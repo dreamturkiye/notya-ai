@@ -80,9 +80,9 @@ export function prepostNormalize(ham: unknown): PrepostKart {
 export function prepostSkorla(ham: unknown): PrepostSonuc {
   const kart = prepostNormalize(ham)
   const maddeler = prepostMaddeler(kart.tip)
-  const dipnot: Dipnot = { ref: 'SB_CERRAHI', not: 'Pre/post-op checklist karar desteğidir; tanı ve doz hekimde' }
+  const dipnot: Dipnot = { ref: 'SB_CERRAHI', not: 'Pre/post-op kontrol listesi karar desteğidir; tanı ve doz hekimde' }
   if (kart.not && dozVeyaTaniKilidiIceriyorMu(kart.not)) {
-    return { tamamMi: false, kart, ozet: 'Nota doz / OR scheduling / tanı kilidi / Neyzi yazılamaz.', eksik: [], dipnot }
+    return { tamamMi: false, kart, ozet: 'Nota doz / ameliyathane planı / tanı kilidi / Neyzi yazılamaz.', eksik: [], dipnot }
   }
   if (kart.planlananAmeliyatEtiket && dozVeyaTaniKilidiIceriyorMu(kart.planlananAmeliyatEtiket)) {
     return { tamamMi: false, kart, ozet: 'Etikette tanı/ICD veya doz yazılamaz — yalnız hekim kısa etiketi.', eksik: [], dipnot }
@@ -93,12 +93,12 @@ export function prepostSkorla(ham: unknown): PrepostSonuc {
     kart.planlananAmeliyatEtiket ? `Etiket: ${kart.planlananAmeliyatEtiket}` : null,
     kart.ameliyatTarihi ? `Tarih: ${kart.ameliyatTarihi}` : null,
     `Tamamlanan ${kart.tamamlanan.length}/${maddeler.length}`,
-    eksik.length ? `Eksik: ${eksik.slice(0, 3).join('; ')}${eksik.length > 3 ? '…' : ''}` : 'Checklist tamam',
+    eksik.length ? `Eksik: ${eksik.slice(0, 3).join('; ')}${eksik.length > 3 ? '…' : ''}` : 'Kontrol listesi tamam',
   ].filter(Boolean)
   return {
     tamamMi: true,
     kart,
-    ozet: `${parcalar.join(' · ')}. Karar desteğidir; OR/HIS ve tanı hekimde.`,
+    ozet: `${parcalar.join(' · ')}. Karar desteğidir; ameliyathane/HIS ve tanı hekimde.`,
     eksik,
     dipnot,
   }

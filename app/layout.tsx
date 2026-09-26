@@ -1,6 +1,7 @@
 
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
+import TurkceDogrulama from "@/components/core/TurkceDogrulama"
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -12,7 +13,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Notya AI — AI Uzman Asistan",
+  title: "Notya AI — Yapay Zekâ Uzman Asistanı",
   description: "Doktorun cebindeki dünyaca ünlü uzman. Sesli komutla hasta oluştur, tanı al, reçete yaz.",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body style={{margin:0,background:"#0A1628"}}>
+        <TurkceDogrulama />
         {children}
         <script dangerouslySetInnerHTML={{__html:`
           if ('serviceWorker' in navigator) {

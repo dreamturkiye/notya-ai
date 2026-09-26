@@ -34,14 +34,14 @@ export interface PostopSonuc {
 }
 
 export function postopSkorla(secilenHam: unknown, not?: string | null): PostopSonuc {
-  const dipnot: Dipnot = { ref: 'TND_NOROS', not: 'Post-op checklist karar desteğidir; tanı ve doz hekimin' }
+  const dipnot: Dipnot = { ref: 'TND_NOROS', not: 'Post-op kontrol listesi karar desteğidir; tanı ve doz hekimin' }
   const izinli = new Set(POSTOP_MADDELER.map((m) => m.kod))
   const secilen = (Array.isArray(secilenHam) ? secilenHam.map(String) : []).filter((k): k is PostopKod => izinli.has(k as PostopKod))
   if (not && aedDozIceriyorMu(not)) {
     return { tamamMi: false, secilen, ozet: 'Post-op notunda AED / mg doz yazılamaz.', gorevOnerileri: [], dipnot }
   }
   if (!secilen.length) {
-    return { tamamMi: false, secilen, ozet: 'En az bir checklist maddesi seçin.', gorevOnerileri: [], dipnot }
+    return { tamamMi: false, secilen, ozet: 'En az bir kontrol listesi maddesi seçin.', gorevOnerileri: [], dipnot }
   }
   const adlar = POSTOP_MADDELER.filter((m) => secilen.includes(m.kod)).map((m) => m.ad)
   const gorevOnerileri = secilen
@@ -53,7 +53,7 @@ export function postopSkorla(secilenHam: unknown, not?: string | null): PostopSo
   return {
     tamamMi: true,
     secilen,
-    ozet: `Nöro post-op checklist: ${adlar.join('; ')}. Karar desteğidir; tanı/AED dozu hekimin.`,
+    ozet: `Nöro post-op kontrol listesi: ${adlar.join('; ')}. Karar desteğidir; tanı/AED dozu hekimin.`,
     gorevOnerileri,
     dipnot,
   }

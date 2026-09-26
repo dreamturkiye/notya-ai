@@ -30,8 +30,8 @@ export function evaluateProcedure(kind: ProcedureKind): EvalResult {
   return {
     triage: 'routine',
     next: [
-      cosmetic ? 'PRP-cosmetic often non-SUT' : 'SUT catalog stub',
-      'recommend islem_oncesi + islem_sonrasi photos',
+      cosmetic ? 'Kozmetik PRP çoğu zaman SUT kapsamı dışındadır' : 'SUT işlem kodu listesi',
+      'İşlem öncesi ve işlem sonrası fotoğraf önerilir',
     ],
     citations: ['tdd-islem', 'sut-2026'],
     photoPlan: ['islem_oncesi', 'islem_sonrasi'],

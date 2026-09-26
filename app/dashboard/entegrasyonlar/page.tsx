@@ -89,7 +89,7 @@ export default function EntegrasyonlarPage() {
             <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12 }}>
               {denetim.map((d, i) => (
                 <div key={i} style={{ fontSize: 12, color: '#8FA0B5', padding: '5px 2px', borderBottom: i < denetim.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                  <span style={{ color: d.sonuc.startsWith('OK') || d.sonuc === 'ACILDI' ? '#2DD4BF' : d.sonuc === 'KAPATILDI' ? '#FBBF24' : '#FCA5A5', fontWeight: 600 }}>{d.sonuc}</span>
+                  <span style={{ color: d.sonuc.startsWith('OK') || d.sonuc === 'ACILDI' ? '#2DD4BF' : d.sonuc === 'KAPATILDI' ? '#FBBF24' : '#FCA5A5', fontWeight: 600 }}>{d.sonuc === 'ACILDI' ? 'AÇILDI' : d.sonuc}</span>
                   {' '}· {d.islem} · {new Date(d.created_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}{d.detay ? ` · ${d.detay.slice(0, 80)}` : ''}
                 </div>
               ))}

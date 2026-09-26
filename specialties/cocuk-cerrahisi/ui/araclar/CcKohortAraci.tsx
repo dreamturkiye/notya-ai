@@ -85,7 +85,7 @@ export default function CcKohortAraci() {
           </button>
         </div>
         {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        <TaslakNotu>Hatırlatma tanı / doz taşımaz. Pediatri Hedef Boy / Neyzi sızmaz. OR/HIS yok.</TaslakNotu>
+        <TaslakNotu>Hatırlatma tanı / doz taşımaz. Pediatri Hedef Boy / Neyzi sızmaz. Ameliyathane/HIS yok.</TaslakNotu>
       </div>
     </>
   )

@@ -117,7 +117,7 @@ export function raporuDogrula(r: BelgeRaporu, f: FusionSonuc): { rapor: BelgeRap
   }
   rapor.tanilar = rapor.tanilar.map((t): Tani => {
     let pct = Math.round(Number(t.guven_pct) || 0)
-    if (pct > f.capPct) { duzeltmeler.push(`${t.ad}: %${pct} → cap %${f.capPct}`); pct = f.capPct }
+    if (pct > f.capPct) { duzeltmeler.push(`${t.ad}: %${pct} → üst sınır %${f.capPct}`); pct = f.capPct }
     if (pct > 95) pct = 95
     if (pct < 0) pct = 0
     return { ...t, guven_pct: pct, guven_bant: bant(pct), destek: t.destek || [], karsi: t.karsi || [] }

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <EndoAracKabugu route="/doktor-tools/endo-kohort" baslik="Endokrinoloji kohort paneli" aciklama="Geciken kontrol · lab/DXA izlem · açık acil bayrak · yüksek HbA1c bandı · 1-tap hasta-güvenli hatırlatma.">
+    <EndoAracKabugu route="/doktor-tools/endo-kohort" baslik="Endokrinoloji kohort paneli" aciklama="Geciken kontrol · lab/DXA izlem · açık acil bayrak · yüksek HbA1c bandı · tek dokunuşla hasta-güvenli hatırlatma.">
       <EndoKohortAraci />
     </EndoAracKabugu>
   )

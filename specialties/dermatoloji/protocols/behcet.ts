@@ -5,11 +5,11 @@ export function evaluateBehcet(card: BehcetCard): EvalResult {
   return {
     triage: card.eye ? 'urgent' : 'routine',
     next: [
-      card.oral ? 'oral ulcers' : 'no oral',
-      card.genital ? 'genital ulcers — extra consent photos' : 'no genital',
-      card.eye ? 'eye refer' : 'eye exam',
-      card.pathergy ? 'pathergy pos' : 'pathergy',
-      card.isgCriteriaMet ? 'ISG met' : 'ISG incomplete',
+      card.oral ? 'Oral ülser var' : 'Oral ülser yok',
+      card.genital ? 'Genital ülser var — fotoğraf için ek onam' : 'Genital ülser yok',
+      card.eye ? 'Göz tutulumu — sevk' : 'Göz muayenesi',
+      card.pathergy ? 'Paterji pozitif' : 'Paterji testi',
+      card.isgCriteriaMet ? 'ISG kriterleri karşılandı' : 'ISG kriterleri eksik',
     ],
     citations: ['alpsoy-behcet'],
     photoPlan: ['mucosa'],

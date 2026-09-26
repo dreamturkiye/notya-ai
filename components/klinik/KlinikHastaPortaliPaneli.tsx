@@ -145,7 +145,7 @@ function Ic() {
         </div>
       )}
       <p style={{ fontSize: 12, color: 'rgba(10,22,40,0.45)', marginTop: 16 }}>
-        Klinik ve Doktor aynı Sağlığım ürünüdür. TUS Derim / Yaram / FTR bu token’da açılmaz. Mint, hasta izolasyonu ile sizin kaydınıza bağlıdır.
+        Klinik ve Doktor aynı Sağlığım ürünüdür. TUS Derim / Yaram / FTR bölümleri bu bağlantıda açılmaz. Bağlantı, hasta izolasyonu gereği yalnızca sizin kaydınıza bağlıdır.
       </p>
     </div>
   )

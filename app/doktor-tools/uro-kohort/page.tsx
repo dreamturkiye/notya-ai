@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <UroAracKabugu route="/doktor-tools/uro-kohort" baslik="Üroloji kohort paneli" aciklama="Geciken kontrol · PSA izlem · yüksek IPSS · açık kırmızı bayrak. 1-tap hasta-güvenli hatırlatma (tanı/PSA sayı/IPSS skor yok).">
+    <UroAracKabugu route="/doktor-tools/uro-kohort" baslik="Üroloji kohort paneli" aciklama="Geciken kontrol · PSA izlem · yüksek IPSS · açık kırmızı bayrak. Tek dokunuşla hasta-güvenli hatırlatma (tanı/PSA sayı/IPSS skor yok).">
       <UroKohortAraci />
     </UroAracKabugu>
   )

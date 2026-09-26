@@ -24,7 +24,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   KLIMIK: 'KLİMİK (Türk Klinik Mikrobiyoloji ve İnfeksiyon Hastalıkları Derneği) — klinik pratik; tanı/doz hekimin',
   SB_ATB: 'T.C. Sağlık Bakanlığı Akılcı Antibiyotik Kullanımı — süre karar desteği; doz Notya üretmez',
   SB_HIV: 'T.C. SB HIV, tüberküloz, viral hepatit klinik protokolleri — izlem aralıkları karar desteği',
-  SB_IZOLASYON: 'T.C. SB hastane enfeksiyon kontrolü / izolasyon ve sürveyans — ayaktan hatırlatma; full HIS out',
+  SB_IZOLASYON: 'T.C. SB hastane enfeksiyon kontrolü / izolasyon ve sürveyans — ayaktan hatırlatma; tam HIS kapsam dışı',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — enfeksiyon ilaç kısıtları; güncel metin hekim doğrular',
   TITCK: 'TİTCK — KÜB; antibiyotik / antiviral doz Notya tarafından üretilmez',
 }
@@ -36,7 +36,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Yüksek ateş ile bilinç değişikliği, boyun sertliği, peteşiyal döküntü, nekrotizan yumuşak doku şüphesi veya sepsis bulgularında ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan enfeksiyon hastalıkları muayenehanesi / polikliniği ürünü. Hastane enfeksiyon kontrolü full HIS, tanı kilidi ve uydurma antibiyotik dozu bu bölümün kapsamı değildir.'
+  'Ayaktan enfeksiyon hastalıkları muayenehanesi / polikliniği ürünü. Hastane enfeksiyon kontrolü için tam HIS, tanı kilidi ve uydurma antibiyotik dozu bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

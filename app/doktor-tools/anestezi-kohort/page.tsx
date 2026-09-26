@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <AnesteziAracKabugu route="/doktor-tools/anestezi-kohort" baslik="Anestezi kohort" aciklama="Geciken kontrol, ASA/pre-op, hava yolu, ağrı, alerji/ilaç ve açık acil bayrakları. Hasta-güvenli 1-tap hatırlatma.">
+    <AnesteziAracKabugu route="/doktor-tools/anestezi-kohort" baslik="Anestezi kohort" aciklama="Geciken kontrol, ASA/pre-op, hava yolu, ağrı, alerji/ilaç ve açık acil bayrakları. Tek dokunuşla hasta-güvenli hatırlatma.">
       <AnesteziKohortAraci />
     </AnesteziAracKabugu>
   )

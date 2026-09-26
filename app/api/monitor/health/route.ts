@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, results }, { status: 200 })
   } catch (error) {
     console.error("Health check failed:", error)
-    await sendTelegram(`Error in health check: ${error instanceof Error ? error.message : String(error)}`)
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    await sendTelegram(`Sağlık kontrolü hatası: ${error instanceof Error ? error.message : String(error)}`)
+    return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 })
   }
 }

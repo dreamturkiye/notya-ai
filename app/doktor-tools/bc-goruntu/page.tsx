@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <BcAracKabugu route="/doktor-tools/bc-goruntu" baslik="Görüntü belge köprü" aciklama="BT/MR/belge kontrol tarihi ve etiket. Tanı ve AI rapor yorumu yazılmaz.">
+    <BcAracKabugu route="/doktor-tools/bc-goruntu" baslik="Görüntü belge köprü" aciklama="BT/MR/belge kontrol tarihi ve etiket. Tanı ve yapay zekâ rapor yorumu yazılmaz.">
       <BcGoruntuAraci />
     </BcAracKabugu>
   )

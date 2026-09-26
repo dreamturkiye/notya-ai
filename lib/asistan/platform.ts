@@ -28,5 +28,6 @@ export function connectionErrorHelp(detail?: string): string {
   if (/first_message|override.*not allowed/i.test(detail)) {
     return 'Sesli asistan yapılandırması güncelleniyor. Lütfen birkaç saniye sonra tekrar deneyin.'
   }
-  return `${base} (${detail.slice(0, 80)})`
+  // KURAL — TÜRKÇE: SDK / tarayıcı ayrıntısı İngilizcedir; yalnız Türkçe ayrıntı gösterilir.
+  return /[çğıİöşüÇĞÖŞÜ]/.test(detail) ? `${base} (${detail.slice(0, 80)})` : base
 }

@@ -27,7 +27,7 @@ export default function BcPostopAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('Post-op checklist hasta dosyasına kaydedildi.')
+      setDurum('Post-op kontrol listesi hasta dosyasına kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -36,7 +36,7 @@ export default function BcPostopAraci() {
       <div style={bcStil.kutu}>
         <div style={bcStil.etiket}>Hasta (isteğe bağlı kayıt için)</div>
         <BcHastaSecici secili={hastaId} sec={(id) => setHastaId(id)} />
-        <div style={{ ...bcStil.etiket, marginTop: 12 }}>Checklist maddeleri</div>
+        <div style={{ ...bcStil.etiket, marginTop: 12 }}>Kontrol listesi maddeleri</div>
         {POSTOP_MADDELER.map((m) => (
           <label key={m.kod} style={{ ...bcStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={secilen.includes(m.kod)} onChange={() => setSecilen((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />
@@ -55,7 +55,7 @@ export default function BcPostopAraci() {
         </div>
         {durum && <div style={{ ...bcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...bcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — post-op checklist karar desteğidir; tanı, OR/HIS ve AED dozu yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — post-op kontrol listesi karar desteğidir; tanı, ameliyathane/HIS ve AED dozu yazılmaz.</TaslakNotu>
       </div>
     </>
   )

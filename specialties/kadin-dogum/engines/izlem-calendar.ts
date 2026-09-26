@@ -184,11 +184,12 @@ export function evaluateCadence(input: {
   const acogHit = overlay.some((v) => Math.abs(v.ga_or_pp_day - input.ga_weeks) <= 1)
   const sb: CadenceDue = {
     due: Boolean(sbOpen),
-    detail: sbOpen ? `izlem ${sbOpen.izlem_no} window ${sbOpen.week_lo}–${sbOpen.week_hi}` : 'no open DÖBYR izlem window',
+    detail: sbOpen ? `${sbOpen.izlem_no}. izlem penceresi ${sbOpen.week_lo}–${sbOpen.week_hi}. hafta` : 'açık DÖBYR izlem penceresi yok',
   }
+  const aralikMetni = { weekly: 'haftalık', q2w: 'iki haftada bir', q4w: 'dört haftada bir' }[interval]
   const acog: CadenceDue = {
     due: acogHit,
-    detail: `ACOG ${interval}`,
+    detail: `ACOG kadansı: ${aralikMetni} vizit`,
   }
   return dualWhenConflict(sb, acog, sb.due !== acog.due)
 }

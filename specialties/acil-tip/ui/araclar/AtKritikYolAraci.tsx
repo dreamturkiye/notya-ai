@@ -43,7 +43,7 @@ export default function AtKritikYolAraci() {
             {m.ad}
           </label>
         ))}
-        <div style={{ ...atStil.etiket, marginTop: 12 }}>Checklist maddeleri</div>
+        <div style={{ ...atStil.etiket, marginTop: 12 }}>Kontrol listesi maddeleri</div>
         {KRITIK_MADDELER.map((m) => (
           <label key={m.kod} style={{ ...atStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={maddeler.includes(m.kod)} onChange={() => setMaddeler((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />
@@ -61,7 +61,7 @@ export default function AtKritikYolAraci() {
         </div>
         {durum && <div style={{ ...atStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...atStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — kritik yol bayrağıdır; STEMI/inme tanısı kilidi ve doz yazılmaz. Kardiyoloji/nöroloji tile değildir.</TaslakNotu>
+        <TaslakNotu>TASLAK — kritik yol bayrağıdır; STEMI/inme tanısı kilidi ve doz yazılmaz. Kardiyoloji/nöroloji aracı değildir.</TaslakNotu>
       </div>
     </>
   )

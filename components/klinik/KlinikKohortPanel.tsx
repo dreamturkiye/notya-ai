@@ -20,6 +20,14 @@ const RENK: Record<KlinikKohortSatir['durum'], string> = {
   yaklasiyor: '#059669',
 }
 
+const DURUM_ETIKET: Record<KlinikKohortSatir['durum'], string> = {
+  '112': '112',
+  'riza-eksik': 'RIZA EKSİK',
+  gecikti: 'GECİKTİ',
+  bugun: 'BUGÜN',
+  yaklasiyor: 'YAKLAŞIYOR',
+}
+
 export default function KlinikKohortPanel() {
   const router = useRouter()
   const [satir, setSatir] = useState<KlinikKohortSatir[]>([])
@@ -79,7 +87,7 @@ export default function KlinikKohortPanel() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
             <b style={{ color: '#0A1628' }}>{s.ad}</b>
-            <span style={{ fontSize: 11, fontWeight: 700, color: RENK[s.durum], textTransform: 'uppercase' }}>{s.durum}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: RENK[s.durum], textTransform: 'uppercase' }}>{DURUM_ETIKET[s.durum]}</span>
           </div>
           <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.55)', marginTop: 4 }}>{s.ozet}</div>
         </button>

@@ -37,7 +37,7 @@ export type ImagingModality = {
 /** Popular PACS-style modalities used in Turkish outpatient practice. */
 export const IMAGING_MODALITIES: ImagingModality[] = [
   { code: 'xray', label: 'Röntgen', patientLabel: 'Röntgen', portalKind: 'goruntuleme', color: '#3b82f6' },
-  { code: 'mri', label: 'MRI', patientLabel: 'MR', portalKind: 'goruntuleme', color: '#a855f7' },
+  { code: 'mri', label: 'MR', patientLabel: 'MR', portalKind: 'goruntuleme', color: '#a855f7' },
   { code: 'bt', label: 'BT', patientLabel: 'BT (Tomografi)', portalKind: 'goruntuleme', color: '#f59e0b' },
   { code: 'us', label: 'Ultrason', patientLabel: 'Ultrason', portalKind: 'goruntuleme', color: '#22c55e' },
   { code: 'eko', label: 'EKO', patientLabel: 'EKO', portalKind: 'goruntuleme', color: '#0d9488' },

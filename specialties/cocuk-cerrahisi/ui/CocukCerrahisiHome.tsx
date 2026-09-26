@@ -135,7 +135,7 @@ export default function CocukCerrahisiHome({ patientId }: { patientId: string })
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>Pre/post-op, yara/dren ve onam/veli checklist karar desteğidir. Tanı / doz / OR hekimdedir. Pediatri Neyzi/Hedef Boy yok.</div>
+          <div style={metin}>Pre/post-op, yara/dren ve onam/veli kontrol listesi karar desteğidir. Tanı / doz / ameliyathane planı hekimdedir. Pediatri Neyzi/Hedef Boy yok.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· portalda &quot;Çocuğumun Cerrahisi&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -154,7 +154,7 @@ export default function CocukCerrahisiHome({ patientId }: { patientId: string })
 
       {sekme === 'Pre/Post-op' && (
         <div>
-          <div style={etiket}>Pre/post-op checklist</div>
+          <div style={etiket}>Pre/post-op kontrol listesi</div>
           <div style={satir}>
             {(['preop', 'postop'] as PrepostTip[]).map((x) => (
               <button key={x} type="button" onClick={() => { setTip(x); setPrepostTamam([]) }} style={{ ...ghost, background: tip === x ? 'rgba(8,145,178,0.25)' : 'transparent' }}>
@@ -204,7 +204,7 @@ export default function CocukCerrahisiHome({ patientId }: { patientId: string })
 
       {sekme === 'Onam/Veli' && (
         <div>
-          <div style={etiket}>Onam / veli checklist (yaş kapılı)</div>
+          <div style={etiket}>Onam / veli kontrol listesi (yaşa bağlı)</div>
           <div style={satir}>
             <input type="number" min={0} max={120} value={yas} onChange={(e) => { setYas(e.target.value); setOnamSec([]) }} style={{ ...toolsInput, width: 80 }} />
             <span style={kucuk}>yaş (yıl)</span>
@@ -217,7 +217,7 @@ export default function CocukCerrahisiHome({ patientId }: { patientId: string })
           ))}
           <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({
             adim: 'onam', secilen: onamSec, yasYil: yas === '' ? null : Number(yas), hekimKilit: true,
-          }, 'Onam checklist kaydedildi.')}>Kaydet</button>
+          }, 'Onam kontrol listesi kaydedildi.')}>Kaydet</button>
         </div>
       )}
 

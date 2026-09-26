@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <GcAracKabugu route="/doktor-tools/gogus-cerrahi-kohort" baslik="Göğüs cerrahisi kohort paneli" aciklama="Geciken kontrol · pre-op · tüp/yara · patoloji · açık acil · 1-tap hatırlatma. Tanı/CAT taşınmaz.">
+    <GcAracKabugu route="/doktor-tools/gogus-cerrahi-kohort" baslik="Göğüs cerrahisi kohort paneli" aciklama="Geciken kontrol · pre-op · tüp/yara · patoloji · açık acil · tek dokunuşla hatırlatma. Tanı/CAT taşınmaz.">
       <GcKohortAraci />
     </GcAracKabugu>
   )

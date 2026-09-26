@@ -287,7 +287,7 @@ export async function POST(req: NextRequest) {
     const id = String(body.gorevId || '')
     const status = String(body.status || '')
     if (!['bekliyor', 'yapildi', 'red', 'gecikti'].includes(status)) {
-      return NextResponse.json({ error: 'Geçersiz status.' }, { status: 400 })
+      return NextResponse.json({ error: 'Geçersiz durum.' }, { status: 400 })
     }
     const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
     if (status === 'red') {

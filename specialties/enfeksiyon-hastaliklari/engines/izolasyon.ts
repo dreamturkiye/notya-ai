@@ -49,7 +49,7 @@ export function izolasyonNormalize(ham: unknown): IzolasyonKart {
 
 export function izolasyonPlanla(ham: unknown): IzolasyonSonuc {
   const kart = izolasyonNormalize(ham)
-  const dipnot: Dipnot = { ref: 'SB_IZOLASYON', not: 'İzolasyon/bildirim hatırlatması ayaktan ürün; full HIS out' }
+  const dipnot: Dipnot = { ref: 'SB_IZOLASYON', not: 'İzolasyon/bildirim hatırlatması ayaktan ürün; tam HIS kapsam dışı' }
   if (!kart.baslangic && !kart.bitis && !kart.bildirimTarihi) {
     return { tamamMi: false, kart, ozet: 'En az bir tarih (başlangıç, bitiş veya bildirim) gerekli', dipnot }
   }
@@ -79,5 +79,5 @@ export const IZOLASYON_KONTROL_LISTESI: readonly string[] = [
   'Başlangıç / bitiş tarihleri kaydedildi',
   'Bildirim yükümlülüğü değerlendirildi (varsa tarih)',
   'Hasta / yakın bilgilendirildi (tanı dili yok)',
-  'Hastane enfeksiyon kontrolü full HIS bu üründe yoktur',
+  'Hastane enfeksiyon kontrolü için tam HIS bu üründe yoktur',
 ]

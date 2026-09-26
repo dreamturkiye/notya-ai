@@ -18,7 +18,7 @@ export const BOLGELER = [
 ] as const
 
 export const MEKANIZMALAR = [
-  'Temas / darbe', 'Non-kontakt (dönme / ani duruş)', 'Overuse / yüklenme', 'Aşırı gerilme', 'Bilinmiyor',
+  'Temas / darbe', 'Temassız (dönme / ani duruş)', 'Aşırı kullanım / yüklenme', 'Aşırı gerilme', 'Bilinmiyor',
 ] as const
 
 export type SakatlikDurum = 'aktif' | 'iyilesiyor' | 'kapandi'

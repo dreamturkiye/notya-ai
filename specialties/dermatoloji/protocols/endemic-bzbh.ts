@@ -8,10 +8,10 @@ export function evaluateBzbh(kind: BzbhKind): EvalResult {
   return {
     triage: kind === 'hiv' ? 'urgent' : 'routine',
     next: kind === 'sark_cibani'
-      ? ['endemic SE Anatolia/Çukurova', 'dermatologist-led treat', '3-month follow-up ×1 year', 'Form 014']
+      ? ['Güneydoğu Anadolu / Çukurova endemik', 'Tedaviyi dermatolog yönetir', '1 yıl boyunca 3 ayda bir kontrol', 'Form 014']
       : kind === 'lepra'
-        ? ['lepra report', 'Form 014']
-        : ['TDD CYBE algorithm', form014 ? 'Form 014/TSİM' : ''],
+        ? ['Lepra bildirimi', 'Form 014']
+        : ['TDD CYBE algoritması', form014 ? 'Form 014/TSİM' : ''],
     citations: ['tdd-cybe', 'bzbh-014'],
     photoPlan: kind === 'sark_cibani' ? ['baseline', 'month 3', 'month 6', 'month 9', 'month 12'] : ['lesion'],
   }

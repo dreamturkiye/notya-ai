@@ -60,7 +60,7 @@ export default function AtEsiAraci() {
         </div>
         {durum && <div style={{ ...atStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...atStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — ESI karar desteğidir; tanı, doz ve ED bed board HIS yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — ESI karar desteğidir; tanı, doz ve acil servis yatak panosu HIS yazılmaz.</TaslakNotu>
       </div>
     </>
   )

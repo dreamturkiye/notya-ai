@@ -49,7 +49,7 @@ export default function NefEgfrAraci() {
           <Istatistik deger={sonuc.sonrakiAy ? `${sonuc.sonrakiAy} ay` : '—'} etiket="Önerilen izlem" ton="notr" />
         </div>
         <div style={nefStil.metin}>{sonuc.ozet}</div>
-        <div style={{ ...nefStil.etiket, marginTop: 12 }}>İlaç sınıfı checklist (doz yok)</div>
+        <div style={{ ...nefStil.etiket, marginTop: 12 }}>İlaç sınıfı kontrol listesi (doz yok)</div>
         {ILAC_DOZ_UYARI_LISTESI.map((x) => <div key={x} style={nefStil.kucuk}>☐ {x}</div>)}
         <div style={{ ...nefStil.satir, marginTop: 12 }}>
           <button type="button" style={nefStil.btn} onClick={kaydet}>Kaydet</button>
@@ -57,7 +57,7 @@ export default function NefEgfrAraci() {
         </div>
         {durum && <div style={{ ...nefStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...nefStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — KDIGO hücresi karar desteğidir; tanı yazmaz, ESA / ilaç dozu yazmaz. Dahiliye CKD aracı bu tile değildir.</TaslakNotu>
+        <TaslakNotu>TASLAK — KDIGO hücresi karar desteğidir; tanı yazmaz, ESA / ilaç dozu yazmaz. Bu araç, Dahiliye CKD aracından ayrıdır.</TaslakNotu>
       </div>
     </>
   )

@@ -41,7 +41,7 @@ export const NORO_IZLEM_KURALLARI: NoroIzlemKural[] = [
   },
   {
     kod: 'noro_izlem_fenitoin',
-    ad: 'Fenitoin: kan düzeyi + albumin + KCFT',
+    ad: 'Fenitoin: kan düzeyi + albümin + KCFT',
     re: /fenitoin|phenytoin|epitoin|dilantin/i,
     labs: ['ALT', 'AST'],
     baslangicGun: 14,

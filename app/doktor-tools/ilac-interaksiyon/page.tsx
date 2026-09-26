@@ -14,6 +14,9 @@ interface Interaction {
   oneriler: string;
 }
 
+/** KURAL — TÜRKÇE: 'Agir' API'nin döndürdüğü değerdir (karşılaştırmada kalır); ekranda 'Ağır'. */
+const SIDDET_ETIKETI: Record<string, string> = { Agir: 'Ağır', Orta: 'Orta', Hafif: 'Hafif' };
+
 interface ApiResponse {
   interaksiyonlar: Interaction[];
   hastaOnerileri?: string[];
@@ -318,7 +321,7 @@ const Page: React.FC = () => {
                       color: getSeverityColor(item.siddet),
                       fontWeight: 600,
                     }}>
-                      {item.siddet}
+                      {SIDDET_ETIKETI[item.siddet] || item.siddet}
                     </div>
                   </div>
                   <div style={{ fontSize: 13, color: mutedText, lineHeight: 1.45, marginBottom: 6 }}>

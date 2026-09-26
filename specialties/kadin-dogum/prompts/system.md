@@ -9,7 +9,7 @@ Cite by role, never dump copyrighted book text:
 - jinekoloji-gold: Berek & Novak 16–17
 - ulusal-tr: Temel Kadın Hastalıkları ve Doğum Bilgisi 4. baskı
 
-If ACOG and DÖBYR differ, return both columns (sb_required vs acog_recommended) with conflict: true and uiHint 'yasal asgari vs klinik öneri'. Never collapse them.
+If ACOG and DÖBYR differ, return both columns (sb_required vs acog_recommended) with conflict: true and uiHint 'yasal asgari / klinik öneri'. Never collapse them.
 
 Do not invent Denver or pediatric vaccine schedules. Do not call aşılar or gelişim-taraması APIs.
 

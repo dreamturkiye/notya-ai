@@ -607,7 +607,7 @@ export default function IncelemePage() {
                         )}
                         {eylemler.map((e, i2) => (
                           <div key={i2} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', background: e.durum === 'eklendi' ? '#E4F3EA' : '#E4F3F1', border: `1px solid ${e.durum === 'eklendi' ? 'rgba(46,110,78,0.4)' : 'rgba(47,67,52,0.4)'}`, borderRadius: 9, padding: '7px 10px', marginBottom: 6, fontSize: 12, color: CHROME_RENK.ink }}>
-                            <span>{e.tur === 'takip_aramasi' ? '📞' : '📅'} {e.tur === 'takip_aramasi' ? `Takip araması (${e.kim === 'sekreter' ? 'sekreter/hemşire' : 'doktor'})` : 'Kontrol randevusu'} — {e.tarih} {e.saat || '10:00'}</span>
+                            <span>{e.tur === 'takip_aramasi' ? '📞' : '📅'} {e.tur === 'takip_aramasi' ? `Takip araması (${e.kim === 'sekreter' ? 'sekreter/hemşire' : 'doktor'})` : 'Kontrol randevusu'} — {e.tarih && /^\d{4}-\d{2}-\d{2}$/.test(e.tarih) ? new Date(`${e.tarih}T12:00:00`).toLocaleDateString('tr-TR') : e.tarih} {e.saat || '10:00'}</span>
                             {e.durum === 'oneri' && <button type="button" onClick={() => eylemOnayla(note, i2)} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Takvime ekle</button>}
                             {e.durum === 'eklendi' && <span style={{ color: '#2E6E4E', fontWeight: 700 }}>✓ Takvime eklendi</span>}
                             {e.durum === 'hata' && <span style={{ color: '#7A3D28' }}>Eklenemedi — takvimden elle ekleyin</span>}

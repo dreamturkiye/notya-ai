@@ -52,7 +52,7 @@ export function gcSeridi(g: GcSeritGirdi): GcSerit {
       alt: g.ameliyatTarihi || undefined,
     })
   } else {
-    chips.push({ ad: 'Pre-op', deger: '—', durum: 'yok', alt: 'checklist yok' })
+    chips.push({ ad: 'Pre-op', deger: '—', durum: 'yok', alt: 'kontrol listesi yok' })
   }
 
   chips.push(

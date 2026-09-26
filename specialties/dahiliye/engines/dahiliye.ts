@@ -21,7 +21,7 @@ export function kbSinifla(sbp: number, dbp: number): { sinif: KbSinif; ad: strin
 }
 export type KbHedef = { hedefSbp: [number, number]; hedefDbp: [number, number] | null; tedaviEsigi: [number, number]; kova: '18-79' | '80+' | 'kirilgan'; dipnot: Dipnot }
 export function kbHedefi(yas: number | null, kirilgan: boolean): KbHedef {
-  const d: Dipnot = { ref: 'HT_UZLASI2025', not: 'Hedefler komorbiditeden bağımsız yaş/kırılganlık kovaları; hekim override edebilir' }
+  const d: Dipnot = { ref: 'HT_UZLASI2025', not: 'Hedefler komorbiditeden bağımsız yaş/kırılganlık kovaları; hekim değiştirebilir' }
   if (kirilgan) return { hedefSbp: [140, 150], hedefDbp: null, tedaviEsigi: [160, 90], kova: 'kirilgan', dipnot: d }
   if (yas != null && yas >= 80) return { hedefSbp: [130, 140], hedefDbp: null, tedaviEsigi: [140, 90], kova: '80+', dipnot: d }
   return { hedefSbp: [120, 130], hedefDbp: [70, 80], tedaviEsigi: [140, 90], kova: '18-79', dipnot: d }

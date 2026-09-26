@@ -28,13 +28,13 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
 }
 
 export const HEKIM_KILIT_METNI =
-  'Foto zaman çizgisi, yara/greft izlem ve onam checklist karar desteğidir. Tanı, işlem endikasyonu, ilaç ve doz kararı hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane / HIS planlamaz.'
+  'Foto zaman çizgisi, yara/greft izlem ve onam kontrol listesi karar desteğidir. Tanı, işlem endikasyonu, ilaç ve doz kararı hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane / HIS planlamaz.'
 
 export const ACIL_YONLENDIRME_METNI =
   'Flep / greftte ani renk solukluğu veya morarma, hızla büyüyen şişlik (hematom), yüksek ateş ile yara kızarıklığı veya yara kenarlarının ayrılması varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan plastik cerrahi muayenehanesi / polikliniği ürünü. Ameliyathane OR scheduling, full HIS, tanı auto-lock ve uydurma doz bu bölümün kapsamı değildir. Dermatoloji skorları (PASI vb.) bu chapter\'a sızmaz.'
+  'Ayaktan plastik cerrahi muayenehanesi / polikliniği ürünü. Ameliyathane planlaması, tam HIS, otomatik tanı kilidi ve uydurma doz bu bölümün kapsamı değildir. Dermatoloji skorları (PASI vb.) bu bölüme sızmaz.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

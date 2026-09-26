@@ -121,7 +121,7 @@ export default function BeyinCerrahisiHome({ patientId }: { patientId: string })
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>Post-op checklist, bilinç/nöbet bayrakları ve görüntü köprüsü karar desteğidir. Tanı / AED dozu hekimdedir. OR/HIS yok.</div>
+          <div style={metin}>Post-op kontrol listesi, bilinç/nöbet bayrakları ve görüntü köprüsü karar desteğidir. Tanı / AED dozu hekimdedir. Ameliyathane/HIS yok.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -140,7 +140,7 @@ export default function BeyinCerrahisiHome({ patientId }: { patientId: string })
 
       {sekme === 'Post-op' && (
         <div>
-          <div style={etiket}>Nöro post-op checklist</div>
+          <div style={etiket}>Nöro post-op kontrol listesi</div>
           {POSTOP_MADDELER.map((m) => (
             <label key={m.kod} style={{ ...metin, display: 'flex', gap: 8, padding: '2px 0' }}>
               <input type="checkbox" checked={postopSec.includes(m.kod)} onChange={() => setPostopSec((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />

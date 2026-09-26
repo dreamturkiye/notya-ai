@@ -71,7 +71,7 @@ export default function PlastikYaraAraci() {
         </div>
         {durum && <div style={{ ...plastikStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...plastikStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — yara/greft izlem karar desteğidir; tanı, doz ve OR/HIS planı yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — yara/greft izlem karar desteğidir; tanı, doz ve ameliyathane/HIS planı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

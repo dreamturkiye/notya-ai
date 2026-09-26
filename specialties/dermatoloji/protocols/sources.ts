@@ -53,7 +53,7 @@ export interface DermKaynak {
 
 export const DERM_KAYNAKLAR: Record<DermRef, DermKaynak> = {
   SUT_2026: { ref: 'SUT_2026', ad: 'SGK Sağlık Uygulama Tebliği — ilaç kullanım ilkeleri (biyolojik basamak, izotretinoin dermatolog kısıtı, fototerapi endikasyon raporu)', rol: 'tr-yasal', yil: 2026, dogrulama: 'hekim', not: 'Madde numaraları ve güncel eşikler bu repoda doğrulanmadı — hekim / idare teyit eder; doz yazılmaz' },
-  SUT_ISLEM: { ref: 'SUT_ISLEM', ad: 'SUT işlem puan listesi — dermatolojik işlem kodları (700.x, 530.070)', rol: 'tr-yasal', yil: 2026, dogrulama: 'hekim', not: 'Kod eşleşmesi katalog stub; ücret yazılmaz' },
+  SUT_ISLEM: { ref: 'SUT_ISLEM', ad: 'SUT işlem puan listesi — dermatolojik işlem kodları (700.x, 530.070)', rol: 'tr-yasal', yil: 2026, dogrulama: 'hekim', not: 'Kod eşleşmesi katalog taslağıdır; ücret yazılmaz' },
   GOP_KUB: { ref: 'GOP_KUB', ad: 'Gebelik Önleme Programı — izotretinoin / asitretin KÜB kuralları', rol: 'tr-yasal', yil: 2024, dogrulama: 'birincil', not: 'Kapı kuralları engine’de; doz hekimin' },
   AYAKTA_TESHIS: { ref: 'AYAKTA_TESHIS', ad: 'Ayakta Teşhis ve Tedavi Yapılan Özel Sağlık Kuruluşları Yönetmeliği — estetik girişim kapsamı', rol: 'tr-yasal', yil: 2018, dogrulama: 'ikincil' },
   SOLARYUM_2018: { ref: 'SOLARYUM_2018', ad: 'Solaryum yasağı (2018) — solaryum fototerapi cihazı değildir', rol: 'tr-yasal', yil: 2018, dogrulama: 'birincil' },
@@ -64,7 +64,7 @@ export const DERM_KAYNAKLAR: Record<DermRef, DermKaynak> = {
   TDD_CYBE: { ref: 'TDD_CYBE', ad: 'TDD cinsel yolla bulaşan enfeksiyonlar algoritmaları', rol: 'tr-dernek', yil: 2020, dogrulama: 'hekim' },
   ALPSOY_BEHCET: { ref: 'ALPSOY_BEHCET', ad: 'Behçet hastalığı TR literatürü (Alpsoy) + ISG ölçütleri', rol: 'tr-dernek', yil: 2020, dogrulama: 'ikincil' },
   EUROMELANOMA: { ref: 'EUROMELANOMA', ad: 'Euromelanoma / TDD Mayıs deri kanseri farkındalık kampanyası', rol: 'tr-dernek', yil: 2026, dogrulama: 'ikincil' },
-  BOLOGNIA: { ref: 'BOLOGNIA', ad: 'Bolognia Dermatology 5. baskı — ders kitabı derinliği (gold)', rol: 'ders-kitabi', yil: 2024, dogrulama: 'ikincil', not: 'Rol atfı; metin kopyalanmaz' },
+  BOLOGNIA: { ref: 'BOLOGNIA', ad: 'Bolognia Dermatology 5. baskı — ders kitabı derinliği (altın standart)', rol: 'ders-kitabi', yil: 2024, dogrulama: 'ikincil', not: 'Rol atfı; metin kopyalanmaz' },
   ANDREWS: { ref: 'ANDREWS', ad: 'Andrews Deri Hastalıkları 14 TR + Atlas — klinik / atlas', rol: 'ders-kitabi', yil: 2026, dogrulama: 'ikincil' },
   TEMEL_DERM: { ref: 'TEMEL_DERM', ad: 'Temel Dermatoloji — ulusal TR poliklinik dili', rol: 'ulusal-tr', yil: 2020, dogrulama: 'ikincil' },
   TUKMOS_2019: { ref: 'TUKMOS_2019', ad: 'TUKMOS Deri ve Zührevi Hastalıkları çekirdek müfredatı', rol: 'ders-kitabi', yil: 2019, dogrulama: 'ikincil' },

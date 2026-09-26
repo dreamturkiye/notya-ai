@@ -107,7 +107,7 @@ export const PROTOCOL_SOURCES: ProtocolSource[] = [
   },
 ]
 
-export const UI_HINT_YASAL_VS_KLINIK = 'yasal asgari vs klinik öneri' as const
+export const UI_HINT_YASAL_VS_KLINIK = 'yasal asgari / klinik öneri' as const
 
 export type DualRecommendation<T> = {
   sb_required: T

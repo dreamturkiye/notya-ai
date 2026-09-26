@@ -11,10 +11,10 @@ export const EGZERSIZ_ORNEKLERI: readonly string[] = [
   'Kalça abduksiyonu (yan yatış)',
   'Omuz sarkaç (Codman)',
   'Boyun izometrik tutuş',
-  'Wall slide',
+  'Duvarda kaydırma (wall slide)',
   'Yürüyüş programı (süreyi hekim yazar)',
   'Gerdirme / germe (hekim bölgesi)',
-  'Denge / proprioception (hekim seçimi)',
+  'Denge / propriosepsiyon (hekim seçimi)',
 ]
 
 export interface EgzersizMadde {

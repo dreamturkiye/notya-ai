@@ -60,7 +60,7 @@ export default function AtSevkAraci() {
         </div>
         {durum && <div style={{ ...atStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...atStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — sevk/yatış paketidir; boarding HIS, yatak panosu, tanı kilidi ve doz yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — sevk/yatış paketidir; yatış bekletme HIS, yatak panosu, tanı kilidi ve doz yazılmaz.</TaslakNotu>
       </div>
     </>
   )

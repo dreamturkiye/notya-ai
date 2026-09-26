@@ -43,7 +43,7 @@ const KURALLAR: Array<{
     ad: 'Egzersiz / antrenman sırasında göğüs ağrısı',
     eylem: 'Egzersizi durdurun; 112 veya en yakın acile başvurun. Portal mesajı beklemeyin.',
     oncelik: 'hemen',
-    dipnot: { ref: 'SB_SPOR', not: 'Egzersiz göğüs ağrısı — kardiyak red-flag; ayaktan izlem yeterli değildir' },
+    dipnot: { ref: 'SB_SPOR', not: 'Egzersiz göğüs ağrısı — kardiyak kırmızı bayrak; ayaktan izlem yeterli değildir' },
   },
   {
     kod: 'senkop_bayilma',

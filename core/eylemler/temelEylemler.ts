@@ -133,7 +133,10 @@ export const ASI_KAYDI_EKLE = eylem({
       const { belge_id: _b, hekim_onay_at: _h, lot_no: _l, uygulama_yeri: _y, ...eski } = satir
       ;({ data, error } = await ctx.supabase.from('asilar').insert(eski).select('id').single())
     }
-    if (error || !data) throw new Error(error?.message || 'Aşı kaydedilemedi.')
+    if (error || !data) {
+      if (error) console.error('[eylem] asi_kaydi_ekle yazılamadı', error.message)
+      throw new Error('Aşı kaydedilemedi.')
+    }
     return { hedefTablo: 'asilar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Aşılar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=asilar` } }
   },
   geriAl: async (ctx, k) => {
@@ -199,7 +202,10 @@ export const ILAC_EKLE = eylem({
       // onay_durumu is left to the column default ('onayli'), exactly as the UI POST route does.
     }
     const { data, error } = await ctx.supabase.from('hasta_ilaclar').insert(satir).select('id').single()
-    if (error || !data) throw new Error(error?.message || 'İlaç kaydedilemedi.')
+    if (error || !data) {
+      if (error) console.error('[eylem] ilac_ekle yazılamadı', error.message)
+      throw new Error('İlaç kaydedilemedi.')
+    }
     return { hedefTablo: 'hasta_ilaclar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
   geriAl: async (ctx, k) => {
@@ -381,7 +387,10 @@ export const KONTROL_RANDEVUSU_OLUSTUR = eylem({
       olusturan_id: ctx.doktorId,
     }
     const { data, error } = await ctx.supabase.from('randevular').insert(satir).select('id').single()
-    if (error || !data) throw new Error(error?.message || 'Randevu oluşturulamadı.')
+    if (error || !data) {
+      if (error) console.error('[eylem] kontrol_randevusu_olustur yazılamadı', error.message)
+      throw new Error('Randevu oluşturulamadı.')
+    }
     return { hedefTablo: 'randevular', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Randevularda gör', yol: '/dashboard/doktor/randevular' } }
   },
   geriAl: async (ctx, k) => {
@@ -470,7 +479,10 @@ export const ILAC_SONLANDIR = eylem({
     const guncel = { aktif: false, bitis_tarihi: v.bitis_tarihi ?? ctx.bugunTRT, notlar: v.sebep ? `Sonlandırma: ${v.sebep}` : undefined }
     const yama = Object.fromEntries(Object.entries(guncel).filter(([, x]) => x !== undefined))
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
-    if (error) throw new Error(error.message)
+    if (error) {
+      console.error('[eylem] ilac_sonlandir yazılamadı', error.message)
+      throw new Error('İlaç sonlandırılamadı.')
+    }
     return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
 })
@@ -511,7 +523,10 @@ export const ILAC_DOZ_DEGISTIR = eylem({
     if (v.yeni_doz) yama.doz = v.yeni_doz
     if (v.yeni_kullanim) yama.kullanim_sikli = v.yeni_kullanim
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
-    if (error) throw new Error(error.message)
+    if (error) {
+      console.error('[eylem] ilac_doz_degistir yazılamadı', error.message)
+      throw new Error('İlaç dozu güncellenemedi.')
+    }
     return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
 })
@@ -563,7 +578,10 @@ export const HASTA_BILGISI_DUZELT = eylem({
     if (!Object.keys(yama).length) throw new Error('Değiştirilecek alan yok.')
     yama.updated_at = new Date().toISOString()
     const { error } = await ctx.supabase.from('patients').update(yama).eq('id', ctx.hasta.id).eq('doctor_id', ctx.doktorId)
-    if (error) throw new Error(error.message)
+    if (error) {
+      console.error('[eylem] hasta_bilgisi_duzelt yazılamadı', error.message)
+      throw new Error('Hasta bilgisi güncellenemedi.')
+    }
     // Encrypted values are never written into the audit row — only which fields moved and to what
     // the doctor confirmed on screen (the card already showed önce → sonra in plain text).
     return {
@@ -612,7 +630,10 @@ export const MESAJ_HASTA_ILE_KONUSULDU = eylem({
       .update({ okundu_pratik: true, son_mesaj_at: simdi })
       .eq('id', konuId)
       .eq('doctor_id', ctx.doktorId)
-    if (kErr) throw new Error(kErr.message)
+    if (kErr) {
+      console.error('[eylem] mesaj_hasta_ile_konusuldu konu güncellenemedi', kErr.message)
+      throw new Error('Mesaj konusu güncellenemedi.')
+    }
     return {
       hedefTablo: 'hasta_mesaj_konulari',
       hedefId: konuId,

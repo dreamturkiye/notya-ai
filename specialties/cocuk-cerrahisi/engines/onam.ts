@@ -51,7 +51,7 @@ export interface OnamSonuc {
 }
 
 export function onamSkorla(secilenHam: unknown, yasYilHam?: unknown, hekimNot?: string | null): OnamSonuc {
-  const dipnot: Dipnot = { ref: 'VELI_ONAM', not: 'Onam checklist karar desteğidir; yazılı onam klinik süreçtedir' }
+  const dipnot: Dipnot = { ref: 'VELI_ONAM', not: 'Onam kontrol listesi karar desteğidir; yazılı onam klinik süreçtedir' }
   const yasRaw = yasYilHam == null || yasYilHam === '' ? null : Number(yasYilHam)
   const yasYil = yasRaw != null && Number.isFinite(yasRaw) && yasRaw >= 0 && yasRaw < 120 ? yasRaw : null
   const veliGerekli = yasYil == null || yasYil < 18
@@ -63,13 +63,13 @@ export function onamSkorla(secilenHam: unknown, yasYilHam?: unknown, hekimNot?: 
     return { tamamMi: false, secilen: [], yasYil, veliGerekli, ozet: 'En az bir onam maddesi işaretleyin.', taslak: '', dipnot, gorevOnerileri: [] }
   }
   if (hekimNot && dozVeyaTaniKilidiIceriyorMu(hekimNot)) {
-    return { tamamMi: false, secilen, yasYil, veliGerekli, ozet: 'Hekim notunda doz / tanı kilidi / OR planı yazılamaz.', taslak: '', dipnot, gorevOnerileri: [] }
+    return { tamamMi: false, secilen, yasYil, veliGerekli, ozet: 'Hekim notunda doz / tanı kilidi / ameliyathane planı yazılamaz.', taslak: '', dipnot, gorevOnerileri: [] }
   }
   const adlar = maddeler.filter((m) => secilen.includes(m.kod)).map((m) => m.ad)
   const taslak = [
-    'TASLAK — Bilgilendirilmiş onam / veli checklist (karar desteği).',
+    'TASLAK — Bilgilendirilmiş onam / veli kontrol listesi (karar desteği).',
     veliGerekli
-      ? 'Hasta <18 veya yaş bilinmiyor → veli / yasal temsilci maddeleri açıktır (VELI-YASAL-ONAM).'
+      ? 'Hasta <18 veya yaş bilinmiyor → veli / yasal temsilci maddeleri açıktır.'
       : 'Hasta ≥18 → veli maddeleri kapalı; hasta kendi onamı.',
     '',
     ...adlar.map((a) => `☐ ${a}`),
@@ -89,7 +89,7 @@ export function onamSkorla(secilenHam: unknown, yasYilHam?: unknown, hekimNot?: 
     secilen,
     yasYil,
     veliGerekli,
-    ozet: `Onam checklist: ${secilen.length}/${maddeler.length} madde${veliGerekli ? ' (veli açık)' : ' (reşit — veli kapalı)'}. Karar desteğidir.`,
+    ozet: `Onam kontrol listesi: ${secilen.length}/${maddeler.length} madde${veliGerekli ? ' (veli açık)' : ' (reşit — veli kapalı)'}. Karar desteğidir.`,
     taslak,
     dipnot,
     gorevOnerileri,

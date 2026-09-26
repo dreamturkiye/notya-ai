@@ -5,6 +5,7 @@ import { getAccessTokenAsync, toolsInput } from '@/lib/doktor/toolsUi';
 import type { Wow5Veri } from '@/app/api/doktor/dahiliye/_wow5';
 import { Kaynak } from './DahiliyeWow2';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi';
 
 type Props = { sekme: string; w5: Wow5Veri; patientId: string; kaynak: boolean; refler: Record<string, string>; calistir: (body: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null> };
 
@@ -56,7 +57,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
             <div style={satir}>
               <button type="button" style={btn} onClick={() => calistir({ adim: 'polifarmasi_karar', kuralKod: o.kod, karar: 'kabul' }, 'Karar kaydedildi (ilaç listesi değişmedi — değişiklik reçeteyle).')}>Kabul (plana al)</button>
               <input value={g} onChange={(e) => set(`g_${o.kod}`, e.target.value)} placeholder={o.engelleyici ? `uygulamama gerekçesi (≥${p.overrideMin} karakter, zorunlu)` : 'uygulamama gerekçesi (isteğe bağlı)'} style={{ ...toolsInput, width: 'auto', flex: '1 1 260px' }} />
-              <button type="button" style={o.engelleyici ? kirmiziBtn : ghost} disabled={o.engelleyici && g.trim().length < p.overrideMin} onClick={() => calistir({ adim: 'polifarmasi_karar', kuralKod: o.kod, karar: 'override', gerekce: g }, 'Gerekçeli karar kaydedildi.')}>Uygulama (override)</button>
+              <button type="button" style={o.engelleyici ? kirmiziBtn : ghost} disabled={o.engelleyici && g.trim().length < p.overrideMin} onClick={() => calistir({ adim: 'polifarmasi_karar', kuralKod: o.kod, karar: 'override', gerekce: g }, 'Gerekçeli karar kaydedildi.')}>Uygulama (gerekçeli)</button>
             </div>)}
         </div>);
       })}
@@ -162,7 +163,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
     return (<div>
       <div style={etiket}>e-Nabız geçmiş PDF → Belgeler <span style={kucuk}>· yalnız hekimin yüklediği PDF (canlı e-Nabız çekimi yok) · aynı lab hattı: çıkar → tablo onayla → raporla → Onayla · kimlik kontrolü aynı</span></div>
       <div style={kucuk}>Hasta e-Nabız’dan “Tahlillerim” çıktısını PDF olarak verir. Her satır basılı tarihini taşır; tarihi okunamayan satır onaylanana kadar kartlara ve şeride girmez.</div>
-      <div style={satir}><input type="file" accept="application/pdf" onChange={(e) => { const x = e.target.files?.[0]; if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#F87171' : '#0F9B8E' }}>{yukleme}</span>}</div>
+      <div style={satir}><DosyaSecDugmesi dosya={null} etiket="PDF seç" accept="application/pdf" onSec={(x) => { if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#F87171' : '#0F9B8E' }}>{yukleme}</span>}</div>
       <div style={govde}>{w5.enabiz.paneller.map((p) => <div key={p.id}><a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab?geriTab=dahiliye`} style={{ color: '#0F9B8E' }}>e-Nabız geçmiş · {String(p.created_at).slice(0, 10)}</a> <span style={kucuk}>· durum {p.durum}{p.numune_tarihi ? ` · en yeni ${p.numune_tarihi}` : ''}{(p.kimlik_uyari as { eslesme?: boolean } | null)?.eslesme === false ? ' · ⚠ kimlik eşleşmiyor' : ''}</span></div>)}{!w5.enabiz.paneller.length && <span style={kucuk}>Henüz içe aktarma yok.</span>}</div>
     </div>);
   }

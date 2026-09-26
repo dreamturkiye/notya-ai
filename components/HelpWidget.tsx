@@ -36,10 +36,10 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
           role: 'assistant',
           content:
             professionType === 'doktor'
-              ? 'Merhaba! Prof. Ayse ile nasil calisacaginizi veya dashboard hakkinda sorulariniz icin burdayim.'
+              ? 'Merhaba! Prof. Ayşe ile nasıl çalışacağınız veya panel hakkındaki sorularınız için buradayım.'
               : professionType === 'mali_müşavirlik'
-              ? 'Merhaba! Uzm. Derya ile nasil calisacaginizi veya beyan takvimi hakkinda sorulariniz icin burdayim.'
-              : 'Merhaba! 9 uzman avukatimiz veya sure takibi hakkinda sorulariniz icin burdayim.',
+              ? 'Merhaba! Uzm. Derya ile nasıl çalışacağınızı ya da beyan takvimi hakkındaki sorularınız için buradayım.'
+              : 'Merhaba! 9 uzman avukatımız ya da süre takibi hakkındaki sorularınız için buradayım.',
         },
       ])
     }
@@ -115,9 +115,9 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {(professionType === 'doktor'
                 ? [
-                    'Prof. Ayse ile sesli konusin - mikrofona dokunun',
-                    'Hasta notlariniz otomatik SOAP formatinda kaydedilir',
-                    'Dashboard\'unuzdan tum notlara ve istatistiklere erisebilirsiniz',
+                    'Prof. Ayşe ile sesli konuşun — mikrofona dokunun',
+                    'Hasta notlarınız otomatik olarak SOAP formatında kaydedilir',
+                    'Panelinizden tüm notlara ve istatistiklere erişebilirsiniz',
                   ]
                 : professionType === 'mali_müşavirlik'
                 ? [
@@ -139,7 +139,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
             <button onClick={closeModal} style={{ marginTop: '32px', padding: '12px 24px', backgroundColor: '#FF6B4B', color: '#fff', fontSize: '16px', fontWeight: '700', borderRadius: '8px' }}>
               Başlayalım
             </button>
-            <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>Yardım için ? butonunu kullanin</div>
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>Yardım için ? düğmesini kullanın</div>
           </div>
         </div>
       )}
@@ -150,7 +150,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
         <div style={{ position: 'fixed', bottom: 'calc(80px + var(--sab))', right: 'max(24px, var(--sar))', width: '380px', height: '480px', backgroundColor: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', borderRadius: '16px', display: 'flex', flexDirection: 'column', zIndex: 999 }}>
           <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', fontSize: '20px', fontWeight: '700', color: '#1F2937', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>Notya AI Yardım</span>
-            <div style={{ backgroundColor: '#e5e7eb', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>{professionType}</div>
+            <div style={{ backgroundColor: '#e5e7eb', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>{professionType === 'doktor' ? 'Doktor' : professionType}</div>
           </div>
           <div id="chat-area" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {messages.map((msg, index) => (

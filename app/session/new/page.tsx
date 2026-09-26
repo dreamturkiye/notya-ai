@@ -10,6 +10,7 @@ import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 import { CHROME_FONT } from "@/lib/doktor/chromeTheme"
+import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
 import {
   cekListeDogrula,
@@ -189,7 +190,7 @@ function NewSessionInner() {
       const guvenliAd = dosya.name.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(-60) || "kayit"
       const yol = `${userId}/${Date.now()}-${guvenliAd}`
       const { error: yuklemeHatasi } = await sb.storage.from("ses-kayitlari").upload(yol, dosya, { contentType: dosya.type || "audio/mpeg" })
-      if (yuklemeHatasi) throw new Error("Yükleme başarısız: " + yuklemeHatasi.message)
+      if (yuklemeHatasi) throw new Error("Ses dosyası yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.")
       const resp = await fetch("/api/sessions/ses-yukle", {
         method: "POST",
         headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
@@ -199,7 +200,7 @@ function NewSessionInner() {
       if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
       router.push(d.noteId ? muayeneFormuYolu(String(d.noteId)) : INCELEME_KUYRUGU_YOLU)  // NOTYA-NOT-DUZENLE-01: ses dosyası da doğrudan düzenlenebilir forma
     } catch (e) {
-      setSesHata(e instanceof Error ? e.message : "Yükleme başarısız oldu.")
+      setSesHata(turkceHataMesaji(e instanceof Error ? e.message : "") || "Yükleme başarısız oldu. Lütfen tekrar deneyin.")
     } finally {
       setSesYukleniyor(false)
     }
@@ -361,7 +362,7 @@ function NewSessionInner() {
           patient_consent_given: true, patient_consent_at: new Date().toISOString(),
           ...(efektifTarihIso ? { started_at: efektifTarihIso } : {}),
         }).select().single()
-        if (se || !data) throw new Error("Seans oluşturulamadı: " + se?.message)
+        if (se || !data) throw new Error("Seans oluşturulamadı. Lütfen tekrar deneyin.")
         session = data as { id: string }
       }
       basarisizSeansRef.current = null
@@ -408,7 +409,7 @@ function NewSessionInner() {
       if (not?.id) { router.replace(muayeneFormuYolu(String(not.id))); return }
       setStep("done")
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Bir hata oluştu")
+      setError(turkceHataMesaji(e instanceof Error ? e.message : "") || "Bir hata oluştu. Lütfen tekrar deneyin.")
       setStep("recording")
     }
   }
@@ -434,7 +435,7 @@ function NewSessionInner() {
       setTimeout(() => router.push(onaylananNotYolu(noteId)), 900)
     } catch (e: unknown) {
       setOnayDurumu("beklemede")
-      setOnayHata(e instanceof Error ? e.message : "Onaylanamadı — Not Revizyonu'ndan deneyin.")
+      setOnayHata(turkceHataMesaji(e instanceof Error ? e.message : "") || "Onaylanamadı — Not Revizyonu'ndan deneyin.")
     }
   }
 
@@ -592,7 +593,7 @@ function NewSessionInner() {
         {step === "processing" && (
           <div style={S({background:"#fff",borderRadius:"20px",padding:"48px",textAlign:"center"})}>
             <div style={S({fontSize:"48px",marginBottom:"16px"})}>⚙️</div>
-            <div style={S({fontSize:"18px",fontWeight:"600",color:"#f4eee3",marginBottom:"8px"})}>AI Not Oluşturuyor</div>
+            <div style={S({fontSize:"18px",fontWeight:"600",color:"#f4eee3",marginBottom:"8px"})}>Yapay zekâ notu oluşturuyor</div>
             <div style={S({fontSize:"13px",color:"#8b7d70"})}>30-60 saniye...</div>
           </div>
         )}
@@ -603,7 +604,7 @@ function NewSessionInner() {
               <div style={S({fontSize:"24px"})}>✅</div>
               <div>
                 <div style={S({fontSize:"16px",fontWeight:"600",color:"#f4eee3"})}>Not Hazır</div>
-                <div style={S({fontSize:"12px",color:"#8b7d70"})}>AI güveni: {Math.round(((note.ai_confidence as number)||0.9)*100)}%</div>
+                <div style={S({fontSize:"12px",color:"#8b7d70"})}>Yapay zekâ güveni: %{Math.round(((note.ai_confidence as number)||0.9)*100)}</div>
               </div>
             </div>
             {/* NOTYA-BASLIK-01: Anamnez bölümleri kendi başlıklarıyla (Şikayet, Şikayetin Hikayesi, Özgeçmiş...) */}

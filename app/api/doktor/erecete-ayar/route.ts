@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   const engel = sadeceDoktor(oturum)
   if (engel) return engel
   const body = await req.json().catch(() => ({})) as { islem?: string }
-  if (body.islem !== 'test') return NextResponse.json({ error: 'islem: test bekleniyor.' }, { status: 400 })
+  if (body.islem !== 'test') return NextResponse.json({ error: 'Geçersiz işlem: yalnızca test bağlantısı yapılabilir.' }, { status: 400 })
   const { ayar } = await ayarOku(oturum.supabase, oturum.doktorId)
   const kimlik = kimlikCoz(ayar)
   if (!kimlik) return NextResponse.json({ error: 'Önce TC, hekim şifresi ve tesis kodunu kaydedin.' }, { status: 400 })

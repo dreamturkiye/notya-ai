@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <AileAracKabugu route="/doktor-tools/aile-kohort" baslik="Aile hekimliği kohort paneli" aciklama="Geciken kontrol, aşı/tarama, kronik izlem ve açık sevk/acil bayraklarını görün. 1-tap hatırlatma klinik bilgi taşımaz.">
+    <AileAracKabugu route="/doktor-tools/aile-kohort" baslik="Aile hekimliği kohort paneli" aciklama="Geciken kontrol, aşı/tarama, kronik izlem ve açık sevk/acil bayraklarını görün. Tek dokunuşla gönderilen hatırlatma klinik bilgi taşımaz.">
       <AileKohortAraci />
       {/* ASI-KARNESI-01: hekimin girdiği sonraki doz tarihleri — hekim onaylı hatırlatma (yeni araç değil) */}
       <AsiHatirlatmaListesi />

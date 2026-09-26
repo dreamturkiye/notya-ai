@@ -16,7 +16,7 @@ import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
-const modaliteler = ['Röntgen', 'USG', 'MRI', 'BT', 'PET-BT', 'EKO', 'EKG', 'Mamografi', 'EEG', 'EMG']
+const modaliteler = ['Röntgen', 'USG', 'MR', 'BT', 'PET-BT', 'EKO', 'EKG', 'Mamografi', 'EEG', 'EMG']
 
 export default function TetkikPage() {
   const [activeTab, setActiveTab] = useState<'lab' | 'goruntuleme'>('lab')
@@ -295,7 +295,7 @@ export default function TetkikPage() {
                   <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: '#6d6055' }}>Notya</span>
                 </div>
                 <div style={{ fontWeight: 600, fontSize: 18 }}>Tetkik İstek Formu</div>
-                <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>TC SAĞLIK BAKANLIĞI</div>
+                <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>T.C. SAĞLIK BAKANLIĞI</div>
               </div>
               <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{new Date().toLocaleDateString('tr-TR')}</div>
             </div>

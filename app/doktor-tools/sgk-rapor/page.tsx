@@ -149,7 +149,7 @@ export default function SgkRaporPage() {
           </div>
 
           <div style={{ fontSize: 12, fontWeight: 800, color: '#B4832F', letterSpacing: 0.6, margin: '4px 0 8px' }}>
-            ÖZEL MUAYENEHANE / PRIVATE PRACTICE
+            ÖZEL MUAYENEHANE
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
             {RAPOR_TIPLERI.filter((t) => t.kanal === 'ozel_muayenehane').map((tip) => (
@@ -470,8 +470,8 @@ export default function SgkRaporPage() {
 
             {show('ozel_uyari') && (
               <section style={{ ...noteBox, background: '#FFFBEB', borderColor: '#F59E0B' }}>
-                <strong>Önemli:</strong> Bu belge <em>SGK e-İstirahat değildir</em>. Solo özel muayenehane
-                raporları SGK geçici iş göremezlik ödeneğine esas kabul edilmez; ödenek için hastanın sözleşmeli /
+                <strong>Önemli:</strong> Bu belge <em>SGK e-İstirahat değildir</em>. Özel muayenehane
+                raporları tek başına SGK geçici iş göremezlik ödeneğine esas kabul edilmez; ödenek için hastanın sözleşmeli /
                 yetkili sağlık hizmet sunucusundan Medula e-İstirahat alması gerekir. İşverenin özel muayenehane
                 belgesini kabul edip etmeyeceği işyeri uygulamasına bağlıdır.
               </section>

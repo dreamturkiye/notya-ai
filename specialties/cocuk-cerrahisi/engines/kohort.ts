@@ -13,7 +13,7 @@ export const CC_BAYRAK_AD: Record<CcKohortBayrak, string> = {
   gecikmis_kontrol: 'Gecikmiş kontrol',
   preop_eksik: 'Pre-op hazırlık / işlem günü',
   yara_gecikmis: 'Gecikmiş yara / dren / dikiş izlemi',
-  onam_eksik: 'Onam / veli checklist eksik',
+  onam_eksik: 'Onam / veli kontrol listesi eksik',
   risk_acik: 'Açık cerrahi acil bayrağı',
 }
 

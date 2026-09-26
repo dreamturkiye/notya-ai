@@ -13,8 +13,8 @@ interface Profession {
 
 const professions: Profession[] = [
   { id: 'doktor', label: 'Doktor/Hekim', emoji: '🏥', desc: 'Tıbbi uzmanlık alanınız' },
-  { id: 'klinik-uzman', label: 'Klinik Uzman', emoji: '💉', desc: 'Estetik, sac ekimi, dermatoloji' },
-  { id: 'saglik-uzmani', label: 'Saglik Uzmani', emoji: '🩺', desc: 'Fizyoterapi, psikoloji, diyetisyen' },
+  { id: 'klinik-uzman', label: 'Klinik Uzman', emoji: '💉', desc: 'Estetik, saç ekimi, dermatoloji' },
+  { id: 'saglik-uzmani', label: 'Sağlık Uzmanı', emoji: '🩺', desc: 'Fizyoterapi, psikoloji, diyetisyen' },
   { id: 'mali', label: 'Mali Müşavir/SMMM', emoji: '💰', desc: 'Finansal danışmanlık' },
   { id: 'avukat', label: 'Avukat', emoji: '⚖️', desc: 'Hukuki danışmanlık' },
   { id: 'psikolog', label: 'Psikolog/Terapist', emoji: '🧠', desc: 'Ruh sağlığı uzmanlığı' },
@@ -34,6 +34,9 @@ const doctorSpecialties = [
 ];
 const klinikUzmanSpecialties = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Dermatoloji', 'Medikal Estetik', 'Longevity & Wellness'];
 const saglikUzmaniSpecialties = ['Fizyoterapi', 'Klinik Psikoloji', 'Diyetisyen', 'Ergoterapi', 'Odyoloji'];
+// KURAL — TÜRKÇE: 'Sac Ekimi' kayıtlı değer / eşleme anahtarıdır (klinikSlugCoz, personalar) — değişmez; yalnız ekranda doğru yazılır.
+const UZMANLIK_GORUNEN: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer' };
+const uzmanlikGorunen = (s: string) => UZMANLIK_GORUNEN[s] || s;
 
 const maliChips = ['Vergi Danışmanlığı', 'Bağımsız Denetim', 'Muhasebe', 'Mali Hukuk', 'KDV İadesi', 'Transfer Fiyatlandırması'];
 const avukatUzmanlik = ['Ceza Hukuku', 'Ticaret Hukuku', 'Aile Hukuku', 'İdare Hukuku', 'İş Hukuku', 'Gayrimenkul Hukuku', 'Fikri Mülkiyet'];
@@ -213,7 +216,7 @@ function OnboardingInner() {
       const parsed = JSON.parse(tokenStr);
       access_token = parsed.access_token;
     } catch {
-      alert('Token formatı hatalı');
+      alert('Oturum bilgisi okunamadı. Lütfen yeniden giriş yapın.');
       return;
     }
 
@@ -323,7 +326,7 @@ function OnboardingInner() {
               style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             >
               <option value="">Seçiniz</option>
-              {doctorSpecialties.map(s => <option key={s} value={s}>{s}</option>)}
+              {doctorSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
             </select>
           </div>
 
@@ -406,7 +409,7 @@ function OnboardingInner() {
             style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
           >
             <option value="">Seçiniz</option>
-            {klinikUzmanSpecialties.map(s => <option key={s} value={s}>{s}</option>)}
+            {klinikUzmanSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
           </select>
         </div>
       );

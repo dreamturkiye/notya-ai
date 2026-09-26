@@ -25,7 +25,7 @@ export function DermSpine({ patientId }: { patientId: string }) {
   const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch(`/api/doktor/dermatoloji/spine?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
   const calistir = async (body: Record<string, unknown>, ok?: string) => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
-  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Derm spine yükleniyor…</div>;
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Dermatoloji paneli yükleniyor…</div>;
   const lez = v.lezyonlar.find((l) => l.id === s('lezyonId')) || v.lezyonlar[0];
 
   return (
@@ -73,7 +73,7 @@ export function DermSpine({ patientId }: { patientId: string }) {
       </div>)}
 
       {sekme === 'Kozmetik' && (<div>
-        <div style={etiket}>Kozmetik (isteğe bağlı) <span style={kucuk}>· yalnız onam stub'ları; yapay zekâ tanısı yok; tıbbi derm listesinden ayrı</span></div>
+        <div style={etiket}>Kozmetik (isteğe bağlı) <span style={kucuk}>· yalnız onam taslakları; yapay zekâ tanısı yok; tıbbi derm listesinden ayrı</span></div>
         <div style={satir}>{v.kutuphane.onamlar.filter((o) => o.kod.startsWith('derm_kozmetik')).map((o) => <button key={o.kod} type="button" onClick={() => calistir({ adim: 'onam', sablonKodu: o.kod, hastaOnayladi: true }, 'Onam kaydedildi.')} style={ghost}>{o.ad}</button>)}</div>
       </div>)}
     </div>

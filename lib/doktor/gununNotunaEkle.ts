@@ -31,7 +31,7 @@ export async function gununNotunaEkle(
   const eskiMetin = String((not as Record<string, unknown>)[alan] || '')
   const yeniMetin = eskiMetin.trim() ? `${eskiMetin.trim()}\n${ekSatir}` : ekSatir
   const { error } = await supabase.from('notes').update({ [alan]: yeniMetin }).eq('id', not.id)
-  if (error) return { eklendi: false, notId: not.id, sebep: error.message }
+  if (error) { console.error('[gununNotunaEkle]', error.message); return { eklendi: false, notId: not.id, sebep: 'Not güncellenemedi. Lütfen tekrar deneyin.' } }
 
   await supabase.from('not_duzenlemeleri').insert({
     note_id: not.id, doctor_id: doktorId, alan,
@@ -76,7 +76,7 @@ export async function gununNotunaVitalEkle(
   const once = (not.vitaller && typeof not.vitaller === 'object' ? not.vitaller : {}) as Record<string, unknown>
   const sonra = { ...once, ...vitaller }
   const { error } = await supabase.from('notes').update({ vitaller: sonra }).eq('id', not.id)
-  if (error) return { eklendi: false, notId: not.id, once, sonra: null, sebep: error.message }
+  if (error) { console.error('[gununNotunaEkle] vitaller', error.message); return { eklendi: false, notId: not.id, once, sonra: null, sebep: 'Ölçümler nota yazılamadı. Lütfen tekrar deneyin.' } }
   return { eklendi: true, notId: not.id, once, sonra }
 }
 

@@ -43,7 +43,7 @@ export function fotoNormalize(ham: unknown): FotoKart {
 
 export function fotoSkorla(ham: unknown): FotoSonuc {
   const kart = fotoNormalize(ham)
-  const dipnot: Dipnot = { ref: 'TPRECD', not: 'Foto zaman çizgisi köprüdür; AI tanı / morfoloji yazılmaz' }
+  const dipnot: Dipnot = { ref: 'TPRECD', not: 'Foto zaman çizgisi köprüdür; yapay zekâ tanısı / morfoloji yazılmaz' }
   if (!kart.tarih) {
     return { tamamMi: false, kart, ozet: 'Foto tarihi YYYY-AA-GG gerekli.', dipnot }
   }
@@ -51,7 +51,7 @@ export function fotoSkorla(ham: unknown): FotoSonuc {
     return { tamamMi: false, kart, ozet: 'Foto etiketi gerekli — tanı yazılmaz.', dipnot }
   }
   if (dozVeyaTaniKilidiIceriyorMu(kart.etiket) || (kart.not && dozVeyaTaniKilidiIceriyorMu(kart.not))) {
-    return { tamamMi: false, kart, ozet: 'Etiket/notta doz, tanı kilidi veya OR planı yazılamaz.', dipnot }
+    return { tamamMi: false, kart, ozet: 'Etiket/notta doz, tanı kilidi veya ameliyathane planı yazılamaz.', dipnot }
   }
   if (/PASI|EASI|Fitzpatrick|melanom|basal|skuam[öo]z/i.test(kart.etiket + (kart.not || ''))) {
     return { tamamMi: false, kart, ozet: 'Dermatoloji skor / tanı dili bu köprüye yazılmaz — yalnız tarih+etiket.', dipnot }
@@ -64,7 +64,7 @@ export function fotoSkorla(ham: unknown): FotoSonuc {
   return {
     tamamMi: true,
     kart,
-    ozet: `${parcalar.join(' · ')}. Foto zaman çizgisi karar desteğidir; AI tanı yok.`,
+    ozet: `${parcalar.join(' · ')}. Foto zaman çizgisi karar desteğidir; yapay zekâ tanısı yok.`,
     dipnot,
   }
 }

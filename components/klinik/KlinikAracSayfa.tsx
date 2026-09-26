@@ -6,6 +6,7 @@ import KlinikKohortPanel from './KlinikKohortPanel'
 import KlinikHastaPortaliPaneli from './KlinikHastaPortaliPaneli'
 import type { AracVurgu } from '@/lib/doktor/aracUi'
 import { klinikMevzuat, klinikMevzuatOzet, KLINIK_ORTAK_KANUNLAR, KLINIK_ORTAK_KAYIT } from '@/lib/klinik/klinikMevzuat'
+import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 
 const V: Record<string, AracVurgu> = {
   sac: { ana: '#2563EB', anaMetin: '#EFF6FF', yumusak: '#93C5FD', baslik: '#93C5FD' },
@@ -21,11 +22,11 @@ const V: Record<string, AracVurgu> = {
 }
 
 const META: Record<string, { slug: string; etiket: string; baslik: string; aciklama: string; vurgu: AracVurgu }> = {
-  '/klinik-tools/hasta-portali': { slug: 'sac-ekimi', etiket: 'Klinik', baslik: 'Hasta Portalı', aciklama: 'Aynı Sağlığım kabuğu — PIN + link. TUS chapter yok.', vurgu: V.sac },
+  '/klinik-tools/hasta-portali': { slug: 'sac-ekimi', etiket: 'Klinik', baslik: 'Hasta Portalı', aciklama: 'Aynı Sağlığım kabuğu — PIN + link. TUS bölümü yok.', vurgu: V.sac },
   '/klinik-tools/kayit-kvkk': { slug: 'sac-ekimi', etiket: 'Klinik', baslik: 'Kayıt · rıza · KVKK', aciklama: 'SB / Hasta Hakları / KVKK — dalınıza göre zorunlu evrak.', vurgu: V.sac },
   '/klinik-tools/sac-greft': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Donör greft bandı', aciklama: 'Karar desteği. Nihai greft hekimindir.', vurgu: V.sac },
   '/klinik-tools/sac-takvim': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Yıkama takvimi', aciklama: '1 / 3 / 10 / 14. gün vadeleri.', vurgu: V.sac },
-  '/klinik-tools/sac-kohort': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Saç ekimi kohort', aciklama: 'Yıkama ve kontrol vadeleri. 1-tap hatırlatma.', vurgu: V.sac },
+  '/klinik-tools/sac-kohort': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Saç ekimi kohort', aciklama: 'Yıkama ve kontrol vadeleri. Tek dokunuşla hatırlatma.', vurgu: V.sac },
   '/klinik-tools/cerrahi-onam': { slug: 'estetik-cerrahi', etiket: 'Estetik Cerrahi', baslik: 'Elektif onam / soğuma', aciklama: 'Kesi ve implant yok.', vurgu: V.cer },
   '/klinik-tools/cerrahi-takvim': { slug: 'estetik-cerrahi', etiket: 'Estetik Cerrahi', baslik: 'Ameliyat sonrası takvim', aciklama: '1 / 7 / 14 / 42. gün.', vurgu: V.cer },
   '/klinik-tools/cerrahi-kohort': { slug: 'estetik-cerrahi', etiket: 'Estetik Cerrahi', baslik: 'Estetik cerrahi kohort', aciklama: 'Soğuma ve geç izlem.', vurgu: V.cer },
@@ -103,7 +104,7 @@ function KayitKvkkPanel() {
       <ul>{KLINIK_ORTAK_KAYIT.map((k) => <li key={k}>{k}</li>)}</ul>
       {m && (
         <>
-          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>{m.slug} — rıza</h2>
+          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>{KLINIK_ETIKET[m.slug]} — rıza</h2>
           <ul>{m.riza.map((k) => <li key={k}>{k}</li>)}</ul>
           <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>Kayıt</h2>
           <ul>{m.kayit.map((k) => <li key={k}>{k}</li>)}</ul>

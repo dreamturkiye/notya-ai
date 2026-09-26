@@ -21,6 +21,10 @@ interface Clinic {
   plan: string
 }
 
+const ROL_ETIKET: Record<string, string> = { member: 'Üye', admin: 'Yönetici' }
+// DB'de saklanan eski ASCII uzmanlık değerleri — yalnız ekranda Türkçe karakterli etiket.
+const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer' }
+
 export default function KlinikDashboard() {
   const router = useRouter()
   const [clinic, setClinic] = useState<Clinic | null>(null)
@@ -47,10 +51,10 @@ export default function KlinikDashboard() {
           setMembers(data.data.members || [])
           setAdminName(data.data.adminName || '')
         } else {
-          setError('Klinik bilgileri yuklenemedi.')
+          setError('Klinik bilgileri yüklenemedi.')
         }
       } catch {
-        setError('Bir hata olustu.')
+        setError('Bir hata oluştu.')
       } finally {
         setLoading(false)
       }
@@ -66,7 +70,7 @@ export default function KlinikDashboard() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#FFFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', color: 'rgba(10,22,40,0.4)' }}>
-      Yukleniyor...
+      Yükleniyor...
     </div>
   )
 
@@ -83,23 +87,23 @@ export default function KlinikDashboard() {
       <KlinikNav clinicName={clinic?.name || 'Klinik'} adminName={adminName} />
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 48px' }}>
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: '#0A1628', marginBottom: '8px', letterSpacing: '-0.025em' }}>
-          Hosgeldiniz, {clinic?.name}
+          Hoş geldiniz, {clinic?.name}
         </h1>
         <p style={{ fontSize: '14px', color: 'rgba(10,22,40,0.45)', marginBottom: '40px' }}>
-          Klinik yoneticisi paneli
+          Klinik yöneticisi paneli
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '48px' }}>
           <div style={kpiStyle(false)}>
-            <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Toplam Kullanici</div>
+            <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Toplam Kullanıcı</div>
             <div style={{ fontSize: '36px', fontWeight: 300, color: '#0A1628', fontFamily: 'Georgia, serif' }}>{members.length}</div>
           </div>
           <div style={kpiStyle(false)}>
-            <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Aktif Kullanici</div>
+            <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Aktif Kullanıcı</div>
             <div style={{ fontSize: '36px', fontWeight: 300, color: '#0A1628', fontFamily: 'Georgia, serif' }}>{activeMembers}</div>
           </div>
           <div style={kpiStyle(false)}>
-            <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Kullanilan Koltuk</div>
+            <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Kullanılan Koltuk</div>
             <div style={{ fontSize: '36px', fontWeight: 300, color: '#0A1628', fontFamily: 'Georgia, serif' }}>
               {clinic?.seats_used || 0}<span style={{ fontSize: '16px', color: 'rgba(10,22,40,0.3)' }}>/{clinic?.seat_count || 5}</span>
             </div>
@@ -107,18 +111,18 @@ export default function KlinikDashboard() {
           <div style={kpiStyle(!!clinic?.pabau_connected)}>
             <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Pabau</div>
             <div style={{ fontSize: '14px', fontWeight: 600, color: clinic?.pabau_connected ? '#00A89D' : 'rgba(10,22,40,0.4)' }}>
-              {clinic?.pabau_connected ? 'Baglõ' : 'Bagli Degil'}
+              {clinic?.pabau_connected ? 'Bağlı' : 'Bağlı Değil'}
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#0A1628' }}>Kullanicilar</h2>
+          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#0A1628' }}>Kullanıcılar</h2>
           <button onClick={() => router.push('/dashboard/klinik/kullanicilar')} style={{
             padding: '10px 20px', background: '#2563EB', border: 'none', borderRadius: '8px',
             color: '#fff', fontSize: '13px', fontWeight: 500, cursor: 'pointer'
           }}>
-            + Kullanici Davet Et
+            + Kullanıcı Davet Et
           </button>
         </div>
 
@@ -126,19 +130,19 @@ export default function KlinikDashboard() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(10,22,40,0.06)' }}>
-                {['Ad Soyad', 'Uzmanlik', 'Rol', 'Durum'].map(h => (
+                {['Ad Soyad', 'Uzmanlık', 'Rol', 'Durum'].map(h => (
                   <th key={h} style={{ padding: '14px 20px', textAlign: 'left', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', fontWeight: 500 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {members.length === 0 ? (
-                <tr><td colSpan={4} style={{ padding: '32px 20px', textAlign: 'center', fontSize: '14px', color: 'rgba(10,22,40,0.3)' }}>Henuz kullanici yok. Davet edin.</td></tr>
+                <tr><td colSpan={4} style={{ padding: '32px 20px', textAlign: 'center', fontSize: '14px', color: 'rgba(10,22,40,0.3)' }}>Henüz kullanıcı yok. Davet edin.</td></tr>
               ) : members.map(m => (
                 <tr key={m.id} style={{ borderBottom: '1px solid rgba(10,22,40,0.04)' }}>
                   <td style={{ padding: '14px 20px', fontSize: '14px', color: '#0A1628' }}>{m.users?.full_name || '-'}</td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(10,22,40,0.6)' }}>{m.specialty || '-'}</td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(10,22,40,0.6)', textTransform: 'capitalize' }}>{m.role}</td>
+                  <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(10,22,40,0.6)' }}>{m.specialty ? (UZMANLIK_ETIKET[m.specialty] || m.specialty) : '-'}</td>
+                  <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(10,22,40,0.6)' }}>{ROL_ETIKET[m.role] || m.role}</td>
                   <td style={{ padding: '14px 20px' }}>
                     <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, background: m.is_active ? 'rgba(0,168,157,0.1)' : 'rgba(245,158,11,0.1)', color: m.is_active ? '#00A89D' : '#D97706' }}>
                       {m.is_active ? 'Aktif' : 'Davet Bekliyor'}

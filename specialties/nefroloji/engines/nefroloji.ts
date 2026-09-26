@@ -22,7 +22,7 @@ export type Dipnot = { ref: Ref; not: string }
 
 export const REF_ACIKLAMA: Record<Ref, string> = {
   TND_KBH: 'Türk Nefroloji Derneği — kronik böbrek hastalığı klinik kılavuz / konsensus; eGFR×UACR karar desteği',
-  TND_DIYALIZ: 'Türk Nefroloji Derneği — diyaliz klinik pratik; seans tarihleri; makine HIS core değil',
+  TND_DIYALIZ: 'Türk Nefroloji Derneği — diyaliz klinik pratik; seans tarihleri; diyaliz makinesi HIS’i ürünün parçası değil',
   KDIGO_TND: 'KDIGO ilkelerinin Türk Nefroloji Derneği pratiğindeki uyarlamaları — G×A ısı haritası',
   SB_NEF: 'T.C. Sağlık Bakanlığı — KBH ve diyaliz klinik protokolleri / yönlendirme',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — diyaliz / ESA rapor; güncel metin hekim doğrular; doz Notya yazmaz',

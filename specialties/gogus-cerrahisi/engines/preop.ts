@@ -40,7 +40,7 @@ export function preopYasakIceriyorMu(metin: string): boolean {
 }
 
 export function preopSkorla(secilenHam: unknown, not?: string | null): PreopSonuc {
-  const dipnot: Dipnot = { ref: 'TGCD', not: 'Pre-op checklist karar desteğidir; tanı ve cerrahi karar hekimin' }
+  const dipnot: Dipnot = { ref: 'TGCD', not: 'Pre-op kontrol listesi karar desteğidir; tanı ve cerrahi karar hekimin' }
   const liste = Array.isArray(secilenHam) ? secilenHam.map(String) : []
   const secilen = [...new Set(liste.filter((k): k is PreopKod => KOD_SET.has(k as PreopKod)))]
   if (not && preopYasakIceriyorMu(not)) {
@@ -55,7 +55,7 @@ export function preopSkorla(secilenHam: unknown, not?: string | null): PreopSonu
   return {
     tamamMi: true,
     secilen,
-    ozet: `Pre-op solunum checklist (${secilen.length}/${PREOP_MADDELER.length}): ${adlar.join('; ')}. Karar desteğidir; tanı/cerrahi karar hekimin.`,
+    ozet: `Pre-op solunum kontrol listesi (${secilen.length}/${PREOP_MADDELER.length}): ${adlar.join('; ')}. Karar desteğidir; tanı/cerrahi karar hekimin.`,
     gorevOnerileri,
     dipnot,
   }

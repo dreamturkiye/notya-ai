@@ -12,7 +12,7 @@ export type GcKohortBayrak =
 
 export const GC_BAYRAK_AD: Record<GcKohortBayrak, string> = {
   gecikmis_kontrol: 'Gecikmiş kontrol',
-  preop_eksik: 'Pre-op checklist eksik',
+  preop_eksik: 'Pre-op kontrol listesi eksik',
   tup_yara_izlem: 'Tüp / yara izlem',
   patoloji_bekliyor: 'Patoloji raporu bekleniyor',
   risk_acik: 'Açık toraks acil bayrağı',

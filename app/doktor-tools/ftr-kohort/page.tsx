@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <FtrAracKabugu route="/doktor-tools/ftr-kohort" baslik="FTR kohort paneli" aciklama="Geciken kontrol, seans/egzersiz, açık kırmızı bayrak ve yüksek VAS/ODI. 1-tap hatırlatma tanı/skor/doz taşımaz.">
+    <FtrAracKabugu route="/doktor-tools/ftr-kohort" baslik="FTR kohort paneli" aciklama="Geciken kontrol, seans/egzersiz, açık kırmızı bayrak ve yüksek VAS/ODI. Tek dokunuşla gönderilen hatırlatma tanı/skor/doz taşımaz.">
       <FtrKohortAraci />
     </FtrAracKabugu>
   )

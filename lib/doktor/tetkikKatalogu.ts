@@ -106,7 +106,7 @@ export const TETKIK_KATALOGU: TetkikBolumu[] = [
     t('24 saatlik idrarda kalsiyum', 'İ24'), t('24 saatlik idrarda ürik asit', 'İ24'), t('24 saatlik idrarda sodyum/potasyum', 'İ24'), t('24 saatlik idrarda oksalat/sitrat', 'İ24'), t('İdrar osmolalitesi', 'İ'), t('İdrar elektrolitleri (spot)', 'İ'), t('İdrar Bence-Jones proteini', 'İ24'), t('İdrar sitolojisi', 'İ'), t('İdrarda uyuşturucu taraması', 'İ'), t('Gebelik testi (idrar)', 'İ'),
   ]},
   { bolum: 'Gebelik ve Prenatal', testler: [
-    t('İkili tarama testi (PAPP-A + free β-hCG)', 'S', false, '11-14. hafta'), t('Üçlü tarama testi', 'S', false, '16-20. hafta'), t('Dörtlü tarama testi', 'S', false, '16-20. hafta'), t('NIPT (fetal DNA)', 'E', false, '10. haftadan itibaren'),
+    t('İkili tarama testi (PAPP-A + serbest β-hCG)', 'S', false, '11-14. hafta'), t('Üçlü tarama testi', 'S', false, '16-20. hafta'), t('Dörtlü tarama testi', 'S', false, '16-20. hafta'), t('NIPT (fetal DNA)', 'E', false, '10. haftadan itibaren'),
     t('TORCH paneli (Toxo/Rubella/CMV/HSV IgM-IgG)', 'S'), t('İndirekt Coombs (gebelik)', 'S'), t('Kan grubu ve Rh (gebelik)', 'E'), t('OGTT 50 g (24-28. hafta)', 'F'), t('OGTT 100 g (3 saat)', 'F', true), t('Grup B streptokok taraması (vajinal/rektal)', 'SW', false, '35-37. hafta'),
   ]},
   { bolum: 'İlaç Düzeyleri ve Toksikoloji', testler: [

@@ -83,6 +83,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: { ...result, onboarding_completed: true } })
   } catch (error) {
     console.error('[profile]', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'Profil kaydedilemedi. Lütfen tekrar deneyin.' }, { status: 500 })
   }
 }

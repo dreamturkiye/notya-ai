@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <EnfAracKabugu route="/doktor-tools/enfeksiyon-atb-sure" baslik="Antibiyotik süre sayacı" aciklama="Başlangıç ve süre günlerinden bitiş/kontrol tarihi. Doz, mg ve etken madde invent edilmez — süre karar desteğidir.">
+    <EnfAracKabugu route="/doktor-tools/enfeksiyon-atb-sure" baslik="Antibiyotik süre sayacı" aciklama="Başlangıç ve süre günlerinden bitiş/kontrol tarihi. Doz, mg ve etken madde uydurulmaz — süre karar desteğidir.">
       <EnfAtbSureAraci />
     </EnfAracKabugu>
   )

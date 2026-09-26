@@ -372,7 +372,7 @@ export default function HastaProfilPage() {
 
   // NOTYA-MUAYENE-KALICI-SIL: 2. kademe -- geri alınamaz, yalnız zaten arşivlenmiş bir muayene için.
   const muayeneKaliciSil = async (sessionId: string) => {
-    if (!window.confirm('Bu muayeneyi KALICI OLARAK silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ -- not, bağlı belge değerlendirmeleri ve lab tabloları tamamen silinir.')) return;
+    if (!window.confirm('Bu muayeneyi KALICI OLARAK silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ — not, bağlı belge değerlendirmeleri ve lab tabloları tamamen silinir.')) return;
     setSilinenSeans(sessionId);
     try {
       const token = await ensureDoctorAccessToken();
@@ -642,7 +642,7 @@ export default function HastaProfilPage() {
                           type="button"
                           onClick={() => void muayeneArsivdenCikar(s.id)}
                           disabled={arsivleniyor === s.id}
-                          title="Arşivden çıkar -- muayene tüm listelerde yeniden görünür"
+                          title="Arşivden çıkar — muayene tüm listelerde yeniden görünür"
                           style={{ background: 'rgba(47,67,52,0.08)', border: '1px solid rgba(47,67,52,0.4)', color: CHROME_RENK.pine, borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: arsivleniyor === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: arsivleniyor === s.id ? 0.5 : 1 }}
                         >
                           {arsivleniyor === s.id ? 'Çıkarılıyor…' : 'Arşivden çıkar'}
@@ -653,7 +653,7 @@ export default function HastaProfilPage() {
                           type="button"
                           onClick={() => void muayeneKaliciSil(s.id)}
                           disabled={silinenSeans === s.id}
-                          title="Kalıcı olarak sil -- geri alınamaz"
+                          title="Kalıcı olarak sil — geri alınamaz"
                           style={{ background: 'rgba(164,69,60,0.10)', border: '1px solid rgba(164,69,60,0.5)', color: '#A4453C', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: silinenSeans === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: silinenSeans === s.id ? 0.5 : 1 }}
                         >
                           {silinenSeans === s.id ? 'Siliniyor…' : 'Kalıcı olarak sil'}
@@ -663,7 +663,7 @@ export default function HastaProfilPage() {
                           type="button"
                           onClick={() => void muayeneArsivle(s.id)}
                           disabled={arsivleniyor === s.id}
-                          title="Muayeneyi arşivle -- listeden kaldırır, kaydı silmez"
+                          title="Muayeneyi arşivle — listeden kaldırır, kaydı silmez"
                           style={{ background: 'transparent', border: '1px solid rgba(164,69,60,0.35)', color: '#A4453C', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: arsivleniyor === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: arsivleniyor === s.id ? 0.5 : 1 }}
                         >
                           {arsivleniyor === s.id ? 'Arşivleniyor…' : 'Arşivle'}

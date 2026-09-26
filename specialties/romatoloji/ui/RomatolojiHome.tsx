@@ -165,7 +165,7 @@ export default function RomatolojiHome({ patientId }: { patientId: string }) {
       {sekme === 'SUT' && (
         <div>
           <div style={etiket}>Biyolojik SUT</div>
-          <div style={metin}>Tam kontrol listesi Araçlar › Biyolojik SUT checklist üzerinden. Doz ve infüzyon HIS yazılmaz.</div>
+          <div style={metin}>Tam kontrol listesi Araçlar › Biyolojik SUT kontrol listesi üzerinden. Doz ve infüzyon HIS yazılmaz.</div>
           <a href="/doktor-tools/roma-biyolojik-sut" style={{ ...btn, display: 'inline-block', textDecoration: 'none', marginTop: 8 }}>Araçlar’a git</a>
         </div>
       )}

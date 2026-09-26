@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       success: true, source: 'demo',
       data: {
         aktifSigorta: true,
-        sgkTuru: 'Genel Saglik Sigortasi',
+        sgkTuru: 'Genel Sağlık Sigortası',
         muafiyet: 'Yok',
         katilimPayi: '20',
         takipNo: 'DEMO-' + Date.now(),
@@ -46,5 +46,5 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  return NextResponse.json({ error: 'Bilinmeyen action' }, { status: 400 })
+  return NextResponse.json({ error: 'Bilinmeyen işlem' }, { status: 400 })
 }

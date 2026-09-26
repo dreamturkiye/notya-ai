@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <GcAracKabugu route="/doktor-tools/gogus-cerrahi-preop" baslik="Pre-op solunum checklist" aciklama="SFT, görüntü, anestezi ve onam hazırlık maddeleri. CAT/mMRC, doz ve OR planı yazılmaz.">
+    <GcAracKabugu route="/doktor-tools/gogus-cerrahi-preop" baslik="Pre-op solunum kontrol listesi" aciklama="SFT, görüntü, anestezi ve onam hazırlık maddeleri. CAT/mMRC, doz ve ameliyathane planı yazılmaz.">
       <GcPreopAraci />
     </GcAracKabugu>
   )

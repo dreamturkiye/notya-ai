@@ -32,7 +32,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Ciddi kontrast reaksiyonu, gebelikte iyonizan çekim şüphesi veya hekimin işaretlediği kritik bulguda klinik iletişimi geciktirmeyin: 112 veya ilgili klinisyen / en yakın acil. Portal mesajı yeterli değildir.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan radyoloji / görüntüleme raporlama ürünü. Full PACS / RIS / HIS, AI otomatik tanı ve uydurma bulgular bu bölümün kapsamı değildir.'
+  'Ayaktan radyoloji / görüntüleme raporlama ürünü. Tam PACS / RIS / HIS, yapay zekâ ile otomatik tanı ve uydurma bulgular bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

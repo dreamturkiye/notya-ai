@@ -178,7 +178,7 @@ async function calistir() {
         await sb.from('fhir_export_kuyruk').update({ durum: basarili ? 'sent' : 'failed', deneme: 1, yanit, sent_at: basarili ? new Date().toISOString() : null }).eq('id', kayit!.id)
         await sb.from('fhir_audit').insert({ note_id: not.id, kurum_id: kurum.id, islem: 'export', sonuc: basarili ? 'OK ' + r.status : 'HATA ' + r.status, detay: yanit.slice(0, 300) })
         rapor.push({ kurum: kurum.ad, note: not.id, durum: basarili ? 'sent' : 'failed', http: r.status })
-        if (!basarili) await kritikAlarm('FHIR export hatasi', `${kurum.ad} / not ${not.id} / HTTP ${r.status}`)
+        if (!basarili) await kritikAlarm('FHIR dışa aktarım hatası', `${kurum.ad} / not ${not.id} / HTTP ${r.status}`)
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e)
         await sb.from('fhir_export_kuyruk').update({ durum: 'failed', deneme: 1, yanit: msg.slice(0, 400) }).eq('id', kayit!.id)

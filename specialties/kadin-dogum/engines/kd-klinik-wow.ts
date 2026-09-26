@@ -204,7 +204,7 @@ export function csSavunmaPaketi(endikasyonlar: string[], kararAt: string | null,
     'Endikasyon SB listesinden seçildi',
     'Karar zamanı damgalandı',
     fetalDistres ? 'Fetal distres / KTG notu eklendi' : 'Fetal distres yok — maternal/obstetrik gerekçe net',
-    'Onam imzalandı (sezaryen sablonu)',
+    'Onam imzalandı (sezaryen şablonu)',
     'Robson grubu notu (isteğe bağlı performans)',
   ]
   const eksik: string[] = []
@@ -246,7 +246,7 @@ export const INFERTILITE_ADIM1_FULL = [
   { kod: 'tsh_prl', ad: 'TSH + PRL', zorunlu: true },
   { kod: 'semen', ad: 'Semen analizi (partner sevk)', zorunlu: true },
   { kod: 'hsg', ad: 'HSG / SIS / 3D kavite', zorunlu: true },
-  { kod: 'ovulasyon', ad: 'Ovulasyon / siklus takibi', zorunlu: true },
+  { kod: 'ovulasyon', ad: 'Ovülasyon / siklus takibi', zorunlu: true },
   { kod: 'tvus', ad: 'Bazal TVUS (AFC, endometrioma)', zorunlu: false },
   { kod: 'hsg_sonuc', ad: 'HSG sonucu kaydı (açıklık / hidrosalpenks)', zorunlu: false },
   { kod: 'sevk', ad: 'ÜYTE/IVF merkezine sevk paketi', zorunlu: true },
@@ -299,8 +299,8 @@ export function onkolojiIotaTriyaj(g: {
 
 // ---------- JINE-03: violence + KOK annual ----------
 export function siddetTarama(evet: boolean | null): { durum: 'sorulmadi' | 'hayir' | 'evet'; gorevler: string[]; not: string } {
-  if (evet === null) return { durum: 'sorulmadi', gorevler: [], not: 'Yıllık kontrolde tek checkbox ile sorun' }
-  if (evet === false) return { durum: 'hayir', gorevler: [], not: 'Kayıtlandı' }
+  if (evet === null) return { durum: 'sorulmadi', gorevler: [], not: 'Yıllık kontrolde tek onay kutusuyla sorun' }
+  if (evet === false) return { durum: 'hayir', gorevler: [], not: 'Kaydedildi' }
   return {
     durum: 'evet',
     gorevler: [

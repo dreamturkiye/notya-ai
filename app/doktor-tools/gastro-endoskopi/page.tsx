@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <GastroAracKabugu route="/doktor-tools/gastro-endoskopi" baslik="Endoskopi belge köprüsü" aciklama="İşlem türü ve tarihi kaydedin; sonraki kontrol önerisi karar desteğidir. Tam endoskopi suite / HIS / ameliyathane yoktur.">
+    <GastroAracKabugu route="/doktor-tools/gastro-endoskopi" baslik="Endoskopi belge köprüsü" aciklama="İşlem türü ve tarihi kaydedin; sonraki kontrol önerisi karar desteğidir. Tam endoskopi ünitesi / HBYS / ameliyathane yazılımı değildir.">
       <GastroEndoskopiAraci />
     </GastroAracKabugu>
   )

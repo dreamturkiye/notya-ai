@@ -42,7 +42,7 @@ export async function PUT(
   if (bitis_tarihi !== undefined) updateData.bitis_tarihi = bitis_tarihi || null;
 
   if (Object.keys(updateData).length === 0) {
-    return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    return NextResponse.json({ error: 'Güncellenecek alan yok.' }, { status: 400 });
   }
 
   const { data, error } = await supabase

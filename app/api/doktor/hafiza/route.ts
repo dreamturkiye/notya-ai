@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, unutuldu: body.unut })
     }
     if (!body.kategori || !KATEGORILER.includes(body.kategori as HafizaKategori) || !body.anahtar || !body.deger) {
-      return NextResponse.json({ error: 'kategori, anahtar ve deger zorunludur.' }, { status: 400 })
+      return NextResponse.json({ error: 'Kategori, anahtar ve değer zorunludur.' }, { status: 400 })
     }
     await hafizaKaydet(supabase, doktorId, {
       kategori: body.kategori as HafizaKategori, anahtar: body.anahtar, deger: body.deger, kaynak: 'doktor_soyledi',

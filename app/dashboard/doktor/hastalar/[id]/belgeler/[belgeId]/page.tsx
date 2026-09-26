@@ -28,7 +28,8 @@ type Analiz = { id: string; durum: string; sonuc: BelgeRaporu | null; fusion: { 
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 4 };
 const btn: React.CSSProperties = { background: CHROME_RENK.pine, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnGhost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)' };
-const bantRenk: Record<string, string> = { 'yüksek': CHROME_RENK.pine, 'orta': '#B4832F', 'düşük': CHROME_RENK.muted };
+const KALITE_TR: Record<string, string> = { iyi: 'iyi', orta: 'orta', dusuk: 'düşük' };
+const bantRenk: Record<string, string> ={ 'yüksek': CHROME_RENK.pine, 'orta': '#B4832F', 'düşük': CHROME_RENK.muted };
 
 export default function BelgeAnalizPage() {
   const { id: patientId, belgeId } = useParams<{ id: string; belgeId: string }>();
@@ -140,7 +141,7 @@ export default function BelgeAnalizPage() {
       const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot: klinikBirlesik || undefined, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ, tekAlanFundus: modalite === 'fundus' ? tekAlanFundus : undefined }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
-      if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${j.analiz?.sonuc?.modalite}" olarak gördü; siz "${j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
+      if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${MODALITE_TR[j.analiz?.sonuc?.modalite as Modalite] || j.analiz?.sonuc?.modalite}" olarak gördü; siz "${MODALITE_TR[j.secilenModalite as Modalite] || j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
       setDurum('hazir'); setMesaj(''); await yukle();
     } catch (e) { setDurum('hata'); setMesaj(e instanceof Error ? e.message : 'Hata'); }
   };
@@ -323,7 +324,7 @@ export default function BelgeAnalizPage() {
                 {rapor.acil_bayrak && <div style={{ ...toolsCard, background: '#FBEAE3', borderColor: 'rgba(164,91,62,0.5)', color: '#a45b3e', fontSize: 13, fontWeight: 800, marginBottom: 10 }}>⚠ ACİL BAYRAK — {analiz.fusion?.acilNedenler?.join(', ') || 'kırmızı bayrak bulgu'}</div>}
 
                 <div style={{ ...toolsCard, marginBottom: 10 }}>
-                  <div style={etiket}>Özet <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· {rapor.modalite} · kalite {rapor.kalite} · düzenlenebilir</span></div>
+                  <div style={etiket}>Özet <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· {MODALITE_TR[rapor.modalite as Modalite] || rapor.modalite} · kalite {KALITE_TR[rapor.kalite] || rapor.kalite} · düzenlenebilir</span></div>
                   <textarea value={ozetTaslak} onChange={(e) => setOzetTaslak(e.target.value)} rows={5} style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} disabled={analiz.durum === 'muayene_onaylandi'} />
                   <div style={{ marginTop: 6 }}><button type="button" onClick={() => kaydet('ozet')} style={btnGhost} disabled={analiz.durum === 'muayene_onaylandi'}>Özeti kaydet</button></div>
                 </div>
@@ -384,7 +385,7 @@ export default function BelgeAnalizPage() {
 
                 {kural.goruntuOkumaKoprusu && ['fundus', 'oct', 'dis_goz'].includes(analiz.modality_final) && analiz.durum !== 'kalite_dusuk' && (
                   <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: CHROME_RENK.ink }}>
-                    <div style={etiket}>Göz görüntü okumasına aktar <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· dual-sign taslak — uzman onayı Göz › Görüntü&apos;de</span></div>
+                    <div style={etiket}>Göz görüntü okumasına aktar <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· çift imzalı taslak — uzman onayı Göz › Görüntü&apos;de</span></div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                       <select value={kopruGoz} onChange={(e) => setKopruGoz(e.target.value as 'sag' | 'sol' | '')} style={{ ...toolsInput, width: 'auto' }} aria-label="Aktarılacak göz">
                         <option value="" style={{ color: '#000' }}>Göz seçin (zorunlu)</option>

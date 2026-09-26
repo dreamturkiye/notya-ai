@@ -3,7 +3,7 @@ import KdcPreopAraci from '@/specialties/kalp-damar-cerrahisi/ui/araclar/KdcPreo
 
 export default function Page() {
   return (
-    <KdcAracKabugu route="/doktor-tools/kdc-preop" baslik="Pre-op risk checklist" aciklama="Ameliyat öncesi hazırlık maddeleri — tanı, doz ve SCORE2 yazılmaz.">
+    <KdcAracKabugu route="/doktor-tools/kdc-preop" baslik="Pre-op risk kontrol listesi" aciklama="Ameliyat öncesi hazırlık maddeleri — tanı, doz ve SCORE2 yazılmaz.">
       <KdcPreopAraci />
     </KdcAracKabugu>
   )

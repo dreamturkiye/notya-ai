@@ -132,7 +132,7 @@ export default function AcilTipHome({ patientId }: { patientId: string }) {
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>ESI, kritik yol ve sevk/yatış paketi karar desteğidir. Tanı / doz hekimdedir. ED bed board HIS yok.</div>
+          <div style={metin}>ESI, kritik yol ve sevk/yatış paketi karar desteğidir. Tanı / doz hekimdedir. Acil servis yatak panosu HIS yok.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Acil sonrası kontrol <span style={kucuk}>· hasta portalında &quot;Acil sonrası takip&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -177,7 +177,7 @@ export default function AcilTipHome({ patientId }: { patientId: string }) {
               {y.ad}
             </label>
           ))}
-          <div style={{ ...etiket, marginTop: 10 }}>Checklist</div>
+          <div style={{ ...etiket, marginTop: 10 }}>Kontrol listesi</div>
           {KRITIK_MADDELER.map((m) => (
             <label key={m.kod} style={{ ...metin, display: 'flex', gap: 8, padding: '2px 0' }}>
               <input type="checkbox" checked={kritikMad.includes(m.kod)} onChange={() => setKritikMad((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />
@@ -190,7 +190,7 @@ export default function AcilTipHome({ patientId }: { patientId: string }) {
 
       {sekme === 'Sevk' && (
         <div>
-          <div style={etiket}>Hedef (boarding HIS yok)</div>
+          <div style={etiket}>Hedef (yatış bekletme HIS yok)</div>
           <div style={satir}>
             {SEVK_HEDEFLER.map((h) => (
               <button key={h.kod} type="button" onClick={() => setSevkHedef(h.kod)} style={{ ...ghost, background: sevkHedef === h.kod ? 'rgba(249,115,22,0.25)' : 'transparent', color: sevkHedef === h.kod ? '#FFEDD5' : CHROME_RENK.muted }}>{h.ad}</button>

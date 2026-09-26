@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <GcAracKabugu route="/doktor-tools/gc-preop" baslik="Pre-op checklist" aciklama="Onam, lab, görüntü ve antikoagülan planı checkbox'ları. Doz, OR scheduling ve tanı kilidi yazılmaz.">
+    <GcAracKabugu route="/doktor-tools/gc-preop" baslik="Pre-op kontrol listesi" aciklama="Onam, lab, görüntü ve antikoagülan planı onay kutuları. Doz, ameliyathane takvimi ve tanı kilidi yazılmaz.">
       <GcPreopAraci />
     </GcAracKabugu>
   )

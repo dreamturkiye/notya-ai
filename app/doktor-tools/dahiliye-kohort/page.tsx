@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <DahiliyeAracKabugu route="/doktor-tools/dahiliye-kohort" baslik="Dahiliye kohort paneli" aciklama="HbA1c, tansiyon, lipid ve takip gecikmelerini tek bakışta görün; seçtiğiniz hastalara 1-tap hatırlatma gönderin.">
+    <DahiliyeAracKabugu route="/doktor-tools/dahiliye-kohort" baslik="Dahiliye kohort paneli" aciklama="HbA1c, tansiyon, lipid ve takip gecikmelerini tek bakışta görün; seçtiğiniz hastalara tek dokunuşla hatırlatma gönderin.">
       <KohortPanel />
       {/* KONSULTASYON-01: evrensel satır — yanıt bekleyen konsültasyonlar (yeni araç değil) */}
       <KonsultasyonKohortSatiri />

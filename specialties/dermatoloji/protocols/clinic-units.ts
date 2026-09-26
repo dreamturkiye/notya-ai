@@ -29,6 +29,33 @@ export const CLINIC_UNIT_PROFILES: UnitProfile[] = [
   { id: 'psikoderm', label: 'Psikodermatoloji', defaultVisitType: 'yandal', soapTemplate: 'genel', checklist: ['DLQI', 'tetik stres'] },
 ]
 
+/**
+ * Kontrol listesi maddeleri kayıtlı ziyaretlerde JSON anahtarıdır (değiştirilmez);
+ * hekime görünen metin bu eşlemeden gelir.
+ */
+const CHECKLIST_ETIKET: Record<string, string> = {
+  'sonraki foto': 'Sonraki fotoğraf',
+  'foto baseline': 'Başlangıç fotoğrafı',
+  'seans foto': 'Seans fotoğrafı',
+  'foto her okuma': 'Her okumada fotoğraf',
+  pediatric_consent: 'Veli onamı',
+  'hemangiom/egzama handoff': 'Hemanjiyom / egzama devri',
+  'trikoskopi seri': 'Trikoskopi serisi',
+  'akut vs kronik >6hft': 'Akut / kronik (>6 hafta)',
+  islem_oncesi: 'İşlem öncesi fotoğraf',
+  islem_sonrasi: 'İşlem sonrası fotoğraf',
+  'test spot': 'Test spot',
+  'lot no': 'Lot no',
+  'hekim lazer': 'Hekim lazeri',
+  'ugly duckling': 'Çirkin ördek yavrusu işareti',
+  'tetik stres': 'Tetikleyici stres',
+  tetik: 'Tetikleyici',
+}
+
+export function checklistEtiketi(madde: string): string {
+  return CHECKLIST_ETIKET[madde] ?? madde
+}
+
 export function unitForVisit(visitType: VisitType): ClinicUnit {
   const hit = CLINIC_UNIT_PROFILES.find((u) => u.defaultVisitType === visitType)
   return hit?.id ?? 'genel'

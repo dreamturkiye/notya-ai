@@ -29,13 +29,13 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
 }
 
 export const HEKIM_KILIT_METNI =
-  'Pre-op solunum checklist, toraks tüp/yara izlem ve patoloji köprü karar desteğidir. Tanı, cerrahi karar ve doz hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane / OR HIS entegre etmez.'
+  'Pre-op solunum kontrol listesi, toraks tüp/yara izlem ve patoloji köprü karar desteğidir. Tanı, cerrahi karar ve doz hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane HIS entegre etmez.'
 
 export const ACIL_YONLENDIRME_METNI =
   'Ani tek taraflı göğüs ağrısı ve nefes darlığı (tansiyon pnömotoraks şüphesi), bol kanlı balgam / masif hemotoraks şüphesi, tüp sonrası ani nefes darlığı veya yara çevresinde hızla artan kızarıklık/ateş varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan göğüs cerrahisi muayenehanesi / polikliniği ürünü. Ameliyathane / full OR HIS, tanı auto-lock, uydurma doz, canlı Medula e-imza ve gogus-hastaliklari CAT/mMRC/Akciğerlerim bu bölümün kapsamı değildir.'
+  'Ayaktan göğüs cerrahisi muayenehanesi / polikliniği ürünü. Tam ameliyathane HIS, otomatik tanı kilidi, uydurma doz, canlı Medula e-imza ve göğüs hastalıkları CAT/mMRC/Akciğerlerim bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

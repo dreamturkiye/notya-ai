@@ -167,6 +167,19 @@ export default function KvkkPage() {
           alınabilir.
         </li>
       </ul>
+      <p style={S.p}>
+        <strong>Google kullanıcı verileri.</strong> Notya&apos;nın Google API&apos;lerinden aldığı bilgileri
+        kullanması ve başka bir uygulamaya aktarması, Sınırlı Kullanım (Limited Use) koşulları dâhil{' '}
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" style={{ color: '#2563EB' }}>
+          Google API Hizmetleri Kullanıcı Verileri Politikası
+        </a>
+        &apos;na uygundur. Notya yalnızca e-posta gönderme iznini (gmail.send) ve bağlanan e-posta adresini
+        ister; hekimin posta kutusunun içeriğini okumaz, saklamaz ve paylaşmaz. Google kullanıcı verilerini
+        reklam için kullanmaz ve yapay zekâ ya da makine öğrenmesi modellerini eğitmek için kullanmaz. Hekim
+        destek için talep etmedikçe, güvenlik açısından gerekmedikçe veya yasa gerektirmedikçe bu verileri
+        hiçbir çalışanımız okumaz.
+      </p>
+      {/* Google OAuth doğrulaması, Sınırlı Kullanım (Limited Use) beyanını İngilizce olarak da ister — aşağıdaki paragraf bu zorunlu beyandır; Türkçesi yukarıdadır. */}
       <p style={S.p} lang="en">
         <strong>Google user data.</strong> Notya&apos;s use and transfer to any other app of information
         received from Google APIs will adhere to the{' '}

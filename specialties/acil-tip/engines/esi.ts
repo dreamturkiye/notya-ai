@@ -24,7 +24,7 @@ export const ESI_KAYNAKLAR: Array<{ kod: EsiKaynak; ad: string }> = [
 ]
 
 export const ESI_ETIKET: Record<EsiSeviye, string> = {
-  1: 'ESI 1 — Resus',
+  1: 'ESI 1 — Resüsitasyon',
   2: 'ESI 2 — Acil',
   3: 'ESI 3 — Acil (kaynaklı)',
   4: 'ESI 4 — Daha az acil',
@@ -63,14 +63,14 @@ export function esiSkorla(girdi: { seviye?: unknown; kaynaklar?: unknown; not?: 
     gorevOnerileri.push({ kod: 'esi_yeniden_degerlendirme', ad: 'ESI yeniden değerlendirme / vital izlem' })
   }
   if (seviye === 1) {
-    gorevOnerileri.push({ kod: 'resus_takip', ad: 'Resus / kritik bakım izlem görevi' })
+    gorevOnerileri.push({ kod: 'resus_takip', ad: 'Resüsitasyon / kritik bakım izlem görevi' })
   }
 
   return {
     tamamMi: true,
     seviye,
     kaynaklar,
-    ozet: `${ESI_ETIKET[seviye]}${kaynaklar.length ? ` · kaynak: ${kaynaklar.map((k) => ESI_KAYNAKLAR.find((x) => x.kod === k)?.ad || k).join('; ')}` : ''}. Karar desteğidir; tanı/doz hekimin. Bed board HIS yok.`,
+    ozet: `${ESI_ETIKET[seviye]}${kaynaklar.length ? ` · kaynak: ${kaynaklar.map((k) => ESI_KAYNAKLAR.find((x) => x.kod === k)?.ad || k).join('; ')}` : ''}. Karar desteğidir; tanı/doz hekimin. Yatak panosu HIS yok.`,
     gorevOnerileri,
     dipnot,
   }

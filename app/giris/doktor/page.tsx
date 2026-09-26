@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import { authHataMesaji } from '../authHataMesaji'
 
 
 
@@ -19,7 +20,7 @@ export default function Giris() {
     setLoading(true); setError('')
     const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
-    if (ae || !data.session) { setError(ae?.message === 'Invalid login credentials' ? 'E-posta veya şifre hatalı' : (ae?.message || 'Giriş başarısız')); setLoading(false); return }
+    if (ae || !data.session) { setError(authHataMesaji(ae?.message, 'Giriş başarısız. Lütfen tekrar deneyin.')); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
     // Prefer users table /me over auth metadata alone — metadata onboarding flag often never stuck.
     try {
@@ -52,12 +53,12 @@ export default function Giris() {
         <div style={{textAlign:'center',marginBottom:'28px'}}>
           <div style={{fontSize:'36px',marginBottom:'8px'}}>&#129658;</div>
           <div style={{fontSize:'22px',fontWeight:700,color:'#fff'}}><span style={{color:'#2563EB'}}>Notya</span> AI</div>
-          <div style={{fontSize:'13px',color:'#64748b',marginTop:'4px'}}>Klinik Asistan Modulu</div>
+          <div style={{fontSize:'13px',color:'#64748b',marginTop:'4px'}}>Klinik Asistan Modülü</div>
         </div>
         <form onSubmit={handleLogin} noValidate style={{display:'flex',flexDirection:'column',gap:'14px'}}>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>E-posta</label>
-            <input type='text' value={email} onChange={e=>setEmail(e.target.value)} placeholder='dr.ornek@hastane.com' autoCapitalize='none' autoCorrect='off' autoComplete='email' inputMode='email' spellCheck={false} style={inp} />
+            <input type='text' value={email} onChange={e=>setEmail(e.target.value)} placeholder='dr.ad@hastane.com' autoCapitalize='none' autoCorrect='off' autoComplete='email' inputMode='email' spellCheck={false} style={inp} />
           </div>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Şifre</label>

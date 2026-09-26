@@ -35,7 +35,7 @@ export default function CcPrepostAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('Pre/post-op checklist hasta dosyasına kaydedildi.')
+      setDurum('Pre/post-op kontrol listesi hasta dosyasına kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -57,7 +57,7 @@ export default function CcPrepostAraci() {
         <input value={etiket} onChange={(e) => setEtiket(e.target.value)} placeholder="örn. hekim kısa işlem adı" style={ccStil.input} />
         <div style={{ ...ccStil.etiket, marginTop: 12 }}>Planlanan / işlem tarihi</div>
         <input type="date" value={tarih} onChange={(e) => setTarih(e.target.value)} style={ccStil.input} />
-        <div style={{ ...ccStil.etiket, marginTop: 12 }}>Checklist</div>
+        <div style={{ ...ccStil.etiket, marginTop: 12 }}>Kontrol listesi</div>
         {maddeler.map((m) => (
           <label key={m.id} style={{ ...ccStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={tamamlanan.includes(m.id)} onChange={() => setTamamlanan((p) => (p.includes(m.id) ? p.filter((x) => x !== m.id) : [...p, m.id]))} />
@@ -77,7 +77,7 @@ export default function CcPrepostAraci() {
         </div>
         {durum && <div style={{ ...ccStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...ccStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — pre/post-op checklist karar desteğidir; doz, OR scheduling, tanı kilidi ve Neyzi/Hedef Boy yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — pre/post-op kontrol listesi karar desteğidir; doz, ameliyathane planı, tanı kilidi ve Neyzi/Hedef Boy yazılmaz.</TaslakNotu>
       </div>
     </>
   )

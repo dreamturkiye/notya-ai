@@ -9,6 +9,7 @@ import { PREGNANCY_SUPPLEMENTS, PREGNANCY_VACCINES } from '../protocols/suppleme
 import { evaluateGDM, evaluatePE, evaluateRh, evaluateGBS } from '../protocols/risk-pe-gdm-rh'
 import { UI_HINT_YASAL_VS_KLINIK } from '../protocols/sources'
 import { suggestPerinatology } from '../protocols/sevk-perinatoloji'
+import { trNext } from '../protocols/karar-kartlari'
 import { sevkFlagsFromRiskForm, type RiskSinifi } from '../protocols/risk-formu'
 
 export type ChecklistDurum = 'yapildi' | 'reddedildi' | 'bekliyor'
@@ -162,7 +163,7 @@ export function dualClinicWarnings(input: {
       seviye: 'bilgi',
       dual: {
         sb: cadence.sb_required.due ? `DÖBYR: ${cadence.sb_required.detail}` : 'DÖBYR: açık yasal izlem penceresi yok',
-        acog: cadence.acog_recommended.due ? `ACOG: ${cadence.acog_recommended.detail}` : 'ACOG: overlay izlem zamanı değil',
+        acog: cadence.acog_recommended.due ? `ACOG: ${cadence.acog_recommended.detail}` : 'ACOG: ek izlem zamanı değil',
         hint: UI_HINT_YASAL_VS_KLINIK,
       },
     })
@@ -172,8 +173,8 @@ export function dualClinicWarnings(input: {
     out.push({
       seviye: 'bilgi',
       dual: {
-        sb: `DÖBYR zorunlu: ${gdm.sb_required.next.join('; ')}`,
-        acog: `ACOG: ${gdm.acog_recommended.next.join('; ')}`,
+        sb: `DÖBYR zorunlu: ${trNext(gdm.sb_required.next).join('; ')}`,
+        acog: `ACOG: ${trNext(gdm.acog_recommended.next).join('; ')}`,
         hint: UI_HINT_YASAL_VS_KLINIK,
       },
     })
@@ -187,8 +188,8 @@ export function dualClinicWarnings(input: {
     out.push({
       seviye: pe.triage === 'emergency' ? 'kritik' : 'dikkat',
       dual: {
-        sb: `DÖBYR / Riskli Gebelikler: ${pe.next.join('; ')}`,
-        acog: `ACOG: ${pe.next.join('; ')}`,
+        sb: `DÖBYR / Riskli Gebelikler: ${trNext(pe.next).join('; ')}`,
+        acog: `ACOG: ${trNext(pe.next).join('; ')}`,
         hint: pe.conflict ? UI_HINT_YASAL_VS_KLINIK : 'çelişki yok — iki sütun aynı adımı gösterir',
       },
     })
@@ -199,7 +200,7 @@ export function dualClinicWarnings(input: {
       seviye: 'dikkat',
       dual: {
         sb: 'DÖBYR: Rh(−) gebede 28. hafta Anti-D değerlendirmesi yasal taban.',
-        acog: `ACOG: ${rh.next.join('; ')}`,
+        acog: `ACOG: ${trNext(rh.next).join('; ')}`,
         hint: UI_HINT_YASAL_VS_KLINIK,
       },
     })
@@ -212,8 +213,8 @@ export function dualClinicWarnings(input: {
     out.push({
       seviye: 'bilgi',
       dual: {
-        sb: `DÖBYR: ${gbs.sb_required.next.join('; ')}`,
-        acog: `ACOG: ${gbs.acog_recommended.next.join('; ')}`,
+        sb: `DÖBYR: ${trNext(gbs.sb_required.next).join('; ')}`,
+        acog: `ACOG: ${trNext(gbs.acog_recommended.next).join('; ')}`,
         hint: UI_HINT_YASAL_VS_KLINIK,
       },
     })

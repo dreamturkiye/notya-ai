@@ -19,6 +19,7 @@ import { receteGruplari, belirsizKontrol, RENK_ETIKET } from '@/lib/doktor/recet
 import RrsPaneli from '@/components/doktor/RrsPaneli';
 import EReceteDurum from '@/components/doktor/EReceteDurum';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -247,9 +248,9 @@ export default function ReceteYazdirPage() {
                 <input value={bDiploma} onChange={(e) => setBDiploma(e.target.value)} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6, width: 160 }} />
               </label>
               <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Logo (PNG/JPG)
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => logoSec(e.target.files?.[0] || null)} style={{ fontSize: 12 }} />
+                <DosyaSecDugmesi dosya={null} etiket="Logo seç" onSec={logoSec} accept="image/png,image/jpeg,image/webp" style={{ fontSize: 12 }} />
               </label>
-              {bLogo && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><img src={bLogo} alt="logo" style={{ height: 36 }} /><button type="button" onClick={() => setBLogo('')} style={{ background: 'transparent', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 12 }}>kaldır</button></span>}
+              {bLogo && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><img src={bLogo} alt="Logo"style={{ height: 36 }} /><button type="button" onClick={() => setBLogo('')} style={{ background: 'transparent', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 12 }}>kaldır</button></span>}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={baslikKaydet} disabled={bKaydediyor} style={{ background: CHROME_RENK.pine, color: '#FAF8F4', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}>{bKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>

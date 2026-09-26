@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <NefAracKabugu route="/doktor-tools/nef-diyaliz" baslik="Diyaliz seans / takip" aciklama="Modalite ve seans tarihleri. Makine HIS, UF, Kt/V ve reçete bu ürünün kapsamı dışındadır.">
+    <NefAracKabugu route="/doktor-tools/nef-diyaliz" baslik="Diyaliz seans / takip" aciklama="Modalite ve seans tarihleri. Diyaliz makinesi / HBYS bağlantısı, UF, Kt/V ve reçete bu ürünün kapsamı dışındadır.">
       <NefDiyalizAraci />
     </NefAracKabugu>
   )

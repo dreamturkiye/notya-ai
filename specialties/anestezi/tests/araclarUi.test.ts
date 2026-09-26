@@ -19,7 +19,7 @@ describe('anestezi araçlar UI kilitleri', () => {
   it('ASA / ağrı doz dilini reddeder', () => {
     const asa = oku('specialties/anestezi/ui/araclar/AnesteziAsaAraci.tsx')
     const agri = oku('specialties/anestezi/ui/araclar/AnesteziAgriAraci.tsx')
-    assert.match(asa, /OR anestezi makinesi HIS|ilaç dozu/)
+    assert.match(asa, /ameliyathane anestezi makinesi HIS|ilaç dozu/)
     assert.match(agri, /analjezik mg|mg doz/)
     assert.doesNotMatch(asa + agri, /gc-preop|CAT\/mMRC/)
   })

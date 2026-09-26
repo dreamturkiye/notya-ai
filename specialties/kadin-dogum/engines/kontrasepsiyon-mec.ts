@@ -139,7 +139,7 @@ export function postpartumKontrasepsiyonBaslangic(ppGun: number, emziriyor: bool
   if (ppGun >= 21) out.push({ yontem: 'pop', baslangic: '≥21 gün', not: 'Emzirmede KOK\'a tercih' })
   if (ppGun >= 21 && !emziriyor) out.push({ yontem: 'kok', baslangic: '≥21 gün (emzirmeyen)', not: 'Emziren: genelde ≥42 gün / MEC' })
   if (ppGun >= 28) {
-    out.push({ yontem: 'ria_cu', baslangic: '≥4 hafta (veya doğumda takılıysa protokol)', not: 'STI tarama' })
+    out.push({ yontem: 'ria_cu', baslangic: '≥4 hafta (veya doğumda takılıysa protokol)', not: 'CYBH taraması' })
     out.push({ yontem: 'ria_lng', baslangic: '≥4 hafta', not: 'HMB + kontrasepsiyon ikili yarar' })
   }
   if (ppGun >= 21) out.push({ yontem: 'implant', baslangic: '≥21 gün (erken PP mümkün — hekim)', not: 'Emzirme uyumlu' })

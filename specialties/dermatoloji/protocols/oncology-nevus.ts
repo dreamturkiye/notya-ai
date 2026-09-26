@@ -4,10 +4,10 @@ export function evaluateNevus(input: { ugly_duckling: boolean; digital_map?: boo
   return {
     triage: input.ugly_duckling ? 'urgent' : 'routine',
     next: [
-      input.ugly_duckling ? 'ugly duckling' : 'routine mole check',
-      input.digital_map ? 'digital map' : 'consider molemax/fotofinder/manual',
-      'follow-up interval 3–12 months',
-      'excision + pathology return if indicated',
+      input.ugly_duckling ? 'Çirkin ördek yavrusu işareti' : 'Rutin ben kontrolü',
+      input.digital_map ? 'Dijital harita' : 'MoleMax / FotoFinder / manuel haritalama düşünülebilir',
+      'Kontrol aralığı 3–12 ay',
+      'Endikasyon varsa eksizyon + patoloji sonucu takibi',
     ],
     citations: ['bolognia-5', 'euromelanoma'],
     photoPlan: ['klinik_genel', 'klinik_yakin', 'dermoskopi_polarize'],

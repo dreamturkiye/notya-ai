@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <PlastikAracKabugu route="/doktor-tools/plastik-foto" baslik="Foto zaman çizgisi köprü" aciklama="Klinik foto tarih ve etiketi. AI tanı, PASI/Fitzpatrick ve doz yazılmaz.">
+    <PlastikAracKabugu route="/doktor-tools/plastik-foto" baslik="Foto zaman çizgisi köprü" aciklama="Klinik foto tarih ve etiketi. Yapay zekâ tanısı, PASI/Fitzpatrick ve doz yazılmaz.">
       <PlastikFotoAraci />
     </PlastikAracKabugu>
   )

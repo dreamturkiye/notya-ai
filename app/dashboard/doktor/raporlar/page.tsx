@@ -160,7 +160,7 @@ const Page: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `aylik-rapor-${monthLabel.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+      a.download = `aylık-rapor-${monthLabel.toLocaleLowerCase('tr-TR').replace(/\s+/g, '-')}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();

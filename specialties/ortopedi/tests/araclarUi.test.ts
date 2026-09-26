@@ -28,10 +28,10 @@ describe('Ortopedi araç bileşenleri (SSR)', () => {
     assert.match(h, /NV|Alçı|Ortez/i)
   })
 
-  it('Op-sonrası: OR scheduling yok', () => {
+  it('Op-sonrası: ameliyathane planı yok', () => {
     const h = ciz(OrtoOpProtokolAraci)
     assert.match(h, /TASLAK/)
-    assert.match(h, /OR scheduling|HIS/i)
+    assert.match(h, /Ameliyathane planı|HIS/i)
   })
 
   it('Kohort: bayraklı hasta manşeti', () => {

@@ -85,7 +85,7 @@ export default function GcKohortAraci() {
           </button>
         </div>
         {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        <TaslakNotu>TASLAK — hatırlatma tanı / doz taşımaz. OR scheduling / HIS vaadi yok.</TaslakNotu>
+        <TaslakNotu>TASLAK — hatırlatma tanı / doz taşımaz. Ameliyathane planlaması / HIS vaadi yok.</TaslakNotu>
       </div>
     </>
   )

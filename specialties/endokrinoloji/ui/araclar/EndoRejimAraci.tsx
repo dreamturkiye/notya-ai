@@ -62,7 +62,7 @@ export default function EndoRejimAraci() {
         </div>
         {durum && <div style={{ ...endoStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...endoStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — ünite, mcg, mg ve sliding-scale şeması yazılmaz. Yalnız başlangıç / kontrol tarihleri.</TaslakNotu>
+        <TaslakNotu>TASLAK — ünite, mcg, mg ve kayan ölçek (sliding scale) şeması yazılmaz. Yalnız başlangıç / kontrol tarihleri.</TaslakNotu>
       </div>
     </>
   )

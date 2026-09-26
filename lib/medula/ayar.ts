@@ -55,7 +55,7 @@ export function girdiDogrula(g: EReceteAyarGirdi): string[] {
   if (g.doktorTc != null && g.doktorTc !== '' && !TC_RE.test(String(g.doktorTc).trim())) h.push('Hekim TC kimlik no 11 haneli olmalı.')
   if (g.tesisKodu != null && g.tesisKodu !== '' && !TESIS_RE.test(String(g.tesisKodu).trim())) h.push('Tesis kodu 6–10 haneli sayı olmalı (muayenehane için SGK\'nın verdiği kod).')
   if (g.bransKodu != null && g.bransKodu !== '' && !/^\d{3,5}$/.test(String(g.bransKodu).trim())) h.push('SGK branş kodu 3–5 haneli sayı olmalı.')
-  if (g.ortam != null && g.ortam !== '' && g.ortam !== 'test' && g.ortam !== 'gercek') h.push('Ortam test veya gercek olmalı.')
+  if (g.ortam != null && g.ortam !== '' && g.ortam !== 'test' && g.ortam !== 'gercek') h.push('Ortam "test" veya "gerçek" olmalı.')
   if (g.imzaYontemi != null && g.imzaYontemi !== '' && !['token', 'mobil', 'yok'].includes(String(g.imzaYontemi))) h.push('e-imza yöntemi token, mobil veya yok olmalı.')
   if (g.sifre != null && g.sifre !== '' && String(g.sifre).length < 4) h.push('Hekim şifresi çok kısa.')
   return h

@@ -45,7 +45,7 @@ export function diyalizNormalize(ham: unknown): DiyalizKayit | null {
 }
 
 export function diyalizSkorla(ham: unknown): DiyalizSonuc {
-  const dipnot: Dipnot = { ref: 'TND_DIYALIZ', not: 'Seans tarihi karar desteği; makine HIS ve reçete core değil' }
+  const dipnot: Dipnot = { ref: 'TND_DIYALIZ', not: 'Seans tarihi karar desteği; diyaliz makinesi HIS’i ve reçete ürünün parçası değil' }
   const kayit = diyalizNormalize(ham)
   if (!kayit) {
     return { tamamMi: false, kayit: null, ozet: 'Modalite ve seans tarihi gerekli — makine parametresi yazılmaz', dipnot }

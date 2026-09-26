@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <KardioAracKabugu route="/doktor-tools/kardio-kohort" baslik="Kardiyoloji kohort paneli" aciklama="Geciken kontrol, lab/EKG, açık kırmızı bayrak ve yüksek risk izlem gecikmesi. 1-tap hatırlatma — tanı, SCORE2 değeri ve ilaç adı yazılmaz.">
+    <KardioAracKabugu route="/doktor-tools/kardio-kohort" baslik="Kardiyoloji kohort paneli" aciklama="Geciken kontrol, lab/EKG, açık kırmızı bayrak ve yüksek risk izlem gecikmesi. Tek dokunuşla hatırlatma — tanı, SCORE2 değeri ve ilaç adı yazılmaz.">
       <KardioKohortAraci />
     </KardioAracKabugu>
   )

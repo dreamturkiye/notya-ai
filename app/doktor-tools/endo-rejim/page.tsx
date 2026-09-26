@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <EndoAracKabugu route="/doktor-tools/endo-rejim" baslik="İnsülin / tiroid rejim kartı" aciklama="Yalnız başlangıç ve kontrol tarihleri. Ünite, mcg, mg ve sliding-scale şeması yazılmaz — doz hekimin.">
+    <EndoAracKabugu route="/doktor-tools/endo-rejim" baslik="İnsülin / tiroid rejim kartı" aciklama="Yalnız başlangıç ve kontrol tarihleri. Ünite, mcg, mg ve kayan ölçek (sliding-scale) şeması yazılmaz — doz hekimin.">
       <EndoRejimAraci />
     </EndoAracKabugu>
   )

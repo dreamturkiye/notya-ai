@@ -184,7 +184,7 @@ export function BugunkuJineMuayene({
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', alignItems: 'baseline' }}>
           <div>
             <div style={{ fontWeight: 800, color: CHROME_RENK.ink, fontSize: 16 }}>Bugünkü jinekoloji muayenesi</div>
-            <div style={kucuk}>ACOG pratik gold · SB/KETEM tarama · Berek &amp; Novak / Temel KD. Çelişki iki sütun; birleştirilmez. Gebelik GA/TDT bu omurgada yok.</div>
+            <div style={kucuk}>ACOG (pratikte altın standart) · SB/KETEM tarama · Berek &amp; Novak / Temel KD. Çelişki iki sütun; birleştirilmez. Gebelik GA/TDT bu omurgada yok.</div>
           </div>
           <button type="button" style={btn()} onClick={() => setFormAcik((x) => !x)}>{formAcik ? 'Küçült' : 'Aç'}</button>
         </div>

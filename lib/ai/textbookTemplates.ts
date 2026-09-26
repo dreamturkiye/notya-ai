@@ -46,7 +46,7 @@ const TEXTBOOK_LIBRARY: Record<string, TextbookReference[]> = {
       authors: "Türk Çocuk Acil Tıp ve Yoğun Bakım Derneği",
       edition: "Güncel + SB 2025 YBÜ protokolü",
       publisher: "ÇAYD / Sağlık Bakanlığı",
-      why: "Çocuk acil red-flag, YBÜ kabul-taburculuk ve acil yaklaşım standardı."
+      why: "Çocuk acil kırmızı bayrakları, YBÜ kabul-taburculuk ve acil yaklaşım standardı."
     },
     {
       title: "Nelson Textbook of Pediatrics + Harriet Lane Handbook",
@@ -531,7 +531,7 @@ PEDİATRİK ÖZEL KURALLAR (Nelson + Harriet Lane):
 - Tüm ilaç dozlarını KG başına hesapla
 - Büyüme-gelişim persentillerini değerlendir
 - Yaşa göre Denver II kilometre taşlarını kontrol et
-- Ateşli çocukta: <3 ay = acil, <3 yaş dehydration skorla
+- Ateşli çocukta: <3 ay = acil, <3 yaş dehidratasyonu skorla
 - Aşı takvimi eksikliklerini not et
 - Ebeveyn eğitim notunu her zaman ekle
 - Pnömoni, otit, boğaz: amoksisilin dozu KG x 45mg/gün`,
@@ -561,7 +561,7 @@ NÖROLOJİ ÖZEL KURALLAR (Adams & Victor + ESO İnme Kılavuzu):
 
 PSİKİYATRİ ÖZEL KURALLAR (Kaplan & Sadock + DSM-5-TR):
 - Her seansta: MSE (Mental Durum Muayenesi) tam yapılmalı
-- İntihar riski: C-SSRS skoru — YÜKSEK RİSKTE ZORUNLU YATIRIŞ
+- İntihar riski: C-SSRS skoru — YÜKSEK RİSKTE ZORUNLU YATIŞ
 - Tanı: DSM-5-TR kriterlerini tam karşılıyor mu?
 - Stahl'ın farmakolojisini uygula: mekanizma → seçim
 - Psikoterapide: BDT, DBT, ACT — endikasyona göre yönlendir

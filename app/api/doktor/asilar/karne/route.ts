@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   const { supabase, doktorId } = oturum
 
   const body = (await req.json().catch(() => null)) as { adim?: string; belgeId?: string; hekimOnayi?: unknown; satirlar?: unknown } | null
-  if (!body?.adim || !body.belgeId) return NextResponse.json({ error: 'adim ve belgeId zorunludur.' }, { status: 400 })
+  if (!body?.adim || !body.belgeId) return NextResponse.json({ error: 'adım ve belgeId zorunludur.' }, { status: 400 })
 
   let meta
   try { meta = await getDocumentMeta({ supabase }, doktorId, String(body.belgeId)) } catch { return NextResponse.json({ error: 'Belge bulunamadı.' }, { status: 404 }) }

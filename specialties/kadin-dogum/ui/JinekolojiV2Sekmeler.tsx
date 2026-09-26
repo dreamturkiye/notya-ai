@@ -43,7 +43,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         <input value={s('hb')} onChange={(e) => set('hb', e.target.value)} placeholder="Hb (boş: onaylı lab)" style={{ ...toolsInput, width: 150 }} />
         <input value={s('fer')} onChange={(e) => set('fer', e.target.value)} placeholder="ferritin" style={{ ...toolsInput, width: 90 }} />
         <input value={s('et')} onChange={(e) => set('et', e.target.value)} placeholder="TVUS ET mm" style={{ ...toolsInput, width: 110 }} />
-        {chk('postmenopozal', b('pmp'), (x) => set('pmp', x))}{chk('obezite', b('ob'), (x) => set('ob', x))}{chk('anovulasyon öyküsü', b('anov'), (x) => set('anov', x))}{chk('kronik/dirençli', b('kr'), (x) => set('kr', x))}
+        {chk('postmenopozal', b('pmp'), (x) => set('pmp', x))}{chk('obezite', b('ob'), (x) => set('ob', x))}{chk('anovülasyon öyküsü', b('anov'), (x) => set('anov', x))}{chk('kronik/dirençli', b('kr'), (x) => set('kr', x))}
         <button type="button" onClick={() => calistir({ adim: 'aub', girdi: { palm: Object.fromEntries(PALM.map(([k]) => [k, b('p_' + k)])), coein: Object.fromEntries(COEIN.map(([k]) => [k, b('c_' + k)])), sureGun: s('sure'), pedAdet: s('ped'), pihti: b('pihti'), hb: s('hb'), ferritin: s('fer'), tvusEt: s('et'), postmenopoz: b('pmp'), obezite: b('ob'), anovulasyon: b('anov'), kronik: b('kr') } }, 'AUB kartı oluşturuldu; plan taslağı hazır.')} style={btn}>Değerlendir</button>
       </div>
       {son?.taslak && (<div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.ink }}>
@@ -75,17 +75,17 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         <input value={s('tas')} onChange={(e) => set('tas', e.target.value)} placeholder="TA sist" style={{ ...toolsInput, width: 80 }} />
         <input value={s('tad')} onChange={(e) => set('tad', e.target.value)} placeholder="TA diast" style={{ ...toolsInput, width: 80 }} />
         <input value={s('pp')} onChange={(e) => set('pp', e.target.value)} placeholder="postpartum gün" style={{ ...toolsInput, width: 120 }} />
-        <input value={s('bmi')} onChange={(e) => set('bmi', e.target.value)} placeholder="BMI" style={{ ...toolsInput, width: 70 }} />
+        <input value={s('bmi')} onChange={(e) => set('bmi', e.target.value)} placeholder="VKİ" style={{ ...toolsInput, width: 70 }} />
       </div>
       <div style={satir}>{[['vte', 'VTE öyküsü'], ['aura', 'auralı migren'], ['aurasiz', 'aurasız migren ≥35'], ['vask', 'vasküler hastalık'], ['mca', 'meme Ca (aktif/5 yıl)'], ['mcag', 'meme Ca >5 yıl'], ['kc', 'ağır karaciğer hst'], ['kct', 'karaciğer tümörü'], ['emz', 'emziriyor'], ['sle', 'SLE + aPL'], ['dmv', 'DM vasküler'], ['cer', 'büyük cerrahi/immobil'], ['bk', 'açıklanmamış kanama'], ['lip', 'hiperlipidemi']].map(([k, ad]) => chk(ad, b(k), (x) => set(k, x)))}</div>
       <div style={satir}>
         <input value={s('prep')} onChange={(e) => set('prep', e.target.value)} placeholder="preparat (hekim)" style={{ ...toolsInput, minWidth: 180 }} />
         <button type="button" onClick={() => calistir({ adim: 'kok', kontrol: kontrol(), karar: 'beklemede' }, 'MEC değerlendirmesi kaydedildi.')} style={ghost}>Değerlendir</button>
         <button type="button" onClick={() => calistir({ adim: 'kok', kontrol: kontrol(), karar: 'baslandi', preparat: s('prep'), overrideGerekce: s('ovr') }, 'KOK başlangıcı kaydedildi.')} style={btn}>KOK başlat (hekim)</button>
-        <input value={s('ovr')} onChange={(e) => set('ovr', e.target.value)} placeholder="MEC 4 override gerekçesi (≥15 karakter)" style={{ ...toolsInput, minWidth: 260 }} />
+        <input value={s('ovr')} onChange={(e) => set('ovr', e.target.value)} placeholder="MEC 4'e rağmen başlatma gerekçesi (≥15 karakter)" style={{ ...toolsInput, minWidth: 260 }} />
       </div>
       {son?.sonuc && (<div style={{ marginTop: 8, fontSize: 12 }}>
-        <div style={{ fontWeight: 800, color: son.sonuc.kategori === 4 ? '#F87171' : son.sonuc.kategori === 3 ? '#FBBF24' : '#0F9B8E' }}>MEC kategori {son.sonuc.kategori} · karar: {son.karar}{son.override ? ` · OVERRIDE: ${son.override_gerekce}` : ''}{son.preparat ? ` · ${son.preparat}` : ''}</div>
+        <div style={{ fontWeight: 800, color: son.sonuc.kategori === 4 ? '#F87171' : son.sonuc.kategori === 3 ? '#FBBF24' : '#0F9B8E' }}>MEC kategori {son.sonuc.kategori} · karar: {({ beklemede: 'beklemede', baslandi: 'başlandı' } as Record<string, string>)[son.karar ?? ''] ?? son.karar}{son.override ? ` · Kurala rağmen hekim kararı: ${son.override_gerekce}` : ''}{son.preparat ? ` · ${son.preparat}` : ''}</div>
         {son.sonuc.engeller.map((e) => <div key={e} style={{ color: '#F87171' }}>✖ {e}</div>)}{son.sonuc.dikkat.map((e) => <div key={e} style={{ color: '#FBBF24' }}>⚠ {e}</div>)}{son.sonuc.alternatif.map((e) => <div key={e} style={{ color: CHROME_RENK.muted }}>→ {e}</div>)}
         <Kaynak dipnotlar={son.sonuc.dipnotlar} acik={kaynakAcik} refler={refler} />
       </div>)}

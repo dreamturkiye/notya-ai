@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Conversation } from '@/components/AsistanConversation'
-import { isAndroid } from '@/lib/asistan/platform'
+import { isAndroid, connectionErrorHelp, micPermissionHelp } from '@/lib/asistan/platform'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { KlinikUzmanPersonas, type KlinikUzmanPersona } from '@/lib/ai/personas/klinik_uzmanlar'
 
@@ -22,6 +22,14 @@ type Msg = { id: string; role: 'user'|'ai'; text: string }
 type AC = Awaited<ReturnType<typeof Conversation.startSession>>
 
 const SLUGS = Object.keys(KlinikUzmanPersonas)
+
+/** KURAL — TÜRKÇE: ses SDK'sının / tarayıcının İngilizce hata metni ekrana çıkmaz; Türkçe mesajlar olduğu gibi kalır. */
+function sesHataMesaji(m?: string): string {
+  if (!m) return connectionErrorHelp()
+  if (/[çğıİöşüÇĞÖŞÜ]/.test(m)) return m
+  if (/denied|not-?allowed|permission/i.test(m)) return micPermissionHelp()
+  return connectionErrorHelp()
+}
 
 export default function KlinikAsistanPage() {
   // Next cannot prerender a client page that calls useSearchParams at the top level; the
@@ -103,10 +111,10 @@ function KlinikAsistanInner() {
         onConnect: () => { setStatus('listening'); setErrorMsg('') },
         onDisconnect: (d: { reason: string; message?: string }) => {
           convRef.current = null
-          if (d.reason === 'error') { setErrorMsg(d.message || 'Bağlantı kesildi'); setStatus('error') }
+          if (d.reason === 'error') { setErrorMsg(d.message ? sesHataMesaji(d.message) : 'Bağlantı kesildi. Tekrar deneyin.'); setStatus('error') }
           else setStatus('idle')
         },
-        onError: (m: string) => { setErrorMsg(m); setStatus('error') },
+        onError: (m: string) => { setErrorMsg(sesHataMesaji(m)); setStatus('error') },
         onMessage: ({ message, role }: {message:string;role:string}) => { addMsg(role==='user'?'user':'ai', message) },
         onModeChange: ({ mode }: {mode:string}) => { setStatus(mode==='speaking'?'speaking':'listening') },
         onStatusChange: ({ status: s }: {status:string}) => {
@@ -115,7 +123,7 @@ function KlinikAsistanInner() {
         }
       })
       convRef.current = conv
-    } catch (e: unknown) { setErrorMsg(e instanceof Error ? e.message : String(e)); setStatus('error'); convRef.current = null }
+    } catch (e: unknown) { setErrorMsg(sesHataMesaji(e instanceof Error ? e.message : String(e))); setStatus('error'); convRef.current = null }
   }
 
   const isActive = ['connecting','listening','speaking'].includes(status)

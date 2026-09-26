@@ -48,7 +48,7 @@ export function atbHesapla(baslangic: string | null | undefined, sureGunHam: num
   return {
     tamamMi: true,
     kart,
-    ozet: `ATB süre: ${baslangic} → ${bitis} (${sureGun} gün)${sinif ? ` · sınıf: ${sinif}` : ''}. Kontrol ${kontrolTarih}. Doz ve etken madde hekimin — Notya invent etmez.`,
+    ozet: `ATB süre: ${baslangic} → ${bitis} (${sureGun} gün)${sinif ? ` · sınıf: ${sinif}` : ''}. Kontrol ${kontrolTarih}. Doz ve etken madde hekimin — Notya bunları kendisi üretmez.`,
     dipnot,
   }
 }

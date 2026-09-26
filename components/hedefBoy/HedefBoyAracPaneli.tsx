@@ -148,7 +148,7 @@ export function HedefBoyAracPaneli({
             Anne-Baba Boylarına Göre Hedef Boy
           </h2>
           <p style={{ color: '#9CA3AF', fontSize: 14, maxWidth: 720, lineHeight: 1.5, margin: '0 0 18px' }}>
-            Baba ve anne boyunu girin — stüdyo bu sayfada açılır. Laptop veya telefonu ebeveyne çevirin.
+            Baba ve anne boyunu girin — stüdyo bu sayfada açılır. Dizüstü bilgisayarı veya telefonu ebeveyne çevirin.
           </p>
         </>
       )}

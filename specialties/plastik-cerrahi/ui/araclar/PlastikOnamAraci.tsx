@@ -27,7 +27,7 @@ export default function PlastikOnamAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('Onam checklist hasta dosyasına kaydedildi.')
+      setDurum('Onam kontrol listesi hasta dosyasına kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -46,7 +46,7 @@ export default function PlastikOnamAraci() {
         <textarea value={not} onChange={(e) => setNot(e.target.value)} placeholder="Hekim notu (doz / tanı kilidi yok)" rows={3} style={{ ...plastikStil.input, marginTop: 10, width: '100%' }} />
       </div>
       <div style={plastikStil.kutu}>
-        <div style={plastikStil.etiket}>Checklist özeti</div>
+        <div style={plastikStil.etiket}>Kontrol listesi özeti</div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
           <Istatistik deger={`${sonuc.secilen.length}/${ONAM_MADDELER.length}`} etiket="Madde" ton="notr" />
         </div>
@@ -57,7 +57,7 @@ export default function PlastikOnamAraci() {
         </div>
         {durum && <div style={{ ...plastikStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...plastikStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — onam checklist karar desteğidir; tanı auto-lock, doz ve OR/HIS yok.</TaslakNotu>
+        <TaslakNotu>TASLAK — onam kontrol listesi karar desteğidir; otomatik tanı kilidi, doz ve ameliyathane/HIS yok.</TaslakNotu>
       </div>
     </>
   )

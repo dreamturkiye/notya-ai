@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <PlastikAracKabugu route="/doktor-tools/plastik-onam" baslik="Onam taslağı checklist" aciklama="Bilgilendirilmiş onam hatırlatma maddeleri. Tanı auto-lock ve canlı e-imza yok.">
+    <PlastikAracKabugu route="/doktor-tools/plastik-onam" baslik="Onam taslağı kontrol listesi" aciklama="Bilgilendirilmiş onam hatırlatma maddeleri. Tanı otomatik kilitlenmez; canlı e-imza yok.">
       <PlastikOnamAraci />
     </PlastikAracKabugu>
   )

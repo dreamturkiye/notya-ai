@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { authHataMesaji } from "./authHataMesaji"
 
 const SUPA_URL = "https://anjayzospuurymjmmtim.supabase.co"
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE"
@@ -26,7 +27,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email: email.toLowerCase().trim(), password })
       })
       const data = await resp.json()
-      if (!data.access_token) throw new Error(data.error_description || data.error || "Giriş basarisiz")
+      if (!data.access_token) throw new Error(authHataMesaji(data.error_description || data.msg || data.error, mode === "login" ? "Giriş başarısız. Lütfen tekrar deneyin." : "Kayıt tamamlanamadı. Lütfen tekrar deneyin."))
       localStorage.setItem("sb-anjayzospuurymjmmtim-auth-token", JSON.stringify({
         access_token: data.access_token, refresh_token: data.refresh_token,
         expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
@@ -43,7 +44,7 @@ export default function LoginPage() {
       if (!profileData.data?.onboarding_completed && !profType) { router.push("/onboarding"); return }
       router.push("/dashboard")
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Bir hata oluştu")
+      setError(authHataMesaji(e instanceof Error ? e.message : "", "Bir hata oluştu. Lütfen tekrar deneyin."))
       setLoading(false)
     }
   }
@@ -56,13 +57,13 @@ export default function LoginPage() {
             <span style={{color:"#2563EB"}}>Notya</span> AI
           </div>
           <div style={{fontSize:"13px",color:"#64748B"}}>
-            {mode === "login" ? "Hesabiniza giriş yapin" : "Ücretsiz hesap oluşturun"}
+            {mode === "login" ? "Hesabınıza giriş yapın" : "Ücretsiz hesap oluşturun"}
           </div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
           <div>
             <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>E-posta</label>
-            <input type="text" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@notya.io" autoCapitalize="none" autoCorrect="off" autoComplete="email" inputMode="email" spellCheck={false} style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
+            <input type="text" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ad@ornek.com" autoCapitalize="none" autoCorrect="off" autoComplete="email" inputMode="email" spellCheck={false} style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           <div>
             <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>Şifre</label>
@@ -77,7 +78,7 @@ export default function LoginPage() {
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"13px",color:"#64748B"}}>
           {mode === "login" ? "Hesabınız yok mu? " : "Zaten hesabınız var mı? "}
           <span onClick={()=>{setMode(mode==="login"?"register":"login");setError("")}} style={{color:"#2563EB",cursor:"pointer",fontWeight:"500"}}>
-            {mode === "login" ? "Ücretsiz kayit" : "Giriş yapin"}
+            {mode === "login" ? "Ücretsiz kayıt" : "Giriş yapın"}
           </span>
         </div>
         <div style={{marginTop:"20px",padding:"12px",background:"#F8FAFC",borderRadius:"10px",fontSize:"12px",color:"#64748B",textAlign:"center"}}>

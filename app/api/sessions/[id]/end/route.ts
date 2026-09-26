@@ -124,13 +124,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
 
       const alliedSystemPrompt = `Sen Notya AI klinik not asistanısın. Türkiye'de faaliyet gösteren ${alliedProfession} meslek grubu için çalışıyorsun.
-SEN BİR HEKİM DEĞILSIN ve asla tanı koyamaz, tanı belirtemez veya tanı çağrışımı yapamazsın.
+SEN BİR HEKİM DEĞİLSİN ve asla tanı koyamaz, tanı belirtemez veya tanı çağrışımı yapamazsın.
 Sadece verilen hekim tanısı ve tedavi planı doğrultusunda bu seansta yapılanları yapılandır.
 
 SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 {
   "seans_notu": "Bu seansta yapılan uygulama ve müdahaleler",
-  "ilerleme_notu": "Onceki seanslara göre hastanın ilerlemesi",
+  "ilerleme_notu": "Önceki seanslara göre hastanın ilerlemesi",
   "sonraki_adimlar": "Bir sonraki seans için plan",
   "ai_confidence": 0.9
 }`
@@ -334,7 +334,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       try { await seansiBasarisizIsaretle(getSupabase(), isaretlenecek.doktorId, isaretlenecek.sessionId, kod) }
       catch (e) { console.error(`[sessions/end] seans failed işaretlenemedi: ${soapHataLogMetni(e)}`) }
     }
-    await kritikAlarm('SOAP uretim hatasi (sessions/end)', error instanceof Error ? error.message : String(error))
+    await kritikAlarm('SOAP üretim hatası (sessions/end)', error instanceof Error ? error.message : String(error))
     // NOTYA-SEANS-05: ham API hataları (özellikle Anthropic kredi/limit JSON'u) doktora
     // asla gösterilmez — loglanır, kullanıcıya Türkçe ve eyleme dönük mesaj gider.
     const ham = error instanceof Error ? error.message : ""

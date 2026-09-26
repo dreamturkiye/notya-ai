@@ -51,7 +51,7 @@ export function DualTakvimAccordion({ visits }: { visits: PlannedVisit[] }) {
   return (
     <details style={{ ...kutu, padding: '10px 14px' }} data-kd="dual-takvim">
       <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>
-        Yasal asgari vs klinik öneri
+        Yasal asgari / klinik öneri
       </summary>
       <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Sütunlar birleştirilmez. Kayıtlı izlem haftaları Yapıldı işaretler.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <NefAracKabugu route="/doktor-tools/nef-kohort" baslik="Nefroloji kohort paneli" aciklama="Geciken kontrol · eGFR/anemi/diyaliz · açık acil · KDIGO kırmızı · 1-tap hatırlatma. İlaç doz uyarısı yalnız hekim checklist (mg yok).">
+    <NefAracKabugu route="/doktor-tools/nef-kohort" baslik="Nefroloji kohort paneli" aciklama="Geciken kontrol · eGFR/anemi/diyaliz · açık acil · KDIGO kırmızı · tek dokunuşla hatırlatma. İlaç doz uyarısı yalnız hekim kontrol listesidir (mg yok).">
       <NefKohortAraci />
     </NefAracKabugu>
   )

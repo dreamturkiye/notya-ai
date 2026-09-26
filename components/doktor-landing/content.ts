@@ -97,7 +97,7 @@ export const SPECIALISTS = [
 
 export const INDIVIDUAL_PLANS = [
   {
-    name: "Starter",
+    name: "Başlangıç",
     price: "499",
     unit: "/ ay",
     highlight: false,

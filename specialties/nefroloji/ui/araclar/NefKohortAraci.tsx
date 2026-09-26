@@ -80,14 +80,14 @@ export default function NefKohortAraci() {
           </label>
         ))}
         {satirlar && !gorunen.length && <div style={S.kucuk}>Bayraklı hasta yok.</div>}
-        <div style={{ ...S.etiket, marginTop: 12 }}>İlaç doz uyarısı — hekim checklist (mg yok)</div>
+        <div style={{ ...S.etiket, marginTop: 12 }}>İlaç doz uyarısı — hekim kontrol listesi (mg yok)</div>
         {ILAC_DOZ_UYARI_LISTESI.map((x) => <div key={x} style={S.kucuk}>☐ {x}</div>)}
         <div style={{ ...S.satir, marginTop: 12 }}>
           <button type="button" style={S.btn} disabled={!secili.length || gonderiliyor} onClick={gonder}>1-tap hatırlatma gönder</button>
           <button type="button" style={S.ghost} onClick={yukle}>Yenile</button>
         </div>
         {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        <TaslakNotu>TASLAK — Hatırlatma tanı, eGFR sayısı, ilaç adı ve doz yazılmaz. Checklist yalnız hekim yüzündedir.</TaslakNotu>
+        <TaslakNotu>TASLAK — Hatırlatma tanı, eGFR sayısı, ilaç adı ve doz yazılmaz. Kontrol listesini yalnız hekim görür.</TaslakNotu>
       </div>
     </>
   )

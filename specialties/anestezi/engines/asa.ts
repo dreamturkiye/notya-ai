@@ -37,7 +37,7 @@ export interface AsaSonuc {
 }
 
 export function asaSkorla(secilenHam: unknown, asaSinifHam?: unknown, not?: string | null): AsaSonuc {
-  const dipnot: Dipnot = { ref: 'ASA_TR', not: 'ASA/pre-op checklist karar desteğidir; tanı ve doz hekimin' }
+  const dipnot: Dipnot = { ref: 'ASA_TR', not: 'ASA/pre-op kontrol listesi karar desteğidir; tanı ve doz hekimin' }
   const izinli = new Set(ASA_MADDELER.map((m) => m.kod))
   const secilen = (Array.isArray(secilenHam) ? secilenHam.map(String) : []).filter((k): k is AsaKod => izinli.has(k as AsaKod))
   const sinifHam = asaSinifHam != null ? String(asaSinifHam).toUpperCase() : ''
@@ -46,7 +46,7 @@ export function asaSkorla(secilenHam: unknown, asaSinifHam?: unknown, not?: stri
     return { tamamMi: false, secilen, asaSinif, ozet: 'Pre-op notunda mg / anestezik doz yazılamaz.', gorevOnerileri: [], dipnot }
   }
   if (!secilen.length) {
-    return { tamamMi: false, secilen, asaSinif, ozet: 'En az bir checklist maddesi seçin.', gorevOnerileri: [], dipnot }
+    return { tamamMi: false, secilen, asaSinif, ozet: 'En az bir kontrol listesi maddesi seçin.', gorevOnerileri: [], dipnot }
   }
   const adlar = ASA_MADDELER.filter((m) => secilen.includes(m.kod)).map((m) => m.ad)
   const gorevOnerileri = secilen
@@ -60,7 +60,7 @@ export function asaSkorla(secilenHam: unknown, asaSinifHam?: unknown, not?: stri
     tamamMi: true,
     secilen,
     asaSinif,
-    ozet: `ASA/pre-op checklist: ${adlar.join('; ')}${sinifMetin}. Karar desteğidir; tanı/doz hekimin.`,
+    ozet: `ASA/pre-op kontrol listesi: ${adlar.join('; ')}${sinifMetin}. Karar desteğidir; tanı/doz hekimin.`,
     gorevOnerileri,
     dipnot,
   }

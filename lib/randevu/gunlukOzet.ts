@@ -37,13 +37,21 @@ export function bitisSaati(saat: string, sureDk: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
+/** "2026-09-25" → "25 Eylül 2026 Cuma" (what Ayşe says / shows). Anything else passes through. */
+export function tarihEtiketi(iso: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
+  const d = new Date(`${iso}T12:00:00Z`)
+  if (Number.isNaN(d.getTime())) return iso
+  return new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }).format(d)
+}
+
 export function gunlukOzetMetni(g: {
   tarih: string
   satirlar: GunlukSatir[]
   istenenSaat?: string | null
   istenenSureDk?: number
 }): { metin: string; cakisiyor: boolean; cakisan?: GunlukSatir } {
-  const tarih = g.tarih
+  const tarih = tarihEtiketi(g.tarih)
   if (!g.satirlar.length) {
     const slot = g.istenenSaat ? ` İstediğiniz ${g.istenenSaat} boş.` : ''
     return { metin: `${tarih} takviminde randevu yok.${slot}`, cakisiyor: false }

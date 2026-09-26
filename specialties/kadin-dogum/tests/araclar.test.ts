@@ -81,7 +81,7 @@ test('takvim: Anti-D row hidden only for known Rh(+); DÖBYR 4 izlem, late booke
   assert.equal(t.izlemler[1].durum, 'kacirildi')
   assert.equal(t.izlemler[2].durum, 'acik')
   assert.ok(t.cift.length >= 4)
-  for (const c of t.cift) { assert.ok(c.sb && c.klinik && c.sb !== c.klinik); assert.equal(c.uiHint, 'yasal asgari vs klinik öneri') }
+  for (const c of t.cift) { assert.ok(c.sb && c.klinik && c.sb !== c.klinik); assert.equal(c.uiHint, 'yasal asgari / klinik öneri') }
   assert.ok(t.cift.every((c) => !/ACOG/.test(c.sb)), 'ACOG never in the yasal column')
   assert.equal(t.analikRaporuBaslangic.tekil, addDays(edd, -56))
   assert.equal(t.analikRaporuBaslangic.cogul, addDays(edd, -70))

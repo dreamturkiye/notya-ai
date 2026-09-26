@@ -89,7 +89,7 @@ export function UnitePanelleri({
         <section style={kutu} data-derm="kozmetik-panel">
           <h2 style={{ margin: 0, fontSize: 16 }}>Kozmetik — Ayakta Teşhis</h2>
           <p style={{ fontSize: 13 }}>{aes.next[0]}</p>
-          <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Hekim lazer vs salon IPL ayrı sütunlarda (karar kartı). Test spot ve lot no zorunlu.</p>
+          <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Hekim lazeri ve salon IPL ayrı sütunlarda (karar kartı). Test spot ve lot no zorunlu.</p>
         </section>
       )}
 

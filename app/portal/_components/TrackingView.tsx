@@ -122,8 +122,9 @@ function OzetKart({ baslik, deger, birim, degisim, ondalik, aralik, ters }: { ba
     <SoftPanel>
       <div style={{ fontSize: 12, color: 'var(--sg-muted)', fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}>{baslik}</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-        <span style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.5, color: 'var(--sg-ink)' }}>{deger == null ? '—' : trDeger(deger, ondalik)}</span>
-        <span style={{ fontSize: 13, color: 'var(--sg-muted)' }}>{birim}</span>
+        {/* Türkçede yüzde işareti sayıdan önce yazılır: %97 */}
+        <span style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.5, color: 'var(--sg-ink)' }}>{deger == null ? '—' : `${birim === '%' ? '%' : ''}${trDeger(deger, ondalik)}`}</span>
+        {birim !== '%' && <span style={{ fontSize: 13, color: 'var(--sg-muted)' }}>{birim}</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11.5, fontWeight: 700, padding: '3px 9px', borderRadius: 999, color: d.renk, background: d.zemin }}>{d.metin}</span>

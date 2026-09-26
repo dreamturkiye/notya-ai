@@ -182,7 +182,7 @@ export default function LabPage() {
               {doc && /csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 8 }}>Tablo dosyası — satırlar sağda.</div>}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={cikar} disabled={durum !== 'hazir' || kilitli} style={{ ...btn, opacity: durum !== 'hazir' ? 0.6 : 1 }}>{durum === 'cikariyor' ? 'Tablo çıkarılıyor…' : panel ? 'Tabloyu yeniden çıkar' : 'Tabloyu çıkar'}</button>
-                {panel && <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>{panel.lab_adi || ''}{panel.numune_tarihi ? ` · numune ${new Date(panel.numune_tarihi).toLocaleDateString('tr-TR')}` : ''} · kaynak: {panel.kaynaklar?.join(' + ') || '—'} · kalite {panel.kalite}</span>}
+                {panel && <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>{panel.lab_adi || ''}{panel.numune_tarihi ? ` · numune ${new Date(panel.numune_tarihi).toLocaleDateString('tr-TR')}` : ''} · kaynak: {panel.kaynaklar?.join(' + ') || '—'} · kalite {panel.kalite === 'dusuk' ? 'düşük' : panel.kalite}</span>}
               </div>
               {mesaj && (
                 <div style={{ marginTop: 8, fontSize: 12, color: /Hata|amadı|eşleşmiyor/.test(mesaj) ? '#a45b3e' : CHROME_RENK.pine }}>
@@ -225,7 +225,7 @@ export default function LabPage() {
                 )}
                 <div style={{ overflowX: 'auto', marginTop: 6 }}>
                   <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
-                    <thead><tr style={{ color: CHROME_RENK.muted, fontSize: 11 }}>{['Test', 'Sonuç', 'Birim', 'Ref', 'Flag', 'Önceki', 'Δ', 'Trend'].map((h) => <th key={h} style={{ ...hücre, textAlign: 'left', fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                    <thead><tr style={{ color: CHROME_RENK.muted, fontSize: 11 }}>{['Test', 'Sonuç', 'Birim', 'Ref', 'Durum', 'Önceki', 'Δ', 'Trend'].map((h) => <th key={h} style={{ ...hücre, textAlign: 'left', fontWeight: 600 }}>{h}</th>)}</tr></thead>
                     <tbody>
                       {satirlar.map((s) => (
                         <tr key={s.id} style={{ background: s.dogrulanacak ? '#FBF3DE' : s.kritik ? '#FBEAE3' : 'transparent' }} title={s.dogrulama_notu || undefined}>

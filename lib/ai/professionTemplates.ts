@@ -194,7 +194,7 @@ Odak noktaları:
 - Erken dönem ilişki kalıpları
 - Rüya içerikleri (varsa)
 - Bilinçdışı içerikler
-- Direnç analizı`,
+- Direnç analizi`,
       keyFocus: ['aktarım', 'savunma', 'içgörü', 'erken çocukluk', 'tekrarlayan örüntüler']
     },
     gestalt: {

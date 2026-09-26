@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <UroAracKabugu route="/doktor-tools/uro-acil" baslik="Hematuri / taş acil triyaj" aciklama="Makroskopik hematüri, retansiyon, flank+ateş, torsiyon, priapizm ve üretra travması için kırmızı bayrak kapısı. Tanı koymaz; 112 yönlendirir.">
+    <UroAracKabugu route="/doktor-tools/uro-acil" baslik="Hematuri / taş acil triyaj" aciklama="Makroskopik hematüri, retansiyon, yan ağrısı + ateş, torsiyon, priapizm ve üretra travması için kırmızı bayrak kapısı. Tanı koymaz; 112 yönlendirir.">
       <UroAcilAraci />
     </UroAracKabugu>
   )
