@@ -2,6 +2,8 @@
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import TurkceDogrulama from "@/components/core/TurkceDogrulama"
+import { AsistanOturumProvider } from "@/components/asistan/AsistanOturumContext"
+import AsistanYuzenPanel from "@/components/asistan/AsistanYuzenPanel"
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -45,7 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{margin:0,background:"#0A1628"}}>
         <TurkceDogrulama />
-        {children}
+        {/* NOTYA-ASISTAN-YUZEN-01: asistan oturumu sayfa geçişlerinde yaşar; /asistan dışında yüzen panel. */}
+        <AsistanOturumProvider>
+          {children}
+          <AsistanYuzenPanel />
+        </AsistanOturumProvider>
         <script dangerouslySetInnerHTML={{__html:`
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));

@@ -2,33 +2,18 @@
 export const dynamic = "force-dynamic"
 
 import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
 import HafifMarkdown from "@/components/asistan/HafifMarkdown";
 import { useRouter } from "next/navigation"
-import { Conversation } from "@/components/AsistanConversation"
 import YaziliSohbet from "@/components/asistan/YaziliSohbet"
-import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan/platform"
-import {
-  PERSONAS,
-  PERSONA_ORDER,
-  buildVoiceSystemPrompt,
-  resolveOpeningPersonaId,
-  type Persona,
-  type PersonaId,
-} from "@/lib/asistan/personaEngine"
+import { PERSONAS, PERSONA_ORDER } from "@/lib/asistan/personaEngine"
 import { SPECIALTY_MAP } from "@/lib/doktor/specialties"
 import { formatColleagueTabLabel, formatColleagueDisplayName } from "@/lib/colleagueAddress"
-import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
-import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAuth"
-import { address } from '@/lib/address'
-import { EylemKarti, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
+import { EylemKarti } from '@/components/core/EylemKarti'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import DoktorChrome, { useChromeKompakt } from '@/components/doktor/DoktorChrome'
 import { pwaIkonundanAsistanMi } from '@/lib/pwa/ikonAcilis'
-
-type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
-type Message = { id: string; role: "user" | "ai"; text: string }
-
-type ActiveConversation = Awaited<ReturnType<typeof Conversation.startSession>>
+import { useAsistanOturum } from '@/components/asistan/AsistanOturumContext'
 
 // NOTYA-CHROME-KOMPAKT-01 (Kaan, 2026-09-24): useContext reads from the nearest ANCESTOR
 // provider -- calling useChromeKompakt at the top of the same component that RETURNS
@@ -52,79 +37,15 @@ function AsistanPageInner() {
   // wrapper, so this page's own full-height persona/conversation/control-bar layout keeps working.
   useChromeKompakt(true)
   const router = useRouter()
-  const [persona, setPersona] = useState<Persona>(PERSONAS.aysekaya)
-  const [personaKey, setPersonaKey] = useState<PersonaId>("aysekaya")
+  // NOTYA-ASISTAN-YUZEN-01 (Kaan, 2026-09-26): oturum (ses, mesajlar, persona, tek beyin yoklaması, araçlar,
+  // yazılı sohbet) AsistanOturumContext'te — app/layout.tsx'te bütün sayfaları sarar. Bu sayfa yalnız görünüm:
+  // kendi oturumunu açmaz, ayrılınca oturumu kapatmaz. Doktor başka sayfadayken AsistanYuzenPanel devralır.
+  const {
+    persona, personaKey, status, isActive, messages, errorMsg, sureUzatmaGoster, sesKarti,
+    hazirla, startConversation, stopConversation, switchPersona, sureUzat, sesKartiniKapat,
+  } = useAsistanOturum()
   const [isMobile, setIsMobile] = useState(true)
-  const [status, setStatus] = useState<ConvStatus>("idle")
-  const [messages, setMessages] = useState<Message[]>([])
-  const [errorMsg, setErrorMsg] = useState("")
-  const [authToken, setAuthToken] = useState<string | null>(null)
-  const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
-  const conversationRef = useRef<ActiveConversation | null>(null)
-  /** NOTYA-OGRENME-03: addMsg ile eş zamanlı tutulur — endConversation()'ın kullandığı kapanışlar
-   *  (özellikle mount-effect cleanup) React state'in bayat bir kopyasını görebilir; ref her zaman güncel. */
-  const messagesRef = useRef<Message[]>([])
-  /** Last voice-prepared öneri — eylem_onayla / vazgec use this when the agent omits oneriId. */
-  const sesEylemRef = useRef<{ oneriId: string; hastaId: string } | null>(null)
-  const sureUyariRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const sureSonRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const sureBaslangicRef = useRef<number>(0)
-  const sureHedefDkRef = useRef<number>(60)
-  const sureHitapRef = useRef<string>("Hocam")
-  const [sureUzatmaGoster, setSureUzatmaGoster] = useState(false)
-  const [sesKarti, setSesKarti] = useState<{ oneri: EylemOneriGorunumu; hasta: EylemHasta } | null>(null)
-  /** NOTYA-TEK-BEYIN: yazılı sohbet ile sesin ORTAK asistan oturumu — tek konuşma, tek aktif hasta. */
-  const [ortakOturumId, setOrtakOturumId] = useState<string | null>(null)
-  /** Tek beyinli sesli görüşme sürerken: oturum + ses-ekran yoklamasının imleci (sunucu saati). */
-  const tekBeyinRef = useRef<{ oturumId: string; sonra: string } | null>(null)
-  const yoklamaRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const sesKartiIdRef = useRef<string | null>(null)
-  const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
-
-  const sureTimerlariTemizle = () => {
-    if (sureUyariRef.current) { clearTimeout(sureUyariRef.current); sureUyariRef.current = null }
-    if (sureSonRef.current) { clearTimeout(sureSonRef.current); sureSonRef.current = null }
-  }
-  const sureUyariSesli = (named: string) => {
-    const uyari = `${named}, kayıt 5 dakika içinde otomatik olarak sonlanacak. Uzatmak isterseniz ekrandaki düğmeye basabilirsiniz.`
-    addMsg("ai", `⏱️ ${uyari}`)
-    try {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        const u = new SpeechSynthesisUtterance(uyari)
-        u.lang = "tr-TR"
-        window.speechSynthesis.speak(u)
-      }
-    } catch { /* sesli uyarı olmazsa yazılı uyarı yeterli */ }
-    setSureUzatmaGoster(true)
-  }
-  /** hedefDk: konuşma başından itibaren toplam dakika. Uyarı hedef-5'te, kapanış hedefte. */
-  const sureTimerlariKur = (hedefDk: number) => {
-    sureTimerlariTemizle()
-    sureHedefDkRef.current = hedefDk
-    const gecenMs = Date.now() - sureBaslangicRef.current
-    const uyariMs = Math.max(0, (hedefDk - 5) * 60 * 1000 - gecenMs)
-    const sonMs = Math.max(0, hedefDk * 60 * 1000 - gecenMs)
-    sureUyariRef.current = setTimeout(() => sureUyariSesli(sureHitapRef.current), uyariMs)
-    sureSonRef.current = setTimeout(() => {
-      setSureUzatmaGoster(false)
-      addMsg("ai", `⏱️ ${hedefDk} dakikalık süre doldu, görüşme otomatik olarak sonlandırıldı.`)
-      conversationRef.current?.endSession().catch(() => { /* zaten kapanıyor olabilir */ })
-    }, sonMs)
-  }
-  const sureTimerlariBaslat = (named: string) => {
-    sureHitapRef.current = named
-    sureBaslangicRef.current = Date.now()
-    setSureUzatmaGoster(false)
-    sureTimerlariKur(60)
-  }
-  const sureUzat = (dk: number) => {
-    const yeniHedef = Math.min(SURE_TAVAN_DK, sureHedefDkRef.current + dk)
-    sureTimerlariKur(yeniHedef)
-    setSureUzatmaGoster(false)
-    addMsg("ai", `⏱️ Süre ${yeniHedef} dakikaya uzatıldı.`)
-  }
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  // auth via localStorage
 
   useEffect(() => {
     const chk = () => setIsMobile(window.innerWidth < 768)
@@ -133,569 +54,24 @@ function AsistanPageInner() {
     return () => window.removeEventListener('resize', chk)
   }, [])
 
-  // Opening colleague: branch doctors (KD → Fatma) ignore stale localStorage Ayşe.
+  // Opening colleague: branch doctors (KD → Fatma) ignore stale localStorage Ayşe (AsistanOturumContext.hazirla).
   useEffect(() => {
     if (pwaIkonundanAsistanMi()) {
       window.location.replace('/dashboard/doktor')
       return
     }
     ;(async () => {
-      let token = await ensureDoctorAccessToken()
-      if (!token) {
-        router.replace("/giris/doktor")
-        return
-      }
-      setAuthToken(token)
-
-      let resp = await fetch("/api/users/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      // Expired access token without reliable expires_at — refresh once, then login.
-      if (resp.status === 401) {
-        token = await ensureDoctorAccessToken({ forceRefresh: true })
-        if (!token) {
-          router.replace("/giris/doktor")
-          return
-        }
-        setAuthToken(token)
-        resp = await fetch("/api/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (resp.status === 401) {
-          router.replace("/giris/doktor")
-          return
-        }
-      }
-      const profileData = await resp.json().catch(() => ({} as { data?: DoctorProfile }))
-      if (!isOnboardingDone(profileData.data)) {
-        router.replace("/onboarding?p=doktor")
-        return
-      }
-      setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
-      let secili: string | null = null
-      try { secili = localStorage.getItem('notya_asistan_persona') } catch { /* ignore */ }
-      const acilis = resolveOpeningPersonaId(
-        (profileData.data as { specialty?: string } | undefined)?.specialty,
-        secili,
-      )
-      setPersonaKey(acilis)
-      setPersona(PERSONAS[acilis])
-      try {
-        if (secili !== acilis) localStorage.setItem('notya_asistan_persona', acilis)
-      } catch { /* ignore */ }
+      const sonuc = await hazirla()
+      if (sonuc === "giris") router.replace("/giris/doktor")
+      else if (sonuc === "onboarding") router.replace("/onboarding?p=doktor")
     })()
-    return () => { void endConversation() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // iOS notification banners can suspend the mic mid-call without firing onDisconnect.
-  // Playback keeps working (separate audio pipe) but the mic input silently stays muted.
-  // On tab/app return, force-unmute so the doctor's voice input resumes.
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return
-      const conv = conversationRef.current as unknown as { setMuted?: (m: boolean) => void; isMuted?: boolean } | null
-      if (!conv) return
-      try {
-        if (typeof conv.setMuted === 'function') {
-          conv.setMuted(false)
-        }
-      } catch { /* non-fatal */ }
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
-
-  function addMsg(role: "user" | "ai", text: string) {
-    if (!text?.trim()) return
-    const trimmed = text.trim()
-    setMessages((prev) => {
-      // Guard against connect-seed + agent transcript of the same greeting.
-      const last = prev[prev.length - 1]
-      if (last && last.role === role && last.text === trimmed) return prev
-      const next = [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: trimmed }]
-      messagesRef.current = next
-      return next
-    })
-  }
-
-  /** NOTYA-OGRENME-03: canlı sesli Ayşe, doktorun aslında EN çok konuştuğu yüzeydi ama Next.js
-   *  sunucusuna hiç uğramadığı için hafıza buradan hiçbir şey öğrenmiyordu. SDK zaten her turu
-   *  onMessage ile tarayıcıya veriyor (messagesRef) — konuşma biterken doktor tarafını tek istekte
-   *  yolla. keepalive: sekme kapanırken/navigasyonda istek yarım kalmasın.
-   */
-  function sesOgrenGonder() {
-    // NOTYA-TEK-BEYIN: tek beyinli seste her tur sunucuda, yazılı sohbetle aynı yoldan öğrenilir — ikinci kez yollanmaz.
-    if (tekBeyinRef.current) return
-    try {
-      const doktorSozleri = messagesRef.current.filter((m) => m.role === "user").map((m) => m.text).join("\n").slice(0, 4000)
-      if (!doktorSozleri || !authToken) return
-      void fetch("/api/asistan/ses-ogren", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
-        body: JSON.stringify({ doktorSozleri }),
-        keepalive: true,
-      }).catch(() => { /* öğrenme kritik değil */ })
-    } catch { /* öğrenme kritik değil */ }
-  }
-
-  async function endConversation() {
-    const conv = conversationRef.current
-    conversationRef.current = null
-    if (conv) {
-      sesOgrenGonder()
-      try { await conv.endSession() } catch { /* ignore */ }
-    }
-    yoklamayiDurdur()
-    setStatus("idle")
-  }
-
-  /**
-   * NOTYA-TEK-BEYIN: sesli Ayşe yalnız kısa sözlü biçimi konuşur; tam cevap (liste, tablo, kimlik değerleri) ve
-   * onay kartları ortak oturuma yazılır. Görüşme sürerken burada hafifçe yoklanır ve baloncuğa / karta taşınır.
-   */
-  async function ekranYokla() {
-    const tb = tekBeyinRef.current
-    if (!tb) return
-    try {
-      const t = await ensureDoctorAccessToken()
-      if (!t) return
-      const r = await fetch(`/api/asistan/ses-ekran?oturum=${encodeURIComponent(tb.oturumId)}&sonra=${encodeURIComponent(tb.sonra)}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      })
-      if (!r.ok || tekBeyinRef.current !== tb) return
-      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[] }
-      for (const tur of j.turlar || []) {
-        if (tur.zaman > tb.sonra) tb.sonra = tur.zaman
-        addMsg("ai", tur.metin)
-        if (tur.kartlar?.length && tur.hastaId) void kartiYukle(tur.hastaId, tur.kartlar[tur.kartlar.length - 1])
-      }
-      // Sesle onaylanan / vazgeçilen kart artık bekleyen değil → kapat.
-      if (sesKartiIdRef.current && Array.isArray(j.bekleyen) && !j.bekleyen.includes(sesKartiIdRef.current)) {
-        sesKartiIdRef.current = null
-        setSesKarti(null)
-      }
-    } catch { /* yoklama kritik değil — bir sonraki turda tekrar */ }
-  }
-
-  function yoklamayiBaslat() {
-    if (yoklamaRef.current) clearInterval(yoklamaRef.current)
-    yoklamaRef.current = setInterval(() => { void ekranYokla() }, 1500)
-  }
-
-  function yoklamayiDurdur() {
-    if (yoklamaRef.current) { clearInterval(yoklamaRef.current); yoklamaRef.current = null }
-    // Son turun ekranını da al, sonra bu görüşmenin imlecini bırak (yeni görüşme kendi imlecini kurmuş olabilir).
-    const tb = tekBeyinRef.current
-    if (tb) void ekranYokla().finally(() => { if (tekBeyinRef.current === tb) tekBeyinRef.current = null })
-  }
-
-  function isFirstMessageOverrideError(msg: string): boolean {
-    // Narrow match: the prior broad "Override for field" also caught voice/prompt
-    // failures and restarted a second session on the same mic → broken speech (Ayşe).
-    return /first[_ ]?message/i.test(msg || "")
-  }
-
-  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
-    if (!authToken) throw new Error("Oturum bulunamadı")
-    const oturumParam = ortakOturumId ? `&asistanSessionId=${encodeURIComponent(ortakOturumId)}` : ""
-    const resp = await fetch(
-      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}`,
-      { headers: { Authorization: `Bearer ${authToken}` } }
-    )
-    if (!resp.ok) {
-      const errBody = await resp.json().catch(() => ({}))
-      throw new Error((errBody as { error?: string }).error || `Sunucu hatası: ${resp.status}`)
-    }
-    const body = await resp.json()
-    if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
-    return {
-      signedUrl: body.signed_url as string,
-      voiceId: (body.voice_id as string) || p.voiceId,
-      // NOTYA-TEK-BEYIN: yalnız bayraktaki doktorda gelir; yoksa eski sesli akış birebir sürer.
-      tekBeyin: body.tek_beyin && body.notya_jeton && body.asistan_session_id
-        ? { oturumId: String(body.asistan_session_id), jeton: String(body.notya_jeton), baslangic: String(body.baslangic || new Date().toISOString()) }
-        : null,
-    }
-  }
-
-  async function startConversation() {
-    if (!authToken) { router.push("/giris"); return }
-    await endConversation()
-    setStatus("connecting")
-    setErrorMsg("")
-    setMessages([])
-    messagesRef.current = []
-    // Pre-flight: request mic permission explicitly on user gesture
-    // so the browser prompt fires before any async work
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach(t => t.stop())
-    } catch {
-      setErrorMsg(micPermissionHelp())
-      setStatus("error")
-      return
-    }
-    // Android: unlock AudioContext on user gesture before any async work
-    if (isAndroid() && typeof window !== "undefined") {
-      try { const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)(); await ctx.resume() } catch { /* non-fatal */ }
-    }
-
-    try {
-      const doctor = doctorProfile || toAddressableUser(null)
-      const p = PERSONAS[personaKey]
-      // NOTYA-OGRENME-03: sesli Ayşe de meslektaş hafızasını okur — 5+ seansta kendini
-      // tanıtmayı bırakır, bildiklerini promptta taşır. Başarısızlıkta eski davranış.
-      let hafiza: { karsilama?: { tanit: boolean; onSoz: string }; sesBlogu?: string; gun?: { metin: string; blok: string } | null } = {}
-      try {
-        const hr = await fetch("/api/doktor/hafiza", { headers: { Authorization: `Bearer ${authToken}` } })
-        if (hr.ok) hafiza = await hr.json()
-      } catch { /* hafıza kritik değil */ }
-      const firstMessage = `Merhaba ${address(doctor || { firstName: 'Hocam' }, 'named')}. Nasıl yardımcı olabilirim?`
-      const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
-      const { signedUrl, voiceId, tekBeyin } = await fetchSignedUrl(p)
-      if (tekBeyin) {
-        tekBeyinRef.current = { oturumId: tekBeyin.oturumId, sonra: tekBeyin.baslangic }
-        setOrtakOturumId(tekBeyin.oturumId)
-      }
-
-      // Pre-regression path (c38e18e): same for all personas — personalized
-      // first_message with single-flight fallback; always pass tts.voiceId.
-      await startConversationWithoutFirstMessage(
-        signedUrl,
-        voicePrompt,
-        firstMessage,
-        voiceId,
-        {
-          tryFirstMessage: true,
-          refreshSignedUrl: () => fetchSignedUrl(p).then((r) => r.signedUrl),
-          notyaJeton: tekBeyin?.jeton,
-        }
-      )
-    } catch (e: unknown) {
-      const raw = e instanceof Error ? e.message : String(e)
-      setErrorMsg(
-        raw.includes("denied") || raw.includes("NotAllowed") || raw.includes("Permission")
-          ? micPermissionHelp()
-          : connectionErrorHelp(raw)
-      )
-      setStatus("error")
-      conversationRef.current = null
-    }
-  }
-
-  async function startConversationWithoutFirstMessage(
-    signedUrl: string,
-    voicePrompt: string,
-    firstMessage: string,
-    voiceId: string,
-    opts?: {
-      tryFirstMessage?: boolean
-      refreshSignedUrl?: () => Promise<string>
-      /** NOTYA-TEK-BEYIN: imzalı konuşma jetonu → Custom LLM extra body; varken tarayıcı araçları kullanılmaz. */
-      notyaJeton?: string
-    }
-  ) {
-    const tekBeyin = Boolean(opts?.notyaJeton)
-    let doktorKonustu = false
-    const tryFirst = Boolean(opts?.tryFirstMessage)
-    let usedFirstMessage = tryFirst
-    let retriedWithoutFirst = false
-    let retryInFlight = false
-    let activeSignedUrl = signedUrl
-
-    const endCurrentSession = async () => {
-      const old = conversationRef.current
-      conversationRef.current = null
-      if (old) {
-        try { await old.endSession() } catch { /* ignore */ }
-      }
-    }
-
-    const scheduleRetryWithoutFirst = async () => {
-      if (retriedWithoutFirst || retryInFlight) return
-      retriedWithoutFirst = true
-      retryInFlight = true
-      try {
-        await endCurrentSession()
-        if (opts?.refreshSignedUrl) {
-          try {
-            activeSignedUrl = await opts.refreshSignedUrl()
-          } catch {
-            // Keep prior URL if refresh fails; begin(false) may still succeed.
-          }
-        }
-        await begin(false)
-      } catch (e: unknown) {
-        setErrorMsg(connectionErrorHelp(e instanceof Error ? e.message : String(e)))
-        setStatus("error")
-        conversationRef.current = null
-      } finally {
-        retryInFlight = false
-      }
-    }
-
-    const begin = async (includeFirstMessage: boolean) => {
-      usedFirstMessage = includeFirstMessage
-      // Fallback seeds UI greeting; skip the agent's own default transcript once.
-      let skipNextAgentTranscript = !includeFirstMessage
-      setStatus("connecting")
-      const conversation = await Conversation.startSession({
-        signedUrl: activeSignedUrl,
-        connectionType: "websocket",
-        overrides: {
-          agent: {
-            prompt: { prompt: voicePrompt },
-            language: "tr",
-            ...(includeFirstMessage ? { firstMessage } : {}),
-          },
-          tts: { voiceId },
-        },
-        // NOTYA-TEK-BEYIN: ElevenLabs bunu her LLM isteğinde elevenlabs_extra_body olarak /api/asistan/ses-llm'e taşır.
-        ...(tekBeyin ? { customLlmExtraBody: { notya_jeton: opts?.notyaJeton } } : {}),
-        // Kaan (2026-09-14): "Ayşe Hocam bana fırça attı, dosyalara giremiyorum diyor" —
-        // sesli Ayşe'nin gerçekten hasta dosyasına erişimi yoktu (yazılı sohbette vardı).
-        // ElevenLabs client tool: doktor bir hasta adı söylediğinde agent bunu çağırır,
-        // tarayıcı doktorun kendi oturum belirtecinle /api/asistan/hasta-bul'u sorgular.
-        //
-        // NOTYA-EYLEM-19 — dosyaya kayıt HAZIRLAMA + sözlü onay. Bu araçlar klinik tabloya
-        // yazmaz: /api/asistan/ses-eylem yalnız taslak açar veya eylemOnayla omurgasını çağırır.
-        // Canlı ElevenLabs ajanına araç şeması Kaan tarafından yapıştırılmalı (docs/README_EYLEM.md).
-        // NOTYA-TEK-BEYIN: tek beyinli seste hasta arama, kart hazırlama ve sözlü onay sunucuda — tarayıcı aracı yok.
-        clientTools: tekBeyin ? {} : {
-          hasta_bul: async (params: { isim?: string }) => {
-            try {
-              const t = await ensureDoctorAccessToken()
-              const r = await fetch("/api/asistan/hasta-bul", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-                body: JSON.stringify({ isim: params?.isim || "" }),
-              })
-              const j = await r.json()
-              // NOTYA-BETA-0925: kimlik / iletişim değerleri (anne-baba adı, telefon…) yalnız ekrana yazılır;
-              // ajana dönen `sonuc` bu değerleri taşımaz.
-              if (j.ekran) addMsg("ai", String(j.ekran))
-              return String(j.sonuc || "Dosyaya şu an ulaşamadım.")
-            } catch {
-              return "Dosyaya şu an ulaşamadım, bağlantı sorunu olabilir."
-            }
-          },
-          dosyaya_kayit_hazirla: async (params: {
-            eylem?: string
-            hasta?: string
-            alanlar?: Record<string, unknown> | string
-          }) => {
-            try {
-              const t = await ensureDoctorAccessToken()
-              let alanlar: Record<string, unknown> = {}
-              if (typeof params?.alanlar === 'string' && params.alanlar.trim()) {
-                try {
-                  const p = JSON.parse(params.alanlar)
-                  if (p && typeof p === 'object' && !Array.isArray(p)) alanlar = p as Record<string, unknown>
-                } catch {
-                  alanlar = { notlar: params.alanlar }
-                }
-              } else if (params?.alanlar && typeof params.alanlar === 'object') {
-                alanlar = params.alanlar
-              }
-              const r = await fetch("/api/asistan/ses-eylem", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-                body: JSON.stringify({
-                  adim: "hazirla",
-                  eylem: params?.eylem || "",
-                  hastaAdi: params?.hasta || "",
-                  alanlar,
-                }),
-              })
-              const j = (await r.json()) as { sonuc?: string; oneriId?: string; hastaId?: string }
-              if (j.oneriId && j.hastaId) {
-                sesEylemRef.current = { oneriId: String(j.oneriId), hastaId: String(j.hastaId) }
-                void kartiYukle(String(j.hastaId), String(j.oneriId))
-              }
-              return String(j.sonuc || "Kartı hazırlayamadım Hocam, ekrandan deneyelim.")
-            } catch {
-              return "Kartı hazırlayamadım Hocam, bağlantı sorunu olabilir."
-            }
-          },
-          eylem_onayla: async (params: { onayMetni?: string; oneriId?: string; hastaId?: string }) => {
-            try {
-              const t = await ensureDoctorAccessToken()
-              const son = sesEylemRef.current
-              const r = await fetch("/api/asistan/ses-eylem", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-                body: JSON.stringify({
-                  adim: "onayla",
-                  onayMetni: params?.onayMetni || "evet",
-                  oneriId: params?.oneriId || son?.oneriId || "",
-                  hastaId: params?.hastaId || son?.hastaId || "",
-                }),
-              })
-              const j = (await r.json()) as { sonuc?: string; ok?: boolean }
-              if (j.ok) {
-                sesEylemRef.current = null
-                setSesKarti(null)
-              }
-              return String(j.sonuc || "Onaylanamadı.")
-            } catch {
-              return "Onaylanamadı, bağlantı sorunu olabilir."
-            }
-          },
-          eylem_vazgec: async (params: { oneriId?: string; hastaId?: string }) => {
-            try {
-              const t = await ensureDoctorAccessToken()
-              const son = sesEylemRef.current
-              const r = await fetch("/api/asistan/ses-eylem", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-                body: JSON.stringify({
-                  adim: "vazgec",
-                  oneriId: params?.oneriId || son?.oneriId || "",
-                  hastaId: params?.hastaId || son?.hastaId || "",
-                }),
-              })
-              const j = (await r.json()) as { sonuc?: string }
-              sesEylemRef.current = null
-              setSesKarti(null)
-              return String(j.sonuc || "Vazgeçilemedi.")
-            } catch {
-              return "Vazgeçilemedi, bağlantı sorunu olabilir."
-            }
-          },
-          randevu_takvim: async (params: { tarih?: string; saat?: string; sure_dk?: number | string }) => {
-            try {
-              const t = await ensureDoctorAccessToken()
-              const r = await fetch("/api/asistan/ses-eylem", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-                body: JSON.stringify({
-                  adim: "takvim",
-                  tarih: params?.tarih || "",
-                  saat: params?.saat || "",
-                  sure_dk: params?.sure_dk || 20,
-                }),
-              })
-              const j = (await r.json()) as { sonuc?: string }
-              return String(j.sonuc || "Takvimi okuyamadım Hocam.")
-            } catch {
-              return "Takvimi okuyamadım, bağlantı sorunu olabilir."
-            }
-          },
-        },
-        onConnect: () => {
-          setStatus("listening")
-          setErrorMsg("")
-          sureTimerlariBaslat(address(doctorProfile || { firstName: 'Hocam' }, 'named'))
-          // When first_message override is active the agent speaks it and onMessage
-          // adds the bubble once. Seeding here caused the doubled first text.
-          // Fallback path (no override): seed personalized greeting in UI only.
-          if (!includeFirstMessage) {
-            addMsg("ai", firstMessage)
-          }
-          if (tekBeyin) yoklamayiBaslat()
-        },
-        onDisconnect: (details) => {
-          sureTimerlariTemizle()
-          if (tekBeyin) yoklamayiDurdur()
-          setSureUzatmaGoster(false)
-          if (details.reason === "error") {
-            const msg = details.message || ""
-            if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(msg)) {
-              void scheduleRetryWithoutFirst()
-              return
-            }
-            conversationRef.current = null
-            setErrorMsg(connectionErrorHelp(msg))
-            setStatus("error")
-          } else {
-            conversationRef.current = null
-            setStatus("idle")
-          }
-        },
-        onError: (message) => {
-          if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(message || "")) {
-            void scheduleRetryWithoutFirst()
-            return
-          }
-          setErrorMsg(connectionErrorHelp(message))
-          setStatus("error")
-        },
-        onMessage: ({ message, role }) => {
-          if (role !== "user" && skipNextAgentTranscript) {
-            skipNextAgentTranscript = false
-            return
-          }
-          // NOTYA-TEK-BEYIN: açılış selamından sonra Ayşe'nin baloncuğu sözlü kısa biçim değil, ekran biçimidir (ekranYokla).
-          if (tekBeyin) {
-            if (role === "user") doktorKonustu = true
-            else if (doktorKonustu) return
-          }
-          addMsg(role === "user" ? "user" : "ai", message)
-        },
-        onModeChange: ({ mode }) => {
-          setStatus(mode === "speaking" ? "speaking" : "listening")
-        },
-        onStatusChange: ({ status: sdkStatus }) => {
-          if (sdkStatus === "connecting") setStatus("connecting")
-          if (sdkStatus === "connected") setStatus("listening")
-        },
-      })
-      conversationRef.current = conversation
-    }
-
-    try {
-      await begin(tryFirst ? true : false)
-    } catch (e: unknown) {
-      const raw = e instanceof Error ? e.message : String(e)
-      if (tryFirst && isFirstMessageOverrideError(raw) && !retriedWithoutFirst) {
-        await scheduleRetryWithoutFirst()
-        return
-      }
-      setErrorMsg(connectionErrorHelp(raw))
-      setStatus("error")
-      conversationRef.current = null
-    }
-  }
-
-  async function kartiYukle(hastaId: string, oneriId: string) {
-    try {
-      const t = await ensureDoctorAccessToken()
-      if (!t) return
-      const r = await fetch(`/api/doktor/eylem?hastaId=${encodeURIComponent(hastaId)}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      })
-      const j = (await r.json()) as { oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta }
-      const oneri = (j.oneriler || []).find((o) => o.id === oneriId) || (j.oneriler || [])[0]
-      if (oneri && j.hasta) {
-        sesKartiIdRef.current = oneri.id
-        setSesKarti({ oneri, hasta: j.hasta })
-      }
-    } catch { /* kart yoksa ses özeti yine durur */ }
-  }
-
-  async function stopConversation() {
-    await endConversation()
-  }
-
-  function switchPersona(key: PersonaId) {
-    void stopConversation()
-    setPersonaKey(key)
-    setPersona(PERSONAS[key])
-    setMessages([])
-    messagesRef.current = []
-    setErrorMsg("")
-    setSesKarti(null)
-    sesEylemRef.current = null
-    try {
-      localStorage.setItem('notya_asistan_persona', key)
-    } catch { /* ignore */ }
-  }
-
-  const isActive = ["connecting", "listening", "speaking"].includes(status)
   const statusLabel = {
     idle:       "Konuşmayı başlatmak için dokunun",
     connecting: "Bağlanıyor...",
@@ -725,8 +101,9 @@ function AsistanPageInner() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
       <div style={{ padding: "12px 16px", borderBottom: `1px solid ${CHROME_RENK.border}`, background: "#faf6ee", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-          <div onClick={() => { void stopConversation(); router.push("/dashboard/doktor") }}
-            style={{ color: CHROME_RENK.muted, cursor: "pointer", fontSize: "24px", padding: "6px 8px", flexShrink: 0, lineHeight: 1 }}>‹</div>
+          {/* NOTYA-ASISTAN-YUZEN-01: geri dönmek oturumu bitirmez — ses yüzen panelde sürer. */}
+          <Link href="/dashboard/doktor" aria-label="Ana sayfaya dön"
+            style={{ color: CHROME_RENK.muted, cursor: "pointer", fontSize: "24px", padding: "6px 8px", flexShrink: 0, lineHeight: 1, textDecoration: "none" }}>‹</Link>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: "15px", fontWeight: 600, color: CHROME_RENK.ink, lineHeight: 1.35, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatColleagueTabLabel(persona.name)}</div>
@@ -821,10 +198,7 @@ function AsistanPageInner() {
           <EylemKarti
             oneri={sesKarti.oneri}
             hasta={sesKarti.hasta}
-            onSonuc={() => {
-              sesEylemRef.current = null
-              setSesKarti(null)
-            }}
+            onSonuc={sesKartiniKapat}
           />
         </div>
       )}
@@ -893,7 +267,7 @@ function AsistanPageInner() {
         </div>
       </div>
       {/* NOTYA-KADEME-01: temel kademe yüzeyi — sesli sor (tarayıcı STT), yazılı cevap; dosya bilinçli */}
-      <YaziliSohbet personaId={personaKey} personaAdi={persona.shortName} oturumId={ortakOturumId} onOturumId={setOrtakOturumId} />
+      <YaziliSohbet />
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wave1{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}@keyframes wave2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}`}</style>
     </div>
       </div>

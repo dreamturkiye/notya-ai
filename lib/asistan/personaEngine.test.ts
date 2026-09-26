@@ -40,5 +40,6 @@ test('chat route and asistan page use the branch-aware default, not a hardcoded 
   const rota = fs.readFileSync(path.join(kok, 'lib/asistan/ayseCevapla.ts'), 'utf8') // NOTYA-TEK-BEYIN: chat pipeline
   assert.ok(rota.includes('varsayilanPersonaId(specialty, hekimBransi)')); assert.ok(!rota.includes('getPersonaForSpecialty(specialty || "pediatri")'))
   assert.ok(!rota.includes('prefs?.preferred_persona'), 'schema default elifsahin (nöroloji) is never a doctor pick')
-  assert.ok(fs.readFileSync(path.join(kok, 'app/asistan/page.tsx'), 'utf8').includes('resolveOpeningPersonaId('))
+  // NOTYA-ASISTAN-YUZEN-01: açılış meslektaşı /asistan oturumunun sahibi olan context'te çözülür.
+  assert.ok(fs.readFileSync(path.join(kok, 'components/asistan/AsistanOturumContext.tsx'), 'utf8').includes('resolveOpeningPersonaId('))
 })

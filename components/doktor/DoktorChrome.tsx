@@ -20,7 +20,7 @@
  */
 
 import React, { useEffect, useState, createContext, useContext } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
@@ -181,6 +181,7 @@ function havaIkonu(kod: number): string {
 
 export default function DoktorChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
   const [mesajUnread, setMesajUnread] = useState(0);
   const [gelenSayi, setGelenSayi] = useState(0);
@@ -288,10 +289,12 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     if (!raw) window.location.href = '/giris/doktor';
   }, []);
 
+  // NOTYA-ASISTAN-YUZEN-01: istemci tarafı gezinme — window.location tam sayfa yüklemesi yapıp
+  // AsistanOturumProvider'ı (sesli seans + sohbet) öldürüyordu.
   function handleNav(route: string) {
     const raw = getDoctorAccessToken();
-    if (!raw) { window.location.href = '/giris/doktor'; return; }
-    window.location.href = route;
+    if (!raw) { router.push('/giris/doktor'); return; }
+    router.push(route);
     setMenuOpen(false);
   }
 
