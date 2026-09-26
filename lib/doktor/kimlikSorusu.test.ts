@@ -143,6 +143,11 @@ describe('kimlikSorusu — Gökhan’ın cümleleri tanınır', () => {
     assert.deepEqual(K.kimlikSorusu('doğum yeri neresi'), ['dogumYeri'])
     assert.deepEqual(K.kimlikSorusu('DOĞUM TARİHİ NE?'), ['dogumTarihi'])
   })
+  it('erişim itirazı: "bu bilgilere ulaşamıyorum" + anne/baba → aynı alanlar, modelsiz tekrar', () => {
+    assert.equal(K.kimlikErisimSorusu('Bu bilgilere ulaşamıyorum, annenin ve babanın telefonu'), true)
+    assert.deepEqual(K.kimlikSorusu('Bu bilgilere ulaşamıyorum, annenin ve babanın telefonu'), ['anneAdi', 'babaAdi', 'anneTelefon', 'babaTelefon'])
+    assert.equal(K.kimlikErisimSorusu('Annesi telefonda ateşin 39 olduğunu söyledi'), false)
+  })
   it('klinik cümle, kohort sorusu, arama ve kayıt niyeti kimlik sorusu değildir', () => {
     for (const m of [
       'Annesi telefonda ateşin 39 olduğunu söyledi, ne yapalım?',
@@ -192,9 +197,12 @@ describe('kimlik cevabı — değer ekrana, model bağlamına asla', () => {
     assert.ok(!gecmis.includes(ANNE) && !gecmis.includes(BABA), 'saklanan geçmiş (sonraki turda modele gider) değer taşımamalı')
     assert.equal(oturum.active_context.currentPatientId, s.hasta)
 
-    // Takip sorusu aktif hastadan: "babasının telefonu" — yine modelsiz; sonra klinik soru modele gider ama değer taşımaz
-    const t = await coz(R.chat.POST(iste('/api/asistan/chat', s.doktor.token, { message: 'babasının telefonu', asistanSessionId: oturum.id })))
+    const t = await coz(R.chat.POST(iste('/api/asistan/chat', s.doktor.token, { message: 'Bu bilgilere ulaşamıyorum, annenin ve babanın telefonu da var mı', asistanSessionId: oturum.id })))
+    assert.equal(t.status, 200, t.metin)
+    assert.match(t.json.data.speech, new RegExp(ANNE))
+    assert.match(t.json.data.speech, new RegExp(BABA))
     assert.match(t.json.data.speech, new RegExp(BABA_TEL))
+    assert.ok(!/erişemem|ulaşamam|erişimim yok/i.test(t.json.data.speech), t.json.data.speech)
     assert.equal(modelIstekleri.length, 0)
     const k = await coz(R.chat.POST(iste('/api/asistan/chat', s.doktor.token, { message: 'Öksürüğü için ne önerirsin?', asistanSessionId: oturum.id })))
     assert.equal(k.status, 200, k.metin)

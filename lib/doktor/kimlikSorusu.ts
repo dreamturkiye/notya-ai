@@ -84,6 +84,15 @@ function sade(mesaj: string): string {
  * yalnız soru biçimli ifadeler: "annesinin adı", "babasının telefonu", "adresi ne" — "annesi telefonda ateşin 39
  * olduğunu söyledi" (telefonda) ya da kohort sorusu ("telefonu olmayan hastalar") eşleşmez.
  */
+/** "Bu bilgilere ulaşamıyorum" / "erişimin var mı" — değer istemez, erişim iddiasını düzeltir. */
+export function kimlikErisimSorusu(mesaj: string): boolean {
+  const n = sade(mesaj)
+  if (/ hastalar| hastalarim| kac hasta| hangi hasta| olan | bul\w* | listele\w* /.test(n)) return false
+  if (/ (kaydet|guncelle|degistir|ekle|sil|duzelt|gonder|yolla)\w*/.test(n) || / mail at /.test(n)) return false
+  return /(bu bilgi|bu bilgiler|bu veri|erisim|erise|ulasami|ulasa)/.test(n)
+    && /(anne|baba|veli|telefon|eposta|e posta|adres|kimlik|iletisim|demografik)/.test(n)
+}
+
 export function kimlikSorusu(mesaj: string): KimlikAlani[] {
   const n = sade(mesaj)
   if (n.trim().length < 3) return []
@@ -91,6 +100,24 @@ export function kimlikSorusu(mesaj: string): KimlikAlani[] {
   // "annesinin adı Ayşe olan hastayı bul" bir hasta aramasıdır (hastaAramaFiltre anneadi filtresi) — burada cevaplanmaz.
   if (/ hastalar| hastalarim| kac hasta| hangi hasta| olan | bul\w* | listele\w* /.test(n)) return []
   if (/ (kaydet|guncelle|degistir|ekle|sil|duzelt|gonder|yolla)\w*/.test(n) || / mail at /.test(n)) return []
+  if (kimlikErisimSorusu(mesaj)) {
+    const alanlar: KimlikAlani[] = []
+    const ekle = (a: KimlikAlani) => { if (!alanlar.includes(a)) alanlar.push(a) }
+    const anne = / anne(?!anne)\w*/.test(n)
+    const baba = / baba(?!anne)\w*/.test(n)
+    if (anne) ekle('anneAdi')
+    if (baba) ekle('babaAdi')
+    if (/ veli\w*| yasal temsilci\w*/.test(n)) ekle('veli')
+    if (/ telefon\w*| numara\w*| gsm /.test(n)) {
+      if (anne) ekle('anneTelefon')
+      if (baba) ekle('babaTelefon')
+      if (!anne && !baba) ekle('telefon')
+    }
+    if (/ e posta|eposta|e mail|email /.test(n)) ekle('eposta')
+    if (/ adres\w*/.test(n.replace(/ (e posta|eposta|e mail|email|mail) adres\w*/g, ' '))) ekle('adres')
+    if (alanlar.length) return alanlar
+    return ['anneAdi', 'babaAdi']
+  }
 
   const anne = / anne(?!anne)\w*/.test(n) || / ana(si|sinin|nin)? ad/.test(n)
   const baba = / baba(?!anne)\w*/.test(n)
@@ -255,8 +282,8 @@ export function kimlikCevabiMetni(alanlar: KimlikAlani[], k: KimlikKaydi, nowMs 
   const satirlar = alanlar.map((a) => satir(a, k, nowMs))
   return {
     ekran: satirlar.length === 1 ? `${k.ad} — ${satirlar[0].ekran}` : `${k.ad}\n${satirlar.map((s) => `• ${s.ekran}`).join('\n')}`,
-    model: `${k.ad} için istenen kimlik bilgisini doğrudan doktorun ekranına yazdım (${satirlar.map((s) => s.model).join('; ')}). `
-      + 'KVKK gereği kimlik ve iletişim değerleri bana gönderilmiyor — değeri söyleme, "ekranda" de.',
+    model: `${k.ad} için istenen kimlik ve iletişim bilgisine ERİŞİMİM VAR; değeri az önce ekrana yazdım (${satirlar.map((s) => s.model).join('; ')}). `
+      + 'Seste okumam — telefon ve adres ekranda kalır. "Erişemem / ulaşamam" DEME. Doktor tekrar sorarsa: "Ekranda, az önce yazdım."',
   }
 }
 
