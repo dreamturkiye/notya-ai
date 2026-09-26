@@ -254,8 +254,13 @@ export default function DoktorDashboard() {
   const card: React.CSSProperties = { background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 20, boxShadow: '0 16px 34px rgba(58,44,34,0.06)' }
 
   return (
-    <div style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
-      <style>{`@keyframes nabizYg { 0%,100%{opacity:1} 50%{opacity:.4} } .yg-satir:hover, .yg-karo:hover, .yg-rv:hover { background: rgba(47,67,52,0.05) !important; }`}</style>
+    <div className="yg-ana" style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
+      <style>{`@keyframes nabizYg { 0%,100%{opacity:1} 50%{opacity:.4} } .yg-satir:hover, .yg-karo:hover, .yg-rv:hover { background: rgba(47,67,52,0.05) !important; }
+        @media (max-width: 899px) {
+          .yg-alt, .yg-hafta { display: contents !important; }
+          .yg-mesaj, .yg-kpi, .yg-erisim, .yg-notlar, .yg-ozet { order: 1; }
+          .yg-fisilti { order: 0; margin-top: 0 !important; }
+        }`}</style>
 
       {/* Kicker + title */}
       <div>
@@ -290,7 +295,7 @@ export default function DoktorDashboard() {
       <BekleyenKonsultasyonOzeti />
 
       {/* Randevular — Bugün / Bu Hafta */}
-      <div>
+      <div className="yg-takvim">
         <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 })}>
           <div style={S({ display: 'flex', background: '#EFE9DC', borderRadius: 11, padding: 4, gap: 2 })}>
             {([['bugun', 'Bugün'], ['hafta', 'Bu Hafta']] as const).map(([k, v]) => (
@@ -399,7 +404,7 @@ export default function DoktorDashboard() {
       {/* Yeni mesajlar — hasta portalından gelen, henüz okunmamış konular; "Bugün" alanının hemen
           altında, sadece randevuların değil (Kaan, 2026-09-24) */}
       {yeniMesajlar.length > 0 && (
-        <div>
+        <div className="yg-mesaj">
           <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 })}>
             <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Yeni mesajlar</div>
             <span onClick={() => router.push('/dashboard/doktor/mesajlar')} style={S({ fontSize: 13, color: CHROME_RENK.pine, fontWeight: 600, cursor: 'pointer' })}>Tümünü gör ›</span>
@@ -421,7 +426,7 @@ export default function DoktorDashboard() {
       )}
 
       {/* KPI kartları */}
-      <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 })}>
+      <div className="yg-kpi" style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 })}>
         {[
           { label: 'Bugünkü muayene', value: kpi.bugunkuMuayene, color: CHROME_RENK.pine, sub: 'hasta bugün' },
           { label: 'Bekleyen onay', value: kpi.bekleyenOnay, color: '#B4832F', sub: 'not onayı bekliyor', git: '/dashboard/doktor/inceleme' },
@@ -442,7 +447,7 @@ export default function DoktorDashboard() {
       </div>
 
       {/* Hızlı erişim */}
-      <div>
+      <div className="yg-erisim">
         <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı erişim</div>
         <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
           {[
@@ -470,9 +475,9 @@ export default function DoktorDashboard() {
           İnceleme Kuyruğu'na düşmek (o not zaten kuyrukta olmadığı için "bekleyen not yok" görünmesi)
           kafa karıştırıyordu. API artık yalnız onay bekleyeni döndürür (son-notlar/route.ts); panel de
           hiçbir şey bekleniyorsa hiç görünmez -- boş bir "henüz not yok" kartı yerine. */}
-      <div style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
+      <div className="yg-alt" style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
         {(loading || recentNotes.length > 0) && (
-        <div style={S({ flex: '1 1 280px', minWidth: 0 })}>
+        <div className="yg-notlar" style={S({ flex: '1 1 280px', minWidth: 0 })}>
           <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 })}>
             <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Onay bekleyen muayene notları</div>
             <span onClick={() => router.push('/dashboard/doktor/inceleme')} style={S({ fontSize: 13, color: CHROME_RENK.pine, fontWeight: 600, cursor: 'pointer' })}>Tümünü gör ›</span>
@@ -499,7 +504,8 @@ export default function DoktorDashboard() {
         </div>
         )}
 
-        <div style={S({ flex: '1 1 240px', minWidth: 0 })}>
+        <div className="yg-hafta" style={S({ flex: '1 1 240px', minWidth: 0, display: 'flex', flexDirection: 'column' })}>
+          <div className="yg-ozet">
           <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>&nbsp;</div>
           <div style={S({ ...card, padding: '20px 20px 18px' })}>
             <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Bu hafta özeti</div>
@@ -515,9 +521,10 @@ export default function DoktorDashboard() {
               </div>
             ))}
           </div>
+          </div>
 
-          {/* Notya fısıldıyor — moved here under Bu Hafta Özeti, own dark-blue identity (Kaan, 2026-09-24) */}
-          <div style={S({ marginTop: 16 })}>
+          {/* Phone: directly under today's calendar. Desktop: stays under Bu Hafta Özeti. */}
+          <div className="yg-fisilti" style={S({ marginTop: 16 })}>
             <NotyaFisildiyor specialty={specialty} />
           </div>
         </div>
