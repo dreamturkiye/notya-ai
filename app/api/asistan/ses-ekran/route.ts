@@ -2,7 +2,8 @@
  * NOTYA-TEK-BEYIN — sesli turların EKRAN biçimi (/asistan sayfası görüşme sırasında hafifçe yoklar).
  *
  * Sesli Ayşe ElevenLabs'ten yalnız kısa sözlü biçimi konuşur; tam cevap (liste, tablo, kimlik değerleri) ve onay
- * kartları ortak asistan oturumuna yazılır, sayfa burada okur. Kimlik cevabının değerleri saklanmaz — turun sorusu
+ * kartları ortak asistan oturumuna yazılır, sayfa burada okur. NOTYA-SES-DEVAM-01: kesilen turun okunmamış kalanı
+ * varsa `devam` / `devamAnahtar` döner; sayfa ajan susunca gizli `[devam]` turunu bir kez yollar. Kimlik cevabının değerleri saklanmaz — turun sorusu
  * burada, sunucuda, yeniden cevaplanır (kimlikSorusunuCevapla, doctor_id kapsamlı).
  *
  * HASTA-IZOLASYON-01: oturum id + doctor_id birlikte; yabancı oturum → 404. Kart hastası oturumun kendi satırından,
@@ -11,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { kimlikSorusunuCevapla } from '@/lib/doktor/kimlikSorusu'
-import type { OturumMesaji } from '@/lib/asistan/ayseCevapla'
+import type { OturumMesaji, SesDevam } from '@/lib/asistan/ayseCevapla'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,10 @@ export async function GET(req: NextRequest) {
   if (!oturum) return NextResponse.json({ error: 'Oturum bulunamadı' }, { status: 404 })
 
   const mesajlar = ((oturum as { messages?: OturumMesaji[] }).messages || [])
-  const turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null }[] = []
+  const baglam = ((oturum as { active_context?: Record<string, unknown> }).active_context || {})
+  const sesDevam = baglam.sesDevam as SesDevam | undefined
+  const devamAnahtar = sesDevam && typeof sesDevam.kalan === 'string' && sesDevam.kalan.trim() ? String(sesDevam.anahtar || '') || null : null
+  const turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null; devam: boolean }[] = []
   for (let i = 0; i < mesajlar.length; i++) {
     const m = mesajlar[i]
     if (m?.role !== 'assistant' || m.kanal !== 'ses' || !m.zaman || (sonra && m.zaman <= sonra)) continue
@@ -51,11 +55,13 @@ export async function GET(req: NextRequest) {
         if (k) metin = k.ekran
       } catch { /* değersiz metin kalır */ }
     }
-    turlar.push({ zaman: m.zaman, metin, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null })
+    turlar.push({ zaman: m.zaman, metin, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null, devam: devamAnahtar === m.zaman })
   }
-  const baglam = ((oturum as { active_context?: Record<string, unknown> }).active_context || {})
   return NextResponse.json({
     turlar,
+    // Cursor-independent: the page waits for Ayşe to stop speaking and re-checks on every poll until consumed.
+    devam: Boolean(devamAnahtar),
+    devamAnahtar,
     aktifHasta: typeof baglam.patientName === 'string' ? baglam.patientName : null,
     // Sesle onaylanan / vazgeçilen kart artık bekleyen değildir — sayfa kartı kapatır.
     bekleyen: Array.isArray(baglam.bekleyenOneriler) ? baglam.bekleyenOneriler.map(String) : [],

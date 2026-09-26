@@ -55,7 +55,7 @@ import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { bugunTRT, type HastaOzeti } from "@/core/eylemler/types"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { konusmaYap, okumaIstegiMi, SesAkisi } from "@/lib/asistan/konusma"
+import { konusmaYap, okumaIstegiMi, SesAkisi, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
@@ -80,6 +80,19 @@ export interface AyseGirdisi {
   sozParcasi?: (parca: string) => void
   /** NOTYA-SES-ERKEN-01: called once when the spoken cap is reached; the voice channel may close, the screen answer continues. */
   sesSiniri?: () => void
+  /**
+   * NOTYA-SES-DEVAM-01: the voice endpoint's view of this turn — was it cut (cap or guard timer) and what text
+   * actually reached ElevenLabs. When given, the cap is silent and a cut turn stores its remainder (sesDevam).
+   */
+  sesDurumu?: () => { kesildi: boolean; soylenen: string }
+}
+
+/** NOTYA-SES-DEVAM-01: asistan_sessions.active_context.sesDevam — the unspoken rest of a cut voice turn. */
+export interface SesDevam {
+  /** The assistant message's `zaman` (the ses-ekran turn key). */
+  anahtar: string
+  kalan: string
+  olusturma: string
 }
 
 /** Sohbet geçmişi satırı. Sesli turlar ekrana taşınabilmek için `kanal` / `zaman` / `kartlar` da taşır; modele yalnız role + content gider. */
@@ -161,20 +174,25 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const oturumId = (asistanSession?.id as string) || null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
-  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[] } = {}) => {
+  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[]; sesDevamKalan?: string } = {}) => {
     const kullanici: OturumMesaji = ses ? { role: "user", content: message, kanal: "ses", zaman: simdi() } : { role: "user", content: message }
+    const asistanZamani = simdi()
     const asistan: OturumMesaji = ses
       ? {
-          role: "assistant", content: asistanSozu, kanal: "ses", zaman: simdi(),
+          role: "assistant", content: asistanSozu, kanal: "ses", zaman: asistanZamani,
           ...(ek.kartlar?.length ? { kartlar: ek.kartlar, hastaId: ek.kartHastaId ?? null } : {}),
           ...(ek.kimlik ? { kimlik: true, hastaId: ek.hasta?.id ?? (contextPatientId ? String(contextPatientId) : null) } : {}),
         }
       : { role: "assistant", content: asistanSozu }
-    const yeniBaglam = ek.hasta || ek.bekleyen
+    // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
+    const { sesDevam: eskiDevam, ...oncekiBaglam } = baglam
+    const sesDevam: SesDevam | null = ses && ek.sesDevamKalan ? { anahtar: asistanZamani, kalan: ek.sesDevamKalan, olusturma: simdi() } : null
+    const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam
       ? {
-          ...baglam,
+          ...oncekiBaglam,
           ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad } : {}),
           ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
+          ...(sesDevam ? { sesDevam } : {}),
         }
       : null
     await supabase.from("asistan_sessions").update({
@@ -364,7 +382,8 @@ ${ilacBaglamMetni(drugs[0])}`
     if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
     return t
   }
-  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri) : null
+  // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
+  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, SOZ_BEAT_SINIRI, Boolean(g.sesDurumu)) : null
 
   const cagri = {
     istemci: getAnthropic(),
@@ -480,8 +499,16 @@ ${ilacBaglamMetni(drugs[0])}`
     if (ses && eylemHastasi) sozEkle(kartOkumasi(eylemOnerileri, eylemHastasi.ad))
   }
 
+  // NOTYA-SES-DEVAM-01 (Dr. Gökhan: "özet yarıda kesilmesin"): the voice turn closed before everything was said
+  // (5-sentence cap or the 22 s guard) → the unspoken rest, uncapped, waits for the page's hidden [devam] turn.
+  let sesDevamKalan = ""
+  const durum = ses ? g.sesDurumu?.() : undefined
+  if (durum?.kesildi) {
+    sesDevamKalan = sesDevamKalani([...sozCumleleri(String(aiData.speech || ""), sesTemizle), ...sozler.slice(1)], durum.soylenen)
+  }
+
   // Update conversation history
-  await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: eylemHastasi?.id ?? null, bekleyen })
+  await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: eylemHastasi?.id ?? null, bekleyen, sesDevamKalan })
 
   // Log action for learning
   await supabase.from("asistan_actions").insert({

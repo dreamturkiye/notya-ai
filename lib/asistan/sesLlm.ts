@@ -10,13 +10,16 @@
  * Hız: arama / model gerekiyorsa hemen kısa bir bekletme sözü ("Bakıyorum Hocam... "), sonra cevap model yazdıkça
  * (yazılı cevapla aynı içerik, doğal cümlelerle — lib/asistan/konusma.ts).
  * ElevenLabs sistem araçları (tools): yalnız end_call kullanılır (doktor görüşmeyi bitirince); diğerleri yok sayılır.
+ * NOTYA-SES-DEVAM-01: kesilen sesli turun söylenmeyen kalanı (active_context.sesDevam) gizli `[devam]` turunda
+ * (ya da doktor "devam" deyince) modelsiz, sınırsız okunur.
  * Günlüğe klinik içerik yazılmaz — yalnız hata türü.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
-import { DEVAMI_EKRANDA, dolguSec } from '@/lib/asistan/konusma'
+import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
+import type { SesDevam } from '@/lib/asistan/ayseCevapla'
 import { waitUntil } from '@vercel/functions'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
@@ -59,6 +62,20 @@ export function vedaMi(mesaj: string): boolean {
   return VEDA.test(String(mesaj || '').trim().toLocaleLowerCase('tr-TR'))
 }
 
+/**
+ * NOTYA-SES-DEVAM-01: take the unspoken remainder of the last cut voice turn (and clear it). Doctor-scoped read;
+ * null when there is none. Clearing first means a duplicate [devam] cannot read the remainder twice.
+ */
+async function sesDevamAl(supabase: ReturnType<typeof getSupabase>, doktorId: string, oturumId: string): Promise<string | null> {
+  const { data } = await supabase.from('asistan_sessions').select('active_context').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
+  const baglam = ((data as { active_context?: Record<string, unknown> } | null)?.active_context || null)
+  const devam = baglam?.sesDevam as SesDevam | undefined
+  if (!baglam || !devam) return null
+  const { sesDevam: _alinan, ...kalanBaglam } = baglam
+  await supabase.from('asistan_sessions').update({ active_context: kalanBaglam }).eq('id', oturumId).eq('doctor_id', doktorId)
+  return typeof devam.kalan === 'string' && devam.kalan.trim() ? devam.kalan : null
+}
+
 function aracVarMi(araclar: unknown, ad: string): boolean {
   return Array.isArray(araclar) && (araclar as ElArac[]).some((a) => (a?.function?.name || a?.name) === ad)
 }
@@ -90,7 +107,27 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       })
       const yaz = (t: string) => { if (!t) return; parca({ content: t }); ilk = false }
       let cevapSoylendi = false
-      const cevapYaz = (t: string) => { if (t.trim()) cevapSoylendi = true; yaz(t) }
+      // NOTYA-SES-DEVAM-01: what actually reached ElevenLabs before the voice turn closed (the continuation starts after it).
+      let turKapandi = false
+      let soylenen = ''
+      const cevapYaz = (t: string) => {
+        if (t.trim()) cevapSoylendi = true
+        if (!turKapandi) soylenen += t
+        yaz(t)
+      }
+      /**
+       * NOTYA-SES-DEVAM-01: the rest of the cut turn, uncapped, sentence by sentence — no model call, no new screen
+       * bubble (the screen already holds the full answer). A hidden [devam] with nothing left (already read, or the
+       * doctor moved on) is not a question: nothing is said. A spoken "devam" with nothing left is a normal turn.
+       */
+      const devamiOku = async (m: string): Promise<boolean> => {
+        const kalan = await sesDevamAl(getSupabase(), jeton.d, jeton.o).catch(() => null)
+        if (!kalan) return m === DEVAM_ISARETI
+        const akis = new SesAkisi(cevapYaz, undefined, undefined, Number.POSITIVE_INFINITY)
+        akis.ekle(kalan)
+        akis.bitir()
+        return true
+      }
       let bitis = 'stop'
       try {
         if (mesaj && vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
@@ -98,6 +135,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
           ilk = false
           bitis = 'tool_calls'
+        } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
+          // okundu (ya da söylenecek bir şey kalmadı)
         } else if (mesaj) {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }))
           const supabase = getSupabase()
@@ -105,17 +144,22 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           const karar = await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
           if (karar) {
             cevapYaz(karar.soz)
+            await sesDevamAl(supabase, jeton.d, jeton.o).catch(() => null) // yeni gerçek tur: önceki turun kalanı düşer
           } else {
             // NOTYA-SES-ERKEN-01 (Dr. Gökhan, 2026-09-26 — "Bağlantı kurulamadı"): ElevenLabs drops a Custom LLM
             // stream that runs ~30 s (LLM Cascade TimeoutError). Long file answers (özet, aşı, açık işler) take
-            // longer than that on the screen. So the VOICE turn ends at the spoken cap ("Devamı ekranınızda") or
-            // at the guard timer, whichever comes first; the screen answer keeps generating in the background.
+            // longer than that on the screen. So the VOICE turn ends at the spoken cap or at the guard timer,
+            // whichever comes first; the screen answer keeps generating in the background.
+            // NOTYA-SES-DEVAM-01: a cut turn is no longer the end of the answer — ayseCevapla stores the unspoken rest
+            // and the /asistan page asks for it with a hidden [devam] turn as soon as the screen answer is ready.
             let sesSinirCoz: () => void = () => {}
+            let sinirGeldi = false
             const sesSiniri = new Promise<void>((r) => { sesSinirCoz = r })
             const sonucSozu = ayseCevapla({
               supabase, doktorId: jeton.d, oturumId: jeton.o, mesaj, kanal: 'ses',
               specialty: jeton.s, patientId: jeton.p, personaId: jeton.pe || null, sozParcasi: cevapYaz,
-              sesSiniri: () => sesSinirCoz(),
+              sesSiniri: () => { sinirGeldi = true; sesSinirCoz() },
+              sesDurumu: () => ({ kesildi: sinirGeldi || turKapandi, soylenen }),
             })
             const sonrasi = sonucSozu.then(async (sonuc) => {
               if (!sonuc.ok) { cevapYaz(sonuc.soz); return }
@@ -125,7 +169,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             const bekci = new Promise<'bekci'>((r) => setTimeout(() => r('bekci'), SES_BEKCI_MS))
             const kim = await Promise.race([sonrasi.then(() => 'bitti' as const), sesSiniri.then(() => 'sinir' as const), bekci])
             if (kim !== 'bitti') {
-              if (kim === 'bekci') cevapYaz(cevapSoylendi ? DEVAMI_EKRANDA : 'Dosyayı inceliyorum Hocam, cevabı ekranınıza yazıyorum.')
+              // Nothing extra at a cut: the pause is the gap before the continuation. Only a turn that said nothing yet
+              // gets a holding sentence (the continuation then reads the whole answer).
+              if (kim === 'bekci' && !cevapSoylendi) cevapYaz('Dosyayı inceliyorum Hocam, cevabı ekranınıza yazıyorum.')
+              turKapandi = true
               arkaPlandaSurdur(sonrasi)
             }
           }

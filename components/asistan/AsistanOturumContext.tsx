@@ -29,6 +29,7 @@ import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz'
 import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import type { SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
+import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 
 export type ConvStatus = SesDurumu
 /** sira: sesli ve yazılı mesajları yüzen panelde tek zaman çizgisinde sıralamak için. */
@@ -129,6 +130,14 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const tekBeyinRef = useRef<{ oturumId: string; sonra: string } | null>(null)
   const yoklamaRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const sesKartiIdRef = useRef<string | null>(null)
+  /**
+   * NOTYA-SES-DEVAM-01: the hidden continuation turn. `mod` mirrors the SDK's speaking/listening mode; `doktorSozu`
+   * / `ajanSustu` are the last doctor transcript and the last time Ayşe stopped speaking (the doctor interrupting
+   * after the cut cancels the continuation); `gonderilen` holds turn keys already sent or cancelled (once per turn).
+   */
+  const sesDevamRef = useRef<{ mod: "speaking" | "listening"; doktorSozu: number; ajanSustu: number; gonderilen: Set<string> }>({
+    mod: "listening", doktorSozu: 0, ajanSustu: 0, gonderilen: new Set(),
+  })
   const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
 
   // NOTYA-KADEME-01 — yazılı sohbet (components/asistan/YaziliSohbet.tsx'ten taşındı; görünüm orada kaldı).
@@ -247,6 +256,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   function addMsg(role: "user" | "ai", text: string) {
     if (!text?.trim()) return
     const trimmed = text.trim()
+    if (role === "user" && trimmed === DEVAM_ISARETI) return // NOTYA-SES-DEVAM-01: gizli devam turu baloncuk değildir
     setMessages((prev) => {
       // Guard against connect-seed + agent transcript of the same greeting.
       const last = prev[prev.length - 1]
@@ -302,18 +312,34 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         headers: { Authorization: `Bearer ${t}` },
       })
       if (!r.ok || tekBeyinRef.current !== tb) return
-      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[] }
+      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[]; devam?: boolean; devamAnahtar?: string | null }
       for (const tur of j.turlar || []) {
         if (tur.zaman > tb.sonra) tb.sonra = tur.zaman
         addMsg("ai", tur.metin)
         if (tur.kartlar?.length && tur.hastaId) void kartiYukle(tur.hastaId, tur.kartlar[tur.kartlar.length - 1])
       }
+      if (j.devam && j.devamAnahtar) sesDevamiIste(j.devamAnahtar)
       // Sesle onaylanan / vazgeçilen kart artık bekleyen değil → kapat.
       if (sesKartiIdRef.current && Array.isArray(j.bekleyen) && !j.bekleyen.includes(sesKartiIdRef.current)) {
         sesKartiIdRef.current = null
         setSesKarti(null)
       }
     } catch { /* yoklama kritik değil — bir sonraki turda tekrar */ }
+  }
+
+  /**
+   * NOTYA-SES-DEVAM-01 (Dr. Gökhan: "özet yarıda kesilmesin"): the voice turn closed at the cap / guard before the
+   * answer was fully said; the screen answer is now complete and the server holds the rest. Once Ayşe has stopped
+   * speaking, send the hidden [devam] turn — exactly once per turn key. If she is still speaking, the next poll
+   * re-checks. If the doctor spoke after she stopped, the doctor moved on: the continuation is dropped.
+   */
+  function sesDevamiIste(anahtar: string) {
+    const d = sesDevamRef.current
+    const conv = conversationRef.current
+    if (!conv || d.gonderilen.has(anahtar) || d.mod === "speaking") return
+    d.gonderilen.add(anahtar)
+    if (d.doktorSozu > d.ajanSustu) return
+    try { conv.sendUserMessage(DEVAM_ISARETI) } catch { /* bağlantı kapandıysa devam yok */ }
   }
 
   function yoklamayiBaslat() {
@@ -666,6 +692,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           setStatus("error")
         },
         onMessage: ({ message, role }) => {
+          if (role === "user" && String(message || "").trim() === DEVAM_ISARETI) return
+          if (role === "user") sesDevamRef.current.doktorSozu = Date.now()
           if (role === "user" && asistaniKapatMi(message)) {
             addMsg("user", message)
             void endConversation()
@@ -683,6 +711,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           addMsg(role === "user" ? "user" : "ai", message)
         },
         onModeChange: ({ mode }) => {
+          const d = sesDevamRef.current
+          if (d.mod === "speaking" && mode !== "speaking") d.ajanSustu = Date.now()
+          d.mod = mode === "speaking" ? "speaking" : "listening"
           setStatus(mode === "speaking" ? "speaking" : "listening")
         },
         onStatusChange: ({ status: sdkStatus }) => {

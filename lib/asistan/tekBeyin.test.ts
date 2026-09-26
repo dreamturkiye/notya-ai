@@ -171,7 +171,7 @@ async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?
 async function sesEkrani(s: Sahne, oturum = s.oturum) {
   const y = await R.sesEkran.GET(new NextRequestSinifi(`http://localhost/api/asistan/ses-ekran?oturum=${oturum}`, { headers: { authorization: `Bearer ${s.doktor.token}` } } as ConstructorParameters<typeof NextRequestSinifi>[1]))
   assert.equal(y.status, 200)
-  return (await y.json()) as { turlar: { metin: string; kartlar: string[]; hastaId: string | null }[]; bekleyen: string[]; aktifHasta: string | null }
+  return (await y.json()) as { turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null }
 }
 
 before(async () => {
@@ -311,7 +311,7 @@ describe('kilitler — sunucu sırrı + imzalı konuşma jetonu', () => {
 describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', () => {
   beforeEach(() => { sahne() })
 
-  it('NOTYA-SES-ERKEN-01: ses turu sözlü sınırda kapanır ([DONE]), ekran cevabı arka planda tamamlanır', async () => {
+  it('NOTYA-SES-ERKEN-01 + DEVAM-01: ses turu sözlü sınırda sessizce kapanır ([DONE]), ekran arka planda tamamlanır; [devam] kalanı modelsiz okur', async () => {
     const bas = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.'
     const kuyruk = ' Sekiz. Dokuz. Ekrana yazılan uzun tablo satırı.'
     const b = sahne()
@@ -324,10 +324,47 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const gecen = Date.now() - t0
     assert.equal(v.status, 200)
     assert.ok(gecen < 2000, `ses turu sınırda kapanmalı, ${gecen} ms sürdü`)
-    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+    // NOTYA-SES-DEVAM-01: a continuation follows, so the cut itself says nothing extra ("Devamı ekranınızda" is fallback only)
+    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), 'Bir. İki. Üç. Dört. Beş.')
     await new Promise((r) => setTimeout(r, 3500))
     const e = await sesEkrani(b)
     assert.ok((e.turlar.at(-1)?.metin || '').includes('Dokuz.'), 'ekran cevabı arka planda tamamlanmalı')
+    const oturum = () => db.tablo('asistan_sessions').find((o) => o.id === b.oturum)!
+    const kalan = 'Altı. Yedi. Sekiz. Dokuz. Ekrana yazılan uzun tablo satırı.'
+    assert.equal(oturum().active_context.sesDevam?.kalan, kalan, 'söylenmeyen kalan oturuma yazılmalı')
+    assert.equal(e.devam, true)
+    assert.equal(e.devamAnahtar, e.turlar.at(-1)?.zaman, 'devam anahtarı kesilen turun zamanıdır')
+    assert.equal(e.turlar.at(-1)?.devam, true)
+    // the page's hidden continuation turn: exactly the remainder, uncapped, no model call, no new bubble
+    const modelOnce = modelIstekleri.length
+    const mesajOnce = oturum().messages.length
+    const d = await ses({ sahne: b, mesaj: '[devam]' })
+    assert.equal(d.status, 200)
+    assert.equal(d.metin.replace(/\s+/g, ' ').trim(), kalan)
+    assert.equal(modelIstekleri.length, modelOnce, '[devam] bir model turu değildir')
+    assert.equal(oturum().active_context.sesDevam, undefined, 'okunan kalan silinmeli')
+    assert.equal(oturum().messages.length, mesajOnce, '[devam] yeni baloncuk yazmaz')
+    assert.equal((await sesEkrani(b)).devam, false)
+    // a duplicate [devam] says nothing and still calls no model
+    const tekrar = await ses({ sahne: b, mesaj: '[devam]' })
+    assert.equal(tekrar.metin.trim(), '')
+    assert.equal(modelIstekleri.length, modelOnce)
+  })
+
+  it('NOTYA-SES-DEVAM-01: sınıra varmayan tur kalan bırakmaz; yeni gerçek doktor turu eski kalanı siler', async () => {
+    const b = sahne()
+    yanit = { metin: JSON.stringify({ speech: 'Bir. İki. Üç.' }) }
+    await ses({ sahne: b, mesaj: 'Genel bir soru: uyku düzeni?' })
+    const oturum = () => db.tablo('asistan_sessions').find((o) => o.id === b.oturum)!
+    assert.equal(oturum().active_context?.sesDevam, undefined, 'kesilmeyen turda sesDevam yok')
+    oturum().active_context = { ...(oturum().active_context || {}), sesDevam: { anahtar: 'eski', kalan: 'Eski kalan cümle.', olusturma: new Date().toISOString() } }
+    assert.equal((await sesEkrani(b)).devam, true)
+    await ses({ sahne: b, mesaj: 'Başka bir soru: beslenme nasıl olmalı?' })
+    assert.equal(oturum().active_context?.sesDevam, undefined, 'yeni gerçek tur eski kalanı düşürmeli')
+    // "devam" with nothing left is an ordinary turn (the model answers)
+    const once = modelIstekleri.length
+    await ses({ sahne: b, mesaj: 'devam et' })
+    assert.equal(modelIstekleri.length, once + 1)
   })
   it('model cevabı: yazı ve ses aynı ekranı verir; ses önce bekletme sözü, sonra model yazdıkça aynı içerik', async () => {
     const ekranMetni = 'Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi.\n\n- Öneri 1\n- Öneri 2\n\nAnnesine 0532 700 11 22 numarasından ulaşabilirsiniz.'
@@ -450,6 +487,38 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const z = await ses({ sahne: s, mesaj: 'Görüşmeyi bitir Ayşe' })
     assert.equal(z.aracCagrilari.length, 0)
     assert.equal(z.bitis, 'stop')
+  })
+})
+
+describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
+  it('sesDevamKalani: söylenen cümleler baştan düşer; eşleşmezse tamamı; liste notu ve kart okuması kalanda', () => {
+    const tum = K.sozCumleleri('Bir. İki. Üç. Dört. Beş. Altı. Yedi.')
+    assert.deepEqual(tum, ['Bir.', 'İki.', 'Üç.', 'Dört.', 'Beş.', 'Altı.', 'Yedi.'])
+    assert.equal(K.sesDevamKalani(tum, 'Bir. İki. Üç. Dört. Beş. '), 'Altı. Yedi.')
+    // a holding sentence before the answer does not break the match
+    assert.equal(K.sesDevamKalani(tum, 'Tamam Hocam... Bir. İki. '), 'Üç. Dört. Beş. Altı. Yedi.')
+    // nothing of the answer was said (guard timer, holding sentence only) → the whole answer
+    assert.equal(K.sesDevamKalani(tum, 'Dosyayı inceliyorum Hocam, cevabı ekranınıza yazıyorum. '), tum.join(' '))
+    assert.equal(K.sesDevamKalani(tum, ''), tum.join(' '))
+    // everything said → nothing left
+    assert.equal(K.sesDevamKalani(tum, tum.join(' ')), '')
+    const listeli = K.sozCumleleri('Özet hazır.\n- a\n- b\n- c\nSon cümle.')
+    assert.equal(K.sesDevamKalani([...listeli, 'Kart ekranda.'], 'Özet hazır. '), `${K.listeEkranda(3)} Son cümle. Kart ekranda.`)
+  })
+  it('sessiz sınır: "Devamı ekranınızda" söylenmez, onSinir yine bir kez; varsayılan akış eski davranışta', () => {
+    const parcalar: string[] = []
+    let sinir = 0
+    const a = new K.SesAkisi((p) => parcalar.push(p), undefined, () => { sinir++ }, K.SOZ_BEAT_SINIRI, true)
+    a.ekle('Bir. İki. Üç. Dört. Beş. Altı. Yedi.')
+    assert.equal(a.bitir(), 'Bir. İki. Üç. Dört. Beş.')
+    assert.equal(sinir, 1)
+    assert.ok(a.sinirAsildi)
+    assert.ok(!parcalar.join('').includes(K.DEVAMI_EKRANDA))
+    assert.equal(K.konusmaYap('Bir. İki. Üç. Dört. Beş. Altı.'), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+  })
+  it('devamIstegiMi: gizli işaret ve kısa "devam" sözü; başka cümle değil', () => {
+    for (const m of ['[devam]', 'devam', 'Devam et', 'devam et hocam.', 'Devam edelim Ayşe']) assert.ok(K.devamIstegiMi(m), m)
+    for (const m of ['devamını oku', 'tedaviye devam edelim mi', 'ilaca devam', 'Devam eden şikayeti var mı?']) assert.ok(!K.devamIstegiMi(m), m)
   })
 })
 

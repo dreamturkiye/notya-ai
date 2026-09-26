@@ -87,7 +87,12 @@ export class SesAkisi {
     private readonly onSinir?: () => void,
     /** NOTYA-SES-OKU-01: sentence cap for this stream; Infinity reads everything ("bana anlat"). */
     private readonly sinir: number = SOZ_BEAT_SINIRI,
+    /** NOTYA-SES-DEVAM-01: a continuation turn follows the cap — stop silently, no "Devamı ekranınızda". */
+    private readonly sessizSinir = false,
   ) {}
+
+  /** NOTYA-SES-DEVAM-01: the cap was reached (sentences after it were not spoken). */
+  get sinirAsildi(): boolean { return this.devamNotu }
 
   ekle(tamMetin: string): void {
     if (tamMetin.length <= this.islenen) return
@@ -106,7 +111,11 @@ export class SesAkisi {
   private soyle(s: string, not = false): void {
     if (!not) {
       if (this.beat >= this.sinir) {
-        if (!this.devamNotu) { this.devamNotu = true; this.soylenen.push(DEVAMI_EKRANDA); this.yay(`${DEVAMI_EKRANDA} `); try { this.onSinir?.() } catch { /* yok */ } }
+        if (!this.devamNotu) {
+          this.devamNotu = true
+          if (!this.sessizSinir) { this.soylenen.push(DEVAMI_EKRANDA); this.yay(`${DEVAMI_EKRANDA} `) }
+          try { this.onSinir?.() } catch { /* yok */ }
+        }
         return
       }
       this.beat++
@@ -180,6 +189,49 @@ export function konusmaYap(ekran: string, temizle?: (cumle: string) => string, s
   const a = new SesAkisi(() => {}, temizle, undefined, secenek?.sinirsiz ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI)
   a.ekle(String(ekran || ''))
   return a.bitir()
+}
+
+/** NOTYA-SES-DEVAM-01: the uncapped spoken sentences of a screen answer, one entry per sentence / note. */
+export function sozCumleleri(ekran: string, temizle?: (cumle: string) => string): string[] {
+  const a = new SesAkisi(() => {}, temizle, undefined, Number.POSITIVE_INFINITY)
+  a.ekle(String(ekran || ''))
+  a.bitir()
+  return [...a.soylenen]
+}
+
+const bosluk = (s: string) => s.replace(/\s+/g, ' ').trim()
+
+/**
+ * NOTYA-SES-DEVAM-01 (Dr. Gökhan, 2026-09-26): what is left to say after a cut voice turn. `tumCumleler` is the
+ * uncapped spoken form (sozCumleleri), `soylenen` the text that actually reached ElevenLabs before the turn closed.
+ * The leading sentences found in order in `soylenen` are dropped; if not even the first one matches, the whole
+ * answer is the remainder (repeating is better than skipping).
+ */
+export function sesDevamKalani(tumCumleler: string[], soylenen: string): string {
+  const sozlu = bosluk(soylenen)
+  let konum = 0
+  let k = 0
+  for (const c of tumCumleler) {
+    const n = bosluk(c)
+    if (!n) { k++; continue }
+    const i = sozlu.indexOf(n, konum)
+    if (i === -1) break
+    konum = i + n.length
+    k++
+  }
+  return tumCumleler.slice(k).map(bosluk).filter(Boolean).join(' ')
+}
+
+/**
+ * NOTYA-SES-DEVAM-01: the hidden continuation turn the /asistan page sends when a cut voice turn has a remainder
+ * (`[devam]`), or the doctor simply saying "devam" / "devam et".
+ */
+export const DEVAM_ISARETI = '[devam]'
+const DEVAM_SOZU = /^devam(?:\s+(?:et|etsene|edin|edelim))?(?:\s+(?:hocam|ayşe|lütfen))*[.!]?$/iu
+export function devamIstegiMi(mesaj: string): boolean {
+  const m = String(mesaj || '').trim()
+  if (m === DEVAM_ISARETI) return true
+  return DEVAM_SOZU.test(m.toLocaleLowerCase('tr-TR'))
 }
 
 /**
