@@ -1,36 +1,41 @@
 /**
- * NOTYA-MALIYET-01 — model politikası: hangi iş hangi Claude modeline gider, TEK kaynak.
+ * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNA-01 — model politikası: hangi iş hangi modele gider, TEK kaynak.
  *
  * KURAL: app/, lib/, core/ altında hiçbir yere model adı STRING olarak yazılmaz. Model her zaman bu modülden
  * alınır — modelSec(gorev) ya da gucluModel()/hizliModel(). lib/ai/model-sizmasi.test.ts bunu bekler: model adı
- * deseni bu dosya dışında görünürse test kırılır. Model adı değişince kod değişmez; Vercel'de
- * NOTYA_MODEL_GUCLU / NOTYA_MODEL_HIZLI ortam değişkeni ayarlanır.
+ * deseni (claude-…, gpt-…, openai/…, anthropic/…) bu dosya ve lib/ai/saglayici.ts dışında görünürse test kırılır.
+ * Model adı değişince kod değişmez; Vercel'de NOTYA_MODEL_GUCLU / NOTYA_MODEL_HIZLI ortam değişkeni ayarlanır.
  *
- * ÖNCELİK (Kaan, 2026-09-19 — bağlayıcı): KLİNİK KALİTE > MALİYET. "Röntgenlerde ve diğer incelemelerde de Sonnet'i
- * kullan. Kesinlikle application'ın kalitesinin düşmesini istemiyorum." Tasarruf yalnız klinik OLMAYAN işlerden
- * ve kaliteye dokunmayan tekniklerden (prompt caching, modele giden geçmişin kırpılması) gelir.
+ * KARAR A (Kaan, 2026-09-26 — 2026-09-19 varsayılanının yerine): hacim trafiği GPT-6 Luna'da ucuzdur; imzalanan klinik
+ * çıktı Sonnet 5'te kalır. İki model de OpenRouter'dan geçer (ödeme tek yerden); OPENROUTER_API_KEY yoksa (yerel/dev)
+ * Anthropic modelleri eski doğrudan SDK yoluyla gider, OpenAI modeli GÜÇLÜ'ye düşer (lib/ai/saglayici.ts).
+ * ÖNCELİK değişmedi: KLİNİK KALİTE > MALİYET. sohbet-uzman ve hiçbir klinik görev Luna'ya taşınmadı.
  *
  * İki kademe:
- *  - GÜÇLÜ (Sonnet 4.6) — VARSAYILAN. Hekimin/avukatın/müşavirin karar verdiği her çıktı: SOAP/muayene notu,
+ *  - GÜÇLÜ (Sonnet 5) — VARSAYILAN. Hekimin/avukatın/müşavirin karar verdiği her çıktı: SOAP/muayene notu,
  *    mesleki notlar, klinik konsültasyon, doz önerisi, ICD-10 eşleme, e-reçete, epikriz, lab yorumu, HER TÜRLÜ
  *    görüntü/belge incelemesi, dilekçe/sözleşme analizi, mali analiz, klinik ya da belirsiz sohbet turu.
- *  - HIZLI (Haiku 4.5) — YALNIZ şu DAR liste (klinik içerik üretmeyen işler): yardım/destek sohbeti, meslektaş
+ *  - HIZLI (GPT-6 Luna) — YALNIZ şu DAR liste (klinik içerik üretmeyen işler): yardım/destek sohbeti, meslektaş
  *    hafızası özetleme ve tercih çıkarımı, saf sınıflandırma/etiketleme (görselsiz), biçimlendirme/metin temizleme,
  *    asistan sohbetinin NET sosyal turları (selam, teşekkür, vedalaşma) ve uygulama kullanımı soruları.
  *    Bu listeye yeni iş eklemek ürün kararıdır; docs/OPEN-COMMITMENTS.md'de gerekçesiyle yazılmadan eklenmez.
  *
- * Kod seviyesinde güvence: mesajda görüntü/PDF bloğu varsa lib/ai/cagir.ts görev ne olursa olsun GÜÇLÜ'ye yükseltir.
+ * İki kapı (lib/ai/cagir.ts): KALİTE kapısı çağrıdan ÖNCE GÜÇLÜ'yü seçer (görev, görsel/PDF, güvenlik sinyali) ve
+ * Luna boş/ret/düşük güven dönerse GÜÇLÜ'ye yükseltir; TAŞIMA kapısı Luna cevap veremezse (5xx, zaman aşımı, 429,
+ * ağ hatası) 400 ms sonra bir kez daha dener, sonra GÜÇLÜ. OpenRouter `models: []` yalnız taşımadır, kalite kapısı değil.
+ *
+ * Geri dönüş anahtarı: NOTYA_MODEL_HIZLI=anthropic/claude-haiku-4.5 → HIZLI eski Haiku'ya döner (kod değişmez).
  */
 
-/** Varsayılan GÜÇLÜ kademe — Claude Sonnet 4.6. */
-export const MODEL_GUCLU = 'claude-sonnet-4-6'
-/** Varsayılan HIZLI kademe — Claude Haiku 4.5. */
-export const MODEL_HIZLI = 'claude-haiku-4-5-20251001'
+/** Varsayılan GÜÇLÜ kademe — Claude Sonnet 5 (OpenRouter slug'ı; doğrudan yolda saglayici.ts önekini atar). */
+export const MODEL_GUCLU = 'anthropic/claude-sonnet-5'
+/** Varsayılan HIZLI kademe — GPT-6 Luna (yalnız OpenRouter). */
+export const MODEL_HIZLI = 'openai/gpt-6-luna'
 
 /** Ortam değişkeni boş/geçersizse varsayılan kalır — yanlış ayar üretimi düşürmesin. */
 function ortamModeli(ad: string, varsayilan: string): string {
   const deger = (typeof process !== 'undefined' ? process.env?.[ad] : undefined)?.trim()
-  return deger && /^[a-z0-9][a-z0-9.\-@:]*$/i.test(deger) ? deger : varsayilan
+  return deger && /^[a-z0-9][a-z0-9.\-@:/]*$/i.test(deger) ? deger : varsayilan
 }
 
 /** Etkin GÜÇLÜ model: NOTYA_MODEL_GUCLU ayarlıysa o, değilse MODEL_GUCLU. Çağrı anında okunur. */
@@ -115,6 +120,40 @@ export function modelSec(gorev: Gorev): ModelSecimi {
   const p = GOREV_POLITIKASI[gorev]
   if (!p) throw new Error(`Bilinmeyen AI görevi: ${String(gorev)}`)
   return { gorev, kademe: p.kademe, model: p.kademe === 'guclu' ? gucluModel() : hizliModel(), maxTokens: p.maxTokens }
+}
+
+// ─── Yükseltme nedenleri (NOTYA-MODEL-LUNA-01, ai_token_kullanim.neden) ──────────────────────────────
+/**
+ * Neden GÜÇLÜ gitti — ölçüm satırına yazılır, içerik değildir.
+ *  - transport: Luna cevap veremedi (5xx, zaman aşımı, boş gövde, 429 tekrarı, ağ) ya da OpenRouter yok
+ *  - onayla: hekimin Onayla'dan geçen imzalı çıktısı (SOAP, mesleki not)
+ *  - safety: HIZLI bir görevin mesajında güvenlik sinyali (gebe, emzirme, pediatrik doz, warfarin/NSAID, isotretinoin…)
+ *  - vision: görüntü/PDF bloğu ya da görüntü-inceleme görevi
+ *  - low_conf: Luna boş/ret/düşük güven döndü
+ *  - uzman: klinik ya da uzman görev (klinik-analiz, uzman-analiz, sohbet-uzman)
+ */
+export type YukseltmeNedeni = 'transport' | 'onayla' | 'safety' | 'vision' | 'low_conf' | 'uzman'
+
+/** GÜÇLÜ kademedeki bir görevin neden GÜÇLÜ olduğu; HIZLI görevde null. */
+export function gorevNedeni(gorev: Gorev): YukseltmeNedeni | null {
+  if (modelSec(gorev).kademe !== 'guclu') return null
+  if (gorev === 'soap' || gorev === 'not-uretimi') return 'onayla'
+  if (gorev === 'goruntu-inceleme') return 'vision'
+  return 'uzman'
+}
+
+// Güvenlik sinyali — HIZLI görev bile olsa GÜÇLÜ. Liste genişletmek yalnız GÜÇLÜ yönüne iter (güvenli taraf).
+const GUVENLIK_SINYALI = /(?<![\p{L}])(gebe|gebelik|hamile|emzir|laktasyon|pediatrik doz|çocuk doz|mg\/kg|warfarin|varfarin|kumadin|coumadin|nsai|ibuprofen|naproksen|diklofenak|isotretinoin|izotretinoin|roaccutane|kontrendik)/iu
+export function guvenlikSinyaliVar(metin: string): boolean {
+  const m = String(metin || '')
+  // Hem ham hem tr-TR küçük harf: "NSAİİ" → "nsaii", "NSAID" ham haliyle yakalanır ("nsaıd" değil).
+  return GUVENLIK_SINYALI.test(m) || GUVENLIK_SINYALI.test(m.toLocaleLowerCase('tr-TR'))
+}
+
+// Luna'nın "bilmiyorum / daha fazla bilgi şart / yardımcı olamam" dediği cevap → GÜÇLÜ tekrar dener.
+const DUSUK_GUVEN = /(daha fazla bilgi (şart|gerek|lazım)|daha fazla bilgiye ihtiyaç|emin değilim|yeterli bilgi(m)? yok|yardımcı olamam|yanıt veremiyorum|cevap veremiyorum|i can(no|')t help|i'?m (not able|unable) to|i am unable to)/iu
+export function dusukGuvenMi(metin: string): boolean {
+  return DUSUK_GUVEN.test(String(metin || ''))
 }
 
 /** Asistan sohbetinde modele giden geçmiş (4 tur). Uzun sohbette maliyet her turda tüm geçmişle büyüyordu (20 mesaj). */

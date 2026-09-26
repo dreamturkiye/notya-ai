@@ -79,6 +79,7 @@ let encrypt: (s: string) => string
 let R: Record<string, any>
 let T: typeof import('./konsultasyonTaslagi')
 let M: typeof import('../ai/modeller')
+let S: typeof import('../ai/saglayici')
 
 function iste(yontem: string, token: string, govde?: unknown) {
   return new NextRequestSinifi('http://localhost/api/doktor/konsultasyon', {
@@ -117,6 +118,7 @@ describe('AYSE-KONSULTASYON-01 — istem taslağı (gerçek rota)', () => {
     R = await import('../../app/api/doktor/konsultasyon/route')
     T = await import('./konsultasyonTaslagi')
     M = await import('../ai/modeller')
+    S = await import('../ai/saglayici')
   })
   let A: Hekim, B: Hekim
   beforeEach(() => {
@@ -144,7 +146,7 @@ describe('AYSE-KONSULTASYON-01 — istem taslağı (gerçek rota)', () => {
     await post(A.token, { islem: 'istem_taslagi', patientId: A.hasta, hedefBrans: 'kulak-burun-bogaz', not: 'işitme kaybı şüphesi' })
     assert.equal(istekler.length, 1)
     const i = istekler[0]
-    assert.equal(i.model, M.gucluModel(), 'HIZLI modele düştü')
+    assert.equal(i.model, S.dogrudanModelAdi(M.gucluModel()), 'HIZLI modele düştü')
     assert.equal(i.system.length, 1)
     assert.deepEqual(i.system[0].cache_control, { type: 'ephemeral' })
     assert.equal(i.system[0].text, T.ISTEM_TASLAK_SISTEMI)
@@ -212,7 +214,7 @@ describe('AYSE-KONSULTASYON-01 — yanıt özeti taslağı (gerçek rota)', () =
     assert.deepEqual({ ok: y.j.ok, taslak: y.j.taslak, kaynak: y.j.kaynak }, { ok: true, taslak: 'İşitme kaybı saptanmadı; odyometri ve timpanometri normal.', kaynak: 'ayse' })
     assert.deepEqual(indirilen, [`${A.id}:${A.belge}`])
     const i = istekler[0]
-    assert.equal(i.model, M.gucluModel())
+    assert.equal(i.model, S.dogrudanModelAdi(M.gucluModel()))
     assert.deepEqual(i.system[0].cache_control, { type: 'ephemeral' })
     assert.equal(i.system[0].text, T.YANIT_TASLAK_SISTEMI)
     assert.equal(i.messages[0].content[0].type, 'document')
@@ -241,7 +243,7 @@ describe('AYSE-KONSULTASYON-01 — yanıt özeti taslağı (gerçek rota)', () =
     const y = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon, belgeId: A.foto, deid: { mime: 'image/jpeg', base64: Buffer.from('jpeg').toString('base64') } })
     assert.equal(y.j.ok, true)
     assert.equal(istekler[0].messages[0].content[0].type, 'image')
-    assert.equal(istekler[0].model, M.gucluModel())
+    assert.equal(istekler[0].model, S.dogrudanModelAdi(M.gucluModel()))
   })
 
   it('HATA YOLU: rapor okunamadı / model hatası → ok:false "elle yazabilirsiniz"; hekim özeti elle yazıp kaydedebilir', async () => {

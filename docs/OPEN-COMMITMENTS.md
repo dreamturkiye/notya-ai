@@ -8,6 +8,17 @@ Last reviewed: 2026-09-19 (NOTYA-EYLEM düzeltme turu — sessiz yol kapandı, i
 
 ---
 
+## NOTYA-MODEL-LUNA — LLM yığını: Luna varsayılan, Sonnet 5 yükseltme (Kaan, 2026-09-26, KARAR A)
+
+2026-09-19 varsayılanının (GÜÇLÜ = Sonnet 4.6, HIZLI = Haiku 4.5) yerine. Politika: `.cursor/skills/ai-model-politikasi/SKILL.md`.
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-MODEL-LUNA-01 | **DONE 2026-09-26 — kod** (branch feat/model-luna, not pushed) | HIZLI = `openai/gpt-6-luna`, GÜÇLÜ = `anthropic/claude-sonnet-5`, ikisi de OpenRouter (`provider.data_collection = deny`); `OPENROUTER_API_KEY` yoksa Anthropic doğrudan yolu. **Karar A: klinik çıktı Sonnet 5'te kalır** — `sohbet-uzman` ve hiçbir klinik görev Luna'ya taşınmadı; HIZLI listesi aynı. İki kapı (`lib/ai/cagir.ts`): taşıma (Luna 5xx/429/ağ/boş → 400 ms → Luna → Sonnet) ve kalite (görev, görsel/PDF, güvenlik sinyali, Luna boş/ret/düşük güven → Sonnet). `ai_token_kullanim.kademe` + `neden` (migration 105). **Sonnet bütçe hedefi: çağrıların ~%15'i** — `ai_token_kullanim_gunluk` görünümünden `kademe`/`neden` ile izlenir. Geri dönüş: `NOTYA_MODEL_HIZLI=anthropic/claude-haiku-4.5`. | — |
+| NOTYA-MODEL-LUNA-02 | OPEN 2026-09-26 | Deploy öncesi: migration 105'i uygula; Vercel'e `OPENROUTER_API_KEY`, `NOTYA_MODEL_HIZLI=openai/gpt-6-luna`, `NOTYA_MODEL_GUCLU=anthropic/claude-sonnet-5` ekle. Migration olmadan da kod çalışır (kademe/neden yazılmaz, sayaçlar yazılır). | Kaan |
+| NOTYA-MODEL-LUNA-03 | OPEN 2026-09-26 — daha sonra yeniden değerlendir | **Seçenek B:** `sohbet-uzman` → Luna, güvenlik yükseltmesiyle (safety/low_conf Sonnet'e çıkar). Karar A'nın ~%15 Sonnet ölçümü ve Luna'nın klinik-dışı kalitesi görülmeden açılmaz. | Kaan |
+| NOTYA-MODEL-LUNA-04 | OPEN 2026-09-26 — kapsam dışı | OpenRouter (ve Anthropic) Türkiye dışındadır; `data_collection: deny` saklama/eğitimi kapatır ama KVKK yurt dışı aktarım konusunu **çözmez**. | Kaan (hukuk) |
+
 ## NOTYA-AYSE-STANDART — Ayşe klinik dosya sorgulama standardı (Dr. Gökhan Mamur + Kaan, 2026-09-26)
 
 Standard, query plan per question, harness: `docs/AYSE-STANDART.md`. 7 core questions (1, 2, 5, 6, 7, 9, 10), 2 core with specialty parameters (3 büyüme, 4 aşı), 1 specialty chapter question (8 gelişim — pediatri only).
