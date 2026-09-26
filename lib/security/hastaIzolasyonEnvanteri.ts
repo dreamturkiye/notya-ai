@@ -39,7 +39,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/konsult/route.ts': I('hastaDosyasiniDerle(doktorId, patientId) returns null for a foreign patient → 404'),
   'app/api/doktor/medula/recete/route.ts': I('note by id AND doctor_id; patient read scoped by doctor_id'),
   'app/api/doktor/rrs/route.ts': I('note by id AND doctor_id, patient ownership re-checked; list/patch scoped by doctor_id'),
-  'app/api/doktor/raporlar/route.ts': I('aggregates only rows with doctor_id = user.id'),
+  'app/api/doktor/raporlar/route.ts': I('aggregates only rows with doctor_id = user.id; no patient name, phone or id in the response'),
+  'app/api/doktor/raporlar/pdf/route.tsx': I('same doctor-scoped aggregate as raporlar/route.ts, rendered to PDF; users.full_name read with id = user.id; no patient identity'),
   // ── İlaç / aşı / lab / belge / görüntü / cihaz ──
   'app/api/doktor/ilaclar/route.ts': T,
   'app/api/doktor/ilaclar/[id]/route.ts': T,

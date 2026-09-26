@@ -172,7 +172,7 @@ export default function DoktorDashboard() {
       } catch {}
 
       try {
-        const raporRes = await fetch('/api/doktor/raporlar', { headers: { Authorization: `Bearer ${token}` } })
+        const raporRes = await fetch('/api/doktor/raporlar?ozet=1', { headers: { Authorization: `Bearer ${token}` } })
         if (raporRes.ok) {
           const raporData = await raporRes.json()
           const src = raporData?.data && typeof raporData.data === 'object' ? raporData.data : raporData

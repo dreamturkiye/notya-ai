@@ -8,6 +8,27 @@ Last reviewed: 2026-09-19 (NOTYA-EYLEM düzeltme turu — sessiz yol kapandı, i
 
 ---
 
+## NOTYA-RAPORLAR — sayfa kilitli, kod bekliyor (Kaan, 2026-09-26)
+
+**Locked.** Kaan approved the shape and asked to freeze it while he asks further questions. Do not redesign and do not code until he says go.
+
+The page is one specialty’s own practice. No specialty-distribution chart. Accounts that can switch specialty get one extra line at the bottom (this range, how many exams in each specialty). Everyone else never sees it. Aggregates are `doctor_id` only; archived sessions and notes stay out. Day boundary is Europe/Istanbul. Patient names, phone, and ID never appear. Age and sex stay off this page (encrypted).
+
+Period chips: Bu hafta, Bu ay, Son 3 ay, Bu yıl. Each headline number sits next to the previous window of the same length.
+
+1. Volume — new patients (this month, last 3 months, active total) and exams (this week, this month, all time).
+2. Same days, three measures — exam count; average duration in minutes (sessions with no duration excluded); chair time = count × average. Busiest day by count and longest day by chair time are both stated. Weighted average for the range. Count and minutes are separate charts.
+3. Visit type — muayene, kontrol, konsültasyon, telesağlık.
+4. Top complaint — `notes.basvuru_yakinmasi`, identical wording grouped. No patient name.
+5. Top diagnosis — ICD-10 code plus the Turkish name stored on the note.
+6. Work — note type, approved vs waiting, weighted average duration, top drug name without dose.
+7. PDF of those six blocks. No specialty list, no patient identity.
+
+| ID | Status | What |
+|---|---|---|
+| NOTYA-RAPORLAR-01 | **BUILT 2026-09-26** | Page above, in `app/dashboard/doktor/raporlar` and `lib/doktor/raporHesap.ts`. Dashboard keeps the old count fields via `?ozet=1`. |
+| NOTYA-RAPORLAR-02 | **OUT 2026-09-26** (Kaan) | No assistant reading of these reports in this stage. The page is the numbers and charts only. |
+
 ## Standing rule — mobile check on every change (Kaan, 2026-09-13)
 
 Every new feature, UI change, or fix Claude ships to Notya from now on must be verified to

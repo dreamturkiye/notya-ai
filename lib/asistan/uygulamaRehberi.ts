@@ -16,7 +16,7 @@ SOL MENÜ:
 - Hastalar — hasta listesi ve hasta dosyası: kimlik ve Hasta Bilgi Formu cevapları, alerjiler, kronik hastalıklar, Kullandığı İlaçlar, aşı karnesi, ölçümler, geçmiş muayeneler ve belgeler. Arşivlenmiş muayeneler de dosyada görünür.
 - Mesajlar — hastaya e-posta/WhatsApp; gönderim doktorun kendi hesabından yapılır, otomatik gönderim ancak doktor onayıyla çıkar.
 - Gelen Belgeler — hastalardan gelen belgelerin kutusu; belge doğru hastaya dosyalanır, kenar çubuğundaki rozet bekleyen sayısını gösterir.
-- Raporlar — muayene ve iş yükü özetleri.
+- Raporlar — muayene sayısı, süre, yakınma ve tanı özetleri.
 - Araçlar — ilaç doz hesaplama, epikriz, SGK raporu, konsültasyon taslağı gibi araçlar.
 - Ayarlar — hesap, iletişim ve görünüm tercihleri.
 - Asistana sor — bu ekran: sesli konuşma (mikrofona dokun) veya yazılı sohbet; üstteki şeritten başka uzmana geçilir, soldaki Branş seçimiyle liste daralır.

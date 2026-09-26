@@ -21,6 +21,7 @@ const nextConfig = {
       '/api/**/*': ['./specialties/dahiliye/prompts/*.md', './specialties/kadin-dogum/prompts/*.md', './specialties/dermatoloji/prompts/*.md', './specialties/goz-hastaliklari/prompts/*.md'],
       '/api/portal/hasta/*/asi-karnesi/pdf': ['./node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf', './node_modules/pdfjs-dist/standard_fonts/LiberationSans-Bold.ttf'],
       '/api/doktor/asilar/karne/pdf': ['./node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf', './node_modules/pdfjs-dist/standard_fonts/LiberationSans-Bold.ttf'],
+      '/api/doktor/raporlar/pdf': ['./node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf', './node_modules/pdfjs-dist/standard_fonts/LiberationSans-Bold.ttf'],
     },
   },
 
