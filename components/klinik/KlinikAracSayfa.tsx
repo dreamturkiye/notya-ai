@@ -1,9 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import KlinikAracKabugu from './KlinikAracKabugu'
 import KlinikBolumHome from './KlinikBolumHome'
 import KlinikKohortPanel from './KlinikKohortPanel'
 import KlinikHastaPortaliPaneli from './KlinikHastaPortaliPaneli'
+import EnabizMasa from '@/components/doktor/EnabizMasa'
 import type { AracVurgu } from '@/lib/doktor/aracUi'
 import { klinikMevzuat, klinikMevzuatOzet, KLINIK_ORTAK_KANUNLAR, KLINIK_ORTAK_KAYIT } from '@/lib/klinik/klinikMevzuat'
 import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
@@ -24,6 +25,7 @@ const V: Record<string, AracVurgu> = {
 const META: Record<string, { slug: string; etiket: string; baslik: string; aciklama: string; vurgu: AracVurgu }> = {
   '/klinik-tools/hasta-portali': { slug: 'sac-ekimi', etiket: 'Klinik', baslik: 'Hasta Portalı', aciklama: 'Aynı Sağlığım kabuğu — PIN + link. TUS bölümü yok.', vurgu: V.sac },
   '/klinik-tools/kayit-kvkk': { slug: 'sac-ekimi', etiket: 'Klinik', baslik: 'Kayıt · rıza · KVKK', aciklama: 'SB / Hasta Hakları / KVKK — dalınıza göre zorunlu evrak.', vurgu: V.sac },
+  '/klinik-tools/enabiz': { slug: 'sac-ekimi', etiket: 'Klinik', baslik: 'e-Nabız', aciklama: 'e-Nabız’a siz girersiniz; Notya alanları kopyalamaya hazırlar.', vurgu: V.sac },
   '/klinik-tools/sac-greft': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Donör greft bandı', aciklama: 'Karar desteği. Nihai greft hekimindir.', vurgu: V.sac },
   '/klinik-tools/sac-takvim': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Yıkama takvimi', aciklama: '1 / 3 / 10 / 14. gün vadeleri.', vurgu: V.sac },
   '/klinik-tools/sac-kohort': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Saç ekimi kohort', aciklama: 'Yıkama ve kontrol vadeleri. Tek dokunuşla hatırlatma.', vurgu: V.sac },
@@ -125,7 +127,7 @@ export default function KlinikAracSayfa({ route }: { route: string }) {
   if (!m) return null
   return (
     <KlinikAracKabugu route={route} baslik={m.baslik} aciklama={m.aciklama} etiket={m.etiket} vurgu={m.vurgu}>
-      {route === '/klinik-tools/hasta-portali' ? <KlinikHastaPortaliPaneli /> : route === '/klinik-tools/kayit-kvkk' ? <KayitKvkkPanel /> : route.endsWith('-kohort') ? <KlinikKohortPanel /> : <KlinikBolumHome slug={m.slug} panel={PANEL[route]} />}
+      {route === '/klinik-tools/hasta-portali' ? <KlinikHastaPortaliPaneli /> : route === '/klinik-tools/enabiz' ? <Suspense fallback={null}><EnabizMasa gizliBaslik /></Suspense> : route === '/klinik-tools/kayit-kvkk' ? <KayitKvkkPanel /> : route.endsWith('-kohort') ? <KlinikKohortPanel /> : <KlinikBolumHome slug={m.slug} panel={PANEL[route]} />}
     </KlinikAracKabugu>
   )
 }

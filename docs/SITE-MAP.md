@@ -36,7 +36,8 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/raporlar` | `/api/doktor/raporlar`, `/api/notes/pdf` | notes, sessions |
 | `/inceleme` | `/api/notes`, `/api/notes/[id]/approve` | notes |
 | `/entegrasyonlar` | `/api/doktor/integrations[/provider]` | doctor_integrations |
-| `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*`, `/api/doktor/sgk`, `/api/doktor/iletisim/*` | notes, iletisim_kayitlari, hasta_portal_tokens |
+| `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*` (enabiz masa: hasta+not, pratikOturum), `/api/doktor/sgk`, `/api/doktor/iletisim/*` | notes, iletisim_kayitlari, hasta_portal_tokens, patients.enabiz_gonderilmesin |
+| `/klinik-tools/enabiz` (10 dal, aynı masa) | `/api/doktor/araclar/enabiz` | aynı |
 | `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
 | `/mesajlar` (Sağlığım practice inbox — doktor + sekreter) | `/api/doktor/mesajlar`, `/api/doktor/mesajlar/[konuId]`, `/api/doktor/mesajlar/unread-count` | hasta_mesaj_konulari, hasta_mesajlar |
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |

@@ -78,6 +78,7 @@ const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', grup: 'calisma' },
   { label: 'Gelen Belgeler', route: '/dashboard/doktor/gelen-belgeler', gelenBelge: true, grup: 'calisma' },
   { label: 'Raporlar', route: '/dashboard/doktor/raporlar', sadeceDoktor: true, grup: 'diger' },
+  { label: 'e-Nabız', route: '/doktor-tools/enabiz', grup: 'diger' },
   { label: 'Araçlar', route: '/doktor-tools', sadeceDoktor: true, grup: 'diger' },
   { label: 'Ayarlar', route: '/dashboard/doktor/ayarlar', sadeceDoktor: true, grup: 'diger' },
 ];
@@ -111,6 +112,9 @@ const NAV_ICON: Record<string, React.ReactNode> = {
   ),
   '/dashboard/doktor/raporlar': (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M10 19V6M15 19v-7M20 19V8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
+  ),
+  '/doktor-tools/enabiz': (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="16" rx="1.6" stroke="currentColor" strokeWidth="1.5" /><path d="M8 9h8M8 12h8M8 15h5" stroke="currentColor" strokeWidth="1.4" /></svg>
   ),
   '/doktor-tools': (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4.5" y="4.5" width="6.2" height="6.2" rx="1.2" stroke="currentColor" strokeWidth="1.5" /><rect x="13.3" y="4.5" width="6.2" height="6.2" rx="1.2" stroke="currentColor" strokeWidth="1.5" /><rect x="4.5" y="13.3" width="6.2" height="6.2" rx="1.2" stroke="currentColor" strokeWidth="1.5" /><rect x="13.3" y="13.3" width="6.2" height="6.2" rx="1.2" stroke="currentColor" strokeWidth="1.5" /></svg>

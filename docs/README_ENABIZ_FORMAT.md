@@ -1,7 +1,11 @@
-# e-Nabız format hazırlığı (canlı bağlantı yok)
+# e-Nabız — yapıştırma masası + format paketleri
 
-**Kural (CEO 2026-09-16):** e-Nabız’a doğrudan bağlantı yok; ama reçete, rapor, epikriz, USG,
-gebe/e-Doğum ve ileride USS’ye gidecek her çıktı **şimdiden doğru formatta** üretilir.
+**Ürün (2026-09-27):** hekim veya sekreter `enabiz.gov.tr`’ye kendi girer. Notya alanı
+kopyalar. Masa: `/doktor-tools/enabiz` (30 branş), `/klinik-tools/enabiz` (10 dal).
+Bakanlık HTTP yok.
+
+**Kural (CEO 2026-09-16):** doğrudan bağlantı yok; reçete, rapor, epikriz, USG,
+gebe/e-Doğum çıktıları doğru formatta üretilir (teknik paket, masada ikinci planda).
 
 | Artefakt | Kanal | Kod |
 |---|---|---|

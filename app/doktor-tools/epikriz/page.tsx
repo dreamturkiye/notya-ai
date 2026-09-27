@@ -135,16 +135,6 @@ export default function EpikrizPage() {
     navigator.clipboard.writeText(text);
   };
 
-  const handleEnabizIndir = () => {
-    if (!sonuc?.enabiz) return;
-    const blob = new Blob([JSON.stringify(sonuc.enabiz, null, 2)], { type: 'application/json;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `enabiz-epikriz-${(sonuc.enabiz.uretildi_at || '').slice(0, 10) || 'paket'}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-
   const handleYazdir = () => {
     window.print();
   };
@@ -442,21 +432,22 @@ export default function EpikrizPage() {
                   }}>
                     Kopyala
                   </button>
-                  {sonuc.enabiz && (
-                    <button onClick={handleEnabizIndir} style={{
+                  <a href={`/doktor-tools/enabiz?hastaId=${encodeURIComponent(seciliHastaId)}${seciliSeansId ? `&seansId=${encodeURIComponent(seciliSeansId)}` : ''}&tur=epikriz`} style={{
                       flex: 1,
                       height: '44px',
                       backgroundColor: 'transparent',
-                      color: CHROME_RENK.muted,
-                      border: `1px solid ${CHROME_RENK.border}`,
+                      color: CHROME_RENK.pine,
+                      border: `1px solid ${CHROME_RENK.pine}`,
                       borderRadius: '10px',
                       fontSize: '14px',
                       fontWeight: 500,
-                      cursor: 'pointer'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textDecoration: 'none',
                     }}>
-                      e-Nabız FHIR JSON
-                    </button>
-                  )}
+                      e-Nabız masası
+                    </a>
                   <button onClick={handleYazdir} style={{
                     flex: 1,
                     height: '44px',

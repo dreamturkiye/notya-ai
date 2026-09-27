@@ -57,20 +57,6 @@ export default function SeansKapilari({ noteId, onKilit }: { noteId: string; onK
     } catch { setHata('Kopyalanamadı.') }
   }
 
-  const enabizIndir = async () => {
-    setHata('')
-    const t = await ensureDoctorAccessToken()
-    const r = await fetch('/api/doktor/seans-paketi', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'enabiz', noteId }) })
-    const j = await r.json().catch(() => ({}))
-    if (!j.dosya) { setHata('e-Nabız çıktısı üretilmedi.'); return }
-    const blob = new Blob([JSON.stringify(j.dosya, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = 'notya-enabiz-taslak.json'
-    a.click()
-    URL.revokeObjectURL(a.href)
-  }
-
   const renk = (s: Uyari['seviye']) => s === 'kirmizi' ? '#8C2F2F' : s === 'sari' ? '#8A5A12' : R.muted
 
   return (
@@ -99,7 +85,7 @@ export default function SeansKapilari({ noteId, onKilit }: { noteId: string; onK
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: 0 }}>{mbys}</pre>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button type="button" onClick={() => void yapistir()} style={{ minHeight: 36, borderRadius: 8, border: 'none', background: R.pine, color: '#FAF8F4', fontWeight: 700, padding: '0 10px' }}>{kopya || 'Kopyala'}</button>
-            <button type="button" onClick={() => void enabizIndir()} style={{ minHeight: 36, borderRadius: 8, border: `1px solid ${R.border}`, background: '#fff', fontWeight: 600, padding: '0 10px' }}>e-Nabız şekli indir</button>
+            <a href={`/doktor-tools/enabiz?notId=${encodeURIComponent(noteId)}&tur=epikriz`} style={{ minHeight: 36, borderRadius: 8, border: `1px solid ${R.border}`, background: '#fff', fontWeight: 600, padding: '8px 10px', textDecoration: 'none', color: R.ink, display: 'inline-flex', alignItems: 'center' }}>e-Nabız masası</a>
           </div>
         </div>
       )}

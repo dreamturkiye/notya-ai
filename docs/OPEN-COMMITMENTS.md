@@ -1,5 +1,11 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-ENABIZ-MASA — 30 branş + klinik + sekreter yapıştırma masası (Kaan, 2026-09-27)
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-ENABIZ-MASA-01 | **DONE 2026-09-27 — kod** | Araçlar › e-Nabız tek masa: hasta+vizit, alan alan kopyala, eksikler, izin kilidi, `enabiz.gov.tr`. Aynı bileşen klinik Araçlar + sekreter nav. Seans / epikriz / e-reçete bu masayı açar. Bakanlık HTTP yok. | Canlı tık: hekim + sekreter bir hasta yapıştırır |
+
 ## NOTYA-MESLEKTAS-V2 — 10. seansta görülen meslektaş (Kaan, 2026-09-27)
 
 | ID | Status | What | Waits on |

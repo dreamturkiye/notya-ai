@@ -28,6 +28,7 @@ describe('KLINIK-10-EXCEPTIONAL — 10 dal Klinik kategorisi', () => {
       const arac = klinikAraclariListesi(k)
       assert.ok(arac.some((a) => a.route === '/klinik-tools/kayit-kvkk'), `${k} kayit-kvkk`)
       assert.ok(arac.some((a) => a.route === '/klinik-tools/hasta-portali'), `${k} hasta-portali`)
+      assert.ok(arac.some((a) => a.route === '/klinik-tools/enabiz'), `${k} enabiz`)
       assert.ok(arac.some((a) => a.dallar.includes(k)), k)
       assert.ok(arac.some((a) => a.route.startsWith('/klinik-tools/')), k)
       assert.ok(arac.some((a) => a.route.endsWith('-kohort')), `${k} kohort`)

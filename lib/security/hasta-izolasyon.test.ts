@@ -434,6 +434,8 @@ const VAKALAR: Vaka[] = [
   // Araçlar
   { ad: 'POST /api/doktor/araclar/epikriz (kendi seansı + yabancı hastaId)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.epikriz.POST(iste('POST', '/api/doktor/araclar/epikriz', { token: a.token, govde: { hastaId: h.hasta, seansId: a.seans } }))) },
+  { ad: 'GET /api/doktor/araclar/enabiz?hastaId (e-Nabız masası)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.enabizMasa.GET(iste('GET', `/api/doktor/araclar/enabiz?hastaId=${h.hasta}`, { token: a.token }))) },
   // Branş modülleri
   { ad: 'GET /api/doktor/asilar', okur: true,
     cagir: (r, a, h) => coz(r.asilar.GET(iste('GET', `/api/doktor/asilar?patientId=${h.hasta}`, { token: a.token }))) },
@@ -698,6 +700,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       randevu: await ice('app/api/doktor/randevular/[id]/route'),
       gunProgrami: await ice('app/api/doktor/gun-programi/route'),
       epikriz: await ice('app/api/doktor/araclar/epikriz/route'),
+      enabizMasa: await ice('app/api/doktor/araclar/enabiz/route'),
       asilar: await ice('app/api/doktor/asilar/route'),
       asiKarne: await ice('app/api/doktor/asilar/karne/route'),
       asiKarnePdf: await ice('app/api/doktor/asilar/karne/pdf/route'),

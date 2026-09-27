@@ -478,6 +478,11 @@ export default function SgkRaporPage() {
             )}
 
             <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              {hastaId ? (
+                <a href={`/doktor-tools/enabiz?hastaId=${encodeURIComponent(hastaId)}&tur=rapor`} style={{ ...toolsPrimaryBtn(false), textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  e-Nabız masası
+                </a>
+              ) : null}
               <button
                 type="button"
                 onClick={() => window.print()}

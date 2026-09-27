@@ -34,7 +34,10 @@ export default function EnabizIzinKutusu({ patientId }: { patientId: string }) {
   return (
     <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', background: '#fff', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 16px', fontFamily: CHROME_FONT.sans, fontSize: 14, color: CHROME_RENK.ink }}>
       <input type="checkbox" checked={istemiyor} onChange={(e) => void degis(e.target.checked)} />
-      <span>e-Nabız’a gönderilmesini istemiyor</span>
+      <span>
+        e-Nabız’a gönderilmesini istemiyor
+        <a href={`/doktor-tools/enabiz?hastaId=${encodeURIComponent(patientId)}`} style={{ display: 'block', marginTop: 6, color: CHROME_RENK.pine, fontWeight: 700 }}>e-Nabız masasını aç ›</a>
+      </span>
     </label>
   )
 }

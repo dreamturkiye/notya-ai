@@ -183,6 +183,10 @@ test('commercial grid: no internal audits, sprint jargon, or named beta-doctor c
   const blob = TUM_DOKTOR_ARACLARI.map((a) => `${a.title} ${a.desc} ${a.route}`).join('\n')
   assert.doesNotMatch(blob, /audit|presprint|post-sprint|pre-sprint|wow|JINE-|Gökhan|Gokhan|Gaps \+|sprint/i)
   assert.doesNotMatch(blob, /\.html/)
+  const enabiz = ORTAK_DOKTOR_ARACLARI.find((a) => a.route === '/doktor-tools/enabiz')
+  assert.ok(enabiz)
+  assert.equal(enabiz.title, 'e-Nabız')
+  assert.doesNotMatch(`${enabiz.title} ${enabiz.desc}`, /FHIR|Medula|USS|Format|canlı bağlantı/i)
   for (const a of BRANS_DOKTOR_ARACLARI) {
     assert.ok(a.route.startsWith('/doktor-tools/'), `chapter tile must be an app route: ${a.route}`)
     assert.ok(a.branslar && a.branslar.length > 0, a.route)
