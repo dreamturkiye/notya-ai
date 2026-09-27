@@ -5,6 +5,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { DEVRE_AYAR, DEVRE_SAAT, devreBasari, devreBirincilIzinli, devreDurumu, devreHata, devreNotr, devreSifirla } from './devre'
+process.env.NOTYA_DEVRE_ACIK = '1' // LUNAPRO-03: breaker is off by default; these suites test it explicitly
 
 const M = 'openai/model-a'
 const DK = 60_000
@@ -96,5 +97,18 @@ describe('devre kesici', () => {
     hatalar(5)
     devreSifirla()
     assert.equal(devreDurumu(M), 'kapali')
+  })
+})
+
+describe('LUNAPRO-03: devre varsayılan KAPALI', () => {
+  it('NOTYA_DEVRE_ACIK yokken 5 hata da devreyi açmaz — her istek yeniden birinciyi dener', () => {
+    const eski = process.env.NOTYA_DEVRE_ACIK
+    delete process.env.NOTYA_DEVRE_ACIK
+    try {
+      devreSifirla()
+      for (let i = 0; i < 6; i++) devreHata('openai/x')
+      assert.equal(devreDurumu('openai/x'), 'kapali')
+      assert.equal(devreBirincilIzinli('openai/x'), true)
+    } finally { process.env.NOTYA_DEVRE_ACIK = eski }
   })
 })

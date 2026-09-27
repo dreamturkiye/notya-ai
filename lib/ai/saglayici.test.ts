@@ -109,7 +109,7 @@ describe('OpenRouter açık — taşıma kapısı (Luna → 400 ms → Luna → 
 
   it('LUNAPRO-02: koruyucuya zorlanan çağrı (koruyucuyaZorla) tek çağrı; 500 çağırana gider', async () => {
     sira = [{ durum: 500 }]
-    await assert.rejects(aiCagir({ gorev: 'klinik-analiz', koruyucuyaZorla: true, messages: [{ role: 'user', content: 'warfarin dozu' }] }), (e: { durum?: number }) => e.durum === 500)
+    await assert.rejects(aiCagir({ gorev: 'klinik-analiz', koruyucuyaZorla: { neden: 'low_conf', altKod: 'test' }, messages: [{ role: 'user', content: 'warfarin dozu' }] }), (e: { durum?: number }) => e.durum === 500)
     assert.equal(istekler.length, 1)
     assert.equal(istekler[0].govde.model, MODEL_GUCLU)
   })
