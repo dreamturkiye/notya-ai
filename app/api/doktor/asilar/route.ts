@@ -75,5 +75,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: 'A\u015f\u0131 kayd\u0131 eklenemedi.' }, { status: 500 })
+  const { onbellekKirlet } = await import('@/lib/doktor/ogrenme/dosyaOnbellek')
+  void onbellekKirlet(supabase, doktorId, patientId).catch(() => { /* önbellek */ })
   return NextResponse.json({ asi: data })
 }

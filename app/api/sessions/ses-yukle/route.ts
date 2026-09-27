@@ -204,6 +204,10 @@ export async function POST(req: NextRequest) {
       ...(gecmisTarihIso ? { created_at: gecmisTarihIso } : {}),
     }).select('id').single()
     if (noteError || !note) throw new Error(noteError?.message || 'not kaydedilemedi')
+    if (patientId) {
+      const { onbellekKirlet } = await import('@/lib/doktor/ogrenme/dosyaOnbellek')
+      void onbellekKirlet(supabase, doktorId, String(patientId)).catch(() => { /* önbellek */ })
+    }
     // NOTYA-NOT-HIZ-03: öneri arka planda sürer; bitince yalnız bu notun (id + doktor) boş öneri sütunlarını doldurur.
     if (oneri.soz) oneriyiArkaPlandaYaz(supabase, { noteId: String(note.id), doktorId, oneriSozu: oneri.soz, etiket: 'ses-yukle' })
 

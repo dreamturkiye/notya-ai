@@ -155,6 +155,7 @@ export default function DoktorDashboard() {
     const initDashboard = async () => {
       const token = await ensureDoctorAccessToken()
       if (!token) { router.push(DOKTOR_GIRIS); return }
+      void fetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ bugun: true }), keepalive: true })
 
       try {
         const meRes = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } })

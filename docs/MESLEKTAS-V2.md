@@ -38,10 +38,10 @@ Kapat = `durum=kapali` + `doktor_soyledi` negatif kayıt. Unut = `hafizaUnut`.
 
 Telemetri (PII yok) `lib/telemetri/kullanim.ts` → `POST /api/doktor/kullanim` (sendBeacon, ≤1/10 sn). Tablo `doktor_kullanim_olaylari`. Gece 03:30 TRT ` /api/cron/meslektas-rutin` + 30 gün silme → `rutinTuret` → `doktor_rutin`. `SonrakiAdim` yalnız p≥0.6 ve n≥8. Bugün: `kartSirasi=hastalar` ise Hastalar kartı Randevular’ın üstünde. Önerir, yazmaz / gezdirmez. Dismissal = `reddet` (negatif kanıt).
 
-## Faz 3 — Önbellek + prefetch (sonraki PR)
+## Faz 3 — Önbellek + prefetch
 
-`hasta_dosya_onbellek` + `onbellekKirlet` + 06:00 TRT prefetch. `v_hiz_gunluk`. Hedef: önbellekli dosya sorusu P50 −40%; not üretimi yavaşlamaz.
+`hasta_dosya_onbellek` (doctor_id+patient_id). Taze satır → derive yok. `onbellekKirlet` yazma yerlerinde. Cron 06:00 TRT + giriş/`onbellek-isin` + hasta sayfası. SOAP önek ısınması girişte waitUntil. `v_hiz_gunluk`. Hedef: önbellekli sohbet P50 −40%; not yavaşlamaz.
 
 ## Session-10 simülasyonu
 
-`scripts/meslektas/seans10.mts` — Faz 3 ile birlikte çalışır (üç fazın tanımı).
+`npx tsx scripts/meslektas/seans10.mts` — 10 sentetik gün: ≥3 UYGULANIR, `uygulananKurallar` dolu, meslektaş selamı, SonrakiAdim, ilk hasta paketi taze.
