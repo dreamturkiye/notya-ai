@@ -15,7 +15,7 @@
  *    Kimlik başlığı ekranda sunucu tarafında hasta kaydından birleştirilir.
  */
 import Anthropic from '@anthropic-ai/sdk'
-import { aiCagir } from '@/lib/ai/cagir'
+import { aiCagir, type SistemBlogu } from '@/lib/ai/cagir'
 import fs from 'fs'
 import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
@@ -90,8 +90,7 @@ GÜRÜLTÜ FİLTRESİ (kritik):
 - Not, kayıttan kısa, yoğun ve klinik olarak eksiksiz olmalı.
 
 ╔══ EN ÖNEMLİ KURAL — NOT GÖVDESİ vs AI ÖNERİSİ (hukuki) ══╗
-Notun GÖVDESİ (basvuruYakinmasi, subjektif, objektif, degerlendirme, plan, anamnez,
-fizik_muayene, tani, tedavi, vitaller) YALNIZ doktorun/${hitap('velinin', 'hastanın')} DEDİĞİNİ içerir. Bu
+Notun GÖVDESİ (basvuruYakinmasi, subjektif, objektif, degerlendirme, plan, vitaller) YALNIZ doktorun/${hitap('velinin', 'hastanın')} DEDİĞİNİ içerir. Bu
 alanlar hastanın kendi portalinde GÖRÜNÜR ve resmî kayıttır.
 - degerlendirme: doktorun söylediği/koyduğu tanıları yaz. Doktorun AĞZINDAN ÇIKMAYAN
   ayırıcı tanı, dışlanan tanı, "olasılık", "düşünülmeli" gibi KENDİ ÇIKARIMINI EKLEME.
@@ -133,30 +132,30 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.${ped('\n  BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, sayı uydurma, WHO referansı kullanma: uygulama Neyzi sonucunu senin çıktından SONRA aiDegerlendirme\'ye ekler. Kendi "X. persentil" sayını yazma. Büyüme persentiline bakınız demek yeter; resmi tanıya persentilden tanı (obezite, malnütrisyon) doktor söylemedikçe koyma.', '')}
 - receteOnerisi: önerdiğin her ilaç için etkenMadde + Türkiye'den ticariOrnek + doz${ped(' (pediatride mg/kg hesabıyla, kilo transkriptte varsa hesapla)', '')} + kullanim + sure + gerekirse not. Bu bir ÖNERİDİR; reçeteyi doktor yazar. Hastanın bilinen alerjisi/sürekli ilacıyla çelişen öneri YAPMA, gerekirse not alanında uyar.
 - alarmBulgulari: "Evde dikkat edilmesi gerekenler" — ${hitap('veliye/hastaya', 'hastaya')} sakin dille anlatılacak izlem maddeleri. Üslup ASLA alarmcı olmasın ("hemen gelin", "derhal başvurun" YAZMA). Kalıp: önce izlenecek durumları listele, sonra tek yönlendirme cümlesi: "Şu durumlarda doktorunuz ile temas kurun: ..." ve en sonda "Acil bir durumda acil servise başvurun."
-- anamnez: tam anamnez metni — şikayet→hikaye→özgeçmiş→soygeçmiş→alışkanlıklar akışını tek parça düzyazı olarak da doldur (epikriz ve resmî kayıt için).
+- anamnez / fizik muayene / tanı / tedavi metnini AYRICA YAZMA: uygulama bunları subjektif / objektif / degerlendirme / plan'dan kendisi türetir (epikriz ve resmî kayıt için).
 - PLAN SÜREKLİLİĞİ: bağlamda ÖNCEKİ VİZİT PLANI verilmişse, değerlendirmede önceki plan maddelerinin akıbetine kısaca değin (yapıldı/yapılmadı/etkisi ne oldu) ve yeni planı bunun üzerine kur — her vizit bir öncekinin devamıdır, izole not yazma.
 - kritik_bulgular: doktorun gözünden kaçmaması gereken kırmızı bayraklar (yoksa boş).
 - hasta_ozeti: ${hitap('veliye/hastaya', 'hastaya')} SADE DİLDE 3-5 cümle — ne bulundu, ne yapılacak, ilaç nasıl kullanılacak, ne zaman geri gelinmeli. Kesin sonuç vaadi/garanti dili KULLANMA ("kesin iyileşir", "sorun yok" YAZMA); "saptandı / önerildi / değerlendirildi" gibi tespit dili kullan ve gerektiğinde "belirtiler değişirse hekiminize danışınız" yönlendirmesiyle bitir.
 
-SADECE geçerli JSON döndür:
+ÇIKTI iki ayrı JSON'dur; her çağrı YALNIZ mesajın sonundaki ÇAĞRI satırında istenen JSON'u döndürür.
+(A) NOT GÖVDESİ — SADECE geçerli JSON döndür:
 {
   "basvuruYakinmasi": "",
   "soap": { "subjektif": "", "objektif": "", "degerlendirme": "", "plan": "" },
-  "aiDegerlendirme": "",
   "vitaller": { "kilo": null, "boy": null, ${ped('"basCevresi": null, ', '')}"ates": null, "nabiz": null, "solunum": null, "spo2": null, "tansiyon": null },
-  "anamnez": "",
-  "fizik_muayene": "",
-  "tani": "",
-  "tedavi": "",
   "ilaclar": [{"ad": "", "doz": "", "kullanim": "", "sure": ""}],
   "asilar": [{"asi_adi": "", "doz_no": null, "lot_no": "", "uygulama_yeri": "", "notlar": ""}],
-  "receteOnerisi": [{"etkenMadde": "", "ticariOrnek": "", "doz": "", "kullanim": "", "sure": "", "not": ""}],
   "icd10_codes": [{"code": "", "description": "", "description_tr": "", "is_primary": true}],
+  "takip_suresi": "",
+  "ai_confidence": 0.9
+}
+(B) AI ÖNERİSİ — SADECE geçerli JSON döndür:
+{
+  "aiDegerlendirme": "",
+  "receteOnerisi": [{"etkenMadde": "", "ticariOrnek": "", "doz": "", "kullanim": "", "sure": "", "not": ""}],
   "kritik_bulgular": [],
   "alarmBulgulari": [],
-  "takip_suresi": "",
-  "hasta_ozeti": "",
-  "ai_confidence": 0.9
+  "hasta_ozeti": ""
 }`
 }
 
@@ -191,10 +190,11 @@ export interface SoapNotu {
   soap?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string }
   aiDegerlendirme?: string
   vitaller?: Record<string, unknown>
-  anamnez?: string
-  fizik_muayene?: string
-  tani?: string
-  tedavi?: string
+  /** NOTYA-NOT-HIZ-01: modelden gelmez — turkceBolumleriTuret ile soap'tan türetilir (routes content_* sütunlarına yazar). */
+  anamnez?: string | null
+  fizik_muayene?: string | null
+  tani?: string | null
+  tedavi?: string | null
   ilaclar?: unknown[]
   /** NOTYA-ASI-NOT-01: raw model list — routes pass it through muayeneAsilariniHazirla before saving. */
   asilar?: unknown[]
@@ -282,37 +282,107 @@ export function dozKilitliBrans(...branslar: (string | null | undefined)[]): boo
   return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar) || gozMi(...branslar)
 }
 
-/** System prompt for SOAP generation. Dahiliye / kadın doğum / dermatoloji / göz doctors get their prompts/ lock appended. */
-export function soapSistemPromptu(girdi: SoapGirdi): string {
+/** NOTYA-NOT-HIZ-01: system prompt as two blocks. The first (persona + rules + the branch's prompts/ lock) depends only on
+ * branch + pediatrik/veli axes, never on the patient → cached (`onbellek`), shared by both note calls and by every note of
+ * the same branch. Patient context, style examples, hafıza profile, hekim adı and çek listesi stay in the second, uncached block. */
+export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
   const personaAnahtari = soapPersonaAnahtari(girdi)
-  return [
+  const sabit = [
     aysePersona(personaAnahtari),
     soapKurallari(pediatrikKapsam(girdi.specialty, girdi.doktorBransi, girdi.hastaDogumIso), veliDiliMi({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso })),
+    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : '',
+  ]
+  const degisken = [
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
-    girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',,
+    girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
-    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : '',
     ...(girdi.cekListeBlogu ? [girdi.cekListeBlogu] : []),
-  ].join('\n')
+  ]
+  return [
+    { metin: sabit.filter(Boolean).join('\n'), onbellek: true },
+    { metin: degisken.filter(Boolean).join('\n') },
+  ]
 }
 
+/** System prompt for SOAP generation as one string. Dahiliye / kadın doğum / dermatoloji / göz doctors get their prompts/ lock. */
+export function soapSistemPromptu(girdi: SoapGirdi): string {
+  return soapSistemBloklari(girdi).map((b) => b.metin).filter(Boolean).join('\n')
+}
+
+/** NOTYA-NOT-HIZ-01: the Turkish-tradition prose columns are the SOAP sections themselves (labels kept — Dr. Gökhan's
+ * 2026-09-03 headers); the model no longer writes the same content twice. Empty section → null. */
+export function turkceBolumleriTuret(soap: SoapNotu['soap'] | null): Pick<SoapNotu, 'anamnez' | 'fizik_muayene' | 'tani' | 'tedavi'> {
+  const al = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+  return { anamnez: al(soap?.subjektif), fizik_muayene: al(soap?.objektif), tani: al(soap?.degerlendirme), tedavi: al(soap?.plan) }
+}
+
+/** Advisory fields — produced only by the second (öneri) call. */
+const ONERI_ALANLARI = ['aiDegerlendirme', 'receteOnerisi', 'kritik_bulgular', 'alarmBulgulari', 'hasta_ozeti'] as const
+
+const GOVDE_CAGRISI = `ÇAĞRI: YALNIZ (A) NOT GÖVDESİ JSON'unu döndür. Öneri alanları (aiDegerlendirme, receteOnerisi, kritik_bulgular, alarmBulgulari, hasta_ozeti) bu çağrıda ÜRETİLMEZ — ayrı bir çağrıda üretilir; bu yüzden kendi yorumunu/önerini gövdeye KOYMA.`
+const ONERI_CAGRISI = `ÇAĞRI: YALNIZ (B) AI ÖNERİSİ JSON'unu döndür. Not gövdesini (basvuruYakinmasi, soap, vitaller, ilaclar, asilar, icd10_codes) bu çağrıda YAZMA — ayrı bir çağrıda yazılır. hasta_ozeti ve alarmBulgulari yalnız doktorun söylediği tanı/tedaviyi anlatır.`
+
+/** Öneri çağrısı gövde çağrısından sonra en çok bu kadar beklenir; sonra not öneri alanları boş kaydedilir (testler kısaltır). */
+export const ONERI_EK_BEKLEME = { ms: 20_000 }
+
+function yanitJsonu(yanit: Anthropic.Message): SoapNotu {
+  // Boş içerik (content: []) eskiden TypeError'dı; artık ayrıştırılamayan çıktı olarak geçici hata sayılır.
+  const ham = yanit?.content?.[0]?.type === 'text' ? yanit.content[0].text : ''
+  return jsonKurtar(ham.replace(/```json\n?|\n?```/g, '').trim())
+}
+
+/** Log line for a dropped advisory call — error class / status only, never model output or transcript. */
+function oneriHataKodu(e: unknown): string {
+  const h = (e && typeof e === 'object' ? e : {}) as { name?: unknown; durum?: unknown; status?: unknown }
+  const durum = typeof h.durum === 'number' ? h.durum : typeof h.status === 'number' ? h.status : null
+  return [typeof h.name === 'string' ? h.name : 'Hata', durum].filter((x) => x != null).join(' ')
+}
+
+/**
+ * NOTYA-NOT-HIZ-01: two PARALLEL calls on the same cached system prefix — (A) note body, (B) advisory fields. The note
+ * never waits on B: if B fails, returns unparseable JSON or is still running ONERI_EK_BEKLEME after A, the note is saved
+ * with empty advisory fields. A failure keeps the old error path (thrown → soapUretYeniden / route).
+ */
 export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
-  const sistem = soapSistemPromptu(girdi)
+  const system = soapSistemBloklari(girdi)
+  const transkript = `Muayene transkripti:\n\n${girdi.transcript}`
 
   // NOTYA-MALIYET-01: muayene/SOAP notu — GÜÇLÜ
-  const yanit = await aiCagir({
+  const govdeSozu = aiCagir({
     istemci: anthropic,
     gorev: 'soap',
     maxTokens: 8000,
     doctorId: girdi.doctorId ?? null,
-    system: sistem,
-    messages: [{ role: 'user', content: `Muayene transkripti:\n\n${girdi.transcript}` }],
+    system,
+    messages: [{ role: 'user', content: `${transkript}\n\n${GOVDE_CAGRISI}` }],
   })
-  // Boş içerik (content: []) eskiden TypeError'dı; artık ayrıştırılamayan çıktı olarak geçici hata sayılır.
-  const ham = yanit.content?.[0]?.type === 'text' ? yanit.content[0].text : ''
-  const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
-  const veri = jsonKurtar(temiz)
+  // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — GÜÇLÜ, kendi politika satırıyla.
+  const oneriSozu: Promise<SoapNotu | null> = aiCagir({
+    istemci: anthropic,
+    gorev: 'klinik-analiz',
+    maxTokens: 4000,
+    doctorId: girdi.doctorId ?? null,
+    system,
+    messages: [{ role: 'user', content: `${transkript}\n\n${ONERI_CAGRISI}` }],
+  }).then(yanitJsonu).catch((e) => {
+    console.warn(`[soap] öneri çağrısı düştü, not öneri alanları boş kaydedilir: ${oneriHataKodu(e)}`)
+    return null
+  })
+
+  const govde = yanitJsonu(await govdeSozu)
+  let zamanlayici: ReturnType<typeof setTimeout> | undefined
+  const oneri = await Promise.race([
+    oneriSozu,
+    new Promise<null>((r) => { zamanlayici = setTimeout(() => {
+      console.warn(`[soap] öneri çağrısı ${ONERI_EK_BEKLEME.ms} ms içinde bitmedi, not öneri alanları boş kaydedilir`)
+      r(null)
+    }, ONERI_EK_BEKLEME.ms) }),
+  ])
+  clearTimeout(zamanlayici)
+
+  const veri: SoapNotu = { ...govde }
+  for (const k of ONERI_ALANLARI) (veri as Record<string, unknown>)[k] = oneri?.[k]
   if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
   // dictated during an obstetric USG is not the mother's vital sign).
@@ -323,7 +393,10 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   // CROSS-SPECIALTY-PARITY: the prompt-locked chapters get the full lock (dose-free receteOnerisi too); every other
   // branch in lib/doktor/specialties still gets the invention backstop — a dose the hekim never said never ships.
   const dozlu = dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)
-  return notMetinleriniTemizle(soapNumaraliAlanlariDuzenle(kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu))
+  const numarali = soapNumaraliAlanlariDuzenle(kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu)
+  // NOTYA-NOT-HIZ-01: prose columns derived from the already locked / numbered SOAP sections (dose lock runs once, not
+  // twice on the same text); the F4 cleaner then runs over both — they stay identical.
+  return notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap) })
 }
 
 /** Doktorun onayladığı son notlardan kısa üslup örnekleri derler (few-shot stil öğrenmesi).

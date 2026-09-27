@@ -71,8 +71,9 @@ const MODEL_SOAP = {
 }
 class SahteAnthropic {
   messages = {
-    create: async (istek: { system?: string }) => {
-      soapSistemleri.push(String(istek?.system || ''))
+    create: async (istek: { system?: string | { text?: string }[] }) => {
+      // NOTYA-NOT-HIZ-01: SOAP system önbellek için blok dizisi olarak gider — modelin gördüğü metin blokların birleşimidir
+      soapSistemleri.push(Array.isArray(istek?.system) ? istek.system.map((b) => String(b?.text || '')).join('') : String(istek?.system || ''))
       return { content: [{ type: 'text', text: JSON.stringify(MODEL_SOAP) }], stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
     },
   }
