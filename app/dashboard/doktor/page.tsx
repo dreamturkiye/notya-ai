@@ -31,6 +31,7 @@ import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu'
 import { IlkHastaAdimi } from '@/components/doktor/SonrakiAdim'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
+import { tarayiciSaatDilimi } from '@/lib/doktor/selam'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -269,7 +270,7 @@ export default function DoktorDashboard() {
 
       {/* Kicker + title */}
       <div>
-        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{gunKickerTRT()}, {todayFull}</div>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{gunKickerTRT(new Date(), tarayiciSaatDilimi())}, {todayFull}</div>
         <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>
           Hoş geldiniz, Dr. {doktorAdi}
         </h1>

@@ -1,3 +1,4 @@
+import { saatDizesi, selamla, yerelSaat } from '@/lib/doktor/selam'
 /**
  * NOTYA-YENI-GORUNUM-01 (Kaan, 2026-09-22) — shared design tokens for the new doktor chrome.
  * Direction: warm, soft, human — away from the dark-navy admin-panel look. Palette and type
@@ -46,18 +47,11 @@ export const CHROME_FONT_HREF =
 /** Real, re-hosted asset — was on a throwaway image host in the original concept. */
 export const CHROME_BG_IMAGE = '/doktor-chrome/plant.jpg'
 
-/** TRT-aware time-of-day greeting — used on Ana Sayfa's kicker. */
-export function gunKickerTRT(d: Date = new Date()): string {
-  const saat = Number(
-    d.toLocaleTimeString('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', hour12: false }).slice(0, 2)
-  )
-  if (saat < 6) return 'İyi geceler'
-  if (saat < 11) return 'Günaydın'
-  if (saat < 18) return 'İyi günler'
-  return 'İyi akşamlar'
+/** NOTYA-SELAM-SAAT-01: time-of-day greeting in the doctor's local tz (kicker on Ana Sayfa); TRT only as fallback. */
+export function gunKickerTRT(d: Date = new Date(), tz?: string): string {
+  return selamla(yerelSaat(d, tz))
 }
-
-/** Live TRT clock string, e.g. "14:32". */
-export function saatTRT(d: Date = new Date()): string {
-  return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
+/** Live clock string in the doctor's local tz (TRT fallback), e.g. "14:32". */
+export function saatTRT(d: Date = new Date(), tz?: string): string {
+  return saatDizesi(d, tz)
 }
