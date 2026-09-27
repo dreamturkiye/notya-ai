@@ -29,6 +29,8 @@ import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
 import { PERSONAS, varsayilanPersonaId } from '@/lib/asistan/personaEngine'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu'
+import { IlkHastaAdimi } from '@/components/doktor/SonrakiAdim'
+import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -140,6 +142,7 @@ export default function DoktorDashboard() {
   const [loading, setLoading] = useState(true)
   const [pediatriAraci, setPediatriAraci] = useState(false)
   const [yeniMesajlar, setYeniMesajlar] = useState<MesajOzet[]>([])
+  const rutinPaket = useRutinPaket()
 
   useEffect(() => {
     // Cached name from a previous session -- read after mount only, never during the initial
@@ -274,6 +277,10 @@ export default function DoktorDashboard() {
             <span style={S({ color: CHROME_RENK.pine, fontWeight: 700 })}>{asistanKisaAd}:</span> {ayseAcilis}
           </div>
         )}
+        {(() => {
+          const ilk = (gunProgrami || []).find((p) => p.patientId && new Date(p.baslangic).getTime() >= Date.now() - 30 * 60_000)
+          return ilk?.patientId ? <IlkHastaAdimi hastaAdi={ilk.hastaAdi} patientId={ilk.patientId} /> : null
+        })()}
       </div>
 
       <PaketSayacSeridi />
@@ -296,6 +303,13 @@ export default function DoktorDashboard() {
       <GelenBelgelerKarti />
 
       <BekleyenKonsultasyonOzeti />
+
+      {rutinPaket?.kartSirasi === 'hastalar' && (
+        <div onClick={() => router.push('/dashboard/doktor/hastalar')} style={S({ ...card, padding: '16px 20px', cursor: 'pointer' })}>
+          <div style={S({ fontSize: 12, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hastalar</div>
+          <div style={S({ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink, marginTop: 4 })}>Genelde önce hastaları açarsınız ›</div>
+        </div>
+      )}
 
       {/* Randevular — Bugün / Bu Hafta */}
       <div className="yg-takvim">

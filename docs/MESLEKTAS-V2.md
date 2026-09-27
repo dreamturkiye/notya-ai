@@ -34,9 +34,9 @@ Model politikasına dokunulmaz (`lib/ai/modeller.ts` / `cagir.ts` / `saglayici.t
 
 Kapat = `durum=kapali` + `doktor_soyledi` negatif kayıt. Unut = `hafizaUnut`.
 
-## Faz 2 — Rutin + öne geçme (sonraki PR)
+## Faz 2 — Rutin + öne geçme
 
-Telemetri (PII yok) → `doktor_kullanim_olaylari` → gece `rutinTuret` → `SonrakiAdim` (≥0.6, ≥8 gözlem). Bugün kart sırası. Önerir, yazmaz / gezdirmez.
+Telemetri (PII yok) `lib/telemetri/kullanim.ts` → `POST /api/doktor/kullanim` (sendBeacon, ≤1/10 sn). Tablo `doktor_kullanim_olaylari`. Gece 03:30 TRT ` /api/cron/meslektas-rutin` + 30 gün silme → `rutinTuret` → `doktor_rutin`. `SonrakiAdim` yalnız p≥0.6 ve n≥8. Bugün: `kartSirasi=hastalar` ise Hastalar kartı Randevular’ın üstünde. Önerir, yazmaz / gezdirmez. Dismissal = `reddet` (negatif kanıt).
 
 ## Faz 3 — Önbellek + prefetch (sonraki PR)
 

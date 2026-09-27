@@ -218,6 +218,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/erecete-ayar/route.ts': I('users row of doktorId only'),
   'app/api/doktor/recete-baslik/route.ts': I('GET/POST users row of doktorId only — letterhead, no patient id'),
   'app/api/doktor/hafiza/route.ts': I('doktor_hafiza scoped by doctor_id; no patient data'),
+  'app/api/doktor/kullanim/route.ts': I('usage events only: sayfa_tipi/eylem; no patient id; insert scoped by pratikOturum doktorId'),
+  'app/api/doktor/rutin/route.ts': I('doktor_rutin / kullanim olaylari scoped by doktorId; no patient table'),
   'app/api/doktor/hesap/sifre-degistir/route.ts': I('own auth account only'),
   'app/api/doktor/id-card/parse/route.ts': I('OCR of an uploaded image; stores nothing'),
   'app/api/doktor/ilac-ara/route.ts': I('drug catalogue search; no patient data'),
@@ -261,4 +263,5 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id; then (NOTYA-ILETISIM-04) the dispatcher sends from each item\'s own doctor\'s account — see iletisim-otomatik'),
   'app/api/cron/iletisim-otomatik/route.ts': I('cron-secret gated; NOTYA-ILETISIM-04 dispatcher (lib/iletisim/otomatikGonderim.ts): every queue item is re-read via iletisimHazirla with the item\'s own doctor_id (queue row, appointment and patient each resolved with doctor_id), sent only from that doctor\'s own connected account, every write .eq(doctor_id)'),
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path (NOTYA-GELEN-BELGELER: deletes unfiled inbox rows + their files by age only, returns counts)'),
+  'app/api/cron/meslektas-rutin/route.ts': I('cron-secret gated; 30-day usage purge + per-doctor rutinTuret on that doctor_id only; no patient ids'),
 }

@@ -29,6 +29,9 @@ import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip';
+import SonrakiAdim from '@/components/doktor/SonrakiAdim';
+import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci';
+import { kullanimEylem } from '@/lib/telemetri/kullanim';
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
@@ -125,6 +128,7 @@ export default function IncelemePage() {
   // NOTYA-ONAY-DONUS-01: kuyrukta sıra işlenirken onaylanan notu gözden kaçırmayalım —
   // sayfa değişmediği durumda onaylanan nota giden bağlantı burada tutulur.
   const [sonOnaylanan, setSonOnaylanan] = useState<{ id: string; hasta: string; patientId: string | null } | null>(null);
+  const rutinPaket = useRutinPaket();
   const [acikId, setAcikId] = useState('');
   const [taslak, setTaslak] = useState<Taslak>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
   // Kaan/Gökhan (2026-09-10): başlık (hasta, branş, tarih) dışında her şey düzenlenebilir
@@ -433,6 +437,7 @@ export default function IncelemePage() {
       notlariYaz(kalan);
       if (acikId === id) setAcikId('');
       setSonOnaylanan({ id, hasta: onaylanan?.maskedPatient || '', patientId: onaylanan?.patientId ?? null });
+      kullanimEylem('not_onayla', '/dashboard/doktor/inceleme');
 
       const hedef = onaySonrasiHedef(id, kalan.length);
       // NOTYA-ILAC-SONLANDIR-01: not bir ilacı kestiyse tek satır + Geri al; kuyruk boşsa hekim Devam ile geçer.
@@ -486,6 +491,7 @@ export default function IncelemePage() {
             <span style={{ color: '#2E6E4E', fontSize: 13, fontWeight: 600 }}>✓ Not onaylandı{sonOnaylanan.hasta ? ` — ${sonOnaylanan.hasta}` : ''}</span>
             <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
             <a href={hastaDosyasiYolu(sonOnaylanan.patientId, 'muayene')} style={{ color: CHROME_RENK.muted, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Muayene Geçmişi →</a>
+            <SonrakiAdim sonEylem="not_onayla" paket={rutinPaket} noteId={sonOnaylanan.id} patientId={sonOnaylanan.patientId} />
           </div>
         )}
 

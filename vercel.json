@@ -71,6 +71,10 @@
     {
       "path": "/api/cron/iletisim-otomatik",
       "schedule": "*/10 4-17 * * *"
+    },
+    {
+      "path": "/api/cron/meslektas-rutin",
+      "schedule": "30 0 * * *"
     }
   ]
 }
