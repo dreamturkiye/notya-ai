@@ -30,7 +30,8 @@ import {
 import { kbbSeridi } from '@/specialties/kulak-burun-bogaz/engines/serit'
 import { KBB_RAPOR_SABLONLARI } from '@/specialties/kulak-burun-bogaz/engines/sgkRapor'
 import {
-  BURUN_SIKAYET_AD, BURUN_MUAYENE_BULGULARI, TEDAVI_BASAMAKLARI, SURE_AD, sinusRinitNotu,
+  BURUN_SIKAYET_AD, BURUN_SIKAYET_LISTESI, BURUN_MUAYENE_BULGULARI, TEDAVI_BASAMAKLARI, SURE_AD, sinusRinitNotu,
+  type BurunSikayeti,
 } from '@/specialties/kulak-burun-bogaz/engines/sinusRinit'
 import {
   TIMP_TIP_AD, timpanometriNotu, timpTipiGecerliMi,
@@ -194,7 +195,9 @@ export async function POST(req: NextRequest) {
 
   if (adim === 'burun') {
     const sonuc = sinusRinitNotu({
-      sikayetler: Array.isArray(b.sikayetler) ? (b.sikayetler as string[]) : [],
+      sikayetler: Array.isArray(b.sikayetler)
+        ? (b.sikayetler as unknown[]).map(String).filter((k): k is BurunSikayeti => (BURUN_SIKAYET_LISTESI as readonly string[]).includes(k))
+        : [],
       sure: (b.sure === 'akut' || b.sure === 'subakut' || b.sure === 'kronik' ? b.sure : 'akut'),
       muayeneBulgulari: Array.isArray(b.muayeneBulgulari) ? (b.muayeneBulgulari as string[]).map(String) : [],
       basamaklar: Array.isArray(b.basamaklar) ? (b.basamaklar as string[]).map(String) : [],
