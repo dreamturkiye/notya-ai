@@ -207,6 +207,10 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         fundusYuksekligi: sayi(g.fundus), fetalKalpAtimi: sayi(g.fka), proteinuri: g.proteinuri || null,
         usg: Object.keys(usg).length ? usg : null, notMetni: g.not || null, muayeneFormunaEkle,
         checklist, gbsKultur: g.gbs || null,
+        servikalUzunluk: sayi(g.servikal),
+        ogtt: (g.ogtt0 || g.ogtt60 || g.ogtt120 || g.ogttSonuc)
+          ? { glukoz0: sayi(g.ogtt0), glukoz60: sayi(g.ogtt60), glukoz120: sayi(g.ogtt120), sonuc: g.ogttSonuc || null }
+          : null,
       });
       if (muayeneFormunaEkle) setMesajVeNot(d.notEkleme?.eklendi ? 'İzlem kaydedildi ve bugünkü muayene formuna eklendi.' : `İzlem kaydedildi. ${d.notEkleme?.sebep || ''}`, d);
       else setMesaj('İzlem kaydedildi.');
@@ -455,6 +459,15 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 {alan('kanGrubu', 'Kan grubu', f, setF, 'text', 'A, B, AB, 0')}
                 <label style={{ display: 'block' }}><span style={etiketS}>Rh</span>
                   <select value={f.rh || ''} onChange={(e) => { const v = e.target.value; setF((prev) => ({ ...prev, rh: v })); }} style={giris}><option value="">—</option><option value="pozitif">Rh (+)</option><option value="negatif">Rh (−)</option></select></label>
+                {alan('csSayisi', 'Önceki sezaryen sayısı', f, setF, 'number')}
+                <label style={{ display: 'block' }}><span style={etiketS}>Önceki sezaryen kesi tipi</span>
+                  <select value={f.csKesi || ''} onChange={(e) => setF((prev) => ({ ...prev, csKesi: e.target.value }))} style={giris}>
+                    <option value="">—</option>
+                    <option value="alt-segment">Alt segment transvers</option>
+                    <option value="klasik">Klasik / korporal</option>
+                    <option value="bilinmiyor">Bilinmiyor</option>
+                  </select>
+                </label>
               </div>
               <div style={{ display: 'flex', gap: 8 }}><button type="submit" style={btn(true)}>Kaydet</button><button type="button" style={btn()} onClick={() => setBaslatAcik(false)}>Vazgeç</button></div>
             </form>
@@ -537,7 +550,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         </>
       )}
 
-      {etkinMod === 'infertilite' && <InfertiliteStub />}
+      {etkinMod === 'infertilite' && <InfertiliteStub patientId={patientId} />}
 
       {veri?.gebelik && etkinMod === 'klinik' && (
         <>
@@ -559,6 +572,21 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 <label style={{ display: 'block' }}><span style={etiketS}>GBS kültürü</span>
                   <select value={g.gbs || ''} onChange={(e) => setG((prev) => ({ ...prev, gbs: e.target.value }))} style={giris}>
                     <option value="">—</option><option value="negatif">Negatif</option><option value="pozitif">Pozitif</option><option value="bekleniyor">Bekleniyor</option>
+                  </select>
+                </label>
+                {alan('servikal', 'Servikal uzunluk (mm)', g, setG, 'number')}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, margin: '14px 0 6px' }}>OGTT (24–28 hf — yapılandırılmış; yorum hekimin)</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+                {alan('ogtt0', 'Açlık glukoz', g, setG, 'number')}
+                {alan('ogtt60', '1. saat', g, setG, 'number')}
+                {alan('ogtt120', '2. saat', g, setG, 'number')}
+                <label style={{ display: 'block' }}><span style={etiketS}>OGTT sonuç (hekim)</span>
+                  <select value={g.ogttSonuc || ''} onChange={(e) => setG((prev) => ({ ...prev, ogttSonuc: e.target.value }))} style={giris}>
+                    <option value="">—</option>
+                    <option value="normal">Normal</option>
+                    <option value="bozuk">Bozuk / GDM düşündürür</option>
+                    <option value="bekleniyor">Bekleniyor</option>
                   </select>
                 </label>
               </div>
@@ -675,6 +703,34 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           <VtePaneli maddeler={vteMaddeler} onChange={setVteMaddeler} onKaydet={() => klinikKaydet({ vteFormu: { maddeler: vteMaddeler } }, 'VTE formu kaydedildi.')} />
           <DestekAsiPaneli state={destekAsi} onChange={setDestekAsi} onKaydet={() => klinikKaydet({ destekAsi }, 'Destek ve aşı kaydedildi.')} />
           <LabPaneli state={labPanel} onChange={setLabPanel} onKaydet={() => klinikKaydet({ labPanel }, 'Laboratuvar kaydedildi.')} />
+          <div style={kutu} data-kd="anti-d-log">
+            <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 6 }}>Anti-D uygulaması</div>
+            <p style={{ fontSize: 12.5, color: CHROME_RENK.muted, margin: '0 0 8px' }}>
+              Rh (−) gebede doz ve zamanlama hekimindir; Notya doz yazmaz. Tarih ve hafta kaydı SUT / izlem için.
+            </p>
+            {Array.isArray(veri.gebelik.anti_d_uygulamalari) && (veri.gebelik.anti_d_uygulamalari as Array<{ tarih?: string; hafta?: number }>).length > 0 && (
+              <div style={{ marginBottom: 8 }}>
+                {(veri.gebelik.anti_d_uygulamalari as Array<{ tarih?: string; hafta?: number; not?: string }>).map((x, i) => (
+                  <div key={`${x.tarih || i}`} style={{ fontSize: 12, color: CHROME_RENK.muted }}>{x.tarih || '—'}{x.hafta != null ? ` · ${x.hafta}. hf` : ''}{x.not ? ` — ${x.not}` : ''}</div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+              {alan('antiDTarih', 'Tarih', g, setG, 'date')}
+              {alan('antiDHafta', 'Hafta', g, setG, 'number')}
+            </div>
+            <button
+              type="button"
+              style={{ ...btn(true), marginTop: 10 }}
+              onClick={() => {
+                const onceki = Array.isArray(veri.gebelik.anti_d_uygulamalari) ? (veri.gebelik.anti_d_uygulamalari as Array<Record<string, unknown>>) : []
+                if (!g.antiDTarih) { setHata('Anti-D tarihi girin.'); return }
+                klinikKaydet({
+                  antiDUygulamalari: [...onceki, { tarih: g.antiDTarih, hafta: sayi(g.antiDHafta), not: g.antiDNot || null }],
+                }, 'Anti-D kaydı eklendi.')
+              }}
+            >Anti-D kaydet</button>
+          </div>
           <TehlikeIsaretleri onKopyala={() => setMesaj('Tehlike işaretleri kopyalandı.')} />
 
           {veri.izlemler.length > 0 && (

@@ -5,7 +5,7 @@
  * hasta 404 döner. Satır güncellemeleri hem id hem doctor_id ile kapsanır (.cursor/skills/hasta-izolasyon).
  *
  * GET  ?patientId= → şerit çipleri, son odyometri, açık kırmızı bayrak, görevler, kütüphane
- * POST adim: odyometri | otoskopi | vertigo | risk | gorev | kontrol | osas
+ * POST adim: odyometri | otoskopi | vertigo | risk | gorev | kontrol | osas | burun | timpanometri
  *
  * Kilitler: doz üretilmez, tanı kilitlenmez, PTA bandı tanıya çevrilmez, kayıp tipi hekimin. Açık
  * "hemen" kırmızı bayrak varken hekim onayı olmadan risk kaydı yazılmaz (409).
@@ -30,8 +30,11 @@ import {
 import { kbbSeridi } from '@/specialties/kulak-burun-bogaz/engines/serit'
 import { KBB_RAPOR_SABLONLARI } from '@/specialties/kulak-burun-bogaz/engines/sgkRapor'
 import {
-  BURUN_SIKAYET_AD, BURUN_MUAYENE_BULGULARI, TEDAVI_BASAMAKLARI, SURE_AD,
+  BURUN_SIKAYET_AD, BURUN_MUAYENE_BULGULARI, TEDAVI_BASAMAKLARI, SURE_AD, sinusRinitNotu,
 } from '@/specialties/kulak-burun-bogaz/engines/sinusRinit'
+import {
+  TIMP_TIP_AD, timpanometriNotu, timpTipiGecerliMi,
+} from '@/specialties/kulak-burun-bogaz/engines/timpanometri'
 import {
   REF_ACIKLAMA, HEKIM_KILIT_METNI, ACIL_YONLENDIRME_METNI, KAPSAM_NOTU, YAN_AD, gunEkle, yanGecerliMi,
 } from '@/specialties/kulak-burun-bogaz/engines/kbb'
@@ -189,6 +192,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  if (adim === 'burun') {
+    const sonuc = sinusRinitNotu({
+      sikayetler: Array.isArray(b.sikayetler) ? (b.sikayetler as string[]) : [],
+      sure: (b.sure === 'akut' || b.sure === 'subakut' || b.sure === 'kronik' ? b.sure : 'akut'),
+      muayeneBulgulari: Array.isArray(b.muayeneBulgulari) ? (b.muayeneBulgulari as string[]).map(String) : [],
+      basamaklar: Array.isArray(b.basamaklar) ? (b.basamaklar as string[]).map(String) : [],
+      hekimNotu: b.hekimNotu ? String(b.hekimNotu) : '',
+    })
+    if (!sonuc.satirlar.length) return NextResponse.json({ error: 'Burun / sinüs bulgusu işaretlenmedi', eksikler: sonuc.eksikler }, { status: 400 })
+    const rn = await gununNotunaEkle(sb, user.id, patientId, `Burun / sinüs — ${sonuc.metin}`)
+    return NextResponse.json({ ok: true, sonuc, notId: rn.eklendi ? rn.notId : null })
+  }
+
+  if (adim === 'timpanometri') {
+    const sonuc = timpanometriNotu({
+      kulaklar: Array.isArray(b.kulaklar) ? (b.kulaklar as Array<{ yan: 'sag' | 'sol'; tip: string | null }>).map((k) => ({
+        yan: k.yan, tip: timpTipiGecerliMi(k.tip) ? k.tip : null,
+      })) : [],
+      hekimNotu: b.hekimNotu ? String(b.hekimNotu) : '',
+    })
+    if (sonuc.eksikler.length && !sonuc.satirlar.length) {
+      return NextResponse.json({ error: sonuc.eksikler[0], eksikler: sonuc.eksikler }, { status: 400 })
+    }
+    const kayit = await bolumKaydi(sb, user.id, patientId)
+    const mevcut = (kayit?.notes || {}) as Notlar & { timpanometri?: unknown[] }
+    const onceki = Array.isArray(mevcut.timpanometri) ? mevcut.timpanometri : []
+    await sb.from('hasta_kbb')
+      .update({ notes: { ...mevcut, timpanometri: [...onceki, { tarih: T, kulaklar: b.kulaklar, metin: sonuc.metin }] }, updated_at: new Date().toISOString() })
+      .eq('id', String(kayit?.id || '')).eq('doctor_id', user.id).eq('patient_id', patientId)
+    const rn = await gununNotunaEkle(sb, user.id, patientId, `Timpanometri — ${sonuc.metin}`)
+    return NextResponse.json({ ok: true, sonuc, notId: rn.eklendi ? rn.notId : null })
+  }
+
   // OSAS sevk işareti: hekimin kendi kararı. Notya uyku tanısı koymaz, yalnız sevk takvimi tutar.
   if (adim === 'osas') {
     const durum = b.durum === 'planlandi' || b.durum === 'yok' ? String(b.durum) : 'planlandi'
@@ -280,6 +316,7 @@ export async function GET(req: NextRequest) {
       otoskopi: { disKulak: DIS_KULAK_AD, tm: TM_AD, ekBulgular: EK_BULGULAR },
       vertigo: { manevralar: MANEVRA_AD, sonuclar: SONUC_AD, nistagmus: NISTAGMUS_OZELLIKLERI, santral: SANTRAL_ISARETLERI },
       burun: { sikayetler: BURUN_SIKAYET_AD, bulgular: BURUN_MUAYENE_BULGULARI, basamaklar: TEDAVI_BASAMAKLARI, sureler: SURE_AD },
+      timpanometri: { tipler: TIMP_TIP_AD },
       acilKodlari: ACIL_KODLARI,
       acilListesi: ACIL_KONTROL_LISTESI,
       raporSablonlari: KBB_RAPOR_SABLONLARI,

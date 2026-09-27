@@ -88,10 +88,10 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
     // (migration 023: D/E/sezaryen geçmişi/çoğul gebelik/risk sınıfı/ilk vizit lab/servikal
     // uzunluk/OGTT/GBS/tehlike işaretleri sütunları var) ama çoğu HENÜZ FORM ALANI OLARAK
     // BAĞLANMADI — bu gece zaman yetmedi, uydurmak yerine dürüstçe işaretlendi.
-    { konu: 'A. Hasta modeli — veri sütunları var, form alanları eksik', neden: 'D (ölü doğum)/E (ektopik), önceki sezaryen sayısı/kesi tipi, çoğul gebelik tipi (dikoryonik/monokoryonik), risk sınıfı (düşük/orta/yüksek) migration 023 ile eklendi; başlangıç formuna henüz bağlanmadı.' },
+    { konu: 'A. Hasta modeli — 023 başlat bağları (2026-09 beta)', neden: 'D/E, önceki sezaryen sayısı/kesi tipi ve çoğul gebelik tipi başlangıç formuna bağlandı. Risk sınıfı hâlâ hekim seçer; SB resmi form kriterleri kodlanmadı.' },
     { konu: 'B. SB Risk Değerlendirme Formu', neden: 'risk_sinifi alanı var (doktor elle seçiyor) ama SB\'nin kendi resmi formunun kriterleri doğrulanıp kod haline getirilmedi.' },
     { konu: 'C. İlk vizit laboratuvar paneli', neden: 'ilk_vizit_lab jsonb sütunu var (hemogram/ferritin/TSH/HBsAg/HIV/VDRL/HCV/idrar kültür/açlık glukoz); form alanı yok.' },
-    { konu: 'C. Eksik test alanları', neden: 'Nazal kemik (ikili test), servikal uzunluk (18-22hf USG), OGTT (24-28hf, yapılandırılmış), GBS kültür (35-37hf), Anti-D doz kaydı — veri modelinde/motorda var (nazalKemik, servikalUzunluk, ogtt, gbsKultur, antiDUygulamalari), form alanı yok. Kordosentez ve fetal eko invaziif test seçeneklerine eklendi.' },
+    { konu: 'C. İzlem 023 bağları (2026-09 beta)', neden: 'Servikal uzunluk, yapılandırılmış OGTT ve Anti-D tarih/hafta logu izlem + gebe yüzeyine bağlandı. Nazal kemik ve Anti-D doz değeri hâlâ hekimindir (Notya doz yazmaz). GBS kültür izlem formunda.' },
     { konu: 'C. Erken gebelik (4-8 hf) takibi', neden: 'β-hCG seri + TVUSG ile canlılık/ektopik/abortus takibi kurulmadı — gebelik kaydı şu an yalnız SAT girilince başlıyor.' },
     { konu: 'C. Geç gebelik fetal iyilik testleri (28+ hf)', neden: 'NST, BPP, umbilikal/MCA Doppler kurulmadı.' },
     { konu: 'C. SUT kodları', neden: 'İkili (P.901.120) ve üçlü (P.904.090) kodları sabit olarak eklendi (lib/clinical/genetikTarama.ts SUT_KODLARI); belgelere henüz basılmıyor.' },

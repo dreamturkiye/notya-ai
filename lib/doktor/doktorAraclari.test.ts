@@ -115,9 +115,9 @@ test('göz-only Araçlar: göz sees all five; pediatri / dahiliye / kardiyoloji 
   assert.ok(!goz.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/dahiliye-kohort'))
 })
 
-const DERM_ROTALARI = ['/doktor-tools/derm-pasi', '/doktor-tools/derm-gop', '/doktor-tools/derm-fototerapi', '/doktor-tools/derm-yama', '/doktor-tools/derm-kohort']
+const DERM_ROTALARI = ['/doktor-tools/derm-pasi', '/doktor-tools/derm-gop', '/doktor-tools/derm-fototerapi', '/doktor-tools/derm-yama', '/doktor-tools/derm-kohort', '/doktor-tools/derm-biyolojik-sut']
 
-test('dermatoloji-only Araçlar: derm sees all five; pediatri / dahiliye / kardiyoloji / göz / KD and 25 others never', () => {
+test('dermatoloji-only Araçlar: derm sees all six; pediatri / dahiliye / kardiyoloji / göz / KD and 25 others never', () => {
   const derm = doktorAraclariListesi('dermatoloji')
   for (const r of DERM_ROTALARI) {
     assert.ok(derm.some((a) => a.route === r), `dermatoloji missing ${r}`)
@@ -152,7 +152,7 @@ test('dermatoloji studio pages: guarded, card-opened, never on the landing', () 
     assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
     assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
   }
-  assert.doesNotMatch(landing, /PasiEasiAraci|GopKapiAraci|FototerapiDefteriAraci|YamaAraci|DermKohortPaneli/)
+  assert.doesNotMatch(landing, /PasiEasiAraci|GopKapiAraci|FototerapiDefteriAraci|YamaAraci|DermKohortPaneli|BiyolojikSutAraci/)
 })
 
 test('göz studio pages: guarded, card-opened, never on the landing', () => {

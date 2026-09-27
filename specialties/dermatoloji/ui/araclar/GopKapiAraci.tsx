@@ -8,7 +8,8 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { gopIsotretinoin, acitretinPregnancyBanYears, type GopSex } from '../../engines/gop-isotretinoin';
-import { dermStil, Secim, Onay, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
+import { dermStil, Secim, Onay, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu, KayitButonu } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dermStil;
@@ -135,6 +136,31 @@ export default function GopKapiAraci() {
         <div style={etiket}>Hastada kaydet (isteğe bağlı)</div>
         <div style={kucuk}>Kapı sonucunu ilaç güvenlik kaydına işlemek için hastayı seçip Deri sekmesini açın.</div>
         <DermHastaSecici secili={hasta.id} sec={(id, ad) => setHasta({ id, ad })} />
+        <KayitButonu
+          etiket="GÖP paketini hastaya kaydet"
+          hastaId={hasta.id}
+          ipucu="Aynı kayıt Deri sekmesindeki GÖP bloğuna yazılır (action: klinik)."
+          kaydet={async () => {
+            const t = await getAccessTokenAsync();
+            const r = await fetch('/api/doktor/dermatoloji', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                patientId: hasta.id, action: 'klinik',
+                gop: {
+                  two_contraception: kontrasepsiyon1 && kontrasepsiyon2,
+                  hcg_iso: hcgTarih || null,
+                  hcg_negative: hcgNegatif,
+                  cycle_day: siklusGunu === '' ? null : Number(siklusGunu),
+                  rx_days: Number(receteGun) || 30,
+                  start_iso: baslangic || bugun(),
+                },
+              }),
+            });
+            const j = await r.json().catch(() => ({}));
+            return r.ok ? null : (j.error || 'Kaydedilemedi.');
+          }}
+        />
         {hasta.id && <div style={satir}><a href={hastaDosyaHref(hasta.id, 'deri')} style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Deri) →</a></div>}
       </div>
     </>

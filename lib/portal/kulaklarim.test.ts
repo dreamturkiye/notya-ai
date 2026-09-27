@@ -5,7 +5,7 @@ import path from 'node:path'
 import { KULAK_BURUN_BOGAZ_PROFILE } from '@/lib/specialties/kulak-burun-bogaz'
 import { portalModulAktif, portalModulleri, type PortalUygunlukGirdisi } from '@/lib/portal/moduller'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
-import { SAGLIGIM_DEMO } from '@/lib/portal/demoData'
+import { SAGLIGIM_DEMO, SAGLIGIM_DEMO_KBB } from '@/lib/portal/demoData'
 import {
   gorevBasligi, hatirlatmaDurumu, kulaklarimHatirlatmalari, sonrakiKontrol,
   testHatirlatmalari, islemHatirlatmalari, hastaDiliTemizMi, KULAKLARIM_NOTU, KULAK_BAKIM_IPUCLARI,
@@ -52,6 +52,23 @@ describe('KBB-EXCEPTIONAL-01 Kulaklarım portal', () => {
   it('bundle slice starts null everywhere (demo portal never carries KBB follow-up)', () => {
     assert.equal(emptyPortalBundle().kulak, null)
     assert.equal(SAGLIGIM_DEMO.kulak, null)
+  })
+
+  it('KBB demo fixture attaches only Kulaklarım — no dB / tanı / ilaç', () => {
+    assert.deepEqual(SAGLIGIM_DEMO_KBB.portal?.moduller, ['kulaklarim'])
+    assert.deepEqual(SAGLIGIM_DEMO_KBB.portal?.nav.map((n) => n.path), ['/kulaklarim'])
+    assert.equal(SAGLIGIM_DEMO_KBB.buyume, null)
+    assert.equal(SAGLIGIM_DEMO_KBB.gebelik, null)
+    assert.equal(SAGLIGIM_DEMO_KBB.hedefBoy, null)
+    assert.ok(portalModulAktif(SAGLIGIM_DEMO_KBB, 'kulaklarim'))
+    const k = SAGLIGIM_DEMO_KBB.kulak
+    assert.ok(k)
+    assert.ok(k.sonrakiKontrol)
+    assert.ok(k.testHatirlatma.some((h) => h.ad === 'İşitme testi randevusu'))
+    const metin = JSON.stringify(k)
+    assert.doesNotMatch(metin, /\bdB\b|PTA|sensorin|perforasyon|BPPV|tanı|mg\b/i)
+    for (const x of k.bakimIpuclari) assert.ok(hastaDiliTemizMi(x), x)
+    assert.ok(hastaDiliTemizMi(k.not))
   })
 
   it('page gates on kulaklarim module', () => {

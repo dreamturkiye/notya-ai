@@ -9,11 +9,14 @@
 ## Hazırlık (ekip, 1 gün önce)
 
 - [ ] Hekim hesabı `users.specialty = 'kulak-burun-bogaz'` (veya "Kulak Burun Boğaz Hastalıkları" / "KBB") → Araçlar'da 5 KBB kartı (Otoskopi · Odyometri · Vertigo · SGK işitme raporu · Kohort); Hedef Boy / Dahiliye / Göz / Derm / KD / Psikiyatri tile'ları **yok**.
+- [ ] TEST kart (`scripts/seed-beta-impress-patients.mts`): **TEST — Hasan Yıldız (KBB)** — bilateral PTA + otoskopi + Dix-Hallpike + bir SGK eksik satırı.
 - [ ] Migration 057 uygulandı: `hasta_kbb`, `kbb_odyometri`, `kbb_gorevleri`, `kbb_risk` + RLS.
 - [ ] `npm run test:kbb` ve `npm run test:brans-sizmasi` yeşil.
 - [ ] 20 dk tur: hasta dosyası › KBB sekmesi, sticky şerit, Araçlar › Kohort, Sağlığım › Kulaklarım.
 
 ## Gün 1 — muayene omurgası
+
+**20 dk script (TEST — Hasan Yıldız):** otoskopi sağ+sol (eksik kulak = normal sayılmaz) → PTA 0.5–4 bilateral → timpanometri A/B/C/Ad → Burun sekmesi → Dix-Hallpike (santral → acil) → SGK işitme taslağı (Home’da kopyala) → Kohort → Kulaklarım (`/portal/demo-kbb`).
 
 - [ ] Otoskopi kontrol listesi: sağ/sol dış kulak yolu ve TM görünümleri sahadaki dilinize uyuyor mu? Eksik bir görünüm var mı?
 - [ ] Muayene edilmeyen kulak sessizce "normal" sayılmıyor, eksik olarak işaretleniyor — kabul?

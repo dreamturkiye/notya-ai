@@ -10,7 +10,8 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { PHOTO_DEVICES, BURN_CHECKLIST, cumulativeJ, fototerapiOzeti, SOLARIUM_FORBIDDEN, type PhotoDevice, type PhotoSession } from '../../engines/phototherapy-log';
 import { DERM_PHOTO_DEVICE, dermLabel } from '../labels';
-import { dermStil, Secim, Kutu, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
+import { dermStil, Secim, Kutu, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu, KayitButonu } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
@@ -150,12 +151,36 @@ export default function FototerapiDefteriAraci() {
         {seanslar.length > cihazSeanslari.length && <div style={{ ...kucuk, marginTop: 8 }}>Tüm cihazlar toplamı: {tumKumulatif} J/cm² ({seanslar.length} seans).</div>}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Defteri kopyala" /></div>
         <MuayeneFormunaEkle hastaId={hasta.id} arac="Fototerapi defteri" satirlar={notSatirlari} />
-        <TaslakNotu>Bu defter kaydedilmez — kalıcı seans kaydı hasta dosyasının Deri sekmesinde tutulur. Doz artışı ve protokol hekimin kararıdır; nota otomatik yazılmaz.</TaslakNotu>
+        <TaslakNotu>Yerel defter hesap içindir. Hasta seçilirse son seans Deri sekmesindeki fototerapi tablosuna yazılır. Doz artışı ve protokol hekimin kararıdır.</TaslakNotu>
       </div>
 
       <div style={kutu}>
         <div style={etiket}>Hastada kaydet (isteğe bağlı)</div>
         <DermHastaSecici secili={hasta.id} sec={(id, ad) => setHasta({ id, ad })} />
+        <KayitButonu
+          etiket="Son seansı hastaya kaydet"
+          hastaId={hasta.id}
+          kapali={!cihazSeanslari.length}
+          kapaliNedeni="Önce deftere bir seans ekleyin."
+          ipucu="Aynı API (fototerapi-seans) Deri sekmesinde kullanılır."
+          kaydet={async () => {
+            const son = cihazSeanslari[cihazSeanslari.length - 1];
+            if (!son) return 'Kaydedilecek seans yok.';
+            const t = await getAccessTokenAsync();
+            const r = await fetch('/api/doktor/dermatoloji', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                patientId: hasta.id, action: 'fototerapi-seans',
+                date: son.date, device: son.device, j_cm2: son.j_cm2,
+                med_test: son.med_test === true, burn: son.burn === true,
+                doz_adimi_pct: son.dose_step ?? null,
+              }),
+            });
+            const j = await r.json().catch(() => ({}));
+            return r.ok ? null : (j.error || 'Kaydedilemedi.');
+          }}
+        />
         {hasta.id && <div style={satir}><a href={hastaDosyaHref(hasta.id, 'deri')} style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Deri) →</a></div>}
       </div>
     </>

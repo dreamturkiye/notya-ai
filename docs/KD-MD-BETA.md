@@ -13,8 +13,11 @@
 - [ ] Hekim hesabı KD specialty → Araçlar'da **5** KD kartı (Gebelik takvimi · Doğum/analık raporu · MEC · Obstetrik risk · Kohort); Hedef Boy / Göz / Derm / Dahiliye / Psik tile'ları **yok**.
 - [ ] `npm run test:kd` ve `npm run test:brans-sizmasi` yeşil.
 - [ ] 20 dk tur: hasta dosyası › Kadın Sağlığı & Gebelik, sticky şerit, Araçlar › Kohort, Sağlığım › Gebeliğim.
+- [ ] TEST kartlar (gerçek hasta değil; `scripts/seed-beta-impress-patients.mts`): **TEST — Ayşe Demir (28 hf)** · **TEST — Selin Kaya (Pap)** · **TEST — Elif Koç (lohusa)** + **TEST — Bebek Koç (yenidoğan)**.
 
 ## Gün 1 — gebelik omurgası
+
+**20 dk script (TEST — Ayşe Demir):** SAT → çift takvim (DÖBYR ≠ ACOG) → izlem (fundus / FKA / USG + OGTT + servikal uzunluk) → NST → Anti-D log → Araçlar Kohort → Sağlığım Gebeliğim. Jine için **Selin Kaya (Pap)**; lohusa köprüsü **Elif Koç**.
 
 - [ ] SAT → gebelik haftası / TDT sunucuda mı hesaplanıyor? Hekim elle "uydurma hafta" yazmıyor değil mi?
 - [ ] Çift takvim: DÖBYR asgari ile ACOG önerisi ayrı sütunlarda; conflict satırı birleştirilmiyor mu?

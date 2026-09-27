@@ -72,6 +72,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#7C3AED', icon: 'FT', title: 'Fototerapi defteri', desc: 'Cihaz · J/cm² · kümülatif doz · MED · yanık bayrağı', route: '/doktor-tools/derm-fototerapi', branslar: ['dermatoloji'] },
   { circleColor: '#C026D3', icon: 'YT', title: 'Yama D2 / D4', desc: 'Uygulama → okuma takvimi · Avrupa baz serisi antijenleri', route: '/doktor-tools/derm-yama', branslar: ['dermatoloji'] },
   { circleColor: '#0891B2', icon: 'DK', title: 'Derm kohort paneli', desc: 'TBSE · yama okuma · fototerapi arası · β-hCG · lab · lezyon görevi', route: '/doktor-tools/derm-kohort', branslar: ['dermatoloji'] },
+  { circleColor: '#16A34A', icon: 'SR', title: 'Biyolojik SUT taslağı', desc: 'PASI / DLQI · tarama · önceki basamak · kopyalanabilir taslak — doz ve T.C. yazılmaz', route: '/doktor-tools/derm-biyolojik-sut', branslar: ['dermatoloji'] },
   // Kadın Hastalıkları ve Doğum — specialty-only (not pediatri / dahiliye / kardiyoloji / göz / dermatoloji). Chapter engines only.
   // Canonical key: portalBransAnahtari('kadin-dogum' | 'Kadın Hastalıkları ve Doğum') → 'kadin-hastaliklari-dogum'.
   { circleColor: '#DB2777', icon: 'GT', title: 'Gebelik takvimi', desc: 'SAT · USG · CRL → gebelik haftası, DÖBYR izlemleri ve tarama pencereleri: açık · kapanmak üzere · kaçırıldı', route: '/doktor-tools/kd-gebelik-takvim', branslar: ['kadin-hastaliklari-dogum'] },

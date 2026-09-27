@@ -6,13 +6,16 @@
 
 ## Hazırlık (ekip, 1 gün önce)
 
-- [ ] Hekim hesabı `users.specialty = 'dermatoloji'` → Araçlar'da 5 derm kartı görünüyor, Hedef Boy / Göz kohort / Dahiliye kohort görünmüyor.
+- [ ] Hekim hesabı `users.specialty = 'dermatoloji'` → Araçlar'da **6** derm kartı görünüyor (PASI · GÖP · Fototerapi · Yama · Kohort · Biyolojik SUT taslağı), Hedef Boy / Göz kohort / Dahiliye kohort görünmüyor.
+- [ ] TEST kartlar (`scripts/seed-beta-impress-patients.mts`): **TEST — Mert Aydın (psoriasis)** · **TEST — Zeynep Arslan (GÖP)**.
 - [ ] Migration 054 (`lib/db/migrations/054_derm_exceptional.sql`) uygulandı — Belge → dual-sign köprüsü alanları.
 - [ ] Sentetik prova yerel sunucuya karşı: `npx tsx scripts/derm-prompts-smoke.mts` ve `npx tsx scripts/derm-exceptional-smoke.mts`.
 - [ ] `npm run test:derm` ve `npm run test:brans-sizmasi` yeşil.
 - [ ] Hekimle 20 dk tur: Deri & Lezyon sekmesi, sticky şerit, Araçlar › Derm kohort, Sağlığım › Derim.
 
 ## Gün 1 — genel poliklinik + lezyon
+
+**20 dk script (TEST — Mert Aydın):** ünite → lezyon + vücut haritası → PASI worksheet → Araçlar Kohort → Derim (tanı/doz yok). GÖP için **Zeynep Arslan**; Araçlar › GÖP / fototerapi / yama / biyolojik SUT kaydı Deri sekmesiyle aynı API.
 
 - [ ] Ünite seçimi (genel / psoriasis / fototerapi / kontakt-yama / nevüs-tümör …) günün gerçek akışına oturuyor mu? Yanlış ünitede fazla alan var mı?
 - [ ] Lezyon kaydı ≤30 sn/hasta: bölge + morfoloji + vücut haritası düğümü. Morfoloji sözlüğü Andrews/Bolognia TR karşılıklarıyla uyumlu mu?

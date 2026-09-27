@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dermatoloji — Post-exceptional Audit (DERM-EXCEPTIONAL-01) · Notya</title>
-  <meta name="description" content="Post-exceptional sprint DERM-EXCEPTIONAL-01 (2026-09-18): Deri ve Zührevi 21/21 domain Strong, 5 derm-only Araç, Derim Strong, olgunluk beta-hazir (MD onayı bekliyor). No PHI." />
+  <meta name="description" content="Post-exceptional sprint DERM-EXCEPTIONAL-01 (2026-09-18): Deri ve Zührevi 21/21 domain Strong, 6 derm-only Araç, Derim Strong, olgunluk beta-hazir (MD onayı bekliyor). No PHI." />
   <style>
     :root {
       --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
@@ -79,7 +79,8 @@
     </span>
   </div>
 
-  <div class="banner" style="background:rgba(20,184,166,.1);border-color:rgba(45,212,191,.4);color:var(--green)"><b>Post-exceptional sprint DERM-EXCEPTIONAL-01</b> — 2026-09-18 · workstream A (chapter derinliği) · B (5 derm-only Araç) · C (game changers) · D (sızma / izolasyon sertleştirme) · E (bu audit) · migration <b>054 applied</b> (2026-09-18) · <code>test:derm</code> + <code>test:brans-sizmasi</code> + Araçlar cross-leak yeşil · <code>scripts/derm-exceptional-smoke.mts</code> canlı koşuya hazır · no PHI.</div>
+  <div class="banner" style="background:rgba(20,184,166,.1);border-color:rgba(45,212,191,.4);color:var(--green)"><b>Post-exceptional sprint DERM-EXCEPTIONAL-01</b> — 2026-09-18 · workstream A (chapter derinliği) · B (derm-only Araç) · C (game changers) · D (sızma / izolasyon sertleştirme) · E (bu audit) · migration <b>054 applied</b> (2026-09-18) · <code>test:derm</code> + <code>test:brans-sizmasi</code> + Araçlar cross-leak yeşil · <code>scripts/derm-exceptional-smoke.mts</code> canlı koşuya hazır · no PHI.</div>
+  <div class="banner"><b>Beta-hazırlık 2026-09-27</b> — Araçlar kayıt paritesi (GÖP / fototerapi / yama → aynı API) + 6. derm-only kart (Biyolojik SUT taslağı) + TEST kartlar. Olgunluk hâlâ <code>beta-hazir</code>. <code>uzman-dogrulandi</code> yalnız saha + CEO. FotoFinder / Form 014 ağı / doz uydurma yok. Never on Doktor Araçları.</div>
 
   <h1>Dermatoloji (Deri ve Zührevi) — Post-exceptional Audit</h1>
   <p class="lede">Aynı ölçek, aynı dürüstlük: Notya codebase × PSOKİD 2025 × TDD Atopik Dermatit 2018 / Akne × GÖP KÜB (TİTCK) × SGK SUT 2026 × TUKMOS 2019 × TR özel muayenehane ve EAH dermatoloji polikliniği. Soru: Deri bölümü Pediatri gibi exceptional mı? <b>Cevap: ürün olarak evet, 21/21 alan Strong. Olgunluk etiketi ise gerçek bir dermatoloğun saha haftasını ve Boss/CEO onayını bekliyor.</b></p>
@@ -87,21 +88,21 @@
   <div class="pills">
     <span class="pill success">21 / 21 domain Strong</span>
     <span class="pill success">0 Partial · 0 Thin · 0 Missing</span>
-    <span class="pill success">5 derm-only Araç live</span>
+    <span class="pill success">6 derm-only Araç live</span>
     <span class="pill success">Sağlığım › Derim: Strong</span>
     <span class="pill warning">olgunluk: beta-hazir — MD sign-off bekliyor</span>
   </div>
 
   <div class="stats">
     <div class="stat"><div class="v success">21/21</div><div class="l">Coverage domains Strong (4/21 idi)</div></div>
-    <div class="stat"><div class="v success">5</div><div class="l">Derm-only Araçlar (0 → 5)</div></div>
+    <div class="stat"><div class="v success">6</div><div class="l">Derm-only Araçlar (0 → 6)</div></div>
     <div class="stat"><div class="v success">10/10</div><div class="l">Game changers shipped</div></div>
     <div class="stat"><div class="v info">~90%</div><div class="l">Poliklinik wow (from ~50%)</div></div>
   </div>
 
   <div class="callout info">
     <h2>Executive verdict</h2>
-    <p>Deri bölümü artık bir TR dermatoloji polikliniğinin / özel muayenehanenin 8 saatlik gününü baştan sona taşıyor. Ekranlar sırayla: ünite seçimi ve sticky şerit, lezyon → ABCDE → <b>hekimin kataloglu resmî tanısı</b> → işlem odası (onam, numune, yara bakımı, patoloji aynı lezyona), bölge bazlı PASI / EASI / SCORAD worksheet'leri, fototerapi ünitesi v2 (MED, doz-adımı, yanık protokolü, cihaz başına kümülatif J/cm², solaryum yasağı), Avrupa baz serisi yama grid'i + D2/D4 oda takvimi, biyolojik lab kapısı → <b>SUT rapor taslağı</b>, interaktif vücut haritası, SJS/TEN–anjioödem–eritrodermi acil bandı, BZBH Form 014 yazdırılabilir taslağı ve saç-tırnak worksheet'i. Belge › Asistana raporla artık <b>dual-sign taslağına</b> düşüyor (<code>derm_vision_reads</code>), uzman onaylıyor; tanı hiçbir zaman aktarılmıyor. Araçlar'da 5 derm-only kart var ve başka branşa sızmıyor. Sağlığım › <b>Derim</b> Strong: β-hCG vadesi, fototerapi seansı, yama D2/D4, yara kontrolü ve TBSE hatırlatmaları hasta diliyle — skor, doz, ilaç adı ve tanı yok. Pediatriden tek farkı etiket: <b>olgunluk = beta-hazir</b>. <code>uzman-dogrulandi</code> gerçek dermatoloğun 5 günlük saha haftası (<code>docs/DERM-MD-BETA.md</code>) ve Boss/CEO onayıyla gelir. Bu, eksik ürün değil, dürüst etiket.</p>
+    <p>Deri bölümü artık bir TR dermatoloji polikliniğinin / özel muayenehanenin 8 saatlik gününü baştan sona taşıyor. Ekranlar sırayla: ünite seçimi ve sticky şerit, lezyon → ABCDE → <b>hekimin kataloglu resmî tanısı</b> → işlem odası (onam, numune, yara bakımı, patoloji aynı lezyona), bölge bazlı PASI / EASI / SCORAD worksheet'leri, fototerapi ünitesi v2 (MED, doz-adımı, yanık protokolü, cihaz başına kümülatif J/cm², solaryum yasağı), Avrupa baz serisi yama grid'i + D2/D4 oda takvimi, biyolojik lab kapısı → <b>SUT rapor taslağı</b>, interaktif vücut haritası, SJS/TEN–anjioödem–eritrodermi acil bandı, BZBH Form 014 yazdırılabilir taslağı ve saç-tırnak worksheet'i. Belge › Asistana raporla artık <b>dual-sign taslağına</b> düşüyor (<code>derm_vision_reads</code>), uzman onaylıyor; tanı hiçbir zaman aktarılmıyor. Araçlar'da 6 derm-only kart var ve başka branşa sızmıyor. Sağlığım › <b>Derim</b> Strong: β-hCG vadesi, fototerapi seansı, yama D2/D4, yara kontrolü ve TBSE hatırlatmaları hasta diliyle — skor, doz, ilaç adı ve tanı yok. Pediatriden tek farkı etiket: <b>olgunluk = beta-hazir</b>. <code>uzman-dogrulandi</code> gerçek dermatoloğun 5 günlük saha haftası (<code>docs/DERM-MD-BETA.md</code>) ve Boss/CEO onayıyla gelir. Bu, eksik ürün değil, dürüst etiket.</p>
   </div>
 
   <h2>Coverage depth</h2>

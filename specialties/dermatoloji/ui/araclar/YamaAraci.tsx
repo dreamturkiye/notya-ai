@@ -9,7 +9,8 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { plannedReads, patchStatus, EUROPEAN_BASELINE } from '../../engines/patch-calendar';
 import { DERM_PATCH_STATUS, dermLabel } from '../labels';
-import { dermStil, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
+import { dermStil, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu, KayitButonu } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
@@ -130,13 +131,33 @@ export default function YamaAraci() {
         </div>
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Takvimi ve seriyi kopyala" /></div>
         <MuayeneFormunaEkle hastaId={hasta.id} arac="Yama testi D2 / D4" satirlar={notSatirlari} />
-        <TaslakNotu>Okuma zamanlaması, klinik ilgi değerlendirmesi ve pozitifliğin anlamı hekimindir. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
+        <TaslakNotu>Okuma zamanlaması ve klinik ilgi hekimindir. Hasta seçilirse kür Deri sekmesine yazılır.</TaslakNotu>
       </div>
 
       <div style={kutu}>
         <div style={etiket}>Hastada kaydet (isteğe bağlı)</div>
-        <div style={kucuk}>Kür kaydı, D2/D4 fotoğrafları ve pozitifler hasta dosyasının Deri sekmesinde saklanır.</div>
+        <div style={kucuk}>Kür kaydı, D2/D4 tarihleri ve pozitifler hasta dosyasının Deri sekmesinde saklanır.</div>
         <DermHastaSecici secili={hasta.id} sec={(id, ad2) => setHasta({ id, ad: ad2 })} />
+        <KayitButonu
+          etiket="Yama kürünü hastaya kaydet"
+          hastaId={hasta.id}
+          ipucu="Aynı API (yama) Deri sekmesinde kullanılır."
+          kaydet={async () => {
+            const t = await getAccessTokenAsync();
+            const r = await fetch('/api/doktor/dermatoloji', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                patientId: hasta.id, action: 'yama',
+                appliedAt: uygulama, series: 'european_baseline',
+                readD2: okumaD2 || null, readD4: okumaD4 || null,
+                positives: pozitif,
+              }),
+            });
+            const j = await r.json().catch(() => ({}));
+            return r.ok ? null : (j.error || 'Kaydedilemedi.');
+          }}
+        />
         {hasta.id && <div style={satir}><a href={hastaDosyaHref(hasta.id, 'deri')} style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Deri) →</a></div>}
       </div>
     </>

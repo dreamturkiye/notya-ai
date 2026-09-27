@@ -61,6 +61,7 @@ import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
 import { dosyaSorguVerisiDerle } from "@/lib/doktor/dosyaOlaylari"
+import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 
 export type Kanal = "yazi" | "ses"
 
@@ -250,6 +251,8 @@ ${ilacBaglamMetni(drugs[0])}`
   // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
   // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
   let dosyaEk = ""
+  let odakDosyaMetni = ""
+  let odakHastaAdi = ""
   let cozulenHasta: { id: string; ad: string } | null = null
   let kesinDosyaCevap: string | null = null
   let aramaCevabi: string | null = null
@@ -311,6 +314,8 @@ ${ilacBaglamMetni(drugs[0])}`
         if (paket) {
           if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
           const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
+          odakHastaAdi = aktifAd
+          odakDosyaMetni = paket.metin || ""
           // NOTYA-HASTA-ODAK-01 (Dr. Gökhan canlı vaka, 2026-09-26): "Dosyada aşı: kayıtlı aşı yok" doğruydu ama
           // BAŞKA hastanın dosyasıydı ve cümlede ad yoktu — doktor konuştuğu hasta sanıp "aşı yok deyip aşıları
           // gösterdi" dedi. Kesin dosya cevabı her zaman hastanın adıyla başlar; yanlış hasta anında görülür.
@@ -446,6 +451,11 @@ ${ilacBaglamMetni(drugs[0])}`
     aiData.speech = r.bulgular.length ? `${r.metin}\n\n⚠ Kaynak kontrolü (hekim onayı): doğrulanamayan kılavuz numarası / yılı yanıttan çıkarıldı; kaynağı hekim doğrular.` : r.metin
     if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaKaynakTemizle(String(aiData.proactiveWarning), liste).metin
   }
+  // NOTYA-HASTA-ODAK-01: açık dosyadayken uydurma liste / recant / başka hasta dilliği geri çekilir.
+  const odakAd = odakHastaAdi || (cozulenHasta?.ad ?? (baglam.patientName ? String(baglam.patientName) : ''))
+  const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: odakDosyaMetni || dosyaEk } : null)
+  if (odak.ihlal.length) console.warn("[asistan/chat] hasta odak kilidi", { ihlal: odak.ihlal, ad: odakAd })
+  aiData.speech = odak.metin
 
   // Ses: modelin cevabı söylendi (ya da akış yoksa şimdi kurulur); aşağıdaki ekler (yönlendirme, kart okuması) sona eklenir.
   const sozler: string[] = []

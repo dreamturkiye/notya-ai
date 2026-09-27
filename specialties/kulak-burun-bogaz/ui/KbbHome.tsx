@@ -1,7 +1,7 @@
 'use client';
 /**
  * KBB-EXCEPTIONAL-01 — KBB bölüm ana ekranı (hasta dosyası › KBB).
- * Sticky şerit + sekmeler: Özet | Otoskopi | Odyometri | Vertigo | Risk | Görevler | SGK.
+ * Sticky şerit + sekmeler: Özet | Otoskopi | Odyometri | Burun | Vertigo | Risk | Görevler | SGK.
  * Bilinçli olarak KOMPAKT: ayaktan poliklinikte iki dokunuşta iş bitmeli.
  *
  * Kilitler: doz yazılmaz, tanı kilitlenmez, PTA bandı "karar desteği" etiketiyle gösterilir, kayıp
@@ -13,6 +13,9 @@ import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import { skorla as odyoSkorla, PTA_FREKANSLARI } from '../engines/odyometri';
 import { kbbRaporTaslagi, KBB_RAPOR_SABLONLARI, type KbbRaporSablon } from '../engines/sgkRapor';
+import { sinusRinitNotu } from '../engines/sinusRinit';
+import { timpanometriNotu, TIMP_TIPLERI, TIMP_TIP_AD, type TimpTip } from '../engines/timpanometri';
+import { KopyalaButonu } from './araclar/KbbAracKabugu';
 import type { KbbSerit } from '../engines/serit';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
@@ -30,6 +33,7 @@ type Veri = {
     otoskopi: { disKulak: Record<string, string>; tm: Record<string, string>; ekBulgular: string[] };
     vertigo: { manevralar: Record<string, string>; sonuclar: Record<string, string>; nistagmus: string[]; santral: string[] };
     burun: { sikayetler: Record<string, string>; bulgular: string[]; basamaklar: string[]; sureler: Record<string, string> };
+    timpanometri?: { tipler: Record<string, string> };
     acilKodlari: Array<{ kod: string; ad: string }>;
     acilListesi: string[];
     raporSablonlari: Array<{ id: KbbRaporSablon; ad: string }>;
@@ -48,7 +52,7 @@ const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lin
 const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 
-const SEKMELER = ['Özet', 'Otoskopi', 'Odyometri', 'Vertigo', 'Risk', 'Görevler', 'SGK'] as const;
+const SEKMELER = ['Özet', 'Otoskopi', 'Odyometri', 'Burun', 'Vertigo', 'Risk', 'Görevler', 'SGK'] as const;
 type Sekme = (typeof SEKMELER)[number];
 
 const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted };
@@ -85,10 +89,20 @@ export default function KbbHome({ patientId }: { patientId: string }) {
   const [otoEk, setOtoEk] = useState<string[]>([]);
   const [otoNot, setOtoNot] = useState('');
 
-  // Odyometri
-  const [odyoYan, setOdyoYan] = useState<'sag' | 'sol' | 'iki'>('sag');
-  const [esikler, setEsikler] = useState<string[]>(['', '', '', '']);
+  // Odyometri — araçla aynı: sağ + sol ayrı (Home↔Araç paritesi)
+  const [sagEsikler, setSagEsikler] = useState<string[]>(['', '', '', '']);
+  const [solEsikler, setSolEsikler] = useState<string[]>(['', '', '', '']);
   const [odyoTip, setOdyoTip] = useState('');
+  const [timpSag, setTimpSag] = useState<TimpTip | ''>('');
+  const [timpSol, setTimpSol] = useState<TimpTip | ''>('');
+  const [timpNot, setTimpNot] = useState('');
+
+  // Burun / sinüs
+  const [burunSikayet, setBurunSikayet] = useState<string[]>([]);
+  const [burunSure, setBurunSure] = useState<'akut' | 'subakut' | 'kronik'>('akut');
+  const [burunBulgu, setBurunBulgu] = useState<string[]>([]);
+  const [burunBasamak, setBurunBasamak] = useState<string[]>([]);
+  const [burunNot, setBurunNot] = useState('');
 
   // Vertigo
   const [manevralar, setManevralar] = useState<Record<string, string>>({});
@@ -131,7 +145,22 @@ export default function KbbHome({ patientId }: { patientId: string }) {
     catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; }
   };
 
-  const odyoSonuc = useMemo(() => odyoSkorla(esikler.map((x) => (x === '' ? null : Number(x))), odyoYan), [esikler, odyoYan]);
+  const sagOdyo = useMemo(() => odyoSkorla(sagEsikler.map((x) => (x === '' ? null : Number(x))), 'sag'), [sagEsikler]);
+  const solOdyo = useMemo(() => odyoSkorla(solEsikler.map((x) => (x === '' ? null : Number(x))), 'sol'), [solEsikler]);
+  const timpSonuc = useMemo(() => timpanometriNotu({
+    kulaklar: [
+      { yan: 'sag', tip: timpSag || null },
+      { yan: 'sol', tip: timpSol || null },
+    ],
+    hekimNotu: timpNot,
+  }), [timpSag, timpSol, timpNot]);
+  const burunSonuc = useMemo(() => sinusRinitNotu({
+    sikayetler: burunSikayet as never[],
+    sure: burunSure,
+    muayeneBulgulari: burunBulgu,
+    basamaklar: burunBasamak,
+    hekimNotu: burunNot,
+  }), [burunSikayet, burunSure, burunBulgu, burunBasamak, burunNot]);
   const raporSonuc = useMemo(() => v ? kbbRaporTaslagi({
     sablon: raporSablon, hastaAdi: '',
     odyometriler: v.odyometriler.map((o) => ({ tarih: String(o.tarih).slice(0, 10), yan: o.yan as 'sag', pta: o.pta_db == null ? null : Number(o.pta_db), tip: o.tip })),
@@ -232,36 +261,63 @@ export default function KbbHome({ patientId }: { patientId: string }) {
 
       {sekme === 'Odyometri' && (
         <div>
-          <div style={etiket}>Saf ses eşikleri (dB HL) <span style={kucuk}>· 0,5 / 1 / 2 / 4 kHz hava yolu</span></div>
-          <div style={satir}>
-            {(['sag', 'sol', 'iki'] as const).map((y) => (
-              <button key={y} type="button" onClick={() => setOdyoYan(y)} style={{ ...ghost, background: odyoYan === y ? 'rgba(79,70,229,0.22)' : 'transparent', color: odyoYan === y ? '#C7D2FE' : CHROME_RENK.muted }}>
-                {y === 'sag' ? 'Sağ' : y === 'sol' ? 'Sol' : 'İki'}
-              </button>
-            ))}
-          </div>
-          <div style={satir}>
-            {PTA_FREKANSLARI.map((f, i) => (
-              <label key={f} style={{ ...kucuk, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {f} kHz
-                <input type="number" value={esikler[i]} onChange={(e) => setEsikler((p) => p.map((x, j) => (j === i ? e.target.value : x)))} style={{ ...toolsInput, width: 78 }} />
-              </label>
-            ))}
-          </div>
-          <div style={satir}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: odyoSonuc.tamamMi ? '#C7D2FE' : CHROME_RENK.muted }}>{odyoSonuc.pta ?? '—'}</span>
-            <span style={metin}>{odyoSonuc.tamamMi ? odyoSonuc.bantAd : `${odyoSonuc.eksikFrekans} frekans boş — ortalama yorumlanmaz`}</span>
-            <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ</span>
-          </div>
+          <div style={etiket}>Saf ses eşikleri (dB HL) <span style={kucuk}>· 0,5 / 1 / 2 / 4 kHz hava yolu · sağ + sol (araçla aynı)</span></div>
+          {([['Sağ', sagEsikler, setSagEsikler, sagOdyo], ['Sol', solEsikler, setSolEsikler, solOdyo]] as const).map(([ad, esik, set, sonuc]) => (
+            <div key={ad} style={{ marginTop: 10 }}>
+              <div style={metin}><b>{ad} kulak</b></div>
+              <div style={satir}>
+                {PTA_FREKANSLARI.map((f, i) => (
+                  <label key={f} style={{ ...kucuk, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {f} kHz
+                    <input type="number" aria-label={`${ad} ${f} kHz`} value={esik[i]} onChange={(e) => set((p) => p.map((x, j) => (j === i ? e.target.value : x)))} style={{ ...toolsInput, width: 78 }} />
+                  </label>
+                ))}
+              </div>
+              <div style={satir}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#C7D2FE' : CHROME_RENK.muted }}>{sonuc.pta ?? '—'}</span>
+                <span style={metin}>{sonuc.tamamMi ? sonuc.bantAd : `${sonuc.eksikFrekans} frekans boş — ortalama yorumlanmaz`}</span>
+                <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ</span>
+              </div>
+            </div>
+          ))}
           <div style={satir}>
             <select aria-label="Kayıp tipi (hekim)" value={odyoTip} onChange={(e) => setOdyoTip(e.target.value)} style={{ ...toolsInput, width: 'auto' }}>
               <option value="">Kayıp tipi seç (hekim)</option>
               {Object.entries(v.kutuphane.odyometri.tipler).map(([k, ad]) => <option key={k} value={k} style={{ color: '#000' }}>{ad}</option>)}
             </select>
-            <button type="button" style={btn} disabled={!odyoSonuc.tamamMi} onClick={() => calistir({ adim: 'odyometri', yan: odyoYan, esikler: esikler.map((x) => (x === '' ? null : Number(x))), tip: odyoTip || null, hekimKilit: true }, 'Odyometri kaydedildi.')}>Kaydet</button>
-            <button type="button" style={ghost} onClick={() => { setEsikler(['', '', '', '']); setOdyoTip(''); }}>Temizle</button>
+            <button type="button" style={btn} disabled={!sagOdyo.tamamMi && !solOdyo.tamamMi} onClick={async () => {
+              if (sagOdyo.tamamMi) await calistir({ adim: 'odyometri', yan: 'sag', esikler: sagEsikler.map((x) => (x === '' ? null : Number(x))), tip: odyoTip || null, hekimKilit: true }, 'Sağ odyometri kaydedildi.')
+              if (solOdyo.tamamMi) await calistir({ adim: 'odyometri', yan: 'sol', esikler: solEsikler.map((x) => (x === '' ? null : Number(x))), tip: odyoTip || null, hekimKilit: true }, 'Sol odyometri kaydedildi.')
+            }}>Kaydet</button>
+            <button type="button" style={ghost} onClick={() => { setSagEsikler(['', '', '', '']); setSolEsikler(['', '', '', '']); setOdyoTip(''); }}>Temizle</button>
           </div>
           <div style={kucuk}>Kayıp tipini (iletim / sensorinöral / mikst) Notya atamaz; hekim seçer.</div>
+
+          <div style={{ ...etiket, marginTop: 16 }}>Timpanometri <span style={kucuk}>· Jerger A / B / C / Ad · tanı kilidi yok</span></div>
+          <div style={satir}>
+            <label style={{ ...kucuk, display: 'flex', flexDirection: 'column', gap: 3 }}>Sağ
+              <select aria-label="Sağ timpanogram" value={timpSag} onChange={(e) => setTimpSag(e.target.value as TimpTip | '')} style={{ ...toolsInput, width: 'auto' }}>
+                <option value="">—</option>
+                {TIMP_TIPLERI.map((t) => <option key={t} value={t} style={{ color: '#000' }}>{TIMP_TIP_AD[t]}</option>)}
+              </select>
+            </label>
+            <label style={{ ...kucuk, display: 'flex', flexDirection: 'column', gap: 3 }}>Sol
+              <select aria-label="Sol timpanogram" value={timpSol} onChange={(e) => setTimpSol(e.target.value as TimpTip | '')} style={{ ...toolsInput, width: 'auto' }}>
+                <option value="">—</option>
+                {TIMP_TIPLERI.map((t) => <option key={t} value={t} style={{ color: '#000' }}>{TIMP_TIP_AD[t]}</option>)}
+              </select>
+            </label>
+          </div>
+          <div style={satir}>
+            <input value={timpNot} onChange={(e) => setTimpNot(e.target.value)} placeholder="Hekim notu" style={{ ...toolsInput, minWidth: 260, flex: '1 1 260px' }} />
+            <button type="button" style={btn} disabled={!timpSag && !timpSol} onClick={() => calistir({
+              adim: 'timpanometri',
+              kulaklar: [{ yan: 'sag', tip: timpSag || null }, { yan: 'sol', tip: timpSol || null }],
+              hekimNotu: timpNot,
+            }, 'Timpanometri notu eklendi.')}>Nota ekle</button>
+          </div>
+          {timpSonuc.satirlar.length > 0 && <div style={{ ...kucuk, marginTop: 6 }}>{timpSonuc.satirlar.join(' ')}</div>}
+          <div style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ · tanı hekimin</div>
 
           {v.odyometriler.length > 0 && (
             <>
@@ -275,6 +331,39 @@ export default function KbbHome({ patientId }: { patientId: string }) {
               ))}
             </>
           )}
+        </div>
+      )}
+
+      {sekme === 'Burun' && (
+        <div>
+          <div style={etiket}>Burun / sinüs <span style={kucuk}>· kontrol listesi · tanı ve doz hekimin</span></div>
+          <div style={satir}>
+            {Object.entries(v.kutuphane.burun.sureler).map(([k, ad]) => (
+              <button key={k} type="button" onClick={() => setBurunSure(k as 'akut' | 'subakut' | 'kronik')} style={{ ...ghost, background: burunSure === k ? 'rgba(79,70,229,0.22)' : 'transparent', color: burunSure === k ? '#C7D2FE' : CHROME_RENK.muted }}>{ad}</button>
+            ))}
+          </div>
+          <div style={{ ...etiket, marginTop: 12 }}>Şikâyetler</div>
+          {Object.entries(v.kutuphane.burun.sikayetler).map(([k, ad]) => <Kutucuk key={k} ad={ad} secili={burunSikayet.includes(k)} tikla={() => setBurunSikayet((p) => cevir(p, k))} />)}
+          <div style={{ ...etiket, marginTop: 12 }}>Muayene</div>
+          {v.kutuphane.burun.bulgular.map((x) => <Kutucuk key={x} ad={x} secili={burunBulgu.includes(x)} tikla={() => setBurunBulgu((p) => cevir(p, x))} />)}
+          <div style={{ ...etiket, marginTop: 12 }}>Konuşulan basamaklar <span style={kucuk}>· sınıf düzeyi, doz yok</span></div>
+          {v.kutuphane.burun.basamaklar.map((x) => <Kutucuk key={x} ad={x} secili={burunBasamak.includes(x)} tikla={() => setBurunBasamak((p) => cevir(p, x))} />)}
+          {burunSonuc.kararBasliklari.length > 0 && (
+            <>
+              <div style={{ ...etiket, marginTop: 12, color: '#FBBF24' }}>Bu vizitte karara bağla</div>
+              {burunSonuc.kararBasliklari.map((k) => <div key={k} style={{ ...kucuk, color: '#FBBF24' }}>• {k}</div>)}
+            </>
+          )}
+          <div style={satir}>
+            <input value={burunNot} onChange={(e) => setBurunNot(e.target.value)} placeholder="Hekim notu" style={{ ...toolsInput, minWidth: 260, flex: '1 1 260px' }} />
+          </div>
+          <div style={satir}>
+            <button type="button" style={btn} onClick={() => calistir({
+              adim: 'burun', sikayetler: burunSikayet, sure: burunSure, muayeneBulgulari: burunBulgu, basamaklar: burunBasamak, hekimNotu: burunNot,
+            }, 'Burun / sinüs notu eklendi.')}>Nota ekle</button>
+            <button type="button" style={ghost} onClick={() => { setBurunSikayet([]); setBurunBulgu([]); setBurunBasamak([]); setBurunNot(''); }}>Temizle</button>
+            <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>TASLAK · tanı hekimin</span>
+          </div>
         </div>
       )}
 
@@ -392,6 +481,15 @@ export default function KbbHome({ patientId }: { patientId: string }) {
               {raporSonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#FBBF24' }}>• {e}</div>)}
             </>
           )}
+          <div style={satir}>
+            <KopyalaButonu metin={[
+              `${raporSonuc.draft.sablonAd} — taslak (${raporSonuc.draft.duzenlemeTarihi})`,
+              raporSonuc.draft.tani ? `Tanı (hekim): ${raporSonuc.draft.tani.icd10}${raporSonuc.draft.tani.aciklama ? ` — ${raporSonuc.draft.tani.aciklama}` : ''}` : 'Tanı: hekim seçmedi',
+              ...raporSonuc.draft.odyolojikOzet.map((o) => `${o.tarih} · ${o.yan} · ${o.pta ?? '—'} dB — ${o.bant} · ${o.tip}`),
+              raporSonuc.draft.hekimDegerlendirmesi ? `Hekim değerlendirmesi: ${raporSonuc.draft.hekimDegerlendirmesi}` : '',
+              'T.C. kimlik numarası bu çıktıda yer almaz; Medula girişi ve e-imza hekimindedir.',
+            ].filter(Boolean).join('\n')} etiket="Taslağı kopyala" />
+          </div>
           <div style={{ ...kucuk, marginTop: 10 }}>Çıktı taslaktır. Medula girişi ve e-imza hekimindedir; Notya canlı gönderim yapmaz.</div>
         </div>
       )}

@@ -554,3 +554,74 @@ export function demoGozVisitById(id: string) {
 export function demoGozResultById(id: string) {
   return SAGLIGIM_DEMO_GOZ.results.find((r) => r.id === id) || null
 }
+
+/**
+ * KBB-EXCEPTIONAL-01 — synthetic, non-PHI fixture for /portal/demo-kbb ("Kulaklarım").
+ * Generic SAGLIGIM_DEMO stays kulak:null (dahiliye demo never carries KBB follow-up).
+ * Hasta yüzünde dB / PTA / tanı / ilaç yok.
+ */
+const KBB_HEKIM = 'Op. Dr. Ece Yılmaz'
+export const SAGLIGIM_DEMO_KBB: PortalBundle = {
+  ...SAGLIGIM_DEMO,
+  portal: { moduller: ['kulaklarim'], nav: [{ key: 'kulaklarim', label: 'Kulaklarım', path: '/kulaklarim' }] },
+  yonlendirmeler: [],
+  buyume: null,
+  gebelik: null,
+  jinekoloji: null,
+  hedefBoy: null,
+  goz: null,
+  deri: null,
+  summary: {
+    aktifIlac: 0,
+    bekleyenMesaj: 1,
+    sonLabOzet: 'İşitme testi randevunuz planlandı',
+    yaklasanKontrol: '10 Ekim 2026 · 11:00',
+    sonAktivite: [
+      { id: 'ka1', tur: 'mesaj', baslik: 'Yeni mesaj: Kontrol öncesi bilgi', tarih: '2026-09-20T09:00:00Z', href: 'mesajlar' },
+      { id: 'ka2', tur: 'ziyaret', baslik: 'Kulak Burun Boğaz ziyareti', tarih: '2026-09-18T10:00:00Z', href: 'ziyaretler' },
+    ],
+  },
+  visits: [
+    {
+      id: 'kv1',
+      tarih: '2026-09-18T10:00:00Z',
+      brans: 'Kulak Burun Boğaz Hastalıkları',
+      basvuruNedeni: 'Kontrol muayenesi',
+      hekim: KBB_HEKIM,
+      ozetKisa: 'Kulak muayenesi ve işitme testi planı konuşuldu.',
+      plan: 'İşitme testi randevusu verildi. 3 hafta sonra kontrol.',
+      takip: '3 hafta',
+    },
+  ],
+  results: [],
+  medications: [],
+  medicationHistory: [],
+  history: {
+    kronikHastaliklar: [],
+    alerjiler: [],
+    ameliyatlar: [],
+    aileOykusu: [],
+    asilar: [],
+  },
+  tracking: { tansiyon: [], kilo: [], nabiz: [], spo2: [] },
+  kulak: {
+    sonrakiKontrol: { tarih: '2026-10-10', neden: 'Kontrol randevusu' },
+    hatirlatmalar: [
+      { ad: 'İşitme testi randevusu', due: '2026-10-03', durum: 'planli' },
+      { ad: 'Kontrol randevusu', due: '2026-10-10', durum: 'planli' },
+    ],
+    testHatirlatma: [{ ad: 'İşitme testi randevusu', due: '2026-10-03' }],
+    islemHatirlatma: [],
+    bakimIpuclari: [
+      'Kulağınıza pamuklu çubuk veya sivri cisim sokmayın.',
+      'Kulağınıza doktorunuz söylemediği sürece hiçbir sıvı damlatmayın.',
+      'Yüksek sesli ortamlarda koruyucu kullanın ve kulaklığı uzun süre yüksek sesle dinlemeyin.',
+      'Uçuş ve dalış öncesi şikâyetiniz varsa muayenehanenizi arayın.',
+    ],
+    not: 'Bu bilgiler bilgilendirme amaçlıdır; yorum ve plan doktorunuzdadır. Tarihleri muayenehaneniz belirler. Aniden duymamaya başlarsanız, burun kanamanız durmazsa veya nefes almakta zorlanırsanız portal mesajı beklemeyin: 112’yi arayın veya en yakın acile başvurun.',
+  },
+}
+
+export function demoKbbVisitById(id: string) {
+  return SAGLIGIM_DEMO_KBB.visits.find((v) => v.id === id) || null
+}
