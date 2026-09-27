@@ -162,6 +162,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       aiDegerlendirme: buyumeYorumunuEkle(not.ai_degerlendirme || '', buyume),
       takipSuresi: not.takip_suresi || '',
       arsivde: seansArsivdeMi(not.sessions),
+      uygulananKurallar: await (async () => {
+        const slugs = Array.isArray(not.uygulanan_kurallar) ? (not.uygulanan_kurallar as string[]) : []
+        if (!slugs.length) return []
+        const { kuralMetinleriniCoz } = await import('@/lib/doktor/ogrenme/kuralKaydet')
+        return kuralMetinleriniCoz(supabase, doktorId, slugs)
+      })(),
       cek,
     },
     hasta: { ...hasta, patientId: seans?.patient_id ? String(seans.patient_id) : null },

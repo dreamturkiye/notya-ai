@@ -14,6 +14,7 @@ const BOLUMLER = [
   { baslik: 'İletişim', aciklama: 'Hastalarınıza kendi WhatsApp ve e-postanızdan tek dokunuşla yazın', rota: '/dashboard/doktor/ayarlar/iletisim', ikon: '💬' },
   { baslik: 'Gelen Belgeler', aciklama: 'Sekreterinizin gelen belgeleri görüp dosyalamasına izin verin', rota: '/dashboard/doktor/ayarlar/gelen-belgeler', ikon: '📥' },
   { baslik: 'Personel',aciklama: 'Çalışanların hesapları ve erişim yetkileri', rota: '/dashboard/doktor/personel', ikon: '👥' },
+  { baslik: 'Ayşe’nin hafızası', aciklama: 'Öğrendiği kurallar — görünür, kapatılır, unutulur', rota: '/dashboard/doktor/ayarlar/ayse-hafizasi', ikon: '✦' },
   { baslik: 'e-Reçete', aciklama: 'SGK hekim şifresi, tesis kodu, e-imza — bir kez girin, reçeteyi Notya\'dan gönderin', rota: '/dashboard/doktor/ayarlar/erecete', ikon: '💊' },
   { baslik: 'SGK Medula', aciklama: 'SGK Medula işlemleri', rota: '/doktor-tools/sgk-medula', ikon: '🏥' },
   { baslik: 'Araçlar', aciklama: 'ICD-10, e-reçete, epikriz ve diğer yardımcı araçlar', rota: '/doktor-tools', ikon: '🧰' },

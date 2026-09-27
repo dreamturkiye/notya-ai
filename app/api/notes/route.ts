@@ -29,6 +29,7 @@ type NoteRow = {
   content_degerlendirme?: string | null
   content_plan?: string | null
   content_tani?: string | null
+  uygulanan_kurallar?: string[] | null
   content_ilaclar?: unknown
   icd10_codes?: unknown
   kritik_bulgular?: unknown
@@ -94,25 +95,30 @@ export async function GET(req: NextRequest) {
   let rows: NoteRow[] = []
 
   // NOTYA-ARSIV-01: arşivlenmiş muayenenin notu İnceleme kuyruğuna girmez (lib/doktor/arsiv).
-  const joined = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id, sessions(specialty, patient_id)')
+  const joined = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, uygulanan_kurallar, session_id, sessions(specialty, patient_id)')
     .eq('doctor_id', user.id)
     .is('approved_at', null)
     .order('created_at', { ascending: false })
     .limit(50)
 
-  if (joined.error) {
+  if (!joined.error) {
+    rows = Array.isArray(joined.data) ? (joined.data as NoteRow[]) : []
+  } else if (/uygulanan_kurallar/i.test(joined.error.message || '')) {
+    const eski = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id, sessions(specialty, patient_id)')
+      .eq('doctor_id', user.id)
+      .is('approved_at', null)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    if (eski.error) return NextResponse.json({ error: eski.error.message }, { status: 500 })
+    rows = Array.isArray(eski.data) ? (eski.data as NoteRow[]) : []
+  } else {
     const plain = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id')
       .eq('doctor_id', user.id)
       .is('approved_at', null)
       .order('created_at', { ascending: false })
       .limit(50)
-
-    if (plain.error) {
-      return NextResponse.json({ error: plain.error.message }, { status: 500 })
-    }
+    if (plain.error) return NextResponse.json({ error: plain.error.message }, { status: 500 })
     rows = Array.isArray(plain.data) ? (plain.data as NoteRow[]) : []
-  } else {
-    rows = Array.isArray(joined.data) ? (joined.data as NoteRow[]) : []
   }
 
   // Kaan/Gökhan (2026-09-10): kuyrukta "Hasta da5141bb" yerine hastanın adı. Ad şifreli → sunucuda çöz (Ad S.).
@@ -139,6 +145,13 @@ export async function GET(req: NextRequest) {
   }
   // BRANS-ALAN-SIZMASI: İnceleme formu branşa göre çizilir — ölçüm alanları + hasta/veli hitabı sunucuda hesaplanır
   const doktorBransi = await hekimBransi(supabase, user.id)
+  const slugler = [...new Set(rows.flatMap((r) => Array.isArray(r.uygulanan_kurallar) ? r.uygulanan_kurallar : []))]
+  let kuralMap = new Map<string, string>()
+  if (slugler.length) {
+    const { kuralMetinleriniCoz } = await import('@/lib/doktor/ogrenme/kuralKaydet')
+    const cozulen = await kuralMetinleriniCoz(supabase, user.id, slugler)
+    kuralMap = new Map(cozulen.map((k) => [k.slug, k.deger]))
+  }
   const notes = rows.map((row) => {
     const session = firstSession(row.sessions)
     const dogumIso = session.patient_id ? dogumlar.get(String(session.patient_id)) || null : null
@@ -172,6 +185,7 @@ export async function GET(req: NextRequest) {
       receteOnerisi: Array.isArray(row.recete_onerisi) ? row.recete_onerisi : [],
       aiDegerlendirme: buyumeYorumunuEkle((row as { ai_degerlendirme?: string }).ai_degerlendirme || '', buyume) || null,
       alarmBulgulari: Array.isArray(row.alarm_bulgulari) ? (row.alarm_bulgulari as string[]).map(String) : [],
+      uygulananKurallar: (Array.isArray(row.uygulanan_kurallar) ? row.uygulanan_kurallar : []).map((slug) => ({ slug, deger: kuralMap.get(slug) || slug })),
     }
   })
 

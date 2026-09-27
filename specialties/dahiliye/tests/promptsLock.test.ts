@@ -64,7 +64,8 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("dahiliyeKilidi('ses')"))
     assert.match(kaynak('app/api/sessions/[id]/end/route.ts'), /soapNotuUret\([^\n]*\bdoktorBransi\b/) // BRANS-ALAN-SIZMASI: hastaDogumIso de geçer
     assert.match(kaynak('app/api/sessions/ses-yukle/route.ts'), /soapNotuUret\([^\n]*\bdoktorBransi\b/) // BRANS-ALAN-SIZMASI: hastaDogumIso de geçer
-    assert.ok(kaynak('app/api/notes/[id]/approve/route.ts').includes('await hekimBransi(supabase, user.id)'))
+    assert.ok(kaynak('app/api/notes/[id]/approve/route.ts').includes('hekimBransi(supabase, user.id)'))
+    assert.ok(kaynak('lib/doktor/ogrenme/arkaPlandaOgren.ts').includes('hekimBransi'))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("dahiliyeKilidi('ogrenme')"))
     assert.ok(kaynak('next.config.mjs').includes('./specialties/dahiliye/prompts/*.md'))
   })

@@ -43,6 +43,7 @@ import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAkt
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -77,6 +78,7 @@ interface NotVeri {
     tani?: string
     /** NOTYA-CEK-DOGRULA-02: çek listesi girdileri — panel bunlardan ve formun GÜNCEL alanlarından hesaplanır. */
     cek?: { maddeler: CekMadde[]; oncekiIdler: string[]; isaretler: Record<string, boolean> } | null
+    uygulananKurallar?: { slug: string; deger: string }[]
   }
   hasta: { ad: string; patientId: string | null }
   doktor: { ad: string }
@@ -428,6 +430,7 @@ export default function NotSayfasi() {
           <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: CHROME_RENK.muted, fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)}</span></div>
           <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
             <span style={{ padding: '2px 10px', borderRadius: 999, fontWeight: 700, fontSize: 11.5, background: onayli ? 'rgba(46,110,78,0.12)' : 'rgba(180,131,47,0.14)', color: onayli ? '#2E6E4E' : '#B4832F', border: `1px solid ${onayli ? 'rgba(46,110,78,0.35)' : 'rgba(180,131,47,0.4)'}` }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}</span>
+            {not.uygulananKurallar && not.uygulananKurallar.length > 0 ? <SizinTarzinizChip kurallar={not.uygulananKurallar} /> : null}
             <span style={{ color: '#B4832F' }}>
             {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
             {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}

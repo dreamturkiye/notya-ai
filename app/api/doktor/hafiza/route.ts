@@ -1,15 +1,15 @@
 /**
- * NOTYA-OGRENME-03 — Meslektaş hafızası okuma/unutma ucu.
+ * NOTYA-OGRENME-03 + MESLEKTAS-V2 — Meslektaş hafızası okuma/unutma ucu.
  *
- * GET  -> sesli Ayşe (ElevenLabs promptu istemcide kurulur) ve şeffaflık için:
- *         ilişki durumu, karşılama seçimi, kısa ses bloğu, aktif kayıtlar.
- * POST -> doktorun elle söylediği bir bilgiyi kaydet ({kategori, anahtar, deger})
- *         veya unut ({unut: "anahtar"}). "Şefe söylemek" — anında kesin.
+ * GET  -> sesli Ayşe, gün özeti, aktif kayıtlar. ?tum=1 → kapalılar dahil (Ayarlar).
+ * POST -> kaydet / unut / kapat / durum (uygulanir|kapali).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
-import { hafizaYukle, hafizaBloguSes, karsilamaSecimi, hafizaKaydet, hafizaUnut, type HafizaKategori } from '@/lib/doktor/hafiza'
+import { hafizaYukle, hafizaYukleTum, hafizaBloguSes, karsilamaSecimi, hafizaKaydet, hafizaUnut, anahtarSlug, type HafizaKategori } from '@/lib/doktor/hafiza'
 import { gunVerisiDerle, gunFazi, gunOzetiMetni, gunBlogu } from '@/lib/doktor/gunOzeti'
+import { meslektasSelamSatiri, ogrenmeSelamSatiri } from '@/lib/doktor/ogrenme/selam'
+import { kuralKapat } from '@/lib/doktor/ogrenme/kuralKaydet'
 import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
@@ -26,22 +26,48 @@ function sesKilidi(brans: string | null | undefined): string {
   return ''
 }
 
+function bugunTRT(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+}
+
 export async function GET(req: NextRequest) {
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
   const engel = sadeceDoktor(oturum)
   if (engel) return engel
   const { supabase, doktorId } = oturum
+  const tum = new URL(req.url).searchParams.get('tum') === '1'
   try {
-    const [h, gunVerisi, doktorRow] = await Promise.all([
+    const [h, gunVerisi, doktorRow, tumKayit] = await Promise.all([
       hafizaYukle(supabase, doktorId),
       gunVerisiDerle(supabase, doktorId).catch(() => null),
       supabase.from('users').select('*').eq('id', doktorId).maybeSingle().then((r) => r.data),
+      tum ? hafizaYukleTum(supabase, doktorId) : Promise.resolve(null),
     ])
-    // NOTYA-GUN-01: Ayşe günü açar/kapatır — aynı uçtan, yeni ekran yok
     const doctor = toAddressableUser((doktorRow as DoctorProfile | null) || null)
     const faz = gunVerisi ? gunFazi(gunVerisi.saatTRT, h.iliski.rutin) : 'basi'
-    const gun = gunVerisi ? { faz, metin: gunOzetiMetni(gunVerisi, doctor, h.iliski, faz), blok: gunBlogu(gunVerisi, faz), veri: gunVerisi } : null
+    let metin = gunVerisi ? gunOzetiMetni(gunVerisi, doctor, h.iliski, faz) : ''
+    const bugun = bugunTRT()
+    const sonSelam = h.iliski.ogrenme_selam_gunu || null
+    const yeniKurallar = h.kesinKayitlar
+      .filter((k) => k.kaynak === 'duzeltme' && k.durum !== 'kapali' && k.son_gorulme && (!sonSelam || String(k.son_gorulme).slice(0, 10) > sonSelam) && String(k.son_gorulme).slice(0, 10) !== bugun)
+      .slice(0, 2)
+    const ogrenmeSatir = ogrenmeSelamSatiri({ asama: h.asama, yeniKurallar })
+    const meslektasSatir = meslektasSelamSatiri({
+      seans: h.iliski.seans_sayisi,
+      dahaOnceGosterildi: Boolean(h.iliski.meslektas_selam_at),
+      kuralSayisi: h.kesinKayitlar.filter((k) => k.durum !== 'kapali').length,
+      rutinBaslangic: typeof h.iliski.rutin?.tipikBaslangicSaati === 'string' ? String(h.iliski.rutin.tipikBaslangicSaati) : null,
+    })
+    const ekler = [ogrenmeSatir, meslektasSatir].filter(Boolean) as string[]
+    if (ekler.length && metin) metin = `${metin} ${ekler.join(' ')}`
+    if (ekler.length) {
+      const guncelle: Record<string, unknown> = { updated_at: new Date().toISOString() }
+      if (ogrenmeSatir) guncelle.ogrenme_selam_gunu = bugun
+      if (meslektasSatir) guncelle.meslektas_selam_at = bugun
+      void supabase.from('doktor_iliski').update(guncelle).eq('doctor_id', doktorId)
+    }
+    const gun = gunVerisi ? { faz, metin, blok: gunBlogu(gunVerisi, faz), veri: gunVerisi } : null
     return NextResponse.json({
       iliski: {
         seans: h.iliski.seans_sayisi,
@@ -53,10 +79,9 @@ export async function GET(req: NextRequest) {
         rutin: h.iliski.rutin,
       },
       karsilama: karsilamaSecimi(h.iliski),
-      // DAH-/KD-/DERM-PROMPTS-LOCK: sesli Ayşe için branş kilidinin kısa hali
       sesBlogu: [hafizaBloguSes(h), sesKilidi((doktorRow as { specialty?: string } | null)?.specialty)].filter(Boolean).join('\n\n'),
       gun,
-      kayitlar: [...h.kesinKayitlar, ...h.belirsizKayitlar],
+      kayitlar: tum && tumKayit ? tumKayit : [...h.kesinKayitlar, ...h.belirsizKayitlar],
     })
   } catch (e) {
     console.error('[hafiza] get', e)
@@ -72,10 +97,23 @@ export async function POST(req: NextRequest) {
   const engel = sadeceDoktor(oturum)
   if (engel) return engel
   const { supabase, doktorId } = oturum
-  const body = await req.json().catch(() => ({})) as { kategori?: string; anahtar?: string; deger?: string; unut?: string }
+  const body = await req.json().catch(() => ({})) as { kategori?: string; anahtar?: string; deger?: string; unut?: string; kapat?: string; durum?: string }
   try {
+    if (body.kapat || (body.durum === 'kapali' && body.anahtar)) {
+      await kuralKapat(supabase, doktorId, anahtarSlug(body.kapat || body.anahtar || ''))
+      return NextResponse.json({ ok: true, kapali: body.kapat || body.anahtar })
+    }
+    if (body.durum === 'uygulanir' && body.anahtar) {
+      const slug = anahtarSlug(body.anahtar)
+      await supabase.from('doktor_hafiza').update({
+        durum: 'uygulanir', aktif: true, kesin: true, updated_at: new Date().toISOString(),
+      }).eq('doctor_id', doktorId).eq('anahtar', slug)
+      return NextResponse.json({ ok: true, durum: 'uygulanir' })
+    }
     if (body.unut) {
       await hafizaUnut(supabase, doktorId, body.unut)
+      await supabase.from('doktor_hafiza').update({ durum: 'kapali', updated_at: new Date().toISOString() })
+        .eq('doctor_id', doktorId).eq('anahtar', anahtarSlug(body.unut))
       return NextResponse.json({ ok: true, unutuldu: body.unut })
     }
     if (!body.kategori || !KATEGORILER.includes(body.kategori as HafizaKategori) || !body.anahtar || !body.deger) {
