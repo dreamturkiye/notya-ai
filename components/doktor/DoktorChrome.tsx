@@ -29,6 +29,7 @@ import SesleUyandir from '@/components/asistan/SesleUyandir';
 import { GELEN_OLAY, GELEN_SAYI_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
+import KullanimIzle from './KullanimIzle';
 
 /**
  * A page rendered under a chrome-owning layout (e.g. hedef-boy's "aile" / family-facing embed
@@ -412,6 +413,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   return (
     <ChromeGizleContext.Provider value={setGizli}>
     <ChromeKompaktContext.Provider value={setKompakt}>
+    <KullanimIzle />
     {gelenErisim && <GelenBelgeBirak />}
     <style>{`
       html, body { background: ${CHROME_RENK.cream}; }

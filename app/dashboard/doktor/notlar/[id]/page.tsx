@@ -44,6 +44,9 @@ import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } fr
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
+import SonrakiAdim from '@/components/doktor/SonrakiAdim'
+import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
+import { kullanimEylem } from '@/lib/telemetri/kullanim'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -134,6 +137,8 @@ export default function NotSayfasi() {
   const [aiDurum, setAiDurum] = useState<'bos' | 'bekliyor' | 'guncellendi' | 'hata'>('bos');
   const [uyum, setUyum] = useState<IlacUyumDurumu | null>(null);
   const [sonlandirma, setSonlandirma] = useState<IlacSonlandirmaBilgisi | null>(null);
+  const rutinPaket = useRutinPaket();
+  const [onaylandiSimdi, setOnaylandiSimdi] = useState(false);
   const atlaOtomatikRef = useRef(true);
   const aiBekliyorRef = useRef(false);
   // NOTYA-RECETE-05: not açıldığındaki Plan — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
@@ -391,6 +396,8 @@ export default function NotSayfasi() {
       const aktarimHatalari = [j.asiAktarim?.hata, j.receteAktarim?.hata].filter(Boolean) as string[];
       if (aktarimHatalari.length) alert(`Not onaylandı, ama aşağıdaki aktarım(lar) başarısız oldu — hasta dosyasına/aşı kartına/reçeteye yansımamış olabilir:\n${aktarimHatalari.map((h) => `• ${h}`).join('\n')}\nLütfen notu tekrar açıp yeniden onaylayın; sorun devam ederse destek ekibine bildirin.`);
       setDurum('kaydedildi'); setDegisti(false);
+      setOnaylandiSimdi(true);
+      kullanimEylem('not_onayla', `/dashboard/doktor/notlar/${params.id}`);
       setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
       // NOTYA-ILAC-SONLANDIR-01: not bir ilacı kestiyse sayfa hemen geçmez — hekim satırı (ve Geri al'ı) görür, Devam ile geçer.
       const sonlanan = ilacSonlandirmaBilgisi(params.id, j);
@@ -431,6 +438,7 @@ export default function NotSayfasi() {
           <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
             <span style={{ padding: '2px 10px', borderRadius: 999, fontWeight: 700, fontSize: 11.5, background: onayli ? 'rgba(46,110,78,0.12)' : 'rgba(180,131,47,0.14)', color: onayli ? '#2E6E4E' : '#B4832F', border: `1px solid ${onayli ? 'rgba(46,110,78,0.35)' : 'rgba(180,131,47,0.4)'}` }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}</span>
             {not.uygulananKurallar && not.uygulananKurallar.length > 0 ? <SizinTarzinizChip kurallar={not.uygulananKurallar} /> : null}
+            {onaylandiSimdi ? <SonrakiAdim sonEylem="not_onayla" paket={rutinPaket} noteId={params.id} /> : null}
             <span style={{ color: '#B4832F' }}>
             {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
             {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}
