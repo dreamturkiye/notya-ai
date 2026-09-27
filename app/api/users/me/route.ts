@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hekimProfilOku, hekimProfilYaz } from '@/lib/doktor/hekimProfilOnbellek'
+import { klinikYuzuAcikMi } from '@/lib/klinik/klinikErisim'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,8 +46,8 @@ export async function GET(req: NextRequest) {
   // Branş değişimi başka izolde kalmış 60 sn'lik kopyayı ezmesin.
   const tazele = req.headers.get('x-profil-tazele') === '1'
   const onbellekte = tazele ? null : hekimProfilOku(user.id)
-  if (onbellekte) {
-    return NextResponse.json({ success: true, data: onbellekte })
+  if (onbellekte && typeof onbellekte === 'object') {
+    return NextResponse.json({ success: true, data: { ...(onbellekte as object), klinik_erisim: klinikYuzuAcikMi(user.id) } })
   }
 
   const { data: profile, error } = await getSupabase()
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
       onboarding_completed,
     }
     hekimProfilYaz(user.id, govde)
-    return NextResponse.json({ success: true, data: govde })
+    return NextResponse.json({ success: true, data: { ...govde, klinik_erisim: klinikYuzuAcikMi(user.id) } })
   }
 
   const onboarding_completed = deriveOnboardingCompleted(profile as Record<string, unknown>, meta)
@@ -106,5 +107,5 @@ export async function GET(req: NextRequest) {
   }
 
   hekimProfilYaz(user.id, merged)
-  return NextResponse.json({ success: true, data: merged })
+  return NextResponse.json({ success: true, data: { ...merged, klinik_erisim: klinikYuzuAcikMi(user.id) } })
 }

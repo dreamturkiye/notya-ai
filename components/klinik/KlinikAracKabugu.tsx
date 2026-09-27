@@ -29,7 +29,7 @@ export default function KlinikAracKabugu({
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
         const j = r.ok ? await r.json() : null
         const tip = String(j?.data?.profession_type || '')
-        const ok = (tip === 'klinik-uzman' || tip === 'saglik-uzmani') && klinikAraciDalaUygun(route, j?.data?.specialty)
+        const ok = Boolean(j?.data?.klinik_erisim) || ((tip === 'klinik-uzman' || tip === 'saglik-uzmani') && klinikAraciDalaUygun(route, j?.data?.specialty))
         if (!iptal) {
           setIzin(ok)
           setMevzuat(klinikMevzuatOzet(j?.data?.specialty))

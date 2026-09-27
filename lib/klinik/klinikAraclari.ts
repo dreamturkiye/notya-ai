@@ -68,3 +68,8 @@ export function klinikAraclariListesi(uzmanlik: string | null | undefined): Klin
     return !!dal && a.dallar.includes(dal)
   })
 }
+
+/** Süper kullanıcı Klinik önizlemesi — 10 dalın araçları (Doktor branşı filtrelemez). */
+export function klinikAraclariHepsi(): KlinikArac[] {
+  return [...KLINIK_ARACLARI]
+}

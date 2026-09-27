@@ -13,7 +13,7 @@ interface Member {
 }
 
 interface Clinic {
-  id: string
+  id: string | null
   name: string
   seat_count: number
   seats_used: number
@@ -32,6 +32,7 @@ export default function KlinikDashboard() {
   const [adminName, setAdminName] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [onizleme, setOnizleme] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -39,17 +40,25 @@ export default function KlinikDashboard() {
       try {
         const raw = localStorage.getItem('auth-token')
         if (raw) { const p = JSON.parse(raw); token = p.access_token || '' }
+        if (!token) {
+          const key = Object.keys(localStorage).find((k) => k.includes('auth-token') || k.startsWith('sb-'))
+          if (key) {
+            const p = JSON.parse(localStorage.getItem(key) || '')
+            token = p?.access_token || p?.session?.access_token || ''
+          }
+        }
       } catch {}
-      if (!token) { router.push('/giris'); return }
+      if (!token) { router.push('/giris/klinik'); return }
 
       try {
         const res = await fetch('/api/klinik/me', { headers: { Authorization: `Bearer ${token}` } })
-        if (res.status === 401 || res.status === 403) { router.push('/giris'); return }
+        if (res.status === 401 || res.status === 403) { router.push('/giris/klinik'); return }
         const data = await res.json()
         if (data.success) {
           setClinic(data.data.clinic)
           setMembers(data.data.members || [])
           setAdminName(data.data.adminName || '')
+          setOnizleme(Boolean(data.data.onizleme))
         } else {
           setError('Klinik bilgileri yüklenemedi.')
         }
@@ -89,9 +98,14 @@ export default function KlinikDashboard() {
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: '#0A1628', marginBottom: '8px', letterSpacing: '-0.025em' }}>
           Hoş geldiniz, {clinic?.name}
         </h1>
-        <p style={{ fontSize: '14px', color: 'rgba(10,22,40,0.45)', marginBottom: '40px' }}>
+        <p style={{ fontSize: '14px', color: 'rgba(10,22,40,0.45)', marginBottom: onizleme ? 12 : 40 }}>
           Klinik yöneticisi paneli
         </p>
+        {onizleme && (
+          <p style={{ fontSize: 13, color: 'rgba(10,22,40,0.55)', marginBottom: 40 }}>
+            Doktor hesabınızla Klinik yüzü açık. Araçlar 10 dalı gösterir. Klinik üyeliği yok — koltuk / Pabau boş kalır.
+          </p>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '48px' }}>
           <div style={kpiStyle(false)}>

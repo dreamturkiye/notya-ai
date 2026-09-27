@@ -62,6 +62,7 @@ export default function MaliGiris() {
         <div style={{textAlign:'center',marginTop:'20px',fontSize:'12px',color:'#64748b'}}>
           <a href='/giris' style={{color:'#94a3b8'}}>Genel giris</a>{' | '}
           <a href='/giris/doktor' style={{color:'#2563EB'}}>Doktor</a>{' | '}
+          <a href='/giris/klinik' style={{color:'#E91E8C'}}>Klinik</a>{' | '}
           <a href='/giris/avukat' style={{color:'#7C3AED'}}>Avukat</a>
         </div>
       </div>

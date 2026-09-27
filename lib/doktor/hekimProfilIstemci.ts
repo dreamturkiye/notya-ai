@@ -12,6 +12,7 @@ export interface HekimProfilOzet {
   specialty?: string | null
   profession_type?: string | null
   full_name?: string | null
+  klinik_erisim?: boolean
 }
 
 export function hekimProfilOturumOku(): (HekimProfilOzet & { t: number }) | null {
@@ -25,6 +26,7 @@ export function hekimProfilOturumOku(): (HekimProfilOzet & { t: number }) | null
       specialty: j.specialty ?? null,
       profession_type: j.profession_type ?? null,
       full_name: j.full_name ?? null,
+      klinik_erisim: Boolean(j.klinik_erisim),
       t: Number(j.t),
     }
   } catch {
@@ -39,6 +41,7 @@ export function hekimProfilOturumYaz(o: HekimProfilOzet): void {
       specialty: o.specialty ?? null,
       profession_type: o.profession_type ?? null,
       full_name: o.full_name ?? null,
+      klinik_erisim: Boolean(o.klinik_erisim),
       t: Date.now(),
     }))
   } catch { /* gizli mod */ }

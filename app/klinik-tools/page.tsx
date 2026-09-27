@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
-import { klinikAraclariListesi, type KlinikArac } from '@/lib/klinik/klinikAraclari'
+import { klinikAraclariHepsi, klinikAraclariListesi, type KlinikArac } from '@/lib/klinik/klinikAraclari'
 import { klinikSlugCoz, KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci'
 
@@ -17,7 +17,10 @@ export default function KlinikToolsPage() {
     const onbellek = hekimProfilOturumOku()
     const tazele = hekimProfilTazeleBasligi()
     const tipOnbellek = String(onbellek?.profession_type || '')
-    if (onbellek && (tipOnbellek === 'klinik-uzman' || tipOnbellek === 'saglik-uzmani')) {
+    if (onbellek?.klinik_erisim) {
+      setEtiket('Klinik')
+      setAraclar(klinikAraclariHepsi())
+    } else if (onbellek && (tipOnbellek === 'klinik-uzman' || tipOnbellek === 'saglik-uzmani')) {
       const slug = klinikSlugCoz(onbellek.specialty)
       setEtiket(slug ? KLINIK_ETIKET[slug] : (onbellek.specialty || 'Klinik'))
       setAraclar(klinikAraclariListesi(onbellek.specialty))
@@ -32,13 +35,19 @@ export default function KlinikToolsPage() {
         const j = r.ok ? await r.json() : null
         if (r.ok) hekimProfilTazeleBitti()
         const tip = String(j?.data?.profession_type || '')
-        if (tip !== 'klinik-uzman' && tip !== 'saglik-uzmani') { router.replace('/dashboard/klinik'); return }
+        const onizleme = Boolean(j?.data?.klinik_erisim)
+        if (!onizleme && tip !== 'klinik-uzman' && tip !== 'saglik-uzmani') { router.replace('/dashboard/klinik'); return }
         if (!iptal) {
           // KURAL — TÜRKÇE: profilde slug ('sac-ekimi') saklanır; ekranda Türkçe etiket ('Saç Ekimi').
-          const slug = klinikSlugCoz(j?.data?.specialty)
-          setEtiket(slug ? KLINIK_ETIKET[slug] : (j?.data?.specialty || 'Klinik'))
-          setAraclar(klinikAraclariListesi(j?.data?.specialty))
-          hekimProfilOturumYaz({ specialty: j?.data?.specialty, profession_type: j?.data?.profession_type, full_name: j?.data?.full_name })
+          if (onizleme) {
+            setEtiket('Klinik')
+            setAraclar(klinikAraclariHepsi())
+          } else {
+            const slug = klinikSlugCoz(j?.data?.specialty)
+            setEtiket(slug ? KLINIK_ETIKET[slug] : (j?.data?.specialty || 'Klinik'))
+            setAraclar(klinikAraclariListesi(j?.data?.specialty))
+          }
+          hekimProfilOturumYaz({ specialty: j?.data?.specialty, profession_type: j?.data?.profession_type, full_name: j?.data?.full_name, klinik_erisim: onizleme })
         }
       } catch {
         if (!iptal) setAraclar([])

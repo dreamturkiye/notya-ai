@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { klinikYuzuAcikMi } from '@/lib/klinik/klinikErisim'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,7 +28,26 @@ async function getAdminClinic(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const admin = await getAdminClinic(req)
-  if (!admin) return NextResponse.json({ success: false, error: 'Klinik yönetici yetkisi gereklidir.' }, { status: 403 })
+  if (!admin) {
+    const authHeader = req.headers.get('Authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const sb = getSupabase()
+      const { data: { user } } = await sb.auth.getUser(authHeader.split(' ')[1])
+      if (user && klinikYuzuAcikMi(user.id)) {
+        const { data: adminProfile } = await sb.from('users').select('full_name').eq('id', user.id).maybeSingle()
+        return NextResponse.json({
+          success: true,
+          data: {
+            clinic: { id: null, name: 'Notya Klinik', seat_count: 5, seats_used: 0, pabau_connected: false, plan: 'onizleme' },
+            members: [],
+            adminName: adminProfile?.full_name || user.email,
+            onizleme: true,
+          },
+        })
+      }
+    }
+    return NextResponse.json({ success: false, error: 'Klinik yönetici yetkisi gereklidir.' }, { status: 403 })
+  }
 
   const { user, clinicId, sb } = admin
 

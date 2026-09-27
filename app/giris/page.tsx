@@ -86,6 +86,7 @@ export default function LoginPage() {
           {" "}<a href="/giris/mali">Mali Müşavir</a>
           {" | "}<a href="/giris/avukat">Avukat</a>
           {" | "}<a href="/giris/doktor">Doktor</a>
+          {" | "}<a href="/giris/klinik">Klinik</a>
         </div>
       </div>
     </div>
