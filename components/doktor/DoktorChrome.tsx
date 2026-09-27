@@ -463,7 +463,17 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         .notya-telefon-perde { display: block !important; }
         .notya-telefon-menu { display: flex !important; }
         .notya-alt-nav { display: flex !important; }
-        .notya-icerik { width: calc(100% - 32px); padding-top: 0; padding-bottom: 72px; }
+        .notya-icerik { width: calc(100% - 32px); padding-top: 0; padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+        .notya-alt-nav {
+          left: 8px !important;
+          right: 8px !important;
+          width: auto !important;
+          bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+          border-radius: 16px !important;
+          background: linear-gradient(165deg, #d0d8d5, #dde3e0) !important;
+          border: 1px solid rgba(30,51,54,0.18) !important;
+          color: #1e3336;
+        }
         .notya-telefon-ust {
           position: sticky;
           top: 0;
@@ -474,9 +484,9 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
         .notya-bitki { opacity: 0.28; }
-        .notya-kompakt { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+        .notya-kompakt { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
-        .notya-alt-yuzer { bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important; }
+        .notya-alt-yuzer { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
       }
       @media print {
         .notya-alt-nav, .notya-telefon-menu, .notya-telefon-perde { display: none !important; }
@@ -602,7 +612,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           <button type="button" className="notya-telefon-perde" aria-label="Menüyü kapat" onClick={() => setMenuOpen(false)} style={S({ position: 'fixed', inset: 0, zIndex: 32, border: 'none', background: 'rgba(58,44,34,0.32)', padding: 0 })} />
           <div className="notya-telefon-menu" role="dialog" aria-label="Menü" style={S({
             position: 'fixed', left: 12, right: 12, zIndex: 36, flexDirection: 'column',
-            bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+            bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))',
             maxHeight: 'min(70dvh, 520px)', overflowY: 'auto',
             background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 18,
             padding: '14px 12px', boxShadow: '0 12px 32px rgba(58,44,34,0.16)',
@@ -645,7 +655,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               style={S({
                 flex: '1 1 0', minWidth: 0, minHeight: 48, border: 'none', background: 'transparent', cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-                color: aktif ? CHROME_RENK.pine : '#8a7b6c', fontFamily: 'inherit', fontSize: 10, fontWeight: aktif ? 700 : 600,
+                color: aktif ? '#1e3336' : 'rgba(30,51,54,0.62)', fontFamily: 'inherit', fontSize: 11, fontWeight: aktif ? 700 : 600,
                 padding: '4px 2px',
               })}
             >
@@ -673,7 +683,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           style={S({
             flex: '1 1 0', minWidth: 0, minHeight: 48, border: 'none', background: 'transparent', cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-            color: menuAktif ? CHROME_RENK.pine : '#8a7b6c', fontFamily: 'inherit', fontSize: 10, fontWeight: menuAktif ? 700 : 600,
+            color: menuAktif ? '#1e3336' : 'rgba(30,51,54,0.62)', fontFamily: 'inherit', fontSize: 11, fontWeight: menuAktif ? 700 : 600,
             padding: '4px 2px',
           })}
         >
