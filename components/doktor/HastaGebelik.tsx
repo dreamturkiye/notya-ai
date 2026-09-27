@@ -708,7 +708,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             <p style={{ fontSize: 12.5, color: CHROME_RENK.muted, margin: '0 0 8px' }}>
               Rh (−) gebede doz ve zamanlama hekimindir; Notya doz yazmaz. Tarih ve hafta kaydı SUT / izlem için.
             </p>
-            {Array.isArray(veri.gebelik.anti_d_uygulamalari) && (veri.gebelik.anti_d_uygulamalari as Array<{ tarih?: string; hafta?: number }>).length > 0 && (
+            {Array.isArray(veri.gebelik?.anti_d_uygulamalari) && (veri.gebelik.anti_d_uygulamalari as Array<{ tarih?: string; hafta?: number }>).length > 0 && (
               <div style={{ marginBottom: 8 }}>
                 {(veri.gebelik.anti_d_uygulamalari as Array<{ tarih?: string; hafta?: number; not?: string }>).map((x, i) => (
                   <div key={`${x.tarih || i}`} style={{ fontSize: 12, color: CHROME_RENK.muted }}>{x.tarih || '—'}{x.hafta != null ? ` · ${x.hafta}. hf` : ''}{x.not ? ` — ${x.not}` : ''}</div>
@@ -723,7 +723,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               type="button"
               style={{ ...btn(true), marginTop: 10 }}
               onClick={() => {
-                const onceki = Array.isArray(veri.gebelik.anti_d_uygulamalari) ? (veri.gebelik.anti_d_uygulamalari as Array<Record<string, unknown>>) : []
+                const onceki = Array.isArray(veri.gebelik?.anti_d_uygulamalari) ? (veri.gebelik.anti_d_uygulamalari as Array<Record<string, unknown>>) : []
                 if (!g.antiDTarih) { setHata('Anti-D tarihi girin.'); return }
                 klinikKaydet({
                   antiDUygulamalari: [...onceki, { tarih: g.antiDTarih, hafta: sayi(g.antiDHafta), not: g.antiDNot || null }],
