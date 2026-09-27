@@ -180,7 +180,7 @@ export async function GET(req: NextRequest) {
 
   const rb = (hekim?.recete_baslik && typeof hekim.recete_baslik === 'object' ? hekim.recete_baslik : {}) as { diplomaNo?: string }
   const ayar = (hekim?.erecete_ayar && typeof hekim.erecete_ayar === 'object' ? hekim.erecete_ayar : {}) as { tesisKodu?: number }
-  const icdHam = not && Array.isArray(not.icd10_codes) ? not.icd10_codes : []
+  const icdHam: unknown[] = not && Array.isArray(not.icd10_codes) ? (not.icd10_codes as unknown[]) : []
   const icd10 = icdHam
     .map((x) => {
       if (!x || typeof x !== 'object') return ''
