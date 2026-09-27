@@ -42,23 +42,21 @@ describe('LUNA-02 — birincil Luna her görevde, görsel/PDF dahil (GÖRSEL = G
     }
   })
 
-  it('güvenlik sinyali → GÜÇLÜ çağrıdan ÖNCE, neden = safety (her görevde, görselle de)', () => {
+  it('LUNAPRO-02: güvenlik sinyali yönlendirmeyi değiştirmez — her görevde birincil, neden null; sinyal yalnız işaretlenir', () => {
     for (const gorev of TUM_GOREVLER) {
       const s = etkinSecim({ gorev, messages: [{ role: 'user', content: 'hasta 12 haftalık gebe, ne yazalım' }] })
-      assert.deepEqual([s.kademe, s.model, s.yukseltildi, s.neden], ['guclu', gucluModel(), true, 'safety'], gorev)
+      assert.deepEqual([s.kademe, s.model, s.yukseltildi, s.neden, s.guvenlikSinyali], ['hizli', hizliModel(), false, null, true], gorev)
     }
     const g = etkinSecim({ gorev: 'goruntu-inceleme', messages: [{ role: 'user', content: [{ type: 'image', source: {} }, { type: 'text', text: 'isotretinoin öncesi lezyon' }] }] })
-    assert.equal(g.neden, 'safety')
+    assert.equal(g.neden, null); assert.equal(g.guvenlikSinyali, true)
   })
-
-  it('güvenlik sinyali hasta dosyası bağlamında (guvenlikBaglami) → GÜÇLÜ; sabit system metni taranmaz', () => {
+  it('LUNAPRO-02: dosya bağlamındaki sinyal de yönlendirmez; sabit system metni taranmaz', () => {
     const mesaj: AiMesaj[] = [{ role: 'user', content: 'kontrol ne zaman olsun' }]
-    assert.equal(etkinSecim({ gorev: 'sohbet-uzman', messages: mesaj, guvenlikBaglami: 'Sürekli ilaç: Warfarin 5 mg' }).neden, 'safety')
-    assert.equal(etkinSecim({ gorev: 'sohbet-uzman', messages: mesaj, guvenlikBaglami: 'Alerji: yok' }).neden, null)
-    // system'de geçen sinyal kelimesi (ör. branş kilidindeki "gebe") tek başına yükseltmez
+    const w = etkinSecim({ gorev: 'sohbet-uzman', messages: mesaj, guvenlikBaglami: 'Sürekli ilaç: Warfarin 5 mg' })
+    assert.equal(w.neden, null); assert.equal(w.guvenlikSinyali, true); assert.equal(w.model, hizliModel())
+    assert.equal(etkinSecim({ gorev: 'sohbet-uzman', messages: mesaj, guvenlikBaglami: 'Alerji: yok' }).guvenlikSinyali, false)
     assert.equal(istekGovdesi({ gorev: 'soap', system: 'Gebelikte kontrendike ilaçları yazma.', messages: mesaj }).model, hizliModel())
   })
-
   it('OpenRouter yok → Luna gidemez; görsel istek GÜÇLÜ doğrudan kimliğine düşer (transport), tavan korunur', async () => {
     const eski = process.env.OPENROUTER_API_KEY
     delete process.env.OPENROUTER_API_KEY
