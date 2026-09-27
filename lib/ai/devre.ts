@@ -13,6 +13,15 @@
  * Saat enjekte edilebilir (DEVRE_SAAT.simdi) — testler zamanı kendileri ilerletir.
  */
 
+/**
+ * NOTYA-MODEL-LUNAPRO-03 (Kaan, 2026-09-27): "Sonnet only for that request; the next request goes back to Luna-Pro
+ * immediately — never stay on Sonnet and run up the bill." A 10-minute open state would hold traffic on the guardian,
+ * so the breaker is OFF unless NOTYA_DEVRE_ACIK=1 (kept in code for a provider-outage decision later). When off,
+ * devreDurumu is always 'kapali' and every request tries the primary first; per-request fallback is unchanged.
+ */
+export function devreEtkinMi(): boolean {
+  return process.env.NOTYA_DEVRE_ACIK === '1'
+}
 export const DEVRE_AYAR = {
   /** Pencere içinde bu kadar hata devreyi açar. */
   esik: 5,
@@ -41,6 +50,7 @@ function kayit(model: string): Kayit {
 
 /** Modelin devre hali (testler ve gözlem). */
 export function devreDurumu(model: string): DevreHali {
+  if (!devreEtkinMi()) return 'kapali'
   const k = kayitlar.get(model)
   if (!k || k.acikBitis === null) return 'kapali'
   return DEVRE_SAAT.simdi() < k.acikBitis ? 'acik' : 'yari-acik'
