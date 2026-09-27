@@ -75,6 +75,10 @@
     {
       "path": "/api/cron/meslektas-rutin",
       "schedule": "30 0 * * *"
+    },
+    {
+      "path": "/api/cron/meslektas-onbellek",
+      "schedule": "0 3 * * *"
     }
   ]
 }

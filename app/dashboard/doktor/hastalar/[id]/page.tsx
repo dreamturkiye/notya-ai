@@ -280,6 +280,7 @@ export default function HastaProfilPage() {
         const data = await resp.json();
         if (!resp.ok) { setError(data.error || 'Hasta bilgisi alınamadı'); return; }
         setPatient(data.patient);
+        void fetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId }), keepalive: true })
         if (meRes.ok) {
           const me = await meRes.json();
           const sp = String(me?.data?.specialty || '');

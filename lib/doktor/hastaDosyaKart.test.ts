@@ -151,7 +151,7 @@ describe('hasta dosya derleyici — kart başta kalır, izolasyon', () => {
   })
 
   it('yazılı sohbet ve ses dosya gerçeğini karttan okur', () => {
-    assert.ok(chat.includes('hastaDosyaPaketiniDerle'))
+    assert.ok(chat.includes('dosyaPaketOnbellekli') || chat.includes('hastaDosyaPaketiniDerle'))
     assert.ok(chat.includes('dosyaSoruCevap'))
     assert.ok(chat.includes('KESİN DOSYA CEVABI'))
     assert.ok(chat.includes('cozumKonus'))

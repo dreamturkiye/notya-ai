@@ -36,8 +36,8 @@ import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogr
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { cozumKonus, hastaninSozunuCoz, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
-import { hastaDosyaPaketiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
-import { adliDosyaCevabi, dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
+import { dosyaPaketOnbellekli } from "@/lib/doktor/ogrenme/dosyaOnbellek"
+import { adliDosyaCevabi, dosyaSoruCevap, type HastaDosyaKart } from "@/lib/doktor/hastaDosyaKart"
 import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPrescriptionData } from "@/lib/asistan/intentParser"
@@ -60,7 +60,7 @@ import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
-import { dosyaSorguVerisiDerle } from "@/lib/doktor/dosyaOlaylari"
+import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 
 export type Kanal = "yazi" | "ses"
@@ -256,6 +256,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-AYSE-STANDART-01 + odak kilidi uyumu: kanıt yolu (İlk 10) açıkken cevap takvimdeki eksik aşıları ADIYLA sayar
   // ("KKK — kayıt yok"); bu uydurma liste değildir, kilit bu turda aşı-listesi kuralını uygulamaz.
   let kanitYoluAktif = false
+  let dosyaOnbellekten = false
   let odakHastaAdi = ""
   // NOTYA-MODEL-LUNA-02: dosyanın yalnız hasta verisi (kurallar değil) — güvenlik sinyali taraması için (gebe, warfarin …).
   let dosyaGuvenlikMetni = ""
@@ -296,7 +297,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // NOTYA-TEK-BEYIN (hız): takip sorusunda aktif hastanın dosyası, mesajdaki hasta çözülürken paralel derlenir;
     // mesaj başka bir hastayı adlandırırsa bu derleme kullanılmaz (doktora kapsanmış bir okuma — sızıntı değil).
     const aktifOnceden = contextPatientId ? String(contextPatientId) : null
-    const aktifPaketSozu = aktifOnceden ? hastaDosyaPaketiniDerle(supabase, doktorId, aktifOnceden).catch(() => null) : null
+    const aktifPaketSozu = aktifOnceden ? dosyaPaketOnbellekli(supabase, doktorId, aktifOnceden).catch(() => null) : null
     cozum = await hastaninSozunuCoz(supabase, doktorId, message)
     // NOTYA-AKTIF-HASTA-01: with a patient open, an unnamed question is about that patient, not a search.
     const aktifeDon = aktifHastaKullanilsinMi({
@@ -314,11 +315,13 @@ ${ilacBaglamMetni(drugs[0])}`
         // NOTYA-AYSE-STANDART-01: açık hasta + 10 kanonik dosya sorusundan biri → olay dizini (planlandı ≠ uygulandı)
         // dosya paketiyle birlikte, paralel derlenir. Olay okumaları da doktora kapsanır (dosyaOlaylari).
         const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
-        const sorguSozu = soruTuru ? dosyaSorguVerisiDerle(supabase, doktorId, aktifId).catch(() => null) : null
-        const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await hastaDosyaPaketiniDerle(supabase, doktorId, aktifId)
-        const sorgu = sorguSozu ? await sorguSozu : null
+        const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, aktifId)
+        const sorgu = paket && soruTuru && paket.sorguHasta
+          ? { olaylar: paket.olaylar as DosyaOlayi[], hasta: paket.sorguHasta as DosyaHastasi }
+          : null
         kanitYoluAktif = Boolean(soruTuru && sorgu)
         if (paket) {
+          dosyaOnbellekten = Boolean(paket.onbellekten)
           if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
           const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
           odakHastaAdi = aktifAd
@@ -328,7 +331,7 @@ ${ilacBaglamMetni(drugs[0])}`
           // gösterdi" dedi. Kesin dosya cevabı her zaman hastanın adıyla başlar; yanlış hasta anında görülür.
           // NOTYA-AYSE-STANDART-01: dosya sorusu (özet, aşı tam mı, ilaçlar, açık işler…) HIZLI KART'la cevaplanmaz —
           // kart tek bilgilik sorular içindir (kan grubu, alerji, son vizit tarihi, telefon / kimlik).
-          const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart)
+          const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart as HastaDosyaKart)
           kesinDosyaCevap = kesinHam ? adliDosyaCevabi(aktifAd, kesinHam) : null
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
@@ -586,7 +589,7 @@ ${ilacBaglamMetni(drugs[0])}`
   }
 
   void import("@/lib/doktor/ogrenme/hizOlc").then((m) => m.hizYazSessiz({
-    doctorId: doktorId, gorev: "sohbet", sureMs: Date.now() - cevapBas,
+    doctorId: doktorId, gorev: "sohbet", sureMs: Date.now() - cevapBas, onbellekli: dosyaOnbellekten,
   })).catch(() => { /* ölçüm */ })
 
   return {

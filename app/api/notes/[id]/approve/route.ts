@@ -320,5 +320,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error('[ogrenme] kanca', e) }
   }
 
+  if (hastaBenim && hastaIdA) {
+    const { onbellekKirlet } = await import('@/lib/doktor/ogrenme/dosyaOnbellek')
+    void onbellekKirlet(supabase, user.id, hastaIdA).catch(() => { /* önbellek */ })
+  }
+
   return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim, ilacSonlandirma })
 }

@@ -309,6 +309,10 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     }).select().single()
 
     if (noteError) throw new Error("Not kaydedilemedi: " + noteError.message)
+    if (hastaId) {
+      const { onbellekKirlet } = await import('@/lib/doktor/ogrenme/dosyaOnbellek')
+      void onbellekKirlet(getSupabase(), user.id, hastaId).catch(() => { /* önbellek */ })
+    }
 
     // NOTYA-NOT-HIZ-03: öneri arka planda sürer; bitince yalnız bu notun (id + doktor) boş öneri sütunlarını doldurur.
     // Çek listesi bloğunu yalnız uygulama yazar — öneri metnindeki olası blok silinir.
