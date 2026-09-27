@@ -252,6 +252,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
   let dosyaEk = ""
   let odakDosyaMetni = ""
+  // NOTYA-AYSE-STANDART-01 + odak kilidi uyumu: kanıt yolu (İlk 10) açıkken cevap takvimdeki eksik aşıları ADIYLA sayar
+  // ("KKK — kayıt yok"); bu uydurma liste değildir, kilit bu turda aşı-listesi kuralını uygulamaz.
+  let kanitYoluAktif = false
   let odakHastaAdi = ""
   // NOTYA-MODEL-LUNA-02: dosyanın yalnız hasta verisi (kurallar değil) — güvenlik sinyali taraması için (gebe, warfarin …).
   let dosyaGuvenlikMetni = ""
@@ -313,6 +316,7 @@ ${ilacBaglamMetni(drugs[0])}`
         const sorguSozu = soruTuru ? dosyaSorguVerisiDerle(supabase, doktorId, aktifId).catch(() => null) : null
         const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await hastaDosyaPaketiniDerle(supabase, doktorId, aktifId)
         const sorgu = sorguSozu ? await sorguSozu : null
+        kanitYoluAktif = Boolean(soruTuru && sorgu)
         if (paket) {
           if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
           const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
@@ -459,7 +463,7 @@ ${ilacBaglamMetni(drugs[0])}`
   }
   // NOTYA-HASTA-ODAK-01: açık dosyadayken uydurma liste / recant / başka hasta dilliği geri çekilir.
   const odakAd = odakHastaAdi || (cozulenHasta?.ad ?? (baglam.patientName ? String(baglam.patientName) : ''))
-  const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: odakDosyaMetni || dosyaEk } : null)
+  const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: odakDosyaMetni || dosyaEk, kanitYolu: kanitYoluAktif } : null)
   if (odak.ihlal.length) console.warn("[asistan/chat] hasta odak kilidi", { ihlal: odak.ihlal, ad: odakAd })
   aiData.speech = odak.metin
 

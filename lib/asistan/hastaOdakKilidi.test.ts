@@ -55,3 +55,15 @@ test('without an open patient, recant still refuses to invent', () => {
   assert.ok(r.ihlal.includes('recant'))
   assert.match(r.metin, /hangi hastanın/i)
 })
+
+test('NOTYA-AYSE-STANDART-01 uyumu: takvime göre EKSİK aşıları adıyla saymak uydurma liste değildir; uygulandı iddiası hâlâ yakalanır', () => {
+  const dosya = 'Hasta: Sentetik Bebek Test\nAşı: kayıtlı aşı yok'
+  const standart = 'Sentetik Bebek Test — aşı tablosunda hiç kayıtlı doz yok.\n| KKK | 1 doz (12.ay) | Kayıt yok |\n| Hepatit B | 3 doz | Kayıt yok |\nDikkat: uygulandığına dair kayıt bulamadım; karne yüklenmemiş.'
+  const a = hastaOdakTemizle(standart, { ad: 'Sentetik Bebek Test', dosyaMetni: dosya })
+  assert.deepEqual(a.ihlal, [], 'eksik aşı listesi ihlal sayılmamalı')
+  assert.equal(a.metin, standart)
+  const b = hastaOdakTemizle('Sentetik Bebek Test — KKK ve Hepatit B aşıları uygulandı, karne tam.', { ad: 'Sentetik Bebek Test', dosyaMetni: dosya })
+  assert.ok(b.ihlal.includes('uydurma-asi-listesi'), 'uygulandı iddiası hâlâ yakalanmalı')
+  const c = hastaOdakTemizle('Sentetik Bebek Test — KKK ve Hepatit B aşıları uygulandı.', { ad: 'Sentetik Bebek Test', dosyaMetni: dosya, kanitYolu: true })
+  assert.deepEqual(c.ihlal, [], 'kanıt yolunda aşı kuralı çalışmaz')
+})
