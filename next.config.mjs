@@ -14,6 +14,9 @@ const nextConfig = {
 
   // DAH-/KD-/DERM-PROMPTS-LOCK: specialties/<branş>/prompts/*.md are read at runtime (fs) by SOAP, chat, hafıza (voice) and approve routes.
   experimental: {
+    // Vercel 8 GB builder SIGKILL (OOM) on next build — one compile worker.
+    cpus: 1,
+    workerThreads: false,
     // NOTYA-GELEN-BELGELER: iPhone HEIC → JPEG runs libheif (WebAssembly) on the server; loaded from node_modules, not bundled.
     serverComponentsExternalPackages: ['heic-convert', 'heic-decode', 'libheif-js'],
     // ASI-KARNESI-01: aşı karnesi PDF'i Türkçe glifler için gömülü Liberation Sans okur (lib/asi/karnePdf.tsx) — yalnız iki PDF rotası.
