@@ -20,7 +20,6 @@ import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
 import type { SesDevam } from '@/lib/asistan/ayseCevapla'
-import { waitUntil } from '@vercel/functions'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
@@ -35,7 +34,11 @@ const getSupabase = () => createClient(
 const SES_BEKCI_MS = 22_000
 /** Keep a background promise alive after the SSE closes (Vercel freezes the function otherwise). */
 function arkaPlandaSurdur(p: Promise<unknown>): void {
-  try { waitUntil(p) } catch { void p /* yerel çalışma: söz zaten sürer */ }
+  try {
+    const mod = require('@vercel/functions') as { waitUntil?: (x: Promise<unknown>) => void }
+    if (mod.waitUntil) mod.waitUntil(p)
+    else void p
+  } catch { void p /* yerel çalışma: söz zaten sürer */ }
 }
 
 type ElMesaj = { role?: string; content?: unknown }

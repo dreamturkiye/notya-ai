@@ -131,6 +131,7 @@ const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY
 const simdi = () => new Date().toISOString()
 
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
+  const cevapBas = Date.now()
   const supabase = g.supabase
   const doktorId = g.doktorId
   const message = g.mesaj
@@ -552,19 +553,28 @@ ${ilacBaglamMetni(drugs[0])}`
     action_data: aiData.action || {}
   })
 
-  // NOTYA-OGRENME-03: ilişki sayacı (seans = farklı gün, mesaj başına değil) + öğrenme.
-  // Haiku yalnız doktor kendinden/tercihinden bahsettiğinde çağrılır (regex kapısı — ekonomi).
+  // NOTYA-OGRENME-03 / V2: ilişki sayacı istekte kalır (ucuz); LLM öğrenme waitUntil.
   try {
     const iliski = await seansIsle(supabase, doktorId, "sohbet")
-    if (ogrenmeyeDeger(String(message || ""))) {
-      await sohbettenOgren(getAnthropic(), supabase, doktorId, [
-        ...messages.slice(-4).map((m: { role: string; content: string }) => ({ role: m.role, content: m.content })),
-        { role: "user", content: String(message) },
-        { role: "assistant", content: aiData.speech },
-      ])
-    }
-    if (iliski.seans_sayisi >= 5 && iliski.seans_sayisi - iliski.ozet_seans >= 5) {
-      await ozetGerekirseGuncelle(getAnthropic(), supabase, doktorId)
+    const ogren = ogrenmeyeDeger(String(message || ""))
+    const ozet = iliski.seans_sayisi >= 5 && iliski.seans_sayisi - iliski.ozet_seans >= 5
+    if (ogren || ozet) {
+      const { arkaPlandaSurdur } = await import("@/lib/doktor/ogrenme/arkaPlandaOgren")
+      const gecmis = messages.slice(-4).map((m: { role: string; content: string }) => ({ role: m.role, content: m.content }))
+      const soz = String(aiData.speech)
+      const mesaj = String(message)
+      arkaPlandaSurdur((async () => {
+        try {
+          if (ogren) {
+            await sohbettenOgren(getAnthropic(), supabase, doktorId, [
+              ...gecmis,
+              { role: "user", content: mesaj },
+              { role: "assistant", content: soz },
+            ])
+          }
+          if (ozet) await ozetGerekirseGuncelle(getAnthropic(), supabase, doktorId)
+        } catch (e) { console.error("[hafiza] sohbet arka plan", e) }
+      })())
     }
   } catch (e) { console.error("[hafiza] sohbet", e) }
 
@@ -574,6 +584,10 @@ ${ilacBaglamMetni(drugs[0])}`
   } else {
     await supabase.from("doctor_preferences").update({ last_session_at: new Date().toISOString() }).eq("doctor_id", doktorId)
   }
+
+  void import("@/lib/doktor/ogrenme/hizOlc").then((m) => m.hizYazSessiz({
+    doctorId: doktorId, gorev: "sohbet", sureMs: Date.now() - cevapBas,
+  })).catch(() => { /* ölçüm */ })
 
   return {
     ok: true,

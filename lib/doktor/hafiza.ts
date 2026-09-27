@@ -47,6 +47,10 @@ export interface HafizaKayit {
   kanit_sayisi: number
   kesin: boolean
   aktif: boolean
+  durum?: 'aday' | 'uygulanir' | 'kapali'
+  ornekler?: string[]
+  ilk_gorulme?: string | null
+  son_gorulme?: string | null
 }
 
 export interface DoktorIliski {
@@ -60,6 +64,8 @@ export interface DoktorIliski {
   rutin: Record<string, unknown>
   ozet: string | null
   ozet_seans: number
+  ogrenme_selam_gunu?: string | null
+  meslektas_selam_at?: string | null
 }
 
 export interface HafizaOzeti {
@@ -121,6 +127,7 @@ function bosIliski(doctorId: string): DoktorIliski {
   return {
     doctor_id: doctorId, seans_sayisi: 0, ilk_seans_gunu: null, son_seans_gunu: null,
     toplam_not: 0, toplam_sohbet: 0, toplam_duzeltme: 0, rutin: {}, ozet: null, ozet_seans: 0,
+    ogrenme_selam_gunu: null, meslektas_selam_at: null,
   }
 }
 
@@ -251,18 +258,36 @@ export async function hafizaUnut(sb: SupabaseClient, doctorId: string, anahtar: 
 export async function hafizaYukle(sb: SupabaseClient, doctorId: string): Promise<HafizaOzeti> {
   const [iliski, kayitRes, stilRes] = await Promise.all([
     iliskiYukle(sb, doctorId),
-    sb.from('doktor_hafiza').select('kategori, anahtar, deger, kaynak, kanit_sayisi, kesin, aktif')
-      .eq('doctor_id', doctorId).eq('aktif', true).order('son_gorulme', { ascending: false }).limit(80),
+    sb.from('doktor_hafiza').select('kategori, anahtar, deger, kaynak, kanit_sayisi, kesin, aktif, durum, ornekler, ilk_gorulme, son_gorulme')
+      .eq('doctor_id', doctorId).eq('aktif', true).order('son_gorulme', { ascending: false }).limit(80)
+      .then(async (r) => {
+        if (r.error && /durum|ornekler|kanit_not/i.test(r.error.message || '')) {
+          return sb.from('doktor_hafiza').select('kategori, anahtar, deger, kaynak, kanit_sayisi, kesin, aktif, ilk_gorulme, son_gorulme')
+            .eq('doctor_id', doctorId).eq('aktif', true).order('son_gorulme', { ascending: false }).limit(80)
+        }
+        return r
+      }),
     sb.from('doktor_stil_profilleri').select('profil').eq('doctor_id', doctorId).maybeSingle(),
   ])
   const kayitlar = (kayitRes.data || []) as HafizaKayit[]
   return {
     iliski,
     asama: asamaBul(iliski.seans_sayisi),
-    kesinKayitlar: kayitlar.filter((k) => k.kesin),
-    belirsizKayitlar: kayitlar.filter((k) => !k.kesin),
+    kesinKayitlar: kayitlar.filter((k) => k.kesin && k.durum !== 'kapali'),
+    belirsizKayitlar: kayitlar.filter((k) => !k.kesin && k.durum !== 'kapali'),
     stilProfili: String(stilRes.data?.profil || ''),
   }
+}
+
+/** Ayarlar sayfası — kapalılar dahil, her kayıt görünür. */
+export async function hafizaYukleTum(sb: SupabaseClient, doctorId: string): Promise<HafizaKayit[]> {
+  const { data } = await sb
+    .from('doktor_hafiza')
+    .select('kategori, anahtar, deger, kaynak, kanit_sayisi, kesin, aktif, durum, ornekler, ilk_gorulme, son_gorulme')
+    .eq('doctor_id', doctorId)
+    .order('son_gorulme', { ascending: false })
+    .limit(200)
+  return (data || []) as HafizaKayit[]
 }
 
 // ------------------------------------------------------------------

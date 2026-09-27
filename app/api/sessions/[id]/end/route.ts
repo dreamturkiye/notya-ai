@@ -225,9 +225,12 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     // NOTYA-OGRENME-03: meslektaş hafızası — stil profili + kesin klinik/üslup kayıtları tek metinde
     let stilProfili = ''
+    let doktorKurallari: { slug: string; satir: string }[] = []
     try {
       const { hafizaYukle, hafizaBloguNot } = await import('@/lib/doktor/hafiza')
       stilProfili = hafizaBloguNot(await hafizaYukle(getSupabase(), user.id))
+      const { uygulanirKurallariYukle } = await import('@/lib/doktor/ogrenme/kuralKaydet')
+      doktorKurallari = await uygulanirKurallariYukle(getSupabase(), user.id)
     } catch { /* profil kritik değil */ }
 
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
@@ -251,7 +254,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir (son denemeninki).
     const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
     const { sonuc: noteData } = await soapUretYeniden(
-      () => soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }, { oneriAyri: (soz) => { oneri.soz = soz } }),
+      () => soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }, { oneriAyri: (soz) => { oneri.soz = soz } }),
       { baslangicMs, sureSiniriMs: maxDuration * 1000, uyar: (satir) => console.warn(satir) },
     )
     // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
@@ -299,6 +302,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       vitaller: noteData?.vitaller || null,
       recete_onerisi: noteData?.receteOnerisi || null,
       alarm_bulgulari: noteData?.alarmBulgulari || null,
+      uygulanan_kurallar: noteData?.uygulananKurallar || [],
       ai_model: modelSec("soap").model,
       ai_confidence: noteData?.ai_confidence || 0.9,
       ...(gecmisTarihIso ? { created_at: gecmisTarihIso } : {}),
@@ -327,7 +331,8 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
             .join('\n')
         : String(transcript || '')
       if (doktorSozleri && ogrenmeyeDeger(doktorSozleri)) {
-        await sohbettenOgren(getAnthropic(), getSupabase(), user.id, [{ role: 'user', content: doktorSozleri }])
+        const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
+        arkaPlandaSurdur(sohbettenOgren(getAnthropic(), getSupabase(), user.id, [{ role: 'user', content: doktorSozleri }]))
       }
     } catch (e) { console.error('[hafiza] seans-sonu', e) }
 

@@ -145,9 +145,12 @@ export async function POST(req: NextRequest) {
 
   // NOTYA-OGRENME-03: meslektaş hafızası — stil profili + kesin klinik/üslup kayıtları
   let stilProfili = ''
+  let doktorKurallari: { slug: string; satir: string }[] = []
   try {
     const { hafizaYukle, hafizaBloguNot } = await import('@/lib/doktor/hafiza')
     stilProfili = hafizaBloguNot(await hafizaYukle(supabase, doktorId))
+    const { uygulanirKurallariYukle } = await import('@/lib/doktor/ogrenme/kuralKaydet')
+    doktorKurallari = await uygulanirKurallariYukle(supabase, doktorId)
   } catch { /* profil kritik değil */ }
 
   try {
@@ -157,7 +160,7 @@ export async function POST(req: NextRequest) {
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir.
     const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId }, { oneriAyri: (soz) => { oneri.soz = soz } })
+    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId }, { oneriAyri: (soz) => { oneri.soz = soz } })
     // NOTYA-ASI-NOT-01: sessions/end ile aynı — yalnız bu vizitte uygulanan aşılar, vizit tarihiyle.
     let notAsilari: unknown[] = []
     try {
@@ -189,6 +192,7 @@ export async function POST(req: NextRequest) {
       vitaller: noteData?.vitaller || null,
       recete_onerisi: noteData?.receteOnerisi || null,
       alarm_bulgulari: noteData?.alarmBulgulari || null,
+      uygulanan_kurallar: noteData?.uygulananKurallar || [],
       ai_model: modelSec('soap').model, // NOTYA-MALIYET-01: etiket politikadan
       ai_confidence: noteData?.ai_confidence || 0.9,
       // NOTYA-SES-03 (Kaan, 2026-09-24): notes tablosunda specialty kolonu hiç yok — branch bilgisi
@@ -208,7 +212,8 @@ export async function POST(req: NextRequest) {
     try {
       const { ogrenmeyeDeger, sohbettenOgren } = await import('@/lib/doktor/hafiza')
       if (ogrenmeyeDeger(transcript)) {
-        await sohbettenOgren(anthropic, supabase, doktorId, [{ role: 'user', content: transcript }])
+        const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
+        arkaPlandaSurdur(sohbettenOgren(anthropic, supabase, doktorId, [{ role: 'user', content: transcript }]))
       }
     } catch (e) { console.error('[hafiza] ses-yukle', e) }
 

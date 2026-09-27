@@ -148,7 +148,8 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   "asilar": [{"asi_adi": "", "doz_no": null, "lot_no": "", "uygulama_yeri": "", "notlar": ""}],
   "icd10_codes": [{"code": "", "description": "", "description_tr": "", "is_primary": true}],
   "takip_suresi": "",
-  "ai_confidence": 0.9
+  "ai_confidence": 0.9,
+  "uygulananKurallar": []
 }
 (B) AI ÖNERİSİ — SADECE geçerli JSON döndür:
 {
@@ -206,6 +207,8 @@ export interface SoapNotu {
   takip_suresi?: string
   hasta_ozeti?: string
   ai_confidence?: number
+  /** NOTYA-MESLEKTAS-V2: bu notta uygulanan kural slugs (sunulan listeden). */
+  uygulananKurallar?: string[]
 }
 
 export interface SoapGirdi {
@@ -219,6 +222,8 @@ export interface SoapGirdi {
   hastaDogumIso?: string | null // BRANS-ALAN-SIZMASI: aile/genel pediatrik bağlam + VELI-YASAL-ONAM (<18 → veli dili, her branş)
   doctorId?: string | null // NOTYA-MALIYET-01: yalnız ai_token_kullanim ölçümü (prompta girmez)
   cekListeBlogu?: string // hekim çek listesi — gövdeye uydurma yasağı
+  /** UYGULANIR kurallar — değişken (önbelleksiz) blok. En fazla 12. */
+  doktorKurallari?: { slug: string; satir: string }[]
 }
 
 /** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
@@ -256,6 +261,23 @@ export function dozKilitliBrans(...branslar: (string | null | undefined)[]): boo
   return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar) || gozMi(...branslar)
 }
 
+export function doktorKurallariBlogu(kurallar: { slug: string; satir: string }[] | undefined): string {
+  const liste = (kurallar || []).filter((k) => k.slug && k.satir).slice(0, 12)
+  if (!liste.length) return ''
+  const satirlar = liste.map((k) => `- [${k.slug}] ${k.satir}`).join('\n')
+  return `\nDOKTORUN KURALLARI (düzeltmelerinden — UYGULA, sorma; klinik güvenlik uyarısını gevşetme):\n${satirlar}\nuygulananKurallar dizisine bu notta gerçekten uyguladığın slug'ları yaz. Listede olmayan slug uydurma.`
+}
+
+export function uygulananKurallariSuz(
+  donen: unknown,
+  sunulan: { slug: string }[] | undefined,
+): string[] {
+  const izin = new Set((sunulan || []).map((k) => k.slug).filter(Boolean))
+  if (!izin.size) return []
+  const ham = Array.isArray(donen) ? donen : []
+  return [...new Set(ham.map((x) => String(x || '').trim()).filter((s) => izin.has(s)))]
+}
+
 /** NOTYA-NOT-HIZ-01: system prompt as two blocks. The first (persona + rules + the branch's prompts/ lock) depends only on
  * branch + pediatrik/veli axes, never on the patient → cached (`onbellek`), shared by both note calls and by every note of
  * the same branch. Patient context, style examples, hafıza profile, hekim adı and çek listesi stay in the second, uncached block. */
@@ -270,6 +292,7 @@ export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
     girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',
+    doktorKurallariBlogu(girdi.doktorKurallari),
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
     ...(girdi.cekListeBlogu ? [girdi.cekListeBlogu] : []),
   ]
@@ -388,6 +411,7 @@ export interface SoapSecenek {
  */
 export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secenek: SoapSecenek = {}): Promise<SoapNotu> {
   const system = soapSistemBloklari(girdi)
+  const bas = Date.now()
   const transkript = `Muayene transkripti:\n\n${girdi.transcript}`
 
   // NOTYA-MALIYET-01: muayene/SOAP notu. LUNAPRO-01: birincil Luna-Pro; klinik bağlam (alerji, sürekli ilaç) system'de —
@@ -423,6 +447,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secen
   if (secenek.oneriAyri) secenek.oneriAyri(oneriSozu)
 
   const veri: SoapNotu = await govdeyiAl(govdeCagrisi, await govdeSozu)
+  veri.uygulananKurallar = uygulananKurallariSuz(veri.uygulananKurallar, girdi.doktorKurallari)
   for (const k of ONERI_ALANLARI) delete (veri as Record<string, unknown>)[k]
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
   // dictated during an obstetric USG is not the mother's vital sign).
@@ -430,7 +455,10 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secen
   const numarali = soapNumaraliAlanlariDuzenle(kilitle(veri, girdi))
   // NOTYA-NOT-HIZ-01: prose columns derived from the already locked / numbered SOAP sections (dose lock runs once, not
   // twice on the same text); the F4 cleaner then runs over both — they stay identical.
-  const not = notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap) })
+  const not = notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap), uygulananKurallar: veri.uygulananKurallar })
+  void import('@/lib/doktor/ogrenme/hizOlc').then((m) => m.hizYazSessiz({
+    doctorId: girdi.doctorId, gorev: 'soap', sureMs: Date.now() - bas, onbellekli: Boolean(girdi.doktorKurallari?.length),
+  })).catch(() => { /* ölçüm */ })
   if (secenek.oneriAyri) return not
   return oneriyiBirlestir(not, await oneriSozu)
 }

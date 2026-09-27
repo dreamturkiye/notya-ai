@@ -11,13 +11,16 @@
  *   - B düşerse sütunlar boş kalır; log yalnız hata sınıfı (model çıktısı / transkript asla).
  * Not gövdesine hiçbir şey yazılmaz — öneri yalnız doktora görünen alanlardadır.
  */
-import { waitUntil } from '@vercel/functions'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { SoapOnerisi } from '@/lib/doktor/soapUret'
 
 /** Yanıt döndükten sonra sözü canlı tutar (Vercel aksi hâlde fonksiyonu dondurur). Yerelde söz zaten sürer. */
 export function arkaPlandaSurdur(p: Promise<unknown>): void {
-  try { waitUntil(p) } catch { void p }
+  try {
+    const mod = require('@vercel/functions') as { waitUntil?: (x: Promise<unknown>) => void }
+    if (mod.waitUntil) mod.waitUntil(p)
+    else void p
+  } catch { void p }
 }
 
 function hataSinifi(e: unknown): string {

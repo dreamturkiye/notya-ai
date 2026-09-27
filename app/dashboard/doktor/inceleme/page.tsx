@@ -28,6 +28,7 @@ import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
+import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip';
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
@@ -68,6 +69,7 @@ interface PendingNote {
   aiDegerlendirme: string;
   /** BRANS-ALAN-SIZMASI: sunucu hesaplar — ölçüm alanları + hasta/veli hitabı (yoksa baseline, "hasta") */
   bransKapsami: BransKapsami;
+  uygulananKurallar?: { slug: string; deger: string }[];
 }
 
 function normalizeNotes(payload: unknown): PendingNote[] {
@@ -99,6 +101,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       alarmBulgulari: Array.isArray(n.alarmBulgulari) ? (n.alarmBulgulari as string[]).map(String) : [],
       aiDegerlendirme: String(n.aiDegerlendirme ?? ''),
       bransKapsami: istemciKapsami(n.bransKapsami as BransKapsami | undefined),
+      uygulananKurallar: Array.isArray(n.uygulananKurallar) ? (n.uygulananKurallar as { slug: string; deger: string }[]) : [],
     };
   });
 }
@@ -526,6 +529,7 @@ export default function IncelemePage() {
                     {[note.maskedPatient, bransEtiketi(note.specialty), note.date].filter(Boolean).join(' • ')}
                     {acikId === note.id && kBekliyor ? <span style={{ color: '#B4832F', fontWeight: 500 }}> · Ayşe notu yeniden okuyor…</span> : null}
                     {acikId === note.id && oneriBekleyenId === note.id ? <span role="status" style={{ color: '#B4832F', fontWeight: 500 }}> · Ayşe'nin önerisi hazırlanıyor…</span> : null}
+                    {note.uygulananKurallar && note.uygulananKurallar.length > 0 ? <SizinTarzinizChip kurallar={note.uygulananKurallar} /> : null}
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                     <button onClick={() => approve(note.id)} disabled={busy} style={btnStyle('#3F7D4A', busy)}>

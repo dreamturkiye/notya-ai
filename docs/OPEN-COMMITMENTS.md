@@ -1,5 +1,15 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-MESLEKTAS-V2 — 10. seansta görülen meslektaş (Kaan, 2026-09-27)
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-MESLEKTAS-V2-01 | **DONE 2026-09-27 — kod** (Faz 1) | Düzeltme farkı + kural eşiği + waitUntil onay kancası + SOAP `DOKTORUN KURALLARI` + chip + `/ayarlar/ayse-hafizasi` + GÜN-01 öğrenme/10. seans satırı. Doz değeri kural olmaz. | Dr. Gökhan: 10 seans canlı kontrol |
+| NOTYA-MESLEKTAS-V2-02 | OPEN 2026-09-27 | Faz 2: kullanım telemetrisi (PII yok), gece rutin, `SonrakiAdim` (≥0.6 / ≥8), Bugün kart sırası. | Kaan (eşik onayı: 0.6 / 8) |
+| NOTYA-MESLEKTAS-V2-03 | OPEN 2026-09-27 | Faz 3: `hasta_dosya_onbellek`, prefetch, `v_hiz_gunluk`, `scripts/meslektas/seans10.mts`, `docs/denetim/` hız raporu. | Kaan (QA hesabı ölçümü) |
+
+
+
 **Why this file exists.** Work agreed in a session and deferred to "next time" was getting lost and
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.

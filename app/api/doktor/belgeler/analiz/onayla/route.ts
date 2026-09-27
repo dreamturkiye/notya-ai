@@ -125,6 +125,10 @@ export async function POST(req: NextRequest) {
       supabase.from('belge_revizyonlar').insert({ analiz_id: a.id, doctor_id: user.id, alan: 'onay', onceki: null, sonraki: { noteId } }),
       supabase.from('belge_analizleri').update({ durum: 'onaylandi', note_id: noteId, onaylandi_at: new Date().toISOString(), guncellendi: new Date().toISOString() }).eq('id', a.id),
     ])
+    try {
+      const { onaySonrasiOgren } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
+      onaySonrasiOgren(supabase, user.id, noteId, [{ alan: 'objektif', onceki: onceki.slice(0, 2000), sonraki: sonraki.slice(0, 2000) }])
+    } catch { /* öğrenme kritik değil */ }
     return NextResponse.json({ ok: true, noteId })
   }
 
@@ -141,6 +145,10 @@ export async function POST(req: NextRequest) {
       supabase.from('not_duzenlemeleri').insert({ note_id: noteId, doctor_id: user.id, alan: 'plan', onceki: (not.content_plan || '').slice(0, 2000), sonraki: yeniPlan.slice(0, 2000) }),
       supabase.from('muayene_revizyonlar').insert({ note_id: noteId, doctor_id: user.id, kaynak: 'belge_analizi', kaynak_id: a.id, alan: 'plan', onceki: not.content_plan || '', sonraki: yeniPlan }),
     ])
+    try {
+      const { onaySonrasiOgren } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
+      onaySonrasiOgren(supabase, user.id, noteId, [{ alan: 'plan', onceki: (not.content_plan || '').slice(0, 2000), sonraki: yeniPlan.slice(0, 2000) }])
+    } catch { /* öğrenme kritik değil */ }
   }
   await Promise.all([
     supabase.from('belge_revizyonlar').insert({ analiz_id: a.id, doctor_id: user.id, alan: 'muayene_onay', onceki: null, sonraki: { noteId } }),
