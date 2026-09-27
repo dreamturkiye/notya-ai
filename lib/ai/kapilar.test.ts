@@ -1,6 +1,6 @@
 /**
  * NOTYA-MODEL-LUNAPRO-01 — birincil (GPT-6 Luna-Pro) → koruyucu (Sonnet 5) kapıları, uçtan uca (sahte fetch, ağ yok).
- *  G1 transport, G2 (a)–(f) low_conf, G3 safety, G4 devre; sesli akışta ilk sözden önce / sonra.
+ *  G1 transport, G2 (a)–(f) low_conf, G3 safety (LUNAPRO-02: kaldırıldı, yalnız işaret), G4 devre; sesli akışta ilk sözden önce / sonra.
  * Her yanıtın hangi kademeden ve hangi nedenle geldiği yanitKademesi() ile okunur (ölçüm satırıyla aynı değer).
  * Sentetik veri — hasta verisi yok.
  */
@@ -204,11 +204,11 @@ describe('G2 (f) SOAP gövdesi ai_confidence', () => {
 })
 
 describe('G3 safety ve görsel', () => {
-  it('güvenlik sinyali → koruyucu çağrıdan ÖNCE, neden safety; birincil hiç çağrılmaz', async () => {
+  it('LUNAPRO-02: güvenlik sinyali yönlendirmeyi DEĞİŞTİRMEZ — birincil çağrılır, neden null (Sonnet yalnız başarısızlıkta)', async () => {
     sira = [tamam('k')]
-    const y = await aiCagir({ gorev: 'klinik-analiz', messages: [{ role: 'user', content: 'hasta gebe, ne verelim' }] })
-    assert.deepEqual(modeller(), [MODEL_GUCLU])
-    assert.deepEqual(yanitKademesi(y), { kademe: 'guclu', neden: 'safety' })
+    const y = await aiCagir({ gorev: 'klinik-analiz', messages: [{ role: 'user', content: 'hasta gebe, warfarin alıyor, 10 mg/kg ibuprofen ne verelim' }] })
+    assert.deepEqual(modeller(), [MODEL_HIZLI])
+    assert.deepEqual(yanitKademesi(y), { kademe: 'hizli', neden: null })
   })
   it('görsel/PDF → BİRİNCİL (GÖRSEL = GÜÇLÜ emekli)', async () => {
     sira = [tamam('{"satirlar":[]}')]

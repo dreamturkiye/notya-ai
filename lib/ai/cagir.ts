@@ -129,16 +129,17 @@ function kullaniciMetni(mesajlar: AiMesaj[]): string {
 }
 
 /**
- * Çağrıdan önceki seçim — görevin birincil modeli (LUNAPRO-01: her görevde Luna-Pro), tek istisna G3 GÜVENLİK: kullanıcı
- * mesajında ya da hasta dosyası bağlamında güvenlik sinyali → koruyucu (safety). Görsel/PDF yükseltmez.
+ * Çağrıdan önceki seçim — görevin birincil modeli (LUNAPRO-01: her görevde Luna-Pro). Görsel/PDF yükseltmez.
+ * NOTYA-MODEL-LUNAPRO-02 (Kaan, 2026-09-27: "All must be on Pro; Sonnet only if it must"): çağrı ÖNCESİ güvenlik
+ * kapısı (G3) KALDIRILDI — pediatride mg/kg / ibuprofen / çocuk doz sinyalleri her klinik çağrıyı Sonnet'e yolluyordu.
+ * Koruyucu (Sonnet 5) artık yalnız birincil GERÇEKTEN başarısız olunca devreye girer: G1 taşıma, G2 kalite, G4 devre.
+ * Güvenlik sinyali yalnız ölçüm/günlük amaçlı işaretlenir (guvenlikSinyali: true), yönlendirmeyi değiştirmez.
  * `neden` ölçüm satırına gider (birincil modelde kalırsa null).
  */
-export function etkinSecim(g: Pick<AiCagriGirdisi, 'gorev' | 'messages' | 'guvenlikBaglami'>): ModelSecimi & { yukseltildi: boolean; neden: YukseltmeNedeni | null } {
+export function etkinSecim(g: Pick<AiCagriGirdisi, 'gorev' | 'messages' | 'guvenlikBaglami'>): ModelSecimi & { yukseltildi: boolean; neden: YukseltmeNedeni | null; guvenlikSinyali: boolean } {
   const secim = modelSec(g.gorev)
-  if (guvenlikSinyaliVar(`${kullaniciMetni(g.messages)}\n${g.guvenlikBaglami || ''}`)) {
-    return { ...secim, kademe: 'guclu', model: gucluModel(), yukseltildi: true, neden: 'safety' }
-  }
-  return { ...secim, yukseltildi: false, neden: null }
+  const guvenlikSinyali = guvenlikSinyaliVar(`${kullaniciMetni(g.messages)}\n${g.guvenlikBaglami || ''}`)
+  return { ...secim, yukseltildi: false, neden: null, guvenlikSinyali }
 }
 
 /** API en fazla 4 cache_control kırılma noktası kabul eder. */
