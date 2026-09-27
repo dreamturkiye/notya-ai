@@ -286,15 +286,17 @@ export default function DoktorDashboard() {
 
       <PaketSayacSeridi />
 
-      {/* Hızlı araçlar — compact links, moved up here (was inside Bu Hafta Özeti); fısıltı now
-          sits under Bu Hafta Özeti instead (Kaan, 2026-09-24) */}
-      <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
-        <span style={S({ fontSize: 12, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı araçlar</span>
-        <span onClick={() => router.push('/doktor-tools/epikriz')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Epikriz üret ›</span>
-        <span onClick={() => router.push('/doktor-tools/icd10')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>ICD-10 kodla ›</span>
-        {pediatriAraci && (
-          <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Hedef boy ›</span>
-        )}
+      {/* Hızlı araçlar — heading above the box; Asistan first (mobile: no floating aç/kapat) */}
+      <div>
+        <h2 style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı araçlar</h2>
+        <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
+          <span onClick={() => router.push('/asistan')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Asistan ›</span>
+          <span onClick={() => router.push('/doktor-tools/epikriz')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Epikriz üret ›</span>
+          <span onClick={() => router.push('/doktor-tools/icd10')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>ICD-10 kodla ›</span>
+          {pediatriAraci && (
+            <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Hedef boy ›</span>
+          )}
+        </div>
       </div>
 
       {/* NOTYA-ILETISIM-01: prepared patient messages — hidden when there are none */}

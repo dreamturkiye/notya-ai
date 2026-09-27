@@ -61,6 +61,22 @@ test('mikrofonEtiketi Türkçe durumları verir', () => {
   assert.equal(mikrofonEtiketi('idle', false), 'Yazılı sohbet')
 })
 
+test('telefon: sesle uyandır çipi ve otomatik mikrofon yok; ana sayfada Asistan Hızlı araçlar’da ilk', () => {
+  const kok = path.join(import.meta.dirname, '..', '..')
+  const oku = (d: string) => fs.readFileSync(path.join(kok, d), 'utf8')
+  const uyandir = oku('components/asistan/SesleUyandir.tsx')
+  assert.match(uyandir, /max-width:\s*899px/)
+  assert.match(uyandir, /telefonEkraniMi/)
+  assert.match(uyandir, /if \(!doktor \|\| telefon\) return null/)
+  assert.match(uyandir, /if \(!doktor \|\| telefon\) return/)
+  const ana = oku('app/dashboard/doktor/page.tsx')
+  const hizli = ana.indexOf('>Hızlı araçlar</h2>')
+  const asistan = ana.indexOf("router.push('/asistan')")
+  const epikriz = ana.indexOf("router.push('/doktor-tools/epikriz')")
+  assert.ok(hizli > 0, 'Hızlı araçlar heading kutunun üstünde olmalı')
+  assert.ok(asistan > hizli && asistan < epikriz, 'Asistan, Epikriz üret’ten önce')
+})
+
 test('yaşam döngüsü: provider kök düzende, /asistan kendi oturumunu açmaz, gezinme istemci tarafında', () => {
   const kok = path.join(import.meta.dirname, '..', '..')
   const oku = (d: string) => fs.readFileSync(path.join(kok, d), 'utf8')

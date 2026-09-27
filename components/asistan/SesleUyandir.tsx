@@ -44,6 +44,11 @@ function tercihAcik(): boolean {
   try { return localStorage.getItem(ANAHTAR) === 'acik' } catch { return false }
 }
 
+/** DoktorChrome telefon kırılımı — aç/kapat ve otomatik mikrofon burada çalışmıyor. */
+function telefonEkraniMi(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 899px)').matches
+}
+
 /**
  * Doktor sayfalarında ince kulak. Pencere öndeyken "Asistanı aç" der ve bugünkü
  * sesli görüşmeyi başlatır (oturum sayfalar arasında yaşar). Görüşme sürerken
@@ -56,6 +61,7 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
   startRef.current = startConversation
   const [kulak, setKulak] = useState<Kulak>('davet')
   const [motorYok, setMotorYok] = useState(false)
+  const [telefon, setTelefon] = useState(true)
   const tanimaRef = useRef<Tanima | null>(null)
   const istenenRef = useRef<'dinle' | 'sus'>('sus')
   const calisiyorRef = useRef(false)
@@ -69,7 +75,7 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
   }
 
   function kulagiAc() {
-    if (!doktor || motorYok || aktifRef.current || !pencereOnde()) {
+    if (!doktor || telefon || motorYok || aktifRef.current || !pencereOnde()) {
       if (!aktifRef.current) setKulak('davet')
       return
     }
@@ -96,6 +102,21 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
   }
 
   useEffect(() => {
+    const mq = window.matchMedia('(max-width: 899px)')
+    const ayarla = () => {
+      const t = telefonEkraniMi()
+      setTelefon(t)
+      if (t) {
+        birak()
+        setKulak('davet')
+      }
+    }
+    ayarla()
+    mq.addEventListener('change', ayarla)
+    return () => mq.removeEventListener('change', ayarla)
+  }, [])
+
+  useEffect(() => {
     try {
       if (localStorage.getItem(ANAHTAR) === 'kapali') setKulak('kapali')
     } catch { /* davet kalır */ }
@@ -106,7 +127,7 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
   }, [isActive])
 
   useEffect(() => {
-    if (!doktor) return
+    if (!doktor || telefon) return
     const t = tanimaKur()
     if (!t) {
       setMotorYok(true)
@@ -180,10 +201,10 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
       document.removeEventListener('visibilitychange', gorunur)
       tanimaRef.current = null
     }
-  }, [doktor])
+  }, [doktor, telefon])
 
   useEffect(() => {
-    if (isActive || !tercihAcik() || !pencereOnde() || calisiyorRef.current) return
+    if (telefon || isActive || !tercihAcik() || !pencereOnde() || calisiyorRef.current) return
     const t = tanimaRef.current
     if (!t) return
     istenenRef.current = 'dinle'
@@ -192,9 +213,9 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
       calisiyorRef.current = true
       setKulak('dinliyor')
     } catch { /* davet kalır */ }
-  }, [isActive])
+  }, [isActive, telefon])
 
-  if (!doktor) return null
+  if (!doktor || telefon) return null
 
   function kapat() {
     birak()
@@ -226,12 +247,7 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
           max-width: calc(100vw - 288px);
         }
         @media (max-width: 899px) {
-          .notya-uyandir {
-            left: 12px;
-            bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-            max-width: calc(100vw - 24px);
-          }
-          .notya-uyandir.gizli { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+          .notya-uyandir { display: none !important; }
         }
         @media print { .notya-uyandir { display: none !important; } }
       `}</style>
