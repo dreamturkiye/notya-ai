@@ -321,7 +321,11 @@ export function turkceBolumleriTuret(soap: SoapNotu['soap'] | null): Pick<SoapNo
 const ONERI_ALANLARI = ['aiDegerlendirme', 'receteOnerisi', 'kritik_bulgular', 'alarmBulgulari', 'hasta_ozeti'] as const
 
 const GOVDE_CAGRISI = `ÇAĞRI: YALNIZ (A) NOT GÖVDESİ JSON'unu döndür. Öneri alanları (aiDegerlendirme, receteOnerisi, kritik_bulgular, alarmBulgulari, hasta_ozeti) bu çağrıda ÜRETİLMEZ — ayrı bir çağrıda üretilir; bu yüzden kendi yorumunu/önerini gövdeye KOYMA.`
-const ONERI_CAGRISI = `ÇAĞRI: YALNIZ (B) AI ÖNERİSİ JSON'unu döndür. Not gövdesini (basvuruYakinmasi, soap, vitaller, ilaclar, asilar, icd10_codes) bu çağrıda YAZMA — ayrı bir çağrıda yazılır. hasta_ozeti ve alarmBulgulari yalnız doktorun söylediği tanı/tedaviyi anlatır.`
+// NOTYA-NOT-HIZ-01 canlı ölçüm (2026-09-27 02:00 UTC, QA): gövde (A) 2.630 token / ~31 sn; öneri (B) 4.000 token TAVANA
+// çarptı ve not B için 20 sn bekledi → 55 sn. Öneri metni gövdenin iki katıydı. Uzunluk sınırı konulmuştur: öneri
+// doktorun 15 saniyede okuyacağı kadardır; ayrıntı isterse Ayşe'ye sorar.
+const ONERI_CAGRISI = `ÇAĞRI: YALNIZ (B) AI ÖNERİSİ JSON'unu döndür. Not gövdesini (basvuruYakinmasi, soap, vitaller, ilaclar, asilar, icd10_codes) bu çağrıda YAZMA — ayrı bir çağrıda yazılır. hasta_ozeti ve alarmBulgulari yalnız doktorun söylediği tanı/tedaviyi anlatır.
+UZUNLUK SINIRI (kesin): aiDegerlendirme en fazla 6 kısa madde, toplam 120 kelime — gerekçe yazma, sonucu yaz. receteOnerisi en fazla 4 kalem, her kalemde not alanı en fazla 1 cümle. kritik_bulgular en fazla 3 madde (yoksa boş dizi). alarmBulgulari 3-5 kısa madde. hasta_ozeti 3-5 cümle. Toplam çıktı 1.200 tokeni geçmesin; ayrıntı isteyen doktor Ayşe'ye sorar.`
 
 /** Öneri çağrısı gövde çağrısından sonra en çok bu kadar beklenir; sonra not öneri alanları boş kaydedilir (testler kısaltır). */
 export const ONERI_EK_BEKLEME = { ms: 20_000 }
@@ -361,7 +365,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   const oneriSozu: Promise<SoapNotu | null> = aiCagir({
     istemci: anthropic,
     gorev: 'klinik-analiz',
-    maxTokens: 4000,
+    maxTokens: 2000,
     doctorId: girdi.doctorId ?? null,
     system,
     messages: [{ role: 'user', content: `${transkript}\n\n${ONERI_CAGRISI}` }],
