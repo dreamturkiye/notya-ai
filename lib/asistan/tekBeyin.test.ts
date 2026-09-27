@@ -382,7 +382,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(v.status, 200)
     assert.equal(modelIstekleri.at(-1)?.stream, true, 'ses yolu modeli akışla çağırır')
     assert.ok(!v.parcalar[0].startsWith('Bakıyorum'), 'bekletme sözü yok — ilk parça doğrudan cevap')
-    assert.ok(v.parcalar.length >= 3, 'cevap tek parça değil, cümle cümle akar')
+    assert.ok(v.parcalar.length >= 1 && v.parcalar.length <= 3, 'nefes bloğu: cümle cümle damlamaz, tek seferde de boşalmaz')
     assert.ok(!v.metin.includes('0532'), v.metin)
     assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
 

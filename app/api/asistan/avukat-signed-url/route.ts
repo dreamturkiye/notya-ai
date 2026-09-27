@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { voiceIdForAvukatPersona } from '@/lib/asistan/elevenVoices'
+import { sesMotorunuSabitle } from '@/lib/asistan/sesMotoru'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,6 +36,8 @@ export async function GET(req: NextRequest) {
 
     const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
     if (!elKey) return NextResponse.json({ error: 'ElevenLabs key missing' }, { status: 500 })
+
+    await sesMotorunuSabitle(agentId, elKey)
 
     const resp = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,

@@ -28,6 +28,7 @@ import { address } from '@/lib/address'
 import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz'
 import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
+import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 
@@ -530,6 +531,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const conversation = await Conversation.startSession({
         signedUrl: activeSignedUrl,
         connectionType: "websocket",
+        ...SES_CALAR,
         overrides: {
           agent: {
             prompt: { prompt: voicePrompt },
