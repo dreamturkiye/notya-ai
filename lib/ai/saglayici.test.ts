@@ -107,13 +107,12 @@ describe('OpenRouter açık — taşıma kapısı (Luna → 400 ms → Luna → 
     assert.equal(istekler.length, 1)
   })
 
-  it('güvenlikle Sonnet 5 seçilen çağrı tek çağrı; 500 çağırana gider (Luna kapısı yalnız Luna içindir)', async () => {
+  it('LUNAPRO-02: koruyucuya zorlanan çağrı (koruyucuyaZorla) tek çağrı; 500 çağırana gider', async () => {
     sira = [{ durum: 500 }]
-    await assert.rejects(aiCagir({ gorev: 'klinik-analiz', messages: [{ role: 'user', content: 'warfarin dozu' }] }), (e: { durum?: number }) => e.durum === 500)
+    await assert.rejects(aiCagir({ gorev: 'klinik-analiz', koruyucuyaZorla: true, messages: [{ role: 'user', content: 'warfarin dozu' }] }), (e: { durum?: number }) => e.durum === 500)
     assert.equal(istekler.length, 1)
     assert.equal(istekler[0].govde.model, MODEL_GUCLU)
   })
-
   it('klinik görev (soap) Luna 500 iki kez → Sonnet 5 (taşıma kapısı artık klinik görevlerde de)', async () => {
     sira = [{ durum: 500 }, { ag: true }, tamam('{"soap":{}}')]
     await aiCagir({ gorev: 'soap', maxTokens: 8000, messages: [{ role: 'user', content: 'Muayene transkripti: öksürük' }] })
@@ -142,21 +141,19 @@ describe('OpenRouter açık — kalite kapısı çağrıdan önce', () => {
     assert.deepEqual(istekler[1].govde.messages[0].content[0], { type: 'file', file: { filename: 'belge.pdf', file_data: 'data:application/pdf;base64,BBBB' } })
   })
 
-  it('güvenlik sinyali (gebe, warfarin, isotretinoin) → Sonnet 5 ilk istekte, Luna hiç görmez (neden = safety)', async () => {
+  it('LUNAPRO-02: güvenlik sinyali yönlendirmez → Luna-Pro ilk istekte, Sonnet çağrılmaz', async () => {
     for (const [gorev, m] of [['kisa-yanit', 'gebe hastada ne yazayım'], ['soap', 'warfarin ile etkileşim'], ['goruntu-inceleme', 'isotretinoin']] as const) {
-      sira = [tamam('ok')]
+      sira = [tamam(gorev === 'soap' ? '{"soap":{}}' : gorev === 'goruntu-inceleme' ? '{"satirlar":[]}' : 'ok')]
       await aiCagir({ gorev, messages: [{ role: 'user', content: m }] })
     }
-    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_GUCLU, MODEL_GUCLU, MODEL_GUCLU])
+    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_HIZLI, MODEL_HIZLI, MODEL_HIZLI])
   })
-
-  it('güvenlik sinyali hasta dosyası bağlamında (guvenlikBaglami) → Sonnet 5; bağlam modele ayrıca gitmez', async () => {
+  it('LUNAPRO-02: dosya bağlamındaki sinyal (guvenlikBaglami) de yönlendirmez; bağlam modele ayrıca gitmez', async () => {
     sira = [tamam('ok')]
     await aiCagir({ gorev: 'sohbet-uzman', system: [{ metin: 'DOSYA: emziriyor' }], guvenlikBaglami: 'emziriyor', messages: [{ role: 'user', content: 'ateş düşürücü' }] })
-    assert.equal(istekler[0].govde.model, MODEL_GUCLU)
+    assert.equal(istekler[0].govde.model, MODEL_HIZLI)
     assert.ok(!('guvenlikBaglami' in istekler[0].govde))
   })
-
   it('LUNAPRO-01: klinik görevler (soap, klinik-analiz, sohbet-uzman…) sinyalsiz metinde birincil — Sonnet çağrılmaz', async () => {
     const gorevler = ['soap', 'klinik-analiz', 'sohbet-uzman', 'goruntu-inceleme', 'not-uretimi', 'uzman-analiz'] as const
     for (const gorev of gorevler) {

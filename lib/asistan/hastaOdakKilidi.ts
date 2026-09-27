@@ -19,6 +19,8 @@ const ASI_ADI =
 const LISTE_SORUSU = /\b(a[sş][ıi]|ila[cç]|lab|tetkik|vizit|muayene not|kronik|alerji)\b/i
 
 export type AktifHastaOdak = {
+  /** NOTYA-AYSE-STANDART-01: cevap kanıt yolundan (İlk 10) geldi — aşı listesi kuralı uygulanmaz. */
+  kanitYolu?: boolean
   ad: string
   dosyaMetni: string
   yasMetin?: string | null
@@ -40,6 +42,19 @@ function dosyadaAsiVarMi(dosya: string): boolean {
   return ASI_ADI.test(t)
 }
 
+/** Aşı adı + 80 karakter içinde uygulandı/yapıldı/vuruldu/tamamlandı iddiası — "kayıt yok / eksik / bekleniyor / planlandı" ile
+ *  nitelenen cümleler sayılmaz. */
+function uygulandiIddiasiAsilar(metin: string): string[] {
+  const bulunan: string[] = []
+  const cumleler = String(metin || '').split(/(?<=[.!?\n])\s+/)
+  for (const c of cumleler) {
+    const k = kucuk(c)
+    if (/kay[ıi]t (yok|bulunam|g[öo]remiyorum)|kay[ıi]tl[ıi] de[gğ]il|eksik|bekle|planlan|[öo]neril|yap[ıi]lmam[ıi][sş]|uygulanmam[ıi][sş]|takvim/i.test(k)) continue
+    if (!/uyguland[ıi]|yap[ıi]ld[ıi]|vuruldu|tamamland[ıi]|yap[ıi]lm[ıi][sş]|uygulanm[ıi][sş]/i.test(k)) continue
+    for (const m of c.matchAll(ASI_ADI)) { const ad = kucuk(m[0]).replace(/\s+/g, ' '); if (!bulunan.includes(ad)) bulunan.push(ad) }
+  }
+  return bulunan
+}
 function konusmadaAsiListesi(metin: string): string[] {
   const bulunan: string[] = []
   for (const m of String(metin || '').matchAll(ASI_ADI)) {
@@ -108,7 +123,10 @@ export function hastaOdakTemizle(speech: string, aktif: AktifHastaOdak | null): 
     return { metin: dosyaAsiOzeti(aktif.dosyaMetni, ad), ihlal }
   }
 
-  const konusmaAsi = konusmadaAsiListesi(metin)
+  // NOTYA-AYSE-STANDART-01 uyumu (Claude, 2026-09-27): canlı denetimde 10 cevabın 10'u bu kuralla silinip kart satırına
+  // dönmüştü. Standart, takvime göre EKSİK aşıları adıyla sayar ("KKK — kayıt yok"); uydurma olan yalnız UYGULANDI iddiasıdır.
+  // Kanıt yolundaysa (kanitYolu) bu kural hiç çalışmaz; değilse yalnız uygulandı/yapıldı iddiası taşıyan cümleler sayılır.
+  const konusmaAsi = aktif.kanitYolu ? [] : uygulandiIddiasiAsilar(metin)
   if (konusmaAsi.length && !dosyadaAsiVarMi(aktif.dosyaMetni)) {
     ihlal.push('uydurma-asi-listesi')
     return { metin: dosyaAsiOzeti(aktif.dosyaMetni, ad), ihlal }
