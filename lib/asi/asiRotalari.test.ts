@@ -28,6 +28,10 @@ import { SahteVeritabani } from '../security/testing/sahteSupabase'
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-asi-anahtari'
 process.env.PORTAL_TOKEN_SECRET = 'qa-sentetik-portal-sirri'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
+// NOTYA-MODEL-LUNAPRO-01: OpenRouter yok (doğrudan Anthropic yolu) — birincil model bu yolda gidebilsin diye test
+// birincili bir Anthropic slug'ına çevrilir (geri dönüş anahtarının şekli). Böylece "görev birincile gider" ölçülür.
+delete process.env.OPENROUTER_API_KEY
+process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-haiku-4.5'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
@@ -183,18 +187,18 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
     karne = await import('../../app/api/doktor/asilar/karne/route')
   })
 
-  it("'oku': GÜÇLÜ kademe, görüntü modele gider; asilar'a HİÇBİR şey yazılmaz; okunamayan satır uydurulmaz", async () => {
+  it("'oku': birincil model (LUNAPRO-01), görüntü modele gider; asilar'a HİÇBİR şey yazılmaz; okunamayan satır uydurulmaz", async () => {
     const { A } = sahneKur()
     modelYaniti = OKUMA
     const y = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'oku', belgeId: A.karne } })))
     assert.equal(y.status, 200, y.metin)
     assert.equal(asilar().length, 0, 'okuma adımı kayıt açmamalı')
     assert.equal(y.json.taslak, true)
-    // model kademesi: goruntu-inceleme → GÜÇLÜ; HIZLI değil
+    // model: goruntu-inceleme → birincil (LUNAPRO-01; GÖRSEL = GÜÇLÜ emekli); koruyucu yalnız G1–G4
     assert.equal(modelIstekleri.length, 1)
-    // OPENROUTER_API_KEY yok → doğrudan Anthropic yolu (NOTYA-MODEL-LUNA-01): önek atılmış GÜÇLÜ kimliği
-    assert.equal(modelIstekleri[0].model, dogrudanModelAdi(gucluModel()))
-    assert.notEqual(modelIstekleri[0].model, dogrudanModelAdi(hizliModel()))
+    // OPENROUTER_API_KEY yok → doğrudan Anthropic yolu: önek atılmış birincil kimliği
+    assert.equal(modelIstekleri[0].model, dogrudanModelAdi(hizliModel()))
+    assert.notEqual(modelIstekleri[0].model, dogrudanModelAdi(gucluModel()))
     const icerik = JSON.stringify(modelIstekleri[0].messages)
     assert.ok(icerik.includes('"type":"image"'), 'karne görüntüsü modele gitmeli')
     assert.ok(!icerik.includes('QA Çocuk'), 'hasta adı modele gitmez')

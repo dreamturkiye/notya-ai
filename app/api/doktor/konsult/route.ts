@@ -111,11 +111,12 @@ export async function POST(req: NextRequest) {
   const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
 
   try {
-    // NOTYA-MALIYET-01: hasta dosyası üzerinde klinik konsültasyon — GÜÇLÜ (klinik-analiz)
+    // NOTYA-MALIYET-01: hasta dosyası üzerinde klinik konsültasyon (klinik-analiz). LUNAPRO-01: birincil Luna-Pro; dosya system'de
+    // olduğu için güvenlik taramasına guvenlikBaglami ile verilir (gebe / warfarin … → Sonnet 5).
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar, toolChoice })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] anthropic', e.govde.slice(0, 300))

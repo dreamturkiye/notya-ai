@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     const sistem = buildAvukatSystemPromptParcalari(persona, prefs, muvekkel || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null), officePattern || null);
 
-    // NOTYA-MALIYET-01: hukuk tavsiyesi — GÜÇLÜ kalır (sohbet-uzman); model adı artık politikadan
+    // NOTYA-MALIYET-01: hukuk tavsiyesi (sohbet-uzman; LUNAPRO-01: birincil Luna-Pro); model adı artık politikadan
     const aiResponse = await aiCagir({
       istemci: anthropic,
       gorev: "sohbet-uzman",

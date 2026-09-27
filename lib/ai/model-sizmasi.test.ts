@@ -1,10 +1,10 @@
 /**
- * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNA-01 — model adı sızıntısı ve tek kapı.
+ * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNA-01 / LUNAPRO-01 — model adı sızıntısı ve tek kapı.
  *  1. Model adı (claude-sonnet-…, claude-haiku-…, claude-opus-…, gpt-<sürüm>…, openai/…, anthropic/…) kod içinde YALNIZ
  *     lib/ai/modeller.ts'te (ve önekleri bilmesi gereken lib/ai/saglayici.ts'te) geçer. Başka yerde elle yazılan bir
  *     model adı politikayı (GÜÇLÜ/HIZLI, ortam değişkeni, iki kapı) sessizce by-pass eder.
  *  2. LLM'e giden her istek lib/ai/cagir.ts'ten geçer (messages.create / api.anthropic.com yalnız orada; openrouter.ai
- *     yalnız saglayici.ts'te) — GÖRSEL = GÜÇLÜ, iki kapı ve ai_token_kullanim ölçümü yalnız bu kapıda uygulanır.
+ *     yalnız saglayici.ts'te) — dört kapı (G1–G4) ve ai_token_kullanim ölçümü yalnız bu kapıda uygulanır.
  * Kapsam: app/, lib/, core/, components/, specialties/, types/ altındaki kod dosyaları (test dosyaları hariç).
  * Skill: .cursor/skills/ai-model-politikasi/SKILL.md
  */
@@ -67,15 +67,21 @@ describe('model adı sızıntısı (NOTYA-MALIYET-01)', () => {
   it('modeller.ts kendisi desene uyan varsayılanları taşır (desen gerçekten çalışıyor)', () => {
     const kaynak = readFileSync(join(KOK, 'lib/ai/modeller.ts'), 'utf8')
     assert.match(kaynak, /claude-sonnet-[0-9]/)
-    assert.match(kaynak, /MODEL_HIZLI = 'openai\/gpt-6-luna'/)
+    assert.match(kaynak, /MODEL_HIZLI = 'openai\/gpt-6-luna-pro'/)
     assert.match(kaynak, /MODEL_GUCLU = 'anthropic\/claude-sonnet-5'/)
   })
 
-  it('yasak varsayılanlar seçilmedi (gpt-5.6-luna, claude-sonnet-4.5, claude-sonnet-4-6)', () => {
+  it("LUNAPRO-01: 'luna-pro' slug parçası yalnız lib/ai/modeller.ts ve lib/ai/saglayici.ts içinde", () => {
+    // Küçük harf slug parçası; düzyazıdaki "Luna-Pro" model adı değildir.
+    const bulgular = eslesenler(/luna-pro/, ['lib/ai/modeller.ts', 'lib/ai/saglayici.ts'])
+    assert.deepEqual(bulgular, [], `Model adı politikayı by-pass ediyor — modelSec(gorev) kullan:\n${bulgular.join('\n')}`)
+  })
+
+  it('yasak varsayılanlar seçilmedi (gpt-5.6-luna*, claude-sonnet-4.x)', () => {
     const kaynak = readFileSync(join(KOK, 'lib/ai/modeller.ts'), 'utf8')
     const varsayilanlar = kaynak.match(/export const MODEL_(GUCLU|HIZLI) = '[^']+'/g) || []
     assert.equal(varsayilanlar.length, 2)
-    for (const v of varsayilanlar) assert.doesNotMatch(v, /gpt-5\.6-luna|claude-sonnet-4[.-][56]/)
+    for (const v of varsayilanlar) assert.doesNotMatch(v, /gpt-5\.6-luna|claude-sonnet-4([.-]\d+)?'/)
   })
 
   it("Claude'a doğrudan istek yalnız lib/ai/cagir.ts'te (messages.create / api.anthropic.com)", () => {

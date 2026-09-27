@@ -121,7 +121,7 @@ export async function claudeIleYaz(
   if (gorsel?.tip === 'image') icerik.push({ type: 'image', source: { type: 'base64', media_type: gorsel.mime, data: gorsel.base64 } })
   if (gorsel?.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: gorsel.base64 } } as unknown as (typeof icerik)[number])
   icerik.push({ type: 'text', text: kullaniciPromptu(girdi, fusion, motorlar, sesMetrikleri) })
-  // NOTYA-MALIYET-01: görüntü/belge yorumu — istisnasız GÜÇLÜ (goruntu-inceleme); model adı politikadan
+  // NOTYA-MALIYET-01: görüntü/belge yorumu (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro); model adı politikadan
   const yanit = await aiCagir({ istemci: anthropic, gorev: 'goruntu-inceleme', maxTokens: 3000, temperature: 0.2, doctorId, system: sistemPromptu(persona), messages: [{ role: 'user', content: icerik }] })
   const ham = yanit.content.filter((c) => c.type === 'text').map((c) => (c as { text: string }).text).join('\n')
   const temiz = ham.replace(/```json|```/g, '').trim()

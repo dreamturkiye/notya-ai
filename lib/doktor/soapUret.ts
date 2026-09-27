@@ -15,7 +15,8 @@
  *    Kimlik başlığı ekranda sunucu tarafında hasta kaydından birleştirilir.
  */
 import Anthropic from '@anthropic-ai/sdk'
-import { aiCagir, type SistemBlogu } from '@/lib/ai/cagir'
+import { aiCagir, yanitKademesi, type SistemBlogu } from '@/lib/ai/cagir'
+import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import fs from 'fs'
 import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
@@ -231,38 +232,11 @@ export class SoapCiktiHatasi extends Error {
 }
 
 function jsonKurtar(metin: string): SoapNotu {
-  const dene = (s: string): SoapNotu | null => { try { return JSON.parse(s) as SoapNotu } catch { return null } }
-  let v = dene(metin)
-  if (v) return v
-  const bas = metin.indexOf('{')
-  if (bas === -1) throw new SoapCiktiHatasi('SOAP çıktısı ayrıştırılamadı (JSON yok)')
-  const govde = metin.slice(bas)
-  v = dene(govde)
-  if (v) return v
-  const adaylar = [govde]
-  for (const kesici of ['},', '],', '",', '}']) {
-    const i = govde.lastIndexOf(kesici)
-    if (i > 0) adaylar.push(govde.slice(0, i + 1))
-  }
-  for (const parca of adaylar) {
-    let str = false, esc = false
-    const yigin: string[] = []
-    for (const ch of parca) {
-      if (esc) { esc = false; continue }
-      if (ch === '\\') { esc = true; continue }
-      if (ch === '"') { str = !str; continue }
-      if (str) continue
-      if (ch === '{') yigin.push('}')
-      else if (ch === '[') yigin.push(']')
-      else if (ch === '}' || ch === ']') yigin.pop()
-    }
-    let aday = parca
-    if (str) aday += '"'
-    aday = aday.replace(/,\s*$/, '') + yigin.reverse().join('')
-    v = dene(aday)
-    if (v) return v
-  }
-  throw new SoapCiktiHatasi('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
+  // F3 onarıcı lib/ai/jsonOnar.ts'te — cagir.ts G2 (d) aynı algoritmayla "kurtarılabilir mi" ölçer (LUNAPRO-01).
+  const r = jsonOnarDetay(metin)
+  if (r.neden === 'json_yok') throw new SoapCiktiHatasi('SOAP çıktısı ayrıştırılamadı (JSON yok)')
+  if (r.neden !== 'ok' || !r.deger || typeof r.deger !== 'object') throw new SoapCiktiHatasi('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
+  return r.deger as SoapNotu
 }
 
 /** Persona key: the session branch when it is a known specialty; otherwise users.specialty (KD-PROMPTS-LOCK: a KD doctor's
@@ -370,6 +344,33 @@ export function oneriyiBirlestir(not: SoapNotu, oneri: SoapOnerisi | null): Soap
   return { ...not, ...oneri, aiDegerlendirme }
 }
 
+/** NOTYA-MODEL-LUNAPRO-01 G2 (f): birincilin gövdesi bu güvenin altındaysa gövde (A) Sonnet 5'te yeniden yazılır. */
+export const SOAP_GUVEN_ESIGI = 0.6
+
+/** ai_confidence sayı ya da sayısal metin; yoksa/bozuksa null (yeniden yazma tetiklenmez). */
+function soapGuveni(v: SoapNotu): number | null {
+  const g = typeof v.ai_confidence === 'string' ? Number(v.ai_confidence) : v.ai_confidence
+  return typeof g === 'number' && Number.isFinite(g) ? g : null
+}
+
+/**
+ * Gövde (A) JSON'u. G2 (f): birincil model gövdeyi ai_confidence < 0.6 ile döndürdüyse — yalnız bu, birincil AÇIKÇA
+ * başaramadığında; uzun cevap tek başına tetiklemez — gövde bir kez Sonnet 5'te yeniden yazılır (not zamanlaması:
+ * yalnız bu durumda bir çağrı süresi eklenir). Gövde zaten koruyucudan geldiyse (G1–G4) yeniden yazılmaz (istek başına
+ * tek düşüş). Koruyucu da düşerse birincilin notu kullanılır — hekim boş not görmez.
+ */
+async function govdeyiAl(cagri: Parameters<typeof aiCagir>[0], yanit: Anthropic.Message): Promise<SoapNotu> {
+  const veri: SoapNotu = { ...yanitJsonu(yanit) }
+  const guven = soapGuveni(veri)
+  if (guven === null || guven >= SOAP_GUVEN_ESIGI || yanitKademesi(yanit)?.kademe === 'guclu') return veri
+  try {
+    return { ...yanitJsonu(await aiCagir({ ...cagri, koruyucuyaZorla: { neden: 'low_conf', altKod: 'soap_guven' } })) }
+  } catch (e) {
+    console.warn(`[soap] düşük güvenli gövde koruyucuda yeniden yazılamadı, birincilin notu kullanılır: ${oneriHataKodu(e)}`)
+    return veri
+  }
+}
+
 export interface SoapSecenek {
   /**
    * NOTYA-NOT-HIZ-03: given → soapNotuUret returns as soon as the body (A) is parsed and locked; the advisory (B) arrives
@@ -389,22 +390,27 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secen
   const system = soapSistemBloklari(girdi)
   const transkript = `Muayene transkripti:\n\n${girdi.transcript}`
 
-  // NOTYA-MALIYET-01: muayene/SOAP notu — GÜÇLÜ
-  const govdeSozu = aiCagir({
+  // NOTYA-MALIYET-01: muayene/SOAP notu. LUNAPRO-01: birincil Luna-Pro; klinik bağlam (alerji, sürekli ilaç) system'de —
+  // transkriptle birlikte güvenlik taramasına girer. 'soap' yapılandırılmış görevdir (G2 d: bozuk/kesik JSON → Sonnet 5).
+  const govdeCagrisi: Parameters<typeof aiCagir>[0] = {
     istemci: anthropic,
     gorev: 'soap',
     maxTokens: 8000,
     doctorId: girdi.doctorId ?? null,
     system,
+    guvenlikBaglami: girdi.klinikBaglam,
     messages: [{ role: 'user', content: `${transkript}\n\n${GOVDE_CAGRISI}` }],
-  })
-  // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — GÜÇLÜ, kendi politika satırıyla.
+  }
+  const govdeSozu = aiCagir(govdeCagrisi)
+  // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — klinik-analiz, JSON (G2 d), kendi politika satırıyla.
   const hamOneriSozu: Promise<SoapNotu | null> = aiCagir({
     istemci: anthropic,
     gorev: 'klinik-analiz',
     maxTokens: 2000,
     doctorId: girdi.doctorId ?? null,
     system,
+    guvenlikBaglami: girdi.klinikBaglam,
+    jsonBekleniyor: true,
     messages: [{ role: 'user', content: `${transkript}\n\n${ONERI_CAGRISI}` }],
   }).then(yanitJsonu).catch((e) => {
     console.warn(`[soap] öneri çağrısı düştü, not öneri alanları boş kalır: ${oneriHataKodu(e)}`)
@@ -416,7 +422,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secen
   })
   if (secenek.oneriAyri) secenek.oneriAyri(oneriSozu)
 
-  const veri: SoapNotu = { ...yanitJsonu(await govdeSozu) }
+  const veri: SoapNotu = await govdeyiAl(govdeCagrisi, await govdeSozu)
   for (const k of ONERI_ALANLARI) delete (veri as Record<string, unknown>)[k]
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
   // dictated during an obstetric USG is not the mother's vital sign).

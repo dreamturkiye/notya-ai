@@ -17,6 +17,10 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
+// NOTYA-MODEL-LUNAPRO-01: OpenRouter yok (doğrudan Anthropic yolu) — birincil model bu yolda gidebilsin diye test
+// birincili bir Anthropic slug'ına çevrilir (geri dönüş anahtarının şekli). Böylece "görev birincile gider" ölçülür.
+delete process.env.OPENROUTER_API_KEY
+process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-haiku-4.5'
 
 let db = new SahteVeritabani()
 const KOK = resolve(__dirname, '../..')
@@ -142,11 +146,12 @@ describe('AYSE-KONSULTASYON-01 — istem taslağı (gerçek rota)', () => {
     assert.equal(db.tablo('sevkler').length, sevkOnce, 'taslak kayıt açmaz')
   })
 
-  it("model: 'klinik-analiz' → GÜÇLÜ; sabit prompt önbellekli; dosya user mesajında; son muayene ağırlıklı; kimlik ve kirli satır YOK", async () => {
+  it("model: 'klinik-analiz' → birincil (LUNAPRO-01); sabit prompt önbellekli; dosya user mesajında; son muayene ağırlıklı; kimlik ve kirli satır YOK", async () => {
     await post(A.token, { islem: 'istem_taslagi', patientId: A.hasta, hedefBrans: 'kulak-burun-bogaz', not: 'işitme kaybı şüphesi' })
     assert.equal(istekler.length, 1)
     const i = istekler[0]
-    assert.equal(i.model, S.dogrudanModelAdi(M.gucluModel()), 'HIZLI modele düştü')
+    assert.equal(i.model, S.dogrudanModelAdi(M.hizliModel()), 'birincil modele gitmedi')
+    assert.notEqual(i.model, S.dogrudanModelAdi(M.gucluModel()))
     assert.equal(i.system.length, 1)
     assert.deepEqual(i.system[0].cache_control, { type: 'ephemeral' })
     assert.equal(i.system[0].text, T.ISTEM_TASLAK_SISTEMI)
@@ -208,13 +213,13 @@ describe('AYSE-KONSULTASYON-01 — yanıt özeti taslağı (gerçek rota)', () =
     A = hekimKur('A'); B = hekimKur('B')
   })
 
-  it("PDF rapor: kasadan (hekim kapsamlı) okunur, 'goruntu-inceleme' → GÜÇLÜ, sabit prompt önbellekli; taslak kaydedilmez, durum değişmez", async () => {
+  it("PDF rapor: kasadan (hekim kapsamlı) okunur, 'goruntu-inceleme' → birincil (LUNAPRO-01), sabit prompt önbellekli; taslak kaydedilmez, durum değişmez", async () => {
     const y = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon })
     assert.equal(y.status, 200, JSON.stringify(y.j))
     assert.deepEqual({ ok: y.j.ok, taslak: y.j.taslak, kaynak: y.j.kaynak }, { ok: true, taslak: 'İşitme kaybı saptanmadı; odyometri ve timpanometri normal.', kaynak: 'ayse' })
     assert.deepEqual(indirilen, [`${A.id}:${A.belge}`])
     const i = istekler[0]
-    assert.equal(i.model, S.dogrudanModelAdi(M.gucluModel()))
+    assert.equal(i.model, S.dogrudanModelAdi(M.hizliModel()))
     assert.deepEqual(i.system[0].cache_control, { type: 'ephemeral' })
     assert.equal(i.system[0].text, T.YANIT_TASLAK_SISTEMI)
     assert.equal(i.messages[0].content[0].type, 'document')
@@ -236,14 +241,14 @@ describe('AYSE-KONSULTASYON-01 — yanıt özeti taslağı (gerçek rota)', () =
     assert.deepEqual(indirilen, [])
   })
 
-  it('fotoğraf rapor: önce kimliksizleştirilmiş türev istenir; türevle görüntü bloğu GÜÇLÜ modele gider', async () => {
+  it('fotoğraf rapor: önce kimliksizleştirilmiş türev istenir; türevle görüntü bloğu birincil modele gider (GÖRSEL = GÜÇLÜ emekli)', async () => {
     const ilk = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon, belgeId: A.foto })
     assert.deepEqual({ ok: ilk.j.ok, neden: ilk.j.neden }, { ok: false, neden: 'deid_gerekli' })
     assert.equal(istekler.length, 0)
     const y = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon, belgeId: A.foto, deid: { mime: 'image/jpeg', base64: Buffer.from('jpeg').toString('base64') } })
     assert.equal(y.j.ok, true)
     assert.equal(istekler[0].messages[0].content[0].type, 'image')
-    assert.equal(istekler[0].model, S.dogrudanModelAdi(M.gucluModel()))
+    assert.equal(istekler[0].model, S.dogrudanModelAdi(M.hizliModel()))
   })
 
   it('HATA YOLU: rapor okunamadı / model hatası → ok:false "elle yazabilirsiniz"; hekim özeti elle yazıp kaydedebilir', async () => {

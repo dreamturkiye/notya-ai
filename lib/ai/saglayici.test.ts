@@ -1,7 +1,9 @@
 /**
- * NOTYA-MODEL-LUNA-01 — OpenRouter taşıma yolu ve iki kapı (Kaan, 2026-09-26, karar A).
- *  - TAŞIMA: Luna 5xx / 429 / ağ / boş gövde → 400 ms → Luna bir kez → Sonnet 5. 4xx istek hatası yükseltilmez.
- *  - KALİTE: görsel/PDF, güvenlik sinyali, klinik görev → çağrıdan önce Sonnet 5; Luna boş/ret/düşük güven → Sonnet 5.
+ * NOTYA-MODEL-LUNA-01 / LUNAPRO-01 — OpenRouter taşıma yolu ve koruyucu kapıları (Kaan, 2026-09-27: birincil her görevde
+ * Luna-Pro; "Luna" aşağıda birincil model demektir). G2 (d)/(e)/(f) ve G4 ayrıntısı lib/ai/kapilar.test.ts, devre.test.ts.
+ *  - TAŞIMA: birincil 5xx / 429 / ağ / boş gövde → 400 ms → birincil bir kez → Sonnet 5. 4xx istek hatası yükseltilmez.
+ *  - KALİTE: birincil boş/ret/düşük güven → Sonnet 5. GÜVENLİK: sinyal → çağrıdan önce Sonnet 5. Görsel/PDF ve klinik
+ *    görev birincile gider.
  *  - Çeviri: system cache_control, görsel/PDF, tool_use ↔ tool_calls, usage, F3 (length → max_tokens), SSE akışı.
  *  - OPENROUTER_API_KEY yoksa eski Anthropic yolu birebir (SDK istemcisi), OpenAI modeli GÜÇLÜ'ye düşer.
  * Ağ erişimi yok: globalThis.fetch sahte.
@@ -11,6 +13,7 @@ import assert from 'node:assert/strict'
 import { aiAkis, aiCagir, dusukGuvenliYanit, TASIMA_BEKLEME, yanitMetni, type AiMesaj } from './cagir'
 import { gucluModel, hizliModel, MODEL_GUCLU, MODEL_HIZLI } from './modeller'
 import { dogrudanModelAdi, kullanimCevir, mesajlariCevir, openRouterGovdesi, openRouterModelAdi, openRouterYanitiniCevir, yolSec } from './saglayici'
+import { devreSifirla } from './devre'
 
 const METIN: AiMesaj[] = [{ role: 'user', content: 'şifremi nasıl değiştiririm' }]
 const GORSEL: AiMesaj[] = [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAAA' } }, { type: 'text', text: 'Bu nedir?' }] }]
@@ -54,7 +57,7 @@ describe('OpenRouter açık — taşıma kapısı (Luna → 400 ms → Luna → 
     process.env.OPENROUTER_API_KEY = 'sk-or-test'
     delete process.env.NOTYA_MODEL_HIZLI
     delete process.env.NOTYA_MODEL_GUCLU
-    istekler = []; sira = []; TASIMA_BEKLEME.ms = 1
+    istekler = []; sira = []; TASIMA_BEKLEME.ms = 1; devreSifirla()
     sahteFetch()
   })
   afterEach(() => { globalThis.fetch = orijinalFetch; TASIMA_BEKLEME.ms = 400; ortamiGeriYukle() })
@@ -104,11 +107,18 @@ describe('OpenRouter açık — taşıma kapısı (Luna → 400 ms → Luna → 
     assert.equal(istekler.length, 1)
   })
 
-  it('GÜÇLÜ görev tek çağrı; 500 çağırana gider (Luna kapısı yalnız HIZLI içindir)', async () => {
+  it('güvenlikle Sonnet 5 seçilen çağrı tek çağrı; 500 çağırana gider (Luna kapısı yalnız Luna içindir)', async () => {
     sira = [{ durum: 500 }]
-    await assert.rejects(aiCagir({ gorev: 'klinik-analiz', messages: METIN }), (e: { durum?: number }) => e.durum === 500)
+    await assert.rejects(aiCagir({ gorev: 'klinik-analiz', messages: [{ role: 'user', content: 'warfarin dozu' }] }), (e: { durum?: number }) => e.durum === 500)
     assert.equal(istekler.length, 1)
     assert.equal(istekler[0].govde.model, MODEL_GUCLU)
+  })
+
+  it('klinik görev (soap) Luna 500 iki kez → Sonnet 5 (taşıma kapısı artık klinik görevlerde de)', async () => {
+    sira = [{ durum: 500 }, { ag: true }, tamam('{"soap":{}}')]
+    await aiCagir({ gorev: 'soap', maxTokens: 8000, messages: [{ role: 'user', content: 'Muayene transkripti: öksürük' }] })
+    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_HIZLI, MODEL_HIZLI, MODEL_GUCLU])
+    assert.equal(istekler[0].govde.max_tokens, 8000)
   })
 })
 
@@ -117,34 +127,51 @@ describe('OpenRouter açık — kalite kapısı çağrıdan önce', () => {
     process.env.OPENROUTER_API_KEY = 'sk-or-test'
     delete process.env.NOTYA_MODEL_HIZLI
     delete process.env.NOTYA_MODEL_GUCLU
-    istekler = []; sira = []
+    istekler = []; sira = []; devreSifirla()
     sahteFetch()
   })
   afterEach(() => { globalThis.fetch = orijinalFetch; ortamiGeriYukle() })
 
-  it('görsel/PDF → HIZLI görevde bile Sonnet 5; görüntü image_url, PDF file parçası olur', async () => {
-    sira = [tamam('ok'), tamam('ok')]
+  it('LUNA-02: görsel/PDF → Luna (görüntü-inceleme dahil); görüntü image_url, PDF file parçası olur', async () => {
+    sira = [tamam('{"ok":true}'), tamam('{"ok":true}'), tamam('ok')]
+    await aiCagir({ gorev: 'goruntu-inceleme', messages: GORSEL })
+    await aiCagir({ gorev: 'goruntu-inceleme', messages: PDF })
     await aiCagir({ gorev: 'siniflandirma', messages: GORSEL })
-    await aiCagir({ gorev: 'ozet', messages: PDF })
-    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_GUCLU, MODEL_GUCLU])
+    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_HIZLI, MODEL_HIZLI, MODEL_HIZLI])
     assert.deepEqual(istekler[0].govde.messages[0].content[0], { type: 'image_url', image_url: { url: 'data:image/png;base64,AAAA' } })
     assert.deepEqual(istekler[1].govde.messages[0].content[0], { type: 'file', file: { filename: 'belge.pdf', file_data: 'data:application/pdf;base64,BBBB' } })
   })
 
-  it('güvenlik sinyali (gebe, warfarin, isotretinoin) → HIZLI görev Sonnet 5', async () => {
-    for (const m of ['gebe hastada ne yazayım', 'warfarin ile etkileşim', 'isotretinoin']) {
+  it('güvenlik sinyali (gebe, warfarin, isotretinoin) → Sonnet 5 ilk istekte, Luna hiç görmez (neden = safety)', async () => {
+    for (const [gorev, m] of [['kisa-yanit', 'gebe hastada ne yazayım'], ['soap', 'warfarin ile etkileşim'], ['goruntu-inceleme', 'isotretinoin']] as const) {
       sira = [tamam('ok')]
-      await aiCagir({ gorev: 'kisa-yanit', messages: [{ role: 'user', content: m }] })
+      await aiCagir({ gorev, messages: [{ role: 'user', content: m }] })
     }
     assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_GUCLU, MODEL_GUCLU, MODEL_GUCLU])
   })
 
-  it('klinik görevler (soap, klinik-analiz, sohbet-uzman) ilk istekte Sonnet 5 — Luna hiç görmez', async () => {
-    for (const gorev of ['soap', 'klinik-analiz', 'sohbet-uzman', 'goruntu-inceleme', 'not-uretimi', 'uzman-analiz'] as const) {
-      sira = [tamam('ok')]
+  it('güvenlik sinyali hasta dosyası bağlamında (guvenlikBaglami) → Sonnet 5; bağlam modele ayrıca gitmez', async () => {
+    sira = [tamam('ok')]
+    await aiCagir({ gorev: 'sohbet-uzman', system: [{ metin: 'DOSYA: emziriyor' }], guvenlikBaglami: 'emziriyor', messages: [{ role: 'user', content: 'ateş düşürücü' }] })
+    assert.equal(istekler[0].govde.model, MODEL_GUCLU)
+    assert.ok(!('guvenlikBaglami' in istekler[0].govde))
+  })
+
+  it('LUNAPRO-01: klinik görevler (soap, klinik-analiz, sohbet-uzman…) sinyalsiz metinde birincil — Sonnet çağrılmaz', async () => {
+    const gorevler = ['soap', 'klinik-analiz', 'sohbet-uzman', 'goruntu-inceleme', 'not-uretimi', 'uzman-analiz'] as const
+    for (const gorev of gorevler) {
+      sira = [tamam('{"ozet":"ok"}')]
       await aiCagir({ gorev, messages: METIN })
     }
-    assert.ok(istekler.every((i) => i.govde.model === MODEL_GUCLU))
+    assert.equal(istekler.length, gorevler.length)
+    assert.ok(istekler.every((i) => i.govde.model === MODEL_HIZLI))
+  })
+
+  it('LUNA-02: klinik görevde Luna düşük güven ("emin değilim") → Sonnet 5 (low_conf)', async () => {
+    sira = [tamam('Emin değilim, daha fazla bilgi şart.'), tamam('Sonnet klinik cevap')]
+    const y = await aiCagir({ gorev: 'klinik-analiz', messages: METIN })
+    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_HIZLI, MODEL_GUCLU])
+    assert.equal(yanitMetni(y), 'Sonnet klinik cevap')
   })
 
   it('istek: başlıklar, gizlilik tercihi, cache_control yalnız sabit blokta, max_tokens / temperature', async () => {
@@ -173,10 +200,19 @@ describe('OpenRouter açık — kalite kapısı çağrıdan önce', () => {
     assert.equal(istekler.length, 1)
   })
 
-  it('F3: finish_reason length → stop_reason max_tokens (kesik JSON ham gösterilmez korumaları aynen çalışır)', async () => {
-    sira = [tamam('{"a": "yarım', { finish_reason: 'length' })]
-    const y = await aiCagir({ gorev: 'soap', messages: METIN })
+  it('F3: finish_reason length → stop_reason max_tokens (düzyazı işte kesik cevap çağırana gider, korumalar aynen)', async () => {
+    sira = [tamam('{"speech": "yarım', { finish_reason: 'length' })]
+    const y = await aiCagir({ gorev: 'sohbet-uzman', messages: METIN })
+    assert.equal(istekler.length, 1)
+    assert.equal(istekler[0].govde.model, MODEL_HIZLI)
     assert.equal(y.stop_reason, 'max_tokens')
+  })
+
+  it('LUNAPRO-01 G2 (d): yapılandırılmış işte (soap) max_tokens kesilmesi → Sonnet 5 bir kez', async () => {
+    sira = [tamam('{"a": "yarım', { finish_reason: 'length' }), tamam('{"a":"tam"}')]
+    const y = await aiCagir({ gorev: 'soap', messages: METIN })
+    assert.deepEqual(istekler.map((i) => i.govde.model), [MODEL_HIZLI, MODEL_GUCLU])
+    assert.equal(yanitMetni(y), '{"a":"tam"}')
   })
 })
 
@@ -241,7 +277,7 @@ describe('akış (sesli Ayşe) — OpenRouter SSE', () => {
     process.env.OPENROUTER_API_KEY = 'sk-or-test'
     delete process.env.NOTYA_MODEL_HIZLI
     delete process.env.NOTYA_MODEL_GUCLU
-    istekler = []; sira = []; TASIMA_BEKLEME.ms = 1
+    istekler = []; sira = []; TASIMA_BEKLEME.ms = 1; devreSifirla()
     sahteFetch()
   })
   afterEach(() => { globalThis.fetch = orijinalFetch; TASIMA_BEKLEME.ms = 400; ortamiGeriYukle() })
@@ -290,7 +326,7 @@ describe('OpenRouter kapalı — eski Anthropic yolu', () => {
   beforeEach(() => { delete process.env.OPENROUTER_API_KEY; delete process.env.NOTYA_MODEL_HIZLI; delete process.env.NOTYA_MODEL_GUCLU })
   afterEach(ortamiGeriYukle)
 
-  it('GÜÇLÜ görev SDK istemcisine önek atılmış Sonnet 5 kimliğiyle gider', async () => {
+  it('OpenRouter yok → birincil Luna gidemez; SOAP SDK istemcisine önek atılmış Sonnet 5 kimliğiyle gider (transport)', async () => {
     const giden: Record<string, unknown>[] = []
     const istemci = { messages: { create: async (g: never) => { giden.push(g); return { content: [{ type: 'text', text: 'ok' }], usage: {} } } } }
     await aiCagir({ istemci, gorev: 'soap', messages: METIN })
@@ -316,7 +352,7 @@ describe('OpenRouter kapalı — eski Anthropic yolu', () => {
     assert.equal(giden[0].model, 'claude-haiku-4-5')
   })
 
-  it('aiAkis doğrudan yolda SDK akışını eskisi gibi kullanır', async () => {
+  it('aiAkis doğrudan yolda SDK akışını eskisi gibi kullanır (Luna yok → Sonnet 5, transport)', async () => {
     let govde: Record<string, unknown> | null = null
     const istemci = { messages: { create: async (g: never) => { govde = g; return { content: [{ type: 'text', text: 'tam' }], usage: {} } } } }
     const parcalar: string[] = []

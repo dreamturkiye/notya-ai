@@ -101,8 +101,8 @@ export function labKullaniciPromptu(satirlar: LabSatir[], baglam: { yasAy: numbe
 }
 
 export async function labRaporYaz(anthropic: Anthropic, persona: string, bransKey: string, satirlar: LabSatir[], baglam: Parameters<typeof labKullaniciPromptu>[1], doctorId?: string | null): Promise<{ rapor: LabRapor; ham: string }> {
-  // NOTYA-MALIYET-01: lab çıkarımı sonrası klinik yorum — GÜÇLÜ (klinik-analiz)
-  const y = await aiCagir({ istemci: anthropic, gorev: 'klinik-analiz', maxTokens: 2500, temperature: 0.2, doctorId, system: labSistemPromptu(persona, bransKey), messages: [{ role: 'user', content: labKullaniciPromptu(satirlar, baglam) }] })
+  // NOTYA-MALIYET-01: lab çıkarımı sonrası klinik yorum (klinik-analiz; LUNAPRO-01: birincil Luna-Pro)
+  const y = await aiCagir({ istemci: anthropic, gorev: 'klinik-analiz', jsonBekleniyor: true, maxTokens: 2500, temperature: 0.2, doctorId, system: labSistemPromptu(persona, bransKey), messages: [{ role: 'user', content: labKullaniciPromptu(satirlar, baglam) }] })
   const ham = y.content.filter((c) => c.type === 'text').map((c) => (c as { text: string }).text).join('\n').replace(/```json|```/g, '')
   const j = JSON.parse(ham.slice(ham.indexOf('{'), ham.lastIndexOf('}') + 1)) as Partial<LabRapor>
   const arr = (x: unknown) => (Array.isArray(x) ? x.map(String) : [])

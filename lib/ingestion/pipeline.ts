@@ -233,8 +233,8 @@ export async function detectType(b64: string, mime: string, filename: string): P
   if (mime.startsWith("image/")) content.push({ type: "image", source: { type: "base64", media_type: mime, data: b64 } })
   else content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } })
   content.push({ type: "text", text: "Bu Turkiye mali belgesi hangi tur? SADECE: z_raporu | efatura | kagit_fatura | banka | puantaj | kira | diger_belge" })
-  // NOTYA-MALIYET-01: saf etiketleme (siniflandirma, 20 token). Mesajda görsel/PDF olduğu için cagir.ts GÖRSEL = GÜÇLÜ
-  // güvencesiyle Sonnet'e yükseltir (Kaan: her türlü görsel çağrı GÜÇLÜ). Eskisi gibi API hatasında "diger_belge".
+  // NOTYA-MALIYET-01: saf etiketleme (siniflandirma, 20 token). LUNAPRO-01: görsel/PDF de birincil Luna-Pro'ya gider
+  // (GÖRSEL = GÜÇLÜ emekli). Eskisi gibi API hatasında "diger_belge".
   const d = await aiCagir({ gorev: "siniflandirma", maxTokens: 20, messages: [{ role: "user", content }] }).catch(httpHatasiBos)
   const t = (d ? yanitMetni(d) : "").trim().toLowerCase().replace(/[^a-z_]/g, "")
   const ok = ["z_raporu","efatura","kagit_fatura","banka","puantaj","kira","diger_belge"]
@@ -252,7 +252,7 @@ async function extractWithDerya(b64: string, mime: string, belgeTuru: string, is
   if (isImg)      content.push({ type: "image",    source: { type: "base64", media_type: mime,                data: b64 } })
   else if (isPDF) content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } })
   content.push({ type: "text", text: prompt })
-  // NOTYA-MALIYET-01: belge/görsel okuyup alan çıkarma — GÜÇLÜ (goruntu-inceleme). API hatasında eskisi gibi "{}".
+  // NOTYA-MALIYET-01: belge/görsel okuyup alan çıkarma (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro). API hatasında eskisi gibi "{}".
   const d   = await aiCagir({ gorev: "goruntu-inceleme", maxTokens: 2048, system: DERYA_SYSTEM, messages: [{ role: "user", content }] }).catch(httpHatasiBos)
   const txt = ((d ? yanitMetni(d) : "") || "{}").replace(/```json|```/g, "").trim()
   try   { return JSON.parse(txt) }
@@ -279,7 +279,7 @@ async function selfCorrect(b64: string, mime: string, belgeTuru: string, first: 
   if (isImg)      content.push({ type: "image",    source: { type: "base64", media_type: mime,                data: b64 } })
   else if (isPDF) content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } })
   content.push({ type: "text", text: prompt })
-  // NOTYA-MALIYET-01: eksik alanlar için ikinci geçiş — GÜÇLÜ (goruntu-inceleme). API hatasında eskisi gibi "{}".
+  // NOTYA-MALIYET-01: eksik alanlar için ikinci geçiş (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro). API hatasında eskisi gibi "{}".
   const d   = await aiCagir({ gorev: "goruntu-inceleme", maxTokens: 1024, system: DERYA_SYSTEM, messages: [{ role: "user", content }] }).catch(httpHatasiBos)
   const txt = ((d ? yanitMetni(d) : "") || "{}").replace(/```json|```/g, "").trim()
   try {

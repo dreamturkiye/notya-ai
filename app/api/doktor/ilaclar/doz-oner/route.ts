@@ -88,10 +88,11 @@ SADECE geçerli JSON döndür, başka metin yazma:
 {"doz": "<örn. 560 mg veya 11 mL>", "kullanim": "<örn. 2x1>", "aciklama": "<tek cümle: mg/kg hesabı veya gerekçe>"}
 Kiloya/yaşa uygun değilse veya bu ilaç bu yaşta önerilmezse doz'u boş bırak, aciklama'da nedenini yaz.`
 
-    // NOTYA-MALIYET-01: doz önerisi — klinik karar, GÜÇLÜ
+    // NOTYA-MALIYET-01: doz önerisi — klinik karar (klinik-analiz; LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız koruyucu)
     const resp = await aiCagir({
       istemci: anthropic,
       gorev: 'klinik-analiz',
+      jsonBekleniyor: true,
       maxTokens: 400,
       messages: [{ role: 'user', content: prompt }],
     })

@@ -6,31 +6,33 @@
  * deseni (claude-…, gpt-…, openai/…, anthropic/…) bu dosya ve lib/ai/saglayici.ts dışında görünürse test kırılır.
  * Model adı değişince kod değişmez; Vercel'de NOTYA_MODEL_GUCLU / NOTYA_MODEL_HIZLI ortam değişkeni ayarlanır.
  *
- * KARAR A (Kaan, 2026-09-26 — 2026-09-19 varsayılanının yerine): hacim trafiği GPT-6 Luna'da ucuzdur; imzalanan klinik
- * çıktı Sonnet 5'te kalır. İki model de OpenRouter'dan geçer (ödeme tek yerden); OPENROUTER_API_KEY yoksa (yerel/dev)
- * Anthropic modelleri eski doğrudan SDK yoluyla gider, OpenAI modeli GÜÇLÜ'ye düşer (lib/ai/saglayici.ts).
- * ÖNCELİK değişmedi: KLİNİK KALİTE > MALİYET. sohbet-uzman ve hiçbir klinik görev Luna'ya taşınmadı.
+ * NOTYA-MODEL-LUNAPRO-01 (Kaan, 2026-09-27 — karar A'nın ve LUNA-02'nin yerine): HER görevin birincil modeli
+ * GPT-6 Luna-Pro (MODEL_HIZLI / NOTYA_MODEL_HIZLI) — SOAP, klinik analiz, görüntü/PDF okuma, sohbet dahil. Koruyucu
+ * Sonnet 5 (MODEL_GUCLU / NOTYA_MODEL_GUCLU) YALNIZ dört kapıdan ulaşılır (lib/ai/cagir.ts, lib/ai/devre.ts):
+ *  G1 transport — birincil cevap veremedi (5xx, zaman aşımı, boş gövde, ağ, 429): birincil → 400 ms → birincil → Sonnet 5.
+ *  G2 low_conf  — istek başına EN FAZLA BİR kez: boş, ret, düşük güven; yapılandırılmış işte ayrıştırılamayan (F3 onarımı
+ *                 da kurtaramayan) JSON ya da max_tokens kesilmesi; bilinmeyen araç adı / bozuk araç argümanı; SOAP
+ *                 gövdesinde ai_confidence < 0.6 (lib/doktor/soapUret.ts). Sesli akışta yalnız ilk sözden ÖNCE.
+ *  G3 safety    — mesajda ya da hasta dosyası bağlamında güvenlik sinyali (guvenlikSinyaliVar): çağrıdan ÖNCE Sonnet 5.
+ *  G4 devre     — birincil 5 dakikada ≥5 G1/G2 hatası verdiyse 10 dakika bütün çağrılar Sonnet 5; sonra tek yoklama.
+ * Görev (uzman), Onayla (onayla) ve görsel (vision) zorunlu yükseltmeleri yok; LUNA-01'in 3 numaralı pazarlık dışı kuralı
+ * (GÖRSEL = GÜÇLÜ) ve karar A emekli. İki model de OpenRouter'dan geçer (ödeme tek yerden, data_collection=deny);
+ * OPENROUTER_API_KEY yoksa (yerel/test) Anthropic modelleri eski doğrudan SDK yoluyla gider, OpenAI modeli gidemez →
+ * Sonnet 5 (transport) (lib/ai/saglayici.ts). Ölçüt: koruyucu payı (v_model_yedek_gunluk, migration 106) — hedef < %15.
  *
- * İki kademe:
- *  - GÜÇLÜ (Sonnet 5) — VARSAYILAN. Hekimin/avukatın/müşavirin karar verdiği her çıktı: SOAP/muayene notu,
- *    mesleki notlar, klinik konsültasyon, doz önerisi, ICD-10 eşleme, e-reçete, epikriz, lab yorumu, HER TÜRLÜ
- *    görüntü/belge incelemesi, dilekçe/sözleşme analizi, mali analiz, klinik ya da belirsiz sohbet turu.
- *  - HIZLI (GPT-6 Luna) — YALNIZ şu DAR liste (klinik içerik üretmeyen işler): yardım/destek sohbeti, meslektaş
- *    hafızası özetleme ve tercih çıkarımı, saf sınıflandırma/etiketleme (görselsiz), biçimlendirme/metin temizleme,
- *    asistan sohbetinin NET sosyal turları (selam, teşekkür, vedalaşma) ve uygulama kullanımı soruları.
- *    Bu listeye yeni iş eklemek ürün kararıdır; docs/OPEN-COMMITMENTS.md'de gerekçesiyle yazılmadan eklenmez.
+ * Kademe artık "birincil mi koruyucu mu" demektir: tabloda her görev 'hizli' (birincil). 'guclu' kademe tip, ölçüm
+ * satırı ve geri dönüş anahtarı için durur; bir çağrı Sonnet 5'e yalnız yukarıdaki dört kapıdan ulaşır.
+ * asistanModelYonlendir() hâlâ sohbet ↔ sohbet-uzman ayırır — o ayrım prompt ve maxTokens içindir, model için değil.
  *
- * İki kapı (lib/ai/cagir.ts): KALİTE kapısı çağrıdan ÖNCE GÜÇLÜ'yü seçer (görev, görsel/PDF, güvenlik sinyali) ve
- * Luna boş/ret/düşük güven dönerse GÜÇLÜ'ye yükseltir; TAŞIMA kapısı Luna cevap veremezse (5xx, zaman aşımı, 429,
- * ağ hatası) 400 ms sonra bir kez daha dener, sonra GÜÇLÜ. OpenRouter `models: []` yalnız taşımadır, kalite kapısı değil.
- *
- * Geri dönüş anahtarı: NOTYA_MODEL_HIZLI=anthropic/claude-haiku-4.5 → HIZLI eski Haiku'ya döner (kod değişmez).
+ * Geri dönüş anahtarı (kod değişmez, tek yeniden dağıtım):
+ *  - NOTYA_MODEL_HIZLI=anthropic/claude-sonnet-5 → birincil model Sonnet 5 olur (tüm görevler).
+ *  - NOTYA_MODEL_GUCLU=… → koruyucu değişir. Geçersiz değer → varsayılan.
  */
 
-/** Varsayılan GÜÇLÜ kademe — Claude Sonnet 5 (OpenRouter slug'ı; doğrudan yolda saglayici.ts önekini atar). */
+/** Varsayılan koruyucu (GÜÇLÜ kademe, yalnız G1–G4) — Claude Sonnet 5 (OpenRouter slug'ı; doğrudan yolda saglayici.ts önekini atar). */
 export const MODEL_GUCLU = 'anthropic/claude-sonnet-5'
-/** Varsayılan HIZLI kademe — GPT-6 Luna (yalnız OpenRouter). */
-export const MODEL_HIZLI = 'openai/gpt-6-luna'
+/** Varsayılan birincil (HIZLI kademe, her görev) — GPT-6 Luna-Pro (yalnız OpenRouter; görsel + dosya girdisi destekler). */
+export const MODEL_HIZLI = 'openai/gpt-6-luna-pro'
 
 /** Ortam değişkeni boş/geçersizse varsayılan kalır — yanlış ayar üretimi düşürmesin. */
 function ortamModeli(ad: string, varsayilan: string): string {
@@ -54,23 +56,23 @@ export type Gorev =
    *  konsültasyon yanıt raporundan klinik özet (KONSULTASYON-01) */
   | 'klinik-analiz'
   /**
-   * GÖRÜNTÜ VE İNCELEME — İSTİSNASIZ GÜÇLÜ (Kaan, 2026-09-19). Kapsam:
+   * GÖRÜNTÜ VE İNCELEME — görüntü/belge okuyan her çağrı. Kapsam:
    *  - Röntgen, OCT, fundus, ön segment, dermatoskopi, USG, MR, BT, mamografi, EKG ve her türlü görüntü yorumu /
    *    karar desteği (core/belgeler/yazar.ts → Tier A taslak; belge_analizleri boru hattı; göz ve dermatoloji ekleri)
    *  - Lab raporu PDF/görsel çıkarımı (core/lab/cikarim.ts) — sonrasındaki klinik yorum 'klinik-analiz'
    *  - Belge (PDF/görsel) okuyup alan çıkaran her çağrı (lib/ingestion/pipeline.ts analiz + ikinci geçiş)
-   *  - HERHANGİ bir vision/multimodal çağrı: görev tipi ne olursa olsun cagir.ts GÜÇLÜ'ye yükseltir.
-   * Bu satır HIZLI'ya çekilemez — lib/ai/modeller.test.ts kilitler.
+   * NOTYA-MODEL-LUNAPRO-01 (Kaan, 2026-09-27): birincil Luna-Pro (görsel + dosya girdisi destekler); GÖRSEL = GÜÇLÜ
+   * kuralı emekli. Sonnet 5 yalnız G1–G4 koruyucusudur.
    */
   | 'goruntu-inceleme'
   /** Hukuk analizi: dilekçe, sözleşme, müvekkil portalı */
   | 'uzman-analiz'
-  /** Uzman kararı gerektiren sohbet turu: klinik sinyalli asistan turu (asistanModelYonlendir yükseltir),
-   *  mali müşavir ve avukat sohbeti (mevzuat/hukuk tavsiyesi — alan yönlendiricisi yok, GÜÇLÜ kalır) */
+  /** Uzman sohbet turu: klinik sinyalli asistan turu (asistanModelYonlendir seçer — daha uzun tavan, F3), mali müşavir
+   *  ve avukat sohbeti (mevzuat/hukuk tavsiyesi) */
   | 'sohbet-uzman'
   /** YALNIZ net sosyal asistan turu ya da uygulama kullanımı sorusu (asistanModelYonlendir istisnası) */
   | 'sohbet'
-  /** Tek etiketli sınıflandırma — görselsiz (görsel varsa cagir.ts GÜÇLÜ'ye yükseltir) */
+  /** Tek etiketli sınıflandırma / etiketleme */
   | 'siniflandirma'
   /** Meslektaş hafızası özeti / profil paragrafı (hasta klinik verisi yorumlamaz) */
   | 'ozet'
@@ -90,12 +92,15 @@ export interface ModelSecimi {
 }
 
 /** Görev → kademe + önerilen max_tokens. Sayılar mevcut çağrı yerlerinin gerçek ihtiyacından geldi.
+ * NOTYA-MODEL-LUNAPRO-01: `kademe` = birincil mi koruyucu mu. Hepsi 'hizli' (birincil Luna-Pro); Sonnet 5'e yalnız
+ * cagir.ts'teki dört kapıdan (G1 transport / G2 low_conf / G3 safety / G4 devre) ulaşılır. Görevler maxTokens için
+ * ayrı tutulur (F3).
  * max_tokens bir TAVAN'dır, fatura üretilen token'a göredir — düşürmek tasarruf getirmez, yalnız kesilme (F3) riski
  * getirir. Bu yüzden hiçbir çağrı yerinin mevcut tavanı düşürülmedi. */
 export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number }> = {
-  soap: { kademe: 'guclu', maxTokens: 8000 },
-  'not-uretimi': { kademe: 'guclu', maxTokens: 4000 },
-  'klinik-analiz': { kademe: 'guclu', maxTokens: 2000 },
+  soap: { kademe: 'hizli', maxTokens: 8000 },
+  'not-uretimi': { kademe: 'hizli', maxTokens: 4000 },
+  'klinik-analiz': { kademe: 'hizli', maxTokens: 2000 },
   // ASI-KARNESI-FIX (Kaan/Dr. Gokhan, 2026-09-19): 3000 yetmiyordu. Turk asi karnesinde 20-25
   // satir olur; her satir JSON'da ~150 token (ad, doz, tarih, okunamadi, neden, ham metin) →
   // 3500-4000 token. Tavan asilinca JSON ORTADAN KESILIYOR ve karneYanitiniCoz kesik JSON'u
@@ -104,10 +109,10 @@ export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number
   // Kaan (2026-09-19) 12000 istedi: cok dozlu/uzun karnelerde 8000 de yetmeyebilir. Bu bir
   // TAVAN'dir, sabit maliyet degil — cikti kisa ise kisa faturalanir; yalniz gercekten uzun
   // karnede devreye girer. Karne okuma seyrek bir islem oldugu icin risk dusuk.
-  'goruntu-inceleme': { kademe: 'guclu', maxTokens: 12000 },
-  'uzman-analiz': { kademe: 'guclu', maxTokens: 2000 },
+  'goruntu-inceleme': { kademe: 'hizli', maxTokens: 12000 },
+  'uzman-analiz': { kademe: 'hizli', maxTokens: 2000 },
   // F3 (KD-DERM-SAFETY-FINDINGS): 800 uzun klinik cevabı JSON ortasında kesiyordu — klinik tur bu yüzden 1600.
-  'sohbet-uzman': { kademe: 'guclu', maxTokens: 1600 },
+  'sohbet-uzman': { kademe: 'hizli', maxTokens: 1600 },
   sohbet: { kademe: 'hizli', maxTokens: 800 },
   siniflandirma: { kademe: 'hizli', maxTokens: 20 },
   ozet: { kademe: 'hizli', maxTokens: 300 },
@@ -124,25 +129,22 @@ export function modelSec(gorev: Gorev): ModelSecimi {
 
 // ─── Yükseltme nedenleri (NOTYA-MODEL-LUNA-01, ai_token_kullanim.neden) ──────────────────────────────
 /**
- * Neden GÜÇLÜ gitti — ölçüm satırına yazılır, içerik değildir.
- *  - transport: Luna cevap veremedi (5xx, zaman aşımı, boş gövde, 429 tekrarı, ağ) ya da OpenRouter yok
- *  - onayla: hekimin Onayla'dan geçen imzalı çıktısı (SOAP, mesleki not)
- *  - safety: HIZLI bir görevin mesajında güvenlik sinyali (gebe, emzirme, pediatrik doz, warfarin/NSAID, isotretinoin…)
- *  - vision: görüntü/PDF bloğu ya da görüntü-inceleme görevi
- *  - low_conf: Luna boş/ret/düşük güven döndü
- *  - uzman: klinik ya da uzman görev (klinik-analiz, uzman-analiz, sohbet-uzman)
+ * Neden koruyucuya (Sonnet 5) gidildi — ölçüm satırına yazılır, içerik değildir. NOTYA-MODEL-LUNAPRO-01: dört kapı.
+ *  - transport (G1): birincil cevap veremedi (5xx, zaman aşımı, boş gövde, 429 tekrarı, ağ) ya da OpenRouter yok
+ *  - low_conf (G2): boş/ret/düşük güven, bozuk/kesik yapılandırılmış JSON, bozuk araç çağrısı, SOAP ai_confidence < 0.6
+ *  - safety (G3): mesajda ya da hasta dosyası bağlamında güvenlik sinyali (gebe, emzirme, pediatrik doz, warfarin/NSAID…)
+ *  - devre (G4): birincilin devresi açık (lib/ai/devre.ts)
+ * Emekli (2026-09-26): onayla, vision, uzman — migration 105/106'nın check listesinde geçmiş satırlar için duruyor.
  */
-export type YukseltmeNedeni = 'transport' | 'onayla' | 'safety' | 'vision' | 'low_conf' | 'uzman'
+export type YukseltmeNedeni = 'transport' | 'safety' | 'low_conf' | 'devre'
 
-/** GÜÇLÜ kademedeki bir görevin neden GÜÇLÜ olduğu; HIZLI görevde null. */
+/** Görev tek başına koruyucuya götürmez (LUNA-02 / LUNAPRO-01) — her görev için null. İmza ölçüm/uyumluluk için korunur. */
 export function gorevNedeni(gorev: Gorev): YukseltmeNedeni | null {
-  if (modelSec(gorev).kademe !== 'guclu') return null
-  if (gorev === 'soap' || gorev === 'not-uretimi') return 'onayla'
-  if (gorev === 'goruntu-inceleme') return 'vision'
-  return 'uzman'
+  modelSec(gorev) // bilinmeyen görev yine hata fırlatır
+  return null
 }
 
-// Güvenlik sinyali — HIZLI görev bile olsa GÜÇLÜ. Liste genişletmek yalnız GÜÇLÜ yönüne iter (güvenli taraf).
+// Güvenlik sinyali — çağrıdan ÖNCE GÜÇLÜ (neden = safety). Liste LUNA-01'deki gibidir; değiştirmek ürün kararıdır.
 const GUVENLIK_SINYALI = /(?<![\p{L}])(gebe|gebelik|hamile|emzir|laktasyon|pediatrik doz|çocuk doz|mg\/kg|warfarin|varfarin|kumadin|coumadin|nsai|ibuprofen|naproksen|diklofenak|isotretinoin|izotretinoin|roaccutane|kontrendik)/iu
 export function guvenlikSinyaliVar(metin: string): boolean {
   const m = String(metin || '')
@@ -150,7 +152,7 @@ export function guvenlikSinyaliVar(metin: string): boolean {
   return GUVENLIK_SINYALI.test(m) || GUVENLIK_SINYALI.test(m.toLocaleLowerCase('tr-TR'))
 }
 
-// Luna'nın "bilmiyorum / daha fazla bilgi şart / yardımcı olamam" dediği cevap → GÜÇLÜ tekrar dener.
+// Birincilin "bilmiyorum / daha fazla bilgi şart / yardımcı olamam" dediği cevap → GÜÇLÜ tekrar dener (low_conf).
 const DUSUK_GUVEN = /(daha fazla bilgi (şart|gerek|lazım)|daha fazla bilgiye ihtiyaç|emin değilim|yeterli bilgi(m)? yok|yardımcı olamam|yanıt veremiyorum|cevap veremiyorum|i can(no|')t help|i'?m (not able|unable) to|i am unable to)/iu
 export function dusukGuvenMi(metin: string): boolean {
   return DUSUK_GUVEN.test(String(metin || ''))
@@ -169,7 +171,8 @@ export function gecmisiKirp<T extends { role: string }>(mesajlar: T[], n: number
 }
 
 // ─── Asistan sohbeti yönlendirme kuralı ────────────────────────────────────────────────────────
-// Kaan, 2026-09-19: ŞÜPHEDE KALIRSAN GÜÇLÜ. Varsayılan dal GÜÇLÜ'dür; HIZLI yalnız dar bir istisna listesiyle seçilir.
+// Kaan, 2026-09-19: şüphede uzman tur. Varsayılan dal sohbet-uzman'dır; sohbet yalnız dar bir istisna listesiyle seçilir.
+// NOTYA-MODEL-LUNAPRO-01: iki dal da birincil Luna-Pro'ya gider — ayrım prompt ve maxTokens (F3: 1600 vs 800) içindir, model için değil.
 
 export interface YonlendirmeGirdisi {
   mesaj: string
@@ -182,7 +185,7 @@ export interface YonlendirmeGirdisi {
 export interface YonlendirmeSonucu { gorev: 'sohbet' | 'sohbet-uzman'; neden: string }
 
 // Klinik sinyal — HIZLI istisnalarını ezer. Soldan kelime sınırı; Türkçe ekler serbest ("dozu", "ilaçları").
-// Liste genişletmek yalnız GÜÇLÜ yönüne iter (güvenli taraf); daraltmak kalite kararıdır.
+// Liste genişletmek yalnız uzman tura iter (güvenli taraf); daraltmak kalite kararıdır.
 const KLINIK_KOK = /(?<![\p{L}])(hasta|doz|ilaç|ilac|reçete|recete|tanı|tani\b|teşhis|ayırıcı|tedavi|antibiyotik|etkileş|interaksiyon|endikasyon|kontrendik|yan etki|alerji|kılavuz|kilavuz|protokol|prognoz|semptom|belirti|şikayet|yakınma|bulgu|muayene|tahlil|tetkik|laboratuvar|hemogram|biyokimya|kültür|görüntü|röntgen|rontgen|grafi|tomografi|ultrason|ultrasonografi|mamografi|dermatoskop|fundus|ön segment|anjiyo|ekokardiyo|lezyon|kitle|nodül|patoloji|biyopsi|ameliyat|cerrahi|sevk|konsült|epikriz|rapor|skor|risk|gebe|gebelik|hamile|emzir|aşı|ateş|ağrı|öksürük|kusma|ishal|nefes|tansiyon|nabız|satürasyon|kreatinin|glukoz|hba1c|troponin|insülin|steroid|kortizon|parasetamol|ibuprofen|amoksisilin|mg\/kg)/iu
 // Kısa kısaltmalar: iki yandan sınır.
 const KLINIK_KISALTMA = /(?<![\p{L}])(mg|mcg|ml|iu|ekg|eeg|emg|eko|usg|mr|mri|bt|pet|oct|crp|ldl|tsh|inr|spo2|icd|lab)(?![\p{L}])/iu
@@ -191,13 +194,13 @@ const EYLEM_NIYETLERI = new Set(['CREATE_PATIENT', 'ADD_COMPLAINT', 'REQUEST_DIA
 
 // HIZLI istisnası 1 — NET sosyal tur: mesajın TAMAMI selam/teşekkür/hal-hatır/vedalaşma kelimelerinden oluşur.
 // "evet / tamam / olur / peki" BİLEREK yok: asistanın klinik önerisine onay olabilir ("ayırıcı tanıya ekleyeyim mi?" →
-// "evet") ve modelin eylemi doğru kurması gerekir — belirsiz, dolayısıyla GÜÇLÜ.
+// "evet") ve modelin eylemi doğru kurması gerekir — belirsiz, dolayısıyla uzman tur.
 const SOSYAL_CEKIRDEK = new Set([
   'merhaba', 'merhabalar', 'selam', 'selamlar', 'günaydın', 'akşamlar', 'geceler', 'günler', 'çalışmalar',
   'nasılsın', 'nasılsınız', 'naber', 'napıyorsun', 'iyiyim', 'teşekkür', 'teşekkürler', 'sağol', 'sağolun',
   'eyvallah', 'gelsin', 'görüşürüz', 'hoşça', 'bye',
 ])
-// Tek başına sosyal sayılmayan dolgu kelimeleri ("iyi" tek başına klinik soruya cevap olabilir → GÜÇLÜ).
+// Tek başına sosyal sayılmayan dolgu kelimeleri ("iyi" tek başına klinik soruya cevap olabilir → uzman tur).
 const SOSYAL_DOLGU = new Set(['iyi', 'sen', 'siz', 'ben', 'de', 'da', 'çok', 'sana', 'size', 'ederim', 'ediyorum', 'rica', 'kolay', 'kal', 'kalın', 'hocam', 'hanım', 'bey'])
 const SOSYAL_AZAMI_KELIME = 8
 // HIZLI istisnası 2 — uygulama kullanımı sorusu: açık bir uygulama/ekran/hesap terimi, kısa, klinik sinyalsiz, hastasız.
@@ -216,13 +219,14 @@ export function netSosyalMi(mesaj: string): boolean {
 }
 
 /**
- * Asistan sohbeti hangi kademeye gider — saf fonksiyon (lib/ai/modeller.test.ts).
- * VARSAYILAN GÜÇLÜ. Sıra:
- *  1. hasta bağlamı (seçili hasta / çözülen dosya) → GÜÇLÜ, istisnasız ("teşekkürler" bile)
- *  2. eylem niyeti (hasta oluştur, reçete, tanı, belge) → GÜÇLÜ
- *  3. klinik kök / kısaltma (ilaç, tanı, tetkik, görüntü, lab, doz, risk skoru …) → GÜÇLÜ
- *  4. DAR İSTİSNA → HIZLI: net sosyal tur ya da uygulama kullanımı sorusu
- *  5. geri kalan her şey (belirsiz, sınıflanamayan) → GÜÇLÜ
+ * Asistan sohbeti hangi göreve gider (sohbet | sohbet-uzman) — saf fonksiyon (lib/ai/modeller.test.ts).
+ * Model iki dalda da birincil Luna-Pro'dur (LUNAPRO-01); görev prompt ve maxTokens'ı belirler.
+ * VARSAYILAN sohbet-uzman. Sıra:
+ *  1. hasta bağlamı (seçili hasta / çözülen dosya) → sohbet-uzman, istisnasız ("teşekkürler" bile)
+ *  2. eylem niyeti (hasta oluştur, reçete, tanı, belge) → sohbet-uzman
+ *  3. klinik kök / kısaltma (ilaç, tanı, tetkik, görüntü, lab, doz, risk skoru …) → sohbet-uzman
+ *  4. DAR İSTİSNA → sohbet: net sosyal tur ya da uygulama kullanımı sorusu
+ *  5. geri kalan her şey (belirsiz, sınıflanamayan) → sohbet-uzman
  */
 export function asistanModelYonlendir(g: YonlendirmeGirdisi): YonlendirmeSonucu {
   const kucuk = String(g.mesaj || '').trim().toLocaleLowerCase('tr-TR')
@@ -236,5 +240,5 @@ export function asistanModelYonlendir(g: YonlendirmeGirdisi): YonlendirmeSonucu 
     return { gorev: 'sohbet', neden: 'istisna: uygulama kullanımı sorusu' }
   }
 
-  return { gorev: 'sohbet-uzman', neden: 'varsayılan (şüphede GÜÇLÜ)' }
+  return { gorev: 'sohbet-uzman', neden: 'varsayılan (şüphede uzman tur)' }
 }

@@ -70,6 +70,7 @@ GÖREV: Transkripti analiz et ve aşağıdaki JSON yapısını döndür. Başka 
     maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
+    guvenlikBaglami: [context.previous_diagnoses, context.current_medications, context.allergies].flat().filter(Boolean).join('\n'),
     messages: [
       {
         role: 'user',
@@ -230,6 +231,7 @@ Seans transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
     maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
+    guvenlikBaglami: [context.diagnosis, ...(context.treatment_goals || [])].filter(Boolean).join('\n'),
     messages: [{ role: 'user', content: `Terapi seansı transkripti:\n\n${transcript}` }]
   })
 

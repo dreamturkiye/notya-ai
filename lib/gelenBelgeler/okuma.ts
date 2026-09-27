@@ -2,8 +2,8 @@
  * NOTYA-GELEN-BELGELER — Notya reads an incoming document: what kind it is, a one-line summary for the inbox
  * ("Hemogram — Hb düşük"), and whose it is (name, birth date, TC as printed). Server-only.
  *
- * AI policy (.cursor/skills/ai-model-politikasi): reading a document / photo is GÜÇLÜ ('goruntu-inceleme'); a text
- * (pasted table, Word / Excel text, voice-note transcript) goes as 'klinik-analiz' — also GÜÇLÜ. Model names never
+ * AI policy (.cursor/skills/ai-model-politikasi): reading a document / photo is 'goruntu-inceleme'; a text
+ * (pasted table, Word / Excel text, voice-note transcript) goes as 'klinik-analiz'. Both: Luna-Pro primary, Sonnet 5 guardian (LUNAPRO-01). Model names never
  * appear here; lib/ai/cagir.ts picks the model and measures the call. The fixed instructions are one cached block.
  *
  * What the model sees: only the document itself (photos with their metadata stripped — donustur.ts). The doctor's
@@ -129,6 +129,7 @@ export async function belgeyiOku(g: OkumaGirdisi, bicim: Bicim, o: { doctorId: s
   try {
     const yanit = await aiCagir({
       gorev: g.tip === 'metin' ? 'klinik-analiz' : 'goruntu-inceleme',
+      jsonBekleniyor: true,
       system: [{ metin: OKUMA_TALIMATI, onbellek: true }],
       messages: mesajKur(g),
       temperature: 0,

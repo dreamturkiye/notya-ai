@@ -17,7 +17,7 @@ export async function POST(req:NextRequest){
     if(sozlesmeMetni.length>50000) return NextResponse.json({error:'Metin cok uzun (max 50000 karakter)'},{status:400})
     const system=buildSozlesmeAnalysisPrompt(sozlesmeMetni,sozlesmeTuru||'diger')
     const ai=getAnthropic()
-    const resp=await aiCagir({istemci:ai,gorev:'uzman-analiz',doctorId:user.id,system,messages:[{role:'user',content:'Sozlesmeyi analiz et ve JSON formatinda yanit ver.'}]})
+    const resp=await aiCagir({istemci:ai,gorev:'uzman-analiz',jsonBekleniyor:true,doctorId:user.id,system,messages:[{role:'user',content:'Sozlesmeyi analiz et ve JSON formatinda yanit ver.'}]})
     const raw=resp.content[0].type==='text'?resp.content[0].text:''
     let parsed
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim())}

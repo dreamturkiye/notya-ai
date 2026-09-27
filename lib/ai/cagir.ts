@@ -1,27 +1,33 @@
 /**
- * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNA-01 — tüm LLM çağrılarının tek kapısı.
+ * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNA-01 + NOTYA-MODEL-LUNAPRO-01 — tüm LLM çağrılarının tek kapısı.
  *
  * Model ve önerilen max_tokens görevden gelir (lib/ai/modeller.ts → modelSec); çağrı yeri model adı yazmaz.
  * Taşıma yolu lib/ai/saglayici.ts'te seçilir:
- *  - OPENROUTER_API_KEY varsa → OpenRouter (HIZLI = GPT-6 Luna, GÜÇLÜ = Sonnet 5); istek/yanıt Anthropic biçimine çevrilir.
+ *  - OPENROUTER_API_KEY varsa → OpenRouter (birincil = GPT-6 Luna-Pro, koruyucu = Sonnet 5); istek/yanıt Anthropic
+ *    biçimine çevrilir.
  *  - yoksa → eski Anthropic yolu, birebir: `istemci` verilirse SDK istemcisi (SDK'yı mock'layan testler aynen çalışır),
- *    verilmezse doğrudan fetch ile /v1/messages. OpenAI modeli bu yolda gidemez → GÜÇLÜ (neden = transport).
+ *    verilmezse doğrudan fetch ile /v1/messages. OpenAI modeli bu yolda gidemez → koruyucu (neden = transport).
  * HTTP hatasında AiCagriHatasi fırlatılır (durum + gövde); çağıran eskisi gibi kendi hata mesajını seçer.
  *
- * Güvenceler burada, çağrı yerinde değil:
- *  1. KALİTE kapısı (çağrıdan önce): GÜÇLÜ görev, görsel/PDF bloğu (GÖRSEL = GÜÇLÜ, Kaan 2026-09-19) ya da HIZLI
- *     görevde güvenlik sinyali → GÜÇLÜ. Luna boş/ret/düşük güven dönerse → GÜÇLÜ (low_conf).
- *  2. TAŞIMA kapısı (yalnız Luna): 5xx / zaman aşımı / boş gövde / 429 / ağ → 400 ms → Luna bir kez → GÜÇLÜ (transport).
- *  3. Prompt caching: system blok dizisi olarak verilirse `onbellek: true` bloklar cache_control alır (OpenRouter'da da).
- *  4. Ölçüm: her yanıtın usage sayaçları + kademe + neden ai_token_kullanim'a yazılır (yalnız sayaç — lib/ai/kullanim.ts).
+ * Birincil model HER görevde Luna-Pro (Kaan, 2026-09-27) — görsel/PDF dahil. Sonnet 5 koruyucudur, dört kapıdan:
+ *  G3 GÜVENLİK (çağrıdan önce): mesajda ya da `guvenlikBaglami`nda (hasta dosyası) güvenlik sinyali → koruyucu (safety).
+ *  G4 DEVRE (çağrıdan önce): birincilin devresi açık → koruyucu (devre) — lib/ai/devre.ts.
+ *  G1 TAŞIMA: 5xx / zaman aşımı / boş gövde / 429 / ağ → 400 ms → birincil bir kez → koruyucu (transport).
+ *  G2 KALİTE (çağrıdan sonra, istek başına en fazla bir kez): boş / ret / düşük güven; yapılandırılmış işte (`jsonBekleniyor`)
+ *     F3 onarımının da kurtaramadığı JSON ya da max_tokens kesilmesi; bilinmeyen araç adı / bozuk araç argümanı → koruyucu
+ *     (low_conf). SOAP gövdesinin ai_confidence < 0.6 kuralı soapUret.ts'te, `koruyucuyaZorla` ile.
+ *  Her düşüş ai_token_kullanim'a nedeniyle yazılır ve konsola TEK satır düşer (istek kimliği, görev, neden, alt kod —
+ *  içerik yok). Prompt caching: `onbellek: true` system blokları cache_control alır (OpenRouter'da da).
  */
 import type Anthropic from '@anthropic-ai/sdk'
 import {
-  dusukGuvenMi, gorevNedeni, gucluModel, guvenlikSinyaliVar, modelSec,
+  dusukGuvenMi, gucluModel, guvenlikSinyaliVar, modelSec,
   type Gorev, type Kademe, type ModelSecimi, type YukseltmeNedeni,
 } from './modeller'
 import { kullanimKaydet, kullanimSatiri } from './kullanim'
-import { AiCagriHatasi, dogrudanModelAdi, openRouterAkis, openRouterCagir, yolSec } from './saglayici'
+import { AiCagriHatasi, dogrudanModelAdi, gecersizArgumanIsaretle, gecersizArgumanMi, openRouterAkis, openRouterCagir, yolSec } from './saglayici'
+import { devreBasari, devreBirincilIzinli, devreHata, devreNotr } from './devre'
+import { jsonOnarDetay } from './jsonOnar'
 
 export { AiCagriHatasi }
 
@@ -57,6 +63,41 @@ export interface AiCagriGirdisi {
    * "veri girişi yapamam". Still a proposal only — commit is the tap.
    */
   toolChoice?: 'auto' | 'any' | { type: 'tool'; name: string }
+  /**
+   * NOTYA-MODEL-LUNA-02: system'e konan hasta dosyası metni (ör. asistanın AKTİF HASTA DOSYASI). Yalnız güvenlik
+   * sinyali taraması için okunur, modele ayrıca GİTMEZ. Kullanıcı mesajları her zaman taranır; sabit system metni
+   * (kurallar, branş kilidi) taranmaz — orada geçen "gebe" her turu Sonnet'e iterdi.
+   */
+  guvenlikBaglami?: string
+  /**
+   * NOTYA-MODEL-LUNAPRO-01 G2 (d): çağıran yanıtı JSON olarak ayrıştıracak. Birincilin yanıtı F3 onarımıyla da
+   * ayrıştırılamıyorsa ya da max_tokens'ta kesildiyse koruyucu bir kez dener. Verilmezse görev varsayılanı
+   * (YAPILANDIRILMIS_GOREVLER); `false` → düzyazı işi, JSON kontrolü yok.
+   */
+  jsonBekleniyor?: boolean
+  /** jsonBekleniyor ile aynı anlam (okunabilirlik için iki ad). */
+  yapilandirilmis?: boolean
+  /**
+   * G2 (f): çağıran birincilin yanıtını kendi ölçütüyle (ör. SOAP ai_confidence < 0.6) reddetti — bu çağrı doğrudan
+   * koruyucuya gider, birincilin devresine hata yazılır. Alt kod konsol satırına düşer (içerik değil).
+   */
+  koruyucuyaZorla?: { neden: 'low_conf'; altKod: string }
+  /** Konsol satırındaki istek kimliği (verilmezse üretilir). Hasta/hekim kimliği DEĞİLDİR. */
+  istekId?: string
+}
+
+/**
+ * Varsayılan olarak yapılandırılmış (JSON) çıktı bekleyen görevler: SOAP gövdesi, mesleki not (noteGenerator / seans
+ * notu — hepsi JSON), görüntü/belge okuma (karne, lab çıkarımı, belge yazarı, gelen belge, mali belge alanları).
+ * Diğer görevlerde JSON bekleyen çağrı yeri `jsonBekleniyor: true` verir (lab yorumu, doz, e-reçete, SGK raporu…);
+ * düzyazı üreten görüntü işi `jsonBekleniyor: false` verir (konsültasyon yanıt özeti).
+ */
+export const YAPILANDIRILMIS_GOREVLER: ReadonlySet<Gorev> = new Set<Gorev>(['soap', 'not-uretimi', 'goruntu-inceleme'])
+
+export function yapilandirilmisMi(g: Pick<AiCagriGirdisi, 'gorev' | 'jsonBekleniyor' | 'yapilandirilmis'>): boolean {
+  if (g.jsonBekleniyor !== undefined) return g.jsonBekleniyor
+  if (g.yapilandirilmis !== undefined) return g.yapilandirilmis
+  return YAPILANDIRILMIS_GOREVLER.has(g.gorev)
 }
 
 /** Yanıttaki tüm metin bloklarını birleştirir. */
@@ -88,14 +129,15 @@ function kullaniciMetni(mesajlar: AiMesaj[]): string {
 }
 
 /**
- * KALİTE kapısı — görevin politikası + GÖRSEL = GÜÇLÜ + güvenlik sinyali. Çağıran yanlış (HIZLI) görev verse bile
- * görselde / güvenlik sinyalinde GÜÇLÜ döner. `neden` ölçüm satırına gider (HIZLI kalırsa null).
+ * Çağrıdan önceki seçim — görevin birincil modeli (LUNAPRO-01: her görevde Luna-Pro), tek istisna G3 GÜVENLİK: kullanıcı
+ * mesajında ya da hasta dosyası bağlamında güvenlik sinyali → koruyucu (safety). Görsel/PDF yükseltmez.
+ * `neden` ölçüm satırına gider (birincil modelde kalırsa null).
  */
-export function etkinSecim(g: Pick<AiCagriGirdisi, 'gorev' | 'messages'>): ModelSecimi & { yukseltildi: boolean; neden: YukseltmeNedeni | null } {
+export function etkinSecim(g: Pick<AiCagriGirdisi, 'gorev' | 'messages' | 'guvenlikBaglami'>): ModelSecimi & { yukseltildi: boolean; neden: YukseltmeNedeni | null } {
   const secim = modelSec(g.gorev)
-  if (secim.kademe === 'guclu') return { ...secim, yukseltildi: false, neden: gorevNedeni(g.gorev) }
-  if (gorselIcerirMi(g.messages)) return { ...secim, kademe: 'guclu', model: gucluModel(), yukseltildi: true, neden: 'vision' }
-  if (guvenlikSinyaliVar(kullaniciMetni(g.messages))) return { ...secim, kademe: 'guclu', model: gucluModel(), yukseltildi: true, neden: 'safety' }
+  if (guvenlikSinyaliVar(`${kullaniciMetni(g.messages)}\n${g.guvenlikBaglami || ''}`)) {
+    return { ...secim, kademe: 'guclu', model: gucluModel(), yukseltildi: true, neden: 'safety' }
+  }
   return { ...secim, yukseltildi: false, neden: null }
 }
 
@@ -154,29 +196,77 @@ async function olc(g: AiCagriGirdisi, govde: Record<string, unknown>, yanit: Ant
   }))
 }
 
-/** Luna'nın taşıma hatası: 5xx, 429, zaman aşımı (504), ağ (503), boş gövde (502). 4xx istek hatası değildir. */
+/** Birincilin taşıma hatası: 5xx, 429, zaman aşımı (504), ağ (503), boş gövde (502). 4xx istek hatası değildir. */
 export function tasimaHatasiMi(e: unknown): boolean {
   return e instanceof AiCagriHatasi && (e.durum >= 500 || e.durum === 429)
 }
 
-/** Luna cevabı kullanılamaz mı: metin + araç çağrısı yok, ret, ya da "daha fazla bilgi şart / emin değilim". */
+/** Birincil cevabı kullanılamaz mı: metin + araç çağrısı yok, ret, ya da "daha fazla bilgi şart / emin değilim". */
 export function dusukGuvenliYanit(y: Anthropic.Message | null | undefined): boolean {
-  if (!y) return true
+  return dusukGuvenKodu(y) !== null
+}
+
+/** G2 (a)–(c) alt kodu: bos | ret | dusuk_guven; kullanılabilir cevapta null. Araç çağrısı boş cevap sayılmaz. */
+function dusukGuvenKodu(y: Anthropic.Message | null | undefined): string | null {
+  if (!y) return 'bos'
   const bloklar = Array.isArray(y.content) ? (y.content as { type?: string }[]) : []
-  if (bloklar.some((b) => b?.type === 'tool_use')) return false
+  if ((y.stop_reason as string | null) === 'refusal') return 'ret'
+  if (bloklar.some((b) => b?.type === 'tool_use')) return null
   const metin = yanitMetni(y).trim()
-  return !metin || (y.stop_reason as string | null) === 'refusal' || dusukGuvenMi(metin)
+  if (!metin) return 'bos'
+  return dusukGuvenMi(metin) ? 'dusuk_guven' : null
+}
+
+/** G2 (e): bilinmeyen araç adı ya da JSON olarak çözülemeyen araç argümanı. */
+function aracKodu(g: Pick<AiCagriGirdisi, 'araclar'>, y: Anthropic.Message): string | null {
+  const bloklar = (Array.isArray(y?.content) ? y.content : []) as { type?: string; name?: string }[]
+  const cagrilar = bloklar.filter((b) => b?.type === 'tool_use')
+  if (!cagrilar.length) return null
+  const adlar = new Set((g.araclar || []).map((a) => String((a as { name?: unknown })?.name ?? '')))
+  if (cagrilar.some((b) => !b.name || !adlar.has(String(b.name)))) return 'arac_adi'
+  if (cagrilar.some(gecersizArgumanMi)) return 'arac_json'
+  return null
+}
+
+/** G2 (d): yapılandırılmış işte max_tokens kesilmesi ya da F3 onarımının da kurtaramadığı JSON. */
+function yapiKodu(y: Anthropic.Message): string | null {
+  if ((y.stop_reason as string | null) === 'max_tokens') return 'kesildi'
+  const metin = yanitMetni(y).trim()
+  if (!metin) return null // boş cevap (a)'da sayılır; araç-yalnız yanıt JSON beklemez
+  const r = jsonOnarDetay(metin)
+  return r.neden === 'ok' && r.deger !== null && typeof r.deger === 'object' ? null : 'json'
+}
+
+/**
+ * G2 kalite kapısı — birincilin cevabı koruyucuya gitmeli mi? Alt kod (konsol satırı için) ya da null.
+ * Sıra: (b) ret, (e) araç, (a)(c) boş / düşük güven, (d) yapılandırılmış JSON.
+ */
+export function kaliteKodu(g: Pick<AiCagriGirdisi, 'gorev' | 'araclar' | 'jsonBekleniyor' | 'yapilandirilmis'>, y: Anthropic.Message | null | undefined): string | null {
+  if (!y) return 'bos'
+  if ((y.stop_reason as string | null) === 'refusal') return 'ret'
+  const arac = aracKodu(g, y)
+  if (arac) return arac
+  const dusuk = dusukGuvenKodu(y)
+  if (dusuk) return dusuk
+  return yapilandirilmisMi(g) ? yapiKodu(y) : null
 }
 
 /** Taşıma kapısında denemeler arası bekleme (testler kısaltır). */
 export const TASIMA_BEKLEME = { ms: 400 }
-/** Luna (HIZLI) çağrısının zaman aşımı — aşılırsa taşıma hatası sayılır. GÜÇLÜ çağrıda zaman aşımı yok (eskisi gibi). */
-const LUNA_ZAMAN_ASIMI_MS = 25_000
+/**
+ * Birincil çağrının zaman aşımı — aşılırsa taşıma hatası sayılır. Koruyucu çağrıda zaman aşımı yok (eskisi gibi).
+ * SOAP (8000) ve karne/görüntü (12000) de birincilde; 25 sn uzun çıktıyı yarıda keserdi. Tavan max_tokens'la büyür
+ * (~8 ms/token), 25–60 sn arası: kısa işler 25 sn, uzun işler 60 sn.
+ */
+export function lunaZamanAsimiMs(maxTokens: unknown): number {
+  const n = typeof maxTokens === 'number' && Number.isFinite(maxTokens) ? maxTokens : 0
+  return Math.min(60_000, Math.max(25_000, n * 8))
+}
 const bekle = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 type Hedef = { govde: Record<string, unknown>; kademe: Kademe; neden: YukseltmeNedeni | null }
 
-/** Seçilen modeli bu ortamda gidebileceği bir modele çevirir: OpenAI modeli + OpenRouter yok → GÜÇLÜ (transport). */
+/** Seçilen modeli bu ortamda gidebileceği bir modele çevirir: OpenAI modeli + OpenRouter yok → koruyucu (transport). */
 function hedefBelirle(g: AiCagriGirdisi): Hedef {
   const secim = etkinSecim(g)
   const govde = istekGovdesi(g)
@@ -186,14 +276,38 @@ function hedefBelirle(g: AiCagriGirdisi): Hedef {
   return { govde: { ...govde, model: guclu }, kademe: 'guclu', neden: 'transport' }
 }
 
-/** GÜÇLÜ modelle aynı istek (Luna kapısından düşüş). */
+/** Koruyucu modelle aynı istek (birincil kapısından düşüş). */
 function gucluyeYukselt(h: Hedef, neden: YukseltmeNedeni): Hedef {
   return { govde: { ...h.govde, model: gucluModel() }, kademe: 'guclu', neden }
 }
 
-/** Luna kapısı yalnız HIZLI kademe OpenRouter'dan giderken çalışır; doğrudan Anthropic yolu eskisi gibi tek çağrıdır. */
+/** Birincil kapısı (G1, G2, G4) yalnız HIZLI kademe OpenRouter'dan giderken çalışır; doğrudan Anthropic yolu tek çağrıdır. */
 function lunaKapisiMi(h: Hedef): boolean {
   return h.kademe === 'hizli' && yolSec(String(h.govde.model)) === 'openrouter'
+}
+
+function istekKimligi(g: AiCagriGirdisi): string {
+  if (g.istekId) return String(g.istekId).slice(0, 40)
+  try { return globalThis.crypto.randomUUID().slice(0, 8) } catch { return Math.random().toString(36).slice(2, 10) }
+}
+
+/** Her düşüşte tek konsol satırı — istek kimliği, görev, neden, alt kod. İçerik, hasta, prompt YOK. */
+function dususGunlukle(istekId: string, gorev: Gorev, neden: YukseltmeNedeni, altKod: string): void {
+  console.warn(`[ai/yedek] istek=${istekId} gorev=${gorev} neden=${neden} alt=${altKod}`)
+}
+
+function tasimaAltKodu(e: unknown): string {
+  return e instanceof AiCagriHatasi ? `http_${e.durum}` : 'ag'
+}
+
+/** Koruyucu yanıtının hangi kademeden ve hangi nedenle geldiği (ör. SOAP G2 (f) ikinci kez yedeğe gitmesin). */
+const YANIT_KADEMESI = new WeakMap<object, Olcum>()
+export function yanitKademesi(y: unknown): Olcum | null {
+  return y && typeof y === 'object' ? YANIT_KADEMESI.get(y as object) ?? null : null
+}
+function isaretle<T>(y: T, o: Olcum): T {
+  if (y && typeof y === 'object') YANIT_KADEMESI.set(y as object, { kademe: o.kademe, neden: o.neden })
+  return y
 }
 
 async function tekCagri(g: AiCagriGirdisi, govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Anthropic.Message> {
@@ -218,38 +332,58 @@ async function olcSessiz(g: AiCagriGirdisi, h: Hedef, yanit: Anthropic.Message):
   try { await olc(g, h.govde, yanit, h) } catch { /* ölçüm çağrıyı asla düşürmez */ }
 }
 
+/** Koruyucuya tek çağrı (düşüş). Koruyucunun cevabı kapılardan geçmez — istek başına en fazla bir düşüş. */
+async function koruyucuCagri(g: AiCagriGirdisi, h: Hedef, neden: YukseltmeNedeni, altKod: string, istekId: string): Promise<Anthropic.Message> {
+  dususGunlukle(istekId, g.gorev, neden, altKod)
+  const t = gucluyeYukselt(h, neden)
+  const y = await tekCagri(g, t.govde)
+  await olcSessiz(g, t, y)
+  return isaretle(y, t)
+}
+
 export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
   const h = hedefBelirle(g)
+  if (h.neden === 'safety') dususGunlukle(istekKimligi(g), g.gorev, 'safety', 'sinyal')
   if (!lunaKapisiMi(h)) {
     const yanit = await tekCagri(g, h.govde)
     await olcSessiz(g, h, yanit)
-    return yanit
+    return isaretle(yanit, h)
   }
-  // TAŞIMA kapısı: Luna → 400 ms → Luna bir kez → GÜÇLÜ
+  const birincil = String(h.govde.model)
+  const istekId = istekKimligi(g)
+  // G2 (f): çağıran birincilin cevabını reddetti → doğrudan koruyucu, birincilin devresine hata.
+  if (g.koruyucuyaZorla) {
+    devreHata(birincil)
+    return koruyucuCagri(g, h, g.koruyucuyaZorla.neden, g.koruyucuyaZorla.altKod, istekId)
+  }
+  // G4: devre açık → birincil hiç çağrılmaz.
+  if (!devreBirincilIzinli(birincil)) return koruyucuCagri(g, h, 'devre', 'acik', istekId)
+
+  // G1 TAŞIMA: birincil → 400 ms → birincil bir kez → koruyucu
   let yanit: Anthropic.Message | null = null
+  let sonHata: unknown = null
   for (let deneme = 0; deneme < 2 && !yanit; deneme++) {
     if (deneme) await bekle(TASIMA_BEKLEME.ms)
     try {
-      yanit = await tekCagri(g, h.govde, LUNA_ZAMAN_ASIMI_MS)
+      yanit = await tekCagri(g, h.govde, lunaZamanAsimiMs(h.govde.max_tokens))
     } catch (e) {
-      if (!tasimaHatasiMi(e)) throw e
+      if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
+      sonHata = e
     }
   }
   if (!yanit) {
-    const t = gucluyeYukselt(h, 'transport')
-    const y = await tekCagri(g, t.govde)
-    await olcSessiz(g, t, y)
-    return y
+    devreHata(birincil)
+    return koruyucuCagri(g, h, 'transport', tasimaAltKodu(sonHata), istekId)
   }
   await olcSessiz(g, h, yanit)
-  // KALİTE kapısı (çağrı sonrası): boş / ret / düşük güven → GÜÇLÜ
-  if (dusukGuvenliYanit(yanit)) {
-    const t = gucluyeYukselt(h, 'low_conf')
-    const y = await tekCagri(g, t.govde)
-    await olcSessiz(g, t, y)
-    return y
+  // G2 KALİTE (çağrı sonrası, bir kez): boş / ret / düşük güven / bozuk-kesik JSON / bozuk araç çağrısı → koruyucu
+  const kod = kaliteKodu(g, yanit)
+  if (kod) {
+    devreHata(birincil)
+    return koruyucuCagri(g, h, 'low_conf', kod, istekId)
   }
-  return yanit
+  devreBasari(birincil)
+  return isaretle(yanit, h)
 }
 
 type AkisOlayi = {
@@ -301,51 +435,79 @@ async function anthropicAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, h: Hede
   }
   jsonlar.forEach((j, i) => {
     if (!bloklar[i]) return
-    try { bloklar[i].input = j ? JSON.parse(j) : {} } catch { bloklar[i].input = {} }
+    try { bloklar[i].input = j ? JSON.parse(j) : {} } catch { bloklar[i].input = {}; gecersizArgumanIsaretle(bloklar[i]) }
   })
   const yanit = { model, content: bloklar.filter(Boolean), stop_reason: stopReason, usage } as unknown as Anthropic.Message
   try { await olc(g, govde, yanit, h) } catch { /* ölçüm çağrıyı asla düşürmez */ }
   return yanit
 }
 
-/** OpenRouter yolunda akış; Luna ise taşıma kapısı yalnız henüz metin söylenmemişken devreye girer. */
+/**
+ * OpenRouter yolunda akış. Birincilde kapılar yalnız henüz söz söylenmemişken devreye girer:
+ *  - G4 devre açık → koruyucu akışı; G1 ilk sözden önce taşıma hatası → birincil bir kez → koruyucu akışı;
+ *  - G2 hiç metin söylenmediyse (boş / ret / bozuk araç çağrısı) → koruyucu akışı.
+ * İlk sözden SONRA kopan akış yeniden söylenmez: kesik cevap olarak döner (saglayici.ts `koptu`), F3 / DEVAMI_EKRANDA
+ * yolu işler; birincilin devresine hata yazılır.
+ */
 async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   if (!lunaKapisiMi(h)) {
     const { yanit } = await openRouterAkis(h.govde, metinParcasi)
     await olcSessiz(g, h, yanit)
-    return yanit
+    return isaretle(yanit, h)
   }
-  const guclu = async (neden: YukseltmeNedeni) => {
+  const birincil = String(h.govde.model)
+  const istekId = istekKimligi(g)
+  const guclu = async (neden: YukseltmeNedeni, altKod: string) => {
+    dususGunlukle(istekId, g.gorev, neden, altKod)
     const t = gucluyeYukselt(h, neden)
     const { yanit } = await openRouterAkis(t.govde, metinParcasi)
     await olcSessiz(g, t, yanit)
-    return yanit
+    return isaretle(yanit, t)
   }
-  let sonuc: { yanit: Anthropic.Message; metinVerildi: boolean } | null = null
+  if (!devreBirincilIzinli(birincil)) return guclu('devre', 'acik')
+  let sonuc: { yanit: Anthropic.Message; metinVerildi: boolean; koptu?: boolean } | null = null
+  let sonHata: unknown = null
   for (let deneme = 0; deneme < 2 && !sonuc; deneme++) {
     if (deneme) await bekle(TASIMA_BEKLEME.ms)
     try {
-      sonuc = await openRouterAkis(h.govde, metinParcasi, LUNA_ZAMAN_ASIMI_MS)
+      sonuc = await openRouterAkis(h.govde, metinParcasi, lunaZamanAsimiMs(h.govde.max_tokens))
     } catch (e) {
-      // Söylenmiş metin geri alınamaz — akış ortasında kopan Luna turu tekrarlanmaz, hata çağırana gider.
-      if (!tasimaHatasiMi(e) || (e as { metinVerildi?: boolean }).metinVerildi) throw e
+      if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
+      sonHata = e
     }
   }
-  if (!sonuc) return guclu('transport')
+  if (!sonuc) {
+    devreHata(birincil)
+    return guclu('transport', tasimaAltKodu(sonHata))
+  }
   await olcSessiz(g, h, sonuc.yanit)
-  // Hiç metin söylenmediyse (boş / ret) GÜÇLÜ'ye yükselt; söylenmiş düşük güvenli metin sesli yolda geri alınamaz.
-  if (!sonuc.metinVerildi && dusukGuvenliYanit(sonuc.yanit)) return guclu('low_conf')
-  return sonuc.yanit
+  if (sonuc.koptu) {
+    // Söylenmiş söz geri alınmaz: kesik tur olarak döner, koruyucu çağrılmaz.
+    devreHata(birincil)
+    console.warn(`[ai/akis] istek=${istekId} gorev=${g.gorev} birincil akış ilk sözden sonra koptu — kesik tur, yeniden söylenmez`)
+    return isaretle(sonuc.yanit, h)
+  }
+  // Hiç metin söylenmediyse (boş / ret / bozuk araç) koruyucuya; söylenmiş düşük güvenli metin sesli yolda geri alınamaz.
+  if (!sonuc.metinVerildi) {
+    const kod = kaliteKodu({ ...g, jsonBekleniyor: false }, sonuc.yanit)
+    if (kod) {
+      devreHata(birincil)
+      return guclu('low_conf', kod)
+    }
+  }
+  devreBasari(birincil)
+  return isaretle(sonuc.yanit, h)
 }
 
 /**
  * NOTYA-TEK-BEYIN — aiCagir'in akışlı eşi (sesli Ayşe ilk sözü model yazarken söyler). İstek gövdesi, kademe,
- * GÖRSEL = GÜÇLÜ ve ölçüm aiCagir'le aynı; `metinParcasi` her metin parçasında çağrılır. Dönen mesaj akıştan
+ * güvenlik yükseltmesi ve ölçüm aiCagir'le aynı; `metinParcasi` her metin parçasında çağrılır. Dönen mesaj akıştan
  * birleştirilir (text + tool_use blokları, stop_reason, usage) — çağıran onu aiCagir yanıtıyla aynı işler.
  * OpenRouter yolunda SSE chat.completions akışı aynı geri çağrıya bağlanır.
  */
 export async function aiAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   const h = hedefBelirle(g)
+  if (h.neden === 'safety') dususGunlukle(istekKimligi(g), g.gorev, 'safety', 'sinyal')
   if (yolSec(String(h.govde.model)) === 'openrouter') return openRouterAkisKapili(g, h, metinParcasi)
   return anthropicAkis(g, h, metinParcasi)
 }

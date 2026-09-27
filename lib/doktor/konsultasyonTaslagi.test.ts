@@ -1,6 +1,6 @@
 /**
  * AYSE-KONSULTASYON-01 — Ayşe'nin istem / yanıt taslakları, saf kurallar (sentetik veri):
- *   • model kademesi: istem 'klinik-analiz', yanıt 'goruntu-inceleme' — ikisi de GÜÇLÜ, HIZLI'ya düşmez
+ *   • model: istem 'klinik-analiz', yanıt 'goruntu-inceleme' — ikisi de birincil (NOTYA-MODEL-LUNAPRO-01); Sonnet 5 yalnız G1–G4
  *   • önbellek: sabit system prompt cache_control alır, hasta dosyası system'e girmez
  *   • bağlam: BÜTÜN vizitler okunur, AĞIRLIK SON MUAYENEDE (son tam, öncekiler tek satır, ham metin yok)
  *   • çıktı: selamlama/imza sunucudan; ham JSON / kesilmiş / DOSYA_YETERSIZ düşer (F3); uydurma doz yer tutucu olur
@@ -44,21 +44,21 @@ const kaynak = (o: Partial<IstemKaynagi> = {}): IstemKaynagi => ({
   ...o,
 })
 
-describe('AYSE-KONSULTASYON-01 — model kademesi (GÜÇLÜ, HIZLI\'ya düşmez)', () => {
-  it("istem taslağı 'klinik-analiz' → GÜÇLÜ; yanıt taslağı 'goruntu-inceleme' → GÜÇLÜ", () => {
+describe('AYSE-KONSULTASYON-01 — model (LUNAPRO-01: birincil, Sonnet 5 yalnız G1–G4)', () => {
+  it("istem taslağı 'klinik-analiz' → birincil; yanıt taslağı 'goruntu-inceleme' → birincil", () => {
     assert.equal(ISTEM_TASLAK_GOREVI, 'klinik-analiz')
     assert.equal(YANIT_TASLAK_GOREVI, 'goruntu-inceleme')
     for (const g of [ISTEM_TASLAK_GOREVI, YANIT_TASLAK_GOREVI]) {
-      assert.equal(GOREV_POLITIKASI[g].kademe, 'guclu', g)
+      assert.equal(GOREV_POLITIKASI[g].kademe, 'hizli', g)
       const s = modelSec(g)
-      assert.equal(s.model, gucluModel(), g)
-      assert.notEqual(s.model, hizliModel(), `${g} HIZLI modele düştü`)
+      assert.equal(s.model, hizliModel(), g)
+      assert.notEqual(s.model, gucluModel(), `${g} koruyucuya zorlandı`)
     }
   })
-  it('istek gövdesi: GÜÇLÜ model; sabit system prompt önbellekli ve hasta verisi içermez; dosya user mesajında', () => {
+  it('istek gövdesi: birincil model; sabit system prompt önbellekli ve hasta verisi içermez; dosya user mesajında', () => {
     const baglam = istemBaglamiDerle(kaynak())
     const g = istekGovdesi({ gorev: ISTEM_TASLAK_GOREVI, system: [{ metin: ISTEM_TASLAK_SISTEMI, onbellek: true }], messages: [{ role: 'user', content: baglam }] })
-    assert.equal(g.model, gucluModel())
+    assert.equal(g.model, hizliModel())
     const sys = g.system as Array<{ text: string; cache_control?: unknown }>
     assert.equal(sys.length, 1)
     assert.deepEqual(sys[0].cache_control, { type: 'ephemeral' })
@@ -66,9 +66,9 @@ describe('AYSE-KONSULTASYON-01 — model kademesi (GÜÇLÜ, HIZLI\'ya düşmez)
     assert.ok(!sys[0].text.includes('Üç gündür sağ kulak ağrısı'), 'hasta dosyası sabit bloğa karışmaz')
     assert.ok(String((g.messages as Array<{ content: string }>)[0].content).includes('Üç gündür sağ kulak ağrısı'))
   })
-  it('yanıt taslağı: görsel/PDF blokla bile GÜÇLÜ (cagir.ts emniyeti) ve sabit prompt önbellekli', () => {
+  it('yanıt taslağı: görsel/PDF blokla da birincil (GÖRSEL = GÜÇLÜ emekli) ve sabit prompt önbellekli', () => {
     const g = istekGovdesi({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'eA==' } }] }] })
-    assert.equal(g.model, gucluModel())
+    assert.equal(g.model, hizliModel())
     assert.deepEqual((g.system as Array<{ cache_control?: unknown }>)[0].cache_control, { type: 'ephemeral' })
   })
   it('sabit prompt: Dr. Gökhan biçimi, kısaltmasız, yalnız dosya, doz/tanı uydurma yasağı, DOSYA_YETERSIZ kaçış yolu', () => {

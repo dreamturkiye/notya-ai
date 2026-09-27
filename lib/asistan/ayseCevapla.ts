@@ -253,6 +253,8 @@ ${ilacBaglamMetni(drugs[0])}`
   let dosyaEk = ""
   let odakDosyaMetni = ""
   let odakHastaAdi = ""
+  // NOTYA-MODEL-LUNA-02: dosyanın yalnız hasta verisi (kurallar değil) — güvenlik sinyali taraması için (gebe, warfarin …).
+  let dosyaGuvenlikMetni = ""
   let cozulenHasta: { id: string; ad: string } | null = null
   let kesinDosyaCevap: string | null = null
   let aramaCevabi: string | null = null
@@ -326,6 +328,7 @@ ${ilacBaglamMetni(drugs[0])}`
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
+          dosyaGuvenlikMetni = String(paket.metin || "")
           dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
           if (sorgu && soruTuru) {
             dosyaEk += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
@@ -380,8 +383,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // ve hasta bloğunun üstüne çıkarsa önceliği onları kapsamaz (kalite riski).
   const sistem = buildSystemPromptParcalari(persona, prefs, currentPatient, doctorProfile, hafizaBlogu)
 
-  // NOTYA-MALIYET-01 (Kaan, 2026-09-19): ŞÜPHEDE GÜÇLÜ. Hasta bağlamı, eylem niyeti, klinik sinyal ya da belirsiz mesaj →
-  // GÜÇLÜ (Sonnet, 1600 token — F3). HIZLI yalnız net sosyal tur / uygulama kullanımı sorusu. Kural: lib/ai/modeller.ts.
+  // NOTYA-MALIYET-01 (Kaan, 2026-09-19): şüphede uzman tur. Hasta bağlamı, eylem niyeti, klinik sinyal ya da belirsiz mesaj →
+  // sohbet-uzman (1600 token — F3); sohbet yalnız net sosyal tur / uygulama kullanımı sorusu. Kural: lib/ai/modeller.ts.
+  // NOTYA-MODEL-LUNAPRO-01: iki görev de birincil Luna-Pro; Sonnet 5 yalnız G1–G4 koruyucusu.
   const yonlendirme = asistanModelYonlendir({ mesaj: String(message || ""), hastaBaglami: Boolean(dosyaEk) || Boolean(currentPatient), niyet: quickIntent })
 
   const eylemBransi = bransAnahtari(hekimBransi)
@@ -406,6 +410,8 @@ ${ilacBaglamMetni(drugs[0])}`
     istemci: getAnthropic(),
     gorev: yonlendirme.gorev,
     doctorId: doktorId,
+    // Hasta dosyası ve aktif hasta system'de — güvenlik sinyali taraması mesajla birlikte bunları da okur.
+    guvenlikBaglami: [dosyaGuvenlikMetni, currentPatient ? JSON.stringify(currentPatient) : ""].filter(Boolean).join("\n"),
     araclar,
     toolChoice,
     system: [

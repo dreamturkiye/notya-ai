@@ -99,12 +99,13 @@ export async function POST(req: NextRequest) {
   const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
 
   try {
-    // NOTYA-MALIYET-01: SOAP üzerinde klinik danışma + düzenleme — GÜÇLÜ (klinik-analiz)
+    // NOTYA-MALIYET-01: SOAP üzerinde klinik danışma + düzenleme (klinik-analiz). LUNAPRO-01: birincil Luna-Pro; taslak ve dosya
+    // bağlamı system'in değişken bloğunda — güvenlik taramasına guvenlikBaglami ile verilir.
     let ham: string
     let yanit: Awaited<ReturnType<typeof aiCagir>> | null = null
     try {
       // prompt caching: kimlik/yetenekler/alan anahtarları (branş kapsamı başına sabit) önbellekli; tarih, taslak, dosya, hafıza arkasından
-      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar, toolChoice })
+      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: sistem.degisken })
       // yanitMetni yalnız text bloklarını birleştirir — tool_use blokları JSON zarfını bozmaz.
       ham = yanitMetni(yanit)
     } catch (e) {

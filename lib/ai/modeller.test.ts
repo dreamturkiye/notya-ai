@@ -1,7 +1,8 @@
 /**
- * NOTYA-MALIYET-01 — model politikası ve asistan yönlendirme kuralı.
- * Kaan (2026-09-19, bağlayıcı): KLİNİK KALİTE > MALİYET. Görüntü/inceleme istisnasız GÜÇLÜ; asistan sohbetinde
- * şüphede GÜÇLÜ; HIZLI yalnız dar bir klinik-dışı listede.
+ * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNAPRO-01 — model politikası ve asistan yönlendirme kuralı.
+ * Kaan (2026-09-27, LUNAPRO-01): her görevin birincil modeli HIZLI (GPT-6 Luna-Pro), görüntü dahil. Sonnet 5 yalnız
+ * koruyucu (G1 transport / G2 low_conf / G3 safety / G4 devre — lib/ai/cagir.ts, lib/ai/devre.ts). Asistan
+ * yönlendirmesi sohbet ↔ sohbet-uzman ayırır (prompt, F3) — model için değil.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -11,27 +12,52 @@ import {
 } from './modeller'
 
 describe('görev politikası — kademe tablosu', () => {
-  it('görüntü/inceleme ayrı bir görev ve istisnasız GÜÇLÜ', () => {
-    assert.equal(GOREV_POLITIKASI['goruntu-inceleme'].kademe, 'guclu')
-    assert.equal(modelSec('goruntu-inceleme').model, gucluModel())
+  it('LUNA-02: görüntü/inceleme ayrı bir görev (12000 tavan) ve birincil HIZLI', () => {
+    assert.equal(GOREV_POLITIKASI['goruntu-inceleme'].kademe, 'hizli')
+    assert.equal(GOREV_POLITIKASI['goruntu-inceleme'].maxTokens, 12000)
+    assert.equal(modelSec('goruntu-inceleme').model, hizliModel())
   })
 
-  it('klinik ve uzman çıktılar GÜÇLÜ (SOAP, not, konsültasyon/ICD/e-reçete/doz, hukuk, uzman sohbet)', () => {
+  it('LUNA-02: klinik ve uzman görevler birincil HIZLI (SOAP, not, konsültasyon/ICD/e-reçete/doz, hukuk, uzman sohbet)', () => {
     for (const g of ['soap', 'not-uretimi', 'klinik-analiz', 'uzman-analiz', 'sohbet-uzman'] as Gorev[]) {
-      assert.equal(GOREV_POLITIKASI[g].kademe, 'guclu', g)
+      assert.equal(GOREV_POLITIKASI[g].kademe, 'hizli', g)
+      assert.equal(modelSec(g).model, hizliModel(), g)
     }
   })
 
-  it('HIZLI yalnız dar klinik-dışı liste — yeni bir HIZLI görev bu testi bilinçli güncellemeden eklenemez', () => {
-    const hizli = (Object.keys(GOREV_POLITIKASI) as Gorev[]).filter((g) => GOREV_POLITIKASI[g].kademe === 'hizli').sort()
-    assert.deepEqual(hizli, ['bicimlendirme', 'cikarim', 'kisa-yanit', 'ozet', 'siniflandirma', 'sohbet'])
+  it('LUNAPRO-01: hiçbir görev birincil GÜÇLÜ değil — Sonnet 5 yalnız cagir.ts kapılarından', () => {
+    const guclu = (Object.keys(GOREV_POLITIKASI) as Gorev[]).filter((g) => GOREV_POLITIKASI[g].kademe === 'guclu')
+    assert.deepEqual(guclu, [])
+  })
+
+  it('LUNAPRO-01: HER görev → birincil (hizli kademe, Luna-Pro), ortam değişkeni yokken', () => {
+    const eski = process.env.NOTYA_MODEL_HIZLI
+    delete process.env.NOTYA_MODEL_HIZLI
+    try {
+      for (const g of Object.keys(GOREV_POLITIKASI) as Gorev[]) {
+        const s = modelSec(g)
+        assert.equal(s.kademe, 'hizli', g)
+        assert.equal(s.model, MODEL_HIZLI, g)
+        assert.equal(s.model, 'openai/gpt-6-luna-pro', g)
+      }
+    } finally {
+      if (eski !== undefined) process.env.NOTYA_MODEL_HIZLI = eski
+    }
+  })
+
+  it('görevlerin maxTokens tavanları LUNA-01 ile aynı (F3 — tavan düşürülmedi)', () => {
+    const tavan = Object.fromEntries((Object.keys(GOREV_POLITIKASI) as Gorev[]).map((g) => [g, GOREV_POLITIKASI[g].maxTokens]))
+    assert.deepEqual(tavan, {
+      soap: 8000, 'not-uretimi': 4000, 'klinik-analiz': 2000, 'goruntu-inceleme': 12000, 'uzman-analiz': 2000,
+      'sohbet-uzman': 1600, sohbet: 800, siniflandirma: 20, ozet: 300, bicimlendirme: 1000, cikarim: 500, 'kisa-yanit': 300,
+    })
   })
 
   it('F3: GÜÇLÜ sohbet turunun tavanı 1600 (800 uzun klinik cevabı JSON ortasında kesiyordu)', () => {
     assert.ok(GOREV_POLITIKASI['sohbet-uzman'].maxTokens >= 1600)
   })
 
-  it('varsayılan modeller (karar A, 2026-09-26): Sonnet 5 / GPT-6 Luna; ortam değişkeni geçerliyse onu, geçersizse varsayılanı kullanır', () => {
+  it('varsayılan modeller (LUNAPRO-01, 2026-09-27): Sonnet 5 koruyucu / GPT-6 Luna-Pro birincil; ortam değişkeni geçerliyse onu, geçersizse varsayılanı kullanır', () => {
     const eski = { g: process.env.NOTYA_MODEL_GUCLU, h: process.env.NOTYA_MODEL_HIZLI }
     try {
       delete process.env.NOTYA_MODEL_GUCLU
@@ -39,7 +65,10 @@ describe('görev politikası — kademe tablosu', () => {
       assert.equal(gucluModel(), MODEL_GUCLU)
       assert.equal(hizliModel(), MODEL_HIZLI)
       process.env.NOTYA_MODEL_GUCLU = 'yeni-model-1'
-      assert.equal(modelSec('soap').model, 'yeni-model-1')
+      assert.equal(gucluModel(), 'yeni-model-1')
+      // Geri dönüş anahtarı (LUNAPRO-01): NOTYA_MODEL_HIZLI=anthropic/claude-sonnet-5 → tek yeniden dağıtımda her görev Sonnet 5
+      process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-sonnet-5'
+      assert.equal(modelSec('soap').model, 'anthropic/claude-sonnet-5')
       process.env.NOTYA_MODEL_GUCLU = 'bozuk model; drop'
       assert.equal(gucluModel(), MODEL_GUCLU)
       // Geri dönüş anahtarı: OpenRouter slug'ı (eğik çizgi + nokta) geçerli bir değerdir
@@ -51,17 +80,14 @@ describe('görev politikası — kademe tablosu', () => {
     }
   })
 
-  it("varsayılan slug'ları: HIZLI = openai/gpt-6-luna, GÜÇLÜ = anthropic/claude-sonnet-5", () => {
-    assert.equal(MODEL_HIZLI, 'openai/gpt-6-luna')
+  it("varsayılan slug'ları: HIZLI (birincil) = openai/gpt-6-luna-pro, GÜÇLÜ (koruyucu) = anthropic/claude-sonnet-5", () => {
+    assert.equal(MODEL_HIZLI, 'openai/gpt-6-luna-pro')
     assert.equal(MODEL_GUCLU, 'anthropic/claude-sonnet-5')
   })
 
-  it('yükseltme nedeni: imzalı çıktı = onayla, görüntü = vision, diğer klinik = uzman, HIZLI = null', () => {
-    assert.equal(gorevNedeni('soap'), 'onayla')
-    assert.equal(gorevNedeni('not-uretimi'), 'onayla')
-    assert.equal(gorevNedeni('goruntu-inceleme'), 'vision')
-    for (const g of ['klinik-analiz', 'uzman-analiz', 'sohbet-uzman'] as Gorev[]) assert.equal(gorevNedeni(g), 'uzman', g)
-    for (const g of ['sohbet', 'siniflandirma', 'ozet', 'bicimlendirme', 'cikarim', 'kisa-yanit'] as Gorev[]) assert.equal(gorevNedeni(g), null, g)
+  it('LUNA-02 / LUNAPRO-01: görev tek başına yükseltmez — gorevNedeni her görevde null (onayla / vision / uzman emekli)', () => {
+    for (const g of Object.keys(GOREV_POLITIKASI) as Gorev[]) assert.equal(gorevNedeni(g), null, g)
+    assert.throws(() => gorevNedeni('bilinmeyen' as Gorev), /Bilinmeyen AI görevi/)
   })
 
   it('güvenlik sinyali: gebe, emzirme, pediatrik doz, warfarin/NSAID, isotretinoin, kontrendikasyon', () => {
@@ -81,7 +107,7 @@ describe('görev politikası — kademe tablosu', () => {
   })
 })
 
-describe('asistan sohbeti yönlendirme — şüphede GÜÇLÜ', () => {
+describe('asistan sohbeti yönlendirme — şüphede uzman tur (sohbet-uzman)', () => {
   const yon = (mesaj: string, hastaBaglami = false, niyet: string | null = null) => asistanModelYonlendir({ mesaj, hastaBaglami, niyet }).gorev
 
   it('şüpheli / belirsiz mesaj → GÜÇLÜ', () => {
