@@ -22,7 +22,7 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
-import { hekimProfilOturumOku, hekimProfilOturumYaz } from '@/lib/doktor/hekimProfilIstemci';
+import { hekimProfilOturumOku, hekimProfilOturumSil, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
 import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
@@ -249,6 +249,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const onbellek = hekimProfilOturumOku()
+    const tazele = hekimProfilTazeleBasligi()
     if (onbellek?.full_name) setAd(String(onbellek.full_name))
     if (onbellek?.specialty) setBrans(String(onbellek.specialty))
     ;(async () => {
@@ -263,8 +264,9 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         if (r.ok) { const d = await r.json(); setMesajUnread(Number(d.unreadCount) || 0); }
       } catch { /* badge stays 0 */ }
       try {
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}`, ...tazele } });
         if (r.ok) {
+          hekimProfilTazeleBitti()
           const d = await r.json();
           const u = d?.data || d;
           setAd(String(u?.full_name || u?.first_name || '').trim());
@@ -313,6 +315,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     if (typeof window !== 'undefined') {
       const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
       if (key) localStorage.removeItem(key);
+      hekimProfilOturumSil()
     }
     window.location.href = '/giris/doktor';
   }

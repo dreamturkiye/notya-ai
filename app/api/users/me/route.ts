@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
   }
 
   const meta = (user.user_metadata || {}) as Record<string, unknown>
-  const onbellekte = hekimProfilOku(user.id)
+  // Branş değişimi başka izolde kalmış 60 sn'lik kopyayı ezmesin.
+  const tazele = req.headers.get('x-profil-tazele') === '1'
+  const onbellekte = tazele ? null : hekimProfilOku(user.id)
   if (onbellekte) {
     return NextResponse.json({ success: true, data: onbellekte })
   }

@@ -1,8 +1,8 @@
 -- ============================================================
 -- Migration 109: hasta dosya önbelleğini klinik yazımda kirlet.
--- Üretimde UYGULAMA: kullanıcı "go" demeden çalıştırma.
 -- Klinik satır (doctor_id veya doktor_id + patient) değişince kirli=true.
 -- Tetik hata verirse klinik yazımı düşürmez. notes hasta_id taşımaz → sessions.
+-- Üretim: bu dosya Vercel ile kendiliğinden çalışmaz; Supabase SQL olarak bir kez uygulanır.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION notya_guvenli_uuid(t text)
@@ -94,4 +94,14 @@ BEGIN
       t
     );
   END LOOP;
+END $$;
+
+REVOKE ALL ON FUNCTION public.hasta_dosya_onbellek_kirlet() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.notya_guvenli_uuid(text) FROM PUBLIC;
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    EXECUTE 'REVOKE ALL ON FUNCTION public.hasta_dosya_onbellek_kirlet() FROM anon, authenticated';
+    EXECUTE 'REVOKE ALL ON FUNCTION public.notya_guvenli_uuid(text) FROM anon, authenticated';
+  END IF;
 END $$;

@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { bransDegistirebilir, gecerliBransMi, bransSecenekleri } from '@/lib/auth/superuserBranslar'
+import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
   if (guncelleHatasi) {
     return NextResponse.json({ error: guncelleHatasi.message }, { status: 500 })
   }
+  hekimProfilDusur(user.id)
 
   const mevcutMeta = (user.user_metadata || {}) as Record<string, unknown>
   const { error: metaHatasi } = await supabase.auth.admin.updateUserById(user.id, {

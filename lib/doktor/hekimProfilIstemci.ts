@@ -1,8 +1,11 @@
 /**
  * Doktor / klinik araçlarının ilk boyası. Yalnız branş, meslek ve ad — hasta listesi yok.
  * sessionStorage, 60 sn. Ağ yine doğrular; bu yalnızca beklemeden çizmeyi sağlar.
+ * Branş değişince `tazele` bayrağı konur: sonraki /api/users/me önbelleği atlar
+ * (süreç içi önbellek başka izolde eski branşı 60 sn tutabilir).
  */
 const ANAHTAR = 'notya_hekim_profil'
+const TAZELLE = 'notya_hekim_profil_tazele'
 const TTL_MS = 60_000
 
 export interface HekimProfilOzet {
@@ -39,4 +42,32 @@ export function hekimProfilOturumYaz(o: HekimProfilOzet): void {
       t: Date.now(),
     }))
   } catch { /* gizli mod */ }
+}
+
+export function hekimProfilOturumSil(): void {
+  if (typeof sessionStorage === 'undefined') return
+  try {
+    sessionStorage.removeItem(ANAHTAR)
+    sessionStorage.removeItem(TAZELLE)
+  } catch { /* gizli mod */ }
+}
+
+/** Sonraki /api/users/me bu izolün 60 sn'lik kopyasını kullanmasın. */
+export function hekimProfilTazeleIsaretle(): void {
+  if (typeof sessionStorage === 'undefined') return
+  try { sessionStorage.setItem(TAZELLE, '1') } catch { /* gizli mod */ }
+}
+
+export function hekimProfilTazeleBasligi(): Record<string, string> {
+  if (typeof sessionStorage === 'undefined') return {}
+  try {
+    return sessionStorage.getItem(TAZELLE) === '1' ? { 'x-profil-tazele': '1' } : {}
+  } catch {
+    return {}
+  }
+}
+
+export function hekimProfilTazeleBitti(): void {
+  if (typeof sessionStorage === 'undefined') return
+  try { sessionStorage.removeItem(TAZELLE) } catch { /* gizli mod */ }
 }
