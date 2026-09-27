@@ -16,6 +16,7 @@ import { Conversation } from '@/components/AsistanConversation'
 import { isAndroid, connectionErrorHelp, micPermissionHelp } from '@/lib/asistan/platform'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { KlinikUzmanPersonas, type KlinikUzmanPersona } from '@/lib/ai/personas/klinik_uzmanlar'
+import { SES_CALAR } from '@/lib/asistan/sesCalar'
 
 type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
 type Msg = { id: string; role: 'user'|'ai'; text: string }
@@ -100,6 +101,7 @@ function KlinikAsistanInner() {
 
       const conv = await Conversation.startSession({
         signedUrl: body.signed_url as string, connectionType: 'websocket',
+        ...SES_CALAR,
         overrides: {
           agent: {
             prompt: { prompt: body.prompt as string },

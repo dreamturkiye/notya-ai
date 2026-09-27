@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { Conversation } from '@/components/AsistanConversation'
+import { SES_CALAR } from '@/lib/asistan/sesCalar'
 
 // supabase: use localStorage token only
 type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
@@ -67,6 +68,7 @@ export default function AvukatAsistanPage() {
       const p = PERSONAS[pk]
       const conv = await Conversation.startSession({
         signedUrl: signed_url, connectionType: 'websocket',
+        ...SES_CALAR,
         overrides: {
           agent: { language: 'tr' },
           tts: { voiceId: body.voice_id as string },

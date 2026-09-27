@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { voiceIdForMali } from "@/lib/asistan/elevenVoices"
+import { sesMotorunuSabitle } from "@/lib/asistan/sesMotoru"
 
 const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
 const AGENT_ID = process.env.MALI_MUSAVIR_AGENT_ID || "agent_4301kvraprgwf5btftn0k836t55m"
@@ -16,6 +17,8 @@ export async function GET(req: NextRequest) {
 
     const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
     if (!elKey) return NextResponse.json({ error: "ElevenLabs key missing" }, { status: 500 })
+
+    await sesMotorunuSabitle(AGENT_ID, elKey)
 
     // Fetch musteri context if provided
     const musteriId = req.nextUrl.searchParams.get("musteriId")
