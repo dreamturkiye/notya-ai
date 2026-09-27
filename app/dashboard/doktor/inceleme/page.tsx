@@ -28,6 +28,7 @@ import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
+import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
@@ -48,6 +49,8 @@ interface PendingNote {
   sessionId: string | null;
   specialty: string;
   date: string;
+  /** NOTYA-NOT-HIZ-03: ISO — yeni notta Ayşe'nin önerisi gelene kadar yoklanır. */
+  createdAt: string | null;
   subjektif: string;
   objektif: string;
   degerlendirme: string;
@@ -79,6 +82,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       sessionId: n.sessionId ? String(n.sessionId) : null,
       specialty: String(n.specialty ?? 'Genel'),
       date: String(n.date ?? ''),
+      createdAt: n.createdAt ? String(n.createdAt) : null,
       subjektif: satirBasiNumarala(String(n.subjektif ?? '')),
       objektif: satirBasiNumarala(String(n.objektif ?? '')),
       degerlendirme: satirBasiNumarala(String(n.degerlendirme ?? '')),
@@ -143,6 +147,8 @@ export default function IncelemePage() {
   const kBekliyorRef = useRef(false);
   // NOTYA-RECETE-05: açık notun ilk Plan metni — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
   const ilkPlanRef = useRef<string | null>(null);
+  // NOTYA-NOT-HIZ-03: öneri arka planda hazırlanan açık not (yeni, öneri alanları boş).
+  const [oneriBekleyenId, setOneriBekleyenId] = useState('');
 
   function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {
     return metin.split('\n').map((satir) => satir.trim()).filter(Boolean).map((satir) => {
@@ -167,7 +173,52 @@ export default function IncelemePage() {
     setKMesajlar([]);
     setKGirdi('');
     setEylemler([]);
+    setOneriBekleyenId(oneriYoklamasiGerekli(note) ? note.id : '');
   };
+
+  // NOTYA-NOT-HIZ-03: öneri gelene kadar (en çok 90 sn) açık notu yeniden oku; gelince listeyi güncelle, formda yalnız
+  // hâlâ boş / dokunulmamış öneri alanlarını doldur. Onay bunu beklemez.
+  useEffect(() => {
+    if (!oneriBekleyenId) return;
+    const id = oneriBekleyenId;
+    const ilk = notlarRef.current.find((n) => n.id === id);
+    let iptal = false;
+    void (async () => {
+      const gelen = await oneriyiYokla<{ hastaOzeti?: string; alarmBulgulari?: string[]; receteOnerisi?: ReceteOner[]; kritikBulgular?: string[]; aiDegerlendirme?: string }>({
+        getir: async () => {
+          const token = await getAccessTokenAsync();
+          const r = await fetch(`/api/notes/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${token}` } });
+          if (!r.ok) return null;
+          return ((await r.json()) as { not?: Record<string, unknown> }).not ?? null;
+        },
+        geldiMi: oneriGeldiMi,
+        iptal: () => iptal,
+      });
+      if (iptal) return;
+      if (gelen) {
+        const alarm = Array.isArray(gelen.alarmBulgulari) ? gelen.alarmBulgulari.map(String) : [];
+        const recete = Array.isArray(gelen.receteOnerisi) ? gelen.receteOnerisi : [];
+        const kritik = Array.isArray(gelen.kritikBulgular) ? gelen.kritikBulgular.map(String) : [];
+        const ozet = String(gelen.hastaOzeti || '');
+        const aiDeg = String(gelen.aiDegerlendirme || '');
+        notlariYaz(notlarRef.current.map((n) => (n.id === id ? {
+          ...n,
+          hastaOzeti: n.hastaOzeti || ozet,
+          alarmBulgulari: n.alarmBulgulari.length ? n.alarmBulgulari : alarm,
+          receteOnerisi: n.receteOnerisi.length ? n.receteOnerisi : recete,
+          kritikBulgular: n.kritikBulgular.length ? n.kritikBulgular : kritik,
+          aiDegerlendirme: n.aiDegerlendirme === (ilk?.aiDegerlendirme ?? '') ? aiDeg : n.aiDegerlendirme,
+        } : n)));
+        setAlarmTaslak((v) => (v.trim() ? v : alarm.join('\n')));
+        setOzetTaslak((v) => (v.trim() ? v : ozet));
+        setReceteTaslak((v) => (v.length ? v : recete));
+        setAiDegTaslak((v) => (v === (ilk?.aiDegerlendirme ?? '') ? aiDeg : v));
+      }
+      setOneriBekleyenId((v) => (v === id ? '' : v));
+    })();
+    return () => { iptal = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oneriBekleyenId]);
 
   // NOTYA-KONSULT-03: not üzerinde Ayşe ile konsult + sözle düzenleme.
   // sessiz=true: form yenilemesinde otomatik yeniden değerlendirme — sohbeti doldurmaz.
@@ -474,6 +525,7 @@ export default function IncelemePage() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: CHROME_RENK.ink, minWidth: 0 }}>
                     {[note.maskedPatient, bransEtiketi(note.specialty), note.date].filter(Boolean).join(' • ')}
                     {acikId === note.id && kBekliyor ? <span style={{ color: '#B4832F', fontWeight: 500 }}> · Ayşe notu yeniden okuyor…</span> : null}
+                    {acikId === note.id && oneriBekleyenId === note.id ? <span role="status" style={{ color: '#B4832F', fontWeight: 500 }}> · Ayşe'nin önerisi hazırlanıyor…</span> : null}
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                     <button onClick={() => approve(note.id)} disabled={busy} style={btnStyle('#3F7D4A', busy)}>

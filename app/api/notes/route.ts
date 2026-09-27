@@ -153,6 +153,8 @@ export async function GET(req: NextRequest) {
       sessionId: row.session_id ? String(row.session_id) : null,
       specialty: String(session.specialty || 'Genel'),
       date: formatDate(row.created_at),
+      // NOTYA-NOT-HIZ-03: İnceleme yeni notta öneri gelene kadar yoklar (lib/doktor/oneriBekle).
+      createdAt: row.created_at || null,
       subjektif: String(row.content_subjektif || ''),
       objektif: String(row.content_objektif || ''),
       degerlendirme: String(row.content_degerlendirme || ''),

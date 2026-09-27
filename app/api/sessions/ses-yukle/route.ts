@@ -12,7 +12,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { modelSec } from '@/lib/ai/modeller'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
-import { soapNotuUret, stilOrnekleriDerle } from '@/lib/doktor/soapUret'
+import { soapNotuUret, stilOrnekleriDerle, type SoapOnerisi } from '@/lib/doktor/soapUret'
+import { oneriyiArkaPlandaYaz } from '@/lib/doktor/oneriArkaPlan'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
@@ -154,7 +155,9 @@ export async function POST(req: NextRequest) {
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId })
+    // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir.
+    const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
+    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId }, { oneriAyri: (soz) => { oneri.soz = soz } })
     // NOTYA-ASI-NOT-01: sessions/end ile aynı — yalnız bu vizitte uygulanan aşılar, vizit tarihiyle.
     let notAsilari: unknown[] = []
     try {
@@ -197,6 +200,8 @@ export async function POST(req: NextRequest) {
       ...(gecmisTarihIso ? { created_at: gecmisTarihIso } : {}),
     }).select('id').single()
     if (noteError || !note) throw new Error(noteError?.message || 'not kaydedilemedi')
+    // NOTYA-NOT-HIZ-03: öneri arka planda sürer; bitince yalnız bu notun (id + doktor) boş öneri sütunlarını doldurur.
+    if (oneri.soz) oneriyiArkaPlandaYaz(supabase, { noteId: String(note.id), doktorId, oneriSozu: oneri.soz, etiket: 'ses-yukle' })
 
     // NOTYA-OGRENME-03: bu da bir "doktor konuştu" yüzeyi — seans/end ile aynı kanca (bkz. oradaki not).
     // Scribe burada diarizasyon döndürmez, tek blok transkript doktorun kendi anlatımı sayılır.

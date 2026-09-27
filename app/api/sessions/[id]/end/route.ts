@@ -10,6 +10,8 @@ import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 import { seansiBasarisizIsaretle, soapHataKodu, soapHataLogMetni, soapUretYeniden, takiliSeanslariKapat } from '@/lib/doktor/soapYeniden'
+import { oneriyiArkaPlandaYaz } from '@/lib/doktor/oneriArkaPlan'
+import type { SoapOnerisi } from '@/lib/doktor/soapUret'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -246,8 +248,10 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     const cekVeri = await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
     // NOTYA-BETA-0925 (a): geçici hatada (bozuk JSON, overloaded / 5xx / 529, ağ, zaman aşımı) bir kez daha — yalnız
     // maxDuration içinde yeterli pay kaldıysa (lib/doktor/soapYeniden.ts).
+    // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir (son denemeninki).
+    const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
     const { sonuc: noteData } = await soapUretYeniden(
-      () => soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }),
+      () => soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }, { oneriAyri: (soz) => { oneri.soz = soz } }),
       { baslangicMs, sureSiniriMs: maxDuration * 1000, uyar: (satir) => console.warn(satir) },
     )
     // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
@@ -301,6 +305,10 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     }).select().single()
 
     if (noteError) throw new Error("Not kaydedilemedi: " + noteError.message)
+
+    // NOTYA-NOT-HIZ-03: öneri arka planda sürer; bitince yalnız bu notun (id + doktor) boş öneri sütunlarını doldurur.
+    // Çek listesi bloğunu yalnız uygulama yazar — öneri metnindeki olası blok silinir.
+    if (oneri.soz) oneriyiArkaPlandaYaz(getSupabase(), { noteId: String(note.id), doktorId: user.id, oneriSozu: oneri.soz, aiMetni: cekBlokSil, etiket: 'sessions/end' })
 
     // Mark session complete
     await getSupabase().from("sessions").update({ status: "completed" }).eq("id", sessionId).eq("doctor_id", user.id)

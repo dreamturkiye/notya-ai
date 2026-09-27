@@ -320,15 +320,18 @@ export function turkceBolumleriTuret(soap: SoapNotu['soap'] | null): Pick<SoapNo
 /** Advisory fields — produced only by the second (öneri) call. */
 const ONERI_ALANLARI = ['aiDegerlendirme', 'receteOnerisi', 'kritik_bulgular', 'alarmBulgulari', 'hasta_ozeti'] as const
 
-const GOVDE_CAGRISI = `ÇAĞRI: YALNIZ (A) NOT GÖVDESİ JSON'unu döndür. Öneri alanları (aiDegerlendirme, receteOnerisi, kritik_bulgular, alarmBulgulari, hasta_ozeti) bu çağrıda ÜRETİLMEZ — ayrı bir çağrıda üretilir; bu yüzden kendi yorumunu/önerini gövdeye KOYMA.`
+/** NOTYA-NOT-HIZ-03: the advisory (B) result, already locked the same way as the note body — ready to write to the note row. */
+export type SoapOnerisi = Pick<SoapNotu, (typeof ONERI_ALANLARI)[number]>
+
+// NOTYA-NOT-HIZ-03 canlı ölçüm (2026-09-27 08:39 UTC, QA, 4 dk AOM): gövde (A) 4.081 token / ~45 sn — model ayrıntıyı
+// kendiliğinden şişiriyor. Uzunluk kuralı: gövde transkriptle orantılı, dolgu yok; alan ve Türk geleneği başlıkları aynen.
+const GOVDE_CAGRISI = `ÇAĞRI: YALNIZ (A) NOT GÖVDESİ JSON'unu döndür. Öneri alanları (aiDegerlendirme, receteOnerisi, kritik_bulgular, alarmBulgulari, hasta_ozeti) bu çağrıda ÜRETİLMEZ — ayrı bir çağrıda üretilir; bu yüzden kendi yorumunu/önerini gövdeye KOYMA.
+UZUNLUK KURALI (kesin): her SOAP bölümü YALNIZ transkriptte söyleneni içerir. Bölümler arasında TEKRAR YOK — bir bilgi tek bölümde, bir kez yazılır. Transkriptin desteklemediği alt bölümü (ör. Soygeçmiş, Alışkanlıklar, bir sistem başlığı) HİÇ açma. objektif YALNIZ muayene edilen sistemleri listeler. plan numaralıdır, her madde TEK satır. Gövdenin toplam uzunluğu transkriptle orantılıdır: 3-5 dakikalık bir muayene için yaklaşık 1.200-1.800 token; asla dolgu yapma. JSON'daki hiçbir alanı atlama (içeriği yoksa boş bırak); Türk tıp geleneği başlıkları (Şikayet, Şikayetin Hikayesi, Özgeçmiş…, Genel durum) aynen kalır.`
 // NOTYA-NOT-HIZ-01 canlı ölçüm (2026-09-27 02:00 UTC, QA): gövde (A) 2.630 token / ~31 sn; öneri (B) 4.000 token TAVANA
 // çarptı ve not B için 20 sn bekledi → 55 sn. Öneri metni gövdenin iki katıydı. Uzunluk sınırı konulmuştur: öneri
 // doktorun 15 saniyede okuyacağı kadardır; ayrıntı isterse Ayşe'ye sorar.
 const ONERI_CAGRISI = `ÇAĞRI: YALNIZ (B) AI ÖNERİSİ JSON'unu döndür. Not gövdesini (basvuruYakinmasi, soap, vitaller, ilaclar, asilar, icd10_codes) bu çağrıda YAZMA — ayrı bir çağrıda yazılır. hasta_ozeti ve alarmBulgulari yalnız doktorun söylediği tanı/tedaviyi anlatır.
 UZUNLUK SINIRI (kesin): aiDegerlendirme en fazla 6 kısa madde, toplam 120 kelime — gerekçe yazma, sonucu yaz. receteOnerisi en fazla 4 kalem, her kalemde not alanı en fazla 1 cümle. kritik_bulgular en fazla 3 madde (yoksa boş dizi). alarmBulgulari 3-5 kısa madde. hasta_ozeti 3-5 cümle. Toplam çıktı 1.200 tokeni geçmesin; ayrıntı isteyen doktor Ayşe'ye sorar.`
-
-/** Öneri çağrısı gövde çağrısından sonra en çok bu kadar beklenir; sonra not öneri alanları boş kaydedilir (testler kısaltır). */
-export const ONERI_EK_BEKLEME = { ms: 20_000 }
 
 function yanitJsonu(yanit: Anthropic.Message): SoapNotu {
   // Boş içerik (content: []) eskiden TypeError'dı; artık ayrıştırılamayan çıktı olarak geçici hata sayılır.
@@ -343,12 +346,46 @@ function oneriHataKodu(e: unknown): string {
   return [typeof h.name === 'string' ? h.name : 'Hata', durum].filter((x) => x != null).join(' ')
 }
 
+/** KD-DERM-SAFETY-FINDINGS F1 / F4 + KD-KAYNAK-KILIDI + CROSS-SPECIALTY-PARITY — the same locks for the body (A) and,
+ * separately, for the advisory (B): the prompt-locked chapters get the full dose lock (dose-free receteOnerisi too);
+ * every other branch still gets the invention backstop — a dose the hekim never said never ships; kadın doğum never
+ * keeps a guideline number / year that is not in the verified list. Each lock appends its review line to aiDegerlendirme. */
+function kilitle<T extends object>(veri: T, girdi: SoapGirdi): T & { aiDegerlendirme?: string } {
+  const dozlu = dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)
+  return kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu
+}
+
+/** NOTYA-NOT-HIZ-03: B's raw JSON → the advisory fields only, SGK-checked, locked and F4-cleaned. */
+function oneriyiHazirla(ham: SoapNotu, girdi: SoapGirdi): SoapOnerisi {
+  const oneri: SoapOnerisi = {}
+  for (const k of ONERI_ALANLARI) (oneri as Record<string, unknown>)[k] = ham[k]
+  if (Array.isArray(oneri.receteOnerisi)) oneri.receteOnerisi = sgkDogrula(oneri.receteOnerisi)
+  return notMetinleriniTemizle(kilitle(oneri, girdi))
+}
+
+/** Note (A) + advisory (B): advisory fields from B; B's aiDegerlendirme first, then the body's own lock lines (if any). */
+export function oneriyiBirlestir(not: SoapNotu, oneri: SoapOnerisi | null): SoapNotu {
+  if (!oneri) return not
+  const aiDegerlendirme = [oneri.aiDegerlendirme, not.aiDegerlendirme].filter((x) => typeof x === 'string' && x.trim()).join('\n\n') || undefined
+  return { ...not, ...oneri, aiDegerlendirme }
+}
+
+export interface SoapSecenek {
+  /**
+   * NOTYA-NOT-HIZ-03: given → soapNotuUret returns as soon as the body (A) is parsed and locked; the advisory (B) arrives
+   * through this promise (never rejects; null when B failed or was unparseable). The caller keeps it alive
+   * (waitUntil) and writes it to the saved note. Not given → B is awaited and merged (scripts / smoke tests).
+   */
+  oneriAyri?: (oneriSozu: Promise<SoapOnerisi | null>) => void
+}
+
 /**
- * NOTYA-NOT-HIZ-01: two PARALLEL calls on the same cached system prefix — (A) note body, (B) advisory fields. The note
- * never waits on B: if B fails, returns unparseable JSON or is still running ONERI_EK_BEKLEME after A, the note is saved
- * with empty advisory fields. A failure keeps the old error path (thrown → soapUretYeniden / route).
+ * NOTYA-NOT-HIZ-01: two PARALLEL calls on the same cached system prefix — (A) note body, (B) advisory fields.
+ * NOTYA-NOT-HIZ-03: B is off the critical path — with `oneriAyri` the note is returned at A time and B is delivered
+ * separately; if B fails or returns unparseable JSON (F3), the advisory stays empty. A failure keeps the old error path
+ * (thrown → soapUretYeniden / route).
  */
-export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
+export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secenek: SoapSecenek = {}): Promise<SoapNotu> {
   const system = soapSistemBloklari(girdi)
   const transkript = `Muayene transkripti:\n\n${girdi.transcript}`
 
@@ -362,7 +399,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
     messages: [{ role: 'user', content: `${transkript}\n\n${GOVDE_CAGRISI}` }],
   })
   // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — GÜÇLÜ, kendi politika satırıyla.
-  const oneriSozu: Promise<SoapNotu | null> = aiCagir({
+  const hamOneriSozu: Promise<SoapNotu | null> = aiCagir({
     istemci: anthropic,
     gorev: 'klinik-analiz',
     maxTokens: 2000,
@@ -370,37 +407,26 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
     system,
     messages: [{ role: 'user', content: `${transkript}\n\n${ONERI_CAGRISI}` }],
   }).then(yanitJsonu).catch((e) => {
-    console.warn(`[soap] öneri çağrısı düştü, not öneri alanları boş kaydedilir: ${oneriHataKodu(e)}`)
+    console.warn(`[soap] öneri çağrısı düştü, not öneri alanları boş kalır: ${oneriHataKodu(e)}`)
     return null
   })
+  const oneriSozu: Promise<SoapOnerisi | null> = hamOneriSozu.then((ham) => (ham ? oneriyiHazirla(ham, girdi) : null)).catch((e) => {
+    console.warn(`[soap] öneri hazırlanamadı, not öneri alanları boş kalır: ${oneriHataKodu(e)}`)
+    return null
+  })
+  if (secenek.oneriAyri) secenek.oneriAyri(oneriSozu)
 
-  const govde = yanitJsonu(await govdeSozu)
-  let zamanlayici: ReturnType<typeof setTimeout> | undefined
-  const oneri = await Promise.race([
-    oneriSozu,
-    new Promise<null>((r) => { zamanlayici = setTimeout(() => {
-      console.warn(`[soap] öneri çağrısı ${ONERI_EK_BEKLEME.ms} ms içinde bitmedi, not öneri alanları boş kaydedilir`)
-      r(null)
-    }, ONERI_EK_BEKLEME.ms) }),
-  ])
-  clearTimeout(zamanlayici)
-
-  const veri: SoapNotu = { ...govde }
-  for (const k of ONERI_ALANLARI) (veri as Record<string, unknown>)[k] = oneri?.[k]
-  if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
+  const veri: SoapNotu = { ...yanitJsonu(await govdeSozu) }
+  for (const k of ONERI_ALANLARI) delete (veri as Record<string, unknown>)[k]
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
   // dictated during an obstetric USG is not the mother's vital sign).
   veri.vitaller = vitalOlcumleriniNormallestir(vitalleriKapsamaGoreSuz(veri.vitaller, bransKapsami({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso })))
-  // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches never keep a model-written dose the hekim did not give.
-  // KD-DERM-SAFETY-FINDINGS F4 (every branch): no internal field names, no invented consent form number in doctor-facing text.
-  // KD-KAYNAK-KILIDI: kadın doğum notes never keep a guideline number / year that is not in the verified list.
-  // CROSS-SPECIALTY-PARITY: the prompt-locked chapters get the full lock (dose-free receteOnerisi too); every other
-  // branch in lib/doktor/specialties still gets the invention backstop — a dose the hekim never said never ships.
-  const dozlu = dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)
-  const numarali = soapNumaraliAlanlariDuzenle(kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu)
+  const numarali = soapNumaraliAlanlariDuzenle(kilitle(veri, girdi))
   // NOTYA-NOT-HIZ-01: prose columns derived from the already locked / numbered SOAP sections (dose lock runs once, not
   // twice on the same text); the F4 cleaner then runs over both — they stay identical.
-  return notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap) })
+  const not = notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap) })
+  if (secenek.oneriAyri) return not
+  return oneriyiBirlestir(not, await oneriSozu)
 }
 
 /** Doktorun onayladığı son notlardan kısa üslup örnekleri derler (few-shot stil öğrenmesi).
