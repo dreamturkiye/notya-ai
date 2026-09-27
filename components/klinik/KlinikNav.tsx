@@ -1,5 +1,6 @@
 'use client'
 import { useRouter, usePathname } from 'next/navigation'
+import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci'
 
 interface KlinikNavProps {
   clinicName?: string
@@ -23,6 +24,7 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
 
   function logout() {
     try { localStorage.removeItem('auth-token') } catch {}
+    hekimProfilOturumSil()
     router.push('/giris')
   }
 

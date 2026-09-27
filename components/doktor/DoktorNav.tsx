@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci';
 import BransDegistir from './BransDegistir';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
@@ -84,6 +85,7 @@ export default function DoktorNav() {
     if (typeof window !== 'undefined') {
       const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
       if (key) localStorage.removeItem(key);
+      hekimProfilOturumSil()
     }
     window.location.href = '/giris/doktor';
   };

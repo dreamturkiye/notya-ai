@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ensureDoctorAccessToken, isOnboardingDone } from '@/lib/doktor/clientAuth';
+import { hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci';
 
 interface Profession {
   id: string;
@@ -275,6 +276,7 @@ function OnboardingInner() {
         const errBody = await profileRes.json().catch(() => ({}));
         throw new Error(String((errBody as { error?: string }).error || 'Profil kaydedilemedi'));
       }
+      hekimProfilTazeleIsaretle()
 
       // Set asistan specialty
       await fetch('/api/asistan/set-specialty', {

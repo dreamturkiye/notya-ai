@@ -87,7 +87,20 @@ export async function onbellekYaz(
   }, { onConflict: 'doctor_id,patient_id' })
 }
 
-export async function dosyaPaketOnbellekli(
+/** Aynı (doktor, hasta) için eşzamanlı derlemeyi tek uçuşta birleştirir. */
+export function tekUcus<T>(harita: Map<string, Promise<T>>, anahtar: string, uret: () => Promise<T>): Promise<T> {
+  const varOlan = harita.get(anahtar)
+  if (varOlan) return varOlan
+  const p = uret().finally(() => {
+    if (harita.get(anahtar) === p) harita.delete(anahtar)
+  })
+  harita.set(anahtar, p)
+  return p
+}
+
+const ucuslar = new Map<string, Promise<OnbellekPaket | null>>()
+
+async function dosyaPaketDerle(
   sb: SupabaseClient,
   doctorId: string,
   patientId: string,
@@ -104,6 +117,15 @@ export async function dosyaPaketOnbellekli(
   const yazilacak = { metin: paket.metin, kart: paket.kart, ad: paket.ad, olaylar, sorguHasta: sorgu?.hasta, surumHash: hash }
   void onbellekYaz(sb, doctorId, patientId, yazilacak).catch(() => { /* yazım kritik değil */ })
   return { ...yazilacak, onbellekten: false }
+}
+
+export async function dosyaPaketOnbellekli(
+  sb: SupabaseClient,
+  doctorId: string,
+  patientId: string,
+): Promise<OnbellekPaket | null> {
+  if (!doctorId || !patientId) return null
+  return tekUcus(ucuslar, `${doctorId}:${patientId}`, () => dosyaPaketDerle(sb, doctorId, patientId))
 }
 
 /** İlk notun günü cache_read vursun diye sabit SOAP önekini ısıtır. İstek yolunda yok. */

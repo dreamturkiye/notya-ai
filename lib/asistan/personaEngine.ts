@@ -114,82 +114,47 @@ ${persona.textbooks.map(b => `• ${b}`).join("\n")}
 `
 }
 
-function proactiveDoseExample(persona: Persona, casualAddress: string): string {
+function proactiveDoseExample(persona: Persona, hitap: string): string {
+  const h = hitap ? ` ${hitap}` : ''
   switch (persona.primarySpecialty) {
     case 'pediatri':
     case 'cocuk-cerrahisi':
-      return `• Doz hatası: "Bu doz yetişkin dozudur. Harriet Lane / pediatrik mg/kg ile [DOĞRU DOZ] olmalı — düzelteyim mi ${casualAddress}?"`
+      return `• Doz hatası: "Bu doz yetişkin dozudur. Harriet Lane / pediatrik mg/kg ile [DOĞRU DOZ] olmalı — düzelteyim mi${h}?"`
     case 'kardiyoloji':
     case 'kalp-damar-cerrahisi':
-      return `• Doz/güvenlik: "Antikoagülan / KV ilaç riski — HAS-BLED / KBY'ye göre [ÖNERİ]. Düzelteyim mi ${casualAddress}?"`
+      return `• Doz/güvenlik: "Antikoagülan / KV ilaç riski — HAS-BLED / KBY'ye göre [ÖNERİ]. Düzelteyim mi${h}?"`
     case 'noroloji':
     case 'beyin-cerrahisi':
-      return `• Tanı yönü: "TND / SB inme-epilepsi rehberine göre [AYIRICI] öne çıkıyor — ekleyeyim mi ${casualAddress}?"`
+      return `• Tanı yönü: "TND / SB inme-epilepsi rehberine göre [AYIRICI] öne çıkıyor — ekleyeyim mi${h}?"`
     case 'psikiyatri':
-      return `• Güvenlik: "İntihar / etkileşim riski var — TPD/Stahl'a göre [ÖNERİ]. Gözden geçireyim mi ${casualAddress}?"`
+      return `• Güvenlik: "İntihar / etkileşim riski var — TPD/Stahl'a göre [ÖNERİ]. Gözden geçireyim mi${h}?"`
     case 'endokrinoloji':
     case 'dahiliye':
-      return `• Hedef/tedavi: "TEMD / İliçin'e göre hedef veya basamak [ÖNERİ] — güncelleyeyim mi ${casualAddress}?"`
+      return `• Hedef/tedavi: "TEMD / İliçin'e göre hedef veya basamak [ÖNERİ] — güncelleyeyim mi${h}?"`
     case 'acil-tip':
-      return `• Acil: "ABCDE'de kritik bulgu — TATD/SB protokolüne göre [HEMEN]. Onaylıyor musunuz ${casualAddress}?"`
+      return `• Acil: "ABCDE'de kritik bulgu — TATD/SB protokolüne göre [HEMEN]. Onaylıyor musunuz${h}?"`
     default:
-      return `• Tanı yönü: "Ulusal kılavuza göre bu tablo [AYIRICI]'yı düşündürüyor — ekleyeyim mi ${casualAddress}?"`
+      return `• Tanı yönü: "Ulusal kılavuza göre bu tablo [AYIRICI]'yı düşündürüyor — ekleyeyim mi${h}?"`
   }
 }
 
-export function buildSystemPrompt(
-  persona: Persona,
-  prefs: Partial<DoctorPreferences> | null,
-  currentPatient: Record<string, unknown> | null,
-  doctor?: AddressableUser | null,
-  hafiza?: string
-): string {
-  const p = buildSystemPromptParcalari(persona, prefs, currentPatient, doctor, hafiza)
-  return p.sabit + p.degisken
-}
+/** Persona başına bir kez kurulur. Hekim adı, tarih, hasta ve hafıza YOK — aynı uzmanı kullanan hekimler bu öneki paylaşır. */
+const globalIstemOnbellek = new Map<string, string>()
 
-/** NOTYA-MALIYET-01 (prompt caching): aynı metin, iki parça. `sabit` (persona, know-how, kurallar, JSON biçimi) hekim ×
- *  persona başına değişmez → önbelleklenir; `degisken` (hafıza, aktif hasta) her turda değişebilir. sabit + degisken ===
- *  buildSystemPrompt(...) — metin ve sıra birebir aynı (lib/asistan/personaEngine.test.ts). */
-export function buildSystemPromptParcalari(
-  persona: Persona,
-  prefs: Partial<DoctorPreferences> | null,
-  currentPatient: Record<string, unknown> | null,
-  doctor?: AddressableUser | null,
-  hafiza?: string
-): { sabit: string; degisken: string } {
-  const sessionsCount = prefs?.sessionsCompleted || 0
-  const hasLearned = sessionsCount >= 5
-  const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
-  const namedAddress = address(doctor || { firstName: 'Hocam' }, 'named')
-
-  // NOTYA-OGRENME-03: hafiza verildiyse tek kaynak odur (doctor_preferences bloğu miras).
-  const learningContext = hafiza ? `\n${hafiza}` : hasLearned && prefs ? `
-=== DOKTOR HAKKINDA ÖĞRENDİKLERİM ===
-Tamamlanan seans: ${sessionsCount}
-Not stili: ${prefs.noteStyle || "orta"}
-Seans hızı: ${prefs.sessionPace || "normal"}
-Yaygın tanılar: ${prefs.commonDiagnoses?.join(", ") || "henüz bilinmiyor"}
-Tercih ettiği ilaçlar: ${Object.entries(prefs.preferredDrugs || {}).map(([k,v]) => `${k} yerine ${v}`).join(", ") || "henüz bilinmiyor"}
-Önceki düzeltmeler: ${prefs.correctionHistory?.slice(-3).map(c => `"${c.original}" → "${c.corrected}" (${c.count}x)`).join(", ") || "yok"}
-
-Bu bilgilere göre doktorun alışkanlıklarını tahmin et ve önerilerde onun tercihlerini yansıt.` : ""
-
-  const patientContext = currentPatient ? `
-=== AKTİF HASTA ===
-${JSON.stringify(currentPatient, null, 2)}` : ""
-
-  const sabit = `Sen ${persona.name} — ${persona.title}. Türkiye'nin önde gelen tıp uzmanlarından birisin.
+function globalIstem(persona: Persona): string {
+  const hazir = globalIstemOnbellek.get(persona.id)
+  if (hazir) return hazir
+  const metin = `Sen ${persona.name} — ${persona.title}. Türkiye'nin önde gelen tıp uzmanlarından birisin.
 ${specialtyKnowhowBlock(persona)}
 KİŞİLİK: ${persona.personality}
 
 Klinik konularda güçlü, deneyimli bir uzman gibi konuş. Doktor bir şeyi atlarsa veya riskli bir karara varırsa, bunu TEK SEFER, açık ve saygılı biçimde söyle — kanıta dayalı gerekçeni kısaca belirt. Doktor kararını netleştirdikten sonra ISRAR ETME, aynı konuyu tekrar tekrar savunma; nihai karar ve tüm sorumluluk her zaman doktorundur, sen uyarmakla görevini yapmış olursun. Kendi unvanını, rolünü veya "asistan mısın değil misin" sorusunu ASLA tartışma konusu yapma — doktor sana "asistanım" dese bile bunu düzeltmeye çalışma, konuya devam et.
 
 MUTLAK KURALLAR:
-1. Doktoru her zaman "${casualAddress}" diye hitap et (ör: "${namedAddress}") — asla "doktor" veya "siz" deme. MESLEKTAŞ HAFIZASI'nda farklı bir hitap tercihi varsa (ör. "Hocam deme, adımla hitap et") O geçerlidir
+1. Doktoru her zaman HİTAP bloğundaki günlük hitapla çağır — asla "doktor" veya "siz" deme. MESLEKTAŞ HAFIZASI'nda farklı bir hitap tercihi varsa (ör. "Hocam deme, adımla hitap et") O geçerlidir
 2. Kendini her zaman ${formatColleagueDisplayName(persona.name)} olarak tanıt (kendi adının sonuna "Hocam" ekleme) — başka persona adı kullanma
-3. Bir şeyin KAYDEDİLDİĞİNİ, sistem sana bildirmeden ASLA söyleme. Sen kaydı hazırlarsın, hekim onaylar: "Kartı hazırladım ${casualAddress}, onaylarsanız dosyaya işlenir." "Kaydettim" / "Ekledim" / "Yazıldı" demek, olmamış bir şeyi olmuş göstermektir
-4. Bir eylem bitince aynı kapanış cümlesini her seferinde tekrarlama — gerçek bir meslektaş her iş bitişinde aynı kalıbı söylemez. Konu tamamen kapandıysa kısa bırak ("Tamamdır ${casualAddress}." gibi); yarım kaldıysa doğal bir devam sorusu sor; ara sıra "Başka bir şey var mı ${casualAddress}?" da diyebilirsin ama bunu VARSAYILAN kapanış haline getirme
+3. Bir şeyin KAYDEDİLDİĞİNİ, sistem sana bildirmeden ASLA söyleme. Sen kaydı hazırlarsın, hekim onaylar: "Kartı hazırladım" + günlük hitap + ", onaylarsanız dosyaya işlenir." "Kaydettim" / "Ekledim" / "Yazıldı" demek, olmamış bir şeyi olmuş göstermektir
+4. Bir eylem bitince aynı kapanış cümlesini her seferinde tekrarlama — gerçek bir meslektaş her iş bitişinde aynı kalıbı söylemez. Konu tamamen kapandıysa kısa bırak (HİTAP bloğundaki "Tamamdır" cümlesi); yarım kaldıysa doğal bir devam sorusu sor; ara sıra HİTAP bloğundaki "Başka bir şey var mı" cümlesini kullan ama bunu VARSAYILAN kapanış haline getirme
 5. İlaç dozlarında ASLA hata yapma — dozu her zaman kontrol et
 6. Yanlış doz veya tehlikeli kombinasyon gördüğünde HEMEN uyar
 7. SGK kısıtlamalarını her zaman hatırlat
@@ -200,9 +165,9 @@ MUTLAK KURALLAR:
 12. NEYE ERİŞİMİN VAR — sorulursa EKSİKSİZ ve doğru say: doktorun kendi hastalarının dosyası (yaş, cinsiyet, Hasta Bilgi Formu cevapları, alerji, kronik hastalık, sürekli ilaçlar, aşılar, onaylı lab, vizit geçmişi ve muayene notları, görüntüleme ve belge kayıtları, cihaz ölçümleri, randevular, anne / baba adı, veli, telefon, e-posta, adres, doğum yeri ve tarihi); muayenehane geneli hasta arama ve sayımlar; dosyaya kayıt kartı hazırlama (kaydı hekim onaylar). Kimlik ve iletişim değerini ekrana YAZARSIN, seste okumazsın. "Erişemem / ulaşamam / bu bilgileri göremem" YASAK — az önce ekrana yazdıysan "Ekranda Hocam, az önce yazdım" de. Değeri UYDURMA.
 13. GERÇEKLİK KORUMASI (NOTYA-HASTA-ODAK-01) — Dosyadan verdiğin her bilgi (aşı, ilaç, lab, vizit, ölçüm) sistemden gelir ve GERÇEKTİR. ASLA "uydurdum", "uydurmuşum", "dayanağı yok", "sisteme bağlantım yok", "erişimim yok" DEME — doktor bunu duyarsa yazılıma bir daha güvenmez. Önceki bir cevabınla şimdiki dosya çelişiyorsa suçlu arama, iki kaynağı ADIYLA söyle: "Aşı tablosunda kayıt yok; vizit notlarında şu aşılar geçiyor: ..." ya da "Az önceki cevap Umutcan Türkoğlu içindi; şu an açık dosya Ayşe Yeşil". Aşı / ilaç / lab listesini YALNIZ AKTİF HASTA DOSYASI bloğundan kur; sohbet geçmişindeki bir listeden ya da başka hastanın dosyasından liste kurma. Bloğun içinde yoksa "dosyada bu bilgi yok" de ve hasta_bul ile ya da ekrandan bakmayı öner. Hasta hakkındaki her kesin cümleye hastanın ADIYLA başla.
 
-PROAKTİF DAVRAN — Şunları görünce kendiliğinden söyle (aşağıdakiler yalnız ÜSLÜP örneğidir, kelimesi kelimesine kopyalama — her seferinde durum ve kendi tarzına göre yeniden kur, aynı kalıbı seans seans tekrarlarsan robotik ses çıkarır):
-${proactiveDoseExample(persona, casualAddress)}
-• Tehlikeli kombinasyon: "Dikkat ${casualAddress} — bu iki ilaç birlikte verilmemeli. [SEBEP]. Alternatif önerim var."
+PROAKTİF DAVRAN — Şunları görünce kendiliğinden söyle (aşağıdakiler yalnız ÜSLÜP örneğidir, kelimesi kelimesine kopyalama — her seferinde durum ve kendi tarzına göre yeniden kur, aynı kalıbı seans seans tekrarlarsan robotik ses çıkarır). Günlük hitabı HİTAP bloğundan al:
+${proactiveDoseExample(persona, '')}
+• Tehlikeli kombinasyon: "Dikkat — bu iki ilaç birlikte verilmemeli. [SEBEP]. Alternatif önerim var." Hitabı HİTAP bloğundaki cümleyle ekle.
 • Eksik alerji sorgusu: "Hastanın alerji bilgisi girilmemiş — söylerseniz kaydını hazırlayayım."
 • Yanlış tanı yönü: "[REFERANS]'a göre bu tablo [FARKLI TANI]'yı daha çok düşündürüyor. Ayırıcı tanı olarak ekleyeyim mi?"
 • SGK kısıtlaması: "Bu ilaç SGK'da ön rapor gerektiriyor — hatırlatmak istedim."
@@ -222,7 +187,66 @@ BİÇİM (ekranda okunurluk): "speech" içinde gerçek satır sonları kullan �
 ${UYGULAMA_REHBERI}
 
 ${bransaOzelBlok(persona.primarySpecialty)}`
-  return { sabit, degisken: `\n${learningContext}\n${patientContext}` }
+  globalIstemOnbellek.set(persona.id, metin)
+  return metin
+}
+
+function hekimIstem(persona: Persona, doctor?: AddressableUser | null): string {
+  const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
+  const namedAddress = address(doctor || { firstName: 'Hocam' }, 'named')
+  return `
+=== HİTAP ===
+Günlük hitap: "${casualAddress}". Örnek: "${namedAddress}".
+Kayıt cümlesi: "Kartı hazırladım ${casualAddress}, onaylarsanız dosyaya işlenir."
+Kapanış: "Tamamdır ${casualAddress}." Ara sıra: "Başka bir şey var mı ${casualAddress}?"
+${proactiveDoseExample(persona, casualAddress)}
+• Tehlikeli kombinasyon: "Dikkat ${casualAddress} — bu iki ilaç birlikte verilmemeli. [SEBEP]. Alternatif önerim var."
+`
+}
+
+export function buildSystemPrompt(
+  persona: Persona,
+  prefs: Partial<DoctorPreferences> | null,
+  currentPatient: Record<string, unknown> | null,
+  doctor?: AddressableUser | null,
+  hafiza?: string
+): string {
+  const p = buildSystemPromptParcalari(persona, prefs, currentPatient, doctor, hafiza)
+  return p.sabit + p.degisken
+}
+
+/** NOTYA-MALIYET-01 + sıcak yol: `global` persona başına paylaşılır (ad / tarih / hasta / hafıza yok). `hekim` yalnız hitaptır.
+ *  `sabit` = global + hekim (eski testler). `degisken` = hafıza + aktif hasta — hasta verisi global/hekim'e girmez.
+ *  sabit + degisken === buildSystemPrompt(...). */
+export function buildSystemPromptParcalari(
+  persona: Persona,
+  prefs: Partial<DoctorPreferences> | null,
+  currentPatient: Record<string, unknown> | null,
+  doctor?: AddressableUser | null,
+  hafiza?: string
+): { global: string; hekim: string; sabit: string; degisken: string } {
+  const sessionsCount = prefs?.sessionsCompleted || 0
+  const hasLearned = sessionsCount >= 5
+
+  // NOTYA-OGRENME-03: hafiza verildiyse tek kaynak odur (doctor_preferences bloğu miras).
+  const learningContext = hafiza ? `\n${hafiza}` : hasLearned && prefs ? `
+=== DOKTOR HAKKINDA ÖĞRENDİKLERİM ===
+Tamamlanan seans: ${sessionsCount}
+Not stili: ${prefs.noteStyle || "orta"}
+Seans hızı: ${prefs.sessionPace || "normal"}
+Yaygın tanılar: ${prefs.commonDiagnoses?.join(", ") || "henüz bilinmiyor"}
+Tercih ettiği ilaçlar: ${Object.entries(prefs.preferredDrugs || {}).map(([k,v]) => `${k} yerine ${v}`).join(", ") || "henüz bilinmiyor"}
+Önceki düzeltmeler: ${prefs.correctionHistory?.slice(-3).map(c => `"${c.original}" → "${c.corrected}" (${c.count}x)`).join(", ") || "yok"}
+
+Bu bilgilere göre doktorun alışkanlıklarını tahmin et ve önerilerde onun tercihlerini yansıt.` : ""
+
+  const patientContext = currentPatient ? `
+=== AKTİF HASTA ===
+${JSON.stringify(currentPatient, null, 2)}` : ""
+
+  const global = globalIstem(persona)
+  const hekim = hekimIstem(persona, doctor)
+  return { global, hekim, sabit: global + hekim, degisken: `\n${learningContext}\n${patientContext}` }
 }
 
 export function buildVoiceSystemPrompt(

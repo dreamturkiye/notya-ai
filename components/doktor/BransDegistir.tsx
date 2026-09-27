@@ -11,6 +11,7 @@
 import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci'
 
 type Secenek = { anahtar: string; etiket: string }
 
@@ -64,6 +65,13 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
         localStorage.setItem('notya_doktor_specialty', yeni)
         // Drop stale Ayşe tab after KD/derm/… switch — asistan opens on branch colleague.
         localStorage.removeItem('notya_asistan_persona')
+        const once = hekimProfilOturumOku()
+        hekimProfilOturumYaz({
+          specialty: yeni,
+          profession_type: once?.profession_type || 'doktor',
+          full_name: once?.full_name ?? null,
+        })
+        hekimProfilTazeleIsaretle()
       } catch { /* önbellek yoksa sorun değil */ }
       // Branşa bağlı durum panodan portala kadar dağınık; tek temiz yeniden yükleme
       // sayfa sayfa elle yenilemekten hem basit hem güvenilir.

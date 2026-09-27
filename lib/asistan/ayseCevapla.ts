@@ -25,6 +25,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
+import { asistanOnbellekBloklari } from "@/lib/asistan/onbellekBloklari"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
@@ -252,6 +253,8 @@ ${ilacBaglamMetni(drugs[0])}`
   // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
   // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
   let dosyaEk = ""
+  let dosyaGovde = ""
+  let dosyaTur = ""
   let odakDosyaMetni = ""
   // NOTYA-AYSE-STANDART-01 + odak kilidi uyumu: kanıt yolu (İlk 10) açıkken cevap takvimdeki eksik aşıları ADIYLA sayar
   // ("KKK — kayıt yok"); bu uydurma liste değildir, kilit bu turda aşı-listesi kuralını uygulamaz.
@@ -337,10 +340,13 @@ ${ilacBaglamMetni(drugs[0])}`
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
           dosyaGuvenlikMetni = String(paket.metin || "")
-          dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+          // Gövde turdan tura aynı bayt olmalı (soru, kesin cümle, kanıt burada yok).
+          dosyaGovde = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Bu bloktan sonra KESİN DOSYA CEVABI varsa o cümleyi AYNEN söyle. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+          dosyaTur = kesinBlok
           if (sorgu && soruTuru) {
-            dosyaEk += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
+            dosyaTur += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
           }
+          dosyaEk = dosyaGovde + dosyaTur
         }
       }
     }
@@ -379,17 +385,17 @@ ${ilacBaglamMetni(drugs[0])}`
     eylemKapali() ? Promise.resolve(null) : hastaOzetiGetir(supabase, doktorId, eylemHastaId),
   ])
   if (!kota.izin) return { ok: false, durum: 429, govde: { success: false, error: KOTA_MESAJI }, soz: KOTA_MESAJI }
-  const hafizaBlogu = hafizaHam + gunHam
+  const hafizaBlogu = hafizaHam
 
   // Build system prompt with learning context
   // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
   const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
-  // NOTYA-MALIYET-01 (prompt caching): metin ve sıra eskisiyle birebir aynı (buildSystemPrompt + bransKilidi + dosyaEk).
-  // 1. kırılma noktası: persona/know-how/kurallar (hekim × persona başına sabit). 2. kırılma noktası: tüm system — hafıza,
-  // aktif hasta, branş kilidi ve dosya aynı sohbette turdan tura değişmez (yalnız ilk turda gün bloğu var).
-  // Branş kilidi BİLEREK sabit bloğa taşınmadı: kilit "yukarıdaki talimatlarla çeliştiğinde ÖNCELİKLİDİR" der; hafıza
-  // ve hasta bloğunun üstüne çıkarsa önceliği onları kapsamaz (kalite riski).
+  // NOTYA-ONBELLEK-SICAK-YOL: global (persona, hekimler paylaşır) ve hekim (hitap) ayrı kırılma.
+  // Kararlı blok: hafıza + hasta + branş kilidi + dosya gövdesi — aynı hastada turdan tura aynı bayt.
+  // Gün özeti, kesin cümle ve kanıt kuyrukta; soru dosya önekini bozmaz. Hasta global/hekim'de yok.
+  // Branş kilidi hafıza ve hastanın ÜSTÜNE çıkmaz (öncelik cümlesi onları kapsar); dosya gövdesi en sonda.
   const sistem = buildSystemPromptParcalari(persona, prefs, currentPatient, doctorProfile, hafizaBlogu)
+  const kararli = sistem.degisken + bransKilidi + dosyaGovde
 
   // NOTYA-MALIYET-01 (Kaan, 2026-09-19): şüphede uzman tur. Hasta bağlamı, eylem niyeti, klinik sinyal ya da belirsiz mesaj →
   // sohbet-uzman (1600 token — F3); sohbet yalnız net sosyal tur / uygulama kullanımı sorusu. Kural: lib/ai/modeller.ts.
@@ -399,6 +405,7 @@ ${ilacBaglamMetni(drugs[0])}`
   const eylemBransi = bransAnahtari(hekimBransi)
   const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
   const toolChoice = araclar.length && kayitNiyetiMi(String(message || augmentedMessage || '')) ? ('any' as const) : undefined
+  const kuyruk = gunHam + dosyaTur + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.
@@ -422,10 +429,7 @@ ${ilacBaglamMetni(drugs[0])}`
     guvenlikBaglami: [dosyaGuvenlikMetni, currentPatient ? JSON.stringify(currentPatient) : ""].filter(Boolean).join("\n"),
     araclar,
     toolChoice,
-    system: [
-      { metin: sistem.sabit, onbellek: true },
-      { metin: sistem.degisken + bransKilidi + dosyaEk + (araclar.length ? EYLEM_ISTEM_BLOGU : ""), onbellek: true },
-    ],
+    system: asistanOnbellekBloklari({ global: sistem.global, hekim: sistem.hekim, kararli, kuyruk }),
     messages: [
       // modele son 8 mesaj (4 tur) gider; saklanan geçmiş ve doz-kaynak kontrolü tam listeyi kullanır
       ...gecmisiKirp(messages).map((m: { role: string; content: string }) => ({

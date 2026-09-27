@@ -149,9 +149,11 @@ Varsayılan olarak `gpt-5.6-luna*` ve `claude-sonnet-4.x` seçilmez
 
 ## Tasarruf buradan gelir
 
-1. **Prompt caching** — sabit system (persona, branş kilidi, kurallar)
-   `onbellek: true` → `cache_control: { type: 'ephemeral' }`. Hasta bağlamı
-   **asla** önbellekli blokta değildir.
+1. **Prompt caching** — `onbellek: true` → `cache_control: { type: 'ephemeral' }`, en fazla 4 kırılma.
+   Paylaşılan önek (persona, kılavuz, kurallar, uygulama rehberi) hekim adı, tarih, hafıza ve hasta taşımaz.
+   Hitap ayrı kırılmadır. Kararlı dosya gövdesi yalnız son kırılmada, o hekim + o hasta için durur; kesin cümle,
+   kanıt ve gün özeti önbelleklenmez (soru öneki bozmasın). Klinik cevap soru metninin hash'iyle sunulmaz.
+   Çapraz hekim okuması yok.
 2. **Bağlam disiplini** — sohbet geçmişi kısa (`SOHBET_GECMIS_MESAJ`),
    `maxTokens` görev tipine göre gerçekçi.
 3. **Koruyucu payını düşük tut** — prompt ve şema birincilde ilk seferde

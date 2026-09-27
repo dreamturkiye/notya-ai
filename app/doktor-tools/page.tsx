@@ -13,6 +13,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraclariGruplu, type AracGrubu } from '@/lib/doktor/doktorAraclari'
+import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,9 @@ export default function DoktorToolsPage() {
   }, [])
 
   useEffect(() => {
+    const onbellek = hekimProfilOturumOku()
+    const tazele = hekimProfilTazeleBasligi()
+    if (onbellek) setGruplar(doktorAraclariGruplu(onbellek.specialty))
     let iptal = false
     ;(async () => {
       try {
@@ -42,9 +46,13 @@ export default function DoktorToolsPage() {
           if (!iptal) setGruplar(doktorAraclariGruplu(null))
           return
         }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}`, ...tazele } })
         const j = r.ok ? await r.json() : null
-        if (!iptal) setGruplar(doktorAraclariGruplu(j?.data?.specialty))
+        if (r.ok) hekimProfilTazeleBitti()
+        if (!iptal) {
+          setGruplar(doktorAraclariGruplu(j?.data?.specialty))
+          if (j?.data) hekimProfilOturumYaz({ specialty: j.data.specialty, profession_type: j.data.profession_type, full_name: j.data.full_name })
+        }
       } catch {
         if (!iptal) setGruplar(doktorAraclariGruplu(null))
       }
