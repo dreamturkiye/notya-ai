@@ -22,6 +22,7 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { hekimProfilOturumOku, hekimProfilOturumYaz } from '@/lib/doktor/hekimProfilIstemci';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
 import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
@@ -247,7 +248,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    (async () => {
+    const onbellek = hekimProfilOturumOku()
+    if (onbellek?.full_name) setAd(String(onbellek.full_name))
+    if (onbellek?.specialty) setBrans(String(onbellek.specialty))
+    ;(async () => {
       const t = await ensureDoctorAccessToken();
       if (!t) return;
       try {
@@ -265,6 +269,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           const u = d?.data || d;
           setAd(String(u?.full_name || u?.first_name || '').trim());
           setBrans(String(u?.specialty || ''));
+          hekimProfilOturumYaz({ specialty: u?.specialty, profession_type: u?.profession_type, full_name: u?.full_name || u?.first_name })
         }
       } catch { /* header just shows less */ }
       try {

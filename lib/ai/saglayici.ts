@@ -10,7 +10,8 @@
  * Gizlilik: her OpenRouter isteği `provider: { data_collection: 'deny' }` taşır — yalnız veriyi saklamayan / eğitimde
  * kullanmayan sağlayıcılara yönlenir. Bu KVKK yurt dışı aktarım konusunu ÇÖZMEZ (OpenRouter Türkiye dışındadır).
  * Prompt caching: sabit system blokları cache_control'ü system mesajının content parçalarında korur (Anthropic
- * modelleri); OpenAI modelleri önbelleği otomatik uygular. Hasta bağlamı hiçbir zaman önbellekli blokta değildir.
+ * modelleri); OpenAI modelleri önbelleği otomatik uygular. Paylaşılan önekte hasta yoktur. Kararlı dosya gövdesi
+ * yalnız son kırılma noktasında durur (hekim + hasta); soru kanıtı ve gün özeti o öneki bozmaz.
  */
 import type Anthropic from '@anthropic-ai/sdk'
 

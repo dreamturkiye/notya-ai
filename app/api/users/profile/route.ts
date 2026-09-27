@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { bransDegistirebilir } from '@/lib/auth/superuserBranslar'
+import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
       if (error) throw error
       result = data
     }
+    hekimProfilDusur(userId)
     return NextResponse.json({ success: true, data: { ...result, onboarding_completed: true } })
   } catch (error) {
     console.error('[profile]', error)

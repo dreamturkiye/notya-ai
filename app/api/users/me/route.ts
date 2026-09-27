@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { hekimProfilOku, hekimProfilYaz } from '@/lib/doktor/hekimProfilOnbellek'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,6 +42,10 @@ export async function GET(req: NextRequest) {
   }
 
   const meta = (user.user_metadata || {}) as Record<string, unknown>
+  const onbellekte = hekimProfilOku(user.id)
+  if (onbellekte) {
+    return NextResponse.json({ success: true, data: onbellekte })
+  }
 
   const { data: profile, error } = await getSupabase()
     .from('users')
@@ -54,17 +59,16 @@ export async function GET(req: NextRequest) {
 
   if (!profile) {
     const onboarding_completed = deriveOnboardingCompleted(null, meta)
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: user.id,
-        email: user.email,
-        full_name: meta.full_name || user.email?.split('@')[0] || '',
-        profession_type: meta.profession_type || null,
-        specialty: meta.specialty || null,
-        onboarding_completed,
-      },
-    })
+    const govde = {
+      id: user.id,
+      email: user.email,
+      full_name: meta.full_name || user.email?.split('@')[0] || '',
+      profession_type: meta.profession_type || null,
+      specialty: meta.specialty || null,
+      onboarding_completed,
+    }
+    hekimProfilYaz(user.id, govde)
+    return NextResponse.json({ success: true, data: govde })
   }
 
   const onboarding_completed = deriveOnboardingCompleted(profile as Record<string, unknown>, meta)
@@ -99,5 +103,6 @@ export async function GET(req: NextRequest) {
       .eq('id', user.id)
   }
 
+  hekimProfilYaz(user.id, merged)
   return NextResponse.json({ success: true, data: merged })
 }

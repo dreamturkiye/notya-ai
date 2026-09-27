@@ -30,6 +30,19 @@ describe('asistan sohbeti — sabit + değişken = eski prompt', () => {
     const b = buildSystemPromptParcalari(persona, null, null, null, undefined).sabit
     assert.equal(a, b)
   })
+  it('iki hekim aynı global öneki paylaşır; ad yalnız hekim bloğunda', () => {
+    const ayla = buildSystemPromptParcalari(persona, null, HASTA, { firstName: 'Ayla', lastName: 'Deniz' } as never, HAFIZA)
+    const kerim = buildSystemPromptParcalari(persona, null, null, { firstName: 'Kerim', lastName: 'Yilmaz' } as never)
+    assert.equal(ayla.global, kerim.global)
+    assert.equal(ayla.sabit, ayla.global + ayla.hekim)
+    assert.notEqual(ayla.hekim, kerim.hekim)
+    assert.equal(ayla.global.includes('Ayla'), false)
+    assert.equal(ayla.global.includes('Kerim'), false)
+    assert.equal(ayla.hekim.includes('Ayla'), true)
+    assert.equal(ayla.global.includes('SENTETIK_HASTA_ISARETI'), false)
+    assert.equal(ayla.hekim.includes('SENTETIK_HASTA_ISARETI'), false)
+    assert.equal(ayla.hekim.includes('SENTETIK_HAFIZA_ISARETI'), false)
+  })
 })
 
 describe('mali / avukat sohbeti — sabit + değişken = eski prompt', () => {
