@@ -9,6 +9,10 @@
  *
  * Kaan (2026-09-18): Formda klinik yenileme (başvuru / vital / SOAP) olunca Ayşe notu yeniden
  * okur — ICD, reçete/ilaç, evde dikkat, hasta özeti pediatrideki gibi güncellenir.
+ *
+ * NOTYA-NOT-HIZ-03 (Kaan, 2026-09-27): Ayşe'nin önerisi (değerlendirme, reçete önerisi, evde dikkat, özet) not
+ * kaydedildikten sonra gelir — yeni notta öneri boşsa sayfa notu kısa aralıkla yeniden okur ve boş alanları doldurur.
+ * Onay beklemez; hekimin yazdığı alan ezilmez.
  */
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -39,6 +43,7 @@ import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAkt
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
@@ -57,6 +62,7 @@ interface NotVeri {
     degerlendirme: string
     plan: string
     alarmBulgulari: string[]
+    kritikBulgular?: string[]
     vitaller: Record<string, unknown> | null
     ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]
     /** NOTYA-ASI-NOT-01: bu muayenede uygulanan aşılar (onayda aşı kartına geçer) + kart (bu notun satırları hariç). */
@@ -130,6 +136,9 @@ export default function NotSayfasi() {
   const aiBekliyorRef = useRef(false);
   // NOTYA-RECETE-05: not açıldığındaki Plan — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
   const ilkPlanRef = useRef<string | null>(null);
+  // NOTYA-NOT-HIZ-03: öneri arka planda hazırlanıyor (yeni not, öneri alanları boş).
+  const [oneriBekleniyor, setOneriBekleniyor] = useState(false);
+  const ilkAiDegRef = useRef('');
 
   useEffect(() => {
     (async () => {
@@ -156,9 +165,38 @@ export default function NotSayfasi() {
         setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
         setRecete(Array.isArray(j.not.receteOnerisi) ? j.not.receteOnerisi : []);
         setAiDeg(String(j.not.aiDegerlendirme || ''));
+        ilkAiDegRef.current = String(j.not.aiDegerlendirme || '');
+        setOneriBekleniyor(oneriYoklamasiGerekli(j.not));
       } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); }
     })();
   }, [params.id]);
+
+  // NOTYA-NOT-HIZ-03: öneri gelene kadar (en çok 90 sn) notu yeniden oku; gelince yalnız hâlâ boş / dokunulmamış alanları doldur.
+  useEffect(() => {
+    if (!oneriBekleniyor) return;
+    let iptal = false;
+    void (async () => {
+      const gelen = await oneriyiYokla<NotVeri['not']>({
+        getir: async () => {
+          const t = await ensureDoctorAccessToken();
+          const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+          if (!r.ok) return null;
+          return ((await r.json()) as NotVeri).not;
+        },
+        geldiMi: oneriGeldiMi,
+        iptal: () => iptal,
+      });
+      if (iptal) return;
+      if (gelen) {
+        setAlarm((v) => (v.trim() ? v : (gelen.alarmBulgulari || []).join('\n')));
+        setOzet((v) => (v.trim() ? v : gelen.hastaOzeti || ''));
+        setRecete((v) => (v.length ? v : Array.isArray(gelen.receteOnerisi) ? gelen.receteOnerisi : []));
+        setAiDeg((v) => (v === ilkAiDegRef.current ? String(gelen.aiDegerlendirme || '') : v));
+      }
+      setOneriBekleniyor(false);
+    })();
+    return () => { iptal = true; };
+  }, [oneriBekleniyor, params.id]);
 
   const isaretle = <T,>(set: (v: T) => void) => (v: T) => { set(v); setDegisti(true); };
 
@@ -455,6 +493,11 @@ export default function NotSayfasi() {
             <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>Henüz ICD önerisi yok — notu düzenleyince Ayşe günceller.</div>
           )}
         </div>
+        {oneriBekleniyor ? (
+          <div role="status" style={{ fontSize: 12.5, color: '#B4832F', background: 'rgba(180,131,47,0.08)', border: '1px dashed rgba(180,131,47,0.35)', borderRadius: 8, padding: '8px 12px' }}>
+            Ayşe'nin önerisi hazırlanıyor… <span style={{ color: CHROME_RENK.muted }}>(notu beklemeden onaylayabilirsiniz)</span>
+          </div>
+        ) : null}
         {aiDegGorunen.trim() ? (
           <div>
             <div style={etiket}>Klinik değerlendirme (AI · hastaya görünmez)</div>

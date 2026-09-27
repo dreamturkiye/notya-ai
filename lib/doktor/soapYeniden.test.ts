@@ -45,10 +45,13 @@ const TRANSKRIPT = 'Sentetik GIZLI-TRANSKRIPT-9Z: üç gündür öksürük, ate�
 /** Each call to the mocked generator takes the next scripted outcome: an Error to throw, or 'ok'. */
 let senaryo: (Error | 'ok')[] = []
 let uretimSayisi = 0
+/** NOTYA-NOT-HIZ-03: set → each generator call hands the route the next advisory promise (oneriAyri). */
+let oneriSozleri: Promise<unknown>[] | null = null
 mock.module(yerel('soapUret.ts'), {
   namedExports: {
-    soapNotuUret: async () => {
+    soapNotuUret: async (_c: unknown, _g: unknown, secenek?: { oneriAyri?: (s: Promise<unknown>) => void }) => {
       uretimSayisi++
+      if (oneriSozleri?.length) secenek?.oneriAyri?.(oneriSozleri.shift()!)
       const s = senaryo.shift() ?? 'ok'
       if (s !== 'ok') throw s
       return { soap: { subjektif: 'Sentetik S', objektif: 'Sentetik O', degerlendirme: 'Sentetik D', plan: 'Sentetik P' }, tani: 'Sentetik' }
@@ -148,6 +151,7 @@ function sahne(): Sahne {
   db = new SahteVeritabani()
   senaryo = []
   uretimSayisi = 0
+  oneriSozleri = null
   const kullanici = () => { const id = randomUUID(); const token = `qa-${id}`; db.kullanicilar.set(token, { id }); return { id, token } }
   const doktor = kullanici()
   const diger = kullanici()
@@ -261,5 +265,64 @@ describe('gerçek rota: POST /api/sessions/[id]/end', () => {
     console.error = orijinalHata
     assert.equal(y.status, 404)
     assert.equal(db.tablo('sessions').find((x) => x.id === yabanci)!.status, 'processing')
+  })
+})
+
+describe('gerçek rota: öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () => {
+  let s: Sahne
+  let seans: string
+  const ONERI = { aiDegerlendirme: 'Öneri (doktor onayına tabi): astım ayırıcı tanıda.', hasta_ozeti: 'Sentetik özet.', alarmBulgulari: ['Nefes darlığı'], receteOnerisi: [{ etkenMadde: 'Sentetik', ticariOrnek: 'Sentetik' }], kritik_bulgular: [] }
+  const ertelenmis = () => { let coz!: (v: unknown) => void; const soz = new Promise((r) => { coz = r }); return { soz, coz } }
+  const not = () => db.tablo('notes').find((n) => n.session_id === seans)!
+  const bekleKi = async (kosul: () => boolean) => { for (let i = 0; i < 100 && !kosul(); i++) await new Promise((r) => setTimeout(r, 2)) }
+  beforeEach(() => {
+    s = sahne()
+    seans = db.ekle('sessions', { doctor_id: s.doktor.id, patient_id: s.hasta, status: 'processing' }).id
+  })
+  const cagir = async () => {
+    const req = new NextRequestSinifi(`http://localhost/api/sessions/${seans}/end`, {
+      method: 'POST', headers: { authorization: `Bearer ${s.doktor.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ transcript: TRANSKRIPT, context: { specialty: 'dahiliye' } }),
+    } as ConstructorParameters<typeof NextRequestSinifi>[1])
+    const y = await bitir.POST(req, { params: { id: seans } })
+    return { status: y.status, json: await y.json() }
+  }
+
+  it('not öneri beklenmeden kaydedilir ve yanıt döner; öneri gelince aynı nota (id + doktor) yazılır', async () => {
+    const b = ertelenmis()
+    oneriSozleri = [b.soz]
+    const y = await cagir()
+    assert.equal(y.status, 200, JSON.stringify(y.json))
+    assert.equal(db.tablo('notes').filter((n) => n.session_id === seans).length, 1)
+    assert.equal(not().hasta_ozeti, null)
+    assert.equal(not().recete_onerisi, null)
+    assert.equal(not().doctor_id, s.doktor.id)
+    b.coz(ONERI)
+    await bekleKi(() => not().hasta_ozeti != null)
+    assert.equal(not().hasta_ozeti, ONERI.hasta_ozeti)
+    assert.deepEqual(not().alarm_bulgulari, ONERI.alarmBulgulari)
+    assert.deepEqual(not().recete_onerisi, ONERI.receteOnerisi)
+    assert.equal(not().kritik_bulgular, null, 'boş dizi yazılmaz')
+    assert.ok(String(not().ai_degerlendirme).includes(ONERI.aiDegerlendirme), String(not().ai_degerlendirme))
+    assert.equal(not().content_subjektif, 'Sentetik S', 'gövdeye dokunulmaz')
+  })
+
+  it('öneri düşerse (null) not öneri alanları boş kalır, seans completed', async () => {
+    oneriSozleri = [Promise.resolve(null)]
+    const y = await cagir()
+    assert.equal(y.status, 200)
+    await new Promise((r) => setTimeout(r, 10))
+    assert.equal(not().hasta_ozeti, null)
+    assert.equal(not().alarm_bulgulari, null)
+    assert.equal(db.tablo('sessions').find((x) => x.id === seans)!.status, 'completed')
+  })
+
+  it('geçici hata sonrası tekrar: yalnız son denemenin önerisi yazılır', async () => {
+    senaryo = [apiHatasi(529, 'overloaded_error'), 'ok']
+    oneriSozleri = [Promise.resolve({ ...ONERI, hasta_ozeti: 'ESKI-DENEME' }), Promise.resolve(ONERI)]
+    const y = await cagir()
+    assert.equal(y.status, 200)
+    await bekleKi(() => not().hasta_ozeti != null)
+    assert.equal(not().hasta_ozeti, ONERI.hasta_ozeti)
   })
 })

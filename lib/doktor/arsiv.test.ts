@@ -43,6 +43,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'app/api/doktor/belgeler/analiz/onayla/route.ts': { adet: 2, neden: 'writes into the note the doctor targeted by explicit id; auto-targeting above uses the helpers' },
   'lib/doktor/receteAktarim.ts': { adet: 1, neden: 'approval path: the note being approved, by id → hasta_ilaclar' },
   'lib/doktor/hastaSahipligi.ts': { adet: 1, neden: 'ownership check of a session id' },
+  'lib/doktor/oneriArkaPlan.ts': { adet: 1, neden: 'NOTYA-NOT-HIZ-03: background advisory write reads ONE note by id + doctor id (the note this request just created) to merge ai_degerlendirme without overwriting a doctor edit; never lists visits' },
   'lib/vault/service.ts': { adet: 1, neden: 'ownership check of a visit id before filing a document' },
   'lib/doktor/soapYeniden.ts': { adet: 2, neden: 'status bookkeeping only (NOTYA-BETA-0925): stuck `processing` sessions → failed; must see archived notes too so a session that has a note is never marked failed. Nothing reaches a screen or the model' },
 }
