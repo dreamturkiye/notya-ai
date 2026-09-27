@@ -18,6 +18,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { address, type AddressableUser } from '@/lib/address'
 import { asamaBul, type DoktorIliski } from '@/lib/doktor/hafiza'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { selamla as selamlaOrtak, yerelSaat } from '@/lib/doktor/selam'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 
 export type GunFazi = 'basi' | 'orta' | 'sonu'
 
@@ -62,8 +64,10 @@ export function gunFazi(saat = trtSaat(new Date()), rutin?: Record<string, unkno
   return 'orta'
 }
 
-export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Promise<GunVerisi> {
+export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string, saatDilimi?: string): Promise<GunVerisi> {
   const simdi = new Date()
+  // NOTYA-SELAM-SAAT-01: selam ve gün fazı doktorun yerel saatiyle; randevu penceresi (bugun) TRT'de kalır.
+  const yerel = yerelSaat(simdi, saatDilimi || istekSaatDilimi())
   const bugunS = trtGunSinirlari(0)
   const dunS = trtGunSinirlari(-1)
   const yarinS = trtGunSinirlari(1)
@@ -123,7 +127,7 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
   return {
     bugun: trtTarih(simdi),
     haftaGunu: simdi.toLocaleDateString('tr-TR', { timeZone: TZ, weekday: 'long' }),
-    saatTRT: trtSaat(simdi),
+    saatTRT: yerel, // yerel saat (ad tarihsel: selam/faz için kullanılır)
     randevu: {
       toplam: randevular.length,
       kontrol: randevular.filter((r) => r.tur === 'kontrol').length,
@@ -141,11 +145,8 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
   }
 }
 
-function selamla(saat: number): string {
-  if (saat < 12) return 'Günaydın'
-  if (saat < 18) return 'İyi günler'
-  return 'İyi akşamlar'
-}
+// NOTYA-SELAM-SAAT-01: tek bant, lib/doktor/selam.ts — kicker ile aynı.
+const selamla = selamlaOrtak
 
 /** Ayşe'nin ilk sözü — aşamaya göre ton: tanışmada açıklayıcı, meslektaşta kısa ve ortak dil. */
 export function gunOzetiMetni(

@@ -31,6 +31,7 @@ import { GELEN_OLAY, GELEN_SAYI_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 import KullanimIzle from './KullanimIzle';
+import { SAAT_DILIMI_CEREZ, tarayiciSaatDilimi } from '@/lib/doktor/selam';
 
 /**
  * A page rendered under a chrome-owning layout (e.g. hedef-boy's "aile" / family-facing embed
@@ -220,8 +221,11 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   }, [])
 
   useEffect(() => {
-    setSaat(saatTRT());
-    const t = setInterval(() => setSaat(saatTRT()), 30000);
+    // NOTYA-SELAM-SAAT-01: saat ve selam doktorun bulunduğu yerin dilimiyle; dilim çereze yazılır, sunucu selamları okur.
+    const tz = tarayiciSaatDilimi();
+    try { document.cookie = `${SAAT_DILIMI_CEREZ}=${encodeURIComponent(tz)}; path=/; max-age=31536000; samesite=lax`; } catch { /* yok */ }
+    setSaat(saatTRT(new Date(), tz));
+    const t = setInterval(() => setSaat(saatTRT(new Date(), tz)), 30000);
     return () => clearInterval(t);
   }, []);
 
