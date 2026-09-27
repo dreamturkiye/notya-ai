@@ -197,7 +197,7 @@ describe('UI ve rota kilitleri (kaynak)', () => {
     assert.match(liste, /asiKaynakRozeti\(tur, hitap\.beyanEtiketi\)/)
     assert.match(liste, /<Rozet ton=\{rozet\.ton\}>\{rozet\.metin\}<\/Rozet>/, 'paylaşılan Rozet — yeni tasarım dili yok')
   })
-  it("karne okuma görevi 'goruntu-inceleme' (GÜÇLÜ); model adı rotada yazılmaz; hasta verisi system bloğunda değil", () => {
+  it("karne okuma görevi 'goruntu-inceleme' (birincil, yapılandırılmış — LUNAPRO-01); model adı rotada yazılmaz; hasta verisi system bloğunda değil", () => {
     const rota = oku('app/api/doktor/asilar/karne/route.ts')
     assert.match(rota, /gorev: 'goruntu-inceleme'/)
     assert.doesNotMatch(rota, /claude-(sonnet|haiku|opus)/)

@@ -92,7 +92,7 @@ export async function gorselCikar(anthropic: Anthropic, girdi: { tip: 'pdf'; bas
   if (girdi.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: girdi.base64 } })
   else icerik.push({ type: 'image', source: { type: 'base64', media_type: girdi.mime, data: girdi.base64 } })
   icerik.push({ type: 'text', text: `Bu laboratuvar raporundaki TÜM satırları şemaya göre çıkar. Yalnızca JSON.${ekTalimat ? `\n${ekTalimat}` : ''}` })
-  // NOTYA-MALIYET-01: lab PDF/görsel okuma — istisnasız GÜÇLÜ (goruntu-inceleme)
+  // NOTYA-MALIYET-01: lab PDF/görsel okuma (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro)
   const y = await aiCagir({ istemci: anthropic, gorev: 'goruntu-inceleme', maxTokens: ekTalimat ? 16000 : 6000, temperature: 0, doctorId, system: CIKARIM_SISTEM, messages: [{ role: 'user', content: icerik }] })
   const ham = y.content.filter((c) => c.type === 'text').map((c) => (c as { text: string }).text).join('\n').replace(/```json|```/g, '')
   const j = JSON.parse(ham.slice(ham.indexOf('{'), ham.lastIndexOf('}') + 1)) as Partial<CikarimSonucu> & { satirlar?: Partial<HamSatir>[] }

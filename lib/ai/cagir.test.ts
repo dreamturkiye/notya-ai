@@ -1,11 +1,12 @@
 /**
- * NOTYA-MALIYET-01 — çağrı kapısı: GÖRSEL = GÜÇLÜ güvencesi, prompt caching biçimi, ölçüm satırının içeriksizliği.
+ * NOTYA-MALIYET-01 + NOTYA-MODEL-LUNA-02 — çağrı kapısı: birincil Luna (görsel dahil), güvenlik yükseltmesi, prompt
+ * caching biçimi, ölçüm satırının içeriksizliği.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { aiCagir, etkinSecim, gorselIcerirMi, istekGovdesi, sistemGovdesi, type AiMesaj } from './cagir'
+import { aiCagir, etkinSecim, gorselIcerirMi, istekGovdesi, lunaZamanAsimiMs, sistemGovdesi, type AiMesaj } from './cagir'
 import { kullanimSatiri } from './kullanim'
-import { gucluModel, hizliModel } from './modeller'
+import { gucluModel, hizliModel, type Gorev } from './modeller'
 import { dogrudanModelAdi } from './saglayici'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -13,8 +14,9 @@ import { join } from 'node:path'
 const GORSEL: AiMesaj[] = [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAAA' } }, { type: 'text', text: 'Bu nedir?' }] }]
 const PDF: AiMesaj[] = [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'AAAA' } }, { type: 'text', text: 'Çıkar' }] }]
 const METIN: AiMesaj[] = [{ role: 'user', content: 'merhaba' }]
+const TUM_GOREVLER: Gorev[] = ['soap', 'not-uretimi', 'klinik-analiz', 'goruntu-inceleme', 'uzman-analiz', 'sohbet-uzman', 'sohbet', 'siniflandirma', 'ozet', 'bicimlendirme', 'cikarim', 'kisa-yanit']
 
-describe('GÖRSEL = GÜÇLÜ (Kaan, 2026-09-19 — istisnasız)', () => {
+describe('LUNA-02 — birincil Luna her görevde, görsel/PDF dahil (GÖRSEL = GÜÇLÜ emekli, Kaan 2026-09-26)', () => {
   it('görsel/PDF bloğu algılanır; düz metin algılanmaz', () => {
     assert.equal(gorselIcerirMi(GORSEL), true)
     assert.equal(gorselIcerirMi(PDF), true)
@@ -22,28 +24,62 @@ describe('GÖRSEL = GÜÇLÜ (Kaan, 2026-09-19 — istisnasız)', () => {
     assert.equal(gorselIcerirMi([{ role: 'user', content: [{ type: 'tool_result', content: [{ type: 'image', source: {} }] }] }]), true)
   })
 
-  it('çağıran HIZLI bir görev verse bile görselde GÜÇLÜ model gider', () => {
-    for (const gorev of ['siniflandirma', 'sohbet', 'kisa-yanit', 'ozet', 'bicimlendirme', 'cikarim'] as const) {
+  it('görsel/PDF artık HIZLI gider — görüntü-inceleme dahil, yükseltme yok', () => {
+    for (const gorev of TUM_GOREVLER) {
       const s = etkinSecim({ gorev, messages: GORSEL })
-      assert.equal(s.kademe, 'guclu', gorev)
-      assert.equal(s.model, gucluModel(), gorev)
-      assert.equal(s.yukseltildi, true)
-      assert.equal(istekGovdesi({ gorev, messages: PDF }).model, gucluModel(), gorev)
+      assert.equal(s.kademe, 'hizli', gorev)
+      assert.equal(s.model, hizliModel(), gorev)
+      assert.equal(s.yukseltildi, false, gorev)
+      assert.equal(s.neden, null, gorev)
+      assert.equal(istekGovdesi({ gorev, messages: PDF }).model, hizliModel(), gorev)
     }
   })
 
-  it('görselsiz HIZLI görev HIZLI kalır; GÜÇLÜ görev yükseltme işareti taşımaz', () => {
-    assert.equal(istekGovdesi({ gorev: 'siniflandirma', messages: METIN }).model, hizliModel())
-    assert.equal(etkinSecim({ gorev: 'goruntu-inceleme', messages: GORSEL }).yukseltildi, false)
+  it('klinik görev (soap, sohbet-uzman, klinik-analiz…) sinyalsiz metinde birincil HIZLI', () => {
+    for (const gorev of ['soap', 'not-uretimi', 'klinik-analiz', 'uzman-analiz', 'sohbet-uzman'] as Gorev[]) {
+      const s = etkinSecim({ gorev, messages: [{ role: 'user', content: 'üç gündür öksürük ve ateş' }] })
+      assert.deepEqual([s.kademe, s.model, s.neden], ['hizli', hizliModel(), null], gorev)
+    }
   })
 
-  it('SDK istemcisine giden gerçek istek de GÜÇLÜ modeli taşır (OpenRouter yok → doğrudan Anthropic kimliği)', async () => {
+  it('güvenlik sinyali → GÜÇLÜ çağrıdan ÖNCE, neden = safety (her görevde, görselle de)', () => {
+    for (const gorev of TUM_GOREVLER) {
+      const s = etkinSecim({ gorev, messages: [{ role: 'user', content: 'hasta 12 haftalık gebe, ne yazalım' }] })
+      assert.deepEqual([s.kademe, s.model, s.yukseltildi, s.neden], ['guclu', gucluModel(), true, 'safety'], gorev)
+    }
+    const g = etkinSecim({ gorev: 'goruntu-inceleme', messages: [{ role: 'user', content: [{ type: 'image', source: {} }, { type: 'text', text: 'isotretinoin öncesi lezyon' }] }] })
+    assert.equal(g.neden, 'safety')
+  })
+
+  it('güvenlik sinyali hasta dosyası bağlamında (guvenlikBaglami) → GÜÇLÜ; sabit system metni taranmaz', () => {
+    const mesaj: AiMesaj[] = [{ role: 'user', content: 'kontrol ne zaman olsun' }]
+    assert.equal(etkinSecim({ gorev: 'sohbet-uzman', messages: mesaj, guvenlikBaglami: 'Sürekli ilaç: Warfarin 5 mg' }).neden, 'safety')
+    assert.equal(etkinSecim({ gorev: 'sohbet-uzman', messages: mesaj, guvenlikBaglami: 'Alerji: yok' }).neden, null)
+    // system'de geçen sinyal kelimesi (ör. branş kilidindeki "gebe") tek başına yükseltmez
+    assert.equal(istekGovdesi({ gorev: 'soap', system: 'Gebelikte kontrendike ilaçları yazma.', messages: mesaj }).model, hizliModel())
+  })
+
+  it('OpenRouter yok → Luna gidemez; görsel istek GÜÇLÜ doğrudan kimliğine düşer (transport), tavan korunur', async () => {
+    const eski = process.env.OPENROUTER_API_KEY
     delete process.env.OPENROUTER_API_KEY
-    let giden: Record<string, unknown> | null = null
-    const istemci = { messages: { create: async (g: never) => { giden = g as Record<string, unknown>; return { content: [{ type: 'text', text: 'ok' }], usage: {} } } } }
-    await aiCagir({ istemci, gorev: 'siniflandirma', maxTokens: 20, messages: GORSEL })
-    assert.equal(giden!.model, dogrudanModelAdi(gucluModel()))
-    assert.equal(giden!.max_tokens, 20)
+    try {
+      let giden: Record<string, unknown> | null = null
+      const istemci = { messages: { create: async (g: never) => { giden = g as Record<string, unknown>; return { content: [{ type: 'text', text: 'ok' }], usage: {} } } } }
+      await aiCagir({ istemci, gorev: 'siniflandirma', maxTokens: 20, messages: GORSEL })
+      assert.equal(giden!.model, dogrudanModelAdi(gucluModel()))
+      assert.equal(giden!.max_tokens, 20)
+    } finally {
+      if (eski !== undefined) process.env.OPENROUTER_API_KEY = eski
+    }
+  })
+
+  it('Luna zaman aşımı max_tokens ile büyür: kısa iş 25 sn, SOAP/görüntü 60 sn tavan', () => {
+    assert.equal(lunaZamanAsimiMs(20), 25_000)
+    assert.equal(lunaZamanAsimiMs(1600), 25_000)
+    assert.equal(lunaZamanAsimiMs(4000), 32_000)
+    assert.equal(lunaZamanAsimiMs(8000), 60_000)
+    assert.equal(lunaZamanAsimiMs(12000), 60_000)
+    assert.equal(lunaZamanAsimiMs(undefined), 25_000)
   })
 })
 

@@ -11,7 +11,7 @@
  *  - hekimin bu not için daha önce "Geri al" dediği satır.
  *
  * Akış: ucuz deterministik ön kontrol (lib/doktor/ilacSonlandirMetin.ts) → gerekiyorsa TEK model çağrısı
- * (klinik-analiz = GÜÇLÜ, temperature 0, yalnız JSON; kimlik verisi yok — yalnız not metni + ilaç adları)
+ * (klinik-analiz — LUNAPRO-01: birincil Luna-Pro, temperature 0, yalnız JSON; kimlik verisi yok — yalnız not metni + ilaç adları)
  * → her öneri deterministik olarak yeniden doğrulanır (alıntı notta birebir, ilaç adı alıntıda, alıntıda
  * olumsuzluk/koşul yok). Şüphede durdurma.
  */
@@ -192,6 +192,7 @@ export async function nottanIlacSonlandir(
     }
     const cagri = aiCagir({
       gorev: 'klinik-analiz',
+      jsonBekleniyor: true,
       system: [{ metin: SONLANDIRMA_SISTEM, onbellek: true }],
       messages: [{ role: 'user', content: JSON.stringify(girdi) }],
       temperature: 0,

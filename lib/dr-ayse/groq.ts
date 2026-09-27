@@ -33,12 +33,13 @@ export async function groqChat(
     .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
   if (konusma.length === 0) konusma.push({ role: 'user', content: 'Devam et.' })
 
-  // NOTYA-MALIYET-01: epikriz, gelişim taraması, belge ingest özeti (lab/radyoloji metni) — klinik çıktı, GÜÇLÜ
+  // NOTYA-MALIYET-01: epikriz, gelişim taraması, belge ingest özeti (lab/radyoloji metni) — klinik çıktı (LUNAPRO-01: birincil Luna-Pro)
   // (klinik-analiz). Hata metni eskisiyle aynı biçimde: "Anthropic API <durum>: <gövde>".
   const data = await aiCagir({
     gorev: 'klinik-analiz',
     maxTokens: options?.maxTokens ?? 1024,
     temperature: options?.temperature ?? 0.4,
+    jsonBekleniyor: !!options?.jsonMode,
     system: sistemParcalari.join('\n\n') || undefined,
     messages: konusma,
   })

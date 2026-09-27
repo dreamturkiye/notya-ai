@@ -1,7 +1,7 @@
 /**
  * NOTYA-MALIYET-01 (E) — her Claude çağrısının token sayaçlarını ai_token_kullanim tablosuna yazar.
  *
- * YALNIZ SAYAÇ: hekim kimliği (varsa), görev, model, kademe, yükseltme nedeni (NOTYA-MODEL-LUNA-01) ve usage sayıları. Prompt, yanıt, hasta adı/kimliği
+ * YALNIZ SAYAÇ: hekim kimliği (varsa), görev, model, kademe, yükseltme nedeni (NOTYA-MODEL-LUNA-01 / LUNAPRO-01) ve usage sayıları. Prompt, yanıt, hasta adı/kimliği
  * veya herhangi bir içerik YAZILMAZ — kullanimSatiri() şekli lib/ai/cagir.test.ts'te kilitli.
  * Kayıt hatası çağrıyı asla düşürmez (ölçüm kritik yol değildir).
  */
@@ -25,7 +25,7 @@ export interface KullanimSatiri {
   kesildi: boolean
   /** Etkin kademe (guclu | hizli) — migration 105 */
   kademe: Kademe | null
-  /** Neden GÜÇLÜ gitti (transport | onayla | safety | vision | low_conf | uzman); HIZLI kaldıysa null — migration 105 */
+  /** Neden koruyucuya gidildi (transport | low_conf | safety | devre — LUNAPRO-01); birincilde kaldıysa null — migration 105/106 */
   neden: YukseltmeNedeni | null
 }
 
@@ -71,12 +71,22 @@ function kolonYok(e: unknown): boolean {
   return h?.code === 'PGRST204' || h?.code === '42703' || /column/i.test(String(h?.message || ''))
 }
 
+/** Check kısıtı ihlali (23514) — ör. migration 106 uygulanmadan 'devre' nedeni. */
+function kisitIhlali(e: unknown): boolean {
+  const h = e as { code?: string; message?: string }
+  return h?.code === '23514' || /check constraint/i.test(String(h?.message || ''))
+}
+
 /** Servis rolüyle tek satır ekler; her hata yutulur (yalnız konsola sayaçsız bir uyarı). */
 export async function kullanimKaydet(satir: KullanimSatiri): Promise<void> {
   try {
     const sb = await yaziciAl()
     if (!sb) return
     let { error } = await sb.from('ai_token_kullanim').insert(satir)
+    if (error && kisitIhlali(error) && satir.neden) {
+      // Migration 106 henüz uygulanmadıysa 'devre' satırı kaybolmasın: neden olmadan tekrar yaz (kademe kalır).
+      ;({ error } = await sb.from('ai_token_kullanim').insert({ ...satir, neden: null }))
+    }
     if (error && kolonYok(error)) {
       // Migration 105 henüz uygulanmadıysa sayaçlar kaybolmasın: kademe/neden olmadan tekrar yaz.
       const { kademe: _k, neden: _n, ...eski } = satir

@@ -89,10 +89,10 @@ export async function POST(request: NextRequest) {
     // AUDIT-2026-09-03: Groq'tan Anthropic'e geçiş — GROQ_API_KEY hiçbir ortamda tanımlı
     // değildi, araç hiç çalışmamıştı. Tek AI sağlayıcı = tek fatura, tutarlı kalite.
     // NOTYA-MALIYET-01: yalnız biçimlendirme değil — mevcut ilaçlarla etkileşim kontrolü ve SGK notu üretir;
-    // klinik karar çıktısı olduğu için GÜÇLÜ (klinik-analiz) kalır. 2500: ilaç + etkileşim listesi JSON'u kesilmesin.
+    // klinik karar çıktısı (klinik-analiz; LUNAPRO-01: birincil Luna-Pro). 2500: ilaç + etkileşim listesi JSON'u kesilmesin.
     let hamMetin: string
     try {
-      hamMetin = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', maxTokens: 2500, doctorId: user.id, system: systemPrompt, messages: [{ role: 'user', content: guvenliMesaj }] }))
+      hamMetin = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', jsonBekleniyor: true, maxTokens: 2500, doctorId: user.id, system: systemPrompt, messages: [{ role: 'user', content: guvenliMesaj }] }))
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[erecete] anthropic', e.govde.slice(0, 300));

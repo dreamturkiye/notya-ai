@@ -13,7 +13,7 @@
  *   POST { patientId, hedefBrans, klinikSoru, hedefHekim?, aciliyet?, not?, tanilar?, mevcutDurum?, istemTarihi? }
  *   POST { islem: 'istem_taslagi', patientId, hedefBrans, not? }   → Ayşe'nin istem TASLAĞI (kaydetmez)
  *   POST { islem: 'yanit_taslagi', id, belgeId?, deid? }             → konsültan raporundan yanıt özeti TASLAĞI (kaydetmez)
- *         AYSE-KONSULTASYON-01: lib/doktor/konsultasyonTaslagi.ts. Model lib/ai/cagir.ts üzerinden, GÜÇLÜ kademe
+ *         AYSE-KONSULTASYON-01: lib/doktor/konsultasyonTaslagi.ts. Model lib/ai/cagir.ts üzerinden, birincil Luna-Pro
  *         ('klinik-analiz' / 'goruntu-inceleme'); sabit system prompt önbellekli, hasta dosyası özeti user mesajında.
  *         Taslak üretilemezse 200 { ok: false, error } — form boş ama kullanılabilir (hekim asla kilitlenmez).
  *         Yanıt taslağı önce mevcut belge_analizleri taslağını KULLANIR (ikinci analiz yolu açılmaz); yoksa PDF kasadan
@@ -222,7 +222,7 @@ async function istemKaynaginiOku(sb: SupabaseClient, doktorId: string, patientId
   }
 }
 
-/** Ayşe'nin istem taslağı — hekim + hasta kapsamlı dosya, GÜÇLÜ model, sabit prompt önbellekli. Kaydetmez. */
+/** Ayşe'nin istem taslağı — hekim + hasta kapsamlı dosya, klinik-analiz (LUNAPRO-01: birincil Luna-Pro), sabit prompt önbellekli. Kaydetmez. */
 async function istemTaslagi(sb: SupabaseClient, doktorId: string, b: Record<string, unknown> | null): Promise<NextResponse> {
   const patientId = String(b?.patientId || '')
   // HASTA-IZOLASYON: yabancı hastanın dosyası derlenmez, modele gitmez.
@@ -309,7 +309,8 @@ async function yanitTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
   const mesaj: AiMesaj = { role: 'user', content: [blok, { type: 'text', text: `İstenen branş: ${s.hedef_brans && hedefBransGecerli(s.hedef_brans) ? specialtyProfile(s.hedef_brans).resmiUnvan : hedefEtiketi(s)}\nHekimin klinik sorusu: ${soru.slice(0, 1200) || 'belirtilmemiş'}\n\nBu konsültan raporunun sonucunu özet taslağı olarak yaz.` }] }
   let ham = '', kesildi = false
   try {
-    const y = await aiCagir({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [mesaj], temperature: 0.1, istemci: getAnthropic(), doctorId: doktorId })
+    // Düzyazı özet (JSON değil) — G2 (d) JSON kontrolü kapalı.
+    const y = await aiCagir({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [mesaj], temperature: 0.1, istemci: getAnthropic(), doctorId: doktorId, jsonBekleniyor: false })
     ham = yanitMetni(y, '\n')
     kesildi = (y as { stop_reason?: string | null }).stop_reason === 'max_tokens'
   } catch (e) {

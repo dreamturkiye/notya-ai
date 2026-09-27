@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const persona = MALI_PERSONAS[getMaliPersona()]
     const sistem = buildMaliSystemPromptParcalari(persona, prefs, musteri || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null))
 
-    // NOTYA-MALIYET-01: mevzuat tavsiyesi — GÜÇLÜ kalır (sohbet-uzman)
+    // NOTYA-MALIYET-01: mevzuat tavsiyesi (sohbet-uzman; LUNAPRO-01: birincil Luna-Pro)
     const aiResponse = await aiCagir({
       istemci: anthropic,
       gorev: "sohbet-uzman",

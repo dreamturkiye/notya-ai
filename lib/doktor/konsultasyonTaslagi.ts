@@ -7,9 +7,9 @@
  * onu onaylayıp konsültasyon notu ortaya çıkarabilir."
  * Kaan: taslak DOLU gelir (ayrı düğme yok); Ayşe BÜTÜN vizitleri okur, AĞIRLIK SON MUAYENEDE; aynı mantık dönüşte.
  *
- * MODEL (.cursor/skills/ai-model-politikasi/SKILL.md): klinik içerik üretimi → GÜÇLÜ, istisnasız.
- *   • istem taslağı  → 'klinik-analiz'     (klinik konsültasyon metni; HIZLI'ya ALINMAZ — kalite > maliyet)
- *   • yanıt taslağı  → 'goruntu-inceleme'  (konsültan raporu PDF/fotoğraf okunur; cagir.ts görselde zaten yükseltir)
+ * MODEL (.cursor/skills/ai-model-politikasi/SKILL.md): klinik içerik üretimi → klinik görev; LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız G1–G4 koruyucusu.
+ *   • istem taslağı  → 'klinik-analiz'     (klinik konsültasyon metni, düzyazı)
+ *   • yanıt taslağı  → 'goruntu-inceleme'  (konsültan raporu PDF/fotoğraf okunur; düzyazı özet — jsonBekleniyor: false)
  * MALİYET: sabit system prompt (format, ton, hekim kilidi) cache_control ile işaretlenir; hasta dosyası özeti user
  * mesajında gider (işaretlenmez). Ham vizit metinleri gönderilmez — son muayene tam, öncekiler tek satırlık özet.
  * GÜVENLİK: yalnız dosyadaki bilgi; tanı/evre/doz uydurma yok (prompt + kod: dozKilidi); kimlik modele gitmez;
@@ -22,9 +22,9 @@ import { DOZ_YER_TUTUCU, kaynakSayilari, uydurmaDozTemizle } from '@/lib/doktor/
 import { doktorMetniTemizle } from '@/lib/doktor/klinikMetin'
 import { KONSULTASYON_SINIRLARI, KLINIK_SORU_EN_AZ } from '@/lib/doktor/konsultasyon'
 
-/** İstem taslağı görevi — klinik içerik üretimi, GÜÇLÜ. lib/ai/modeller.ts GOREV_POLITIKASI. */
+/** İstem taslağı görevi — klinik içerik üretimi (klinik-analiz). lib/ai/modeller.ts GOREV_POLITIKASI. */
 export const ISTEM_TASLAK_GOREVI: Gorev = 'klinik-analiz'
-/** Yanıt taslağı görevi — konsültan raporu (PDF/fotoğraf) okuma, GÜÇLÜ. */
+/** Yanıt taslağı görevi — konsültan raporu (PDF/fotoğraf) okuma (birincil Luna-Pro). */
 export const YANIT_TASLAK_GOREVI: Gorev = 'goruntu-inceleme'
 
 /** Taslak üretilemediğinde hekime gösterilen tek cümle — form boş ama kullanılabilir gelir. */

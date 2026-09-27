@@ -5,8 +5,8 @@
  * medical_documents). Bu rota yeni bir saklama yolu açmaz; yalnız Kasa'daki belgeyi okur.
  *
  * POST { adim: 'oku', belgeId }
- *   → Kasa belgesi (hekime kapsanmış) modele gider: görev 'goruntu-inceleme' (GÜÇLÜ — lib/ai/modeller.ts; görsel
- *     olduğu için cagir.ts de yükseltir). Dönen satırlar TASLAKTIR: `asilar`a HİÇBİR ŞEY yazılmaz.
+ *   → Kasa belgesi (hekime kapsanmış) modele gider: görev 'goruntu-inceleme' (lib/ai/modeller.ts; LUNAPRO-01:
+ *     birincil Luna-Pro, Sonnet 5 yalnız koruyucu). Dönen satırlar TASLAKTIR: `asilar`a HİÇBİR ŞEY yazılmaz.
  * POST { adim: 'onayla', belgeId, hekimOnayi: true, satirlar: [{ asiAdi, dozNo, uygulamaTarihi, okunamadi?, hekimDuzeltti? }] }
  *   → yalnız hekim (sekreter değil), yalnız açık onayla; hekimin düzelttiği değerler aynen, kaynak='beyan',
  *     belge_id + hekim_onay_at kanıt iziyle yazılır. Kural ihlalinde hiçbir satır yazılmaz.
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     let sonuc
     try {
-      // NOTYA-MALIYET-01: görüntü/belge okuma — istisnasız GÜÇLÜ ('goruntu-inceleme'). HIZLI'ya alınmaz.
+      // NOTYA-MALIYET-01: görüntü/belge okuma ('goruntu-inceleme', 12000 tavan). LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız koruyucu.
       const y = await aiCagir({
         istemci: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }),
         gorev: 'goruntu-inceleme',

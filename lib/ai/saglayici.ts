@@ -1,5 +1,5 @@
 /**
- * NOTYA-MODEL-LUNA-01 — sağlayıcı katmanı: istek hangi uçtan gider (OpenRouter ya da doğrudan Anthropic).
+ * NOTYA-MODEL-LUNA-01 / LUNAPRO-01 — sağlayıcı katmanı: istek hangi uçtan gider (OpenRouter ya da doğrudan Anthropic).
  *
  * Yalnız lib/ai/cagir.ts kullanır. Çağrı yerleri Anthropic biçiminde (system blokları, content blokları, tool_use /
  * tool_result, Anthropic.Message yanıtı) çalışmaya devam eder; OpenRouter chat.completions biçimine çeviri burada:
@@ -171,9 +171,32 @@ export function kullanimCevir(u: OrKullanim | undefined | null): Record<string, 
   }
 }
 
-function argumanCoz(j: unknown): unknown {
-  if (j && typeof j === 'object') return j
-  try { return j ? JSON.parse(String(j)) : {} } catch { return {} }
+/**
+ * NOTYA-MODEL-LUNAPRO-01 G2 (e): JSON olarak çözülemeyen araç argümanı. Blok eskisi gibi `input: {}` taşır (çağıranlar
+ * değişmez); bozukluk bu kümede işaretlenir, cagir.ts kalite kapısı okur. Bloğa alan eklenmez (geçmişe geri gider).
+ */
+const GECERSIZ_ARGUMAN = new WeakSet<object>()
+export function gecersizArgumanMi(blok: unknown): boolean {
+  return !!blok && typeof blok === 'object' && GECERSIZ_ARGUMAN.has(blok as object)
+}
+export function gecersizArgumanIsaretle<T extends object>(blok: T): T {
+  GECERSIZ_ARGUMAN.add(blok)
+  return blok
+}
+
+function argumanCoz(j: unknown): { input: unknown; gecerli: boolean } {
+  if (j && typeof j === 'object') return { input: j, gecerli: true }
+  if (!j) return { input: {}, gecerli: true }
+  try {
+    const v = JSON.parse(String(j)) as unknown
+    return v && typeof v === 'object' && !Array.isArray(v) ? { input: v, gecerli: true } : { input: {}, gecerli: false }
+  } catch { return { input: {}, gecerli: false } }
+}
+
+function aracBlogu(id: string, name: string, args: unknown): Blok {
+  const { input, gecerli } = argumanCoz(args)
+  const blok: Blok = { type: 'tool_use', id, name, input }
+  return gecerli ? blok : gecersizArgumanIsaretle(blok)
 }
 
 /** OpenRouter yanıtı → Anthropic.Message. Boş gövde / choices yok → null (taşıma hatası sayılır). */
@@ -183,9 +206,7 @@ export function openRouterYanitiniCevir(y: any, istenenModel: string): Anthropic
   const m = secenek.message
   const icerik: Blok[] = []
   if (typeof m.content === 'string' && m.content) icerik.push({ type: 'text', text: m.content })
-  for (const c of m.tool_calls || []) {
-    icerik.push({ type: 'tool_use', id: String(c.id || ''), name: String(c.function?.name || ''), input: argumanCoz(c.function?.arguments) })
-  }
+  for (const c of m.tool_calls || []) icerik.push(aracBlogu(String(c.id || ''), String(c.function?.name || ''), c.function?.arguments))
   return {
     id: String(y.id || ''),
     type: 'message',
@@ -248,8 +269,11 @@ export async function openRouterCagir(govde: Record<string, unknown>, zamanAsimi
 /**
  * Akışlı OpenRouter çağrısı (sesli Ayşe). SSE `data:` satırları → metinParcasi; tool_calls parçaları birleşir.
  * Dönen mesaj aiAkis'in Anthropic yolunda kurduğu mesajla aynı şekildedir. Akış tek metin üretmeden koparsa hata.
+ * NOTYA-MODEL-LUNAPRO-01: ilk metin parçasından SONRA kopan akış hata fırlatmaz — söylenen kısım kesik bir cevap
+ * olarak döner (stop_reason 'max_tokens', `koptu: true`); F3 kurtarma ve DEVAMI_EKRANDA yolu onu normal kesik tur gibi
+ * işler. Söylenmiş söz asla yeniden söylenmez.
  */
-export async function openRouterAkis(govde: Record<string, unknown>, metinParcasi: (p: string) => void, zamanAsimiMs?: number): Promise<{ yanit: Anthropic.Message; metinVerildi: boolean }> {
+export async function openRouterAkis(govde: Record<string, unknown>, metinParcasi: (p: string) => void, zamanAsimiMs?: number): Promise<{ yanit: Anthropic.Message; metinVerildi: boolean; koptu?: boolean }> {
   const or = openRouterGovdesi({ ...govde, stream: true })
   const r = await gonder(or, zamanAsimiMs)
   if (!r.body) throw new AiCagriHatasi(502, 'OpenRouter boş akış')
@@ -292,6 +316,7 @@ export async function openRouterAkis(govde: Record<string, unknown>, metinParcas
     if (c.finish_reason) bitis = c.finish_reason
   }
 
+  let koptu = false
   try {
     for (;;) {
       const { done, value } = await okuyucu.read()
@@ -302,18 +327,22 @@ export async function openRouterAkis(govde: Record<string, unknown>, metinParcas
     }
     if (tampon) satirIsle(tampon)
   } catch (e) {
-    if (e instanceof AiCagriHatasi) throw Object.assign(e, { metinVerildi: metin.length > 0 })
-    throw Object.assign(new AiCagriHatasi(503, `OpenRouter akış koptu: ${String((e as Error)?.message || e).slice(0, 120)}`), { metinVerildi: metin.length > 0 })
+    const hata = e instanceof AiCagriHatasi ? e : new AiCagriHatasi(503, `OpenRouter akış koptu: ${String((e as Error)?.message || e).slice(0, 120)}`)
+    // İlk sözden önce kopan akış taşıma hatasıdır (çağıran yeniden dener / koruyucuya gider); sonra kopan akış kesik turdur.
+    if (!metin) throw Object.assign(hata, { metinVerildi: false })
+    koptu = true
+    try { await okuyucu.cancel() } catch { /* zaten kapandı */ }
   }
   if (!herhangiOlay) throw new AiCagriHatasi(502, 'OpenRouter boş akış')
 
   const icerik: Blok[] = []
   if (metin) icerik.push({ type: 'text', text: metin })
-  for (const a of cagrilar.filter(Boolean)) icerik.push({ type: 'tool_use', id: a.id, name: a.name, input: argumanCoz(a.args) })
+  // Koptuysa yarım kalmış araç çağrısı atılır (kesik eylem önerilmez — F3).
+  if (!koptu) for (const a of cagrilar.filter(Boolean)) icerik.push(aracBlogu(a.id, a.name, a.args))
   const yanit = {
     id, type: 'message', role: 'assistant', model, content: icerik,
-    stop_reason: reddetti ? 'refusal' : (bitis ? (DURMA[bitis] ?? bitis) : null), stop_sequence: null,
+    stop_reason: koptu ? 'max_tokens' : reddetti ? 'refusal' : (bitis ? (DURMA[bitis] ?? bitis) : null), stop_sequence: null,
     usage: kullanimCevir(usage),
   } as unknown as Anthropic.Message
-  return { yanit, metinVerildi: metin.length > 0 }
+  return koptu ? { yanit, metinVerildi: true, koptu: true } : { yanit, metinVerildi: metin.length > 0 }
 }

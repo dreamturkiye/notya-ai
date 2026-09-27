@@ -103,7 +103,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         görüşme_turu: maliNote.görüşme_turu,
         profession_type: 'mali_musavirlik',
         raw_note: JSON.stringify(maliNote),
-        // NOTYA-MALIYET-01: yalnız etiket (notes.ai_model) — notu üreten generateAccountingNoteV2 'not-uretimi' (GÜÇLÜ)
+        // NOTYA-MALIYET-01: yalnız etiket (notes.ai_model) — notu üreten generateAccountingNoteV2 'not-uretimi' (LUNAPRO-01: birincil Luna-Pro)
         ai_model: modelSec('not-uretimi').model, ai_confidence: maliNote.ai_confidence,
       }).select().single()
       if (noteError) throw new Error('Mali not kaydedilemedi: ' + noteError.message)
@@ -139,7 +139,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
       const alliedUserMessage = `Seans transkripti:\n${transcript}\n\nMeslek: ${alliedProfession}\nHekim Tanısı: ${hekimTaniReferansi}\nHekim Adı: ${hekimAdi || 'Belirtilmedi'}\nTedavi Planı Özeti: ${tedaviPlaniOzet || 'Belirtilmedi'}`
 
-      // NOTYA-MALIYET-01: sağlık meslekleri seans notu — GÜÇLÜ (not-uretimi)
+      // NOTYA-MALIYET-01: sağlık meslekleri seans notu (not-uretimi; LUNAPRO-01: birincil Luna-Pro)
       const alliedResponse = await aiCagir({
         istemci: getAnthropic(),
         gorev: 'not-uretimi',
