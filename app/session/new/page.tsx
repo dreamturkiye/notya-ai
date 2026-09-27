@@ -131,6 +131,9 @@ function NewSessionInner() {
   const [onayDurumu, setOnayDurumu] = useState<"beklemede"|"gonderiliyor"|"onaylandi">("beklemede")
   const [onayHata, setOnayHata] = useState("")
   const [sesYukleniyor, setSesYukleniyor] = useState(false)
+  // NOTYA-NOT-HIZ-01: istek sürerken ikinci basış (çift tık, state yenilenmeden gelen tık) aynı notu ikinci kez üretmesin.
+  // Yalnız istemci korumasıdır — sunucu tarafında tekilleştirme yok (meşru ikinci kayıt düşmesin).
+  const notIstegiSuruyorRef = useRef(false)
   const [sesHata, setSesHata] = useState("")
   const [error, setError] = useState("")
   const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>({})
@@ -161,6 +164,8 @@ function NewSessionInner() {
   async function sesDosyasiIsle(dosya: File) {
     setSesHata("")
     if (dosya.size > 60 * 1024 * 1024) { setSesHata("Dosya 60 MB'ı aşıyor. Daha kısa bir kayıt deneyin."); return }
+    if (notIstegiSuruyorRef.current) return
+    notIstegiSuruyorRef.current = true
     setSesYukleniyor(true)
     try {
       // NOTYA-AUTH-01 (Kaan, 2026-09-24): bu, çalışmayan eşdolaylı versiyonuydu — taze bir
@@ -202,6 +207,7 @@ function NewSessionInner() {
     } catch (e) {
       setSesHata(turkceHataMesaji(e instanceof Error ? e.message : "") || "Yükleme başarısız oldu. Lütfen tekrar deneyin.")
     } finally {
+      notIstegiSuruyorRef.current = false
       setSesYukleniyor(false)
     }
   }
@@ -332,6 +338,7 @@ function NewSessionInner() {
   }
 
   async function processSession() {
+    if (notIstegiSuruyorRef.current) return
     istenenKayitRef.current = false
     try { recognitionRef.current?.stop() } catch { /* yok */ }
     setIsRecordingVoice(false)
@@ -340,6 +347,7 @@ function NewSessionInner() {
       setError("Lütfen önce muayene notlarını yazın veya sesle kaydedin.")
       return
     }
+    notIstegiSuruyorRef.current = true
     setStep("processing")
     setError("")
 
@@ -411,6 +419,8 @@ function NewSessionInner() {
     } catch (e: unknown) {
       setError(turkceHataMesaji(e instanceof Error ? e.message : "") || "Bir hata oluştu. Lütfen tekrar deneyin.")
       setStep("recording")
+    } finally {
+      notIstegiSuruyorRef.current = false
     }
   }
 

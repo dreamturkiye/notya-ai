@@ -43,8 +43,8 @@ const NOT_NUMARA_ALANLARI = ['tani', 'tedavi'] as const
 /** SOAP gövdesindeki numaralı tanı/tedavi alanları — vitaller ve aiDegerlendirme'ye dokunmaz. */
 export function soapNumaraliAlanlariDuzenle<T extends {
   soap?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string } | null
-  tani?: string
-  tedavi?: string
+  tani?: string | null
+  tedavi?: string | null
 }>(veri: T): T {
   const soap = veri.soap
   if (soap && typeof soap === 'object') {
