@@ -14,7 +14,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
-import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan/platform"
+import { connectionErrorHelp, micPermissionHelp } from "@/lib/asistan/platform"
 import {
   PERSONAS,
   buildVoiceSystemPrompt,
@@ -31,6 +31,33 @@ import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
+
+const SESSIZ_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
+
+/** iOS only lets the agent's voice out if play() succeeds inside the tap.
+ *  The SDK plays later, after the microphone prompt, so the first session stays
+ *  silent. The next start works because the site is then allowed to play.
+ *  Must run before any await. */
+function sesiDokunustaAc() {
+  if (typeof window === "undefined") return
+  try {
+    const audio = new Audio(SESSIZ_WAV)
+    audio.setAttribute("playsinline", "true")
+    ;(audio as HTMLAudioElement & { playsInline?: boolean }).playsInline = true
+    void audio.play()
+  } catch { /* bağlanır, ses çıkmasa da oturum sürer */ }
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AC) return
+    const ctx = new AC()
+    const buffer = ctx.createBuffer(1, 1, 22050)
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(0)
+    void ctx.resume()
+  } catch { /* non-fatal */ }
+}
 
 export type ConvStatus = SesDurumu
 /** sira: sesli ve yazılı mesajları yüzen panelde tek zaman çizgisinde sıralamak için. */
@@ -400,6 +427,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   async function startConversation() {
+    sesiDokunustaAc()
     if (!authTokenRef.current) {
       const sonuc = await hazirla()
       if (sonuc === "giris") { router.push("/giris"); return }
@@ -411,20 +439,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     setErrorMsg("")
     setMessages([])
     messagesRef.current = []
-    // Pre-flight: request mic permission explicitly on user gesture
-    // so the browser prompt fires before any async work
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach(t => t.stop())
-    } catch {
-      setErrorMsg(micPermissionHelp())
-      setStatus("error")
-      return
-    }
-    // Android: unlock AudioContext on user gesture before any async work
-    if (isAndroid() && typeof window !== "undefined") {
-      try { const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)(); await ctx.resume() } catch { /* non-fatal */ }
-    }
 
     try {
       const doctor = doctorRef.current || doctorProfile || toAddressableUser(null)
