@@ -555,7 +555,7 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
     return { ...s, ayse }
   }
 
-  it('rota: sahibi 200 + ad, odak oturuma yazılır; başka doktorun hastası 403 ve hiçbir şey yazılmaz; bilinmeyen / yabancı oturum 404; girişsiz 401', async () => {
+  it('rota: sahibi 200 + ad, odak oturuma yazılır; başka doktorun hastası 404 (varlık sızmaz) ve hiçbir şey yazılmaz; bilinmeyen / yabancı oturum 404; girişsiz 401', async () => {
     const s = ikiHasta()
     const yabanciHasta = db.ekle('patients', { doctor_id: s.diger.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'QA Yabancı Hasta' })) }).id
     const yabanciOturum = db.ekle('asistan_sessions', { doctor_id: s.diger.id, persona_id: 'aysekaya', messages: [], active_context: {} }).id
@@ -573,7 +573,7 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
 
     const once = JSON.stringify(oturumu(s.oturum))
     const red = await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: yabanciHasta })
-    assert.equal(red.status, 403)
+    assert.equal(red.status, 404) // NOTYA-SAYFA-HASTA-02: yabancı hasta 404 döner, 403 değil — var olan hasta sızmasın
     assert.ok(!JSON.stringify(await red.json()).includes('QA Yabancı Hasta'))
     assert.equal(JSON.stringify(oturumu(s.oturum)), once, '403: oturuma hiçbir şey yazılmaz')
 
