@@ -31,6 +31,10 @@ const nextConfig = {
   // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
   async redirects() {
     return [
+      // NOTYA-KOK-DOKTOR-01 (Kaan, 2026-09-27): alan adının kökü doğrudan hekim açılış sayfasına. Uçta GERÇEK 307 + Location
+      // (geçici: dikeyler yeniden öne çıkarsa bu satır silinir). app/page.tsx'teki redirect() tek başına yetmedi: statik
+      // sayfa olarak derlenince Location başlıksız 307 + hata kabuğu üretiyordu.
+      { source: '/', destination: '/doktor', permanent: false },
       { source: '/login', destination: '/giris', permanent: true },
       { source: '/signin', destination: '/giris', permanent: true },
     ]
