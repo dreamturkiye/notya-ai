@@ -55,13 +55,12 @@ export async function POST(req: NextRequest) {
       console.error('[fish-ses]', yanit.status)
       return NextResponse.json({ error: 'Ses üretilemedi' }, { status: 502 })
     }
-    const ses = await yanit.arrayBuffer()
-    if (ses.byteLength < 64) return NextResponse.json({ error: 'Ses boş' }, { status: 502 })
-    return new NextResponse(new Uint8Array(ses), {
+    return new NextResponse(yanit.body, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'application/octet-stream',
         'Cache-Control': 'no-store',
+        'X-Sample-Rate': '24000',
       },
     })
   } catch (e) {

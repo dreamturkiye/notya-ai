@@ -9,6 +9,7 @@
 export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
 export const FISH_MODEL = 's2.1-pro-free'
 export const FISH_HIZ = 1
+export const FISH_ORNEK_HZ = 24000
 
 const ETIKET = /\[[^\]]{0,120}\]/g
 
@@ -28,13 +29,12 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
     govde: {
       text,
       reference_id: FISH_HABER_SES_ID,
-      format: 'mp3',
-      mp3_bitrate: 128,
-      sample_rate: 44100,
+      format: 'pcm',
+      sample_rate: 24000,
       temperature: 0.7,
       top_p: 0.7,
       normalize: true,
-      latency: 'normal',
+      latency: 'balanced',
       chunk_length: 300,
       prosody: { speed: FISH_HIZ, volume: 0, normalize_loudness: true },
     },
