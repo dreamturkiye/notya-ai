@@ -29,10 +29,11 @@ import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz'
 import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
-import { fishCalarOlustur, type FishCalar } from '@/lib/asistan/fishCalar'
+import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
 import { kendiSelamiMi, ozgecmisAcilisiMi } from '@/lib/asistan/acilis'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
+import { cevapEkle, kullaniciEkle } from '@/lib/asistan/balonSirasi'
 
 const SESSIZ_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
 
@@ -66,7 +67,7 @@ function sesiDokunustaAc(): AudioContext | null {
 
 export type ConvStatus = SesDurumu
 /** sira: sesli ve yazılı mesajları yüzen panelde tek zaman çizgisinde sıralamak için. */
-export type Message = { id: string; role: "user" | "ai"; text: string; sira: number }
+export type Message = { id: string; role: "user" | "ai"; text: string; sira: number; olay?: number }
 
 // NOTYA-EYLEM: cards ride ON the assistant message. This surface has no patientId on the client —
 // the patient is resolved server-side from free text — so both the proposal ids and the header name
@@ -143,6 +144,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   /** NOTYA-FISH-AYSE-01: only Ayşe Kaya. ElevenLabs stays muted; this player is the voice. */
   const fishRef = useRef<FishCalar | null>(null)
   const fishAcikRef = useRef(false)
+  /** Text already handed to Fish, and the agent event of the answer now playing. */
+  const fishSozRef = useRef("")
+  const fishBirikimRef = useRef("")
+  const fishCevapOlayRef = useRef(0)
   /** NOTYA-OGRENME-03: addMsg ile eş zamanlı tutulur — endConversation()'ın kullandığı kapanışlar
    *  React state'in bayat bir kopyasını görebilir; ref her zaman güncel. */
   const messagesRef = useRef<Message[]>([])
@@ -302,15 +307,34 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
-  function addMsg(role: "user" | "ai", text: string) {
+  function yeniBalon(role: "user" | "ai", text: string, olay?: number): Message {
+    return { id: `${Date.now()}-${Math.random()}`, role, text, sira: siradaki(), ...(olay != null ? { olay } : {}) }
+  }
+
+  function fishKes() {
+    fishSozRef.current = ""
+    fishBirikimRef.current = ""
+    fishRef.current?.kes()
+  }
+
+  function fishIsle(tam: string, bitir: boolean, olay?: number) {
+    if (!fishAcikRef.current) return
+    if (typeof olay === "number" && olay > fishCevapOlayRef.current) fishCevapOlayRef.current = olay
+    const r = fishYeniCumleler(fishSozRef.current, tam, bitir)
+    fishSozRef.current = r.islenen
+    for (const c of r.soyle) fishRef.current?.soyle(c)
+  }
+
+  function addMsg(role: "user" | "ai", text: string, olay?: number) {
     if (!text?.trim()) return
     const trimmed = text.trim()
     if (role === "user" && trimmed === DEVAM_ISARETI) return // NOTYA-SES-DEVAM-01: gizli devam turu baloncuk değildir
     setMessages((prev) => {
-      // Guard against connect-seed + agent transcript of the same greeting.
-      const last = prev[prev.length - 1]
-      if (last && last.role === role && last.text === trimmed) return prev
-      const next = [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: trimmed, sira: siradaki() }]
+      const next = role === "user"
+        ? kullaniciEkle(prev, trimmed, olay, yeniBalon)
+        : (prev[prev.length - 1]?.role === role && prev[prev.length - 1]?.text === trimmed
+          ? prev
+          : [...prev, yeniBalon(role, trimmed, olay)])
       messagesRef.current = next
       return next
     })
@@ -340,6 +364,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     const conv = conversationRef.current
     conversationRef.current = null
     fishAcikRef.current = false
+    fishSozRef.current = ""
+    fishBirikimRef.current = ""
+    fishCevapOlayRef.current = 0
     fishRef.current?.kapat()
     fishRef.current = null
     if (conv) {
@@ -364,10 +391,24 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         headers: { Authorization: `Bearer ${t}` },
       })
       if (!r.ok || tekBeyinRef.current !== tb) return
-      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[]; devam?: boolean; devamAnahtar?: string | null }
-      for (const tur of j.turlar || []) {
+      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; soru?: string | null; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[]; devam?: boolean; devamAnahtar?: string | null }
+      const turlar = j.turlar || []
+      for (const tur of turlar) {
         if (tur.zaman > tb.sonra) tb.sonra = tur.zaman
-        addMsg("ai", tur.metin)
+      }
+      if (turlar.length) {
+        setMessages((prev) => {
+          let next = prev
+          for (const tur of turlar) {
+            const hamSoru = String(tur.soru || "").trim()
+            const soru = hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) ? hamSoru : null
+            next = cevapEkle(next, soru, tur.metin, yeniBalon)
+          }
+          messagesRef.current = next
+          return next
+        })
+      }
+      for (const tur of turlar) {
         if (tur.kartlar?.length && tur.hastaId) void kartiYukle(tur.hastaId, tur.kartlar[tur.kartlar.length - 1])
       }
       if (j.devam && j.devamAnahtar) sesDevamiIste(j.devamAnahtar)
@@ -397,7 +438,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
 
   function yoklamayiBaslat() {
     if (yoklamaRef.current) clearInterval(yoklamaRef.current)
-    yoklamaRef.current = setInterval(() => { void ekranYokla() }, 1500)
+    yoklamaRef.current = setInterval(() => { void ekranYokla() }, 500)
   }
 
   function yoklamayiDurdur() {
@@ -452,6 +493,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     setErrorMsg("")
     setMessages([])
     messagesRef.current = []
+    fishSozRef.current = ""
+    fishBirikimRef.current = ""
+    fishCevapOlayRef.current = 0
 
     try {
       const doctor = doctorRef.current || doctorProfile || toAddressableUser(null)
@@ -776,23 +820,32 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           setErrorMsg(connectionErrorHelp(message))
           setStatus("error")
         },
-        onMessage: ({ message, role }) => {
+        onMessage: ({ message, role, event_id }) => {
+          const olay = typeof event_id === "number" ? event_id : undefined
           if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kendiSelamiMi(message))) return
           if (role === "user") {
-            if (fishAcikRef.current) fishRef.current?.kes()
-            sesDevamRef.current.doktorSozu = Date.now()
+            const gecikenSoru = typeof olay === "number" && fishCevapOlayRef.current > olay
+            if (!gecikenSoru) fishKes()
+            if (!gecikenSoru) sesDevamRef.current.doktorSozu = Date.now()
           } else if (!doktorKonustu && ozgecmisAcilisiMi(message)) {
             if (!selamBizden) {
               selamBizden = true
               if (fishAcikRef.current) fishRef.current?.soyle(firstMessage)
-              addMsg("ai", firstMessage)
+              addMsg("ai", firstMessage, olay)
             }
             return
           } else if (fishAcikRef.current && String(message || "").trim()) {
-            fishRef.current?.soyle(message)
+            const eskiCevap = typeof olay === "number" && fishCevapOlayRef.current > 0 && olay < fishCevapOlayRef.current && fishSozRef.current.length > 0
+            if (!eskiCevap) {
+              const tam = String(message)
+              const birikim = fishBirikimRef.current
+              const hedef = !birikim || tam.startsWith(birikim) ? tam : (birikim.startsWith(tam) ? birikim : tam)
+              fishBirikimRef.current = hedef
+              fishIsle(hedef, true, olay)
+            }
           }
           if (role === "user" && asistaniKapatMi(message)) {
-            addMsg("user", message)
+            addMsg("user", message, olay)
             void endConversation()
             return
           }
@@ -805,13 +858,26 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             if (role === "user") doktorKonustu = true
             else if (doktorKonustu) return
           }
-          addMsg(role === "user" ? "user" : "ai", message)
+          addMsg(role === "user" ? "user" : "ai", message, olay)
+        },
+        onAgentChatResponsePart: (part) => {
+          if (!fishAcikRef.current || !part) return
+          const olay = typeof part.event_id === "number" ? part.event_id : undefined
+          if (part.type === "start") {
+            fishSozRef.current = ""
+            fishBirikimRef.current = ""
+            if (typeof olay === "number") fishCevapOlayRef.current = olay
+            return
+          }
+          if (typeof olay === "number" && fishCevapOlayRef.current > olay && fishSozRef.current) return
+          fishBirikimRef.current = fishBirlestir(fishBirikimRef.current, String(part.text || ""))
+          fishIsle(fishBirikimRef.current, part.type === "stop", olay)
         },
         onInterruption: () => {
-          if (fishAcikRef.current) fishRef.current?.kes()
+          fishKes()
         },
         onVadScore: ({ vadScore }) => {
-          if (fishAcikRef.current && vadScore >= 0.55 && fishRef.current?.caliyorMu()) fishRef.current.kes()
+          if (fishAcikRef.current && vadScore >= 0.55 && fishRef.current?.caliyorMu()) fishKes()
         },
         onModeChange: ({ mode }) => {
           const d = sesDevamRef.current

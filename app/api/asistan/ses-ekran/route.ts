@@ -44,11 +44,13 @@ export async function GET(req: NextRequest) {
   const sesDevam = baglam.sesDevam as SesDevam | undefined
   const devamAnahtar = sesDevam && typeof sesDevam.kalan === 'string' && sesDevam.kalan.trim() ? String(sesDevam.anahtar || '') || null : null
   const devamBuCagri = Boolean(devamAnahtar && (!sonra || devamAnahtar > sonra))
-  const turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null; devam: boolean }[] = []
+  const turlar: { zaman: string; metin: string; soru: string | null; kartlar: string[]; hastaId: string | null; devam: boolean }[] = []
   for (let i = 0; i < mesajlar.length; i++) {
     const m = mesajlar[i]
     if (m?.role !== 'assistant' || m.kanal !== 'ses' || !m.zaman || (sonra && m.zaman <= sonra)) continue
     let metin = String(m.content || '')
+    const onceki = mesajlar[i - 1]
+    const soru = onceki?.role === 'user' ? String(onceki.content || '').trim() : ''
     if (m.kimlik) {
       const soru = mesajlar[i - 1]?.role === 'user' ? String(mesajlar[i - 1].content || '') : ''
       try {
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest) {
         if (k) metin = k.ekran
       } catch { /* değersiz metin kalır */ }
     }
-    turlar.push({ zaman: m.zaman, metin, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null, devam: devamBuCagri && devamAnahtar === m.zaman })
+    turlar.push({ zaman: m.zaman, metin, soru: soru || null, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null, devam: devamBuCagri && devamAnahtar === m.zaman })
   }
   return NextResponse.json({
     turlar,
