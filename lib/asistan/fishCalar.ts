@@ -117,7 +117,7 @@ export function fishCalarOlustur(
   }
 
   return {
-    hazirla: baglam,
+    hazirla: async () => { await baglam() },
     soyle(metin: string) {
       const t = String(metin || '').trim()
       if (kapali || !t) return
