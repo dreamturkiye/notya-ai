@@ -11,9 +11,6 @@ export function SiteFooter() {
           </p>
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm" aria-label="Alt bağlantılar">
-          <a href={LINKS.home} className="text-ink-2 hover:text-ink">
-            Tüm meslekler
-          </a>
           <a href={LINKS.login} className="text-ink-2 hover:text-ink">
             Giriş
           </a>

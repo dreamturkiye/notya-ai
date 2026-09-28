@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 
 const supabase = createClient(
   'https://anjayzospuurymjmmtim.supabase.co',
@@ -96,167 +97,84 @@ export default function KayitPage() {
     }
   };
 
+  // NOTYA-KAYIT-GORUNUM-01 (Kaan, 2026-09-28): kayıt sayfası doktor arayüzünün krem/çam görünümünde. Mantık (KVKK onayı,
+  // hata/başarı iletileri, yönlendirme) aynen korunur. Başlıktaki hastane emojisi (kırmızı haçlı bina) kaldırıldı: Kızılhaç ve
+  // Kızılay/Kırmızı Hilal amblemleri korunan işaretlerdir (Cenevre Sözleşmeleri) — ticari üründe ne haç ne hilal
+  // kullanılır; nötr yazı işareti (Notya).
+  const R = CHROME_RENK;
+  const girdi: React.CSSProperties = {
+    width: '100%', padding: '14px 16px', backgroundColor: R.paper, border: `1px solid ${R.border}`, borderRadius: 12,
+    color: R.ink, fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: CHROME_FONT.sans,
+  };
   return (
     <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#060C18',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px'
+      minHeight: '100dvh', backgroundColor: R.cream, fontFamily: CHROME_FONT.sans, color: R.ink,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
+      padding: 'calc(32px + env(safe-area-inset-top, 0px)) 16px calc(32px + env(safe-area-inset-bottom, 0px))',
     }}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        backgroundColor: '#111827',
-        borderRadius: '20px',
-        padding: '48px 40px',
-        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.4)'
+        width: '100%', maxWidth: 440, backgroundColor: R.paper, borderRadius: 24, boxSizing: 'border-box',
+        padding: 'clamp(28px, 6vw, 44px)', border: `1px solid ${R.border}`, boxShadow: '0 18px 50px rgba(58,44,34,0.08)',
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '42px', marginBottom: '12px' }}>🏥</div>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: 600,
-            color: '#ffffff',
-            margin: '0 0 4px 0',
-            letterSpacing: '-0.3px'
-          }}>
-            Notya AI
-          </h1>
-          <p style={{
-            fontSize: '15px',
-            color: '#14b8a6',
-            margin: 0,
-            fontWeight: 500
-          }}>
-            15 Gün Ücretsiz Deneyin!
-          </p>
+        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1 }}>Notya</div>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>15 gün ücretsiz deneyin</div>
         </div>
 
         {/* Badge */}
         <div style={{
-          display: 'inline-block',
-          backgroundColor: '#134e4b',
-          color: '#14b8a6',
-          fontSize: '13px',
-          fontWeight: 500,
-          padding: '6px 16px',
-          borderRadius: '9999px',
-          marginBottom: '32px',
-          textAlign: 'center',
-          width: '100%'
+          backgroundColor: 'rgba(47,67,52,0.08)', color: R.pine, fontSize: 13, fontWeight: 600, padding: '9px 16px',
+          borderRadius: 9999, marginBottom: 26, textAlign: 'center', width: '100%', boxSizing: 'border-box',
         }}>
-          15 günlük tam erişim - kredi kartı gerekmez
+          15 günlük tam erişim — kredi kartı gerekmez
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '18px' }}>
-            <input
-              type="email"
-              placeholder="E-posta adresiniz"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '12px',
-                color: '#ffffff',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-            />
+          <div style={{ marginBottom: 14 }}>
+            <input type="email" placeholder="E-posta adresiniz" aria-label="E-posta adresiniz" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={girdi} />
           </div>
-
-          <div style={{ marginBottom: '18px' }}>
-            <input
-              type="password"
-              placeholder="Şifreniz"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '12px',
-                color: '#ffffff',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-            />
+          <div style={{ marginBottom: 14 }}>
+            <input type="password" placeholder="Şifreniz" aria-label="Şifreniz" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required style={girdi} />
           </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <input
-              type="password"
-              placeholder="Şifrenizi tekrar girin"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '12px',
-                color: '#ffffff',
-                fontSize: '15px',
-                outline: 'none'
-              }}
-            />
+          <div style={{ marginBottom: 20 }}>
+            <input type="password" placeholder="Şifrenizi tekrar girin" aria-label="Şifrenizi tekrar girin" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required style={girdi} />
           </div>
 
           {error && (
             <div style={{
-              color: '#f87171',
-              fontSize: '14px',
-              marginBottom: '20px',
-              textAlign: 'center'
+              background: 'rgba(164,91,62,0.08)', border: '1px solid rgba(164,91,62,0.25)', borderRadius: 10,
+              color: R.warn, fontSize: 14, lineHeight: 1.5, padding: '10px 12px', marginBottom: 18, textAlign: 'center',
             }}>
               {error}
             </div>
           )}
 
-          {/* NOTYA-SIGNUP-02: a successful registration awaiting e-mail confirmation is NOT an
-              error and must not be styled as one — red text on a success path teaches doctors
-              that the product failed when it did not. */}
+          {/* NOTYA-SIGNUP-02: kayıt alındı, e-posta onayı bekleniyor — hata değil; hata renginde gösterilmez. */}
           {info && (
             <div style={{
-              color: '#0A1628',
-              background: '#EEF4FF',
-              border: '1px solid #2563EB',
-              borderRadius: '8px',
-              padding: '14px 16px',
-              fontSize: '14px',
-              lineHeight: 1.5,
-              marginBottom: '20px',
-              textAlign: 'center'
+              color: R.pine, background: 'rgba(47,67,52,0.08)', border: '1px solid rgba(47,67,52,0.28)', borderRadius: 12,
+              padding: '14px 16px', fontSize: 14, lineHeight: 1.5, marginBottom: 18, textAlign: 'center',
             }}>
               {info}
             </div>
           )}
 
           <label style={{
-            display: 'flex', alignItems: 'flex-start', gap: '10px',
-            fontSize: '13px', lineHeight: 1.5, marginBottom: '18px',
-            color: 'rgba(10,22,40,0.75)', cursor: 'pointer'
+            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 18,
+            color: R.ink, cursor: 'pointer',
           }}>
             <input
               type="checkbox"
               checked={kvkkOnay}
               onChange={(e) => setKvkkOnay(e.target.checked)}
-              style={{ marginTop: '3px', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
+              style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: 'pointer', accentColor: R.pine }}
             />
             <span>
-              <a href="/kvkk" target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB' }}>
+              <a href="/kvkk" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
                 KVKK Aydınlatma Metni
               </a>
               &apos;ni okudum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin metinde
@@ -269,40 +187,20 @@ export default function KayitPage() {
             type="submit"
             disabled={loading}
             style={{
-              width: '100%',
-              backgroundColor: '#14b8a6',
-              color: '#ffffff',
-              fontSize: '16px',
-              fontWeight: 600,
-              padding: '14px',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              transition: 'all 0.2s ease'
+              width: '100%', backgroundColor: R.pine, color: '#ffffff', fontSize: 15, fontWeight: 600, padding: 14,
+              border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
+              transition: 'all 0.2s ease', fontFamily: CHROME_FONT.sans, letterSpacing: 0.2,
             }}
           >
-            {loading ? 'Hesap oluşturuluyor...' : 'Hesap Oluştur'}
+            {loading ? 'Hesap oluşturuluyor…' : 'Hesap oluştur'}
           </button>
         </form>
 
         {/* Footer Link */}
-        <div style={{
-          marginTop: '28px',
-          textAlign: 'center',
-          fontSize: '14px',
-          color: '#9ca3af'
-        }}>
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${R.borderSoft}`, textAlign: 'center', fontSize: 14, color: R.muted }}>
           Zaten hesabınız var mı?{' '}
-          <a
-            href="/giris/doktor"
-            style={{
-              color: '#14b8a6',
-              textDecoration: 'none',
-              fontWeight: 500
-            }}
-          >
-            Giriş Yap
+          <a href="/giris/doktor" style={{ color: R.pine, textDecoration: 'none', fontWeight: 600 }}>
+            Giriş yap
           </a>
         </div>
       </div>
