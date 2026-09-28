@@ -13,7 +13,7 @@ interface Profession {
 }
 
 const professions: Profession[] = [
-  { id: 'doktor', label: 'Doktor/Hekim', emoji: '🏥', desc: 'Tıbbi uzmanlık alanınız' },
+  { id: 'doktor', label: 'Doktor/Hekim', emoji: '🩺', desc: 'Tıbbi uzmanlık alanınız' },
   { id: 'klinik-uzman', label: 'Klinik Uzman', emoji: '💉', desc: 'Estetik, saç ekimi, dermatoloji' },
   { id: 'saglik-uzmani', label: 'Sağlık Uzmanı', emoji: '🩺', desc: 'Fizyoterapi, psikoloji, diyetisyen' },
   { id: 'mali', label: 'Mali Müşavir/SMMM', emoji: '💰', desc: 'Finansal danışmanlık' },
