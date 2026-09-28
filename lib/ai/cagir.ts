@@ -25,11 +25,11 @@ import {
   type Gorev, type Kademe, type ModelSecimi, type YukseltmeNedeni,
 } from './modeller'
 import { kullanimKaydet, kullanimSatiri } from './kullanim'
-import { AiCagriHatasi, dogrudanModelAdi, gecersizArgumanIsaretle, gecersizArgumanMi, openRouterAkis, openRouterCagir, yolSec } from './saglayici'
+import { AiCagriHatasi, AiIptalHatasi, dogrudanModelAdi, gecersizArgumanIsaretle, gecersizArgumanMi, iptalMi, openRouterAkis, openRouterCagir, yolSec } from './saglayici'
 import { devreBasari, devreBirincilIzinli, devreHata, devreNotr } from './devre'
 import { jsonOnarDetay } from './jsonOnar'
 
-export { AiCagriHatasi }
+export { AiCagriHatasi, AiIptalHatasi, iptalMi }
 
 /** SDK'nın bu sürümünde (0.27) tiplenmemiş ama API'nin kabul ettiği içerik blokları (ör. PDF `document`) için geniş tip. */
 export type AiMesaj = { role: 'user' | 'assistant'; content: string | unknown[] }
@@ -84,6 +84,11 @@ export interface AiCagriGirdisi {
   koruyucuyaZorla?: { neden: 'low_conf'; altKod: string }
   /** Konsol satırındaki istek kimliği (verilmezse üretilir). Hasta/hekim kimliği DEĞİLDİR. */
   istekId?: string
+  /**
+   * NOTYA-SES-FISH-UCTAN-UCA-01 (yalnız aiAkis): doktor sözü kesince çağıran turu bırakır. Akış hemen durur ve
+   * AiIptalHatasi fırlar — yeniden deneme, koruyucu, devre yazısı YOK (iptal ikinci bir model çağrısı doğurmaz).
+   */
+  iptal?: AbortSignal
 }
 
 /**
@@ -399,6 +404,7 @@ type AkisOlayi = {
 /** Doğrudan Anthropic yolunda akış — eski aiAkis gövdesi, birebir. */
 async function anthropicAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   const govde: Record<string, unknown> = { ...h.govde, model: dogrudanModelAdi(String(h.govde.model)), stream: true }
+  if (g.iptal?.aborted) throw new AiIptalHatasi()
   const ham = (await g.istemci.messages.create(govde as never)) as unknown
   // Akış yerine tam mesaj dönen istemci (test sahtesi, vekil) → metni tek parça ver, aynen işle.
   if (!ham || typeof (ham as AsyncIterable<unknown>)[Symbol.asyncIterator] !== 'function') {
@@ -414,25 +420,43 @@ async function anthropicAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, h: Hede
   let model = String(govde.model)
   let usage: Record<string, number | null> = {}
   let stopReason: string | null = null
-  for await (const o of akis) {
-    if (o.type === 'message_start') {
-      model = o.message?.model || model
-      usage = { ...(o.message?.usage || {}) }
-    } else if (o.type === 'content_block_start' && o.index !== undefined) {
-      bloklar[o.index] = { ...(o.content_block || {}) }
-      if (o.content_block?.type === 'tool_use') jsonlar[o.index] = ''
-    } else if (o.type === 'content_block_delta' && o.index !== undefined) {
-      const b = bloklar[o.index] || (bloklar[o.index] = { type: 'text', text: '' })
-      if (o.delta?.type === 'text_delta' && o.delta.text) {
-        b.text = String(b.text || '') + o.delta.text
-        metinParcasi(o.delta.text)
-      } else if (o.delta?.type === 'input_json_delta') {
-        jsonlar[o.index] = (jsonlar[o.index] || '') + String(o.delta.partial_json || '')
+  const yineleyici = akis[Symbol.asyncIterator]()
+  // Söz kesme bir sonraki olayı beklemez (model "düşünürken" olay gelmeyebilir): her next() iptalle yarışır.
+  const iptalSozu = g.iptal
+    ? new Promise<never>((_, red) => {
+      if (g.iptal!.aborted) red(new AiIptalHatasi())
+      else g.iptal!.addEventListener('abort', () => red(new AiIptalHatasi()), { once: true })
+    })
+    : null
+  iptalSozu?.catch(() => { /* yarışta okunur; yalnız başına işlenmemiş ret sayılmasın */ })
+  let tukendi = false
+  try {
+    for (;;) {
+      const adim = iptalSozu ? await Promise.race([yineleyici.next(), iptalSozu]) : await yineleyici.next()
+      if (adim.done) { tukendi = true; break }
+      const o = adim.value
+      if (o.type === 'message_start') {
+        model = o.message?.model || model
+        usage = { ...(o.message?.usage || {}) }
+      } else if (o.type === 'content_block_start' && o.index !== undefined) {
+        bloklar[o.index] = { ...(o.content_block || {}) }
+        if (o.content_block?.type === 'tool_use') jsonlar[o.index] = ''
+      } else if (o.type === 'content_block_delta' && o.index !== undefined) {
+        const b = bloklar[o.index] || (bloklar[o.index] = { type: 'text', text: '' })
+        if (o.delta?.type === 'text_delta' && o.delta.text) {
+          b.text = String(b.text || '') + o.delta.text
+          metinParcasi(o.delta.text)
+        } else if (o.delta?.type === 'input_json_delta') {
+          jsonlar[o.index] = (jsonlar[o.index] || '') + String(o.delta.partial_json || '')
+        }
+      } else if (o.type === 'message_delta') {
+        stopReason = o.delta?.stop_reason ?? stopReason
+        usage = { ...usage, ...(o.usage || {}) }
       }
-    } else if (o.type === 'message_delta') {
-      stopReason = o.delta?.stop_reason ?? stopReason
-      usage = { ...usage, ...(o.usage || {}) }
     }
+  } finally {
+    // for-await gibi: erken çıkış (iptal / hata) SDK akışının return()'ünü çağırır — bağlantı kapanır.
+    if (!tukendi) void Promise.resolve(yineleyici.return?.()).catch(() => undefined)
   }
   jsonlar.forEach((j, i) => {
     if (!bloklar[i]) return
@@ -452,16 +476,17 @@ async function anthropicAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, h: Hede
  */
 async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   if (!lunaKapisiMi(h)) {
-    const { yanit } = await openRouterAkis(h.govde, metinParcasi)
+    const { yanit } = await openRouterAkis(h.govde, metinParcasi, undefined, g.iptal)
     await olcSessiz(g, h, yanit)
     return isaretle(yanit, h)
   }
   const birincil = String(h.govde.model)
   const istekId = istekKimligi(g)
   const guclu = async (neden: YukseltmeNedeni, altKod: string) => {
+    if (g.iptal?.aborted) throw new AiIptalHatasi()
     dususGunlukle(istekId, g.gorev, neden, altKod)
     const t = gucluyeYukselt(h, neden)
-    const { yanit } = await openRouterAkis(t.govde, metinParcasi)
+    const { yanit } = await openRouterAkis(t.govde, metinParcasi, undefined, g.iptal)
     await olcSessiz(g, t, yanit)
     return isaretle(yanit, t)
   }
@@ -471,8 +496,9 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
   for (let deneme = 0; deneme < 2 && !sonuc; deneme++) {
     if (deneme) await bekle(TASIMA_BEKLEME.ms)
     try {
-      sonuc = await openRouterAkis(h.govde, metinParcasi, lunaZamanAsimiMs(h.govde.max_tokens))
+      sonuc = await openRouterAkis(h.govde, metinParcasi, lunaZamanAsimiMs(h.govde.max_tokens), g.iptal)
     } catch (e) {
+      if (iptalMi(e)) throw e
       if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
       sonHata = e
     }

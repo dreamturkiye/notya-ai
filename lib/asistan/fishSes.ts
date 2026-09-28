@@ -40,3 +40,19 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
     },
   }
 }
+
+/**
+ * NOTYA-SES-FISH-UCTAN-UCA-01: Ayşe Kaya'nın ElevenLabs'siz yolu. Yalnız aysekaya; Fish (ses) + Deepgram (kulak)
+ * anahtarları sunucuda yoksa Ayşe eskisi gibi ElevenLabs'le konuşur — başka persona bu yola hiç girmez.
+ */
+export function fishUctanUcaAcik(personaId: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean {
+  return personaId === 'aysekaya'
+    && Boolean(env.FISH_API_KEY?.trim())
+    && Boolean(env.DEEPGRAM_API_KEY?.trim())
+    && Boolean(env.DEEPGRAM_PROJECT_ID?.trim())
+}
+
+/** Fish UTF-8 bayt başına ücretlendirir (docs.fish.audio pricing) — kullanım bu sayıyla yazılır. */
+export function fishFaturaBayti(metin: string): number {
+  return new TextEncoder().encode(String(metin || '')).length
+}
