@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { authHataMesaji } from '../authHataMesaji'
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 export default function KlinikGiris() {
   const router = useRouter()
@@ -32,43 +33,45 @@ export default function KlinikGiris() {
     router.replace('/dashboard/klinik')
   }
 
-  const inp: React.CSSProperties = { width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px 14px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }
-
+  // NOTYA-GIRIS-GORUNUM-01 (Kaan, 2026-09-27): klinik girişi de doktor arayüzünün krem/çam görünümünde (pembe vurgu bırakıldı).
+  const R = CHROME_RENK
+  const inp: React.CSSProperties = { width: '100%', background: R.paper, border: `1px solid ${R.border}`, borderRadius: 12, padding: '12px 14px', color: R.ink, fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: CHROME_FONT.sans }
+  const etiket: React.CSSProperties = { fontSize: 13, color: R.muted, marginBottom: 6, display: 'block', fontWeight: 600, letterSpacing: 0.2 }
+  const baglanti: React.CSSProperties = { color: R.pine, fontWeight: 600, textDecoration: 'none' }
   return (
-    <div style={{ minHeight: '100dvh', background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', fontFamily: 'system-ui,sans-serif', boxSizing: 'border-box' }}>
-      <div style={{ background: '#111827', borderRadius: '20px', padding: 'clamp(24px, 6vw, 40px)', maxWidth: '420px', width: '100%', border: '1px solid rgba(233,30,140,0.25)', boxSizing: 'border-box' }}>
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#fff' }}><span style={{ color: '#E91E8C' }}>Notya</span> AI</div>
-          <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Klinik Modülü</div>
+    <div style={{ minHeight: '100dvh', background: R.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', fontFamily: CHROME_FONT.sans, color: R.ink, boxSizing: 'border-box' }}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(28px, 6vw, 44px)', maxWidth: 420, width: '100%', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 26 }}>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1 }}>Notya</div>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>Klinik girişi</div>
         </div>
-        <form onSubmit={handleLogin} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <form onSubmit={handleLogin} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <label style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '6px', display: 'block' }}>E-posta</label>
+            <label style={etiket}>E-posta</label>
             <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ad@klinik.com" autoCapitalize="none" autoCorrect="off" autoComplete="email" inputMode="email" spellCheck={false} style={inp} />
           </div>
           <div>
-            <label style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '6px', display: 'block' }}>Şifre</label>
+            <label style={etiket}>Şifre</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Şifrenizi girin" autoComplete="current-password" style={inp} />
-            <button type="button" onClick={() => setSifremiUnuttum((v) => !v)} style={{ background: 'transparent', border: 'none', color: '#F472B6', fontSize: '12.5px', cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>Şifremi unuttum</button>
+            <button type="button" onClick={() => setSifremiUnuttum((v) => !v)} style={{ background: 'transparent', border: 'none', color: R.pine, fontSize: 12.5, cursor: 'pointer', padding: '8px 0 0', textAlign: 'left', fontFamily: CHROME_FONT.sans, fontWeight: 600 }}>Şifremi unuttum</button>
             {sifremiUnuttum && (
-              <div style={{ marginTop: 6, fontSize: 12.5, color: '#94A3B8', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ marginTop: 6, fontSize: 12.5, color: R.muted, background: R.cream, border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px' }}>
                 Şifre sıfırlama şu an otomatik değil — Notya ekibinizle iletişime geçin, sizin için sıfırlansın.
               </div>
             )}
           </div>
-          {error && <div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '8px', padding: '10px', color: '#fca5a5', fontSize: '13px' }}>{error}</div>}
-          <button type="submit" disabled={loading} style={{ padding: '13px', background: '#E91E8C', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}>
-            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          {error && <div style={{ background: 'rgba(164,91,62,0.08)', border: '1px solid rgba(164,91,62,0.25)', borderRadius: 10, padding: '10px 12px', color: R.warn, fontSize: 13 }}>{error}</div>}
+          <button type="submit" disabled={loading} style={{ padding: 14, background: R.pine, border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.7 : 1, fontFamily: CHROME_FONT.sans, letterSpacing: 0.2 }}>
+            {loading ? 'Giriş yapılıyor…' : 'Giriş yap'}
           </button>
         </form>
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#64748b' }}>
-          <a href="/giris" style={{ color: '#94a3b8' }}>Genel giriş</a>
-          {' | '}
-          <a href="/giris/doktor" style={{ color: '#2563EB' }}>Doktor</a>
-          {' | '}
-          <a href="/giris/mali" style={{ color: '#10B981' }}>Mali Müşavir</a>
-          {' | '}
-          <a href="/giris/avukat" style={{ color: '#7C3AED' }}>Avukat</a>
+        <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${R.borderSoft}`, fontSize: 12.5, color: R.muted, textAlign: 'center', display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/giris" style={baglanti}>Genel giriş</a>
+          <a href="/giris/doktor" style={baglanti}>Doktor</a>
+          <a href="/giris/mali" style={baglanti}>Mali Müşavir</a>
+          <a href="/giris/avukat" style={baglanti}>Avukat</a>
         </div>
       </div>
     </div>
