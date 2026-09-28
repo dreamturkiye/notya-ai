@@ -43,6 +43,7 @@ export async function GET(req: NextRequest) {
   const baglam = ((oturum as { active_context?: Record<string, unknown> }).active_context || {})
   const sesDevam = baglam.sesDevam as SesDevam | undefined
   const devamAnahtar = sesDevam && typeof sesDevam.kalan === 'string' && sesDevam.kalan.trim() ? String(sesDevam.anahtar || '') || null : null
+  const devamBuCagri = Boolean(devamAnahtar && (!sonra || devamAnahtar > sonra))
   const turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null; devam: boolean }[] = []
   for (let i = 0; i < mesajlar.length; i++) {
     const m = mesajlar[i]
@@ -55,13 +56,13 @@ export async function GET(req: NextRequest) {
         if (k) metin = k.ekran
       } catch { /* değersiz metin kalır */ }
     }
-    turlar.push({ zaman: m.zaman, metin, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null, devam: devamAnahtar === m.zaman })
+    turlar.push({ zaman: m.zaman, metin, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null, devam: devamBuCagri && devamAnahtar === m.zaman })
   }
   return NextResponse.json({
     turlar,
-    // Cursor-independent: the page waits for Ayşe to stop speaking and re-checks on every poll until consumed.
-    devam: Boolean(devamAnahtar),
-    devamAnahtar,
+    // Bu görüşmeden önceki kesik tur okunmaz — mikrofon açılınca eski vaka konuşulmaz.
+    devam: devamBuCagri,
+    devamAnahtar: devamBuCagri ? devamAnahtar : null,
     aktifHasta: typeof baglam.patientName === 'string' ? baglam.patientName : null,
     // Sesle onaylanan / vazgeçilen kart artık bekleyen değildir — sayfa kartı kapatır.
     bekleyen: Array.isArray(baglam.bekleyenOneriler) ? baglam.bekleyenOneriler.map(String) : [],

@@ -201,5 +201,5 @@ export function gunBlogu(v: GunVerisi, faz: GunFazi): string {
   return `=== GÜNÜN DURUMU (${v.bugun} ${v.haftaGunu}, saat ${String(v.saatTRT).padStart(2, '0')}:00 TRT, faz: ${faz}) ===
 Bugün randevu: ${v.randevu.toplam} (kontrol ${v.randevu.kontrol}, kalan ${v.randevu.kalan}${v.randevu.ilkSaat ? `, ilki ${v.randevu.ilkSaat}` : ''}) | Bugün seans: ${v.bugunHasta} | Dün: ${v.dunHasta} | Yarın randevu: ${v.yarinRandevu.toplam} (kontrol ${v.yarinRandevu.kontrol})
 Onaysız not: ${v.onaysizNot}${v.onaysizNotlar?.length ? ` — ${v.onaysizNotlar.join(', ')}` : ''} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}
-Sohbet açılışında bunlardan doğal ve KISA söz et (meslektaş gibi, liste okuma); doktor konuya girdiyse tekrar etme.`
+Sohbet açılışında bunları kendiliğinden okuma. Doktor günü, randevuyu veya bekleyen işi sorarsa doğal ve KISA söyle. Dosyada olmayan hasta, şikayet veya vaka UYDURMA. Doktor konuya girdiyse günü tekrar etme.`
 }

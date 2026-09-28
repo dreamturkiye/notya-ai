@@ -30,7 +30,7 @@ import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKart
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishCalarOlustur, type FishCalar } from '@/lib/asistan/fishCalar'
-import { ozgecmisAcilisiMi } from '@/lib/asistan/acilis'
+import { kendiSelamiMi, ozgecmisAcilisiMi } from '@/lib/asistan/acilis'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 
@@ -777,7 +777,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           setStatus("error")
         },
         onMessage: ({ message, role }) => {
-          if (role === "user" && String(message || "").trim() === DEVAM_ISARETI) return
+          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kendiSelamiMi(message))) return
           if (role === "user") {
             if (fishAcikRef.current) fishRef.current?.kes()
             sesDevamRef.current.doktorSozu = Date.now()
@@ -919,6 +919,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     setPersona(PERSONAS[key])
     setMessages([])
     messagesRef.current = []
+    // Önceki meslektaşın oturumu, hastası ve kesik kalanı bu sese taşınmaz.
+    setOrtakOturumId(null)
+    setAktifHasta(null)
+    setYaziliMesajlar([])
+    setYaziliGirdi('')
     setErrorMsg("")
     setSesKarti(null)
     sesEylemRef.current = null

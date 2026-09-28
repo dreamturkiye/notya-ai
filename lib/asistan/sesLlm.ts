@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
+import { kendiSelamiMi } from '@/lib/asistan/acilis'
 import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
 import { SesYayKapisi, sesEtiketTemizle } from '@/lib/asistan/sesYay'
 import type { SesDevam } from '@/lib/asistan/ayseCevapla'
@@ -144,6 +145,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
           ilk = false
           bitis = 'tool_calls'
+        } else if (mesaj && kendiSelamiMi(mesaj)) {
+          // Açılış cümlesi mikrofon veya ElevenLabs tarafından doktora ait sanıldı. Cevap yok.
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
           // okundu (ya da söylenecek bir şey kalmadı)
         } else if (mesaj) {
