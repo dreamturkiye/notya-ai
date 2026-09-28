@@ -171,7 +171,7 @@ async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?
 async function sesEkrani(s: Sahne, oturum = s.oturum) {
   const y = await R.sesEkran.GET(new NextRequestSinifi(`http://localhost/api/asistan/ses-ekran?oturum=${oturum}`, { headers: { authorization: `Bearer ${s.doktor.token}` } } as ConstructorParameters<typeof NextRequestSinifi>[1]))
   assert.equal(y.status, 200)
-  return (await y.json()) as { turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null }
+  return (await y.json()) as { turlar: { zaman: string; metin: string; soru: string | null; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null }
 }
 
 before(async () => {
@@ -382,12 +382,14 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(v.status, 200)
     assert.equal(modelIstekleri.at(-1)?.stream, true, 'ses yolu modeli akışla çağırır')
     assert.ok(!v.parcalar[0].startsWith('Bakıyorum'), 'bekletme sözü yok — ilk parça doğrudan cevap')
-    assert.ok(v.parcalar.length >= 1 && v.parcalar.length <= 3, 'nefes bloğu: cümle cümle damlamaz, tek seferde de boşalmaz')
+    assert.match(v.parcalar[0], /öksürük vardı\./, 'ilk cümle turun bitmesini beklemez')
+    assert.ok(v.parcalar.length >= 2, 'bitmiş cümleler ayrı ayrı gider')
     assert.ok(!v.metin.includes('0532'), v.metin)
     assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
 
     const e = await sesEkrani(b)
     assert.equal(e.turlar.at(-1)?.metin, t.speech, 'ses turunun ekranı yazılı cevapla aynı')
+    assert.match(e.turlar.at(-1)?.soru || '', /Umutcan/, 'ekran turu doktorun cümlesini de taşır')
     assert.equal(t.speech, ekranMetni)
     // Aynı model isteği (sistem, geçmiş, araçlar) — tek fark stream bayrağı
     const [ty, sy] = [JSON.parse(yaziIstegi), JSON.parse(modelIstekleri.at(-1)!.govde)]

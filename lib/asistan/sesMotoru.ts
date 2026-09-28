@@ -37,6 +37,19 @@ export type SesTtsGorunen = {
   suggested_audio_tags?: unknown[] | null
 }
 
+/** How fast the agent takes the turn after the doctor stops. Client overrides cannot set this. */
+export const SES_DONUS_KILIT = { turn_eagerness: 'eager', speculative_turn: true } as const
+
+export type SesTurnGorunen = { turn_eagerness?: string | null; speculative_turn?: boolean | null }
+
+/** True when the agent still waits the slow default before calling the model. */
+export function donusKilitGerekli(turn: SesTurnGorunen | null | undefined): boolean {
+  if (!turn) return true
+  if (turn.turn_eagerness !== SES_DONUS_KILIT.turn_eagerness) return true
+  if (turn.speculative_turn !== true) return true
+  return false
+}
+
 const ONBELLEK_MS = 60_000
 const ZAMAN_MS = 2_500
 const onbellek = new Map<string, number>()
@@ -86,41 +99,60 @@ export async function sesMotorunuSabitle(agentId: string, apiKey: string, fetchF
       console.error('[ses-motoru] okunamadı', agentId, getir.status)
       return { once: 'okunamadi', degisti: false }
     }
-    const ajan = await getir.json() as { conversation_config?: { tts?: SesTtsGorunen } }
+    const ajan = await getir.json() as { conversation_config?: { tts?: SesTtsGorunen; turn?: SesTurnGorunen } }
     const tts = ajan?.conversation_config?.tts
-    const once = `model=${tts?.model_id || '-'} expressive=${tts?.expressive_mode === true} speed=${tts?.speed ?? '-'} stability=${tts?.stability ?? '-'}`
-    if (!ttsKilitGerekli(tts)) {
+    const turn = ajan?.conversation_config?.turn
+    const once = `model=${tts?.model_id || '-'} expressive=${tts?.expressive_mode === true} speed=${tts?.speed ?? '-'} stability=${tts?.stability ?? '-'} donus=${turn?.turn_eagerness || '-'}`
+    const ttsGerek = ttsKilitGerekli(tts)
+    const donusGerek = donusKilitGerekli(turn)
+    if (!ttsGerek && !donusGerek) {
       onbellek.set(agentId, simdi)
       return { once, degisti: false }
     }
-    console.error('[ses-motoru] sapma, Flash kilidine alınıyor', agentId, once)
-    // Only the fields we own. Spreading the whole TTS object has been rejected
-    // (read-only keys); voice_id is kept on both attempts so a failed first write
-    // cannot reset the persona's voice.
-    const kilit = {
-      ...SES_TTS_KILIT,
-      ...(tts?.voice_id ? { voice_id: tts.voice_id } : {}),
-      ...(tts?.agent_output_audio_format ? { agent_output_audio_format: tts.agent_output_audio_format } : {}),
-    }
-    const govde = (formatla: boolean) => JSON.stringify({
-      conversation_config: {
-        tts: formatla ? kilit : { ...SES_TTS_KILIT, ...(tts?.voice_id ? { voice_id: tts.voice_id } : {}) },
-      },
-    })
-    let yama = await fetchFn(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-      method: 'PATCH', headers: baslik, body: govde(true), signal: kontrol.signal,
-    })
-    if (!yama.ok) {
-      const hata = await yama.text().catch(() => '')
-      console.error('[ses-motoru] tam yama reddedildi, dar yama', agentId, yama.status, hata.slice(0, 240))
-      yama = await fetchFn(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-        method: 'PATCH', headers: baslik, body: govde(false), signal: kontrol.signal,
+    if (ttsGerek) {
+      console.error('[ses-motoru] sapma, Flash kilidine alınıyor', agentId, once)
+      // Only the fields we own. Spreading the whole TTS object has been rejected
+      // (read-only keys); voice_id is kept on both attempts so a failed first write
+      // cannot reset the persona's voice.
+      const kilit = {
+        ...SES_TTS_KILIT,
+        ...(tts?.voice_id ? { voice_id: tts.voice_id } : {}),
+        ...(tts?.agent_output_audio_format ? { agent_output_audio_format: tts.agent_output_audio_format } : {}),
+      }
+      const govde = (formatla: boolean) => JSON.stringify({
+        conversation_config: {
+          tts: formatla ? kilit : { ...SES_TTS_KILIT, ...(tts?.voice_id ? { voice_id: tts.voice_id } : {}) },
+        },
       })
+      let yama = await fetchFn(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
+        method: 'PATCH', headers: baslik, body: govde(true), signal: kontrol.signal,
+      })
+      if (!yama.ok) {
+        const hata = await yama.text().catch(() => '')
+        console.error('[ses-motoru] tam yama reddedildi, dar yama', agentId, yama.status, hata.slice(0, 240))
+        yama = await fetchFn(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
+          method: 'PATCH', headers: baslik, body: govde(false), signal: kontrol.signal,
+        })
+      }
+      if (!yama.ok) {
+        const hata = await yama.text().catch(() => '')
+        console.error('[ses-motoru] kilit yazılamadı', agentId, yama.status, hata.slice(0, 240))
+        return { once, degisti: false }
+      }
     }
-    if (!yama.ok) {
-      const hata = await yama.text().catch(() => '')
-      console.error('[ses-motoru] kilit yazılamadı', agentId, yama.status, hata.slice(0, 240))
-      return { once, degisti: false }
+    if (donusGerek) {
+      // Eager + speculative: the model starts during the silence after the doctor
+      // stops, instead of waiting out the default endpoint. Voice settings are not touched.
+      const yama = await fetchFn(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
+        method: 'PATCH', headers: baslik,
+        body: JSON.stringify({ conversation_config: { turn: SES_DONUS_KILIT } }),
+        signal: kontrol.signal,
+      })
+      if (!yama.ok) {
+        const hata = await yama.text().catch(() => '')
+        console.error('[ses-motoru] dönüş yazılamadı', agentId, yama.status, hata.slice(0, 240))
+        return { once, degisti: ttsGerek }
+      }
     }
     onbellek.set(agentId, simdi)
     return { once, degisti: true }

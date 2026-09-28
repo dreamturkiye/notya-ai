@@ -98,6 +98,27 @@ export function tumAdParcalariVar(adDuz: string, tokenlar: Set<string>): boolean
   const p = adDuz.split(' ').filter(Boolean)
   return p.length >= 2 && p.every((x) => tokenlar.has(x))
 }
+
+/**
+ * Chitchat has no patient name. Decrypting every chart on those turns is the
+ * pause before the model can start ("bir kahve içelim mi"). An unknown word
+ * still scans — a first name must never be skipped.
+ */
+const AD_OLMAYAN = new Set([
+  'ben', 'sen', 'siz', 'biz', 'bir', 'bu', 'su', 'cok', 'iyi', 'iyiyim', 'iyisin', 'iyisiniz', 'iyiyiz',
+  'tesekkur', 'tesekkurler', 'sagol', 'sagolun', 'ederim', 'merhaba', 'merhabalar', 'selam', 'selamlar', 'nasilsin', 'nasilsiniz', 'naber',
+  'gunaydin', 'aksamlar', 'geceler', 'hocam', 'hoca', 'hanim', 'bey', 'lutfen', 'rica', 'evet', 'hayir',
+  'tamam', 'peki', 'olur', 'tabii', 'tabi', 'kahve', 'cay', 'icelim', 'icersin', 'icersiniz', 'iceyim',
+  'bugun', 'yarin', 'simdi', 'sizinle', 'seninle', 'benimle', 'bizimle', 'molada', 'molasinda', 'sohbet',
+  'edebilirim', 'edebiliriz', 'ederiz', 'gercekten', 'naziksiniz', 'naziksin', 'nazik', 'biraz', 'guzel',
+  'hos', 'pardon', 'gorusuruz', 'size', 'bana', 'sana', 'kolay', 'gelsin', 'eyvallah', 'gunler',
+  'affedersin', 'affedersiniz', 'buyurun', 'buyrun', 'hadi', 'beraber', 'birlikte', 'isterim', 'isterseniz',
+  'ister', 'misiniz', 'musunuz', 'memnun', 'oldum', 'afiyet', 'degil', 'degilim',
+])
+export function adTaramasiGereksizMi(mesaj: string): boolean {
+  const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
+  return kelime.length > 0 && kelime.every((k) => AD_OLMAYAN.has(k))
+}
 /** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
 export function hastaAdiCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
@@ -190,6 +211,7 @@ export async function hastaninSozunuCoz(
       if (p) return { tur: 'tek', patientId: p.id, ad: hastaAdiCoz(p.name_encrypted) || 'son hasta' }
     }
   }
+  if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
   const { data: hastalar } = await supabase
     .from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true).limit(500)
   if (!hastalar || hastalar.length === 0) return { tur: 'yok' }

@@ -1,6 +1,14 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { hitapsiz, sesliSozTokenlari, tumAdParcalariVar } from './hastaCozumleyici'
+import { hitapsiz, sesliSozTokenlari, tumAdParcalariVar, adTaramasiGereksizMi } from './hastaCozumleyici'
+
+test('kahve sohbeti hasta listesini taramaz; ad geçen cümle tarar', () => {
+  assert.equal(adTaramasiGereksizMi('Ben de iyiyim. Bir kahve içelim mi sizinle bugün?'), true)
+  assert.equal(adTaramasiGereksizMi('Merhaba, nasılsınız?'), true)
+  assert.equal(adTaramasiGereksizMi('Elif’in ateşi nasıl?'), false)
+  assert.equal(adTaramasiGereksizMi('Umutcan Türkoğlu kaç kilo?'), false)
+  assert.equal(adTaramasiGereksizMi('son hastamın ilaçları'), false)
+})
 
 test('NOTYA-SES-DOLGU-01: dolgu sözcükleri ve ayrık ad (Dr. Gökhan)', () => {
   const t = sesliSozTokenlari('gokhan eee s umutcan eee turkoglu nun dosyasina bakmani istiyorum')

@@ -110,8 +110,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         id: kimlik, object: 'chat.completion.chunk', created: olusturma, model,
         choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }],
       })
-      // NOTYA-SES-KILIT-01: sentences leave as one breath, not a drip and not a dump.
-      // Expressive tags are stripped inside the gate. `hemen` is only the acknowledgement.
+      // A finished sentence is sent as soon as it exists. Holding it for a
+      // breath, or until this function returns, is the gap before Ayşe speaks.
       const kapi = new SesYayKapisi((t) => { if (!t) return; parca({ content: t }); ilk = false })
       const yaz = (t: string, hemen = false) => kapi.ekle(t, hemen)
       let cevapSoylendi = false

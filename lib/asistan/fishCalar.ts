@@ -8,6 +8,64 @@
 
 import { FISH_ORNEK_HZ } from '@/lib/asistan/fishSes'
 
+/** Join a streaming text part onto the transcript so far. Deltas may be a chunk or the full text. */
+export function fishBirlestir(buf: string, parca: string): string {
+  if (!parca) return buf
+  if (!buf) return parca
+  if (parca.startsWith(buf)) return parca
+  if (buf.endsWith(parca)) return buf
+  return buf + parca
+}
+
+function cumleSonu(s: string, from: number): number {
+  for (let i = from; i < s.length; i++) {
+    const ch = s[i]
+    if (ch !== '.' && ch !== '!' && ch !== '?' && ch !== '…') continue
+    let j = i + 1
+    while (j < s.length && (s[j] === '.' || s[j] === '…')) j++
+    if (j < s.length && (s[j] === '"' || s[j] === '”' || s[j] === "'")) j++
+    if (j >= s.length || /\s/.test(s[j])) return j < s.length ? j + 1 : j
+  }
+  return -1
+}
+
+/**
+ * Text already handed to the player (`islenen`) versus the transcript now.
+ * Finished sentences leave while the model is still writing. The final full
+ * text, if nothing was spoken yet, stays one clip so a late dump is not chopped.
+ */
+export function fishYeniCumleler(islenen: string, tam: string, bitir: boolean): { soyle: string[]; islenen: string } {
+  const hedef = String(tam || '')
+  if (!hedef.trim()) return { soyle: [], islenen }
+  if (islenen && !hedef.startsWith(islenen)) {
+    const kirpik = islenen.trimEnd()
+    if (kirpik && (hedef.startsWith(kirpik) || hedef.startsWith(`${kirpik} `))) {
+      islenen = hedef.startsWith(islenen) ? islenen : (hedef.startsWith(`${kirpik} `) ? `${kirpik} ` : kirpik)
+    } else if (!bitir) return { soyle: [], islenen }
+    else return { soyle: [hedef.trim()], islenen: hedef }
+  }
+  if (!islenen && bitir) {
+    const t = hedef.trim()
+    return { soyle: t ? [t] : [], islenen: hedef }
+  }
+  const kalan = hedef.slice(islenen.length)
+  const soyle: string[] = []
+  let pos = 0
+  for (;;) {
+    const son = cumleSonu(kalan, pos)
+    if (son < 0) break
+    const parca = kalan.slice(pos, son).trim()
+    if (parca) soyle.push(parca)
+    pos = son
+  }
+  if (bitir) {
+    const kuyruk = kalan.slice(pos).trim()
+    if (kuyruk) soyle.push(kuyruk)
+    pos = kalan.length
+  }
+  return { soyle, islenen: islenen + kalan.slice(0, pos) }
+}
+
 export type FishGetir = (metin: string, sinyal: AbortSignal) => Promise<ReadableStream<Uint8Array> | null>
 
 export type FishCalar = {
@@ -24,11 +82,11 @@ export function fishCalarOlustur(
   hazirBaglam?: AudioContext | null,
 ): FishCalar {
   let nesil = 0
-  let kuyruk: string[] = []
+  let sira: { kontrol: AbortController; akis: Promise<ReadableStream<Uint8Array> | null>; iptal: boolean; hata: boolean }[] = []
   let calisiyor = false
   let ctx: AudioContext | null = hazirBaglam ?? null
   let kaynaklar: AudioBufferSourceNode[] = []
-  let abort: AbortController | null = null
+  let aktifKontrol: AbortController | null = null
   let kapali = false
 
   async function baglam(): Promise<AudioContext> {
@@ -51,11 +109,12 @@ export function fishCalarOlustur(
   }
 
   function kes(): void {
-    const vardi = calisiyor || kuyruk.length > 0 || kaynaklar.length > 0
+    const vardi = calisiyor || sira.length > 0 || kaynaklar.length > 0
     nesil += 1
-    kuyruk = []
-    abort?.abort()
-    abort = null
+    for (const is of sira) { is.iptal = true; is.kontrol.abort() }
+    sira = []
+    aktifKontrol?.abort()
+    aktifKontrol = null
     kaynakDurdur()
     calisiyor = false
     if (vardi && !kapali) olay?.onDurdu?.()
@@ -104,43 +163,36 @@ export function fishCalarOlustur(
     return zaman
   }
 
-  async function cal(ben: number, metin: string): Promise<void> {
+  async function oynat(): Promise<void> {
+    if (kapali || calisiyor) return
+    const is = sira.shift()
+    if (!is) return
+    const ben = nesil
     calisiyor = true
-    const kontrol = new AbortController()
-    abort = kontrol
-    let akis: ReadableStream<Uint8Array> | null = null
-    let iptal = false
-    try {
-      akis = await getir(metin, kontrol.signal)
-    } catch (e) {
-      iptal = e instanceof DOMException && e.name === 'AbortError'
-      akis = null
-    }
-    if (ben !== nesil || kapali) {
-      calisiyor = false
-      return
-    }
+    aktifKontrol = is.kontrol
+    const akis = await is.akis
+    if (ben !== nesil || kapali) return
     if (!akis) {
       calisiyor = false
-      if (!iptal) {
+      aktifKontrol = null
+      if (!is.iptal && is.hata) {
         kes()
         olay?.onHata?.()
-      }
+      } else void oynat()
       return
     }
     try {
       const ses = await baglam()
+      if (ben !== nesil || kapali) return
       const bitis = await pcmOku(akis, ses, ben)
-      if (ben !== nesil || kapali) {
-        calisiyor = false
-        return
-      }
+      if (ben !== nesil || kapali) return
       const kalanMs = Math.max(0, (bitis - ses.currentTime) * 1000)
       await new Promise((r) => setTimeout(r, kalanMs))
       if (ben !== nesil || kapali) return
       calisiyor = false
+      aktifKontrol = null
       kaynaklar = []
-      if (kuyruk.length) siradaki()
+      if (sira.length) void oynat()
       else olay?.onDurdu?.()
     } catch {
       if (ben !== nesil || kapali) return
@@ -149,23 +201,26 @@ export function fishCalarOlustur(
     }
   }
 
-  function siradaki(): void {
-    if (kapali || calisiyor) return
-    const metin = kuyruk.shift()
-    if (!metin) return
-    void cal(nesil, metin)
-  }
-
   return {
     hazirla: async () => { await baglam() },
     soyle(metin: string) {
       const t = String(metin || '').trim()
       if (kapali || !t) return
-      kuyruk.push(t)
-      siradaki()
+      const kontrol = new AbortController()
+      const is = { kontrol, iptal: false, hata: false, akis: Promise.resolve(null as ReadableStream<Uint8Array> | null) }
+      is.akis = getir(t, kontrol.signal).then((s) => {
+        if (!s && !is.iptal) is.hata = true
+        return s
+      }).catch((e) => {
+        if (e instanceof DOMException && e.name === 'AbortError') is.iptal = true
+        else is.hata = true
+        return null
+      })
+      sira.push(is)
+      void oynat()
     },
     kes,
-    caliyorMu: () => calisiyor,
+    caliyorMu: () => calisiyor || sira.length > 0,
     kapat() {
       kapali = true
       kes()
