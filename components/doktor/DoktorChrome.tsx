@@ -502,7 +502,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           right: -22% !important;
           bottom: auto !important;
           width: min(88vw, 460px) !important;
-          height: 62vh !important;
+          height: 46vh !important;
           object-position: 70% 32% !important;
           opacity: 0.3;
           -webkit-mask-image: linear-gradient(105deg, transparent 0%, #000 58%) !important;
@@ -512,7 +512,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
         .notya-alt-yuzer { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
         .notya-kabuk:has(.notya-alt-nav-akis) { flex-direction: column; }
-        .notya-kabuk:has(.notya-alt-nav-akis) .notya-icerik { padding-bottom: 16px !important; }
+        .notya-kabuk:has(.notya-alt-nav-akis) .notya-icerik { padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important; }
         body .notya-alt-nav.notya-alt-nav-akis {
           position: relative !important;
           top: auto !important;

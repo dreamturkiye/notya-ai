@@ -271,7 +271,7 @@ export default function DoktorDashboard() {
           .yg-masa-arac, .yg-erisim, .yg-mesaj { display: none !important; }
           .yg-mobil-ust { display: block !important; }
           .yg-kpi, .yg-notlar { order: 1; }
-          .yg-ozet { order: 2; }
+          .yg-ozet { order: 2; scroll-margin-bottom: 24px; }
           .yg-fisilti { order: 0; margin-top: 0 !important; }
           .yg-ozet-bos { display: none !important; }
           .yg-ozet-baslik {
