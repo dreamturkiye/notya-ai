@@ -22,21 +22,6 @@ export class AiCagriHatasi extends Error {
   }
 }
 
-/**
- * NOTYA-SES-FISH-UCTAN-UCA-01: çağıran turu kendisi bıraktı (doktor Ayşe'nin sözünü kesti). Taşıma hatası DEĞİLDİR —
- * yeniden denenmez, koruyucuya gitmez, devreye yazılmaz. Tek istenen: model akışı hemen dursun.
- */
-export class AiIptalHatasi extends Error {
-  constructor() {
-    super('Model çağrısı çağıran tarafından iptal edildi')
-    this.name = 'AiIptalHatasi'
-  }
-}
-
-export function iptalMi(e: unknown): e is AiIptalHatasi {
-  return e instanceof AiIptalHatasi
-}
-
 const ONEK = /^(openai|anthropic)\//
 
 export function openRouterAcik(): boolean {
@@ -250,20 +235,16 @@ function uc(): string {
   return `${(process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, '')}/chat/completions`
 }
 
-async function gonder(govde: Record<string, unknown>, zamanAsimiMs?: number, iptal?: AbortSignal): Promise<Response> {
-  if (iptal?.aborted) throw new AiIptalHatasi()
-  const sinyaller = [zamanAsimiMs ? AbortSignal.timeout(zamanAsimiMs) : null, iptal || null].filter((s): s is AbortSignal => Boolean(s))
-  const signal = sinyaller.length > 1 ? AbortSignal.any(sinyaller) : sinyaller[0]
+async function gonder(govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Response> {
   let r: Response
   try {
     r = await fetch(uc(), {
       method: 'POST',
       headers: basliklar(),
       body: JSON.stringify(govde),
-      ...(signal ? { signal } : {}),
+      ...(zamanAsimiMs ? { signal: AbortSignal.timeout(zamanAsimiMs) } : {}),
     })
   } catch (e) {
-    if (iptal?.aborted) throw new AiIptalHatasi()
     const ad = (e as { name?: string })?.name
     if (ad === 'TimeoutError' || ad === 'AbortError') throw new AiCagriHatasi(504, 'OpenRouter zaman aşımı')
     throw new AiCagriHatasi(503, `OpenRouter ağ hatası: ${String((e as Error)?.message || e).slice(0, 120)}`)
@@ -293,9 +274,9 @@ export async function openRouterCagir(govde: Record<string, unknown>, zamanAsimi
  * olarak döner (stop_reason 'max_tokens', `koptu: true`); F3 kurtarma ve DEVAMI_EKRANDA yolu onu normal kesik tur gibi
  * işler. Söylenmiş söz asla yeniden söylenmez.
  */
-export async function openRouterAkis(govde: Record<string, unknown>, metinParcasi: (p: string) => void, zamanAsimiMs?: number, iptal?: AbortSignal): Promise<{ yanit: Anthropic.Message; metinVerildi: boolean; koptu?: boolean }> {
+export async function openRouterAkis(govde: Record<string, unknown>, metinParcasi: (p: string) => void, zamanAsimiMs?: number): Promise<{ yanit: Anthropic.Message; metinVerildi: boolean; koptu?: boolean }> {
   const or = openRouterGovdesi({ ...govde, stream: true })
-  const r = await gonder(or, zamanAsimiMs, iptal)
+  const r = await gonder(or, zamanAsimiMs)
   if (!r.body) throw new AiCagriHatasi(502, 'OpenRouter boş akış')
   const okuyucu = r.body.getReader()
   const coz = new TextDecoder()
@@ -347,11 +328,6 @@ export async function openRouterAkis(govde: Record<string, unknown>, metinParcas
     }
     if (tampon) satirIsle(tampon)
   } catch (e) {
-    // İptal kesik tur değildir: söylenen kısım zaten sesteydi, turun geri kalanı istenmiyor.
-    if (iptal?.aborted) {
-      try { await okuyucu.cancel() } catch { /* zaten kapandı */ }
-      throw new AiIptalHatasi()
-    }
     const hata = e instanceof AiCagriHatasi ? e : new AiCagriHatasi(503, `OpenRouter akış koptu: ${String((e as Error)?.message || e).slice(0, 120)}`)
     // İlk sözden önce kopan akış taşıma hatasıdır (çağıran yeniden dener / koruyucuya gider); sonra kopan akış kesik turdur.
     if (!metin) throw Object.assign(hata, { metinVerildi: false })
