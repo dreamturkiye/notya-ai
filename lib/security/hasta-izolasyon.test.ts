@@ -39,10 +39,6 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
 process.env.NOTYA_SES_LLM_SECRET = 'qa-sentetik-ses-llm-sirri-0123456789abcdef'
 process.env.NOTYA_SES_JETON_SECRET = 'qa-sentetik-ses-jeton-anahtari-0123456789ab'
-// NOTYA-SES-FISH-UCTAN-UCA-01: Ayşe Kaya'nın ElevenLabs'siz yolu açık (anahtarlar sahte; Deepgram anahtarı aşağıda sahte).
-process.env.FISH_API_KEY = 'qa-sahte-fish'
-process.env.DEEPGRAM_API_KEY = 'qa-sahte-deepgram'
-process.env.DEEPGRAM_PROJECT_ID = 'qa-sahte-proje'
 
 // ─── Sahte altyapı ──────────────────────────────────────────────────────────────────────────────
 let db = new SahteVeritabani()
@@ -664,15 +660,6 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.sesLlm.POST(sesLlmIste(r, { d: a.id, o: h.asistanOturum, s: 'pediatri', p: null, pe: 'aysekaya' }, 'Az önce ne demiştin?'))) },
   { ad: 'GET /api/asistan/ses-ekran (sesli turların ekran biçimi)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.sesEkran.GET(iste('GET', `/api/asistan/ses-ekran?oturum=${h.asistanOturum}`, { token: a.token }))) },
-  // NOTYA-SES-FISH-UCTAN-UCA-01: Ayşe Kaya'nın ElevenLabs'siz sesli turu / görüşme açılışı / kullanım sayacı.
-  { ad: 'POST /api/asistan/fish-tur (oturumun geçmişi ve hastası modele gider)', red: 404,
-    yazdi: (a) => ((tablo('asistan_sessions').find((x) => x.id === a.asistanOturum)?.messages || []) as { content?: string }[]).some((m) => m.content === 'Az önce ne demiştin Hocam?'),
-    cagir: (r, a, h) => coz(r.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: a.token, govde: { asistanSessionId: h.asistanOturum, nonce: `qa-${randomUUID()}`, metin: 'Az önce ne demiştin Hocam?' } }))) },
-  { ad: 'GET /api/asistan/fish-oturum (yabancı oturum ve yabancı sayfa hastası yeni oturuma taşınmaz)',
-    cagir: (r, a, h) => coz(r.fishOturum.GET(iste('GET', `/api/asistan/fish-oturum?persona=aysekaya&asistanSessionId=${h.asistanOturum}&patientId=${h.hasta}`, { token: a.token }))) },
-  { ad: 'POST /api/asistan/ses-kullanim (Deepgram sayacı)', red: 404,
-    yazdi: (a) => tablo('ses_kullanim').some((x) => x.asistan_session_id === a.asistanOturum),
-    cagir: (r, a, h) => coz(r.sesKullanim.POST(iste('POST', '/api/asistan/ses-kullanim', { token: a.token, govde: { asistanSessionId: h.asistanOturum, satirlar: [{ kaynak: 'deepgram', olcu: 'ses_saniye', miktar: 12 }] } }))) },
   // NOTYA-SAYFA-HASTA-01/02: sayfa açılınca asistan odağı — yabancı hasta ve yabancı oturum ikisi de 404 (varlık sızmaz; hiçbir şey yazılmaz)
   { ad: 'POST /api/asistan/oturum-hasta (kendi oturumu + yabancı hasta)', red: 404, okur: true,
     yazdi: (a) => tablo('asistan_sessions').find((x) => x.id === a.asistanOturum)?.active_context?.currentPatientId === a.hasta,
@@ -758,9 +745,6 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       sesLlm: await ice('app/api/asistan/ses-llm/v1/chat/completions/route'),
       sesEkran: await ice('app/api/asistan/ses-ekran/route'),
       oturumHasta: await ice('app/api/asistan/oturum-hasta/route'),
-      fishTur: await ice('app/api/asistan/fish-tur/route'),
-      fishOturum: await ice('app/api/asistan/fish-oturum/route'),
-      sesKullanim: await ice('app/api/asistan/ses-kullanim/route'),
       sesJetonuImzala: (await import('../asistan/sesJetonu')).sesJetonuImzala,
       portal: await ice('app/api/portal/hasta/[token]/route'),
       portalMesajlar: await ice('app/api/portal/hasta/[token]/mesajlar/route'),

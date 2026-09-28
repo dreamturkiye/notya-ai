@@ -241,11 +241,6 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/ses-llm/v1/chat/completions/route.ts': T,
   'app/api/asistan/ses-llm/v1/route.ts': I('same handler as ses-llm/v1/chat/completions (lib/asistan/sesLlm.ts), covered there'),
   'app/api/asistan/ses-ekran/route.ts': T,
-  // NOTYA-SES-FISH-UCTAN-UCA-01 — Ayşe Kaya'nın ElevenLabs'siz sesli yolu
-  'app/api/asistan/fish-tur/route.ts': T,
-  'app/api/asistan/fish-oturum/route.ts': T,
-  'app/api/asistan/ses-kullanim/route.ts': T,
-  'app/api/asistan/fish-ses/route.ts': I('Fish TTS for the caller: body is free text only (no patient id, no patient read); optional asistanSessionId is used only to write a usage counter via sesKullanimYaz, which requires id + doctor_id to match before any insert'),
   'app/api/asistan/oturum-hasta/route.ts': T,
   'app/api/asistan/klinik-signed-url/route.ts': I('voice-agent URL for the caller; no patient read'),
   'app/api/asistan/ses-ogren/route.ts': I('NOTYA-OGRENME-03: canli sesli Ayse ogrenme kancasi — body yalniz serbest metin (doktor konusma turleri), patient_id/hasta tablosu yok; yazar doktor_hafiza/doktor_iliski, ikisi de doctor_id scoped'),
