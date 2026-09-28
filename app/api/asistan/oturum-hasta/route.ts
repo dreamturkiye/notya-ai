@@ -12,7 +12,9 @@ import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
  * Migration yok: yalnız oturum JSON'u.
  *
  * HASTA-IZOLASYON-01: oturum id + doctor_id ile çözülür (yabancı / bilinmeyen oturum 404); hasta hastaSahibiMi ile
- * doğrulanır — başka doktorun hastası 403 ve hiçbir şey yazılmaz.
+ * doğrulanır — başka doktorun hastası ile olmayan hasta AYNI cevabı verir: 404 (NOTYA-SAYFA-HASTA-02, Kaan
+ * 2026-09-27: 403 "bu kimlikte bir hasta var ama sizin değil" demek olurdu; kimlikle hasta varlığı sorgulanamasın)
+ * ve hiçbir şey yazılmaz.
  */
 export async function POST(req: NextRequest) {
   const oturum = await doktorOturum(req)
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
   if (!asistanOturumu) return NextResponse.json({ error: 'Asistan oturumu bulunamadı.' }, { status: 404 })
 
   if (!(await hastaSahibiMi(supabase, doktorId, patientId))) {
-    return NextResponse.json({ error: 'Bu hasta size ait değil.' }, { status: 403 })
+    return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   }
   const { data: hasta } = await supabase
     .from('patients')

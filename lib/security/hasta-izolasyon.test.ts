@@ -660,8 +660,8 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.sesLlm.POST(sesLlmIste(r, { d: a.id, o: h.asistanOturum, s: 'pediatri', p: null, pe: 'aysekaya' }, 'Az önce ne demiştin?'))) },
   { ad: 'GET /api/asistan/ses-ekran (sesli turların ekran biçimi)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.sesEkran.GET(iste('GET', `/api/asistan/ses-ekran?oturum=${h.asistanOturum}`, { token: a.token }))) },
-  // NOTYA-SAYFA-HASTA-01: sayfa açılınca asistan odağı — yabancı hasta 403 (hiçbir şey yazılmaz), yabancı oturum 404
-  { ad: 'POST /api/asistan/oturum-hasta (kendi oturumu + yabancı hasta)', red: 403, okur: true,
+  // NOTYA-SAYFA-HASTA-01/02: sayfa açılınca asistan odağı — yabancı hasta ve yabancı oturum ikisi de 404 (varlık sızmaz; hiçbir şey yazılmaz)
+  { ad: 'POST /api/asistan/oturum-hasta (kendi oturumu + yabancı hasta)', red: 404, okur: true,
     yazdi: (a) => tablo('asistan_sessions').find((x) => x.id === a.asistanOturum)?.active_context?.currentPatientId === a.hasta,
     cagir: (r, a, h) => coz(r.oturumHasta.POST(iste('POST', '/api/asistan/oturum-hasta', { token: a.token, govde: { asistanSessionId: a.asistanOturum, patientId: h.hasta } }))) },
   { ad: 'POST /api/asistan/oturum-hasta (yabancı oturum + kendi hastası)', red: 404,
