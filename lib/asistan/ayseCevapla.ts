@@ -166,15 +166,19 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     asistanSession = await asistanOturumuAc(supabase, { doktorId, personaId: g.personaId, specialty, hekimBransi, patientId, sessionId: g.sessionId })
   }
 
-  const personaId = (asistanSession?.persona_id as PersonaId) || varsayilanPersonaId(specialty, hekimBransi)
+  const baglam = (asistanSession?.active_context as Record<string, unknown>) || {}
+  const istenenPersona = g.personaId && PERSONAS[g.personaId as PersonaId] ? (g.personaId as PersonaId) : null
+  const kayitliPersona = (asistanSession?.persona_id as PersonaId) || null
+  // Sekme değişince aynı oturum kalırsa eski meslektaşın geçmişi ve hastası yeni sesin ağzından konuşuyordu.
+  const personaDegisti = Boolean(istenenPersona && kayitliPersona && istenenPersona !== kayitliPersona)
+  const personaId = istenenPersona || kayitliPersona || varsayilanPersonaId(specialty, hekimBransi)
   const persona = PERSONAS[personaId] || PERSONAS[varsayilanPersonaId(specialty, hekimBransi)]
   if (!persona) {
     return { ok: false, durum: 500, govde: { error: "Uzman persona bulunamadı" }, soz: "Şu an cevap veremiyorum Hocam." }
   }
 
-  const baglam = (asistanSession?.active_context as Record<string, unknown>) || {}
-  const contextPatientId = baglam.currentPatientId || patientId
-  const messages: OturumMesaji[] = (asistanSession?.messages as OturumMesaji[]) || []
+  const contextPatientId = personaDegisti ? (patientId || null) : (baglam.currentPatientId || patientId)
+  const messages: OturumMesaji[] = personaDegisti ? [] : ((asistanSession?.messages as OturumMesaji[]) || [])
   const oturumId = (asistanSession?.id as string) || null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
@@ -189,7 +193,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
         }
       : { role: "assistant", content: asistanSozu }
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
-    const { sesDevam: eskiDevam, ...oncekiBaglam } = baglam
+    const { sesDevam: eskiDevam, currentPatientId, patientName, ...geriBaglam } = baglam
+    const oncekiBaglam = personaDegisti ? geriBaglam : { ...geriBaglam, ...(currentPatientId ? { currentPatientId, patientName } : {}) }
     const sesDevam: SesDevam | null = ses && ek.sesDevamKalan ? { anahtar: asistanZamani, kalan: ek.sesDevamKalan, olusturma: simdi() } : null
     // NOTYA-SAYFA-HASTA-01: the doctor opened another patient's page while this turn ran (a voice turn can take
     // 30 s) — that page switch is the more recent explicit signal; this write must not put the old focus back.
@@ -201,9 +206,10 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
         sayfaOdagi = { currentPatientId: t.currentPatientId, patientName: t.patientName ?? null, odakKaynak: "sayfa", odakZaman: t.odakZaman }
       }
     }
-    const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam
+    const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam || personaDegisti
       ? {
           ...oncekiBaglam,
+          ...(personaDegisti && !ek.hasta && !sayfaOdagi ? { currentPatientId: null, patientName: null } : {}),
           ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad, odakKaynak: "soz", odakZaman: asistanZamani } : {}),
           ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
           ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
@@ -212,7 +218,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       : null
     await supabase.from("asistan_sessions").update({
       messages: [...messages, kullanici, asistan].slice(-SOHBET_SAKLANAN_MESAJ),
-      ...(sayfaOdagi ? { patient_id: sayfaOdagi.currentPatientId } : ek.hasta ? { patient_id: ek.hasta.id } : {}),
+      ...(personaDegisti ? { persona_id: personaId } : {}),
+      ...(sayfaOdagi ? { patient_id: sayfaOdagi.currentPatientId } : ek.hasta ? { patient_id: ek.hasta.id } : personaDegisti ? { patient_id: null } : {}),
       ...(yeniBaglam ? { active_context: yeniBaglam } : {}),
     }).eq("id", oturumId)
   }
@@ -390,8 +397,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // Build system prompt with learning context
   // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
   const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
-  // NOTYA-ONBELLEK-SICAK-YOL: global (persona, hekimler paylaşır) ve hekim (hitap) ayrı kırılma.
-  // Kararlı blok: hafıza + hasta + branş kilidi + dosya gövdesi — aynı hastada turdan tura aynı bayt.
+  // NOTYA-ONBELLEK-SICAK-YOL: global ve hekim önbellekte (sabit). Hafıza, hasta satırı, branş kilidi
+  // ve dosya gövdesi kuyrukla birlikte önbelleksiz — seans sayacı ve hasta satırı her tur değişir,
+  // önbelleğe yazmak cevabı yazma bitene kadar bekletir.
   // Gün özeti, kesin cümle ve kanıt kuyrukta; soru dosya önekini bozmaz. Hasta global/hekim'de yok.
   // Branş kilidi hafıza ve hastanın ÜSTÜNE çıkmaz (öncelik cümlesi onları kapsar); dosya gövdesi en sonda.
   const sistem = buildSystemPromptParcalari(persona, prefs, currentPatient, doctorProfile, hafizaBlogu)

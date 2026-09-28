@@ -1,9 +1,10 @@
 /**
  * Sesli / yazılı Ayşe system blokları.
- * Kırılma noktaları (en fazla 4): global (persona, tüm hekimler paylaşır), hekim (hitap),
- * kararlı (hafıza + hasta JSON + branş kilidi + dosya gövdesi — turdan tura aynı bayt).
- * Kuyruk önbelleklenmez: gün özeti, kesin cümle, kanıt, eylem istemi. Soru metni dosya önekini bozmaz.
- * Hasta adı global ve hekim bloklarına girmez.
+ * Önbellek yalnız sabit önekte: global (persona, tüm hekimler paylaşır) ve hekim (hitap).
+ * Kararlı blok (hafıza, hasta satırı, branş kilidi, dosya gövdesi) ve kuyruk (gün, kesin cümle,
+ * kanıt, eylem) önbelleklenmez. Hafıza seans sayacı ve hasta satırı her tur değişir; onları
+ * önbelleğe yazmak her turda yazma cezasıdır — cevap, yazma bitmeden başlayamaz.
+ * Soru metni dosya gövdesine girmez. Hasta adı global ve hekim bloklarına girmez.
  */
 export function asistanOnbellekBloklari(p: {
   global: string
@@ -14,7 +15,7 @@ export function asistanOnbellekBloklari(p: {
   const bloklar: { metin: string; onbellek?: boolean }[] = []
   if (p.global.trim()) bloklar.push({ metin: p.global, onbellek: true })
   if (p.hekim.trim()) bloklar.push({ metin: p.hekim, onbellek: true })
-  if (p.kararli.trim()) bloklar.push({ metin: p.kararli, onbellek: true })
-  if (p.kuyruk.trim()) bloklar.push({ metin: p.kuyruk })
+  const kuyruk = [p.kararli, p.kuyruk].filter((s) => s && s.trim()).join('')
+  if (kuyruk.trim()) bloklar.push({ metin: kuyruk })
   return bloklar
 }
