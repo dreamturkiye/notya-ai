@@ -451,6 +451,19 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       }
       .notya-alt { margin-top: auto; }
       .notya-bitki { opacity: 0.4; }
+      @media (min-width: 900px) {
+        .notya-bitki-asagi {
+          top: 5.5rem !important;
+          bottom: auto !important;
+          right: -8% !important;
+          width: min(44vw, 560px) !important;
+          height: 70vh !important;
+          object-position: 72% 28% !important;
+          opacity: 0.34;
+          -webkit-mask-image: linear-gradient(100deg, transparent 0%, #000 48%) !important;
+          mask-image: linear-gradient(100deg, transparent 0%, #000 48%) !important;
+        }
+      }
       .notya-kompakt {
         position: absolute;
         left: 0; right: 0;
