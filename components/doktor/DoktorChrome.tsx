@@ -484,7 +484,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
         .notya-bitki { opacity: 0.28; }
-        .notya-bitki-asagi { top: 36rem !important; }
+        .notya-bitki-asagi { top: 32rem !important; width: min(64vw, 880px) !important; }
         .notya-kompakt { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
         .notya-alt-yuzer { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
