@@ -487,6 +487,17 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         .notya-kompakt { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
         .notya-alt-yuzer { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+        .notya-kabuk:has(.notya-alt-nav-akis) { flex-direction: column; }
+        .notya-kabuk:has(.notya-alt-nav-akis) .notya-icerik { padding-bottom: 16px !important; }
+        body .notya-alt-nav.notya-alt-nav-akis {
+          position: relative !important;
+          top: auto !important;
+          bottom: auto !important;
+          left: auto !important;
+          right: auto !important;
+          width: auto !important;
+          margin: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+        }
       }
       @media print {
         .notya-alt-nav, .notya-telefon-menu, .notya-telefon-perde { display: none !important; }
@@ -637,7 +648,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
 
       <SesleUyandir doktor={rol === 'doktor'} />
 
-      <div className="notya-alt-nav" role="navigation" aria-label="Ana menü" style={S({
+      <div className={pathname === '/dashboard/doktor' ? 'notya-alt-nav notya-alt-nav-akis' : 'notya-alt-nav'} role="navigation" aria-label="Ana menü" style={S({
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 38,
         background: CHROME_RENK.paper, borderTop: `1px solid ${CHROME_RENK.border}`,
         padding: '4px env(safe-area-inset-right, 0px) calc(4px + env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px)',

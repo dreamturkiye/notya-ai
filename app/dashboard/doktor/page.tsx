@@ -271,23 +271,15 @@ export default function DoktorDashboard() {
           .yg-masa-arac, .yg-erisim, .yg-mesaj { display: none !important; }
           .yg-mobil-ust { display: block !important; }
           .yg-kpi, .yg-notlar { order: 1; }
+          .yg-ozet { order: 2; }
           .yg-fisilti { order: 0; margin-top: 0 !important; }
-          .yg-ozet {
-            position: fixed; left: 0; right: 0; z-index: 37;
-            bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-            margin: 0 !important; padding: 10px 16px 6px;
-            background: #f4eee3;
-          }
           .yg-ozet-bos { display: none !important; }
-          .yg-ozet-kart { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
-          .yg-ozet-kart > div { padding-top: 3px !important; padding-bottom: 3px !important; }
           .yg-ozet-baslik {
             font-family: ${CHROME_FONT.serif} !important;
             font-size: 18px !important; font-weight: 700 !important;
             text-transform: none !important; letter-spacing: -0.02em !important;
             color: #2e251d !important; margin: 0 0 2px !important;
           }
-          .yg-ana { padding-bottom: 148px; }
         }
         .yg-mobil-ust { display: none; }`}</style>
 
