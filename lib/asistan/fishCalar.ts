@@ -1,12 +1,14 @@
 /**
  * NOTYA-FISH-AYSE-01 — playback we can cut the moment the doctor speaks.
  *
- * ElevenLabs still owns the microphone, turn-taking and the interruption
- * event. This player only speaks. `kes` stops the current buffer in the same
- * turn (well under the 300 ms barge-in budget) and drops anything still queued.
+ * The server streams 24 kHz PCM. The first chunk is scheduled as soon as it
+ * arrives, so the bubble and the voice are not a full clip apart. `kes` stops
+ * every scheduled buffer in the same turn.
  */
 
-export type FishGetir = (metin: string, sinyal: AbortSignal) => Promise<ArrayBuffer | null>
+import { FISH_ORNEK_HZ } from '@/lib/asistan/fishSes'
+
+export type FishGetir = (metin: string, sinyal: AbortSignal) => Promise<ReadableStream<Uint8Array> | null>
 
 export type FishCalar = {
   hazirla: () => Promise<void>
@@ -25,7 +27,7 @@ export function fishCalarOlustur(
   let kuyruk: string[] = []
   let calisiyor = false
   let ctx: AudioContext | null = hazirBaglam ?? null
-  let kaynak: AudioBufferSourceNode | null = null
+  let kaynaklar: AudioBufferSourceNode[] = []
   let abort: AbortController | null = null
   let kapali = false
 
@@ -33,6 +35,7 @@ export function fishCalarOlustur(
     if (!ctx || ctx.state === 'closed') {
       const Pencere = window as Window & { webkitAudioContext?: typeof AudioContext }
       const Kur = window.AudioContext || Pencere.webkitAudioContext
+      if (!Kur) throw new Error('ses yok')
       ctx = new Kur()
     }
     if (ctx.state === 'suspended') await ctx.resume().catch(() => undefined)
@@ -40,14 +43,15 @@ export function fishCalarOlustur(
   }
 
   function kaynakDurdur(): void {
-    if (!kaynak) return
-    try { kaynak.onended = null; kaynak.stop() } catch { /* already stopped */ }
-    kaynak.disconnect()
-    kaynak = null
+    for (const s of kaynaklar) {
+      try { s.onended = null; s.stop() } catch { /* already stopped */ }
+      try { s.disconnect() } catch { /* already disconnected */ }
+    }
+    kaynaklar = []
   }
 
   function kes(): void {
-    const vardi = calisiyor || kuyruk.length > 0 || kaynak !== null
+    const vardi = calisiyor || kuyruk.length > 0 || kaynaklar.length > 0
     nesil += 1
     kuyruk = []
     abort?.abort()
@@ -57,24 +61,66 @@ export function fishCalarOlustur(
     if (vardi && !kapali) olay?.onDurdu?.()
   }
 
+  async function pcmOku(stream: ReadableStream<Uint8Array>, ses: AudioContext, ben: number): Promise<number> {
+    const reader = stream.getReader()
+    let artik = new Uint8Array(0)
+    let zaman = ses.currentTime + 0.02
+    let basladi = false
+    const planla = (ornek: Int16Array) => {
+      if (!ornek.length || ben !== nesil) return
+      const buf = ses.createBuffer(1, ornek.length, FISH_ORNEK_HZ)
+      const kanal = buf.getChannelData(0)
+      for (let i = 0; i < ornek.length; i++) kanal[i] = ornek[i] / 32768
+      const src = ses.createBufferSource()
+      src.buffer = buf
+      src.connect(ses.destination)
+      const basla = Math.max(zaman, ses.currentTime + 0.01)
+      src.start(basla)
+      zaman = basla + buf.duration
+      kaynaklar.push(src)
+      if (!basladi) {
+        basladi = true
+        olay?.onBasladi?.()
+      }
+    }
+    try {
+      while (ben === nesil && !kapali) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (!value?.length) continue
+        const birlesik = new Uint8Array(artik.length + value.length)
+        birlesik.set(artik)
+        birlesik.set(value, artik.length)
+        const cift = birlesik.length - (birlesik.length % 2)
+        artik = birlesik.subarray(cift)
+        if (cift < 2) continue
+        const gorunum = birlesik.subarray(0, cift)
+        const ornek = new Int16Array(gorunum.buffer, gorunum.byteOffset, cift / 2)
+        planla(ornek)
+      }
+    } finally {
+      reader.cancel().catch(() => undefined)
+    }
+    return zaman
+  }
+
   async function cal(ben: number, metin: string): Promise<void> {
     calisiyor = true
-    olay?.onBasladi?.()
     const kontrol = new AbortController()
     abort = kontrol
-    let buf: ArrayBuffer | null = null
+    let akis: ReadableStream<Uint8Array> | null = null
     let iptal = false
     try {
-      buf = await getir(metin, kontrol.signal)
+      akis = await getir(metin, kontrol.signal)
     } catch (e) {
       iptal = e instanceof DOMException && e.name === 'AbortError'
-      buf = null
+      akis = null
     }
     if (ben !== nesil || kapali) {
       calisiyor = false
       return
     }
-    if (!buf) {
+    if (!akis) {
       calisiyor = false
       if (!iptal) {
         kes()
@@ -84,24 +130,18 @@ export function fishCalarOlustur(
     }
     try {
       const ses = await baglam()
-      const cozum = await ses.decodeAudioData(buf.slice(0))
+      const bitis = await pcmOku(akis, ses, ben)
       if (ben !== nesil || kapali) {
         calisiyor = false
         return
       }
-      const src = ses.createBufferSource()
-      src.buffer = cozum
-      src.connect(ses.destination)
-      kaynak = src
-      src.onended = () => {
-        if (kaynak !== src) return
-        kaynak = null
-        if (ben !== nesil || kapali) return
-        calisiyor = false
-        if (kuyruk.length) siradaki()
-        else olay?.onDurdu?.()
-      }
-      src.start()
+      const kalanMs = Math.max(0, (bitis - ses.currentTime) * 1000)
+      await new Promise((r) => setTimeout(r, kalanMs))
+      if (ben !== nesil || kapali) return
+      calisiyor = false
+      kaynaklar = []
+      if (kuyruk.length) siradaki()
+      else olay?.onDurdu?.()
     } catch {
       if (ben !== nesil || kapali) return
       kes()

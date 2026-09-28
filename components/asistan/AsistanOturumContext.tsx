@@ -30,6 +30,7 @@ import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKart
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishCalarOlustur, type FishCalar } from '@/lib/asistan/fishCalar'
+import { ozgecmisAcilisiMi } from '@/lib/asistan/acilis'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 
@@ -479,8 +480,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             body: JSON.stringify({ metin }),
             signal: sinyal,
           })
-          if (!r.ok) return null
-          return r.arrayBuffer()
+          if (!r.ok || !r.body) return null
+          return r.body
         }, {
           onHata: () => {
             fishAcikRef.current = false
@@ -545,6 +546,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   ) {
     const tekBeyin = Boolean(opts?.notyaJeton)
     let doktorKonustu = false
+    let selamBizden = false
     const tryFirst = Boolean(opts?.tryFirstMessage)
     let usedFirstMessage = tryFirst
     let retriedWithoutFirst = false
@@ -779,6 +781,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (role === "user") {
             if (fishAcikRef.current) fishRef.current?.kes()
             sesDevamRef.current.doktorSozu = Date.now()
+          } else if (!doktorKonustu && ozgecmisAcilisiMi(message)) {
+            if (!selamBizden) {
+              selamBizden = true
+              if (fishAcikRef.current) fishRef.current?.soyle(firstMessage)
+              addMsg("ai", firstMessage)
+            }
+            return
           } else if (fishAcikRef.current && String(message || "").trim()) {
             fishRef.current?.soyle(message)
           }
