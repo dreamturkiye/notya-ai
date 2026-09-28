@@ -67,7 +67,12 @@ export function fishDinleIstegi(jeton: () => Promise<string | null>, oturumId: (
   return async (g) => {
     const t = await jeton()
     const o = oturumId()
-    if (!t || !o) throw new Error('Oturum yok')
+    // NOTYA-SES-FISH-SADECE-01 canlı bulgu (Kaan, 2026-09-28): "Sizi duyamadım" ile ilk konuşma başarısız oldu;
+    // sunucu loglarında fish-dinle'ye hiç istek düşmemişti — throw ağa hiç çıkmadan burada oluyordu. `oturumId` bu
+    // çağrıda zaten atanmış bir `const`'tan geliyor, boş olması yapısal olarak beklenmez; asıl şüpheli jeton. İkisini
+    // ayırt eden ayrı hata, bir sonraki canlı denemede kesin sebebi verir.
+    if (!t) throw new Error('Jeton yok')
+    if (!o) throw new Error('Oturum yok')
     const r = await fetch(`/api/asistan/fish-dinle?asistanSessionId=${encodeURIComponent(o)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'audio/wav', Authorization: `Bearer ${t}` },

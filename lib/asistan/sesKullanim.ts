@@ -59,7 +59,7 @@ export async function sesKullanimYaz(supabase: SupabaseClient, doktorId: string,
     const { error } = await supabase.from('ses_kullanim').insert(satirlar.map((s) => ({
       doctor_id: doktorId, asistan_session_id: oturumId, kaynak: s.kaynak, olcu: s.olcu, miktar: s.miktar, model: s.model ?? null,
     })))
-    if (error) console.error('[ses-kullanim] yazılamadı')
+    if (error) console.error('[ses-kullanim] yazılamadı', error.code, error.message)
     return error ? 'hata' : 'tamam'
   } catch {
     return 'hata'

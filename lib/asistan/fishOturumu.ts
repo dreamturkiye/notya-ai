@@ -40,6 +40,8 @@ export const ON_KAYIT_MS = 500
 export const KULLANIM_ARALIGI_MS = 60_000
 
 export const DINLEME_HATASI = 'Sizi duyamadım — bir daha söyler misiniz?'
+/** Jeton tazeleme başarısız oldu — mikrofon sorunu değil, oturum sorunu. */
+export const JETON_HATASI = 'Bağlantınız zaman aşımına uğradı — sayfayı yenileyip tekrar deneyin.'
 export const TUR_HATASI = 'Bağlantıda bir sorun oldu — bir daha söyler misiniz?'
 
 export interface MikrofonKaynagi {
@@ -236,12 +238,15 @@ export class FishOturumu {
     this.dinlemeler.add(kontrol)
     const istek = this.d.dinle({ wav: wavKodla(s.pcm), sureMs: s.sureMs, sinyal: kontrol.signal })
       .then((r) => ({ ok: true as const, metin: String(r?.metin || ''), bitti: this.simdi() }))
-      .catch(() => ({ ok: false as const, metin: '', bitti: this.simdi() }))
+      .catch((e: unknown) => ({ ok: false as const, metin: '', bitti: this.simdi(), neden: e instanceof Error && e.message === 'Jeton yok' ? 'jeton' as const : 'dinleme' as const }))
     this.dinleZinciri = this.dinleZinciri.then(async () => {
       const r = await istek
       this.dinlemeler.delete(kontrol)
       if (this.kapali || kontrol.signal.aborted) return
-      if (!r.ok) { this.d.olay.hata(DINLEME_HATASI); return }
+      if (!r.ok) {
+        this.d.olay.hata(r.neden === 'jeton' ? JETON_HATASI : DINLEME_HATASI)
+        return
+      }
       this.sozGeldi(r.metin, { sonSes: s.sonSes, ilan: s.ilan, dinleBitti: r.bitti, gonderildi: 0, ilkSoz: 0 })
     })
   }
