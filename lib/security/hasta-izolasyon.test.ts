@@ -39,6 +39,8 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
 process.env.NOTYA_SES_LLM_SECRET = 'qa-sentetik-ses-llm-sirri-0123456789abcdef'
 process.env.NOTYA_SES_JETON_SECRET = 'qa-sentetik-ses-jeton-anahtari-0123456789ab'
+// NOTYA-SES-FISH-SADECE-01: Ayşe Kaya'nın uçtan uca Fish yolu açık (anahtar sahte; Fish ASR aşağıda sahte).
+process.env.FISH_API_KEY = 'qa-sahte-fish'
 
 // ─── Sahte altyapı ──────────────────────────────────────────────────────────────────────────────
 let db = new SahteVeritabani()
@@ -107,6 +109,10 @@ mock.module(yerel('lib/doktor/twilioNotify.ts'), { namedExports: { sendTwilioMes
 
 // No network, ever. The one allowed call is the speech-to-text step of ses-yukle (synthetic transcript).
 globalThis.fetch = (async (girdi: unknown) => {
+  // NOTYA-SES-FISH-SADECE-01: fish-dinle'nin Fish ASR çağrısı — yalnız doktor kendi oturumunda ulaşır.
+  if (String(girdi) === 'https://api.fish.audio/v1/asr') {
+    return new Response(JSON.stringify({ text: 'Sentetik QA sözü.', duration: 1.2, segments: [], language_code: 'tr', language: 'Turkish' }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
   if (String(girdi).includes('api.elevenlabs.io')) {
     return new Response(JSON.stringify({ text: 'Sentetik QA transkripti: üç gündür öksürük, ateş yok, iştah iyi, uyku düzenli, aşıları tam.' }), { status: 200, headers: { 'content-type': 'application/json' } })
   }
@@ -660,6 +666,25 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.sesLlm.POST(sesLlmIste(r, { d: a.id, o: h.asistanOturum, s: 'pediatri', p: null, pe: 'aysekaya' }, 'Az önce ne demiştin?'))) },
   { ad: 'GET /api/asistan/ses-ekran (sesli turların ekran biçimi)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.sesEkran.GET(iste('GET', `/api/asistan/ses-ekran?oturum=${h.asistanOturum}`, { token: a.token }))) },
+  // NOTYA-SES-FISH-UCTAN-UCA-01 / SADECE-01: Ayşe Kaya'nın uçtan uca Fish sesli turu / görüşme açılışı / dinleme / sayaç.
+  { ad: 'POST /api/asistan/fish-tur (oturumun geçmişi ve hastası modele gider)', red: 404,
+    yazdi: (a) => ((tablo('asistan_sessions').find((x) => x.id === a.asistanOturum)?.messages || []) as { content?: string }[]).some((m) => m.content === 'Az önce ne demiştin Hocam?'),
+    cagir: (r, a, h) => coz(r.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: a.token, govde: { asistanSessionId: h.asistanOturum, nonce: `qa-${randomUUID()}`, metin: 'Az önce ne demiştin Hocam?' } }))) },
+  { ad: 'GET /api/asistan/fish-oturum (yabancı oturum ve yabancı sayfa hastası yeni oturuma taşınmaz)',
+    cagir: (r, a, h) => coz(r.fishOturum.GET(iste('GET', `/api/asistan/fish-oturum?persona=aysekaya&asistanSessionId=${h.asistanOturum}&patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/asistan/ses-kullanim (görüşme süresi / tur gecikmesi sayacı)', red: 404,
+    yazdi: (a) => tablo('ses_kullanim').some((x) => x.asistan_session_id === a.asistanOturum && x.olcu === 'oturum_saniye'),
+    cagir: (r, a, h) => coz(r.sesKullanim.POST(iste('POST', '/api/asistan/ses-kullanim', { token: a.token, govde: { asistanSessionId: h.asistanOturum, satirlar: [{ kaynak: 'oturum', olcu: 'oturum_saniye', miktar: 12 }] } }))) },
+  { ad: 'POST /api/asistan/fish-dinle (söz WAV → Fish ASR; sayaç oturuma yazılır)', red: 404,
+    yazdi: (a) => tablo('ses_kullanim').some((x) => x.asistan_session_id === a.asistanOturum && x.kaynak === 'fish_asr'),
+    // Sayaç yanıttan sonra yazılır (ASR yolunu bekletmez) — hem pozitif hem çapraz kontrol yazının inmesini bekler.
+    cagir: async (r, a, h) => {
+      const y = await coz(r.fishDinle.POST(new NextRequestSinifi(`http://localhost/api/asistan/fish-dinle?asistanSessionId=${h.asistanOturum}`, {
+        method: 'POST', headers: { authorization: `Bearer ${a.token}`, 'content-type': 'audio/wav' }, body: new Uint8Array(44 + 3200),
+      } as ConstructorParameters<typeof NextRequestSinifi>[1])))
+      await new Promise((bitti) => setTimeout(bitti, 30))
+      return y
+    } },
   // NOTYA-SAYFA-HASTA-01/02: sayfa açılınca asistan odağı — yabancı hasta ve yabancı oturum ikisi de 404 (varlık sızmaz; hiçbir şey yazılmaz)
   { ad: 'POST /api/asistan/oturum-hasta (kendi oturumu + yabancı hasta)', red: 404, okur: true,
     yazdi: (a) => tablo('asistan_sessions').find((x) => x.id === a.asistanOturum)?.active_context?.currentPatientId === a.hasta,
@@ -745,6 +770,10 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       sesLlm: await ice('app/api/asistan/ses-llm/v1/chat/completions/route'),
       sesEkran: await ice('app/api/asistan/ses-ekran/route'),
       oturumHasta: await ice('app/api/asistan/oturum-hasta/route'),
+      fishTur: await ice('app/api/asistan/fish-tur/route'),
+      fishOturum: await ice('app/api/asistan/fish-oturum/route'),
+      sesKullanim: await ice('app/api/asistan/ses-kullanim/route'),
+      fishDinle: await ice('app/api/asistan/fish-dinle/route'),
       sesJetonuImzala: (await import('../asistan/sesJetonu')).sesJetonuImzala,
       portal: await ice('app/api/portal/hasta/[token]/route'),
       portalMesajlar: await ice('app/api/portal/hasta/[token]/mesajlar/route'),
