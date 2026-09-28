@@ -484,6 +484,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
         .notya-bitki { opacity: 0.28; }
+        .notya-bitki-asagi { top: 36rem !important; }
         .notya-kompakt { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
         .notya-alt-yuzer { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -537,7 +538,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         <img
           src="/doktor-chrome/plant.jpg"
           alt=""
-          className="notya-bitki"
+          className={pathname === '/dashboard/doktor' ? 'notya-bitki notya-bitki-asagi' : 'notya-bitki'}
           style={S({
             position: 'absolute', right: '-2%', top: 0, bottom: 0, width: 'min(50vw, 700px)',
             objectFit: 'cover', objectPosition: '58% 12%',
