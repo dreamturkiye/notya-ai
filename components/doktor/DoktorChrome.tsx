@@ -497,7 +497,17 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
         .notya-bitki { opacity: 0.28; }
-        .notya-bitki-asagi { top: 32rem !important; width: min(64vw, 880px) !important; }
+        .notya-bitki-asagi {
+          top: 18rem !important;
+          right: -22% !important;
+          bottom: auto !important;
+          width: min(88vw, 460px) !important;
+          height: 62vh !important;
+          object-position: 70% 32% !important;
+          opacity: 0.3;
+          -webkit-mask-image: linear-gradient(105deg, transparent 0%, #000 58%) !important;
+          mask-image: linear-gradient(105deg, transparent 0%, #000 58%) !important;
+        }
         .notya-kompakt { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
         .notya-alt-yuzer { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
