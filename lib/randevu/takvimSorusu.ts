@@ -15,6 +15,9 @@
 import { kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { bugunTRT, gunKaydirTRT } from '@/core/eylemler/types'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
+
+export { sesGurultusuMu }
 
 export type TakvimSorusu = {
   tarih: string
@@ -52,16 +55,6 @@ export function takvimSorusuCoz(mesaj: string | null | undefined): TakvimSorusu 
   const sm = ham.match(SAAT)
   const saat = sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null
   return { tarih, saat }
-}
-
-/** Fish / ElevenLabs VAD often transcribes a pause as "..." — that is not a doctor turn. */
-export function sesGurultusuMu(mesaj: string | null | undefined): boolean {
-  const ham = String(mesaj || '').trim()
-  if (!ham) return true
-  const harf = ham.replace(/[\s.·…,;:!?…\-–—'"“”‘’()[\]]+/g, '')
-  if (!harf) return true
-  const n = trAramaNormalize(harf)
-  return /^(e+|ee+|eee+|hmm+|ii+|iii+|sey|ha+|ah+|ok)$/.test(n)
 }
 
 /** "Emin misin / bir daha bak" after a calendar answer — re-read, do not send to the model. */
