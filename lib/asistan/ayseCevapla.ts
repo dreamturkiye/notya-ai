@@ -66,7 +66,7 @@ import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
 import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
-import { takvimSorusuCoz } from "@/lib/randevu/takvimSorusu"
+import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from "@/lib/randevu/takvimSorusu"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni } from "@/lib/randevu/gunlukOzet"
 
 export type Kanal = "yazi" | "ses"
@@ -242,7 +242,14 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
 
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
-  const takvim = kayitNiyetiMi(String(message || "")) ? null : takvimSorusuCoz(message)
+  const sonTakvimAsistan = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
+  const takvim = kayitNiyetiMi(String(message || ""))
+    ? null
+    : (takvimSorusuCoz(message) || takvimTakipCoz(message, sonTakvimAsistan?.content))
+  if (!takvim && sesGurultusuMu(message)) {
+    // ASR pause ("...") after a true calendar line must not reach the model — it recants.
+    return sade("", "", baglam.patientName ? String(baglam.patientName) : null)
+  }
   if (takvim) {
     try {
       const satirlar = await doktorunGununuOku(supabase, doktorId, takvim.tarih)
@@ -494,6 +501,10 @@ ${ilacBaglamMetni(drugs[0])}`
   const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: odakDosyaMetni || dosyaEk, kanitYolu: kanitYoluAktif } : null)
   if (odak.ihlal.length) console.warn("[asistan/chat] hasta odak kilidi", { ihlal: odak.ihlal, ad: odakAd })
   aiData.speech = odak.metin
+  if (takvimRecantMi(aiData.speech)) {
+    const sonTakvim = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
+    if (sonTakvim) aiData.speech = String(sonTakvim.content)
+  }
 
   // Ses: modelin cevabı söylendi (ya da akış yoksa şimdi kurulur); aşağıdaki ekler (yönlendirme, kart okuması) sona eklenir.
   const sozler: string[] = []

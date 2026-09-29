@@ -26,7 +26,7 @@ import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
 import { netSosyalMi } from '@/lib/ai/modeller'
-import { takvimSorusuMu } from '@/lib/randevu/takvimSorusu'
+import { takvimSorusuMu, sesGurultusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -167,6 +167,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           bitis = 'tool_calls'
         } else if (mesaj && kendiSelamiMi(mesaj)) {
           // Açılış cümlesi mikrofon veya ElevenLabs tarafından doktora ait sanıldı. Cevap yok.
+        } else if (mesaj && sesGurultusuMu(mesaj)) {
+          // Fish/EL pause transcript ("...") — not a doctor turn. A model reply recants the last fact.
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
           // okundu (ya da söylenecek bir şey kalmadı)
         } else if (mesaj) {
@@ -174,7 +176,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           const supabase = getSupabase()
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
-          const karar = takvimSorusuMu(mesaj) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
+          const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
           if (karar) {
             cevapYaz(karar.soz)
             await sesDevamAl(supabase, jeton.d, jeton.o).catch(() => null) // yeni gerçek tur: önceki turun kalanı düşer
@@ -196,7 +198,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             })
             const sonrasi = sonucSozu.then(async (sonuc) => {
               if (!sonuc.ok) { cevapYaz(sonuc.soz); return }
-              if (!cevapSoylendi) cevapYaz(sonuc.cevap.konusma || 'Ekranınıza yazdım Hocam.')
+              if (!cevapSoylendi) {
+                if (sonuc.cevap.konusma) cevapYaz(sonuc.cevap.konusma)
+                else if (!sesGurultusuMu(mesaj)) cevapYaz('Ekranınıza yazdım Hocam.')
+              }
               if (sonuc.cevap.kartlar.length) await eskiSesTaslaklariniCek(supabase, jeton.d, sonuc.cevap.oncekiBekleyen || [], sonuc.cevap.kartlar, sonuc.cevap.kartHastaId ?? null)
             }).catch((e) => { console.error('[ses-llm/arka]', e instanceof Error ? e.name : 'hata') })
             const bekci = new Promise<'bekci'>((r) => setTimeout(() => r('bekci'), SES_BEKCI_MS))

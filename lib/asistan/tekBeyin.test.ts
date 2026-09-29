@@ -395,6 +395,22 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const e = await sesEkrani(b)
     assert.match(e.turlar.at(-1)?.metin || '', /randevu/)
     assert.match(e.turlar.at(-1)?.soru || '', /Bugün randevu/)
+
+    const gurultu = await ses({ sahne: b, mesaj: '...' })
+    assert.equal(gurultu.status, 200)
+    assert.equal(modelIstekleri.length, once, '"..." model turu değildir')
+    assert.equal(gurultu.metin.trim(), '', 'ASR duraklaması sessizdir')
+    assert.doesNotMatch(gurultu.metin, /Haklısınız|doğrulamadan|Ana Sayfa/)
+    const emin = await ses({ sahne: b, mesaj: 'Emin misin?' })
+    assert.equal(emin.status, 200)
+    assert.equal(modelIstekleri.length, once, 'emin misin takvimi yeniden okur')
+    assert.match(emin.metin, /randevu/i)
+    assert.doesNotMatch(emin.metin, /Yabancı Hasta/)
+
+    yanit = { metin: JSON.stringify({ speech: 'Haklısınız Hocam; az önce randevu olmadığını ve tarihi kesinmiş gibi söyledim. Bunu doğrulamadan belirtmemeliydim. Randevu durumunu Ana Sayfa’daki bugünkü randevular bölümünden kontrol edelim.' }) }
+    const recant = await yazi(b, 'Peki başka ne var?', b.oturum)
+    assert.doesNotMatch(recant.speech, /Ana Sayfa|doğrulamadan|Haklısınız/)
+    assert.match(recant.speech, /takviminde.{0,20}randevu/)
   })
   it('model cevabı: yazı ve ses aynı ekranı verir; ses önce bekletme sözü, sonra model yazdıkça aynı içerik', async () => {
     const ekranMetni = 'Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi.\n\n- Öneri 1\n- Öneri 2\n\nAnnesine 0532 700 11 22 numarasından ulaşabilirsiniz.'

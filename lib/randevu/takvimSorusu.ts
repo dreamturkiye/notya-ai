@@ -6,6 +6,11 @@
  * Custom LLM ("Bağlantı kurulamadı"). Voice never spoke the day list because
  * tek-beyin has no randevu_takvim client tool — the question went through ayseCevapla
  * like a chart query. Detect here; answer from randevular (doktor_id) without the LLM.
+ *
+ * Live (Kaan, 2026-09-29, 10:09): after a true "takvimde randevu yok", Fish/EL sent "..."
+ * twice. The model treated the ellipsis as a challenge and recanted ("doğrulamadan
+ * belirtmemeliydim", send the doctor to Ana Sayfa). ASR noise is not a question;
+ * "emin misin" re-reads the same lookup.
  */
 import { kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { bugunTRT, gunKaydirTRT } from '@/core/eylemler/types'
@@ -47,4 +52,42 @@ export function takvimSorusuCoz(mesaj: string | null | undefined): TakvimSorusu 
   const sm = ham.match(SAAT)
   const saat = sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null
   return { tarih, saat }
+}
+
+/** Fish / ElevenLabs VAD often transcribes a pause as "..." — that is not a doctor turn. */
+export function sesGurultusuMu(mesaj: string | null | undefined): boolean {
+  const ham = String(mesaj || '').trim()
+  if (!ham) return true
+  const harf = ham.replace(/[\s.·…,;:!?…\-–—'"“”‘’()[\]]+/g, '')
+  if (!harf) return true
+  const n = trAramaNormalize(harf)
+  return /^(e+|ee+|eee+|hmm+|ii+|iii+|sey|ha+|ah+|ok)$/.test(n)
+}
+
+/** "Emin misin / bir daha bak" after a calendar answer — re-read, do not send to the model. */
+export function takvimTakibiMi(mesaj: string | null | undefined): boolean {
+  const n = ` ${trAramaNormalize(String(mesaj || '')).replace(/[?!.,;:]+/g, ' ').replace(/\s+/g, ' ').trim()} `
+  if (n.trim().length < 3) return false
+  return /\b(emin misin|emin misiniz|dogru mu|gercekten|bir daha bak|tekrar (soyle|oku|bak)|yok mu|hic mi yok|kesin mi|yanlis mi|dogrula)\b/.test(n)
+}
+
+export function sonTakvimCevabiMi(metin: string | null | undefined): boolean {
+  return /takvim(?:inizde|inde)\s+.{0,20}randevu/i.test(String(metin || ''))
+}
+
+/** Model recanting a system calendar fact (live: "doğrulamadan belirtmemeliydim" + Ana Sayfa). */
+export function takvimRecantMi(metin: string | null | undefined): boolean {
+  const n = trAramaNormalize(String(metin || ''))
+  return /(dogrulamadan|kesinmis gibi|bilgiye guvenmeyin|kesin soyleyemem|randevu listesi gorunmedi|takvimini dogrulama|ana sayfa.{0,60}randevu|randevu.{0,60}ana sayfa|bu konusmada randevu)/.test(n)
+}
+
+/** If the last assistant line was a calendar lookup, this turn re-reads today. */
+export function takvimTakipCoz(
+  mesaj: string | null | undefined,
+  sonAsistan: string | null | undefined,
+): TakvimSorusu | null {
+  if (!sonTakvimCevabiMi(sonAsistan)) return null
+  if (sesGurultusuMu(mesaj)) return null
+  if (!takvimTakibiMi(mesaj)) return null
+  return { tarih: bugunTRT(), saat: null }
 }
