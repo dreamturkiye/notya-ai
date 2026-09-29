@@ -197,7 +197,7 @@ describe('kimlik cevabı — değer ekrana, model bağlamına asla', () => {
     assert.ok(!gecmis.includes(ANNE) && !gecmis.includes(BABA), 'saklanan geçmiş (sonraki turda modele gider) değer taşımamalı')
     assert.equal(oturum.active_context.currentPatientId, s.hasta)
 
-    const t = await coz(R.chat.POST(iste('/api/asistan/chat', s.doktor.token, { message: 'Bu bilgilere ulaşamıyorum, annenin ve babanın telefonu da var mı', asistanSessionId: oturum.id })))
+    const t = await coz(R.chat.POST(iste('/api/asistan/chat', s.doktor.token, { message: 'Umutcan Türkoğlu için bu bilgilere ulaşamıyorum, annenin ve babanın telefonu da var mı', asistanSessionId: oturum.id })))
     assert.equal(t.status, 200, t.metin)
     assert.match(t.json.data.speech, new RegExp(ANNE))
     assert.match(t.json.data.speech, new RegExp(BABA))

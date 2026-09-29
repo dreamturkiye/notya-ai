@@ -1,11 +1,10 @@
 /**
- * NOTYA-AKTIF-HASTA-01 (Kaan / Dr. Gökhan, 2026-09-25): with a patient open, a question that does not name
- * another patient is about THAT patient — "En son ne zaman geldi?", "Tansiyon takibini nasıl planlarsın?" —
- * not an all-patients search ("0 hasta, Filtre: …"). Only explicit many-patient questions stay a search,
- * and a name that matches several patients still asks which one.
+ * NOTYA-SES-DOSYA-ISTE-01 (Kaan, 2026-09-29): a patient's chart is opened only when THIS
+ * message uniquely names them. Page focus / previous-turn "aktif hasta" never preloads a
+ * dossier — that cache made every voice turn wait on the chart and then speak late.
+ * "Kaan Arioglu kaç yaşında?" → resolve Kaan → read age. "Nasılsınız?" → no file.
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
-import { takvimSorusuMu } from '@/lib/randevu/takvimSorusu'
 
 const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
 
@@ -13,17 +12,12 @@ export function kohortSorusuMu(mesaj: string): boolean {
   return KOHORT.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')
 }
 
-export function aktifHastaKullanilsinMi(g: {
+/** Always false: focus is not a chart. Kept so callers do not fork a second rule. */
+export function aktifHastaKullanilsinMi(_g: {
   aktifHastaVar: boolean
   cozumTur: 'tek' | 'coklu' | 'yok'
-  /** true when the search result is an all-patients filter search (has a count sentence) */
   aramaSonucu: boolean
   mesaj: string
 }): boolean {
-  if (!g.aktifHastaVar) return false
-  // A patient found BY NAME wins; a single hit of an all-patients search (has a count sentence) does not.
-  if (g.cozumTur === 'tek' && !g.aramaSonucu) return false
-  if (g.cozumTur === 'coklu' && !g.aramaSonucu) return false
-  if (takvimSorusuMu(g.mesaj)) return false
-  return !kohortSorusuMu(g.mesaj)
+  return false
 }

@@ -7,7 +7,9 @@
  *   - /api/asistan/chat bu fonksiyonun ince sarmalayıcısıdır (kanal: 'yazi');
  *   - ElevenLabs Custom LLM ucu /api/asistan/ses-llm aynı fonksiyonu çağırır (kanal: 'ses'); ElevenLabs yalnız
  *     dinler, sıra alır ve konuşur.
- * Aynı oturum (asistan_sessions) iki kanalın hafızasıdır: sesle başlayıp yazıyla süren TEK konuşma, TEK aktif hasta.
+ * Aynı oturum (asistan_sessions) iki kanalın hafızasıdır: sesle başlayıp yazıyla süren TEK konuşma.
+ * NOTYA-SES-DOSYA-ISTE-01: chart yalnız bu mesajda adı geçen hasta için açılır; sayfa odağı / önceki tur
+ * dosya düşürmez — 30 branş ve Klinik aynı omurgayı kullanır.
  *
  * Çıktı iki biçimdir: `ekran` (biçimli tam cevap) ve `konusma` (aynı içerik, doğal Türkçe cümlelerle — yazılı kadar
  * ayrıntılı; yalnız kimlik / iletişim değerleri ve tablolar ekranda kalır — lib/asistan/konusma.ts). Aynı soru iki
@@ -57,7 +59,6 @@ import { bugunTRT, type HastaOzeti } from "@/core/eylemler/types"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, okumaIstegiMi, SesAkisi, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
-import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
@@ -286,10 +287,8 @@ ${ilacBaglamMetni(drugs[0])}`
     }
   }
 
-  // NOTYA-KONSULT-02: "klinik meslektaş" tek asistanda — doktor sohbette bir hastadan
-  // bahsettiğinde (adıyla ya da "son hastam" diyerek) hastanın TAM dosyası bağlama eklenir;
-  // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
-  // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
+  // NOTYA-KONSULT-02: doktor sohbette bir hastayı ADIYLA sorduğunda o hastanın dosyası bu tura eklenir.
+  // NOTYA-SES-DOSYA-ISTE-01: sayfa odağı / önceki tur "aktif hasta" dosya açmaz — istenmeden chart yok.
   let dosyaEk = ""
   let dosyaGovde = ""
   let dosyaTur = ""
@@ -311,7 +310,7 @@ ${ilacBaglamMetni(drugs[0])}`
   let kimlikCevabi: KimlikCevabi | null = null
   if (!kayitNiyetiMi(String(message || ""))) {
     try {
-      kimlikCevabi = await kimlikSorusunuCevapla(supabase, doktorId, String(message || ""), contextPatientId ? String(contextPatientId) : null)
+      kimlikCevabi = await kimlikSorusunuCevapla(supabase, doktorId, String(message || ""), null)
     } catch (e) { console.error("[asistan/chat] kimlik cevabı", e instanceof Error ? e.message : String(e)) }
   }
   if (kimlikCevabi) {
@@ -335,55 +334,31 @@ ${ilacBaglamMetni(drugs[0])}`
   }
 
   try {
-    // NOTYA-TEK-BEYIN (hız): takip sorusunda aktif hastanın dosyası, mesajdaki hasta çözülürken paralel derlenir;
-    // mesaj başka bir hastayı adlandırırsa bu derleme kullanılmaz (doktora kapsanmış bir okuma — sızıntı değil).
-    const aktifOnceden = contextPatientId ? String(contextPatientId) : null
-    const aktifPaketSozu = aktifOnceden ? dosyaPaketOnbellekli(supabase, doktorId, aktifOnceden).catch(() => null) : null
+    // Named patient only. Prefetching the focused chart was the pause before first speech.
     cozum = await hastaninSozunuCoz(supabase, doktorId, message)
-    // NOTYA-AKTIF-HASTA-01: with a patient open, an unnamed question is about that patient, not a search.
-    const aktifeDon = aktifHastaKullanilsinMi({
-      aktifHastaVar: Boolean(aktifOnceden),
-      cozumTur: cozum.tur,
-      aramaSonucu: Boolean((cozum as { sayiMetin?: string }).sayiMetin),
-      mesaj: String(message || ''),
-    })
-    const konus = aktifeDon ? null : cozumKonus(cozum)
+    const konus = cozumKonus(cozum)
     if (konus) {
       aramaCevabi = konus
-    } else {
-      const aktifId = cozum.tur === "tek" ? cozum.patientId : aktifOnceden
-      if (aktifId) {
-        // NOTYA-AYSE-STANDART-01: açık hasta + 10 kanonik dosya sorusundan biri → olay dizini (planlandı ≠ uygulandı)
-        // dosya paketiyle birlikte, paralel derlenir. Olay okumaları da doktora kapsanır (dosyaOlaylari).
+    } else if (cozum.tur === "tek") {
         const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
-        const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, aktifId)
+        const paket = await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
         const sorgu = paket && soruTuru && paket.sorguHasta
           ? { olaylar: paket.olaylar as DosyaOlayi[], hasta: paket.sorguHasta as DosyaHastasi }
           : null
         kanitYoluAktif = Boolean(soruTuru && sorgu)
         if (paket) {
           dosyaOnbellekten = Boolean(paket.onbellekten)
-          if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
-          const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
+          cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
+          const aktifAd = cozum.ad
           odakHastaAdi = aktifAd
           odakDosyaMetni = paket.metin || ""
-          // NOTYA-HASTA-ODAK-01 (Dr. Gökhan canlı vaka, 2026-09-26): "Dosyada aşı: kayıtlı aşı yok" doğruydu ama
-          // BAŞKA hastanın dosyasıydı ve cümlede ad yoktu — doktor konuştuğu hasta sanıp "aşı yok deyip aşıları
-          // gösterdi" dedi. Kesin dosya cevabı her zaman hastanın adıyla başlar; yanlış hasta anında görülür.
-          // NOTYA-AYSE-STANDART-01: dosya sorusu (özet, aşı tam mı, ilaçlar, açık işler…) HIZLI KART'la cevaplanmaz —
-          // kart tek bilgilik sorular içindir (kan grubu, alerji, son vizit tarihi, telefon / kimlik).
           const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart as HastaDosyaKart)
           kesinDosyaCevap = kesinHam ? adliDosyaCevabi(aktifAd, kesinHam) : null
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
           dosyaGuvenlikMetni = String(paket.metin || "")
-          // NOTYA-SES-BAGLAM-KUCULT-01: ses gerçek zamanlı — her turda tam dosya değil, güvenlik-tam kısa özet
-          // (lib/doktor/hastaDosyaKisa.ts). İlk-10 sorusunda kanıt bloğu aşağıda aynen eklenir; özette olmayan bir
-          // kaydı soran tur (eski vizit, tarih, görüntüleme…) tam dosyayla gider. Yazı: değişmedi. G3 taraması,
-          // doz kilidi ve odak kilidi hâlâ tam dosyayı okur (dosyaGuvenlikMetni, odakDosyaMetni).
           const sesOzeti = ses && (Boolean(soruTuru) || !sesTamDosyaGerekirMi(String(message || "")))
-          // Gövde turdan tura aynı bayt olmalı (soru, kesin cümle, kanıt burada yok).
           dosyaGovde = sesOzeti
             ? `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${hastaOzetiKisa(paket)}\n=== DOSYA SONU ===\n${sesOzetKurali(aktifAd)}`
             : `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Bu bloktan sonra KESİN DOSYA CEVABI varsa o cümleyi AYNEN söyle. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
@@ -393,7 +368,6 @@ ${ilacBaglamMetni(drugs[0])}`
           }
           dosyaEk = dosyaGovde + dosyaTur
         }
-      }
     }
   } catch { /* dosya bağlamı kritik değil — normal akış sürer */ }
 
@@ -409,7 +383,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-EYLEM: hasta kimliği SUNUCUDA çözülür. Bu yüzeyde hasta serbest metinden bulunur
   // (hastaninSozunuCoz) — çözülen hasta belirsizse (cozum.tur === 'coklu') aktifEylemHastasi null
   // kalır, araç sunulmaz ve Ayşe hangi hastayı kastettiğini sorar (docs §2: "ambiguous → ask, no card").
-  const eylemHastaId = cozulenHasta?.id || (contextPatientId ? String(contextPatientId) : null)
+  const eylemHastaId = cozulenHasta?.id || null
   const [kota, hafizaHam, gunHam, currentPatient, eylemHastasi] = await Promise.all([
     // NOTYA-KOTA-01: yazılı sohbet günlük kotaya tabi (dosya gerçeği LLM'e gitmez — kota harcanmaz)
     aiKotaKullan(supabase, doktorId, 'sohbet'),
@@ -424,8 +398,8 @@ ${ilacBaglamMetni(drugs[0])}`
       : Promise.resolve(""),
     // Load current patient if any
     // HASTA-IZOLASYON-01: patientId comes from the request body — only this doctor's patient enters the prompt.
-    contextPatientId
-      ? supabase.from("patients").select("*").eq("id", contextPatientId).eq("doctor_id", doktorId).maybeSingle().then((r) => r.data)
+    cozulenHasta
+      ? supabase.from("patients").select("*").eq("id", cozulenHasta.id).eq("doctor_id", doktorId).maybeSingle().then((r) => r.data)
       : Promise.resolve(null),
     eylemKapali() ? Promise.resolve(null) : hastaOzetiGetir(supabase, doktorId, eylemHastaId),
   ])

@@ -319,6 +319,9 @@ async function dosyaIleDaralt(
   if (tekHastaSorusuMu(ad.tur, mesaj)) return ad
   if (ad.tur === 'coklu' && !klinik) return ad
   if (ad.tur === 'yok' && !klinik) return ad
+  // NOTYA-SES-DOSYA-ISTE-01: no name in this message → never bind a chart (and never scan every
+  // dossier for a symptom). Practice-wide counts/lists still run.
+  if (ad.tur === 'yok' && !kohortSorusuMu(mesaj) && !listeSorgusuMu(mesaj)) return ad
 
   const { adaylar: ara, istatistik } = await klinikAramaYurut(supabase, doctorId, mesaj)
   // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
@@ -346,6 +349,7 @@ async function dosyaIleDaralt(
   }
 
   if (ara.length === 1 && !liste) {
+    if (ad.tur !== 'tek') return { tur: 'yok', sayiMetin: istatistik.cumle }
     return { tur: 'tek', patientId: ara[0].id, ad: ara[0].ad, sayiMetin: istatistik.cumle }
   }
   return {

@@ -7,7 +7,7 @@
  *
  *   1. soruyu tanır (kimlikSorusu — anne adı, baba adı, veli / yasal temsilci, telefon, e-posta, adres, doğum yeri
  *      ve tarihi),
- *   2. hastayı YALNIZ bu doktorun hastaları içinden adıyla ya da aktif hastadan çözer,
+ *   2. hastayı YALNIZ bu doktorun hastaları içinden bu mesajdaki adla çözer (odaklı chart yok),
  *   3. değeri şifre çözülmüş hasta kaydından, en son Hasta Bilgi Formu'ndan ve (anne / baba adı, doğum yeri için)
  *      belge özetlerinden okur (dosyaAlanTara.kimlikAlanlariniTara),
  *   4. iki metin döndürür: `ekran` (değerlerle — yalnız doktorun ekranına) ve `model` (değersiz — sesli ajana,
@@ -288,9 +288,9 @@ export function kimlikCevabiMetni(alanlar: KimlikAlani[], k: KimlikKaydi, nowMs 
 }
 
 /**
- * Tam akış: hastayı çöz (mesajdaki ad → yoksa aktif hasta), kaydı oku, iki metni kur. Kimlik sorusu değilse null.
- * `aktifPatientId` yalnız sohbet oturumunun ZATEN sahipliği doğrulanmış aktif hastasıdır; yine de kayıt
- * doctor_id ile okunur (kimlikKaydiOku), yabancı kimlik null döner.
+ * Tam akış: hastayı bu mesajdaki adla çöz, kaydı oku, iki metni kur. Kimlik sorusu değilse null.
+ * `aktifPatientId` yalnız aynı turun ekran yeniden kurulumunda (ses-ekran) o turda çözülmüş hastadır;
+ * sohbet odağı chart açmaz. Kayıt yine doctor_id ile okunur.
  */
 export async function kimlikSorusunuCevapla(
   supabase: SupabaseClient,

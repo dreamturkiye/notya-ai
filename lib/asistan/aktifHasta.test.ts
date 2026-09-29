@@ -5,11 +5,12 @@ import { aktifHastaKullanilsinMi, kohortSorusuMu } from './aktifHasta'
 const aktif = (mesaj: string, cozumTur: 'tek' | 'coklu' | 'yok' = 'yok', aramaSonucu = true, aktifHastaVar = true) =>
   aktifHastaKullanilsinMi({ aktifHastaVar, cozumTur, aramaSonucu, mesaj })
 
-test('açık hasta varken adsız soru o hastaya gider (Dr. Gökhan)', () => {
-  assert.equal(aktif('En son ne zaman geldi?'), true)
-  assert.equal(aktif('Tansiyon takibini nasıl planlarsın?'), true)
-  assert.equal(aktif('Son muayenede ateşi kaçtı?', 'coklu', true), true)
-  assert.equal(aktif('Kaç kez geldi?'), true)
+test('odaklı hasta varken adsız soru dosya açmaz (NOTYA-SES-DOSYA-ISTE-01)', () => {
+  assert.equal(aktif('En son ne zaman geldi?'), false)
+  assert.equal(aktif('Tansiyon takibini nasıl planlarsın?'), false)
+  assert.equal(aktif('Son muayenede ateşi kaçtı?', 'coklu', true), false)
+  assert.equal(aktif('Kaç kez geldi?'), false)
+  assert.equal(aktif('Kaan Arioglu kaç yaşında?', 'tek', false), false)
 })
 
 test('takvim / bugün randevu açık hastanın dosyasına gitmez', () => {
@@ -31,7 +32,7 @@ test('açık hasta yoksa, ad eşleştiyse ya da ad birden çok hastaya uyuyorsa 
   assert.equal(aktif('Ayşe ne zaman geldi?', 'coklu', false), false)
 })
 
-test('NOTYA-SES-DOLGU-01: açık hasta varken tek arama sonucu adla bulunmuş hastanın yerine geçmez', () => {
-  assert.equal(aktif('Ayşe, en son ne zaman geldi', 'tek', true), true)
+test('odak hiçbir mesajda dosyayı bağlama düşmez', () => {
+  assert.equal(aktif('Ayşe, en son ne zaman geldi', 'tek', true), false)
   assert.equal(aktif('Umutcan kaç yaşında', 'tek', false), false)
 })

@@ -424,12 +424,14 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     // NOTYA-SES-BAGLAM-KUCULT-01 sesli tur tam dosya yerine kısa, güvenlik-tam özeti taşır.
     const [ty, sy] = [JSON.parse(yaziIstegi), JSON.parse(modelIstekleri.at(-1)!.govde)]
     delete sy.stream
-    const dosyaBlogu = /=== AKTİF HASTA DOSYASI: [^\n]+ ===\n[\s\S]*?\n=== DOSYA SONU ===\n\[KURALLAR:[\s\S]*?doktorundur\.\]/
+    const dosyaBlogu = /=== AKTİF HASTA DOSYASI:[\s\S]*?doktorundur\.\]/
+    const hastaSatiri = /=== AKTİF HASTA ===\n[\s\S]*?(?=\n=== |\n\n|$)/
     const sistemMetni = (r: { system: { text: string }[] }, h: string, d: string) => r.system.map((x) => x.text).join('\n').replace(new RegExp(h, 'g'), 'H').replace(new RegExp(d, 'g'), 'D')
     const [sesSistem, yaziSistem] = [sistemMetni(sy, b.hasta, b.doktor.id), sistemMetni(ty, a.hasta, a.doktor.id)]
     assert.match(sesSistem, /SESLİ GÖRÜŞME DOSYA ÖZETİ/)
     assert.match(yaziSistem, /## VİZİT GEÇMİŞİ/)
-    assert.equal(sesSistem.replace(dosyaBlogu, '<DOSYA>'), yaziSistem.replace(dosyaBlogu, '<DOSYA>'))
+    const strip = (s: string) => s.replace(dosyaBlogu, '<DOSYA>').replace(hastaSatiri, '<HASTA>')
+    assert.equal(strip(sesSistem), strip(yaziSistem))
     assert.deepEqual(sy.tools, ty.tools)
     assert.deepEqual(sy.messages, ty.messages)
   })
@@ -462,7 +464,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(e.aktifHasta, 'Umutcan Türkoğlu')
   })
 
-  it('TEK konuşma, TEK aktif hasta: sesle açılan hasta yazılı takip sorusunda aktif; yazılı tur sesin geçmişini görür', async () => {
+  it('TEK konuşma: sesle adlı soru yazılı geçmişte durur; adsız takip dosya açmaz', async () => {
     const s = sahne()
     yanit = { metin: JSON.stringify({ speech: 'Hocam, son vizitte öksürük vardı.' }) }
     await ses({ sahne: s, mesaj: 'Umutcan Türkoğlu’nun son muayenesinde ne vardı' })
@@ -472,7 +474,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const t = await yazi(s, 'Peki öksürüğü için ne önerirsin?', s.oturum)
     assert.equal(t.asistanSessionId, s.oturum)
     const son = JSON.parse(modelIstekleri.at(-1)!.govde)
-    assert.ok(JSON.stringify(son.system).includes(s.hasta), 'aktif hasta yazılı turda da bağlamda')
+    assert.ok(!JSON.stringify(son.system).includes('=== AKTİF HASTA DOSYASI:'), 'adsız takip dosya açmaz')
     assert.ok(JSON.stringify(son.messages).includes('Umutcan Türkoğlu’nun son muayenesinde ne vardı'), 'sesli tur yazılı geçmişte')
     const mesajlar = db.tablo('asistan_sessions').find((o) => o.id === s.oturum)!.messages
     assert.equal(mesajlar.length, 4)
@@ -572,11 +574,10 @@ describe('NOTYA-SES-OKU-01: "bana anlat" ekrandaki cevabı sınırsız okur, mod
 })
 
 /**
- * NOTYA-SAYFA-HASTA-01 (Dr. Gökhan canlı vaka, 2026-09-26): oturum Ayşe Yeşil'le başladı, doktor Umutcan Türkoğlu'nun
- * Büyüme sayfasına geçti; panel hâlâ "aktif hasta: Ayşe Yeşil" dedi ve Ayşe büyüme sorularını yanlış çocuğun
- * dosyasından cevapladı. Kural (Kaan): sayfayı açmak hastayı adıyla söylemekle eş değer; en son açık sinyal kazanır.
+ * NOTYA-SAYFA-HASTA-01: panel, açık sayfanın hastasını izler. NOTYA-SES-DOSYA-ISTE-01: sayfa odağı chart açmaz;
+ * adsız soru kilosunu söylemez; adlı soru o hastanın dosyasındandır.
  */
-describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını takip eder', () => {
+describe('NOTYA-SAYFA-HASTA-01: panel sayfayı izler; dosya yalnız adla açılır', () => {
   const odakIste = (token: string | null, govde: unknown) => R.oturumHasta.POST(new NextRequestSinifi('http://localhost/api/asistan/oturum-hasta', {
     method: 'POST', headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), 'content-type': 'application/json' }, body: JSON.stringify(govde),
   } as ConstructorParameters<typeof NextRequestSinifi>[1])) as Promise<Response>
@@ -620,24 +621,22 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
     assert.equal((await odakIste(s.doktor.token, { asistanSessionId: s.oturum })).status, 400)
   })
 
-  it('sayfa geçişinden sonra adsız "kaç kilo" yeni hastanın dosyasından cevaplanır — yazı ve ses; model çağrılmaz', async () => {
+  it('adsız "kaç kilo" sayfa odağından dosya açmaz; adlı soru o hastanın kilosunu verir', async () => {
     const s = ikiHasta()
+    yanit = { metin: JSON.stringify({ speech: 'Hangi hastanın kilosunu soruyorsunuz Hocam?' }) }
     const once = await yazi(s, 'Kaç kilo?', s.oturum)
-    assert.match(once.speech, /^Ayşe Yeşil — /)
-    assert.ok(once.speech.includes('18.4') || once.speech.includes('18,4'), once.speech)
+    assert.ok(!once.speech.includes('18.4') && !once.speech.includes('18,4'), once.speech)
+    assert.ok(!/^Ayşe Yeşil — /.test(once.speech), once.speech)
 
     assert.equal((await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })).status, 200)
-    const t = await yazi(s, 'Kaç kilo?', s.oturum)
+    const t = await yazi(s, 'Umutcan Türkoğlu kaç kilo?', s.oturum)
     assert.match(t.speech, /^Umutcan Türkoğlu — /, t.speech)
     assert.ok(t.speech.includes('21.7') || t.speech.includes('21,7'), t.speech)
-    assert.ok(!t.speech.includes('18.4') && !t.speech.includes('18,4'), 'eski hastanın ölçümü gelmez')
+    assert.ok(!t.speech.includes('18.4') && !t.speech.includes('18,4'), 'başka hastanın ölçümü gelmez')
 
-    const v = await ses({ sahne: s, mesaj: 'Peki kaç kilo?' })
+    const v = await ses({ sahne: s, mesaj: 'Umutcan Türkoğlu kaç kilo?' })
     assert.equal(v.status, 200)
     assert.ok(v.metin.startsWith('Umutcan Türkoğlu'), v.metin)
-    assert.equal(modelIstekleri.length, 0, 'kesin dosya cevabı modelsiz')
-    // Adsız takip odakta kalır (NOTYA-HASTA-ODAK-01) — sayfa sinyali tek seferliktir, her mesajda yeniden gelmez.
-    assert.equal(oturumu(s.oturum).active_context.currentPatientId, s.hasta)
   })
 
   it('Q3 büyüme: sayfa geçişinden sonra kanıt bloğu yeni çocuğun ölçüm serisini Neyzi ile taşır, eskisini taşımaz', async () => {
@@ -646,7 +645,7 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: s.hasta, tur: 'kilo', deger: 19.9, birim: 'kg', alindi: '2026-03-22T09:00:00Z', onaylandi: true })
     await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })
     yanit = { metin: JSON.stringify({ speech: 'Umutcan Türkoğlu — büyüme değerlendirmesi.' }) }
-    await yazi(s, 'Büyümesi nasıl, persentili ne?', s.oturum)
+    await yazi(s, 'Umutcan Türkoğlu büyümesi nasıl, persentili ne?', s.oturum)
     assert.equal(modelIstekleri.length, 1)
     const sistem = JSON.stringify(JSON.parse(modelIstekleri[0].govde).system)
     assert.ok(sistem.includes('AKTİF HASTA DOSYASI: Umutcan Türkoğlu'), 'dosya bloğu yeni hastanın')
@@ -719,25 +718,39 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     return { ...p, olaylar: q.olaylar }
   }
 
-  it("kanal:'ses' + sıradan soru → yalnız kısa özet (tam dosya, kanıt yok)", async () => {
+  it("kanal:'ses' + selam / adsız soru → dosya yok (sayfa odağı dosya açmaz)", async () => {
     const s = gercekci()
-    for (const mesaj of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?']) {
+    yanit = { metin: JSON.stringify({ speech: 'Hocam, buradayım.' }) }
+    for (const mesaj of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?', 'teşekkürler']) {
       odakla(s)
       assert.equal((await ses({ sahne: s, mesaj })).status, 200)
       const t = sistem()
-      assert.ok(t.includes(`=== AKTİF HASTA DOSYASI: ${F.GERCEKCI_HASTA_ADI} ===`), mesaj)
-      assert.ok(t.includes(D.SES_OZET_BASLIK), `${mesaj}: kısa özet`)
-      assert.ok(!t.includes('## VİZİT GEÇMİŞİ') && !t.includes('[TAM SOAP]') && !t.includes('## AŞILAR') && !t.includes('## BELGELER'), `${mesaj}: tam dosya gövdesi yok`)
-      assert.ok(!t.includes(KANIT), `${mesaj}: kanıt bloğu yok`)
-      assert.ok(t.includes('Tegretol') && t.includes('Penisilin') && t.includes('SpO₂ %91'), `${mesaj}: güvenlik bilgisi özette`)
+      assert.ok(!t.includes('=== AKTİF HASTA DOSYASI:'), mesaj)
+      assert.ok(!t.includes(D.SES_OZET_BASLIK), mesaj)
+      assert.ok(!t.includes('Tegretol') && !t.includes('Penisilin'), `${mesaj}: odaklı chart bağlanmaz`)
     }
   })
 
-  it("kanal:'ses' + İlk-10 sorusu → kısa özet + kanıt bloğu (ikisi de); kanıt yazıdakiyle aynı", async () => {
+  it("kanal:'ses' + adlı klinik soru → yalnız kısa özet (tam dosya, kanıt yok)", async () => {
+    const s = gercekci()
+    odakla(s)
+    const mesaj = `${F.GERCEKCI_HASTA_ADI} için sefuroksim versem olur mu?`
+    yanit = { metin: JSON.stringify({ speech: `${F.GERCEKCI_HASTA_ADI} — sefuroksim değerlendirmesi.` }) }
+    assert.equal((await ses({ sahne: s, mesaj })).status, 200)
+    const t = sistem()
+    assert.ok(t.includes(`=== AKTİF HASTA DOSYASI: ${F.GERCEKCI_HASTA_ADI} ===`), mesaj)
+    assert.ok(t.includes(D.SES_OZET_BASLIK), `${mesaj}: kısa özet`)
+    assert.ok(!t.includes('## VİZİT GEÇMİŞİ') && !t.includes('[TAM SOAP]') && !t.includes('## AŞILAR') && !t.includes('## BELGELER'), `${mesaj}: tam dosya gövdesi yok`)
+    assert.ok(!t.includes(KANIT), `${mesaj}: kanıt bloğu yok`)
+    assert.ok(t.includes('Tegretol') && t.includes('Penisilin') && t.includes('SpO₂ %91'), `${mesaj}: güvenlik bilgisi özette`)
+  })
+
+  it("kanal:'ses' + İlk-10 adlı sorusu → kısa özet + kanıt bloğu (ikisi de); kanıt yazıdakiyle aynı", async () => {
     const s = gercekci()
     odakla(s)
     yanit = { metin: JSON.stringify({ speech: `${F.GERCEKCI_HASTA_ADI} — özet.` }) }
-    await ses({ sahne: s, mesaj: 'Bu hastayı bana kısaca özetler misin?' })
+    const soru = `${F.GERCEKCI_HASTA_ADI} dosyasını bana kısaca özetler misin?`
+    await ses({ sahne: s, mesaj: soru })
     const t = sistem()
     assert.ok(t.includes(D.SES_OZET_BASLIK), 'kısa özet')
     assert.ok(t.includes(KANIT), 'kanıt bloğu')
@@ -745,16 +758,22 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     const kanitSes = t.slice(t.indexOf(KANIT))
 
     odakla(s)
-    await yazi(s, 'Bu hastayı bana kısaca özetler misin?', s.oturum)
+    await yazi(s, soru, s.oturum)
     const y = sistem()
     assert.ok(y.includes('## VİZİT GEÇMİŞİ') && y.includes(KANIT), 'yazı: tam dosya + kanıt')
     assert.equal(kanitSes, y.slice(y.indexOf(KANIT)), 'kanıt bloğu (ve sonrası) iki kanalda bayt bayt aynı')
   })
 
-  it("kanal:'yazi' → soru türünden bağımsız TAM dosya (değişmedi)", async () => {
+  it("kanal:'yazi' + adsız selam → dosya yok; adlı soru → TAM dosya", async () => {
     const s = gercekci()
-    for (const mesaj of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?', 'Geçen sonbaharda kulak için ne yazmıştık?']) {
+    odakla(s)
+    yanit = { metin: JSON.stringify({ speech: 'Hocam, buradayım.' }) }
+    await yazi(s, 'Merhaba Ayşe, nasılsınız?', s.oturum)
+    assert.ok(!sistem().includes('=== AKTİF HASTA DOSYASI:'), 'adsız yazı dosya açmaz')
+
+    for (const mesaj of [`${F.GERCEKCI_HASTA_ADI} için sefuroksim versem olur mu?`, `${F.GERCEKCI_HASTA_ADI} geçen sonbaharda kulak için ne yazmıştık?`]) {
       odakla(s)
+      yanit = { metin: JSON.stringify({ speech: `${F.GERCEKCI_HASTA_ADI} — değerlendirme.` }) }
       await yazi(s, mesaj, s.oturum)
       const t = sistem()
       assert.ok(t.includes('## VİZİT GEÇMİŞİ') && t.includes('[TAM SOAP]') && t.includes('## AŞILAR'), `${mesaj}: tam dosya`)
@@ -766,7 +785,8 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
   it("kanal:'ses' + özette olmayan kaydı soran tur (eski vizit, tarih, görüntüleme) → tam dosya — \"dosyada yok\" denmesin", async () => {
     const s = gercekci()
     odakla(s)
-    await ses({ sahne: s, mesaj: 'Geçen sonbaharda kulak için ne yazmıştık?' })
+    yanit = { metin: JSON.stringify({ speech: `${F.GERCEKCI_HASTA_ADI} — sonbahar viziti.` }) }
+    await ses({ sahne: s, mesaj: `${F.GERCEKCI_HASTA_ADI} geçen sonbaharda kulak için ne yazmıştık?` })
     const t = sistem()
     assert.ok(t.includes('## VİZİT GEÇMİŞİ') && !t.includes(D.SES_OZET_BASLIK))
     for (const m of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?', 'teşekkürler', 'ibuprofen dozu ne olmalı']) assert.equal(S.sesTamDosyaGerekirMi(m), false, m)
