@@ -68,6 +68,7 @@ import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
 import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
 import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from "@/lib/randevu/takvimSorusu"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni } from "@/lib/randevu/gunlukOzet"
+import { saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 
 export type Kanal = "yazi" | "ses"
 
@@ -92,6 +93,8 @@ export interface AyseGirdisi {
    * actually reached ElevenLabs. When given, the cap is silent and a cut turn stores its remainder (sesDevam).
    */
   sesDurumu?: () => { kesildi: boolean; soylenen: string }
+  /** NOTYA-TAKVIM-TZ-01: doctor's IANA timezone from the client (Intl resolvedOptions) — "bugün / yarın" resolve here. Fallback TRT. */
+  saatDilimi?: string | null
 }
 
 /** NOTYA-SES-DEVAM-01: asistan_sessions.active_context.sesDevam — the unspoken rest of a cut voice turn. */
@@ -246,16 +249,17 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
   const sonTakvimAsistan = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
+  const saatDilimi = saatDilimiSec(g.saatDilimi)
   const takvim = kayitNiyetiMi(String(message || ""))
     ? null
-    : (takvimSorusuCoz(message) || takvimTakipCoz(message, sonTakvimAsistan?.content))
+    : (takvimSorusuCoz(message, { saatDilimi }) || takvimTakipCoz(message, sonTakvimAsistan?.content, { saatDilimi }))
   if (!takvim && sesGurultusuMu(message)) {
     // ASR pause ("...") after a true calendar line must not reach the model — it recants.
     return sade("", "", baglam.patientName ? String(baglam.patientName) : null)
   }
   if (takvim) {
     try {
-      const satirlar = await doktorunGununuOku(supabase, doktorId, takvim.tarih)
+      const satirlar = await doktorunGununuOku(supabase, doktorId, takvim.tarih, saatDilimi)
       const ozet = gunlukOzetMetni({
         tarih: takvim.tarih,
         satirlar,
@@ -268,6 +272,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
         istenenSaat: takvim.saat,
         cakisiyor: ozet.cakisiyor,
         cakisan: ozet.cakisan,
+        tz: saatDilimi,
       })
       soyle(konusma)
       await oturumuYaz(ozet.metin, {})

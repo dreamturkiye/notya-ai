@@ -23,6 +23,8 @@ export interface SesJetonu {
   p: string | null
   /** persona */
   pe: string
+  /** NOTYA-TAKVIM-TZ-01: doctor's IANA timezone at connect time (ElevenLabs sends no cookie) — "bugün / yarın" resolve here. */
+  tz?: string
   /** bitiş (ms) */
   exp: number
 }
@@ -63,7 +65,7 @@ export function sesJetonuDogrula(jeton: unknown, simdi = Date.now()): SesJetonu 
   try {
     const v = JSON.parse(Buffer.from(govde, 'base64url').toString('utf8')) as SesJetonu
     if (typeof v.d !== 'string' || !v.d || typeof v.o !== 'string' || !v.o || typeof v.exp !== 'number' || v.exp < simdi) return null
-    return { d: v.d, o: v.o, s: String(v.s || 'genel'), p: v.p ? String(v.p) : null, pe: String(v.pe || ''), exp: v.exp }
+    return { d: v.d, o: v.o, s: String(v.s || 'genel'), p: v.p ? String(v.p) : null, pe: String(v.pe || ''), ...(typeof v.tz === 'string' && v.tz ? { tz: v.tz } : {}), exp: v.exp }
   } catch {
     return null
   }

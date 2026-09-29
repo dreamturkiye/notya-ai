@@ -6,6 +6,8 @@ import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
+import { saatDilimiSec } from '@/lib/randevu/tarihCozumle'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
     specialty?: unknown
     personaId?: unknown
     patientId?: unknown
+    saatDilimi?: unknown
   } | null
   const mesaj = typeof govde?.mesaj === 'string' ? govde.mesaj.trim().slice(0, 4000) : ''
   const oturumId = typeof govde?.asistanSessionId === 'string' ? govde.asistanSessionId.trim() : ''
@@ -46,6 +49,8 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
   if (!oturum) return new Response(JSON.stringify({ error: 'Oturum bulunamadı' }), { status: 404 })
 
+  // NOTYA-TAKVIM-TZ-01: doctor's timezone — body first, then the notya_tz cookie, then TRT.
+  const saatDilimi = saatDilimiSec(typeof govde?.saatDilimi === 'string' ? govde.saatDilimi : null, istekSaatDilimi())
   const istenenHasta = typeof govde?.patientId === 'string' ? govde.patientId.trim() : ''
   const patientId = istenenHasta && (await hastaSahibiMi(supabase, user.id, istenenHasta)) ? istenenHasta : null
 
@@ -68,6 +73,7 @@ export async function POST(req: NextRequest) {
           specialty: typeof govde?.specialty === 'string' ? govde.specialty : 'pediatri',
           personaId: typeof govde?.personaId === 'string' ? govde.personaId : 'aysekaya',
           patientId,
+          saatDilimi,
           sozParcasi: (p) => { if (p) { soylendi = true; gonder({ t: 'soz', m: p }) } },
         })
         if (!sonuc.ok) gonder({ t: 'hata', m: sonuc.soz })

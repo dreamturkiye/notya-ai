@@ -3,10 +3,13 @@
  *
  * Isolation: randevular are always .eq('doktor_id'); names come from that doctor's
  * patients row or hasta_adi_serbest on the same booking. Never another doctor's day.
+ *
+ * NOTYA-TAKVIM-TZ-01 (2026-09-29): the day's boundaries and the spoken "Bugün / Yarın" are computed in
+ * the doctor's timezone (`tz`, IANA); callers without one keep TRT. Slot times are shown in that same tz.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { hastaAdiCoz } from '@/core/eylemler/hasta'
-import { bugunTRT, gunKaydirTRT } from '@/core/eylemler/types'
+import { bugunTz, gunKaydirTz, gunSinirlariUtc, isoSaatTz, saatDilimiSec } from '@/lib/randevu/tarihCozumle'
 export interface GunlukSatir {
   saat: string
   bitisSaat: string
@@ -44,6 +47,14 @@ export function tarihEtiketi(iso: string): string {
   const d = new Date(`${iso}T12:00:00Z`)
   if (Number.isNaN(d.getTime())) return iso
   return new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }).format(d)
+}
+
+/** "2026-09-30" → "30 Eylül Çarşamba" — the spoken form names the resolved day, not only "Yarın". */
+export function kisaTarihEtiketi(iso: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
+  const d = new Date(`${iso}T12:00:00Z`)
+  if (Number.isNaN(d.getTime())) return iso
+  return new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'long', weekday: 'long' }).format(d)
 }
 
 export function gunlukOzetMetni(g: {
@@ -89,10 +100,15 @@ export function gunlukKonusmaMetni(g: {
   istenenSaat?: string | null
   cakisiyor?: boolean
   cakisan?: GunlukSatir
+  /** Doctor's IANA timezone; decides whether `tarih` is "Bugün" / "Yarın". Default TRT. */
+  tz?: string | null
+  simdi?: Date
 }): string {
-  const bugun = g.tarih === bugunTRT()
-  const yarin = g.tarih === gunKaydirTRT(1)
-  const gun = bugun ? 'Bugün' : yarin ? 'Yarın' : tarihEtiketi(g.tarih)
+  const tz = saatDilimiSec(g.tz)
+  const bugun = g.tarih === bugunTz(tz, g.simdi)
+  const yarin = g.tarih === gunKaydirTz(1, tz, g.simdi)
+  const etiket = kisaTarihEtiketi(g.tarih)
+  const gun = bugun ? `Bugün, ${etiket},` : yarin ? `Yarın, ${etiket},` : etiket
   const n = g.satirlar.length
   if (!n) {
     const slot = g.istenenSaat ? ` İstediğiniz ${g.istenenSaat} boş.` : ''
@@ -110,24 +126,21 @@ export function gunlukKonusmaMetni(g: {
 }
 
 export function isoTrtSaat(iso: string): string {
-  try {
-    return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
-  } catch {
-    return '?'
-  }
+  return isoSaatTz(iso, 'Europe/Istanbul')
 }
 
 const TUR: Record<string, string> = { muayene: 'muayene', kontrol: 'kontrol', ilk_muayene: 'ilk muayene', diger: 'diğer' }
 
-/** Doctor-scoped day list. `tarih` = YYYY-MM-DD in TRT. */
+/** Doctor-scoped day list. `tarih` = YYYY-MM-DD in the doctor's timezone `tz` (default TRT); day boundaries and slot times follow it. */
 export async function doktorunGununuOku(
   supabase: SupabaseClient,
   doktorId: string,
-  tarih: string
+  tarih: string,
+  tz?: string | null,
 ): Promise<GunlukSatir[]> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(tarih)) return []
-  const bas = new Date(`${tarih}T00:00:00+03:00`).toISOString()
-  const bit = new Date(`${tarih}T23:59:59+03:00`).toISOString()
+  const dilim = saatDilimiSec(tz)
+  const { bas, bit } = gunSinirlariUtc(tarih, dilim)
   const { data, error } = await supabase
     .from('randevular')
     .select('baslangic, bitis, tur, durum, patient_id, hasta_adi_serbest')
@@ -149,8 +162,8 @@ export async function doktorunGununuOku(
     for (const h of hastalar || []) adlar.set(String(h.id), hastaAdiCoz(h.name_encrypted as string | null))
   }
   return data.map((r) => ({
-    saat: isoTrtSaat(String(r.baslangic)),
-    bitisSaat: isoTrtSaat(String(r.bitis)),
+    saat: isoSaatTz(String(r.baslangic), dilim),
+    bitisSaat: isoSaatTz(String(r.bitis), dilim),
     hastaAdi: (r.patient_id && adlar.get(String(r.patient_id))) || String(r.hasta_adi_serbest || '').trim() || 'Hasta',
     tur: TUR[String(r.tur)] || String(r.tur || 'randevu'),
   }))
