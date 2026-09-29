@@ -10,6 +10,16 @@ test('kahve sohbeti hasta listesini taramaz; ad geçen cümle tarar', () => {
   assert.equal(adTaramasiGereksizMi('son hastamın ilaçları'), false)
 })
 
+test('NOTYA-SES-DOLGU-02 (Kaan, canlı vaka 2026-09-28): Fish ASR yazım varyantı — "nasılsınız" -> "nasınsınız" hâlâ sohbet sayılır', () => {
+  assert.equal(adTaramasiGereksizMi('Merhaba hocam bugün nasınsınız iyi misiniz?'), true)
+  assert.equal(adTaramasiGereksizMi('Merhaba hocam bugun nasilsiniz'), true) // aksansız/yazım farkı da
+  assert.equal(adTaramasiGereksizMi('tesekur ederim iyiyim'), true) // 'teşekkür' -> tek harf eksik yazım hatası
+  // Kısa (<5) kelimede tolerans yok — 'bir' <-> 'bin' gibi bir yanlış yazım hâlâ taramayı tetikler.
+  assert.equal(adTaramasiGereksizMi('Bin kahve alalım mı'), false)
+  // Gerçek bir isme 1 düzenleme mesafesindeki bir dolgu kelimesi varsa bile isim hâlâ taranır —
+  // guvenliKelimeMi yalnız kelime AD_OLMAYAN'a yakınsa güvenli sayar, adayları etkilemez.
+  assert.equal(adTaramasiGereksizMi('Umutcan nasil bugun'), false)
+})
 test('NOTYA-SES-DOLGU-01: dolgu sözcükleri ve ayrık ad (Dr. Gökhan)', () => {
   const t = sesliSozTokenlari('gokhan eee s umutcan eee turkoglu nun dosyasina bakmani istiyorum')
   assert.equal(tumAdParcalariVar('umutcan turkoglu', t), true)
