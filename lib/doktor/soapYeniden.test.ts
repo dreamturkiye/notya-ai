@@ -49,7 +49,7 @@ let uretimSayisi = 0
 let oneriSozleri: Promise<unknown>[] | null = null
 mock.module(yerel('soapUret.ts'), {
   namedExports: {
-    soapNotuUret: async (_c: unknown, _g: unknown, secenek?: { oneriAyri?: (s: Promise<unknown>) => void }) => {
+    soapNotuUret: async (_g: unknown, secenek?: { oneriAyri?: (s: Promise<unknown>) => void }) => {
       uretimSayisi++
       if (oneriSozleri?.length) secenek?.oneriAyri?.(oneriSozleri.shift()!)
       const s = senaryo.shift() ?? 'ok'

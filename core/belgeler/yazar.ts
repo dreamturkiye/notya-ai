@@ -1,11 +1,10 @@
 /**
- * NOTYA-BELGE-01 — Tier A: Claude vision writer.
- * Claude receives the de-identified image (or PDF, or an audio spectrogram + metrics), the doctor's persona,
+ * NOTYA-BELGE-01 — Tier A: Luna-Pro vision writer (Sonnet 5 only on G1–G4).
+ * The model receives the de-identified image (or PDF, or an audio spectrogram + metrics), the doctor's persona,
  * the fused engine JSON (may be empty in V1) and returns the locked JSON schema in Turkish colleague prose.
- * Claude is the WRITER and a describe-tier engine; it is never the authority on confidence or acil —
+ * The model is the WRITER and a describe-tier engine; it is never the authority on confidence or acil —
  * fusion.ts caps and rules override it.
  */
-import type Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from '@/lib/ai/cagir'
 import { BULGU_KODLARI, MODALITE_TR, bulguTr, type Modalite } from './ontoloji'
 import { SES_MODALITELERI } from './router'
@@ -108,7 +107,6 @@ export type ClaudeGorselGirdi =
   | { tip: 'pdf'; base64: string }
 
 export async function claudeIleYaz(
-  anthropic: Anthropic,
   persona: string,
   girdi: AnalizGirdi,
   gorsel: ClaudeGorselGirdi | null,
@@ -117,12 +115,12 @@ export async function claudeIleYaz(
   sesMetrikleri?: Record<string, number | string> | null,
   doctorId?: string | null
 ): Promise<{ rapor: BelgeRaporu; bulguKodlari: { kod: string; p: number }[]; ham: string }> {
-  const icerik: Anthropic.Messages.MessageParam['content'] extends string | (infer U)[] ? U[] : never = []
+  const icerik: unknown[] = []
   if (gorsel?.tip === 'image') icerik.push({ type: 'image', source: { type: 'base64', media_type: gorsel.mime, data: gorsel.base64 } })
-  if (gorsel?.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: gorsel.base64 } } as unknown as (typeof icerik)[number])
+  if (gorsel?.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: gorsel.base64 } })
   icerik.push({ type: 'text', text: kullaniciPromptu(girdi, fusion, motorlar, sesMetrikleri) })
   // NOTYA-MALIYET-01: görüntü/belge yorumu (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro); model adı politikadan
-  const yanit = await aiCagir({ istemci: anthropic, gorev: 'goruntu-inceleme', maxTokens: 3000, temperature: 0.2, doctorId, system: sistemPromptu(persona), messages: [{ role: 'user', content: icerik }] })
+  const yanit = await aiCagir({ gorev: 'goruntu-inceleme', maxTokens: 3000, temperature: 0.2, doctorId, system: sistemPromptu(persona), messages: [{ role: 'user', content: icerik }] })
   const ham = yanit.content.filter((c) => c.type === 'text').map((c) => (c as { text: string }).text).join('\n')
   const temiz = ham.replace(/```json|```/g, '').trim()
   const j = JSON.parse(temiz.slice(temiz.indexOf('{'), temiz.lastIndexOf('}') + 1)) as BelgeRaporu & { bulgu_kodlari?: { kod: string; p: number }[] }
@@ -145,5 +143,5 @@ export async function claudeIleYaz(
 
 /** Claude's own findings as an engine output so fusion treats it like any other (unvalidated, tier A). */
 export function claudeMotorCiktisi(bulguKodlari: { kod: string; p: number }[], kalite: BelgeRaporu['kalite'], modalite: Modalite | null): MotorCiktisi {
-  return { motor: 'claude-vision', surum: 'sonnet-4.6', tier: 'A', dogrulanmis: false, labels: bulguKodlari.map((b) => ({ kod: b.kod, p: b.p })), kalite, modaliteTahmini: modalite }
+  return { motor: 'claude-vision', surum: 'tier-a', tier: 'A', dogrulanmis: false, labels: bulguKodlari.map((b) => ({ kod: b.kod, p: b.p })), kalite, modaliteTahmini: modalite }
 }

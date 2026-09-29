@@ -15,7 +15,7 @@ import {
 export const dynamic = 'force-dynamic'
 
 // NOTYA-SGK-RAPOR-02 (Kaan, 2026-09-23): the SGK draft now uses the patient's approved notes.
-// Routed through the same Anthropic path as every other clinical call (aiCagir, ai-model-politikasi)
+// Routed through the same aiCagir path as every other clinical call (ai-model-politikasi)
 // instead of Groq/xAI: no new processor for health data (KVKK), same logging/cost metering.
 // The pseudonymize/restore map and the TCKN guard stay in front of the call.
 async function taslakUret(system: string, user: string, doctorId: string): Promise<SgkRaporDraft> {

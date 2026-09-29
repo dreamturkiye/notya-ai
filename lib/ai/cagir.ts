@@ -5,8 +5,8 @@
  * Taşıma yolu lib/ai/saglayici.ts'te seçilir:
  *  - OPENROUTER_API_KEY varsa → OpenRouter (birincil = GPT-6 Luna-Pro, koruyucu = Sonnet 5); istek/yanıt Anthropic
  *    biçimine çevrilir.
- *  - yoksa → eski Anthropic yolu, birebir: `istemci` verilirse SDK istemcisi (SDK'yı mock'layan testler aynen çalışır),
- *    verilmezse doğrudan fetch ile /v1/messages. OpenAI modeli bu yolda gidemez → koruyucu (neden = transport).
+ *  - yoksa → koruyucu (Sonnet 5) eski doğrudan SDK yoluyla; OpenAI modeli bu yolda gidemez → koruyucu (neden = transport).
+ *    Çağrı yerleri Anthropic SDK istemcisi kurmaz — yalnız bu kapı (test sahtesi `istemci` ile).
  * HTTP hatasında AiCagriHatasi fırlatılır (durum + gövde); çağıran eskisi gibi kendi hata mesajını seçer.
  *
  * Birincil model HER görevde Luna-Pro (Kaan, 2026-09-27) — görsel/PDF dahil. Sonnet 5 koruyucudur, dört kapıdan:
@@ -49,6 +49,7 @@ export interface AiCagriGirdisi {
   /** modelSec önerisinin gerekçeli aşımı (ör. 16k satırlık e-Nabız çıkarımı). */
   maxTokens?: number
   temperature?: number
+  /** Yalnız test sahtesi. Üretimde OpenRouter kullanılır; verilmezse doğrudan yolda SDK bu kapıda kurulur. */
   istemci?: AiIstemci
   /** Ölçüm satırı için hekim/kullanıcı kimliği (UUID değilse null yazılır). Hasta kimliği ASLA verilmez. */
   doctorId?: string | null
@@ -311,22 +312,19 @@ function isaretle<T>(y: T, o: Olcum): T {
   return y
 }
 
+/** Doğrudan koruyucu yolu (OpenRouter yok). Üretim çağrı yerleri istemci kurmaz. */
+async function dogrudanIstemci(g: AiCagriGirdisi): Promise<AiIstemci> {
+  if (g.istemci) return g.istemci
+  const { default: AnthropicSdk } = await import('@anthropic-ai/sdk')
+  return new AnthropicSdk({ apiKey: process.env.ANTHROPIC_API_KEY || '' }) as unknown as AiIstemci
+}
+
 async function tekCagri(g: AiCagriGirdisi, govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Anthropic.Message> {
   const model = String(govde.model)
   if (yolSec(model) === 'openrouter') return openRouterCagir(govde, zamanAsimiMs)
   const dogrudan = { ...govde, model: dogrudanModelAdi(model) }
-  if (g.istemci) return (await g.istemci.messages.create(dogrudan as never)) as Anthropic.Message
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(dogrudan),
-  })
-  if (!r.ok) throw new AiCagriHatasi(r.status, await r.text().catch(() => ''))
-  return (await r.json()) as Anthropic.Message
+  const istemci = await dogrudanIstemci(g)
+  return (await istemci.messages.create(dogrudan as never)) as Anthropic.Message
 }
 
 async function olcSessiz(g: AiCagriGirdisi, h: Hedef, yanit: Anthropic.Message): Promise<void> {
@@ -396,10 +394,11 @@ type AkisOlayi = {
   usage?: Record<string, number | null>
 }
 
-/** Doğrudan Anthropic yolunda akış — eski aiAkis gövdesi, birebir. */
-async function anthropicAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
+/** Doğrudan koruyucu yolunda akış — eski aiAkis gövdesi, birebir. */
+async function anthropicAkis(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   const govde: Record<string, unknown> = { ...h.govde, model: dogrudanModelAdi(String(h.govde.model)), stream: true }
-  const ham = (await g.istemci.messages.create(govde as never)) as unknown
+  const istemci = await dogrudanIstemci(g)
+  const ham = (await istemci.messages.create(govde as never)) as unknown
   // Akış yerine tam mesaj dönen istemci (test sahtesi, vekil) → metni tek parça ver, aynen işle.
   if (!ham || typeof (ham as AsyncIterable<unknown>)[Symbol.asyncIterator] !== 'function') {
     const tam = ham as Anthropic.Message
@@ -506,7 +505,7 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
  * birleştirilir (text + tool_use blokları, stop_reason, usage) — çağıran onu aiCagir yanıtıyla aynı işler.
  * OpenRouter yolunda SSE chat.completions akışı aynı geri çağrıya bağlanır.
  */
-export async function aiAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
+export async function aiAkis(g: AiCagriGirdisi, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   const h = hedefBelirle(g)
   if (h.neden === 'safety') dususGunlukle(istekKimligi(g), g.gorev, 'safety', 'sinyal')
   if (yolSec(String(h.govde.model)) === 'openrouter') return openRouterAkisKapili(g, h, metinParcasi)

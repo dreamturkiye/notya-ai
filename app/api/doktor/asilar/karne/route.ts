@@ -15,7 +15,6 @@
  * belgeden türetilir ve hastaSahibiMi ile yeniden doğrulanır.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { getDocumentMeta, downloadDocument } from '@/lib/vault/service'
@@ -70,7 +69,6 @@ export async function POST(req: NextRequest) {
     try {
       // NOTYA-MALIYET-01: görüntü/belge okuma ('goruntu-inceleme', 12000 tavan). LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız koruyucu.
       const y = await aiCagir({
-        istemci: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }),
         gorev: 'goruntu-inceleme',
         system: [{ metin: KARNE_SISTEM, onbellek: true }],
         messages: [{ role: 'user', content: [blok, { type: 'text', text: KARNE_KULLANICI_METNI }] }],

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from '@/lib/ai/cagir'
 import { verifyPortalToken, generatePortalToken, registerPortalToken, buildMuvekkilSystemPrompt } from '@/lib/avukat/avukatPortalEngine'
 
 const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 const SECRET = process.env.PORTAL_TOKEN_SECRET
 if (!SECRET) console.error('PORTAL_TOKEN_SECRET env var not set — avukat portal tokens are NOT being issued')
 
@@ -97,10 +95,9 @@ export async function POST(req: NextRequest) {
       muv || {},
       sureler || []
     )
-    const ai = getAnthropic()
     const msgs = [...(history || []), { role: 'user' as const, content: message }]
     // NOTYA-MALIYET-01: müvekkile hukuki süre/dosya durumu — hukuk içeriği (sohbet-uzman; LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız koruyucu)
-    const resp = await aiCagir({ istemci: ai, gorev: 'sohbet-uzman', maxTokens: 800, doctorId: payload.avukatId, system, messages: msgs })
+    const resp = await aiCagir({ gorev: 'sohbet-uzman', maxTokens: 800, doctorId: payload.avukatId, system, messages: msgs })
     const reply = resp.content[0].type === 'text' ? resp.content[0].text : 'Yanit alinamadi.'
     return NextResponse.json({ success: true, data: { speech: reply } })
   } catch (e: unknown) {

@@ -5,7 +5,6 @@
  * Live tables are CRUD truth. Photos remain hasta_goruntulemeler (coreImageId). Belgeler remain vault (documentId).
  */
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { PHOTO_DEVICES } from '@/specialties/dermatoloji/engines/phototherapy-log'
 import { VISION_DISCLAIMER, uzmanOnay } from '@/specialties/dermatoloji/imaging/vision-tools'
@@ -623,7 +622,7 @@ export async function POST(req: NextRequest) {
       let sonuc
       try {
         sonuc = await tierAYazVeFuzyonla({
-          anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona,
+          persona: kural.persona,
           girdi: { brans: kural.ad, modality_final: mod, yasAy: null, cinsiyet: null, klinikNot: [`Bölge: ${b.bolge}.`, body.klinikNot ? String(body.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') },
           gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: mod, yasAy: null, fitzpatrickBilinmiyor, doctorId: doktorId,
         })

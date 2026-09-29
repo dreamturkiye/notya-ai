@@ -14,7 +14,6 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
-import Anthropic from '@anthropic-ai/sdk'
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren } from '@/lib/doktor/hafiza'
 import { NOT_YENIDEN_DEGERLENDIR_ISTEK } from '@/lib/doktor/notYenidenDegerlendir'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
@@ -33,8 +32,6 @@ import { notAsilariniTemizle } from '@/lib/doktor/notAsilari'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
-
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 interface Mesaj { rol: string; icerik: string }
 
@@ -110,7 +107,7 @@ export async function POST(req: NextRequest) {
       ham = yanitMetni(yanit)
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
-      console.error('[not-konsult] anthropic', e.govde.slice(0, 300))
+      console.error('[not-konsult] ai', e.govde.slice(0, 300))
       return NextResponse.json({ error: 'Ayşe şu an yanıt veremiyor. Lütfen tekrar deneyin.' }, { status: 502 })
     }
     const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
@@ -154,7 +151,7 @@ export async function POST(req: NextRequest) {
       try {
         await seansIsle(supabase, doktorId, 'sohbet')
         if (ogrenmeyeDeger(sonMetin)) {
-          await sohbettenOgren(getAnthropic(), supabase, doktorId, [
+          await sohbettenOgren(supabase, doktorId, [
             ...gecmis.slice(-4),
             { role: 'assistant', content: cevap },
           ])

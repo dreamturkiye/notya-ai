@@ -11,7 +11,6 @@
  */
 import fs from 'fs'
 import path from 'path'
-import Anthropic from '@anthropic-ai/sdk'
 
 for (const f of ['.env.local', '.env']) {
   const p = path.join(process.cwd(), f)
@@ -22,6 +21,7 @@ for (const f of ['.env.local', '.env']) {
   }
 }
 const { soapNotuUret, soapSistemPromptu } = await import('../lib/doktor/soapUret')
+const { aiCagir } = await import('../lib/ai/cagir')
 
 const TEKRAR = Number(process.argv[2] || 3)
 const TRANSKRIPT = [
@@ -35,10 +35,9 @@ const UYDURMA_FORM = /(?:BZBH\s*)?Form\s*(?:No\.?\s*)?0?\d{2,4}/i
 const kontroller: { ad: string; ok: boolean; detay: unknown }[] = []
 const kontrol = (ad: string, ok: boolean, detay: unknown) => { kontroller.push({ ad, ok, detay }); console.log(`${ok ? '✓' : '✗'} ${ad}${ok ? '' : ` — ${JSON.stringify(detay).slice(0, 300)}`}`) }
 const notlar: unknown[] = []
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 for (let i = 1; i <= TEKRAR; i++) {
-  const not = await soapNotuUret(anthropic, { transcript: TRANSKRIPT, specialty: 'dermatoloji', doktorBransi: 'dermatoloji', klinikBaglam: 'Kadın, 24 yaş.' })
+  const not = await soapNotuUret({ transcript: TRANSKRIPT, specialty: 'dermatoloji', doktorBransi: 'dermatoloji', klinikBaglam: 'Kadın, 24 yaş.' })
   const metin = JSON.stringify(not)
   const alan = metin.match(new RegExp(`.{0,60}${IC_ALAN.source}.{0,40}`))?.[0]
   const form = metin.match(new RegExp(`.{0,60}${UYDURMA_FORM.source}.{0,40}`, 'i'))?.[0]
@@ -46,7 +45,7 @@ for (let i = 1; i <= TEKRAR; i++) {
   kontrol(`#${i} uydurma resmî form adı/numarası yok`, !form, form)
   // info only: did the model itself (prompt lock, before the code cleaner) avoid both?
   const girdi = { transcript: TRANSKRIPT, specialty: 'dermatoloji', doktorBransi: 'dermatoloji', klinikBaglam: 'Kadın, 24 yaş.' }
-  const hamY = await anthropic.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 8000, system: soapSistemPromptu(girdi), messages: [{ role: 'user', content: `Muayene transkripti:\n\n${TRANSKRIPT}` }] })
+  const hamY = await aiCagir({ gorev: 'soap', maxTokens: 8000, system: soapSistemPromptu(girdi), messages: [{ role: 'user', content: `Muayene transkripti:\n\n${TRANSKRIPT}` }] })
   const ham = hamY.content[0]?.type === 'text' ? hamY.content[0].text : ''
   const hamBulgu = { icAlan: ham.match(new RegExp(`.{0,50}${IC_ALAN.source}.{0,30}`))?.[0] || null, form: ham.match(new RegExp(`.{0,50}${UYDURMA_FORM.source}.{0,30}`, 'i'))?.[0] || null }
   console.log(`  (bilgi) #${i} ham model çıktısı — iç alan: ${hamBulgu.icAlan ? 'VAR' : 'yok'}, form no: ${hamBulgu.form ? 'VAR' : 'yok'}`)

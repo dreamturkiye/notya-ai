@@ -1,5 +1,5 @@
 /**
- * NOTYA-MALIYET-01 (E) — her Claude çağrısının token sayaçlarını ai_token_kullanim tablosuna yazar.
+ * NOTYA-MALIYET-01 (E) — her model çağrısının token sayaçlarını ai_token_kullanim tablosuna yazar.
  *
  * YALNIZ SAYAÇ: hekim kimliği (varsa), görev, model, kademe, yükseltme nedeni (NOTYA-MODEL-LUNA-01 / LUNAPRO-01) ve usage sayıları. Prompt, yanıt, hasta adı/kimliği
  * veya herhangi bir içerik YAZILMAZ — kullanimSatiri() şekli lib/ai/cagir.test.ts'te kilitli.

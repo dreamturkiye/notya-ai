@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import Anthropic from "@anthropic-ai/sdk"
 import { AVUKAT_PERSONAS, getPersonaForBranch, buildAvukatSystemPromptParcalari, type AvukatPersonaId, type BranchId } from "@/lib/avukat/avukatPersonaEngine"
 import { quickClassifyLegal } from "@/lib/avukat/avukatIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
@@ -11,7 +10,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
 )
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,7 +70,6 @@ export async function POST(req: NextRequest) {
 
     // NOTYA-MALIYET-01: hukuk tavsiyesi (sohbet-uzman; LUNAPRO-01: birincil Luna-Pro); model adı artık politikadan
     const aiResponse = await aiCagir({
-      istemci: anthropic,
       gorev: "sohbet-uzman",
       doctorId: user.id,
       // prompt caching: kimlik + kurallar bloğu önbellekli; öğrenilenler / aktif kayıt arkasından

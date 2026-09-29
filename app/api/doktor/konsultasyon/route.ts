@@ -37,7 +37,6 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import Anthropic from '@anthropic-ai/sdk'
 import { aiCagir, yanitMetni, type AiMesaj } from '@/lib/ai/cagir'
 import { aiKotaKullan } from '@/lib/doktor/hizLimiti'
 import { downloadDocument } from '@/lib/vault/service'
@@ -138,7 +137,6 @@ const IZ_YAZILAMADI = 'Düzenleme izi kaydedilemedi — değişiklik yapılmadı
 
 /* ───────────────────────── Ayşe taslakları (AYSE-KONSULTASYON-01) ───────────────────────── */
 
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 const taslakYok = (neden: Parameters<typeof taslakHataMesaji>[0], yon: 'istem' | 'yanit') =>
   NextResponse.json({ ok: false, neden, error: taslakHataMesaji(neden, yon) })
 /** İlk kayıt formundan modele GİTMEYEN alanlar — kimlik, iletişim, sigorta, veli/yakın kimliği (hastaDosyaDerleyici ile aynı). */
@@ -246,7 +244,6 @@ async function istemTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
       system: [{ metin: ISTEM_TASLAK_SISTEMI, onbellek: true }],
       messages: [{ role: 'user', content: `=== HASTA DOSYASI ÖZETİ ===\n${baglam}\n\nBu hasta için ${hedefAdi} konsültasyon istem metninin gövdesini yaz.` }],
       temperature: 0.2,
-      istemci: getAnthropic(),
       doctorId: doktorId,
     })
     ham = yanitMetni(y, '\n')
@@ -310,7 +307,7 @@ async function yanitTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
   let ham = '', kesildi = false
   try {
     // Düzyazı özet (JSON değil) — G2 (d) JSON kontrolü kapalı.
-    const y = await aiCagir({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [mesaj], temperature: 0.1, istemci: getAnthropic(), doctorId: doktorId, jsonBekleniyor: false })
+    const y = await aiCagir({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [mesaj], temperature: 0.1, doctorId: doktorId, jsonBekleniyor: false })
     ham = yanitMetni(y, '\n')
     kesildi = (y as { stop_reason?: string | null }).stop_reason === 'max_tokens'
   } catch (e) {

@@ -1,6 +1,6 @@
 /**
  * NOTYA-BELGE-01 — Client-side de-identification and audio preparation (runs in the doctor's browser).
- *  - images: canvas re-encode strips EXIF/metadata, downscales to ≤1568 px (Anthropic vision sweet spot),
+ *  - images: canvas re-encode strips EXIF/metadata, downscales to ≤1568 px (vision input cap),
  *            returns JPEG base64 + sha256. The vault original never leaves the device in original form.
  *  - audio : Web Audio decode → mono → mel-ish log spectrogram PNG + quality metrics (duration, clipping, RMS, SNR proxy).
  * Face blur for facial photos and OCR redaction of burned-in text are the doctor's explicit checkbox in V1

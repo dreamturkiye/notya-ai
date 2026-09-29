@@ -11,7 +11,6 @@
  */
 import fs from 'fs'
 import path from 'path'
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 
 for (const f of ['.env.local', '.env']) {
@@ -25,6 +24,7 @@ for (const f of ['.env.local', '.env']) {
 const { asistanYanitiCoz, KESIK_YANIT_NOTU } = await import('../lib/asistan/yanitCoz')
 const { PERSONAS, buildSystemPrompt, varsayilanPersonaId } = await import('../lib/asistan/personaEngine')
 const { kadinDogumKilidi } = await import('../specialties/kadin-dogum/prompts')
+const { aiCagir } = await import('../lib/ai/cagir')
 
 const BASE = (process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
 const HAM_JSON = /```|\{\s*"speech"|"speech"\s*:|"action"\s*:|"proactiveWarning"\s*:/
@@ -36,7 +36,7 @@ const kontrol = (ad: string, ok: boolean, detay: unknown) => { kontroller.push({
 // 1. real model, forced cut
 const persona = PERSONAS[varsayilanPersonaId('genel', 'kadin-dogum')]
 const sistem = buildSystemPrompt(persona, null, null, { firstName: 'QA' } as never, '') + kadinDogumKilidi('asistan')
-const r1 = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }).messages.create({ model: 'claude-sonnet-4-6', max_tokens: 300, system: sistem, messages: [{ role: 'user', content: SORU }] })
+const r1 = await aiCagir({ gorev: 'sohbet-uzman', maxTokens: 300, system: sistem, messages: [{ role: 'user', content: SORU }] })
 const ham = r1.content[0]?.type === 'text' ? r1.content[0].text : ''
 const eski = ham // the pre-fix route showed this raw text when JSON.parse failed
 let eskiParse = true

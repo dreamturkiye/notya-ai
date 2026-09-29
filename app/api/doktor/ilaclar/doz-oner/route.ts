@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from '@/lib/ai/cagir'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
@@ -79,7 +78,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
     const prompt = `Türkiye'de ruhsatlı ilaçlar ve Türk pediatri/erişkin doz pratiğine göre öneri ver.
 İlaç: ${ilacAdi}${etkenMadde ? ` (etken madde: ${etkenMadde})` : ''}
 Hasta: ${yasMetni}, kilo ${kilo} kg.
@@ -90,7 +88,6 @@ Kiloya/yaşa uygun değilse veya bu ilaç bu yaşta önerilmezse doz'u boş bır
 
     // NOTYA-MALIYET-01: doz önerisi — klinik karar (klinik-analiz; LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız koruyucu)
     const resp = await aiCagir({
-      istemci: anthropic,
       gorev: 'klinik-analiz',
       jsonBekleniyor: true,
       maxTokens: 400,

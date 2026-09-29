@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { kritikAlarm } from "@/lib/alarm"
-import Anthropic from "@anthropic-ai/sdk"
 import { aiCagir } from "@/lib/ai/cagir"
 import { modelSec } from "@/lib/ai/modeller"
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
@@ -22,7 +21,6 @@ const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
 )
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const baslangicMs = Date.now()
@@ -141,7 +139,6 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
       // NOTYA-MALIYET-01: sağlık meslekleri seans notu (not-uretimi; LUNAPRO-01: birincil Luna-Pro)
       const alliedResponse = await aiCagir({
-        istemci: getAnthropic(),
         gorev: 'not-uretimi',
         maxTokens: 1500,
         doctorId: user.id,
@@ -254,7 +251,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir (son denemeninki).
     const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
     const { sonuc: noteData } = await soapUretYeniden(
-      () => soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }, { oneriAyri: (soz) => { oneri.soz = soz } }),
+      () => soapNotuUret({ transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }, { oneriAyri: (soz) => { oneri.soz = soz } }),
       { baslangicMs, sureSiniriMs: maxDuration * 1000, uyar: (satir) => console.warn(satir) },
     )
     // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
@@ -336,7 +333,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
         : String(transcript || '')
       if (doktorSozleri && ogrenmeyeDeger(doktorSozleri)) {
         const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
-        arkaPlandaSurdur(sohbettenOgren(getAnthropic(), getSupabase(), user.id, [{ role: 'user', content: doktorSozleri }]))
+        arkaPlandaSurdur(sohbettenOgren(getSupabase(), user.id, [{ role: 'user', content: doktorSozleri }]))
       }
     } catch (e) { console.error('[hafiza] seans-sonu', e) }
 
@@ -352,7 +349,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       catch (e) { console.error(`[sessions/end] seans failed işaretlenemedi: ${soapHataLogMetni(e)}`) }
     }
     await kritikAlarm('SOAP üretim hatası (sessions/end)', error instanceof Error ? error.message : String(error))
-    // NOTYA-SEANS-05: ham API hataları (özellikle Anthropic kredi/limit JSON'u) doktora
+    // NOTYA-SEANS-05: ham API hataları (özellikle kredi/limit JSON'u) doktora
     // asla gösterilmez — loglanır, kullanıcıya Türkçe ve eyleme dönük mesaj gider.
     const ham = error instanceof Error ? error.message : ""
     let msg = "Not oluşturulamadı. Lütfen tekrar deneyin — notlarınız kaybolmadı."

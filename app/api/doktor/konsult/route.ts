@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
-      console.error('[konsult] anthropic', e.govde.slice(0, 300))
+      console.error('[konsult] ai', e.govde.slice(0, 300))
       let msg = 'Asistan şu an yanıt veremiyor. Lütfen tekrar deneyin.'
       if (/credit balance/i.test(e.govde)) msg = 'Yapay zekâ servisi geçici olarak kullanılamıyor (hesap bakiyesi). Yönetici bilgilendirildi.'
       else if (/rate_limit|overloaded/i.test(e.govde)) msg = 'Sistem şu an yoğun. Birkaç saniye sonra tekrar deneyin.'

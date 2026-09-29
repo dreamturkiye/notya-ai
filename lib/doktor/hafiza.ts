@@ -17,7 +17,7 @@
  * Güven eşiği (Kaan/Gökhan, 2026-09-09): klinik gözlem/düzeltme 2+ kanıt ister;
  * üslup/rutin/iletişim tek kanıtla yeter; doktorun kendi ağzından söylediği hemen kesindir.
  *
- * Ekonomi: Haiku yalnız (a) doktor kendinden bahsettiğinde (regex kapısı) ve
+ * Ekonomi: model yalnız (a) doktor kendinden bahsettiğinde (regex kapısı) ve
  * (b) 5 seansta bir özet için çağrılır. Rutin hesabı günde bir, LLM'siz.
  *
  * NOTYA-OGRENME-04 (Kaan, 2026-09-22) — TEMPO + İŞ SIRASI: doktor_soyledi yalnız AÇIKÇA
@@ -25,13 +25,12 @@
  * (cümle uzunluğu, doğrudanlık) ve işi hangi sırayla yaptığı (önce X, sonra Y) genelde
  * AÇIKÇA söylenmez, davranıştan gözlemlenir. 5-seanslık özet çağrısı artık iki ek girdi
  * alır: sohbetOrnekleriDerle (doktorun kendi mesajlarından birebir örnek — tempo için) ve
- * eylemSirasiOzeti (asistan_actions'tan LLM'siz çıkarılan iş sırası — "A→B→C"). Haiku
+ * eylemSirasiOzeti (asistan_actions'tan LLM'siz çıkarılan iş sırası — "A→B→C"). Model
  * bunları görerek özet paragrafa tempo + iş sırası gözlemini de katar; ekonomi bozulmaz
  * (mevcut 5-seans çağrısına binen ek metin, yeni bir LLM çağrısı değil).
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from '@/lib/ai/cagir'
 import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
@@ -371,10 +370,10 @@ export function karsilamaSecimi(h: DoktorIliski | null | undefined): { tanit: bo
 }
 
 // ------------------------------------------------------------------
-// Öğrenme — doktorun sohbette söylediklerinden (Haiku, kapılı)
+// Öğrenme — doktorun sohbette söylediklerinden (kapılı model çağrısı)
 // ------------------------------------------------------------------
 
-/** Ucuz kapı: yalnız doktor kendinden/tercihinden bahsediyorsa Haiku çağrılır. */
+/** Ucuz kapı: yalnız doktor kendinden/tercihinden bahsediyorsa model çağrılır. */
 const KENDINDEN_BAHSETME = /\b(ben|benim|bana|bende|hep|her zaman|genelde|genellikle|asla|hiç|sevmem|sevmiyorum|istemem|istemiyorum|tercih|kullanırım|kullanmam|yazarım|yazmam|alışkanlık|mesai|öğle|sabah|akşam|unut|artık|bundan sonra|kısa|uzun|detaylı|hitap|hocam deme|adımla|randevu sürem|dakika)\b/i
 
 export function ogrenmeyeDeger(mesaj: string): boolean {
@@ -386,7 +385,6 @@ interface CikarilanKayit { kategori: HafizaKategori; anahtar: string; deger: str
 /** Son turlardan doktorun KENDİ AĞZINDAN söylediği kalıcı bilgileri çıkarır.
  *  Hastaya özgü klinik içerik alınmaz; yalnız doktorun kendisi/tercihi/ritmi. */
 export async function sohbettenOgren(
-  anthropic: Anthropic,
   sb: SupabaseClient,
   doctorId: string,
   sonMesajlar: { role: string; content: string }[],
@@ -394,7 +392,6 @@ export async function sohbettenOgren(
   const metin = sonMesajlar.slice(-6).map((m) => `${m.role === 'user' ? 'DOKTOR' : 'ASİSTAN'}: ${String(m.content).slice(0, 600)}`).join('\n')
   // NOTYA-MALIYET-01: doktorun kendi tercihlerini çıkarma — dar HIZLI listesinde (hasta klinik verisi alınmaz)
   const yanit = await aiCagir({
-    istemci: anthropic,
     gorev: 'cikarim',
     maxTokens: 500,
     doctorId,
@@ -430,7 +427,7 @@ SADECE JSON döndür: {"kayitlar":[{"kategori":"...","anahtar":"...","deger":"..
 /** NOTYA-OGRENME-04: doktorun kendi mesajlarından BIREBIR örnek — 5-seanslık özete tempo
  *  sinyali sağlar. LLM'siz; yazılı sohbet/Ayşe'ye Danış oturumlarından (asistan_sessions)
  *  en son birkaç oturumun doktor tarafı turlarını alır. Hastaya özel klinik bilgi filtrelenmez
- *  — bu metin yalnız bir sonraki Haiku çağrısına (özet) girer, doğrudan hiçbir yüzeye
+ *  — bu metin yalnız bir sonraki özet çağrısına girer, doğrudan hiçbir yüzeye
  *  gösterilmez ya da kaydedilmez. */
 export async function sohbetOrnekleriDerle(sb: SupabaseClient, doctorId: string, limitMesaj = 15): Promise<string> {
   const { data } = await sb
@@ -477,8 +474,8 @@ export async function eylemSirasiOzeti(sb: SupabaseClient, doctorId: string, lim
   return satirMetni.join('\n')
 }
 
-/** 5 seansta bir "bu doktor kimdir" özeti (Haiku). Sesli promptta ve karşılamada kullanılır. */
-export async function ozetGerekirseGuncelle(anthropic: Anthropic, sb: SupabaseClient, doctorId: string): Promise<void> {
+/** 5 seansta bir "bu doktor kimdir" özeti. Sesli promptta ve karşılamada kullanılır. */
+export async function ozetGerekirseGuncelle(sb: SupabaseClient, doctorId: string): Promise<void> {
   const h = await hafizaYukle(sb, doctorId)
   const seans = h.iliski.seans_sayisi
   if (seans < 5 || seans - h.iliski.ozet_seans < 5) return
@@ -496,7 +493,6 @@ export async function ozetGerekirseGuncelle(anthropic: Anthropic, sb: SupabaseCl
   if (!malzeme) return
   // NOTYA-MALIYET-01: hafıza kayıtlarından doktor profili paragrafı — dar HIZLI listesinde
   const yanit = await aiCagir({
-    istemci: anthropic,
     gorev: 'ozet',
     maxTokens: 350,
     doctorId,

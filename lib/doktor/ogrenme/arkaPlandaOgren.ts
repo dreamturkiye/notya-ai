@@ -87,11 +87,9 @@ export async function stilProfiliArkaPlan(
     .select('profil, ornek_sayisi')
     .eq('doctor_id', doctorId)
     .maybeSingle()
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
   const { stilProfiliDamit } = await import('@/lib/doktor/soapUret')
   const { hekimBransi } = await import('@/lib/doktor/hekimAdi')
   const yeniProfil = await stilProfiliDamit(
-    new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }),
     String(profilSatiri?.profil || ''),
     gecmis || [],
     await hekimBransi(sb, doctorId),

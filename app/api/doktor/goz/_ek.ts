@@ -19,7 +19,6 @@ import { GLOKOM_ARALIK_ONERILERI, GLOKOM_ONERI_ETIKETI, SHAFFER_AD } from '@/spe
 import { IVT_KONTROL } from '@/specialties/goz-hastaliklari/engines/antiVegf'
 import { gozKohortVerisi, type Sb } from './_kohort'
 import { gozHatirlatmaGonder } from './_kohortHatirlatma'
-import Anthropic from '@anthropic-ai/sdk'
 import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
 import { bransKurali } from '@/core/belgeler/router'
 import type { BelgeRaporu } from '@/core/belgeler/types'
@@ -298,7 +297,7 @@ export async function gozGoruntuKopru(eylem: string, c: Ctx): Promise<NextRespon
     }
     let sonuc
     try {
-      sonuc = await tierAYazVeFuzyonla({ anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona, girdi: { brans: kural.ad, modality_final: belgeMod, yasAy: h.yasAy, cinsiyet: null, klinikNot: [`Göz: ${g.goz === 'sag' ? 'OD (sağ)' : 'OS (sol)'}.`, b.klinikNot ? String(b.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') }, gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: belgeMod, yasAy: h.yasAy, tekAlanFundus: mod === 'fundus' ? tekAlan : undefined, doctorId: doktorId })
+      sonuc = await tierAYazVeFuzyonla({ persona: kural.persona, girdi: { brans: kural.ad, modality_final: belgeMod, yasAy: h.yasAy, cinsiyet: null, klinikNot: [`Göz: ${g.goz === 'sag' ? 'OD (sağ)' : 'OS (sol)'}.`, b.klinikNot ? String(b.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') }, gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: belgeMod, yasAy: h.yasAy, tekAlanFundus: mod === 'fundus' ? tekAlan : undefined, doctorId: doktorId })
     } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
     const uygun = analizKopruyeUygun('taslak', sonuc.rapor)
     if (!uygun.ok) return iskelet('Görüntü kalitesi düşük')

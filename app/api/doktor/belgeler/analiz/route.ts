@@ -9,7 +9,6 @@
  * PATCH body: { analizId, alan: 'ozet'|'hekim_tanisi'|'tanilar', sonraki } → doctor edit + revision log
  */
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createHash } from 'crypto'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta } from '@/lib/vault/service'
@@ -22,8 +21,6 @@ import type { ClaudeGorselGirdi } from '@/core/belgeler/yazar'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
-
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 function yasAyHesapla(dobIso: string | null): number | null {
   if (!dobIso) return null
@@ -94,7 +91,7 @@ export async function POST(req: NextRequest) {
   // Tier A: one shared path (core/belgeler/tierA) — also used by Göz › Görüntü › Asistana raporla.
   let sonucA
   try {
-    sonucA = await tierAYazVeFuzyonla({ anthropic: getAnthropic(), persona: kural.persona, girdi, gorsel, tierB, modalite, yasAy, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus, serbest, sesMetrikleri: sesMi ? body.sesMetrikleri || null : null, doctorId: user.id })
+    sonucA = await tierAYazVeFuzyonla({ persona: kural.persona, girdi, gorsel, tierB, modalite, yasAy, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus, serbest, sesMetrikleri: sesMi ? body.sesMetrikleri || null : null, doctorId: user.id })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'yazar hatası'
     await supabase.from('belge_analizleri').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, brans: bransKey, modality_final: modalite, yas_ay: yasAy, cinsiyet, de_id_hash: deIdHash, engine_set: 'tierA-v1', durum: 'hata', motor_ciktilari: tierB, sonuc: { hata: msg.slice(0, 300) } })

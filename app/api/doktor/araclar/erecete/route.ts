@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const { text: guvenliMesaj, map: receteMap } = pseudonymize(userMessage);
     assertNoTckn(guvenliMesaj, 'erecete');
 
-    // AUDIT-2026-09-03: Groq'tan Anthropic'e geçiş — GROQ_API_KEY hiçbir ortamda tanımlı
+    // AUDIT-2026-09-03: Groq'tan tek kapıya (aiCagir) geçiş — GROQ_API_KEY hiçbir ortamda tanımlı
     // değildi, araç hiç çalışmamıştı. Tek AI sağlayıcı = tek fatura, tutarlı kalite.
     // NOTYA-MALIYET-01: yalnız biçimlendirme değil — mevcut ilaçlarla etkileşim kontrolü ve SGK notu üretir;
     // klinik karar çıktısı (klinik-analiz; LUNAPRO-01: birincil Luna-Pro). 2500: ilaç + etkileşim listesi JSON'u kesilmesin.
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       hamMetin = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', jsonBekleniyor: true, maxTokens: 2500, doctorId: user.id, system: systemPrompt, messages: [{ role: 'user', content: guvenliMesaj }] }))
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
-      console.error('[erecete] anthropic', e.govde.slice(0, 300));
+      console.error('[erecete] ai', e.govde.slice(0, 300));
       await kritikAlarm('e-Reçete AI hatası', e.govde.slice(0, 200));
       return NextResponse.json({ hata: 'Reçete taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
     }

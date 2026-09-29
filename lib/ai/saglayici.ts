@@ -17,7 +17,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 
 export class AiCagriHatasi extends Error {
   constructor(public durum: number, public govde: string) {
-    super(`Anthropic API ${durum}: ${govde.slice(0, 200)}`)
+    super(`Model API ${durum}: ${govde.slice(0, 200)}`)
     this.name = 'AiCagriHatasi'
   }
 }

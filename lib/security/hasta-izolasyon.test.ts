@@ -91,7 +91,7 @@ const SAHTE_AI_JSON = JSON.stringify({ taniVeTedavi: 'Sentetik', taburcuOzeti: '
 mock.module(yerel('lib/dr-ayse/groq.ts'), { namedExports: { groqChat: async () => SAHTE_AI_JSON } })
 mock.module(yerel('lib/doktor/soapUret.ts'), {
   namedExports: {
-    soapNotuUret: async (_c: unknown, girdi: { klinikBaglam?: string }) => {
+    soapNotuUret: async (girdi: { klinikBaglam?: string }) => {
       aiBaglamlari.push(String(girdi?.klinikBaglam || ''))
       return { soap: { subjektif: 'Sentetik S', objektif: 'Sentetik O', degerlendirme: 'Sentetik D', plan: 'Sentetik P' }, tani: 'Sentetik' }
     },

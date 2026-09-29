@@ -12,7 +12,6 @@
  * Onayla / Muayeneyi onayla reuse /api/doktor/belgeler/analiz/onayla (lab-aware block).
  */
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta, downloadDocument } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
@@ -28,7 +27,6 @@ import { muhtemelNtpPanel, ntpBelgeSahibi, ntpKeyFromRaw, yorumNtp, NTP_DISCLAIM
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -66,8 +64,8 @@ export async function POST(req: NextRequest) {
       else if (ft === 'application/pdf') { const p = await pdfMetinCoz(bytes); yapi = p.satirlar.length ? p : null; if (!p.metin.trim()) yapi = null }
     } catch (e) { yapi = null; console.error('lab yapi', e) }
     try {
-      if (ft === 'application/pdf') gorsel = await gorselCikar(getAnthropic(), { tip: 'pdf', base64: bytes.toString('base64') }, enabiz ? ENABIZ_TALIMAT : undefined, user.id)
-      else if (ft.startsWith('image/')) gorsel = await gorselCikar(getAnthropic(), { tip: 'image', mime: ft, base64: bytes.toString('base64') }, undefined, user.id)
+      if (ft === 'application/pdf') gorsel = await gorselCikar({ tip: 'pdf', base64: bytes.toString('base64') }, enabiz ? ENABIZ_TALIMAT : undefined, user.id)
+      else if (ft.startsWith('image/')) gorsel = await gorselCikar({ tip: 'image', mime: ft, base64: bytes.toString('base64') }, undefined, user.id)
     } catch (e) { gorsel = null; console.error('lab gorsel', e) }
     if (!yapi && !gorsel) return NextResponse.json({ error: 'Bu dosyadan tablo çıkarılamadı.' }, { status: 422 })
 
@@ -231,7 +229,7 @@ export async function POST(req: NextRequest) {
     }) : null
     if (ntp) ozelSatirlar.unshift(`NTP yorum (kural): ${ntp.yorum}`, NTP_DISCLAIMER, ntp.sevk !== 'yok' ? `Sevk: ${ntp.sevk}` : 'Sevk yok', ...ntp.plan.map((p) => `Plan önerisi: ${p}`))
     let yazim
-    try { yazim = await labRaporYaz(getAnthropic(), ntpMi ? 'ayse' : kural.persona, ntpMi ? 'pediatri' : bransKey, satirlar, { yasAy, cinsiyet, ilaclar, labAdi: panel.lab_adi, numuneTarihi: panel.numune_tarihi, kritik, oncekiVar, ozelSatirlar }, user.id) }
+    try { yazim = await labRaporYaz(ntpMi ? 'ayse' : kural.persona, ntpMi ? 'pediatri' : bransKey, satirlar, { yasAy, cinsiyet, ilaclar, labAdi: panel.lab_adi, numuneTarihi: panel.numune_tarihi, kritik, oncekiVar, ozelSatirlar }, user.id) }
     catch (e) {
       console.error('lab yorum', e)
       if (!ntp) return NextResponse.json({ error: 'Taslak üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 })

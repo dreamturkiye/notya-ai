@@ -8,7 +8,6 @@
  * bu route yalnız yolu alır — Vercel gövde limiti sorunsuz aşılır.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { modelSec } from '@/lib/ai/modeller'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
@@ -154,13 +153,12 @@ export async function POST(req: NextRequest) {
   } catch { /* profil kritik değil */ }
 
   try {
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-    // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
+        // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir.
     const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId }, { oneriAyri: (soz) => { oneri.soz = soz } })
+    const noteData = await soapNotuUret({ transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId }, { oneriAyri: (soz) => { oneri.soz = soz } })
     // NOTYA-ASI-NOT-01: sessions/end ile aynı — yalnız bu vizitte uygulanan aşılar, vizit tarihiyle.
     let notAsilari: unknown[] = []
     try {
@@ -217,7 +215,7 @@ export async function POST(req: NextRequest) {
       const { ogrenmeyeDeger, sohbettenOgren } = await import('@/lib/doktor/hafiza')
       if (ogrenmeyeDeger(transcript)) {
         const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
-        arkaPlandaSurdur(sohbettenOgren(anthropic, supabase, doktorId, [{ role: 'user', content: transcript }]))
+        arkaPlandaSurdur(sohbettenOgren(supabase, doktorId, [{ role: 'user', content: transcript }]))
       }
     } catch (e) { console.error('[hafiza] ses-yukle', e) }
 

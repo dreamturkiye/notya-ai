@@ -97,7 +97,7 @@ describe('JSON sözleşmesi', () => {
 
 describe('soapNotuUret — paralel iki çağrı', () => {
   it('iki çağrı da ikisinden biri bitmeden başlar; aynı system öneki, ilk blok cache_control taşır', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     assert.equal(cagrilar.length, 2)
     assert.deepEqual(cagrilar.map((c) => c.tur).sort(), ['A', 'B'])
@@ -112,7 +112,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('A + B birleşir: gövde A\'dan, öneri alanları yalnız B\'den; Türkçe bölümler türetilir', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('A').coz(cevap(GOVDE)); cagri('B').coz(cevap(ONERI))
     const n = await sonuc
@@ -130,7 +130,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('B hata verirse not A ile kaydedilir, öneri alanları boş', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').reddet(Object.assign(new Error('529 overloaded'), { status: 529 }))
     cagri('A').coz(cevap(GOVDE))
@@ -141,7 +141,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('B ayrıştırılamazsa (F3) ham metin gösterilmez, öneri alanları boş', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').coz(cevap('bu JSON değil'))
     cagri('A').coz(cevap(GOVDE))
@@ -151,7 +151,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('kesik A JSON\'u eskisi gibi kurtarılır; B kesikse de kurtarılan kısım kullanılır', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('A').coz(cevap(JSON.stringify({ soap: GOVDE.soap, ilaclar: [{ ad: 'X' }, { ad: 'Y' }] }).slice(0, -12)))
     cagri('B').coz(cevap(JSON.stringify(ONERI).slice(0, -30)))
@@ -162,7 +162,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('gövde çağrısına uzunluk kuralı gider (NOT-HIZ-03); maxTokens A 8000, B 2000', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     const [a, b] = [cagri('A'), cagri('B')]
     const govdeMesaji = a.istek.messages[0].content
@@ -176,7 +176,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('A hata verirse hata eskisi gibi fırlatılır (soapUretYeniden / rota yolu)', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').coz(cevap(ONERI))
     cagri('A').reddet(Object.assign(new Error('529 overloaded'), { status: 529 }))
@@ -184,7 +184,7 @@ describe('soapNotuUret — paralel iki çağrı', () => {
   })
 
   it('A ayrıştırılamazsa SoapCiktiHatasi (geçici, yeniden denenir)', async () => {
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI)
+    const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').coz(cevap(ONERI))
     cagri('A').coz(cevap('JSON yok'))
@@ -200,7 +200,7 @@ describe('soapNotuUret — öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () =>
 
   it('oneriAyri verilince not A ile döner, B beklenmez; öneri alanları notta yok', async () => {
     const { kutu, secenek } = ayri()
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI, secenek)
+    const sonuc = soapNotuUret(GIRDI, { ...secenek, istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     assert.ok(kutu.soz, 'öneri sözü hemen verilmeli')
     cagri('A').coz(cevap(GOVDE))
@@ -220,7 +220,7 @@ describe('soapNotuUret — öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () =>
 
   it('B hata verirse öneri sözü null ile biter, fırlatmaz; not etkilenmez', async () => {
     const { kutu, secenek } = ayri()
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI, secenek)
+    const sonuc = soapNotuUret(GIRDI, { ...secenek, istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').reddet(Object.assign(new Error('529 overloaded'), { status: 529 }))
     cagri('A').coz(cevap(GOVDE))
@@ -231,7 +231,7 @@ describe('soapNotuUret — öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () =>
 
   it('B ayrıştırılamazsa (F3) öneri null; ham metin hiçbir yere gitmez', async () => {
     const { kutu, secenek } = ayri()
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI, secenek)
+    const sonuc = soapNotuUret(GIRDI, { ...secenek, istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').coz(cevap('bu JSON değil'))
     cagri('A').coz(cevap(GOVDE))
@@ -242,7 +242,7 @@ describe('soapNotuUret — öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () =>
 
   it('B, A\'dan önce biterse de not A zamanında döner ve öneri teslim edilir', async () => {
     const { kutu, secenek } = ayri()
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI, secenek)
+    const sonuc = soapNotuUret(GIRDI, { ...secenek, istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').coz(cevap(ONERI))
     assert.equal((await kutu.soz!)?.hasta_ozeti, ONERI.hasta_ozeti)
@@ -252,7 +252,7 @@ describe('soapNotuUret — öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () =>
 
   it('A hata verirse oneriAyri yolunda da hata fırlatılır (soapUretYeniden)', async () => {
     const { secenek } = ayri()
-    const sonuc = soapNotuUret(sahteIstemci as never, GIRDI, secenek)
+    const sonuc = soapNotuUret(GIRDI, { ...secenek, istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('B').coz(cevap(ONERI))
     cagri('A').reddet(Object.assign(new Error('529 overloaded'), { status: 529 }))
@@ -261,7 +261,7 @@ describe('soapNotuUret — öneri kritik yolda değil (NOTYA-NOT-HIZ-03)', () =>
 
   it('doz kilidi öneriye ayrı uygulanır: dahiliyede reçete önerisi dozsuz, uydurma doz öneri metninden çıkar', async () => {
     const { kutu, secenek } = ayri()
-    const sonuc = soapNotuUret(sahteIstemci as never, { ...GIRDI, specialty: 'dahiliye' }, secenek)
+    const sonuc = soapNotuUret({ ...GIRDI, specialty: 'dahiliye' }, { ...secenek, istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     cagri('A').coz(cevap(GOVDE))
     await sonuc

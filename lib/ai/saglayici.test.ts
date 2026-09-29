@@ -10,6 +10,9 @@
  */
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
+
+delete process.env.NEXT_PUBLIC_SUPABASE_URL
+
 import { aiAkis, aiCagir, dusukGuvenliYanit, TASIMA_BEKLEME, yanitMetni, type AiMesaj } from './cagir'
 import { gucluModel, hizliModel, MODEL_GUCLU, MODEL_HIZLI } from './modeller'
 import { dogrudanModelAdi, kullanimCevir, mesajlariCevir, openRouterGovdesi, openRouterModelAdi, openRouterYanitiniCevir, yolSec } from './saglayici'

@@ -1,11 +1,5 @@
 /**
- * AUDIT-2026-09-03 — Bu modül artık bir ANTHROPIC ŞİMİ'dir.
- * Tarihçe: erken dönem araçlar (epikriz, belgeler/ingest, e-reçete, sandbox) Groq'a
- * yazılmıştı; GROQ_API_KEY hiçbir ortamda tanımlanmadığı için bu araçlar hiç çalışmadı.
- * Dışa açılan arayüz (groqChat(messages, options) → string ve varsayılan (system, user)
- * imzası) birebir korunarak iç kısım Anthropic'e geçirildi — böylece tüm çağıran rotalar
- * tek dosya değişikliğiyle düzeldi. Yeni kod bu modülü değil doğrudan Anthropic desenini
- * kullanmalı; bu dosya geriye dönük uyumluluk içindir.
+ * Eski Groq çağrı yerlerini aiCagir'e bağlar (Luna-Pro). Dış arayüz (groqChat) korunur.
  */
 
 import { aiCagir, yanitMetni } from '@/lib/ai/cagir'
@@ -19,9 +13,8 @@ export async function groqChat(
   messages: GroqMessage[],
   options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean }
 ): Promise<string> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY missing')
+  if (!String(process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || '').trim()) {
+    throw new Error('OPENROUTER_API_KEY missing')
   }
 
   const sistemParcalari = messages.filter((m) => m.role === 'system').map((m) => m.content)
@@ -34,7 +27,7 @@ export async function groqChat(
   if (konusma.length === 0) konusma.push({ role: 'user', content: 'Devam et.' })
 
   // NOTYA-MALIYET-01: epikriz, gelişim taraması, belge ingest özeti (lab/radyoloji metni) — klinik çıktı (LUNAPRO-01: birincil Luna-Pro)
-  // (klinik-analiz). Hata metni eskisiyle aynı biçimde: "Anthropic API <durum>: <gövde>".
+  // (klinik-analiz).
   const data = await aiCagir({
     gorev: 'klinik-analiz',
     maxTokens: options?.maxTokens ?? 1024,
@@ -44,7 +37,7 @@ export async function groqChat(
     messages: konusma,
   })
   const content = yanitMetni(data)
-  if (!content) throw new Error('Empty Anthropic response')
+  if (!content) throw new Error('Empty model response')
   // jsonMode çağıranları JSON.parse yapar — kod bloğu çitlerini burada temizle.
   return options?.jsonMode ? content.replace(/```json\n?|\n?```/g, '').trim() : content
 }

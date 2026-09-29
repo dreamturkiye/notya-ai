@@ -1,19 +1,14 @@
 // ============================================================
 // NOTYA AI - Yapay Zeka Not Üretici
-// Tüm Meslekler için Claude API Entegrasyonu
+// Tüm meslekler için not üretici (aiCagir / Luna-Pro)
 // NOTYA-MALIYET-01: hepsi GÜÇLÜ — tıbbi not 'soap', diğer meslek notları 'not-uretimi' (lib/ai/modeller.ts)
 // ============================================================
 
-import Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from './cagir'
 import type { 
   GeneratedNote, SessionContext, TranscriptSegment, MedicalSpecialty 
 } from '@/types/notya'
 import { getSpecialtyTemplate } from './specialtyTemplates'
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
 
 // ============================================================
 // TIP ALANLARI - KLİNİK NOT ÜRETİCİ
@@ -65,7 +60,6 @@ GÖREV: Transkripti analiz et ve aşağıdaki JSON yapısını döndür. Başka 
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'soap',
     maxTokens: 4000,
     temperature: 0.1,
@@ -153,7 +147,6 @@ Avukat-müvekkil görüşmesini analiz et ve JSON döndür. Başka hiçbir şey 
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 4000,
     temperature: 0.1,
@@ -226,7 +219,6 @@ Seans transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 4000,
     temperature: 0.1,
@@ -295,7 +287,6 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 4000,
     temperature: 0.1,
@@ -364,7 +355,6 @@ Transkripti analiz et ve YALNIZCA şu JSON'u döndür:
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 4000,
     temperature: 0.1,
@@ -442,7 +432,6 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 3000,
     temperature: 0.1,
@@ -502,7 +491,6 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 3000,
     temperature: 0.1,
@@ -558,7 +546,6 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 3000,
     temperature: 0.1,
@@ -617,7 +604,6 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 3000,
     temperature: 0.1,
@@ -673,7 +659,6 @@ Toplantı transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await aiCagir({
-    istemci: anthropic,
     gorev: 'not-uretimi',
     maxTokens: 3000,
     temperature: 0.1,

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import Anthropic from "@anthropic-ai/sdk"
 import { MALI_PERSONAS, getMaliPersona, buildMaliSystemPromptParcalari, type MaliPersonaId } from "@/lib/mali/maliPersonaEngine"
 import { quickClassifyMali } from "@/lib/mali/maliIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
@@ -11,7 +10,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
 )
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,7 +53,6 @@ export async function POST(req: NextRequest) {
 
     // NOTYA-MALIYET-01: mevzuat tavsiyesi (sohbet-uzman; LUNAPRO-01: birincil Luna-Pro)
     const aiResponse = await aiCagir({
-      istemci: anthropic,
       gorev: "sohbet-uzman",
       doctorId: user.id,
       // prompt caching: kimlik + kurallar bloğu önbellekli; öğrenilenler / aktif kayıt arkasından

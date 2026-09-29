@@ -25,7 +25,6 @@
  * lib/asistan/sesliOnay.ts'e verir (dokunuşla aynı omurga). Yazılı kanalda onay hâlâ karttaki dokunuştur.
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
-import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
 import { asistanOnbellekBloklari } from "@/lib/asistan/onbellekBloklari"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
@@ -131,8 +130,6 @@ export type AyseSonucu =
   | { ok: true; cevap: AyseCevabi }
   /** `govde` yazılı rotanın eski hata gövdesi (biçim korunur); `soz` sesli kanalda söylenecek cümle. */
   | { ok: false; durum: number; govde: Record<string, unknown>; soz: string }
-
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 const simdi = () => new Date().toISOString()
 
@@ -449,7 +446,6 @@ ${ilacBaglamMetni(drugs[0])}`
   const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, SOZ_BEAT_SINIRI, Boolean(g.sesDurumu)) : null
 
   const cagri = {
-    istemci: getAnthropic(),
     gorev: yonlendirme.gorev,
     doctorId: doktorId,
     // Hasta dosyası ve aktif hasta system'de — güvenlik sinyali taraması mesajla birlikte bunları da okur.
@@ -604,13 +600,13 @@ ${ilacBaglamMetni(drugs[0])}`
       arkaPlandaSurdur((async () => {
         try {
           if (ogren) {
-            await sohbettenOgren(getAnthropic(), supabase, doktorId, [
+            await sohbettenOgren(supabase, doktorId, [
               ...gecmis,
               { role: "user", content: mesaj },
               { role: "assistant", content: soz },
             ])
           }
-          if (ozet) await ozetGerekirseGuncelle(getAnthropic(), supabase, doktorId)
+          if (ozet) await ozetGerekirseGuncelle(supabase, doktorId)
         } catch (e) { console.error("[hafiza] sohbet arka plan", e) }
       })())
     }

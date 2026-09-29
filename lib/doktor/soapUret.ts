@@ -14,7 +14,6 @@
  * 5. KVKK: modele hastanın kimliği (TC, ad) ASLA gitmez — yalnız yaş/cinsiyet/klinik bağlam.
  *    Kimlik başlığı ekranda sunucu tarafında hasta kaydından birleştirilir.
  */
-import Anthropic from '@anthropic-ai/sdk'
 import { aiCagir, yanitKademesi, type SistemBlogu } from '@/lib/ai/cagir'
 import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import fs from 'fs'
@@ -330,7 +329,9 @@ UZUNLUK KURALI (kesin): her SOAP bölümü YALNIZ transkriptte söyleneni içeri
 const ONERI_CAGRISI = `ÇAĞRI: YALNIZ (B) AI ÖNERİSİ JSON'unu döndür. Not gövdesini (basvuruYakinmasi, soap, vitaller, ilaclar, asilar, icd10_codes) bu çağrıda YAZMA — ayrı bir çağrıda yazılır. hasta_ozeti ve alarmBulgulari yalnız doktorun söylediği tanı/tedaviyi anlatır.
 UZUNLUK SINIRI (kesin): aiDegerlendirme en fazla 6 kısa madde, toplam 120 kelime — gerekçe yazma, sonucu yaz. receteOnerisi en fazla 4 kalem, her kalemde not alanı en fazla 1 cümle. kritik_bulgular en fazla 3 madde (yoksa boş dizi). alarmBulgulari 3-5 kısa madde. hasta_ozeti 3-5 cümle. Toplam çıktı 1.200 tokeni geçmesin; ayrıntı isteyen doktor Ayşe'ye sorar.`
 
-function yanitJsonu(yanit: Anthropic.Message): SoapNotu {
+type AiYanit = Awaited<ReturnType<typeof aiCagir>>
+
+function yanitJsonu(yanit: AiYanit): SoapNotu {
   // Boş içerik (content: []) eskiden TypeError'dı; artık ayrıştırılamayan çıktı olarak geçici hata sayılır.
   const ham = yanit?.content?.[0]?.type === 'text' ? yanit.content[0].text : ''
   return jsonKurtar(ham.replace(/```json\n?|\n?```/g, '').trim())
@@ -382,7 +383,7 @@ function soapGuveni(v: SoapNotu): number | null {
  * yalnız bu durumda bir çağrı süresi eklenir). Gövde zaten koruyucudan geldiyse (G1–G4) yeniden yazılmaz (istek başına
  * tek düşüş). Koruyucu da düşerse birincilin notu kullanılır — hekim boş not görmez.
  */
-async function govdeyiAl(cagri: Parameters<typeof aiCagir>[0], yanit: Anthropic.Message): Promise<SoapNotu> {
+async function govdeyiAl(cagri: Parameters<typeof aiCagir>[0], yanit: AiYanit): Promise<SoapNotu> {
   const veri: SoapNotu = { ...yanitJsonu(yanit) }
   const guven = soapGuveni(veri)
   if (guven === null || guven >= SOAP_GUVEN_ESIGI || yanitKademesi(yanit)?.kademe === 'guclu') return veri
@@ -401,6 +402,8 @@ export interface SoapSecenek {
    * (waitUntil) and writes it to the saved note. Not given → B is awaited and merged (scripts / smoke tests).
    */
   oneriAyri?: (oneriSozu: Promise<SoapOnerisi | null>) => void
+  /** Yalnız test sahtesi — üretim OpenRouter'dan geçer. */
+  istemci?: import('@/lib/ai/cagir').AiIstemci
 }
 
 /**
@@ -409,7 +412,7 @@ export interface SoapSecenek {
  * separately; if B fails or returns unparseable JSON (F3), the advisory stays empty. A failure keeps the old error path
  * (thrown → soapUretYeniden / route).
  */
-export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secenek: SoapSecenek = {}): Promise<SoapNotu> {
+export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}): Promise<SoapNotu> {
   const system = soapSistemBloklari(girdi)
   const bas = Date.now()
   const transkript = `Muayene transkripti:\n\n${girdi.transcript}`
@@ -417,7 +420,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secen
   // NOTYA-MALIYET-01: muayene/SOAP notu. LUNAPRO-01: birincil Luna-Pro; klinik bağlam (alerji, sürekli ilaç) system'de —
   // transkriptle birlikte güvenlik taramasına girer. 'soap' yapılandırılmış görevdir (G2 d: bozuk/kesik JSON → Sonnet 5).
   const govdeCagrisi: Parameters<typeof aiCagir>[0] = {
-    istemci: anthropic,
+    istemci: secenek.istemci,
     gorev: 'soap',
     maxTokens: 8000,
     doctorId: girdi.doctorId ?? null,
@@ -428,7 +431,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi, secen
   const govdeSozu = aiCagir(govdeCagrisi)
   // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — klinik-analiz, JSON (G2 d), kendi politika satırıyla.
   const hamOneriSozu: Promise<SoapNotu | null> = aiCagir({
-    istemci: anthropic,
+    istemci: secenek.istemci,
     gorev: 'klinik-analiz',
     maxTokens: 2000,
     doctorId: girdi.doctorId ?? null,
@@ -475,12 +478,11 @@ export function stilOrnekleriDerle(notlar: { content_subjektif?: string | null; 
   return parcalar.join('\n')
 }
 
-/** NOTYA-OGRENME-02 — düzeltme farklarını kompakt doktor stil profiline damıtır (Haiku, ucuz).
+/** NOTYA-OGRENME-02 — düzeltme farklarını kompakt doktor stil profiline damıtır (ucuz cikarim).
  * Onay rotası, düzeltme içeren her onayda çağırır; profil sonraki TÜM not üretimlerine gider.
  * Veri çarkı (flywheel): doktor düzelttıkçe Ayşe o doktora özgü keskinleşir — birikim,
  * kopyalanamayan doktor-başına rekabet avantajıdır. */
 export async function stilProfiliDamit(
-  anthropic: Anthropic,
   mevcutProfil: string,
   duzeltmeler: { alan?: string | null; onceki?: string | null; sonraki?: string | null }[],
   doktorBransi?: string | null
@@ -491,7 +493,6 @@ export async function stilProfiliDamit(
   if (!ornekler) return mevcutProfil
   // NOTYA-MALIYET-01: doktorun kendi düzeltmelerinden tercih çıkarımı — dar HIZLI listesinde (hasta verisi yorumlamaz)
   const yanit = await aiCagir({
-    istemci: anthropic,
     gorev: 'cikarim',
     maxTokens: 800,
     system: `Bir doktorun yapay zekâ taslak notlarına yaptığı düzeltmelerden, gelecekteki not üretimine rehber olacak KOMPAKT bir tercih profili çıkar. En fazla 12 madde.

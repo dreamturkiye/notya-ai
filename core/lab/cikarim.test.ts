@@ -1,6 +1,5 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import type Anthropic from '@anthropic-ai/sdk'
 import { csvXlsxCoz, gorselCikar, pdfMetinCoz, trTarihIso } from './cikarim'
 import { kanonikBul } from './kanonik'
 import { satirKur, uzlastir } from './trend'
@@ -84,11 +83,11 @@ describe('trTarihIso', () => {
 })
 
 describe('gorselCikar (vision pass) — response normalisation with a stub client', () => {
-  const stub = (text: string) => ({ messages: { create: async () => ({ content: [{ type: 'text', text }] }) } }) as unknown as Anthropic
+  const stub = (text: string) => ({ messages: { create: async () => ({ content: [{ type: 'text', text }] }) } })
   it('fenced JSON → rows as strings, rows without value dropped, ISO dates, kimlik kept for the identity guard only', async () => {
     const json = { lab_adi: 'QA Lab', numune_tarihi: '2026-09-13', rapor_tarihi: '2026-09-14', kimlik: { ad: 'TEST Sentetik', dogum: null, tc_son4: null },
       satirlar: [{ raw_name: 'HbA1c', value: 7.9, unit: '%', ref_low: 4, ref_high: 6, flag_printed: 'H', page: 1 }, { raw_name: 'Boş', value: null, unit: null, ref_low: null, ref_high: null, flag_printed: null, page: 1 }, { raw_name: 'Kreatinin', value: '88', unit: 'µmol/L', ref_low: '62', ref_high: '106', flag_printed: null, page: 1 }], not: null }
-    const r = await gorselCikar(stub('Here:\n```json\n' + JSON.stringify(json) + '\n```'), { tip: 'pdf', base64: '' })
+    const r = await gorselCikar({ tip: 'pdf', base64: '' }, undefined, undefined, stub('Here:\n```json\n' + JSON.stringify(json) + '\n```'))
     assert.equal(r.kaynak, 'gorsel'); assert.equal(r.lab_adi, 'QA Lab'); assert.equal(r.numune_tarihi, '2026-09-13')
     assert.equal(r.satirlar.length, 2); assert.equal(r.satirlar[0].value, '7.9'); assert.equal(r.satirlar[0].ref_low, '4'); assert.equal(r.satirlar[0].kaynak, 'gorsel')
     assert.equal(r.kimlik?.ad, 'TEST Sentetik')

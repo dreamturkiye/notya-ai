@@ -1,6 +1,6 @@
 /**
  * NOTYA-KOTA-01 — Hesap başına günlük AI kotası.
- * Amaç ikili: (1) bozuk bir istemci döngüsünün ya da kötü niyetli bir hesabın Anthropic
+ * Amaç ikili: (1) bozuk bir istemci döngüsünün ya da kötü niyetli bir hesabın model
  * bakiyesini bir gecede eritmesini engellemek, (2) çıktı-hasadı (rakibin toplu üretimle
  * kalitemizi damıtması) yolunu kapatmak. Sayaçlar Postgres'te (ai_kullanim) — sunucusuz
  * ortamda bellek-içi sayaç güvenilmez. Gün TRT'ye göre döner.

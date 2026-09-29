@@ -7,7 +7,7 @@
  *   1. GET  /api/notes?pending=true      → İnceleme kuyruğu: ölçüm alanları + hitap (sunucu hesaplar)
  *      + ortak <YasamsalBulgularFormu> bu yanıtla GERÇEKTEN çizilir (react-dom/server) → Baş Çevresi var mı?
  *   2. GET  /api/notes/[id]              → not sayfası / yazdır: aynı paket + Neyzi persentili yalnız pediatride
- *   3. POST /api/sessions/[id]/end       → SOAP üretimi (gerçek soapUret, sahte Anthropic): sistem promptunda veli?
+ *   3. POST /api/sessions/[id]/end       → SOAP üretimi (gerçek soapUret, sahte model): sistem promptunda veli?
  *                                          model baş çevresi doldurursa KD notuna yazılıyor mu?
  *   4. POST /api/doktor/not-konsult      → "↻ Notuma göre yenile": UI'nin gönderdiği istek + sistem promptu veli?
  *   5. POST /api/doktor/araclar/epikriz  → "Kliniği: …" başlığı ve imza unvanı hekimin branşı mı?
@@ -34,6 +34,7 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
+delete process.env.OPENROUTER_API_KEY
 
 // ─── Sahte altyapı ──────────────────────────────────────────────────────────────────────────────
 let db = new SahteVeritabani()
@@ -59,8 +60,9 @@ function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { hea
   }
 }
 
-/** SOAP üretiminin (Anthropic SDK) gördüğü sistem promptları + modelin "dolduracağı" sentetik yanıt. */
+/** SOAP ve not-konsult aynı SDK sahte kapısından geçer (üretim OpenRouter; test doğrudan yol). */
 const soapSistemleri: string[] = []
+const konsultIstekleri: Array<{ system: string; mesajlar: string }> = []
 const MODEL_SOAP = {
   basvuruYakinmasi: 'Sentetik yakınma',
   soap: { subjektif: 'Şikayet: sentetik', objektif: 'Genel durum iyi', degerlendirme: '1) Sentetik tanı', plan: '1) Kontrol' },
@@ -71,10 +73,17 @@ const MODEL_SOAP = {
 }
 class SahteAnthropic {
   messages = {
-    create: async (istek: { system?: string | { text?: string }[] }) => {
-      // NOTYA-NOT-HIZ-01: SOAP system önbellek için blok dizisi olarak gider — modelin gördüğü metin blokların birleşimidir
-      soapSistemleri.push(Array.isArray(istek?.system) ? istek.system.map((b) => String(b?.text || '')).join('') : String(istek?.system || ''))
-      return { content: [{ type: 'text', text: JSON.stringify(MODEL_SOAP) }], stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
+    create: async (istek: { system?: string | { text?: string }[]; messages?: unknown[] }) => {
+      const system = Array.isArray(istek?.system) ? istek.system.map((b) => String(b?.text || '')).join('') : String(istek?.system || '')
+      const mesajlar = JSON.stringify(istek?.messages || [])
+      // SOAP gövde/öneri çağrıları; not-konsult sohbet geçmişi.
+      if (/NOT GÖVDESİ|AI ÖNERİSİ|Muayene transkripti/.test(mesajlar)) {
+        soapSistemleri.push(system)
+        return { content: [{ type: 'text', text: JSON.stringify(MODEL_SOAP) }], stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
+      }
+      konsultIstekleri.push({ system, mesajlar })
+      const cevap = { cevap: 'Özeti güncelledim Hocam.', duzenlemeler: { hastaOzeti: 'Yenilenmiş sentetik özet.', vitaller: { nabiz: '84', basCevresi: '30' } }, eylemler: [] }
+      return { content: [{ type: 'text', text: JSON.stringify(cevap) }], stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
     },
   }
 }
@@ -98,17 +107,8 @@ mock.module(yerel('lib/dr-ayse/groq.ts'), {
 mock.module(yerel('lib/doktor/hizLimiti.ts'), { namedExports: { aiKotaKullan: async () => ({ izin: true }), KOTA_MESAJI: 'kota', KOVA_LIMITLERI: {} } })
 mock.module(yerel('lib/alarm.ts'), { namedExports: { kritikAlarm: async () => undefined } })
 
-/** not-konsult Claude'a düz fetch ile gider — istek yakalanır, model baş çevresi + özet döndürür. */
-const konsultIstekleri: Array<{ system: string; mesajlar: string }> = []
-globalThis.fetch = (async (girdi: unknown, init?: { body?: string }) => {
-  if (String(girdi).includes('api.anthropic.com')) {
-    const govde = JSON.parse(String(init?.body || '{}'))
-    // NOTYA-MALIYET-01: system önbellek için blok dizisi olarak gidebilir — modelin gördüğü metin blokların birleşimidir
-    const system = Array.isArray(govde.system) ? govde.system.map((b: { text?: string }) => String(b?.text || '')).join('') : String(govde.system || '')
-    konsultIstekleri.push({ system, mesajlar: JSON.stringify(govde.messages || []) })
-    const cevap = { cevap: 'Özeti güncelledim Hocam.', duzenlemeler: { hastaOzeti: 'Yenilenmiş sentetik özet.', vitaller: { nabiz: '84', basCevresi: '30' } }, eylemler: [] }
-    return new Response(JSON.stringify({ content: [{ type: 'text', text: JSON.stringify(cevap) }] }), { status: 200, headers: { 'content-type': 'application/json' } })
-  }
+/** Ölçüm yazımı / OpenRouter dışı fetch yok. */
+globalThis.fetch = (async (girdi: unknown) => {
   throw new Error(`brans-alan-sizmasi testi ağ erişimi yapamaz: ${String(girdi)}`)
 }) as typeof fetch
 

@@ -9,7 +9,6 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import Anthropic from '@anthropic-ai/sdk'
 import { seansIsle, ogrenmeyeDeger, sohbettenOgren } from '@/lib/doktor/hafiza'
 
 export const dynamic = 'force-dynamic'
@@ -18,7 +17,6 @@ const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
 )
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
@@ -35,7 +33,7 @@ export async function POST(req: NextRequest) {
   try {
     await seansIsle(supabase, user.id, 'sohbet')
     if (doktorSozleri && ogrenmeyeDeger(doktorSozleri)) {
-      await sohbettenOgren(getAnthropic(), supabase, user.id, [{ role: 'user', content: doktorSozleri }])
+      await sohbettenOgren(supabase, user.id, [{ role: 'user', content: doktorSozleri }])
     }
   } catch (e) {
     console.error('[hafiza] ses-ogren', e)

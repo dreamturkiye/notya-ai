@@ -172,7 +172,7 @@ describe('G2 (f) SOAP gövdesi ai_confidence', () => {
 
   it(`eşik ${SOAP_GUVEN_ESIGI}: birincil gövde 0.4 → gövde koruyucuda yeniden yazılır, öneri (B) tekrarlanmaz`, async () => {
     secici = (g) => govdeIstegi(g) ? tamam(g.model === MODEL_GUCLU ? govde(0.92).replace('Akut bronşit', 'Akut bronşit (koruyucu)') : govde(0.4)) : tamam(ONERI)
-    const not = await soapNotuUret(istemci as never, GIRDI)
+    const not = await soapNotuUret(GIRDI, { istemci: istemci as never })
     const govdeModelleri = istekler.filter((i) => govdeIstegi(i.govde)).map((i) => i.govde.model)
     assert.deepEqual(govdeModelleri, [MODEL_HIZLI, MODEL_GUCLU])
     assert.equal(istekler.filter((i) => !govdeIstegi(i.govde)).length, 1)
@@ -181,7 +181,7 @@ describe('G2 (f) SOAP gövdesi ai_confidence', () => {
   })
   it('birincil gövde 0.9 → yeniden yazma yok (uzun ya da iyi cevap tetiklemez)', async () => {
     secici = (g) => govdeIstegi(g) ? tamam(govde(0.9)) : tamam(ONERI)
-    const not = await soapNotuUret(istemci as never, GIRDI)
+    const not = await soapNotuUret(GIRDI, { istemci: istemci as never })
     assert.deepEqual(modeller().filter((m) => m === MODEL_GUCLU), [])
     assert.equal(not.ai_confidence, 0.9)
   })
@@ -192,13 +192,13 @@ describe('G2 (f) SOAP gövdesi ai_confidence', () => {
       govdeSayac++
       return govdeSayac <= 2 ? { durum: 500 } : tamam(govde(0.3))
     }
-    const not = await soapNotuUret(istemci as never, GIRDI)
+    const not = await soapNotuUret(GIRDI, { istemci: istemci as never })
     assert.deepEqual(istekler.filter((i) => govdeIstegi(i.govde)).map((i) => i.govde.model), [MODEL_HIZLI, MODEL_HIZLI, MODEL_GUCLU])
     assert.equal(not.ai_confidence, 0.3)
   })
   it('koruyucu yeniden yazımı düşerse birincilin notu kullanılır (hekim boş not görmez)', async () => {
     secici = (g) => govdeIstegi(g) ? (g.model === MODEL_GUCLU ? { durum: 500 } : tamam(govde(0.4))) : tamam(ONERI)
-    const not = await soapNotuUret(istemci as never, GIRDI)
+    const not = await soapNotuUret(GIRDI, { istemci: istemci as never })
     assert.equal(not.ai_confidence, 0.4)
     assert.equal(not.soap?.degerlendirme, '1. Akut bronşit')
   })

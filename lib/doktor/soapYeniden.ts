@@ -42,8 +42,8 @@ function durumKodu(e: unknown): number | null {
   const h = nesne(e)
   const d = typeof h.status === 'number' ? h.status : typeof h.durum === 'number' ? h.durum : null
   if (d != null) return d
-  // SDK / AiCagriHatasi mesajı durumla başlar ("529 {…}", "Anthropic API 503: …"); mesajın içindeki rastgele sayı sayılmaz.
-  const m = String(h.message ?? '').match(/^(?:Anthropic API )?([45]\d\d)\b/)
+  // SDK / AiCagriHatasi mesajı durumla başlar ("529 {…}", "Model API 503: …"); mesajın içindeki rastgele sayı sayılmaz.
+  const m = String(h.message ?? '').match(/^(?:(?:Anthropic|Model) API )?([45]\d\d)\b/)
   return m ? Number(m[1]) : null
 }
 
