@@ -1,7 +1,44 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
 import { pcmdenWav } from './fishMikrofon'
+
+function msgpackAsrOku(b: Uint8Array): { audio: Uint8Array; language: string; ignore_timestamps: boolean } {
+  let i = 0
+  if (b[i++] !== 0x83) throw new Error('map')
+  const alan: Record<string, unknown> = {}
+  for (let k = 0; k < 3; k++) {
+    const t = b[i++]
+    if ((t & 0xe0) !== 0xa0) throw new Error('key')
+    const kn = t & 0x1f
+    const ad = new TextDecoder().decode(b.subarray(i, i + kn))
+    i += kn
+    const v = b[i]
+    if (v === 0xc3 || v === 0xc2) {
+      alan[ad] = v === 0xc3
+      i += 1
+    } else if ((v & 0xe0) === 0xa0) {
+      const n = v & 0x1f
+      alan[ad] = new TextDecoder().decode(b.subarray(i + 1, i + 1 + n))
+      i += 1 + n
+    } else if (v === 0xc4) {
+      const n = b[i + 1]
+      alan[ad] = b.subarray(i + 2, i + 2 + n)
+      i += 2 + n
+    } else if (v === 0xc5) {
+      const n = (b[i + 1] << 8) | b[i + 2]
+      alan[ad] = b.subarray(i + 3, i + 3 + n)
+      i += 3 + n
+    } else if (v === 0xc6) {
+      const n = (b[i + 1] << 24) | (b[i + 2] << 16) | (b[i + 3] << 8) | b[i + 4]
+      alan[ad] = b.subarray(i + 5, i + 5 + n)
+      i += 5 + n
+    } else {
+      throw new Error('val')
+    }
+  }
+  return alan as { audio: Uint8Array; language: string; ignore_timestamps: boolean }
+}
 
 test('Fish metni cümle arasına kısa durak koyar, duygu etiketini siler', () => {
   assert.equal(fishMetni(''), '')
@@ -56,11 +93,25 @@ test('Fish ASR düz metin — konuşmacı etiketi beyne gitmez', () => {
 })
 
 test('ASR isteği Türkçeye sabit, tekrar kuralı yalnız ağ / 5xx', () => {
-  const f = fishAsrFormu(new Blob([new Uint8Array(10)], { type: 'audio/wav' }), 'tur.wav')
-  assert.equal(f.get('language'), 'tr')
-  assert.equal(FISH_ASR_DIL, 'tr')
-  assert.equal(f.get('ignore_timestamps'), 'true')
-  assert.ok(f.get('audio') instanceof Blob)
+  const ses = new Uint8Array([1, 2, 3, 4, 5])
+  const govde = fishAsrGovde(ses)
+  assert.equal(govde[0], 0x83)
+  const okunan = msgpackAsrOku(govde)
+  assert.deepEqual(okunan.audio, ses)
+  assert.equal(okunan.language, 'tr')
+  assert.equal(okunan.language, FISH_ASR_DIL)
+  assert.equal(okunan.ignore_timestamps, true)
+  const buyuk = new Uint8Array(400)
+  buyuk[0] = 9
+  buyuk[399] = 8
+  assert.deepEqual(msgpackAsrOku(fishAsrGovde(buyuk)).audio, buyuk)
+  const uzun = new Uint8Array(70_000)
+  uzun[0] = 1
+  uzun[69_999] = 2
+  const uzunOkunan = msgpackAsrOku(fishAsrGovde(uzun))
+  assert.equal(uzunOkunan.language, 'tr')
+  assert.equal(uzunOkunan.audio[0], 1)
+  assert.equal(uzunOkunan.audio[69_999], 2)
   assert.equal(fishAsrYenidenDenenirMi(null), true)
   assert.equal(fishAsrYenidenDenenirMi(502), true)
   assert.equal(fishAsrYenidenDenenirMi(400), false)

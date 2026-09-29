@@ -33,27 +33,76 @@ export function fishAsrDosyaAdi(mime: string): string {
   return 'tur.webm'
 }
 
-/** Multipart body for POST /v1/asr — language always Turkish, never auto-detect. */
-export function fishAsrFormu(ses: Blob, ad: string): FormData {
-  const giden = new FormData()
-  giden.append('audio', ses, ad)
-  giden.append('language', FISH_ASR_DIL)
-  giden.append('ignore_timestamps', 'true')
-  return giden
+function msgpackStr(metin: string): Uint8Array {
+  const b = new TextEncoder().encode(metin)
+  if (b.length > 31) throw new Error('fish asr str')
+  const o = new Uint8Array(1 + b.length)
+  o[0] = 0xa0 | b.length
+  o.set(b, 1)
+  return o
+}
+
+function msgpackBin(veri: Uint8Array): Uint8Array {
+  const n = veri.byteLength
+  let bas: Uint8Array
+  if (n < 256) {
+    bas = new Uint8Array([0xc4, n])
+  } else if (n < 65536) {
+    bas = new Uint8Array(3)
+    bas[0] = 0xc5
+    bas[1] = n >> 8
+    bas[2] = n & 255
+  } else {
+    bas = new Uint8Array(5)
+    bas[0] = 0xc6
+    new DataView(bas.buffer).setUint32(1, n)
+  }
+  const o = new Uint8Array(bas.length + n)
+  o.set(bas, 0)
+  o.set(veri, bas.length)
+  return o
+}
+
+function msgpackBirlestir(...parca: Uint8Array[]): Uint8Array {
+  const n = parca.reduce((s, x) => s + x.length, 0)
+  const o = new Uint8Array(n)
+  let i = 0
+  for (const x of parca) {
+    o.set(x, i)
+    i += x.length
+  }
+  return o
 }
 
 /**
- * Latin letters that never appear in Turkish. Fish auto-detects despite `language=tr` and will
- * decode a short "bugün mesaj" as Czech/Slovak (ý ř ž) — that must not reach the brain.
+ * Official Fish ASR body (Python SDK `asr.transcribe(..., language="tr")`):
+ * MessagePack `{ audio, language: "tr", ignore_timestamps: true }`.
+ * Product docs: pass an ISO code to pin the language on short clips.
+ * Multipart `language` is accepted but auto-detect still won on live Turkish.
+ */
+export function fishAsrGovde(ses: Uint8Array): Uint8Array {
+  return msgpackBirlestir(
+    new Uint8Array([0x83]),
+    msgpackStr('audio'),
+    msgpackBin(ses),
+    msgpackStr('language'),
+    msgpackStr(FISH_ASR_DIL),
+    msgpackStr('ignore_timestamps'),
+    new Uint8Array([0xc3]),
+  )
+}
+
+/**
+ * Latin letters that never appear in Turkish. Kept as a backstop if Fish still
+ * returns a non-Turkish transcript after language is pinned to `tr`.
  */
 const YABANCI_LATIN = /[ŘřŽžÝýŮůĚěČčĎďŇňŤťŁłĄąĘęŃńŚśŹźŻżÑñØøÆæŒœßŸÿ]/g
 /** Western accents that can appear once in a name (José); junk when they dominate the clip. */
 const BATI_AKSAN = /[ÁÉÍÓÚÀÈÌÒÙÄËÏáéíóúàèìòùäëï]/g
 
 /**
- * Fish auto-detects the language regardless of the `language` hint (docs: "Optional hint. The language is
- * auto-detected regardless"). A transcript with no Latin letters — or dominated by Arabic/Persian, Cyrillic,
- * CJK, Greek, Hebrew, or non-Turkish Latin diacritics — is a mislabelled clip, not Turkish speech.
+ * Backstop after language is pinned to `tr`. A transcript with no Latin letters — or dominated by
+ * Arabic/Persian, Cyrillic, CJK, or non-Turkish Latin diacritics — is not Turkish speech.
  */
 export function fishAsrDilUyumluMu(metin: string): boolean {
   const t = String(metin || '')

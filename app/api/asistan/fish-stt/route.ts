@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   FISH_ASR_DIL, FISH_ASR_MODEL, FISH_ASR_YENIDEN, FISH_ASR_ZAMAN_MS, FISH_KLIP_AZAMI_BAYT,
-  asrKlipDenetle, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi,
+  asrKlipDenetle, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi,
 } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
@@ -29,14 +29,18 @@ async function doktorMu(req: NextRequest): Promise<boolean> {
 
 type AsrDeneme = { durum: number | null; metin: string; hata: string | null; dil?: string | null }
 
-async function fishAsrCagir(anahtar: string, ses: Blob, ad: string): Promise<AsrDeneme> {
+async function fishAsrCagir(anahtar: string, bayt: Uint8Array): Promise<AsrDeneme> {
   const kontrol = new AbortController()
   const zaman = setTimeout(() => kontrol.abort(), FISH_ASR_ZAMAN_MS)
   try {
     const yanit = await fetch('https://api.fish.audio/v1/asr', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${anahtar}`, model: FISH_ASR_MODEL },
-      body: fishAsrFormu(ses, ad),
+      headers: {
+        Authorization: `Bearer ${anahtar}`,
+        model: FISH_ASR_MODEL,
+        'Content-Type': 'application/msgpack',
+      },
+      body: fishAsrGovde(bayt),
       signal: kontrol.signal,
       cache: 'no-store',
     })
@@ -83,13 +87,13 @@ export async function POST(req: NextRequest) {
   let tekrar = 0
   for (let i = 0; i <= FISH_ASR_YENIDEN; i++) {
     tekrar = i
-    deneme = await fishAsrCagir(anahtar, new Blob([bayt], { type: ses.type || 'audio/wav' }), ad)
+    deneme = await fishAsrCagir(anahtar, bayt)
     const dilOk = !deneme.hata && fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil)
     if (dilOk) break
     if (deneme.hata && !fishAsrYenidenDenenirMi(deneme.durum)) break
   }
   const asr_latency_ms = Date.now() - t0
-  // Fish treats `language` as a hint only: a Persian/Cyrillic/CJK/Czech transcript is a mislabelled clip → junk.
+  // Pin is `language: "tr"` in the MessagePack body. Non-Turkish transcripts are still junk.
   const asr_dil_uyusmazligi = !deneme.hata && !(fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil))
   console.info('[fish-stt]', {
     asr_latency_ms, klip_ms: klip.sureMs, bayt: klip.bayt, dil: FISH_ASR_DIL, dil_tespit: deneme.dil ?? null, model: FISH_ASR_MODEL,
