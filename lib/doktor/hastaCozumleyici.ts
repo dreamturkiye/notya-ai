@@ -115,9 +115,43 @@ const AD_OLMAYAN = new Set([
   'affedersin', 'affedersiniz', 'buyurun', 'buyrun', 'hadi', 'beraber', 'birlikte', 'isterim', 'isterseniz',
   'ister', 'misiniz', 'musunuz', 'memnun', 'oldum', 'afiyet', 'degil', 'degilim',
 ])
+/**
+ * NOTYA-SES-DOLGU-02 (Kaan, canlı vaka 2026-09-28): "nasılsınız" → Fish ASR "nasınsınız" (bir harf düşmüş) —
+ * tam eşleşme listesi bunu tanımadı, sohbet 500 hastalık tam taramaya düştü ve alakasız bir dosya açıldı. Ses
+ * tanıma küçük yazım farkları üretir; bu yüzden AD_OLMAYAN'a tam eşleşmeyen ama ona 1 düzenleme uzaklıkta olan
+ * (tek harf eksik/fazla/değişik) 5+ karakterlik kelimeler de güvenli sayılır. Eşleşmeyen kelime (kısa, ya da
+ * 1'den uzak) hâlâ taramayı tetikler — bir isim asla atlanmaz, yalnız bilinen dolgu kelimelerin yazım varyantları
+ * atlanır.
+ */
+function duzenlemeUzakligi1Mi(a: string, b: string): boolean {
+  if (a === b) return true
+  const la = a.length, lb = b.length
+  if (Math.abs(la - lb) > 1) return false
+  if (la === lb) {
+    let fark = 0
+    for (let i = 0; i < la; i++) if (a[i] !== b[i]) { if (++fark > 1) return false }
+    return fark === 1
+  }
+  const [kisa, uzun] = la < lb ? [a, b] : [b, a]
+  let i = 0, j = 0, fark = 0
+  while (i < kisa.length && j < uzun.length) {
+    if (kisa[i] === uzun[j]) { i++; j++; continue }
+    if (++fark > 1) return false
+    j++
+  }
+  return true
+}
+function guvenliKelimeMi(k: string): boolean {
+  if (AD_OLMAYAN.has(k)) return true
+  if (k.length < 5) return false
+  for (const g of AD_OLMAYAN) {
+    if (Math.abs(g.length - k.length) <= 1 && duzenlemeUzakligi1Mi(k, g)) return true
+  }
+  return false
+}
 export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
-  return kelime.length > 0 && kelime.every((k) => AD_OLMAYAN.has(k))
+  return kelime.length > 0 && kelime.every(guvenliKelimeMi)
 }
 /** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
 export function hastaAdiCoz(nameEncrypted: string | null): string {
