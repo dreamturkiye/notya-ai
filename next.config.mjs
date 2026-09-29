@@ -12,6 +12,17 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
 
+  // Preview deploys restore the previous preview's `.next/cache`. After an OOM that cache is
+  // bloated/partial; webpack loads it and the 6 GB heap dies during compile. Production keeps
+  // its own healthy cache and compiles. Skip the filesystem cache on preview only.
+  webpack: (config) => {
+    config.parallelism = 1
+    if (process.env.VERCEL_ENV === 'preview') {
+      config.cache = false
+    }
+    return config
+  },
+
   // DAH-/KD-/DERM-PROMPTS-LOCK: specialties/<branş>/prompts/*.md are read at runtime (fs) by SOAP, chat, hafıza (voice) and approve routes.
   experimental: {
     // Vercel 8 GB builder SIGKILL (OOM) on next build — one compile worker.
