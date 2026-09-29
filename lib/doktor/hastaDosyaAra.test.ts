@@ -1,7 +1,9 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { ARAMA_ALANLARI, adaylariTopla, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { ARAMA_ALANLARI, adaylariTopla, hastaSayimiSeansIster, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { cevapTuru } from './aramaBolum'
+import { listeIstenmisMi } from './hastaCozumleyici'
 import { antibiyotikMi, haricEslesir, ilacAdiKir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
 
 const PAZAR = new Date('2026-09-20T15:00:00+03:00')
@@ -289,5 +291,42 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
         `${m[1]} doktor filtresi yok`
       )
     }
+  })
+})
+
+describe('NOTYA-SES-KAC-HASTA — sesli "kaç hasta" sayımı', () => {
+  it('varyantlar saf sayım: filtre terimi yok, cevap türü sayim', () => {
+    for (const s of ['kaç hasta', 'kaç hastam var', 'kac hasta', 'bugün kaç hasta', 'toplam kaç hastam var', 'Bugün kaç hasta baktım', 'bu hafta kaç hasta gördük']) {
+      const q = sorguyuAyikla(s, PAZAR)
+      assert.equal(q.sayim, true, s)
+      assert.equal(q.olcum, 'hasta', s)
+      assert.deepEqual(q.terimler, [], `${s} → terim ${q.terimler.join(',')}`)
+      assert.equal(cevapTuru(q, null), 'sayim', s)
+    }
+    assert.equal(sorguyuAyikla('Bugün kaç hasta baktım', PAZAR).ziyaret, true)
+    assert.equal(sorguyuAyikla('bugün kaç hasta', PAZAR).pencere?.etiket, 'bugün')
+  })
+
+  it('çıplak sayım tüm paneli sayar; pencere / ziyaret fiili seans ister', () => {
+    assert.equal(hastaSayimiSeansIster(sorguyuAyikla('kaç hastam var', PAZAR)), false)
+    assert.equal(hastaSayimiSeansIster(sorguyuAyikla('kaç hasta', PAZAR)), false)
+    assert.equal(hastaSayimiSeansIster(sorguyuAyikla('bugün kaç hasta', PAZAR)), true)
+    assert.equal(hastaSayimiSeansIster(sorguyuAyikla('kaç hasta gördüm', PAZAR)), true)
+    assert.equal(hastaSayimiSeansIster(sorguyuAyikla('bu hafta 2 yaşında kaç hasta gördüm', PAZAR)), true)
+  })
+
+  it('sayım cümlesi verilen tam sayıyı söyler (40 satırlık liste tavanı değil)', () => {
+    const q = sorguyuAyikla('kaç hastam var', PAZAR)
+    const i = istatistikKur(q, { hastaSayisi: 137, seansSayisi: 0, asiAdedi: 0, ilacAdedi: 0, ortalamaSeansDk: null })
+    assert.equal(i.cumle, 'Kayıtlarda 137 hasta.')
+    const b = istatistikKur(sorguyuAyikla('bugün kaç hasta', PAZAR), { hastaSayisi: 3, seansSayisi: 3, asiAdedi: 0, ilacAdedi: 0, ortalamaSeansDk: null })
+    assert.equal(b.cumle, 'Bugün 3 hasta. Filtre: bugün.')
+  })
+
+  it('liste yalnız istenince: "kaç hasta" sayı, "listele / kimler" ad listesi', () => {
+    assert.equal(listeIstenmisMi('kaç hastam var'), false)
+    assert.equal(listeIstenmisMi('Ayşe, bugün kaç hasta?'), false)
+    assert.equal(listeIstenmisMi('bugün kaç hasta, listele'), true)
+    assert.equal(listeIstenmisMi('ateşli hastalarım kimler'), true)
   })
 })

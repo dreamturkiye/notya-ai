@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_HIZ, FISH_MODEL, ayseFishTamMi, fishAsrDosyaAdi, fishAsrMetni, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { pcmdenWav } from './fishMikrofon'
 
 test('Fish metni cümle arasına kısa durak koyar, duygu etiketini siler', () => {
   assert.equal(fishMetni(''), '')
@@ -52,4 +53,40 @@ test('Fish ASR düz metin — konuşmacı etiketi beyne gitmez', () => {
   assert.equal(ayseFishTamMi('aysekaya', 'key'), true)
   assert.equal(ayseFishTamMi('aysekaya', ''), false)
   assert.equal(ayseFishTamMi('mehmetdemir', 'key'), false)
+})
+
+test('ASR isteği Türkçeye sabit, tekrar kuralı yalnız ağ / 5xx', () => {
+  const f = fishAsrFormu(new Blob([new Uint8Array(10)], { type: 'audio/wav' }), 'tur.wav')
+  assert.equal(f.get('language'), 'tr')
+  assert.equal(FISH_ASR_DIL, 'tr')
+  assert.equal(f.get('ignore_timestamps'), 'true')
+  assert.ok(f.get('audio') instanceof Blob)
+  assert.equal(fishAsrYenidenDenenirMi(null), true)
+  assert.equal(fishAsrYenidenDenenirMi(502), true)
+  assert.equal(fishAsrYenidenDenenirMi(400), false)
+  assert.equal(fishAsrYenidenDenenirMi(429), false)
+})
+
+test('çöp klip Fish\'e gitmez: boş, kısa, sessiz; gerçek konuşma geçer', async () => {
+  const hz = 16000
+  const wav = async (saniye: number, genlik: number) => {
+    const n = Math.round(hz * saniye)
+    const o = new Float32Array(n)
+    for (let i = 0; i < n; i++) o[i] = genlik * Math.sin((i / hz) * 2 * Math.PI * 220)
+    return new Uint8Array(await pcmdenWav([o], hz).arrayBuffer())
+  }
+  assert.equal(asrKlipDenetle(new Uint8Array(0), 'audio/wav').neden, 'bos')
+  assert.equal(asrKlipDenetle(new Uint8Array(30), 'audio/wav').neden, 'bozuk')
+  const kisa = asrKlipDenetle(await wav(0.3, 0.3), 'audio/wav')
+  assert.equal(kisa.uygun, false)
+  assert.equal(kisa.neden, 'kisa')
+  assert.ok(kisa.sureMs != null && kisa.sureMs < FISH_KLIP_MIN_MS)
+  const sessiz = asrKlipDenetle(await wav(1.2, 0.001), 'audio/wav')
+  assert.equal(sessiz.neden, 'sessiz')
+  const iyi = asrKlipDenetle(await wav(1.2, 0.2), 'audio/wav')
+  assert.equal(iyi.uygun, true)
+  assert.ok(iyi.sureMs != null && Math.abs(iyi.sureMs - 1200) <= 2)
+  assert.ok(iyi.rms != null && iyi.rms > 0.1)
+  assert.equal(asrKlipDenetle(new Uint8Array(500), 'audio/webm').neden, 'kisa_bayt')
+  assert.equal(asrKlipDenetle(new Uint8Array(5000), 'audio/webm').uygun, true)
 })

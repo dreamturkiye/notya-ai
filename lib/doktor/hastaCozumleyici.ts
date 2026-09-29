@@ -149,6 +149,10 @@ function guvenliKelimeMi(k: string): boolean {
   }
   return false
 }
+/** The doctor asked for names, not just a number. */
+export function listeIstenmisMi(mesaj: string): boolean {
+  return /\b(listele|liste|hangileri|hangisi|kimler|kimlerdi|isimleri|adlari|hepsini|say bakalim)\b/.test(duzle(mesaj))
+}
 export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
   return kelime.length > 0 && kelime.every(guvenliKelimeMi)
@@ -248,7 +252,10 @@ export async function hastaninSozunuCoz(
   if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
   const { data: hastalar } = await supabase
     .from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true).limit(500)
-  if (!hastalar || hastalar.length === 0) return { tur: 'yok' }
+  if (!hastalar || hastalar.length === 0) {
+    // A count question on an empty panel is still answered with a number, not a model guess.
+    return kohortSorusuMu(mesaj) ? { tur: 'yok', sayiMetin: 'Kayıtlarda 0 hasta.' } : { tur: 'yok' }
+  }
   const adMesaji = hitapsiz(mesaj)
   const mAd = ' ' + duzle(adMesaji) + ' '
   const tokenlar = sesliSozTokenlari(duzle(adMesaji))
@@ -323,7 +330,13 @@ async function dosyaIleDaralt(
   // dossier for a symptom). Practice-wide counts/lists still run.
   if (ad.tur === 'yok' && !kohortSorusuMu(mesaj) && !listeSorgusuMu(mesaj)) return ad
 
-  const { adaylar: ara, istatistik } = await klinikAramaYurut(supabase, doctorId, mesaj)
+  // "Ayşe, kaç hastam var?" — the address is not a search term. Same strip as the name pass.
+  const { adaylar: ara, istatistik, tur: aramaTuru, q: aramaSorgusu } = await klinikAramaYurut(supabase, doctorId, hitapsiz(mesaj))
+  // NOTYA-SES-KAC-HASTA: a pure count ("kaç hasta", "bugün kaç hasta", "kaç hastam var") is answered with the
+  // number only. Reading 40 names aloud for "kaç hasta" was the voice failure; a list is given only when asked.
+  if (aramaTuru === 'sayim' && ad.tur !== 'tek' && !aramaSorgusu.kirilim && !listeIstenmisMi(mesaj)) {
+    return { tur: 'yok', sayiMetin: istatistik.cumle }
+  }
   // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
   // List/cohort questions ("ateşli hastalarım kimler") keep the old answer, so "Merhaba Ayşe" never picks a patient.
   // NOTYA-SES-DOLGU-01: "kaç yaşında" about a named patient is not a count; only explicit many-patient questions are.

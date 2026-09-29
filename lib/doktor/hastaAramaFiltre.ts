@@ -131,7 +131,7 @@ const DURAK = new Set([
   'mi', 'mu', 'miydi', 'yedi', 'gecen', 'hafta', 'haftaki', 'ay', 'ayi', 'bugun', 'dun',
   'son', 'onceki', 'benim', 'ben', 'da', 'de', 'ki', 'ne', 'nedir', 'var', 'yok',
   'soyle', 'bak', 'bul', 'ara', 'arama', 'hocam', 'merhaba', 'selam', 'nasilsiniz',
-  'gordugum', 'gorduklerim', 'goren', 'baktigim', 'muayene', 'ettigim', 'ettigimiz',
+  'gordugum', 'gorduklerim', 'goren', 'baktigim', 'baktim', 'baktik', 'baktin', 'gordum', 'gordun', 'gorduk', 'muayene', 'ettigim', 'ettigimiz',
   'yasinda', 'yasindaki', 'yasindakiler', 'yasında', 'aylik', 'aylikken', 'tane',
   'kac', 'kaci', 'sayisi', 'sayi', 'listele', 'liste', 'hepsi', 'tamami',
   'yil', 'yilinda', 'yilindaki',
@@ -425,7 +425,8 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
   const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0)
   const asi = ASI_KELIME.test(n0)
-  const ziyaret = /gordugum|gorduklerim|gorduk|muayene|ettigim|baktigim|gelen|geldi|gordum|\bhad\b|\bsaw\b/.test(n0)
+  // Spoken forms too: "bugün kaç hasta baktım / gördük" — these are visit verbs, not search terms.
+  const ziyaret = /gordugum|gorduklerim|gorduk|muayene|ettigim|baktigim|baktim|baktik|baktin|gelen|geldi|gordum|gordun|\bhad\b|\bsaw\b/.test(n0)
   const sureSor = /averaj|ortalama|average|dakika/.test(n0)
   const ilacYaz = /recete|yazdim|yazdigim|yazdigin|verdim|verdigim/.test(n0)
   const pratik = pratikKirilimCikar(n0)

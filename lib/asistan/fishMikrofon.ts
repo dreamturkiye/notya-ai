@@ -3,7 +3,7 @@
  * Capture AudioContext is separate from Haberci playback. Analyser / ScriptProcessor
  * must reach destination (muted) or Safari reports silence and the turn never starts.
  */
-import { FISH_AZAMI_TUR_MS, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
+import { FISH_AZAMI_TUR_MS, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, klipGonderilirMi, onTamponuKirp, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
 import { fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
 
 export { fishAsrDosyaAdi }
@@ -105,10 +105,12 @@ function pcmTurKaydet(
 ): Promise<Blob | null> {
   const islem = baglam.createScriptProcessor(2048, 1, 1)
   const parcalar: Float32Array[] = []
+  const kareMs = (2048 / baglam.sampleRate) * 1000
   let duydu = false
   let konusmaBas = 0
   let sessizBas = 0
   let bargeMs = 0
+  let sesliMs = 0
 
   return new Promise((coz) => {
     let bitti = false
@@ -118,6 +120,18 @@ function pcmTurKaydet(
       islem.onaudioprocess = null
       dugumleriKopar(kaynak, islem, sessiz)
       coz(blob && blob.size > 800 ? blob : null)
+    }
+    /** Turn ended: send only if it carries real speech, otherwise keep listening. */
+    const turuBitir = () => {
+      let n = 0
+      for (const p of parcalar) n += p.length
+      const karar = klipGonderilirMi({ toplamMs: (n / baglam.sampleRate) * 1000, sesliMs })
+      if (!karar.gonder) {
+        console.info('[fish-mic]', { atlandi: karar.neden, sesli_ms: Math.round(sesliMs), toplam_ms: Math.round((n / baglam.sampleRate) * 1000) })
+        bitir(null)
+        return
+      }
+      bitir(pcmdenWav(parcalar, baglam.sampleRate))
     }
     const bekci = () => {
       if (bitti) return
@@ -140,31 +154,35 @@ function pcmTurKaydet(
       if (barge.kes) g.bargeIn()
 
       if (ajan) {
+        // Ayşe is speaking: her own playback is never a doctor turn.
         parcalar.length = 0
         duydu = false
         konusmaBas = 0
         sessizBas = 0
+        sesliMs = 0
         return
       }
 
       parcalar.push(new Float32Array(ch))
+      if (!duydu) onTamponuKirp(parcalar, baglam.sampleRate)
       if (ses) {
         if (!duydu) {
           duydu = true
           konusmaBas = simdi
         }
+        sesliMs += kareMs
         sessizBas = 0
       } else if (duydu) {
         if (!sessizBas) sessizBas = simdi
         const konusmaMs = simdi - konusmaBas
         if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= FISH_SES_SIZLIGI_MS) {
-          bitir(pcmdenWav(parcalar, baglam.sampleRate))
+          turuBitir()
           return
         }
       }
 
       if (duydu && simdi - konusmaBas > FISH_AZAMI_TUR_MS) {
-        bitir(pcmdenWav(parcalar, baglam.sampleRate))
+        turuBitir()
       }
     }
     kaynak.connect(islem)
@@ -200,6 +218,8 @@ function mediaTurKaydet(
   let konusmaBas = 0
   let sessizBas = 0
   let bargeMs = 0
+  let sesliMs = 0
+  let kayitBas = 0
 
   return new Promise((coz) => {
     let bitti = false
@@ -215,12 +235,18 @@ function mediaTurKaydet(
     }
     kayit.onstop = () => {
       if (vazgec) { bitir(null); return }
+      const karar = klipGonderilirMi({ toplamMs: kayitBas ? Date.now() - kayitBas : 0, sesliMs })
+      if (!karar.gonder) {
+        console.info('[fish-mic]', { atlandi: karar.neden, sesli_ms: Math.round(sesliMs) })
+        bitir(null)
+        return
+      }
       const blob = parcalar.length ? new Blob(parcalar, { type: kayit.mimeType || tur || 'audio/webm' }) : null
       bitir(blob && blob.size > 800 ? blob : null)
     }
     kayit.onerror = () => bitir(null)
 
-    try { kayit.start(200) } catch { bitir(null); return }
+    try { kayit.start(200); kayitBas = Date.now() } catch { bitir(null); return }
 
     const tik = () => {
       if (bitti) return
@@ -244,6 +270,7 @@ function mediaTurKaydet(
         duydu = false
         konusmaBas = 0
         sessizBas = 0
+        sesliMs = 0
         setTimeout(tik, 50)
         return
       }
@@ -253,6 +280,7 @@ function mediaTurKaydet(
           duydu = true
           konusmaBas = simdi
         }
+        sesliMs += 50
         sessizBas = 0
       } else if (duydu) {
         if (!sessizBas) sessizBas = simdi
