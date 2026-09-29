@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   FISH_ASR_DIL, FISH_ASR_MODEL, FISH_ASR_YENIDEN, FISH_ASR_ZAMAN_MS, FISH_KLIP_AZAMI_BAYT,
-  asrKlipDenetle, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi,
+  asrKlipDenetle, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi,
 } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
@@ -84,11 +84,13 @@ export async function POST(req: NextRequest) {
   for (let i = 0; i <= FISH_ASR_YENIDEN; i++) {
     tekrar = i
     deneme = await fishAsrCagir(anahtar, new Blob([bayt], { type: ses.type || 'audio/wav' }), ad)
-    if (!deneme.hata || !fishAsrYenidenDenenirMi(deneme.durum)) break
+    const dilOk = !deneme.hata && fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil)
+    if (dilOk) break
+    if (deneme.hata && !fishAsrYenidenDenenirMi(deneme.durum)) break
   }
   const asr_latency_ms = Date.now() - t0
-  // Fish treats `language` as a hint only: a Persian/Cyrillic/CJK transcript is a mislabelled clip → junk.
-  const asr_dil_uyusmazligi = !deneme.hata && !fishAsrDilUyumluMu(deneme.metin)
+  // Fish treats `language` as a hint only: a Persian/Cyrillic/CJK/Czech transcript is a mislabelled clip → junk.
+  const asr_dil_uyusmazligi = !deneme.hata && !(fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil))
   console.info('[fish-stt]', {
     asr_latency_ms, klip_ms: klip.sureMs, bayt: klip.bayt, dil: FISH_ASR_DIL, dil_tespit: deneme.dil ?? null, model: FISH_ASR_MODEL,
     durum: deneme.durum, tekrar, karakter: deneme.metin.length, hata: deneme.hata, asr_dil_uyusmazligi,

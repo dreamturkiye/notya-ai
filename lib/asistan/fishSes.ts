@@ -43,16 +43,35 @@ export function fishAsrFormu(ses: Blob, ad: string): FormData {
 }
 
 /**
+ * Latin letters that never appear in Turkish. Fish auto-detects despite `language=tr` and will
+ * decode a short "bugün mesaj" as Czech/Slovak (ý ř ž) — that must not reach the brain.
+ */
+const YABANCI_LATIN = /[ŘřŽžÝýŮůĚěČčĎďŇňŤťŁłĄąĘęŃńŚśŹźŻżÑñØøÆæŒœßŸÿ]/g
+/** Western accents that can appear once in a name (José); junk when they dominate the clip. */
+const BATI_AKSAN = /[ÁÉÍÓÚÀÈÌÒÙÄËÏáéíóúàèìòùäëï]/g
+
+/**
  * Fish auto-detects the language regardless of the `language` hint (docs: "Optional hint. The language is
  * auto-detected regardless"). A transcript with no Latin letters — or dominated by Arabic/Persian, Cyrillic,
- * CJK, Greek, Hebrew script — is a mislabelled clip, not Turkish speech: dropped, never fed to the brain.
+ * CJK, Greek, Hebrew, or non-Turkish Latin diacritics — is a mislabelled clip, not Turkish speech.
  */
 export function fishAsrDilUyumluMu(metin: string): boolean {
   const t = String(metin || '')
-  const latin = (t.match(/[A-Za-zÇĞİÖŞÜçğıöşüâîû]/g) || []).length
+  const latin = (t.match(/[A-Za-zÇĞİÖŞÜçğıöşüâîûÂÎÛ]/g) || []).length
   if (!latin) return false
-  const yabanci = (t.match(/[\u0370-\u03FF\u0400-\u04FF\u0530-\u058F\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0900-\u097F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g) || []).length
-  return yabanci * 2 < latin
+  const yabanciYazi = (t.match(/[\u0370-\u03FF\u0400-\u04FF\u0530-\u058F\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0900-\u097F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g) || []).length
+  if (yabanciYazi * 2 >= latin) return false
+  if ((t.match(YABANCI_LATIN) || []).length) return false
+  const bati = (t.match(BATI_AKSAN) || []).length
+  if (bati >= 3 || bati * 2 >= latin) return false
+  return true
+}
+
+/** Native `/v1/asr` language_code is detected language, not the hint we sent. Empty/unknown is allowed. */
+export function fishAsrDilKoduUyumluMu(kod: string | null | undefined): boolean {
+  const k = String(kod || '').trim().toLowerCase()
+  if (!k) return true
+  return k === 'tr' || k.startsWith('tr-')
 }
 
 /** Network failure (null) or a 5xx is retried once; anything else is final. */

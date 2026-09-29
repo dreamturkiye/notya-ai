@@ -33,6 +33,7 @@ import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
 import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinleBaglamAc } from '@/lib/asistan/fishMikrofon'
+import { fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
 
 /** NOTYA-SES-1TO1: client-side ceilings for one Fish turn; the server has its own 20 s / 60 s limits. */
 const FISH_ASR_ISTEMCI_MS = 25_000
@@ -637,7 +638,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           clearTimeout(asrZamani)
         }
         if (!canli()) return
-        if (sesGurultusuMu(metin)) continue
+        if (sesGurultusuMu(metin) || !fishAsrDilUyumluMu(metin)) continue
         if (kendiSelamiMi(metin)) continue
         if (asistaniKapatMi(metin)) {
           addMsg("user", metin)
