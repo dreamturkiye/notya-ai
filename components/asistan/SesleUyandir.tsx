@@ -52,13 +52,16 @@ function telefonEkraniMi(): boolean {
 /**
  * Doktor sayfalarında ince kulak. Pencere öndeyken "Asistanı aç" der ve bugünkü
  * sesli görüşmeyi başlatır (oturum sayfalar arasında yaşar). Görüşme sürerken
- * mikrofon ondadır; "Asistanı kapat" sözünü görüşme duyar. Sekreterde ve
- * pencere arkadayken susar.
+ * mikrofon ondadır; "Asistanı kapat" sözünü görüşme duyar. Görüşme sürerken
+ * "Asistanı kapat deyin" pili de gerçek bir düğmedir: dokunmak görüşmeyi tamamen
+ * kapatır (oturumuKapat). Sekreterde ve pencere arkadayken susar.
  */
 export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli?: boolean }) {
-  const { startConversation, isActive } = useAsistanOturum()
+  const { startConversation, oturumuKapat, isActive } = useAsistanOturum()
   const startRef = useRef(startConversation)
   startRef.current = startConversation
+  const kapatRef = useRef(oturumuKapat)
+  kapatRef.current = oturumuKapat
   const [kulak, setKulak] = useState<Kulak>('davet')
   const [motorYok, setMotorYok] = useState(false)
   const [telefon, setTelefon] = useState(true)
@@ -254,7 +257,12 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
       <div className={gizli ? 'notya-uyandir gizli' : 'notya-uyandir'}>
         <button
           type="button"
-          onClick={() => { if (!isActive && kulak !== 'dinliyor') kulagiAc() }}
+          onClick={() => {
+            // Active conversation: the pill closes it (same path as the floating panel's "Kapat").
+            if (isActive) { void kapatRef.current().catch(() => undefined); return }
+            if (kulak !== 'dinliyor') kulagiAc()
+          }}
+          aria-label={isActive ? 'Asistanı kapat' : undefined}
           style={{
             border: `1px solid ${CHROME_RENK.border}`,
             background: CHROME_RENK.paper,
@@ -265,7 +273,7 @@ export default function SesleUyandir({ doktor, gizli }: { doktor: boolean; gizli
             fontFamily: CHROME_FONT.sans,
             fontSize: 13,
             fontWeight: 700,
-            cursor: kulak === 'dinliyor' || isActive ? 'default' : 'pointer',
+            cursor: kulak === 'dinliyor' && !isActive ? 'default' : 'pointer',
           }}
         >
           {yazi}
