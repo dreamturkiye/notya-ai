@@ -26,6 +26,7 @@ import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
 import { netSosyalMi } from '@/lib/ai/modeller'
+import { takvimSorusuMu } from '@/lib/randevu/takvimSorusu'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -57,6 +58,18 @@ export function sonDoktorCumlesi(mesajlar: unknown): string | null {
   const liste = Array.isArray(mesajlar) ? (mesajlar as ElMesaj[]) : []
   const son = liste[liste.length - 1]
   if (!son || son.role !== 'user') return null
+  const t = metin(son.content).replace(/\s+/g, ' ').trim()
+  return t ? t.slice(0, 4000) : null
+}
+
+/**
+ * Client-tool round-trip (randevu_takvim on the non-tek-beyin agent): last message is the
+ * tool string. An empty Custom LLM reply here is what ElevenLabs reports as "Bağlantı kurulamadı".
+ */
+export function sonAracMetni(mesajlar: unknown): string | null {
+  const liste = Array.isArray(mesajlar) ? (mesajlar as ElMesaj[]) : []
+  const son = liste[liste.length - 1]
+  if (!son || (son.role !== 'tool' && son.role !== 'function')) return null
   const t = metin(son.content).replace(/\s+/g, ' ').trim()
   return t ? t.slice(0, 4000) : null
 }
@@ -140,10 +153,17 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       }
       let bitis = 'stop'
       try {
-        if (mesaj && vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
+        // Open the SSE before any DB/model work. Empty content + role is enough for
+        // ElevenLabs to commit the user transcript; waiting for first speech was the
+        // 10s "voice to text" delay (and the cascade timeout → "Bağlantı kurulamadı").
+        parca({})
+        ilk = false
+        const aracSonucu = !mesaj ? sonAracMetni(govde.messages) : null
+        if (aracSonucu) {
+          cevapYaz(aracSonucu)
+        } else if (mesaj && vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
           yaz('Görüşmek üzere Hocam.', true)
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
-          ilk = false
           bitis = 'tool_calls'
         } else if (mesaj && kendiSelamiMi(mesaj)) {
           // Açılış cümlesi mikrofon veya ElevenLabs tarafından doktora ait sanıldı. Cevap yok.
@@ -153,7 +173,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           const supabase = getSupabase()
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
-          const karar = await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
+          // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
+          const karar = takvimSorusuMu(mesaj) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
           if (karar) {
             cevapYaz(karar.soz)
             await sesDevamAl(supabase, jeton.d, jeton.o).catch(() => null) // yeni gerçek tur: önceki turun kalanı düşer

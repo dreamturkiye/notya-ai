@@ -12,6 +12,12 @@ test('açık hasta varken adsız soru o hastaya gider (Dr. Gökhan)', () => {
   assert.equal(aktif('Kaç kez geldi?'), true)
 })
 
+test('takvim / bugün randevu açık hastanın dosyasına gitmez', () => {
+  assert.equal(aktif('Bugün randevu var mı?'), false)
+  assert.equal(aktif('do we have any appointments today'), false)
+  assert.equal(aktif('Yarın 14:00 boş mu?'), false)
+})
+
 test('çok hastalı sorular arama olarak kalır', () => {
   for (const m of ['Bu hafta ateşli hastalarım kimler?', 'Kaç hasta gördük bu ay?', 'Hangi hastalar aşı bekliyor?', 'En çok yazdığım antibiyotik ne?', 'Tüm hastalarımda HbA1c ortalaması']) {
     assert.equal(kohortSorusuMu(m), true, m)

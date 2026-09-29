@@ -6,6 +6,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { hastaAdiCoz } from '@/core/eylemler/hasta'
+import { bugunTRT, gunKaydirTRT } from '@/core/eylemler/types'
 export interface GunlukSatir {
   saat: string
   bitisSaat: string
@@ -76,6 +77,36 @@ export function gunlukOzetMetni(g: {
     }
   }
   return { metin: `${kafa} İstediğiniz ${g.istenenSaat} boş.`, cakisiyor: false }
+}
+
+/**
+ * Spoken form of the day list. The screen keeps every slot (`gunlukOzetMetni`);
+ * voice is at most two sentences so Fish / ElevenLabs actually start.
+ */
+export function gunlukKonusmaMetni(g: {
+  tarih: string
+  satirlar: GunlukSatir[]
+  istenenSaat?: string | null
+  cakisiyor?: boolean
+  cakisan?: GunlukSatir
+}): string {
+  const bugun = g.tarih === bugunTRT()
+  const yarin = g.tarih === gunKaydirTRT(1)
+  const gun = bugun ? 'Bugün' : yarin ? 'Yarın' : tarihEtiketi(g.tarih)
+  const n = g.satirlar.length
+  if (!n) {
+    const slot = g.istenenSaat ? ` İstediğiniz ${g.istenenSaat} boş.` : ''
+    return `${gun} takviminizde randevu yok Hocam.${slot}`
+  }
+  const ilk = g.satirlar[0]
+  let soz = n === 1
+    ? `${gun} 1 randevu var Hocam: ${ilk.saat} ${ilk.hastaAdi} ${ilk.tur}.`
+    : `${gun} ${n} randevu var Hocam. İlki ${ilk.saat} ${ilk.hastaAdi}.`
+  if (n === 2) soz += ` İkincisi ${g.satirlar[1].saat} ${g.satirlar[1].hastaAdi}.`
+  else if (n >= 3) soz += ' Ayrıntı ekranınızda.'
+  if (g.istenenSaat && g.cakisiyor && g.cakisan) soz += ` ${g.istenenSaat} dolu — ${g.cakisan.hastaAdi}.`
+  else if (g.istenenSaat && !g.cakisiyor) soz += ` ${g.istenenSaat} boş.`
+  return soz.replace(/\s+/g, ' ').trim()
 }
 
 export function isoTrtSaat(iso: string): string {

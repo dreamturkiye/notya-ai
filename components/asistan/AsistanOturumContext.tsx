@@ -532,7 +532,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
             c?.setVolume?.({ volume: 1 })
           },
-          onBasladi: () => { if (fishAcikRef.current) setStatus('speaking') },
+          onBasladi: () => {
+            if (!fishAcikRef.current) return
+            const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
+            c?.setVolume?.({ volume: 0 })
+            setStatus('speaking')
+          },
           onDurdu: () => {
             const d = sesDevamRef.current
             d.ajanSustu = Date.now()
@@ -637,10 +642,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         signedUrl: activeSignedUrl,
         connectionType: "websocket",
         ...SES_CALAR,
-        onConversationCreated: (oturum) => {
-          if (!fishAcikRef.current) return
-          ;(oturum as { setVolume?: (o: { volume: number }) => void }).setVolume?.({ volume: 0 })
-        },
         overrides: {
           agent: {
             prompt: { prompt: voicePrompt },
@@ -896,9 +897,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (sdkStatus === "connected" && !(fishAcikRef.current && fishRef.current?.caliyorMu())) setStatus("listening")
         },
       })
-      if (fishAcikRef.current) {
-        ;(conversation as { setVolume?: (o: { volume: number }) => void }).setVolume?.({ volume: 0 })
-      }
       conversationRef.current = conversation
     }
 

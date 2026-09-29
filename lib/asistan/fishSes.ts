@@ -34,8 +34,8 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
       temperature: 0.7,
       top_p: 0.7,
       normalize: true,
-      latency: 'balanced',
-      chunk_length: 300,
+      latency: 'low',
+      chunk_length: 120,
       prosody: { speed: FISH_HIZ, volume: 0, normalize_loudness: true },
     },
   }

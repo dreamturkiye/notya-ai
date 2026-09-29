@@ -5,6 +5,7 @@
  * and a name that matches several patients still asks which one.
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { takvimSorusuMu } from '@/lib/randevu/takvimSorusu'
 
 const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
 
@@ -23,5 +24,6 @@ export function aktifHastaKullanilsinMi(g: {
   // A patient found BY NAME wins; a single hit of an all-patients search (has a count sentence) does not.
   if (g.cozumTur === 'tek' && !g.aramaSonucu) return false
   if (g.cozumTur === 'coklu' && !g.aramaSonucu) return false
+  if (takvimSorusuMu(g.mesaj)) return false
   return !kohortSorusuMu(g.mesaj)
 }

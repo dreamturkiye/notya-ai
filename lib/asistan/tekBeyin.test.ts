@@ -258,6 +258,8 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
   it('konuşmanın son doktor cümlesi; son mesaj doktorun değilse cevap yok; veda tanınır', () => {
     assert.equal(L.sonDoktorCumlesi([{ role: 'user', content: 'a' }, { role: 'assistant', content: 'b' }, { role: 'user', content: [{ type: 'text', text: 'Umutcan  nasıl' }] }]), 'Umutcan nasıl')
     assert.equal(L.sonDoktorCumlesi([{ role: 'user', content: 'a' }, { role: 'tool', content: 'x' }]), null)
+    assert.equal(L.sonAracMetni([{ role: 'user', content: 'bugün randevu' }, { role: 'tool', content: 'Bugün 1 randevu var Hocam.' }]), 'Bugün 1 randevu var Hocam.')
+    assert.equal(L.sonAracMetni([{ role: 'user', content: 'a' }]), null)
     assert.ok(L.vedaMi('Görüşmeyi bitir Ayşe'))
     assert.ok(L.vedaMi('hoşça kal'))
     assert.ok(!L.vedaMi('Umutcan’ın görüşmesini bitir mi dedin'))
@@ -366,6 +368,33 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const once = modelIstekleri.length
     await ses({ sahne: b, mesaj: 'devam et' })
     assert.equal(modelIstekleri.length, once + 1)
+  })
+  it('NOTYA-SES-TAKVIM-01: bugün randevu modelsiz okunur ve söylenir; yabancı doktorun günü sızmaz', async () => {
+    const { bugunTRT } = await import('../../core/eylemler/types')
+    const b = sahne()
+    const gun = bugunTRT()
+    db.ekle('randevular', {
+      doktor_id: b.doktor.id, patient_id: b.hasta,
+      baslangic: new Date(`${gun}T10:00:00+03:00`).toISOString(),
+      bitis: new Date(`${gun}T10:20:00+03:00`).toISOString(),
+      durum: 'planli', tur: 'muayene', hasta_adi_serbest: null,
+    })
+    db.ekle('randevular', {
+      doktor_id: b.diger.id, patient_id: null,
+      baslangic: new Date(`${gun}T11:00:00+03:00`).toISOString(),
+      bitis: new Date(`${gun}T11:20:00+03:00`).toISOString(),
+      durum: 'planli', tur: 'muayene', hasta_adi_serbest: 'Yabancı Hasta',
+    })
+    const once = modelIstekleri.length
+    const v = await ses({ sahne: b, mesaj: 'Bugün randevu var mı?' })
+    assert.equal(v.status, 200)
+    assert.equal(modelIstekleri.length, once, 'takvim model turu değildir')
+    assert.match(v.metin, /randevu/i)
+    assert.ok(/Umutcan|10:00/.test(v.metin), v.metin)
+    assert.doesNotMatch(v.metin, /Yabancı Hasta/)
+    const e = await sesEkrani(b)
+    assert.match(e.turlar.at(-1)?.metin || '', /randevu/)
+    assert.match(e.turlar.at(-1)?.soru || '', /Bugün randevu/)
   })
   it('model cevabı: yazı ve ses aynı ekranı verir; ses önce bekletme sözü, sonra model yazdıkça aynı içerik', async () => {
     const ekranMetni = 'Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi.\n\n- Öneri 1\n- Öneri 2\n\nAnnesine 0532 700 11 22 numarasından ulaşabilirsiniz.'

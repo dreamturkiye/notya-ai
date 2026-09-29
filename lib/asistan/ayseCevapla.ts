@@ -65,6 +65,8 @@ import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
 import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
+import { takvimSorusuCoz } from "@/lib/randevu/takvimSorusu"
+import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni } from "@/lib/randevu/gunlukOzet"
 
 export type Kanal = "yazi" | "ses"
 
@@ -236,6 +238,33 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       },
     },
   })
+
+  // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
+  // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
+  const takvim = kayitNiyetiMi(String(message || "")) ? null : takvimSorusuCoz(message)
+  if (takvim) {
+    try {
+      const satirlar = await doktorunGununuOku(supabase, doktorId, takvim.tarih)
+      const ozet = gunlukOzetMetni({
+        tarih: takvim.tarih,
+        satirlar,
+        istenenSaat: takvim.saat,
+        istenenSureDk: 20,
+      })
+      const konusma = gunlukKonusmaMetni({
+        tarih: takvim.tarih,
+        satirlar,
+        istenenSaat: takvim.saat,
+        cakisiyor: ozet.cakisiyor,
+        cakisan: ozet.cakisan,
+      })
+      soyle(konusma)
+      await oturumuYaz(ozet.metin, {})
+      return sade(ozet.metin, konusma, baglam.patientName ? String(baglam.patientName) : null)
+    } catch (e) {
+      console.error("[asistan/chat] takvim", e instanceof Error ? e.message : String(e))
+    }
+  }
 
   // Quick classify intent for faster response
   const quickIntent = quickClassify(message)

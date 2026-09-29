@@ -173,6 +173,12 @@ export function bugunTRT(simdi: Date = new Date()): string {
   return new Date(simdi.getTime() + 3 * 3600e3).toISOString().slice(0, 10)
 }
 
+/** Calendar day in TRT, `offsetGun` days from today (1 = tomorrow). */
+export function gunKaydirTRT(offsetGun: number, simdi: Date = new Date()): string {
+  const [y, m, d] = bugunTRT(simdi).split('-').map(Number)
+  return new Date(Date.UTC(y, (m || 1) - 1, (d || 1) + offsetGun)).toISOString().slice(0, 10)
+}
+
 export function yasAyHesapla(dogumTarihi: string | null, bugun: string): number | null {
   if (!dogumTarihi) return null
   const d = new Date(`${dogumTarihi}T00:00:00Z`)
