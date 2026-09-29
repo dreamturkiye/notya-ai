@@ -1,10 +1,13 @@
 /**
- * NOTYA-SES-DOSYA-ISTE-01 (Kaan, 2026-09-29): a patient's chart is opened only when THIS
- * message uniquely names them. Page focus / previous-turn "aktif hasta" never preloads a
- * dossier — that cache made every voice turn wait on the chart and then speak late.
- * "Kaan Arioglu kaç yaşında?" → resolve Kaan → read age. "Nasılsınız?" → no file.
+ * NOTYA-AKTIF-HASTA-01 (Kaan / Dr. Gökhan, 2026-09-25; restored by Kaan's decision 2026-09-29 over
+ * NOTYA-SES-DOSYA-ISTE-01): with a patient open — opened by name in this session OR the page the doctor is on
+ * (NOTYA-SAYFA-HASTA-01) — a question that does not name another patient is about THAT patient
+ * ("En son ne zaman geldi?", "Aşıları tam mı?"), not an all-patients search ("0 hasta, Filtre: …").
+ * Only explicit many-patient questions and calendar questions stay a search; a name that matches several
+ * patients still asks which one.
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { takvimSorusuMu } from '@/lib/randevu/takvimSorusu'
 import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 
 const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
@@ -15,8 +18,8 @@ export function kohortSorusuMu(mesaj: string): boolean {
 
 /**
  * NOTYA-SES-AKTIF-HASTA-01 (Kaan, 2026-09-29): "hastamız / bu hasta / kendisi / dosyadaki hasta / o" point at
- * the session's active patient (the one last opened by name). Only such a reference reaches the chart —
- * an unreferenced question ("Nasılsınız?", "En son ne zaman geldi?") still opens nothing (DOSYA-ISTE-01).
+ * the session's active patient. Kept as a classifier (tests, future narrowing); under the restored
+ * NOTYA-AKTIF-HASTA-01 rule every unnamed non-cohort, non-calendar question already reaches the open patient.
  */
 const ATIF = /\b(hastamiz\w*|hastam\b|hastamin|hastama|hastami|bu hasta\w*|su hasta\w*|o hasta\w*|bu cocuk\w*|cocugumuz\w*|kendisi\w*|dosyadaki\w*|bu dosya\w*|acik dosya\w*|onun|ona|onu|o kac|o ne zaman|o kimdir|o kim)\b/
 
@@ -35,13 +38,21 @@ export function dosyaAcmaIstegiMi(mesaj: string): boolean {
   return DOSYA_AC.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')
 }
 
-/** True only for a referenced active patient when this message names nobody and no search matched. */
+/**
+ * NOTYA-AKTIF-HASTA-01: with a patient open, an unnamed question goes to that patient.
+ * A patient found BY NAME wins; a single hit of an all-patients search (has a count sentence) does not
+ * (NOTYA-SES-DOLGU-01). Calendar questions and explicit many-patient questions never bind the chart.
+ */
 export function aktifHastaKullanilsinMi(g: {
   aktifHastaVar: boolean
   cozumTur: 'tek' | 'coklu' | 'yok'
+  /** true when the search result is an all-patients filter search (has a count sentence) */
   aramaSonucu: boolean
   mesaj: string
 }): boolean {
-  if (!g.aktifHastaVar || g.cozumTur !== 'yok' || g.aramaSonucu) return false
-  return hastaAtifiMu(g.mesaj)
+  if (!g.aktifHastaVar) return false
+  if (g.cozumTur === 'tek' && !g.aramaSonucu) return false
+  if (g.cozumTur === 'coklu' && !g.aramaSonucu) return false
+  if (takvimSorusuMu(g.mesaj)) return false
+  return !kohortSorusuMu(g.mesaj)
 }

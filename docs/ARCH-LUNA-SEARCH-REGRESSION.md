@@ -24,11 +24,16 @@ Checked and **not** a cause: request/response translation (`lib/ai/saglayici.ts`
 - F4 `ayseCevapla.ts` — chart-compile failure now logs `[asistan/chat] dosya bağlamı kurulamadı`.
 - Tests: `aktifHasta.test.ts` (+1), `tekBeyin.test.ts` (+1). Ran the 6 affected files: 111 pass; the 2 failures are NOTYA-SES-BAGLAM-KUCULT-01 subtests that fail identically on main (order-dependent background hafıza call, already in the ledger). `tsc --noEmit`: no errors in touched files.
 
-## Not fixed (Kaan's call — product rules from today)
-- Cause 1 for text chat: restore "open patient (page or session) answers unnamed questions" on `kanal:'yazi'` (revert b4316b32 semantics for text only; voice keeps named-only). ~15 lines in ayseCevapla.ts + 2 test expectations written today would flip.
-- Cause 3: drop the two b4316b32 guards in `dosyaIleDaralt` for text, or keep them only when `kanal === 'ses'`.
+## Decision 2026-09-29 (Kaan): 09-25 rule restored on both channels
+- Cause 1: NOTYA-AKTIF-HASTA-01 (31e32a83, as it stood before b4316b32) is back in `lib/asistan/aktifHasta.ts` / `ayseCevapla.ts` — the open patient (opened by name in the session, `odakKaynak 'soz'`, OR the doctor's open page, `'sayfa'`) answers unnamed non-cohort, non-calendar questions with the chart attached (voice: short summary + İlk-10 evidence, text: full file); a patient named in the message still wins; parallel prefetch of the open chart restored; `kimlikSorusunuCevapla` and the eylem/`currentPatient` fallbacks use the open patient again. `DOSYA_YOK_BLOGU` (F1) is now emitted only when no patient could be resolved at all.
+- Cause 3: both b4316b32 guards in `dosyaIleDaralt` removed — unnamed clinical searches ("dün gelen ateşli bebek") run `klinikAramaYurut` again and a single hit resolves to that patient.
+- Kept from today: ec52a9d0 ("kaç <ölçü>" not a count, `hastaAtifiMu`, deterministic "dosyasını aç"), 2b25cb43 (rule-13 wording, F4 logging), isolation guardrails (`hastaSahibiMi` re-check before the focus id becomes the chart).
+- Tests: `aktifHasta.test.ts` and `tekBeyin.test.ts` expectations written on 09-29 flipped back to the 09-25 semantics (page-focus "kaç kilo", unnamed follow-up after a voice turn, KUCULT-01 unnamed short summary).
 
-## Model policy recommendation
+## Model policy
+**Decision (Kaan, 2026-09-29): keep `openai/gpt-6-luna` (non-pro) as primary** — Luna-Pro reasons at max effort and the latency is the point. Reasoning-parameter check (`lib/ai/saglayici.ts` `openRouterGovdesi`): the OpenRouter body carries only `model`, `messages`, `max_tokens`, `provider.data_collection=deny`, optional `temperature`, `tools`/`tool_choice`, `stream` — **no `reasoning`, `reasoning_effort` or `thinking` parameter is sent** for any task, so non-pro Luna runs at the provider default for chart Q&A (`sohbet-uzman`) and the 1:1 voice path alike; nothing to lower, left as is. (Luna-Pro's `reasoning.mode=pro` was a model-slug property, not a request field.)
+
+Earlier recommendation (kept for the record):
 Keep Luna as primary **only after** F1–F4 plus the text-channel restore; the 09-27 Luna-Pro audits show quality is fine when the chart is attached. Until non-pro Luna is audited with the İlk-10 set, route `sohbet-uzman` with an attached chart to Sonnet 5 (one-line switch: `NOTYA_MODEL_HIZLI=anthropic/claude-sonnet-5` on Vercel, no code) or add a task-level override for `sohbet-uzman`. Trade-off from the audits: Sonnet 09-26 median ≈18 s/question vs Luna-Pro 09-27 ≈15 s and ~2× lower cost; non-pro Luna will be faster still but is the unaudited variable introduced today. Rerun `scripts/ayse-denetim/canli.mts` (QA doctor JWT) once per model before deciding.
 
 ## Could not verify

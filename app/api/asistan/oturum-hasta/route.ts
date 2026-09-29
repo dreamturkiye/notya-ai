@@ -4,11 +4,12 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
 
 /**
- * NOTYA-SAYFA-HASTA-01 — panel etiketi doktorun açık sayfasını izler.
- * Doktor bir hastanın sayfasını açtığında AsistanOturumContext bu rotayı bir kez çağırır ve oturum
- * `currentPatientId` yazar (yuzen panel "aktif hasta"). NOTYA-SES-DOSYA-ISTE-01: bu odak chart açmaz;
- * Ayşe dosyayı yalnız bu mesajda adı geçen hasta için derler. Adsız "kaç kilo?" başka çocuğun kilosunu
- * söylemez. Migration yok: yalnız oturum JSON'u.
+ * NOTYA-SAYFA-HASTA-01 (Dr. Gökhan canlı vaka, Kaan kuralı, 2026-09-26; Kaan 2026-09-29 ile yeniden) — asistan
+ * doktoru takip eder. Doktor bir hastanın sayfasını açtığında (/dashboard/doktor/hastalar/<id>[/…])
+ * AsistanOturumContext bu rotayı o gezinmede BİR KEZ çağırır: ortak asistan oturumunun odağı o hasta olur (hastayı
+ * adıyla söylemekle eş değer). En son açık sinyal kazanır; adsız takip sorusu mevcut odakta kalır ve dosya o hastaya
+ * bağlanır (NOTYA-AKTIF-HASTA-01). Ses ve yazı bir sonraki turda active_context.currentPatientId'yi okur
+ * (ayseCevapla). Migration yok: yalnız oturum JSON'u.
  *
  * HASTA-IZOLASYON-01: oturum id + doctor_id ile çözülür (yabancı / bilinmeyen oturum 404); hasta hastaSahibiMi ile
  * doğrulanır — başka doktorun hastası ile olmayan hasta AYNI cevabı verir: 404 (NOTYA-SAYFA-HASTA-02, Kaan

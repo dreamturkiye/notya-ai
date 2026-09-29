@@ -5,12 +5,13 @@ import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi, hastaAtifiMu, kohortSorusuM
 const aktif = (mesaj: string, cozumTur: 'tek' | 'coklu' | 'yok' = 'yok', aramaSonucu = true, aktifHastaVar = true) =>
   aktifHastaKullanilsinMi({ aktifHastaVar, cozumTur, aramaSonucu, mesaj })
 
-test('odaklı hasta varken adsız soru dosya açmaz (NOTYA-SES-DOSYA-ISTE-01)', () => {
-  assert.equal(aktif('En son ne zaman geldi?'), false)
-  assert.equal(aktif('Tansiyon takibini nasıl planlarsın?'), false)
-  assert.equal(aktif('Son muayenede ateşi kaçtı?', 'coklu', true), false)
-  assert.equal(aktif('Kaç kez geldi?'), false)
-  assert.equal(aktif('Kaan Arioglu kaç yaşında?', 'tek', false), false)
+test('açık hasta varken adsız soru o hastaya gider (NOTYA-AKTIF-HASTA-01, Kaan 2026-09-29: 09-25 kuralı geri)', () => {
+  assert.equal(aktif('En son ne zaman geldi?'), true)
+  assert.equal(aktif('Tansiyon takibini nasıl planlarsın?'), true)
+  assert.equal(aktif('Son muayenede ateşi kaçtı?', 'coklu', true), true)
+  assert.equal(aktif('Kaç kez geldi?'), true)
+  assert.equal(aktif('Merhaba Ayşe, nasılsınız?', 'yok', false), true) // page focus binds too (NOTYA-SAYFA-HASTA-01)
+  assert.equal(aktif('Kaan Arioglu kaç yaşında?', 'tek', false), false) // a name in this message wins
 })
 
 test('takvim / bugün randevu açık hastanın dosyasına gitmez', () => {
@@ -32,8 +33,8 @@ test('açık hasta yoksa, ad eşleştiyse ya da ad birden çok hastaya uyuyorsa 
   assert.equal(aktif('Ayşe ne zaman geldi?', 'coklu', false), false)
 })
 
-test('odak hiçbir mesajda dosyayı bağlama düşmez', () => {
-  assert.equal(aktif('Ayşe, en son ne zaman geldi', 'tek', true), false)
+test('NOTYA-SES-DOLGU-01: açık hasta varken tek arama sonucu adla bulunmuş hastanın yerine geçmez', () => {
+  assert.equal(aktif('Ayşe, en son ne zaman geldi', 'tek', true), true)
   assert.equal(aktif('Umutcan kaç yaşında', 'tek', false), false)
 })
 
@@ -44,7 +45,7 @@ test('NOTYA-SES-AKTIF-HASTA-01: atıf (hastamız / bu hasta / kendisi) aktif has
   }
   assert.equal(aktif('Hastamız kaç yaşında?', 'yok', false, false), false) // no active patient
   assert.equal(aktif('Hastamız kaç yaşında?', 'tek', false), false) // a name already resolved
-  assert.equal(aktif('Hastamız kaç yaşında?', 'yok', true), false) // a search answered
+  assert.equal(aktif('Hastamız kaç yaşında?', 'yok', true), true) // a 0-hit filter search is not an answer with a patient open
   assert.equal(hastaAtifiMu('Kaç hastam var?'), false)
   assert.equal(hastaAtifiMu('Bu hafta ateşli hastalarım kimler?'), false)
   assert.equal(hastaAtifiMu('O zaman yarın görüşürüz'), false)
