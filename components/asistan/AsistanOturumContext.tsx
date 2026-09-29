@@ -4,8 +4,10 @@
  * NOTYA-ASISTAN-YUZEN-01 (Kaan, 2026-09-26) — "doktor asistanla çalışırken başka sayfaya gidince asistan
  * KAPANMAMALI; doktor kendisi kapatana kadar oturum ve konuşma sürer."
  *
- * Asistan oturumunun TEK sahibi burası: ElevenLabs konuşma nesnesi, sesli mesajlar, seçili persona, tek beyin
- * oturumu + ses-ekran yoklaması, hasta_bul / ses-eylem araçları, süre sayaçları ve yazılı sohbet. Provider
+ * Asistan oturumunun TEK sahibi burası: sesli mesajlar, seçili persona, tek beyin
+ * oturumu + ses-ekran yoklaması, süre sayaçları ve yazılı sohbet.
+ * Ayşe Kaya: Fish Audio (mic ASR + Haberci TTS) — ElevenLabs ConvAI açılmaz.
+ * Diğer uzmanlar: ElevenLabs websocket.
  * app/layout.tsx'te bütün sayfaları sarar; istemci tarafı sayfa geçişinde unmount olmaz — ses ve mesajlar yaşar.
  * /asistan sayfası ve AsistanYuzenPanel bu context'in görünümleridir; ikisi de oturum AÇMAZ.
  * Mantık app/asistan/page.tsx'ten birebir taşındı — endpoint'ler, onay kartları ve tek beyin ekran biçimi aynı.
@@ -30,6 +32,7 @@ import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKart
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
+import { fishAkisAc, fishAkisKapat, fishBirTurKaydet } from '@/lib/asistan/fishMikrofon'
 import { kendiSelamiMi, acilisAjanSozuMu } from '@/lib/asistan/acilis'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
@@ -142,9 +145,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const doctorRef = useRef<ReturnType<typeof toAddressableUser> | null>(null)
   const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
-  /** NOTYA-FISH-AYSE-01: only Ayşe Kaya. ElevenLabs stays muted; this player is the voice. */
+  /** NOTYA-FISH-AYSE-02: Ayşe is a full Fish call — no ElevenLabs websocket. */
   const fishRef = useRef<FishCalar | null>(null)
   const fishAcikRef = useRef(false)
+  const fishMicRef = useRef<MediaStream | null>(null)
+  const fishDinleNesilRef = useRef(0)
+  const fishTurAbortRef = useRef<AbortController | null>(null)
   /** Text already handed to Fish, and the agent event of the answer now playing. */
   const fishSozRef = useRef("")
   const fishBirikimRef = useRef("")
@@ -296,6 +302,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState !== 'visible') return
+      if (fishAcikRef.current) return
       const conv = conversationRef.current as unknown as { setMuted?: (m: boolean) => void; isMuted?: boolean } | null
       if (!conv) return
       try {
@@ -362,6 +369,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   async function endConversation() {
+    fishDinleNesilRef.current += 1
+    fishTurAbortRef.current?.abort()
+    fishTurAbortRef.current = null
+    fishAkisKapat(fishMicRef.current)
+    fishMicRef.current = null
     const conv = conversationRef.current
     conversationRef.current = null
     fishAcikRef.current = false
@@ -375,6 +387,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       try { await conv.endSession() } catch { /* ignore */ }
     }
     yoklamayiDurdur()
+    sureTimerlariTemizle()
+    setSureUzatmaGoster(false)
     setStatus("idle")
   }
 
@@ -465,6 +479,145 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     return /first[_ ]?message/i.test(msg || "")
   }
 
+  async function fishSseOku(govde: ReadableStream<Uint8Array>, onSoz: (m: string) => void, sinyal: AbortSignal) {
+    const okuyucu = govde.getReader()
+    const dec = new TextDecoder()
+    let buf = ""
+    while (!sinyal.aborted) {
+      const { done, value } = await okuyucu.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      for (;;) {
+        const i = buf.indexOf("\n\n")
+        if (i < 0) break
+        const blok = buf.slice(0, i)
+        buf = buf.slice(i + 2)
+        const satir = blok.split("\n").find((l) => l.startsWith("data: "))
+        if (!satir) continue
+        try {
+          const j = JSON.parse(satir.slice(6)) as { t?: string; m?: string }
+          if (j.t === "soz" && j.m) onSoz(j.m)
+        } catch { /* parça */ }
+      }
+    }
+  }
+
+  async function startFishOturumu(g: {
+    p: Persona
+    firstMessage: string
+    sayfaHastasi: string | null
+    dokunus: AudioContext | null
+    tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null
+  }) {
+    if (!g.tekBeyin?.oturumId) throw new Error("Asistan oturumu açılamadı")
+    fishAcikRef.current = true
+    fishDinleNesilRef.current += 1
+    const nesil = fishDinleNesilRef.current
+    fishRef.current?.kapat()
+    fishRef.current = fishCalarOlustur(async (metin, sinyal) => {
+      const t = authTokenRef.current || await ensureDoctorAccessToken()
+      if (!t) return null
+      const r = await fetch("/api/asistan/fish-ses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ metin }),
+        signal: sinyal,
+      })
+      if (!r.ok || !r.body) return null
+      return r.body
+    }, {
+      onHata: () => { if (fishAcikRef.current) setStatus("listening") },
+      onBasladi: () => { if (fishAcikRef.current) setStatus("speaking") },
+      onDurdu: () => {
+        const d = sesDevamRef.current
+        d.ajanSustu = Date.now()
+        d.mod = "listening"
+        if (fishAcikRef.current) setStatus("listening")
+      },
+    }, g.dokunus)
+    await fishRef.current.hazirla()
+    tekBeyinRef.current = { oturumId: g.tekBeyin.oturumId, sonra: g.tekBeyin.baslangic }
+    setOrtakOturumId(g.tekBeyin.oturumId)
+    if (g.sayfaHastasi) void odagiSayfayaAl(g.tekBeyin.oturumId, g.sayfaHastasi)
+    const akis = await fishAkisAc()
+    if (nesil !== fishDinleNesilRef.current) { fishAkisKapat(akis); return }
+    fishMicRef.current = akis
+    const baglam = g.dokunus && g.dokunus.state !== "closed" ? g.dokunus : await (async () => {
+      const Pencere = window as Window & { webkitAudioContext?: typeof AudioContext }
+      const Kur = window.AudioContext || Pencere.webkitAudioContext
+      if (!Kur) throw new Error("ses yok")
+      const ctx = new Kur()
+      await ctx.resume().catch(() => undefined)
+      return ctx
+    })()
+    yoklamayiBaslat()
+    setStatus("listening")
+    setErrorMsg("")
+    sureTimerlariBaslat(address(doctorProfile || { firstName: "Hocam" }, "named"))
+    addMsg("ai", g.firstMessage)
+    fishRef.current.soyle(g.firstMessage)
+    void fishDinleDongusu(nesil, akis, baglam, g.p, g.tekBeyin.oturumId)
+  }
+
+  async function fishDinleDongusu(nesil: number, akis: MediaStream, baglam: AudioContext, p: Persona, oturumId: string) {
+    while (nesil === fishDinleNesilRef.current && fishAcikRef.current) {
+      const blob = await fishBirTurKaydet(akis, baglam, {
+        iptal: () => nesil !== fishDinleNesilRef.current || !fishAcikRef.current,
+        ajanKonusuyorMu: () => Boolean(fishRef.current?.caliyorMu()),
+        bargeIn: () => fishKes(),
+      })
+      if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) return
+      if (!blob) continue
+      const t = authTokenRef.current || await ensureDoctorAccessToken()
+      if (!t || nesil !== fishDinleNesilRef.current) return
+      const fd = new FormData()
+      fd.append("audio", blob, "tur.webm")
+      let metin = ""
+      try {
+        const r = await fetch("/api/asistan/fish-stt", { method: "POST", headers: { Authorization: `Bearer ${t}` }, body: fd })
+        const j = (await r.json().catch(() => null)) as { metin?: string } | null
+        metin = String(j?.metin || "").trim()
+      } catch { continue }
+      if (nesil !== fishDinleNesilRef.current) return
+      if (sesGurultusuMu(metin)) continue
+      if (asistaniKapatMi(metin)) {
+        addMsg("user", metin)
+        void endConversation()
+        return
+      }
+      sesDevamRef.current.doktorSozu = Date.now()
+      addMsg("user", metin)
+      fishKes()
+      fishSozRef.current = ""
+      fishBirikimRef.current = ""
+      fishTurAbortRef.current?.abort()
+      const kontrol = new AbortController()
+      fishTurAbortRef.current = kontrol
+      try {
+        const r = await fetch("/api/asistan/fish-tur", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+          body: JSON.stringify({
+            mesaj: metin,
+            asistanSessionId: oturumId,
+            specialty: p.primarySpecialty,
+            personaId: p.id,
+          }),
+          signal: kontrol.signal,
+        })
+        if (!r.ok || !r.body) continue
+        await fishSseOku(r.body, (m) => {
+          if (nesil !== fishDinleNesilRef.current) return
+          fishBirikimRef.current = fishBirlestir(fishBirikimRef.current, m)
+          fishIsle(fishBirikimRef.current, false)
+        }, kontrol.signal)
+        if (nesil === fishDinleNesilRef.current) fishIsle(fishBirikimRef.current, true)
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") continue
+      }
+    }
+  }
+
   async function fetchSignedUrl(p: Persona, sayfaHastasi: string | null = null): Promise<{ signedUrl: string; voiceId: string; fish: boolean; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
     const token = authTokenRef.current
     if (!token) throw new Error("Oturum bulunamadı")
@@ -479,12 +632,21 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       throw new Error((errBody as { error?: string }).error || `Sunucu hatası: ${resp.status}`)
     }
     const body = await resp.json()
+    const fish = body.fish === true && p.id === "aysekaya"
+    if (fish) {
+      if (!body.asistan_session_id) throw new Error("Asistan oturumu açılamadı")
+      return {
+        signedUrl: "",
+        voiceId: (body.voice_id as string) || p.voiceId,
+        fish: true,
+        tekBeyin: { oturumId: String(body.asistan_session_id), jeton: "", baslangic: String(body.baslangic || new Date().toISOString()) },
+      }
+    }
     if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
     return {
       signedUrl: body.signed_url as string,
       voiceId: (body.voice_id as string) || p.voiceId,
-      fish: body.fish === true && p.id === 'aysekaya',
-      // NOTYA-TEK-BEYIN: yalnız bayraktaki doktorda gelir; yoksa eski sesli akış birebir sürer.
+      fish: false,
       tekBeyin: body.tek_beyin && body.notya_jeton && body.asistan_session_id
         ? { oturumId: String(body.asistan_session_id), jeton: String(body.notya_jeton), baslangic: String(body.baslangic || new Date().toISOString()) }
         : null,
@@ -522,41 +684,14 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
       const sayfaHastasi = ortakOturumId ? null : yeniOturumSayfaHastasi()
       const { signedUrl, voiceId, fish, tekBeyin } = await fetchSignedUrl(p, sayfaHastasi)
-      fishAcikRef.current = fish
+      if (p.id === "aysekaya") {
+        if (!fish) throw new Error("Ses motoru yok")
+        await startFishOturumu({ p, firstMessage, sayfaHastasi, dokunus, tekBeyin })
+        return
+      }
+      fishAcikRef.current = false
       fishRef.current?.kapat()
       fishRef.current = null
-      if (fish) {
-        fishRef.current = fishCalarOlustur(async (metin, sinyal) => {
-          const t = authTokenRef.current || await ensureDoctorAccessToken()
-          if (!t) return null
-          const r = await fetch('/api/asistan/fish-ses', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-            body: JSON.stringify({ metin }),
-            signal: sinyal,
-          })
-          if (!r.ok || !r.body) return null
-          return r.body
-        }, {
-          onHata: () => {
-            // Ayşe tests are Fish-only — never unmute ElevenLabs as a fallback mouth.
-            const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
-            c?.setVolume?.({ volume: 0 })
-          },
-          onBasladi: () => {
-            if (!fishAcikRef.current) return
-            const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
-            c?.setVolume?.({ volume: 0 })
-            setStatus('speaking')
-          },
-          onDurdu: () => {
-            const d = sesDevamRef.current
-            d.ajanSustu = Date.now()
-            d.mod = 'listening'
-            if (fishAcikRef.current) setStatus('listening')
-          },
-        }, dokunus)
-      }
       if (tekBeyin) {
         tekBeyinRef.current = { oturumId: tekBeyin.oturumId, sonra: tekBeyin.baslangic }
         setOrtakOturumId(tekBeyin.oturumId)
@@ -572,7 +707,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         firstMessage,
         voiceId,
         {
-          // Fish is the speaker. EL first_message + Fish soyle = two "Merhaba", then one mute.
           tryFirstMessage: true,
           refreshSignedUrl: () => fetchSignedUrl(p, sayfaHastasi).then((r) => r.signedUrl),
           notyaJeton: tekBeyin?.jeton,
@@ -587,6 +721,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       )
       setStatus("error")
       conversationRef.current = null
+      yoklamayiDurdur()
+      fishDinleNesilRef.current += 1
+      fishAkisKapat(fishMicRef.current)
+      fishMicRef.current = null
       fishRef.current?.kapat()
       fishRef.current = null
       fishAcikRef.current = false
@@ -648,26 +786,20 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     const begin = async (includeFirstMessage: boolean) => {
       usedFirstMessage = includeFirstMessage
       // Fallback seeds UI greeting; skip the agent's own default transcript once.
-      // Fish: EL gets a one-word dummy so "speaking" ends immediately (first STT was waiting
-      // on the muted full greeting). Fish speaks the real firstMessage onConnect.
-      let skipNextAgentTranscript = fishAcikRef.current || !includeFirstMessage
+      let skipNextAgentTranscript = !includeFirstMessage
       setStatus("connecting")
-      const elIlkSoz = fishAcikRef.current ? 'Hocam.' : firstMessage
       const conversation = await Conversation.startSession({
         signedUrl: activeSignedUrl,
         connectionType: "websocket",
         ...SES_CALAR,
         onConversationCreated: (c) => {
           conversationRef.current = c
-          if (fishAcikRef.current) {
-            try { c.setVolume({ volume: 0 }) } catch { /* SDK */ }
-          }
         },
         overrides: {
           agent: {
             prompt: { prompt: voicePrompt },
             language: "tr",
-            ...(includeFirstMessage ? { firstMessage: elIlkSoz } : {}),
+            ...(includeFirstMessage ? { firstMessage } : {}),
           },
           tts: { voiceId },
         },
@@ -807,16 +939,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           setStatus("listening")
           setErrorMsg("")
           sureTimerlariBaslat(address(doctorProfile || { firstName: 'Hocam' }, 'named'))
-          if (fishAcikRef.current) {
-            const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
-            try { c?.setVolume?.({ volume: 0 }) } catch { /* SDK */ }
-            if (!selamBizden) {
-              selamBizden = true
-              fishRef.current?.soyle(firstMessage)
-              addMsg("ai", firstMessage)
-            }
-          } else if (!includeFirstMessage) {
-            // Fallback path (no override): seed personalized greeting in UI only.
+          if (!includeFirstMessage) {
             addMsg("ai", firstMessage)
           }
           if (tekBeyin) yoklamayiBaslat()
@@ -850,7 +973,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         },
         onMessage: ({ message, role, event_id }) => {
           const olay = typeof event_id === "number" ? event_id : undefined
-          // Dummy EL first_message ("Hocam.") must not reach Fish — skip before soyle.
           if (role !== "user" && skipNextAgentTranscript) {
             skipNextAgentTranscript = false
             return

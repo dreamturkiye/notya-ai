@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_HIZ, FISH_MODEL, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { FISH_HIZ, FISH_MODEL, ayseFishTamMi, fishAsrMetni, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
 
 test('Fish metni cümle arasına kısa durak koyar, duygu etiketini siler', () => {
   assert.equal(fishMetni(''), '')
@@ -43,4 +43,12 @@ test('Fish isteği kilitli: haber sesi, hız 1, ücretsiz model, duygu yok', () 
   assert.equal(govde.chunk_length, 120)
   assert.equal(govde.text, 'Amoksisilin elli miligram. [break] Aşı yapılmaz.')
   assert.equal(fishIstegi('[excited]'), null)
+})
+
+test('Fish ASR düz metin — konuşmacı etiketi beyne gitmez', () => {
+  assert.equal(fishAsrMetni('<|speaker:0|>Kaan Arıoğlu kaç yaşında?'), 'Kaan Arıoğlu kaç yaşında?')
+  assert.equal(fishAsrMetni('[laughter] eee'), 'eee')
+  assert.equal(ayseFishTamMi('aysekaya', 'key'), true)
+  assert.equal(ayseFishTamMi('aysekaya', ''), false)
+  assert.equal(ayseFishTamMi('mehmetdemir', 'key'), false)
 })

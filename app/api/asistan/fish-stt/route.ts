@@ -1,15 +1,14 @@
 /**
- * NOTYA-FISH-AYSE-01 — Ayşe'nin sesi. Anahtar tarayıcıya hiç inmez.
- * Ayşe tests are Fish-only (mic ASR + Haberci TTS).
+ * NOTYA-FISH-AYSE-02 — Ayşe mic. Audio in, Turkish transcript out. No patient id.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { fishIstegi } from '@/lib/asistan/fishSes'
+import { FISH_ASR_MODEL, fishAsrMetni } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const UST_KARAKTER = 2000
+const AZAMI_BAYT = 3 * 1024 * 1024
 
 async function doktorMu(req: NextRequest): Promise<boolean> {
   const baslik = req.headers.get('authorization')
@@ -32,40 +31,43 @@ export async function POST(req: NextRequest) {
   const anahtar = process.env.FISH_API_KEY
   if (!anahtar) return NextResponse.json({ error: 'Ses motoru yok' }, { status: 503 })
 
-  const govde = (await req.json().catch(() => null)) as { metin?: unknown } | null
-  const metin = typeof govde?.metin === 'string' ? govde.metin.slice(0, UST_KARAKTER) : ''
-  const istek = fishIstegi(metin)
-  if (!istek) return NextResponse.json({ error: 'Boş' }, { status: 400 })
+  const form = await req.formData().catch(() => null)
+  const ses = form?.get('audio')
+  if (!(ses instanceof Blob) || !ses.size) {
+    return NextResponse.json({ error: 'Ses yok' }, { status: 400 })
+  }
+  if (ses.size > AZAMI_BAYT) {
+    return NextResponse.json({ error: 'Ses çok uzun' }, { status: 413 })
+  }
+
+  const giden = new FormData()
+  giden.append('audio', ses, 'tur.webm')
+  giden.append('language', 'tr')
+  giden.append('ignore_timestamps', 'true')
 
   const kontrol = new AbortController()
   const zaman = setTimeout(() => kontrol.abort(), 20_000)
   try {
-    const yanit = await fetch('https://api.fish.audio/v1/tts', {
+    const yanit = await fetch('https://api.fish.audio/v1/asr', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${anahtar}`,
-        'Content-Type': 'application/json',
-        model: istek.model,
+        model: FISH_ASR_MODEL,
       },
-      body: JSON.stringify(istek.govde),
+      body: giden,
       signal: kontrol.signal,
       cache: 'no-store',
     })
-    if (!yanit.ok || !yanit.body) {
-      console.error('[fish-ses]', yanit.status)
-      return NextResponse.json({ error: 'Ses üretilemedi' }, { status: 502 })
+    if (!yanit.ok) {
+      console.error('[fish-stt]', yanit.status)
+      return NextResponse.json({ error: 'Çözülemedi' }, { status: 502 })
     }
-    return new NextResponse(yanit.body, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Cache-Control': 'no-store',
-        'X-Sample-Rate': '24000',
-      },
-    })
+    const j = (await yanit.json()) as { text?: unknown }
+    const metin = fishAsrMetni(typeof j.text === 'string' ? j.text : '')
+    return NextResponse.json({ metin })
   } catch (e) {
-    console.error('[fish-ses]', e instanceof Error ? e.name : 'hata')
-    return NextResponse.json({ error: 'Ses üretilemedi' }, { status: 502 })
+    console.error('[fish-stt]', e instanceof Error ? e.name : 'hata')
+    return NextResponse.json({ error: 'Çözülemedi' }, { status: 502 })
   } finally {
     clearTimeout(zaman)
   }

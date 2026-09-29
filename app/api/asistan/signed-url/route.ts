@@ -6,6 +6,7 @@ import { sesJetonuImzala, tekBeyinAcikMi } from '@/lib/asistan/sesJetonu';
 import { TEK_BEYIN_AJANLARI } from '@/lib/asistan/tekBeyinAjanlari';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { sesMotorunuSabitle } from '@/lib/asistan/sesMotoru';
+import { ayseFishTamMi } from '@/lib/asistan/fishSes';
 
 const AYSE_AGENT =
   process.env.ELEVENLABS_AGENT_PEDIATRI ||
@@ -104,14 +105,38 @@ export async function GET(req: NextRequest) {
   let AGENT_ID = agentForPersona(persona);
   const voiceId = persona.voiceId;
 
+  // NOTYA-FISH-AYSE-02: Ayşe is a Fish call — no ConvAI signed URL, no ElevenLabs websocket.
+  const fishTam = ayseFishTamMi(persona.id)
+  if (fishTam) {
+    const oturum = await tekBeyinHazirla(auth.userId, persona.id, specialtyParam, req.nextUrl.searchParams)
+    if (!oturum?.asistan_session_id) {
+      return NextResponse.json({ error: 'Asistan oturumu açılamadı.' }, { status: 500 })
+    }
+    return NextResponse.json({
+      fish: true,
+      signed_url: null,
+      agent_id: null,
+      voice_id: voiceId,
+      specialty: persona.primarySpecialty,
+      persona_id: persona.id,
+      persona_name: persona.name,
+      persona_title: persona.title,
+      specialist_total: 30,
+      tek_beyin: true,
+      asistan_session_id: oturum.asistan_session_id,
+      baslangic: oturum.baslangic,
+    })
+  }
+
   // NOTYA-TEK-BEYIN: bayraktaki doktor Custom LLM'li test kopyasına geçer — beyin /api/asistan/ses-llm (yazılı sohbetle
   // aynı fonksiyon, aynı oturum). Bayrak boşsa / kopya ya da jeton anahtarı yoksa eski ajan, eski akış.
-  let tekBeyin: { asistan_session_id: string; notya_jeton: string; baslangic: string } | null = null;
+  let tekBeyin: { asistan_session_id: string; notya_jeton: string | null; baslangic: string } | null = null;
   const kopya = TEK_BEYIN_AJANLARI[AGENT_ID];
   if (kopya && tekBeyinAcikMi(auth.userId)) {
     try {
       tekBeyin = await tekBeyinHazirla(auth.userId, persona.id, specialtyParam, req.nextUrl.searchParams);
-      if (tekBeyin) AGENT_ID = kopya;
+      if (tekBeyin?.notya_jeton) AGENT_ID = kopya;
+      else tekBeyin = null;
     } catch (e) {
       console.error('[signed-url] tek beyin', e instanceof Error ? e.name : 'hata');
     }
@@ -135,8 +160,8 @@ export async function GET(req: NextRequest) {
     persona_name: persona.name,
     persona_title: persona.title,
     specialist_total: 30,
-    fish: persona.id === 'aysekaya' && Boolean(process.env.FISH_API_KEY),
-    ...(tekBeyin ? { tek_beyin: true, ...tekBeyin } : {}),
+    fish: false,
+    ...(tekBeyin?.notya_jeton ? { tek_beyin: true, ...tekBeyin } : {}),
   });
 }
 
@@ -162,5 +187,5 @@ async function tekBeyinHazirla(doktorId: string, personaId: string, specialty: s
   if (!oturumId) return null;
   const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: specialty, p: patientId, pe: personaId });
   // baslangic: sayfanın ses-ekran yoklaması sunucu saatinden sayar (istemci saati kayık olabilir).
-  return jeton ? { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString() } : null;
+  return { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString() };
 }

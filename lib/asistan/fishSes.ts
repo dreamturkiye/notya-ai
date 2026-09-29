@@ -8,8 +8,23 @@
 
 export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
 export const FISH_MODEL = 's2.1-pro-free'
+export const FISH_ASR_MODEL = 'transcribe-1'
 export const FISH_HIZ = 1
 export const FISH_ORNEK_HZ = 24000
+
+/** Ayşe Kaya is a full Fish call (mic + TTS). Other specialists stay on ElevenLabs ConvAI. */
+export function ayseFishTamMi(personaId: string | null | undefined, anahtar = process.env.FISH_API_KEY): boolean {
+  return personaId === 'aysekaya' && Boolean(String(anahtar || '').trim())
+}
+
+/** Fish ASR may wrap turns in speaker / emotion tags — the brain gets plain Turkish. */
+export function fishAsrMetni(ham: string | null | undefined): string {
+  return String(ham || '')
+    .replace(/<\|speaker:\d+\|>/g, ' ')
+    .replace(/\[[^\]]{1,40}\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
 
 const ETIKET = /\[[^\]]{0,120}\]/g
 
