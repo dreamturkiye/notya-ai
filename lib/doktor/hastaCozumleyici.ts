@@ -326,9 +326,8 @@ async function dosyaIleDaralt(
   if (tekHastaSorusuMu(ad.tur, mesaj)) return ad
   if (ad.tur === 'coklu' && !klinik) return ad
   if (ad.tur === 'yok' && !klinik) return ad
-  // NOTYA-SES-DOSYA-ISTE-01: no name in this message → never bind a chart (and never scan every
-  // dossier for a symptom). Practice-wide counts/lists still run.
-  if (ad.tur === 'yok' && !kohortSorusuMu(mesaj) && !listeSorgusuMu(mesaj)) return ad
+  // NOTYA-AKTIF-HASTA-01 (Kaan, 2026-09-29): unnamed clinical searches ("dün gelen ateşli bebek",
+  // "kulak iltihabı olan çocuk") run klinikAramaYurut again — the DOSYA-ISTE-01 name guard is withdrawn.
 
   // "Ayşe, kaç hastam var?" — the address is not a search term. Same strip as the name pass.
   const { adaylar: ara, istatistik, tur: aramaTuru, q: aramaSorgusu } = await klinikAramaYurut(supabase, doctorId, hitapsiz(mesaj))
@@ -362,7 +361,6 @@ async function dosyaIleDaralt(
   }
 
   if (ara.length === 1 && !liste) {
-    if (ad.tur !== 'tek') return { tur: 'yok', sayiMetin: istatistik.cumle }
     return { tur: 'tek', patientId: ara[0].id, ad: ara[0].ad, sayiMetin: istatistik.cumle }
   }
   return {

@@ -7,9 +7,9 @@
  *   - /api/asistan/chat bu fonksiyonun ince sarmalayıcısıdır (kanal: 'yazi');
  *   - ElevenLabs Custom LLM ucu /api/asistan/ses-llm aynı fonksiyonu çağırır (kanal: 'ses'); ElevenLabs yalnız
  *     dinler, sıra alır ve konuşur.
- * Aynı oturum (asistan_sessions) iki kanalın hafızasıdır: sesle başlayıp yazıyla süren TEK konuşma.
- * NOTYA-SES-DOSYA-ISTE-01: chart yalnız bu mesajda adı geçen hasta için açılır; sayfa odağı / önceki tur
- * dosya düşürmez — 30 branş ve Klinik aynı omurgayı kullanır.
+ * Aynı oturum (asistan_sessions) iki kanalın hafızasıdır: sesle başlayıp yazıyla süren TEK konuşma, TEK aktif hasta.
+ * NOTYA-AKTIF-HASTA-01 (Kaan kararı 2026-09-29, NOTYA-SES-DOSYA-ISTE-01 geri alındı): açık hasta (adla açılan ya da
+ * doktorun açık sayfası) adsız soruları cevaplar; dosya o hastaya bağlanır — 30 branş ve Klinik aynı omurgayı kullanır.
  *
  * Çıktı iki biçimdir: `ekran` (biçimli tam cevap) ve `konusma` (aynı içerik, doğal Türkçe cümlelerle — yazılı kadar
  * ayrıntılı; yalnız kimlik / iletişim değerleri ve tablolar ekranda kalır — lib/asistan/konusma.ts). Aynı soru iki
@@ -297,8 +297,10 @@ ${ilacBaglamMetni(drugs[0])}`
     }
   }
 
-  // NOTYA-KONSULT-02: doktor sohbette bir hastayı ADIYLA sorduğunda o hastanın dosyası bu tura eklenir.
-  // NOTYA-SES-DOSYA-ISTE-01: sayfa odağı / önceki tur "aktif hasta" dosya açmaz — istenmeden chart yok.
+  // NOTYA-KONSULT-02: "klinik meslektaş" tek asistanda — doktor sohbette bir hastadan
+  // bahsettiğinde (adıyla ya da "son hastam" diyerek) hastanın TAM dosyası bağlama eklenir;
+  // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
+  // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
   let dosyaEk = ""
   let dosyaGovde = ""
   let dosyaTur = ""
@@ -320,7 +322,7 @@ ${ilacBaglamMetni(drugs[0])}`
   let kimlikCevabi: KimlikCevabi | null = null
   if (!kayitNiyetiMi(String(message || ""))) {
     try {
-      kimlikCevabi = await kimlikSorusunuCevapla(supabase, doktorId, String(message || ""), null)
+      kimlikCevabi = await kimlikSorusunuCevapla(supabase, doktorId, String(message || ""), contextPatientId ? String(contextPatientId) : null)
     } catch (e) { console.error("[asistan/chat] kimlik cevabı", e instanceof Error ? e.message : String(e)) }
   }
   if (kimlikCevabi) {
@@ -344,19 +346,28 @@ ${ilacBaglamMetni(drugs[0])}`
   }
 
   try {
-    // Named patient only. Prefetching the focused chart was the pause before first speech.
+    // NOTYA-TEK-BEYIN (hız): takip sorusunda aktif hastanın dosyası, mesajdaki hasta çözülürken paralel derlenir;
+    // mesaj başka bir hastayı adlandırırsa bu derleme kullanılmaz (doktora kapsanmış bir okuma — sızıntı değil).
+    const aktifOnceden = contextPatientId ? String(contextPatientId) : null
+    const aktifPaketSozu = aktifOnceden ? dosyaPaketOnbellekli(supabase, doktorId, aktifOnceden).catch(() => null) : null
     cozum = await hastaninSozunuCoz(supabase, doktorId, message)
-    // NOTYA-SES-AKTIF-HASTA-01: "hastamız / bu hasta / kendisi" with no name in THIS message → the session's
-    // active patient (last opened by name). Anything else still opens nothing (NOTYA-SES-DOSYA-ISTE-01).
-    // Only a patient opened BY NAME in this session (odakKaynak 'soz') — page focus never binds a chart.
-    const aktifId = baglam.currentPatientId && baglam.odakKaynak === "soz" ? String(baglam.currentPatientId) : ""
-    const aktifAdi = baglam.patientName ? String(baglam.patientName) : ""
     const mesajMetni = String(message || "")
-    if (cozum.tur === "yok" && !cozum.sayiMetin && aktifHastaKullanilsinMi({ aktifHastaVar: Boolean(aktifId), cozumTur: "yok", aramaSonucu: false, mesaj: mesajMetni })) {
-      if (await hastaSahibiMi(supabase, doktorId, aktifId)) cozum = { tur: "tek", patientId: aktifId, ad: aktifAdi || "Hasta" }
+    // NOTYA-AKTIF-HASTA-01 (Kaan kararı 2026-09-29, 09-25 kuralı geri geldi): açık hasta — bu oturumda adla açılan
+    // (odakKaynak 'soz') YA DA doktorun açık sayfası (NOTYA-SAYFA-HASTA-01, 'sayfa') — adsız soruyu cevaplar; arama
+    // değil. Adla bulunan hasta kazanır; takvim / çok-hasta sorusu dosya bağlamaz (lib/asistan/aktifHasta.ts).
+    const aktifeDon = aktifHastaKullanilsinMi({
+      aktifHastaVar: Boolean(aktifOnceden),
+      cozumTur: cozum.tur,
+      aramaSonucu: Boolean((cozum as { sayiMetin?: string }).sayiMetin),
+      mesaj: mesajMetni,
+    })
+    if (aktifeDon && aktifOnceden && cozum.tur !== "tek" && (await hastaSahibiMi(supabase, doktorId, aktifOnceden))) {
+      // HASTA-IZOLASYON-01: the focus id is re-checked against this doctor before it becomes the chart.
+      const aktifAdi = baglam.currentPatientId && String(baglam.currentPatientId) === aktifOnceden && baglam.patientName ? String(baglam.patientName) : ""
+      cozum = { tur: "tek", patientId: aktifOnceden, ad: aktifAdi }
     }
     const dosyaIstegi = dosyaAcmaIstegiMi(mesajMetni)
-    const konus = cozumKonus(cozum)
+    const konus = aktifeDon ? null : cozumKonus(cozum)
     if (konus) {
       aramaCevabi = konus
     } else if (cozum.tur === "yok" && dosyaIstegi) {
@@ -368,15 +379,15 @@ ${ilacBaglamMetni(drugs[0])}`
       aramaCevabi = `${cozum.ad} dosyası açık Hocam. Ne sormak istersiniz?`
     } else if (cozum.tur === "tek") {
         const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
-        const paket = await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
+        const paket = cozum.patientId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
         const sorgu = paket && soruTuru && paket.sorguHasta
           ? { olaylar: paket.olaylar as DosyaOlayi[], hasta: paket.sorguHasta as DosyaHastasi }
           : null
         kanitYoluAktif = Boolean(soruTuru && sorgu)
         if (paket) {
           dosyaOnbellekten = Boolean(paket.onbellekten)
-          cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
-          const aktifAd = cozum.ad
+          const aktifAd = cozum.ad || paket.ad || "aktif hasta"
+          cozulenHasta = { id: cozum.patientId, ad: aktifAd }
           odakHastaAdi = aktifAd
           odakDosyaMetni = paket.metin || ""
           const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart as HastaDosyaKart)
@@ -413,7 +424,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-EYLEM: hasta kimliği SUNUCUDA çözülür. Bu yüzeyde hasta serbest metinden bulunur
   // (hastaninSozunuCoz) — çözülen hasta belirsizse (cozum.tur === 'coklu') aktifEylemHastasi null
   // kalır, araç sunulmaz ve Ayşe hangi hastayı kastettiğini sorar (docs §2: "ambiguous → ask, no card").
-  const eylemHastaId = cozulenHasta?.id || null
+  const eylemHastaId = cozulenHasta?.id || (contextPatientId ? String(contextPatientId) : null)
   const [kota, hafizaHam, gunHam, currentPatient, eylemHastasi] = await Promise.all([
     // NOTYA-KOTA-01: yazılı sohbet günlük kotaya tabi (dosya gerçeği LLM'e gitmez — kota harcanmaz)
     aiKotaKullan(supabase, doktorId, 'sohbet'),
@@ -428,8 +439,8 @@ ${ilacBaglamMetni(drugs[0])}`
       : Promise.resolve(""),
     // Load current patient if any
     // HASTA-IZOLASYON-01: patientId comes from the request body — only this doctor's patient enters the prompt.
-    cozulenHasta
-      ? supabase.from("patients").select("*").eq("id", cozulenHasta.id).eq("doctor_id", doktorId).maybeSingle().then((r) => r.data)
+    eylemHastaId
+      ? supabase.from("patients").select("*").eq("id", eylemHastaId).eq("doctor_id", doktorId).maybeSingle().then((r) => r.data)
       : Promise.resolve(null),
     eylemKapali() ? Promise.resolve(null) : hastaOzetiGetir(supabase, doktorId, eylemHastaId),
   ])
@@ -457,6 +468,8 @@ ${ilacBaglamMetni(drugs[0])}`
   const toolChoice = araclar.length && kayitNiyetiMi(String(message || augmentedMessage || '')) ? ('any' as const) : undefined
   // NOTYA-LUNA-ARAMA-01 (2026-09-29): with no chart attached the prompt still says "dosyaya erişimin VAR" and
   // forbids "erişemem" — a compliant model then invents a file ("dosyası açık", made-up aşı/ilaç). Say it plainly.
+  // Only when NO patient could be resolved at all (no name, no open patient) — an open patient without a chart this
+  // turn (cohort / calendar question) is still a known patient.
   const dosyaYokBlogu = !dosyaEk && !currentPatient ? DOSYA_YOK_BLOGU : ""
   const kuyruk = gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
