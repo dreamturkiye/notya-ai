@@ -420,10 +420,14 @@ function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: 
   return { cinsiyet: null, kalan: n }
 }
 
+/** "kaç <ölçü>" — an age / weight / time / dose value, never a patient count. */
+const SAYIM_OLCU = /\bkac\s+(yas\w*|kilo\w*|kg|gram\w*|boy\w*|cm|santim\w*|gun\w*|ay|aylik|aydir|hafta\w*|yil\w*|saat\w*|dakika\w*|derece\w*|ates\w*|ml|mg|damla|tablet|kasik|olcek|puan|kez|kere|defa)\b/g
 export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const n0 = trAramaNormalize(mesaj).replace(/\borta\s+kulak\b/g, 'kulak')
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
-  const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0)
+  // NOTYA-SES-KAC-HASTA-02 (Kaan, 2026-09-29): "kaç" before a measure word ("hastamız kaç yaşında", "kaç kilo",
+  // "kaç gün") is a value question about one patient, not a count — it answered "Kayıtlarda 0 hasta".
+  const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0.replace(SAYIM_OLCU, ' '))
   const asi = ASI_KELIME.test(n0)
   // Spoken forms too: "bugün kaç hasta baktım / gördük" — these are visit verbs, not search terms.
   const ziyaret = /gordugum|gorduklerim|gorduk|muayene|ettigim|baktigim|baktim|baktik|baktin|gelen|geldi|gordum|gordun|\bhad\b|\bsaw\b/.test(n0)

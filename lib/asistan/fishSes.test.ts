@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
 import { pcmdenWav } from './fishMikrofon'
 
 test('Fish metni cümle arasına kısa durak koyar, duygu etiketini siler', () => {
@@ -89,4 +89,15 @@ test('çöp klip Fish\'e gitmez: boş, kısa, sessiz; gerçek konuşma geçer', 
   assert.ok(iyi.rms != null && iyi.rms > 0.1)
   assert.equal(asrKlipDenetle(new Uint8Array(500), 'audio/webm').neden, 'kisa_bayt')
   assert.equal(asrKlipDenetle(new Uint8Array(5000), 'audio/webm').uygun, true)
+})
+
+test('fishAsrDilUyumluMu — non-Latin script or empty transcript is junk', () => {
+  assert.equal(fishAsrDilUyumluMu('Hastamız kaç yaşında hocam?'), true)
+  assert.equal(fishAsrDilUyumluMu('Kaan Arıoğlu\'nun dosyasını açar mısın'), true)
+  assert.equal(fishAsrDilUyumluMu('کان رو از کجا شنودم؟'), false)
+  assert.equal(fishAsrDilUyumluMu('Привет как дела'), false)
+  assert.equal(fishAsrDilUyumluMu('你好'), false)
+  assert.equal(fishAsrDilUyumluMu(''), false)
+  assert.equal(fishAsrDilUyumluMu('... ?'), false)
+  assert.equal(fishAsrDilUyumluMu('paracetamol 15 mg/kg'), true)
 })

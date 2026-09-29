@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   FISH_ASR_DIL, FISH_ASR_MODEL, FISH_ASR_YENIDEN, FISH_ASR_ZAMAN_MS, FISH_KLIP_AZAMI_BAYT,
-  asrKlipDenetle, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi,
+  asrKlipDenetle, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrFormu, fishAsrMetni, fishAsrYenidenDenenirMi,
 } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
@@ -27,7 +27,7 @@ async function doktorMu(req: NextRequest): Promise<boolean> {
   }
 }
 
-type AsrDeneme = { durum: number | null; metin: string; hata: string | null }
+type AsrDeneme = { durum: number | null; metin: string; hata: string | null; dil?: string | null }
 
 async function fishAsrCagir(anahtar: string, ses: Blob, ad: string): Promise<AsrDeneme> {
   const kontrol = new AbortController()
@@ -41,8 +41,11 @@ async function fishAsrCagir(anahtar: string, ses: Blob, ad: string): Promise<Asr
       cache: 'no-store',
     })
     if (!yanit.ok) return { durum: yanit.status, metin: '', hata: `http_${yanit.status}` }
-    const j = (await yanit.json().catch(() => null)) as { text?: unknown } | null
-    return { durum: yanit.status, metin: fishAsrMetni(typeof j?.text === 'string' ? j.text : ''), hata: null }
+    const j = (await yanit.json().catch(() => null)) as { text?: unknown; language_code?: unknown } | null
+    return {
+      durum: yanit.status, metin: fishAsrMetni(typeof j?.text === 'string' ? j.text : ''), hata: null,
+      dil: typeof j?.language_code === 'string' ? j.language_code : null,
+    }
   } catch (e) {
     return { durum: null, metin: '', hata: e instanceof Error ? e.name : 'hata' }
   } finally {
@@ -84,10 +87,13 @@ export async function POST(req: NextRequest) {
     if (!deneme.hata || !fishAsrYenidenDenenirMi(deneme.durum)) break
   }
   const asr_latency_ms = Date.now() - t0
+  // Fish treats `language` as a hint only: a Persian/Cyrillic/CJK transcript is a mislabelled clip → junk.
+  const asr_dil_uyusmazligi = !deneme.hata && !fishAsrDilUyumluMu(deneme.metin)
   console.info('[fish-stt]', {
-    asr_latency_ms, klip_ms: klip.sureMs, bayt: klip.bayt, dil: FISH_ASR_DIL, model: FISH_ASR_MODEL,
-    durum: deneme.durum, tekrar, karakter: deneme.metin.length, hata: deneme.hata,
+    asr_latency_ms, klip_ms: klip.sureMs, bayt: klip.bayt, dil: FISH_ASR_DIL, dil_tespit: deneme.dil ?? null, model: FISH_ASR_MODEL,
+    durum: deneme.durum, tekrar, karakter: deneme.metin.length, hata: deneme.hata, asr_dil_uyusmazligi,
   })
   if (deneme.hata) return NextResponse.json({ error: 'Çözülemedi' }, { status: 502 })
+  if (asr_dil_uyusmazligi) return NextResponse.json({ metin: '', atlandi: 'dil' })
   return NextResponse.json({ metin: deneme.metin })
 }

@@ -330,3 +330,20 @@ describe('NOTYA-SES-KAC-HASTA — sesli "kaç hasta" sayımı', () => {
     assert.equal(listeIstenmisMi('ateşli hastalarım kimler'), true)
   })
 })
+
+describe('NOTYA-SES-KAC-HASTA-02 — "kaç <ölçü>" is not a count', () => {
+  it('kaç yaşında / kilo / gün / ay / kez are value questions, not list/count queries', () => {
+    for (const m of ['Ah hastamız kaç yaşında hocam?', 'Kaan Arıoğlu kaç yaşında?', 'Kaç kilo geldi?', 'Kaç gündür ateşi var?', 'Kaç aylık?', 'Kaç kez geldi?', 'Ateşi kaç derece?']) {
+      const q = sorguyuAyikla(m, PAZAR)
+      assert.equal(q.sayim, false, m)
+      assert.equal(listeSorgusuMu(m, q), false, m)
+    }
+  })
+  it('real counts still count', () => {
+    for (const m of ['Kaç hastam var?', 'Bugün kaç hasta baktım?', 'Hasta sayısı?', 'kaç hasta', 'Bu ay kaç çocuk geldi?']) {
+      const q = sorguyuAyikla(m, PAZAR)
+      assert.equal(q.sayim, true, m)
+      assert.equal(listeSorgusuMu(m, q), true, m)
+    }
+  })
+})

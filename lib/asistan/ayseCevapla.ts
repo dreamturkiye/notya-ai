@@ -48,6 +48,7 @@ import { searchDrug, ilacBaglamMetni } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
+import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from "@/lib/asistan/aktifHasta"
 import { aiAkis, aiCagir } from "@/lib/ai/cagir"
 import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali } from "@/core/eylemler/araclar"
@@ -340,9 +341,26 @@ ${ilacBaglamMetni(drugs[0])}`
   try {
     // Named patient only. Prefetching the focused chart was the pause before first speech.
     cozum = await hastaninSozunuCoz(supabase, doktorId, message)
+    // NOTYA-SES-AKTIF-HASTA-01: "hastamız / bu hasta / kendisi" with no name in THIS message → the session's
+    // active patient (last opened by name). Anything else still opens nothing (NOTYA-SES-DOSYA-ISTE-01).
+    // Only a patient opened BY NAME in this session (odakKaynak 'soz') — page focus never binds a chart.
+    const aktifId = baglam.currentPatientId && baglam.odakKaynak === "soz" ? String(baglam.currentPatientId) : ""
+    const aktifAdi = baglam.patientName ? String(baglam.patientName) : ""
+    const mesajMetni = String(message || "")
+    if (cozum.tur === "yok" && !cozum.sayiMetin && aktifHastaKullanilsinMi({ aktifHastaVar: Boolean(aktifId), cozumTur: "yok", aramaSonucu: false, mesaj: mesajMetni })) {
+      if (await hastaSahibiMi(supabase, doktorId, aktifId)) cozum = { tur: "tek", patientId: aktifId, ad: aktifAdi || "Hasta" }
+    }
+    const dosyaIstegi = dosyaAcmaIstegiMi(mesajMetni)
     const konus = cozumKonus(cozum)
     if (konus) {
       aramaCevabi = konus
+    } else if (cozum.tur === "yok" && dosyaIstegi) {
+      // Never "dosyası açık" without a resolved patient.
+      aramaCevabi = "Bu isimde bir hasta bulamadım Hocam; adını ve soyadını tam söyler misiniz?"
+    } else if (cozum.tur === "tek" && dosyaIstegi) {
+      // Deterministic open: the chart becomes the session's active patient; follow-ups load it from cache.
+      cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
+      aramaCevabi = `${cozum.ad} dosyası açık Hocam. Ne sormak istersiniz?`
     } else if (cozum.tur === "tek") {
         const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
         const paket = await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
@@ -491,6 +509,10 @@ ${ilacBaglamMetni(drugs[0])}`
     if (r.bulgular.length) console.warn("[asistan/chat] kaynak kilidi", r.bulgular)
     aiData.speech = r.bulgular.length ? `${r.metin}\n\n⚠ Kaynak kontrolü (hekim onayı): doğrulanamayan kılavuz numarası / yılı yanıttan çıkarıldı; kaynağı hekim doğrular.` : r.metin
     if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaKaynakTemizle(String(aiData.proactiveWarning), liste).metin
+  }
+  // NOTYA-SES-AKTIF-HASTA-01: no chart this turn → the model may not claim one is open.
+  if (!cozulenHasta && !currentPatient && /dosya\w*\s+(açık|açtım|açıyorum|açıldı|önümde|hazır)/iu.test(String(aiData.speech || ""))) {
+    aiData.speech = "Şu an açık bir hasta dosyası yok Hocam; hastanın adını söylerseniz dosyasını açarım."
   }
   // NOTYA-HASTA-ODAK-01: açık dosyadayken uydurma liste / recant / başka hasta dilliği geri çekilir.
   const odakAd = odakHastaAdi || (cozulenHasta?.ad ?? (baglam.patientName ? String(baglam.patientName) : ''))

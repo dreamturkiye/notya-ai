@@ -42,6 +42,19 @@ export function fishAsrFormu(ses: Blob, ad: string): FormData {
   return giden
 }
 
+/**
+ * Fish auto-detects the language regardless of the `language` hint (docs: "Optional hint. The language is
+ * auto-detected regardless"). A transcript with no Latin letters — or dominated by Arabic/Persian, Cyrillic,
+ * CJK, Greek, Hebrew script — is a mislabelled clip, not Turkish speech: dropped, never fed to the brain.
+ */
+export function fishAsrDilUyumluMu(metin: string): boolean {
+  const t = String(metin || '')
+  const latin = (t.match(/[A-Za-zÇĞİÖŞÜçğıöşüâîû]/g) || []).length
+  if (!latin) return false
+  const yabanci = (t.match(/[\u0370-\u03FF\u0400-\u04FF\u0530-\u058F\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0900-\u097F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g) || []).length
+  return yabanci * 2 < latin
+}
+
 /** Network failure (null) or a 5xx is retried once; anything else is final. */
 export function fishAsrYenidenDenenirMi(durum: number | null): boolean {
   return durum === null || durum >= 500
