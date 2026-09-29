@@ -9,7 +9,7 @@
   "background_color": "#f4eee3",
   "theme_color": "#f4eee3",
   "lang": "tr",
-  "id": "/asistan",
+  "id": "/dashboard/doktor",
   "icons": [
     {
       "src": "/icon-192.png",

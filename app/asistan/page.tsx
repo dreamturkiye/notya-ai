@@ -23,6 +23,23 @@ import { useAsistanOturum } from '@/components/asistan/AsistanOturumContext'
 // the <DoktorChrome> boundary, and an inner component -- a genuine descendant -- that calls the
 // hook and holds every bit of this page's existing logic unchanged.
 export default function AsistanPage() {
+  return <AsistanAcilis />
+}
+
+/** Do not paint Asistan chrome until we know this is not an old PWA icon cold-open. */
+function AsistanAcilis() {
+  const router = useRouter()
+  const [ac, setAc] = useState(false)
+  useEffect(() => {
+    if (pwaIkonundanAsistanMi()) {
+      router.replace('/dashboard/doktor')
+      return
+    }
+    setAc(true)
+  }, [router])
+  if (!ac) {
+    return <div style={{ minHeight: '100dvh', background: CHROME_RENK.cream }} aria-hidden />
+  }
   return (
     <DoktorChrome>
       <AsistanPageInner />
@@ -56,10 +73,6 @@ function AsistanPageInner() {
 
   // Opening colleague: branch doctors (KD → Fatma) ignore stale localStorage Ayşe (AsistanOturumContext.hazirla).
   useEffect(() => {
-    if (pwaIkonundanAsistanMi()) {
-      window.location.replace('/dashboard/doktor')
-      return
-    }
     ;(async () => {
       const sonuc = await hazirla()
       if (sonuc === "giris") router.replace("/giris/doktor")

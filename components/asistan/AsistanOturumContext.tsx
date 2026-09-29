@@ -30,7 +30,7 @@ import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKart
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
-import { kendiSelamiMi, ozgecmisAcilisiMi } from '@/lib/asistan/acilis'
+import { kendiSelamiMi, acilisAjanSozuMu } from '@/lib/asistan/acilis'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 import { cevapEkle, kullaniciEkle } from '@/lib/asistan/balonSirasi'
@@ -561,7 +561,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         firstMessage,
         voiceId,
         {
-          tryFirstMessage: true,
+          // Fish is the speaker. EL first_message + Fish soyle = two "Merhaba", then one mute.
+          tryFirstMessage: !fish,
           refreshSignedUrl: () => fetchSignedUrl(p, sayfaHastasi).then((r) => r.signedUrl),
           notyaJeton: tekBeyin?.jeton,
         }
@@ -642,6 +643,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         signedUrl: activeSignedUrl,
         connectionType: "websocket",
         ...SES_CALAR,
+        onConversationCreated: (c) => {
+          conversationRef.current = c
+          if (fishAcikRef.current) {
+            try { c.setVolume({ volume: 0 }) } catch { /* SDK */ }
+          }
+        },
         overrides: {
           agent: {
             prompt: { prompt: voicePrompt },
@@ -786,10 +793,16 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           setStatus("listening")
           setErrorMsg("")
           sureTimerlariBaslat(address(doctorProfile || { firstName: 'Hocam' }, 'named'))
-          // When first_message override is active the agent speaks it and onMessage
-          // adds the bubble once. Seeding here caused the doubled first text.
-          // Fallback path (no override): seed personalized greeting in UI only.
-          if (!includeFirstMessage) {
+          if (fishAcikRef.current) {
+            const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
+            try { c?.setVolume?.({ volume: 0 }) } catch { /* SDK */ }
+            if (!selamBizden) {
+              selamBizden = true
+              fishRef.current?.soyle(firstMessage)
+              addMsg("ai", firstMessage)
+            }
+          } else if (!includeFirstMessage) {
+            // Fallback path (no override): seed personalized greeting in UI only.
             addMsg("ai", firstMessage)
           }
           if (tekBeyin) yoklamayiBaslat()
@@ -828,7 +841,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             const gecikenSoru = typeof olay === "number" && fishCevapOlayRef.current > olay
             if (!gecikenSoru) fishKes()
             if (!gecikenSoru) sesDevamRef.current.doktorSozu = Date.now()
-          } else if (!doktorKonustu && ozgecmisAcilisiMi(message)) {
+          } else if (!doktorKonustu && acilisAjanSozuMu(message)) {
             if (!selamBizden) {
               selamBizden = true
               if (fishAcikRef.current) fishRef.current?.soyle(firstMessage)
@@ -863,6 +876,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         },
         onAgentChatResponsePart: (part) => {
           if (!fishAcikRef.current || !part) return
+          // Opening line is spoken once onConnect. Streaming it here is the second voice.
+          if (!doktorKonustu) return
           const olay = typeof part.event_id === "number" ? part.event_id : undefined
           if (part.type === "start") {
             fishSozRef.current = ""

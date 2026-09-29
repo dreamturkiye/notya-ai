@@ -14,3 +14,8 @@ export function kendiSelamiMi(metin: string): boolean {
   if (!t || t.length > 180) return false
   return /^merhaba\b/.test(t) && /nasıl yardımcı olabilirim\??$/.test(t)
 }
+
+/** Agent opening (bio or our Merhaba) — Fish must not replay it on top of ElevenLabs. */
+export function acilisAjanSozuMu(metin: string): boolean {
+  return ozgecmisAcilisiMi(metin) || kendiSelamiMi(metin)
+}
