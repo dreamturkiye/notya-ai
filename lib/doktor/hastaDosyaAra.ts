@@ -163,6 +163,19 @@ export async function hastaDosyaAra(
   return (await klinikAramaYurut(supabase, doktorId, mesaj, now)).adaylar
 }
 
+/**
+ * NOTYA-SES-KAC-HASTA (Kaan, 2026-09-29): "kaç hastam var" counted only patients with a
+ * visit row because olcum='hasta' alone demanded a session — a practice of 30 registered
+ * patients with 4 examined answered "Kayıtlarda 4 hasta". A visit is required only when
+ * the doctor asks about visits (window or a visit verb); a bare count is the whole panel.
+ */
+export function hastaSayimiSeansIster(q: SorguAyik): boolean {
+  if (q.olcum === 'sure') return true
+  if (q.ziyaret) return true
+  if (q.pencere && (q.olcum === 'hasta' || (q.yas && q.olcum !== 'asi' && q.olcum !== 'ilac'))) return true
+  return false
+}
+
 export async function klinikAramaYurut(
   supabase: SupabaseClient,
   doktorId: string,
@@ -511,7 +524,7 @@ export async function klinikAramaYurut(
     }
 
     const bolumSoru = q.seriGecikme || Boolean(q.mchat) || q.persentilEsik != null || q.bayrakVe.length > 0
-    const seansGerek = !bolumSoru && (q.olcum === 'sure' || q.olcum === 'hasta' || q.ziyaret || Boolean(q.pencere && q.yas && q.olcum !== 'asi' && q.olcum !== 'ilac'))
+    const seansGerek = !bolumSoru && hastaSayimiSeansIster(q)
     if (q.ziyaretYok) {
       if (ziyaretId.has(id)) continue
     } else if (seansGerek && !ziyaretId.has(id) && !g.nedenler.some((n) => /muayene|randevu|not:/i.test(n))) {
@@ -588,7 +601,8 @@ export async function klinikAramaYurut(
     ? Math.round((seansSureleri.reduce((a, b) => a + b, 0) / seansSureleri.length / 60) * 10) / 10
     : null
   const istatistik = istatistikKur(q, {
-    hastaSayisi: adaylar.length,
+    // The spoken count is the full match, not the 40-row list the screen shows.
+    hastaSayisi: q.kirilim === 'ilac_adi' ? 0 : cikti.length,
     seansSayisi,
     asiAdedi,
     ilacAdedi,

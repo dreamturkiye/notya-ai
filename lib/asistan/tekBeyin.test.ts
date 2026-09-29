@@ -383,7 +383,8 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const soru = 'Rıdvan Dilmen dosyasına bakabilir misin?'
     yanit = { metin: JSON.stringify({ speech: 'Hocam, yalnızca kendi hastalarınızın dosyalarına erişebiliyorum.' }) }
     const ilk = await ses({ sahne: b, mesaj: soru })
-    assert.match(ilk.metin, /hastalarınızın/)
+    // NOTYA-SES-AKTIF-HASTA-01: a chart-open request for an unknown / foreign name is answered without the model.
+    assert.match(ilk.metin, /bulamadım/)
     const n = modelIstekleri.length
     const tekrar = await ses({ sahne: b, mesaj: soru })
     assert.equal(modelIstekleri.length, n, 'replay yeni model turu açmaz')

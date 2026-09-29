@@ -33,6 +33,16 @@ import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
 import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinleBaglamAc } from '@/lib/asistan/fishMikrofon'
+
+/** NOTYA-SES-1TO1: client-side ceilings for one Fish turn; the server has its own 20 s / 60 s limits. */
+const FISH_ASR_ISTEMCI_MS = 25_000
+const FISH_TUR_ISTEMCI_MS = 55_000
+const FISH_ASR_HATA = "Sesinizi çözemedim Hocam, tekrar söyler misiniz?"
+const FISH_ASR_UZUN = "Kayıt çok uzun oldu Hocam, daha kısa söyler misiniz?"
+const FISH_TUR_HATA = "Şu an cevap veremiyorum Hocam, bir daha sorar mısınız?"
+const FISH_TTS_HATA = "Sesim kesildi Hocam — cevap ekranınızda, dinlemeye devam ediyorum."
+const FISH_OTURUM_HATA = "Oturum doğrulanamadı Hocam, yeniden deniyorum."
+const FISH_MIK_HATA = "Mikrofona ulaşamıyorum Hocam, seansı kapattım — mikrofona dokunup yeniden başlatın."
 import { kendiSelamiMi, acilisAjanSozuMu } from '@/lib/asistan/acilis'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
@@ -483,7 +493,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     return /first[_ ]?message/i.test(msg || "")
   }
 
-  async function fishSseOku(govde: ReadableStream<Uint8Array>, onSoz: (m: string) => void, sinyal: AbortSignal) {
+  /** SSE from /api/asistan/fish-tur. `hata` events reach the doctor (spoken + shown), not the void. */
+  async function fishSseOku(govde: ReadableStream<Uint8Array>, onSoz: (m: string) => void, sinyal: AbortSignal, onHata?: (m: string) => void) {
     const okuyucu = govde.getReader()
     const dec = new TextDecoder()
     let buf = ""
@@ -501,6 +512,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         try {
           const j = JSON.parse(satir.slice(6)) as { t?: string; m?: string }
           if (j.t === "soz" && j.m) onSoz(j.m)
+          else if (j.t === "hata" && j.m) onHata?.(j.m)
         } catch { /* parça */ }
       }
     }
@@ -538,7 +550,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       return r.body
     }, {
       onHata: () => {
-        if (fishAcikRef.current) setStatus("listening")
+        // TTS failed for this sentence: the screen answer is still there, keep listening.
+        if (fishAcikRef.current) {
+          setStatus("listening")
+          setErrorMsg(FISH_TTS_HATA)
+        }
         acilisiKapat()
       },
       onBasladi: () => { if (fishAcikRef.current) setStatus("speaking") },
@@ -576,64 +592,129 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     void fishDinleDongusu(nesil, akis, baglam, g.p, g.tekBeyin.oturumId)
   }
 
+  /**
+   * One doctor turn per iteration: record → ASR → brain → speak. A failed call says so
+   * in one Turkish line and the loop keeps listening; only a dead mic/context ends it.
+   */
   async function fishDinleDongusu(nesil: number, akis: MediaStream, baglam: AudioContext, p: Persona, oturumId: string) {
-    while (nesil === fishDinleNesilRef.current && fishAcikRef.current) {
-      const blob = await fishBirTurKaydet(akis, baglam, {
-        iptal: () => nesil !== fishDinleNesilRef.current || !fishAcikRef.current,
-        ajanKonusuyorMu: () => Boolean(fishRef.current?.caliyorMu()),
-        bargeIn: () => fishKes(),
-      })
-      if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) return
-      if (!blob) continue
-      const t = authTokenRef.current || await ensureDoctorAccessToken()
-      if (!t || nesil !== fishDinleNesilRef.current) return
-      const fd = new FormData()
-      fd.append("audio", blob, fishAsrDosyaAdi(blob.type))
-      let metin = ""
+    const canli = () => nesil === fishDinleNesilRef.current && fishAcikRef.current
+    let ustUsteHata = 0
+    while (canli()) {
       try {
-        const r = await fetch("/api/asistan/fish-stt", { method: "POST", headers: { Authorization: `Bearer ${t}` }, body: fd })
-        const j = (await r.json().catch(() => null)) as { metin?: string } | null
-        metin = String(j?.metin || "").trim()
-      } catch { continue }
-      if (nesil !== fishDinleNesilRef.current) return
-      if (sesGurultusuMu(metin)) continue
-      if (kendiSelamiMi(metin)) continue
-      if (asistaniKapatMi(metin)) {
-        addMsg("user", metin)
-        void endConversation()
-        return
-      }
-      sesDevamRef.current.doktorSozu = Date.now()
-      addMsg("user", metin)
-      fishKes()
-      fishSozRef.current = ""
-      fishBirikimRef.current = ""
-      fishTurAbortRef.current?.abort()
-      const kontrol = new AbortController()
-      fishTurAbortRef.current = kontrol
-      try {
-        const r = await fetch("/api/asistan/fish-tur", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-          body: JSON.stringify({
-            mesaj: metin,
-            asistanSessionId: oturumId,
-            specialty: p.primarySpecialty,
-            personaId: p.id,
-          }),
-          signal: kontrol.signal,
+        const blob = await fishBirTurKaydet(akis, baglam, {
+          iptal: () => !canli(),
+          ajanKonusuyorMu: () => Boolean(fishRef.current?.caliyorMu()),
+          bargeIn: () => fishKes(),
         })
-        if (!r.ok || !r.body) continue
-        await fishSseOku(r.body, (m) => {
-          if (nesil !== fishDinleNesilRef.current) return
-          fishBirikimRef.current = fishBirlestir(fishBirikimRef.current, m)
-          fishIsle(fishBirikimRef.current, false)
-        }, kontrol.signal)
-        if (nesil === fishDinleNesilRef.current) fishIsle(fishBirikimRef.current, true)
+        if (!canli()) return
+        if (!blob) continue
+        const t = authTokenRef.current || await ensureDoctorAccessToken()
+        if (!canli()) return
+        if (!t) { setErrorMsg(FISH_OTURUM_HATA); await new Promise((r) => setTimeout(r, 1500)); continue }
+        const fd = new FormData()
+        fd.append("audio", blob, fishAsrDosyaAdi(blob.type))
+        let metin = ""
+        const asrT0 = Date.now()
+        const asrKontrol = new AbortController()
+        const asrZamani = setTimeout(() => asrKontrol.abort(), FISH_ASR_ISTEMCI_MS)
+        try {
+          const r = await fetch("/api/asistan/fish-stt", {
+            method: "POST", headers: { Authorization: `Bearer ${t}` }, body: fd, signal: asrKontrol.signal,
+          })
+          const j = (await r.json().catch(() => null)) as { metin?: string; atlandi?: string; error?: string } | null
+          if (!r.ok) {
+            console.warn("[fish-mic] asr", { durum: r.status, ms: Date.now() - asrT0, hata: j?.error || null })
+            if (canli()) setErrorMsg(r.status === 413 ? FISH_ASR_UZUN : FISH_ASR_HATA)
+            continue
+          }
+          if (j?.atlandi) continue // junk clip dropped server-side — no transcript entry
+          metin = String(j?.metin || "").trim()
+        } catch (e) {
+          console.warn("[fish-mic] asr", { ms: Date.now() - asrT0, hata: e instanceof Error ? e.name : "hata" })
+          if (canli()) setErrorMsg(FISH_ASR_HATA)
+          continue
+        } finally {
+          clearTimeout(asrZamani)
+        }
+        if (!canli()) return
+        if (sesGurultusuMu(metin)) continue
+        if (kendiSelamiMi(metin)) continue
+        if (asistaniKapatMi(metin)) {
+          addMsg("user", metin)
+          void endConversation()
+          return
+        }
+        sesDevamRef.current.doktorSozu = Date.now()
+        addMsg("user", metin)
+        setErrorMsg("")
+        fishKes()
+        fishSozRef.current = ""
+        fishBirikimRef.current = ""
+        fishTurAbortRef.current?.abort()
+        const kontrol = new AbortController()
+        fishTurAbortRef.current = kontrol
+        const turZamani = setTimeout(() => kontrol.abort(), FISH_TUR_ISTEMCI_MS)
+        try {
+          const r = await fetch("/api/asistan/fish-tur", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+            body: JSON.stringify({
+              mesaj: metin,
+              asistanSessionId: oturumId,
+              specialty: p.primarySpecialty,
+              personaId: p.id,
+            }),
+            signal: kontrol.signal,
+          })
+          if (!r.ok || !r.body) {
+            if (canli()) sesliHataSoyle(FISH_TUR_HATA)
+            continue
+          }
+          let hataSoylendi = false
+          await fishSseOku(r.body, (m) => {
+            if (!canli()) return
+            fishBirikimRef.current = fishBirlestir(fishBirikimRef.current, m)
+            fishIsle(fishBirikimRef.current, false)
+          }, kontrol.signal, (m) => {
+            if (!canli() || hataSoylendi) return
+            hataSoylendi = true
+            sesliHataSoyle(m)
+          })
+          if (canli() && !hataSoylendi) fishIsle(fishBirikimRef.current, true)
+          ustUsteHata = 0
+        } catch (e) {
+          if (e instanceof DOMException && e.name === "AbortError") {
+            // Our own timeout (not a newer turn) — tell the doctor instead of going quiet.
+            if (canli() && fishTurAbortRef.current === kontrol) sesliHataSoyle(FISH_TUR_HATA)
+            continue
+          }
+          if (canli()) sesliHataSoyle(FISH_TUR_HATA)
+        } finally {
+          clearTimeout(turZamani)
+        }
       } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") continue
+        // Recorder / context failure: never let one exception kill the session silently.
+        ustUsteHata += 1
+        console.error("[fish-mic] tur", { hata: e instanceof Error ? e.message : String(e), ustUste: ustUsteHata })
+        if (!canli()) return
+        if (baglam.state === "closed" || ustUsteHata >= 3) {
+          setErrorMsg(FISH_MIK_HATA)
+          void endConversation()
+          return
+        }
+        await new Promise((r) => setTimeout(r, 500))
       }
     }
+  }
+
+  /** One short Turkish line, spoken by Ayşe and shown on screen; the loop keeps listening. */
+  function sesliHataSoyle(metin: string) {
+    const m = String(metin || "").trim() || FISH_TUR_HATA
+    setErrorMsg(m)
+    addMsg("ai", m)
+    fishSozRef.current = ""
+    fishBirikimRef.current = ""
+    fishIsle(m, true)
   }
 
   async function fetchSignedUrl(p: Persona, sayfaHastasi: string | null = null): Promise<{ signedUrl: string; voiceId: string; fish: boolean; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {

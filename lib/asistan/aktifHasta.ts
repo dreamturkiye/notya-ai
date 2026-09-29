@@ -12,12 +12,31 @@ export function kohortSorusuMu(mesaj: string): boolean {
   return KOHORT.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')
 }
 
-/** Always false: focus is not a chart. Kept so callers do not fork a second rule. */
-export function aktifHastaKullanilsinMi(_g: {
+/**
+ * NOTYA-SES-AKTIF-HASTA-01 (Kaan, 2026-09-29): "hastamız / bu hasta / kendisi / dosyadaki hasta / o" point at
+ * the session's active patient (the one last opened by name). Only such a reference reaches the chart —
+ * an unreferenced question ("Nasılsınız?", "En son ne zaman geldi?") still opens nothing (DOSYA-ISTE-01).
+ */
+const ATIF = /\b(hastamiz\w*|hastam\b|hastamin|hastama|hastami|bu hasta\w*|su hasta\w*|o hasta\w*|bu cocuk\w*|cocugumuz\w*|kendisi\w*|dosyadaki\w*|bu dosya\w*|acik dosya\w*|onun|ona|onu|o kac|o ne zaman|o kimdir|o kim)\b/
+
+export function hastaAtifiMu(mesaj: string): boolean {
+  const m = ' ' + trAramaNormalize(String(mesaj || '')) + ' '
+  return ATIF.test(m) && !kohortSorusuMu(mesaj)
+}
+
+/** "X'in dosyasını açar mısın / kartını getir / kaydına bakalım" — a chart-open request. */
+const DOSYA_AC = /\b(dosya\w*|kart\w*|kayd\w*|kaydi)\b[^.?!]{0,40}\b(ac\w*|getir\w*|goster\w*|bak\w*)\b/
+export function dosyaAcmaIstegiMi(mesaj: string): boolean {
+  return DOSYA_AC.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')
+}
+
+/** True only for a referenced active patient when this message names nobody and no search matched. */
+export function aktifHastaKullanilsinMi(g: {
   aktifHastaVar: boolean
   cozumTur: 'tek' | 'coklu' | 'yok'
   aramaSonucu: boolean
   mesaj: string
 }): boolean {
-  return false
+  if (!g.aktifHastaVar || g.cozumTur !== 'yok' || g.aramaSonucu) return false
+  return hastaAtifiMu(g.mesaj)
 }

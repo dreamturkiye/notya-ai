@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
 
   const kontrol = new AbortController()
   const zaman = setTimeout(() => kontrol.abort(), 20_000)
+  const t0 = Date.now()
+  const kayit = (durum: number | null, hata: string | null) => {
+    console.info('[fish-ses]', { tts_latency_ms: Date.now() - t0, karakter: metin.length, dil: istek.govde.language, durum, hata })
+  }
   try {
     const yanit = await fetch('https://api.fish.audio/v1/tts', {
       method: 'POST',
@@ -52,9 +56,11 @@ export async function POST(req: NextRequest) {
       cache: 'no-store',
     })
     if (!yanit.ok || !yanit.body) {
-      console.error('[fish-ses]', yanit.status)
+      kayit(yanit.status, `http_${yanit.status}`)
       return NextResponse.json({ error: 'Ses üretilemedi' }, { status: 502 })
     }
+    // Latency = time to first byte of audio; the body streams on to the browser.
+    kayit(yanit.status, null)
     return new NextResponse(yanit.body, {
       status: 200,
       headers: {
@@ -64,7 +70,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (e) {
-    console.error('[fish-ses]', e instanceof Error ? e.name : 'hata')
+    kayit(null, e instanceof Error ? e.name : 'hata')
     return NextResponse.json({ error: 'Ses üretilemedi' }, { status: 502 })
   } finally {
     clearTimeout(zaman)
