@@ -31,6 +31,7 @@ import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
 import { kendiSelamiMi, acilisAjanSozuMu } from '@/lib/asistan/acilis'
+import { sesGurultusuMu } from '@/lib/randevu/takvimSorusu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 import { cevapEkle, kullaniciEkle } from '@/lib/asistan/balonSirasi'
@@ -528,9 +529,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           return r.body
         }, {
           onHata: () => {
-            fishAcikRef.current = false
+            // Ayşe tests are Fish-only — never unmute ElevenLabs as a fallback mouth.
             const c = conversationRef.current as { setVolume?: (o: { volume: number }) => void } | null
-            c?.setVolume?.({ volume: 1 })
+            c?.setVolume?.({ volume: 0 })
           },
           onBasladi: () => {
             if (!fishAcikRef.current) return
@@ -562,7 +563,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         voiceId,
         {
           // Fish is the speaker. EL first_message + Fish soyle = two "Merhaba", then one mute.
-          tryFirstMessage: !fish,
+          tryFirstMessage: true,
           refreshSignedUrl: () => fetchSignedUrl(p, sayfaHastasi).then((r) => r.signedUrl),
           notyaJeton: tekBeyin?.jeton,
         }
@@ -637,8 +638,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     const begin = async (includeFirstMessage: boolean) => {
       usedFirstMessage = includeFirstMessage
       // Fallback seeds UI greeting; skip the agent's own default transcript once.
-      let skipNextAgentTranscript = !includeFirstMessage
+      // Fish: EL gets a one-word dummy so "speaking" ends immediately (first STT was waiting
+      // on the muted full greeting). Fish speaks the real firstMessage onConnect.
+      let skipNextAgentTranscript = fishAcikRef.current || !includeFirstMessage
       setStatus("connecting")
+      const elIlkSoz = fishAcikRef.current ? 'Hocam.' : firstMessage
       const conversation = await Conversation.startSession({
         signedUrl: activeSignedUrl,
         connectionType: "websocket",
@@ -653,7 +657,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           agent: {
             prompt: { prompt: voicePrompt },
             language: "tr",
-            ...(includeFirstMessage ? { firstMessage } : {}),
+            ...(includeFirstMessage ? { firstMessage: elIlkSoz } : {}),
           },
           tts: { voiceId },
         },
@@ -836,11 +840,18 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         },
         onMessage: ({ message, role, event_id }) => {
           const olay = typeof event_id === "number" ? event_id : undefined
-          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kendiSelamiMi(message))) return
+          // Dummy EL first_message ("Hocam.") must not reach Fish — skip before soyle.
+          if (role !== "user" && skipNextAgentTranscript) {
+            skipNextAgentTranscript = false
+            return
+          }
+          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kendiSelamiMi(message) || sesGurultusuMu(message))) return
           if (role === "user") {
             const gecikenSoru = typeof olay === "number" && fishCevapOlayRef.current > olay
             if (!gecikenSoru) fishKes()
             if (!gecikenSoru) sesDevamRef.current.doktorSozu = Date.now()
+          } else if (sesGurultusuMu(message)) {
+            return
           } else if (!doktorKonustu && acilisAjanSozuMu(message)) {
             if (!selamBizden) {
               selamBizden = true
@@ -861,10 +872,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (role === "user" && asistaniKapatMi(message)) {
             addMsg("user", message, olay)
             void endConversation()
-            return
-          }
-          if (role !== "user" && skipNextAgentTranscript) {
-            skipNextAgentTranscript = false
             return
           }
           // NOTYA-TEK-BEYIN: açılış selamından sonra Ayşe'nin baloncuğu sözlü kısa biçim değil, ekran biçimidir (ekranYokla).

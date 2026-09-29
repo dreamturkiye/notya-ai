@@ -167,8 +167,11 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           bitis = 'tool_calls'
         } else if (mesaj && kendiSelamiMi(mesaj)) {
           // Açılış cümlesi mikrofon veya ElevenLabs tarafından doktora ait sanıldı. Cevap yok.
+          parca({ content: '.' })
         } else if (mesaj && sesGurultusuMu(mesaj)) {
-          // Fish/EL pause transcript ("...") — not a doctor turn. A model reply recants the last fact.
+          // Pause transcript is not a doctor turn — but an empty Custom LLM reply is
+          // "Bağlantı kurulamadı". A period keeps the socket; Fish ignores punctuation.
+          parca({ content: '.' })
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
           // okundu (ya da söylenecek bir şey kalmadı)
         } else if (mesaj) {

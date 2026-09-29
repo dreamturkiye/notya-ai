@@ -13,9 +13,44 @@ export const FISH_ORNEK_HZ = 24000
 
 const ETIKET = /\[[^\]]{0,120}\]/g
 
+const BIR = ['sıfır', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'] as const
+const ONLAR = ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış', 'yetmiş', 'seksen', 'doksan'] as const
+
+/** Fish's news voice reads digits in English ("fifty seven"). Spell them in Turkish first. */
+export function fishSayiOku(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 9999) return String(n)
+  if (n < 10) return BIR[n]
+  if (n < 20) return n === 10 ? 'on' : `on ${BIR[n % 10]}`
+  if (n < 100) {
+    const o = ONLAR[Math.floor(n / 10)]
+    const b = n % 10
+    return b ? `${o} ${BIR[b]}` : o
+  }
+  if (n < 1000) {
+    const y = Math.floor(n / 100)
+    const k = n % 100
+    const bas = y === 1 ? 'yüz' : `${BIR[y]} yüz`
+    return k ? `${bas} ${fishSayiOku(k)}` : bas
+  }
+  const bin = Math.floor(n / 1000)
+  const k = n % 1000
+  const bas = bin === 1 ? 'bin' : `${BIR[bin]} bin`
+  return k ? `${bas} ${fishSayiOku(k)}` : bas
+}
+
+export function fishRakamlariOku(metin: string): string {
+  return String(metin || '')
+    .replace(/\b(\d{1,2})[:.](\d{2})\b/g, (_, s, dk) => {
+      const saat = fishSayiOku(Number(s))
+      return dk === '00' ? saat : `${saat} ${fishSayiOku(Number(dk))}`
+    })
+    .replace(/\b(\d{1,4})[.,](\d)\b/g, (_, t, o) => `${fishSayiOku(Number(t))} virgül ${fishSayiOku(Number(o))}`)
+    .replace(/\b(\d{1,4})\b/g, (_, d) => fishSayiOku(Number(d)))
+}
+
 /** Strip any bracket cue, then put one short pause between sentences. */
 export function fishMetni(ham: string): string {
-  const duz = String(ham || '').replace(ETIKET, ' ').replace(/\s+/g, ' ').trim()
+  const duz = fishRakamlariOku(String(ham || '').replace(ETIKET, ' ').replace(/[—–]/g, ',').replace(/\s+/g, ' ').trim())
   if (!duz) return ''
   const cumleler = duz.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean)
   return cumleler.join(' [break] ')
@@ -23,7 +58,7 @@ export function fishMetni(ham: string): string {
 
 export function fishIstegi(metin: string): { model: string; govde: Record<string, unknown> } | null {
   const text = fishMetni(metin)
-  if (!text) return null
+  if (!text || /^[.,;:!?…\-–—'"]+$/.test(text.replace(/\s|\[break\]/g, ''))) return null
   return {
     model: FISH_MODEL,
     govde: {

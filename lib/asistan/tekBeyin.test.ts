@@ -399,7 +399,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const gurultu = await ses({ sahne: b, mesaj: '...' })
     assert.equal(gurultu.status, 200)
     assert.equal(modelIstekleri.length, once, '"..." model turu değildir')
-    assert.equal(gurultu.metin.trim(), '', 'ASR duraklaması sessizdir')
+    assert.equal(gurultu.metin.trim(), '.', 'ASR duraklaması soketi açık tutar, model cevabı değildir')
     assert.doesNotMatch(gurultu.metin, /Haklısınız|doğrulamadan|Ana Sayfa/)
     const emin = await ses({ sahne: b, mesaj: 'Emin misin?' })
     assert.equal(emin.status, 200)

@@ -1,6 +1,6 @@
 /**
  * NOTYA-FISH-AYSE-01 — Ayşe'nin sesi. Anahtar tarayıcıya hiç inmez.
- * Başarısızlıkta istemci ElevenLabs sesine geri döner; görüşme susmaz.
+ * Ayşe tests are Fish-only: failure stays silent (client never unmutes ElevenLabs).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_HIZ, FISH_MODEL, fishIstegi, fishMetni } from './fishSes'
+import { FISH_HIZ, FISH_MODEL, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
 
 test('Fish metni cümle arasına kısa durak koyar, duygu etiketini siler', () => {
   assert.equal(fishMetni(''), '')
@@ -11,6 +11,20 @@ test('Fish metni cümle arasına kısa durak koyar, duygu etiketini siler', () =
     'Hocam, dosyayı açtım. [break] Elif ateşli.',
   )
   assert.equal(fishMetni('[çok endişeli] Hocam, iyi haber değil. [rahat] Kusma yok.'), 'Hocam, iyi haber değil. [break] Kusma yok.')
+})
+
+test('Fish rakamları Türkçe okur — 57 fifty seven olmaz', () => {
+  assert.equal(fishSayiOku(0), 'sıfır')
+  assert.equal(fishSayiOku(11), 'on bir')
+  assert.equal(fishSayiOku(57), 'elli yedi')
+  assert.equal(fishSayiOku(100), 'yüz')
+  assert.equal(fishSayiOku(2026), 'iki bin yirmi altı')
+  assert.equal(fishRakamlariOku('Kaan Arioglu — dosyada yaş: 57 yaşında.'), 'Kaan Arioglu — dosyada yaş: elli yedi yaşında.')
+  assert.match(fishMetni('Kaan Arioglu — dosyada yaş: 57 yaşında.'), /elli yedi yaşında/)
+  assert.match(fishMetni('Kaan Arioglu — dosyada yaş: 57 yaşında.'), /,/)
+  assert.doesNotMatch(fishMetni('57 yaşında'), /57/)
+  assert.equal(fishIstegi('.'), null)
+  assert.equal(fishIstegi('…'), null)
 })
 
 test('Fish isteği kilitli: haber sesi, hız 1, ücretsiz model, duygu yok', () => {
