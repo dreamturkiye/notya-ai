@@ -9,14 +9,14 @@ import assert from 'node:assert/strict'
 
 delete process.env.NEXT_PUBLIC_SUPABASE_URL
 
-import { aiAkis, aiCagir, kaliteKodu, TASIMA_BEKLEME, yanitKademesi, yanitMetni, type AiMesaj } from './cagir'
+import { aiAkis, aiCagir, AiIptalHatasi, kaliteKodu, TASIMA_BEKLEME, yanitKademesi, yanitMetni, type AiMesaj } from './cagir'
 import { MODEL_GUCLU, MODEL_HIZLI } from './modeller'
 import { devreDurumu, devreSifirla } from './devre'
 import { jsonOnar } from './jsonOnar'
 import { soapNotuUret, SOAP_GUVEN_ESIGI } from '@/lib/doktor/soapUret'
 process.env.NOTYA_DEVRE_ACIK = '1' // LUNAPRO-03: breaker is off by default; these suites test it explicitly
 
-type Cevap = { durum?: number; json?: unknown; ham?: string; sse?: string[]; sseKop?: string[] }
+type Cevap = { durum?: number; json?: unknown; ham?: string; sse?: string[]; sseKop?: string[]; sseAsili?: string[]; yanitsiz?: boolean }
 type Istek = { govde: Record<string, any> }
 
 const orijinalFetch = globalThis.fetch
@@ -32,8 +32,23 @@ function sahteFetch() {
     const c = secici ? secici(govde) : sira.shift()
     if (!c) throw new Error('beklenmeyen istek')
     const kod = new TextEncoder()
+    if (c.yanitsiz) {
+      // Sağlayıcı henüz başlık bile dönmedi (kuyrukta) — istek yalnız çağıranın sinyaliyle biter.
+      return new Promise<Response>((_, red) => o?.signal?.addEventListener('abort', () => red(new DOMException('aborted', 'AbortError')), { once: true }))
+    }
     if (c.sse) {
       const g = new ReadableStream({ start(k) { for (const s of c.sse!) k.enqueue(kod.encode(s)); k.close() } })
+      return new Response(g, { status: 200 })
+    }
+    if (c.sseAsili) {
+      // Parçaları verir, sonra model yazmaya devam ediyormuş gibi bekler — yalnız çağıranın sinyali akışı keser.
+      const parcalar = [...c.sseAsili]
+      const g = new ReadableStream({
+        start(k) {
+          for (const p of parcalar) k.enqueue(kod.encode(p))
+          o?.signal?.addEventListener('abort', () => k.error(new DOMException('aborted', 'AbortError')), { once: true })
+        },
+      })
       return new Response(g, { status: 200 })
     }
     if (c.sseKop) {
@@ -260,6 +275,47 @@ describe('sesli akış (aiAkis)', () => {
     ]
     await aiAkis({ istemci, gorev: 'sohbet-uzman', messages: METIN, araclar: [{ name: 'vital_ekle' }] }, () => {})
     assert.deepEqual(modeller(), [MODEL_HIZLI, MODEL_GUCLU])
+  })
+  it('NOTYA-SES-FISH-UCTAN-UCA-01: çağıran iptal ederse (söz kesme) akış durur — yeniden deneme yok, koruyucu yok, kesik tur yok', async () => {
+    sira = [{ sseAsili: [sse({ choices: [{ delta: { content: '{"speech":"Hocam' } }] })] }]
+    const kontrol = new AbortController()
+    const parcalar: string[] = []
+    const soz = aiAkis({ istemci, gorev: 'sohbet-uzman', messages: METIN, iptal: kontrol.signal }, (p) => { parcalar.push(p); kontrol.abort() })
+    await assert.rejects(soz, (e) => e instanceof AiIptalHatasi)
+    assert.deepEqual(modeller(), [MODEL_HIZLI], 'tek istek: iptal ikinci bir model çağrısı doğurmaz')
+    assert.deepEqual(parcalar, ['{"speech":"Hocam'])
+  })
+  it('NOTYA-SES-FISH-UCTAN-UCA-01: ilk sözden ÖNCE iptal taşıma hatası sayılmaz (birincil tekrar + koruyucu = üç çağrı olurdu)', async () => {
+    sira = [{ sseAsili: [': OPENROUTER PROCESSING\n\n'] }]
+    const kontrol = new AbortController()
+    const soz = aiAkis({ istemci, gorev: 'sohbet-uzman', messages: METIN, iptal: kontrol.signal }, () => {})
+    setTimeout(() => kontrol.abort(), 5)
+    await assert.rejects(soz, (e) => e instanceof AiIptalHatasi)
+    assert.deepEqual(modeller(), [MODEL_HIZLI])
+  })
+  it('NOTYA-SES-FISH-UCTAN-UCA-01: istek daha yanıt başlığı almadan iptal edilirse 504 taşıma hatası sayılmaz (tekrar + koruyucu yok)', async () => {
+    sira = [{ yanitsiz: true }]
+    const kontrol = new AbortController()
+    const soz = aiAkis({ istemci, gorev: 'sohbet-uzman', messages: METIN, iptal: kontrol.signal }, () => {})
+    setTimeout(() => kontrol.abort(), 5)
+    await assert.rejects(soz, (e) => e instanceof AiIptalHatasi)
+    assert.deepEqual(modeller(), [MODEL_HIZLI])
+  })
+  it('NOTYA-SES-FISH-UCTAN-UCA-01: zaten iptal edilmiş tur modele hiç gitmez; OpenRouter yokken doğrudan akış da durur', async () => {
+    const kontrol = new AbortController()
+    kontrol.abort()
+    await assert.rejects(aiAkis({ istemci, gorev: 'sohbet-uzman', messages: METIN, iptal: kontrol.signal }, () => {}), (e) => e instanceof AiIptalHatasi)
+    assert.equal(istekler.length, 0)
+
+    delete process.env.OPENROUTER_API_KEY
+    let olay = 0
+    const k2 = new AbortController()
+    const dogrudan = { messages: { create: async () => (async function* () {
+      yield { type: 'message_start', message: { model: 'sahte', usage: {} } }
+      for (;;) { olay += 1; yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'a' } }; await new Promise((r) => setTimeout(r, 1)) }
+    })() } }
+    await assert.rejects(aiAkis({ istemci: dogrudan, gorev: 'sohbet-uzman', messages: METIN, iptal: k2.signal }, () => { if (olay >= 3) k2.abort() }), (e) => e instanceof AiIptalHatasi)
+    assert.ok(olay < 10, 'akış iptalden sonra okunmaya devam etmedi')
   })
   it('devre açıkken akış doğrudan koruyucuya gider', async () => {
     for (let i = 0; i < 5; i++) { sira = [tamam(''), tamam('k')]; await aiCagir({ gorev: 'sohbet', messages: METIN }) }

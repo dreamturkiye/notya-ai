@@ -40,3 +40,53 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
     },
   }
 }
+
+/**
+ * NOTYA-SES-FISH-SADECE-01: Ayşe Kaya'nın sesli yolu uçtan uca Fish — dinleme (/v1/asr) ve konuşma (/v1/tts) aynı
+ * FISH_API_KEY ile. Başka satıcı yok. Yalnız aysekaya; anahtar yoksa yol kapalıdır ve Ayşe'nin sesli görüşmesi
+ * görünür hatayla açılmaz (ElevenLabs'e düşülmez) — başka persona bu yola hiç girmez.
+ */
+export function fishUctanUcaAcik(personaId: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean {
+  return personaId === 'aysekaya' && Boolean(env.FISH_API_KEY?.trim())
+}
+
+/**
+ * Fish ASR — docs.fish.audio/features/speech-to-text + api-reference/endpoint/openapi-v1/speech-to-text
+ * (2026-09-28'de bakıldı): POST https://api.fish.audio/v1/asr, `Authorization: Bearer`, multipart/form-data
+ * `audio` (dosya baytı; wav/mp3/opus…), `language` (isteğe bağlı İPUCU — belgeye göre otomatik algılama yine koşar ve
+ * baskındır), `ignore_timestamps` (varsayılan true); model `model` BAŞLIĞIYLA: `transcribe-1` (varsayılan) ya da
+ * `transcribe-1-pro`. Yanıt: `{ text, duration, segments[{text,start,end}], language_code, language }`. İstek başına
+ * 20 MB / 60 dk (fish.audio/stt). Türkçe: "80+ dil" deniyor, ayrıca listelenmiyor; en çok sınanan diller İngilizce,
+ * Mandarin, Kantonca, Japonca, Korece — Türkçe tıbbi konuşma kalitesi DOĞRULANMADI (insan testi gerekli).
+ */
+export const FISH_ASR_URL = 'https://api.fish.audio/v1/asr'
+export const FISH_ASR_MODEL = 'transcribe-1'
+export const FISH_ASR_DIL = 'tr'
+
+export function fishAsrFormu(wav: ArrayBuffer | Uint8Array<ArrayBuffer>): FormData {
+  const form = new FormData()
+  form.append('audio', new Blob([wav], { type: 'audio/wav' }), 'soz.wav')
+  form.append('language', FISH_ASR_DIL)
+  form.append('ignore_timestamps', 'true')
+  return form
+}
+
+export type FishAsrSonucu = { metin: string; sureSn: number; dil: string | null }
+
+/** Fish /v1/asr JSON yanıtı → metin + faturalanan süre. Beklenmeyen biçim null (tur açılmaz). */
+export function fishAsrCevabi(j: unknown): FishAsrSonucu | null {
+  if (!j || typeof j !== 'object') return null
+  const r = j as { text?: unknown; duration?: unknown; language_code?: unknown }
+  if (typeof r.text !== 'string') return null
+  const sure = Number(r.duration)
+  return {
+    metin: r.text.replace(/\s+/g, ' ').trim(),
+    sureSn: Number.isFinite(sure) && sure > 0 ? sure : 0,
+    dil: typeof r.language_code === 'string' ? r.language_code : null,
+  }
+}
+
+/** Fish UTF-8 bayt başına ücretlendirir (docs.fish.audio pricing) — kullanım bu sayıyla yazılır. */
+export function fishFaturaBayti(metin: string): number {
+  return new TextEncoder().encode(String(metin || '')).length
+}

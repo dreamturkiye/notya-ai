@@ -135,7 +135,6 @@ export async function GET(req: NextRequest) {
     persona_name: persona.name,
     persona_title: persona.title,
     specialist_total: 30,
-    fish: persona.id === 'aysekaya' && Boolean(process.env.FISH_API_KEY),
     ...(tekBeyin ? { tek_beyin: true, ...tekBeyin } : {}),
   });
 }

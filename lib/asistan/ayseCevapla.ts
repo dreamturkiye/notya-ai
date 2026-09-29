@@ -89,6 +89,11 @@ export interface AyseGirdisi {
    * actually reached ElevenLabs. When given, the cap is silent and a cut turn stores its remainder (sesDevam).
    */
   sesDurumu?: () => { kesildi: boolean; soylenen: string }
+  /**
+   * NOTYA-SES-FISH-UCTAN-UCA-01: doktor Ayşe'nin sözünü kesti — model akışı durur (AiIptalHatasi), tur oturuma
+   * yazılmaz. Yalnız ses; yazılı kanal vermez.
+   */
+  iptal?: AbortSignal
 }
 
 /** NOTYA-SES-DEVAM-01: asistan_sessions.active_context.sesDevam — the unspoken rest of a cut voice turn. */
@@ -441,6 +446,7 @@ ${ilacBaglamMetni(drugs[0])}`
   const cagri = {
     istemci: getAnthropic(),
     gorev: yonlendirme.gorev,
+    iptal: g.iptal,
     doctorId: doktorId,
     // Hasta dosyası ve aktif hasta system'de — güvenlik sinyali taraması mesajla birlikte bunları da okur.
     guvenlikBaglami: [dosyaGuvenlikMetni, currentPatient ? JSON.stringify(currentPatient) : ""].filter(Boolean).join("\n"),
