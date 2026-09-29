@@ -54,3 +54,12 @@ test('dosya açma isteği tanınır', () => {
   for (const m of ["Kaan Arıoğlu'nun dosyasını açar mısın", 'Ayşe Yeşil kartını getir', 'Mehmet Yılmaz kaydına bakalım', 'dosyasını göster']) assert.equal(dosyaAcmaIstegiMi(m), true, m)
   for (const m of ['Kaan Arıoğlu kaç yaşında?', 'Nasılsınız?', 'Kaç hastam var?']) assert.equal(dosyaAcmaIstegiMi(m), false, m)
 })
+
+test('NOTYA-LUNA-ARAMA-01: İlk 10 dosya sorusu (iyelik ekli) aktif hastaya atıftır', () => {
+  for (const m of ['Aşıları tam mı?', 'Büyümesi nasıl gidiyor?', 'Şu anda kullandığı ilaçlar neler?', 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?', 'Bu hastayı bana kısaca özetler misin?']) {
+    assert.equal(hastaAtifiMu(m), true, m)
+    assert.equal(aktif(m, 'yok', false), true, m)
+    assert.equal(aktif(m, 'yok', false, false), false, `${m} — açık hasta yok`)
+  }
+  for (const m of ['Nasılsınız?', 'Kaç kilo?', 'Bu hafta ateşli hastalarım kimler?']) assert.equal(hastaAtifiMu(m), false, m)
+})

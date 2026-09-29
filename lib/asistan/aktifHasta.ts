@@ -5,6 +5,7 @@
  * "Kaan Arioglu kaç yaşında?" → resolve Kaan → read age. "Nasılsınız?" → no file.
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 
 const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
 
@@ -21,7 +22,11 @@ const ATIF = /\b(hastamiz\w*|hastam\b|hastamin|hastama|hastami|bu hasta\w*|su ha
 
 export function hastaAtifiMu(mesaj: string): boolean {
   const m = ' ' + trAramaNormalize(String(mesaj || '')) + ' '
-  return ATIF.test(m) && !kohortSorusuMu(mesaj)
+  if (kohortSorusuMu(mesaj)) return false
+  // NOTYA-LUNA-ARAMA-01 (2026-09-29): the İlk 10 dossier questions ("Aşıları tam mı?", "Büyümesi nasıl gidiyor?",
+  // "İlaçları neler?") carry a 3rd-person possessive — they ARE a reference to the patient opened by name.
+  // Without this, the follow-up after "X dosyasını aç" reached the model with no chart and Ayşe invented one.
+  return ATIF.test(m) || soruTuruBul(mesaj) !== null
 }
 
 /** "X'in dosyasını açar mısın / kartını getir / kaydına bakalım" — a chart-open request. */

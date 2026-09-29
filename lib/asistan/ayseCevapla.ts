@@ -134,6 +134,11 @@ export type AyseSonucu =
 
 const simdi = () => new Date().toISOString()
 
+/** NOTYA-LUNA-ARAMA-01: kuyruk bloğu — bu turda dosya yok; model dosya uydurmasın, "dosyası açık" demesin. */
+export const DOSYA_YOK_BLOGU = `
+
+[BU TURDA AÇIK HASTA DOSYASI YOK] Bu mesajda adı çözülen bir hasta yok ve sana dosya verilmedi. Bir hasta hakkında soru soruluyorsa dosyadan bilgi VERME, "dosyası açık / önümde / baktım" DEME, aşı / ilaç / lab / vizit uydurma; hastanın adını ve soyadını iste. Hasta gerektirmeyen klinik ya da uygulama sorusuna normal cevap ver.`
+
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const cevapBas = Date.now()
   const supabase = g.supabase
@@ -391,7 +396,10 @@ ${ilacBaglamMetni(drugs[0])}`
           dosyaEk = dosyaGovde + dosyaTur
         }
     }
-  } catch { /* dosya bağlamı kritik değil — normal akış sürer */ }
+  } catch (e) {
+    // Dosya bağlamı kritik değil — normal akış sürer; ama sessiz kayıp "hasta yok" cevabı üretir, görünür olsun.
+    console.warn("[asistan/chat] dosya bağlamı kurulamadı", e instanceof Error ? e.message : String(e))
+  }
 
   if ((aramaCevabi || kesinDosyaCevap) && !kayitNiyetiMi(String(message || ""))) {
     const speech = aramaCevabi || kesinDosyaCevap || ""
@@ -447,7 +455,10 @@ ${ilacBaglamMetni(drugs[0])}`
   const eylemBransi = bransAnahtari(hekimBransi)
   const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
   const toolChoice = araclar.length && kayitNiyetiMi(String(message || augmentedMessage || '')) ? ('any' as const) : undefined
-  const kuyruk = gunHam + dosyaTur + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
+  // NOTYA-LUNA-ARAMA-01 (2026-09-29): with no chart attached the prompt still says "dosyaya erişimin VAR" and
+  // forbids "erişemem" — a compliant model then invents a file ("dosyası açık", made-up aşı/ilaç). Say it plainly.
+  const dosyaYokBlogu = !dosyaEk && !currentPatient ? DOSYA_YOK_BLOGU : ""
+  const kuyruk = gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.

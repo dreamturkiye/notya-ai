@@ -517,6 +517,25 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(mesajlar.length, 4)
   })
 
+  it('NOTYA-LUNA-ARAMA-01: dosyasız turda model "dosya yok" bloğunu görür; adla açılan hastaya İlk 10 sorusu dosyayı getirir', async () => {
+    const s = sahne()
+    yanit = { metin: JSON.stringify({ speech: 'Hangi hastayı soruyorsunuz Hocam?' }) }
+    await yazi(s, 'Aşıları tam mı?', s.oturum)
+    let son = JSON.parse(modelIstekleri.at(-1)!.govde)
+    assert.ok(JSON.stringify(son.system).includes('[BU TURDA AÇIK HASTA DOSYASI YOK]'), 'açık hasta yokken blok var')
+    assert.ok(!JSON.stringify(son.system).includes('=== AKTİF HASTA DOSYASI:'))
+
+    yanit = { metin: JSON.stringify({ speech: 'Umutcan Türkoğlu — son vizitte öksürük vardı.' }) }
+    const u = await yazi(s, 'Umutcan Türkoğlu’nun son muayenesinde ne vardı', s.oturum)
+    assert.equal(u.aktifHasta, 'Umutcan Türkoğlu', 'adla açılan hasta oturumun aktif hastası')
+
+    yanit = { metin: JSON.stringify({ speech: 'Umutcan Türkoğlu — aşı tablosunda kayıt yok.' }) }
+    const t = await yazi(s, 'Aşıları tam mı?', s.oturum)
+    son = JSON.parse(modelIstekleri.at(-1)!.govde)
+    assert.ok(JSON.stringify(son.system).includes('=== AKTİF HASTA DOSYASI: Umutcan Türkoğlu'), 'iyelik ekli İlk 10 sorusu adla açılan hastaya döner')
+    assert.equal(t.aktifHasta, 'Umutcan Türkoğlu')
+  })
+
   it('sesli kart + "Evet": kart hazırlanır ve okunur; "Evet" modelsiz, dokunuşun omurgasından kaydeder', async () => {
     const s = sahne()
     yanit = {
