@@ -12,7 +12,6 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
 import { doktorOturum } from "@/lib/doktor/serverAuth"
 import { KlinikUzmanPersonas } from "@/lib/ai/personas/klinik_uzmanlar"
-import { sesMotorunuSabitle } from "@/lib/asistan/sesMotoru"
 
 const FEMALE_AGENT =
   process.env.ELEVENLABS_AGENT_PEDIATRI ||
@@ -45,7 +44,6 @@ export async function GET(req: NextRequest) {
   if (!elKey) return NextResponse.json({ error: "Ses servisi yapılandırılmamış." }, { status: 500 })
 
   const agentId = persona.gender === "male" ? MALE_AGENT : FEMALE_AGENT
-  await sesMotorunuSabitle(agentId, elKey)
   const resp = await fetch(
     `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${agentId}`,
     { headers: { "xi-api-key": elKey }, cache: "no-store" }

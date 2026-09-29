@@ -18,10 +18,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
-import { kendiSelamiMi } from '@/lib/asistan/acilis'
 import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
-import { SesYayKapisi, sesEtiketTemizle } from '@/lib/asistan/sesYay'
 import type { SesDevam } from '@/lib/asistan/ayseCevapla'
+import { waitUntil } from '@vercel/functions'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
@@ -36,11 +35,7 @@ const getSupabase = () => createClient(
 const SES_BEKCI_MS = 22_000
 /** Keep a background promise alive after the SSE closes (Vercel freezes the function otherwise). */
 function arkaPlandaSurdur(p: Promise<unknown>): void {
-  try {
-    const mod = require('@vercel/functions') as { waitUntil?: (x: Promise<unknown>) => void }
-    if (mod.waitUntil) mod.waitUntil(p)
-    else void p
-  } catch { void p /* yerel çalışma: söz zaten sürer */ }
+  try { waitUntil(p) } catch { void p /* yerel çalışma: söz zaten sürer */ }
 }
 
 type ElMesaj = { role?: string; content?: unknown }
@@ -110,20 +105,15 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         id: kimlik, object: 'chat.completion.chunk', created: olusturma, model,
         choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }],
       })
-      // A finished sentence is sent as soon as it exists. Holding it for a
-      // breath, or until this function returns, is the gap before Ayşe speaks.
-      const kapi = new SesYayKapisi((t) => { if (!t) return; parca({ content: t }); ilk = false })
-      const yaz = (t: string, hemen = false) => kapi.ekle(t, hemen)
+      const yaz = (t: string) => { if (!t) return; parca({ content: t }); ilk = false }
       let cevapSoylendi = false
       // NOTYA-SES-DEVAM-01: what actually reached ElevenLabs before the voice turn closed (the continuation starts after it).
       let turKapandi = false
       let soylenen = ''
       const cevapYaz = (t: string) => {
-        const temiz = sesEtiketTemizle(t)
-        if (!temiz.trim()) return
-        cevapSoylendi = true
-        if (!turKapandi) soylenen += temiz
-        yaz(temiz)
+        if (t.trim()) cevapSoylendi = true
+        if (!turKapandi) soylenen += t
+        yaz(t)
       }
       /**
        * NOTYA-SES-DEVAM-01: the rest of the cut turn, uncapped, sentence by sentence — no model call, no new screen
@@ -141,16 +131,14 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       let bitis = 'stop'
       try {
         if (mesaj && vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
-          yaz('Görüşmek üzere Hocam.', true)
+          yaz('Görüşmek üzere Hocam.')
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
           ilk = false
           bitis = 'tool_calls'
-        } else if (mesaj && kendiSelamiMi(mesaj)) {
-          // Açılış cümlesi mikrofon veya ElevenLabs tarafından doktora ait sanıldı. Cevap yok.
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
           // okundu (ya da söylenecek bir şey kalmadı)
         } else if (mesaj) {
-          yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
+          yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }))
           const supabase = getSupabase()
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           const karar = await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
@@ -183,10 +171,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             if (kim !== 'bitti') {
               // Nothing extra at a cut: the pause is the gap before the continuation. Only a turn that said nothing yet
               // gets a holding sentence (the continuation then reads the whole answer).
-              // Close the gate BEFORE turKapandi so a sentence still in the breath is sent and counted,
-              // and anything the background generates after the cut cannot sneak into this turn.
               if (kim === 'bekci' && !cevapSoylendi) cevapYaz('Dosyayı inceliyorum Hocam, cevabı ekranınıza yazıyorum.')
-              kapi.bitir()
               turKapandi = true
               arkaPlandaSurdur(sonrasi)
             }
@@ -196,9 +181,6 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         console.error('[ses-llm]', e instanceof Error ? e.name : 'hata')
         cevapYaz('Şu an dosyaya ulaşamadım Hocam, bir daha söyler misiniz?')
       }
-      // Flush the breath still held in the gate BEFORE the SSE closes, including on a cut,
-      // so the sentences already counted in `soylenen` actually reach ElevenLabs.
-      kapi.bitir()
       parca({}, bitis)
       if (!kapali) {
         try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* bağlantı kapandı */ }

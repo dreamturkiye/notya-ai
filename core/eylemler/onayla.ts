@@ -182,12 +182,6 @@ export async function eylemOnayla(g: OnayGirdisi): Promise<OnaySonucu> {
   // failing the request here would tell the doctor "kaydedilmedi" about a record that exists.
   if (kayitHatasi) console.error('[eylem] denetim satırı yazılamadı', kayitHatasi.message)
 
-  // Dosya anlık görüntüsü bu yazımdan sonra kirli. Tetik (109) de aynı işi yapar; bu çağrı
-  // göç uygulanmadan da ses turunun eski dosyayı okumasını keser. Hata kaydı geri almaz.
-  void import('@/lib/doktor/ogrenme/dosyaOnbellek')
-    .then(({ onbellekKirlet }) => onbellekKirlet(sb, doktorId, hasta.id))
-    .catch(() => { /* önbellek */ })
-
   return { ok: true, kayitId: String(kayit?.id || ''), sonuc, etiket: eylem.etiket, uyarilar }
 }
 

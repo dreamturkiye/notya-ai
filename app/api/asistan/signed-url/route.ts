@@ -5,7 +5,6 @@ import { asistanOturumuAc } from '@/lib/asistan/ayseCevapla';
 import { sesJetonuImzala, tekBeyinAcikMi } from '@/lib/asistan/sesJetonu';
 import { TEK_BEYIN_AJANLARI } from '@/lib/asistan/tekBeyinAjanlari';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
-import { sesMotorunuSabitle } from '@/lib/asistan/sesMotoru';
 
 const AYSE_AGENT =
   process.env.ELEVENLABS_AGENT_PEDIATRI ||
@@ -46,9 +45,6 @@ async function getElevenLabsSignedUrl(agentId: string): Promise<string | null> {
     console.error('ELEVENLABS_API_KEY is not configured');
     return null;
   }
-
-  // NOTYA-SES-KILIT-01: the call must not start on v3 expressive or a drifted speed.
-  await sesMotorunuSabitle(agentId, ELEVENLABS_API_KEY);
 
   try {
     const response = await fetch(
@@ -135,7 +131,6 @@ export async function GET(req: NextRequest) {
     persona_name: persona.name,
     persona_title: persona.title,
     specialist_total: 30,
-    fish: persona.id === 'aysekaya' && Boolean(process.env.FISH_API_KEY),
     ...(tekBeyin ? { tek_beyin: true, ...tekBeyin } : {}),
   });
 }
