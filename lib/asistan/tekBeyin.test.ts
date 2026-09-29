@@ -171,7 +171,7 @@ async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?
 async function sesEkrani(s: Sahne, oturum = s.oturum) {
   const y = await R.sesEkran.GET(new NextRequestSinifi(`http://localhost/api/asistan/ses-ekran?oturum=${oturum}`, { headers: { authorization: `Bearer ${s.doktor.token}` } } as ConstructorParameters<typeof NextRequestSinifi>[1]))
   assert.equal(y.status, 200)
-  return (await y.json()) as { turlar: { zaman: string; metin: string; soru: string | null; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null }
+  return (await y.json()) as { turlar: { zaman: string; metin: string; soru: string | null; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null; devamKalan: string | null }
 }
 
 before(async () => {
@@ -260,6 +260,13 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
     assert.equal(L.sonDoktorCumlesi([{ role: 'user', content: 'a' }, { role: 'tool', content: 'x' }]), null)
     assert.equal(L.sonAracMetni([{ role: 'user', content: 'bugün randevu' }, { role: 'tool', content: 'Bugün 1 randevu var Hocam.' }]), 'Bugün 1 randevu var Hocam.')
     assert.equal(L.sonAracMetni([{ role: 'user', content: 'a' }]), null)
+    const ridvan = 'Rıdvan Dilmen dosyasına bakabilir misin?'
+    const izolasyon = [{ role: 'user', content: ridvan, kanal: 'ses' }, { role: 'assistant', content: 'Hocam, yalnızca kendi hastalarınızın dosyalarına erişebiliyorum.' }]
+    assert.equal(L.cevaplanmisSonSoruMu(izolasyon, ridvan), true)
+    assert.equal(L.cevaplanmisSonSoruMu([{ role: 'user', content: ridvan }, { role: 'assistant', content: 'Yok.' }], ridvan), false, 'yazılı tur ses replay sayılmaz')
+    assert.equal(L.cevaplanmisSonSoruMu(izolasyon, 'Umutcan nasıl?'), false)
+    assert.equal(L.cevaplanmisSonSoruMu([{ role: 'user', content: ridvan }], ridvan), false)
+    assert.equal(L.cevaplanmisSonSoruMu(izolasyon, '[devam]'), false)
     assert.ok(L.vedaMi('Görüşmeyi bitir Ayşe'))
     assert.ok(L.vedaMi('hoşça kal'))
     assert.ok(!L.vedaMi('Umutcan’ın görüşmesini bitir mi dedin'))
@@ -337,6 +344,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(oturum().active_context.sesDevam?.kalan, kalan, 'söylenmeyen kalan oturuma yazılmalı')
     assert.equal(e.devam, true)
     assert.equal(e.devamAnahtar, e.turlar.at(-1)?.zaman, 'devam anahtarı kesilen turun zamanıdır')
+    assert.equal(e.devamKalan, kalan)
     assert.equal(e.turlar.at(-1)?.devam, true)
     // the page's hidden continuation turn: exactly the remainder, uncapped, no model call, no new bubble
     const modelOnce = modelIstekleri.length
@@ -350,7 +358,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal((await sesEkrani(b)).devam, false)
     // a duplicate [devam] says nothing and still calls no model
     const tekrar = await ses({ sahne: b, mesaj: '[devam]' })
-    assert.equal(tekrar.metin.trim(), '')
+    assert.equal(tekrar.metin.trim(), '.', 'boş [devam] ElevenLabs soketini nokta ile tutar')
     assert.equal(modelIstekleri.length, modelOnce)
   })
 
@@ -368,6 +376,18 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const once = modelIstekleri.length
     await ses({ sahne: b, mesaj: 'devam et' })
     assert.equal(modelIstekleri.length, once + 1)
+  })
+
+  it('aynı doktor sorusunun ikinci Custom LLM turu model çağırmaz (EL replay / izolasyon döngüsü)', async () => {
+    const b = sahne()
+    const soru = 'Rıdvan Dilmen dosyasına bakabilir misin?'
+    yanit = { metin: JSON.stringify({ speech: 'Hocam, yalnızca kendi hastalarınızın dosyalarına erişebiliyorum.' }) }
+    const ilk = await ses({ sahne: b, mesaj: soru })
+    assert.match(ilk.metin, /hastalarınızın/)
+    const n = modelIstekleri.length
+    const tekrar = await ses({ sahne: b, mesaj: soru })
+    assert.equal(modelIstekleri.length, n, 'replay yeni model turu açmaz')
+    assert.equal(tekrar.metin.trim(), '.')
   })
   it('NOTYA-SES-TAKVIM-01: bugün randevu modelsiz okunur ve söylenir; yabancı doktorun günü sızmaz', async () => {
     const { bugunTRT } = await import('../../core/eylemler/types')
@@ -574,7 +594,7 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     assert.equal(K.konusmaYap('Bir. İki. Üç. Dört. Beş. Altı.'), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
   })
   it('devamIstegiMi: gizli işaret ve kısa "devam" sözü; başka cümle değil', () => {
-    for (const m of ['[devam]', 'devam', 'Devam et', 'devam et hocam.', 'Devam edelim Ayşe']) assert.ok(K.devamIstegiMi(m), m)
+    for (const m of ['[devam]', '[devam].', 'devam', 'Devam et', 'devam et hocam.', 'Devam edelim Ayşe']) assert.ok(K.devamIstegiMi(m), m)
     for (const m of ['devamını oku', 'tedaviye devam edelim mi', 'ilaca devam', 'Devam eden şikayeti var mı?']) assert.ok(!K.devamIstegiMi(m), m)
   })
 })

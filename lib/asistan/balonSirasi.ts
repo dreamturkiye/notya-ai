@@ -17,6 +17,19 @@ function olayYeri<T extends Balon>(prev: T[], olay: number | undefined): number 
   return prev.length
 }
 
+/** Two model generations of the same isolation (or a cut + replay) start the same way. */
+export function benzerCevapMi(a: string, b: string): boolean {
+  const n = (s: string) => String(s || '').replace(/\s+/g, ' ').trim()
+  const x = n(a)
+  const y = n(b)
+  if (!x || !y) return false
+  if (x === y) return true
+  const kisa = x.length <= y.length ? x : y
+  const uzun = x.length <= y.length ? y : x
+  if (kisa.length < 72) return false
+  return uzun.startsWith(kisa.slice(0, 72))
+}
+
 /** A late user transcript slots in before the reply, not after it and not before the greeting. */
 export function kullaniciEkle<T extends Balon>(
   prev: T[],
@@ -79,6 +92,9 @@ export function cevapEkle<T extends Balon>(
       else next.push(u)
     }
   }
-  if (cevapIndeksi() === -1) next.push(ekle('ai', c))
+  if (cevapIndeksi() === -1) {
+    const sonAi = [...next].reverse().find((m) => m.role === 'ai')
+    if (!sonAi || !benzerCevapMi(sonAi.text, c)) next.push(ekle('ai', c))
+  }
   return next
 }

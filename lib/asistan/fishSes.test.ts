@@ -34,6 +34,8 @@ test('Fish isteği kilitli: haber sesi, hız 1, ücretsiz model, duygu yok', () 
   assert.equal(FISH_MODEL, 's2.1-pro-free')
   const govde = istek!.govde
   assert.equal(govde.reference_id, '27d0d61d7dc8479da8dfd991ae3ad66b')
+  assert.equal(govde.language, 'tr')
+  assert.equal(govde.normalize, false)
   assert.equal((govde.prosody as { speed: number }).speed, FISH_HIZ)
   assert.equal(FISH_HIZ, 1)
   assert.equal(govde.temperature, 0.7)

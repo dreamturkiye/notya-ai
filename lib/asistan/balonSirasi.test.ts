@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cevapEkle, kullaniciEkle, type Balon } from './balonSirasi'
+import { benzerCevapMi, cevapEkle, kullaniciEkle, type Balon } from './balonSirasi'
 
 const ekle = (role: 'user' | 'ai', text: string, olay?: number): Balon => ({ role, text, ...(olay != null ? { olay } : {}) })
 
@@ -33,4 +33,15 @@ test('olaysız ekran balonu dururken geç gelen döküm soruyu cevabın arkasın
   const yerlesmis = cevapEkle([{ role: 'ai', text: SELAM }], SORU, KAHVE, ekle)
   const sonra = kullaniciEkle(yerlesmis, SORU, 4, ekle)
   assert.deepEqual(sonra.map((m) => m.role), ['ai', 'user', 'ai'])
+})
+
+test('aynı izolasyonun ikinci modeli yeni balon açmaz', () => {
+  const a = 'Hocam, yalnızca kendi hastalarınızın dosyalarına erişebiliyorum; başka bir hekimin hastası olan Rıdvan Dilmen\'in dosya bilgilerini görüntüleyemem.'
+  const b = 'Hocam, yalnızca kendi hastalarınızın dosyalarına erişebiliyorum; başka bir hekimin hastası olan Rıdvan Dilmen\'in dosyasını açamam. Dr. Gökhan Mamur\'un kendi hesabından kontrol etmesi gerekir.'
+  assert.ok(benzerCevapMi(a, b))
+  const soru = 'Rıdvan Dilmen dosyasına bakabilir misin?'
+  const once = cevapEkle([{ role: 'ai', text: SELAM }], soru, a, ekle)
+  const tekrar = cevapEkle(once, soru, b, ekle)
+  assert.equal(tekrar.filter((m) => m.role === 'ai').length, 2, 'selam + bir izolasyon')
+  assert.equal(tekrar.at(-1)?.text, a)
 })

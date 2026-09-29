@@ -56,10 +56,13 @@ export async function middleware(req: NextRequest) {
   const allowedOrigins = [
     'https://notya.io',
     'https://www.notya.io',
+    'https://notya-ai.vercel.app',
+    'https://notya-ai-getvelacom.vercel.app',
     process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '',
   ].filter(Boolean)
+  const vercelOnizleme = /^https:\/\/notya(-ai)?-[a-z0-9-]+-getvelacom\.vercel\.app$/i.test(origin || '')
 
-  if (origin && allowedOrigins.includes(origin)) {
+  if (origin && (allowedOrigins.includes(origin) || vercelOnizleme)) {
     response.headers.set('Access-Control-Allow-Origin', origin)
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')

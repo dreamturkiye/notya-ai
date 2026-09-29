@@ -228,9 +228,10 @@ export function sesDevamKalani(tumCumleler: string[], soylenen: string): string 
  */
 export const DEVAM_ISARETI = '[devam]'
 const DEVAM_SOZU = /^devam(?:\s+(?:et|etsene|edin|edelim))?(?:\s+(?:hocam|ayşe|lütfen))*[.!]?$/iu
+const DEVAM_ISARET_SOZU = /^\[devam\][.!?…]?$/iu
 export function devamIstegiMi(mesaj: string): boolean {
   const m = String(mesaj || '').trim()
-  if (m === DEVAM_ISARETI) return true
+  if (DEVAM_ISARET_SOZU.test(m)) return true
   return DEVAM_SOZU.test(m.toLocaleLowerCase('tr-TR'))
 }
 

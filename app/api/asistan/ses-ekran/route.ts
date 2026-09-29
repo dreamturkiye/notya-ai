@@ -1,9 +1,9 @@
 /**
  * NOTYA-TEK-BEYIN — sesli turların EKRAN biçimi (/asistan sayfası görüşme sırasında hafifçe yoklar).
  *
- * Sesli Ayşe ElevenLabs'ten yalnız kısa sözlü biçimi konuşur; tam cevap (liste, tablo, kimlik değerleri) ve onay
+ * Sesli Ayşe kalanı Fish Haberci ile okur (ElevenLabs [devam] turuna girmez); tam cevap (liste, tablo, kimlik değerleri) ve onay
  * kartları ortak asistan oturumuna yazılır, sayfa burada okur. NOTYA-SES-DEVAM-01: kesilen turun okunmamış kalanı
- * varsa `devam` / `devamAnahtar` döner; sayfa ajan susunca gizli `[devam]` turunu bir kez yollar. Kimlik cevabının değerleri saklanmaz — turun sorusu
+ * varsa `devam` / `devamAnahtar` / `devamKalan` döner. Diğer uzmanlarda sayfa ajan susunca gizli `[devam]` turunu bir kez yollar. Kimlik cevabının değerleri saklanmaz — turun sorusu
  * burada, sunucuda, yeniden cevaplanır (kimlikSorusunuCevapla, doctor_id kapsamlı).
  *
  * HASTA-IZOLASYON-01: oturum id + doctor_id birlikte; yabancı oturum → 404. Kart hastası oturumun kendi satırından,
@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
   const sesDevam = baglam.sesDevam as SesDevam | undefined
   const devamAnahtar = sesDevam && typeof sesDevam.kalan === 'string' && sesDevam.kalan.trim() ? String(sesDevam.anahtar || '') || null : null
   const devamBuCagri = Boolean(devamAnahtar && (!sonra || devamAnahtar > sonra))
+  const devamKalan = devamBuCagri ? String(sesDevam!.kalan).trim() : null
   const turlar: { zaman: string; metin: string; soru: string | null; kartlar: string[]; hastaId: string | null; devam: boolean }[] = []
   for (let i = 0; i < mesajlar.length; i++) {
     const m = mesajlar[i]
@@ -65,6 +66,7 @@ export async function GET(req: NextRequest) {
     // Bu görüşmeden önceki kesik tur okunmaz — mikrofon açılınca eski vaka konuşulmaz.
     devam: devamBuCagri,
     devamAnahtar: devamBuCagri ? devamAnahtar : null,
+    devamKalan,
     aktifHasta: typeof baglam.patientName === 'string' ? baglam.patientName : null,
     // Sesle onaylanan / vazgeçilen kart artık bekleyen değildir — sayfa kartı kapatır.
     bekleyen: Array.isArray(baglam.bekleyenOneriler) ? baglam.bekleyenOneriler.map(String) : [],

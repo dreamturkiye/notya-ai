@@ -1,9 +1,9 @@
 /**
- * NOTYA-FISH-AYSE-01 — Ayşe Kaya (pediatri) speaks with Fish, not ElevenLabs.
+ * NOTYA-FISH-AYSE-01 — Ayşe Kaya (pediatri) speaks with Fish Haberci (female), not ElevenLabs.
  *
- * Locked with Kaan, 2026-09-28: haber sunucusu, speed 1.0, no emotion,
- * a short [break] between sentences. Model is the free developer tier
- * (s2.1-pro-free) through 30 Nov 2026. Other specialists stay on ElevenLabs.
+ * Locked with Kaan, 2026-09-29: Haberci / Turkey host female, speed 1.0, no emotion,
+ * language locked to Turkish, a short [break] between sentences. Model is the free
+ * developer tier (s2.1-pro-free) through 30 Nov 2026. Other specialists stay on ElevenLabs.
  */
 
 export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
@@ -64,11 +64,12 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
     govde: {
       text,
       reference_id: FISH_HABER_SES_ID,
+      language: 'tr',
       format: 'pcm',
       sample_rate: 24000,
       temperature: 0.7,
       top_p: 0.7,
-      normalize: true,
+      normalize: false,
       latency: 'low',
       chunk_length: 120,
       prosody: { speed: FISH_HIZ, volume: 0, normalize_loudness: true },

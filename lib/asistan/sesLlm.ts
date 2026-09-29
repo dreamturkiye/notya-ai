@@ -10,8 +10,9 @@
  * Hız: arama / model gerekiyorsa hemen kısa bir bekletme sözü ("Bakıyorum Hocam... "), sonra cevap model yazdıkça
  * (yazılı cevapla aynı içerik, doğal cümlelerle — lib/asistan/konusma.ts).
  * ElevenLabs sistem araçları (tools): yalnız end_call kullanılır (doktor görüşmeyi bitirince); diğerleri yok sayılır.
- * NOTYA-SES-DEVAM-01: kesilen sesli turun söylenmeyen kalanı (active_context.sesDevam) gizli `[devam]` turunda
- * (ya da doktor "devam" deyince) modelsiz, sınırsız okunur.
+ * NOTYA-SES-DEVAM-01: kesilen sesli turun söylenmeyen kalanı (active_context.sesDevam) Ayşe'de Fish Haberci
+ * ile okunur — ElevenLabs `[devam]` turuna girmez. Diğer uzmanlarda gizli `[devam]` (ya da doktor "devam"
+ * deyince) modelsiz, sınırsız okunur.
  * Günlüğe klinik içerik yazılmaz — yalnız hata türü.
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -44,13 +45,17 @@ function arkaPlandaSurdur(p: Promise<unknown>): void {
   } catch { void p /* yerel çalışma: söz zaten sürer */ }
 }
 
-type ElMesaj = { role?: string; content?: unknown }
+type ElMesaj = { role?: string; content?: unknown; kanal?: string }
 type ElArac = { type?: string; function?: { name?: string }; name?: string }
 
 function metin(icerik: unknown): string {
   if (typeof icerik === 'string') return icerik
   if (Array.isArray(icerik)) return icerik.map((p) => (p && typeof p === 'object' && typeof (p as { text?: unknown }).text === 'string' ? (p as { text: string }).text : '')).join(' ')
   return ''
+}
+
+function sozNorm(s: string): string {
+  return String(s || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('tr-TR')
 }
 
 /** Konuşmanın son doktor cümlesi. Son mesaj doktorun değilse (ör. araç sonucu) cevaplanacak bir şey yoktur. */
@@ -60,6 +65,27 @@ export function sonDoktorCumlesi(mesajlar: unknown): string | null {
   if (!son || son.role !== 'user') return null
   const t = metin(son.content).replace(/\s+/g, ' ').trim()
   return t ? t.slice(0, 4000) : null
+}
+
+/**
+ * Hidden `[devam]` is sendUserMessage, but ElevenLabs often POSTs the previous doctor
+ * question as the last user turn. A second model pass on that question is the double
+ * isolation bubble; the empty third SSE is "Bağlantı kurulamadı".
+ */
+export function cevaplanmisSonSoruMu(oturumMesajlari: unknown, mesaj: string): boolean {
+  const hedef = sozNorm(mesaj)
+  if (!hedef || devamIstegiMi(mesaj)) return false
+  const liste = Array.isArray(oturumMesajlari) ? (oturumMesajlari as ElMesaj[]) : []
+  for (let i = liste.length - 1; i >= 0; i--) {
+    if (liste[i]?.role !== 'user') continue
+    const t = metin(liste[i].content).replace(/\s+/g, ' ').trim()
+    if (!t || devamIstegiMi(t) || sesGurultusuMu(t) || kendiSelamiMi(t)) continue
+    if (sozNorm(t) !== hedef) return false
+    const cevapVar = liste.slice(i + 1).some((m) => m.role === 'assistant' && metin(m.content).trim())
+    // Written-then-spoken is a real second turn. Only a VOICE user line already answered is EL replaying.
+    return cevapVar && liste[i].kanal === 'ses'
+  }
+  return false
 }
 
 /**
@@ -94,6 +120,12 @@ async function sesDevamAl(supabase: ReturnType<typeof getSupabase>, doktorId: st
   return typeof devam.kalan === 'string' && devam.kalan.trim() ? devam.kalan : null
 }
 
+async function oturumMesajlari(supabase: ReturnType<typeof getSupabase>, doktorId: string, oturumId: string): Promise<ElMesaj[]> {
+  const { data } = await supabase.from('asistan_sessions').select('messages').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
+  const liste = (data as { messages?: ElMesaj[] } | null)?.messages
+  return Array.isArray(liste) ? liste : []
+}
+
 function aracVarMi(araclar: unknown, ad: string): boolean {
   return Array.isArray(araclar) && (araclar as ElArac[]).some((a) => (a?.function?.name || a?.name) === ad)
 }
@@ -115,14 +147,18 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
     async start(controller) {
       let ilk = true
       let kapali = false
+      let icerikGitti = false
       const gonder = (nesne: unknown) => {
         if (kapali) return
         try { controller.enqueue(enc.encode(`data: ${JSON.stringify(nesne)}\n\n`)) } catch { kapali = true }
       }
-      const parca = (delta: Record<string, unknown>, bitis: string | null = null) => gonder({
-        id: kimlik, object: 'chat.completion.chunk', created: olusturma, model,
-        choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }],
-      })
+      const parca = (delta: Record<string, unknown>, bitis: string | null = null) => {
+        if (typeof delta.content === 'string' && delta.content) icerikGitti = true
+        gonder({
+          id: kimlik, object: 'chat.completion.chunk', created: olusturma, model,
+          choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }],
+        })
+      }
       // A finished sentence is sent as soon as it exists. Holding it for a
       // breath, or until this function returns, is the gap before Ayşe speaks.
       const kapi = new SesYayKapisi((t) => { if (!t) return; parca({ content: t }); ilk = false })
@@ -173,7 +209,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           // "Bağlantı kurulamadı". A period keeps the socket; Fish ignores punctuation.
           parca({ content: '.' })
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
-          // okundu (ya da söylenecek bir şey kalmadı)
+          // okundu (ya da söylenecek bir şey kalmadı — boş SSE aşağıda nokta ile tutulur)
+        } else if (mesaj && cevaplanmisSonSoruMu(await oturumMesajlari(getSupabase(), jeton.d, jeton.o), mesaj)) {
+          // ElevenLabs replayed the last doctor question instead of `[devam]`. Do not run the model again.
+          await devamiOku(mesaj)
         } else if (mesaj) {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           const supabase = getSupabase()
@@ -188,8 +227,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             // stream that runs ~30 s (LLM Cascade TimeoutError). Long file answers (özet, aşı, açık işler) take
             // longer than that on the screen. So the VOICE turn ends at the spoken cap or at the guard timer,
             // whichever comes first; the screen answer keeps generating in the background.
-            // NOTYA-SES-DEVAM-01: a cut turn is no longer the end of the answer — ayseCevapla stores the unspoken rest
-            // and the /asistan page asks for it with a hidden [devam] turn as soon as the screen answer is ready.
+            // NOTYA-SES-DEVAM-01: a cut turn is no longer the end of the answer — ayseCevapla stores the unspoken rest.
+            // Ayşe (Fish Haberci) reads that remainder on the page; other specialists still use a hidden `[devam]` EL turn.
             let sesSinirCoz: () => void = () => {}
             let sinirGeldi = false
             const sesSiniri = new Promise<void>((r) => { sesSinirCoz = r })
@@ -228,6 +267,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       // Flush the breath still held in the gate BEFORE the SSE closes, including on a cut,
       // so the sentences already counted in `soylenen` actually reach ElevenLabs.
       kapi.bitir()
+      // Empty Custom LLM SSE (hidden `[devam]` with nothing left, or a replayed question)
+      // is what ElevenLabs reports as "Bağlantı kurulamadı". A period keeps the socket;
+      // Fish treats punctuation as noise and does not speak it.
+      if (!icerikGitti) parca({ content: '.' })
       parca({}, bitis)
       if (!kapali) {
         try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* bağlantı kapandı */ }

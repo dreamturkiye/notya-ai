@@ -392,7 +392,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         headers: { Authorization: `Bearer ${t}` },
       })
       if (!r.ok || tekBeyinRef.current !== tb) return
-      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; soru?: string | null; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[]; devam?: boolean; devamAnahtar?: string | null }
+      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; soru?: string | null; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[]; devam?: boolean; devamAnahtar?: string | null; devamKalan?: string | null }
       const turlar = j.turlar || []
       for (const tur of turlar) {
         if (tur.zaman > tb.sonra) tb.sonra = tur.zaman
@@ -412,7 +412,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       for (const tur of turlar) {
         if (tur.kartlar?.length && tur.hastaId) void kartiYukle(tur.hastaId, tur.kartlar[tur.kartlar.length - 1])
       }
-      if (j.devam && j.devamAnahtar) sesDevamiIste(j.devamAnahtar)
+      if (j.devam && j.devamAnahtar) sesDevamiIste(j.devamAnahtar, j.devamKalan || '')
       // Sesle onaylanan / vazgeçilen kart artık bekleyen değil → kapat.
       if (sesKartiIdRef.current && Array.isArray(j.bekleyen) && !j.bekleyen.includes(sesKartiIdRef.current)) {
         sesKartiIdRef.current = null
@@ -422,18 +422,28 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   /**
-   * NOTYA-SES-DEVAM-01 (Dr. Gökhan: "özet yarıda kesilmesin"): the voice turn closed at the cap / guard before the
-   * answer was fully said; the screen answer is now complete and the server holds the rest. Once Ayşe has stopped
-   * speaking, send the hidden [devam] turn — exactly once per turn key. If she is still speaking, the next poll
-   * re-checks. If the doctor spoke after she stopped, the doctor moved on: the continuation is dropped.
+   * NOTYA-SES-DEVAM-01: cut voice turn — remainder is already on screen. Ayşe (Fish Haberci)
+   * speaks it here. ElevenLabs must not enter this loop: sendUserMessage('[devam]') made EL
+   * re-ask the last doctor question (second isolation bubble) then drop with an empty Custom
+   * LLM SSE ("Bağlantı kurulamadı"). Other specialists still use the hidden EL turn.
    */
-  function sesDevamiIste(anahtar: string) {
+  function sesDevamiIste(anahtar: string, kalan = "") {
     const d = sesDevamRef.current
-    const conv = conversationRef.current
-    if (!conv || d.gonderilen.has(anahtar) || d.mod === "speaking") return
-    d.gonderilen.add(anahtar)
-    if (d.doktorSozu > d.ajanSustu) return
+    if (d.gonderilen.has(anahtar) || d.mod === "speaking") return
     if (fishAcikRef.current && fishRef.current?.caliyorMu()) return
+    if (d.doktorSozu > d.ajanSustu) return
+    const metin = String(kalan || "").trim()
+    if (fishAcikRef.current) {
+      if (!metin) return
+      d.gonderilen.add(anahtar)
+      d.mod = "speaking"
+      setStatus("speaking")
+      fishIsle(metin, true)
+      return
+    }
+    const conv = conversationRef.current
+    if (!conv) return
+    d.gonderilen.add(anahtar)
     try { conv.sendUserMessage(DEVAM_ISARETI) } catch { /* bağlantı kapandıysa devam yok */ }
   }
 
