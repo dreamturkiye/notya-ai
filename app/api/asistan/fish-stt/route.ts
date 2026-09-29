@@ -3,7 +3,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { FISH_ASR_MODEL, fishAsrMetni } from '@/lib/asistan/fishSes'
+import { FISH_ASR_MODEL, fishAsrMetni, fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
   }
 
   const giden = new FormData()
-  giden.append('audio', ses, 'tur.webm')
+  const ad = ses instanceof File && ses.name ? ses.name : fishAsrDosyaAdi(ses.type)
+  giden.append('audio', ses, ad)
   giden.append('language', 'tr')
   giden.append('ignore_timestamps', 'true')
 

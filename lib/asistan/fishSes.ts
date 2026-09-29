@@ -12,6 +12,16 @@ export const FISH_ASR_MODEL = 'transcribe-1'
 export const FISH_HIZ = 1
 export const FISH_ORNEK_HZ = 24000
 
+/** Multipart filename Fish's ASR decoder keys off, matching the blob's container. */
+export function fishAsrDosyaAdi(mime: string): string {
+  const t = String(mime || '').toLowerCase()
+  if (t.includes('wav')) return 'tur.wav'
+  if (t.includes('mpeg') || t.includes('mp3')) return 'tur.mp3'
+  if (t.includes('mp4') || t.includes('m4a') || t.includes('aac')) return 'tur.m4a'
+  if (t.includes('ogg')) return 'tur.ogg'
+  return 'tur.webm'
+}
+
 /** Ayşe Kaya is a full Fish call (mic + TTS). Other specialists stay on ElevenLabs ConvAI. */
 export function ayseFishTamMi(personaId: string | null | undefined, anahtar = process.env.FISH_API_KEY): boolean {
   return personaId === 'aysekaya' && Boolean(String(anahtar || '').trim())

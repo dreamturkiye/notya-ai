@@ -32,7 +32,7 @@ import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKart
 import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
-import { fishAkisAc, fishAkisKapat, fishBirTurKaydet } from '@/lib/asistan/fishMikrofon'
+import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinleBaglamAc } from '@/lib/asistan/fishMikrofon'
 import { kendiSelamiMi, acilisAjanSozuMu } from '@/lib/asistan/acilis'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
@@ -149,6 +149,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const fishRef = useRef<FishCalar | null>(null)
   const fishAcikRef = useRef(false)
   const fishMicRef = useRef<MediaStream | null>(null)
+  const fishYakalaRef = useRef<AudioContext | null>(null)
   const fishDinleNesilRef = useRef(0)
   const fishTurAbortRef = useRef<AbortController | null>(null)
   /** Text already handed to Fish, and the agent event of the answer now playing. */
@@ -374,6 +375,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishTurAbortRef.current = null
     fishAkisKapat(fishMicRef.current)
     fishMicRef.current = null
+    const yakala = fishYakalaRef.current
+    fishYakalaRef.current = null
+    if (yakala && yakala.state !== "closed") void yakala.close().catch(() => undefined)
     const conv = conversationRef.current
     conversationRef.current = null
     fishAcikRef.current = false
@@ -507,12 +511,16 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     firstMessage: string
     sayfaHastasi: string | null
     dokunus: AudioContext | null
+    akis: MediaStream
+    yakala: AudioContext | null
     tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null
   }) {
     if (!g.tekBeyin?.oturumId) throw new Error("Asistan oturumu açılamadı")
     fishAcikRef.current = true
     fishDinleNesilRef.current += 1
     const nesil = fishDinleNesilRef.current
+    fishMicRef.current = g.akis
+    if (g.yakala) fishYakalaRef.current = g.yakala
     fishRef.current?.kapat()
     let acilisBitti: (() => void) | null = null
     const acilisSozu = new Promise<void>((r) => { acilisBitti = r })
@@ -556,17 +564,14 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) return
     await new Promise<void>((r) => setTimeout(r, 400))
     if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) return
-    const akis = await fishAkisAc()
-    if (nesil !== fishDinleNesilRef.current) { fishAkisKapat(akis); return }
-    fishMicRef.current = akis
-    const baglam = g.dokunus && g.dokunus.state !== "closed" ? g.dokunus : await (async () => {
-      const Pencere = window as Window & { webkitAudioContext?: typeof AudioContext }
-      const Kur = window.AudioContext || Pencere.webkitAudioContext
-      if (!Kur) throw new Error("ses yok")
-      const ctx = new Kur()
-      await ctx.resume().catch(() => undefined)
-      return ctx
-    })()
+    const akis = fishMicRef.current
+    if (!akis) throw new Error("Mikrofon yok")
+    let baglam = g.yakala && g.yakala.state !== "closed" ? g.yakala : null
+    if (!baglam) {
+      baglam = fishDinleBaglamAc()
+      fishYakalaRef.current = baglam
+    }
+    if (baglam.state === "suspended") await baglam.resume().catch(() => undefined)
     setStatus("listening")
     void fishDinleDongusu(nesil, akis, baglam, g.p, g.tekBeyin.oturumId)
   }
@@ -583,7 +588,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const t = authTokenRef.current || await ensureDoctorAccessToken()
       if (!t || nesil !== fishDinleNesilRef.current) return
       const fd = new FormData()
-      fd.append("audio", blob, "tur.webm")
+      fd.append("audio", blob, fishAsrDosyaAdi(blob.type))
       let metin = ""
       try {
         const r = await fetch("/api/asistan/fish-stt", { method: "POST", headers: { Authorization: `Bearer ${t}` }, body: fd })
@@ -668,13 +673,29 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
 
   async function startConversation() {
     const dokunus = sesiDokunustaAc()
+    const pEarly = PERSONAS[personaKeyRef.current] || PERSONAS[personaKey]
+    const ayseFish = pEarly.id === "aysekaya"
+    const micSozu = ayseFish ? fishAkisAc() : Promise.resolve(null as MediaStream | null)
+    let yakala: AudioContext | null = null
+    try { if (ayseFish) yakala = fishDinleBaglamAc() } catch { yakala = null }
     if (!authTokenRef.current) {
       const sonuc = await hazirla()
-      if (sonuc === "giris") { router.push("/giris"); return }
-      if (sonuc === "onboarding") { router.push("/onboarding?p=doktor"); return }
+      if (sonuc === "giris" || sonuc === "onboarding") {
+        try { fishAkisKapat(await micSozu) } catch { /* */ }
+        if (yakala && yakala.state !== "closed") void yakala.close().catch(() => undefined)
+        if (sonuc === "giris") router.push("/giris")
+        else router.push("/onboarding?p=doktor")
+        return
+      }
     }
-    if (!authTokenRef.current) { router.push("/giris"); return }
+    if (!authTokenRef.current) {
+      try { fishAkisKapat(await micSozu) } catch { /* */ }
+      if (yakala && yakala.state !== "closed") void yakala.close().catch(() => undefined)
+      router.push("/giris")
+      return
+    }
     await endConversation()
+    if (yakala) fishYakalaRef.current = yakala
     setStatus("connecting")
     setErrorMsg("")
     setMessages([])
@@ -698,8 +719,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const sayfaHastasi = ortakOturumId ? null : yeniOturumSayfaHastasi()
       const { signedUrl, voiceId, fish, tekBeyin } = await fetchSignedUrl(p, sayfaHastasi)
       if (p.id === "aysekaya") {
+        const akis = await micSozu
+        if (akis) fishMicRef.current = akis
         if (!fish) throw new Error("Ses motoru yok")
-        await startFishOturumu({ p, firstMessage, sayfaHastasi, dokunus, tekBeyin })
+        if (!akis) throw new Error("Mikrofon yok")
+        await startFishOturumu({ p, firstMessage, sayfaHastasi, dokunus, akis, yakala, tekBeyin })
         return
       }
       fishAcikRef.current = false
@@ -738,6 +762,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       fishDinleNesilRef.current += 1
       fishAkisKapat(fishMicRef.current)
       fishMicRef.current = null
+      const yakalaKapan = fishYakalaRef.current
+      fishYakalaRef.current = null
+      if (yakalaKapan && yakalaKapan.state !== "closed") void yakalaKapan.close().catch(() => undefined)
       fishRef.current?.kapat()
       fishRef.current = null
       fishAcikRef.current = false
