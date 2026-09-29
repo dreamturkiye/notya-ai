@@ -67,7 +67,7 @@ describe('model adı sızıntısı (NOTYA-MALIYET-01)', () => {
   it('modeller.ts kendisi desene uyan varsayılanları taşır (desen gerçekten çalışıyor)', () => {
     const kaynak = readFileSync(join(KOK, 'lib/ai/modeller.ts'), 'utf8')
     assert.match(kaynak, /claude-sonnet-[0-9]/)
-    assert.match(kaynak, /MODEL_HIZLI = 'openai\/gpt-6-luna-pro'/)
+    assert.match(kaynak, /MODEL_HIZLI = 'openai\/gpt-6-luna'/)
     assert.match(kaynak, /MODEL_GUCLU = 'anthropic\/claude-sonnet-5'/)
   })
 

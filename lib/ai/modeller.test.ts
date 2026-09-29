@@ -30,7 +30,7 @@ describe('görev politikası — kademe tablosu', () => {
     assert.deepEqual(guclu, [])
   })
 
-  it('LUNAPRO-01: HER görev → birincil (hizli kademe, Luna-Pro), ortam değişkeni yokken', () => {
+  it('LUNAPRO-01: HER görev → birincil (hizli kademe, Luna), ortam değişkeni yokken', () => {
     const eski = process.env.NOTYA_MODEL_HIZLI
     delete process.env.NOTYA_MODEL_HIZLI
     try {
@@ -38,7 +38,7 @@ describe('görev politikası — kademe tablosu', () => {
         const s = modelSec(g)
         assert.equal(s.kademe, 'hizli', g)
         assert.equal(s.model, MODEL_HIZLI, g)
-        assert.equal(s.model, 'openai/gpt-6-luna-pro', g)
+        assert.equal(s.model, 'openai/gpt-6-luna', g)
       }
     } finally {
       if (eski !== undefined) process.env.NOTYA_MODEL_HIZLI = eski
@@ -57,7 +57,7 @@ describe('görev politikası — kademe tablosu', () => {
     assert.ok(GOREV_POLITIKASI['sohbet-uzman'].maxTokens >= 1600)
   })
 
-  it('varsayılan modeller (LUNAPRO-01, 2026-09-27): Sonnet 5 koruyucu / GPT-6 Luna-Pro birincil; ortam değişkeni geçerliyse onu, geçersizse varsayılanı kullanır', () => {
+  it('varsayılan modeller (LUNAPRO-01 kapılar, 2026-09-29): Sonnet 5 koruyucu / GPT-6 Luna birincil; ortam değişkeni geçerliyse onu, geçersizse varsayılanı kullanır', () => {
     const eski = { g: process.env.NOTYA_MODEL_GUCLU, h: process.env.NOTYA_MODEL_HIZLI }
     try {
       delete process.env.NOTYA_MODEL_GUCLU
@@ -80,8 +80,8 @@ describe('görev politikası — kademe tablosu', () => {
     }
   })
 
-  it("varsayılan slug'ları: HIZLI (birincil) = openai/gpt-6-luna-pro, GÜÇLÜ (koruyucu) = anthropic/claude-sonnet-5", () => {
-    assert.equal(MODEL_HIZLI, 'openai/gpt-6-luna-pro')
+  it("varsayılan slug'ları: HIZLI (birincil) = openai/gpt-6-luna, GÜÇLÜ (koruyucu) = anthropic/claude-sonnet-5", () => {
+    assert.equal(MODEL_HIZLI, 'openai/gpt-6-luna')
     assert.equal(MODEL_GUCLU, 'anthropic/claude-sonnet-5')
   })
 

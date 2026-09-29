@@ -6,9 +6,9 @@
  * deseni (claude-…, gpt-…, openai/…, anthropic/…) bu dosya ve lib/ai/saglayici.ts dışında görünürse test kırılır.
  * Model adı değişince kod değişmez; Vercel'de NOTYA_MODEL_GUCLU / NOTYA_MODEL_HIZLI ortam değişkeni ayarlanır.
  *
- * NOTYA-MODEL-LUNAPRO-01 (Kaan, 2026-09-27 — karar A'nın ve LUNA-02'nin yerine): HER görevin birincil modeli
- * GPT-6 Luna-Pro (MODEL_HIZLI / NOTYA_MODEL_HIZLI) — SOAP, klinik analiz, görüntü/PDF okuma, sohbet dahil. Koruyucu
- * Sonnet 5 (MODEL_GUCLU / NOTYA_MODEL_GUCLU) YALNIZ dört kapıdan ulaşılır (lib/ai/cagir.ts, lib/ai/devre.ts):
+ * NOTYA-MODEL-LUNAPRO-01 kapıları durur (Kaan, 2026-09-27). Birincil slug Kaan 2026-09-29 ile GPT-6 Luna
+ * (MODEL_HIZLI / NOTYA_MODEL_HIZLI = openai/gpt-6-luna) — SOAP, klinik analiz, görüntü/PDF, sohbet. Luna-Pro
+ * reasoning.mode=pro idi; gecikme için düzenli Luna. Koruyucu Sonnet 5 (MODEL_GUCLU) yalnız dört kapıdan:
  *  G1 transport — birincil cevap veremedi (5xx, zaman aşımı, boş gövde, ağ, 429): birincil → 400 ms → birincil → Sonnet 5.
  *  G2 low_conf  — istek başına EN FAZLA BİR kez: boş, ret, düşük güven; yapılandırılmış işte ayrıştırılamayan (F3 onarımı
  *                 da kurtaramayan) JSON ya da max_tokens kesilmesi; bilinmeyen araç adı / bozuk araç argümanı; SOAP
@@ -31,8 +31,8 @@
 
 /** Varsayılan koruyucu (GÜÇLÜ kademe, yalnız G1–G4) — Claude Sonnet 5 (OpenRouter slug'ı; doğrudan yolda saglayici.ts önekini atar). */
 export const MODEL_GUCLU = 'anthropic/claude-sonnet-5'
-/** Varsayılan birincil (HIZLI kademe, her görev) — GPT-6 Luna-Pro (yalnız OpenRouter; görsel + dosya girdisi destekler). */
-export const MODEL_HIZLI = 'openai/gpt-6-luna-pro'
+/** Varsayılan birincil (HIZLI kademe, her görev) — GPT-6 Luna (yalnız OpenRouter; görsel + dosya girdisi destekler). */
+export const MODEL_HIZLI = 'openai/gpt-6-luna'
 
 /** Ortam değişkeni boş/geçersizse varsayılan kalır — yanlış ayar üretimi düşürmesin. */
 function ortamModeli(ad: string, varsayilan: string): string {

@@ -4,21 +4,21 @@ description: >-
   Notya'da bir LLM çağrısı (Anthropic/OpenRouter) eklerken veya değiştirirken
   uygulanan ZORUNLU kural: model adı asla dosyaya string olarak yazılmaz;
   model lib/ai/modeller.ts'teki merkezi politikadan alınır, çağrı
-  lib/ai/cagir.ts'ten geçer. Birincil model HER görevde GPT-6 Luna-Pro
+  lib/ai/cagir.ts'ten geçer. Birincil model HER görevde GPT-6 Luna
   (görsel/PDF dahil); Sonnet 5 yalnız dört kapıdan (G1 transport, G2 kalite,
-  G3 güvenlik, G4 devre) ulaşılan koruyucudur (Kaan, 2026-09-27,
-  NOTYA-MODEL-LUNAPRO-01). 30+ branşın tamamı için geçerlidir — yeni bölüm
+  G3 güvenlik, G4 devre) ulaşılan koruyucudur (Kaan, 2026-09-29:
+  düzenli Luna; kapılar LUNAPRO-01). 30+ branşın tamamı için geçerlidir — yeni bölüm
   (chapter) yazarken de uygulanır.
 ---
 
 # AI model politikası (tüm branşlar, tüm uygulama)
 
-**NOTYA-MODEL-LUNAPRO-01 — Kaan (CEO), 2026-09-27.** Karar A'nın
-(2026-09-26: klinik iş Sonnet 5'te) ve LUNA-02'nin yerine:
+**Birincil slug (Kaan, 2026-09-29):** `openai/gpt-6-luna`. Kapılar LUNAPRO-01
+(2026-09-27) durur. Luna-Pro (`reasoning.mode=pro`) gecikme için kapatıldı.
 
 | Rol | Model | Ortam değişkeni | Taşıma |
 |---|---|---|---|
-| **Birincil** (her görev) | `openai/gpt-6-luna-pro` | `NOTYA_MODEL_HIZLI` | OpenRouter |
+| **Birincil** (her görev) | `openai/gpt-6-luna` | `NOTYA_MODEL_HIZLI` | OpenRouter |
 | **Koruyucu** (yalnız G1–G4) | `anthropic/claude-sonnet-5` | `NOTYA_MODEL_GUCLU` | OpenRouter; `OPENROUTER_API_KEY` yoksa Anthropic doğrudan |
 
 Birincil: SOAP (`soap`), mesleki not (`not-uretimi`), klinik analiz
@@ -140,9 +140,9 @@ neden değerleri geçmiş satırlar için check listesinde durur.
 Kod değişmeden, tek yeniden dağıtımla (Vercel ortam değişkeni):
 
 - `NOTYA_MODEL_HIZLI=anthropic/claude-sonnet-5` → **her şey** Sonnet 5'e döner.
+- `NOTYA_MODEL_HIZLI=openai/gpt-6-luna-pro` → Luna-Pro'ya döner.
 - `NOTYA_MODEL_GUCLU=…` → koruyucu değişir. Geçersiz değer → varsayılan.
-- Dikkat: ortamda eski `NOTYA_MODEL_HIZLI=openai/gpt-6-luna` kaldıysa yeni
-  varsayılanı ezer.
+- Dikkat: ortamda `NOTYA_MODEL_HIZLI=openai/gpt-6-luna-pro` kaldıysa kod varsayılanını **ezer**.
 
 Varsayılan olarak `gpt-5.6-luna*` ve `claude-sonnet-4.x` seçilmez
 (`model-sizmasi.test.ts` kilitler).

@@ -3,13 +3,13 @@
  *
  * Model ve önerilen max_tokens görevden gelir (lib/ai/modeller.ts → modelSec); çağrı yeri model adı yazmaz.
  * Taşıma yolu lib/ai/saglayici.ts'te seçilir:
- *  - OPENROUTER_API_KEY varsa → OpenRouter (birincil = GPT-6 Luna-Pro, koruyucu = Sonnet 5); istek/yanıt Anthropic
+ *  - OPENROUTER_API_KEY varsa → OpenRouter (birincil = GPT-6 Luna, koruyucu = Sonnet 5); istek/yanıt Anthropic
  *    biçimine çevrilir.
  *  - yoksa → koruyucu (Sonnet 5) eski doğrudan SDK yoluyla; OpenAI modeli bu yolda gidemez → koruyucu (neden = transport).
  *    Çağrı yerleri Anthropic SDK istemcisi kurmaz — yalnız bu kapı (test sahtesi `istemci` ile).
  * HTTP hatasında AiCagriHatasi fırlatılır (durum + gövde); çağıran eskisi gibi kendi hata mesajını seçer.
  *
- * Birincil model HER görevde Luna-Pro (Kaan, 2026-09-27) — görsel/PDF dahil. Sonnet 5 koruyucudur, dört kapıdan:
+ * Birincil model HER görevde GPT-6 Luna (Kaan, 2026-09-29) — görsel/PDF dahil. Sonnet 5 koruyucudur, dört kapıdan:
  *  G3 GÜVENLİK (çağrıdan önce): mesajda ya da `guvenlikBaglami`nda (hasta dosyası) güvenlik sinyali → koruyucu (safety).
  *  G4 DEVRE (çağrıdan önce): birincilin devresi açık → koruyucu (devre) — lib/ai/devre.ts.
  *  G1 TAŞIMA: 5xx / zaman aşımı / boş gövde / 429 / ağ → 400 ms → birincil bir kez → koruyucu (transport).
@@ -130,7 +130,7 @@ function kullaniciMetni(mesajlar: AiMesaj[]): string {
 }
 
 /**
- * Çağrıdan önceki seçim — görevin birincil modeli (LUNAPRO-01: her görevde Luna-Pro). Görsel/PDF yükseltmez.
+ * Çağrıdan önceki seçim — görevin birincil modeli (LUNAPRO-01 kapılar; her görevde Luna). Görsel/PDF yükseltmez.
  * NOTYA-MODEL-LUNAPRO-02 (Kaan, 2026-09-27: "All must be on Pro; Sonnet only if it must"): çağrı ÖNCESİ güvenlik
  * kapısı (G3) KALDIRILDI — pediatride mg/kg / ibuprofen / çocuk doz sinyalleri her klinik çağrıyı Sonnet'e yolluyordu.
  * Koruyucu (Sonnet 5) artık yalnız birincil GERÇEKTEN başarısız olunca devreye girer: G1 taşıma, G2 kalite, G4 devre.
