@@ -98,61 +98,6 @@ export function tumAdParcalariVar(adDuz: string, tokenlar: Set<string>): boolean
   const p = adDuz.split(' ').filter(Boolean)
   return p.length >= 2 && p.every((x) => tokenlar.has(x))
 }
-
-/**
- * Chitchat has no patient name. Decrypting every chart on those turns is the
- * pause before the model can start ("bir kahve içelim mi"). An unknown word
- * still scans — a first name must never be skipped.
- */
-const AD_OLMAYAN = new Set([
-  'ben', 'sen', 'siz', 'biz', 'bir', 'bu', 'su', 'cok', 'iyi', 'iyiyim', 'iyisin', 'iyisiniz', 'iyiyiz',
-  'tesekkur', 'tesekkurler', 'sagol', 'sagolun', 'ederim', 'merhaba', 'merhabalar', 'selam', 'selamlar', 'nasilsin', 'nasilsiniz', 'naber',
-  'gunaydin', 'aksamlar', 'geceler', 'hocam', 'hoca', 'hanim', 'bey', 'lutfen', 'rica', 'evet', 'hayir',
-  'tamam', 'peki', 'olur', 'tabii', 'tabi', 'kahve', 'cay', 'icelim', 'icersin', 'icersiniz', 'iceyim',
-  'bugun', 'yarin', 'simdi', 'sizinle', 'seninle', 'benimle', 'bizimle', 'molada', 'molasinda', 'sohbet',
-  'edebilirim', 'edebiliriz', 'ederiz', 'gercekten', 'naziksiniz', 'naziksin', 'nazik', 'biraz', 'guzel',
-  'hos', 'pardon', 'gorusuruz', 'size', 'bana', 'sana', 'kolay', 'gelsin', 'eyvallah', 'gunler',
-  'affedersin', 'affedersiniz', 'buyurun', 'buyrun', 'hadi', 'beraber', 'birlikte', 'isterim', 'isterseniz',
-  'ister', 'misiniz', 'musunuz', 'memnun', 'oldum', 'afiyet', 'degil', 'degilim',
-])
-/**
- * NOTYA-SES-DOLGU-02 (Kaan, canlı vaka 2026-09-28): "nasılsınız" → Fish ASR "nasınsınız" (bir harf düşmüş) —
- * tam eşleşme listesi bunu tanımadı, sohbet 500 hastalık tam taramaya düştü ve alakasız bir dosya açıldı. Ses
- * tanıma küçük yazım farkları üretir; bu yüzden AD_OLMAYAN'a tam eşleşmeyen ama ona 1 düzenleme uzaklıkta olan
- * (tek harf eksik/fazla/değişik) 5+ karakterlik kelimeler de güvenli sayılır. Eşleşmeyen kelime (kısa, ya da
- * 1'den uzak) hâlâ taramayı tetikler — bir isim asla atlanmaz, yalnız bilinen dolgu kelimelerin yazım varyantları
- * atlanır.
- */
-function duzenlemeUzakligi1Mi(a: string, b: string): boolean {
-  if (a === b) return true
-  const la = a.length, lb = b.length
-  if (Math.abs(la - lb) > 1) return false
-  if (la === lb) {
-    let fark = 0
-    for (let i = 0; i < la; i++) if (a[i] !== b[i]) { if (++fark > 1) return false }
-    return fark === 1
-  }
-  const [kisa, uzun] = la < lb ? [a, b] : [b, a]
-  let i = 0, j = 0, fark = 0
-  while (i < kisa.length && j < uzun.length) {
-    if (kisa[i] === uzun[j]) { i++; j++; continue }
-    if (++fark > 1) return false
-    j++
-  }
-  return true
-}
-function guvenliKelimeMi(k: string): boolean {
-  if (AD_OLMAYAN.has(k)) return true
-  if (k.length < 5) return false
-  for (const g of AD_OLMAYAN) {
-    if (Math.abs(g.length - k.length) <= 1 && duzenlemeUzakligi1Mi(k, g)) return true
-  }
-  return false
-}
-export function adTaramasiGereksizMi(mesaj: string): boolean {
-  const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
-  return kelime.length > 0 && kelime.every(guvenliKelimeMi)
-}
 /** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
 export function hastaAdiCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
@@ -245,7 +190,6 @@ export async function hastaninSozunuCoz(
       if (p) return { tur: 'tek', patientId: p.id, ad: hastaAdiCoz(p.name_encrypted) || 'son hasta' }
     }
   }
-  if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
   const { data: hastalar } = await supabase
     .from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true).limit(500)
   if (!hastalar || hastalar.length === 0) return { tur: 'yok' }

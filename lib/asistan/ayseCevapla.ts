@@ -25,7 +25,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
-import { asistanOnbellekBloklari } from "@/lib/asistan/onbellekBloklari"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
@@ -37,8 +36,8 @@ import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogr
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { cozumKonus, hastaninSozunuCoz, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
-import { dosyaPaketOnbellekli } from "@/lib/doktor/ogrenme/dosyaOnbellek"
-import { adliDosyaCevabi, dosyaSoruCevap, type HastaDosyaKart } from "@/lib/doktor/hastaDosyaKart"
+import { hastaDosyaPaketiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
+import { adliDosyaCevabi, dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
 import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPrescriptionData } from "@/lib/asistan/intentParser"
@@ -61,10 +60,8 @@ import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
-import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
+import { dosyaSorguVerisiDerle } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
-import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
-import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
 
 export type Kanal = "yazi" | "ses"
 
@@ -134,7 +131,6 @@ const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY
 const simdi = () => new Date().toISOString()
 
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
-  const cevapBas = Date.now()
   const supabase = g.supabase
   const doktorId = g.doktorId
   const message = g.mesaj
@@ -168,19 +164,15 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     asistanSession = await asistanOturumuAc(supabase, { doktorId, personaId: g.personaId, specialty, hekimBransi, patientId, sessionId: g.sessionId })
   }
 
-  const baglam = (asistanSession?.active_context as Record<string, unknown>) || {}
-  const istenenPersona = g.personaId && PERSONAS[g.personaId as PersonaId] ? (g.personaId as PersonaId) : null
-  const kayitliPersona = (asistanSession?.persona_id as PersonaId) || null
-  // Sekme değişince aynı oturum kalırsa eski meslektaşın geçmişi ve hastası yeni sesin ağzından konuşuyordu.
-  const personaDegisti = Boolean(istenenPersona && kayitliPersona && istenenPersona !== kayitliPersona)
-  const personaId = istenenPersona || kayitliPersona || varsayilanPersonaId(specialty, hekimBransi)
+  const personaId = (asistanSession?.persona_id as PersonaId) || varsayilanPersonaId(specialty, hekimBransi)
   const persona = PERSONAS[personaId] || PERSONAS[varsayilanPersonaId(specialty, hekimBransi)]
   if (!persona) {
     return { ok: false, durum: 500, govde: { error: "Uzman persona bulunamadı" }, soz: "Şu an cevap veremiyorum Hocam." }
   }
 
-  const contextPatientId = personaDegisti ? (patientId || null) : (baglam.currentPatientId || patientId)
-  const messages: OturumMesaji[] = personaDegisti ? [] : ((asistanSession?.messages as OturumMesaji[]) || [])
+  const baglam = (asistanSession?.active_context as Record<string, unknown>) || {}
+  const contextPatientId = baglam.currentPatientId || patientId
+  const messages: OturumMesaji[] = (asistanSession?.messages as OturumMesaji[]) || []
   const oturumId = (asistanSession?.id as string) || null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
@@ -195,8 +187,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
         }
       : { role: "assistant", content: asistanSozu }
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
-    const { sesDevam: eskiDevam, currentPatientId, patientName, ...geriBaglam } = baglam
-    const oncekiBaglam = personaDegisti ? geriBaglam : { ...geriBaglam, ...(currentPatientId ? { currentPatientId, patientName } : {}) }
+    const { sesDevam: eskiDevam, ...oncekiBaglam } = baglam
     const sesDevam: SesDevam | null = ses && ek.sesDevamKalan ? { anahtar: asistanZamani, kalan: ek.sesDevamKalan, olusturma: simdi() } : null
     // NOTYA-SAYFA-HASTA-01: the doctor opened another patient's page while this turn ran (a voice turn can take
     // 30 s) — that page switch is the more recent explicit signal; this write must not put the old focus back.
@@ -208,10 +199,9 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
         sayfaOdagi = { currentPatientId: t.currentPatientId, patientName: t.patientName ?? null, odakKaynak: "sayfa", odakZaman: t.odakZaman }
       }
     }
-    const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam || personaDegisti
+    const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam
       ? {
           ...oncekiBaglam,
-          ...(personaDegisti && !ek.hasta && !sayfaOdagi ? { currentPatientId: null, patientName: null } : {}),
           ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad, odakKaynak: "soz", odakZaman: asistanZamani } : {}),
           ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
           ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
@@ -220,8 +210,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       : null
     await supabase.from("asistan_sessions").update({
       messages: [...messages, kullanici, asistan].slice(-SOHBET_SAKLANAN_MESAJ),
-      ...(personaDegisti ? { persona_id: personaId } : {}),
-      ...(sayfaOdagi ? { patient_id: sayfaOdagi.currentPatientId } : ek.hasta ? { patient_id: ek.hasta.id } : personaDegisti ? { patient_id: null } : {}),
+      ...(sayfaOdagi ? { patient_id: sayfaOdagi.currentPatientId } : ek.hasta ? { patient_id: ek.hasta.id } : {}),
       ...(yeniBaglam ? { active_context: yeniBaglam } : {}),
     }).eq("id", oturumId)
   }
@@ -262,13 +251,10 @@ ${ilacBaglamMetni(drugs[0])}`
   // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
   // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
   let dosyaEk = ""
-  let dosyaGovde = ""
-  let dosyaTur = ""
   let odakDosyaMetni = ""
   // NOTYA-AYSE-STANDART-01 + odak kilidi uyumu: kanıt yolu (İlk 10) açıkken cevap takvimdeki eksik aşıları ADIYLA sayar
   // ("KKK — kayıt yok"); bu uydurma liste değildir, kilit bu turda aşı-listesi kuralını uygulamaz.
   let kanitYoluAktif = false
-  let dosyaOnbellekten = false
   let odakHastaAdi = ""
   // NOTYA-MODEL-LUNA-02: dosyanın yalnız hasta verisi (kurallar değil) — güvenlik sinyali taraması için (gebe, warfarin …).
   let dosyaGuvenlikMetni = ""
@@ -309,7 +295,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // NOTYA-TEK-BEYIN (hız): takip sorusunda aktif hastanın dosyası, mesajdaki hasta çözülürken paralel derlenir;
     // mesaj başka bir hastayı adlandırırsa bu derleme kullanılmaz (doktora kapsanmış bir okuma — sızıntı değil).
     const aktifOnceden = contextPatientId ? String(contextPatientId) : null
-    const aktifPaketSozu = aktifOnceden ? dosyaPaketOnbellekli(supabase, doktorId, aktifOnceden).catch(() => null) : null
+    const aktifPaketSozu = aktifOnceden ? hastaDosyaPaketiniDerle(supabase, doktorId, aktifOnceden).catch(() => null) : null
     cozum = await hastaninSozunuCoz(supabase, doktorId, message)
     // NOTYA-AKTIF-HASTA-01: with a patient open, an unnamed question is about that patient, not a search.
     const aktifeDon = aktifHastaKullanilsinMi({
@@ -327,13 +313,11 @@ ${ilacBaglamMetni(drugs[0])}`
         // NOTYA-AYSE-STANDART-01: açık hasta + 10 kanonik dosya sorusundan biri → olay dizini (planlandı ≠ uygulandı)
         // dosya paketiyle birlikte, paralel derlenir. Olay okumaları da doktora kapsanır (dosyaOlaylari).
         const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
-        const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, aktifId)
-        const sorgu = paket && soruTuru && paket.sorguHasta
-          ? { olaylar: paket.olaylar as DosyaOlayi[], hasta: paket.sorguHasta as DosyaHastasi }
-          : null
+        const sorguSozu = soruTuru ? dosyaSorguVerisiDerle(supabase, doktorId, aktifId).catch(() => null) : null
+        const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await hastaDosyaPaketiniDerle(supabase, doktorId, aktifId)
+        const sorgu = sorguSozu ? await sorguSozu : null
         kanitYoluAktif = Boolean(soruTuru && sorgu)
         if (paket) {
-          dosyaOnbellekten = Boolean(paket.onbellekten)
           if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
           const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
           odakHastaAdi = aktifAd
@@ -343,26 +327,16 @@ ${ilacBaglamMetni(drugs[0])}`
           // gösterdi" dedi. Kesin dosya cevabı her zaman hastanın adıyla başlar; yanlış hasta anında görülür.
           // NOTYA-AYSE-STANDART-01: dosya sorusu (özet, aşı tam mı, ilaçlar, açık işler…) HIZLI KART'la cevaplanmaz —
           // kart tek bilgilik sorular içindir (kan grubu, alerji, son vizit tarihi, telefon / kimlik).
-          const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart as HastaDosyaKart)
+          const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart)
           kesinDosyaCevap = kesinHam ? adliDosyaCevabi(aktifAd, kesinHam) : null
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
           dosyaGuvenlikMetni = String(paket.metin || "")
-          // NOTYA-SES-BAGLAM-KUCULT-01: ses gerçek zamanlı — her turda tam dosya değil, güvenlik-tam kısa özet
-          // (lib/doktor/hastaDosyaKisa.ts). İlk-10 sorusunda kanıt bloğu aşağıda aynen eklenir; özette olmayan bir
-          // kaydı soran tur (eski vizit, tarih, görüntüleme…) tam dosyayla gider. Yazı: değişmedi. G3 taraması,
-          // doz kilidi ve odak kilidi hâlâ tam dosyayı okur (dosyaGuvenlikMetni, odakDosyaMetni).
-          const sesOzeti = ses && (Boolean(soruTuru) || !sesTamDosyaGerekirMi(String(message || "")))
-          // Gövde turdan tura aynı bayt olmalı (soru, kesin cümle, kanıt burada yok).
-          dosyaGovde = sesOzeti
-            ? `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${hastaOzetiKisa(paket)}\n=== DOSYA SONU ===\n${sesOzetKurali(aktifAd)}`
-            : `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Bu bloktan sonra KESİN DOSYA CEVABI varsa o cümleyi AYNEN söyle. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
-          dosyaTur = kesinBlok
+          dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
           if (sorgu && soruTuru) {
-            dosyaTur += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
+            dosyaEk += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
           }
-          dosyaEk = dosyaGovde + dosyaTur
         }
       }
     }
@@ -401,18 +375,17 @@ ${ilacBaglamMetni(drugs[0])}`
     eylemKapali() ? Promise.resolve(null) : hastaOzetiGetir(supabase, doktorId, eylemHastaId),
   ])
   if (!kota.izin) return { ok: false, durum: 429, govde: { success: false, error: KOTA_MESAJI }, soz: KOTA_MESAJI }
-  const hafizaBlogu = hafizaHam
+  const hafizaBlogu = hafizaHam + gunHam
 
   // Build system prompt with learning context
   // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
   const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
-  // NOTYA-ONBELLEK-SICAK-YOL: global ve hekim önbellekte (sabit). Hafıza, hasta satırı, branş kilidi
-  // ve dosya gövdesi kuyrukla birlikte önbelleksiz — seans sayacı ve hasta satırı her tur değişir,
-  // önbelleğe yazmak cevabı yazma bitene kadar bekletir.
-  // Gün özeti, kesin cümle ve kanıt kuyrukta; soru dosya önekini bozmaz. Hasta global/hekim'de yok.
-  // Branş kilidi hafıza ve hastanın ÜSTÜNE çıkmaz (öncelik cümlesi onları kapsar); dosya gövdesi en sonda.
+  // NOTYA-MALIYET-01 (prompt caching): metin ve sıra eskisiyle birebir aynı (buildSystemPrompt + bransKilidi + dosyaEk).
+  // 1. kırılma noktası: persona/know-how/kurallar (hekim × persona başına sabit). 2. kırılma noktası: tüm system — hafıza,
+  // aktif hasta, branş kilidi ve dosya aynı sohbette turdan tura değişmez (yalnız ilk turda gün bloğu var).
+  // Branş kilidi BİLEREK sabit bloğa taşınmadı: kilit "yukarıdaki talimatlarla çeliştiğinde ÖNCELİKLİDİR" der; hafıza
+  // ve hasta bloğunun üstüne çıkarsa önceliği onları kapsamaz (kalite riski).
   const sistem = buildSystemPromptParcalari(persona, prefs, currentPatient, doctorProfile, hafizaBlogu)
-  const kararli = sistem.degisken + bransKilidi + dosyaGovde
 
   // NOTYA-MALIYET-01 (Kaan, 2026-09-19): şüphede uzman tur. Hasta bağlamı, eylem niyeti, klinik sinyal ya da belirsiz mesaj →
   // sohbet-uzman (1600 token — F3); sohbet yalnız net sosyal tur / uygulama kullanımı sorusu. Kural: lib/ai/modeller.ts.
@@ -422,11 +395,10 @@ ${ilacBaglamMetni(drugs[0])}`
   const eylemBransi = bransAnahtari(hekimBransi)
   const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
   const toolChoice = araclar.length && kayitNiyetiMi(String(message || augmentedMessage || '')) ? ('any' as const) : undefined
-  const kuyruk = gunHam + dosyaTur + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.
-  const dozKaynak = kaynakSayilari(augmentedMessage, dosyaEk, odakDosyaMetni, ...messages.filter((m) => m.role === "user").map((m) => m.content))
+  const dozKaynak = kaynakSayilari(augmentedMessage, dosyaEk, ...messages.filter((m) => m.role === "user").map((m) => m.content))
   const kdMi = kadinDogumMi(hekimBransi, specialty)
   const liste = kdMi ? kdDogrulanmisKaynaklar() : []
   // Ses: model yazarken her cümle ekrandakiyle aynı kilitlerden geçer — doğrulanmamış doz / kılavuz numarası söylenmez.
@@ -446,7 +418,10 @@ ${ilacBaglamMetni(drugs[0])}`
     guvenlikBaglami: [dosyaGuvenlikMetni, currentPatient ? JSON.stringify(currentPatient) : ""].filter(Boolean).join("\n"),
     araclar,
     toolChoice,
-    system: asistanOnbellekBloklari({ global: sistem.global, hekim: sistem.hekim, kararli, kuyruk }),
+    system: [
+      { metin: sistem.sabit, onbellek: true },
+      { metin: sistem.degisken + bransKilidi + dosyaEk + (araclar.length ? EYLEM_ISTEM_BLOGU : ""), onbellek: true },
+    ],
     messages: [
       // modele son 8 mesaj (4 tur) gider; saklanan geçmiş ve doz-kaynak kontrolü tam listeyi kullanır
       ...gecmisiKirp(messages).map((m: { role: string; content: string }) => ({
@@ -577,28 +552,19 @@ ${ilacBaglamMetni(drugs[0])}`
     action_data: aiData.action || {}
   })
 
-  // NOTYA-OGRENME-03 / V2: ilişki sayacı istekte kalır (ucuz); LLM öğrenme waitUntil.
+  // NOTYA-OGRENME-03: ilişki sayacı (seans = farklı gün, mesaj başına değil) + öğrenme.
+  // Haiku yalnız doktor kendinden/tercihinden bahsettiğinde çağrılır (regex kapısı — ekonomi).
   try {
     const iliski = await seansIsle(supabase, doktorId, "sohbet")
-    const ogren = ogrenmeyeDeger(String(message || ""))
-    const ozet = iliski.seans_sayisi >= 5 && iliski.seans_sayisi - iliski.ozet_seans >= 5
-    if (ogren || ozet) {
-      const { arkaPlandaSurdur } = await import("@/lib/doktor/ogrenme/arkaPlandaOgren")
-      const gecmis = messages.slice(-4).map((m: { role: string; content: string }) => ({ role: m.role, content: m.content }))
-      const soz = String(aiData.speech)
-      const mesaj = String(message)
-      arkaPlandaSurdur((async () => {
-        try {
-          if (ogren) {
-            await sohbettenOgren(getAnthropic(), supabase, doktorId, [
-              ...gecmis,
-              { role: "user", content: mesaj },
-              { role: "assistant", content: soz },
-            ])
-          }
-          if (ozet) await ozetGerekirseGuncelle(getAnthropic(), supabase, doktorId)
-        } catch (e) { console.error("[hafiza] sohbet arka plan", e) }
-      })())
+    if (ogrenmeyeDeger(String(message || ""))) {
+      await sohbettenOgren(getAnthropic(), supabase, doktorId, [
+        ...messages.slice(-4).map((m: { role: string; content: string }) => ({ role: m.role, content: m.content })),
+        { role: "user", content: String(message) },
+        { role: "assistant", content: aiData.speech },
+      ])
+    }
+    if (iliski.seans_sayisi >= 5 && iliski.seans_sayisi - iliski.ozet_seans >= 5) {
+      await ozetGerekirseGuncelle(getAnthropic(), supabase, doktorId)
     }
   } catch (e) { console.error("[hafiza] sohbet", e) }
 
@@ -608,10 +574,6 @@ ${ilacBaglamMetni(drugs[0])}`
   } else {
     await supabase.from("doctor_preferences").update({ last_session_at: new Date().toISOString() }).eq("doctor_id", doktorId)
   }
-
-  void import("@/lib/doktor/ogrenme/hizOlc").then((m) => m.hizYazSessiz({
-    doctorId: doktorId, gorev: "sohbet", sureMs: Date.now() - cevapBas, onbellekli: dosyaOnbellekten,
-  })).catch(() => { /* ölçüm */ })
 
   return {
     ok: true,

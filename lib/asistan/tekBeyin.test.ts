@@ -171,7 +171,7 @@ async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?
 async function sesEkrani(s: Sahne, oturum = s.oturum) {
   const y = await R.sesEkran.GET(new NextRequestSinifi(`http://localhost/api/asistan/ses-ekran?oturum=${oturum}`, { headers: { authorization: `Bearer ${s.doktor.token}` } } as ConstructorParameters<typeof NextRequestSinifi>[1]))
   assert.equal(y.status, 200)
-  return (await y.json()) as { turlar: { zaman: string; metin: string; soru: string | null; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null }
+  return (await y.json()) as { turlar: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null; devam: boolean }[]; bekleyen: string[]; aktifHasta: string | null; devam: boolean; devamAnahtar: string | null }
 }
 
 before(async () => {
@@ -382,26 +382,17 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(v.status, 200)
     assert.equal(modelIstekleri.at(-1)?.stream, true, 'ses yolu modeli akışla çağırır')
     assert.ok(!v.parcalar[0].startsWith('Bakıyorum'), 'bekletme sözü yok — ilk parça doğrudan cevap')
-    assert.match(v.parcalar[0], /öksürük vardı\./, 'ilk cümle turun bitmesini beklemez')
-    assert.ok(v.parcalar.length >= 2, 'bitmiş cümleler ayrı ayrı gider')
+    assert.ok(v.parcalar.length >= 3, 'cevap tek parça değil, cümle cümle akar')
     assert.ok(!v.metin.includes('0532'), v.metin)
     assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
 
     const e = await sesEkrani(b)
     assert.equal(e.turlar.at(-1)?.metin, t.speech, 'ses turunun ekranı yazılı cevapla aynı')
-    assert.match(e.turlar.at(-1)?.soru || '', /Umutcan/, 'ekran turu doktorun cümlesini de taşır')
     assert.equal(t.speech, ekranMetni)
-    // Aynı model isteği (sistem, geçmiş, araçlar) — farklar yalnız stream bayrağı ve hasta dosyası bloğu:
-    // NOTYA-SES-BAGLAM-KUCULT-01 sesli tur tam dosya yerine kısa, güvenlik-tam özeti taşır.
+    // Aynı model isteği (sistem, geçmiş, araçlar) — tek fark stream bayrağı
     const [ty, sy] = [JSON.parse(yaziIstegi), JSON.parse(modelIstekleri.at(-1)!.govde)]
     delete sy.stream
-    const dosyaBlogu = /=== AKTİF HASTA DOSYASI: [^\n]+ ===\n[\s\S]*?\n=== DOSYA SONU ===\n\[KURALLAR:[\s\S]*?doktorundur\.\]/
-    const sistemMetni = (r: { system: { text: string }[] }, h: string, d: string) => r.system.map((x) => x.text).join('\n').replace(new RegExp(h, 'g'), 'H').replace(new RegExp(d, 'g'), 'D')
-    const [sesSistem, yaziSistem] = [sistemMetni(sy, b.hasta, b.doktor.id), sistemMetni(ty, a.hasta, a.doktor.id)]
-    assert.match(sesSistem, /SESLİ GÖRÜŞME DOSYA ÖZETİ/)
-    assert.match(yaziSistem, /## VİZİT GEÇMİŞİ/)
-    assert.equal(sesSistem.replace(dosyaBlogu, '<DOSYA>'), yaziSistem.replace(dosyaBlogu, '<DOSYA>'))
-    assert.deepEqual(sy.tools, ty.tools)
+    assert.equal(JSON.stringify(sy.system).replace(new RegExp(b.hasta, 'g'), 'H').replace(new RegExp(b.doktor.id, 'g'), 'D'), JSON.stringify(ty.system).replace(new RegExp(a.hasta, 'g'), 'H').replace(new RegExp(a.doktor.id, 'g'), 'D'))
     assert.deepEqual(sy.messages, ty.messages)
   })
 
@@ -653,133 +644,5 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
     assert.equal(oturumu(s.oturum).patient_id, s.ayse)
     assert.equal(modelIstekleri.length, 1, 'model turu — yazı modelden sonra gelir (yarış gerçekten kurulur)')
     assert.ok(oturumu(s.oturum).messages.length >= 2, 'turun konuşması yine kaydedilir')
-  })
-})
-
-describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İlk-10 kanıtı aynen; yazı değişmedi', () => {
-  const oturumu = (id: string) => db.tablo('asistan_sessions').find((o) => o.id === id)!
-  const KANIT = 'AYŞE KLİNİK DOSYA SORGULAMA STANDARDI'
-  let F: typeof import('./tests/gercekciHasta')
-  let D: typeof import('../doktor/hastaDosyaKisa')
-  let S: typeof import('./sesDosya')
-  before(async () => {
-    F = await import('./tests/gercekciHasta')
-    D = await import('../doktor/hastaDosyaKisa')
-    S = await import('./sesDosya')
-  })
-  /** Gerçekçi hasta (14 vizit, 5 ilaç, 18 aşı, 22 lab) açık; her tur temiz geçmişle başlar. */
-  function gercekci() {
-    const s = sahne()
-    const h = F.gercekciHastaEkle(db, encrypt, s.doktor.id)
-    return { ...s, h }
-  }
-  function odakla(s: Sahne & { h: string }) {
-    oturumu(s.oturum).active_context = { specialty: 'pediatri', currentPatientId: s.h, patientName: F.GERCEKCI_HASTA_ADI }
-    oturumu(s.oturum).messages = []
-    modelIstekleri.length = 0
-  }
-  const sistem = () => {
-    // [0] asıl tur; "bana" gibi bir söz arka plan öğrenme çağrısını (sohbettenOgren) da tetikleyebilir.
-    assert.ok(modelIstekleri.length >= 1, 'model turu')
-    return (JSON.parse(modelIstekleri[0].govde).system as { text: string }[]).map((b) => b.text).join('\n')
-  }
-  async function paket(s: Sahne & { h: string }) {
-    const sb = db.istemci() as never
-    const p = (await (await import('../doktor/hastaDosyaDerleyici')).hastaDosyaPaketiniDerle(sb, s.doktor.id, s.h))!
-    const q = (await (await import('../doktor/dosyaOlaylari')).dosyaSorguVerisiDerle(sb, s.doktor.id, s.h))!
-    return { ...p, olaylar: q.olaylar }
-  }
-
-  it("kanal:'ses' + sıradan soru → yalnız kısa özet (tam dosya, kanıt yok)", async () => {
-    const s = gercekci()
-    for (const mesaj of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?']) {
-      odakla(s)
-      assert.equal((await ses({ sahne: s, mesaj })).status, 200)
-      const t = sistem()
-      assert.ok(t.includes(`=== AKTİF HASTA DOSYASI: ${F.GERCEKCI_HASTA_ADI} ===`), mesaj)
-      assert.ok(t.includes(D.SES_OZET_BASLIK), `${mesaj}: kısa özet`)
-      assert.ok(!t.includes('## VİZİT GEÇMİŞİ') && !t.includes('[TAM SOAP]') && !t.includes('## AŞILAR') && !t.includes('## BELGELER'), `${mesaj}: tam dosya gövdesi yok`)
-      assert.ok(!t.includes(KANIT), `${mesaj}: kanıt bloğu yok`)
-      assert.ok(t.includes('Tegretol') && t.includes('Penisilin') && t.includes('SpO₂ %91'), `${mesaj}: güvenlik bilgisi özette`)
-    }
-  })
-
-  it("kanal:'ses' + İlk-10 sorusu → kısa özet + kanıt bloğu (ikisi de); kanıt yazıdakiyle aynı", async () => {
-    const s = gercekci()
-    odakla(s)
-    yanit = { metin: JSON.stringify({ speech: `${F.GERCEKCI_HASTA_ADI} — özet.` }) }
-    await ses({ sahne: s, mesaj: 'Bu hastayı bana kısaca özetler misin?' })
-    const t = sistem()
-    assert.ok(t.includes(D.SES_OZET_BASLIK), 'kısa özet')
-    assert.ok(t.includes(KANIT), 'kanıt bloğu')
-    assert.ok(!t.includes('## VİZİT GEÇMİŞİ'), 'tam dosya gövdesi yok')
-    const kanitSes = t.slice(t.indexOf(KANIT))
-
-    odakla(s)
-    await yazi(s, 'Bu hastayı bana kısaca özetler misin?', s.oturum)
-    const y = sistem()
-    assert.ok(y.includes('## VİZİT GEÇMİŞİ') && y.includes(KANIT), 'yazı: tam dosya + kanıt')
-    assert.equal(kanitSes, y.slice(y.indexOf(KANIT)), 'kanıt bloğu (ve sonrası) iki kanalda bayt bayt aynı')
-  })
-
-  it("kanal:'yazi' → soru türünden bağımsız TAM dosya (değişmedi)", async () => {
-    const s = gercekci()
-    for (const mesaj of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?', 'Geçen sonbaharda kulak için ne yazmıştık?']) {
-      odakla(s)
-      await yazi(s, mesaj, s.oturum)
-      const t = sistem()
-      assert.ok(t.includes('## VİZİT GEÇMİŞİ') && t.includes('[TAM SOAP]') && t.includes('## AŞILAR'), `${mesaj}: tam dosya`)
-      assert.ok(!t.includes(D.SES_OZET_BASLIK), `${mesaj}: kısa özet yok`)
-      assert.ok(t.includes('Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur'), `${mesaj}: tam dosyanın kuralları aynen`)
-    }
-  })
-
-  it("kanal:'ses' + özette olmayan kaydı soran tur (eski vizit, tarih, görüntüleme) → tam dosya — \"dosyada yok\" denmesin", async () => {
-    const s = gercekci()
-    odakla(s)
-    await ses({ sahne: s, mesaj: 'Geçen sonbaharda kulak için ne yazmıştık?' })
-    const t = sistem()
-    assert.ok(t.includes('## VİZİT GEÇMİŞİ') && !t.includes(D.SES_OZET_BASLIK))
-    for (const m of ['Merhaba Ayşe, nasılsınız?', 'Bu hastaya sefuroksim versem olur mu?', 'teşekkürler', 'ibuprofen dozu ne olmalı']) assert.equal(S.sesTamDosyaGerekirMi(m), false, m)
-    for (const m of ['önceki vizitte ne demiştik', 'röntgen sonucu neydi', 'epikrizde ne yazıyor', 'mart ayında geldiğinde', 'Tegretol ne zaman başlandı']) assert.equal(S.sesTamDosyaGerekirMi(m), true, m)
-  })
-
-  it('kısa özet tam dosyanın yarısından küçük', async () => {
-    const s = gercekci()
-    const p = await paket(s)
-    const kisa = D.hastaOzetiKisa(p)
-    assert.ok(kisa.length * 2 < p.metin.length, `${kisa.length} / ${p.metin.length}`)
-  })
-
-  it('güvenlik olguları kısa özette: alerji, alerji çatışması, bütün aktif ilaçlar, etkileşim, KRİTİK, acil bayrak, kronik tanı, kilo, kan grubu', async () => {
-    const s = gercekci()
-    const p = await paket(s)
-    const kisa = D.hastaOzetiKisa(p)
-    const G = F.GUVENLIK_OLGULARI
-    assert.ok(kisa.includes(`Alerji: ${G.alerji}`), 'alerji (HIZLI KART)')
-    assert.ok(kisa.includes(G.alerjiCatismasi), 'penisilin alerjisi ↔ Augmentin reçetesi')
-    for (const ilac of G.aktifIlaclar) assert.ok(kisa.includes(`- ${ilac}`), `aktif ilaç ${ilac}`)
-    assert.match(kisa, /İlaç etkileşimi \(ciddi\): Karbamazepin \+ "Klacid"/, 'Tegretol ↔ Klacid')
-    assert.ok(kisa.includes(`⚠ KRİTİK`) && kisa.includes(G.kritik), 'kritik bulgu')
-    assert.ok(kisa.includes('⚠ acil bayrak') && kisa.includes(G.acilBelge), 'acil bayraklı belge')
-    assert.match(kisa, new RegExp(`G40\\.9 ${G.kronik}`), 'kronik hastalık vizit tanısından')
-    assert.ok(kisa.includes(`Güncel kilo: ${G.kilo}`), 'doz için kilo')
-    assert.ok(kisa.includes(G.kanGrubu), 'kan grubu')
-    // Tam dosyanın ilaç bölümü satır satır ve her KRİTİK satırı kısa özette.
-    const bolum = p.metin.split('## SÜREKLİ / KAYITLI İLAÇLAR\n')[1].split('\n\n')[0].split('\n').filter(Boolean)
-    for (const satir of bolum) assert.ok(kisa.includes(satir), `ilaç satırı: ${satir}`)
-    for (const k of p.metin.split('\n').filter((x) => x.startsWith('KRİTİK:'))) assert.ok(kisa.includes(k.slice(8).trim()), k)
-    // Bulk düşer.
-    for (const baslik of ['## VİZİT GEÇMİŞİ', '## AŞILAR', '## ONAYLI LAB', '## GÖRÜNTÜLEME', '## BELGELER', '## RANDEVULAR']) assert.ok(!kisa.includes(baslik), baslik)
-  })
-
-  it('eski önbellek satırı (kart / olay dizini yok): metinden ilaç, kritik bulgu ve HIZLI KART yine gelir', async () => {
-    const s = gercekci()
-    const p = await paket(s)
-    const kisa = D.hastaOzetiKisa({ metin: p.metin, kart: {}, olaylar: [] })
-    assert.ok(kisa.includes('## HIZLI KART') && kisa.includes('Alerji: Penisilin'))
-    for (const ilac of F.GUVENLIK_OLGULARI.aktifIlaclar) assert.ok(kisa.includes(`- ${ilac}`), ilac)
-    assert.ok(kisa.includes(F.GUVENLIK_OLGULARI.kritik))
-    assert.match(kisa, /Epilepsi/)
   })
 })

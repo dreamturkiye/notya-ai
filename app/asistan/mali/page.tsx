@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Conversation } from '@/components/AsistanConversation'
 import { isAndroid } from '@/lib/asistan/platform'
 import MaliNav from '@/components/mali/MaliNav'
-import { SES_CALAR } from '@/lib/asistan/sesCalar'
 
 // supabase: init inside async functions only
 type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
@@ -61,7 +60,6 @@ export default function MaliAsistanPage() {
       }
       const conv = await Conversation.startSession({
         signedUrl: signed_url, connectionType: 'websocket',
-        ...SES_CALAR,
         overrides: {
           agent: { language: 'tr' },
           tts: { voiceId: body.voice_id as string },
