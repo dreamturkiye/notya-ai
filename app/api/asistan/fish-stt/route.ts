@@ -40,7 +40,7 @@ async function fishAsrCagir(anahtar: string, bayt: Uint8Array): Promise<AsrDenem
         model: FISH_ASR_MODEL,
         'Content-Type': 'application/msgpack',
       },
-      body: fishAsrGovde(bayt),
+      body: Buffer.from(fishAsrGovde(bayt)),
       signal: kontrol.signal,
       cache: 'no-store',
     })
