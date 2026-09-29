@@ -2,7 +2,7 @@
  * Browser mic for Ayşe — one utterance, then silence. Echo cancellation on;
  * barge-in only while Haberci is speaking.
  */
-import { FISH_AZAMI_TUR_MS, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
+import { FISH_AZAMI_TUR_MS, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
 
 export async function fishAkisAc(): Promise<MediaStream> {
   return navigator.mediaDevices.getUserMedia({
@@ -47,6 +47,7 @@ export async function fishBirTurKaydet(
   let basladi = false
   let konusmaBas = 0
   let sessizBas = 0
+  let bargeMs = 0
 
   return new Promise((coz) => {
     let bitti = false
@@ -81,7 +82,9 @@ export async function fishBirTurKaydet(
       const ses = konusuyorMu(rms)
       const simdi = Date.now()
 
-      if (g.ajanKonusuyorMu() && ses) g.bargeIn()
+      const barge = bargeSayaci(bargeMs, g.ajanKonusuyorMu(), rms)
+      bargeMs = barge.ms
+      if (barge.kes) g.bargeIn()
 
       if (!basladi) {
         if (ses && !g.ajanKonusuyorMu()) {

@@ -99,6 +99,8 @@ test('yaşam döngüsü: provider kök düzende, /asistan kendi oturumunu açmaz
   const elOturum = ctx.indexOf('await startConversationWithoutFirstMessage')
   assert.ok(ayseDal > 0 && ayseDal < elOturum && ctx.slice(ayseDal, elOturum).includes('return'), 'Ayşe Fish yoluna ElevenLabs girmeden ayrılır')
   assert.ok(ctx.includes('startFishOturumu'), 'Ayşe tam Fish oturumu')
+  assert.ok(ctx.includes('await Promise.race([acilisSozu'), 'Açılış TTS bitmeden mikrofona bakılmaz')
+  assert.ok(ctx.includes('if (kendiSelamiMi(metin)) continue'), 'Fish kendi selamını STT echo sanmaz')
   assert.ok(ctx.includes('/api/asistan/fish-stt'), 'Ayşe kulağı Fish ASR')
   assert.ok(ctx.includes('/api/asistan/fish-tur'), 'Ayşe beyni EL Custom LLM değil')
   assert.ok(!ctx.includes("fishAcikRef.current ? 'Hocam.'"), 'Ayşe EL dummy selamı yok')

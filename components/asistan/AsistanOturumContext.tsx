@@ -514,6 +514,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishDinleNesilRef.current += 1
     const nesil = fishDinleNesilRef.current
     fishRef.current?.kapat()
+    let acilisBitti: (() => void) | null = null
+    const acilisSozu = new Promise<void>((r) => { acilisBitti = r })
+    const acilisiKapat = () => { acilisBitti?.(); acilisBitti = null }
     fishRef.current = fishCalarOlustur(async (metin, sinyal) => {
       const t = authTokenRef.current || await ensureDoctorAccessToken()
       if (!t) return null
@@ -526,19 +529,33 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       if (!r.ok || !r.body) return null
       return r.body
     }, {
-      onHata: () => { if (fishAcikRef.current) setStatus("listening") },
+      onHata: () => {
+        if (fishAcikRef.current) setStatus("listening")
+        acilisiKapat()
+      },
       onBasladi: () => { if (fishAcikRef.current) setStatus("speaking") },
       onDurdu: () => {
         const d = sesDevamRef.current
         d.ajanSustu = Date.now()
         d.mod = "listening"
         if (fishAcikRef.current) setStatus("listening")
+        acilisiKapat()
       },
     }, g.dokunus)
     await fishRef.current.hazirla()
     tekBeyinRef.current = { oturumId: g.tekBeyin.oturumId, sonra: g.tekBeyin.baslangic }
     setOrtakOturumId(g.tekBeyin.oturumId)
     if (g.sayfaHastasi) void odagiSayfayaAl(g.tekBeyin.oturumId, g.sayfaHastasi)
+    yoklamayiBaslat()
+    setErrorMsg("")
+    sureTimerlariBaslat(address(doctorProfile || { firstName: "Hocam" }, "named"))
+    addMsg("ai", g.firstMessage)
+    setStatus("speaking")
+    fishRef.current.soyle(g.firstMessage)
+    await Promise.race([acilisSozu, new Promise<void>((r) => setTimeout(r, 15_000))])
+    if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) return
+    await new Promise<void>((r) => setTimeout(r, 400))
+    if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) return
     const akis = await fishAkisAc()
     if (nesil !== fishDinleNesilRef.current) { fishAkisKapat(akis); return }
     fishMicRef.current = akis
@@ -550,12 +567,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       await ctx.resume().catch(() => undefined)
       return ctx
     })()
-    yoklamayiBaslat()
     setStatus("listening")
-    setErrorMsg("")
-    sureTimerlariBaslat(address(doctorProfile || { firstName: "Hocam" }, "named"))
-    addMsg("ai", g.firstMessage)
-    fishRef.current.soyle(g.firstMessage)
     void fishDinleDongusu(nesil, akis, baglam, g.p, g.tekBeyin.oturumId)
   }
 
@@ -580,6 +592,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       } catch { continue }
       if (nesil !== fishDinleNesilRef.current) return
       if (sesGurultusuMu(metin)) continue
+      if (kendiSelamiMi(metin)) continue
       if (asistaniKapatMi(metin)) {
         addMsg("user", metin)
         void endConversation()

@@ -6,7 +6,7 @@ export function ozgecmisAcilisiMi(metin: string): boolean {
 }
 
 /**
- * Bizim açılış cümlemiz. ElevenLabs bunu bazen doktorun sözü sanıp beyne geri yollar;
+ * Bizim açılış cümlemiz. Fish / ElevenLabs bunu bazen doktorun sözü sanıp beyne geri yollar;
  * o tur cevaplanmaz — yoksa asistan kendi selamına "İyiyim" deyip eldeki dosyadan vaka uydurur.
  */
 export function kendiSelamiMi(metin: string): boolean {
