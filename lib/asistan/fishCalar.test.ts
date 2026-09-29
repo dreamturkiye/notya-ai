@@ -1,5 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { fishBirlestir, fishYeniCumleler } from './fishCalar'
 
 test('ilk bitmiş cümle hemen söylenir, yarım cümle bekler, tam metin tekrar söylenmez', () => {
@@ -22,4 +25,10 @@ test('delta ya parça ya da biriken metnin tamamıdır', () => {
   assert.equal(fishBirlestir('Gerçekten ', 'kahve'), 'Gerçekten kahve')
   assert.equal(fishBirlestir('Gerçekten kahve', 'Gerçekten kahve içemem.'), 'Gerçekten kahve içemem.')
   assert.equal(fishBirlestir('Gerçekten kahve', 'kahve'), 'Gerçekten kahve')
+})
+
+test('caliyorMu yalnız çalan PCM — kuyruktaki TTS fetch dinlemeyi kilitlemez', () => {
+  const kaynak = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'fishCalar.ts'), 'utf8')
+  assert.match(kaynak, /caliyorMu:\s*\(\)\s*=>\s*calisiyor\s*,/)
+  assert.doesNotMatch(kaynak, /caliyorMu:\s*\(\)\s*=>\s*calisiyor\s*\|\|/)
 })

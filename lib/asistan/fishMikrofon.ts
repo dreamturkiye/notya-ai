@@ -3,7 +3,7 @@
  * Capture AudioContext is separate from Haberci playback. Analyser / ScriptProcessor
  * must reach destination (muted) or Safari reports silence and the turn never starts.
  */
-import { FISH_AZAMI_TUR_MS, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, klipGonderilirMi, onTamponuKirp, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
+import { FISH_AZAMI_TUR_MS, FISH_BARGE_ESIK, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, klipGonderilirMi, onTamponuKirp, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
 import { fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
 
 export { fishAsrDosyaAdi }
@@ -154,12 +154,19 @@ function pcmTurKaydet(
       if (barge.kes) g.bargeIn()
 
       if (ajan) {
-        // Ayşe is speaking: her own playback is never a doctor turn.
-        parcalar.length = 0
-        duydu = false
-        konusmaBas = 0
-        sessizBas = 0
-        sesliMs = 0
+        // Playback only — queued TTS fetch is not "she's talking". Keep doctor-level
+        // energy (barge threshold) so a question in the gap between sentences is not wiped.
+        if (rms >= FISH_BARGE_ESIK) {
+          if (!duydu) {
+            duydu = true
+            konusmaBas = simdi
+          }
+          parcalar.push(new Float32Array(ch))
+          sesliMs += kareMs
+          sessizBas = 0
+        } else if (!duydu) {
+          parcalar.length = 0
+        }
         return
       }
 
@@ -267,10 +274,19 @@ function mediaTurKaydet(
       if (barge.kes) g.bargeIn()
 
       if (ajan) {
-        duydu = false
-        konusmaBas = 0
-        sessizBas = 0
-        sesliMs = 0
+        if (rms >= FISH_BARGE_ESIK) {
+          if (!duydu) {
+            duydu = true
+            konusmaBas = simdi
+          }
+          sesliMs += 50
+          sessizBas = 0
+        } else if (!duydu) {
+          duydu = false
+          konusmaBas = 0
+          sessizBas = 0
+          sesliMs = 0
+        }
         setTimeout(tik, 50)
         return
       }

@@ -220,7 +220,7 @@ export function fishCalarOlustur(
       void oynat()
     },
     kes,
-    caliyorMu: () => calisiyor || sira.length > 0,
+    caliyorMu: () => calisiyor,
     kapat() {
       kapali = true
       kes()
