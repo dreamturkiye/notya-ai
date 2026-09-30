@@ -319,12 +319,25 @@ async function dogrudanIstemci(g: AiCagriGirdisi): Promise<AiIstemci> {
   return new AnthropicSdk({ apiKey: process.env.ANTHROPIC_API_KEY || '' }) as unknown as AiIstemci
 }
 
+/**
+ * NOTYA-AYSE-100 D1: the direct Anthropic path (koruyucu Sonnet 5) returns a leading `thinking` block even when no
+ * thinking is requested. Every consumer reads `content[0].type === 'text'` (ayseCevapla, soapUret, hafiza), so the
+ * fallback answer came back EMPTY. Thinking blocks carry nothing the product uses — drop them so `content[0]` is the text.
+ */
+export function dusunmeBloklariniAt<T extends { content?: unknown }>(yanit: T): T {
+  if (!yanit || !Array.isArray(yanit.content)) return yanit
+  const icerik = (yanit.content as { type?: string }[]).filter((b) => b?.type !== 'thinking' && b?.type !== 'redacted_thinking')
+  if (icerik.length === (yanit.content as unknown[]).length) return yanit
+  yanit.content = icerik
+  return yanit
+}
+
 async function tekCagri(g: AiCagriGirdisi, govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Anthropic.Message> {
   const model = String(govde.model)
   if (yolSec(model) === 'openrouter') return openRouterCagir(govde, zamanAsimiMs)
   const dogrudan = { ...govde, model: dogrudanModelAdi(model) }
   const istemci = await dogrudanIstemci(g)
-  return (await istemci.messages.create(dogrudan as never)) as Anthropic.Message
+  return dusunmeBloklariniAt((await istemci.messages.create(dogrudan as never)) as Anthropic.Message)
 }
 
 async function olcSessiz(g: AiCagriGirdisi, h: Hedef, yanit: Anthropic.Message): Promise<void> {
@@ -401,7 +414,7 @@ async function anthropicAkis(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: 
   const ham = (await istemci.messages.create(govde as never)) as unknown
   // Akış yerine tam mesaj dönen istemci (test sahtesi, vekil) → metni tek parça ver, aynen işle.
   if (!ham || typeof (ham as AsyncIterable<unknown>)[Symbol.asyncIterator] !== 'function') {
-    const tam = ham as Anthropic.Message
+    const tam = dusunmeBloklariniAt(ham as Anthropic.Message)
     const t = yanitMetni(tam)
     if (t) metinParcasi(t)
     try { await olc(g, govde, tam, h) } catch { /* ölçüm çağrıyı asla düşürmez */ }
@@ -437,7 +450,7 @@ async function anthropicAkis(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: 
     if (!bloklar[i]) return
     try { bloklar[i].input = j ? JSON.parse(j) : {} } catch { bloklar[i].input = {}; gecersizArgumanIsaretle(bloklar[i]) }
   })
-  const yanit = { model, content: bloklar.filter(Boolean), stop_reason: stopReason, usage } as unknown as Anthropic.Message
+  const yanit = dusunmeBloklariniAt({ model, content: bloklar.filter(Boolean), stop_reason: stopReason, usage } as unknown as Anthropic.Message)
   try { await olc(g, govde, yanit, h) } catch { /* ölçüm çağrıyı asla düşürmez */ }
   return yanit
 }

@@ -142,3 +142,21 @@ describe('ölçüm satırı — yalnız sayaç', () => {
     assert.equal(await aiCagir({ istemci, gorev: 'sohbet', messages: METIN }), null)
   })
 })
+
+describe('NOTYA-AYSE-100 D1 — direct Anthropic path drops leading thinking blocks', () => {
+  it('content[0] is the text block again, tool_use kept', async () => {
+    const { dusunmeBloklariniAt } = await import('./cagir')
+    const y = dusunmeBloklariniAt({ content: [{ type: 'thinking', thinking: '', signature: 'x' }, { type: 'text', text: '{"speech":"Merhaba"}' }, { type: 'tool_use', id: 't', name: 'a', input: {} }] })
+    assert.equal((y.content as { type: string }[])[0].type, 'text')
+    assert.equal((y.content as unknown[]).length, 2)
+  })
+  it('aiCagir on the direct path returns text at content[0] when the SDK answers with thinking first', async () => {
+    const eski = process.env.OPENROUTER_API_KEY
+    delete process.env.OPENROUTER_API_KEY
+    try {
+      const istemci = { messages: { create: async () => ({ model: 'claude-sonnet-5', content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: 'ok' }], stop_reason: 'end_turn', usage: {} }) } }
+      const y = await aiCagir({ gorev: 'sohbet-uzman', doctorId: 'd', system: 's', messages: [{ role: 'user', content: 'x' }], istemci: istemci as never })
+      assert.equal(y.content[0]?.type, 'text')
+    } finally { if (eski !== undefined) process.env.OPENROUTER_API_KEY = eski }
+  })
+})
