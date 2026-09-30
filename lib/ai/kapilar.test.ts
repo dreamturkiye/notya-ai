@@ -9,7 +9,7 @@ import assert from 'node:assert/strict'
 
 delete process.env.NEXT_PUBLIC_SUPABASE_URL
 
-import { aiAkis, aiCagir, kaliteKodu, TASIMA_BEKLEME, yanitKademesi, yanitMetni, type AiMesaj } from './cagir'
+import { aiAkis, aiCagir, AiCagriHatasi, kaliteKodu, TASIMA_BEKLEME, yanitKademesi, yanitMetni, type AiMesaj } from './cagir'
 import { MODEL_GUCLU, MODEL_HIZLI } from './modeller'
 import { devreDurumu, devreSifirla } from './devre'
 import { jsonOnar } from './jsonOnar'
@@ -268,5 +268,31 @@ describe('sesli akış (aiAkis)', () => {
     const y = await aiAkis({ istemci, gorev: 'sohbet', messages: METIN }, () => {})
     assert.deepEqual(modeller(), [MODEL_GUCLU])
     assert.equal(yanitKademesi(y)?.neden, 'devre')
+  })
+})
+
+describe('NOTYA_KORUYUCU_KAPALI (audit kill-switch)', () => {
+  afterEach(() => { delete process.env.NOTYA_KORUYUCU_KAPALI })
+  it('transport fall → 599 luna_fail:transport, koruyucu never called', async () => {
+    process.env.NOTYA_KORUYUCU_KAPALI = '1'
+    sira = [{ durum: 500 }, { durum: 500 }, tamam('koruyucu')]
+    await assert.rejects(aiCagir({ gorev: 'sohbet', messages: METIN }), (e: unknown) => e instanceof AiCagriHatasi && e.durum === 599 && e.govde === 'luna_fail:transport:http_500')
+    assert.deepEqual(modeller(), [MODEL_HIZLI, MODEL_HIZLI])
+  })
+  it('empty primary answer → 599 luna_fail:low_conf:bos', async () => {
+    process.env.NOTYA_KORUYUCU_KAPALI = '1'
+    sira = [tamam('  '), tamam('k')]
+    await assert.rejects(aiCagir({ gorev: 'sohbet', messages: METIN }), (e: unknown) => e instanceof AiCagriHatasi && e.govde === 'luna_fail:low_conf:bos')
+    assert.deepEqual(modeller(), [MODEL_HIZLI])
+  })
+  it('streaming: no text + broken tool call → 599, no koruyucu stream', async () => {
+    process.env.NOTYA_KORUYUCU_KAPALI = '1'
+    sira = [{ sse: [sse({ choices: [{ delta: { tool_calls: [{ index: 0, id: 't', function: { name: 'x', arguments: '{bozuk' } }] }, finish_reason: 'tool_calls' }] })] }, tamam('k')]
+    await assert.rejects(aiAkis({ gorev: 'sohbet', messages: METIN, araclar: [{ name: 'x', input_schema: {} }] }, () => {}), (e: unknown) => e instanceof AiCagriHatasi && e.durum === 599)
+    assert.deepEqual(modeller(), [MODEL_HIZLI])
+  })
+  it('unset → koruyucu still called', async () => {
+    sira = [{ durum: 500 }, { durum: 500 }, tamam('koruyucu')]
+    assert.equal(yanitKademesi(await aiCagir({ gorev: 'sohbet', messages: METIN }))?.neden, 'transport')
   })
 })

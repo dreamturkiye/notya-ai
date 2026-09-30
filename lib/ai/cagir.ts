@@ -344,9 +344,22 @@ async function olcSessiz(g: AiCagriGirdisi, h: Hedef, yanit: Anthropic.Message):
   try { await olc(g, h.govde, yanit, h) } catch { /* ölçüm çağrıyı asla düşürmez */ }
 }
 
+/**
+ * NOTYA-AYSE-100-LUNA: audit kill-switch. With NOTYA_KORUYUCU_KAPALI=1 the koruyucu (Sonnet 5) is never called — every
+ * fall that would have reached it throws AiCagriHatasi(599, "luna_fail:<neden>:<altKod>") so the primary's failure is
+ * visible instead of being papered over. Never set in production; the audit harness sets it.
+ */
+export function koruyucuKapali(): boolean {
+  return process.env.NOTYA_KORUYUCU_KAPALI === '1'
+}
+function koruyucuKapaliHatasi(neden: YukseltmeNedeni, altKod: string): AiCagriHatasi {
+  return new AiCagriHatasi(599, `luna_fail:${neden}:${altKod}`)
+}
+
 /** Koruyucuya tek çağrı (düşüş). Koruyucunun cevabı kapılardan geçmez — istek başına en fazla bir düşüş. */
 async function koruyucuCagri(g: AiCagriGirdisi, h: Hedef, neden: YukseltmeNedeni, altKod: string, istekId: string): Promise<Anthropic.Message> {
   dususGunlukle(istekId, g.gorev, neden, altKod)
+  if (koruyucuKapali()) throw koruyucuKapaliHatasi(neden, altKod)
   const t = gucluyeYukselt(h, neden)
   const y = await tekCagri(g, t.govde)
   await olcSessiz(g, t, y)
@@ -472,6 +485,7 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
   const istekId = istekKimligi(g)
   const guclu = async (neden: YukseltmeNedeni, altKod: string) => {
     dususGunlukle(istekId, g.gorev, neden, altKod)
+    if (koruyucuKapali()) throw koruyucuKapaliHatasi(neden, altKod)
     const t = gucluyeYukselt(h, neden)
     const { yanit } = await openRouterAkis(t.govde, metinParcasi)
     await olcSessiz(g, t, yanit)

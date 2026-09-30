@@ -6,7 +6,7 @@
  * Nothing is created or changed in production — the doctor's real charts can be read read-only.
  *
  *   npx tsx scripts/ayse-denetim/yuz.mts --doktor dr.gokhan@notya.ai [--etiket ayse-100] [--sadece 12,13,40]
- *     [--env .env.audit.local] [--tz America/New_York] [--kanal sohbet|ses]
+ *     [--env .env.audit.local] [--tz America/New_York] [--kanal sohbet|ses] [--koruyucu acik]
  *
  * Output: .denetim-out/<etiket>.jsonl (gitignored) — one row per question: answer, source (deterministic/model),
  * LLM calls, latency, automatic verdict. The markdown report is written by hand from that file.
@@ -31,6 +31,9 @@ const TZ = arg('tz') || 'America/New_York'
 const KANAL = (arg('kanal') || 'sohbet') as 'sohbet' | 'ses'
 const SADECE = arg('sadece')?.split(',').map(Number)
 const SORU_DOSYASI = arg('sorular') || path.join(process.cwd(), 'scripts', 'ayse-denetim', 'sorular-100.json')
+// NOTYA-AYSE-100-LUNA: the audit grades the PRIMARY model only. Default: koruyucu (Sonnet) disabled — a fall is a
+// FAIL logged as luna_fail:<neden>:<altKod>. `--koruyucu acik` restores production behaviour.
+if (arg('koruyucu') !== 'acik') process.env.NOTYA_KORUYUCU_KAPALI = '1'
 
 type Soru = {
   no: number; kat: string; oturum: string; soru: string
@@ -110,26 +113,42 @@ const supabase = new Proxy(gercek, {
   },
 }) as typeof gercek
 
-/* ---------- LLM call counter ---------- */
-const sayac = { cagri: 0, girdi: 0, cikti: 0, modeller: {} as Record<string, number> }
+/* ---------- LLM call counter + per-call log (model, status, finish_reason, shape, latency) ---------- */
+type Cagri = { model: string; durum: number; ms: number; bitis?: string; metin?: number; arac?: number; hata?: string; girdi?: number; cikti?: number; onbellek?: number; maliyet?: number }
+const sayac = { cagri: 0, girdi: 0, cikti: 0, onbellek: 0, maliyet: 0, modeller: {} as Record<string, number> }
+let cagriGunlugu: Cagri[] = []
+let yedekSatirlari: string[] = []
+const eskiWarn = console.warn
+console.warn = (...a: unknown[]) => { const m = a.map(String).join(' '); if (/\[ai\/(yedek|akis)\]/.test(m)) yedekSatirlari.push(m); eskiWarn(...a) }
 const gercekFetch = globalThis.fetch
 globalThis.fetch = (async (u: RequestInfo | URL, o?: RequestInit) => {
   const url = typeof u === 'string' ? u : u instanceof URL ? u.href : u.url
   const llm = /openrouter\.ai|api\.anthropic\.com/.test(url)
-  const r = await gercekFetch(u, o)
-  if (llm) {
-    sayac.cagri++
-    try {
-      const govde = o?.body ? JSON.parse(String(o.body)) as { model?: string } : {}
-      if (govde.model) sayac.modeller[govde.model] = (sayac.modeller[govde.model] || 0) + 1
-      const ct = r.headers.get('content-type') || ''
-      if (ct.includes('application/json')) {
-        const j = await r.clone().json() as { usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number } }
-        sayac.girdi += j.usage?.prompt_tokens ?? j.usage?.input_tokens ?? 0
-        sayac.cikti += j.usage?.completion_tokens ?? j.usage?.output_tokens ?? 0
-      }
-    } catch { /* sayaç kritik değil */ }
-  }
+  if (!llm) return gercekFetch(u, o)
+  const t0 = Date.now()
+  const govde = o?.body ? JSON.parse(String(o.body)) as { model?: string } : {}
+  const kayit: Cagri = { model: String(govde.model || '?'), durum: 0, ms: 0 }
+  sayac.cagri++
+  sayac.modeller[kayit.model] = (sayac.modeller[kayit.model] || 0) + 1
+  cagriGunlugu.push(kayit)
+  let r: Response
+  try { r = await gercekFetch(u, o) } catch (e) { kayit.ms = Date.now() - t0; kayit.hata = `ag:${String((e as Error)?.message || e).slice(0, 80)}`; throw e }
+  kayit.durum = r.status
+  try {
+    const ct = r.headers.get('content-type') || ''
+    if (ct.includes('application/json')) {
+      const j = await r.clone().json() as { usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number; cost?: number; prompt_tokens_details?: { cached_tokens?: number } }; error?: { message?: string }; choices?: { finish_reason?: string; message?: { content?: string | null; tool_calls?: unknown[]; refusal?: string } }[] }
+      kayit.girdi = j.usage?.prompt_tokens ?? j.usage?.input_tokens ?? 0
+      kayit.cikti = j.usage?.completion_tokens ?? j.usage?.output_tokens ?? 0
+      kayit.onbellek = j.usage?.prompt_tokens_details?.cached_tokens ?? 0
+      kayit.maliyet = Number(j.usage?.cost) || 0
+      sayac.girdi += kayit.girdi; sayac.cikti += kayit.cikti; sayac.onbellek += kayit.onbellek; sayac.maliyet += kayit.maliyet
+      if (j.error?.message) kayit.hata = `api:${String(j.error.message).slice(0, 120)}`
+      const c = j.choices?.[0]
+      if (c) { kayit.bitis = c.finish_reason; kayit.metin = (c.message?.content || '').length; kayit.arac = c.message?.tool_calls?.length || 0; if (c.message?.refusal) kayit.hata = `refusal:${String(c.message.refusal).slice(0, 80)}` }
+    } else if (!r.ok) kayit.hata = `http:${(await r.clone().text().catch(() => '')).slice(0, 120)}`
+  } catch { /* sayaç kritik değil */ }
+  kayit.ms = Date.now() - t0
   return r
 }) as typeof fetch
 
@@ -167,6 +186,7 @@ const secilen = SORULAR.filter((s) => !SADECE || SADECE.includes(s.no))
 let gecti = 0
 for (const s of secilen) {
   const oncekiCagri = sayac.cagri
+  cagriGunlugu = []; yedekSatirlari = []
   const t0 = Date.now()
   const oturumId = oturumKimlikleri.get(s.oturum) ?? null
   let ekran = ''
@@ -185,10 +205,11 @@ for (const s of secilen) {
   const cagri = sayac.cagri - oncekiCagri
   const eksik = (s.icerir || []).filter((re) => !new RegExp(re, 'iu').test(ekran))
   const fazla = (s.icermez || []).filter((re) => new RegExp(re, 'iu').test(ekran))
+  const lunaFail = /luna_fail:[a-z_]+:[a-z_0-9]+/.exec(hata)?.[0] || ''
   const otomatik = !hata && eksik.length === 0 && fazla.length === 0
   if (otomatik) gecti++
-  const satir = { no: s.no, kat: s.kat, oturum: s.oturum, soru: s.soru, hasta: s.hasta || null, cevap: ekran, aktifHasta, kaynak: cagri ? 'model' : 'deterministik', llm: cagri, ms, otomatik, eksik, fazla, hata, not: s.not || '' }
+  const satir = { no: s.no, kat: s.kat, oturum: s.oturum, soru: s.soru, hasta: s.hasta || null, cevap: ekran, aktifHasta, kaynak: cagri ? 'model' : 'deterministik', llm: cagri, ms, otomatik, eksik, fazla, hata, lunaFail, cagrilar: cagriGunlugu, yedek: yedekSatirlari, not: s.not || '' }
   fs.appendFileSync(jsonl, JSON.stringify(satir) + '\n')
-  console.log(`${String(s.no).padStart(3)} ${otomatik ? 'OK ' : 'FAIL'} ${s.kat.padEnd(10)} ${cagri ? 'model' : 'determ'} ${(ms / 1000).toFixed(1)}s  ${s.soru.slice(0, 60)}`)
+  console.log(`${String(s.no).padStart(3)} ${otomatik ? 'OK ' : 'FAIL'} ${s.kat.padEnd(10)} ${cagri ? 'model' : 'determ'} ${(ms / 1000).toFixed(1)}s  ${s.soru.slice(0, 60)}${lunaFail ? '  ' + lunaFail : ''}`)
 }
 console.log(JSON.stringify({ toplam: secilen.length, gecti, kaldi: secilen.length - gecti, llm: sayac, yutulanYazmalar, dosya: path.relative(process.cwd(), jsonl) }))
