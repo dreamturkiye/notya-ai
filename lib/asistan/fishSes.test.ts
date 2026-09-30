@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishModel, fishSayiOku, fishRakamlariOku } from './fishSes'
 import { pcmdenWav } from './fishMikrofon'
 
 function msgpackAsrOku(b: Uint8Array): { audio: Uint8Array; language: string; ignore_timestamps: boolean } {
@@ -78,7 +78,7 @@ test('Fish isteği kilitli: haber sesi, hız 1, s2.1-pro, duygu yok', () => {
   assert.equal(FISH_HIZ, 1)
   assert.equal(govde.temperature, 0.7)
   assert.equal(govde.latency, 'low')
-  assert.equal(govde.chunk_length, 160)
+  assert.equal(govde.chunk_length, 100)
   assert.equal(govde.text, 'Amoksisilin elli miligram. [break] Aşı yapılmaz.')
   assert.equal(fishIstegi('[excited]'), null)
 })
@@ -158,4 +158,13 @@ test('fishAsrDilUyumluMu — non-Latin script or empty transcript is junk', () =
   assert.equal(fishAsrDilKoduUyumluMu('tr'), true)
   assert.equal(fishAsrDilKoduUyumluMu('cs'), false)
   assert.equal(fishAsrDilKoduUyumluMu('zh'), false)
+})
+
+test('Fish model switch: NOTYA_FISH_MODEL picks a documented model, anything else stays s2.1-pro', () => {
+  assert.equal(fishModel(undefined), 's2.1-pro')
+  assert.equal(fishModel(''), 's2.1-pro')
+  assert.equal(fishModel('s2-pro'), 's2-pro')
+  assert.equal(fishModel(' S1 '), 's1')
+  assert.equal(fishModel('s2.1-pro-free'), 's2.1-pro', 'free tier measured 2.3x slower — never selectable')
+  assert.equal(fishModel('gpt'), 's2.1-pro')
 })

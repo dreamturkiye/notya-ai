@@ -534,6 +534,23 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     }
   }
 
+  async function fishTurIsit(oturumId: string) {
+    try {
+      const t = authTokenRef.current || await ensureDoctorAccessToken()
+      if (!t || !fishAcikRef.current) return
+      const kontrol = new AbortController()
+      const zaman = setTimeout(() => kontrol.abort(), 8000)
+      await fetch("/api/asistan/fish-tur", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ isit: true, asistanSessionId: oturumId }),
+        signal: kontrol.signal,
+        keepalive: true,
+      }).catch(() => null)
+      clearTimeout(zaman)
+    } catch { /* warm-up only */ }
+  }
+
   async function startFishOturumu(g: {
     p: Persona
     firstMessage: string
@@ -583,6 +600,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       },
     }, g.dokunus)
     await fishRef.current.hazirla()
+    // NOTYA-FISH-HAVUZ-01: mic is granted — warm the turn route now (Fish socket pre-open + keep-alive
+    // agent), so the doctor's first sentence never pays a Fish cold start. Best effort, never awaited.
+    void fishTurIsit(g.tekBeyin.oturumId)
     tekBeyinRef.current = { oturumId: g.tekBeyin.oturumId, sonra: g.tekBeyin.baslangic }
     setOrtakOturumId(g.tekBeyin.oturumId)
     if (g.sayfaHastasi) void odagiSayfayaAl(g.tekBeyin.oturumId, g.sayfaHastasi)

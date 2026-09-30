@@ -10,6 +10,11 @@
  * handshake overlaps ASR. Socket failure before the first word: no `ses_hazir`, browser speaks
  * via /fish-ses as before. Failure mid-turn: `ses_dus` with the transcript offset already handed
  * to Fish; the browser speaks the rest via REST.
+ *
+ * NOTYA-FISH-HAVUZ-01 — the turn's socket comes from fishWsHavuzu(): a socket pre-opened when the
+ * previous turn ended (or by the `isit` warm-up the browser sends once the mic is granted), so the
+ * doctor's sentence never waits for a Fish handshake. `{ isit: true, asistanSessionId }` warms
+ * this instance (socket pre-open + one tiny REST TTS on the keep-alive agent) and returns JSON.
  */
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -18,7 +23,9 @@ import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { fishAsrBlob } from '@/lib/asistan/fishAsr'
 import { FISH_KLIP_AZAMI_BAYT, fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
 import { KelimeKesici, fishWsAcikMi, pcmBase64 } from '@/lib/asistan/fishWs'
-import { fishWsAc, type FishWsOturumu } from '@/lib/asistan/fishWsSunucu'
+import { fishWsHavuzu } from '@/lib/asistan/fishWsHavuz'
+import type { FishWsOturumu } from '@/lib/asistan/fishWsSunucu'
+import { fishIsinma } from '@/lib/asistan/fishIsinma'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
@@ -49,6 +56,7 @@ async function turGirdi(req: NextRequest): Promise<{
   patientId: string
   ses: string
   saatDilimi: string | null
+  isit: boolean
 } | null> {
   const ct = req.headers.get('content-type') || ''
   if (ct.includes('multipart/form-data')) {
@@ -64,6 +72,7 @@ async function turGirdi(req: NextRequest): Promise<{
       patientId: str(form.get('patientId')),
       ses: str(form.get('ses')),
       saatDilimi: str(form.get('saatDilimi')) || null,
+      isit: str(form.get('isit')) === '1',
     }
   }
   const govde = (await req.json().catch(() => null)) as Record<string, unknown> | null
@@ -77,6 +86,7 @@ async function turGirdi(req: NextRequest): Promise<{
     patientId: str(govde.patientId),
     ses: str(govde.ses),
     saatDilimi: str(govde.saatDilimi) || null,
+    isit: govde.isit === true || govde.isit === '1',
   }
 }
 
@@ -106,6 +116,16 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
   if (!oturum) return new Response(JSON.stringify({ error: 'Oturum bulunamadı' }), { status: 404 })
 
+  if (girdi.isit) {
+    const anahtar = process.env.FISH_API_KEY || ''
+    if (!anahtar) return new Response(JSON.stringify({ error: 'Ses motoru yok' }), { status: 503 })
+    const ws = fishWsAcikMi()
+    if (ws) fishWsHavuzu().hazirla(anahtar)
+    const sonuc = await fishIsinma(anahtar)
+    console.info('[fish-isinma]', { ws, ...sonuc })
+    return new Response(JSON.stringify({ ok: true, ws, ...sonuc }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+  }
+
   // NOTYA-TAKVIM-TZ-01: doctor's timezone — body first, then the notya_tz cookie, then TRT.
   const saatDilimi = saatDilimiSec(girdi.saatDilimi, istekSaatDilimi())
   const istenenHasta = girdi.patientId
@@ -131,6 +151,7 @@ export async function POST(req: NextRequest) {
       let wsAktif = false
       let wsBildirildi = false
       let wsHata: string | null = null
+      let havuzdan = false
       let sesBayt = 0
       let ilkSesMs: number | null = null
       const dus = (neden: string) => {
@@ -141,15 +162,19 @@ export async function POST(req: NextRequest) {
         wsOturum?.kapat()
       }
       const wsHazir: Promise<boolean> = wsIstendi
-        ? fishWsAc({
-            anahtar,
-            onSes: (pcm) => {
-              if (ilkSesMs === null) ilkSesMs = Date.now() - t0
-              sesBayt += pcm.byteLength
-              if (wsAktif) gonder({ t: 'ses', b: pcmBase64(pcm) })
-            },
-            onHata: dus,
-          }).then((o) => { wsOturum = o; return !kapali }).catch((e) => { wsHata = e instanceof Error ? e.message : 'hata'; return false })
+        ? fishWsHavuzu().al(anahtar).then(({ oturum, havuzdan: h }) => {
+            oturum.bagla({
+              onSes: (pcm) => {
+                if (ilkSesMs === null) ilkSesMs = Date.now() - t0
+                sesBayt += pcm.byteLength
+                if (wsAktif) gonder({ t: 'ses', b: pcmBase64(pcm) })
+              },
+              onHata: dus,
+            })
+            wsOturum = oturum
+            havuzdan = h
+            return !kapali
+          }).catch((e) => { wsHata = e instanceof Error ? e.message : 'hata'; return false })
         : Promise.resolve(false)
       const asrSozu = girdi.audio
         ? fishAsrBlob(anahtar, girdi.audio, '[fish-tur]')
@@ -178,7 +203,7 @@ export async function POST(req: NextRequest) {
         }
         if (wsIstendi) {
           console.info('[fish-ws]', {
-            ws: wsAktif ? 'tam' : (wsBildirildi && wsHata ? 'dustu' : 'acilmadi'), hata: wsHata, ilk_ses_ms: ilkSesMs,
+            ws: wsAktif ? 'tam' : (wsBildirildi && wsHata ? 'dustu' : 'acilmadi'), hata: wsHata, havuzdan, ilk_ses_ms: ilkSesMs,
             ses_bayt: sesBayt, karakter: kesici.birikim.length, sure_ms: Date.now() - t0,
           })
         }
@@ -240,6 +265,8 @@ export async function POST(req: NextRequest) {
       } finally {
         kapali = true
         void wsHazir.then(() => wsOturum?.kapat())
+        // NOTYA-FISH-HAVUZ-01: the next sentence's socket opens while the doctor listens.
+        if (wsIstendi) fishWsHavuzu().hazirla(anahtar)
         try { controller.close() } catch { /* */ }
       }
     },

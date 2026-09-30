@@ -6,7 +6,17 @@
 import WebSocket from 'ws'
 import { FISH_WS_ACILIS_MS, FISH_WS_BITIS_MS, FISH_WS_DUR, FISH_WS_URL, fishWsBaslangic, fishWsKodla, fishWsMetinOlayi, fishWsModel, fishWsOlayCoz } from '@/lib/asistan/fishWs'
 
+export type FishWsDinleyici = {
+  onSes: (pcm: Uint8Array) => void
+  /** Socket died mid-turn (after open). The route falls back to REST for the rest of the text. */
+  onHata: (neden: string) => void
+}
+
 export type FishWsOturumu = {
+  /** NOTYA-FISH-HAVUZ-01: a pre-opened socket gets its turn's listeners here, before the first `metin`. */
+  bagla: (d: FishWsDinleyici) => void
+  /** Milliseconds since the socket opened — the pool drops sockets older than FISH_WS_HAVUZ_YAS_MS. */
+  yas: () => number
   /** Queue one finished word-group. Returns false when the socket is gone. */
   metin: (cumle: string) => boolean
   /** No more text: ask Fish to finish; resolves when the last audio frame arrived (or timeout / error). */
@@ -19,9 +29,9 @@ export type FishWsOturumu = {
 
 export type FishWsGirdi = {
   anahtar: string
-  onSes: (pcm: Uint8Array) => void
-  /** Socket died mid-turn (after open). The route falls back to REST for the rest of the text. */
-  onHata: (neden: string) => void
+  /** Optional at open time: a pooled socket is opened before its turn exists and bound later with `bagla`. */
+  onSes?: (pcm: Uint8Array) => void
+  onHata?: (neden: string) => void
   url?: string
 }
 
@@ -33,6 +43,8 @@ export function fishWsAc(g: FishWsGirdi): Promise<FishWsOturumu> {
     let toplam = 0
     let ilkSesMs: number | null = null
     const t0 = Date.now()
+    let acilisMs = 0
+    const dinleyici: FishWsDinleyici = { onSes: g.onSes ?? (() => {}), onHata: g.onHata ?? (() => {}) }
     const ws = new WebSocket(g.url || FISH_WS_URL, {
       headers: { Authorization: `Bearer ${g.anahtar}`, model: fishWsModel() },
       perMessageDeflate: false,
@@ -57,9 +69,12 @@ export function fishWsAc(g: FishWsGirdi): Promise<FishWsOturumu> {
 
     ws.on('open', () => {
       acik = true
+      acilisMs = Date.now()
       clearTimeout(acilisZamani)
       if (!gonder(fishWsBaslangic())) { reddet(new Error('ws_start')); kapat(); return }
       coz({
+        bagla: (d) => { dinleyici.onSes = d.onSes; dinleyici.onHata = d.onHata },
+        yas: () => Date.now() - acilisMs,
         metin: (cumle) => {
           const olay = fishWsMetinOlayi(cumle)
           if (!olay) return true
@@ -69,7 +84,7 @@ export function fishWsAc(g: FishWsGirdi): Promise<FishWsOturumu> {
           if (kapali) { r(); return }
           bitisCoz = r
           if (!gonder(FISH_WS_DUR)) { kapat(); return }
-          setTimeout(() => { if (!kapali) { g.onHata('ws_bitis_zaman'); kapat() } }, FISH_WS_BITIS_MS)
+          setTimeout(() => { if (!kapali) { dinleyici.onHata('ws_bitis_zaman'); kapat() } }, FISH_WS_BITIS_MS)
         }),
         kapat,
         acik: () => acik && !kapali,
@@ -86,9 +101,9 @@ export function fishWsAc(g: FishWsGirdi): Promise<FishWsOturumu> {
         if (!olay.ses.byteLength) return
         if (ilkSesMs === null) ilkSesMs = Date.now() - t0
         toplam += olay.ses.byteLength
-        g.onSes(olay.ses)
+        dinleyici.onSes(olay.ses)
       } else if (olay.tur === 'finish') {
-        if (olay.neden && olay.neden !== 'stop') g.onHata(`finish_${olay.neden}`)
+        if (olay.neden && olay.neden !== 'stop') dinleyici.onHata(`finish_${olay.neden}`)
         kapat()
       } else if (olay.tur === 'log') {
         console.info('[fish-ws]', { log: olay.mesaj.slice(0, 200) })
@@ -97,7 +112,7 @@ export function fishWsAc(g: FishWsGirdi): Promise<FishWsOturumu> {
     ws.on('error', (e) => {
       const neden = e instanceof Error ? e.message.slice(0, 120) : 'hata'
       if (!acik) { clearTimeout(acilisZamani); kapat(); reddet(new Error(neden)); return }
-      if (!kapali) g.onHata(neden)
+      if (!kapali) dinleyici.onHata(neden)
       kapat()
     })
     ws.on('unexpected-response', (_req, res) => {
