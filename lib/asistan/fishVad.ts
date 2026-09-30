@@ -60,3 +60,35 @@ export function rmsHesapla(ornek: ArrayLike<number>): number {
 export function konusuyorMu(rms: number, esik = FISH_KONUSMA_ESIK): boolean {
   return rms >= esik
 }
+
+/* ---- NOTYA-SILERO-01: Silero VAD (in-browser, @ricky0123/vad-web) replaces the RMS gate when it loads. ---- */
+
+/** End-of-turn silence tail with Silero: speech probability does not flicker on breaths like RMS did. */
+export const FISH_SES_SIZLIGI_SILERO_MS = 350
+/** Silero speech probability thresholds (hysteresis: enter above, leave below). */
+export const FISH_SILERO_ESIK = 0.5
+export const FISH_SILERO_CIKIS_ESIK = 0.35
+/** A probability older than this (worklet stalled) is not trusted; the frame falls back to RMS. */
+export const FISH_SILERO_TAZELIK_MS = 250
+
+export type SileroOlasilik = { p: number; zaman: number } | null
+
+/** Hysteresis gate on Silero's speech probability. `onceki` is last frame's decision. */
+export function sileroKonusuyorMu(p: number, onceki: boolean, esik = FISH_SILERO_ESIK, cikis = FISH_SILERO_CIKIS_ESIK): boolean {
+  if (!(p >= 0)) return false
+  return onceki ? p >= cikis : p >= esik
+}
+
+/**
+ * Per-frame speech decision: Silero when a fresh probability exists, RMS otherwise.
+ * Barge-in stays on RMS on purpose — Silero hears Ayşe's own speaker leak as speech.
+ */
+export function kareKonusmasi(g: { rms: number; silero: SileroOlasilik; onceki: boolean; simdi: number }): { ses: boolean; kaynak: 'silero' | 'rms' } {
+  const s = g.silero
+  if (s && g.simdi - s.zaman <= FISH_SILERO_TAZELIK_MS) return { ses: sileroKonusuyorMu(s.p, g.onceki), kaynak: 'silero' }
+  return { ses: konusuyorMu(g.rms), kaynak: 'rms' }
+}
+
+export function sessizlikKuyrugu(kaynak: 'silero' | 'rms'): number {
+  return kaynak === 'silero' ? FISH_SES_SIZLIGI_SILERO_MS : FISH_SES_SIZLIGI_MS
+}

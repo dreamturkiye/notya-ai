@@ -3,7 +3,7 @@
  * Capture AudioContext is separate from Haberci playback. Analyser / ScriptProcessor
  * must reach destination (muted) or Safari reports silence and the turn never starts.
  */
-import { FISH_AZAMI_TUR_MS, FISH_BARGE_ESIK, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, klipGonderilirMi, onTamponuKirp, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
+import { FISH_AZAMI_TUR_MS, FISH_BARGE_ESIK, FISH_MIN_KONUSMA_MS, bargeSayaci, kareKonusmasi, klipGonderilirMi, onTamponuKirp, rmsHesapla, sessizlikKuyrugu, type SileroOlasilik } from '@/lib/asistan/fishVad'
 import { fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
 
 export { fishAsrDosyaAdi }
@@ -74,6 +74,8 @@ type DinleGirdi = {
   iptal: () => boolean
   ajanKonusuyorMu: () => boolean
   bargeIn: () => void
+  /** NOTYA-SILERO-01: latest Silero speech probability, or null → RMS gate. */
+  silero?: () => SileroOlasilik
 }
 
 function dugumleriKopar(...dugum: AudioNode[]): void {
@@ -111,6 +113,8 @@ function pcmTurKaydet(
   let sessizBas = 0
   let bargeMs = 0
   let sesliMs = 0
+  let oncekiSes = false
+  let kaynakAdi: 'silero' | 'rms' = 'rms'
 
   return new Promise((coz) => {
     let bitti = false
@@ -127,7 +131,7 @@ function pcmTurKaydet(
       for (const p of parcalar) n += p.length
       const karar = klipGonderilirMi({ toplamMs: (n / baglam.sampleRate) * 1000, sesliMs })
       if (!karar.gonder) {
-        console.info('[fish-mic]', { atlandi: karar.neden, sesli_ms: Math.round(sesliMs), toplam_ms: Math.round((n / baglam.sampleRate) * 1000) })
+        console.info('[fish-mic]', { atlandi: karar.neden, vad: kaynakAdi, sesli_ms: Math.round(sesliMs), toplam_ms: Math.round((n / baglam.sampleRate) * 1000) })
         bitir(null)
         return
       }
@@ -145,8 +149,11 @@ function pcmTurKaydet(
       if (g.iptal()) { bitir(null); return }
       const ch = ev.inputBuffer.getChannelData(0)
       const rms = rmsHesapla(ch)
-      const ses = konusuyorMu(rms)
       const simdi = Date.now()
+      const kare = kareKonusmasi({ rms, silero: g.silero?.() ?? null, onceki: oncekiSes, simdi })
+      const ses = kare.ses
+      oncekiSes = ses
+      kaynakAdi = kare.kaynak
       const ajan = g.ajanKonusuyorMu()
 
       const barge = bargeSayaci(bargeMs, ajan, rms, (2048 / baglam.sampleRate) * 1000)
@@ -182,7 +189,7 @@ function pcmTurKaydet(
       } else if (duydu) {
         if (!sessizBas) sessizBas = simdi
         const konusmaMs = simdi - konusmaBas
-        if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= FISH_SES_SIZLIGI_MS) {
+        if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= sessizlikKuyrugu(kaynakAdi)) {
           turuBitir()
           return
         }
@@ -227,6 +234,8 @@ function mediaTurKaydet(
   let bargeMs = 0
   let sesliMs = 0
   let kayitBas = 0
+  let oncekiSes = false
+  let kaynakAdi: 'silero' | 'rms' = 'rms'
 
   return new Promise((coz) => {
     let bitti = false
@@ -265,8 +274,11 @@ function mediaTurKaydet(
       }
       olcer.getFloatTimeDomainData(ornek)
       const rms = rmsHesapla(ornek)
-      const ses = konusuyorMu(rms)
       const simdi = Date.now()
+      const kare = kareKonusmasi({ rms, silero: g.silero?.() ?? null, onceki: oncekiSes, simdi })
+      const ses = kare.ses
+      oncekiSes = ses
+      kaynakAdi = kare.kaynak
       const ajan = g.ajanKonusuyorMu()
 
       const barge = bargeSayaci(bargeMs, ajan, rms)
@@ -301,7 +313,7 @@ function mediaTurKaydet(
       } else if (duydu) {
         if (!sessizBas) sessizBas = simdi
         const konusmaMs = simdi - konusmaBas
-        if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= FISH_SES_SIZLIGI_MS) {
+        if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= sessizlikKuyrugu(kaynakAdi)) {
           try { kayit.stop() } catch { bitir(null) }
           return
         }
