@@ -22,13 +22,15 @@
 import { kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
-import { TARIH_IFADESI, bugunTz, cevaptakiTarih, goreliTarihCoz, saatDilimiSec } from '@/lib/randevu/tarihCozumle'
+import { TARIH_IFADESI, bugunTz, cevaptakiTarih, goreliTarihCoz, haftaAraligiCoz, saatDilimiSec } from '@/lib/randevu/tarihCozumle'
 
 export { sesGurultusuMu }
 
 export type TakvimSorusu = {
   tarih: string
   saat: string | null
+  /** NOTYA-AYSE-100 T1: "bu hafta / haftaya" without a weekday — Monday..Sunday, read day by day. */
+  aralik?: { bas: string; bit: string }
 }
 
 /** Doctor's IANA timezone (client `saatDilimi` → cookie → TRT) and the instant "now" (tests). */
@@ -39,7 +41,7 @@ const SAAT = /\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/
 /** Words that add nothing to a calendar question ("peki", "hocam", "acaba"…). */
 const DOLGU = new Set(['peki', 'hocam', 'acaba', 'ya', 'bir', 'de', 'da', 'e', 'ee', 'o', 'zaman', 'icin', 'bakalim', 'bakar', 'misin', 'misiniz', 'soyle', 'soyler', 've', 'ile', 'tamam', 'iyi', 'simdi', 'hic', 'hicbir', 'benim', 'bizim', 'ki', 'da', 'sonra', 'gun', 'gune', 'gunu', 'gunun'])
 /** Calendar question words allowed in the bare form ("yarın var mı", "yarın kaç hastam var", "yarın kimler geliyor"). */
-const TAKVIM_SORU = new Set(['var', 'mi', 'mu', 'yok', 'doluyum', 'dolu', 'muyum', 'muyuz', 'bos', 'bosum', 'bosuz', 'kac', 'hasta', 'hastam', 'hastamiz', 'hastalar', 'kimler', 'kim', 'geliyor', 'gelecek', 'gelir', 'ne', 'neler', 'program', 'programim', 'programimiz', 'durum', 'nasil', 'gunum', 'gunumuz', 'randevu', 'randevum', 'randevumuz', 'randevular', 'randevularim', 'randevularimiz', 'takvim', 'takvimim', 'takvimimiz', 'liste', 'listele', 'oku', 'goster', 'doluluk', 'yogun', 'yogunum', 'hastalarim', 'hastalarimiz'])
+const TAKVIM_SORU = new Set(['geldi', 'geldiler', 'gelmis', 'gelmisti', 'gelen', 'gelenler', 'gordum', 'baktim', 'gorunuyor', 'gozukuyor', 'bakiyor', 'yogunluk', 'gunumde', 'var', 'mi', 'mu', 'yok', 'doluyum', 'dolu', 'muyum', 'muyuz', 'bos', 'bosum', 'bosuz', 'kac', 'hasta', 'hastam', 'hastamiz', 'hastalar', 'kimler', 'kim', 'geliyor', 'gelecek', 'gelir', 'ne', 'neler', 'program', 'programim', 'programimiz', 'durum', 'nasil', 'gunum', 'gunumuz', 'randevu', 'randevum', 'randevumuz', 'randevular', 'randevularim', 'randevularimiz', 'takvim', 'takvimim', 'takvimimiz', 'liste', 'listele', 'oku', 'goster', 'doluluk', 'yogun', 'yogunum', 'hastalarim', 'hastalarimiz'])
 
 function normalize(mesaj: string | null | undefined): string {
   return ` ${trAramaNormalize(String(mesaj || '')).replace(/[?!.,;:’'"]+/g, ' ').replace(/\s+/g, ' ').trim()} `
@@ -95,7 +97,8 @@ export function takvimSorusuCoz(mesaj: string | null | undefined, secenek: Takvi
 
   const sm = ham.match(SAAT)
   const saat = sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null
-  return { tarih, saat }
+  const aralik = saat ? null : haftaAraligiCoz(n, tz, secenek.simdi)
+  return aralik ? { tarih: aralik.bas, saat, aralik } : { tarih, saat }
 }
 
 /** "Emin misin / bir daha bak" after a calendar answer — re-read, do not send to the model. */
@@ -106,7 +109,7 @@ export function takvimTakibiMi(mesaj: string | null | undefined): boolean {
 }
 
 export function sonTakvimCevabiMi(metin: string | null | undefined): boolean {
-  return /takvim(?:inizde|inde)\s+.{0,20}randevu/i.test(String(metin || ''))
+  return /takvim(?:inizde|inde)\s+.{0,20}randevu|haftas\w*\s+takvim/i.test(String(metin || ''))
 }
 
 /** Model recanting a system calendar fact (live: "doğrulamadan belirtmemeliydim" + Ana Sayfa). */
@@ -137,5 +140,7 @@ export function takvimTakipCoz(
   const tarih = goreliTarihCoz(n, tz, secenek.simdi)
   if (!tarih) return null
   const sm = String(mesaj || '').match(SAAT)
-  return { tarih, saat: sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null }
+  const saat = sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null
+  const aralik = saat ? null : haftaAraligiCoz(n, tz, secenek.simdi)
+  return aralik ? { tarih: aralik.bas, saat, aralik } : { tarih, saat }
 }

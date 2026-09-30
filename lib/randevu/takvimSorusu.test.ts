@@ -97,7 +97,7 @@ describe('takvimSorusu — doctor timezone and calendar follow-ups', () => {
       ['Peki yarın var mı hocam?', '2026-09-30'],
       ['peki öbür gün?', '2026-10-01'],
       ['Ya cuma?', '2026-10-02'],
-      ['haftaya', '2026-10-06'],
+      ['haftaya', '2026-10-05'],
       ['yarın', '2026-09-30'],
     ] as const) {
       const t = takvimTakipCoz(m, son, NY)
@@ -113,5 +113,26 @@ describe('takvimSorusu — doctor timezone and calendar follow-ups', () => {
 
   it('model sending the doctor to the menu is a recant', () => {
     assert.equal(takvimRecantMi('Yarının randevu listesi bu konuşmada görünmüyor; menüden Randevular bölümüne bakabilirsiniz.'), true)
+  })
+})
+
+describe('NOTYA-AYSE-100 T1 — week questions and past-tense calendar verbs', () => {
+  it('"bu hafta / haftaya" without a weekday is a Monday–Sunday range in the doctor tz', () => {
+    const a = takvimSorusuCoz('bu hafta kac randevum var', NY)
+    assert.deepEqual(a?.aralik, { bas: '2026-09-28', bit: '2026-10-04' })
+    const b = takvimSorusuCoz('haftaya nasil gorunuyor', NY)
+    assert.deepEqual(b?.aralik, { bas: '2026-10-05', bit: '2026-10-11' })
+    assert.equal(takvimSorusuCoz('haftaya cuma bos muyum', NY)?.aralik, undefined)
+    const takip = takvimTakipCoz('haftaya', '29 Eylül 2026 Salı takviminde randevu yok.', NY)
+    assert.deepEqual(takip?.aralik, { bas: '2026-10-05', bit: '2026-10-11' })
+  })
+  it('"dün kim geldi" / "haftaya nasıl görünüyor" are calendar lookups, not model turns', () => {
+    assert.equal(takvimSorusuCoz('dün kim geldi', NY)?.tarih, '2026-09-28')
+    assert.equal(takvimSorusuCoz('dun kimler gelmisti', NY)?.tarih, '2026-09-28')
+    assert.ok(takvimSorusuCoz('haftaya nasıl görünüyor', NY))
+    assert.equal(takvimSorusuCoz('dün gelen ateşli çocuk', NY), null)
+  })
+  it('the week answer is recognised as a calendar answer for follow-ups', () => {
+    assert.ok(sonTakvimCevabiMi('Bu hafta (28 Eylül – 4 Ekim) haftası takviminde 1 randevu. Pazartesi 28 Eylül: 11:30–11:50 R (muayene).'))
   })
 })

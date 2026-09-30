@@ -114,6 +114,22 @@ export function goreliTarihCoz(n: string, tz: string, simdi: Date = new Date()):
   return null
 }
 
+/**
+ * NOTYA-AYSE-100 T1: "bu hafta / haftaya / gelecek hafta" WITHOUT a weekday is a week, not one day. Monday–Sunday
+ * (Turkish week) in the doctor's timezone; `haftaya` = next week. Null when the text names a single day.
+ */
+export function haftaAraligiCoz(n: string, tz: string, simdi: Date = new Date()): { bas: string; bit: string } | null {
+  const t = ` ${String(n || '').trim()} `
+  if (HAFTA_GUNU.some(([re]) => re.test(t))) return null
+  if (/\b(20\d{2}-\d{2}-\d{2})\b/.test(t) || /\b\d{1,2} (ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)\b/.test(t)) return null
+  const haftaya = /\b(haftaya|gelecek hafta|onumuzdeki hafta|next week)\b/.test(t)
+  const buHafta = /\b(bu hafta|this week)\b/.test(t)
+  if (!haftaya && !buHafta) return null
+  const bugun = bugunTz(tz, simdi)
+  const pazartesi = isoGunKaydir(bugun, -haftaGunuIndeksi(bugun) + (haftaya ? 7 : 0))
+  return { bas: pazartesi, bit: isoGunKaydir(pazartesi, 6) }
+}
+
 const TR_AYLAR = ['ocak', 'subat', 'mart', 'nisan', 'mayis', 'haziran', 'temmuz', 'agustos', 'eylul', 'ekim', 'kasim', 'aralik']
 
 /** "30 Eylül 2026 Çarşamba takviminde …" (a stored calendar answer, normalized) → 2026-09-30. */

@@ -125,6 +125,32 @@ export function gunlukKonusmaMetni(g: {
   return soz.replace(/\s+/g, ' ').trim()
 }
 
+/**
+ * NOTYA-AYSE-100 T1: a week ("bu hafta / haftaya") is read day by day and summarised once — screen text names every
+ * appointment with its weekday, speech gives the count and the first two. The screen text keeps the
+ * "haftası takviminde … randevu" shape so `sonTakvimCevabiMi` recognises it and "peki cuma?" continues the lookup.
+ */
+export function haftalikOzetMetni(g: { bas: string; bit: string; gunler: { tarih: string; satirlar: GunlukSatir[] }[]; tz?: string | null; simdi?: Date }): { metin: string; konusma: string } {
+  const tz = saatDilimiSec(g.tz)
+  const bugun = bugunTz(tz, g.simdi)
+  const buHafta = g.bas <= bugun && bugun <= g.bit
+  const etiket = `${kisaTarihEtiketi(g.bas).replace(/ \S+$/, '')} – ${kisaTarihEtiketi(g.bit).replace(/ \S+$/, '')}`
+  const hafta = buHafta ? `Bu hafta (${etiket})` : `Haftaya (${etiket})`
+  const dolu = g.gunler.filter((d) => d.satirlar.length)
+  const n = dolu.reduce((t, d) => t + d.satirlar.length, 0)
+  if (!n) return { metin: `${hafta} haftası takviminde randevu yok.`, konusma: `${hafta} takviminizde randevu yok Hocam.` }
+  const liste = dolu
+    .map((d) => `${kisaTarihEtiketi(d.tarih)}: ${d.satirlar.map((s) => `${s.saat}–${s.bitisSaat} ${s.hastaAdi} (${s.tur})`).join('; ')}`)
+    .join('. ')
+  const metin = `${hafta} haftası takviminde ${n} randevu. ${liste}.`
+  const ilk = dolu[0].satirlar[0]
+  let konusma = n === 1
+    ? `${hafta} takviminizde 1 randevu var Hocam: ${kisaTarihEtiketi(dolu[0].tarih)} ${ilk.saat} ${ilk.hastaAdi} ${ilk.tur}.`
+    : `${hafta} takviminizde ${n} randevu var Hocam. İlki ${kisaTarihEtiketi(dolu[0].tarih)} ${ilk.saat} ${ilk.hastaAdi}.`
+  if (n >= 3) konusma += ' Ayrıntı ekranınızda.'
+  return { metin, konusma: konusma.replace(/\s+/g, ' ').trim() }
+}
+
 export function isoTrtSaat(iso: string): string {
   return isoSaatTz(iso, 'Europe/Istanbul')
 }

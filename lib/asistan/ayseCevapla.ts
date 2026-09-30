@@ -67,8 +67,8 @@ import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
 import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
 import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from "@/lib/randevu/takvimSorusu"
-import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni } from "@/lib/randevu/gunlukOzet"
-import { saatDilimiSec } from "@/lib/randevu/tarihCozumle"
+import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
+import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 
 export type Kanal = "yazi" | "ses"
 
@@ -257,7 +257,21 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // ASR pause ("...") after a true calendar line must not reach the model — it recants.
     return sade("", "", baglam.patientName ? String(baglam.patientName) : null)
   }
-  if (takvim) {
+  if (takvim?.aralik) {
+    // NOTYA-AYSE-100 T1: "bu hafta / haftaya" — seven day reads, one summary, no model.
+    try {
+      const { bas, bit } = takvim.aralik
+      const gunler: string[] = []
+      for (let g = bas; g <= bit && gunler.length < 7; g = isoGunKaydir(g, 1)) gunler.push(g)
+      const okunan = await Promise.all(gunler.map(async (tarih) => ({ tarih, satirlar: await doktorunGununuOku(supabase, doktorId, tarih, saatDilimi) })))
+      const hafta = haftalikOzetMetni({ bas, bit, gunler: okunan, tz: saatDilimi })
+      soyle(hafta.konusma)
+      await oturumuYaz(hafta.metin, {})
+      return sade(hafta.metin, hafta.konusma, baglam.patientName ? String(baglam.patientName) : null)
+    } catch (e) {
+      console.error("[asistan/chat] takvim hafta", e instanceof Error ? e.message : String(e))
+    }
+  } else if (takvim) {
     try {
       const satirlar = await doktorunGununuOku(supabase, doktorId, takvim.tarih, saatDilimi)
       const ozet = gunlukOzetMetni({
