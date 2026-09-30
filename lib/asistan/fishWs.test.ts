@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { msgpackKodla } from './fishMsgpack'
-import { CumleKesici, FISH_WS_DUR, FISH_WS_URL, base64Pcm, fishWsAcikMi, fishWsBaslangic, fishWsMetinOlayi, fishWsOlayCoz, pcmBase64, sesDusKesimi } from './fishWs'
+import { CumleKesici, KelimeKesici, FISH_WS_DUR, FISH_WS_URL, base64Pcm, fishWsAcikMi, fishWsBaslangic, fishWsMetinOlayi, fishWsOlayCoz, pcmBase64, sesDusKesimi } from './fishWs'
 import { FISH_HABER_SES_ID, FISH_ORNEK_HZ } from './fishSes'
 
 test('ws: start event carries the documented TTSRequest fields, pinned to our PCM/24k/low profile', () => {
@@ -12,7 +12,7 @@ test('ws: start event carries the documented TTSRequest fields, pinned to our PC
   assert.equal(s.request.format, 'pcm')
   assert.equal(s.request.sample_rate, FISH_ORNEK_HZ)
   assert.equal(s.request.latency, 'low')
-  assert.equal(s.request.chunk_length, 120)
+  assert.equal(s.request.chunk_length, 160)
   assert.equal(s.request.reference_id, FISH_HABER_SES_ID)
   assert.deepEqual(s.request.prosody, { speed: 1, volume: 0, normalize_loudness: true })
   assert.deepEqual(FISH_WS_DUR, { event: 'stop' })
@@ -46,6 +46,15 @@ test('ws: feature flag defaults ON and only 0/false/off revert to REST', () => {
   assert.equal(fishWsAcikMi('off'), false)
 })
 
+test('ws: word cutter feeds Fish as tokens arrive, not after a period; flushes the tail at the end', () => {
+  const k = new KelimeKesici()
+  assert.deepEqual(k.ekle('Merhaba'), [])
+  assert.deepEqual(k.ekle(' Hocam'), ['Merhaba'])
+  assert.deepEqual(k.ekle(' bugün'), ['Hocam'])
+  assert.deepEqual(k.bitir(), ['bugün'])
+  assert.equal(k.islenen, k.birikim)
+})
+
 test('ws: server cutter emits finished sentences as deltas arrive, flushes the tail at the end', () => {
   const k = new CumleKesici()
   assert.deepEqual(k.ekle('Merhaba '), [])
@@ -56,11 +65,11 @@ test('ws: server cutter emits finished sentences as deltas arrive, flushes the t
 })
 
 test('ws: ses_dus offset — text before it was handed to Fish, the rest is spoken via REST', () => {
-  const k = new CumleKesici()
-  k.ekle('Merhaba Hocam. Bugün üç hasta var. Sonra')
-  assert.equal(k.islenen, 'Merhaba Hocam. Bugün üç hasta var. ')
-  const birikim = 'Merhaba Hocam. Bugün üç hasta var. Sonra kontrol.'
-  assert.equal(sesDusKesimi(birikim, k.islenen.length), 'Merhaba Hocam. Bugün üç hasta var. ')
+  const k = new KelimeKesici()
+  k.ekle('Merhaba Hocam Bugün üç hasta var ')
+  assert.equal(k.islenen, 'Merhaba Hocam Bugün üç hasta var ')
+  const birikim = 'Merhaba Hocam Bugün üç hasta var Sonra kontrol.'
+  assert.equal(sesDusKesimi(birikim, k.islenen.length), 'Merhaba Hocam Bugün üç hasta var ')
   assert.equal(sesDusKesimi('kısa', 99), 'kısa')
   assert.equal(sesDusKesimi('kısa', -3), '')
 })

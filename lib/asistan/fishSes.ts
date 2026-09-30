@@ -2,12 +2,12 @@
  * NOTYA-FISH-AYSE-01 — Ayşe Kaya (pediatri) speaks with Fish Haberci (female), not ElevenLabs.
  *
  * Locked with Kaan, 2026-09-29: Haberci / Turkey host female, speed 1.0, no emotion,
- * language locked to Turkish, a short [break] between sentences. Model is the free
- * developer tier (s2.1-pro-free) through 30 Nov 2026. Other specialists stay on ElevenLabs.
+ * language locked to Turkish, a short [break] between sentences. TTS model for this
+ * cadence preview is s2.1-pro (paid). Other specialists stay on ElevenLabs.
  */
 
 export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
-export const FISH_MODEL = 's2.1-pro-free'
+export const FISH_MODEL = 's2.1-pro'
 export const FISH_ASR_MODEL = 'transcribe-1'
 /** ASR language is pinned to Turkish on every call — Fish's auto-detect mislabels short Turkish clips. */
 export const FISH_ASR_DIL = 'tr'
@@ -255,7 +255,7 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
       top_p: 0.7,
       normalize: false,
       latency: 'low',
-      chunk_length: 120,
+      chunk_length: 160,
       prosody: { speed: FISH_HIZ, volume: 0, normalize_loudness: true },
     },
   }

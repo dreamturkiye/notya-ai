@@ -2,7 +2,7 @@
  * NOTYA-FISH-AYSE-01 — playback we can cut the moment the doctor speaks.
  *
  * The server streams 24 kHz PCM (Fish `format: "pcm"`, `sample_rate: 24000`, 16-bit LE mono).
- * Playback starts once a small jitter buffer (FISH_TAMPON_MS) is in hand — not on the first
+ * Playback starts once a small jitter buffer (FISH_TAMPON_MS, 40 ms) is in hand — not on the first
  * byte and not after a full sentence — and chunks are scheduled back to back so sentences
  * run into each other without a gap. `kes` stops every scheduled buffer in the same turn.
  * NOTYA-FISH-WS-01: `akisAc` is a push source for PCM relayed over the turn SSE (one Fish
@@ -72,7 +72,7 @@ export function fishYeniCumleler(islenen: string, tam: string, bitir: boolean): 
 export type FishGetir = (metin: string, sinyal: AbortSignal) => Promise<ReadableStream<Uint8Array> | null>
 
 /** Audio in hand before the first source starts (≈ first 1–2 Fish PCM chunks). */
-export const FISH_TAMPON_MS = 120
+export const FISH_TAMPON_MS = 40
 /** After an underrun, wait for this much before resuming so one late chunk does not stutter. */
 export const FISH_TAMPON_YENIDEN_MS = 80
 /** Scheduling lead: a source must start at least this far ahead of the clock. */

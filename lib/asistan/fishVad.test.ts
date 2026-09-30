@@ -24,6 +24,7 @@ test('barge-in speaker sızıntısında kesmez, doktor mikrofonda süreyle keser
     kes = r.kes
   }
   assert.equal(kes, true)
+  assert.equal(FISH_BARGE_MS, 300)
   assert.ok(ms >= FISH_BARGE_MS)
   assert.deepEqual(bargeSayaci(ms, true, 0.03), { ms: 0, kes: false })
   assert.deepEqual(bargeSayaci(ms, false, 0.2), { ms: 0, kes: false })

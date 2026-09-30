@@ -65,11 +65,11 @@ test('Fish rakamları Türkçe okur — 57 fifty seven olmaz', () => {
   assert.equal(fishIstegi('…'), null)
 })
 
-test('Fish isteği kilitli: haber sesi, hız 1, ücretsiz model, duygu yok', () => {
+test('Fish isteği kilitli: haber sesi, hız 1, s2.1-pro, duygu yok', () => {
   const istek = fishIstegi('Amoksisilin elli miligram. Aşı yapılmaz.')
   assert.ok(istek)
   assert.equal(istek!.model, FISH_MODEL)
-  assert.equal(FISH_MODEL, 's2.1-pro-free')
+  assert.equal(FISH_MODEL, 's2.1-pro')
   const govde = istek!.govde
   assert.equal(govde.reference_id, '27d0d61d7dc8479da8dfd991ae3ad66b')
   assert.equal(govde.language, 'tr')
@@ -78,7 +78,7 @@ test('Fish isteği kilitli: haber sesi, hız 1, ücretsiz model, duygu yok', () 
   assert.equal(FISH_HIZ, 1)
   assert.equal(govde.temperature, 0.7)
   assert.equal(govde.latency, 'low')
-  assert.equal(govde.chunk_length, 120)
+  assert.equal(govde.chunk_length, 160)
   assert.equal(govde.text, 'Amoksisilin elli miligram. [break] Aşı yapılmaz.')
   assert.equal(fishIstegi('[excited]'), null)
 })

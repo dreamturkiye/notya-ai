@@ -1,13 +1,13 @@
 /**
  * NOTYA-FISH-WS-01 — one Fish live socket per spoken turn (server side, Node runtime).
- * Text goes in sentence by sentence as the LLM writes; PCM comes back the moment Fish has
- * it, so sentence N+1 is synthesised while N is still playing in the browser.
+ * Text goes in as complete words as the LLM writes; PCM comes back the moment Fish has
+ * it, so word N+1 is synthesised while N is still playing in the browser.
  */
 import WebSocket from 'ws'
 import { FISH_WS_ACILIS_MS, FISH_WS_BITIS_MS, FISH_WS_DUR, FISH_WS_URL, fishWsBaslangic, fishWsKodla, fishWsMetinOlayi, fishWsModel, fishWsOlayCoz } from '@/lib/asistan/fishWs'
 
 export type FishWsOturumu = {
-  /** Queue one finished sentence. Returns false when the socket is gone. */
+  /** Queue one finished word-group. Returns false when the socket is gone. */
   metin: (cumle: string) => boolean
   /** No more text: ask Fish to finish; resolves when the last audio frame arrived (or timeout / error). */
   bitir: () => Promise<void>

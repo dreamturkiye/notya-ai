@@ -11,7 +11,7 @@ test('silero: hysteresis — enters at 0.5, stays until below 0.35', () => {
   assert.equal(sileroKonusuyorMu(NaN, true), false)
 })
 
-test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail 350 vs 600', () => {
+test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail 350 vs 300', () => {
   const simdi = 10_000
   const a = kareKonusmasi({ rms: 0.001, silero: { p: 0.9, zaman: simdi - 40 }, onceki: false, simdi })
   assert.deepEqual(a, { ses: true, kaynak: 'silero' })
@@ -23,6 +23,7 @@ test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail
   assert.equal(d.kaynak, 'rms')
   assert.equal(sessizlikKuyrugu('silero'), FISH_SES_SIZLIGI_SILERO_MS)
   assert.equal(sessizlikKuyrugu('rms'), FISH_SES_SIZLIGI_MS)
+  assert.equal(FISH_SES_SIZLIGI_MS, 300)
   assert.equal(FISH_SES_SIZLIGI_SILERO_MS, 350)
 })
 

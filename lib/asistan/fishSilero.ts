@@ -23,7 +23,7 @@ export function iosMu(ua: string, dokunma = 0): boolean {
 }
 
 /**
- * Opt-in (2026-09-29): default OFF everywhere — the RMS gate with its 600 ms tail is the shipped
+ * Opt-in (2026-09-29): default OFF everywhere — the RMS gate with its 300 ms tail is the preview
  * path. `NEXT_PUBLIC_NOTYA_SILERO=1` enables Silero on desktop; iOS additionally needs
  * `NEXT_PUBLIC_NOTYA_SILERO_IOS=1`. A Safari session dropped two doctor turns after Silero attached.
  */

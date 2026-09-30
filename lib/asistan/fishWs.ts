@@ -34,7 +34,7 @@ export function fishWsBaslangic(): { event: 'start'; request: { [k: string]: Msg
       format: 'pcm',
       sample_rate: FISH_ORNEK_HZ,
       latency: 'low',
-      chunk_length: 120,
+      chunk_length: 160,
       temperature: 0.7,
       top_p: 0.7,
       normalize: false,
@@ -45,7 +45,7 @@ export function fishWsBaslangic(): { event: 'start'; request: { [k: string]: Msg
 
 export function fishWsModel(): string { return FISH_MODEL }
 
-/** One finished sentence → one text event. Trailing space: Fish's guide says "send complete words with spaces". */
+/** One finished word-group → one text event. Trailing space: Fish's guide says "send complete words with spaces". */
 export function fishWsMetinOlayi(cumle: string): { event: 'text'; text: string } | null {
   const t = fishMetni(cumle).replace(/\s*\[break\]\s*/g, ' ').replace(/\s+/g, ' ').trim()
   if (!t || /^[.,;:!?…\-–—'"]+$/.test(t)) return null
@@ -75,9 +75,31 @@ export function fishWsOlayCoz(ham: Uint8Array): FishWsOlay {
 }
 
 /**
- * Server-side sentence cutter — the same fishBirlestir + fishYeniCumleler the browser runs, so
- * `islenen.length` means the same offset on both ends (used by the `ses_dus` fallback).
+ * Server-side cutter — send complete words as Luna streams, not finished sentences.
+ * `islenen.length` is the offset handed to Fish (used by `ses_dus` REST fallback).
  */
+export class KelimeKesici {
+  birikim = ''
+  islenen = ''
+  ekle(parca: string, bitir = false): string[] {
+    this.birikim = fishBirlestir(this.birikim, parca)
+    const kalan = this.birikim.slice(this.islenen.length)
+    if (bitir) {
+      const t = kalan.replace(/\s+/g, ' ').trim()
+      this.islenen = this.birikim
+      return t ? [t] : []
+    }
+    const son = kalan.lastIndexOf(' ')
+    if (son < 0) return []
+    const ham = kalan.slice(0, son + 1)
+    this.islenen += ham
+    const t = ham.replace(/\s+/g, ' ').trim()
+    return t ? [t] : []
+  }
+  bitir(): string[] { return this.ekle('', true) }
+}
+
+/** Sentence cutter kept for REST `ses_dus` tests and any non-WS path. */
 export class CumleKesici {
   birikim = ''
   islenen = ''
@@ -97,6 +119,9 @@ export type FishTurSesOlayi =
   | { t: 'ses_bit' }
   | { t: 'soz_bit' }
   | { t: 'ses_dus'; islenen: number }
+  | { t: 'stt'; m: string }
+  | { t: 'atlandi'; neden: string }
+  | { t: 'kapat'; m: string }
 
 export function pcmBase64(b: Uint8Array): string {
   return Buffer.from(b.buffer, b.byteOffset, b.byteLength).toString('base64')

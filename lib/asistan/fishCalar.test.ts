@@ -33,10 +33,10 @@ test('caliyorMu yalnız çalan PCM — kuyruktaki TTS fetch dinlemeyi kilitlemez
   assert.doesNotMatch(kaynak, /caliyorMu:\s*\(\)\s*=>\s*calisiyor\s*\|\|/)
 })
 
-test('jitter buffer: first source waits for ≈120 ms of PCM, then chunks append back to back, underrun re-buffers', async () => {
+test('jitter buffer: first source waits for ≈40 ms of PCM, then chunks append back to back, underrun re-buffers', async () => {
   const { tamponKarari, FISH_TAMPON_MS, FISH_TAMPON_YENIDEN_MS } = await import('./fishCalar')
   // before start: below the buffer → hold; at/above → start
-  assert.equal(tamponKarari({ bekleyenMs: 60, basladi: false, planSonu: 0, simdi: 0, bitti: false }), false)
+  assert.equal(tamponKarari({ bekleyenMs: 20, basladi: false, planSonu: 0, simdi: 0, bitti: false }), false)
   assert.equal(tamponKarari({ bekleyenMs: FISH_TAMPON_MS, basladi: false, planSonu: 0, simdi: 0, bitti: false }), true)
   // stream ended with a short tail: play it regardless
   assert.equal(tamponKarari({ bekleyenMs: 20, basladi: false, planSonu: 0, simdi: 0, bitti: true }), true)

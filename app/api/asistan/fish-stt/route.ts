@@ -1,15 +1,13 @@
 /**
  * NOTYA-FISH-AYSE-02 — Ayşe mic. Audio in, Turkish transcript out. No patient id.
  * Language is pinned to Turkish on every call; junk clips never reach Fish; one
- * structured latency line per call.
+ * structured latency line per call. Kept as a standalone probe; the live loop
+ * now sends the clip on fish-tur so the TTS socket can open during ASR.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { fishFetch } from '@/lib/asistan/fishBaglanti'
-import {
-  FISH_ASR_DIL, FISH_ASR_MODEL, FISH_ASR_YENIDEN, FISH_ASR_ZAMAN_MS, FISH_KLIP_AZAMI_BAYT,
-  asrKlipDenetle, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi,
-} from '@/lib/asistan/fishSes'
+import { fishAsrBlob } from '@/lib/asistan/fishAsr'
+import { FISH_KLIP_AZAMI_BAYT } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -31,36 +29,6 @@ async function doktorMu(req: NextRequest): Promise<boolean> {
   }
 }
 
-type AsrDeneme = { durum: number | null; metin: string; hata: string | null; dil?: string | null }
-
-async function fishAsrCagir(anahtar: string, bayt: Uint8Array): Promise<AsrDeneme> {
-  const kontrol = new AbortController()
-  const zaman = setTimeout(() => kontrol.abort(), FISH_ASR_ZAMAN_MS)
-  try {
-    // Keep-alive agent: TCP+TLS are paid once per lambda instance, not once per turn.
-    const yanit = await fishFetch('https://api.fish.audio/v1/asr', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${anahtar}`,
-        model: FISH_ASR_MODEL,
-        'Content-Type': 'application/msgpack',
-      },
-      body: Buffer.from(fishAsrGovde(bayt)),
-      signal: kontrol.signal,
-    })
-    if (!yanit.ok) return { durum: yanit.status, metin: '', hata: `http_${yanit.status}` }
-    const j = (await yanit.json().catch(() => null)) as { text?: unknown; language_code?: unknown } | null
-    return {
-      durum: yanit.status, metin: fishAsrMetni(typeof j?.text === 'string' ? j.text : ''), hata: null,
-      dil: typeof j?.language_code === 'string' ? j.language_code : null,
-    }
-  } catch (e) {
-    return { durum: null, metin: '', hata: e instanceof Error ? e.name : 'hata' }
-  } finally {
-    clearTimeout(zaman)
-  }
-}
-
 export async function POST(req: NextRequest) {
   if (!(await doktorMu(req))) {
     return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
@@ -77,33 +45,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ses çok uzun' }, { status: 413 })
   }
 
-  const ad = ses instanceof File && ses.name ? ses.name : fishAsrDosyaAdi(ses.type)
-  const bayt = new Uint8Array(await ses.arrayBuffer())
-  const klip = asrKlipDenetle(bayt, ses.type || ad)
-  if (!klip.uygun) {
-    // Filtered clips never hit Fish and never become a transcript entry.
-    console.info('[fish-stt]', { atlandi: klip.neden, klip_ms: klip.sureMs, bayt: klip.bayt, rms: klip.rms })
-    return NextResponse.json({ metin: '', atlandi: klip.neden })
+  const sonuc = await fishAsrBlob(anahtar, ses)
+  if (sonuc.tur === 'hata') return NextResponse.json({ error: 'Çözülemedi' }, { status: 502 })
+  if (sonuc.tur === 'atlandi') {
+    if (sonuc.neden === 'uzun') return NextResponse.json({ error: 'Ses çok uzun' }, { status: 413 })
+    return NextResponse.json({ metin: '', atlandi: sonuc.neden })
   }
-
-  const t0 = Date.now()
-  let deneme: AsrDeneme = { durum: null, metin: '', hata: 'baslamadi' }
-  let tekrar = 0
-  for (let i = 0; i <= FISH_ASR_YENIDEN; i++) {
-    tekrar = i
-    deneme = await fishAsrCagir(anahtar, bayt)
-    const dilOk = !deneme.hata && fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil)
-    if (dilOk) break
-    if (deneme.hata && !fishAsrYenidenDenenirMi(deneme.durum)) break
-  }
-  const asr_latency_ms = Date.now() - t0
-  // Pin is `language: "tr"` in the MessagePack body. Non-Turkish transcripts are still junk.
-  const asr_dil_uyusmazligi = !deneme.hata && !(fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil))
-  console.info('[fish-stt]', {
-    asr_latency_ms, klip_ms: klip.sureMs, bayt: klip.bayt, dil: FISH_ASR_DIL, dil_tespit: deneme.dil ?? null, model: FISH_ASR_MODEL,
-    durum: deneme.durum, tekrar, karakter: deneme.metin.length, hata: deneme.hata, asr_dil_uyusmazligi,
-  })
-  if (deneme.hata) return NextResponse.json({ error: 'Çözülemedi' }, { status: 502 })
-  if (asr_dil_uyusmazligi) return NextResponse.json({ metin: '', atlandi: 'dil' })
-  return NextResponse.json({ metin: deneme.metin })
+  return NextResponse.json({ metin: sonuc.metin })
 }

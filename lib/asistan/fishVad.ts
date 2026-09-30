@@ -3,9 +3,9 @@
 export const FISH_KONUSMA_ESIK = 0.02
 /** Speaker leak of Haberci is quieter than the doctor at the mic. Barge-in must not fire on her own playback. */
 export const FISH_BARGE_ESIK = 0.12
-export const FISH_BARGE_MS = 350
-/** End-of-turn silence tail. 800 → 600 ms (2026-09-29): RMS-only VAD; 500 clipped mid-sentence pauses ("eee"). */
-export const FISH_SES_SIZLIGI_MS = 600
+export const FISH_BARGE_MS = 300
+/** End-of-turn silence tail. 600 → 300 ms for greeting cadence test (feat/ayse-100). */
+export const FISH_SES_SIZLIGI_MS = 300
 export const FISH_MIN_KONUSMA_MS = 500
 export const FISH_AZAMI_TUR_MS = 16_000
 /** Audio kept from before the first voiced frame (word onsets), everything older is dropped. */

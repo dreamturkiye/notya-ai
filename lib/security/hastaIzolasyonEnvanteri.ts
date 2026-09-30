@@ -239,7 +239,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/ses-eylem/route.ts': I('hastaninSozunuCoz / hastaSahibiMi; eylem_onerileri doctor_id; takvim randevular.eq(doktor_id) + patients.eq(doctor_id)'),
   'app/api/asistan/fish-ses/route.ts': I('any authenticated doctor; free-text body synthesized by Fish TTS, no Supabase read, no patient identifier ever touches this route'),
   'app/api/asistan/fish-stt/route.ts': I('any authenticated doctor; uploaded audio forwarded to Fish ASR; no patient id, no Supabase patient read'),
-  'app/api/asistan/fish-tur/route.ts': I('ayseCevapla(doktorId from auth); asistanSessionId reused only when id + doctor_id match (404 otherwise); optional patientId enters only after hastaSahibiMi'),
+  'app/api/asistan/fish-tur/route.ts': I('ayseCevapla(doktorId from auth); asistanSessionId reused only when id + doctor_id match (404 otherwise); optional patientId enters only after hastaSahibiMi; optional audio is Fish ASR only (no patient id on the clip)'),
   'app/api/asistan/signed-url/route.ts': I('voice-agent URL for the caller; NOTYA-TEK-BEYIN: optional patientId enters the signed token only after hastaSahibiMi(doktorId), optional asistanSessionId reused only when id + doctor_id match'),
   'app/api/asistan/ses-llm/v1/chat/completions/route.ts': T,
   'app/api/asistan/ses-llm/v1/route.ts': I('same handler as ses-llm/v1/chat/completions (lib/asistan/sesLlm.ts), covered there'),
