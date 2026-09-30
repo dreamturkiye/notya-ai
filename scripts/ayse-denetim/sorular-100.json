@@ -542,7 +542,7 @@
   "oturum": "S2",
   "soru": "kendisi daha önce kulak enfeksiyonu geçirmiş mi",
   "icerir": [
-   "ilk|tek|önce\\w* (vizit|kayıt|muayene)\\w* (yok|bulunmuyor)|daha önce\\w* (kayıt|vizit)\\w* (yok|bulunmuyor|görünmüyor)|kayıt (yok|bulunmuyor|bulamadım)"
+   "ilk|tek|önce\\w* (vizit|kayıt|muayene)\\w* (yok|bulunmuyor)|daha önce\\w* (kayıt|vizit)\\w* (yok|bulunmuyor|görünmüyor)|kayıt (yok|bulunmuyor|bulamadım)|(başka|daha eski)[^.]*(vizit|kayıt|atak)\\w* (yok|bulunmuyor)"
   ],
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"

@@ -345,6 +345,8 @@ export function kademeYukseltKodu(g: Pick<AiCagriGirdisi, 'gorev' | 'araclar' | 
   const bloklar = Array.isArray(y?.content) ? (y!.content as { type?: string }[]) : []
   if (bloklar.some((b) => b?.type === 'tool_use')) return null
   const metin = yanitMetni(y!).trim()
+  // JSON gövdesi ({"kayitlar":[]}) kelime sayısıyla ölçülmez — cikarim/ozet gibi hafif işler JSON döndürür.
+  if (/^[\[{]/.test(metin)) return null
   return metin.split(/\s+/).filter(Boolean).length < 3 ? 'kisa' : null
 }
 

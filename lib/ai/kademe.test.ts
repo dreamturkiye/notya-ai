@@ -129,7 +129,7 @@ describe('istek gövdesi — reasoning.effort ve derin model', () => {
     assert.equal(openRouterGovdesi(g).reasoning && (openRouterGovdesi(g).reasoning as { effort: string }).effort, 'none')
     assert.equal(openRouterGovdesi({ ...g, model: MODEL_GUCLU }).reasoning, undefined)
     assert.equal(istekGovdesi({ gorev: 'sohbet-uzman', messages: METIN }).reasoning, undefined)
-    assert.equal(istekGovdesi({ gorev: 'sohbet-uzman', messages: METIN, caba: 'none' }).reasoning?.effort, 'none')
+    assert.deepEqual(istekGovdesi({ gorev: 'sohbet-uzman', messages: METIN, caba: 'none' }).reasoning, { effort: 'none' })
   })
   it('soap → Luna-Pro; klinik-analiz + kademe derin → Luna-Pro; > 20k token arka plan girdisi → Luna-Pro, sohbet asla', () => {
     assert.equal(istekGovdesi({ gorev: 'soap', messages: METIN }).model, MODEL_DERIN)
@@ -178,6 +178,7 @@ describe('aiCagir — luna-none → luna (tier_up) → koruyucu', () => {
     assert.equal(yanitMetni(y), 'Tamam Hocam, notu açıyorum.')
     assert.equal(kademeYukseltKodu({ gorev: 'sohbet' }, { content: [{ type: 'text', text: 'İyi çalışmalar Hocam.' }], stop_reason: 'end_turn' } as never), null)
     assert.equal(kademeYukseltKodu({ gorev: 'sohbet' }, { content: [{ type: 'text', text: 'Peki.' }], stop_reason: 'end_turn' } as never), 'kisa')
+    assert.equal(kademeYukseltKodu({ gorev: 'cikarim' }, { content: [{ type: 'text', text: '{"kayitlar":[]}' }], stop_reason: 'end_turn' } as never), null, 'JSON gövdesi kısa sayılmaz')
     assert.equal(kademeYukseltKodu({ gorev: 'sohbet', araclar: [{ name: 'a' }] }, { content: [{ type: 'tool_use', id: '1', name: 'a', input: {} }], stop_reason: 'tool_use' } as never), null)
   })
   it('luna-none boş → luna boş → koruyucu Sonnet 5 (low_conf), reasoning hiçbir Sonnet gövdesinde yok', async () => {

@@ -146,6 +146,9 @@ describe('NOTYA-KONUSMA-BAGLAMI-01 — chart follow-ups', () => {
   it('muayene / not / belge', () => {
     const m0 = b('muayene', "Rıdvan Dilmen'in son muayenesinde ateşi kaçtı", '39 °C', {}, R)
     assert.equal(takipCoz('tanısı?', m0, sec)?.soru, "Rıdvan Dilmen'in son tanısı neydi?")
+    // NOTYA-AYSE-100 #8: past-comparison question after a chart turn keeps its words, inherits only the patient
+    assert.equal(takipCoz('Daha önce aynı şikayetle geldi mi?', m0, sec)?.soru, 'Rıdvan Dilmen Daha önce aynı şikayetle geldi mi?')
+    assert.equal(takipCoz('daha önce bu şikayetle geldi mi', m0, sec)?.soru, 'Rıdvan Dilmen daha önce bu şikayetle geldi mi')
     const n0 = b('not', "Umutcan Türkoğlu'nun son vizitte ne not düşmüşüm?", '…', {}, U)
     assert.equal(takipCoz('peki bir öncekinde?', n0, sec)?.soru, "Umutcan Türkoğlu'nun bir önceki vizitte ne not düşmüşüm?")
     const b0 = b('mesaj-belge', 'Ayşe Yeşil gelen belgeler kutusunda bir şey var mı?', '…', {}, A)

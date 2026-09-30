@@ -63,6 +63,8 @@ export interface TakipSonucu {
 
 export const BAGLAM_OMRU_MS = 10 * 60 * 1000
 
+/** Past-comparison wording that must never be folded into a "son muayenesinde …" template. */
+const GECMIS_KARSILASTIRMA_RE = /\b(daha once\w*|onceden|gecmiste|ayni (sikayet|sorun|yakinma|tablo)\w*|benzer\w*|tekrar\w*|kac (kez|kere|defa))\b/
 const DOSYA_NIYETLERI: ReadonlySet<Niyet> = new Set<Niyet>(['hasta-dosya', 'recete', 'tahlil', 'asi', 'buyume', 'muayene', 'not', 'mesaj-belge'])
 
 /* ---------- lexicons (normalized: lowercase ASCII, trAramaNormalize) ---------- */
@@ -509,6 +511,10 @@ export function takipCoz(
       break
     }
     case 'muayene': {
+      // NOTYA-AYSE-100 #8: a history-comparison question ("daha önce aynı şikayetle geldi mi?", "kaç kez geçirdi?") is
+      // a whole question about the past, not the last visit — inherit only the patient, keep the doctor's words, so the
+      // İlk-10 'benzer' path answers it instead of the deterministic "son vizit" card.
+      if (GECMIS_KARSILASTIRMA_RE.test(nn)) { soru = `${adYazili || onceki.hastaAd} ${ham}`; break }
       if (oncekiSoru) soru = `${G} bir önceki muayenesinde ne bulduk?`
       else if (/\btani/.test(nn)) soru = `${G} son tanısı neydi?`
       else if (/\bates/.test(nn)) soru = `${G} son muayenesinde ateşi kaçtı?`
