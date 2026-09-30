@@ -115,9 +115,13 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   if (!n.trim()) return null
   if (PRATIK.test(n) && !/bu hasta|hastanin|hastaya|hastanin dosya/.test(n)) return null
 
+  // NOTYA-AYSE-100 K1: "e-nabız'dan yeni gelen bir şey var mı" is an integration question, not a vital-sign question.
+  if (/\be ?nabiz|enabiz|e-nabiz/.test(n)) return null
+
   const bulunan: string[] = []
   const ekle = (baslik: string, deger: string) => {
-    const satir = `Dosyada ${baslik}: ${deger}`
+    // NOTYA-AYSE-100 K1: an empty card field printed "plan ve takip: ." — say "kayıt yok" instead.
+    const satir = `Dosyada ${baslik}: ${String(deger || '').trim() || 'kayıt yok'}`
     if (!bulunan.includes(satir)) bulunan.push(satir)
   }
 
@@ -140,9 +144,9 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   // NOTYA-SES-KART-01 (Dr. Gökhan): kontrol / takip soruları son muayenenin planından cevaplanır.
   if (/kontrol|takip|plan|ne zaman gel|tekrar gel/.test(n)) ekle('plan ve takip', k.sonPlan)
   if (/muayene bulgu|fizik muayene|dinleme|bulgular/.test(n)) ekle('muayene bulgusu', k.sonBulgu)
-  if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', k.randevu)
+  if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', kartBosMu(k.randevu) ? 'planlanmış randevu yok' : k.randevu)
   if (/hba1c|egfr|tahlil|laboratuvar|\blab\b|kan sayimi|son onayli lab/.test(n)) ekle('onaylı lab', k.lab)
-  if (/ates|kilo|tansiyon|nabiz|spo2|olcum|vital/.test(n)) ekle('son ölçüm', k.olcum)
+  if (/ates|kilo|tansiyon|nabiz|nabz|spo2|olcum|vital/.test(n)) ekle('son ölçüm', k.olcum)
 
   if (!bulunan.length) return null
   return `${bulunan.join('. ')}.`
