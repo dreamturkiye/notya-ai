@@ -51,7 +51,8 @@ function sozSaati(ham: string, n: string): string | null {
     if (m2) saat = SAAT_YAZI[m2[1]]
   }
   if (saat == null) return null
-  if (saat >= 1 && saat <= 7 && /\b(ogleden sonra|aksam|aksamustu|ikindi)\b/.test(n)) saat += 12
+  // NOTYA-KONUSMA-BAGLAMI-01 (2026-09-30): clinic hours — a spoken "saat 3" is 15:00 unless the doctor says sabah / gece.
+  if (saat >= 1 && saat <= 7 && !/\b(sabah|sabahi|gece)\b/.test(n)) saat += 12
   return `${String(saat).padStart(2, '0')}:00`
 }
 

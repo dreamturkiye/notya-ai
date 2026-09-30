@@ -7,6 +7,11 @@
  *
  *   npx tsx scripts/ayse-denetim/yuz.mts --doktor dr.gokhan@notya.ai [--etiket ayse-100] [--sadece 12,13,40]
  *     [--env .env.audit.local] [--tz America/New_York] [--kanal sohbet|ses] [--koruyucu acik]
+ *     [--sorular scripts/ayse-denetim/sorular-takip.json]
+ *
+ * NOTYA-KONUSMA-BAGLAMI-01: a question file may use {{A}} / {{A1}} / {{A_ID}} … placeholders; they are filled from
+ * the gitignored scripts/ayse-denetim/adlar.local.json (real names never enter the repo). A question with `geriAlDk`
+ * moves the session's stored konusma record that many minutes into the past before the call (expiry test).
  *
  * Output: .denetim-out/<etiket>.jsonl (gitignored) — one row per question: answer, source (deterministic/model),
  * LLM calls, latency, automatic verdict. The markdown report is written by hand from that file.
@@ -38,10 +43,17 @@ if (arg('koruyucu') !== 'acik') process.env.NOTYA_KORUYUCU_KAPALI = '1'
 type Soru = {
   no: number; kat: string; oturum: string; soru: string
   hasta?: string | null            // patientId sent as the page patient (open chart), else null
+  geriAlDk?: number                // age the stored konusma record by N minutes before this question (expiry)
   icerir?: string[]; icermez?: string[]  // regexes (i, u) on the screen answer
   not?: string
 }
-const SORULAR: Soru[] = JSON.parse(fs.readFileSync(SORU_DOSYASI, 'utf8'))
+const ADLAR_DOSYASI = path.join(process.cwd(), 'scripts', 'ayse-denetim', 'adlar.local.json')
+const ADLAR: Record<string, string> = fs.existsSync(ADLAR_DOSYASI) ? JSON.parse(fs.readFileSync(ADLAR_DOSYASI, 'utf8')) : {}
+const yerlestir = (m: string) => m.replace(/\{\{([A-Za-z0-9_]+)\}\}/g, (_, k) => { if (!(k in ADLAR)) throw new Error(`adlar.local.json: ${k} yok`); return ADLAR[k] })
+const SORULAR: Soru[] = (JSON.parse(fs.readFileSync(SORU_DOSYASI, 'utf8')) as Soru[]).map((s) => ({
+  ...s, soru: yerlestir(s.soru), hasta: s.hasta ? yerlestir(s.hasta) : s.hasta,
+  icerir: s.icerir?.map(yerlestir), icermez: s.icermez?.map(yerlestir),
+}))
 
 const { createClient } = await import('@supabase/supabase-js')
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -189,6 +201,10 @@ for (const s of secilen) {
   cagriGunlugu = []; yedekSatirlari = []
   const t0 = Date.now()
   const oturumId = oturumKimlikleri.get(s.oturum) ?? null
+  if (s.geriAlDk && oturumId) {
+    const k = (oturumlar.get(oturumId)?.active_context as { konusma?: { zaman?: string } } | undefined)?.konusma
+    if (k?.zaman) k.zaman = new Date(Date.parse(k.zaman) - s.geriAlDk * 60_000).toISOString()
+  }
   let ekran = ''
   let hata = ''
   let aktifHasta: string | null = null

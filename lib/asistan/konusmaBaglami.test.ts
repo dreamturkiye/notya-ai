@@ -1,0 +1,227 @@
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
+import { takipCoz, baglamKur, baglamOku, baglamBlogu, niyetBul, varliklariCikar, genitif, adCikar, type KonusmaBaglami, type Niyet } from './konusmaBaglami'
+
+const SIMDI = new Date('2026-09-30T14:00:00-04:00') // Wednesday, New York
+const TZ = 'America/New_York'
+const sec = { tz: TZ, simdi: SIMDI }
+
+function b(niyet: Niyet, soru: string, cevap: string, varliklar: KonusmaBaglami['sonVarliklar'] = {}, hasta?: { id: string; ad: string }, zaman = SIMDI): KonusmaBaglami {
+  return baglamKur({ niyet, soru, cevap, varliklar: { ...varliklariCikar(soru, sec), ...varliklar }, hasta, zaman })
+}
+const U = { id: 'u1', ad: 'Umutcan Türkoğlu' }
+const R = { id: 'r1', ad: 'Rıdvan Dilmen' }
+const A = { id: 'a1', ad: 'Ayşe Yeşil' }
+
+describe('NOTYA-KONUSMA-BAGLAMI-01 — genitif / adCikar / niyetBul', () => {
+  it('genitif follows vowel harmony', () => {
+    assert.equal(genitif('Ali'), "Ali'nin")
+    assert.equal(genitif('Ayşe Yeşil'), "Ayşe Yeşil'in")
+    assert.equal(genitif('Umutcan Türkoğlu'), "Umutcan Türkoğlu'nun")
+    assert.equal(genitif('Rıdvan Dilmen'), "Rıdvan Dilmen'in")
+    assert.equal(genitif('Umut'), "Umut'un")
+    assert.equal(genitif('Gökçe'), "Gökçe'nin")
+  })
+  it('adCikar: apostrophe genitive and ASR single token', () => {
+    assert.equal(adCikar("peki Rıdvan'ın?"), "Rıdvan'ın")
+    assert.equal(adCikar("ya Ayşe Yeşil’in"), "Ayşe Yeşil’in")
+    assert.equal(adCikar('peki ridvanin'), 'ridvanin')
+    assert.equal(adCikar('peki yarın'), null)
+    assert.equal(adCikar('onun dozu'), null)
+  })
+  it('niyetBul: intent words with and without diacritics', () => {
+    assert.equal(niyetBul('Bugün randevum var mı?'), 'takvim')
+    assert.equal(niyetBul('yarin kac hastam var'), 'takvim')
+    assert.equal(niyetBul('Kaç hastam var?'), 'hasta-sayim')
+    assert.equal(niyetBul('aşıları?'), 'asi')
+    assert.equal(niyetBul('asilari tam mi'), 'asi')
+    assert.equal(niyetBul('CRP kaç?'), 'tahlil')
+    assert.equal(niyetBul('dozu?'), null)
+    assert.equal(niyetBul('Klacid dozu?'), 'recete')
+    assert.equal(niyetBul('kaç kilo?'), 'buyume')
+    assert.equal(niyetBul('tanısı?'), 'muayene')
+    assert.equal(niyetBul('peki yarın?'), null)
+    assert.equal(niyetBul('kimler?'), null)
+    assert.equal(niyetBul('eksik olan var mı?'), null)
+  })
+})
+
+describe('NOTYA-KONUSMA-BAGLAMI-01 — calendar follow-ups', () => {
+  const bugun = b('takvim', 'Bugün randevum var mı?', '30 Eylül 2026 Çarşamba takviminde randevu yok.')
+  it('"Peki yarın?" inherits the calendar intent', () => {
+    const t = takipCoz('Peki yarın?', bugun, sec)
+    assert.equal(t?.soru, 'yarın randevum var mı?')
+    assert.equal(t?.niyet, 'takvim')
+    assert.equal(t?.varliklar.tarih, '2026-10-01')
+  })
+  it('"Ya cuma?" / "Haftaya?" / ASR "peki yarin"', () => {
+    assert.equal(takipCoz('Ya cuma?', bugun, sec)?.soru, 'cuma randevum var mı?')
+    assert.equal(takipCoz('Haftaya?', bugun, sec)?.soru, 'haftaya randevum var mı?')
+    assert.ok(takipCoz('Haftaya?', bugun, sec)?.varliklar.tarihAralik)
+    assert.equal(takipCoz('peki yarin', bugun, sec)?.soru, 'yarın randevum var mı?')
+    assert.equal(takipCoz('e persembe', bugun, sec)?.soru, 'perşembe randevum var mı?')
+  })
+  it('"Peki var mı?" after a date-only turn re-asks that date', () => {
+    const yarin = b('takvim', 'yarın randevum var mı?', '1 Ekim 2026 Perşembe takviminde randevu yok.')
+    const t = takipCoz('Peki var mı?', yarin, sec)
+    assert.equal(t?.soru, 'yarın randevum var mı?')
+    assert.deepEqual(t?.miras, ['tarih'])
+  })
+  it('"kaç hastam var bugün?" → "peki yarın?" → "kimler?" keeps the count / who type', () => {
+    const kac = b('takvim', 'kaç hastam var bugün?', '30 Eylül 2026 Çarşamba takviminde randevu yok.')
+    const t1 = takipCoz('peki yarın?', kac, sec)
+    assert.equal(t1?.soru, 'yarın kaç hastam var?')
+    const yarin = b('takvim', t1!.soru, '1 Ekim 2026 Perşembe takviminde randevu yok.', t1!.varliklar)
+    const t2 = takipCoz('kimler?', yarin, sec)
+    assert.equal(t2?.soru, 'yarın kimler geliyor?')
+    assert.equal(t2?.varliklar.takvimTipi, 'kimler')
+  })
+  it('a slot question inherits the clock time', () => {
+    const saat = b('takvim', "Bugün saat 3'te yer var mı?", '30 Eylül 2026 Çarşamba takviminde randevu yok. İstediğiniz 15:00 boş.', { saat: '15:00', takvimTipi: 'bosluk' })
+    assert.equal(takipCoz('peki yarın?', saat, sec)?.soru, 'yarın saat 15:00 boşluk var mı?')
+  })
+  it('"peki öğleden sonra?" keeps the day, adds the part of day', () => {
+    const sabah = b('takvim', 'yarın sabah boşluk var mı', '1 Ekim 2026 Perşembe takviminde randevu yok.', { takvimTipi: 'bosluk' })
+    assert.equal(takipCoz('peki öğleden sonra?', sabah, sec)?.soru, 'yarın öğleden sonra boşluk var mı?')
+  })
+  it('a full calendar question is not rewritten', () => {
+    assert.equal(takipCoz('Peki yarın randevu var mı?', bugun, sec), null)
+    assert.equal(takipCoz('Cuma kaç hastam var?', bugun, sec), null)
+  })
+  it('"Kaç hastam var?" (total) is a new topic, not a calendar follow-up', () => {
+    assert.equal(takipCoz('Kaç hastam var?', bugun, sec), null)
+  })
+})
+
+describe('NOTYA-KONUSMA-BAGLAMI-01 — chart follow-ups', () => {
+  it('tahlil: "CRP kaç?" → "Peki hemogram?" → "bir önceki?"', () => {
+    const t0 = b('tahlil', "Umutcan Türkoğlu'nun son tahlili ne?", 'Umutcan Türkoğlu son hemogramı 15.05.2026 …', {}, U)
+    const t1 = takipCoz('CRP kaç?', t0, sec)
+    assert.equal(t1?.soru, "Umutcan Türkoğlu'nun son tahlilinde CRP kaç?")
+    assert.deepEqual(t1?.miras, ['hasta'])
+    const b1 = b('tahlil', t1!.soru, 'Umutcan Türkoğlu dosyasında CRP sonucu yok.', t1!.varliklar, U)
+    const t2 = takipCoz('Peki hemogram?', b1, sec)
+    assert.equal(t2?.soru, "Umutcan Türkoğlu'nun son hemogram sonucu ne?")
+    const b2 = b('tahlil', t2!.soru, 'Hb 12,4 …', t2!.varliklar, U)
+    const t3 = takipCoz('bir önceki?', b2, sec)
+    assert.equal(t3?.soru, "Umutcan Türkoğlu'nun bir önceki hemogram sonucu ne?")
+    assert.ok(t3?.miras.includes('tahlil'))
+  })
+  it('reçete: "dozu?" → "kaç gün?" and a named drug', () => {
+    const r0 = b('recete', "Ayşe Yeşil'in reçetesi?", 'Ayşe Yeşil — dosyada son reçete: Klacid süspansiyon, Calpol şurup', {}, A)
+    assert.equal(takipCoz('dozu?', r0, sec)?.soru, "Ayşe Yeşil'in reçetesindeki ilaçların dozları neler?")
+    assert.equal(takipCoz('kaç gün?', r0, sec)?.soru, "Ayşe Yeşil'in reçetesindeki ilaçlar kaç gün yazılmış?")
+    assert.equal(takipCoz('Klacid dozu?', r0, sec)?.soru, "Ayşe Yeşil'in reçetesinde klacid dozu ne?")
+    assert.equal(takipCoz('kac gun verdik', r0, sec)?.soru, "Ayşe Yeşil'in reçetesindeki ilaçlar kaç gün yazılmış?")
+  })
+  it('aşı: "aşıları?" → "eksik olan var mı?" → "peki Rıdvan\'ın?" (patient switch keeps the frame)', () => {
+    const d0 = b('hasta-dosya', 'Umutcan Türkoğlu dosyasını aç', 'Umutcan Türkoğlu dosyası açık Hocam.', {}, U)
+    const t1 = takipCoz('aşıları?', d0, sec)
+    assert.equal(t1?.soru, "Umutcan Türkoğlu'nun aşıları tam mı?")
+    assert.equal(t1?.niyet, 'asi')
+    const a1 = b('asi', t1!.soru, 'Umutcan Türkoğlu aşıları …', t1!.varliklar, U)
+    const t2 = takipCoz('eksik olan var mı?', a1, sec)
+    assert.equal(t2?.soru, "Umutcan Türkoğlu'nun aşılarında eksik olan var mı?")
+    const a2 = b('asi', t2!.soru, 'Umutcan Türkoğlu aşılarında eksik: …', t2!.varliklar, U)
+    const t3 = takipCoz("peki Rıdvan'ın?", a2, sec)
+    assert.equal(t3?.soru, "Rıdvan'ın aşılarında eksik olan var mı?")
+    assert.equal(t3?.niyet, 'asi')
+    assert.equal(t3?.varliklar.hastaAd, 'Rıdvan')
+    assert.equal(t3?.varliklar.hastaId, null)
+  })
+  it('aşı entity: "KKK ne zaman?" → "peki Hepatit B?" → "kaç doz?"', () => {
+    const k0 = b('asi', "Umutcan Türkoğlu'nun KKK aşısını ne zaman yaptık?", 'KKK 15 Mayıs 2025', {}, U)
+    const t1 = takipCoz('peki Hepatit B?', k0, sec)
+    assert.equal(t1?.soru, "Umutcan Türkoğlu'nun hepatit b aşısı ne zaman yapılmış?")
+    const k1 = b('asi', t1!.soru, 'Hepatit B 2 doz', t1!.varliklar, U)
+    assert.equal(takipCoz('kaç doz?', k1, sec)?.soru, "Umutcan Türkoğlu'nun hepatit b aşısı kaç doz yapılmış?")
+  })
+  it('büyüme: "kilosu?" / "boyu?" / "persentili?" / ASR "bas cevresi"', () => {
+    const g0 = b('buyume', "Rıdvan Dilmen'in büyümesi nasıl?", '…', {}, R)
+    assert.equal(takipCoz('kilosu?', g0, sec)?.soru, "Rıdvan Dilmen'in kilosu kaç?")
+    assert.equal(takipCoz('boyu', g0, sec)?.soru, "Rıdvan Dilmen'in boyu kaç?")
+    assert.equal(takipCoz('persentili nasıl', g0, sec)?.soru, "Rıdvan Dilmen'in persentili kaç?")
+    assert.equal(takipCoz('bas cevresi', g0, sec)?.soru, "Rıdvan Dilmen'in baş çevresi kaç?")
+  })
+  it('muayene / not / belge', () => {
+    const m0 = b('muayene', "Rıdvan Dilmen'in son muayenesinde ateşi kaçtı", '39 °C', {}, R)
+    assert.equal(takipCoz('tanısı?', m0, sec)?.soru, "Rıdvan Dilmen'in son tanısı neydi?")
+    const n0 = b('not', "Umutcan Türkoğlu'nun son vizitte ne not düşmüşüm?", '…', {}, U)
+    assert.equal(takipCoz('peki bir öncekinde?', n0, sec)?.soru, "Umutcan Türkoğlu'nun bir önceki vizitte ne not düşmüşüm?")
+    const b0 = b('mesaj-belge', 'Ayşe Yeşil gelen belgeler kutusunda bir şey var mı?', '…', {}, A)
+    assert.equal(takipCoz("peki Umutcan'ın?", b0, sec)?.soru, "Umutcan'ın gelen belgeler kutusunda bir şey var mı?")
+  })
+  it('hasta-dosya attribute question keeps its words: "peki Rıdvan\'ın?" after "kaç yaşında"', () => {
+    const y0 = b('hasta-dosya', 'Ayşe Yeşil kaç yaşında?', 'Ayşe Yeşil — dosyada yaş: 5 yaşında.', {}, A)
+    assert.equal(takipCoz("peki Rıdvan'ın?", y0, sec)?.soru, "Rıdvan'ın kaç yaşında?")
+    assert.equal(takipCoz('kan grubu?', y0, sec)?.soru, "Ayşe Yeşil'in kan grubu?")
+    assert.equal(takipCoz('alerjisi var mı', y0, sec)?.soru, "Ayşe Yeşil'in alerjisi var mı?")
+  })
+  it('follow-up markers "ya" / "e" / "o zaman" / "kendisinin"', () => {
+    const t0 = b('muayene', 'Ayşe Yeşil son tanısı?', 'Atipik pnömoni', {}, A)
+    assert.equal(takipCoz('ya ilaçları?', t0, sec)?.soru, "Ayşe Yeşil'in ilaçları neler?")
+    assert.equal(takipCoz('e dozu?', b('recete', "Ayşe Yeşil'in ilaçları neler?", '…', {}, A), sec)?.soru, "Ayşe Yeşil'in reçetesindeki ilaçların dozları neler?")
+    assert.equal(takipCoz('o zaman aşıları?', t0, sec)?.soru, "Ayşe Yeşil'in aşıları tam mı?")
+    assert.equal(takipCoz('kendisinin kilosu', t0, sec)?.soru, "Ayşe Yeşil'in kilosu kaç?")
+  })
+  it('a named patient overrides the inherited one; a new intent overrides the inherited intent', () => {
+    const f0 = b('tahlil', "Umutcan Türkoğlu'nun ferritin kaç?", '32 ng/mL', {}, U)
+    const t = takipCoz("peki Rıdvan'ın?", f0, sec)
+    assert.equal(t?.soru, "Rıdvan'ın ferritin kaç?")
+    assert.equal(t?.varliklar.tahlil, 'ferritin')
+    assert.equal(takipCoz('peki aşıları?', f0, sec)?.niyet, 'asi')
+  })
+  it('a full question or an open/record request is never rewritten', () => {
+    const f0 = b('tahlil', "Umutcan Türkoğlu'nun ferritin kaç?", '32', {}, U)
+    assert.equal(takipCoz("Rıdvan Dilmen'in aşıları tam mı?", f0, sec), null)
+    assert.equal(takipCoz('Ayşe Yeşil dosyasını aç', f0, sec), null)
+    assert.equal(takipCoz('Hastalarımı listele', f0, sec), null)
+    assert.equal(takipCoz('...', f0, sec), null)
+    // free text with a marker is a new (model) question, not a slot fill — the open-patient rule carries the chart
+    assert.equal(takipCoz('Peki öksürüğü için ne önerirsin?', f0, sec), null)
+    assert.equal(takipCoz('ya annesine ne söyleyeyim', f0, sec), null)
+  })
+  it('date-only after a chart question is left to the model', () => {
+    const f0 = b('asi', "Umutcan Türkoğlu'nun aşıları tam mı?", '…', {}, U)
+    assert.equal(takipCoz('peki yarın?', f0, sec), null)
+  })
+  it('nothing to inherit → null (no patient in context)', () => {
+    const g = b('genel', 'nasılsın', 'İyiyim Hocam.')
+    assert.equal(takipCoz('dozu?', g, sec), null)
+  })
+})
+
+describe('NOTYA-KONUSMA-BAGLAMI-01 — hasta-sayım frame substitution, expiry, prompt block', () => {
+  it('"bu hafta kaç hasta muayene ettim" → "peki son 30 gün?"', () => {
+    const s0 = b('hasta-sayim', 'bu hafta kaç hasta muayene ettim?', 'Bu hafta 1 hasta.')
+    assert.equal(takipCoz('peki son 30 gün?', s0, sec)?.soru, 'son 30 gün kaç hasta muayene ettim?')
+    assert.equal(takipCoz('ya geçen hafta', s0, sec)?.soru, 'geçen hafta kaç hasta muayene ettim?')
+  })
+  it('context expires after 10 minutes', () => {
+    const eski = b('takvim', 'Bugün randevum var mı?', 'takviminde randevu yok', {}, undefined, new Date(SIMDI.getTime() - 11 * 60_000))
+    assert.equal(baglamOku(eski, SIMDI), null)
+    assert.equal(takipCoz('peki yarın?', eski, sec), null)
+    assert.equal(baglamBlogu(eski, SIMDI), '')
+    const taze = b('takvim', 'Bugün randevum var mı?', 'takviminde randevu yok', {}, undefined, new Date(SIMDI.getTime() - 9 * 60_000))
+    assert.ok(takipCoz('peki yarın?', taze, sec))
+  })
+  it('malformed stored record is ignored', () => {
+    assert.equal(baglamOku({ sonNiyet: 'takvim' }, SIMDI), null)
+    assert.equal(baglamOku('x', SIMDI), null)
+    assert.equal(takipCoz('peki yarın?', null, sec), null)
+  })
+  it('prompt block is compact and names the slots', () => {
+    const t0 = b('tahlil', "Umutcan Türkoğlu'nun son tahlilinde CRP kaç?", 'Umutcan Türkoğlu dosyasında CRP sonucu yok.\n\n**Kayıt:** …', {}, U)
+    const blok = baglamBlogu(t0, SIMDI)
+    assert.match(blok, /KONUŞMA BAĞLAMI/)
+    assert.match(blok, /Hasta: Umutcan Türkoğlu/)
+    assert.match(blok, /Tahlil: crp/)
+    assert.match(blok, /Son cevap: Umutcan Türkoğlu dosyasında CRP sonucu yok\./)
+    assert.ok(blok.length < 1000, String(blok.length))
+  })
+  it('summary is one line, ≤ 160 chars, markdown stripped', () => {
+    const k = baglamKur({ niyet: 'genel', soru: 'x', cevap: `**${'a'.repeat(200)}**\nikinci satır` })
+    assert.ok(k.sonCevapOzeti.length <= 160 && k.sonCevapOzeti.endsWith('…'))
+    assert.ok(!k.sonCevapOzeti.includes('*'))
+  })
+})

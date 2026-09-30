@@ -162,3 +162,6 @@ smoke-out/
 
 # ayse-denetim raw output (clinical answers — never committed)
 .denetim-out/
+
+# ayse-denetim: real patient names / ids for the {{...}} placeholders in sorular-*.json (never committed)
+scripts/ayse-denetim/adlar.local.json

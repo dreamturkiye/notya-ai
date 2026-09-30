@@ -67,6 +67,7 @@ import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
 import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
 import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from "@/lib/randevu/takvimSorusu"
+import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar, type Niyet } from "@/lib/asistan/konusmaBaglami"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
@@ -147,7 +148,10 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const cevapBas = Date.now()
   const supabase = g.supabase
   const doktorId = g.doktorId
-  const message = g.mesaj
+  /** The doctor's words as typed / heard — stored in the session history and shown to the model as such. */
+  const hamMesaj = g.mesaj
+  /** The effective question: the follow-up rewrite (NOTYA-KONUSMA-BAGLAMI-01) or the raw message. Every matcher reads this. */
+  let message = hamMesaj
   const specialty = g.specialty || "genel"
   const patientId = g.patientId || null
   const ses = g.kanal === "ses"
@@ -192,10 +196,34 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const contextPatientId = personaDegisti ? (patientId || null) : (baglam.currentPatientId || patientId)
   const messages: OturumMesaji[] = personaDegisti ? [] : ((asistanSession?.messages as OturumMesaji[]) || [])
   const oturumId = (asistanSession?.id as string) || null
+  const saatDilimi = saatDilimiSec(g.saatDilimi)
+
+  // NOTYA-KONUSMA-BAGLAMI-01 (Kaan, 2026-09-30): deterministic continuity. The previous turn's intent + entities live
+  // in active_context.konusma; an elliptical follow-up ("peki yarın?", "dozu?", "kimler?", "ya Rıdvan'ın?") is rewritten
+  // into the full question BEFORE any matcher runs, so calendar / chart / search / model all see the same intent.
+  // A persona switch drops the context; so does 10 minutes of silence or a full question (lib/asistan/konusmaBaglami.ts).
+  let konusmaOnceki = personaDegisti ? null : baglamOku(baglam.konusma)
+  if (konusmaOnceki) {
+    // The session's open patient (a page switch is the more recent explicit signal) is the patient a follow-up
+    // inherits — never a name the record kept from before the switch.
+    const aktifId = contextPatientId ? String(contextPatientId) : null
+    const v = konusmaOnceki.sonVarliklar
+    if (aktifId && v.hastaId !== aktifId) {
+      const ad = baglam.currentPatientId && String(baglam.currentPatientId) === aktifId && baglam.patientName ? String(baglam.patientName) : null
+      konusmaOnceki = { ...konusmaOnceki, sonVarliklar: { ...v, hastaId: aktifId, hastaAd: ad } }
+    }
+  }
+  const takip = konusmaOnceki ? takipCoz(hamMesaj, konusmaOnceki, { tz: saatDilimi }) : null
+  if (takip) {
+    message = takip.soru
+    console.info("[asistan/chat] takip", { miras: takip.miras, niyet: takip.niyet })
+  }
+  /** Intent of this turn as the deterministic paths decide it; the model path falls back to the intent words. */
+  let turNiyeti: Niyet | null = null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
   const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[]; sesDevamKalan?: string } = {}) => {
-    const kullanici: OturumMesaji = ses ? { role: "user", content: message, kanal: "ses", zaman: simdi() } : { role: "user", content: message }
+    const kullanici: OturumMesaji = ses ? { role: "user", content: hamMesaj, kanal: "ses", zaman: simdi() } : { role: "user", content: hamMesaj }
     const asistanZamani = simdi()
     const asistan: OturumMesaji = ses
       ? {
@@ -211,28 +239,39 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // NOTYA-SAYFA-HASTA-01: the doctor opened another patient's page while this turn ran (a voice turn can take
     // 30 s) — that page switch is the more recent explicit signal; this write must not put the old focus back.
     let sayfaOdagi: Record<string, unknown> | null = null
-    if (ek.hasta || ek.bekleyen || eskiDevam || sesDevam) {
+    {
       const { data: taze } = await supabase.from("asistan_sessions").select("active_context").eq("id", oturumId).eq("doctor_id", doktorId).maybeSingle()
       const t = ((taze as { active_context?: Record<string, unknown> | null } | null)?.active_context || {}) as Record<string, unknown>
       if (t.odakKaynak === "sayfa" && t.currentPatientId && String(t.odakZaman || "") > turBaslangic) {
         sayfaOdagi = { currentPatientId: t.currentPatientId, patientName: t.patientName ?? null, odakKaynak: "sayfa", odakZaman: t.odakZaman }
       }
     }
-    const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam || personaDegisti
-      ? {
-          ...oncekiBaglam,
-          ...(personaDegisti && !ek.hasta && !sayfaOdagi ? { currentPatientId: null, patientName: null } : {}),
-          ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad, odakKaynak: "soz", odakZaman: asistanZamani } : {}),
-          ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
-          ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
-          ...(sayfaOdagi || {}),
-        }
-      : null
+    // NOTYA-KONUSMA-BAGLAMI-01: the record for the next turn — the effective (rewritten) question, the entities it
+    // carried and the patient it ended on. Written on every turn, deterministic and model paths alike.
+    const konusmaHastasi = ek.hasta
+      ?? (sayfaOdagi?.currentPatientId ? { id: String(sayfaOdagi.currentPatientId), ad: String(sayfaOdagi.patientName || "") } : null)
+      ?? (!personaDegisti && currentPatientId ? { id: String(currentPatientId), ad: String(patientName || "") } : null)
+    const konusma = baglamKur({
+      soru: message,
+      cevap: asistanSozu,
+      niyet: turNiyeti ?? takip?.niyet ?? niyetBul(message) ?? (konusmaOnceki && takip ? konusmaOnceki.sonNiyet : "genel"),
+      varliklar: { ...(takip?.varliklar || {}), ...varliklariCikar(message, { tz: saatDilimi }) },
+      hasta: konusmaHastasi && konusmaHastasi.ad ? konusmaHastasi : konusmaHastasi ? { id: konusmaHastasi.id, ad: takip?.varliklar.hastaAd || konusmaOnceki?.sonVarliklar.hastaAd || "" } : null,
+    })
+    const yeniBaglam = {
+      ...oncekiBaglam,
+      ...(personaDegisti && !ek.hasta && !sayfaOdagi ? { currentPatientId: null, patientName: null } : {}),
+      ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad, odakKaynak: "soz", odakZaman: asistanZamani } : {}),
+      ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
+      ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
+      ...(sayfaOdagi || {}),
+      konusma,
+    }
     await supabase.from("asistan_sessions").update({
       messages: [...messages, kullanici, asistan].slice(-SOHBET_SAKLANAN_MESAJ),
       ...(personaDegisti ? { persona_id: personaId } : {}),
       ...(sayfaOdagi ? { patient_id: sayfaOdagi.currentPatientId } : ek.hasta ? { patient_id: ek.hasta.id } : personaDegisti ? { patient_id: null } : {}),
-      ...(yeniBaglam ? { active_context: yeniBaglam } : {}),
+      active_context: yeniBaglam,
     }).eq("id", oturumId)
   }
 
@@ -250,7 +289,6 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
   const sonTakvimAsistan = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
-  const saatDilimi = saatDilimiSec(g.saatDilimi)
   const takvim = kayitNiyetiMi(String(message || ""))
     ? null
     : (takvimSorusuCoz(message, { saatDilimi }) || takvimTakipCoz(message, sonTakvimAsistan?.content, { saatDilimi }))
@@ -258,6 +296,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // ASR pause ("...") after a true calendar line must not reach the model — it recants.
     return sade("", "", baglam.patientName ? String(baglam.patientName) : null)
   }
+  if (takvim) turNiyeti = "takvim"
   if (takvim?.aralik) {
     // NOTYA-AYSE-100 T1: "bu hafta / haftaya" — seven day reads, one summary, no model.
     try {
@@ -299,7 +338,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
 
   // Quick classify intent for faster response
   const quickIntent = quickClassify(message)
-  let augmentedMessage = message
+  // The model sees the doctor's words AND the completed question, so the answer addresses what was meant.
+  let augmentedMessage = takip ? `${hamMesaj}\n\n[DOKTORUN KASTI — konuşma bağlamından tamamlandı: ${takip.soru}]` : message
 
   // Add drug context if prescription intent
   if (quickIntent === "ADD_PRESCRIPTION") {
@@ -347,6 +387,7 @@ ${ilacBaglamMetni(drugs[0])}`
   }
   if (kimlikCevabi) {
     const kimlikHastasi = kimlikCevabi.hasta
+    turNiyeti = "hasta-dosya"
     await oturumuYaz(kimlikCevabi.model, { hasta: kimlikHastasi, kimlik: true })
     const konusma = kimlikSozu(kimlikCevabi)
     soyle(konusma)
@@ -436,6 +477,7 @@ ${ilacBaglamMetni(drugs[0])}`
 
   if ((aramaCevabi || kesinDosyaCevap) && !kayitNiyetiMi(String(message || ""))) {
     const speech = aramaCevabi || kesinDosyaCevap || ""
+    turNiyeti = aramaCevabi && cozum && cozum.tur !== "tek" ? "hasta-sayim" : niyetBul(message) ?? "hasta-dosya"
     await oturumuYaz(speech, { hasta: cozulenHasta })
     const konusma = konusmaYap(speech)
     soyle(konusma)
@@ -494,7 +536,8 @@ ${ilacBaglamMetni(drugs[0])}`
   // turn (cohort / calendar question) is still a known patient.
   const dosyaYokBlogu = !dosyaEk && !currentPatient ? DOSYA_YOK_BLOGU : ""
   // NOTYA-AYSE-100-LUNA (c): the model clock — doctor-timezone date/time, per turn, never cached.
-  const kuyruk = zamanBlogu(saatDilimi) + gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
+  // NOTYA-KONUSMA-BAGLAMI-01: the previous turn's topic for the residual model-path questions (≈ 200 tokens, per turn).
+  const kuyruk = zamanBlogu(saatDilimi) + baglamBlogu(konusmaOnceki) + gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.
@@ -652,6 +695,7 @@ ${ilacBaglamMetni(drugs[0])}`
   }
 
   // Update conversation history
+  turNiyeti = niyetBul(message) ?? (dosyaEk || currentPatient ? "hasta-dosya" : "genel")
   await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: eylemHastasi?.id ?? null, bekleyen, sesDevamKalan })
 
   // Log action for learning
