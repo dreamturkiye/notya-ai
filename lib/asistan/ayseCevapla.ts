@@ -49,7 +49,7 @@ import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from "@/lib/asistan/aktifHasta"
-import { aiAkis, aiCagir } from "@/lib/ai/cagir"
+import { aiAkis, aiCagir, yanitMetni } from "@/lib/ai/cagir"
 import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, oneriHazirla, kayitNiyetiMi, type HazirOneri } from "@/core/eylemler/oneri"
@@ -389,6 +389,8 @@ ${ilacBaglamMetni(drugs[0])}`
     const konus = aktifeDon ? null : cozumKonus(cozum)
     if (konus) {
       aramaCevabi = konus
+      // NOTYA-AYSE-100 S2: a who-answer ("Son gördüğünüz hasta: X") makes X the open patient for the follow-up.
+      if (cozum.tur === "tek" && cozum.cevap) cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
     } else if (cozum.tur === "yok" && dosyaIstegi) {
       // Never "dosyası açık" without a resolved patient.
       aramaCevabi = "Bu isimde bir hasta bulamadım Hocam; adını ve soyadını tam söyler misiniz?"
@@ -528,7 +530,8 @@ ${ilacBaglamMetni(drugs[0])}`
     ? await aiAkis(cagri, (p) => { akanHam += p; sesAkisi.ekle(speechOneki(akanHam)) })
     : await aiCagir(cagri)
 
-  const rawResponse = response.content[0]?.type === "text" ? response.content[0].text : ""
+  // NOTYA-AYSE-100 M1: the text block is not always first (tool_use first, thinking first) — join every text block.
+  const rawResponse = yanitMetni(response)
 
   // KD-DERM-SAFETY-FINDINGS F3: never raw JSON to the doctor — a max_tokens cut is salvaged (speech up to the cut +
   // "yanıt kesildi" note) and a half-written action is dropped.
@@ -629,6 +632,13 @@ ${ilacBaglamMetni(drugs[0])}`
   if (eylemOnerileri.length) {
     bekleyen = eylemOnerileri.map((o) => o.id)
     if (ses && eylemHastasi) sozEkle(kartOkumasi(eylemOnerileri, eylemHastasi.ad))
+  }
+  // NOTYA-AYSE-100 M1: a tool-only turn left the screen blank; a model turn with no text and no card says so.
+  if (!String(aiData.speech || "").trim()) {
+    aiData.speech = eylemOnerileri.length && eylemHastasi
+      ? kartOkumasi(eylemOnerileri, eylemHastasi.ad)
+      : "Bu soruya şu an cevap üretemedim Hocam; bir daha sorar mısınız?"
+    if (ses && !sozler.some(Boolean)) sozEkle(konusmaYap(aiData.speech))
   }
 
   // NOTYA-SES-DEVAM-01 (Dr. Gökhan: "özet yarıda kesilmesin"): the voice turn closed before everything was said
