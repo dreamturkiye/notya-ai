@@ -63,3 +63,16 @@ test('push source (akisAc): chunks queue like a sentence; kes() marks it cut and
   assert.equal(z.kesildiMi(), false)
   calar.kapat()
 })
+
+test('NOTYA-SES-TUR-01: caliyorMu drops at her last voiced sample (+120 ms), not when Fish\'s trailing padding drains', async () => {
+  const { sonSesliOrnek, calmaSonu, FISH_SES_SONU_PAYI_SN } = await import('./fishCalar')
+  const kanal = new Float32Array(24000) // 1 s
+  kanal.fill(0.3, 0, 12000) // voice in the first 500 ms, 500 ms of padding after
+  assert.equal(sonSesliOrnek(kanal), 11999)
+  assert.equal(sonSesliOrnek(new Float32Array(100)), -1)
+  const bitis = 10 + 1
+  const sesSonu = 10 + 0.5
+  assert.equal(calmaSonu(bitis, sesSonu), 10.5 + FISH_SES_SONU_PAYI_SN)
+  assert.equal(calmaSonu(bitis, -1), bitis)
+  assert.equal(calmaSonu(10.05, sesSonu), 10.05) // voice runs to the end: buffer end wins
+})

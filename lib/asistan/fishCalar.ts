@@ -77,6 +77,24 @@ export const FISH_TAMPON_MS = 40
 export const FISH_TAMPON_YENIDEN_MS = 80
 /** Scheduling lead: a source must start at least this far ahead of the clock. */
 export const FISH_PLAN_ONCE_SN = 0.01
+/** NOTYA-SES-TUR-01: samples quieter than this (≈ −38 dBFS) are Fish's trailing padding, not her voice. */
+export const FISH_SES_SONU_ESIK = 0.012
+/** Playback counts as over this long after her last voiced sample; the echo guard lifts there, not when the padding drains. */
+export const FISH_SES_SONU_PAYI_SN = 0.12
+
+/** Index of the last sample above `esik`, −1 when the whole buffer is silence. */
+export function sonSesliOrnek(kanal: ArrayLike<number>, esik = FISH_SES_SONU_ESIK): number {
+  for (let i = kanal.length - 1; i >= 0; i--) {
+    const v = kanal[i]
+    if (v > esik || v < -esik) return i
+  }
+  return -1
+}
+
+/** When `caliyorMu` must drop: her voice end (+ pad) or the buffer end, whichever is earlier. */
+export function calmaSonu(bitis: number, sesSonu: number): number {
+  return sesSonu >= 0 ? Math.min(bitis, sesSonu + FISH_SES_SONU_PAYI_SN) : bitis
+}
 
 /**
  * Jitter-buffer decision for one arriving chunk. Pure so it can be tested against a fake clock.
@@ -148,10 +166,11 @@ export function fishCalarOlustur(
     if (vardi && !kapali) olay?.onDurdu?.()
   }
 
-  async function pcmOku(stream: ReadableStream<Uint8Array>, ses: AudioContext, ben: number): Promise<number> {
+  async function pcmOku(stream: ReadableStream<Uint8Array>, ses: AudioContext, ben: number): Promise<{ bitis: number; sesSonu: number }> {
     const reader = stream.getReader()
     let artik = new Uint8Array(0)
     let zaman = 0
+    let sesSonu = -1
     let basladi = false
     let bekleyen: Int16Array[] = []
     let bekleyenOrnek = 0
@@ -168,6 +187,8 @@ export function fishCalarOlustur(
       src.connect(ses.destination)
       const basla = Math.max(zaman, ses.currentTime + FISH_PLAN_ONCE_SN)
       src.start(basla)
+      const son = sonSesliOrnek(kanal)
+      if (son >= 0) sesSonu = basla + (son + 1) / FISH_ORNEK_HZ
       zaman = basla + buf.duration
       kaynaklar.push(src)
       if (!basladi) {
@@ -199,7 +220,7 @@ export function fishCalarOlustur(
     } finally {
       reader.cancel().catch(() => undefined)
     }
-    return zaman
+    return { bitis: zaman, sesSonu }
   }
 
   async function oynat(): Promise<void> {
@@ -223,9 +244,10 @@ export function fishCalarOlustur(
     try {
       const ses = await baglam()
       if (ben !== nesil || kapali) return
-      const bitis = await pcmOku(akis, ses, ben)
+      const { bitis, sesSonu } = await pcmOku(akis, ses, ben)
       if (ben !== nesil || kapali) return
-      const kalanMs = Math.max(0, (bitis - ses.currentTime) * 1000)
+      // Anchored to the audio clock: the guard lifts when her voice ends, not when the trailing padding drains.
+      const kalanMs = Math.max(0, (calmaSonu(bitis, sesSonu) - ses.currentTime) * 1000)
       await new Promise((r) => setTimeout(r, kalanMs))
       if (ben !== nesil || kapali) return
       calisiyor = false
