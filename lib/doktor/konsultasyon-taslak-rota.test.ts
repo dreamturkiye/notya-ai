@@ -21,6 +21,7 @@ process.env.ANTHROPIC_API_KEY = 'sahte'
 // birincili bir Anthropic slug'ına çevrilir (geri dönüş anahtarının şekli). Böylece "görev birincile gider" ölçülür.
 delete process.env.OPENROUTER_API_KEY
 process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-haiku-4.5'
+process.env.NOTYA_TIER_KAPALI = '1' // NOTYA-KADEME-01: rota kablolaması tek kademede sınanır (doğrudan Anthropic yolu)
 
 let db = new SahteVeritabani()
 const KOK = resolve(__dirname, '../..')

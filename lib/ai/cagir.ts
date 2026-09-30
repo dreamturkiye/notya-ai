@@ -21,8 +21,8 @@
  */
 import type Anthropic from '@anthropic-ai/sdk'
 import {
-  dusukGuvenMi, gucluModel, guvenlikSinyaliVar, modelSec,
-  type Gorev, type Kademe, type ModelSecimi, type YukseltmeNedeni,
+  dusukGuvenMi, gucluModel, guvenlikSinyaliVar, kademeAdi, kademeKapali, modelSec,
+  type Caba, type Gorev, type Kademe, type ModelSecimi, type YukseltmeNedeni,
 } from './modeller'
 import { kullanimKaydet, kullanimSatiri } from './kullanim'
 import { AiCagriHatasi, dogrudanModelAdi, gecersizArgumanIsaretle, gecersizArgumanMi, openRouterAkis, openRouterCagir, yolSec } from './saglayici'
@@ -85,6 +85,35 @@ export interface AiCagriGirdisi {
   koruyucuyaZorla?: { neden: 'low_conf'; altKod: string }
   /** Konsol satırındaki istek kimliği (verilmezse üretilir). Hasta/hekim kimliği DEĞİLDİR. */
   istekId?: string
+  /**
+   * NOTYA-KADEME-01: çağrı yerinin kademe aşımı. 'derin' = DERİN model (epikriz, konsült, e-reçete, SGK, SOAP önerisi —
+   * arka plan işleri); 'hizli' = politikayı luna'ya çeker. Verilmezse görev politikası (GOREV_POLITIKASI).
+   */
+  kademe?: 'hizli' | 'derin'
+  /** NOTYA-KADEME-01: reasoning.effort aşımı — ayseCevapla tek-slot takip turunda 'none' (sohbetKademesi). */
+  caba?: Caba
+}
+
+/** NOTYA-KADEME-01: metin girdisi bu tahmini aşan arka plan çağrısı DERİN modele gider (chars / 4). */
+export const UZUN_GIRDI_TOKEN = 20_000
+const SOHBET_GOREVLERI: ReadonlySet<Gorev> = new Set<Gorev>(['sohbet', 'sohbet-uzman'])
+
+function metinUzunlugu(v: unknown): number {
+  if (typeof v === 'string') return v.length
+  if (Array.isArray(v)) return v.reduce<number>((t, b) => t + metinUzunlugu(b), 0)
+  if (v && typeof v === 'object') {
+    const o = v as { type?: string; text?: string; metin?: string; content?: unknown; source?: { type?: string; data?: string } }
+    if (typeof o.text === 'string') return o.text.length
+    if (typeof o.metin === 'string') return o.metin.length
+    if (o.type === 'document' && o.source?.type === 'text') return String(o.source.data || '').length
+    return metinUzunlugu(o.content) // tool_result; image/PDF base64 sayılmaz
+  }
+  return 0
+}
+
+/** Kaba girdi token tahmini — system + mesajların metni / 4 (görüntü ve PDF ikili verisi hariç). */
+export function girdiTokenTahmini(g: Pick<AiCagriGirdisi, 'system' | 'messages'>): number {
+  return Math.ceil((metinUzunlugu(g.system) + metinUzunlugu(g.messages)) / 4)
 }
 
 /**
@@ -137,8 +166,12 @@ function kullaniciMetni(mesajlar: AiMesaj[]): string {
  * Güvenlik sinyali yalnız ölçüm/günlük amaçlı işaretlenir (guvenlikSinyali: true), yönlendirmeyi değiştirmez.
  * `neden` ölçüm satırına gider (birincil modelde kalırsa null).
  */
-export function etkinSecim(g: Pick<AiCagriGirdisi, 'gorev' | 'messages' | 'guvenlikBaglami'>): ModelSecimi & { yukseltildi: boolean; neden: YukseltmeNedeni | null; guvenlikSinyali: boolean } {
-  const secim = modelSec(g.gorev)
+export function etkinSecim(g: Pick<AiCagriGirdisi, 'gorev' | 'messages' | 'guvenlikBaglami' | 'system' | 'kademe' | 'caba'>): ModelSecimi & { yukseltildi: boolean; neden: YukseltmeNedeni | null; guvenlikSinyali: boolean } {
+  let secim = modelSec(g.gorev, { kademe: g.kademe, caba: g.caba })
+  // NOTYA-KADEME-01: > 20k token metin girdisi olan ARKA PLAN çağrısı DERİN modele; canlı sohbet/ses turu asla.
+  if (secim.kademe === 'hizli' && !g.kademe && !kademeKapali() && !SOHBET_GOREVLERI.has(g.gorev) && girdiTokenTahmini(g) > UZUN_GIRDI_TOKEN) {
+    secim = modelSec(g.gorev, { kademe: 'derin' })
+  }
   const guvenlikSinyali = guvenlikSinyaliVar(`${kullaniciMetni(g.messages)}\n${g.guvenlikBaglami || ''}`)
   return { ...secim, yukseltildi: false, neden: null, guvenlikSinyali }
 }
@@ -174,6 +207,7 @@ export function istekGovdesi(g: AiCagriGirdisi): Record<string, unknown> {
   const system = sistemGovdesi(g.system)
   if (system) govde.system = system
   if (g.temperature !== undefined) govde.temperature = g.temperature
+  if (secim.caba) govde.reasoning = { effort: secim.caba }
   if (g.araclar?.length) {
     govde.tools = g.araclar
     if (g.toolChoice === 'any') govde.tool_choice = { type: 'any' }
@@ -183,7 +217,7 @@ export function istekGovdesi(g: AiCagriGirdisi): Record<string, unknown> {
   return govde
 }
 
-type Olcum = { kademe: Kademe; neden: YukseltmeNedeni | null }
+type Olcum = { kademe: Kademe; neden: YukseltmeNedeni | null; caba?: Caba }
 
 async function olc(g: AiCagriGirdisi, govde: Record<string, unknown>, yanit: Anthropic.Message, o: Olcum): Promise<void> {
   const y = yanit as unknown as { model?: string; usage?: Record<string, number | null>; stop_reason?: string | null }
@@ -266,26 +300,52 @@ export function lunaZamanAsimiMs(maxTokens: unknown): number {
 }
 const bekle = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-type Hedef = { govde: Record<string, unknown>; kademe: Kademe; neden: YukseltmeNedeni | null }
+type Hedef = { govde: Record<string, unknown>; kademe: Kademe; neden: YukseltmeNedeni | null; caba?: Caba }
+
+/** `reasoning` alanı olmayan gövde (koruyucu / doğrudan Anthropic yolu / tier_up). */
+function cabasiz(govde: Record<string, unknown>): Record<string, unknown> {
+  const { reasoning: _r, ...kalan } = govde
+  return kalan
+}
 
 /** Seçilen modeli bu ortamda gidebileceği bir modele çevirir: OpenAI modeli + OpenRouter yok → koruyucu (transport). */
 function hedefBelirle(g: AiCagriGirdisi): Hedef {
   const secim = etkinSecim(g)
   const govde = istekGovdesi(g)
-  if (yolSec(String(govde.model))) return { govde, kademe: secim.kademe, neden: secim.neden }
+  if (yolSec(String(govde.model))) return { govde, kademe: secim.kademe, neden: secim.neden, ...(secim.caba ? { caba: secim.caba } : {}) }
   const guclu = gucluModel()
   if (!yolSec(guclu)) throw new AiCagriHatasi(500, 'OPENROUTER_API_KEY tanımlı değil ve GÜÇLÜ model Anthropic değil')
-  return { govde: { ...govde, model: guclu }, kademe: 'guclu', neden: 'transport' }
+  return { govde: { ...cabasiz(govde), model: guclu }, kademe: 'guclu', neden: 'transport' }
 }
 
 /** Koruyucu modelle aynı istek (birincil kapısından düşüş). */
 function gucluyeYukselt(h: Hedef, neden: YukseltmeNedeni): Hedef {
-  return { govde: { ...h.govde, model: gucluModel() }, kademe: 'guclu', neden }
+  return { govde: { ...cabasiz(h.govde), model: gucluModel() }, kademe: 'guclu', neden }
 }
 
-/** Birincil kapısı (G1, G2, G4) yalnız HIZLI kademe OpenRouter'dan giderken çalışır; doğrudan Anthropic yolu tek çağrıdır. */
+/** NOTYA-KADEME-01: luna-none → luna, aynı gövde, reasoning alanı düşer (tek sıçrama, neden = tier_up). */
+function lunayaYukselt(h: Hedef): Hedef {
+  return { govde: cabasiz(h.govde), kademe: 'hizli', neden: 'tier_up' }
+}
+
+/** Birincil kapısı (G1, G2, G4) HIZLI ve DERİN kademeler OpenRouter'dan giderken çalışır; doğrudan Anthropic yolu tek çağrıdır. */
 function lunaKapisiMi(h: Hedef): boolean {
-  return h.kademe === 'hizli' && yolSec(String(h.govde.model)) === 'openrouter'
+  return (h.kademe === 'hizli' || h.kademe === 'derin') && yolSec(String(h.govde.model)) === 'openrouter'
+}
+
+/** Her çağrıda tek satır: hangi kademe, hangi model, hangi effort. İçerik yok. */
+function kademeGunlukle(istekId: string, gorev: Gorev, h: Hedef): void {
+  console.log(`[ai] istek=${istekId} gorev=${gorev} kademe=${kademeAdi(h)} model=${String(h.govde.model)}${h.caba ? ` effort=${h.caba}` : ''}${h.neden ? ` neden=${h.neden}` : ''}`)
+}
+
+/** NOTYA-KADEME-01: luna-none cevabı kullanılamaz mı — kalite kodu ya da < 3 kelimelik metin (araç çağrısı yoksa). */
+export function kademeYukseltKodu(g: Pick<AiCagriGirdisi, 'gorev' | 'araclar' | 'jsonBekleniyor' | 'yapilandirilmis'>, y: Anthropic.Message | null | undefined): string | null {
+  const kod = kaliteKodu(g, y)
+  if (kod) return kod
+  const bloklar = Array.isArray(y?.content) ? (y!.content as { type?: string }[]) : []
+  if (bloklar.some((b) => b?.type === 'tool_use')) return null
+  const metin = yanitMetni(y!).trim()
+  return metin.split(/\s+/).filter(Boolean).length < 3 ? 'kisa' : null
 }
 
 function istekKimligi(g: AiCagriGirdisi): string {
@@ -308,7 +368,7 @@ export function yanitKademesi(y: unknown): Olcum | null {
   return y && typeof y === 'object' ? YANIT_KADEMESI.get(y as object) ?? null : null
 }
 function isaretle<T>(y: T, o: Olcum): T {
-  if (y && typeof y === 'object') YANIT_KADEMESI.set(y as object, { kademe: o.kademe, neden: o.neden })
+  if (y && typeof y === 'object') YANIT_KADEMESI.set(y as object, { kademe: o.kademe, neden: o.neden, ...(o.caba ? { caba: o.caba } : {}) })
   return y
 }
 
@@ -335,7 +395,7 @@ export function dusunmeBloklariniAt<T extends { content?: unknown }>(yanit: T): 
 async function tekCagri(g: AiCagriGirdisi, govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Anthropic.Message> {
   const model = String(govde.model)
   if (yolSec(model) === 'openrouter') return openRouterCagir(govde, zamanAsimiMs)
-  const dogrudan = { ...govde, model: dogrudanModelAdi(model) }
+  const dogrudan = { ...cabasiz(govde), model: dogrudanModelAdi(model) }
   const istemci = await dogrudanIstemci(g)
   return dusunmeBloklariniAt((await istemci.messages.create(dogrudan as never)) as Anthropic.Message)
 }
@@ -367,15 +427,16 @@ async function koruyucuCagri(g: AiCagriGirdisi, h: Hedef, neden: YukseltmeNedeni
 }
 
 export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
-  const h = hedefBelirle(g)
-  if (h.neden === 'safety') dususGunlukle(istekKimligi(g), g.gorev, 'safety', 'sinyal')
+  let h = hedefBelirle(g)
+  const istekId = istekKimligi(g)
+  kademeGunlukle(istekId, g.gorev, h)
+  if (h.neden === 'safety') dususGunlukle(istekId, g.gorev, 'safety', 'sinyal')
   if (!lunaKapisiMi(h)) {
     const yanit = await tekCagri(g, h.govde)
     await olcSessiz(g, h, yanit)
     return isaretle(yanit, h)
   }
   const birincil = String(h.govde.model)
-  const istekId = istekKimligi(g)
   // G2 (f): çağıran birincilin cevabını reddetti → doğrudan koruyucu, birincilin devresine hata.
   if (g.koruyucuyaZorla) {
     devreHata(birincil)
@@ -401,6 +462,23 @@ export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
     return koruyucuCagri(g, h, 'transport', tasimaAltKodu(sonHata), istekId)
   }
   await olcSessiz(g, h, yanit)
+  // NOTYA-KADEME-01: luna-none cevabı kullanılamadı → aynı gövde luna'da bir kez (tier_up); sonra G2 eskisi gibi.
+  if (h.caba === 'none') {
+    const yukselt = kademeYukseltKodu(g, yanit)
+    if (yukselt) {
+      dususGunlukle(istekId, g.gorev, 'tier_up', yukselt)
+      h = lunayaYukselt(h)
+      kademeGunlukle(istekId, g.gorev, h)
+      try {
+        yanit = await tekCagri(g, h.govde, lunaZamanAsimiMs(h.govde.max_tokens))
+      } catch (e) {
+        if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
+        devreHata(birincil)
+        return koruyucuCagri(g, h, 'transport', tasimaAltKodu(e), istekId)
+      }
+      await olcSessiz(g, h, yanit)
+    }
+  }
   // G2 KALİTE (çağrı sonrası, bir kez): boş / ret / düşük güven / bozuk-kesik JSON / bozuk araç çağrısı → koruyucu
   const kod = kaliteKodu(g, yanit)
   if (kod) {
@@ -422,7 +500,7 @@ type AkisOlayi = {
 
 /** Doğrudan koruyucu yolunda akış — eski aiAkis gövdesi, birebir. */
 async function anthropicAkis(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
-  const govde: Record<string, unknown> = { ...h.govde, model: dogrudanModelAdi(String(h.govde.model)), stream: true }
+  const govde: Record<string, unknown> = { ...cabasiz(h.govde), model: dogrudanModelAdi(String(h.govde.model)), stream: true }
   const istemci = await dogrudanIstemci(g)
   const ham = (await istemci.messages.create(govde as never)) as unknown
   // Akış yerine tam mesaj dönen istemci (test sahtesi, vekil) → metni tek parça ver, aynen işle.
@@ -476,13 +554,14 @@ async function anthropicAkis(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: 
  * yolu işler; birincilin devresine hata yazılır.
  */
 async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
+  const istekId = istekKimligi(g)
+  kademeGunlukle(istekId, g.gorev, h)
   if (!lunaKapisiMi(h)) {
     const { yanit } = await openRouterAkis(h.govde, metinParcasi)
     await olcSessiz(g, h, yanit)
     return isaretle(yanit, h)
   }
   const birincil = String(h.govde.model)
-  const istekId = istekKimligi(g)
   const guclu = async (neden: YukseltmeNedeni, altKod: string) => {
     dususGunlukle(istekId, g.gorev, neden, altKod)
     if (koruyucuKapali()) throw koruyucuKapaliHatasi(neden, altKod)
@@ -513,6 +592,25 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
     devreHata(birincil)
     console.warn(`[ai/akis] istek=${istekId} gorev=${g.gorev} birincil akış ilk sözden sonra koptu — kesik tur, yeniden söylenmez`)
     return isaretle(sonuc.yanit, h)
+  }
+  // NOTYA-KADEME-01: luna-none hiç söz söylemeden boş/ret/bozuk döndüyse önce luna'da bir kez (tier_up), ilk sözden ÖNCE.
+  if (!sonuc.metinVerildi && h.caba === 'none') {
+    const yukselt = kademeYukseltKodu({ ...g, jsonBekleniyor: false }, sonuc.yanit)
+    if (yukselt) {
+      dususGunlukle(istekId, g.gorev, 'tier_up', yukselt)
+      const t = lunayaYukselt(h)
+      kademeGunlukle(istekId, g.gorev, t)
+      try {
+        sonuc = await openRouterAkis(t.govde, metinParcasi, lunaZamanAsimiMs(t.govde.max_tokens))
+      } catch (e) {
+        if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
+        devreHata(birincil)
+        return guclu('transport', tasimaAltKodu(e))
+      }
+      await olcSessiz(g, t, sonuc.yanit)
+      if (sonuc.koptu) { devreHata(birincil); return isaretle(sonuc.yanit, t) }
+      h = t
+    }
   }
   // Hiç metin söylenmediyse (boş / ret / bozuk araç) koruyucuya; söylenmiş düşük güvenli metin sesli yolda geri alınamaz.
   if (!sonuc.metinVerildi) {

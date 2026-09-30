@@ -14,7 +14,10 @@ import { MODEL_GUCLU, MODEL_HIZLI } from './modeller'
 import { devreDurumu, devreSifirla } from './devre'
 import { jsonOnar } from './jsonOnar'
 import { soapNotuUret, SOAP_GUVEN_ESIGI } from '@/lib/doktor/soapUret'
-process.env.NOTYA_DEVRE_ACIK = '1' // LUNAPRO-03: breaker is off by default; these suites test it explicitly
+process.env.NOTYA_DEVRE_ACIK = '1'
+// NOTYA-KADEME-01: bu paket kapıları TEK kademede sınar (kill-switch); kademe seçimi ve tier_up lib/ai/kademe.test.ts'te.
+process.env.NOTYA_TIER_KAPALI = '1'
+ // LUNAPRO-03: breaker is off by default; these suites test it explicitly
 
 type Cevap = { durum?: number; json?: unknown; ham?: string; sse?: string[]; sseKop?: string[] }
 type Istek = { govde: Record<string, any> }

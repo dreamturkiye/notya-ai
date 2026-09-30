@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     // klinik karar çıktısı (klinik-analiz; LUNAPRO-01: birincil Luna-Pro). 2500: ilaç + etkileşim listesi JSON'u kesilmesin.
     let hamMetin: string
     try {
-      hamMetin = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', jsonBekleniyor: true, maxTokens: 2500, doctorId: user.id, system: systemPrompt, messages: [{ role: 'user', content: guvenliMesaj }] }))
+      hamMetin = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', kademe: 'derin', jsonBekleniyor: true, maxTokens: 2500, doctorId: user.id, system: systemPrompt, messages: [{ role: 'user', content: guvenliMesaj }] }))
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[erecete] ai', e.govde.slice(0, 300));

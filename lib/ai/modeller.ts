@@ -29,10 +29,26 @@
  *  - NOTYA_MODEL_GUCLU=… → koruyucu değişir. Geçersiz değer → varsayılan.
  */
 
+/*
+ * NOTYA-KADEME-01 (Kaan, 2026-09-30 — docs/ARCH-MODEL-TIERING.md): three tiers on the Luna family, chosen per task.
+ *  luna-none  = HIZLI model + reasoning.effort "none" (TTFT ≈ 1 s): social turns, single-slot chart follow-ups,
+ *               background light tasks (cikarim, ozet, siniflandirma, bicimlendirme, kisa-yanit). Never where JSON is
+ *               parsed, never with tools. Falls back to luna once (neden = tier_up) on empty / < 3 words / refusal / bad JSON.
+ *  luna       = HIZLI model, provider default effort: the remaining sohbet-uzman turns, every tool-call turn,
+ *               quick klinik-analiz (doz, lab yorum), not-uretimi.
+ *  luna-pro   = DERİN model (NOTYA_MODEL_DERIN, default openai/gpt-6-luna-pro): soap body + öneri, goruntu-inceleme,
+ *               uzman-analiz, epikriz / konsült / e-reçete / SGK JSON (call site passes kademe: 'derin'), and any
+ *               background call whose text input exceeds 20k tokens. Background only — never the live chat/voice turn.
+ *  Kill-switch NOTYA_TIER_KAPALI=1 → everything back to the single luna tier (no reasoning field, no derin model).
+ *  Sonnet 5 stays the koruyucu behind G1/G2/G4 exactly as before; the tiers sit in front of those gates.
+ */
+
 /** Varsayılan koruyucu (GÜÇLÜ kademe, yalnız G1–G4) — Claude Sonnet 5 (OpenRouter slug'ı; doğrudan yolda saglayici.ts önekini atar). */
 export const MODEL_GUCLU = 'anthropic/claude-sonnet-5'
 /** Varsayılan birincil (HIZLI kademe, her görev) — GPT-6 Luna (yalnız OpenRouter; görsel + dosya girdisi destekler). */
 export const MODEL_HIZLI = 'openai/gpt-6-luna'
+/** Varsayılan DERİN model (luna-pro kademesi, yalnız arka plan ağır işler) — GPT-6 Luna-Pro (yalnız OpenRouter). */
+export const MODEL_DERIN = 'openai/gpt-6-luna-pro'
 
 /** Ortam değişkeni boş/geçersizse varsayılan kalır — yanlış ayar üretimi düşürmesin. */
 function ortamModeli(ad: string, varsayilan: string): string {
@@ -44,8 +60,18 @@ function ortamModeli(ad: string, varsayilan: string): string {
 export const gucluModel = (): string => ortamModeli('NOTYA_MODEL_GUCLU', MODEL_GUCLU)
 /** Etkin HIZLI model: NOTYA_MODEL_HIZLI ayarlıysa o, değilse MODEL_HIZLI. Çağrı anında okunur. */
 export const hizliModel = (): string => ortamModeli('NOTYA_MODEL_HIZLI', MODEL_HIZLI)
+/** Etkin DERİN model: NOTYA_MODEL_DERIN ayarlıysa o, değilse MODEL_DERIN. Çağrı anında okunur. */
+export const derinModel = (): string => ortamModeli('NOTYA_MODEL_DERIN', MODEL_DERIN)
 
-export type Kademe = 'guclu' | 'hizli'
+/** NOTYA-KADEME-01 kill-switch: NOTYA_TIER_KAPALI=1 → tek kademe (bugünkü luna), reasoning alanı gönderilmez. */
+export const kademeKapali = (): boolean => (typeof process !== 'undefined' ? process.env?.NOTYA_TIER_KAPALI : undefined)?.trim() === '1'
+
+/** guclu = koruyucu Sonnet 5 (G1–G4) · hizli = luna (birincil) · derin = luna-pro (arka plan ağır işler). */
+export type Kademe = 'guclu' | 'hizli' | 'derin'
+/** OpenRouter `reasoning.effort` — yalnız openai/* modellerde gönderilir (saglayici.openRouterGovdesi). */
+export type Caba = 'none' | 'low' | 'medium'
+/** Günlük satırındaki kademe adı ([ai] kademe=…). */
+export type KademeAdi = 'luna-none' | 'luna' | 'luna-pro' | 'sonnet'
 
 export type Gorev =
   /** Muayene/SOAP notu üretimi — uzun yapılandırılmış JSON */
@@ -89,6 +115,8 @@ export interface ModelSecimi {
   model: string
   /** Önerilen üst sınır; çağıran yalnız gerekçeli olarak (ör. uzun belge çıkarımı) aşar. */
   maxTokens: number
+  /** reasoning.effort (NOTYA-KADEME-01); undefined → sağlayıcı varsayılanı (medium). */
+  caba?: Caba
 }
 
 /** Görev → kademe + önerilen max_tokens. Sayılar mevcut çağrı yerlerinin gerçek ihtiyacından geldi.
@@ -97,9 +125,12 @@ export interface ModelSecimi {
  * ayrı tutulur (F3).
  * max_tokens bir TAVAN'dır, fatura üretilen token'a göredir — düşürmek tasarruf getirmez, yalnız kesilme (F3) riski
  * getirir. Bu yüzden hiçbir çağrı yerinin mevcut tavanı düşürülmedi. */
-export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number }> = {
-  soap: { kademe: 'hizli', maxTokens: 8000 },
+export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number; caba?: Caba }> = {
+  // NOTYA-KADEME-01: derin = luna-pro (arka plan), caba 'none' = luna-none. Satırsız görev = luna (varsayılan effort).
+  soap: { kademe: 'derin', maxTokens: 8000 },
   'not-uretimi': { kademe: 'hizli', maxTokens: 4000 },
+  // Varsayılan luna (doz önerisi, lab yorumu, ilaç sonlandırma…); epikriz / konsült / e-reçete / SGK / SOAP önerisi çağrı
+  // yerinde `kademe: 'derin'` verir.
   'klinik-analiz': { kademe: 'hizli', maxTokens: 2000 },
   // ASI-KARNESI-FIX (Kaan/Dr. Gokhan, 2026-09-19): 3000 yetmiyordu. Turk asi karnesinde 20-25
   // satir olur; her satir JSON'da ~150 token (ad, doz, tarih, okunamadi, neden, ham metin) →
@@ -109,22 +140,89 @@ export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number
   // Kaan (2026-09-19) 12000 istedi: cok dozlu/uzun karnelerde 8000 de yetmeyebilir. Bu bir
   // TAVAN'dir, sabit maliyet degil — cikti kisa ise kisa faturalanir; yalniz gercekten uzun
   // karnede devreye girer. Karne okuma seyrek bir islem oldugu icin risk dusuk.
-  'goruntu-inceleme': { kademe: 'hizli', maxTokens: 12000 },
-  'uzman-analiz': { kademe: 'hizli', maxTokens: 2000 },
+  'goruntu-inceleme': { kademe: 'derin', maxTokens: 12000 },
+  'uzman-analiz': { kademe: 'derin', maxTokens: 2000 },
   // F3 (KD-DERM-SAFETY-FINDINGS): 800 uzun klinik cevabı JSON ortasında kesiyordu — klinik tur bu yüzden 1600.
+  // sohbet-uzman: luna; tek-slot kısa takip turu ayseCevapla'da sohbetKademesi ile 'none' alır.
   'sohbet-uzman': { kademe: 'hizli', maxTokens: 1600 },
-  sohbet: { kademe: 'hizli', maxTokens: 800 },
-  siniflandirma: { kademe: 'hizli', maxTokens: 20 },
-  ozet: { kademe: 'hizli', maxTokens: 300 },
-  bicimlendirme: { kademe: 'hizli', maxTokens: 1000 },
-  cikarim: { kademe: 'hizli', maxTokens: 500 },
-  'kisa-yanit': { kademe: 'hizli', maxTokens: 300 },
+  sohbet: { kademe: 'hizli', maxTokens: 800, caba: 'none' },
+  siniflandirma: { kademe: 'hizli', maxTokens: 20, caba: 'none' },
+  ozet: { kademe: 'hizli', maxTokens: 300, caba: 'none' },
+  bicimlendirme: { kademe: 'hizli', maxTokens: 1000, caba: 'none' },
+  cikarim: { kademe: 'hizli', maxTokens: 500, caba: 'none' },
+  'kisa-yanit': { kademe: 'hizli', maxTokens: 300, caba: 'none' },
 }
 
-export function modelSec(gorev: Gorev): ModelSecimi {
+export interface KademeSecenegi {
+  /** Çağrı yerinin kademe aşımı: 'derin' (epikriz, SOAP önerisi…) ya da 'hizli' (politikayı luna'ya çeker). */
+  kademe?: 'hizli' | 'derin'
+  /** Çağrı yerinin effort aşımı (ayseCevapla tek-slot takip → 'none'). */
+  caba?: Caba
+}
+
+/** Kademe → model. NOTYA_TIER_KAPALI=1 iken derin de hizli sayılır. */
+export function kademeModeli(kademe: Kademe): string {
+  if (kademe === 'guclu') return gucluModel()
+  if (kademe === 'derin' && !kademeKapali()) return derinModel()
+  return hizliModel()
+}
+
+/** Günlük adı: luna-none | luna | luna-pro | sonnet. */
+export function kademeAdi(s: Pick<ModelSecimi, 'kademe' | 'caba'>): KademeAdi {
+  if (s.kademe === 'guclu') return 'sonnet'
+  if (s.kademe === 'derin') return 'luna-pro'
+  return s.caba === 'none' ? 'luna-none' : 'luna'
+}
+
+export function modelSec(gorev: Gorev, secenek: KademeSecenegi = {}): ModelSecimi {
   const p = GOREV_POLITIKASI[gorev]
   if (!p) throw new Error(`Bilinmeyen AI görevi: ${String(gorev)}`)
-  return { gorev, kademe: p.kademe, model: p.kademe === 'guclu' ? gucluModel() : hizliModel(), maxTokens: p.maxTokens }
+  if (kademeKapali()) {
+    const kademe: Kademe = p.kademe === 'guclu' ? 'guclu' : 'hizli'
+    return { gorev, kademe, model: kademeModeli(kademe), maxTokens: p.maxTokens }
+  }
+  const kademe: Kademe = p.kademe === 'guclu' ? 'guclu' : (secenek.kademe ?? p.kademe)
+  const caba = kademe === 'hizli' ? (secenek.caba ?? p.caba) : undefined
+  return { gorev, kademe, model: kademeModeli(kademe), maxTokens: p.maxTokens, ...(caba ? { caba } : {}) }
+}
+
+// ─── NOTYA-KADEME-01: sohbet turunun kademesi (ayseCevapla, asistanModelYonlendir'den SONRA) ───────────
+/** Ağır sohbet soruları luna-none'a inmez (açık uçlu, çok varlıklı, rapor/özet/görüntü). */
+const AGIR_SOHBET = /(muayene raporu|epikriz|soap|özet|ozet|değerlendir|degerlendir|röntgen|rontgen|görüntü|goruntu|etkileşim|etkilesim|ayırıcı|ayirici|neler değiş|neler degis|gözümden kaç|gozumden kac|karşılaştır|karsilastir|hepsi|tümü|tumu|listele)/iu
+/** Tek-slot takip niyetleri (konusmaBaglami Niyet): hasta-dosya, reçete, tahlil, aşı, büyüme, genel (yaş sorusu genel'e düşer). */
+const TEK_SLOT_NIYET = new Set(['hasta-dosya', 'recete', 'tahlil', 'asi', 'buyume', 'genel'])
+export const TEK_SLOT_AZAMI_KELIME = 12
+
+export interface SohbetKademeGirdisi {
+  gorev: 'sohbet' | 'sohbet-uzman'
+  mesaj: string
+  /** Önceki turun / çözülen takibin niyeti (konusma bağlamı); yoksa null → luna. */
+  sonNiyet?: string | null
+  /** intentParser.quickClassify (eylem niyeti → luna). */
+  niyet?: string | null
+  aracSayisi: number
+  /** Kaba girdi token tahmini (metin/4); > 20k → luna. */
+  girdiToken?: number
+}
+export interface SohbetKademeSonucu { caba?: 'none'; neden: string }
+
+/**
+ * Saf kural (lib/ai/modeller.test.ts):
+ *  sohbet → none · araç var / eylem niyeti / ağır anahtar / > 20k token → luna ·
+ *  sonNiyet tek-slot ve ≤ 12 kelime → none · kalan sohbet-uzman → luna. Kill-switch'te her zaman luna.
+ */
+export function sohbetKademesi(g: SohbetKademeGirdisi): SohbetKademeSonucu {
+  if (kademeKapali()) return { neden: 'kademe kapalı' }
+  if (g.gorev === 'sohbet') return { caba: 'none', neden: 'sosyal / uygulama turu' }
+  if (g.aracSayisi > 0) return { neden: 'araç turu' }
+  if (g.niyet && EYLEM_NIYETLERI.has(g.niyet)) return { neden: `eylem niyeti: ${g.niyet}` }
+  if ((g.girdiToken ?? 0) > 20_000) return { neden: 'uzun girdi' }
+  const kucuk = String(g.mesaj || '').trim().toLocaleLowerCase('tr-TR')
+  if (AGIR_SOHBET.test(kucuk)) return { neden: 'ağır soru' }
+  if (g.sonNiyet && TEK_SLOT_NIYET.has(g.sonNiyet) && kelimeler(kucuk).length <= TEK_SLOT_AZAMI_KELIME) {
+    return { caba: 'none', neden: `tek-slot takip (${g.sonNiyet})` }
+  }
+  return { neden: 'uzman tur' }
 }
 
 // ─── Yükseltme nedenleri (NOTYA-MODEL-LUNA-01, ai_token_kullanim.neden) ──────────────────────────────
@@ -134,9 +232,10 @@ export function modelSec(gorev: Gorev): ModelSecimi {
  *  - low_conf (G2): boş/ret/düşük güven, bozuk/kesik yapılandırılmış JSON, bozuk araç çağrısı, SOAP ai_confidence < 0.6
  *  - safety (G3): mesajda ya da hasta dosyası bağlamında güvenlik sinyali (gebe, emzirme, pediatrik doz, warfarin/NSAID…)
  *  - devre (G4): birincilin devresi açık (lib/ai/devre.ts)
+ *  - tier_up (NOTYA-KADEME-01): luna-none cevabı kullanılamadı (boş / < 3 kelime / ret / bozuk JSON) → aynı istek luna'da
  * Emekli (2026-09-26): onayla, vision, uzman — migration 105/106'nın check listesinde geçmiş satırlar için duruyor.
  */
-export type YukseltmeNedeni = 'transport' | 'safety' | 'low_conf' | 'devre'
+export type YukseltmeNedeni = 'transport' | 'safety' | 'low_conf' | 'devre' | 'tier_up'
 
 /** Görev tek başına koruyucuya götürmez (LUNA-02 / LUNAPRO-01) — her görev için null. İmza ölçüm/uyumluluk için korunur. */
 export function gorevNedeni(gorev: Gorev): YukseltmeNedeni | null {

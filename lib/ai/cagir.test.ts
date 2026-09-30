@@ -5,6 +5,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { aiCagir, etkinSecim, gorselIcerirMi, istekGovdesi, lunaZamanAsimiMs, sistemGovdesi, type AiMesaj } from './cagir'
+// NOTYA-KADEME-01: bu paket kapıları TEK kademede sınar (kill-switch); kademe seçimi ve tier_up lib/ai/kademe.test.ts'te.
+process.env.NOTYA_TIER_KAPALI = '1'
 import { kullanimSatiri } from './kullanim'
 import { gucluModel, hizliModel, type Gorev } from './modeller'
 import { dogrudanModelAdi } from './saglayici'

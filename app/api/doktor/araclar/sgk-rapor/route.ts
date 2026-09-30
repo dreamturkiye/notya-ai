@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic'
 async function taslakUret(system: string, user: string, doctorId: string): Promise<SgkRaporDraft> {
   const yanit = await aiCagir({
     gorev: 'klinik-analiz',
+    kademe: 'derin', // NOTYA-KADEME-01: SGK rapor JSON'u DERİN model
     jsonBekleniyor: true,
     maxTokens: 2200,
     doctorId,

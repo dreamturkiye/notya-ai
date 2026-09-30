@@ -32,6 +32,7 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 // birincili bir Anthropic slug'ına çevrilir (geri dönüş anahtarının şekli). Böylece "görev birincile gider" ölçülür.
 delete process.env.OPENROUTER_API_KEY
 process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-haiku-4.5'
+process.env.NOTYA_TIER_KAPALI = '1' // NOTYA-KADEME-01: rota kablolaması tek kademede sınanır (doğrudan Anthropic yolu)
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'

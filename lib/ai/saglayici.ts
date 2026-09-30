@@ -145,6 +145,9 @@ export function openRouterGovdesi(govde: Record<string, unknown>): Record<string
     provider: { data_collection: 'deny' },
   }
   if (govde.temperature !== undefined) or.temperature = govde.temperature
+  // NOTYA-KADEME-01: reasoning.effort yalnız openai/* modellere (Luna ailesi); Anthropic slug'ına gönderilmez.
+  const caba = (govde.reasoning as { effort?: unknown } | undefined)?.effort
+  if (typeof caba === 'string' && caba && String(or.model).startsWith('openai/')) or.reasoning = { effort: caba }
   if (Array.isArray(govde.tools) && govde.tools.length) {
     or.tools = (govde.tools as Blok[]).map(aracCevir)
     const secim = aracSecimiCevir(govde.tool_choice as Blok | undefined)

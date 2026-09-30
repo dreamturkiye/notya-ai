@@ -8,7 +8,7 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { GOREV_POLITIKASI, gucluModel, hizliModel, modelSec } from '../ai/modeller'
+import { GOREV_POLITIKASI, derinModel, gucluModel, hizliModel, modelSec } from '../ai/modeller'
 import { istekGovdesi } from '../ai/cagir'
 import {
   DOZ_YER_TUTUCU,
@@ -45,20 +45,21 @@ const kaynak = (o: Partial<IstemKaynagi> = {}): IstemKaynagi => ({
 })
 
 describe('AYSE-KONSULTASYON-01 — model (LUNAPRO-01: birincil, Sonnet 5 yalnız G1–G4)', () => {
-  it("istem taslağı 'klinik-analiz' → birincil; yanıt taslağı 'goruntu-inceleme' → birincil", () => {
+  it("istem taslağı 'klinik-analiz' (rota kademe: 'derin' verir) ve yanıt taslağı 'goruntu-inceleme' → DERİN (Luna-Pro), koruyucu değil", () => {
     assert.equal(ISTEM_TASLAK_GOREVI, 'klinik-analiz')
     assert.equal(YANIT_TASLAK_GOREVI, 'goruntu-inceleme')
-    for (const g of [ISTEM_TASLAK_GOREVI, YANIT_TASLAK_GOREVI]) {
-      assert.equal(GOREV_POLITIKASI[g].kademe, 'hizli', g)
-      const s = modelSec(g)
-      assert.equal(s.model, hizliModel(), g)
-      assert.notEqual(s.model, gucluModel(), `${g} koruyucuya zorlandı`)
+    assert.equal(GOREV_POLITIKASI[ISTEM_TASLAK_GOREVI].kademe, 'hizli')
+    assert.equal(modelSec(ISTEM_TASLAK_GOREVI).model, hizliModel())
+    assert.equal(GOREV_POLITIKASI[YANIT_TASLAK_GOREVI].kademe, 'derin')
+    for (const s of [modelSec(ISTEM_TASLAK_GOREVI, { kademe: 'derin' }), modelSec(YANIT_TASLAK_GOREVI)]) {
+      assert.equal(s.model, derinModel())
+      assert.notEqual(s.model, gucluModel(), 'koruyucuya zorlandı')
     }
   })
   it('istek gövdesi: birincil model; sabit system prompt önbellekli ve hasta verisi içermez; dosya user mesajında', () => {
     const baglam = istemBaglamiDerle(kaynak())
-    const g = istekGovdesi({ gorev: ISTEM_TASLAK_GOREVI, system: [{ metin: ISTEM_TASLAK_SISTEMI, onbellek: true }], messages: [{ role: 'user', content: baglam }] })
-    assert.equal(g.model, hizliModel())
+    const g = istekGovdesi({ gorev: ISTEM_TASLAK_GOREVI, kademe: 'derin', system: [{ metin: ISTEM_TASLAK_SISTEMI, onbellek: true }], messages: [{ role: 'user', content: baglam }] })
+    assert.equal(g.model, derinModel())
     const sys = g.system as Array<{ text: string; cache_control?: unknown }>
     assert.equal(sys.length, 1)
     assert.deepEqual(sys[0].cache_control, { type: 'ephemeral' })
@@ -68,7 +69,7 @@ describe('AYSE-KONSULTASYON-01 — model (LUNAPRO-01: birincil, Sonnet 5 yalnız
   })
   it('yanıt taslağı: görsel/PDF blokla da birincil (GÖRSEL = GÜÇLÜ emekli) ve sabit prompt önbellekli', () => {
     const g = istekGovdesi({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'eA==' } }] }] })
-    assert.equal(g.model, hizliModel())
+    assert.equal(g.model, derinModel())
     assert.deepEqual((g.system as Array<{ cache_control?: unknown }>)[0].cache_control, { type: 'ephemeral' })
   })
   it('sabit prompt: Dr. Gökhan biçimi, kısaltmasız, yalnız dosya, doz/tanı uydurma yasağı, DOSYA_YETERSIZ kaçış yolu', () => {

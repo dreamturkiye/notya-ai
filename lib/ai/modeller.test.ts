@@ -7,21 +7,26 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  asistanModelYonlendir, gecmisiKirp, GOREV_POLITIKASI, gucluModel, hizliModel, modelSec, netSosyalMi,
-  SOHBET_GECMIS_MESAJ, MODEL_GUCLU, MODEL_HIZLI, type Gorev, gorevNedeni, guvenlikSinyaliVar, dusukGuvenMi,
+  asistanModelYonlendir, gecmisiKirp, GOREV_POLITIKASI, gucluModel, hizliModel, derinModel, modelSec, netSosyalMi,
+  SOHBET_GECMIS_MESAJ, MODEL_GUCLU, MODEL_HIZLI, MODEL_DERIN, type Gorev, gorevNedeni, guvenlikSinyaliVar, dusukGuvenMi,
 } from './modeller'
 
 describe('görev politikası — kademe tablosu', () => {
-  it('LUNA-02: görüntü/inceleme ayrı bir görev (12000 tavan) ve birincil HIZLI', () => {
-    assert.equal(GOREV_POLITIKASI['goruntu-inceleme'].kademe, 'hizli')
+  it('KADEME-01: görüntü/inceleme ayrı bir görev (12000 tavan), DERİN kademe (luna-pro, arka plan)', () => {
+    assert.equal(GOREV_POLITIKASI['goruntu-inceleme'].kademe, 'derin')
     assert.equal(GOREV_POLITIKASI['goruntu-inceleme'].maxTokens, 12000)
-    assert.equal(modelSec('goruntu-inceleme').model, hizliModel())
+    assert.equal(modelSec('goruntu-inceleme').model, derinModel())
   })
 
-  it('LUNA-02: klinik ve uzman görevler birincil HIZLI (SOAP, not, konsültasyon/ICD/e-reçete/doz, hukuk, uzman sohbet)', () => {
-    for (const g of ['soap', 'not-uretimi', 'klinik-analiz', 'uzman-analiz', 'sohbet-uzman'] as Gorev[]) {
+  it('KADEME-01: soap / görüntü / uzman-analiz DERİN; not, klinik-analiz, sohbet-uzman HIZLI (luna)', () => {
+    for (const g of ['soap', 'goruntu-inceleme', 'uzman-analiz'] as Gorev[]) {
+      assert.equal(GOREV_POLITIKASI[g].kademe, 'derin', g)
+      assert.equal(modelSec(g).model, derinModel(), g)
+    }
+    for (const g of ['not-uretimi', 'klinik-analiz', 'sohbet-uzman'] as Gorev[]) {
       assert.equal(GOREV_POLITIKASI[g].kademe, 'hizli', g)
       assert.equal(modelSec(g).model, hizliModel(), g)
+      assert.equal(modelSec(g).caba, undefined, g)
     }
   })
 
@@ -30,18 +35,29 @@ describe('görev politikası — kademe tablosu', () => {
     assert.deepEqual(guclu, [])
   })
 
-  it('LUNAPRO-01: HER görev → birincil (hizli kademe, Luna), ortam değişkeni yokken', () => {
-    const eski = process.env.NOTYA_MODEL_HIZLI
+  it('KADEME-01: ortam değişkeni yokken hizli görevler Luna, derin görevler Luna-Pro; kill-switch ile hepsi Luna', () => {
+    const eski = { h: process.env.NOTYA_MODEL_HIZLI, d: process.env.NOTYA_MODEL_DERIN, k: process.env.NOTYA_TIER_KAPALI }
     delete process.env.NOTYA_MODEL_HIZLI
+    delete process.env.NOTYA_MODEL_DERIN
+    delete process.env.NOTYA_TIER_KAPALI
     try {
+      for (const g of Object.keys(GOREV_POLITIKASI) as Gorev[]) {
+        const s = modelSec(g)
+        assert.equal(s.kademe, GOREV_POLITIKASI[g].kademe, g)
+        assert.equal(s.model, s.kademe === 'derin' ? 'openai/gpt-6-luna-pro' : 'openai/gpt-6-luna', g)
+        assert.equal(s.model, s.kademe === 'derin' ? MODEL_DERIN : MODEL_HIZLI, g)
+      }
+      process.env.NOTYA_TIER_KAPALI = '1'
       for (const g of Object.keys(GOREV_POLITIKASI) as Gorev[]) {
         const s = modelSec(g)
         assert.equal(s.kademe, 'hizli', g)
         assert.equal(s.model, MODEL_HIZLI, g)
-        assert.equal(s.model, 'openai/gpt-6-luna', g)
+        assert.equal(s.caba, undefined, g)
       }
     } finally {
-      if (eski !== undefined) process.env.NOTYA_MODEL_HIZLI = eski
+      if (eski.h !== undefined) process.env.NOTYA_MODEL_HIZLI = eski.h
+      if (eski.d !== undefined) process.env.NOTYA_MODEL_DERIN = eski.d
+      if (eski.k === undefined) delete process.env.NOTYA_TIER_KAPALI; else process.env.NOTYA_TIER_KAPALI = eski.k
     }
   })
 
@@ -68,7 +84,10 @@ describe('görev politikası — kademe tablosu', () => {
       assert.equal(gucluModel(), 'yeni-model-1')
       // Geri dönüş anahtarı (LUNAPRO-01): NOTYA_MODEL_HIZLI=anthropic/claude-sonnet-5 → tek yeniden dağıtımda her görev Sonnet 5
       process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-sonnet-5'
+      assert.equal(modelSec('sohbet-uzman').model, 'anthropic/claude-sonnet-5')
+      process.env.NOTYA_TIER_KAPALI = '1'
       assert.equal(modelSec('soap').model, 'anthropic/claude-sonnet-5')
+      delete process.env.NOTYA_TIER_KAPALI
       process.env.NOTYA_MODEL_GUCLU = 'bozuk model; drop'
       assert.equal(gucluModel(), MODEL_GUCLU)
       // Geri dönüş anahtarı: OpenRouter slug'ı (eğik çizgi + nokta) geçerli bir değerdir

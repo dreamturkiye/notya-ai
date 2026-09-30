@@ -49,8 +49,8 @@ import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from "@/lib/asistan/aktifHasta"
-import { aiAkis, aiCagir, yanitMetni } from "@/lib/ai/cagir"
-import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
+import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni } from "@/lib/ai/cagir"
+import { asistanModelYonlendir, gecmisiKirp, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, oneriHazirla, kayitNiyetiMi, type HazirOneri } from "@/core/eylemler/oneri"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
@@ -560,7 +560,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
   const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, SOZ_BEAT_SINIRI, Boolean(g.sesDurumu)) : null
 
-  const cagri = {
+  const cagriTaban = {
     gorev: yonlendirme.gorev,
     doctorId: doktorId,
     // Hasta dosyası ve aktif hasta system'de — güvenlik sinyali taraması mesajla birlikte bunları da okur.
@@ -577,6 +577,12 @@ ${ilacBaglamMetni(drugs[0])}`
       { role: "user" as const, content: augmentedMessage }
     ]
   }
+  // NOTYA-KADEME-01: sosyal tur ve tek-slot kısa takip turu luna-none (effort none); araç / eylem / ağır soru luna.
+  const kademe = sohbetKademesi({
+    gorev: yonlendirme.gorev, mesaj: String(message || ""), sonNiyet: takip?.niyet ?? konusmaOnceki?.sonNiyet ?? null,
+    niyet: quickIntent, aracSayisi: araclar.length, girdiToken: girdiTokenTahmini(cagriTaban),
+  })
+  const cagri = kademe.caba ? { ...cagriTaban, caba: kademe.caba } : cagriTaban
   let akanHam = ""
   const response = sesAkisi
     ? await aiAkis(cagri, (p) => { akanHam += p; sesAkisi.ekle(speechOneki(akanHam)) })

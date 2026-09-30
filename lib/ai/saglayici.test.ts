@@ -8,6 +8,8 @@
  *  - OPENROUTER_API_KEY yoksa eski Anthropic yolu birebir (SDK istemcisi), OpenAI modeli GÜÇLÜ'ye düşer.
  * Ağ erişimi yok: globalThis.fetch sahte.
  */
+// NOTYA-KADEME-01: bu paket kapıları TEK kademede sınar (kill-switch); kademe seçimi ve tier_up lib/ai/kademe.test.ts'te.
+process.env.NOTYA_TIER_KAPALI = '1'
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 
