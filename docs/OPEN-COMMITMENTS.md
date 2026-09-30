@@ -1,5 +1,17 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-KONUSMA-BAGLAMI — deterministic conversation continuity, model-independent (Kaan, 2026-09-30, branch `feat/ayse-100`)
+
+Report: `docs/denetim/2026-09-30-ayse-takip.md`. Code: `lib/asistan/konusmaBaglami.ts` (session record, follow-up resolver, prompt block), wired in `lib/asistan/ayseCevapla.ts` for both channels.
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-KONUSMA-BAGLAMI-01 | **DONE 2026-09-30 — code** | `active_context.konusma` after every turn; elliptical follow-ups ("peki yarın?", "dozu?", "kimler?", "ya Rıdvan'ın?") rewritten before intent matching; `KONUŞMA BAĞLAMI` prompt block; persona rule 14. Harness `sorular-takip.json` 34 sequences / 101 questions: 94 → 101 / 101 on Luna, Sonnet off, $0.125. | Kaan / Dr. Gökhan: live check on chat AND fish-tur voice ("Bugün randevum var mı?" → "Peki yarın?"; "X dosyasını aç" → "aşıları?" → "eksik olan var mı?" → "peki Y'nin?"); then merge |
+| NOTYA-KONUSMA-BAGLAMI-02 | OPEN | Calendar follow-ups with "geçen hafta / bu ay / geçen ay" fall to the model — the day/week reader (`takvimSorusu.ts`) knows only bugün/dün/yarın/weekday/bu hafta/haftaya. Add past-week and month ranges to `haftaAraligiCoz` + `haftalikOzetMetni` (7-day cap → month). | Claude, small-medium; Kaan says whether a month view is wanted |
+| NOTYA-KONUSMA-BAGLAMI-03 | OPEN | Voice ASR filler shapes not in the marker list (e.g. "eee peki", "ııı yarın") — read `[asistan/chat] takip` lines from the first live voice sessions and extend `TAKIP_RE` / `DOLGU`. | Claude, after Kaan's live voice session |
+| NOTYA-KONUSMA-BAGLAMI-04 | OPEN | `sorular-100.json` still carries real patient names; `yuz.mts` now fills `{{A}} / {{A_ID}} …` from the gitignored `adlar.local.json` — convert the 100-set to placeholders. | Claude, small |
+| NOTYA-KONUSMA-BAGLAMI-05 | OPEN | Spoken "saat 3" now means 15:00 unless *sabah / gece* (clinic hours). Confirm with Dr. Gökhan that no clinic books 03:00–07:00. | Kaan |
+
 ## NOTYA-FISH-LATENCY — Ayşe voice loop latency (Kaan, 2026-09-29, branch `feat/fish-latency`)
 
 | ID | Status | What | Waits on |
@@ -31,7 +43,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-09-19 (NOTYA-EYLEM düzeltme turu — sessiz yol kapandı, ilaç uyarıları kartta)
+Last reviewed: 2026-09-30 (NOTYA-KONUSMA-BAGLAMI) (NOTYA-EYLEM düzeltme turu — sessiz yol kapandı, ilaç uyarıları kartta)
 
 ---
 
