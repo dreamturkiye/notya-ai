@@ -34,12 +34,10 @@ export function fishAkisKapat(s: MediaStream | null | undefined): void {
   }
 }
 
-/** Mono 16-bit PCM WAV — Fish's documented ASR example format. */
-export function pcmdenWav(parcalar: Float32Array[], hz: number): Blob {
-  let n = 0
-  for (const p of parcalar) n += p.length
-  const buf = new ArrayBuffer(44 + n * 2)
-  const v = new DataView(buf)
+/** One clip that left the junk gate. `konusmaBas` / `bitis` are wall-clock ms (turn sequencing, fishTurSirasi). */
+export type FishKlip = { blob: Blob; konusmaBas: number; bitis: number; sesliMs: number; toplamMs: number }
+
+function wavBaslik(v: DataView, hz: number, n: number): void {
   const yaz = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) }
   yaz(0, 'RIFF')
   v.setUint32(4, 36 + n * 2, true)
@@ -54,6 +52,15 @@ export function pcmdenWav(parcalar: Float32Array[], hz: number): Blob {
   v.setUint16(34, 16, true)
   yaz(36, 'data')
   v.setUint32(40, n * 2, true)
+}
+
+/** Mono 16-bit PCM WAV — Fish's documented ASR example format. */
+export function pcmdenWav(parcalar: Float32Array[], hz: number): Blob {
+  let n = 0
+  for (const p of parcalar) n += p.length
+  const buf = new ArrayBuffer(44 + n * 2)
+  const v = new DataView(buf)
+  wavBaslik(v, hz, n)
   let o = 44
   for (const p of parcalar) {
     for (let i = 0; i < p.length; i++) {
@@ -63,6 +70,29 @@ export function pcmdenWav(parcalar: Float32Array[], hz: number): Blob {
     }
   }
   return new Blob([buf], { type: 'audio/wav' })
+}
+
+/**
+ * NOTYA-SES-TUR-01: two sentences spoken in one breath become one clip — the PCM of our own WAVs is
+ * concatenated under one header (same sample rate, mono 16-bit), so the server ASRs one utterance.
+ */
+export async function wavBirlestir(klipler: Blob[]): Promise<Blob> {
+  if (klipler.length === 1) return klipler[0]
+  const govdeler: Uint8Array[] = []
+  let hz = 0
+  for (const b of klipler) {
+    const buf = new Uint8Array(await b.arrayBuffer())
+    if (buf.byteLength <= 44) continue
+    if (!hz) hz = new DataView(buf.buffer, buf.byteOffset).getUint32(24, true)
+    govdeler.push(buf.subarray(44))
+  }
+  let bayt = 0
+  for (const g of govdeler) bayt += g.byteLength
+  const out = new Uint8Array(44 + bayt)
+  wavBaslik(new DataView(out.buffer), hz || 16000, bayt / 2)
+  let o = 44
+  for (const g of govdeler) { out.set(g, o); o += g.byteLength }
+  return new Blob([out], { type: 'audio/wav' })
 }
 
 function kayitTuru(): string {
@@ -108,7 +138,7 @@ export async function fishBirTurKaydet(
   akis: MediaStream,
   baglam: AudioContext,
   g: DinleGirdi,
-): Promise<Blob | null> {
+): Promise<FishKlip | null> {
   if (baglam.state === 'suspended') await baglam.resume().catch(() => undefined)
   const kaynak = baglam.createMediaStreamSource(akis)
   const sessiz = baglam.createGain()
@@ -124,7 +154,7 @@ function pcmTurKaydet(
   kaynak: MediaStreamAudioSourceNode,
   sessiz: GainNode,
   g: DinleGirdi,
-): Promise<Blob | null> {
+): Promise<FishKlip | null> {
   const islem = baglam.createScriptProcessor(2048, 1, 1)
   const parcalar: Float32Array[] = []
   const kareMs = (2048 / baglam.sampleRate) * 1000
@@ -134,12 +164,12 @@ function pcmTurKaydet(
 
   return new Promise((coz) => {
     let bitti = false
-    const bitir = (blob: Blob | null) => {
+    const bitir = (klip: FishKlip | null) => {
       if (bitti) return
       bitti = true
       islem.onaudioprocess = null
       dugumleriKopar(kaynak, islem, sessiz)
-      coz(blob && blob.size > 800 ? blob : null)
+      coz(klip && klip.blob.size > 800 ? klip : null)
     }
     /** Turn ended: send only if it carries real speech, otherwise keep listening. */
     const turuBitir = () => {
@@ -150,7 +180,7 @@ function pcmTurKaydet(
       const blob = karar.gonder ? pcmdenWav(parcalar, baglam.sampleRate) : null
       const neden = karar.neden ?? (blob && blob.size <= 800 ? 'kucuk' : null)
       turKarariYaz({ sesliMs: tur.sesliMs, toplamMs, bayt: blob?.size ?? 0, kaynak: tur.kaynak, neden })
-      bitir(neden ? null : blob)
+      bitir(neden || !blob ? null : { blob, konusmaBas: tur.konusmaBas, bitis: Date.now(), sesliMs: tur.sesliMs, toplamMs })
     }
     const bekci = () => {
       if (bitti) return
@@ -182,7 +212,10 @@ function pcmTurKaydet(
           parcalar.push(new Float32Array(ch))
           tur = turAdimi(tur, { ses: true, kaynak: 'rms', simdi, kareMs }).durum
         } else if (!tur.duydu) {
-          parcalar.length = 0
+          // NOTYA-SES-TUR-01: keep a rolling pre-roll instead of wiping — the doctor's first word usually
+          // starts while the guard is still on (tail of her playback); it must not be cut from the clip.
+          parcalar.push(new Float32Array(ch))
+          onTamponuKirp(parcalar, baglam.sampleRate)
         }
         return
       }
@@ -205,7 +238,7 @@ function mediaTurKaydet(
   kaynak: MediaStreamAudioSourceNode,
   sessiz: GainNode,
   g: DinleGirdi,
-): Promise<Blob | null> {
+): Promise<FishKlip | null> {
   if (typeof MediaRecorder === 'undefined') {
     dugumleriKopar(kaynak, sessiz)
     return Promise.resolve(null)
@@ -230,14 +263,14 @@ function mediaTurKaydet(
   return new Promise((coz) => {
     let bitti = false
     let vazgec = false
-    const bitir = (blob: Blob | null) => {
+    const bitir = (klip: FishKlip | null) => {
       if (bitti) return
       bitti = true
       dugumleriKopar(kaynak, olcer, sessiz)
       if (kayit.state !== 'inactive') {
         try { kayit.stop() } catch { /* */ }
       }
-      coz(blob)
+      coz(klip)
     }
     kayit.onstop = () => {
       if (vazgec) { bitir(null); return }
@@ -246,7 +279,7 @@ function mediaTurKaydet(
       const blob = karar.gonder && parcalar.length ? new Blob(parcalar, { type: kayit.mimeType || kayitTipi || 'audio/webm' }) : null
       const neden = karar.neden ?? (!blob || blob.size <= 800 ? 'kucuk' : null)
       turKarariYaz({ sesliMs: tur.sesliMs, toplamMs, bayt: blob?.size ?? 0, kaynak: tur.kaynak, neden })
-      bitir(neden ? null : blob)
+      bitir(neden || !blob ? null : { blob, konusmaBas: tur.konusmaBas, bitis: Date.now(), sesliMs: tur.sesliMs, toplamMs })
     }
     kayit.onerror = () => bitir(null)
 

@@ -273,6 +273,9 @@ export async function POST(req: NextRequest) {
     cancel() {
       kapali = true
       wsOturum?.kapat()
+      // NOTYA-SES-TUR-01: the browser cancels a turn to merge two sentences / barge in and sends the next
+      // one at once — pre-open its socket now rather than when the abandoned brain call returns.
+      if (wsIstendi) fishWsHavuzu().hazirla(anahtar)
     },
   })
   return new Response(akis, {
