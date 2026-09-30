@@ -24,7 +24,8 @@ import { PERSONAS } from '@/lib/asistan/personaEngine'
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
 export type HastaCozumu =
-  | { tur: 'tek'; patientId: string; ad: string; sayiMetin?: string }
+  /** `cevap`: NOTYA-AYSE-100 S2 — a who-question ("son kaydettiğim hasta kim") answered in the resolver; spoken as is. */
+  | { tur: 'tek'; patientId: string; ad: string; sayiMetin?: string; cevap?: string }
   | { tur: 'coklu'; adaylar: CozumAday[]; sayiMetin?: string }
   | { tur: 'yok'; sayiMetin?: string }
 
@@ -34,10 +35,11 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
     const liste = cozum.adaylar
       .map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`)
       .join('. ')
-    const bas = cozum.sayiMetin || `${cozum.adaylar.length} hasta`
+    const bas = (cozum.sayiMetin || `${cozum.adaylar.length} hasta`).replace(/\.$/, '')
     return `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`
   }
   if (cozum.tur === 'yok' && cozum.sayiMetin) return cozum.sayiMetin
+  if (cozum.tur === 'tek' && cozum.cevap) return cozum.cevap
   return null
 }
 
@@ -239,15 +241,36 @@ export async function hastaninSozunuCoz(
   secenek: { yalnizAd?: boolean } = {}
 ): Promise<HastaCozumu> {
   const m = ' ' + duzle(mesaj) + ' '
-  // "son hastam" / "az önceki hasta" / "en son gelen hasta"
-  if (/ (son|az onceki|en son)( gelen| muayene ettigim)? hasta/.test(m)) {
+  // A bare who-question ("… hasta kim", "hangi hastayı gördüm") is answered here; a question about that patient
+  // ("son hastamın aşıları") opens the chart as before.
+  const kimSorusu = /\bkim(di|dir)?\b|hangi hasta/.test(m) && !/(asi|ilac|kilo|boy|yas|tani|recete|alerji|not|lab|tahlil)\w*/.test(m.replace(/ (son|en son) (recete\w*|ilac(?:i)? yazdigim)/, ' '))
+  const sonHastaAdi = async (pid: string | null | undefined, varsayilan: string, etiket: string): Promise<HastaCozumu | null> => {
+    if (!pid) return null
+    const { data: p } = await supabase.from('patients').select('id, name_encrypted').eq('id', pid).eq('doctor_id', doctorId).maybeSingle()
+    if (!p) return null
+    const ad = hastaAdiCoz(p.name_encrypted) || varsayilan
+    return { tur: 'tek', patientId: p.id, ad, ...(kimSorusu ? { cevap: `${etiket}: ${ad}.` } : {}) }
+  }
+  // NOTYA-AYSE-100 S2: "son kaydettiğim hasta" is the newest chart, "son reçetem hangi hastaya" the newest prescription.
+  if (/ (son|en son)( olarak)? (kaydettigim|kayit ettigim|ekledigim|actigim|olusturdugum) hasta/.test(m)) {
+    const { data } = await supabase.from('patients').select('id').eq('doctor_id', doctorId).eq('is_active', true)
+      .order('created_at', { ascending: false }).limit(1)
+    const c = await sonHastaAdi(data?.[0]?.id, 'son kayıt', 'Son kaydettiğiniz hasta')
+    if (c) return c
+  }
+  if (/ (son|en son) (recete\w*|ilac(?:i)? yazdigim|yazdigim ilac)/.test(m) && /hasta|kim/.test(m)) {
+    const { data } = await supabase.from('hasta_ilaclar').select('patient_id, ilac_adi, created_at').eq('doctor_id', doctorId)
+      .not('patient_id', 'is', null).order('created_at', { ascending: false }).limit(1)
+    const ilk = data?.[0] as { patient_id?: string; ilac_adi?: string; created_at?: string } | undefined
+    const c = await sonHastaAdi(ilk?.patient_id, 'son reçete', 'Son reçeteniz')
+    if (c) return c.tur === 'tek' && c.cevap && ilk?.ilac_adi ? { ...c, cevap: `Son reçeteniz: ${c.ad} — ${ilk.ilac_adi} (${trTarih(ilk.created_at || null)}).` } : c
+  }
+  // "son hastam" / "az önceki hasta" / "en son gelen hasta" / "en son hangi hastayı gördüm"
+  if (/ (son|az onceki|en son)( gelen| muayene ettigim| gordugum| baktigim| hangi)? hasta/.test(m)) {
     const { data } = await arsivsizSeanslar(supabase, 'patient_id').eq('doctor_id', doctorId)
       .not('patient_id', 'is', null).order('created_at', { ascending: false }).limit(1)
-    const pid = data?.[0]?.patient_id
-    if (pid) {
-      const { data: p } = await supabase.from('patients').select('id, name_encrypted').eq('id', pid).eq('doctor_id', doctorId).maybeSingle()
-      if (p) return { tur: 'tek', patientId: p.id, ad: hastaAdiCoz(p.name_encrypted) || 'son hasta' }
-    }
+    const c = await sonHastaAdi(data?.[0]?.patient_id, 'son hasta', 'Son gördüğünüz hasta')
+    if (c) return c
   }
   if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
   const { data: hastalar } = await supabase

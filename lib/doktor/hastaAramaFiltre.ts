@@ -155,6 +155,12 @@ const DURAK = new Set([
   'yazdim', 'yazdigim', 'yazdigin', 'yazdi',
   'verdim', 'verdigim', 'koydum', 'koydugum', 'uyguladim', 'uyguladigim',
   'sik', 'neydi', 'nedir',
+  // NOTYA-AYSE-100 S1: doctor-speech function words that became mandatory search terms ("kaç tane hasta kaydım var
+  // toplam" → term "kaydim" → 0 hasta). Verb forms of kaydet/et, possessives of hasta/reçete, "kimdi", "vaka", "çocuk".
+  'kaydim', 'kaydimiz', 'kaydettigim', 'kaydettigimiz', 'kayitlarim', 'kayitli', 'kayitlarda', 'kayitlarimda',
+  'ettim', 'ettik', 'ettin', 'ettiniz', 'hastayi', 'hastalarim', 'hastalarimiz', 'hastamiz', 'hastamin', 'hastamizin',
+  'recetem', 'recetemiz', 'kimdi', 'kimdir', 'kimlerdi', 'kimmis', 'vaka', 'vakasi', 'vakalar', 'vakalari', 'vakam',
+  'cocuk', 'cocuklar', 'cocugu', 'tani', 'tanisi', 'tanili', 'koydugumuz', 'neler', 'nelerdi',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -423,7 +429,9 @@ function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: 
 /** "kaç <ölçü>" — an age / weight / time / dose value, never a patient count. */
 const SAYIM_OLCU = /\bkac\s+(yas\w*|kilo\w*|kg|gram\w*|boy\w*|cm|santim\w*|gun\w*|ay|aylik|aydir|hafta\w*|yil\w*|saat\w*|dakika\w*|derece\w*|ates\w*|ml|mg|damla|tablet|kasik|olcek|puan|kez|kere|defa)\b/g
 export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
-  const n0 = trAramaNormalize(mesaj).replace(/\borta\s+kulak\b/g, 'kulak')
+  // NOTYA-AYSE-100 S3: "kulak iltihabı / enfeksiyonu" IS otitis — as two terms, "iltihap" became a second mandatory
+  // AND group that a note saying "akut otitis media" never satisfied (R.D. was missed, 2026-09-29).
+  const n0 = trAramaNormalize(mesaj).replace(/\borta\s+kulak\b/g, 'kulak').replace(/\bkulak\s+(?:iltihab|iltihap|enfeksiyon|infeksiyon)\w*/g, 'otit')
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
   // NOTYA-SES-KAC-HASTA-02 (Kaan, 2026-09-29): "kaç" before a measure word ("hastamız kaç yaşında", "kaç kilo",
   // "kaç gün") is a value question about one patient, not a count — it answered "Kayıtlarda 0 hasta".

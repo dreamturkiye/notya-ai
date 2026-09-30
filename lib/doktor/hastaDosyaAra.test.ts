@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { ARAMA_ALANLARI, adaylariTopla, hastaSayimiSeansIster, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { ARAMA_ALANLARI, adaylariTopla, hastaSayimiSeansIster, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, tumTerimlerEslesir, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
 import { cevapTuru } from './aramaBolum'
 import { listeIstenmisMi } from './hastaCozumleyici'
 import { antibiyotikMi, haricEslesir, ilacAdiKir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
@@ -345,5 +345,19 @@ describe('NOTYA-SES-KAC-HASTA-02 — "kaç <ölçü>" is not a count', () => {
       assert.equal(q.sayim, true, m)
       assert.equal(listeSorgusuMu(m, q), true, m)
     }
+  })
+})
+
+describe('NOTYA-AYSE-100 S1 — doctor-speech function words are not search terms', () => {
+  it('kaydım / ettim / kimdi / vakası / çocuk / reçetem drop out of terimler', () => {
+    const now = new Date('2026-09-30T01:00:00Z')
+    assert.deepEqual(sorguyuAyikla('kaç tane hasta kaydım var toplam', now).terimler, [])
+    assert.deepEqual(sorguyuAyikla('bu hafta kaç hasta muayene ettim', now).terimler, [])
+    assert.deepEqual(sorguyuAyikla('Son kaydettiğim hasta kim?', now).terimler, [])
+    assert.deepEqual(sorguyuAyikla('Bu hafta tanı koyduğum pnömoni vakası kimdi?', now).terimler, ['pnomoni'])
+    const kulak = sorguyuAyikla('kulak iltihabı olan çocuk kimdi', now)
+    assert.ok(!kulak.terimler.includes('cocuk') && !kulak.terimler.includes('kimdi') && !kulak.terimler.includes('iltihap'), JSON.stringify(kulak.terimler))
+    assert.ok(tumTerimlerEslesir('Sağ akut otitis media. Sağ kulak ağrısı', kulak.terimler))
+    assert.equal(sorguyuAyikla('Hastalarımı listele', now).cogul, true)
   })
 })

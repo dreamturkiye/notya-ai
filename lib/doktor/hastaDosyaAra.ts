@@ -35,6 +35,7 @@ export {
   listeSorgusuMu,
   metinEslesir,
   sorguyuAyikla,
+  tumTerimlerEslesir,
   yasAyHesapla,
   yasFiltreEslesir,
 } from '@/lib/doktor/hastaAramaFiltre'
@@ -532,8 +533,9 @@ export async function klinikAramaYurut(
     }
     if (q.minSeans && (seansAdet.get(id) || 0) < q.minSeans) continue
 
+    // NOTYA-AYSE-100 S1: "hastalarımı listele" has no filter — the whole panel IS the answer, not "0 hasta".
     const anlamiVar = Boolean(
-      q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere
+      q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere || q.cogul
       || q.veya.length || q.haric.length || q.sayisal.length || q.kanGrubu || q.cinsiyet || q.olcum
       || q.minSeans || q.seriGecikme || q.mchat || q.persentilEsik || q.bayrakVe.length || q.kirilim || q.ilacSinif
       || q.bolumIstegi || q.ziyaretYok
