@@ -1,0 +1,8 @@
+[
+ { "no": 1, "kat": "sayim", "oturum": "K1", "soru": "Hocam benim şu anda toplam kaç hastam var?", "icerir": ["Kayıtlarda [1-9]\\d* hasta"], "icermez": ["Kayıtlarda 0 hasta"] },
+ { "no": 2, "kat": "takvim", "oturum": "T1", "soru": "Bugün hiçbir randevumuz var mı?", "icerir": ["30 Eylül 2026"], "icermez": ["takvimden|kontrol et|menüden"] },
+ { "no": 3, "kat": "takvim", "oturum": "T1", "soru": "Peki yanım var mı?", "icerir": ["1 Ekim 2026"], "icermez": ["takvimden|kontrol et|menüden"] },
+ { "no": 4, "kat": "takvim", "oturum": "T2", "soru": "Bugün randevum var mı?", "icerir": ["30 Eylül 2026"] },
+ { "no": 5, "kat": "takvim", "oturum": "T2", "soru": "Peki xqzt var mı?", "icerir": ["1 Ekim 2026"], "icermez": ["takvimden|kontrol et|menüden"] },
+ { "no": 6, "kat": "takvim", "oturum": "T3", "soru": "Yarın randevo var mı?", "icerir": ["1 Ekim 2026"], "icermez": ["takvimden|kontrol et|menüden"] }
+]

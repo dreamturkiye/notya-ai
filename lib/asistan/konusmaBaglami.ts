@@ -95,6 +95,99 @@ function normalize(mesaj: string | null | undefined): string {
   return trAramaNormalize(String(mesaj || '')).replace(/['’]/g, '').replace(/[?!.,;:"“”]+/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
+/* ---------- ASR repair (NOTYA-KONUSMA-BAGLAMI-06, Kaan 2026-09-30) ----------
+ * Live: "Peki yarın var mı?" arrived from Fish as "Peki yanım var mı?" — no date word, no rewrite, the model
+ * deflected ("takvimden kontrol etmek gerekir"). A closed vocabulary is matched by edit distance, date words ONLY
+ * when the previous turn makes a date the expected slot (calendar intent); intent stems (randevu / reçete / tahlil)
+ * on the token prefix, suffixes kept. */
+const TARIH_SOZLUGU = ['bugun', 'yarin', 'dun', 'oburgun', 'haftaya', 'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma', 'cumartesi', 'pazar']
+const NIYET_GOVDELERI = ['randevu', 'recete', 'tahlil']
+/** Fish mis-hearings seen or inferred (normalized) → canonical. */
+const ASR_SABIT: Record<string, string> = {
+  yanim: 'yarin', yarim: 'yarin', yarn: 'yarin', yarinn: 'yarin', bugum: 'bugun', bugunn: 'bugun', bugn: 'bugun', dunn: 'dun',
+  obur: 'oburgun', ober: 'oburgun', haftay: 'haftaya', cumay: 'cuma', cumaya: 'cuma', persembeye: 'persembe', pazartesiye: 'pazartesi', saliya: 'sali', carsambaya: 'carsamba',
+  randevo: 'randevu', randevi: 'randevu', randovu: 'randevu', randevuz: 'randevu', randev: 'randevu', rande: 'randevu',
+  reseta: 'recete', resete: 'recete', receta: 'recete', recede: 'recete', rejete: 'recete', recet: 'recete',
+  tahril: 'tahlil', tahlik: 'tahlil', tehlil: 'tahlil', tahli: 'tahlil', tahlin: 'tahlil', tahsil: 'tahlil',
+  ashi: 'asi', asii: 'asi',
+}
+/** Words that must never be repaired into a date (they carry a slot / a marker of their own). */
+const TARIH_ONARIM_DISI = /^(gun|ay|son|hafta|yer|bos|tam|cok|hic|ama|yok|var|kac|kim|ne|bu|su|o|de|da|ya|ve|ile|olan|olur|olsa|olsun|mi|mu|saat|sonra|once|bize|bana|size|sana)$/
+
+export function duzenlemeMesafesi(a: string, b: string): number {
+  if (a === b) return 0
+  const m = a.length, n = b.length
+  if (!m) return n
+  if (!n) return m
+  let onceki = Array.from({ length: n + 1 }, (_, j) => j)
+  for (let i = 1; i <= m; i++) {
+    const simdiki: number[] = [i]
+    for (let j = 1; j <= n; j++) simdiki[j] = Math.min(onceki[j] + 1, simdiki[j - 1] + 1, onceki[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+    onceki = simdiki
+  }
+  return onceki[n]
+}
+
+const TR_YON_EKI = /(ya|ye|a|e)$/
+
+/** A garbled date word → the closed-list word, or null. Only called in calendar context. */
+export function tarihSozuBulanik(k: string): string | null {
+  if (!k || k.length < 3) return null
+  if (ASR_SABIT[k]) return TARIH_SOZLUGU.includes(ASR_SABIT[k]) ? ASR_SABIT[k] : null
+  if (DOLGU.has(k) || ISARET_KELIMELERI.has(k) || TARIH_ONARIM_DISI.test(k) || SORU_RE.test(` ${k} `) || SLOT_RE.test(k) || GUN_PARCASI_RE.test(` ${k} `) || niyetBul(k)) return null
+  const adaylar = [k, k.replace(TR_YON_EKI, '')].filter((x, i, arr) => x.length >= 3 && arr.indexOf(x) === i)
+  let enIyi: { soz: string; d: number } | null = null
+  for (const aday of adaylar) {
+    for (const soz of TARIH_SOZLUGU) {
+      const d = duzenlemeMesafesi(aday, soz)
+      const sinir = Math.min(aday.length, soz.length) >= 5 ? 2 : 1
+      if (d <= sinir && (!enIyi || d < enIyi.d)) enIyi = { soz, d }
+    }
+  }
+  return enIyi?.soz ?? null
+}
+
+/** A garbled intent word ("randevo", "reşete", "tahril") → canonical stem + its suffix, or null. */
+export function niyetSozuBulanik(k: string): string | null {
+  if (!k || k.length < 5) return null
+  if (ASR_SABIT[k] && !TARIH_SOZLUGU.includes(ASR_SABIT[k])) return ASR_SABIT[k]
+  if (DOLGU.has(k) || SLOT_RE.test(k) || niyetBul(k) || TARIH_RE.test(` ${k} `)) return null
+  for (const govde of NIYET_GOVDELERI) {
+    if (k.startsWith(govde) || k.length < govde.length - 1 || k.length > govde.length + 6) continue
+    const on = k.slice(0, govde.length)
+    if (duzenlemeMesafesi(on, govde) === 1) return govde + k.slice(govde.length)
+  }
+  return null
+}
+
+/**
+ * Repair the ASR text with the closed vocabulary: intent stems always, date words only when the previous turn was a
+ * calendar turn. Returns the repaired message (original spelling kept where nothing changed) and the repairs made.
+ */
+export function asrOnar(mesaj: string, takvimBaglami: boolean): { mesaj: string; onarilan: string[] } {
+  const ham = String(mesaj || '')
+  const onarilan: string[] = []
+  const parcalar = ham.split(/(\s+)/)
+  const yeni = parcalar.map((w) => {
+    if (!w || /^\s+$/.test(w)) return w
+    const noktalama = w.match(/[?!.,;:]+$/)?.[0] || ''
+    const k = normalize(w)
+    if (!k || TARIH_RE.test(` ${k} `)) return w
+    const niyet = niyetSozuBulanik(k)
+    if (niyet && niyet !== k) { onarilan.push(`${k}→${niyet}`); return niyet + noktalama }
+    if (takvimBaglami) {
+      const t = tarihSozuBulanik(k)
+      if (t && t !== k) { onarilan.push(`${k}→${t}`); return (t === 'oburgun' ? 'öbür gün' : t) + noktalama }
+    }
+    return w
+  })
+  return { mesaj: yeni.join(''), onarilan }
+}
+
+/** "peki … var mı?" after a calendar turn with an unreadable slot: the next natural day. */
+const SONRAKI_TARIH: Record<string, string> = { bugun: 'yarin', yarin: 'obur gun', dun: 'bugun', 'obur gun': 'haftaya', oburgun: 'haftaya', 'bu hafta': 'haftaya', pazartesi: 'sali', sali: 'carsamba', carsamba: 'persembe', persembe: 'cuma', cuma: 'pazartesi', cumartesi: 'pazartesi', pazar: 'pazartesi' }
+export function sonrakiTarihSozu(sozu: string | null | undefined): string | null { return sozu ? SONRAKI_TARIH[sozu] ?? null : null }
+
 /** "Rıdvan Dilmen'in" — the name with the apostrophe genitive as written; ASR "ridvanin" when it is the only word. */
 export function adCikar(mesaj: string): string | null {
   const ham = String(mesaj || '').trim()
@@ -255,9 +348,12 @@ export function takipCoz(
   const simdi = secenek.simdi || new Date()
   const b = baglam ? baglamOku(baglam, simdi) : null
   if (!b) return null
-  const ham = String(mesaj || '').trim()
-  if (!ham || ham.replace(/[.\s…]+/g, '').length < 2) return null
-  if (kayitNiyetiMi(ham) || dosyaAcmaIstegiMi(ham)) return null
+  const hamGiris = String(mesaj || '').trim()
+  if (!hamGiris || hamGiris.replace(/[.\s…]+/g, '').length < 2) return null
+  if (kayitNiyetiMi(hamGiris) || dosyaAcmaIstegiMi(hamGiris)) return null
+  // NOTYA-KONUSMA-BAGLAMI-06: ASR repair on the closed vocabulary (date words only after a calendar turn).
+  const onarim = asrOnar(hamGiris, b.sonNiyet === 'takvim')
+  const ham = onarim.mesaj
   const n = normalize(ham)
   const nn = ` ${n} `
   const isaret = TAKIP_RE.test(nn)
@@ -268,16 +364,19 @@ export function takipCoz(
   const kelimeler = n.split(' ').filter((k) => k && !DOLGU.has(k))
   const icerik = kelimeler.filter((k) => !SORU_RE.test(` ${k} `))
   const ozneVar = Boolean(v.tarihSozu || adYazili)
-  const miras: string[] = []
+  const miras: string[] = onarim.onarilan.length ? [`asr:${onarim.onarilan.join(',')}`] : []
+  let bozukTarih: string | null = null
 
-  // A full question is not rewritten — it resets the topic by itself.
-  if (yeniNiyet && ozneVar) return null
+  // A full question is not rewritten — it resets the topic by itself. When the ASR repair made it a full question
+  // ("Peki yanım var mı?" → "Peki yarin var mı?") the matchers must still see the repaired words.
+  const onarilmisTam = (): TakipSonucu | null => (onarim.onarilan.length ? { soru: ham, niyet: yeniNiyet || b.sonNiyet, varliklar: v, miras } : null)
+  if (yeniNiyet && ozneVar) return onarilmisTam()
   if (yeniNiyet && !ozneVar && !isaret) {
     // "Kaç hastam var?" / "Hastalarımı listele" are complete on their own; only a chart intent without a subject
     // ("aşıları?", "ilaçları?", "CRP kaç?") leans on the open patient.
-    if (!DOSYA_NIYETLERI.has(yeniNiyet) || icerik.length > 3) return null
+    if (!DOSYA_NIYETLERI.has(yeniNiyet) || icerik.length > 3) return onarilmisTam()
   }
-  if (!yeniNiyet && !isaret && icerik.length > 4) return null
+  if (!yeniNiyet && !isaret && icerik.length > 4) return onarilmisTam()
 
   const onceki = b.sonVarliklar
   const niyet: Niyet = yeniNiyet || b.sonNiyet
@@ -293,9 +392,16 @@ export function takipCoz(
     let kalanMetin = ` ${icerik.join(' ')} `
     for (const re of [TARIH_RE, TAHLIL_RE, ASI_RE, ILAC_RE]) kalanMetin = kalanMetin.replace(new RegExp(re.source, 'g'), ' ')
     const serbest = kalanMetin.split(' ').filter((k) => k && !adN.includes(k))
-    if (!serbest.every((k) => SLOT_RE.test(k) || tarihKelimesi(k) || niyetBul(k) !== null)) return null
+    const okunmayan = serbest.filter((k) => !(SLOT_RE.test(k) || tarihKelimesi(k) || niyetBul(k) !== null))
+    if (okunmayan.length) {
+      // NOTYA-KONUSMA-BAGLAMI-06: "peki <garbled> var mı?" after a calendar turn — one unreadable token in the date
+      // slot is the ASR's, not the doctor's; the calendar branch takes the next natural day.
+      const takvimBozuk = b.sonNiyet === 'takvim' && !yeniNiyet && isaret && /\b(var mi|yok mu)\b/.test(nn) && okunmayan.length === 1 && !v.tarihSozu && !adYazili
+      if (!takvimBozuk) return null
+      bozukTarih = okunmayan[0]
+    }
   }
-  const kalan = icerik.filter((k) => !tarihKelimesi(k) && !adN.includes(k) && !GUN_PARCASI_RE.test(` ${k} `) && k !== 'sonra').join(' ')
+  const kalan = icerik.filter((k) => !tarihKelimesi(k) && !adN.includes(k) && !GUN_PARCASI_RE.test(` ${k} `) && k !== 'sonra' && k !== bozukTarih).join(' ')
 
   // Only a patient ("peki Rıdvan'ın?"): the previous question, other patient — whatever the topic was.
   if (adYazili && !kalan && !yeniNiyet && !v.tarihSozu && b.sonSoru) {
@@ -313,9 +419,10 @@ export function takipCoz(
   }
 
   if (niyet === 'takvim') {
-    const tarihSozu = v.tarihSozu || onceki.tarihSozu
+    const sonraki = bozukTarih ? sonrakiTarihSozu(onceki.tarihSozu) : null
+    const tarihSozu = v.tarihSozu || sonraki || onceki.tarihSozu
     if (!tarihSozu) return null
-    if (!v.tarihSozu) miras.push('tarih')
+    if (!v.tarihSozu) miras.push(sonraki ? 'tarih-sonraki' : 'tarih')
     const tip: TakvimTipi = v.takvimTipi || onceki.takvimTipi || 'varmi'
     if (!v.takvimTipi && onceki.takvimTipi) miras.push('soru-tipi')
     const saat = v.saat || (tip === 'bosluk' ? onceki.saat : null) || null

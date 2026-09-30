@@ -164,6 +164,10 @@ const DURAK = new Set([
   'ettim', 'ettik', 'ettin', 'ettiniz', 'hastayi', 'hastalarim', 'hastalarimiz', 'hastamiz', 'hastamin', 'hastamizin',
   'recetem', 'recetemiz', 'kimdi', 'kimdir', 'kimlerdi', 'kimmis', 'vaka', 'vakasi', 'vakalar', 'vakalari', 'vakam',
   'cocuk', 'cocuklar', 'cocugu', 'tani', 'tanisi', 'tanili', 'koydugumuz', 'neler', 'nelerdi',
+  // NOTYA-SAYIM-ANDA-01 (Kaan live, 2026-09-30): "Hocam benim şu anda toplam kaç hastam var?" → "Kayıtlarda 0 hasta".
+  // "şu" was a stop word, "anda" was not — it became a mandatory search term no chart contains. Time-of-speaking
+  // words are never search terms.
+  'anda', 'suanda', 'suan', 'simdi', 'simdilik', 'halihazirda', 'hala', 'guncel', 'mevcut', 'toplamda', 'acaba', 'bakalim', 'bakar', 'misin', 'misiniz',
 ])
 
 const YAZI_SAYI: Record<string, number> = {

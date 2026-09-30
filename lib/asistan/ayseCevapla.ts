@@ -66,8 +66,8 @@ import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
 import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
-import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from "@/lib/randevu/takvimSorusu"
-import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar, type Niyet } from "@/lib/asistan/konusmaBaglami"
+import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi, takvimSapmasiMi } from "@/lib/randevu/takvimSorusu"
+import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar, asrOnar, type Niyet } from "@/lib/asistan/konusmaBaglami"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
@@ -212,6 +212,13 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       const ad = baglam.currentPatientId && String(baglam.currentPatientId) === aktifId && baglam.patientName ? String(baglam.patientName) : null
       konusmaOnceki = { ...konusmaOnceki, sonVarliklar: { ...v, hastaId: aktifId, hastaAd: ad } }
     }
+  }
+  // NOTYA-KONUSMA-BAGLAMI-06: the closed-vocabulary ASR repair ("randevo" → randevu, "reşete" → reçete) also applies
+  // to a first turn with no context; date-word repair needs a calendar turn behind it and lives in takipCoz.
+  const onarim = asrOnar(hamMesaj, false)
+  if (onarim.onarilan.length) {
+    message = onarim.mesaj
+    console.info("[asistan/chat] asr onarım", { onarilan: onarim.onarilan })
   }
   const takip = konusmaOnceki ? takipCoz(hamMesaj, konusmaOnceki, { tz: saatDilimi }) : null
   if (takip) {
@@ -620,6 +627,25 @@ ${ilacBaglamMetni(drugs[0])}`
   if (ses) sozler.push(sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle))
   const sozEkle = (s: string) => { if (!ses || !s) return; sozler.push(s); soyle(s) }
 
+  // NOTYA-KONUSMA-BAGLAMI-06 (Kaan live, 2026-09-30): a calendar question is answered by the calendar reader, never by
+  // "takvimden kontrol etmek gerekir". When the (rewritten) intent is calendar and a day resolves, the model's
+  // deflection is replaced with the deterministic day summary — this is the last line of defence behind the matcher.
+  if ((takip?.niyet === "takvim" || niyetBul(message) === "takvim") && takvimSapmasiMi(aiData.speech)) {
+    const gun = takvimSorusuCoz(message, { saatDilimi })?.tarih || varliklariCikar(message, { tz: saatDilimi }).tarih || takip?.varliklar.tarih || null
+    if (gun) {
+      try {
+        const satirlar = await doktorunGununuOku(supabase, doktorId, gun, saatDilimi)
+        const ozet = gunlukOzetMetni({ tarih: gun, satirlar, istenenSaat: null, istenenSureDk: 20 })
+        console.warn("[asistan/chat] takvim sapması → deterministik", { gun, model: String(aiData.speech || "").slice(0, 120) })
+        aiData.speech = ozet.metin
+        turNiyeti = "takvim"
+        if (ses) { sozler.length = 0; sozEkle(gunlukKonusmaMetni({ tarih: gun, satirlar, istenenSaat: null, cakisiyor: ozet.cakisiyor, cakisan: ozet.cakisan, tz: saatDilimi })) }
+      } catch (e) {
+        console.error("[asistan/chat] takvim sapması okunamadı", e instanceof Error ? e.message : String(e))
+      }
+    }
+  }
+
   // NOTYA-EYLEM: tool_use → taslak öneri + onay kartı. Hiçbir şey yazılmadı; hekim onaylayacak.
   const yuzey = ses ? "ses" as const : "sohbet" as const
   const eylemCtx = (h: HastaOzeti) => ({ supabase, doktorId, hasta: h, brans: eylemBransi, oneriId: "", bugunTRT: bugunTRT() })
@@ -695,7 +721,7 @@ ${ilacBaglamMetni(drugs[0])}`
   }
 
   // Update conversation history
-  turNiyeti = niyetBul(message) ?? (dosyaEk || currentPatient ? "hasta-dosya" : "genel")
+  turNiyeti = turNiyeti ?? niyetBul(message) ?? (dosyaEk || currentPatient ? "hasta-dosya" : "genel")
   await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: eylemHastasi?.id ?? null, bekleyen, sesDevamKalan })
 
   // Log action for learning

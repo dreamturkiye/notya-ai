@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { bugunTRT, gunKaydirTRT } from '../../core/eylemler/types'
-import { takvimSorusuCoz, takvimSorusuMu, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from './takvimSorusu'
+import { takvimSorusuCoz, takvimSorusuMu, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi, takvimSapmasiMi } from './takvimSorusu'
 
 describe('takvimSorusu — clinic day lookup, not a chart question', () => {
   it('bugün / today / appointments today → today', () => {
@@ -146,5 +146,14 @@ describe('NOTYA-AYSE-100 T2 — spoken slots and free-slot wording', () => {
     assert.equal(b?.saat, '15:00')
     assert.equal(takvimSorusuCoz('yarın saat 10 gibi müsait miyim', NY)?.saat, '10:00')
     assert.equal(takvimSorusuCoz('yarın 14:30 boş mu', NY)?.saat, '14:30')
+  })
+})
+
+describe('NOTYA-KONUSMA-BAGLAMI-06 — takvimSapmasiMi', () => {
+  it('detects the model sending the doctor to the calendar', () => {
+    for (const m of ['Bunu takvimden kontrol etmek gerekir Hocam.', 'Yarın için takvimi kontrol etmenizi öneririm.', 'Randevu listesine bakmanız gerekir.', 'Takvime bakmak lazım.', 'Randevu bilgilerine erişemiyorum Hocam.']) assert.equal(takvimSapmasiMi(m), true, m)
+  })
+  it('a real calendar answer is not a deflection', () => {
+    for (const m of ['1 Ekim 2026 Perşembe takviminde randevu yok.', 'Yarın 2 randevu var Hocam: 10:00 A.Y., 11:30 R.D.', '']) assert.equal(takvimSapmasiMi(m), false, m)
   })
 })

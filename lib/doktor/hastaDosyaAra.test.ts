@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { ARAMA_ALANLARI, adaylariTopla, hastaSayimiSeansIster, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, tumTerimlerEslesir, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { sayimCumlesi } from './hastaCozumleyici'
 import { olumsuzBulgulariAyikla } from './hastaAramaFiltre'
 import { cevapTuru } from './aramaBolum'
 import { listeIstenmisMi } from './hastaCozumleyici'
@@ -404,5 +405,26 @@ describe('NOTYA-AYSE-100-LUNA (b) — negated findings are not hits', () => {
   it('term match: a chart with only a negated kulak line does not match "kulak"', () => {
     assert.equal(metinEslesir(olumsuzBulgulariAyikla('Kulaklar — özellik yok'), ['kulak']), false)
     assert.equal(metinEslesir(olumsuzBulgulariAyikla('Sağ kulak zarı hiperemik'), ['kulak']), true)
+  })
+})
+
+describe('NOTYA-SAYIM-ANDA-01 — "şu anda / toplam / benim" are never search terms (Kaan live, 2026-09-30)', () => {
+  const NOW = new Date('2026-09-30T12:25:00Z')
+  it('"Hocam benim şu anda toplam kaç hastam var?" is a bare panel count', () => {
+    const q = sorguyuAyikla('Hocam benim şu anda toplam kaç hastam var?', NOW, 'America/New_York')
+    assert.deepEqual(q.terimler, [])
+    assert.equal(q.olcum, 'hasta')
+    assert.equal(q.pencere, null)
+    assert.equal(hastaSayimiSeansIster(q), false)
+  })
+  it('"şimdi kaç hastam var" / "şu an toplamda kaç hasta" likewise', () => {
+    for (const s of ['şimdi kaç hastam var', 'şu an toplamda kaç hasta', 'acaba hâlâ kaç hastam var']) assert.deepEqual(sorguyuAyikla(s, NOW).terimler, [], s)
+  })
+  it('sayimCumlesi names a panel of ≤ 5, keeps the number alone above', () => {
+    assert.equal(sayimCumlesi('Kayıtlarda 1 hasta.', 1, ['Kaan Arıoğlu']), 'Kayıtlarda 1 hasta: Kaan Arıoğlu.')
+    assert.equal(sayimCumlesi('Kayıtlarda 2 hasta.', 2, ['A B', 'C D']), 'Kayıtlarda 2 hasta: A B, C D.')
+    assert.equal(sayimCumlesi('Kayıtlarda 0 hasta.', 0, []), 'Kayıtlarda 0 hasta.')
+    assert.equal(sayimCumlesi('Kayıtlarda 137 hasta.', 137, ['x']), 'Kayıtlarda 137 hasta.')
+    assert.equal(sayimCumlesi('Bugün 2 hasta. Filtre: ateş.', 2, ['A', 'B']), 'Bugün 2 hasta: A, B. Filtre: ateş.')
   })
 })

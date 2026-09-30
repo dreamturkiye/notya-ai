@@ -136,6 +136,16 @@ export function takvimRecantMi(metin: string | null | undefined): boolean {
 }
 
 /**
+ * NOTYA-KONUSMA-BAGLAMI-06: the model sending the doctor to the calendar instead of reading it ("takvimden kontrol
+ * etmek gerekir", "takvimi kontrol edin", "randevu listesine bakmanız gerekir"). A calendar question never ends here.
+ */
+export function takvimSapmasiMi(metin: string | null | undefined): boolean {
+  const n = trAramaNormalize(String(metin || ''))
+  if (!n) return false
+  return /(takvim\w*\s+(kontrol|bak|goz|incele|dogrula)\w*|takvimden|takvime\s+bak|(randevu|takvim)\w*\s+(listes|ekran|sayfas|modul|bolum)\w*\s+(kontrol|bak|goz)\w*|kontrol et(mek|meniz|men) (gerek|lazim)|(randevu|takvim)\w*\s+(sistem|kayd|bilgi)\w*ne\s+eris|(randevu|takvim)\w*\s+(gorem|goruntuleyem|okuyam|ulasam|erisem))/.test(n)
+}
+
+/**
  * Calendar context carries across turns. If the last assistant line was a calendar lookup:
  *  - "emin misin / bir daha bak" re-reads the SAME day that answer named;
  *  - a message that is only a date expression (+ "peki / var mı / hocam"…) reads that day

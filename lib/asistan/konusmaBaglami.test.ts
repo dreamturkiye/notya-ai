@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { takipCoz, baglamKur, baglamOku, baglamBlogu, niyetBul, varliklariCikar, genitif, adCikar, type KonusmaBaglami, type Niyet } from './konusmaBaglami'
+import { takipCoz, baglamKur, baglamOku, baglamBlogu, niyetBul, varliklariCikar, genitif, adCikar, asrOnar, tarihSozuBulanik, niyetSozuBulanik, duzenlemeMesafesi, sonrakiTarihSozu, type KonusmaBaglami, type Niyet } from './konusmaBaglami'
 
 const SIMDI = new Date('2026-09-30T14:00:00-04:00') // Wednesday, New York
 const TZ = 'America/New_York'
@@ -223,5 +223,93 @@ describe('NOTYA-KONUSMA-BAGLAMI-01 — hasta-sayım frame substitution, expiry, 
     const k = baglamKur({ niyet: 'genel', soru: 'x', cevap: `**${'a'.repeat(200)}**\nikinci satır` })
     assert.ok(k.sonCevapOzeti.length <= 160 && k.sonCevapOzeti.endsWith('…'))
     assert.ok(!k.sonCevapOzeti.includes('*'))
+  })
+})
+
+describe('NOTYA-KONUSMA-BAGLAMI-06 — ASR-corrupted calendar follow-ups (Kaan live, 2026-09-30)', () => {
+  const T = b('takvim', 'Bugün hiçbir randevumuz var mı?', '30 Eylül 2026 Çarşamba takviminde randevu yok.')
+  const takvimSoru = (s: string) => takipCoz(s, T, sec)
+
+  it('duzenlemeMesafesi', () => {
+    assert.equal(duzenlemeMesafesi('yanim', 'yarin'), 2)
+    assert.equal(duzenlemeMesafesi('bugum', 'bugun'), 1)
+    assert.equal(duzenlemeMesafesi('cuma', 'cuma'), 0)
+  })
+  it('tarihSozuBulanik: Fish forms → closed list', () => {
+    assert.equal(tarihSozuBulanik('yanim'), 'yarin')
+    assert.equal(tarihSozuBulanik('yarim'), 'yarin')
+    assert.equal(tarihSozuBulanik('bugum'), 'bugun')
+    assert.equal(tarihSozuBulanik('cumaya'), 'cuma')
+    assert.equal(tarihSozuBulanik('persembeye'), 'persembe')
+    assert.equal(tarihSozuBulanik('carsanba'), 'carsamba')
+  })
+  it('tarihSozuBulanik: slot / marker / short words are never dates', () => {
+    for (const k of ['gun', 'bunun', 'var', 'yok', 'kim', 'saat', 'bos', 'sabah', 'peki', 'onun', 'sonra', 'hasta']) assert.equal(tarihSozuBulanik(k), null, k)
+  })
+  it('niyetSozuBulanik: randevu / reçete / tahlil mis-hearings, suffix kept', () => {
+    assert.equal(niyetSozuBulanik('randevo'), 'randevu')
+    assert.equal(niyetSozuBulanik('randevom'), 'randevum')
+    assert.equal(niyetSozuBulanik('resete'), 'recete')
+    assert.equal(niyetSozuBulanik('recetasi'), 'recetesi')
+    assert.equal(niyetSozuBulanik('tahril'), 'tahlil')
+    assert.equal(niyetSozuBulanik('randevum'), null)
+    assert.equal(niyetSozuBulanik('takvim'), null)
+  })
+  it('asrOnar: date words only in calendar context, intent stems always', () => {
+    assert.equal(asrOnar('Peki yanım var mı?', true).mesaj, 'Peki yarin var mı?')
+    assert.equal(asrOnar('Peki yanım var mı?', false).mesaj, 'Peki yanım var mı?')
+    assert.equal(asrOnar('yarın randevo var mı', false).mesaj, 'yarın randevu var mı')
+    assert.deepEqual(asrOnar('Peki yarın?', true).onarilan, [])
+  })
+  it('"Peki yanım var mı?" after "Bugün … randevumuz var mı?" → tomorrow', () => {
+    const r = takvimSoru('Peki yanım var mı?')
+    assert.ok(r)
+    assert.equal(r.niyet, 'takvim')
+    assert.equal(r.soru, 'Peki yarin var mı?') // a full (bare-date) calendar question after repair — the matcher reads it
+    assert.equal(r.varliklar.tarih, '2026-10-01')
+    assert.ok(r.miras.some((m) => m.startsWith('asr:yanim→yarin')))
+  })
+  it('"peki yarim?" / "bugum var mı" / "ya cumaya?" repair to the day', () => {
+    assert.equal(takvimSoru('peki yarim?')?.varliklar.tarih, '2026-10-01')
+    assert.equal(takvimSoru('peki bugum var mı')?.varliklar.tarih, '2026-09-30')
+    assert.equal(takvimSoru('ya cumaya?')?.varliklar.tarih, '2026-10-02')
+  })
+  it('one unreadable token in "peki … var mı" after a calendar turn → next natural day', () => {
+    const r = takvimSoru('Peki xqzt var mı?')
+    assert.ok(r)
+    assert.equal(r.soru, 'yarın randevum var mı?')
+    assert.ok(r.miras.includes('tarih-sonraki'))
+    const Y = b('takvim', 'Yarın randevum var mı?', '1 Ekim 2026 Perşembe takviminde randevu yok.')
+    assert.equal(takipCoz('peki xqzt var mı', Y, sec)?.soru, 'öbür gün randevum var mı?')
+  })
+  it('sonrakiTarihSozu', () => {
+    assert.equal(sonrakiTarihSozu('bugun'), 'yarin')
+    assert.equal(sonrakiTarihSozu('cuma'), 'pazartesi')
+    assert.equal(sonrakiTarihSozu(null), null)
+  })
+  it('an unreadable token without a calendar turn is not rewritten', () => {
+    const R = b('recete', "Umutcan'ın son reçetesi ne?", 'Umutcan Türkoğlu — reçete: Augmentin', {}, U)
+    assert.equal(takipCoz('Peki xqzt var mı?', R, sec), null)
+    assert.equal(takipCoz('Peki yanım var mı?', R, sec), null)
+  })
+  it('two unreadable tokens are free text, not a calendar slot', () => {
+    assert.equal(takvimSoru('peki xqzt wvb var mı'), null)
+  })
+  it('"Peki var mı?" without any slot still inherits the same day', () => {
+    const r = takvimSoru('Peki var mı?')
+    assert.equal(r?.soru, 'bugün randevum var mı?')
+    assert.ok(!r?.miras.includes('tarih-sonraki'))
+  })
+  it('a full calendar question with a garbled noun is repaired, not inherited', () => {
+    const r = takvimSoru('yarın randevo var mı?')
+    assert.equal(r?.soru, 'yarın randevu var mı?')
+    assert.equal(r?.niyet, 'takvim')
+    assert.deepEqual(r?.miras, ['asr:randevo→randevu'])
+    assert.equal(takvimSoru('yarın randevu var mı?'), null) // nothing to repair → a full question resets by itself
+  })
+  it('garbled entity words after a chart turn: "reşetesi" / "tahril"', () => {
+    const D = b('hasta-dosya', "Umutcan'ın dosyasını özetle", 'Umutcan Türkoğlu — özet', {}, U)
+    assert.equal(takipCoz('resetesi?', D, sec)?.niyet, 'recete')
+    assert.equal(takipCoz('son tahrili ne?', D, sec)?.niyet, 'tahlil')
   })
 })

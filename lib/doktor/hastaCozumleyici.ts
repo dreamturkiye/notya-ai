@@ -19,6 +19,18 @@ import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
+
+/**
+ * NOTYA-SAYIM-ANDA-01 (Kaan, 2026-09-30): a small panel is named — "Kayıtlarda 1 hasta: Kaan Arıoğlu." (≤ 5 names,
+ * only when the list IS the whole count); a large panel keeps the number only (the voice rule).
+ */
+export function sayimCumlesi(cumle: string, hastaSayisi: number, adlar: string[]): string {
+  const temiz = adlar.map((a) => String(a || '').trim()).filter(Boolean)
+  if (!hastaSayisi || hastaSayisi > 5 || temiz.length !== hastaSayisi) return cumle
+  const m = cumle.match(/^(.*?\b\d+ hasta)\.(.*)$/)
+  if (!m) return cumle
+  return `${m[1]}: ${temiz.join(', ')}.${m[2]}`
+}
 import { PERSONAS } from '@/lib/asistan/personaEngine'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
@@ -358,7 +370,7 @@ async function dosyaIleDaralt(
   // NOTYA-SES-KAC-HASTA: a pure count ("kaç hasta", "bugün kaç hasta", "kaç hastam var") is answered with the
   // number only. Reading 40 names aloud for "kaç hasta" was the voice failure; a list is given only when asked.
   if (aramaTuru === 'sayim' && ad.tur !== 'tek' && !aramaSorgusu.kirilim && !listeIstenmisMi(mesaj)) {
-    return { tur: 'yok', sayiMetin: istatistik.cumle }
+    return { tur: 'yok', sayiMetin: sayimCumlesi(istatistik.cumle, istatistik.hastaSayisi, ara.map((x) => x.ad)) }
   }
   // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
   // List/cohort questions ("ateşli hastalarım kimler") keep the old answer, so "Merhaba Ayşe" never picks a patient.
