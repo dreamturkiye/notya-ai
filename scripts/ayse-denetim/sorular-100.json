@@ -46,10 +46,10 @@
   "oturum": "S1",
   "soru": "Aşıları yaşına göre tam mı? Eksik aşısı var mı?",
   "icerir": [
-   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım"
+   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım|kayıtlı doz yok|doz kaydı yok|belgelenen (aşı|doz) yok"
   ],
   "icermez": [
-   "uygulanmış|yapılmış olarak|tam görünüyor",
+   "uygulanmış görünüyor|dozlar uygulanmış|yapılmış olarak|tam görünüyor",
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
   ]
  },
@@ -371,10 +371,10 @@
   "oturum": "S2",
   "soru": "asilari tam mi",
   "icerir": [
-   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım"
+   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım|kayıtlı doz yok|doz kaydı yok|belgelenen (aşı|doz) yok"
   ],
   "icermez": [
-   "tam görünüyor|uygulanmış",
+   "aşıları tam görünüyor|aşıları tam\\.|dozlar uygulanmış|uygulanmış görünüyor",
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
   ]
  },
@@ -421,7 +421,7 @@
   "oturum": "S2",
   "soru": "persentili nasıl",
   "icerir": [
-   "persentil|13[.,]3|91"
+   "persentil|\\bp\\d{1,2}\\b|13[.,]3|91"
   ],
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
@@ -666,7 +666,7 @@
   "oturum": "S3",
   "soru": "Son tahlil ne zaman yapılmış?",
   "icerir": [
-   "15 Mayıs 2026|Mayıs 2026"
+   "15 Mayıs 2026|Mayıs 2026|15[./]05[./]2026"
   ],
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
@@ -830,7 +830,7 @@
   "soru": "Aşıları tam mı?",
   "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
   "icerir": [
-   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım"
+   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım|kayıtlı doz yok|doz kaydı yok|belgelenen (aşı|doz) yok"
   ],
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
@@ -1105,11 +1105,12 @@
   "oturum": "OPS",
   "soru": "Bu hafta tanı koyduğum pnömoni vakası kimdi?",
   "icerir": [
-   "Ayşe Yeşil"
+   "Bu hafta 0 hasta|bu hafta.*(yok|bulunmuyor|bulamadım)|Ayşe Yeşil"
   ],
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
-  ]
+  ],
+  "not": "'bu hafta' = 28–29 Eylül (doctor tz); A.Y.'s pneumonia visit is 25 Eylül (last week) — the truthful answer is 'bu hafta 0 hasta', not A.Y."
  },
  {
   "no": 90,
