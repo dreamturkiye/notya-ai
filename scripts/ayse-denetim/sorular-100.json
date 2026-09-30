@@ -84,7 +84,7 @@
   "oturum": "S1",
   "soru": "Son muayeneden bu yana neler değişmiş?",
   "icerir": [
-   "25 Eylül|tek vizit|ilk vizit|1 vizit|bir vizit|önceki (vizit|muayene)"
+   "25 Eylül|25\\.09\\.2026|tek vizit|tek muayene|ilk vizit|1 vizit|bir vizit|önceki (vizit|muayene)"
   ],
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
@@ -947,6 +947,7 @@
   "icerir": [
    "Rıdvan"
   ],
+  "not": "Tarihe bağlı fixture: R.D. 28.09.2026'de geldi — yalnız 29.09'da koşulunca geçer (harness gerçek takvimi kullanır); tiering ile ilgisi yok.",
   "icermez": [
    "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
   ]
