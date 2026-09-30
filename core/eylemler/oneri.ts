@@ -116,7 +116,9 @@ export function tahminleriAyikla(
  * Still a PROPOSAL only: tool_choice forces the card; the tap is the commit.
  */
 export function kayitNiyetiMi(metin: string): boolean {
-  return /kaydet|yaz[ıi]ver|dosyaya\s*(gir|yaz|ekle)|kayda\s*(ge[çc]|al|ge[çc]ir)|sen\s+(yaz|gir|ekle|hazırla|yap)|geçir|sorumlulu[gğ]umda|rica\s+ediyorum|giriş\s+(benim|hekimin)|aşıy[ıi]\s*(gir|yaz|ekle|kaydet)|hazırla\.?\s*$/i.test(
+  // NOTYA-AYSE-100 N1: past/participle forms are questions about the past, not a record intent — "son kaydettiğim
+  // hasta kim", "daha önce otit geçirmiş mi" were forced into a tool call (tool_choice any) and answered with no text.
+  return /kaydet(?!ti|mi[şs]|il)|yaz[ıi]ver|dosyaya\s*(gir|yaz|ekle)|kayda\s*(ge[çc]|al|ge[çc]ir)|sen\s+(yaz|gir|ekle|hazırla|yap)|geçir(?!mi[şs]|di|iyor|ir mi|ecek|en)|sorumlulu[gğ]umda|rica\s+ediyorum|giriş\s+(benim|hekimin)|aşıy[ıi]\s*(gir|yaz|ekle|kaydet)|hazırla\.?\s*$/i.test(
     String(metin || '')
   )
 }

@@ -55,3 +55,31 @@ describe('gunlukOzet — o günün saatleri', () => {
     assert.doesNotMatch(cok, /Veli/)
   })
 })
+
+describe('sözlü biçim — gün adı doktorun saat dilimine göre (NOTYA-TAKVIM-TZ-01)', () => {
+  const AN = new Date('2026-09-29T23:35:00Z') // Tue 19:35 US Eastern, already Wed in TRT
+  it('"Bugün / Yarın" is decided in tz and the resolved day is spoken', () => {
+    const ny = gunlukKonusmaMetni({ tarih: '2026-09-29', satirlar: [], tz: 'America/New_York', simdi: AN })
+    assert.match(ny, /^Bugün, 29 Eylül Salı, takviminizde randevu yok Hocam\./)
+    const yarin = gunlukKonusmaMetni({ tarih: '2026-09-30', satirlar: [{ saat: '09:00', bitisSaat: '09:20', hastaAdi: 'Ali Kaya', tur: 'muayene' }], tz: 'America/New_York', simdi: AN })
+    assert.match(yarin, /^Yarın, 30 Eylül Çarşamba, 1 randevu var Hocam/)
+    const trt = gunlukKonusmaMetni({ tarih: '2026-09-30', satirlar: [], tz: 'Europe/Istanbul', simdi: AN })
+    assert.match(trt, /^Bugün, 30 Eylül Çarşamba,/)
+    assert.match(gunlukKonusmaMetni({ tarih: '2026-10-15', satirlar: [], tz: 'America/New_York', simdi: AN }), /^15 Ekim Perşembe takviminizde/)
+  })
+})
+
+describe('NOTYA-AYSE-100 T1 — haftalikOzetMetni', () => {
+  it('empty week and a week with one appointment', async () => {
+    const { haftalikOzetMetni } = await import('./gunlukOzet')
+    const simdi = new Date('2026-09-29T20:00:00Z')
+    const bos = haftalikOzetMetni({ bas: '2026-10-05', bit: '2026-10-11', gunler: [], tz: 'America/New_York', simdi })
+    assert.match(bos.metin, /^Haftaya .* haftası takviminde randevu yok\.$/)
+    const dolu = haftalikOzetMetni({ bas: '2026-09-28', bit: '2026-10-04', tz: 'America/New_York', simdi, gunler: [
+      { tarih: '2026-09-28', satirlar: [{ saat: '11:30', bitisSaat: '11:50', hastaAdi: 'R D', tur: 'muayene' }] },
+      { tarih: '2026-09-29', satirlar: [] },
+    ] })
+    assert.match(dolu.metin, /^Bu hafta .* haftası takviminde 1 randevu\. .*28 Eylül.*11:30–11:50 R D \(muayene\)\.$/)
+    assert.match(dolu.konusma, /1 randevu var Hocam/)
+  })
+})

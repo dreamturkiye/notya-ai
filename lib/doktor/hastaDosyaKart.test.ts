@@ -199,3 +199,13 @@ describe('sesli kart: plan / takip ve muayene bulgusu', () => {
     assert.doesNotMatch(m, /sürekli ilaç/)
   })
 })
+
+describe('NOTYA-AYSE-100 K1 — card answers', () => {
+  it('"e-nabız" is not a nabız (vital) question; empty field says kayıt yok; no appointment reads naturally', () => {
+    const k: HastaDosyaKart = { ...bosKart(), olcum: 'Ateş: 39 °C · Nabız: 126/dk', sonPlan: '' }
+    assert.equal(dosyaSoruCevap("E-nabız'dan yeni gelen bir şey var mı?", k), null)
+    assert.equal(dosyaSoruCevap('e nabizdan gelen var mi', k), null)
+    assert.match(dosyaSoruCevap('nabzı kaçtı', k) || '', /Nabız: 126/)
+    assert.equal(dosyaSoruCevap('ne zaman gelecek', k), 'Dosyada plan ve takip: kayıt yok. Dosyada randevu: planlanmış randevu yok.')
+  })
+})

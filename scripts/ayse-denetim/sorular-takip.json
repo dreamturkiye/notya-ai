@@ -1,0 +1,1262 @@
+[
+ {
+  "no": 1,
+  "kat": "takvim",
+  "oturum": "T01",
+  "soru": "Bugün randevum var mı?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 2,
+  "kat": "takvim",
+  "oturum": "T01",
+  "soru": "Peki yarın?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 3,
+  "kat": "takvim",
+  "oturum": "T01",
+  "soru": "Ya cuma?",
+  "icerir": [
+   "2 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 4,
+  "kat": "takvim",
+  "oturum": "T01",
+  "soru": "Haftaya?",
+  "icerir": [
+   "5 Ekim"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 5,
+  "kat": "takvim",
+  "oturum": "T02",
+  "soru": "Yarın randevum var mı?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 6,
+  "kat": "takvim",
+  "oturum": "T02",
+  "soru": "Peki var mı?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ],
+  "not": "date-only turn, then bare question → same day"
+ },
+ {
+  "no": 7,
+  "kat": "takvim",
+  "oturum": "T02",
+  "soru": "e öbür gün?",
+  "icerir": [
+   "2 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 8,
+  "kat": "takvim",
+  "oturum": "T03",
+  "soru": "bugun randevum var mi",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 9,
+  "kat": "takvim",
+  "oturum": "T03",
+  "soru": "peki yarin",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 10,
+  "kat": "takvim",
+  "oturum": "T03",
+  "soru": "ya persembe",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 11,
+  "kat": "takvim",
+  "oturum": "T04",
+  "soru": "Bugün kaç hastam var?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 12,
+  "kat": "takvim",
+  "oturum": "T04",
+  "soru": "peki yarın?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 13,
+  "kat": "takvim",
+  "oturum": "T04",
+  "soru": "kimler?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "Kayıtlarda \\d+ hasta",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 14,
+  "kat": "takvim",
+  "oturum": "T05",
+  "soru": "Bu hafta kaç randevum var?",
+  "icerir": [
+   "28 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 15,
+  "kat": "takvim",
+  "oturum": "T05",
+  "soru": "peki haftaya?",
+  "icerir": [
+   "5 Ekim"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 16,
+  "kat": "takvim",
+  "oturum": "T05",
+  "soru": "bu hafta kimler geliyor?",
+  "icerir": [
+   "28 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 17,
+  "kat": "takvim",
+  "oturum": "T06",
+  "soru": "yarın sabah boşluk var mı",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 18,
+  "kat": "takvim",
+  "oturum": "T06",
+  "soru": "peki öğleden sonra?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 19,
+  "kat": "takvim",
+  "oturum": "T07",
+  "soru": "Bugün saat 3'te yer var mı?",
+  "icerir": [
+   "30 Eylül 2026",
+   "15:00"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 20,
+  "kat": "takvim",
+  "oturum": "T07",
+  "soru": "peki yarın?",
+  "icerir": [
+   "1 Ekim 2026",
+   "15:00"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 21,
+  "kat": "takvim",
+  "oturum": "T08",
+  "soru": "dün kim geldi",
+  "icerir": [
+   "29 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 22,
+  "kat": "takvim",
+  "oturum": "T08",
+  "soru": "peki bugün?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 23,
+  "kat": "takvim",
+  "oturum": "T08",
+  "soru": "ya yarın kimler?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 24,
+  "kat": "randevu",
+  "oturum": "T09",
+  "soru": "Bugün randevum var mı?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 25,
+  "kat": "randevu",
+  "oturum": "T09",
+  "soru": "peki {{R}} randevusu ne zaman?",
+  "icerir": [
+   "{{R1}}",
+   "randevu"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 26,
+  "kat": "randevu",
+  "oturum": "T09",
+  "soru": "peki {{U1in}}?",
+  "icerir": [
+   "{{U1}}",
+   "randevu"
+  ],
+  "icermez": [
+   "{{R1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 27,
+  "kat": "asi",
+  "oturum": "T10",
+  "soru": "{{A}} dosyasını aç",
+  "icerir": [
+   "{{A1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 28,
+  "kat": "asi",
+  "oturum": "T10",
+  "soru": "aşıları?",
+  "icerir": [
+   "{{A1}}",
+   "aşı"
+  ],
+  "icermez": [
+   "{{R1}}|{{U1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 29,
+  "kat": "asi",
+  "oturum": "T10",
+  "soru": "eksik olan var mı?",
+  "icerir": [
+   "{{A1}}"
+  ],
+  "icermez": [
+   "{{R1}}|{{U1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 30,
+  "kat": "asi",
+  "oturum": "T10",
+  "soru": "peki {{U1in}}?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "{{A1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ],
+  "not": "patient switch keeps the aşı-eksik intent"
+ },
+ {
+  "no": 31,
+  "kat": "lab",
+  "oturum": "T11",
+  "soru": "{{U}} son tahlili ne?",
+  "icerir": [
+   "{{U1}}",
+   "hemogram|ferritin|15.05.2026|15 Mayıs"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 32,
+  "kat": "lab",
+  "oturum": "T11",
+  "soru": "CRP kaç?",
+  "icerir": [
+   "{{U1}}",
+   "CRP"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 33,
+  "kat": "lab",
+  "oturum": "T11",
+  "soru": "Peki hemogram?",
+  "icerir": [
+   "{{U1}}",
+   "Hb|hemogram|12,4|12\\.4"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 34,
+  "kat": "lab",
+  "oturum": "T11",
+  "soru": "bir önceki?",
+  "icerir": [
+   "{{U1}}",
+   "hemogram|önceki|yok|tek|bir"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 35,
+  "kat": "recete",
+  "oturum": "T12",
+  "soru": "{{A}} reçetesi?",
+  "icerir": [
+   "Klacid|Calpol"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 36,
+  "kat": "recete",
+  "oturum": "T12",
+  "soru": "dozu?",
+  "icerir": [
+   "Klacid|Calpol",
+   "mL|mg"
+  ],
+  "icermez": [
+   "amoksisilin",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 37,
+  "kat": "recete",
+  "oturum": "T12",
+  "soru": "kaç gün?",
+  "icerir": [
+   "gün"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 38,
+  "kat": "recete",
+  "oturum": "T13",
+  "soru": "{{R1}} recetesi ne",
+  "icerir": [
+   "{{R1}}",
+   "amoksisilin|buprofen"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 39,
+  "kat": "recete",
+  "oturum": "T13",
+  "soru": "dozu",
+  "icerir": [
+   "mL|mg"
+  ],
+  "icermez": [
+   "Klacid",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 40,
+  "kat": "recete",
+  "oturum": "T13",
+  "soru": "kac gun verdik",
+  "icerir": [
+   "gün"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 41,
+  "kat": "buyume",
+  "oturum": "T14",
+  "soru": "{{U}} kaç kilo?",
+  "icerir": [
+   "{{U1}}",
+   "kg"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 42,
+  "kat": "buyume",
+  "oturum": "T14",
+  "soru": "boyu?",
+  "icerir": [
+   "{{U1}}",
+   "cm"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 43,
+  "kat": "buyume",
+  "oturum": "T14",
+  "soru": "persentili?",
+  "icerir": [
+   "p\\d|persentil|%"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 44,
+  "kat": "buyume",
+  "oturum": "T14",
+  "soru": "baş çevresi?",
+  "icerir": [
+   "cm|baş çevresi"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 45,
+  "kat": "muayene",
+  "oturum": "T15",
+  "soru": "{{R}} son muayenesinde ateşi kaçtı",
+  "icerir": [
+   "{{R1}}",
+   "39"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 46,
+  "kat": "muayene",
+  "oturum": "T15",
+  "soru": "tanısı?",
+  "icerir": [
+   "{{R1}}",
+   "otit"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 47,
+  "kat": "muayene",
+  "oturum": "T15",
+  "soru": "peki {{U1in}}?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "{{R1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 48,
+  "kat": "lab",
+  "oturum": "T16",
+  "soru": "{{U}} ferritin kaç?",
+  "icerir": [
+   "{{U1}}",
+   "32|ferritin"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 49,
+  "kat": "lab",
+  "oturum": "T16",
+  "soru": "peki {{R1in}}?",
+  "icerir": [
+   "{{R1}}",
+   "ferritin|yok|bulunmuyor|kayıt"
+  ],
+  "icermez": [
+   "{{U1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 50,
+  "kat": "sayim",
+  "oturum": "T17",
+  "soru": "Kaç hastam var?",
+  "icerir": [
+   "4 hasta"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 51,
+  "kat": "sayim",
+  "oturum": "T17",
+  "soru": "bu hafta kaç hasta muayene ettim?",
+  "icerir": [
+   "Bu hafta|bu hafta"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 52,
+  "kat": "sayim",
+  "oturum": "T17",
+  "soru": "peki son 30 gün?",
+  "icerir": [
+   "30 gün|Son 30"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 53,
+  "kat": "dosya",
+  "oturum": "T18",
+  "soru": "{{U}} dosyasını aç",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 54,
+  "kat": "dosya",
+  "oturum": "T18",
+  "soru": "kan grubu?",
+  "icerir": [
+   "kan grubu"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 55,
+  "kat": "dosya",
+  "oturum": "T18",
+  "soru": "alerjisi?",
+  "icerir": [
+   "alerji"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 56,
+  "kat": "dosya",
+  "oturum": "T18",
+  "soru": "peki {{A}}'in?",
+  "icerir": [
+   "{{A1}}",
+   "alerji"
+  ],
+  "icermez": [
+   "{{U1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 57,
+  "kat": "sayfa",
+  "oturum": "T19",
+  "soru": "aşıları tam mı?",
+  "hasta": "{{A_ID}}",
+  "icerir": [
+   "{{A1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 58,
+  "kat": "sayfa",
+  "oturum": "T19",
+  "soru": "peki {{U1in}}?",
+  "hasta": "{{A_ID}}",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "{{A1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 59,
+  "kat": "sayfa",
+  "oturum": "T19",
+  "soru": "kilosu?",
+  "hasta": "{{A_ID}}",
+  "icerir": [
+   "{{U1}}",
+   "kg"
+  ],
+  "icermez": [
+   "{{A1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ],
+  "not": "after the named switch the session patient is U, not the page patient"
+ },
+ {
+  "no": 60,
+  "kat": "not",
+  "oturum": "T20",
+  "soru": "{{U}} son vizitte ne not düşmüşüm?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 61,
+  "kat": "not",
+  "oturum": "T20",
+  "soru": "peki bir öncekinde?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 62,
+  "kat": "belge",
+  "oturum": "T21",
+  "soru": "{{A}} gelen belgeler kutusunda bir şey var mı?",
+  "icerir": [
+   "{{A1}}",
+   "belge|kayıt|Belge"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 63,
+  "kat": "belge",
+  "oturum": "T21",
+  "soru": "peki {{U1in}}?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "{{A1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 64,
+  "kat": "asi",
+  "oturum": "T22",
+  "soru": "{{U}} KKK aşısını ne zaman yaptık?",
+  "icerir": [
+   "KKK",
+   "15 Mayıs 2025|15.05.2025"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 65,
+  "kat": "asi",
+  "oturum": "T22",
+  "soru": "peki Hepatit B?",
+  "icerir": [
+   "Hepatit B|hepatit B|Hepatit-B"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 66,
+  "kat": "asi",
+  "oturum": "T22",
+  "soru": "kaç doz?",
+  "icerir": [
+   "doz",
+   "Hepatit B|hepatit"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 67,
+  "kat": "recete",
+  "oturum": "T23",
+  "soru": "{{R}} dosyasını aç",
+  "icerir": [
+   "{{R1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 68,
+  "kat": "recete",
+  "oturum": "T23",
+  "soru": "ilaçları?",
+  "icerir": [
+   "moksisilin"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 69,
+  "kat": "recete",
+  "oturum": "T23",
+  "soru": "dozu?",
+  "icerir": [
+   "mL|mg"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 70,
+  "kat": "recete",
+  "oturum": "T23",
+  "soru": "kaç gün?",
+  "icerir": [
+   "gün"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 71,
+  "kat": "takvim",
+  "oturum": "T24",
+  "soru": "kaç hastam var bugün?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 72,
+  "kat": "takvim",
+  "oturum": "T24",
+  "soru": "peki yarın?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 73,
+  "kat": "takvim",
+  "oturum": "T24",
+  "soru": "peki haftaya?",
+  "icerir": [
+   "5 Ekim"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 74,
+  "kat": "takvim",
+  "oturum": "T24",
+  "soru": "kimler?",
+  "icerir": [
+   "5 Ekim"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 75,
+  "kat": "buyume",
+  "oturum": "T25",
+  "soru": "{{U}} büyümesi nasıl?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 76,
+  "kat": "buyume",
+  "oturum": "T25",
+  "soru": "kilosu?",
+  "icerir": [
+   "{{U1}}",
+   "kg"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 77,
+  "kat": "buyume",
+  "oturum": "T25",
+  "soru": "peki {{R1in}}?",
+  "icerir": [
+   "{{R1}}",
+   "kg"
+  ],
+  "icermez": [
+   "{{U1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 78,
+  "kat": "asi",
+  "oturum": "T26",
+  "soru": "{{U}} asilari tam mi",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 79,
+  "kat": "asi",
+  "oturum": "T26",
+  "soru": "eksik olan var mi",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 80,
+  "kat": "asi",
+  "oturum": "T26",
+  "soru": "siradaki hangisi",
+  "icerir": [
+   "{{U1}}",
+   "aşı|Aşı"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 81,
+  "kat": "recete",
+  "oturum": "T27",
+  "soru": "{{A}} son tanısı?",
+  "icerir": [
+   "nömoni"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 82,
+  "kat": "recete",
+  "oturum": "T27",
+  "soru": "ya ilaçları?",
+  "icerir": [
+   "Klacid|Calpol"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 83,
+  "kat": "recete",
+  "oturum": "T27",
+  "soru": "e dozu?",
+  "icerir": [
+   "mL|mg"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 84,
+  "kat": "lab",
+  "oturum": "T28",
+  "soru": "{{U}} son tahlili ne zaman?",
+  "icerir": [
+   "15 Mayıs 2026|15.05.2026|24 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 85,
+  "kat": "lab",
+  "oturum": "T28",
+  "soru": "sonuçları?",
+  "icerir": [
+   "Hb|ferritin|hemogram|12,4"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 86,
+  "kat": "lab",
+  "oturum": "T28",
+  "soru": "ferritin?",
+  "icerir": [
+   "32|ferritin"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 87,
+  "kat": "neg",
+  "oturum": "T29",
+  "soru": "dozu?",
+  "icermez": [
+   "Klacid|amoksisilin|Calpol|mL|mg"
+  ],
+  "not": "no context at all → the model may ask; must not invent a dose"
+ },
+ {
+  "no": 88,
+  "kat": "takvim",
+  "oturum": "T30",
+  "soru": "Bugün kaç hastam var?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 89,
+  "kat": "takvim",
+  "oturum": "T30",
+  "soru": "kimler?",
+  "geriAlDk": 11,
+  "icermez": [
+   "takviminde",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ],
+  "not": "context expired (11 min) → not a calendar continuation"
+ },
+ {
+  "no": 90,
+  "kat": "lab",
+  "oturum": "T31",
+  "soru": "{{U}} ferritin kaç?",
+  "icerir": [
+   "32|ferritin"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 91,
+  "kat": "lab",
+  "oturum": "T31",
+  "soru": "peki demir?",
+  "icerir": [
+   "emir"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 92,
+  "kat": "lab",
+  "oturum": "T31",
+  "soru": "bir önceki?",
+  "icerir": [
+   "{{U1}}"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 93,
+  "kat": "takvim",
+  "oturum": "T32",
+  "soru": "Bu hafta kaç randevum var?",
+  "icerir": [
+   "28 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 94,
+  "kat": "takvim",
+  "oturum": "T32",
+  "soru": "peki haftaya?",
+  "icerir": [
+   "5 Ekim"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 95,
+  "kat": "takvim",
+  "oturum": "T32",
+  "soru": "ya bu hafta kimler?",
+  "icerir": [
+   "28 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 96,
+  "kat": "dosya",
+  "oturum": "T33",
+  "soru": "{{A}} kaç yaşında?",
+  "icerir": [
+   "5 yaş"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 97,
+  "kat": "dosya",
+  "oturum": "T33",
+  "soru": "peki {{R1in}}?",
+  "icerir": [
+   "{{R1}}",
+   "2 yaş"
+  ],
+  "icermez": [
+   "{{A1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 98,
+  "kat": "dosya",
+  "oturum": "T33",
+  "soru": "ya {{U1in}}?",
+  "icerir": [
+   "{{U1}}",
+   "2 yaş"
+  ],
+  "icermez": [
+   "{{R1}}",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 99,
+  "kat": "takvim",
+  "oturum": "T34",
+  "soru": "Bugün randevum var mı?",
+  "icerir": [
+   "30 Eylül 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 100,
+  "kat": "takvim",
+  "oturum": "T34",
+  "soru": "{{A}} aşıları tam mı?",
+  "icerir": [
+   "{{A1}}"
+  ],
+  "icermez": [
+   "takviminde",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ },
+ {
+  "no": 101,
+  "kat": "takvim",
+  "oturum": "T34",
+  "soru": "peki yarın randevu var mı?",
+  "icerir": [
+   "1 Ekim 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|hangi hastayı|hangi hastanın|hangi tarih|neyi kastettiniz|kastettiğiniz|netleştirir misiniz|netleştirmenizi"
+  ]
+ }
+]

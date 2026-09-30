@@ -5,9 +5,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { fishIstegi } from '@/lib/asistan/fishSes'
+import { fishFetch } from '@/lib/asistan/fishBaglanti'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
+// NOTYA-FISH-BOLGE-01: next to Supabase (us-east-1) — see fish-stt.
+export const preferredRegion = ['iad1']
 
 const UST_KARAKTER = 2000
 
@@ -44,7 +47,7 @@ export async function POST(req: NextRequest) {
     console.info('[fish-ses]', { tts_latency_ms: Date.now() - t0, karakter: metin.length, dil: istek.govde.language, durum, hata })
   }
   try {
-    const yanit = await fetch('https://api.fish.audio/v1/tts', {
+    const yanit = await fishFetch('https://api.fish.audio/v1/tts', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${anahtar}`,
@@ -53,7 +56,6 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(istek.govde),
       signal: kontrol.signal,
-      cache: 'no-store',
     })
     if (!yanit.ok || !yanit.body) {
       kayit(yanit.status, `http_${yanit.status}`)
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
     // Latency = time to first byte of audio; the body streams on to the browser.
     kayit(yanit.status, null)
-    return new NextResponse(yanit.body, {
+    return new NextResponse(yanit.body as unknown as ReadableStream<Uint8Array>, {
       status: 200,
       headers: {
         'Content-Type': 'application/octet-stream',

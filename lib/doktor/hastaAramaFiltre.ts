@@ -5,6 +5,7 @@
  * Values are matched across notes, intake, aşı, ilaç, randevu, belge, vitals.
  * Isolation lives in hastaDosyaAra (every query doctor-scoped).
  */
+import { gunSinirlariUtc } from '@/lib/randevu/tarihCozumle'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { AY_AD, ASI_KELIME, ANTIBIYOTIK_GOVDE, KAN_GRUPLARI, KLINIK_SOZLUK } from '@/lib/doktor/hastaAramaSozluk'
 
@@ -51,6 +52,8 @@ export interface SorguAyik {
   bolumIstegi: 'pediatri' | 'goz' | 'kd' | 'dahiliye' | 'derm' | null
   ziyaretYok: boolean
   ozet: string
+  /** Doctor timezone the window was built in (NOTYA-AYSE-100-LUNA a). */
+  tz: string
 }
 
 export interface AlanTanimi {
@@ -155,6 +158,16 @@ const DURAK = new Set([
   'yazdim', 'yazdigim', 'yazdigin', 'yazdi',
   'verdim', 'verdigim', 'koydum', 'koydugum', 'uyguladim', 'uyguladigim',
   'sik', 'neydi', 'nedir',
+  // NOTYA-AYSE-100 S1: doctor-speech function words that became mandatory search terms ("kaç tane hasta kaydım var
+  // toplam" → term "kaydim" → 0 hasta). Verb forms of kaydet/et, possessives of hasta/reçete, "kimdi", "vaka", "çocuk".
+  'kaydim', 'kaydimiz', 'kaydettigim', 'kaydettigimiz', 'kayitlarim', 'kayitli', 'kayitlarda', 'kayitlarimda',
+  'ettim', 'ettik', 'ettin', 'ettiniz', 'hastayi', 'hastalarim', 'hastalarimiz', 'hastamiz', 'hastamin', 'hastamizin',
+  'recetem', 'recetemiz', 'kimdi', 'kimdir', 'kimlerdi', 'kimmis', 'vaka', 'vakasi', 'vakalar', 'vakalari', 'vakam',
+  'cocuk', 'cocuklar', 'cocugu', 'tani', 'tanisi', 'tanili', 'koydugumuz', 'neler', 'nelerdi',
+  // NOTYA-SAYIM-ANDA-01 (Kaan live, 2026-09-30): "Hocam benim şu anda toplam kaç hastam var?" → "Kayıtlarda 0 hasta".
+  // "şu" was a stop word, "anda" was not — it became a mandatory search term no chart contains. Time-of-speaking
+  // words are never search terms.
+  'anda', 'suanda', 'suan', 'simdi', 'simdilik', 'halihazirda', 'hala', 'guncel', 'mevcut', 'toplamda', 'acaba', 'bakalim', 'bakar', 'misin', 'misiniz',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -163,24 +176,41 @@ const YAZI_SAYI: Record<string, number> = {
   onyedi: 17, onsekiz: 18,
 }
 
-function trtParca(d = new Date(), gunOffset = 0): { iso: string; gun: string } {
-  const x = new Date(d.getTime() + gunOffset * 86400000)
-  const gun = x.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-  return { iso: new Date(`${gun}T00:00:00+03:00`).toISOString(), gun }
+/**
+ * NOTYA-AYSE-100-LUNA (open item a, 2026-09-29): search windows ("bugün", "bu hafta", "son 30 gün") were computed in
+ * TRT while the calendar and the doctor's "bugün" live in the doctor's timezone — a US doctor asking at 21:00 got
+ * tomorrow's TRT day. Every window is now built in `tz` (default TRT for callers that have no doctor timezone).
+ */
+export const VARSAYILAN_TZ = 'Europe/Istanbul'
+
+function gunTz(d: Date, tz: string): string {
+  try { return d.toLocaleDateString('en-CA', { timeZone: tz }) } catch { return d.toLocaleDateString('en-CA', { timeZone: VARSAYILAN_TZ }) }
 }
 
-function haftaBasiGun(d = new Date()): string {
-  const gun = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-  const dt = new Date(`${gun}T12:00:00+03:00`)
+function trtParca(d = new Date(), gunOffset = 0, tz = VARSAYILAN_TZ): { iso: string; gun: string } {
+  const x = new Date(d.getTime() + gunOffset * 86400000)
+  const gun = gunTz(x, tz)
+  return { iso: gunSinirlariUtc(gun, tz).bas, gun }
+}
+
+function haftaBasiGun(d = new Date(), tz = VARSAYILAN_TZ): string {
+  const gun = gunTz(d, tz)
+  const dt = new Date(`${gun}T12:00:00Z`)
   const dow = (dt.getUTCDay() + 6) % 7
   dt.setUTCDate(dt.getUTCDate() - dow)
-  return dt.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  return dt.toISOString().slice(0, 10)
 }
 
+/** Calendar-day arithmetic on an ISO day — timezone-free (a day plus n days is the same in every zone). */
 function gunEkle(gun: string, n: number): string {
-  const d = new Date(`${gun}T12:00:00+03:00`)
+  const d = new Date(`${gun}T12:00:00Z`)
   d.setUTCDate(d.getUTCDate() + n)
-  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  return d.toISOString().slice(0, 10)
+}
+
+/** Window from two ISO days, instants in `tz`. */
+function pencereKur(basGun: string, bitGun: string, etiket: string, tz: string): Pencere {
+  return { basIso: gunSinirlariUtc(basGun, tz).bas, bitIso: gunSinirlariUtc(bitGun, tz).bit, basGun, bitGun, etiket }
 }
 
 export function yasAyHesapla(dobIso: string, now = new Date()): number | null {
@@ -291,36 +321,36 @@ function yasCikar(n: string): { yas: YasFiltresi | null; kalan: string } {
   return { yas, kalan: kalan.replace(/\s+/g, ' ').trim() }
 }
 
-function pencereCikar(n: string, now: Date): { pencere: Pencere | null; kalan: string } {
-  const bugun = trtParca(now).gun
+function pencereCikar(n: string, now: Date, tz: string): { pencere: Pencere | null; kalan: string } {
+  const bugun = trtParca(now, 0, tz).gun
   let pencere: Pencere | null = null
   let kalan = n
   if (/\bbugun\b|\btoday\b/.test(n)) {
-    pencere = { basIso: `${bugun}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bugun, bitGun: bugun, etiket: 'bugün' }
+    pencere = pencereKur(bugun, bugun, 'bugün', tz)
   } else if (/\bdun\b|\byesterday\b/.test(n)) {
     const d = gunEkle(bugun, -1)
-    pencere = { basIso: `${d}T00:00:00+03:00`, bitIso: `${d}T23:59:59+03:00`, basGun: d, bitGun: d, etiket: 'dün' }
+    pencere = pencereKur(d, d, 'dün', tz)
   } else if (/gecen hafta|last week/.test(n)) {
-    const bu = haftaBasiGun(now)
+    const bu = haftaBasiGun(now, tz)
     const bas = gunEkle(bu, -7)
     const bit = gunEkle(bu, -1)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: 'geçen hafta' }
+    pencere = pencereKur(bas, bit, 'geçen hafta', tz)
   } else if (/bu hafta|this week/.test(n)) {
-    const bas = haftaBasiGun(now)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu hafta' }
+    const bas = haftaBasiGun(now, tz)
+    pencere = pencereKur(bas, bugun, 'bu hafta', tz)
   } else if (/gecen ay|last month/.test(n)) {
     const [y, a] = bugun.split('-').map(Number)
     const ay = a === 1 ? 12 : a - 1
     const yil = a === 1 ? y - 1 : y
     const bas = `${yil}-${String(ay).padStart(2, '0')}-01`
     const bit = gunEkle(`${bugun.slice(0, 8)}01`, -1)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: 'geçen ay' }
+    pencere = pencereKur(bas, bit, 'geçen ay', tz)
   } else if (/bu ay|this month/.test(n)) {
     const bas = `${bugun.slice(0, 8)}01`
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu ay' }
+    pencere = pencereKur(bas, bugun, 'bu ay', tz)
   } else if (/bu yil|this year/.test(n)) {
     const bas = `${bugun.slice(0, 4)}-01-01`
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu yıl' }
+    pencere = pencereKur(bas, bugun, 'bu yıl', tz)
   } else {
     const son = n.match(new RegExp(`\\bson\\s+(?:${SAYI_RE}\\s+)?(gun|hafta|ay|days?|weeks?|months?)(?:da|de|dir)?(?:\\s+icinde)?`))
     if (son) {
@@ -328,7 +358,7 @@ function pencereCikar(n: string, now: Date): { pencere: Pencere | null; kalan: s
       const birim = son[2]
       const gun = /hafta|week/.test(birim) ? adet * 7 : /ay|month/.test(birim) ? adet * 30 : adet
       const bas = gunEkle(bugun, -gun)
-      pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: `son ${adet} ${birim}` }
+      pencere = pencereKur(bas, bugun, `son ${adet} ${birim}`, tz)
       kalan = kalan.replace(son[0], ' ')
     }
     const ayAralik = n.match(/\b(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)\s*[-–]\s*(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)/)
@@ -339,7 +369,7 @@ function pencereCikar(n: string, now: Date): { pencere: Pencere | null; kalan: s
       if (a1 && a2) {
         const bas = `${yil}-${String(a1).padStart(2, '0')}-${String(ayAralik[1]).padStart(2, '0')}`
         const bit = `${yil}-${String(a2).padStart(2, '0')}-${String(ayAralik[3]).padStart(2, '0')}`
-        pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: `${ayAralik[1]}–${ayAralik[3]} ${ayAralik[4]}` }
+        pencere = pencereKur(bas, bit, `${ayAralik[1]}–${ayAralik[3]} ${ayAralik[4]}`, tz)
         kalan = kalan.replace(ayAralik[0], ' ')
       }
     }
@@ -347,7 +377,7 @@ function pencereCikar(n: string, now: Date): { pencere: Pencere | null; kalan: s
     if (isoAralik && !pencere) {
       const bas = `${isoAralik[3]}-${isoAralik[2].padStart(2, '0')}-${isoAralik[1].padStart(2, '0')}`
       const bit = `${isoAralik[6]}-${isoAralik[5].padStart(2, '0')}-${isoAralik[4].padStart(2, '0')}`
-      pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: `${isoAralik[1]}.${isoAralik[2]}–${isoAralik[4]}.${isoAralik[5]}` }
+      pencere = pencereKur(bas, bit, `${isoAralik[1]}.${isoAralik[2]}–${isoAralik[4]}.${isoAralik[5]}`, tz)
       kalan = kalan.replace(isoAralik[0], ' ')
     }
   }
@@ -422,8 +452,10 @@ function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: 
 
 /** "kaç <ölçü>" — an age / weight / time / dose value, never a patient count. */
 const SAYIM_OLCU = /\bkac\s+(yas\w*|kilo\w*|kg|gram\w*|boy\w*|cm|santim\w*|gun\w*|ay|aylik|aydir|hafta\w*|yil\w*|saat\w*|dakika\w*|derece\w*|ates\w*|ml|mg|damla|tablet|kasik|olcek|puan|kez|kere|defa)\b/g
-export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
-  const n0 = trAramaNormalize(mesaj).replace(/\borta\s+kulak\b/g, 'kulak')
+export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARSAYILAN_TZ): SorguAyik {
+  // NOTYA-AYSE-100 S3: "kulak iltihabı / enfeksiyonu" IS otitis — as two terms, "iltihap" became a second mandatory
+  // AND group that a note saying "akut otitis media" never satisfied (R.D. was missed, 2026-09-29).
+  const n0 = trAramaNormalize(mesaj).replace(/\borta\s+kulak\b/g, 'kulak').replace(/\bkulak\s+(?:iltihab|iltihap|enfeksiyon|infeksiyon)\w*/g, 'otit')
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
   // NOTYA-SES-KAC-HASTA-02 (Kaan, 2026-09-29): "kaç" before a measure word ("hastamız kaç yaşında", "kaç kilo",
   // "kaç gün") is a value question about one patient, not a count — it answered "Kayıtlarda 0 hasta".
@@ -447,11 +479,11 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const yasKirilim = /1\s*[-–]\s*5\s*yas.*5\s*\+|ayri ortalama/.test(n0)
   const nYas = yasKirilim ? n0.replace(/1\s*[-–]\s*5\s*yas(?:lari)?(?:\s+ve\s+5\s*\+?\s*yas)?/g, ' ') : n0
   const y = yasCikar(nYas)
-  const p = pencereCikar(y.kalan, now)
+  const p = pencereCikar(y.kalan, now, tz)
   if (!p.pencere && (pratik.kirilim || (olcum === 'ilac' && sayim))) {
     const bugun = trtParca(now).gun
     const bas = gunEkle(bugun, -30)
-    p.pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'son 30 gün' }
+    p.pencere = pencereKur(bas, bugun, 'son 30 gün', tz)
   }
   const c = cinsiyetCikar(p.kalan)
   const h = haricCikar(c.kalan)
@@ -491,7 +523,11 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const ucDeger = /en\s+uzun|en\s+kisa/.test(n0)
   const bayrakVe: string[] = []
   if (/izlem\s*kac|saglam\s+cocuk/.test(n0)) bayrakVe.push('izlem_kacti')
-  if ((/\basi\s*gecik/.test(n0) && !/gorev|hba1c|egfr|ivt|tbse/.test(n0)) || seriGecikme) bayrakVe.push('asi_gecikti')
+  // NOTYA-AYSE-100-LUNA (#88): "aşısı eksik / eksik aşısı olan / aşıları tam olmayan" is the same cohort question as
+  // "aşısı gecikmiş" — it used to be a plain term search for "asisi eksik" (0 hasta).
+  const asiEksik = /\basi(?:si|lari|lar)?\s*(?:gecik|eksik|tam\s+olmayan|tamamlanmamis)|\beksik\s+asi/.test(n0)
+  if ((asiEksik && !/gorev|hba1c|egfr|ivt|tbse/.test(n0)) || seriGecikme) bayrakVe.push('asi_gecikti')
+  if (asiEksik) kalan = kalan.replace(/\basi(?:si|lari|lar)?\s*(?:gecik\w*|eksik|tam\s+olmayan|tamamlanmamis)|\beksik\s+asi\w*/g, ' ')
   if (persentilEsik) bayrakVe.push('persentil_kaymasi')
   if (/d\s*vit|demir/.test(n0) && /olmayan|yok|profilaksi/.test(n0)) bayrakVe.push('profilaksi')
   if (mchat) bayrakVe.push('tarama_gecikti')
@@ -550,7 +586,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   if (!p.pencere && (asi || /sikayet|tani|iltihap|otit|alerji|ilac|randevu|epikriz|form/.test(n0)) && !y.yas && !haric.includes('asi')) {
     const bugun = trtParca(now).gun
     const bas = gunEkle(bugun, -90)
-    p.pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'son 90 gün' }
+    p.pencere = pencereKur(bas, bugun, 'son 90 gün', tz)
   }
 
   const alanlar: AlanFiltresi[] = []
@@ -644,11 +680,12 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     bolumIstegi,
     ziyaretYok,
     ozet: etiketler.join(' · '),
+    tz,
   }
 }
 
-export function klinikAramaMi(mesaj: string, now = new Date()): boolean {
-  return sorguyuAyikla(mesaj, now).klinik
+export function klinikAramaMi(mesaj: string, now = new Date(), tz?: string): boolean {
+  return sorguyuAyikla(mesaj, now, tz).klinik
 }
 
 /**
@@ -762,6 +799,21 @@ export function sikayetAnahtar(ad: string): string {
     if (t === kok || liste.some((x) => x.length >= 4 && t.includes(x))) return kok
   }
   return t.slice(0, 48)
+}
+
+/**
+ * NOTYA-AYSE-100-LUNA (open item b, 2026-09-29): a negated finding is not a finding. "Kulaklar: özellik yok",
+ * "kusma yok", "boğaz doğal" made every chart a hit for "kulak / kusma / boğaz" (A.Y. was listed as an otitis child).
+ * The note text is split into exam segments (newline, sentence, ';', '·', ',' ) and every segment that ends in a
+ * negation / normal marker is dropped before term matching. Positive segments are untouched.
+ */
+const OLUMSUZ_SEGMENT = /(?:^|\s)(?:ozellik\s+yok|ozelligi\s+yok|patoloji\s+yok|bulgu\s+yok|dogal|normal|negatif|saptanmadi|izlenmedi|gorulmedi|yok|temiz|olagan)\s*$/
+export function olumsuzBulgulariAyikla(metin: string): string {
+  if (!metin) return ''
+  return metin
+    .split(/\n|[.;·|,]/)
+    .filter((p) => !OLUMSUZ_SEGMENT.test(trAramaNormalize(p).trim()))
+    .join(' . ')
 }
 
 export function metinEslesir(metin: string, terimler: string[]): boolean {

@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { pediKohortSatiri, pediKohortSatirlari, pediHatirlatmaMesaji, veliHatirlatmaBayraklari, type PediKohortGirdi } from '../engines/kohort'
+import { pediAramaUygula } from '../engines/aramaBolumu'
+import { sorguyuAyikla } from '@/lib/doktor/hastaAramaFiltre'
 
 const BUGUN = '2026-09-18'
 const bos = (ek: Partial<PediKohortGirdi>): PediKohortGirdi => ({
@@ -93,5 +95,30 @@ describe('pediatri kohort — bayraklar diğer pediatri motorlarından', () => {
     const m = pediHatirlatmaMesaji(['asi_gecikti', 'persentil_kaymasi', 'profilaksi', 'tarama_gecikti', 'izlem_kacti'])
     assert.match(m.metin, /112/)
     assert.doesNotMatch(m.metin, /persentil|\bkg\b|\bcm\b|\bIU\b|\bmg\b|KKK|M-CHAT|otizm|\banemi|Devit|Ferrum/i)
+  })
+})
+
+describe('NOTYA-AYSE-100-LUNA #88 — "aşısı eksik olan hastalarım" (no record ≠ eksik)', () => {
+  const NOW = new Date('2026-09-18T09:00:00Z')
+  it('parses to the asi_gecikti kohort flag, pediatri chapter, no leftover search terms', () => {
+    for (const c of ['Aşısı eksik olan hastalarım kimler?', 'eksik aşısı olan çocuklar', 'aşıları tam olmayan hastalar', 'aşısı gecikmiş hastalarım']) {
+      const q = sorguyuAyikla(c, NOW)
+      assert.ok(q.bayrakVe.includes('asi_gecikti'), c)
+      assert.equal(q.bolumIstegi, 'pediatri', c)
+      assert.deepEqual(q.terimler, [], `${c} → ${q.terimler.join(',')}`)
+    }
+  })
+  it('kayıt yok → third state; gecikmiş doz → listed; tam → not listed', () => {
+    const q = sorguyuAyikla('Aşısı eksik olan hastalarım kimler?', NOW)
+    const satirlar = pediAramaUygula([
+      bos({ patientId: 'yok', ad: 'Kayıt Yok' }),
+      bos({ patientId: 'gec', ad: 'Gecikmiş Doz', asilar: [{ id: 'a', ad: "5'li karma", tarih: '2025-03-10', kaynak: 'kayit' }] }),
+    ], q, BUGUN, new Set())
+    const yok = satirlar.find((s) => s.patientId === 'yok')
+    assert.ok(yok?.asiKayitYok)
+    assert.equal(yok?.ozet, 'aşı kaydı yok')
+    const gec = satirlar.find((s) => s.patientId === 'gec')
+    assert.ok(gec && !gec.asiKayitYok)
+    assert.match(gec!.ozet, /Karma 2\. doz/)
   })
 })

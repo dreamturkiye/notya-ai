@@ -21,7 +21,7 @@ test('takvim / bugün randevu açık hastanın dosyasına gitmez', () => {
 })
 
 test('çok hastalı sorular arama olarak kalır', () => {
-  for (const m of ['Bu hafta ateşli hastalarım kimler?', 'Kaç hasta gördük bu ay?', 'Hangi hastalar aşı bekliyor?', 'En çok yazdığım antibiyotik ne?', 'Tüm hastalarımda HbA1c ortalaması']) {
+  for (const m of ['Bu hafta ateşli hastalarım kimler?', 'Kaç hasta gördük bu ay?', 'Hangi hastalar aşı bekliyor?', 'En çok yazdığım antibiyotik ne?', 'Tüm hastalarımda HbA1c ortalaması', 'Bu hafta tanı koyduğum pnömoni vakası kimdi?', 'kulak iltihabı olan çocuk kimdi', 'dün gelen ateşli vaka']) {
     assert.equal(kohortSorusuMu(m), true, m)
     assert.equal(aktif(m), false, m)
   }

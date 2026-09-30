@@ -433,6 +433,7 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
   const hamOneriSozu: Promise<SoapNotu | null> = aiCagir({
     istemci: secenek.istemci,
     gorev: 'klinik-analiz',
+    kademe: 'derin', // NOTYA-KADEME-01: SOAP önerisi arka planda DERİN model
     maxTokens: 2000,
     doctorId: girdi.doctorId ?? null,
     system,

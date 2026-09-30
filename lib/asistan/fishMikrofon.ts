@@ -3,7 +3,7 @@
  * Capture AudioContext is separate from Haberci playback. Analyser / ScriptProcessor
  * must reach destination (muted) or Safari reports silence and the turn never starts.
  */
-import { FISH_AZAMI_TUR_MS, FISH_BARGE_ESIK, FISH_MIN_KONUSMA_MS, FISH_SES_SIZLIGI_MS, bargeSayaci, klipGonderilirMi, onTamponuKirp, rmsHesapla, konusuyorMu } from '@/lib/asistan/fishVad'
+import { FISH_BARGE_ESIK, bargeSayaci, kareKonusmasi, klipGonderilirMi, onTamponuKirp, rmsHesapla, turAdimi, turBaslat, type SileroOlasilik, type TurDurumu } from '@/lib/asistan/fishVad'
 import { fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
 
 export { fishAsrDosyaAdi }
@@ -74,7 +74,29 @@ type DinleGirdi = {
   iptal: () => boolean
   ajanKonusuyorMu: () => boolean
   bargeIn: () => void
+  /** NOTYA-SILERO-01: latest Silero speech probability, or null → RMS gate. */
+  silero?: () => SileroOlasilik
 }
+
+/** Last engine written to the console — the `[fish-vad]` engine line appears at session start and on every switch, not per turn. */
+let sonMotor: 'silero' | 'rms' | null = null
+
+function motoruYaz(kaynak: 'silero' | 'rms'): void {
+  if (sonMotor === kaynak) return
+  console.info('[fish-vad]', { motor: kaynak, gecis: sonMotor !== null })
+  sonMotor = kaynak
+}
+
+/** One line per turn — client junk gate decision; never the transcript. */
+function turKarariYaz(g: { sesliMs: number; toplamMs: number; bayt: number; kaynak: 'silero' | 'rms'; neden: string | null }): void {
+  console.info('[fish-vad]', {
+    karar: g.neden ? `atlandi:${g.neden}` : 'gonderildi',
+    sesli_ms: Math.round(g.sesliMs), toplam_ms: Math.round(g.toplamMs), bayt: g.bayt, motor: g.kaynak,
+  })
+}
+
+/** Reset the engine memo when a session starts so the first turn logs the engine again. */
+export function fishVadGunlukSifirla(): void { sonMotor = null }
 
 function dugumleriKopar(...dugum: AudioNode[]): void {
   for (const d of dugum) {
@@ -106,11 +128,9 @@ function pcmTurKaydet(
   const islem = baglam.createScriptProcessor(2048, 1, 1)
   const parcalar: Float32Array[] = []
   const kareMs = (2048 / baglam.sampleRate) * 1000
-  let duydu = false
-  let konusmaBas = 0
-  let sessizBas = 0
+  let tur: TurDurumu = turBaslat()
   let bargeMs = 0
-  let sesliMs = 0
+  let oncekiSes = false
 
   return new Promise((coz) => {
     let bitti = false
@@ -125,13 +145,12 @@ function pcmTurKaydet(
     const turuBitir = () => {
       let n = 0
       for (const p of parcalar) n += p.length
-      const karar = klipGonderilirMi({ toplamMs: (n / baglam.sampleRate) * 1000, sesliMs })
-      if (!karar.gonder) {
-        console.info('[fish-mic]', { atlandi: karar.neden, sesli_ms: Math.round(sesliMs), toplam_ms: Math.round((n / baglam.sampleRate) * 1000) })
-        bitir(null)
-        return
-      }
-      bitir(pcmdenWav(parcalar, baglam.sampleRate))
+      const toplamMs = (n / baglam.sampleRate) * 1000
+      const karar = klipGonderilirMi({ toplamMs, sesliMs: tur.sesliMs })
+      const blob = karar.gonder ? pcmdenWav(parcalar, baglam.sampleRate) : null
+      const neden = karar.neden ?? (blob && blob.size <= 800 ? 'kucuk' : null)
+      turKarariYaz({ sesliMs: tur.sesliMs, toplamMs, bayt: blob?.size ?? 0, kaynak: tur.kaynak, neden })
+      bitir(neden ? null : blob)
     }
     const bekci = () => {
       if (bitti) return
@@ -145,8 +164,11 @@ function pcmTurKaydet(
       if (g.iptal()) { bitir(null); return }
       const ch = ev.inputBuffer.getChannelData(0)
       const rms = rmsHesapla(ch)
-      const ses = konusuyorMu(rms)
       const simdi = Date.now()
+      const kare = kareKonusmasi({ rms, silero: g.silero?.() ?? null, onceki: oncekiSes, simdi })
+      const ses = kare.ses
+      oncekiSes = ses
+      motoruYaz(kare.kaynak)
       const ajan = g.ajanKonusuyorMu()
 
       const barge = bargeSayaci(bargeMs, ajan, rms, (2048 / baglam.sampleRate) * 1000)
@@ -157,40 +179,19 @@ function pcmTurKaydet(
         // Playback only — queued TTS fetch is not "she's talking". Keep doctor-level
         // energy (barge threshold) so a question in the gap between sentences is not wiped.
         if (rms >= FISH_BARGE_ESIK) {
-          if (!duydu) {
-            duydu = true
-            konusmaBas = simdi
-          }
           parcalar.push(new Float32Array(ch))
-          sesliMs += kareMs
-          sessizBas = 0
-        } else if (!duydu) {
+          tur = turAdimi(tur, { ses: true, kaynak: 'rms', simdi, kareMs }).durum
+        } else if (!tur.duydu) {
           parcalar.length = 0
         }
         return
       }
 
       parcalar.push(new Float32Array(ch))
-      if (!duydu) onTamponuKirp(parcalar, baglam.sampleRate)
-      if (ses) {
-        if (!duydu) {
-          duydu = true
-          konusmaBas = simdi
-        }
-        sesliMs += kareMs
-        sessizBas = 0
-      } else if (duydu) {
-        if (!sessizBas) sessizBas = simdi
-        const konusmaMs = simdi - konusmaBas
-        if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= FISH_SES_SIZLIGI_MS) {
-          turuBitir()
-          return
-        }
-      }
-
-      if (duydu && simdi - konusmaBas > FISH_AZAMI_TUR_MS) {
-        turuBitir()
-      }
+      if (!tur.duydu) onTamponuKirp(parcalar, baglam.sampleRate)
+      const adim = turAdimi(tur, { ses, kaynak: kare.kaynak, simdi, kareMs })
+      tur = adim.durum
+      if (adim.bitir) turuBitir()
     }
     kaynak.connect(islem)
     islem.connect(sessiz)
@@ -216,17 +217,15 @@ function mediaTurKaydet(
   sessiz.connect(baglam.destination)
   const ornek = new Float32Array(olcer.fftSize)
 
-  const tur = kayitTuru()
-  const kayit = new MediaRecorder(akis, tur ? { mimeType: tur } : undefined)
+  const kayitTipi = kayitTuru()
+  const kayit = new MediaRecorder(akis, kayitTipi ? { mimeType: kayitTipi } : undefined)
   const parcalar: BlobPart[] = []
   kayit.ondataavailable = (e) => { if (e.data?.size) parcalar.push(e.data) }
 
-  let duydu = false
-  let konusmaBas = 0
-  let sessizBas = 0
+  let tur: TurDurumu = turBaslat()
   let bargeMs = 0
-  let sesliMs = 0
   let kayitBas = 0
+  let oncekiSes = false
 
   return new Promise((coz) => {
     let bitti = false
@@ -242,14 +241,12 @@ function mediaTurKaydet(
     }
     kayit.onstop = () => {
       if (vazgec) { bitir(null); return }
-      const karar = klipGonderilirMi({ toplamMs: kayitBas ? Date.now() - kayitBas : 0, sesliMs })
-      if (!karar.gonder) {
-        console.info('[fish-mic]', { atlandi: karar.neden, sesli_ms: Math.round(sesliMs) })
-        bitir(null)
-        return
-      }
-      const blob = parcalar.length ? new Blob(parcalar, { type: kayit.mimeType || tur || 'audio/webm' }) : null
-      bitir(blob && blob.size > 800 ? blob : null)
+      const toplamMs = kayitBas ? Date.now() - kayitBas : 0
+      const karar = klipGonderilirMi({ toplamMs, sesliMs: tur.sesliMs })
+      const blob = karar.gonder && parcalar.length ? new Blob(parcalar, { type: kayit.mimeType || kayitTipi || 'audio/webm' }) : null
+      const neden = karar.neden ?? (!blob || blob.size <= 800 ? 'kucuk' : null)
+      turKarariYaz({ sesliMs: tur.sesliMs, toplamMs, bayt: blob?.size ?? 0, kaynak: tur.kaynak, neden })
+      bitir(neden ? null : blob)
     }
     kayit.onerror = () => bitir(null)
 
@@ -265,8 +262,11 @@ function mediaTurKaydet(
       }
       olcer.getFloatTimeDomainData(ornek)
       const rms = rmsHesapla(ornek)
-      const ses = konusuyorMu(rms)
       const simdi = Date.now()
+      const kare = kareKonusmasi({ rms, silero: g.silero?.() ?? null, onceki: oncekiSes, simdi })
+      const ses = kare.ses
+      oncekiSes = ses
+      motoruYaz(kare.kaynak)
       const ajan = g.ajanKonusuyorMu()
 
       const barge = bargeSayaci(bargeMs, ajan, rms)
@@ -274,40 +274,15 @@ function mediaTurKaydet(
       if (barge.kes) g.bargeIn()
 
       if (ajan) {
-        if (rms >= FISH_BARGE_ESIK) {
-          if (!duydu) {
-            duydu = true
-            konusmaBas = simdi
-          }
-          sesliMs += 50
-          sessizBas = 0
-        } else if (!duydu) {
-          duydu = false
-          konusmaBas = 0
-          sessizBas = 0
-          sesliMs = 0
-        }
+        if (rms >= FISH_BARGE_ESIK) tur = turAdimi(tur, { ses: true, kaynak: 'rms', simdi, kareMs: 50 }).durum
+        else if (!tur.duydu) tur = turBaslat()
         setTimeout(tik, 50)
         return
       }
 
-      if (ses) {
-        if (!duydu) {
-          duydu = true
-          konusmaBas = simdi
-        }
-        sesliMs += 50
-        sessizBas = 0
-      } else if (duydu) {
-        if (!sessizBas) sessizBas = simdi
-        const konusmaMs = simdi - konusmaBas
-        if (konusmaMs >= FISH_MIN_KONUSMA_MS && simdi - sessizBas >= FISH_SES_SIZLIGI_MS) {
-          try { kayit.stop() } catch { bitir(null) }
-          return
-        }
-      }
-
-      if (duydu && simdi - konusmaBas > FISH_AZAMI_TUR_MS) {
+      const adim = turAdimi(tur, { ses, kaynak: kare.kaynak, simdi, kareMs: 50 })
+      tur = adim.durum
+      if (adim.bitir) {
         if (kayit.state === 'recording') try { kayit.stop() } catch { bitir(null) }
         else bitir(null)
         return

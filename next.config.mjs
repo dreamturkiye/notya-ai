@@ -29,7 +29,9 @@ const nextConfig = {
     cpus: 1,
     workerThreads: false,
     // NOTYA-GELEN-BELGELER: iPhone HEIC → JPEG runs libheif (WebAssembly) on the server; loaded from node_modules, not bundled.
-    serverComponentsExternalPackages: ['heic-convert', 'heic-decode', 'libheif-js'],
+    serverComponentsExternalPackages: ['heic-convert', 'heic-decode', 'libheif-js',
+      // NOTYA-FISH-WS-01: Fish live socket (ws) + keep-alive agent (undici) run from node_modules, not the bundle.
+      'ws', 'undici'],
     // ASI-KARNESI-01: aşı karnesi PDF'i Türkçe glifler için gömülü Liberation Sans okur (lib/asi/karnePdf.tsx) — yalnız iki PDF rotası.
     outputFileTracingIncludes: {
       '/api/**/*': ['./specialties/dahiliye/prompts/*.md', './specialties/kadin-dogum/prompts/*.md', './specialties/dermatoloji/prompts/*.md', './specialties/goz-hastaliklari/prompts/*.md'],

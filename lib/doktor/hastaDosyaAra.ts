@@ -24,6 +24,7 @@ import {
   yasFiltreEslesir,
   type AramaIstatistik,
   type SorguAyik,
+  olumsuzBulgulariAyikla,
 } from '@/lib/doktor/hastaAramaFiltre'
 import { aramaBolumuAc, bolumBayraklari, cevapTuru, BOLUM_AD, type AramaCevapTur } from '@/lib/doktor/aramaBolum'
 
@@ -35,6 +36,7 @@ export {
   listeSorgusuMu,
   metinEslesir,
   sorguyuAyikla,
+  tumTerimlerEslesir,
   yasAyHesapla,
   yasFiltreEslesir,
 } from '@/lib/doktor/hastaAramaFiltre'
@@ -180,9 +182,11 @@ export async function klinikAramaYurut(
   supabase: SupabaseClient,
   doktorId: string,
   mesaj: string,
-  now = new Date()
+  now = new Date(),
+  /** Doctor timezone for "bugün / bu hafta / son 30 gün" windows (NOTYA-AYSE-100-LUNA a); default TRT. */
+  tz?: string
 ): Promise<KlinikAramaSonuc> {
-  const q = sorguyuAyikla(mesaj, now)
+  const q = sorguyuAyikla(mesaj, now, tz)
   const bos = istatistikKur(q, { hastaSayisi: 0, seansSayisi: 0, asiAdedi: 0, ilacAdedi: 0, ortalamaSeansDk: null })
   if (!doktorId) return { adaylar: [], istatistik: bos, q, tur: cevapTuru(q, null) }
 
@@ -348,7 +352,8 @@ export async function klinikAramaYurut(
     const ilacListe = notIlacAdlari(n.content_ilaclar)
     const ilac = ilacListe.length ? ilacListe.join(' ') : ''
     const vital = n.vitaller && typeof n.vitaller === 'object' ? JSON.stringify(n.vitaller) : ''
-    const metin = [n.basvuru_yakinmasi, n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.content_tani, icd, ilac, vital].filter(Boolean).join(' ')
+    // NOTYA-AYSE-100-LUNA (b): negated exam findings ("Kulaklar: özellik yok") are not search hits.
+    const metin = [...[n.basvuru_yakinmasi, n.content_subjektif, n.content_objektif, n.content_degerlendirme].map((x) => olumsuzBulgulariAyikla(String(x || ''))), n.content_plan, n.content_tani, icd, ilac, vital].filter(Boolean).join(' ')
     ham.push({
       patientId: pid,
       kaynak: 'not',
@@ -532,8 +537,9 @@ export async function klinikAramaYurut(
     }
     if (q.minSeans && (seansAdet.get(id) || 0) < q.minSeans) continue
 
+    // NOTYA-AYSE-100 S1: "hastalarımı listele" has no filter — the whole panel IS the answer, not "0 hasta".
     const anlamiVar = Boolean(
-      q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere
+      q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere || q.cogul
       || q.veya.length || q.haric.length || q.sayisal.length || q.kanGrubu || q.cinsiyet || q.olcum
       || q.minSeans || q.seriGecikme || q.mchat || q.persentilEsik || q.bayrakVe.length || q.kirilim || q.ilacSinif
       || q.bolumIstegi || q.ziyaretYok
@@ -743,7 +749,7 @@ async function pediBolumYurut(
   const { pediKohortGirdileri } = await import('@/app/api/doktor/pediatri/_kohort')
   const { pediAramaUygula } = await import('@/specialties/pediatri/engines/aramaBolumu')
   const { PEDI_HATIRLATMA_KONU } = await import('@/specialties/pediatri/engines/kohort')
-  const bugun = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  const bugun = now.toLocaleDateString('en-CA', { timeZone: q.tz })
   const { girdiler } = await pediKohortGirdileri(supabase, doktorId, bugun)
   const yakin = new Set<string>()
   if (q.hatirlatmaSay) {
@@ -755,7 +761,10 @@ async function pediBolumYurut(
       .gte('son_mesaj_at', new Date(now.getTime() - 7 * 86400000).toISOString())
     for (const r of yakinSatir || []) yakin.add(String(r.patient_id))
   }
-  const pedi = pediAramaUygula(girdiler, q, bugun, yakin)
+  const pediHam = pediAramaUygula(girdiler, q, bugun, yakin)
+  // NOTYA-AYSE-100-LUNA (#88): charts without any vaccine record are reported apart, not counted as eksik.
+  const kayitYok = pediHam.filter((s) => s.asiKayitYok)
+  const pedi = pediHam.filter((s) => !s.asiKayitYok)
   const adaylar = pedi.slice(0, 40).map((s) => ({
     id: s.patientId,
     ad: s.ad,
@@ -770,6 +779,10 @@ async function pediBolumYurut(
     ilacAdedi: 0,
     ortalamaSeansDk: null,
   })
+  if (kayitYok.length) {
+    const adlar = kayitYok.slice(0, 10).map((s) => s.ad).join(', ')
+    istatistik.cumle += ` Ayrıca ${kayitYok.length} hastada aşı kaydı hiç yok (eksik sayılmadı): ${adlar}${kayitYok.length > 10 ? ' …' : ''}.`
+  }
   if (q.hatirlatmaSay) {
     const gider = pedi.filter((s) => s.hatirlatilabilir).length
     istatistik.cumle += ` ${gider} aileye bu hafta hatırlatma gidebilir (7 gün kuralı).`

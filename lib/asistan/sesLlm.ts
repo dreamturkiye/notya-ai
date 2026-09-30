@@ -234,7 +234,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             const sesSiniri = new Promise<void>((r) => { sesSinirCoz = r })
             const sonucSozu = ayseCevapla({
               supabase, doktorId: jeton.d, oturumId: jeton.o, mesaj, kanal: 'ses',
-              specialty: jeton.s, patientId: jeton.p, personaId: jeton.pe || null, sozParcasi: cevapYaz,
+              specialty: jeton.s, patientId: jeton.p, personaId: jeton.pe || null, saatDilimi: jeton.tz || null, sozParcasi: cevapYaz,
               sesSiniri: () => { sinirGeldi = true; sesSinirCoz() },
               sesDurumu: () => ({ kesildi: sinirGeldi || turKapandi, soylenen }),
             })

@@ -1,9 +1,12 @@
 /**
  * NOTYA-FISH-AYSE-01 — playback we can cut the moment the doctor speaks.
  *
- * The server streams 24 kHz PCM. The first chunk is scheduled as soon as it
- * arrives, so the bubble and the voice are not a full clip apart. `kes` stops
- * every scheduled buffer in the same turn.
+ * The server streams 24 kHz PCM (Fish `format: "pcm"`, `sample_rate: 24000`, 16-bit LE mono).
+ * Playback starts once a small jitter buffer (FISH_TAMPON_MS, 40 ms) is in hand — not on the first
+ * byte and not after a full sentence — and chunks are scheduled back to back so sentences
+ * run into each other without a gap. `kes` stops every scheduled buffer in the same turn.
+ * NOTYA-FISH-WS-01: `akisAc` is a push source for PCM relayed over the turn SSE (one Fish
+ * socket per turn on the server) — it goes through the same queue, barge-in and callbacks.
  */
 
 import { FISH_ORNEK_HZ } from '@/lib/asistan/fishSes'
@@ -68,9 +71,34 @@ export function fishYeniCumleler(islenen: string, tam: string, bitir: boolean): 
 
 export type FishGetir = (metin: string, sinyal: AbortSignal) => Promise<ReadableStream<Uint8Array> | null>
 
+/** Audio in hand before the first source starts (≈ first 1–2 Fish PCM chunks). */
+export const FISH_TAMPON_MS = 40
+/** After an underrun, wait for this much before resuming so one late chunk does not stutter. */
+export const FISH_TAMPON_YENIDEN_MS = 80
+/** Scheduling lead: a source must start at least this far ahead of the clock. */
+export const FISH_PLAN_ONCE_SN = 0.01
+
+/**
+ * Jitter-buffer decision for one arriving chunk. Pure so it can be tested against a fake clock.
+ * `planSonu` is where the last scheduled source ends (AudioContext seconds), `simdi` the clock.
+ */
+export function tamponKarari(g: { bekleyenMs: number; basladi: boolean; planSonu: number; simdi: number; bitti: boolean }): boolean {
+  if (g.bitti) return g.bekleyenMs > 0
+  if (!g.basladi) return g.bekleyenMs >= FISH_TAMPON_MS
+  // Still ahead of the clock: append immediately, back to back.
+  if (g.planSonu > g.simdi + FISH_PLAN_ONCE_SN) return true
+  // Underrun: re-buffer a little before resuming.
+  return g.bekleyenMs >= FISH_TAMPON_YENIDEN_MS
+}
+
+/** `kesildiMi` is true once barge-in / `kes` dropped this stream — later chunks are discarded. */
+export type FishAkisYazici = { yaz: (pcm: Uint8Array) => void; bitir: () => void; kesildiMi: () => boolean }
+
 export type FishCalar = {
   hazirla: () => Promise<void>
   soyle: (metin: string) => void
+  /** Push source: PCM chunks arrive from the turn SSE; `bitir` closes it. Queued like a sentence. */
+  akisAc: () => FishAkisYazici
   kes: () => void
   caliyorMu: () => boolean
   kapat: () => void
@@ -123,17 +151,22 @@ export function fishCalarOlustur(
   async function pcmOku(stream: ReadableStream<Uint8Array>, ses: AudioContext, ben: number): Promise<number> {
     const reader = stream.getReader()
     let artik = new Uint8Array(0)
-    let zaman = ses.currentTime + 0.02
+    let zaman = 0
     let basladi = false
-    const planla = (ornek: Int16Array) => {
-      if (!ornek.length || ben !== nesil) return
-      const buf = ses.createBuffer(1, ornek.length, FISH_ORNEK_HZ)
+    let bekleyen: Int16Array[] = []
+    let bekleyenOrnek = 0
+    const bosalt = () => {
+      if (!bekleyenOrnek || ben !== nesil) { bekleyen = []; bekleyenOrnek = 0; return }
+      const buf = ses.createBuffer(1, bekleyenOrnek, FISH_ORNEK_HZ)
       const kanal = buf.getChannelData(0)
-      for (let i = 0; i < ornek.length; i++) kanal[i] = ornek[i] / 32768
+      let i = 0
+      for (const p of bekleyen) { for (let k = 0; k < p.length; k++) kanal[i++] = p[k] / 32768 }
+      bekleyen = []
+      bekleyenOrnek = 0
       const src = ses.createBufferSource()
       src.buffer = buf
       src.connect(ses.destination)
-      const basla = Math.max(zaman, ses.currentTime + 0.01)
+      const basla = Math.max(zaman, ses.currentTime + FISH_PLAN_ONCE_SN)
       src.start(basla)
       zaman = basla + buf.duration
       kaynaklar.push(src)
@@ -142,6 +175,9 @@ export function fishCalarOlustur(
         olay?.onBasladi?.()
       }
     }
+    const karar = (bitti: boolean) => tamponKarari({
+      bekleyenMs: (bekleyenOrnek / FISH_ORNEK_HZ) * 1000, basladi, planSonu: zaman, simdi: ses.currentTime, bitti,
+    })
     try {
       while (ben === nesil && !kapali) {
         const { done, value } = await reader.read()
@@ -153,10 +189,13 @@ export function fishCalarOlustur(
         const cift = birlesik.length - (birlesik.length % 2)
         artik = birlesik.subarray(cift)
         if (cift < 2) continue
-        const gorunum = birlesik.subarray(0, cift)
+        const gorunum = birlesik.slice(0, cift)
         const ornek = new Int16Array(gorunum.buffer, gorunum.byteOffset, cift / 2)
-        planla(ornek)
+        bekleyen.push(ornek)
+        bekleyenOrnek += ornek.length
+        if (karar(false)) bosalt()
       }
+      if (ben === nesil && !kapali && karar(true)) bosalt()
     } finally {
       reader.cancel().catch(() => undefined)
     }
@@ -218,6 +257,36 @@ export function fishCalarOlustur(
       })
       sira.push(is)
       void oynat()
+    },
+    akisAc() {
+      const kontrol = new AbortController()
+      let denetim: ReadableStreamDefaultController<Uint8Array> | null = null
+      let bitti = false
+      let kesildi = false
+      const akis = new ReadableStream<Uint8Array>({
+        start(c) { denetim = c },
+        cancel() { bitti = true; denetim = null },
+      })
+      const kapatAkis = () => {
+        if (bitti) return
+        bitti = true
+        try { denetim?.close() } catch { /* already closed */ }
+        denetim = null
+      }
+      kontrol.signal.addEventListener('abort', () => { kesildi = true; kapatAkis() })
+      if (kapali) { kesildi = true; kapatAkis() }
+      else {
+        sira.push({ kontrol, iptal: false, hata: false, akis: Promise.resolve(akis) })
+        void oynat()
+      }
+      return {
+        yaz: (pcm) => {
+          if (bitti || !pcm?.byteLength) return
+          try { denetim?.enqueue(pcm) } catch { bitti = true }
+        },
+        bitir: kapatAkis,
+        kesildiMi: () => kesildi,
+      }
     },
     kes,
     caliyorMu: () => calisiyor,

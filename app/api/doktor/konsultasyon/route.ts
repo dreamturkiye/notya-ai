@@ -240,6 +240,7 @@ async function istemTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
   try {
     const y = await aiCagir({
       gorev: ISTEM_TASLAK_GOREVI,
+      kademe: 'derin', // NOTYA-KADEME-01: konsültasyon istem taslağı DERİN model
       // SABİT kısım önbellekli; hasta dosyası özeti (DEĞİŞKEN) user mesajında — önbelleği bozmaz.
       system: [{ metin: ISTEM_TASLAK_SISTEMI, onbellek: true }],
       messages: [{ role: 'user', content: `=== HASTA DOSYASI ÖZETİ ===\n${baglam}\n\nBu hasta için ${hedefAdi} konsültasyon istem metninin gövdesini yaz.` }],

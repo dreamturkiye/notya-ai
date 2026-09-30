@@ -10,7 +10,9 @@ import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { takvimSorusuMu } from '@/lib/randevu/takvimSorusu'
 import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 
-const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
+// NOTYA-AYSE-100-LUNA (#89, 2026-09-29): "… vakası kimdi / hangi çocuk kimdi / dün gelen vaka" is a who-question over
+// the practice, never about the open chart — with R.D. open, "bu hafta pnömoni vakası kimdi" was answered from R.D.
+const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(si|lari|lar|m)?\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
 
 export function kohortSorusuMu(mesaj: string): boolean {
   return KOHORT.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')

@@ -32,3 +32,34 @@ test('caliyorMu yalnız çalan PCM — kuyruktaki TTS fetch dinlemeyi kilitlemez
   assert.match(kaynak, /caliyorMu:\s*\(\)\s*=>\s*calisiyor\s*,/)
   assert.doesNotMatch(kaynak, /caliyorMu:\s*\(\)\s*=>\s*calisiyor\s*\|\|/)
 })
+
+test('jitter buffer: first source waits for ≈40 ms of PCM, then chunks append back to back, underrun re-buffers', async () => {
+  const { tamponKarari, FISH_TAMPON_MS, FISH_TAMPON_YENIDEN_MS } = await import('./fishCalar')
+  // before start: below the buffer → hold; at/above → start
+  assert.equal(tamponKarari({ bekleyenMs: 20, basladi: false, planSonu: 0, simdi: 0, bitti: false }), false)
+  assert.equal(tamponKarari({ bekleyenMs: FISH_TAMPON_MS, basladi: false, planSonu: 0, simdi: 0, bitti: false }), true)
+  // stream ended with a short tail: play it regardless
+  assert.equal(tamponKarari({ bekleyenMs: 20, basladi: false, planSonu: 0, simdi: 0, bitti: true }), true)
+  assert.equal(tamponKarari({ bekleyenMs: 0, basladi: false, planSonu: 0, simdi: 0, bitti: true }), false)
+  // started, schedule ahead of the clock: any chunk goes straight on (no inter-sentence gap)
+  assert.equal(tamponKarari({ bekleyenMs: 10, basladi: true, planSonu: 5.5, simdi: 5.0, bitti: false }), true)
+  // started, clock passed the plan (underrun): wait for the re-buffer amount
+  assert.equal(tamponKarari({ bekleyenMs: 30, basladi: true, planSonu: 5.0, simdi: 5.2, bitti: false }), false)
+  assert.equal(tamponKarari({ bekleyenMs: FISH_TAMPON_YENIDEN_MS, basladi: true, planSonu: 5.0, simdi: 5.2, bitti: false }), true)
+})
+
+test('push source (akisAc): chunks queue like a sentence; kes() marks it cut and later writes are dropped', async () => {
+  const { fishCalarOlustur } = await import('./fishCalar')
+  const calar = fishCalarOlustur(async () => null, {}, null)
+  const y = calar.akisAc()
+  assert.equal(y.kesildiMi(), false)
+  y.yaz(new Uint8Array([1, 2]))
+  calar.kes()
+  assert.equal(y.kesildiMi(), true)
+  y.yaz(new Uint8Array([3, 4])) // no throw after cut
+  y.bitir()
+  const z = calar.akisAc()
+  z.bitir()
+  assert.equal(z.kesildiMi(), false)
+  calar.kapat()
+})

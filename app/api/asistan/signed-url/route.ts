@@ -7,6 +7,8 @@ import { TEK_BEYIN_AJANLARI } from '@/lib/asistan/tekBeyinAjanlari';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { sesMotorunuSabitle } from '@/lib/asistan/sesMotoru';
 import { ayseFishTamMi } from '@/lib/asistan/fishSes';
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi';
+import { saatDilimiSec } from '@/lib/randevu/tarihCozumle';
 
 const AYSE_AGENT =
   process.env.ELEVENLABS_AGENT_PEDIATRI ||
@@ -185,7 +187,9 @@ async function tekBeyinHazirla(doktorId: string, personaId: string, specialty: s
     oturumId = (yeni?.id as string) || null;
   }
   if (!oturumId) return null;
-  const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: specialty, p: patientId, pe: personaId });
+  // NOTYA-TAKVIM-TZ-01: the voice token carries the doctor's timezone (query `tz` → notya_tz cookie → TRT).
+  const tz = saatDilimiSec(String(q.get('tz') || '').trim() || null, istekSaatDilimi());
+  const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: specialty, p: patientId, pe: personaId, tz });
   // baslangic: sayfanın ses-ekran yoklaması sunucu saatinden sayar (istemci saati kayık olabilir).
   return { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString() };
 }

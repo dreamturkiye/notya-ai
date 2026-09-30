@@ -110,14 +110,20 @@ export function kartSoyle(k: HastaDosyaKart): string {
 const PRATIK = /en fazla (?:yazdim|yaptim|koydum)|en cok yazdigim|en sik (?:tani|sikayet|antibiyoti|ilac)/
 
 /** Deterministic answer for a spoken/written question about THIS patient. */
+const ASI_ADI = /\b(kkk|hepatit a|hepatit b|bcg|dabt|ipa|hib|kpa|opa|sucicegi|su cicegi|meningokok|menengokok|rotavirus|grip|hpv|tetanoz|kizamik|kabakulak|kizamikcik|difteri|bogmaca|polio|pnomokok|karma)\b/
+
 export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   const n = trAramaNormalize(soru)
   if (!n.trim()) return null
   if (PRATIK.test(n) && !/bu hasta|hastanin|hastaya|hastanin dosya/.test(n)) return null
 
+  // NOTYA-AYSE-100 K1: "e-nabız'dan yeni gelen bir şey var mı" is an integration question, not a vital-sign question.
+  if (/\be ?nabiz|enabiz|e-nabiz/.test(n)) return null
+
   const bulunan: string[] = []
   const ekle = (baslik: string, deger: string) => {
-    const satir = `Dosyada ${baslik}: ${deger}`
+    // NOTYA-AYSE-100 K1: an empty card field printed "plan ve takip: ." — say "kayıt yok" instead.
+    const satir = `Dosyada ${baslik}: ${String(deger || '').trim() || 'kayıt yok'}`
     if (!bulunan.includes(satir)) bulunan.push(satir)
   }
 
@@ -135,14 +141,16 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   if (/son recete|son ilac|ne yazdin|ne yazdik|hangi ilac(?:i)? yaz|hangi antibiyoti/.test(n)) {
     ekle('son reçete', k.sonRecete)
   }
-  if (/\basi/.test(n) && !/antibiyoti/.test(n)) ekle('aşı', k.asilar)
+  // NOTYA-KONUSMA-BAGLAMI-01 (2026-09-30): a question about ONE named vaccine ("Hepatit B kaç doz", "KKK ne zaman")
+  // needs the aşı table, not the card's five-line list — it goes to the model with the chart.
+  if (/\basi/.test(n) && !/antibiyoti/.test(n) && !ASI_ADI.test(n)) ekle('aşı', k.asilar)
   if (/surekli ilac|ne kullaniyor|ilaclari ne|aktif ilac/.test(n)) ekle('aktif ilaç', k.ilaclar)
   // NOTYA-SES-KART-01 (Dr. Gökhan): kontrol / takip soruları son muayenenin planından cevaplanır.
   if (/kontrol|takip|plan|ne zaman gel|tekrar gel/.test(n)) ekle('plan ve takip', k.sonPlan)
   if (/muayene bulgu|fizik muayene|dinleme|bulgular/.test(n)) ekle('muayene bulgusu', k.sonBulgu)
-  if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', k.randevu)
+  if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', kartBosMu(k.randevu) ? 'planlanmış randevu yok' : k.randevu)
   if (/hba1c|egfr|tahlil|laboratuvar|\blab\b|kan sayimi|son onayli lab/.test(n)) ekle('onaylı lab', k.lab)
-  if (/ates|kilo|tansiyon|nabiz|spo2|olcum|vital/.test(n)) ekle('son ölçüm', k.olcum)
+  if (/ates|kilo|tansiyon|nabiz|nabz|spo2|olcum|vital/.test(n)) ekle('son ölçüm', k.olcum)
 
   if (!bulunan.length) return null
   return `${bulunan.join('. ')}.`
