@@ -318,6 +318,12 @@ describe('Onay: doğrulama, makullük, mükerrer, idempotans', () => {
     assert.equal(kayitNiyetiMi('dosyaya gir'), true)
     assert.equal(kayitNiyetiMi('Ama ben senden rica ediyorum dolayısıyla giriş benim sorumluluğumda olacak'), true)
     assert.equal(kayitNiyetiMi('özetle'), false)
+    // NOTYA-AYSE-100 N1: questions about the past are not record intents
+    assert.equal(kayitNiyetiMi('Son kaydettiğim hasta kim?'), false)
+    assert.equal(kayitNiyetiMi('kendisi daha önce kulak enfeksiyonu geçirmiş mi'), false)
+    assert.equal(kayitNiyetiMi('kaç gün önce ateş geçirdi'), false)
+    assert.equal(kayitNiyetiMi('bunu kayda geçir'), true)
+    assert.equal(kayitNiyetiMi('aşıyı kaydet'), true)
   })
 
   it('geçersiz tarih düzeltmesi 400 döner, kayıt yazılmaz', async () => {
