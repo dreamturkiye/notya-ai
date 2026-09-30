@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { fishFetch } from '@/lib/asistan/fishBaglanti'
 import {
   FISH_ASR_DIL, FISH_ASR_MODEL, FISH_ASR_YENIDEN, FISH_ASR_ZAMAN_MS, FISH_KLIP_AZAMI_BAYT,
   asrKlipDenetle, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi,
@@ -12,6 +13,9 @@ import {
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
+// NOTYA-FISH-BOLGE-01: Supabase (auth + DB) is us-east-1; the app default fra1 put an Atlantic
+// round trip in front of every Fish call. Fish's own region is undocumented (see OPEN-COMMITMENTS).
+export const preferredRegion = ['iad1']
 
 async function doktorMu(req: NextRequest): Promise<boolean> {
   const baslik = req.headers.get('authorization')
@@ -33,7 +37,8 @@ async function fishAsrCagir(anahtar: string, bayt: Uint8Array): Promise<AsrDenem
   const kontrol = new AbortController()
   const zaman = setTimeout(() => kontrol.abort(), FISH_ASR_ZAMAN_MS)
   try {
-    const yanit = await fetch('https://api.fish.audio/v1/asr', {
+    // Keep-alive agent: TCP+TLS are paid once per lambda instance, not once per turn.
+    const yanit = await fishFetch('https://api.fish.audio/v1/asr', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${anahtar}`,
@@ -42,7 +47,6 @@ async function fishAsrCagir(anahtar: string, bayt: Uint8Array): Promise<AsrDenem
       },
       body: Buffer.from(fishAsrGovde(bayt)),
       signal: kontrol.signal,
-      cache: 'no-store',
     })
     if (!yanit.ok) return { durum: yanit.status, metin: '', hata: `http_${yanit.status}` }
     const j = (await yanit.json().catch(() => null)) as { text?: unknown; language_code?: unknown } | null
