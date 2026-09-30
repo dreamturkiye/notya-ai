@@ -136,3 +136,15 @@ describe('NOTYA-AYSE-100 T1 — week questions and past-tense calendar verbs', (
     assert.ok(sonTakvimCevabiMi('Bu hafta (28 Eylül – 4 Ekim) haftası takviminde 1 randevu. Pazartesi 28 Eylül: 11:30–11:50 R (muayene).'))
   })
 })
+
+describe('NOTYA-AYSE-100 T2 — spoken slots and free-slot wording', () => {
+  it('"yarın sabah boşluk var mı" and "bugün öğleden sonra 3\'te yer var mı" are calendar lookups', () => {
+    const a = takvimSorusuCoz('yarin sabah bosluk var mi', NY)
+    assert.equal(a?.tarih, '2026-09-30')
+    const b = takvimSorusuCoz("Bugün öğleden sonra 3'te yer var mı?", NY)
+    assert.equal(b?.tarih, '2026-09-29')
+    assert.equal(b?.saat, '15:00')
+    assert.equal(takvimSorusuCoz('yarın saat 10 gibi müsait miyim', NY)?.saat, '10:00')
+    assert.equal(takvimSorusuCoz('yarın 14:30 boş mu', NY)?.saat, '14:30')
+  })
+})

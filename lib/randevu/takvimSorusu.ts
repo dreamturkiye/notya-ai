@@ -37,11 +37,28 @@ export type TakvimSorusu = {
 export type TakvimSecenek = { saatDilimi?: string | null; simdi?: Date }
 
 const SAAT = /\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/
+/** NOTYA-AYSE-100 T2: spoken slot — "saat 3", "3'te", "üçte"; "öğleden sonra / akşam" moves 1–7 to the afternoon. */
+const SAAT_SOZ = /\b(?:saat\s+)?([01]?\d|2[0-3])\s*(?:['’]?\s*(?:te|de|ta|da)\b|\s*(?:gibi|civari|sularinda)\b)/
+const SAAT_YAZI: Record<string, number> = { bir: 1, iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10, onbir: 11, oniki: 12 }
+function sozSaati(ham: string, n: string): string | null {
+  const sm = ham.match(SAAT)
+  if (sm) return `${String(sm[1]).padStart(2, '0')}:${sm[2]}`
+  let saat: number | null = null
+  const m1 = n.match(SAAT_SOZ)
+  if (m1) saat = Number(m1[1])
+  else {
+    const m2 = n.match(/\b(?:saat\s+)?(bir|iki|uc|dort|bes|alti|yedi|sekiz|dokuz|on|onbir|oniki)(?:de|da|te|ta)\b/)
+    if (m2) saat = SAAT_YAZI[m2[1]]
+  }
+  if (saat == null) return null
+  if (saat >= 1 && saat <= 7 && /\b(ogleden sonra|aksam|aksamustu|ikindi)\b/.test(n)) saat += 12
+  return `${String(saat).padStart(2, '0')}:00`
+}
 
 /** Words that add nothing to a calendar question ("peki", "hocam", "acaba"…). */
 const DOLGU = new Set(['peki', 'hocam', 'acaba', 'ya', 'bir', 'de', 'da', 'e', 'ee', 'o', 'zaman', 'icin', 'bakalim', 'bakar', 'misin', 'misiniz', 'soyle', 'soyler', 've', 'ile', 'tamam', 'iyi', 'simdi', 'hic', 'hicbir', 'benim', 'bizim', 'ki', 'da', 'sonra', 'gun', 'gune', 'gunu', 'gunun'])
 /** Calendar question words allowed in the bare form ("yarın var mı", "yarın kaç hastam var", "yarın kimler geliyor"). */
-const TAKVIM_SORU = new Set(['geldi', 'geldiler', 'gelmis', 'gelmisti', 'gelen', 'gelenler', 'gordum', 'baktim', 'gorunuyor', 'gozukuyor', 'bakiyor', 'yogunluk', 'gunumde', 'var', 'mi', 'mu', 'yok', 'doluyum', 'dolu', 'muyum', 'muyuz', 'bos', 'bosum', 'bosuz', 'kac', 'hasta', 'hastam', 'hastamiz', 'hastalar', 'kimler', 'kim', 'geliyor', 'gelecek', 'gelir', 'ne', 'neler', 'program', 'programim', 'programimiz', 'durum', 'nasil', 'gunum', 'gunumuz', 'randevu', 'randevum', 'randevumuz', 'randevular', 'randevularim', 'randevularimiz', 'takvim', 'takvimim', 'takvimimiz', 'liste', 'listele', 'oku', 'goster', 'doluluk', 'yogun', 'yogunum', 'hastalarim', 'hastalarimiz'])
+const TAKVIM_SORU = new Set(['bosluk', 'boslugum', 'yer', 'yerim', 'musait', 'musaitim', 'uygun', 'sabah', 'sabahi', 'ogle', 'ogleden', 'sonra', 'once', 'aksam', 'aksamustu', 'ikindi', 'saat', 'saatte', 'saatim', 'te', 'de', 'ta', 'da', 'geldi', 'geldiler', 'gelmis', 'gelmisti', 'gelen', 'gelenler', 'gordum', 'baktim', 'gorunuyor', 'gozukuyor', 'bakiyor', 'yogunluk', 'gunumde', 'var', 'mi', 'mu', 'yok', 'doluyum', 'dolu', 'muyum', 'muyuz', 'bos', 'bosum', 'bosuz', 'kac', 'hasta', 'hastam', 'hastamiz', 'hastalar', 'kimler', 'kim', 'geliyor', 'gelecek', 'gelir', 'ne', 'neler', 'program', 'programim', 'programimiz', 'durum', 'nasil', 'gunum', 'gunumuz', 'randevu', 'randevum', 'randevumuz', 'randevular', 'randevularim', 'randevularimiz', 'takvim', 'takvimim', 'takvimimiz', 'liste', 'listele', 'oku', 'goster', 'doluluk', 'yogun', 'yogunum', 'hastalarim', 'hastalarimiz'])
 
 function normalize(mesaj: string | null | undefined): string {
   return ` ${trAramaNormalize(String(mesaj || '')).replace(/[?!.,;:’'"]+/g, ' ').replace(/\s+/g, ' ').trim()} `
@@ -64,7 +81,7 @@ function ciplakTakvimSorusuMu(n: string, soruGerekli: boolean): boolean {
   let soru = false
   for (const k of kelimeler) {
     if (TAKVIM_SORU.has(k)) { soru = true; continue }
-    if (DOLGU.has(k)) continue
+    if (DOLGU.has(k) || /^\d{1,2}$/.test(k)) continue
     return false
   }
   return soruGerekli ? soru : true
@@ -95,8 +112,7 @@ export function takvimSorusuCoz(mesaj: string | null | undefined, secenek: Takvi
   const tz = saatDilimiSec(secenek.saatDilimi)
   const tarih = goreliTarihCoz(n, tz, secenek.simdi) || bugunTz(tz, secenek.simdi)
 
-  const sm = ham.match(SAAT)
-  const saat = sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null
+  const saat = sozSaati(ham, n)
   const aralik = saat ? null : haftaAraligiCoz(n, tz, secenek.simdi)
   return aralik ? { tarih: aralik.bas, saat, aralik } : { tarih, saat }
 }
@@ -139,8 +155,7 @@ export function takvimTakipCoz(
   if (!ciplakTakvimSorusuMu(n, false)) return null
   const tarih = goreliTarihCoz(n, tz, secenek.simdi)
   if (!tarih) return null
-  const sm = String(mesaj || '').match(SAAT)
-  const saat = sm ? `${String(sm[1]).padStart(2, '0')}:${sm[2]}` : null
+  const saat = sozSaati(String(mesaj || ''), n)
   const aralik = saat ? null : haftaAraligiCoz(n, tz, secenek.simdi)
   return aralik ? { tarih: aralik.bas, saat, aralik } : { tarih, saat }
 }
