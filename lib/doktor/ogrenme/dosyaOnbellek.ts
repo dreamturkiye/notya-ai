@@ -29,8 +29,25 @@ export function onbellekAnahtari(doctorId: string, patientId: string): { doctor_
   return { doctor_id: doctorId, patient_id: patientId }
 }
 
-export function tazeMi(satir: { kirli?: boolean; paket_metin?: string } | null): boolean {
-  return Boolean(satir && satir.kirli === false && satir.paket_metin)
+export function tazeMi(satir: { kirli?: boolean; paket_metin?: string; kart_json?: unknown } | null, simdi: Date = new Date()): boolean {
+  if (!satir || satir.kirli !== false || !satir.paket_metin) return false
+  return !sonrakiRandevuGecmisMi((satir.kart_json as { randevu?: unknown } | null)?.randevu, simdi)
+}
+
+const TR_AY: Record<string, number> = { ocak: 1, şubat: 2, mart: 3, nisan: 4, mayıs: 5, haziran: 6, temmuz: 7, ağustos: 8, eylül: 9, ekim: 10, kasım: 11, aralık: 12 }
+/**
+ * NOTYA-AYSE-100 D2: the packet is invalidated by data changes (kirli), never by time passing — a chart compiled the
+ * day before an appointment kept "Sonraki randevu: 27 Eylül" as the NEXT appointment days later (live: O.B.,
+ * 2026-09-29). A card whose next appointment is before today is stale; recompile.
+ */
+export function sonrakiRandevuGecmisMi(randevu: unknown, simdi: Date = new Date()): boolean {
+  const m = String(randevu || '').match(/^(\d{1,2}) (\p{L}+) (20\d{2})/u)
+  if (!m) return false
+  const ay = TR_AY[m[2].toLocaleLowerCase('tr-TR')]
+  if (!ay) return false
+  const iso = `${m[3]}-${String(ay).padStart(2, '0')}-${m[1].padStart(2, '0')}`
+  const bugunTrt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(simdi)
+  return iso < bugunTrt
 }
 
 export async function onbellekKirlet(sb: SupabaseClient, doctorId: string, patientId: string): Promise<void> {

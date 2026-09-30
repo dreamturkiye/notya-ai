@@ -53,3 +53,15 @@ test('tekUcus aynı anahtarda tek derleme', async () => {
   assert.equal(n, 2)
   assert.equal(c, 2)
 })
+
+test('NOTYA-AYSE-100 D2 — a cached card whose next appointment has passed is stale', async () => {
+  {
+    const { sonrakiRandevuGecmisMi } = await import('./dosyaOnbellek')
+    const simdi = new Date('2026-09-29T20:00:00Z')
+    assert.equal(sonrakiRandevuGecmisMi('27 Eylül 2026 — muayene', simdi), true)
+    assert.equal(sonrakiRandevuGecmisMi('30 Eylül 2026 — kontrol', simdi), false)
+    assert.equal(sonrakiRandevuGecmisMi('randevu yok', simdi), false)
+    assert.equal(tazeMi({ kirli: false, paket_metin: 'x', kart_json: { randevu: '27 Eylül 2026 — muayene' } }, simdi), false)
+    assert.equal(tazeMi({ kirli: false, paket_metin: 'x', kart_json: { randevu: 'randevu yok' } }, simdi), true)
+  }
+})
