@@ -15,6 +15,8 @@ export interface PediAramaSatir {
   ozet: string
   sira: string
   hatirlatilabilir: boolean
+  /** NOTYA-AYSE-100-LUNA (#88): chart has NO vaccine record at all — third state, not "eksik", not "tam". */
+  asiKayitYok?: boolean
 }
 
 const DVIT_RE = /d\s*-?\s*vit|vitamin\s*d|\bd3\b|devit/i
@@ -94,11 +96,18 @@ export function pediAramaUygula(
       parca.push([!dvit ? 'D vit yok' : '', !demir ? 'demir yok' : '', 'görev bekliyor/gecikmiş'].filter(Boolean).join(' · '))
     }
 
-    const kohort = (q.bayrakVe.includes('izlem_kacti') || q.portalYok)
+    // NOTYA-AYSE-100-LUNA (#88): "aşısı eksik olan hastalarım" — the kohort row decides (aşı tablosu behind the plan);
+    // a chart with NO vaccine record is a third state ("aşı kaydı yok"): listed apart, never guessed as eksik or tam.
+    const asiSorusu = q.bayrakVe.includes('asi_gecikti') && !q.seriGecikme
+    if (asiSorusu && !g.asilar.length) {
+      cikti.push({ patientId: g.patientId, ad: g.ad, ozet: 'aşı kaydı yok', sira: '9999-12-31', hatirlatilabilir: false, asiKayitYok: true })
+      continue
+    }
+    const kohort = (q.bayrakVe.includes('izlem_kacti') || q.portalYok || asiSorusu)
       ? pediKohortSatiri(g, bugun)
       : null
     if (q.bayrakVe.includes('izlem_kacti') && kohort && !kohort.bayraklar.includes('izlem_kacti')) continue
-    if (q.bayrakVe.includes('asi_gecikti') && !q.seriGecikme && kohort && !kohort.bayraklar.includes('asi_gecikti')) continue
+    if (asiSorusu && kohort && !kohort.bayraklar.includes('asi_gecikti')) continue
     if (q.portalYok && g.portalVar) continue
     if (kohort) parca.push(...kohort.detay)
     if (kohort?.enErkenTarih) sira = kohort.enErkenTarih

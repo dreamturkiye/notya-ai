@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { ARAMA_ALANLARI, adaylariTopla, hastaSayimiSeansIster, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, tumTerimlerEslesir, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { olumsuzBulgulariAyikla } from './hastaAramaFiltre'
 import { cevapTuru } from './aramaBolum'
 import { listeIstenmisMi } from './hastaCozumleyici'
 import { antibiyotikMi, haricEslesir, ilacAdiKir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
@@ -359,5 +360,49 @@ describe('NOTYA-AYSE-100 S1 — doctor-speech function words are not search term
     assert.ok(!kulak.terimler.includes('cocuk') && !kulak.terimler.includes('kimdi') && !kulak.terimler.includes('iltihap'), JSON.stringify(kulak.terimler))
     assert.ok(tumTerimlerEslesir('Sağ akut otitis media. Sağ kulak ağrısı', kulak.terimler))
     assert.equal(sorguyuAyikla('Hastalarımı listele', now).cogul, true)
+  })
+})
+
+describe('NOTYA-AYSE-100-LUNA (a) — search windows in the doctor timezone', () => {
+  // 2026-09-30T01:00Z: 30 Eylül 04:00 TRT, still 29 Eylül 21:00 in New York
+  const AKSAM = new Date('2026-09-30T01:00:00Z')
+  it('"bugün" for a US doctor is 29 Eylül; TRT default stays 30 Eylül', () => {
+    const us = sorguyuAyikla('bugün kaç hasta muayene ettim', AKSAM, 'America/New_York')
+    assert.equal(us.pencere?.basGun, '2026-09-29')
+    assert.equal(us.pencere?.basIso, '2026-09-29T04:00:00.000Z')
+    assert.equal(us.pencere?.bitIso, '2026-09-30T03:59:59.000Z')
+    assert.equal(us.tz, 'America/New_York')
+    const trt = sorguyuAyikla('bugün kaç hasta muayene ettim', AKSAM)
+    assert.equal(trt.pencere?.basGun, '2026-09-30')
+    assert.equal(trt.pencere?.basIso, '2026-09-29T21:00:00.000Z')
+  })
+  it('"bu hafta" and "son 7 gün" start from the doctor day, instants in the doctor zone', () => {
+    const hafta = sorguyuAyikla('bu hafta kaç hasta muayene ettim', AKSAM, 'America/New_York')
+    assert.equal(hafta.pencere?.basGun, '2026-09-28')
+    assert.equal(hafta.pencere?.bitGun, '2026-09-29')
+    assert.equal(hafta.pencere?.basIso, '2026-09-28T04:00:00.000Z')
+    const son = sorguyuAyikla('son 7 gün kaç hasta geldi', AKSAM, 'America/New_York')
+    assert.equal(son.pencere?.basGun, '2026-09-22')
+    assert.equal(son.pencere?.bitGun, '2026-09-29')
+  })
+  it('unknown timezone falls back to TRT', () => {
+    assert.equal(sorguyuAyikla('dün kaç hasta geldi', AKSAM, 'Mars/Olympus').pencere?.basGun, '2026-09-29')
+  })
+})
+
+describe('NOTYA-AYSE-100-LUNA (b) — negated findings are not hits', () => {
+  it('"Kulaklar: özellik yok" is dropped, "sağ kulak zarı hiperemik" stays', () => {
+    const not = 'Boğaz hiperemik. Kulaklar: özellik yok. Kusma yok, ishal yok. Akciğerler doğal; kalp sesleri normal'
+    const t = olumsuzBulgulariAyikla(not)
+    assert.ok(!/kulak/i.test(t), t)
+    assert.ok(!/kusma|ishal|akci|kalp/i.test(t), t)
+    assert.ok(/Boğaz hiperemik/.test(t))
+    const pozitif = olumsuzBulgulariAyikla('Sağ kulak zarı hiperemik ve bombe — sağ AOM')
+    assert.match(pozitif, /kulak zarı hiperemik/)
+    assert.equal(olumsuzBulgulariAyikla(''), '')
+  })
+  it('term match: a chart with only a negated kulak line does not match "kulak"', () => {
+    assert.equal(metinEslesir(olumsuzBulgulariAyikla('Kulaklar — özellik yok'), ['kulak']), false)
+    assert.equal(metinEslesir(olumsuzBulgulariAyikla('Sağ kulak zarı hiperemik'), ['kulak']), true)
   })
 })

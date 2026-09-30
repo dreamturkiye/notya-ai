@@ -238,7 +238,7 @@ export async function hastaninSozunuCoz(
   doctorId: string,
   mesaj: string,
   /** NOTYA-BETA-0925: kimlik sorusu ("annesinin adı ne") yalnız adla çözülür — "anne" kelimesi klinik arama filtresine dönmez. */
-  secenek: { yalnizAd?: boolean } = {}
+  secenek: { yalnizAd?: boolean; tz?: string } = {}
 ): Promise<HastaCozumu> {
   const m = ' ' + duzle(mesaj) + ' '
   // A bare who-question ("… hasta kim", "hangi hastayı gördüm") is answered here; a question about that patient
@@ -329,18 +329,19 @@ export async function hastaninSozunuCoz(
   // (at least two words) appears in the sentence is final. Single-word names never qualify, so addressing
   // the assistant ("Merhaba Ayşe") cannot pick a patient.
   if (tam.length === 1 && duzle(tam[0].ad).includes(' ')) return { tur: 'tek', patientId: tam[0].id, ad: tam[0].ad }
-  if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam))
-  if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi))
-  return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' })
+  if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam), secenek.tz)
+  if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi), secenek.tz)
+  return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' }, secenek.tz)
 }
 
 async function dosyaIleDaralt(
   supabase: SupabaseClient,
   doctorId: string,
   mesaj: string,
-  ad: HastaCozumu
+  ad: HastaCozumu,
+  tz?: string
 ): Promise<HastaCozumu> {
-  const klinik = klinikAramaMi(mesaj)
+  const klinik = klinikAramaMi(mesaj, undefined, tz)
   if (ad.tur === 'tek' && !klinik) return ad
   // NOTYA-SES-DOLGU-01: a single named patient with a question about him/her ("Umutcan kaç yaşında") is final;
   // only explicit many-patient questions run the clinical search.
@@ -353,7 +354,7 @@ async function dosyaIleDaralt(
   // "kulak iltihabı olan çocuk") run klinikAramaYurut again — the DOSYA-ISTE-01 name guard is withdrawn.
 
   // "Ayşe, kaç hastam var?" — the address is not a search term. Same strip as the name pass.
-  const { adaylar: ara, istatistik, tur: aramaTuru, q: aramaSorgusu } = await klinikAramaYurut(supabase, doctorId, hitapsiz(mesaj))
+  const { adaylar: ara, istatistik, tur: aramaTuru, q: aramaSorgusu } = await klinikAramaYurut(supabase, doctorId, hitapsiz(mesaj), undefined, tz)
   // NOTYA-SES-KAC-HASTA: a pure count ("kaç hasta", "bugün kaç hasta", "kaç hastam var") is answered with the
   // number only. Reading 40 names aloud for "kaç hasta" was the voice failure; a list is given only when asked.
   if (aramaTuru === 'sayim' && ad.tur !== 'tek' && !aramaSorgusu.kirilim && !listeIstenmisMi(mesaj)) {
