@@ -34,6 +34,8 @@ import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
 import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinleBaglamAc } from '@/lib/asistan/fishMikrofon'
 import { fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
+import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
+import { base64Pcm, sesDusKesimi } from '@/lib/asistan/fishWs'
 
 /** NOTYA-SES-1TO1: client-side ceilings for one Fish turn; the server has its own 20 s / 60 s limits. */
 const FISH_ASR_ISTEMCI_MS = 25_000
@@ -161,6 +163,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const fishAcikRef = useRef(false)
   const fishMicRef = useRef<MediaStream | null>(null)
   const fishYakalaRef = useRef<AudioContext | null>(null)
+  /** NOTYA-SILERO-01: Silero VAD bound to the mic stream; null → RMS gate. */
+  const fishSileroRef = useRef<SileroKapi | null>(null)
   const fishDinleNesilRef = useRef(0)
   const fishTurAbortRef = useRef<AbortController | null>(null)
   /** Text already handed to Fish, and the agent event of the answer now playing. */
@@ -337,6 +341,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishRef.current?.kes()
   }
 
+  function fishSileroKapat() {
+    const s = fishSileroRef.current
+    fishSileroRef.current = null
+    if (s) void s.kapat()
+  }
+
   function fishIsle(tam: string, bitir: boolean, olay?: number) {
     if (!fishAcikRef.current) return
     if (typeof olay === "number" && olay > fishCevapOlayRef.current) fishCevapOlayRef.current = olay
@@ -384,6 +394,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishDinleNesilRef.current += 1
     fishTurAbortRef.current?.abort()
     fishTurAbortRef.current = null
+    fishSileroKapat()
     fishAkisKapat(fishMicRef.current)
     fishMicRef.current = null
     const yakala = fishYakalaRef.current
@@ -495,7 +506,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   /** SSE from /api/asistan/fish-tur. `hata` events reach the doctor (spoken + shown), not the void. */
-  async function fishSseOku(govde: ReadableStream<Uint8Array>, onSoz: (m: string) => void, sinyal: AbortSignal, onHata?: (m: string) => void) {
+  type FishTurOlayi = { t?: string; m?: string; b?: string; islenen?: number }
+  async function fishSseOku(govde: ReadableStream<Uint8Array>, onSoz: (m: string) => void, sinyal: AbortSignal, onHata?: (m: string) => void, onOlay?: (j: FishTurOlayi) => void) {
     const okuyucu = govde.getReader()
     const dec = new TextDecoder()
     let buf = ""
@@ -511,9 +523,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         const satir = blok.split("\n").find((l) => l.startsWith("data: "))
         if (!satir) continue
         try {
-          const j = JSON.parse(satir.slice(6)) as { t?: string; m?: string }
+          const j = JSON.parse(satir.slice(6)) as FishTurOlayi
           if (j.t === "soz" && j.m) onSoz(j.m)
           else if (j.t === "hata" && j.m) onHata?.(j.m)
+          else if (j.t) onOlay?.(j)
         } catch { /* parça */ }
       }
     }
@@ -589,6 +602,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       fishYakalaRef.current = baglam
     }
     if (baglam.state === "suspended") await baglam.resume().catch(() => undefined)
+    // Silero loads in the background; the first turn may still run on RMS, later turns switch over.
+    fishSileroKapat()
+    void sileroAc(akis, baglam).then((s) => {
+      if (!s) return
+      if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) { void s.kapat(); return }
+      fishSileroRef.current = s
+    })
     setStatus("listening")
     void fishDinleDongusu(nesil, akis, baglam, g.p, g.tekBeyin.oturumId)
   }
@@ -606,6 +626,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           iptal: () => !canli(),
           ajanKonusuyorMu: () => Boolean(fishRef.current?.caliyorMu()),
           bargeIn: () => fishKes(),
+          silero: () => fishSileroRef.current?.olasilik() ?? null,
         })
         if (!canli()) return
         if (!blob) continue
@@ -655,6 +676,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         const kontrol = new AbortController()
         fishTurAbortRef.current = kontrol
         const turZamani = setTimeout(() => kontrol.abort(), FISH_TUR_ISTEMCI_MS)
+        let bargeIptal = false
         try {
           const r = await fetch("/api/asistan/fish-tur", {
             method: "POST",
@@ -664,6 +686,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
               asistanSessionId: oturumId,
               specialty: p.primarySpecialty,
               personaId: p.id,
+              ses: "ws",
             }),
             signal: kontrol.signal,
           })
@@ -672,21 +695,61 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             continue
           }
           let hataSoylendi = false
+          // NOTYA-FISH-WS-01: `ses_hazir` arrives before the first `soz` → PCM comes on this stream
+          // (one Fish socket per turn on the server); otherwise sentences go to /fish-ses as before.
+          let wsYazici: ReturnType<FishCalar["akisAc"]> | null = null
+          let wsAktif = false
+          let sozBitti = false
+          const bargeSonrasiKapat = () => {
+            // Doctor cut in and the text is complete: nothing left to show, stop the audio relay.
+            if (bargeIptal && sozBitti && fishTurAbortRef.current === kontrol) kontrol.abort()
+          }
           await fishSseOku(r.body, (m) => {
             if (!canli()) return
             fishBirikimRef.current = fishBirlestir(fishBirikimRef.current, m)
-            fishIsle(fishBirikimRef.current, false)
+            if (wsAktif) {
+              // Keep `islenen` in step with the server's cutter so a `ses_dus` offset means the same text.
+              const r2 = fishYeniCumleler(fishSozRef.current, fishBirikimRef.current, false)
+              fishSozRef.current = r2.islenen
+            } else fishIsle(fishBirikimRef.current, false)
           }, kontrol.signal, (m) => {
             if (!canli() || hataSoylendi) return
             hataSoylendi = true
             sesliHataSoyle(m)
+          }, (j) => {
+            if (!canli()) return
+            if (j.t === "ses_hazir") {
+              const calar = fishRef.current
+              if (!calar) return
+              wsAktif = true
+              wsYazici = calar.akisAc()
+            } else if (j.t === "ses" && j.b) {
+              if (!wsYazici) return
+              if (wsYazici.kesildiMi()) { bargeIptal = true; wsYazici = null; bargeSonrasiKapat(); return }
+              wsYazici.yaz(base64Pcm(j.b))
+            } else if (j.t === "ses_bit") {
+              wsYazici?.bitir()
+              wsYazici = null
+            } else if (j.t === "soz_bit") {
+              sozBitti = true
+              if (wsYazici?.kesildiMi()) bargeIptal = true
+              bargeSonrasiKapat()
+            } else if (j.t === "ses_dus") {
+              // Socket died mid-turn: what Fish already had may have played; the rest goes via REST.
+              wsYazici?.bitir()
+              wsYazici = null
+              wsAktif = false
+              fishSozRef.current = sesDusKesimi(fishBirikimRef.current, Number(j.islenen ?? 0))
+              fishIsle(fishBirikimRef.current, false)
+            }
           })
-          if (canli() && !hataSoylendi) fishIsle(fishBirikimRef.current, true)
+          if (canli() && !hataSoylendi && !wsAktif) fishIsle(fishBirikimRef.current, true)
+          ;(wsYazici as ReturnType<FishCalar["akisAc"]> | null)?.bitir()
           ustUsteHata = 0
         } catch (e) {
           if (e instanceof DOMException && e.name === "AbortError") {
             // Our own timeout (not a newer turn) — tell the doctor instead of going quiet.
-            if (canli() && fishTurAbortRef.current === kontrol) sesliHataSoyle(FISH_TUR_HATA)
+            if (canli() && fishTurAbortRef.current === kontrol && !bargeIptal) sesliHataSoyle(FISH_TUR_HATA)
             continue
           }
           if (canli()) sesliHataSoyle(FISH_TUR_HATA)
@@ -842,6 +905,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       conversationRef.current = null
       yoklamayiDurdur()
       fishDinleNesilRef.current += 1
+      fishSileroKapat()
       fishAkisKapat(fishMicRef.current)
       fishMicRef.current = null
       const yakalaKapan = fishYakalaRef.current

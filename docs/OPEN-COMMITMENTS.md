@@ -1,5 +1,15 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-FISH-LATENCY — Ayşe voice loop latency (Kaan, 2026-09-29, branch `feat/fish-latency`)
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-FISH-LATENCY-01 | **DONE 2026-09-29 — code** | One Fish TTS live socket per turn inside `/api/asistan/fish-tur` (`ses: "ws"`, PCM relayed as base64 SSE `ses` events; `NOTYA_FISH_WS=0` reverts to per-sentence REST). Jitter-buffered player (120 ms start, back-to-back scheduling). undici keep-alive agent for ASR + REST TTS. `preferredRegion = ['iad1']` on fish-stt / fish-ses / fish-tur (Supabase is us-east-1). Silero VAD (`@ricky0123/vad-web`, assets copied to `/public/vad/` by `prebuild`), 350 ms tail, RMS fallback. | Kaan: live test on Chrome desktop with Dr. Gökhan-style turn; then merge |
+| NOTYA-FISH-LATENCY-02 | OPEN | Measurement `scripts/fish-olcum.mts` was NOT run: `FISH_API_KEY` is not in `.env.local` and the Cowork shell cannot reach `api.fish.audio` (proxy allowlist). Run it from a Mac terminal with the key (≈21 Fish calls) and paste the medians into this row. | Kaan: run `npx tsx scripts/fish-olcum.mts` |
+| NOTYA-FISH-LATENCY-03 | OPEN | iPhone / iPad Safari: Silero is OFF there by default (`NEXT_PUBLIC_NOTYA_SILERO_IOS=1` enables) — AudioWorklet + WASM path not verified on a device. Verify on an iPhone, then flip the flag. | Kaan / Dr. Gökhan: one iPhone session |
+| NOTYA-FISH-LATENCY-04 | OPEN | Fish API region is undocumented and could not be probed from here (`curl -sI api.fish.audio` blocked). `iad1` was chosen for the DB (us-east-1). If Vercel logs show `[fish-ws] ilk_ses_ms` > 600 ms consistently, probe Fish from iad1/sfo1 and revisit. | Claude: after first live logs |
+| NOTYA-FISH-LATENCY-05 | OPEN | Mid-turn socket failure (`ses_dus`) may replay part of the sentence Fish already had — accepted for a rare path; watch `[fish-ws] ws: "dustu"` in logs. | Claude: if seen in logs |
+
 ## NOTYA-ENABIZ-MASA — 30 branş + klinik + sekreter yapıştırma masası (Kaan, 2026-09-27)
 
 | ID | Status | What | Waits on |
