@@ -69,6 +69,7 @@ import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
 import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi } from "@/lib/randevu/takvimSorusu"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
+import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
 
 export type Kanal = "yazi" | "ses"
 
@@ -140,7 +141,7 @@ const simdi = () => new Date().toISOString()
 /** NOTYA-LUNA-ARAMA-01: kuyruk bloğu — bu turda dosya yok; model dosya uydurmasın, "dosyası açık" demesin. */
 export const DOSYA_YOK_BLOGU = `
 
-[BU TURDA AÇIK HASTA DOSYASI YOK] Bu mesajda adı çözülen bir hasta yok ve sana dosya verilmedi. Bir hasta hakkında soru soruluyorsa dosyadan bilgi VERME, "dosyası açık / önümde / baktım" DEME, aşı / ilaç / lab / vizit uydurma; hastanın adını ve soyadını iste. Hasta gerektirmeyen klinik ya da uygulama sorusuna normal cevap ver.`
+[BU TURDA AÇIK HASTA DOSYASI YOK] Bu mesajda adı çözülen bir hasta yok ve sana dosya verilmedi. Bir hasta hakkında soru soruluyorsa dosyadan bilgi VERME, "dosyası açık / önümde / baktım" DEME, aşı / ilaç / lab / vizit uydurma. Mesajda bir kişi adı geçiyorsa o ad kayıtlarda BULUNAMAMIŞTIR: "<ad> adında bir hasta kayıtlarınızda bulamadım Hocam; adını ve soyadını tam söyler misiniz?" de — "dosyasını açın / seçin / açıp sorun" DEME (dosyayı sen açarsın, doktor değil). Ad geçmiyorsa hastanın adını ve soyadını iste. Hasta gerektirmeyen klinik ya da uygulama sorusuna normal cevap ver.`
 
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const cevapBas = Date.now()
@@ -369,7 +370,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // mesaj başka bir hastayı adlandırırsa bu derleme kullanılmaz (doktora kapsanmış bir okuma — sızıntı değil).
     const aktifOnceden = contextPatientId ? String(contextPatientId) : null
     const aktifPaketSozu = aktifOnceden ? dosyaPaketOnbellekli(supabase, doktorId, aktifOnceden).catch(() => null) : null
-    cozum = await hastaninSozunuCoz(supabase, doktorId, message)
+    cozum = await hastaninSozunuCoz(supabase, doktorId, message, { tz: saatDilimi })
     const mesajMetni = String(message || "")
     // NOTYA-AKTIF-HASTA-01 (Kaan kararı 2026-09-29, 09-25 kuralı geri geldi): açık hasta — bu oturumda adla açılan
     // (odakKaynak 'soz') YA DA doktorun açık sayfası (NOTYA-SAYFA-HASTA-01, 'sayfa') — adsız soruyu cevaplar; arama
@@ -492,7 +493,8 @@ ${ilacBaglamMetni(drugs[0])}`
   // Only when NO patient could be resolved at all (no name, no open patient) — an open patient without a chart this
   // turn (cohort / calendar question) is still a known patient.
   const dosyaYokBlogu = !dosyaEk && !currentPatient ? DOSYA_YOK_BLOGU : ""
-  const kuyruk = gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
+  // NOTYA-AYSE-100-LUNA (c): the model clock — doctor-timezone date/time, per turn, never cached.
+  const kuyruk = zamanBlogu(saatDilimi) + gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.
