@@ -92,3 +92,49 @@ export function kareKonusmasi(g: { rms: number; silero: SileroOlasilik; onceki: 
 export function sessizlikKuyrugu(kaynak: 'silero' | 'rms'): number {
   return kaynak === 'silero' ? FISH_SES_SIZLIGI_SILERO_MS : FISH_SES_SIZLIGI_MS
 }
+
+/* ---- Turn state machine — one pure step per captured frame, shared by the PCM and MediaRecorder paths. ---- */
+
+export type TurDurumu = {
+  duydu: boolean
+  konusmaBas: number
+  sessizBas: number
+  /** Voiced time actually heard this turn (wall-clock, see `turAdimi`). */
+  sesliMs: number
+  sonKare: number
+  kaynak: 'silero' | 'rms'
+}
+
+export function turBaslat(): TurDurumu {
+  return { duydu: false, konusmaBas: 0, sessizBas: 0, sesliMs: 0, sonKare: 0, kaynak: 'rms' }
+}
+
+/** A frame that arrives later than this many nominal frames is a stall, not speech: cap what one frame may add. */
+export const FISH_KARE_AZAMI_KAT = 4
+
+/**
+ * One captured frame outside Ayşe's playback. Voiced time is the wall-clock gap since the previous
+ * frame (floor: nominal frame length, cap: FISH_KARE_AZAMI_KAT × frame). The ScriptProcessor /
+ * setTimeout tick and Silero's ORT inference share the main thread, so under load frames arrive
+ * late and bunched; counting the nominal frame length per voiced frame undercounts what the doctor
+ * said and the junk gate drops a real sentence as `sesli_kisa` while the tail still closes the turn
+ * on wall-clock silence. The tail is measured on wall-clock too, so both sides agree.
+ */
+export function turAdimi(
+  d: TurDurumu,
+  g: { ses: boolean; kaynak: 'silero' | 'rms'; simdi: number; kareMs: number },
+): { durum: TurDurumu; bitir: 'sessizlik' | 'azami' | null } {
+  const gecen = d.sonKare > 0 ? Math.min(Math.max(g.simdi - d.sonKare, g.kareMs), FISH_KARE_AZAMI_KAT * g.kareMs) : g.kareMs
+  const n: TurDurumu = { ...d, sonKare: g.simdi, kaynak: g.kaynak }
+  if (g.ses) {
+    if (!n.duydu) { n.duydu = true; n.konusmaBas = g.simdi }
+    n.sesliMs += gecen
+    n.sessizBas = 0
+  } else if (n.duydu) {
+    if (!n.sessizBas) n.sessizBas = g.simdi
+    const konusmaMs = g.simdi - n.konusmaBas
+    if (konusmaMs >= FISH_MIN_KONUSMA_MS && g.simdi - n.sessizBas >= sessizlikKuyrugu(n.kaynak)) return { durum: n, bitir: 'sessizlik' }
+  }
+  if (n.duydu && g.simdi - n.konusmaBas > FISH_AZAMI_TUR_MS) return { durum: n, bitir: 'azami' }
+  return { durum: n, bitir: null }
+}

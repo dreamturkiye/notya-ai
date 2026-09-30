@@ -17,14 +17,19 @@ export type SileroKapi = {
   kapat: () => Promise<void>
 }
 
-/** iPhone / iPad (incl. iPadOS "Macintosh" UA with touch). Unverified there → RMS unless NEXT_PUBLIC_NOTYA_SILERO_IOS=1. */
+/** iPhone / iPad (incl. iPadOS "Macintosh" UA with touch). Needs NEXT_PUBLIC_NOTYA_SILERO=1 *and* NEXT_PUBLIC_NOTYA_SILERO_IOS=1. */
 export function iosMu(ua: string, dokunma = 0): boolean {
   return /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && dokunma > 1)
 }
 
+/**
+ * Opt-in (2026-09-29): default OFF everywhere — the RMS gate with its 600 ms tail is the shipped
+ * path. `NEXT_PUBLIC_NOTYA_SILERO=1` enables Silero on desktop; iOS additionally needs
+ * `NEXT_PUBLIC_NOTYA_SILERO_IOS=1`. A Safari session dropped two doctor turns after Silero attached.
+ */
 export function sileroKullanilirMi(g: { ua: string; dokunma?: number; genel?: string; ios?: string }): boolean {
   const genel = String(g.genel ?? '').trim().toLowerCase()
-  if (genel === '0' || genel === 'false' || genel === 'off') return false
+  if (!(genel === '1' || genel === 'true' || genel === 'on')) return false
   if (iosMu(g.ua, g.dokunma ?? 0)) return String(g.ios ?? '').trim() === '1'
   return true
 }
@@ -45,18 +50,23 @@ function tarayicidaKullanilirMi(): boolean {
  * failure (no throw) so the caller simply keeps the RMS gate.
  */
 export async function sileroAc(akis: MediaStream, baglam: AudioContext): Promise<SileroKapi | null> {
-  if (!tarayicidaKullanilirMi()) return null
+  if (!tarayicidaKullanilirMi()) {
+    console.info('[fish-vad]', { motor: 'rms', silero: 'kapali', neden: 'ayar' })
+    return null
+  }
   const t0 = Date.now()
   let son: SileroOlasilik = null
   let kare = 0
   let ilkKare: (() => void) | null = null
   const ilkKareSozu = new Promise<void>((r) => { ilkKare = r })
+  /** Destroyed on any failure after creation — a half-attached MicVAD would keep its source node and inference alive. */
+  let vad: { destroy: () => Promise<void> | void; errored: string | null | false } | null = null
   try {
     const mod = await Promise.race([
       import('@ricky0123/vad-web'),
       new Promise<never>((_, rej) => setTimeout(() => rej(new Error('silero_yukleme_zaman')), SILERO_ACILIS_MS)),
     ])
-    const vad = await mod.MicVAD.new({
+    vad = await mod.MicVAD.new({
       model: 'v5',
       baseAssetPath: SILERO_VARLIK_YOLU,
       onnxWASMBasePath: SILERO_VARLIK_YOLU,
@@ -79,17 +89,20 @@ export async function sileroAc(akis: MediaStream, baglam: AudioContext): Promise
       onSpeechEnd: () => undefined,
       onVADMisfire: () => undefined,
     })
-    if (vad.errored) throw new Error(vad.errored)
+    const kapi = vad as NonNullable<typeof vad>
+    if (kapi.errored) throw new Error(kapi.errored)
     // Safari can create the worklet and never feed it — no frame within the window means RMS.
     await Promise.race([ilkKareSozu, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('silero_kare_yok')), SILERO_ILK_KARE_MS))])
-    console.info('[fish-vad]', { silero: 'acik', yukleme_ms: Date.now() - t0 })
+    const islemci = (kapi as unknown as { _audioProcessorAdapterType?: string })._audioProcessorAdapterType ?? null
+    console.info('[fish-vad]', { motor: 'silero', silero: 'acik', islemci, hz: baglam.sampleRate, yukleme_ms: Date.now() - t0 })
     return {
       olasilik: () => son,
       kareSayisi: () => kare,
-      kapat: async () => { try { await vad.destroy() } catch { /* */ } },
+      kapat: async () => { try { await kapi.destroy() } catch { /* */ } },
     }
   } catch (e) {
-    console.info('[fish-vad]', { silero: 'kapali', neden: e instanceof Error ? e.message : 'hata', ms: Date.now() - t0 })
+    if (vad) { try { await vad.destroy() } catch { /* */ } }
+    console.info('[fish-vad]', { motor: 'rms', silero: 'kapali', neden: e instanceof Error ? e.message : 'hata', ms: Date.now() - t0 })
     return null
   }
 }
