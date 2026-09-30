@@ -10,7 +10,8 @@
  * PCM is relayed to the browser as base64 SSE events on the existing turn stream.
  */
 import { fishBirlestir, fishYeniCumleler } from '@/lib/asistan/fishCalar'
-import { FISH_HABER_SES_ID, FISH_HIZ, FISH_MODEL, FISH_ORNEK_HZ, fishMetni } from '@/lib/asistan/fishSes'
+import { FISH_GECIKME, FISH_HABER_SES_ID, FISH_HIZ, FISH_ORNEK_HZ, FISH_PARCA, fishModel } from '@/lib/asistan/fishSes'
+import { fishMetni } from '@/lib/asistan/fishSes'
 import { msgpackCoz, msgpackKodla, type MsgpackDeger } from '@/lib/asistan/fishMsgpack'
 
 export const FISH_WS_URL = 'wss://api.fish.audio/v1/tts/live'
@@ -33,8 +34,8 @@ export function fishWsBaslangic(): { event: 'start'; request: { [k: string]: Msg
       reference_id: FISH_HABER_SES_ID,
       format: 'pcm',
       sample_rate: FISH_ORNEK_HZ,
-      latency: 'low',
-      chunk_length: 160,
+      latency: FISH_GECIKME,
+      chunk_length: FISH_PARCA,
       temperature: 0.7,
       top_p: 0.7,
       normalize: false,
@@ -43,7 +44,8 @@ export function fishWsBaslangic(): { event: 'start'; request: { [k: string]: Msg
   }
 }
 
-export function fishWsModel(): string { return FISH_MODEL }
+/** Read per call so a Vercel `NOTYA_FISH_MODEL` change applies to the next socket. */
+export function fishWsModel(): string { return fishModel() }
 
 /** One finished word-group → one text event. Trailing space: Fish's guide says "send complete words with spaces". */
 export function fishWsMetinOlayi(cumle: string): { event: 'text'; text: string } | null {

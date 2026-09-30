@@ -7,7 +7,28 @@
  */
 
 export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
-export const FISH_MODEL = 's2.1-pro'
+/** Models the hosted API accepts (docs.fish.audio TTS reference, read 2026-09-30). */
+export const FISH_MODELLER = ['s2.1-pro', 's2-pro', 's1'] as const
+export type FishModel = (typeof FISH_MODELLER)[number]
+export const FISH_VARSAYILAN_MODEL: FishModel = 's2.1-pro'
+/**
+ * NOTYA-FISH-HIZ-01 (2026-09-30 matrix, docs/ARCH-FISH-TTS-LATENCY.md): s2-pro and s1 answered
+ * ~50 ms sooner and finished ~500 ms sooner than s2.1-pro on the same six sentences. Voice quality
+ * is Kaan's call by ear, so the model is switchable in Vercel (`NOTYA_FISH_MODEL`) without a deploy;
+ * the default stays the locked s2.1-pro until he chooses.
+ */
+export function fishModel(deger: string | undefined = process.env.NOTYA_FISH_MODEL): FishModel {
+  const d = String(deger ?? '').trim().toLowerCase()
+  return (FISH_MODELLER as readonly string[]).includes(d) ? (d as FishModel) : FISH_VARSAYILAN_MODEL
+}
+export const FISH_MODEL = fishModel()
+/** `latency: "low"` — measured equal to "balanced" and 1.4 s ahead of "normal" (TTFB 1 656 ms). */
+export const FISH_GECIKME = 'low'
+/**
+ * Text chunk Fish synthesises at a time (100–300). 100 gave the earliest first audio on our
+ * sentence-sized turns (216 vs 235 ms at 160, 227 at 200); total time did not change.
+ */
+export const FISH_PARCA = 100
 export const FISH_ASR_MODEL = 'transcribe-1'
 /** ASR language is pinned to Turkish on every call — Fish's auto-detect mislabels short Turkish clips. */
 export const FISH_ASR_DIL = 'tr'
@@ -244,7 +265,7 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
   const text = fishMetni(metin)
   if (!text || /^[.,;:!?…\-–—'"]+$/.test(text.replace(/\s|\[break\]/g, ''))) return null
   return {
-    model: FISH_MODEL,
+    model: fishModel(),
     govde: {
       text,
       reference_id: FISH_HABER_SES_ID,
@@ -254,8 +275,8 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
       temperature: 0.7,
       top_p: 0.7,
       normalize: false,
-      latency: 'low',
-      chunk_length: 160,
+      latency: FISH_GECIKME,
+      chunk_length: FISH_PARCA,
       prosody: { speed: FISH_HIZ, volume: 0, normalize_loudness: true },
     },
   }

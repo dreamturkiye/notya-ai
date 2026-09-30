@@ -12,7 +12,7 @@ test('ws: start event carries the documented TTSRequest fields, pinned to our PC
   assert.equal(s.request.format, 'pcm')
   assert.equal(s.request.sample_rate, FISH_ORNEK_HZ)
   assert.equal(s.request.latency, 'low')
-  assert.equal(s.request.chunk_length, 160)
+  assert.equal(s.request.chunk_length, 100)
   assert.equal(s.request.reference_id, FISH_HABER_SES_ID)
   assert.deepEqual(s.request.prosody, { speed: 1, volume: 0, normalize_loudness: true })
   assert.deepEqual(FISH_WS_DUR, { event: 'stop' })
