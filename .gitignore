@@ -159,3 +159,6 @@ smoke-out/
 # NOTYA-SILERO-01: copied from node_modules at build (scripts/vad-varliklari.mjs)
 /public/vad/
 /scripts/_fish-olcum-fixture.wav
+
+# ayse-denetim raw output (clinical answers — never committed)
+.denetim-out/

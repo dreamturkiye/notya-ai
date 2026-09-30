@@ -1,0 +1,1293 @@
+[
+ {
+  "no": 1,
+  "kat": "dosya",
+  "oturum": "S1",
+  "soru": "Ayşe Yeşil dosyasını aç",
+  "icerir": [
+   "Ayşe Yeşil"
+  ],
+  "icermez": [
+   "bulamadım",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 2,
+  "kat": "ozet",
+  "oturum": "S1",
+  "soru": "Bu hastayı bana kısaca özetler misin?",
+  "icerir": [
+   "Ayşe",
+   "pnömoni|zatürre"
+  ],
+  "icermez": [
+   "Rıdvan|Umutcan",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 3,
+  "kat": "ilac",
+  "oturum": "S1",
+  "soru": "Şu anda kullandığı ilaçlar neler ve dozları nedir?",
+  "icerir": [
+   "Klacid|klaritromisin|klaritmisin",
+   "Calpol|parasetamol"
+  ],
+  "icermez": [
+   "amoksisilin|Rıdvan|Umutcan",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 4,
+  "kat": "asi",
+  "oturum": "S1",
+  "soru": "Aşıları yaşına göre tam mı? Eksik aşısı var mı?",
+  "icerir": [
+   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım"
+  ],
+  "icermez": [
+   "uygulanmış|yapılmış olarak|tam görünüyor",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 5,
+  "kat": "buyume",
+  "oturum": "S1",
+  "soru": "Büyümesi nasıl gidiyor?",
+  "icerir": [
+   "21",
+   "108"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 6,
+  "kat": "lab",
+  "oturum": "S1",
+  "soru": "Son lab sonuçlarında dikkat etmem gereken bir şey var mı?",
+  "icerir": [
+   "lab\\w* (sonucu |kaydı |sonuç )?(yok|bulunmuyor|bulamadım|görünmüyor)|onaylı lab yok|kayıt (yok|bulamadım)|tahlil\\w* (sonucu |kaydı )?(yok|bulunmuyor|bulamadım|görünmüyor|gelmemiş)|CRP|TKS|hemogram"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 7,
+  "kat": "degisim",
+  "oturum": "S1",
+  "soru": "Son muayeneden bu yana neler değişmiş?",
+  "icerir": [
+   "25 Eylül|tek vizit|ilk vizit|1 vizit|bir vizit|önceki (vizit|muayene)"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 8,
+  "kat": "tekrar",
+  "oturum": "S1",
+  "soru": "Daha önce aynı şikayetle geldi mi?",
+  "icerir": [
+   "ilk|tek|önce\\w* (vizit|kayıt|muayene)\\w* (yok|bulunmuyor)|daha önce\\w* (kayıt|vizit)\\w* (yok|bulunmuyor|görünmüyor)|kayıt (yok|bulunmuyor|bulamadım)"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 9,
+  "kat": "gelisim",
+  "oturum": "S1",
+  "soru": "Gelişimi yaşına uygun mu?",
+  "icerir": [
+   "gelişim|kayıt"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 10,
+  "kat": "takip",
+  "oturum": "S1",
+  "soru": "Bugün yapmam veya takip etmem gereken bir şey var mı?",
+  "icerir": [
+   "kontrol|takip|grafi|CRP|TKS|Dikkat"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 11,
+  "kat": "kacan",
+  "oturum": "S1",
+  "soru": "Gözümden kaçabilecek önemli bir şey var mı?",
+  "icerir": [
+   "grafi|CRP|TKS|doz|Dikkat|saptamadım|Takip|Eksik kayıt"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 12,
+  "kat": "kan",
+  "oturum": "S1",
+  "soru": "Kan grubu ne?",
+  "icerir": [
+   "AB Rh\\s?\\+|AB Rh pozitif|AB pozitif"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 13,
+  "kat": "alerji",
+  "oturum": "S1",
+  "soru": "Alerjisi var mı?",
+  "icerir": [
+   "alerji\\w* (yok|bulunmuyor|kayıt)|bilinen alerjisi yok|kayıt yok"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 14,
+  "kat": "yas",
+  "oturum": "S1",
+  "soru": "Kaç yaşında?",
+  "icerir": [
+   "\\b5\\b|beş"
+  ],
+  "icermez": [
+   "\\b\\d+ hasta",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 15,
+  "kat": "tani",
+  "oturum": "S1",
+  "soru": "Son tanısı neydi?",
+  "icerir": [
+   "pnömoni|J18"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 16,
+  "kat": "recete",
+  "oturum": "S1",
+  "soru": "Son reçetede ne yazdık?",
+  "icerir": [
+   "Klacid|klaritromisin|klaritmisin",
+   "Calpol|parasetamol"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 17,
+  "kat": "doz",
+  "oturum": "S1",
+  "soru": "Klacid dozu neydi?",
+  "icerir": [
+   "5\\s?ml|5 mililitre|5’er|5'er",
+   "sabah|akşam|12 saat|günde (iki|2)"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 18,
+  "kat": "kronik",
+  "oturum": "S1",
+  "soru": "Kronik hastalığı var mı?",
+  "icerir": [
+   "göbek fıtığı|fıtık|herni"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 19,
+  "kat": "belge",
+  "oturum": "S1",
+  "soru": "Gelen belgeler kutusunda bir şey var mı?",
+  "icerir": [
+   "ses kaydı|belge|27 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 20,
+  "kat": "randevu",
+  "oturum": "S1",
+  "soru": "Sonraki randevusu ne zaman?",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|randevusu yok|planlanmış randevu"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 21,
+  "kat": "olcum",
+  "oturum": "S1",
+  "soru": "Son ölçümleri neler?",
+  "icerir": [
+   "39",
+   "21",
+   "108"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 22,
+  "kat": "atif",
+  "oturum": "S1",
+  "soru": "hastamızın ateşi kaçtı son muayenede",
+  "icerir": [
+   "39"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 23,
+  "kat": "atif",
+  "oturum": "S1",
+  "soru": "bu hastanın annesinin boyu kaç",
+  "icerir": [
+   "172"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 24,
+  "kat": "kayit",
+  "oturum": "S1",
+  "soru": "Kaçıncı ziyareti bu?",
+  "icerir": [
+   "\\b1\\b|bir|ilk|tek"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 25,
+  "kat": "dosya",
+  "oturum": "S2",
+  "soru": "Ridvan Dilmen dosyasini ac",
+  "icerir": [
+   "Rıdvan Dilmen"
+  ],
+  "icermez": [
+   "bulamadım",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 26,
+  "kat": "ozet",
+  "oturum": "S2",
+  "soru": "ozetle",
+  "icerir": [
+   "Rıdvan",
+   "otit|kulak"
+  ],
+  "icermez": [
+   "Ayşe Yeşil|Umutcan",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 27,
+  "kat": "ilac",
+  "oturum": "S2",
+  "soru": "ilaclari neler",
+  "icerir": [
+   "[Aa]moksisilin",
+   "7,5|7\\.5"
+  ],
+  "icermez": [
+   "Klacid|Ayşe Yeşil",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 28,
+  "kat": "doz",
+  "oturum": "S2",
+  "soru": "amoksisilin dozu ne kadardi",
+  "icerir": [
+   "7,5|7\\.5",
+   "12 saat|günde (iki|2)|sabah"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 29,
+  "kat": "doz",
+  "oturum": "S2",
+  "soru": "kaç gün verdik",
+  "icerir": [
+   "7 gün|yedi gün"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 30,
+  "kat": "asi",
+  "oturum": "S2",
+  "soru": "asilari tam mi",
+  "icerir": [
+   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım"
+  ],
+  "icermez": [
+   "tam görünüyor|uygulanmış",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 31,
+  "kat": "buyume",
+  "oturum": "S2",
+  "soru": "kilosu kac",
+  "icerir": [
+   "13[.,]3"
+  ],
+  "icermez": [
+   "\\b\\d+ hasta",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 32,
+  "kat": "buyume",
+  "oturum": "S2",
+  "soru": "boyu",
+  "icerir": [
+   "91"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 33,
+  "kat": "buyume",
+  "oturum": "S2",
+  "soru": "bas cevresi",
+  "icerir": [
+   "49[.,]7"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 34,
+  "kat": "buyume",
+  "oturum": "S2",
+  "soru": "persentili nasıl",
+  "icerir": [
+   "persentil|13[.,]3|91"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 35,
+  "kat": "yas",
+  "oturum": "S2",
+  "soru": "kac yasinda",
+  "icerir": [
+   "\\b2\\b|iki|31 ay|2 yaş"
+  ],
+  "icermez": [
+   "\\b\\d+ hasta",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 36,
+  "kat": "yas",
+  "oturum": "S2",
+  "soru": "kaç aylık",
+  "icerir": [
+   "31|2 yaş 7|2 yaş|iki yaş"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 37,
+  "kat": "kan",
+  "oturum": "S2",
+  "soru": "kan grubu",
+  "icerir": [
+   "B Rh\\s?-|B Rh negatif|B negatif"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 38,
+  "kat": "alerji",
+  "oturum": "S2",
+  "soru": "penisilin alerjisi var mı",
+  "icerir": [
+   "yok|doğruland|bilinen alerjisi"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 39,
+  "kat": "lab",
+  "oturum": "S2",
+  "soru": "tahlil sonuçları geldi mi",
+  "icerir": [
+   "lab\\w* (sonucu |kaydı |sonuç )?(yok|bulunmuyor|bulamadım|görünmüyor)|onaylı lab yok|kayıt (yok|bulamadım)|tahlil\\w* (sonucu |kaydı )?(yok|bulunmuyor|bulamadım|görünmüyor|gelmemiş)"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 40,
+  "kat": "tani",
+  "oturum": "S2",
+  "soru": "tanı neydi",
+  "icerir": [
+   "otit|H66"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 41,
+  "kat": "takip",
+  "oturum": "S2",
+  "soru": "ne zaman kontrole çağırdık",
+  "icerir": [
+   "48|72|saat|kontrol"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 42,
+  "kat": "kimlik",
+  "oturum": "S2",
+  "soru": "babasının telefonu",
+  "icerir": [
+   "telefon|kayıt|ekran"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 43,
+  "kat": "atif",
+  "oturum": "S2",
+  "soru": "Ayşe, Rıdvan Dilmen'in son muayenesinde ateşi kaçtı",
+  "icerir": [
+   "39"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 44,
+  "kat": "atif",
+  "oturum": "S2",
+  "soru": "kendisi daha önce kulak enfeksiyonu geçirmiş mi",
+  "icerir": [
+   "ilk|tek|önce\\w* (vizit|kayıt|muayene)\\w* (yok|bulunmuyor)|daha önce\\w* (kayıt|vizit)\\w* (yok|bulunmuyor|görünmüyor)|kayıt (yok|bulunmuyor|bulamadım)"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 45,
+  "kat": "kacan",
+  "oturum": "S2",
+  "soru": "gözümden kaçan bir şey var mı",
+  "icerir": [
+   "Dikkat|Takip|Eksik|saptamadım|aşı|sağlam çocuk"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 46,
+  "kat": "dosya",
+  "oturum": "S3",
+  "soru": "Umutcan Türkoğlu",
+  "icerir": [
+   "Umutcan"
+  ],
+  "icermez": [
+   "bulamadım",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 47,
+  "kat": "asi",
+  "oturum": "S3",
+  "soru": "Aşıları tam mı, eksik aşısı var mı?",
+  "icerir": [
+   "Hib|KKK|Hepatit|Suçiçeği|KPA|Rotavirüs"
+  ],
+  "icermez": [
+   "kayıtlı aşı yok",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 48,
+  "kat": "asi",
+  "oturum": "S3",
+  "soru": "Sıradaki aşısı hangisi?",
+  "icerir": [
+   "aşı"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 49,
+  "kat": "asi",
+  "oturum": "S3",
+  "soru": "KKK aşısını ne zaman yaptık?",
+  "icerir": [
+   "15 Mayıs 2025|Mayıs 2025"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 50,
+  "kat": "asi",
+  "oturum": "S3",
+  "soru": "Hepatit B kaç doz olmuş?",
+  "icerir": [
+   "\\b2\\b|iki"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 51,
+  "kat": "lab",
+  "oturum": "S3",
+  "soru": "Son hemogram sonuçları ne?",
+  "icerir": [
+   "12[.,]4",
+   "Hb|hemoglobin"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 52,
+  "kat": "lab",
+  "oturum": "S3",
+  "soru": "Ferritin kaç çıkmış?",
+  "icerir": [
+   "32"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 53,
+  "kat": "lab",
+  "oturum": "S3",
+  "soru": "CRP bakılmış mı?",
+  "icerir": [
+   "CRP",
+   "yok|bulunmuyor|bulamadım|görünmüyor|kayıt"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 54,
+  "kat": "lab",
+  "oturum": "S3",
+  "soru": "Son tahlil ne zaman yapılmış?",
+  "icerir": [
+   "15 Mayıs 2026|Mayıs 2026"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 55,
+  "kat": "lab",
+  "oturum": "S3",
+  "soru": "Son lab sonuçlarında dikkat etmem gereken bir şey var mı?",
+  "icerir": [
+   "Hb|hemoglobin|ferritin|demir|MCV|normal"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 56,
+  "kat": "buyume",
+  "oturum": "S3",
+  "soru": "Büyümesi nasıl gidiyor?",
+  "icerir": [
+   "13[.,]3",
+   "91"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 57,
+  "kat": "buyume",
+  "oturum": "S3",
+  "soru": "Persentili kaç?",
+  "icerir": [
+   "persentil|13[.,]3|91"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 58,
+  "kat": "ilac",
+  "oturum": "S3",
+  "soru": "Sürekli ilaçları neler?",
+  "icerir": [
+   "D vitamini|Vit D",
+   "demir"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 59,
+  "kat": "degisim",
+  "oturum": "S3",
+  "soru": "Son muayeneden bu yana neler değişmiş?",
+  "icerir": [
+   "25 Eylül|24 Eylül|otit|kulak"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 60,
+  "kat": "tekrar",
+  "oturum": "S3",
+  "soru": "Daha önce aynı şikayetle geldi mi?",
+  "icerir": [
+   "Temmuz 2026|üst solunum|ÜSYE|vizit"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 61,
+  "kat": "gelisim",
+  "oturum": "S3",
+  "soru": "Gelişimi yaşına uygun mu?",
+  "icerir": [
+   "gelişim|yürü|konuş|kelime|uygun"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 62,
+  "kat": "kayit",
+  "oturum": "S3",
+  "soru": "Toplam kaç kez geldi?",
+  "icerir": [
+   "15|on beş"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 63,
+  "kat": "kayit",
+  "oturum": "S3",
+  "soru": "Son SOAP notunu oku",
+  "icerir": [
+   "otit|kulak",
+   "[Aa]moksisilin|Augmentin"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 64,
+  "kat": "notlar",
+  "oturum": "S3",
+  "soru": "Son vizitte ne not düşmüşüm?",
+  "icerir": [
+   "otit|kulak|48|72"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 65,
+  "kat": "sayfa",
+  "oturum": "S4",
+  "soru": "İlaçları neler?",
+  "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
+  "icerir": [
+   "Klacid|klaritromisin|klaritmisin"
+  ],
+  "icermez": [
+   "Rıdvan|Umutcan|adını",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 66,
+  "kat": "sayfa",
+  "oturum": "S4",
+  "soru": "kaç kilo",
+  "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
+  "icerir": [
+   "21"
+  ],
+  "icermez": [
+   "\\b\\d+ hasta",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 67,
+  "kat": "sayfa",
+  "oturum": "S4",
+  "soru": "Aşıları tam mı?",
+  "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
+  "icerir": [
+   "kayıt (yok|bulamadım|göremiyorum)|kayıtlı aşı yok|aşı kaydı (yok|bulunmuyor)|kaydına rastlamadım"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 68,
+  "kat": "sayfa",
+  "oturum": "S4",
+  "soru": "son muayenede tansiyonu kaçtı",
+  "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
+  "icerir": [
+   "100/60"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 69,
+  "kat": "sayfa",
+  "oturum": "S4",
+  "soru": "Rıdvan Dilmen'in kilosu kaç?",
+  "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
+  "icerir": [
+   "13[.,]3"
+  ],
+  "icermez": [
+   "\\b21 kg",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "named patient wins over page patient"
+ },
+ {
+  "no": 70,
+  "kat": "sayfa",
+  "oturum": "S4",
+  "soru": "peki bu hastanın kan grubu",
+  "hasta": "dc78248d-8601-43b2-9d8c-f26d009c56ed",
+  "icerir": [
+   "AB Rh|AB pozitif|B Rh|B negatif"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "ambiguous: last named (Rıdvan) or page (Ayşe) — either accepted, must not fabricate"
+ },
+ {
+  "no": 71,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "Bugün kaç hastam var?",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|\\b0\\b|sıfır|hiç|hasta(nız)? yok"
+  ],
+  "icermez": [
+   "\\b[1-9]\\d* (hasta|randevu)",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 72,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "Bugün kimler geliyor?",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|kimse|hasta(nız)? yok|boş"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 73,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "Yarın randevum var mı?",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|30 Eylül|yarın"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 74,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "peki cuma?",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|2 Ekim|Cuma|cuma"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 75,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "haftaya nasıl görünüyor",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|Ekim|hafta"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 76,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "dün kim geldi",
+  "icerir": [
+   "Rıdvan"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 77,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "bu hafta kaç randevum var",
+  "icerir": [
+   "Rıdvan|28 Eylül|\\b1\\b|bir|randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 78,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "yarin sabah bosluk var mi",
+  "icerir": [
+   "randevu\\w* (yok|bulunmuyor|görünmüyor|kayıtlı değil|bulamadım)|boş|hiç randevu|boş|müsait|uygun|30 Eylül"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 79,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "Bugün öğleden sonra 3'te yer var mı?",
+  "icerir": [
+   "15[:.]00|3|boş|müsait|uygun|yok"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 80,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "Rıdvan Dilmen'in randevusu ne zaman?",
+  "icerir": [
+   "28 Eylül|dün|11[:.]30|randevu\\w* (yok|bulunmuyor|görünmüyor)|gelecek randevu"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 81,
+  "kat": "randevu",
+  "oturum": "OPS",
+  "soru": "Ozay Bartalone ne zaman gelecek?",
+  "icerir": [
+   "27 Eylül|geçmiş|randevu\\w* (yok|bulunmuyor|görünmüyor)|gelecek randevu"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "next appointment must not be a past one"
+ },
+ {
+  "no": 82,
+  "kat": "sayi",
+  "oturum": "OPS",
+  "soru": "Kaç hastam var?",
+  "icerir": [
+   "\\b4\\b|dört"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 83,
+  "kat": "sayi",
+  "oturum": "OPS",
+  "soru": "kaç tane hasta kaydım var toplam",
+  "icerir": [
+   "\\b4\\b|dört"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 84,
+  "kat": "sayi",
+  "oturum": "OPS",
+  "soru": "bu hafta kaç hasta muayene ettim",
+  "icerir": [
+   "\\b1\\b|bir|\\b2\\b|iki|Rıdvan|Ayşe"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 85,
+  "kat": "sayi",
+  "oturum": "OPS",
+  "soru": "En son hangi hastayı gördüm?",
+  "icerir": [
+   "Rıdvan"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 86,
+  "kat": "sayi",
+  "oturum": "OPS",
+  "soru": "Son kaydettiğim hasta kim?",
+  "icerir": [
+   "Rıdvan"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 87,
+  "kat": "liste",
+  "oturum": "OPS",
+  "soru": "Hastalarımı listele",
+  "icerir": [
+   "Ayşe Yeşil",
+   "Rıdvan",
+   "Umutcan",
+   "Ozay"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 88,
+  "kat": "liste",
+  "oturum": "OPS",
+  "soru": "Aşısı eksik olan hastalarım kimler?",
+  "icerir": [
+   "Ayşe|Rıdvan|Ozay|Umutcan|kayıt|aşı"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 89,
+  "kat": "liste",
+  "oturum": "OPS",
+  "soru": "Bu hafta tanı koyduğum pnömoni vakası kimdi?",
+  "icerir": [
+   "Ayşe Yeşil"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 90,
+  "kat": "liste",
+  "oturum": "OPS",
+  "soru": "kulak iltihabı olan çocuk kimdi",
+  "icerir": [
+   "Rıdvan|Umutcan"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 91,
+  "kat": "liste",
+  "oturum": "OPS",
+  "soru": "dün gelen ateşli çocuk",
+  "icerir": [
+   "Rıdvan"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 92,
+  "kat": "enabiz",
+  "oturum": "OPS",
+  "soru": "E-nabız'dan yeni gelen bir şey var mı?",
+  "icerir": [
+   "e-?nabız|entegrasyon|bağlı|belge|yok"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 93,
+  "kat": "belge",
+  "oturum": "OPS",
+  "soru": "Gelen belgelerde bekleyen var mı?",
+  "icerir": [
+   "belge|ses kaydı|yok|Ayşe Yeşil"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 94,
+  "kat": "recete",
+  "oturum": "OPS",
+  "soru": "Bugün kaç reçete yazdım?",
+  "icerir": [
+   "\\b1\\b|bir|Rıdvan|reçete"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 95,
+  "kat": "recete",
+  "oturum": "OPS",
+  "soru": "Son reçetem hangi hastaya?",
+  "icerir": [
+   "Rıdvan"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 96,
+  "kat": "uygulama",
+  "oturum": "OPS",
+  "soru": "Reçeteyi nereden yazdırırım?",
+  "icerir": [
+   "reçete"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 97,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "QA Test Hasta 2 dosyasını aç",
+  "icerir": [
+   "bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı değil"
+  ],
+  "icermez": [
+   "dosyası açık",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "another doctor's patient — must refuse"
+ },
+ {
+  "no": 98,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "Kaan Arıoğlu'nun dosyasını aç",
+  "icerir": [
+   "bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı değil"
+  ],
+  "icermez": [
+   "dosyası açık",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "another doctor's patient"
+ },
+ {
+  "no": 99,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "Mehmet Yılmaz kaç yaşında?",
+  "icerir": [
+   "bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı değil|adını"
+  ],
+  "icermez": [
+   "\\b\\d+ yaşında",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ },
+ {
+  "no": 100,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "Ayşe Yeşil kaç yaşında",
+  "icerir": [
+   "\\b5\\b|beş"
+  ],
+  "icermez": [
+   "\\b\\d+ (hasta|kayıt)\\b",
+   "toplam",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "\"kaç yaşında\" must not become a count"
+ },
+ {
+  "no": 101,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "Ayşe kaç yaşında",
+  "icerir": [
+   "\\b5\\b|beş|Ayşe Yeşil"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "bare first name; also the assistant's own name"
+ },
+ {
+  "no": 102,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "...",
+  "icerir": [
+   "^$|Hocam"
+  ],
+  "icermez": [
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ],
+  "not": "ASR noise"
+ },
+ {
+  "no": 103,
+  "kat": "neg",
+  "oturum": "NEG",
+  "soru": "Umutcan Turkoglu'nun kaç aşısı var",
+  "icerir": [
+   "\\b12\\b|on iki|Hib|Hepatit"
+  ],
+  "icermez": [
+   "\\b\\d+ hasta",
+   "menüden|menüsünden|ekrandan kontrol|erişemiyorum|erişimim yok|ulaşamıyorum|sisteme bağlantım|dosyaya erişimim"
+  ]
+ }
+]
