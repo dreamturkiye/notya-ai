@@ -49,7 +49,7 @@ export async function fishAsrBlob(anahtar: string, ses: Blob, gunluk = '[fish-st
   const klip = asrKlipDenetle(bayt, ses.type || ad)
   if (!klip.uygun) {
     console.info(gunluk, { atlandi: klip.neden, klip_ms: klip.sureMs, bayt: klip.bayt, rms: klip.rms })
-    return { tur: 'atlandi', neden: klip.neden, asr_latency_ms: 0 }
+    return { tur: 'atlandi', neden: klip.neden || 'klip', asr_latency_ms: 0 }
   }
   const t0 = Date.now()
   let deneme: FishAsrDeneme = { durum: null, metin: '', hata: 'baslamadi' }
