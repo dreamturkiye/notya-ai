@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { ayseCevapla } from "@/lib/asistan/ayseCevapla"
+import { istekSaatDilimi } from "@/lib/doktor/saatDilimi"
+import { saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 
 // NOTYA-TEK-BEYIN: yazılı Ayşe — bütün boru hattı (hasta çözümü, dosya paketi, kimlik cevabı, branş kilitleri, doz /
 // kaynak kilidi, eylem kartları, hafıza) lib/asistan/ayseCevapla.ts'te; sesli Ayşe (/api/asistan/ses-llm) aynı
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
       sessionId,
       specialty = "genel",
       personaId: requestedPersona,
+      saatDilimi,
     } = body
 
     const sonuc = await ayseCevapla({
@@ -43,6 +46,8 @@ export async function POST(req: NextRequest) {
       patientId,
       sessionId,
       personaId: requestedPersona,
+      // NOTYA-TAKVIM-TZ-01: client tz on every request; cookie (DoktorChrome) when the body has none; TRT last.
+      saatDilimi: saatDilimiSec(typeof saatDilimi === "string" ? saatDilimi : null, istekSaatDilimi()),
     })
     if (!sonuc.ok) return NextResponse.json(sonuc.govde, { status: sonuc.durum })
     return NextResponse.json({ success: true, data: sonuc.cevap.veri })

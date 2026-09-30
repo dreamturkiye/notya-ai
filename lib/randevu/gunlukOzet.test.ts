@@ -55,3 +55,16 @@ describe('gunlukOzet — o günün saatleri', () => {
     assert.doesNotMatch(cok, /Veli/)
   })
 })
+
+describe('sözlü biçim — gün adı doktorun saat dilimine göre (NOTYA-TAKVIM-TZ-01)', () => {
+  const AN = new Date('2026-09-29T23:35:00Z') // Tue 19:35 US Eastern, already Wed in TRT
+  it('"Bugün / Yarın" is decided in tz and the resolved day is spoken', () => {
+    const ny = gunlukKonusmaMetni({ tarih: '2026-09-29', satirlar: [], tz: 'America/New_York', simdi: AN })
+    assert.match(ny, /^Bugün, 29 Eylül Salı, takviminizde randevu yok Hocam\./)
+    const yarin = gunlukKonusmaMetni({ tarih: '2026-09-30', satirlar: [{ saat: '09:00', bitisSaat: '09:20', hastaAdi: 'Ali Kaya', tur: 'muayene' }], tz: 'America/New_York', simdi: AN })
+    assert.match(yarin, /^Yarın, 30 Eylül Çarşamba, 1 randevu var Hocam/)
+    const trt = gunlukKonusmaMetni({ tarih: '2026-09-30', satirlar: [], tz: 'Europe/Istanbul', simdi: AN })
+    assert.match(trt, /^Bugün, 30 Eylül Çarşamba,/)
+    assert.match(gunlukKonusmaMetni({ tarih: '2026-10-15', satirlar: [], tz: 'America/New_York', simdi: AN }), /^15 Ekim Perşembe takviminizde/)
+  })
+})

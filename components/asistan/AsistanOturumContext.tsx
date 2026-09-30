@@ -26,6 +26,7 @@ import {
 } from "@/lib/asistan/personaEngine"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAuth"
+import { tarayiciSaatDilimi } from "@/lib/doktor/selam"
 import { address } from '@/lib/address'
 import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz'
 import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKarti'
@@ -694,6 +695,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
               specialty: p.primarySpecialty,
               personaId: p.id,
               ses: "ws",
+              saatDilimi: tarayiciSaatDilimi(),
             }),
             signal: kontrol.signal,
           })
@@ -819,7 +821,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     const oturumParam = ortakOturumId ? `&asistanSessionId=${encodeURIComponent(ortakOturumId)}` : ""
     const hastaParam = sayfaHastasi ? `&patientId=${encodeURIComponent(sayfaHastasi)}` : ""
     const resp = await fetch(
-      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}${hastaParam}`,
+      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}${hastaParam}&tz=${encodeURIComponent(tarayiciSaatDilimi())}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
     if (!resp.ok) {
@@ -1446,7 +1448,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const r = await fetch('/api/asistan/chat', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: metin, personaId: personaKey, asistanSessionId: ortakOturumId, ...(sayfaHastasi ? { patientId: sayfaHastasi } : {}) }),
+        body: JSON.stringify({ message: metin, personaId: personaKey, asistanSessionId: ortakOturumId, saatDilimi: tarayiciSaatDilimi(), ...(sayfaHastasi ? { patientId: sayfaHastasi } : {}) }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || `${personaAdi} yanıt veremedi.`)

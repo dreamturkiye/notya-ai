@@ -51,9 +51,67 @@ describe('takvimSorusu — clinic day lookup, not a chart question', () => {
     assert.equal(takvimTakipCoz('...', son), null)
     const takip = takvimTakipCoz('Emin misin?', son)
     assert.ok(takip)
-    assert.equal(takip!.tarih, bugunTRT())
+    assert.equal(takip!.tarih, '2026-09-29') // re-reads the day the answer named
     assert.equal(takvimTakipCoz('Emin misin?', 'Hocam, iyiyim.'), null)
     assert.equal(takvimRecantMi('Haklısınız Hocam; az önce randevu olmadığını ve tarihi kesinmiş gibi söyledim. Bunu doğrulamadan belirtmemeliydim. Randevu durumunu Ana Sayfa’daki bugünkü randevular bölümünden kontrol edelim.'), true)
     assert.equal(takvimRecantMi('Bugün takviminizde randevu yok Hocam.'), false)
+  })
+})
+
+// NOTYA-TAKVIM-TZ-01 — doctor in US Eastern, Tue 29 Sep 19:35 local (23:35Z; already 30 Sep in TRT)
+const AN = new Date('2026-09-29T23:35:00Z')
+const NY = { saatDilimi: 'America/New_York', simdi: AN }
+
+describe('takvimSorusu — doctor timezone and calendar follow-ups', () => {
+  it('"bugün" is the doctor\'s today, not TRT\'s', () => {
+    const c = takvimSorusuCoz('Bugün hiçbir randevumuz var mı?', NY)
+    assert.ok(c)
+    assert.equal(c!.tarih, '2026-09-29')
+    assert.equal(takvimSorusuCoz('Bugün hiçbir randevumuz var mı?', { saatDilimi: 'Europe/Istanbul', simdi: AN })!.tarih, '2026-09-30')
+    assert.equal(takvimSorusuCoz('Bugün randevu var mı?', { saatDilimi: 'garbage', simdi: AN })!.tarih, '2026-09-30')
+  })
+
+  it('bare date questions are calendar questions without the noun', () => {
+    for (const [m, tarih] of [
+      ['Yarın var mı?', '2026-09-30'],
+      ['yarın doluyum mu', '2026-09-30'],
+      ['Yarın kaç hastam var?', '2026-09-30'],
+      ['yarın kimler geliyor', '2026-09-30'],
+      ['Öbür gün boş muyum?', '2026-10-01'],
+      ['Cuma kimler geliyor hocam?', '2026-10-02'],
+      ['Haftaya pazartesi program ne?', '2026-10-05'],
+    ] as const) {
+      const c = takvimSorusuCoz(m, NY)
+      assert.ok(c, m)
+      assert.equal(c!.tarih, tarih, m)
+    }
+    // Not calendar: clinical "var mı" about a patient, or a bare date with no question
+    assert.equal(takvimSorusuMu('Bugün ateşi var mı?'), false)
+    assert.equal(takvimSorusuMu('yarın'), false)
+    assert.equal(takvimSorusuMu('Bugün Umutcan geldi mi?'), false)
+  })
+
+  it('after a calendar answer, a date-only follow-up continues the lookup', () => {
+    const son = '29 Eylül 2026 Salı takviminde randevu yok.'
+    for (const [m, tarih] of [
+      ['Peki yarın var mı hocam?', '2026-09-30'],
+      ['peki öbür gün?', '2026-10-01'],
+      ['Ya cuma?', '2026-10-02'],
+      ['haftaya', '2026-10-06'],
+      ['yarın', '2026-09-30'],
+    ] as const) {
+      const t = takvimTakipCoz(m, son, NY)
+      assert.ok(t, m)
+      assert.equal(t!.tarih, tarih, m)
+    }
+    assert.equal(takvimTakipCoz('Peki yarın var mı hocam?', 'Hocam, iyiyim.', NY), null)
+    assert.equal(takvimTakipCoz('Peki Umutcan yarın geliyor mu?', son, NY), null)
+    assert.equal(takvimTakipCoz('Peki aşıları tam mı?', son, NY), null)
+    // "emin misin" re-reads the day the last answer named (not today)
+    assert.equal(takvimTakipCoz('Emin misin?', '30 Eylül 2026 Çarşamba takviminde randevu yok.', NY)!.tarih, '2026-09-30')
+  })
+
+  it('model sending the doctor to the menu is a recant', () => {
+    assert.equal(takvimRecantMi('Yarının randevu listesi bu konuşmada görünmüyor; menüden Randevular bölümüne bakabilirsiniz.'), true)
   })
 })

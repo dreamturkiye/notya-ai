@@ -26,6 +26,8 @@ import {
   sesOzetMetni,
 } from '@/core/eylemler/sesKapilari'
 import { doktorunGununuOku, gunlukOzetMetni } from '@/lib/randevu/gunlukOzet'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
+import { bugunTz } from '@/lib/randevu/tarihCozumle'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import type { IlacUyarisi } from '@/core/eylemler/ilacUyari'
 
@@ -210,10 +212,11 @@ export async function POST(req: NextRequest) {
 
   if (adim === 'takvim') {
     const tarihHam = String(body.tarih || body.gun || '').trim()
-    const tarih = /^\d{4}-\d{2}-\d{2}$/.test(tarihHam) ? tarihHam : bugunTRT()
+    const saatDilimi = istekSaatDilimi()
+    const tarih = /^\d{4}-\d{2}-\d{2}$/.test(tarihHam) ? tarihHam : bugunTz(saatDilimi)
     const saat = String(body.saat || '').trim()
     const sure = Number(body.sure_dk || body.sureDk || 20)
-    const satirlar = await doktorunGununuOku(supabase, user.id, tarih)
+    const satirlar = await doktorunGununuOku(supabase, user.id, tarih, saatDilimi)
     const ozet = gunlukOzetMetni({
       tarih,
       satirlar,
