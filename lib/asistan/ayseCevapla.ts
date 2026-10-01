@@ -76,6 +76,13 @@ import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
 
 export type Kanal = "yazi" | "ses"
 
+/**
+ * NOTYA-AYSE-GERI-00: which step of the pipeline answered the turn. Everything except `model` is a model-free
+ * return. Carried on the answer (`veri.rota`) and logged once per turn, so a request that never reached Luna is
+ * visible in production logs and pinned by the routing table (lib/asistan/ayseRota.test.ts).
+ */
+export type AyseRota = "kapsam" | "takvim" | "gurultu" | "kimlik" | "oku" | "arama" | "dosya-ac" | "hizli-kart" | "model"
+
 export interface AyseGirdisi {
   supabase: SupabaseClient
   doktorId: string
@@ -135,6 +142,7 @@ export interface AyseCevabi {
   oncekiBekleyen?: string[]
   aktifHasta: string | null
   oturumId: string | null
+  rota: AyseRota
   /** /api/asistan/chat yanıtının `data` alanı — yazılı sohbetin sözleşmesi birebir. */
   veri: Record<string, unknown>
 }
@@ -292,16 +300,20 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     }).eq("id", oturumId)
   }
 
-  const sade = (ekran: string, konusma: string, aktifHasta: string | null, veriEk: Record<string, unknown> = {}): AyseSonucu => ({
-    ok: true,
-    cevap: {
-      ekran, konusma, kartlar: [], aktifHasta, oturumId,
-      veri: {
-        eylemOnerileri: [], eylemYonlendirme: null, eylemHastasi: null, speech: ekran, proactiveWarning: null,
-        action: null, actionResult: null, asistanSessionId: oturumId, aktifHasta, personaId, personaName: persona.name, ...veriEk,
+  const rotaYaz = (rota: AyseRota, ek: Record<string, unknown> = {}) => console.info("[asistan/chat] rota", { rota, kanal: g.kanal, ...ek })
+  const sade = (rota: AyseRota, ekran: string, konusma: string, aktifHasta: string | null, veriEk: Record<string, unknown> = {}): AyseSonucu => {
+    rotaYaz(rota)
+    return {
+      ok: true,
+      cevap: {
+        ekran, konusma, kartlar: [], aktifHasta, oturumId, rota,
+        veri: {
+          eylemOnerileri: [], eylemYonlendirme: null, eylemHastasi: null, speech: ekran, proactiveWarning: null,
+          action: null, actionResult: null, asistanSessionId: oturumId, aktifHasta, personaId, personaName: persona.name, rota, ...veriEk,
+        },
       },
-    },
-  })
+    }
+  }
 
   // NOTYA-KAPSAM-01 (Kaan, 2026-10-01): Ayse answers only what Notya is for. A clearly off-topic ask (car / weather /
   // sports / finance / recipe / code ...) with no in-scope signal gets ONE fixed refusal: no patient lookup, no model,
@@ -321,7 +333,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     console.info('[asistan/chat] kapsam', { karar: kapsam, kanal: g.kanal, oncekiRed })
     soyle(sabit)
     await oturumuYaz(sabit, {})
-    return sade(sabit, sabit, baglam.patientName ? String(baglam.patientName) : null)
+    return sade("kapsam", sabit, sabit, baglam.patientName ? String(baglam.patientName) : null)
   }
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
@@ -331,7 +343,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     : (takvimSorusuCoz(message, { saatDilimi }) || takvimTakipCoz(message, sonTakvimAsistan?.content, { saatDilimi }))
   if (!takvim && sesGurultusuMu(message)) {
     // ASR pause ("...") after a true calendar line must not reach the model — it recants.
-    return sade("", "", baglam.patientName ? String(baglam.patientName) : null)
+    return sade("gurultu", "", "", baglam.patientName ? String(baglam.patientName) : null)
   }
   if (takvim) turNiyeti = "takvim"
   if (takvim?.aralik) {
@@ -344,7 +356,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       const hafta = haftalikOzetMetni({ bas, bit, gunler: okunan, tz: saatDilimi })
       soyle(hafta.konusma)
       await oturumuYaz(hafta.metin, {})
-      return sade(hafta.metin, hafta.konusma, baglam.patientName ? String(baglam.patientName) : null)
+      return sade("takvim", hafta.metin, hafta.konusma, baglam.patientName ? String(baglam.patientName) : null)
     } catch (e) {
       console.error("[asistan/chat] takvim hafta", e instanceof Error ? e.message : String(e))
     }
@@ -367,7 +379,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       })
       soyle(konusma)
       await oturumuYaz(ozet.metin, {})
-      return sade(ozet.metin, konusma, baglam.patientName ? String(baglam.patientName) : null)
+      return sade("takvim", ozet.metin, konusma, baglam.patientName ? String(baglam.patientName) : null)
     } catch (e) {
       console.error("[asistan/chat] takvim", e instanceof Error ? e.message : String(e))
     }
@@ -412,6 +424,7 @@ ${ilacBaglamMetni(drugs[0])}`
   let cozulenHasta: { id: string; ad: string } | null = null
   let kesinDosyaCevap: string | null = null
   let aramaCevabi: string | null = null
+  let aramaRota: AyseRota = "arama"
   let cozum: HastaCozumu | null = null
   // NOTYA-BETA-0925: kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi)
   // sunucuda, modelsiz cevaplanır. Değerler yalnız bu yanıtın ekran metnindedir; saklanan geçmişe (sonraki
@@ -428,7 +441,7 @@ ${ilacBaglamMetni(drugs[0])}`
     await oturumuYaz(kimlikCevabi.model, { hasta: kimlikHastasi, kimlik: true })
     const konusma = kimlikSozu(kimlikCevabi)
     soyle(konusma)
-    return sade(kimlikCevabi.ekran, konusma, kimlikHastasi?.ad || null)
+    return sade("kimlik", kimlikCevabi.ekran, konusma, kimlikHastasi?.ad || null)
   }
   // NOTYA-SES-OKU-01: "bana anlat / devamını oku" — read the last screen answer aloud, uncapped, no model.
   if (ses && okumaIstegiMi(String(message || ""))) {
@@ -439,7 +452,7 @@ ${ilacBaglamMetni(drugs[0])}`
       soyle(okuma)
       const ekranNotu = "Ekrandaki cevabı sesli okudum Hocam."
       await oturumuYaz(ekranNotu, {})
-      return sade(ekranNotu, okuma, baglam.patientName ? String(baglam.patientName) : null)
+      return sade("oku", ekranNotu, okuma, baglam.patientName ? String(baglam.patientName) : null)
     }
   }
 
@@ -476,6 +489,7 @@ ${ilacBaglamMetni(drugs[0])}`
     } else if (cozum.tur === "tek" && dosyaIstegi) {
       // Deterministic open: the chart becomes the session's active patient; follow-ups load it from cache.
       cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
+      aramaRota = "dosya-ac"
       aramaCevabi = `${cozum.ad} dosyası açık Hocam. Ne sormak istersiniz?`
     } else if (cozum.tur === "tek") {
         const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
@@ -518,7 +532,7 @@ ${ilacBaglamMetni(drugs[0])}`
     await oturumuYaz(speech, { hasta: cozulenHasta })
     const konusma = konusmaYap(speech)
     soyle(konusma)
-    return sade(speech, konusma, cozulenHasta?.ad || null)
+    return sade(aramaCevabi ? aramaRota : "hizli-kart", speech, konusma, cozulenHasta?.ad || null)
   }
 
   // NOTYA-TEK-BEYIN (hız): model turundan önceki okumalar birbirinden bağımsız — sırayla değil, birlikte.
@@ -806,9 +820,11 @@ ${ilacBaglamMetni(drugs[0])}`
     doctorId: doktorId, gorev: "sohbet", sureMs: Date.now() - cevapBas, onbellekli: dosyaOnbellekten,
   })).catch(() => { /* ölçüm */ })
 
+  rotaYaz("model", { arac: toolChoice ?? null, aracSayisi: araclar.length, kart: eylemOnerileri.length })
   return {
     ok: true,
     cevap: {
+      rota: "model",
       ekran: aiData.speech,
       konusma: sozler.filter(Boolean).join(" ").trim(),
       kartlar: eylemOnerileri,
@@ -828,6 +844,7 @@ ${ilacBaglamMetni(drugs[0])}`
         aktifHasta: cozulenHasta?.ad || null,
         personaId,
         personaName: persona.name,
+        rota: "model",
       },
     },
   }
