@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi, fishIstegi, fishMetni, fishModel, fishSayiOku, fishRakamlariOku } from './fishSes'
+import { FISH_ASR_DIL, FISH_HIZ, FISH_KLIP_MIN_MS, FISH_MODEL, asrKlipDenetle, ayseFishTamMi, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi, fishBirimleriOku, fishIstegi, fishMetni, fishModel, fishSayiOku, fishRakamlariOku } from './fishSes'
 import { pcmdenWav } from './fishMikrofon'
 
 function msgpackAsrOku(b: Uint8Array): { audio: Uint8Array; language: string; ignore_timestamps: boolean } {
@@ -167,4 +167,24 @@ test('Fish model switch: NOTYA_FISH_MODEL picks a documented model, anything els
   assert.equal(fishModel(' S1 '), 's1')
   assert.equal(fishModel('s2.1-pro-free'), 's2.1-pro', 'free tier measured 2.3x slower — never selectable')
   assert.equal(fishModel('gpt'), 's2.1-pro')
+})
+
+
+test('fishBirimleriOku — clinical unit abbreviations become Turkish words (NOTYA-TTS-BIRIM-01, #505)', () => {
+  assert.equal(fishBirimleriOku('13.3kg'), '13.3 kilogram')
+  assert.equal(fishBirimleriOku('250mg'), '250 miligram')
+  assert.equal(fishBirimleriOku('5mcg'), '5 mikrogram')
+  assert.equal(fishBirimleriOku('2g'), '2 gram')
+  assert.equal(fishBirimleriOku('10ml'), '10 mililitre')
+  assert.equal(fishBirimleriOku('1.5lt'), '1.5 litre')
+  assert.equal(fishBirimleriOku('7mm'), '7 milimetre')
+  assert.equal(fishBirimleriOku('45cm'), '45 santimetre')
+  // Whitespace between the digit and the unit is optional and tolerated either way.
+  assert.equal(fishBirimleriOku('250 mg'), '250 miligram')
+  // Runs end-to-end through fishMetni before fishRakamlariOku, so digits are still spelled Turkish after.
+  assert.match(fishMetni('Amoksisilin 250mg iki kez.'), /iki yüz elli miligram/)
+  assert.match(fishMetni('Kilo 13.3kg, boy 92cm.'), /on üç virgül üç kilogram/)
+  assert.match(fishMetni('Kilo 13.3kg, boy 92cm.'), /doksan iki santimetre/)
+  // A unit letter sequence with no preceding digit is never touched (would mangle normal words).
+  assert.equal(fishBirimleriOku('kg cinsinden'), 'kg cinsinden')
 })

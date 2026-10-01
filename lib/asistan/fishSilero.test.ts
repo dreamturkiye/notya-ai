@@ -85,3 +85,33 @@ test('silero gate: late frames (main thread busy) still credit wall-clock voiced
   assert.equal(blip.bitir, 'sessizlik')
   assert.deepEqual(klipGonderilirMi({ toplamMs: 300 + blip.kareSayisi * 32, sesliMs: blip.tur.sesliMs }), { gonder: false, neden: 'sesli_kisa' })
 })
+
+
+test('NOTYA-VAD-TAIL-01 regression — a deliberate 450ms mid-sentence pause (doctor speaking slowly) never closes the turn, only the trailing 500ms+ silence does', () => {
+  // Two "sentences" of ~700ms speech each, with a 450ms silent gap between them — the kind of
+  // natural pause a doctor takes speaking slowly and deliberately (the root cause of the
+  // "interrupting / not listening" complaint under the old 300ms tail, where anything over 300ms
+  // of mid-sentence silence ended the turn early). Numbers below are the REAL output of turAdimi/
+  // kareKonusmasi driven through sileroTuru, not hand-derived.
+  const sentence = (n: number) => Array.from({ length: n }, () => 0.9)
+  const pause = (ms: number) => Array.from({ length: Math.round(ms / 32) }, () => 0.1) // below the 0.35 exit threshold
+  const tail = (n: number) => Array.from({ length: n }, () => 0.05)
+
+  // 1) The 450 ms pause alone, with nothing after it, must not have closed the turn.
+  const mid = sileroTuru([...sentence(22), ...pause(450)])
+  assert.equal(mid.bitir, null, 'bir 450ms ara turu kapatmamalı')
+  assert.equal(mid.kareSayisi, 36)
+  assert.equal(mid.tur.sesliMs, 704) // only the 22 voiced frames count; the pause adds 0
+
+  // 2) Full two-sentence turn: speech, 450ms pause, speech, then real trailing silence closes it.
+  //    Both sentences' voiced time is kept — the mid-sentence pause never reset sesliMs.
+  const full = sileroTuru([...sentence(22), ...pause(450), ...sentence(22), ...tail(40)])
+  assert.equal(full.bitir, 'sessizlik')
+  assert.equal(full.tur.sesliMs, 1408) // 704 × 2 — both sentences counted, the pause excluded
+  assert.equal(full.kareSayisi, 75) // 22 + 14 + 22 + 17 trailing silent frames to close
+
+  // 3) A 320ms pause — just over the OLD 300ms tail, which would have closed the turn there —
+  //    must also not close under the new 500ms tail. Locks in the NOTYA-VAD-TAIL-01 regression.
+  const oldWouldHaveCut = sileroTuru([...sentence(22), ...pause(320)])
+  assert.equal(oldWouldHaveCut.bitir, null, '300ms eski kuyruk burada kapatırdı; 500ms kapatmamalı')
+})
