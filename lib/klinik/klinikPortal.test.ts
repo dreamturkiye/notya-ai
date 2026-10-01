@@ -20,10 +20,11 @@ describe('KLINIK-PORTAL — aynı Sağlığım kabuğu, 10 dal', () => {
       const p = portalModulleri({ doktorBransi: slug, ...bos })
       assert.deepEqual(p.moduller, [KLINIK_PORTAL_MODUL[slug]], slug)
       assert.equal(p.nav.length, 1, slug)
-      assert.ok(!p.moduller.includes('dermatoloji'), slug)
-      assert.ok(!p.moduller.includes('yaram'), slug)
-      assert.ok(!p.moduller.includes('ftrm'), slug)
-      assert.ok(!p.moduller.includes('psikiyatri'), slug)
+      const digerDalModulleri: string[] = p.moduller
+      assert.ok(!digerDalModulleri.includes('dermatoloji'), slug)
+      assert.ok(!digerDalModulleri.includes('yaram'), slug)
+      assert.ok(!digerDalModulleri.includes('ftrm'), slug)
+      assert.ok(!digerDalModulleri.includes('psikiyatri'), slug)
     }
     assert.equal(doktorAraclariListesi('kardiyoloji').some((a) => a.route === '/klinik-tools/hasta-portali'), false)
     assert.equal(doktorAraclariListesi('dermatoloji').some((a) => a.route.startsWith('/klinik-tools/')), false)
