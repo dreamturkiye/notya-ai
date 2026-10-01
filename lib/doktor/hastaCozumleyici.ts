@@ -16,7 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
-import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
@@ -271,7 +271,7 @@ export async function hastaninSozunuCoz(
     if (c) return c
   }
   if (/ (son|en son) (recete\w*|ilac(?:i)? yazdigim|yazdigim ilac)/.test(m) && /hasta|kim/.test(m)) {
-    const { data } = await supabase.from('hasta_ilaclar').select('patient_id, ilac_adi, created_at').eq('doctor_id', doctorId)
+    const { data } = await arsivsizIlaclar(supabase, 'patient_id, ilac_adi, created_at').eq('doctor_id', doctorId)
       .not('patient_id', 'is', null).order('created_at', { ascending: false }).limit(1)
     const ilk = data?.[0] as { patient_id?: string; ilac_adi?: string; created_at?: string } | undefined
     const c = await sonHastaAdi(ilk?.patient_id, 'son reçete', 'Son reçeteniz')
