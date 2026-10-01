@@ -45,8 +45,12 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Annesine ilaç kullanımını anlatan WhatsApp mesajı yaz', durum: 'yok', beklenen: { rota: 'model' }, dilim: 'S1' },
   { soz: 'Alerji testi nasıl istenir?', durum: 'yok', beklenen: { rota: 'model' }, dilim: 'S1' },
   // A patient whose first name equals a persona name resolves by that first name (audit §4.3).
-  { soz: 'Ayşe’nin son aşı tarihi ne', durum: 'yok', beklenen: { rota: 'model', hasta: 'Ayşe Yeşil' }, dilim: 'S1' },
+  { soz: 'Ayşe’nin son aşı tarihi ne', durum: 'yok', beklenen: { rota: 'hizli-kart', hasta: 'Ayşe Yeşil' }, dilim: 'S1' },
+  { soz: 'Ayşe için boğaz kültürü sonucu geldi mi?', durum: 'yok', beklenen: { rota: 'model', hasta: 'Ayşe Yeşil' }, dilim: 'S1' },
   { soz: 'Merhaba Ayşe, nasılsın?', durum: 'yok', beklenen: { rota: 'model', hasta: null } },
+  // The vocative stays an address: the live wrong-chart incident (NOTYA-HASTA-ODAK-01) must not come back.
+  { soz: 'Ayşe, aşı karnesini gösterir misin?', durum: 'yok', beklenen: { rota: 'model', hasta: null } },
+  { soz: 'Ayşe Hanım otitte ilk seçenek ne?', durum: 'yok', beklenen: { rota: 'model', hasta: null } },
   // Explicit count / list questions stay with the search.
   { soz: 'Kaç hastam var?', durum: 'yok', beklenen: { rota: 'arama' } },
   { soz: 'Ateşli hastalarım kimler?', durum: 'yok', beklenen: { rota: 'arama' } },
@@ -58,6 +62,10 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Toplam kaç aşısı var', durum: 'acik', beklenen: { rota: 'model', hasta: D }, dilim: 'S1' },
   { soz: 'En çok hangi şikayetle geldi', durum: 'acik', beklenen: { rota: 'model', hasta: D }, dilim: 'S1' },
   { soz: 'Astım tanılı hastaları listele', durum: 'acik', beklenen: { rota: 'arama' } },
+  { soz: 'En çok yazdığım antibiyotik hangisi?', durum: 'acik', beklenen: { rota: 'arama' } },
+  // A described, unnamed patient is still looked for; a knowledge question with the same words is not.
+  { soz: 'Dün gelen ateşli çocuk kimdi?', durum: 'yok', beklenen: { rota: 'arama' } },
+  { soz: 'Bronşiolit yönetimini anlat', durum: 'yok', beklenen: { rota: 'model', hasta: null } },
 
   // ── Patient open: commands reach a tool, forced (audit §4.4, PR 4) ──
   { soz: 'Penisilin alerjisini ekle', durum: 'acik', beklenen: { rota: 'model', arac: 'alerji_ekle', hasta: D }, dilim: 'S3' },
@@ -104,7 +112,7 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Bitcoin almalı mıyım?', durum: 'yok', beklenen: { rota: 'kapsam' } },
 ]
 
-const ARAMA: Beklenti = { rota: 'arama', hasta: null }
+const MODEL_ARACSIZ: Beklenti = { rota: 'model', arac: null, hasta: null }
 const KART: Beklenti = { rota: 'hizli-kart', hasta: D }
 const MODEL_SERBEST: Beklenti = { rota: 'model', arac: null, hasta: D }
 const MODEL_ANY: Beklenti = { rota: 'model', arac: 'any', hasta: D }
@@ -114,20 +122,13 @@ const MODEL_ANY: Beklenti = { rota: 'model', arac: 'any', hasta: D }
  * The slice that fixes a row deletes its line here. Empty map = restoration complete.
  */
 const BILINEN_HATALAR: Record<string, Beklenti> = {
-  // S1: the count template answers a sentence that is not a patient question.
-  'yok|Ali Yılmaz için randevu oluştur': ARAMA,
-  'yok|Bir randevu yapmak istiyorum bir hasta için yardımcı olur musun?': ARAMA,
-  'yok|Randevu saatini değiştirmek istiyorum': ARAMA,
-  'yok|Aşı karnesini tablo olarak göster': ARAMA,
-  'yok|İlaç etkileşimi var mı kontrol et': ARAMA,
-  'yok|Otitte ilk seçenek tedavi nedir': ARAMA,
-  'yok|Ateşli çocukta parasetamol dozu nedir': ARAMA,
-  'yok|Tanı koymama yardım eder misin': ARAMA,
-  'yok|Annesine ilaç kullanımını anlatan WhatsApp mesajı yaz': ARAMA,
-  'yok|Alerji testi nasıl istenir?': ARAMA,
-  'yok|Ayşe’nin son aşı tarihi ne': ARAMA,
-  'acik|Toplam kaç aşısı var': ARAMA,
-  'acik|En çok hangi şikayetle geldi': ARAMA,
+  // S1 (count template) fixed these thirteen rows on 2026-10-01; what is left of them belongs to later slices:
+  // S3: with no patient resolved the model is reached, but no tool is offered yet.
+  'yok|Ali Yılmaz için randevu oluştur': MODEL_ARACSIZ,
+  'yok|Bir randevu yapmak istiyorum bir hasta için yardımcı olur musun?': MODEL_ARACSIZ,
+  'yok|Randevu saatini değiştirmek istiyorum': MODEL_ARACSIZ,
+  // S5: the open chart answers, but with the quick card's short vaccine line instead of the count.
+  'acik|Toplam kaç aşısı var': KART,
   // S3: the quick card or the calendar reader answers a command; or the tool call is left to the model.
   'acik|Penisilin alerjisini ekle': KART,
   'acik|Kilosunu 12,4 kilo olarak ekle': KART,

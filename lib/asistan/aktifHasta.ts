@@ -12,10 +12,20 @@ import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 
 // NOTYA-AYSE-100-LUNA (#89, 2026-09-29): "… vakası kimdi / hangi çocuk kimdi / dün gelen vaka" is a who-question over
 // the practice, never about the open chart — with R.D. open, "bu hafta pnömoni vakası kimdi" was answered from R.D.
-const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(si|lari|lar|m)?\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
+const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(lari|lar)\w*|tum hasta|butun hasta|istatistik/
+/**
+ * NOTYA-AYSE-GERI-01 (audit §4.3, PR 9): "toplam / en çok / en sık / vaka" alone are not a practice-wide question.
+ * With a chart open, "Toplam kaç aşısı var" and "En çok hangi şikayetle geldi" are about THAT patient and were
+ * answered "Kayıtlarda 0 hasta." They count as cohort words only next to a sign that the doctor means the
+ * practice: a plural patient word, a first-person / passive practice verb ("yazdığım", "görülen", "gelen") or the
+ * practice itself.
+ */
+const KOHORT_ZAYIF = /\ben cok\b|\ben sik\b|\btoplam\b|\bvaka(si|m)?\b/
+const PRATIK_ISARETI = /\bhastalar\w*|\bcocuklar\w*|\bbebekler\w*|\b(yazdig|gordug|koydug|verdig|baktig|yaptig|istedig)\w*|\b(yazdim|gordum|koydum|verdim|baktim|yaptim|yazdik|gorduk|koyduk|baktik)\b|\b(gorulen|konulan|yazilan|gelen)\b|\bpratig\w*|\bmuayenehane\w*|\bklinig\w*|\bgenel(de)?\b/
 
 export function kohortSorusuMu(mesaj: string): boolean {
-  return KOHORT.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')
+  const n = ' ' + trAramaNormalize(String(mesaj || '')) + ' '
+  return KOHORT.test(n) || (KOHORT_ZAYIF.test(n) && PRATIK_ISARETI.test(n))
 }
 
 /**

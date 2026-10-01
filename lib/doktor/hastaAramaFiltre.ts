@@ -588,11 +588,12 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     if (kalan.includes(k) || kalan.includes(k.replace(/\s+/g, ''))) { kanGrubu = k; break }
   }
 
-  if (!p.pencere && (asi || /sikayet|tani|iltihap|otit|alerji|ilac|randevu|epikriz|form/.test(n0)) && !y.yas && !haric.includes('asi')) {
-    const bugun = trtParca(now, 0, tz).gun
-    const bas = gunEkle(bugun, -90)
-    p.pencere = pencereKur(bas, bugun, 'son 90 gün', tz)
-  }
+  // NOTYA-AYSE-GERI-01 (Kaan, 2026-10-01): no implicit "son 90 gün" window. A message that carried an aşı word or
+  // "şikayet / tanı / alerji / ilaç / randevu / epikriz / form" used to get a 90-day window it never asked for —
+  // "aşı kaydı olan hastalarım kimler" answered "Son 90 gün 0 hasta" for a patient with twelve older vaccine
+  // records (NOTYA-ARAMA-PENCERE-VARSAYILAN-01). A window now exists only when the doctor names one; without it
+  // the search reads the whole record ("Kayıtlarda …"). The 30-day default of the practice breakdowns above
+  // ("en çok yazdığım antibiyotik") is a separate rule and is unchanged.
 
   const alanlar: AlanFiltresi[] = []
   for (const alan of ARAMA_ALANLARI) {

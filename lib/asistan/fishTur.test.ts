@@ -53,6 +53,21 @@ describe('fish-tur — düz sesli tur uçtan uca', () => {
     assert.equal(yabanci.status, 404)
   })
 
+  it('NOTYA-AYSE-GERI-01: dosya kelimesi geçen cümle sesli turda da sayım şablonu almaz — modele gider', async () => {
+    for (const soz of ['Akut otit tedavisini anlat', 'Bronşiolit yönetimini anlat', 'Bir randevu yapmak istiyorum bir hasta için yardımcı olur musun?', 'Ali Yılmaz için randevu oluştur']) {
+      ortam.modelIstekleri.length = 0
+      ortam.yanit = { metin: JSON.stringify({ speech: 'Hangi hasta için Hocam?' }) }
+      const t = await fishTur(s, soz, { oturum: oturumAc(s) })
+      assert.equal(sonRota(), 'model', soz)
+      assert.equal(ortam.modelIstekleri.length, 1, soz)
+      assert.ok(!/Filtre:|\d+ hasta\./.test(t.soz), `${soz} → ${t.soz}`)
+      // No chart this turn: the model is told so and told not to build a count sentence.
+      const sistem = JSON.stringify(ortam.modelIstekleri[0].govde.system)
+      assert.match(sistem, /BU TURDA AÇIK HASTA DOSYASI YOK/, soz)
+      assert.match(sistem, /sayım istenmedi/, soz)
+    }
+  })
+
   it('kimlik doğrulaması yoksa 401; ASR gürültüsü tur sayılmaz (model yok, atlandi)', async () => {
     const y = await fishTur(s, 'Merhaba', { token: 'gecersiz' })
     assert.equal(y.status, 401)
