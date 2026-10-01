@@ -168,6 +168,11 @@ const DURAK = new Set([
   // "şu" was a stop word, "anda" was not — it became a mandatory search term no chart contains. Time-of-speaking
   // words are never search terms.
   'anda', 'suanda', 'suan', 'simdi', 'simdilik', 'halihazirda', 'hala', 'guncel', 'mevcut', 'toplamda', 'acaba', 'bakalim', 'bakar', 'misin', 'misiniz',
+  // NOTYA-FILTRE-TERIM-01 (Claude ship-verification pass, 2026-10-01, Dr. Gökhan screenshots): "filtre: 5 yaş"
+  // and "filtre: Burun" answered "Kayıtlarda 0 hasta" even though the yaş / alan parsing below was correct —
+  // the literal word "filtre" was never a stop word, so it became a mandatory AND term in q.terimler that no
+  // chart's text ever contains. Drop it like every other function word above.
+  'filtre', 'filtrele', 'filtresi', 'filtreleme',
 ])
 
 const YAZI_SAYI: Record<string, number> = {

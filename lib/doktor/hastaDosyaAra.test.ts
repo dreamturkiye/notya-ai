@@ -428,3 +428,25 @@ describe('NOTYA-SAYIM-ANDA-01 — "şu anda / toplam / benim" are never search t
     assert.equal(sayimCumlesi('Bugün 2 hasta. Filtre: ateş.', 2, ['A', 'B']), 'Bugün 2 hasta: A, B. Filtre: ateş.')
   })
 })
+
+
+describe('NOTYA-FILTRE-TERIM-01 — "filtre:" label never becomes a mandatory search term (Dr. Gökhan screenshots, ~2026-09-30)', () => {
+  const NOW = new Date('2026-09-30T12:00:00Z')
+  it('"filtre: 5 yaş" parses the age filter and drops "filtre" from terimler', () => {
+    const q = sorguyuAyikla('filtre: 5 yaş', NOW)
+    assert.deepEqual(q.terimler, [])
+    assert.ok(q.yas, 'yaş filtresi çözülmeli')
+    assert.equal(q.yas?.etiket, '5 yaş')
+    assert.equal(q.klinik, true)
+  })
+  it('"filtre: Burun" resolves the symptom field and drops "filtre" from terimler', () => {
+    const q = sorguyuAyikla('filtre: Burun', NOW)
+    assert.ok(!q.terimler.includes('filtre'), JSON.stringify(q.terimler))
+    assert.ok(q.alanlar.some((a) => a.anahtar === 'burun'), JSON.stringify(q.alanlar))
+    assert.equal(q.klinik, true)
+  })
+  it('a chart with no literal "filtre" anywhere still matches on its terimler (the actual bug: it never did before)', () => {
+    const q = sorguyuAyikla('filtre: Burun', NOW)
+    assert.equal(tumTerimlerEslesir('Burun akıntısı, nazal konjesyon mevcut.', q.terimler), true)
+  })
+})
