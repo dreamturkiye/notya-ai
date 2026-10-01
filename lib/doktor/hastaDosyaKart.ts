@@ -146,7 +146,13 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   if (/\basi/.test(n) && !/antibiyoti/.test(n) && !ASI_ADI.test(n)) ekle('aşı', k.asilar)
   if (/surekli ilac|ne kullaniyor|ilaclari ne|aktif ilac/.test(n)) ekle('aktif ilaç', k.ilaclar)
   // NOTYA-SES-KART-01 (Dr. Gökhan): kontrol / takip soruları son muayenenin planından cevaplanır.
-  if (/kontrol|takip|plan|ne zaman gel|tekrar gel/.test(n)) ekle('plan ve takip', k.sonPlan)
+  // NOTYA-DOSYA-SORU-PLAN-01 (Kaan, 2026-10-01): bare 'plan' matched inside unrelated words
+  // ("Tesla almayı planlıyorum" -> "plan" substring) and returned the active patient's visit
+  // plan verbatim for a message that had nothing to do with any patient. \bkontrol\b / \btakip\b broke
+  // real phrasing ("kontrole gelmesi", suffix glued with no boundary) so only 'plan' is narrowed: it
+  // excludes the verb stem "planla-" ("planlıyorum", "planladım") while still matching the noun's own
+  // suffixes ("planı", "plana", "plandan").
+  if (/kontrol|takip|\bplan(?!l)|ne zaman gel|tekrar gel/.test(n)) ekle('plan ve takip', k.sonPlan)
   if (/muayene bulgu|fizik muayene|dinleme|bulgular/.test(n)) ekle('muayene bulgusu', k.sonBulgu)
   if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', kartBosMu(k.randevu) ? 'planlanmış randevu yok' : k.randevu)
   if (/hba1c|egfr|tahlil|laboratuvar|\blab\b|kan sayimi|son onayli lab/.test(n)) ekle('onaylı lab', k.lab)

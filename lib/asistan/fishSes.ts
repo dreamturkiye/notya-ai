@@ -263,6 +263,11 @@ export function fishRakamlariOku(metin: string): string {
  * kilogram").
  */
 const BIRIM_ESLESME: ReadonlyArray<readonly [RegExp, string]> = [
+  // NOTYA-TTS-BIRIM-02 (Kaan, canlı, 2026-10-01): "39°C" had no rule at all -- Fish's voice rendered
+  // the bare degree sign + letter as something close to "çiş". Matched first, same "must run before
+  // fishRakamlariOku" reasoning as the units below ("39.2°C" -> "39.2 derece" -> "otuz dokuz virgül iki derece").
+  [/(\d)\s*\u00b0\s*c\b/gi, '$1 derece'],
+  [/(\d)\s*\u00b0/g, '$1 derece'],
   [/(\d)\s*mcg\b/gi, '$1 mikrogram'],
   [/(\d)\s*mg\b/gi, '$1 miligram'],
   [/(\d)\s*kg\b/gi, '$1 kilogram'],

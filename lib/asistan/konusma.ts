@@ -24,6 +24,16 @@ export const DEVAMI_EKRANDA = 'Devamı ekranınızda Hocam.'
 /** Lists of this many items or more are not read item by item — one sentence points to the screen. */
 export const LISTE_ESIGI = 3
 export function listeEkranda(n: number): string { return `${n} madde, ekranınızda.` }
+
+/**
+ * NOTYA-SES-OZET-TAM-01 (Kaan, canlı, 2026-10-01): "hastanın özetini tamamen sesli okuması lazım,
+ * yarısını değil ... doktor araba sürüyorsa yarısı olursa voice ile olmaz". A dosya-evidence answer
+ * (özet/değişim/büyüme/aşı/lab/ilaç/... — `kanitYoluAktif` in ayseCevapla.ts) is read in full; the
+ * 5-sentence cap (NOTYA-SES-SLUR-01) stays for ordinary chat, where the late-turn slur was observed.
+ */
+export function sesSiniriSec(kanitYoluAktif: boolean): number {
+  return kanitYoluAktif ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI
+}
 const BASLIK_SATIRI = /^\s*#{1,6}\s+/
 const LISTE_MADDESI = /^\s*(?:[-*•]\s+|\d{1,2}\.\s+)/
 
