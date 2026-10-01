@@ -204,8 +204,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
    * / `ajanSustu` are the last doctor transcript and the last time Ayşe stopped speaking (the doctor interrupting
    * after the cut cancels the continuation); `gonderilen` holds turn keys already sent or cancelled (once per turn).
    */
-  const sesDevamRef = useRef<{ mod: "speaking" | "listening"; doktorSozu: number; ajanSustu: number; gonderilen: Set<string> }>({
-    mod: "listening", doktorSozu: 0, ajanSustu: 0, gonderilen: new Set(),
+  const sesDevamRef = useRef<{ mod: "speaking" | "listening"; doktorSozu: number; ajanSustu: number; gonderilen: Set<string>; bekleyen: { anahtar: string; kalan: string } | null }>({
+    mod: "listening", doktorSozu: 0, ajanSustu: 0, gonderilen: new Set(), bekleyen: null,
   })
   const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
 
@@ -494,16 +494,25 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
    */
   function sesDevamiIste(anahtar: string, kalan = "") {
     const d = sesDevamRef.current
-    if (d.gonderilen.has(anahtar) || d.mod === "speaking") return
-    if (fishAcikRef.current && fishRef.current?.caliyorMu()) return
-    if (d.doktorSozu > d.ajanSustu) return
+    if (d.gonderilen.has(anahtar)) return
     const metin = String(kalan || "").trim()
+    // NOTYA-AYSE-GERI-02: on Fish the screen poll reports the remainder ONCE, usually while Ayşe is still speaking
+    // the first sentences — the old code returned here and the remainder was never read. It is now kept and
+    // tried again when her playback stops (onDurdu).
+    if (fishAcikRef.current && metin) d.bekleyen = { anahtar, kalan: metin }
+    if (d.mod === "speaking") return
+    if (fishAcikRef.current && fishRef.current?.caliyorMu()) return
+    // The doctor spoke after the cut: the continuation is cancelled, not postponed.
+    if (d.doktorSozu > d.ajanSustu) { d.bekleyen = null; return }
     if (fishAcikRef.current) {
       if (!metin) return
       d.gonderilen.add(anahtar)
+      d.bekleyen = null
       d.mod = "speaking"
       setStatus("speaking")
       fishIsle(metin, true)
+      // The server's copy is taken, so a later spoken "devam et" does not read the same sentences again.
+      void fishDevamOkundu()
       return
     }
     const conv = conversationRef.current
@@ -555,6 +564,22 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         } catch { /* parça */ }
       }
     }
+  }
+
+  /** NOTYA-SES-DEVAM-01: tell the turn route the page read the cut turn's remainder (best effort). */
+  async function fishDevamOkundu() {
+    const oturumId = tekBeyinRef.current?.oturumId
+    if (!oturumId) return
+    try {
+      const t = authTokenRef.current || await ensureDoctorAccessToken()
+      if (!t) return
+      await fetch("/api/asistan/fish-tur", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ devamOkundu: true, asistanSessionId: oturumId }),
+        keepalive: true,
+      }).catch(() => null)
+    } catch { /* the remainder then stays readable by "devam et" */ }
   }
 
   async function fishTurIsit(oturumId: string) {
@@ -623,6 +648,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         d.mod = "listening"
         if (fishAcikRef.current) setStatus("listening")
         acilisiKapat()
+        // NOTYA-AYSE-GERI-02: a cut turn's remainder that arrived while she was speaking is read now.
+        if (d.bekleyen) sesDevamiIste(d.bekleyen.anahtar, d.bekleyen.kalan)
       },
     }, g.dokunus)
     await fishRef.current.hazirla()

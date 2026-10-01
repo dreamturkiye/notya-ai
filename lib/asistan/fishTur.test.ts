@@ -1,12 +1,15 @@
 /**
- * NOTYA-AYSE-GERI-00 — route-level tests of /api/asistan/fish-tur, the route Ayşe's voice actually uses.
+ * NOTYA-AYSE-GERI-00 / -02 — route-level tests of /api/asistan/fish-tur, the route Ayşe's voice actually uses.
  *
  * Until now the single-brain suite (tekBeyin.test.ts) drove only the ElevenLabs Custom-LLM route, which Ayşe left
  * on 2026-09-29; no test ran a turn through the Fish route (audit §4.6). Here the real handler runs with the
  * transcript given as text (`mesaj`), so Fish ASR / TTS are not called and everything after the transcript is the
  * production path.
+ *
+ * S2 (NOTYA-AYSE-GERI-02): spoken Evet / Hayır on a pending card, withdrawal of the superseded draft and
+ * continuation of a cut answer — all through this route.
  */
-import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, fishTur, sonRota, sonAsistanMesaji, type Sahne } from './tests/ayseSahne'
+import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, oturumBaglami, fishTur, sonRota, sonAsistanMesaji, encrypt, type Sahne } from './tests/ayseSahne'
 import { describe, it, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 
@@ -18,6 +21,16 @@ before(async () => { await sahneHazirla() })
 beforeEach(() => {
   s = sahneKur()
   hasta = hastaEkle(s.doktor.id, AD, { dogum: '2019-04-10', cinsiyet: 'male' })
+})
+
+const taslaklar = () => ortam.db.tablo('eylem_onerileri').filter((r) => r.durum === 'taslak')
+const hastaNotlari = (id: string): Record<string, unknown> => {
+  const r = ortam.db.tablo('patients').find((x) => x.id === id)!
+  return JSON.parse(require('../security/encryption').decrypt(String(r.notes_encrypted))) as Record<string, unknown>
+}
+const alerjiKarti = (alerji: string) => ({
+  metin: JSON.stringify({ speech: 'Kartı hazırladım Hocam.' }),
+  araclar: [{ name: 'alerji_ekle', input: { alerji, alan_kaynaklari: { alerji: { kaynak: 'doktor_soyledi' } } } }],
 })
 
 describe('fish-tur — düz sesli tur uçtan uca', () => {
@@ -77,51 +90,200 @@ describe('fish-tur — düz sesli tur uçtan uca', () => {
   })
 })
 
-/**
- * KNOWN FAILURES on the Fish route (audit §4.6) — pinned to today's behaviour. S2 replaces each of these with the
- * restored behaviour: spoken Evet / Hayır on a pending card, withdrawal of the superseded draft, continuation.
- */
-describe('fish-tur — bilinen hatalar (S2 düzeltir)', () => {
-  const kartHazirla = async (oturum: string) => {
-    ortam.yanit = {
-      metin: JSON.stringify({ speech: 'Kartı hazırladım Hocam.' }),
-      araclar: [{ name: 'alerji_ekle', input: { alerji: 'Penisilin', alan_kaynaklari: { alerji: { kaynak: 'doktor_soyledi' } } } }],
-    }
-    const t = await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
-    assert.equal(ortam.db.tablo('eylem_onerileri').filter((r) => r.durum === 'taslak').length, 1, 'taslak kart hazırlanmalı')
-    return t
-  }
-
-  it('BİLİNEN HATA: sesli "Evet" bekleyen kartı onaylamaz — model turuna gider, taslak taslak kalır', async () => {
+describe('NOTYA-AYSE-GERI-02 — sesli onay Fish rotasında (denetim §4.6, PR 3)', () => {
+  it('kart sesle hazırlanır ve okunur; "Evet" model çağırmadan, dokunuşun omurgasından kaydeder', async () => {
     const oturum = oturumAc(s, { id: hasta, ad: AD })
-    await kartHazirla(oturum)
-    const once = ortam.modelIstekleri.length
-    ortam.yanit = { metin: JSON.stringify({ speech: 'Tamam Hocam.' }) }
+    ortam.yanit = alerjiKarti('Penisilin')
+    const hazir = await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    assert.match(hazir.soz, /Umutcan Türkoğlu için Alerji ekle hazırladım/)
+    assert.match(hazir.soz, /Henüz dosyaya yazılmadı\. Onaylıyor musunuz\?/)
+    assert.equal(taslaklar().length, 1)
+    assert.equal(hastaNotlari(hasta).alerjiler, undefined, 'kart kayıt değildir — onaydan önce dosyaya hiçbir şey yazılmaz')
+    assert.deepEqual(oturumBaglami(oturum).bekleyenOneriler, [taslaklar()[0].id])
+
+    const modelOnce = ortam.modelIstekleri.length
+    const onay = await fishTur(s, 'Evet', { oturum })
+    assert.equal(ortam.modelIstekleri.length, modelOnce, '"Evet" bir model turu değildir')
+    assert.match(onay.soz, /^Kaydedildi Hocam — Alerji ekle\.$/)
+    assert.deepEqual(onay.sira, ['stt', 'soz', 'soz_bit', 'bit'])
+    assert.equal(hastaNotlari(hasta).alerjiler, 'Penisilin')
+    assert.equal(ortam.db.tablo('eylem_onerileri')[0].durum, 'onaylandi')
+    assert.equal(ortam.db.tablo('eylem_kayitlari').length, 1, 'denetim satırı yazılır: hazırlayan Ayşe, onaylayan hekim')
+    assert.deepEqual(oturumBaglami(oturum).bekleyenOneriler, [])
+    assert.equal(sonAsistanMesaji(oturum), 'Kaydedildi Hocam — Alerji ekle.')
+
+    // With nothing pending, "Evet" is ordinary conversation again — nothing is written.
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Buyurun Hocam.' }) }
     await fishTur(s, 'Evet', { oturum })
-    assert.equal(ortam.modelIstekleri.length, once + 1, 'bugün: Evet bir model turu')
-    assert.equal(ortam.db.tablo('eylem_onerileri')[0].durum, 'taslak', 'bugün: kart onaylanmadı')
+    assert.equal(ortam.modelIstekleri.length, modelOnce + 1)
+    assert.equal(ortam.db.tablo('eylem_kayitlari').length, 1)
+  })
+
+  it('"Onaylıyorum" da onaydır; belirsiz cümle ("evet ama saat değişsin") onay değildir, modele gider', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = alerjiKarti('Fıstık')
+    await fishTur(s, 'Fıstık alerjisini dosyaya gir', { oturum })
+    const once = ortam.modelIstekleri.length
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Neyi değiştireyim Hocam?' }) }
+    await fishTur(s, 'Evet ama önce bir bakayım', { oturum })
+    assert.equal(ortam.modelIstekleri.length, once + 1)
+    assert.equal(taslaklar().length, 1, 'belirsiz cümle kartı onaylamaz')
+    await fishTur(s, 'Onaylıyorum', { oturum })
+    assert.equal(hastaNotlari(hasta).alerjiler, 'Fıstık')
+  })
+
+  it('"Hayır": bekleyen kart geri çekilir, dosyaya hiçbir şey yazılmaz, model çağrılmaz', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = alerjiKarti('Penisilin')
+    await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    const once = ortam.modelIstekleri.length
+    const h = await fishTur(s, 'Hayır', { oturum })
+    assert.match(h.soz, /vazgeçtim — dosyaya hiçbir şey yazılmadı/)
+    assert.equal(ortam.modelIstekleri.length, once)
+    assert.equal(taslaklar().length, 0)
+    assert.equal(ortam.db.tablo('eylem_onerileri')[0].durum, 'vazgecildi')
+    assert.equal(hastaNotlari(hasta).alerjiler, undefined)
     assert.equal(ortam.db.tablo('eylem_kayitlari').length, 0)
   })
 
-  it('BİLİNEN HATA: aynı kart sesle yeniden hazırlanınca eski taslak geri çekilmez — iki taslak bekler', async () => {
-    const oturum = oturumAc(s, { id: hasta, ad: AD })
-    await kartHazirla(oturum)
+  it('ciddi ilaç uyarısı taşıyan kart sesle onaylanamaz: kart taslak kalır, ilaç yazılmaz', async () => {
+    const alerjik = hastaEkle(s.doktor.id, 'Rüzgar Kara', { dogum: '2018-02-02', notlar: { alerjiler: 'Penisilin' } })
+    const oturum = oturumAc(s, { id: alerjik, ad: 'Rüzgar Kara' })
     ortam.yanit = {
-      metin: JSON.stringify({ speech: 'Kartı güncelledim Hocam.' }),
-      araclar: [{ name: 'alerji_ekle', input: { alerji: 'Amoksisilin', alan_kaynaklari: { alerji: { kaynak: 'doktor_soyledi' } } } }],
+      metin: JSON.stringify({ speech: 'Kartı hazırladım Hocam.' }),
+      araclar: [{ name: 'ilac_ekle', input: { ilac_adi: 'Largopen', doz: '250 mg', kullanim_sikli: '2x1', alan_kaynaklari: { ilac_adi: { kaynak: 'doktor_soyledi' }, doz: { kaynak: 'doktor_soyledi' }, kullanim_sikli: { kaynak: 'doktor_soyledi' } } } }],
     }
-    await fishTur(s, 'Yok, amoksisilin alerjisi olarak kaydet', { oturum })
-    assert.equal(ortam.db.tablo('eylem_onerileri').filter((r) => r.durum === 'taslak').length, 2, 'bugün: iki taslak')
+    await fishTur(s, 'Largopen 250 mg 2x1 ilaçlarına ekle, kaydet', { oturum })
+    assert.equal(taslaklar().length, 1)
+    const e = await fishTur(s, 'Evet', { oturum })
+    assert.match(e.soz, /Ciddi bir ilaç uyarısı var — bunu sesle onaylayamam/)
+    assert.equal(taslaklar().length, 1, 'kart ekrandaki ikinci dokunuşu bekler')
+    assert.equal(ortam.db.tablo('hasta_ilaclar').length, 0)
   })
 
-  it('BİLİNEN HATA: kesilen sesli cevabın kalanı saklanmaz — "devam et" bir model turudur', async () => {
-    ortam.yanit = { metin: JSON.stringify({ speech: 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.' }) }
-    const t = await fishTur(s, 'Akut otitte ilk seçenek nedir?')
-    assert.match(t.soz, /Devamı ekranınızda/)
-    const baglam = ortam.db.tablo('asistan_sessions').find((x) => x.id === s.oturum)!.active_context as Record<string, unknown>
-    assert.equal(baglam.sesDevam, undefined, 'bugün: kalan saklanmıyor')
-    const once = ortam.modelIstekleri.length
-    await fishTur(s, 'devam et')
-    assert.equal(ortam.modelIstekleri.length, once + 1, 'bugün: devam et bir model turu')
+  it('zorunlu alanı boş kart sesle onaylanamaz', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Kartı hazırladım.' }), araclar: [{ name: 'asi_kaydi_ekle', input: { asi_adi: 'KKK', alan_kaynaklari: { asi_adi: { kaynak: 'doktor_soyledi' } } } }] }
+    const k = await fishTur(s, 'KKK aşısını dosyaya gir', { oturum })
+    assert.match(k.soz, /Uygulama tarihi boş/)
+    const e = await fishTur(s, 'Evet', { oturum })
+    assert.match(e.soz, /Şu alanlar boş: Uygulama tarihi/)
+    assert.equal(ortam.db.tablo('asilar').length, 0)
+  })
+
+  it('başka doktor aynı oturum kimliğiyle "Evet" diyemez (404); kendi oturumunda başkasının kartını onaylayamaz', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = alerjiKarti('Penisilin')
+    await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    const kartId = taslaklar()[0].id
+    const y = await fishTur(s, 'Evet', { oturum, token: s.diger.token })
+    assert.equal(y.status, 404)
+    // The other doctor's own session, with the foreign card id planted in its context: not his card → not committed.
+    const digerOturum = ortam.db.ekle('asistan_sessions', { doctor_id: s.diger.id, persona_id: 'aysekaya', messages: [], active_context: { bekleyenOneriler: [kartId] } }).id as string
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Buyurun Hocam.' }) }
+    await fishTur(s, 'Evet', { oturum: digerOturum, token: s.diger.token })
+    assert.equal(taslaklar().length, 1)
+    assert.equal(hastaNotlari(hasta).alerjiler, undefined)
+  })
+
+  it('takvim sorusu bekleyen kart varken de takvimdir — onay sayılmaz', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = alerjiKarti('Penisilin')
+    await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    await fishTur(s, 'Bugün randevum var mı?', { oturum })
+    assert.equal(sonRota(), 'takvim')
+    assert.equal(taslaklar().length, 1)
   })
 })
+
+describe('NOTYA-AYSE-GERI-02 — aynı kart sesle yeniden hazırlanınca eski taslak geri çekilir (PR 3)', () => {
+  it('aynı hasta + aynı eylem: tek güncel taslak kalır, "Evet" onu kaydeder', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = alerjiKarti('Penisilin')
+    await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    ortam.yanit = alerjiKarti('Amoksisilin')
+    await fishTur(s, 'Yok, amoksisilin alerjisi olarak kaydet', { oturum })
+    assert.equal(taslaklar().length, 1, 'eski taslak geri çekildi')
+    assert.equal(taslaklar()[0].veri.alerji, 'Amoksisilin')
+    assert.equal(ortam.db.tablo('eylem_onerileri').filter((r) => r.durum === 'vazgecildi').length, 1)
+    await fishTur(s, 'Evet', { oturum })
+    assert.equal(hastaNotlari(hasta).alerjiler, 'Amoksisilin')
+  })
+
+  it('farklı eylemin kartı geri çekilmez', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = alerjiKarti('Penisilin')
+    await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Kartı hazırladım.' }), araclar: [{ name: 'kronik_hastalik_ekle', input: { hastalik: 'Astım', alan_kaynaklari: { hastalik: { kaynak: 'doktor_soyledi' } } } }] }
+    await fishTur(s, 'Astımı kronik hastalıklarına kaydet', { oturum })
+    assert.equal(taslaklar().length, 2)
+  })
+})
+
+describe('NOTYA-AYSE-GERI-02 — kesilen sesli cevabın devamı (NOTYA-SES-DEVAM-01, PR 8)', () => {
+  const YEDI = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.'
+
+  it('yedi cümlelik cevap beşte sessizce kesilir, kalan saklanır; "devam et" kalan ikiyi model çağırmadan okur', async () => {
+    ortam.yanit = { metin: JSON.stringify({ speech: YEDI }) }
+    const t = await fishTur(s, 'Akut otitte ilk seçenek nedir?')
+    assert.equal(t.soz, 'Bir. İki. Üç. Dört. Beş.')
+    assert.ok(!/Devamı ekranınızda/.test(t.soz), 'devamı gelecek — "Devamı ekranınızda" denmez')
+    assert.equal(oturumBaglami(s.oturum).sesDevam?.kalan, 'Altı. Yedi.')
+    assert.equal(sonAsistanMesaji(s.oturum), YEDI, 'ekran cevabı tamdır')
+
+    const once = ortam.modelIstekleri.length
+    const mesajSayisi = (ortam.db.tablo('asistan_sessions').find((x) => x.id === s.oturum)!.messages as unknown[]).length
+    const d = await fishTur(s, 'devam et')
+    assert.equal(d.soz, 'Altı. Yedi.')
+    assert.equal(ortam.modelIstekleri.length, once, '"devam et" bir model turu değildir')
+    assert.equal(oturumBaglami(s.oturum).sesDevam, undefined, 'kalan bir kez okunur')
+    assert.equal((ortam.db.tablo('asistan_sessions').find((x) => x.id === s.oturum)!.messages as unknown[]).length, mesajSayisi, 'devam yeni baloncuk açmaz')
+
+    // Nothing left: a second "devam et" is an ordinary turn.
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Neye devam edeyim Hocam?' }) }
+    await fishTur(s, 'devam et')
+    assert.equal(ortam.modelIstekleri.length, once + 1)
+  })
+
+  it('sayfa kalanı kendisi okuduysa (devamOkundu) sunucudaki kalan alınır — "devam et" aynı cümleleri tekrar okumaz', async () => {
+    ortam.yanit = { metin: JSON.stringify({ speech: YEDI }) }
+    await fishTur(s, 'Akut otitte ilk seçenek nedir?')
+    assert.ok(oturumBaglami(s.oturum).sesDevam)
+    const r = await fishTur(s, '', { govde: { devamOkundu: true } })
+    assert.equal(r.status, 200)
+    assert.equal(oturumBaglami(s.oturum).sesDevam, undefined)
+    // Another doctor cannot clear it: the session is doctor-scoped.
+    ortam.yanit = { metin: JSON.stringify({ speech: YEDI }) }
+    await fishTur(s, 'Bronşiolitte ilk basamak nedir?')
+    const y = await fishTur(s, '', { govde: { devamOkundu: true }, token: s.diger.token })
+    assert.equal(y.status, 404)
+    assert.ok(oturumBaglami(s.oturum).sesDevam)
+  })
+
+  it('yeni gerçek tur (soru ya da sesli karar) önceki kalanı düşürür', async () => {
+    ortam.yanit = { metin: JSON.stringify({ speech: YEDI }) }
+    await fishTur(s, 'Akut otitte ilk seçenek nedir?')
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Kısa cevap.' }) }
+    await fishTur(s, 'Peki bronşiolitte?')
+    assert.equal(oturumBaglami(s.oturum).sesDevam, undefined)
+  })
+
+  it('beş cümle ve altı: kesilme yok, kalan saklanmaz', async () => {
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Bir. İki. Üç.' }) }
+    const t = await fishTur(s, 'Akut otitte ilk seçenek nedir?')
+    assert.equal(t.soz, 'Bir. İki. Üç.')
+    assert.equal(oturumBaglami(s.oturum).sesDevam, undefined)
+  })
+
+  it('kesilen cevapta kart da varsa onay sorusu son sözdür: arkasına kalan kuyruklanmaz, "Evet" kartı kaydeder', async () => {
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    ortam.yanit = { ...alerjiKarti('Penisilin'), metin: JSON.stringify({ speech: YEDI }) }
+    const t = await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
+    assert.match(t.soz, /^Bir\. İki\. Üç\. Dört\. Beş\. Umutcan Türkoğlu için Alerji ekle hazırladım.*Onaylıyor musunuz\?$/)
+    assert.equal(oturumBaglami(oturum).sesDevam, undefined)
+    await fishTur(s, 'Evet', { oturum })
+    assert.equal(hastaNotlari(hasta).alerjiler, 'Penisilin')
+  })
+})
+
+void encrypt

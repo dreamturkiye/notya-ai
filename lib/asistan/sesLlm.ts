@@ -22,7 +22,7 @@ import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { kendiSelamiMi } from '@/lib/asistan/acilis'
 import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
 import { SesYayKapisi, sesEtiketTemizle } from '@/lib/asistan/sesYay'
-import type { SesDevam } from '@/lib/asistan/ayseCevapla'
+import { sesDevamAl } from '@/lib/asistan/sesDevam'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
@@ -104,20 +104,6 @@ const VEDA = /^(?:tamam\s+|peki\s+)?(?:(?:görüşmeyi|konuşmayı|aramayı)\s+(
 
 export function vedaMi(mesaj: string): boolean {
   return VEDA.test(String(mesaj || '').trim().toLocaleLowerCase('tr-TR'))
-}
-
-/**
- * NOTYA-SES-DEVAM-01: take the unspoken remainder of the last cut voice turn (and clear it). Doctor-scoped read;
- * null when there is none. Clearing first means a duplicate [devam] cannot read the remainder twice.
- */
-async function sesDevamAl(supabase: ReturnType<typeof getSupabase>, doktorId: string, oturumId: string): Promise<string | null> {
-  const { data } = await supabase.from('asistan_sessions').select('active_context').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
-  const baglam = ((data as { active_context?: Record<string, unknown> } | null)?.active_context || null)
-  const devam = baglam?.sesDevam as SesDevam | undefined
-  if (!baglam || !devam) return null
-  const { sesDevam: _alinan, ...kalanBaglam } = baglam
-  await supabase.from('asistan_sessions').update({ active_context: kalanBaglam }).eq('id', oturumId).eq('doctor_id', doktorId)
-  return typeof devam.kalan === 'string' && devam.kalan.trim() ? devam.kalan : null
 }
 
 async function oturumMesajlari(supabase: ReturnType<typeof getSupabase>, doktorId: string, oturumId: string): Promise<ElMesaj[]> {

@@ -770,7 +770,14 @@ ${ilacBaglamMetni(drugs[0])}`
   let sesDevamKalan = ""
   const durum = ses ? g.sesDurumu?.() : undefined
   if (durum?.kesildi) {
-    sesDevamKalan = sesDevamKalani([...sozCumleleri(String(aiData.speech || ""), sesTemizle), ...sozler.slice(1)], durum.soylenen)
+    // The extras after the model's answer (card read-back, redirect sentence). On the ElevenLabs route the turn is
+    // closed at the cut, so they are still unspoken and belong to the remainder. On the Fish route the stream stays
+    // open and they were just spoken: the read-back question ("Onaylıyor musunuz?") must stay the LAST thing said,
+    // so nothing is queued behind it — the rest of the answer is on screen.
+    const soylenenDuz = durum.soylenen.replace(/\s+/g, " ")
+    const ekler = sozler.slice(1).filter(Boolean)
+    const ekSoylendi = ekler.some((e) => soylenenDuz.includes(e.replace(/\s+/g, " ").trim()))
+    sesDevamKalan = ekSoylendi ? "" : sesDevamKalani([...sozCumleleri(String(aiData.speech || ""), sesTemizle), ...ekler], durum.soylenen)
   }
 
   // Update conversation history
