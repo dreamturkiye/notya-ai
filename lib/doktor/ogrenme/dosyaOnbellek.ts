@@ -51,13 +51,8 @@ export function sonrakiRandevuGecmisMi(randevu: unknown, simdi: Date = new Date(
 }
 
 export async function onbellekKirlet(sb: SupabaseClient, doctorId: string, patientId: string): Promise<void> {
-  if (!doctorId || !patientId) return
-  await sb.from('hasta_dosya_onbellek').upsert({
-    doctor_id: doctorId,
-    patient_id: patientId,
-    kirli: true,
-    guncelleme: new Date().toISOString(),
-  }, { onConflict: 'doctor_id,patient_id' })
+  // NOTYA-MESLEKTAS-V2-FAZ3-KALDIRILDI (2026-10-01): onbellek tablosuna artik yazilmiyor, no-op.
+  void sb; void doctorId; void patientId
 }
 
 export async function onbellekOku(
@@ -122,8 +117,9 @@ async function dosyaPaketDerle(
   doctorId: string,
   patientId: string,
 ): Promise<OnbellekPaket | null> {
-  const hazir = await onbellekOku(sb, doctorId, patientId)
-  if (hazir) return hazir
+  // NOTYA-MESLEKTAS-V2-FAZ3-KALDIRILDI (Kaan karari, 2026-10-01): onbellek okuma/yazma kaldirildi -
+  // olculen veride onbellekli=true turlar daha yavasti (sohbet gorevi, 7 gunluk pencere: p95 24.6s vs 12.1s).
+  // Her tur artik dogrudan canli derleniyor.
   const [paket, sorgu] = await Promise.all([
     hastaDosyaPaketiniDerle(sb, doctorId, patientId),
     dosyaSorguVerisiDerle(sb, doctorId, patientId),
@@ -132,7 +128,6 @@ async function dosyaPaketDerle(
   const olaylar = sorgu?.olaylar || []
   const hash = surumHash(paket.metin, olaylar)
   const yazilacak = { metin: paket.metin, kart: paket.kart, ad: paket.ad, olaylar, sorguHasta: sorgu?.hasta, surumHash: hash }
-  void onbellekYaz(sb, doctorId, patientId, yazilacak).catch(() => { /* yazım kritik değil */ })
   return { ...yazilacak, onbellekten: false }
 }
 
@@ -164,9 +159,7 @@ export async function onbellekIsin(
   doctorId: string,
   patientId: string,
 ): Promise<'vurdu' | 'yazdi' | 'yok'> {
-  const hazir = await onbellekOku(sb, doctorId, patientId)
-  if (hazir) return 'vurdu'
-  const paket = await dosyaPaketOnbellekli(sb, doctorId, patientId)
-  if (!paket) return 'yok'
-  return 'yazdi'
+  // NOTYA-MESLEKTAS-V2-FAZ3-KALDIRILDI (2026-10-01): isitilacak onbellek yok, no-op.
+  void sb; void doctorId; void patientId
+  return 'yok'
 }
