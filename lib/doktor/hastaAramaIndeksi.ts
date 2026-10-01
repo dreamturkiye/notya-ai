@@ -50,6 +50,25 @@ export async function hastaAramaIndeksiniGuncelle(
  * Mesajdaki (zaten hesaplanmis) konusma token'larindan, bu doktorun olasi aday hasta id'lerini bulur.
  * null donerse indeks kullanilamiyor demektir - cagiran taraf eski tam-tarama davranisina donmelidir.
  */
+/**
+ * NOTYA-ARAMA-INDEKS-SUFFIX-01 (Kaan/Gökhan, 2026-10-01): a Turkish suffix glues onto a name
+ * with no separator ("yeşilin" from patient "Yeşil", "Umutcanın" from "Umutcan") -- hastaCozumleyici's
+ * inner comparison already tolerates this (NOTYA-SUFFIX-TOLERANS-01: a token STARTS WITH the name
+ * part), but this blind index hashes only the EXACT name part, so a suffixed message token hashes to
+ * a value the index never stored and the candidate is dropped before the inner comparison ever runs --
+ * the real regression Dr. Gökhan hit on "yeşilin" reproduces again on any doctor whose index is used
+ * (every doctor past the empty-index fallback). Fix: also hash every prefix (>=3 chars) of each
+ * message token and query by those too, mirroring the inner check in reverse (name-part is a prefix of
+ * the token, instead of the token starting with the name part). Purely additive -- can only surface a
+ * candidate the exact-hash lookup missed, never drop one. Capped at 24 chars/token to bound query size.
+ */
+function tokenVeOnEkleri(token: string): string[] {
+  const liste = [token]
+  const sinir = Math.min(token.length - 1, 24)
+  for (let i = 3; i <= sinir; i++) liste.push(token.slice(0, i))
+  return liste
+}
+
 export async function mesajAdaylariniBul(
   supabase: SupabaseClient,
   doctorId: string,
@@ -57,7 +76,9 @@ export async function mesajAdaylariniBul(
 ): Promise<Set<string> | null> {
   const adaylar = Array.from(tokenlar).filter((t) => t.length >= 3)
   if (adaylar.length === 0) return new Set()
-  const hashler = adaylar.map(tokenOzeti)
+  const genisletilmis = new Set<string>()
+  for (const t of adaylar) for (const parca of tokenVeOnEkleri(t)) genisletilmis.add(parca)
+  const hashler = Array.from(genisletilmis).map(tokenOzeti)
   const { data, error } = await supabase
     .from('patient_search_tokens')
     .select('patient_id')

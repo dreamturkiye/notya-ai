@@ -84,4 +84,28 @@ describe('NOTYA-ARAMA-INDEKS-01 -- blind token index', () => {
     const sonuc = await hastaninSozunuCoz(sb, doctorId, 'bugun hava nasil acaba')
     assert.equal(sonuc.tur, 'yok')
   })
+
+  it('hastaninSozunuCoz: eklenti sonek -- indeksli yolda da coziliyor (NOTYA-ARAMA-INDEKS-SUFFIX-01)', async () => {
+    // Dr. Gokhan'in gercek vakasi: hasta 'Ayse Yesil', doktor sadece soyadini sonek yapisik soyluyor/yaziyor
+    // ("yesilin dosyasini getir") -- NOTYA-SUFFIX-TOLERANS-01 ic karsilastirmayi duzeltmisti, ama bu indeks
+    // (NOTYA-ARAMA-INDEKS-01) adayi hic getirmedigi icin o duzeltme devreye asla girmiyordu.
+    const db = new SahteVeritabani()
+    const sb = db.istemci() as any
+    const doctorId = randomUUID()
+    const p1 = db.ekle('patients', { doctor_id: doctorId, name_encrypted: encrypt(JSON.stringify({ ad: 'Ayse Yesil' })), is_active: true })
+    db.ekle('patients', { doctor_id: doctorId, name_encrypted: encrypt(JSON.stringify({ ad: 'Umutcan Turkoglu' })), is_active: true })
+    await hastaAramaIndeksiniGuncelle(sb, doctorId, p1.id, 'Ayse Yesil')
+    await hastaAramaIndeksiniGuncelle(sb, doctorId, db.tablo('patients')[1].id, 'Umutcan Turkoglu')
+
+    const soneklerVar = ['yesilin dosyasini getir', 'Turkoglunun asilari', 'Umutcanin dosyasi']
+    for (const mesaj of soneklerVar) {
+      const tokenlar = sesliSozTokenlari(duzle(mesaj))
+      const adaylar = await mesajAdaylariniBul(sb, doctorId, tokenlar)
+      assert.ok(adaylar && adaylar.size > 0, `onek icin aday bulunamadi: ${mesaj}`)
+    }
+
+    const sonuc = await hastaninSozunuCoz(sb, doctorId, 'yesilin dosyasini getir')
+    assert.equal(sonuc.tur, 'tek')
+    assert.equal((sonuc as any).patientId, p1.id)
+  })
 })
