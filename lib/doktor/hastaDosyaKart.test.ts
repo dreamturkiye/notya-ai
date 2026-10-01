@@ -198,6 +198,11 @@ describe('sesli kart: plan / takip ve muayene bulgusu', () => {
     assert.match(m, /muayene bulgusu Bilateral/)
     assert.doesNotMatch(m, /sürekli ilaç/)
   })
+  // NOTYA-DOSYA-SORU-PLAN-01 (Kaan, canlı, 2026-10-01): tamamen ilgisiz bir mesajdaki "planlıyorum"
+  // içindeki "plan" alt dizisi hastanın vizit planını tetiklememeli.
+  it('"planlıyorum" içindeki "plan" alt dizisi dosya planını tetiklemez', () => {
+    assert.equal(dosyaSoruCevap('Bir tane Tesla elektrikli araba almayı planlıyorum.', k), null)
+  })
 })
 
 describe('NOTYA-AYSE-100 K1 — card answers', () => {

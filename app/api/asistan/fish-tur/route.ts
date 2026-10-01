@@ -139,6 +139,9 @@ export async function POST(req: NextRequest) {
 
   const enc = new TextEncoder()
   let kapali = false
+  // NOTYA-SES-TUR-02: the browser's `cancel()` below used to stop only the SSE/Fish socket -- the
+  // in-flight ayseCevapla() brain call kept running and could still write its answer afterwards.
+  const turSinyali = new AbortController()
   let wsOturum: FishWsOturumu | null = null
   const akis = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -251,6 +254,7 @@ export async function POST(req: NextRequest) {
           personaId: girdi.personaId || 'aysekaya',
           patientId,
           saatDilimi,
+          sinyal: turSinyali.signal,
           sozParcasi: (p) => { if (p) { soylendi = true; sozParcasi(p) } },
         })
         if (!sonuc.ok) gonder({ t: 'hata', m: sonuc.soz })
@@ -272,6 +276,7 @@ export async function POST(req: NextRequest) {
     },
     cancel() {
       kapali = true
+      turSinyali.abort()
       wsOturum?.kapat()
       // NOTYA-SES-TUR-01: the browser cancels a turn to merge two sentences / barge in and sends the next
       // one at once — pre-open its socket now rather than when the abandoned brain call returns.

@@ -170,6 +170,13 @@ test('Fish model switch: NOTYA_FISH_MODEL picks a documented model, anything els
 })
 
 
+test('fishBirimleriOku — degree Celsius becomes "derece", not a stray letter (NOTYA-TTS-BIRIM-02)', () => {
+  assert.equal(fishBirimleriOku('39°C'), '39 derece')
+  assert.equal(fishBirimleriOku('39 °C'), '39 derece')
+  assert.equal(fishBirimleriOku('39.2°C ateş'), '39.2 derece ateş')
+  assert.match(fishMetni('Ateş 39°C.'), /otuz dokuz derece/)
+})
+
 test('fishBirimleriOku — clinical unit abbreviations become Turkish words (NOTYA-TTS-BIRIM-01, #505)', () => {
   assert.equal(fishBirimleriOku('13.3kg'), '13.3 kilogram')
   assert.equal(fishBirimleriOku('250mg'), '250 miligram')

@@ -609,6 +609,21 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     const listeli = K.sozCumleleri('Özet hazır.\n- a\n- b\n- c\nSon cümle.')
     assert.equal(K.sesDevamKalani([...listeli, 'Kart ekranda.'], 'Özet hazır. '), `${K.listeEkranda(3)} Son cümle. Kart ekranda.`)
   })
+  // NOTYA-SES-OZET-TAM-01 (Kaan, canlı, 2026-10-01)
+  it('sesSiniriSec: dosya-evidence (özet vb.) yanıtı sınırsız, sıradan sohbet SOZ_BEAT_SINIRI', () => {
+    assert.equal(K.sesSiniriSec(true), Number.POSITIVE_INFINITY)
+    assert.equal(K.sesSiniriSec(false), K.SOZ_BEAT_SINIRI)
+  })
+  it('sesSiniriSec(true) ile SesAkisi 5\'ten uzun bir özeti "Devamı ekranınızda" demeden tam okur', () => {
+    const parcalar: string[] = []
+    const a = new K.SesAkisi((p) => parcalar.push(p), undefined, undefined, K.sesSiniriSec(true))
+    const uzunOzet = Array.from({ length: 8 }, (_, i) => `Cümle ${i + 1} burada klinik bilgi anlatır.`).join(' ')
+    a.ekle(uzunOzet)
+    const tam = a.bitir()
+    assert.doesNotMatch(tam, /Devamı ekranınızda/)
+    assert.match(tam, /Cümle 1 /)
+    assert.match(tam, /Cümle 8 /)
+  })
   it('sessiz sınır: "Devamı ekranınızda" söylenmez, onSinir yine bir kez; varsayılan akış eski davranışta', () => {
     const parcalar: string[] = []
     let sinir = 0

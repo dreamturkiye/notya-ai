@@ -58,7 +58,7 @@ import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { bugunTRT, type HastaOzeti } from "@/core/eylemler/types"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { konusmaYap, okumaIstegiMi, SesAkisi, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
+import { konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
@@ -97,6 +97,11 @@ export interface AyseGirdisi {
   sesDurumu?: () => { kesildi: boolean; soylenen: string }
   /** NOTYA-TAKVIM-TZ-01: doctor's IANA timezone from the client (Intl resolvedOptions) — "bugün / yarın" resolve here. Fallback TRT. */
   saatDilimi?: string | null
+  /** NOTYA-SES-TUR-02 (Kaan, 2026-10-01): set when the caller can abort this turn (voice barge-in /
+   * sentence merge). An aborted turn still runs to completion (no network call is cut) but its answer is
+   * never written to the session record, so it can never resurface later as a stale answer on a
+   * different turn or a different conversation. */
+  sinyal?: AbortSignal
 }
 
 /** NOTYA-SES-DEVAM-01: asistan_sessions.active_context.sesDevam — the unspoken rest of a cut voice turn. */
@@ -230,6 +235,9 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
   const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[]; sesDevamKalan?: string } = {}) => {
+    // NOTYA-SES-TUR-02: this turn was cancelled (barge-in / sentence merge) -- never let its answer reach
+    // the session record, where a later poll or follow-up turn could surface it as a fresh answer.
+    if (g.sinyal?.aborted) return
     const kullanici: OturumMesaji = ses ? { role: "user", content: hamMesaj, kanal: "ses", zaman: simdi() } : { role: "user", content: hamMesaj }
     const asistanZamani = simdi()
     const asistan: OturumMesaji = ses
@@ -558,7 +566,7 @@ ${ilacBaglamMetni(drugs[0])}`
     return t
   }
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
-  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, SOZ_BEAT_SINIRI, Boolean(g.sesDurumu)) : null
+  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null
 
   const cagriTaban = {
     gorev: yonlendirme.gorev,
