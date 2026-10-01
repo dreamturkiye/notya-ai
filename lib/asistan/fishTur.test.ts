@@ -76,8 +76,8 @@ describe('fish-tur — düz sesli tur uçtan uca', () => {
       assert.ok(!/Filtre:|\d+ hasta\./.test(t.soz), `${soz} → ${t.soz}`)
       // No chart this turn: the model is told so and told not to build a count sentence.
       const sistem = JSON.stringify(ortam.modelIstekleri[0].govde.system)
-      assert.match(sistem, /BU TURDA AÇIK HASTA DOSYASI YOK/, soz)
-      assert.match(sistem, /sayım istenmedi/, soz)
+      assert.ok(/BU TURDA AÇIK HASTA DOSYASI YOK/.test(sistem), soz)
+      assert.ok(/sayım istenmedi/.test(sistem), soz)
     }
   })
 

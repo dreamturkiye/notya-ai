@@ -27,6 +27,9 @@ import {
 import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/lib/doktor/gununNotunaEkle'
 import { arsivsizAsilar, arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
+import { randevuGuncellemePlani } from '@/lib/randevu/randevuDurum'
+import { bugunTz, isoSaatTz } from '@/lib/randevu/tarihCozumle'
+import { kisaTarihEtiketi } from '@/lib/randevu/gunlukOzet'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
 import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
@@ -331,6 +334,8 @@ export const BAS_CEVRESI_EKLE = eylem({
 /* ─────────────────────────────── T1 · Randevu ─────────────────────────────── */
 
 const SAAT = /^([01]\d|2[0-3]):([0-5]\d)$/
+/** The calendar page and the confirm card show appointment times in Turkish time (Kaan's decision 2026-09-27, #480). */
+const RANDEVU_DILIMI = 'Europe/Istanbul'
 
 /** TRT (UTC+3) local wall time → the instant stored in `randevular.baslangic`. */
 export function trtAnI(tarih: string, saat: string): string {
@@ -395,6 +400,169 @@ export const KONTROL_RANDEVUSU_OLUSTUR = eylem({
   },
   geriAl: async (ctx, k) => {
     await ctx.supabase.from('randevular').delete().eq('id', k.hedefId).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
+  },
+  basariSozu: 'Randevu oluşturuldu Hocam.',
+})
+
+/* ───────────────────── T2 · Randevu: saat değiştir / iptal (NOTYA-AYSE-GERI-03) ─────────────────────
+ *
+ * Move / cancel an EXISTING appointment. Neither existed as an Ayşe capability before 2026-10-01 (only the
+ * calendar UI had them — docs/ayse-randevu-forensics.md). Both go through the calendar UI's own rules
+ * (randevuGuncellemePlani + randevuCakismasiVarMi — the PATCH route's pair), never a second copy, and a cancel is
+ * NOT a delete: the row stays with durum = 'iptal' and can be re-activated from the calendar.
+ *
+ * WHICH appointment is decided by the server, never by the model: `randevu_id` is a `sunucu` field. `hazirla`
+ * reads this doctor's upcoming appointments of THIS patient; one → that one; several → the one on the day the
+ * doctor named, else a question listing them. HASTA-IZOLASYON-01: every read and write carries id AND doktor_id
+ * AND patient_id — a foreign id is "Randevu bulunamadı", indistinguishable from a missing one.
+ */
+interface RandevuSatiri { id: string; baslangic: string; bitis: string; durum: string; iptal_nedeni: string | null }
+
+async function hastaRandevusu(ctx: EylemBaglami, randevuId: unknown): Promise<RandevuSatiri | null> {
+  const { data } = await ctx.supabase
+    .from('randevular')
+    .select('id, baslangic, bitis, durum, iptal_nedeni')
+    .eq('id', String(randevuId || ''))
+    .eq('doktor_id', ctx.doktorId)
+    .eq('patient_id', ctx.hasta.id)
+    .maybeSingle()
+  return (data as RandevuSatiri | null) ?? null
+}
+
+/** This doctor's, this patient's, not cancelled, from now on — soonest first. */
+async function gelecekRandevular(ctx: EylemBaglami): Promise<RandevuSatiri[]> {
+  const { data } = await ctx.supabase
+    .from('randevular')
+    .select('id, baslangic, bitis, durum, iptal_nedeni')
+    .eq('doktor_id', ctx.doktorId)
+    .eq('patient_id', ctx.hasta.id)
+    .neq('durum', 'iptal')
+    .gte('baslangic', (ctx.simdi ?? new Date()).toISOString())
+    .order('baslangic', { ascending: true })
+    .limit(6)
+  return ((data || []) as RandevuSatiri[]).map((r) => ({ ...r, id: String(r.id) }))
+}
+
+const randevuGunu = (r: RandevuSatiri) => bugunTz(RANDEVU_DILIMI, new Date(r.baslangic))
+const randevuSaati = (r: RandevuSatiri) => isoSaatTz(r.baslangic, RANDEVU_DILIMI)
+const randevuEtiketi = (r: RandevuSatiri) => `${kisaTarihEtiketi(randevuGunu(r))} ${randevuSaati(r)}`
+const randevuListesi = (liste: RandevuSatiri[]) => liste.map((r, i) => `${i + 1}. ${randevuEtiketi(r)}`).join(', ')
+
+/** Which of the patient's upcoming appointments the doctor means — or the question to ask. */
+async function randevuyuCoz(ctx: EylemBaglami, veri: Record<string, unknown>): Promise<{ randevu: RandevuSatiri } | { soru: string }> {
+  const liste = await gelecekRandevular(ctx)
+  if (!liste.length) return { soru: `${ctx.hasta.ad} için ileri tarihli bir randevu bulamadım Hocam.` }
+  const istenenGun = veri.mevcut_tarih ? String(veri.mevcut_tarih) : ''
+  let aday = liste
+  if (istenenGun) {
+    aday = liste.filter((r) => randevuGunu(r) === istenenGun)
+    // "yarınki randevusunu iptal et" when the only appointment is next week: never act on a day that was not named.
+    if (!aday.length) return { soru: `${ctx.hasta.ad} için ${kisaTarihEtiketi(istenenGun)} günü randevu bulamadım Hocam. Kayıtlı randevuları: ${randevuListesi(liste)}. Hangisi?` }
+  }
+  if (aday.length > 1) return { soru: `${ctx.hasta.ad} için ${aday.length} randevu var Hocam: ${randevuListesi(aday)}. Hangisi?` }
+  return { randevu: aday[0] }
+}
+
+const RANDEVU_KAYDI_ALANI: AlanTanimi = { anahtar: 'randevu_id', etiket: 'Randevu kaydı', tip: 'metin', zorunlu: true, sunucu: true, gizli: true }
+const MEVCUT_RANDEVU_ALANI: AlanTanimi = { anahtar: 'mevcut', etiket: 'Mevcut randevu', tip: 'metin', sunucu: true }
+const MEVCUT_GUN_ALANI: AlanTanimi = {
+  anahtar: 'mevcut_tarih', etiket: 'Mevcut randevunun günü', tip: 'tarih', gizli: true,
+  aciklama: 'Day of the EXISTING appointment, only when the doctor said which one ("yarınki randevusunu", "cuma günkü randevu"). Leave empty when the doctor did not say — the server finds the appointment.',
+}
+
+export const RANDEVU_TASI = eylem({
+  anahtar: 'randevu_tasi',
+  etiket: 'Randevu saatini değiştir',
+  aciklama: 'Hastanın MEVCUT randevusunu başka bir güne ya da saate alır (erteleme, öne alma, saat değişikliği). Yeni randevu açmaz. Hangi randevu olduğunu sistem bulur. Tarih ve saat Türkiye saatiyle verilir; hekim yalnız saati değiştirdiyse tarihi, yalnız günü değiştirdiyse saati boş bırak.',
+  alanlar: [
+    RANDEVU_KAYDI_ALANI,
+    MEVCUT_RANDEVU_ALANI,
+    MEVCUT_GUN_ALANI,
+    { anahtar: 'tarih', etiket: 'Yeni tarih', tip: 'tarih', zorunlu: true, aciklama: 'New day. Empty when the doctor changed only the time.' },
+    { anahtar: 'saat', etiket: 'Yeni saat', tip: 'metin', zorunlu: true, aciklama: 'New time, TRT, HH:MM (24h). Empty when the doctor changed only the day.' },
+  ],
+  zorunlu: ['randevu_id', 'tarih', 'saat'],
+  kademe: 'T2',
+  branslar: 'hepsi',
+  basariSozu: 'Randevu yeni saatine alındı Hocam.',
+  hazirla: async (ctx, v) => {
+    const c = await randevuyuCoz(ctx, v)
+    if ('soru' in c) return c
+    const r = c.randevu
+    if (!v.tarih && !v.saat) return { soru: `${ctx.hasta.ad} randevusu ${randevuEtiketi(r)}’te Hocam. Hangi güne ve saate alalım?` }
+    const tarih = String(v.tarih || randevuGunu(r))
+    const saat = String(v.saat || randevuSaati(r))
+    if (tarih === randevuGunu(r) && saat === randevuSaati(r)) return { soru: `Randevu zaten ${randevuEtiketi(r)}’te Hocam. Hangi güne ve saate alalım?` }
+    return { veri: { ...v, randevu_id: r.id, mevcut: randevuEtiketi(r), tarih, saat } }
+  },
+  makullukKontrol: (ctx, v) => {
+    if (v.saat && !SAAT.test(String(v.saat))) return 'Saat SS:DD biçiminde olmalı (ör. 14:30).'
+    if (v.tarih && String(v.tarih) < ctx.bugunTRT) return `Randevu tarihi geçmişte (${v.tarih}).`
+    return null
+  },
+  mukerrerKontrol: async (ctx, v) => {
+    if (!v.randevu_id || !v.tarih || !v.saat || !SAAT.test(String(v.saat))) return null
+    const mevcut = await hastaRandevusu(ctx, v.randevu_id)
+    if (!mevcut) return null
+    const bas = trtAnI(String(v.tarih), String(v.saat))
+    const sureMs = Math.max(5 * 60000, new Date(mevcut.bitis).getTime() - new Date(mevcut.baslangic).getTime())
+    const c = await randevuCakismasiVarMi(ctx.supabase, ctx.doktorId, bas, new Date(new Date(bas).getTime() + sureMs).toISOString(), mevcut.id)
+    return c.cakisiyor ? CAKISMA_MESAJI : null
+  },
+  calistir: async (ctx, v) => {
+    const mevcut = await hastaRandevusu(ctx, v.randevu_id)
+    if (!mevcut) throw new Error('Randevu bulunamadı.')
+    if (mevcut.durum === 'iptal') throw new Error('Bu randevu iptal edilmiş; önce takvimden yeniden aktif edin.')
+    const bas = trtAnI(String(v.tarih), String(v.saat))
+    const sureMs = Math.max(5 * 60000, new Date(mevcut.bitis).getTime() - new Date(mevcut.baslangic).getTime())
+    const bit = new Date(new Date(bas).getTime() + sureMs).toISOString()
+    const plan = randevuGuncellemePlani(mevcut, { baslangic: bas, bitis: bit })
+    if (plan.hata) throw new Error(plan.hata)
+    if (plan.cakismaKontrolu) {
+      const c = await randevuCakismasiVarMi(ctx.supabase, ctx.doktorId, plan.cakismaKontrolu.baslangic, plan.cakismaKontrolu.bitis, mevcut.id)
+      if (c.hata) throw new Error(CAKISMA_KONTROL_HATASI)
+      if (c.cakisiyor) throw new Error(CAKISMA_MESAJI)
+    }
+    const { error } = await ctx.supabase.from('randevular').update(plan.alanlar).eq('id', mevcut.id).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
+    if (error) {
+      console.error('[eylem] randevu_tasi yazılamadı', error.message)
+      throw new Error('Randevu güncellenemedi.')
+    }
+    return { hedefTablo: 'randevular', hedefId: mevcut.id, once: { baslangic: mevcut.baslangic, bitis: mevcut.bitis }, sonra: plan.alanlar, ilgiliSekme: { etiket: 'Randevularda gör', yol: '/dashboard/doktor/randevular' } }
+  },
+})
+
+export const RANDEVU_IPTAL = eylem({
+  anahtar: 'randevu_iptal',
+  etiket: 'Randevuyu iptal et',
+  aciklama: 'Hastanın MEVCUT randevusunu iptal eder. Kayıt silinmez; takvimde iptal olarak kalır ve oradan yeniden aktif edilebilir. Hangi randevu olduğunu sistem bulur.',
+  alanlar: [
+    RANDEVU_KAYDI_ALANI,
+    MEVCUT_RANDEVU_ALANI,
+    MEVCUT_GUN_ALANI,
+    { anahtar: 'sebep', etiket: 'İptal nedeni', tip: 'metin', aciklama: 'Only if the doctor said why.' },
+  ],
+  zorunlu: ['randevu_id'],
+  kademe: 'T2',
+  branslar: 'hepsi',
+  basariSozu: 'Randevu iptal edildi Hocam.',
+  hazirla: async (ctx, v) => {
+    const c = await randevuyuCoz(ctx, v)
+    if ('soru' in c) return c
+    return { veri: { ...v, randevu_id: c.randevu.id, mevcut: randevuEtiketi(c.randevu) } }
+  },
+  calistir: async (ctx, v) => {
+    const mevcut = await hastaRandevusu(ctx, v.randevu_id)
+    if (!mevcut) throw new Error('Randevu bulunamadı.')
+    if (mevcut.durum === 'iptal') throw new Error('Bu randevu zaten iptal edilmiş.')
+    const plan = randevuGuncellemePlani(mevcut, { durum: 'iptal', iptalNedeni: v.sebep ? String(v.sebep) : undefined })
+    if (plan.hata) throw new Error(plan.hata)
+    const { error } = await ctx.supabase.from('randevular').update(plan.alanlar).eq('id', mevcut.id).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
+    if (error) {
+      console.error('[eylem] randevu_iptal yazılamadı', error.message)
+      throw new Error('Randevu iptal edilemedi.')
+    }
+    return { hedefTablo: 'randevular', hedefId: mevcut.id, once: { durum: mevcut.durum, iptal_nedeni: mevcut.iptal_nedeni }, sonra: plan.alanlar, ilgiliSekme: { etiket: 'Randevularda gör', yol: '/dashboard/doktor/randevular' } }
   },
 })
 
@@ -658,6 +826,8 @@ export const TEMEL_EYLEMLER: EylemTanimi[] = [
   OLCUM_EKLE,
   BAS_CEVRESI_EKLE,
   KONTROL_RANDEVUSU_OLUSTUR,
+  RANDEVU_TASI,
+  RANDEVU_IPTAL,
   DOSYA_NOTU_EKLE,
   FISILTI_SESSIZE_AL,
   MESAJ_HASTA_ILE_KONUSULDU,

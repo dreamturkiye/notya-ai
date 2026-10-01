@@ -57,6 +57,26 @@ export interface AlanTanimi {
   enCok?: number
   /** e.g. 'cm', 'kg' — rendered next to the input. */
   birim?: string
+  /**
+   * NOTYA-AYSE-GERI-03 — resolved by the SERVER (`hazirla`), never by the model and never by the card: left out
+   * of the tool schema, ignored in model input and in the doctor's edits. A row id belongs here.
+   */
+  sunucu?: boolean
+  /** Not rendered on the card and not read back by voice (a row id, or a hint only the resolver uses). */
+  gizli?: boolean
+}
+
+/**
+ * NOTYA-AYSE-GERI-03 — outcome of an action's server-side preparation. `soru`: no card can be prepared yet; Ayşe
+ * asks this one question instead ("Hangisi Hocam: 1. …, 2. …?"). Never a write.
+ */
+export type HazirlikSonucu = { veri: Record<string, unknown> } | { soru: string }
+
+/** The fields a doctor sees (card, voice read-back) and the required ones among them. */
+export function kartAlanlari(e: { alanlar: readonly AlanTanimi[]; zorunlu: readonly string[] }): { alanlar: AlanTanimi[]; zorunlu: string[] } {
+  const alanlar = e.alanlar.filter((a) => !a.gizli)
+  const gorunur = new Set(alanlar.map((a) => a.anahtar))
+  return { alanlar, zorunlu: e.zorunlu.filter((k) => gorunur.has(k)) }
 }
 
 /** Identity resolved SERVER-SIDE. A hasta id from model output never reaches this object. */
@@ -80,6 +100,8 @@ export interface EylemBaglami {
   oneriId: string
   /** Today in Turkish time, yyyy-mm-dd. Actions must not read the host clock directly. */
   bugunTRT: string
+  /** The instant "now" for actions that compare against one (upcoming appointments). Default: the host clock. */
+  simdi?: Date
 }
 
 /** What `calistir` reports back so `eylem_kayitlari` can describe (and `geriAl` can reverse) the write. */
@@ -121,6 +143,14 @@ export interface EylemTanimi<V = Record<string, unknown>> {
   hastaKosulu?: (hasta: HastaOzeti, brans: SpecialtyKey | null) => boolean
   /** The record also becomes visible in Sağlığım — the card says so before the tap. */
   portalaYansir?: boolean
+  /** Spoken after a voice "Evet" commits the card; default "Kaydedildi Hocam — <etiket>." */
+  basariSozu?: string
+  /**
+   * NOTYA-AYSE-GERI-03 — runs when the card is prepared, after the model's values were normalised: fills the
+   * `sunucu` fields from this doctor's own rows (which appointment is meant) or answers with one question when it
+   * cannot. Every read inside is scoped by ctx.doktorId AND ctx.hasta.id. Never a write.
+   */
+  hazirla?: (ctx: EylemBaglami, veri: V) => Promise<HazirlikSonucu>
   /** Derived from `alanlar`; re-validated server-side on every commit. */
   readonly sema: ZodType<V>
   /** THE write. Must call the same shared function the UI form calls — never a second write path. */

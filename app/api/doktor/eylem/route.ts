@@ -20,6 +20,7 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { eylemOnayla, eylemVazgec, suresiDolduMu } from '@/core/eylemler/onayla'
 import { eylemGeriAl } from '@/core/eylemler/geriAl'
 import { eylemBul } from '@/core/eylemler/kayit'
+import { kartAlanlari } from '@/core/eylemler/types'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
@@ -61,7 +62,9 @@ export async function GET(req: NextRequest) {
     .filter((o) => !suresiDolduMu(o as { created_at: string }))
     .map((o) => {
       const e = eylemBul(String(o.eylem_anahtar))
-      return { ...o, etiket: e?.etiket || o.eylem_anahtar, alanlar: e?.alanlar || [], zorunlu: e?.zorunlu || [], portalaYansir: Boolean(e?.portalaYansir) }
+      // NOTYA-AYSE-GERI-03: hidden fields (a server-resolved row id) are not card fields.
+      const kart = e ? kartAlanlari(e) : { alanlar: [], zorunlu: [] }
+      return { ...o, etiket: e?.etiket || o.eylem_anahtar, alanlar: kart.alanlar, zorunlu: kart.zorunlu, portalaYansir: Boolean(e?.portalaYansir) }
     })
   return NextResponse.json({ oneriler, hasta: { ad: hasta.ad, dogumTarihi: hasta.dogumTarihi } })
 }

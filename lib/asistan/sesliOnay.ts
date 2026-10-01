@@ -100,7 +100,7 @@ async function uygula(
     uyariGoruldu: false,
   })
   if (!s.ok) return { soz: s.hata, kalan: [t.id] }
-  return { soz: `Kaydedildi Hocam — ${s.etiket}.`, kalan: [] }
+  return { soz: eylem.basariSozu || `Kaydedildi Hocam — ${s.etiket}.`, kalan: [] }
 }
 
 /**

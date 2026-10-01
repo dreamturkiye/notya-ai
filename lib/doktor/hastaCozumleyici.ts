@@ -335,7 +335,8 @@ export async function hastaninSozunuCoz(
   /** NOTYA-BETA-0925: kimlik sorusu ("annesinin adı ne") yalnız adla çözülür — "anne" kelimesi klinik arama filtresine dönmez. */
   /** `kohortsuz`: a chart is open and the question is about it — no name in the message means no all-patients search. */
   /** `hitapAdi`: first name of the colleague the doctor is talking to ("Ayşe") — see the bare-name guard below. */
-  secenek: { yalnizAd?: boolean; tz?: string; kohortsuz?: boolean; hitapAdi?: string } = {}
+  /** `adKesin`: the text IS a patient name (a tool call's `hasta_adi`), not a sentence — no address is stripped from it. */
+  secenek: { yalnizAd?: boolean; tz?: string; kohortsuz?: boolean; hitapAdi?: string; adKesin?: boolean } = {}
 ): Promise<HastaCozumu> {
   const m = ' ' + duzle(mesaj) + ' '
   // A bare who-question ("… hasta kim", "hangi hastayı gördüm") is answered here; a question about that patient
@@ -370,14 +371,14 @@ export async function hastaninSozunuCoz(
     if (c) return c
   }
   if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
-  const adMesaji = hitapsiz(mesaj)
+  const adMesaji = secenek.adKesin ? mesaj : hitapsiz(mesaj)
   const mAd = ' ' + duzle(adMesaji) + ' '
   const tokenlar = sesliSozTokenlari(duzle(adMesaji))
   const anilanPersona = hastaOlarakAnilanPersonaAdlari(duzle(adMesaji))
   // The bare-name guard protects the colleague being spoken to. When the caller says who that is, the other
   // personas' first names (Mehmet, Deniz, Elif …) are ordinary patient names; otherwise every persona name is guarded.
   const hitapDuz = secenek.hitapAdi ? duzle(secenek.hitapAdi) : ''
-  const hitapAdiMi = (p: string) => (hitapDuz ? p === hitapDuz : PERSONA_ADLARI_DUZ.has(p))
+  const hitapAdiMi = (p: string) => (secenek.adKesin ? false : hitapDuz ? p === hitapDuz : PERSONA_ADLARI_DUZ.has(p))
   // Eskiden: doktorun TUM aktif hastalari (<=500) cozulup tek tek karsilastirilirdi. Artik mesajin konusma
   // token'lari, hic kimseyi cozmeden, indekslenmis ad-parca ozetleriyle eslestirilir; yalnizca indeksin
   // 'olasi aday' dedigi hastalar cozulur. Indeks kullanilamazsa (hata) eski tam-tarama davranisina guvenli

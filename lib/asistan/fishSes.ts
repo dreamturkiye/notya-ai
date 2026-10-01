@@ -128,7 +128,9 @@ const BATI_AKSAN = /[ÁÉÍÓÚÀÈÌÒÙÄËÏáéíóúàèìòùäëï]/g
 export function fishAsrDilUyumluMu(metin: string): boolean {
   const t = String(metin || '')
   const latin = (t.match(/[A-Za-zÇĞİÖŞÜçğıöşüâîûÂÎÛ]/g) || []).length
-  if (!latin) return false
+  // NOTYA-AYSE-GERI-03: a spoken number is written in digits — "14:30" is the doctor's answer to "Saat kaçta?",
+  // "12,4" a weight. With no letters it was dropped as not-Turkish and the turn silently vanished.
+  if (!latin) return /^\s*\d[\d\s:.,/-]*\s*$/.test(t)
   const yabanciYazi = (t.match(/[\u0370-\u03FF\u0400-\u04FF\u0530-\u058F\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0900-\u097F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g) || []).length
   if (yabanciYazi * 2 >= latin) return false
   if ((t.match(YABANCI_LATIN) || []).length) return false

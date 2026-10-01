@@ -249,6 +249,14 @@ export function sonModelIstegi(): ModelIstegi | null {
   return ortam.modelIstekleri[ortam.modelIstekleri.length - 1] ?? null
 }
 
+/**
+ * Does the system prompt of the last model request contain this? A boolean on purpose — `assert.match` on the
+ * prompt prints all of it (tens of kilobytes) when it fails.
+ */
+export function sistemde(re: RegExp): boolean {
+  return re.test(JSON.stringify(sonModelIstegi()?.govde.system ?? ''))
+}
+
 /** Tool the request forces: a tool name, 'any', or null (auto / no tools). */
 export function zorlananArac(istek: ModelIstegi | null): string | null {
   const tc = istek?.govde?.tool_choice as { type?: string; name?: string } | undefined

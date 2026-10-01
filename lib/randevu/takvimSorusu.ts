@@ -23,6 +23,8 @@ import { kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { TARIH_IFADESI, bugunTz, cevaptakiTarih, goreliTarihCoz, haftaAraligiCoz, saatDilimiSec } from '@/lib/randevu/tarihCozumle'
+import { randevuNiyetiBul } from '@/lib/randevu/randevuSozu'
+import { bosSaatSorusuMu } from '@/lib/randevu/bosSaatler'
 
 export { sesGurultusuMu }
 
@@ -31,6 +33,8 @@ export type TakvimSorusu = {
   saat: string | null
   /** NOTYA-AYSE-100 T1: "bu hafta / haftaya" without a weekday — Monday..Sunday, read day by day. */
   aralik?: { bas: string; bit: string }
+  /** NOTYA-AYSE-GERI-03: the doctor asked for the day's FREE slots ("yarın hangi saatler boş"). */
+  bosluk?: boolean
 }
 
 /** Doctor's IANA timezone (client `saatDilimi` → cookie → TRT) and the instant "now" (tests). */
@@ -95,9 +99,17 @@ export function takvimSorusuMu(mesaj: string | null | undefined): boolean {
 /** Clinic calendar lookup (today / tomorrow / a weekday / a date / a slot) in the doctor's timezone. Null = not this question. */
 export function takvimSorusuCoz(mesaj: string | null | undefined, secenek: TakvimSecenek = {}): TakvimSorusu | null {
   const ham = String(mesaj || '').trim()
-  if (!ham || kayitNiyetiMi(ham)) return null
+  // NOTYA-AYSE-GERI-03: a booking / move / cancel request is a command for the tools, never a calendar read —
+  // "yarın saat 14:00 için kontrol randevusu oluştur" used to be answered with that day's schedule.
+  if (!ham || kayitNiyetiMi(ham) || randevuNiyetiBul(ham)) return null
   const n = normalize(ham)
   if (n.length < 6) return null
+
+  // NOTYA-AYSE-GERI-03: free slots of a day — a calendar question of its own, with or without the word "randevu".
+  if (bosSaatSorusuMu(ham) && !SAAT.test(ham)) {
+    const dilim = saatDilimiSec(secenek.saatDilimi)
+    return { tarih: goreliTarihCoz(n, dilim, secenek.simdi) || bugunTz(dilim, secenek.simdi), saat: null, bosluk: true }
+  }
 
   const randevu = /\b(randevu\w*|takvim\w*|appointment\w*)\b/.test(n)
   const gun = TARIH_IFADESI.test(n) || /\bo gun\b/.test(n)

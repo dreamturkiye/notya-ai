@@ -112,41 +112,20 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Bitcoin almalı mıyım?', durum: 'yok', beklenen: { rota: 'kapsam' } },
 ]
 
-const MODEL_ARACSIZ: Beklenti = { rota: 'model', arac: null, hasta: null }
 const KART: Beklenti = { rota: 'hizli-kart', hasta: D }
 const MODEL_SERBEST: Beklenti = { rota: 'model', arac: null, hasta: D }
-const MODEL_ANY: Beklenti = { rota: 'model', arac: 'any', hasta: D }
 
 /**
  * KNOWN FAILURES — what `origin/main` at 16948383 does instead of `beklenen`, keyed "durum|soz".
  * The slice that fixes a row deletes its line here. Empty map = restoration complete.
+ *
+ * History: 40 rows at S0. S1 (count template) flipped 13 on 2026-10-01; S3 (commands → tools) flipped 20 more:
+ * the quick card and the calendar reader no longer answer a command, the tool call is forced with the tool the
+ * wording names, and tools are offered with no resolved patient.
  */
 const BILINEN_HATALAR: Record<string, Beklenti> = {
-  // S1 (count template) fixed these thirteen rows on 2026-10-01; what is left of them belongs to later slices:
-  // S3: with no patient resolved the model is reached, but no tool is offered yet.
-  'yok|Ali Yılmaz için randevu oluştur': MODEL_ARACSIZ,
-  'yok|Bir randevu yapmak istiyorum bir hasta için yardımcı olur musun?': MODEL_ARACSIZ,
-  'yok|Randevu saatini değiştirmek istiyorum': MODEL_ARACSIZ,
   // S5: the open chart answers, but with the quick card's short vaccine line instead of the count.
   'acik|Toplam kaç aşısı var': KART,
-  // S3: the quick card or the calendar reader answers a command; or the tool call is left to the model.
-  'acik|Penisilin alerjisini ekle': KART,
-  'acik|Kilosunu 12,4 kilo olarak ekle': KART,
-  'acik|Astım tanısını kronik hastalıklara ekle': KART,
-  'acik|Amoksisilin 250 mg günde iki kez ilaçlarına ekle': MODEL_SERBEST,
-  'acik|Ventolini kes': MODEL_SERBEST,
-  'acik|Ventolinin dozunu 2x2 olarak değiştir': MODEL_SERBEST,
-  'acik|Dosyasına not al: annesi sigarayı bıraktı': MODEL_SERBEST,
-  'acik|Aşıyı dosyaya gir': MODEL_ANY,
-  'acik|Ateşi 38,2, kaydet': MODEL_ANY,
-  'acik|Yarın saat 14:00 için kontrol randevusu oluştur': { rota: 'takvim' },
-  'acik|Haftaya salı 10:30 kontrol randevusu ver': { rota: 'takvim' },
-  'acik|Randevusunu perşembeye al': KART,
-  'acik|Randevu saatini 15:30 olarak değiştir': KART,
-  'acik|Randevusunu iptal et': KART,
-  [`yok|${D} için yarın 11:00’e randevu oluştur`]: { rota: 'takvim' },
-  [`yok|${D} dosyasına fıstık alerjisi ekle`]: KART,
-  'yok|Yarın hangi saatler boş?': { rota: 'model', arac: null, hasta: null },
   // S5: a one-line card answer or a free model answer where a table from the record is asked for.
   'acik|Aşılarını göster': KART,
   'acik|Aşı karnesini tablo olarak göster': MODEL_SERBEST,

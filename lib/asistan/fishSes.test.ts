@@ -151,6 +151,9 @@ test('fishAsrDilUyumluMu — non-Latin script or empty transcript is junk', () =
   assert.equal(fishAsrDilUyumluMu('你好'), false)
   assert.equal(fishAsrDilUyumluMu(''), false)
   assert.equal(fishAsrDilUyumluMu('... ?'), false)
+  // NOTYA-AYSE-GERI-03: a spoken number written in digits is the doctor's answer, not junk.
+  for (const sayi of ['14:30', '14.30', '15', '12,4', ' 9:00 ']) assert.equal(fishAsrDilUyumluMu(sayi), true, sayi)
+  for (const cop of ['.', ':', '- -', '?!']) assert.equal(fishAsrDilUyumluMu(cop), false, cop)
   assert.equal(fishAsrDilUyumluMu('paracetamol 15 mg/kg'), true)
   assert.equal(fishAsrDilUyumluMu('José\'nin dosyası'), true)
   assert.equal(fishAsrDilUyumluMu('Pekin bukýn, hřib, mesaž, masáž, má.'), false)

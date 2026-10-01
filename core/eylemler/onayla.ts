@@ -90,6 +90,9 @@ export async function eylemOnayla(g: OnayGirdisi): Promise<OnaySonucu> {
   // Merge the doctor's edits over the proposal, honouring only known field keys.
   const birlesik: Record<string, unknown> = { ...(oneri.veri || {}) }
   for (const a of eylem.alanlar) {
+    // NOTYA-AYSE-GERI-03: a server-resolved field (a row id) is never taken from the client — the value the
+    // server stored when it prepared the card stands.
+    if (a.sunucu) continue
     const d = g.duzeltmeler?.[a.anahtar]
     if (d !== undefined) birlesik[a.anahtar] = d
   }
