@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { doktorOturum } from '@/lib/doktor/serverAuth';
 import { encrypt, decrypt } from '@/lib/security/encryption';
 import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra';
+import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 
 export const dynamic = 'force-dynamic';
 
@@ -124,5 +125,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Hasta oluşturulamadı: ' + error.message }, { status: 500 });
   }
 
+  await hastaAramaIndeksiniGuncelle(supabase, user.id, data.id, adSoyad);
   return NextResponse.json({ patient: data });
 }

@@ -16,6 +16,7 @@ export const maxDuration = 30
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { encryptPII } from '@/lib/security/encryption'
+import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -95,6 +96,7 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }).eq('id', mevcut.patient_id)
     await sb.from('fhir_audit').insert({ kurum_id: kurum.id, islem: 'inbound', sonuc: 'OK guncelleme', detay: `MRN ${mrn.slice(0, 12)}` })
+    await hastaAramaIndeksiniGuncelle(sb, uye.doctor_id, mevcut.patient_id, adSoyad)
   } else {
     const { data: yeni, error } = await sb.from('patients').insert({
       doctor_id: uye.doctor_id,
@@ -108,6 +110,7 @@ export async function POST(req: NextRequest) {
       return ack('AE', ctrlId, 'Hasta yaratılamadı')
     }
     await sb.from('kurum_hasta_eslesme').insert({ kurum_id: kurum.id, mrn, patient_id: yeni.id })
+    await hastaAramaIndeksiniGuncelle(sb, uye.doctor_id, yeni.id, adSoyad)
     await sb.from('fhir_audit').insert({ kurum_id: kurum.id, islem: 'inbound', sonuc: 'OK yeni', detay: `MRN ${mrn.slice(0, 12)} → dr ${doktorKodu}` })
   }
 

@@ -20,6 +20,7 @@ import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
+import { mesajAdaylariniBul } from '@/lib/doktor/hastaAramaIndeksi'
 
 /**
  * NOTYA-SAYIM-ANDA-01 (Kaan, 2026-09-30): a small panel is named — "Kayıtlarda 1 hasta: Kaan Arıoğlu." (≤ 5 names,
@@ -56,7 +57,7 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
   return null
 }
 
-function duzle(s: string): string {
+export function duzle(s: string): string {
   return trAramaNormalize(s).replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim()
 }
 /**
@@ -285,15 +286,21 @@ export async function hastaninSozunuCoz(
     if (c) return c
   }
   if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
-  const { data: hastalar } = await supabase
-    .from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true).limit(500)
-  if (!hastalar || hastalar.length === 0) {
-    // A count question on an empty panel is still answered with a number, not a model guess.
-    return kohortSorusuMu(mesaj) ? { tur: 'yok', sayiMetin: 'Kayıtlarda 0 hasta.' } : { tur: 'yok' }
-  }
   const adMesaji = hitapsiz(mesaj)
   const mAd = ' ' + duzle(adMesaji) + ' '
   const tokenlar = sesliSozTokenlari(duzle(adMesaji))
+  // Eskiden: doktorun TUM aktif hastalari (<=500) cozulup tek tek karsilastirilirdi. Artik mesajin konusma
+  // token'lari, hic kimseyi cozmeden, indekslenmis ad-parca ozetleriyle eslestirilir; yalnizca indeksin
+  // 'olasi aday' dedigi hastalar cozulur. Indeks kullanilamazsa (hata) eski tam-tarama davranisina guvenli
+  // donus yapilir - davranis asla daralmaz, sadece hizlanir.
+  const adaylarIdSeti = await mesajAdaylariniBul(supabase, doctorId, tokenlar)
+  let hastalar: { id: string; name_encrypted: string | null }[] = []
+  if (adaylarIdSeti === null || adaylarIdSeti.size > 0) {
+    let sorgu = supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true)
+    if (adaylarIdSeti) sorgu = sorgu.in('id', Array.from(adaylarIdSeti))
+    const { data } = await sorgu.limit(500)
+    hastalar = data || []
+  }
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
   for (const h of hastalar) {
