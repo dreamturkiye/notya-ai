@@ -121,6 +121,13 @@ export interface EylemTanimi<V = Record<string, unknown>> {
   hastaKosulu?: (hasta: HastaOzeti, brans: SpecialtyKey | null) => boolean
   /** The record also becomes visible in Sağlığım — the card says so before the tap. */
   portalaYansir?: boolean
+  /**
+   * NOTYA-RANDEVU-AYSE-01 — never offered to the model as a tool. The action needs a row id that only
+   * the server may resolve (lib/asistan/randevuAkisi.ts); it also stays out of the ARAC_TAVANI budget.
+   */
+  modeleKapali?: boolean
+  /** Spoken after a voice "Evet" commits the card; default "Kaydedildi Hocam — <etiket>." */
+  basariSozu?: string
   /** Derived from `alanlar`; re-validated server-side on every commit. */
   readonly sema: ZodType<V>
   /** THE write. Must call the same shared function the UI form calls — never a second write path. */

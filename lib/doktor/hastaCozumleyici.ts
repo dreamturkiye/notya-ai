@@ -18,7 +18,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
-import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
+import { tekHastaSorusuMu, type SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
 import { mesajAdaylariniBul } from '@/lib/doktor/hastaAramaIndeksi'
 
@@ -41,7 +41,8 @@ export type HastaCozumu =
   /** `cevap`: NOTYA-AYSE-100 S2 — a who-question ("son kaydettiğim hasta kim") answered in the resolver; spoken as is. */
   | { tur: 'tek'; patientId: string; ad: string; sayiMetin?: string; cevap?: string }
   | { tur: 'coklu'; adaylar: CozumAday[]; sayiMetin?: string }
-  | { tur: 'yok'; sayiMetin?: string }
+  /** `niyetBelirsiz`: the search ran only because a chart-field word was in the sentence and found nobody — not a patient question. */
+  | { tur: 'yok'; sayiMetin?: string; niyetBelirsiz?: boolean }
 
 /** Ses + sohbet aynı cümleyi söyler — pratik sıralama / çoklu aday LLM'e gitmez. */
 export function cozumKonus(cozum: HastaCozumu): string | null {
@@ -167,6 +168,18 @@ function guvenliKelimeMi(k: string): boolean {
 /** The doctor asked for names, not just a number. */
 export function listeIstenmisMi(mesaj: string): boolean {
   return /\b(listele|liste|hangileri|hangisi|kimler|kimlerdi|isimleri|adlari|hepsini|say bakalim)\b/.test(duzle(mesaj))
+}
+/**
+ * NOTYA-RANDEVU-AYSE-01: is the message a question ABOUT patients — who / how many / which / "… olan hastalar" /
+ * a structured filter (age, visit window, cohort flag)? A sentence that only happens to carry a chart-field word
+ * ("randevu", "ilaç", "epikriz") is not.
+ */
+export function hastaSorgusuMu(mesaj: string, q: SorguAyik): boolean {
+  if (q.sayim || q.cogul || q.ziyaret || q.kirilim || q.yas || q.cinsiyet || q.kanGrubu || q.olcum || q.minSeans) return true
+  if (q.sayisal.length || q.haric.length || q.veya.length || q.bayrakVe.length) return true
+  if (q.seriGecikme || q.mchat || q.persentilEsik || q.yasKirilim || q.ucDeger || q.portalYok || q.hatirlatmaSay || q.bolumIstegi || q.ziyaretYok) return true
+  if (kohortSorusuMu(mesaj) || listeIstenmisMi(mesaj)) return true
+  return /\b((olan|olmayan|gelen|gelmeyen|kullanan|alan|goren|geciken|yazilan|verilen|yapilan)(lar|ler)?|gecikmis|eksik|bul|bulur|listele|goster|getir|var mi|yok mu|kim|kimin|hangi|kac)\b/.test(duzle(mesaj))
 }
 export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
@@ -390,7 +403,14 @@ async function dosyaIleDaralt(
   // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
   // List/cohort questions ("ateşli hastalarım kimler") keep the old answer, so "Merhaba Ayşe" never picks a patient.
   // NOTYA-SES-DOLGU-01: "kaç yaşında" about a named patient is not a count; only explicit many-patient questions are.
-  if (!ara.length) return ad.tur === 'tek' && !kohortSorusuMu(mesaj) ? ad : { tur: 'yok', sayiMetin: istatistik.cumle }
+  if (!ara.length) {
+    if (ad.tur === 'tek' && !kohortSorusuMu(mesaj)) return ad
+    // NOTYA-RANDEVU-AYSE-01 (Kaan, 2026-10-01): "Son 90 gün 0 hasta. Filtre: …" answers a patient QUESTION only. A
+    // sentence that merely contains a chart-field word ("randevu yapmak istiyorum", "epikriz yazmama yardım et") is
+    // not one — no count sentence; the brain asks what is meant instead.
+    if (aramaTuru === 'liste' && !hastaSorgusuMu(mesaj, aramaSorgusu)) return { tur: 'yok', niyetBelirsiz: true }
+    return { tur: 'yok', sayiMetin: istatistik.cumle }
+  }
 
   const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
   if (ad.tur === 'coklu') {

@@ -57,6 +57,19 @@ export function gunSinirlariUtc(iso: string, tz: string): { bas: string; bit: st
   return { bas: bas.toISOString(), bit: bit.toISOString() }
 }
 
+/**
+ * NOTYA-RANDEVU-AYSE-01: wall time (`iso` day + "HH:MM") in `tz` → the instant (ISO). The offset is re-read at
+ * the first guess, so a slot on a DST-change day lands on the right side of the change.
+ */
+export function yerelAnI(iso: string, saat: string, tz: string): string {
+  const dilim = saatDilimiSec(tz)
+  const [y, m, d] = iso.split('-').map(Number)
+  const [sa, dk] = saat.split(':').map(Number)
+  const yerel = Date.UTC(y, (m || 1) - 1, d || 1, sa || 0, dk || 0, 0)
+  const tahmin = yerel - tzOffsetDakika(new Date(yerel), dilim) * 60000
+  return new Date(yerel - tzOffsetDakika(new Date(tahmin), dilim) * 60000).toISOString()
+}
+
 /** "14:30" in `tz` for an ISO instant. */
 export function isoSaatTz(iso: string, tz: string): string {
   try {

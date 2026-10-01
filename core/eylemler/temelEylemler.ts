@@ -27,6 +27,7 @@ import {
 import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/lib/doktor/gununNotunaEkle'
 import { arsivsizAsilar, arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
+import { randevuGuncellemePlani } from '@/lib/randevu/randevuDurum'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
 import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
@@ -396,6 +397,101 @@ export const KONTROL_RANDEVUSU_OLUSTUR = eylem({
   geriAl: async (ctx, k) => {
     await ctx.supabase.from('randevular').delete().eq('id', k.hedefId).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
   },
+  basariSozu: 'Randevu oluşturuldu Hocam.',
+})
+
+/**
+ * NOTYA-RANDEVU-AYSE-01 — move / cancel an EXISTING appointment. Both go through the calendar UI's own
+ * rules (randevuGuncellemePlani + randevuCakismasiVarMi, the PATCH route's pair), never a second copy.
+ *
+ * `randevu_id` is resolved server-side by lib/asistan/randevuAkisi.ts from this doctor's own rows and is
+ * never offered to the model (`modeleKapali`). HASTA-IZOLASYON-01: the row is read and written with id AND
+ * doktor_id AND patient_id — a foreign id is "Randevu bulunamadı", indistinguishable from a missing one.
+ */
+async function hastaRandevusu(ctx: EylemBaglami, randevuId: unknown) {
+  const { data } = await ctx.supabase
+    .from('randevular')
+    .select('id, baslangic, bitis, durum, iptal_nedeni')
+    .eq('id', String(randevuId || ''))
+    .eq('doktor_id', ctx.doktorId)
+    .eq('patient_id', ctx.hasta.id)
+    .maybeSingle()
+  return (data as { id: string; baslangic: string; bitis: string; durum: string; iptal_nedeni: string | null } | null) ?? null
+}
+
+const RANDEVU_KAYDI_ALANI: AlanTanimi = { anahtar: 'randevu_id', etiket: 'Randevu kaydı', tip: 'metin', zorunlu: true, aciklama: 'randevular.id — resolved by the server from the doctor’s own calendar, never guessed' }
+const MEVCUT_RANDEVU_ALANI: AlanTanimi = { anahtar: 'mevcut', etiket: 'Mevcut randevu', tip: 'metin', aciklama: 'Current slot as shown to the doctor (TRT), display only' }
+
+export const RANDEVU_TASI = eylem({
+  anahtar: 'randevu_tasi',
+  etiket: 'Randevu saatini değiştir',
+  aciklama: 'Hastanın mevcut randevusunu başka bir güne / saate alır. Tarih ve saat Türkiye saatiyle verilir.',
+  alanlar: [
+    RANDEVU_KAYDI_ALANI,
+    MEVCUT_RANDEVU_ALANI,
+    { anahtar: 'tarih', etiket: 'Yeni tarih', tip: 'tarih', zorunlu: true },
+    { anahtar: 'saat', etiket: 'Yeni saat', tip: 'metin', zorunlu: true, aciklama: 'TRT, HH:MM (24h)' },
+  ],
+  zorunlu: ['randevu_id', 'tarih', 'saat'],
+  kademe: 'T2',
+  branslar: 'hepsi',
+  modeleKapali: true,
+  basariSozu: 'Randevu yeni saatine alındı Hocam.',
+  makullukKontrol: (ctx, v) => {
+    if (v.saat && !SAAT.test(String(v.saat))) return 'Saat SS:DD biçiminde olmalı (ör. 14:30).'
+    if (v.tarih && String(v.tarih) < ctx.bugunTRT) return `Randevu tarihi geçmişte (${v.tarih}).`
+    return null
+  },
+  calistir: async (ctx, v) => {
+    const mevcut = await hastaRandevusu(ctx, v.randevu_id)
+    if (!mevcut) throw new Error('Randevu bulunamadı.')
+    if (mevcut.durum === 'iptal') throw new Error('Bu randevu iptal edilmiş; önce takvimden yeniden aktif edin.')
+    const bas = trtAnI(String(v.tarih), String(v.saat))
+    const sureMs = Math.max(5 * 60000, new Date(mevcut.bitis).getTime() - new Date(mevcut.baslangic).getTime())
+    const bit = new Date(new Date(bas).getTime() + sureMs).toISOString()
+    const plan = randevuGuncellemePlani(mevcut, { baslangic: bas, bitis: bit })
+    if (plan.hata) throw new Error(plan.hata)
+    if (plan.cakismaKontrolu) {
+      const c = await randevuCakismasiVarMi(ctx.supabase, ctx.doktorId, plan.cakismaKontrolu.baslangic, plan.cakismaKontrolu.bitis, mevcut.id)
+      if (c.hata) throw new Error(CAKISMA_KONTROL_HATASI)
+      if (c.cakisiyor) throw new Error(CAKISMA_MESAJI)
+    }
+    const { error } = await ctx.supabase.from('randevular').update(plan.alanlar).eq('id', mevcut.id).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
+    if (error) {
+      console.error('[eylem] randevu_tasi yazılamadı', error.message)
+      throw new Error('Randevu güncellenemedi.')
+    }
+    return { hedefTablo: 'randevular', hedefId: mevcut.id, once: { baslangic: mevcut.baslangic, bitis: mevcut.bitis }, sonra: plan.alanlar, ilgiliSekme: { etiket: 'Randevularda gör', yol: '/dashboard/doktor/randevular' } }
+  },
+})
+
+export const RANDEVU_IPTAL = eylem({
+  anahtar: 'randevu_iptal',
+  etiket: 'Randevuyu iptal et',
+  aciklama: 'Hastanın mevcut randevusunu iptal eder. Kayıt silinmez; takvimde iptal olarak kalır ve oradan yeniden aktif edilebilir.',
+  alanlar: [
+    RANDEVU_KAYDI_ALANI,
+    MEVCUT_RANDEVU_ALANI,
+    { anahtar: 'sebep', etiket: 'İptal nedeni', tip: 'metin' },
+  ],
+  zorunlu: ['randevu_id'],
+  kademe: 'T2',
+  branslar: 'hepsi',
+  modeleKapali: true,
+  basariSozu: 'Randevu iptal edildi Hocam.',
+  calistir: async (ctx, v) => {
+    const mevcut = await hastaRandevusu(ctx, v.randevu_id)
+    if (!mevcut) throw new Error('Randevu bulunamadı.')
+    if (mevcut.durum === 'iptal') throw new Error('Bu randevu zaten iptal edilmiş.')
+    const plan = randevuGuncellemePlani(mevcut, { durum: 'iptal', iptalNedeni: v.sebep ? String(v.sebep) : undefined })
+    if (plan.hata) throw new Error(plan.hata)
+    const { error } = await ctx.supabase.from('randevular').update(plan.alanlar).eq('id', mevcut.id).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
+    if (error) {
+      console.error('[eylem] randevu_iptal yazılamadı', error.message)
+      throw new Error('Randevu iptal edilemedi.')
+    }
+    return { hedefTablo: 'randevular', hedefId: mevcut.id, once: { durum: mevcut.durum, iptal_nedeni: mevcut.iptal_nedeni }, sonra: plan.alanlar, ilgiliSekme: { etiket: 'Randevularda gör', yol: '/dashboard/doktor/randevular' } }
+  },
 })
 
 /* ─────────────────────────────── T1 · Dosya notu ─────────────────────────────── */
@@ -658,6 +754,8 @@ export const TEMEL_EYLEMLER: EylemTanimi[] = [
   OLCUM_EKLE,
   BAS_CEVRESI_EKLE,
   KONTROL_RANDEVUSU_OLUSTUR,
+  RANDEVU_TASI,
+  RANDEVU_IPTAL,
   DOSYA_NOTU_EKLE,
   FISILTI_SESSIZE_AL,
   MESAJ_HASTA_ILE_KONUSULDU,

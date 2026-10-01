@@ -73,6 +73,7 @@ import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar,
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
+import { randevuAkisiCalistir, type RandevuAkisDurumu } from "@/lib/asistan/randevuAkisi"
 
 export type Kanal = "yazi" | "ses"
 
@@ -150,6 +151,14 @@ const simdi = () => new Date().toISOString()
 export const DOSYA_YOK_BLOGU = `
 
 [BU TURDA AÇIK HASTA DOSYASI YOK] Bu mesajda adı çözülen bir hasta yok ve sana dosya verilmedi. Bir hasta hakkında soru soruluyorsa dosyadan bilgi VERME, "dosyası açık / önümde / baktım" DEME, aşı / ilaç / lab / vizit uydurma. Mesajda bir kişi adı geçiyorsa o ad kayıtlarda BULUNAMAMIŞTIR: "<ad> adında bir hasta kayıtlarınızda bulamadım Hocam; adını ve soyadını tam söyler misiniz?" de — "dosyasını açın / seçin / açıp sorun" DEME (dosyayı sen açarsın, doktor değil). Ad geçmiyorsa hastanın adını ve soyadını iste. Hasta gerektirmeyen klinik ya da uygulama sorusuna normal cevap ver.`
+
+/**
+ * NOTYA-RANDEVU-AYSE-01: kuyruk bloğu — the sentence carried a chart-field word but is not a patient question
+ * (lib/doktor/hastaCozumleyici.ts `niyetBelirsiz`). Never a count sentence; one short clarifying question if unclear.
+ */
+export const NIYET_BELIRSIZ_BLOGU = `
+
+[BU MESAJ BİR HASTA ARAMASI DEĞİL] Hasta sayısı, "Son … gün … hasta" ya da "Filtre: …" cümlesi KURMA. Mesaj klinik ya da uygulama sorusuysa normal, kısa cevap ver. Ne istendiği net değilse TEK kısa netleştirici soru sor ("Hangi hasta için Hocam?", "Ne yapmamı istersiniz Hocam?") — başka bir şey ekleme.`
 
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const cevapBas = Date.now()
@@ -236,7 +245,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   let turNiyeti: Niyet | null = null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
-  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[]; sesDevamKalan?: string } = {}) => {
+  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[]; sesDevamKalan?: string; randevuAkisi?: RandevuAkisDurumu | null } = {}) => {
     // NOTYA-SES-TUR-02: this turn was cancelled (barge-in / sentence merge) -- never let its answer reach
     // the session record, where a later poll or follow-up turn could surface it as a fresh answer.
     if (g.sinyal?.aborted) return
@@ -250,7 +259,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
         }
       : { role: "assistant", content: asistanSozu }
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
-    const { sesDevam: eskiDevam, currentPatientId, patientName, ...geriBaglam } = baglam
+    // NOTYA-RANDEVU-AYSE-01: a pending appointment question lives only as long as the dialogue writes it back.
+    const { sesDevam: eskiDevam, randevuAkisi: eskiRandevuAkisi, currentPatientId, patientName, ...geriBaglam } = baglam
     const oncekiBaglam = personaDegisti ? geriBaglam : { ...geriBaglam, ...(currentPatientId ? { currentPatientId, patientName } : {}) }
     const sesDevam: SesDevam | null = ses && ek.sesDevamKalan ? { anahtar: asistanZamani, kalan: ek.sesDevamKalan, olusturma: simdi() } : null
     // NOTYA-SAYFA-HASTA-01: the doctor opened another patient's page while this turn ran (a voice turn can take
@@ -280,6 +290,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       ...(personaDegisti && !ek.hasta && !sayfaOdagi ? { currentPatientId: null, patientName: null } : {}),
       ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad, odakKaynak: "soz", odakZaman: asistanZamani } : {}),
       ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
+      ...(ek.randevuAkisi ? { randevuAkisi: ek.randevuAkisi } : {}),
       ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
       ...(sayfaOdagi || {}),
       konusma,
@@ -314,6 +325,50 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     soyle(KAPSAM_RED)
     await oturumuYaz(KAPSAM_RED, {})
     return sade(KAPSAM_RED, KAPSAM_RED, baglam.patientName ? String(baglam.patientName) : null)
+  }
+  // NOTYA-RANDEVU-AYSE-01 (Kaan, 2026-10-01): an appointment request (book / move / cancel) is a short deterministic
+  // dialogue, not a patient search and not a model turn — "Bir randevu yapmak istiyorum bir hasta için" used to be
+  // answered with the count sentence "Son 90 gün 0 hasta. Filtre: … Randevu". It prepares a taslak card and reads it
+  // back; nothing is written here (the commit is the spoken Evet in the voice route or the tap on the card).
+  try {
+    const randevu = await randevuAkisiCalistir({
+      supabase, doktorId, mesaj: onarim.mesaj, kanal: g.kanal, saatDilimi, brans: bransAnahtari(hekimBransi),
+      onceki: personaDegisti ? null : ((baglam.randevuAkisi as RandevuAkisDurumu | undefined) ?? null),
+      aktifHasta: contextPatientId && baglam.patientName ? { id: String(contextPatientId), ad: String(baglam.patientName) } : null,
+    })
+    if (randevu) {
+      message = onarim.mesaj
+      turNiyeti = "takvim"
+      const aktifHasta = baglam.patientName ? String(baglam.patientName) : null
+      const kartlar = randevu.kart ? [randevu.kart] : []
+      console.info("[asistan/chat] randevu akışı", { kanal: g.kanal, tur: randevu.durum?.tur ?? null, bekleyen: randevu.durum?.bekleyen ?? null, kart: kartlar.length })
+      soyle(randevu.konusma)
+      // A card this dialogue prepared and then left behind (the corrected slot was full, the doctor withdrew) is no
+      // longer pending: a later spoken "Tamam" must not commit the superseded slot.
+      const eskiAkis = baglam.randevuAkisi as RandevuAkisDurumu | undefined
+      const eskiKart = eskiAkis?.bekleyen === "onay" ? eskiAkis.oneriId : null
+      const birakildi = Boolean(eskiKart) && !randevu.kart && randevu.durum?.oneriId !== eskiKart
+      await oturumuYaz(randevu.ekran, {
+        randevuAkisi: randevu.durum,
+        ...(randevu.kart ? { kartlar: [randevu.kart.id], kartHastaId: randevu.kartHasta?.id ?? null, bekleyen: [randevu.kart.id] } : {}),
+        ...(birakildi ? { bekleyen: (Array.isArray(baglam.bekleyenOneriler) ? baglam.bekleyenOneriler.map(String) : []).filter((id) => id !== eskiKart) } : {}),
+      })
+      const yalin = sade(randevu.ekran, randevu.konusma, aktifHasta, {
+        eylemOnerileri: kartlar,
+        eylemHastasi: randevu.kartHasta ? { ad: randevu.kartHasta.ad, dogumTarihi: randevu.kartHasta.dogumTarihi } : null,
+      })
+      if (!yalin.ok) return yalin
+      return {
+        ok: true,
+        cevap: {
+          ...yalin.cevap, kartlar,
+          kartHastaId: randevu.kartHasta?.id ?? null,
+          oncekiBekleyen: Array.isArray(baglam.bekleyenOneriler) ? baglam.bekleyenOneriler.map(String) : [],
+        },
+      }
+    }
+  } catch (e) {
+    console.error("[asistan/chat] randevu akışı", e instanceof Error ? e.message : String(e))
   }
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
@@ -566,7 +621,8 @@ ${ilacBaglamMetni(drugs[0])}`
   const dosyaYokBlogu = !dosyaEk && !currentPatient ? DOSYA_YOK_BLOGU : ""
   // NOTYA-AYSE-100-LUNA (c): the model clock — doctor-timezone date/time, per turn, never cached.
   // NOTYA-KONUSMA-BAGLAMI-01: the previous turn's topic for the residual model-path questions (≈ 200 tokens, per turn).
-  const kuyruk = zamanBlogu(saatDilimi) + baglamBlogu(konusmaOnceki) + gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
+  const niyetBelirsizBlogu = cozum?.tur === "yok" && cozum.niyetBelirsiz ? NIYET_BELIRSIZ_BLOGU : ""
+  const kuyruk = zamanBlogu(saatDilimi) + baglamBlogu(konusmaOnceki) + gunHam + dosyaTur + dosyaYokBlogu + niyetBelirsizBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "")
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.

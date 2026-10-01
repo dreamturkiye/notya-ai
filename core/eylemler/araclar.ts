@@ -42,7 +42,7 @@ export function eylemUygunMu(e: EylemTanimi, s: AracSuzgeci): boolean {
 export function uygunEylemler(s: AracSuzgeci): EylemTanimi[] {
   if (eylemKapali()) return []
   // Base actions first, then specialty actions: if the cap bites, the shared spine survives it.
-  const liste = eylemler().filter((e) => eylemUygunMu(e, s))
+  const liste = eylemler().filter((e) => !e.modeleKapali && eylemUygunMu(e, s))
   const temel = liste.filter((e) => e.branslar === 'hepsi')
   const brans = liste.filter((e) => e.branslar !== 'hepsi')
   return [...temel, ...brans].slice(0, ARAC_TAVANI)

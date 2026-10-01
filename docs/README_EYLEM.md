@@ -68,7 +68,11 @@ onay kartı HER ZAMAN, sessiz yazma ASLA. Denetim okuması: **hazırlayan = Ayş
 | `dosya_notu_ekle` | bugünkü notun değerlendirmesi | geri alma yok (metin sonradan düzenlenmiş olabilir) |
 
 **T2 — önce → sonra farkı + dokunuş** (`ilac_sonlandir`, `ilac_doz_degistir`, `alerji_kaldir`,
-`hasta_bilgisi_duzelt`). Geri alma yok: fark zaten dokunuştan önce gösterildi; hekim ilgili ekrandan düzeltir.
+`hasta_bilgisi_duzelt`, `randevu_tasi`, `randevu_iptal`). Geri alma yok: fark zaten dokunuştan önce gösterildi; hekim ilgili ekrandan düzeltir.
+
+`randevu_tasi` / `randevu_iptal` (NOTYA-RANDEVU-AYSE-01) modele araç olarak **sunulmaz** (`modeleKapali`): randevu
+kimliğini yalnız sunucu çözer (`lib/asistan/randevuAkisi.ts` — modelsiz randevu diyaloğu). İkisi de takvim ekranının
+kendi kuralından geçer (`randevuGuncellemePlani` + `randevuCakismasiVarMi`); iptal silme değildir (`durum = iptal`).
 
 **Branşa özel (P3):** `jine_gorevi_ekle` (kadın hastalıkları ve doğum), `derm_gorevi_ekle`
 (dermatoloji), `dahiliye_gorevi_ekle` (dahiliye). Pediatri kendi eylemini gerektirmiyor: aşı ve

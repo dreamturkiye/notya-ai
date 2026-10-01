@@ -27,6 +27,8 @@ import { fishWsHavuzu } from '@/lib/asistan/fishWsHavuz'
 import type { FishWsOturumu } from '@/lib/asistan/fishWsSunucu'
 import { fishIsinma } from '@/lib/asistan/fishIsinma'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
+import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
+import { takvimSorusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
@@ -243,6 +245,17 @@ export async function POST(req: NextRequest) {
           return
         }
         gonder({ t: 'stt', m: mesaj })
+        // NOTYA-RANDEVU-AYSE-01: a spoken Evet / Hayır on a pending card is not a model turn — it goes through the
+        // tap's spine (sesliOnay → eylemOnayla), exactly as on the ElevenLabs endpoint (lib/asistan/sesLlm.ts). The
+        // Fish route never had this step, so a card read back by voice could not be confirmed by voice.
+        const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, user.id, oturumId, mesaj)
+        if (karar) {
+          sozParcasi(karar.soz)
+          gonder({ t: 'soz_bit' })
+          await bitirWs()
+          gonder({ t: 'bit' })
+          return
+        }
         let soylendi = false
         const sonuc = await ayseCevapla({
           supabase,
@@ -259,6 +272,8 @@ export async function POST(req: NextRequest) {
         })
         if (!sonuc.ok) gonder({ t: 'hata', m: sonuc.soz })
         else if (!soylendi && sonuc.cevap.konusma) sozParcasi(sonuc.cevap.konusma)
+        // A re-prepared card for the same patient + action replaces the old one: one card on screen, one for "Evet".
+        if (sonuc.ok && sonuc.cevap.kartlar.length) await eskiSesTaslaklariniCek(supabase, user.id, sonuc.cevap.oncekiBekleyen || [], sonuc.cevap.kartlar, sonuc.cevap.kartHastaId ?? null)
         gonder({ t: 'soz_bit' })
         await bitirWs()
         gonder({ t: 'bit' })

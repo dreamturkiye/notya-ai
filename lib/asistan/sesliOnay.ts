@@ -64,7 +64,8 @@ export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: stri
       { role: 'user', content: mesaj, kanal: 'ses', zaman },
       { role: 'assistant', content: karar.soz, kanal: 'ses', zaman },
     ].slice(-SOHBET_SAKLANAN_MESAJ),
-    active_context: { ...baglam, bekleyenOneriler: karar.kalan },
+    // NOTYA-RANDEVU-AYSE-01: once the card is decided the appointment dialogue that prepared it is over.
+    active_context: { ...baglam, bekleyenOneriler: karar.kalan, ...(karar.kalan.length ? {} : { randevuAkisi: null }) },
   }).eq('id', oturumId).eq('doctor_id', doktorId)
   return { soz: karar.soz }
 }
@@ -100,7 +101,7 @@ async function uygula(
     uyariGoruldu: false,
   })
   if (!s.ok) return { soz: s.hata, kalan: [t.id] }
-  return { soz: `Kaydedildi Hocam — ${s.etiket}.`, kalan: [] }
+  return { soz: eylem.basariSozu || `Kaydedildi Hocam — ${s.etiket}.`, kalan: [] }
 }
 
 /**
