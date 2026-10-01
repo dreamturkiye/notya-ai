@@ -26,7 +26,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
-import { kapsamKarari } from "@/lib/asistan/kapsamKilidi"
+import { kapsamKarariHastayla } from "@/lib/asistan/kapsamKilidi"
 import { KAPSAM_RED, KAPSAM_SORU, kapsamRedMi } from "@/lib/asistan/kapsamRed"
 import { asistanOnbellekBloklari } from "@/lib/asistan/onbellekBloklari"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
@@ -313,7 +313,9 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   // model. The clarifying question is only for a fresh turn: an in-scope follow-up ("peki yarın?") keeps its context.
   const oncekiAsistan = [...messages].reverse().find((m) => m.role === 'assistant')
   const oncekiRed = kapsamRedMi(oncekiAsistan?.content)
-  const kapsam = kapsamKarari(hamMesaj, { oncekiRed })
+  // NOTYA-KAPSAM-06: a message that names one of this doctor's patients is never refused (name-only, doctor-scoped
+  // lookup, run only when the model-free verdict is not in-scope).
+  const kapsam = await kapsamKarariHastayla(supabase, doktorId, hamMesaj, { oncekiRed })
   if (kapsam === 'disi' || (kapsam === 'belirsiz' && !takip)) {
     const sabit = kapsam === 'disi' ? KAPSAM_RED : KAPSAM_SORU
     console.info('[asistan/chat] kapsam', { karar: kapsam, kanal: g.kanal, oncekiRed })
