@@ -71,7 +71,7 @@ test('Fish isteği kilitli: haber sesi, hız 1, s2.1-pro, duygu yok', () => {
   assert.equal(istek!.model, FISH_MODEL)
   assert.equal(FISH_MODEL, 's2.1-pro')
   const govde = istek!.govde
-  assert.equal(govde.reference_id, '27d0d61d7dc8479da8dfd991ae3ad66b')
+  assert.equal(govde.reference_id, 'c6ebcbee252d4c769696dc849d664c61')
   assert.equal(govde.language, 'tr')
   assert.equal(govde.normalize, false)
   assert.equal((govde.prosody as { speed: number }).speed, FISH_HIZ)
