@@ -2873,3 +2873,7 @@ Kod: `lib/asistan/kapsamKilidi.ts` (modelsiz ön kapı), `lib/asistan/kapsamRed.
 | NOTYA-KAPSAM-02 | AÇIK | Ön kapı kelime listesidir: listede olmayan bir kapsam-dışı konu (ör. plaj, ünlü kişi) kapıdan geçer ve yalnız model kuralına (istem) kalır. Canlı model denemesi 5/5 ret, 3/3 tıbbi cevap verdi ama istem kuralı %100 garanti değil. Canlıda sızan konu çıkarsa listeye eklenir. | Claude (Kaan sızıntı bildirirse) |
 | NOTYA-KAPSAM-03 | AÇIK | Avukat ve müşavir (mali) asistanları ayrı rotalardan çalışır (`avukat-chat`, `mali-signed-url`), `ayseCevapla` değildir; bu kapıya bağlı DEĞİL. Beta kapsamı doktor + Klinik olduğu için yapılmadı; kendi alanlarına göre ayrı kural gerekir. | Kaan: bu personalar açılırken karar |
 | NOTYA-KAPSAM-04 | AÇIK | Aşırı temkin: kapsam-içi sinyal (hasta, ilaç, randevu ...) varsa kapı asla reddetmez; bu yüzden hasta kelimesiyle karışık bir Tesla sorusu geçer ve modele kalır. Bilinçli tercih (yanlış ret, sızan cevaptan kötüdür). | — |
+
+## 2026-10-01 - Fish sesi geri alındı
+- Yeni Fish sesi (c6ebcbee...) Kaan tarafından 2026-10-01 tarihinde çok kötü bulunarak reddedildi; eski ses (27d0d61d...) geri yüklendi (PR #514 geri alındı).
+- Gelecekte herhangi bir ses değişikliğinden önce Dr. Gökhan dinlemeli; özellikle Ayşe ve Ozay Bartalone, yeni ses tarafından bozuk okundu. Bekleyen taraf: Dr. Gökhan (dinleme onayı).
