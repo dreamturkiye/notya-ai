@@ -246,6 +246,41 @@ async function adaylariZenginlestir(supabase: SupabaseClient, doctorId: string, 
   return zengin.sort((a, b) => a.id.localeCompare(b.id))
 }
 
+/** This doctor's active patients whose indexed name parts may match the message tokens (index miss → full scan). */
+async function adAdaylariniYukle(supabase: SupabaseClient, doctorId: string, tokenlar: Set<string>): Promise<{ id: string; name_encrypted: string | null }[]> {
+  const adaylarIdSeti = await mesajAdaylariniBul(supabase, doctorId, tokenlar)
+  if (adaylarIdSeti !== null && adaylarIdSeti.size === 0) return []
+  let sorgu = supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true)
+  if (adaylarIdSeti) sorgu = sorgu.in('id', Array.from(adaylarIdSeti))
+  const { data } = await sorgu.limit(500)
+  return data || []
+}
+
+/** Turkish case ending glued onto a name ("Yılmazın", "Güneşe") — not a derivation ("güneşli" is weather, not Güneş). */
+const AD_HAL_EKI = '(?:n?[iu]n|[ny]?[iuae]|[dt][ae]n?|y?l[ae])?'
+/**
+ * NOTYA-KAPSAM-06: does the message name one of THIS doctor's patients? Name-only — no clinical search, no count —
+ * and doctor-scoped like the resolver, so a name that is not this doctor's patient gives null whether or not another
+ * doctor has that patient. 'tam' = a full name (two or more words) as consecutive words; 'tek' = one name part.
+ */
+export async function mesajdakiHastaAdi(supabase: SupabaseClient, doctorId: string, mesaj: string): Promise<'tam' | 'tek' | null> {
+  if (adTaramasiGereksizMi(mesaj)) return null
+  const sozcukler = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x && !DOLGU.has(x))
+  if (sozcukler.length === 0) return null
+  const metin = ' ' + sozcukler.join(' ') + ' '
+  const hastalar = await adAdaylariniYukle(supabase, doctorId, sesliSozTokenlari(sozcukler.join(' ')))
+  let tek = false
+  for (const h of hastalar) {
+    const adDuz = duzle(hastaAdiCoz(h.name_encrypted))
+    if (!adDuz) continue
+    if (adDuz.includes(' ') && new RegExp(' ' + adDuz + AD_HAL_EKI + ' ').test(metin)) return 'tam'
+    if (tek) continue
+    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && !PERSONA_ADLARI_DUZ.has(p))
+    tek = parcalar.some((p) => new RegExp(' ' + p + AD_HAL_EKI + ' ').test(metin))
+  }
+  return tek ? 'tek' : null
+}
+
 export async function hastaninSozunuCoz(
   supabase: SupabaseClient,
   doctorId: string,
@@ -293,14 +328,7 @@ export async function hastaninSozunuCoz(
   // token'lari, hic kimseyi cozmeden, indekslenmis ad-parca ozetleriyle eslestirilir; yalnizca indeksin
   // 'olasi aday' dedigi hastalar cozulur. Indeks kullanilamazsa (hata) eski tam-tarama davranisina guvenli
   // donus yapilir - davranis asla daralmaz, sadece hizlanir.
-  const adaylarIdSeti = await mesajAdaylariniBul(supabase, doctorId, tokenlar)
-  let hastalar: { id: string; name_encrypted: string | null }[] = []
-  if (adaylarIdSeti === null || adaylarIdSeti.size > 0) {
-    let sorgu = supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true)
-    if (adaylarIdSeti) sorgu = sorgu.in('id', Array.from(adaylarIdSeti))
-    const { data } = await sorgu.limit(500)
-    hastalar = data || []
-  }
+  const hastalar = await adAdaylariniYukle(supabase, doctorId, tokenlar)
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
   for (const h of hastalar) {

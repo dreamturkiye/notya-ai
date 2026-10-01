@@ -26,8 +26,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
-import { kapsamDisiMi } from "@/lib/asistan/kapsamKilidi"
-import { KAPSAM_RED, kapsamRedMi } from "@/lib/asistan/kapsamRed"
+import { kapsamKarariHastayla } from "@/lib/asistan/kapsamKilidi"
+import { KAPSAM_RED, KAPSAM_SORU, kapsamRedMi } from "@/lib/asistan/kapsamRed"
 import { asistanOnbellekBloklari } from "@/lib/asistan/onbellekBloklari"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
@@ -307,13 +307,21 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   // sports / finance / recipe / code ...) with no in-scope signal gets ONE fixed refusal: no patient lookup, no model,
   // no learning, no card, and the same string on screen and in voice. A same-topic follow-up right after a refusal
   // (peki hangisi daha iyi?) is refused too. Rules and word lists: lib/asistan/kapsamKilidi.ts.
+  // NOTYA-KAPSAM-05 (2026-10-01): "Bugün İstanbul'da hava yağışlı mı?" answered "Bugün 0 hasta. Filtre: bugün · Şehir."
+  // The gate now runs on follow-up turns too (a clear off-topic pattern is never a follow-up of a patient question),
+  // and an unsure turn (off-topic hint, no in-scope signal) gets one fixed clarifying question — no patient tool, no
+  // model. The clarifying question is only for a fresh turn: an in-scope follow-up ("peki yarın?") keeps its context.
   const oncekiAsistan = [...messages].reverse().find((m) => m.role === 'assistant')
   const oncekiRed = kapsamRedMi(oncekiAsistan?.content)
-  if ((!takip || oncekiRed) && kapsamDisiMi(hamMesaj, { oncekiRed })) {
-    console.info('[asistan/chat] kapsam disi', { kanal: g.kanal, oncekiRed })
-    soyle(KAPSAM_RED)
-    await oturumuYaz(KAPSAM_RED, {})
-    return sade(KAPSAM_RED, KAPSAM_RED, baglam.patientName ? String(baglam.patientName) : null)
+  // NOTYA-KAPSAM-06: a message that names one of this doctor's patients is never refused (name-only, doctor-scoped
+  // lookup, run only when the model-free verdict is not in-scope).
+  const kapsam = await kapsamKarariHastayla(supabase, doktorId, hamMesaj, { oncekiRed })
+  if (kapsam === 'disi' || (kapsam === 'belirsiz' && !takip)) {
+    const sabit = kapsam === 'disi' ? KAPSAM_RED : KAPSAM_SORU
+    console.info('[asistan/chat] kapsam', { karar: kapsam, kanal: g.kanal, oncekiRed })
+    soyle(sabit)
+    await oturumuYaz(sabit, {})
+    return sade(sabit, sabit, baglam.patientName ? String(baglam.patientName) : null)
   }
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.

@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const eylem = eylemBul(eylemAnahtar)
     if (!eylem) return sesYanit('Bu tür bir kaydı sesle hazırlayamıyorum. Ekrandan ilgili sekmeyi açın.')
 
-    const cozum = await hastaninSozunuCoz(supabase, user.id, hastaAdi)
+    const cozum = await hastaninSozunuCoz(supabase, user.id, hastaAdi, { tz: istekSaatDilimi() })
     if (cozum.tur === 'coklu') {
       const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad}`).join(', ')
       return sesYanit(`"${hastaAdi}" için birden fazla kayıt var: ${liste}. Hangisini istiyorsunuz?`)
