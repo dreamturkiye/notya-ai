@@ -62,11 +62,37 @@ export function dogumdaTarihDoldur(
   if (veri.uygulama_tarihi != null && String(veri.uygulama_tarihi).trim() !== '') return veri
   const alinti = String(kaynaklar.uygulama_tarihi?.alinti || kaynaklar.asi_adi?.alinti || '')
   const metin = `${alinti} ${veri.notlar || ''} ${veri.asi_adi || ''}`
-  if (!/do[ğg]umda|do[ğg]um\s*(an[ıi]|nda)|yenido[ğg]an|natal/i.test(metin)) return veri
+  // NOTYA-AYSE-GERI-04: only an explicit "at birth". "yenidoğan" is a period of four weeks and "natal" also sits
+  // inside "prenatal / postnatal" — neither is the birth DATE, and filling it was a guess stored as a fact.
+  if (!/do[ğg]umda\b|do[ğg]um\s+an[ıi]nda|do[ğg]ar\s+do[ğg]maz|do[ğg]umhanede/i.test(metin)) return veri
+  // The same text names another day ("doğumda Hepatit B yapılmış, ikinci doz bugün yapıldı"): the dose being
+  // recorded is not provably the birth dose, so the date stays empty and the doctor fills it.
+  if (BASKA_GUN.test(metin)) return veri
   return {
     ...veri,
     uygulama_tarihi: dogumTarihi,
   }
+}
+
+/** A day other than birth named in the same text: a relative day, a dated visit, an age ("2. ayda", "6 aylıkken"). */
+const BASKA_GUN = /\b(bug[üu]n|d[üu]n|yar[ıi]n|az\s+[öo]nce|demin|[şs]imdi|ge[çc]en\s+(hafta|ay)|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d+\s*\.?\s*(ay|hafta|g[üu]n)(da|de|l[ıi]k\w*)?)\b/i
+
+const TR_GUN = new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })
+
+/**
+ * NOTYA-AYSE-GERI-04 — a date the way Ayşe says it before asking for "Evet": "2026-10-01" → "1 Ekim 2026 Perşembe",
+ * with "bugün" / "dün" / "yarın" in front when it is one of those. The doctor hears the day the card will carry —
+ * a wrong date is caught by ear, before the confirmation, not found in the chart afterwards.
+ */
+export function tarihOkunusu(iso: unknown, bugun?: string | null): string {
+  const s = String(iso ?? '')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const d = new Date(`${s}T12:00:00Z`)
+  if (Number.isNaN(d.getTime())) return s
+  const etiket = TR_GUN.format(d)
+  if (!bugun || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return etiket
+  const fark = Math.round((d.getTime() - new Date(`${bugun}T12:00:00Z`).getTime()) / 86400000)
+  return fark === 0 ? `bugün, ${etiket}` : fark === -1 ? `dün, ${etiket}` : fark === 1 ? `yarın, ${etiket}` : etiket
 }
 
 /** Short Turkish summary Ayşe speaks before “Onaylıyor musunuz?” — never claims kaydedildi. */
@@ -77,13 +103,17 @@ export function sesOzetMetni(g: {
   alanlar: readonly AlanTanimi[]
   eksik: readonly string[]
   ek?: string | null
+  /** Today in the doctor's timezone (yyyy-mm-dd) — lets a date be read as "bugün, 1 Ekim 2026 Perşembe". */
+  bugun?: string | null
 }): string {
   const parcalar: string[] = [`${g.hastaAd} için ${g.etiket} hazırladım`]
   for (const a of g.alanlar) {
     const v = g.veri[a.anahtar]
     if (v == null || String(v).trim() === '') continue
+    if (a.gizli) continue
     if (a.tip === 'uzunMetin' && String(v).length > 80) continue
-    parcalar.push(`${a.etiket}: ${v}`)
+    // NOTYA-AYSE-GERI-04: the date is read aloud in words, before "Onaylıyor musunuz?".
+    parcalar.push(`${a.etiket}: ${a.tip === 'tarih' ? tarihOkunusu(v, g.bugun) : v}`)
   }
   const ek = g.ek ? ` ${g.ek.replace(/\s+/g, ' ').trim()}` : ''
   if (g.eksik.length) {

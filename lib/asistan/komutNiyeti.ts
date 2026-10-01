@@ -64,6 +64,8 @@ const SORU_EKI = new Set(['mi', 'mu', 'miydi', 'muydu', 'miymis', 'muymus'])
 /** "sesi kes", "sözü kes", "kısa kes": the object is not a drug. */
 const KES_DISI = new Set(['sesi', 'sesini', 'sozu', 'sozunu', 'konusmayi', 'muzigi', 'kisa', 'lafi', 'hemen', 'artik', 'tamam', 'peki', 'yeter', 'sunu', 'bunu'])
 const DOZ_BICIMI = /\b\d+(?:[.,]\d+)?\s?(?:mg|mcg|ml|gr|g|iu|unite|damla|tablet|olcek|puf)\b|\b\d\s?x\s?\d\b/
+/** National-schedule vaccine names as doctors say them (normalized ASCII). */
+const ASI_ADI = / (kkk|hepatit a|hepatit b|bcg|dabt\w*|ipa|hib|kpa|opa|sucicegi|su cicegi|meningokok\w*|menengokok\w*|rotavirus|rota|hpv|karma) /
 /** A text for somebody ("WhatsApp mesajı yaz", "rapor yaz", "mektup hazırla") is a draft, never a chart record. */
 const METIN_ISTEGI = / (mesaj\w*|whatsapp|eposta|e posta|mail\w*|sms|mektup\w*|rapor\w*|yazi\w*|metin\w*|epikriz\w*|ozet\w*) /
 
@@ -168,7 +170,8 @@ export function komutNiyetiBul(mesaj: string | null | undefined, secenek: { saat
   if (/ kronik\w* /.test(n) && yaz) adaylar.push('kronik_hastalik_ekle')
   if (/ bas cevre\w* /.test(n) && yaz) adaylar.push('bas_cevresi_ekle')
   else if (/ (kilo\w*|agirlig\w*|boy|boyu\w*|ates\w*|nabiz\w*|nabz\w*|tansiyon\w*|spo2|saturasyon\w*|olcum\w*) /.test(n) && yaz) adaylar.push('olcum_ekle')
-  if (/ asi\w* /.test(n) && yaz && !adaylar.includes('alerji_ekle')) adaylar.push('asi_kaydi_ekle')
+  // A vaccine named without the word "aşı" ("Hepatit B dün yapıldı, kaydet") is still a vaccine record.
+  if ((/ asi\w* /.test(n) || ASI_ADI.test(n)) && yaz && !adaylar.includes('alerji_ekle')) adaylar.push('asi_kaydi_ekle')
   if (/ doz\w* /.test(n) && var_(DEGISTIR)) adaylar.push('ilac_doz_degistir')
   else if ((/ (ilac\w*|tedavi\w*) /.test(n) || DOZ_BICIMI.test(n)) && (ekle || var_(BASLA)) && !adaylar.length) adaylar.push('ilac_ekle')
   // "Ventolini kes", "ilacı sonlandır": a stop verb with an object that is not the conversation itself.

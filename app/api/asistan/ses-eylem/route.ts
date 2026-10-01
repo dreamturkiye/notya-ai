@@ -17,7 +17,8 @@ import { oneriHazirla, kaynaklariCoz } from '@/core/eylemler/oneri'
 import { eylemOnayla, eylemVazgec } from '@/core/eylemler/onayla'
 import { eylemBul } from '@/core/eylemler/kayit'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
-import { bugunTRT } from '@/core/eylemler/types'
+import { eylemZamani } from '@/core/eylemler/types'
+import { soylenenTarih } from '@/lib/randevu/randevuSozu'
 import {
   dogumdaTarihDoldur,
   sesCiddiUyariEngeli,
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
   const adim = String(body.adim || '').trim()
   const brans = await hekimBransi(supabase, user.id)
+  const saatDilimi = istekSaatDilimi()
 
   if (adim === 'hazirla') {
     const eylemAnahtar = String(body.eylem || body.eylemAnahtar || '').trim()
@@ -88,11 +90,14 @@ export async function POST(req: NextRequest) {
     if (!hasta) return sesYanit('Hasta bulunamadı.', {}, 404)
 
     // Spoken dates: "bugün" and dd.mm.yyyy become YYYY-MM-DD (the card's date inputs need ISO).
+    // NOTYA-AYSE-GERI-04: "bugün / dün / az önce" are resolved in the DOCTOR's timezone (they were TRT, and only
+    // the exact word "bugün" was understood).
     const tarihNormal = (v: unknown): unknown => {
       const s = String(v ?? '').trim().toLocaleLowerCase('tr-TR')
-      if (s === 'bugün' || s === 'bugun') return bugunTRT()
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
       const m = s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
-      return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : v
+      if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+      return soylenenTarih(s, saatDilimi) ?? v
     }
     for (const a of eylem.alanlar) {
       if (a.tip === 'tarih' && alanlarHam[a.anahtar] != null) alanlarHam[a.anahtar] = tarihNormal(alanlarHam[a.anahtar])
@@ -166,7 +171,7 @@ export async function POST(req: NextRequest) {
     }
 
     const o = await oneriHazirla({
-      ctx: { supabase, doktorId: user.id, hasta, brans, oneriId: '', bugunTRT: bugunTRT() },
+      ctx: { supabase, doktorId: user.id, hasta, brans, oneriId: '', ...eylemZamani(saatDilimi) },
       anahtar: eylemAnahtar,
       girdi,
       yuzey: 'ses',
@@ -198,6 +203,7 @@ export async function POST(req: NextRequest) {
       alanlar: o.alanlar,
       eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)),
       ek: [takvimEk, ...(o.uyarilar || [])].filter(Boolean).join(' '),
+      bugun: eylemZamani(saatDilimi).bugun,
     })
     return sesYanit(ozet, {
       ok: true,
@@ -279,6 +285,7 @@ export async function POST(req: NextRequest) {
       brans,
       // Spoken Evet is the deliberate ack for voice; serious warnings already blocked above.
       uyariGoruldu: false,
+      saatDilimi: istekSaatDilimi(),
     })
     if (!s.ok) return sesYanit(s.hata, { uyarilar: s.uyarilar ?? null }, s.durum)
     return sesYanit(`Kaydedildi Hocam — ${s.etiket}.`, {

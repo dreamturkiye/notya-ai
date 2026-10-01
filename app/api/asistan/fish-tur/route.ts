@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
         }
         // NOTYA-AYSE-GERI-02: spoken Evet / Hayır on a pending card — the tap's spine, no model call. A calendar
         // question is never a confirmation (same exclusion as the ElevenLabs route).
-        const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, user.id, oturumId, mesaj)
+        const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, user.id, oturumId, mesaj, saatDilimi)
         if (karar) {
           console.info('[fish-tur] sesli karar')
           sozParcasi(`${karar.soz} `)

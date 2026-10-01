@@ -146,6 +146,11 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
   for (const [k, v] of Object.entries(g.girdi)) if (modelAlanlari.has(k)) ham[k] = v
   for (const [k, v] of Object.entries(g.sunucuDegerleri || {})) {
     if (!modelAlanlari.has(k) || v === undefined || v === null || v === '') continue
+    // The model wrote a different value for a day / time the doctor said: the server's reading wins. Logged by
+    // field name only — it is the signal that the model's clock was wrong (no clinical content in the log).
+    if (ham[k] !== undefined && ham[k] !== null && ham[k] !== '' && String(ham[k]) !== String(v)) {
+      console.warn('[eylem] sunucu değeri modelin değerinin yerine geçti', { eylem: eylem.anahtar, alan: k })
+    }
     ham[k] = v
     kaynaklar[k] = { kaynak: 'doktor_soyledi', alinti: kaynaklar[k]?.alinti ?? null, belgeId: null, notId: null }
   }
@@ -191,7 +196,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
   // Soft: past next-dose is a catch-up reality for neonates — warn on the card, never hard-fail commit.
   if (eylem.anahtar === 'asi_kaydi_ekle') {
     const sonraki = veri.sonraki_doz_tarihi
-    if (sonraki && String(sonraki) < g.ctx.bugunTRT) {
+    if (sonraki && String(sonraki) < g.ctx.bugun) {
       uyarilar.push(`Sonraki doz tarihi (${sonraki}) geçmişte — kontrol edin.`)
     }
   }

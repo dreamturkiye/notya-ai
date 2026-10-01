@@ -22,7 +22,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { eylemBul } from './kayit'
 import { veriNormalize, tarihAlanlariGecerliMi } from './sema'
 import { hastaOzetiGetir } from './hasta'
-import { bugunTRT, type EylemBaglami, type EylemOnerisi, type EylemSonucu } from './types'
+import { eylemZamani, type EylemBaglami, type EylemOnerisi, type EylemSonucu } from './types'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { ciddiUyariVarMi, type IlacUyarisi } from './ilacUyari'
 
@@ -48,6 +48,11 @@ export interface OnayGirdisi {
    * warning never blocks him; it costs one deliberate acknowledgement, which is recorded.
    */
   uyariGoruldu?: boolean
+  /**
+   * NOTYA-AYSE-GERI-04 — the doctor's IANA timezone (request body, then the notya_tz cookie). "Today" for the
+   * commit-time checks and defaults is that timezone's day; missing → Europe/Istanbul.
+   */
+  saatDilimi?: string | null
 }
 
 async function oneriYukle(sb: SupabaseClient, doktorId: string, oneriId: string): Promise<EylemOnerisi | null> {
@@ -114,7 +119,7 @@ export async function eylemOnayla(g: OnayGirdisi): Promise<OnaySonucu> {
     return { ok: false, durum: 400, hata: `Şu alanlar boş: ${etiketler.join(', ')}. Doldurup tekrar kaydedin.` }
   }
 
-  const ctx: EylemBaglami = { supabase: sb, doktorId, hasta, brans: g.brans, oneriId: oneri.id, bugunTRT: bugunTRT() }
+  const ctx: EylemBaglami = { supabase: sb, doktorId, hasta, brans: g.brans, oneriId: oneri.id, ...eylemZamani(g.saatDilimi) }
 
   const makul = eylem.makullukKontrol?.(ctx, veri as never)
   if (makul) return { ok: false, durum: 400, hata: makul }

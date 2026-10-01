@@ -35,6 +35,8 @@ describe('komut niyeti — doğal ifade → araç', () => {
       ['Şunu not düş: kontrolde EEG istenecek', 'dosya_notu_ekle'],
       ['Aşıyı dosyaya gir', 'asi_kaydi_ekle'],
       ['Hepatit B aşısı dün yapıldı, kaydet', 'asi_kaydi_ekle'],
+      ['Hepatit B dün yapıldı, sonraki doz 3 ay sonra, kaydet', 'asi_kaydi_ekle'],
+      ['KKK bugün yapıldı, dosyaya işle', 'asi_kaydi_ekle'],
       ['Doğum tarihini 12.03.2021 olarak düzelt', 'hasta_bilgisi_duzelt'],
       ['Yarın saat 14:00 için kontrol randevusu oluştur', 'kontrol_randevusu_olustur'],
       ['Haftaya salı 10:30 kontrol randevusu ver', 'kontrol_randevusu_olustur'],

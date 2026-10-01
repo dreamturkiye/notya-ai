@@ -85,11 +85,17 @@ function tarihKokle(n: string): string {
     .replace(new RegExp(`(?<= )(${AYLAR})(?:t[ae]|d[ae]|y?[ae]|[iu]n)(?= )`, 'g'), '$1')
 }
 
-/** How many different days the sentence names ("pazartesi randevusunu cumaya al" = 2). */
+/** How many different days the sentence names ("pazartesi randevusunu cumaya al" = 2, "dün yapıldı" = 1). */
 export function gunSozuSayisi(mesaj: string): number {
-  const n = tarihKokle(duz(mesaj))
-  return new Set(n.match(new RegExp(`(?<= )(${GUNLER}|yarin|bugun|obur gun|\\d{1,2} (?:${AYLAR})|\\d{1,2}[./]\\d{1,2}[./]20\\d{2})(?= )`, 'g')) || []).size
+  // The full date is counted from the raw text: duz() turns its dots into spaces.
+  const tam = String(mesaj || '').match(new RegExp(TAM_TARIH.source, 'g')) || []
+  const n = tarihKokle(duz(String(mesaj || '').replace(new RegExp(TAM_TARIH.source, 'g'), ' ')))
+  const soz = n.match(new RegExp(`(?<= )(${GUNLER}|yarin|bugun|dun|obur gun|ertesi gun|\\d{1,2} (?:${AYLAR}))(?= )`, 'g')) || []
+  return new Set([...tam, ...soz]).size
 }
+
+/** Ways of saying "today" for something that has just been done. */
+const BUGUN_SOZU = / (az once|biraz once|az evvel|demin|simdi|su an|su anda|bu sabah|bu aksam|bu ogle\w*|bugunku) /
 
 /**
  * A day named in the message, in the doctor's timezone. Null when the message names none.
@@ -101,7 +107,8 @@ export function soylenenTarih(mesaj: string, tz: string, simdi: Date = new Date(
   if (m && Number(m[1]) >= 1 && Number(m[1]) <= 31 && Number(m[2]) >= 1 && Number(m[2]) <= 12) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
   const dilim = saatDilimiSec(tz)
   const n = tarihKokle(duz(mesaj))
-  const tarih = goreliTarihCoz(n, dilim, simdi)
+  // NOTYA-AYSE-GERI-04: "az önce / demin / şimdi / bu sabah yapıldı" is today — in the doctor's timezone.
+  const tarih = goreliTarihCoz(n, dilim, simdi) ?? (!secenek.ileri && BUGUN_SOZU.test(n) ? bugunTz(dilim, simdi) : null)
   if (secenek.ileri && tarih && tarih < bugunTz(dilim, simdi) && new RegExp(` \\d{1,2} (?:${AYLAR}) `).test(n) && !/ 20\d{2}[ -]/.test(n)) {
     return `${Number(tarih.slice(0, 4)) + 1}${tarih.slice(4)}`
   }

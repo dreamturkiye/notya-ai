@@ -19,7 +19,8 @@ import { toolUseOnerileri, kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
 import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
-import { bugunTRT } from '@/core/eylemler/types'
+import { eylemZamani } from '@/core/eylemler/types'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
 import { notAlanlariCoz, alerjiListe } from '@/lib/doktor/hastaKayitAlanlari'
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
     const oneriler = hasta
       ? await toolUseOnerileri(
           veri,
-          { supabase, doktorId, hasta, brans, oneriId: '', bugunTRT: bugunTRT() },
+          { supabase, doktorId, hasta, brans, oneriId: '', ...eylemZamani(istekSaatDilimi()) },
           'danis',
           { brans, hasta },
           // NOTYA-EYLEM-31: Danış düz metin döndürür, bu yüzden Ayşe'nin uyarı cümlesi karta

@@ -12,7 +12,7 @@
  * capability may be added — core/eylemler/yasakli.ts lists them and the guard test enforces absence.
  */
 import { semaYap } from './sema'
-import { bugunTRT, type AlanTanimi, type EylemBaglami, type EylemTanimi, type HastaOzeti } from './types'
+import type { AlanTanimi, EylemBaglami, EylemTanimi, HastaOzeti } from './types'
 import {
   alerjiCikarilmis,
   alerjiEklenmis,
@@ -93,7 +93,7 @@ export const ASI_KAYDI_EKLE = eylem({
   kademe: 'T1',
   branslar: 'hepsi',
   // Past sonraki_doz is a soft card warning only (oneri.ts) — catch-up Hep B/KKK must still save.
-  makullukKontrol: (ctx, v) => tarihMakul('Uygulama tarihi', v.uygulama_tarihi, ctx.hasta, ctx.bugunTRT),
+  makullukKontrol: (ctx, v) => tarihMakul('Uygulama tarihi', v.uygulama_tarihi, ctx.hasta, ctx.bugun),
   mukerrerKontrol: async (ctx, v) => {
     if (!v.asi_adi) return null
     const hedefSeri = kayitSerisi(String(v.asi_adi))
@@ -198,7 +198,7 @@ export const ILAC_EKLE = eylem({
       etken_madde: v.etken_madde ?? null,
       doz: v.doz ?? null,
       kullanim_sikli: v.kullanim_sikli ?? null,
-      baslangic_tarihi: v.baslangic_tarihi ?? ctx.bugunTRT,
+      baslangic_tarihi: v.baslangic_tarihi ?? ctx.bugun,
       bitis_tarihi: v.bitis_tarihi ?? null,
       aktif: true,
       notlar: v.notlar ?? null,
@@ -334,7 +334,12 @@ export const BAS_CEVRESI_EKLE = eylem({
 /* ─────────────────────────────── T1 · Randevu ─────────────────────────────── */
 
 const SAAT = /^([01]\d|2[0-3]):([0-5]\d)$/
-/** The calendar page and the confirm card show appointment times in Turkish time (Kaan's decision 2026-09-27, #480). */
+/**
+ * Appointment CLOCK TIMES are Turkish time: the calendar page and the confirm card show them so (Kaan's decision
+ * 2026-09-27, #480), and "14:30" on a card means 14:30 at the clinic. NOTYA-AYSE-GERI-04 moved the DAY ("bugün",
+ * "yarın", "is this date in the past") to the doctor's timezone; the wall-clock rule was deliberately not changed
+ * here — for a doctor outside Turkey it is an open product decision (docs/OPEN-COMMITMENTS.md).
+ */
 const RANDEVU_DILIMI = 'Europe/Istanbul'
 
 /** TRT (UTC+3) local wall time → the instant stored in `randevular.baslangic`. */
@@ -365,7 +370,7 @@ export const KONTROL_RANDEVUSU_OLUSTUR = eylem({
   branslar: 'hepsi',
   makullukKontrol: (ctx, v) => {
     if (v.saat && !SAAT.test(String(v.saat))) return 'Saat SS:DD biçiminde olmalı (ör. 14:30).'
-    if (v.tarih && String(v.tarih) < ctx.bugunTRT) return `Randevu tarihi geçmişte (${v.tarih}).`
+    if (v.tarih && String(v.tarih) < ctx.bugun) return `Randevu tarihi geçmişte (${v.tarih}).`
     return null
   },
   mukerrerKontrol: async (ctx, v) => {
@@ -497,7 +502,7 @@ export const RANDEVU_TASI = eylem({
   },
   makullukKontrol: (ctx, v) => {
     if (v.saat && !SAAT.test(String(v.saat))) return 'Saat SS:DD biçiminde olmalı (ör. 14:30).'
-    if (v.tarih && String(v.tarih) < ctx.bugunTRT) return `Randevu tarihi geçmişte (${v.tarih}).`
+    if (v.tarih && String(v.tarih) < ctx.bugun) return `Randevu tarihi geçmişte (${v.tarih}).`
     return null
   },
   mukerrerKontrol: async (ctx, v) => {
@@ -577,7 +582,7 @@ export const DOSYA_NOTU_EKLE = eylem({
   kademe: 'T1',
   branslar: 'hepsi',
   calistir: async (ctx, v) => {
-    const satir = `${String(v.metin).trim()} (Ayşe hazırladı, hekim onayladı — ${ctx.bugunTRT})`
+    const satir = `${String(v.metin).trim()} (Ayşe hazırladı, hekim onayladı — ${ctx.bugun})`
     const r = await gununNotunaEkle(ctx.supabase, ctx.doktorId, ctx.hasta.id, satir)
     if (!r.eklendi || !r.notId) throw new Error(r.sebep || 'Not eklenemedi.')
     return { hedefTablo: 'notes', hedefId: r.notId, once: null, sonra: { satir }, ilgiliSekme: { etiket: 'Muayene notunda gör', yol: `/dashboard/doktor/notlar/${r.notId}` } }
@@ -644,7 +649,7 @@ export const ILAC_SONLANDIR = eylem({
     const liste = await aktifIlac(ctx, String(v.ilac_adi))
     if (liste.length !== 1) throw new Error(liste.length ? 'Birden çok eşleşme — ilaç listesinden seçin.' : 'İlaç bulunamadı.')
     const once = liste[0]
-    const guncel = { aktif: false, bitis_tarihi: v.bitis_tarihi ?? ctx.bugunTRT, notlar: v.sebep ? `Sonlandırma: ${v.sebep}` : undefined }
+    const guncel = { aktif: false, bitis_tarihi: v.bitis_tarihi ?? ctx.bugun, notlar: v.sebep ? `Sonlandırma: ${v.sebep}` : undefined }
     const yama = Object.fromEntries(Object.entries(guncel).filter(([, x]) => x !== undefined))
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
     if (error) {
@@ -735,7 +740,7 @@ export const HASTA_BILGISI_DUZELT = eylem({
   kademe: 'T2',
   branslar: 'hepsi',
   makullukKontrol: (ctx, v) => {
-    if (v.dogum_tarihi && String(v.dogum_tarihi) > ctx.bugunTRT) return 'Doğum tarihi gelecekte olamaz.'
+    if (v.dogum_tarihi && String(v.dogum_tarihi) > ctx.bugun) return 'Doğum tarihi gelecekte olamaz.'
     if (v.dogum_tarihi && String(v.dogum_tarihi) < '1900-01-01') return 'Doğum tarihi 1900 öncesi olamaz.'
     return null
   },
@@ -788,7 +793,7 @@ export const MESAJ_HASTA_ILE_KONUSULDU = eylem({
     const not = String(v.not).trim()
     const { data: mesaj, error: mErr } = await ctx.supabase
       .from('hasta_mesajlar')
-      .insert({ konu_id: konuId, taraf: 'doktor', yazar_user_id: ctx.doktorId, metin: `${not} (Ayşe hazırladı, hekim onayladı — ${ctx.bugunTRT})` })
+      .insert({ konu_id: konuId, taraf: 'doktor', yazar_user_id: ctx.doktorId, metin: `${not} (Ayşe hazırladı, hekim onayladı — ${ctx.bugun})` })
       .select('id')
       .single()
     if (mErr || !mesaj) throw new Error('Not eklenemedi.')
@@ -836,5 +841,3 @@ export const TEMEL_EYLEMLER: EylemTanimi[] = [
   ALERJI_KALDIR,
   HASTA_BILGISI_DUZELT,
 ] as EylemTanimi[]
-
-export { bugunTRT }

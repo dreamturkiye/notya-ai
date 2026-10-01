@@ -17,6 +17,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import type { ZodType } from './z'
+import { bugunTz, saatDilimiSec } from '@/lib/randevu/tarihCozumle'
 
 /** Risk tier. T3 (reçete, not onayı, silme, dışarı çıkan her şey) is NOT a value: it never enters the registry. */
 export type Kademe = 'T1' | 'T2'
@@ -98,10 +99,25 @@ export interface EylemBaglami {
   brans: SpecialtyKey | null
   /** The öneri row being committed, for audit linkage. */
   oneriId: string
-  /** Today in Turkish time, yyyy-mm-dd. Actions must not read the host clock directly. */
-  bugunTRT: string
+  /**
+   * Today in the DOCTOR's timezone, yyyy-mm-dd (NOTYA-AYSE-GERI-04). Actions must not read the host clock directly.
+   * Was `bugunTRT` — a doctor west of Turkey got tomorrow's date in the evening.
+   */
+  bugun: string
+  /** The doctor's IANA timezone: the clock every day and time on a card is read in. */
+  saatDilimi: string
   /** The instant "now" for actions that compare against one (upcoming appointments). Default: the host clock. */
   simdi?: Date
+}
+
+/**
+ * NOTYA-AYSE-GERI-04 — the clock of an action context. `saatDilimi` comes from the client (request body, then the
+ * notya_tz cookie); an unknown or missing value falls back to Europe/Istanbul, which is what every caller did
+ * before, so a doctor in Turkey sees no change.
+ */
+export function eylemZamani(saatDilimi?: string | null, simdi: Date = new Date()): { bugun: string; saatDilimi: string; simdi: Date } {
+  const dilim = saatDilimiSec(saatDilimi)
+  return { bugun: bugunTz(dilim, simdi), saatDilimi: dilim, simdi }
 }
 
 /** What `calistir` reports back so `eylem_kayitlari` can describe (and `geriAl` can reverse) the write. */
@@ -198,7 +214,10 @@ export interface EylemOnerisi {
   karar_at: string | null
 }
 
-/** Turkey is UTC+3 all year. Everything dated in this layer uses this, never the host clock. */
+/**
+ * Turkey is UTC+3 all year. Kept for callers that have no doctor timezone at hand (tests, the calendar page's own
+ * TRT view); the action layer itself dates everything with `eylemZamani` in the doctor's timezone.
+ */
 export function bugunTRT(simdi: Date = new Date()): string {
   return new Date(simdi.getTime() + 3 * 3600e3).toISOString().slice(0, 10)
 }

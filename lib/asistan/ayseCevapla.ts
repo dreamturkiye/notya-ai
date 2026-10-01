@@ -60,7 +60,8 @@ import { adsiz, anilanKisi, randevuSaatiBul, randevuTarihiBul, soylenenAd, type 
 import { bosSaatMetni, doktorCalismaGunu } from "@/lib/randevu/bosSaatler"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
 import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
-import { bugunTRT, type HastaOzeti } from "@/core/eylemler/types"
+import { eylemZamani, type HastaOzeti } from "@/core/eylemler/types"
+import { sunucuTarihDegerleri } from "@/lib/asistan/sunucuTarihi"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
@@ -74,7 +75,7 @@ import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
 import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi, takvimSapmasiMi } from "@/lib/randevu/takvimSorusu"
 import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar, asrOnar, type Niyet } from "@/lib/asistan/konusmaBaglami"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
-import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
+import { bugunTz, isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
 
 export type Kanal = "yazi" | "ses"
@@ -806,7 +807,10 @@ ${ilacBaglamMetni(drugs[0])}`
 
   // NOTYA-EYLEM: tool_use → taslak öneri + onay kartı. Hiçbir şey yazılmadı; hekim onaylayacak.
   const yuzey = ses ? "ses" as const : "sohbet" as const
-  const eylemCtx = (h: HastaOzeti) => ({ supabase, doktorId, hasta: h, brans: eylemBransi, oneriId: "", bugunTRT: bugunTRT() })
+  // NOTYA-AYSE-GERI-04: the action clock is the doctor's timezone, and the day / time the doctor SAID (resolved by
+  // the server from this sentence and the pending command) replaces whatever the model wrote in those fields.
+  const eylemCtx = (h: HastaOzeti) => ({ supabase, doktorId, hasta: h, brans: eylemBransi, oneriId: "", ...eylemZamani(saatDilimi) })
+  const sunucuDegerleri = (anahtar: string) => sunucuTarihDegerleri({ anahtar, mesaj: onarim.mesaj, saatDilimi, randevuTarih, randevuSaat })
   /** Questions the action layer asks instead of a card ("Hangisi Hocam: 1. …, 2. …?"). */
   const kartSorulari: string[] = []
   /** The patient the cards belong to — the resolved / open patient, or the one a patient-less tool call named. */
@@ -816,7 +820,7 @@ ${ilacBaglamMetni(drugs[0])}`
   if (eylemHastasi) {
     // NOTYA-EYLEM-21: Ayşe'nin kendi uyarı cümlesi karta "Ayşe'nin notu" olarak taşınır — deterministik
     // kontrolün yerine değil, yanına; asla `ciddi` sayılmaz (core/eylemler/ilacUyari.ts).
-    eylemOnerileri = await toolUseOnerileri(yanitGovdesi, eylemCtx(eylemHastasi), yuzey, { brans: eylemBransi, hasta: eylemHastasi }, aiData.proactiveWarning, { sorular: kartSorulari })
+    eylemOnerileri = await toolUseOnerileri(yanitGovdesi, eylemCtx(eylemHastasi), yuzey, { brans: eylemBransi, hasta: eylemHastasi }, aiData.proactiveWarning, { sorular: kartSorulari, sunucuDegerleri })
   } else if (hastasizArac) {
     // NOTYA-AYSE-GERI-03: a tool call with no patient resolved. The model passed a NAME (`hasta_adi`), never an id.
     // It is resolved here with the doctor-scoped resolver: one match → the card is prepared for that patient;
@@ -835,7 +839,7 @@ ${ilacBaglamMetni(drugs[0])}`
         if (ozet) {
           kartHastasi = ozet
           cozulenHasta = { id: ozet.id, ad: ozet.ad }
-          eylemOnerileri = await toolUseOnerileri(yanitGovdesi, eylemCtx(ozet), yuzey, { brans: eylemBransi, hasta: ozet }, aiData.proactiveWarning, { sorular: kartSorulari })
+          eylemOnerileri = await toolUseOnerileri(yanitGovdesi, eylemCtx(ozet), yuzey, { brans: eylemBransi, hasta: ozet }, aiData.proactiveWarning, { sorular: kartSorulari, sunucuDegerleri })
         } else if (adCozumu.tur === "coklu") {
           kartSorulari.push(cozumKonus(adCozumu) || "Bu isimle birden çok hasta var Hocam; hangisi?")
         } else {
@@ -898,12 +902,12 @@ ${ilacBaglamMetni(drugs[0])}`
   let bekleyen: string[] | undefined
   if (eylemOnerileri.length) {
     bekleyen = eylemOnerileri.map((o) => o.id)
-    if (ses && kartHastasi) sozEkle(kartOkumasi(eylemOnerileri, kartHastasi.ad))
+    if (ses && kartHastasi) sozEkle(kartOkumasi(eylemOnerileri, kartHastasi.ad, bugunTz(saatDilimi)))
   }
   // NOTYA-AYSE-100 M1: a tool-only turn left the screen blank; a model turn with no text and no card says so.
   if (!String(aiData.speech || "").trim()) {
     aiData.speech = eylemOnerileri.length && kartHastasi
-      ? kartOkumasi(eylemOnerileri, kartHastasi.ad)
+      ? kartOkumasi(eylemOnerileri, kartHastasi.ad, bugunTz(saatDilimi))
       : "Bu soruya şu an cevap üretemedim Hocam; bir daha sorar mısınız?"
     if (ses && !sozler.some(Boolean)) sozEkle(konusmaYap(aiData.speech))
   }
@@ -1041,9 +1045,9 @@ export function kimlikSozu(k: KimlikCevabi): string {
 }
 
 /** Kart(lar) için sözlü okuma — "Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz?" (ses-eylem ile aynı cümle). */
-function kartOkumasi(kartlar: HazirOneri[], hastaAd: string): string {
+function kartOkumasi(kartlar: HazirOneri[], hastaAd: string, bugun?: string): string {
   if (kartlar.length > 1) return `${hastaAd} için ${kartlar.length} kayıt kartı hazırladım, ekranda. Henüz dosyaya yazılmadı. Ekrandan onaylayın ya da tek tek söyleyin.`
   const o = kartlar[0]
-  return sesOzetMetni({ etiket: o.etiket, hastaAd, veri: o.veri, alanlar: o.alanlar, eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)), ek: (o.uyarilar || []).join(' ') })
+  return sesOzetMetni({ etiket: o.etiket, hastaAd, veri: o.veri, alanlar: o.alanlar, eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)), ek: (o.uyarilar || []).join(' '), bugun })
 }
 

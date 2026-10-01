@@ -204,7 +204,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           const supabase = getSupabase()
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
-          const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
+          const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj, jeton.tz || null)
           if (karar) {
             cevapYaz(karar.soz)
             await sesDevamAl(supabase, jeton.d, jeton.o).catch(() => null) // yeni gerçek tur: önceki turun kalanı düşer

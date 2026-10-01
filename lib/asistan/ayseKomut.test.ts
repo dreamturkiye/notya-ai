@@ -268,10 +268,12 @@ describe('randevu — oluştur, saat değiştir, iptal; sesle onay (Fish)', () =
     const rk = ortam.db.tablo('patients').find((x) => x.doctor_id === s.doktor.id && x.id !== umutcan)!.id as string
     randevuEkle(s.doktor.id, rk, gun(3), '15:30')
     const oturum = oturumAc(s, { id: umutcan, ad: AD })
-    aracla({})
-    const bos = await yazi(s, 'Randevusunu erteleyelim, saati sonra söylerim, perşembeye al', { oturum })
+    // The model calls the tool although neither a new day nor a new time was said: no card, the action asks.
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Kartı hazırladım Hocam.' }), araclar: [{ name: 'randevu_tasi', input: {} }] }
+    const bos = await yazi(s, 'Randevusunu erteleyelim', { oturum })
+    assert.equal(zorlananArac(sonModelIstegi()), null, 'yeni gün / saat yokken araç zorlanmaz')
     assert.equal(bos.eylemOnerileri.length, 0)
-    assert.match(bos.speech, /Hangi güne ve saate alalım\?$/)
+    assert.match(bos.speech, /^Umutcan Türkoğlu randevusu .* 10:00’te Hocam\. Hangi güne ve saate alalım\?$/)
     aracla({ saat: '15:30' })
     const dolu = await yazi(s, 'Randevu saatini 15:30 olarak değiştir', { oturum: oturumAc(s, { id: umutcan, ad: AD }) })
     assert.match(dolu.eylemOnerileri[0].uyarilar.join(' '), /zaten bir randevu var/)
@@ -392,6 +394,83 @@ describe('tek cümlede bitmeyen komut — bekleyen komut tamamlanınca araç zor
     assert.equal(oturumBaglami(s.oturum).bekleyenKomut, undefined, 'başka konu komutu bitirir')
     await yazi(s, 'Umutcan Türkoğlu')
     assert.equal(zorlananArac(sonModelIstegi()), null, 'bekleyen komut yokken ad tek başına komut değildir')
+  })
+})
+
+describe('NOTYA-AYSE-GERI-04 — tarih sunucuda, doktorun saat diliminde çözülür ve modelin tarihinin yerine geçer', () => {
+  // Two timezones that are ALWAYS on different calendar days (25 hours apart): whichever the real clock is, the
+  // card must carry the day of the doctor's own timezone — never a fixed TRT day, never the model's date.
+  const BATI = 'Pacific/Pago_Pago'
+  const DOGU = 'Pacific/Kiritimati'
+
+  it('aşı "bugün": model 2024-02-28 yazsa da kart doktorun bugününü taşır; sesli okuma tarihi söyler', async () => {
+    assert.notEqual(bugunTz(BATI), bugunTz(DOGU))
+    for (const tz of [BATI, DOGU]) {
+      const oturum = oturumAc(s, { id: umutcan, ad: AD })
+      aracla({ asi_adi: 'Hepatit B', uygulama_tarihi: '2024-02-28' })
+      const k = await fishTur(s, 'Hepatit B aşısı bugün yapıldı, kaydet', { oturum, saatDilimi: tz })
+      const kart = taslaklar().find((t) => oturumBaglami(oturum).bekleyenOneriler.includes(t.id))!
+      assert.equal(kart.veri.uygulama_tarihi, bugunTz(tz), tz)
+      assert.equal(kart.alan_kaynaklari.uygulama_tarihi.kaynak, 'doktor_soyledi')
+      assert.ok(k.soz.includes('Uygulama tarihi: bugün, '), k.soz)
+      assert.ok(!k.soz.includes('2024'), k.soz)
+      assert.match(k.soz, /Onaylıyor musunuz\?$/)
+      await fishTur(s, 'Evet', { oturum, saatDilimi: tz })
+      assert.ok(ortam.db.tablo('asilar').some((a) => a.uygulama_tarihi === bugunTz(tz)), 'kayıt doktorun bugünüyle yazılır')
+    }
+    assert.equal(ortam.db.tablo('asilar').length, 2)
+    assert.ok(!ortam.db.tablo('asilar').some((a) => a.uygulama_tarihi === '2024-02-28'))
+  })
+
+  it('"dün" ve "az önce": model tarihi boş bıraksa da alan dolar', async () => {
+    const oturum = oturumAc(s, { id: umutcan, ad: AD })
+    aracla({ asi_adi: 'KKK' })
+    const dun = await yazi(s, 'KKK aşısı dün yapıldı, dosyaya gir', { oturum, saatDilimi: BATI })
+    assert.equal(dun.eylemOnerileri[0].veri.uygulama_tarihi, isoGunKaydir(bugunTz(BATI), -1))
+    assert.deepEqual(dun.eylemOnerileri[0].eksik_alanlar, [])
+    const az = await yazi(s, 'Az önce KKK aşısını yaptık, kaydet', { oturum: oturumAc(s, { id: umutcan, ad: AD }), saatDilimi: DOGU })
+    assert.equal(az.eylemOnerileri[0].veri.uygulama_tarihi, bugunTz(DOGU))
+  })
+
+  it('cümlede gün sözü yoksa modelin (hekimin söylediği) tarihine dokunulmaz; belirsizse sunucu karışmaz', async () => {
+    const oturum = oturumAc(s, { id: umutcan, ad: AD })
+    aracla({ asi_adi: 'Hepatit B', uygulama_tarihi: '2026-09-01' })
+    const y = await yazi(s, 'Hepatit B aşısı 1 Eylül 2026’da yapıldı, kaydet', { oturum })
+    assert.equal(y.eylemOnerileri[0].veri.uygulama_tarihi, '2026-09-01')
+    aracla({ asi_adi: 'Hepatit B', uygulama_tarihi: '2026-08-15', sonraki_doz_tarihi: '2026-11-15' })
+    const b = await yazi(s, 'Hepatit B dün yapıldı, sonraki doz 3 ay sonra, kaydet', { oturum: oturumAc(s, { id: umutcan, ad: AD }) })
+    assert.equal(b.eylemOnerileri[0].veri.uygulama_tarihi, '2026-08-15', '"sonraki doz" yanında gün belirsiz — sunucu yazmaz')
+  })
+
+  it('randevu: model yanlış gün yazsa da "yarın" doktorun yarınıdır; saat hekimin söylediğidir', async () => {
+    const oturum = oturumAc(s, { id: umutcan, ad: AD })
+    aracla({ tarih: '2024-02-29', saat: '09:00' })
+    const y = await yazi(s, 'Yarın saat 14:00 için kontrol randevusu oluştur', { oturum, saatDilimi: BATI })
+    assert.equal(y.eylemOnerileri[0].veri.tarih, isoGunKaydir(bugunTz(BATI), 1))
+    assert.equal(y.eylemOnerileri[0].veri.saat, '14:00')
+    assert.deepEqual(y.eylemOnerileri[0].uyarilar, [], 'geçmiş tarih uyarısı yok')
+  })
+
+  it('randevu iptal: "yarınki randevusunu" sunucuda günü seçer — model gün vermese de doğru randevu', async () => {
+    const yarinki = randevuEkle(s.doktor.id, umutcan, yarin(), '10:00')
+    randevuEkle(s.doktor.id, umutcan, gun(9), '16:20')
+    aracla({})
+    const y = await yazi(s, 'Yarınki randevusunu iptal et', { oturum: oturumAc(s, { id: umutcan, ad: AD }), saatDilimi: TRT })
+    assert.equal(y.eylemOnerileri[0]?.veri.randevu_id, yarinki.id)
+  })
+
+  it('yazılı onay (dokunuş) da doktorun saat dilimini kullanır: ilaç başlangıcı doktorun bugünü', async () => {
+    const E = await import('../../app/api/doktor/eylem/route')
+    const { NextRequest } = await import('next/server')
+    const oturum = oturumAc(s, { id: umutcan, ad: AD })
+    aracla({ ilac_adi: 'Amoksisilin', doz: '250 mg', kullanim_sikli: '2x1' })
+    const y = await yazi(s, 'Amoksisilin 250 mg 2x1 ilaçlarına ekle', { oturum, saatDilimi: BATI })
+    const r = await E.POST(new NextRequest('http://localhost/api/doktor/eylem', {
+      method: 'POST', headers: { authorization: `Bearer ${s.doktor.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ adim: 'onayla', oneriId: y.eylemOnerileri[0].id, saatDilimi: BATI }),
+    } as ConstructorParameters<typeof NextRequest>[1]))
+    assert.equal(r.status, 200, JSON.stringify(await r.clone().json()))
+    assert.equal(ortam.db.tablo('hasta_ilaclar')[0].baslangic_tarihi, bugunTz(BATI))
   })
 })
 

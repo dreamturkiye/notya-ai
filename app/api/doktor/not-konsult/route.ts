@@ -24,7 +24,8 @@ import { aracTanimlari, eylemKapali } from '@/core/eylemler/araclar'
 import { toolUseOnerileri, kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
-import { bugunTRT } from '@/core/eylemler/types'
+import { eylemZamani } from '@/core/eylemler/types'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { cekBlokSil } from '@/lib/doktor/muayeneCekListesi'
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
     const eylemOnerileri = eylemHastasi
       ? await toolUseOnerileri(
           (yanit ?? {}) as { content?: unknown },
-          { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', bugunTRT: bugunTRT() },
+          { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', ...eylemZamani(istekSaatDilimi()) },
           'not',
           { brans: eylemBransi, hasta: eylemHastasi },
           // NOTYA-EYLEM-31: not içi kutu da düz metin döndürür; Ayşe'nin uyarı cümlesi karta aynı
