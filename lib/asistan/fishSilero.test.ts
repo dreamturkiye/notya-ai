@@ -11,7 +11,7 @@ test('silero: hysteresis — enters at 0.5, stays until below 0.35', () => {
   assert.equal(sileroKonusuyorMu(NaN, true), false)
 })
 
-test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail 350 vs 300', () => {
+test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail 500 vs 500', () => {
   const simdi = 10_000
   const a = kareKonusmasi({ rms: 0.001, silero: { p: 0.9, zaman: simdi - 40 }, onceki: false, simdi })
   assert.deepEqual(a, { ses: true, kaynak: 'silero' })
@@ -23,8 +23,8 @@ test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail
   assert.equal(d.kaynak, 'rms')
   assert.equal(sessizlikKuyrugu('silero'), FISH_SES_SIZLIGI_SILERO_MS)
   assert.equal(sessizlikKuyrugu('rms'), FISH_SES_SIZLIGI_MS)
-  assert.equal(FISH_SES_SIZLIGI_MS, 300)
-  assert.equal(FISH_SES_SIZLIGI_SILERO_MS, 350)
+  assert.equal(FISH_SES_SIZLIGI_MS, 500)
+  assert.equal(FISH_SES_SIZLIGI_SILERO_MS, 500)
 })
 
 test('silero: opt-in — off by default, NEXT_PUBLIC_NOTYA_SILERO=1 enables, iOS also needs the iOS flag', () => {
@@ -63,15 +63,15 @@ function sileroTuru(olasiliklar: number[], gecikmeMs = 32) {
   return { tur, bitir, kareSayisi }
 }
 
-test('silero gate: 1.2 s of speech (with two hysteresis dips) closes on the 350 ms tail and passes the junk gate', () => {
+test('silero gate: 1.2 s of speech (with two hysteresis dips) closes on the 500 ms tail and passes the junk gate', () => {
   const sessiz = (n: number) => Array.from({ length: n }, () => 0.05)
   const konusma = Array.from({ length: 38 }, (_, i) => (i === 12 || i === 25 ? 0.4 : 0.85)) // 38 × 32 ms ≈ 1216 ms, dips stay inside hysteresis
   const r = sileroTuru([...sessiz(8), ...konusma, ...sessiz(30)])
   assert.equal(r.bitir, 'sessizlik')
   assert.equal(r.tur.kaynak, 'silero')
   assert.ok(r.tur.sesliMs >= 1150 && r.tur.sesliMs <= 1280, `sesli ${r.tur.sesliMs}`)
-  // closes at the first frame ≥ 350 ms after speech ended: 11–12 silent frames, not the whole 30
-  assert.ok(r.kareSayisi >= 8 + 38 + 11 && r.kareSayisi <= 8 + 38 + 13, `kare ${r.kareSayisi}`)
+  // closes at the first frame ≥ 500 ms after speech ended: 16–18 silent frames, not the whole 30
+  assert.ok(r.kareSayisi >= 8 + 38 + 16 && r.kareSayisi <= 8 + 38 + 18, `kare ${r.kareSayisi}`)
   const toplamMs = r.kareSayisi * 32 + 300 // + pre-roll
   assert.deepEqual(klipGonderilirMi({ toplamMs, sesliMs: r.tur.sesliMs }), { gonder: true, neden: null })
 })
