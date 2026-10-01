@@ -15,6 +15,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
@@ -55,9 +56,8 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
   return null
 }
 
-const TR_MAP: Record<string, string> = { 'ç': 'c', 'Ç': 'c', 'ğ': 'g', 'Ğ': 'g', 'ı': 'i', 'I': 'i', 'İ': 'i', 'ö': 'o', 'Ö': 'o', 'ş': 's', 'Ş': 's', 'ü': 'u', 'Ü': 'u' }
 function duzle(s: string): string {
-  return s.replace(/[çÇğĞıIİöÖşŞüÜ]/g, (c) => TR_MAP[c] || c).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim()
+  return trAramaNormalize(s).replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim()
 }
 /**
  * NOTYA-SES-DOLGU-01 (Dr. Gökhan, 2026-09-25): spoken requests carry pauses and fillers

@@ -11,13 +11,16 @@ const IV_LENGTH = 16  // 128 bit
 const TAG_LENGTH = 16 // 128 bit auth tag
 
 // Ortam değişkeninden şifreleme anahtarı türet
+let onbellekliAnahtar: Buffer | null = null
 function getDerivedKey(): Buffer {
+  if (onbellekliAnahtar) return onbellekliAnahtar
   const masterKey = process.env.ENCRYPTION_MASTER_KEY
   if (!masterKey) {
     throw new Error('ENCRYPTION_MASTER_KEY ortam değişkeni tanımlı değil')
   }
   const salt = process.env.ENCRYPTION_SALT || 'notya-ai-kvkk-salt-2026'
-  return scryptSync(masterKey, salt, KEY_LENGTH)
+  onbellekliAnahtar = scryptSync(masterKey, salt, KEY_LENGTH)
+  return onbellekliAnahtar
 }
 
 // ============================================================
