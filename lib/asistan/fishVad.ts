@@ -4,8 +4,13 @@ export const FISH_KONUSMA_ESIK = 0.02
 /** Speaker leak of Haberci is quieter than the doctor at the mic. Barge-in must not fire on her own playback. */
 export const FISH_BARGE_ESIK = 0.12
 export const FISH_BARGE_MS = 300
-/** End-of-turn silence tail. 600 → 300 ms for greeting cadence test (feat/ayse-100). */
-export const FISH_SES_SIZLIGI_MS = 300
+/**
+ * NOTYA-VAD-TAIL-01 (Kaan/Gokhan, 2026-10-01): was dropped 600 -> 300 ms for greeting
+ * cadence (feat/ayse-100), but that cuts off a doctor speaking slowly and deliberately
+ * with natural mid-sentence pauses -- the root cause of the "interrupting / not
+ * listening" complaint. Raised to 500 ms; confirm final value by ear.
+ */
+export const FISH_SES_SIZLIGI_MS = 500
 export const FISH_MIN_KONUSMA_MS = 500
 export const FISH_AZAMI_TUR_MS = 16_000
 /** Audio kept from before the first voiced frame (word onsets), everything older is dropped. */
@@ -63,8 +68,12 @@ export function konusuyorMu(rms: number, esik = FISH_KONUSMA_ESIK): boolean {
 
 /* ---- NOTYA-SILERO-01: Silero VAD (in-browser, @ricky0123/vad-web) replaces the RMS gate when it loads. ---- */
 
-/** End-of-turn silence tail with Silero: speech probability does not flicker on breaths like RMS did. */
-export const FISH_SES_SIZLIGI_SILERO_MS = 350
+/**
+ * End-of-turn silence tail with Silero: speech probability does not flicker on breaths
+ * like RMS did. Raised alongside FISH_SES_SIZLIGI_MS (NOTYA-VAD-TAIL-01) for the same
+ * reason -- 350 ms was still cutting off deliberate speech.
+ */
+export const FISH_SES_SIZLIGI_SILERO_MS = 500
 /** Silero speech probability thresholds (hysteresis: enter above, leave below). */
 export const FISH_SILERO_ESIK = 0.5
 export const FISH_SILERO_CIKIS_ESIK = 0.35

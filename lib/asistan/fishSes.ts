@@ -253,9 +253,35 @@ export function fishRakamlariOku(metin: string): string {
     .replace(/\b(\d{1,4})\b/g, (_, d) => fishSayiOku(Number(d)))
 }
 
+/**
+ * NOTYA-TTS-BIRIM-01 (Kaan/Gokhan, 2026-10-01): Fish's news voice spells out clinical
+ * unit abbreviations letter by letter ("kg" -> "ka ge") instead of the Turkish word
+ * ("kilogram"). Each pattern requires the unit to immediately follow a digit, with only
+ * optional whitespace between, so the eight patterns are naturally non-overlapping and
+ * this must run BEFORE fishRakamlariOku -- the number is still numeric text here
+ * ("13.3kg" -> "13.3 kilogram"), and digit-to-words runs second ("on üç virgül üç
+ * kilogram").
+ */
+const BIRIM_ESLESME: ReadonlyArray<readonly [RegExp, string]> = [
+  [/(\d)\s*mcg\b/gi, '$1 mikrogram'],
+  [/(\d)\s*mg\b/gi, '$1 miligram'],
+  [/(\d)\s*kg\b/gi, '$1 kilogram'],
+  [/(\d)\s*g\b/gi, '$1 gram'],
+  [/(\d)\s*ml\b/gi, '$1 mililitre'],
+  [/(\d)\s*lt\b/gi, '$1 litre'],
+  [/(\d)\s*mm\b/gi, '$1 milimetre'],
+  [/(\d)\s*cm\b/gi, '$1 santimetre'],
+]
+
+export function fishBirimleriOku(metin: string): string {
+  let sonuc = String(metin || '')
+  for (const [desen, degisim] of BIRIM_ESLESME) sonuc = sonuc.replace(desen, degisim)
+  return sonuc
+}
+
 /** Strip any bracket cue, then put one short pause between sentences. */
 export function fishMetni(ham: string): string {
-  const duz = fishRakamlariOku(String(ham || '').replace(ETIKET, ' ').replace(/[—–]/g, ',').replace(/\s+/g, ' ').trim())
+  const duz = fishRakamlariOku(fishBirimleriOku(String(ham || '').replace(ETIKET, ' ').replace(/[—–]/g, ',').replace(/\s+/g, ' ').trim()))
   if (!duz) return ''
   const cumleler = duz.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean)
   return cumleler.join(' [break] ')
