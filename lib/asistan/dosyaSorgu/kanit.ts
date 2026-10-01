@@ -16,6 +16,7 @@ import { eksikDozEtiketi, parametreSec, type BransSorguParametreleri } from '@/l
 import { SORU_SABLONLARI } from '@/lib/asistan/dosyaSorgu/kurallar'
 import type { SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@/lib/klinik/sikayetEsanlam'
+import { vizitTuruGruplariBul, vizitYasIfadesiCoz, vizitYasIfadesiEslesir } from '@/lib/klinik/vizitTuruEsanlam'
 import { kanonikTr } from '@/core/lab/kanonik'
 
 export interface KanitEki {
@@ -267,6 +268,31 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
  * Brief imzası: `kanitBlogu(intent, olaylar, hasta)` → soru için kanıt + cevap şablonu (Türkçe). Blok hasta adını
  * içermez; kurallar bloğu (dosyaSorguKuralBlogu) adı ilk cümleye koyar.
  */
+/**
+ * NOTYA-DOSYA-SORU-TUR-01 — mesaj belirli bir vizit TÜRÜ / yaş-dönümü anıyorsa (örn. "6 aylık sağlam çocuk
+ * muayenesi") o vizit(ler)e filtreler; hiç anmıyorsa null döner (ozetBolumu değişmeden çalışır — davranış aynı).
+ * Eşleşme yoksa SESSİZCE en son vizite düşmez — açık "bulamadım" cevabı döner (kök neden: ozetBolumu türe göre
+ * hiç filtrelemiyordu, her zaman en son vizit döndürülüyordu).
+ */
+function vizitTuruBolumu(olaylar: DosyaOlayi[], mesaj: string): string[] | null {
+  const vizitler = vizitleri(olaylar)
+  const yas = vizitYasIfadesiCoz(mesaj)
+  const gruplar = vizitTuruGruplariBul(mesaj)
+  if (!yas && !gruplar.length) return null
+  let adaylar = vizitler
+  if (gruplar.length) adaylar = adaylar.filter((v) => gruplar.some((g) => terimlerdenBiriGeciyor(oykuKismi(v), g.terimler)))
+  if (yas) {
+    // Yaş-dönümü belirtildiyse TAM eşleşme şart — tür eşleşmesi varsa bile yanlış yaştaki vizitlere düşme.
+    adaylar = adaylar.filter((v) => vizitYasIfadesiEslesir(vizitYasIfadesiCoz(oykuKismi(v)), yas))
+  }
+  const aciklama = [gruplar.map((g) => g.ad).join(', '), yas ? `${yas.sayi} ${yas.birim}` : ''].filter(Boolean).join(' / ') || 'belirtilen vizit türü'
+  if (!adaylar.length) return [`Aranan vizit: ${aciklama}. Bu türde / bu yaşta eşleşen onaylı vizit kaydı bulamadım — dosyada bu muayene yok Hocam; sessizce başka bir vizite düşmedim.`]
+  const out = [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit(ler) (${adaylar.length}):`]
+  for (const v of adaylar) out.push(`- ${trGun(v.tarih)}: ${v.metin}`)
+  if (adaylar.length > 1) out.push('Not: birden fazla eşleşme var; hangisini sorduğunu netleştirmek isteyebilirsin.')
+  return out
+}
+
 export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHastasi, ek: KanitEki = {}): string {
   const p = parametreSec(hasta.brans, hasta.dogumIso, hasta.bugunIso)
   const s = SORU_SABLONLARI[tur]
@@ -280,7 +306,7 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
   ]
   let govde: string[] = []
   switch (tur) {
-    case 'ozet': govde = ozetBolumu(olaylar, hasta, p); break
+    case 'ozet': { const t = vizitTuruBolumu(olaylar, ek.mesaj || ''); govde = t ?? ozetBolumu(olaylar, hasta, p); break }
     case 'degisim': govde = degisimBolumu(olaylar, hasta, p); break
     case 'buyume': { const b = p.buyume(olaylar, hasta); govde = [...b.satirlar, ...(b.bayraklar.length ? ['DİKKAT:', ...isSatirlari(b.bayraklar)] : [])]; break }
     case 'asi': govde = asiBolumu(olaylar, hasta, p); break
