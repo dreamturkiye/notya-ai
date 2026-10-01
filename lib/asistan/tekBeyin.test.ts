@@ -102,6 +102,8 @@ let K: typeof import('./konusma')
 let Y: typeof import('./yanitCoz')
 let J: typeof import('./sesJetonu')
 let L: typeof import('./sesLlm')
+let A: typeof import('./asiTablosu')
+let T: typeof import('./markdownTablo')
 let R: Record<string, any>
 
 const ANNE = 'QA-Anne-Nermin'
@@ -188,11 +190,14 @@ before(async () => {
   Y = await import('./yanitCoz')
   J = await import('./sesJetonu')
   L = await import('./sesLlm')
+  A = await import('./asiTablosu')
+  T = await import('./markdownTablo')
   R = {
     chat: await import('../../app/api/asistan/chat/route'),
     sesLlm: await import('../../app/api/asistan/ses-llm/v1/chat/completions/route'),
     sesEkran: await import('../../app/api/asistan/ses-ekran/route'),
     oturumHasta: await import('../../app/api/asistan/oturum-hasta/route'),
+    fishTur: await import('../../app/api/asistan/fish-tur/route'),
   }
 })
 
@@ -911,5 +916,171 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     for (const ilac of F.GUVENLIK_OLGULARI.aktifIlaclar) assert.ok(kisa.includes(`- ${ilac}`), ilac)
     assert.ok(kisa.includes(F.GUVENLIK_OLGULARI.kritik))
     assert.match(kisa, /Epilepsi/)
+  })
+})
+
+describe('NOTYA-ASI-TABLO-01 (Kaan, 2026-10-01): aşı kaydı ekranda tablo, seste tek cümle; model çağrılmaz', () => {
+  const SOZ = 'Umutcan Türkoğlu\'nun aşı karnesini ekrana getirdim Hocam.'
+  function asilariEkle(s: Sahne) {
+    // dob 2019-04-10 → "doğumda", "1 aylık", "12 aylık"; one row without a dose number, one without a date
+    const satir = (asi_adi: string, doz_no: number | null, uygulama_tarihi: string | null) =>
+      db.ekle('asilar', { doktor_id: s.doktor.id, patient_id: s.hasta, asi_adi, doz_no, uygulama_tarihi, kaynak: 'kayit', kategori: 'cocukluk' })
+    satir('Hepatit B', 1, '2019-04-10')
+    satir('Hepatit B', 2, '2019-05-12')
+    satir('KKK', null, '2020-04-15')
+    satir('BCG', 1, null)
+    // another doctor's row on the same patient id: never on this doctor's table
+    db.ekle('asilar', { doktor_id: s.diger.id, patient_id: s.hasta, asi_adi: 'GIZLI-YABANCI-ASI', doz_no: 1, uygulama_tarihi: '2021-01-01', kaynak: 'kayit' })
+  }
+  function tablo(metin: string) {
+    const satirlar = metin.split('\n')
+    const i = satirlar.findIndex((_, k) => T.tabloBasiMi(satirlar, k))
+    assert.ok(i >= 0, `ekranda tablo yok:\n${metin}`)
+    return T.tabloOku(satirlar, i).tablo
+  }
+
+  it('"aşıları / aşılarını göster / aşı karnesi / uygulanmış aşılar": yazıda ve seste AYNI tablo; ses yalnız tek cümle söyler', async () => {
+    for (const soru of ['Umutcan Türkoğlu’nun aşıları', 'Umutcan Türkoğlu’nun aşılarını göster', 'Umutcan Türkoğlu’nun aşı karnesi', 'Umutcan Türkoğlu’nun uygulanmış aşıları', 'Ayşe lütfen bana Umutcan Türkoğlu’nun aşı karnesini göster']) {
+      const a = sahne(); asilariEkle(a)
+      const t = await yazi(a, soru)
+      const b = sahne(); asilariEkle(b)
+      const v = await ses({ sahne: b, mesaj: soru })
+      assert.equal(modelIstekleri.length, 0, `${soru}: model çağrılmamalı`)
+
+      // screen: a real table payload — Aşı | Tarih (+ Doz, + Yaş because the data has them)
+      const tb = tablo(t.speech)
+      assert.deepEqual(tb.baslik, ['Aşı', 'Tarih', 'Doz', 'Yaş'], soru)
+      assert.deepEqual(tb.satirlar, [
+        ['Hepatit B', '10.04.2019', '1. doz', 'doğumda'],
+        ['Hepatit B', '12.05.2019', '2. doz', '1 aylık'],
+        ['KKK', '15.04.2020', '', '12 aylık'],
+        ['BCG', 'Tarih kayıtlı değil', '1. doz', ''],
+      ], soru)
+      assert.ok(!t.speech.includes('GIZLI-YABANCI-ASI'), 'başka hekimin satırı tabloda olmamalı')
+      assert.match(t.speech, /^\*\*Umutcan Türkoğlu — Aşı Karnesi\*\*\n/)
+
+      // voice: one short line, never the list
+      assert.equal(v.metin.trim(), SOZ, soru)
+      for (const okunmaz of ['Hepatit', 'KKK', 'BCG', '2019', 'doz', '|']) assert.ok(!v.metin.includes(okunmaz), `${soru}: seste "${okunmaz}"`)
+      assert.equal(K.sozCumleleri(v.metin).length, 1)
+
+      // the voice turn's screen form is the same table, and the patient is now the open patient
+      const e = await sesEkrani(b)
+      assert.equal(e.turlar.at(-1)?.metin, t.speech, soru)
+      assert.equal(e.aktifHasta, 'Umutcan Türkoğlu')
+    }
+  })
+
+  it('açık hastaya adsız "aşıları?" da tablodur (takip yeniden yazımı değerlendirme sorusuna çevirse bile)', async () => {
+    const s = sahne(); asilariEkle(s)
+    yanit = { metin: JSON.stringify({ speech: 'Umutcan Türkoğlu — son vizitte öksürük vardı.' }) }
+    await ses({ sahne: s, mesaj: 'Umutcan Türkoğlu’nun son muayenesinde ne vardı' })
+    const once = modelIstekleri.length
+    const v = await ses({ sahne: s, mesaj: 'Aşıları?' })
+    assert.equal(modelIstekleri.length, once, 'model çağrılmamalı')
+    assert.equal(v.metin.trim(), SOZ)
+    assert.equal(tablo((await sesEkrani(s)).turlar.at(-1)!.metin).satirlar.length, 4)
+  })
+
+  it('sütunlar yalnız veride varsa: doz ve doğum tarihi yoksa Aşı | Tarih; alan uydurulmaz; kayıt yoksa tablo yok', async () => {
+    const karne = (yapilanlar: { ad: string; doz: number | null; tarih: string | null }[], dogumTarihi: string | null) =>
+      ({ yapilanlar: yapilanlar.map((y) => ({ ...y, kaynak: 'klinik' as const, kaynakEtiketi: '', lotNo: 'LOT-GIZLI', uygulamaYeri: 'sol kol' })), hasta: { adSoyad: 'QA Hasta', dogumTarihi } })
+    const yalin = A.asiTablosuCevabi('QA Hasta', karne([{ ad: 'Grip', doz: null, tarih: '2025-10-01' }, { ad: 'Td | rapel', doz: null, tarih: null }], null))
+    assert.deepEqual(yalin.sutunlar, ['Aşı', 'Tarih'])
+    assert.deepEqual(yalin.satirlar, [['Grip', '01.10.2025'], ['Td \\| rapel', 'Tarih kayıtlı değil']])
+    assert.deepEqual(tablo(yalin.ekran).satirlar, [['Grip', '01.10.2025'], ['Td | rapel', 'Tarih kayıtlı değil']])
+    assert.ok(!/eksik|gecik|sonraki|LOT-GIZLI|sol kol/i.test(yalin.ekran), yalin.ekran)
+    assert.equal(yalin.konusma, 'QA Hasta\'nın aşı karnesini ekrana getirdim Hocam.')
+    assert.deepEqual(A.asiTablosuCevabi('QA Hasta', karne([{ ad: 'Grip', doz: 2, tarih: '2025-10-01' }], null)).sutunlar, ['Aşı', 'Tarih', 'Doz'])
+    assert.deepEqual(A.asiTablosuCevabi('QA Hasta', karne([{ ad: 'Grip', doz: null, tarih: '2025-10-01' }], '1980-01-01')).satirlar, [['Grip', '01.10.2025', '45 yaşında']])
+
+    const bos = sahne()
+    const v = await ses({ sahne: bos, mesaj: 'Umutcan Türkoğlu’nun aşı karnesi' })
+    assert.equal(v.metin.trim(), 'Umutcan Türkoğlu için kayıtlı aşı yok Hocam.')
+    assert.ok(!(await sesEkrani(bos)).turlar.at(-1)!.metin.includes('|'))
+    assert.equal(modelIstekleri.length, 0)
+  })
+
+  it('hangi soru tablo, hangisi değil: değerlendirme / takvim / tek aşı / kayıt isteği eski yolunda kalır', async () => {
+    for (const m of ['aşı', 'aşıları', 'Aşıları?', 'aşılarını göster', 'aşı karnesi', 'aşı karnesini getir', 'aşı kayıtları', 'aşı kaydını göster', 'uygulanmış aşılar', 'yapılan aşıları listele', 'Umutcan\'ın aşıları neler', 'aşısını göster']) {
+      assert.equal(A.asiKaydiSorusuMu(m), true, m)
+    }
+    for (const m of ['Aşıları tam mı?', 'eksik aşısı var mı', 'aşılarında eksik olan var mı', 'sıradaki aşısı hangisi', 'aşı takvimi', 'aşı durumu nasıl', 'KKK aşısı ne zaman yapılmış', 'Hepatit B aşısı kaç doz yapılmış', 'KKK aşısını göster', 'bugün aşılarını yaptık', 'aşıdan sonra ateşi çıktı', 'Hepatit B 2. doz aşıyı kaydet', 'ilaçları neler', 'bugün randevum var mı', '']) {
+      assert.equal(A.asiKaydiSorusuMu(m), false, m)
+    }
+    const s = sahne(); asilariEkle(s)
+    yanit = { metin: JSON.stringify({ speech: 'Umutcan Türkoğlu — takvime göre eksik aşı yok.' }) }
+    const t = await yazi(s, 'Umutcan Türkoğlu’nun aşıları tam mı?')
+    assert.equal(modelIstekleri.length, 1, 'değerlendirme sorusu kanıt yolundan modele gider')
+    assert.ok(!t.speech.includes('|---'))
+  })
+
+  it('iki Umutcan: aşı tablosu açılmaz, Ayşe hangisi diye sorar; soyadı gelince o hastanın tablosu', async () => {
+    const s = sahne(); asilariEkle(s)
+    const ikinci = db.ekle('patients', { doctor_id: s.doktor.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Umutcan Demir' })), dob_encrypted: encrypt('2022-06-15') }).id
+    indeksle(s.doktor.id, ikinci, 'Umutcan Demir')
+    const v = await ses({ sahne: s, mesaj: 'Umutcan’ın aşı karnesini göster' })
+    assert.equal(modelIstekleri.length, 0)
+    assert.match(v.metin, /Hangisini istiyorsunuz/)
+    const ekran = (await sesEkrani(s)).turlar.at(-1)!.metin
+    assert.ok(ekran.includes('Umutcan Türkoğlu') && ekran.includes('Umutcan Demir') && !ekran.includes('Hepatit'), ekran)
+    const v2 = await ses({ sahne: s, mesaj: 'Umutcan Türkoğlu’nun aşı karnesini göster' })
+    assert.equal(v2.metin.trim(), SOZ)
+  })
+})
+
+describe('NOTYA-SES-YARIM-01 (Kaan, 2026-10-01): yarım söz cevap tetiklemez — fish-tur `bekle`, beyin çağrılmaz', () => {
+  type Olay = { t: string; m?: string; neden?: string }
+  async function fishTur(s: Sahne, mesaj: string): Promise<Olay[]> {
+    const y: Response = await R.fishTur.POST(new NextRequestSinifi('http://localhost/api/asistan/fish-tur', {
+      method: 'POST', headers: { authorization: `Bearer ${s.doktor.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ mesaj, asistanSessionId: s.oturum, specialty: 'pediatri', personaId: 'aysekaya' }),
+    } as ConstructorParameters<typeof NextRequestSinifi>[1]))
+    assert.equal(y.status, 200)
+    return (await y.text()).split('\n\n').map((b) => b.split('\n').find((l) => l.startsWith('data: '))).filter(Boolean).map((l) => JSON.parse(l!.slice(6)) as Olay)
+  }
+  const mesajSayisi = (s: Sahne) => (db.tablo('asistan_sessions').find((o) => o.id === s.oturum)?.messages || []).length
+
+  it('"Ayşe lütfen bana." ve "Ayşe lütfen bana Umutcan": stt → bekle → bit; söz yok, model yok, oturuma yazı yok', async () => {
+    for (const [mesaj, neden] of [['Ayşe lütfen bana.', 'askida'], ['Ayşe lütfen bana', 'askida'], ['Ayşe lütfen bana Umutcan.', 'ad'], ['Aç Umutcan', 'ad']] as const) {
+      const s = sahne()
+      const olaylar = await fishTur(s, mesaj)
+      assert.deepEqual(olaylar.map((o) => o.t), ['stt', 'bekle', 'bit'], `${mesaj}: ${JSON.stringify(olaylar)}`)
+      assert.equal(olaylar[0].m, mesaj)
+      assert.equal(olaylar[1].neden, neden)
+      assert.equal(modelIstekleri.length, 0, mesaj)
+      assert.equal(mesajSayisi(s), 0, `${mesaj}: yarım söz oturuma yazılmaz`)
+      assert.equal(db.tablo('asistan_sessions').find((o) => o.id === s.oturum)?.active_context?.currentPatientId, undefined, 'yarım söz hasta açmaz')
+    }
+  })
+
+  it('devamı gelince TEK tur: birleşik söz cevaplanır (aşı tablosu + tek cümle)', async () => {
+    const s = sahne()
+    db.ekle('asilar', { doktor_id: s.doktor.id, patient_id: s.hasta, asi_adi: 'Hepatit B', doz_no: 1, uygulama_tarihi: '2019-04-10', kaynak: 'kayit' })
+    assert.deepEqual((await fishTur(s, 'Ayşe lütfen bana Umutcan.')).map((o) => o.t), ['stt', 'bekle', 'bit'])
+    const olaylar = await fishTur(s, 'Ayşe lütfen bana Umutcan Türkoğlu\'nun aşılarını göster.')
+    assert.ok(!olaylar.some((o) => o.t === 'bekle'), JSON.stringify(olaylar))
+    assert.equal(olaylar.filter((o) => o.t === 'soz').map((o) => o.m).join('').trim(), 'Umutcan Türkoğlu\'nun aşı karnesini ekrana getirdim Hocam.')
+    assert.equal(mesajSayisi(s), 2, 'yalnız birleşik tur yazıldı')
+    assert.equal(modelIstekleri.length, 0)
+  })
+
+  it('tam söz bekletilmez: hasta adı olmayan kelime ("Lütfen devam"), fiille biten istek, kısa onay, ad + soyad', async () => {
+    for (const mesaj of ['Lütfen devam', 'Bana Umutcan\'ı aç', 'Evet lütfen', 'Umutcan Türkoğlu']) {
+      const s = sahne()
+      yanit = { metin: JSON.stringify({ speech: 'Tamam Hocam.' }) }
+      const olaylar = await fishTur(s, mesaj)
+      assert.ok(!olaylar.some((o) => o.t === 'bekle'), `${mesaj}: ${JSON.stringify(olaylar)}`)
+      assert.ok(olaylar.some((o) => o.t === 'soz'), `${mesaj}: cevap bekleniyor`)
+    }
+  })
+
+  it('başka doktorun hastasının adı bu doktor için ad değildir (indeks doktora kapsanır)', async () => {
+    const s = sahne()
+    const yabanci = db.ekle('patients', { doctor_id: s.diger.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Zerdali Qahasta' })), dob_encrypted: encrypt('2020-01-01') }).id
+    indeksle(s.diger.id, yabanci, 'Zerdali Qahasta')
+    yanit = { metin: JSON.stringify({ speech: 'Bu isimde bir hasta bulamadım Hocam.' }) }
+    const olaylar = await fishTur(s, 'Ayşe lütfen bana zerdali')
+    assert.ok(!olaylar.some((o) => o.t === 'bekle'), JSON.stringify(olaylar))
   })
 })

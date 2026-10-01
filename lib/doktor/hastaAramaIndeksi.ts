@@ -87,3 +87,21 @@ export async function mesajAdaylariniBul(
   if (error) return null
   return new Set((data || []).map((r) => r.patient_id as string))
 }
+
+/**
+ * NOTYA-SES-YARIM-01: is this single word EXACTLY a name part of one of this doctor's patients? Exact hash only
+ * (no prefix expansion) — "Umutcan" must not be answered by a patient called "Umut". Doctor-scoped; nothing is
+ * decrypted. null = the index could not be read (the caller falls back to its own signal).
+ */
+export async function adParcasiMi(supabase: SupabaseClient, doctorId: string, kelime: string): Promise<boolean | null> {
+  const parca = duzle(kelime)
+  if (parca.length < 3 || parca.includes(' ')) return false
+  const { data, error } = await supabase
+    .from('patient_search_tokens')
+    .select('patient_id')
+    .eq('doctor_id', doctorId)
+    .eq('token_hash', tokenOzeti(parca))
+    .limit(1)
+  if (error) return null
+  return (data || []).length > 0
+}

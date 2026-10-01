@@ -11,7 +11,7 @@ test('silero: hysteresis — enters at 0.5, stays until below 0.35', () => {
   assert.equal(sileroKonusuyorMu(NaN, true), false)
 })
 
-test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail 500 vs 500', () => {
+test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail 700 vs 700', () => {
   const simdi = 10_000
   const a = kareKonusmasi({ rms: 0.001, silero: { p: 0.9, zaman: simdi - 40 }, onceki: false, simdi })
   assert.deepEqual(a, { ses: true, kaynak: 'silero' })
@@ -23,8 +23,9 @@ test('silero: frame gate uses Silero when fresh, RMS when stale or missing; tail
   assert.equal(d.kaynak, 'rms')
   assert.equal(sessizlikKuyrugu('silero'), FISH_SES_SIZLIGI_SILERO_MS)
   assert.equal(sessizlikKuyrugu('rms'), FISH_SES_SIZLIGI_MS)
-  assert.equal(FISH_SES_SIZLIGI_MS, 500)
-  assert.equal(FISH_SES_SIZLIGI_SILERO_MS, 500)
+  // NOTYA-SES-YARIM-01: 500 → 700 ms (name-surname pause).
+  assert.equal(FISH_SES_SIZLIGI_MS, 700)
+  assert.equal(FISH_SES_SIZLIGI_SILERO_MS, 700)
 })
 
 test('silero: opt-in — off by default, NEXT_PUBLIC_NOTYA_SILERO=1 enables, iOS also needs the iOS flag', () => {
@@ -63,15 +64,15 @@ function sileroTuru(olasiliklar: number[], gecikmeMs = 32) {
   return { tur, bitir, kareSayisi }
 }
 
-test('silero gate: 1.2 s of speech (with two hysteresis dips) closes on the 500 ms tail and passes the junk gate', () => {
+test('silero gate: 1.2 s of speech (with two hysteresis dips) closes on the 700 ms tail and passes the junk gate', () => {
   const sessiz = (n: number) => Array.from({ length: n }, () => 0.05)
   const konusma = Array.from({ length: 38 }, (_, i) => (i === 12 || i === 25 ? 0.4 : 0.85)) // 38 × 32 ms ≈ 1216 ms, dips stay inside hysteresis
   const r = sileroTuru([...sessiz(8), ...konusma, ...sessiz(30)])
   assert.equal(r.bitir, 'sessizlik')
   assert.equal(r.tur.kaynak, 'silero')
   assert.ok(r.tur.sesliMs >= 1150 && r.tur.sesliMs <= 1280, `sesli ${r.tur.sesliMs}`)
-  // closes at the first frame ≥ 500 ms after speech ended: 16–18 silent frames, not the whole 30
-  assert.ok(r.kareSayisi >= 8 + 38 + 16 && r.kareSayisi <= 8 + 38 + 18, `kare ${r.kareSayisi}`)
+  // closes at the first frame ≥ 700 ms after speech ended: 22–24 silent frames, not the whole 30
+  assert.ok(r.kareSayisi >= 8 + 38 + 22 && r.kareSayisi <= 8 + 38 + 24, `kare ${r.kareSayisi}`)
   const toplamMs = r.kareSayisi * 32 + 300 // + pre-roll
   assert.deepEqual(klipGonderilirMi({ toplamMs, sesliMs: r.tur.sesliMs }), { gonder: true, neden: null })
 })
@@ -87,7 +88,7 @@ test('silero gate: late frames (main thread busy) still credit wall-clock voiced
 })
 
 
-test('NOTYA-VAD-TAIL-01 regression — a deliberate 450ms mid-sentence pause (doctor speaking slowly) never closes the turn, only the trailing 500ms+ silence does', () => {
+test('NOTYA-VAD-TAIL-01 regression — a deliberate 450ms mid-sentence pause (doctor speaking slowly) never closes the turn, only the trailing 700ms+ silence does', () => {
   // Two "sentences" of ~700ms speech each, with a 450ms silent gap between them — the kind of
   // natural pause a doctor takes speaking slowly and deliberately (the root cause of the
   // "interrupting / not listening" complaint under the old 300ms tail, where anything over 300ms
@@ -108,10 +109,10 @@ test('NOTYA-VAD-TAIL-01 regression — a deliberate 450ms mid-sentence pause (do
   const full = sileroTuru([...sentence(22), ...pause(450), ...sentence(22), ...tail(40)])
   assert.equal(full.bitir, 'sessizlik')
   assert.equal(full.tur.sesliMs, 1408) // 704 × 2 — both sentences counted, the pause excluded
-  assert.equal(full.kareSayisi, 75) // 22 + 14 + 22 + 17 trailing silent frames to close
+  assert.equal(full.kareSayisi, 81) // 22 + 14 + 22 + 23 trailing silent frames to close (700 ms tail, NOTYA-SES-YARIM-01)
 
   // 3) A 320ms pause — just over the OLD 300ms tail, which would have closed the turn there —
-  //    must also not close under the new 500ms tail. Locks in the NOTYA-VAD-TAIL-01 regression.
+  //    must also not close under the current tail. Locks in the NOTYA-VAD-TAIL-01 regression.
   const oldWouldHaveCut = sileroTuru([...sentence(22), ...pause(320)])
-  assert.equal(oldWouldHaveCut.bitir, null, '300ms eski kuyruk burada kapatırdı; 500ms kapatmamalı')
+  assert.equal(oldWouldHaveCut.bitir, null, '300ms eski kuyruk burada kapatırdı; şimdiki kuyruk kapatmamalı')
 })

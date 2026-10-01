@@ -73,6 +73,8 @@ import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar,
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
+import { asiKaydiSorusuMu, asiTablosuCevabi, type AsiTablosuCevabi } from "@/lib/asistan/asiTablosu"
+import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 
 export type Kanal = "yazi" | "ses"
 
@@ -405,6 +407,7 @@ ${ilacBaglamMetni(drugs[0])}`
   let kesinDosyaCevap: string | null = null
   let aramaCevabi: string | null = null
   let cozum: HastaCozumu | null = null
+  let asiTablo: AsiTablosuCevabi | null = null
   // NOTYA-BETA-0925: kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi)
   // sunucuda, modelsiz cevaplanır. Değerler yalnız bu yanıtın ekran metnindedir; saklanan geçmişe (sonraki
   // turlarda modele giden) değersiz metin yazılır — VELI-YASAL-ONAM kuralı korunur.
@@ -445,7 +448,10 @@ ${ilacBaglamMetni(drugs[0])}`
     // NOTYA-AKTIF-HASTA-01 (Kaan kararı 2026-09-29, 09-25 kuralı geri geldi): açık hasta — bu oturumda adla açılan
     // (odakKaynak 'soz') YA DA doktorun açık sayfası (NOTYA-SAYFA-HASTA-01, 'sayfa') — adsız soruyu cevaplar; arama
     // değil. Adla bulunan hasta kazanır; takvim / çok-hasta sorusu dosya bağlamaz (lib/asistan/aktifHasta.ts).
-    const aktifeDon = aktifHastaKullanilsinMi({
+    // NOTYA-SES-YARIM-01: the name the doctor said matches too many patients to list — Ayşe asks for the surname;
+    // the open patient must not answer a question that named someone else.
+    const adBelirsiz = cozum.tur === "yok" && Boolean(cozum.cokAday)
+    const aktifeDon = !adBelirsiz && aktifHastaKullanilsinMi({
       aktifHastaVar: Boolean(aktifOnceden),
       cozumTur: cozum.tur,
       aramaSonucu: Boolean((cozum as { sayiMetin?: string }).sayiMetin),
@@ -456,9 +462,27 @@ ${ilacBaglamMetni(drugs[0])}`
       const aktifAdi = baglam.currentPatientId && String(baglam.currentPatientId) === aktifOnceden && baglam.patientName ? String(baglam.patientName) : ""
       cozum = { tur: "tek", patientId: aktifOnceden, ad: aktifAdi }
     }
-    const dosyaIstegi = dosyaAcmaIstegiMi(mesajMetni)
+    // NOTYA-ASI-TABLO-01: the vaccine RECORD is asked for ("aşıları", "aşı karnesi", "uygulanmış aşılar") — a table on
+    // screen and one spoken line, no model. The doctor's own words count too: the follow-up rewrite turns a bare
+    // "aşıları?" into the evaluation question "… aşıları tam mı?".
+    const asiTabloIstegi = !kayitNiyetiMi(mesajMetni) && (asiKaydiSorusuMu(hamMesaj) || asiKaydiSorusuMu(mesajMetni))
+    const dosyaIstegi = !asiTabloIstegi && dosyaAcmaIstegiMi(mesajMetni)
     const konus = aktifeDon ? null : cozumKonus(cozum)
-    if (konus) {
+    if (cozum.tur === "tek" && !cozum.cevap && asiTabloIstegi) {
+      try {
+        // HASTA-IZOLASYON-01: the id is the resolver's (doctor-scoped) or the re-checked open patient; the karne
+        // read narrows every query by doctor AND patient again.
+        const karne = await asiKarnesiVerisi(supabase, doktorId, cozum.patientId)
+        const ad = cozum.ad || karne.hasta.adSoyad || "Hasta"
+        cozulenHasta = { id: cozum.patientId, ad }
+        asiTablo = asiTablosuCevabi(ad, karne)
+      } catch (e) {
+        console.error("[asistan/chat] aşı tablosu", e instanceof Error ? e.message : String(e))
+      }
+    }
+    if (asiTablo) {
+      // answered below, before any model call
+    } else if (konus) {
       aramaCevabi = konus
       // NOTYA-AYSE-100 S2: a who-answer ("Son gördüğünüz hasta: X") makes X the open patient for the follow-up.
       if (cozum.tur === "tek" && cozum.cevap) cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
@@ -502,6 +526,13 @@ ${ilacBaglamMetni(drugs[0])}`
   } catch (e) {
     // Dosya bağlamı kritik değil — normal akış sürer; ama sessiz kayıp "hasta yok" cevabı üretir, görünür olsun.
     console.warn("[asistan/chat] dosya bağlamı kurulamadı", e instanceof Error ? e.message : String(e))
+  }
+
+  if (asiTablo) {
+    turNiyeti = "asi"
+    await oturumuYaz(asiTablo.ekran, { hasta: cozulenHasta })
+    soyle(asiTablo.konusma)
+    return sade(asiTablo.ekran, asiTablo.konusma, cozulenHasta?.ad || null)
   }
 
   if ((aramaCevabi || kesinDosyaCevap) && !kayitNiyetiMi(String(message || ""))) {
