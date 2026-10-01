@@ -6,7 +6,7 @@
  * cadence preview is s2.1-pro (paid). Other specialists stay on ElevenLabs.
  */
 
-export const FISH_HABER_SES_ID = 'c6ebcbee252d4c769696dc849d664c61'
+export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
 /** Models the hosted API accepts (docs.fish.audio TTS reference, read 2026-09-30). */
 export const FISH_MODELLER = ['s2.1-pro', 's2-pro', 's1'] as const
 export type FishModel = (typeof FISH_MODELLER)[number]
