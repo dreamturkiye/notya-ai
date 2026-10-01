@@ -2877,3 +2877,29 @@ Kod: `lib/asistan/kapsamKilidi.ts` (modelsiz ön kapı), `lib/asistan/kapsamRed.
 ## 2026-10-01 - Fish sesi geri alındı
 - Yeni Fish sesi (c6ebcbee...) Kaan tarafından 2026-10-01 tarihinde çok kötü bulunarak reddedildi; eski ses (27d0d61d...) geri yüklendi (PR #514 geri alındı).
 - Gelecekte herhangi bir ses değişikliğinden önce Dr. Gökhan dinlemeli; özellikle Ayşe ve Ozay Bartalone, yeni ses tarafından bozuk okundu. Bekleyen taraf: Dr. Gökhan (dinleme onayı).
+
+## NOTYA-AYSE-YETENEK-DENETIM-01 — Ayşe capability regression audit (2026-10-01, owner: Claude audit job, branch `audit/ayse-capability-regression`; decisions: Kaan)
+
+Report: `docs/ayse-capability-regression-audit.md`. Read-only audit of `origin/main` at `7f902b41` against the pre-Luna baseline `076720ae` (2026-09-26) and the pre-router baseline `e2371dbe` (2026-09-20). No product code changed; docs only, on the branch, not on `main`, nothing shipped. Appointments and the vaccine table are owned by `fix/ayse-randevu-capability` and `fix/ayse-voice-endpointing-vaccine-table` and are not planned here.
+
+Result: no single cause, and not the Luna transport (tool schemas are sent and tool calls are parsed). Three causes: (1) model-free routers in `ayseCevapla` answer before Luna is called (search template since 09-21, quick card since 09-21, calendar reader 09-29, scope gate 10-01); (2) the Fish voice route `fish-tur` (09-29) does not call the spoken-confirmation, draft-withdrawal and continuation handlers that live in `sesLlm.ts`, and voice gets a shortened chart since #497; (3) Luna's unforced tool calling has never been audited. The patient-count template comes out identically at the 09-26 baseline, so it predates Luna. Test run in the audit worktree: 13 assistant test files, 377 passed; `tekBeyin.test.ts` and the full `npm test` could not run there (no `node_modules`).
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-AYSE-YETENEK-DENETIM-01 | **DONE 2026-10-01 — docs only (branch, not merged)** | Audit report with baselines, timeline, evidence, 43-row capability table and a 14-PR restoration plan. | Kaan: read, choose order |
+| NOTYA-AYSE-GERI-00 | OPEN | Routing regression table (phrase, patient state, expected route and tool), a `fish-tur` route harness, and the ten test files missing from `npm test`. | Claude, after Kaan's go; S |
+| NOTYA-AYSE-GERI-01 | OPEN — P0 | Scope gate refuses patients and clinical questions whose words collide with the off-topic list ("Burcu Yılmaz ...", "Mehmet Erdoğan ...", "Kriptorşidizm ...", "Araba tutması ..."). | Claude; S |
+| NOTYA-AYSE-GERI-02 | OPEN — P0 | With no patient resolved, a non-cohort message returns the count template ("Son 90 gün 0 hasta. Filtre: ...") instead of reaching the model. | Claude; S-M |
+| NOTYA-AYSE-GERI-03 | OPEN — P0 | Spoken "Evet / Hayır" does not commit or withdraw a card on Ayşe's Fish voice route. | Claude; S |
+| NOTYA-AYSE-GERI-04 | OPEN — P0 | Natural record commands ("alerjisini ekle", "kilosunu ekle", "kronik hastalıklara ekle") are answered by the quick card; the action tools are never offered. Shared command-intent helper to be agreed with the appointments job. | Claude + appointments job; M |
+| NOTYA-AYSE-GERI-05 | OPEN — P0 | Anthropometrics for one exam, as a series, across all exams: only the latest measurement is returned. | Claude; M |
+| NOTYA-AYSE-GERI-06 | OPEN — P0 | Exam summaries for several or all exams. | Claude; M |
+| NOTYA-AYSE-GERI-07 | OPEN — P1 | Voice: detail beyond the shortened chart (older visits, history, tables). | Claude; S-M |
+| NOTYA-AYSE-GERI-08 | OPEN — P1 | Voice: continuation of a cut answer on the Fish route. | Claude; S |
+| NOTYA-AYSE-GERI-09 | OPEN — P1 | With a patient open, "toplam / en çok / vaka" questions go to the practice-wide search. | Claude; S |
+| NOTYA-AYSE-GERI-10 | OPEN — P1 | Name index: no fallback for a patient without index rows; table migration not in the repo; fixtures and smoke scripts do not write rows. Production coverage unverified (count query in the report, section 9). | Claude; Kaan runs or approves the count query; S |
+| NOTYA-AYSE-GERI-11 | OPEN — P1 | Luna action audit: about thirty action sentences on both channels with the fallback disabled; no audit so far exercised a card-producing tool call. | Claude; Kaan agrees the target rate; M |
+| NOTYA-AYSE-GERI-12 | OPEN — P1 | SOAP advisory hits its 2000-token cap; in-note consult box lacks the JSON flag; memory extraction runs at effort none with parsed JSON. | Claude; S |
+| NOTYA-AYSE-GERI-13 | OPEN — P2 | Tool-page timeouts equal to the route budget, strict JSON parsing, and ledger truth-up (row NOTYA-KAPSAM-01 above still says "PR open"; #515 is on `main` as `ee8cb9bf`). | Claude; S |
+
+Not verified in this audit: whether production serves `7f902b41`; production index coverage; live Luna behaviour; the model behind the ElevenLabs-hosted agents before the single-brain switch.
