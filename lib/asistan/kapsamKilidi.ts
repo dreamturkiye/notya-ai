@@ -12,9 +12,9 @@
  * hiçbir kapsam-dışı kalıpla eşleşmez, bu yüzden her zaman geçer.
  */
 import { duzle } from '@/lib/doktor/hastaCozumleyici'
-import { KAPSAM_RED, kapsamRedMi } from '@/lib/asistan/kapsamRed'
+import { KAPSAM_RED, KAPSAM_SORU, kapsamRedMi } from '@/lib/asistan/kapsamRed'
 
-export { KAPSAM_RED, kapsamRedMi }
+export { KAPSAM_RED, KAPSAM_SORU, kapsamRedMi }
 
 /** Kapsam-içi sinyal kökleri (duzle sonrası). Kısa kökler (<=4 harf) yalnız kısa ekle eşleşir ('asi' ile 'asilzade' değil). */
 const IC_KOKLER = [
@@ -31,6 +31,7 @@ const IC_KOKLER = [
   'onay', 'mg', 'kg', 'ml', 'mcg', 'bmi', 'crp', 'ekg', 'eeg', 'tsh', 'nobet', 'alkol', 'sigara', 'uyku', 'beslen',
   'diyet', 'gelisim', 'teshis', 'prognoz', 'patoloji', 'cerrahi', 'ameliyat', 'anestezi', 'reflu', 'kolik', 'sepsis',
   'kanser', 'tumor', 'kist', 'sarilik', 'bilirubin', 'hemoglobin', 'vitamin', 'mineral', 'steroid', 'serum',
+  'hava yolu', 'havayolu', 'oda havasi',
 ]
 
 export function kapsamIciSinyalVar(n: string): boolean {
@@ -61,6 +62,12 @@ const DISI_KALIPLAR: RegExp[] = [
   / (bugun|yarin|haftasonu|hafta sonu) hava /,
   / hava (bugun|yarin) /,
   / (bugun|yarin) sicaklik /,
+  // NOTYA-KAPSAM-05 (2026-10-01): "Bugün İstanbul'da hava yağışlı mı?" slipped past the list above and ran a
+  // patient count (bugün + Şehir filter). Weather adjectives anywhere within three words of 'hava', either order.
+  / hava (\S+ ){0,3}(yagis|yagmur|karli|gunes|bulut|ruzgar|sisli|firtina|serin|sicak|soguk|derece|nem)[a-z]* /,
+  / (yagisli|yagmurlu|karli|gunesli|bulutlu|ruzgarli|sisli|firtinali) (\S+ ){0,3}hava[a-z]* /,
+  / (yagis|yagmur|kar|firtina|dolu) (bekleniyor|var mi|olacak mi|yagacak mi|ihtimali)[a-z]* /,
+  / (meteoroloji|hava tahmini|hava raporu)[a-z]* /,
   // spor
   / (fenerbahce|galatasaray|besiktas|trabzonspor|super lig|sampiyonlar ligi|nba|formula 1|dunya kupasi|euroleague|avrupa kupasi)[a-z]* /,
   / mac(i|in|lar|lari|ta)? (.* )?(kac|sonuc|skor|bitti|ne zaman|kazandi)[a-z]* /,
@@ -94,11 +101,29 @@ const DEVAM_IZLERI =
 
 /** Metin açıkça kapsam-dışıysa true. `oncekiRed`: önceki asistan cevabı KAPSAM_RED idi (aynı konunun devamı). */
 export function kapsamDisiMi(mesaj: string | null | undefined, secenek: { oncekiRed?: boolean } = {}): boolean {
+  return kapsamKarari(mesaj, secenek) === 'disi'
+}
+
+/**
+ * NOTYA-KAPSAM-05: kapsam-dışı bir konunun izi (hava, yağmur, maç, gündem …) var ama açık bir kalıp yok ve hiçbir
+ * kapsam-içi sinyal de yok ('Hava güzel mi?'). Bu kelimeler tıbbi bir cümlede tek başına geçmez; 'hava yolu' gibi
+ * tıbbi kullanım IC sinyaliyle zaten geçer. Belirsiz turda hasta aracı çalışmaz: kısa bir netleştirme sorusu sorulur.
+ */
+const DISI_IZLERI = / (hava|havalar|yagmur[a-z]*|yagis[a-z]*|firtina[a-z]*|meteoroloji[a-z]*|gundem[a-z]*|futbol[a-z]*|basketbol[a-z]*|mac|maci|maclar[a-z]*|sarki[a-z]*) /
+
+export type KapsamKarari = 'ic' | 'disi' | 'belirsiz'
+
+/**
+ * Üç yollu karar: 'disi' → KAPSAM_RED; 'belirsiz' → KAPSAM_SORU (hasta aracı yok, model yok); 'ic' → normal akış.
+ * Varsayılan 'ic' kalır: iz kelimesi olmayan her soru eskisi gibi geçer.
+ */
+export function kapsamKarari(mesaj: string | null | undefined, secenek: { oncekiRed?: boolean } = {}): KapsamKarari {
   const n = duzle(String(mesaj || ''))
-  if (!n) return false
-  if (kapsamIciSinyalVar(n)) return false
+  if (!n) return 'ic'
+  if (kapsamIciSinyalVar(n)) return 'ic'
   const metin = ` ${n} `
-  if (DISI_KALIPLAR.some((re) => re.test(metin))) return true
-  if (secenek.oncekiRed && n.split(' ').length >= 3 && DEVAM_IZLERI.test(metin)) return true
-  return false
+  if (DISI_KALIPLAR.some((re) => re.test(metin))) return 'disi'
+  if (secenek.oncekiRed && n.split(' ').length >= 3 && DEVAM_IZLERI.test(metin)) return 'disi'
+  if (DISI_IZLERI.test(metin)) return 'belirsiz'
+  return 'ic'
 }

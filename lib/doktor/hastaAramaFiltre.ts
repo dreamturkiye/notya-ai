@@ -486,7 +486,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
   const y = yasCikar(nYas)
   const p = pencereCikar(y.kalan, now, tz)
   if (!p.pencere && (pratik.kirilim || (olcum === 'ilac' && sayim))) {
-    const bugun = trtParca(now).gun
+    const bugun = trtParca(now, 0, tz).gun
     const bas = gunEkle(bugun, -30)
     p.pencere = pencereKur(bas, bugun, 'son 30 gün', tz)
   }
@@ -589,7 +589,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
   }
 
   if (!p.pencere && (asi || /sikayet|tani|iltihap|otit|alerji|ilac|randevu|epikriz|form/.test(n0)) && !y.yas && !haric.includes('asi')) {
-    const bugun = trtParca(now).gun
+    const bugun = trtParca(now, 0, tz).gun
     const bas = gunEkle(bugun, -90)
     p.pencere = pencereKur(bas, bugun, 'son 90 gün', tz)
   }
@@ -625,6 +625,17 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
       }
     }
     return [...terimler]
+  }
+
+  // NOTYA-KAPSAM-05 (2026-10-01): a city / address is a patient filter only when the question is about patients.
+  // "Bugün İstanbul'da hava yağışlı mı?" became "bugün · Şehir" and ran a count ("Bugün 0 hasta. Filtre: …").
+  // With no patient word and no other clinical filter, the location fields are dropped and nothing marks it clinical.
+  const hastaNiyeti = /\bhasta|\bkim\b|\bkimler|\bkac\b|\bkaci\b|listele|\bcocuk|\bbebek|\bgelen|\bgeldi|muayene|randevu|\bkayitli|\boturan|\byasayan|ikamet|\bdosya/.test(n0)
+    || alanlar.some((a) => ARAMA_ALANLARI.find((x) => x.anahtar === a.anahtar)?.grup !== 'iletisim')
+  if (!hastaNiyeti) {
+    for (let i = alanlar.length - 1; i >= 0; i--) {
+      if (ARAMA_ALANLARI.find((x) => x.anahtar === alanlar[i].anahtar)?.grup === 'iletisim') alanlar.splice(i, 1)
+    }
   }
 
   const yalinVeya = kalan.replace(/\bhasta(?:lar|si|nin)?\s+(?:veya|ya da| or )\s+hasta(?:lar|si)?\b/g, ' ')

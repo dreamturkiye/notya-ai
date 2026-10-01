@@ -178,6 +178,27 @@ export function hastaSayimiSeansIster(q: SorguAyik): boolean {
   return false
 }
 
+/**
+ * NOTYA-KAPSAM-05 (Kaan, 2026-10-01): "bugün kaç hastam var?" = patients with a visit (seans / not) or a non-cancelled
+ * appointment inside the doctor's day (browser timezone, not UTC / TRT). A bare windowed count with no visit verb and
+ * no other filter is that number; when it is 0 the answer also says the registered total, so a doctor with 1 patient
+ * and nothing today hears "… yok; kayıtlı toplam 1 hastanız var" instead of a bare "0 hasta".
+ */
+export function pencereliCiplakSayim(q: SorguAyik): boolean {
+  return Boolean(
+    q.sayim && q.olcum === 'hasta' && q.pencere && !q.ziyaret
+    && !q.terimler.length && !q.alanlar.length && !q.veya.length && !q.haric.length && !q.sayisal.length
+    && !q.yas && !q.cinsiyet && !q.kanGrubu && !q.asi && !q.minSeans && !q.seriGecikme && !q.bayrakVe.length && !q.kirilim
+    && !q.ziyaretYok && !q.bolumIstegi,
+  )
+}
+
+export function bosGunSayimCumlesi(q: SorguAyik, kayitliToplam: number): string {
+  const donem = q.pencere?.etiket || 'bugün'
+  const bas = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)}`
+  return `${bas} randevulu ya da muayene edilen hastanız yok; kayıtlı toplam ${kayitliToplam} hastanız var.`
+}
+
 export async function klinikAramaYurut(
   supabase: SupabaseClient,
   doktorId: string,
@@ -616,6 +637,7 @@ export async function klinikAramaYurut(
   })
   if (q.kirilim === 'ilac_adi' && ek.length) istatistik.cumle = ek.join(' ')
   else if (ek.length) istatistik.cumle = `${istatistik.cumle} ${ek.join(' ')}`
+  if (cikti.length === 0 && pencereliCiplakSayim(q)) istatistik.cumle = bosGunSayimCumlesi(q, (hastalar || []).length)
   return { adaylar, q, istatistik, tur: cevapTuru(q, null) }
 }
 

@@ -128,3 +128,34 @@ test('sabit ret cümlesi: tek dizgi, tanınır, sistem isteminde var', () => {
   const p = Object.values(PERSONAS)[0]
   assert.ok(buildSystemPrompt(p, null, null).includes(KAPSAM_RED))
 })
+
+// NOTYA-KAPSAM-05 (2026-10-01): live voice bug — "Bugün İstanbul'da hava yağışlı mı?" → "Bugün 0 hasta. Filtre: bugün · Şehir."
+import { kapsamKarari, KAPSAM_SORU } from '@/lib/asistan/kapsamKilidi'
+import { readFileSync } from 'node:fs'
+
+test('NOTYA-KAPSAM-05: canlı cümle reddedilir (hasta sayımı değil)', () => {
+  assert.equal(kapsamKarari(`Bugün İstanbul'da hava yağışlı mı?`), 'disi')
+  for (const m of [`yarın Ankara'da hava yağmurlu olacak mı`, `hafta sonu İzmir'de hava güneşli mi`, `bugün yağış bekleniyor mu`, `meteoroloji ne diyor`, `yağmurlu bir hava var mı dışarıda`]) {
+    assert.equal(kapsamKarari(m), 'disi', m)
+  }
+})
+test('NOTYA-KAPSAM-05: belirsizse netleştirme sorusu (hasta aracı yok)', () => {
+  for (const m of [`hava güzel mi`, `İstanbul'da havalar nasıl gidiyor`, `maç ne oldu`, `gündemde ne var`]) assert.equal(kapsamKarari(m), 'belirsiz', m)
+  assert.ok(KAPSAM_SORU.includes('Hocam') && KAPSAM_SORU.endsWith('?'))
+})
+test('NOTYA-KAPSAM-05: hasta / klinik sorular geçer', () => {
+  for (const m of [`bugün kaç hastam var?`, `Bugün kaç hastam var`, `İstanbul'da oturan hastalarım kimler`, `hava yolu açık mı`, `oda havasında satürasyon kaç`, `bugün randevularım neler`, `peki yarın?`]) {
+    assert.equal(kapsamKarari(m), 'ic', m)
+  }
+})
+test('NOTYA-KAPSAM-05: kapı her araçtan önce ve takip turunda da çalışır', () => {
+  const k = readFileSync(new URL('./ayseCevapla.ts', import.meta.url), 'utf8')
+  const kapi = k.indexOf('kapsamKarari(hamMesaj')
+  assert.ok(kapi > 0)
+  for (const arac of ['takvimSorusuCoz(message', 'kimlikSorusunuCevapla(supabase', 'hastaninSozunuCoz(supabase']) {
+    assert.ok(k.indexOf(arac) > kapi, `${arac} kapıdan sonra olmalı`)
+  }
+  assert.match(k, /kapsam === 'disi' \|\| \(kapsam === 'belirsiz' && !takip\)/)
+  const bul = readFileSync(new URL('../../app/api/asistan/hasta-bul/route.ts', import.meta.url), 'utf8')
+  assert.ok(bul.indexOf('kapsamKarari(soz)') > 0 && bul.indexOf('kapsamKarari(soz)') < bul.indexOf('hastaninSozunuCoz(supabase'))
+})

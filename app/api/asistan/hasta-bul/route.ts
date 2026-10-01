@@ -17,6 +17,8 @@ import { cozumKonus, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { hastaDosyaPaketiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { dosyaSoruCevap, kartSoyle } from '@/lib/doktor/hastaDosyaKart'
 import { kimlikSorusunuCevapla } from '@/lib/doktor/kimlikSorusu'
+import { kapsamKarari, KAPSAM_RED, KAPSAM_SORU } from '@/lib/asistan/kapsamKilidi'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +31,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { isim?: string; hastaAdi?: string }
   const soz = String(body.isim || body.hastaAdi || '').trim()
   if (!soz) return NextResponse.json({ sonuc: 'Hasta adını anlayamadım, tekrar söyler misiniz?' })
+  // NOTYA-KAPSAM-05: the same scope gate as ayseCevapla, before any patient lookup.
+  const kapsam = kapsamKarari(soz)
+  if (kapsam !== 'ic') return NextResponse.json({ sonuc: kapsam === 'disi' ? KAPSAM_RED : KAPSAM_SORU })
 
   try {
     // NOTYA-BETA-0925: kimlik / iletişim sorusu → değerler yalnız `ekran` ile tarayıcıya (sesli sayfa bunu sohbet
@@ -41,7 +46,7 @@ export async function POST(req: NextRequest) {
         ...(kimlik.hasta ? { patientId: kimlik.hasta.id, ad: kimlik.hasta.ad } : {}),
       })
     }
-    const cozum = await hastaninSozunuCoz(supabase, doktorId, soz)
+    const cozum = await hastaninSozunuCoz(supabase, doktorId, soz, { tz: istekSaatDilimi() })
     const konus = cozumKonus(cozum)
     if (cozum.tur === 'coklu') {
       return NextResponse.json({
