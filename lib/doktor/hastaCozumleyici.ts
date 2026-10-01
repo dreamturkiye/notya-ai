@@ -308,10 +308,18 @@ export async function hastaninSozunuCoz(
     if (!ad) continue
     const adDuz = duzle(ad)
     if (!adDuz) continue
-    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar)) { tam.push({ id: h.id, ad }); continue }
+    // NOTYA-SUFFIX-TOLERANS-01 (Kaan/Gökhan, 2026-10-01): sesliSozTokenlari strips an apostrophe-separated
+    // suffix ("Türkoğlu'nun" -> "türkoğlu") but not one glued straight onto the word with no apostrophe
+    // ("yeşilin"), which real doctor speech/typing does constantly. A name-part is still a match if some
+    // message token simply STARTS WITH it -- Turkish suffixes only ever append, never prepend, so this is
+    // purely additive: it can only turn a past false 'no match' into a match, never break an existing one.
+    const parcaUzatilmisVarMi = (p: string) => tokenlar.has(p) || Array.from(tokenlar).some((t) => t.startsWith(p))
+    const parcalarUzun = adDuz.split(' ').filter((p) => p.length >= 3)
+    const tumParcalarVarGevsek = parcalarUzun.length > 0 && parcalarUzun.every(parcaUzatilmisVarMi)
+    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar) || tumParcalarVarGevsek) { tam.push({ id: h.id, ad }); continue }
     // NOTYA-HASTA-ODAK-01: a persona first name alone ("Ayşe") never partially matches a patient.
     const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && !PERSONA_ADLARI_DUZ.has(p))
-    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || tokenlar.has(p))) kismi.push({ id: h.id, ad })
+    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || parcaUzatilmisVarMi(p))) kismi.push({ id: h.id, ad })
   }
 
   const cozAdaylar = async (adaylar: { id: string; ad: string }[]): Promise<HastaCozumu> => {
