@@ -15,6 +15,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { encrypt } from '@/lib/security/encryption'
+import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 
 export async function otomatikHastaKaydiOlustur(
   supabase: SupabaseClient,
@@ -35,5 +36,6 @@ export async function otomatikHastaKaydiOlustur(
     .select('id')
     .single()
   if (error || !data) return null
+  await hastaAramaIndeksiniGuncelle(supabase, doktorId, data.id, temizAd)
   return { id: data.id }
 }

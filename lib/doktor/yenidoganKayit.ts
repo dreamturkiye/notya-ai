@@ -8,6 +8,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt, encrypt } from '@/lib/security/encryption'
+import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 import { uploadDocument } from '@/lib/vault/service'
 import {
   ASI_V1,
@@ -302,6 +303,7 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
     }).select('id').single()
     if (yeniHata || !yeni) throw new Error(yeniHata?.message || 'Bebek kaydı oluşturulamadı')
     bebekPatientId = yeni.id
+    await hastaAramaIndeksiniGuncelle(sb, g.doktorId, yeni.id, bebekAdi)
   }
   if (!bebekPatientId) throw new Error('Bebek kaydı oluşturulamadı')
 

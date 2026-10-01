@@ -16,6 +16,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
+import { adIndeksParcalari, tokenOzeti } from '../doktor/hastaAramaIndeksi'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-tek-beyin-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
@@ -26,6 +27,11 @@ process.env.NOTYA_SES_LLM_SECRET = SIR
 process.env.NOTYA_SES_JETON_SECRET = 'qa-sentetik-ses-jeton-anahtari-0123456789ab'
 
 let db = new SahteVeritabani()
+
+function indeksle(doctorId: string, patientId: string, adPlaintext: string) {
+  for (const parca of adIndeksParcalari(adPlaintext)) db.ekle('patient_search_tokens', { patient_id: patientId, doctor_id: doctorId, token_hash: tokenOzeti(parca) })
+}
+
 function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { headers?: Record<string, string> } }) {
   const c = () => db.istemci(opts)
   return {
@@ -119,6 +125,7 @@ function sahne(): Sahne {
     phone_encrypted: encrypt(TEL), email_encrypted: null,
     notes_encrypted: encrypt(JSON.stringify({ anneAdi: ANNE, babaAdi: BABA })),
   }).id
+  indeksle(doktor.id, hasta, 'Umutcan Türkoğlu')
   const oturum = db.ekle('asistan_sessions', { doctor_id: doktor.id, persona_id: 'aysekaya', messages: [], active_context: { specialty: 'pediatri' } }).id
   return { doktor, diger, hasta, oturum }
 }
@@ -644,6 +651,7 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
   function ikiHasta() {
     const s = sahne()
     const ayse = db.ekle('patients', { doctor_id: s.doktor.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Ayşe Yeşil' })), dob_encrypted: encrypt('2021-02-03') }).id
+    indeksle(s.doktor.id, ayse, 'Ayşe Yeşil')
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: ayse, tur: 'kilo', deger: 18.4, birim: 'kg', alindi: '2026-09-20T09:00:00Z', onaylandi: true })
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: s.hasta, tur: 'kilo', deger: 21.7, birim: 'kg', alindi: '2026-09-22T09:00:00Z', onaylandi: true })
     oturumu(s.oturum).active_context = { specialty: 'pediatri', currentPatientId: ayse, patientName: 'Ayşe Yeşil' }
@@ -653,6 +661,7 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
   it('rota: sahibi 200 + ad, odak oturuma yazılır; başka doktorun hastası 404 (varlık sızmaz) ve hiçbir şey yazılmaz; bilinmeyen / yabancı oturum 404; girişsiz 401', async () => {
     const s = ikiHasta()
     const yabanciHasta = db.ekle('patients', { doctor_id: s.diger.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'QA Yabancı Hasta' })) }).id
+    indeksle(s.diger.id, yabanciHasta, 'QA Yabancı Hasta')
     const yabanciOturum = db.ekle('asistan_sessions', { doctor_id: s.diger.id, persona_id: 'aysekaya', messages: [], active_context: {} }).id
 
     const ok = await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })

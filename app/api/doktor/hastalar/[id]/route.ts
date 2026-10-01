@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { encrypt, decrypt } from '@/lib/security/encryption'
+import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 import {
   cinsiyetSakla,
   notlardanOzetAlanlari,
@@ -108,10 +109,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  let yeniAd: string | null = null
 
   if (body.ad_soyad !== undefined) {
     const ad = String(body.ad_soyad || '').trim()
-    if (ad) updateData.name_encrypted = encrypt(JSON.stringify({ ad }))
+    if (ad) { updateData.name_encrypted = encrypt(JSON.stringify({ ad })); yeniAd = ad }
   }
   if (body.dogum_tarihi !== undefined) {
     const d = String(body.dogum_tarihi || '').trim()
@@ -152,6 +154,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (error) {
     return NextResponse.json({ error: 'Güncelleme başarısız' }, { status: 500 })
   }
+
+  if (yeniAd) await hastaAramaIndeksiniGuncelle(supabase, user.id, data.id, yeniAd)
 
   return NextResponse.json({ ok: true, id: data.id })
 }

@@ -16,6 +16,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
+import { adIndeksParcalari, tokenOzeti } from './hastaAramaIndeksi'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-kimlik-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
@@ -23,6 +24,11 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
 
 let db = new SahteVeritabani()
+
+function indeksle(doctorId: string, patientId: string, adPlaintext: string) {
+  for (const parca of adIndeksParcalari(adPlaintext)) db.ekle('patient_search_tokens', { patient_id: patientId, doctor_id: doctorId, token_hash: tokenOzeti(parca) })
+}
+
 function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { headers?: Record<string, string> } }) {
   const c = () => db.istemci(opts)
   return {
@@ -88,6 +94,7 @@ function sahne(): Sahne {
     phone_encrypted: encrypt(TEL), email_encrypted: null,
     notes_encrypted: encrypt(JSON.stringify({ anneAdi: ANNE, babaAdi: BABA })),
   }).id
+  indeksle(doktor.id, hasta, 'Umutcan Türkoğlu')
   db.ekle('hasta_intake_formlari', {
     doktor_id: doktor.id, patient_id: hasta,
     form_data_encrypted: encrypt(JSON.stringify({
@@ -96,11 +103,13 @@ function sahne(): Sahne {
     })),
   })
   const bos = db.ekle('patients', { doctor_id: doktor.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Bilgisiz Deneme' })), dob_encrypted: encrypt('1980-01-01') }).id
+  indeksle(doktor.id, bos, 'Bilgisiz Deneme')
   const yabanci = db.ekle('patients', {
     doctor_id: diger.id, is_active: true,
     name_encrypted: encrypt(JSON.stringify({ ad: 'Yabancı Hastaoğlu' })),
     notes_encrypted: encrypt(JSON.stringify({ anneAdi: 'GIZLI-B-ANNE' })),
   }).id
+  indeksle(diger.id, yabanci, 'Yabancı Hastaoğlu')
   return { doktor, diger, hasta, bos, yabanci }
 }
 
