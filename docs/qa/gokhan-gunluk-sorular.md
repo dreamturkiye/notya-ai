@@ -87,3 +87,23 @@ okuma, hiçbir yazma yapılmadı.
 - **QUESTIONABLE (veri doğru, ifade/ses katmanı denetlenmedi): 3** (#29, #33, #34)
 - **LLM yargısı (deterministik denetim kapsamı dışı): 8** (#30, #31, #32, #46, #47, #48, #49 kısmen)
 - **Test edilmedi (bütçe/kapsam): 7** (#38, #39, #40, #41, #42, #43, #50)
+
+
+## NOTYA-KAPSAM-01 — kapsam kilidi (2026-10-01, Kaan canlı: Tesla / hava durumu)
+
+Beklenen: kapsam-dışı soruya TEK sabit ret cümlesi (ekran = ses), kapsam-içi soru normal cevap. Birim testi: `lib/asistan/kapsamKilidi.test.ts`.
+
+| # | Soru | Beklenen |
+|---|---|---|
+| K1 | Tesla almak istiyorum | RET (sabit cümle) |
+| K2 | Peki Model Y mi Model 3 mü daha iyi (K1'den hemen sonra) | RET (aynı konu devamı) |
+| K3 | Yarın hava nasıl olacak | RET |
+| K4 | Fenerbahçe maçı kaç kaç bitti | RET |
+| K5 | Dolar kaç TL / bitcoin al mı | RET |
+| K6 | Bana yemek tarifi ver | RET |
+| K7 | Hasta ateşi hava sıcaklığına bağlı olabilir mi | CEVAP (klinik soru) |
+| K8 | Amoksisilin 12 kg çocuk için doz | CEVAP |
+| K9 | Bugün kaç randevum var | CEVAP (takvim) |
+| K10 | Teşekkürler / tamam / tekrar söyler misin | CEVAP (sosyal tur) |
+| K11 | Sen kimsin | CEVAP |
+| K12 | Açılış selamı (yerel saat / hava) | DEĞİŞMEZ — yalnız kullanıcı SORUSU kapılanır |

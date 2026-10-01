@@ -2861,3 +2861,15 @@ LLM serbest metni değil).
 | NOTYA-DOSYA-SORU-TUR-01 | **DONE 2026-10-01 — kod (PR #512, main'de live, commit 4f89a58c)** | Kaan canlı: "Umutcan Türkoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?" en son vizitin (akut otitis media, alakasız) özetini döndürüyordu — kök neden `kanit.ts`'teki `ozetBolumu()`'nün vizit TÜRÜNE göre hiç filtrelememesiydi. Fix: yeni `lib/klinik/vizitTuruEsanlam.ts` (sağlam çocuk/rutin kontrol/aşı vizidi/akut kategorileri + rakamlı yaş-dönümü ifadesi "6 aylık" tarzı) + `kanit.ts`'e `benzerBolumu`'nünkiyle aynı desende bağlama (`vizitTuruBolumu`); eşleşme yoksa artık sessizce en son vizite düşmüyor, açık "bulamadım" cevabı veriyor. Dr. Gökhan'ın gerçek production vizit geçmişine (Umutcan Türkoğlu) karşı doğrulandı. Regresyon: `vizitTuru.test.ts` (4 yeni test) + `denetim.test.ts` (91/91) + tam repo suite (3522/3522) + `tsc` temiz. Kapsam kasıtlı sınırlı: yalnızca rakamlı yaş ifadeleri (ASR zaten rakama çeviriyor) ve 'ozet' soru tipi — sözel sayı ("altı aylık") ve diğer soru tipleri (değişim/büyüme/...) bu sürümde kapsanmadı. | — |
 
 **Bu run'da test edilmeyenler** (bütçe/kapsam, bug değil): randevu/takvim soruları (`takvimSorusuCoz` çalıştırılmadı), vital/alerji/kronik-hastalık negasyon soruları (intake form alanları incelenmedi), aşı-tamlık/eksik-aşı yargısı (TR aşı takvimi karşılastırması deterministik olarak bulunup çalıştırılmadı), SOAP taslağı üretimi ((hem LLM yargısı hem bu hastalarda hiç geçmiş vizit yok). Tam liste ve gerekçeler: `docs/qa/gokhan-gunluk-sorular.md`.
+
+
+## NOTYA-KAPSAM-01 — Ayşe yalnız uygulamanın işine cevap verir (Kaan, 2026-10-01, branch `feat/asistan-kapsam-kilidi`)
+
+Kod: `lib/asistan/kapsamKilidi.ts` (modelsiz ön kapı), `lib/asistan/kapsamRed.ts` (sabit ret cümlesi), `ayseCevapla.ts` (kapı, takvimden önce), `personaEngine.ts` (kural 15, model yedeği).
+
+| ID | Durum | Ne | Kimde |
+|---|---|---|---|
+| NOTYA-KAPSAM-01 | **KOD HAZIR 2026-10-01 — PR açık, birleştirilmedi** | Kapsam-dışı soru (araba, hava, spor, haber, finans, tarif, seyahat, eğlence, kod) tek sabit cümleyle reddedilir; yazı ve ses aynı dizgi; hasta araması / model / kayıt yok; ret sonrası aynı konunun devamı da reddedilir. | Kaan: PR onayı + canlıda Tesla / hava denemesi |
+| NOTYA-KAPSAM-02 | AÇIK | Ön kapı kelime listesidir: listede olmayan bir kapsam-dışı konu (ör. plaj, ünlü kişi) kapıdan geçer ve yalnız model kuralına (istem) kalır. Canlı model denemesi 5/5 ret, 3/3 tıbbi cevap verdi ama istem kuralı %100 garanti değil. Canlıda sızan konu çıkarsa listeye eklenir. | Claude (Kaan sızıntı bildirirse) |
+| NOTYA-KAPSAM-03 | AÇIK | Avukat ve müşavir (mali) asistanları ayrı rotalardan çalışır (`avukat-chat`, `mali-signed-url`), `ayseCevapla` değildir; bu kapıya bağlı DEĞİL. Beta kapsamı doktor + Klinik olduğu için yapılmadı; kendi alanlarına göre ayrı kural gerekir. | Kaan: bu personalar açılırken karar |
+| NOTYA-KAPSAM-04 | AÇIK | Aşırı temkin: kapsam-içi sinyal (hasta, ilaç, randevu ...) varsa kapı asla reddetmez; bu yüzden hasta kelimesiyle karışık bir Tesla sorusu geçer ve modele kalır. Bilinçli tercih (yanlış ret, sızan cevaptan kötüdür). | — |

@@ -26,6 +26,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
+import { kapsamDisiMi } from "@/lib/asistan/kapsamKilidi"
+import { KAPSAM_RED, kapsamRedMi } from "@/lib/asistan/kapsamRed"
 import { asistanOnbellekBloklari } from "@/lib/asistan/onbellekBloklari"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
@@ -301,6 +303,18 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     },
   })
 
+  // NOTYA-KAPSAM-01 (Kaan, 2026-10-01): Ayse answers only what Notya is for. A clearly off-topic ask (car / weather /
+  // sports / finance / recipe / code ...) with no in-scope signal gets ONE fixed refusal: no patient lookup, no model,
+  // no learning, no card, and the same string on screen and in voice. A same-topic follow-up right after a refusal
+  // (peki hangisi daha iyi?) is refused too. Rules and word lists: lib/asistan/kapsamKilidi.ts.
+  const oncekiAsistan = [...messages].reverse().find((m) => m.role === 'assistant')
+  const oncekiRed = kapsamRedMi(oncekiAsistan?.content)
+  if ((!takip || oncekiRed) && kapsamDisiMi(hamMesaj, { oncekiRed })) {
+    console.info('[asistan/chat] kapsam disi', { kanal: g.kanal, oncekiRed })
+    soyle(KAPSAM_RED)
+    await oturumuYaz(KAPSAM_RED, {})
+    return sade(KAPSAM_RED, KAPSAM_RED, baglam.patientName ? String(baglam.patientName) : null)
+  }
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
   const sonTakvimAsistan = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
