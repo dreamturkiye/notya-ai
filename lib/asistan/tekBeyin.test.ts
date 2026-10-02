@@ -455,8 +455,8 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(v.status, 200)
     assert.equal(modelIstekleri.at(-1)?.stream, true, 'ses yolu modeli akışla çağırır')
     assert.ok(!v.parcalar[0].startsWith('Bakıyorum'), 'bekletme sözü yok — ilk parça doğrudan cevap')
-    assert.match(v.parcalar[0], /öksürük vardı\./, 'ilk cümle turun bitmesini beklemez')
-    assert.ok(v.parcalar.length >= 2, 'bitmiş cümleler ayrı ayrı gider')
+    // NOTYA-SES-ELEVEN-GERI-01: as at f247ea1b — ElevenLabs Flash gets one breath, not a sentence drip (NOTYA-SES-KILIT-01).
+    assert.ok(v.parcalar.length >= 1 && v.parcalar.length <= 3, 'nefes bloğu: cümle cümle damlamaz, tek seferde de boşalmaz')
     assert.ok(!v.metin.includes('0532'), v.metin)
     assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
 

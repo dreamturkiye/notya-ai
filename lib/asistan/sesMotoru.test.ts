@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { SES_TTS_KILIT, donusKilitGerekli, sesMotoruOnbelleginiSil, sesMotorunuSabitle, ttsKilitGerekli } from './sesMotoru'
-import { SesYayKapisi, sesEtiketTemizle } from './sesYay'
+import { SES_TTS_KILIT, sesMotoruOnbelleginiSil, sesMotorunuSabitle, ttsKilitGerekli } from './sesMotoru'
+import { SES_BLOK_ESIGI, SesYayKapisi, sesEtiketTemizle } from './sesYay'
 import { pcmOranla } from './sesCalar'
 
 test('TTS kilidi: Flash ve sabit hız temizdir; v3, expressive ve hız sapması kilit ister', () => {
@@ -13,9 +13,6 @@ test('TTS kilidi: Flash ve sabit hız temizdir; v3, expressive ve hız sapması 
   assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1.15, stability: 0.55, similarity_boost: 0.75 }), true)
   assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.3, similarity_boost: 0.75 }), true)
   assert.equal(ttsKilitGerekli(null), true)
-  assert.equal(donusKilitGerekli(null), true)
-  assert.equal(donusKilitGerekli({ turn_eagerness: 'normal', speculative_turn: true }), true)
-  assert.equal(donusKilitGerekli({ turn_eagerness: 'eager', speculative_turn: true }), false)
   assert.equal(ttsKilitGerekli({
     model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.55, similarity_boost: 0.75,
     suggested_audio_tags: [{ tag: 'slow' }],
@@ -46,19 +43,13 @@ test('ses motoru sapmış ajanı Flash kilidine yazar, temiz ajanı yazmaz', asy
   assert.equal(govde.conversation_config.tts.speed, 1)
   assert.equal(govde.conversation_config.tts.voice_id, 'ses', 'ses kimliği yamada kalır')
   assert.deepEqual(govde.conversation_config.tts.suggested_audio_tags, [])
-  const donus = cagrilar.filter((c) => c.method === 'PATCH').map((c) => JSON.parse(c.body || '{}')).find((g) => g.conversation_config?.turn)
-  assert.equal(donus.conversation_config.turn.turn_eagerness, 'eager')
-  assert.equal(donus.conversation_config.turn.speculative_turn, true)
 
   cagrilar.length = 0
   sesMotoruOnbelleginiSil()
   const temiz: typeof fetch = async (url, init) => {
     cagrilar.push({ url: String(url), method: init?.method || 'GET' })
     return new Response(JSON.stringify({
-      conversation_config: {
-        tts: { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75 },
-        turn: { turn_eagerness: 'eager', speculative_turn: true },
-      },
+      conversation_config: { tts: { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75 } },
     }), { status: 200 })
   }
   const t = await sesMotorunuSabitle('agent_temiz', 'anahtar', temiz)
@@ -66,18 +57,20 @@ test('ses motoru sapmış ajanı Flash kilidine yazar, temiz ajanı yazmaz', asy
   assert.equal(cagrilar.some((c) => c.method === 'PATCH'), false)
 })
 
-test('konuşma kapısı: bitmiş cümle hemen gider, yarım cümle bitişe kadar tutulur, etiket yok', () => {
+test('konuşma kapısı: etiket yok, yarım cümle biriktirilir, nefes dolunca ve bitişte tek parça', () => {
   assert.equal(sesEtiketTemizle('Önemli. [slow] Doz hekimindir. [excited]').replace(/\s+/g, ' ').trim(), 'Önemli. Doz hekimindir.')
   const parcalar: string[] = []
   const k = new SesYayKapisi((p) => parcalar.push(p))
   k.ekle('Kısa cümle. ')
-  assert.deepEqual(parcalar, ['Kısa cümle. '], 'bitmiş cümle cevabın sonunu beklemez')
-  k.ekle('Hocam, bu henüz')
-  assert.equal(parcalar.length, 1, 'yarım cümle tutulur')
-  k.ekle('[slow] bitmedi')
+  assert.equal(parcalar.length, 0, 'eşik dolmadan ElevenLabs\'e gitmez')
+  const uzun = 'Hocam, bu cümle tek başına bir nefes olacak kadar uzundur ve Flash her cümleyi ayrı sentezleyip Türkçeyi peltekleştirmesin diye burada birikir, eşik dolar. '
+  k.ekle(uzun)
+  assert.equal(parcalar.length, 1, 'eşik aşılınca tek delta')
+  assert.ok(parcalar[0].length >= SES_BLOK_ESIGI)
+  assert.equal(parcalar[0].includes('[slow]'), false)
+  k.ekle('Kuyruk cümlesi. ')
   k.bitir()
-  assert.match(parcalar[parcalar.length - 1], /Hocam, bu henüz bitmedi/)
-  assert.equal(parcalar.join('').includes('[slow]'), false)
+  assert.match(parcalar[parcalar.length - 1], /Kuyruk cümlesi\./)
 })
 
 test('onay sözü beklemez; uzun cevap cümle ortasından bölünmeden birleşir', () => {

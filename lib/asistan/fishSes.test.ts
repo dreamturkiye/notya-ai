@@ -87,9 +87,12 @@ test('Fish ASR düz metin — konuşmacı etiketi beyne gitmez', () => {
   assert.equal(fishAsrMetni('<|speaker:0|>Kaan Arıoğlu kaç yaşında?'), 'Kaan Arıoğlu kaç yaşında?')
   assert.equal(fishAsrMetni('[laughter] eee'), 'eee')
   assert.equal(fishAsrDosyaAdi('audio/wav'), 'tur.wav')
-  assert.equal(ayseFishTamMi('aysekaya', 'key'), true)
-  assert.equal(ayseFishTamMi('aysekaya', ''), false)
-  assert.equal(ayseFishTamMi('mehmetdemir', 'key'), false)
+  // NOTYA-SES-ELEVEN-GERI-01: the key alone no longer makes Ayşe a Fish call — the provider switch must say fish.
+  assert.equal(ayseFishTamMi('aysekaya', 'key', 'fish'), true)
+  assert.equal(ayseFishTamMi('aysekaya', '', 'fish'), false)
+  assert.equal(ayseFishTamMi('aysekaya', 'key', 'elevenlabs'), false)
+  assert.equal(ayseFishTamMi('aysekaya', 'key', ''), false)
+  assert.equal(ayseFishTamMi('mehmetdemir', 'key', 'fish'), false)
 })
 
 test('ASR isteği Türkçeye sabit, tekrar kuralı yalnız ağ / 5xx', () => {

@@ -4,13 +4,14 @@
  * NOTYA-ASISTAN-YUZEN-01 (Kaan, 2026-09-26) — "doktor asistanla çalışırken başka sayfaya gidince asistan
  * KAPANMAMALI; doktor kendisi kapatana kadar oturum ve konuşma sürer."
  *
- * Asistan oturumunun TEK sahibi burası: sesli mesajlar, seçili persona, tek beyin
- * oturumu + ses-ekran yoklaması, süre sayaçları ve yazılı sohbet.
- * Ayşe Kaya: Fish Audio (mic ASR + Haberci TTS) — ElevenLabs ConvAI açılmaz.
- * Diğer uzmanlar: ElevenLabs websocket.
+ * Asistan oturumunun TEK sahibi burası: ElevenLabs konuşma nesnesi, sesli mesajlar, seçili persona, tek beyin
+ * oturumu + ses-ekran yoklaması, hasta_bul / ses-eylem araçları, süre sayaçları ve yazılı sohbet. Provider
  * app/layout.tsx'te bütün sayfaları sarar; istemci tarafı sayfa geçişinde unmount olmaz — ses ve mesajlar yaşar.
  * /asistan sayfası ve AsistanYuzenPanel bu context'in görünümleridir; ikisi de oturum AÇMAZ.
  * Mantık app/asistan/page.tsx'ten birebir taşındı — endpoint'ler, onay kartları ve tek beyin ekran biçimi aynı.
+ *
+ * NOTYA-SES-ELEVEN-GERI-01 (Kaan, 2026-10-02): Ayşe Kaya de ElevenLabs'le konuşur (Fish öncesi gibi). Fish yolu
+ * (mic ASR + Haberci TTS, startFishOturumu) yalnız AYSE_SES_SAGLAYICI=fish iken açılır (lib/asistan/sesSaglayici.ts).
  */
 
 import { createContext, useContext, useEffect, useRef, useState } from "react"
@@ -36,6 +37,7 @@ import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } fro
 import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinleBaglamAc, fishVadGunlukSifirla, wavBirlestir, type FishKlip } from '@/lib/asistan/fishMikrofon'
 import { klipGeldi, sesBasladi, sttGeldi, turBitti, turSirasiBaslat, yarimKaldi, type TurSirasi } from '@/lib/asistan/fishTurSirasi'
 import { fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
+import { ayseFishIstemcideMi } from '@/lib/asistan/sesSaglayici'
 import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
 import { KelimeKesici, base64Pcm, sesDusKesimi, sesDusOfseti } from '@/lib/asistan/fishWs'
 
@@ -436,6 +438,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishCevapOlayRef.current = 0
     fishRef.current?.kapat()
     fishRef.current = null
+    // A cut turn's remainder belongs to this call; the next call never reads it (ses-ekran's cursor agrees).
+    sesDevamRef.current.bekleyen = null
     if (conv) {
       sesOgrenGonder()
       try { await conv.endSession() } catch { /* ignore */ }
@@ -481,6 +485,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         if (tur.kartlar?.length && tur.hastaId) void kartiYukle(tur.hastaId, tur.kartlar[tur.kartlar.length - 1])
       }
       if (j.devam && j.devamAnahtar) sesDevamiIste(j.devamAnahtar, j.devamKalan || '')
+      else if (!fishAcikRef.current && sesDevamRef.current.bekleyen) sesDevamiIste(sesDevamRef.current.bekleyen.anahtar, sesDevamRef.current.bekleyen.kalan)
       // Sesle onaylanan / vazgeçilen kart artık bekleyen değil → kapat.
       if (sesKartiIdRef.current && Array.isArray(j.bekleyen) && !j.bekleyen.includes(sesKartiIdRef.current)) {
         sesKartiIdRef.current = null
@@ -490,19 +495,20 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   /**
-   * NOTYA-SES-DEVAM-01: cut voice turn — remainder is already on screen. Ayşe (Fish Haberci)
-   * speaks it here. ElevenLabs must not enter this loop: sendUserMessage('[devam]') made EL
-   * re-ask the last doctor question (second isolation bubble) then drop with an empty Custom
-   * LLM SSE ("Bağlantı kurulamadı"). Other specialists still use the hidden EL turn.
+   * NOTYA-SES-DEVAM-01 (Dr. Gökhan: "özet yarıda kesilmesin"): the voice turn closed at the cap / guard before the
+   * answer was fully said; the screen answer is now complete and the server holds the rest. Once Ayşe has stopped
+   * speaking, send the hidden [devam] turn — exactly once per turn key. If she is still speaking, the next poll
+   * re-checks. If the doctor spoke after she stopped, the doctor moved on: the continuation is dropped.
+   * On Fish (AYSE_SES_SAGLAYICI=fish) the page speaks the remainder itself instead of the hidden turn.
    */
   function sesDevamiIste(anahtar: string, kalan = "") {
     const d = sesDevamRef.current
     if (d.gonderilen.has(anahtar)) return
     const metin = String(kalan || "").trim()
-    // NOTYA-AYSE-GERI-02: on Fish the screen poll reports the remainder ONCE, usually while Ayşe is still speaking
-    // the first sentences — the old code returned here and the remainder was never read. It is now kept and
-    // tried again when her playback stops (onDurdu).
-    if (fishAcikRef.current && metin) d.bekleyen = { anahtar, kalan: metin }
+    // NOTYA-AYSE-GERI-02: the screen poll reports the remainder ONCE (ses-ekran's cursor), usually while Ayşe is
+    // still speaking the first sentences. It is kept and tried again: on Fish when her playback stops (onDurdu), on
+    // ElevenLabs on the next poll (ekranYokla) — the f247ea1b "next poll re-checks" behaviour.
+    if (metin || !fishAcikRef.current) d.bekleyen = { anahtar, kalan: metin }
     if (d.mod === "speaking") return
     if (fishAcikRef.current && fishRef.current?.caliyorMu()) return
     // The doctor spoke after the cut: the continuation is cancelled, not postponed.
@@ -521,6 +527,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     const conv = conversationRef.current
     if (!conv) return
     d.gonderilen.add(anahtar)
+    d.bekleyen = null
     try { conv.sendUserMessage(DEVAM_ISARETI) } catch { /* bağlantı kapandıysa devam yok */ }
   }
 
@@ -963,7 +970,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   async function startConversation() {
     const dokunus = sesiDokunustaAc()
     const pEarly = PERSONAS[personaKeyRef.current] || PERSONAS[personaKey]
-    const ayseFish = pEarly.id === "aysekaya"
+    // NOTYA-SES-ELEVEN-GERI-01: Fish only with AYSE_SES_SAGLAYICI=fish; by default Ayşe takes the ElevenLabs path below.
+    const ayseFish = ayseFishIstemcideMi(pEarly.id)
     const micSozu = ayseFish ? fishAkisAc() : Promise.resolve(null as MediaStream | null)
     let yakala: AudioContext | null = null
     try { if (ayseFish) yakala = fishDinleBaglamAc() } catch { yakala = null }
@@ -1007,13 +1015,21 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
       const sayfaHastasi = ortakOturumId ? null : yeniOturumSayfaHastasi()
       const { signedUrl, voiceId, fish, tekBeyin } = await fetchSignedUrl(p, sayfaHastasi)
-      if (p.id === "aysekaya") {
+      if (ayseFish && fish && p.id === pEarly.id) {
         const akis = await micSozu
         if (akis) fishMicRef.current = akis
-        if (!fish) throw new Error("Ses motoru yok")
         if (!akis) throw new Error("Mikrofon yok")
         await startFishOturumu({ p, firstMessage, sayfaHastasi, dokunus, akis, yakala, tekBeyin })
         return
+      }
+      // The page did not open the Fish microphone, so a Fish answer cannot be used (a tab built with another value).
+      if (fish) throw new Error("Ses motoru uyuşmuyor — sayfayı yenileyin")
+      if (ayseFish) {
+        // Switch says fish but the server has no Fish key: Ayşe falls back to ElevenLabs; the SDK opens its own mic.
+        try { fishAkisKapat(await micSozu) } catch { /* */ }
+        const yakalaKapan = fishYakalaRef.current
+        fishYakalaRef.current = null
+        if (yakalaKapan && yakalaKapan.state !== "closed") void yakalaKapan.close().catch(() => undefined)
       }
       fishAcikRef.current = false
       fishRef.current?.kapat()

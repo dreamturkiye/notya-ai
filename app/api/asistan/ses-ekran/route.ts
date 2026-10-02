@@ -1,9 +1,10 @@
 /**
  * NOTYA-TEK-BEYIN — sesli turların EKRAN biçimi (/asistan sayfası görüşme sırasında hafifçe yoklar).
  *
- * Sesli Ayşe kalanı Fish Haberci ile okur (ElevenLabs [devam] turuna girmez); tam cevap (liste, tablo, kimlik değerleri) ve onay
+ * Sesli Ayşe ElevenLabs'ten yalnız kısa sözlü biçimi konuşur; tam cevap (liste, tablo, kimlik değerleri) ve onay
  * kartları ortak asistan oturumuna yazılır, sayfa burada okur. NOTYA-SES-DEVAM-01: kesilen turun okunmamış kalanı
- * varsa `devam` / `devamAnahtar` / `devamKalan` döner. Diğer uzmanlarda sayfa ajan susunca gizli `[devam]` turunu bir kez yollar. Kimlik cevabının değerleri saklanmaz — turun sorusu
+ * varsa `devam` / `devamAnahtar` / `devamKalan` döner; sayfa ajan susunca gizli `[devam]` turunu bir kez yollar
+ * (Fish'te, AYSE_SES_SAGLAYICI=fish, kalanı sayfa kendisi okur). Kimlik cevabının değerleri saklanmaz — turun sorusu
  * burada, sunucuda, yeniden cevaplanır (kimlikSorusunuCevapla, doctor_id kapsamlı).
  *
  * HASTA-IZOLASYON-01: oturum id + doctor_id birlikte; yabancı oturum → 404. Kart hastası oturumun kendi satırından,

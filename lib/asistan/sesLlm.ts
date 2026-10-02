@@ -10,9 +10,9 @@
  * Hız: arama / model gerekiyorsa hemen kısa bir bekletme sözü ("Bakıyorum Hocam... "), sonra cevap model yazdıkça
  * (yazılı cevapla aynı içerik, doğal cümlelerle — lib/asistan/konusma.ts).
  * ElevenLabs sistem araçları (tools): yalnız end_call kullanılır (doktor görüşmeyi bitirince); diğerleri yok sayılır.
- * NOTYA-SES-DEVAM-01: kesilen sesli turun söylenmeyen kalanı (active_context.sesDevam) Ayşe'de Fish Haberci
- * ile okunur — ElevenLabs `[devam]` turuna girmez. Diğer uzmanlarda gizli `[devam]` (ya da doktor "devam"
- * deyince) modelsiz, sınırsız okunur.
+ * NOTYA-SES-DEVAM-01: kesilen sesli turun söylenmeyen kalanı (active_context.sesDevam) gizli `[devam]` turunda
+ * (ya da doktor "devam" deyince) modelsiz, sınırsız okunur. Ayşe yalnız AYSE_SES_SAGLAYICI=fish iken bu rotaya
+ * gelmez; kalanı Fish'te sayfa okur (NOTYA-SES-ELEVEN-GERI-01).
  * Günlüğe klinik içerik yazılmaz — yalnız hata türü.
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -145,8 +145,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }],
         })
       }
-      // A finished sentence is sent as soon as it exists. Holding it for a
-      // breath, or until this function returns, is the gap before Ayşe speaks.
+      // NOTYA-SES-KILIT-01: sentences leave as one breath, not a drip and not a dump.
+      // Expressive tags are stripped inside the gate. `hemen` is only the acknowledgement.
       const kapi = new SesYayKapisi((t) => { if (!t) return; parca({ content: t }); ilk = false })
       const yaz = (t: string, hemen = false) => kapi.ekle(t, hemen)
       let cevapSoylendi = false
@@ -213,8 +213,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             // stream that runs ~30 s (LLM Cascade TimeoutError). Long file answers (özet, aşı, açık işler) take
             // longer than that on the screen. So the VOICE turn ends at the spoken cap or at the guard timer,
             // whichever comes first; the screen answer keeps generating in the background.
-            // NOTYA-SES-DEVAM-01: a cut turn is no longer the end of the answer — ayseCevapla stores the unspoken rest.
-            // Ayşe (Fish Haberci) reads that remainder on the page; other specialists still use a hidden `[devam]` EL turn.
+            // NOTYA-SES-DEVAM-01: a cut turn is no longer the end of the answer — ayseCevapla stores the unspoken rest
+            // and the /asistan page asks for it with a hidden [devam] turn as soon as the screen answer is ready.
             let sesSinirCoz: () => void = () => {}
             let sinirGeldi = false
             const sesSiniri = new Promise<void>((r) => { sesSinirCoz = r })

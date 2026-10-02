@@ -107,7 +107,8 @@ export async function GET(req: NextRequest) {
   let AGENT_ID = agentForPersona(persona);
   const voiceId = persona.voiceId;
 
-  // NOTYA-FISH-AYSE-02: Ayşe is a Fish call — no ConvAI signed URL, no ElevenLabs websocket.
+  // NOTYA-FISH-AYSE-02: with AYSE_SES_SAGLAYICI=fish (and a Fish key) Ayşe is a Fish call — no ConvAI signed URL,
+  // no ElevenLabs websocket. NOTYA-SES-ELEVEN-GERI-01: by default she takes the ElevenLabs path below, as before Fish.
   const fishTam = ayseFishTamMi(persona.id)
   if (fishTam) {
     const oturum = await tekBeyinHazirla(auth.userId, persona.id, specialtyParam, req.nextUrl.searchParams)

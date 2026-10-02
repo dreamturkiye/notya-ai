@@ -3,6 +3,9 @@
 const nextConfig = {
   env: {
     TZ: 'Europe/Istanbul',
+    // NOTYA-SES-ELEVEN-GERI-01: Ayşe's voice provider (elevenlabs | fish), inlined so the page and the server read
+    // the same value — the page decides inside the tap, before any request. Empty → elevenlabs (lib/asistan/sesSaglayici.ts).
+    AYSE_SES_SAGLAYICI: process.env.AYSE_SES_SAGLAYICI || '',
   },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
