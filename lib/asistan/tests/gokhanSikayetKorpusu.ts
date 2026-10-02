@@ -194,6 +194,8 @@ const BULUNAMADI = 'bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı deği
 /** The patient-count template's sentence shapes (lib/doktor/hastaAramaFiltre.ts). */
 const SAYIM_SABLONU = 'Kayıtlarda \\d+ hasta|\\b0 hasta|Filtre:'
 const PANEL_SAYI = `\\b${KORPUS_PANEL_SAYISI}\\b|beş`
+/** NOTYA-AYSE-OZET-01: the eight parts of one visit's summary, as bold headings, in their fixed order. */
+const OZET_SIRASI = ['Muayene', 'Şikayet', 'Muayene bulgusu', 'Laboratuvar', 'Aşı', 'Büyüme ve gelişme', 'Tedavi', 'Plan'].map((b) => `\\*\\*${b}:\\*\\*`).join('[\\s\\S]*')
 
 /**
  * Sentences Ayşe must never say on any turn that is not an expected refusal. Each comes from a complaint:
@@ -336,16 +338,48 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
     { ret: true, icermez: ['1 ay sonra kontrol', 'Tedavi tamamlandı', 'Emircan'] }, { sayfa: 'bebek', not: 'New chat on the boy\'s page: the answer was his visit plan.' }),
 
   // ── one named exam (NOTYA-DOSYA-SORU-TUR-01) ──
+  // Since NOTYA-AYSE-OZET-01 the server guarantees the text of one visit's summary on chat and voice (an answer
+  // without the eight parts, or with a value the record does not hold, is replaced by the record's own summary), so
+  // these entries are graded in a dry run too. The file panel has no such check: its entry is graded on the model's words.
   g('L-TUR-6AY', 'muayene', `${P}'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, [L('NOTYA-DOSYA-SORU-TUR-01'), G(55)],
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['6 aylık|[Ee]k gıda|7,9|67,5'], icermez: ['otitis media|Augmentin'] }, { yuzeyler: UC, acik: 'bebek' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['6 aylık|[Ee]k gıda|7,9|67,5', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { acik: 'bebek' }),
+  g('L-TUR-6AY-PANEL', 'muayene', `${P}'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, [L('NOTYA-DOSYA-SORU-TUR-01'), G(55)],
+    { rotaDegil: ['arama', 'kapsam'], icerir: ['6 aylık|[Ee]k gıda|7,9|67,5'], icermez: ['otitis media|Augmentin'] }, { yuzeyler: ['panel'], acik: 'bebek' }),
   g('L-TUR-12AY', 'muayene', `${P}'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['12 aylık|birkaç adım|9,8'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['12 aylık|birkaç adım|9,8', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
   g('L-TUR-15AY', 'muayene', `${P}'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['15 aylık|10,6|5-6 kelime'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'This visit has its measurements only in the note text.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['15 aylık|10,6|5-6 kelime', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'This visit has its measurements only in the note text.' }),
   g('L-TUR-18AY', 'muayene', `${P}'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['18 aylık|M-CHAT|11,3'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['18 aylık|M-CHAT|11,3', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
   g('L-TUR-24AY', 'muayene', `${P}'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['24 aylık|Hepatit A|12,6'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['24 aylık|Hepatit A|12,6', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+
+  // ── the summary of one visit: eight parts, absent parts stated, and it is HEARD (NOTYA-AYSE-OZET-01) ──
+  g('L-OZET-12AY', 'muayene', `${P}'nun 12 aylık sağlam çocuk muayenesinin özetini verir misin?`, L('NOTYA-AYSE-OZET-01'),
+    {
+      hasta: 'bebek', rota: ['model'], sunucuYazar: true,
+      icerir: [OZET_SIRASI, 'muayene tarihinde 1[12] aylık', 'KPA \\(Konjuge Pnömokok\\) 3\\. doz; KKK \\(Kızamık-Kızamıkçık-Kabakulak\\) 1\\. doz; Suçiçeği \\(Varisella\\) 1\\. doz', 'kilo 9,8 kg; boy 76 cm; baş çevresi 46,4 cm', 'Büyüme motoru: Kilo 9,8 kg \\(p\\d+, z', '\\*\\*Laboratuvar:\\*\\* Laboratuvar istenmemiş', '\\*\\*Tedavi:\\*\\* Reçete yazılmamış', '\\*\\*Plan:\\*\\* .*3 ay sonra kontrol'],
+      icermez: ['otitis media|Augmentin', 'Dayanak'],
+      okunus: { icerir: ['Aşı yapılmış', 'kilogram', 'santimetre', 'persentil', 'Laboratuvar istenmemiş'], icermez: ['madde, ekranınızda', 'Dayanak'] },
+    }, { not: 'The live sentence of 2026-10-02, asked by voice: the answer had no vaccines and no weight / height / head circumference, and nothing was spoken. Graded on the screen text and, on voice, on the text handed to the speech engine.' }),
+  g('L-OZET-15AY', 'muayene', `${P}'nun 15 aylık sağlam çocuk muayenesinin özetini verir misin?`, L('NOTYA-AYSE-OZET-01'),
+    {
+      hasta: 'bebek', rota: ['model'], sunucuYazar: true,
+      icerir: [OZET_SIRASI, '\\*\\*Aşı:\\*\\* Aşı yapılmamış', '\\*\\*Laboratuvar:\\*\\* Laboratuvar istenmemiş', 'kilo 10,6 kg \\(not metninden\\)', 'persentil hesaplanmadı'],
+      icermez: ['otitis media|Augmentin', '\\(p\\d+, z'],
+      okunus: { icerir: ['Aşı yapılmamış', 'Laboratuvar istenmemiş', 'persentil hesaplanmadı'], icermez: ['madde, ekranınızda'] },
+    }, { turetilmis: true, not: 'The live sentence with the visit that has no vaccine row, no lab and its measurements only in the note text: every absent part is stated, no percentile is estimated.' }),
+  g('L-OZET-24AY-DEVAM', 'ses', 'devam et', [L('NOTYA-AYSE-OZET-01'), L('NOTYA-SES-DEVAM-01')],
+    { hasta: 'bebek', icerir: ['Reçete yazılmamış; plan: Hepatit A 2\\. doz planlandı.*6 ay sonra kontrol'], icermez: ['Neye devam'] },
+    { kurulum: [`${P}'nun 24 aylık sağlam çocuk muayenesinin özetini verir misin?`], yuzeyler: ['ses'], turetilmis: true, not: 'The 24-month narrative is eight sentences (the growth engine reports a shift): seven are spoken, the eighth waits for the continuation and is read without a model call.' }),
+  g('L-OZET-ERISKIN', 'muayene', 'Son muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
+    {
+      hasta: 'eriskin', rota: ['model'], sunucuYazar: true,
+      icerir: ['\\*\\*Muayene:\\*\\*[\\s\\S]*\\*\\*Şikayet:\\*\\*[\\s\\S]*\\*\\*Muayene bulgusu:\\*\\*[\\s\\S]*\\*\\*Laboratuvar:\\*\\*[\\s\\S]*\\*\\*Ölçümler:\\*\\*[\\s\\S]*\\*\\*Tedavi:\\*\\*[\\s\\S]*\\*\\*Plan:\\*\\*', 'tansiyon 132/84 mmHg', 'HbA1c 7,1 % — laboratuvar referansının üstünde'],
+      icermez: ['\\*\\*Aşı', 'persentil', 'baş çevresi', 'Büyüme'],
+    }, { acik: 'eriskin', brans: 'dahiliye', turetilmis: true, not: 'The same question on the adult chart of a dahiliye doctor: the generic sections with the branch\'s own measurements, no vaccine and no growth section.' }),
+  g('L-OZET-YABANCI', 'izolasyon', 'Selim Erkoç\'un 12 aylık sağlam çocuk muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
+    { hasta: null, icermez: ['\\*\\*Muayene:\\*\\*', '\\*\\*Aşı:\\*\\*', 'dosyası açık'] }, { turetilmis: true, not: 'The live sentence about a patient of the scene\'s other doctor: no summary, no chart. What IS answered today is the count template ("Kayıtlarda 0 hasta. Filtre: 12 aylık.") — the age phrase is read as a cohort filter when the name resolves to nobody; listed as open under NOTYA-AYSE-OZET-01g, not graded here.' }),
   g('L-GECMIS', 'muayene', 'Bu hastanın geçmişini özetler misin?', L('çoklu-muayene sorgusu'),
     { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['demir eksikliği|anemi', 'otit'] }, { acik: 'bebek', yuzeyler: UC, turetilmis: true, not: 'The ledger\'s success criterion: a "bu hastanın geçmişi" question is answered from ALL notes, not only the last one.' }),
 

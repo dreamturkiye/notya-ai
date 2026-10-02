@@ -37,7 +37,7 @@ import { personaIlkAdi } from '@/lib/doktor/hastaCozumleyici'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { fishAsrBlob } from '@/lib/asistan/fishAsr'
 import { FISH_KLIP_AZAMI_BAYT, fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
-import { KelimeKesici, fishWsAcikMi, pcmBase64 } from '@/lib/asistan/fishWs'
+import { KelimeKesici, fishWsAcikMi, pcmBase64, sesDusOfseti, wsSessizBittiMi } from '@/lib/asistan/fishWs'
 import { fishWsHavuzu } from '@/lib/asistan/fishWsHavuz'
 import type { FishWsOturumu } from '@/lib/asistan/fishWsSunucu'
 import { fishIsinma } from '@/lib/asistan/fishIsinma'
@@ -204,7 +204,8 @@ export async function POST(req: NextRequest) {
         if (!wsAktif) return
         wsAktif = false
         wsHata = neden
-        gonder({ t: 'ses_dus', islenen: kesici.islenen.length })
+        // Text handed to a socket that returned no audio was never spoken: the browser's REST fallback starts at 0.
+        gonder({ t: 'ses_dus', islenen: sesDusOfseti(sesBayt > 0, kesici.islenen.length) })
         wsOturum?.kapat()
       }
       const wsHazir: Promise<boolean> = wsIstendi
@@ -245,6 +246,10 @@ export async function POST(req: NextRequest) {
         }
         if (wsAktif && wsOturum) {
           await wsOturum.bitir()
+          // NOTYA-AYSE-OZET-01: the socket closed "cleanly" (finish / close, no error) but gave no audio for the text
+          // it was handed — until now this ended as `ses_bit` and the turn was silent. It is a failed socket: the
+          // browser speaks the whole text through REST.
+          if (wsAktif && wsSessizBittiMi(sesBayt, kesici.islenen)) dus('ws_ses_yok')
           if (wsAktif) gonder({ t: 'ses_bit' })
         }
         if (wsIstendi) {

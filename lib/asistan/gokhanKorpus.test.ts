@@ -501,7 +501,7 @@ describe('Gökhan korpusu — sentetik dosyalar', () => {
 
 describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
   let satirlar: KorpusSatiri[] = []
-  const SECILEN = ['L-KIMLIK-ANNE', 'C-2', 'C-3', 'R-ASI-2', 'E-01', 'L-EYLEM-HEPB', 'Y-097', 'I-01', 'L-SAYFA-KILO', 'T-088', 'T-089', 'L-AKTIF-TANSIYON', 'L-BIRIM-02', 'G-K1', 'G-K2', 'L-DANIS-12AY', 'L-DANIS-15AY', 'K-G01', 'K-OLCUM-ATES', 'K-TARIH-SON']
+  const SECILEN = ['L-KIMLIK-ANNE', 'C-2', 'C-3', 'R-ASI-2', 'E-01', 'L-EYLEM-HEPB', 'Y-097', 'I-01', 'L-SAYFA-KILO', 'T-088', 'T-089', 'L-AKTIF-TANSIYON', 'L-BIRIM-02', 'G-K1', 'G-K2', 'L-DANIS-12AY', 'L-DANIS-15AY', 'L-TUR-15AY', 'L-TUR-18AY', 'L-TUR-24AY', 'L-TUR-6AY-PANEL', 'L-OZET-12AY', 'L-OZET-15AY', 'L-OZET-24AY-DEVAM', 'L-OZET-ERISKIN', 'L-OZET-YABANCI', 'K-G01', 'K-OLCUM-ATES', 'K-TARIH-SON']
   before(async () => {
     await sahneHazirla()
     assert.equal(gercekModelAc(vekilOpenRouter), true)
@@ -570,6 +570,36 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
       assert.equal(bul('L-DANIS-15AY', yuzey).karar, 'PASS', yuzey)
     }
     assert.deepEqual([bul('L-DANIS-12AY', 'yazi').rota, bul('L-DANIS-12AY', 'yazi').modeleGitti, bul('L-DANIS-12AY', 'panel').modeleGitti], ['kayit', false, true])
+  })
+
+  it('bir muayenenin özeti yazıda ve seste kayıttan güvenceye alınır: sekiz bölüm, vekil ne yazarsa yazsın — PASS, VEKIL değil (NOTYA-AYSE-OZET-01)', () => {
+    for (const yuzey of ['yazi', 'ses'] as const) {
+      for (const id of ['L-TUR-15AY', 'L-TUR-18AY', 'L-TUR-24AY', 'L-OZET-12AY', 'L-OZET-15AY', 'L-OZET-ERISKIN']) {
+        const s = bul(id, yuzey)
+        assert.deepEqual([s.karar, s.rota, s.modeleGitti], ['PASS', 'model', true], `${id}/${yuzey}: ${s.nedenler.join('; ')} | ${s.cevap.slice(0, 200)}`)
+        assert.ok(!s.cevap.includes('Vekil yanıt'), `${id}/${yuzey}: vekilin cevabı hekime gitmedi`)
+      }
+      // The live sentence: vaccines and the three measurements are in the answer.
+      const o = bul('L-OZET-12AY', yuzey)
+      assert.match(o.cevap, /\*\*Aşı:\*\* Yapılmış .*KKK/)
+      assert.match(o.cevap, /kilo 9,8 kg; boy 76 cm; baş çevresi 46,4 cm/)
+      assert.equal(bul('L-OZET-ERISKIN', yuzey).hasta, KORPUS_ADLARI.eriskin)
+      // Another doctor's patient: no chart is bound, no summary is written.
+      const y = bul('L-OZET-YABANCI', yuzey)
+      assert.deepEqual([y.karar, y.hasta], ['PASS', null])
+      assert.ok(!/\*\*Muayene:\*\*|9,8/.test(`${y.cevap} ${y.sozlu}`))
+    }
+    // Voice: the summary is HEARD — the narrative from the record, not "Dayanak. N madde, ekranınızda.".
+    const ses = bul('L-OZET-12AY', 'ses')
+    assert.match(ses.sozlu, /Aşı yapılmış: KPA 3\. doz, KKK 1\. doz ve Suçiçeği 1\. doz\./)
+    assert.match(ses.sozlu, /kilo 9,8 kg, persentil \d+; Boy 76 cm, persentil \d+; Baş çevresi 46,4 cm, persentil \d+/)
+    assert.doesNotMatch(ses.sozlu, /madde, ekranınızda|Dayanak|Vekil/)
+    // The eighth sentence of the 24-month narrative is read by the continuation, with no model call.
+    const devam = bul('L-OZET-24AY-DEVAM', 'ses')
+    assert.deepEqual([devam.karar, devam.modeleGitti], ['PASS', false], devam.nedenler.join('; '))
+    assert.match(devam.sozlu, /^Reçete yazılmamış; plan: Hepatit A 2\. doz planlandı/)
+    // The file panel has no such check: the stand-in's words are not judged there.
+    assert.equal(bul('L-TUR-6AY-PANEL', 'panel').karar, 'VEKIL')
   })
 
   it('modelin yazdığı cevap yargılanmaz (VEKIL); yapı tuttuğu sürece FAIL değildir; başka hekimin hastası açılmaz', () => {
