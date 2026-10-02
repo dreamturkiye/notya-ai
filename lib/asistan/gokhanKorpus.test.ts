@@ -34,7 +34,8 @@ import { aracZorlamaKapali } from './ayseCevapla'
 
 const KOK = process.cwd()
 const oku = (dosya: string) => fs.readFileSync(path.join(KOK, dosya), 'utf8')
-const duz = (s: string) => s.replace(/\\'/g, "'").replace(/[’‘]/g, "'").replace(/\s+/g, ' ')
+/** Source text as written: escaped quotes and \uXXXX letters decoded, typographic apostrophes and white space folded. */
+const duz = (s: string) => s.replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))).replace(/\\'/g, "'").replace(/[’‘]/g, "'").replace(/\s+/g, ' ')
 
 /** Word stems of the synthetic names (and of their mis-heard forms) — the only words a sentence may differ in from its source. */
 const AD_KOKLERI = ['emircan', 'emirçan', 'emircn', 'emirhan', 'karaoğlu', 'karaoglu', 'kara', 'oğlu', 'bozkurt', 'tarık', 'tarik', 'taırk', 'özdemir', 'ozdemir', 'olcay', 'santoro', 'santor', 'selim', 'erkoç', 'kemal', 'sarıtaş']

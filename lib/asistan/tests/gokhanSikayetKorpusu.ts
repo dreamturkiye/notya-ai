@@ -112,6 +112,7 @@ const T_ANALIZ = 'lib/doktor/pratikAnaliz.test.ts'
 const T_KAPSAM = 'lib/asistan/kapsamKilidi.test.ts'
 const T_STANDART = 'lib/asistan/dosyaSorgu/denetim.test.ts'
 const T_OLCUM = 'lib/asistan/vizitOlcumSahne.test.ts'
+const T_KOHORT = 'lib/asistan/aktifHastaPratik.test.ts'
 
 /** Every source file the corpus was extracted from, with what was taken. Printed in the report. */
 export const KORPUS_KAYNAKLARI: { dosya: string; ne: string }[] = [
@@ -131,6 +132,7 @@ export const KORPUS_KAYNAKLARI: { dosya: string; ne: string }[] = [
   { dosya: T_KAPSAM, ne: 'header comment citing the live weather sentence (NOTYA-KAPSAM-05)' },
   { dosya: T_STANDART, ne: 'single-fact questions of the Dr. Gökhan standard' },
   { dosya: T_OLCUM, ne: 'header comment citing the live visit-measurement question (NOTYA-DANIS-OLCUM) and its variants' },
+  { dosya: T_KOHORT, ne: 'the doctor\'s own practice-ranking question of 2026-09-20 and its variants (NOTYA-AYSE-KOHORT-01)' },
 ]
 
 /**
@@ -367,6 +369,16 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
     { hasta: 'eriskin', icerir: ['75,5'], rotaDegil: ['arama'] }, { acik: 'eriskin', brans: 'dahiliye' }),
   g('L-DANIS-GECEN-YIL', 'olcum', 'geçen yıl kaç kiloydu', L('NOTYA-DANIS-OLCUM-09'),
     'MANUAL', { acik: 'bebek', acikKusur: 'NOTYA-DANIS-OLCUM-09', not: 'OPEN in the ledger: the quick card answers with the LATEST weight. What the right answer is for "last year" is not written down.' }),
+
+  // ── a practice question stays a practice question with a chart open (NOTYA-AYSE-KOHORT-01, live report 2026-09-20) ──
+  g('L-KOHORT-01', 'liste', 'Son bir ay içinde hangi antibiyotiği en fazla yazdım?', [L('NOTYA-AYSE-KOHORT-01'), K(T_KOHORT, 'NOTYA-AYSE-KOHORT-01')],
+    { rota: ['arama'], icerir: ['Augmentin|[Aa]moksisilin|Klacid'], icermez: ['dosyada son'] }, { acik: 'bebek', not: 'Asked with a chart open: the ranking is the practice\'s, not the open patient\'s quick card.' }),
+  g('L-KOHORT-02', 'liste', 'Son bir ayda kaç hastaya antibiyotik yazdım?', K(T_KOHORT, 'NOTYA-AYSE-KOHORT-01'),
+    { rota: ['arama'], icermez: ['dosyada son'] }, { acik: 'bebek' }),
+  g('L-KOHORT-03', 'liste', 'Bu hafta en fazla hangi tanıyı koydum?', K(T_KOHORT, 'NOTYA-AYSE-KOHORT-01'),
+    { rota: ['arama'], icermez: ['dosyada son'] }, { acik: 'bebek' }),
+  g('L-KOHORT-04', 'ilac', 'Bu hastaya en fazla hangi antibiyotiği yazdım?', K(T_KOHORT, 'NOTYA-AYSE-KOHORT-01'),
+    { hasta: 'bebek', rotaDegil: ['arama'], icerir: ['Augmentin|[Aa]moksisilin'] }, { acik: 'bebek', not: 'The counter-case: the sentence points at this patient, so it stays on the open chart.' }),
 
   g('L-GERI-02-EVET', 'eylem', 'Evet', L('NOTYA-AYSE-GERI-02'),
     'MANUAL', { acik: 'deniz', kurulum: ['Fıstık alerjisini ekle'], yuzeyler: ['ses'], not: 'A spoken Evet commits the pending card. With a stand-in model the card has no value to commit; read the live answer.' }),
