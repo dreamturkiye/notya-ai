@@ -13,7 +13,7 @@ import { metindenOlcumCikar } from '@/lib/clinical/olcumMetni'
 import { kanitBlogu } from './kanit'
 import { soruTuruBul } from './soruTuru'
 import { vizitOlcumSorusuBul, vizitOlcumKaniti, vizitOlcumCevabi, vizitOlcumKanitBlogu, olcumCevabiniGuvenceyeAl } from './vizitOlcum'
-import { olcumDosyasi, OLCUM_COCUK_ADI as AD, KILO_12AY, TARIH_12AY, TAHMIN_KILO, type OlcumVaryanti } from '../tests/olcumHastasi'
+import { olcumDosyasi, eriskinOlcumDosyasi, OLCUM_COCUK_ADI as AD, OLCUM_ERISKIN_ADI as ERISKIN, KILO_12AY, TARIH_12AY, TAHMIN_KILO, type OlcumVaryanti } from '../tests/olcumHastasi'
 
 const BUGUN = '2026-01-01'
 const SORU = 'bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu'
@@ -71,6 +71,10 @@ describe('vizitOlcumSorusuBul — hangi ölçüm, hangi muayene', () => {
     'gelişimi yaşına uygun mu',
     'bugün randevum var mı',
   ]) it(`ölçüm sorusu DEĞİL: "${m}"`, () => assert.equal(vizitOlcumSorusuBul(m), null))
+
+  it('"son 3 aylık kilo değişimi" bir süredir — 3 aylık muayene aranmaz', () => {
+    assert.equal(vizitOlcumSorusuBul('son 3 aylık kilo değişimi')?.hedef.tip, 'seri')
+  })
 
   it('"kilo gelişimi" gelişim (GİDR) sorusu sayılmaz', () => {
     assert.equal(soruTuruBul('kilo gelişimi nasıl'), 'buyume')
@@ -223,6 +227,14 @@ describe('olcumCevabiniGuvenceyeAl — modelin cevabı kayıtla tutmalı', () =>
       assert.equal(olcumCevabiniGuvenceyeAl(iyi, k), iyi)
     }
   })
+  it('ölçüme dayanan BAŞKA soru: modelin cevabı silinmez, kayıt cümlesi önüne konur', () => {
+    const baska = '12 aylık muayenede kilosuna göre hangi mama önerilmişti'
+    assert.equal(vizitOlcumSorusuBul(baska)?.kesin, false)
+    assert.equal(vizitOlcumSorusuBul(SORU)?.kesin, true)
+    const c = olcumCevabiniGuvenceyeAl('Hocam, devam sütü önerilmişti.', kanit(olcumDosyasi('a'), baska))
+    assert.match(c, /^Kayıt — 12 aylık muayene \(15\.05\.2025\): kilo 9,8 kg\./)
+    assert.match(c, /devam sütü önerilmişti/)
+  })
   it('(d) kayıt yokken etiketsiz tahmin kayıt gibi sunulamaz; "tahmin" etiketli cevap kalır', () => {
     const k = kanit(olcumDosyasi('d'), SORU)
     const c = olcumCevabiniGuvenceyeAl('Hocam o muayenede kilosu 9,35 kg idi.', k)
@@ -230,5 +242,48 @@ describe('olcumCevabiniGuvenceyeAl — modelin cevabı kayıtla tutmalı', () =>
     assert.ok(!c.includes(TAHMIN_KILO))
     const etiketli = 'Hocam, 12 aylık muayenede kayıtlı kilo ölçümü yok. Tahmin: demir dozundan yaklaşık 9,35 kg — bu kayıtlı bir ölçüm değildir.'
     assert.equal(olcumCevabiniGuvenceyeAl(etiketli, k), etiketli)
+  })
+})
+
+describe('erişkin — aynı sorgu, pediatrik varsayım yok (kilo, boy, VKİ, tansiyon)', () => {
+  const PEDIATRIK = /baş çevresi|persentil|sağlam çocuk|veli|Neyzi/i
+  const eriskin = (soru: string, brans = 'Kardiyoloji') => cevap(eriskinOlcumDosyasi(brans), soru)
+
+  it('ilk / son muayenede kilo, boy, tansiyon', () => {
+    assert.match(eriskin('ilk muayenede kaç kiloydu'), new RegExp(`^${ERISKIN} — ilk muayene \\(03\\.11\\.2025\\): kilo 84 kg\\.`))
+    assert.match(eriskin('son muayenede boyu ve kilosu'), /son muayene \(15\.06\.2026\): kilo 79,5 kg; boy 162 cm\. Kaynak: muayene notunun yaşamsal bulgu alanı/)
+    assert.match(eriskin('son kontrolde tansiyonu kaçtı'), /son muayene \(15\.06\.2026\): tansiyon 128\/82 mmHg\./)
+  })
+  it('VKİ: aynı muayenenin kayıtlı kilo ve boyundan hesaplanır, hesap olduğu yazılır; boy yoksa kayıt yok', () => {
+    const c = eriskin('son muayenede VKİ kaçtı')
+    assert.match(c, /VKİ 30,3 kg\/m²\. Kaynak: hesaplanan değer/)
+    const ham = eriskinOlcumDosyasi()
+    ham.vizitler[2].vitaller = { kilo: '79,5' }
+    assert.match(cevap(ham, 'son muayenede VKİ kaçtı'), /kayıtlı VKİ ölçümü yok/)
+  })
+  it('seri: tansiyon ve kilo tarih sırasıyla, not metnindeki değer kaynağıyla', () => {
+    const e = eriskin('bütün muayenelerinde kilosu ve tansiyonu', 'Diyetisyen')
+    assert.match(e, /\| 03\.11\.2025 \| 84 kg \| 158\/96 mmHg \| muayene alanı \|/)
+    assert.match(e, /\| 10\.02\.2026 \| 82 kg \| 142\/88 mmHg \| not metni \|/)
+    assert.match(e, /\| 15\.06\.2026 \| 79,5 kg \| 128\/82 mmHg \| muayene alanı \|/)
+    assert.doesNotMatch(e, PEDIATRIK)
+  })
+  it('cihaz tansiyonu 135/85 bütün olarak okunur (eskiden 135 sayısına iniyordu)', () => {
+    const ham = eriskinOlcumDosyasi()
+    ham.vizitler[2].vitaller = null
+    ham.cihaz = [{ id: 'c-ta', tur: 'tansiyon', deger: '135/85', birim: 'mmHg', alindi: '2026-06-15T09:30:00Z' }]
+    assert.match(cevap(ham, 'son muayenede tansiyonu kaçtı'), /tansiyon 135\/85 mmHg\. Kaynak: aynı günlü cihaz ölçümü/)
+  })
+  it('erişkinde baş çevresi sorulursa: kayıt yok — değer ya da pediatrik yorum üretilmez', () => {
+    const c = eriskin('ilk muayenede baş çevresi kaçtı')
+    assert.match(c, /kayıtlı baş çevresi ölçümü yok/)
+    assert.doesNotMatch(c, /\d+ cm/)
+  })
+  it('kanıt bloğu (TEMEL parametre): o muayenenin tansiyonu başta, kanıtta pediatrik ölçüm yok', () => {
+    const ham = eriskinOlcumDosyasi()
+    const blok = kanitBlogu('buyume', olaylariKur(ham, BUGUN), hastaKur(ham, BUGUN), { mesaj: 'ilk muayenede tansiyonu nasıldı' }).split('[CEVAP ŞABLONU')[0]
+    assert.match(blok, /KAYITLI: tansiyon 158\/96 mmHg — 03\.11\.2025/)
+    assert.match(blok, /parametre seti: Temel/)
+    assert.doesNotMatch(blok, PEDIATRIK)
   })
 })

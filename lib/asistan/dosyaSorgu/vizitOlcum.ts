@@ -42,6 +42,12 @@ export interface VizitOlcumSorusu {
   hedef: VizitHedefi
   /** "normal miydi", "persentili", "nasıldı" — kesin cevap değil, kanıtla birlikte modele giden soru. */
   degerlendirme: boolean
+  /**
+   * Soru yalnız değeri istiyor ("kaç kiloydu", "boyu ve kilosu") — kayıttaki kesin cevap tek başına yeter. false:
+   * değerlendirme ya da ölçüme dayanan BAŞKA bir soru ("… kilosuna göre hangi mama önerilmişti"); o soruya kayıt
+   * cümlesi tek başına cevap olmaz, kanıtla birlikte model cevaplar.
+   */
+  kesin: boolean
 }
 
 const AD: Record<OlcumAnahtari, string> = { kilo: 'kilo', boy: 'boy', basCevresi: 'baş çevresi', vki: 'VKİ', tansiyon: 'tansiyon', ates: 'ateş', nabiz: 'nabız', spo2: 'SpO₂' }
@@ -66,7 +72,9 @@ const DEGER_SOZU = /\b(kac|kacti|kacmis|neydi|nedir|ne kadar\w*|olcul\w*|deger\w
 /** Doz / ilaç sorusu ölçüm sorusu değildir ("… demir dozu kaç mg/kg"). */
 const DOZ_SOZU = /\b(doz\w*|mg|ml|mcg|ilac\w*|recete\w*|antibiyoti\w*|surup\w*|damla\w*)\b|mg\/kg/
 const DEGERLENDIRME = /persentil|egri|normal mi|geri mi|yeterli mi|dusuk mu|fazla mi|yuksek mi|uygun mu|uzuyor mu|\bnasil\w*|yasina gore|kilo (aliyor|alimi|alamiyor|kaybi)|\byorumla\w*|\bdegerlendir\w*/
-const SERI = new RegExp(`\\b(butun|tum|her)\\s+${MUAYENE}\\w*|\\b${MUAYENE}ler\\w*|\\b(gelisim\\w*|seyri\\w*|seyir\\w*|degisim\\w*|trend\\w*|takib\\w*|takip\\w*|gecmis\\w*|kronoloji\\w*|olcumler\\w*|degerler\\w*|sirayla|sirasiyla|zaman icinde|tablo\\w*|liste\\w*)\\b`)
+/** Ölçümün yanında başka bir şey soruluyor — neden, hangi, neye göre, ne önerildi. */
+const BASKA_SORU = /\b(hangi\w*|neden|nicin|niye|ne zaman|kim\w*|oner\w*|verdi\w*|verildi\w*|verilmis\w*|yazdi\w*|yazildi\w*|yazmis\w*|baslan\w*|basladi\w*|gore|icin|ragmen|yuzunden|sebeb\w*)\b/
+const SERI = new RegExp(`\\b(butun|tum|her)\\s+${MUAYENE}\\w*|\\b${MUAYENE}ler\\w*|\\b(gelisim\\w*|seyri\\w*|seyir\\w*|degisim\\w*|trend\\w*|gecmis\\w*|kronoloji\\w*|olcumler\\w*|degerler\\w*|sirayla|sirasiyla|zaman icinde|tablo\\w*|liste\\w*)\\b`)
 const SAYI: Record<string, number> = { iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10 }
 
 /**
@@ -76,6 +84,8 @@ const SAYI: Record<string, number> = { iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, 
 function yasDonumuBul(n: string): VizitYasIfadesi | null {
   for (const m of n.matchAll(/\b(\d{1,3})\s*\.?\s*(aylik|haftalik|gunluk|yasinda|yas|ay|hafta|gun)(\w*)/g)) {
     const birim = m[2]
+    // "son 3 aylık kilo değişimi" bir süredir, 3 aylık muayene değil.
+    if (/\bson\s*$/.test(n.slice(0, m.index))) continue
     const donum = ['aylik', 'haftalik', 'gunluk', 'yasinda'].includes(birim)
       || (!m[3] && new RegExp(`^\\s+${MUAYENE}`).test(n.slice(m.index + m[0].length)))
     if (!donum) continue
@@ -102,7 +112,7 @@ export function vizitOlcumSorusuBul(mesaj: string | null | undefined, secenek: {
   if (!olcumler.length) return null
 
   const degerlendirme = DEGERLENDIRME.test(n)
-  const sor = (hedef: VizitHedefi): VizitOlcumSorusu => ({ olcumler, genel, hedef, degerlendirme })
+  const sor = (hedef: VizitHedefi): VizitOlcumSorusu => ({ olcumler, genel, hedef, degerlendirme, kesin: !degerlendirme && !BASKA_SORU.test(n) })
 
   const yas = yasDonumuBul(n)
   const gruplar = vizitTuruGruplariBul(mesaj)
@@ -438,7 +448,7 @@ export function vizitOlcumKanitSatirlari(k: VizitOlcumKaniti): string[] {
     if (yok.length || !v.kayitlar.length) out.push(`- KAYIT YOK: bu muayene için ${yok.length ? adlar(yok) : ''} ölçümü bulunamadı (bakılan yerler: ${BAKILAN}).`.replace('için  ölçümü', 'için ölçüm'))
     if (v.yakin.length) out.push(`- En yakın kayıtlı ölçümler (bu muayenenin ölçümü DEĞİL): ${v.yakin.map((y) => `${AD[y.olcum]} ${y.metin} (${trGun(y.tarih)})`).join('; ')}.`)
   }
-  out.push('[KURAL] KAYITLI değeri birimi, tarihi ve kaynağıyla AYNEN ver. İlaç dozundan (mg/kg), persentilden ya da komşu ölçümlerden değer TÜRETME; başka muayenenin ölçümünü bu muayenenin ölçümü gibi sunma.')
+  out.push('[KURAL] KAYITLI değeri birimi, tarihi ve kaynağıyla AYNEN ver. İlaç dozundan (mg/kg), başka bir hesaptan ya da komşu ölçümlerden değer TÜRETME; başka muayenenin ölçümünü bu muayenenin ölçümü gibi sunma.')
   if (k.durum !== 'kayitli') out.push('[KURAL] KAYIT YOK yazan ölçüm için ilk cümlede "bu muayenede kayıtlı ölçüm yok" de. Tahmin verirsen açıkça "tahmin" diye etiketle, neye dayandığını söyle ve kayıtlı ölçüm gibi sunma.')
   return out
 }
@@ -463,7 +473,8 @@ const TAHMIN_DIYOR = /tahm[iİ]n/i
 /**
  * Model (Danış paneli) kanıtı gördükten sonra cevap verir; bu son denetim cevabın kayıtla tuttuğunu güvenceye alır:
  *   • kayıtlı değer varsa cevapta o değer geçmelidir — geçmiyorsa (model tahmin etti, "yazılmamış" dedi) cevap
- *     kayıttaki kesin cevapla DEĞİŞTİRİLİR; değerlendirme sorusunda kesin cevap modelin yorumunun ÖNÜNE konur.
+ *     kayıttaki kesin cevapla DEĞİŞTİRİLİR; değerlendirme ya da ölçüme dayanan başka bir soruda (soru.kesin = false)
+ *     kesin cevap modelin cevabının ÖNÜNE konur, cevap silinmez.
  *   • kayıt yoksa cevap bunu söylemelidir ve kayıtta olmayan bir değer ancak "tahmin" etiketiyle geçebilir.
  * Kayıtla tutan cevaba dokunulmaz.
  */
@@ -473,7 +484,7 @@ export function olcumCevabiniGuvenceyeAl(cevap: string, k: VizitOlcumKaniti): st
   const kayitli = k.seri ? k.seri.flatMap((s) => Object.values(s.kayitlar)) : k.vizitler.flatMap((v) => v.kayitlar)
   if (kayitli.length) {
     if (kayitli.every((x) => geciyor(c, sayiKismi(x.metin)))) return cevap
-    return k.soru.degerlendirme && c.trim() ? `${kesin}\n\n${cevap}` : kesin
+    return !k.soru.kesin && c.trim() ? `${kesin}\n\n${cevap}` : kesin
   }
   const izinli = new Set(k.vizitler.flatMap((v) => v.yakin).map((y) => sayiKismi(y.metin)))
   const yabanci = k.soru.olcumler.some((o) => [...c.matchAll(new RegExp(`(\\d+(?:,\\d+)?)${BIRIM_RE[o]}`, 'gi'))].some((m) => !izinli.has(m[1])))

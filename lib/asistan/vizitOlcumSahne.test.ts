@@ -130,6 +130,13 @@ describe('Ayşe sohbet ve ses — aynı kanıt, modelsiz', () => {
     assert.ok(sistemde(/KAYITLI: kilo 9,8 kg — 15\.05\.2025/))
   })
 
+  it('ölçüme dayanan başka soru modele gider (hızlı kartın "son ölçüm"ü değil), kanıt yanında', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    const y = await yazi(s, '12 aylık muayenede kilosuna göre hangi mama önerilmişti?', { oturum: oturumAc(s, { id: hasta, ad: AD }) })
+    assert.equal(y.rota, 'model')
+    assert.ok(sistemde(/KAYITLI: kilo 9,8 kg — 15\.05\.2025/))
+  })
+
   it('"kilo gelişimi": tarih ve değer sırayla (gelişim taraması cevabı değil)', async () => {
     const { s, hasta } = cocukSahnesi('c')
     const y = await yazi(s, 'kilo gelişimi', { oturum: oturumAc(s, { id: hasta, ad: AD }) })

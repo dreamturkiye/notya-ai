@@ -70,6 +70,7 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
+import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
@@ -517,6 +518,8 @@ ${ilacBaglamMetni(drugs[0])}`
   /** NOTYA-AYSE-GERI-05: a record shown from stored values (vaccine table, anthropometrics, exam summaries). */
   let kayitCevap: KayitCevabi | null = null
   let kayitNiyeti: Niyet = "hasta-dosya"
+  /** NOTYA-DANIS-OLCUM: the question evaluates one exam's measurement (evidence path, not the quick card). */
+  let olcumDegerlendirmesi = false
   // NOTYA-BETA-0925: kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi)
   // sunucuda, modelsiz cevaplanır. Değerler yalnız bu yanıtın ekran metnindedir; saklanan geçmişe (sonraki
   // turlarda modele giden) değersiz metin yazılır — VELI-YASAL-ONAM kuralı korunur.
@@ -591,7 +594,17 @@ ${ilacBaglamMetni(drugs[0])}`
     // follow-up rewrite (which turns a bare "aşıları?" into the evaluation question "… aşıları tam mı?").
     const asiTabloIstegi = !komut && (asiKaydiSorusuMu(hamMesaj) || asiKaydiSorusuMu(mesajMetni))
     const kayitIstegi = komut || asiTabloIstegi ? null : (kayitIstegiBul(hamMesaj) ?? kayitIstegiBul(mesajMetni))
-    if (cozum.tur === "tek" && !cozum.cevap && (asiTabloIstegi || kayitIstegi)) {
+    // NOTYA-DANIS-OLCUM (Dr. Gökhan, 2026-10-02): the measurement of ONE named exam ("12 aylık muayenesine geldiğinde kaç
+    // kiloydu", "son kontrolde tansiyonu") or a series the table above does not cover ("kilo gelişimi", "tansiyon
+    // seyri"). Before, the quick card answered these with the LATEST measurement. Same query as the Danış panel
+    // (dosyaSorgu/vizitOlcum): stored values only, with unit, date and source; no model. An evaluation ("… normal
+    // miydi") or another question that leans on the measurement ("… kilosuna göre hangi mama önerilmişti") is not
+    // answered here — it goes to the evidence path below with that exam's measurement in the evidence.
+    const olcumSorusuHam = komut || asiTabloIstegi ? null : (vizitOlcumSorusuBul(hamMesaj) ?? vizitOlcumSorusuBul(mesajMetni))
+    olcumDegerlendirmesi = Boolean(olcumSorusuHam && !olcumSorusuHam.kesin)
+    // A named exam is more specific than the all-exams table; otherwise the table keeps its requests.
+    const olcumSorusu = olcumSorusuHam?.kesin && (olcumSorusuHam.hedef.tip === "vizit" || !kayitIstegi) ? olcumSorusuHam : null
+    if (cozum.tur === "tek" && !cozum.cevap && (asiTabloIstegi || kayitIstegi || olcumSorusu)) {
       try {
         // HASTA-IZOLASYON-01: the id is the resolver's (doctor-scoped) or the re-checked open patient; the karne read
         // and the chart package narrow every query by doctor AND patient again.
@@ -601,13 +614,19 @@ ${ilacBaglamMetni(drugs[0])}`
           cozulenHasta = { id: cozum.patientId, ad }
           kayitCevap = asiTablosuCevabi(ad, karne)
           kayitNiyeti = "asi"
-        } else if (kayitIstegi) {
+        } else if (olcumSorusu || kayitIstegi) {
           const paket = cozum.patientId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
           if (paket) {
             const ad = cozum.ad || paket.ad || "Hasta"
             cozulenHasta = { id: cozum.patientId, ad }
-            kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
-            kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
+            if (olcumSorusu) {
+              // HASTA-IZOLASYON-01: the events are the doctor-scoped chart package of the resolved patient.
+              kayitCevap = vizitOlcumCevabi(vizitOlcumKaniti(olcumSorusu, (paket.olaylar || []) as DosyaOlayi[], { dogumIso: (paket.sorguHasta as DosyaHastasi | undefined)?.dogumIso ?? null }), ad)
+              kayitNiyeti = "buyume"
+            } else if (kayitIstegi) {
+              kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
+              kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
+            }
           }
         }
       } catch (e) {
@@ -632,7 +651,10 @@ ${ilacBaglamMetni(drugs[0])}`
       aramaRota = "dosya-ac"
       aramaCevabi = `${cozum.ad} dosyası açık Hocam. Ne sormak istersiniz?`
     } else if (cozum.tur === "tek") {
-        const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
+        // NOTYA-DANIS-OLCUM: an evaluation of one exam's measurement ("12 aylık muayenesinde kilosu normal miydi") is a
+        // growth-evidence question even when no canonical sentence matches — otherwise the quick card answered it
+        // with the latest measurement.
+        const soruTuru: SoruTuru | null = soruTuruBul(String(message || "")) ?? (olcumDegerlendirmesi ? "buyume" : null)
         const paket = cozum.patientId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
         const sorgu = paket && soruTuru && paket.sorguHasta
           ? { olaylar: paket.olaylar as DosyaOlayi[], hasta: paket.sorguHasta as DosyaHastasi }

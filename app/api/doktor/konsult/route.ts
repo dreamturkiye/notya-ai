@@ -24,6 +24,8 @@ import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
 import { notAlanlariCoz, alerjiListe } from '@/lib/doktor/hastaKayitAlanlari'
+import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari'
+import { olcumCevabiniGuvenceyeAl, vizitOlcumKaniti, vizitOlcumKanitBlogu, vizitOlcumSorusuBul, type VizitOlcumKaniti } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -49,7 +51,12 @@ Kurallar:
 7. Hastanın adını/kimliğini asla üretme — "hasta" de. Dosyada kimlik bilgisi zaten yoktur. (Onay kartındaki
    hasta adını sistem koyar, sen değil.)
 8. Doğum tarihi ve diğer form başlıkları yalnız ilk kayıt formunda değil; epikriz, SOAP ve belgede
-   de geçebilir. "DOSYADAN OKUNAN FORM BİLGİLERİ" bölümüne bak — form boş diye "bilinmiyor" deme.`
+   de geçebilir. "DOSYADAN OKUNAN FORM BİLGİLERİ" bölümüne bak — form boş diye "bilinmiyor" deme.
+9. ÖLÇÜM (kilo, boy, baş çevresi, VKİ, tansiyon, ateş): yalnız KAYITLI değeri söyle — değer, birim,
+   hangi muayenenin tarihi ve kaynağı (vizitin "Ölçümler" satırı, cihaz ölçümü ya da not metni). Bir
+   muayenenin ölçümü sorulduysa o muayenenin kaydına bak; başka muayenenin ölçümünü onun yerine verme.
+   Kayıt yoksa "bu muayenede kayıtlı ölçüm yok Hocam" de. İlaç dozundan (mg/kg) ya da komşu
+   ölçümlerden değer türetme; tahmin verirsen açıkça "tahmin" diye etiketle, kayıtlı ölçüm gibi sunma.`
 
 // NOTYA-EYLEM: the capability paragraph is the SAME text on every surface (core/eylemler/istem.ts).
 // Appended to the cached constant block, so it costs nothing per turn.
@@ -108,6 +115,20 @@ export async function POST(req: NextRequest) {
     content: String(m.icerik || '').slice(0, 4000),
   }))
   const sonMetin = String(mesajlar[mesajlar.length - 1]?.icerik || '')
+
+  // NOTYA-DANIS-OLCUM (Dr. Gökhan, 2026-10-02): "12 aylık muayenesine geldiğinde kaç kiloydu" — bir MUAYENENİN ölçümü
+  // sorulduysa o muayenenin kaydı deterministik olarak okunur (sohbet ve sesle aynı sorgu: dosyaSorgu/vizitOlcum) ve
+  // kanıt olarak modele verilir; model cevabı aşağıda kayıtla karşılaştırılır. HASTA-IZOLASYON: dosyaSorguVerisiDerle
+  // hastayı ve her çocuk okumayı doktorId ile kapsar; yabancı hasta yukarıda zaten 404 döndü.
+  let olcumKaniti: VizitOlcumKaniti | null = null
+  // Bir kayıt komutu ("… kaydet") ölçüm SORUSU değildir — o tur araç kartıyla cevaplanır.
+  const olcumSorusu = sonMesajDoktorun && !kayitNiyetiMi(sonMetin) ? vizitOlcumSorusuBul(sonMetin) : null
+  if (olcumSorusu) {
+    try {
+      const sorgu = await dosyaSorguVerisiDerle(supabase, doktorId, patientId)
+      if (sorgu) olcumKaniti = vizitOlcumKaniti(olcumSorusu, sorgu.olaylar, sorgu.hasta)
+    } catch (e) { console.error('[konsult] ölçüm kanıtı', e instanceof Error ? e.message.slice(0, 200) : 'hata') }
+  }
   // yazıver / kaydet → tool_choice any: model cannot narrate a refusal; card still needs the tap.
   const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
 
@@ -117,7 +138,7 @@ export async function POST(req: NextRequest) {
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + (olcumKaniti ? `\n\n${vizitOlcumKanitBlogu(olcumKaniti)}` : '') }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] ai', e.govde.slice(0, 300))
@@ -126,7 +147,8 @@ export async function POST(req: NextRequest) {
       else if (/rate_limit|overloaded/i.test(e.govde)) msg = 'Sistem şu an yoğun. Birkaç saniye sonra tekrar deneyin.'
       return NextResponse.json({ error: msg }, { status: 502 })
     }
-    const cevap = yanitMetni(veri, '\n')
+    // NOTYA-DANIS-OLCUM: kayıtlı ölçüm cevapta yoksa (model tahmin etti / "yazılmamış" dedi) kayıttaki kesin cevap döner.
+    const cevap = olcumKaniti ? olcumCevabiniGuvenceyeAl(yanitMetni(veri, '\n'), olcumKaniti) : yanitMetni(veri, '\n')
 
     // NOTYA-EYLEM: a tool_use block is a PROPOSAL, never a write. Each becomes an eylem_onerileri
     // taslak and comes back as a card; the record happens when the doctor taps (POST /api/doktor/eylem).

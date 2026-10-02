@@ -184,17 +184,28 @@ export async function hastaDosyaPaketiniDerle(
   }
   b.push(`\n## VİZİT GEÇMİŞİ — toplam ${seanslar.length} vizit`)
   const tamNotSayisi = 10
+  // NOTYA-DANIS-OLCUM (Dr. Gökhan, 2026-10-02): her vizitin KENDİ ölçümü (notes.vitaller) vizit bloğunda. Eskiden dosya
+  // metninde yalnız HIZLI KART'ın "son ölçüm"ü vardı; "12 aylık muayenede kaç kiloydu" sorusunda model o vizitin
+  // kilosunu göremiyor, plandaki mg/kg dozundan tahmin yürütüyordu. BRANS-ALAN-SIZMASI: baş çevresi yalnız pediatrik
+  // bağlamda (karttaki kuralla aynı).
+  const vizitOlcumleri = (n: Record<string, unknown> | undefined): string => {
+    if (!n?.vitaller || typeof n.vitaller !== 'object') return ''
+    const ozet = yasamsalBulguOzeti(n.vitaller as never)
+    return (pediatrik ? ozet : ozet.replace(/Baş Çevresi:[^·]+·?\s*/gi, '')).replace(/\s*·\s*$/, '').trim()
+  }
   seanslar.forEach((s, idx) => {
     const n = notHaritasi.get(String(s.id))
     const sira = idx + 1
     const sonlardan = idx >= seanslar.length - tamNotSayisi
+    const olcum = vizitOlcumleri(n)
     if (!sonlardan) {
       const kisa = n?.content_subjektif ? String(n.content_subjektif).slice(0, 160) : '(not yok)'
-      b.push(`\n### Vizit ${sira} — ${trTarih(s.created_at)}\n- Özet: ${kisa}`)
+      b.push(`\n### Vizit ${sira} — ${trTarih(s.created_at)}\n- Özet: ${kisa}${olcum ? `\n- Ölçümler (yaşamsal bulgu alanı): ${olcum}` : ''}`)
       return
     }
     b.push(`\n### Vizit ${sira} — ${trTarih(s.created_at)} [TAM SOAP]`)
     if (!n) { b.push('- Not bulunamadı.'); return }
+    if (olcum) b.push(`Ölçümler (yaşamsal bulgu alanı): ${olcum}`)
     if (n.content_subjektif) b.push(`S (Subjektif): ${n.content_subjektif}`)
     if (n.content_objektif) b.push(`O (Objektif): ${n.content_objektif}`)
     if (n.content_degerlendirme) b.push(`A (Değerlendirme): ${n.content_degerlendirme}`)

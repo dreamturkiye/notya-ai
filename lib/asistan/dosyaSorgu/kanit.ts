@@ -287,7 +287,7 @@ function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: stri
   if (!adaylar.length) return [`Aranan vizit: ${aciklama}. Bu türde / bu yaşta eşleşen onaylı vizit kaydı bulamadım — dosyada bu muayene yok Hocam; sessizce başka bir vizite düşmedim.`]
   const out = [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit(ler) (${adaylar.length})${secim === 'yas-tarih' ? ' — notta bu yaş yazmıyor; muayene tarihindeki yaşa göre seçildi' : ''}:`]
   // O muayenenin kayıtlı ölçümleri de satırda (alan, aynı günlü cihaz ölçümü, not metni) — özet ölçümsüz kalmasın.
-  const olcum = vizitOlcumKaniti({ olcumler: ['kilo', 'boy', 'basCevresi', 'tansiyon', 'ates', 'nabiz', 'spo2'], genel: true, hedef, degerlendirme: false }, olaylar, hasta)
+  const olcum = vizitOlcumKaniti({ olcumler: ['kilo', 'boy', 'basCevresi', 'tansiyon', 'ates', 'nabiz', 'spo2'], genel: true, hedef, degerlendirme: false, kesin: true }, olaylar, hasta)
   for (const v of adaylar) {
     out.push(`- ${trGun(v.tarih)}: ${v.metin}`)
     const k = olcum.vizitler.find((x) => x.tarih === v.tarih)?.kayitlar || []
