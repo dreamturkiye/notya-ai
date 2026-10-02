@@ -12,7 +12,9 @@ import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 
 // NOTYA-AYSE-100-LUNA (#89, 2026-09-29): "… vakası kimdi / hangi çocuk kimdi / dün gelen vaka" is a who-question over
 // the practice, never about the open chart — with R.D. open, "bu hafta pnömoni vakası kimdi" was answered from R.D.
-const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(lari|lar)\w*|tum hasta|butun hasta|istatistik/
+// NOTYA-KORPUS-KALAN-01 (Y-083): "kaç tane hasta kaydım var toplam" — "kaç TANE hasta" and "hasta kaydım" are the
+// panel count too. With a chart open the question went to the model with that chart instead of the count.
+const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac (tane |adet )?hasta|kac kisi|kac cocuk|kac vaka|\bhasta (kaydim|kaydimiz|kayitlarim)\b|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(lari|lar)\w*|tum hasta|butun hasta|istatistik/
 /**
  * NOTYA-AYSE-GERI-01 (audit §4.3, PR 9): "toplam / en çok / en sık / vaka" alone are not a practice-wide question.
  * With a chart open, "Toplam kaç aşısı var" and "En çok hangi şikayetle geldi" are about THAT patient and were
@@ -66,7 +68,7 @@ export function aktifHastaKullanilsinMi(g: {
   if (g.cozumTur === 'tek' && !g.aramaSonucu) return false
   if (g.cozumTur === 'coklu' && !g.aramaSonucu) return false
   if (takvimSorusuMu(g.mesaj)) return false
-  return !kohortSorusuMu(g.mesaj)
+  return !acikDosyaDisiSoruMu(g.mesaj)
 }
 
 // NOTYA-AYSE-KOHORT-01 (Kaan, 2026-10-02): a question about what the doctor wrote, saw or diagnosed, ranked or counted
@@ -90,6 +92,22 @@ const DOZ_SORUSU = / (mg|ml|kg|doz|dozu|dozunu|gunde) /
 const PRATIK_SAYIM_KALIBI = / kac (tane )?(asi|recete|muayene|kontrol)[a-z]* /
 const PRATIK_SAYIM_FIILI = / (yaptik|yaptim|uyguladik|uyguladim|vurduk|vurdum|yazdik|yazdim|gorduk|baktik) /
 const ZAMAN_PENCERESI = / (bugun|dun|bu (hafta|ay|yil)|gecen (hafta|ay|yil)|son (bir|iki|uc|dort|bes|alti|[0-9]+) (gun|hafta|ay|yil)[a-z]*) /
+// NOTYA-KORPUS-KALAN-01 (Y-091): "dün gelen ateşli çocuk" with a chart open was answered by the open chart's quick
+// card ("… son ölçüm: kayıt yok"). A patient described BY A VISIT inside a stated time window ("dün gelen …",
+// "bu hafta gördüğüm …", "geçen hafta muayene ettiğim …") is somebody the doctor is looking for in the practice —
+// the open chart cannot be "the child who came yesterday" unless the search finds it. Without a window ("ateşi olan
+// çocuk için ne önerirsin") the sentence stays with the open chart, as before.
+// It is NOT a count / list question (kohortSorusuMu): when the search finds nobody the turn still goes to the model,
+// never to a "Dün 0 hasta" sentence (NOTYA-AYSE-GERI-01).
+const ZIYARETLE_TARIF = / (gelen|gelmis olan|gordugum|gordugumuz|baktigim|baktigimiz|muayene ettigim|muayene ettigimiz)( [a-z0-9]+){0,3} (hasta|hastam|hastamiz|hastayi|cocuk|cocugu|bebek|bebegi|vaka|vakasi|kiz|oglan) /
+export function ziyaretleTarifMi(mesaj: string): boolean {
+  const n = sadeTrPratik(mesaj)
+  return ZIYARETLE_TARIF.test(n) && ZAMAN_PENCERESI.test(n) && !BU_HASTAYA_GONDERME.test(n)
+}
+/** With a chart open: is the question about the practice (a count, a list, a patient described by a visit) rather than that chart? */
+export function acikDosyaDisiSoruMu(mesaj: string): boolean {
+  return kohortSorusuMu(mesaj) || ziyaretleTarifMi(mesaj)
+}
 export function kohortSorusuMu(...a: Parameters<typeof kohortSorusuTemel>): boolean {
   if (kohortSorusuTemel(...a)) return true
   const n = sadeTrPratik(String(a[0] ?? ''))

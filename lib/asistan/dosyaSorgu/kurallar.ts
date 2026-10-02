@@ -80,16 +80,29 @@ export const SORU_SABLONLARI: Record<SoruTuru, { no: number; soru: string; sablo
 }
 
 /**
+ * NOTYA-AYSE-OZET-01 — TEK MUAYENENİN özeti için biçim (Dr. Gökhan, 2026-10-02): "Dayanak" maddeleri yerine, kanıttaki
+ * bölüm sırasıyla, her biri kendi kalın başlığıyla başlayan kısa paragraflar. Başlıklar özetin kendi bölümleridir
+ * (vizitOzeti.ts): pediatri dışında aşı ve büyüme başlığı hiç verilmez. İçerik kuralı kanıt bloğunun şablonundadır.
+ */
+export function vizitOzetBicimi(hastaAdi: string, basliklar: readonly string[]): string {
+  return `BİÇİM (muayene özeti — bu turda CEVAP STANDARDI'nın 2-4. maddelerinin yerine geçer): "speech" alanının İLK cümlesi "${hastaAdi}" adıyla başlar ve hangi muayenenin özetlendiğini söyler (tarih, muayene tarihindeki yaş). Ardından KANIT'taki sırayla her bölüm AYRI ve KISA bir paragraf; paragraf kalın başlığıyla başlar: ${basliklar.map((b) => `**${b}:**`).join(' ')}. Başlıkları AYNEN ve bu sırayla yaz, hiçbirini atlama. Madde imi, numara, tablo ve "Dayanak" başlığı KULLANMA. Hasta güvenliği maddesi varsa en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`
+}
+
+/**
  * GENEL KURALLAR + CEVAP STANDARDI — dosya sorusu turunda system prompt'a eklenen kurallar bloğu.
+ * `vizitOzetiBasliklari`: soru tek bir muayenenin özetiyse o özetin bölüm başlıkları (biçim satırı değişir).
  *
  * `hastaAdi` null: hasta dosyası paneli ("Ayşe'ye Danış"). O yüzeyde modele kimlik verilmez ve cevap "hasta" der —
- * biçim satırı adsızdır (NOTYA-ILK10-ASI-01: panel de aynı kanıtı ve aynı standardı alır).
+ * biçim satırı adsızdır (NOTYA-ILK10-ASI-01: panel de aynı kanıtı ve aynı standardı alır). Muayene özeti biçimi
+ * adla başlar; adsız yüzeyde genel biçim kullanılır.
  */
-export function dosyaSorguKuralBlogu(hastaAdi: string | null): string {
+export function dosyaSorguKuralBlogu(hastaAdi: string | null, secenek: { vizitOzetiBasliklari?: readonly string[] | null } = {}): string {
   const cevapStandardi = hastaAdi ? CEVAP_STANDARDI : CEVAP_STANDARDI.map((k) => k.replace(' ve hastanın adıyla başlar (sesli okumada ilk duyulan budur)', ''))
-  const bicim = hastaAdi
-    ? `BİÇİM: "speech" alanının İLK cümlesi doğrudan cevaptır ve "${hastaAdi}" adıyla başlar; sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`
-    : 'BİÇİM: cevabın İLK cümlesi doğrudan cevaptır (hastanın adını yazma, "hasta" de); sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Bu soruda aşağıdaki KANIT bloğu hasta dosyası metninden ÖNCE gelir: tarih, değer, doz, aşı ve sonuçları KANIT bloğundan al; kanıtta olmayanı yazma. "uydurdum" deme.'
+  const bicim = !hastaAdi
+    ? 'BİÇİM: cevabın İLK cümlesi doğrudan cevaptır (hastanın adını yazma, "hasta" de); sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Bu soruda aşağıdaki KANIT bloğu hasta dosyası metninden ÖNCE gelir: tarih, değer, doz, aşı ve sonuçları KANIT bloğundan al; kanıtta olmayanı yazma. "uydurdum" deme.'
+    : secenek.vizitOzetiBasliklari?.length
+      ? vizitOzetBicimi(hastaAdi, secenek.vizitOzetiBasliklari)
+      : `BİÇİM: "speech" alanının İLK cümlesi doğrudan cevaptır ve "${hastaAdi}" adıyla başlar; sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`
   return [
     '\n\n=== AYŞE KLİNİK DOSYA SORGULAMA STANDARDI (bu tur için zorunlu) ===',
     DOSYA_SORGU_AMACI,

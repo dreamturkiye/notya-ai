@@ -90,6 +90,110 @@ describe('Ayşe\'ye Danış — 12 aylık muayenenin kilosu', () => {
   })
 })
 
+/** A Danış conversation: the panel is stateless, the browser sends every turn. */
+async function danisSohbet(token: string, patientId: string, mesajlar: { rol: 'doktor' | 'asistan'; icerik: string }[]): Promise<string> {
+  const y = await danisRota.POST(new Istek('http://localhost/api/doktor/konsult', {
+    method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ patientId, mesajlar }),
+  } as ConstructorParameters<typeof Istek>[1]))
+  assert.equal(y.status, 200)
+  return String((await y.json()).cevap || '')
+}
+
+describe('NOTYA-KORPUS-KALAN-01 — Danış: takip sorusu, seri tablosu, büyüme sorusunda son kayıtlı değerler', () => {
+  it('(L-DANIS-BOYU) "peki boyu?" bir önceki sorunun muayenesinin boyudur — model son boyu söylese bile', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    ortam.yanit = { metin: 'Hocam, boyu kayıtlı değil.' }
+    const c = await danisSohbet(s.doktor.token, hasta, [
+      { rol: 'doktor', icerik: SORU }, { rol: 'asistan', icerik: `Kayıt — 12 aylık muayene (${TARIH_12AY}): kilo ${KILO_12AY}.` }, { rol: 'doktor', icerik: 'peki boyu?' },
+    ])
+    assert.match(c, /^Kayıt — 12 aylık muayene \(15\.05\.2025\): boy 75 cm\. Kaynak: muayene notunun yaşamsal bulgu alanı\./)
+    assert.ok(sistemde(/KAYITLI: boy 75 cm — 15\.05\.2025/), 'kanıt modele gitti')
+    // With no exam named before it, the same sentence is not a visit question: no evidence block, the model answers.
+    ortam.yanit = { metin: 'Hocam, son boy 75 cm (15.05.2025).' }
+    assert.equal(await danisSohbet(s.doktor.token, hasta, [{ rol: 'doktor', icerik: 'peki boyu?' }]), 'Hocam, son boy 75 cm (15.05.2025).')
+    assert.ok(!sistemde(/VİZİT ÖLÇÜMÜ KANITI/))
+  })
+
+  it('(L-DANIS-SERI-2) "bütün muayenelerinde kilosu": model değerleri madde madde yazsa da ekranda kayıt tablosu', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    ortam.yanit = { metin: 'Hocam, kayıtlı kilo ölçümleri:\n- 15.11.2024: 7,9 kg\n- 15.02.2025: 9,1 kg\n- 15.05.2025: 9,8 kg\n- 25.09.2025: 10,6 kg' }
+    const y = await danis(s.doktor.token, hasta, 'bütün muayenelerinde kilosu')
+    const satirlar = y.cevap.split('\n').filter((x) => /^\| \d{2}\./.test(x)).map((x) => x.split('|').slice(1, 3).map((h) => h.trim()))
+    assert.deepEqual(satirlar, [['15.11.2024', '7,9 kg'], ['15.02.2025', '9,1 kg'], ['15.05.2025', '9,8 kg'], ['25.09.2025', '10,6 kg']])
+    assert.ok(!y.cevap.includes(AD), 'Danış hasta adını üretmez')
+  })
+
+  it('(I-03) "Büyümesi nasıl gidiyor?": son kayıtlı kilo / boy / baş çevresi cevapta — model yuvarlasa ya da hiç yazmasa da', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    const yuvarlak = 'Hocam, ölçümler artış gösteriyor: 12 aylıkken 9,8 kg ve 76 cm; son kontrolde 10,6 kg.'
+    ortam.yanit = { metin: yuvarlak }
+    const y = await danis(s.doktor.token, hasta, 'Büyümesi nasıl gidiyor?')
+    // A canonical file question: the server opens the answer with the patient's name (I-01); the model never gets it.
+    assert.equal(y.cevap, `${AD} — kayıtlı son ölçümler: kilo 10,6 kg (25.09.2025); boy 75 cm (15.05.2025); baş çevresi 46 cm (15.05.2025).\n\n${yuvarlak}`)
+    assert.ok(sistemde(/SON KAYITLI ÖLÇÜMLER \(kayıttan, deterministik\) ===[^=]*- boy 75 cm — 15\.05\.2025/), 'kanıt modele gitti')
+    // The model's own answer stays untouched when it carries the recorded values.
+    const dogru = 'Hocam, son kilo 10,6 kg (25.09.2025), son boy 75 cm ve baş çevresi 46 cm (15.05.2025). Artış düzenli.'
+    ortam.yanit = { metin: dogru }
+    assert.equal((await danis(s.doktor.token, hasta, 'Büyümesi nasıl gidiyor?')).cevap, `${AD} — ${dogru}`)
+    // Not a growth question: nothing is added.
+    ortam.yanit = { metin: 'Hocam, hasta sağlam çocuk izleminde.' }
+    assert.equal((await danis(s.doktor.token, hasta, 'Bu hastayı özetler misin?')).cevap.includes('son ölçümler'), false)
+  })
+
+  it('(I-03) BRANS-ALAN-SIZMASI: erişkin branşta kayıt cümlesi baş çevresi taşımaz', async () => {
+    const { s, hasta } = eriskinSahnesi('kardiyoloji')
+    ortam.yanit = { metin: 'Hocam, kilo vermiş.' }
+    const y = await danis(s.doktor.token, hasta, 'Kilosu nasıl gidiyor, büyüme eğrisi var mı?')
+    assert.equal(y.cevap, `${ERISKIN} — kayıtlı son ölçümler: kilo 79,5 kg (15.06.2026); boy 162 cm (15.06.2026).\n\nHocam, kilo vermiş.`)
+    assert.doesNotMatch(y.cevap, /baş çevresi/i)
+    assert.ok(sistemde(/SON KAYITLI ÖLÇÜMLER \(kayıttan, deterministik\) ===[^=]*- kilo 79,5 kg/), 'kanıt modele gitti')
+    assert.ok(!sistemde(/SON KAYITLI ÖLÇÜMLER \(kayıttan, deterministik\) ===[^=]*baş çevresi/), 'kanıt da baş çevresi taşımaz')
+  })
+})
+
+// T-042 / T-044 ("boyu?" with no exam named → the latest recorded value) is the single-measurement route of
+// lib/asistan/kayitTablosu.ts, which is being reworked on its own branch; it is not asserted here.
+describe('NOTYA-KORPUS-KALAN-01 — sohbet ve ses: aynı muayenenin takibi, son ölçümler, anne boyu', () => {
+  it('(L-DANIS-BOYU) "peki boyu?" 12 aylık muayenenin kilosundan sonra o muayenenin boyudur (yazı ve ses)', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    await yazi(s, SORU, { oturum })
+    const y = await yazi(s, 'peki boyu?', { oturum })
+    assert.equal(y.rota, 'kayit')
+    assert.ok(y.speech.startsWith(`${AD} — 12 aylık muayene (${TARIH_12AY}): boy 75 cm.`), y.speech)
+    // The chain continues on the same exam; a question that names no exam and follows none asks the latest value.
+    assert.match((await yazi(s, 'baş çevresi?', { oturum })).speech, /12 aylık muayene \(15\.05\.2025\): baş çevresi 46 cm\./)
+    const ses = oturumAc(s, { id: hasta, ad: AD })
+    await fishTur(s, SORU, { oturum: ses })
+    const v = await fishTur(s, 'peki boyu?', { oturum: ses })
+    assert.equal(sonRota(), 'kayit')
+    assert.match(v.soz, /12 aylık muayene \(15\.05\.2025\): boy 75 cm/)
+    assert.equal(ortam.modelIstekleri.length, 0)
+  })
+
+  it('(Y-021) "Son ölçümleri neler?": son muayenenin kayıtlı bütün ölçümleri (ateş dahil) — antropometri tablosu değil', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    const y = await yazi(s, 'Son ölçümleri neler?', { oturum: oturumAc(s, { id: hasta, ad: AD }) })
+    assert.deepEqual([y.rota, y.speech], ['kayit', `${AD} — son muayene (25.09.2025): kilo 10,6 kg; ateş 38,4 °C. Kaynak: muayene notunun yaşamsal bulgu alanı.`])
+    // Asked for as a table, it is still the record table.
+    const tablo = await yazi(s, 'Son ölçümlerini tablo olarak göster', { oturum: oturumAc(s, { id: hasta, ad: AD }) })
+    assert.match(tablo.speech, /^\| Tarih \|/m)
+    assert.equal(ortam.modelIstekleri.length, 0)
+  })
+
+  it('(Y-023) "annesinin boyu kaç": Hasta Bilgi Formu alanı, modelsiz; formda yoksa hastanın boyu verilmez', async () => {
+    const { s, hasta } = cocukSahnesi('a')
+    const oturum = oturumAc(s, { id: hasta, ad: AD })
+    const yok = await yazi(s, 'bu hastanın annesinin boyu kaç', { oturum })
+    assert.deepEqual([yok.rota, yok.speech], ['kayit', `${AD} — anne boyu Hasta Bilgi Formu’nda kayıtlı değil Hocam.`])
+    ortam.db.ekle('hasta_intake_formlari', { patient_id: hasta, doktor_id: s.doktor.id, created_at: '2024-11-01T09:00:00Z', form_data_encrypted: encrypt(JSON.stringify({ anneBoyu: '168', babaBoyu: '176' })) })
+    const y = await yazi(s, 'bu hastanın annesinin boyu kaç', { oturum: oturumAc(s, { id: hasta, ad: AD }) })
+    assert.deepEqual([y.rota, y.speech], ['kayit', `${AD} — anne boyu 168 cm (Hasta Bilgi Formu).`])
+    assert.equal(ortam.modelIstekleri.length, 0)
+  })
+})
+
 describe('Ayşe sohbet ve ses — aynı kanıt, modelsiz', () => {
   for (const v of ['a', 'b', 'c'] as const) {
     it(`(${v}) yazı: kayıtlı kilo, tarih ve kaynak; "son ölçüm" değil`, async () => {

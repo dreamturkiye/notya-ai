@@ -22,6 +22,10 @@ export type BoslukTuru = 'asi' | 'ilac' | 'alerji' | 'olcum'
 export interface YapilandirilmisSayim {
   asi: number
   ilac: number
+  /**
+   * An allergy STATEMENT is recorded — on the patient card or in the patient's form, the explicit "Bilinen alerjisi
+   * yok" included (`alerjiBeyaniKayitliMi`). Not "an allergen is listed": a recorded negative is not a gap.
+   */
   alerjiVar: boolean
   olcumVar: boolean
 }
@@ -41,6 +45,24 @@ const ETIKET: Record<BoslukTuru, string> = {
   olcum: 'ölçüm',
 }
 
+/**
+ * NOTYA-FORM-KART-01 — the dossier sections that ARE the record, not a document: the quick card ("- Alerji: kayıt
+ * yok") and the patient form ("- alerjiVarMi: …"). The allergy scan used to read them too, so the word "alerji" in
+ * the dossier's own labels made every chart look as if a document mentioned an allergy.
+ */
+const KAYIT_BOLUMLERI = ['HIZLI KART', 'EN SON HASTA FORMU']
+
+/** The dossier without its record sections: visit notes, documents, device / imaging / lab lines, the doctor's note. */
+export function belgeVeNotMetni(dosyaMetni: string): string {
+  const out: string[] = []
+  let atla = false
+  for (const satir of String(dosyaMetni || '').split('\n')) {
+    if (satir.startsWith('## ')) atla = KAYIT_BOLUMLERI.some((b) => satir.slice(3).startsWith(b))
+    if (!atla) out.push(satir)
+  }
+  return out.join('\n')
+}
+
 /** Which categories the documents talk about while the structured records stay empty. */
 export function bosluklariBul(dosyaMetni: string, sayim: YapilandirilmisSayim): BoslukTuru[] {
   const metin = String(dosyaMetni || '')
@@ -51,7 +73,8 @@ export function bosluklariBul(dosyaMetni: string, sayim: YapilandirilmisSayim): 
     alerji: !sayim.alerjiVar,
     olcum: !sayim.olcumVar,
   }
-  return (Object.keys(IPUCLARI) as BoslukTuru[]).filter((t) => bos[t] && IPUCLARI[t].test(metin))
+  const belgeler = belgeVeNotMetni(metin)
+  return (Object.keys(IPUCLARI) as BoslukTuru[]).filter((t) => bos[t] && IPUCLARI[t].test(t === 'alerji' ? belgeler : metin))
 }
 
 /**

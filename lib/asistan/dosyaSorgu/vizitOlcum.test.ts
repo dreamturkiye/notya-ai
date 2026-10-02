@@ -12,7 +12,7 @@ import { olaylariKur, hastaKur, type HamDosya } from '@/lib/doktor/dosyaOlaylari
 import { metindenOlcumCikar } from '@/lib/clinical/olcumMetni'
 import { kanitBlogu } from './kanit'
 import { soruTuruBul } from './soruTuru'
-import { vizitOlcumSorusuBul, vizitOlcumKaniti, vizitOlcumCevabi, vizitOlcumKanitBlogu, olcumCevabiniGuvenceyeAl } from './vizitOlcum'
+import { vizitOlcumSorusuBul, vizitOlcumKaniti, vizitOlcumCevabi, vizitOlcumKanitBlogu, olcumCevabiniGuvenceyeAl, vizitOlcumTakipSorusu, vizitSoylenisi, sonOlcumlerSorusuMu, sonKayitliOlcumler, sonOlcumKanitBlogu, sonOlcumleriGuvenceyeAl } from './vizitOlcum'
 import { olcumDosyasi, eriskinOlcumDosyasi, OLCUM_COCUK_ADI as AD, OLCUM_ERISKIN_ADI as ERISKIN, KILO_12AY, TARIH_12AY, TAHMIN_KILO, type OlcumVaryanti } from '../tests/olcumHastasi'
 
 const BUGUN = '2026-01-01'
@@ -205,7 +205,8 @@ describe('kanıt bloğu (kanitBlogu) — değerlendirme ve özet sorularında o 
   it('"12 aylık muayenesini özetle" → eşleşen muayenenin ölçümleri de satırda', () => {
     const b = blok('a', 'ozet', '12 aylık sağlam çocuk muayenesini özetler misin?')
     assert.match(b, /12 aylık sağlam çocuk izlemi/)
-    assert.match(b, /Ölçümler: kilo 9,8 kg; boy 75 cm; baş çevresi 46 cm/)
+    // NOTYA-AYSE-OZET-01: the one-line form became the eight-part block; the measurements are its sixth part.
+    assert.match(b, /Bu muayenenin ölçümleri \(yalnız kayıtlı değer\): kilo 9,8 kg; boy 75 cm; baş çevresi 46 cm/)
   })
   it('vizit adı geçmeyen büyüme sorusu değişmedi', () => {
     assert.doesNotMatch(blok('a', 'buyume', 'Büyümesi nasıl gidiyor?'), /VİZİT ÖLÇÜMÜ/)
@@ -285,5 +286,87 @@ describe('erişkin — aynı sorgu, pediatrik varsayım yok (kilo, boy, VKİ, ta
     assert.match(blok, /KAYITLI: tansiyon 158\/96 mmHg — 03\.11\.2025/)
     assert.match(blok, /parametre seti: Temel/)
     assert.doesNotMatch(blok, PEDIATRIK)
+  })
+})
+
+describe('NOTYA-KORPUS-KALAN-01 — son ölçümler, takip sorusu, seri tablosu, son kayıtlı değerler', () => {
+  it('(Y-021) "Son ölçümleri neler?" → son muayenenin kayıtlı bütün ölçümleri; çoğul "ölçümleri" seri değildir', () => {
+    for (const m of ['Son ölçümleri neler?', 'son ölçümleri ne', 'En son vitalleri neydi']) {
+      const s = vizitOlcumSorusuBul(m)
+      assert.deepEqual([s?.hedef.tip, s?.genel, s?.kesin], ['son', true, true], m)
+    }
+    // A series said in so many words stays a series.
+    assert.equal(vizitOlcumSorusuBul('Son ölçümlerini sırayla göster')?.hedef.tip, 'seri')
+    assert.equal(vizitOlcumSorusuBul('ölçümleri neler')?.hedef.tip, 'seri')
+    // The brain's precedence over the record tables: only this wording, never a named measurement or a table request.
+    for (const m of ['Son ölçümleri neler?', 'En son vitalleri neydi']) assert.equal(sonOlcumlerSorusuMu(m), true, m)
+    for (const m of ['Son ölçümlerini tablo olarak göster', 'Son muayenedeki boy ve kilo ölçümlerini göster', 'ölçümleri neler', 'Son muayenedeki ölçümlerini göster', 'Boyu kaç?', 'son ölçümleri normal mi']) assert.equal(sonOlcumlerSorusuMu(m), false, m)
+    const e = cocuk('a', 'Son ölçümleri neler?')
+    assert.match(e, /^QA Bebek Ölçüm — son muayene \(25\.09\.2025\): kilo 10,6 kg; ateş 38,4 °C\. Kaynak: muayene notunun yaşamsal bulgu alanı\.$/)
+  })
+
+  it('(L-DANIS-BOYU) takip sorusu bir önceki sorunun muayenesini sorar; kendi muayenesi, dozu ya da ebeveyni olan söz takip değildir', () => {
+    const t = vizitOlcumTakipSorusu('peki boyu?', SORU)
+    assert.deepEqual([t?.olcumler, t?.hedef.tip, t?.kesin], [['boy'], 'vizit', true])
+    assert.match(vizitOlcumCevabi(vizitOlcumKaniti(t!, olaylariKur(olcumDosyasi('a'), BUGUN), hastaKur(olcumDosyasi('a'), BUGUN)), AD).ekran, /12 aylık muayene \(15\.05\.2025\): boy 75 cm\./)
+    assert.equal(vizitOlcumTakipSorusu('baş çevresi?', 'ilk muayenede kaç kiloydu')?.hedef.tip, 'ilk')
+    // The previous question named no exam, or was a series: nothing to inherit.
+    assert.equal(vizitOlcumTakipSorusu('peki boyu?', 'kilosu kaç'), null)
+    assert.equal(vizitOlcumTakipSorusu('peki boyu?', 'bütün muayenelerinde kilosu'), null)
+    assert.equal(vizitOlcumTakipSorusu('peki boyu?', null), null)
+    // Not a bare measurement follow-up.
+    assert.equal(vizitOlcumTakipSorusu('peki annesinin boyu?', SORU), null)
+    assert.equal(vizitOlcumTakipSorusu('peki demir dozu kaç mg', SORU), null)
+    assert.equal(vizitOlcumTakipSorusu('peki öksürüğü için ne önerirsin', SORU), null)
+  })
+
+  it('(L-DANIS-BOYU) vizitSoylenisi: adı geçen muayene takip sorusuna yeniden yazılabilen biçimde; seri ve adsız soru için yok', () => {
+    assert.equal(vizitSoylenisi(vizitOlcumSorusuBul(SORU)), '12 aylık muayenesinde')
+    assert.equal(vizitSoylenisi(vizitOlcumSorusuBul('2 yaş kontrolünde boyu ve kilosu')), '2 yaş muayenesinde')
+    assert.equal(vizitSoylenisi(vizitOlcumSorusuBul('ilk muayenede kaç kiloydu')), 'ilk muayenesinde')
+    assert.equal(vizitSoylenisi(vizitOlcumSorusuBul('son muayenede tansiyonu kaçtı')), 'son muayenesinde')
+    assert.equal(vizitSoylenisi(vizitOlcumSorusuBul('bütün muayenelerinde kilosu')), null)
+    assert.equal(vizitSoylenisi(null), null)
+    // What is stored reads back as the same exam.
+    for (const m of [SORU, '6 aylık kontrolde boyu kaç cm idi', 'ilk muayenede kaç kiloydu']) {
+      const s = vizitOlcumSorusuBul(m)!
+      assert.deepEqual(vizitOlcumSorusuBul(`QA Bebek Ölçüm'ün ${vizitSoylenisi(s)} boyu kaçtı?`)?.hedef, s.hedef, m)
+    }
+  })
+
+  it('(L-DANIS-SERI-2) değer olarak istenen seri her yüzeyde kayıt TABLOSUDUR — model aynı değerleri madde madde yazsa da', () => {
+    const k = kanit(olcumDosyasi('a'), 'bütün muayenelerinde kilosu')
+    const madde = 'Hocam, kayıtlı kilo ölçümleri:\n- 15.11.2024: 7,9 kg\n- 15.02.2025: 9,1 kg\n- 15.05.2025: 9,8 kg\n- 25.09.2025: 10,6 kg'
+    const c = olcumCevabiniGuvenceyeAl(madde, k)
+    assert.match(c, /^\*\*Kayıt — kilo ölçümleri\*\*/)
+    assert.match(c, /^\| 15\.05\.2025 \| 9,8 kg \| muayene alanı \|$/m)
+    // An evaluation over the series keeps the model's words when they carry every recorded value.
+    const degerlendirme = kanit(olcumDosyasi('a'), 'kilo gelişimi nasıl')
+    assert.equal(degerlendirme.soru.kesin, false)
+    assert.equal(olcumCevabiniGuvenceyeAl(madde, degerlendirme), madde)
+  })
+
+  it('(I-03) son kayıtlı ölçümler: her ölçümün en son kayıtlı değeri, hangi muayenede olursa olsun', () => {
+    const o = olaylariKur(olcumDosyasi('a'), BUGUN)
+    const son = sonKayitliOlcumler(o, ['kilo', 'boy', 'basCevresi'])
+    // The last (acute) visit has a weight only: height and head circumference come from the 12-month visit.
+    assert.deepEqual(son.map((x) => [x.olcum, x.metin, x.tarih]), [['kilo', '10,6 kg', '2025-09-25'], ['boy', '75 cm', '2025-05-15'], ['basCevresi', '46 cm', '2025-05-15']])
+    assert.deepEqual(sonKayitliOlcumler(olaylariKur(eriskinOlcumDosyasi(), BUGUN), ['kilo', 'boy']).map((x) => x.metin), ['79,5 kg', '162 cm'])
+    assert.deepEqual(sonKayitliOlcumler(olaylariKur({ ...olcumDosyasi('a'), vizitler: [] }, BUGUN), ['kilo', 'boy']), [])
+    const blok = sonOlcumKanitBlogu(son)
+    assert.match(blok, /- boy 75 cm — 15\.05\.2025 — kaynak: muayene notunun yaşamsal bulgu alanı\./)
+    assert.ok(!blok.includes(AD), 'kanıt bloğu hasta adını taşımaz')
+    assert.equal(sonOlcumKanitBlogu([]), '')
+  })
+
+  it('(I-03) sonOlcumleriGuvenceyeAl: yuvarlanan / eksik değer → kayıt cümlesi cevabın önünde; doğru cevap aynen kalır', () => {
+    const son = sonKayitliOlcumler(olaylariKur(olcumDosyasi('a'), BUGUN), ['kilo', 'boy', 'basCevresi'])
+    const yuvarlak = 'Hocam, ölçümler artıyor: son kontrolde 10,6 kg; 12 aylıkken 75,5 cm ve baş çevresi 46 cm.'
+    const c = sonOlcumleriGuvenceyeAl(yuvarlak, son)
+    assert.equal(c, `Kayıt — son ölçümler: kilo 10,6 kg (25.09.2025); boy 75 cm (15.05.2025); baş çevresi 46 cm (15.05.2025).\n\n${yuvarlak}`)
+    const dogru = 'Hocam, son kilo 10,6 kg (25.09.2025); son boy 75 cm ve baş çevresi 46 cm (15.05.2025). Artış düzenli.'
+    assert.equal(sonOlcumleriGuvenceyeAl(dogru, son), dogru)
+    assert.equal(sonOlcumleriGuvenceyeAl('Vekil yanıt.', []), 'Vekil yanıt.')
+    assert.equal(sonOlcumleriGuvenceyeAl('', son), 'Kayıt — son ölçümler: kilo 10,6 kg (25.09.2025); boy 75 cm (15.05.2025); baş çevresi 46 cm (15.05.2025).')
   })
 })

@@ -32,15 +32,16 @@ import { kimlikAlanDegeri, kimlikAlanEtiketi, kimlikKaydiOku, kimlikSorusunuCeva
 import { ALAN_ADLARI, AlanDefteri, alanAnahtari, HASTA_ALAN_ARACI, HASTA_ALAN_KURALI } from '@/lib/asistan/hastaAlan'
 import { ANALIZ_ARACLARI, ANALIZ_KURALI, eksiklerMetni, muayeneAra, muayeneOzeti } from '@/lib/asistan/muayeneAnaliz'
 import { hastaFisiltisi } from '@/lib/doktor/fisiltiHasta'
-import { cozumKonus, duzle, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
+import { cozumKonus, duzle, hastaninSozunuCoz, hitabiAracSozundenAyikla } from '@/lib/doktor/hastaCozumleyici'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { dosyaPaketOnbellekli } from '@/lib/doktor/ogrenme/dosyaOnbellek'
 import { dosyaSoruCevap, kartSoyle, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
-import { aktifHastaKullanilsinMi, kohortSorusuMu } from '@/lib/asistan/aktifHasta'
+import { acikDosyaDisiSoruMu, aktifHastaKullanilsinMi } from '@/lib/asistan/aktifHasta'
 import { soruTuruBul, type SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { kanitBlogu } from '@/lib/asistan/dosyaSorgu/kanit'
 import { dosyaSorguKuralBlogu } from '@/lib/asistan/dosyaSorgu/kurallar'
+import { vizitOzetiSec } from '@/lib/asistan/dosyaSorgu/vizitOzeti'
 import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { takvimSorusuCoz, type TakvimSorusu } from '@/lib/randevu/takvimSorusu'
 import { doktorunGununuOku, gunlukOzetMetni, haftalikOzetMetni } from '@/lib/randevu/gunlukOzet'
@@ -119,6 +120,8 @@ export interface OkumaBaglami {
   aktifHasta: { id: string; ad: string } | null
   /** First name of the colleague the doctor is talking to — the resolver's bare-name guard. */
   hitapAdi?: string
+  /** The doctor's own sentence of this turn: an address in it is never a patient in the model's tool text (hitabiAracSozundenAyikla). */
+  doktorSozu?: string
   /** NOTYA-AYSE-ALAN-01: the turn's placeholder ledger. hasta_alan registers what it issues here; references only. */
   alanDefteri?: AlanDefteri
 }
@@ -186,8 +189,11 @@ async function randevuTakvim(b: OkumaBaglami, g: Record<string, unknown>): Promi
 
 async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<OkumaSonucu> {
   const { supabase, doktorId, saatDilimi } = b
-  const soz = String(g.isim ?? g.hastaAdi ?? '').replace(/\s+/g, ' ').trim().slice(0, 600)
-  if (!soz) return { sonuc: 'Hasta adını anlayamadım, tekrar söyler misiniz?' }
+  const yazilan = String(g.isim ?? g.hastaAdi ?? '').replace(/\s+/g, ' ').trim().slice(0, 600)
+  if (!yazilan) return { sonuc: 'Hasta adını anlayamadım, tekrar söyler misiniz?' }
+  // NOTYA-KORPUS-KALAN-01 (L-ODAK-HITAP-1): the doctor's address ("Ayşe, …") is not a patient in the model's sentence.
+  const soz = hitabiAracSozundenAyikla(yazilan, b.doktorSozu, b.hitapAdi)
+  if (!soz) return { sonuc: HANGI_HASTA }
   // The route's scope gate, on the sentence the model wrote.
   const kapsam = await kapsamKarariHastayla(supabase, doktorId, soz)
   if (kapsam !== 'ic') return { sonuc: kapsam === 'disi' ? KAPSAM_RED : KAPSAM_SORU }
@@ -204,7 +210,7 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
 
   // Same binding rules as the brain (NOTYA-AKTIF-HASTA-01): a name in the sentence wins; an unnamed, non-cohort
   // question is about the open chart; a named person who was not found is never replaced by the open chart.
-  const acikDosyaSorusu = Boolean(aktifId) && !kohortSorusuMu(soz)
+  const acikDosyaSorusu = Boolean(aktifId) && !acikDosyaDisiSoruMu(soz)
   let cozum = await hastaninSozunuCoz(supabase, doktorId, soz, { tz: saatDilimi, kohortsuz: acikDosyaSorusu, hitapAdi: b.hitapAdi })
   const aramaSonucu = Boolean((cozum as { sayiMetin?: string }).sayiMetin)
   const baskaKisi = cozum.tur === 'yok' && !aramaSonucu ? anilanBaskaKisi(soz, b.aktifHasta?.ad) : null
@@ -242,7 +248,9 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
   // exam's measurement is a growth-evidence question, as in the brain).
   const soruTuru: SoruTuru | null = soruTuruBul(soz) ?? (olcum ? 'buyume' : null)
   if (soruTuru && sorguHasta) {
-    return { sonuc: `${ad} — dosya sorgusu.${dosyaSorguKuralBlogu(ad)}\n${kanitBlogu(soruTuru, olaylar, sorguHasta, { mesaj: soz })}`, hasta }
+    // NOTYA-AYSE-OZET-01: the summary of one named visit has its own answer shape (the eight parts, in order).
+    const ozetBasliklari = soruTuru === 'ozet' ? vizitOzetiSec(soz, olaylar, sorguHasta)?.ozet?.bolumler.map((b) => b.baslik) : null
+    return { sonuc: `${ad} — dosya sorgusu.${dosyaSorguKuralBlogu(ad, { vizitOzetiBasliklari: ozetBasliklari })}\n${kanitBlogu(soruTuru, olaylar, sorguHasta, { mesaj: soz })}`, hasta }
   }
   const kesin = dosyaSoruCevap(soz, paket.kart as HastaDosyaKart)
   const metin = `${ad}. ${kesin || kartSoyle(paket.kart as HastaDosyaKart)}`
@@ -259,7 +267,8 @@ const HASTA_BULUNAMADI = 'Bu hastayı kayıtlarınızda bulamadım.'
  */
 async function aracHastasi(b: OkumaBaglami, adGirdisi: unknown): Promise<{ hedef: { id: string; ad: string } } | { sonuc: OkumaSonucu }> {
   const { supabase, doktorId, saatDilimi } = b
-  const adHam = String(adGirdisi ?? '').replace(/\s+/g, ' ').trim().slice(0, 120)
+  // The doctor's address is not a patient name the model may pass on (NOTYA-KORPUS-KALAN-01, L-ODAK-HITAP-1).
+  const adHam = hitabiAracSozundenAyikla(String(adGirdisi ?? '').replace(/\s+/g, ' ').trim().slice(0, 120), b.doktorSozu, b.hitapAdi)
   if (adHam) {
     const cozum = await hastaninSozunuCoz(supabase, doktorId, adHam, { yalnizAd: true, adKesin: true, tz: saatDilimi })
     if (cozum.tur === 'coklu') {

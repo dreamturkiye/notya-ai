@@ -168,6 +168,16 @@ describe('kimlikSorusu — Gökhan’ın cümleleri tanınır', () => {
       'Son reçetesi ne?',
     ]) assert.deepEqual(K.kimlikSorusu(m), [], m)
   })
+  it('NOTYA-ARAMA-DOGUM-NEGASYON-01 (G-24): "… olmayan hastam var mı" bir aramadır; tek hastanın doğum tarihi sorusu kimlik sorusu kalır', () => {
+    for (const m of [
+      'doğum tarihi kayıtlı olmayan hastam var mı',
+      'Doğum tarihi girilmemiş hasta var mı?',
+      'Telefonu olmayan hastam var mı',
+      'Adresi kayıtlı olmayanları say',
+    ]) assert.deepEqual(K.kimlikSorusu(m), [], m)
+    assert.deepEqual(K.kimlikSorusu('Bu hastanın doğum tarihi var mı?'), ['dogumTarihi'])
+    assert.deepEqual(K.kimlikSorusu('Hastamın doğum tarihi ne?'), ['dogumTarihi'])
+  })
 })
 
 describe('kimlik cevabı — değer ekrana, model bağlamına asla', () => {

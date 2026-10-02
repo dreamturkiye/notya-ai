@@ -224,6 +224,11 @@ export interface KorpusDosyasi extends HamDosya {
   form: Record<string, unknown>
   belgeDosyalari: { baslik: string; tarih: string; ozet: string }[]
   goruntuler: { tip: string; bolge: string; tarih: string; yorum: string }[]
+  /**
+   * NOTYA-KALITE-STANDART-01 (Q-06): the visits were entered LATER than they happened. The session rows are created
+   * from this instant on (five minutes apart, in visit order); each note keeps its own day (`vizitler[].tarih`).
+   */
+  gecGiris?: string
 }
 
 export const KORPUS_BEBEK_ADI = 'Emircan Karaoğlu'
@@ -447,6 +452,102 @@ export function korpusBebek(bugunIso: string): KorpusDosyasi {
 }
 
 /** Adult chart for the non-paediatric entries: 46-year-old woman, hypertension + type 2 diabetes. */
+// ─── Geç girilmiş dosya (NOTYA-KALITE-STANDART-01, Q-06) ────────────────────────────────────────────────
+// A SYNTHETIC chart whose three visits were typed in on one evening, three days ago: the session rows carry that
+// evening, each note carries the day the child was actually seen. Every name, date and value is invented. It also
+// holds what the quality standard's golden cases need: a screening and a vaccine that are only PLANNED, a
+// consultation asked for with no answer, a follow-up window that has passed, an abnormal lab result with no repeat,
+// and one weight in a note text that contradicts the series.
+
+export const KORPUS_GEC_GIRIS_ADI = 'Doruk Akyel'
+
+/** 19 months before `bugunIso`, minus ten days. */
+export function korpusGecGirisDogum(bugunIso: string): string {
+  return gunEkle(ayEkle(bugunIso, -19), -10)
+}
+
+/** Golden values the corpus assertions quote; lib/asistan/gokhanKorpus.test.ts checks them against the built chart. */
+export const KORPUS_GEC_GIRIS = {
+  ad: KORPUS_GEC_GIRIS_ADI,
+  anneAdi: 'Melis', babaAdi: 'Kerem', telefon: '0536 000 55 66',
+  vizitSayisi: 3,
+  /** Days before today the three visits were entered. */
+  girisGunOnce: 3,
+  /** Age in months at each visit, and the extra days after that month day. */
+  vizitAylari: [[12, 0], [15, 6], [18, 0]],
+  sonKilo: 10.8, sonBoy: 82, sonBas: 47.6, ilkKilo: 9.4,
+  /** Written only in the 15-month note text; out of line with the series (9,4 → 10,8). */
+  celisenKilo: 14.1,
+  hb: 10.2, mcv: 68,
+  yalnizPlanli: ['M-CHAT-R/F', 'Hepatit A 1. doz'],
+  kontrolPenceresi: '2 hafta sonra kontrol',
+} as const
+
+export function korpusGecGiris(bugunIso: string): KorpusDosyasi {
+  const dogum = korpusGecGirisDogum(bugunIso)
+  const g = KORPUS_GEC_GIRIS
+  const gun = (n: number) => gunEkle(ayEkle(dogum, g.vizitAylari[n][0]), g.vizitAylari[n][1])
+  const tr = (d: number) => String(d).replace('.', ',')
+  const giris = `${gunEkle(bugunIso, -g.girisGunOnce)}T15:00:00Z`
+  const vizitler: HamDosya['vizitler'] = [
+    {
+      id: 'g-v1', tarih: `${gun(0)}T09:00:00Z`,
+      subjektif: '12 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Tutunarak yürüyor, "mama" diyor.',
+      objektif: 'Fizik muayene doğal. Dört diş var.',
+      degerlendirme: '12 aylık sağlam çocuk.', tani: 'Sağlam çocuk izlemi',
+      plan: 'Aşıları uygulandı. Hemogram istendi. D vitamini devam. 3 ay sonra kontrol.',
+      vitaller: { kilo: g.ilkKilo, boy: 75, basCevresi: 46 },
+    },
+    {
+      id: 'g-v2', tarih: `${gun(1)}T09:00:00Z`,
+      subjektif: 'İshal ve kusma, 2 gündür. Ateş yok. Sıvı alımı azalmış.',
+      objektif: `Kilo ${tr(g.celisenKilo)} kg. Hafif dehidrate görünümde. Batın rahat, bağırsak sesleri artmış.`,
+      degerlendirme: 'Akut gastroenterit.', tani: 'Akut gastroenterit', icd: [{ code: 'A09', description_tr: 'Gastroenterit' }],
+      plan: 'Oral rehidratasyon sıvısı önerildi. 2 gün sonra kontrol.',
+    },
+    {
+      id: 'g-v3', tarih: `${gun(2)}T09:00:00Z`,
+      subjektif: '18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Yürüyor. Annesi henüz anlamlı kelimesi olmadığını söylüyor; istediğini işaret ederek gösteriyor.',
+      objektif: 'Fizik muayene doğal. Yürüyüşü doğal.',
+      degerlendirme: '18 aylık sağlam çocuk. Dil gelişimi yakından izlenecek. M-CHAT-R/F planlandı.', tani: 'Sağlam çocuk izlemi',
+      plan: `M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit A 1. doz planlandı. İşitme değerlendirmesi için KBB konsültasyonu istendi. ${g.kontrolPenceresi}.`,
+      vitaller: { kilo: g.sonKilo, boy: g.sonBoy, basCevresi: g.sonBas },
+    },
+  ]
+  // The national schedule up to today, written as applied on the recommended day — except Hepatit A 1. doz, which
+  // the 18-month note only PLANS.
+  const asilar = takvimDozlari({ donem: 'besli' })
+    .map((d) => ({ d, tarih: d.onerilenGun != null ? gunEkle(dogum, d.onerilenGun) : ayEkle(dogum, d.onerilenAy) }))
+    .filter(({ d, tarih }) => tarih <= bugunIso && `${d.seri}:${d.no}` !== 'hepa:1')
+    .map(({ d, tarih }, i) => ({ id: `g-asi-${i}`, asi_adi: d.urun, doz_no: d.no, uygulama_tarihi: tarih, kaynak: 'klinik' }))
+  const labGunu = gunEkle(gun(0), 2)
+  const form = {
+    ad: 'Doruk', soyad: 'Akyel', telefon: g.telefon, anneAdi: g.anneAdi, babaAdi: g.babaAdi,
+    veliYakinligi: 'anne', veliAd: g.anneAdi, veliSoyad: 'Akyel', veliTelefon: g.telefon,
+    cinsiyet: 'Erkek', kanGrubu: 'B Rh+', alerjiVarMi: 'Hayır', alerjiAciklama: '', kronikHastaliklar: [],
+    gebelikHaftasiPed: '38', dogumKilosuPed: '3100 g', dogumSekliPed: 'Normal doğum', dogumSonrasiPed: 'Sorunsuz',
+    basvuruNedeniPed: 'Sağlam çocuk izlemi',
+  }
+  return {
+    hasta: { ad: KORPUS_GEC_GIRIS_ADI, dogumIso: dogum, cinsiyet: 'Erkek' },
+    brans: 'Pediatri',
+    telefon: g.telefon,
+    form,
+    intake: Object.fromEntries(Object.entries(form).filter(([k]) => !/^(ad|soyad|telefon|veli|anneAdi|babaAdi)/.test(k))),
+    intakeTarih: giris,
+    gecGiris: giris,
+    vizitler,
+    asilar,
+    ilaclar: [{ id: 'g-i1', ilac_adi: 'D vitamini damla', etken_madde: 'kolekalsiferol', doz: '400 IU', kullanim_sikli: '1x1', baslangic_tarihi: gunEkle(dogum, 5), aktif: true }],
+    lablar: [
+      { id: 'g-l1', canonical_key: 'Hb', kanonik_deger: g.hb, kanonik_birim: 'g/dL', value_text: `${g.hb} g/dL`, numune_tarihi: labGunu, ref_low: 11, ref_high: 14 },
+      { id: 'g-l2', canonical_key: 'MCV', kanonik_deger: g.mcv, kanonik_birim: 'fL', value_text: `${g.mcv} fL`, numune_tarihi: labGunu, ref_low: 70, ref_high: 86 },
+    ],
+    randevular: [],
+    belgeDosyalari: [], goruntuler: [],
+  }
+}
+
 export const KORPUS_ERISKIN = {
   ad: KORPUS_ERISKIN_ADI, kanGrubu: 'B Rh+', vizitSayisi: 4, sonTansiyon: '132/84',
   aktifIlaclar: ['Ramipril', 'Metformin', 'Atorvastatin'], hba1c: [7.8, 7.1],

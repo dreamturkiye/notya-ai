@@ -117,8 +117,8 @@ describe('antropometri — tek muayene, seri, tüm muayeneler', () => {
     assert.match(boy.speech, /^Deniz Aksoy — son boy 124 cm \(\d{2}\.\d{2}\.\d{4}\)\.$/)
   })
 
-  it('tek bilgi ("Kilosu kaç?") hızlı kartta, değerlendirme ("Büyümesi nasıl?") kanıt yolunda kalır', async () => {
-    assert.equal((await yazi(s, 'Kilosu kaç?', { oturum: acik() })).rota, 'hizli-kart')
+  it('tek bilgi ("Kilosu kaç?") tarihli ölçüm rotasında, değerlendirme ("Büyümesi nasıl?") kanıt yolunda kalır', async () => {
+    assert.equal((await yazi(s, 'Kilosu kaç?', { oturum: acik() })).rota, 'kayit')
     assert.equal((await yazi(s, 'Büyümesi nasıl gidiyor?', { oturum: acik() })).rota, 'model')
   })
 })

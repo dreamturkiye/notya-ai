@@ -291,7 +291,8 @@ describe('ayseCevapla bağlantısı (kaynak metin)', () => {
     assert.ok(kaynak.includes('soruTuruBul(String(message || ""))'))
     // NOTYA-AYSE-GERI-03: a command skips the quick card too (it must reach the tools).
     assert.ok(kaynak.includes('const kesinHam = sorgu || komut ? null : dosyaSoruCevap('))
-    assert.ok(kaynak.includes('dosyaSorguKuralBlogu(aktifAd)'))
+    // NOTYA-AYSE-OZET-01: the rule block takes the section headings when the question is one visit's summary.
+    assert.ok(kaynak.includes('dosyaSorguKuralBlogu(aktifAd, { vizitOzetiBasliklari:'))
     assert.ok(kaynak.includes('kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta'))
   })
 })

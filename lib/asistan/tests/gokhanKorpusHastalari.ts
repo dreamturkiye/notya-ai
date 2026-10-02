@@ -13,11 +13,14 @@
  *   olcay    Olcay Santoro      no birth date, no clinical record, one past appointment
  *   eriskin  Nermin Aydoğan     46-year-old woman, hypertension + type 2 diabetes — korpusEriskin()
  *   (other doctor)  QA Test Hasta 2, Selim Erkoç — must never resolve for the corpus doctor
+ *
+ * Not in the panel, added only to the sessions that use it (so every count above stays the same):
+ *   doruk    Doruk Akyel        19-month-old boy, three visits ENTERED LATER than they happened — korpusGecGiris()
  */
 import type { SahteVeritabani } from '@/lib/security/testing/sahteSupabase'
 import { adIndeksParcalari, tokenOzeti } from '@/lib/doktor/hastaAramaIndeksi'
 import { gunEkle, ayEkle } from '@/specialties/pediatri/engines/girdi'
-import { KORPUS_BEBEK_ADI, KORPUS_ERISKIN_ADI, ilk10Dosyasi, korpusBebek, korpusEriskin, type KorpusDosyasi } from '@/lib/asistan/dosyaSorgu/denetim/fikstur'
+import { KORPUS_BEBEK_ADI, KORPUS_ERISKIN_ADI, KORPUS_GEC_GIRIS_ADI, ilk10Dosyasi, korpusBebek, korpusEriskin, korpusGecGiris, type KorpusDosyasi } from '@/lib/asistan/dosyaSorgu/denetim/fikstur'
 
 export type KorpusHasta = 'bebek' | 'ayse' | 'tarik' | 'olcay' | 'eriskin'
 
@@ -43,6 +46,16 @@ export const HASTA_ESLEME: { kaynak: string; korpus: KorpusHasta | 'yabanci'; ne
 
 export const KORPUS_AYSE = { kilo: 19.4, boy: 110, ates: 38.9, tansiyon: '95/60', kanGrubu: 'AB Rh+', anneBoyu: 168, yas: 5 } as const
 export const KORPUS_TARIK = { kilo: 13.9, boy: 92, bas: 49.5, ates: 38.7, kanGrubu: 'A Rh-', dozMl: '6', sureGun: 7 } as const
+
+/**
+ * NOTYA-KALITE-STANDART-01 (Q-31): identity and contact values of the panel's intake forms. None may be spoken on a
+ * voice turn — the value is written on the screen. The unit test checks each one against the charts.
+ */
+export const KORPUS_KIMLIK_DEGERLERI: readonly string[] = [
+  'Elif', 'Serdar', '0532 000 11 22', 'qa-veli@example.test', 'QA Mahallesi', '10000000146',
+  'Sevgi', 'Orhan', '0534 000 33 44', 'Derya', 'Volkan', '0535 000 44 55',
+  'Melis', 'Kerem', '0536 000 55 66',
+]
 
 const erkek = /erkek|male/i
 
@@ -146,9 +159,11 @@ export function korpusDosyasiYaz(db: SahteVeritabani, encrypt: (s: string) => st
     db.ekle('hasta_intake_formlari', { patient_id: hasta, doktor_id: doktorId, created_at: ilkTarih, form_data_encrypted: encrypt(JSON.stringify(d.form)) })
   }
   d.vizitler.forEach((v, i) => {
-    const seans = db.ekle('sessions', { patient_id: hasta, doctor_id: doktorId, created_at: o.seansOlusturma ? o.seansOlusturma(v.tarih, i) : v.tarih, status: 'completed', specialty: 'pediatri', session_type: 'muayene', archived_at: null }).id
+    // A visit entered later than it happened: the session row is created at entry time, the note keeps the visit's day.
+    const seansTarihi = d.gecGiris ? new Date(Date.parse(d.gecGiris) + i * 5 * 60_000).toISOString() : v.tarih
+    const seans = db.ekle('sessions', { patient_id: hasta, doctor_id: doktorId, created_at: o.seansOlusturma ? o.seansOlusturma(v.tarih, i) : seansTarihi, status: 'completed', specialty: 'pediatri', session_type: 'muayene', archived_at: null }).id
     db.ekle('notes', {
-      session_id: seans, doctor_id: doktorId, patient_id: hasta, created_at: v.tarih, approved_at: v.tarih,
+      session_id: seans, doctor_id: doktorId, patient_id: hasta, created_at: v.tarih, approved_at: seansTarihi,
       content_subjektif: v.subjektif ?? null, content_objektif: v.objektif ?? null, content_degerlendirme: v.degerlendirme ?? null,
       content_plan: v.plan ?? null, content_tani: v.tani ?? null,
       basvuru_yakinmasi: String(v.subjektif || '').split('.')[0],
@@ -195,3 +210,9 @@ export function korpusPaneliKur(db: SahteVeritabani, encrypt: (s: string) => str
   }
   return { idler, bugunIso }
 }
+
+/** NOTYA-KALITE-STANDART-01: the late-entry chart, for the sessions that use it. Returns the patient id. */
+export function gecGirisHastasiEkle(db: SahteVeritabani, encrypt: (s: string) => string, doktorId: string, bugunIso: string): string {
+  return korpusDosyasiYaz(db, encrypt, doktorId, korpusGecGiris(bugunIso))
+}
+export { KORPUS_GEC_GIRIS_ADI }

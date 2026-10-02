@@ -18,10 +18,15 @@
  * This module is PURE (no scene, no mocks): types, entries, loader, placeholder context and the assertion
  * helpers. The runner is gokhanKorpusKosucu.ts.
  */
+import type { KaliteGirdisi, KaliteKaniti, OlcumTuru, YapiTuru } from '../kalite/denetimler'
+import { istenenOlcumBul, okuIstegiMi, yapiBul } from '../kalite/cikarim'
 
 export type Yuzey = 'yazi' | 'ses' | 'panel'
-/** bebek / ayse / tarik / olcay / eriskin: the corpus panel. deniz: the action-audit chart (added only where used). */
-export type KorpusHastasi = 'bebek' | 'ayse' | 'tarik' | 'olcay' | 'eriskin' | 'deniz'
+/**
+ * bebek / ayse / tarik / olcay / eriskin: the corpus panel. deniz: the action-audit chart. doruk: the late-entry
+ * chart of the quality standard's golden cases. The last two are added only to the sessions that use them.
+ */
+export type KorpusHastasi = 'bebek' | 'ayse' | 'tarik' | 'olcay' | 'eriskin' | 'deniz' | 'doruk'
 export type KorpusRota = 'kapsam' | 'takvim' | 'gurultu' | 'kimlik' | 'oku' | 'arama' | 'dosya-ac' | 'hizli-kart' | 'kayit' | 'model'
 export type Kategori =
   | 'kimlik' | 'hasta-cozum' | 'sayim' | 'liste' | 'takvim' | 'takip' | 'ilac' | 'asi' | 'olcum' | 'muayene' | 'lab'
@@ -64,6 +69,11 @@ export interface Beklenti {
    * the record). Such a turn is graded in full in a dry run too, although it passed through the stand-in.
    */
   sunucuYazar?: boolean
+  /**
+   * On a `sunucuYazar` turn: patterns the MODEL must write on top of what the server guarantees. Graded whenever the
+   * model wrote the answer; skipped only when a stand-in did (dry run), where `icerir` is still graded in full.
+   */
+  modelIcerir?: string[]
 }
 
 export interface KorpusGirdisi {
@@ -87,11 +97,26 @@ export interface KorpusGirdisi {
   beklenti: Beklenti | 'MANUAL'
   /** Voice-only overrides, merged over `beklenti` (e.g. identity values are shown, never spoken). */
   ses?: Beklenti
+  /** File-panel-only overrides, merged over `beklenti` (e.g. the panel's server check writes what chat leaves to the model). */
+  panel?: Beklenti
   /** The sentence is not a quote of the source but derived from its description; `not` says how. */
   turetilmis?: boolean
   /** Ledger id of a defect the ledger itself lists as OPEN: a FAIL here is known, not a new regression. */
   acikKusur?: string
   not?: string
+  /** NOTYA-KALITE-STANDART-01: what the quality rubric needs to know about this entry beyond the sentence itself. */
+  kalite?: KorpusKalitesi
+}
+
+export interface KorpusKalitesi {
+  /** Structure of Q-21 the answer must have; default: derived from the sentence (yapiBul). null = none. */
+  yapi?: YapiTuru | null
+  /** The single measurement asked (Q-02); default: derived from the sentence (istenenOlcumBul). null = none. */
+  olcum?: OlcumTuru | null
+  /** What the fixture says about the items the answer may mention (Q-04 planned versus given, Q-06 overdue follow-up). */
+  kanit?: KaliteKaniti
+  /** Identity values of the fixture that must not be spoken on this turn (Q-31), besides the panel-wide list. */
+  kimlik?: string[]
 }
 
 /* ───────────────────────────── sources ───────────────────────────── */
@@ -113,6 +138,7 @@ const T_KAPSAM = 'lib/asistan/kapsamKilidi.test.ts'
 const T_STANDART = 'lib/asistan/dosyaSorgu/denetim.test.ts'
 const T_OLCUM = 'lib/asistan/vizitOlcumSahne.test.ts'
 const T_KOHORT = 'lib/asistan/aktifHastaPratik.test.ts'
+const STANDART = 'docs/AYSE-KALITE-STANDARDI.md'
 
 /** Every source file the corpus was extracted from, with what was taken. Printed in the report. */
 export const KORPUS_KAYNAKLARI: { dosya: string; ne: string }[] = [
@@ -133,6 +159,7 @@ export const KORPUS_KAYNAKLARI: { dosya: string; ne: string }[] = [
   { dosya: T_STANDART, ne: 'single-fact questions of the Dr. Gökhan standard' },
   { dosya: T_OLCUM, ne: 'header comment citing the live visit-measurement question (NOTYA-DANIS-OLCUM) and its variants' },
   { dosya: T_KOHORT, ne: 'the doctor\'s own practice-ranking question of 2026-09-20 and its variants (NOTYA-AYSE-KOHORT-01)' },
+  { dosya: STANDART, ne: 'the golden cases of the quality standard: the ten İlk-10 questions on the late-entry chart, visit summaries, single-measurement and visit-date questions (NOTYA-KALITE-STANDART-01)' },
 ]
 
 /**
@@ -172,6 +199,8 @@ const BULUNAMADI = 'bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı deği
 /** The patient-count template's sentence shapes (lib/doktor/hastaAramaFiltre.ts). */
 const SAYIM_SABLONU = 'Kayıtlarda \\d+ hasta|\\b0 hasta|Filtre:'
 const PANEL_SAYI = `\\b${KORPUS_PANEL_SAYISI}\\b|beş`
+/** NOTYA-AYSE-OZET-01: the eight parts of one visit's summary, as bold headings, in their fixed order. */
+const OZET_SIRASI = ['Muayene', 'Şikayet', 'Muayene bulgusu', 'Laboratuvar', 'Aşı', 'Büyüme ve gelişme', 'Tedavi', 'Plan'].map((b) => `\\*\\*${b}:\\*\\*`).join('[\\s\\S]*')
 
 /**
  * Sentences Ayşe must never say on any turn that is not an expected refusal. Each comes from a complaint:
@@ -314,16 +343,48 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
     { ret: true, icermez: ['1 ay sonra kontrol', 'Tedavi tamamlandı', 'Emircan'] }, { sayfa: 'bebek', not: 'New chat on the boy\'s page: the answer was his visit plan.' }),
 
   // ── one named exam (NOTYA-DOSYA-SORU-TUR-01) ──
+  // Since NOTYA-AYSE-OZET-01 the server guarantees the text of one visit's summary on chat and voice (an answer
+  // without the eight parts, or with a value the record does not hold, is replaced by the record's own summary), so
+  // these entries are graded in a dry run too. The file panel has no such check: its entry is graded on the model's words.
   g('L-TUR-6AY', 'muayene', `${P}'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, [L('NOTYA-DOSYA-SORU-TUR-01'), G(55)],
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['6 aylık|[Ee]k gıda|7,9|67,5'], icermez: ['otitis media|Augmentin'] }, { yuzeyler: UC, acik: 'bebek' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['6 aylık|[Ee]k gıda|7,9|67,5', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { acik: 'bebek' }),
+  g('L-TUR-6AY-PANEL', 'muayene', `${P}'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, [L('NOTYA-DOSYA-SORU-TUR-01'), G(55)],
+    { rotaDegil: ['arama', 'kapsam'], icerir: ['6 aylık|[Ee]k gıda|7,9|67,5'], icermez: ['otitis media|Augmentin'] }, { yuzeyler: ['panel'], acik: 'bebek' }),
   g('L-TUR-12AY', 'muayene', `${P}'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['12 aylık|birkaç adım|9,8'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['12 aylık|birkaç adım|9,8', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
   g('L-TUR-15AY', 'muayene', `${P}'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['15 aylık|10,6|5-6 kelime'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'This visit has its measurements only in the note text.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['15 aylık|10,6|5-6 kelime', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'This visit has its measurements only in the note text.' }),
   g('L-TUR-18AY', 'muayene', `${P}'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['18 aylık|M-CHAT|11,3'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['18 aylık|M-CHAT|11,3', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
   g('L-TUR-24AY', 'muayene', `${P}'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın?`, L('NOTYA-DOSYA-SORU-TUR-01'),
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['24 aylık|Hepatit A|12,6'], icermez: ['otitis media|Augmentin'] }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['24 aylık|Hepatit A|12,6', OZET_SIRASI], icermez: ['otitis media|Augmentin'], sunucuYazar: true }, { turetilmis: true, not: 'The quoted sentence with another well-child visit of the fixture.' }),
+
+  // ── the summary of one visit: eight parts, absent parts stated, and it is HEARD (NOTYA-AYSE-OZET-01) ──
+  g('L-OZET-12AY', 'muayene', `${P}'nun 12 aylık sağlam çocuk muayenesinin özetini verir misin?`, L('NOTYA-AYSE-OZET-01'),
+    {
+      hasta: 'bebek', rota: ['model'], sunucuYazar: true,
+      icerir: [OZET_SIRASI, 'muayene tarihinde 1[12] aylık', 'KPA \\(Konjuge Pnömokok\\) 3\\. doz; KKK \\(Kızamık-Kızamıkçık-Kabakulak\\) 1\\. doz; Suçiçeği \\(Varisella\\) 1\\. doz', 'kilo 9,8 kg; boy 76 cm; baş çevresi 46,4 cm', 'Büyüme motoru: Kilo 9,8 kg \\(p\\d+, z', '\\*\\*Laboratuvar:\\*\\* Laboratuvar istenmemiş', '\\*\\*Tedavi:\\*\\* Reçete yazılmamış', '\\*\\*Plan:\\*\\* .*3 ay sonra kontrol'],
+      icermez: ['otitis media|Augmentin', 'Dayanak'],
+      okunus: { icerir: ['Aşı yapılmış', 'kilogram', 'santimetre', 'persentil', 'Laboratuvar istenmemiş'], icermez: ['madde, ekranınızda', 'Dayanak'] },
+    }, { not: 'The live sentence of 2026-10-02, asked by voice: the answer had no vaccines and no weight / height / head circumference, and nothing was spoken. Graded on the screen text and, on voice, on the text handed to the speech engine.' }),
+  g('L-OZET-15AY', 'muayene', `${P}'nun 15 aylık sağlam çocuk muayenesinin özetini verir misin?`, L('NOTYA-AYSE-OZET-01'),
+    {
+      hasta: 'bebek', rota: ['model'], sunucuYazar: true,
+      icerir: [OZET_SIRASI, '\\*\\*Aşı:\\*\\* Aşı yapılmamış', '\\*\\*Laboratuvar:\\*\\* Laboratuvar istenmemiş', 'kilo 10,6 kg \\(not metninden\\)', 'persentil hesaplanmadı'],
+      icermez: ['otitis media|Augmentin', '\\(p\\d+, z'],
+      okunus: { icerir: ['Aşı yapılmamış', 'Laboratuvar istenmemiş', 'persentil hesaplanmadı'], icermez: ['madde, ekranınızda'] },
+    }, { turetilmis: true, not: 'The live sentence with the visit that has no vaccine row, no lab and its measurements only in the note text: every absent part is stated, no percentile is estimated.' }),
+  g('L-OZET-24AY-DEVAM', 'ses', 'devam et', [L('NOTYA-AYSE-OZET-01'), L('NOTYA-SES-DEVAM-01')],
+    { hasta: 'bebek', icerir: ['Reçete yazılmamış; plan: Hepatit A 2\\. doz planlandı.*6 ay sonra kontrol'], icermez: ['Neye devam'] },
+    { kurulum: [`${P}'nun 24 aylık sağlam çocuk muayenesinin özetini verir misin?`], yuzeyler: ['ses'], turetilmis: true, not: 'The 24-month narrative is eight sentences (the growth engine reports a shift): seven are spoken, the eighth waits for the continuation and is read without a model call.' }),
+  g('L-OZET-ERISKIN', 'muayene', 'Son muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
+    {
+      hasta: 'eriskin', rota: ['model'], sunucuYazar: true,
+      icerir: ['\\*\\*Muayene:\\*\\*[\\s\\S]*\\*\\*Şikayet:\\*\\*[\\s\\S]*\\*\\*Muayene bulgusu:\\*\\*[\\s\\S]*\\*\\*Laboratuvar:\\*\\*[\\s\\S]*\\*\\*Ölçümler:\\*\\*[\\s\\S]*\\*\\*Tedavi:\\*\\*[\\s\\S]*\\*\\*Plan:\\*\\*', 'tansiyon 132/84 mmHg', 'HbA1c 7,1 % — laboratuvar referansının üstünde'],
+      icermez: ['\\*\\*Aşı', 'persentil', 'baş çevresi', 'Büyüme'],
+    }, { acik: 'eriskin', brans: 'dahiliye', turetilmis: true, not: 'The same question on the adult chart of a dahiliye doctor: the generic sections with the branch\'s own measurements, no vaccine and no growth section.' }),
+  g('L-OZET-YABANCI', 'izolasyon', 'Selim Erkoç\'un 12 aylık sağlam çocuk muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
+    { hasta: null, icermez: ['\\*\\*Muayene:\\*\\*', '\\*\\*Aşı:\\*\\*', 'dosyası açık'] }, { turetilmis: true, not: 'The live sentence about a patient of the scene\'s other doctor: no summary, no chart. What IS answered today is the count template ("Kayıtlarda 0 hasta. Filtre: 12 aylık.") — the age phrase is read as a cohort filter when the name resolves to nobody; listed as open under NOTYA-AYSE-OZET-01g, not graded here.' }),
   g('L-GECMIS', 'muayene', 'Bu hastanın geçmişini özetler misin?', L('çoklu-muayene sorgusu'),
     { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['demir eksikliği|anemi', 'otit'] }, { acik: 'bebek', yuzeyler: UC, turetilmis: true, not: 'The ledger\'s success criterion: a "bu hastanın geçmişi" question is answered from ALL notes, not only the last one.' }),
 
@@ -346,7 +407,7 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
     { hasta: 'bebek', icerir: ['12 aylık', '9,8 kg'], icermez: ['mg/kg', '12,8', SAYIM_SABLONU], rotaDegil: ['arama', 'hizli-kart'], sunucuYazar: true },
     { acik: 'bebek', yuzeyler: UC, oturum: 'L-DANIS', not: 'Asked in Ayşe\'ye Danış; the answer was an estimate from an iron dose. The weight recorded at that visit must reach the doctor on every surface, whatever the model writes; never the latest weight.' }),
   g('L-DANIS-BOYU', 'takip', 'peki boyu?', L('NOTYA-DANIS-OLCUM-07'),
-    { icerir: ['\\b76 cm'], icermez: ['87,5'] }, { acik: 'bebek', yuzeyler: UC, oturum: 'L-DANIS', acikKusur: 'NOTYA-DANIS-OLCUM-07', not: 'A follow-up that does not repeat the visit: the height of the SAME (12-month) visit. OPEN in the ledger for the Danış panel.' }),
+    { icerir: ['\\b76 cm'], icermez: ['87,5'], sunucuYazar: true }, { acik: 'bebek', yuzeyler: UC, oturum: 'L-DANIS', not: 'A follow-up that does not repeat the visit: the height of the SAME (12-month) visit, written by the server on every surface (NOTYA-KORPUS-KALAN-01).' }),
   g('L-DANIS-15AY', 'olcum', '15 aylıkken kaç kiloydu', L('NOTYA-DANIS-OLCUM-03'),
     { hasta: 'bebek', icerir: ['15 aylık', '10,6 kg'], icermez: ['12,8', SAYIM_SABLONU], rotaDegil: ['arama', 'hizli-kart'], sunucuYazar: true },
     { acik: 'bebek', yuzeyler: UC, turetilmis: true, not: 'The row quotes the pattern "15 aylıkken". In the fixture that visit has its weight only in the note text — the third place the fix reads.' }),
@@ -411,7 +472,7 @@ const GUNLUK_GIRDILERI: KorpusGirdisi[] = [
   g('G-21', 'liste', 'aşı kaydı olan hastalarım kimler', [G(21), L('NOTYA-ARAMA-PENCERE-VARSAYILAN-01'), L('NOTYA-AYSE-GERI-01')], { rota: ['arama'], icerir: ['Emircan'], icermez: ['\\b0 hasta'] }, { not: 'Every vaccine row of the fixture is older than 90 days; GERI-01 says the implicit window is gone.' }),
   g('G-22', 'liste', 'ilaç kullanan hastam var mı', [G(22), L('NOTYA-ARAMA-PENCERE-VARSAYILAN-01')], { rota: ['arama'], icerir: ['Emircan|Nermin|Ayşe|Tarık'], icermez: ['\\b0 hasta'] }),
   g('G-23', 'liste', 'bu ay kayıt olan hastalarım', [G(23), L('NOTYA-ARAMA-KAYIT-PENCERE-01')], 'MANUAL', { acikKusur: 'NOTYA-ARAMA-KAYIT-PENCERE-01', not: 'OPEN in the ledger; the right answer depends on the day of the month the run is made.' }),
-  g('G-24', 'liste', 'doğum tarihi kayıtlı olmayan hastam var mı', [G(24), L('NOTYA-ARAMA-DOGUM-NEGASYON-01')], { rota: ['arama'], icerir: ['Olcay'], icermez: ['Emircan', 'Tarık', 'Nermin'] }, { acikKusur: 'NOTYA-ARAMA-DOGUM-NEGASYON-01' }),
+  g('G-24', 'liste', 'doğum tarihi kayıtlı olmayan hastam var mı', [G(24), L('NOTYA-ARAMA-DOGUM-NEGASYON-01')], { rota: ['arama'], icerir: ['Olcay'], icermez: ['Emircan', 'Tarık', 'Nermin'] }),
   g('G-25', 'lab', 'Emircan\'ın hemoglobin değeri kaçtı', G(25), { hasta: 'bebek', icerir: ['11[.,]9|on bir virgül dokuz'], icermez: [SAYIM_SABLONU] }, { oturum: 'G-LAB' }),
   g('G-26', 'lab', 'ferritin sonucu ne', G(26), { hasta: 'bebek', icerir: ['\\b24\\b|yirmi dört'] }, { oturum: 'G-LAB' }),
   g('G-27', 'lab', 'WBC kaç', G(27), { hasta: 'bebek', icerir: ['9[.,]1|dokuz virgül bir'] }, { oturum: 'G-LAB' }),
@@ -694,6 +755,8 @@ const TAKIP_GIRDILERI: KorpusGirdisi[] = [
  * voice turn and by the bound patient (`hasta`), not in the written text. The banned words are the standard's: a missing record is never "yapılmadı / uygulanmadı".
  */
 const KAYIT_YOK_DEGIL_YAPILMADI = 'yapılmadı|uygulanmadı|yapılmamış|uygulanmamış'
+const I03_KAYITLI = ['12[.,]8|12[.,]6', '87[.,]5']
+const I03_PERSENTIL_Z = ['persentil|\\bp ?\\d{1,2}\\b', '\\bz\\b|z-skor|z skor']
 const i = (no: number, soz: string, icerir: string[], icermez: string[] = [], sesIcerir?: string[]) =>
   g(`I-${String(no).padStart(2, '0')}`, 'ilk10', soz, [K(ILK10, `## ${no}.`), L('NOTYA-AYSE-STANDART-01'), ...(sesIcerir ? [L('NOTYA-ILK10-YAPI-01')] : [])],
     { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir, icermez }, { acik: 'bebek', yuzeyler: UC, ...(sesIcerir ? { ses: { icerir: sesIcerir } } : {}) })
@@ -702,7 +765,9 @@ const ILK10_GIRDILERI: KorpusGirdisi[] = [
   i(1, 'Bu hastayı bana kısaca özetler misin?', ['otit|kulak', '[Dd]emir|anemi', '[Bb]üyüme|persentil|kilo', '[Gg]elişim|M-CHAT', 'aşı|Hepatit A'], [], ['Emircan', 'otit|kulak', '[Dd]emir|anemi']),
   i(2, 'Son muayeneden bu yana neler değişmiş?', ['otit|kulak']),
   // Q3 — the latest measurement with percentile and z-score from the engine, and a change between two named dates.
-  i(3, 'Büyümesi nasıl gidiyor?', ['12[.,]8|12[.,]6', '87[.,]5', 'persentil|\\bp ?\\d{1,2}\\b', '\\bz\\b|z-skor|z skor'], [], ['12[.,]8|12[.,]6', '87[.,]5']),
+  // The file panel's server check writes the latest recorded values whatever the model writes (NOTYA-KORPUS-KALAN-01);
+  // the percentile and the z-score are the model's words there, so a stand-in run grades the recorded values only.
+  { ...i(3, 'Büyümesi nasıl gidiyor?', [...I03_KAYITLI, ...I03_PERSENTIL_Z], [], I03_KAYITLI), panel: { sunucuYazar: true, icerir: I03_KAYITLI, modelIcerir: I03_PERSENTIL_Z } },
   // Q4 — the planned dose is not a given dose; the wording for a missing record; risk-based apart from routine.
   i(4, 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', ['Hepatit A', 'planlan', 'kayıt\\w* (bulamadım|yok|görünmüyor|göremiyorum|bulunmuyor)|kaydı (yok|görünmüyor|bulunmuyor)'], ['Hepatit A 2\\. doz[^.\\n]*uyguland', KAYIT_YOK_DEGIL_YAPILMADI], ['Hepatit A']),
   i(5, 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?', ['Hb|[Hh]emoglobin|[Ff]erritin|CRP']),
@@ -798,10 +863,79 @@ const YETENEK_GIRDILERI: KorpusGirdisi[] = [
   g('R-KAPSAM06-10', 'dosya', `${P} en son ne zaman geldi?`, [K(DENETIM, 'en son ne zaman geldi?'), L('NOTYA-KAPSAM-06b')], { hasta: 'bebek', rotaDegil: ['kapsam', 'arama'], icerir: ['{P_SON_VIZIT}'] }),
 ]
 
+/* ══════════════════════════════════════════════════════════════════════════════════════════════════════
+ * H. docs/AYSE-KALITE-STANDARDI.md — golden cases of the quality standard (NOTYA-KALITE-STANDART-01)
+ *
+ * The ten İlk-10 questions on the LATE-ENTRY chart (visits entered three days ago, notes dated on the day the child
+ * was seen), visit summaries, single-measurement questions and visit-date questions, on chat and voice. Each entry
+ * states the facts of the fixture the answer must carry and what the rubric needs (structure, evidence).
+ *
+ * Q-40: these entries come BEFORE the fixes. Where today's build is known to fail, the entry names the ledger row:
+ *   NOTYA-VIZIT-TARIH-01        a visit is dated by its session row, not by its note
+ *   NOTYA-KALITE-STANDART-01e   the quick card answers a measurement question without its date
+ * ══════════════════════════════════════════════════════════════════════════════════════════════════════ */
+const KALITE = L('NOTYA-KALITE-STANDART-01')
+const VIZIT_TARIH = 'NOTYA-VIZIT-TARIH-01'
+/** Born 19 months and ten days before today. */
+const YAS_19AY = '19 ay|1 yaş 7 ay|bir yaş yedi ay'
+const PLAN_DILI = 'planlan|uygulanacak|kayıt (yok|bulamadım|göremiyorum)|kaydı (yok|bulunmuyor)|görünmüyor'
+/** What the 15-visit chart documents: Hepatit A 2. doz is only planned; the three Hepatit B doses are recorded as given. */
+const BEBEK_KANITI: KaliteKaniti = { planli: ['Hepatit A 2\\. doz'], uygulanan: ['Hepatit B'] }
+/** What the late-entry chart documents: M-CHAT-R/F and Hepatit A are only planned; the two-week control window has passed. */
+const DORUK_KANITI: KaliteKaniti = { planli: ['M-CHAT', 'Hepatit A'], uygulanan: ['Hepatit B'], gecenTakip: ['2 hafta|iki hafta'] }
+const k = (id: string, kat: Kategori, soz: string, kural: string, beklenti: Beklenti | 'MANUAL', ek: Ek = {}) =>
+  g(`K-${id}`, kat, soz, [K(STANDART, kural), KALITE], beklenti, ek)
+const doruk = (icerir: string[], icermez: string[] = []): Beklenti => ({ hasta: 'doruk', rotaDegil: ['arama', 'kapsam'], icerir, ...(icermez.length ? { icermez } : {}) })
+const ALTIN_GIRDILERI: KorpusGirdisi[] = [
+  // ── the ten questions on the late-entry chart ──
+  k('G01', 'ilk10', 'Bu hastayı bana kısaca özetler misin?', 'Q-21', doruk(['Doruk', YAS_19AY, 'M-CHAT', 'Hepatit A', 'Hb|[Hh]emoglobin'], ['M-CHAT[^.\\n]*(düşük risk|normal)']),
+    { acik: 'doruk', kalite: { yapi: 'ozet', kanit: DORUK_KANITI } }),
+  k('G02', 'ilk10', 'Son muayeneden bu yana neler değişmiş?', 'Q-06', doruk(['{G_V18}', '10[.,]8']),
+    { acik: 'doruk', acikKusur: VIZIT_TARIH, kalite: { yapi: 'degisim', kanit: DORUK_KANITI }, not: 'The last visit is the 18-month one, on the day of its NOTE; the answer may not date it by the day it was entered.' }),
+  k('G03', 'ilk10', 'Büyümesi nasıl gidiyor?', 'Q-21', doruk(['10[.,]8', '{G_V18}', '14[.,]1', 'çeliş|uyumsuz|tutarsız|doğrula|hata|şüphe']),
+    { acik: 'doruk', acikKusur: VIZIT_TARIH, kalite: { yapi: 'buyume' }, not: 'The 15-month note text carries a weight of 14,1 kg between 9,4 and 10,8: shown with its date and kept out of the trend (Q-03, Q-21).' }),
+  k('G04', 'ilk10', 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', 'Q-21', doruk([YAS_19AY, 'Hepatit A', PLAN_DILI], ['Hepatit A 1\\. doz[^.\\n]*uyguland(ı|ığı belgelen)']),
+    { acik: 'doruk', kalite: { yapi: 'asi', kanit: DORUK_KANITI } }),
+  k('G05', 'ilk10', 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?', 'Q-09', doruk(['Hb|[Hh]emoglobin', '10[.,]2', '{G_LAB}']),
+    { acik: 'doruk', kalite: { yapi: 'lab' }, not: 'Hb 10,2 g/dL below the laboratory reference, seven months ago, no repeat on file: an abnormal result that was not followed.' }),
+  k('G06', 'ilk10', 'Şu anda kullandığı ilaçlar neler ve dozları nedir?', 'Q-21', doruk(['D vitamini', '400']), { acik: 'doruk', kalite: { yapi: 'ilac' } }),
+  k('G07', 'ilk10', 'Daha önce aynı şikayetle geldi mi?', 'Q-21', 'MANUAL',
+    { acik: 'doruk', kalite: { yapi: 'benzer' }, not: 'The last visit is a well-child visit with a language concern; whether the 12-month well-child visit counts as "the same complaint" is a human read. The rubric still judges the form.' }),
+  k('G08', 'ilk10', 'Gelişimi yaşına uygun mu?', 'Q-04', doruk(['M-CHAT', PLAN_DILI, 'kelime|dil'], ['M-CHAT[^.\\n]*(düşük risk|normal)']),
+    { acik: 'doruk', kalite: { yapi: 'gelisim', kanit: DORUK_KANITI }, not: 'M-CHAT-R/F is planned, not done; the mother reports no meaningful word at 18 months.' }),
+  k('G09', 'ilk10', 'Bugün yapmam veya takip etmem gereken bir şey var mı?', 'Q-06', doruk(['M-CHAT', 'Hepatit A', 'KBB|konsültasyon', 'geçti|geçmiş|gecik']),
+    { acik: 'doruk', acikKusur: VIZIT_TARIH, kalite: { yapi: 'takip', kanit: DORUK_KANITI }, not: 'The 18-month plan says "2 hafta sonra kontrol"; counted from the note\'s day the window passed weeks ago, counted from the entry day it has not.' }),
+  k('G10', 'ilk10', 'Gözümden kaçabilecek önemli bir şey var mı?', 'Q-09', doruk(['Hb|[Hh]emoglobin|anemi', 'M-CHAT|KBB|konsültasyon']),
+    { acik: 'doruk', kalite: { yapi: 'gozden-kacan', kanit: DORUK_KANITI } }),
+
+  // ── one visit summarised: the eight parts ──
+  k('VIZIT-B12', 'muayene', '12 aylık muayenesini özetler misin?', 'Q-21', { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['9,8', '76', '46,4', 'birkaç adım|anne'], icermez: ['otitis media|Augmentin'] },
+    { acik: 'bebek', kalite: { yapi: 'vizit-ozeti', kanit: BEBEK_KANITI } }),
+  k('VIZIT-G18', 'muayene', '18 aylık muayenesini özetler misin?', 'Q-06', doruk(['{G_V18}', '10,8', 'M-CHAT', 'Hepatit A', 'KBB'], ['{G_GIRIS}']),
+    { acik: 'doruk', acikKusur: VIZIT_TARIH, kalite: { yapi: 'vizit-ozeti', kanit: DORUK_KANITI } }),
+
+  // ── one measurement asked: that measurement and its date, nothing else ──
+  k('OLCUM-KILO', 'olcum', 'Kilosu kaç?', 'Q-02', { hasta: 'bebek', rotaDegil: ['arama'], icerir: ['12,8', '{P_SON_VIZIT}'], icermez: ['87,5', '48,9'] },
+    { acik: 'bebek', acikKusur: 'NOTYA-KALITE-STANDART-01e' }),
+  k('OLCUM-G-KILO', 'olcum', 'Kilosu kaç?', 'Q-02', doruk(['10,8', '{G_V18}'], ['{G_GIRIS}', '47,6']), { acik: 'doruk', acikKusur: VIZIT_TARIH }),
+  k('OLCUM-G-BOY', 'olcum', 'Boyu kaç?', 'Q-02', doruk(['82', '{G_V18}'], ['{G_GIRIS}', '47,6']), { acik: 'doruk', acikKusur: VIZIT_TARIH }),
+  k('OLCUM-G-BAS', 'olcum', 'Baş çevresi kaç?', 'Q-02', doruk(['47,6', '{G_V18}'], ['{G_GIRIS}', '10,8']), { acik: 'doruk', acikKusur: VIZIT_TARIH }),
+  k('OLCUM-ATES', 'olcum', 'Son muayenede ateşi kaçtı?', 'Q-02', { hasta: 'tarik', rotaDegil: ['arama'], icerir: ['38,7', '{DUN}'], icermez: ['13,9', '49,5'] }, { acik: 'tarik' }),
+
+  // ── a visit's day is its note's day ──
+  k('TARIH-SON', 'dosya', 'En son ne zaman geldi?', 'Q-06', doruk(['{G_V18}'], ['{G_GIRIS}']), { acik: 'doruk', acikKusur: VIZIT_TARIH }),
+  k('TARIH-G18', 'olcum', '18 aylık muayenesinde kaç kiloydu?', 'Q-06', doruk(['10,8 kg', '{G_V18}'], ['{G_GIRIS}']), { acik: 'doruk', acikKusur: VIZIT_TARIH }),
+]
+/** Entries of the corpus that are golden cases of the quality standard. */
+export const ALTIN_ON_EKI = 'K-'
+
 /* ───────────────────────────── the corpus ───────────────────────────── */
 
 export const GOKHAN_SIKAYET_KORPUSU: KorpusGirdisi[] = [
-  ...LEDGER_GIRDILERI, ...GUNLUK_GIRDILERI, ...YUZ_GIRDILERI, ...TAKIP_GIRDILERI, ...ILK10_GIRDILERI, ...EYLEM_GIRDILERI, ...YETENEK_GIRDILERI,
+  ...LEDGER_GIRDILERI, ...GUNLUK_GIRDILERI, ...YUZ_GIRDILERI, ...TAKIP_GIRDILERI,
+  // The İlk-10 entries on the 15-visit chart carry the chart's evidence for the planned-versus-given check (Q-04).
+  ...ILK10_GIRDILERI.map((x) => ({ ...x, kalite: { kanit: BEBEK_KANITI } })),
+  ...EYLEM_GIRDILERI, ...YETENEK_GIRDILERI, ...ALTIN_GIRDILERI,
 ]
 
 /* ───────────────────────────── loader ───────────────────────────── */
@@ -830,10 +964,13 @@ export function korpusDenetle(girdiler: KorpusGirdisi[]): string[] {
     if (g.turetilmis && !g.not) sorun.push(`${g.id}: türetilmiş cümle açıklama (not) ister`)
     if (g.beklenti !== 'MANUAL') {
       const okunus = [g.beklenti.okunus, g.ses?.okunus].flatMap((x) => [...(x?.icerir || []), ...(x?.icermez || [])])
-      for (const re of [...(g.beklenti.icerir || []), ...(g.beklenti.icermez || []), ...(g.ses?.icerir || []), ...(g.ses?.icermez || []), ...okunus]) {
+      for (const re of [...(g.beklenti.icerir || []), ...(g.beklenti.icermez || []), ...(g.ses?.icerir || []), ...(g.ses?.icermez || []), ...(g.panel?.icerir || []), ...(g.panel?.icermez || []), ...okunus]) {
         try { new RegExp(re.replace(/\{[A-Z0-9_]+\}/g, 'x'), 'iu') } catch { sorun.push(`${g.id}: bozuk desen ${re}`) }
       }
       if (!Object.keys(g.beklenti).length) sorun.push(`${g.id}: boş beklenti (MANUAL yazın)`)
+    }
+    for (const re of [...(g.kalite?.kanit?.planli || []), ...(g.kalite?.kanit?.uygulanan || []), ...(g.kalite?.kanit?.gecenTakip || [])]) {
+      try { new RegExp(re, 'iu') } catch { sorun.push(`${g.id}: bozuk kalite deseni ${re}`) }
     }
   }
   // An `oturum` is one session: its entries must be contiguous so the file order is the turn order.
@@ -899,7 +1036,11 @@ export function tarihDeseni(iso: string, yilli = true): string {
 }
 
 /** Dates of the fixture the placeholders need (ISO days), supplied by the runner from the charts it wrote. */
-export interface FiksturTarihleri { pDogum: string; pKkk: string; pRandevu: string; pSonVizit: string; pSonLab: string; aVizit: string }
+export interface FiksturTarihleri {
+  pDogum: string; pKkk: string; pRandevu: string; pSonVizit: string; pSonLab: string; aVizit: string
+  /** The late-entry chart: the day of its 12-, 15- and 18-month NOTES, the day the visits were entered, its lab day. */
+  gV12: string; gV15: string; gV18: string; gGiris: string; gLab: string
+}
 
 /**
  * Placeholder values for one run. Weekday names resolve to the coming day of that name, today included — the
@@ -915,6 +1056,7 @@ export function korpusBaglami(bugunIso: string, f: FiksturTarihleri): Record<str
     BUHAFTA_PZT: tarihDeseni(buPzt, false), HAFTAYA_PZT: tarihDeseni(kaydir(buPzt, 7), false),
     P_DOGUM: tarihDeseni(f.pDogum), P_KKK: tarihDeseni(f.pKkk), P_RANDEVU: tarihDeseni(f.pRandevu), P_SON_VIZIT: tarihDeseni(f.pSonVizit), P_SON_LAB: tarihDeseni(f.pSonLab),
     A_VIZIT: tarihDeseni(f.aVizit),
+    G_V12: tarihDeseni(f.gV12), G_V15: tarihDeseni(f.gV15), G_V18: tarihDeseni(f.gV18), G_GIRIS: tarihDeseni(f.gGiris), G_LAB: tarihDeseni(f.gLab),
   }
 }
 
@@ -957,6 +1099,7 @@ const kisalt = (s: string, n = 60) => (s.length > n ? `${s.slice(0, n)}…` : s)
 /** The effective expectation of an entry on a surface: voice overrides merged over the base. */
 export function yuzeyBeklentisi(g: KorpusGirdisi, yuzey: Yuzey): Beklenti | 'MANUAL' {
   if (g.beklenti === 'MANUAL') return 'MANUAL'
+  if (yuzey === 'panel' && g.panel) return { ...g.beklenti, ...g.panel }
   return yuzey === 'ses' && g.ses ? { ...g.beklenti, ...g.ses } : g.beklenti
 }
 
@@ -1005,6 +1148,7 @@ export function beklentiDegerlendir(
     // A warning the server adds to the card's line is part of the answer whoever wrote the rest.
     if (beklenti.kartUyari && !t.kartlar.some((k) => k.uyari > 0)) nedenler.push('kartta uyarı yok')
     for (const d of beklenti.icerir || []) if (!re(d, baglam).test(metin)) nedenler.push(`içermeli: ${kisalt(d)}`)
+    if (!(o.vekil && t.modeleGitti)) for (const d of beklenti.modelIcerir || []) if (!re(d, baglam).test(metin)) nedenler.push(`içermeli: ${kisalt(d)}`)
     for (const d of beklenti.icermez || []) if (re(d, baglam).test(metin)) nedenler.push(`içermemeli: ${kisalt(d)}`)
     if (beklenti.tablo && !/^\|.+\|\s*$/m.test(t.ekran)) nedenler.push('ekranda tablo yok')
     if (beklenti.okunus && t.yuzey === 'ses') {
@@ -1019,4 +1163,55 @@ export function beklentiDegerlendir(
   if (nedenler.length) return { karar: 'FAIL', nedenler }
   const sozBekleniyor = Boolean(beklenti.icerir?.length || beklenti.icermez?.length || beklenti.tablo || beklenti.kartUyari || beklenti.okunus)
   return { karar: vekilCevabi && sozBekleniyor ? 'VEKIL' : 'PASS', nedenler }
+}
+
+/* ───────────────────────────── quality rubric input (NOTYA-KALITE-STANDART-01) ───────────────────────────── */
+
+/** Categories whose answer states a fact of the bound patient's chart: the answer must open with the patient's name (Q-07). */
+const HASTAYA_OZGU: ReadonlySet<Kategori> = new Set<Kategori>(['dosya', 'ilk10', 'olcum', 'asi', 'ilac', 'lab', 'muayene', 'kimlik', 'hasta-cozum'])
+/** Routes whose answer is not about one chart (calendar, practice search, scope gate) or repeats an earlier answer. */
+const DOSYA_DISI_ROTA: ReadonlySet<string> = new Set(['takvim', 'arama', 'kapsam', 'gurultu', 'oku'])
+/**
+ * Routes that do not answer one of the structured questions of Q-21: the ones above, a request to SHOW a record
+ * (the record table), opening a chart, and the identity reader. "Aşı karnesini göster" is not "Aşıları tam mı?".
+ */
+const YAPISIZ_ROTA: ReadonlySet<string> = new Set([...DOSYA_DISI_ROTA, 'kayit', 'dosya-ac', 'kimlik'])
+/** Routes that answer one stored fact (Q-20: at most two sentences before the supporting lines). */
+const OLGU_ROTASI: ReadonlySet<string> = new Set(['hizli-kart', 'kimlik'])
+
+/**
+ * What the quality rubric (lib/asistan/kalite/rubrik.ts) is given for one graded turn, or null when the turn is not
+ * judged: in a dry run the words of a turn that reached the stand-in are not the product's.
+ *
+ * Derived from the entry and the observation: the single measurement from the sentence; the structure from the
+ * sentence when a chart is bound and the route is one that answers a file question (an entry may state both); the
+ * patient-name rule only where the answer is about the bound patient's chart; the identity values that must not be
+ * spoken from the panel-wide list plus the entry's own.
+ */
+export function kaliteGirdisiKur(
+  g: KorpusGirdisi, t: TurGozlemi, o: { vekil?: boolean; kimlikDegerleri?: readonly string[]; yabanciAdlar?: readonly string[] } = {},
+): KaliteGirdisi | null {
+  if (o.vekil && t.modeleGitti) return null
+  const beklenti = yuzeyBeklentisi(g, t.yuzey)
+  const b = beklenti === 'MANUAL' ? {} : beklenti
+  const olcum = g.kalite?.olcum !== undefined ? g.kalite.olcum : istenenOlcumBul(g.soz)
+  const dosyaCevabi = Boolean(t.hasta) && b.hasta !== null && !DOSYA_DISI_ROTA.has(t.rota || '')
+  const hastayaOzgu = dosyaCevabi && (HASTAYA_OZGU.has(g.kat) || (g.kat === 'eylem' && t.kartlar.length > 0))
+  const yapiAranir = (t.yuzey === 'panel' || Boolean(t.hasta)) && !YAPISIZ_ROTA.has(t.rota || '')
+  // On voice the identity reader stores a value-less note for the conversation history, not what the screen shows.
+  const ekran = t.yuzey === 'ses' && t.rota === 'kimlik' ? '' : t.ekran
+  return {
+    soru: g.soz, yuzey: t.yuzey, ekran,
+    ...(t.yuzey === 'ses' ? { soz: t.soz, okunus: t.okunus ?? '' } : {}),
+    hastaAdi: hastayaOzgu ? t.hasta : null,
+    yapi: g.kalite?.yapi !== undefined ? g.kalite.yapi : yapiAranir ? yapiBul(g.soz) : null,
+    olcum,
+    olgu: olcum !== null || OLGU_ROTASI.has(t.rota || ''),
+    ...(g.kalite?.kanit ? { kanit: g.kalite.kanit } : {}),
+    kimlikDegerleri: [...(o.kimlikDegerleri || []), ...(g.kalite?.kimlik || [])],
+    yabanciAdlar: [...(o.yabanciAdlar || [])],
+    okuIstegi: t.rota === 'oku' || okuIstegiMi(g.soz),
+    ret: b.ret === true,
+    gurultu: t.rota === 'gurultu',
+  }
 }
