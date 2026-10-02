@@ -374,9 +374,9 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
       icermez: ['otitis media|Augmentin', '\\(p\\d+, z'],
       okunus: { icerir: ['Aşı yapılmamış', 'Laboratuvar istenmemiş', 'persentil hesaplanmadı'], icermez: ['madde, ekranınızda'] },
     }, { turetilmis: true, not: 'The live sentence with the visit that has no vaccine row, no lab and its measurements only in the note text: every absent part is stated, no percentile is estimated.' }),
-  g('L-OZET-24AY-DEVAM', 'ses', 'devam et', [L('NOTYA-AYSE-OZET-01'), L('NOTYA-SES-DEVAM-01')],
-    { hasta: 'bebek', icerir: ['Reçete yazılmamış; plan: Hepatit A 2\\. doz planlandı.*6 ay sonra kontrol'], icermez: ['Neye devam'] },
-    { kurulum: [`${P}'nun 24 aylık sağlam çocuk muayenesinin özetini verir misin?`], yuzeyler: ['ses'], turetilmis: true, not: 'The 24-month narrative is eight sentences (the growth engine reports a shift): seven are spoken, the eighth waits for the continuation and is read without a model call.' }),
+  g('L-OZET-24AY-DEVAM', 'ses', `${P}'nun 24 aylık sağlam çocuk muayenesinin özetini verir misin?`, [L('NOTYA-AYSE-OZET-01'), L('NOTYA-SES-DEVAM-01'), L('NOTYA-KADEMELI-01d')],
+    { hasta: 'bebek', rota: ['model'], sunucuYazar: true, icerir: ['Reçete yazılmamış; plan: Hepatit A 2\\. doz planlandı.*6 ay sonra kontrol'], icermez: ['persentil kayması var', 'Devamı ekranınızda'] },
+    { yuzeyler: ['ses'], turetilmis: true, not: 'Until NOTYA-KADEMELI-01d the 24-month narrative was eight sentences: the eighth was a VKİ "shift" measured from the 5-day-old value, and the plan sentence waited for "devam et". A birth value is no longer the start of a drift, so the narrative is seven sentences and the plan is heard in the turn itself. The continuation of a narrative that IS longer than the cap is tested in lib/asistan/vizitOzetiSahne.test.ts on a chart with a drift between validated measurements.' }),
   g('L-OZET-ERISKIN', 'muayene', 'Son muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
     {
       hasta: 'eriskin', rota: ['model'], sunucuYazar: true,

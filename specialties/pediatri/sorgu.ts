@@ -10,13 +10,13 @@
  *   - Soru 8 gelişim: engines/gelisimPlan.ts vizitPlani (SB izlem protokolü pencereleri, GİDR basamağı, M-CHAT-R/F
  *     16–30 ay, düzeltilmiş yaş) + notlardaki ebeveyn kaygısı / regresyon ifadeleri.
  */
-import type { BransSorguParametreleri, AsiDoz, AsiTutarsizligi, Degerlendirme } from '@/lib/asistan/dosyaSorgu/parametreler'
+import type { BransSorguParametreleri, AsiDoz, AsiTutarsizligi, BuyumeOzeti, Degerlendirme } from '@/lib/asistan/dosyaSorgu/parametreler'
 import type { AcikIs } from '@/lib/doktor/acikIsler'
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
-import { trGun } from '@/lib/doktor/dosyaOlaylari'
+import { trGun, uzunGun } from '@/lib/doktor/dosyaOlaylari'
 import { planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { asiPlani, kayitSerisi, onerilenDonem, SERI_AD, type AsiKaydi } from './engines/asiPlan'
-import { olcumSatirlari, persentilKaymalari, buyumeHizlari, persentilKisa, zMetni, PARAM_AD, PARAM_BIRIM, REFERANS_AD, type BuyumeHizi, type Olcum } from './engines/buyume'
+import { olcumSatirlari, persentilKaymalari, buyumeHizlari, persentilKisa, zMetni, tutarsizOlcumler, dogrulanmisSatirlar, KAYMA_BASLANGIC_AY, PARAM_AD, PARAM_BIRIM, REFERANS_AD, type BuyumeHizi, type Olcum } from './engines/buyume'
 import { vizitPlani, type MchatKaydi, type TaramaKaydi, type TaramaSonuc, type TaramaTur } from './engines/gelisimPlan'
 import { yasMetni, tamAy } from './engines/girdi'
 import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
@@ -78,31 +78,56 @@ export function buyumeHiziSatiri(h: BuyumeHizi): string {
 function buyume(olaylar: DosyaOlayi[], hasta: DosyaHastasi): Degerlendirme {
   const { olcumler, celiskiler } = buyumeOlcumleri(olaylar)
   const celiskiSatirlari = celiskiler.map((c) => `ÇELİŞEN ÖLÇÜM — ${trGun(c.tarih)} ${PARAM_AD[c.param].toLocaleLowerCase('tr-TR')}: ${c.degerler.map((d) => `${trS(d.deger, 2)} ${PARAM_BIRIM[c.param]} (${d.kaynak})`).join(' / ')} — hangisinin doğru olduğu kayıttan anlaşılmıyor; bu tarihin ${PARAM_AD[c.param].toLocaleLowerCase('tr-TR')} değeri eğilime, persentil kaymasına ve hız hesabına ALINMADI.`)
-  const celiskiBayraklari: AcikIs[] = celiskiler.map((c) => ({ oncelik: 'yakinda', tur: 'celiski', tarih: c.tarih, metin: `Çelişen ölçüm: ${trGun(c.tarih)} tarihinde ${PARAM_AD[c.param].toLocaleLowerCase('tr-TR')} için farklı değerler kayıtlı (${c.degerler.map((d) => `${trS(d.deger, 2)} ${PARAM_BIRIM[c.param]} — ${d.kaynak}`).join('; ')}); doğru değer kayıtta düzeltilmeli, büyüme eğilimine alınmadı.` }))
-  if (!olcumler.length) return { satirlar: [...celiskiSatirlari, celiskiler.length ? 'Çelişmeyen tarihli kilo / boy / baş çevresi ölçümü yok; persentil, eğilim ve hız hesaplanmadı (tahmin verilmez).' : 'Dosyada tarihli kilo / boy / baş çevresi ölçümü bulamadım; persentil, eğilim ve hız hesaplanmadı (tahmin verilmez).'], bayraklar: celiskiBayraklari }
+  const kucukAd = (p: BuyumeParametre) => PARAM_AD[p].toLocaleLowerCase('tr-TR')
+  const celiskiKisa = celiskiler.map((c) => `${uzunGun(c.tarih)} tarihinde ${kucukAd(c.param)} için iki farklı değer kayıtlı (${c.degerler.map((d) => `${trS(d.deger, 2)} ${PARAM_BIRIM[c.param]}`).join(' ve ')}); doğru değer doğrulanmalı`)
+  const celiskiBayraklari: AcikIs[] = celiskiler.map((c, i) => ({ oncelik: 'yakinda', tur: 'celiski', tarih: c.tarih, kisa: celiskiKisa[i], metin: `Çelişen ölçüm: ${trGun(c.tarih)} tarihinde ${PARAM_AD[c.param].toLocaleLowerCase('tr-TR')} için farklı değerler kayıtlı (${c.degerler.map((d) => `${trS(d.deger, 2)} ${PARAM_BIRIM[c.param]} — ${d.kaynak}`).join('; ')}); doğru değer kayıtta düzeltilmeli, büyüme eğilimine alınmadı.` }))
+  const olcumsuz = (olcumGunu: number): BuyumeOzeti => ({ olcumGunu, son: [], tutarsizlik: celiskiKisa, kayma: [] })
+  if (!olcumler.length) return { satirlar: [...celiskiSatirlari, celiskiler.length ? 'Çelişmeyen tarihli kilo / boy / baş çevresi ölçümü yok; persentil, eğilim ve hız hesaplanmadı (tahmin verilmez).' : 'Dosyada tarihli kilo / boy / baş çevresi ölçümü bulamadım; persentil, eğilim ve hız hesaplanmadı (tahmin verilmez).'], bayraklar: celiskiBayraklari, ozet: olcumsuz(0) }
   if (!hasta.dogumIso || !hasta.cinsiyet) {
-    return { satirlar: [...celiskiSatirlari, `Doğum tarihi veya cinsiyet kayıtlı olmadığı için persentil hesaplanamadı; ölçümler: ${olcumler.map((o) => `${trGun(o.tarih)} kilo ${o.kilo ?? '—'} kg, boy ${o.boy ?? '—'} cm`).join('; ')}.`], bayraklar: celiskiBayraklari }
+    return { satirlar: [...celiskiSatirlari, `Doğum tarihi veya cinsiyet kayıtlı olmadığı için persentil hesaplanamadı; ölçümler: ${olcumler.map((o) => `${trGun(o.tarih)} kilo ${o.kilo ?? '—'} kg, boy ${o.boy ?? '—'} cm`).join('; ')}.`], bayraklar: celiskiBayraklari, ozet: olcumsuz(olcumler.length) }
   }
-  const satirlar = olcumSatirlari('neyzi', hasta.cinsiyet, hasta.dogumIso, olcumler)
+  const hamSatirlar = olcumSatirlari('neyzi', hasta.cinsiyet, hasta.dogumIso, olcumler)
+  // NOTYA-KADEMELI-01d: a value its own series contradicts (engines/buyume.ts tutarsizOlcumler) is shown apart and kept
+  // out of every trend, drift, velocity and VKİ computation — the same treatment as a same-day contradiction above.
+  const tutarsiz = tutarsizOlcumler(hamSatirlar)
+  const satirlar = dogrulanmisSatirlar(hamSatirlar, tutarsiz)
+  const tutarsizSatirlari = tutarsiz.map((t) => `TUTARSIZ ÖLÇÜM — ${trGun(t.tarih)} ${kucukAd(t.param)} ${trS(t.deger, 2)} ${PARAM_BIRIM[t.param]}: önceki ${trS(t.onceki.deger, 2)} ${PARAM_BIRIM[t.param]} (${trGun(t.onceki.tarih)}) ve sonraki ${t.sonrakiler.map((s) => `${trS(s.deger, 2)} ${PARAM_BIRIM[t.param]} (${trGun(s.tarih)})`).join(', ')} ölçümleriyle uyumsuz — kayıt doğrulanmalı; bu değer eğilime, persentil kaymasına, hız ve VKİ hesabına ALINMADI, persentili karşılaştırmaya KATILMAZ.`)
+  const tutarsizKisa = tutarsiz.map((t) => `${uzunGun(t.tarih)} tarihli ${trS(t.deger, 2)} ${PARAM_BIRIM[t.param]} ${kucukAd(t.param)} kaydı, sonraki ${t.sonrakiler.map((s) => `${trS(s.deger, 2)} ${PARAM_BIRIM[t.param]}`).join(' ve ')} ölçümleriyle uyumsuz; eğri güvenle okunmadan önce bu kayıt doğrulanmalı`)
   const out: string[] = [`Referans: ${REFERANS_AD.neyzi}. Ölçümler (eskiden yeniye):`]
   for (const s of satirlar) {
     const p = (Object.keys(s.deger) as BuyumeParametre[]).filter((k) => k !== 'vki').map((k) => {
       const r = s.sonuc[k]
       return `${PARAM_AD[k]} ${trS(s.deger[k]!, 2)} ${PARAM_BIRIM[k]}${r ? ` (${persentilZMetni(r)})` : ' (referans kapsamı dışında — persentil hesaplanmadı)'}`
     })
-    out.push(`- ${trGun(s.tarih)} (${yasMetni(hasta.dogumIso, s.tarih)}): ${p.join('; ')}`)
+    if (p.length) out.push(`- ${trGun(s.tarih)} (${yasMetni(hasta.dogumIso, s.tarih)}): ${p.join('; ')}`)
   }
-  out.push(...celiskiSatirlari)
-  const bayraklar: AcikIs[] = [...celiskiBayraklari]
+  out.push(...celiskiSatirlari, ...tutarsizSatirlari)
+  const bayraklar: AcikIs[] = [...celiskiBayraklari, ...tutarsiz.map((t, i): AcikIs => ({ oncelik: 'yakinda', tur: 'celiski', tarih: t.tarih, kisa: tutarsizKisa[i], metin: `Tutarsız ölçüm: ${trGun(t.tarih)} tarihli ${trS(t.deger, 2)} ${PARAM_BIRIM[t.param]} ${kucukAd(t.param)} kaydı, önceki (${trS(t.onceki.deger, 2)} ${PARAM_BIRIM[t.param]}, ${trGun(t.onceki.tarih)}) ve sonraki (${t.sonrakiler.map((s) => `${trS(s.deger, 2)} ${PARAM_BIRIM[t.param]}, ${trGun(s.tarih)}`).join('; ')}) ölçümlerle uyumsuz; kayıt doğrulanmalı, büyüme eğilimine alınmadı.` }))]
   if (satirlar.length < 2) out.push('Tek ölçüm var — eğilim (yön / hız) için yeterli veri yok; tek ölçümle karar verilmez.')
-  const kaymalar = persentilKaymalari(satirlar)
+  // The crossing assessment starts after the first six months of life: a large newborn settling toward the middle is
+  // physiological catch-down, so the birth value is history and never the start of a drift (docs/AYSE-KALITE-STANDARDI.md).
+  if (satirlar.some((s) => s.ay < KAYMA_BASLANGIC_AY) && satirlar.some((s) => s.ay >= KAYMA_BASLANGIC_AY)) {
+    out.push(`İlk ${KAYMA_BASLANGIC_AY} aydaki ölçümler (doğum dahil) yalnız öyküdür: persentil kayması ${KAYMA_BASLANGIC_AY}. aydan sonraki doğrulanmış ölçümler arasında değerlendirildi; doğum persentilinden bugüne "düşüş" YORUMU YAPMA (ilk aylarda kanal değişimi fizyolojik olabilir).`)
+  }
+  const kaymalar = persentilKaymalari(satirlar, 2, KAYMA_BASLANGIC_AY)
+  const kaymaKisa: BuyumeOzeti['kayma'] = []
   for (const k of kaymalar) {
     const yon = k.cizgi < 0 ? 'aşağı' : 'yukarı'
     const cumle = `${PARAM_AD[k.param]} persentili p${Math.round(k.pOnce)} → p${Math.round(k.pSon)} (${trGun(k.oncekiTarih)} → ${trGun(k.sonTarih)}): ${Math.abs(k.cizgi)} majör persentil çizgisi ${yon}`
     out.push(`- Kayma: ${cumle}.`)
-    bayraklar.push({ oncelik: k.cizgi < 0 ? 'yakinda' : 'rutin', tur: 'buyume', tarih: k.sonTarih, metin: `Büyüme: ${cumle} — ${k.cizgi < 0 ? 'büyüme eğrisinde düşüş' : 'eğride yukarı kayma'}; hekim değerlendirir.` })
+    const kisa = `${kucukAd(k.param)} persentili ${uzunGun(k.oncekiTarih)} ile ${uzunGun(k.sonTarih)} arasında ${Math.abs(k.cizgi)} majör persentil çizgisi ${yon} geçmiş; ölçümün doğrulanması önerilir`
+    kaymaKisa.push({ asagi: k.cizgi < 0, kisa })
+    // Worded as a suggestion to verify, not an alarm; the doctor reads the curve.
+    bayraklar.push({ oncelik: k.cizgi < 0 ? 'yakinda' : 'rutin', tur: 'buyume', tarih: k.sonTarih, kisa, metin: `Büyüme: ${cumle} — ölçümün doğrulanması önerilir (ölçüm tekrarı / kayıt kontrolü); doğruysa eğriyi hekim değerlendirir.` })
   }
   for (const h of buyumeHizlari(satirlar)) out.push(`- ${buyumeHiziSatiri(h)}`)
+  const sonDeger = (p: BuyumeOlcumu) => [...satirlar].reverse().find((s) => s.deger[p] != null)
+  const ozet: BuyumeOzeti = {
+    olcumGunu: hamSatirlar.length,
+    son: BUYUME_OLCUMLERI.flatMap((p) => { const s = sonDeger(p); return s ? [{ ad: kucukAd(p), persentil: s.sonuc[p]?.persentil ?? null, tarih: s.tarih }] : [] }),
+    tutarsizlik: [...celiskiKisa, ...tutarsizKisa],
+    kayma: kaymaKisa,
+  }
   const son = satirlar[satirlar.length - 1]
   const kp = son?.sonuc.kilo?.persentil, bp = son?.sonuc.boy?.persentil
   if (kp != null && bp != null && Math.abs(kp - bp) >= 50) out.push(`- Kilo-boy orantısı: son ölçümde kilo p${Math.round(kp)}, boy p${Math.round(bp)} — belirgin fark.`)
@@ -113,7 +138,7 @@ function buyume(olaylar: DosyaOlayi[], hasta: DosyaHastasi): Degerlendirme {
   } else {
     out.push('- Anne-baba boyu dosyada yok; hedef boy hesaplanmadı.')
   }
-  return { satirlar: out, bayraklar }
+  return { satirlar: out, bayraklar, ozet }
 }
 
 function asi(olaylar: DosyaOlayi[], hasta: DosyaHastasi) {
@@ -263,7 +288,7 @@ function gelisimEtmenleri(olaylar: DosyaOlayi[], hasta: DosyaHastasi, gh: number
   ekle('İşitme / görme sorunu', duyuTarama ? `${duyuTarama.metin} (${trGun(duyuTarama.tarih)})` : notta(DUYU_SORUNU))
   const kronik = olaylar.find((o) => o.tur === 'kronik')
   ekle('Kronik hastalık', kronik ? kronik.metin.replace(/^Kronik \/ özgeçmiş:\s*/, '') : null)
-  const kayma = buyume(olaylar, hasta).bayraklar.find((b) => b.tur === 'buyume' && /düşüş/.test(b.metin))
+  const kayma = buyume(olaylar, hasta).bayraklar.find((b) => b.tur === 'buyume' && /çizgisi aşağı/.test(b.metin))
   ekle('Malnütrisyon / büyüme sorunu', kayma ? kayma.metin : notta(BESLENME))
   const demirVizit = [...vizitler].reverse().find((v) => esanlamGruplariBul(v.metin.split(' | Plan:')[0]).some((g) => g.id === 'demir'))
   const dusukLab = [...olaylar].reverse().find((o) => o.kaynak === 'lab' && ['Ferritin', 'Hb'].includes(String(o.anahtar)) && o.deger != null && o.refAlt != null && o.deger < o.refAlt)

@@ -56,7 +56,20 @@ export interface AsiDurumu {
   tutarsiz?: AsiTutarsizligi[]
 }
 
-export interface Degerlendirme { satirlar: string[]; bayraklar: AcikIs[] }
+/**
+ * NOTYA-KADEMELI-01 — what the first-stage answer of the growth question is built from: the engine's own results, not
+ * a second computation. `son`: the latest VALIDATED value of each parameter with its percentile (null when the
+ * reference does not cover it). `tutarsizlik` / `kayma`: short clauses, the full sentences are in `satirlar`.
+ */
+export interface BuyumeOzeti {
+  /** Days that carry at least one measurement. */
+  olcumGunu: number
+  son: { ad: string; persentil: number | null; tarih: string }[]
+  tutarsizlik: string[]
+  kayma: { asagi: boolean; kisa: string }[]
+}
+
+export interface Degerlendirme { satirlar: string[]; bayraklar: AcikIs[]; ozet?: BuyumeOzeti }
 
 export interface BransSorguParametreleri {
   anahtar: string
