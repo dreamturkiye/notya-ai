@@ -268,10 +268,10 @@ export function adIndeksle(doktorId: string, hastaId: string, ad: string): void 
 }
 
 /** New Ayşe session for the doctor; `acikHasta` makes that patient the session's open chart. */
-export function oturumAc(s: Sahne, acikHasta?: { id: string; ad: string } | null): string {
+export function oturumAc(s: Sahne, acikHasta?: { id: string; ad: string } | null, brans = 'pediatri'): string {
   return ortam.db.ekle('asistan_sessions', {
     doctor_id: s.doktor.id, persona_id: 'aysekaya', messages: [], patient_id: acikHasta?.id ?? null,
-    active_context: { specialty: 'pediatri', ...(acikHasta ? { currentPatientId: acikHasta.id, patientName: acikHasta.ad, odakKaynak: 'soz' } : {}) },
+    active_context: { specialty: brans, ...(acikHasta ? { currentPatientId: acikHasta.id, patientName: acikHasta.ad, odakKaynak: 'soz' } : {}) },
   }).id as string
 }
 
@@ -287,11 +287,11 @@ export type YaziCevabi = {
 }
 
 /** One written turn through the real /api/asistan/chat handler. */
-export async function yazi(s: Sahne, message: string, o: { oturum?: string; token?: string; patientId?: string; saatDilimi?: string } = {}): Promise<YaziCevabi> {
+export async function yazi(s: Sahne, message: string, o: { oturum?: string; token?: string; patientId?: string; saatDilimi?: string; brans?: string } = {}): Promise<YaziCevabi> {
   if (!rotalar) throw new Error('sahneHazirla() çağrılmadı')
   const istek = new NextRequestSinifi('http://localhost/api/asistan/chat', {
     method: 'POST', headers: { authorization: `Bearer ${o.token || s.doktor.token}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ message, specialty: 'pediatri', asistanSessionId: o.oturum || s.oturum, ...(o.patientId ? { patientId: o.patientId } : {}), ...(o.saatDilimi ? { saatDilimi: o.saatDilimi } : {}) }),
+    body: JSON.stringify({ message, specialty: o.brans || 'pediatri', asistanSessionId: o.oturum || s.oturum, ...(o.patientId ? { patientId: o.patientId } : {}), ...(o.saatDilimi ? { saatDilimi: o.saatDilimi } : {}) }),
   } as ConstructorParameters<typeof NextRequestSinifi>[1])
   const y = await rotalar.chat.POST(istek)
   const j = await y.json()
@@ -311,11 +311,11 @@ export type FishTuru = {
 }
 
 /** One spoken turn through the real /api/asistan/fish-tur handler, with the transcript given as text. */
-export async function fishTur(s: Sahne, mesaj: string, o: { oturum?: string; token?: string; patientId?: string; saatDilimi?: string; govde?: Record<string, unknown> } = {}): Promise<FishTuru> {
+export async function fishTur(s: Sahne, mesaj: string, o: { oturum?: string; token?: string; patientId?: string; saatDilimi?: string; brans?: string; govde?: Record<string, unknown> } = {}): Promise<FishTuru> {
   if (!rotalar) throw new Error('sahneHazirla() çağrılmadı')
   const istek = new NextRequestSinifi('http://localhost/api/asistan/fish-tur', {
     method: 'POST', headers: { authorization: `Bearer ${o.token || s.doktor.token}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ mesaj, asistanSessionId: o.oturum || s.oturum, specialty: 'pediatri', personaId: 'aysekaya', ...(o.patientId ? { patientId: o.patientId } : {}), ...(o.saatDilimi ? { saatDilimi: o.saatDilimi } : {}), ...(o.govde || {}) }),
+    body: JSON.stringify({ mesaj, asistanSessionId: o.oturum || s.oturum, specialty: o.brans || 'pediatri', personaId: 'aysekaya', ...(o.patientId ? { patientId: o.patientId } : {}), ...(o.saatDilimi ? { saatDilimi: o.saatDilimi } : {}), ...(o.govde || {}) }),
   } as ConstructorParameters<typeof NextRequestSinifi>[1])
   const y = await rotalar.fishTur.POST(istek)
   const ham = await y.text()
@@ -331,6 +331,32 @@ export async function fishTur(s: Sahne, mesaj: string, o: { oturum?: string; tok
     hata: (olaylar.find((e) => e.t === 'hata')?.m as string | undefined) ?? null,
     sira: olaylar.map((e) => String(e.t)),
   }
+}
+
+export type PanelCevabi = {
+  status: number
+  cevap: string
+  oneriler: { eylem_anahtar?: string; eksik_alanlar?: string[] }[]
+  hata: string | null
+}
+
+let konsultRotasi: { POST: (r: any) => Promise<Response> } | null = null
+
+/**
+ * NOTYA-GOKHAN-KORPUS-01: one turn through the real /api/doktor/konsult handler — the "Ayşe'ye Danış" panel of the
+ * patient file. The route is stateless: the caller sends the whole conversation (`mesajlar`) and the patient id.
+ * Loaded on first use, so the other route tests do not pay for it.
+ */
+export async function panel(s: Sahne, patientId: string, mesajlar: { rol: 'doktor' | 'asistan'; icerik: string }[], o: { token?: string } = {}): Promise<PanelCevabi> {
+  if (!rotalar) throw new Error('sahneHazirla() çağrılmadı')
+  konsultRotasi ??= await import('../../../app/api/doktor/konsult/route')
+  const istek = new NextRequestSinifi('http://localhost/api/doktor/konsult', {
+    method: 'POST', headers: { authorization: `Bearer ${o.token || s.doktor.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ patientId, mesajlar }),
+  } as ConstructorParameters<typeof NextRequestSinifi>[1])
+  const y = await konsultRotasi.POST(istek)
+  const j = await y.json().catch(() => ({})) as Record<string, any>
+  return { status: y.status, cevap: String(j.cevap || ''), oneriler: Array.isArray(j.oneriler) ? j.oneriler : [], hata: y.status === 200 ? null : String(j.error || `HTTP ${y.status}`) }
 }
 
 /** Route of the last turn (either channel), or null. */
