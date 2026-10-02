@@ -2939,3 +2939,10 @@ This closes, once merged, three rows of "2026-10-01 - added by Claude (chat)" ab
 | NOTYA-AYSE-GERI-08b | 2026-10-01 | OPEN | `NOTYA_ARAC_ZORLAMA_KAPALI` is an audit switch only (like `NOTYA_KORUYUCU_KAPALI`). Never set it in Vercel. | — |
 
 Rules kept: Luna + Fish Audio only; no patient data invented (missing values are written as missing, dose JSON is never repaired); nothing is written before the doctor's confirmation; cross-doctor isolation suite green; PR #499 and `scripts/hasta-kalici-sil.mjs` untouched. Not shipped until the SHA is on origin/main and the Vercel production deployment at that SHA is READY.
+
+## 2026-10-02 - NOTYA-AYSE-RESCORE: the audit's 43 capability rows re-scored on `origin/main` after PR #518
+Source: `docs/ayse-capability-rescore.md` (read-only; branch `audit/ayse-rescore`, pushed, not merged, not deployed). Owner: Claude.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-AYSE-RESCORE-01 | 2026-10-02 | OPEN | Re-score at `1b7a06a0`: 22 of 43 rows worked at the audit, 37 work now, 1 is new (appointment change / cancel); 15 of the 16 LOST or DEGRADED rows are WORKS, none is LOST or DEGRADED. Runs: `test:ayse` 232 / 232, `test:izolasyon` 372 / 372, `tsc` clean. Still open, in order: (1) one live Fish voice session — every voice proof is text input to `fish-tur`; (2) confirm production is READY at `1b7a06a0` (not checked in this session); (3) the live action report `docs/denetim/2026-10-02-ayse-eylem.md` is untracked — commit it and close NOTYA-AYSE-GERI-08a; (4) `alerji_kaldir` does not see an allergy recorded only in the intake form (live report rows 3 and 32) — check on a real chart; (5) SOAP advisory at the 6000 cap never measured on the real model (row 36, UNVERIFIED); (6) re-run the 100-question Luna audit on the new routes; (7) route tests for the "Ayşe'ye Danış" panel, an İlk-10 question through `fish-tur`, a lab question and a plain follow-up. Rows NOTYA-AYSE-GERI-00 to -08 above still read "not merged"; #518 is on `origin/main`. | Claude: items 3, 5, 6, 7 when asked; Kaan: items 1, 2, 4 |
