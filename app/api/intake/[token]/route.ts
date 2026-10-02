@@ -116,10 +116,13 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (error) return NextResponse.json({ error: 'Form kaydedilemedi.' }, { status: 500 })
   // NOTYA-INTAKE-06 (Kaan 2026-09-10): form cevapları hasta kaydındaki boş alanlara da yazılsın — Özet sekmesi dolsun.
   if (form.patient_id) {
-    try {
-      const { intakeYanitlariniHastayaAktar } = await import('@/lib/intake/hastaKaydinaAktar')
-      await intakeYanitlariniHastayaAktar(supabase, form.patient_id, kayitYanitlari)
-    } catch (e) { console.error('[intake→hasta]', e) }
+    // NOTYA-FORM-KART-01: scoped by the form row's own doktor_id as well as its patient_id (both NOT NULL, migration 009).
+    if (form.doktor_id) {
+      try {
+        const { intakeYanitlariniHastayaAktar } = await import('@/lib/intake/hastaKaydinaAktar')
+        await intakeYanitlariniHastayaAktar(supabase, form.doktor_id, form.patient_id, kayitYanitlari)
+      } catch (e) { console.error('[intake→hasta]', e) }
+    }
     // NOTYA-ILETISIM-01: the patient's WhatsApp / e-posta consent from the two Onay lines (unticked = no).
     // Scoped by the form row's own patient_id AND doktor_id; fails soft before migration 095.
     if (form.doktor_id) {

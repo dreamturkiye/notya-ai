@@ -10,12 +10,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { parseBoyGirdi } from '@/lib/clinical/hedefBoy'
+import { formAlerjiBeyani } from '@/lib/doktor/hastaKayitAlanlari'
 
 function coz(v: string | null | undefined): string { if (!v) return ''; try { return decrypt(v) } catch { return '' } }
 function metin(v: unknown): string { return Array.isArray(v) ? v.filter(Boolean).join(', ') : String(v ?? '').trim() }
 
-export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientId: string, y: Record<string, unknown>): Promise<string[]> {
-  const { data: p } = await sb.from('patients').select('dob_encrypted, gender_encrypted, email_encrypted, notes_encrypted').eq('id', patientId).maybeSingle()
+export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, doktorId: string, patientId: string, y: Record<string, unknown>): Promise<string[]> {
+  // HASTA-IZOLASYON-01 (NOTYA-FORM-KART-01): the patient is read and written under the form row's own doctor.
+  const { data: p } = await sb.from('patients').select('dob_encrypted, gender_encrypted, email_encrypted, notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
   if (!p) return []
   const guncelleme: Record<string, unknown> = {}
   const doldurulan: string[] = []
@@ -42,8 +44,10 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientI
     const temiz = kh.filter((x) => x && x.toLowerCase() !== 'yok')
     if (temiz.length) { notlar.kronikHastaliklar = temiz; doldurulan.push('kronikHastaliklar') }
   }
-  const alerji = metin(y.alerjiVarMi)
-  yaz('alerjiler', alerji.includes('var') ? (metin(y.alerjiAciklama) || 'Bilinen alerjisi var') : alerji ? 'Bilinen alerjisi yok' : '')
+  // NOTYA-FORM-KART-01: one reading of the form's allergy answer (formAlerjiBeyani). The old test here wrote every
+  // answer that did not contain "var" — "Evet" too — as "Bilinen alerjisi yok", and skipped a bare `alerji` text.
+  const alerji = formAlerjiBeyani(y)
+  yaz('alerjiler', alerji.durum === 'var' ? (alerji.metin || 'Bilinen alerjisi var') : alerji.durum === 'yok' ? 'Bilinen alerjisi yok' : '')
   yaz('suregenIlaclar', metin(y.kullanilanIlaclar) || (metin(y.kullaniyorMu) === 'Hayır' ? 'Yok' : ''))
   const sigara = metin(y.sigara); const alkol = metin(y.alkol)
   // Pediatride "Ailede Sigara Kullanımı" Evet/Hayır; erişkinde Kullanmıyorum/Kullanıyorum/Bıraktım + alkol
@@ -60,7 +64,7 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientI
   if (doldurulan.some((k) => !['dogumTarihi', 'cinsiyet', 'eposta'].includes(k))) guncelleme.notes_encrypted = encrypt(JSON.stringify(notlar))
   if (Object.keys(guncelleme).length === 0) return []
   guncelleme.updated_at = new Date().toISOString()
-  const { error } = await sb.from('patients').update(guncelleme).eq('id', patientId)
+  const { error } = await sb.from('patients').update(guncelleme).eq('id', patientId).eq('doctor_id', doktorId)
   if (error) { console.error('[intake→hasta]', error.message); return [] }
   return doldurulan
 }

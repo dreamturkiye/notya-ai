@@ -51,6 +51,34 @@ export function ilkKayitAlerjiMetni(formEncrypted: string | null | undefined): s
   }
 }
 
+const ALERJI_YOK_METNI = /^(yok|hay[ıi]r|bilinen alerjisi yok|bilinen alerji yok|bilinen yok|-|none)\.?$/i
+
+/**
+ * NOTYA-FORM-KART-01 — what a form's answers state about allergy: 'var' (with the text, possibly empty), 'yok' (the
+ * explicit negative) or 'bos' (the form does not say). The radio is "Bilinen alerjisi yok / var"; "Hayır / Evet" and
+ * the bare free-text `alerji` of older forms are read the same way. A negative radio wins over the free-text box
+ * (same rule as `ilkKayitAlerjiMetni`).
+ */
+export function formAlerjiBeyani(y: Record<string, unknown> | null | undefined): { durum: 'var' | 'yok' | 'bos'; metin: string } {
+  if (!y || typeof y !== 'object') return { durum: 'bos', metin: '' }
+  const soru = String(y.alerjiVarMi ?? '').trim()
+  const aciklama = String(y.alerjiAciklama ?? y.alerji ?? '').trim()
+  if (/^hay|yok/i.test(soru)) return { durum: 'yok', metin: '' }
+  if (/var|evet/i.test(soru)) return { durum: 'var', metin: ALERJI_YOK_METNI.test(aciklama) ? '' : aciklama }
+  if (!aciklama) return { durum: 'bos', metin: '' }
+  return ALERJI_YOK_METNI.test(aciklama) ? { durum: 'yok', metin: '' } : { durum: 'var', metin: aciklama }
+}
+
+/**
+ * NOTYA-FORM-KART-01 — is an allergy statement already RECORDED for this patient: on the card
+ * (`notes_encrypted.alerjiler`, any non-empty line — the explicit "Bilinen alerjisi yok" is a statement) or in the
+ * patient's form answers. Ayşe's "belgelerde var ama dosyada kayıtlı değil" offer asks this, not `alerjiListe`
+ * (which drops the negative because it lists allergens).
+ */
+export function alerjiBeyaniKayitliMi(kart: HastaNotAlanlari, formYanitlari: Record<string, unknown> | null | undefined): boolean {
+  return String(kart.alerjiler ?? '').trim() !== '' || formAlerjiBeyani(formYanitlari).durum !== 'bos'
+}
+
 /** `kronikHastaliklar` is written as an array but older rows hold a comma string — read both. */
 export function kronikListe(n: HastaNotAlanlari): string[] {
   const v = n.kronikHastaliklar

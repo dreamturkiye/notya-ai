@@ -189,7 +189,7 @@ export function hastaOzetiKisa(paket: KisaOzetPaketi, bugunIso: string = bugunTR
   }
 
   // 5 · İlk kayıt formunun güvenlik satırları + dosyadan okunan form bilgileri.
-  const form = bolumBul(b, 'İLK KAYIT FORMU')
+  const form = bolumBul(b, 'EN SON HASTA FORMU')
   if (form) {
     const guvenlik = form.satirlar.filter((s) => {
       const m = /^- ([^:]+):/.exec(s)

@@ -23,7 +23,8 @@ import { eylemZamani } from '@/core/eylemler/types'
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
-import { notAlanlariCoz, alerjiListe } from '@/lib/doktor/hastaKayitAlanlari'
+import { notAlanlariCoz, alerjiBeyaniKayitliMi } from '@/lib/doktor/hastaKayitAlanlari'
+import { BIRLESTIRILEN_FORM_SAYISI, formlariBirlestir, sifreliFormlariCoz } from '@/lib/intake/formBirlestir'
 import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari'
 import { olcumCevabiniGuvenceyeAl, sonKayitliOlcumler, sonOlcumKanitBlogu, sonOlcumleriGuvenceyeAl, vizitOlcumKaniti, vizitOlcumKanitBlogu, vizitOlcumSorusuBul, vizitOlcumTakipSorusu, type OlcumKaydi, type VizitOlcumKaniti } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
@@ -33,7 +34,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const SISTEM = `Sen Ayşe, Notya'da doktorun klinik meslektaşı olan yapay zekâ asistanısın.
-Aşağıda bu hastanın TAM dosyası var: ilk kayıt formu, tüm vizitlerin SOAP notları, sürekli
+Aşağıda bu hastanın TAM dosyası var: en son hasta formu, tüm vizitlerin SOAP notları, sürekli
 ilaçlar, aşılar, görüntüleme ve belgeler. Doktorla Türkçe, meslektaş tonunda ("Hocam" diye
 hitap ederek), kısa ve öz konuş.
 
@@ -52,7 +53,7 @@ Kurallar:
 6. Nihai klinik karar ve sorumluluk her zaman doktordadır; bunu gerektiğinde kibarca belirt.
 7. Hastanın adını/kimliğini asla üretme — "hasta" de. Dosyada kimlik bilgisi zaten yoktur. (Onay kartındaki
    hasta adını sistem koyar, sen değil.)
-8. Doğum tarihi ve diğer form başlıkları yalnız ilk kayıt formunda değil; epikriz, SOAP ve belgede
+8. Doğum tarihi ve diğer form başlıkları yalnız hasta formunda değil; epikriz, SOAP ve belgede
    de geçebilir. "DOSYADAN OKUNAN FORM BİLGİLERİ" bölümüne bak — form boş diye "bilinmiyor" deme.
 9. ÖLÇÜM (kilo, boy, baş çevresi, VKİ, tansiyon, ateş): yalnız KAYITLI değeri söyle — değer, birim,
    hangi muayenenin tarihi ve kaynağı (vizitin "Ölçümler" satırı, cihaz ölçümü ya da not metni). Bir
@@ -95,17 +96,23 @@ export async function POST(req: NextRequest) {
   // eder. İkinci turdan sonra sessiz — dırdır eden asistan görmezden gelinir (core/eylemler/bosluk.ts).
   let boslukEk = ''
   if (araclar.length) {
-    const [asiSay, ilacSay, hastaSatiri, notSatiri] = await Promise.all([
+    const [asiSay, ilacSay, hastaSatiri, notSatiri, formSatirlari] = await Promise.all([
       arsivsizAsilar(supabase, 'id', { count: 'exact', head: true }).eq('doktor_id', doktorId).eq('patient_id', patientId),
       arsivsizIlaclar(supabase, 'id', { count: 'exact', head: true }).eq('doctor_id', doktorId).eq('patient_id', patientId).eq('aktif', true),
       supabase.from('patients').select('notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
       arsivsizNotlar(supabase, 'vitaller, sessions!inner(patient_id)').eq('sessions.patient_id', patientId).not('vitaller', 'is', null).limit(1),
+      // NOTYA-FORM-KART-01: the same forms the dossier merges (doctor + patient scoped, newest first).
+      supabase.from('hasta_intake_formlari').select('form_data_encrypted, created_at').eq('patient_id', patientId).eq('doktor_id', doktorId).not('form_data_encrypted', 'is', null).order('created_at', { ascending: false }).limit(BIRLESTIRILEN_FORM_SAYISI),
     ])
     const notAlanlari = notAlanlariCoz((hastaSatiri.data?.notes_encrypted as string | null) ?? null)
+    const formYanitlari = formlariBirlestir(sifreliFormlariCoz(formSatirlari.data).formlar)?.yanitlar ?? null
     const bosluklar = bosluklariBul(dosya, {
       asi: asiSay.count ?? 0,
       ilac: ilacSay.count ?? 0,
-      alerjiVar: alerjiListe(notAlanlari).length > 0,
+      // NOTYA-FORM-KART-01: an allergy statement on the card or in the form — "Bilinen alerjisi yok" included — is
+      // recorded. This used to be `alerjiListe(...).length > 0`, which drops the explicit negative, so a card that
+      // says "Bilinen alerjisi yok" was offered a bulk card for allergy information "not on file".
+      alerjiVar: alerjiBeyaniKayitliMi(notAlanlari, formYanitlari),
       olcumVar: Boolean(Array.isArray(notSatiri.data) ? notSatiri.data.length : notSatiri.data),
     })
     boslukEk = boslukBlogu(bosluklar, mesajlar.filter((m) => m.rol !== 'asistan').length)

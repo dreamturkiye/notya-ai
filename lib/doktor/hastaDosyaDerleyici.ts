@@ -2,7 +2,7 @@
  * NOTYA-KONSULT-01 — "Klinik meslektaş" hasta dosyası derleyicisi.
  *
  * Asistanın (Ayşe) doktora hasta hakkında danışmanlık verebilmesi için hastanın TÜM
- * dosyasını tek bir sınırlı metne derler: kimlik özeti, ilk kayıt (intake) formu,
+ * dosyasını tek bir sınırlı metne derler: kimlik özeti, en son hasta (intake) formu,
  * sürekli ilaçlar, aşılar, vizit geçmişi (tümünün tarih+ana şikayeti; son 10'unun tam
  * SOAP notu), görüntüleme ve belge listeleri.
  *
@@ -22,6 +22,7 @@ import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
+import { BIRLESTIRILEN_FORM_SAYISI, formlariBirlestir, sifreliFormlariCoz } from '@/lib/intake/formBirlestir'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -66,7 +67,8 @@ export async function hastaDosyaPaketiniDerle(
     arsivsizIlaclar(supabase, '*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
     // NOTYA-ASI-NOT-01: nor the vaccines its note wrote into the aşı kartı.
     arsivsizAsilar(supabase, '*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
-    supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('created_at', { ascending: false }).limit(1),
+    // NOTYA-FORM-BIRLESTIR-01: the newest filled forms, merged below — a later partial form does not erase earlier answers.
+    supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).not('form_data_encrypted', 'is', null).order('created_at', { ascending: false }).limit(BIRLESTIRILEN_FORM_SAYISI),
     supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     // NOTYA-BLE-06 + NOTYA-BELGE-05: cihazdan gelen ölçümler/dosyalar ve onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
@@ -107,31 +109,32 @@ export async function hastaDosyaPaketiniDerle(
   b.push(`- İlk kayıt: ${trTarih(hasta.created_at)}`)
   if (doktorNotu) b.push(`- Doktor notu: ${doktorNotu}`)
 
-  const intake = intakeQ.data?.[0]
+  // NOTYA-FORM-BIRLESTIR-01: the forms are merged key by key from the newest to the oldest (lib/intake/formBirlestir.ts);
+  // an unreadable form is skipped. The section is the patient's LATEST form, not the first registration.
+  const { formlar, okunamayan } = sifreliFormlariCoz(intakeQ.data)
+  const birlesik = formlariBirlestir(formlar)
   // BRANS-ALAN-SIZMASI: "veli beyanı" yalnız formu gerçekten veli doldurduysa (pediatri formu: veliYakinligi) —
-  // KD/dahiliye/göz hastasının dosyası modele "hasta/veli" diye sunulmaz (model özet metnine veli dilini taşıyordu)
-  let yanitlar: Record<string, unknown> | null = null
-  if (intake?.form_data_encrypted) {
-    try { yanitlar = JSON.parse(decrypt(intake.form_data_encrypted)) as Record<string, unknown> } catch { yanitlar = null }
-  }
-  b.push(`\n## İLK KAYIT FORMU (ÖZGEÇMİŞ — ${yanitlar && yanitlar.veliYakinligi ? 'veli beyanı' : 'hasta beyanı'})`)
-  if (intake?.form_data_encrypted) {
-    try {
-      if (!yanitlar) throw new Error('intake çözülemedi')
-      // VELI-YASAL-ONAM: veli / yasal temsilcinin kimlik + iletişim bilgisi de modele gitmez (yakınlık gider: "anne beyanı")
-      // NOTYA-BETA-0925: anne / baba adı ve doğum yeri de kimliktir — modele gitmez; doktor sorarsa sunucu cevaplar
-      // (lib/doktor/kimlikSorusu.ts, değer model bağlamına hiç girmez).
-      // NOTYA-AYSE-ALAN-01: `il` (Şehir) is the second half of the address the identity answer gives ("adres, il").
-      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'il', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', ...MODELE_GITMEYEN_KIMLIK])
-      for (const [k, v] of Object.entries(yanitlar)) {
-        if (gizli.has(k) || v == null || v === '') continue
-        const deger = Array.isArray(v) ? v.join(', ') : String(v)
-        if (deger.trim()) b.push(`- ${k}: ${deger}`)
-      }
-      b.push(`(Form tarihi: ${trTarih(intake.created_at)})`)
-    } catch { b.push('- Form kayıtlı ancak çözülemedi.') }
+  // KD/dahiliye/göz hastasının dosyası modele "hasta/veli" diye sunulmaz (model özet metnine veli dilini taşıyordu).
+  // The statement is the newest form's: veliYakinligi is never carried over from an older form.
+  const yanitlar: Record<string, unknown> | null = birlesik?.yanitlar ?? null
+  b.push(`\n## EN SON HASTA FORMU${birlesik ? ` — ${trTarih(birlesik.tarih)}` : ''} (ÖZGEÇMİŞ — ${yanitlar && yanitlar.veliYakinligi ? 'veli beyanı' : 'hasta beyanı'})`)
+  if (birlesik && yanitlar) {
+    // VELI-YASAL-ONAM: veli / yasal temsilcinin kimlik + iletişim bilgisi de modele gitmez (yakınlık gider: "anne beyanı")
+    // NOTYA-BETA-0925: anne / baba adı ve doğum yeri de kimliktir — modele gitmez; doktor sorarsa sunucu cevaplar
+    // (lib/doktor/kimlikSorusu.ts, değer model bağlamına hiç girmez).
+    // NOTYA-AYSE-ALAN-01: `il` (Şehir) is the second half of the address the identity answer gives ("adres, il").
+    const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'il', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', ...MODELE_GITMEYEN_KIMLIK])
+    for (const [k, v] of Object.entries(yanitlar)) {
+      if (gizli.has(k) || v == null || v === '') continue
+      const deger = Array.isArray(v) ? v.join(', ') : String(v)
+      // A value an older form supplied says so, with that form's date.
+      if (deger.trim()) b.push(`- ${k}: ${deger}${k in birlesik.eskiFormdan ? ` (önceki form: ${trTarih(birlesik.eskiFormdan[k])})` : ''}`)
+    }
+    b.push(`(Form tarihi: ${trTarih(birlesik.tarih)})`)
+  } else if (okunamayan) {
+    b.push('- Form kayıtlı ancak çözülemedi.')
   } else {
-    b.push('- İlk kayıt formu henüz doldurulmamış.')
+    b.push('- Hasta formu henüz doldurulmamış.')
   }
 
   b.push('\n## SÜREKLİ / KAYITLI İLAÇLAR')
