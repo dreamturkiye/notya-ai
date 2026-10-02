@@ -186,7 +186,9 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
   if (takvim) return takvimOku(b, takvim)
 
   const aktifId = b.aktifHasta?.id || null
-  const kimlik = await kimlikSorusunuCevapla(supabase, doktorId, soz, aktifId)
+  // The identity read falls back to the open patient only when the sentence names nobody else: a named person who
+  // is not found must not be answered with the open patient's parents or phone.
+  const kimlik = await kimlikSorusunuCevapla(supabase, doktorId, soz, anilanBaskaKisi(soz, b.aktifHasta?.ad) ? null : aktifId)
   if (kimlik) return kimlik.hasta ? { sonuc: kimlik.model, kimlik, hasta: kimlik.hasta } : { sonuc: kimlik.model, hekimMetni: kimlik.ekran }
 
   // Same binding rules as the brain (NOTYA-AKTIF-HASTA-01): a name in the sentence wins; an unnamed, non-cohort

@@ -83,9 +83,19 @@ const PRATIK_SIRALAMA_KALIBI = / en (fazla|cok|sik|az|yuksek) | hangi .* en | ka
 const DOKTOR_GECMIS_FIILI = / (yazdim|yazmisim|yazdigim|recete ettim|recete ettigim|recete yazdim|kullandim|kullandigim|verdim|verdigim|gordum|gorduklerim|baktim|baktigim|tani koydum|koydum|koydugum|yaptim|istedim|istedigim) /
 const BU_HASTAYA_GONDERME = / (bu|su) (hasta|cocuk|bebek)[a-z]* | onun | ona | hastanin | hastaya ozel /
 const DOZ_SORUSU = / (mg|ml|kg|doz|dozu|dozunu|gunde) /
+// NOTYA-AYSE-ARAC-PARITE (2026-10-02): 'Son bir ayda kac asi yaptik?' with a chart open was answered from the open chart
+// ('... dosyada asi: KKK 28 Eylul'). The rule above knows 'kac recete / kac hasta' and first person singular; it missed
+// the count of vaccines and the plural ('yaptik', 'uyguladik'). A count of what the practice DID inside a stated time
+// window is a practice question. Without a window ('Kac asi yaptik?') it stays with the open chart, as before.
+const PRATIK_SAYIM_KALIBI = / kac (tane )?(asi|recete|muayene|kontrol)[a-z]* /
+const PRATIK_SAYIM_FIILI = / (yaptik|yaptim|uyguladik|uyguladim|vurduk|vurdum|yazdik|yazdim|gorduk|baktik) /
+const ZAMAN_PENCERESI = / (bugun|dun|bu (hafta|ay|yil)|gecen (hafta|ay|yil)|son (bir|iki|uc|dort|bes|alti|[0-9]+) (gun|hafta|ay|yil)[a-z]*) /
 export function kohortSorusuMu(...a: Parameters<typeof kohortSorusuTemel>): boolean {
   if (kohortSorusuTemel(...a)) return true
   const n = sadeTrPratik(String(a[0] ?? ''))
-  if (BU_HASTAYA_GONDERME.test(n) || DOZ_SORUSU.test(n)) return false
-  return PRATIK_SIRALAMA_KALIBI.test(n) && DOKTOR_GECMIS_FIILI.test(n)
+  // 'son 30 gunde' is a time window, not the dose word 'gunde' ('gunde 3 kez').
+  const dozIcin = n.replace(/ son (bir|iki|uc|dort|bes|alti|[0-9]+) gunde /g, ' ')
+  if (BU_HASTAYA_GONDERME.test(n) || DOZ_SORUSU.test(dozIcin)) return false
+  if (PRATIK_SIRALAMA_KALIBI.test(n) && DOKTOR_GECMIS_FIILI.test(n)) return true
+  return PRATIK_SAYIM_KALIBI.test(n) && PRATIK_SAYIM_FIILI.test(n) && ZAMAN_PENCERESI.test(n)
 }

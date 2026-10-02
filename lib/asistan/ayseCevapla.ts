@@ -1007,7 +1007,10 @@ ${ilacBaglamMetni(drugs[0])}`
     aiData.speech = "Şu an açık bir hasta dosyası yok Hocam; hastanın adını söylerseniz dosyasını açarım."
   }
   // NOTYA-HASTA-ODAK-01: açık dosyadayken uydurma liste / recant / başka hasta dilliği geri çekilir.
-  const odakAd = odakHastaAdi || (cozulenHasta?.ad ?? (baglam.patientName ? String(baglam.patientName) : ''))
+  // NOTYA-AYSE-ARAC-PARITE: a practice-wide look-up (no chart bound this turn, the tool named no patient) is not about
+  // the open patient — the lock must not put that patient's name in front of a practice answer.
+  const pratikOkumasi = okuma.tur > 0 && !odakHastaAdi && !okumaHastasi
+  const odakAd = pratikOkumasi ? '' : odakHastaAdi || (cozulenHasta?.ad ?? (baglam.patientName ? String(baglam.patientName) : ''))
   // A read-tool result is chart text of this turn as much as the chart block is.
   const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: [odakDosyaMetni || dosyaEk, ...okuma.metinler].join("\n"), kanitYolu: kanitYoluAktif || okuma.tur > 0 } : null)
   if (odak.ihlal.length) console.warn("[asistan/chat] hasta odak kilidi", { ihlal: odak.ihlal, ad: odakAd })
