@@ -103,6 +103,17 @@ eder misiniz?".
 **Q-33 Latency budgets.** Fast path (no model): p50 at most 2 s to first sound. Model path: p50 at most 8 s and p95 at
 most 15 s to first sound.
 
+**Q-34 Medical speech.** (NOTYA-SES-NORMAL-01, extension of Q-31; Dr. Gökhan's specification.) By voice Ayşe does
+not read the written medical text as it is: she speaks as a doctor speaks to another health professional. An
+abbreviation is never spelled letter by letter and never read as a meaningless Turkish word — it gets its natural
+clinical reading or, when needed, its full name ("KPA" → "konjuge pnömokok aşısı", "DaBT-İPA-Hib" → "beşli karma
+aşı", and in detail "difteri aselüler boğmaca tetanos inaktif polio ve Hib aşısı"). Units, numbers, percentiles,
+Z-scores, ranges and dates are said in words ("13,3 kg" → "on üç virgül üç kilogram", "50 mg/kg/gün" → "günde
+kilogram başına elli miligram"). The short natural form is the default; the full form is used in the second stage of
+a tiered answer or when the doctor asks for detail. The screen keeps the written form. This is done by a
+deterministic layer in front of the speech engine (`lib/ses/tibbiSeslendirme.ts`, dictionary
+`lib/ses/tibbiSeslendirmeSozluk.ts`), never by the model remembering it in each answer.
+
 ## D. Process
 
 **Q-40 The corpus only grows.** Every live complaint from Dr. Gökhan becomes a corpus entry BEFORE its fix
@@ -134,9 +145,10 @@ step).
 | Q-20 | `uzunluk`: factual answer ≤ 2 sentences before the supporting lines; summary ≤ 275 words (250 + 10 %). `seri-tablo`: four or more dated values are a table. | Whether the supporting lines are the important ones. |
 | Q-21 | `bolumler`: the required parts of Q1, Q3, Q4, Q8, Q9 and the visit summary are present (by heading or keyword). Q1 also: not a visit-by-visit list. | Whether each part says the right thing. Q1's record-dependent parts (perinatal, chronic, labs, consultations) are required only when the record has them — a human checks. |
 | Q-30 | `ses-uzunluk`: at most 7 sentences and 65 words (≈ 25 s) unless the doctor asked to have it read. `ses-anlati`: the spoken text carries content — not only pointers to the screen; a narrative answer has 5 sentences, or as many as the screen answer has. | Real duration; whether the condensed narrative chose the right facts; "devam et" behaviour with real audio. |
-| Q-31 | `ses-tarih` (no dd.mm.yyyy), `ses-bicim` (no markdown, pipes, ids), `ses-birim` (no unit symbol left in the text handed to the speech engine), `ses-kimlik` (no identity value). | Pronunciation — judged by ear. |
+| Q-31 | `ses-tarih` (no dd.mm.yyyy in the text handed to the speech engine; in the spoken text when the turn has no engine text), `ses-bicim` (no markdown, pipes, ids), `ses-birim` (no unit symbol left in the text handed to the speech engine), `ses-kimlik` (no identity value). | Pronunciation — judged by ear. |
 | Q-32 | `sessiz-degil`: the turn produced an answer (text: non-empty; voice: spoken text non-empty, except recogniser noise that is dropped by design). | Silence caused by audio, ASR, TTS or the browser. |
 | Q-33 | None as a gate. A live run reports p50 / p95 of the harness turn time per path against the budgets, as an indication. | Time to FIRST SOUND: measured in the live spot check, with a stopwatch or the page's timing log. |
+| Q-34 | `ses-kisaltma`: the text handed to the speech engine carries no abbreviation of the pronunciation dictionary and no unit symbol or unit abbreviation (an abbreviation the dictionary reads as written — "BCG", "Hib" — is not a finding). The layer itself: golden unit tests (`lib/ses/tibbiSeslendirme.test.ts`). | Whether a reading is the one a clinician would use: by ear, Dr. Gökhan. Abbreviations that are NOT in the dictionary are not seen by the check — `npm run denetim:ses-kisaltma` lists the ones corpus answers still carry. Draft entries of the dictionary wait for his confirmation. |
 | Q-40 | `kalite-karsilastir` fails when the run has fewer graded turns than the baseline. | That a complaint was entered before its fix: review. |
 | Q-41 | `kalite-karsilastir`: non-zero exit when a rule's pass rate, the score, or the FAIL count is worse than the baseline. | Deciding that a lower baseline is acceptable: Kaan. |
 
@@ -192,5 +204,6 @@ measurement question without its date).
 |---|---|---|
 | Q-30 | NOTYA-SES-OZET-TAM-01 (2026-10-01) reads a chart-evidence answer in full on voice. Q-30 asks for five to seven sentences and the rest on "devam et". An explicit read-aloud request ("oku", "bana anlat") is exempt in the rubric. | Kaan / Dr. Gökhan: which of the two stands for a summary asked by voice. |
 | Q-30 | `lib/asistan/konusma.ts` turns a list of three or more items into "N madde, ekranınızda." | Product change to a condensed narrative — separate task. |
-| Q-31 | Model-free handlers speak dates as "30.09.2026". | Product change — separate task. |
+| Q-31 | Model-free handlers speak dates as "30.09.2026". | **Resolved for what is heard (2026-10-02, NOTYA-SES-NORMAL-01):** the medical speech layer says the date in words before the speech engine; the `soz` text (the transcript on screen) still carries the digits. |
+| Q-34 | The specification text was cut off after the BCG example (NOTYA-SES-NORMAL-02); every dictionary entry beyond the received examples and the instruction is a draft. | Kaan: paste the remainder; Dr. Gökhan: confirm the drafts. |
 | Q-06 | `lib/doktor/dosyaOlaylari.ts` dates a visit by `sessions.created_at`; the patient page already uses the note's date (NOTYA-MUAYENE-TARIH-DUZELT). | Product change — separate task; the corpus entry exists first (Q-40). |

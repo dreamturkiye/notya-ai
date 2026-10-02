@@ -3,7 +3,7 @@
  *
  *   written answer / file panel   every wording and structure check on the screen text
  *   voice answer                  wording checks on the SPOKEN text (what the doctor hears), the voice checks
- *                                 (Q-30 to Q-32), and the structure checks on the screen text of the same turn
+ *                                 (Q-30 to Q-32, Q-34), and the structure checks on the screen text of the same turn
  *
  * The screen text and the spoken text are judged separately; each verdict says which one it is about (`hedef`).
  * An expected out-of-scope refusal is the fixed sentence of the scope gate: only "never silent" applies to it.
@@ -11,7 +11,7 @@
  */
 import {
   bolumler, bosSavusturma, cevapOnce, dayanakYorum, dikkatSonda, hamArtik, hastaAdi, karar, mgkgKilo, persentilTarih, planUygulandi,
-  seriTablo, sesAnlati, sesBicim, sesBirim, sesKimlik, sesTarih, sesUzunluk, sessizDegil, takipBugun, takipGecti, tamTarih, tekOlcum,
+  seriTablo, sesAnlati, sesBicim, sesBirim, sesKimlik, sesKisaltma, sesTarih, sesUzunluk, sessizDegil, takipBugun, takipGecti, tamTarih, tekOlcum,
   turkce, uzunluk, yabanciHasta, yapilmadi, yasakIfade,
   type KaliteGirdisi, type KaliteKarari,
 } from './denetimler'
@@ -63,9 +63,11 @@ export function cevabiDenetle(g: KaliteGirdisi): KaliteKarari[] {
     out.push(
       karar('ses-uzunluk', 'soz', sesUzunluk(soz, g.okuIstegi)),
       karar('ses-anlati', 'soz', g.okuIstegi ? null : sesAnlati(soz, ekran, g.yapi)),
-      karar('ses-tarih', 'soz', sesTarih(soz)),
+      // What the doctor HEARS is the engine text: the medical speech layer says dates, units and abbreviations in words.
+      karar('ses-tarih', 'soz', sesTarih(g.okunus?.trim() ? g.okunus : soz)),
       karar('ses-bicim', 'soz', sesBicim(soz)),
       karar('ses-birim', 'soz', sesBirim(g.okunus)),
+      karar('ses-kisaltma', 'soz', sesKisaltma(g.okunus)),
       karar('ses-kimlik', 'soz', sesKimlik(soz, g.kimlikDegerleri)),
     )
   }

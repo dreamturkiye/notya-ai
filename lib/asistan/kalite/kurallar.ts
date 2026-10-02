@@ -9,7 +9,7 @@
 export type KuralId =
   | 'Q-01' | 'Q-02' | 'Q-03' | 'Q-04' | 'Q-05' | 'Q-06' | 'Q-07' | 'Q-08' | 'Q-09' | 'Q-10' | 'Q-11'
   | 'Q-20' | 'Q-21'
-  | 'Q-30' | 'Q-31' | 'Q-32' | 'Q-33'
+  | 'Q-30' | 'Q-31' | 'Q-32' | 'Q-33' | 'Q-34'
   | 'Q-40' | 'Q-41'
 
 export type DenetimAdi =
@@ -17,7 +17,7 @@ export type DenetimAdi =
   | 'hasta-adi' | 'yabanci-hasta' | 'persentil-tarih' | 'mgkg-kilo' | 'dikkat-sonda'
   | 'yasak-ifade' | 'bos-savusturma' | 'ham-artik' | 'turkce'
   | 'uzunluk' | 'seri-tablo' | 'bolumler'
-  | 'ses-uzunluk' | 'ses-anlati' | 'ses-tarih' | 'ses-bicim' | 'ses-birim' | 'ses-kimlik' | 'sessiz-degil'
+  | 'ses-uzunluk' | 'ses-anlati' | 'ses-tarih' | 'ses-bicim' | 'ses-birim' | 'ses-kimlik' | 'sessiz-degil' | 'ses-kisaltma'
 
 export interface KaliteKurali {
   id: KuralId
@@ -48,6 +48,7 @@ export const KALITE_KURALLARI: readonly KaliteKurali[] = [
   { id: 'Q-31', bolum: 'C', ad: 'Speakable', denetimler: ['ses-tarih', 'ses-bicim', 'ses-birim', 'ses-kimlik'], olculemez: 'Pronunciation — judged by ear.' },
   { id: 'Q-32', bolum: 'C', ad: 'Never silent', denetimler: ['sessiz-degil'], olculemez: 'Silence caused by audio, ASR, TTS or the browser.' },
   { id: 'Q-33', bolum: 'C', ad: 'Latency budgets', denetimler: [], olculemez: 'Time to first sound: live spot check. A live corpus run reports harness turn times against the budgets as an indication only.' },
+  { id: 'Q-34', bolum: 'C', ad: 'Medical speech', denetimler: ['ses-kisaltma'], olculemez: 'Whether a reading is the one a clinician would use — judged by ear, by Dr. Gökhan. Abbreviations that are not in the dictionary: npm run denetim:ses-kisaltma lists them.' },
   { id: 'Q-40', bolum: 'D', ad: 'The corpus only grows', denetimler: [], olculemez: 'Checked by the baseline comparison (fewer graded turns than the baseline fails), not per answer.' },
   { id: 'Q-41', bolum: 'D', ad: 'Release gate', denetimler: [], olculemez: 'Checked by npm run denetim:kalite-karsilastir, not per answer.' },
 ]

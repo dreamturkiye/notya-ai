@@ -10,7 +10,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {
   bolumler, bosSavusturma, cevapOnce, cumleler, dayanakYorum, dikkatSonda, hamArtik, hastaAdi, kelimeSayisi, mgkgKilo, persentilTarih,
-  planUygulandi, seriTablo, sesAnlati, sesBicim, sesBirim, sesKimlik, sesTarih, sesUzunluk, sessizDegil, sozIcerigi, takipBugun, takipGecti,
+  planUygulandi, seriTablo, sesAnlati, sesBicim, sesBirim, sesKimlik, sesKisaltma, sesTarih, sesUzunluk, sessizDegil, sozIcerigi, takipBugun, takipGecti,
   tamTarih, tekOlcum, turkce, uzunluk, yabanciHasta, yapilmadi, yasakIfade, YAPI_BOLUMLERI,
   type KaliteGirdisi, type KaliteKarari,
 } from './denetimler'
@@ -331,6 +331,26 @@ describe('Q-31 ses-tarih, ses-bicim, ses-birim, ses-kimlik', () => {
   })
 })
 
+describe('Q-34 ses-kisaltma (NOTYA-SES-NORMAL-01)', () => {
+  it('seslendirme metninde sözlük kısaltması ya da birim simgesi kalmaz', () => {
+    gecer(sesKisaltma(fishMetni('DaBT-İPA-Hib 2. doz ve KPA yapıldı; Hb 11,8 g/dL, MCV 74 fL, ateş 38,7 °C, %50.')))
+    gecer(sesKisaltma(fishMetni("SB'nin şemasına göre KKK 12. ayda; M-CHAT-R/F uygulanacak.")))
+    // read as written by the dictionary: not a finding
+    gecer(sesKisaltma('BCG aşısı ve Hib aşısı yapıldı.'))
+    gecer(sesKisaltma('Emircan Karaoğlu için istediğiniz bilgiyi ekranınıza yazdım Hocam.'))
+    kalir(sesKisaltma('DaBT-İPA-Hib yapıldı.'), /okunmayan kısaltma ya da birim: "DaBT-İPA-Hib"/)
+    kalir(sesKisaltma('KPA ve KKK planlı.'), /"KPA", "KKK"/)
+    kalir(sesKisaltma('Kilosu on iki virgül sekiz kg.'), /"kg"/)
+    kalir(sesKisaltma('Ateşi otuz sekiz °C.'), /°/)
+    kalir(sesKisaltma('Hemoglobin on bir g/dL.'), /okunmayan kısaltma ya da birim/)
+    // an abbreviation that is not in the dictionary is not seen by this check (the dev tool lists it)
+    gecer(sesKisaltma('PDA kapalı.'))
+    assert.equal(sesKisaltma(undefined), null)
+    assert.equal(sesKisaltma('  '), null)
+    assert.equal(DENETIM_KURALI['ses-kisaltma'], 'Q-34')
+  })
+})
+
 describe('Q-32 sessiz-degil', () => {
   it('her tur bir cevapla biter; düşürülen gürültüde cevap beklenmez', () => {
     gecer(sessizDegil({ yuzey: 'yazi', ekran: 'Emircan 25 aylık.' }))
@@ -357,9 +377,16 @@ describe('kalite — rubrik (hangi denetim hangi metne)', () => {
     const soz = 'Emircan Karaoğlu, son muayene (30.09.2026): kilo 12,8 kg.'
     const k = cevabiDenetle(g({ yuzey: 'ses', ekran, soz, okunus: fishMetni(soz), hastaAdi: 'Emircan Karaoğlu', olcum: 'kilo', olgu: true }))
     const kalan = k.filter((x) => !x.gecti).map((x) => `${x.kural} ${x.denetim}@${x.hedef}`)
-    // The table on screen is fine; the spoken date is not speakable.
-    assert.deepEqual(kalan, ['Q-31 ses-tarih@soz'])
-    assert.ok(adlar(k).includes('uzunluk@ekran') && adlar(k).includes('tek-olcum@soz') && adlar(k).includes('ses-birim@soz') && !adlar(k).includes('tek-olcum@ekran'))
+    // The table on screen is fine; the date and the unit are said in words by the medical speech layer (NOTYA-SES-NORMAL-01).
+    assert.deepEqual(kalan, [])
+    assert.ok(adlar(k).includes('uzunluk@ekran') && adlar(k).includes('tek-olcum@soz') && adlar(k).includes('ses-birim@soz') && adlar(k).includes('ses-kisaltma@soz') && !adlar(k).includes('tek-olcum@ekran'))
+    // Without the layer the same spoken text is not speakable: the date in digits, the unit and an abbreviation reach the engine.
+    const ham = cevabiDenetle(g({ yuzey: 'ses', ekran, soz: `${soz} KPA yapıldı.`, okunus: `${soz} KPA yapıldı.`, hastaAdi: 'Emircan Karaoğlu', olcum: 'kilo', olgu: true }))
+    assert.deepEqual(ham.filter((x) => !x.gecti).map((x) => `${x.kural} ${x.denetim}@${x.hedef}`).sort(), ['Q-31 ses-birim@soz', 'Q-31 ses-tarih@soz', 'Q-34 ses-kisaltma@soz'])
+    // A turn with no engine text: the date is judged on the spoken text, the engine-text checks do not apply.
+    const motorsuz = cevabiDenetle(g({ yuzey: 'ses', ekran, soz, hastaAdi: 'Emircan Karaoğlu', olcum: 'kilo', olgu: true }))
+    assert.deepEqual(motorsuz.filter((x) => !x.gecti).map((x) => x.denetim), ['ses-tarih'])
+    assert.ok(!motorsuz.some((x) => x.denetim === 'ses-kisaltma' || x.denetim === 'ses-birim'))
   })
 
   it('panel: hasta adı aranmaz (sayfa zaten o hastanın); beklenen kapsam reddinde yalnız Q-32', () => {
