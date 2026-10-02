@@ -176,6 +176,7 @@ export async function rutinHesapla(sb: SupabaseClient, doctorId: string): Promis
 
   const gunler = new Map<string, Set<string>>()
   const saatler: number[] = []
+  const gunIlk = new Map<string, number>() // NOTYA-SELAM-01: first session hour of each active day
   const haftaGunu = new Map<string, number>()
   for (const s of satirlar) {
     const d = new Date(s.started_at)
@@ -185,12 +186,14 @@ export async function rutinHesapla(sb: SupabaseClient, doctorId: string): Promis
     if (!gunler.has(gun)) gunler.set(gun, new Set())
     gunler.get(gun)!.add(s.patient_id || s.started_at)
     saatler.push(saat)
+    gunIlk.set(gun, Math.min(gunIlk.get(gun) ?? 99, saat))
     haftaGunu.set(hg, (haftaGunu.get(hg) || 0) + 1)
   }
   const gunSayisi = gunler.size
   const ortHasta = Math.round([...gunler.values()].reduce((a, s) => a + s.size, 0) / gunSayisi)
   const sirali = [...saatler].sort((a, b) => a - b)
-  const p10 = sirali[Math.floor(sirali.length * 0.1)]
+  const ilkSaatler = [...gunIlk.values()].sort((a, b) => a - b)
+  const p10 = ilkSaatler[Math.floor(ilkSaatler.length / 2)] // the median first-session hour, not a low percentile of every session
   const p90 = sirali[Math.min(sirali.length - 1, Math.floor(sirali.length * 0.9))]
   const yogunGunler = [...haftaGunu.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([g]) => g)
   return {

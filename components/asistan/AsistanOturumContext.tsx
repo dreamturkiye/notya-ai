@@ -229,6 +229,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const sayfaHasta = sayfaHastaId(usePathname())
   const sayfaHastaRef = useRef<string | null>(sayfaHasta)
   sayfaHastaRef.current = sayfaHasta
+  // NOTYA-SES-ASR-KAZANC-01: skipped clips (language mismatch / empty) in the last seconds, and when the hint was last shown
+  const atlaIpucuRef = useRef<number[]>([])
+  const sonIpucuRef = useRef(0)
   const sayfaOdakRef = useRef<{ onceki: string | null | undefined; bekleyen: string | null }>({ onceki: undefined, bekleyen: null })
 
   const sureTimerlariTemizle = () => {
@@ -803,6 +806,17 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (j.t === "atlandi") {
             atlandi = true
             console.info("[fish-vad]", { karar: `atlandi:${j.neden || "?"}`, sunucu: true })
+            const sebep = String(j.neden || "")
+            if (sebep === "dil" || sebep === "bos") {
+              const simdi = Date.now()
+              const liste = atlaIpucuRef.current.filter((z) => simdi - z < 25000)
+              liste.push(simdi)
+              atlaIpucuRef.current = liste
+              if (liste.length >= 2 && simdi - sonIpucuRef.current > 45000 && sesDevamRef.current.mod === "listening") {
+                sonIpucuRef.current = simdi
+                addMsg("ai", "Sizi net duyamadım Hocam, mikrofona biraz yaklaşıp tekrar söyler misiniz?")
+              }
+            }
           } else if (j.t === "stt" && j.m) {
             const metin = String(j.m).trim()
             if (sesGurultusuMu(metin) || !fishAsrDilUyumluMu(metin) || kendiSelamiMi(metin)) {
