@@ -77,7 +77,19 @@ const BASKA_SORU = /\b(hangi\w*|neden|nicin|niye|ne zaman|kim\w*|oner\w*|verdi\w
 const SERI = new RegExp(`\\b(butun|tum|her)\\s+${MUAYENE}\\w*|\\b${MUAYENE}ler\\w*|\\b(gelisim\\w*|seyri\\w*|seyir\\w*|degisim\\w*|trend\\w*|gecmis\\w*|kronoloji\\w*|olcumler\\w*|degerler\\w*|sirayla|sirasiyla|zaman icinde|tablo\\w*|liste\\w*)\\b`)
 /** A series in so many words — a plural alone ("ölçümleri") is not one. */
 const SERI_SOZU = new RegExp(`\\b(butun|tum|her)\\s+${MUAYENE}\\w*|\\b${MUAYENE}ler\\w*|\\b(gelisim\\w*|seyri\\w*|seyir\\w*|degisim\\w*|trend\\w*|gecmis\\w*|kronoloji\\w*|sirayla|sirasiyla|zaman icinde|tablo\\w*|liste\\w*)\\b`)
+const SON_OLCUMLER = /\b(son|en son) (olcum|vital|yasamsal bulgu|antropometri)/
 const SAYI: Record<string, number> = { iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10 }
+
+/**
+ * "Son ölçümleri neler?" — the last exam's measurements asked for with no measurement named and no table / series
+ * word. The brain gives this question to the visit-measurement query before the record tables see "ölçümleri".
+ */
+export function sonOlcumlerSorusuMu(mesaj: string | null | undefined): boolean {
+  const s = vizitOlcumSorusuBul(mesaj)
+  if (!s || !s.genel || !s.kesin || s.hedef.tip !== 'son') return false
+  const n = trAramaNormalize(mesaj).replace(/[?!,;:'’"]+/g, ' ').replace(/\s+/g, ' ').trim()
+  return SON_OLCUMLER.test(n) && !SERI_SOZU.test(n)
+}
 
 /**
  * Soruda adı geçen yaş-dönümü. Yalnız dönüm biçimi sayılır ("12 aylık", "15 aylıkken", "2 yaşında", "12. ay
@@ -126,7 +138,7 @@ export function vizitOlcumSorusuBul(mesaj: string | null | undefined, secenek: {
   if (new RegExp(`\\b(son|en son|gecen|onceki) ${MUAYENE}(?!ler)`).test(n)) return sor({ tip: 'son' })
   // NOTYA-KORPUS-KALAN-01 (Y-021): "Son ölçümleri neler?" — the measurements of the LAST exam (ateş and tansiyon
   // included), not the series the plural "ölçümleri" would otherwise select below.
-  if (genel && /\b(son|en son) (olcum|vital|yasamsal bulgu|antropometri)/.test(n) && !SERI_SOZU.test(n)) return sor({ tip: 'son' })
+  if (genel && SON_OLCUMLER.test(n) && !SERI_SOZU.test(n)) return sor({ tip: 'son' })
   // Yalnız ölçüm adı verilen seri: "kilo gelişimi", "tansiyon seyri". Varsayılanla gelen soruda seri sayılmaz.
   if (!secenek.varsayilan && SERI.test(n)) return sor({ tip: 'seri' })
   return null

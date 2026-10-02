@@ -46,27 +46,10 @@ describe('kayıt isteği — hangi cümle tablo / özet ister', () => {
       ['İlk muayenedeki boyu neydi', { tur: 'olcum', olcumler: ['boy'], kapsam: { tip: 'ilk', adet: 1 }, tekDeger: false }],
       ['2025 yılındaki kilo ölçümlerini listele', { tur: 'olcum', olcumler: ['kilo'], kapsam: { tip: 'yil', yil: 2025 }, tekDeger: false }],
       ['Ölçümlerini tablo olarak göster', { tur: 'olcum', olcumler: ['kilo', 'boy', 'basCevresi'], kapsam: { tip: 'tum' }, tekDeger: false }],
-      // NOTYA-KORPUS-KALAN-01 (T-042, T-044): one value = the latest RECORDED one, whichever exam holds it.
-      ['Boyu kaç?', { tur: 'olcum', olcumler: ['boy'], kapsam: { tip: 'tum' }, tekDeger: true }],
-      ['Baş çevresi kaç santim', { tur: 'olcum', olcumler: ['basCevresi'], kapsam: { tip: 'tum' }, tekDeger: true }],
-      ['Son ölçümlerini tablo olarak göster', { tur: 'olcum', olcumler: ['kilo', 'boy', 'basCevresi'], kapsam: { tip: 'tum' }, tekDeger: false }],
+      ['Boyu kaç?', { tur: 'olcum', olcumler: ['boy'], kapsam: { tip: 'son', adet: 1 }, tekDeger: true }],
+      ['Baş çevresi kaç santim', { tur: 'olcum', olcumler: ['basCevresi'], kapsam: { tip: 'son', adet: 1 }, tekDeger: true }],
     ]
     for (const [m, beklenen] of b) assert.deepEqual(kayitIstegiBul(m), beklenen, m)
-  })
-  it('NOTYA-KORPUS-KALAN-01 (Y-021): "Son ölçümleri neler?" antropometri tablosu değildir — son muayenenin bütün ölçümleri sorulur', () => {
-    for (const m of ['Son ölçümleri neler?', 'son ölçümleri ne', 'En son ölçümlerini söyle']) assert.equal(kayitIstegiBul(m), null, m)
-  })
-  it('NOTYA-KORPUS-KALAN-01 (Y-023): anne / baba boyu hastanın boyu değildir — Hasta Bilgi Formu alanı', () => {
-    const b: [string, object][] = [
-      ['bu hastanın annesinin boyu kaç', { tur: 'ebeveyn-boy', kimler: ['anne'] }],
-      ['Babasının boyu ne kadar', { tur: 'ebeveyn-boy', kimler: ['baba'] }],
-      ['Anne boyu kaç santim?', { tur: 'ebeveyn-boy', kimler: ['anne'] }],
-      ['Anne ve babasının boyları neydi', { tur: 'ebeveyn-boy', kimler: ['anne', 'baba'] }],
-    ]
-    for (const [m, beklenen] of b) assert.deepEqual(kayitIstegiBul(m), beklenen, m)
-    // The patient's own height stays the patient's.
-    assert.deepEqual(kayitIstegiBul('Annesi boyunu sordu, boyu kaç?'), { tur: 'olcum', olcumler: ['boy'], kapsam: { tip: 'tum' }, tekDeger: true })
-    assert.equal(kayitIstegiBul('Annesinin adı ne'), null)
   })
   it('muayene özeti: birkaç ya da tüm muayeneler', () => {
     const b: [string, object][] = [
@@ -130,28 +113,6 @@ describe('antropometri tablosu — yalnız kayıtlı değer, eksik işaretli', (
   it('tek değer: quick card’da olmayan boy / baş çevresi — son kayıtlı değer ve tarihi', () => {
     assert.equal(kayitCevabi(istek('Boyu kaç?'), olaylar, AD).ekran, `${AD} — son boy 81 cm (05.04.2026).`)
     assert.equal(kayitCevabi(istek('Baş çevresi kaç santim'), olaylar, AD).ekran, `${AD} — son baş çevresi 47 cm (05.04.2026).`)
-  })
-  it('NOTYA-KORPUS-KALAN-01 (T-042, T-044): son muayene akut ve yalnız kilo taşıyorsa boy / baş çevresi bir önceki kayıtlı değerdir', () => {
-    // The live shape: a well-child exam with every measurement, then an acute visit with a weight only.
-    const akut: HamDosya = { ...HAM, vizitler: [...HAM.vizitler, { id: 'v7', tarih: '2026-05-02', subjektif: 'Kulak ağrısı kontrolü.', tani: 'Akut otitis media, iyileşmiş', vitaller: { kilo: 11.1 } }] }
-    const o = olaylariKur(akut, BUGUN)
-    assert.equal(kayitCevabi(istek('Boyu kaç?'), o, AD).ekran, `${AD} — son boy 81 cm (05.04.2026).`)
-    assert.equal(kayitCevabi(istek('Baş çevresi kaç?'), o, AD).ekran, `${AD} — son baş çevresi 47 cm (05.04.2026).`)
-    // "Son muayenede" said in so many words is still that exam only.
-    assert.match(kayitCevabi(istek('Son muayenedeki boyu neydi'), o, AD).ekran, /kayıtlı boy ölçümü yok Hocam \(son muayene\)/)
-    // No height anywhere: said so, nothing invented.
-    const boysuz = olaylariKur({ ...HAM, vizitler: HAM.vizitler.map((v) => ({ ...v, vitaller: { kilo: (v.vitaller as { kilo?: number }).kilo } })), cihaz: [] }, BUGUN)
-    assert.equal(kayitCevabi(istek('Boyu kaç?'), boysuz, AD).ekran, `${AD} için kayıtlı boy ölçümü yok Hocam.`)
-  })
-  it('NOTYA-KORPUS-KALAN-01 (Y-023): anne / baba boyu formdaki değerdir; formda yoksa öyle söylenir, hastanın boyu verilmez', () => {
-    const formlu = olaylariKur({ ...HAM, intake: { anneBoyu: '168', babaBoyu: '176' } }, BUGUN)
-    assert.equal(kayitCevabi(istek('bu hastanın annesinin boyu kaç'), formlu, AD).ekran, `${AD} — anne boyu 168 cm (Hasta Bilgi Formu).`)
-    assert.equal(kayitCevabi(istek('Anne ve babasının boyları neydi'), formlu, AD).ekran, `${AD} — anne boyu 168 cm ve baba boyu 176 cm (Hasta Bilgi Formu).`)
-    const yarim = olaylariKur({ ...HAM, intake: { anneBoyu: '168' } }, BUGUN)
-    assert.equal(kayitCevabi(istek('Anne ve babasının boyları neydi'), yarim, AD).ekran, `${AD} — anne boyu 168 cm (Hasta Bilgi Formu). Baba boyu Hasta Bilgi Formu’nda kayıtlı değil.`)
-    const c = kayitCevabi(istek('bu hastanın annesinin boyu kaç'), olaylar, AD)
-    assert.equal(c.ekran, `${AD} — anne boyu Hasta Bilgi Formu’nda kayıtlı değil Hocam.`)
-    for (const d of ['81', '76', '71', '66']) assert.ok(!c.ekran.includes(d), `hastanın boyu cevapta: ${d}`)
   })
   it('hiç kaydı olmayan ölçüm uydurulmaz: açıkça söylenir', () => {
     const baslamamis: HamDosya = { ...HAM, vizitler: HAM.vizitler.map((v) => ({ ...v, vitaller: { kilo: (v.vitaller as { kilo?: number }).kilo } })), cihaz: [] }

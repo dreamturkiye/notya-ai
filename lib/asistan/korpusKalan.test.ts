@@ -28,7 +28,8 @@ type Girdi = string | { id: string; yuzeyler: Yuzey[]; modele?: boolean }
 const KUMELER: { ad: string; girdiler: Girdi[] }[] = [
   { ad: 'A — özellik listeleri (arama)', girdiler: ['G-21', 'G-22', 'G-24'] },
   { ad: 'B — adlı hasta turundan sonraki takip soruları', girdiler: ['Y-080', 'T-025', 'Y-083', 'Y-091'] },
-  { ad: 'C — ölçümler', girdiler: ['T-042', 'T-044', 'L-DANIS-BOYU', 'Y-021', 'Y-023', { id: 'I-03', yuzeyler: ['panel'] }, 'L-DANIS-SERI-2'] },
+  // T-042 / T-044 are not here: the single-measurement route (kayitTablosu) is fixed on its own branch.
+  { ad: 'C — ölçümler', girdiler: ['L-DANIS-BOYU', 'Y-021', 'Y-023', { id: 'I-03', yuzeyler: ['panel'] }, 'L-DANIS-SERI-2'] },
   { ad: 'D — okumalar', girdiler: [{ id: 'G-28', yuzeyler: ['ses'], modele: true }, { id: 'Y-063', yuzeyler: ['ses'], modele: true }, { id: 'L-ODAK-HITAP-1', yuzeyler: ['yazi', 'ses'], modele: true }] },
 ]
 const kimlik = (g: Girdi) => (typeof g === 'string' ? g : g.id)

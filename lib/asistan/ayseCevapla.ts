@@ -72,7 +72,8 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
-import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul, vizitSoylenisi } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
+import { sonOlcumlerSorusuMu, vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul, vizitSoylenisi } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
+import { ebeveynBoyCevabi, ebeveynBoyuSorusu } from "@/lib/asistan/ebeveynBoy"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
@@ -635,7 +636,13 @@ ${ilacBaglamMetni(drugs[0])}`
     // only, no model; a table on screen and a short spoken line. The doctor's own words count as well as the
     // follow-up rewrite (which turns a bare "aşıları?" into the evaluation question "… aşıları tam mı?").
     const asiTabloIstegi = !komut && hizliYol && (asiKaydiSorusuMu(hamMesaj) || asiKaydiSorusuMu(mesajMetni))
-    const kayitIstegi = komut || asiTabloIstegi || !hizliYol ? null : (kayitIstegiBul(hamMesaj) ?? kayitIstegiBul(mesajMetni))
+    // NOTYA-KORPUS-KALAN-01 (Y-023): "annesinin boyu kaç" is the Hasta Bilgi Formu field, not a measurement of the
+    // patient — looked at BEFORE the record tables, whose single-value matcher sees only "boy … kaç".
+    const ebeveynler = komut || asiTabloIstegi || !hizliYol ? [] : (ebeveynBoyuSorusu(hamMesaj).length ? ebeveynBoyuSorusu(hamMesaj) : ebeveynBoyuSorusu(mesajMetni))
+    // NOTYA-KORPUS-KALAN-01 (Y-021): "Son ölçümleri neler?" is the last exam's recorded measurements (ateş and tansiyon
+    // too), the visit-measurement query's question — not the kilo / boy / baş çevresi table of every exam.
+    const sonOlcumler = sonOlcumlerSorusuMu(hamMesaj) || sonOlcumlerSorusuMu(mesajMetni)
+    const kayitIstegi = komut || asiTabloIstegi || !hizliYol || ebeveynler.length || sonOlcumler ? null : (kayitIstegiBul(hamMesaj) ?? kayitIstegiBul(mesajMetni))
     // NOTYA-DANIS-OLCUM (Dr. Gökhan, 2026-10-02): the measurement of ONE named exam ("12 aylık muayenesine geldiğinde kaç
     // kiloydu", "son kontrolde tansiyonu") or a series the table above does not cover ("kilo gelişimi", "tansiyon
     // seyri"). Before, the quick card answered these with the LATEST measurement. Same query as the Danış panel
@@ -646,8 +653,8 @@ ${ilacBaglamMetni(drugs[0])}`
     olcumDegerlendirmesi = Boolean(olcumSorusuHam && !olcumSorusuHam.kesin)
     turVizit = vizitSoylenisi(olcumSorusuHam)
     // A named exam is more specific than the all-exams table; otherwise the table keeps its requests.
-    const olcumSorusu = olcumSorusuHam?.kesin && (olcumSorusuHam.hedef.tip === "vizit" || !kayitIstegi) ? olcumSorusuHam : null
-    if (cozum.tur === "tek" && !cozum.cevap && (asiTabloIstegi || kayitIstegi || olcumSorusu)) {
+    const olcumSorusu = !ebeveynler.length && olcumSorusuHam?.kesin && (olcumSorusuHam.hedef.tip === "vizit" || !kayitIstegi) ? olcumSorusuHam : null
+    if (cozum.tur === "tek" && !cozum.cevap && (asiTabloIstegi || kayitIstegi || olcumSorusu || ebeveynler.length)) {
       try {
         // HASTA-IZOLASYON-01: the id is the resolver's (doctor-scoped) or the re-checked open patient; the karne read
         // and the chart package narrow every query by doctor AND patient again.
@@ -657,18 +664,22 @@ ${ilacBaglamMetni(drugs[0])}`
           cozulenHasta = { id: cozum.patientId, ad }
           kayitCevap = asiTablosuCevabi(ad, karne)
           kayitNiyeti = "asi"
-        } else if (olcumSorusu || kayitIstegi) {
+        } else if (olcumSorusu || kayitIstegi || ebeveynler.length) {
           const paket = cozum.patientId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
           if (paket) {
             const ad = cozum.ad || paket.ad || "Hasta"
             cozulenHasta = { id: cozum.patientId, ad }
-            if (olcumSorusu) {
+            if (ebeveynler.length) {
+              // HASTA-IZOLASYON-01: the intake events of the doctor-scoped chart package; no model, no identity value.
+              kayitCevap = ebeveynBoyCevabi(ebeveynler, (paket.olaylar || []) as DosyaOlayi[], ad)
+              kayitNiyeti = "hasta-dosya"
+            } else if (olcumSorusu) {
               // HASTA-IZOLASYON-01: the events are the doctor-scoped chart package of the resolved patient.
               kayitCevap = vizitOlcumCevabi(vizitOlcumKaniti(olcumSorusu, (paket.olaylar || []) as DosyaOlayi[], { dogumIso: (paket.sorguHasta as DosyaHastasi | undefined)?.dogumIso ?? null }), ad)
               kayitNiyeti = "buyume"
             } else if (kayitIstegi) {
               kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
-              kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : kayitIstegi.tur === "ebeveyn-boy" ? "hasta-dosya" : "muayene"
+              kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
             }
           }
         }

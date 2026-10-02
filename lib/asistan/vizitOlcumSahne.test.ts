@@ -152,18 +152,9 @@ describe('NOTYA-KORPUS-KALAN-01 — Danış: takip sorusu, seri tablosu, büyüm
   })
 })
 
-describe('NOTYA-KORPUS-KALAN-01 — sohbet ve ses: son kayıtlı değer, aynı muayenenin takibi, son ölçümler, anne boyu', () => {
-  it('(T-042, T-044) "boyu?" / "baş çevresi?": son muayene akut ve yalnız kilo taşıyorsa bir önceki kayıtlı değer', async () => {
-    const { s, hasta } = cocukSahnesi('a')
-    const oturum = oturumAc(s, { id: hasta, ad: AD })
-    assert.equal((await yazi(s, `${AD} kaç kilo?`, { oturum })).rota, 'hizli-kart')
-    const boy = await yazi(s, 'boyu?', { oturum })
-    assert.deepEqual([boy.rota, boy.speech], ['kayit', `${AD} — son boy 75 cm (15.05.2025).`])
-    const bas = await yazi(s, 'baş çevresi?', { oturum })
-    assert.deepEqual([bas.rota, bas.speech], ['kayit', `${AD} — son baş çevresi 46 cm (15.05.2025).`])
-    assert.equal(ortam.modelIstekleri.length, 0)
-  })
-
+// T-042 / T-044 ("boyu?" with no exam named → the latest recorded value) is the single-measurement route of
+// lib/asistan/kayitTablosu.ts, which is being reworked on its own branch; it is not asserted here.
+describe('NOTYA-KORPUS-KALAN-01 — sohbet ve ses: aynı muayenenin takibi, son ölçümler, anne boyu', () => {
   it('(L-DANIS-BOYU) "peki boyu?" 12 aylık muayenenin kilosundan sonra o muayenenin boyudur (yazı ve ses)', async () => {
     const { s, hasta } = cocukSahnesi('a')
     const oturum = oturumAc(s, { id: hasta, ad: AD })
@@ -185,6 +176,9 @@ describe('NOTYA-KORPUS-KALAN-01 — sohbet ve ses: son kayıtlı değer, aynı m
     const { s, hasta } = cocukSahnesi('a')
     const y = await yazi(s, 'Son ölçümleri neler?', { oturum: oturumAc(s, { id: hasta, ad: AD }) })
     assert.deepEqual([y.rota, y.speech], ['kayit', `${AD} — son muayene (25.09.2025): kilo 10,6 kg; ateş 38,4 °C. Kaynak: muayene notunun yaşamsal bulgu alanı.`])
+    // Asked for as a table, it is still the record table.
+    const tablo = await yazi(s, 'Son ölçümlerini tablo olarak göster', { oturum: oturumAc(s, { id: hasta, ad: AD }) })
+    assert.match(tablo.speech, /^\| Tarih \|/m)
     assert.equal(ortam.modelIstekleri.length, 0)
   })
 

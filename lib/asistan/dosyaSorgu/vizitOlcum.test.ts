@@ -12,7 +12,7 @@ import { olaylariKur, hastaKur, type HamDosya } from '@/lib/doktor/dosyaOlaylari
 import { metindenOlcumCikar } from '@/lib/clinical/olcumMetni'
 import { kanitBlogu } from './kanit'
 import { soruTuruBul } from './soruTuru'
-import { vizitOlcumSorusuBul, vizitOlcumKaniti, vizitOlcumCevabi, vizitOlcumKanitBlogu, olcumCevabiniGuvenceyeAl, vizitOlcumTakipSorusu, vizitSoylenisi, sonKayitliOlcumler, sonOlcumKanitBlogu, sonOlcumleriGuvenceyeAl } from './vizitOlcum'
+import { vizitOlcumSorusuBul, vizitOlcumKaniti, vizitOlcumCevabi, vizitOlcumKanitBlogu, olcumCevabiniGuvenceyeAl, vizitOlcumTakipSorusu, vizitSoylenisi, sonOlcumlerSorusuMu, sonKayitliOlcumler, sonOlcumKanitBlogu, sonOlcumleriGuvenceyeAl } from './vizitOlcum'
 import { olcumDosyasi, eriskinOlcumDosyasi, OLCUM_COCUK_ADI as AD, OLCUM_ERISKIN_ADI as ERISKIN, KILO_12AY, TARIH_12AY, TAHMIN_KILO, type OlcumVaryanti } from '../tests/olcumHastasi'
 
 const BUGUN = '2026-01-01'
@@ -297,6 +297,9 @@ describe('NOTYA-KORPUS-KALAN-01 — son ölçümler, takip sorusu, seri tablosu,
     // A series said in so many words stays a series.
     assert.equal(vizitOlcumSorusuBul('Son ölçümlerini sırayla göster')?.hedef.tip, 'seri')
     assert.equal(vizitOlcumSorusuBul('ölçümleri neler')?.hedef.tip, 'seri')
+    // The brain's precedence over the record tables: only this wording, never a named measurement or a table request.
+    for (const m of ['Son ölçümleri neler?', 'En son vitalleri neydi']) assert.equal(sonOlcumlerSorusuMu(m), true, m)
+    for (const m of ['Son ölçümlerini tablo olarak göster', 'Son muayenedeki boy ve kilo ölçümlerini göster', 'ölçümleri neler', 'Son muayenedeki ölçümlerini göster', 'Boyu kaç?', 'son ölçümleri normal mi']) assert.equal(sonOlcumlerSorusuMu(m), false, m)
     const e = cocuk('a', 'Son ölçümleri neler?')
     assert.match(e, /^QA Bebek Ölçüm — son muayene \(25\.09\.2025\): kilo 10,6 kg; ateş 38,4 °C\. Kaynak: muayene notunun yaşamsal bulgu alanı\.$/)
   })
