@@ -42,6 +42,12 @@ export interface Varliklar {
   ilac?: string | null
   tahlil?: string | null
   asi?: string | null
+  /**
+   * NOTYA-DANIS-OLCUM-07: the exam the previous turn's measurement question named, as it is said in a question
+   * ("12 aylık muayenesinde", "ilk muayenesinde" — dosyaSorgu/vizitOlcum vizitSoylenisi). Written by the brain for
+   * that turn only; a follow-up that names no exam ("peki boyu?") asks about the same one.
+   */
+  vizit?: string | null
 }
 
 export interface KonusmaBaglami {
@@ -515,9 +521,22 @@ export function takipCoz(
       break
     }
     case 'buyume': {
-      if (/\bkilo/.test(nn)) soru = `${G} kilosu kaç?`
-      else if (/\bbas cevresi/.test(nn)) soru = `${G} baş çevresi kaç?`
-      else if (/\bboy/.test(nn)) soru = `${G} boyu kaç?`
+      // NOTYA-KORPUS-KALAN-01 (Y-023): "annesinin boyu kaç" is the PARENT's height — the doctor's words are kept. The
+      // template below used to turn it into "<hasta> boyu kaç?" and the child's height was answered.
+      if (/\b(anne|baba)\w*/.test(nn)) {
+        const sozler = ham.replace(/[?!.,;:"“”]+/g, ' ').split(/\s+/).filter((w) => { const k = normalize(w); return k && !adN.includes(k) && !ISARET_KELIMELERI.has(k) && !/^(bu|su|hasta|hastanin|hastamin|hastamizin)$/.test(k) }).join(' ')
+        soru = `${G} ${sozler}?`
+        break
+      }
+      // NOTYA-DANIS-OLCUM-07 (L-DANIS-BOYU): the previous turn named an exam ("12 aylık muayenesine geldiğinde kaç
+      // kiloydu") and this one does not — "peki boyu?" is the height of the SAME exam, not the latest one.
+      const vizit = onceki.vizit && !v.tarihSozu ? onceki.vizit : ''
+      if (vizit) miras.push('vizit')
+      const kac = vizit ? 'kaçtı' : 'kaç'
+      const V = vizit ? ` ${vizit}` : ''
+      if (/\bkilo/.test(nn)) soru = `${G}${V} kilosu ${kac}?`
+      else if (/\bbas cevresi/.test(nn)) soru = `${G}${V} baş çevresi ${kac}?`
+      else if (/\bboy/.test(nn)) soru = `${G}${V} boyu ${kac}?`
       else if (/\bpersentil/.test(nn)) soru = `${G} persentili kaç?`
       else soru = kalan ? `${G} büyümesinde ${kalan}?` : `${G} büyümesi nasıl gidiyor?`
       break
@@ -529,7 +548,8 @@ export function takipCoz(
       if (GECMIS_KARSILASTIRMA_RE.test(nn)) { soru = `${adYazili || onceki.hastaAd} ${ham}`; break }
       if (oncekiSoru) soru = `${G} bir önceki muayenesinde ne bulduk?`
       else if (/\btani/.test(nn)) soru = `${G} son tanısı neydi?`
-      else if (/\bates/.test(nn)) soru = `${G} son muayenesinde ateşi kaçtı?`
+      else if (/\bates/.test(nn)) soru = `${G} ${onceki.vizit && !v.tarihSozu ? onceki.vizit : 'son muayenesinde'} ateşi kaçtı?`
+      else if (onceki.vizit && !v.tarihSozu && /^(tansiyon\w*|nabiz\w*|nabzi|spo2)$/.test(kalan)) soru = `${G} ${onceki.vizit} ${kalan} kaçtı?`
       else if (/\bsoap\b/.test(nn)) soru = `${G} son SOAP notunu oku`
       else soru = kalan ? `${G} son muayenesinde ${kalan}?` : `${G} son muayenesinde ne bulduk?`
       break

@@ -25,7 +25,9 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
 import { notAlanlariCoz, alerjiListe } from '@/lib/doktor/hastaKayitAlanlari'
 import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari'
-import { olcumCevabiniGuvenceyeAl, vizitOlcumKaniti, vizitOlcumKanitBlogu, vizitOlcumSorusuBul, type VizitOlcumKaniti } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
+import { olcumCevabiniGuvenceyeAl, sonKayitliOlcumler, sonOlcumKanitBlogu, sonOlcumleriGuvenceyeAl, vizitOlcumKaniti, vizitOlcumKanitBlogu, vizitOlcumSorusuBul, vizitOlcumTakipSorusu, type OlcumKaydi, type VizitOlcumKaniti } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
+import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
+import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -121,14 +123,24 @@ export async function POST(req: NextRequest) {
   // kanıt olarak modele verilir; model cevabı aşağıda kayıtla karşılaştırılır. HASTA-IZOLASYON: dosyaSorguVerisiDerle
   // hastayı ve her çocuk okumayı doktorId ile kapsar; yabancı hasta yukarıda zaten 404 döndü.
   let olcumKaniti: VizitOlcumKaniti | null = null
+  /** NOTYA-KORPUS-KALAN-01 (I-03): büyüme sorusunda her ölçümün en son kayıtlı değeri — kanıt ve cevap denetimi. */
+  let sonOlcumler: OlcumKaydi[] = []
   // Bir kayıt komutu ("… kaydet") ölçüm SORUSU değildir — o tur araç kartıyla cevaplanır.
-  const olcumSorusu = sonMesajDoktorun && !kayitNiyetiMi(sonMetin) ? vizitOlcumSorusuBul(sonMetin) : null
-  if (olcumSorusu) {
+  const soruTuruMu = sonMesajDoktorun && !kayitNiyetiMi(sonMetin)
+  // NOTYA-DANIS-OLCUM-07 (L-DANIS-BOYU): "peki boyu?" — muayeneyi yinelemeyen takip sorusu bir önceki hekim sorusunun
+  // muayenesini sorar. Panel durumsuzdur: önceki soru isteğin kendi `mesajlar` dizisindedir.
+  const oncekiDoktorSorusu = [...mesajlar.slice(0, -1)].reverse().find((m) => m.rol !== 'asistan')?.icerik
+  const olcumSorusu = soruTuruMu ? vizitOlcumSorusuBul(sonMetin) ?? vizitOlcumTakipSorusu(sonMetin, oncekiDoktorSorusu) : null
+  const buyumeSorusu = soruTuruMu && !olcumSorusu && soruTuruBul(sonMetin) === 'buyume'
+  if (olcumSorusu || buyumeSorusu) {
     try {
       const sorgu = await dosyaSorguVerisiDerle(supabase, doktorId, patientId)
-      if (sorgu) olcumKaniti = vizitOlcumKaniti(olcumSorusu, sorgu.olaylar, sorgu.hasta)
+      if (sorgu && olcumSorusu) olcumKaniti = vizitOlcumKaniti(olcumSorusu, sorgu.olaylar, sorgu.hasta)
+      // BRANS-ALAN-SIZMASI: baş çevresi yalnız pediatrik bağlamda (dosya metnindeki ve karttaki kuralla aynı kapı).
+      else if (sorgu) sonOlcumler = sonKayitliOlcumler(sorgu.olaylar, pediatrikBaglamMi({ doktorBransi: sorgu.hasta.brans, hastaDogumIso: sorgu.hasta.dogumIso }) ? ['kilo', 'boy', 'basCevresi'] : ['kilo', 'boy'])
     } catch (e) { console.error('[konsult] ölçüm kanıtı', e instanceof Error ? e.message.slice(0, 200) : 'hata') }
   }
+  const olcumEk = olcumKaniti ? `\n\n${vizitOlcumKanitBlogu(olcumKaniti)}` : sonOlcumler.length ? `\n\n${sonOlcumKanitBlogu(sonOlcumler)}` : ''
   // yazıver / kaydet → tool_choice any: model cannot narrate a refusal; card still needs the tap.
   const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
 
@@ -138,7 +150,7 @@ export async function POST(req: NextRequest) {
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + (olcumKaniti ? `\n\n${vizitOlcumKanitBlogu(olcumKaniti)}` : '') }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + olcumEk }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] ai', e.govde.slice(0, 300))
@@ -148,7 +160,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 502 })
     }
     // NOTYA-DANIS-OLCUM: kayıtlı ölçüm cevapta yoksa (model tahmin etti / "yazılmamış" dedi) kayıttaki kesin cevap döner.
-    const cevap = olcumKaniti ? olcumCevabiniGuvenceyeAl(yanitMetni(veri, '\n'), olcumKaniti) : yanitMetni(veri, '\n')
+    // NOTYA-KORPUS-KALAN-01 (I-03): büyüme sorusunda son kayıtlı değerler cevapta yoksa kayıt cümlesi cevabın önüne gelir.
+    const cevap = olcumKaniti ? olcumCevabiniGuvenceyeAl(yanitMetni(veri, '\n'), olcumKaniti) : sonOlcumleriGuvenceyeAl(yanitMetni(veri, '\n'), sonOlcumler)
 
     // NOTYA-EYLEM: a tool_use block is a PROPOSAL, never a write. Each becomes an eylem_onerileri
     // taslak and comes back as a card; the record happens when the doctor taps (POST /api/doktor/eylem).

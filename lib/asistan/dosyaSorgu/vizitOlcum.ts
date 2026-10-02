@@ -75,6 +75,8 @@ const DEGERLENDIRME = /persentil|egri|normal mi|geri mi|yeterli mi|dusuk mu|fazl
 /** Ölçümün yanında başka bir şey soruluyor — neden, hangi, neye göre, ne önerildi. */
 const BASKA_SORU = /\b(hangi\w*|neden|nicin|niye|ne zaman|kim\w*|oner\w*|verdi\w*|verildi\w*|verilmis\w*|yazdi\w*|yazildi\w*|yazmis\w*|baslan\w*|basladi\w*|gore|icin|ragmen|yuzunden|sebeb\w*)\b/
 const SERI = new RegExp(`\\b(butun|tum|her)\\s+${MUAYENE}\\w*|\\b${MUAYENE}ler\\w*|\\b(gelisim\\w*|seyri\\w*|seyir\\w*|degisim\\w*|trend\\w*|gecmis\\w*|kronoloji\\w*|olcumler\\w*|degerler\\w*|sirayla|sirasiyla|zaman icinde|tablo\\w*|liste\\w*)\\b`)
+/** A series in so many words — a plural alone ("ölçümleri") is not one. */
+const SERI_SOZU = new RegExp(`\\b(butun|tum|her)\\s+${MUAYENE}\\w*|\\b${MUAYENE}ler\\w*|\\b(gelisim\\w*|seyri\\w*|seyir\\w*|degisim\\w*|trend\\w*|gecmis\\w*|kronoloji\\w*|sirayla|sirasiyla|zaman icinde|tablo\\w*|liste\\w*)\\b`)
 const SAYI: Record<string, number> = { iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10 }
 
 /**
@@ -122,9 +124,45 @@ export function vizitOlcumSorusuBul(mesaj: string | null | undefined, secenek: {
   if (sonN) return sor({ tip: 'seri', son: /^\d+$/.test(sonN[1]) ? Number(sonN[1]) : SAYI[sonN[1]] })
   if (new RegExp(`\\bilk ${MUAYENE}(?!ler)`).test(n)) return sor({ tip: 'ilk' })
   if (new RegExp(`\\b(son|en son|gecen|onceki) ${MUAYENE}(?!ler)`).test(n)) return sor({ tip: 'son' })
+  // NOTYA-KORPUS-KALAN-01 (Y-021): "Son ölçümleri neler?" — the measurements of the LAST exam (ateş and tansiyon
+  // included), not the series the plural "ölçümleri" would otherwise select below.
+  if (genel && /\b(son|en son) (olcum|vital|yasamsal bulgu|antropometri)/.test(n) && !SERI_SOZU.test(n)) return sor({ tip: 'son' })
   // Yalnız ölçüm adı verilen seri: "kilo gelişimi", "tansiyon seyri". Varsayılanla gelen soruda seri sayılmaz.
   if (!secenek.varsayilan && SERI.test(n)) return sor({ tip: 'seri' })
   return null
+}
+
+/** Adı geçen tek muayene (yaş-dönümü / tür / ilk / son) — seri değil. */
+const tekMuayeneHedefi = (h: VizitHedefi | null | undefined): h is Exclude<VizitHedefi, { tip: 'seri' }> => Boolean(h) && h!.tip !== 'seri'
+
+/**
+ * NOTYA-DANIS-OLCUM-07 (L-DANIS-BOYU): muayeneyi yinelemeyen takip sorusu — "peki boyu?". Bir önceki hekim sorusu bir
+ * muayenenin ölçümünü sorduysa takip sorusu AYNI muayenenin ölçümünü sorar. Yalnız bir önceki soruya bakılır (daha
+ * eski bir konu taşınmaz) ve yalnız ölçüm adından ibaret kısa söze (kendi muayenesini anan soru kendi başına okunur).
+ */
+export function vizitOlcumTakipSorusu(mesaj: string | null | undefined, oncekiSoru: string | null | undefined): VizitOlcumSorusu | null {
+  const n = trAramaNormalize(mesaj).replace(/[?!,;:'’"]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!n || DOZ_SOZU.test(n) || n.split(' ').length > 6) return null
+  const olcumler = OLCUM_SOZU.filter(([o, re]) => re.test(n) || (o === 'ates' && /\bates\w*/.test(n))).map(([o]) => o)
+  if (!olcumler.length) return null
+  // Bir ebeveynin boyu hastanın ölçümü değildir.
+  if (/\b(anne|baba)\w*/.test(n)) return null
+  const onceki = vizitOlcumSorusuBul(oncekiSoru, { varsayilan: ['kilo'] })
+  if (!tekMuayeneHedefi(onceki?.hedef)) return null
+  const degerlendirme = DEGERLENDIRME.test(n)
+  return { olcumler, genel: false, hedef: onceki!.hedef, degerlendirme, kesin: !degerlendirme && !BASKA_SORU.test(n) }
+}
+
+/**
+ * Adı geçen muayenenin, takip sorusuna YENİDEN yazılabilen söylenişi: "12 aylık muayenesinde", "ilk muayenesinde".
+ * Sohbet / ses bağlamı (konusmaBaglami `vizit`) bunu saklar; söyleniş bu modülde aynı muayeneye çözülmüyorsa null.
+ */
+export function vizitSoylenisi(soru: VizitOlcumSorusu | null | undefined): string | null {
+  if (!soru || !tekMuayeneHedefi(soru.hedef)) return null
+  const etiket = hedefEtiketi(soru.hedef)
+  const soylenis = /muayenesi$|muayene$/.test(etiket) ? etiket.replace(/muayenesi$|muayene$/, 'muayenesinde') : `${etiket} sırasında`
+  const geri = vizitOlcumSorusuBul(`${soylenis} kilosu kaçtı`)
+  return geri && geri.hedef.tip === soru.hedef.tip && hedefEtiketi(geri.hedef) === etiket ? soylenis : null
 }
 
 /* ───────────────────────────── muayene seçimi ───────────────────────────── */
@@ -354,7 +392,8 @@ function vizitCumlesi(k: VizitOlcumKaniti, v: VizitOlcumu): string {
   }
   const degerler = v.kayitlar.map((x) => `${AD[x.olcum]} ${x.metin}`).join('; ')
   const kaynaklar = [...new Set(v.kayitlar.map((x) => x.kaynakAdi))]
-  const kaynak = kaynaklar.length === 1 ? kaynaklar[0] : v.kayitlar.map((x) => `${AD[x.olcum]} — ${x.kaynakAdi}`).join('; ')
+  // Several sources: each source once, with the measurements read from it.
+  const kaynak = kaynaklar.length === 1 ? kaynaklar[0] : kaynaklar.map((s) => `${adlar(v.kayitlar.filter((x) => x.kaynakAdi === s).map((x) => x.olcum))} — ${s}`).join('; ')
   const eksik = v.eksik.length ? ` ${buyukBas(adlar(v.eksik))} için bu muayenede kayıtlı ölçüm yok.` : ''
   const celiski = v.celiski.length ? ` Çelişen kayıt: ${v.celiski.join('; ')}.` : ''
   return `${bas}${degerler}. Kaynak: ${kaynak}.${eksik}${celiski}${secimNotu(k)}`
@@ -457,6 +496,38 @@ export function vizitOlcumKanitBlogu(k: VizitOlcumKaniti): string {
   return ['=== VİZİT ÖLÇÜMÜ (kayıttan, deterministik) ===', ...vizitOlcumKanitSatirlari(k), '=== VİZİT ÖLÇÜMÜ SONU ==='].join('\n')
 }
 
+/* ───────────────────────────── son kayıtlı ölçümler (büyüme sorusu, Danış) ───────────────────────────── */
+
+/**
+ * NOTYA-KORPUS-KALAN-01 (I-03): her ölçümün EN SON kayıtlı değeri — hangi muayenede ya da cihaz ölçümünde olursa
+ * olsun. "Büyümesi nasıl gidiyor?" sorusunda Danış paneli modele yalnız dosya metnini veriyordu; model son boyu
+ * yuvarladı (kayıt 87,5 cm, cevap "88 cm") ve cevabı kayıtla karşılaştıran yoktu.
+ */
+export function sonKayitliOlcumler(olaylar: DosyaOlayi[], olcumler: OlcumAnahtari[]): OlcumKaydi[] {
+  const seri = seriSatirlari(olaylar, vizitleri(olaylar), olcumler, true)
+  return olcumler.map((o) => seri.filter((s) => s.kayitlar[o]).at(-1)?.kayitlar[o]).filter((x): x is OlcumKaydi => Boolean(x))
+}
+
+const sonOlcumMetni = (kayitlar: OlcumKaydi[]) => kayitlar.map((x) => `${AD[x.olcum]} ${x.metin} (${trGun(x.tarih)})`).join('; ')
+
+/** Modele giden kanıt — hasta adı yok. */
+export function sonOlcumKanitBlogu(kayitlar: OlcumKaydi[]): string {
+  if (!kayitlar.length) return ''
+  return ['=== SON KAYITLI ÖLÇÜMLER (kayıttan, deterministik) ===', ...kayitlar.map((x) => `- ${AD[x.olcum]} ${x.metin} — ${trGun(x.tarih)} — kaynak: ${x.kaynakAdi}.`), '[KURAL] Bu değerleri birimi ve tarihiyle AYNEN ver; yuvarlama, başka muayenenin değerini son değer gibi sunma.', '=== SON KAYITLI ÖLÇÜMLER SONU ==='].join('\n')
+}
+
+/**
+ * Cevap kayıtlı son değerlerin hepsini taşıyorsa dokunulmaz; taşımıyorsa kayıt cümlesi cevabın ÖNÜNE konur (cevap
+ * silinmez — değerlendirme modelindir, değer kaydındır).
+ */
+export function sonOlcumleriGuvenceyeAl(cevap: string, kayitlar: OlcumKaydi[]): string {
+  if (!kayitlar.length) return cevap
+  const c = duz(cevap)
+  if (kayitlar.every((x) => geciyor(c, sayiKismi(x.metin)))) return cevap
+  const kayit = `Kayıt — son ölçümler: ${sonOlcumMetni(kayitlar)}.`
+  return c.trim() ? `${kayit}\n\n${cevap}` : kayit
+}
+
 /* ───────────────────────────── modelin cevabı kayıtla tutuyor mu ───────────────────────────── */
 
 const BIRIM_RE: Record<OlcumAnahtari, string> = {
@@ -482,6 +553,10 @@ export function olcumCevabiniGuvenceyeAl(cevap: string, k: VizitOlcumKaniti): st
   const kesin = vizitOlcumCevabi(k).ekran
   const c = duz(cevap)
   const kayitli = k.seri ? k.seri.flatMap((s) => Object.values(s.kayitlar)) : k.vizitler.flatMap((v) => v.kayitlar)
+  // NOTYA-KORPUS-KALAN-01 (L-DANIS-SERI-2): a series the doctor asked for as values ("bütün muayenelerinde kilosu") is
+  // the record's own TABLE on every surface. The model listing the same values as bullets used to pass the check
+  // above unchanged, so the panel showed a list where chat showed the table.
+  if (k.seri && kayitli.length && k.soru.kesin) return kesin
   if (kayitli.length) {
     if (kayitli.every((x) => geciyor(c, sayiKismi(x.metin)))) return cevap
     return !k.soru.kesin && c.trim() ? `${kesin}\n\n${cevap}` : kesin

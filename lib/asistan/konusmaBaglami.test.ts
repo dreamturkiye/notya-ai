@@ -107,6 +107,23 @@ describe('NOTYA-KONUSMA-BAGLAMI-01 — chart follow-ups', () => {
     assert.equal(t3?.soru, "Umutcan Türkoğlu'nun bir önceki hemogram sonucu ne?")
     assert.ok(t3?.miras.includes('tahlil'))
   })
+  it('NOTYA-DANIS-OLCUM-07 (L-DANIS-BOYU): a measurement follow-up asks about the exam the previous turn named', () => {
+    const k0 = b('buyume', 'bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu', 'Umutcan Türkoğlu — 12 aylık muayene (15.05.2025): kilo 9,8 kg.', { vizit: '12 aylık muayenesinde' }, U)
+    const t1 = takipCoz('peki boyu?', k0, sec)
+    assert.equal(t1?.soru, "Umutcan Türkoğlu'nun 12 aylık muayenesinde boyu kaçtı?")
+    assert.ok(t1?.miras.includes('vizit'))
+    assert.equal(takipCoz('baş çevresi?', k0, sec)?.soru, "Umutcan Türkoğlu'nun 12 aylık muayenesinde baş çevresi kaçtı?")
+    assert.equal(takipCoz('peki ateşi?', k0, sec)?.soru, "Umutcan Türkoğlu'nun 12 aylık muayenesinde ateşi kaçtı?")
+    // The previous turn named no exam (T-042, T-044): the latest recorded value is asked, as before.
+    const k1 = b('buyume', 'Umutcan Türkoğlu kaç kilo?', 'Umutcan Türkoğlu — dosyada son ölçüm: Kilo: 12,8 kg.', {}, U)
+    assert.equal(takipCoz('boyu?', k1, sec)?.soru, "Umutcan Türkoğlu'nun boyu kaç?")
+    assert.equal(takipCoz('baş çevresi?', k1, sec)?.soru, "Umutcan Türkoğlu'nun baş çevresi kaç?")
+  })
+  it('NOTYA-KORPUS-KALAN-01 (Y-023): "annesinin boyu kaç" keeps the parent — never rewritten into the patient\'s own height', () => {
+    const k0 = b('muayene', 'hastamızın ateşi kaçtı son muayenede', 'Ayşe Yeşil — son muayene (24.09.2026): ateş 38,9 °C.', { vizit: 'son muayenesinde' }, A)
+    assert.equal(takipCoz('bu hastanın annesinin boyu kaç', k0, sec)?.soru, "Ayşe Yeşil'in annesinin boyu kaç?")
+    assert.equal(takipCoz('peki babasının boyu?', k0, sec)?.soru, "Ayşe Yeşil'in babasının boyu?")
+  })
   it('reçete: "dozu?" → "kaç gün?" and a named drug', () => {
     const r0 = b('recete', "Ayşe Yeşil'in reçetesi?", 'Ayşe Yeşil — dosyada son reçete: Klacid süspansiyon, Calpol şurup', {}, A)
     assert.equal(takipCoz('dozu?', r0, sec)?.soru, "Ayşe Yeşil'in reçetesindeki ilaçların dozları neler?")

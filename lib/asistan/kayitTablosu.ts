@@ -24,9 +24,12 @@ import { genitif } from '@/lib/asistan/konusmaBaglami'
 
 export type OlcumTuru = 'kilo' | 'boy' | 'basCevresi'
 export type Kapsam = { tip: 'tum' } | { tip: 'son'; adet: number } | { tip: 'ilk'; adet: number } | { tip: 'yil'; yil: number }
+export type Ebeveyn = 'anne' | 'baba'
 export type KayitIstegi =
   | { tur: 'olcum'; olcumler: OlcumTuru[]; kapsam: Kapsam; tekDeger: boolean }
   | { tur: 'muayene'; kapsam: Kapsam }
+  /** NOTYA-KORPUS-KALAN-01 (Y-023): the mother's / father's height — a Hasta Bilgi Formu field, not a measurement of the patient. */
+  | { tur: 'ebeveyn-boy'; kimler: Ebeveyn[] }
 
 export interface KayitCevabi {
   /** Screen answer (markdown; tables are pipe tables). */
@@ -65,10 +68,35 @@ function kapsamBul(n: string): Exclude<Kapsam, { tip: 'tum' }> | null {
   return null
 }
 
+/** A table / series / every exam is asked for in so many words. */
+const TABLO_SOZU = /\b(tablo\w*|liste\w*|sirayla|sirasiyla|sira ile|tum\w*|butun|hepsi\w*|tek tek|zaman icinde|seyri\w*|gecmis\w*)\b/
+
+/**
+ * "Annesinin boyu kaç", "baba boyu", "anne ve babasının boyları" — whose height is asked. Before, the single-value
+ * matcher below saw only "boy … kaç" and answered with the CHILD's height ("son boy 110 cm").
+ */
+function ebeveynBoyuBul(n: string): Ebeveyn[] {
+  const k = n.split(' ')
+  const boy = k.findIndex((x) => /^boy(u|unu|un|lari|larini)?$/.test(x))
+  if (boy < 0) return []
+  // The parent is named right before the height: "annesinin boyu", "anne ve babasının boyları".
+  const once = k.slice(Math.max(0, boy - 3), boy)
+  const var_ = (re: RegExp) => once.some((x) => re.test(x))
+  // Genitive ("annesinin boyu") or the compound ("anne boyu"); "annesi boyunu sordu" has the mother as its subject.
+  return [
+    ...(var_(/^(anne|annesinin|annenin|annemin)$/) ? ['anne' as const] : []),
+    ...(var_(/^(baba|babasinin|babanin|babamin)$/) ? ['baba' as const] : []),
+  ]
+}
+
 /** Null = not a record request this module answers. */
 export function kayitIstegiBul(mesaj: string | null | undefined): KayitIstegi | null {
   const n = trAramaNormalize(mesaj).replace(/[?!.,;:'’]+/g, ' ').replace(/\s+/g, ' ').trim()
   if (!n) return null
+
+  // ── a parent's height: the form field, never the patient's own measurement ──
+  const kimler = ebeveynBoyuBul(n)
+  if (kimler.length) return { tur: 'ebeveyn-boy', kimler }
 
   // ── anthropometrics ──
   const hepsi = /\bantropometri\w*|\bbuyume olcum\w*|\bvucut olcum\w*/.test(n)
@@ -79,13 +107,20 @@ export function kayitIstegiBul(mesaj: string | null | undefined): KayitIstegi | 
     if (/\bbas cevre\w*/.test(n)) olcumler.push('basCevresi')
   }
   const genelOlcum = !olcumler.length && /\bolcum(ler)?(i|ini|leri|lerini)?\b/.test(n) && !/\b(ates|tansiyon|nabiz|spo2|saturasyon|seker|lab|tahlil)\w*/.test(n)
+  // NOTYA-KORPUS-KALAN-01 (Y-021): "Son ölçümleri neler?" asks for the LAST measurements — every vital of the last
+  // exam (ateş, tansiyon too). Since NOTYA-AYSE-GERI-05 any "ölçümleri" was taken here and answered with the
+  // kilo / boy / baş çevresi table of every exam. Without a table word it is the visit-measurement query's question.
+  if (genelOlcum && /\b(son|en son) olcum/.test(n) && !TABLO_SOZU.test(n)) return null
   if (genelOlcum) olcumler.push(...TUM_OLCUMLER)
   if (olcumler.length && !DEGERLENDIRME.test(n)) {
     const kapsam = kapsamBul(n)
     const liste = LISTE.test(n)
     // "Boyu kaç?", "baş çevresi ne?" — one value the quick card does not carry (it has the weight only).
     const tekDeger = !liste && !kapsam && !olcumler.includes('kilo') && /\b(kac|ne|nedir|kacti|neydi)\b/.test(n)
-    if (liste || kapsam || tekDeger) return { tur: 'olcum', olcumler, kapsam: kapsam ?? (tekDeger ? { tip: 'son', adet: 1 } : { tip: 'tum' }), tekDeger }
+    // NOTYA-KORPUS-KALAN-01 (T-042, T-044): the single value is the LATEST RECORDED one, whichever exam holds it. It
+    // used to be read from the last exam only: after an acute visit with a weight and nothing else, "boyu?" answered
+    // "kayıtlı boy ölçümü yok (son muayene)" for a chart with a height one exam earlier.
+    if (liste || kapsam || tekDeger) return { tur: 'olcum', olcumler, kapsam: kapsam ?? { tip: 'tum' }, tekDeger }
     return null
   }
 
@@ -288,6 +323,30 @@ export function muayeneCevabi(istek: Extract<KayitIstegi, { tur: 'muayene' }>, o
   return { ekran, konusma }
 }
 
+/* ───────────────────────────── a parent's height (Hasta Bilgi Formu) ───────────────────────────── */
+
+const EBEVEYN: Record<Ebeveyn, { olay: string; ad: string }> = { anne: { olay: 'anne-boy', ad: 'anne boyu' }, baba: { olay: 'baba-boy', ad: 'baba boyu' } }
+
+/**
+ * The value the form holds — the intake events of the chart index (lib/doktor/dosyaOlaylari.ts), the same
+ * doctor-scoped read every other form field of the record answers uses. No model, nothing derived (no target
+ * height). The sentence is said only when the doctor asks; a chart whose form has no such field says so.
+ */
+export function ebeveynBoyCevabi(istek: Extract<KayitIstegi, { tur: 'ebeveyn-boy' }>, olaylar: DosyaOlayi[], hastaAdi: string): KayitCevabi {
+  const ad = String(hastaAdi || '').trim() || 'Hasta'
+  const deger = (k: Ebeveyn) => olaylar.find((o) => o.kaynak === 'intake' && o.tur === EBEVEYN[k].olay && o.deger != null)?.deger ?? null
+  const var_ = istek.kimler.filter((k) => deger(k) != null), yok = istek.kimler.filter((k) => deger(k) == null)
+  const parcalar: string[] = []
+  if (var_.length) parcalar.push(`${ad} — ${birlestir(var_.map((k) => `${EBEVEYN[k].ad} ${sayi(deger(k)!)} cm`))} (Hasta Bilgi Formu).`)
+  if (yok.length) {
+    const eksik = `${buyukBas(birlestir(yok.map((k) => EBEVEYN[k].ad)))} Hasta Bilgi Formu’nda kayıtlı değil${var_.length ? '.' : ' Hocam.'}`
+    parcalar.push(var_.length ? eksik : `${ad} — ${eksik[0].toLocaleLowerCase('tr-TR')}${eksik.slice(1)}`)
+  }
+  const cumle = parcalar.join(' ')
+  return { ekran: cumle, konusma: cumle }
+}
+
 export function kayitCevabi(istek: KayitIstegi, olaylar: DosyaOlayi[], hastaAdi: string): KayitCevabi {
+  if (istek.tur === 'ebeveyn-boy') return ebeveynBoyCevabi(istek, olaylar, hastaAdi)
   return istek.tur === 'olcum' ? olcumCevabi(istek, olaylar, hastaAdi) : muayeneCevabi(istek, olaylar, hastaAdi)
 }

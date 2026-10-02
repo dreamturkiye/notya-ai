@@ -72,7 +72,7 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
-import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
+import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul, vizitSoylenisi } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
@@ -346,6 +346,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   }
   /** Intent of this turn as the deterministic paths decide it; the model path falls back to the intent words. */
   let turNiyeti: Niyet | null = null
+  /** NOTYA-DANIS-OLCUM-07: the exam this turn's measurement question named ("12 aylık muayenesinde"), for the follow-up. */
+  let turVizit: string | null = null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
   const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; kimlikSorusu?: string; bekleyen?: string[]; sesDevamKalan?: string; bekleyenKomut?: BekleyenKomut | null; alanlar?: AlanRef[] } = {}) => {
@@ -386,7 +388,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       soru: message,
       cevap: asistanSozu,
       niyet: turNiyeti ?? takip?.niyet ?? niyetBul(message) ?? (konusmaOnceki && takip ? konusmaOnceki.sonNiyet : "genel"),
-      varliklar: { ...(takip?.varliklar || {}), ...varliklariCikar(message, { tz: saatDilimi }) },
+      // `vizit` belongs to THIS turn only: a turn that named no exam clears it (baglamKur drops a null slot).
+      varliklar: { ...(takip?.varliklar || {}), ...varliklariCikar(message, { tz: saatDilimi }), vizit: turVizit },
       hasta: konusmaHastasi && konusmaHastasi.ad ? konusmaHastasi : konusmaHastasi ? { id: konusmaHastasi.id, ad: takip?.varliklar.hastaAd || konusmaOnceki?.sonVarliklar.hastaAd || "" } : null,
     })
     const yeniBaglam = {
@@ -639,6 +642,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // answered here — it goes to the evidence path below with that exam's measurement in the evidence.
     const olcumSorusuHam = komut || asiTabloIstegi || !hizliYol ? null : (vizitOlcumSorusuBul(hamMesaj) ?? vizitOlcumSorusuBul(mesajMetni))
     olcumDegerlendirmesi = Boolean(olcumSorusuHam && !olcumSorusuHam.kesin)
+    turVizit = vizitSoylenisi(olcumSorusuHam)
     // A named exam is more specific than the all-exams table; otherwise the table keeps its requests.
     const olcumSorusu = olcumSorusuHam?.kesin && (olcumSorusuHam.hedef.tip === "vizit" || !kayitIstegi) ? olcumSorusuHam : null
     if (cozum.tur === "tek" && !cozum.cevap && (asiTabloIstegi || kayitIstegi || olcumSorusu)) {
@@ -662,7 +666,7 @@ ${ilacBaglamMetni(drugs[0])}`
               kayitNiyeti = "buyume"
             } else if (kayitIstegi) {
               kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
-              kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
+              kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : kayitIstegi.tur === "ebeveyn-boy" ? "hasta-dosya" : "muayene"
             }
           }
         }
