@@ -25,7 +25,8 @@ export function meslektasSelamSatiri(opts: {
   if (asama !== 'meslektas' && asama !== 'ortak') return null
   if (opts.seans < 10) return null
   if (opts.kuralSayisi < 1) return null
-  const rutin = opts.rutinBaslangic ? `; sabahları genelde ${opts.rutinBaslangic} ile başlıyorsunuz` : ''
+  const sabahSaatiMi = (() => { const h = Number(String(opts.rutinBaslangic || '').slice(0, 2)); return Number.isFinite(h) && h >= 5 && h <= 12 })() // NOTYA-SELAM-01: a 01:00 start is a timezone or test-session artefact, never said
+  const rutin = opts.rutinBaslangic && sabahSaatiMi ? `; sabahları genelde ${opts.rutinBaslangic} ile başlıyorsunuz` : ''
   return `10. seansımız Hocam — artık notlarınızı ${opts.kuralSayisi} kuralınızla yazıyorum${rutin}.`
 }
 

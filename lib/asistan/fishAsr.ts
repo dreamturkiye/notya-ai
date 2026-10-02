@@ -5,7 +5,7 @@
 import { fishFetch } from '@/lib/asistan/fishBaglanti'
 import {
   FISH_ASR_DIL, FISH_ASR_MODEL, FISH_ASR_YENIDEN, FISH_ASR_ZAMAN_MS, FISH_KLIP_AZAMI_BAYT,
-  asrKlipDenetle, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi,
+  asrKlipDenetle, asrKlipNormallestir, fishAsrDilKoduUyumluMu, fishAsrDilUyumluMu, fishAsrDosyaAdi, fishAsrGovde, fishAsrMetni, fishAsrYenidenDenenirMi,
 } from '@/lib/asistan/fishSes'
 
 export type FishAsrDeneme = { durum: number | null; metin: string; hata: string | null; dil?: string | null }
@@ -54,9 +54,12 @@ export async function fishAsrBlob(anahtar: string, ses: Blob, gunluk = '[fish-st
   const t0 = Date.now()
   let deneme: FishAsrDeneme = { durum: null, metin: '', hata: 'baslamadi' }
   let tekrar = 0
+  // NOTYA-SES-ASR-KAZANC-01: a quiet clip is tried at a normal level first; the retry sends the other version.
+  const guclu = asrKlipNormallestir(bayt)
+  const sirasi = guclu.kazanc > 1.3 ? [guclu.bayt, bayt] : [bayt, guclu.bayt]
   for (let i = 0; i <= FISH_ASR_YENIDEN; i++) {
     tekrar = i
-    deneme = await fishAsrCagir(anahtar, bayt)
+    deneme = await fishAsrCagir(anahtar, sirasi[Math.min(i, sirasi.length - 1)])
     const dilOk = !deneme.hata && fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil)
     if (dilOk) break
     if (deneme.hata && !fishAsrYenidenDenenirMi(deneme.durum)) break
@@ -65,7 +68,7 @@ export async function fishAsrBlob(anahtar: string, ses: Blob, gunluk = '[fish-st
   const asr_dil_uyusmazligi = !deneme.hata && !(fishAsrDilUyumluMu(deneme.metin) && fishAsrDilKoduUyumluMu(deneme.dil))
   console.info(gunluk, {
     asr_latency_ms, klip_ms: klip.sureMs, bayt: klip.bayt, dil: FISH_ASR_DIL, dil_tespit: deneme.dil ?? null, model: FISH_ASR_MODEL,
-    durum: deneme.durum, tekrar, karakter: deneme.metin.length, hata: deneme.hata, asr_dil_uyusmazligi,
+    durum: deneme.durum, tekrar, kazanc: Number(guclu.kazanc.toFixed(2)), karakter: deneme.metin.length, hata: deneme.hata, asr_dil_uyusmazligi,
   })
   if (deneme.hata) return { tur: 'hata', asr_latency_ms }
   if (asr_dil_uyusmazligi) return { tur: 'atlandi', neden: 'dil', asr_latency_ms }

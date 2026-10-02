@@ -314,3 +314,43 @@ export function fishIstegi(metin: string): { model: string; govde: Record<string
     },
   }
 }
+
+/**
+ * NOTYA-SES-ASR-KAZANC-01 (Kaan, 2026-10-02): live, Fish Transcribe-1 answered quiet Turkish clips in Chinese, Arabic or
+ * Hindi even with the language pinned to tr, the clip was dropped as not Turkish and the doctor got silence. The retry sent
+ * the same bytes again. A quiet clip is the classic trigger: bring a low-peak PCM16 WAV up to a normal level before ASR
+ * (gain capped at 12x, clipping-safe). A clip that is loud enough, not a WAV, or silent is returned untouched (gain 1).
+ */
+export function asrKlipNormallestir(bayt: Uint8Array): { bayt: Uint8Array; kazanc: number } {
+  const n = bayt.byteLength
+  if (n < 48 || String.fromCharCode(bayt[0], bayt[1], bayt[2], bayt[3]) !== 'RIFF') return { bayt, kazanc: 1 }
+  const v = new DataView(bayt.buffer, bayt.byteOffset, bayt.byteLength)
+  let o = 12
+  let bit = 16
+  let veriBas = -1
+  let veriBoy = 0
+  while (o + 8 <= n) {
+    const id = String.fromCharCode(bayt[o], bayt[o + 1], bayt[o + 2], bayt[o + 3])
+    const boy = v.getUint32(o + 4, true)
+    if (id === 'fmt ' && o + 24 <= n) bit = v.getUint16(o + 22, true) || 16
+    else if (id === 'data') { veriBas = o + 8; veriBoy = Math.min(boy, n - veriBas); break }
+    o += 8 + boy + (boy % 2)
+  }
+  if (veriBas < 0 || bit !== 16 || veriBoy < 2) return { bayt, kazanc: 1 }
+  const sayi = Math.floor(veriBoy / 2)
+  let tepe = 0
+  for (let i = 0; i < sayi; i++) {
+    const x = Math.abs(v.getInt16(veriBas + i * 2, true))
+    if (x > tepe) tepe = x
+  }
+  const oran = tepe / 0x8000
+  if (oran < 0.003 || oran >= 0.5) return { bayt, kazanc: 1 }
+  const kazanc = Math.min(0.85 / oran, 12)
+  const cikis = new Uint8Array(bayt)
+  const w = new DataView(cikis.buffer, cikis.byteOffset, cikis.byteLength)
+  for (let i = 0; i < sayi; i++) {
+    const y = Math.round(v.getInt16(veriBas + i * 2, true) * kazanc)
+    w.setInt16(veriBas + i * 2, Math.max(-32768, Math.min(32767, y)), true)
+  }
+  return { bayt: cikis, kazanc }
+}

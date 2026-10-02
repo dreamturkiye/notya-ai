@@ -174,7 +174,8 @@ export function gunOzetiMetni(
     if (yakin && yogunGunler.includes(v.haftaGunu)) c.push(`${v.haftaGunu} — sizin yoğun gününüz, tempoyu ona göre tutarız.`)
     if (v.dunHasta > 0 && yakin) c.push(`Dün ${v.dunHasta} hasta baktık.`)
   } else if (faz === 'orta') {
-    c.push(`${selamla(v.saatTRT)} ${named}. Şu ana kadar ${v.bugunHasta} hasta${v.randevu.kalan ? `, kalan ${v.randevu.kalan} randevu` : ''}.`)
+    // NOTYA-SELAM-01 (Kaan, 2026-10-02): no zero-patient sentence; say what exists.
+    c.push(`${selamla(v.saatTRT)} ${named}.${v.bugunHasta > 0 ? ` Şu ana kadar ${v.bugunHasta} hasta${v.randevu.kalan ? `, kalan ${v.randevu.kalan} randevu` : ''}.` : (v.randevu.kalan ? ` Bugün ${v.randevu.kalan} randevunuz var.` : '')}`)
   } else {
     c.push(`${selamla(v.saatTRT)} ${named}.`)
     c.push(v.bugunHasta > 0 ? `Bugün ${v.bugunHasta} hasta baktık.` : 'Bugün seans olmadı.')
