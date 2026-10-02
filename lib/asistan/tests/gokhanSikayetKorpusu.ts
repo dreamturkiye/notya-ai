@@ -87,6 +87,8 @@ export interface KorpusGirdisi {
   beklenti: Beklenti | 'MANUAL'
   /** Voice-only overrides, merged over `beklenti` (e.g. identity values are shown, never spoken). */
   ses?: Beklenti
+  /** File-panel-only overrides, merged over `beklenti` (e.g. the panel's server check writes what chat leaves to the model). */
+  panel?: Beklenti
   /** The sentence is not a quote of the source but derived from its description; `not` says how. */
   turetilmis?: boolean
   /** Ledger id of a defect the ledger itself lists as OPEN: a FAIL here is known, not a new regression. */
@@ -346,7 +348,7 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
     { hasta: 'bebek', icerir: ['12 aylık', '9,8 kg'], icermez: ['mg/kg', '12,8', SAYIM_SABLONU], rotaDegil: ['arama', 'hizli-kart'], sunucuYazar: true },
     { acik: 'bebek', yuzeyler: UC, oturum: 'L-DANIS', not: 'Asked in Ayşe\'ye Danış; the answer was an estimate from an iron dose. The weight recorded at that visit must reach the doctor on every surface, whatever the model writes; never the latest weight.' }),
   g('L-DANIS-BOYU', 'takip', 'peki boyu?', L('NOTYA-DANIS-OLCUM-07'),
-    { icerir: ['\\b76 cm'], icermez: ['87,5'] }, { acik: 'bebek', yuzeyler: UC, oturum: 'L-DANIS', acikKusur: 'NOTYA-DANIS-OLCUM-07', not: 'A follow-up that does not repeat the visit: the height of the SAME (12-month) visit. OPEN in the ledger for the Danış panel.' }),
+    { icerir: ['\\b76 cm'], icermez: ['87,5'], sunucuYazar: true }, { acik: 'bebek', yuzeyler: UC, oturum: 'L-DANIS', not: 'A follow-up that does not repeat the visit: the height of the SAME (12-month) visit, written by the server on every surface (NOTYA-KORPUS-KALAN-01).' }),
   g('L-DANIS-15AY', 'olcum', '15 aylıkken kaç kiloydu', L('NOTYA-DANIS-OLCUM-03'),
     { hasta: 'bebek', icerir: ['15 aylık', '10,6 kg'], icermez: ['12,8', SAYIM_SABLONU], rotaDegil: ['arama', 'hizli-kart'], sunucuYazar: true },
     { acik: 'bebek', yuzeyler: UC, turetilmis: true, not: 'The row quotes the pattern "15 aylıkken". In the fixture that visit has its weight only in the note text — the third place the fix reads.' }),
@@ -411,7 +413,7 @@ const GUNLUK_GIRDILERI: KorpusGirdisi[] = [
   g('G-21', 'liste', 'aşı kaydı olan hastalarım kimler', [G(21), L('NOTYA-ARAMA-PENCERE-VARSAYILAN-01'), L('NOTYA-AYSE-GERI-01')], { rota: ['arama'], icerir: ['Emircan'], icermez: ['\\b0 hasta'] }, { not: 'Every vaccine row of the fixture is older than 90 days; GERI-01 says the implicit window is gone.' }),
   g('G-22', 'liste', 'ilaç kullanan hastam var mı', [G(22), L('NOTYA-ARAMA-PENCERE-VARSAYILAN-01')], { rota: ['arama'], icerir: ['Emircan|Nermin|Ayşe|Tarık'], icermez: ['\\b0 hasta'] }),
   g('G-23', 'liste', 'bu ay kayıt olan hastalarım', [G(23), L('NOTYA-ARAMA-KAYIT-PENCERE-01')], 'MANUAL', { acikKusur: 'NOTYA-ARAMA-KAYIT-PENCERE-01', not: 'OPEN in the ledger; the right answer depends on the day of the month the run is made.' }),
-  g('G-24', 'liste', 'doğum tarihi kayıtlı olmayan hastam var mı', [G(24), L('NOTYA-ARAMA-DOGUM-NEGASYON-01')], { rota: ['arama'], icerir: ['Olcay'], icermez: ['Emircan', 'Tarık', 'Nermin'] }, { acikKusur: 'NOTYA-ARAMA-DOGUM-NEGASYON-01' }),
+  g('G-24', 'liste', 'doğum tarihi kayıtlı olmayan hastam var mı', [G(24), L('NOTYA-ARAMA-DOGUM-NEGASYON-01')], { rota: ['arama'], icerir: ['Olcay'], icermez: ['Emircan', 'Tarık', 'Nermin'] }),
   g('G-25', 'lab', 'Emircan\'ın hemoglobin değeri kaçtı', G(25), { hasta: 'bebek', icerir: ['11[.,]9|on bir virgül dokuz'], icermez: [SAYIM_SABLONU] }, { oturum: 'G-LAB' }),
   g('G-26', 'lab', 'ferritin sonucu ne', G(26), { hasta: 'bebek', icerir: ['\\b24\\b|yirmi dört'] }, { oturum: 'G-LAB' }),
   g('G-27', 'lab', 'WBC kaç', G(27), { hasta: 'bebek', icerir: ['9[.,]1|dokuz virgül bir'] }, { oturum: 'G-LAB' }),
@@ -691,7 +693,8 @@ const i = (no: number, soz: string, icerir: string[], icermez: string[] = []) =>
 const ILK10_GIRDILERI: KorpusGirdisi[] = [
   i(1, 'Bu hastayı bana kısaca özetler misin?', ['Emircan', 'otit|kulak', '[Dd]emir|anemi']),
   i(2, 'Son muayeneden bu yana neler değişmiş?', ['otit|kulak']),
-  i(3, 'Büyümesi nasıl gidiyor?', ['12[.,]8|12[.,]6', '87[.,]5']),
+  // The file panel's server check writes the latest recorded values whatever the model writes (NOTYA-KORPUS-KALAN-01).
+  { ...i(3, 'Büyümesi nasıl gidiyor?', ['12[.,]8|12[.,]6', '87[.,]5']), panel: { sunucuYazar: true } },
   i(4, 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', ['Hepatit A'], ['Hepatit A 2\\. doz[^.\\n]*uyguland']),
   i(5, 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?', ['Hb|[Hh]emoglobin|[Ff]erritin|CRP']),
   i(6, 'Şu anda kullandığı ilaçlar neler ve dozları nedir?', ['D vitamini', 'Ferro Sanol|[Dd]emir']),
@@ -816,7 +819,7 @@ export function korpusDenetle(girdiler: KorpusGirdisi[]): string[] {
     if (g.turetilmis && !g.not) sorun.push(`${g.id}: türetilmiş cümle açıklama (not) ister`)
     if (g.beklenti !== 'MANUAL') {
       const okunus = [g.beklenti.okunus, g.ses?.okunus].flatMap((x) => [...(x?.icerir || []), ...(x?.icermez || [])])
-      for (const re of [...(g.beklenti.icerir || []), ...(g.beklenti.icermez || []), ...(g.ses?.icerir || []), ...(g.ses?.icermez || []), ...okunus]) {
+      for (const re of [...(g.beklenti.icerir || []), ...(g.beklenti.icermez || []), ...(g.ses?.icerir || []), ...(g.ses?.icermez || []), ...(g.panel?.icerir || []), ...(g.panel?.icermez || []), ...okunus]) {
         try { new RegExp(re.replace(/\{[A-Z0-9_]+\}/g, 'x'), 'iu') } catch { sorun.push(`${g.id}: bozuk desen ${re}`) }
       }
       if (!Object.keys(g.beklenti).length) sorun.push(`${g.id}: boş beklenti (MANUAL yazın)`)
@@ -943,6 +946,7 @@ const kisalt = (s: string, n = 60) => (s.length > n ? `${s.slice(0, n)}…` : s)
 /** The effective expectation of an entry on a surface: voice overrides merged over the base. */
 export function yuzeyBeklentisi(g: KorpusGirdisi, yuzey: Yuzey): Beklenti | 'MANUAL' {
   if (g.beklenti === 'MANUAL') return 'MANUAL'
+  if (yuzey === 'panel' && g.panel) return { ...g.beklenti, ...g.panel }
   return yuzey === 'ses' && g.ses ? { ...g.beklenti, ...g.ses } : g.beklenti
 }
 

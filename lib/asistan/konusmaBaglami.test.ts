@@ -107,6 +107,23 @@ describe('NOTYA-KONUSMA-BAGLAMI-01 — chart follow-ups', () => {
     assert.equal(t3?.soru, "Umutcan Türkoğlu'nun bir önceki hemogram sonucu ne?")
     assert.ok(t3?.miras.includes('tahlil'))
   })
+  it('NOTYA-DANIS-OLCUM-07 (L-DANIS-BOYU): a measurement follow-up asks about the exam the previous turn named', () => {
+    const k0 = b('buyume', 'bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu', 'Umutcan Türkoğlu — 12 aylık muayene (15.05.2025): kilo 9,8 kg.', { vizit: '12 aylık muayenesinde' }, U)
+    const t1 = takipCoz('peki boyu?', k0, sec)
+    assert.equal(t1?.soru, "Umutcan Türkoğlu'nun 12 aylık muayenesinde boyu kaçtı?")
+    assert.ok(t1?.miras.includes('vizit'))
+    assert.equal(takipCoz('baş çevresi?', k0, sec)?.soru, "Umutcan Türkoğlu'nun 12 aylık muayenesinde baş çevresi kaçtı?")
+    assert.equal(takipCoz('peki ateşi?', k0, sec)?.soru, "Umutcan Türkoğlu'nun 12 aylık muayenesinde ateşi kaçtı?")
+    // The previous turn named no exam (T-042, T-044): the latest recorded value is asked, as before.
+    const k1 = b('buyume', 'Umutcan Türkoğlu kaç kilo?', 'Umutcan Türkoğlu — dosyada son ölçüm: Kilo: 12,8 kg.', {}, U)
+    assert.equal(takipCoz('boyu?', k1, sec)?.soru, "Umutcan Türkoğlu'nun boyu kaç?")
+    assert.equal(takipCoz('baş çevresi?', k1, sec)?.soru, "Umutcan Türkoğlu'nun baş çevresi kaç?")
+  })
+  it('NOTYA-KORPUS-KALAN-01 (Y-023): "annesinin boyu kaç" keeps the parent — never rewritten into the patient\'s own height', () => {
+    const k0 = b('muayene', 'hastamızın ateşi kaçtı son muayenede', 'Ayşe Yeşil — son muayene (24.09.2026): ateş 38,9 °C.', { vizit: 'son muayenesinde' }, A)
+    assert.equal(takipCoz('bu hastanın annesinin boyu kaç', k0, sec)?.soru, "Ayşe Yeşil'in annesinin boyu kaç?")
+    assert.equal(takipCoz('peki babasının boyu?', k0, sec)?.soru, "Ayşe Yeşil'in babasının boyu?")
+  })
   it('reçete: "dozu?" → "kaç gün?" and a named drug', () => {
     const r0 = b('recete', "Ayşe Yeşil'in reçetesi?", 'Ayşe Yeşil — dosyada son reçete: Klacid süspansiyon, Calpol şurup', {}, A)
     assert.equal(takipCoz('dozu?', r0, sec)?.soru, "Ayşe Yeşil'in reçetesindeki ilaçların dozları neler?")
@@ -263,6 +280,25 @@ describe('NOTYA-KONUSMA-BAGLAMI-06 — ASR-corrupted calendar follow-ups (Kaan l
     assert.equal(asrOnar('Peki yanım var mı?', false).mesaj, 'Peki yanım var mı?')
     assert.equal(asrOnar('yarın randevo var mı', false).mesaj, 'yarın randevu var mı')
     assert.deepEqual(asrOnar('Peki yarın?', true).onarilan, [])
+  })
+  it('NOTYA-KORPUS-KALAN-01 (Y-080, T-025): a patient name is never repaired into a date word', () => {
+    const adlar = new Set(['tarik', 'ozdemir'])
+    // "tarik" is two edits from "yarin": with the doctor's patient names known, the word is left alone.
+    assert.equal(duzenlemeMesafesi('tarik', 'yarin'), 2)
+    assert.deepEqual(asrOnar('peki Tarık Özdemir randevusu ne zaman?', true, adlar), { mesaj: 'peki Tarık Özdemir randevusu ne zaman?', onarilan: [] })
+    assert.deepEqual(asrOnar('Tarıkın randevusu ne zaman', true, adlar).onarilan, [])
+    // A case ending after an apostrophe marks a name even when the lookup knows nothing.
+    assert.deepEqual(asrOnar("Yasin'in randevusu ne zaman?", true).onarilan, [])
+    assert.deepEqual(asrOnar("Tarık'ın randevusu ne zaman?", true).onarilan, [])
+    // The repair itself is untouched: a mis-heard date next to a name is still repaired.
+    assert.equal(asrOnar('Peki yanım var mı?', true, adlar).mesaj, 'Peki yarin var mı?')
+    assert.equal(asrOnar('Tarık yanım geliyor mu', true, adlar).mesaj, 'Tarık yarin geliyor mu')
+  })
+  it('NOTYA-KORPUS-KALAN-01: after a calendar turn a question that names a patient is not rewritten into a calendar question', () => {
+    const adlar = new Set(['tarik', 'ozdemir'])
+    assert.equal(takipCoz('peki Tarık Özdemir randevusu ne zaman?', T, { ...sec, adParcalari: adlar }), null)
+    assert.equal(takipCoz("Tarık Özdemir'in randevusu ne zaman?", T, { ...sec, adParcalari: adlar }), null)
+    assert.equal(takipCoz("Tarık Özdemir'in randevusu ne zaman?", T, sec), null, 'the apostrophe alone is enough')
   })
   it('"Peki yanım var mı?" after "Bugün … randevumuz var mı?" → tomorrow', () => {
     const r = takvimSoru('Peki yanım var mı?')

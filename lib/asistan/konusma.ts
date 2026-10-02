@@ -265,7 +265,22 @@ export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sos
  * sentence cap. Lists are still summarised ("N madde") because a list is not speech; prose is read in full.
  */
 const OKU_ISTEGI = /(?:bana\s+(?:anlat|oku|söyle)|anlat(?:ır|sana)?\s*mısın|anlat\s*bakalım|devam(?:ını|ı)?\s*(?:anlat|oku|söyle)|sesli\s*(?:anlat|oku|söyle)|oku(?:r|sana)?\s*mısın|ekrandakini\s*(?:anlat|oku)|sen\s+bana\s+anlat|tamamını\s*(?:anlat|oku)|hepsini\s*(?:anlat|oku)|(?:^|\s)oku(?:sana)?\s*[.!?]?\s*$)/iu
+/**
+ * NOTYA-KORPUS-KALAN-01 (G-28, Y-063): "MCV ve MCHC değerlerini oku", "Son SOAP notunu oku" name WHAT is to be read —
+ * a thing of the chart, in the accusative. That is a question about the chart, not "read me what is on screen": the
+ * read-aloud route used to take every sentence ending in "oku" and re-read Ayşe's PREVIOUS answer. The words that
+ * point at the screen answer itself ("devamını", "hepsini", "bunu" …) are the only objects this request may carry.
+ */
+const EKRAN_NESNESI = new Set(['devamini', 'devami', 'hepsini', 'tamamini', 'tumunu', 'ekrandakini', 'cevabini', 'cevabi', 'yanitini', 'yaniti', 'kalanini', 'gerisini', 'bunu', 'sunu', 'onu', 'bunlari', 'sunlari', 'onlari', 'yazilani', 'yazani', 'metni', 'listeyi', 'tabloyu', 'yaziyi'])
+const BELIRTME_EKI = /(?:s?[iu]n[iu]|l[ae]r[iu]n[iu]|l[ae]r[iu]|y[iu])$/
+function okunacakNesneVar(mesaj: string): boolean {
+  const duz = mesaj.toLocaleLowerCase('tr-TR').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u')
+  // "MCV'yi oku", "Hb’yi oku": a case ending after an apostrophe marks the object too.
+  if (/[a-z0-9]['’](?:n?[iu]n[iu]|y?[iu])(?![a-z])/.test(duz)) return true
+  return duz.split(/[^a-z0-9]+/).some((k) => k.length >= 5 && !EKRAN_NESNESI.has(k) && BELIRTME_EKI.test(k))
+}
+
 export function okumaIstegiMi(mesaj: string): boolean {
   const m = String(mesaj || '').trim()
-  return m.length <= 160 && OKU_ISTEGI.test(m)
+  return m.length <= 160 && OKU_ISTEGI.test(m) && !okunacakNesneVar(m)
 }

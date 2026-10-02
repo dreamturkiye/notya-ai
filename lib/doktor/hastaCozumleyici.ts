@@ -51,6 +51,8 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
       .map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`)
       .join('. ')
     const bas = (cozum.sayiMetin || `${cozum.adaylar.length} hasta`).replace(/\.$/, '')
+    // One row is an answer, not a choice ("… hastam var mı" with a single match).
+    if (cozum.adaylar.length === 1) return `${bas}: ${liste}.`
     return `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`
   }
   if (cozum.tur === 'yok' && cozum.cokAday) return `Bu adla eşleşen ${cozum.cokAday} hasta var Hocam; soyadını da söyler misiniz?`
@@ -126,6 +128,27 @@ export function hastaOlarakAnilanPersonaAdlari(duzMesaj: string): Set<string> {
     if (ekli.test(m) || hastaDiye.test(m)) bulunan.add(ad)
   }
   return bulunan
+}
+/**
+ * NOTYA-KORPUS-KALAN-01 (L-ODAK-HITAP-1): the doctor ADDRESSED the assistant ("Ayşe, aşı karnesini gösterir misin?")
+ * and the model, writing its tool call, turned the address into a patient ("Ayşe'nin aşı karnesi", hasta_adi "Ayşe").
+ * The resolver trusts a case ending and a bare `hasta_adi`, so the chart of the patient called Ayşe answered — the
+ * live wrong-chart incident of NOTYA-HASTA-ODAK-01, through the tool. What the doctor said decides, not what the
+ * model wrote: when the persona's name is in the doctor's sentence ONLY as an address, it is taken out of the
+ * model's text before any patient is resolved. Deterministic; a sentence in which the doctor does name that patient
+ * ("Ayşe'nin aşıları", "Ayşe Bozkurt", "Ayşe için") is left alone.
+ */
+export function hitabiAracSozundenAyikla(aracSozu: string, doktorSozu: string | null | undefined, hitapAdi: string | null | undefined): string {
+  const ad = duzle(String(hitapAdi || ''))
+  const doktorDuz = duzle(String(doktorSozu || ''))
+  if (!ad || !doktorDuz.split(' ').includes(ad)) return aracSozu
+  // What is left of the doctor's sentence once the address is stripped: any trace of the name there is a patient.
+  const kalan = duzle(hitapsiz(String(doktorSozu)))
+  if (kalan.split(' ').some((t) => t.startsWith(ad))) return aracSozu
+  // The name alone ("Ayşe." as the answer to "Hangi hasta için Hocam?") addresses nobody: it is the patient's name.
+  if (!kalan) return aracSozu
+  const adli = new RegExp(`^${ad}(?: ?(?:n?[iu]n|[ny]?[iuae]|[dt][ae]n?|y?l[ae]))?$`)
+  return String(aracSozu || '').split(/\s+/).filter((w) => !adli.test(duzle(w))).join(' ').trim()
 }
 export function sesliSozTokenlari(duzMesaj: string): Set<string> {
   const t = duzMesaj.split(' ').filter((x) => x.length >= 2 && !DOLGU.has(x))
@@ -216,6 +239,14 @@ export function hastaTarifiMi(mesaj: string): boolean {
   const n = ' ' + duzle(mesaj) + ' '
   return / (olan|olmayan|gelen|gelmeyen|kullanan|alan|goren|geciken|gordugum|baktigim|muayene ettigim) /.test(n)
     && / (hasta|hastam|hastamiz|hastayi|hastami|cocuk|cocugu|bebek|bebegi|vaka|vakasi|kiz|oglan|erkek|kadin|bey|hanim) /.test(n)
+}
+/**
+ * NOTYA-KORPUS-KALAN-01 (G-24): "… hastam var mı" asks WHETHER such patients exist. The answer is the count with the
+ * names — also when exactly one chart matches. Before, a single match was returned as THE patient and its chart
+ * answered the turn (the identity card of the only chart without a birth date instead of "1 hasta: …").
+ */
+export function varMiSorusuMu(mesaj: string): boolean {
+  return / (hasta|hastam|hastamiz|hastalarim|hastalarimiz|hastalar) (var|yok) (mi|mu) /.test(' ' + duzle(mesaj) + ' ')
 }
 export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
@@ -341,6 +372,25 @@ export async function mesajdakiHastaAdi(supabase: SupabaseClient, doctorId: stri
     tek = parcalar.some((p) => new RegExp(' ' + p + AD_HAL_EKI + ' ').test(metin))
   }
   return tek ? 'tek' : null
+}
+
+/**
+ * NOTYA-KORPUS-KALAN-01 (Y-080, T-025): which words of the message are name parts of THIS doctor's patients? Name-only
+ * and doctor-scoped like mesajdakiHastaAdi; returns the normalized parts ("tarik", "ozdemir"), never an id or a chart.
+ * The caller uses it so that a patient's name is not "repaired" into a date word after a calendar turn.
+ */
+export async function mesajdakiAdParcalari(supabase: SupabaseClient, doctorId: string, mesaj: string): Promise<Set<string>> {
+  const bulunan = new Set<string>()
+  const sozcukler = duzle(mesaj).split(' ').filter((x) => x && !DOLGU.has(x))
+  if (sozcukler.length === 0) return bulunan
+  const hastalar = await adAdaylariniYukle(supabase, doctorId, sesliSozTokenlari(sozcukler.join(' ')))
+  for (const h of hastalar) {
+    for (const p of duzle(hastaAdiCoz(h.name_encrypted)).split(' ').filter((x) => x.length >= 3)) {
+      const re = new RegExp('^' + p + AD_HAL_EKI + '$')
+      if (sozcukler.some((s) => re.test(s))) bulunan.add(p)
+    }
+  }
+  return bulunan
 }
 
 export async function hastaninSozunuCoz(
@@ -526,7 +576,7 @@ async function dosyaIleDaralt(
     return { tur: 'yok', sayiMetin: istatistik.cumle }
   }
 
-  const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
+  const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle) || varMiSorusuMu(mesaj)
   if (ad.tur === 'coklu') {
     const idler = new Set(ad.adaylar.map((a) => a.id))
     const kesi = ara.filter((x) => idler.has(x.id))
