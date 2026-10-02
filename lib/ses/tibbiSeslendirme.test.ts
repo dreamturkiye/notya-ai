@@ -4,6 +4,9 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
+import { bilinmeyenKisaltmalar } from './gelistirme/bilinmeyenKisaltma'
 import { detayIstegiMi, ekUyarla, sayiMetniOku, sayiOku, seslendirilmemisler, siraOku, sozlukteVarMi, tarihOku, tibbiSeslendir } from './tibbiSeslendirme'
 import { BIRIM_SOZLUGU, KISALTMA_SOZLUGU, PAYDA_SOZLUGU } from './tibbiSeslendirmeSozluk'
 
@@ -325,6 +328,35 @@ test('seslendirilmemişler — katmanın çıktısında kısaltma ya da birim ka
   assert.deepEqual(seslendirilmemisler('doz mg olarak'), ['mg'])
   assert.deepEqual(seslendirilmemisler('yüzde elli, BCG aşısı, Hib aşısı, influenza'), [])
   assert.deepEqual(seslendirilmemisler('5 g'), ['5 g'])
+})
+
+test('geliştirme aracı — seslendirme metninde kalan bilinmeyen büyük harfli belirteçler', () => {
+  const kalan = bilinmeyenKisaltmalar([
+    s('PDA kapalı, KPA yapıldı. PDA izlemde.'),
+    s('BCG ve Hib tamam; TdaP planlı, VSD yok.'),
+    s('Emircan Karaoğlu 12,8 kg [break] HIB'),
+  ])
+  assert.deepEqual(kalan.map((k) => [k.yazi, k.tur, k.adet]), [['PDA', 'buyuk', 2], ['VSD', 'buyuk', 1]])
+  assert.match(kalan[0].ornek, /PDA kapalı/)
+  // katman çalışmamış metinde sözlükteki kısaltma bilinmeyen sayılmaz: o, "seslendirilmemişler"in işidir
+  assert.deepEqual(bilinmeyenKisaltmalar(['KPA yapıldı']), [])
+  assert.deepEqual(bilinmeyenKisaltmalar(['McDonald ve HbF']).map((k) => [k.yazi, k.tur]), [['HbF', 'karma'], ['McDonald', 'karma']])
+})
+
+test('geliştirme aracı üretim yolunda değil: uygulama kodu onu içe aktarmaz', () => {
+  const kok = process.cwd()
+  const ihlal: string[] = []
+  const gez = (dizin: string) => {
+    for (const d of fs.readdirSync(dizin, { withFileTypes: true })) {
+      if (d.name === 'node_modules' || d.name.startsWith('.')) continue
+      const yol = path.join(dizin, d.name)
+      if (d.isDirectory()) { gez(yol); continue }
+      if (!/\.(?:ts|tsx|mts|mjs)$/.test(d.name) || /\.test\.ts$/.test(d.name)) continue
+      if (fs.readFileSync(yol, 'utf8').includes('gelistirme/bilinmeyenKisaltma')) ihlal.push(path.relative(kok, yol))
+    }
+  }
+  for (const d of ['app', 'components', 'lib', 'core', 'specialties']) if (fs.existsSync(path.join(kok, d))) gez(path.join(kok, d))
+  assert.deepEqual(ihlal, [])
 })
 
 test('gerçekçi cümle — hekim hekime konuşur gibi', () => {
