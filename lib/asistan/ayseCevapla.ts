@@ -53,7 +53,7 @@ import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi, kohortSorusuMu } from "@/lib/asistan/aktifHasta"
 import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
-import { asistanModelYonlendir, gecmisiKirp, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
+import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
 import { bekleyenKomutOku, komutCevabiMi, komutNiyetiBul, randevuTamMi, type BekleyenKomut, type KomutNiyeti } from "@/lib/asistan/komutNiyeti"
@@ -99,6 +99,18 @@ export type AyseRota = "kapsam" | "takvim" | "gurultu" | "kimlik" | "oku" | "ara
  */
 export function aracZorlamaKapali(): boolean {
   return process.env.NOTYA_ARAC_ZORLAMA_KAPALI === "1"
+}
+
+/**
+ * NOTYA-AYSE-ARAC-PARITE (2026-10-02): audit switch, like the two above. With NOTYA_HIZLI_YOL_KAPALI=1 the model-free
+ * READ routers (calendar, identity, record tables, practice search sentence, quick card, evidence matcher) step
+ * aside, exactly as if the doctor's phrasing had matched none of them. The turn then depends on the model and its
+ * read tools alone — the way to prove a router gap is no longer a dead end, and to measure the round trip
+ * (lib/asistan/aracPariteKabul.test.ts). Name resolution, the scope gate and commands are untouched. Never set in
+ * production.
+ */
+export function hizliYolKapali(): boolean {
+  return process.env.NOTYA_HIZLI_YOL_KAPALI === "1"
 }
 
 export interface AyseGirdisi {
@@ -417,8 +429,11 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   // NOTYA-SES-TAKVIM-01: clinic day/slot is a doctor-scoped lookup — no dossier, no model.
   // Voice was waiting on the open patient's full file, then the socket dropped before TTS.
   const sonTakvimAsistan = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
+  // NOTYA-AYSE-ARAC-PARITE: the read routers below are a FAST PATH, not gatekeepers — what they do not answer goes to
+  // the model with its read tools. `hizliYol` is false only under the audit switch.
+  const hizliYol = !hizliYolKapali()
   // A command is never a calendar READ: "yarın 14:00 için kontrol randevusu oluştur" used to get that day's schedule.
-  const takvim = komut
+  const takvim = komut || !hizliYol
     ? null
     : (takvimSorusuCoz(message, { saatDilimi }) || takvimTakipCoz(message, sonTakvimAsistan?.content, { saatDilimi }))
   if (!takvim && sesGurultusuMu(message)) {
@@ -530,7 +545,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // sunucuda, modelsiz cevaplanır. Değerler yalnız bu yanıtın ekran metnindedir; saklanan geçmişe (sonraki
   // turlarda modele giden) değersiz metin yazılır — VELI-YASAL-ONAM kuralı korunur.
   let kimlikCevabi: KimlikCevabi | null = null
-  if (!komut) {
+  if (!komut && hizliYol) {
     try {
       kimlikCevabi = await kimlikSorusunuCevapla(supabase, doktorId, String(message || ""), contextPatientId ? String(contextPatientId) : null)
     } catch (e) { console.error("[asistan/chat] kimlik cevabı", e instanceof Error ? e.message : String(e)) }
@@ -565,7 +580,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // NOTYA-AYSE-GERI-01: with a chart open, a question that is not an explicit many-patient or calendar question is
     // about that chart — the all-patients search is not even run for it (a name in the message still wins).
     const acikDosyaSorusu = Boolean(aktifOnceden) && !takvimSorusuCoz(mesajMetni, { saatDilimi }) && !kohortSorusuMu(mesajMetni)
-    cozum = await hastaninSozunuCoz(supabase, doktorId, message, { tz: saatDilimi, kohortsuz: acikDosyaSorusu, hitapAdi: personaIlkAdi(persona.name) })
+    cozum = await hastaninSozunuCoz(supabase, doktorId, message, { tz: saatDilimi, kohortsuz: acikDosyaSorusu || !hizliYol, hitapAdi: personaIlkAdi(persona.name) })
     adlaCozuldu = cozum.tur === "tek"
     // NOTYA-AKTIF-HASTA-01 (Kaan kararı 2026-09-29, 09-25 kuralı geri geldi): açık hasta — bu oturumda adla açılan
     // (odakKaynak 'soz') YA DA doktorun açık sayfası (NOTYA-SAYFA-HASTA-01, 'sayfa') — adsız soruyu cevaplar; arama
@@ -596,15 +611,15 @@ ${ilacBaglamMetni(drugs[0])}`
     // table (one exam, a series, all exams), exam summaries for several or all exams. Built from stored values
     // only, no model; a table on screen and a short spoken line. The doctor's own words count as well as the
     // follow-up rewrite (which turns a bare "aşıları?" into the evaluation question "… aşıları tam mı?").
-    const asiTabloIstegi = !komut && (asiKaydiSorusuMu(hamMesaj) || asiKaydiSorusuMu(mesajMetni))
-    const kayitIstegi = komut || asiTabloIstegi ? null : (kayitIstegiBul(hamMesaj) ?? kayitIstegiBul(mesajMetni))
+    const asiTabloIstegi = !komut && hizliYol && (asiKaydiSorusuMu(hamMesaj) || asiKaydiSorusuMu(mesajMetni))
+    const kayitIstegi = komut || asiTabloIstegi || !hizliYol ? null : (kayitIstegiBul(hamMesaj) ?? kayitIstegiBul(mesajMetni))
     // NOTYA-DANIS-OLCUM (Dr. Gökhan, 2026-10-02): the measurement of ONE named exam ("12 aylık muayenesine geldiğinde kaç
     // kiloydu", "son kontrolde tansiyonu") or a series the table above does not cover ("kilo gelişimi", "tansiyon
     // seyri"). Before, the quick card answered these with the LATEST measurement. Same query as the Danış panel
     // (dosyaSorgu/vizitOlcum): stored values only, with unit, date and source; no model. An evaluation ("… normal
     // miydi") or another question that leans on the measurement ("… kilosuna göre hangi mama önerilmişti") is not
     // answered here — it goes to the evidence path below with that exam's measurement in the evidence.
-    const olcumSorusuHam = komut || asiTabloIstegi ? null : (vizitOlcumSorusuBul(hamMesaj) ?? vizitOlcumSorusuBul(mesajMetni))
+    const olcumSorusuHam = komut || asiTabloIstegi || !hizliYol ? null : (vizitOlcumSorusuBul(hamMesaj) ?? vizitOlcumSorusuBul(mesajMetni))
     olcumDegerlendirmesi = Boolean(olcumSorusuHam && !olcumSorusuHam.kesin)
     // A named exam is more specific than the all-exams table; otherwise the table keeps its requests.
     const olcumSorusu = olcumSorusuHam?.kesin && (olcumSorusuHam.hedef.tip === "vizit" || !kayitIstegi) ? olcumSorusuHam : null
@@ -639,7 +654,9 @@ ${ilacBaglamMetni(drugs[0])}`
     }
     // A command is never the deterministic "X dosyası açık" answer: "… dosyasına fıstık alerjisi ekle" needs the chart AND the tool.
     const dosyaIstegi = !komut && !kayitCevap && dosyaAcmaIstegiMi(mesajMetni)
-    const konus = aktifeDon ? null : cozumKonus(cozum)
+    // "Which of these patients?" is name resolution and always asked; the search / who-answer sentence is a read router.
+    const hangiHastaSorusu = cozum.tur === "coklu" || (cozum.tur === "yok" && Boolean(cozum.cokAday))
+    const konus = aktifeDon || (!hizliYol && !hangiHastaSorusu) ? null : cozumKonus(cozum)
     if (kayitCevap) {
       // answered below, before any model call
     } else if (konus) {
@@ -658,7 +675,7 @@ ${ilacBaglamMetni(drugs[0])}`
         // NOTYA-DANIS-OLCUM: an evaluation of one exam's measurement ("12 aylık muayenesinde kilosu normal miydi") is a
         // growth-evidence question even when no canonical sentence matches — otherwise the quick card answered it
         // with the latest measurement.
-        const soruTuru: SoruTuru | null = soruTuruBul(String(message || "")) ?? (olcumDegerlendirmesi ? "buyume" : null)
+        const soruTuru: SoruTuru | null = !hizliYol ? null : soruTuruBul(String(message || "")) ?? (olcumDegerlendirmesi ? "buyume" : null)
         const paket = cozum.patientId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
         const sorgu = paket && soruTuru && paket.sorguHasta
           ? { olaylar: paket.olaylar as DosyaOlayi[], hasta: paket.sorguHasta as DosyaHastasi }
@@ -673,7 +690,7 @@ ${ilacBaglamMetni(drugs[0])}`
           // NOTYA-AYSE-GERI-03: the quick card answers single-fact QUESTIONS. "Penisilin alerjisini ekle" is a command —
           // it used to be answered "Dosyada alerji: kayıt yok." and the tool was never offered.
           const kesinHam = sorgu || komut ? null : dosyaSoruCevap(String(message || ""), paket.kart as HastaDosyaKart)
-          kesinDosyaCevap = kesinHam ? adliDosyaCevabi(aktifAd, kesinHam) : null
+          kesinDosyaCevap = kesinHam && hizliYol ? adliDosyaCevabi(aktifAd, kesinHam) : null
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
@@ -796,9 +813,10 @@ ${ilacBaglamMetni(drugs[0])}`
     : hastasizArac ? aracTanimlari({ brans: eylemBransi, hasta: null, hastasiz: true }) : []
   // NOTYA-AYSE-ARAC-PARITE (2026-10-02): the READ tools the voice model had until 2026-09-25 (hasta_bul,
   // randevu_takvim — lib/asistan/okumaAraclari.ts). The routers above are the fast path; when they did not answer,
-  // the model can look the answer up itself instead of saying "bilemedim". A command turn keeps its write tools
-  // exactly as they were (list, forcing, card path) and is not offered the read tools.
-  const okumaSunulur = !komut && !okumaAraciKapali() && Boolean(eylemHastasi)
+  // the model can look the answer up itself instead of saying "bilemedim" — with a chart open or not. A command turn
+  // keeps its write tools exactly as they were (list, forcing, card path) and is not offered the read tools; a turn
+  // that is only a greeting or thanks has nothing to look up.
+  const okumaSunulur = !komut && !okumaAraciKapali() && !netSosyalMi(String(message || ""))
   const araclar = okumaSunulur ? [...yazmaAraclari, ...OKUMA_ARACLARI] : yazmaAraclari
   const toolChoice = !araclar.length || !eylemHastasi || !komutZorla
     ? undefined

@@ -6,7 +6,7 @@
  * A green test therefore means the tool was offered, executed for the authenticated doctor by the existing
  * functions, and its result reached the model — and that the write tools behave exactly as before.
  */
-import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, yazi, fishTur, sonRota, sonModelIstegi, sunulanAraclar, zorlananArac, aracSonuclari, aracCagiranModel, sonAsistanMesaji, encrypt, type Sahne } from './tests/ayseSahne'
+import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, yazi, fishTur, sonRota, sonModelIstegi, sunulanAraclar, zorlananArac, aracSonuclari, aracCagiranModel, sonAsistanMesaji, sistemde, encrypt, type Sahne } from './tests/ayseSahne'
 import { describe, it, before, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -136,6 +136,50 @@ describe('sunucu tarafı araç turu — yazı ve ses, dosya açık', () => {
     }
     const y = await yazi(s, ROUTERSIZ, { oturum })
     assert.match(y.speech, /Dosyada alerji: .*Penisilin/)
+  })
+})
+
+describe('yönlendiriciler hızlı yol, kapı bekçisi değil — dosya açık değilken de okuma araçları sunulur', () => {
+  /** No router lists this phrasing (routing table: "[yok] Geçen ay en yoğun günüm hangisiydi?" → model). */
+  const SORU = 'Geçen ay en yoğun günüm hangisiydi?'
+
+  it('hastasız, komut olmayan tur: yalnız okuma araçları; istem araçları adıyla söyler', async () => {
+    const s = sahneKur()
+    hastaEkle(s.doktor.id, 'Umutcan Türkoğlu', { dogum: '2019-04-10' })
+    await yazi(s, SORU)
+    const istek = sonModelIstegi()
+    assert.deepEqual(sunulanAraclar(istek), ['hasta_bul', 'randevu_takvim'])
+    assert.equal(zorlananArac(istek), null)
+    assert.ok(sistemde(/\[OKUMA ARAÇLARI — bu turda sana verildi: hasta_bul, randevu_takvim\]/))
+    assert.ok(sistemde(/Tam cümleyi isim olarak gönder/), 'istemdeki kural yeniden doğru')
+    assert.ok(sistemde(/BU TURDA AÇIK HASTA DOSYASI YOK/))
+    assert.ok(!sistemde(/DOSYAYA KAYIT HAZIRLAMA \(Notya eylem katmanı\)/), 'yazma aracı yokken eylem paragrafı yok')
+  })
+
+  it('hastasız tur: model hasta_bul ile hastayı adından bulur, hasta oturumun açık hastası olur', async () => {
+    const s = sahneKur()
+    gercekciHastaEkle(ortam.db, encrypt, s.doktor.id)
+    ortam.yanit = aracCagiranModel({ name: 'hasta_bul', input: { isim: `${D} alerjisi ne` } }, (r) => r[0])
+    // The name as a speech recogniser may write it: the resolver finds nobody, the model asks with the right spelling.
+    const y = await yazi(s, 'Denis Aksoj’un alerjisi neydi?')
+    assert.equal(y.rota, 'model')
+    assert.match(y.speech, /Deniz Aksoy\. Dosyada alerji: .*Penisilin/)
+    assert.equal(y.aktifHasta, D)
+  })
+
+  it('selam / teşekkür turunda araç yok', async () => {
+    const s = sahneKur()
+    await yazi(s, 'Teşekkürler')
+    assert.deepEqual(sunulanAraclar(sonModelIstegi()), [])
+    assert.ok(!sistemde(/OKUMA ARAÇLARI/))
+  })
+
+  it('hızlı yol aynen: yönlendiricinin cevapladığı soru modele gitmez', async () => {
+    const s = sahneKur()
+    hastaEkle(s.doktor.id, 'Umutcan Türkoğlu', { dogum: '2019-04-10' })
+    const y = await yazi(s, 'Kaç hastam var?')
+    assert.equal(y.rota, 'arama')
+    assert.equal(ortam.modelIstekleri.length, 0)
   })
 })
 
