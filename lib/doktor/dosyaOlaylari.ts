@@ -23,6 +23,7 @@ import { planIfadeleriniCikar, asiTamBeyaniMi } from '@/lib/doktor/planIfadesi'
 import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
 import { kanonikTr } from '@/core/lab/kanonik'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { metindenOlcumCikar, olcumGosterimi } from '@/lib/clinical/olcumMetni'
 
 export type OlayKaynagi = 'not' | 'ilac' | 'asi' | 'lab' | 'belge' | 'cihaz' | 'randevu' | 'konsultasyon' | 'intake' | 'olcum'
 export type OlayDurumu =
@@ -39,6 +40,8 @@ export interface DosyaOlayi {
   metin: string
   deger?: number
   birim?: string
+  /** NOTYA-DANIS-OLCUM: ölçümün gösterildiği biçim — tansiyonda tek sayı yoktur ("128/82 mmHg"); not metninden okunan ölçümde okunan değer. */
+  degerMetni?: string
   /** Reçete / ilaç başlangıcı: o tarihteki (ya da öncesindeki en yakın) kilo. mg/kg güncel kiloyla hesaplanmaz. */
   kilo?: number
   kiloTarihi?: string
@@ -210,9 +213,30 @@ export function olaylariKur(ham: HamDosya, bugunIso: string): DosyaOlayi[] {
       if (d != null && d > 0) o.push({ tarih: gun(v.tarih), kaynak: 'olcum', tur: k, durum: 'sonuclandi', metin: `${k} ${d} ${birim}`, deger: d, birim, kaynakId: `${v.id}:${k}`, guven: 'kayit', vizitId: v.id })
     }
     const ta = (vt as Record<string, unknown>).tansiyon
-    if (ta) o.push({ tarih: gun(v.tarih), kaynak: 'olcum', tur: 'tansiyon', durum: 'sonuclandi', metin: `tansiyon ${ta} mmHg`, kaynakId: `${v.id}:tansiyon`, guven: 'kayit', vizitId: v.id })
+    if (ta) o.push({ tarih: gun(v.tarih), kaynak: 'olcum', tur: 'tansiyon', durum: 'sonuclandi', metin: `tansiyon ${ta} mmHg`, degerMetni: olcumGosterimi('tansiyon', null, String(ta)), kaynakId: `${v.id}:tansiyon`, guven: 'kayit', vizitId: v.id })
+    // NOTYA-DANIS-OLCUM: bazı vizitlerde ölçüm yalnız not metnindedir ("Kilo 9,8 kg, boy 75 cm"). Yalnız ETİKETLİ değer
+    // okunur (lib/clinical/olcumMetni.ts) ve ayrı bir olay türüdür ('olcum-metin'): büyüme eğrisi, mg/kg kilosu ve
+    // ölçüm trendi yalnız alan / cihaz ölçümünü kullanmaya devam eder. Bulgu bölümü her ölçüm için; öykü ve
+    // değerlendirme yalnız kilo / boy / baş çevresi için (öyküdeki ateş evde ölçülmüştür, vizit ölçümü değildir).
+    const gorulen = new Set<string>()
+    for (const [bolum, metin, hepsi] of [['Bulgu', v.objektif, true], ['Şikayet/öykü', v.subjektif, false], ['Değerlendirme', v.degerlendirme, false]] as const) {
+      for (const m of metindenOlcumCikar(metin)) {
+        if (gorulen.has(m.olcum) || (!hepsi && !['kilo', 'boy', 'basCevresi'].includes(m.olcum))) continue
+        gorulen.add(m.olcum)
+        o.push({
+          tarih: gun(v.tarih), kaynak: 'not', tur: 'olcum-metin', anahtar: m.olcum, durum: 'sonuclandi', metin: `${bolum}: "${kisalt(m.alinti, 80)}"`,
+          degerMetni: m.metin, kaynakId: `${v.id}:metin:${m.olcum}`, guven: 'metin', vizitId: v.id, ...(m.deger != null ? { deger: m.deger } : {}),
+        })
+      }
+    }
   }
   for (const c of ham.cihaz || []) {
+    // "120/80" tek sayı değildir — eskiden sistolik (120) ölçüm değeri diye yazılıyordu.
+    if (c.tur === 'tansiyon' && /\d\s*\/\s*\d/.test(String(c.deger || ''))) {
+      const ta = olcumGosterimi('tansiyon', null, String(c.deger))
+      o.push({ tarih: gun(c.alindi), kaynak: 'cihaz', tur: 'tansiyon', durum: 'sonuclandi', metin: `tansiyon ${ta} (cihaz)`, degerMetni: ta, kaynakId: c.id, guven: 'kayit' })
+      continue
+    }
     const d = sayi(c.deger)
     if (d == null) continue
     o.push({ tarih: gun(c.alindi), kaynak: 'cihaz', tur: c.tur, durum: 'sonuclandi', metin: `${c.tur} ${d} ${c.birim || ''} (cihaz)`.trim(), deger: d, birim: c.birim || undefined, kaynakId: c.id, guven: 'kayit' })

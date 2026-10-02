@@ -49,6 +49,20 @@ export function vizitYasIfadesiCoz(metin: string | null | undefined): VizitYasIf
   return { sayi, birim }
 }
 
+/**
+ * NOTYA-DANIS-OLCUM — bir vizit notundaki BÜTÜN yaş ifadeleri. Not çoğu zaman "2 gündür ateş… 12 aylık bebek" diye
+ * yazılır; yalnız ilk ifadeye bakmak (vizitYasIfadesiCoz) o viziti "2 gün" sayardı.
+ */
+export function vizitYasIfadeleriCoz(metin: string | null | undefined): VizitYasIfadesi[] {
+  const n = trAramaNormalize(metin)
+  const out: VizitYasIfadesi[] = []
+  for (const m of n.matchAll(/(\d{1,3})\s*(?:gunluk|gun|haftalik|hafta|aylik|ay|yasinda|yas)\b/g)) {
+    const y = vizitYasIfadesiCoz(m[0])
+    if (y) out.push(y)
+  }
+  return out
+}
+
 /** İki yaş ifadesi aynı yaş-dönümünü mü anıyor. */
 export function vizitYasIfadesiEslesir(a: VizitYasIfadesi | null, b: VizitYasIfadesi | null): boolean {
   return !!a && !!b && a.sayi === b.sayi && a.birim === b.birim

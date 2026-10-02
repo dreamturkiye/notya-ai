@@ -16,7 +16,8 @@ import { eksikDozEtiketi, parametreSec, type BransSorguParametreleri } from '@/l
 import { SORU_SABLONLARI } from '@/lib/asistan/dosyaSorgu/kurallar'
 import type { SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@/lib/klinik/sikayetEsanlam'
-import { vizitTuruGruplariBul, vizitYasIfadesiCoz, vizitYasIfadesiEslesir } from '@/lib/klinik/vizitTuruEsanlam'
+import { vizitTuruGruplariBul, vizitYasIfadesiCoz } from '@/lib/klinik/vizitTuruEsanlam'
+import { vizitleriSec, vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { kanonikTr } from '@/core/lab/kanonik'
 
 export interface KanitEki {
@@ -274,23 +275,36 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
  * Eşleşme yoksa SESSİZCE en son vizite düşmez — açık "bulamadım" cevabı döner (kök neden: ozetBolumu türe göre
  * hiç filtrelemiyordu, her zaman en son vizit döndürülüyordu).
  */
-function vizitTuruBolumu(olaylar: DosyaOlayi[], mesaj: string): string[] | null {
-  const vizitler = vizitleri(olaylar)
+function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: string): string[] | null {
   const yas = vizitYasIfadesiCoz(mesaj)
   const gruplar = vizitTuruGruplariBul(mesaj)
   if (!yas && !gruplar.length) return null
-  let adaylar = vizitler
-  if (gruplar.length) adaylar = adaylar.filter((v) => gruplar.some((g) => terimlerdenBiriGeciyor(oykuKismi(v), g.terimler)))
-  if (yas) {
-    // Yaş-dönümü belirtildiyse TAM eşleşme şart — tür eşleşmesi varsa bile yanlış yaştaki vizitlere düşme.
-    adaylar = adaylar.filter((v) => vizitYasIfadesiEslesir(vizitYasIfadesiCoz(oykuKismi(v)), yas))
-  }
+  // NOTYA-DANIS-OLCUM: seçim ölçüm sorgusuyla AYNI fonksiyondur (vizitleriSec) — yaş-dönümü verildiyse tam eşleşme
+  // şart (tür eşleşse bile yanlış yaştaki vizite düşülmez); notta yaş yazmıyorsa muayene tarihindeki yaşa bakılır.
+  const hedef = { tip: 'vizit' as const, yas, gruplar }
+  const { vizitler: adaylar, secim } = vizitleriSec(olaylar, hasta, hedef)
   const aciklama = [gruplar.map((g) => g.ad).join(', '), yas ? `${yas.sayi} ${yas.birim}` : ''].filter(Boolean).join(' / ') || 'belirtilen vizit türü'
   if (!adaylar.length) return [`Aranan vizit: ${aciklama}. Bu türde / bu yaşta eşleşen onaylı vizit kaydı bulamadım — dosyada bu muayene yok Hocam; sessizce başka bir vizite düşmedim.`]
-  const out = [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit(ler) (${adaylar.length}):`]
-  for (const v of adaylar) out.push(`- ${trGun(v.tarih)}: ${v.metin}`)
+  const out = [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit(ler) (${adaylar.length})${secim === 'yas-tarih' ? ' — notta bu yaş yazmıyor; muayene tarihindeki yaşa göre seçildi' : ''}:`]
+  // O muayenenin kayıtlı ölçümleri de satırda (alan, aynı günlü cihaz ölçümü, not metni) — özet ölçümsüz kalmasın.
+  const olcum = vizitOlcumKaniti({ olcumler: ['kilo', 'boy', 'basCevresi', 'tansiyon', 'ates', 'nabiz', 'spo2'], genel: true, hedef, degerlendirme: false }, olaylar, hasta)
+  for (const v of adaylar) {
+    out.push(`- ${trGun(v.tarih)}: ${v.metin}`)
+    const k = olcum.vizitler.find((x) => x.tarih === v.tarih)?.kayitlar || []
+    out.push(k.length ? `  Ölçümler: ${k.map((x) => `${OLCUM_ADI[x.olcum]} ${x.metin}`).join('; ')} (kaynak: ${[...new Set(k.map((x) => x.kaynakAdi))].join('; ')}).` : '  Ölçümler: bu muayenede kayıtlı ölçüm yok.')
+  }
   if (adaylar.length > 1) out.push('Not: birden fazla eşleşme var; hangisini sorduğunu netleştirmek isteyebilirsin.')
   return out
+}
+
+/**
+ * NOTYA-DANIS-OLCUM — soru bir MUAYENENİN ölçümünü anıyorsa ("12 aylık muayenesinde kilosu normal miydi") o
+ * muayenenin kayıtlı ölçümü kanıtın BAŞINA konur; yoksa boş (büyüme kanıtı değişmeden çalışır).
+ */
+function vizitOlcumBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguParametreleri, mesaj: string): string[] {
+  const soru = vizitOlcumSorusuBul(mesaj, { varsayilan: p.anahtar === 'pediatri' ? ['kilo', 'boy', 'basCevresi'] : ['kilo', 'boy', 'tansiyon'] })
+  if (!soru || soru.hedef.tip === 'seri') return []
+  return vizitOlcumKanitSatirlari(vizitOlcumKaniti(soru, olaylar, hasta))
 }
 
 export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHastasi, ek: KanitEki = {}): string {
@@ -306,9 +320,9 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
   ]
   let govde: string[] = []
   switch (tur) {
-    case 'ozet': { const t = vizitTuruBolumu(olaylar, ek.mesaj || ''); govde = t ?? ozetBolumu(olaylar, hasta, p); break }
+    case 'ozet': { const t = vizitTuruBolumu(olaylar, hasta, ek.mesaj || ''); govde = t ?? ozetBolumu(olaylar, hasta, p); break }
     case 'degisim': govde = degisimBolumu(olaylar, hasta, p); break
-    case 'buyume': { const b = p.buyume(olaylar, hasta); govde = [...b.satirlar, ...(b.bayraklar.length ? ['DİKKAT:', ...isSatirlari(b.bayraklar)] : [])]; break }
+    case 'buyume': { const b = p.buyume(olaylar, hasta); govde = [...vizitOlcumBolumu(olaylar, hasta, p, ek.mesaj || ''), ...b.satirlar, ...(b.bayraklar.length ? ['DİKKAT:', ...isSatirlari(b.bayraklar)] : [])]; break }
     case 'asi': govde = asiBolumu(olaylar, hasta, p); break
     case 'lab': {
       govde = labBolumu(olaylar)

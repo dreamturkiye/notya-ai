@@ -18,6 +18,8 @@ const KALIP: [SoruTuru, RegExp][] = [
   ['benzer', /\b(ayni|benzer|boyle|bu)( bir)? (sikayet|sorun|problem|yakinma|tablo|sikayetle|sorunla)|daha once(den)? (de )?(bu|ayni|boyle|benzer|bununla|bu sikayet)|(daha once|onceden|gecmiste) .*(geldi mi|gelmis mi|olmus mu|yasadi mi|gecirdi mi|gecirmis mi)|kac (kez|kere|defa) .*(oldu|gecirdi|geldi)|tekrarlayan (bir )?(sikayet|atak|enfeksiyon)/],
   ['asi', /\basi(lari|si|larinin)? (tam|eksik|durum|karne|takvim|guncel|yasina|zamaninda)|eksik asi|asi karnesi|asi durumu|hangi asi(lari|si)? (eksik|kaldi|yapilmali|gerek|yapilacak)|asilari nasil/],
   ['ilac', /ilaclari (neler|ne|nedir|nelerdir)|hangi ilac(lari|i)? (kullaniyor|aliyor|kullanmakta)|kullandigi ilac|su an(ki|da)? (kullandigi |aldigi )?ilac|aktif ilaclar|dozlari (ne|nedir|neler)|ilac(lari)? ve doz|ilac listesi|ne ilac(lar)? kullaniyor/],
+  // NOTYA-DANIS-OLCUM: "kilo gelişimi nasıl" bir ölçüm eğilimi sorusudur, gelişim taraması (GİDR / M-CHAT) değil.
+  ['buyume', /\b(kilo|boy|tarti|agirlik|bas cevresi)\w* gelisim/],
   ['gelisim', /\bgelisim|\bgidr\b|m-?chat|\bdenver\b|konusuyor mu|yuruyor mu|kelime (soyluyor|cikariyor)|otizm|ortak dikkat|ismine (donuyor|bakiyor)/],
   ['degisim', /son (muayene|vizit|kontrol|gorusme|gelis)(den|ten|inden|sinden)? (bu yana|beri|sonra)|ne(ler)? degis|degisen (ne|neler|bir sey)|gecen (sefer|vizit|muayene|kontrol)(den|ten)? (bu yana|beri|farkli)|farkli ne var/],
   ['buyume', /buyume|buyumesi|persentil|kilo aliyor mu|kilo alimi|kilo alamiyor|kilosu nasil|boy(u)? (uzuyor|nasil|uzamasi)|boy uzamasi|bas cevresi (nasil|buyuyor)|tarti (artisi|alimi)|egrisi/],

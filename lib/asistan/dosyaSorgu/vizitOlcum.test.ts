@@ -178,7 +178,7 @@ describe('not metninden ölçüm (yalnız etiketli değer)', () => {
   it('etiketli değerler ve birimler', () => {
     assert.deepEqual(bul('Kilo 9,8 kg, boy 75 cm, baş çevresi 46 cm.'), ['kilo=9,8 kg', 'boy=75 cm', 'basCevresi=46 cm'])
     assert.deepEqual(bul('Ağırlık: 9800 g. Boy: 0,75 m'), ['kilo=9,8 kg', 'boy=75 cm'])
-    assert.deepEqual(bul('TA 142/88 mmHg, nabız 76/dk. Kilo 82 kg. SpO2 %97, ateş 36,8'), ['kilo=82 kg', 'tansiyon=142/88 mmHg', 'ates=36,8 °C', 'nabiz=76 /dk', 'spo2=97 %'])
+    assert.deepEqual(bul('TA 142/88 mmHg, nabız 76/dk. Kilo 82 kg. SpO2 %97, ateş 36,8'), ['kilo=82 kg', 'tansiyon=142/88 mmHg', 'ates=36,8 °C', 'nabiz=76/dk', 'spo2=%97'])
   })
   it('doz, kilo değişimi ve boyun bir ölçüm değildir', () => {
     assert.deepEqual(bul('Parasetamol 15 mg/kg/doz. Demir 1 mg/kg/gün (günde 9,35 mg).'), [])
