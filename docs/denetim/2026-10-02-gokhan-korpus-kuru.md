@@ -4,17 +4,17 @@
 
 What this run does prove: the harness, the corpus loader, the assertions, and every turn that a MODEL-FREE handler answered (identity, calendar, count, record tables, quick card, scope gate, chart open) — those answers are the product's own and are graded in full. What it cannot say anything about: any answer the model writes. Those turns are "not judged" unless something structural failed (route, forced tool, card, bound patient).
 
-Corpus: 417 entries, 850 graded turns (an entry is graded once per surface it lists). Voice = `/api/asistan/fish-tur` with the transcript given as text: Fish ASR, TTS and turn-taking are not exercised.
+Corpus: 423 entries, 859 graded turns (an entry is graded once per surface it lists). Voice = `/api/asistan/fish-tur` with the transcript given as text: Fish ASR, TTS and turn-taking are not exercised.
 
 ## Summary
 
 | surface | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
-| chat | 412 | 255 | **12** | 10 | 135 |
+| chat | 416 | 264 | **12** | 10 | 130 |
 | panel | 21 | 5 | 0 | 0 | 16 |
-| voice | 417 | 257 | **14** | 12 | 134 |
+| voice | 422 | 267 | **14** | 12 | 129 |
 
-Total: 850 turns — 517 PASS, 26 FAIL, 22 MANUAL, 285 not judged (stand-in).
+Total: 859 turns — 536 PASS, 26 FAIL, 22 MANUAL, 275 not judged (stand-in).
 
 ### By source
 
@@ -23,8 +23,8 @@ Total: 850 turns — 517 PASS, 26 FAIL, 22 MANUAL, 285 not judged (stand-in).
 | docs/ayse-capability-regression-audit.md | 62 | 42 | 0 | 0 | 20 |
 | docs/denetim/2026-09-26-qa-sentetik-bebek.md | 32 | 0 | 0 | 0 | 32 |
 | docs/denetim/2026-10-02-ayse-eylem.md | 66 | 60 | 0 | 0 | 6 |
-| docs/OPEN-COMMITMENTS.md | 340 | 225 | **10** | 8 | 97 |
-| docs/qa/gokhan-gunluk-sorular.md | 133 | 75 | **7** | 14 | 37 |
+| docs/OPEN-COMMITMENTS.md | 349 | 244 | **10** | 8 | 87 |
+| docs/qa/gokhan-gunluk-sorular.md | 133 | 77 | **7** | 14 | 35 |
 | docs/qa/gokhan-yetenek-talepleri.md | 28 | 28 | 0 | 0 | 0 |
 | lib/asistan/aktifHastaPratik.test.ts | 8 | 8 | 0 | 0 | 0 |
 | lib/asistan/ayseRota.test.ts | 66 | 40 | **2** | 0 | 24 |
@@ -50,15 +50,15 @@ A turn is counted under every source file it cites, so the rows add up to more t
 | hasta-cozum | 68 | 40 | 0 | 4 | 24 |
 | ilac | 32 | 8 | 0 | 0 | 24 |
 | ilk10 | 70 | 0 | 0 | 0 | 70 |
-| izolasyon | 6 | 4 | 0 | 0 | 2 |
+| izolasyon | 8 | 6 | 0 | 0 | 2 |
 | kapsam | 44 | 44 | 0 | 0 | 0 |
 | kimlik | 20 | 20 | 0 | 0 | 0 |
 | lab | 30 | 0 | **1** | 4 | 25 |
 | liste | 34 | 24 | **8** | 2 | 0 |
-| muayene | 30 | 10 | **1** | 0 | 19 |
+| muayene | 36 | 26 | **1** | 0 | 9 |
 | olcum | 69 | 59 | **2** | 2 | 6 |
 | sayim | 32 | 14 | **2** | 0 | 16 |
-| ses | 8 | 4 | 0 | 1 | 3 |
+| ses | 9 | 5 | 0 | 1 | 3 |
 | sohbet | 20 | 20 | 0 | 0 | 0 |
 | takip | 141 | 84 | **8** | 0 | 49 |
 | takvim | 72 | 70 | **2** | 0 | 0 |
@@ -68,15 +68,15 @@ A turn is counted under every source file it cites, so the rows add up to more t
 
 | route | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
-| (yok) | 1 | 0 | 0 | 1 | 0 |
-| arama | 58 | 52 | **4** | 2 | 0 |
+| (yok) | 2 | 1 | 0 | 1 | 0 |
+| arama | 60 | 54 | **4** | 2 | 0 |
 | dosya-ac | 22 | 22 | 0 | 0 | 0 |
 | gurultu | 2 | 2 | 0 | 0 | 0 |
 | hizli-kart | 122 | 116 | **2** | 4 | 0 |
 | kapsam | 22 | 22 | 0 | 0 | 0 |
 | kayit | 75 | 65 | **10** | 0 | 0 |
 | kimlik | 22 | 20 | **2** | 0 | 0 |
-| model | 386 | 100 | **2** | 15 | 269 |
+| model | 392 | 116 | **2** | 15 | 259 |
 | oku | 3 | 1 | **2** | 0 | 0 |
 | panel | 21 | 5 | 0 | 0 | 16 |
 | takvim | 116 | 112 | **4** | 0 | 0 |
@@ -190,10 +190,10 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | L-KIMLIK-DT | docs/OPEN-COMMITMENTS.md: STT mis-transcription investigated | voice | Emircan Karaoğlu'nun doğum tarihini verir misin? | kimlik | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu için istediğiniz bilgiyi ekranınıza yazdım Hocam. 🖥 Emircan Karaoğlu için istenen kimlik ve iletişim bilgisine ERİŞİMİM VAR; değeri az önce ekrana yazdım (Doğu… |
 | L-KIMLIK-DT-ASR | docs/OPEN-COMMITMENTS.md: STT mis-transcription investigated | chat | Emircan Kara oğlunun doğum tarihini verir misin? | kimlik | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — Doğum tarihi: 30.08.2024 (hasta kartı) |
 | L-KIMLIK-DT-ASR | docs/OPEN-COMMITMENTS.md: STT mis-transcription investigated | voice | Emircan Kara oğlunun doğum tarihini verir misin? | kimlik | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu için istediğiniz bilgiyi ekranınıza yazdım Hocam. 🖥 Emircan Karaoğlu için istenen kimlik ve iletişim bilgisine ERİŞİMİM VAR; değeri az önce ekrana yazdım (Doğu… |
-| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | chat | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
-| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | voice | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
-| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | chat | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
-| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | voice | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
+| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | chat | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Ayşe Bozkurt — 24.09.2026 tarihli muayenenin özeti (muayene tarihinde 5 yaş 2 ay); yalnız kayıttaki bilgilerle. **Muayene:** 24.09.2026; muayene tarihinde 5 yaş 2 ay. **Şikayet:** … |
+| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | voice | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Ayşe Bozkurt, 24 Eylül 2026 tarihli muayene, 5 yaş 2 ay. Şikayet ve öykü: Öksürük ve ateş, 4 gündür; Dün gece nefes almakta zorlanmış. Muayene bulgusu: Sağ alt zonda ince raller… |
+| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | chat | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Ayşe Bozkurt — 24.09.2026 tarihli muayenenin özeti (muayene tarihinde 5 yaş 2 ay); yalnız kayıttaki bilgilerle. **Muayene:** 24.09.2026; muayene tarihinde 5 yaş 2 ay. **Şikayet:** … |
+| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | voice | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Ayşe Bozkurt, 24 Eylül 2026 tarihli muayene, 5 yaş 2 ay. Şikayet ve öykü: Öksürük ve ateş, 4 gündür; Dün gece nefes almakta zorlanmış. Muayene bulgusu: Sağ alt zonda ince raller… |
 | L-SES-HASTA-01-KOHORT | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/sesliSoz.test.ts: Merhaba Ayşe, bu hafta ateşli hasta… | chat | Merhaba Ayşe, bu hafta ateşli hastalarım kimler | arama | — | — | PASS | Bu hafta 2 hasta. Filtre: bu hafta: 1. Tarık Özdemir (d.t. 25.02.2024) — bu hafta · 2 yaş 7 ay · 01.10.2026 muayene · 01.10.2026 not: Sol kulak ağrısı ve ateş, 2 gündür · ilaç: Amo… |
 | L-SES-HASTA-01-KOHORT | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/sesliSoz.test.ts: Merhaba Ayşe, bu hafta ateşli hasta… | voice | Merhaba Ayşe, bu hafta ateşli hastalarım kimler | arama | — | — | PASS | 🔊 Bu hafta 2 hasta. Filtre: bu hafta: 1) Tarık Özdemir — bu hafta, 2 yaş 7 ay, 01.10.2026 muayene, 01.10.2026 not: Sol kulak ağrısı ve ateş, 2 gündür, ilaç: Amoksisilin 250 mg/5 m… |
 | L-AKTIF-SON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01; docs/OPEN-COMMITMENTS.md: NOTYA-LUNA-ARAMA-01 | chat | En son ne zaman geldi? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son vizit: 30 Eylül 2026 — Otit kontrolü. Dosyada plan ve takip: Tedavi tamamlandı. 1 ay sonra kontrol.. |
@@ -232,17 +232,26 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | L-BIRIM-02 | docs/OPEN-COMMITMENTS.md: NOTYA-TTS-BIRIM-02; docs/qa/gokhan-gunluk-sorular.md: #54 | voice | Son muayenede ateşi kaçtı? | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son muayene (01.10.2026): ateş 38,7 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | L-PLAN-01 | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-PLAN-01; docs/qa/gokhan-gunluk-sorular.md: #52; docs/OPEN-COMMITMEN… | chat | Bir tane Tesla elektrikli araba almayı planlıyorum. | kapsam | — | — | PASS | Hocam, ben yalnızca Notya'daki hasta, muayene, randevu ve klinik konularda yardımcı olabiliyorum; bu konuda yardımcı olamam. Hastalarınız, randevularınız ya da klinik bir sorunuz v… |
 | L-PLAN-01 | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-PLAN-01; docs/qa/gokhan-gunluk-sorular.md: #52; docs/OPEN-COMMITMEN… | voice | Bir tane Tesla elektrikli araba almayı planlıyorum. | kapsam | — | — | PASS | 🔊 Hocam, ben yalnızca Notya'daki hasta, muayene, randevu ve klinik konularda yardımcı olabiliyorum; bu konuda yardımcı olamam. Hastalarınız, randevularınız ya da klinik bir sorunu… |
-| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | chat | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | voice | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | panel | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
-| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
+| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | chat | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 28.02.2025 tarihli muayenenin özeti (muayene tarihinde 5 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 28.02.2025; muayene tarihinde 5 aylık. Tür: Sağlam çoc… |
+| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | voice | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 28 Şubat 2025 tarihli muayene, 5 aylık. Şikayet ve öykü: 6 aylık erkek bebek, rutin sağlam çocuk kontrolü için getirildi; Ek gıdaya başlanacak. Muayene bulgusu… |
+| L-TUR-6AY-PANEL | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | panel | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.08.2025 tarihli muayenenin özeti (muayene tarihinde 12 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2025; muayene tarihinde 12 aylık. Tür: Sağlam ç… |
+| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Ağustos 2025 tarihli muayene, 12 aylık. Şikayet ve öykü: 12 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Tek başına birkaç adım atıyor, "anne", "baba" di… |
+| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.11.2025 tarihli muayenenin özeti (muayene tarihinde 15 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.11.2025; muayene tarihinde 15 aylık. Tür: Sağlam ç… |
+| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Kasım 2025 tarihli muayene, 15 aylık. Şikayet ve öykü: 15 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Yürüyor, 5-6 kelimesi var. Muayene bulgusu: Kilo 1… |
+| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 28.02.2026 tarihli muayenenin özeti (muayene tarihinde 17 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 28.02.2026; muayene tarihinde 17 aylık. Tür: Sağlam ç… |
+| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 28 Şubat 2026 tarihli muayene, 17 aylık. Şikayet ve öykü: 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü; İki kelimelik cümle kurmaya başlamış, kaşıkla yiyo… |
+| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.08.2026 tarihli muayenenin özeti (muayene tarihinde 2 yaş); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2026; muayene tarihinde 2 yaş. Tür: Sağlam çocuk m… |
+| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Ağustos 2026 tarihli muayene, 2 yaş. Şikayet ve öykü: 24 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Koşuyor, merdiven çıkıyor, 2-3 kelimelik cümle kuru… |
+| L-OZET-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.08.2025 tarihli muayenenin özeti (muayene tarihinde 12 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2025; muayene tarihinde 12 aylık. Tür: Sağlam ç… |
+| L-OZET-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Ağustos 2025 tarihli muayene, 12 aylık. Şikayet ve öykü: 12 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Tek başına birkaç adım atıyor, "anne", "baba" di… |
+| L-OZET-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.11.2025 tarihli muayenenin özeti (muayene tarihinde 15 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.11.2025; muayene tarihinde 15 aylık. Tür: Sağlam ç… |
+| L-OZET-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Kasım 2025 tarihli muayene, 15 aylık. Şikayet ve öykü: 15 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Yürüyor, 5-6 kelimesi var. Muayene bulgusu: Kilo 1… |
+| L-OZET-24AY-DEVAM | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01; docs/OPEN-COMMITMENTS.md: NOTYA-SES-DEVAM-01 | voice | devam et | — | — | Emircan Karaoğlu | PASS | 🔊 Reçete yazılmamış; plan: Hepatit A 2. doz planlandı; Demir tedavisi 2 ay daha devam; D vitamini devam; 6 ay sonra kontrol. |
+| L-OZET-ERISKIN | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Son muayenesinin özetini verir misin? | model | — | Nermin Aydoğan | PASS | Nermin Aydoğan — 18.09.2026 tarihli muayenenin özeti (muayene tarihinde 46 yaş); yalnız kayıttaki bilgilerle. **Muayene:** 18.09.2026; muayene tarihinde 46 yaş. **Şikayet:** Kontro… |
+| L-OZET-ERISKIN | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Son muayenesinin özetini verir misin? | model | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan, 18 Eylül 2026 tarihli muayene, 46 yaş. Şikayet ve öykü: Kontrol; Şikayeti yok, ilaçlarını düzenli kullanıyor. Muayene bulgusu: Tansiyon 132/84 mmHg, nabız 76/dk;… |
+| L-OZET-YABANCI | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Selim Erkoç'un 12 aylık sağlam çocuk muayenesinin özetini verir misin? | arama | — | — | PASS | Kayıtlarda 0 hasta. Filtre: 12 aylık. |
+| L-OZET-YABANCI | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Selim Erkoç'un 12 aylık sağlam çocuk muayenesinin özetini verir misin? | arama | — | — | PASS | 🔊 Kayıtlarda 0 hasta. Filtre: 12 aylık. |
 | L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | chat | Bu hastanın geçmişini özetler misin? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | voice | Bu hastanın geçmişini özetler misin? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | panel | Bu hastanın geçmişini özetler misin? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
@@ -906,12 +915,12 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | E-21 | docs/denetim/2026-10-02-ayse-eylem.md: \| 21 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Yarın saat 14:00 için kontrol randevusu oluştur | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: yarın, 3 Ekim 2026 Cumartesi. Saat: 14:00. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
 | E-22 | docs/denetim/2026-10-02-ayse-eylem.md: \| 22 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Haftaya salı 10:30 kontrol randevusu ver | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: 6 Ekim 2026 Salı. Saat: 10:30. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
 | E-22 | docs/denetim/2026-10-02-ayse-eylem.md: \| 22 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Haftaya salı 10:30 kontrol randevusu ver | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: 6 Ekim 2026 Salı. Saat: 10:30. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
-| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? |
-| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. … |
-| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? |
-| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. … |
-| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? |
-| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. … |
+| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:37, 2. 21 Aralık Pazartesi 21:37. Hangisi? |
+| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 21:37, 2. 21 Aralık Pazartesi 21:37. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:37, 2. … |
+| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:37, 2. 21 Aralık Pazartesi 21:37. Hangisi? |
+| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 21:37, 2. 21 Aralık Pazartesi 21:37. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:37, 2. … |
+| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:37, 2. 21 Aralık Pazartesi 21:37. Hangisi? |
+| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 21:37, 2. 21 Aralık Pazartesi 21:37. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:37, 2. … |
 | E-26 | docs/denetim/2026-10-02-ayse-eylem.md: \| 26 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Deniz Aksoy'un fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-26 | docs/denetim/2026-10-02-ayse-eylem.md: \| 26 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Deniz Aksoy'un fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-27 | docs/denetim/2026-10-02-ayse-eylem.md: \| 27 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03; docs/OPEN-COMMI… | chat | Deniz Aksoy için yarın 11:00'e kontrol randevusu oluştur | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | not judged | Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: yarın, 3 Ekim 2026 Cumartesi. Saat: 11:00. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
