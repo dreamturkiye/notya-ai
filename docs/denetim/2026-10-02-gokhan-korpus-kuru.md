@@ -4,17 +4,17 @@
 
 What this run does prove: the harness, the corpus loader, the assertions, and every turn that a MODEL-FREE handler answered (identity, calendar, count, record tables, quick card, scope gate, chart open) — those answers are the product's own and are graded in full. What it cannot say anything about: any answer the model writes. Those turns are "not judged" unless something structural failed (route, forced tool, card, bound patient).
 
-Corpus: 413 entries, 842 graded turns (an entry is graded once per surface it lists). Voice = `/api/asistan/fish-tur` with the transcript given as text: Fish ASR, TTS and turn-taking are not exercised.
+Corpus: 417 entries, 850 graded turns (an entry is graded once per surface it lists). Voice = `/api/asistan/fish-tur` with the transcript given as text: Fish ASR, TTS and turn-taking are not exercised.
 
 ## Summary
 
 | surface | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
-| chat | 408 | 250 | **12** | 10 | 136 |
+| chat | 412 | 255 | **12** | 10 | 135 |
 | panel | 21 | 5 | 0 | 0 | 16 |
-| voice | 413 | 252 | **14** | 12 | 135 |
+| voice | 417 | 257 | **14** | 12 | 134 |
 
-Total: 842 turns — 507 PASS, 26 FAIL, 22 MANUAL, 287 not judged (stand-in).
+Total: 850 turns — 517 PASS, 26 FAIL, 22 MANUAL, 285 not judged (stand-in).
 
 ### By source
 
@@ -23,9 +23,10 @@ Total: 842 turns — 507 PASS, 26 FAIL, 22 MANUAL, 287 not judged (stand-in).
 | docs/ayse-capability-regression-audit.md | 62 | 42 | 0 | 0 | 20 |
 | docs/denetim/2026-09-26-qa-sentetik-bebek.md | 32 | 0 | 0 | 0 | 32 |
 | docs/denetim/2026-10-02-ayse-eylem.md | 66 | 60 | 0 | 0 | 6 |
-| docs/OPEN-COMMITMENTS.md | 338 | 223 | **10** | 8 | 97 |
+| docs/OPEN-COMMITMENTS.md | 340 | 225 | **10** | 8 | 97 |
 | docs/qa/gokhan-gunluk-sorular.md | 133 | 75 | **7** | 14 | 37 |
 | docs/qa/gokhan-yetenek-talepleri.md | 28 | 28 | 0 | 0 | 0 |
+| lib/asistan/aktifHastaPratik.test.ts | 8 | 8 | 0 | 0 | 0 |
 | lib/asistan/ayseRota.test.ts | 66 | 40 | **2** | 0 | 24 |
 | lib/asistan/dosyaSorgu/denetim.test.ts | 6 | 6 | 0 | 0 | 0 |
 | lib/asistan/kapsamKilidi.test.ts | 2 | 2 | 0 | 0 | 0 |
@@ -33,7 +34,7 @@ Total: 842 turns — 507 PASS, 26 FAIL, 22 MANUAL, 287 not judged (stand-in).
 | lib/doktor/hastaCozumleyici.test.ts | 10 | 2 | 0 | 0 | 8 |
 | lib/doktor/pratikAnaliz.test.ts | 2 | 0 | 0 | 0 | 2 |
 | lib/doktor/sesliSoz.test.ts | 10 | 8 | 0 | 0 | 2 |
-| scripts/ayse-denetim/sorular-100.json | 206 | 104 | **11** | 4 | 87 |
+| scripts/ayse-denetim/sorular-100.json | 206 | 106 | **11** | 4 | 85 |
 | scripts/ayse-denetim/sorular-canli-0930.json | 12 | 12 | 0 | 0 | 0 |
 | scripts/ayse-denetim/sorular-takip.json | 202 | 124 | **6** | 0 | 72 |
 
@@ -47,13 +48,13 @@ A turn is counted under every source file it cites, so the rows add up to more t
 | dosya | 52 | 38 | **2** | 4 | 8 |
 | eylem | 72 | 60 | 0 | 1 | 11 |
 | hasta-cozum | 68 | 40 | 0 | 4 | 24 |
-| ilac | 30 | 4 | 0 | 0 | 26 |
+| ilac | 32 | 8 | 0 | 0 | 24 |
 | ilk10 | 70 | 0 | 0 | 0 | 70 |
 | izolasyon | 6 | 4 | 0 | 0 | 2 |
 | kapsam | 44 | 44 | 0 | 0 | 0 |
 | kimlik | 20 | 20 | 0 | 0 | 0 |
 | lab | 30 | 0 | **1** | 4 | 25 |
-| liste | 28 | 18 | **8** | 2 | 0 |
+| liste | 34 | 24 | **8** | 2 | 0 |
 | muayene | 30 | 10 | **1** | 0 | 19 |
 | olcum | 69 | 59 | **2** | 2 | 6 |
 | sayim | 32 | 14 | **2** | 0 | 16 |
@@ -68,14 +69,14 @@ A turn is counted under every source file it cites, so the rows add up to more t
 | route | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
 | (yok) | 1 | 0 | 0 | 1 | 0 |
-| arama | 50 | 44 | **4** | 2 | 0 |
+| arama | 58 | 52 | **4** | 2 | 0 |
 | dosya-ac | 22 | 22 | 0 | 0 | 0 |
 | gurultu | 2 | 2 | 0 | 0 | 0 |
-| hizli-kart | 120 | 114 | **2** | 4 | 0 |
+| hizli-kart | 122 | 116 | **2** | 4 | 0 |
 | kapsam | 22 | 22 | 0 | 0 | 0 |
 | kayit | 75 | 65 | **10** | 0 | 0 |
 | kimlik | 22 | 20 | **2** | 0 | 0 |
-| model | 388 | 100 | **2** | 15 | 271 |
+| model | 386 | 100 | **2** | 15 | 269 |
 | oku | 3 | 1 | **2** | 0 | 0 |
 | panel | 21 | 5 | 0 | 0 | 16 |
 | takvim | 116 | 112 | **4** | 0 | 0 |
@@ -288,6 +289,14 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | L-DANIS-SON | lib/asistan/vizitOlcumSahne.test.ts: son muayenede kaç kiloydu; docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | voice | son muayenede kaç kiloydu | kayit | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan, son muayene (18.09.2026): kilo 75,5 kg. 🖥 **Nermin Aydoğan — kilo ölçümleri** (son muayene; toplam 4 muayene kayıtlı) \| Tarih \| Kilo (kg) \| \| --- \| --- \| … |
 | L-DANIS-GECEN-YIL | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-09 | chat | geçen yıl kaç kiloydu | hizli-kart | — | Emircan Karaoğlu | MANUAL | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
 | L-DANIS-GECEN-YIL | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-09 | voice | geçen yıl kaç kiloydu | hizli-kart | — | Emircan Karaoğlu | MANUAL | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| L-KOHORT-01 | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-KOHORT-01; lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | chat | Son bir ay içinde hangi antibiyotiği en fazla yazdım? | arama | — | — | PASS | Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid 250… |
+| L-KOHORT-01 | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-KOHORT-01; lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | voice | Son bir ay içinde hangi antibiyotiği en fazla yazdım? | arama | — | Emircan Karaoğlu | PASS | 🔊 Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid … |
+| L-KOHORT-02 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | chat | Son bir ayda kaç hastaya antibiyotik yazdım? | arama | — | — | PASS | Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid 250… |
+| L-KOHORT-02 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | voice | Son bir ayda kaç hastaya antibiyotik yazdım? | arama | — | Emircan Karaoğlu | PASS | 🔊 Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid … |
+| L-KOHORT-03 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | chat | Bu hafta en fazla hangi tanıyı koydum? | arama | — | — | PASS | Bu hafta en çok koyduğun tanı Akut otitis media (1). Sıra: Akut otitis media 1, Otitis media, iyileşmiş 1 (toplam 2). |
+| L-KOHORT-03 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | voice | Bu hafta en fazla hangi tanıyı koydum? | arama | — | Emircan Karaoğlu | PASS | 🔊 Bu hafta en çok koyduğun tanı Akut otitis media (1). Sıra: Akut otitis media 1, Otitis media, iyileşmiş 1 (toplam 2). |
+| L-KOHORT-04 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | chat | Bu hastaya en fazla hangi antibiyotiği yazdım? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son reçete: Augmentin ES 600 mg/5 ml süspansiyon, Pedifen şurup (20 Eylül 2026). |
+| L-KOHORT-04 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | voice | Bu hastaya en fazla hangi antibiyotiği yazdım? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son reçete: Augmentin ES 600 mg/5 ml süspansiyon, Pedifen şurup (20 Eylül 2026). |
 | L-GERI-02-EVET | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-02 | voice | Evet | — | — | Deniz Aksoy | MANUAL | 🔊 Şu alanlar boş: Alerji. Ekrandan doldurup onaylayın, ya da tarihi söyleyin. |
 | G-01 | docs/qa/gokhan-gunluk-sorular.md: #1 | chat | Emircan'ın dosyasını aç | dosya-ac | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu dosyası açık Hocam. Ne sormak istersiniz? |
 | G-01 | docs/qa/gokhan-gunluk-sorular.md: #1 | voice | Emircan'ın dosyasını aç | dosya-ac | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu dosyası açık Hocam. Ne sormak istersiniz? |
@@ -578,7 +587,7 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | Y-091 | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | chat | dün gelen ateşli çocuk | hizli-kart | — | Olcay Santoro | **FAIL** | Olcay Santoro — dosyada son ölçüm: kayıt yok. |
 | Y-092 | scripts/ayse-denetim/sorular-100.json: #92 | chat | E-nabız'dan yeni gelen bir şey var mı? | model | — | Olcay Santoro | not judged | Vekil yanıt Hocam. |
 | Y-093 | scripts/ayse-denetim/sorular-100.json: #93; docs/OPEN-COMMITMENTS.md: sorular-100 #93 | chat | Gelen belgelerde bekleyen var mı? | model | — | Olcay Santoro | MANUAL | Vekil yanıt Hocam. |
-| Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | chat | Bugün kaç reçete yazdım? | model | — | Olcay Santoro | not judged | Vekil yanıt Hocam. |
+| Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | chat | Bugün kaç reçete yazdım? | arama | — | — | PASS | Bugün 0 reçete (0 hasta). Filtre: bugün · İlaç. |
 | Y-095 | scripts/ayse-denetim/sorular-100.json: #95 | chat | Son reçetem hangi hastaya? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada son reçete: Amoksisilin 250 mg/5 ml süspansiyon (1 Ekim 2026). |
 | Y-096 | scripts/ayse-denetim/sorular-100.json: #96 | chat | Reçeteyi nereden yazdırırım? | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
 | Y-071 | scripts/ayse-denetim/sorular-100.json: #71; docs/OPEN-COMMITMENTS.md: NOTYA-KAPSAM-05c | voice | Bugün kaç hastam var? | takvim | — | — | PASS | 🔊 Bugün, 2 Ekim Cuma, 1 randevu var Hocam: 16:00 Nermin Aydoğan kontrol. 🖥 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
@@ -604,7 +613,7 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | Y-091 | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | voice | dün gelen ateşli çocuk | hizli-kart | — | Olcay Santoro | **FAIL** | 🔊 Olcay Santoro — dosyada son ölçüm: kayıt yok. |
 | Y-092 | scripts/ayse-denetim/sorular-100.json: #92 | voice | E-nabız'dan yeni gelen bir şey var mı? | model | — | Olcay Santoro | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-093 | scripts/ayse-denetim/sorular-100.json: #93; docs/OPEN-COMMITMENTS.md: sorular-100 #93 | voice | Gelen belgelerde bekleyen var mı? | model | — | Olcay Santoro | MANUAL | 🔊 Vekil yanıt Hocam. |
-| Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | voice | Bugün kaç reçete yazdım? | model | — | Olcay Santoro | not judged | 🔊 Vekil yanıt Hocam. |
+| Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | voice | Bugün kaç reçete yazdım? | arama | — | Olcay Santoro | PASS | 🔊 Bugün 0 reçete (0 hasta). Filtre: bugün, İlaç. 🖥 Bugün 0 reçete (0 hasta). Filtre: bugün · İlaç. |
 | Y-095 | scripts/ayse-denetim/sorular-100.json: #95 | voice | Son reçetem hangi hastaya? | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada son reçete: Amoksisilin 250 mg/5 ml süspansiyon (1 Ekim 2026). |
 | Y-096 | scripts/ayse-denetim/sorular-100.json: #96 | voice | Reçeteyi nereden yazdırırım? | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-097 | scripts/ayse-denetim/sorular-100.json: #97 | chat | QA Test Hasta 2 dosyasını aç | arama | — | — | PASS | Bu isimde bir hasta bulamadım Hocam; adını ve soyadını tam söyler misiniz? |
@@ -897,12 +906,12 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 | E-21 | docs/denetim/2026-10-02-ayse-eylem.md: \| 21 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Yarın saat 14:00 için kontrol randevusu oluştur | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: yarın, 3 Ekim 2026 Cumartesi. Saat: 14:00. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
 | E-22 | docs/denetim/2026-10-02-ayse-eylem.md: \| 22 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Haftaya salı 10:30 kontrol randevusu ver | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: 6 Ekim 2026 Salı. Saat: 10:30. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
 | E-22 | docs/denetim/2026-10-02-ayse-eylem.md: \| 22 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Haftaya salı 10:30 kontrol randevusu ver | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: 6 Ekim 2026 Salı. Saat: 10:30. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
-| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:39, 2. 21 Aralık Pazartesi 11:39. Hangisi? |
-| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:39, 2. 21 Aralık Pazartesi 11:39. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:39, 2. … |
-| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:39, 2. 21 Aralık Pazartesi 11:39. Hangisi? |
-| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:39, 2. 21 Aralık Pazartesi 11:39. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:39, 2. … |
-| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:39, 2. 21 Aralık Pazartesi 11:39. Hangisi? |
-| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:39, 2. 21 Aralık Pazartesi 11:39. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:39, 2. … |
+| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? |
+| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. … |
+| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? |
+| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. … |
+| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? |
+| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 11:44, 2. 21 Aralık Pazartesi 11:44. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 11:44, 2. … |
 | E-26 | docs/denetim/2026-10-02-ayse-eylem.md: \| 26 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Deniz Aksoy'un fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-26 | docs/denetim/2026-10-02-ayse-eylem.md: \| 26 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Deniz Aksoy'un fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-27 | docs/denetim/2026-10-02-ayse-eylem.md: \| 27 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03; docs/OPEN-COMMI… | chat | Deniz Aksoy için yarın 11:00'e kontrol randevusu oluştur | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | not judged | Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: yarın, 3 Ekim 2026 Cumartesi. Saat: 11:00. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
@@ -1010,6 +1019,7 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01.
 - `lib/asistan/kapsamKilidi.test.ts` — header comment citing the live weather sentence (NOTYA-KAPSAM-05)
 - `lib/asistan/dosyaSorgu/denetim.test.ts` — single-fact questions of the Dr. Gökhan standard
 - `lib/asistan/vizitOlcumSahne.test.ts` — header comment citing the live visit-measurement question (NOTYA-DANIS-OLCUM) and its variants
+- `lib/asistan/aktifHastaPratik.test.ts` — the doctor's own practice-ranking question of 2026-09-20 and its variants (NOTYA-AYSE-KOHORT-01)
 
 ## Live complaints that are not a sentence to Ayşe (not in the corpus)
 
