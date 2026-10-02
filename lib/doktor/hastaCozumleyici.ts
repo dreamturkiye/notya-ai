@@ -20,7 +20,7 @@ import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { sorguyuAyikla, tekHastaSorusuMu, type SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
-import { mesajAdaylariniBul } from '@/lib/doktor/hastaAramaIndeksi'
+import { indekssizHastalar, mesajAdaylariniBul } from '@/lib/doktor/hastaAramaIndeksi'
 
 /**
  * NOTYA-SAYIM-ANDA-01 (Kaan, 2026-09-30): a small panel is named — "Kayıtlarda 1 hasta: Kaan Arıoğlu." (≤ 5 names,
@@ -301,9 +301,14 @@ async function adaylariZenginlestir(supabase: SupabaseClient, doctorId: string, 
   return zengin.sort((a, b) => a.id.localeCompare(b.id))
 }
 
+/** More unindexed patients than this and the id filter is pointless — the doctor's whole list is read instead. */
+const INDEKSSIZ_TAVANI = 100
 /** This doctor's active patients whose indexed name parts may match the message tokens (index miss → full scan). */
 async function adAdaylariniYukle(supabase: SupabaseClient, doctorId: string, tokenlar: Set<string>): Promise<{ id: string; name_encrypted: string | null }[]> {
-  const adaylarIdSeti = await mesajAdaylariniBul(supabase, doctorId, tokenlar)
+  // NOTYA-AYSE-GERI-07: a patient with no index row is a candidate too — the index cannot say "no" for it.
+  const [indeksAdaylari, indekssiz] = await Promise.all([mesajAdaylariniBul(supabase, doctorId, tokenlar), indekssizHastalar(supabase, doctorId)])
+  const tamTarama = indeksAdaylari === null || indekssiz === null || indekssiz.length > INDEKSSIZ_TAVANI
+  const adaylarIdSeti = tamTarama ? null : new Set([...Array.from(indeksAdaylari), ...indekssiz])
   if (adaylarIdSeti !== null && adaylarIdSeti.size === 0) return []
   let sorgu = supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true)
   if (adaylarIdSeti) sorgu = sorgu.in('id', Array.from(adaylarIdSeti))

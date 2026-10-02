@@ -32,6 +32,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { aiCagir } from '@/lib/ai/cagir'
+import { jsonCikar, jsonOnar } from '@/lib/ai/jsonOnar'
 import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type HafizaKategori = 'klinik' | 'uslup' | 'rutin' | 'iletisim' | 'kisisel' | 'uygulama'
@@ -382,6 +383,19 @@ export function ogrenmeyeDeger(mesaj: string): boolean {
 
 interface CikarilanKayit { kategori: HafizaKategori; anahtar: string; deger: string; unut?: boolean }
 
+/** Output cap of the extraction call — reasoning tokens included. */
+export const OGRENME_TOKEN_TAVANI = 1200
+
+/** The extraction answer as records: fenced, wrapped in prose or cut mid-list, whatever can be recovered; else []. */
+export function ogrenilenKayitlar(ham: string): CikarilanKayit[] {
+  const temiz = String(ham || '').replace(/```[a-z]*/g, '').replace(/```/g, '').trim()
+  const kayit = (liste: unknown): CikarilanKayit[] => (Array.isArray(liste) ? liste.filter((k): k is CikarilanKayit => !!k && typeof k === 'object') : [])
+  const tam = jsonCikar(temiz)
+  if (tam) return kayit(tam.kayitlar)
+  // Cut mid-list: the records before the cut are whole; the last one may be half a sentence — it is not kept.
+  return kayit((jsonOnar(temiz) as { kayitlar?: unknown } | null)?.kayitlar).slice(0, -1)
+}
+
 /** Son turlardan doktorun KENDİ AĞZINDAN söylediği kalıcı bilgileri çıkarır.
  *  Hastaya özgü klinik içerik alınmaz; yalnız doktorun kendisi/tercihi/ritmi. */
 export async function sohbettenOgren(
@@ -391,9 +405,15 @@ export async function sohbettenOgren(
 ): Promise<number> {
   const metin = sonMesajlar.slice(-6).map((m) => `${m.role === 'user' ? 'DOKTOR' : 'ASİSTAN'}: ${String(m.content).slice(0, 600)}`).join('\n')
   // NOTYA-MALIYET-01: doktorun kendi tercihlerini çıkarma — dar HIZLI listesinde (hasta klinik verisi alınmaz)
+  // NOTYA-AYSE-GERI-07 (audit §7, PR 12): this answer is PARSED, and the tiering rule is "effort none never where
+  // JSON is parsed" (lib/ai/modeller.ts). The task's default is none, so the call site asks for low effort, marks
+  // the answer as JSON (a cut or unparseable answer goes through the quality gate instead of being dropped), and
+  // leaves room for the reasoning tokens that now count against the cap.
   const yanit = await aiCagir({
     gorev: 'cikarim',
-    maxTokens: 500,
+    caba: 'low',
+    jsonBekleniyor: true,
+    maxTokens: OGRENME_TOKEN_TAVANI,
     doctorId,
     system: `Bir doktor ile AI meslektaşının sohbetinden, doktorun KENDİSİ hakkında AÇIKÇA söylediği ve gelecekte de geçerli KALICI bilgileri çıkar. Kişisel şef benzetmesi: "balık yemem", "akşam 7'de yerim", "az ricotta" gibi şeyler.
 Kategoriler: klinik (ilaç/tedavi tercihleri), uslup (not/konuşma biçimi tercihleri: kısa/uzun, terminoloji), rutin (mesai, öğle arası, hasta yoğunluğu, randevu süresi), iletisim (hitap: "bana X de", "Hocam deme", cevap uzunluğu, ses tonu), kisisel (doktorun paylaştığı kişisel ama işle ilgili detay: çocuğu var, cuma erken çıkar), uygulama (hangi özelliği nasıl kullanmak istediği).
@@ -408,11 +428,8 @@ SADECE JSON döndür: {"kayitlar":[{"kategori":"...","anahtar":"...","deger":"..
     messages: [{ role: 'user', content: metin }],
   })
   const ham = yanit.content[0]?.type === 'text' ? yanit.content[0].text : ''
-  let kayitlar: CikarilanKayit[] = []
-  try {
-    const temiz = ham.replace(/```[a-z]*/g, '').replace(/```/g, '').trim()
-    kayitlar = (JSON.parse(temiz)?.kayitlar || []) as CikarilanKayit[]
-  } catch { return 0 }
+  const kayitlar = ogrenilenKayitlar(ham)
+  if (!kayitlar.length) return 0
   const gecerli: HafizaKategori[] = ['klinik', 'uslup', 'rutin', 'iletisim', 'kisisel', 'uygulama']
   let n = 0
   for (const k of kayitlar.slice(0, 6)) {

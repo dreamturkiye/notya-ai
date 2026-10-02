@@ -21,6 +21,7 @@ import { csvXlsxCoz, pdfMetinCoz, gorselCikar, type CikarimSonucu } from '@/core
 import { satirKur, uzlastir, panelOzeti, ozelHesaplar, type HamSatir, type LabSatir, type OncekiSatir } from '@/core/lab/trend'
 import { KANONIK, normalizeAd, panelSirasi, type KanonikAnahtar } from '@/core/lab/kanonik'
 import { labRaporYaz, labRaporuDogrula } from '@/core/lab/yorum'
+import { rotaButcesiMs } from '@/lib/ai/cagir'
 import { labRaporKaynaklari } from '@/specialties/dahiliye/engines/labKaynak'
 import { ENABIZ_TALIMAT, satirTarihiDogrula, tekrarAyikla, panelTarihi } from '@/core/lab/enabiz'
 import { muhtemelNtpPanel, ntpBelgeSahibi, ntpKeyFromRaw, yorumNtp, NTP_DISCLAIMER } from '@/lib/clinical/yenidogan'
@@ -64,8 +65,8 @@ export async function POST(req: NextRequest) {
       else if (ft === 'application/pdf') { const p = await pdfMetinCoz(bytes); yapi = p.satirlar.length ? p : null; if (!p.metin.trim()) yapi = null }
     } catch (e) { yapi = null; console.error('lab yapi', e) }
     try {
-      if (ft === 'application/pdf') gorsel = await gorselCikar({ tip: 'pdf', base64: bytes.toString('base64') }, enabiz ? ENABIZ_TALIMAT : undefined, user.id)
-      else if (ft.startsWith('image/')) gorsel = await gorselCikar({ tip: 'image', mime: ft, base64: bytes.toString('base64') }, undefined, user.id)
+      if (ft === 'application/pdf') gorsel = await gorselCikar({ tip: 'pdf', base64: bytes.toString('base64') }, enabiz ? ENABIZ_TALIMAT : undefined, user.id, undefined, rotaButcesiMs(maxDuration))
+      else if (ft.startsWith('image/')) gorsel = await gorselCikar({ tip: 'image', mime: ft, base64: bytes.toString('base64') }, undefined, user.id, undefined, rotaButcesiMs(maxDuration))
     } catch (e) { gorsel = null; console.error('lab gorsel', e) }
     if (!yapi && !gorsel) return NextResponse.json({ error: 'Bu dosyadan tablo çıkarılamadı.' }, { status: 422 })
 

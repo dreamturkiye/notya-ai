@@ -331,6 +331,9 @@ UZUNLUK SINIRI (kesin): aiDegerlendirme en fazla 6 kısa madde, toplam 120 kelim
 
 type AiYanit = Awaited<ReturnType<typeof aiCagir>>
 
+/** Output cap of the advisory call (B) — reasoning tokens included. */
+export const ONERI_TOKEN_TAVANI = 6000
+
 function yanitJsonu(yanit: AiYanit): SoapNotu {
   // Boş içerik (content: []) eskiden TypeError'dı; artık ayrıştırılamayan çıktı olarak geçici hata sayılır.
   const ham = yanit?.content?.[0]?.type === 'text' ? yanit.content[0].text : ''
@@ -434,7 +437,10 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
     istemci: secenek.istemci,
     gorev: 'klinik-analiz',
     kademe: 'derin', // NOTYA-KADEME-01: SOAP önerisi arka planda DERİN model
-    maxTokens: 2000,
+    // NOTYA-AYSE-GERI-07 (audit §7, PR 12): the cap counts the model's REASONING tokens too. At 2000 the primary
+    // spent the budget thinking and stopped with `length` before the JSON (docs/denetim/2026-09-30-kademe.md), so
+    // the advisory only ever came from the guard. The visible advisory is ~1–1.5k tokens; the rest is headroom.
+    maxTokens: ONERI_TOKEN_TAVANI,
     doctorId: girdi.doctorId ?? null,
     system,
     guvenlikBaglami: girdi.klinikBaglam,

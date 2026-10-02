@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { SahteVeritabani } from '../../security/testing/sahteSupabase'
-import { adIndeksParcalari, tokenOzeti } from '../../doktor/hastaAramaIndeksi'
+import { adIndeksParcalari, indeksOnbelleginiTemizle, tokenOzeti } from '../../doktor/hastaAramaIndeksi'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-ayse-sahne-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
@@ -143,6 +143,7 @@ export function encrypt(s: string): string {
 /** Fresh database, two doctors (pediatri), one Ayşe session for the first doctor. */
 export function sahneKur(brans = 'pediatri'): Sahne {
   ortam.db = new SahteVeritabani()
+  indeksOnbelleginiTemizle()
   ortam.modelIstekleri.length = 0
   ortam.rotalar.length = 0
   ortam.yanit = { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) }

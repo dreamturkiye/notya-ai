@@ -13,7 +13,7 @@ process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-arama-indeks-anahtari'
 
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
 import { encrypt } from '../security/encryption'
-import { tokenOzeti, adIndeksParcalari, hastaAramaIndeksiniGuncelle, mesajAdaylariniBul } from './hastaAramaIndeksi'
+import { tokenOzeti, adIndeksParcalari, hastaAramaIndeksiniGuncelle, mesajAdaylariniBul, indekssizHastalar, indeksOnbelleginiTemizle, adParcasiMi } from './hastaAramaIndeksi'
 import { hastaninSozunuCoz, sesliSozTokenlari, duzle } from './hastaCozumleyici'
 
 describe('NOTYA-ARAMA-INDEKS-01 -- blind token index', () => {
@@ -107,5 +107,82 @@ describe('NOTYA-ARAMA-INDEKS-01 -- blind token index', () => {
     const sonuc = await hastaninSozunuCoz(sb, doctorId, 'yesilin dosyasini getir')
     assert.equal(sonuc.tur, 'tek')
     assert.equal((sonuc as any).patientId, p1.id)
+  })
+})
+
+// NOTYA-AYSE-GERI-07 (audit §4.3, PR 10): the index cannot say "no" for a patient it has no row for.
+describe('NOTYA-AYSE-GERI-07 -- indeks satiri olmayan hasta', () => {
+  const hasta = (db: SahteVeritabani, doctorId: string, ad: string, aktif = true) =>
+    db.ekle('patients', { doctor_id: doctorId, name_encrypted: encrypt(JSON.stringify({ ad })), is_active: aktif }).id as string
+
+  it('hic indeks satiri olmayan hekimin hastasi adla bulunur', async () => {
+    indeksOnbelleginiTemizle()
+    const db = new SahteVeritabani()
+    const sb = db.istemci() as any
+    const doctorId = randomUUID()
+    const id = hasta(db, doctorId, 'Zeynep Arslan')
+    hasta(db, doctorId, 'Mehmet Yilmaz')
+    assert.deepEqual((await indekssizHastalar(sb, doctorId))?.length, 2)
+    const sonuc = await hastaninSozunuCoz(sb, doctorId, 'Zeynep Arslanin dosyasini ac')
+    assert.equal(sonuc.tur, 'tek')
+    assert.equal((sonuc as any).patientId, id)
+  })
+
+  it('indeksli adasin yaninda indekssiz adas da aday olur -- tek hastaya sessizce cozulmez', async () => {
+    indeksOnbelleginiTemizle()
+    const db = new SahteVeritabani()
+    const sb = db.istemci() as any
+    const doctorId = randomUUID()
+    const indeksli = hasta(db, doctorId, 'Umutcan Yildiz')
+    const indekssiz = hasta(db, doctorId, 'Umutcan Turkoglu')
+    await hastaAramaIndeksiniGuncelle(sb, doctorId, indeksli, 'Umutcan Yildiz')
+    assert.deepEqual(await indekssizHastalar(sb, doctorId), [indekssiz])
+    const sonuc = await hastaninSozunuCoz(sb, doctorId, 'Umutcanin dosyasini ac')
+    assert.equal(sonuc.tur, 'coklu', 'iki Umutcan: hekime sorulur')
+    const tam = await hastaninSozunuCoz(sb, doctorId, 'Umutcan Turkoglunun dosyasini ac')
+    assert.equal(tam.tur, 'tek')
+    assert.equal((tam as any).patientId, indekssiz)
+  })
+
+  it('CAPRAZ-DOKTOR: baska hekimin indekssiz hastasi aday olmaz', async () => {
+    indeksOnbelleginiTemizle()
+    const db = new SahteVeritabani()
+    const sb = db.istemci() as any
+    const doktorA = randomUUID()
+    const doktorB = randomUUID()
+    hasta(db, doktorB, 'Zeynep Arslan')
+    const benim = hasta(db, doktorA, 'Mehmet Yilmaz')
+    assert.deepEqual(await indekssizHastalar(sb, doktorA), [benim])
+    const sonuc = await hastaninSozunuCoz(sb, doktorA, 'Zeynep Arslanin dosyasini ac', { yalnizAd: true })
+    assert.equal(sonuc.tur, 'yok')
+  })
+
+  it('pasif hasta ve tam indeks: ek aday yok; tam indeks bir dakika hatirlanir', async () => {
+    indeksOnbelleginiTemizle()
+    const db = new SahteVeritabani()
+    const sb = db.istemci() as any
+    const doctorId = randomUUID()
+    const id = hasta(db, doctorId, 'Mehmet Yilmaz')
+    hasta(db, doctorId, 'Eski Hasta', false)
+    await hastaAramaIndeksiniGuncelle(sb, doctorId, id, 'Mehmet Yilmaz')
+    assert.deepEqual(await indekssizHastalar(sb, doctorId), [])
+    // remembered: a patient added behind the index's back is not seen until the minute passes…
+    hasta(db, doctorId, 'Zeynep Arslan')
+    assert.deepEqual(await indekssizHastalar(sb, doctorId), [])
+    // …and is seen once it has
+    indeksOnbelleginiTemizle()
+    assert.equal((await indekssizHastalar(sb, doctorId))?.length, 1)
+  })
+
+  it('adParcasiMi: indeks eksikken "hayir" demez (null), tamken der', async () => {
+    indeksOnbelleginiTemizle()
+    const db = new SahteVeritabani()
+    const sb = db.istemci() as any
+    const doctorId = randomUUID()
+    const id = hasta(db, doctorId, 'Mehmet Yilmaz')
+    assert.equal(await adParcasiMi(sb, doctorId, 'Mehmet'), null)
+    await hastaAramaIndeksiniGuncelle(sb, doctorId, id, 'Mehmet Yilmaz')
+    assert.equal(await adParcasiMi(sb, doctorId, 'Mehmet'), true)
+    assert.equal(await adParcasiMi(sb, doctorId, 'Zeynep'), false)
   })
 })

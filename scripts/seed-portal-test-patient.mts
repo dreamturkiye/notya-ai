@@ -103,6 +103,9 @@ const { data: patient, error: patientError } = await sb
   .single()
 if (patientError || !patient) throw new Error(`patients: ${patientError?.message}`)
 const patientId = patient.id as string
+// NOTYA-AYSE-GERI-07: a seeded patient gets its blind name index rows like every created patient.
+const { hastaAramaIndeksiniGuncelle } = await import('../lib/doktor/hastaAramaIndeksi')
+await hastaAramaIndeksiniGuncelle(sb, doctorId, patientId, TEST_NAME)
 console.log(`Hasta oluşturuldu: ${patientId.slice(0, 8)}…`)
 
 // ── Sessions + APPROVED notes with vitals ───────────────────────────────────

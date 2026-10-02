@@ -6,6 +6,28 @@
  * persentil rule now come from the note's BransKapsami (lib/specialties/kapsam.ts).
  */
 import type { BransKapsami } from '@/lib/specialties/kapsam'
+import { jsonOnar } from '@/lib/ai/jsonOnar'
+
+export interface NotKonsultZarfi { cevap?: string; duzenlemeler?: Record<string, unknown>; eylemler?: unknown[] }
+
+/**
+ * NOTYA-AYSE-GERI-07 (audit §7, PR 12) — the model's answer as the {"cevap","duzenlemeler","eylemler"} envelope.
+ * Whole JSON, or the first {...} block inside prose, is taken as it is. A CUT envelope is repaired for its `cevap`
+ * only: half a SOAP field must never be written over the doctor's draft, and half an action list is not an action.
+ * Anything else is the answer text itself.
+ */
+export function notKonsultZarfi(ham: string): NotKonsultZarfi {
+  const temiz = String(ham || '').replace(/```json\n?|\n?```/g, '').trim()
+  const nesne = (v: unknown): NotKonsultZarfi | null => (v && typeof v === 'object' && !Array.isArray(v) ? (v as NotKonsultZarfi) : null)
+  const dene = (s: string): NotKonsultZarfi | null => { try { return nesne(JSON.parse(s)) } catch { return null } }
+  const tam = dene(temiz) ?? dene(temiz.match(/\{[\s\S]*\}/)?.[0] ?? '')
+  if (tam) return tam
+  const onarilan = nesne(jsonOnar(temiz))
+  if (onarilan && typeof onarilan.cevap === 'string' && onarilan.cevap.trim()) return { cevap: onarilan.cevap }
+  // Broken JSON with no answer in it: say so — the old code answered "Düzenlemeyi ekrana işledim" with no edit made.
+  return { cevap: temiz.startsWith('{') ? NOT_KONSULT_YARIM_CEVAP : temiz }
+}
+export const NOT_KONSULT_YARIM_CEVAP = 'Yanıtı tamamlayamadım Hocam; aynı soruyu bir kez daha sorar mısınız?'
 
 export interface NotKonsultTaslak { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; asilar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
 export interface NotKonsultNot { vitaller?: unknown; icd10_codes?: unknown; recete_onerisi?: unknown; alarm_bulgulari?: unknown; basvuru_yakinmasi?: string | null; hasta_ozeti?: string | null }

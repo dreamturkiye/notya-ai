@@ -109,6 +109,9 @@ async function hastaYaz(doctorId: string, k: Kart): Promise<string> {
     .select('id')
     .single()
   if (error || !data) throw new Error(`patients ${k.ad}: ${error?.message}`)
+  // NOTYA-AYSE-GERI-07: a seeded patient gets its blind name index rows like every created patient.
+  const { hastaAramaIndeksiniGuncelle } = await import('../lib/doktor/hastaAramaIndeksi')
+  await hastaAramaIndeksiniGuncelle(sb, doctorId, data.id as string, k.ad)
   return data.id as string
 }
 

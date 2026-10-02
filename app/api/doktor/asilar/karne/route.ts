@@ -19,7 +19,7 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { getDocumentMeta, downloadDocument } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
-import { aiCagir, yanitMetni } from '@/lib/ai/cagir'
+import { aiCagir, rotaButcesiMs, yanitMetni } from '@/lib/ai/cagir'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import {
   KARNE_SISTEM, KARNE_KULLANICI_METNI, KARNE_NOT_ONEKI, KarneOkumaHatasi,
@@ -74,10 +74,13 @@ export async function POST(req: NextRequest) {
         messages: [{ role: 'user', content: [blok, { type: 'text', text: KARNE_KULLANICI_METNI }] }],
         temperature: 0,
         doctorId: doktorId,
+        // NOTYA-AYSE-GERI-07: two 60 s primary attempts equalled the route limit — the guard was never reached.
+        butceMs: rotaButcesiMs(maxDuration),
       })
       // ASI-KARNESI-FIX: yanit token tavaninda kesildiyse bunu SESSIZCE "okunamadi"ya dusurme —
       // sebebi farkli (karne okunmadi degil, cevap sigmadi) ve hekime verilecek tavsiye de farkli.
-      const kesildi = (y as { stopReason?: string | null })?.stopReason === 'max_tokens'
+      // NOTYA-AYSE-GERI-07: the field is `stop_reason`; this branch read `stopReason` and never fired.
+      const kesildi = (y as { stop_reason?: string | null })?.stop_reason === 'max_tokens'
       if (kesildi) {
         console.error('[asi-karnesi] yanit token tavaninda kesildi (goruntu inceleme gorevi)')
         return NextResponse.json(

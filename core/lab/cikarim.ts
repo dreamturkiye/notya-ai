@@ -86,13 +86,13 @@ KURALLAR: Hiçbir değer, birim veya referans aralığı UYDURMA; sayfada yoksa 
 ŞEMA: {"lab_adi": string|null, "numune_tarihi": "YYYY-MM-DD"|null, "rapor_tarihi": "YYYY-MM-DD"|null, "kimlik": {"ad": string|null, "dogum": "YYYY-MM-DD"|null, "tc_son4": string|null}, "satirlar": [{"raw_name": string, "value": string, "unit": string|null, "ref_low": string|null, "ref_high": string|null, "flag_printed": string|null, "page": number}], "not": string|null}
 Mikrobiyoloji/kültür: organizma ve duyarlılıkları "not" alanına düz metin olarak yaz, satır uydurma.`
 
-export async function gorselCikar(girdi: { tip: 'pdf'; base64: string } | { tip: 'image'; mime: string; base64: string }, ekTalimat?: string, doctorId?: string | null, istemci?: AiIstemci): Promise<CikarimSonucu> {
+export async function gorselCikar(girdi: { tip: 'pdf'; base64: string } | { tip: 'image'; mime: string; base64: string }, ekTalimat?: string, doctorId?: string | null, istemci?: AiIstemci, butceMs?: number): Promise<CikarimSonucu> {
   const icerik: unknown[] = []
   if (girdi.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: girdi.base64 } })
   else icerik.push({ type: 'image', source: { type: 'base64', media_type: girdi.mime, data: girdi.base64 } })
   icerik.push({ type: 'text', text: `Bu laboratuvar raporundaki TÜM satırları şemaya göre çıkar. Yalnızca JSON.${ekTalimat ? `\n${ekTalimat}` : ''}` })
   // NOTYA-MALIYET-01: lab PDF/görsel okuma (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro)
-  const y = await aiCagir({ istemci, gorev: 'goruntu-inceleme', maxTokens: ekTalimat ? 16000 : 6000, temperature: 0, doctorId, system: CIKARIM_SISTEM, messages: [{ role: 'user', content: icerik }] })
+  const y = await aiCagir({ istemci, gorev: 'goruntu-inceleme', maxTokens: ekTalimat ? 16000 : 6000, temperature: 0, doctorId, system: CIKARIM_SISTEM, messages: [{ role: 'user', content: icerik }], ...(butceMs ? { butceMs } : {}) })
   const ham = y.content.filter((c) => c.type === 'text').map((c) => (c as { text: string }).text).join('\n').replace(/```json|```/g, '')
   const j = JSON.parse(ham.slice(ham.indexOf('{'), ham.lastIndexOf('}') + 1)) as Partial<CikarimSonucu> & { satirlar?: Partial<HamSatir>[] }
   const satirlar: HamSatir[] = (j.satirlar || []).filter((s) => s && typeof s.raw_name === 'string' && s.value != null).map((s) => ({ raw_name: String(s.raw_name), value: String(s.value), unit: s.unit ? String(s.unit) : null, ref_low: s.ref_low != null ? String(s.ref_low) : null, ref_high: s.ref_high != null ? String(s.ref_high) : null, flag_printed: s.flag_printed ? String(s.flag_printed) : null, page: typeof s.page === 'number' ? s.page : null, kaynak: 'gorsel', ...(ekTalimat ? { numune_tarihi: s.numune_tarihi != null ? String(s.numune_tarihi) : null } : {}) }))
