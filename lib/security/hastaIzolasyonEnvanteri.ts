@@ -249,6 +249,15 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // and the record is read again with the authenticated doctor's id (a reference to a foreign patient reads nothing).
   // Covered by the same "Ayşe okuma araçları" block (positive control, A→B, B→A, chat and fish-tur) and by
   // lib/asistan/alanSizinti.test.ts (forged reference in ses-ekran, other doctor's session → 404).
+  // NOTYA-AYSE-ANALIZ-01 (2026-10-02): three more read tools — muayene_ara(terim, hasta_adi?),
+  // muayeneleri_oku(adet | tarihler | tur, hasta_adi?), eksikler(hasta_adi?) — lib/asistan/muayeneAnaliz.ts. They take a
+  // term, dates and a NAME, never an id. The patient is resolved by the same helper as hasta_alan (aracHastasi:
+  // hastaninSozunuCoz(doktorId), or the open patient after hastaSahibiMi); the chart is dosyaPaketOnbellekli(doktorId).
+  // eksikler also calls the branch's kohort function in process (lib/doktor/fisiltiHasta.ts → app/api/doktor/<rota>/
+  // _kohort.ts, the function the kohort route itself calls) with the authenticated doctor's id and that ONE resolved
+  // patient id; every kohort function scopes its reads by the doctor id it is given. No new route. Covered by the same
+  // "Ayşe okuma araçları" block (the three tools are called with the victim's patient name: five "not found" results,
+  // no chart read; positive control reads the doctor's own patient) and by lib/asistan/analizKabul.test.ts.
   'app/api/asistan/chat/route.ts': T,
   'app/api/asistan/learn/route.ts': T,
   'app/api/asistan/hasta-bul/route.ts': I('hastaninSozunuCoz(doktorId) searches only the doctor\'s patients; file via hastaDosyaPaketiniDerle(doktorId). Client-tool endpoint of the ElevenLabs path only; the single brain runs the same logic in process (lib/asistan/okumaAraclari.ts)'),
