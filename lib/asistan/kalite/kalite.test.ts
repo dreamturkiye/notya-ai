@@ -314,6 +314,7 @@ describe('Q-31 ses-tarih, ses-bicim, ses-birim, ses-kimlik', () => {
     kalir(sesBirim(fishMetni('Hemoglobin 11,8 g/dL.')), /okunmayan birim/)
     kalir(sesBirim(fishMetni('Tansiyon 95/60 mmHg.')), /okunmayan birim/)
     kalir(sesBirim(fishMetni('D vitamini 400 IU.')), /okunmayan birim/)
+    gecer(sesBirim(fishMetni('M-CHAT-R/F bir sonraki vizitte uygulanacak.')), 'tarama adı birim değildir')
     assert.equal(sesBirim(undefined), null)
   })
   it('ses-kimlik: telefon, e-posta, kimlik numarası, doğum tarihi ve fikstürün kimlik değerleri seslendirilmez', () => {

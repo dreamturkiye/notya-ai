@@ -574,12 +574,14 @@ export function sesBicim(soz: string): Sonuc {
   return m ? kusur(`biçim işareti: "${kisalt(m[0], 20)}"`) : tamam()
 }
 
+/** Names that carry a slash and are not units. */
+const BIRIM_DEGIL = /m-chat-r\/f/giu
 const BIRIM_ARTIGI = /°|µ|%|(?<![\p{L}\d])(?:kg|cm|mm|mg|mcg|ml|gr|dl|fl|iu|mmhg)(?![\p{L}\d])|\p{L}\s*\/\s*\p{L}/iu
 
 /** Numbers are said with their units: no unit symbol or abbreviation is left in the text handed to the speech engine. */
 export function sesBirim(okunus: string | undefined): Sonuc {
   if (okunus === undefined || !okunus.trim()) return null
-  const metin = okunus.replace(/\[break\]/g, ' ')
+  const metin = okunus.replace(/\[break\]/g, ' ').replace(BIRIM_DEGIL, 'm-chat')
   const m = BIRIM_ARTIGI.exec(metin)
   return m ? kusur(`okunmayan birim: "${kisalt(metin.slice(Math.max(0, m.index - 12), m.index + m[0].length + 4), 30)}"`) : tamam()
 }

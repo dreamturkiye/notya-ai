@@ -185,7 +185,7 @@ export function tabanlaKarsilastir(
   }
   if (yeniTurlar.length) {
     const y = kaliteOzetle(yeniTurlar)
-    notlar.push(`${yeniTurlar.length} turn(s) not in the baseline (score ${y.puan}, ${y.toplam.gecen}/${y.toplam.toplam} verdicts) — regenerate the baseline after the live pass`)
+    notlar.push(`${yeniTurlar.length} turn(s) not in the baseline (score ${y.puan}, ${y.toplam.gecen}/${y.toplam.toplam} verdicts) — they enter the rates when the baseline is regenerated`)
   }
 
   // ── Q-41: corpus FAIL ──

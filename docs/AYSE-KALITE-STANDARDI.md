@@ -148,6 +148,44 @@ A verdict exists only for an answer the product wrote: in a stand-in run (no mod
 stand-in is not judged, so only the model-free handlers are comparable there, and the baseline keeps the two modes
 apart.
 
+## Golden cases
+
+The corpus (`lib/asistan/tests/gokhanSikayetKorpusu.ts`, ids `K-…`) holds one golden case per question below, on chat
+and on voice. Each states the facts of the synthetic chart the answer must carry and what the rubric needs to know
+(structure, which items are only planned, which follow-up has passed). The İlk-10 entries on the 15-visit chart
+(`I-01` to `I-10`, three surfaces) carry that chart's planned-versus-given evidence.
+
+The late-entry chart (`korpusGecGiris`, lib/asistan/dosyaSorgu/denetim/fikstur.ts) is a synthetic 19-month-old whose
+three visits were typed in on one evening three days ago: the session rows carry that evening, each note carries the
+day the child was seen. It also has a screening and a vaccine that are only planned (M-CHAT-R/F, Hepatit A 1. doz), a
+consultation asked for with no answer, a follow-up window that has passed ("2 hafta sonra kontrol"), an abnormal lab
+result with no repeat, and one weight in a note text that contradicts the series.
+
+| Case | Sentence | Chart | The answer must |
+|---|---|---|---|
+| K-G01 | Bu hastayı bana kısaca özetler misin? | late-entry | give the exact age, name the planned M-CHAT-R/F and Hepatit A as planned, mention the low haemoglobin |
+| K-G02 | Son muayeneden bu yana neler değişmiş? | late-entry | date the last visit by its note (the 18-month visit), with its weight |
+| K-G03 | Büyümesi nasıl gidiyor? | late-entry | give the last values with the note's date and show the contradicting 14,1 kg as a contradiction |
+| K-G04 | Aşıları yaşına göre tam mı? Eksik aşısı var mı? | late-entry | give the exact age and say Hepatit A is planned with no record of being given |
+| K-G05 | Son lab sonuçlarında dikkat etmem gereken bir şey var mı? | late-entry | give Hb 10,2 with its date |
+| K-G06 | Şu anda kullandığı ilaçlar neler ve dozları nedir? | late-entry | give D vitamini with its dose |
+| K-G07 | Daha önce aynı şikayetle geldi mi? | late-entry | read by a person (the intended outcome is ambiguous); the rubric still judges the form |
+| K-G08 | Gelişimi yaşına uygun mu? | late-entry | say M-CHAT-R/F is planned and not done, and report the mother's language concern |
+| K-G09 | Bugün yapmam veya takip etmem gereken bir şey var mı? | late-entry | list the planned screening, the planned vaccine and the unanswered consultation, and say the control window has passed |
+| K-G10 | Gözümden kaçabilecek önemli bir şey var mı? | late-entry | flag the unfollowed low haemoglobin and an open developmental item |
+| K-VIZIT-B12 | 12 aylık muayenesini özetler misin? | 15-visit | carry that visit's measurements and milestones in the eight-part structure, and nothing of the otitis visits |
+| K-VIZIT-G18 | 18 aylık muayenesini özetler misin? | late-entry | date the visit by its note and carry its weight, the planned items and the consultation |
+| K-OLCUM-KILO, K-OLCUM-G-KILO | Kilosu kaç? | 15-visit, late-entry | give the weight and its date, no other vital sign |
+| K-OLCUM-G-BOY | Boyu kaç? | late-entry | give the height and its date |
+| K-OLCUM-G-BAS | Baş çevresi kaç? | late-entry | give the head circumference and its date |
+| K-OLCUM-ATES | Son muayenede ateşi kaçtı? | one-visit chart | give the temperature and its date, no weight |
+| K-TARIH-SON | En son ne zaman geldi? | late-entry | give the day of the last NOTE, never the day the visits were entered |
+| K-TARIH-G18 | 18 aylık muayenesinde kaç kiloydu? | late-entry | give the weight with the day of that note |
+
+Entries that today's build is known to fail name the ledger row of the defect (Q-40: the entry comes before the fix):
+NOTYA-VIZIT-TARIH-01 (a visit is dated by its session row) and NOTYA-KALITE-STANDART-01e (the quick card answers a
+measurement question without its date).
+
 ## Known conflicts with shipped behaviour (not changed by this work)
 
 | Rule | Today | Decision needed |

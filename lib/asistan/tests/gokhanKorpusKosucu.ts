@@ -18,8 +18,8 @@ import {
   type Sahne,
 } from './ayseSahne'
 import { GERCEKCI_HASTA_ADI, gercekciHastaEkle } from './gercekciHasta'
-import { KORPUS_ADLARI, KORPUS_KIMLIK_DEGERLERI, YABANCI_HASTALAR, korpusPaneliKur } from './gokhanKorpusHastalari'
-import { korpusBebek } from '../dosyaSorgu/denetim/fikstur'
+import { KORPUS_ADLARI, KORPUS_GEC_GIRIS_ADI, KORPUS_KIMLIK_DEGERLERI, YABANCI_HASTALAR, gecGirisHastasiEkle, korpusPaneliKur } from './gokhanKorpusHastalari'
+import { KORPUS_GEC_GIRIS, korpusBebek, korpusGecGiris } from '../dosyaSorgu/denetim/fikstur'
 import { bugunTz } from '../../randevu/tarihCozumle'
 import { fishMetni } from '../fishSes'
 import { gunEkle } from '../../../specialties/pediatri/engines/girdi'
@@ -32,7 +32,7 @@ import { GECIKME_BUTCESI, KALITE_KURALLARI } from '../kalite/kurallar'
 import { gecikmeOzeti, kaliteIhlalleri, kaliteOzetle, oran, type KaliteSayimi } from '../kalite/ozet'
 import type { KaliteKarari } from '../kalite/denetimler'
 
-export const TUM_ADLAR: Record<KorpusHastasi, string> = { ...KORPUS_ADLARI, deniz: GERCEKCI_HASTA_ADI }
+export const TUM_ADLAR: Record<KorpusHastasi, string> = { ...KORPUS_ADLARI, deniz: GERCEKCI_HASTA_ADI, doruk: KORPUS_GEC_GIRIS_ADI }
 
 export interface KorpusSatiri {
   id: string
@@ -71,6 +71,7 @@ export interface KorpusSatiri {
 
 export const fiksturTarihleri = (bugunIso: string): FiksturTarihleri => {
   const b = korpusBebek(bugunIso)
+  const d = korpusGecGiris(bugunIso)
   const gun = (iso: string | null | undefined) => String(iso || '').slice(0, 10)
   return {
     pDogum: gun(b.hasta.dogumIso),
@@ -79,6 +80,8 @@ export const fiksturTarihleri = (bugunIso: string): FiksturTarihleri => {
     pSonVizit: gun(b.vizitler[b.vizitler.length - 1].tarih),
     pSonLab: [...(b.lablar || [])].map((l) => gun(l.numune_tarihi)).sort().pop() || '',
     aVizit: gunEkle(bugunIso, -8),
+    gV12: gun(d.vizitler[0].tarih), gV15: gun(d.vizitler[1].tarih), gV18: gun(d.vizitler[2].tarih),
+    gGiris: gunEkle(bugunIso, -KORPUS_GEC_GIRIS.girisGunOnce), gLab: gun(d.lablar?.[0]?.numune_tarihi),
   }
 }
 
@@ -112,6 +115,8 @@ async function oturumuKos(grup: KorpusGirdisi[], yuzey: Yuzey, o: { saatDilimi: 
   const idler: Partial<Record<KorpusHastasi, string>> = { ...p.idler }
   // The action-audit chart joins the panel only for the sessions that use it, so every other count stays the same.
   if (grup.some((g) => g.acik === 'deniz' || g.id.startsWith('E-'))) idler.deniz = gercekciHastaEkle(ortam.db, encrypt, s.doktor.id)
+  // The late-entry chart of the quality standard's golden cases, likewise.
+  if (grup.some((g) => g.acik === 'doruk' || g.sayfa === 'doruk' || g.soz.includes(KORPUS_GEC_GIRIS_ADI))) idler.doruk = gecGirisHastasiEkle(ortam.db, encrypt, s.doktor.id, bugun)
   const baglam = korpusBaglami(bugun, fiksturTarihleri(bugun))
   const acik = grup[0].acik
   const oturum = acik ? oturumAc(s, { id: idler[acik]!, ad: TUM_ADLAR[acik] }, brans) : s.oturum
