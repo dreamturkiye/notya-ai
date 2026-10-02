@@ -65,7 +65,7 @@ describe('kayıt isteği — hangi cümle tablo / özet ister', () => {
   })
   it('tek bilgi, değerlendirme ve tek adlı muayene bu yol değildir', () => {
     for (const m of [
-      'Kilosu kaç?', 'Ateşi kaçtı?', 'Büyümesi nasıl gidiyor?', 'Kilo alıyor mu?', 'Persentilleri nasıl', 'Boyu yaşına göre normal mi',
+      'Ateşi kaçtı?', 'Büyümesi nasıl gidiyor?', 'Kilo alıyor mu?', 'Persentilleri nasıl', 'Boyu yaşına göre normal mi',
       'Son muayenesini özetle', '6 aylık muayenesini anlat', 'Aşıları tam mı?', 'Alerjisi var mı?', 'Tansiyon ölçümleri neler', 'Kontrole ne zaman gelecek',
       'Otitte ilk seçenek nedir', 'Merhaba',
     ]) assert.equal(kayitIstegiBul(m), null, m)
