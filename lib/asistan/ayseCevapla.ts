@@ -65,7 +65,7 @@ import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { eylemZamani, type HastaOzeti } from "@/core/eylemler/types"
 import { sunucuTarihDegerleri } from "@/lib/asistan/sunucuTarihi"
 import { asiKaydiSorusuMu, asiTablosuCevabi } from "@/lib/asistan/asiTablosu"
-import { kayitCevabi, kayitIstegiBul, type KayitCevabi } from "@/lib/asistan/kayitTablosu"
+import { kayitCevabi, kayitIstegiBul, olcumVarMi, type KayitCevabi } from "@/lib/asistan/kayitTablosu"
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
@@ -653,8 +653,13 @@ ${ilacBaglamMetni(drugs[0])}`
               kayitCevap = vizitOlcumCevabi(vizitOlcumKaniti(olcumSorusu, (paket.olaylar || []) as DosyaOlayi[], { dogumIso: (paket.sorguHasta as DosyaHastasi | undefined)?.dogumIso ?? null }), ad)
               kayitNiyeti = "buyume"
             } else if (kayitIstegi) {
-              kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
-              kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
+              // NOTYA-OLCUM-TEK-01: a single value with no stored measurement falls through to the quick card (its own vitals), then the model.
+              if (kayitIstegi.tur === "olcum" && kayitIstegi.tekDeger && !olcumVarMi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[])) {
+                kayitCevap = null
+              } else {
+                kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
+                kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
+              }
             }
           }
         }

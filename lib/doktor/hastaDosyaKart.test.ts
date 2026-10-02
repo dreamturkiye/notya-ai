@@ -210,7 +210,7 @@ describe('NOTYA-AYSE-100 K1 — card answers', () => {
     const k: HastaDosyaKart = { ...bosKart(), olcum: 'Ateş: 39 °C · Nabız: 126/dk', sonPlan: '' }
     assert.equal(dosyaSoruCevap("E-nabız'dan yeni gelen bir şey var mı?", k), null)
     assert.equal(dosyaSoruCevap('e nabizdan gelen var mi', k), null)
-    assert.match(dosyaSoruCevap('nabzı kaçtı', k) || '', /Nabız: 126/)
+    assert.match(dosyaSoruCevap('nabzı kaçtı', k) || '', /[Nn]abız: 126/)
     assert.equal(dosyaSoruCevap('ne zaman gelecek', k), 'Dosyada plan ve takip: kayıt yok. Dosyada randevu: planlanmış randevu yok.')
   })
 })

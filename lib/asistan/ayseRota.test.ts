@@ -101,7 +101,7 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: `${D} aşı karnesini tablo olarak göster`, durum: 'yok', beklenen: { rota: 'kayit', hasta: D }, dilim: 'S5' },
 
   // ── Guards: what works today must keep its route ──
-  { soz: 'Kilosu kaç?', durum: 'acik', beklenen: { rota: 'hizli-kart', hasta: D } },
+  { soz: 'Kilosu kaç?', durum: 'acik', beklenen: { rota: 'kayit', hasta: D } },
   { soz: 'Alerjisi var mı?', durum: 'acik', beklenen: { rota: 'hizli-kart', hasta: D } },
   { soz: 'Aşıları tam mı?', durum: 'acik', beklenen: { rota: 'model', arac: null, hasta: D } },
   { soz: 'Büyümesi nasıl gidiyor?', durum: 'acik', beklenen: { rota: 'model', arac: null, hasta: D } },

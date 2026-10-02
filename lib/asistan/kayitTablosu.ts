@@ -84,7 +84,8 @@ export function kayitIstegiBul(mesaj: string | null | undefined): KayitIstegi | 
     const kapsam = kapsamBul(n)
     const liste = LISTE.test(n)
     // "Boyu kaç?", "baş çevresi ne?" — one value the quick card does not carry (it has the weight only).
-    const tekDeger = !liste && !kapsam && !olcumler.includes('kilo') && /\b(kac|ne|nedir|kacti|neydi)\b/.test(n)
+    // NOTYA-OLCUM-TEK-01: the quick card prints the WHOLE vital line, so a single weight is answered here too: one value, with its date.
+    const tekDeger = !liste && !kapsam && /\b(kac|ne|nedir|kacti|neydi)\b/.test(n)
     if (liste || kapsam || tekDeger) return { tur: 'olcum', olcumler, kapsam: kapsam ?? (tekDeger ? { tip: 'son', adet: 1 } : { tip: 'tum' }), tekDeger }
     return null
   }
@@ -290,4 +291,10 @@ export function muayeneCevabi(istek: Extract<KayitIstegi, { tur: 'muayene' }>, o
 
 export function kayitCevabi(istek: KayitIstegi, olaylar: DosyaOlayi[], hastaAdi: string): KayitCevabi {
   return istek.tur === 'olcum' ? olcumCevabi(istek, olaylar, hastaAdi) : muayeneCevabi(istek, olaylar, hastaAdi)
+}
+
+/** NOTYA-OLCUM-TEK-01: does the chart hold at least one stored value of the asked measurements? A single-value question without one is left to the quick card and the model. */
+export function olcumVarMi(istek: Extract<KayitIstegi, { tur: 'olcum' }>, olaylar: DosyaOlayi[]): boolean {
+  const { satirlar } = olcumSatirlari(olaylar, istek.kapsam)
+  return istek.olcumler.some((t) => satirlar.some((x) => x.deger[t] != null))
 }
