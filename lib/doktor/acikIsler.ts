@@ -32,6 +32,11 @@ export interface AcikIs {
   tarih?: string
   /** Hasta güvenliği maddesi: cevabın SONUNDA belirgin bildirilir. */
   guvenlik?: boolean
+  /**
+   * NOTYA-KADEMELI-01: the item as one short clause for the first-stage answer — no quote of the note, no reference
+   * range, no value; a date only where it names an inconsistency. The full sentence (`metin`) is the second stage.
+   */
+  kisa?: string
 }
 
 export interface AcikIsler { bugun: AcikIs[]; yakinda: AcikIs[]; rutin: AcikIs[] }

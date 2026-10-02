@@ -114,6 +114,13 @@ export function trGun(iso: string | null | undefined): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(t) ? `${t.slice(8, 10)}.${t.slice(5, 7)}.${t.slice(0, 4)}` : 'tarihsiz'
 }
 
+const AY_ADLARI = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+/** "15 Mayıs 2026" — the date as it is said (Q-31); the first-stage answer is read on screen and spoken as written. */
+export function uzunGun(iso: string | null | undefined): string {
+  const t = gun(iso)
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? `${Number(t.slice(8, 10))} ${AY_ADLARI[Number(t.slice(5, 7)) - 1]} ${t.slice(0, 4)}` : 'tarihsiz'
+}
+
 function sayi(v: unknown): number | null {
   if (v == null || v === '') return null
   const m = String(v).replace(',', '.').match(/-?\d+(?:\.\d+)?/)

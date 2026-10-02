@@ -158,12 +158,34 @@ describe('sesli tur — hekim özeti DUYAR', () => {
     })
   }
 
-  it('anlatım sınırdan uzunsa (24. ay: büyüme motorunun kayma cümlesi) kalan devam mekanizmasına gider; "devam et" modelsiz okur', async () => {
+  it('24. ay: doğum değerinden bugüne VKİ "kayması" artık söylenmez — anlatım yedi cümledir, kalan yok (NOTYA-KADEMELI-01d)', async () => {
     const { s } = sahne()
     ince()
     const cumleler = vizitOzetSozCumleleri(kayit.ozet(24), AD)
+    assert.equal(cumleler.length, 7)
+    assert.ok(!cumleler.some((c) => /persentil kayması var/.test(c)), cumleler.join('\n'))
+    const t = await fishTur(s, soru(24))
+    assert.equal(t.soz, cumleler.join(' '))
+    assert.match(t.soz, /Reçete yazılmamış; plan: Hepatit A 2\. doz planlandı.*6 ay sonra kontrol/)
+    assert.equal(oturumBaglami(s.oturum).sesDevam, undefined)
+  })
+
+  it('anlatım sınırdan uzunsa (24. ay kilosu pencere içinde iki majör çizgi düşmüş: büyüme motorunun kayma cümlesi) kalan devam mekanizmasına gider; "devam et" modelsiz okur', async () => {
+    const { s } = sahne()
+    ince()
+    // The same chart with a 24-month weight that lies two major percentile lines below the 18-month one: a drift
+    // between validated measurements after the sixth month, which the engine still reports (the eighth sentence).
+    const v24 = KORPUS_BEBEK.saglamCocuk[24]
+    const DUSUK_KILO = 10.2
+    const not = ortam.db.tablo('notes').find((n) => (n.vitaller as { kilo?: number; boy?: number } | null)?.kilo === v24.kilo && (n.vitaller as { boy?: number }).boy === v24.boy)!
+    not.vitaller = { ...(not.vitaller as object), kilo: DUSUK_KILO }
+    const ham = korpusBebek(bugun)
+    const vizit = ham.vizitler.find((v) => (v.vitaller as { kilo?: number; boy?: number } | null)?.kilo === v24.kilo && (v.vitaller as { boy?: number }).boy === v24.boy)!
+    vizit.vitaller = { ...vizit.vitaller, kilo: DUSUK_KILO }
+    const ozet = vizitOzetiSec(soru(24), olaylariKur(ham, bugun), hastaKur({ ...ham, brans: 'pediatri' }, bugun))!.ozet!
+    const cumleler = vizitOzetSozCumleleri(ozet, AD)
     assert.equal(cumleler.length, 8)
-    assert.match(cumleler[6], /^Büyüme eğrisinde persentil kayması var, VKİ persentili \d+ iken \d+ olmuş/)
+    assert.match(cumleler[6], /^Büyüme eğrisinde persentil kayması var, Kilo persentili \d+ iken \d+ olmuş/)
     const t = await fishTur(s, soru(24))
     assert.equal(t.soz, cumleler.slice(0, 7).join(' '))
     assert.doesNotMatch(t.soz, /Devamı ekranınızda/)

@@ -89,11 +89,13 @@ export interface Kayma { param: BuyumeParametre; oncekiTarih: string; sonTarih: 
 /**
  * Persentil kayması: son ölçüm, daha önceki herhangi bir ölçüme göre ≥ 2 majör çizgi geçmişse (yukarı veya aşağı).
  * En büyük geçişi döndürür. Tanı değil, dikkat bayrağı — ilk aylardaki kanal değişimi fizyolojik olabilir, hekim yorumlar.
+ * `baslangicAy`: yalnız bu yaştan (ay) sonraki ölçümler karşılaştırılır (stüdyo ve kohort 0 ile çağırır — değişmedi;
+ * Ayşe'nin dosya cevabı KAYMA_BASLANGIC_AY ile çağırır — NOTYA-KADEMELI-01d).
  */
-export function persentilKaymalari(satirlar: OlcumSatiri[], esik = 2): Kayma[] {
+export function persentilKaymalari(satirlar: OlcumSatiri[], esik = 2, baslangicAy = 0): Kayma[] {
   const out: Kayma[] = []
   for (const p of ['kilo', 'boy', 'basCevresi', 'vki'] as BuyumeParametre[]) {
-    const s = satirlar.filter((x) => x.sonuc[p])
+    const s = satirlar.filter((x) => x.sonuc[p] && x.ay >= baslangicAy)
     if (s.length < 2) continue
     const son = s[s.length - 1]
     let en: Kayma | null = null
@@ -106,6 +108,70 @@ export function persentilKaymalari(satirlar: OlcumSatiri[], esik = 2): Kayma[] {
     if (en) out.push(en)
   }
   return out
+}
+
+/**
+ * NOTYA-KADEMELI-01d (Dr. Gökhan via Kaan, 2026-10-02) — the percentile-crossing assessment of a chart answer starts
+ * here: a large newborn settling toward the middle in the first months is physiological catch-down, so a birth value
+ * is history, never the start of a drift. Months of age (decimal, as OlcumSatiri.ay).
+ */
+export const KAYMA_BASLANGIC_AY = 6
+
+export type OlcumParametresi = 'kilo' | 'boy' | 'basCevresi'
+export interface TutarsizOlcum {
+  param: OlcumParametresi
+  tarih: string
+  deger: number
+  persentil: number
+  /** The validated measurement before it and the measurements after it that it does not fit. */
+  onceki: { tarih: string; deger: number; persentil: number }
+  sonrakiler: { tarih: string; deger: number; persentil: number }[]
+}
+
+/**
+ * NOTYA-KADEMELI-01d — a measurement that does not fit its own series (live: 16,5 kg between 10,8 kg and 12,8 /
+ * 13,3 kg). Rule, per parameter, among the measurements from KAYMA_BASLANGIC_AY on: a measurement that lies `esik`
+ * (2) or more major percentile lines away from the validated measurement before it AND from the measurement after it,
+ * in opposite directions, while those two neighbours are less than `esik` lines apart from each other. Such a value
+ * is a recording or measuring error until verified; which of the three is wrong cannot be read from the record, the
+ * odd one out is the one two others contradict. The first and the last measurement of the window have one neighbour
+ * only and are never flagged by this rule. Not a diagnosis: the doctor verifies.
+ */
+export function tutarsizOlcumler(satirlar: OlcumSatiri[], esik = 2, baslangicAy = KAYMA_BASLANGIC_AY): TutarsizOlcum[] {
+  const out: TutarsizOlcum[] = []
+  for (const p of ['kilo', 'boy', 'basCevresi'] as const) {
+    const s = satirlar.filter((x) => x.sonuc[p] && x.ay >= baslangicAy)
+    const nokta = (x: OlcumSatiri) => ({ tarih: x.tarih, deger: x.deger[p]!, persentil: x.sonuc[p]!.persentil })
+    let onceki = s[0]
+    for (let i = 1; i < s.length - 1; i++) {
+      const bu = s[i], sonraki = s[i + 1]
+      const giris = cizgiGecisi(onceki.sonuc[p]!.persentil, bu.sonuc[p]!.persentil)
+      const cikis = cizgiGecisi(bu.sonuc[p]!.persentil, sonraki.sonuc[p]!.persentil)
+      const komsular = Math.abs(cizgiGecisi(onceki.sonuc[p]!.persentil, sonraki.sonuc[p]!.persentil))
+      if (Math.abs(giris) >= esik && Math.abs(cikis) >= esik && Math.sign(giris) !== Math.sign(cikis) && komsular < esik) {
+        out.push({ param: p, ...nokta(bu), onceki: nokta(onceki), sonrakiler: s.slice(i + 1).map(nokta) })
+      } else {
+        onceki = bu
+      }
+    }
+  }
+  return out.sort((a, b) => a.tarih.localeCompare(b.tarih))
+}
+
+/**
+ * The series without the flagged values: the flagged parameter of that day is dropped, and the VKİ of that day with
+ * it when it was computed from a flagged weight or height. Trend, drift, velocity and VKİ comparisons read this.
+ */
+export function dogrulanmisSatirlar(satirlar: OlcumSatiri[], tutarsiz: TutarsizOlcum[]): OlcumSatiri[] {
+  if (!tutarsiz.length) return satirlar
+  return satirlar.map((x) => {
+    const atilan = tutarsiz.filter((t) => t.tarih === x.tarih).map((t) => t.param)
+    if (!atilan.length) return x
+    const deger = { ...x.deger }, sonuc = { ...x.sonuc }
+    for (const p of atilan) { delete deger[p]; delete sonuc[p] }
+    if (atilan.includes('kilo') || atilan.includes('boy')) { delete deger.vki; delete sonuc.vki }
+    return { ...x, deger, sonuc }
+  })
 }
 
 export interface BuyumeHizi { param: 'boy' | 'basCevresi' | 'kilo'; oncekiTarih: string; sonTarih: string; fark: number; aralikAy: number; yillik: number; kisaAralik: boolean }

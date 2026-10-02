@@ -594,10 +594,12 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
     assert.match(ses.sozlu, /Aşı yapılmış: KPA 3\. doz, KKK 1\. doz ve Suçiçeği 1\. doz\./)
     assert.match(ses.sozlu, /kilo 9,8 kg, persentil \d+; Boy 76 cm, persentil \d+; Baş çevresi 46,4 cm, persentil \d+/)
     assert.doesNotMatch(ses.sozlu, /madde, ekranınızda|Dayanak|Vekil/)
-    // The eighth sentence of the 24-month narrative is read by the continuation, with no model call.
+    // NOTYA-KADEMELI-01d: the 24-month narrative no longer carries a "shift" measured from the birth value, so its
+    // seven sentences are all heard in the turn — the plan sentence does not wait for "devam et" any more.
     const devam = bul('L-OZET-24AY-DEVAM', 'ses')
-    assert.deepEqual([devam.karar, devam.modeleGitti], ['PASS', false], devam.nedenler.join('; '))
-    assert.match(devam.sozlu, /^Reçete yazılmamış; plan: Hepatit A 2\. doz planlandı/)
+    assert.deepEqual([devam.karar, devam.modeleGitti], ['PASS', true], devam.nedenler.join('; '))
+    assert.match(devam.sozlu, /Reçete yazılmamış; plan: Hepatit A 2\. doz planlandı/)
+    assert.doesNotMatch(devam.sozlu, /persentil kayması var/)
     // The file panel has no such check: the stand-in's words are not judged there.
     assert.equal(bul('L-TUR-6AY-PANEL', 'panel').karar, 'VEKIL')
   })

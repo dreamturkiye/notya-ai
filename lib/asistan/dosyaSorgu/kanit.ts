@@ -252,7 +252,7 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
   out.push(`AKTİF İLAÇ: ${aktif.length ? aktif.map((o) => o.metin.replace(/\s*\[.*$/, '')).join('; ') : 'aktif ilaç kaydı yok'}.`)
   const b = p.buyume(olaylar, hasta)
   const olcumSatirlari = b.satirlar.filter((x) => /^- \d{2}\.\d{2}\.\d{4} \(/.test(x))
-  out.push('BÜYÜME:', ...(olcumSatirlari.length ? [olcumSatirlari[olcumSatirlari.length - 1]] : b.satirlar.slice(0, 1)), ...b.satirlar.filter((x) => /Kayma|Hedef boy|Tek ölçüm|ÇELİŞEN ÖLÇÜM/.test(x)))
+  out.push('BÜYÜME:', ...(olcumSatirlari.length ? [olcumSatirlari[olcumSatirlari.length - 1]] : b.satirlar.slice(0, 1)), ...b.satirlar.filter((x) => /Kayma:|Hedef boy|Tek ölçüm|ÇELİŞEN ÖLÇÜM|TUTARSIZ ÖLÇÜM/.test(x)))
   if (p.gelisim) {
     const g = p.gelisim(olaylar, hasta)
     out.push('GELİŞİM:', ...g.satirlar.filter((s) => /^(Tarama durumu|Gelişimsel tarama planlanmış|Planlanan tarama|Ebeveyn kaygısı|Notlarda ebeveynin|⚠ Regresyon|Kayıtlı tarama)/.test(s)).slice(0, 5))

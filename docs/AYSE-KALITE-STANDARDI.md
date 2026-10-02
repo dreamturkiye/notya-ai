@@ -57,6 +57,24 @@ an address ("Ayşe, …") is not a patient. Another doctor's data never appears.
 date, with that date. A percentile or z-score comes only from the growth engine, with its date. Vaccine categories as
 in the İlk-10 standard (documented as given / planned / uncertain / missing or overdue / upcoming / risk-based).
 
+*Growth trend — only from validated measurements (Dr. Gökhan via Kaan, 2026-10-02, NOTYA-KADEMELI-01d).* Live, the
+growth answer said "marked long-term downward percentile shift": the shift ran from the BIRTH values (weight p97,
+length p98, head circumference p93) to today, and a VKİ fall from p100 came from one unverified weight. Both were
+artefacts. The rule and its thresholds (`specialties/pediatri/engines/buyume.ts`, `specialties/pediatri/sorgu.ts`):
+
+| What | Rule |
+|---|---|
+| Inconsistent measurement, same day | Two different values of one parameter on one day (visit field / device / note text): neither enters the trend (unchanged, NOTYA-ILK10-YAPI-01). |
+| Inconsistent measurement, in the series | From the 6th month on, a value that lies **2 or more major percentile lines** (3, 10, 25, 50, 75, 90, 97) away from the validated measurement before it AND from the measurement after it, in opposite directions, while those two neighbours are less than 2 lines apart. The first and the last measurement of the window have one neighbour only and are never flagged by this rule. |
+| What an inconsistent measurement is used for | Nothing: no trend, no percentile-crossing, no velocity, no VKİ (the VKİ of that day is not computed). It is stated instead, with its date and the values it contradicts, as "to be verified". Its percentile is not shown and not compared. |
+| Start of the percentile-crossing assessment | Validated measurements **after the first 6 months of life**. Birth and early values are shown as history, never as the start of a drift: a large newborn settling toward the middle in the first months is physiological catch-down. |
+| Drift warning | Only when the latest validated measurement lies **2 or more major percentile lines** below (or above) an earlier validated measurement inside that window. Worded as a suggestion to verify ("ölçümün doğrulanması önerilir"), not as an alarm; the doctor reads the curve. |
+| "Yaşına uygun" in the first-stage answer | Said only when every latest validated percentile is between p3 and p97 and there is no drift warning. Otherwise the answer names what is outside or what moved. |
+
+The 6-month start, the 2-line threshold for an inconsistent value and the p3 – p97 wording are Claude's reading of Dr.
+Gökhan's text; they wait for his confirmation (`docs/OPEN-COMMITMENTS.md`, NOTYA-KADEMELI-01d). The growth studio
+(Araçlar) and the cohort search still compare from the first measurement — not changed here.
+
 **Q-09 Safety first, without alarm.** A dose out of range, an allergy conflict, a regression, an abnormal or
 unfollowed lab result and an overdue follow-up are stated at the end under a visible heading ("⚠ Dikkat"). Trivia is
 not put there.
