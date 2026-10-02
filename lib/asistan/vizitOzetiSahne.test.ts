@@ -56,7 +56,7 @@ describe('yazılı sohbet — adı geçen muayenenin özeti sekiz bölümdür', 
       assert.equal(y.aktifHasta, AD)
       // The model was given the eight-part evidence and the visit-summary format.
       assert.ok(sistemde(/MUAYENE ÖZETİ KANITI/) && sistemde(/BİÇİM \(muayene özeti/) && sistemde(/Tek muayenenin özeti\. Bölümler ve sıraları SABİT/), 'kanıt ve kural modele gitti')
-      assert.ok(!sistemde(/Longitudinal özet/), 'dosyanın genel özeti şablonu bu turda yok')
+      assert.ok(!sistemde(/Anlık \(snapshot\) özet/), 'dosyanın genel özeti şablonu bu turda yok')
       const c = y.speech
       assert.ok(c.startsWith(`${AD} — `), c.slice(0, 80))
       assert.ok(sirali(c, BASLIKLAR), `sekiz başlık sırasıyla\n${c}`)
@@ -118,7 +118,7 @@ describe('yazılı sohbet — adı geçen muayenenin özeti sekiz bölümdür', 
     ortam.yanit = { metin: JSON.stringify({ speech: INCE_CEVAP }) }
     const y = await yazi(s, 'Bu hastayı bana kısaca özetler misin?', { oturum })
     assert.equal(y.speech, INCE_CEVAP)
-    assert.ok(sistemde(/Longitudinal özet/) && !sistemde(/MUAYENE ÖZETİ KANITI/))
+    assert.ok(sistemde(/Anlık \(snapshot\) özet/) && !sistemde(/MUAYENE ÖZETİ KANITI/))
   })
 })
 

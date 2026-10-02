@@ -28,6 +28,8 @@ import { BIRLESTIRILEN_FORM_SAYISI, formlariBirlestir, sifreliFormlariCoz } from
 import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari'
 import { olcumCevabiniGuvenceyeAl, sonKayitliOlcumler, sonOlcumKanitBlogu, sonOlcumleriGuvenceyeAl, vizitOlcumKaniti, vizitOlcumKanitBlogu, vizitOlcumSorusuBul, vizitOlcumTakipSorusu, type OlcumKaydi, type VizitOlcumKaniti } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
+import { kanitBlogu } from '@/lib/asistan/dosyaSorgu/kanit'
+import { dosyaSorguKuralBlogu } from '@/lib/asistan/dosyaSorgu/kurallar'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 
 export const dynamic = 'force-dynamic'
@@ -148,13 +150,19 @@ export async function POST(req: NextRequest) {
   const kanonikTur = soruTuruMu ? soruTuruBul(sonMetin) : null
   const kanonikSoru = Boolean(kanonikTur) && !olcumSorusu
   const buyumeSorusu = kanonikSoru && kanonikTur === 'buyume'
-  if (olcumSorusu || buyumeSorusu) {
+  // NOTYA-ILK10-ASI-01 (Dr. Gökhan "İlk 10" standardı, gerçek hasta testi 2026-10-02): on dosya sorusu bu panelde
+  // yalnız dosya metniyle cevaplanıyordu — sohbet ve sesin aldığı deterministik kanıt (aşı durumu, persentil, üç
+  // öncelik sepeti) burada yoktu. Aynı sınıflayıcı ve aynı kanıt bloğu (soruTuruBul → kanitBlogu) panele de eklenir.
+  // Kanıt bloğu hasta adını taşımaz; kurallar bloğu burada adsız kurulur (kural 7: kimlik modele gitmez).
+  let ilk10Ek = ''
+  if (olcumSorusu || kanonikTur) {
     try {
       const sorgu = await dosyaSorguVerisiDerle(supabase, doktorId, patientId)
       if (sorgu && olcumSorusu) olcumKaniti = vizitOlcumKaniti(olcumSorusu, sorgu.olaylar, sorgu.hasta)
       // BRANS-ALAN-SIZMASI: baş çevresi yalnız pediatrik bağlamda (dosya metnindeki ve karttaki kuralla aynı kapı).
-      else if (sorgu) sonOlcumler = sonKayitliOlcumler(sorgu.olaylar, pediatrikBaglamMi({ doktorBransi: sorgu.hasta.brans, hastaDogumIso: sorgu.hasta.dogumIso }) ? ['kilo', 'boy', 'basCevresi'] : ['kilo', 'boy'])
-    } catch (e) { console.error('[konsult] ölçüm kanıtı', e instanceof Error ? e.message.slice(0, 200) : 'hata') }
+      else if (sorgu && buyumeSorusu) sonOlcumler = sonKayitliOlcumler(sorgu.olaylar, pediatrikBaglamMi({ doktorBransi: sorgu.hasta.brans, hastaDogumIso: sorgu.hasta.dogumIso }) ? ['kilo', 'boy', 'basCevresi'] : ['kilo', 'boy'])
+      if (sorgu && kanonikTur) ilk10Ek = `${dosyaSorguKuralBlogu(null)}\n${kanitBlogu(kanonikTur, sorgu.olaylar, sorgu.hasta, { mesaj: sonMetin })}`
+    } catch (e) { console.error('[konsult] dosya sorgu kanıtı', e instanceof Error ? e.message.slice(0, 200) : 'hata') }
   }
   const olcumEk = olcumKaniti ? `\n\n${vizitOlcumKanitBlogu(olcumKaniti)}` : sonOlcumler.length ? `\n\n${sonOlcumKanitBlogu(sonOlcumler)}` : ''
   // yazıver / kaydet → tool_choice any: model cannot narrate a refusal; card still needs the tap.
@@ -166,7 +174,7 @@ export async function POST(req: NextRequest) {
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + olcumEk }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + ilk10Ek + olcumEk }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] ai', e.govde.slice(0, 300))

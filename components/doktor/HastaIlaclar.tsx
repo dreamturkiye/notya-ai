@@ -39,6 +39,8 @@ interface Ilac {
   /** NOTYA-RECETE-01: 'beklemede' = nottan aktarıldı, hekim kararı bekliyor. */
   onay_durumu?: 'beklemede' | 'onayli' | null;
   kaynak_note_id?: string | null;
+  /** NOTYA-ILK10-DOZ-01: sunucunun hesapladığı doz güvenliği bayrakları (mg/kg/gün aralık dışı, ürün uyuşmazlığı). */
+  doz_guvenligi?: string[] | null;
 }
 
 const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Lüzumlu halde']; // Kaan 2026-09-10: Günde 1 / Haftada 1 kaldırıldı, Gerektiğinde → Lüzumlu halde
@@ -473,6 +475,11 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
                 </div>
               )}
               {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
+              {i.aktif && (i.doz_guvenligi || []).map((m, n) => (
+                <div key={n} role="alert" style={{ marginTop: 6, padding: '8px 10px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45, color: '#991B1B' }}>
+                  <strong>⚠ Doz güvenliği:</strong> {m}
+                </div>
+              ))}
             </div>
             <div className="ni-pending-actions">
               {i.aktif ? (

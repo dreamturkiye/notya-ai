@@ -32,6 +32,17 @@ export interface AsiDoz {
   telafi?: boolean
 }
 
+/** NOTYA-ILK10-ASI-01 — kaydı kendi içinde tutarsız bir doz (aynı gün iki doz, minimum aralıktan önce, doğumdan önce, ileri tarihli). */
+export interface AsiTutarsizligi {
+  seri: string
+  /** "Hepatit B 2. doz" */
+  ad: string
+  /** ISO — tutarsız görünen kaydın tarihi. */
+  tarih: string
+  /** "1. dozla aynı tarihte kayıtlı" */
+  neden: string
+}
+
 export interface AsiDurumu {
   /** Takvim sürümü / kaynağı. */
   surum: string
@@ -41,6 +52,8 @@ export interface AsiDurumu {
   eslesmeyen: string[]
   /** Takvim dışı / risk bazlı aşılar — rutinden ayrı gösterilir. */
   riskBazli: string[]
+  /** Tutarsız kayıtlar: bu serilerde "gecikti" denmez, "kayıt tutarsız" denir (Fısıltı kuralı — NOTYA-FISILTI-GIZLE-01). */
+  tutarsiz?: AsiTutarsizligi[]
 }
 
 export interface Degerlendirme { satirlar: string[]; bayraklar: AcikIs[] }

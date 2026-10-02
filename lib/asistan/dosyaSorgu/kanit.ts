@@ -19,6 +19,8 @@ import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@
 import { vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { vizitOzetiSec, vizitOzetKanitSatirlari, vizitOzetSablonu, type VizitOzeti } from '@/lib/asistan/dosyaSorgu/vizitOzeti'
 import { kanonikTr } from '@/core/lab/kanonik'
+import { asiKaniti, asiKanitSatirlari, asiOzetSatirlari } from '@/lib/asistan/dosyaSorgu/asiKaniti'
+import { dozGuvenligi, dozGuvenligiSatirlari } from '@/lib/doktor/dozGuvenligi'
 
 export interface KanitEki {
   /** Hekimin mesajı — Soru 7'de aranan şikayet buradan çıkar. */
@@ -118,8 +120,12 @@ function labBolumu(olaylar: DosyaOlayi[]): string[] {
 }
 
 function asiBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguParametreleri): string[] {
-  const out: string[] = []
   const asi = p.asi(olaylar, hasta)
+  // NOTYA-ILK10-ASI-01: takvimi olan branşta (pediatri) aşı durumu tek kanıt yapısından kurulur (asiKaniti.ts); aynı
+  // yapı Soru 1, 9 ve 10'u da besler. Takvimi olmayan branşların yolu aşağıda, değişmedi.
+  const kanit = asiKaniti(olaylar, hasta, p, asi)
+  if (kanit && asi) return [...asiKanitSatirlari(kanit), ...asiBeyanCeliskileri(olaylar, asi).map((c) => `⚠ ${c.metin}`)]
+  const out: string[] = []
   const kayitlar = olaylar.filter((o) => o.kaynak === 'asi')
   if (!asi) {
     out.push(p.asiTakvimiYok)
@@ -225,12 +231,9 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
   const v = vizitleri(olaylar)
   const out: string[] = []
   const perinatal = olaylar.find((o) => o.tur === 'perinatal')
+  // NOTYA-ILK10-YAPI-01 — kanıt sırası standarttaki özet sırasıdır: perinatal → tanılar → kronik → alerji → aktif
+  // ilaç → büyüme → gelişim → aşı → lab → konsültasyon → takip (demografi bloğun başlığındadır).
   if (perinatal) out.push(perinatal.metin)
-  out.push(`ALERJİ: ${alerjiSatiri(olaylar)}`)
-  const kronik = olaylar.filter((o) => o.tur === 'kronik')
-  out.push(`KRONİK / ÖZGEÇMİŞ: ${kronik.length ? kronik.map((o) => o.metin.replace(/^Kronik \/ özgeçmiş:\s*/, '')).join('; ') : 'kayıt yok'}.`)
-  const aktif = olaylar.filter((o) => o.kaynak === 'ilac' && o.tur === 'ilac' && o.durum === 'aktif')
-  out.push(`AKTİF İLAÇ: ${aktif.length ? aktif.map((o) => o.metin.replace(/\s*\[.*$/, '')).join('; ') : 'aktif ilaç kaydı yok'}.`)
   // Tanılar: tekrar sayısıyla (her viziti anlatma).
   const tanilar = new Map<string, string[]>()
   for (const x of v) {
@@ -242,20 +245,25 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
   for (const t of tekrarlayanPaternler(olaylar, hasta.bugunIso)) out.push(`TEKRARLAYAN PATERN: ${t.grup} — son 12 ayda ${t.tarihler.length} vizit (${t.tarihler.map(trGun).join(', ')}).`)
   const demirVizit = v.filter((x) => esanlamGruplariBul(oykuKismi(x)).some((g) => g.id === 'demir'))
   if (demirVizit.length) out.push(`DEMİR EKSİKLİĞİ / ANEMİ notlarda: ${demirVizit.map((x) => trGun(x.tarih)).join(', ')}.`)
+  const kronik = olaylar.filter((o) => o.tur === 'kronik')
+  out.push(`KRONİK / ÖZGEÇMİŞ: ${kronik.length ? kronik.map((o) => o.metin.replace(/^Kronik \/ özgeçmiş:\s*/, '')).join('; ') : 'kayıt yok'}.`)
+  out.push(`ALERJİ: ${alerjiSatiri(olaylar)}`)
+  const aktif = olaylar.filter((o) => o.kaynak === 'ilac' && o.tur === 'ilac' && o.durum === 'aktif')
+  out.push(`AKTİF İLAÇ: ${aktif.length ? aktif.map((o) => o.metin.replace(/\s*\[.*$/, '')).join('; ') : 'aktif ilaç kaydı yok'}.`)
   const b = p.buyume(olaylar, hasta)
   const olcumSatirlari = b.satirlar.filter((x) => /^- \d{2}\.\d{2}\.\d{4} \(/.test(x))
-  out.push('BÜYÜME:', ...(olcumSatirlari.length ? [olcumSatirlari[olcumSatirlari.length - 1]] : b.satirlar.slice(0, 1)), ...b.satirlar.filter((x) => /Kayma|Hedef boy|Tek ölçüm/.test(x)))
+  out.push('BÜYÜME:', ...(olcumSatirlari.length ? [olcumSatirlari[olcumSatirlari.length - 1]] : b.satirlar.slice(0, 1)), ...b.satirlar.filter((x) => /Kayma|Hedef boy|Tek ölçüm|ÇELİŞEN ÖLÇÜM/.test(x)))
   if (p.gelisim) {
     const g = p.gelisim(olaylar, hasta)
-    out.push('GELİŞİM:', ...g.satirlar.filter((s) => /Tarama durumu|planlanmış|kaygı|Regresyon|Kayıtlı tarama/.test(s)).slice(0, 5))
+    out.push('GELİŞİM:', ...g.satirlar.filter((s) => /^(Tarama durumu|Gelişimsel tarama planlanmış|Planlanan tarama|Ebeveyn kaygısı|Notlarda ebeveynin|⚠ Regresyon|Kayıtlı tarama)/.test(s)).slice(0, 5))
   }
-  const asi = p.asi(olaylar, hasta)
-  if (asi) {
-    const eksik = asi.dozlar.filter((d) => d.durum === 'gecikti' || d.durum === 'zamani_geldi' || d.durum === 'bugun')
-    out.push(`AŞI: aşı tablosunda ${asi.dozlar.filter((d) => d.durum === 'uygulandi').length} takvim dozu kayıtlı; eksik / zamanı gelmiş: ${eksik.length ? eksik.map((d) => d.ad).join(', ') : 'yok'}.`)
-  } else out.push(`AŞI: ${p.asiTakvimiYok}`)
-  const planAsi = planOlaylari(olaylar).filter((o) => o.tur === 'asi' && !planKarsiligi(o, olaylar))
-  if (planAsi.length) out.push(`AŞI (planlanmış, uygulama kaydı yok): ${planAsi.map(asiPlanSatiri).join('; ')}.`)
+  const asiKanit = asiKaniti(olaylar, hasta, p)
+  if (asiKanit) out.push(...asiOzetSatirlari(asiKanit))
+  else {
+    out.push(`AŞI: ${p.asiTakvimiYok}`)
+    const planAsi = planOlaylari(olaylar).filter((o) => o.tur === 'asi' && !planKarsiligi(o, olaylar))
+    if (planAsi.length) out.push(`AŞI (planlanmış, uygulama kaydı yok): ${planAsi.map(asiPlanSatiri).join('; ')}.`)
+  }
   const lab = labBolumu(olaylar).filter((s) => s.startsWith('- ') || /İSTENEN|DEMİR/.test(s)).slice(0, 8)
   if (lab.length) out.push('ÖNEMLİ LAB:', ...lab)
   const kons = olaylar.filter((o) => o.kaynak === 'konsultasyon')
@@ -342,7 +350,7 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
       if (tani.length) govde.push(`İLGİLİ TANI / NOT: demir eksikliği / anemi ${tani.map((x) => trGun(x.tarih)).join(', ')} notlarında geçiyor.`)
       break
     }
-    case 'ilac': govde = [...ilacBolumleri(olaylar, hasta), `ALERJİ: ${alerjiSatiri(olaylar)}`, ...alerjiCatismalari(olaylar, hasta.bugunIso).map((a) => `⚠ ${a.metin}`)]; break
+    case 'ilac': govde = [...ilacBolumleri(olaylar, hasta), ...dozGuvenligiSatirlari(dozGuvenligi(olaylar, hasta)), `ALERJİ: ${alerjiSatiri(olaylar)}`, ...alerjiCatismalari(olaylar, hasta.bugunIso).map((a) => `⚠ ${a.metin}`)]; break
     case 'benzer': govde = benzerBolumu(olaylar, ek.mesaj || ''); break
     case 'gelisim': {
       if (!p.gelisim) { govde = ['Gelişim / GİDR / M-CHAT sorusu bu branşın bölüm sorusu değil (pediatriye özgü); bu hasta için gelişimsel tarama verisi değerlendirilmedi. Hekime bunu açıkça söyle.']; break }
@@ -356,6 +364,7 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
       const hepsi = [...isler.bugun, ...isler.yakinda, ...isler.rutin]
       if (tur === 'takip') {
         govde = [
+          `Bugünün tarihi ${trGun(hasta.bugunIso)}: her takip penceresi bu tarihle karşılaştırıldı; dolmuş pencere maddesinde kaç gün önce dolduğu yazıyor.`,
           '1) BUGÜN:', ...(isler.bugun.length ? isSatirlari(isler.bugun) : ['- (yok)']),
           '2) YAKIN ZAMANDA:', ...(isler.yakinda.length ? isSatirlari(isler.yakinda) : ['- (yok)']),
           '3) RUTİN:', ...(isler.rutin.length ? isSatirlari(isler.rutin) : ['- (yok)']),
@@ -364,6 +373,7 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
         const grup = (baslik: string, f: (i: AcikIs) => boolean) => { const x = hepsi.filter(f); return x.length ? [baslik, ...isSatirlari(x)] : [] }
         govde = [
           ...grup('HASTA GÜVENLİĞİ:', (i) => Boolean(i.guvenlik)),
+          ...grup('DOZ GÜVENLİĞİ (doğrulanacak):', (i) => i.tur === 'guvenlik-doz' && !i.guvenlik),
           ...grup('ÇELİŞEN KAYIT:', (i) => i.tur === 'celiski'),
           ...grup('AŞI (eksik / planlanmış-uygulanmamış):', (i) => i.tur.startsWith('asi-') && i.tur !== 'asi-yaklasan'),
           ...grup('SONUCU OLMAYAN / TAKİPSİZ TEST:', (i) => i.tur === 'lab-sonuc-yok' || i.tur === 'lab-anormal-tekrar-yok' || i.tur === 'goruntuleme-sonuc-yok'),
