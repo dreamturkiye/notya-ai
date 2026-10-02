@@ -20,6 +20,12 @@
  *
  * Output: .denetim-out/<etiket>[-kuru].jsonl (gitignored, one row per graded turn) and, for a live run,
  * docs/denetim/<date>-<etiket>.md. Not part of `npm test` — it is not a *.test.ts file.
+ *
+ * NOTYA-KALITE-STANDART-01: every row carries `kalite` — the verdicts of the quality rubric (lib/asistan/kalite/)
+ * — and the report has a quality section. After a run:
+ *   npm run denetim:kalite-karsilastir[:kuru]   the gate: non-zero exit when a rule's pass rate, the score or the FAIL
+ *                                               count is worse than docs/denetim/kalite-taban.json
+ *   npm run denetim:kalite-taban[:kuru]         write this run as the new baseline (a deliberate act)
  */
 import { gercekModelAc, sahneHazirla } from './ayseSahne'
 import { it } from 'node:test'
@@ -27,6 +33,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { vekilOpenRouter } from './eylemDenetimi'
 import { korpusRaporu, korpusuKos, ozetle } from './gokhanKorpusKosucu'
+import { kaliteOzetle } from '../kalite/ozet'
 import { GOKHAN_SIKAYET_KORPUSU, korpusYukle, type KorpusFiltresi, type Yuzey } from './gokhanSikayetKorpusu'
 import { MODEL_HIZLI } from '../../ai/modeller'
 
@@ -57,7 +64,10 @@ it('Gökhan şikâyet korpusu', { timeout: 3 * 60 * 60_000 }, async (t) => {
   // Doctor-local "today" for the file name.
   const tarih = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   const filtre = Object.entries(FILTRE).filter(([, v]) => (Array.isArray(v) ? v.length : v)).map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : v}`).join(' ')
-  const rapor = korpusRaporu({ tarih, model: KURU ? 'vekil (stand-in)' : (process.env.NOTYA_MODEL_HIZLI || MODEL_HIZLI), satirlar, girdiSayisi: girdiler.length, kuru: KURU, ...(filtre ? { filtre } : {}) })
+  const model = KURU ? 'vekil (stand-in)' : (process.env.NOTYA_MODEL_HIZLI || MODEL_HIZLI)
+  // Read by scripts/ayse-denetim/kalite-karsilastir.mts: which run the rows are, and whether it was filtered.
+  fs.writeFileSync(path.join(cikti, `${ETIKET}${KURU ? '-kuru' : ''}.meta.json`), JSON.stringify({ tarih, model, mod: KURU ? 'kuru' : 'canli', filtre, girdi: girdiler.length, tur: satirlar.length }, null, 2) + '\n')
+  const rapor = korpusRaporu({ tarih, model, satirlar, girdiSayisi: girdiler.length, kuru: KURU, ...(filtre ? { filtre } : {}) })
   const dokuman = path.join(process.cwd(), 'docs', 'denetim')
   const hedefler = KURU
     ? [path.join(cikti, `${ETIKET}-kuru.md`), ...(process.env.KORPUS_KURU_RAPOR === '1' ? [path.join(dokuman, `${tarih}-${ETIKET}-kuru.md`)] : [])]
@@ -68,5 +78,7 @@ it('Gökhan şikâyet korpusu', { timeout: 3 * 60 * 60_000 }, async (t) => {
     console.log(`Rapor: ${path.relative(process.cwd(), hedef)}`)
   }
   const o = ozetle(satirlar)
-  console.log(JSON.stringify({ girdi: girdiler.length, korpus: GOKHAN_SIKAYET_KORPUSU.length, ...o.toplam, maliyet: Number(satirlar.reduce((x, s) => x + s.maliyet, 0).toFixed(4)) }))
+  const k = kaliteOzetle(satirlar)
+  console.log(JSON.stringify({ girdi: girdiler.length, korpus: GOKHAN_SIKAYET_KORPUSU.length, ...o.toplam, maliyet: Number(satirlar.reduce((x, s) => x + s.maliyet, 0).toFixed(4)), kalitePuani: k.puan, kaliteKarari: k.toplam.toplam, kaliteYargilanan: k.yargilanan }))
+  console.log(`Kalite kapısı: npm run denetim:kalite-karsilastir${KURU ? ':kuru' : ''}`)
 })

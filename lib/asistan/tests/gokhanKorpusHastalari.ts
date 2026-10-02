@@ -44,6 +44,15 @@ export const HASTA_ESLEME: { kaynak: string; korpus: KorpusHasta | 'yabanci'; ne
 export const KORPUS_AYSE = { kilo: 19.4, boy: 110, ates: 38.9, tansiyon: '95/60', kanGrubu: 'AB Rh+', anneBoyu: 168, yas: 5 } as const
 export const KORPUS_TARIK = { kilo: 13.9, boy: 92, bas: 49.5, ates: 38.7, kanGrubu: 'A Rh-', dozMl: '6', sureGun: 7 } as const
 
+/**
+ * NOTYA-KALITE-STANDART-01 (Q-31): identity and contact values of the panel's intake forms. None may be spoken on a
+ * voice turn — the value is written on the screen. The unit test checks each one against the charts.
+ */
+export const KORPUS_KIMLIK_DEGERLERI: readonly string[] = [
+  'Elif', 'Serdar', '0532 000 11 22', 'qa-veli@example.test', 'QA Mahallesi', '10000000146',
+  'Sevgi', 'Orhan', '0534 000 33 44', 'Derya', 'Volkan', '0535 000 44 55',
+]
+
 const erkek = /erkek|male/i
 
 function kucukDosyalar(bugunIso: string): Record<'ayse' | 'tarik' | 'olcay', KorpusDosyasi> {

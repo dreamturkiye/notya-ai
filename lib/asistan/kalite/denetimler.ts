@@ -597,7 +597,8 @@ export function sesKimlik(soz: string, degerler: string[] | undefined): Sonuc {
   if (TC_NO.test(soz)) return kusur('kimlik numarası seslendirildi')
   if (DOGUM_TARIHI.test(soz)) return kusur('doğum tarihi seslendirildi')
   const k = kucuk(soz)
-  const sizan = (degerler || []).find((d) => d.trim() && k.includes(kucuk(d)))
+  // A value counts at the start of a word, so a suffixed form ("Elif'in") is caught and a word that merely contains it is not.
+  const sizan = (degerler || []).find((d) => d.trim() && new RegExp(`(?<!\\p{L})${kucuk(d.trim()).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u').test(k))
   return sizan ? kusur(`kimlik değeri seslendirildi: "${kisalt(sizan, 20)}"`) : tamam()
 }
 

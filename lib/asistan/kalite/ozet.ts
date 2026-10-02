@@ -223,8 +223,8 @@ export function tabanlaKarsilastir(
     }
     dustu('rule', taban.kural, simdi.kural)
     dustu('check', taban.denetim, simdi.denetim)
-    if (oran(simdi.toplam) < oran(taban.toplam) - tolerans - 1e-9) sorunlar.push(`Q-41 quality score ${taban.puan} → ${simdi.puan}`)
-    else if (simdi.puan !== taban.puan) notlar.push(`quality score ${taban.puan} → ${simdi.puan}`)
+    if (oran(simdi.toplam) < oran(taban.toplam) - tolerans - 1e-9) sorunlar.push(`Q-41 quality score ${pct(taban.toplam)} → ${pct(simdi.toplam)}`)
+    else if (Math.abs(oran(simdi.toplam) - oran(taban.toplam)) > 1e-9) notlar.push(`quality score ${pct(taban.toplam)} → ${pct(simdi.toplam)}`)
   }
 
   return { gecti: sorunlar.length === 0, sorunlar, notlar }

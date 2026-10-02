@@ -18,6 +18,8 @@
  * This module is PURE (no scene, no mocks): types, entries, loader, placeholder context and the assertion
  * helpers. The runner is gokhanKorpusKosucu.ts.
  */
+import type { KaliteGirdisi, KaliteKaniti, OlcumTuru, YapiTuru } from '../kalite/denetimler'
+import { istenenOlcumBul, okuIstegiMi, yapiBul } from '../kalite/cikarim'
 
 export type Yuzey = 'yazi' | 'ses' | 'panel'
 /** bebek / ayse / tarik / olcay / eriskin: the corpus panel. deniz: the action-audit chart (added only where used). */
@@ -92,6 +94,19 @@ export interface KorpusGirdisi {
   /** Ledger id of a defect the ledger itself lists as OPEN: a FAIL here is known, not a new regression. */
   acikKusur?: string
   not?: string
+  /** NOTYA-KALITE-STANDART-01: what the quality rubric needs to know about this entry beyond the sentence itself. */
+  kalite?: KorpusKalitesi
+}
+
+export interface KorpusKalitesi {
+  /** Structure of Q-21 the answer must have; default: derived from the sentence (yapiBul). null = none. */
+  yapi?: YapiTuru | null
+  /** The single measurement asked (Q-02); default: derived from the sentence (istenenOlcumBul). null = none. */
+  olcum?: OlcumTuru | null
+  /** What the fixture says about the items the answer may mention (Q-04 planned versus given, Q-06 overdue follow-up). */
+  kanit?: KaliteKaniti
+  /** Identity values of the fixture that must not be spoken on this turn (Q-31), besides the panel-wide list. */
+  kimlik?: string[]
 }
 
 /* ───────────────────────────── sources ───────────────────────────── */
@@ -821,6 +836,9 @@ export function korpusDenetle(girdiler: KorpusGirdisi[]): string[] {
       }
       if (!Object.keys(g.beklenti).length) sorun.push(`${g.id}: boş beklenti (MANUAL yazın)`)
     }
+    for (const re of [...(g.kalite?.kanit?.planli || []), ...(g.kalite?.kanit?.uygulanan || []), ...(g.kalite?.kanit?.gecenTakip || [])]) {
+      try { new RegExp(re, 'iu') } catch { sorun.push(`${g.id}: bozuk kalite deseni ${re}`) }
+    }
   }
   // An `oturum` is one session: its entries must be contiguous so the file order is the turn order.
   const kapanan = new Set<string>()
@@ -1005,4 +1023,55 @@ export function beklentiDegerlendir(
   if (nedenler.length) return { karar: 'FAIL', nedenler }
   const sozBekleniyor = Boolean(beklenti.icerir?.length || beklenti.icermez?.length || beklenti.tablo || beklenti.kartUyari || beklenti.okunus)
   return { karar: vekilCevabi && sozBekleniyor ? 'VEKIL' : 'PASS', nedenler }
+}
+
+/* ───────────────────────────── quality rubric input (NOTYA-KALITE-STANDART-01) ───────────────────────────── */
+
+/** Categories whose answer states a fact of the bound patient's chart: the answer must open with the patient's name (Q-07). */
+const HASTAYA_OZGU: ReadonlySet<Kategori> = new Set<Kategori>(['dosya', 'ilk10', 'olcum', 'asi', 'ilac', 'lab', 'muayene', 'kimlik', 'hasta-cozum'])
+/** Routes whose answer is not about one chart (calendar, practice search, scope gate) or repeats an earlier answer. */
+const DOSYA_DISI_ROTA: ReadonlySet<string> = new Set(['takvim', 'arama', 'kapsam', 'gurultu', 'oku'])
+/**
+ * Routes that do not answer one of the structured questions of Q-21: the ones above, a request to SHOW a record
+ * (the record table), opening a chart, and the identity reader. "Aşı karnesini göster" is not "Aşıları tam mı?".
+ */
+const YAPISIZ_ROTA: ReadonlySet<string> = new Set([...DOSYA_DISI_ROTA, 'kayit', 'dosya-ac', 'kimlik'])
+/** Routes that answer one stored fact (Q-20: at most two sentences before the supporting lines). */
+const OLGU_ROTASI: ReadonlySet<string> = new Set(['hizli-kart', 'kimlik'])
+
+/**
+ * What the quality rubric (lib/asistan/kalite/rubrik.ts) is given for one graded turn, or null when the turn is not
+ * judged: in a dry run the words of a turn that reached the stand-in are not the product's.
+ *
+ * Derived from the entry and the observation: the single measurement from the sentence; the structure from the
+ * sentence when a chart is bound and the route is one that answers a file question (an entry may state both); the
+ * patient-name rule only where the answer is about the bound patient's chart; the identity values that must not be
+ * spoken from the panel-wide list plus the entry's own.
+ */
+export function kaliteGirdisiKur(
+  g: KorpusGirdisi, t: TurGozlemi, o: { vekil?: boolean; kimlikDegerleri?: readonly string[]; yabanciAdlar?: readonly string[] } = {},
+): KaliteGirdisi | null {
+  if (o.vekil && t.modeleGitti) return null
+  const beklenti = yuzeyBeklentisi(g, t.yuzey)
+  const b = beklenti === 'MANUAL' ? {} : beklenti
+  const olcum = g.kalite?.olcum !== undefined ? g.kalite.olcum : istenenOlcumBul(g.soz)
+  const dosyaCevabi = Boolean(t.hasta) && b.hasta !== null && !DOSYA_DISI_ROTA.has(t.rota || '')
+  const hastayaOzgu = dosyaCevabi && (HASTAYA_OZGU.has(g.kat) || (g.kat === 'eylem' && t.kartlar.length > 0))
+  const yapiAranir = (t.yuzey === 'panel' || Boolean(t.hasta)) && !YAPISIZ_ROTA.has(t.rota || '')
+  // On voice the identity reader stores a value-less note for the conversation history, not what the screen shows.
+  const ekran = t.yuzey === 'ses' && t.rota === 'kimlik' ? '' : t.ekran
+  return {
+    soru: g.soz, yuzey: t.yuzey, ekran,
+    ...(t.yuzey === 'ses' ? { soz: t.soz, okunus: t.okunus ?? '' } : {}),
+    hastaAdi: hastayaOzgu ? t.hasta : null,
+    yapi: g.kalite?.yapi !== undefined ? g.kalite.yapi : yapiAranir ? yapiBul(g.soz) : null,
+    olcum,
+    olgu: olcum !== null || OLGU_ROTASI.has(t.rota || ''),
+    ...(g.kalite?.kanit ? { kanit: g.kalite.kanit } : {}),
+    kimlikDegerleri: [...(o.kimlikDegerleri || []), ...(g.kalite?.kimlik || [])],
+    yabanciAdlar: [...(o.yabanciAdlar || [])],
+    okuIstegi: t.rota === 'oku' || okuIstegiMi(g.soz),
+    ret: b.ret === true,
+    gurultu: t.rota === 'gurultu',
+  }
 }

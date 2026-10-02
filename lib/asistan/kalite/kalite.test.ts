@@ -446,7 +446,7 @@ describe('kalite — puan, taban ve kapı (Q-40, Q-41)', () => {
     assert.equal(r.gecti, false)
     assert.ok(r.sorunlar.some((x) => /rule Q-01: pass rate 100\.0% \(4\/4\) → 75\.0% \(3\/4\)/.test(x)), r.sorunlar.join('\n'))
     assert.ok(r.sorunlar.some((x) => /new failed verdicts: A-1\/yazi Q-01 cevap-once/.test(x)))
-    assert.ok(r.sorunlar.some((x) => /quality score 75 → 62\.5/.test(x)))
+    assert.ok(r.sorunlar.some((x) => /quality score 75\.0% \(6\/8\) → 62\.5% \(5\/8\)/.test(x)))
     // Within a tolerance the rate is not a failure, but in a stand-in run the new failed verdict still is.
     const t = tabanlaKarsilastir(taban, kotu, { mod: 'kuru', tolerans: 30 })
     assert.ok(!t.sorunlar.some((x) => /pass rate/.test(x)) && t.sorunlar.some((x) => /new failed verdicts/.test(x)))
