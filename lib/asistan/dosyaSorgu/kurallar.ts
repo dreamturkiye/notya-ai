@@ -79,8 +79,23 @@ export const SORU_SABLONLARI: Record<SoruTuru, { no: number; soru: string; sablo
   },
 }
 
-/** GENEL KURALLAR + CEVAP STANDARDI — dosya sorusu turunda system prompt'a eklenen kurallar bloğu. */
-export function dosyaSorguKuralBlogu(hastaAdi: string): string {
+/**
+ * NOTYA-AYSE-OZET-01 — TEK MUAYENENİN özeti için biçim (Dr. Gökhan, 2026-10-02): "Dayanak" maddeleri yerine, kanıttaki
+ * bölüm sırasıyla, her biri kendi kalın başlığıyla başlayan kısa paragraflar. Başlıklar özetin kendi bölümleridir
+ * (vizitOzeti.ts): pediatri dışında aşı ve büyüme başlığı hiç verilmez. İçerik kuralı kanıt bloğunun şablonundadır.
+ */
+export function vizitOzetBicimi(hastaAdi: string, basliklar: readonly string[]): string {
+  return `BİÇİM (muayene özeti — bu turda CEVAP STANDARDI'nın 2-4. maddelerinin yerine geçer): "speech" alanının İLK cümlesi "${hastaAdi}" adıyla başlar ve hangi muayenenin özetlendiğini söyler (tarih, muayene tarihindeki yaş). Ardından KANIT'taki sırayla her bölüm AYRI ve KISA bir paragraf; paragraf kalın başlığıyla başlar: ${basliklar.map((b) => `**${b}:**`).join(' ')}. Başlıkları AYNEN ve bu sırayla yaz, hiçbirini atlama. Madde imi, numara, tablo ve "Dayanak" başlığı KULLANMA. Hasta güvenliği maddesi varsa en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`
+}
+
+/**
+ * GENEL KURALLAR + CEVAP STANDARDI — dosya sorusu turunda system prompt'a eklenen kurallar bloğu.
+ * `vizitOzetiBasliklari`: soru tek bir muayenenin özetiyse o özetin bölüm başlıkları (biçim satırı değişir).
+ */
+export function dosyaSorguKuralBlogu(hastaAdi: string, secenek: { vizitOzetiBasliklari?: readonly string[] | null } = {}): string {
+  const bicim = secenek.vizitOzetiBasliklari?.length
+    ? vizitOzetBicimi(hastaAdi, secenek.vizitOzetiBasliklari)
+    : `BİÇİM: "speech" alanının İLK cümlesi doğrudan cevaptır ve "${hastaAdi}" adıyla başlar; sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`
   return [
     '\n\n=== AYŞE KLİNİK DOSYA SORGULAMA STANDARDI (bu tur için zorunlu) ===',
     DOSYA_SORGU_AMACI,
@@ -89,7 +104,7 @@ export function dosyaSorguKuralBlogu(hastaAdi: string): string {
     'CEVAP STANDARDI:',
     ...CEVAP_STANDARDI.map((k) => `- ${k}`),
     HEDEF,
-    `BİÇİM: "speech" alanının İLK cümlesi doğrudan cevaptır ve "${hastaAdi}" adıyla başlar; sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`,
+    bicim,
     '=== STANDART SONU ===',
   ].join('\n')
 }

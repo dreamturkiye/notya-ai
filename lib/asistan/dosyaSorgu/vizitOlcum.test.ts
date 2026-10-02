@@ -205,7 +205,8 @@ describe('kanıt bloğu (kanitBlogu) — değerlendirme ve özet sorularında o 
   it('"12 aylık muayenesini özetle" → eşleşen muayenenin ölçümleri de satırda', () => {
     const b = blok('a', 'ozet', '12 aylık sağlam çocuk muayenesini özetler misin?')
     assert.match(b, /12 aylık sağlam çocuk izlemi/)
-    assert.match(b, /Ölçümler: kilo 9,8 kg; boy 75 cm; baş çevresi 46 cm/)
+    // NOTYA-AYSE-OZET-01: the one-line form became the eight-part block; the measurements are its sixth part.
+    assert.match(b, /Bu muayenenin ölçümleri \(yalnız kayıtlı değer\): kilo 9,8 kg; boy 75 cm; baş çevresi 46 cm/)
   })
   it('vizit adı geçmeyen büyüme sorusu değişmedi', () => {
     assert.doesNotMatch(blok('a', 'buyume', 'Büyümesi nasıl gidiyor?'), /VİZİT ÖLÇÜMÜ/)

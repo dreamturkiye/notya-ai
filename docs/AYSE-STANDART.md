@@ -105,6 +105,17 @@ anında hesaplanır.
 1. **Özet:** perinatal, alerji (boşsa "alan boş, alerjisi yok anlamına gelmez"), kronik, aktif ilaç, tanılar tekrar
    sayısıyla, tekrarlayan patern, demir eksikliği izi, son büyüme satırı + kaymalar, gelişim tarama durumu, aşı
    sayısı + eksikler + planlanmış-kaydı-olmayanlar, önemli lab, konsültasyon, takip gerektirenler (bugün + yakında).
+   **Tek muayenenin özeti (NOTYA-AYSE-OZET-01, Dr. Gökhan 2026-10-02):** soru bir muayeneyi anıyorsa ("12 aylık sağlam
+   çocuk muayenesinin özeti", "ilk / son muayene") ve tam olarak bir muayene eşleşiyorsa kanıt sekiz bölümdür, sırası
+   değişmez: muayene (tarih, o tarihteki yaş) · şikayet · muayene bulgusu · laboratuvar (o muayenenin istemleri, ± 14
+   gün içindeki sonuçlar, aynı testin önceki sonucu, laboratuvarın referansına göre işaret) · aşı (aynı günlü aşı
+   kayıtları, notta uygulandığı yazanlar) · büyüme ve gelişme (o muayeneye bağlı ölçümler + branşın büyüme fonksiyonunun
+   o muayeneye kadarki satırı) · tedavi (o muayenenin reçeteleri) · plan. Pediatri dışı parametrede aşı ve büyüme yok,
+   "Ölçümler" var (kilo, boy, VKİ, tansiyon, nabız). Kayıtta olmayan bölüm atlanmaz, kısa ifadesiyle yazılır. Cevap
+   şablonu ve biçimi bu bölümlerdir ("Dayanak" maddeleri değil); modelin cevabı başlık sırası, kayıtlı değerler ve
+   kayıt dışı değer için denetlenir, tutmazsa kayıttaki özetle değiştirilir. Seste özet kayıttan, bölüm başına tek kısa
+   cümleyle söylenir (`lib/asistan/dosyaSorgu/vizitOzeti.ts`). Birden çok eşleşmede eski kısa liste, eşleşme yoksa açık
+   "bulamadım".
 2. **Değişim:** son iki vizit, ölçüm farkı, büyüme bayrakları, **önceki vizitin planları → sonraki kayıttaki karşılık**,
    aradaki lab / aşı / konsültasyon / belge, reçete karşılaştırması, kesilen / tamamlanan ilaç, yeni alerji.
 3. **Büyüme:** pediatri: Neyzi persentil / Z tablosu (tarih, yaş), kayma (≥ 2 majör çizgi, tarih aralığıyla), büyüme

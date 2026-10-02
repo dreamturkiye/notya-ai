@@ -38,6 +38,12 @@ export function listeEkranda(n: number): string { return `${n} madde, ekranını
 export function sesSiniriSec(kanitYoluAktif: boolean): number {
   return kanitYoluAktif ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI
 }
+/**
+ * NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02): the summary of one visit is HEARD as a condensed narrative — one
+ * short sentence per part, about seven. This many are spoken in the turn; if the narrative is longer, the rest goes
+ * to the continuation (NOTYA-SES-DEVAM-01: the page reads it, or the doctor says "devam et"). The details are on screen.
+ */
+export const OZET_ANLATIM_SINIRI = 7
 const BASLIK_SATIRI = /^\s*#{1,6}\s+/
 const LISTE_MADDESI = /^\s*(?:[-*•]\s+|\d{1,2}\.\s+)/
 

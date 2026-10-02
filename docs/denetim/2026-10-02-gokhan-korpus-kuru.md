@@ -4,40 +4,40 @@
 
 What this run does prove: the harness, the corpus loader, the assertions, and every turn that a MODEL-FREE handler answered (identity, calendar, count, record tables, quick card, scope gate, chart open) — those answers are the product's own and are graded in full. What it cannot say anything about: any answer the model writes. Those turns are "not judged" unless something structural failed (route, forced tool, card, bound patient).
 
-Corpus: 436 entries, 888 graded turns (an entry is graded once per surface it lists). Voice = `/api/asistan/fish-tur` with the transcript given as text: Fish ASR, TTS and turn-taking are not exercised.
+Corpus: 442 entries, 897 graded turns (an entry is graded once per surface it lists). Voice = `/api/asistan/fish-tur` with the transcript given as text: Fish ASR, TTS and turn-taking are not exercised.
 
 ## Summary
 
 | surface | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
-| chat | 431 | 256 | **18** | 11 | 146 |
-| panel | 21 | 5 | 0 | 0 | 16 |
-| voice | 436 | 258 | **20** | 13 | 145 |
+| chat | 435 | 280 | **2** | 11 | 142 |
+| panel | 21 | 7 | 0 | 0 | 14 |
+| voice | 441 | 283 | **2** | 13 | 143 |
 
-Total: 888 turns — 519 PASS, 38 FAIL, 24 MANUAL, 307 not judged (stand-in).
+Total: 897 turns — 570 PASS, 4 FAIL, 24 MANUAL, 299 not judged (stand-in).
 
 ### By source
 
 | source | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
 | docs/ayse-capability-regression-audit.md | 62 | 42 | 0 | 0 | 20 |
-| docs/AYSE-KALITE-STANDARDI.md | 38 | 2 | **12** | 2 | 22 |
-| docs/denetim/2026-09-26-qa-sentetik-bebek.md | 32 | 0 | 0 | 0 | 32 |
+| docs/AYSE-KALITE-STANDARDI.md | 38 | 14 | 0 | 2 | 22 |
+| docs/denetim/2026-09-26-qa-sentetik-bebek.md | 32 | 1 | 0 | 0 | 31 |
 | docs/denetim/2026-10-02-ayse-eylem.md | 66 | 60 | 0 | 0 | 6 |
-| docs/OPEN-COMMITMENTS.md | 378 | 227 | **22** | 10 | 119 |
-| docs/qa/gokhan-gunluk-sorular.md | 133 | 75 | **7** | 14 | 37 |
+| docs/OPEN-COMMITMENTS.md | 387 | 270 | 0 | 10 | 107 |
+| docs/qa/gokhan-gunluk-sorular.md | 133 | 83 | 0 | 14 | 36 |
 | docs/qa/gokhan-yetenek-talepleri.md | 28 | 28 | 0 | 0 | 0 |
 | lib/asistan/aktifHastaPratik.test.ts | 8 | 8 | 0 | 0 | 0 |
 | lib/asistan/ayseRota.test.ts | 66 | 40 | **2** | 0 | 24 |
-| lib/asistan/dosyaSorgu/denetim.test.ts | 6 | 6 | 0 | 0 | 0 |
+| lib/asistan/dosyaSorgu/denetim.test.ts | 6 | 4 | **2** | 0 | 0 |
 | lib/asistan/kapsamKilidi.test.ts | 2 | 2 | 0 | 0 | 0 |
 | lib/asistan/vizitOlcumSahne.test.ts | 19 | 17 | 0 | 0 | 2 |
 | lib/doktor/hastaCozumleyici.test.ts | 10 | 2 | 0 | 0 | 8 |
 | lib/doktor/pratikAnaliz.test.ts | 2 | 0 | 0 | 0 | 2 |
 | lib/doktor/sesliSoz.test.ts | 10 | 8 | 0 | 0 | 2 |
-| scripts/ayse-denetim/sorular-100.json | 206 | 106 | **11** | 4 | 85 |
+| scripts/ayse-denetim/sorular-100.json | 206 | 116 | 0 | 4 | 86 |
 | scripts/ayse-denetim/sorular-canli-0930.json | 12 | 12 | 0 | 0 | 0 |
-| scripts/ayse-denetim/sorular-takip.json | 202 | 124 | **6** | 0 | 72 |
+| scripts/ayse-denetim/sorular-takip.json | 202 | 126 | **2** | 0 | 74 |
 
 A turn is counted under every source file it cites, so the rows add up to more than the total.
 
@@ -46,68 +46,68 @@ A turn is counted under every source file it cites, so the rows add up to more t
 | category | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
 | asi | 40 | 18 | 0 | 0 | 22 |
-| dosya | 54 | 38 | **4** | 4 | 8 |
+| dosya | 54 | 42 | 0 | 4 | 8 |
 | eylem | 72 | 60 | 0 | 1 | 11 |
 | hasta-cozum | 68 | 40 | 0 | 4 | 24 |
 | ilac | 32 | 8 | 0 | 0 | 24 |
-| ilk10 | 90 | 0 | 0 | 2 | 88 |
-| izolasyon | 6 | 4 | 0 | 0 | 2 |
+| ilk10 | 90 | 1 | 0 | 2 | 87 |
+| izolasyon | 8 | 6 | 0 | 0 | 2 |
 | kapsam | 44 | 44 | 0 | 0 | 0 |
 | kimlik | 20 | 20 | 0 | 0 | 0 |
-| lab | 30 | 0 | **1** | 4 | 25 |
-| liste | 34 | 24 | **8** | 2 | 0 |
-| muayene | 34 | 10 | **1** | 0 | 23 |
-| olcum | 81 | 61 | **12** | 2 | 6 |
-| sayim | 32 | 14 | **2** | 0 | 16 |
-| ses | 8 | 4 | 0 | 1 | 3 |
+| lab | 30 | 0 | 0 | 4 | 26 |
+| liste | 34 | 32 | 0 | 2 | 0 |
+| muayene | 40 | 26 | 0 | 0 | 14 |
+| olcum | 81 | 71 | **2** | 2 | 6 |
+| sayim | 32 | 16 | 0 | 0 | 16 |
+| ses | 9 | 5 | 0 | 1 | 3 |
 | sohbet | 20 | 20 | 0 | 0 | 0 |
-| takip | 141 | 84 | **8** | 0 | 49 |
-| takvim | 72 | 70 | **2** | 0 | 0 |
+| takip | 141 | 89 | **2** | 0 | 50 |
+| takvim | 72 | 72 | 0 | 0 | 0 |
 | uygulama | 10 | 0 | 0 | 4 | 6 |
 
 ### By route that answered
 
 | route | turns | PASS | FAIL | MANUAL | not judged |
 |---|---|---|---|---|---|
-| (yok) | 1 | 0 | 0 | 1 | 0 |
-| arama | 58 | 52 | **4** | 2 | 0 |
+| (yok) | 2 | 1 | 0 | 1 | 0 |
+| arama | 64 | 62 | 0 | 2 | 0 |
 | dosya-ac | 22 | 22 | 0 | 0 | 0 |
 | gurultu | 2 | 2 | 0 | 0 | 0 |
-| hizli-kart | 128 | 116 | **8** | 4 | 0 |
+| hizli-kart | 108 | 104 | **2** | 2 | 0 |
 | kapsam | 22 | 22 | 0 | 0 | 0 |
-| kayit | 83 | 67 | **16** | 0 | 0 |
-| kimlik | 22 | 20 | **2** | 0 | 0 |
-| model | 410 | 100 | **2** | 17 | 291 |
-| oku | 3 | 1 | **2** | 0 | 0 |
-| panel | 21 | 5 | 0 | 0 | 16 |
-| takvim | 116 | 112 | **4** | 0 | 0 |
+| kayit | 105 | 101 | **2** | 2 | 0 |
+| kimlik | 20 | 20 | 0 | 0 | 0 |
+| model | 418 | 116 | 0 | 17 | 285 |
+| oku | 1 | 1 | 0 | 0 | 0 |
+| panel | 21 | 7 | 0 | 0 | 14 |
+| takvim | 112 | 112 | 0 | 0 | 0 |
 
 ## Quality — measured against docs/AYSE-KALITE-STANDARDI.md
 
-**Stand-in run: only the checks that need no model answer are comparable.** 457 of 888 turns were answered by a model-free handler and are judged; the other 431 were written by the stand-in and have no verdict. The numbers below say nothing about İlk-10 answers, summaries or anything else the model writes — the live pass measures those.
+**Stand-in run: only the checks that need no model answer are comparable.** 458 of 897 turns were answered by a model-free handler and are judged; the other 439 were written by the stand-in and have no verdict. The numbers below say nothing about İlk-10 answers, summaries or anything else the model writes — the live pass measures those.
 
-Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanical check applied to one answer; the checks measure form and wording, not whether a value is true.
+Quality score: **98.1** (5383 of 5487 verdicts passed). A verdict is one mechanical check applied to one answer; the checks measure form and wording, not whether a value is true.
 
 ### By rule
 
 | rule | | verdicts | pass | fail | pass rate |
 |---|---|---|---|---|---|
-| Q-01 | Answer first | 433 | 433 | 0 | 100.0% |
-| Q-02 | Specific | 59 | 37 | **22** | 62.7% |
+| Q-01 | Answer first | 434 | 434 | 0 | 100.0% |
+| Q-02 | Specific | 57 | 57 | 0 | 100.0% |
 | Q-03 | Source versus interpretation | — | — | — | no answer of this run was subject to it |
-| Q-04 | Planned is not given | 433 | 433 | 0 | 100.0% |
+| Q-04 | Planned is not given | 434 | 434 | 0 | 100.0% |
 | Q-05 | Never invent | — | — | — | not checked by the rubric |
-| Q-06 | Dates | 220 | 204 | **16** | 92.7% |
-| Q-07 | Right patient | 637 | 637 | 0 | 100.0% |
+| Q-06 | Dates | 221 | 204 | **17** | 92.3% |
+| Q-07 | Right patient | 638 | 638 | 0 | 100.0% |
 | Q-08 | Paediatrics | — | — | — | no answer of this run was subject to it |
 | Q-09 | Safety first, without alarm | — | — | — | no answer of this run was subject to it |
 | Q-10 | Privacy | — | — | — | not checked by the rubric |
-| Q-11 | Tone | 1732 | 1732 | 0 | 100.0% |
-| Q-20 | Length | 204 | 194 | **10** | 95.1% |
+| Q-11 | Tone | 1736 | 1736 | 0 | 100.0% |
+| Q-20 | Length | 201 | 191 | **10** | 95.0% |
 | Q-21 | Structure by question | — | — | — | no answer of this run was subject to it |
-| Q-30 | The doctor must hear the answer | 432 | 426 | **6** | 98.6% |
-| Q-31 | Speakable | 876 | 822 | **54** | 93.8% |
-| Q-32 | Never silent | 455 | 455 | 0 | 100.0% |
+| Q-30 | The doctor must hear the answer | 434 | 427 | **7** | 98.4% |
+| Q-31 | Speakable | 876 | 806 | **70** | 92.0% |
+| Q-32 | Never silent | 456 | 456 | 0 | 100.0% |
 | Q-33 | Latency budgets | — | — | — | not checked by the rubric |
 | Q-40 | The corpus only grows | — | — | — | not checked by the rubric |
 | Q-41 | Release gate | — | — | — | not checked by the rubric |
@@ -116,56 +116,55 @@ Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanica
 
 | check | verdicts | pass | fail | pass rate |
 |---|---|---|---|---|
-| Q-11 `bos-savusturma` | 433 | 433 | 0 | 100.0% |
-| Q-01 `cevap-once` | 433 | 433 | 0 | 100.0% |
-| Q-11 `ham-artik` | 433 | 433 | 0 | 100.0% |
+| Q-11 `bos-savusturma` | 434 | 434 | 0 | 100.0% |
+| Q-01 `cevap-once` | 434 | 434 | 0 | 100.0% |
+| Q-11 `ham-artik` | 434 | 434 | 0 | 100.0% |
 | Q-07 `hasta-adi` | 204 | 204 | 0 | 100.0% |
 | Q-20 `seri-tablo` | 28 | 28 | 0 | 100.0% |
-| Q-30 `ses-anlati` | 216 | 216 | 0 | 100.0% |
+| Q-30 `ses-anlati` | 217 | 217 | 0 | 100.0% |
 | Q-31 `ses-bicim` | 219 | 219 | 0 | 100.0% |
 | Q-31 `ses-birim` | 219 | 201 | **18** | 91.8% |
 | Q-31 `ses-kimlik` | 219 | 219 | 0 | 100.0% |
-| Q-31 `ses-tarih` | 219 | 183 | **36** | 83.6% |
-| Q-30 `ses-uzunluk` | 216 | 210 | **6** | 97.2% |
-| Q-32 `sessiz-degil` | 455 | 455 | 0 | 100.0% |
-| Q-06 `takip-bugun` | 16 | 0 | **16** | 0.0% |
+| Q-31 `ses-tarih` | 219 | 167 | **52** | 76.3% |
+| Q-30 `ses-uzunluk` | 217 | 210 | **7** | 96.8% |
+| Q-32 `sessiz-degil` | 456 | 456 | 0 | 100.0% |
+| Q-06 `takip-bugun` | 17 | 0 | **17** | 0.0% |
 | Q-06 `tam-tarih` | 204 | 204 | 0 | 100.0% |
-| Q-02 `tek-olcum` | 59 | 37 | **22** | 62.7% |
-| Q-11 `turkce` | 433 | 433 | 0 | 100.0% |
-| Q-20 `uzunluk` | 176 | 166 | **10** | 94.3% |
-| Q-07 `yabanci-hasta` | 433 | 433 | 0 | 100.0% |
-| Q-04 `yapilmadi` | 433 | 433 | 0 | 100.0% |
-| Q-11 `yasak-ifade` | 433 | 433 | 0 | 100.0% |
+| Q-02 `tek-olcum` | 57 | 57 | 0 | 100.0% |
+| Q-11 `turkce` | 434 | 434 | 0 | 100.0% |
+| Q-20 `uzunluk` | 173 | 163 | **10** | 94.2% |
+| Q-07 `yabanci-hasta` | 434 | 434 | 0 | 100.0% |
+| Q-04 `yapilmadi` | 434 | 434 | 0 | 100.0% |
+| Q-11 `yasak-ifade` | 434 | 434 | 0 | 100.0% |
 
 ### By category
 
 | category | verdicts | pass | fail | pass rate |
 |---|---|---|---|---|
 | asi | 252 | 252 | 0 | 100.0% |
-| dosya | 622 | 602 | **20** | 96.8% |
+| dosya | 622 | 604 | **18** | 97.1% |
 | eylem | 38 | 38 | 0 | 100.0% |
-| hasta-cozum | 528 | 522 | **6** | 98.9% |
+| hasta-cozum | 528 | 523 | **5** | 99.1% |
 | ilac | 106 | 103 | **3** | 97.2% |
-| izolasyon | 44 | 44 | 0 | 100.0% |
+| izolasyon | 66 | 66 | 0 | 100.0% |
 | kapsam | 22 | 22 | 0 | 100.0% |
 | kimlik | 270 | 270 | 0 | 100.0% |
-| lab | 12 | 12 | 0 | 100.0% |
-| liste | 377 | 360 | **17** | 95.5% |
-| muayene | 151 | 147 | **4** | 97.4% |
-| olcum | 1018 | 972 | **46** | 95.5% |
-| sayim | 154 | 154 | 0 | 100.0% |
-| ses | 29 | 26 | **3** | 89.7% |
-| takip | 1058 | 1051 | **7** | 99.3% |
-| takvim | 800 | 798 | **2** | 99.8% |
+| liste | 376 | 354 | **22** | 94.1% |
+| muayene | 139 | 135 | **4** | 97.1% |
+| olcum | 1016 | 977 | **39** | 96.2% |
+| sayim | 176 | 176 | 0 | 100.0% |
+| ses | 42 | 38 | **4** | 90.5% |
+| takip | 1032 | 1025 | **7** | 99.3% |
+| takvim | 802 | 800 | **2** | 99.8% |
 
 ### By surface
 
 | surface | verdicts | pass | fail | pass rate |
 |---|---|---|---|---|
-| voice | 3410 | 3326 | **84** | 97.5% |
-| chat | 2071 | 2047 | **24** | 98.8% |
+| voice | 3411 | 3320 | **91** | 97.3% |
+| chat | 2076 | 2063 | **13** | 99.4% |
 
-### Violations — 108 failed verdict(s)
+### Violations — 104 failed verdict(s)
 
 | id | surface | rule | check | text | why |
 |---|---|---|---|---|---|
@@ -177,14 +176,14 @@ Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanica
 | L-AKTIF-SON | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "1 ay sonra kontrol" |
 | L-AKTIF-SON | voice | Q-20 | uzunluk | screen | tek bilgilik cevap 3 cümle (sınır 2) |
 | L-AKTIF-TANSIYON | voice | Q-31 | ses-birim | spoken | okunmayan birim: "yüz otuz iki/sekse" |
-| L-DOLGU-KILO | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| L-DOLGU-KILO | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
-| L-SAYFA-KILO | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| L-SAYFA-KILO | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
+| L-DOLGU-KILO | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
+| L-SAYFA-KILO | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | L-OKU-01 | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "6 ay sonra kontrol" |
 | L-OKU-01 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.08.2026" |
 | L-BIRIM-02 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
+| L-OZET-24AY-DEVAM | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "6 ay sonra kontrol" |
 | L-DANIS-12AY | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.08.2025" |
+| L-DANIS-BOYU | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.08.2025" |
 | L-DANIS-15AY | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.11.2025" |
 | L-DANIS-6AY | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "28.02.2025" |
 | L-DANIS-SERI-1 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "04.09.2024" |
@@ -195,8 +194,7 @@ Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanica
 | L-DANIS-TANSIYON-SERI | voice | Q-31 | ses-birim | spoken | okunmayan birim: "iyon yüz elli/doksa" |
 | L-DANIS-ILK | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "28.08.2025" |
 | L-DANIS-SON | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "18.09.2026" |
-| L-DANIS-GECEN-YIL | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| L-DANIS-GECEN-YIL | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
+| L-DANIS-GECEN-YIL | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | L-KOHORT-01 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
 | L-KOHORT-02 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
 | L-KOHORT-04 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "yüz miligram/beş m" |
@@ -207,31 +205,33 @@ Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanica
 | G-20 | voice | Q-30 | ses-uzunluk | spoken | 107 kelime söylendi (sınır 65, yaklaşık 25 sn) |
 | G-20 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | G-20 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
+| G-21 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "28.02.2026" |
+| G-22 | voice | Q-30 | ses-uzunluk | spoken | 121 kelime söylendi (sınır 65, yaklaşık 25 sn) |
+| G-22 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
+| G-22 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "yüz miligram/beş m" |
 | G-23 | voice | Q-30 | ses-uzunluk | spoken | 89 kelime söylendi (sınır 65, yaklaşık 25 sn) |
 | G-23 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | G-23 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
+| G-24 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "27.09.2026" |
 | G-40 | chat | Q-06 | takip-bugun | screen | takip süresi bugünle karşılaştırılmamış: "1 ay sonra kontrol" |
 | G-40 | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "1 ay sonra kontrol" |
-| G-41 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "n: doksan beş/altmı" |
 | Y-016 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
 | Y-021 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "24.09.2026" |
+| Y-021 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "on doksan beş/altmı" |
 | Y-022 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "24.09.2026" |
-| Y-023 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "24.09.2026" |
 | Y-041 | chat | Q-06 | takip-bugun | screen | takip süresi bugünle karşılaştırılmamış: "48-72 saat içinde düzelmezse kontrol" |
 | Y-041 | chat | Q-20 | uzunluk | screen | tek bilgilik cevap 3 cümle (sınır 2) |
+| Y-031 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | Y-032 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | Y-033 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | Y-038 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
 | Y-041 | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "48-72 saat içinde düzelmezse kontrol" |
 | Y-041 | voice | Q-20 | uzunluk | screen | tek bilgilik cevap 3 cümle (sınır 2) |
 | Y-043 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
-| Y-066 | chat | Q-02 | tek-olcum | screen | sorulmayan ölçüm de verilmiş: boy, ateş, tansiyon |
-| Y-069 | chat | Q-02 | tek-olcum | screen | sorulmayan ölçüm de verilmiş: boy, baş çevresi, ateş |
-| Y-066 | voice | Q-02 | tek-olcum | spoken | sorulmayan ölçüm de verilmiş: boy, ateş, tansiyon |
-| Y-066 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "n: doksan beş/altmı" |
+| Y-066 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "24.09.2026" |
 | Y-068 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "24.09.2026" |
 | Y-068 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "on doksan beş/altmı" |
-| Y-069 | voice | Q-02 | tek-olcum | spoken | sorulmayan ölçüm de verilmiş: boy, baş çevresi, ateş |
+| Y-069 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | Y-087 | voice | Q-30 | ses-uzunluk | spoken | 96 kelime söylendi (sınır 65, yaklaşık 25 sn) |
 | Y-087 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | Y-087 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
@@ -239,13 +239,11 @@ Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanica
 | Y-090 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | Y-090 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
 | Y-095 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
-| T-041 | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| T-041 | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
+| T-041 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | T-045 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
-| T-059 | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| T-059 | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
-| T-076 | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| T-076 | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
+| T-059 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
+| T-076 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
+| T-077 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | T-089 | voice | Q-30 | ses-uzunluk | spoken | 96 kelime söylendi (sınır 65, yaklaşık 25 sn) |
 | T-089 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | T-089 | voice | Q-31 | ses-birim | spoken | okunmayan birim: "elli miligram/beş m" |
@@ -259,82 +257,38 @@ Quality score: **98** (5373 of 5481 verdicts passed). A verdict is one mechanica
 | R-MUAYENE-1 | voice | Q-30 | ses-uzunluk | spoken | 23 cümle söylendi (sınır 7) |
 | R-MUAYENE-2 | chat | Q-06 | takip-bugun | screen | takip süresi bugünle karşılaştırılmamış: "1 ay sonra kontrol" |
 | R-OLCUM-METIN | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.11.2025" |
-| R-KART-KILO | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| R-KART-KILO | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
+| R-KART-KILO | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
 | R-KAPSAM06-10 | chat | Q-06 | takip-bugun | screen | takip süresi bugünle karşılaştırılmamış: "1 ay sonra kontrol" |
 | R-KAPSAM06-10 | chat | Q-20 | uzunluk | screen | tek bilgilik cevap 3 cümle (sınır 2) |
 | R-KAPSAM06-10 | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "1 ay sonra kontrol" |
 | R-KAPSAM06-10 | voice | Q-20 | uzunluk | screen | tek bilgilik cevap 3 cümle (sınır 2) |
-| K-OLCUM-KILO | chat | Q-02 | tek-olcum | screen | kilo değerinin tarihi yok |
-| K-OLCUM-KILO | voice | Q-02 | tek-olcum | spoken | kilo değerinin tarihi yok |
-| K-OLCUM-G-KILO | chat | Q-02 | tek-olcum | screen | sorulmayan ölçüm de verilmiş: boy, baş çevresi |
-| K-OLCUM-G-KILO | voice | Q-02 | tek-olcum | spoken | sorulmayan ölçüm de verilmiş: boy, baş çevresi |
-| K-OLCUM-G-BOY | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "29.09.2026" |
-| K-OLCUM-G-BAS | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "29.09.2026" |
+| K-OLCUM-KILO | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "30.09.2026" |
+| K-OLCUM-G-KILO | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "20.08.2026" |
+| K-OLCUM-G-BOY | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "20.08.2026" |
+| K-OLCUM-G-BAS | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "20.08.2026" |
 | K-OLCUM-ATES | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "01.10.2026" |
 | K-TARIH-SON | chat | Q-06 | takip-bugun | screen | takip süresi bugünle karşılaştırılmamış: "2 hafta sonra kontrol" |
 | K-TARIH-SON | chat | Q-20 | uzunluk | screen | tek bilgilik cevap 5 cümle (sınır 2) |
 | K-TARIH-SON | voice | Q-06 | takip-bugun | spoken | takip süresi bugünle karşılaştırılmamış: "2 hafta sonra kontrol" |
 | K-TARIH-SON | voice | Q-20 | uzunluk | screen | tek bilgilik cevap 5 cümle (sınır 2) |
-| K-TARIH-G18 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "29.09.2026" |
+| K-TARIH-G18 | voice | Q-31 | ses-tarih | spoken | rakamla tarih: "20.08.2026" |
 
-## FAIL — 22 turn(s)
-
-| id | surface | sentence | source | route | tool / card | why | answer |
-|---|---|---|---|---|---|---|---|
-| G-21 | chat | aşı kaydı olan hastalarım kimler | docs/qa/gokhan-gunluk-sorular.md: #21; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-01 | arama | — | içermeli: Emircan; içermemeli: \b0 hasta | Kayıtlarda 0 hasta. Filtre: Aşı. |
-| G-21 | voice | aşı kaydı olan hastalarım kimler | docs/qa/gokhan-gunluk-sorular.md: #21; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-01 | arama | — | içermeli: Emircan; içermemeli: \b0 hasta | 🔊 Kayıtlarda 0 hasta. Filtre: Aşı. |
-| G-22 | chat | ilaç kullanan hastam var mı | docs/qa/gokhan-gunluk-sorular.md: #22; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01 | arama | — | içermeli: Emircan\|Nermin\|Ayşe\|Tarık; içermemeli: \b0 hasta | Kayıtlarda 0 hasta. Filtre: İlaç. |
-| G-22 | voice | ilaç kullanan hastam var mı | docs/qa/gokhan-gunluk-sorular.md: #22; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01 | arama | — | içermeli: Emircan\|Nermin\|Ayşe\|Tarık; içermemeli: \b0 hasta | 🔊 Kayıtlarda 0 hasta. Filtre: İlaç. |
-| G-28 | voice | MCV ve MCHC değerlerini oku *(after: Emircan'ın hemoglobin değeri kaçtı → ferritin sonucu ne → WBC kaç)* | docs/qa/gokhan-gunluk-sorular.md: #28 | oku | — | içermeli: \b75\b\|yetmiş beş | 🔊 Vekil yanıt Hocam. 🖥 Ekrandaki cevabı sesli okudum Hocam. |
-| Y-021 | chat | Son ölçümleri neler? *(after: Kronik hastalığı var mı? → Gelen belgeler kutusunda bir şey var mı? → Sonraki randevusu ne zaman?)* | scripts/ayse-denetim/sorular-100.json: #21 | kayit | — | içermeli: 38,9 | **Ayşe Bozkurt — kilo, boy ve baş çevresi ölçümleri** (1 muayene) \| Tarih \| Kilo (kg) \| Boy (cm) \| Baş çevresi (cm) \| \| --- \| --- \| --- \| --- \| \| 24.09.2026 \| 19,4 \| 110 \| kayıt yok \| Baş çevresi: hiçbir kayıtta ölçüm yok. Yalnız dosyada kayıtlı… |
-| Y-023 | chat | bu hastanın annesinin boyu kaç *(after: Sonraki randevusu ne zaman? → Son ölçümleri neler? → hastamızın ateşi kaçtı son muayenede)* | scripts/ayse-denetim/sorular-100.json: #23; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | kayit | — | içermeli: 168 | Ayşe Bozkurt — son boy 110 cm (24.09.2026). |
-| Y-021 | voice | Son ölçümleri neler? *(after: Kronik hastalığı var mı? → Gelen belgeler kutusunda bir şey var mı? → Sonraki randevusu ne zaman?)* | scripts/ayse-denetim/sorular-100.json: #21 | kayit | — | içermeli: 38,9 | 🔊 Ayşe Bozkurt'un kilo, boy ve baş çevresi ölçümlerini tablo olarak ekrana getirdim Hocam; 1 kayıt var. Son kilo 19,4 kg (24.09.2026). Baş çevresi için kayıtlı ölçüm yok. 🖥 **Ayşe Bozkurt — kilo, boy ve baş çevresi ölçümleri** (1 muayene) \| Tarih \| Kilo (k… |
-| Y-023 | voice | bu hastanın annesinin boyu kaç *(after: Sonraki randevusu ne zaman? → Son ölçümleri neler? → hastamızın ateşi kaçtı son muayenede)* | scripts/ayse-denetim/sorular-100.json: #23; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | kayit | — | içermeli: 168 | 🔊 Ayşe Bozkurt — son boy 110 cm (24.09.2026). |
-| Y-063 | voice | Son SOAP notunu oku *(after: Daha önce aynı şikayetle geldi mi? → Gelişimi yaşına uygun mu? → Toplam kaç kez geldi?)* | scripts/ayse-denetim/sorular-100.json: #63 | oku | — | içermeli: otit\|kulak | 🔊 Vekil yanıt Hocam. 🖥 Ekrandaki cevabı sesli okudum Hocam. |
-| Y-080 | chat | Tarık Özdemir'in randevusu ne zaman? *(after: bu hafta kaç randevum var → yarin sabah bosluk var mi → Bugün öğleden sonra 3'te yer var mı?)* | scripts/ayse-denetim/sorular-100.json: #80 | takvim | — | içermeli: {DUN}\|dün\|11[:.]30\|randevu\w* (yok\|bulunmuyor\|görünmüyor\|kay… | 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
-| Y-083 | chat | kaç tane hasta kaydım var toplam *(after: Tarık Özdemir'in randevusu ne zaman? → Olcay Santoro ne zaman gelecek? → Kaç hastam var?)* | scripts/ayse-denetim/sorular-100.json: #83 | model | — | rota model ≠ arama | Vekil yanıt Hocam. |
-| Y-091 | chat | dün gelen ateşli çocuk *(after: Aşısı eksik olan hastalarım kimler? → Bu hafta tanı koyduğum pnömoni vakası kimdi? → kulak iltihabı olan çocuk kimdi)* | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | hizli-kart | — | içermeli: Tarık | Olcay Santoro — dosyada son ölçüm: kayıt yok. |
-| Y-080 | voice | Tarık Özdemir'in randevusu ne zaman? *(after: bu hafta kaç randevum var → yarin sabah bosluk var mi → Bugün öğleden sonra 3'te yer var mı?)* | scripts/ayse-denetim/sorular-100.json: #80 | takvim | — | içermeli: {DUN}\|dün\|11[:.]30\|randevu\w* (yok\|bulunmuyor\|görünmüyor\|kay… | 🔊 Yarın, 3 Ekim Cumartesi, 1 randevu var Hocam: 10:00 Ayşe Bozkurt kontrol. 🖥 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
-| Y-083 | voice | kaç tane hasta kaydım var toplam *(after: Tarık Özdemir'in randevusu ne zaman? → Olcay Santoro ne zaman gelecek? → Kaç hastam var?)* | scripts/ayse-denetim/sorular-100.json: #83 | model | — | rota model ≠ arama | 🔊 Vekil yanıt Hocam. |
-| Y-091 | voice | dün gelen ateşli çocuk *(after: Aşısı eksik olan hastalarım kimler? → Bu hafta tanı koyduğum pnömoni vakası kimdi? → kulak iltihabı olan çocuk kimdi)* | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | hizli-kart | — | içermeli: Tarık | 🔊 Olcay Santoro — dosyada son ölçüm: kayıt yok. |
-| T-025 | chat | peki Tarık Özdemir randevusu ne zaman? *(after: Bugün randevum var mı?)* | scripts/ayse-denetim/sorular-takip.json: #25 | takvim | — | içermeli: Tarık | 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
-| T-025 | voice | peki Tarık Özdemir randevusu ne zaman? *(after: Bugün randevum var mı?)* | scripts/ayse-denetim/sorular-takip.json: #25 | takvim | — | içermeli: Tarık | 🔊 Yarın, 3 Ekim Cumartesi, 1 randevu var Hocam: 10:00 Ayşe Bozkurt kontrol. 🖥 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
-| T-042 | chat | boyu? *(after: Emircan Karaoğlu kaç kilo?)* | scripts/ayse-denetim/sorular-takip.json: #42 | kayit | — | içermeli: \d cm | Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
-| T-044 | chat | baş çevresi? *(after: Emircan Karaoğlu kaç kilo? → boyu? → persentili?)* | scripts/ayse-denetim/sorular-takip.json: #44 | kayit | — | içermeli: \d cm | Emircan Karaoğlu için kayıtlı baş çevresi ölçümü yok Hocam (son muayene). |
-| T-042 | voice | boyu? *(after: Emircan Karaoğlu kaç kilo?)* | scripts/ayse-denetim/sorular-takip.json: #42 | kayit | — | içermeli: \d cm | 🔊 Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
-| T-044 | voice | baş çevresi? *(after: Emircan Karaoğlu kaç kilo? → boyu? → persentili?)* | scripts/ayse-denetim/sorular-takip.json: #44 | kayit | — | içermeli: \d cm | 🔊 Emircan Karaoğlu için kayıtlı baş çevresi ölçümü yok Hocam (son muayene). |
-
-## FAIL on a defect the ledger already lists as OPEN — 16 turn(s)
-
-Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-KALITE-STANDART-01e, NOTYA-VIZIT-TARIH-01.
+## FAIL — 4 turn(s)
 
 | id | surface | sentence | source | route | tool / card | why | answer |
 |---|---|---|---|---|---|---|---|
-| L-DANIS-BOYU | chat | peki boyu? *(after: bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu)* | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | kayit | — | içermeli: \b76 cm | Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
-| L-DANIS-BOYU | voice | peki boyu? *(after: bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu)* | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | kayit | — | içermeli: \b76 cm | 🔊 Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
-| G-24 | chat | doğum tarihi kayıtlı olmayan hastam var mı | docs/qa/gokhan-gunluk-sorular.md: #24; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-DOGUM-NEGASYON-01 | kimlik | — | rota kimlik ≠ arama; içermeli: Olcay | Hangi hastanın bilgisini istiyorsunuz? Adını yazar mısınız? |
-| G-24 | voice | doğum tarihi kayıtlı olmayan hastam var mı | docs/qa/gokhan-gunluk-sorular.md: #24; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-DOGUM-NEGASYON-01 | kimlik | — | rota kimlik ≠ arama; içermeli: Olcay | 🔊 Hangi hastanın bilgisini istiyorsunuz? Adını yazar mısınız? |
-| K-OLCUM-KILO | chat | Kilosu kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | hizli-kart | — | içermeli: {P_SON_VIZIT} | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| K-OLCUM-KILO | voice | Kilosu kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | hizli-kart | — | içermeli: {P_SON_VIZIT} | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| K-OLCUM-G-KILO | chat | Kilosu kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | hizli-kart | — | içermeli: {G_V18}; içermemeli: 47,6 | Doruk Akyel — dosyada son ölçüm: Kilo: 10,8 kg · Boy: 82 cm · Baş Çevresi: 47,6 cm. |
-| K-OLCUM-G-KILO | voice | Kilosu kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | hizli-kart | — | içermeli: {G_V18}; içermemeli: 47,6 | 🔊 Doruk Akyel — dosyada son ölçüm: Kilo: 10,8 kg, Boy: 82 cm, Baş Çevresi: 47,6 cm. 🖥 Doruk Akyel — dosyada son ölçüm: Kilo: 10,8 kg · Boy: 82 cm · Baş Çevresi: 47,6 cm. |
-| K-OLCUM-G-BOY | chat | Boyu kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | kayit | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | Doruk Akyel — son boy 82 cm (29.09.2026). |
-| K-OLCUM-G-BOY | voice | Boyu kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | kayit | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | 🔊 Doruk Akyel — son boy 82 cm (29.09.2026). |
-| K-OLCUM-G-BAS | chat | Baş çevresi kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | kayit | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | Doruk Akyel — son baş çevresi 47,6 cm (29.09.2026). |
-| K-OLCUM-G-BAS | voice | Baş çevresi kaç? | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | kayit | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | 🔊 Doruk Akyel — son baş çevresi 47,6 cm (29.09.2026). |
-| K-TARIH-SON | chat | En son ne zaman geldi? | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | hizli-kart | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | Doruk Akyel — dosyada son vizit: 29 Eylül 2026 — 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Dosyada plan ve takip: M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit A 1. doz planlandı. İşitme değerlendirmesi için KBB konsültasyonu istendi. 2 hafta so… |
-| K-TARIH-SON | voice | En son ne zaman geldi? | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | hizli-kart | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | 🔊 Doruk Akyel — dosyada son vizit: 29 Eylül 2026 — 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Dosyada plan ve takip: M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit A 1. doz planlandı. İşitme değerlendirmesi için KBB konsültasyonu istendi. 2 hafta… |
-| K-TARIH-G18 | chat | 18 aylık muayenesinde kaç kiloydu? | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | kayit | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | Doruk Akyel — 18 aylık muayene (29.09.2026): kilo 10,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| K-TARIH-G18 | voice | 18 aylık muayenesinde kaç kiloydu? | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | kayit | — | içermeli: {G_V18}; içermemeli: {G_GIRIS} | 🔊 Doruk Akyel — 18 aylık muayene (29.09.2026): kilo 10,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
+| T-042 | chat | boyu? *(after: Emircan Karaoğlu kaç kilo?)* | scripts/ayse-denetim/sorular-takip.json: #42 | hizli-kart | — | içermeli: \d cm | Emircan Karaoğlu — dosyada boy: kayıt yok. |
+| T-042 | voice | boyu? *(after: Emircan Karaoğlu kaç kilo?)* | scripts/ayse-denetim/sorular-takip.json: #42 | hizli-kart | — | içermeli: \d cm | 🔊 Emircan Karaoğlu — dosyada boy: kayıt yok. |
+| R-KART-KILO | chat | Kilosu kaç? | lib/asistan/ayseRota.test.ts: Kilosu kaç?; lib/asistan/dosyaSorgu/denetim.test.ts: Kilosu kaç? | kayit | — | rota kayit ≠ hizli-kart | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| R-KART-KILO | voice | Kilosu kaç? | lib/asistan/ayseRota.test.ts: Kilosu kaç?; lib/asistan/dosyaSorgu/denetim.test.ts: Kilosu kaç? | kayit | — | rota kayit ≠ hizli-kart | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 
 ## MANUAL — 24 turn(s), to be read by a person
 
 | id | surface | sentence | route | why manual | answer |
 |---|---|---|---|---|---|
 | L-DEVAM-01 | voice | devam et | model | A remainder exists only when the previous spoken turn was cut; with text input it usually is not. | 🔊 Vekil yanıt Hocam. |
-| L-DANIS-GECEN-YIL | chat | geçen yıl kaç kiloydu | hizli-kart | OPEN in the ledger: the quick card answers with the LATEST weight. What the right answer is for "last year" is not written down. | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| L-DANIS-GECEN-YIL | voice | geçen yıl kaç kiloydu | hizli-kart | OPEN in the ledger: the quick card answers with the LATEST weight. What the right answer is for "last year" is not written down. | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| L-DANIS-GECEN-YIL | chat | geçen yıl kaç kiloydu | kayit | OPEN in the ledger: the quick card answers with the LATEST weight. What the right answer is for "last year" is not written down. | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| L-DANIS-GECEN-YIL | voice | geçen yıl kaç kiloydu | kayit | OPEN in the ledger: the quick card answers with the LATEST weight. What the right answer is for "last year" is not written down. | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | L-GERI-02-EVET | voice | Evet | — | A spoken Evet commits the pending card. With a stand-in model the card has no value to commit; read the live answer. | 🔊 Şu alanlar boş: Alerji. Ekrandan doldurup onaylayın, ya da tarihi söyleyin. |
 | G-14 | chat | Ayşe hastamı bul | model | The source calls "no patient" the design (NOTYA-HASTA-ODAK-01: the assistant's own name alone picks nobody); NOTYA-AYSE-GERI-01, later the same day, lets a patient called Ayşe resolve by first name when the name is not a… | Vekil yanıt Hocam. |
 | G-14 | voice | Ayşe hastamı bul | model | The source calls "no patient" the design (NOTYA-HASTA-ODAK-01: the assistant's own name alone picks nobody); NOTYA-AYSE-GERI-01, later the same day, lets a patient called Ayşe resolve by first name when the name is not a… | 🔊 Vekil yanıt Hocam. |
@@ -344,8 +298,8 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | G-29 | voice | Emircan'ın Hct değeri yüzde kaç | model | QUESTIONABLE in the source (how "%" is spoken); the fixture has no Hct row. | 🔊 Vekil yanıt Hocam. |
 | G-30 | chat | Emircan'ın topuk kanı sonuçları normal mi | model | Model judgement in the source. | Vekil yanıt Hocam. |
 | G-30 | voice | Emircan'ın topuk kanı sonuçları normal mi | model | Model judgement in the source. | 🔊 Vekil yanıt Hocam. |
-| G-41 | chat | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | Not tested in the source; a negated question about a chart that does have a fever on record. | Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C · Tansiyon: 95/60 mmHg · Kilo: 19,4 kg · Boy: 110 cm. |
-| G-41 | voice | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | Not tested in the source; a negated question about a chart that does have a fever on record. | 🔊 Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C, Tansiyon: 95/60 mmHg, Kilo: 19,4 kg, Boy: 110 cm. 🖥 Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C · Tansiyon: 95/60 mmHg · Kilo: 19,4 kg · Boy: 110 cm. |
+| G-41 | chat | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | Not tested in the source; a negated question about a chart that does have a fever on record. | Ayşe Bozkurt — dosyada ateş: 38,9 °C. |
+| G-41 | voice | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | Not tested in the source; a negated question about a chart that does have a fever on record. | 🔊 Ayşe Bozkurt — dosyada ateş: 38,9 °C. |
 | G-45 | chat | Ayşe'yi aç | model | The source expects the persona-name guard (no chart); NOTYA-AYSE-GERI-01 later made "Ayşe'nin …" resolve the patient called Ayşe. Which rule covers the accusative is not written down. | Vekil yanıt Hocam. |
 | G-45 | voice | Ayşe'yi aç | model | The source expects the persona-name guard (no chart); NOTYA-AYSE-GERI-01 later made "Ayşe'nin …" resolve the patient called Ayşe. Which rule covers the accusative is not written down. | 🔊 Vekil yanıt Hocam. |
 | G-49 | chat | Ayşe için SOAP notu taslağı hazırla | model | Generative; model judgement in the source. | Ayşe Bozkurt için Aşı kaydı hazırladım. Ama Aşı, Uygulama tarihi boş — ekrandaki karttan doldurup onaylayın. |
@@ -401,22 +355,22 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | L-KIMLIK-DT | docs/OPEN-COMMITMENTS.md: STT mis-transcription investigated | voice | Emircan Karaoğlu'nun doğum tarihini verir misin? | kimlik | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu için istediğiniz bilgiyi ekranınıza yazdım Hocam. 🖥 Emircan Karaoğlu için istenen kimlik ve iletişim bilgisine ERİŞİMİM VAR; değeri az önce ekrana yazdım (Doğu… |
 | L-KIMLIK-DT-ASR | docs/OPEN-COMMITMENTS.md: STT mis-transcription investigated | chat | Emircan Kara oğlunun doğum tarihini verir misin? | kimlik | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — Doğum tarihi: 30.08.2024 (hasta kartı) |
 | L-KIMLIK-DT-ASR | docs/OPEN-COMMITMENTS.md: STT mis-transcription investigated | voice | Emircan Kara oğlunun doğum tarihini verir misin? | kimlik | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu için istediğiniz bilgiyi ekranınıza yazdım Hocam. 🖥 Emircan Karaoğlu için istenen kimlik ve iletişim bilgisine ERİŞİMİM VAR; değeri az önce ekrana yazdım (Doğu… |
-| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | chat | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
-| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | voice | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
-| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | chat | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
-| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | voice | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
+| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | chat | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Ayşe Bozkurt — 24.09.2026 tarihli muayenenin özeti (muayene tarihinde 5 yaş 2 ay); yalnız kayıttaki bilgilerle. **Muayene:** 24.09.2026; muayene tarihinde 5 yaş 2 ay. **Şikayet:** … |
+| L-SES-HASTA-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: son muayenesinin özetini ve… | voice | Ayşe Bozkurt'un son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Ayşe Bozkurt, 24 Eylül 2026 tarihli muayene, 5 yaş 2 ay. Şikayet ve öykü: Öksürük ve ateş, 4 gündür; Dün gece nefes almakta zorlanmış. Muayene bulgusu: Sağ alt zonda ince raller… |
+| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | chat | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | Ayşe Bozkurt — 24.09.2026 tarihli muayenenin özeti (muayene tarihinde 5 yaş 2 ay); yalnız kayıttaki bilgilerle. **Muayene:** 24.09.2026; muayene tarihinde 5 yaş 2 ay. **Şikayet:** … |
+| L-SES-HASTA-01-ASR | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/hastaCozumleyici.test.ts: apostrofsuz ek, canlı ASR b… | voice | Ayşe Bozkurtun son muayenesinin özetini verir misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Ayşe Bozkurt, 24 Eylül 2026 tarihli muayene, 5 yaş 2 ay. Şikayet ve öykü: Öksürük ve ateş, 4 gündür; Dün gece nefes almakta zorlanmış. Muayene bulgusu: Sağ alt zonda ince raller… |
 | L-SES-HASTA-01-KOHORT | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/sesliSoz.test.ts: Merhaba Ayşe, bu hafta ateşli hasta… | chat | Merhaba Ayşe, bu hafta ateşli hastalarım kimler | arama | — | — | PASS | Bu hafta 2 hasta. Filtre: bu hafta: 1. Tarık Özdemir (d.t. 25.02.2024) — bu hafta · 2 yaş 7 ay · 01.10.2026 muayene · 01.10.2026 not: Sol kulak ağrısı ve ateş, 2 gündür · ilaç: Amo… |
 | L-SES-HASTA-01-KOHORT | docs/OPEN-COMMITMENTS.md: NOTYA-SES-HASTA-01; lib/doktor/sesliSoz.test.ts: Merhaba Ayşe, bu hafta ateşli hasta… | voice | Merhaba Ayşe, bu hafta ateşli hastalarım kimler | arama | — | — | PASS | 🔊 Bu hafta 2 hasta. Filtre: bu hafta: 1) Tarık Özdemir — bu hafta, 2 yaş 7 ay, 01.10.2026 muayene, 01.10.2026 not: Sol kulak ağrısı ve ateş, 2 gündür, ilaç: Amoksisilin 250 mg/5 m… |
 | L-AKTIF-SON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01; docs/OPEN-COMMITMENTS.md: NOTYA-LUNA-ARAMA-01 | chat | En son ne zaman geldi? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son vizit: 30 Eylül 2026 — Otit kontrolü. Dosyada plan ve takip: Tedavi tamamlandı. 1 ay sonra kontrol.. |
 | L-AKTIF-SON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01; docs/OPEN-COMMITMENTS.md: NOTYA-LUNA-ARAMA-01 | voice | En son ne zaman geldi? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son vizit: 30 Eylül 2026 — Otit kontrolü. Dosyada plan ve takip: Tedavi tamamlandı. 1 ay sonra kontrol.. |
 | L-AKTIF-SON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01; docs/OPEN-COMMITMENTS.md: NOTYA-LUNA-ARAMA-01 | panel | En son ne zaman geldi? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
-| L-AKTIF-TANSIYON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01 | chat | Tansiyon takibini nasıl planlarsın? | hizli-kart | — | Nermin Aydoğan | PASS | Nermin Aydoğan — dosyada son ölçüm: Tansiyon: 132/84 mmHg · Nabız: 76/dk · Kilo: 75,5 kg. |
-| L-AKTIF-TANSIYON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01 | voice | Tansiyon takibini nasıl planlarsın? | hizli-kart | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan — dosyada son ölçüm: Tansiyon: 132/84 mmHg, Nabız: 76/dk, Kilo: 75,5 kg. 🖥 Nermin Aydoğan — dosyada son ölçüm: Tansiyon: 132/84 mmHg · Nabız: 76/dk · Kilo: 75,5 … |
+| L-AKTIF-TANSIYON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01 | chat | Tansiyon takibini nasıl planlarsın? | hizli-kart | — | Nermin Aydoğan | PASS | Nermin Aydoğan — dosyada tansiyon: 132/84 mmHg. |
+| L-AKTIF-TANSIYON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01 | voice | Tansiyon takibini nasıl planlarsın? | hizli-kart | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan — dosyada tansiyon: 132/84 mmHg. |
 | L-AKTIF-TANSIYON | docs/OPEN-COMMITMENTS.md: NOTYA-AKTIF-HASTA-01 | panel | Tansiyon takibini nasıl planlarsın? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
 | L-DOLGU-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-DOLGU-01 | chat | Emircan, eee, Karaoğlu'nun dosyasına bak... şu anda kaç yaşında Emircan? | dosya-ac | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu dosyası açık Hocam. Ne sormak istersiniz? |
 | L-DOLGU-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-DOLGU-01 | voice | Emircan, eee, Karaoğlu'nun dosyasına bak... şu anda kaç yaşında Emircan? | dosya-ac | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu dosyası açık Hocam. Ne sormak istersiniz? |
-| L-DOLGU-KILO | lib/doktor/sesliSoz.test.ts: NOTYA-HASTA-ODAK-01: cümle ortasındaki hitap | chat | Peki Ayşe, Emircan Karaoğlu kaç kilo? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| L-DOLGU-KILO | lib/doktor/sesliSoz.test.ts: NOTYA-HASTA-ODAK-01: cümle ortasındaki hitap | voice | Peki Ayşe, Emircan Karaoğlu kaç kilo? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| L-DOLGU-KILO | lib/doktor/sesliSoz.test.ts: NOTYA-HASTA-ODAK-01: cümle ortasındaki hitap | chat | Peki Ayşe, Emircan Karaoğlu kaç kilo? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| L-DOLGU-KILO | lib/doktor/sesliSoz.test.ts: NOTYA-HASTA-ODAK-01: cümle ortasındaki hitap | voice | Peki Ayşe, Emircan Karaoğlu kaç kilo? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | L-DOLGU-HANE | lib/doktor/sesliSoz.test.ts: hanesini gösterir misin | chat | Eee, merhaba Ayşe Hocam. Bana, eee, Emirhan Karaoğlu'nun hanesini gösterir misin | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | L-DOLGU-HANE | lib/doktor/sesliSoz.test.ts: hanesini gösterir misin | voice | Eee, merhaba Ayşe Hocam. Bana, eee, Emirhan Karaoğlu'nun hanesini gösterir misin | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | L-ODAK-01 | docs/OPEN-COMMITMENTS.md: NOTYA-HASTA-ODAK-01; lib/doktor/sesliSoz.test.ts: Biraz koy. Ayşe, benim spesifik | chat | Biraz koy. Ayşe, benim spesifik, eee, arzum şeydi, aşı karnesini göstermendi. | kayit | — | Emircan Karaoğlu | PASS | **Emircan Karaoğlu — Aşı Karnesi** (16 kayıt) \| Aşı \| Tarih \| Doz \| Yaş \| \| --- \| --- \| --- \| --- \| \| Hepatit B \| 30.08.2024 \| 1. doz \| doğumda \| \| Hepatit B \| 29.… |
@@ -431,8 +385,8 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | L-ODAK-HITAP-4 | lib/doktor/hastaCozumleyici.test.ts: Teşekkürler Ayşe | voice | Teşekkürler Ayşe | model | — | — | PASS | 🔊 Vekil yanıt Hocam. |
 | L-DOLGU-02 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-LATENCY-BULGULARI; lib/doktor/sesliSoz.test.ts: NOTYA-SES-DOLGU-02 | chat | Merhaba hocam bugün nasınsınız iyi misiniz? | model | — | — | PASS | Vekil yanıt Hocam. |
 | L-DOLGU-02 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-LATENCY-BULGULARI; lib/doktor/sesliSoz.test.ts: NOTYA-SES-DOLGU-02 | voice | Merhaba hocam bugün nasınsınız iyi misiniz? | model | — | — | PASS | 🔊 Vekil yanıt Hocam. |
-| L-SAYFA-KILO | docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01 | chat | kaç kilo | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| L-SAYFA-KILO | docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01 | voice | kaç kilo | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| L-SAYFA-KILO | docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01 | chat | kaç kilo | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| L-SAYFA-KILO | docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01 | voice | kaç kilo | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | L-SAYFA-BUYUME | docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01; docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 3. | chat | Büyümesi nasıl gidiyor? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | L-SAYFA-BUYUME | docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01; docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 3. | voice | Büyümesi nasıl gidiyor? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | L-ERKEN-01 | docs/OPEN-COMMITMENTS.md: NOTYA-SES-ERKEN-01 | chat | Emircan Karaoğlu'nun dosyasını kısaca özetler misin | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
@@ -443,20 +397,29 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | L-BIRIM-02 | docs/OPEN-COMMITMENTS.md: NOTYA-TTS-BIRIM-02; docs/qa/gokhan-gunluk-sorular.md: #54 | voice | Son muayenede ateşi kaçtı? | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son muayene (01.10.2026): ateş 38,7 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | L-PLAN-01 | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-PLAN-01; docs/qa/gokhan-gunluk-sorular.md: #52; docs/OPEN-COMMITMEN… | chat | Bir tane Tesla elektrikli araba almayı planlıyorum. | kapsam | — | — | PASS | Hocam, ben yalnızca Notya'daki hasta, muayene, randevu ve klinik konularda yardımcı olabiliyorum; bu konuda yardımcı olamam. Hastalarınız, randevularınız ya da klinik bir sorunuz v… |
 | L-PLAN-01 | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-PLAN-01; docs/qa/gokhan-gunluk-sorular.md: #52; docs/OPEN-COMMITMEN… | voice | Bir tane Tesla elektrikli araba almayı planlıyorum. | kapsam | — | — | PASS | 🔊 Hocam, ben yalnızca Notya'daki hasta, muayene, randevu ve klinik konularda yardımcı olabiliyorum; bu konuda yardımcı olamam. Hastalarınız, randevularınız ya da klinik bir sorunu… |
-| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | chat | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | voice | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | panel | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
-| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
+| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | chat | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 28.02.2025 tarihli muayenenin özeti (muayene tarihinde 5 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 28.02.2025; muayene tarihinde 5 aylık. Tür: Sağlam çoc… |
+| L-TUR-6AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | voice | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 28 Şubat 2025 tarihli muayene, 5 aylık. Şikayet ve öykü: 6 aylık erkek bebek, rutin sağlam çocuk kontrolü için getirildi; Ek gıdaya başlanacak. Muayene bulgusu… |
+| L-TUR-6AY-PANEL | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01; docs/qa/gokhan-gunluk-sorular.md: #55 | panel | Emircan Karaoğlu'nun 6 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
+| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.08.2025 tarihli muayenenin özeti (muayene tarihinde 12 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2025; muayene tarihinde 12 aylık. Tür: Sağlam ç… |
+| L-TUR-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Ağustos 2025 tarihli muayene, 12 aylık. Şikayet ve öykü: 12 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Tek başına birkaç adım atıyor, "anne", "baba" di… |
+| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.11.2025 tarihli muayenenin özeti (muayene tarihinde 15 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.11.2025; muayene tarihinde 15 aylık. Tür: Sağlam ç… |
+| L-TUR-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Kasım 2025 tarihli muayene, 15 aylık. Şikayet ve öykü: 15 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Yürüyor, 5-6 kelimesi var. Muayene bulgusu: Kilo 1… |
+| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 28.02.2026 tarihli muayenenin özeti (muayene tarihinde 17 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 28.02.2026; muayene tarihinde 17 aylık. Tür: Sağlam ç… |
+| L-TUR-18AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 18 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 28 Şubat 2026 tarihli muayene, 17 aylık. Şikayet ve öykü: 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü; İki kelimelik cümle kurmaya başlamış, kaşıkla yiyo… |
+| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | chat | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.08.2026 tarihli muayenenin özeti (muayene tarihinde 2 yaş); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2026; muayene tarihinde 2 yaş. Tür: Sağlam çocuk m… |
+| L-TUR-24AY | docs/OPEN-COMMITMENTS.md: NOTYA-DOSYA-SORU-TUR-01 | voice | Emircan Karaoğlu'nun 24 aylık sağlam çocuk muayenesini özetleyerek anlatır mısın? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Ağustos 2026 tarihli muayene, 2 yaş. Şikayet ve öykü: 24 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Koşuyor, merdiven çıkıyor, 2-3 kelimelik cümle kuru… |
+| L-OZET-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.08.2025 tarihli muayenenin özeti (muayene tarihinde 12 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2025; muayene tarihinde 12 aylık. Tür: Sağlam ç… |
+| L-OZET-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Emircan Karaoğlu'nun 12 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Ağustos 2025 tarihli muayene, 12 aylık. Şikayet ve öykü: 12 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Tek başına birkaç adım atıyor, "anne", "baba" di… |
+| L-OZET-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 30.11.2025 tarihli muayenenin özeti (muayene tarihinde 15 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.11.2025; muayene tarihinde 15 aylık. Tür: Sağlam ç… |
+| L-OZET-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Emircan Karaoğlu'nun 15 aylık sağlam çocuk muayenesinin özetini verir misin? | model | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu, 30 Kasım 2025 tarihli muayene, 15 aylık. Şikayet ve öykü: 15 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Yürüyor, 5-6 kelimesi var. Muayene bulgusu: Kilo 1… |
+| L-OZET-24AY-DEVAM | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01; docs/OPEN-COMMITMENTS.md: NOTYA-SES-DEVAM-01 | voice | devam et | — | — | Emircan Karaoğlu | PASS | 🔊 Reçete yazılmamış; plan: Hepatit A 2. doz planlandı; Demir tedavisi 2 ay daha devam; D vitamini devam; 6 ay sonra kontrol. |
+| L-OZET-ERISKIN | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Son muayenesinin özetini verir misin? | model | — | Nermin Aydoğan | PASS | Nermin Aydoğan — 18.09.2026 tarihli muayenenin özeti (muayene tarihinde 46 yaş); yalnız kayıttaki bilgilerle. **Muayene:** 18.09.2026; muayene tarihinde 46 yaş. **Şikayet:** Kontro… |
+| L-OZET-ERISKIN | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Son muayenesinin özetini verir misin? | model | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan, 18 Eylül 2026 tarihli muayene, 46 yaş. Şikayet ve öykü: Kontrol; Şikayeti yok, ilaçlarını düzenli kullanıyor. Muayene bulgusu: Tansiyon 132/84 mmHg, nabız 76/dk;… |
+| L-OZET-YABANCI | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | chat | Selim Erkoç'un 12 aylık sağlam çocuk muayenesinin özetini verir misin? | arama | — | — | PASS | Kayıtlarda 0 hasta. Filtre: 12 aylık. |
+| L-OZET-YABANCI | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-OZET-01 | voice | Selim Erkoç'un 12 aylık sağlam çocuk muayenesinin özetini verir misin? | arama | — | — | PASS | 🔊 Kayıtlarda 0 hasta. Filtre: 12 aylık. |
 | L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | chat | Bu hastanın geçmişini özetler misin? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | voice | Bu hastanın geçmişini özetler misin? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | panel | Bu hastanın geçmişini özetler misin? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| L-GECMIS | docs/OPEN-COMMITMENTS.md: çoklu-muayene sorgusu | panel | Bu hastanın geçmişini özetler misin? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | L-KAPSAM-05 | docs/OPEN-COMMITMENTS.md: NOTYA-KAPSAM-05; lib/asistan/kapsamKilidi.test.ts: NOTYA-KAPSAM-05: canlı cümle | chat | Bugün İstanbul'da hava yağışlı mı? | kapsam | — | — | PASS | Hocam, ben yalnızca Notya'daki hasta, muayene, randevu ve klinik konularda yardımcı olabiliyorum; bu konuda yardımcı olamam. Hastalarınız, randevularınız ya da klinik bir sorunuz v… |
 | L-KAPSAM-05 | docs/OPEN-COMMITMENTS.md: NOTYA-KAPSAM-05; lib/asistan/kapsamKilidi.test.ts: NOTYA-KAPSAM-05: canlı cümle | voice | Bugün İstanbul'da hava yağışlı mı? | kapsam | — | — | PASS | 🔊 Hocam, ben yalnızca Notya'daki hasta, muayene, randevu ve klinik konularda yardımcı olabiliyorum; bu konuda yardımcı olamam. Hastalarınız, randevularınız ya da klinik bir sorunu… |
 | L-KAPSAM-05C | docs/OPEN-COMMITMENTS.md: NOTYA-KAPSAM-05c | chat | Bugün kaç hastam var? | takvim | — | — | PASS | 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
@@ -471,11 +434,11 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | L-GERI-03-YABANCI | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03; lib/asistan/ayseRota.test.ts: Ali Yılmaz için randevu oluştur; d… | chat | Ali Yılmaz için randevu oluştur | model | — | — | not judged | Vekil yanıt Hocam. |
 | L-GERI-03-YABANCI | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03; lib/asistan/ayseRota.test.ts: Ali Yılmaz için randevu oluştur; d… | voice | Ali Yılmaz için randevu oluştur | model | — | — | not judged | 🔊 Vekil yanıt Hocam. |
 | L-DANIS-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03; lib/asistan/vizitOlcumSahne.test.ts: kaç kiloydu | chat | bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 12 aylık muayene (30.08.2025): kilo 9,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| L-DANIS-BOYU | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | chat | peki boyu? | kayit | — | Emircan Karaoğlu | **FAIL** | Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
+| L-DANIS-BOYU | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | chat | peki boyu? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 12 aylık muayene (30.08.2025): boy 76 cm. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | L-DANIS-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03; lib/asistan/vizitOlcumSahne.test.ts: kaç kiloydu | voice | bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — 12 aylık muayene (30.08.2025): kilo 9,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| L-DANIS-BOYU | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | voice | peki boyu? | kayit | — | Emircan Karaoğlu | **FAIL** | 🔊 Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
+| L-DANIS-BOYU | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | voice | peki boyu? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — 12 aylık muayene (30.08.2025): boy 76 cm. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | L-DANIS-12AY | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03; lib/asistan/vizitOlcumSahne.test.ts: kaç kiloydu | panel | bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu | panel | — | n/a | PASS | Kayıt — 12 aylık muayene (30.08.2025): kilo 9,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| L-DANIS-BOYU | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | panel | peki boyu? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| L-DANIS-BOYU | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-07 | panel | peki boyu? | panel | — | n/a | PASS | Kayıt — 12 aylık muayene (30.08.2025): boy 76 cm. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | L-DANIS-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | chat | 15 aylıkken kaç kiloydu | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 15 aylık muayene (30.11.2025): kilo 10,6 kg. Kaynak: muayene notunun metni (Bulgu: "Kilo 10,6 kg"). |
 | L-DANIS-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | voice | 15 aylıkken kaç kiloydu | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — 15 aylık muayene (30.11.2025): kilo 10,6 kg. Kaynak: muayene notunun metni (Bulgu: "Kilo 10,6 kg"). |
 | L-DANIS-15AY | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | panel | 15 aylıkken kaç kiloydu | panel | — | n/a | PASS | Kayıt — 15 aylık muayene (30.11.2025): kilo 10,6 kg. Kaynak: muayene notunun metni (Bulgu: "Kilo 10,6 kg"). |
@@ -498,8 +461,8 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | L-DANIS-ILK | lib/asistan/vizitOlcumSahne.test.ts: ilk muayenede kaç kiloydu; docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | voice | ilk muayenede kaç kiloydu | kayit | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan, ilk muayene (28.08.2025): kilo 78 kg. 🖥 **Nermin Aydoğan — kilo ölçümleri** (ilk muayene; toplam 4 muayene kayıtlı) \| Tarih \| Kilo (kg) \| \| --- \| --- \| \|… |
 | L-DANIS-SON | lib/asistan/vizitOlcumSahne.test.ts: son muayenede kaç kiloydu; docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | chat | son muayenede kaç kiloydu | kayit | — | Nermin Aydoğan | PASS | **Nermin Aydoğan — kilo ölçümleri** (son muayene; toplam 4 muayene kayıtlı) \| Tarih \| Kilo (kg) \| \| --- \| --- \| \| 18.09.2026 \| 75,5 \| Yalnız dosyada kayıtlı değerler göste… |
 | L-DANIS-SON | lib/asistan/vizitOlcumSahne.test.ts: son muayenede kaç kiloydu; docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03 | voice | son muayenede kaç kiloydu | kayit | — | Nermin Aydoğan | PASS | 🔊 Nermin Aydoğan, son muayene (18.09.2026): kilo 75,5 kg. 🖥 **Nermin Aydoğan — kilo ölçümleri** (son muayene; toplam 4 muayene kayıtlı) \| Tarih \| Kilo (kg) \| \| --- \| --- \| … |
-| L-DANIS-GECEN-YIL | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-09 | chat | geçen yıl kaç kiloydu | hizli-kart | — | Emircan Karaoğlu | MANUAL | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| L-DANIS-GECEN-YIL | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-09 | voice | geçen yıl kaç kiloydu | hizli-kart | — | Emircan Karaoğlu | MANUAL | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| L-DANIS-GECEN-YIL | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-09 | chat | geçen yıl kaç kiloydu | kayit | — | Emircan Karaoğlu | MANUAL | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| L-DANIS-GECEN-YIL | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-09 | voice | geçen yıl kaç kiloydu | kayit | — | Emircan Karaoğlu | MANUAL | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | L-KOHORT-01 | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-KOHORT-01; lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | chat | Son bir ay içinde hangi antibiyotiği en fazla yazdım? | arama | — | — | PASS | Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid 250… |
 | L-KOHORT-01 | docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-KOHORT-01; lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | voice | Son bir ay içinde hangi antibiyotiği en fazla yazdım? | arama | — | Emircan Karaoğlu | PASS | 🔊 Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid … |
 | L-KOHORT-02 | lib/asistan/aktifHastaPratik.test.ts: NOTYA-AYSE-KOHORT-01 | chat | Son bir ayda kaç hastaya antibiyotik yazdım? | arama | — | — | PASS | Son 1 ay en çok yazdığın antibiyotik Amoksisilin 250 mg/5 ml süspansiyon (1 reçete). Sıra: Amoksisilin 250 mg/5 ml süspansiyon 1, Augmentin ES 600 mg/5 ml süspansiyon 1, Klacid 250… |
@@ -549,14 +512,14 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | G-19 | docs/qa/gokhan-gunluk-sorular.md: #19 | voice | 2 yaşından küçük hastalarım kimler | arama | — | — | PASS | 🔊 Kayıtlarda 0 hasta. Filtre: 2 yaşından küçük. |
 | G-20 | docs/qa/gokhan-gunluk-sorular.md: #20 | chat | 1 yaşından büyük hastalarım kimler | arama | — | — | PASS | Kayıtlarda 4 hasta. Filtre: 1 yaşından büyük: 1. Emircan Karaoğlu (d.t. 30.08.2024) — 1 yaşından büyük · 2 yaş 1 ay · 30.09.2026 muayene · 20.09.2026 muayene · 30.08.2026 muayene ·… |
 | G-20 | docs/qa/gokhan-gunluk-sorular.md: #20 | voice | 1 yaşından büyük hastalarım kimler | arama | — | — | PASS | 🔊 Kayıtlarda 4 hasta. Filtre: 1 yaşından büyük: 1) Emircan Karaoğlu — 1 yaşından büyük, 2 yaş 1 ay, 30.09.2026 muayene, 20.09.2026 muayene, 30.08.2026 muayene, 30.04.2026 muayene.… |
-| G-21 | docs/qa/gokhan-gunluk-sorular.md: #21; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01; docs/OPEN-… | chat | aşı kaydı olan hastalarım kimler | arama | — | — | **FAIL** | Kayıtlarda 0 hasta. Filtre: Aşı. |
-| G-21 | docs/qa/gokhan-gunluk-sorular.md: #21; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01; docs/OPEN-… | voice | aşı kaydı olan hastalarım kimler | arama | — | — | **FAIL** | 🔊 Kayıtlarda 0 hasta. Filtre: Aşı. |
-| G-22 | docs/qa/gokhan-gunluk-sorular.md: #22; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01 | chat | ilaç kullanan hastam var mı | arama | — | — | **FAIL** | Kayıtlarda 0 hasta. Filtre: İlaç. |
-| G-22 | docs/qa/gokhan-gunluk-sorular.md: #22; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01 | voice | ilaç kullanan hastam var mı | arama | — | — | **FAIL** | 🔊 Kayıtlarda 0 hasta. Filtre: İlaç. |
+| G-21 | docs/qa/gokhan-gunluk-sorular.md: #21; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01; docs/OPEN-… | chat | aşı kaydı olan hastalarım kimler | arama | — | — | PASS | Kayıtlarda 1 hasta. Filtre: Aşı: 1. Emircan Karaoğlu (d.t. 30.08.2024) — Aşı · 2 yaş 1 ay · 28.02.2026 aşı: 5'li Karma (DaBT-İPA-Hib) · 28.02.2026 aşı: OPA (Oral Polio) · 28.02.202… |
+| G-21 | docs/qa/gokhan-gunluk-sorular.md: #21; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01; docs/OPEN-… | voice | aşı kaydı olan hastalarım kimler | arama | — | — | PASS | 🔊 Kayıtlarda 1 hasta. Filtre: Aşı: 1) Emircan Karaoğlu — Aşı, 2 yaş 1 ay, 28.02.2026 aşı: 5'li Karma (DaBT-İPA-Hib), 28.02.2026 aşı: OPA (Oral Polio), 28.02.2026 aşı: Hepatit A, 3… |
+| G-22 | docs/qa/gokhan-gunluk-sorular.md: #22; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01 | chat | ilaç kullanan hastam var mı | arama | — | — | PASS | Kayıtlarda 4 hasta. Filtre: İlaç: 1. Emircan Karaoğlu (d.t. 30.08.2024) — İlaç · 2 yaş 1 ay · ilaç: Augmentin ES 600 mg/5 ml süspansiyon · ilaç: Pedifen şurup · ilaç: Ferro Sanol d… |
+| G-22 | docs/qa/gokhan-gunluk-sorular.md: #22; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-PENCERE-VARSAYILAN-01 | voice | ilaç kullanan hastam var mı | arama | — | — | PASS | 🔊 Kayıtlarda 4 hasta. Filtre: İlaç: 1) Emircan Karaoğlu — İlaç, 2 yaş 1 ay, ilaç: Augmentin ES 600 mg/5 ml süspansiyon, ilaç: Pedifen şurup, ilaç: Ferro Sanol damla, ilaç: Amoksis… |
 | G-23 | docs/qa/gokhan-gunluk-sorular.md: #23; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-KAYIT-PENCERE-01 | chat | bu ay kayıt olan hastalarım | arama | — | — | MANUAL | Bu ay 5 hasta. Filtre: bu ay: 1. Tarık Özdemir (d.t. 25.02.2024) — bu ay · 2 yaş 7 ay · 01.10.2026 muayene · 01.10.2026 not: Sol kulak ağrısı ve ateş, 2 gündür · ilaç: Amoksisilin … |
 | G-23 | docs/qa/gokhan-gunluk-sorular.md: #23; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-KAYIT-PENCERE-01 | voice | bu ay kayıt olan hastalarım | arama | — | — | MANUAL | 🔊 Bu ay 5 hasta. Filtre: bu ay: 1) Tarık Özdemir — bu ay, 2 yaş 7 ay, 01.10.2026 muayene, 01.10.2026 not: Sol kulak ağrısı ve ateş, 2 gündür, ilaç: Amoksisilin 250 mg/5 ml süspans… |
-| G-24 | docs/qa/gokhan-gunluk-sorular.md: #24; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-DOGUM-NEGASYON-01 | chat | doğum tarihi kayıtlı olmayan hastam var mı | kimlik | — | — | **FAIL** | Hangi hastanın bilgisini istiyorsunuz? Adını yazar mısınız? |
-| G-24 | docs/qa/gokhan-gunluk-sorular.md: #24; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-DOGUM-NEGASYON-01 | voice | doğum tarihi kayıtlı olmayan hastam var mı | kimlik | — | — | **FAIL** | 🔊 Hangi hastanın bilgisini istiyorsunuz? Adını yazar mısınız? |
+| G-24 | docs/qa/gokhan-gunluk-sorular.md: #24; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-DOGUM-NEGASYON-01 | chat | doğum tarihi kayıtlı olmayan hastam var mı | arama | — | — | PASS | Kayıtlarda 1 hasta. Filtre: doğum tarihi yok: 1. Olcay Santoro — doğum tarihi yok · 27.09.2026 randevu. |
+| G-24 | docs/qa/gokhan-gunluk-sorular.md: #24; docs/OPEN-COMMITMENTS.md: NOTYA-ARAMA-DOGUM-NEGASYON-01 | voice | doğum tarihi kayıtlı olmayan hastam var mı | arama | — | — | PASS | 🔊 Kayıtlarda 1 hasta. Filtre: doğum tarihi yok: 1) Olcay Santoro — doğum tarihi yok, 27.09.2026 randevu. 🖥 Kayıtlarda 1 hasta. Filtre: doğum tarihi yok: 1. Olcay Santoro — doğum … |
 | G-25 | docs/qa/gokhan-gunluk-sorular.md: #25 | chat | Emircan'ın hemoglobin değeri kaçtı | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | G-26 | docs/qa/gokhan-gunluk-sorular.md: #26 | chat | ferritin sonucu ne | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | G-27 | docs/qa/gokhan-gunluk-sorular.md: #27 | chat | WBC kaç | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
@@ -565,7 +528,7 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | G-25 | docs/qa/gokhan-gunluk-sorular.md: #25 | voice | Emircan'ın hemoglobin değeri kaçtı | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | G-26 | docs/qa/gokhan-gunluk-sorular.md: #26 | voice | ferritin sonucu ne | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | G-27 | docs/qa/gokhan-gunluk-sorular.md: #27 | voice | WBC kaç | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| G-28 | docs/qa/gokhan-gunluk-sorular.md: #28 | voice | MCV ve MCHC değerlerini oku | oku | — | Emircan Karaoğlu | **FAIL** | 🔊 Vekil yanıt Hocam. 🖥 Ekrandaki cevabı sesli okudum Hocam. |
+| G-28 | docs/qa/gokhan-gunluk-sorular.md: #28 | voice | MCV ve MCHC değerlerini oku | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | G-29 | docs/qa/gokhan-gunluk-sorular.md: #29 | voice | Emircan'ın Hct değeri yüzde kaç | model | — | Emircan Karaoğlu | MANUAL | 🔊 Vekil yanıt Hocam. |
 | G-30 | docs/qa/gokhan-gunluk-sorular.md: #30 | chat | Emircan'ın topuk kanı sonuçları normal mi | model | — | Emircan Karaoğlu | MANUAL | Vekil yanıt Hocam. |
 | G-30 | docs/qa/gokhan-gunluk-sorular.md: #30 | voice | Emircan'ın topuk kanı sonuçları normal mi | model | — | Emircan Karaoğlu | MANUAL | 🔊 Vekil yanıt Hocam. |
@@ -589,8 +552,8 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | G-39 | docs/qa/gokhan-gunluk-sorular.md: #39 | voice | bugün kaç hastam geliyor | takvim | — | — | PASS | 🔊 Bugün, 2 Ekim Cuma, 1 randevu var Hocam: 16:00 Nermin Aydoğan kontrol. 🖥 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
 | G-40 | docs/qa/gokhan-gunluk-sorular.md: #40; docs/OPEN-COMMITMENTS.md: NOTYA-SES-KART-01 | chat | Emircan'ın bir sonraki kontrolü ne zaman | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada plan ve takip: Tedavi tamamlandı. 1 ay sonra kontrol.. |
 | G-40 | docs/qa/gokhan-gunluk-sorular.md: #40; docs/OPEN-COMMITMENTS.md: NOTYA-SES-KART-01 | voice | Emircan'ın bir sonraki kontrolü ne zaman | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada plan ve takip: Tedavi tamamlandı. 1 ay sonra kontrol.. |
-| G-41 | docs/qa/gokhan-gunluk-sorular.md: #41 | chat | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | — | Ayşe Bozkurt | MANUAL | Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C · Tansiyon: 95/60 mmHg · Kilo: 19,4 kg · Boy: 110 cm. |
-| G-41 | docs/qa/gokhan-gunluk-sorular.md: #41 | voice | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | — | Ayşe Bozkurt | MANUAL | 🔊 Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C, Tansiyon: 95/60 mmHg, Kilo: 19,4 kg, Boy: 110 cm. 🖥 Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C · Tansiyon: 95/60 mmHg · Ki… |
+| G-41 | docs/qa/gokhan-gunluk-sorular.md: #41 | chat | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | — | Ayşe Bozkurt | MANUAL | Ayşe Bozkurt — dosyada ateş: 38,9 °C. |
+| G-41 | docs/qa/gokhan-gunluk-sorular.md: #41 | voice | Ayşe'nin hiç ateşi olmadı mı | hizli-kart | — | Ayşe Bozkurt | MANUAL | 🔊 Ayşe Bozkurt — dosyada ateş: 38,9 °C. |
 | G-42 | docs/qa/gokhan-gunluk-sorular.md: #42 | chat | Emircan'ın allerjisi var mı | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | G-42 | docs/qa/gokhan-gunluk-sorular.md: #42 | voice | Emircan'ın allerjisi var mı | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | G-43 | docs/qa/gokhan-gunluk-sorular.md: #43 | chat | Olcay'ın kronik hastalığı var mı | hizli-kart | — | Olcay Santoro | PASS | Olcay Santoro — dosyada kronik hastalık: kayıt yok. |
@@ -655,9 +618,9 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-018 | scripts/ayse-denetim/sorular-100.json: #18 | chat | Kronik hastalığı var mı? | hizli-kart | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — dosyada kronik hastalık: kayıt yok. |
 | Y-019 | scripts/ayse-denetim/sorular-100.json: #19 | chat | Gelen belgeler kutusunda bir şey var mı? | model | — | Ayşe Bozkurt | MANUAL | Vekil yanıt Hocam. |
 | Y-020 | scripts/ayse-denetim/sorular-100.json: #20 | chat | Sonraki randevusu ne zaman? | hizli-kart | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — dosyada randevu: 3 Ekim 2026 — kontrol. |
-| Y-021 | scripts/ayse-denetim/sorular-100.json: #21 | chat | Son ölçümleri neler? | kayit | — | Ayşe Bozkurt | **FAIL** | **Ayşe Bozkurt — kilo, boy ve baş çevresi ölçümleri** (1 muayene) \| Tarih \| Kilo (kg) \| Boy (cm) \| Baş çevresi (cm) \| \| --- \| --- \| --- \| --- \| \| 24.09.2026 \| 19,4 \| 1… |
+| Y-021 | scripts/ayse-denetim/sorular-100.json: #21 | chat | Son ölçümleri neler? | kayit | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — son muayene (24.09.2026): kilo 19,4 kg; boy 110 cm; tansiyon 95/60 mmHg; ateş 38,9 °C; SpO₂ %96. Kaynak: kilo, boy, tansiyon ve ateş — muayene notunun yaşamsal bulgu… |
 | Y-022 | scripts/ayse-denetim/sorular-100.json: #22; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | chat | hastamızın ateşi kaçtı son muayenede | kayit | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — son muayene (24.09.2026): ateş 38,9 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| Y-023 | scripts/ayse-denetim/sorular-100.json: #23; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | chat | bu hastanın annesinin boyu kaç | kayit | — | Ayşe Bozkurt | **FAIL** | Ayşe Bozkurt — son boy 110 cm (24.09.2026). |
+| Y-023 | scripts/ayse-denetim/sorular-100.json: #23; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | chat | bu hastanın annesinin boyu kaç | kayit | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — anne boyu 168 cm (Hasta Bilgi Formu). |
 | Y-024 | scripts/ayse-denetim/sorular-100.json: #24 | chat | Kaçıncı ziyareti bu? | hizli-kart | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — dosyada vizit sayısı: 1 — 24 Eylül 2026 – 24 Eylül 2026. |
 | Y-001 | scripts/ayse-denetim/sorular-100.json: #1 | voice | Ayşe Bozkurt dosyasını aç | dosya-ac | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt dosyası açık Hocam. Ne sormak istersiniz? |
 | Y-002 | scripts/ayse-denetim/sorular-100.json: #2 | voice | Bu hastayı bana kısaca özetler misin? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
@@ -679,9 +642,9 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-018 | scripts/ayse-denetim/sorular-100.json: #18 | voice | Kronik hastalığı var mı? | hizli-kart | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — dosyada kronik hastalık: kayıt yok. |
 | Y-019 | scripts/ayse-denetim/sorular-100.json: #19 | voice | Gelen belgeler kutusunda bir şey var mı? | model | — | Ayşe Bozkurt | MANUAL | 🔊 Vekil yanıt Hocam. |
 | Y-020 | scripts/ayse-denetim/sorular-100.json: #20 | voice | Sonraki randevusu ne zaman? | hizli-kart | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — dosyada randevu: 3 Ekim 2026 — kontrol. |
-| Y-021 | scripts/ayse-denetim/sorular-100.json: #21 | voice | Son ölçümleri neler? | kayit | — | Ayşe Bozkurt | **FAIL** | 🔊 Ayşe Bozkurt'un kilo, boy ve baş çevresi ölçümlerini tablo olarak ekrana getirdim Hocam; 1 kayıt var. Son kilo 19,4 kg (24.09.2026). Baş çevresi için kayıtlı ölçüm yok. 🖥 **Ayş… |
+| Y-021 | scripts/ayse-denetim/sorular-100.json: #21 | voice | Son ölçümleri neler? | kayit | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — son muayene (24.09.2026): kilo 19,4 kg; boy 110 cm; tansiyon 95/60 mmHg; ateş 38,9 °C; SpO₂ %96. Kaynak: kilo, boy, tansiyon ve ateş — muayene notunun yaşamsal bu… |
 | Y-022 | scripts/ayse-denetim/sorular-100.json: #22; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | voice | hastamızın ateşi kaçtı son muayenede | kayit | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — son muayene (24.09.2026): ateş 38,9 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| Y-023 | scripts/ayse-denetim/sorular-100.json: #23; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | voice | bu hastanın annesinin boyu kaç | kayit | — | Ayşe Bozkurt | **FAIL** | 🔊 Ayşe Bozkurt — son boy 110 cm (24.09.2026). |
+| Y-023 | scripts/ayse-denetim/sorular-100.json: #23; docs/OPEN-COMMITMENTS.md: NOTYA-SES-1TO1-02 | voice | bu hastanın annesinin boyu kaç | kayit | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — anne boyu 168 cm (Hasta Bilgi Formu). |
 | Y-024 | scripts/ayse-denetim/sorular-100.json: #24 | voice | Kaçıncı ziyareti bu? | hizli-kart | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — dosyada vizit sayısı: 1 — 24 Eylül 2026 – 24 Eylül 2026. |
 | Y-025 | scripts/ayse-denetim/sorular-100.json: #25 | chat | Tarik Ozdemir dosyasini ac | dosya-ac | — | Tarık Özdemir | PASS | Tarık Özdemir dosyası açık Hocam. Ne sormak istersiniz? |
 | Y-026 | scripts/ayse-denetim/sorular-100.json: #26 | chat | ozetle | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
@@ -689,7 +652,7 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-028 | scripts/ayse-denetim/sorular-100.json: #28 | chat | amoksisilin dozu ne kadardi | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
 | Y-029 | scripts/ayse-denetim/sorular-100.json: #29 | chat | kaç gün verdik | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
 | Y-030 | scripts/ayse-denetim/sorular-100.json: #30 | chat | asilari tam mi | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
-| Y-031 | scripts/ayse-denetim/sorular-100.json: #31 | chat | kilosu kac | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C · Kilo: 13,9 kg · Boy: 92 cm · Baş Çevresi: 49,5 cm. |
+| Y-031 | scripts/ayse-denetim/sorular-100.json: #31 | chat | kilosu kac | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son kilo 13,9 kg (01.10.2026). |
 | Y-032 | scripts/ayse-denetim/sorular-100.json: #32 | chat | boyu | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son boy 92 cm (01.10.2026). |
 | Y-033 | scripts/ayse-denetim/sorular-100.json: #33 | chat | bas cevresi | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son baş çevresi 49,5 cm (01.10.2026). |
 | Y-034 | scripts/ayse-denetim/sorular-100.json: #34 | chat | persentili nasıl | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
@@ -710,7 +673,7 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-028 | scripts/ayse-denetim/sorular-100.json: #28 | voice | amoksisilin dozu ne kadardi | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-029 | scripts/ayse-denetim/sorular-100.json: #29 | voice | kaç gün verdik | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-030 | scripts/ayse-denetim/sorular-100.json: #30 | voice | asilari tam mi | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
-| Y-031 | scripts/ayse-denetim/sorular-100.json: #31 | voice | kilosu kac | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C, Kilo: 13,9 kg, Boy: 92 cm, Baş Çevresi: 49,5 cm. 🖥 Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C · Kilo: 13,9 kg · Boy: 92 … |
+| Y-031 | scripts/ayse-denetim/sorular-100.json: #31 | voice | kilosu kac | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son kilo 13,9 kg (01.10.2026). |
 | Y-032 | scripts/ayse-denetim/sorular-100.json: #32 | voice | boyu | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son boy 92 cm (01.10.2026). |
 | Y-033 | scripts/ayse-denetim/sorular-100.json: #33 | voice | bas cevresi | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son baş çevresi 49,5 cm (01.10.2026). |
 | Y-034 | scripts/ayse-denetim/sorular-100.json: #34 | voice | persentili nasıl | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
@@ -761,19 +724,19 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-060 | scripts/ayse-denetim/sorular-100.json: #60 | voice | Daha önce aynı şikayetle geldi mi? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-061 | scripts/ayse-denetim/sorular-100.json: #61 | voice | Gelişimi yaşına uygun mu? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-062 | scripts/ayse-denetim/sorular-100.json: #62 | voice | Toplam kaç kez geldi? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| Y-063 | scripts/ayse-denetim/sorular-100.json: #63 | voice | Son SOAP notunu oku | oku | — | Emircan Karaoğlu | **FAIL** | 🔊 Vekil yanıt Hocam. 🖥 Ekrandaki cevabı sesli okudum Hocam. |
+| Y-063 | scripts/ayse-denetim/sorular-100.json: #63 | voice | Son SOAP notunu oku | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-064 | scripts/ayse-denetim/sorular-100.json: #64 | voice | Son vizitte ne not düşmüşüm? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son vizit: 30 Eylül 2026 — Otit kontrolü. |
 | Y-065 | scripts/ayse-denetim/sorular-100.json: #65; docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01 | chat | İlaçları neler? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
-| Y-066 | scripts/ayse-denetim/sorular-100.json: #66 | chat | kaç kilo | hizli-kart | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C · Tansiyon: 95/60 mmHg · Kilo: 19,4 kg · Boy: 110 cm. |
+| Y-066 | scripts/ayse-denetim/sorular-100.json: #66 | chat | kaç kilo | kayit | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — son kilo 19,4 kg (24.09.2026). |
 | Y-067 | scripts/ayse-denetim/sorular-100.json: #67 | chat | Aşıları tam mı? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
 | Y-068 | scripts/ayse-denetim/sorular-100.json: #68 | chat | son muayenede tansiyonu kaçtı | kayit | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — son muayene (24.09.2026): tansiyon 95/60 mmHg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| Y-069 | scripts/ayse-denetim/sorular-100.json: #69 | chat | Tarık Özdemir'in kilosu kaç? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C · Kilo: 13,9 kg · Boy: 92 cm · Baş Çevresi: 49,5 cm. |
+| Y-069 | scripts/ayse-denetim/sorular-100.json: #69 | chat | Tarık Özdemir'in kilosu kaç? | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son kilo 13,9 kg (01.10.2026). |
 | Y-070 | scripts/ayse-denetim/sorular-100.json: #70 | chat | peki bu hastanın kan grubu | hizli-kart | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt — dosyada kan grubu: AB Rh+. |
 | Y-065 | scripts/ayse-denetim/sorular-100.json: #65; docs/OPEN-COMMITMENTS.md: NOTYA-SAYFA-HASTA-01 | voice | İlaçları neler? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
-| Y-066 | scripts/ayse-denetim/sorular-100.json: #66 | voice | kaç kilo | hizli-kart | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C, Tansiyon: 95/60 mmHg, Kilo: 19,4 kg, Boy: 110 cm. 🖥 Ayşe Bozkurt — dosyada son ölçüm: Ateş: 38,9 °C · Tansiyon: 95/60 mmHg · Ki… |
+| Y-066 | scripts/ayse-denetim/sorular-100.json: #66 | voice | kaç kilo | kayit | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — son kilo 19,4 kg (24.09.2026). |
 | Y-067 | scripts/ayse-denetim/sorular-100.json: #67 | voice | Aşıları tam mı? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-068 | scripts/ayse-denetim/sorular-100.json: #68 | voice | son muayenede tansiyonu kaçtı | kayit | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — son muayene (24.09.2026): tansiyon 95/60 mmHg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| Y-069 | scripts/ayse-denetim/sorular-100.json: #69 | voice | Tarık Özdemir'in kilosu kaç? | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C, Kilo: 13,9 kg, Boy: 92 cm, Baş Çevresi: 49,5 cm. 🖥 Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C · Kilo: 13,9 kg · Boy: 92 … |
+| Y-069 | scripts/ayse-denetim/sorular-100.json: #69 | voice | Tarık Özdemir'in kilosu kaç? | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son kilo 13,9 kg (01.10.2026). |
 | Y-070 | scripts/ayse-denetim/sorular-100.json: #70 | voice | peki bu hastanın kan grubu | hizli-kart | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — dosyada kan grubu: AB Rh+. |
 | Y-071 | scripts/ayse-denetim/sorular-100.json: #71; docs/OPEN-COMMITMENTS.md: NOTYA-KAPSAM-05c | chat | Bugün kaç hastam var? | takvim | — | — | PASS | 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
 | Y-072 | scripts/ayse-denetim/sorular-100.json: #72 | chat | Bugün kimler geliyor? | takvim | — | — | PASS | 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
@@ -784,10 +747,10 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-077 | scripts/ayse-denetim/sorular-100.json: #77 | chat | bu hafta kaç randevum var | takvim | — | — | PASS | Bu hafta (28 Eylül – 4 Ekim) haftası takviminde 3 randevu. 1 Ekim Perşembe: 11:30–11:50 Tarık Özdemir (muayene). 2 Ekim Cuma: 16:00–16:20 Nermin Aydoğan (kontrol). 3 Ekim Cumartesi… |
 | Y-078 | scripts/ayse-denetim/sorular-100.json: #78 | chat | yarin sabah bosluk var mi | takvim | — | — | PASS | 3 Ekim 2026 Cumartesi çalışma günü olarak işaretli değil; takvimde 1 randevu var. |
 | Y-079 | scripts/ayse-denetim/sorular-100.json: #79 | chat | Bugün öğleden sonra 3'te yer var mı? | takvim | — | — | PASS | 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). İstediğiniz 15:00 boş. |
-| Y-080 | scripts/ayse-denetim/sorular-100.json: #80 | chat | Tarık Özdemir'in randevusu ne zaman? | takvim | — | — | **FAIL** | 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
+| Y-080 | scripts/ayse-denetim/sorular-100.json: #80 | chat | Tarık Özdemir'in randevusu ne zaman? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada randevu: planlanmış randevu yok. |
 | Y-081 | scripts/ayse-denetim/sorular-100.json: #81; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-100 | chat | Olcay Santoro ne zaman gelecek? | hizli-kart | — | Olcay Santoro | PASS | Olcay Santoro — dosyada plan ve takip: kayıt yok. Dosyada randevu: planlanmış randevu yok. |
 | Y-082 | scripts/ayse-denetim/sorular-100.json: #82 | chat | Kaç hastam var? | arama | — | — | PASS | Kayıtlarda 5 hasta: Emircan Karaoğlu, Nermin Aydoğan, Ayşe Bozkurt, Tarık Özdemir, Olcay Santoro. |
-| Y-083 | scripts/ayse-denetim/sorular-100.json: #83 | chat | kaç tane hasta kaydım var toplam | model | — | Olcay Santoro | **FAIL** | Vekil yanıt Hocam. |
+| Y-083 | scripts/ayse-denetim/sorular-100.json: #83 | chat | kaç tane hasta kaydım var toplam | arama | — | — | PASS | Kayıtlarda 5 hasta: Emircan Karaoğlu, Nermin Aydoğan, Ayşe Bozkurt, Tarık Özdemir, Olcay Santoro. |
 | Y-084 | scripts/ayse-denetim/sorular-100.json: #84 | chat | bu hafta kaç hasta muayene ettim | arama | — | — | PASS | Bu hafta 3 hasta: Tarık Özdemir, Emircan Karaoğlu, Nermin Aydoğan. Filtre: bu hafta. |
 | Y-085 | scripts/ayse-denetim/sorular-100.json: #85 | chat | En son hangi hastayı gördüm? | arama | — | Tarık Özdemir | PASS | Son gördüğünüz hasta: Tarık Özdemir. |
 | Y-086 | scripts/ayse-denetim/sorular-100.json: #86 | chat | Son kaydettiğim hasta kim? | arama | — | Olcay Santoro | PASS | Son kaydettiğiniz hasta: Olcay Santoro. |
@@ -795,9 +758,9 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-088 | scripts/ayse-denetim/sorular-100.json: #88; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-100 product question | chat | Aşısı eksik olan hastalarım kimler? | arama | — | — | PASS | Kayıtlarda 1 hasta. Ayrıca 2 hastada aşı kaydı hiç yok (eksik sayılmadı): Ayşe Bozkurt, Tarık Özdemir: 1. Emircan Karaoğlu — Aşı: Hep A 2. doz (30.08.2026) · D vitamini profilaksi … |
 | Y-089 | scripts/ayse-denetim/sorular-100.json: #89 | chat | Bu hafta tanı koyduğum pnömoni vakası kimdi? | arama | — | — | PASS | Bu hafta 0 hasta. Filtre: bu hafta · Tanı. |
 | Y-090 | scripts/ayse-denetim/sorular-100.json: #90 | chat | kulak iltihabı olan çocuk kimdi | arama | — | — | PASS | Kayıtlarda 2 hasta. Filtre: Kulak: 1. Emircan Karaoğlu (d.t. 30.08.2024) — Kulak · 2 yaş 1 ay · 30.09.2026 muayene · 20.09.2026 muayene · 30.08.2026 muayene · 30.04.2026 muayene. 2… |
-| Y-091 | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | chat | dün gelen ateşli çocuk | hizli-kart | — | Olcay Santoro | **FAIL** | Olcay Santoro — dosyada son ölçüm: kayıt yok. |
-| Y-092 | scripts/ayse-denetim/sorular-100.json: #92 | chat | E-nabız'dan yeni gelen bir şey var mı? | model | — | Olcay Santoro | not judged | Vekil yanıt Hocam. |
-| Y-093 | scripts/ayse-denetim/sorular-100.json: #93; docs/OPEN-COMMITMENTS.md: sorular-100 #93 | chat | Gelen belgelerde bekleyen var mı? | model | — | Olcay Santoro | MANUAL | Vekil yanıt Hocam. |
+| Y-091 | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | chat | dün gelen ateşli çocuk | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada ateş: 38,7 °C. |
+| Y-092 | scripts/ayse-denetim/sorular-100.json: #92 | chat | E-nabız'dan yeni gelen bir şey var mı? | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
+| Y-093 | scripts/ayse-denetim/sorular-100.json: #93; docs/OPEN-COMMITMENTS.md: sorular-100 #93 | chat | Gelen belgelerde bekleyen var mı? | model | — | Tarık Özdemir | MANUAL | Vekil yanıt Hocam. |
 | Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | chat | Bugün kaç reçete yazdım? | arama | — | — | PASS | Bugün 0 reçete (0 hasta). Filtre: bugün · İlaç. |
 | Y-095 | scripts/ayse-denetim/sorular-100.json: #95 | chat | Son reçetem hangi hastaya? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada son reçete: Amoksisilin 250 mg/5 ml süspansiyon (1 Ekim 2026). |
 | Y-096 | scripts/ayse-denetim/sorular-100.json: #96 | chat | Reçeteyi nereden yazdırırım? | model | — | Tarık Özdemir | not judged | Vekil yanıt Hocam. |
@@ -810,10 +773,10 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-077 | scripts/ayse-denetim/sorular-100.json: #77 | voice | bu hafta kaç randevum var | takvim | — | — | PASS | 🔊 Bu hafta (28 Eylül – 4 Ekim) takviminizde 3 randevu var Hocam. İlki 1 Ekim Perşembe 11:30 Tarık Özdemir. Ayrıntı ekranınızda. 🖥 Bu hafta (28 Eylül – 4 Ekim) haftası takviminde … |
 | Y-078 | scripts/ayse-denetim/sorular-100.json: #78 | voice | yarin sabah bosluk var mi | takvim | — | — | PASS | 🔊 Yarın, 3 Ekim Cumartesi, çalışma gününüz olarak işaretli değil Hocam; takviminizde 1 randevu var. 🖥 3 Ekim 2026 Cumartesi çalışma günü olarak işaretli değil; takvimde 1 randevu… |
 | Y-079 | scripts/ayse-denetim/sorular-100.json: #79 | voice | Bugün öğleden sonra 3'te yer var mı? | takvim | — | — | PASS | 🔊 Bugün, 2 Ekim Cuma, 1 randevu var Hocam: 16:00 Nermin Aydoğan kontrol. 15:00 boş. 🖥 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). İstediğiniz 15:… |
-| Y-080 | scripts/ayse-denetim/sorular-100.json: #80 | voice | Tarık Özdemir'in randevusu ne zaman? | takvim | — | — | **FAIL** | 🔊 Yarın, 3 Ekim Cumartesi, 1 randevu var Hocam: 10:00 Ayşe Bozkurt kontrol. 🖥 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
+| Y-080 | scripts/ayse-denetim/sorular-100.json: #80 | voice | Tarık Özdemir'in randevusu ne zaman? | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada randevu: planlanmış randevu yok. |
 | Y-081 | scripts/ayse-denetim/sorular-100.json: #81; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-100 | voice | Olcay Santoro ne zaman gelecek? | hizli-kart | — | Olcay Santoro | PASS | 🔊 Olcay Santoro — dosyada plan ve takip: kayıt yok. Dosyada randevu: planlanmış randevu yok. |
 | Y-082 | scripts/ayse-denetim/sorular-100.json: #82 | voice | Kaç hastam var? | arama | — | Olcay Santoro | PASS | 🔊 Kayıtlarda 5 hasta: Emircan Karaoğlu, Nermin Aydoğan, Ayşe Bozkurt, Tarık Özdemir, Olcay Santoro. |
-| Y-083 | scripts/ayse-denetim/sorular-100.json: #83 | voice | kaç tane hasta kaydım var toplam | model | — | Olcay Santoro | **FAIL** | 🔊 Vekil yanıt Hocam. |
+| Y-083 | scripts/ayse-denetim/sorular-100.json: #83 | voice | kaç tane hasta kaydım var toplam | arama | — | Olcay Santoro | PASS | 🔊 Kayıtlarda 5 hasta: Emircan Karaoğlu, Nermin Aydoğan, Ayşe Bozkurt, Tarık Özdemir, Olcay Santoro. |
 | Y-084 | scripts/ayse-denetim/sorular-100.json: #84 | voice | bu hafta kaç hasta muayene ettim | arama | — | Olcay Santoro | PASS | 🔊 Bu hafta 3 hasta: Tarık Özdemir, Emircan Karaoğlu, Nermin Aydoğan. Filtre: bu hafta. |
 | Y-085 | scripts/ayse-denetim/sorular-100.json: #85 | voice | En son hangi hastayı gördüm? | arama | — | Tarık Özdemir | PASS | 🔊 Son gördüğünüz hasta: Tarık Özdemir. |
 | Y-086 | scripts/ayse-denetim/sorular-100.json: #86 | voice | Son kaydettiğim hasta kim? | arama | — | Olcay Santoro | PASS | 🔊 Son kaydettiğiniz hasta: Olcay Santoro. |
@@ -821,10 +784,10 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | Y-088 | scripts/ayse-denetim/sorular-100.json: #88; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-100 product question | voice | Aşısı eksik olan hastalarım kimler? | arama | — | Olcay Santoro | PASS | 🔊 Kayıtlarda 1 hasta. Ayrıca 2 hastada aşı kaydı hiç yok (eksik sayılmadı): Ayşe Bozkurt, Tarık Özdemir: 1) Emircan Karaoğlu — Aşı: Hep A 2. doz (30.08.2026), D vitamini profilaks… |
 | Y-089 | scripts/ayse-denetim/sorular-100.json: #89 | voice | Bu hafta tanı koyduğum pnömoni vakası kimdi? | arama | — | Olcay Santoro | PASS | 🔊 Bu hafta 0 hasta. Filtre: bu hafta, Tanı. 🖥 Bu hafta 0 hasta. Filtre: bu hafta · Tanı. |
 | Y-090 | scripts/ayse-denetim/sorular-100.json: #90 | voice | kulak iltihabı olan çocuk kimdi | arama | — | Olcay Santoro | PASS | 🔊 Kayıtlarda 2 hasta. Filtre: Kulak: 1) Emircan Karaoğlu — Kulak, 2 yaş 1 ay, 30.09.2026 muayene, 20.09.2026 muayene, 30.08.2026 muayene, 30.04.2026 muayene. 2) Tarık Özdemir — Ku… |
-| Y-091 | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | voice | dün gelen ateşli çocuk | hizli-kart | — | Olcay Santoro | **FAIL** | 🔊 Olcay Santoro — dosyada son ölçüm: kayıt yok. |
-| Y-092 | scripts/ayse-denetim/sorular-100.json: #92 | voice | E-nabız'dan yeni gelen bir şey var mı? | model | — | Olcay Santoro | not judged | 🔊 Vekil yanıt Hocam. |
-| Y-093 | scripts/ayse-denetim/sorular-100.json: #93; docs/OPEN-COMMITMENTS.md: sorular-100 #93 | voice | Gelen belgelerde bekleyen var mı? | model | — | Olcay Santoro | MANUAL | 🔊 Vekil yanıt Hocam. |
-| Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | voice | Bugün kaç reçete yazdım? | arama | — | Olcay Santoro | PASS | 🔊 Bugün 0 reçete (0 hasta). Filtre: bugün, İlaç. 🖥 Bugün 0 reçete (0 hasta). Filtre: bugün · İlaç. |
+| Y-091 | scripts/ayse-denetim/sorular-100.json: #91; lib/asistan/ayseRota.test.ts: Dün gelen ateşli çocuk kimdi? | voice | dün gelen ateşli çocuk | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada ateş: 38,7 °C. |
+| Y-092 | scripts/ayse-denetim/sorular-100.json: #92 | voice | E-nabız'dan yeni gelen bir şey var mı? | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
+| Y-093 | scripts/ayse-denetim/sorular-100.json: #93; docs/OPEN-COMMITMENTS.md: sorular-100 #93 | voice | Gelen belgelerde bekleyen var mı? | model | — | Tarık Özdemir | MANUAL | 🔊 Vekil yanıt Hocam. |
+| Y-094 | scripts/ayse-denetim/sorular-100.json: #94 | voice | Bugün kaç reçete yazdım? | arama | — | Tarık Özdemir | PASS | 🔊 Bugün 0 reçete (0 hasta). Filtre: bugün, İlaç. 🖥 Bugün 0 reçete (0 hasta). Filtre: bugün · İlaç. |
 | Y-095 | scripts/ayse-denetim/sorular-100.json: #95 | voice | Son reçetem hangi hastaya? | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada son reçete: Amoksisilin 250 mg/5 ml süspansiyon (1 Ekim 2026). |
 | Y-096 | scripts/ayse-denetim/sorular-100.json: #96 | voice | Reçeteyi nereden yazdırırım? | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
 | Y-097 | scripts/ayse-denetim/sorular-100.json: #97 | chat | QA Test Hasta 2 dosyasını aç | arama | — | — | PASS | Bu isimde bir hasta bulamadım Hocam; adını ve soyadını tam söyler misiniz? |
@@ -888,10 +851,10 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | T-022 | scripts/ayse-denetim/sorular-takip.json: #22 | voice | peki bugün? | takvim | — | — | PASS | 🔊 Bugün, 2 Ekim Cuma, 1 randevu var Hocam: 16:00 Nermin Aydoğan kontrol. 🖥 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
 | T-023 | scripts/ayse-denetim/sorular-takip.json: #23 | voice | ya yarın kimler? | takvim | — | — | PASS | 🔊 Yarın, 3 Ekim Cumartesi, 1 randevu var Hocam: 10:00 Ayşe Bozkurt kontrol. 🖥 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
 | T-024 | scripts/ayse-denetim/sorular-takip.json: #24 | chat | Bugün randevum var mı? | takvim | — | — | PASS | 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
-| T-025 | scripts/ayse-denetim/sorular-takip.json: #25 | chat | peki Tarık Özdemir randevusu ne zaman? | takvim | — | — | **FAIL** | 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
+| T-025 | scripts/ayse-denetim/sorular-takip.json: #25 | chat | peki Tarık Özdemir randevusu ne zaman? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada randevu: planlanmış randevu yok. |
 | T-026 | scripts/ayse-denetim/sorular-takip.json: #26 | chat | peki Emircan'ın? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada randevu: 9 Ekim 2026 — kontrol. |
 | T-024 | scripts/ayse-denetim/sorular-takip.json: #24 | voice | Bugün randevum var mı? | takvim | — | — | PASS | 🔊 Bugün, 2 Ekim Cuma, 1 randevu var Hocam: 16:00 Nermin Aydoğan kontrol. 🖥 2 Ekim 2026 Cuma takviminde 1 randevu: 16:00–16:20 Nermin Aydoğan (kontrol). |
-| T-025 | scripts/ayse-denetim/sorular-takip.json: #25 | voice | peki Tarık Özdemir randevusu ne zaman? | takvim | — | — | **FAIL** | 🔊 Yarın, 3 Ekim Cumartesi, 1 randevu var Hocam: 10:00 Ayşe Bozkurt kontrol. 🖥 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
+| T-025 | scripts/ayse-denetim/sorular-takip.json: #25 | voice | peki Tarık Özdemir randevusu ne zaman? | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada randevu: planlanmış randevu yok. |
 | T-026 | scripts/ayse-denetim/sorular-takip.json: #26 | voice | peki Emircan'ın? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada randevu: 9 Ekim 2026 — kontrol. |
 | T-027 | scripts/ayse-denetim/sorular-takip.json: #27; docs/OPEN-COMMITMENTS.md: NOTYA-KONUSMA-BAGLAMI-01 | chat | Ayşe Bozkurt dosyasını aç | dosya-ac | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt dosyası açık Hocam. Ne sormak istersiniz? |
 | T-028 | scripts/ayse-denetim/sorular-takip.json: #28; docs/OPEN-COMMITMENTS.md: NOTYA-KONUSMA-BAGLAMI-01 | chat | aşıları? | kayit | — | Ayşe Bozkurt | PASS | Ayşe Bozkurt için kayıtlı aşı yok Hocam. |
@@ -921,14 +884,14 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | T-038 | scripts/ayse-denetim/sorular-takip.json: #38 | voice | Tarık recetesi ne | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
 | T-039 | scripts/ayse-denetim/sorular-takip.json: #39 | voice | dozu | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
 | T-040 | scripts/ayse-denetim/sorular-takip.json: #40 | voice | kac gun verdik | model | — | Tarık Özdemir | not judged | 🔊 Vekil yanıt Hocam. |
-| T-041 | scripts/ayse-denetim/sorular-takip.json: #41 | chat | Emircan Karaoğlu kaç kilo? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| T-042 | scripts/ayse-denetim/sorular-takip.json: #42 | chat | boyu? | kayit | — | Emircan Karaoğlu | **FAIL** | Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
+| T-041 | scripts/ayse-denetim/sorular-takip.json: #41 | chat | Emircan Karaoğlu kaç kilo? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| T-042 | scripts/ayse-denetim/sorular-takip.json: #42 | chat | boyu? | hizli-kart | — | Emircan Karaoğlu | **FAIL** | Emircan Karaoğlu — dosyada boy: kayıt yok. |
 | T-043 | scripts/ayse-denetim/sorular-takip.json: #43 | chat | persentili? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| T-044 | scripts/ayse-denetim/sorular-takip.json: #44 | chat | baş çevresi? | kayit | — | Emircan Karaoğlu | **FAIL** | Emircan Karaoğlu için kayıtlı baş çevresi ölçümü yok Hocam (son muayene). |
-| T-041 | scripts/ayse-denetim/sorular-takip.json: #41 | voice | Emircan Karaoğlu kaç kilo? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| T-042 | scripts/ayse-denetim/sorular-takip.json: #42 | voice | boyu? | kayit | — | Emircan Karaoğlu | **FAIL** | 🔊 Emircan Karaoğlu için kayıtlı boy ölçümü yok Hocam (son muayene). |
+| T-044 | scripts/ayse-denetim/sorular-takip.json: #44 | chat | baş çevresi? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
+| T-041 | scripts/ayse-denetim/sorular-takip.json: #41 | voice | Emircan Karaoğlu kaç kilo? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| T-042 | scripts/ayse-denetim/sorular-takip.json: #42 | voice | boyu? | hizli-kart | — | Emircan Karaoğlu | **FAIL** | 🔊 Emircan Karaoğlu — dosyada boy: kayıt yok. |
 | T-043 | scripts/ayse-denetim/sorular-takip.json: #43 | voice | persentili? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| T-044 | scripts/ayse-denetim/sorular-takip.json: #44 | voice | baş çevresi? | kayit | — | Emircan Karaoğlu | **FAIL** | 🔊 Emircan Karaoğlu için kayıtlı baş çevresi ölçümü yok Hocam (son muayene). |
+| T-044 | scripts/ayse-denetim/sorular-takip.json: #44 | voice | baş çevresi? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
 | T-045 | scripts/ayse-denetim/sorular-takip.json: #45 | chat | Tarık Özdemir son muayenesinde ateşi kaçtı | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son muayene (01.10.2026): ateş 38,7 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | T-046 | scripts/ayse-denetim/sorular-takip.json: #46 | chat | tanısı? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada son tanı: Akut otitis media. |
 | T-047 | scripts/ayse-denetim/sorular-takip.json: #47 | chat | peki Emircan'ın? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son tanı: Otitis media, iyileşmiş. |
@@ -955,10 +918,10 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | T-056 | scripts/ayse-denetim/sorular-takip.json: #56 | voice | peki Ayşe Bozkurt'un? | hizli-kart | — | Ayşe Bozkurt | PASS | 🔊 Ayşe Bozkurt — dosyada alerji: kayıt yok. |
 | T-057 | scripts/ayse-denetim/sorular-takip.json: #57 | chat | aşıları tam mı? | model | — | Ayşe Bozkurt | not judged | Vekil yanıt Hocam. |
 | T-058 | scripts/ayse-denetim/sorular-takip.json: #58 | chat | peki Emircan'ın? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| T-059 | scripts/ayse-denetim/sorular-takip.json: #59 | chat | kilosu? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| T-059 | scripts/ayse-denetim/sorular-takip.json: #59 | chat | kilosu? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | T-057 | scripts/ayse-denetim/sorular-takip.json: #57 | voice | aşıları tam mı? | model | — | Ayşe Bozkurt | not judged | 🔊 Vekil yanıt Hocam. |
 | T-058 | scripts/ayse-denetim/sorular-takip.json: #58 | voice | peki Emircan'ın? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| T-059 | scripts/ayse-denetim/sorular-takip.json: #59 | voice | kilosu? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| T-059 | scripts/ayse-denetim/sorular-takip.json: #59 | voice | kilosu? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | T-060 | scripts/ayse-denetim/sorular-takip.json: #60 | chat | Emircan Karaoğlu son vizitte ne not düşmüşüm? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son vizit: 30 Eylül 2026 — Otit kontrolü. |
 | T-061 | scripts/ayse-denetim/sorular-takip.json: #61 | chat | peki bir öncekinde? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | T-060 | scripts/ayse-denetim/sorular-takip.json: #60 | voice | Emircan Karaoğlu son vizitte ne not düşmüşüm? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son vizit: 30 Eylül 2026 — Otit kontrolü. |
@@ -990,11 +953,11 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | T-073 | scripts/ayse-denetim/sorular-takip.json: #73 | voice | peki haftaya? | takvim | — | — | PASS | 🔊 Haftaya (5 Ekim – 11 Ekim) takviminizde 1 randevu var Hocam: 9 Ekim Cuma 10:30 Emircan Karaoğlu kontrol. 🖥 Haftaya (5 Ekim – 11 Ekim) haftası takviminde 1 randevu. 9 Ekim Cuma:… |
 | T-074 | scripts/ayse-denetim/sorular-takip.json: #74 | voice | kimler? | takvim | — | — | PASS | 🔊 Haftaya (5 Ekim – 11 Ekim) takviminizde 1 randevu var Hocam: 9 Ekim Cuma 10:30 Emircan Karaoğlu kontrol. 🖥 Haftaya (5 Ekim – 11 Ekim) haftası takviminde 1 randevu. 9 Ekim Cuma:… |
 | T-075 | scripts/ayse-denetim/sorular-takip.json: #75 | chat | Emircan Karaoğlu büyümesi nasıl? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| T-076 | scripts/ayse-denetim/sorular-takip.json: #76 | chat | kilosu? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| T-077 | scripts/ayse-denetim/sorular-takip.json: #77 | chat | peki Tarık'ın? | hizli-kart | — | Tarık Özdemir | PASS | Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C · Kilo: 13,9 kg · Boy: 92 cm · Baş Çevresi: 49,5 cm. |
+| T-076 | scripts/ayse-denetim/sorular-takip.json: #76 | chat | kilosu? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| T-077 | scripts/ayse-denetim/sorular-takip.json: #77 | chat | peki Tarık'ın? | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son kilo 13,9 kg (01.10.2026). |
 | T-075 | scripts/ayse-denetim/sorular-takip.json: #75 | voice | Emircan Karaoğlu büyümesi nasıl? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| T-076 | scripts/ayse-denetim/sorular-takip.json: #76 | voice | kilosu? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| T-077 | scripts/ayse-denetim/sorular-takip.json: #77 | voice | peki Tarık'ın? | hizli-kart | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C, Kilo: 13,9 kg, Boy: 92 cm, Baş Çevresi: 49,5 cm. 🖥 Tarık Özdemir — dosyada son ölçüm: Ateş: 38,7 °C · Kilo: 13,9 kg · Boy: 92 … |
+| T-076 | scripts/ayse-denetim/sorular-takip.json: #76 | voice | kilosu? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| T-077 | scripts/ayse-denetim/sorular-takip.json: #77 | voice | peki Tarık'ın? | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son kilo 13,9 kg (01.10.2026). |
 | T-078 | scripts/ayse-denetim/sorular-takip.json: #78 | chat | Emircan Karaoğlu asilari tam mi | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | T-079 | scripts/ayse-denetim/sorular-takip.json: #79 | chat | eksik olan var mi | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada aşı: 5'li Karma (DaBT-İPA-Hib) 28 Şubat 2026; OPA (Oral Polio) 28 Şubat 2026; Hepatit A 28 Şubat 2026; KPA (Konjuge Pnömokok) 30 Ağustos 2025; KKK (Kızam… |
 | T-080 | scripts/ayse-denetim/sorular-takip.json: #80 | chat | siradaki hangisi | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada aşı: 5'li Karma (DaBT-İPA-Hib) 28 Şubat 2026; OPA (Oral Polio) 28 Şubat 2026; Hepatit A 28 Şubat 2026; KPA (Konjuge Pnömokok) 30 Ağustos 2025; KKK (Kızam… |
@@ -1045,34 +1008,34 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | T-101 | scripts/ayse-denetim/sorular-takip.json: #101 | voice | peki yarın randevu var mı? | takvim | — | Ayşe Bozkurt | PASS | 🔊 Yarın, 3 Ekim Cumartesi, 1 randevu var Hocam: 10:00 Ayşe Bozkurt kontrol. 🖥 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). |
 | I-01 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 1.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Bu hastayı bana kısaca özetler misin? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-01 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 1.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Bu hastayı bana kısaca özetler misin? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-01 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 1.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Bu hastayı bana kısaca özetler misin? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-01 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 1.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Bu hastayı bana kısaca özetler misin? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-02 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 2.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Son muayeneden bu yana neler değişmiş? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-02 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 2.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Son muayeneden bu yana neler değişmiş? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-02 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 2.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Son muayeneden bu yana neler değişmiş? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-02 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 2.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Son muayeneden bu yana neler değişmiş? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-03 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 3.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Büyümesi nasıl gidiyor? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-03 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 3.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Büyümesi nasıl gidiyor? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-03 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 3.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Büyümesi nasıl gidiyor? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-03 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 3.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Büyümesi nasıl gidiyor? | panel | — | n/a | PASS | Emircan Karaoğlu — kayıtlı son ölçümler: kilo 12,8 kg (30.09.2026); boy 87,5 cm (30.08.2026); baş çevresi 48,9 cm (30.08.2026). {"speech":"Vekil yanıt Hocam."} |
 | I-04 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 4.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Aşıları yaşına göre tam mı? Eksik aşısı var mı? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-04 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 4.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Aşıları yaşına göre tam mı? Eksik aşısı var mı? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-04 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 4.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Aşıları yaşına göre tam mı? Eksik aşısı var mı? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-04 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 4.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Aşıları yaşına göre tam mı? Eksik aşısı var mı? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-05 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 5.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Son lab sonuçlarında dikkat etmem gereken bir şey var mı? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-05 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 5.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Son lab sonuçlarında dikkat etmem gereken bir şey var mı? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-05 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 5.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Son lab sonuçlarında dikkat etmem gereken bir şey var mı? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-05 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 5.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Son lab sonuçlarında dikkat etmem gereken bir şey var mı? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-06 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 6.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Şu anda kullandığı ilaçlar neler ve dozları nedir? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-06 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 6.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Şu anda kullandığı ilaçlar neler ve dozları nedir? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-06 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 6.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Şu anda kullandığı ilaçlar neler ve dozları nedir? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-06 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 6.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Şu anda kullandığı ilaçlar neler ve dozları nedir? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-07 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 7.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Daha önce aynı şikayetle geldi mi? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-07 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 7.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Daha önce aynı şikayetle geldi mi? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-07 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 7.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Daha önce aynı şikayetle geldi mi? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-07 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 7.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Daha önce aynı şikayetle geldi mi? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-08 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 8.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Gelişimi yaşına uygun mu? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-08 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 8.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Gelişimi yaşına uygun mu? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-08 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 8.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Gelişimi yaşına uygun mu? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-08 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 8.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Gelişimi yaşına uygun mu? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-09 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 9.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Bugün yapmam veya takip etmem gereken bir şey var mı? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-09 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 9.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Bugün yapmam veya takip etmem gereken bir şey var mı? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-09 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 9.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Bugün yapmam veya takip etmem gereken bir şey var mı? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-09 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 9.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Bugün yapmam veya takip etmem gereken bir şey var mı? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | I-10 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 10.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | chat | Gözümden kaçabilecek önemli bir şey var mı? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
 | I-10 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 10.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | voice | Gözümden kaçabilecek önemli bir şey var mı? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| I-10 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 10.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Gözümden kaçabilecek önemli bir şey var mı? | panel | — | n/a | not judged | {"speech":"Vekil yanıt Hocam."} |
+| I-10 | docs/denetim/2026-09-26-qa-sentetik-bebek.md: ## 10.; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-STANDART-01 | panel | Gözümden kaçabilecek önemli bir şey var mı? | panel | — | n/a | not judged | Emircan Karaoğlu — {"speech":"Vekil yanıt Hocam."} |
 | E-01 | docs/denetim/2026-10-02-ayse-eylem.md: \| 1 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-01 | docs/denetim/2026-10-02-ayse-eylem.md: \| 1 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-02 | docs/denetim/2026-10-02-ayse-eylem.md: \| 2 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Yumurta alerjisi var, dosyaya işle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
@@ -1117,12 +1080,12 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | E-21 | docs/denetim/2026-10-02-ayse-eylem.md: \| 21 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Yarın saat 14:00 için kontrol randevusu oluştur | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: yarın, 3 Ekim 2026 Cumartesi. Saat: 14:00. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
 | E-22 | docs/denetim/2026-10-02-ayse-eylem.md: \| 22 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Haftaya salı 10:30 kontrol randevusu ver | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: 6 Ekim 2026 Salı. Saat: 10:30. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
 | E-22 | docs/denetim/2026-10-02-ayse-eylem.md: \| 22 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Haftaya salı 10:30 kontrol randevusu ver | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: 6 Ekim 2026 Salı. Saat: 10:30. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
-| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:27, 2. 21 Aralık Pazartesi 21:27. Hangisi? |
-| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 21:27, 2. 21 Aralık Pazartesi 21:27. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:27, 2. … |
-| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:27, 2. 21 Aralık Pazartesi 21:27. Hangisi? |
-| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 21:27, 2. 21 Aralık Pazartesi 21:27. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:27, 2. … |
-| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:27, 2. 21 Aralık Pazartesi 21:27. Hangisi? |
-| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 21:27, 2. 21 Aralık Pazartesi 21:27. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 21:27, 2. … |
+| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 22:55, 2. 21 Aralık Pazartesi 22:55. Hangisi? |
+| E-23 | docs/denetim/2026-10-02-ayse-eylem.md: \| 23 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu perşembeye al | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 22:55, 2. 21 Aralık Pazartesi 22:55. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 22:55, 2. … |
+| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 22:55, 2. 21 Aralık Pazartesi 22:55. Hangisi? |
+| E-24 | docs/denetim/2026-10-02-ayse-eylem.md: \| 24 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevu saatini 15:30 olarak değiştir | model | forced randevu_tasi; called randevu_tasi | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 22:55, 2. 21 Aralık Pazartesi 22:55. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 22:55, 2. … |
+| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 22:55, 2. 21 Aralık Pazartesi 22:55. Hangisi? |
+| E-25 | docs/denetim/2026-10-02-ayse-eylem.md: \| 25 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Randevusunu iptal et | model | forced randevu_iptal; called randevu_iptal | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için 2 randevu var Hocam: 1) 12 Ekim Pazartesi 22:55, 2. 21 Aralık Pazartesi 22:55. Hangisi? 🖥 Deniz Aksoy için 2 randevu var Hocam: 1. 12 Ekim Pazartesi 22:55, 2. … |
 | E-26 | docs/denetim/2026-10-02-ayse-eylem.md: \| 26 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | chat | Deniz Aksoy'un fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-26 | docs/denetim/2026-10-02-ayse-eylem.md: \| 26 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03 | voice | Deniz Aksoy'un fıstık alerjisini ekle | model | forced alerji_ekle; called alerji_ekle; card alerji_ekle (1 missing) | Deniz Aksoy | PASS | 🔊 Deniz Aksoy için Alerji ekle hazırladım. Ama Alerji boş — ekrandaki karttan doldurup onaylayın. |
 | E-27 | docs/denetim/2026-10-02-ayse-eylem.md: \| 27 \|; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-03; docs/OPEN-COMMI… | chat | Deniz Aksoy için yarın 11:00'e kontrol randevusu oluştur | model | forced kontrol_randevusu_olustur; called kontrol_randevusu_olustur; card kontrol_randevusu… | Deniz Aksoy | not judged | Deniz Aksoy için Kontrol randevusu hazırladım. Tarih: yarın, 3 Ekim 2026 Cumartesi. Saat: 11:00. Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz? |
@@ -1163,8 +1126,8 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | R-MUAYENE-2 | lib/asistan/ayseRota.test.ts: Bütün muayenelerini tek tek özetle; docs/OPEN-COMMITMENTS.md: NOTYA-AYSE-GERI-05… | voice | Bütün muayenelerini tek tek özetle | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu'nun 15 muayenesinin özetini ekrana getirdim Hocam; 4 Eylül 2024 ile 30 Eylül 2026 arası. Sesli dinlemek isterseniz "bana anlat" deyin. 🖥 **Emircan Karaoğlu — 1… |
 | R-OLCUM-METIN | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03; docs/qa/gokhan-yetenek-talepleri.md: from a single exam | chat | 15 aylık muayenesinde kilosu kaçtı? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — 15 aylık muayene (30.11.2025): kilo 10,6 kg. Kaynak: muayene notunun metni (Bulgu: "Kilo 10,6 kg"). |
 | R-OLCUM-METIN | docs/OPEN-COMMITMENTS.md: NOTYA-DANIS-OLCUM-03; docs/qa/gokhan-yetenek-talepleri.md: from a single exam | voice | 15 aylık muayenesinde kilosu kaçtı? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — 15 aylık muayene (30.11.2025): kilo 10,6 kg. Kaynak: muayene notunun metni (Bulgu: "Kilo 10,6 kg"). |
-| R-KART-KILO | lib/asistan/ayseRota.test.ts: Kilosu kaç?; lib/asistan/dosyaSorgu/denetim.test.ts: Kilosu kaç? | chat | Kilosu kaç? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| R-KART-KILO | lib/asistan/ayseRota.test.ts: Kilosu kaç?; lib/asistan/dosyaSorgu/denetim.test.ts: Kilosu kaç? | voice | Kilosu kaç? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
+| R-KART-KILO | lib/asistan/ayseRota.test.ts: Kilosu kaç?; lib/asistan/dosyaSorgu/denetim.test.ts: Kilosu kaç? | chat | Kilosu kaç? | kayit | — | Emircan Karaoğlu | **FAIL** | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| R-KART-KILO | lib/asistan/ayseRota.test.ts: Kilosu kaç?; lib/asistan/dosyaSorgu/denetim.test.ts: Kilosu kaç? | voice | Kilosu kaç? | kayit | — | Emircan Karaoğlu | **FAIL** | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
 | R-KART-ALERJI | lib/asistan/ayseRota.test.ts: Alerjisi var mı?; lib/asistan/dosyaSorgu/denetim.test.ts: Alerjisi var mı? | chat | Alerjisi var mı? | hizli-kart | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — dosyada alerji: kayıt yok. |
 | R-KART-ALERJI | lib/asistan/ayseRota.test.ts: Alerjisi var mı?; lib/asistan/dosyaSorgu/denetim.test.ts: Alerjisi var mı? | voice | Alerjisi var mı? | hizli-kart | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — dosyada alerji: kayıt yok. |
 | R-TAKVIM-BOS | lib/asistan/ayseRota.test.ts: Yarın 15:00 boş mu?; docs/qa/gokhan-yetenek-talepleri.md: free slots | chat | Yarın 15:00 boş mu? | takvim | — | Emircan Karaoğlu | PASS | 3 Ekim 2026 Cumartesi takviminde 1 randevu: 10:00–10:20 Ayşe Bozkurt (kontrol). İstediğiniz 15:00 boş. |
@@ -1231,24 +1194,24 @@ Not new regressions: NOTYA-DANIS-OLCUM-07, NOTYA-ARAMA-DOGUM-NEGASYON-01, NOTYA-
 | K-G09 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Bugün yapmam veya takip etmem gereken bir şey var mı? | model | — | Doruk Akyel | not judged | 🔊 Vekil yanıt Hocam. |
 | K-G10 | docs/AYSE-KALITE-STANDARDI.md: Q-09; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Gözümden kaçabilecek önemli bir şey var mı? | model | — | Doruk Akyel | not judged | Vekil yanıt Hocam. |
 | K-G10 | docs/AYSE-KALITE-STANDARDI.md: Q-09; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Gözümden kaçabilecek önemli bir şey var mı? | model | — | Doruk Akyel | not judged | 🔊 Vekil yanıt Hocam. |
-| K-VIZIT-B12 | docs/AYSE-KALITE-STANDARDI.md: Q-21; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | 12 aylık muayenesini özetler misin? | model | — | Emircan Karaoğlu | not judged | Vekil yanıt Hocam. |
-| K-VIZIT-B12 | docs/AYSE-KALITE-STANDARDI.md: Q-21; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | 12 aylık muayenesini özetler misin? | model | — | Emircan Karaoğlu | not judged | 🔊 Vekil yanıt Hocam. |
-| K-VIZIT-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | 18 aylık muayenesini özetler misin? | model | — | Doruk Akyel | not judged | Vekil yanıt Hocam. |
-| K-VIZIT-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | 18 aylık muayenesini özetler misin? | model | — | Doruk Akyel | not judged | 🔊 Vekil yanıt Hocam. |
-| K-OLCUM-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Kilosu kaç? | hizli-kart | — | Emircan Karaoğlu | **FAIL** | Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| K-OLCUM-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Kilosu kaç? | hizli-kart | — | Emircan Karaoğlu | **FAIL** | 🔊 Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg. |
-| K-OLCUM-G-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Kilosu kaç? | hizli-kart | — | Doruk Akyel | **FAIL** | Doruk Akyel — dosyada son ölçüm: Kilo: 10,8 kg · Boy: 82 cm · Baş Çevresi: 47,6 cm. |
-| K-OLCUM-G-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Kilosu kaç? | hizli-kart | — | Doruk Akyel | **FAIL** | 🔊 Doruk Akyel — dosyada son ölçüm: Kilo: 10,8 kg, Boy: 82 cm, Baş Çevresi: 47,6 cm. 🖥 Doruk Akyel — dosyada son ölçüm: Kilo: 10,8 kg · Boy: 82 cm · Baş Çevresi: 47,6 cm. |
-| K-OLCUM-G-BOY | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Boyu kaç? | kayit | — | Doruk Akyel | **FAIL** | Doruk Akyel — son boy 82 cm (29.09.2026). |
-| K-OLCUM-G-BOY | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Boyu kaç? | kayit | — | Doruk Akyel | **FAIL** | 🔊 Doruk Akyel — son boy 82 cm (29.09.2026). |
-| K-OLCUM-G-BAS | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Baş çevresi kaç? | kayit | — | Doruk Akyel | **FAIL** | Doruk Akyel — son baş çevresi 47,6 cm (29.09.2026). |
-| K-OLCUM-G-BAS | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Baş çevresi kaç? | kayit | — | Doruk Akyel | **FAIL** | 🔊 Doruk Akyel — son baş çevresi 47,6 cm (29.09.2026). |
+| K-VIZIT-B12 | docs/AYSE-KALITE-STANDARDI.md: Q-21; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | 12 aylık muayenesini özetler misin? | model | — | Emircan Karaoğlu | not judged | Emircan Karaoğlu — 30.08.2025 tarihli muayenenin özeti (muayene tarihinde 12 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 30.08.2025; muayene tarihinde 12 aylık. Tür: Sağlam ç… |
+| K-VIZIT-B12 | docs/AYSE-KALITE-STANDARDI.md: Q-21; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | 12 aylık muayenesini özetler misin? | model | — | Emircan Karaoğlu | not judged | 🔊 Emircan Karaoğlu, 30 Ağustos 2025 tarihli muayene, 12 aylık. Şikayet ve öykü: 12 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Tek başına birkaç adım atıyor, "anne", "baba" di… |
+| K-VIZIT-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | 18 aylık muayenesini özetler misin? | model | — | Doruk Akyel | not judged | Doruk Akyel — 20.08.2026 tarihli muayenenin özeti (muayene tarihinde 18 aylık); yalnız kayıttaki bilgilerle. **Muayene:** 20.08.2026; muayene tarihinde 18 aylık. Tür: Sağlam çocuk … |
+| K-VIZIT-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | 18 aylık muayenesini özetler misin? | model | — | Doruk Akyel | not judged | 🔊 Doruk Akyel, 20 Ağustos 2026 tarihli muayene, 18 aylık. Şikayet ve öykü: 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü; Yürüyor. Muayene bulgusu: Fizik muayene doğal; Yürüyü… |
+| K-OLCUM-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Kilosu kaç? | kayit | — | Emircan Karaoğlu | PASS | Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| K-OLCUM-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Kilosu kaç? | kayit | — | Emircan Karaoğlu | PASS | 🔊 Emircan Karaoğlu — son kilo 12,8 kg (30.09.2026). |
+| K-OLCUM-G-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Kilosu kaç? | kayit | — | Doruk Akyel | PASS | Doruk Akyel — son kilo 10,8 kg (20.08.2026). |
+| K-OLCUM-G-KILO | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Kilosu kaç? | kayit | — | Doruk Akyel | PASS | 🔊 Doruk Akyel — son kilo 10,8 kg (20.08.2026). |
+| K-OLCUM-G-BOY | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Boyu kaç? | kayit | — | Doruk Akyel | PASS | Doruk Akyel — son boy 82 cm (20.08.2026). |
+| K-OLCUM-G-BOY | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Boyu kaç? | kayit | — | Doruk Akyel | PASS | 🔊 Doruk Akyel — son boy 82 cm (20.08.2026). |
+| K-OLCUM-G-BAS | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Baş çevresi kaç? | kayit | — | Doruk Akyel | PASS | Doruk Akyel — son baş çevresi 47,6 cm (20.08.2026). |
+| K-OLCUM-G-BAS | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Baş çevresi kaç? | kayit | — | Doruk Akyel | PASS | 🔊 Doruk Akyel — son baş çevresi 47,6 cm (20.08.2026). |
 | K-OLCUM-ATES | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | Son muayenede ateşi kaçtı? | kayit | — | Tarık Özdemir | PASS | Tarık Özdemir — son muayene (01.10.2026): ateş 38,7 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 | K-OLCUM-ATES | docs/AYSE-KALITE-STANDARDI.md: Q-02; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | Son muayenede ateşi kaçtı? | kayit | — | Tarık Özdemir | PASS | 🔊 Tarık Özdemir — son muayene (01.10.2026): ateş 38,7 °C. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| K-TARIH-SON | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | En son ne zaman geldi? | hizli-kart | — | Doruk Akyel | **FAIL** | Doruk Akyel — dosyada son vizit: 29 Eylül 2026 — 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Dosyada plan ve takip: M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit A 1. … |
-| K-TARIH-SON | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | En son ne zaman geldi? | hizli-kart | — | Doruk Akyel | **FAIL** | 🔊 Doruk Akyel — dosyada son vizit: 29 Eylül 2026 — 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Dosyada plan ve takip: M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit A … |
-| K-TARIH-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | 18 aylık muayenesinde kaç kiloydu? | kayit | — | Doruk Akyel | **FAIL** | Doruk Akyel — 18 aylık muayene (29.09.2026): kilo 10,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
-| K-TARIH-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | 18 aylık muayenesinde kaç kiloydu? | kayit | — | Doruk Akyel | **FAIL** | 🔊 Doruk Akyel — 18 aylık muayene (29.09.2026): kilo 10,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
+| K-TARIH-SON | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | En son ne zaman geldi? | hizli-kart | — | Doruk Akyel | PASS | Doruk Akyel — dosyada son vizit: 20 Ağustos 2026 — 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Dosyada plan ve takip: M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit A 1… |
+| K-TARIH-SON | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | En son ne zaman geldi? | hizli-kart | — | Doruk Akyel | PASS | 🔊 Doruk Akyel — dosyada son vizit: 20 Ağustos 2026 — 18 aylık erkek çocuk, rutin sağlam çocuk kontrolü. Dosyada plan ve takip: M-CHAT-R/F bir sonraki vizitte uygulanacak. Hepatit … |
+| K-TARIH-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | chat | 18 aylık muayenesinde kaç kiloydu? | kayit | — | Doruk Akyel | PASS | Doruk Akyel — 18 aylık muayene (20.08.2026): kilo 10,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
+| K-TARIH-G18 | docs/AYSE-KALITE-STANDARDI.md: Q-06; docs/OPEN-COMMITMENTS.md: NOTYA-KALITE-STANDART-01 | voice | 18 aylık muayenesinde kaç kiloydu? | kayit | — | Doruk Akyel | PASS | 🔊 Doruk Akyel — 18 aylık muayene (20.08.2026): kilo 10,8 kg. Kaynak: muayene notunun yaşamsal bulgu alanı. |
 
 ## Sources
 
