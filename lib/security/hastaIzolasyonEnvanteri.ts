@@ -240,6 +240,15 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // doktorCalismaGunu by doktor_id); the session's open patient is re-checked with hastaSahibiMi before it is used.
   // Covered both ways (A→B, B→A, positive control) on chat and fish-tur by the "Ayşe okuma araçları" block of
   // hasta-izolasyon.test.ts and by lib/asistan/aracPariteKabul.test.ts.
+  // NOTYA-AYSE-ALAN-01 (2026-10-02): a third read tool, hasta_alan(alan, hasta_adi?) — lib/asistan/hastaAlan.ts. It takes
+  // a field key and a NAME, never an id: the name is resolved with hastaninSozunuCoz(doktorId), the open patient is
+  // re-checked with hastaSahibiMi, the record is read with kimlikKaydiOku(doktorId). It returns a placeholder, never a
+  // value; a name that is another doctor's patient gets the same sentence as a name nobody has and no placeholder.
+  // The value is put into the final answer by alanlariYerineKoy(doktorId) — in ayseCevapla for the written answer and
+  // in ses-ekran for the screen form of a voice turn, where the patient id comes from the session row (id + doctor_id)
+  // and the record is read again with the authenticated doctor's id (a reference to a foreign patient reads nothing).
+  // Covered by the same "Ayşe okuma araçları" block (positive control, A→B, B→A, chat and fish-tur) and by
+  // lib/asistan/alanSizinti.test.ts (forged reference in ses-ekran, other doctor's session → 404).
   'app/api/asistan/chat/route.ts': T,
   'app/api/asistan/learn/route.ts': T,
   'app/api/asistan/hasta-bul/route.ts': I('hastaninSozunuCoz(doktorId) searches only the doctor\'s patients; file via hastaDosyaPaketiniDerle(doktorId). Client-tool endpoint of the ElevenLabs path only; the single brain runs the same logic in process (lib/asistan/okumaAraclari.ts)'),

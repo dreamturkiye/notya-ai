@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { kimlikSorusunuCevapla } from '@/lib/doktor/kimlikSorusu'
 import type { OturumMesaji, SesDevam } from '@/lib/asistan/ayseCevapla'
+import { alanlariYerineKoy, verilmeyenleriSil, yerTutucuVarMi } from '@/lib/asistan/hastaAlan'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,6 +61,12 @@ export async function GET(req: NextRequest) {
         const k = soru ? await kimlikSorusunuCevapla(supabase, user.id, soru, m.hastaId || null) : null
         if (k) metin = k.ekran
       } catch { /* değersiz metin kalır */ }
+    }
+    // NOTYA-AYSE-ALAN-01: the stored turn keeps identity placeholders plus references (field, patient id). The
+    // values are put in here, for the screen only, read with the authenticated doctor's id — a reference to a
+    // patient who is not this doctor's reads nothing and its placeholder is removed.
+    if (yerTutucuVarMi(metin)) {
+      metin = await alanlariYerineKoy(supabase, user.id, metin, Array.isArray(m.alanlar) ? m.alanlar : []).catch(() => verilmeyenleriSil(metin, null).metin)
     }
     turlar.push({ zaman: m.zaman, metin, soru: soru || null, kartlar: Array.isArray(m.kartlar) ? m.kartlar.map(String) : [], hastaId: m.hastaId || null, devam: devamBuCagri && devamAnahtar === m.zaman })
   }

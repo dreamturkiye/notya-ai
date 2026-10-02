@@ -14,7 +14,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
-import { formAlanlariniTara, dosyaAlanOzeti, MODELE_GITMEYEN_KIMLIK } from '@/lib/doktor/dosyaAlanTara'
+import { formAlanlariniTara, dosyaAlanOzeti, belgeOzetindenKimlikCikar, MODELE_GITMEYEN_KIMLIK } from '@/lib/doktor/dosyaAlanTara'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
@@ -116,7 +116,8 @@ export async function hastaDosyaPaketiniDerle(
       // VELI-YASAL-ONAM: veli / yasal temsilcinin kimlik + iletişim bilgisi de modele gitmez (yakınlık gider: "anne beyanı")
       // NOTYA-BETA-0925: anne / baba adı ve doğum yeri de kimliktir — modele gitmez; doktor sorarsa sunucu cevaplar
       // (lib/doktor/kimlikSorusu.ts, değer model bağlamına hiç girmez).
-      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', ...MODELE_GITMEYEN_KIMLIK])
+      // NOTYA-AYSE-ALAN-01: `il` (Şehir) is the second half of the address the identity answer gives ("adres, il").
+      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'il', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', ...MODELE_GITMEYEN_KIMLIK])
       for (const [k, v] of Object.entries(yanitlar)) {
         if (gizli.has(k) || v == null || v === '') continue
         const deger = Array.isArray(v) ? v.join(', ') : String(v)
@@ -237,7 +238,9 @@ export async function hastaDosyaPaketiniDerle(
   const belgeler = belgelerQ.data || []
   if (belgeler.length === 0) b.push('- Kayıtlı belge yok.')
   for (const d of belgeler) {
-    const ozet = d.ai_ozet && typeof d.ai_ozet === 'object' ? JSON.stringify(d.ai_ozet).replace(/[{}"[\]]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400) : ''
+    // NOTYA-AYSE-ALAN-01: a summary that quotes "Baba Adı: …" used to carry that name to the model — the same line the
+    // server-side identity answer reads. The identity lines are taken out before the summary enters the chart.
+    const ozet = d.ai_ozet && typeof d.ai_ozet === 'object' ? belgeOzetindenKimlikCikar(JSON.stringify(d.ai_ozet), d.ai_ozet).replace(/[{}"[\]]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400) : ''
     b.push(`- ${d.baslik || d.dosya_adi || d.belge_turu || d.tur || 'Belge'} — ${trTarih(d.created_at)}${ozet ? ` — ${ozet}` : ''}`)
   }
 

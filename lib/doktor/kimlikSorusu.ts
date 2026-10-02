@@ -18,7 +18,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
-import { kimlikAlanlariniTara } from '@/lib/doktor/dosyaAlanTara'
+import { kimlikAlanlariniTara, metinleriTopla } from '@/lib/doktor/dosyaAlanTara'
 import { ARAMA_ALANLARI } from '@/lib/doktor/hastaAramaFiltre'
 import { cozumKonus, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'
@@ -162,15 +162,6 @@ function kaynakli(deger: string, kaynak: Kaynak): Kaynakli {
 function ilkDolu(...a: Kaynakli[]): Kaynakli {
   return a.find((x) => x && x.deger) || null
 }
-/** Belge özeti JSON'undaki tüm metin değerleri, satır satır — "Anne Adı: …" satırı etiketle bulunsun. */
-function metinleriTopla(v: unknown, out: string[] = [], derinlik = 0): string[] {
-  if (derinlik > 5 || v == null) return out
-  if (typeof v === 'string') out.push(v)
-  else if (Array.isArray(v)) v.forEach((x) => metinleriTopla(x, out, derinlik + 1))
-  else if (typeof v === 'object') Object.values(v as Record<string, unknown>).forEach((x) => metinleriTopla(x, out, derinlik + 1))
-  return out
-}
-
 /** Hasta kaydı + son Hasta Bilgi Formu + belge özetleri → kimlik kaydı. Hasta bu doktorun değilse null. */
 export async function kimlikKaydiOku(supabase: SupabaseClient, doktorId: string, patientId: string): Promise<KimlikKaydi | null> {
   const { data: p } = await supabase
@@ -230,11 +221,16 @@ function yakinMi(k: Kisi | null, kim: 'anne' | 'baba'): boolean {
   return !!k && trAramaNormalize(k.yakinlik).includes(kim)
 }
 
-/** Tek alanın ekran satırı (değerli) ve model satırı (değersiz). */
-function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): { ekran: string; model: string } {
+/**
+ * Tek alanın ekran satırı (değerli) ve model satırı (değersiz). `deger`: kayıtlı değerin yalın hali (etiketsiz,
+ * kaynaksız) — yalnız yer tutucu yolu okur (kimlikAlanDegeri). `degerliCumle`: değer ayrıca kayıtlı değil ama ekran
+ * cümlesi yine de bir iletişim değeri taşıyor (dosyadaki iletişim telefonu).
+ */
+type AlanSatiri = { ekran: string; model: string; deger?: string; degerliCumle?: boolean }
+function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): AlanSatiri {
   const etiket = ETIKET[alan]
-  const goster = (x: Kaynakli, bicim: (s: string) => string = (s) => s) =>
-    x ? { ekran: `${etiket}: ${bicim(x.deger)} (${KAYNAK_ETIKETI[x.kaynak]})`, model: `${etiket} ekranda` } : null
+  const goster = (x: Kaynakli, bicim: (s: string) => string = (s) => s): AlanSatiri | null =>
+    x ? { ekran: `${etiket}: ${bicim(x.deger)} (${KAYNAK_ETIKETI[x.kaynak]})`, model: `${etiket} ekranda`, deger: bicim(x.deger) } : null
   const eksik = (nereden: string) => ({ ekran: `${etiket} kayıtlı değil — ${nereden}.`, model: `${etiket} kayıtlı değil — ${nereden}.` })
 
   switch (alan) {
@@ -248,7 +244,7 @@ function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): { ekran: strin
     case 'veli': {
       if (k.veli) {
         const parca = [k.veli.ad, k.veli.yakinlik ? `(${k.veli.yakinlik})` : '', k.veli.telefon ? `— ${k.veli.telefon}` : ''].filter(Boolean).join(' ')
-        return { ekran: `${etiket}: ${parca} (Hasta Bilgi Formu)`, model: `${etiket} ekranda` }
+        return { ekran: `${etiket}: ${parca} (Hasta Bilgi Formu)`, model: `${etiket} ekranda`, deger: parca }
       }
       const dogum = k.dogumTarihi?.deger || ''
       if (dogum && !veliOnamGerekliMi(dogum, nowMs)) {
@@ -265,17 +261,43 @@ function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): { ekran: strin
         : (k.veli?.telefon ? { ...k.veli, kaynak: 'veli' } : null)
       if (kisi) {
         const nereden = kisi.kaynak === 'veli' ? 'Hasta Bilgi Formu, veli' : 'Hasta Bilgi Formu, acil durumda aranacak kişi'
-        return { ekran: `${etiket}: ${kisi.telefon}${kisi.ad ? ` — ${kisi.ad}` : ''} (${nereden})`, model: `${etiket} ekranda` }
+        const deger = `${kisi.telefon}${kisi.ad ? ` — ${kisi.ad}` : ''}`
+        return { ekran: `${etiket}: ${deger} (${nereden})`, model: `${etiket} ekranda`, deger }
       }
       if (k.telefon) {
         return {
           ekran: `${etiket} ayrıca kayıtlı değil. Dosyadaki iletişim telefonu: ${k.telefon.deger} (${KAYNAK_ETIKETI[k.telefon.kaynak]}; kime ait olduğu yazılı değil).`,
           model: `${etiket} ayrıca kayıtlı değil; dosyadaki iletişim telefonu ekranda.`,
+          degerliCumle: true,
         }
       }
       return eksik(KART_YERI)
     }
   }
+}
+
+export function kimlikAlanEtiketi(alan: KimlikAlani): string {
+  return ETIKET[alan]
+}
+
+export interface KimlikAlanDegeri {
+  /** 'var': kayıtta değer var. 'eksik': yok. */
+  durum: 'var' | 'eksik'
+  /** 'var': yalın değer (hekimin okuyacağı biçimde). 'eksik': hekime nereden ekleyeceğini söyleyen mevcut cümle. */
+  metin: string
+  /** Metin bir kimlik / iletişim değeri taşıyor: seste okunmaz, hiçbir model bağlamına girmez. */
+  degerli: boolean
+}
+
+/**
+ * NOTYA-AYSE-ALAN-01 — yer tutucu yolu (lib/asistan/hastaAlan.ts) için TEK alan. Okuma ve eksik cümlesi yukarıdaki
+ * `satir` ile aynıdır; burada yalnız etiketsiz değer ayrılır. Sonuç modele ASLA verilmez: sunucu, hekime giden son
+ * cevaptaki yer tutucunun yerine koyar.
+ */
+export function kimlikAlanDegeri(alan: KimlikAlani, k: KimlikKaydi, nowMs = Date.now()): KimlikAlanDegeri {
+  const s = satir(alan, k, nowMs)
+  if (s.deger) return { durum: 'var', metin: s.deger, degerli: true }
+  return { durum: 'eksik', metin: s.ekran, degerli: Boolean(s.degerliCumle) }
 }
 
 export function kimlikCevabiMetni(alanlar: KimlikAlani[], k: KimlikKaydi, nowMs = Date.now()): { ekran: string; model: string } {

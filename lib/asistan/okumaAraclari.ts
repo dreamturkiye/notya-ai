@@ -28,7 +28,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AnthropicArac } from '@/core/eylemler/araclar'
 import { HASTA_BUL_KURALI, RANDEVU_TAKVIM_KURALI } from '@/lib/asistan/personaEngine'
 import { kapsamKarariHastayla, KAPSAM_RED, KAPSAM_SORU } from '@/lib/asistan/kapsamKilidi'
-import { kimlikSorusunuCevapla, type KimlikCevabi } from '@/lib/doktor/kimlikSorusu'
+import { kimlikAlanDegeri, kimlikAlanEtiketi, kimlikKaydiOku, kimlikSorusunuCevapla, type KimlikCevabi } from '@/lib/doktor/kimlikSorusu'
+import { ALAN_ADLARI, AlanDefteri, alanAnahtari, HASTA_ALAN_ARACI, HASTA_ALAN_KURALI } from '@/lib/asistan/hastaAlan'
 import { cozumKonus, duzle, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { dosyaPaketOnbellekli } from '@/lib/doktor/ogrenme/dosyaOnbellek'
@@ -73,6 +74,8 @@ export const OKUMA_ARACLARI: AnthropicArac[] = [
       required: ['tarih'],
     },
   },
+  // NOTYA-AYSE-ALAN-01: an identity / contact field as a placeholder — the value never comes back (lib/asistan/hastaAlan.ts).
+  HASTA_ALAN_ARACI,
 ]
 
 const OKUMA_ARAC_ADLARI = new Set(OKUMA_ARACLARI.map((a) => a.name))
@@ -96,9 +99,10 @@ export const OKUMA_AYARI = { zamanAsimiMs: 8_000 }
  */
 export const OKUMA_ARACI_BLOGU = `
 
-[OKUMA ARAÇLARI — bu turda sana verildi: hasta_bul, randevu_takvim]
+[OKUMA ARAÇLARI — bu turda sana verildi: ${OKUMA_ARACLARI.map((a) => a.name).join(', ')}]
 ${HASTA_BUL_KURALI}
 ${RANDEVU_TAKVIM_KURALI}
+${HASTA_ALAN_KURALI}
 Cevap yukarıdaki dosya bloğunda, HIZLI KART'ta ya da kanıt bloğunda zaten varsa araç çağırma, oradan cevapla. Orada yoksa, dosya verilmediyse ya da soru muayenehanenin geneliyle (sayı, sıralama, liste), bir hastanın kimlik / iletişim bilgisiyle ya da takvimle ilgiliyse "bilemedim" DEME, hekime "adını söyleyin" DEME: önce aracı çağır. "Bu turda açık hasta dosyası yok" notu yalnız kendi bilginden dosya uydurmanı yasaklar; aracın döndürdüğü bilgi dosya bilgisidir. Aracın döndürdüğü sayıyı, sıralamayı, tarihi, değeri ve birimi AYNEN aktar; araç "bulamadım / kayıt yok" dediyse onu söyle, değer uydurma.`
 
 export interface OkumaBaglami {
@@ -110,6 +114,8 @@ export interface OkumaBaglami {
   aktifHasta: { id: string; ad: string } | null
   /** First name of the colleague the doctor is talking to — the resolver's bare-name guard. */
   hitapAdi?: string
+  /** NOTYA-AYSE-ALAN-01: the turn's placeholder ledger. hasta_alan registers what it issues here; references only. */
+  alanDefteri?: AlanDefteri
 }
 
 export interface OkumaSonucu {
@@ -238,13 +244,66 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
   return { sonuc: metin, hekimMetni: metin, hasta }
 }
 
+const HANGI_HASTA = 'Hangi hastanın bilgisini istiyorsunuz? Adını yazar mısınız?'
+const HASTA_BULUNAMADI = 'Bu hastayı kayıtlarınızda bulamadım.'
+
+/**
+ * NOTYA-AYSE-ALAN-01 — one identity / contact field of one patient, as a placeholder. The reader is the identity
+ * router's own (kimlikKaydiOku: patient card, latest Hasta Bilgi Formu, document summaries); the result says only
+ * whether the field is recorded and which placeholder to write. The VALUE IS NEVER PART OF THE RESULT.
+ *
+ * HASTA-IZOLASYON-01: the patient is a NAME the model wrote (resolved among this doctor's patients) or the session's
+ * open patient (re-checked here); the record is read with the doctor's id. Another doctor's patient gets the same
+ * sentence as a name nobody has. A name that was given and not found is never replaced by the open chart.
+ */
+async function hastaAlan(b: OkumaBaglami, g: Record<string, unknown>): Promise<OkumaSonucu> {
+  const { supabase, doktorId, saatDilimi } = b
+  const alanAdi = alanAnahtari(g.alan)
+  if (!alanAdi) return { sonuc: `Bu alan tanımlı değil. Geçerli alanlar: ${Object.keys(ALAN_ADLARI).join(', ')}.`, hata: true }
+  const adHam = String(g.hasta_adi ?? g.hastaAdi ?? '').replace(/\s+/g, ' ').trim().slice(0, 120)
+  let hedef: { id: string; ad: string } | null = null
+  if (adHam) {
+    const cozum = await hastaninSozunuCoz(supabase, doktorId, adHam, { yalnizAd: true, adKesin: true, tz: saatDilimi })
+    if (cozum.tur === 'coklu') {
+      const soru = cozumKonus(cozum) || 'Bu isimle birden çok hasta var Hocam; hangisi?'
+      return { sonuc: soru, hekimMetni: soru }
+    }
+    if (cozum.tur !== 'tek') return { sonuc: HASTA_BULUNAMADI, hekimMetni: HASTA_BULUNAMADI }
+    hedef = { id: cozum.patientId, ad: cozum.ad }
+  } else if (b.aktifHasta?.id && (await hastaSahibiMi(supabase, doktorId, b.aktifHasta.id))) {
+    hedef = { id: b.aktifHasta.id, ad: b.aktifHasta.ad }
+  }
+  if (!hedef) return { sonuc: HANGI_HASTA, hekimMetni: HANGI_HASTA }
+  const kayit = await kimlikKaydiOku(supabase, doktorId, hedef.id)
+  if (!kayit) return { sonuc: HASTA_BULUNAMADI, hekimMetni: HASTA_BULUNAMADI }
+  const hasta = { id: hedef.id, ad: hedef.ad || kayit.ad }
+  const alan = ALAN_ADLARI[alanAdi]
+  const deger = kimlikAlanDegeri(alan, kayit)
+  const yer = (b.alanDefteri ?? new AlanDefteri()).ver(alanAdi, hasta, deger)
+  const etiket = kimlikAlanEtiketi(alan)
+  // Audit trail: which field of which patient was asked for — references, never the value.
+  console.info('[asistan/okuma-araci] alan', { alan: alanAdi, hasta: hasta.id, durum: deger.durum })
+  if (deger.durum === 'var') {
+    return {
+      sonuc: `${hasta.ad} — ${etiket} kayıtlı. Değer sana verilmez. Cevabında değerin geleceği yere şunu AYNEN yaz: ${yer} — sunucu, cevabı hekime göstermeden önce gerçek değeri yerine koyar. Değeri tahmin etme; "erişimim yok" DEME.`,
+      hekimMetni: `${hasta.ad} — ${etiket}: ${yer}`,
+      hasta,
+    }
+  }
+  return {
+    sonuc: `${hasta.ad} — ${etiket} kayıtlı değil. Cevabına şunu AYNEN, tek başına bir cümle olarak yaz: ${yer} — sunucu yerine, hekime bilgiyi nereden ekleyeceğini söyleyen cümleyi koyar.`,
+    hekimMetni: `${hasta.ad} — ${yer}`,
+    hasta,
+  }
+}
+
 /**
  * Run one read tool for the authenticated doctor. Never throws: a failure or a timeout is a tool result the model can
  * report ("dosyaya şu an ulaşamadım"), and nothing of the error text reaches the model.
  */
 export async function okumaAraciCalistir(ad: string, girdi: unknown, b: OkumaBaglami): Promise<OkumaSonucu> {
   const g = (girdi && typeof girdi === 'object' && !Array.isArray(girdi) ? girdi : {}) as Record<string, unknown>
-  const is = ad === 'hasta_bul' ? hastaBul(b, g) : ad === 'randevu_takvim' ? randevuTakvim(b, g) : null
+  const is = ad === 'hasta_bul' ? hastaBul(b, g) : ad === 'randevu_takvim' ? randevuTakvim(b, g) : ad === 'hasta_alan' ? hastaAlan(b, g) : null
   if (!is) return { sonuc: 'Bu araç tanımlı değil.', hata: true }
   let zamanlayici: ReturnType<typeof setTimeout> | undefined
   const sinir = new Promise<OkumaSonucu>((r) => { zamanlayici = setTimeout(() => r({ sonuc: ULASILAMADI, hata: true }), OKUMA_AYARI.zamanAsimiMs) })

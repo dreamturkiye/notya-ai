@@ -40,13 +40,19 @@ const ROUTERSIZ = 'En çok hangi şikayetle geldi'
 describe('okuma araçları — tanım, eski ses ajanındaki kayıtla aynı', () => {
   const kayit = readFileSync(new URL('../../scripts/_el-tool-kur.mts', import.meta.url), 'utf8')
 
+  /** The two tools restored from the voice agent. Tools added after the restore exist in the single brain only. */
+  const GERI_GELEN = OKUMA_ARACLARI.slice(0, 2)
+
   it('aynı adlar: hasta_bul ve randevu_takvim', () => {
-    assert.deepEqual(OKUMA_ARACLARI.map((a) => a.name), ['hasta_bul', 'randevu_takvim'])
-    for (const a of OKUMA_ARACLARI) assert.ok(kayit.includes(`'${a.name}'`), a.name)
+    assert.deepEqual(GERI_GELEN.map((a) => a.name), ['hasta_bul', 'randevu_takvim'])
+    for (const a of GERI_GELEN) assert.ok(kayit.includes(`'${a.name}'`), a.name)
     assert.ok(okumaAraciMi('hasta_bul') && okumaAraciMi('randevu_takvim') && !okumaAraciMi('alerji_ekle'))
+    // Later read tools are not client tools of the ElevenLabs agents — the registration script does not know them.
+    for (const a of OKUMA_ARACLARI.slice(2)) assert.ok(okumaAraciMi(a.name) && !kayit.includes(`'${a.name}'`), a.name)
   })
 
   it('aynı şema: zorunlu alanlar, alan adları ve açıklamalar kayıt betiğindeki metinle birebir', () => {
+    const OKUMA_ARACLARI = GERI_GELEN
     const sema = Object.fromEntries(OKUMA_ARACLARI.map((a) => [a.name, a.input_schema as { required: string[]; properties: Record<string, { type: string; description: string }> }]))
     assert.deepEqual(sema.hasta_bul.required, ['isim'])
     assert.deepEqual(Object.keys(sema.hasta_bul.properties), ['isim'])
@@ -148,9 +154,11 @@ describe('yönlendiriciler hızlı yol, kapı bekçisi değil — dosya açık d
     hastaEkle(s.doktor.id, 'Umutcan Türkoğlu', { dogum: '2019-04-10' })
     await yazi(s, SORU)
     const istek = sonModelIstegi()
-    assert.deepEqual(sunulanAraclar(istek), ['hasta_bul', 'randevu_takvim'])
+    const adlar = OKUMA_ARACLARI.map((a) => a.name)
+    assert.deepEqual(adlar.slice(0, 2), ['hasta_bul', 'randevu_takvim'])
+    assert.deepEqual(sunulanAraclar(istek), adlar)
     assert.equal(zorlananArac(istek), null)
-    assert.ok(sistemde(/\[OKUMA ARAÇLARI — bu turda sana verildi: hasta_bul, randevu_takvim\]/))
+    assert.ok(sistemde(new RegExp(`\\[OKUMA ARAÇLARI — bu turda sana verildi: ${adlar.join(', ')}\\]`)))
     assert.ok(sistemde(/Tam cümleyi isim olarak gönder/), 'istemdeki kural yeniden doğru')
     assert.ok(sistemde(/BU TURDA AÇIK HASTA DOSYASI YOK/))
     assert.ok(!sistemde(/DOSYAYA KAYIT HAZIRLAMA \(Notya eylem katmanı\)/), 'yazma aracı yokken eylem paragrafı yok')

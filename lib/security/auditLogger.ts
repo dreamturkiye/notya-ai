@@ -162,6 +162,29 @@ export async function logFisiltiGizleme(
   })
 }
 
+/**
+ * NOTYA-AYSE-ALAN-01 — Ayşe hekime bir hastanın kimlik / iletişim alanını gösterdi (sunucu yer tutucunun yerine
+ * değeri koydu). Kayda yalnız ALAN ADI ve HASTA KİMLİĞİ girer; değer asla.
+ */
+export async function logKimlikAlani(
+  userId: string,
+  alanlar: { alan: string; hastaId: string }[],
+  kanal: string
+): Promise<void> {
+  const hastaya = new Map<string, string[]>()
+  for (const a of alanlar) hastaya.set(a.hastaId, [...(hastaya.get(a.hastaId) || []), a.alan])
+  for (const [hastaId, adlar] of hastaya) {
+    await writeAuditLog({
+      user_id: userId,
+      action: 'view',
+      resource_type: 'hasta_kimlik_alani',
+      resource_id: hastaId,
+      new_values: { alanlar: [...new Set(adlar)], kanal, kaynak: 'ayse' },
+      success: true,
+    })
+  }
+}
+
 // ============================================================
 // İÇ YARDIMCILAR
 // ============================================================
