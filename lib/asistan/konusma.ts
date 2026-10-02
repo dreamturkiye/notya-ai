@@ -280,7 +280,15 @@ function okunacakNesneVar(mesaj: string): boolean {
   return duz.split(/[^a-z0-9]+/).some((k) => k.length >= 5 && !EKRAN_NESNESI.has(k) && BELIRTME_EKI.test(k))
 }
 
-export function okumaIstegiMi(mesaj: string): boolean {
+/**
+ * The sentence asks to HEAR something — the screen answer or a thing of the chart ("Hastanın özetini oku"). Only the
+ * first is the read-aloud route below; the quality rubric (Q-30) lifts the spoken length cap for both.
+ */
+export function sesliOkumaSozuMu(mesaj: string): boolean {
   const m = String(mesaj || '').trim()
-  return m.length <= 160 && OKU_ISTEGI.test(m) && !okunacakNesneVar(m)
+  return m.length <= 160 && OKU_ISTEGI.test(m)
+}
+
+export function okumaIstegiMi(mesaj: string): boolean {
+  return sesliOkumaSozuMu(mesaj) && !okunacakNesneVar(String(mesaj || '').trim())
 }
