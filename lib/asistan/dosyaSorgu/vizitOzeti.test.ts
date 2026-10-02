@@ -9,7 +9,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { kanitBlogu } from './kanit'
-import { ASI_YOK, LAB_YOK, PERSENTIL_YOK, LAB_PENCERE_GUN, vizitOzetHedefiBul, vizitOzetiSec, vizitOzetKanitSatirlari } from './vizitOzeti'
+import { ASI_YOK, LAB_YOK, PERSENTIL_YOK, LAB_PENCERE_GUN, vizitOzetEkrani, vizitOzetHedefiBul, vizitOzetiGuvenceyeAl, vizitOzetiSec, vizitOzetKanitSatirlari } from './vizitOzeti'
+import { dosyaSorguKuralBlogu } from './kurallar'
 import { DENETIM_BUGUN, KORPUS_BEBEK, korpusBebek, korpusEriskin } from './denetim/fikstur'
 import { hastaKur, olaylariKur, trGun, type HamDosya } from '@/lib/doktor/dosyaOlaylari'
 import { PEDIATRI_SORGU } from '@/specialties/pediatri/sorgu'
@@ -157,6 +158,79 @@ describe('NOTYA-AYSE-OZET-01 — muayene özeti kanıtı: sekiz bölüm, sıras�
   })
 })
 
+describe('NOTYA-AYSE-OZET-01 — cevap kuralı, ekran biçimi ve cevabın kayıtla denetimi', () => {
+  const BASLIKLAR = ['Muayene', 'Şikayet', 'Muayene bulgusu', 'Laboratuvar', 'Aşı', 'Büyüme ve gelişme', 'Tedavi', 'Plan']
+
+  it('şablon: tek muayenede dosyanın genel özeti şablonu yerine sekiz bölümün sırası; eksik bölüm söylenir, tanı konmaz, başka muayene katılmaz', () => {
+    const blok = kanitBlogu('ozet', olaylar, hasta, { mesaj: soru(12) })
+    const sablon = blok.split('[CEVAP ŞABLONU — Soru 1] ')[1]
+    assert.ok(!sablon.includes('Longitudinal'), 'genel özet şablonu tek muayenede kullanılmaz')
+    const konum = BASLIKLAR.map((b, i) => sablon.indexOf(`${i + 1}) ${b} —`))
+    assert.ok(konum.every((k, i) => k >= 0 && (i === 0 || k > konum[i - 1])), konum.join(','))
+    for (const d of ['Her bölüm bir KISA paragraf', 'Kayıtta olmayan bölümü ATLAMA', '"aşı yapılmamış"', '"laboratuvar istenmemiş"', 'kısaca tartış', 'TANI koyma', 'persentil hesaplanmadı', 'Yalnız BU muayeneyi anlat', 'olmayan sayı']) assert.ok(sablon.includes(d), d)
+    assert.match(blok, /Soru 1 \(tek muayene\): "Bu muayeneyi özetler misin\?"/)
+    // The whole-chart summary keeps its own template.
+    assert.match(kanitBlogu('ozet', olaylar, hasta, { mesaj: 'Bu hastayı bana kısaca özetler misin?' }), /Longitudinal özet/)
+  })
+
+  it('biçim: başlıklar sırasıyla ve kalın; "Dayanak" maddeleri yok; genel dosya sorusunun biçimi değişmedi', () => {
+    const kural = dosyaSorguKuralBlogu(KORPUS_BEBEK.ad, { vizitOzetiBasliklari: ozet(12).bolumler.map((b) => b.baslik) })
+    assert.ok(kural.includes(BASLIKLAR.map((b) => `**${b}:**`).join(' ')), kural.slice(-900))
+    assert.ok(kural.includes(`"${KORPUS_BEBEK.ad}" adıyla başlar`) && kural.includes('"Dayanak" başlığı KULLANMA') && !kural.includes('sonra **Dayanak:** maddeleri'))
+    const genel = dosyaSorguKuralBlogu(KORPUS_BEBEK.ad)
+    assert.ok(genel.includes('sonra **Dayanak:** maddeleri') && !genel.includes('muayene özeti'))
+    assert.equal(dosyaSorguKuralBlogu(KORPUS_BEBEK.ad, { vizitOzetiBasliklari: null }), genel)
+  })
+
+  it('ekran biçimi (kayıttan): adla başlar, sekiz kalın başlık sırasıyla, kayıtlı değerler ve eksik bölümlerin kısa ifadesi', () => {
+    const e = vizitOzetEkrani(ozet(15), KORPUS_BEBEK.ad)
+    assert.ok(e.startsWith(`${KORPUS_BEBEK.ad} — ${trGun(ozet(15).tarih)} tarihli muayenenin özeti (muayene tarihinde 15 aylık)`), e.slice(0, 120))
+    const konum = BASLIKLAR.map((b) => e.indexOf(`**${b}:**`))
+    assert.ok(konum.every((k, i) => k > 0 && (i === 0 || k > konum[i - 1])), konum.join(','))
+    for (const d of ['kilo 10,6 kg (not metninden)', 'Aşı yapılmamış', 'Laboratuvar istenmemiş', 'Reçete yazılmamış', 'persentil hesaplanmadı', '3 ay sonra kontrol']) assert.ok(e.includes(d), `${d}\n${e}`)
+    const e12 = vizitOzetEkrani(ozet(12), KORPUS_BEBEK.ad)
+    assert.match(e12, /\*\*Aşı:\*\* Yapılmış \(aşı kaydı, \d{2}\.\d{2}\.\d{4}\): KPA .+ 3\. doz; KKK .+ 1\. doz; Suçiçeği .+ 1\. doz\./)
+    assert.match(e12, /Büyüme motoru: Kilo 9,8 kg \(p\d+, z .+\); Boy 76 cm/)
+  })
+
+  it('denetim: kayıttaki özetin kendisi ve kurala uyan bir cevap geçer; değişmez', () => {
+    for (const ay of AYLAR) {
+      const kendi = vizitOzetEkrani(ozet(ay), KORPUS_BEBEK.ad)
+      assert.deepEqual(vizitOzetiGuvenceyeAl(kendi, ozet(ay), KORPUS_BEBEK.ad), { metin: kendi, degisti: false, neden: null }, `${ay} ay`)
+    }
+    const uygun = [
+      `${KORPUS_BEBEK.ad} 12 aylık sağlam çocuk muayenesine ${trGun(ozet(12).tarih)} tarihinde gelmiş.`,
+      '**Muayene:** 12 aylık, rutin sağlam çocuk kontrolü.', '**Şikayet:** Şikayet yok; birkaç adım atıyor.', '**Muayene bulgusu:** Özellikli bulgu yok, altı diş var.',
+      '**Laboratuvar:** Laboratuvar istenmemiş.', '**Aşı:** KPA 3. doz, KKK 1. doz ve Suçiçeği 1. doz yapılmış.',
+      '**Büyüme ve gelişme:** Kilo 9,8 kg (p38), boy 76 cm (p39), baş çevresi 46.4 cm (p32); kayma yok, gelişim yaşına uygun.',
+      '**Tedavi:** Reçete yazılmamış; demir profilaksisi kesilmiş.', '**Plan:** 3 ay sonra kontrol.',
+    ].join('\n\n')
+    assert.equal(vizitOzetiGuvenceyeAl(uygun, ozet(12), KORPUS_BEBEK.ad).degisti, false, String(vizitOzetiGuvenceyeAl(uygun, ozet(12), KORPUS_BEBEK.ad).neden))
+  })
+
+  it('denetim: atlanan bölüm, eksik kayıtlı değer ya da kayıtta olmayan değer / tarih → cevap kayıttaki özetle değiştirilir', () => {
+    const o = ozet(12)
+    const kendi = vizitOzetEkrani(o, KORPUS_BEBEK.ad)
+    const bozuk: [string, string, RegExp][] = [
+      // What the doctor got on 2026-10-02: complaint, assessment and plan only.
+      ['canlı vakadaki ince cevap', `${KORPUS_BEBEK.ad} — 12 aylık sağlam çocuk muayenesi.\n\n**Dayanak:**\n- Şikayet: rutin kontrol\n- Değerlendirme: sağlam çocuk\n- Plan: 3 ay sonra kontrol`, /başlık yok/],
+      ['aşı bölümü atlanmış', kendi.replace(/\*\*Aşı:\*\*[^\n]*\n\n/, ''), /başlık yok ya da sırası farklı: Aşı/],
+      ['bölüm sırası değişmiş', kendi.replace('**Tedavi:**', '**X:**').replace('**Plan:**', '**Tedavi:**').replace('**X:**', '**Plan:**'), /sırası farklı/],
+      ['kilo yazılmamış', kendi.replace(/9,8/g, '—'), /kayıtlı değer cevapta yok: 9,8/],
+      ['başka muayenenin kilosu', kendi.replace('**Plan:**', '**Plan:** Güncel kilosu 12,8 kg.'), /kanıtta olmayan değer: .*12,8/],
+      ['uydurma persentil', kendi.replace('**Plan:**', '**Plan:** Kilo p75 düzeyinde.'), /kanıtta olmayan değer: .*75/],
+      ['uydurma tarih', kendi.replace('**Plan:**', '**Plan:** 01.01.2020 tarihinde görülmüş.'), /kanıtta olmayan tarih: 01\.01\.2020/],
+      ['uydurma lab değeri', kendi.replace('**Plan:**', '**Plan:** Hemoglobin 9.1 g/dL.'), /kanıtta olmayan değer/],
+    ]
+    for (const [ad, cevap, neden] of bozuk) {
+      const g = vizitOzetiGuvenceyeAl(cevap, o, KORPUS_BEBEK.ad)
+      assert.equal(g.degisti, true, ad)
+      assert.match(String(g.neden), neden, ad)
+      assert.equal(g.metin, kendi, ad)
+    }
+  })
+})
+
 describe('NOTYA-AYSE-OZET-01 — erişkin (pediatri dışı): aynı bölümler, aşı ve büyüme yok', () => {
   const e = korpusEriskin(DENETIM_BUGUN)
   const eo = olaylariKur(e, DENETIM_BUGUN), eh = hastaKur(e, DENETIM_BUGUN)
@@ -169,7 +243,8 @@ describe('NOTYA-AYSE-OZET-01 — erişkin (pediatri dışı): aynı bölümler, 
     assert.match(olcum, /kilo 78 kg; boy 162 cm; VKİ 29,7 kg\/m² \(kilo ve boydan hesaplandı\); tansiyon 150\/95 mmHg; nabız 82\/dk/)
     assert.match(ilk.bolumler.find((b) => b.anahtar === 'tedavi')!.kanit.join('\n'), /Ramipril 5 mg tablet/)
     const blok = kanitBlogu('ozet', eo, eh, { mesaj: 'ilk muayenesini özetle' })
-    assert.doesNotMatch(blok.split('[KANIT')[1].split('[CEVAP ŞABLONU')[0], /baş çevresi|persentil|Büyüme motoru|\) AŞI|[Aa]şı (yapıl|tablo|kayd)|gelişim/, 'pediatriye özgü içerik erişkine sızmaz')
+    // Evidence AND template: the adult template names neither vaccines nor growth.
+    assert.doesNotMatch(blok.split('[KANIT')[1], /baş çevresi|persentil|Büyüme motoru|\) AŞI|[Aa]şı (yapıl|tablo|kayd)|gelişim/, 'pediatriye özgü içerik erişkine sızmaz')
   })
 
   it('son muayene: yakın tarihli lab sonuçları önceki sonuçla; referans dışı değer işaretli; önceki ölçüm karşılaştırması', () => {

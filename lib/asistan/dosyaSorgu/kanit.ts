@@ -17,7 +17,7 @@ import { SORU_SABLONLARI } from '@/lib/asistan/dosyaSorgu/kurallar'
 import type { SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@/lib/klinik/sikayetEsanlam'
 import { vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
-import { vizitOzetiSec, vizitOzetKanitSatirlari } from '@/lib/asistan/dosyaSorgu/vizitOzeti'
+import { vizitOzetiSec, vizitOzetKanitSatirlari, vizitOzetSablonu, type VizitOzeti } from '@/lib/asistan/dosyaSorgu/vizitOzeti'
 import { kanonikTr } from '@/core/lab/kanonik'
 
 export interface KanitEki {
@@ -275,7 +275,7 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
  * Eşleşme yoksa SESSİZCE en son vizite düşmez — açık "bulamadım" cevabı döner (kök neden: ozetBolumu türe göre
  * hiç filtrelemiyordu, her zaman en son vizit döndürülüyordu).
  */
-function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: string): string[] | null {
+function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: string): { satirlar: string[]; ozet: VizitOzeti | null } | null {
   // NOTYA-DANIS-OLCUM: seçim ölçüm sorgusuyla AYNI fonksiyondur (vizitleriSec) — yaş-dönümü verildiyse tam eşleşme
   // şart (tür eşleşse bile yanlış yaştaki vizite düşülmez); notta yaş yazmıyorsa muayene tarihindeki yaşa bakılır.
   const s = vizitOzetiSec(mesaj, olaylar, hasta)
@@ -284,10 +284,10 @@ function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: stri
   const aciklama = hedef.tip === 'vizit'
     ? [hedef.gruplar.map((g) => g.ad).join(', '), hedef.yas ? `${hedef.yas.sayi} ${hedef.yas.birim}` : ''].filter(Boolean).join(' / ') || 'belirtilen vizit türü'
     : s.etiket
-  if (!adaylar.length) return [`Aranan vizit: ${aciklama}. Bu türde / bu yaşta eşleşen onaylı vizit kaydı bulamadım — dosyada bu muayene yok Hocam; sessizce başka bir vizite düşmedim.`]
+  if (!adaylar.length) return { ozet: null, satirlar: [`Aranan vizit: ${aciklama}. Bu türde / bu yaşta eşleşen onaylı vizit kaydı bulamadım — dosyada bu muayene yok Hocam; sessizce başka bir vizite düşmedim.`] }
   // NOTYA-AYSE-OZET-01: tek muayene eşleştiyse sekiz bölümlük özet kanıtı (vizitOzeti.ts) — tarih ve yaş, şikayet,
   // bulgu, laboratuvar, aşı, ölçüm ve büyüme, tedavi, plan; kayıtta olmayan bölüm kısa ifadesiyle.
-  if (s.ozet) return [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit: ${trGun(adaylar[0].tarih)}.`, ...vizitOzetKanitSatirlari(s.ozet)]
+  if (s.ozet) return { ozet: s.ozet, satirlar: [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit: ${trGun(adaylar[0].tarih)}.`, ...vizitOzetKanitSatirlari(s.ozet)] }
   const out = [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit(ler) (${adaylar.length})${secim === 'yas-tarih' ? ' — notta bu yaş yazmıyor; muayene tarihindeki yaşa göre seçildi' : ''}:`]
   // O muayenenin kayıtlı ölçümleri de satırda (alan, aynı günlü cihaz ölçümü, not metni) — özet ölçümsüz kalmasın.
   const olcum = vizitOlcumKaniti({ olcumler: ['kilo', 'boy', 'basCevresi', 'tansiyon', 'ates', 'nabiz', 'spo2'], genel: true, hedef, degerlendirme: false, kesin: true }, olaylar, hasta)
@@ -297,7 +297,7 @@ function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: stri
     out.push(k.length ? `  Ölçümler: ${k.map((x) => `${OLCUM_ADI[x.olcum]} ${x.metin}`).join('; ')} (kaynak: ${[...new Set(k.map((x) => x.kaynakAdi))].join('; ')}).` : '  Ölçümler: bu muayenede kayıtlı ölçüm yok.')
   }
   if (adaylar.length > 1) out.push('Not: birden fazla eşleşme var; hangisini sorduğunu netleştirmek isteyebilirsin.')
-  return out
+  return { ozet: null, satirlar: out }
 }
 
 /**
@@ -322,8 +322,15 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
     '[KANIT — durumlar açık: planlandı / önerildi / istendi / reçete edildi ≠ uygulandı / sonuçlandı]',
   ]
   let govde: string[] = []
+  /** NOTYA-AYSE-OZET-01: tek muayenenin özetinde şablon dosyanın genel özeti değil, o özetin bölüm sırasıdır. */
+  let sablon = s.sablon
   switch (tur) {
-    case 'ozet': { const t = vizitTuruBolumu(olaylar, hasta, ek.mesaj || ''); govde = t ?? ozetBolumu(olaylar, hasta, p); break }
+    case 'ozet': {
+      const t = vizitTuruBolumu(olaylar, hasta, ek.mesaj || '')
+      govde = t ? t.satirlar : ozetBolumu(olaylar, hasta, p)
+      if (t?.ozet) { bas[0] = `=== DOSYA SORGUSU — Soru ${s.no} (tek muayene): "Bu muayeneyi özetler misin?" ===`; sablon = vizitOzetSablonu(t.ozet) }
+      break
+    }
     case 'degisim': govde = degisimBolumu(olaylar, hasta, p); break
     case 'buyume': { const b = p.buyume(olaylar, hasta); govde = [...vizitOlcumBolumu(olaylar, hasta, p, ek.mesaj || ''), ...b.satirlar, ...(b.bayraklar.length ? ['DİKKAT:', ...isSatirlari(b.bayraklar)] : [])]; break }
     case 'asi': govde = asiBolumu(olaylar, hasta, p); break
@@ -370,5 +377,5 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
       break
     }
   }
-  return [...bas, ...govde, `[CEVAP ŞABLONU — Soru ${s.no}] ${s.sablon}`, '=== SORGU SONU ==='].join('\n')
+  return [...bas, ...govde, `[CEVAP ŞABLONU — Soru ${s.no}] ${sablon}`, '=== SORGU SONU ==='].join('\n')
 }

@@ -41,6 +41,7 @@ import { aktifHastaKullanilsinMi, kohortSorusuMu } from '@/lib/asistan/aktifHast
 import { soruTuruBul, type SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { kanitBlogu } from '@/lib/asistan/dosyaSorgu/kanit'
 import { dosyaSorguKuralBlogu } from '@/lib/asistan/dosyaSorgu/kurallar'
+import { vizitOzetiSec } from '@/lib/asistan/dosyaSorgu/vizitOzeti'
 import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { takvimSorusuCoz, type TakvimSorusu } from '@/lib/randevu/takvimSorusu'
 import { doktorunGununuOku, gunlukOzetMetni, haftalikOzetMetni } from '@/lib/randevu/gunlukOzet'
@@ -242,7 +243,9 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
   // exam's measurement is a growth-evidence question, as in the brain).
   const soruTuru: SoruTuru | null = soruTuruBul(soz) ?? (olcum ? 'buyume' : null)
   if (soruTuru && sorguHasta) {
-    return { sonuc: `${ad} — dosya sorgusu.${dosyaSorguKuralBlogu(ad)}\n${kanitBlogu(soruTuru, olaylar, sorguHasta, { mesaj: soz })}`, hasta }
+    // NOTYA-AYSE-OZET-01: the summary of one named visit has its own answer shape (the eight parts, in order).
+    const ozetBasliklari = soruTuru === 'ozet' ? vizitOzetiSec(soz, olaylar, sorguHasta)?.ozet?.bolumler.map((b) => b.baslik) : null
+    return { sonuc: `${ad} — dosya sorgusu.${dosyaSorguKuralBlogu(ad, { vizitOzetiBasliklari: ozetBasliklari })}\n${kanitBlogu(soruTuru, olaylar, sorguHasta, { mesaj: soz })}`, hasta }
   }
   const kesin = dosyaSoruCevap(soz, paket.kart as HastaDosyaKart)
   const metin = `${ad}. ${kesin || kartSoyle(paket.kart as HastaDosyaKart)}`

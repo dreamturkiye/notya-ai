@@ -74,6 +74,7 @@ import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
+import { vizitOzetiGuvenceyeAl, vizitOzetiSec, type VizitOzeti } from "@/lib/asistan/dosyaSorgu/vizitOzeti"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
@@ -529,6 +530,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-AYSE-STANDART-01 + odak kilidi uyumu: kanıt yolu (İlk 10) açıkken cevap takvimdeki eksik aşıları ADIYLA sayar
   // ("KKK — kayıt yok"); bu uydurma liste değildir, kilit bu turda aşı-listesi kuralını uygulamaz.
   let kanitYoluAktif = false
+  // NOTYA-AYSE-OZET-01: the question is the summary of ONE named visit and exactly one visit matched — its eight-part
+  // summary from the record (evidence, the check on the model's answer, the spoken narrative).
+  let vizitOzeti: VizitOzeti | null = null
   let dosyaOnbellekten = false
   let odakHastaAdi = ""
   // NOTYA-MODEL-LUNA-02: dosyanın yalnız hasta verisi (kurallar değil) — güvenlik sinyali taraması için (gebe, warfarin …).
@@ -714,7 +718,8 @@ ${ilacBaglamMetni(drugs[0])}`
           if (sesOzeti) sesTamGovde = tamGovde
           dosyaTur = kesinBlok
           if (sorgu && soruTuru) {
-            dosyaTur += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
+            vizitOzeti = soruTuru === "ozet" ? vizitOzetiSec(String(message || ""), sorgu.olaylar, sorgu.hasta)?.ozet ?? null : null
+            dosyaTur += `${dosyaSorguKuralBlogu(aktifAd, { vizitOzetiBasliklari: vizitOzeti?.bolumler.map((b) => b.baslik) })}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
           }
           dosyaEk = dosyaGovde + dosyaTur
         }
@@ -1030,6 +1035,13 @@ ${ilacBaglamMetni(drugs[0])}`
   const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: [odakDosyaMetni || dosyaEk, ...okuma.metinler].join("\n"), kanitYolu: kanitYoluAktif || okuma.tur > 0 } : null)
   if (odak.ihlal.length) console.warn("[asistan/chat] hasta odak kilidi", { ihlal: odak.ihlal, ad: odakAd })
   aiData.speech = odak.metin
+  // NOTYA-AYSE-OZET-01: the summary of one visit must carry every part in order, the visit's recorded values, and no
+  // value the evidence does not hold. An answer that does not is replaced by the summary built from the record.
+  if (vizitOzeti) {
+    const guvence = vizitOzetiGuvenceyeAl(String(aiData.speech || ""), vizitOzeti, odakAd)
+    if (guvence.degisti) console.warn("[asistan/chat] muayene özeti güvencesi", { kanal: g.kanal, neden: guvence.neden })
+    aiData.speech = guvence.metin
+  }
   if (takvimRecantMi(aiData.speech)) {
     const sonTakvim = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))
     if (sonTakvim) aiData.speech = String(sonTakvim.content)

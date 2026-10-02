@@ -385,6 +385,96 @@ export function vizitOzetiSec(mesaj: string | null | undefined, olaylar: DosyaOl
   return { hedef, etiket: hedefEtiketi(hedef), secim, vizitler, ozet: vizitler.length === 1 ? vizitOzetiKur(vizitler[0], olaylar, hasta, secim) : null }
 }
 
+/* ───────────────────────────── cevap şablonu (modele giden kural) ───────────────────────────── */
+
+const BOLUM_KURALI: Record<OzetBolumAnahtari, (pediatrik: boolean) => string> = {
+  muayene: () => 'tarih ve muayene tarihindeki yaş',
+  sikayet: () => 'şikayet varsa kısaca; yoksa ya da rutin kontrolse öyle söyle',
+  bulgu: () => 'muayenede özellikli bir bulgu var mı, yok mu; nottaki değerlendirme ve tanı',
+  lab: () => 'tetkik istendi mi; sonuçlar kısaca; aynı testin önceki sonucuna göre düzeldi mi; laboratuvar referansının dışındaki değer adıyla',
+  asi: () => 'bu muayenede aşı yapıldı mı, hangileri; planlanan aşı yapılmış sayılmaz',
+  olcum: (p) => (p
+    ? 'kilo, boy, baş çevresi; büyüme motorunun persentil / z satırı ve kayma durumu; büyüme ve gelişme olağan seyrinde mi, dikkat gerektiren bir şey var mı'
+    : 'bu muayenenin ölçümleri ve önceki kayda göre değişim'),
+  tedavi: () => 'verilen tedavi: reçete ve plan metninde başlanan / kesilen / süren ilaçlar',
+  plan: () => 'planlananlar',
+}
+
+/**
+ * Tek muayenenin özeti için cevap şablonu (kanıt bloğunun sonuna yazılır; dosyanın genel özeti şablonunun yerine).
+ * Bölüm listesi özetin kendi bölümlerinden kurulur: pediatri dışı parametrede aşı ve büyüme hiç anılmaz.
+ */
+export function vizitOzetSablonu(o: VizitOzeti): string {
+  const liste = o.bolumler.map((b, i) => `${i + 1}) ${b.baslik} — ${BOLUM_KURALI[b.anahtar](o.pediatrik)}`).join('; ')
+  return [
+    `Tek muayenenin özeti. Bölümler ve sıraları SABİT: ${liste}.`,
+    'Her bölüm bir KISA paragraf (1-3 cümle).',
+    `Kayıtta olmayan bölümü ATLAMA; KANIT'taki kısa ifadeyi yaz (${o.pediatrik ? '"aşı yapılmamış", ' : ''}"laboratuvar istenmemiş", "reçete yazılmamış"). Bu kısa ifadeler o muayenenin kendi kaydını anlatır: GENEL KURALLAR'daki "yapılmadı deme" maddesi bunlara uygulanmaz.`,
+    `Patoloji varsa (laboratuvar referansının dışındaki değer${o.pediatrik ? ', büyüme motorunun kayma satırı ya da bayrağı' : ''}, notta yazan anormal bulgu) ilgili bölümde kısaca tartış; kayıtta yazmayan bir TANI koyma, "normal" hükmünü yalnız kayıt destekliyorsa ver.`,
+    ...(o.pediatrik ? [`Büyüme için yalnız motorun satırlarını aktar; motor satırı yoksa "${PERSENTIL_YOK}" de, persentil ya da değer tahmin etme.`] : []),
+    'Yalnız BU muayeneyi anlat: başka muayenelerin şikayet, tanı ve ilaçlarını katma (KANIT\'ta verilen önceki ölçüm / önceki laboratuvar sonucuyla karşılaştırma dışında).',
+    'KANIT\'ta olmayan sayı, tarih, doz ya da aşı adı yazma.',
+  ].join(' ')
+}
+
+/* ───────────────────────────── ekran cevabı (kayıttan, modelsiz) ───────────────────────────── */
+
+/**
+ * Sekiz bölümlük özetin deterministik ekran biçimi: modelin cevabı kayıtla tutmadığında (olmayan başlık, eksik ya da
+ * kayıt dışı değer) hekime giden cevap budur. İlk cümle hastanın adıyla başlar (NOTYA-HASTA-ODAK-01).
+ */
+export function vizitOzetEkrani(o: VizitOzeti, hastaAdi?: string | null): string {
+  const ad = String(hastaAdi || '').trim() || 'Kayıt'
+  return [
+    `${ad} — ${trGun(o.tarih)} tarihli muayenenin özeti${o.yas ? ` (muayene tarihinde ${o.yas})` : ''}; yalnız kayıttaki bilgilerle.`,
+    ...o.bolumler.map((b) => `**${b.baslik}:** ${b.ekran}`),
+  ].join('\n\n')
+}
+
+/* ───────────────────────────── modelin cevabı kayıtla tutuyor mu ───────────────────────────── */
+
+const TARIH = /\b\d{2}\.\d{2}\.\d{4}\b/g
+const sayiDegeri = (s: string) => Number(s.replace(',', '.'))
+/** dd.mm.yyyy tarihleri çıkarılmış metnin bütün sayıları. */
+const sayiKumesi = (metin: string) => new Set([...metin.replace(TARIH, ' ').matchAll(/\d+(?:[.,]\d+)?/g)].map((m) => sayiDegeri(m[0])))
+/** Bir değerin (ölçüm, lab, persentil, z) parçası sayılan sayı: ondalıklı, birimli ya da persentil / z / tansiyon yazımında. */
+const DEGER_ONU = /(?:%\s?|(?<!\p{L})p\s?|(?<!\p{L})z\s?[−+-]?\s?|\d\s?\/\s?)$/u
+const DEGER_BIRIMI = /^\s?(?:kg|gr?|cm|mm|mg|ml|mcg|IU|ng|fL|mmHg)(?!\p{L})|^\s?(?:°|%|\/\s?dk|\/\s?\d)|^\.?\s?persentil/iu
+
+export interface OzetGuvencesi { metin: string; degisti: boolean; neden: string | null }
+
+/**
+ * Model kanıtı gördükten sonra özeti yazar; bu son denetim cevabın kayıtla tuttuğunu güvenceye alır. Üç koşul:
+ *   • bölüm başlıklarının hepsi, sırasıyla (**Muayene:** … **Plan:**) — atlanan bölüm yok;
+ *   • muayenenin kayıtlı ölçüm ve lab değerleri cevapta geçiyor;
+ *   • cevapta kanıtta olmayan değer (ölçüm, lab, persentil, tarih) yok.
+ * Biri tutmazsa cevap kayıttaki deterministik özetle DEĞİŞTİRİLİR (vizitOzetEkrani). Tutan cevaba dokunulmaz.
+ */
+export function vizitOzetiGuvenceyeAl(cevap: string, o: VizitOzeti, hastaAdi?: string | null): OzetGuvencesi {
+  const kesin = (neden: string): OzetGuvencesi => ({ metin: vizitOzetEkrani(o, hastaAdi), degisti: true, neden })
+  const c = String(cevap || '')
+  let konum = -1
+  for (const b of o.bolumler) {
+    const i = c.indexOf(`**${b.baslik}`, konum + 1)
+    if (i === -1) return kesin(`başlık yok ya da sırası farklı: ${b.baslik}`)
+    konum = i
+  }
+  const kaynak = [...vizitOzetKanitSatirlari(o), o.yas || ''].join('\n')
+  const gecen = sayiKumesi(c)
+  const eksik = o.degerler.find((d) => !d.split('/').every((p) => gecen.has(sayiDegeri(p))))
+  if (eksik) return kesin(`kayıtlı değer cevapta yok: ${eksik}`)
+  const yabanciTarih = (c.match(TARIH) || []).find((t) => !kaynak.includes(t))
+  if (yabanciTarih) return kesin(`kanıtta olmayan tarih: ${yabanciTarih}`)
+  const izinli = sayiKumesi(kaynak)
+  const tarihsiz = c.replace(TARIH, ' ')
+  for (const m of tarihsiz.matchAll(/\d+(?:[.,]\d+)?/g)) {
+    const bas = m.index ?? 0, son = bas + m[0].length
+    const deger = /[.,]/.test(m[0]) || DEGER_ONU.test(tarihsiz.slice(Math.max(0, bas - 6), bas)) || DEGER_BIRIMI.test(tarihsiz.slice(son, son + 12))
+    if (deger && !izinli.has(sayiDegeri(m[0]))) return kesin(`kanıtta olmayan değer: ${tarihsiz.slice(Math.max(0, bas - 6), son + 8).replace(/\s+/g, ' ').trim()}`)
+  }
+  return { metin: c, degisti: false, neden: null }
+}
+
 /** Modele giden kanıt satırları: sekiz bölüm, sırasıyla, numaralı başlıklarla. Hasta adı yok. */
 export function vizitOzetKanitSatirlari(o: VizitOzeti): string[] {
   const out: string[] = [`MUAYENE ÖZETİ KANITI — ${trGun(o.tarih)} tarihli muayene; ${o.bolumler.length} bölüm, sırası değişmez. Yalnız kayıt; kayıtta olmayan bölüm kısa ifadesiyle yazılıdır.`]
