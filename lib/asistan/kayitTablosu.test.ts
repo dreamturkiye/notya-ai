@@ -5,7 +5,7 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { kayitIstegiBul, kayitCevabi, olcumCevabi, muayeneCevabi, SESLI_MUAYENE_SINIRI, type KayitIstegi } from './kayitTablosu'
+import { kayitIstegiBul, kayitCevabi, olcumCevabi, olcumVarMi, muayeneCevabi, SESLI_MUAYENE_SINIRI, type KayitIstegi } from './kayitTablosu'
 import { asiKaydiSorusuMu, asiTablosuCevabi } from './asiTablosu'
 import { asiKarnesiOlustur } from '@/lib/asi/karneBelgesi'
 import { olaylariKur, type HamDosya } from '@/lib/doktor/dosyaOlaylari'
@@ -69,6 +69,17 @@ describe('kayıt isteği — hangi cümle tablo / özet ister', () => {
       'Son muayenesini özetle', '6 aylık muayenesini anlat', 'Aşıları tam mı?', 'Alerjisi var mı?', 'Tansiyon ölçümleri neler', 'Kontrole ne zaman gelecek',
       'Otitte ilk seçenek nedir', 'Merhaba',
     ]) assert.equal(kayitIstegiBul(m), null, m)
+  })
+  // NOTYA-OLCUM-TEK-01: a single weight is a measurement question too; the route answers it only when a stored value exists.
+  it('tek değer: kilo da bu yoldadır; kayıtlı değer yoksa yol karta bırakır (olcumVarMi)', () => {
+    assert.deepEqual(kayitIstegiBul('Kilosu kaç?'), { tur: 'olcum', olcumler: ['kilo'], kapsam: { tip: 'son', adet: 1 }, tekDeger: true })
+    const bos = olaylariKur({ ...HAM, vizitler: [], cihaz: [] }, BUGUN)
+    for (const m of ['Kilosu kaç?', 'Boyu kaç?', 'Baş çevresi kaç santim']) {
+      const i = istek(m)
+      assert.ok(i.tur === 'olcum')
+      assert.equal(olcumVarMi(i, olaylar), true, m)
+      assert.equal(olcumVarMi(i, bos), false, m)
+    }
   })
 })
 
