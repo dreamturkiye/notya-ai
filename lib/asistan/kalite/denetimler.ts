@@ -1,7 +1,8 @@
 /**
  * NOTYA-KALITE-STANDART-01 — the mechanical checks of the answer quality standard (docs/AYSE-KALITE-STANDARDI.md).
  *
- * PURE: no model call, no database, no product import. Each check reads one text (the screen answer or the spoken
+ * PURE: no model call, no database. The only product import is the pronunciation dictionary's own "what is left
+ * unread" reader (lib/ses/tibbiSeslendirme.ts, pure as well), so Q-34 and the speech layer cannot drift apart. Each check reads one text (the screen answer or the spoken
  * answer) and returns the rule id, pass or fail and a short reason — or null when the check does not apply to that
  * answer. The checks measure form and wording. None of them can tell whether a value is TRUE: that is what the corpus
  * assertions on fixture values, the live pass and a human reader are for.
@@ -9,6 +10,7 @@
  * Which check runs on which text is decided by rubrik.ts.
  */
 import { DENETIM_KURALI, type DenetimAdi, type KuralId } from './kurallar'
+import { seslendirilmemisler } from '../../ses/tibbiSeslendirme'
 
 export type KaliteYuzeyi = 'yazi' | 'ses' | 'panel'
 /** Structures of Q-21. The five İlk-10 types without a required structure are listed so a narrative voice answer is recognised. */
@@ -558,7 +560,11 @@ export function sesAnlati(soz: string, ekran: string, yapi: YapiTuru | null | un
 
 /* ───────────────────────────── Q-31 speakable ───────────────────────────── */
 
-/** Dates are said as "15 Mayıs 2025": no dd.mm.yyyy in the spoken text. */
+/**
+ * Dates are said as "15 Mayıs 2025": no dd.mm.yyyy in the text the doctor hears. The rubric passes the text handed
+ * to the speech engine when the turn has one (NOTYA-SES-NORMAL-01: the medical speech layer says a date in words),
+ * and the spoken text otherwise.
+ */
 export function sesTarih(soz: string): Sonuc {
   if (!soz.trim()) return null
   const m = NOKTALI_TARIH.exec(soz)
@@ -584,6 +590,19 @@ export function sesBirim(okunus: string | undefined): Sonuc {
   const metin = okunus.replace(/\[break\]/g, ' ').replace(BIRIM_DEGIL, 'm-chat')
   const m = BIRIM_ARTIGI.exec(metin)
   return m ? kusur(`okunmayan birim: "${kisalt(metin.slice(Math.max(0, m.index - 12), m.index + m[0].length + 4), 30)}"`) : tamam()
+}
+
+/* ───────────────────────────── Q-34 medical speech ───────────────────────────── */
+
+/**
+ * Extension of Q-31 (NOTYA-SES-NORMAL-01): the text handed to the speech engine carries no abbreviation of the
+ * pronunciation dictionary and no unit symbol or unit abbreviation — the engine would spell them letter by letter
+ * ("ka pe a", "ka ge"). An abbreviation the dictionary reads as written ("BCG", "Hib") is not a finding.
+ */
+export function sesKisaltma(okunus: string | undefined): Sonuc {
+  if (okunus === undefined || !okunus.trim()) return null
+  const kalan = seslendirilmemisler(okunus.replace(/\[break\]/g, ' '))
+  return kalan.length ? kusur(`okunmayan kısaltma ya da birim: ${kalan.slice(0, 4).map((k) => `"${kisalt(k, 16)}"`).join(', ')}`) : tamam()
 }
 
 const TELEFON = /(?<!\d)(?:\+?90[\s-]?)?\(?0?5\d{2}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}(?!\d)|(?<!\d)0\d{3}[\s-]\d{3}[\s-]\d{2}[\s-]\d{2}(?!\d)/

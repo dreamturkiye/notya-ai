@@ -36,6 +36,7 @@ da düzeltmeniz bu sayfa üzerinden alınacak. Tam metin: `docs/AYSE-KALITE-STAN
 | Q-31 | **Söylenebilir metin.** Tablo, çizgi, biçim işareti, kimlik numarası okunmaz. Sayılar birimiyle söylenir. Tarih "15 Mayıs 2025" biçiminde söylenir. Kimlik bilgisi seslendirilmez, ekrana yazılır. |
 | Q-32 | **Sessiz kalmaz.** Her tur bir cevapla, kısa bir netleştirme sorusuyla ya da "Sizi tam anlayamadım, tekrar eder misiniz?" cümlesiyle biter. |
 | Q-33 | **Süre.** Hazır cevapta ilk ses en geç 2 saniyede (ortanca). Model cevabında ortanca en fazla 8 saniye, yüz cevabın doksan beşi en fazla 15 saniye. |
+| Q-34 | **Tıbbi konuşma dili.** Ayşe sesli cevapta yazılı tıbbi metni olduğu gibi okumaz; bir hekimin başka bir sağlık çalışanına konuştuğu gibi söyler. Kısaltma harf harf ya da anlamsız bir kelime gibi okunmaz: doğal klinik okunuşu ya da gerektiğinde açık adı söylenir ("KPA" → "konjuge pnömokok aşısı", "DaBT-İPA-Hib" → "beşli karma aşı"; ayrıntı istenince "difteri aselüler boğmaca tetanos inaktif polio ve Hib aşısı"). Birim, sayı, yüzdelik, Z skoru, aralık ve tarih sözle söylenir ("13,3 kg" → "on üç virgül üç kilogram"). Ekrandaki yazı değişmez. Sözlükte taslak olarak işaretli okunuşlar sizin onayınızı bekler. |
 
 ## Nasıl güvence altına alıyoruz
 

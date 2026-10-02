@@ -5,6 +5,7 @@
  * language locked to Turkish, a short [break] between sentences. TTS model for this
  * cadence preview is s2.1-pro (paid). Other specialists stay on ElevenLabs.
  */
+import { tibbiSeslendir, type SeslendirmeSecenegi } from '@/lib/ses/tibbiSeslendirme'
 
 export const FISH_HABER_SES_ID = '27d0d61d7dc8479da8dfd991ae3ad66b'
 /** Models the hosted API accepts (docs.fish.audio TTS reference, read 2026-09-30). */
@@ -286,16 +287,24 @@ export function fishBirimleriOku(metin: string): string {
   return sonuc
 }
 
-/** Strip any bracket cue, then put one short pause between sentences. */
-export function fishMetni(ham: string): string {
-  const duz = fishRakamlariOku(fishBirimleriOku(String(ham || '').replace(ETIKET, ' ').replace(/[—–]/g, ',').replace(/\s+/g, ' ').trim()))
+/**
+ * THE choke point: every string Ayşe speaks through Fish — REST (fishIstegi: greeting, fallbacks, the page's own
+ * read-aloud) and the live socket (fishWsMetinOlayi: the turn stream) — is turned into engine text here and nowhere
+ * else. Strip any bracket cue, rewrite the text into spoken Turkish medical language (NOTYA-SES-NORMAL-01,
+ * lib/ses/tibbiSeslendirme.ts: abbreviations, units, numbers, dates — deterministic, no model call), then put one
+ * short pause between sentences. The screen text, the stored transcript and the `soz` events are NOT this text.
+ * The medical layer reads every number and unit itself (fishBirimleriOku / fishRakamlariOku above are its
+ * predecessors, kept for their callers and tests); it runs before the dash-to-comma step because a range is an en dash.
+ */
+export function fishMetni(ham: string, secenek: SeslendirmeSecenegi = {}): string {
+  const duz = tibbiSeslendir(String(ham || '').replace(ETIKET, ' '), secenek).replace(/[—–]/g, ',').replace(/\s+/g, ' ').trim()
   if (!duz) return ''
   const cumleler = duz.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean)
   return cumleler.join(' [break] ')
 }
 
-export function fishIstegi(metin: string): { model: string; govde: Record<string, unknown> } | null {
-  const text = fishMetni(metin)
+export function fishIstegi(metin: string, secenek: SeslendirmeSecenegi = {}): { model: string; govde: Record<string, unknown> } | null {
+  const text = fishMetni(metin, secenek)
   if (!text || /^[.,;:!?…\-–—'"]+$/.test(text.replace(/\s|\[break\]/g, ''))) return null
   return {
     model: fishModel(),

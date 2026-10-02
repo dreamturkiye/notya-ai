@@ -5,6 +5,7 @@
  */
 import WebSocket from 'ws'
 import { FISH_WS_ACILIS_MS, FISH_WS_BITIS_MS, FISH_WS_DUR, FISH_WS_URL, fishWsBaslangic, fishWsKodla, fishWsMetinOlayi, fishWsModel, fishWsOlayCoz } from '@/lib/asistan/fishWs'
+import type { SeslendirmeSecenegi } from '@/lib/ses/tibbiSeslendirme'
 
 export type FishWsDinleyici = {
   onSes: (pcm: Uint8Array) => void
@@ -17,8 +18,8 @@ export type FishWsOturumu = {
   bagla: (d: FishWsDinleyici) => void
   /** Milliseconds since the socket opened — the pool drops sockets older than FISH_WS_HAVUZ_YAS_MS. */
   yas: () => number
-  /** Queue one finished word-group. Returns false when the socket is gone. */
-  metin: (cumle: string) => boolean
+  /** Queue one finished word-group. Returns false when the socket is gone. `secenek.detay`: full medical forms (NOTYA-SES-NORMAL-01). */
+  metin: (cumle: string, secenek?: SeslendirmeSecenegi) => boolean
   /** No more text: ask Fish to finish; resolves when the last audio frame arrived (or timeout / error). */
   bitir: () => Promise<void>
   kapat: () => void
@@ -75,8 +76,8 @@ export function fishWsAc(g: FishWsGirdi): Promise<FishWsOturumu> {
       coz({
         bagla: (d) => { dinleyici.onSes = d.onSes; dinleyici.onHata = d.onHata },
         yas: () => Date.now() - acilisMs,
-        metin: (cumle) => {
-          const olay = fishWsMetinOlayi(cumle)
+        metin: (cumle, secenek) => {
+          const olay = fishWsMetinOlayi(cumle, secenek)
           if (!olay) return true
           return gonder(olay)
         },

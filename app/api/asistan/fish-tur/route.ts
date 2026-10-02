@@ -44,6 +44,7 @@ import { fishIsinma } from '@/lib/asistan/fishIsinma'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { DEVAM_ISARETI, devamIstegiMi, SesAkisi } from '@/lib/asistan/konusma'
 import { sesDevamAl } from '@/lib/asistan/sesDevam'
+import { detayIstegiMi } from '@/lib/ses/tibbiSeslendirme'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { takvimSorusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
@@ -227,6 +228,10 @@ export async function POST(req: NextRequest) {
         ? fishAsrBlob(anahtar, girdi.audio, '[fish-tur]')
         : Promise.resolve(null)
       let zincir: Promise<void> = Promise.resolve()
+      // NOTYA-SES-NORMAL-01: full medical forms for this turn's speech — the second stage of a tiered answer
+      // ("devam et") or an explicit request for detail. Set once the doctor's sentence is known; the `soz` events and
+      // the stored text are never changed by it.
+      let sesDetay = false
       const sozParcasi = (p: string) => {
         zincir = zincir.then(async () => {
           if (!wsBildirildi) {
@@ -236,13 +241,13 @@ export async function POST(req: NextRequest) {
           }
           gonder({ t: 'soz', m: p })
           if (!wsAktif || !wsOturum) return
-          for (const c of kesici.ekle(p)) if (!wsOturum.metin(c)) dus('ws_yazma')
+          for (const c of kesici.ekle(p)) if (!wsOturum.metin(c, { detay: sesDetay })) dus('ws_yazma')
         })
       }
       const bitirWs = async () => {
         await zincir
         if (wsAktif && wsOturum) {
-          for (const c of kesici.bitir()) if (!wsOturum.metin(c)) dus('ws_yazma')
+          for (const c of kesici.bitir()) if (!wsOturum.metin(c, { detay: sesDetay })) dus('ws_yazma')
         }
         if (wsAktif && wsOturum) {
           await wsOturum.bitir()
@@ -292,6 +297,7 @@ export async function POST(req: NextRequest) {
         }
         // The hidden continuation marker is not a doctor sentence: it is never shown as a transcript.
         if (mesaj !== DEVAM_ISARETI) gonder({ t: 'stt', m: mesaj })
+        sesDetay = devamIstegiMi(mesaj) || detayIstegiMi(mesaj)
         // NOTYA-SES-YARIM-01 (NOTYA-AYSE-GERI-06): an unfinished request ("Ayşe lütfen bana", "… bana Umutcan") gets
         // no reply — no brain call, nothing written to the session. The browser keeps the clip and merges the
         // doctor's next one into it.

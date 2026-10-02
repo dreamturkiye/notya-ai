@@ -12,6 +12,7 @@
 import { fishBirlestir, fishYeniCumleler } from '@/lib/asistan/fishCalar'
 import { FISH_GECIKME, FISH_HABER_SES_ID, FISH_HIZ, FISH_ORNEK_HZ, FISH_PARCA, fishModel } from '@/lib/asistan/fishSes'
 import { fishMetni } from '@/lib/asistan/fishSes'
+import type { SeslendirmeSecenegi } from '@/lib/ses/tibbiSeslendirme'
 import { msgpackCoz, msgpackKodla, type MsgpackDeger } from '@/lib/asistan/fishMsgpack'
 
 export const FISH_WS_URL = 'wss://api.fish.audio/v1/tts/live'
@@ -48,8 +49,8 @@ export function fishWsBaslangic(): { event: 'start'; request: { [k: string]: Msg
 export function fishWsModel(): string { return fishModel() }
 
 /** One finished word-group → one text event. Trailing space: Fish's guide says "send complete words with spaces". */
-export function fishWsMetinOlayi(cumle: string): { event: 'text'; text: string } | null {
-  const t = fishMetni(cumle).replace(/\s*\[break\]\s*/g, ' ').replace(/\s+/g, ' ').trim()
+export function fishWsMetinOlayi(cumle: string, secenek: SeslendirmeSecenegi = {}): { event: 'text'; text: string } | null {
+  const t = fishMetni(cumle, secenek).replace(/\s*\[break\]\s*/g, ' ').replace(/\s+/g, ' ').trim()
   if (!t || /^[.,;:!?…\-–—'"]+$/.test(t)) return null
   return { event: 'text', text: `${t} ` }
 }
