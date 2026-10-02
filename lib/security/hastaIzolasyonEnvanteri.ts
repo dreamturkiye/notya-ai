@@ -233,13 +233,20 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/profil/avatar/route.ts': I('doctor_avatars of user.id only'),
   'app/api/doktor/sgk/route.ts': I('MEDULA provision stub; reads no patient table'),
   // ── Asistan ──
+  // NOTYA-AYSE-ARAC-PARITE (2026-10-02): chat, fish-tur and ses-llm all run ayseCevapla, which now executes Ayşe's read
+  // tools (hasta_bul, randevu_takvim — lib/asistan/okumaAraclari.ts) IN PROCESS. No new route. The tools take text and a
+  // date from the model, never an id; every executor gets the authenticated doctor's id and scopes by it
+  // (hastaninSozunuCoz / kimlikSorusunuCevapla / dosyaPaketOnbellekli by doctor_id, doktorunGununuOku and
+  // doktorCalismaGunu by doktor_id); the session's open patient is re-checked with hastaSahibiMi before it is used.
+  // Covered both ways (A→B, B→A, positive control) on chat and fish-tur by the "Ayşe okuma araçları" block of
+  // hasta-izolasyon.test.ts and by lib/asistan/aracPariteKabul.test.ts.
   'app/api/asistan/chat/route.ts': T,
   'app/api/asistan/learn/route.ts': T,
-  'app/api/asistan/hasta-bul/route.ts': I('hastaninSozunuCoz(doktorId) searches only the doctor\'s patients; file via hastaDosyaPaketiniDerle(doktorId)'),
+  'app/api/asistan/hasta-bul/route.ts': I('hastaninSozunuCoz(doktorId) searches only the doctor\'s patients; file via hastaDosyaPaketiniDerle(doktorId). Client-tool endpoint of the ElevenLabs path only; the single brain runs the same logic in process (lib/asistan/okumaAraclari.ts)'),
   'app/api/asistan/ses-eylem/route.ts': I('hastaninSozunuCoz / hastaSahibiMi; eylem_onerileri doctor_id; takvim randevular.eq(doktor_id) + patients.eq(doctor_id)'),
   'app/api/asistan/fish-ses/route.ts': I('any authenticated doctor; free-text body synthesized by Fish TTS, no Supabase read, no patient identifier ever touches this route'),
   'app/api/asistan/fish-stt/route.ts': I('any authenticated doctor; uploaded audio forwarded to Fish ASR; no patient id, no Supabase patient read'),
-  'app/api/asistan/fish-tur/route.ts': I('ayseCevapla(doktorId from auth); asistanSessionId reused only when id + doctor_id match (404 otherwise); optional patientId enters only after hastaSahibiMi; optional audio is Fish ASR only (no patient id on the clip); spoken Evet / Hayır → sesliKarariUygula (session id + doctor_id, eylem_onerileri doctor_id, hastaSahibiMi before eylemOnayla); sesDevam read / cleared by session id + doctor_id'),
+  'app/api/asistan/fish-tur/route.ts': I('ayseCevapla(doktorId from auth); asistanSessionId reused only when id + doctor_id match (404 otherwise); optional patientId enters only after hastaSahibiMi; optional audio is Fish ASR only (no patient id on the clip); spoken Evet / Hayır → sesliKarariUygula (session id + doctor_id, eylem_onerileri doctor_id, hastaSahibiMi before eylemOnayla); sesDevam read / cleared by session id + doctor_id; NOTYA-AYSE-ARAC-PARITE: the read tools the model may call inside ayseCevapla (hasta_bul, randevu_takvim) take text / a date only and run with doktorId from auth — cross-doctor cases for this route are in hasta-izolasyon.test.ts ("Ayşe okuma araçları")'),
   'app/api/asistan/signed-url/route.ts': I('voice-agent URL for the caller; NOTYA-TEK-BEYIN: optional patientId enters the signed token only after hastaSahibiMi(doktorId), optional asistanSessionId reused only when id + doctor_id match'),
   'app/api/asistan/ses-llm/v1/chat/completions/route.ts': T,
   'app/api/asistan/ses-llm/v1/route.ts': I('same handler as ses-llm/v1/chat/completions (lib/asistan/sesLlm.ts), covered there'),

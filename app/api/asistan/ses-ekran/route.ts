@@ -53,7 +53,9 @@ export async function GET(req: NextRequest) {
     const onceki = mesajlar[i - 1]
     const soru = onceki?.role === 'user' ? String(onceki.content || '').trim() : ''
     if (m.kimlik) {
-      const soru = mesajlar[i - 1]?.role === 'user' ? String(mesajlar[i - 1].content || '') : ''
+      // NOTYA-AYSE-ARAC-PARITE: when the model's hasta_bul call produced the identity answer, the screen is rebuilt
+      // from the sentence the tool was called with (stored on the turn; a question, never a value).
+      const soru = m.kimlikSorusu || (mesajlar[i - 1]?.role === 'user' ? String(mesajlar[i - 1].content || '') : '')
       try {
         const k = soru ? await kimlikSorusunuCevapla(supabase, user.id, soru, m.hastaId || null) : null
         if (k) metin = k.ekran

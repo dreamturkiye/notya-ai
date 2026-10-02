@@ -70,10 +70,17 @@ function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { hea
 }
 /** Every request any route sent to the (mocked) Claude API — a foreign patient must never appear in one. */
 const modelIstekleri: string[] = []
+/**
+ * NOTYA-AYSE-ARAC-PARITE: a case may script the model (to make it call Ayşe's read tools). Reset by sahneKur().
+ * Returns the content blocks of the answer for a request, or null for the default synthetic answer.
+ */
+let modelYaniti: ((istek: Record<string, any>) => Record<string, unknown>[] | null) | null = null
 class SahteAnthropic {
   messages = {
     create: async (istek: unknown) => {
       modelIstekleri.push(JSON.stringify(istek))
+      const ozel = modelYaniti ? modelYaniti(JSON.parse(JSON.stringify(istek))) : null
+      if (ozel) return { content: ozel, stop_reason: ozel.some((b) => b.type === 'tool_use') ? 'tool_use' : 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
       return { content: [{ type: 'text', text: JSON.stringify({ speech: 'Sentetik yanıt', action: null }) }], stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
     },
   }
@@ -265,6 +272,7 @@ function sahneKur(): { A: Hekim; B: Hekim } {
   db = new SahteVeritabani()
   aiBaglamlari.length = 0
   modelIstekleri.length = 0
+  modelYaniti = null
   const A = hekimKur('A'), B = hekimKur('B')
   hileliKur(A, B); hileliKur(B, A)
   return { A, B }
@@ -742,6 +750,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       intake: await ice('app/api/doktor/intake-formlari/route'),
       asistanLearn: await ice('app/api/asistan/learn/route'),
       asistanChat: await ice('app/api/asistan/chat/route'),
+      fishTur: await ice('app/api/asistan/fish-tur/route'),
       sesLlm: await ice('app/api/asistan/ses-llm/v1/chat/completions/route'),
       sesEkran: await ice('app/api/asistan/ses-ekran/route'),
       oturumHasta: await ice('app/api/asistan/oturum-hasta/route'),
@@ -825,6 +834,115 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
           assert.ok(!y.metin.includes(kurbanHarf === 'A' ? '05550000001' : '05550000002'), 'yabancı hasta telefonu sızdı')
         }
       })
+    }
+  })
+
+  /**
+   * NOTYA-AYSE-ARAC-PARITE — Ayşe's read tools (lib/asistan/okumaAraclari.ts) run in process inside ayseCevapla.
+   * They take TEXT and a DATE from the model, never an id, and are executed for the authenticated doctor. Here the
+   * model is made to call both with the victim's patient NAME and today's date; the second model request carries the
+   * tool results, so anything the tools read is visible to the test. The read routers are switched off for the turn
+   * (audit switch), so the tools are the only way to the data. Both written chat and the voice route.
+   */
+  describe('Ayşe okuma araçları (hasta_bul, randevu_takvim): yabancı hekimin hastası adıyla da bulunamaz', () => {
+    const AD = 'Nazlı Karşıyaka'
+    const bugunTr = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10)
+    /** A second patient of doctor `k`, with a name that carries no marker and a chart that does. */
+    function adliHasta(k: Hekim): string {
+      const m = isaret(k.harf)
+      const hasta = db.ekle('patients', {
+        doctor_id: k.id, is_active: true,
+        name_encrypted: encrypt(JSON.stringify({ ad: AD })), dob_encrypted: encrypt('2020-05-05'), gender_encrypted: encrypt('female'),
+        phone_encrypted: encrypt(`0555 ${m}`), email_encrypted: null,
+        notes_encrypted: encrypt(JSON.stringify({ anneAdi: `Anne ${m}`, alerjiler: [`Alerji ${m}`] })),
+      }).id
+      db.ekle('hasta_ilaclar', { doctor_id: k.id, patient_id: hasta, ilac_adi: `Adli ilac ${m}`, etken_madde: 'sentetik', doz: '1', kullanim_sikli: '1x1', baslangic_tarihi: '2026-09-01', aktif: true, onay_durumu: 'onayli' })
+      return hasta
+    }
+    /** First request: both read tools; once the request carries tool results: an answer that repeats them. */
+    function araclariCagir(): void {
+      modelYaniti = (istek) => {
+        const sonuclar: string[] = []
+        for (const msg of (istek.messages || []) as { content?: unknown }[]) {
+          if (Array.isArray(msg.content)) for (const b of msg.content as { type?: string; content?: unknown }[]) if (b?.type === 'tool_result') sonuclar.push(String(b.content ?? ''))
+        }
+        if (sonuclar.length) return [{ type: 'text', text: JSON.stringify({ speech: `Araç sonucu: ${sonuclar.join(' | ')}` }) }]
+        return [
+          { type: 'tool_use', id: 'toolu_a', name: 'hasta_bul', input: { isim: `${AD}’nın alerjisi ne` } },
+          { type: 'tool_use', id: 'toolu_b', name: 'hasta_bul', input: { isim: `${AD}’nın annesinin adı ne` } },
+          { type: 'tool_use', id: 'toolu_c', name: 'randevu_takvim', input: { tarih: bugunTr() } },
+        ]
+      }
+    }
+    const SORU = `${AD}’nın alerjisi neydi, annesinin adı ne ve bugün kimler geliyor?`
+    const cagrilar: { ad: string; cagir: (x: Hekim) => Promise<Yanit> }[] = [
+      { ad: 'POST /api/asistan/chat', cagir: (x) => coz(R.asistanChat.POST(iste('POST', '/api/asistan/chat', { token: x.token, govde: { message: SORU, specialty: 'pediatri', saatDilimi: 'Europe/Istanbul' } }))) },
+      { ad: 'POST /api/asistan/fish-tur', cagir: (x) => coz(R.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: x.token, govde: { mesaj: SORU, asistanSessionId: x.asistanOturum, specialty: 'pediatri', personaId: 'aysekaya', saatDilimi: 'Europe/Istanbul' } }))) },
+    ]
+    async function okumaTuru<T>(is: () => Promise<T>): Promise<T> {
+      process.env.NOTYA_HIZLI_YOL_KAPALI = '1'
+      try { return await is() } finally { delete process.env.NOTYA_HIZLI_YOL_KAPALI }
+    }
+
+    for (const c of cagrilar) {
+      it(`${c.ad} — pozitif kontrol: hekim kendi hastasını araçla bulur (araç gerçekten çalışıyor)`, async () => {
+        const { A } = sahneKur()
+        adliHasta(A)
+        araclariCagir()
+        const y = await okumaTuru(() => c.cagir(A))
+        assert.equal(y.status, 200, y.metin.slice(0, 300))
+        // The identity call ends the turn with the value on screen; run the chart and calendar calls on their own too.
+        assert.ok(modelIstekleri.length >= 1)
+        modelYaniti = (istek) => {
+          const var_ = JSON.stringify(istek.messages || []).includes('tool_result')
+          return var_ ? [{ type: 'text', text: JSON.stringify({ speech: 'tamam' }) }] : [
+            { type: 'tool_use', id: 'toolu_a', name: 'hasta_bul', input: { isim: `${AD}’nın alerjisi ne` } },
+            { type: 'tool_use', id: 'toolu_c', name: 'randevu_takvim', input: { tarih: bugunTr() } },
+          ]
+        }
+        modelIstekleri.length = 0
+        await okumaTuru(() => c.cagir(A))
+        const sonIstek = modelIstekleri[modelIstekleri.length - 1]
+        assert.ok(sonIstek.includes('tool_result'), 'araç sonucu modele dönmedi — vaka boşa koştu')
+        assert.ok(sonIstek.includes(`Alerji ${isaret('A')}`), 'kendi hastasının alerjisi araç sonucunda yok')
+        assert.ok(sonIstek.includes(`QA Hasta A ${isaret('A')}`), 'kendi randevusu araç sonucunda yok')
+      })
+
+      for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+        it(`${c.ad} — ${saldiran} → ${kurbanHarf}: araçlar kurbanın hastasını, kimliğini, takvimini okumaz`, async () => {
+          const s = sahneKur()
+          const arayan = s[saldiran], kurban = s[kurbanHarf]
+          const kurbanHastasi = adliHasta(kurban)
+          const once = anlikGoruntu(kurban)
+          // Two turns: the identity call (ends the turn), then chart + calendar (results go back to the model).
+          araclariCagir()
+          const y1 = await okumaTuru(() => c.cagir(arayan))
+          modelYaniti = (istek) => {
+            const sonuclar: string[] = []
+            for (const msg of (istek.messages || []) as { content?: unknown }[]) {
+              if (Array.isArray(msg.content)) for (const b of msg.content as { type?: string; content?: unknown }[]) if (b?.type === 'tool_result') sonuclar.push(String(b.content ?? ''))
+            }
+            return sonuclar.length ? [{ type: 'text', text: JSON.stringify({ speech: `Araç sonucu: ${sonuclar.join(' | ')}` }) }] : [
+              { type: 'tool_use', id: 'toolu_a', name: 'hasta_bul', input: { isim: `${AD}’nın alerjisi ne` } },
+              { type: 'tool_use', id: 'toolu_c', name: 'randevu_takvim', input: { tarih: bugunTr() } },
+            ]
+          }
+          const y2 = await okumaTuru(() => c.cagir(arayan))
+          assert.ok(modelIstekleri.some((m) => m.includes('tool_result')), 'araç turu koşmadı — vaka boşa koştu')
+          for (const y of [y1, y2]) {
+            assert.equal(y.status, 200, y.metin.slice(0, 300))
+            assert.ok(!y.metin.includes(isaret(kurbanHarf)) && !y.metin.includes(kurbanHastasi) && !y.metin.includes(kurban.hasta), `SIZINTI: ${kurbanHarf} hekiminin verisi yanıtta: ${y.metin.slice(0, 400)}`)
+          }
+          for (const m of modelIstekleri) assert.ok(!m.includes(isaret(kurbanHarf)) && !m.includes(kurbanHastasi) && !m.includes(kurban.hasta), `SIZINTI: ${kurbanHarf} hekiminin verisi modele / araç sonucuna girdi`)
+          // The attacker's assistant session did not take the victim's patient as its focus, and nothing of the victim changed.
+          for (const o of tablo('asistan_sessions').filter((r) => r.doctor_id === arayan.id)) {
+            assert.ok(!JSON.stringify(o).includes(kurbanHastasi) && !JSON.stringify(o).includes(isaret(kurbanHarf)), 'SIZINTI: kurbanın hastası saldıranın oturumuna yazıldı')
+          }
+          const sonra = anlikGoruntu(kurban)
+          assert.equal(sonra.sahip, once.sahip)
+          assert.deepEqual([...sonra.atiflar].filter((x) => !once.atiflar.has(x)), [])
+        })
+      }
     }
   })
 

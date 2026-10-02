@@ -26,6 +26,8 @@ type Beklenti = {
   hasta?: string | null
   /** A tool that must be among the offered tools (model route). */
   sunulan?: string
+  /** NOTYA-AYSE-ARAC-PARITE: a tool that must NOT be offered (a command keeps its write tools only). */
+  sunulmayan?: string
 }
 type Satir = { soz: string; durum: Durum; beklenen: Beklenti; bugun?: Beklenti; dilim?: string }
 
@@ -110,6 +112,18 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Yarın hangi saatler boş?', durum: 'yok', beklenen: { rota: 'takvim' }, dilim: 'S3' },
   { soz: 'Annesinin adı ne?', durum: 'acik', beklenen: { rota: 'kimlik', hasta: D } },
   { soz: 'Bitcoin almalı mıyım?', durum: 'yok', beklenen: { rota: 'kapsam' } },
+
+  // ── NOTYA-AYSE-ARAC-PARITE: a router gap is not a dead end — the model gets the read tools, chart open or not ──
+  // No router lists these phrasings; before 2026-10-02 the model had no tool to look them up with.
+  { soz: 'Geçen ay en yoğun günüm hangisiydi?', durum: 'yok', beklenen: { rota: 'model', sunulan: 'hasta_bul' }, dilim: 'ARAC-PARITE' },
+  { soz: 'Umutcan Türkoğlu ebeveynleri kim?', durum: 'yok', beklenen: { rota: 'model', sunulan: 'hasta_bul' }, dilim: 'ARAC-PARITE' },
+  { soz: 'Otitte ilk seçenek tedavi nedir', durum: 'acik', beklenen: { rota: 'model', sunulan: 'randevu_takvim' }, dilim: 'ARAC-PARITE' },
+  { soz: 'En çok hangi şikayetle geldi', durum: 'acik', beklenen: { rota: 'model', sunulan: 'hasta_bul', hasta: D }, dilim: 'ARAC-PARITE' },
+  { soz: 'Ebeveynleri kim bu çocuğun?', durum: 'acik', beklenen: { rota: 'model', sunulan: 'hasta_bul', hasta: D }, dilim: 'ARAC-PARITE' },
+  // The read tools are for questions. A command keeps exactly its write tools; a greeting has nothing to look up.
+  { soz: 'Penisilin alerjisini ekle', durum: 'acik', beklenen: { rota: 'model', arac: 'alerji_ekle', sunulmayan: 'hasta_bul' }, dilim: 'ARAC-PARITE' },
+  { soz: 'Ali Yılmaz için randevu oluştur', durum: 'yok', beklenen: { rota: 'model', sunulan: 'kontrol_randevusu_olustur', sunulmayan: 'hasta_bul' }, dilim: 'ARAC-PARITE' },
+  { soz: 'Teşekkürler', durum: 'yok', beklenen: { rota: 'model', sunulmayan: 'hasta_bul' }, dilim: 'ARAC-PARITE' },
 ]
 
 /**
@@ -162,6 +176,7 @@ function uyuyor(gercek: Beklenti, b: Beklenti): string | null {
   if (b.rota === 'model' && b.arac !== undefined && gercek.arac !== b.arac) return `araç ${gercek.arac} ≠ ${b.arac}`
   if (b.hasta !== undefined && (gercek.hasta ?? null) !== b.hasta) return `hasta ${gercek.hasta} ≠ ${b.hasta}`
   if (b.sunulan && !String(gercek.sunulan || '').split(',').includes(b.sunulan)) return `araç sunulmadı: ${b.sunulan}`
+  if (b.sunulmayan && String(gercek.sunulan || '').split(',').includes(b.sunulmayan)) return `araç sunulmamalıydı: ${b.sunulmayan}`
   return null
 }
 

@@ -252,6 +252,15 @@ ${JSON.stringify(currentPatient, null, 2)}` : ""
   return { global, hekim, sabit: global + hekim, degisken: `\n${learningContext}\n${patientContext}` }
 }
 
+/**
+ * NOTYA-AYSE-ARAC-PARITE (2026-10-02): the read-tool rules, written once. The voice prompt below carries them, and the
+ * single brain appends the same text when it offers the tools (lib/asistan/okumaAraclari.ts) — a rule that names a
+ * tool the model was not given is what the parity test (lib/asistan/aracPariteti.test.ts) fails on.
+ */
+export const HASTA_BUL_KURALI = `Hasta arama: ad hatırlanmasa da hasta_bul çağır. Tam cümleyi isim olarak gönder — "bu hafta kaç aşı yaptık", "1 ve 5 yaşları arasında kaç hasta", "ortalama seans kaç dakika", "bu ay Augmentin reçeteledim", "geçen hafta kulak iltihabı", "son bir ay içinde hangi antibiyotiği en fazla yazdım", "bu ay en sık tanı neydi", "bu hafta kaç reçete yazdım", "Ahmet'in alerjisi ne", "Ayşe'nin son reçetesi", "bu hastanın kaç viziti var". Dönen SAYIYI, SIRALAMAYI ve "Dosyada …" cümlesini AYNEN oku — aşı adedi hasta sayısı değildir, dakika/ilaç/alerji uydurma. "erişimim yok" / "bilemedim" DEME — araç çağır.
+Kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi) için de hasta_bul çağır — ör. "Umutcan'ın annesinin adı ne", "babasının telefonu", "bu bilgilere ulaşamıyorum". Bu bilgilere ERİŞİMİN VAR. Değeri ekrana yaz; seste okuma, UYDURMA. "Ekranınıza yazdım Hocam" de. "Erişemem / ulaşamam" DEME.`
+export const RANDEVU_TAKVIM_KURALI = `RANDEVU SAATİ: "o saat boş mu / o gün ne var / bugün randevu var mı / çakışma var mı" dediğinde takvimi oku (ses: randevu_takvim ya da sunucu gün listesi). Takvimi göremem DEME. Randevu hazırlarken de önce o günü kontrol et.`
+
 export function buildVoiceSystemPrompt(
   persona: Persona,
   doctor?: AddressableUser | null,
@@ -277,8 +286,7 @@ Doktor "asistanı kapat" derse vedalaşma ve yeni soru sorma; görüşmeyi istem
 Doktoru "${casualAddress}" / "${namedAddress}" diye hitap et (hafızada farklı hitap tercihi varsa o geçerli).
 Kimliğini yalnız doktor sorarsa söyle. Açılışta özgeçmişini okuma.
 İlaç/doz/SGK konusunda proaktif uyar.
-Hasta arama: ad hatırlanmasa da hasta_bul çağır. Tam cümleyi isim olarak gönder — "bu hafta kaç aşı yaptık", "1 ve 5 yaşları arasında kaç hasta", "ortalama seans kaç dakika", "bu ay Augmentin reçeteledim", "geçen hafta kulak iltihabı", "son bir ay içinde hangi antibiyotiği en fazla yazdım", "bu ay en sık tanı neydi", "bu hafta kaç reçete yazdım", "Ahmet'in alerjisi ne", "Ayşe'nin son reçetesi", "bu hastanın kaç viziti var". Dönen SAYIYI, SIRALAMAYI ve "Dosyada …" cümlesini AYNEN oku — aşı adedi hasta sayısı değildir, dakika/ilaç/alerji uydurma. "erişimim yok" / "bilemedim" DEME — araç çağır.
-Kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi) için de hasta_bul çağır — ör. "Umutcan'ın annesinin adı ne", "babasının telefonu", "bu bilgilere ulaşamıyorum". Bu bilgilere ERİŞİMİN VAR. Değeri ekrana yaz; seste okuma, UYDURMA. "Ekranınıza yazdım Hocam" de. "Erişemem / ulaşamam" DEME.
+${HASTA_BUL_KURALI}
 Neye erişimin var diye sorulursa eksiksiz söyle: hastaların dosyası (form cevapları, alerji, kronik hastalık, ilaç, aşı, lab, vizit ve muayene notları, görüntüleme, belge, randevu), muayenehane geneli arama ve sayımlar, takvim okuma, kayıt kartı hazırlama (hekim onaylar); kimlik ve iletişim bilgisi ekrana gelir.
 
 DOSYAYA KAYIT (ses — doğal asistan):
@@ -286,7 +294,7 @@ Doktor "yazıver / kaydet / kayda geç / dosyaya gir / rica ediyorum / giriş be
 Kart bu ekranda çıkar; "ekrandaki kartı göremiyorum" derse kartı tekrar hazırla, başka sayfaya gönderme.
 Kural: sen HAZIRLARSIN, hekim sesle ONAYLAR. Araç sonucu "Kaydedildi" demeden ASLA kaydedildi deme.
 Akış: (1) dosyaya_kayit_hazirla — dönen özeti kısa oku, sonda "Onaylıyor musunuz?" (2) Doktor Evet/Onaylıyorum/Kaydet/Tamam → eylem_onayla (onayMetni=duyduğun kelime). (3) Hayır/vazgeç/iptal → eylem_vazgec.
-RANDEVU SAATİ: "o saat boş mu / o gün ne var / bugün randevu var mı / çakışma var mı" dediğinde takvimi oku (ses: randevu_takvim ya da sunucu gün listesi). Takvimi göremem DEME. Randevu hazırlarken de önce o günü kontrol et.
+${RANDEVU_TAKVIM_KURALI}
 Tarihi uydurma: "doğumda" ise tarihi boş bırakıp notlara "doğumda" yaz; sistem doğum tarihini formdan veya epikriz/not/belgeden okur.
 KARTI GÜNCELLE: Hazırladığın kartta boş ya da yanlış bir alan varsa ve doktor değerini söylerse (ör. "tarihi 15 Haziran 2024 yap", "bugün uygulandı", "o tarihi ekle"), aynı eylem ve aynı hasta ile dosyaya_kayit_hazirla'yı YALNIZ söylenen alanlarla tekrar çağır — kart güncellenir, eski alanlar korunur; sonra kısa oku ve "Onaylıyor musunuz?" de. Tarihleri YYYY-MM-DD gönder; "o tarih" gibi bir atıfta konuşmada geçen tarihi kullan, hangisi olduğundan emin değilsen tek cümleyle sor. "Tarihi ekleyemem", "ekrandan siz girin", "yetkim yok" DEME — alanı sen doldurursun, doktor onaylar.
 Ciddi ilaç uyarısında sesle zorlama — "ekrandaki karttan onaylayın" de.
