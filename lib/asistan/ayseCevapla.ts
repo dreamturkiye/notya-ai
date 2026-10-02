@@ -62,6 +62,9 @@ import { hastaOzetiGetir } from "@/core/eylemler/hasta"
 import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { eylemZamani, type HastaOzeti } from "@/core/eylemler/types"
 import { sunucuTarihDegerleri } from "@/lib/asistan/sunucuTarihi"
+import { asiKaydiSorusuMu, asiTablosuCevabi } from "@/lib/asistan/asiTablosu"
+import { kayitCevabi, kayitIstegiBul, type KayitCevabi } from "@/lib/asistan/kayitTablosu"
+import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
@@ -85,7 +88,7 @@ export type Kanal = "yazi" | "ses"
  * return. Carried on the answer (`veri.rota`) and logged once per turn, so a request that never reached Luna is
  * visible in production logs and pinned by the routing table (lib/asistan/ayseRota.test.ts).
  */
-export type AyseRota = "kapsam" | "takvim" | "gurultu" | "kimlik" | "oku" | "arama" | "dosya-ac" | "hizli-kart" | "model"
+export type AyseRota = "kapsam" | "takvim" | "gurultu" | "kimlik" | "oku" | "arama" | "dosya-ac" | "hizli-kart" | "kayit" | "model"
 
 export interface AyseGirdisi {
   supabase: SupabaseClient
@@ -482,6 +485,9 @@ ${ilacBaglamMetni(drugs[0])}`
   let baskaKisiAnildi: string | null = null
   /** The patient was resolved from a name in THIS sentence (not the open chart). */
   let adlaCozuldu = false
+  /** NOTYA-AYSE-GERI-05: a record shown from stored values (vaccine table, anthropometrics, exam summaries). */
+  let kayitCevap: KayitCevabi | null = null
+  let kayitNiyeti: Niyet = "hasta-dosya"
   // NOTYA-BETA-0925: kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi)
   // sunucuda, modelsiz cevaplanır. Değerler yalnız bu yanıtın ekran metnindedir; saklanan geçmişe (sonraki
   // turlarda modele giden) değersiz metin yazılır — VELI-YASAL-ONAM kuralı korunur.
@@ -547,10 +553,41 @@ ${ilacBaglamMetni(drugs[0])}`
       const aktifAdi = baglam.currentPatientId && String(baglam.currentPatientId) === aktifOnceden && baglam.patientName ? String(baglam.patientName) : ""
       cozum = { tur: "tek", patientId: aktifOnceden, ad: aktifAdi }
     }
+    // NOTYA-AYSE-GERI-05 (Dr. Gökhan): the RECORD on screen — the vaccine record as a table, anthropometrics as a
+    // table (one exam, a series, all exams), exam summaries for several or all exams. Built from stored values
+    // only, no model; a table on screen and a short spoken line. The doctor's own words count as well as the
+    // follow-up rewrite (which turns a bare "aşıları?" into the evaluation question "… aşıları tam mı?").
+    const asiTabloIstegi = !komut && (asiKaydiSorusuMu(hamMesaj) || asiKaydiSorusuMu(mesajMetni))
+    const kayitIstegi = komut || asiTabloIstegi ? null : (kayitIstegiBul(hamMesaj) ?? kayitIstegiBul(mesajMetni))
+    if (cozum.tur === "tek" && !cozum.cevap && (asiTabloIstegi || kayitIstegi)) {
+      try {
+        // HASTA-IZOLASYON-01: the id is the resolver's (doctor-scoped) or the re-checked open patient; the karne read
+        // and the chart package narrow every query by doctor AND patient again.
+        if (asiTabloIstegi) {
+          const karne = await asiKarnesiVerisi(supabase, doktorId, cozum.patientId, bugunTz(saatDilimi))
+          const ad = cozum.ad || karne.hasta.adSoyad || "Hasta"
+          cozulenHasta = { id: cozum.patientId, ad }
+          kayitCevap = asiTablosuCevabi(ad, karne)
+          kayitNiyeti = "asi"
+        } else if (kayitIstegi) {
+          const paket = cozum.patientId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await dosyaPaketOnbellekli(supabase, doktorId, cozum.patientId)
+          if (paket) {
+            const ad = cozum.ad || paket.ad || "Hasta"
+            cozulenHasta = { id: cozum.patientId, ad }
+            kayitCevap = kayitCevabi(kayitIstegi, (paket.olaylar || []) as DosyaOlayi[], ad)
+            kayitNiyeti = kayitIstegi.tur === "olcum" ? "buyume" : "muayene"
+          }
+        }
+      } catch (e) {
+        console.error("[asistan/chat] kayıt tablosu", e instanceof Error ? e.message : String(e))
+      }
+    }
     // A command is never the deterministic "X dosyası açık" answer: "… dosyasına fıstık alerjisi ekle" needs the chart AND the tool.
-    const dosyaIstegi = !komut && dosyaAcmaIstegiMi(mesajMetni)
+    const dosyaIstegi = !komut && !kayitCevap && dosyaAcmaIstegiMi(mesajMetni)
     const konus = aktifeDon ? null : cozumKonus(cozum)
-    if (konus) {
+    if (kayitCevap) {
+      // answered below, before any model call
+    } else if (konus) {
       aramaCevabi = konus
       // NOTYA-AYSE-100 S2: a who-answer ("Son gördüğünüz hasta: X") makes X the open patient for the follow-up.
       if (cozum.tur === "tek" && cozum.cevap) cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
@@ -597,6 +634,13 @@ ${ilacBaglamMetni(drugs[0])}`
   } catch (e) {
     // Dosya bağlamı kritik değil — normal akış sürer; ama sessiz kayıp "hasta yok" cevabı üretir, görünür olsun.
     console.warn("[asistan/chat] dosya bağlamı kurulamadı", e instanceof Error ? e.message : String(e))
+  }
+
+  if (kayitCevap) {
+    turNiyeti = kayitNiyeti
+    await oturumuYaz(kayitCevap.ekran, { hasta: cozulenHasta })
+    soyle(kayitCevap.konusma)
+    return sade("kayit", kayitCevap.ekran, kayitCevap.konusma, cozulenHasta?.ad || null)
   }
 
   // A command skips the model-free answers — except the "which of these patients?" question: an ambiguous name must

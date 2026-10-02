@@ -59,7 +59,7 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Ayşe, kaç hastam var?', durum: 'yok', beklenen: { rota: 'arama', hasta: null } },
 
   // ── Patient open: cohort-sounding words about the open chart stay on the chart (audit §4.3, PR 9) ──
-  { soz: 'Toplam kaç aşısı var', durum: 'acik', beklenen: { rota: 'model', hasta: D }, dilim: 'S1' },
+  { soz: 'Toplam kaç aşısı var', durum: 'acik', beklenen: { rota: 'kayit', hasta: D }, dilim: 'S1+S5' },
   { soz: 'En çok hangi şikayetle geldi', durum: 'acik', beklenen: { rota: 'model', hasta: D }, dilim: 'S1' },
   { soz: 'Astım tanılı hastaları listele', durum: 'acik', beklenen: { rota: 'arama' } },
   { soz: 'En çok yazdığım antibiyotik hangisi?', durum: 'acik', beklenen: { rota: 'arama' } },
@@ -112,32 +112,20 @@ export const ROTA_TABLOSU: Satir[] = [
   { soz: 'Bitcoin almalı mıyım?', durum: 'yok', beklenen: { rota: 'kapsam' } },
 ]
 
-const KART: Beklenti = { rota: 'hizli-kart', hasta: D }
-const MODEL_SERBEST: Beklenti = { rota: 'model', arac: null, hasta: D }
-
 /**
  * KNOWN FAILURES — what `origin/main` at 16948383 does instead of `beklenen`, keyed "durum|soz".
  * The slice that fixes a row deletes its line here. Empty map = restoration complete.
  *
- * History: 40 rows at S0. S1 (count template) flipped 13 on 2026-10-01; S3 (commands → tools) flipped 20 more:
- * the quick card and the calendar reader no longer answer a command, the tool call is forced with the tool the
- * wording names, and tools are offered with no resolved patient.
+ * History (2026-10-01): 40 rows at S0.
+ *   S1 (count template) flipped 13 — a sentence that merely contains a chart word is no longer a patient search.
+ *   S3 (commands → tools) flipped 20 — the quick card and the calendar reader no longer answer a command, the tool
+ *      call is forced with the tool the wording names, and tools are offered with no resolved patient.
+ *   S5 (records on screen) flipped the last 11 — vaccine record, anthropometrics and exam summaries come from the
+ *      record as tables / dated blocks instead of the quick card's one line or a free model answer.
+ * The map is empty: every row of the table asserts its target route. A NEW known failure may be added here only
+ * with its slice / ledger id.
  */
-const BILINEN_HATALAR: Record<string, Beklenti> = {
-  // S5: the open chart answers, but with the quick card's short vaccine line instead of the count.
-  'acik|Toplam kaç aşısı var': KART,
-  // S5: a one-line card answer or a free model answer where a table from the record is asked for.
-  'acik|Aşılarını göster': KART,
-  'acik|Aşı karnesini tablo olarak göster': MODEL_SERBEST,
-  'acik|Bütün muayenelerdeki kilo ölçümlerini sırayla göster': KART,
-  'acik|Kilo, boy ve baş çevresi ölçümlerini tablo yap': KART,
-  'acik|Tüm antropometrik ölçümlerini göster': KART,
-  'acik|Baş çevresi ölçümleri neler': KART,
-  'acik|Son muayenedeki boy ve kilo ölçümlerini göster': KART,
-  'acik|Son üç muayenesini özetle': MODEL_SERBEST,
-  'acik|Bütün muayenelerini tek tek özetle': MODEL_SERBEST,
-  [`yok|${D} aşı karnesini tablo olarak göster`]: MODEL_SERBEST,
-}
+const BILINEN_HATALAR: Record<string, Beklenti> = {}
 for (const r of ROTA_TABLOSU) {
   const b = BILINEN_HATALAR[`${r.durum}|${r.soz}`]
   if (b) r.bugun = b
