@@ -58,8 +58,10 @@ export interface AsiKaniti {
   bugunIso: string
   yas: string
   surum: string
-  /** Aşı tablosunda satırı olan takvim dozları — "uygulandığı belgelenmiş". */
+  /** Aşı tablosunda satırı olan takvim dozları — "uygulandığı belgelenmiş" (tutarsız seriler hariç). */
   belgeli: AsiDoz[]
+  /** Tutarsız serilerin aşı tablosundaki satırları, kayıttaki doz numarası ve tarihiyle — yeniden numaralanmadan. */
+  tutarsizSeriSatirlari: { seri: string; ad: string; adet: number; metin: string }[]
   /** Not metninde planlandı / önerildi / randevu verildi — belgelenmiş uygulama DEĞİL. */
   planlar: AsiPlanKaydi[]
   /** Not metninde reçete edildi (özel aşı) — uygulama kaydı ayrı aranır. */
@@ -99,7 +101,13 @@ export function asiKaniti(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSo
   const notAsi = olaylar.filter((o) => o.kaynak === 'not' && o.tur === 'asi')
   return {
     dogumIso: hasta.dogumIso, bugunIso: hasta.bugunIso, yas: kesinYas(hasta.dogumIso, hasta.bugunIso), surum: asi.surum,
-    belgeli: asi.dozlar.filter((d) => d.durum === 'uygulandi'),
+    // Tutarsız seride takvim motorunun doz eşleştirmesi güvenilmez (3. doz satırı 2. doz yerine sayılır): o serinin
+    // satırları olduğu gibi gösterilir, "X. doz uygulandı" diye yeniden numaralanmaz.
+    belgeli: asi.dozlar.filter((d) => d.durum === 'uygulandi' && !tutarsizSeri.has(d.seri)),
+    tutarsizSeriSatirlari: [...tutarsizSeri].map((seri) => {
+      const satirlar = kayitlar.filter((k) => k.anahtar === seri)
+      return { seri, ad: seriAdi(seri), adet: satirlar.length, metin: satirlar.map((k) => `${k.doz ? `${k.doz}. doz` : 'doz numarası yazılmamış'} ${trGun(k.tarih)}`).join('; ') }
+    }),
     planlar: planOlaylari(olaylar).filter((o) => o.tur === 'asi').map((pl) => {
       const k = planKarsiligi(pl, olaylar)
       return { satir: asiPlanSatiri(pl), seri: pl.anahtar ?? null, doz: pl.doz ?? null, tarih: pl.tarih, karsilik: k ? (k.guven === 'kayit' ? 'kayit' : 'metin') : null, karsilikTarihi: k?.tarih ?? null }
@@ -140,7 +148,8 @@ export function asiKanitSatirlari(k: AsiKaniti): string[] {
   out.push(`SONUÇ (kayda göre): ${asiSonucu(k)}`)
   out.push('Karşılaştırılan kaynaklar: aşı tablosu (aşı kartı / elektronik kayıt), vizit notlarının metni, yüklenen belgeler. Kategoriler AYRIDIR — planlandı / önerildi / reçete edildi / randevu verildi / uygulandığı söylendi / uygulandığı belgelenmiş / durumu belirsiz.')
   out.push('UYGULANDIĞI BELGELENMİŞ (aşı tablosu):')
-  out.push(...(k.belgeli.length ? k.belgeli.map((d) => `- ${d.ad} — uygulandı (${trGun(d.uygulamaTarihi)}, aşı kaydı)`) : ['- (aşı tablosunda takvim dozu yok)']))
+  out.push(...(k.belgeli.length || k.tutarsizSeriSatirlari.length ? k.belgeli.map((d) => `- ${d.ad} — uygulandı (${trGun(d.uygulamaTarihi)}, aşı kaydı)`) : ['- (aşı tablosunda takvim dozu yok)']))
+  out.push(...k.tutarsizSeriSatirlari.map((s) => `- ${s.ad} — aşı tablosundaki satırlar: ${s.metin} (kayıt tutarsız; dozlar takvimle eşleştirilmeden, kayıttaki haliyle — aşağıya bakın)`))
   out.push('NOT METNİNDE PLAN / ÖNERİ / RANDEVU (belgelenmiş uygulama DEĞİL):')
   out.push(...(k.planlar.length ? k.planlar.map((p) => `- ${p.satir}${p.karsilik === 'kayit' ? ` → aşı kaydı var (${trGun(p.karsilikTarihi)})` : p.karsilik === 'metin' ? ` → sonraki notta uygulandığı yazıyor (${trGun(p.karsilikTarihi)}); aşı tablosunda satır yok — belirsiz` : '; uygulandığına dair kayıt bulamadım'}`) : ['- (yok)']))
   if (k.receteler.length) {
@@ -178,7 +187,7 @@ export function asiOzetSatirlari(k: AsiKaniti): string[] {
   // Hiç satır yoksa takvimin bütün dozlarını "eksik" diye saymak yanıltır: aşılar başka merkezde uygulanmış olabilir.
   out.push(k.kayitYok
     ? `AŞI: kesin yaş ${k.yas}; aşı tablosunda hiç uygulama kaydı yok — "tam" ya da "eksik" denmez, karne / e-Nabız kaydı istenmeli.`
-    : `AŞI: kesin yaş ${k.yas}; aşı tablosunda ${k.belgeli.length} takvim dozu kayıtlı; eksik / zamanı gelmiş: ${k.eksik.length ? k.eksik.map((d) => d.ad).join(', ') : 'yok'}.`)
+    : `AŞI: kesin yaş ${k.yas}; aşı tablosunda ${k.belgeli.length + k.tutarsizSeriSatirlari.reduce((t, s) => t + s.adet, 0)} takvim dozu kayıtlı; eksik / zamanı gelmiş: ${k.eksik.length ? k.eksik.map((d) => d.ad).join(', ') : 'yok'}.`)
   const plansiz = k.planlar.filter((p) => !p.karsilik)
   if (plansiz.length) out.push(`AŞI (planlanmış, uygulama kaydı yok): ${plansiz.map((p) => p.satir).join('; ')}.`)
   if (k.tutarsiz.length) out.push(`AŞI (kayıt tutarsız — "gecikti" değil): ${k.tutarsiz.map(tutarsizSatiri).join('; ')}.`)

@@ -163,6 +163,9 @@ export function planIfadeleriniCikar(metin: string | null | undefined): PlanIfad
         durum = durumSinifla(katli[j])
       }
       if (!durum && konu.konu === 'kontrol' && /\b(\d{1,3}|bir|iki|uc|dort|alti) (gun|hafta|ay) sonra\b/.test(katli[i])) durum = 'randevu'
+      // NOTYA-ILK10-YAPI-01: "48-72 saat içinde düzelmezse kontrol" da bir takip penceresidir — pencere olaya dönmezse
+      // bugünün tarihiyle karşılaştırılamaz ve günler sonra hâlâ öndeymiş gibi tekrar edilir.
+      if (!durum && konu.konu === 'kontrol' && /\b\d{1,3}(\s*-\s*\d{1,3})? (saat|gun|hafta) (icinde|icerisinde)\b/.test(katli[i])) durum = 'randevu'
       if (!durum) continue
       out.push({ ...konu, durum, guven: 'metin', cumle: cumle.slice(0, 220) })
     }

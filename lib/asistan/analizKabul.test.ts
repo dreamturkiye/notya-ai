@@ -143,7 +143,7 @@ describe('yönlendiriciler devre dışı: model analiz araçlarıyla doğru ceva
         // The four deliberate gaps, each from the place that owns it.
         assert.match(c.ekran, /- Aşı: Hep B 3\. doz \(/, '1) kaçan aşı — Fısıltı')
         assert.match(c.ekran, new RegExp(`Ölçüm kaydı olmayan muayeneler: kilo — ${k.h.tarih[2].replace(/\./g, '\\.')};`), '2) kilosuz muayene — muayene dökümü')
-        assert.match(c.ekran, new RegExp(`- Kontrol \\d{2}\\.\\d{2}\\.\\d{4} için planlanmıştı \\(${k.h.tarih[3].replace(/\./g, '\\.')} notu: "1 ay sonra kontrol"\\); sonraki vizit kaydı yok\\.`), '3) planlanıp verilmeyen kontrol — açık işler')
+        assert.match(c.ekran, new RegExp(`- Kontrol \\d{2}\\.\\d{2}\\.\\d{4} için planlanmıştı \\(${k.h.tarih[3].replace(/\./g, '\\.')} notu: "1 ay sonra kontrol"\\); sonraki vizit kaydı yok — pencere (\\d+ gün önce doldu|bugün doluyor)\\.`), '3) planlanıp verilmeyen kontrol — açık işler')
         assert.match(c.ekran, new RegExp(`- Ferritin — istendi, sonuç yok \\(istem: ${k.h.tarih[0].replace(/\./g, '\\.')}`), '4) istenip sonuçlanmayan tetkik — açık işler')
         assert.match(c.ekran, new RegExp(`### 3\\. muayene — ${k.h.tarih[2].replace(/\./g, '\\.')}[\\s\\S]*?Ölçümler: kilo: kayıt yok`))
 

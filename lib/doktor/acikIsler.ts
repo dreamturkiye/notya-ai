@@ -37,12 +37,19 @@ export interface AcikIsler { bugun: AcikIs[]; yakinda: AcikIs[]; rutin: AcikIs[]
 
 export { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari }
 
-function kontrolVadesi(p: DosyaOlayi): string | null {
-  const m = p.metin.toLocaleLowerCase('tr-TR').match(/(\d{1,3})\s*(gün|gun|hafta|ay)\s*sonra/)
+/**
+ * Notta yazan takip penceresinin son günü: "10 gün sonra kontrol", "2 hafta sonra", "48-72 saat içinde düzelmezse
+ * kontrol", "3 gün içinde". Aralıkta üst sınır alınır; saat güne yuvarlanır (72 saat = 3 gün).
+ */
+export function kontrolVadesi(p: Pick<DosyaOlayi, 'metin' | 'tarih'>): string | null {
+  const m = p.metin.toLocaleLowerCase('tr-TR').match(/(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\s*(saat|gün|gun|hafta|ay)\s*(?:sonra|içinde|icinde|içerisinde)/)
   if (!m) return null
-  const n = Number(m[1])
-  return gunEkleIso(p.tarih, m[2] === 'hafta' ? n * 7 : m[2] === 'ay' ? n * 30 : n)
+  const n = Number(m[2] || m[1])
+  return gunEkleIso(p.tarih, m[3] === 'saat' ? Math.ceil(n / 24) : m[3] === 'hafta' ? n * 7 : m[3] === 'ay' ? n * 30 : n)
 }
+
+/** "düzelmezse", "ateş devam ederse", "gerekirse" — kontrol bir koşula bağlı yazılmış. */
+const KOSULLU_KONTROL = /(mezse|mazsa|olursa|ederse|gerekirse|gerektiğinde)\b/
 
 /** Alerji ile çelişen aktif ilaç / son 90 günün reçetesi — hasta güvenliği. */
 export function alerjiCatismalari(olaylar: DosyaOlayi[], bugunIso: string): AcikIs[] {
@@ -119,9 +126,15 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
     } else if (p.tur === 'kontrol' && !k && p.vizitId === sonVizit?.vizitId) {
       const vade = kontrolVadesi(p)
       const gelecekRandevu = olaylar.find((o) => o.kaynak === 'randevu' && o.durum === 'randevu')
-      if (gelecekRandevu) ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: gelecekRandevu.tarih, metin: `Planlı kontrol: randevu ${trGun(gelecekRandevu.tarih)} (son vizitte: "${p.metin}").` })
-      else if (vade && vade <= bugunIso) ekle({ oncelik: 'bugun', tur: 'kontrol-planli', tarih: vade, metin: `Kontrol ${trGun(vade)} için planlanmıştı (${trGun(p.tarih)} notu: "${p.metin}"); sonraki vizit kaydı yok.` })
-      else ekle({ oncelik: vade ? 'yakinda' : 'rutin', tur: 'kontrol-planli', tarih: vade || p.tarih, metin: `Kontrol ${vade ? `${trGun(vade)} için ` : ''}planlandı (${trGun(p.tarih)} notu: "${p.metin}"); randevu kaydı yok.` })
+      // NOTYA-ILK10-YAPI-01: her takip penceresi BUGÜNÜN tarihiyle karşılaştırılır; geçmişse kaç gün önce dolduğu yazılır.
+      const gecen = vade ? gunFarkiIso(vade, bugunIso) : 0
+      const pencere = !vade ? '' : gecen > 0 ? ` — pencere ${gecen} gün önce doldu` : gecen === 0 ? ' — pencere bugün doluyor' : ''
+      const kosullu = KOSULLU_KONTROL.test(p.metin.toLocaleLowerCase('tr-TR'))
+      if (gelecekRandevu) ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: gelecekRandevu.tarih, metin: `Planlı kontrol: randevu ${trGun(gelecekRandevu.tarih)} (son vizitte: "${p.metin}")${vade && gecen > 0 ? `; notta yazan kontrol penceresi ${trGun(vade)} tarihinde doldu (${gecen} gün önce)` : ''}.` })
+      else if (vade && vade <= bugunIso) ekle({ oncelik: 'bugun', tur: 'kontrol-planli', tarih: vade, metin: kosullu
+        ? `Koşullu kontrol ${trGun(vade)} için yazılmıştı (${trGun(p.tarih)} notu: "${p.metin}"); sonraki vizit kaydı yok, düzelme durumu kayıtlı değil${pencere}.`
+        : `Kontrol ${trGun(vade)} için planlanmıştı (${trGun(p.tarih)} notu: "${p.metin}"); sonraki vizit kaydı yok${pencere}.` })
+      else ekle({ oncelik: vade ? 'yakinda' : 'rutin', tur: 'kontrol-planli', tarih: vade || p.tarih, metin: `${kosullu ? 'Koşullu kontrol' : 'Kontrol'} ${vade ? `${trGun(vade)} için ` : ''}${kosullu ? 'yazıldı' : 'planlandı'} (${trGun(p.tarih)} notu: "${p.metin}"); randevu kaydı yok.` })
     }
   }
 
@@ -134,6 +147,15 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
     const disari = (l.refAlt != null && l.deger < l.refAlt) || (l.refUst != null && l.deger > l.refUst)
     if (!disari) continue
     ekle({ oncelik: 'yakinda', tur: 'lab-anormal-tekrar-yok', tarih: l.tarih, metin: `${l.metin} (${trGun(l.tarih)}) laboratuvarın verdiği referansın (${l.refAlt ?? '—'}–${l.refUst ?? '—'}) dışında; yaşa uygunluğu doğrulanmadı; sonrasında tekrar ölçüm kaydı yok.` })
+  }
+
+  // İlaç sonrası kontrol (NOTYA-ILK10-YAPI-01): süresi son 30 günde dolan kür, sonrasında vizit yok. Rutin sepetinde —
+  // alarm değil, hatırlatma.
+  for (const o of olaylar.filter((x) => x.kaynak === 'ilac' && x.tur === 'ilac' && x.durum === 'tamamlandi' && x.sureGun)) {
+    const bitis = gunEkleIso(o.tarih, o.sureGun!)
+    if (bitis > bugunIso || gunFarkiIso(bitis, bugunIso) > 30) continue
+    if (olaylar.some((v) => v.kaynak === 'not' && v.tur === 'vizit' && v.tarih >= bitis)) continue
+    ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: bitis, metin: `İlaç sonrası kontrol: ${o.metin.split(' — ')[0].replace(/\s*\[.*$/, '').trim()} kürü ${trGun(bitis)} tarihinde doldu (başlangıç ${trGun(o.tarih)}, ${o.sureGun} gün); sonrasında vizit / değerlendirme kaydı yok.` })
   }
 
   // Açık konsültasyonlar (yapılandırılmış satır).
