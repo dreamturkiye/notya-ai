@@ -52,6 +52,8 @@ export interface OzetBolumu {
   ekran: string
   /** Sözlü anlatımdaki tek kısa cümle (noktasız). */
   soz: string
+  /** Bölümün dikkat gerektiren bulgusu ayrı bir cümledir (büyüme motorunun kayma satırı). */
+  sozEk?: string
 }
 
 export interface VizitOzeti {
@@ -83,7 +85,7 @@ const vizitleri = (o: DosyaOlayi[]) => o.filter((x) => x.kaynak === 'not' && x.t
 const noktali = (s: string) => (/[.!?…]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`)
 const noktasiz = (s: string) => s.trim().replace(/[.!?…;:,]+$/, '')
 const birlestir = (l: string[]) => (l.length <= 1 ? l.join('') : `${l.slice(0, -1).join(', ')} ve ${l[l.length - 1]}`)
-const CUMLE = /(?<=[.!?…])\s+(?=["“(]?[A-ZÇĞİÖŞÜ])/
+const CUMLE = /(?<=[.!?…])\s+(?=["“(]?[A-ZÇĞİÖŞÜ\d])/
 /** Not bölümünün sözlü biçimi: ilk `n` cümle, tek cümle olarak (araları noktalı virgül). */
 function kisaSoz(metin: string, n = 2): string {
   return metin.split(CUMLE).slice(0, n).map(noktasiz).filter(Boolean).join('; ')
@@ -264,6 +266,7 @@ function olcumBolumu(v: DosyaOlayi, olaylar: DosyaOlayi[], hasta: DosyaHastasi, 
   const kanit: string[] = [`Bu muayenenin ölçümleri (yalnız kayıtlı değer): ${olcumYazi}.`]
   const ekran: string[] = [kayitlar.length ? `${olcumYazi}.` : `Bu muayenede kayıtlı ölçüm yok (${eksik.map((o) => OLCUM_ADI[o]).join(', ')}).`]
   const soz: string[] = []
+  let sozEk = ''
 
   if (!pediatrik) {
     // Branşın kendi ölçümleri; karşılaştırma için bir önceki muayenenin aynı ölçümleri (kayıtlıysa).
@@ -298,7 +301,9 @@ function olcumBolumu(v: DosyaOlayi, olaylar: DosyaOlayi[], hasta: DosyaHastasi, 
     if (kaymaYazi) kanit.push(kaymaYazi)
     for (const f of b.bayraklar.filter((x) => x.tarih === v.tarih)) kanit.push(`DİKKAT (motor bayrağı): ${f.metin}`)
     ekran.push(`Büyüme motoru: ${motor}.`, ...(kaymaYazi ? [kaymaYazi] : []), ...artis, ...diger)
-    soz.push(noktasiz(persentilSozu(motor)), kayma.length ? noktasiz(kayma.join('; ')).replace(/^Kayma: /, 'Persentil kayması var: ') : olcumSatirlari.length > 1 ? 'büyüme eğrisinde persentil kayması yok' : 'tek ölçüm, eğilim için yeterli veri yok')
+    soz.push(noktasiz(persentilSozu(motor)))
+    if (kayma.length) sozEk = `Büyüme eğrisinde persentil kayması var: ${kayma.map((s) => noktasiz(s.replace(/^Kayma: /, ''))).join('; ')}`
+    else soz.push(olcumSatirlari.length > 1 ? 'büyüme eğrisinde persentil kayması yok' : 'tek ölçüm, eğilim için yeterli veri yok')
   } else {
     // Motor yalnız yapılandırılmış ölçümü (muayene alanı / cihaz) kullanır; yoksa satır da yoktur — tahmin yok.
     const neden = !kayitlar.some((k) => ['kilo', 'boy', 'basCevresi'].includes(k.olcum)) ? 'bu muayenede kayıtlı kilo / boy / baş çevresi yok'
@@ -314,7 +319,7 @@ function olcumBolumu(v: DosyaOlayi, olaylar: DosyaOlayi[], hasta: DosyaHastasi, 
     kanit.push(`Aynı günlü gelişim taraması kaydı: ${tarama.map((o) => o.metin).join('; ')}.`)
     ekran.push(`Gelişim taraması (aynı gün): ${tarama.map((o) => o.metin).join('; ')}.`)
   } else kanit.push('Aynı günlü gelişim taraması kaydı yok; gelişim basamakları not metninde yazıyorsa oradan aktarılır.')
-  return { anahtar: 'olcum', baslik, var: kayitlar.length > 0, kanit, ekran: ekran.join(' '), soz: soz.join('; ') }
+  return { anahtar: 'olcum', baslik, var: kayitlar.length > 0, kanit, ekran: ekran.join(' '), soz: soz.join('; '), ...(sozEk ? { sozEk } : {}) }
 }
 
 function tedaviBolumu(v: DosyaOlayi, olaylar: DosyaOlayi[]): OzetBolumu {
@@ -345,7 +350,7 @@ function planBolumu(v: DosyaOlayi, b: Record<string, string>, olaylar: DosyaOlay
   return {
     anahtar: 'plan', baslik: 'Plan', var: true,
     kanit: [`Plan (nottan): ${m}`, ...(karsiliklar.length ? [`Planlananların sonraki kayıttaki karşılığı: ${karsiliklar.join('; ')}.`] : [])],
-    ekran: noktali(m), soz: `Plan: ${kisaSoz(m, 3)}`,
+    ekran: noktali(m), soz: `Plan: ${kisaSoz(m, 4)}`,
   }
 }
 
@@ -429,6 +434,40 @@ export function vizitOzetEkrani(o: VizitOzeti, hastaAdi?: string | null): string
     `${ad} — ${trGun(o.tarih)} tarihli muayenenin özeti${o.yas ? ` (muayene tarihinde ${o.yas})` : ''}; yalnız kayıttaki bilgilerle.`,
     ...o.bolumler.map((b) => `**${b.baslik}:** ${b.ekran}`),
   ].join('\n\n')
+}
+
+/* ───────────────────────────── sözlü anlatım (kayıttan, modelsiz) ───────────────────────────── */
+
+const kucukBas = (s: string) => (s ? s[0].toLocaleLowerCase('tr-TR') + s.slice(1) : s)
+/** Motorun kayma satırı sözlü biçimde: "p22 → p54 (04.09.2024 → 30.08.2026): 2 majör …" → "22 iken 54 olmuş, 2 majör …". */
+const sozeCevir = (s: string) => s.replace(/p(\d+) → p(\d+)/g, '$1 iken $2 olmuş').replace(/\s*\([^)]*→[^)]*\)/g, '').replace(/(?<=\p{L}|\d):\s+/gu, ', ')
+
+/**
+ * Hekimin DUYDUĞU özet: sekiz bölümün ana noktaları, her bölüm tek kısa cümle (tedavi ve plan birlikte) — yaklaşık
+ * yedi cümle. Yalnız kayıt: not bölümlerinin ilk cümleleri, kayıtlı ölçümler, motorun persentili, aşı adları,
+ * referans dışı lab değerleri. Ayrıntı (z-skorları, önceki sonuçlar, tarihler) ekrandadır. Bir cümle = bir satır.
+ */
+export function vizitOzetSozCumleleri(o: VizitOzeti, hastaAdi?: string | null): string[] {
+  const ad = String(hastaAdi || '').trim()
+  const b = (k: OzetBolumAnahtari) => o.bolumler.find((x) => x.anahtar === k)
+  const tedavi = b('tedavi')?.soz || '', plan = b('plan')?.soz || ''
+  const baslik = b('olcum')?.baslik === 'Büyüme ve gelişme' ? 'Büyüme' : ''
+  const olcum = b('olcum')?.soz ? sozeCevir(b('olcum')!.soz) : ''
+  return [
+    `${ad ? `${ad}, ` : ''}${b('muayene')?.soz || ''}`,
+    b('sikayet')?.soz || '',
+    b('bulgu')?.soz || '',
+    b('lab')?.soz || '',
+    b('asi')?.soz || '',
+    baslik && olcum ? `${baslik}, ${kucukBas(olcum)}` : olcum,
+    b('olcum')?.sozEk ? sozeCevir(b('olcum')!.sozEk!) : '',
+    [tedavi, kucukBas(plan)].filter(Boolean).join('; '),
+  ].map((s) => s.replace(/\s+/g, ' ').trim()).filter(Boolean).map((s) => `${noktasiz(s)}.`)
+}
+
+/** Sözlü anlatım tek metin olarak (cümle başına bir satır — SesAkisi satır sonunu cümle sonu sayar). */
+export function vizitOzetSozu(o: VizitOzeti, hastaAdi?: string | null): string {
+  return vizitOzetSozCumleleri(o, hastaAdi).join('\n')
 }
 
 /* ───────────────────────────── modelin cevabı kayıtla tutuyor mu ───────────────────────────── */

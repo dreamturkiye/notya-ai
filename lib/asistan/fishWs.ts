@@ -145,3 +145,18 @@ export function sesDusKesimi(birikim: string, islenen: number): string {
   const n = Math.max(0, Math.min(birikim.length, Math.floor(islenen)))
   return birikim.slice(0, n)
 }
+
+/**
+ * NOTYA-AYSE-OZET-01 (silent turn: answer on screen, nothing heard; `[fish-ws]` lines with `ilk_ses_ms: null`).
+ * The fallback offset used to be "everything handed to the socket" even when the socket had returned NO audio —
+ * so the REST fallback skipped exactly the text that was never spoken, and a turn whose text was complete before
+ * the fallback fired stayed silent. Text counts as spoken only once audio has come back; until then the offset is 0.
+ */
+export function sesDusOfseti(sesGeldi: boolean, islenen: number): number {
+  return sesGeldi ? Math.max(0, Math.floor(Number(islenen) || 0)) : 0
+}
+
+/** The socket ended without an error, text was handed to it, and not one byte of audio came back. */
+export function wsSessizBittiMi(sesBayt: number, verilenMetin: string): boolean {
+  return sesBayt === 0 && /[\p{L}\d]/u.test(String(verilenMetin || ''))
+}

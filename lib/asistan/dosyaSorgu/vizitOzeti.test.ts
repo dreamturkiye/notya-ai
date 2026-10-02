@@ -9,7 +9,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { kanitBlogu } from './kanit'
-import { ASI_YOK, LAB_YOK, PERSENTIL_YOK, LAB_PENCERE_GUN, vizitOzetEkrani, vizitOzetHedefiBul, vizitOzetiGuvenceyeAl, vizitOzetiSec, vizitOzetKanitSatirlari } from './vizitOzeti'
+import { ASI_YOK, LAB_YOK, PERSENTIL_YOK, LAB_PENCERE_GUN, vizitOzetEkrani, vizitOzetHedefiBul, vizitOzetiGuvenceyeAl, vizitOzetiSec, vizitOzetKanitSatirlari, vizitOzetSozCumleleri } from './vizitOzeti'
 import { dosyaSorguKuralBlogu } from './kurallar'
 import { DENETIM_BUGUN, KORPUS_BEBEK, korpusBebek, korpusEriskin } from './denetim/fikstur'
 import { hastaKur, olaylariKur, trGun, type HamDosya } from '@/lib/doktor/dosyaOlaylari'
@@ -228,6 +228,43 @@ describe('NOTYA-AYSE-OZET-01 — cevap kuralı, ekran biçimi ve cevabın kayıt
       assert.match(String(g.neden), neden, ad)
       assert.equal(g.metin, kendi, ad)
     }
+  })
+})
+
+describe('NOTYA-AYSE-OZET-01 — sözlü anlatım: bölüm başına tek kısa cümle, yalnız kayıt', () => {
+  it('sağlam çocuk vizitleri: yedi cümle (motor kayma bildiriyorsa sekiz); kilo, boy, baş çevresi ve aşı durumu her birinde söylenir', () => {
+    for (const ay of AYLAR) {
+      const c = vizitOzetSozCumleleri(ozet(ay), KORPUS_BEBEK.ad)
+      const kayma = ozet(ay).bolumler.find((b) => b.anahtar === 'olcum')!.sozEk
+      assert.equal(c.length, kayma ? 8 : 7, `${ay} ay\n${c.join('\n')}`)
+      assert.ok(c[0].startsWith(`${KORPUS_BEBEK.ad}, `) && /\d{1,2} \p{L}+ \d{4} tarihli muayene/u.test(c[0]), c[0])
+      const v = KORPUS_BEBEK.saglamCocuk[ay], tum = c.join(' ').toLocaleLowerCase('tr-TR')
+      for (const d of [`kilo ${tr(v.kilo)} kg`, `boy ${tr(v.boy)} cm`, `baş çevresi ${tr(v.bas)} cm`]) assert.ok(tum.includes(d), `${ay} ay: ${d}\n${c.join('\n')}`)
+      assert.ok(c.some((s) => /^Aşı yapılm(ış|amış)/.test(s)), `${ay} ay: aşı cümlesi`)
+      assert.ok(c.some((s) => /^Laboratuvar/.test(s)), `${ay} ay: laboratuvar cümlesi`)
+      assert.match(c[c.length - 1], /^(Reçete yazılmamış|Tedavi: ).*; plan: .*kontrol/)
+      // Spoken form: no markdown, no list, no z-score, no dotted date, every sentence one line.
+      for (const s of c) assert.ok(!/\*\*|^[-•]|z [−+]|\d{2}\.\d{2}\.\d{4}|\n/.test(s) && s.endsWith('.'), s)
+    }
+  })
+
+  it('persentil motorun satırından; motor satırı yoksa "persentil hesaplanmadı"; kayma ayrı cümle', () => {
+    const c12 = vizitOzetSozCumleleri(ozet(12), KORPUS_BEBEK.ad)
+    const motor = kanit(12, 'olcum').match(/bu muayene: Kilo 9,8 kg \(p(\d+), z [^)]+\); Boy 76 cm \(p(\d+)/)!
+    assert.ok(c12[5].includes(`kilo 9,8 kg, persentil ${motor[1]}; Boy 76 cm, persentil ${motor[2]}`) && c12[5].endsWith('büyüme eğrisinde persentil kayması yok.'), c12[5])
+    const c15 = vizitOzetSozCumleleri(ozet(15), KORPUS_BEBEK.ad)
+    assert.ok(c15[5].endsWith('persentil hesaplanmadı.') && !/persentil \d/.test(c15[5]), c15[5])
+    assert.equal(c15[4], 'Aşı yapılmamış.')
+    assert.equal(c15[3], 'Laboratuvar istenmemiş.')
+  })
+
+  it('erişkin: altı cümle, aşı ve büyüme cümlesi yok; referans dışı lab değeri adıyla', () => {
+    const e = korpusEriskin(DENETIM_BUGUN)
+    const s = vizitOzetSozCumleleri(vizitOzetiSec('son muayenesini özetle', olaylariKur(e, DENETIM_BUGUN), hastaKur(e, DENETIM_BUGUN))!.ozet!, e.hasta.ad)
+    assert.equal(s.length, 6, s.join('\n'))
+    assert.match(s[3], /^Laboratuvar: 3 sonuç var; referans dışı HbA1c 7,1 \(referansın üstünde\); öncekine göre düzelen LDL kolesterol 142 değerinden 104 değerine gelmiş\.$/)
+    assert.match(s[4], /^Ölçümler, kilo 75,5 kg, tansiyon 132\/84 mmHg, nabız 76\/dk\.$/)
+    assert.ok(!/[Aa]şı|persentil|Büyüme/.test(s.join(' ')))
   })
 })
 

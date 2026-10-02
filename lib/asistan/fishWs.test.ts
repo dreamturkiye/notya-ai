@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { msgpackKodla } from './fishMsgpack'
-import { CumleKesici, KelimeKesici, FISH_WS_DUR, FISH_WS_URL, base64Pcm, fishWsAcikMi, fishWsBaslangic, fishWsMetinOlayi, fishWsOlayCoz, pcmBase64, sesDusKesimi } from './fishWs'
+import { CumleKesici, KelimeKesici, FISH_WS_DUR, FISH_WS_URL, base64Pcm, fishWsAcikMi, fishWsBaslangic, fishWsMetinOlayi, fishWsOlayCoz, pcmBase64, sesDusKesimi, sesDusOfseti, wsSessizBittiMi } from './fishWs'
 import { FISH_HABER_SES_ID, FISH_ORNEK_HZ } from './fishSes'
 
 test('ws: start event carries the documented TTSRequest fields, pinned to our PCM/24k/low profile', () => {
@@ -72,6 +72,22 @@ test('ws: ses_dus offset — text before it was handed to Fish, the rest is spok
   assert.equal(sesDusKesimi(birikim, k.islenen.length), 'Merhaba Hocam Bugün üç hasta var ')
   assert.equal(sesDusKesimi('kısa', 99), 'kısa')
   assert.equal(sesDusKesimi('kısa', -3), '')
+})
+
+test('ws: text handed to a socket that returned no audio was not spoken — the REST fallback starts at 0 (NOTYA-AYSE-OZET-01)', () => {
+  const birikim = 'Emircan Karaoğlu, 30 Ağustos 2025 tarihli muayene. Aşı yapılmış.'
+  // No chunk came back: nothing was heard, whatever was handed to the socket.
+  assert.equal(sesDusOfseti(false, birikim.length), 0)
+  assert.equal(sesDusKesimi(birikim, sesDusOfseti(false, birikim.length)), '')
+  // Audio did come back: the text handed to the socket is not repeated.
+  assert.equal(sesDusOfseti(true, 31), 31)
+  assert.equal(sesDusOfseti(true, Number.NaN), 0)
+  assert.equal(sesDusOfseti(true, -4), 0)
+  // A socket that ended without an error and without one byte of audio for real text is a failed socket.
+  assert.equal(wsSessizBittiMi(0, birikim), true)
+  assert.equal(wsSessizBittiMi(48_000, birikim), false)
+  assert.equal(wsSessizBittiMi(0, ''), false)
+  assert.equal(wsSessizBittiMi(0, ' . '), false, 'punctuation is never sent to Fish — no audio is expected for it')
 })
 
 test('ws: PCM base64 relay round-trips odd-length chunks', () => {

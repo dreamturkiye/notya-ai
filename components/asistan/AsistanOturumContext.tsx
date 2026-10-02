@@ -37,7 +37,7 @@ import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinle
 import { klipGeldi, sesBasladi, sttGeldi, turBitti, turSirasiBaslat, yarimKaldi, type TurSirasi } from '@/lib/asistan/fishTurSirasi'
 import { fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
 import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
-import { KelimeKesici, base64Pcm, sesDusKesimi } from '@/lib/asistan/fishWs'
+import { KelimeKesici, base64Pcm, sesDusKesimi, sesDusOfseti } from '@/lib/asistan/fishWs'
 
 /** NOTYA-SES-1TO1: client-side ceilings for one Fish turn; the server has its own 20 s / 60 s limits. */
 const FISH_TUR_ISTEMCI_MS = 55_000
@@ -779,7 +779,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         }
         const sesBekciKur = () => {
           if (sesBekci || ilkSesMs !== null || !wsAktif || !ilkSoz) return
-          sesBekci = setTimeout(() => { sesBekci = null; if (canli() && ilkSesMs === null) sesDus("zaman_asimi", kelime.islenen.length) }, FISH_WS_ILK_SES_MS)
+          // NOTYA-AYSE-OZET-01: no chunk arrived, so nothing was heard — the REST fallback starts at the beginning.
+          // (It used to start after the text already received, which left a short or already complete answer silent.)
+          sesBekci = setTimeout(() => { sesBekci = null; if (canli() && ilkSesMs === null) sesDus("zaman_asimi", sesDusOfseti(false, kelime.islenen.length)) }, FISH_WS_ILK_SES_MS)
         }
         const bargeSonrasiKapat = () => {
           // Doctor cut in and the text is complete: nothing left to show, stop the audio relay.
@@ -850,7 +852,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             bargeSonrasiKapat()
           } else if (j.t === "ses_dus") {
             // Socket died mid-turn: what Fish already had may have played; the rest goes via REST.
-            sesDus("sunucu", Number(j.islenen ?? 0))
+            sesDus("sunucu", sesDusOfseti(ilkSesMs !== null, Number(j.islenen ?? 0)))
           }
         })
         if (sesBekci) { clearTimeout(sesBekci); sesBekci = null }

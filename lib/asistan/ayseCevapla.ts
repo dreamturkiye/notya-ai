@@ -69,12 +69,12 @@ import { kayitCevabi, kayitIstegiBul, type KayitCevabi } from "@/lib/asistan/kay
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
+import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, OZET_ANLATIM_SINIRI, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
-import { vizitOzetiGuvenceyeAl, vizitOzetiSec, type VizitOzeti } from "@/lib/asistan/dosyaSorgu/vizitOzeti"
+import { vizitOzetHedefiBul, vizitOzetiGuvenceyeAl, vizitOzetiSec, vizitOzetSozu, type VizitOzeti } from "@/lib/asistan/dosyaSorgu/vizitOzeti"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
@@ -571,7 +571,10 @@ ${ilacBaglamMetni(drugs[0])}`
     return sade("kimlik", kimlikCevabi.ekran, konusma, kimlikHastasi?.ad || null)
   }
   // NOTYA-SES-OKU-01: "bana anlat / devamını oku" — read the last screen answer aloud, uncapped, no model.
-  if (ses && okumaIstegiMi(String(message || ""))) {
+  // NOTYA-AYSE-OZET-01: "… 15 aylık muayenesini özetleyerek anlatır mısın?" asks for a visit's summary, not for the
+  // previous answer to be read again ("anlatır mısın" is also a read-aloud phrase).
+  const muayeneOzetiIstegi = soruTuruBul(String(message || "")) === "ozet" && Boolean(vizitOzetHedefiBul(String(message || "")))
+  if (ses && okumaIstegiMi(String(message || "")) && !muayeneOzetiIstegi) {
     const sonEkran = [...messages].reverse().find((m) => m.role === "assistant" && String(m.content || "").trim())
     if (sonEkran) {
       // Screen text is already the cleaned, doctor-visible answer. NOTYA-AYSE-ALAN-01: a stored answer keeps its
@@ -866,8 +869,19 @@ ${ilacBaglamMetni(drugs[0])}`
     // A sentence that would carry an identity value is not read: once per turn "… ekranınıza yazdım Hocam".
     return alanSoz(t)
   }
+  // NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02: the summary of a visit reached the screen and nothing was said): the
+  // summary of one visit is spoken from the RECORD, now, before the model writes — a condensed narrative, one short
+  // sentence per part. The model's eight paragraphs are the screen answer and are not read on top of it: read as
+  // written they came out as "Dayanak. N madde, ekranınızda." Sentences beyond the cap wait for the continuation.
+  let ozetAnlatimi: { soylenen: string; cumleler: string[] } | null = null
+  if (ses && vizitOzeti) {
+    const anlatim = vizitOzetSozu(vizitOzeti, odakHastaAdi)
+    const akis = new SesAkisi(g.sozParcasi ?? (() => {}), sesTemizle, g.sesSiniri, OZET_ANLATIM_SINIRI, Boolean(g.sesDurumu))
+    akis.ekle(anlatim)
+    ozetAnlatimi = { soylenen: akis.bitir(), cumleler: sozCumleleri(anlatim, sesTemizle) }
+  }
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
-  const sesAkisiKur = () => (ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null)
+  const sesAkisiKur = () => (ses && g.sozParcasi && !ozetAnlatimi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null)
   let sesAkisi = sesAkisiKur()
 
   const cagriTaban = {
@@ -1049,7 +1063,8 @@ ${ilacBaglamMetni(drugs[0])}`
 
   // Ses: modelin cevabı söylendi (ya da akış yoksa şimdi kurulur); aşağıdaki ekler (yönlendirme, kart okuması) sona eklenir.
   const sozler: string[] = []
-  if (ses) sozler.push(sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle))
+  // NOTYA-AYSE-OZET-01: the visit summary's narrative was spoken before the model call; the screen text is not read again.
+  if (ses) sozler.push(ozetAnlatimi ? ozetAnlatimi.soylenen : sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle))
   // The stream said nothing (the full-chart marker was all the model wrote, twice) but there is an answer on screen:
   // it is spoken now — a voice turn never ends in silence while the screen shows a sentence.
   if (ses && sesAkisi && !sozler[0] && String(aiData.speech || "").trim() && !toolUseBloklari(response as unknown as { content?: unknown }).length) {
@@ -1196,7 +1211,10 @@ ${ilacBaglamMetni(drugs[0])}`
   // (5-sentence cap or the 22 s guard) → the unspoken rest, uncapped, waits for the page's hidden [devam] turn.
   let sesDevamKalan = ""
   const durum = ses ? g.sesDurumu?.() : undefined
-  if (durum?.kesildi) {
+  if (ozetAnlatimi) {
+    // The narrative's sentences that did not go out (cap, or the voice channel's own guard timer) are the remainder.
+    sesDevamKalan = sesDevamKalani(ozetAnlatimi.cumleler, durum ? durum.soylenen : ozetAnlatimi.soylenen)
+  } else if (durum?.kesildi) {
     // The extras after the model's answer (card read-back, redirect sentence). On the ElevenLabs route the turn is
     // closed at the cut, so they are still unspoken and belong to the remainder. On the Fish route the stream stays
     // open and they were just spoken: the read-back question ("Onaylıyor musunuz?") must stay the LAST thing said,
