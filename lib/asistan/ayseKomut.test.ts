@@ -12,6 +12,9 @@ import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, oturumBaglami, yazi
 import { describe, it, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { bugunTz, isoGunKaydir, yerelAnI } from '../randevu/tarihCozumle'
+import { gunBolumuBul, randevuSoruBlogu } from './ayseCevapla'
+import { aracTanimlari } from '@/core/eylemler/araclar'
+import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
 
 const TRT = 'Europe/Istanbul'
 let s: Sahne
@@ -503,5 +506,101 @@ describe('boş saatler — günün takvimi, modelsiz', () => {
     randevuEkle(s.diger.id, yabanciHasta, gun(n), '11:00', 60)
     const y = await yazi(s, `${gun(n)} hangi saatler boş?`)
     assert.match(y.speech, /takviminde randevu yok; boş saatler \(çalışma saatleri 09:00–18:00\): 09:00–18:00\./)
+  })
+})
+
+/**
+ * NOTYA-AYSE-GUVENLIK-02 — action audit 2026-10-02, sentence 27, unforced pass: "Deniz Aksoy için yarın 11:00'e
+ * kontrol randevusu oluştur" was answered "Saat kaçta Hocam?". The server had read 11:00 from the sentence, but with
+ * the tool not forced its prompt block still said "EKSİK BİLGİ: saat" and quoted that very question. What the model
+ * is TOLD is tested here; what Luna does with it is measured by the audit.
+ */
+describe('NOTYA-AYSE-GUVENLIK-02 — söylenen saat yeniden sorulmaz; yalnız eksik olan sorulur', () => {
+  const SOZ = `${AD} için yarın 11:00'e kontrol randevusu oluştur`
+  const zorlamasiz = async <T>(is: () => Promise<T>): Promise<T> => {
+    process.env.NOTYA_ARAC_ZORLAMA_KAPALI = '1'
+    try { return await is() } finally { delete process.env.NOTYA_ARAC_ZORLAMA_KAPALI }
+  }
+
+  it('araç zorlanmadan: gün ve saat cümledeyse blok "BİLGİ TAM" der, "Saat kaçta" sorusunu önermez', async () => {
+    aracla({ tarih: yarin(), saat: '11:00' }, 'kontrol_randevusu_olustur')
+    const y = await zorlamasiz(() => yazi(s, SOZ, { oturum: oturumAc(s) }))
+    assert.equal(zorlananArac(sonModelIstegi()), null, 'denetim anahtarı: araç zorlanmadı')
+    assert.ok(sistemde(new RegExp(`RANDEVU — BİLGİ TAM\\] Hekim bu randevu için gün ${yarin()}, saat 11:00 söyledi`)), 'sunucunun okuduğu gün ve saat modele söylenir')
+    // `sistemde` matches the JSON-encoded system prompt, so a quote in it is \" there.
+    assert.ok(sistemde(/Bunları YENİDEN SORMA \(\\"Saat kaçta Hocam\?\\" DEME\): randevu aracını çağır/))
+    assert.ok(!sistemde(/RANDEVU — EKSİK BİLGİ/), 'eksik yokken "eksik bilgi" bloğu gitmez')
+    assert.ok(!sistemde(/tek kısa soru sor/), 'saat sorusu önerilmez')
+    assert.equal(y.eylemOnerileri[0]?.veri.saat, '11:00')
+    assert.equal(y.eylemOnerileri[0]?.veri.tarih, yarin())
+  })
+
+  it('üretim yolu değişmedi: aynı cümlede araç zorlanır, kart 11:00 ile hazırlanır, soru bloğu yok', async () => {
+    aracla({ tarih: yarin(), saat: '09:00' }) // the model's clock is wrong — the server's reading of the sentence wins
+    const y = await yazi(s, SOZ, { oturum: oturumAc(s) })
+    assert.equal(zorlananArac(sonModelIstegi()), 'kontrol_randevusu_olustur')
+    assert.ok(!sistemde(/RANDEVU — (EKSİK BİLGİ|BİLGİ TAM)/))
+    assert.equal(y.eylemOnerileri[0].veri.saat, '11:00')
+  })
+
+  it('saat GERÇEKTEN yoksa davranış aynı: "Randevusunu perşembeye al" ve "Yarına randevu ver" yine sorar', async () => {
+    randevuEkle(s.doktor.id, umutcan, gun(9), '10:00')
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Saat kaç olsun Hocam?' }) }
+    const tasi = await zorlamasiz(() => yazi(s, 'Randevusunu perşembeye al', { oturum: oturumAc(s, { id: umutcan, ad: AD }) }))
+    assert.ok(sistemde(/RANDEVU — EKSİK BİLGİ: yeni gün ya da yeni saat\] .{0,120}söylenen: gün \d{4}-\d{2}-\d{2}\)/), 'taşıma bloğu aynı')
+    assert.ok(sistemde(/tek kısa soru sor \(\\"Hangi güne ve saate alalım Hocam\?\\"\)/))
+    assert.ok(!sistemde(/RANDEVU — BİLGİ TAM/))
+    assert.equal(tasi.eylemOnerileri.length, 0)
+
+    const ver = await yazi(s, 'Yarına kontrol randevusu ver', { oturum: oturumAc(s, { id: umutcan, ad: AD }) })
+    assert.equal(zorlananArac(sonModelIstegi()), null)
+    assert.ok(sistemde(/RANDEVU — EKSİK BİLGİ: saat\] .{0,80}söylenen: gün/))
+    assert.ok(sistemde(/tek kısa soru sor \(\\"Saat kaçta Hocam\?\\"\)/), 'saat söylenmedi — saat sorulur')
+    assert.equal(ver.eylemOnerileri.length, 0)
+  })
+
+  it('günün bölümü söylendi, tam saat söylenmedi: bölüm yeniden sorulmaz, saate çevrilmez; yalnız tam saat sorulur', async () => {
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Öğleden sonra saat kaçta Hocam?' }) }
+    const y = await yazi(s, 'Yarın öğleden sonraya kontrol randevusu ver', { oturum: oturumAc(s, { id: umutcan, ad: AD }) })
+    assert.equal(zorlananArac(sonModelIstegi()), null)
+    assert.ok(sistemde(/RANDEVU — EKSİK BİLGİ: saat\]/))
+    assert.ok(sistemde(/Hekim günün bölümünü söyledi \(öğleden sonra\): onu yeniden sorma, kendin saate çevirme; yalnız tam saati sor\./))
+    assert.equal(y.eylemOnerileri.length, 0)
+    assert.equal(oturumBaglami(s.oturum).bekleyenKomut?.saat ?? null, null, 'günün bölümünden saat uydurulmaz')
+  })
+
+  it('saf blok: tam / eksik ayrımı; taşımada yalnız saat söylendiyse de tamdır', () => {
+    assert.match(randevuSoruBlogu('olustur', '2026-10-03', '11:00'), /BİLGİ TAM\] Hekim bu randevu için gün 2026-10-03, saat 11:00 söyledi/)
+    assert.match(randevuSoruBlogu('tasi', null, '15:30'), /BİLGİ TAM\] Hekim bu randevu için saat 15:30 söyledi/)
+    assert.match(randevuSoruBlogu('tasi', '2026-10-08', '15:30'), /BİLGİ TAM/)
+    assert.match(randevuSoruBlogu('olustur', '2026-10-03', null), /EKSİK BİLGİ: saat\][\s\S]*"Saat kaçta Hocam\?"/)
+    assert.match(randevuSoruBlogu('olustur', null, '11:00'), /EKSİK BİLGİ: gün\][\s\S]*söylenen: saat 11:00[\s\S]*"Hangi gün Hocam\?"/)
+    assert.match(randevuSoruBlogu('olustur', null, null), /EKSİK BİLGİ: gün ve saat\]/)
+    assert.match(randevuSoruBlogu('tasi', '2026-10-08', null), /EKSİK BİLGİ: yeni gün ya da yeni saat\][\s\S]*"Hangi güne ve saate alalım Hocam\?"/)
+    assert.ok(!/günün bölümü/.test(randevuSoruBlogu('olustur', '2026-10-03', null)))
+    assert.match(randevuSoruBlogu('olustur', '2026-10-03', null, 'sabah'), /günün bölümünü söyledi \(sabah\)/)
+    assert.equal(gunBolumuBul('Yarın öğleden sonraya randevu ver'), 'öğleden sonra')
+    assert.equal(gunBolumuBul('Cuma sabahına randevu ver'), 'sabah')
+    assert.equal(gunBolumuBul('Yarın akşam için randevu'), 'akşam')
+    assert.equal(gunBolumuBul('Yarın 11:00 için randevu'), null)
+  })
+
+  it('araç tanımı ve persona kuralı: söylenen saat yeniden sorulmaz, yalnız eksik olan sorulur', () => {
+    const araclar = aracTanimlari({ brans: 'pediatri', hasta: { id: umutcan, ad: AD, dogumTarihi: '2023-04-10', yasAy: 41, cinsiyet: 'male' } })
+    const olustur = araclar.find((a) => a.name === 'kontrol_randevusu_olustur')!
+    assert.match(olustur.description, /saat alanına yaz ve saati YENİDEN SORMA/)
+    assert.match(olustur.description, /Yalnız gerçekten söylenmemiş olanı sor \(hasta, gün ya da saat\)/)
+    assert.match(olustur.description, /Saati hekim söylemediyse tahmin etme/, 'eksik saat yine uydurulmaz')
+    assert.match(olustur.description, /onu saate çevirme, yalnız tam saati sor/)
+    assert.match(araclar.find((a) => a.name === 'randevu_tasi')!.description, /söylediği saati ya da günü YENİDEN SORMA; yalnız gerçekten söylenmemiş olanı sor/)
+    assert.match(EYLEM_ISTEM_BLOGU, /12\. RANDEVU — YALNIZ EKSİĞİ SOR:/)
+    assert.match(EYLEM_ISTEM_BLOGU, /onu YENİDEN SORMA\. Yalnız gerçekten söylenmemiş olanı sor: hasta, gün ya da saat/)
+    assert.match(EYLEM_ISTEM_BLOGU, /saat UYDURMA; bölümü yeniden sormadan yalnız tam saati sor/)
+  })
+
+  it('persona kuralı komut turunda modele gider', async () => {
+    aracla({ tarih: yarin(), saat: '11:00' })
+    await yazi(s, SOZ, { oturum: oturumAc(s) })
+    assert.ok(sistemde(/RANDEVU — YALNIZ EKSİĞİ SOR/))
   })
 })

@@ -32,6 +32,25 @@ export function notAlanlariCoz(notesEncrypted: string | null | undefined): Hasta
   }
 }
 
+/**
+ * NOTYA-AYSE-GUVENLIK-01 — the allergy line of an intake form (`hasta_intake_formlari.form_data_encrypted`),
+ * as the patient or the parent wrote it. Empty when the form says "no known allergy", has no allergy text or
+ * cannot be read. The file card shows this line (lib/doktor/hastaDosyaDerleyici.ts); the drug check reads it
+ * through here so the two cannot disagree about what "an allergy on file" is.
+ */
+export function ilkKayitAlerjiMetni(formEncrypted: string | null | undefined): string {
+  if (!formEncrypted) return ''
+  try {
+    const y = JSON.parse(decrypt(formEncrypted) || '{}') as Record<string, unknown>
+    if (!y || typeof y !== 'object' || Array.isArray(y)) return ''
+    // "Hayır" / "Bilinen alerjisi yok" on the form: the free-text box is not an allergy record.
+    if (/^hay|yok/i.test(String(y.alerjiVarMi ?? '').trim())) return ''
+    return String(y.alerjiAciklama ?? y.alerji ?? '').trim()
+  } catch {
+    return ''
+  }
+}
+
 /** `kronikHastaliklar` is written as an array but older rows hold a comma string — read both. */
 export function kronikListe(n: HastaNotAlanlari): string[] {
   const v = n.kronikHastaliklar

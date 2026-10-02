@@ -333,6 +333,7 @@ export const ANTIINFEKTIF: Record<string, TürkishDrug> = {
     dose: 'Yetişkin: günde tek doz 250 mg. Onikomikozda el tırnağı 6 hafta, ayak tırnağı 12 hafta.',
     pediatricDose: '20–40 kg: 125 mg/gün; >40 kg: 250 mg/gün (2 yaş / 12 kg altında veri yok)',
     pediatrik: {
+      sabitDoz: true,
       min: 125, max: 250, birim: 'mg/kg/gün', gunlukBolum: 1, enAzAy: 24,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): 20–40 kg arası çocukta günde tek doz 125 mg; 40 kg üzerinde günde tek doz 250 mg. İki yaşın altındaki (genellikle <12 kg) çocuklarda kullanım verisi yoktur.',
     },
@@ -403,6 +404,7 @@ export const ANTIINFEKTIF: Record<string, TürkishDrug> = {
     dose: 'Yetişkin oral kandidiyaz: günde 4 kez 1 mL süspansiyon ağız içine damlatılır; semptomlar geçtikten sonra en az 48 saat devam edilir.',
     pediatricDose: 'Bebek ve çocuklarda oral/intestinal kandidoz: günde 4 kez 1 mL. Yenidoğanda profilaksi: günde 1 kez 1 mL',
     pediatrik: {
+      sabitDoz: true,
       min: 1, max: 1, birim: 'mg/kg/doz', gunlukBolum: 4,
       metin: 'KÜB §4.2 (hacim olarak, mg/kg değil): bebek ve çocuklarda intestinal ve oral kandidozda (pamukçuk) günde 4 kez 1 mL süspansiyon ağız içine damlatılır. Yenidoğanlarda profilaksi dozu günde 1 kez 1 mL\'dir.',
     },
@@ -478,6 +480,7 @@ export const ANTIINFEKTIF: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve ≥13 yaş (>40 kg): 5 gün boyunca günde iki kez 75 mg. Tedaviye ilk 48 saat içinde başlanmalıdır.',
     pediatricDose: 'Kiloya göre: 10–15 kg 2×30 mg; >15–23 kg 2×45 mg; >23–40 kg 2×60 mg; >40 kg 2×75 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 30, max: 75, birim: 'mg/kg/doz', gunlukBolum: 2, enAzAy: 12,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): 1 yaş ve üzeri çocukta 5 gün boyunca günde iki kez — 10–15 kg: 30 mg; >15–23 kg: 45 mg; >23–40 kg: 60 mg; >40 kg: 75 mg. 1 yaşın altında güvenlilik ve etkililik saptanmamıştır.',
     },

@@ -116,11 +116,35 @@ const HESAPLANABILIR = new Set<PediatrikDoz['birim']>(['mg/kg/doz', 'mg/kg/gün'
  * said something that can honestly be turned into one — and an overdose verdict is only given when
  * a ceiling (`maxMgKgGun` / `mutlakMaxMgGun`) was actually sourced.
  */
-export function pediatrikDozHesapla(drugKey: string, weightKg: number, verilenGunlukMg?: number): PediatrikDozHesabi | null {
+export function pediatrikDozHesapla(drugKey: string, weightKg: number, verilenGunlukMg?: number, yasAy?: number | null): PediatrikDozHesabi | null {
   const drug = TURKISH_DRUGS[drugKey]
   const p = drug?.pediatrik
   if (!drug || !p) return null
   const hekimDogruladi = drug.kaynak.dogrulama === 'hekim_dogruladi'
+
+  // NOTYA-AYSE-GUVENLIK-01: a fixed dose is never multiplied by a weight. The line is the source's own wording;
+  // a verdict is given only against a reference the source stated — the age band the patient falls in, or an
+  // absolute daily ceiling. Neither sourced → no verdict (`asim` stays undefined) and the card says so.
+  if (p.sabitDoz) {
+    const yuvarla = (n: number) => Math.round(n * 10) / 10
+    const bant = typeof yasAy === 'number' ? p.yasBantlari?.find((b) => yasAy >= b.enAzAy && yasAy < b.ustAy) : undefined
+    const mutlak = typeof p.mutlakMaxMgGun === 'number' ? p.mutlakMaxMgGun : undefined
+    const parcalar = ['Sabit doz (kiloya göre hesaplanmaz)']
+    if (drug.pediatricDose) parcalar.push(drug.pediatricDose)
+    if (mutlak !== undefined) parcalar.push(`Kaynaktaki tavan: ${yuvarla(mutlak)} mg/gün`)
+    const referans = bant ? bant.mgGun : mutlak
+    let asim: boolean | undefined
+    let asimMetni: string | undefined
+    if (referans !== undefined && typeof verilenGunlukMg === 'number' && Number.isFinite(verilenGunlukMg)) {
+      asim = verilenGunlukMg > referans
+      if (asim) {
+        asimMetni = bant
+          ? `Yazılan günlük doz (${yuvarla(verilenGunlukMg)} mg), kaynakta bu yaş grubu için verilen dozun (${yuvarla(bant.mgGun)} mg/gün) ÜZERİNDE.`
+          : `Yazılan günlük doz (${yuvarla(verilenGunlukMg)} mg) kaynaktaki tavanı (${yuvarla(referans)} mg/gün) AŞIYOR.`
+      }
+    }
+    return { metin: `${parcalar.join('. ')}. Kaynak: ${p.metin}`, tavanMgGun: referans, asim, asimMetni, hekimDogruladi }
+  }
 
   if (!HESAPLANABILIR.has(p.birim) || !Number.isFinite(weightKg) || weightKg <= 0) {
     return { metin: p.metin, hekimDogruladi }

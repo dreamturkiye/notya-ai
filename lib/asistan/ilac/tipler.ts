@@ -71,8 +71,27 @@ export interface PediatrikDoz {
   mutlakMaxMgDoz?: number
   /** Minimum age the source allows, in months. */
   enAzAy?: number
+  /**
+   * NOTYA-AYSE-GUVENLIK-01 — the source gives a FIXED dose (by age or weight band, per puff, per mL), not a dose
+   * per kilogram. `min` / `max` are then not per-kg numbers and the calculator must never multiply them by a
+   * weight: montelukast 4–5 mg was printed as "98,4–123 mg/gün" on a 24,6 kg child's card.
+   */
+  sabitDoz?: boolean
+  /**
+   * Fixed daily dose by age band, for a `sabitDoz` entry whose source states one. This is the only thing a
+   * dose verdict for a fixed-dose drug is measured against; an entry without it gets no verdict.
+   */
+  yasBantlari?: readonly YasBandi[]
   /** The source's own sentence — so the doctor can weigh the number against its wording. */
   metin: string
+}
+
+/** `enAzAy` inclusive, `ustAy` exclusive: "6–14 yaş" is 72 ≤ age in months < 180. */
+export interface YasBandi {
+  enAzAy: number
+  ustAy: number
+  /** The daily dose the source gives for this band, in mg. */
+  mgGun: number
 }
 
 export interface GebelikBilgisi {

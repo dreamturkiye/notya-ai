@@ -138,6 +138,7 @@ export const KARDIYOVASKULER: Record<string, TürkishDrug> = {
     dose: 'Hipertansiyon: başlangıç 10 mg 1x1; kan basıncı kontrol edilene kadar günde maksimum 40 mg\'a kadar titre edilir.',
     pediatricDose: '6 yaş üzeri hipertansif çocukta sınırlı deneyim: 20–<50 kg günlük maksimum 20 mg, ≥50 kg günlük maksimum 40 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 20, max: 40, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 40, enAzAy: 72,
       metin: 'KÜB §4.2 (kiloya göre sabit tavan, mg/kg değil): 6 yaş üzeri hipertansif çocukta dozaj bireysel olarak, 20–<50 kg hastalarda günlük maksimum 20 mg\'a ve ≥50 kg hastalarda günlük maksimum 40 mg\'a ayarlanır. Diğer endikasyonlarda deneyim yoktur.',
@@ -168,6 +169,7 @@ export const KARDIYOVASKULER: Record<string, TürkishDrug> = {
     dose: 'Hipertansiyon: günde 1 defa 80 mg veya 160 mg; yeterli kontrol yoksa 320 mg\'a yükseltilir veya diüretik eklenir.',
     pediatricDose: '6–18 yaş: <35 kg 40 mg/gün; ≥35 kg 80 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 40, max: 80, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 80, enAzAy: 72,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): 6–18 yaş pediyatrik hipertansiyonda 35 kg\'dan hafif çocuklarda başlangıç günde bir kez 40 mg, 35 kg ve üzerinde günde bir kez 80 mg. Doz kan basıncı yanıtına göre ayarlanır.',
@@ -281,6 +283,7 @@ export const KARDIYOVASKULER: Record<string, TürkishDrug> = {
     dose: 'Hipertansiyon ve anjina: başlangıç 5 mg 1x1; yanıta göre maksimum 10 mg 1x1.',
     pediatricDose: '6–17 yaş: başlangıç 2,5–5 mg 1x1; 4 hafta sonra gerekirse 5 mg. 5 mg üzeri dozlar çocuklarda incelenmemiştir',
     pediatrik: {
+      sabitDoz: true,
       min: 2.5, max: 5, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 5, enAzAy: 72,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): 6–17 yaş pediyatrik hipertansif hastalarda önerilen başlangıç dozu günde bir kez 2,5–5 mg. Dört hafta sonra hedefe ulaşılamazsa günde 5 mg\'a çıkarılabilir; günde 5 mg\'ın üzerindeki dozlar pediyatrik hastalarda incelenmemiştir. 6 yaşın altında kan basıncı üzerine etkisi bilinmemektedir.',
