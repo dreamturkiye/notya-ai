@@ -350,10 +350,12 @@ export function trtAnI(tarih: string, saat: string): string {
 export const KONTROL_RANDEVUSU_OLUSTUR = eylem({
   anahtar: 'kontrol_randevusu_olustur',
   etiket: 'Kontrol randevusu',
-  aciklama: 'Hastaya kontrol randevusu açar. Tarih ve saat Türkiye saatiyle verilir. Saati hekim söylemediyse tahmin etme.',
+  // NOTYA-AYSE-GUVENLIK-02: "yarın 11:00'e kontrol randevusu oluştur" was answered "Saat kaçta Hocam?" (action
+  // audit 2026-10-02, no. 27, unforced pass). A time the doctor said is written, never asked for again.
+  aciklama: 'Hastaya kontrol randevusu açar. Tarih ve saat Türkiye saatiyle verilir. Hekim cümlede saati söylediyse ("11:00", "11:00\'e", "saat üçte", "on bir buçuk") saat alanına yaz ve saati YENİDEN SORMA; günü söylediyse günü yeniden sorma. Yalnız gerçekten söylenmemiş olanı sor (hasta, gün ya da saat). Saati hekim söylemediyse tahmin etme; günün bölümü söylendiyse ("sabah", "öğleden sonra") onu saate çevirme, yalnız tam saati sor.',
   alanlar: [
     { anahtar: 'tarih', etiket: 'Tarih', tip: 'tarih', zorunlu: true },
-    { anahtar: 'saat', etiket: 'Saat', tip: 'metin', zorunlu: true, aciklama: 'TRT, HH:MM (24h)' },
+    { anahtar: 'saat', etiket: 'Saat', tip: 'metin', zorunlu: true, aciklama: 'TRT, HH:MM (24h). The clock time the doctor said in the sentence ("11:00\'e" → 11:00). Never ask for a time that was said.' },
     { anahtar: 'sure_dk', etiket: 'Süre', tip: 'sayi', birim: 'dk', enAz: 5, enCok: 240 },
     {
       anahtar: 'tur', etiket: 'Tür', tip: 'secim',
@@ -478,7 +480,7 @@ const MEVCUT_GUN_ALANI: AlanTanimi = {
 export const RANDEVU_TASI = eylem({
   anahtar: 'randevu_tasi',
   etiket: 'Randevu saatini değiştir',
-  aciklama: 'Hastanın MEVCUT randevusunu başka bir güne ya da saate alır (erteleme, öne alma, saat değişikliği). Yeni randevu açmaz. Hangi randevu olduğunu sistem bulur. Tarih ve saat Türkiye saatiyle verilir; hekim yalnız saati değiştirdiyse tarihi, yalnız günü değiştirdiyse saati boş bırak.',
+  aciklama: 'Hastanın MEVCUT randevusunu başka bir güne ya da saate alır (erteleme, öne alma, saat değişikliği). Yeni randevu açmaz. Hangi randevu olduğunu sistem bulur. Tarih ve saat Türkiye saatiyle verilir; hekim yalnız saati değiştirdiyse tarihi, yalnız günü değiştirdiyse saati boş bırak. Hekimin cümlede söylediği saati ya da günü YENİDEN SORMA; yalnız gerçekten söylenmemiş olanı sor.',
   alanlar: [
     RANDEVU_KAYDI_ALANI,
     MEVCUT_RANDEVU_ALANI,

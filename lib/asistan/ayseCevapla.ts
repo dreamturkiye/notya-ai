@@ -56,7 +56,7 @@ import { asistanModelYonlendir, gecmisiKirp, sohbetKademesi, SOHBET_SAKLANAN_MES
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
 import { bekleyenKomutOku, komutCevabiMi, komutNiyetiBul, randevuTamMi, type BekleyenKomut, type KomutNiyeti } from "@/lib/asistan/komutNiyeti"
-import { adsiz, anilanKisi, randevuSaatiBul, randevuTarihiBul, soylenenAd, type RandevuNiyeti } from "@/lib/randevu/randevuSozu"
+import { adsiz, anilanKisi, duz, randevuSaatiBul, randevuTarihiBul, soylenenAd, type RandevuNiyeti } from "@/lib/randevu/randevuSozu"
 import { bosSaatMetni, doktorCalismaGunu } from "@/lib/randevu/bosSaatler"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
 import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
@@ -187,15 +187,33 @@ export const HASTASIZ_KOMUT_BLOGU = `
  * NOTYA-AYSE-GERI-03: kuyruk bloğu — an appointment request that is not complete yet. Says what the server already
  * has and what is missing, so the model asks for exactly that and nothing else.
  */
-export function randevuSoruBlogu(tur: RandevuNiyeti, tarih: string | null, saat: string | null): string {
+export function randevuSoruBlogu(tur: RandevuNiyeti, tarih: string | null, saat: string | null, gunBolumu: string | null = null): string {
   const bilinen = [tarih ? `gün ${tarih}` : "", saat ? `saat ${saat}` : ""].filter(Boolean).join(", ")
+  // NOTYA-AYSE-GUVENLIK-02: nothing is missing (a booking with its day and time, a move with its new time) and the
+  // tool was not forced. This block used to label the booking "EKSİK BİLGİ: saat" and hand the model the question
+  // "Saat kaçta Hocam?" — which it asked, with 11:00 in the doctor's sentence (action audit 2026-10-02, no. 27).
+  if (randevuTamMi(tur, tarih, saat) && (tur !== "tasi" || saat)) {
+    return `
+
+[RANDEVU — BİLGİ TAM] Hekim bu randevu için ${bilinen || "gerekeni"} söyledi; sistem bunları cümleden okudu. Bunları YENİDEN SORMA ("Saat kaçta Hocam?" DEME): randevu aracını çağır. Eksik olan başka bir şey varsa (hangi hasta) yalnız onu sor.`
+  }
+  // A part of day without a clock time ("yarın öğleden sonra"): it is not asked again and not turned into an hour.
+  const bolum = !saat && gunBolumu
+    ? ` Hekim günün bölümünü söyledi (${gunBolumu}): onu yeniden sorma, kendin saate çevirme; yalnız tam saati sor.`
+    : ""
   const eksik = tur === "olustur"
     ? (!tarih && !saat ? "gün ve saat" : !tarih ? "gün" : "saat")
     : "yeni gün ya da yeni saat"
   const soru = eksik === "gün ve saat" ? "Hangi gün ve saat kaçta Hocam?" : eksik === "gün" ? "Hangi gün Hocam?" : eksik === "saat" ? "Saat kaçta Hocam?" : "Hangi güne ve saate alalım Hocam?"
   return `
 
-[RANDEVU — EKSİK BİLGİ: ${eksik}] Hekim randevu işlemi istiyor ama ${eksik} söylenmedi${bilinen ? ` (söylenen: ${bilinen})` : ""}. Boş kart hazırlama, araç ÇAĞIRMA: tek kısa soru sor ("${soru}"). Takvimi kontrol etmeyi hekime bırakma; çakışmayı kart kendisi yazar.`
+[RANDEVU — EKSİK BİLGİ: ${eksik}] Hekim randevu işlemi istiyor ama ${eksik} söylenmedi${bilinen ? ` (söylenen: ${bilinen})` : ""}. Boş kart hazırlama, araç ÇAĞIRMA: tek kısa soru sor ("${soru}"). Takvimi kontrol etmeyi hekime bırakma; çakışmayı kart kendisi yazar.${bolum}`
+}
+
+/** "sabah" / "öğleden sonra" / "öğle" / "akşam" in the doctor's sentence — a part of day, not a clock time. */
+export function gunBolumuBul(mesaj: string): string | null {
+  const n = duz(mesaj)
+  return / ogleden sonra\w* /.test(n) ? "öğleden sonra" : / sabah\w* /.test(n) ? "sabah" : / ogle\w* /.test(n) ? "öğle" : / aksam\w* /.test(n) ? "akşam" : null
 }
 
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
@@ -760,7 +778,7 @@ ${ilacBaglamMetni(drugs[0])}`
   const dosyaYokBlogu = !dosyaEk && !currentPatient ? DOSYA_YOK_BLOGU : ""
   // NOTYA-AYSE-100-LUNA (c): the model clock — doctor-timezone date/time, per turn, never cached.
   // NOTYA-KONUSMA-BAGLAMI-01: the previous turn's topic for the residual model-path questions (≈ 200 tokens, per turn).
-  const komutBlogu = !komut ? "" : hastasizArac ? HASTASIZ_KOMUT_BLOGU : komut.randevu && !komutZorla ? randevuSoruBlogu(komut.randevu, randevuTarih, randevuSaat) : ""
+  const komutBlogu = !komut ? "" : hastasizArac ? HASTASIZ_KOMUT_BLOGU : komut.randevu && !komutZorla ? randevuSoruBlogu(komut.randevu, randevuTarih, randevuSaat, gunBolumuBul(zamanSozu)) : ""
   const kuyruk = zamanBlogu(saatDilimi) + baglamBlogu(konusmaOnceki) + gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "") + komutBlogu
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
