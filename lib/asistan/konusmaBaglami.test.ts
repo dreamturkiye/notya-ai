@@ -264,6 +264,25 @@ describe('NOTYA-KONUSMA-BAGLAMI-06 — ASR-corrupted calendar follow-ups (Kaan l
     assert.equal(asrOnar('yarın randevo var mı', false).mesaj, 'yarın randevu var mı')
     assert.deepEqual(asrOnar('Peki yarın?', true).onarilan, [])
   })
+  it('NOTYA-KORPUS-KALAN-01 (Y-080, T-025): a patient name is never repaired into a date word', () => {
+    const adlar = new Set(['tarik', 'ozdemir'])
+    // "tarik" is two edits from "yarin": with the doctor's patient names known, the word is left alone.
+    assert.equal(duzenlemeMesafesi('tarik', 'yarin'), 2)
+    assert.deepEqual(asrOnar('peki Tarık Özdemir randevusu ne zaman?', true, adlar), { mesaj: 'peki Tarık Özdemir randevusu ne zaman?', onarilan: [] })
+    assert.deepEqual(asrOnar('Tarıkın randevusu ne zaman', true, adlar).onarilan, [])
+    // A case ending after an apostrophe marks a name even when the lookup knows nothing.
+    assert.deepEqual(asrOnar("Yasin'in randevusu ne zaman?", true).onarilan, [])
+    assert.deepEqual(asrOnar("Tarık'ın randevusu ne zaman?", true).onarilan, [])
+    // The repair itself is untouched: a mis-heard date next to a name is still repaired.
+    assert.equal(asrOnar('Peki yanım var mı?', true, adlar).mesaj, 'Peki yarin var mı?')
+    assert.equal(asrOnar('Tarık yanım geliyor mu', true, adlar).mesaj, 'Tarık yarin geliyor mu')
+  })
+  it('NOTYA-KORPUS-KALAN-01: after a calendar turn a question that names a patient is not rewritten into a calendar question', () => {
+    const adlar = new Set(['tarik', 'ozdemir'])
+    assert.equal(takipCoz('peki Tarık Özdemir randevusu ne zaman?', T, { ...sec, adParcalari: adlar }), null)
+    assert.equal(takipCoz("Tarık Özdemir'in randevusu ne zaman?", T, { ...sec, adParcalari: adlar }), null)
+    assert.equal(takipCoz("Tarık Özdemir'in randevusu ne zaman?", T, sec), null, 'the apostrophe alone is enough')
+  })
   it('"Peki yanım var mı?" after "Bugün … randevumuz var mı?" → tomorrow', () => {
     const r = takvimSoru('Peki yanım var mı?')
     assert.ok(r)

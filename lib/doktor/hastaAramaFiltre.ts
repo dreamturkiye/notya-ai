@@ -85,7 +85,9 @@ export const ARAMA_ALANLARI: AlanTanimi[] = [
   { anahtar: 'ameliyat', etiket: 'Ameliyat', grup: 'saglik', takma: ['ameliyat', 'operasyon', 'cerrahi'] },
   { anahtar: 'sigara', etiket: 'Sigara', grup: 'saglik', takma: ['sigara', 'icici'] },
   { anahtar: 'alkol', etiket: 'Alkol', grup: 'saglik', takma: ['alkol'] },
-  { anahtar: 'gelme', etiket: 'Gelme nedeni', grup: 'muayene', takma: ['gelme nedeni', 'basvuru', 'yakinma', 'sikayet', 'geldi', 'gelen'] },
+  // NOTYA-KORPUS-KALAN-01 (Y-091): "geldi" / "gelen" are visit verbs, not the "Gelme nedeni" field — as aliases they
+  // made every "dün gelen …" question demand the literal word in the chart text ("Dün 0 hasta. Filtre: dün · Gelme nedeni").
+  { anahtar: 'gelme', etiket: 'Gelme nedeni', grup: 'muayene', takma: ['gelme nedeni', 'basvuru', 'yakinma', 'sikayet'] },
   { anahtar: 'anamnez', etiket: 'Anamnez', grup: 'muayene', takma: ['anamnez', 'subjektif', 'oyku'] },
   { anahtar: 'fizik', etiket: 'Fizik muayene', grup: 'muayene', takma: ['fizik', 'objektif', 'muayene bulgu'] },
   { anahtar: 'tani', etiket: 'Tanı', grup: 'muayene', takma: ['tani', 'teshis', 'degerlendirme'] },

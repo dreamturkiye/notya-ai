@@ -20,6 +20,7 @@ import { korpusYukle } from './tests/gokhanSikayetKorpusu'
 /** Cluster → corpus ids. A session entry brings the earlier turns of its session with it (korpusYukle). */
 const KUMELER: { ad: string; idler: string[] }[] = [
   { ad: 'A — özellik listeleri (arama)', idler: ['G-21', 'G-22', 'G-24'] },
+  { ad: 'B — adlı hasta turundan sonraki takip soruları', idler: ['Y-080', 'T-025', 'Y-083', 'Y-091'] },
 ]
 
 const satirlar = new Map<string, KorpusSatiri[]>()

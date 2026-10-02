@@ -353,6 +353,25 @@ export async function mesajdakiHastaAdi(supabase: SupabaseClient, doctorId: stri
   return tek ? 'tek' : null
 }
 
+/**
+ * NOTYA-KORPUS-KALAN-01 (Y-080, T-025): which words of the message are name parts of THIS doctor's patients? Name-only
+ * and doctor-scoped like mesajdakiHastaAdi; returns the normalized parts ("tarik", "ozdemir"), never an id or a chart.
+ * The caller uses it so that a patient's name is not "repaired" into a date word after a calendar turn.
+ */
+export async function mesajdakiAdParcalari(supabase: SupabaseClient, doctorId: string, mesaj: string): Promise<Set<string>> {
+  const bulunan = new Set<string>()
+  const sozcukler = duzle(mesaj).split(' ').filter((x) => x && !DOLGU.has(x))
+  if (sozcukler.length === 0) return bulunan
+  const hastalar = await adAdaylariniYukle(supabase, doctorId, sesliSozTokenlari(sozcukler.join(' ')))
+  for (const h of hastalar) {
+    for (const p of duzle(hastaAdiCoz(h.name_encrypted)).split(' ').filter((x) => x.length >= 3)) {
+      const re = new RegExp('^' + p + AD_HAL_EKI + '$')
+      if (sozcukler.some((s) => re.test(s))) bulunan.add(p)
+    }
+  }
+  return bulunan
+}
+
 export async function hastaninSozunuCoz(
   supabase: SupabaseClient,
   doctorId: string,

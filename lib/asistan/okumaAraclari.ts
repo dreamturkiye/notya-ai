@@ -37,7 +37,7 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { dosyaPaketOnbellekli } from '@/lib/doktor/ogrenme/dosyaOnbellek'
 import { dosyaSoruCevap, kartSoyle, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
-import { aktifHastaKullanilsinMi, kohortSorusuMu } from '@/lib/asistan/aktifHasta'
+import { acikDosyaDisiSoruMu, aktifHastaKullanilsinMi } from '@/lib/asistan/aktifHasta'
 import { soruTuruBul, type SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { kanitBlogu } from '@/lib/asistan/dosyaSorgu/kanit'
 import { dosyaSorguKuralBlogu } from '@/lib/asistan/dosyaSorgu/kurallar'
@@ -204,7 +204,7 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
 
   // Same binding rules as the brain (NOTYA-AKTIF-HASTA-01): a name in the sentence wins; an unnamed, non-cohort
   // question is about the open chart; a named person who was not found is never replaced by the open chart.
-  const acikDosyaSorusu = Boolean(aktifId) && !kohortSorusuMu(soz)
+  const acikDosyaSorusu = Boolean(aktifId) && !acikDosyaDisiSoruMu(soz)
   let cozum = await hastaninSozunuCoz(supabase, doktorId, soz, { tz: saatDilimi, kohortsuz: acikDosyaSorusu, hitapAdi: b.hitapAdi })
   const aramaSonucu = Boolean((cozum as { sayiMetin?: string }).sayiMetin)
   const baskaKisi = cozum.tur === 'yok' && !aramaSonucu ? anilanBaskaKisi(soz, b.aktifHasta?.ad) : null

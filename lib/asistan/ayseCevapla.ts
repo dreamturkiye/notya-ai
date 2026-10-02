@@ -39,7 +39,7 @@ import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
 import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar"
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
-import { cozumKonus, hastaninSozunuCoz, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
+import { cozumKonus, hastaninSozunuCoz, mesajdakiAdParcalari, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
 import { dosyaPaketOnbellekli } from "@/lib/doktor/ogrenme/dosyaOnbellek"
 import { adliDosyaCevabi, dosyaSoruCevap, type HastaDosyaKart } from "@/lib/doktor/hastaDosyaKart"
 import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
@@ -50,7 +50,7 @@ import { searchDrug, ilacBaglamMetni } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
-import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi, kohortSorusuMu } from "@/lib/asistan/aktifHasta"
+import { acikDosyaDisiSoruMu, aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from "@/lib/asistan/aktifHasta"
 import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
 import { AlanDefteri, alanlariYerineKoy, alanSozcusu, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
@@ -331,7 +331,15 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const komutSimdi = komutNiyetiBul(onarim.mesaj, { saatDilimi })
   const komutDevami = !komutSimdi && bekleyenKomut && komutCevabiMi(onarim.mesaj) ? bekleyenKomut : null
   const komut: KomutNiyeti | null = komutSimdi ?? (komutDevami ? { arac: komutDevami.arac, zorla: false, randevu: komutDevami.randevu } : null)
-  const takip = konusmaOnceki && !komut ? takipCoz(hamMesaj, konusmaOnceki, { tz: saatDilimi }) : null
+  // NOTYA-KORPUS-KALAN-01 (Y-080, T-025): after a calendar turn the follow-up rewriter repairs mis-heard date words
+  // ("yanım" → yarın). A patient's name is not one: "Tarık Özdemir'in randevusu ne zaman?" became "yarın Özdemir'in …"
+  // and was answered with tomorrow's schedule. Only when a date repair would happen, the words of the message are
+  // checked against this doctor's own patient names (name-only, doctor-scoped) and those words are left alone.
+  let adParcalari: Set<string> | null = null
+  if (konusmaOnceki?.sonNiyet === "takvim" && !komut && asrOnar(hamMesaj, true).mesaj !== onarim.mesaj) {
+    try { adParcalari = await mesajdakiAdParcalari(supabase, doktorId, hamMesaj) } catch (e) { console.error("[asistan/chat] ad parçaları", e instanceof Error ? e.message : String(e)) }
+  }
+  const takip = konusmaOnceki && !komut ? takipCoz(hamMesaj, konusmaOnceki, { tz: saatDilimi, adParcalari }) : null
   if (takip) {
     message = takip.soru
     console.info("[asistan/chat] takip", { miras: takip.miras, niyet: takip.niyet })
@@ -589,7 +597,7 @@ ${ilacBaglamMetni(drugs[0])}`
     const mesajMetni = String(message || "")
     // NOTYA-AYSE-GERI-01: with a chart open, a question that is not an explicit many-patient or calendar question is
     // about that chart — the all-patients search is not even run for it (a name in the message still wins).
-    const acikDosyaSorusu = Boolean(aktifOnceden) && !takvimSorusuCoz(mesajMetni, { saatDilimi }) && !kohortSorusuMu(mesajMetni)
+    const acikDosyaSorusu = Boolean(aktifOnceden) && !takvimSorusuCoz(mesajMetni, { saatDilimi }) && !acikDosyaDisiSoruMu(mesajMetni)
     cozum = await hastaninSozunuCoz(supabase, doktorId, message, { tz: saatDilimi, kohortsuz: acikDosyaSorusu || !hizliYol, hitapAdi: personaIlkAdi(persona.name) })
     adlaCozuldu = cozum.tur === "tek"
     // NOTYA-AKTIF-HASTA-01 (Kaan kararı 2026-09-29, 09-25 kuralı geri geldi): açık hasta — bu oturumda adla açılan

@@ -166,10 +166,18 @@ export function niyetSozuBulanik(k: string): string | null {
  * Repair the ASR text with the closed vocabulary: intent stems always, date words only when the previous turn was a
  * calendar turn. Returns the repaired message (original spelling kept where nothing changed) and the repairs made.
  */
-export function asrOnar(mesaj: string, takvimBaglami: boolean): { mesaj: string; onarilan: string[] } {
+/**
+ * NOTYA-KORPUS-KALAN-01 (Y-080, T-025): `adParcalari` — normalized name parts of the doctor's own patients that occur
+ * in the message. After a calendar turn "Tarık Özdemir'in randevusu ne zaman?" was repaired into "yarın Özdemir'in
+ * randevusu ne zaman?" ("tarik" is two edits from "yarin") and answered with tomorrow's schedule. A word that is a
+ * patient's name, or that carries a case ending after an apostrophe ("Yasin'in"), is never a mis-heard date.
+ */
+export function asrOnar(mesaj: string, takvimBaglami: boolean, adParcalari?: ReadonlySet<string> | null): { mesaj: string; onarilan: string[] } {
   const ham = String(mesaj || '')
   const onarilan: string[] = []
   const parcalar = ham.split(/(\s+)/)
+  const adMi = (w: string, k: string) => /\p{L}['’]\p{L}/u.test(w)
+    || Boolean(adParcalari && [...adParcalari].some((p) => p.length >= 3 && k.startsWith(p) && k.length - p.length <= 4))
   const yeni = parcalar.map((w) => {
     if (!w || /^\s+$/.test(w)) return w
     const noktalama = w.match(/[?!.,;:]+$/)?.[0] || ''
@@ -177,7 +185,7 @@ export function asrOnar(mesaj: string, takvimBaglami: boolean): { mesaj: string;
     if (!k || TARIH_RE.test(` ${k} `)) return w
     const niyet = niyetSozuBulanik(k)
     if (niyet && niyet !== k) { onarilan.push(`${k}→${niyet}`); return niyet + noktalama }
-    if (takvimBaglami) {
+    if (takvimBaglami && !adMi(w, k)) {
       const t = tarihSozuBulanik(k)
       if (t && t !== k) { onarilan.push(`${k}→${t}`); return (t === 'oburgun' ? 'öbür gün' : t) + noktalama }
     }
@@ -345,7 +353,8 @@ const kisalt = (s: string) => (s.length <= 4 ? s.toUpperCase() : s)
 export function takipCoz(
   mesaj: string,
   baglam: KonusmaBaglami | null | undefined,
-  secenek: { tz?: string | null; simdi?: Date } = {},
+  /** `adParcalari`: name parts of the doctor's patients found in the message (asrOnar) — never repaired into a date. */
+  secenek: { tz?: string | null; simdi?: Date; adParcalari?: ReadonlySet<string> | null } = {},
 ): TakipSonucu | null {
   const simdi = secenek.simdi || new Date()
   const b = baglam ? baglamOku(baglam, simdi) : null
@@ -354,7 +363,10 @@ export function takipCoz(
   if (!hamGiris || hamGiris.replace(/[.\s…]+/g, '').length < 2) return null
   if (kayitNiyetiMi(hamGiris) || dosyaAcmaIstegiMi(hamGiris)) return null
   // NOTYA-KONUSMA-BAGLAMI-06: ASR repair on the closed vocabulary (date words only after a calendar turn).
-  const onarim = asrOnar(hamGiris, b.sonNiyet === 'takvim')
+  // A name written with its genitive ("Tarık Özdemir'in") protects both of its words, with or without the lookup.
+  const yaziliAd = adCikar(hamGiris)?.replace(/\s?['’].*$/, '') || ''
+  const korunan = new Set([...(secenek.adParcalari || []), ...normalize(yaziliAd).split(' ').filter((k) => k.length >= 3 && !DOLGU.has(k))])
+  const onarim = asrOnar(hamGiris, b.sonNiyet === 'takvim', korunan)
   const ham = onarim.mesaj
   const n = normalize(ham)
   const nn = ` ${n} `

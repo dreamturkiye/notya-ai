@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
 import { adIndeksParcalari, tokenOzeti } from './hastaAramaIndeksi'
-import { cozumKonus, hastaninSozunuCoz } from './hastaCozumleyici'
+import { cozumKonus, hastaninSozunuCoz, mesajdakiAdParcalari } from './hastaCozumleyici'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-cozumleyici-anahtari'
 
@@ -110,6 +110,29 @@ describe('NOTYA-AYSE-GERI-01 — sayım cümlesi yalnız açık sayım / liste s
     // Nobody is missing a birth date: the count is said, nobody is listed.
     db.tablo('patients').find((p) => p.id === olcay)!.dob_encrypted = encrypt('2020-01-01')
     assert.match(String((await coz('doğum tarihi kayıtlı olmayan hastam var mı') as { sayiMetin?: string }).sayiMetin), /^Kayıtlarda 0 hasta\./)
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (Y-091): "dün gelen ateşli çocuk" — "gelen" ziyaret fiilidir, "Gelme nedeni" alanı değil; dünkü ateşli hasta bulunur', async () => {
+    const dun = new Date(Date.now() - 24 * 3600_000).toISOString()
+    const seans = db.ekle('sessions', { patient_id: s.umutcanId, doctor_id: s.doktorId, created_at: dun, status: 'completed', archived_at: null }).id
+    db.ekle('notes', { session_id: seans, doctor_id: s.doktorId, patient_id: s.umutcanId, created_at: dun, approved_at: dun, basvuru_yakinmasi: 'Sol kulak ağrısı ve ateş', content_subjektif: 'Sol kulak ağrısı ve ateş, 2 gündür.', vitaller: { ates: 38.7 } })
+    const c = await coz('dün gelen ateşli çocuk')
+    assert.equal(c.tur, 'tek', JSON.stringify(c))
+    assert.equal((c as { ad: string }).ad, 'Umutcan Türkoğlu')
+    assert.ok(!/Gelme nedeni/.test(JSON.stringify(c)), JSON.stringify(c))
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (Y-080): mesajdakiAdParcalari yalnız bu doktorun hasta adlarını döndürür (ad parçaları; kimlik ya da dosya değil)', async () => {
+    const digerDoktor = randomUUID()
+    const yabanci = db.ekle('patients', { doctor_id: digerDoktor, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Tarık Özdemir' })), dob_encrypted: null }).id
+    indeksle(digerDoktor, yabanci, 'Tarık Özdemir')
+    const parca = (m: string, doktor = s.doktorId) => mesajdakiAdParcalari(db.istemci() as never, doktor, m).then((x) => [...x].sort())
+    assert.deepEqual(await parca('peki Umutcan Türkoğlu randevusu ne zaman?'), ['turkoglu', 'umutcan'])
+    assert.deepEqual(await parca('Umutcanın randevusu ne zaman'), ['umutcan'])
+    assert.deepEqual(await parca('Peki yanım var mı?'), [])
+    // HASTA-IZOLASYON-01: another doctor's patient is not a name for this doctor.
+    assert.deepEqual(await parca('peki Tarık Özdemir randevusu ne zaman?'), [])
+    assert.deepEqual(await parca('peki Tarık Özdemir randevusu ne zaman?', digerDoktor), ['ozdemir', 'tarik'])
   })
 
   it('tarif edilen adsız hasta bulunamazsa sayım cümlesi değil, model turu (hasta yok)', async () => {
