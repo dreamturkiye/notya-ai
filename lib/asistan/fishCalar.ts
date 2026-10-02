@@ -77,6 +77,17 @@ export const FISH_TAMPON_MS = 40
 export const FISH_TAMPON_YENIDEN_MS = 80
 /** Scheduling lead: a source must start at least this far ahead of the clock. */
 export const FISH_PLAN_ONCE_SN = 0.01
+/** NOTYA-SES-UYANIK-01 (Kaan, 2026-10-02): the greeting lost its first sentence live. After a long gap the output device may still be waking, so the first source starts this far ahead of the clock. */
+export const FISH_ILK_ONCE_SN = 0.5
+/** A gap longer than this counts as idle: the output device may have gone to sleep. */
+export const FISH_BOSLUK_SN = 5
+/** Keep-alive noise level, about -70 dBFS: inaudible, but not digital silence (which devices treat as no signal). */
+export const FISH_UYANIK_GENLIK = 0.0003
+/** Pure: when the next source starts (AudioContext seconds). sonBitis is where the last playback ended, -Infinity when nothing has played yet. */
+export function planBaslangici(g: { zaman: number; simdi: number; ilkParca: boolean; sonBitis: number }): number {
+  if (g.ilkParca && g.simdi - g.sonBitis > FISH_BOSLUK_SN) return g.simdi + FISH_ILK_ONCE_SN
+  return Math.max(g.zaman, g.simdi + FISH_PLAN_ONCE_SN)
+}
 /** NOTYA-SES-TUR-01: samples quieter than this (≈ −38 dBFS) are Fish's trailing padding, not her voice. */
 export const FISH_SES_SONU_ESIK = 0.012
 /** Playback counts as over this long after her last voiced sample; the echo guard lifts there, not when the padding drains. */
@@ -134,6 +145,23 @@ export function fishCalarOlustur(
   let kaynaklar: AudioBufferSourceNode[] = []
   let aktifKontrol: AbortController | null = null
   let kapali = false
+  let sonBitisCt = -Infinity // AudioContext time at which the last playback ended
+  let uyanik: AudioBufferSourceNode | null = null // inaudible keep-alive so the output device does not sleep between turns
+
+  function uyaniktaTut(c: AudioContext): void {
+    if (uyanik) return
+    try {
+      const buf = c.createBuffer(1, c.sampleRate, c.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * FISH_UYANIK_GENLIK
+      const kaynak = c.createBufferSource()
+      kaynak.buffer = buf
+      kaynak.loop = true
+      kaynak.connect(c.destination)
+      kaynak.start()
+      uyanik = kaynak
+    } catch { /* best effort */ }
+  }
 
   async function baglam(): Promise<AudioContext> {
     if (!ctx || ctx.state === 'closed') {
@@ -143,6 +171,7 @@ export function fishCalarOlustur(
       ctx = new Kur()
     }
     if (ctx.state === 'suspended') await ctx.resume().catch(() => undefined)
+    uyaniktaTut(ctx)
     return ctx
   }
 
@@ -185,7 +214,7 @@ export function fishCalarOlustur(
       const src = ses.createBufferSource()
       src.buffer = buf
       src.connect(ses.destination)
-      const basla = Math.max(zaman, ses.currentTime + FISH_PLAN_ONCE_SN)
+      const basla = planBaslangici({ zaman, simdi: ses.currentTime, ilkParca: !basladi, sonBitis: sonBitisCt })
       src.start(basla)
       const son = sonSesliOrnek(kanal)
       if (son >= 0) sesSonu = basla + (son + 1) / FISH_ORNEK_HZ
@@ -249,6 +278,7 @@ export function fishCalarOlustur(
       // Anchored to the audio clock: the guard lifts when her voice ends, not when the trailing padding drains.
       const kalanMs = Math.max(0, (calmaSonu(bitis, sesSonu) - ses.currentTime) * 1000)
       await new Promise((r) => setTimeout(r, kalanMs))
+      sonBitisCt = ses.currentTime
       if (ben !== nesil || kapali) return
       calisiyor = false
       aktifKontrol = null
@@ -315,6 +345,8 @@ export function fishCalarOlustur(
     kapat() {
       kapali = true
       kes()
+      try { uyanik?.stop() } catch { /* already stopped */ }
+      uyanik = null
       const kapanan = ctx
       ctx = null
       if (kapanan && kapanan.state !== 'closed') void kapanan.close().catch(() => undefined)

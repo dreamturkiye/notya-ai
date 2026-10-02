@@ -53,6 +53,42 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     assert.equal(g.size, 2)
   })
 
+  it('NOTYA-KORPUS-KALAN-01 (G-21): kaynaklar gösterim listesinden ayrı tutulur — dört muayenenin ardındaki aşı kaydı kaybolmaz', () => {
+    const muayene = [1, 2, 3, 4, 5].map((n) => ({ patientId: 'A', kaynak: 'seans', neden: `0${n}.09.2026 muayene`, skor: 4, metin: 'muayene seans' }))
+    const asi = { patientId: 'A', kaynak: 'asi', neden: '15.05.2024 aşı: KKK', skor: 12, metin: 'aşı KKK' }
+    const g = adaylariTopla([...muayene, asi]).get('A')!
+    assert.equal(g.nedenler.length, 4)
+    assert.ok(!g.nedenler.some((n) => /aşı/.test(n)), 'gösterim listesi ilk dört satırdır')
+    assert.ok(g.kaynaklar.has('asi') && g.kaynaklar.has('seans'))
+    // The table the question is about is shown first.
+    assert.equal(adaylariTopla([...muayene, asi], 'asi').get('A')!.nedenler[0], '15.05.2024 aşı: KKK')
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (G-22): ilaç satırı adı ne olursa olsun "ilaç" eşleşmesidir; etken madde de aranır', () => {
+    const g = adaylariTopla([{ patientId: 'A', kaynak: 'ilac', neden: 'ilaç: Klacid', skor: 7, metin: 'Klacid 250 mg/5 ml', ek: 'ilaç klaritromisin' }]).get('A')!
+    const q = sorguyuAyikla('ilaç kullanan hastam var mı', PAZAR)
+    assert.ok(!q.terimler.includes('kullanan'), JSON.stringify(q.terimler))
+    assert.equal(tumTerimlerEslesir(g.metin, q.terimler), true)
+    assert.equal(metinEslesir(g.metin, ['klaritromisin']), true)
+    for (const m of ['ilaç alan hastalarım kimler', 'demir kullanmakta olan hastalar', 'antibiyotik içen hastalarım']) {
+      const t = sorguyuAyikla(m, PAZAR).terimler
+      assert.ok(!t.some((x) => ['alan', 'kullanmakta', 'icen'].includes(x)), `${m} → ${JSON.stringify(t)}`)
+    }
+  })
+
+  it('NOTYA-ARAMA-DOGUM-NEGASYON-01 (G-24): "doğum tarihi kayıtlı olmayan" bir olumsuzlamadır, alan filtresi değil', () => {
+    for (const m of ['doğum tarihi kayıtlı olmayan hastam var mı', 'Doğum tarihi girilmemiş hastalarım kimler', 'doğum tarihi eksik hastalar', 'doğum tarihi olmayanları listele']) {
+      const q = sorguyuAyikla(m, PAZAR)
+      assert.equal(q.dogumYok, true, m)
+      assert.equal(q.klinik, true, m)
+      assert.ok(!q.alanlar.some((a) => a.anahtar === 'dogum'), m)
+      assert.deepEqual(q.terimler, [], m)
+      assert.match(q.ozet, /doğum tarihi yok/, m)
+    }
+    assert.equal(sorguyuAyikla('doğum tarihi 2021 olan hastalar', PAZAR).dogumYok, false)
+    assert.equal(sorguyuAyikla('kaç hastam var', PAZAR).dogumYok, false)
+  })
+
   it('bu hafta 2 yaşındaki gördüklerim → yaş + pencere + boş artık terim', () => {
     const q = sorguyuAyikla('Bu hafta gördüğüm 2 yaşındaki hastalar hangileriydi?', PAZAR)
     assert.equal(q.yas?.minAy, 24)

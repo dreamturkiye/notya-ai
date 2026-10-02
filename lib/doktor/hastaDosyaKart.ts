@@ -112,6 +112,44 @@ const PRATIK = /en fazla (?:yazdim|yaptim|koydum)|en cok yazdigim|en sik (?:tani
 /** Deterministic answer for a spoken/written question about THIS patient. */
 const ASI_ADI = /\b(kkk|hepatit a|hepatit b|bcg|dabt|ipa|hib|kpa|opa|sucicegi|su cicegi|meningokok|menengokok|rotavirus|grip|hpv|tetanoz|kizamik|kabakulak|kizamikcik|difteri|bogmaca|polio|pnomokok|karma)\b/
 
+// NOTYA-OLCUM-TEK-01 (Dr. Gokhan, 2026-10-02): a question about ONE measurement gets that measurement, not the whole vital-sign line.
+// `buyume`: weight and height. The measurement route (lib/asistan/kayitTablosu.ts) runs before the card and answers them
+// from the approved visits; when the card lacks one too, there is no stored value anywhere: 'kayıt yok', no model call.
+const OLCUM_ANAHTARLARI: { soru: RegExp; etiket: RegExp; ad: string; buyume?: boolean }[] = [
+  { soru: /ates/, etiket: /^ates/, ad: 'ateş' },
+  { soru: /tansiyon/, etiket: /^tansiyon/, ad: 'tansiyon' },
+  { soru: /nabiz|nabz/, etiket: /^nabiz/, ad: 'nabız' },
+  { soru: /solunum/, etiket: /^solunum/, ad: 'solunum' },
+  { soru: /spo2|saturasyon|oksijen/, etiket: /^spo/, ad: 'SpO2' },
+  { soru: /kilo/, etiket: /^kilo/, ad: 'kilo', buyume: true },
+  { soru: /\bboy(?:u|un|unu)?\b/, etiket: /^boy/, ad: 'boy', buyume: true },
+]
+function olcumCevabi(n: string, olcum: string): [string, string][] {
+  const ogeler = String(olcum || '').split(' · ').map((o) => o.trim()).filter(Boolean).map((o): [string, string] | null => {
+    const i = o.indexOf(':')
+    if (i > 0) return [o.slice(0, i).trim(), o.slice(i + 1).trim()]
+    // A confirmed device reading is written without a colon: 'kilo 18.4 kg (20 Eyl 2026)'.
+    const c = o.match(/^(\D+?)\s+(\d.*)$/)
+    return c ? [c[1].trim(), c[2].trim()] : null
+  }).filter((x): x is [string, string] => x !== null)
+  const istenen = OLCUM_ANAHTARLARI.filter((a) => a.soru.test(n))
+  if (!istenen.length) return [['son ölçüm', olcum]]
+  const kartta = (a: { etiket: RegExp }) => ogeler.some(([et]) => a.etiket.test(trAramaNormalize(et)))
+  const sec = ogeler.filter(([et]) => istenen.some((a) => a.etiket.test(trAramaNormalize(et))))
+  // An empty card has no measurement at all: the quick, deterministic kayıt yok for whatever was asked.
+  // A card with other values: a missing weight / height is kayıt yok, a missing vital sign is left to the model.
+  const bos = kartBosMu(olcum)
+  const yok = istenen.filter((a) => !kartta(a) && (bos || a.buyume))
+  return [
+    ...sec.map(([et, d]): [string, string] => [et.toLocaleLowerCase('tr'), d]),
+    ...yok.map((a): [string, string] => [a.ad, 'kayıt yok']),
+  ]
+}
+// NOTYA-OLCUM-TEK-01: a treatment question ('en son hangi tedaviyi verdik') is about the last prescription; a general medical question is not.
+const TEDAVI_SORUSU = /\btedavi(?:yi|si|sini)? (?:verdik|verdin|yazdik|uyguladik|baslad)|(?:en son|son) (?:hangi )?tedavi|hangi tedaviyi/
+// NOTYA-OLCUM-TEK-01: with a treatment word in the sentence, the vaccine field opens only on a clear vaccine cue (ASR turned a patient name into 'asi' live).
+const ASI_ISARETI = /asilar|asisi|asilari|karne|asi (?:kayit|yapil|takvim|doz|eksik|gecik|tamam|var|yok|durum)/
+
 export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   const n = trAramaNormalize(soru)
   if (!n.trim()) return null
@@ -138,12 +176,12 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   if (/son vizit|en son (?:ne zaman )?gel|son muayene|son gelis/.test(n)) ekle('son vizit', k.sonVizit)
   if (/neden geldi|son sikayet|sikayeti ne|basvuru/.test(n)) ekle('son şikayet', k.sonSikayet)
   if (/son tani|son teshis|tanisi ne|ne tanisi/.test(n)) ekle('son tanı', k.sonTani)
-  if (/son recete|son ilac|ne yazdin|ne yazdik|hangi ilac(?:i)? yaz|hangi antibiyoti/.test(n)) {
+  if (/son recete|son ilac|ne yazdin|ne yazdik|hangi ilac(?:i)? yaz|hangi antibiyoti/.test(n) || TEDAVI_SORUSU.test(n)) {
     ekle('son reçete', k.sonRecete)
   }
   // NOTYA-KONUSMA-BAGLAMI-01 (2026-09-30): a question about ONE named vaccine ("Hepatit B kaç doz", "KKK ne zaman")
   // needs the aşı table, not the card's five-line list — it goes to the model with the chart.
-  if (/\basi/.test(n) && !/antibiyoti/.test(n) && !ASI_ADI.test(n)) ekle('aşı', k.asilar)
+  if (/\basi/.test(n) && !/antibiyoti/.test(n) && !ASI_ADI.test(n) && (!/tedavi|recete|\bilac/.test(n) || ASI_ISARETI.test(n))) ekle('aşı', k.asilar)
   if (/surekli ilac|ne kullaniyor|ilaclari ne|aktif ilac/.test(n)) ekle('aktif ilaç', k.ilaclar)
   // NOTYA-SES-KART-01 (Dr. Gökhan): kontrol / takip soruları son muayenenin planından cevaplanır.
   // NOTYA-DOSYA-SORU-PLAN-01 (Kaan, 2026-10-01): bare 'plan' matched inside unrelated words
@@ -156,7 +194,9 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   if (/muayene bulgu|fizik muayene|dinleme|bulgular/.test(n)) ekle('muayene bulgusu', k.sonBulgu)
   if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', kartBosMu(k.randevu) ? 'planlanmış randevu yok' : k.randevu)
   if (/hba1c|egfr|tahlil|laboratuvar|\blab\b|kan sayimi|son onayli lab/.test(n)) ekle('onaylı lab', k.lab)
-  if (/ates|kilo|tansiyon|nabiz|nabz|spo2|olcum|vital/.test(n)) ekle('son ölçüm', k.olcum)
+  if (/ates|kilo|tansiyon|nabiz|nabz|spo2|olcum|vital|\bboy(?:u|un|unu)?\b/.test(n)) {
+    for (const [b, d] of olcumCevabi(n, k.olcum)) ekle(b, d)
+  }
 
   if (!bulunan.length) return null
   return `${bulunan.join('. ')}.`

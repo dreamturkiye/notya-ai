@@ -645,6 +645,10 @@ describe('NOTYA-SES-OKU-01: "bana anlat" ekrandaki cevabı sınırsız okur, mod
   it('okumaIstegiMi ve sınırsız okuma', () => {
     for (const m of ['Bana anlatır mısın lütfen? Devamını ekranda görüyorum ama sen bana anlat.', 'devamını oku', 'Sesli anlat', 'oku', 'Hepsini anlat Ayşe']) assert.ok(K.okumaIstegiMi(m), m)
     for (const m of ['Umutcan Türkoğlu kaç kilo?', 'aşıları tam mı', 'anlatılan şikayet nedir']) assert.ok(!K.okumaIstegiMi(m), m)
+    // NOTYA-KORPUS-KALAN-01 (G-28, Y-063): a sentence that names WHAT to read from the chart is a chart question — the
+    // previous answer is not re-read. The words that point at the screen answer itself keep the route.
+    for (const m of ['MCV ve MCHC değerlerini oku', 'Son SOAP notunu oku', 'Emircan Karaoğlu’nun son SOAP notunu oku', 'Hastanın özetini oku', 'Son reçeteyi oku', "MCV'yi oku", 'Son muayenesini bana anlat', 'İlaçlarını oku', 'Lab sonuçlarını bana oku']) assert.ok(!K.okumaIstegiMi(m), m)
+    for (const m of ['Devamını ekranda görüyorum ama sen bana anlat', 'bunu bana oku', 'Tamamını oku hocam', 'Ekrandakini oku', 'cevabını sesli oku', 'kalanını da sesli oku', 'Hepsini oku Ayşe', 'listeyi bana oku']) assert.ok(K.okumaIstegiMi(m), m)
     const uzun = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi. Sekiz.'
     assert.equal(K.konusmaYap(uzun, undefined, { sinirsiz: true }), uzun)
     assert.equal(K.konusmaYap(uzun), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)

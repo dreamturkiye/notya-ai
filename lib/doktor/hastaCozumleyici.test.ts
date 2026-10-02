@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
 import { adIndeksParcalari, tokenOzeti } from './hastaAramaIndeksi'
-import { cozumKonus, hastaninSozunuCoz } from './hastaCozumleyici'
+import { cozumKonus, hastaninSozunuCoz, hitabiAracSozundenAyikla, mesajdakiAdParcalari } from './hastaCozumleyici'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-cozumleyici-anahtari'
 
@@ -81,6 +81,60 @@ describe('NOTYA-AYSE-GERI-01 — sayım cümlesi yalnız açık sayım / liste s
     assert.ok(JSON.stringify(c).includes('Umutcan Türkoğlu'), JSON.stringify(c))
   })
 
+  it('NOTYA-KORPUS-KALAN-01 (G-21): dört ve daha çok muayenesi olan hastanın aşı kaydı da bulunur', async () => {
+    for (let ay = 1; ay <= 5; ay++) db.ekle('sessions', { patient_id: s.umutcanId, doctor_id: s.doktorId, created_at: `2026-0${ay}-10T09:00:00Z`, status: 'completed', archived_at: null })
+    db.ekle('asilar', { patient_id: s.umutcanId, doktor_id: s.doktorId, asi_adi: 'KKK', doz_no: 1, uygulama_tarihi: '2024-05-15', kaynak: 'kayit', kaynak_note_id: null })
+    const c = await coz('aşı kaydı olan hastalarım kimler')
+    const metin = cozumKonus(c) || ''
+    assert.match(metin, /^Kayıtlarda 1 hasta\. Filtre: Aşı: 1\. Umutcan Türkoğlu/, metin)
+    assert.match(metin, /aşı: KKK/, 'aşı satırı gösterim listesinde öne alınır')
+    assert.ok(!metin.includes('Ayşe Yeşil'), metin)
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (G-22): "ilaç kullanan hastam var mı" ilaç kaydı olan hastayı adıyla söyler; "kullanan" arama terimi değildir', async () => {
+    db.ekle('hasta_ilaclar', { patient_id: s.ayseId, doctor_id: s.doktorId, ilac_adi: 'Metformin 1000 mg tablet', etken_madde: 'metformin', aktif: true, kaynak_note_id: null, created_at: '2026-03-01T09:00:00Z' })
+    const metin = cozumKonus(await coz('ilaç kullanan hastam var mı')) || ''
+    assert.match(metin, /^Kayıtlarda 1 hasta\. Filtre: İlaç: 1\. Ayşe Yeşil/, metin)
+    assert.match(metin, /ilaç: Metformin/, metin)
+    assert.ok(!/Umutcan|Hangisini istiyorsunuz/.test(metin), metin)
+  })
+
+  it('NOTYA-ARAMA-DOGUM-NEGASYON-01 (G-24): "doğum tarihi kayıtlı olmayan hastam var mı" yalnız doğum tarihi olmayan dosyayı sayar, dosyayı açmaz', async () => {
+    const olcay = db.ekle('patients', { doctor_id: s.doktorId, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Olcay Santoro' })), dob_encrypted: null }).id
+    indeksle(s.doktorId, olcay, 'Olcay Santoro')
+    const c = await coz('doğum tarihi kayıtlı olmayan hastam var mı')
+    assert.equal(c.tur, 'coklu', 'tek eşleşme bile dosya açmaz: soru "var mı"')
+    const metin = cozumKonus(c) || ''
+    assert.match(metin, /^Kayıtlarda 1 hasta\. Filtre: doğum tarihi yok: 1\. Olcay Santoro/, metin)
+    assert.ok(!/Umutcan|Ayşe Yeşil|Hangisini istiyorsunuz/.test(metin), metin)
+    // Nobody is missing a birth date: the count is said, nobody is listed.
+    db.tablo('patients').find((p) => p.id === olcay)!.dob_encrypted = encrypt('2020-01-01')
+    assert.match(String((await coz('doğum tarihi kayıtlı olmayan hastam var mı') as { sayiMetin?: string }).sayiMetin), /^Kayıtlarda 0 hasta\./)
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (Y-091): "dün gelen ateşli çocuk" — "gelen" ziyaret fiilidir, "Gelme nedeni" alanı değil; dünkü ateşli hasta bulunur', async () => {
+    const dun = new Date(Date.now() - 24 * 3600_000).toISOString()
+    const seans = db.ekle('sessions', { patient_id: s.umutcanId, doctor_id: s.doktorId, created_at: dun, status: 'completed', archived_at: null }).id
+    db.ekle('notes', { session_id: seans, doctor_id: s.doktorId, patient_id: s.umutcanId, created_at: dun, approved_at: dun, basvuru_yakinmasi: 'Sol kulak ağrısı ve ateş', content_subjektif: 'Sol kulak ağrısı ve ateş, 2 gündür.', vitaller: { ates: 38.7 } })
+    const c = await coz('dün gelen ateşli çocuk')
+    assert.equal(c.tur, 'tek', JSON.stringify(c))
+    assert.equal((c as { ad: string }).ad, 'Umutcan Türkoğlu')
+    assert.ok(!/Gelme nedeni/.test(JSON.stringify(c)), JSON.stringify(c))
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (Y-080): mesajdakiAdParcalari yalnız bu doktorun hasta adlarını döndürür (ad parçaları; kimlik ya da dosya değil)', async () => {
+    const digerDoktor = randomUUID()
+    const yabanci = db.ekle('patients', { doctor_id: digerDoktor, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Tarık Özdemir' })), dob_encrypted: null }).id
+    indeksle(digerDoktor, yabanci, 'Tarık Özdemir')
+    const parca = (m: string, doktor = s.doktorId) => mesajdakiAdParcalari(db.istemci() as never, doktor, m).then((x) => [...x].sort())
+    assert.deepEqual(await parca('peki Umutcan Türkoğlu randevusu ne zaman?'), ['turkoglu', 'umutcan'])
+    assert.deepEqual(await parca('Umutcanın randevusu ne zaman'), ['umutcan'])
+    assert.deepEqual(await parca('Peki yanım var mı?'), [])
+    // HASTA-IZOLASYON-01: another doctor's patient is not a name for this doctor.
+    assert.deepEqual(await parca('peki Tarık Özdemir randevusu ne zaman?'), [])
+    assert.deepEqual(await parca('peki Tarık Özdemir randevusu ne zaman?', digerDoktor), ['ozdemir', 'tarik'])
+  })
+
   it('tarif edilen adsız hasta bulunamazsa sayım cümlesi değil, model turu (hasta yok)', async () => {
     assert.deepEqual(await coz('Dün gelen ateşli bebek'), { tur: 'yok' })
   })
@@ -127,6 +181,41 @@ describe('NOTYA-AYSE-GERI-01 — persona adıyla aynı ilk adı taşıyan hasta 
     const yabanci = db.ekle('patients', { doctor_id: diger, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Selin Öz' })) }).id
     indeksle(diger, yabanci, 'Selin Öz')
     assert.deepEqual(await coz('Selin’in aşıları tam mı'), { tur: 'yok' })
+  })
+})
+
+describe('NOTYA-KORPUS-KALAN-01 (L-ODAK-HITAP-1) — hekimin hitabı, modelin araç metninde hasta olamaz', () => {
+  const ayikla = (arac: string, doktor: string) => hitabiAracSozundenAyikla(arac, doktor, 'Ayşe')
+
+  it('hekim yalnız seslendiyse: modelin yazdığı "Ayşe" / "Ayşe\'nin" / "Ayşe için" araç metninden çıkarılır', () => {
+    const HITAP = 'Ayşe, aşı karnesini gösterir misin?'
+    assert.equal(ayikla('Ayşe’nin aşı karnesi', HITAP), 'aşı karnesi')
+    assert.equal(ayikla("Ayşe'nin aşı karnesi", HITAP), 'aşı karnesi')
+    assert.equal(ayikla('Ayşenin aşı karnesi', HITAP), 'aşı karnesi')
+    assert.equal(ayikla('Ayşe aşı karnesi', HITAP), 'aşı karnesi')
+    assert.equal(ayikla('Ayşe', HITAP), '')
+    assert.equal(ayikla('Ayşe', 'Merhaba Ayşe, fıstık alerjisini ekle'), '')
+    assert.equal(ayikla('Ayşe', 'Biraz koy. Ayşe, benim spesifik, eee, arzum şeydi, aşı karnesini göstermendi.'), '')
+    assert.equal(ayikla('Ayşe Hanım', 'Ayşe Hanım otitte ilk seçenek ne?'), 'Hanım')
+  })
+
+  it('hekim o adı hasta olarak andıysa, başka bir ad söylediyse ya da yalnız adı söylediyse metne dokunulmaz', () => {
+    for (const [arac, doktor] of [
+      ['Ayşe’nin aşı karnesi', 'Ayşe’nin aşı karnesini göster'],
+      ['Ayşe', 'Ayşe için randevu oluştur'],
+      ['Ayşe Bozkurt', 'Ayşe, Ayşe Bozkurt’un aşı karnesini gösterir misin?'],
+      ['Ayşe', 'hastam Ayşe kaç kilo'],
+      // The answer to "Hangi hasta için Hocam?" is a name, not an address.
+      ['Ayşe', 'Ayşe'],
+      ['Ayşe', 'Ayşe.'],
+      // The doctor did not say the persona's name at all: the model's text stands.
+      ['Umutcan Türkoğlu', 'Umutcan Türkoğlu’nun aşı karnesi'],
+      ['Ayşe Yeşil', 'son hastamın aşıları'],
+    ] as const) assert.equal(ayikla(arac, doktor), arac, `${arac} ← ${doktor}`)
+    assert.equal(hitabiAracSozundenAyikla('Ayşe', 'Ayşe, aşı karnesi', null), 'Ayşe')
+    assert.equal(hitabiAracSozundenAyikla('Ayşe', null, 'Ayşe'), 'Ayşe')
+    // Another colleague is being spoken to: "Ayşe" is an ordinary patient name there.
+    assert.equal(hitabiAracSozundenAyikla('Ayşe', 'Mehmet, Ayşe’nin aşı karnesi', 'Mehmet'), 'Ayşe')
   })
 })
 
