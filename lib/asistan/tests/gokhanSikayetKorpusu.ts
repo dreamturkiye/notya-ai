@@ -411,7 +411,7 @@ const GUNLUK_GIRDILERI: KorpusGirdisi[] = [
   g('G-21', 'liste', 'aşı kaydı olan hastalarım kimler', [G(21), L('NOTYA-ARAMA-PENCERE-VARSAYILAN-01'), L('NOTYA-AYSE-GERI-01')], { rota: ['arama'], icerir: ['Emircan'], icermez: ['\\b0 hasta'] }, { not: 'Every vaccine row of the fixture is older than 90 days; GERI-01 says the implicit window is gone.' }),
   g('G-22', 'liste', 'ilaç kullanan hastam var mı', [G(22), L('NOTYA-ARAMA-PENCERE-VARSAYILAN-01')], { rota: ['arama'], icerir: ['Emircan|Nermin|Ayşe|Tarık'], icermez: ['\\b0 hasta'] }),
   g('G-23', 'liste', 'bu ay kayıt olan hastalarım', [G(23), L('NOTYA-ARAMA-KAYIT-PENCERE-01')], 'MANUAL', { acikKusur: 'NOTYA-ARAMA-KAYIT-PENCERE-01', not: 'OPEN in the ledger; the right answer depends on the day of the month the run is made.' }),
-  g('G-24', 'liste', 'doğum tarihi kayıtlı olmayan hastam var mı', [G(24), L('NOTYA-ARAMA-DOGUM-NEGASYON-01')], { rota: ['arama'], icerir: ['Olcay'], icermez: ['Emircan', 'Tarık', 'Nermin'] }, { acikKusur: 'NOTYA-ARAMA-DOGUM-NEGASYON-01' }),
+  g('G-24', 'liste', 'doğum tarihi kayıtlı olmayan hastam var mı', [G(24), L('NOTYA-ARAMA-DOGUM-NEGASYON-01')], { rota: ['arama'], icerir: ['Olcay'], icermez: ['Emircan', 'Tarık', 'Nermin'] }),
   g('G-25', 'lab', 'Emircan\'ın hemoglobin değeri kaçtı', G(25), { hasta: 'bebek', icerir: ['11[.,]9|on bir virgül dokuz'], icermez: [SAYIM_SABLONU] }, { oturum: 'G-LAB' }),
   g('G-26', 'lab', 'ferritin sonucu ne', G(26), { hasta: 'bebek', icerir: ['\\b24\\b|yirmi dört'] }, { oturum: 'G-LAB' }),
   g('G-27', 'lab', 'WBC kaç', G(27), { hasta: 'bebek', icerir: ['9[.,]1|dokuz virgül bir'] }, { oturum: 'G-LAB' }),

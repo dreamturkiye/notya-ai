@@ -81,6 +81,37 @@ describe('NOTYA-AYSE-GERI-01 — sayım cümlesi yalnız açık sayım / liste s
     assert.ok(JSON.stringify(c).includes('Umutcan Türkoğlu'), JSON.stringify(c))
   })
 
+  it('NOTYA-KORPUS-KALAN-01 (G-21): dört ve daha çok muayenesi olan hastanın aşı kaydı da bulunur', async () => {
+    for (let ay = 1; ay <= 5; ay++) db.ekle('sessions', { patient_id: s.umutcanId, doctor_id: s.doktorId, created_at: `2026-0${ay}-10T09:00:00Z`, status: 'completed', archived_at: null })
+    db.ekle('asilar', { patient_id: s.umutcanId, doktor_id: s.doktorId, asi_adi: 'KKK', doz_no: 1, uygulama_tarihi: '2024-05-15', kaynak: 'kayit', kaynak_note_id: null })
+    const c = await coz('aşı kaydı olan hastalarım kimler')
+    const metin = cozumKonus(c) || ''
+    assert.match(metin, /^Kayıtlarda 1 hasta\. Filtre: Aşı: 1\. Umutcan Türkoğlu/, metin)
+    assert.match(metin, /aşı: KKK/, 'aşı satırı gösterim listesinde öne alınır')
+    assert.ok(!metin.includes('Ayşe Yeşil'), metin)
+  })
+
+  it('NOTYA-KORPUS-KALAN-01 (G-22): "ilaç kullanan hastam var mı" ilaç kaydı olan hastayı adıyla söyler; "kullanan" arama terimi değildir', async () => {
+    db.ekle('hasta_ilaclar', { patient_id: s.ayseId, doctor_id: s.doktorId, ilac_adi: 'Metformin 1000 mg tablet', etken_madde: 'metformin', aktif: true, kaynak_note_id: null, created_at: '2026-03-01T09:00:00Z' })
+    const metin = cozumKonus(await coz('ilaç kullanan hastam var mı')) || ''
+    assert.match(metin, /^Kayıtlarda 1 hasta\. Filtre: İlaç: 1\. Ayşe Yeşil/, metin)
+    assert.match(metin, /ilaç: Metformin/, metin)
+    assert.ok(!/Umutcan|Hangisini istiyorsunuz/.test(metin), metin)
+  })
+
+  it('NOTYA-ARAMA-DOGUM-NEGASYON-01 (G-24): "doğum tarihi kayıtlı olmayan hastam var mı" yalnız doğum tarihi olmayan dosyayı sayar, dosyayı açmaz', async () => {
+    const olcay = db.ekle('patients', { doctor_id: s.doktorId, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Olcay Santoro' })), dob_encrypted: null }).id
+    indeksle(s.doktorId, olcay, 'Olcay Santoro')
+    const c = await coz('doğum tarihi kayıtlı olmayan hastam var mı')
+    assert.equal(c.tur, 'coklu', 'tek eşleşme bile dosya açmaz: soru "var mı"')
+    const metin = cozumKonus(c) || ''
+    assert.match(metin, /^Kayıtlarda 1 hasta\. Filtre: doğum tarihi yok: 1\. Olcay Santoro/, metin)
+    assert.ok(!/Umutcan|Ayşe Yeşil|Hangisini istiyorsunuz/.test(metin), metin)
+    // Nobody is missing a birth date: the count is said, nobody is listed.
+    db.tablo('patients').find((p) => p.id === olcay)!.dob_encrypted = encrypt('2020-01-01')
+    assert.match(String((await coz('doğum tarihi kayıtlı olmayan hastam var mı') as { sayiMetin?: string }).sayiMetin), /^Kayıtlarda 0 hasta\./)
+  })
+
   it('tarif edilen adsız hasta bulunamazsa sayım cümlesi değil, model turu (hasta yok)', async () => {
     assert.deepEqual(await coz('Dün gelen ateşli bebek'), { tur: 'yok' })
   })

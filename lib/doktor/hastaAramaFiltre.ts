@@ -51,6 +51,8 @@ export interface SorguAyik {
   hatirlatmaSay: boolean
   bolumIstegi: 'pediatri' | 'goz' | 'kd' | 'dahiliye' | 'derm' | null
   ziyaretYok: boolean
+  /** NOTYA-ARAMA-DOGUM-NEGASYON-01: "doğum tarihi kayıtlı olmayan / girilmemiş / eksik" — charts with no birth date. */
+  dogumYok: boolean
   ozet: string
   /** Doctor timezone the window was built in (NOTYA-AYSE-100-LUNA a). */
   tz: string
@@ -173,6 +175,9 @@ const DURAK = new Set([
   // the literal word "filtre" was never a stop word, so it became a mandatory AND term in q.terimler that no
   // chart's text ever contains. Drop it like every other function word above.
   'filtre', 'filtrele', 'filtresi', 'filtreleme',
+  // NOTYA-KORPUS-KALAN-01 (G-22): "ilaç kullanan hastam var mı" → term "kullanan" → "Kayıtlarda 0 hasta. Filtre: İlaç."
+  // The participle that ties a patient to a record ("kullanan", "alan", "içen") is a function word, like "olan".
+  'kullanan', 'kullananlar', 'kullanmakta', 'kullaniyor', 'kullandigi', 'alan', 'alanlar', 'almakta', 'aliyor', 'icen', 'icenler',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -427,6 +432,19 @@ function sayisalCikar(n: string): { sayisal: SayisalFiltre[]; kalan: string } {
   return { sayisal, kalan: kalan.replace(/\s+/g, ' ').trim() }
 }
 
+/**
+ * NOTYA-ARAMA-DOGUM-NEGASYON-01 (Dr. Gökhan, 2026-10-01; G-24): "doğum tarihi kayıtlı olmayan hastam var mı". The
+ * birth date is a column of the patient card, not a word of the chart text: the "Doğum tarihi" field filter below
+ * only asks whether the word occurs, so the negation had nothing to negate and the question listed the charts that
+ * HAVE a birth date. The negated form is taken out here and answered from the card (hastaDosyaAra: `dob` empty).
+ */
+const DOGUM_YOK = /\b(?:dogum\s+tarih\w*|dogum\s+gunu\w*|dt)\s+(?:(?:kayitli|kayit|girilmis|yazili|belli|tanimli|bilgisi)\s+)*(?:olmayan\w*|yok|girilmemis|girilmeyen|yazilmamis|eksik|bos|bilinmeyen|belirtilmemis|belli\s+olmayan\w*)/g
+function dogumYokCikar(n: string): { dogumYok: boolean; kalan: string } {
+  DOGUM_YOK.lastIndex = 0
+  if (!DOGUM_YOK.test(n)) return { dogumYok: false, kalan: n }
+  return { dogumYok: true, kalan: n.replace(DOGUM_YOK, ' ').replace(/\s+/g, ' ').trim() }
+}
+
 function haricCikar(n: string): { haric: string[]; kalan: string } {
   const haric: string[] = []
   let kalan = n
@@ -491,7 +509,8 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     p.pencere = pencereKur(bas, bugun, 'son 30 gün', tz)
   }
   const c = cinsiyetCikar(p.kalan)
-  const h = haricCikar(c.kalan)
+  const dg = dogumYokCikar(c.kalan)
+  const h = haricCikar(dg.kalan)
   const s = sayisalCikar(h.kalan)
   let kalan = s.kalan
   const haric = h.haric
@@ -651,7 +670,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
   const klinikKelime = liste.some((t) => Boolean(ESANLAM[t]) || Object.values(ESANLAM).some((l) => l.includes(t)) || ASI_KELIME.test(t))
     || veya.some((g) => g.some((t) => Boolean(ESANLAM[t])))
   const bolum = Boolean(seriGecikme || mchat || persentilEsik || kirilim || minSeans || bayrakVe.length || portalYok || hatirlatmaSay || yasKirilim || ucDeger || bolumIstegi || ziyaretYok)
-  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet) || sureSor || Boolean(olcum) || bolum
+  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet) || sureSor || Boolean(olcum) || bolum || dg.dogumYok
   const etiketler = [
     y.yas?.etiket,
     p.pencere?.etiket,
@@ -659,6 +678,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     kanGrubu,
     ...sayisal.map((x) => x.etiket),
     ...haric.map((x) => `${x} hariç`),
+    dg.dogumYok ? 'doğum tarihi yok' : '',
     ...alanlar.map((a) => a.etiket),
     seriGecikme ? `${seri} gecikme` : '',
     mchat ? 'M-CHAT yok/riskli' : '',
@@ -696,6 +716,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     hatirlatmaSay,
     bolumIstegi,
     ziyaretYok,
+    dogumYok: dg.dogumYok,
     ozet: etiketler.join(' · '),
     tz,
   }

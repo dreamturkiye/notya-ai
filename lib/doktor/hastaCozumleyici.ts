@@ -51,6 +51,8 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
       .map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`)
       .join('. ')
     const bas = (cozum.sayiMetin || `${cozum.adaylar.length} hasta`).replace(/\.$/, '')
+    // One row is an answer, not a choice ("… hastam var mı" with a single match).
+    if (cozum.adaylar.length === 1) return `${bas}: ${liste}.`
     return `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`
   }
   if (cozum.tur === 'yok' && cozum.cokAday) return `Bu adla eşleşen ${cozum.cokAday} hasta var Hocam; soyadını da söyler misiniz?`
@@ -216,6 +218,14 @@ export function hastaTarifiMi(mesaj: string): boolean {
   const n = ' ' + duzle(mesaj) + ' '
   return / (olan|olmayan|gelen|gelmeyen|kullanan|alan|goren|geciken|gordugum|baktigim|muayene ettigim) /.test(n)
     && / (hasta|hastam|hastamiz|hastayi|hastami|cocuk|cocugu|bebek|bebegi|vaka|vakasi|kiz|oglan|erkek|kadin|bey|hanim) /.test(n)
+}
+/**
+ * NOTYA-KORPUS-KALAN-01 (G-24): "… hastam var mı" asks WHETHER such patients exist. The answer is the count with the
+ * names — also when exactly one chart matches. Before, a single match was returned as THE patient and its chart
+ * answered the turn (the identity card of the only chart without a birth date instead of "1 hasta: …").
+ */
+export function varMiSorusuMu(mesaj: string): boolean {
+  return / (hasta|hastam|hastamiz|hastalarim|hastalarimiz|hastalar) (var|yok) (mi|mu) /.test(' ' + duzle(mesaj) + ' ')
 }
 export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
@@ -526,7 +536,7 @@ async function dosyaIleDaralt(
     return { tur: 'yok', sayiMetin: istatistik.cumle }
   }
 
-  const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
+  const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle) || varMiSorusuMu(mesaj)
   if (ad.tur === 'coklu') {
     const idler = new Set(ad.adaylar.map((a) => a.id))
     const kesi = ara.filter((x) => idler.has(x.id))

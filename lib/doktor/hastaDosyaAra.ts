@@ -54,16 +54,34 @@ const GIZLI = new Set([
   'acilKisiAdi', 'acilKisiTelefon', 'veliAd', 'veliSoyad', 'veliTelefon',
 ])
 
-interface HamSatir { patientId: string; kaynak: string; neden: string; skor: number; metin?: string; zaman?: string }
+/** `ek`: searchable text that is not part of the row's name (the row kind, a drug's active substance). */
+interface HamSatir { patientId: string; kaynak: string; neden: string; skor: number; metin?: string; zaman?: string; ek?: string }
 
-export function adaylariTopla(satirlar: HamSatir[]): Map<string, { nedenler: string[]; skor: number; metin: string }> {
-  const m = new Map<string, { nedenler: string[]; skor: number; metin: string }>()
-  for (const s of satirlar) {
+export interface AdayGrubu {
+  /** At most four reasons, shown to the doctor. A display list — never the evidence a filter reads. */
+  nedenler: string[]
+  skor: number
+  metin: string
+  /** Every source table that has a row for this patient ('asi', 'ilac', 'not', 'seans' …). */
+  kaynaklar: Set<string>
+}
+
+/**
+ * NOTYA-KORPUS-KALAN-01 (G-21): the vaccine filter used to look for an "aşı" reason among the FOUR reasons kept for
+ * display, and visits are collected before vaccines — a patient with four or more visits never matched "aşı kaydı
+ * olan hastalarım" (16 vaccine rows → "Kayıtlarda 0 hasta"). The sources are now kept apart from the display list,
+ * and the reasons of `oncelik` (the table the question is about) are shown first.
+ */
+export function adaylariTopla(satirlar: HamSatir[], oncelik?: string | null): Map<string, AdayGrubu> {
+  const m = new Map<string, AdayGrubu>()
+  const sirali = oncelik ? [...satirlar.filter((s) => s.kaynak === oncelik), ...satirlar.filter((s) => s.kaynak !== oncelik)] : satirlar
+  for (const s of sirali) {
     if (!s.patientId) continue
-    const cur = m.get(s.patientId) || { nedenler: [], skor: 0, metin: '' }
+    const cur = m.get(s.patientId) || { nedenler: [], skor: 0, metin: '', kaynaklar: new Set<string>() }
     if (cur.nedenler.length < 4) cur.nedenler.push(s.neden)
     cur.skor += s.skor
-    cur.metin = `${cur.metin} ${s.metin || ''}`.trim()
+    cur.metin = `${cur.metin} ${s.metin || ''} ${s.ek || ''}`.replace(/\s+/g, ' ').trim()
+    cur.kaynaklar.add(s.kaynak)
     m.set(s.patientId, cur)
   }
   return m
@@ -189,7 +207,7 @@ export function pencereliCiplakSayim(q: SorguAyik): boolean {
     q.sayim && q.olcum === 'hasta' && q.pencere && !q.ziyaret
     && !q.terimler.length && !q.alanlar.length && !q.veya.length && !q.haric.length && !q.sayisal.length
     && !q.yas && !q.cinsiyet && !q.kanGrubu && !q.asi && !q.minSeans && !q.seriGecikme && !q.bayrakVe.length && !q.kirilim
-    && !q.ziyaretYok && !q.bolumIstegi,
+    && !q.ziyaretYok && !q.bolumIstegi && !q.dogumYok,
   )
 }
 
@@ -385,7 +403,7 @@ export async function klinikAramaYurut(
     })
     const gun = String(n.created_at || '').slice(0, 10)
     for (const ad of ilacListe) {
-      ham.push({ patientId: pid, kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad, zaman: gun })
+      ham.push({ patientId: pid, kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad, zaman: gun, ek: 'ilaç' })
     }
   }
 
@@ -407,7 +425,10 @@ export async function klinikAramaYurut(
     const zaman = String(i.created_at || i.baslangic_tarihi || '')
     if (!i.patient_id || !isoAralikta(zaman, p)) continue
     const ad = String(i.ilac_adi || i.etken_madde || '')
-    ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad, zaman })
+    // NOTYA-KORPUS-KALAN-01 (G-22): a medication row IS an "ilaç" hit whatever the drug is called ("Metformin 1000 mg"
+    // carries none of the ilaç search terms), and it is found by its active substance too (Klacid → klaritromisin).
+    // Same rule as the vaccine rows above. `metin` stays the drug name — the prescription breakdown groups by it.
+    ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad, zaman, ek: `ilaç ${i.ilac_adi ? i.etken_madde || '' : ''}` })
   }
 
   for (const r of randevular.data || []) {
@@ -493,7 +514,8 @@ export async function klinikAramaYurut(
     ham.push({ patientId: String(f.patient_id), kaynak: 'intake', neden: 'hasta formunda geçiyor', skor: 5, metin: parca.join(' ') })
   }
 
-  const grup = adaylariTopla(ham)
+  const ilacSorusu = q.alanlar.some((a) => a.anahtar === 'ilac')
+  const grup = adaylariTopla(ham, q.asi ? 'asi' : ilacSorusu ? 'ilac' : null)
 
   const { data: hastalar } = await supabase
     .from('patients')
@@ -506,13 +528,15 @@ export async function klinikAramaYurut(
   const hastaYas = new Map<string, { ad: string; ay: number | null }>()
   for (const h of hastalar || []) {
     const id = String(h.id)
-    const g = grup.get(id) || { nedenler: [], skor: 0, metin: '' }
+    const g: AdayGrubu = grup.get(id) || { nedenler: [], skor: 0, metin: '', kaynaklar: new Set<string>() }
     let dob = ''
     try { dob = decrypt(String(h.dob_encrypted || '')) } catch { dob = '' }
     const ad = hastaAdiCoz(h.name_encrypted as string | null)
     const ay = dob ? yasAyHesapla(dob, now) : null
     hastaYas.set(id, { ad, ay })
     if (!yasFiltreEslesir(ay, q.yas)) continue
+    // NOTYA-ARAMA-DOGUM-NEGASYON-01: "doğum tarihi kayıtlı olmayan" keeps only the charts with no birth date on the card.
+    if (q.dogumYok && dob.trim()) continue
 
     const cins = cinsiyetCoz(h.gender_encrypted as string | null) || intakeCinsiyet.get(id) || null
     if (q.cinsiyet && cins !== q.cinsiyet) continue
@@ -547,7 +571,8 @@ export async function klinikAramaYurut(
     if (!haricEslesir(torba, q.haric)) continue
     if (q.kanGrubu && !kanGrubuEslesir(torba, q.kanGrubu)) continue
 
-    if (q.asi && !g.nedenler.some((n) => /aşı|asi/i.test(n))) {
+    // The evidence is the vaccine table itself (or a note that says "aşı"), never the four reasons kept for display.
+    if (q.asi && !g.kaynaklar.has('asi') && !/(^|[^a-z])asi/.test(trAramaNormalize(g.metin))) {
       continue
     }
 
@@ -565,7 +590,7 @@ export async function klinikAramaYurut(
       q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere || q.cogul
       || q.veya.length || q.haric.length || q.sayisal.length || q.kanGrubu || q.cinsiyet || q.olcum
       || q.minSeans || q.seriGecikme || q.mchat || q.persentilEsik || q.bayrakVe.length || q.kirilim || q.ilacSinif
-      || q.bolumIstegi || q.ziyaretYok
+      || q.bolumIstegi || q.ziyaretYok || q.dogumYok
     )
     if (!anlamiVar) continue
 
