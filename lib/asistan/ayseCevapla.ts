@@ -39,7 +39,7 @@ import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
 import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar"
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
-import { cozumKonus, duzle, hastaninSozunuCoz, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
+import { cozumKonus, hastaninSozunuCoz, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
 import { dosyaPaketOnbellekli } from "@/lib/doktor/ogrenme/dosyaOnbellek"
 import { adliDosyaCevabi, dosyaSoruCevap, type HastaDosyaKart } from "@/lib/doktor/hastaDosyaKart"
 import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
@@ -51,12 +51,13 @@ import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi, kohortSorusuMu } from "@/lib/asistan/aktifHasta"
-import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni } from "@/lib/ai/cagir"
+import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
+import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
 import { asistanModelYonlendir, gecmisiKirp, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
 import { bekleyenKomutOku, komutCevabiMi, komutNiyetiBul, randevuTamMi, type BekleyenKomut, type KomutNiyeti } from "@/lib/asistan/komutNiyeti"
-import { adsiz, anilanKisi, duz, randevuSaatiBul, randevuTarihiBul, soylenenAd, type RandevuNiyeti } from "@/lib/randevu/randevuSozu"
+import { adsiz, duz, randevuSaatiBul, randevuTarihiBul, soylenenAd, type RandevuNiyeti } from "@/lib/randevu/randevuSozu"
 import { bosSaatMetni, doktorCalismaGunu } from "@/lib/randevu/bosSaatler"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
 import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
@@ -148,6 +149,11 @@ export interface OturumMesaji {
   hastaId?: string | null
   /** Kimlik cevabı: değer saklanmaz (content değersizdir); ekran okunurken sunucuda yeniden kurulur. */
   kimlik?: boolean
+  /**
+   * NOTYA-AYSE-ARAC-PARITE: the identity answer came from the model's hasta_bul call. The screen is rebuilt from the
+   * sentence the tool was called with (the doctor's own wording was the gap). A question, never a value.
+   */
+  kimlikSorusu?: string
 }
 
 export interface AyseCevabi {
@@ -315,7 +321,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   let turNiyeti: Niyet | null = null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
-  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; bekleyen?: string[]; sesDevamKalan?: string; bekleyenKomut?: BekleyenKomut | null } = {}) => {
+  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; kimlikSorusu?: string; bekleyen?: string[]; sesDevamKalan?: string; bekleyenKomut?: BekleyenKomut | null } = {}) => {
     // NOTYA-SES-TUR-02: this turn was cancelled (barge-in / sentence merge) -- never let its answer reach
     // the session record, where a later poll or follow-up turn could surface it as a fresh answer.
     if (g.sinyal?.aborted) return
@@ -325,7 +331,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       ? {
           role: "assistant", content: asistanSozu, kanal: "ses", zaman: asistanZamani,
           ...(ek.kartlar?.length ? { kartlar: ek.kartlar, hastaId: ek.kartHastaId ?? null } : {}),
-          ...(ek.kimlik ? { kimlik: true, hastaId: ek.hasta?.id ?? (contextPatientId ? String(contextPatientId) : null) } : {}),
+          ...(ek.kimlik ? { kimlik: true, hastaId: ek.hasta?.id ?? (contextPatientId ? String(contextPatientId) : null), ...(ek.kimlikSorusu ? { kimlikSorusu: ek.kimlikSorusu } : {}) } : {}),
         }
       : { role: "assistant", content: asistanSozu }
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
@@ -570,9 +576,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // the open patient's card. The turn carries no patient; Ayşe says the name was not found. A name that shares a
     // part with the open patient's own name (a garbled surname) still means the open patient.
     if (cozum.tur === "yok" && !(cozum as { sayiMetin?: string }).sayiMetin) {
-      const anilan = anilanKisi(onarim.mesaj)
-      const acikAd = aktifOnceden && baglam.patientName ? duzle(String(baglam.patientName)).split(" ") : []
-      if (anilan && !duzle(anilan).split(" ").some((p) => p.length >= 3 && acikAd.includes(p))) baskaKisiAnildi = anilan
+      baskaKisiAnildi = anilanBaskaKisi(onarim.mesaj, aktifOnceden && baglam.patientName ? String(baglam.patientName) : null)
     }
     // NOTYA-SES-YARIM-01: the name the doctor said matches too many patients to list — Ayşe asks for the surname;
     // the open patient must not answer a question that named someone else.
@@ -787,9 +791,15 @@ ${ilacBaglamMetni(drugs[0])}`
   if (aracZorlamaKapali()) komutZorla = false
   const zorlanan = komutZorla && eylemHastasi ? komut?.arac ?? null : null
   const hastasizArac = !eylemHastasi && Boolean(komut) && !eylemKapali()
-  const araclar = eylemHastasi
+  const yazmaAraclari = eylemHastasi
     ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }, { yalniz: zorlanan })
     : hastasizArac ? aracTanimlari({ brans: eylemBransi, hasta: null, hastasiz: true }) : []
+  // NOTYA-AYSE-ARAC-PARITE (2026-10-02): the READ tools the voice model had until 2026-09-25 (hasta_bul,
+  // randevu_takvim — lib/asistan/okumaAraclari.ts). The routers above are the fast path; when they did not answer,
+  // the model can look the answer up itself instead of saying "bilemedim". A command turn keeps its write tools
+  // exactly as they were (list, forcing, card path) and is not offered the read tools.
+  const okumaSunulur = !komut && !okumaAraciKapali() && Boolean(eylemHastasi)
+  const araclar = okumaSunulur ? [...yazmaAraclari, ...OKUMA_ARACLARI] : yazmaAraclari
   const toolChoice = !araclar.length || !eylemHastasi || !komutZorla
     ? undefined
     : zorlanan && araclar.some((a) => a.name === zorlanan) ? { type: 'tool' as const, name: zorlanan } : ('any' as const)
@@ -801,11 +811,13 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-AYSE-100-LUNA (c): the model clock — doctor-timezone date/time, per turn, never cached.
   // NOTYA-KONUSMA-BAGLAMI-01: the previous turn's topic for the residual model-path questions (≈ 200 tokens, per turn).
   const komutBlogu = !komut ? "" : hastasizArac ? HASTASIZ_KOMUT_BLOGU : komut.randevu && !komutZorla ? randevuSoruBlogu(komut.randevu, randevuTarih, randevuSaat, gunBolumuBul(zamanSozu)) : ""
-  const kuyruk = zamanBlogu(saatDilimi) + baglamBlogu(konusmaOnceki) + gunHam + dosyaTur + dosyaYokBlogu + (araclar.length ? EYLEM_ISTEM_BLOGU : "") + komutBlogu
+  const kuyruk = zamanBlogu(saatDilimi) + baglamBlogu(konusmaOnceki) + gunHam + dosyaTur + dosyaYokBlogu + (yazmaAraclari.length ? EYLEM_ISTEM_BLOGU : "") + (okumaSunulur ? OKUMA_ARACI_BLOGU : "") + komutBlogu
 
   // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
   // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.
-  const dozKaynak = kaynakSayilari(augmentedMessage, dosyaEk, odakDosyaMetni, ...messages.filter((m) => m.role === "user").map((m) => m.content))
+  const dozKaynakMetinleri = [augmentedMessage, dosyaEk, odakDosyaMetni, ...messages.filter((m) => m.role === "user").map((m) => m.content)]
+  // `let`: a read-tool result is a source too (set below, before the answer that uses it is generated).
+  let dozKaynak = kaynakSayilari(...dozKaynakMetinleri)
   const kdMi = kadinDogumMi(hekimBransi, specialty)
   const liste = kdMi ? kdDogrulanmisKaynaklar() : []
   // Ses: model yazarken her cümle ekrandakiyle aynı kilitlerden geçer — doğrulanmamış doz / kılavuz numarası söylenmez.
@@ -835,7 +847,7 @@ ${ilacBaglamMetni(drugs[0])}`
         content: m.content
       })),
       { role: "user" as const, content: augmentedMessage }
-    ]
+    ] as AiMesaj[]
   }
   // NOTYA-KADEME-01: sosyal tur ve tek-slot kısa takip turu luna-none (effort none); araç / eylem / ağır soru luna.
   const kademe = sohbetKademesi({
@@ -853,6 +865,85 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-AYSE-100 M1: the text block is not always first (tool_use first, thinking first) — join every text block.
   let rawResponse = yanitMetni(response)
 
+  // NOTYA-AYSE-ARAC-PARITE — server-side read-tool round trip: model call → the read tools it asked for, executed
+  // here for the AUTHENTICATED doctor → the results back to the model → the answer. At most OKUMA_TUR_TAVANI round
+  // trips; every execution is bounded by its own timeout (okumaAraciCalistir) and never throws. An answer that also
+  // carries a write call is not a look-up: it goes to the card path below exactly as before, with no round trip.
+  let cagriSon = cagri
+  const okuma = { tur: 0, ms: 0, metinler: [] as string[] }
+  /** The tool results as sentences for the doctor — the answer when the model adds nothing after its look-up. */
+  let okumaYedek = ""
+  let okumaKimlik: { cevap: KimlikCevabi; soru: string } | null = null
+  let okumaHastasi: { id: string; ad: string } | null = null
+  // HASTA-IZOLASYON-01: the tools get the doctor from the session, text from the model, and the open patient from the
+  // session (re-checked in the executor). A named person who was not found is never replaced by the open chart.
+  const okumaBaglami = {
+    supabase, doktorId, saatDilimi, hitapAdi: personaIlkAdi(persona.name),
+    aktifHasta: cozulenHasta ?? (!baskaKisiAnildi && contextPatientId
+      ? { id: String(contextPatientId), ad: baglam.currentPatientId && String(baglam.currentPatientId) === String(contextPatientId) && baglam.patientName ? String(baglam.patientName) : "" }
+      : null),
+  }
+  while (okumaSunulur && okuma.tur < OKUMA_TUR_TAVANI) {
+    const bloklar = toolUseBloklari(response as unknown as { content?: unknown })
+    const cagrilar = bloklar.filter((b) => okumaAraciMi(b.name))
+    if (!cagrilar.length || cagrilar.length !== bloklar.length) break
+    const aracBas = Date.now()
+    okuma.tur++
+    const sonuclar: OkumaSonucu[] = await Promise.all(cagrilar.map((b) => okumaAraciCalistir(String(b.name), b.input, okumaBaglami)))
+    const aracMs = Date.now() - aracBas
+    const gunluk = { kanal: g.kanal, tur: okuma.tur, araclar: cagrilar.map((b) => String(b.name)), hata: sonuclar.filter((s) => s.hata).length, aracMs }
+    // VELI-YASAL-ONAM: an identity answer ends the turn here — the values go to the screen, nothing goes back to the model.
+    const k = sonuclar.findIndex((s) => s.kimlik)
+    if (k >= 0) {
+      okumaKimlik = { cevap: sonuclar[k].kimlik as KimlikCevabi, soru: String(((cagrilar[k].input || {}) as Record<string, unknown>).isim ?? "").slice(0, 600) }
+      okuma.ms += aracMs
+      console.info("[asistan/chat] okuma araci", { ...gunluk, modelMs: 0, ekMs: aracMs, kimlik: true })
+      break
+    }
+    okuma.metinler.push(...sonuclar.map((s) => s.sonuc))
+    dozKaynak = kaynakSayilari(...dozKaynakMetinleri, ...okuma.metinler)
+    okumaYedek = sonuclar.map((s) => s.hekimMetni || "").filter(Boolean).join("\n\n")
+    okumaHastasi = sonuclar.find((s) => s.hasta)?.hasta ?? okumaHastasi
+    const asistanIcerik = ((response as unknown as { content?: unknown[] }).content || []).filter((b) => {
+      const x = b as { type?: string; text?: string }
+      return x?.type === "tool_use" || (x?.type === "text" && Boolean(String(x.text || "").trim()))
+    })
+    const sonucIcerik = cagrilar.map((b, i) => ({ type: "tool_result", tool_use_id: String(b.id || ""), content: sonuclar[i].sonuc, ...(sonuclar[i].hata ? { is_error: true } : {}) }))
+    cagriSon = { ...cagriSon, messages: [...cagriSon.messages, { role: "assistant", content: asistanIcerik }, { role: "user", content: sonucIcerik }] }
+    akanHam = ""
+    sesAkisi = sesAkisiKur()
+    const modelBas = Date.now()
+    try {
+      response = await modeliCagir(cagriSon)
+    } catch (e) {
+      // The look-up worked and the model did not come back: the doctor still gets what was found.
+      if (!okumaYedek) throw e
+      console.error("[asistan/chat] okuma araci sonrası model", e instanceof Error ? e.name : "hata")
+      response = { content: [{ type: "text", text: JSON.stringify({ speech: okumaYedek }) }], stop_reason: "end_turn" } as unknown as typeof response
+    }
+    rawResponse = yanitMetni(response)
+    const modelMs = Date.now() - modelBas
+    okuma.ms += aracMs + modelMs
+    console.info("[asistan/chat] okuma araci", { ...gunluk, modelMs, ekMs: aracMs + modelMs })
+  }
+  if (okumaKimlik) {
+    const kc = okumaKimlik.cevap
+    turNiyeti = "hasta-dosya"
+    await oturumuYaz(kc.model, { hasta: kc.hasta, kimlik: true, kimlikSorusu: okumaKimlik.soru })
+    const konusma = kimlikSozu(kc)
+    soyle(konusma)
+    return sade("kimlik", kc.ekran, konusma, kc.hasta?.ad || null)
+  }
+  if (okuma.tur) {
+    // The round-trip cap is reached and the model asks to look up again: it answers with what it has.
+    const kalan = toolUseBloklari(response as unknown as { content?: unknown })
+    if (kalan.length && kalan.every((b) => okumaAraciMi(b.name))) {
+      response = { ...response, content: ((response as unknown as { content?: { type?: string }[] }).content || []).filter((b) => b?.type !== "tool_use") } as unknown as typeof response
+    }
+    if (okumaHastasi && !cozulenHasta) cozulenHasta = okumaHastasi
+    void import("@/lib/doktor/ogrenme/hizOlc").then((m) => m.hizYazSessiz({ doctorId: doktorId, gorev: "sohbet-okuma-araci", sureMs: okuma.ms })).catch(() => { /* ölçüm */ })
+  }
+
   // NOTYA-AYSE-GERI-06 (audit §4.6, PR 7): the voice turn was sent the SHORT chart and the answer is not in it. The
   // model no longer tells the doctor so ("Bu ayrıntı sesli özetimde yok Hocam…") — it writes a marker, nothing has
   // been spoken, and the same turn is asked once more with the full chart. One retry; a second marker is answered
@@ -861,7 +952,7 @@ ${ilacBaglamMetni(drugs[0])}`
     console.info("[asistan/chat] ses tam dosya yeniden", { kanal: g.kanal })
     akanHam = ""
     sesAkisi = sesAkisiKur()
-    response = await modeliCagir({ ...cagri, system: asistanOnbellekBloklari({ global: sistem.global, hekim: sistem.hekim, kararli: sistem.degisken + bransKilidi + sesTamGovde, kuyruk }) })
+    response = await modeliCagir({ ...cagriSon, system: asistanOnbellekBloklari({ global: sistem.global, hekim: sistem.hekim, kararli: sistem.degisken + bransKilidi + sesTamGovde, kuyruk }) })
     rawResponse = yanitMetni(response)
     if (sesTamDosyaIstendiMi(rawResponse)) rawResponse = JSON.stringify({ speech: `${odakHastaAdi || "Hastanın"} dosyasında bu bilgi yok Hocam.` })
   }
@@ -870,6 +961,8 @@ ${ilacBaglamMetni(drugs[0])}`
   // "yanıt kesildi" note) and a half-written action is dropped.
   const aiData = asistanYanitiCoz(rawResponse, response.stop_reason)
   if (aiData.kesildi) console.warn("[asistan/chat] yanıt kesildi", { stop_reason: response.stop_reason, uzunluk: rawResponse.length })
+  // NOTYA-AYSE-ARAC-PARITE: the model looked something up and wrote nothing after it — what the tool found is the answer.
+  if (!String(aiData.speech || "").trim() && okumaYedek) aiData.speech = okumaYedek
   // KD-DERM-SAFETY-FINDINGS F4: no internal field names / invented consent form numbers in the bubble
   aiData.speech = doktorMetniTemizle(aiData.speech)
   // NOTYA-AYSE-GERI-06: the full-chart marker is an instruction to the server, never text for the doctor.
@@ -897,7 +990,8 @@ ${ilacBaglamMetni(drugs[0])}`
   }
   // NOTYA-HASTA-ODAK-01: açık dosyadayken uydurma liste / recant / başka hasta dilliği geri çekilir.
   const odakAd = odakHastaAdi || (cozulenHasta?.ad ?? (baglam.patientName ? String(baglam.patientName) : ''))
-  const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: odakDosyaMetni || dosyaEk, kanitYolu: kanitYoluAktif } : null)
+  // A read-tool result is chart text of this turn as much as the chart block is.
+  const odak = hastaOdakTemizle(String(aiData.speech || ''), odakAd ? { ad: odakAd, dosyaMetni: [odakDosyaMetni || dosyaEk, ...okuma.metinler].join("\n"), kanitYolu: kanitYoluAktif || okuma.tur > 0 } : null)
   if (odak.ihlal.length) console.warn("[asistan/chat] hasta odak kilidi", { ihlal: odak.ihlal, ad: odakAd })
   aiData.speech = odak.metin
   if (takvimRecantMi(aiData.speech)) {
@@ -1120,7 +1214,7 @@ ${ilacBaglamMetni(drugs[0])}`
     doctorId: doktorId, gorev: "sohbet", sureMs: Date.now() - cevapBas, onbellekli: dosyaOnbellekten,
   })).catch(() => { /* ölçüm */ })
 
-  rotaYaz("model", { arac: toolChoice ?? null, aracSayisi: araclar.length, kart: eylemOnerileri.length })
+  rotaYaz("model", { arac: toolChoice ?? null, aracSayisi: araclar.length, kart: eylemOnerileri.length, okuma: okuma.tur })
   return {
     ok: true,
     cevap: {

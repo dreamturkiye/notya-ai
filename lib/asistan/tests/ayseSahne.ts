@@ -38,17 +38,21 @@ export const ortam: {
   yanit: SahteYanit | ((istek: Record<string, any>) => SahteYanit)
   /** Every `[asistan/chat] rota` log line — the route each turn took, on both channels. */
   rotalar: { rota: string; kanal: string }[]
+  /** NOTYA-AYSE-ARAC-PARITE: every `[asistan/chat] okuma araci` log line — one per read-tool round trip, with its added time. */
+  okumaTurlari: { kanal: string; tur: number; araclar: string[]; hata: number; aracMs: number; modelMs: number; ekMs: number; kimlik?: boolean }[]
 } = {
   db: new SahteVeritabani(),
   modelIstekleri: [],
   yanit: { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) },
   rotalar: [],
+  okumaTurlari: [],
 }
 
 // The route log is the only place a voice turn reports its route (the SSE carries speech, not routing).
 // Product logs are kept out of the test output; errors still print.
 console.info = (...a: unknown[]) => {
   if (a[0] === '[asistan/chat] rota' && a[1] && typeof a[1] === 'object') ortam.rotalar.push(a[1] as { rota: string; kanal: string })
+  if (a[0] === '[asistan/chat] okuma araci' && a[1] && typeof a[1] === 'object') ortam.okumaTurlari.push(a[1] as (typeof ortam.okumaTurlari)[number])
 }
 console.warn = () => {}
 
@@ -234,6 +238,7 @@ export function sahneKur(brans = 'pediatri'): Sahne {
   indeksOnbelleginiTemizle()
   ortam.modelIstekleri.length = 0
   ortam.rotalar.length = 0
+  ortam.okumaTurlari.length = 0
   ortam.yanit = { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) }
   const kullanici = (): Kullanici => { const id = randomUUID(); const token = `qa-${id}`; ortam.db.kullanicilar.set(token, { id }); return { id, token } }
   const doktor = kullanici()
@@ -356,6 +361,28 @@ export function zorlananArac(istek: ModelIstegi | null): string | null {
 
 export function sunulanAraclar(istek: ModelIstegi | null): string[] {
   return ((istek?.govde?.tools as { name?: string }[] | undefined) || []).map((a) => String(a.name || ''))
+}
+
+/** NOTYA-AYSE-ARAC-PARITE: the tool results a model request carries (the text the model reads after a read-tool call). */
+export function aracSonuclari(istek: ModelIstegi | null): string[] {
+  const out: string[] = []
+  for (const m of (istek?.govde?.messages as { role?: string; content?: unknown }[] | undefined) || []) {
+    if (!Array.isArray(m.content)) continue
+    for (const b of m.content as { type?: string; content?: unknown }[]) if (b?.type === 'tool_result') out.push(String(b.content ?? ''))
+  }
+  return out
+}
+
+/**
+ * A fake model that behaves like a model with read tools: on its first request of a turn it calls `arac`, and once
+ * the request carries a tool result it answers with `cevap(sonuclar)`. Lets a test follow a real round trip.
+ */
+export function aracCagiranModel(arac: SahteArac | SahteArac[], cevap: (sonuclar: string[]) => string): (istek: Record<string, any>) => SahteYanit {
+  return (istek) => {
+    const sonuclar = aracSonuclari({ stream: false, govde: istek })
+    if (!sonuclar.length) return { metin: '', araclar: Array.isArray(arac) ? arac : [arac] }
+    return { metin: JSON.stringify({ speech: cevap(sonuclar) }) }
+  }
 }
 
 /** The assistant's last stored message of a session (what the screen poll shows for a voice turn). */
