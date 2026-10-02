@@ -377,8 +377,16 @@ export function karsilamaSecimi(h: DoktorIliski | null | undefined): { tanit: bo
 /** Ucuz kapı: yalnız doktor kendinden/tercihinden bahsediyorsa model çağrılır. */
 const KENDINDEN_BAHSETME = /\b(ben|benim|bana|bende|hep|her zaman|genelde|genellikle|asla|hiç|sevmem|sevmiyorum|istemem|istemiyorum|tercih|kullanırım|kullanmam|yazarım|yazmam|alışkanlık|mesai|öğle|sabah|akşam|unut|artık|bundan sonra|kısa|uzun|detaylı|hitap|hocam deme|adımla|randevu sürem|dakika)\b/i
 
+// NOTYA-OGRENME-GATE-01 (Kaan, 2026-10-02): a doctor teaches style with imperative requests ('Ayse, cevaplarini madde madde ver'),
+// not only by talking about himself. This gate only decides whether the (paid) extraction call runs; the extraction itself keeps
+// its rule: permanent, general, in the doctor's own words, never patient-specific clinical content.
+function sadeTrOgren(m: string): string {
+  const k = String(m || '').toLocaleLowerCase('tr').replace(/\u00e7/g, 'c').replace(/\u011f/g, 'g').replace(/\u0131/g, 'i').replace(/\u00f6/g, 'o').replace(/\u015f/g, 's').replace(/\u00fc/g, 'u')
+  return ' ' + k.replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim() + ' '
+}
+const BICIM_ISTEGI = / (madde madde|tablo halinde|tablo olarak|kisa tut|kisa yaz|kisa anlat|kisa ver|kisaca anlat|ozet gec|ozet ver|detayli anlat|detayli yaz|detayli ver|daha kisa|daha uzun|daha detayli|daha sade|sade anlat|uzun yazma|ayrintili anlat) | (cevaplarini|yanitlarini|notlarini|ozetlerini|aciklamalarini|cevaplarin|yanitlarin) /
 export function ogrenmeyeDeger(mesaj: string): boolean {
-  return mesaj.length >= 12 && KENDINDEN_BAHSETME.test(mesaj)
+  return mesaj.length >= 12 && (KENDINDEN_BAHSETME.test(mesaj) || BICIM_ISTEGI.test(sadeTrOgren(mesaj)))
 }
 
 interface CikarilanKayit { kategori: HafizaKategori; anahtar: string; deger: string; unut?: boolean }
