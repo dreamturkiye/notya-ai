@@ -54,6 +54,12 @@ describe('hasta dosya karti: kartta olmayan olcum', () => {
     }
     assert.equal(dosyaSoruCevap('tansiyonu ka\u00e7', vitalKart), null)
   })
+  it('a device reading on the card (written without a colon) is a held measurement', () => {
+    const cihazKart = { ...bosKart(), olcum: 'kilo 18.4 kg (20 Eyl 2026)' }
+    assert.equal(dosyaSoruCevap('kaç kilo', cihazKart), 'Dosyada kilo: 18.4 kg (20 Eyl 2026).')
+    assert.equal(dosyaSoruCevap('boyu kaç', cihazKart), 'Dosyada boy: kayıt yok.')
+    assert.equal(dosyaSoruCevap('ateşi kaç', cihazKart), null)
+  })
   it('asked together: the held one is answered, a missing weight is kay\u0131t yok, a missing vital is dropped', () => {
     assert.equal(dosyaSoruCevap('ate\u015fi ve kilosu ka\u00e7', vitalKart), 'Dosyada ate\u015f: 39 \u00b0C. Dosyada kilo: kay\u0131t yok.')
     assert.equal(dosyaSoruCevap('ate\u015fi ve kilosu ka\u00e7', buyumeKart), 'Dosyada kilo: 21 kg.')

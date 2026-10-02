@@ -127,7 +127,10 @@ const OLCUM_ANAHTARLARI: { soru: RegExp; etiket: RegExp; ad: string; buyume?: bo
 function olcumCevabi(n: string, olcum: string): [string, string][] {
   const ogeler = String(olcum || '').split(' · ').map((o) => o.trim()).filter(Boolean).map((o): [string, string] | null => {
     const i = o.indexOf(':')
-    return i > 0 ? [o.slice(0, i).trim(), o.slice(i + 1).trim()] : null
+    if (i > 0) return [o.slice(0, i).trim(), o.slice(i + 1).trim()]
+    // A confirmed device reading is written without a colon: 'kilo 18.4 kg (20 Eyl 2026)'.
+    const c = o.match(/^(\D+?)\s+(\d.*)$/)
+    return c ? [c[1].trim(), c[2].trim()] : null
   }).filter((x): x is [string, string] => x !== null)
   const istenen = OLCUM_ANAHTARLARI.filter((a) => a.soru.test(n))
   if (!istenen.length) return [['son ölçüm', olcum]]
