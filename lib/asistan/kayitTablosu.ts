@@ -135,7 +135,11 @@ const buyukBas = (s: string) => (s ? s[0].toLocaleUpperCase('tr-TR') + s.slice(1
 
 const CIHAZ_TURU: [RegExp, OlcumTuru][] = [[/^(kilo|agirlik|weight|tarti)/, 'kilo'], [/^(boy|height)/, 'boy'], [/^(bas ?cevre|head)/, 'basCevresi']]
 
-interface OlcumSatiri { tarih: string; kaynak: 'muayene' | 'cihaz'; deger: Partial<Record<OlcumTuru, number>> }
+interface OlcumSatiri {
+  tarih: string; kaynak: 'muayene' | 'cihaz'; deger: Partial<Record<OlcumTuru, number>>
+  /** NOTYA-DANIS-OLCUM: read from the note TEXT (a labelled value), not from the vital fields — marked in the cell. */
+  metinden?: OlcumTuru[]
+}
 
 function olcumSatirlari(olaylar: DosyaOlayi[], k: Kapsam): { satirlar: OlcumSatiri[]; muayeneSayisi: number; toplamMuayene: number } {
   const tum = vizitler(olaylar)
@@ -149,7 +153,20 @@ function olcumSatirlari(olaylar: DosyaOlayi[], k: Kapsam): { satirlar: OlcumSati
     d[o.tur] = o.deger
     deger.set(String(o.vizitId), d)
   }
-  const satirlar: OlcumSatiri[] = secili.map((v) => ({ tarih: v.tarih, kaynak: 'muayene', deger: deger.get(v.id) || {} }))
+  // NOTYA-DANIS-OLCUM: an exam whose weight / height / head circumference is written only in the note text
+  // ("Kilo 9,8 kg") is not "kayıt yok" — the same labelled value the one-exam answer reads (dosyaSorgu/vizitOlcum).
+  const metinden = new Map<string, OlcumTuru[]>()
+  for (const o of olaylar) {
+    if (o.kaynak !== 'not' || o.tur !== 'olcum-metin' || o.deger == null || !o.vizitId || !idler.has(String(o.vizitId))) continue
+    const tur = o.anahtar
+    if (tur !== 'kilo' && tur !== 'boy' && tur !== 'basCevresi') continue
+    const d = deger.get(String(o.vizitId)) || {}
+    if (d[tur] != null) continue
+    d[tur] = o.deger
+    deger.set(String(o.vizitId), d)
+    metinden.set(String(o.vizitId), [...(metinden.get(String(o.vizitId)) || []), tur])
+  }
+  const satirlar: OlcumSatiri[] = secili.map((v) => ({ tarih: v.tarih, kaynak: 'muayene', deger: deger.get(v.id) || {}, metinden: metinden.get(v.id) }))
   // Device measurements (confirmed readings) belong to the series; a "son / ilk N muayene" request is about exams only.
   if (k.tip === 'tum' || k.tip === 'yil') {
     for (const o of olaylar) {
@@ -193,7 +210,7 @@ export function olcumCevabi(istek: Extract<KayitIstegi, { tur: 'olcum' }>, olayl
     trGun(s.tarih),
     ...(cihazVar ? [s.kaynak === 'cihaz' ? 'cihaz ölçümü' : 'muayene'] : []),
     // A device row carries one measurement by nature; its other cells are not "missing", they are not applicable.
-    ...istek.olcumler.map((t) => (s.deger[t] != null ? sayi(s.deger[t]!) : s.kaynak === 'cihaz' ? '' : YOK)),
+    ...istek.olcumler.map((t) => (s.deger[t] != null ? `${sayi(s.deger[t]!)}${s.metinden?.includes(t) ? ' (not metni)' : ''}` : s.kaynak === 'cihaz' ? '' : YOK)),
   ])
   const cihazSayisi = satirlar.filter((s) => s.kaynak === 'cihaz').length
   const kapsamNotu = `${kapsamEtiketi(istek.kapsam, muayeneSayisi)}${cihazSayisi ? `, ${cihazSayisi} cihaz ölçümü` : ''}${istek.kapsam.tip !== 'tum' && istek.kapsam.tip !== 'yil' && muayeneSayisi < toplamMuayene ? `; toplam ${toplamMuayene} muayene kayıtlı` : ''}`
