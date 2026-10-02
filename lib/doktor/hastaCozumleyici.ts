@@ -301,6 +301,8 @@ async function adaylariZenginlestir(supabase: SupabaseClient, doctorId: string, 
   return zengin.sort((a, b) => a.id.localeCompare(b.id))
 }
 
+/** Name parts that are ordinary words of every sentence about the practice; they select a patient only inside the full name. */
+const GENEL_AD_PARCASI = new Set(['hasta'])
 /** More unindexed patients than this and the id filter is pointless — the doctor's whole list is read instead. */
 const INDEKSSIZ_TAVANI = 100
 /** This doctor's active patients whose indexed name parts may match the message tokens (index miss → full scan). */
@@ -419,7 +421,9 @@ export async function hastaninSozunuCoz(
     if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar) || tumParcalarVarGevsek) { tam.push({ id: h.id, ad }); kesin.add(h.id); continue }
     // NOTYA-HASTA-ODAK-01: a persona first name alone ("Ayşe") never partially matches a patient —
     // unless the sentence uses it as a patient reference ("Ayşe'nin", "Ayşe için"), NOTYA-AYSE-GERI-01.
-    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && (!hitapAdiMi(p) || anilanPersona.has(p)))
+    // NOTYA-AYSE-GERI-07: a name part that is the word "hasta" (QA charts: "Deneme Hasta", "QA Hasta") never matches
+    // on its own — "bugün kaç hastam var?" was answered with that chart instead of the count. The full name still works.
+    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && !GENEL_AD_PARCASI.has(p) && (!hitapAdiMi(p) || anilanPersona.has(p)))
     if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || parcaUzatilmisVarMi(p))) {
       kismi.push({ id: h.id, ad })
       if (parcalar.some(adOlarakGecer)) kesin.add(h.id)

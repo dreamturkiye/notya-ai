@@ -174,6 +174,23 @@ describe('NOTYA-AYSE-GERI-07 -- indeks satiri olmayan hasta', () => {
     assert.equal((await indekssizHastalar(sb, doctorId))?.length, 1)
   })
 
+  it('"hasta" sozcugu ad parcasi olan QA dosyasini secmez: sayim sorusu sayim kalir; tam ad yine bulur', async () => {
+    for (const indeksli of [false, true]) {
+      indeksOnbelleginiTemizle()
+      const db = new SahteVeritabani()
+      const sb = db.istemci() as any
+      const doctorId = randomUUID()
+      const id = hasta(db, doctorId, 'Deneme Hasta')
+      if (indeksli) await hastaAramaIndeksiniGuncelle(sb, doctorId, id, 'Deneme Hasta')
+      const sayim = await hastaninSozunuCoz(sb, doctorId, 'bugun kac hastam var?')
+      assert.equal(sayim.tur, 'yok', `indeksli=${indeksli}`)
+      assert.match(String((sayim as any).sayiMetin), /hasta/i)
+      const tam = await hastaninSozunuCoz(sb, doctorId, 'Deneme Hasta dosyasini ac')
+      assert.equal(tam.tur, 'tek', `indeksli=${indeksli}`)
+      assert.equal((tam as any).patientId, id)
+    }
+  })
+
   it('adParcasiMi: indeks eksikken "hayir" demez (null), tamken der', async () => {
     indeksOnbelleginiTemizle()
     const db = new SahteVeritabani()

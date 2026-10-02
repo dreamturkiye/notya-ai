@@ -140,8 +140,12 @@ let bekleyenOkumalar: Promise<void>[] = []
 /**
  * NOTYA-AYSE-GERI-08 — audit mode: the model is the REAL primary through OpenRouter (or `vekil`, a stand-in that
  * speaks the same wire format). Everything else stays the scene: in-memory Supabase, real routes, synthetic
- * patient. Only openrouter.ai may be reached. Returns false when there is neither a key nor a stand-in.
+ * patient. Only the model endpoint (lib/ai/saglayici.ts) may be reached. Returns false when there is neither a key
+ * nor a stand-in.
  */
+let ucSozu: Promise<string> | null = null
+/** Loaded on first use — by then the routes have loaded the provider module behind the mocks above. */
+const modelUcu = (): Promise<string> => (ucSozu ??= import('../../ai/saglayici').then((m) => m.openRouterUcu()))
 export function gercekModelAc(vekil?: (govde: Record<string, any>) => Response): boolean {
   if (!vekil && !ortamdakiAnahtar) return false
   process.env.OPENROUTER_API_KEY = vekil ? 'sk-or-vekil' : ortamdakiAnahtar
@@ -184,7 +188,7 @@ function yanitiIsle(k: AgCagrisi, ham: string, akis: boolean): void {
 }
 globalThis.fetch = (async (g: unknown, o?: RequestInit) => {
   const url = typeof g === 'string' ? g : g instanceof URL ? g.href : String((g as { url?: string })?.url || g)
-  if (!ag || !/^https:\/\/openrouter\.ai\//.test(url)) throw new Error(`Ayşe sahne testi ağ erişimi yapamaz: ${url}`)
+  if (!ag || url !== (await modelUcu())) throw new Error(`Ayşe sahne testi ağ erişimi yapamaz: ${url}`)
   const govde = JSON.parse(String(o?.body || '{}')) as Record<string, any>
   const secim = govde.tool_choice
   const k: AgCagrisi = {
