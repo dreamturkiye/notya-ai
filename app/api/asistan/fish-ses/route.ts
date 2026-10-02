@@ -35,9 +35,10 @@ export async function POST(req: NextRequest) {
   const anahtar = process.env.FISH_API_KEY
   if (!anahtar) return NextResponse.json({ error: 'Ses motoru yok' }, { status: 503 })
 
-  const govde = (await req.json().catch(() => null)) as { metin?: unknown } | null
+  const govde = (await req.json().catch(() => null)) as { metin?: unknown; detay?: unknown } | null
   const metin = typeof govde?.metin === 'string' ? govde.metin.slice(0, UST_KARAKTER) : ''
-  const istek = fishIstegi(metin)
+  // NOTYA-SES-NORMAL-01: `detay: true` asks for the full medical forms; the default is the short natural reading.
+  const istek = fishIstegi(metin, { detay: govde?.detay === true })
   if (!istek) return NextResponse.json({ error: 'Boş' }, { status: 400 })
 
   const kontrol = new AbortController()

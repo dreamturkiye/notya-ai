@@ -311,9 +311,13 @@ describe('Q-31 ses-tarih, ses-bicim, ses-birim, ses-kimlik', () => {
   })
   it('ses-birim: seslendirme metninde okunmayan birim kalmaz', () => {
     gecer(sesBirim(fishMetni('Kilosu 12,8 kg, boyu 87,5 cm, ateşi 38,7 °C.')))
-    kalir(sesBirim(fishMetni('Hemoglobin 11,8 g/dL.')), /okunmayan birim/)
-    kalir(sesBirim(fishMetni('Tansiyon 95/60 mmHg.')), /okunmayan birim/)
-    kalir(sesBirim(fishMetni('D vitamini 400 IU.')), /okunmayan birim/)
+    // NOTYA-SES-NORMAL-01: the medical speech layer reads these units; before it they reached the engine as written.
+    gecer(sesBirim(fishMetni('Hemoglobin 11,8 g/dL.')))
+    gecer(sesBirim(fishMetni('Tansiyon 95/60 mmHg.')))
+    gecer(sesBirim(fishMetni('D vitamini 400 IU.')))
+    kalir(sesBirim('Hemoglobin on bir virgül sekiz g/dL.'), /okunmayan birim/)
+    kalir(sesBirim('Tansiyon doksan beş bölü altmış mmHg.'), /okunmayan birim/)
+    kalir(sesBirim('D vitamini dört yüz IU.'), /okunmayan birim/)
     gecer(sesBirim(fishMetni('M-CHAT-R/F bir sonraki vizitte uygulanacak.')), 'tarama adı birim değildir')
     assert.equal(sesBirim(undefined), null)
   })
