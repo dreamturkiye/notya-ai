@@ -7,7 +7,7 @@
  * golden cases do. PURE.
  */
 import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
-import { devamIstegiMi, okumaIstegiMi } from '@/lib/asistan/konusma'
+import { devamIstegiMi, sesliOkumaSozuMu } from '@/lib/asistan/konusma'
 import type { OlcumTuru, YapiTuru } from './denetimler'
 
 const kucuk = (s: string) => String(s || '').toLocaleLowerCase('tr-TR')
@@ -47,7 +47,11 @@ export function istenenOlcumBul(soru: string): OlcumTuru | null {
   return anilan.length === 1 ? anilan[0] : null
 }
 
-/** "oku", "bana anlat", "devam et": the doctor asked to hear it — the spoken length cap of Q-30 does not apply. */
+/**
+ * "oku", "bana anlat", "devam et": the doctor asked to hear it — the spoken length cap of Q-30 does not apply.
+ * Wider than the product's read-aloud route (okumaIstegiMi): since NOTYA-KORPUS-KALAN-01 a sentence that names what to
+ * read from the chart ("Hastanın özetini oku") goes to the model, and it is still a request to have the answer read.
+ */
 export function okuIstegiMi(soru: string): boolean {
-  return okumaIstegiMi(soru) || devamIstegiMi(soru)
+  return sesliOkumaSozuMu(soru) || devamIstegiMi(soru)
 }

@@ -404,6 +404,8 @@ describe('kalite — sorudan çıkarım', () => {
   })
   it('okuma isteği: "oku", "bana anlat", "devam et"', () => {
     assert.ok(okuIstegiMi('Hastanın özetini oku') && okuIstegiMi('devam et') && okuIstegiMi('Devamını ekranda görüyorum ama sen bana anlat'))
+    // A chart object after "oku" leaves the product's read-aloud route (NOTYA-KORPUS-KALAN-01); the doctor still asked to hear it.
+    assert.ok(okuIstegiMi('Son SOAP notunu oku') && okuIstegiMi('Hepsini oku Ayşe'))
     assert.ok(!okuIstegiMi('Bu hastayı bana kısaca özetler misin?'))
   })
 })
