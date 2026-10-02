@@ -686,18 +686,32 @@ const TAKIP_GIRDILERI: KorpusGirdisi[] = [
 /* ══════════════════════════════════════════════════════════════════════════════════════════════════════
  * E. İlk-10 — the file questions of the Dr. Gökhan standard, on the 15-visit chart, all three surfaces
  * ══════════════════════════════════════════════════════════════════════════════════════════════════════ */
-const i = (no: number, soz: string, icerir: string[], icermez: string[] = []) =>
-  g(`I-${String(no).padStart(2, '0')}`, 'ilk10', soz, [K(ILK10, `## ${no}.`), L('NOTYA-AYSE-STANDART-01')], { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir, icermez }, { acik: 'bebek', yuzeyler: UC })
+/**
+ * NOTYA-ILK10-YAPI-01: the structure the standard asks for is asserted on the WRITTEN answer (chat and the file
+ * panel), where the whole answer is on screen. Voice speaks a condensed narrative inside the sentence cap, so the
+ * voice turn keeps the content assertions only (`sesIcerir`). The written assertions are shared by chat and the file
+ * panel, and the panel says "hasta" (no identity reaches the model there), so the patient's name is asserted on the
+ * voice turn and by the bound patient (`hasta`), not in the written text. The banned words are the standard's: a missing record is never "yapılmadı / uygulanmadı".
+ */
+const KAYIT_YOK_DEGIL_YAPILMADI = 'yapılmadı|uygulanmadı|yapılmamış|uygulanmamış'
+const i = (no: number, soz: string, icerir: string[], icermez: string[] = [], sesIcerir?: string[]) =>
+  g(`I-${String(no).padStart(2, '0')}`, 'ilk10', soz, [K(ILK10, `## ${no}.`), L('NOTYA-AYSE-STANDART-01'), ...(sesIcerir ? [L('NOTYA-ILK10-YAPI-01')] : [])],
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir, icermez }, { acik: 'bebek', yuzeyler: UC, ...(sesIcerir ? { ses: { icerir: sesIcerir } } : {}) })
 const ILK10_GIRDILERI: KorpusGirdisi[] = [
-  i(1, 'Bu hastayı bana kısaca özetler misin?', ['Emircan', 'otit|kulak', '[Dd]emir|anemi']),
+  // Q1 — snapshot: diagnoses that must be named, plus growth, development and vaccine status.
+  i(1, 'Bu hastayı bana kısaca özetler misin?', ['otit|kulak', '[Dd]emir|anemi', '[Bb]üyüme|persentil|kilo', '[Gg]elişim|M-CHAT', 'aşı|Hepatit A'], [], ['Emircan', 'otit|kulak', '[Dd]emir|anemi']),
   i(2, 'Son muayeneden bu yana neler değişmiş?', ['otit|kulak']),
-  i(3, 'Büyümesi nasıl gidiyor?', ['12[.,]8|12[.,]6', '87[.,]5']),
-  i(4, 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', ['Hepatit A'], ['Hepatit A 2\\. doz[^.\\n]*uyguland']),
+  // Q3 — the latest measurement with percentile and z-score from the engine, and a change between two named dates.
+  i(3, 'Büyümesi nasıl gidiyor?', ['12[.,]8|12[.,]6', '87[.,]5', 'persentil|\\bp ?\\d{1,2}\\b', '\\bz\\b|z-skor|z skor'], [], ['12[.,]8|12[.,]6', '87[.,]5']),
+  // Q4 — the planned dose is not a given dose; the wording for a missing record; risk-based apart from routine.
+  i(4, 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', ['Hepatit A', 'planlan', 'kayıt\\w* (bulamadım|yok|görünmüyor|göremiyorum|bulunmuyor)|kaydı (yok|görünmüyor|bulunmuyor)'], ['Hepatit A 2\\. doz[^.\\n]*uyguland', KAYIT_YOK_DEGIL_YAPILMADI], ['Hepatit A']),
   i(5, 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?', ['Hb|[Hh]emoglobin|[Ff]erritin|CRP']),
   i(6, 'Şu anda kullandığı ilaçlar neler ve dozları nedir?', ['D vitamini', 'Ferro Sanol|[Dd]emir']),
   i(7, 'Daha önce aynı şikayetle geldi mi?', ['otit|kulak']),
-  i(8, 'Gelişimi yaşına uygun mu?', ['M-CHAT|gelişim']),
-  i(9, 'Bugün yapmam veya takip etmem gereken bir şey var mı?', ['Hepatit A|kontrol|Takip|Dikkat']),
+  // Q8 — the six headings, in the standard's words; a recorded screening result is reported, never derived.
+  i(8, 'Gelişimi yaşına uygun mu?', ['Genel değerlendirme', 'Güçlü alanlar', 'İzlenmesi gereken alanlar', '[Rr]isk ve koruyucu', 'Tarama durumu', 'sonraki adım', 'M-CHAT'], [], ['M-CHAT|gelişim']),
+  // Q9 — three buckets, vaccines included.
+  i(9, 'Bugün yapmam veya takip etmem gereken bir şey var mı?', ['Bugün', 'Yakın zamanda', '[Rr]utin|Daha sonra', 'Hepatit A'], [KAYIT_YOK_DEGIL_YAPILMADI], ['Hepatit A|kontrol|Takip|Dikkat']),
   i(10, 'Gözümden kaçabilecek önemli bir şey var mı?', ['Hepatit A|Dikkat|Eksik|Takip|saptamadım']),
 ]
 

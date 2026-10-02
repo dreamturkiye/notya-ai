@@ -17,7 +17,7 @@
 import type { SahteVeritabani } from '@/lib/security/testing/sahteSupabase'
 import { adIndeksParcalari, tokenOzeti } from '@/lib/doktor/hastaAramaIndeksi'
 import { gunEkle, ayEkle } from '@/specialties/pediatri/engines/girdi'
-import { KORPUS_BEBEK_ADI, KORPUS_ERISKIN_ADI, korpusBebek, korpusEriskin, type KorpusDosyasi } from '@/lib/asistan/dosyaSorgu/denetim/fikstur'
+import { KORPUS_BEBEK_ADI, KORPUS_ERISKIN_ADI, ilk10Dosyasi, korpusBebek, korpusEriskin, type KorpusDosyasi } from '@/lib/asistan/dosyaSorgu/denetim/fikstur'
 
 export type KorpusHasta = 'bebek' | 'ayse' | 'tarik' | 'olcay' | 'eriskin'
 
@@ -103,8 +103,34 @@ function kucukDosyalar(bugunIso: string): Record<'ayse' | 'tarik' | 'olcay', Kor
   }
 }
 
+/**
+ * NOTYA-ILK10-* — the "İlk 10" standard chart in the scene: lib/asistan/dosyaSorgu/denetim/fikstur.ts ilk10Dosyasi()
+ * (24-month-old boy: two Hepatit B rows on one day, a planned Hepatit A dose with no row, two weights on one day, a
+ * suspension dose above the table's range written with another product than the drug list, a follow-up window that
+ * closed four days ago, a planned M-CHAT with no result). Not part of the corpus panel: added only by the tests that
+ * use it, so every panel count stays the same. The intake form carries identity keys on purpose — the tests check
+ * that none of them reaches the model.
+ */
+export const ILK10_HASTA_ADI = 'Doruk Savaşkan'
+export const ILK10_KIMLIK = { tcKimlik: '10000000214', telefon: '0536 000 55 66', anneAdi: 'Zerrin', veliTelefon: '0536 000 55 66' } as const
+
+export function ilk10KorpusDosyasi(bugunIso: string): KorpusDosyasi {
+  const ham = ilk10Dosyasi(bugunIso)
+  const form = { ad: 'Doruk', soyad: 'Savaşkan', ...ILK10_KIMLIK, babaAdi: 'Tuncay', veliYakinligi: 'anne', veliAd: 'Zerrin', veliSoyad: 'Savaşkan', cinsiyet: 'Erkek', ...ham.intake }
+  return { ...ham, hasta: { ...ham.hasta, ad: ILK10_HASTA_ADI }, telefon: ILK10_KIMLIK.telefon, form, belgeDosyalari: [], goruntuler: [] }
+}
+
+/**
+ * The chart for one doctor; returns the patient id. `gecmiseDonuk`: the visits were entered AFTER the fact — every
+ * session row is created on the entry day (yesterday) while each note carries its own visit day, the way the real
+ * test chart of 2026-10-02 was entered (NOTYA-VIZIT-TARIHI-01).
+ */
+export function ilk10HastasiEkle(db: SahteVeritabani, encrypt: (s: string) => string, doktorId: string, bugunIso: string, o: { gecmiseDonuk?: boolean } = {}): string {
+  return korpusDosyasiYaz(db, encrypt, doktorId, ilk10KorpusDosyasi(bugunIso), o.gecmiseDonuk ? { seansOlusturma: (_v, i) => `${gunEkle(bugunIso, -1)}T1${i}:00:00Z` } : {})
+}
+
 /** One chart with everything every creation path writes (name index rows included). Returns the patient id. */
-export function korpusDosyasiYaz(db: SahteVeritabani, encrypt: (s: string) => string, doktorId: string, d: KorpusDosyasi): string {
+export function korpusDosyasiYaz(db: SahteVeritabani, encrypt: (s: string) => string, doktorId: string, d: KorpusDosyasi, o: { seansOlusturma?: (vizitTarihi: string, sira: number) => string } = {}): string {
   const ilkTarih = d.intakeTarih || d.vizitler[0]?.tarih || new Date().toISOString()
   const hasta = db.ekle('patients', {
     doctor_id: doktorId, is_active: true,
@@ -120,7 +146,7 @@ export function korpusDosyasiYaz(db: SahteVeritabani, encrypt: (s: string) => st
     db.ekle('hasta_intake_formlari', { patient_id: hasta, doktor_id: doktorId, created_at: ilkTarih, form_data_encrypted: encrypt(JSON.stringify(d.form)) })
   }
   d.vizitler.forEach((v, i) => {
-    const seans = db.ekle('sessions', { patient_id: hasta, doctor_id: doktorId, created_at: v.tarih, status: 'completed', specialty: 'pediatri', session_type: 'muayene', archived_at: null }).id
+    const seans = db.ekle('sessions', { patient_id: hasta, doctor_id: doktorId, created_at: o.seansOlusturma ? o.seansOlusturma(v.tarih, i) : v.tarih, status: 'completed', specialty: 'pediatri', session_type: 'muayene', archived_at: null }).id
     db.ekle('notes', {
       session_id: seans, doctor_id: doktorId, patient_id: hasta, created_at: v.tarih, approved_at: v.tarih,
       content_subjektif: v.subjektif ?? null, content_objektif: v.objektif ?? null, content_degerlendirme: v.degerlendirme ?? null,
@@ -142,6 +168,7 @@ export function korpusDosyasiYaz(db: SahteVeritabani, encrypt: (s: string) => st
     const bas = new Date(r.baslangic)
     db.ekle('randevular', { patient_id: hasta, doktor_id: doktorId, baslangic: bas.toISOString(), bitis: new Date(bas.getTime() + 20 * 60_000).toISOString(), tur: r.tur ?? 'kontrol', durum: r.durum ?? 'planli', hasta_adi_serbest: null })
   }
+  for (const c of d.cihaz || []) db.ekle('cihaz_olcumleri', { patient_id: hasta, doctor_id: doktorId, tur: c.tur, deger: c.deger, birim: c.birim, alindi: c.alindi, onaylandi: true })
   for (const m of d.mchat || []) db.ekle('mchat_testleri', { patient_id: hasta, doctor_id: doktorId, created_at: m.created_at, risk_seviyesi: m.risk_seviyesi, toplam_puan: m.toplam_puan ?? null })
   for (const b of d.belgeler || []) {
     db.ekle('belge_analizleri', { patient_id: hasta, doctor_id: doktorId, modality_final: b.modality_final, durum: 'onaylandi', onaylandi_at: b.onaylandi_at, sonuc: { ozet: b.hekim_ozet, acil_bayrak: false }, hekim_tanisi: [], hekim_ozet: b.hekim_ozet })
