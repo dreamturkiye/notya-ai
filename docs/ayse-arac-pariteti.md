@@ -68,3 +68,42 @@ cards, identity values rebuilt on the server).
 - Write tools are untouched: same list, same forcing, same card path. A command turn is not offered the read tools.
 
 Reuse and new code are listed in the ledger entry (`docs/OPEN-COMMITMENTS.md`, NOTYA-AYSE-ARAC-PARITE).
+
+## 5. How a read-tool turn runs (as built)
+
+1. Scope gate, command detection and the read routers run as before. A router that answers ends the turn with no
+   model call (fast path).
+2. No router answered and the turn is not a command (and not only a greeting): the model request carries the write
+   tools the turn already had plus `hasta_bul` and `randevu_takvim`, and the prompt tail carries the read-tool rules.
+3. The model answers in text (as before), or asks for a read tool. A read call is executed in process for the
+   authenticated doctor; the result goes back as a tool result; the model answers. At most 2 round trips.
+4. Identity: the tool gives the model a value-less text; the values go to the doctor's screen and the turn ends there.
+5. If the answer also carries a write call, there is no round trip: the card path runs exactly as before.
+
+What the executors reuse, by tool:
+
+| Tool | Existing functions called |
+|---|---|
+| `hasta_bul` | `kapsamKarariHastayla` (scope gate) → `takvimSorusuCoz` (a calendar sentence sent here) → `kimlikSorusunuCevapla` → `hastaninSozunuCoz` (name + practice search) with the brain's open-chart rules (`aktifHastaKullanilsinMi`, `kohortSorusuMu`, `hastaSahibiMi`, the wrong-patient guard) → `cozumKonus` → `dosyaPaketOnbellekli` → `vizitOlcumSorusuBul` / `vizitOlcumKaniti` / `vizitOlcumCevabi` (NOTYA-DANIS-OLCUM) → `soruTuruBul` / `kanitBlogu` / `dosyaSorguKuralBlogu` (evidence) → `dosyaSoruCevap` / `kartSoyle` (quick card) |
+| `randevu_takvim` | `doktorunGununuOku` → `gunlukOzetMetni`; with no time asked also `doktorCalismaGunu` → `bosSaatMetni`; for a week `haftalikOzetMetni` |
+
+Switches: `AYSE_OKUMA_ARACI_KAPALI=1` withdraws the read tools (the brain is as it was before this branch).
+`NOTYA_HIZLI_YOL_KAPALI=1` is an audit switch for tests and measurement only: the read routers step aside.
+
+## 6. Added time
+
+Logged per round trip: `[asistan/chat] okuma araci` with `aracMs` (tool execution), `modelMs` (the model call after
+it) and `ekMs` (both); `ekMs` is also written to `ai_hiz_olcum` under görev `sohbet-okuma-araci`.
+
+Stand-in run of 2026-10-02 (`npm run olcum:okuma-araci:kuru`; 8 questions × chart open / closed × chat / voice × 10):
+
+| Channel | Tool-path turns | Tool called | Right answer | Added p50 | Added p90 | Whole turn p50, tool path | Whole turn p50, router |
+|---|---|---|---|---|---|---|---|
+| both | 320 | 320 | 320 | 2 ms | 4 ms | 7 ms | 2 ms |
+| chat | 160 | 160 | 160 | 2 ms | 4 ms | 7 ms | 2 ms |
+| voice | 160 | 160 | 160 | 2 ms | 4 ms | 7 ms | 2 ms |
+
+The stand-in answers at once and the database is in memory: these numbers are the server's own share of a round
+trip. They are not the latency a doctor will see. Live, a round trip costs one more call of the primary model plus
+the tool's database reads, and neither was measured here (no key in this environment). The runner takes a real key:
+`OPENROUTER_API_KEY=… npm run olcum:okuma-araci`.
