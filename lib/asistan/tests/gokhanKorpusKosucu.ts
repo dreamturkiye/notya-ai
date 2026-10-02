@@ -18,17 +18,21 @@ import {
   type Sahne,
 } from './ayseSahne'
 import { GERCEKCI_HASTA_ADI, gercekciHastaEkle } from './gercekciHasta'
-import { KORPUS_ADLARI, korpusPaneliKur } from './gokhanKorpusHastalari'
-import { korpusBebek } from '../dosyaSorgu/denetim/fikstur'
+import { KORPUS_ADLARI, KORPUS_GEC_GIRIS_ADI, KORPUS_KIMLIK_DEGERLERI, YABANCI_HASTALAR, gecGirisHastasiEkle, korpusPaneliKur } from './gokhanKorpusHastalari'
+import { KORPUS_GEC_GIRIS, korpusBebek, korpusGecGiris } from '../dosyaSorgu/denetim/fikstur'
 import { bugunTz } from '../../randevu/tarihCozumle'
 import { fishMetni } from '../fishSes'
 import { gunEkle } from '../../../specialties/pediatri/engines/girdi'
 import {
-  KAPSAM_DISI_SIKAYETLER, KORPUS_KAYNAKLARI, beklentiDegerlendir, korpusBaglami, oturumlaraBol, yuzeyBeklentisi,
+  KAPSAM_DISI_SIKAYETLER, KORPUS_KAYNAKLARI, beklentiDegerlendir, kaliteGirdisiKur, korpusBaglami, oturumlaraBol, yuzeyBeklentisi,
   type FiksturTarihleri, type Karar, type KorpusGirdisi, type KorpusHastasi, type TurGozlemi, type Yuzey,
 } from './gokhanSikayetKorpusu'
+import { cevabiDenetle } from '../kalite/rubrik'
+import { GECIKME_BUTCESI, KALITE_KURALLARI } from '../kalite/kurallar'
+import { gecikmeOzeti, kaliteIhlalleri, kaliteOzetle, oran, type KaliteSayimi } from '../kalite/ozet'
+import type { KaliteKarari } from '../kalite/denetimler'
 
-export const TUM_ADLAR: Record<KorpusHastasi, string> = { ...KORPUS_ADLARI, deniz: GERCEKCI_HASTA_ADI }
+export const TUM_ADLAR: Record<KorpusHastasi, string> = { ...KORPUS_ADLARI, deniz: GERCEKCI_HASTA_ADI, doruk: KORPUS_GEC_GIRIS_ADI }
 
 export interface KorpusSatiri {
   id: string
@@ -58,10 +62,16 @@ export interface KorpusSatiri {
   ms: number
   maliyet: number
   hata: string
+  /**
+   * NOTYA-KALITE-STANDART-01: the quality rubric's verdicts for this turn (rule id, check, target text, pass or
+   * fail, reason). null = not judged — in a dry run the words of a turn that reached the stand-in are not Ayşe's.
+   */
+  kalite: KaliteKarari[] | null
 }
 
 export const fiksturTarihleri = (bugunIso: string): FiksturTarihleri => {
   const b = korpusBebek(bugunIso)
+  const d = korpusGecGiris(bugunIso)
   const gun = (iso: string | null | undefined) => String(iso || '').slice(0, 10)
   return {
     pDogum: gun(b.hasta.dogumIso),
@@ -70,6 +80,8 @@ export const fiksturTarihleri = (bugunIso: string): FiksturTarihleri => {
     pSonVizit: gun(b.vizitler[b.vizitler.length - 1].tarih),
     pSonLab: [...(b.lablar || [])].map((l) => gun(l.numune_tarihi)).sort().pop() || '',
     aVizit: gunEkle(bugunIso, -8),
+    gV12: gun(d.vizitler[0].tarih), gV15: gun(d.vizitler[1].tarih), gV18: gun(d.vizitler[2].tarih),
+    gGiris: gunEkle(bugunIso, -KORPUS_GEC_GIRIS.girisGunOnce), gLab: gun(d.lablar?.[0]?.numune_tarihi),
   }
 }
 
@@ -103,6 +115,8 @@ async function oturumuKos(grup: KorpusGirdisi[], yuzey: Yuzey, o: { saatDilimi: 
   const idler: Partial<Record<KorpusHastasi, string>> = { ...p.idler }
   // The action-audit chart joins the panel only for the sessions that use it, so every other count stays the same.
   if (grup.some((g) => g.acik === 'deniz' || g.id.startsWith('E-'))) idler.deniz = gercekciHastaEkle(ortam.db, encrypt, s.doktor.id)
+  // The late-entry chart of the quality standard's golden cases, likewise.
+  if (grup.some((g) => g.acik === 'doruk' || g.sayfa === 'doruk' || g.soz.includes(KORPUS_GEC_GIRIS_ADI))) idler.doruk = gecGirisHastasiEkle(ortam.db, encrypt, s.doktor.id, bugun)
   const baglam = korpusBaglami(bugun, fiksturTarihleri(bugun))
   const acik = grup[0].acik
   const oturum = acik ? oturumAc(s, { id: idler[acik]!, ad: TUM_ADLAR[acik] }, brans) : s.oturum
@@ -183,12 +197,14 @@ async function oturumuKos(grup: KorpusGirdisi[], yuzey: Yuzey, o: { saatDilimi: 
     if (!g.yuzeyler.includes(yuzey)) continue
     const gozlem: TurGozlemi = { ...r, hata: r.hata || kurulumHatasi }
     const { karar, nedenler } = beklentiDegerlendir(yuzeyBeklentisi(g, yuzey), gozlem, baglam, TUM_ADLAR, { vekil: o.vekil })
+    const kaliteGirdisi = kaliteGirdisiKur(g, gozlem, { vekil: o.vekil, kimlikDegerleri: KORPUS_KIMLIK_DEGERLERI, yabanciAdlar: YABANCI_HASTALAR })
     satirlar.push({
       id: g.id, kaynak: g.kaynak.map((k) => `${k.dosya}: ${k.kimlik}`).join('; '), kaynakDosyalari: [...new Set(g.kaynak.map((k) => k.dosya))],
       kat: g.kat, yuzey, oturum: g.oturum ?? null, onceki, soz: g.soz,
       rota: r.rota, modeleGitti: r.modeleGitti, zorlanan: r.zorlanan, cagrilan: r.cagrilan, kartlar: r.kartlar, hasta: r.hasta,
       cevap: r.ekran, sozlu: r.soz, karar, nedenler, acikKusur: g.acikKusur ?? null, not: g.not ?? null,
       ms: r.ms, maliyet: r.maliyet, hata: gozlem.hata,
+      kalite: kaliteGirdisi ? cevabiDenetle(kaliteGirdisi) : null,
     })
   }
   return satirlar
@@ -243,6 +259,65 @@ const aracKart = (s: KorpusSatiri) => [
 ].filter(Boolean).join('; ') || '—'
 const cevapMetni = (s: KorpusSatiri) => s.hata || (s.yuzey === 'ses' ? [s.sozlu && `🔊 ${s.sozlu}`, s.cevap && s.cevap !== s.sozlu ? `🖥 ${s.cevap}` : ''].filter(Boolean).join(' ') : s.cevap) || '(empty)'
 
+const HEDEF_ADI: Record<KaliteKarari['hedef'], string> = { ekran: 'screen', soz: 'spoken' }
+const yuzdeYaz = (s: KaliteSayimi) => `${(oran(s) * 100).toFixed(1)}%`
+
+/**
+ * NOTYA-KALITE-STANDART-01 — the quality section of the report: score, pass rate per rule, per check, per category
+ * and per surface, and every failed verdict with its rule id. In a dry run only the model-free handlers are judged.
+ */
+export function kaliteBolumu(satirlar: KorpusSatiri[], kuru: boolean): string[] {
+  const o = kaliteOzetle(satirlar)
+  const b: string[] = ['## Quality — measured against docs/AYSE-KALITE-STANDARDI.md', '']
+  if (kuru) {
+    b.push(`**Stand-in run: only the checks that need no model answer are comparable.** ${o.yargilanan} of ${satirlar.length} turns were answered by a model-free handler and are judged; the other ${o.yargilanmayan} were written by the stand-in and have no verdict. The numbers below say nothing about İlk-10 answers, summaries or anything else the model writes — the live pass measures those.`, '')
+  } else {
+    b.push(`${o.yargilanan} of ${satirlar.length} turns judged.`, '')
+  }
+  b.push(`Quality score: **${o.puan}** (${o.toplam.gecen} of ${o.toplam.toplam} verdicts passed). A verdict is one mechanical check applied to one answer; the checks measure form and wording, not whether a value is true.`, '')
+
+  b.push('### By rule', '', '| rule | | verdicts | pass | fail | pass rate |', '|---|---|---|---|---|---|')
+  for (const k of KALITE_KURALLARI) {
+    const s = o.kural[k.id]
+    if (s) b.push(`| ${k.id} | ${k.ad} | ${s.toplam} | ${s.gecen} | ${s.toplam - s.gecen ? `**${s.toplam - s.gecen}**` : 0} | ${yuzdeYaz(s)} |`)
+    else b.push(`| ${k.id} | ${k.ad} | — | — | — | ${k.denetimler.length ? 'no answer of this run was subject to it' : 'not checked by the rubric'} |`)
+  }
+  b.push('')
+  const tablo = (baslik: string, h: Record<string, KaliteSayimi>, ad: (k: string) => string = (k) => k) => {
+    b.push(`| ${baslik} | verdicts | pass | fail | pass rate |`, '|---|---|---|---|---|')
+    for (const [k, s] of Object.entries(h)) b.push(`| ${ad(k)} | ${s.toplam} | ${s.gecen} | ${s.toplam - s.gecen ? `**${s.toplam - s.gecen}**` : 0} | ${yuzdeYaz(s)} |`)
+    b.push('')
+  }
+  const kuralAdi = Object.fromEntries(KALITE_KURALLARI.flatMap((k) => k.denetimler.map((d) => [d, k.id])))
+  b.push('### By check', '')
+  tablo('check', o.denetim, (k) => `${kuralAdi[k] ?? '?'} \`${k}\``)
+  b.push('### By category', '')
+  tablo('category', o.kategori)
+  b.push('### By surface', '')
+  tablo('surface', o.yuzey, (k) => YUZEY_ADI[k as Yuzey] ?? k)
+
+  if (!kuru) {
+    const sn = (ms: number | null) => (ms === null ? '—' : `${(ms / 1000).toFixed(1)} s`)
+    b.push('### Latency (Q-33) — an indication, not a gate', '')
+    b.push('Harness time of the voice turns until the whole text answer exists, with no audio in it. Time to first sound is measured in the live spot check (docs/qa/canli-kontrol.md).', '')
+    b.push('| path | turns | p50 | p95 | budget | within |', '|---|---|---|---|---|---|')
+    for (const g of gecikmeOzeti(satirlar)) {
+      const butce = g.yol === 'hizli' ? `p50 ≤ ${GECIKME_BUTCESI.hizliP50 / 1000} s` : `p50 ≤ ${GECIKME_BUTCESI.modelP50 / 1000} s, p95 ≤ ${GECIKME_BUTCESI.modelP95 / 1000} s`
+      b.push(`| ${g.yol === 'hizli' ? 'fast (no model)' : 'model'} | ${g.adet} | ${sn(g.p50)} | ${sn(g.p95)} | ${butce} | ${g.butceIcinde === null ? '—' : g.butceIcinde ? 'yes' : '**no**'} |`)
+    }
+    b.push('')
+  }
+
+  const ihlal = kaliteIhlalleri(satirlar)
+  b.push(`### Violations — ${ihlal.length} failed verdict(s)`, '')
+  if (ihlal.length) {
+    b.push('| id | surface | rule | check | text | why |', '|---|---|---|---|---|---|')
+    for (const i of ihlal) b.push(`| ${i.id} | ${YUZEY_ADI[i.yuzey as Yuzey] ?? i.yuzey} | ${i.kural} | ${i.denetim} | ${HEDEF_ADI[i.hedef as KaliteKarari['hedef']]} | ${hucre(i.neden, 160)} |`)
+    b.push('')
+  } else b.push('None.', '')
+  return b
+}
+
 /** The markdown report. Synthetic patients only — the answers may be committed. */
 export function korpusRaporu(g: { tarih: string; model: string; satirlar: KorpusSatiri[]; girdiSayisi: number; kuru?: boolean; filtre?: string }): string {
   const o = ozetle(g.satirlar)
@@ -271,6 +346,7 @@ export function korpusRaporu(g: { tarih: string; model: string; satirlar: Korpus
   tablo('category', o.kat)
   b.push('### By route that answered', '')
   tablo('route', o.rota)
+  b.push(...kaliteBolumu(g.satirlar, Boolean(g.kuru)))
 
   const fail = g.satirlar.filter((s) => s.karar === 'FAIL')
   const yeni = fail.filter((s) => !s.acikKusur), bilinen = fail.filter((s) => s.acikKusur)

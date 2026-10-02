@@ -87,18 +87,26 @@ function sade(mesaj: string): string {
 /** "Bu bilgilere ulaşamıyorum" / "erişimin var mı" — değer istemez, erişim iddiasını düzeltir. */
 export function kimlikErisimSorusu(mesaj: string): boolean {
   const n = sade(mesaj)
-  if (/ hastalar| hastalarim| kac hasta| hangi hasta| olan | bul\w* | listele\w* /.test(n)) return false
+  if (KOHORT_SORUSU.test(n)) return false
   if (/ (kaydet|guncelle|degistir|ekle|sil|duzelt|gonder|yolla)\w*/.test(n) || / mail at /.test(n)) return false
   return /(bu bilgi|bu bilgiler|bu veri|erisim|erise|ulasami|ulasa)/.test(n)
     && /(anne|baba|veli|telefon|eposta|e posta|adres|kimlik|iletisim|demografik)/.test(n)
 }
+
+/**
+ * A question about MANY patients ("… olan hastalar", "… olmayan hastam var mı", "kaç hasta") is a search, never an
+ * identity answer. NOTYA-ARAMA-DOGUM-NEGASYON-01 (G-24): "doğum tarihi kayıtlı olmayan hastam var mı" carried none of
+ * the old markers ("olan", "hastalar") — the identity route took it and asked "Hangi hastanın bilgisini istiyorsunuz?".
+ * "Bu hastanın doğum tarihi var mı" names one patient and stays an identity question.
+ */
+const KOHORT_SORUSU = / hastalar| hastalarim| kac hasta| hangi hasta| olan | olmayan\w* | girilmemis | (hasta|hastam|hastamiz) (var|yok) | bul\w* | listele\w* /
 
 export function kimlikSorusu(mesaj: string): KimlikAlani[] {
   const n = sade(mesaj)
   if (n.trim().length < 3) return []
   // Kohort / pratik sorusu, kayıt ya da gönderim niyeti → kimlik cevabı değil.
   // "annesinin adı Ayşe olan hastayı bul" bir hasta aramasıdır (hastaAramaFiltre anneadi filtresi) — burada cevaplanmaz.
-  if (/ hastalar| hastalarim| kac hasta| hangi hasta| olan | bul\w* | listele\w* /.test(n)) return []
+  if (KOHORT_SORUSU.test(n)) return []
   if (/ (kaydet|guncelle|degistir|ekle|sil|duzelt|gonder|yolla)\w*/.test(n) || / mail at /.test(n)) return []
   if (kimlikErisimSorusu(mesaj)) {
     const alanlar: KimlikAlani[] = []
