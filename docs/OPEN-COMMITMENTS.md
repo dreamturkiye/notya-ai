@@ -3036,3 +3036,10 @@ Passing in the dry run, model-free on both channels: identity questions (20 / 20
 | 2026-10-02 | NOTYA-AYSE-ALAN-01 / NOTYA-AYSE-ANALIZ-01 gate (Claude): full npm test, test:ayse, isolation and tsc green; Gokhan corpus FAIL 39 -> 36 (850 turns, synthetic patients, real Luna). |
 | 2026-10-02 | NOTYA-SES-ASR-KAZANC-01 (Claude): quiet clips are level-normalised before Fish ASR, the retry sends the other version, and the doctor sees a hint after two skipped clips; traced from a live report that Ayse did not answer with the mic open (Vercel logs: many clips with dil_tespit zh/ar/hi and empty text). |
 | 2026-10-02 | NOTYA-SELAM-01 (Claude): the 10th-session greeting no longer says a zero-patient count or a non-morning start hour; the typical start is the median first-session hour. Traced from a live screenshot (sabahlari genelde 01:00). Open: the routine is still computed in Istanbul time. |
+
+## 2026-10-02 - NOTYA-KALITE-STANDART-01: quality standard, automatic check and release gate for Ayşe answers (Luna + Fish), branch `feat/ayse-kalite-standardi`
+Why: what a good answer is was spread over the İlk-10 standard, the ledger rows of Dr. Gökhan's live complaints and the real-patient run of the ten questions on 2026-10-02; nothing measured an answer against it and nothing stopped a change from making answers worse. Owner: Claude. Test infrastructure and docs only — no product code changed. Branch pushed, **not merged, not deployed**. Nothing is shipped until the SHA is on `origin/main` and the Vercel deployment at that SHA is READY.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-KALITE-STANDART-01a | 2026-10-02 | DONE — docs, pushed, not merged | The standard: `docs/AYSE-KALITE-STANDARDI.md`, rules Q-01 to Q-11 (universal), Q-20 / Q-21 (text), Q-30 to Q-33 (voice), Q-40 / Q-41 (process), each with what is checked mechanically and what needs the live pass or a human. One-page Turkish summary for approval: `docs/AYSE-KALITE-OZET-TR.md`. | Dr. Gökhan via Kaan: approve or correct the Turkish summary |
