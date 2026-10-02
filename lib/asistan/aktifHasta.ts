@@ -23,7 +23,7 @@ const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalari
 const KOHORT_ZAYIF = /\ben cok\b|\ben sik\b|\btoplam\b|\bvaka(si|m)?\b/
 const PRATIK_ISARETI = /\bhastalar\w*|\bcocuklar\w*|\bbebekler\w*|\b(yazdig|gordug|koydug|verdig|baktig|yaptig|istedig)\w*|\b(yazdim|gordum|koydum|verdim|baktim|yaptim|yazdik|gorduk|koyduk|baktik)\b|\b(gorulen|konulan|yazilan|gelen)\b|\bpratig\w*|\bmuayenehane\w*|\bklinig\w*|\bgenel(de)?\b/
 
-export function kohortSorusuMu(mesaj: string): boolean {
+function kohortSorusuTemel(mesaj: string): boolean {
   const n = ' ' + trAramaNormalize(String(mesaj || '')) + ' '
   return KOHORT.test(n) || (KOHORT_ZAYIF.test(n) && PRATIK_ISARETI.test(n))
 }
@@ -67,4 +67,25 @@ export function aktifHastaKullanilsinMi(g: {
   if (g.cozumTur === 'coklu' && !g.aramaSonucu) return false
   if (takvimSorusuMu(g.mesaj)) return false
   return !kohortSorusuMu(g.mesaj)
+}
+
+// NOTYA-AYSE-KOHORT-01 (Kaan, 2026-10-02): a question about what the doctor wrote, saw or diagnosed, ranked or counted
+// ('Son bir ay icinde hangi antibiyotigi en fazla yazdim?'), is about the practice even with a chart open. The 09-21 fix
+// (4534e28f, 77962a9e) ranks the practice, but the 09-25 single-brain classifier above only knew en cok / en sik, so with a
+// chart open the question was answered from the open chart (or by the quick card) and the ranking never ran. A first-person
+// past verb of the doctor plus a ranking or counting word is a practice question, unless the sentence points at this
+// patient or asks about a dose.
+function sadeTrPratik(m: string): string {
+  const k = String(m || '').toLocaleLowerCase('tr').replace(/\u00e7/g, 'c').replace(/\u011f/g, 'g').replace(/\u0131/g, 'i').replace(/\u00f6/g, 'o').replace(/\u015f/g, 's').replace(/\u00fc/g, 'u')
+  return ' ' + k.replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim() + ' '
+}
+const PRATIK_SIRALAMA_KALIBI = / en (fazla|cok|sik|az|yuksek) | hangi .* en | kac (kez|defa|tane|recete|hasta) | toplam /
+const DOKTOR_GECMIS_FIILI = / (yazdim|yazmisim|yazdigim|recete ettim|recete ettigim|recete yazdim|kullandim|kullandigim|verdim|verdigim|gordum|gorduklerim|baktim|baktigim|tani koydum|koydum|koydugum|yaptim|istedim|istedigim) /
+const BU_HASTAYA_GONDERME = / (bu|su) (hasta|cocuk|bebek)[a-z]* | onun | ona | hastanin | hastaya ozel /
+const DOZ_SORUSU = / (mg|ml|kg|doz|dozu|dozunu|gunde) /
+export function kohortSorusuMu(...a: Parameters<typeof kohortSorusuTemel>): boolean {
+  if (kohortSorusuTemel(...a)) return true
+  const n = sadeTrPratik(String(a[0] ?? ''))
+  if (BU_HASTAYA_GONDERME.test(n) || DOZ_SORUSU.test(n)) return false
+  return PRATIK_SIRALAMA_KALIBI.test(n) && DOKTOR_GECMIS_FIILI.test(n)
 }
