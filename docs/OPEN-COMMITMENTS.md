@@ -8,6 +8,14 @@ Last reviewed: 2026-09-19 (NOTYA-EYLEM düzeltme turu — sessiz yol kapandı, i
 
 ---
 
+## NOTYA-CHECKPOINT-KARSILASTIRMA — the old Ayşe measured on Dr. Gökhan's complaint corpus (Kaan, 2026-10-02)
+
+A measurement, never a proposal to go back: the product stays on Luna + Fish Audio. Branch `audit/checkpoint-karsilastirma` (created at `ac947eef`, the 2026-09-27 11:00 EDT checkpoint); **not to be merged or deployed** — it carries harness files only.
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-CHECKPOINT-KARSILASTIRMA-01 | **OPEN 2026-10-02** — harness built and validated in stand-in mode; **the live pass was NOT run** (no provider credentials in the build environment). Owner: Claude | The corpus of today's main (`lib/asistan/tests/gokhanSikayetKorpusu.ts`, byte-identical; 417 entries) run against the checkpoint build's real routes — chat (`/api/asistan/chat`), patient-file panel (`/api/doktor/konsult`) and, as a separate surface, the ElevenLabs Custom LLM endpoint (`/api/asistan/ses-llm`, transcript as text). Same synthetic patients, same assertion code; entries that expect a capability introduced later are NEW, not FAIL (`lib/asistan/tests/checkpointYetenek.ts`). Product code untouched. Report: `docs/denetim/checkpoint-vs-bugun.md` (computed by `npm run denetim:checkpoint:karsilastir` from `.denetim-out/korpus-checkpoint.jsonl` and `.denetim-out/bugun-korpus.jsonl`). **Stand-in result, chat + panel (433 turns):** checkpoint 104 PASS / 56 FAIL / 10 MANUAL / 77 NEW / 186 not judged (the model's words); today 406 PASS / 17 FAIL / 10 MANUAL. 51 turns failed at the checkpoint and pass today; **3 turns passed at the checkpoint and fail today** — Y-080 and T-025 (a named patient's appointment question after a calendar turn gets a day list; `7661d7fc` / `ed94ef46`) and Y-021 ("Son ölçümleri" lost fever and blood pressure; `5573be8a`). 9 of today's failures were model-written at the checkpoint and stay undecided until the live pass. **To close:** run `OPENROUTER_API_KEY=… npm run denetim:korpus:checkpoint` then `npm run denetim:checkpoint:karsilastir` from the worktree (optionally a second pass with `NOTYA_MODEL_HIZLI=openai/gpt-6-luna` to separate code from model), read section 2 of the report again, and move the regressions that survive into their own fix rows on main. | Kaan or Claude (provider key for the live pass) |
+
 ## NOTYA-MODEL-LUNA — LLM yığını: Luna-Pro birincil, Sonnet 5 koruyucu (Kaan, 2026-09-27, LUNAPRO-01; önce KARAR A 2026-09-26)
 
 2026-09-19 varsayılanının (GÜÇLÜ = Sonnet 4.6, HIZLI = Haiku 4.5) yerine. Politika: `.cursor/skills/ai-model-politikasi/SKILL.md`.
