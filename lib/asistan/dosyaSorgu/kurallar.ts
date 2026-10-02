@@ -79,17 +79,26 @@ export const SORU_SABLONLARI: Record<SoruTuru, { no: number; soru: string; sablo
   },
 }
 
-/** GENEL KURALLAR + CEVAP STANDARDI — dosya sorusu turunda system prompt'a eklenen kurallar bloğu. */
-export function dosyaSorguKuralBlogu(hastaAdi: string): string {
+/**
+ * GENEL KURALLAR + CEVAP STANDARDI — dosya sorusu turunda system prompt'a eklenen kurallar bloğu.
+ *
+ * `hastaAdi` null: hasta dosyası paneli ("Ayşe'ye Danış"). O yüzeyde modele kimlik verilmez ve cevap "hasta" der —
+ * biçim satırı adsızdır (NOTYA-ILK10-ASI-01: panel de aynı kanıtı ve aynı standardı alır).
+ */
+export function dosyaSorguKuralBlogu(hastaAdi: string | null): string {
+  const cevapStandardi = hastaAdi ? CEVAP_STANDARDI : CEVAP_STANDARDI.map((k) => k.replace(' ve hastanın adıyla başlar (sesli okumada ilk duyulan budur)', ''))
+  const bicim = hastaAdi
+    ? `BİÇİM: "speech" alanının İLK cümlesi doğrudan cevaptır ve "${hastaAdi}" adıyla başlar; sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`
+    : 'BİÇİM: cevabın İLK cümlesi doğrudan cevaptır (hastanın adını yazma, "hasta" de); sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Bu soruda aşağıdaki KANIT bloğu hasta dosyası metninden ÖNCE gelir: tarih, değer, doz, aşı ve sonuçları KANIT bloğundan al; kanıtta olmayanı yazma. "uydurdum" deme.'
   return [
     '\n\n=== AYŞE KLİNİK DOSYA SORGULAMA STANDARDI (bu tur için zorunlu) ===',
     DOSYA_SORGU_AMACI,
     'GENEL KURALLAR:',
     ...GENEL_KURALLAR.map((k) => `- ${k}`),
     'CEVAP STANDARDI:',
-    ...CEVAP_STANDARDI.map((k) => `- ${k}`),
+    ...cevapStandardi.map((k) => `- ${k}`),
     HEDEF,
-    `BİÇİM: "speech" alanının İLK cümlesi doğrudan cevaptır ve "${hastaAdi}" adıyla başlar; sonra **Dayanak:** maddeleri (tarihli), varsa **Dikkat / Eksik kayıt / Takip:** maddeleri, gerekiyorsa **Yorum:**. Hasta güvenliği maddesi en SONDA "⚠ Dikkat:" ile. Yalnız aşağıdaki KANIT bloğuna dayan; kanıtta olmayan tarih, değer, doz, aşı ya da sonuç yazma. "uydurdum" deme.`,
+    bicim,
     '=== STANDART SONU ===',
   ].join('\n')
 }

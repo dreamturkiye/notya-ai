@@ -10,12 +10,12 @@
  *   - Soru 8 gelişim: engines/gelisimPlan.ts vizitPlani (SB izlem protokolü pencereleri, GİDR basamağı, M-CHAT-R/F
  *     16–30 ay, düzeltilmiş yaş) + notlardaki ebeveyn kaygısı / regresyon ifadeleri.
  */
-import type { BransSorguParametreleri, AsiDoz, Degerlendirme } from '@/lib/asistan/dosyaSorgu/parametreler'
+import type { BransSorguParametreleri, AsiDoz, AsiTutarsizligi, Degerlendirme } from '@/lib/asistan/dosyaSorgu/parametreler'
 import type { AcikIs } from '@/lib/doktor/acikIsler'
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
 import { trGun } from '@/lib/doktor/dosyaOlaylari'
 import { planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
-import { asiPlani, onerilenDonem, SERI_AD, type AsiKaydi } from './engines/asiPlan'
+import { asiPlani, kayitSerisi, onerilenDonem, SERI_AD, type AsiKaydi } from './engines/asiPlan'
 import { olcumSatirlari, persentilKaymalari, buyumeHizlari, persentilKisa, zMetni, PARAM_AD, PARAM_BIRIM, REFERANS_AD, type Olcum } from './engines/buyume'
 import { vizitPlani, type MchatKaydi, type TaramaKaydi, type TaramaSonuc, type TaramaTur } from './engines/gelisimPlan'
 import { yasMetni, tamAy } from './engines/girdi'
@@ -82,8 +82,28 @@ function asi(olaylar: DosyaOlayi[], hasta: DosyaHastasi) {
     seri: s.seri, no: d.no, ad: `${SERI_AD[s.seri]} ${d.etiket}`, durum: d.durum === 'yapildi' ? 'uygulandi' as const : d.durum,
     onerilen: d.onerilen || null, uygulamaTarihi: d.kayit?.tarih ?? null, telafi: d.telafi,
   })))
+  // NOTYA-ILK10-ASI-01 — Fısıltı kuralı (engines/kohort.ts, NOTYA-FISILTI-GIZLE-01): minimum yaş / aralıktan önce (aynı
+  // gün dahil), doğumdan önce ya da ileri tarihli görünen kayıt büyük olasılıkla yanlış girilmiştir. O seride "gecikti"
+  // denmez; kaydın kontrolü istenir. Aralıklar asiPlan'dan (GBP) gelir — burada yeniden yazılmaz.
+  const tutarsiz: AsiTutarsizligi[] = []
+  for (const s of plan.seriler) {
+    const seriKayitlari = kayitlar.filter((k) => kayitSerisi(k.ad) === s.seri && k.tarih)
+    for (const d of s.dozlar) {
+      const ad = `${SERI_AD[s.seri]} ${d.etiket}`
+      for (const k of d.gecersizler) {
+        if (!k.tarih) continue
+        const ayniGun = seriKayitlari.find((x) => x.id !== k.id && x.tarih === k.tarih)
+        tutarsiz.push({
+          seri: s.seri, ad, tarih: k.tarih,
+          neden: ayniGun ? `aynı seriden başka bir dozla (${ayniGun.dozNo ? `${ayniGun.dozNo}. doz` : 'doz numarası yazılmamış'}) aynı tarihte kayıtlı` : 'takvimdeki minimum yaştan / önceki dozdan sonraki minimum aralıktan önce kayıtlı',
+        })
+      }
+      if (d.kayit?.tarih && d.kayit.tarih < hasta.dogumIso) tutarsiz.push({ seri: s.seri, ad, tarih: d.kayit.tarih, neden: 'doğum tarihinden önce kayıtlı' })
+      else if (d.kayit?.tarih && d.kayit.tarih > hasta.bugunIso) tutarsiz.push({ seri: s.seri, ad, tarih: d.kayit.tarih, neden: 'bugünden ileri bir tarihle kayıtlı' })
+    }
+  }
   return {
-    surum: plan.surum, dozlar, notlar: plan.notlar,
+    surum: plan.surum, dozlar, notlar: plan.notlar, tutarsiz,
     eslesmeyen: [...plan.eslesmeyen, ...plan.fazla].map((k) => `${k.ad}${k.tarih ? ` (${trGun(k.tarih)})` : ''}`),
     riskBazli: plan.ozel.filter((o) => o.kayitlar.length || o.uygunluk === 'uygun').map((o) => `${o.ad}: ${o.kayitlar.length ? `kayıtlı (${o.kayitlar.map((k) => trGun(k.tarih)).join(', ')})` : 'takvim dışı (özel / risk bazlı) — kayıt yok, yaşa göre konuşulabilir'}`),
   }

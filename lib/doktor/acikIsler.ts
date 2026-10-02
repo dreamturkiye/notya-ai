@@ -15,6 +15,7 @@ import { eksikDozEtiketi, parametreSec, type AsiDurumu } from '@/lib/asistan/dos
 import { SIKAYET_GRUPLARI, terimlerdenBiriGeciyor } from '@/lib/klinik/sikayetEsanlam'
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { alerjiUyarilari } from '@/core/eylemler/ilacUyari'
+import { asiKaniti, tutarsizSatiri } from '@/lib/asistan/dosyaSorgu/asiKaniti'
 
 export type AcikIsOnceligi = 'bugun' | 'yakinda' | 'rutin'
 export type AcikIsTuru =
@@ -144,7 +145,25 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
   if (hasta) {
     const p = parametreSec(brans ?? hasta.brans, hasta.dogumIso, hasta.bugunIso)
     const asi = p.asi(olaylar, hasta)
-    if (asi) {
+    // NOTYA-ILK10-ASI-01: aşı maddeleri Soru 4 ile AYNI kanıt yapısından (asiKaniti) gelir — iki soru farklı şey söyleyemez.
+    const kanit = asiKaniti(olaylar, hasta, p, asi)
+    if (asi && kanit) {
+      const planli = planOlaylari(olaylar).filter((o) => o.tur === 'asi')
+      // Tutarsız kayıt "gecikti" değildir (Fısıltı kuralı): o seride eksik doz maddesi yazılmaz, kaydın kontrolü istenir.
+      for (const t of kanit.tutarsiz) ekle({ oncelik: 'bugun', tur: 'celiski', tarih: t.tarih, metin: `Aşı kaydı tutarsız — ${tutarsizSatiri(t)}; "gecikti" sayılmadı, tarih / doz numarası kontrol edilmeli.` })
+      if (kanit.kayitYok) {
+        // Hiç satır yokken takvimin bütün dozlarını tek tek "eksik" saymak alarm üretir; aşılar başka merkezde uygulanmış olabilir.
+        ekle({ oncelik: 'yakinda', tur: 'asi-eksik', metin: `Aşı tablosunda hiç uygulama kaydı yok (kesin yaş ${kanit.yas}); "tam" ya da "eksik" denmez — karne / e-Nabız kaydı istenmeli.` })
+      } else {
+        for (const d of kanit.eksik) {
+          const plan = planli.find((o) => o.anahtar === d.seri && (o.doz == null || o.doz === d.no))
+          if (plan) continue // "planlandı; kayıt yok" maddesi zaten var
+          ekle({ oncelik: 'bugun', tur: 'asi-eksik', metin: `${d.ad} — ${eksikDozEtiketi(d, bugunIso)} (önerilen ${trGun(d.onerilen)})${d.telafi ? ', telafi planı gerekir' : ''}; uygulandığına dair kayıt bulamadım.` })
+        }
+      }
+      for (const d of kanit.yaklasan) ekle({ oncelik: 'rutin', tur: 'asi-yaklasan', metin: `${d.ad} — yaklaşıyor (önerilen ${trGun(d.onerilen)}).` })
+      for (const c of asiBeyanCeliskileri(olaylar, asi)) ekle(c)
+    } else if (asi) {
       const planli = planOlaylari(olaylar).filter((o) => o.tur === 'asi')
       for (const d of asi.dozlar) {
         if (d.durum === 'gecikti' || d.durum === 'zamani_geldi' || d.durum === 'bugun') {

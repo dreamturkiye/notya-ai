@@ -146,6 +146,60 @@ export const FIKSTUR_D: HamDosya = {
   asilar: takvimSatirlari('d', '2023-03-01', 'besli', ['kkk:1']),
 }
 
+// ─── (e) "İlk 10" standardı (NOTYA-ILK10-*): 24 aylık erkek ─────────────────────────────────────────────
+// Dr. Gökhan'ın gerçek hasta testindeki bulguların BİÇİMİ, sentetik değerlerle (hiçbir ad, tarih ya da değer o hastadan
+// değildir): Hepatit B 1. ve 2. doz aynı tarihte kayıtlı (kayıt tutarsız); Hepatit A 2. doz notta planlanmış, satırı
+// yok; aynı gün iki farklı kilo (alan 12,4 kg, cihaz 10,4 kg); 7 gün önceki otit vizitinde süspansiyon dozu tablonun
+// üst sınırının üzerinde ve reçetedeki ürün ilaç listesindekinden farklı; "48-72 saat içinde düzelmezse kontrol"
+// penceresi geçmiş; M-CHAT planlanmış, sonucu yok; prematürite + yoğun bakım öyküsü, düşük ferritin, ekran süresi.
+const E_DOGUM = '2024-09-10'
+export const FIKSTUR_E: HamDosya = {
+  hasta: { ad: 'QA Çocuk E DENETIM-E', dogumIso: E_DOGUM, cinsiyet: 'Erkek' },
+  brans: 'Pediatri',
+  intake: { alerjiVarMi: 'Hayır', gebelikHaftasiPed: '35', dogumKilosuPed: '2450 g', dogumSonrasiPed: 'Yenidoğan yoğun bakımda 5 gün izlendi', emzirmeSuresi: '12 ay' },
+  intakeTarih: '2026-03-10',
+  vizitler: [
+    {
+      id: 'e-v1', tarih: '2026-03-10T09:00:00Z',
+      subjektif: '18 aylık erkek çocuk, sağlam çocuk izlemi. Yürüyor, 8-10 kelimesi var, istediğini işaret ederek gösteriyor, ismine bakıyor. Anne konuşmasının yaşıtlarından geri olduğundan endişeli. Günde 2 saat ekran izliyor.',
+      objektif: 'Fizik muayene doğal. Göz teması var.',
+      degerlendirme: '18 aylık sağlam çocuk.', tani: 'Sağlam çocuk izlemi',
+      plan: 'M-CHAT planlandı. Hepatit A 2. doz 24. ayda yapılacak. Hemogram ve ferritin istendi. 6 ay sonra kontrol.',
+      vitaller: { kilo: '11,2', boy: '82', basCevresi: '47,5' },
+    },
+    {
+      id: 'e-v2', tarih: '2026-06-10T09:00:00Z',
+      subjektif: 'Öksürük ve burun akıntısı, 3 gündür.',
+      objektif: 'Farenks hiperemik. Akciğer sesleri doğal.',
+      degerlendirme: 'Viral üst solunum yolu enfeksiyonu.', tani: 'Akut nazofarenjit',
+      plan: 'Semptomatik tedavi.',
+      vitaller: { kilo: '12,4', boy: '85,5' },
+    },
+    {
+      id: 'e-v3', tarih: '2026-09-19T09:00:00Z',
+      subjektif: 'Sağ kulak ağrısı ve ateş, 1 gündür.',
+      objektif: 'Sağ timpanik membran hiperemik ve bombe.',
+      degerlendirme: 'Sağ akut otitis media.', tani: 'Akut otitis media',
+      plan: 'Augmentin 8 ml sabah akşam, 10 gün. 48-72 saat içinde düzelmezse kontrol.',
+      ilaclar: [{ ad: 'Augmentin ES 600 mg/5 ml süspansiyon', doz: '8 ml', kullanim: '2x1, 10 gün' }],
+      vitaller: { kilo: '13,6', boy: '88', ates: '38,8' },
+    },
+  ],
+  // 5'li karma dönemi. Hepatit B 2. doz 1. dozla aynı tarihte kayıtlı; Hepatit A 2. doz (24. ay) kayıtta yok.
+  asilar: takvimSatirlari('e', E_DOGUM, 'besli', ['hepa:2'])
+    .map((a) => (a.asi_adi === 'Hepatit B' && a.doz_no === 2 ? { ...a, uygulama_tarihi: E_DOGUM } : a)),
+  ilaclar: [
+    { id: 'e-i1', ilac_adi: 'Augmentin BID 400 mg/5 ml süspansiyon', etken_madde: 'amoksisilin-klavulanat', doz: '8 ml', kullanim_sikli: '2x1, 10 gün', baslangic_tarihi: '2026-09-19', aktif: true },
+    { id: 'e-i2', ilac_adi: 'D vitamini damla', etken_madde: 'kolekalsiferol', doz: '400 IU', kullanim_sikli: '1x1', baslangic_tarihi: '2024-09-20', aktif: true },
+    { id: 'e-i3', ilac_adi: 'QA Bitkisel Şurup', doz: '5 ml', kullanim_sikli: '2x1', baslangic_tarihi: '2026-09-19', aktif: true },
+  ],
+  lablar: [
+    { id: 'e-l1', canonical_key: 'Hb', kanonik_deger: 10.6, kanonik_birim: 'g/dL', numune_tarihi: '2026-03-12', ref_low: 11, ref_high: 14 },
+    { id: 'e-l2', canonical_key: 'Ferritin', kanonik_deger: 9, kanonik_birim: 'ng/mL', numune_tarihi: '2026-03-12', ref_low: 12, ref_high: 150 },
+  ],
+  cihaz: [{ id: 'e-c1', tur: 'kilo', deger: '10,4', birim: 'kg', alindi: '2026-06-10T09:20:00Z' }],
+}
+
 export const FIKSTURLER = { a: FIKSTUR_A, b: FIKSTUR_B, c: FIKSTUR_C, d: FIKSTUR_D } as const
 
 // ─── Gökhan şikâyet korpusu (NOTYA-GOKHAN-KORPUS-01) ─────────────────────────────────────────────────────

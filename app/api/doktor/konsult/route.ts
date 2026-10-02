@@ -26,6 +26,9 @@ import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
 import { notAlanlariCoz, alerjiListe } from '@/lib/doktor/hastaKayitAlanlari'
 import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari'
 import { olcumCevabiniGuvenceyeAl, vizitOlcumKaniti, vizitOlcumKanitBlogu, vizitOlcumSorusuBul, type VizitOlcumKaniti } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
+import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
+import { kanitBlogu } from '@/lib/asistan/dosyaSorgu/kanit'
+import { dosyaSorguKuralBlogu } from '@/lib/asistan/dosyaSorgu/kurallar'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -123,11 +126,18 @@ export async function POST(req: NextRequest) {
   let olcumKaniti: VizitOlcumKaniti | null = null
   // Bir kayıt komutu ("… kaydet") ölçüm SORUSU değildir — o tur araç kartıyla cevaplanır.
   const olcumSorusu = sonMesajDoktorun && !kayitNiyetiMi(sonMetin) ? vizitOlcumSorusuBul(sonMetin) : null
-  if (olcumSorusu) {
+  // NOTYA-ILK10-ASI-01 (Dr. Gökhan "İlk 10" standardı, gerçek hasta testi 2026-10-02): on dosya sorusu bu panelde
+  // yalnız dosya metniyle cevaplanıyordu — sohbet ve sesin aldığı deterministik kanıt (aşı durumu, persentil, üç
+  // öncelik sepeti) burada yoktu. Aynı sınıflayıcı ve aynı kanıt bloğu (soruTuruBul → kanitBlogu) panele de eklenir.
+  // Kanıt bloğu hasta adını taşımaz; kurallar bloğu burada adsız kurulur (kural 7: kimlik modele gitmez).
+  const soruTuru = sonMesajDoktorun && !kayitNiyetiMi(sonMetin) ? soruTuruBul(sonMetin) : null
+  let ilk10Ek = ''
+  if (olcumSorusu || soruTuru) {
     try {
       const sorgu = await dosyaSorguVerisiDerle(supabase, doktorId, patientId)
-      if (sorgu) olcumKaniti = vizitOlcumKaniti(olcumSorusu, sorgu.olaylar, sorgu.hasta)
-    } catch (e) { console.error('[konsult] ölçüm kanıtı', e instanceof Error ? e.message.slice(0, 200) : 'hata') }
+      if (sorgu && olcumSorusu) olcumKaniti = vizitOlcumKaniti(olcumSorusu, sorgu.olaylar, sorgu.hasta)
+      if (sorgu && soruTuru) ilk10Ek = `${dosyaSorguKuralBlogu(null)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: sonMetin })}`
+    } catch (e) { console.error('[konsult] dosya sorgu kanıtı', e instanceof Error ? e.message.slice(0, 200) : 'hata') }
   }
   // yazıver / kaydet → tool_choice any: model cannot narrate a refusal; card still needs the tap.
   const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
@@ -138,7 +148,7 @@ export async function POST(req: NextRequest) {
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + (olcumKaniti ? `\n\n${vizitOlcumKanitBlogu(olcumKaniti)}` : '') }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk + ilk10Ek + (olcumKaniti ? `\n\n${vizitOlcumKanitBlogu(olcumKaniti)}` : '') }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: dosya })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] ai', e.govde.slice(0, 300))

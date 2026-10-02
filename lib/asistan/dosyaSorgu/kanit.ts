@@ -19,6 +19,7 @@ import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@
 import { vizitTuruGruplariBul, vizitYasIfadesiCoz } from '@/lib/klinik/vizitTuruEsanlam'
 import { vizitleriSec, vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { kanonikTr } from '@/core/lab/kanonik'
+import { asiKaniti, asiKanitSatirlari, asiOzetSatirlari } from '@/lib/asistan/dosyaSorgu/asiKaniti'
 
 export interface KanitEki {
   /** Hekimin mesajı — Soru 7'de aranan şikayet buradan çıkar. */
@@ -118,8 +119,12 @@ function labBolumu(olaylar: DosyaOlayi[]): string[] {
 }
 
 function asiBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguParametreleri): string[] {
-  const out: string[] = []
   const asi = p.asi(olaylar, hasta)
+  // NOTYA-ILK10-ASI-01: takvimi olan branşta (pediatri) aşı durumu tek kanıt yapısından kurulur (asiKaniti.ts); aynı
+  // yapı Soru 1, 9 ve 10'u da besler. Takvimi olmayan branşların yolu aşağıda, değişmedi.
+  const kanit = asiKaniti(olaylar, hasta, p, asi)
+  if (kanit && asi) return [...asiKanitSatirlari(kanit), ...asiBeyanCeliskileri(olaylar, asi).map((c) => `⚠ ${c.metin}`)]
+  const out: string[] = []
   const kayitlar = olaylar.filter((o) => o.kaynak === 'asi')
   if (!asi) {
     out.push(p.asiTakvimiYok)
@@ -249,13 +254,13 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
     const g = p.gelisim(olaylar, hasta)
     out.push('GELİŞİM:', ...g.satirlar.filter((s) => /Tarama durumu|planlanmış|kaygı|Regresyon|Kayıtlı tarama/.test(s)).slice(0, 5))
   }
-  const asi = p.asi(olaylar, hasta)
-  if (asi) {
-    const eksik = asi.dozlar.filter((d) => d.durum === 'gecikti' || d.durum === 'zamani_geldi' || d.durum === 'bugun')
-    out.push(`AŞI: aşı tablosunda ${asi.dozlar.filter((d) => d.durum === 'uygulandi').length} takvim dozu kayıtlı; eksik / zamanı gelmiş: ${eksik.length ? eksik.map((d) => d.ad).join(', ') : 'yok'}.`)
-  } else out.push(`AŞI: ${p.asiTakvimiYok}`)
-  const planAsi = planOlaylari(olaylar).filter((o) => o.tur === 'asi' && !planKarsiligi(o, olaylar))
-  if (planAsi.length) out.push(`AŞI (planlanmış, uygulama kaydı yok): ${planAsi.map(asiPlanSatiri).join('; ')}.`)
+  const asiKanit = asiKaniti(olaylar, hasta, p)
+  if (asiKanit) out.push(...asiOzetSatirlari(asiKanit))
+  else {
+    out.push(`AŞI: ${p.asiTakvimiYok}`)
+    const planAsi = planOlaylari(olaylar).filter((o) => o.tur === 'asi' && !planKarsiligi(o, olaylar))
+    if (planAsi.length) out.push(`AŞI (planlanmış, uygulama kaydı yok): ${planAsi.map(asiPlanSatiri).join('; ')}.`)
+  }
   const lab = labBolumu(olaylar).filter((s) => s.startsWith('- ') || /İSTENEN|DEMİR/.test(s)).slice(0, 8)
   if (lab.length) out.push('ÖNEMLİ LAB:', ...lab)
   const kons = olaylar.filter((o) => o.kaynak === 'konsultasyon')
