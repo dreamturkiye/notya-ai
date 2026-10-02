@@ -16,8 +16,8 @@ import { eksikDozEtiketi, parametreSec, type BransSorguParametreleri } from '@/l
 import { SORU_SABLONLARI } from '@/lib/asistan/dosyaSorgu/kurallar'
 import type { SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@/lib/klinik/sikayetEsanlam'
-import { vizitTuruGruplariBul, vizitYasIfadesiCoz } from '@/lib/klinik/vizitTuruEsanlam'
-import { vizitleriSec, vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
+import { vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
+import { vizitOzetiSec, vizitOzetKanitSatirlari } from '@/lib/asistan/dosyaSorgu/vizitOzeti'
 import { kanonikTr } from '@/core/lab/kanonik'
 
 export interface KanitEki {
@@ -276,15 +276,18 @@ function ozetBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguPar
  * hiç filtrelemiyordu, her zaman en son vizit döndürülüyordu).
  */
 function vizitTuruBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, mesaj: string): string[] | null {
-  const yas = vizitYasIfadesiCoz(mesaj)
-  const gruplar = vizitTuruGruplariBul(mesaj)
-  if (!yas && !gruplar.length) return null
   // NOTYA-DANIS-OLCUM: seçim ölçüm sorgusuyla AYNI fonksiyondur (vizitleriSec) — yaş-dönümü verildiyse tam eşleşme
   // şart (tür eşleşse bile yanlış yaştaki vizite düşülmez); notta yaş yazmıyorsa muayene tarihindeki yaşa bakılır.
-  const hedef = { tip: 'vizit' as const, yas, gruplar }
-  const { vizitler: adaylar, secim } = vizitleriSec(olaylar, hasta, hedef)
-  const aciklama = [gruplar.map((g) => g.ad).join(', '), yas ? `${yas.sayi} ${yas.birim}` : ''].filter(Boolean).join(' / ') || 'belirtilen vizit türü'
+  const s = vizitOzetiSec(mesaj, olaylar, hasta)
+  if (!s) return null
+  const { hedef, vizitler: adaylar, secim } = s
+  const aciklama = hedef.tip === 'vizit'
+    ? [hedef.gruplar.map((g) => g.ad).join(', '), hedef.yas ? `${hedef.yas.sayi} ${hedef.yas.birim}` : ''].filter(Boolean).join(' / ') || 'belirtilen vizit türü'
+    : s.etiket
   if (!adaylar.length) return [`Aranan vizit: ${aciklama}. Bu türde / bu yaşta eşleşen onaylı vizit kaydı bulamadım — dosyada bu muayene yok Hocam; sessizce başka bir vizite düşmedim.`]
+  // NOTYA-AYSE-OZET-01: tek muayene eşleştiyse sekiz bölümlük özet kanıtı (vizitOzeti.ts) — tarih ve yaş, şikayet,
+  // bulgu, laboratuvar, aşı, ölçüm ve büyüme, tedavi, plan; kayıtta olmayan bölüm kısa ifadesiyle.
+  if (s.ozet) return [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit: ${trGun(adaylar[0].tarih)}.`, ...vizitOzetKanitSatirlari(s.ozet)]
   const out = [`Aranan vizit: ${aciklama}. Eşleşen onaylı vizit(ler) (${adaylar.length})${secim === 'yas-tarih' ? ' — notta bu yaş yazmıyor; muayene tarihindeki yaşa göre seçildi' : ''}:`]
   // O muayenenin kayıtlı ölçümleri de satırda (alan, aynı günlü cihaz ölçümü, not metni) — özet ölçümsüz kalmasın.
   const olcum = vizitOlcumKaniti({ olcumler: ['kilo', 'boy', 'basCevresi', 'tansiyon', 'ates', 'nabiz', 'spo2'], genel: true, hedef, degerlendirme: false, kesin: true }, olaylar, hasta)
