@@ -25,7 +25,7 @@ standalone, dated measurement table that every branş shares is `cihaz_olcumleri
 the "measurement table dated the same day" variant.
 
 Rows 5–7 are chapter tables. They are outside the shared file index and stay outside it in this change (open item
-NOTYA-DANIS-OLCUM-04).
+NOTYA-DANIS-OLCUM-05).
 
 ## 2. What each surface did with the question (reproduced on a synthetic patient)
 
@@ -40,3 +40,11 @@ The hypothesis in the brief — "the evidence builder filters by visit type only
 
 So a measurement tied to one named visit was never selected on any surface, for two reasons: the shared evidence code
 had no "measurements of that visit" query, and the compiled file did not carry visit measurements at all.
+
+## 3. What changed
+
+One query, `lib/asistan/dosyaSorgu/vizitOlcum.ts`, used by all three surfaces: it finds the visit the question names
+(visit type / age milestone through `vizitTuruEsanlam`, "ilk / son muayene", or a series over visits) and reads that
+visit's measurement from rows 1, 2 and 3 of the table above, in that order, with unit, date and source. With no record
+it says so and never derives a value. Danış additionally prints each visit's own measurements in the compiled file and
+checks the model's answer against the record. Status and open items: `docs/OPEN-COMMITMENTS.md` § NOTYA-DANIS-OLCUM.
