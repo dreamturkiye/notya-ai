@@ -129,6 +129,27 @@ export function hastaOlarakAnilanPersonaAdlari(duzMesaj: string): Set<string> {
   }
   return bulunan
 }
+/**
+ * NOTYA-KORPUS-KALAN-01 (L-ODAK-HITAP-1): the doctor ADDRESSED the assistant ("Ayşe, aşı karnesini gösterir misin?")
+ * and the model, writing its tool call, turned the address into a patient ("Ayşe'nin aşı karnesi", hasta_adi "Ayşe").
+ * The resolver trusts a case ending and a bare `hasta_adi`, so the chart of the patient called Ayşe answered — the
+ * live wrong-chart incident of NOTYA-HASTA-ODAK-01, through the tool. What the doctor said decides, not what the
+ * model wrote: when the persona's name is in the doctor's sentence ONLY as an address, it is taken out of the
+ * model's text before any patient is resolved. Deterministic; a sentence in which the doctor does name that patient
+ * ("Ayşe'nin aşıları", "Ayşe Bozkurt", "Ayşe için") is left alone.
+ */
+export function hitabiAracSozundenAyikla(aracSozu: string, doktorSozu: string | null | undefined, hitapAdi: string | null | undefined): string {
+  const ad = duzle(String(hitapAdi || ''))
+  const doktorDuz = duzle(String(doktorSozu || ''))
+  if (!ad || !doktorDuz.split(' ').includes(ad)) return aracSozu
+  // What is left of the doctor's sentence once the address is stripped: any trace of the name there is a patient.
+  const kalan = duzle(hitapsiz(String(doktorSozu)))
+  if (kalan.split(' ').some((t) => t.startsWith(ad))) return aracSozu
+  // The name alone ("Ayşe." as the answer to "Hangi hasta için Hocam?") addresses nobody: it is the patient's name.
+  if (!kalan) return aracSozu
+  const adli = new RegExp(`^${ad}(?: ?(?:n?[iu]n|[ny]?[iuae]|[dt][ae]n?|y?l[ae]))?$`)
+  return String(aracSozu || '').split(/\s+/).filter((w) => !adli.test(duzle(w))).join(' ').trim()
+}
 export function sesliSozTokenlari(duzMesaj: string): Set<string> {
   const t = duzMesaj.split(' ').filter((x) => x.length >= 2 && !DOLGU.has(x))
   const s = new Set(t)

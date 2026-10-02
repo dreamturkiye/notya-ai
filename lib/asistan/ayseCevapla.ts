@@ -39,7 +39,7 @@ import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
 import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar"
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
-import { cozumKonus, hastaninSozunuCoz, mesajdakiAdParcalari, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
+import { cozumKonus, hastaninSozunuCoz, hitabiAracSozundenAyikla, mesajdakiAdParcalari, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
 import { dosyaPaketOnbellekli } from "@/lib/doktor/ogrenme/dosyaOnbellek"
 import { adliDosyaCevabi, dosyaSoruCevap, type HastaDosyaKart } from "@/lib/doktor/hastaDosyaKart"
 import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
@@ -195,6 +195,8 @@ export type AyseSonucu =
   | { ok: false; durum: number; govde: Record<string, unknown>; soz: string }
 
 const simdi = () => new Date().toISOString()
+/** NOTYA-SES-OKU-01: what the read-aloud route stores as its own turn (the screen answer it read stays where it was). */
+const OKU_NOTU = "Ekrandaki cevabı sesli okudum Hocam."
 
 /** NOTYA-LUNA-ARAMA-01: kuyruk bloğu — bu turda dosya yok; model dosya uydurmasın, "dosyası açık" demesin. */
 export const DOSYA_YOK_BLOGU = `
@@ -579,16 +581,16 @@ ${ilacBaglamMetni(drugs[0])}`
   }
   // NOTYA-SES-OKU-01: "bana anlat / devamını oku" — read the last screen answer aloud, uncapped, no model.
   if (ses && okumaIstegiMi(String(message || ""))) {
-    const sonEkran = [...messages].reverse().find((m) => m.role === "assistant" && String(m.content || "").trim())
+    // The note this route leaves behind is not an answer: a second "oku" reads the same answer again, not the note.
+    const sonEkran = [...messages].reverse().find((m) => m.role === "assistant" && String(m.content || "").trim() && m.content !== OKU_NOTU)
     if (sonEkran) {
       // Screen text is already the cleaned, doctor-visible answer. NOTYA-AYSE-ALAN-01: a stored answer keeps its
       // identity placeholders; a sentence with one is not read — the value is on screen.
       const tam = konusmaYap(String(sonEkran.content), alanSozcusu(null), { sinirsiz: true })
       const okuma = tam || "Ekranda okunacak bir cevap bulamadım Hocam."
       soyle(okuma)
-      const ekranNotu = "Ekrandaki cevabı sesli okudum Hocam."
-      await oturumuYaz(ekranNotu, {})
-      return sade("oku", ekranNotu, okuma, baglam.patientName ? String(baglam.patientName) : null)
+      await oturumuYaz(OKU_NOTU, {})
+      return sade("oku", OKU_NOTU, okuma, baglam.patientName ? String(baglam.patientName) : null)
     }
   }
 
@@ -923,7 +925,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // HASTA-IZOLASYON-01: the tools get the doctor from the session, text from the model, and the open patient from the
   // session (re-checked in the executor). A named person who was not found is never replaced by the open chart.
   const okumaBaglami = {
-    supabase, doktorId, saatDilimi, hitapAdi: personaIlkAdi(persona.name), alanDefteri,
+    supabase, doktorId, saatDilimi, hitapAdi: personaIlkAdi(persona.name), alanDefteri, doktorSozu: hamMesaj,
     aktifHasta: cozulenHasta ?? (!baskaKisiAnildi && contextPatientId
       ? { id: String(contextPatientId), ad: baglam.currentPatientId && String(baglam.currentPatientId) === String(contextPatientId) && baglam.patientName ? String(baglam.patientName) : "" }
       : null),
@@ -1102,7 +1104,10 @@ ${ilacBaglamMetni(drugs[0])}`
     // (HASTA-IZOLASYON-01: a foreign patient is indistinguishable from a missing one).
     const cagrilar = toolUseBloklari(yanitGovdesi)
     if (cagrilar.length) {
-      const adlar = [...new Set(cagrilar.map((b) => String((b.input as Record<string, unknown> | null)?.[HASTA_ADI_ALANI] ?? "").trim()).filter(Boolean))]
+      // NOTYA-KORPUS-KALAN-01 (L-ODAK-HITAP-1): "Ayşe, fıstık alerjisini ekle" — the address is not a patient name the
+      // model may pass on; with nothing else said, Ayşe asks which patient instead of preparing a card for "Ayşe".
+      // A continued command is the doctor answering "Hangi hasta için Hocam?" — there the name IS the patient.
+      const adlar = [...new Set(cagrilar.map((b) => String((b.input as Record<string, unknown> | null)?.[HASTA_ADI_ALANI] ?? "").trim()).map((a) => (komutDevami ? a : hitabiAracSozundenAyikla(a, hamMesaj, personaIlkAdi(persona.name)))).filter(Boolean))]
       if (!adlar.length) {
         kartSorulari.push("Hangi hasta için Hocam?")
       } else if (adlar.length > 1) {

@@ -129,12 +129,13 @@ describe('NOTYA-KORPUS-KALAN-01 — Danış: takip sorusu, seri tablosu, büyüm
     const yuvarlak = 'Hocam, ölçümler artış gösteriyor: 12 aylıkken 9,8 kg ve 76 cm; son kontrolde 10,6 kg.'
     ortam.yanit = { metin: yuvarlak }
     const y = await danis(s.doktor.token, hasta, 'Büyümesi nasıl gidiyor?')
-    assert.equal(y.cevap, `Kayıt — son ölçümler: kilo 10,6 kg (25.09.2025); boy 75 cm (15.05.2025); baş çevresi 46 cm (15.05.2025).\n\n${yuvarlak}`)
+    // A canonical file question: the server opens the answer with the patient's name (I-01); the model never gets it.
+    assert.equal(y.cevap, `${AD} — kayıtlı son ölçümler: kilo 10,6 kg (25.09.2025); boy 75 cm (15.05.2025); baş çevresi 46 cm (15.05.2025).\n\n${yuvarlak}`)
     assert.ok(sistemde(/SON KAYITLI ÖLÇÜMLER \(kayıttan, deterministik\) ===[^=]*- boy 75 cm — 15\.05\.2025/), 'kanıt modele gitti')
     // The model's own answer stays untouched when it carries the recorded values.
     const dogru = 'Hocam, son kilo 10,6 kg (25.09.2025), son boy 75 cm ve baş çevresi 46 cm (15.05.2025). Artış düzenli.'
     ortam.yanit = { metin: dogru }
-    assert.equal((await danis(s.doktor.token, hasta, 'Büyümesi nasıl gidiyor?')).cevap, dogru)
+    assert.equal((await danis(s.doktor.token, hasta, 'Büyümesi nasıl gidiyor?')).cevap, `${AD} — ${dogru}`)
     // Not a growth question: nothing is added.
     ortam.yanit = { metin: 'Hocam, hasta sağlam çocuk izleminde.' }
     assert.equal((await danis(s.doktor.token, hasta, 'Bu hastayı özetler misin?')).cevap.includes('son ölçümler'), false)
@@ -144,7 +145,7 @@ describe('NOTYA-KORPUS-KALAN-01 — Danış: takip sorusu, seri tablosu, büyüm
     const { s, hasta } = eriskinSahnesi('kardiyoloji')
     ortam.yanit = { metin: 'Hocam, kilo vermiş.' }
     const y = await danis(s.doktor.token, hasta, 'Kilosu nasıl gidiyor, büyüme eğrisi var mı?')
-    assert.match(y.cevap, /^Kayıt — son ölçümler: kilo 79,5 kg \(15\.06\.2026\); boy 162 cm \(15\.06\.2026\)\.\n\nHocam, kilo vermiş\.$/)
+    assert.equal(y.cevap, `${ERISKIN} — kayıtlı son ölçümler: kilo 79,5 kg (15.06.2026); boy 162 cm (15.06.2026).\n\nHocam, kilo vermiş.`)
     assert.doesNotMatch(y.cevap, /baş çevresi/i)
     assert.ok(sistemde(/SON KAYITLI ÖLÇÜMLER \(kayıttan, deterministik\) ===[^=]*- kilo 79,5 kg/), 'kanıt modele gitti')
     assert.ok(!sistemde(/SON KAYITLI ÖLÇÜMLER \(kayıttan, deterministik\) ===[^=]*baş çevresi/), 'kanıt da baş çevresi taşımaz')

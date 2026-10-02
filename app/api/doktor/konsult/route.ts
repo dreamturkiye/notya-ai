@@ -79,7 +79,10 @@ export async function POST(req: NextRequest) {
 
   // NOTYA-EYLEM: hasta kimliği ve branş SUNUCUDA çözülür — model çıktısından ASLA alınmaz (docs §2).
   // hastaOzetiGetir doctor_id ile kapsar, yani yabancı bir id burada null döner ve araç hiç sunulmaz.
-  const hasta = eylemKapali() ? null : await hastaOzetiGetir(supabase, doktorId, patientId)
+  const hastaOzeti = await hastaOzetiGetir(supabase, doktorId, patientId)
+  const hasta = eylemKapali() ? null : hastaOzeti
+  /** Cevabın başına SUNUCUNUN koyduğu ad (aşağıda). Modele verilmez; geçmişte geri gelirse de ayıklanır. */
+  const adOneki = hastaOzeti?.ad ? `${hastaOzeti.ad} — ` : ''
   const { data: hekim } = eylemKapali() ? { data: null } : await supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle()
   const brans = bransAnahtari((hekim as { specialty?: string } | null)?.specialty)
   // Araçlar yalnız DOKTOR turunda sunulur (docs §5): belge metni güvenilmezdir, kendi başına
@@ -112,9 +115,12 @@ export async function POST(req: NextRequest) {
   const kota = await aiKotaKullan(supabase, doktorId, 'konsult')
   if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
 
+  // The panel is stateless: the browser sends the earlier answers back. A name the server put in front of an answer
+  // (below) is taken off again here, so it never becomes part of what the model reads.
+  const adsiz = (rol: string, icerik: string) => (rol === 'asistan' && adOneki && icerik.startsWith(adOneki) ? icerik.slice(adOneki.length) : icerik)
   const gecmis = mesajlar.slice(-20).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
-    content: String(m.icerik || '').slice(0, 4000),
+    content: adsiz(m.rol, String(m.icerik || '')).slice(0, 4000),
   }))
   const sonMetin = String(mesajlar[mesajlar.length - 1]?.icerik || '')
 
@@ -131,7 +137,10 @@ export async function POST(req: NextRequest) {
   // muayenesini sorar. Panel durumsuzdur: önceki soru isteğin kendi `mesajlar` dizisindedir.
   const oncekiDoktorSorusu = [...mesajlar.slice(0, -1)].reverse().find((m) => m.rol !== 'asistan')?.icerik
   const olcumSorusu = soruTuruMu ? vizitOlcumSorusuBul(sonMetin) ?? vizitOlcumTakipSorusu(sonMetin, oncekiDoktorSorusu) : null
-  const buyumeSorusu = soruTuruMu && !olcumSorusu && soruTuruBul(sonMetin) === 'buyume'
+  /** Standardın kanonik dosya sorularından biri mi (özet, değişim, büyüme, aşı, lab, ilaç …)? */
+  const kanonikTur = soruTuruMu ? soruTuruBul(sonMetin) : null
+  const kanonikSoru = Boolean(kanonikTur) && !olcumSorusu
+  const buyumeSorusu = kanonikSoru && kanonikTur === 'buyume'
   if (olcumSorusu || buyumeSorusu) {
     try {
       const sorgu = await dosyaSorguVerisiDerle(supabase, doktorId, patientId)
@@ -161,7 +170,13 @@ export async function POST(req: NextRequest) {
     }
     // NOTYA-DANIS-OLCUM: kayıtlı ölçüm cevapta yoksa (model tahmin etti / "yazılmamış" dedi) kayıttaki kesin cevap döner.
     // NOTYA-KORPUS-KALAN-01 (I-03): büyüme sorusunda son kayıtlı değerler cevapta yoksa kayıt cümlesi cevabın önüne gelir.
-    const cevap = olcumKaniti ? olcumCevabiniGuvenceyeAl(yanitMetni(veri, '\n'), olcumKaniti) : sonOlcumleriGuvenceyeAl(yanitMetni(veri, '\n'), sonOlcumler)
+    const kayitliCevap = olcumKaniti ? olcumCevabiniGuvenceyeAl(yanitMetni(veri, '\n'), olcumKaniti) : sonOlcumleriGuvenceyeAl(yanitMetni(veri, '\n'), sonOlcumler)
+    // NOTYA-KORPUS-KALAN-01 (I-01): the standard's first rule — the answer to a file question opens with the patient's
+    // name (NOTYA-HASTA-ODAK-01: a wrong-chart answer is obvious at once). The model is never given the name (rule 7
+    // above), so on the panel no summary ever named the patient. The SERVER writes it, after the model has answered.
+    const cevap = adOneki && kanonikSoru && kayitliCevap.trim() && !kayitliCevap.includes(hastaOzeti!.ad)
+      ? `${adOneki}${kayitliCevap.startsWith('Kayıt — ') ? `kayıtlı ${kayitliCevap.slice('Kayıt — '.length)}` : kayitliCevap}`
+      : kayitliCevap
 
     // NOTYA-EYLEM: a tool_use block is a PROPOSAL, never a write. Each becomes an eylem_onerileri
     // taslak and comes back as a card; the record happens when the doctor taps (POST /api/doktor/eylem).
@@ -175,7 +190,7 @@ export async function POST(req: NextRequest) {
           { brans, hasta },
           // NOTYA-EYLEM-31: Danış düz metin döndürür, bu yüzden Ayşe'nin uyarı cümlesi karta
           // deterministik olarak metinden seçilir — üç yüzeyde de kartta aynı satır çıksın diye.
-          ayseUyariCumlesi(cevap)
+          ayseUyariCumlesi(kayitliCevap)
         )
       : []
     return NextResponse.json({ cevap, oneriler, hasta: hasta ? { ad: hasta.ad, dogumTarihi: hasta.dogumTarihi } : null })

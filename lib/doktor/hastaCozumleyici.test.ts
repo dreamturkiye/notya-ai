@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
 import { adIndeksParcalari, tokenOzeti } from './hastaAramaIndeksi'
-import { cozumKonus, hastaninSozunuCoz, mesajdakiAdParcalari } from './hastaCozumleyici'
+import { cozumKonus, hastaninSozunuCoz, hitabiAracSozundenAyikla, mesajdakiAdParcalari } from './hastaCozumleyici'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-cozumleyici-anahtari'
 
@@ -181,6 +181,41 @@ describe('NOTYA-AYSE-GERI-01 — persona adıyla aynı ilk adı taşıyan hasta 
     const yabanci = db.ekle('patients', { doctor_id: diger, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Selin Öz' })) }).id
     indeksle(diger, yabanci, 'Selin Öz')
     assert.deepEqual(await coz('Selin’in aşıları tam mı'), { tur: 'yok' })
+  })
+})
+
+describe('NOTYA-KORPUS-KALAN-01 (L-ODAK-HITAP-1) — hekimin hitabı, modelin araç metninde hasta olamaz', () => {
+  const ayikla = (arac: string, doktor: string) => hitabiAracSozundenAyikla(arac, doktor, 'Ayşe')
+
+  it('hekim yalnız seslendiyse: modelin yazdığı "Ayşe" / "Ayşe\'nin" / "Ayşe için" araç metninden çıkarılır', () => {
+    const HITAP = 'Ayşe, aşı karnesini gösterir misin?'
+    assert.equal(ayikla('Ayşe’nin aşı karnesi', HITAP), 'aşı karnesi')
+    assert.equal(ayikla("Ayşe'nin aşı karnesi", HITAP), 'aşı karnesi')
+    assert.equal(ayikla('Ayşenin aşı karnesi', HITAP), 'aşı karnesi')
+    assert.equal(ayikla('Ayşe aşı karnesi', HITAP), 'aşı karnesi')
+    assert.equal(ayikla('Ayşe', HITAP), '')
+    assert.equal(ayikla('Ayşe', 'Merhaba Ayşe, fıstık alerjisini ekle'), '')
+    assert.equal(ayikla('Ayşe', 'Biraz koy. Ayşe, benim spesifik, eee, arzum şeydi, aşı karnesini göstermendi.'), '')
+    assert.equal(ayikla('Ayşe Hanım', 'Ayşe Hanım otitte ilk seçenek ne?'), 'Hanım')
+  })
+
+  it('hekim o adı hasta olarak andıysa, başka bir ad söylediyse ya da yalnız adı söylediyse metne dokunulmaz', () => {
+    for (const [arac, doktor] of [
+      ['Ayşe’nin aşı karnesi', 'Ayşe’nin aşı karnesini göster'],
+      ['Ayşe', 'Ayşe için randevu oluştur'],
+      ['Ayşe Bozkurt', 'Ayşe, Ayşe Bozkurt’un aşı karnesini gösterir misin?'],
+      ['Ayşe', 'hastam Ayşe kaç kilo'],
+      // The answer to "Hangi hasta için Hocam?" is a name, not an address.
+      ['Ayşe', 'Ayşe'],
+      ['Ayşe', 'Ayşe.'],
+      // The doctor did not say the persona's name at all: the model's text stands.
+      ['Umutcan Türkoğlu', 'Umutcan Türkoğlu’nun aşı karnesi'],
+      ['Ayşe Yeşil', 'son hastamın aşıları'],
+    ] as const) assert.equal(ayikla(arac, doktor), arac, `${arac} ← ${doktor}`)
+    assert.equal(hitabiAracSozundenAyikla('Ayşe', 'Ayşe, aşı karnesi', null), 'Ayşe')
+    assert.equal(hitabiAracSozundenAyikla('Ayşe', null, 'Ayşe'), 'Ayşe')
+    // Another colleague is being spoken to: "Ayşe" is an ordinary patient name there.
+    assert.equal(hitabiAracSozundenAyikla('Ayşe', 'Mehmet, Ayşe’nin aşı karnesi', 'Mehmet'), 'Ayşe')
   })
 })
 
