@@ -109,4 +109,120 @@ stored instead of the placeholder form (mother's name in the second turn's model
   summaries are covered.
 - The `patients` row is still serialized into the prompt as stored (encrypted columns as ciphertext). Not changed
   here.
-- A placeholder inside a write tool's arguments (a card) is not filled; cards are built from what the doctor said.
+- A placeholder that a model copied into a write tool's arguments (a card field) is not filled and would show as
+  written. Cards are built from what the doctor said, and a command turn is not offered the read tools.
+
+## B. Analysis across a patient's visits (NOTYA-AYSE-ANALIZ-01)
+
+Dr. Gökhan asks "bu hastanın hangi muayenesinde X yapıldı" and "4 muayeneden sonra eksikler var mı, nelerdir". The
+pieces existed; they are wired as three read tools. No reader and no clinical rule was written.
+
+| Tool | Parameters | What it returns | Existing code it calls |
+|---|---|---|---|
+| `muayene_ara` | `terim`, `hasta_adi?` | The visits (date, ordinal, type) a drug, test, vaccine, diagnosis or procedure appears in, each line with its state; records outside a visit day (vaccine rows, lab rows) listed apart; says so when the term is nowhere | event index (`dosyaOlaylari`), `esanlamGenislet` / `terimlerdenBiriGeciyor` (complaint synonyms), `kayitSerisi` (vaccine series), `labAnahtarlariBul` (lab keys), `vizitTuruGruplariBul` (visit type), `durumAdi` |
+| `muayeneleri_oku` | `adet` \| `tarihler` \| `tur`, `hasta_adi?` | Per visit: şikayet / bulgu / değerlendirme / tanı / plan, the measurements bound to the visit ("kayıt yok" for a missing one), prescriptions, what was planned and whether a later record answers it, same-day vaccine and lab rows; a closing line names the visits with no record of each measurement | event index, `vizitBolumleri` (`kayitTablosu`), `vizitOlcumKaniti` / `vizitleriSec` (`dosyaSorgu/vizitOlcum` — the reader of "12 aylık muayenesinde kaç kiloydu"), `planOlaylari` / `planKarsiligi` (`planTakibi`), `parametreSec` |
+| `eksikler` | `hasta_adi?` | Section A: Fısıltı's lines for this patient. Section B: what a note planned or asked for whose answer is not in the record | `hastaFisiltisi` (below), `acikIsleriBul` (`acikIsler`), `fisiltiAyir`, `fisiltiGizlemeleri` |
+
+All three take text and never an id. The patient is the name the model wrote, resolved among the authenticated
+doctor's patients, or the session's open patient after `hastaSahibiMi`. A name that was given and not found is not
+replaced by the open chart; another doctor's patient gets the same sentence as a name nobody has.
+
+### Size cap of the digest
+
+`muayeneleri_oku` reads at most 8 visits per call and at most 7 000 characters (Turkish runs near 3 characters per
+token: about 2 300 tokens). When something has to go, the oldest visits go and the newest stay, and the first lines
+say so: how many were shown, why, and the dates that were not shown, to be asked again by date. The event index
+itself keeps a fixed number of characters of each note section (300 / 260 / 220 / 200 / 320); a section that reached
+its cap is marked "burada kısaltıldı". `muayene_ara` shows at most 30 lines and says when it cut.
+
+### Fısıltı and the assistant: one source, and where they still differ
+
+**What Fısıltı is.** `lib/doktor/fisiltiTopla.ts` builds the card by fetching the doctor's own branch kohort route
+over HTTP (`/api/doktor/<rota>/kohort`). Each of the 30 routes is a thin handler over one function,
+`<branş>KohortVerisi(sb, doktorId, bugun, sadece?)`. That function is the Fısıltı engine for the branch. For
+pediatri it flags: late vaccine in a series the record tracks, inconsistent vaccine record, missed well-child visit
+window, percentile shift, D vitamin / iron prophylaxis, hearing / vision / autism screening.
+
+**What the assistant had.** `lib/doktor/acikIsler.ts` (clinical file query standard, questions 9 and 10): plan
+versus record. A lab asked with no result, a vaccine a note planned with no record, a control with no appointment, a
+consultation with no answer, an allergy conflict, a repeating pattern — plus, from the branch parameters, schedule
+items (vaccine calendar, growth, screening windows).
+
+**So Fısıltı does use its own data path, and its own rules.** Two rule sets, overlapping on the schedule topics.
+
+**What was unified.**
+
+- `eksikler` calls the same kohort function in process (`lib/doktor/fisiltiHasta.ts`), for the one resolved patient,
+  with the date the route passes, and normalises the row with Fısıltı's own `normalizeKohortSatiri`. Section A is the
+  card's `detay` lines, verbatim. `lib/doktor/fisiltiHasta.test.ts` reads the 30 route sources and fails if a route
+  calls another function or passes another date; the acceptance test compares section A with what the real
+  `GET /api/doktor/fisilti` returns.
+- On the topics both rule sets cover (vaccine calendar, growth curve, screening window), a branch with a Fısıltı
+  engine shows Fısıltı's lines only: the standard's own schedule items (`asi-eksik`, `buyume`, `tarama-zamani`) are
+  left out of section B. The assistant's gap list and the whisper cannot say different things about the same
+  schedule.
+
+**What was not unified, and why.**
+
+1. *Fısıltı has no rule for three of the four gaps Dr. Gökhan's question is about.* On the synthetic patient Fısıltı
+   reports the late Hepatit B dose and the missed 12-month visit window. It does not report the lab that was asked
+   and never resulted, the control that was planned and never scheduled, or the visit with no weight. `eksikler`
+   lists the first two in section B from the standard, labelled as such; the third is in the visit digest
+   ("Ölçüm kaydı olmayan muayeneler: kilo — …"). **So "the listed gaps equal what Fısıltı reports" holds for
+   section A, not for the whole list.** Making it hold for the whole list means teaching Fısıltı the plan-versus-
+   record rules, which needs the event index of every patient in the cohort on every card load and adds new whisper
+   classes for every doctor. That is a product decision and not a small change; it was not made here. The
+   acceptance test pins the divergence: if Fısıltı gains one of these rules, the test fails and section B must stop
+   repeating it.
+2. *The assistant's other answers still use the standard's schedule.* The evidence path of questions 4, 9 and 10
+   ("aşıları tam mı", "bugün yapmam gereken", "gözümden kaçan") still lists every calendar dose with no record, where
+   Fısıltı flags only series the record tracks. `eksikler` and the whisper agree; those older answers can still say
+   more than the whisper. Aligning them means changing the audited standard (`docs/AYSE-STANDART.md`,
+   `dosyaSorgu/denetim`).
+3. *Fısıltı's transport is unchanged.* The card still fetches over HTTP. Replacing the fetch with the in-process
+   call would be a few lines, but it changes the production whisper path of 30 branches for no change in result.
+4. *Other branches.* Section A works for all 30 branches (same registry). Which of the standard's items overlap a
+   branch's kohort flags is known only for pediatri; for the others both sections are shown, labelled.
+5. *Not in section A:* the two non-clinical whisper sources (unanswered portal messages, pending WhatsApp drafts).
+6. *Hidden or muted whispers.* A doctor who hid the card or muted the patient still gets the gap from `eksikler`
+   (they asked), with a note that the card does not show it.
+7. *Dates.* 28 kohort routes pass the UTC date and two (pediatri, gebelik) the Turkey date. `eksikler` passes what
+   the branch's route passes. Between 00:00 and 03:00 Turkey time the 28 are a day behind; not changed here.
+
+### Prompt
+
+`ANALIZ_KURALI` (in the read-tool block of the prompt tail): which tool for which question, "state as written"
+(planned / asked / prescribed is not applied / resulted; "kayıt yok" is not "yapılmadı"), the gap list verbatim, say
+when a tool cut. The parity test (`aracPariteti.test.ts`) stays green: every tool a prompt names is offered.
+
+**Cost.** A non-command turn that reaches the model now carries six read-tool definitions (4 686 characters; 1 419
+before this branch) and a rule block of 4 218 characters (1 827 before): about 5 650 characters more, in the
+uncached tail. With a patient resolved that is 22 tools in one request (16 write, 6 read), above the 18 the action
+layer caps itself at. Whether Luna picks the right tool among 22 is not measured.
+
+### Acceptance (`lib/asistan/analizKabul.test.ts`)
+
+Synthetic patient, four approved visits, four deliberate gaps (`tests/dortMuayeneHastasi.ts`). Real routes, chat and
+voice, chart open and closed, read routers stubbed (`NOTYA_HIZLI_YOL_KAPALI=1`), a scripted model that calls the
+tool and repeats the result:
+
+- "hangi muayenesinde Augmentin yazıldı" → the one visit, its date, "reçete edildi"; no other visit.
+- "hangi muayenesinde hemogram istemiştim" → the visit, "istendi"; never "sonuçlandı".
+- "son 4 muayeneden sonra eksikler var mı, nelerdir" → `eksikler` and `muayeneleri_oku` in one round trip; all four
+  gaps in the answer; section A deep-equal to the Fısıltı card of the real route.
+- Cross-doctor: the three tools with another doctor's patient name → three "not found", no chart read, the open
+  chart not used instead; tool called directly; a foreign id as "open chart" reads nothing.
+
+With the routers on, the same sentences reach the model with the tools offered (checked by hand, 2026-10-02). One
+phrasing is still answered by the quick card: "hangi muayenesinde aşı yapıldı" gets the vaccine list with dates, not
+the visits.
+
+### Limits
+
+- **Whether Luna calls these tools when it should, with the right term, is not known.** Every test uses a scripted
+  model.
+- The visit type is what the note says (`vizitTuruEsanlam`: sağlam çocuk, aşı vizidi, akut); a note that names none
+  is "muayene". `sessions.session_type` is not in the event index.
+- `muayene_ara` matches the term in the text, by complaint synonym, by vaccine series and by lab key. A drug's
+  active ingredient or a brand's other names are not expanded.
+- A visit with no weight is reported by the digest as a fact of the record. No engine treats it as a gap.

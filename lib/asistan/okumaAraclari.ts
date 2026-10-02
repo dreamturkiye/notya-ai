@@ -30,7 +30,7 @@ import { HASTA_BUL_KURALI, RANDEVU_TAKVIM_KURALI } from '@/lib/asistan/personaEn
 import { kapsamKarariHastayla, KAPSAM_RED, KAPSAM_SORU } from '@/lib/asistan/kapsamKilidi'
 import { kimlikAlanDegeri, kimlikAlanEtiketi, kimlikKaydiOku, kimlikSorusunuCevapla, type KimlikCevabi } from '@/lib/doktor/kimlikSorusu'
 import { ALAN_ADLARI, AlanDefteri, alanAnahtari, HASTA_ALAN_ARACI, HASTA_ALAN_KURALI } from '@/lib/asistan/hastaAlan'
-import { ANALIZ_ARACLARI, eksiklerMetni, muayeneAra, muayeneOzeti } from '@/lib/asistan/muayeneAnaliz'
+import { ANALIZ_ARACLARI, ANALIZ_KURALI, eksiklerMetni, muayeneAra, muayeneOzeti } from '@/lib/asistan/muayeneAnaliz'
 import { hastaFisiltisi } from '@/lib/doktor/fisiltiHasta'
 import { cozumKonus, duzle, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
@@ -107,6 +107,7 @@ export const OKUMA_ARACI_BLOGU = `
 ${HASTA_BUL_KURALI}
 ${RANDEVU_TAKVIM_KURALI}
 ${HASTA_ALAN_KURALI}
+${ANALIZ_KURALI}
 Cevap yukarıdaki dosya bloğunda, HIZLI KART'ta ya da kanıt bloğunda zaten varsa araç çağırma, oradan cevapla. Orada yoksa, dosya verilmediyse ya da soru muayenehanenin geneliyle (sayı, sıralama, liste), bir hastanın kimlik / iletişim bilgisiyle ya da takvimle ilgiliyse "bilemedim" DEME, hekime "adını söyleyin" DEME: önce aracı çağır. "Bu turda açık hasta dosyası yok" notu yalnız kendi bilginden dosya uydurmanı yasaklar; aracın döndürdüğü bilgi dosya bilgisidir. Aracın döndürdüğü sayıyı, sıralamayı, tarihi, değeri ve birimi AYNEN aktar; araç "bulamadım / kayıt yok" dediyse onu söyle, değer uydurma.`
 
 export interface OkumaBaglami {
