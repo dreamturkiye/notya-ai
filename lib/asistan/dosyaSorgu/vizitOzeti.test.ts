@@ -164,13 +164,13 @@ describe('NOTYA-AYSE-OZET-01 — cevap kuralı, ekran biçimi ve cevabın kayıt
   it('şablon: tek muayenede dosyanın genel özeti şablonu yerine sekiz bölümün sırası; eksik bölüm söylenir, tanı konmaz, başka muayene katılmaz', () => {
     const blok = kanitBlogu('ozet', olaylar, hasta, { mesaj: soru(12) })
     const sablon = blok.split('[CEVAP ŞABLONU — Soru 1] ')[1]
-    assert.ok(!sablon.includes('Longitudinal'), 'genel özet şablonu tek muayenede kullanılmaz')
+    assert.ok(!sablon.includes('Anlık (snapshot) özet'), 'genel özet şablonu tek muayenede kullanılmaz')
     const konum = BASLIKLAR.map((b, i) => sablon.indexOf(`${i + 1}) ${b} —`))
     assert.ok(konum.every((k, i) => k >= 0 && (i === 0 || k > konum[i - 1])), konum.join(','))
     for (const d of ['Her bölüm bir KISA paragraf', 'Kayıtta olmayan bölümü ATLAMA', '"aşı yapılmamış"', '"laboratuvar istenmemiş"', 'kısaca tartış', 'TANI koyma', 'persentil hesaplanmadı', 'Yalnız BU muayeneyi anlat', 'olmayan sayı']) assert.ok(sablon.includes(d), d)
     assert.match(blok, /Soru 1 \(tek muayene\): "Bu muayeneyi özetler misin\?"/)
     // The whole-chart summary keeps its own template.
-    assert.match(kanitBlogu('ozet', olaylar, hasta, { mesaj: 'Bu hastayı bana kısaca özetler misin?' }), /Longitudinal özet/)
+    assert.match(kanitBlogu('ozet', olaylar, hasta, { mesaj: 'Bu hastayı bana kısaca özetler misin?' }), /Anlık \(snapshot\) özet/)
   })
 
   it('biçim: başlıklar sırasıyla ve kalın; "Dayanak" maddeleri yok; genel dosya sorusunun biçimi değişmedi', () => {

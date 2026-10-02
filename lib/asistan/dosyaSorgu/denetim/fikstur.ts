@@ -18,10 +18,10 @@ import { ayEkle, gunEkle } from '@/specialties/pediatri/engines/girdi'
 export const DENETIM_BUGUN = '2026-09-26'
 
 /** Takvimdeki her dozu önerilen tarihinde "uygulandı" yazar; `haric` = ['hepb:2', …] atlanır. */
-function takvimSatirlari(onek: string, dogumIso: string, donem: TakvimDonemi, haric: string[] = []) {
+function takvimSatirlari(onek: string, dogumIso: string, donem: TakvimDonemi, haric: string[] = [], bugunIso = DENETIM_BUGUN) {
   return takvimDozlari({ donem })
     .map((d) => ({ d, tarih: d.onerilenGun != null ? gunEkle(dogumIso, d.onerilenGun) : ayEkle(dogumIso, d.onerilenAy) }))
-    .filter(({ d, tarih }) => tarih <= DENETIM_BUGUN && !haric.includes(`${d.seri}:${d.no}`))
+    .filter(({ d, tarih }) => tarih <= bugunIso && !haric.includes(`${d.seri}:${d.no}`))
     .map(({ d, tarih }, i) => ({ id: `${onek}-asi-${i}`, asi_adi: d.urun, doz_no: d.no, uygulama_tarihi: tarih }))
 }
 
@@ -145,6 +145,69 @@ export const FIKSTUR_D: HamDosya = {
   ],
   asilar: takvimSatirlari('d', '2023-03-01', 'besli', ['kkk:1']),
 }
+
+// ─── (e) "İlk 10" standardı (NOTYA-ILK10-*): 24 aylık erkek ─────────────────────────────────────────────
+// Dr. Gökhan'ın gerçek hasta testindeki bulguların BİÇİMİ, sentetik değerlerle (hiçbir ad, tarih ya da değer o hastadan
+// değildir): Hepatit B 1. ve 2. doz aynı tarihte kayıtlı (kayıt tutarsız); Hepatit A 2. doz notta planlanmış, satırı
+// yok; aynı gün iki farklı kilo (alan 12,4 kg, cihaz 10,4 kg); 7 gün önceki otit vizitinde süspansiyon dozu tablonun
+// üst sınırının üzerinde ve reçetedeki ürün ilaç listesindekinden farklı; "48-72 saat içinde düzelmezse kontrol"
+// penceresi geçmiş; M-CHAT planlanmış, sonucu yok; prematürite + yoğun bakım öyküsü, düşük ferritin, ekran süresi.
+//
+// Tarihler `bugunIso`ya göredir (çocuk hep 24 ay 16 günlük; otit viziti hep 7 gün önce): aynı dosya saf denetimde
+// DENETIM_BUGUN ile (FIKSTUR_E), sahne testlerinde günün tarihiyle kurulur (lib/asistan/tests/gokhanKorpusHastalari.ts).
+export function ilk10Dosyasi(bugunIso: string): HamDosya {
+  const dogum = gunEkle(ayEkle(bugunIso, -24), -16)
+  const v1 = ayEkle(dogum, 18), v2 = ayEkle(dogum, 21), v3 = gunEkle(bugunIso, -7)
+  return {
+  hasta: { ad: 'QA Çocuk E DENETIM-E', dogumIso: dogum, cinsiyet: 'Erkek' },
+  brans: 'Pediatri',
+  intake: { alerjiVarMi: 'Hayır', gebelikHaftasiPed: '35', dogumKilosuPed: '2450 g', dogumSonrasiPed: 'Yenidoğan yoğun bakımda 5 gün izlendi', emzirmeSuresi: '12 ay' },
+  intakeTarih: v1,
+  vizitler: [
+    {
+      id: 'e-v1', tarih: `${v1}T09:00:00Z`,
+      subjektif: '18 aylık erkek çocuk, sağlam çocuk izlemi. Yürüyor, 8-10 kelimesi var, istediğini işaret ederek gösteriyor, ismine bakıyor. Anne konuşmasının yaşıtlarından geri olduğundan endişeli. Günde 2 saat ekran izliyor.',
+      objektif: 'Fizik muayene doğal. Göz teması var.',
+      degerlendirme: '18 aylık sağlam çocuk.', tani: 'Sağlam çocuk izlemi',
+      plan: 'M-CHAT planlandı. Hepatit A 2. doz 24. ayda yapılacak. Hemogram ve ferritin istendi. 6 ay sonra kontrol.',
+      vitaller: { kilo: '11,2', boy: '82', basCevresi: '47,5' },
+    },
+    {
+      id: 'e-v2', tarih: `${v2}T09:00:00Z`,
+      subjektif: 'Öksürük ve burun akıntısı, 3 gündür.',
+      objektif: 'Farenks hiperemik. Akciğer sesleri doğal.',
+      degerlendirme: 'Viral üst solunum yolu enfeksiyonu.', tani: 'Akut nazofarenjit',
+      plan: 'Semptomatik tedavi.',
+      vitaller: { kilo: '12,4', boy: '85,5' },
+    },
+    {
+      id: 'e-v3', tarih: `${v3}T09:00:00Z`,
+      subjektif: 'Sağ kulak ağrısı ve ateş, 1 gündür.',
+      objektif: 'Sağ timpanik membran hiperemik ve bombe.',
+      degerlendirme: 'Sağ akut otitis media.', tani: 'Akut otitis media',
+      plan: 'Augmentin 8 ml sabah akşam, 10 gün. 48-72 saat içinde düzelmezse kontrol.',
+      ilaclar: [{ ad: 'Augmentin ES 600 mg/5 ml süspansiyon', doz: '8 ml', kullanim: '2x1, 10 gün' }],
+      vitaller: { kilo: '13,6', boy: '88', ates: '38,8' },
+    },
+  ],
+  // 5'li karma dönemi. Hepatit B 2. doz 1. dozla aynı tarihte kayıtlı; Hepatit A 2. doz (24. ay) kayıtta yok.
+  asilar: takvimSatirlari('e', dogum, 'besli', ['hepa:2'], bugunIso)
+    .map((a) => (a.asi_adi === 'Hepatit B' && a.doz_no === 2 ? { ...a, uygulama_tarihi: dogum } : a)),
+  ilaclar: [
+    { id: 'e-i1', ilac_adi: 'Augmentin BID 400 mg/5 ml süspansiyon', etken_madde: 'amoksisilin-klavulanat', doz: '8 ml', kullanim_sikli: '2x1, 10 gün', baslangic_tarihi: v3, aktif: true },
+    { id: 'e-i2', ilac_adi: 'D vitamini damla', etken_madde: 'kolekalsiferol', doz: '400 IU', kullanim_sikli: '1x1', baslangic_tarihi: gunEkle(dogum, 10), aktif: true },
+    { id: 'e-i3', ilac_adi: 'QA Bitkisel Şurup', doz: '5 ml', kullanim_sikli: '2x1', baslangic_tarihi: v3, aktif: true },
+  ],
+  lablar: [
+    { id: 'e-l1', canonical_key: 'Hb', kanonik_deger: 10.6, kanonik_birim: 'g/dL', numune_tarihi: gunEkle(v1, 2), ref_low: 11, ref_high: 14 },
+    { id: 'e-l2', canonical_key: 'Ferritin', kanonik_deger: 9, kanonik_birim: 'ng/mL', numune_tarihi: gunEkle(v1, 2), ref_low: 12, ref_high: 150 },
+  ],
+  cihaz: [{ id: 'e-c1', tur: 'kilo', deger: '10,4', birim: 'kg', alindi: `${v2}T09:20:00Z` }],
+  }
+}
+
+/** (e) dosyası, denetimin sabit "bugün"üyle: doğum 10.09.2024, vizitler 10.03.2026 / 10.06.2026 / 19.09.2026. */
+export const FIKSTUR_E: HamDosya = ilk10Dosyasi(DENETIM_BUGUN)
 
 export const FIKSTURLER = { a: FIKSTUR_A, b: FIKSTUR_B, c: FIKSTUR_C, d: FIKSTUR_D } as const
 

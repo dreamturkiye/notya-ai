@@ -69,6 +69,11 @@ export interface Beklenti {
    * the record). Such a turn is graded in full in a dry run too, although it passed through the stand-in.
    */
   sunucuYazar?: boolean
+  /**
+   * On a `sunucuYazar` turn: patterns the MODEL must write on top of what the server guarantees. Graded whenever the
+   * model wrote the answer; skipped only when a stand-in did (dry run), where `icerir` is still graded in full.
+   */
+  modelIcerir?: string[]
 }
 
 export interface KorpusGirdisi {
@@ -369,9 +374,9 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
       icermez: ['otitis media|Augmentin', '\\(p\\d+, z'],
       okunus: { icerir: ['Aşı yapılmamış', 'Laboratuvar istenmemiş', 'persentil hesaplanmadı'], icermez: ['madde, ekranınızda'] },
     }, { turetilmis: true, not: 'The live sentence with the visit that has no vaccine row, no lab and its measurements only in the note text: every absent part is stated, no percentile is estimated.' }),
-  g('L-OZET-24AY-DEVAM', 'ses', 'devam et', [L('NOTYA-AYSE-OZET-01'), L('NOTYA-SES-DEVAM-01')],
-    { hasta: 'bebek', icerir: ['Reçete yazılmamış; plan: Hepatit A 2\\. doz planlandı.*6 ay sonra kontrol'], icermez: ['Neye devam'] },
-    { kurulum: [`${P}'nun 24 aylık sağlam çocuk muayenesinin özetini verir misin?`], yuzeyler: ['ses'], turetilmis: true, not: 'The 24-month narrative is eight sentences (the growth engine reports a shift): seven are spoken, the eighth waits for the continuation and is read without a model call.' }),
+  g('L-OZET-24AY-DEVAM', 'ses', `${P}'nun 24 aylık sağlam çocuk muayenesinin özetini verir misin?`, [L('NOTYA-AYSE-OZET-01'), L('NOTYA-SES-DEVAM-01'), L('NOTYA-KADEMELI-01d')],
+    { hasta: 'bebek', rota: ['model'], sunucuYazar: true, icerir: ['Reçete yazılmamış; plan: Hepatit A 2\\. doz planlandı.*6 ay sonra kontrol'], icermez: ['persentil kayması var', 'Devamı ekranınızda'] },
+    { yuzeyler: ['ses'], turetilmis: true, not: 'Until NOTYA-KADEMELI-01d the 24-month narrative was eight sentences: the eighth was a VKİ "shift" measured from the 5-day-old value, and the plan sentence waited for "devam et". A birth value is no longer the start of a drift, so the narrative is seven sentences and the plan is heard in the turn itself. The continuation of a narrative that IS longer than the cap is tested in lib/asistan/vizitOzetiSahne.test.ts on a chart with a drift between validated measurements.' }),
   g('L-OZET-ERISKIN', 'muayene', 'Son muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
     {
       hasta: 'eriskin', rota: ['model'], sunucuYazar: true,
@@ -742,19 +747,36 @@ const TAKIP_GIRDILERI: KorpusGirdisi[] = [
 /* ══════════════════════════════════════════════════════════════════════════════════════════════════════
  * E. İlk-10 — the file questions of the Dr. Gökhan standard, on the 15-visit chart, all three surfaces
  * ══════════════════════════════════════════════════════════════════════════════════════════════════════ */
-const i = (no: number, soz: string, icerir: string[], icermez: string[] = []) =>
-  g(`I-${String(no).padStart(2, '0')}`, 'ilk10', soz, [K(ILK10, `## ${no}.`), L('NOTYA-AYSE-STANDART-01')], { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir, icermez }, { acik: 'bebek', yuzeyler: UC })
+/**
+ * NOTYA-ILK10-YAPI-01: the structure the standard asks for is asserted on the WRITTEN answer (chat and the file
+ * panel), where the whole answer is on screen. Voice speaks a condensed narrative inside the sentence cap, so the
+ * voice turn keeps the content assertions only (`sesIcerir`). The written assertions are shared by chat and the file
+ * panel, and the panel says "hasta" (no identity reaches the model there), so the patient's name is asserted on the
+ * voice turn and by the bound patient (`hasta`), not in the written text. The banned words are the standard's: a missing record is never "yapılmadı / uygulanmadı".
+ */
+const KAYIT_YOK_DEGIL_YAPILMADI = 'yapılmadı|uygulanmadı|yapılmamış|uygulanmamış'
+const I03_KAYITLI = ['12[.,]8|12[.,]6', '87[.,]5']
+const I03_PERSENTIL_Z = ['persentil|\\bp ?\\d{1,2}\\b', '\\bz\\b|z-skor|z skor']
+const i = (no: number, soz: string, icerir: string[], icermez: string[] = [], sesIcerir?: string[]) =>
+  g(`I-${String(no).padStart(2, '0')}`, 'ilk10', soz, [K(ILK10, `## ${no}.`), L('NOTYA-AYSE-STANDART-01'), ...(sesIcerir ? [L('NOTYA-ILK10-YAPI-01')] : [])],
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir, icermez }, { acik: 'bebek', yuzeyler: UC, ...(sesIcerir ? { ses: { icerir: sesIcerir } } : {}) })
 const ILK10_GIRDILERI: KorpusGirdisi[] = [
-  i(1, 'Bu hastayı bana kısaca özetler misin?', ['Emircan', 'otit|kulak', '[Dd]emir|anemi']),
+  // Q1 — snapshot: diagnoses that must be named, plus growth, development and vaccine status.
+  i(1, 'Bu hastayı bana kısaca özetler misin?', ['otit|kulak', '[Dd]emir|anemi', '[Bb]üyüme|persentil|kilo', '[Gg]elişim|M-CHAT', 'aşı|Hepatit A'], [], ['Emircan', 'otit|kulak', '[Dd]emir|anemi']),
   i(2, 'Son muayeneden bu yana neler değişmiş?', ['otit|kulak']),
-  // The file panel's server check writes the latest recorded values whatever the model writes (NOTYA-KORPUS-KALAN-01).
-  { ...i(3, 'Büyümesi nasıl gidiyor?', ['12[.,]8|12[.,]6', '87[.,]5']), panel: { sunucuYazar: true } },
-  i(4, 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', ['Hepatit A'], ['Hepatit A 2\\. doz[^.\\n]*uyguland']),
+  // Q3 — the latest measurement with percentile and z-score from the engine, and a change between two named dates.
+  // The file panel's server check writes the latest recorded values whatever the model writes (NOTYA-KORPUS-KALAN-01);
+  // the percentile and the z-score are the model's words there, so a stand-in run grades the recorded values only.
+  { ...i(3, 'Büyümesi nasıl gidiyor?', [...I03_KAYITLI, ...I03_PERSENTIL_Z], [], I03_KAYITLI), panel: { sunucuYazar: true, icerir: I03_KAYITLI, modelIcerir: I03_PERSENTIL_Z } },
+  // Q4 — the planned dose is not a given dose; the wording for a missing record; risk-based apart from routine.
+  i(4, 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?', ['Hepatit A', 'planlan', 'kayıt\\w* (bulamadım|yok|görünmüyor|göremiyorum|bulunmuyor)|kaydı (yok|görünmüyor|bulunmuyor)'], ['Hepatit A 2\\. doz[^.\\n]*uyguland', KAYIT_YOK_DEGIL_YAPILMADI], ['Hepatit A']),
   i(5, 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?', ['Hb|[Hh]emoglobin|[Ff]erritin|CRP']),
   i(6, 'Şu anda kullandığı ilaçlar neler ve dozları nedir?', ['D vitamini', 'Ferro Sanol|[Dd]emir']),
   i(7, 'Daha önce aynı şikayetle geldi mi?', ['otit|kulak']),
-  i(8, 'Gelişimi yaşına uygun mu?', ['M-CHAT|gelişim']),
-  i(9, 'Bugün yapmam veya takip etmem gereken bir şey var mı?', ['Hepatit A|kontrol|Takip|Dikkat']),
+  // Q8 — the six headings, in the standard's words; a recorded screening result is reported, never derived.
+  i(8, 'Gelişimi yaşına uygun mu?', ['Genel değerlendirme', 'Güçlü alanlar', 'İzlenmesi gereken alanlar', '[Rr]isk ve koruyucu', 'Tarama durumu', 'sonraki adım', 'M-CHAT'], [], ['M-CHAT|gelişim']),
+  // Q9 — three buckets, vaccines included.
+  i(9, 'Bugün yapmam veya takip etmem gereken bir şey var mı?', ['Bugün', 'Yakın zamanda', '[Rr]utin|Daha sonra', 'Hepatit A'], [KAYIT_YOK_DEGIL_YAPILMADI], ['Hepatit A|kontrol|Takip|Dikkat']),
   i(10, 'Gözümden kaçabilecek önemli bir şey var mı?', ['Hepatit A|Dikkat|Eksik|Takip|saptamadım']),
 ]
 
@@ -1126,6 +1148,7 @@ export function beklentiDegerlendir(
     // A warning the server adds to the card's line is part of the answer whoever wrote the rest.
     if (beklenti.kartUyari && !t.kartlar.some((k) => k.uyari > 0)) nedenler.push('kartta uyarı yok')
     for (const d of beklenti.icerir || []) if (!re(d, baglam).test(metin)) nedenler.push(`içermeli: ${kisalt(d)}`)
+    if (!(o.vekil && t.modeleGitti)) for (const d of beklenti.modelIcerir || []) if (!re(d, baglam).test(metin)) nedenler.push(`içermeli: ${kisalt(d)}`)
     for (const d of beklenti.icermez || []) if (re(d, baglam).test(metin)) nedenler.push(`içermemeli: ${kisalt(d)}`)
     if (beklenti.tablo && !/^\|.+\|\s*$/m.test(t.ekran)) nedenler.push('ekranda tablo yok')
     if (beklenti.okunus && t.yuzey === 'ses') {

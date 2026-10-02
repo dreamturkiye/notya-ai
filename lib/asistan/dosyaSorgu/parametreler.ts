@@ -32,6 +32,17 @@ export interface AsiDoz {
   telafi?: boolean
 }
 
+/** NOTYA-ILK10-ASI-01 — kaydı kendi içinde tutarsız bir doz (aynı gün iki doz, minimum aralıktan önce, doğumdan önce, ileri tarihli). */
+export interface AsiTutarsizligi {
+  seri: string
+  /** "Hepatit B 2. doz" */
+  ad: string
+  /** ISO — tutarsız görünen kaydın tarihi. */
+  tarih: string
+  /** "1. dozla aynı tarihte kayıtlı" */
+  neden: string
+}
+
 export interface AsiDurumu {
   /** Takvim sürümü / kaynağı. */
   surum: string
@@ -41,9 +52,24 @@ export interface AsiDurumu {
   eslesmeyen: string[]
   /** Takvim dışı / risk bazlı aşılar — rutinden ayrı gösterilir. */
   riskBazli: string[]
+  /** Tutarsız kayıtlar: bu serilerde "gecikti" denmez, "kayıt tutarsız" denir (Fısıltı kuralı — NOTYA-FISILTI-GIZLE-01). */
+  tutarsiz?: AsiTutarsizligi[]
 }
 
-export interface Degerlendirme { satirlar: string[]; bayraklar: AcikIs[] }
+/**
+ * NOTYA-KADEMELI-01 — what the first-stage answer of the growth question is built from: the engine's own results, not
+ * a second computation. `son`: the latest VALIDATED value of each parameter with its percentile (null when the
+ * reference does not cover it). `tutarsizlik` / `kayma`: short clauses, the full sentences are in `satirlar`.
+ */
+export interface BuyumeOzeti {
+  /** Days that carry at least one measurement. */
+  olcumGunu: number
+  son: { ad: string; persentil: number | null; tarih: string }[]
+  tutarsizlik: string[]
+  kayma: { asagi: boolean; kisa: string }[]
+}
+
+export interface Degerlendirme { satirlar: string[]; bayraklar: AcikIs[]; ozet?: BuyumeOzeti }
 
 export interface BransSorguParametreleri {
   anahtar: string

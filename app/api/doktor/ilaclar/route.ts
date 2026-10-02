@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { arsivsizIlaclar } from '@/lib/doktor/arsiv';
+import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari';
+import { dozGuvenligi } from '@/lib/doktor/dozGuvenligi';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +39,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  // NOTYA-ILK10-DOZ-01: the drug card shows the same dose-safety flag Ayşe reports (Q6 / Q9 / Q10): mg/kg/day with the
+  // weight at the start date, measured against the Notya drug table, and a product mismatch with the visit's
+  // prescription. HASTA-IZOLASYON-01: dosyaSorguVerisiDerle reads the patient row by id AND this doctor's id (a foreign
+  // patient → null → no flag) and scopes every child read the same way. The flag is extra; the list never fails on it.
+  let satirlar = data;
+  try {
+    const sorgu = await dosyaSorguVerisiDerle(supabase, user.id, hastaId);
+    if (sorgu && Array.isArray(data)) {
+      const g = dozGuvenligi(sorgu.olaylar, sorgu.hasta);
+      const bayraklar = new Map<string, string[]>();
+      const ekle = (id: string, metin: string) => bayraklar.set(id, [...(bayraklar.get(id) || []), metin]);
+      for (const d of g.ilaclar) if (d.kaynak === 'liste' && d.bayrak) ekle(d.kaynakId, d.metin);
+      for (const u of g.uyumsuzluklar) ekle(u.listeId, u.metin);
+      if (bayraklar.size) satirlar = data.map((r: { id: string }) => (bayraklar.has(String(r.id)) ? { ...r, doz_guvenligi: bayraklar.get(String(r.id)) } : r));
+    }
+  } catch (e) {
+    console.error('[ilaclar] doz güvenliği', e instanceof Error ? e.message.slice(0, 200) : 'hata');
+  }
+
+  return NextResponse.json(satirlar);
 }
 
 export async function POST(request: NextRequest) {

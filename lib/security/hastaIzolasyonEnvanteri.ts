@@ -36,7 +36,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/sessions/[id]/end/route.ts': T,
   'app/api/sessions/ses-yukle/route.ts': T,
   'app/api/doktor/not-konsult/route.ts': I('note loaded by id AND doctor_id = doktorId; 404 otherwise'),
-  'app/api/doktor/konsult/route.ts': I('hastaDosyasiniDerle(doktorId, patientId) returns null for a foreign patient → 404; the visit-measurement evidence (dosyaSorguVerisiDerle) runs after that check and scopes the patient row and every child read by doktorId — lib/asistan/vizitOlcumSahne.test.ts asserts the 404'),
+  'app/api/doktor/konsult/route.ts': I('hastaDosyasiniDerle(doktorId, patientId) returns null for a foreign patient → 404; the visit-measurement evidence and the İlk-10 file-question evidence (both dosyaSorguVerisiDerle; the evidence block carries no patient name) run after that check and scopes the patient row and every child read by doktorId — lib/asistan/vizitOlcumSahne.test.ts asserts the 404'),
   'app/api/doktor/medula/recete/route.ts': I('note by id AND doctor_id; patient read scoped by doctor_id'),
   'app/api/doktor/rrs/route.ts': I('note by id AND doctor_id, patient ownership re-checked; list/patch scoped by doctor_id'),
   'app/api/doktor/raporlar/route.ts': I('aggregates only rows with doctor_id = user.id; no patient name, phone or id in the response'),

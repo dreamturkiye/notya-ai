@@ -167,7 +167,7 @@ describe('eksikler — Fısıltı bölümü ve dosya sorgu standardının açık
     const m = eksiklerMetni({ hastaAdi: AD, hasta, olaylar, fisilti: f() })
     assert.match(m, /- Ferritin — istendi, sonuç yok \(istem: 27\.09\.2025, not: "Hemogram ve ferritin istendi"\)\./)
     assert.match(m, /- Hepatit B 3\. doz — planlandı \(26\.11\.2025, not: "[^"]+"\); uygulandığına dair kayıt bulamadım\./)
-    assert.match(m, /- Kontrol 04\.06\.2026 için planlanmıştı \(05\.05\.2026 notu: "1 ay sonra kontrol"\); sonraki vizit kaydı yok\./)
+    assert.match(m, /- Kontrol 04\.06\.2026 için planlanmıştı \(05\.05\.2026 notu: "1 ay sonra kontrol"\); sonraki vizit kaydı yok — pencere 120 gün önce doldu\./)
   })
 
   it('Fısıltı olan branşta takvimden hesaplanan kalemler (aşı takvimi, büyüme, tarama penceresi) B bölümüne girmez', () => {

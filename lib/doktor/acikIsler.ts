@@ -15,12 +15,14 @@ import { eksikDozEtiketi, parametreSec, type AsiDurumu } from '@/lib/asistan/dos
 import { SIKAYET_GRUPLARI, terimlerdenBiriGeciyor } from '@/lib/klinik/sikayetEsanlam'
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { alerjiUyarilari } from '@/core/eylemler/ilacUyari'
+import { asiKaniti, tutarsizSatiri } from '@/lib/asistan/dosyaSorgu/asiKaniti'
+import { dozBayraklari, dozGuvenligi } from '@/lib/doktor/dozGuvenligi'
 
 export type AcikIsOnceligi = 'bugun' | 'yakinda' | 'rutin'
 export type AcikIsTuru =
   | 'lab-sonuc-yok' | 'lab-anormal-tekrar-yok' | 'konsultasyon-bekliyor' | 'kontrol-planli' | 'asi-plan-kaydi-yok'
   | 'asi-eksik' | 'asi-yaklasan' | 'tarama-sonuc-yok' | 'tarama-zamani' | 'buyume' | 'gelisim' | 'guvenlik-alerji'
-  | 'celiski' | 'tekrarlayan' | 'goruntuleme-sonuc-yok'
+  | 'celiski' | 'tekrarlayan' | 'goruntuleme-sonuc-yok' | 'guvenlik-doz'
 
 export interface AcikIs {
   oncelik: AcikIsOnceligi
@@ -30,18 +32,30 @@ export interface AcikIs {
   tarih?: string
   /** Hasta güvenliği maddesi: cevabın SONUNDA belirgin bildirilir. */
   guvenlik?: boolean
+  /**
+   * NOTYA-KADEMELI-01: the item as one short clause for the first-stage answer — no quote of the note, no reference
+   * range, no value; a date only where it names an inconsistency. The full sentence (`metin`) is the second stage.
+   */
+  kisa?: string
 }
 
 export interface AcikIsler { bugun: AcikIs[]; yakinda: AcikIs[]; rutin: AcikIs[] }
 
 export { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari }
 
-function kontrolVadesi(p: DosyaOlayi): string | null {
-  const m = p.metin.toLocaleLowerCase('tr-TR').match(/(\d{1,3})\s*(gün|gun|hafta|ay)\s*sonra/)
+/**
+ * Notta yazan takip penceresinin son günü: "10 gün sonra kontrol", "2 hafta sonra", "48-72 saat içinde düzelmezse
+ * kontrol", "3 gün içinde". Aralıkta üst sınır alınır; saat güne yuvarlanır (72 saat = 3 gün).
+ */
+export function kontrolVadesi(p: Pick<DosyaOlayi, 'metin' | 'tarih'>): string | null {
+  const m = p.metin.toLocaleLowerCase('tr-TR').match(/(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\s*(saat|gün|gun|hafta|ay)\s*(?:sonra|içinde|icinde|içerisinde)/)
   if (!m) return null
-  const n = Number(m[1])
-  return gunEkleIso(p.tarih, m[2] === 'hafta' ? n * 7 : m[2] === 'ay' ? n * 30 : n)
+  const n = Number(m[2] || m[1])
+  return gunEkleIso(p.tarih, m[3] === 'saat' ? Math.ceil(n / 24) : m[3] === 'hafta' ? n * 7 : m[3] === 'ay' ? n * 30 : n)
 }
+
+/** "düzelmezse", "ateş devam ederse", "gerekirse" — kontrol bir koşula bağlı yazılmış. */
+const KOSULLU_KONTROL = /(mezse|mazsa|olursa|ederse|gerekirse|gerektiğinde)\b/
 
 /** Alerji ile çelişen aktif ilaç / son 90 günün reçetesi — hasta güvenliği. */
 export function alerjiCatismalari(olaylar: DosyaOlayi[], bugunIso: string): AcikIs[] {
@@ -118,9 +132,15 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
     } else if (p.tur === 'kontrol' && !k && p.vizitId === sonVizit?.vizitId) {
       const vade = kontrolVadesi(p)
       const gelecekRandevu = olaylar.find((o) => o.kaynak === 'randevu' && o.durum === 'randevu')
-      if (gelecekRandevu) ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: gelecekRandevu.tarih, metin: `Planlı kontrol: randevu ${trGun(gelecekRandevu.tarih)} (son vizitte: "${p.metin}").` })
-      else if (vade && vade <= bugunIso) ekle({ oncelik: 'bugun', tur: 'kontrol-planli', tarih: vade, metin: `Kontrol ${trGun(vade)} için planlanmıştı (${trGun(p.tarih)} notu: "${p.metin}"); sonraki vizit kaydı yok.` })
-      else ekle({ oncelik: vade ? 'yakinda' : 'rutin', tur: 'kontrol-planli', tarih: vade || p.tarih, metin: `Kontrol ${vade ? `${trGun(vade)} için ` : ''}planlandı (${trGun(p.tarih)} notu: "${p.metin}"); randevu kaydı yok.` })
+      // NOTYA-ILK10-YAPI-01: her takip penceresi BUGÜNÜN tarihiyle karşılaştırılır; geçmişse kaç gün önce dolduğu yazılır.
+      const gecen = vade ? gunFarkiIso(vade, bugunIso) : 0
+      const pencere = !vade ? '' : gecen > 0 ? ` — pencere ${gecen} gün önce doldu` : gecen === 0 ? ' — pencere bugün doluyor' : ''
+      const kosullu = KOSULLU_KONTROL.test(p.metin.toLocaleLowerCase('tr-TR'))
+      if (gelecekRandevu) ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: gelecekRandevu.tarih, metin: `Planlı kontrol: randevu ${trGun(gelecekRandevu.tarih)} (son vizitte: "${p.metin}")${vade && gecen > 0 ? `; notta yazan kontrol penceresi ${trGun(vade)} tarihinde doldu (${gecen} gün önce)` : ''}.` })
+      else if (vade && vade <= bugunIso) ekle({ oncelik: 'bugun', tur: 'kontrol-planli', tarih: vade, metin: kosullu
+        ? `Koşullu kontrol ${trGun(vade)} için yazılmıştı (${trGun(p.tarih)} notu: "${p.metin}"); sonraki vizit kaydı yok, düzelme durumu kayıtlı değil${pencere}.`
+        : `Kontrol ${trGun(vade)} için planlanmıştı (${trGun(p.tarih)} notu: "${p.metin}"); sonraki vizit kaydı yok${pencere}.` })
+      else ekle({ oncelik: vade ? 'yakinda' : 'rutin', tur: 'kontrol-planli', tarih: vade || p.tarih, metin: `${kosullu ? 'Koşullu kontrol' : 'Kontrol'} ${vade ? `${trGun(vade)} için ` : ''}${kosullu ? 'yazıldı' : 'planlandı'} (${trGun(p.tarih)} notu: "${p.metin}"); randevu kaydı yok.` })
     }
   }
 
@@ -135,6 +155,15 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
     ekle({ oncelik: 'yakinda', tur: 'lab-anormal-tekrar-yok', tarih: l.tarih, metin: `${l.metin} (${trGun(l.tarih)}) laboratuvarın verdiği referansın (${l.refAlt ?? '—'}–${l.refUst ?? '—'}) dışında; yaşa uygunluğu doğrulanmadı; sonrasında tekrar ölçüm kaydı yok.` })
   }
 
+  // İlaç sonrası kontrol (NOTYA-ILK10-YAPI-01): süresi son 30 günde dolan kür, sonrasında vizit yok. Rutin sepetinde —
+  // alarm değil, hatırlatma.
+  for (const o of olaylar.filter((x) => x.kaynak === 'ilac' && x.tur === 'ilac' && x.durum === 'tamamlandi' && x.sureGun)) {
+    const bitis = gunEkleIso(o.tarih, o.sureGun!)
+    if (bitis > bugunIso || gunFarkiIso(bitis, bugunIso) > 30) continue
+    if (olaylar.some((v) => v.kaynak === 'not' && v.tur === 'vizit' && v.tarih >= bitis)) continue
+    ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: bitis, metin: `İlaç sonrası kontrol: ${o.metin.split(' — ')[0].replace(/\s*\[.*$/, '').trim()} kürü ${trGun(bitis)} tarihinde doldu (başlangıç ${trGun(o.tarih)}, ${o.sureGun} gün); sonrasında vizit / değerlendirme kaydı yok.` })
+  }
+
   // Açık konsültasyonlar (yapılandırılmış satır).
   for (const s of olaylar.filter((o) => o.kaynak === 'konsultasyon' && o.durum === 'istendi')) {
     ekle({ oncelik: 'yakinda', tur: 'konsultasyon-bekliyor', tarih: s.tarih, metin: `${s.metin} — istendi (${trGun(s.tarih)}); yanıt kaydı yok.` })
@@ -144,7 +173,25 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
   if (hasta) {
     const p = parametreSec(brans ?? hasta.brans, hasta.dogumIso, hasta.bugunIso)
     const asi = p.asi(olaylar, hasta)
-    if (asi) {
+    // NOTYA-ILK10-ASI-01: aşı maddeleri Soru 4 ile AYNI kanıt yapısından (asiKaniti) gelir — iki soru farklı şey söyleyemez.
+    const kanit = asiKaniti(olaylar, hasta, p, asi)
+    if (asi && kanit) {
+      const planli = planOlaylari(olaylar).filter((o) => o.tur === 'asi')
+      // Tutarsız kayıt "gecikti" değildir (Fısıltı kuralı): o seride eksik doz maddesi yazılmaz, kaydın kontrolü istenir.
+      for (const t of kanit.tutarsiz) ekle({ oncelik: 'bugun', tur: 'celiski', tarih: t.tarih, metin: `Aşı kaydı tutarsız — ${tutarsizSatiri(t)}; "gecikti" sayılmadı, tarih / doz numarası kontrol edilmeli.` })
+      if (kanit.kayitYok) {
+        // Hiç satır yokken takvimin bütün dozlarını tek tek "eksik" saymak alarm üretir; aşılar başka merkezde uygulanmış olabilir.
+        ekle({ oncelik: 'yakinda', tur: 'asi-eksik', metin: `Aşı tablosunda hiç uygulama kaydı yok (kesin yaş ${kanit.yas}); "tam" ya da "eksik" denmez — karne / e-Nabız kaydı istenmeli.` })
+      } else {
+        for (const d of kanit.eksik) {
+          const plan = planli.find((o) => o.anahtar === d.seri && (o.doz == null || o.doz === d.no))
+          if (plan) continue // "planlandı; kayıt yok" maddesi zaten var
+          ekle({ oncelik: 'bugun', tur: 'asi-eksik', metin: `${d.ad} — ${eksikDozEtiketi(d, bugunIso)} (önerilen ${trGun(d.onerilen)})${d.telafi ? ', telafi planı gerekir' : ''}; uygulandığına dair kayıt bulamadım.` })
+        }
+      }
+      for (const d of kanit.yaklasan) ekle({ oncelik: 'rutin', tur: 'asi-yaklasan', metin: `${d.ad} — yaklaşıyor (önerilen ${trGun(d.onerilen)}).` })
+      for (const c of asiBeyanCeliskileri(olaylar, asi)) ekle(c)
+    } else if (asi) {
       const planli = planOlaylari(olaylar).filter((o) => o.tur === 'asi')
       for (const d of asi.dozlar) {
         if (d.durum === 'gecikti' || d.durum === 'zamani_geldi' || d.durum === 'bugun') {
@@ -166,6 +213,14 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
     ekle({ oncelik: 'yakinda', tur: 'tekrarlayan', metin: `Tekrarlayan patern: ${t.grup} — son 12 ayda ${t.tarihler.length} vizit (${t.tarihler.map(trGun).join(', ')}).` })
   }
   for (const a of alerjiCatismalari(olaylar, bugunIso)) ekle(a)
+
+  // NOTYA-ILK10-DOZ-01: süren ilaçta aralık dışı doz ve reçete ↔ ilaç listesi ürün uyuşmazlığı. Üst sınırın üzeri hasta
+  // güvenliği maddesidir (cevabın sonunda belirgin); süresi dolmuş reçete alarm üretmez (Soru 6 kanıtında görünür).
+  if (hasta) {
+    const doz = dozGuvenligi(olaylar, hasta)
+    for (const d of dozBayraklari(doz)) ekle({ oncelik: 'bugun', tur: 'guvenlik-doz', tarih: d.tarih, guvenlik: d.durum === 'ust-sinir-ustu' && d.kesin !== false, metin: `Doz güvenliği — ${d.metin}` })
+    for (const u of doz.uyumsuzluklar.filter((x) => x.devam)) ekle({ oncelik: 'bugun', tur: 'celiski', tarih: u.tarih, metin: u.metin })
+  }
 
   return {
     bugun: isler.filter((i) => i.oncelik === 'bugun'),
