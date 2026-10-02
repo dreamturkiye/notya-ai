@@ -59,7 +59,7 @@ export const SORU_SABLONLARI: Record<SoruTuru, { no: number; soru: string; sablo
   },
   ilac: {
     no: 6, soru: 'Şu anda kullandığı ilaçlar neler ve dozları nedir?',
-    sablon: 'Geçmiş reçeteleri aktif sayma. Her aktif ilaç için: ad, form/konsantrasyon, tek doz, yol, sıklık, endikasyon, başlangıç, planlanan süre, durum. mg/kg için REÇETE TARİHİNDEKİ kiloyu kullan (kanıtta yazıyor); akut antibiyotiği aylar sonra aktif gösterme. Doz / alerji / güvenlik sorunu varsa bildir.',
+    sablon: 'Geçmiş reçeteleri aktif sayma. Her aktif ilaç için: ad, form/konsantrasyon, tek doz, yol, sıklık, endikasyon, başlangıç, planlanan süre, durum. mg/kg için REÇETE TARİHİNDEKİ kiloyu kullan (kanıtta yazıyor); akut antibiyotiği aylar sonra aktif gösterme. Doz / alerji / güvenlik sorunu varsa bildir. Kanıtta "DOZ GÜVENLİĞİ" bölümü varsa: ⚠ işaretli satırı (üst sınırın üzeri, etkin aralığın altı, ürün / konsantrasyon uyuşmazlığı) mg/kg/gün değeri, kullanılan kilo ve tarihi ve referansıyla AYNEN bildir; "referans yok" yazan ilaç için doz yorumu yapma, "hesaplanamadı" yazanın nedenini söyle. mg/kg/gün değerini kendin hesaplama, referans sayısı ekleme.',
   },
   benzer: {
     no: 7, soru: 'Daha önce aynı şikayetle geldi mi?',

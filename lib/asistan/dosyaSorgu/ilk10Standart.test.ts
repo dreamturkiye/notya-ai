@@ -12,6 +12,8 @@ import { DENETIM_BUGUN, FIKSTUR_A, FIKSTUR_B, FIKSTUR_C, FIKSTUR_D, FIKSTUR_E } 
 import { olaylariKur, hastaKur, type HamDosya } from '@/lib/doktor/dosyaOlaylari'
 import { acikIsleriBul, kontrolVadesi } from '@/lib/doktor/acikIsler'
 import { SORU_SABLONLARI } from './kurallar'
+import { dozBayraklari, dozGuvenligi } from '@/lib/doktor/dozGuvenligi'
+import { enIyiIlacAnahtari } from '@/lib/asistan/turkishDrugs'
 import { buyumeHizlari, olcumSatirlari } from '@/specialties/pediatri/engines/buyume'
 import { buyumeHiziSatiri, buyumeOlcumleri, persentilZMetni } from '@/specialties/pediatri/sorgu'
 
@@ -273,5 +275,133 @@ describe('NOTYA-ILK10-YAPI-01 — cevap yapıları ve kanıt sırası', () => {
     assert.ok(rutin.includes('İlaç sonrası kontrol: Augmentin BID 400 mg/5 ml süspansiyon kürü 29.09.2026 tarihinde doldu (başlangıç 19.09.2026, 10 gün); sonrasında vizit / değerlendirme kaydı yok.'), rutin)
     // Kür sürerken yazılmaz.
     assert.ok(!hepsi(dosya(FIKSTUR_E).isler()).some((i) => /İlaç sonrası kontrol/.test(i.metin)))
+  })
+})
+
+describe('NOTYA-ILK10-DOZ-01 — doz güvenliği (mg/kg/gün, reçete tarihindeki kiloyla)', () => {
+  /** (c) dosyasının aktif amoksisilin satırı ve reçetesi başka bir yazımla. */
+  const amoksisilinle = (ilac_adi: string, doz: string, kullanim: string, ek: Partial<HamDosya> = {}): HamDosya => ({
+    ...FIKSTUR_C, intake: { alerjiVarMi: 'Hayır' }, ...ek,
+    vizitler: (ek.vizitler || FIKSTUR_C.vizitler).map((v) => (v.id === 'c-v3' ? { ...v, ilaclar: [{ ad: ilac_adi, doz, kullanim }] } : v)),
+    ilaclar: [{ id: 'c-i2', ilac_adi, etken_madde: 'amoksisilin', doz, kullanim_sikli: kullanim, baslangic_tarihi: '2026-09-20', aktif: true }],
+  })
+  const doz = (ham: HamDosya, bugun = DENETIM_BUGUN) => { const d = dosya(ham, bugun); return dozGuvenligi(d.olaylar, d.hasta) }
+
+  it('aralıktaki süspansiyon dozu: mg/kg/gün hesaplanır, bayrak YOK', () => {
+    const g = doz(FIKSTUR_C)
+    const a = g.ilaclar.find((i) => i.kaynak === 'liste' && /Amoksisilin/.test(i.ad))!
+    // 7,5 mL × 250 mg/5 mL × 2 = 750 mg/gün; 16,5 kg → 45,5 mg/kg/gün; tablo 20–90.
+    assert.deepEqual([a.durum, a.bayrak, a.gunlukMg, a.mgKgGun, a.kilo, a.kiloTarihi], ['aralikta', false, 750, 45.5, 16.5, '2026-09-20'])
+    assert.equal(dozBayraklari(g).length, 0)
+    const blok = dosya(FIKSTUR_C).kanit('ilac')
+    assert.ok(blok.includes('7,5 mL × 250 mg/5 mL = 375 mg/doz × günde 2 = 750 mg/gün; başlangıç tarihindeki kilo 16,5 kg (20.09.2026) → 45,5 mg/kg/gün — tablodaki aralıkta (20–90 mg/kg/gün; Amoksisilin; kaynak: TİTCK KÜB'), blok)
+    assert.ok(!hepsi(dosya(FIKSTUR_C).isler()).some((i) => i.tur === 'guvenlik-doz'))
+  })
+
+  it('üst sınırın üzerindeki süspansiyon dozu bayraklanır: Soru 6, 9 ve 10 — hasta güvenliği maddesi', () => {
+    const ham = amoksisilinle('Amoksisilin 400 mg/5 ml süspansiyon', '12 ml', '2x1, 10 gün')
+    const g = doz(ham)
+    const a = g.ilaclar.find((i) => i.kaynak === 'liste')!
+    // 12 mL × 400 mg/5 mL × 2 = 1920 mg/gün; 16,5 kg → 116,4 mg/kg/gün; tablonun üst sınırı 90.
+    assert.deepEqual([a.durum, a.bayrak, a.kesin, a.gunlukMg, a.mgKgGun], ['ust-sinir-ustu', true, true, 1920, 116.4])
+    assert.equal(dozBayraklari(g).length, 1, 'liste satırı ve reçetesi aynı kür: tek bayrak')
+    const d = dosya(ham)
+    assert.ok(d.kanit('ilac').includes('- ⚠ Amoksisilin 400 mg/5 ml süspansiyon: 12 mL × 400 mg/5 mL = 960 mg/doz × günde 2 = 1.920 mg/gün; başlangıç tarihindeki kilo 16,5 kg (20.09.2026) → 116,4 mg/kg/gün — tablodaki olağan üst sınırın (90 mg/kg/gün) ÜZERİNDE'), d.kanit('ilac'))
+    const is = d.isler().bugun.find((i) => i.tur === 'guvenlik-doz')
+    assert.ok(is && is.guvenlik && /^Doz güvenliği — Amoksisilin 400 mg\/5 ml/.test(is.metin), JSON.stringify(d.isler().bugun))
+    assert.ok(d.kanit('takip').split('2) YAKIN ZAMANDA:')[0].includes('⚠ Doz güvenliği — Amoksisilin 400 mg/5 ml'))
+    assert.ok(/HASTA GÜVENLİĞİ:\n- ⚠ Doz güvenliği — Amoksisilin 400 mg\/5 ml/.test(d.kanit('gozden-kacan')), d.kanit('gozden-kacan'))
+  })
+
+  it('etkin aralığın altındaki doz bayraklanır (hasta güvenliği alarmı değil, doğrulanacak)', () => {
+    const d = dosya(amoksisilinle('Amoksisilin 125 mg/5 ml süspansiyon', '2,5 ml', '2x1, 10 gün'))
+    const g = dozGuvenligi(d.olaylar, d.hasta)
+    // 2,5 mL × 125 mg/5 mL × 2 = 125 mg/gün; 16,5 kg → 7,6 mg/kg/gün; tablonun alt sınırı 20.
+    assert.deepEqual([g.ilaclar[0].durum, g.ilaclar[0].bayrak, g.ilaclar[0].mgKgGun], ['etkin-aralik-alti', true, 7.6])
+    const is = d.isler().bugun.find((i) => i.tur === 'guvenlik-doz')
+    assert.ok(is && !is.guvenlik && /ALTINDA/.test(is.metin))
+    assert.ok(d.kanit('gozden-kacan').includes('DOZ GÜVENLİĞİ (doğrulanacak):'))
+  })
+
+  it('tabloda olmayan ilaç: "referans yok" — bayrak yok, referans uydurulmaz', () => {
+    const g = doz(FIKSTUR_E)
+    const b = g.ilaclar.find((i) => i.ad === 'QA Bitkisel Şurup')!
+    assert.deepEqual([b.durum, b.bayrak, b.mgKgGun], ['referans-yok', false, undefined])
+    assert.match(b.metin, /Notya ilaç tablosunda yok — referans yok; doz denetlenmedi\./)
+    assert.ok(!/\d+ mg\/kg/.test(b.metin), b.metin)
+    assert.ok(!dozBayraklari(g).some((i) => i.ad === 'QA Bitkisel Şurup'))
+    // Kiloya göre dozlanmayan ilaç (IU/gün) için mg/kg hesabı uygulanmaz.
+    assert.equal(g.ilaclar.find((i) => i.ad === 'D vitamini damla')!.durum, 'kilo-bagimsiz')
+  })
+
+  it('kilo REÇETE TARİHİNDEKİ kilodur: vizit ölçümü, yoksa öncesindeki en yakın ölçüm, yoksa "kilo bilinmiyor"', () => {
+    // Vizitte ölçüm yok → önceki vizitin kilosu (16,3 kg, 05.06.2026) ve bunun söylenmesi.
+    const onceki = amoksisilinle('Amoksisilin 250 mg/5 ml süspansiyon', '7,5 ml', '2x1, 10 gün', { vizitler: FIKSTUR_C.vizitler.map((v) => (v.id === 'c-v3' ? { ...v, vitaller: null } : v)) })
+    const a = doz(onceki).ilaclar[0]
+    assert.deepEqual([a.kilo, a.kiloTarihi, a.mgKgGun], [16.3, '2026-06-05', 46])
+    assert.match(a.metin, /başlangıç tarihindeki kilo 16,3 kg \(05\.06\.2026 — o tarihten önceki en yakın ölçüm\)/)
+    // Sonradan girilen (güncel) kilo hesabı değiştirmez.
+    const sonra: HamDosya = { ...FIKSTUR_C, intake: { alerjiVarMi: 'Hayır' }, vizitler: [...FIKSTUR_C.vizitler, { id: 'c-v4', tarih: '2026-09-25T11:00:00Z', subjektif: 'Kontrol.', objektif: 'Doğal.', tani: 'Kontrol', plan: 'Devam.', vitaller: { kilo: '30' } }] }
+    assert.equal(doz(sonra).ilaclar.find((i) => i.kaynak === 'liste' && /Amoksisilin/.test(i.ad))!.kilo, 16.5)
+    // Hiç kilo yok.
+    const kilosuz = amoksisilinle('Amoksisilin 250 mg/5 ml süspansiyon', '7,5 ml', '2x1, 10 gün', { vizitler: FIKSTUR_C.vizitler.map((v) => ({ ...v, vitaller: null })) })
+    const k = doz(kilosuz).ilaclar[0]
+    assert.deepEqual([k.durum, k.bayrak], ['hesaplanamadi', false])
+    assert.match(k.metin, /kilo kaydı yok; kilo bilinmiyor \(güncel kilo kullanılmaz\)/)
+  })
+
+  it('hesaplanamayan yazımlar nedenini söyler; konsantrasyon ve sıklık varsayılmaz', () => {
+    const neden = (ad: string, d: string, s: string) => doz(amoksisilinle(ad, d, s)).ilaclar[0]
+    assert.match(neden('Amoksisilin süspansiyon', '7,5 ml', '2x1').metin, /konsantrasyonu \(mg\/mL\) kayıtta yok; konsantrasyon varsayılmadı/)
+    assert.match(neden('Amoksisilin 250 mg/5 ml süspansiyon', '7,5 ml', '').metin, /günlük sıklık yazılmamış/)
+    for (const i of [neden('Amoksisilin süspansiyon', '7,5 ml', '2x1'), neden('Amoksisilin 250 mg/5 ml süspansiyon', '7,5 ml', '')]) assert.deepEqual([i.durum, i.bayrak], ['hesaplanamadi', false])
+    // Aynı gün çelişen kilo kayıtlarıyla hesap yapılmaz.
+    const celiskili: HamDosya = { ...amoksisilinle('Amoksisilin 250 mg/5 ml süspansiyon', '7,5 ml', '2x1, 10 gün'), cihaz: [{ id: 'c-c1', tur: 'kilo', deger: '12,0', birim: 'kg', alindi: '2026-09-20T11:30:00Z' }] }
+    assert.match(doz(celiskili).ilaclar[0].metin, /20\.09\.2026 tarihinde çelişen kilo kayıtları var \(12 kg \/ 16,5 kg\)/)
+    // mg ve mg/kg yazımı.
+    assert.equal(neden('Amoksisilin 500 mg tablet', '500 mg', '3x1').mgKgGun, 90.9)
+    assert.equal(neden('Amoksisilin süspansiyon', '50 mg/kg/gün', '2x1').mgKgGun, 50)
+  })
+
+  it('formülasyona özgü referans: ürün o formülasyon değilse bayrak "doğrulanacak"tır, alarm değildir; uyuşmazlık ayrıca yazılır', () => {
+    const d = dosya(FIKSTUR_E)
+    const g = dozGuvenligi(d.olaylar, d.hasta)
+    const liste = g.ilaclar.find((i) => i.kaynak === 'liste' && /Augmentin/.test(i.ad))!
+    const recete = g.ilaclar.find((i) => i.kaynak === 'recete')!
+    // 8 mL × 400 mg/5 mL × 2 = 1280 mg/gün ve 8 mL × 600 mg/5 mL × 2 = 1920 mg/gün; 13,6 kg.
+    assert.deepEqual([liste.mgKgGun, recete.mgKgGun, liste.bayrak, recete.bayrak, liste.kesin, recete.kesin], [94.1, 141.2, true, true, false, false])
+    assert.match(recete.metin, /Tablodaki referans 4:1 pediatrik süspansiyon içindir; bu ürünün formülasyonu kayıttan doğrulanamadı — bu formülasyon için tabloda referans yok, ürünün kendi KÜB'ünden teyit edin\./)
+    assert.equal(g.uyumsuzluklar.length, 1)
+    assert.match(g.uyumsuzluklar[0].metin, /vizit reçetesinde "Augmentin ES 600 mg\/5 ml süspansiyon", ilaç listesinde "Augmentin BID 400 mg\/5 ml süspansiyon" — aynı etken madde, ürün adı ve konsantrasyon farklı/)
+    const isler = d.isler().bugun
+    assert.equal(isler.filter((i) => i.tur === 'guvenlik-doz').length, 2)
+    assert.ok(isler.filter((i) => i.tur === 'guvenlik-doz').every((i) => !i.guvenlik))
+    assert.ok(isler.some((i) => i.tur === 'celiski' && /Ürün \/ konsantrasyon uyuşmazlığı/.test(i.metin)))
+    // 4:1 olduğu adından belli ürün: referans uyar, bayrak kesindir.
+    const dortBir = doz({ ...FIKSTUR_E, ilaclar: [{ id: 'e-i1', ilac_adi: 'Klavunat 125 mg/31,25 mg/5 ml süspansiyon', etken_madde: 'amoksisilin-klavulanat', doz: '20 ml', kullanim_sikli: '3x1, 10 gün', baslangic_tarihi: '2026-09-19', aktif: true }] }).ilaclar[0]
+    assert.deepEqual([dortBir.durum, dortBir.kesin, dortBir.mgKgGun], ['ust-sinir-ustu', true, 110.3])
+  })
+
+  it('süresi dolmuş reçete alarm üretmez (akut antibiyotik aylar sonra aktif değildir); erişkinde denetim yok', () => {
+    const d = dosya(FIKSTUR_E, '2026-10-20')
+    assert.ok(!hepsi(d.isler()).some((i) => i.tur === 'guvenlik-doz'), JSON.stringify(hepsi(d.isler()).map((i) => i.metin)))
+    const eriskin: HamDosya = { ...FIKSTUR_C, brans: 'Dahiliye', hasta: { ...FIKSTUR_C.hasta, dogumIso: '1980-01-01' } }
+    const e = dosya(eriskin)
+    assert.deepEqual(dozGuvenligi(e.olaylar, e.hasta), { ilaclar: [], uyumsuzluklar: [] })
+    assert.ok(!e.kanit('ilac').includes('DOZ GÜVENLİĞİ'))
+  })
+
+  it('molekül çözümü: "amoksisilin-klavulanat" düz amoksisilinin aralığıyla ölçülmez', () => {
+    assert.equal(enIyiIlacAnahtari('Augmentin ES 600 mg/5 ml süspansiyon amoksisilin-klavulanat'), 'amoksisilinKlavulanat')
+    assert.equal(enIyiIlacAnahtari('amoksisilin-klavulanat'), 'amoksisilinKlavulanat')
+    assert.equal(enIyiIlacAnahtari('Amoksisilin 250 mg/5 ml süspansiyon amoksisilin'), 'amoksisilin')
+    assert.equal(enIyiIlacAnahtari('QA Bitkisel Şurup'), null)
+  })
+
+  it('doz bloğu hasta adını taşımaz ve "KÜB\'den teyit edin" der', () => {
+    const blok = dosya(FIKSTUR_E).kanit('ilac')
+    assert.ok(!blok.includes(FIKSTUR_E.hasta.ad))
+    assert.ok(blok.includes("KÜB'den teyit edin."))
+    assert.match(SORU_SABLONLARI.ilac.sablon, /mg\/kg\/gün değerini kendin hesaplama, referans sayısı ekleme/)
   })
 })

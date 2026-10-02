@@ -20,6 +20,7 @@ import { vizitTuruGruplariBul, vizitYasIfadesiCoz } from '@/lib/klinik/vizitTuru
 import { vizitleriSec, vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
 import { kanonikTr } from '@/core/lab/kanonik'
 import { asiKaniti, asiKanitSatirlari, asiOzetSatirlari } from '@/lib/asistan/dosyaSorgu/asiKaniti'
+import { dozGuvenligi, dozGuvenligiSatirlari } from '@/lib/doktor/dozGuvenligi'
 
 export interface KanitEki {
   /** Hekimin mesajı — Soru 7'de aranan şikayet buradan çıkar. */
@@ -339,7 +340,7 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
       if (tani.length) govde.push(`İLGİLİ TANI / NOT: demir eksikliği / anemi ${tani.map((x) => trGun(x.tarih)).join(', ')} notlarında geçiyor.`)
       break
     }
-    case 'ilac': govde = [...ilacBolumleri(olaylar, hasta), `ALERJİ: ${alerjiSatiri(olaylar)}`, ...alerjiCatismalari(olaylar, hasta.bugunIso).map((a) => `⚠ ${a.metin}`)]; break
+    case 'ilac': govde = [...ilacBolumleri(olaylar, hasta), ...dozGuvenligiSatirlari(dozGuvenligi(olaylar, hasta)), `ALERJİ: ${alerjiSatiri(olaylar)}`, ...alerjiCatismalari(olaylar, hasta.bugunIso).map((a) => `⚠ ${a.metin}`)]; break
     case 'benzer': govde = benzerBolumu(olaylar, ek.mesaj || ''); break
     case 'gelisim': {
       if (!p.gelisim) { govde = ['Gelişim / GİDR / M-CHAT sorusu bu branşın bölüm sorusu değil (pediatriye özgü); bu hasta için gelişimsel tarama verisi değerlendirilmedi. Hekime bunu açıkça söyle.']; break }
@@ -362,6 +363,7 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
         const grup = (baslik: string, f: (i: AcikIs) => boolean) => { const x = hepsi.filter(f); return x.length ? [baslik, ...isSatirlari(x)] : [] }
         govde = [
           ...grup('HASTA GÜVENLİĞİ:', (i) => Boolean(i.guvenlik)),
+          ...grup('DOZ GÜVENLİĞİ (doğrulanacak):', (i) => i.tur === 'guvenlik-doz' && !i.guvenlik),
           ...grup('ÇELİŞEN KAYIT:', (i) => i.tur === 'celiski'),
           ...grup('AŞI (eksik / planlanmış-uygulanmamış):', (i) => i.tur.startsWith('asi-') && i.tur !== 'asi-yaklasan'),
           ...grup('SONUCU OLMAYAN / TAKİPSİZ TEST:', (i) => i.tur === 'lab-sonuc-yok' || i.tur === 'lab-anormal-tekrar-yok' || i.tur === 'goruntuleme-sonuc-yok'),

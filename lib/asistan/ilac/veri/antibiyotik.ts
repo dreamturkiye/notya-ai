@@ -75,6 +75,7 @@ export const ANTIBIYOTIK: Record<string, TürkishDrug> = {
     pediatrik: {
       min: 20, max: 60, birim: 'mg/kg/gün', gunlukBolum: 3,
       maxMgKgGun: 60, mutlakMaxMgGun: 6000, enAzAy: 2,
+      kapsam: '4:1 pediatrik süspansiyon',
       metin: 'KÜB §4.2 (4:1 pediatrik süspansiyon): üçe bölünmüş dozlar halinde 20/5 – 60/15 mg/kg/gün. 2 yaş altında 40/10 mg/kg/gün üzerindeki dozlar için klinik veri yoktur; 2 aylıktan küçük hastada doz önerisi yoktur. Doz amoksisilin içeriğine göre hesaplanır.',
     },
     form: 'Film tablet, oral süspansiyon, IV flakon',

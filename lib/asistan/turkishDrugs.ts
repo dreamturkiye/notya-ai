@@ -304,6 +304,26 @@ export function drugKeyFor(ad: string): string | null {
   return null
 }
 
+/**
+ * NOTYA-ILK10-DOZ-01 — the table key that matches a written drug BEST, or null.
+ *
+ * `drugKeyFor` returns the first entry any token touches, so "amoksisilin-klavulanat" resolves to plain amoksisilin
+ * (the first entry carrying that word) — a different reference range. A dose verdict must be measured against the
+ * right molecule: this picks the entry that the most tokens of the written text match (name, brand, key), the
+ * earlier entry on a tie. Same vocabulary and same token rules as `drugKeyFor`.
+ */
+export function enIyiIlacAnahtari(ad: string): string | null {
+  const t = [...new Set(tokenlar(String(ad || '')))]
+  if (!t.length) return null
+  let en: { anahtar: string; puan: number } | null = null
+  for (const [anahtar, d] of Object.entries(TURKISH_DRUGS)) {
+    const hedef = [...tokenlar(d.name), ...d.brand.flatMap(tokenlar), ...tokenlar(anahtar)]
+    const puan = t.filter((x) => hedef.some((h) => tokenEslesir(x, h))).length
+    if (puan > 0 && (!en || puan > en.puan)) en = { anahtar, puan }
+  }
+  return en?.anahtar ?? null
+}
+
 /** Every class label used anywhere in the table — the vocabulary a class-level entry may draw on. */
 export function tumSiniflar(): Set<string> {
   const out = new Set<string>()

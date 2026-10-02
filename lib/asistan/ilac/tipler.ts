@@ -82,6 +82,12 @@ export interface PediatrikDoz {
    * dose verdict for a fixed-dose drug is measured against; an entry without it gets no verdict.
    */
   yasBantlari?: readonly YasBandi[]
+  /**
+   * NOTYA-ILK10-DOZ-01 — the formulation the source's numbers belong to, when the source itself limits them to one
+   * (taken from its own sentence, e.g. "4:1 pediatrik süspansiyon"). A dose verdict for a product whose formulation
+   * is not known to be this one says so; another formulation's range is never assumed.
+   */
+  kapsam?: string
   /** The source's own sentence — so the doctor can weigh the number against its wording. */
   metin: string
 }

@@ -16,12 +16,13 @@ import { SIKAYET_GRUPLARI, terimlerdenBiriGeciyor } from '@/lib/klinik/sikayetEs
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { alerjiUyarilari } from '@/core/eylemler/ilacUyari'
 import { asiKaniti, tutarsizSatiri } from '@/lib/asistan/dosyaSorgu/asiKaniti'
+import { dozBayraklari, dozGuvenligi } from '@/lib/doktor/dozGuvenligi'
 
 export type AcikIsOnceligi = 'bugun' | 'yakinda' | 'rutin'
 export type AcikIsTuru =
   | 'lab-sonuc-yok' | 'lab-anormal-tekrar-yok' | 'konsultasyon-bekliyor' | 'kontrol-planli' | 'asi-plan-kaydi-yok'
   | 'asi-eksik' | 'asi-yaklasan' | 'tarama-sonuc-yok' | 'tarama-zamani' | 'buyume' | 'gelisim' | 'guvenlik-alerji'
-  | 'celiski' | 'tekrarlayan' | 'goruntuleme-sonuc-yok'
+  | 'celiski' | 'tekrarlayan' | 'goruntuleme-sonuc-yok' | 'guvenlik-doz'
 
 export interface AcikIs {
   oncelik: AcikIsOnceligi
@@ -207,6 +208,14 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
     ekle({ oncelik: 'yakinda', tur: 'tekrarlayan', metin: `Tekrarlayan patern: ${t.grup} — son 12 ayda ${t.tarihler.length} vizit (${t.tarihler.map(trGun).join(', ')}).` })
   }
   for (const a of alerjiCatismalari(olaylar, bugunIso)) ekle(a)
+
+  // NOTYA-ILK10-DOZ-01: süren ilaçta aralık dışı doz ve reçete ↔ ilaç listesi ürün uyuşmazlığı. Üst sınırın üzeri hasta
+  // güvenliği maddesidir (cevabın sonunda belirgin); süresi dolmuş reçete alarm üretmez (Soru 6 kanıtında görünür).
+  if (hasta) {
+    const doz = dozGuvenligi(olaylar, hasta)
+    for (const d of dozBayraklari(doz)) ekle({ oncelik: 'bugun', tur: 'guvenlik-doz', tarih: d.tarih, guvenlik: d.durum === 'ust-sinir-ustu' && d.kesin !== false, metin: `Doz güvenliği — ${d.metin}` })
+    for (const u of doz.uyumsuzluklar.filter((x) => x.devam)) ekle({ oncelik: 'bugun', tur: 'celiski', tarih: u.tarih, metin: u.metin })
+  }
 
   return {
     bugun: isler.filter((i) => i.oncelik === 'bugun'),
