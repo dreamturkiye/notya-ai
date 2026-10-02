@@ -12,7 +12,6 @@
 import { ortam, sahneHazirla, sahneKur, oturumAc, yazi, fishTur, panel, encrypt, type Sahne } from './tests/ayseSahne'
 import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync } from 'node:fs'
 import { ILK10_HASTA_ADI, ILK10_KIMLIK, ilk10HastasiEkle } from './tests/gokhanKorpusHastalari'
 import { bugunTRTIso, gunEkleIso, trGun } from '../doktor/dosyaOlaylari'
 
@@ -151,8 +150,7 @@ describe('İlaç kartı — doz güvenliği bayrağı (/api/doktor/ilaclar)', ()
 })
 
 describe('Geçmişe dönük girilmiş vizitler (seans satırı giriş günü, not vizit günü)', () => {
-  /** NOTYA-VIZIT-TARIHI-01 is fixed on another branch (fix/vizit-tarihi): the visit day is the note's day. */
-  const VIZIT_GUNU_DUZELTILDI = existsSync('lib/doktor/vizitTarihi.ts')
+  // NOTYA-VIZIT-TARIHI-01 (lib/doktor/vizitTarihi.ts): the visit day is the note's day, not the session row's.
   const otit = trGun(gunEkleIso(BUGUN, -7))
 
   it('aşı kanıtı seans satırının gününe bağlı değildir: aynı sonuç', async () => {
@@ -172,16 +170,7 @@ describe('Geçmişe dönük girilmiş vizitler (seans satırı giriş günü, no
     for (const deger of Object.values(ILK10_KIMLIK)) assert.ok(!giden.includes(deger))
   })
 
-  it('aynı güne düşen vizitlerin ölçümleri eğilim gibi sunulmaz: çelişen ölçüm olarak gösterilir', { skip: VIZIT_GUNU_DUZELTILDI ? 'vizit günü düzeltildi: vizitler kendi günlerinde, bu çakışma oluşmaz' : false }, async () => {
-    // Düzeltme bu dalda yokken üç vizit de giriş gününe düşer: üç ayrı kilo aynı tarihte görünür. Kural: bunlardan
-    // bir "kilo artışı" uydurulmaz; çelişki açıkça yazılır ve o tarihin kilosu eğilime alınmaz.
-    const { s, hasta } = sahne({ gecmiseDonuk: true })
-    const giden = await sor('panel', s, hasta, SORULAR.buyume)
-    assert.ok(/ÇELİŞEN ÖLÇÜM/.test(giden), 'çakışan kilolar çelişki olarak gösterilmedi')
-    assert.ok(!/Kilo artışı/.test(giden), 'aynı güne düşen kilolardan artış hesaplandı')
-  })
-
-  it('vizit günü nottan okunur: pencere, doz kilosu ve büyüme tarihleri vizitin kendi gününe göre', { skip: VIZIT_GUNU_DUZELTILDI ? false : 'NOTYA-VIZIT-TARIHI-01 (fix/vizit-tarihi) bu dalda yok; birleşince kendiliğinden koşar' }, async () => {
+  it('vizit günü nottan okunur: pencere, doz kilosu ve büyüme tarihleri vizitin kendi gününe göre', async () => {
     const { s, hasta } = sahne({ gecmiseDonuk: true })
     const takip = await sor('panel', s, hasta, SORULAR.takip)
     assert.ok(/pencere 4 gün önce doldu/.test(takip), 'takip penceresi vizit gününden hesaplanmadı')
