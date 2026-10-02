@@ -107,6 +107,11 @@ stored instead of the placeholder form (mother's name in the second turn's model
 - Free text written by the doctor (visit notes, `belge_analizleri.hekim_ozet`) is sent to the model as before. If a
   doctor typed the mother's name into a note, it is in the chart. Only the structured sources and the document
   summaries are covered.
+- In a document summary only the lines the identity reader itself reads are removed (anne adı, baba adı, doğum
+  yeri). A phone number or an address quoted in a summary is not recognised and still enters the chart.
+- `hasta_bul` keeps its own identity branch (the router's sentence sent through the tool): there the turn still ends
+  with the values on screen and a second look-up asked in the same answer is dropped (NOTYA-AYSE-ARAC-PARITE-06 f).
+  With `hasta_alan` the placeholder goes back to the model, so identity and another look-up can share one answer.
 - The `patients` row is still serialized into the prompt as stored (encrypted columns as ciphertext). Not changed
   here.
 - A placeholder that a model copied into a write tool's arguments (a card field) is not filled and would show as
@@ -154,13 +159,21 @@ items (vaccine calendar, growth, screening windows).
 
 - `eksikler` calls the same kohort function in process (`lib/doktor/fisiltiHasta.ts`), for the one resolved patient,
   with the date the route passes, and normalises the row with Fısıltı's own `normalizeKohortSatiri`. Section A is the
-  card's `detay` lines, verbatim. `lib/doktor/fisiltiHasta.test.ts` reads the 30 route sources and fails if a route
-  calls another function or passes another date; the acceptance test compares section A with what the real
+  card's `detay` lines, verbatim. The acceptance test compares section A with what the real
   `GET /api/doktor/fisilti` returns.
-- On the topics both rule sets cover (vaccine calendar, growth curve, screening window), a branch with a Fısıltı
-  engine shows Fısıltı's lines only: the standard's own schedule items (`asi-eksik`, `buyume`, `tarama-zamani`) are
-  left out of section B. The assistant's gap list and the whisper cannot say different things about the same
-  schedule.
+- **For five branches: pediatri, dermatoloji, dahiliye, göz, kadın hastalıkları ve doğum.** A model turn may not be
+  able to reach code that writes (NOTYA-EYLEM-24; `core/eylemler/tests/sessizYol.test.ts` walks the import graph of
+  the turn). In the other 25 branches the kohort function shares its file with the reminder sender, which writes
+  patient messages — the first version of this branch registered all 30 and the full `npm test` caught it. Only the
+  five read-only engine files are imported. For a doctor of the other 25 branches section A says the branch's
+  Fısıltı rules cannot be read from here and that the section is UNKNOWN (never "no gaps"), and section B shows the
+  standard's items in full. `lib/doktor/fisiltiHasta.test.ts` reads all 30 engine files: the registry must be
+  exactly the branches whose engine file does not write, each registered route must call the registered function,
+  and the date must be the one the route passes.
+- On the topics both rule sets cover (vaccine calendar, growth curve, screening window), a branch whose Fısıltı
+  engine is connected shows Fısıltı's lines only: the standard's own schedule items (`asi-eksik`, `buyume`,
+  `tarama-zamani`) are left out of section B. The assistant's gap list and the whisper cannot say different things
+  about the same schedule.
 
 **What was not unified, and why.**
 
@@ -181,13 +194,19 @@ items (vaccine calendar, growth, screening windows).
    `dosyaSorgu/denetim`).
 3. *Fısıltı's transport is unchanged.* The card still fetches over HTTP. Replacing the fetch with the in-process
    call would be a few lines, but it changes the production whisper path of 30 branches for no change in result.
-4. *Other branches.* Section A works for all 30 branches (same registry). Which of the standard's items overlap a
-   branch's kohort flags is known only for pediatri; for the others both sections are shown, labelled.
+4. *Other branches.* Section A is connected for five branches (above). Connecting one of the other 25 means moving
+   its reminder sender out of `_kohort.ts` into its own file, as pediatri has it — mechanical, one file per branch,
+   but 25 specialty files; the test then requires the branch to be registered. Which of the standard's items
+   overlap a branch's kohort flags is known only for pediatri; for dermatoloji, dahiliye, göz and kadın
+   hastalıkları ve doğum both sections are shown, labelled.
 5. *Not in section A:* the two non-clinical whisper sources (unanswered portal messages, pending WhatsApp drafts).
 6. *Hidden or muted whispers.* A doctor who hid the card or muted the patient still gets the gap from `eksikler`
    (they asked), with a note that the card does not show it.
 7. *Dates.* 28 kohort routes pass the UTC date and two (pediatri, gebelik) the Turkey date. `eksikler` passes what
    the branch's route passes. Between 00:00 and 03:00 Turkey time the 28 are a day behind; not changed here.
+8. *Import direction.* `lib/doktor/fisiltiHasta.ts` imports five files under `app/api/doktor/<rota>/_kohort.ts`.
+   Nothing else in `lib/` imports from `app/api/`. The engines live there today; moving them under `lib/` would be
+   the cleaner home and is the same refactor as (4).
 
 ### Prompt
 
@@ -213,9 +232,9 @@ tool and repeats the result:
 - Cross-doctor: the three tools with another doctor's patient name → three "not found", no chart read, the open
   chart not used instead; tool called directly; a foreign id as "open chart" reads nothing.
 
-With the routers on, the same sentences reach the model with the tools offered (checked by hand, 2026-10-02). One
-phrasing is still answered by the quick card: "hangi muayenesinde aşı yapıldı" gets the vaccine list with dates, not
-the visits.
+With the routers on, the same sentences reach the model with the tools offered (asserted by the corpus test,
+section C). One phrasing is still answered by the quick card (seen by hand, 2026-10-02): "hangi muayenesinde aşı
+yapıldı" gets the vaccine list with dates, not the visits.
 
 ### Limits
 

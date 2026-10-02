@@ -303,8 +303,8 @@ export function muayeneOzeti(s: MuayeneSecimi, olaylar: DosyaOlayi[], hasta: Dos
 
 /**
  * Open-item types the branch PARAMETERS compute from a schedule (vaccine calendar, growth curve, screening window).
- * In a branch with a Fısıltı engine these topics are Fısıltı's: its lines are shown (section A) and the standard's
- * own schedule lines are not, so the two never say different things about the same schedule.
+ * In a branch whose Fısıltı engine is connected these topics are Fısıltı's: its lines are shown (section A) and the
+ * standard's own schedule lines are not, so the two never say different things about the same schedule.
  */
 const FISILTI_KONUSU = new Set<AcikIsTuru>(['asi-eksik', 'buyume', 'tarama-zamani'])
 
@@ -325,12 +325,14 @@ export function eksiklerMetni(g: EksiklerGirdisi): string {
   const ad = String(g.hastaAdi || '').trim() || 'Hasta'
   const { hasta, olaylar, fisilti: f } = g
   const isler = acikIsleriBul(olaylar, yasAyHesapla(hasta.dogumIso, hasta.bugunIso), hasta.brans, hasta)
-  const suz = (l: AcikIs[]) => (f.destekli ? l.filter((i) => !FISILTI_KONUSU.has(i.tur)) : l)
+  // Fısıltı's schedule lines replace the standard's only when they can actually be shown.
+  const suz = (l: AcikIs[]) => (f.bagli ? l.filter((i) => !FISILTI_KONUSU.has(i.tur)) : l)
   const bugun = suz(isler.bugun), yakinda = suz(isler.yakinda), rutin = suz(isler.rutin)
   const satir = (i: AcikIs) => `- ${i.guvenlik ? '⚠ ' : ''}${i.metin}`
 
   const a: string[] = ['A) FISILTI — hatırlatma motoruyla aynı kural, aynı kayıt (Fısıltı kartında görünenle aynıdır):']
   if (!f.destekli) a.push('- Bu branş için Fısıltı kuralı tanımlı değil; takvime dayalı kalemler B bölümündedir.')
+  else if (!f.bagli) a.push('- Bu branşın Fısıltı kuralları buradan okunamıyor; bu bölüm BİLİNMİYOR ("eksik yok" anlamına gelmez). Hatırlatmalar için Fısıltı kartına bakın.')
   else if (f.hata) a.push('- Fısıltı motoruna şu an ulaşılamadı; bu bölüm BİLİNMİYOR ("eksik yok" anlamına gelmez).')
   else if (!f.oge) a.push('- Fısıltı bu hasta için bir uyarı üretmiyor.')
   else {
@@ -339,7 +341,7 @@ export function eksiklerMetni(g: EksiklerGirdisi): string {
     if (f.gizli || f.sessiz) a.push(`  Not: ${f.sessiz ? 'bu hastanın Fısıltı hatırlatmaları sessize alınmış' : 'bu uyarı Fısıltı kartında gizlenmiş'}; kartta görünmez, eksik yine de kayıtta duruyor.`)
   }
 
-  const b: string[] = [`B) NOTLARDA PLANLANIP / İSTENİP KARŞILIĞI KAYITTA GÖRÜNMEYENLER — dosya sorgu standardı${f.destekli ? ' (bu konularda Fısıltı kuralı yok)' : ''}:`]
+  const b: string[] = [`B) NOTLARDA PLANLANIP / İSTENİP KARŞILIĞI KAYITTA GÖRÜNMEYENLER — dosya sorgu standardı${f.bagli ? ' (bu konularda Fısıltı kuralı yok)' : ''}:`]
   if (!bugun.length && !yakinda.length && !rutin.length) b.push('- Açık iş saptanmadı.')
   if (bugun.length) b.push('Bugün bakılacaklar:', ...bugun.map(satir))
   if (yakinda.length) b.push('Yakın zamanda:', ...yakinda.map(satir))

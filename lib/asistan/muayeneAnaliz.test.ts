@@ -155,7 +155,7 @@ describe('muayeneleri_oku — birkaç muayenenin sınırlı dökümü', () => {
 describe('eksikler — Fısıltı bölümü ve dosya sorgu standardının açık işleri', () => {
   const { olaylar, hasta } = dosya()
   const oge: FisiltiItem = { id: 'pediatri:h1', brans: 'pediatri', patientId: 'h1', ad: AD, baslik: 'aşı gecikti', detay: ['Aşı: Hep B 3. doz (25.01.2026)', 'İzlem: 12. ay (29.07.2026–27.08.2026) muayene yok'], enErkenTarih: '2026-01-25', hedefYol: '/x', toplamBekleyen: 0, kaynak: 'klinik' }
-  const f = (ek: Partial<HastaFisiltisi> = {}): HastaFisiltisi => ({ destekli: true, brans: 'pediatri', oge, gizli: false, sessiz: false, hata: false, ...ek })
+  const f = (ek: Partial<HastaFisiltisi> = {}): HastaFisiltisi => ({ destekli: true, bagli: true, brans: 'pediatri', oge, gizli: false, sessiz: false, hata: false, ...ek })
 
   it('A bölümü Fısıltı kartının satırlarıdır — aynen, sırasıyla', () => {
     const m = eksiklerMetni({ hastaAdi: AD, hasta, olaylar, fisilti: f() })
@@ -175,12 +175,17 @@ describe('eksikler — Fısıltı bölümü ve dosya sorgu standardının açık
     const takvim = [...isler.bugun, ...isler.yakinda, ...isler.rutin].filter((i) => i.tur === 'asi-eksik' || i.tur === 'buyume' || i.tur === 'tarama-zamani')
     assert.ok(takvim.length > 0, 'standart bu hasta için takvim kalemi üretiyor — süzgeç boşa sınanmıyor')
     const fisiltili = eksiklerMetni({ hastaAdi: AD, hasta, olaylar, fisilti: f() })
-    const fisiltisiz = eksiklerMetni({ hastaAdi: AD, hasta, olaylar, fisilti: f({ destekli: false, oge: null }) })
+    const fisiltisiz = eksiklerMetni({ hastaAdi: AD, hasta, olaylar, fisilti: f({ destekli: false, bagli: false, oge: null }) })
+    // A branch whose Fısıltı engine exists but cannot be read from the model turn (its engine file also writes).
+    const bagsiz = eksiklerMetni({ hastaAdi: AD, hasta, olaylar, fisilti: f({ bagli: false, oge: null }) })
     for (const i of takvim) {
       assert.ok(!fisiltili.includes(i.metin), `Fısıltı varken B bölümünde takvim kalemi: ${i.metin}`)
       assert.ok(fisiltisiz.includes(i.metin), `Fısıltı yokken takvim kalemi standarttan gelir: ${i.metin}`)
+      assert.ok(bagsiz.includes(i.metin), `Fısıltı okunamıyorken takvim kalemi standarttan gelir: ${i.metin}`)
     }
     assert.match(fisiltisiz, /Bu branş için Fısıltı kuralı tanımlı değil/)
+    assert.match(bagsiz, /Bu branşın Fısıltı kuralları buradan okunamıyor; bu bölüm BİLİNMİYOR \("eksik yok" anlamına gelmez\)/)
+    assert.ok(!bagsiz.includes('uyarı üretmiyor'), 'okunamayan motor için "uyarı yok" denmez')
   })
 
   it('motor uyarı üretmiyorsa bunu söyler; motora ulaşılamadıysa "eksik yok" DEMEZ', () => {

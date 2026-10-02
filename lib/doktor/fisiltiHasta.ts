@@ -8,7 +8,16 @@
  * the same rules on the same rows, without the HTTP hop — and normalises the row with Fısıltı's own
  * `normalizeKohortSatiri`. Nothing clinical is implemented here.
  *
- * `bugun` is the date the branch's route passes: Turkey time for pediatri and gebelik, the UTC date for the other 28
+ * WHICH BRANCHES. This module is imported by the model turn (lib/asistan/ayseCevapla.ts → okumaAraclari.ts), and a
+ * model turn may not be able to reach code that writes (NOTYA-EYLEM-24, core/eylemler/tests/sessizYol.test.ts walks
+ * the import graph, dynamic imports included). In 25 branches the kohort function shares its file with the reminder
+ * sender, which writes patient messages. Only the branches whose engine file is READ-ONLY are registered here:
+ * pediatri, dermatoloji, dahiliye, göz, kadın hastalıkları ve doğum (their senders live in a separate file). For the
+ * other 25 the tool says that the branch's Fısıltı rules are not connected — it does not guess. Connecting one means
+ * moving its sender out of `_kohort.ts` (as pediatri's `_kohortHatirlatma.ts`); lib/doktor/fisiltiHasta.test.ts then
+ * requires the branch to be added here.
+ *
+ * `bugun` is the date the branch's route passes: Turkey time for pediatri and gebelik, the UTC date for the others
  * (as each route does today).
  *
  * HASTA-IZOLASYON-01: every kohort function scopes its reads by the doctor id it is given; the patient id comes from
@@ -33,43 +42,20 @@ interface KohortKaydi {
 }
 const k = (ad: string, yukle: () => Promise<unknown>, trt = false): KohortKaydi => ({ ad, yukle: yukle as () => Promise<KohortFn>, trt })
 
-/** Branch key (FISILTI_DESTEKLI_BRANSLAR) → the kohort function of its route. */
+/** Branch key (FISILTI_DESTEKLI_BRANSLAR) → the kohort function of its route. Read-only engine files only. */
 export const BRANS_KOHORTLARI: Record<string, KohortKaydi> = {
   'pediatri': k('pediKohortVerisi', () => import('@/app/api/doktor/pediatri/_kohort').then((m) => m.pediKohortVerisi), true),
   'dermatoloji': k('dermKohortVerisi', () => import('@/app/api/doktor/dermatoloji/_kohort').then((m) => m.dermKohortVerisi)),
   'dahiliye': k('kohortVerisi', () => import('@/app/api/doktor/dahiliye/_kohort').then((m) => m.kohortVerisi)),
-  'kardiyoloji': k('kardioKohortVerisi', () => import('@/app/api/doktor/kardiyoloji/_kohort').then((m) => m.kardioKohortVerisi)),
-  'noroloji': k('noroKohortVerisi', () => import('@/app/api/doktor/noroloji/_kohort').then((m) => m.noroKohortVerisi)),
-  'uroloji': k('uroKohortVerisi', () => import('@/app/api/doktor/uroloji/_kohort').then((m) => m.uroKohortVerisi)),
-  'anestezi': k('anesteziKohortVerisi', () => import('@/app/api/doktor/anestezi/_kohort').then((m) => m.anesteziKohortVerisi)),
-  'gastroenteroloji': k('gastroKohortVerisi', () => import('@/app/api/doktor/gastroenteroloji/_kohort').then((m) => m.gastroKohortVerisi)),
-  'fizik-tedavi': k('ftrKohortVerisi', () => import('@/app/api/doktor/fizik-tedavi/_kohort').then((m) => m.ftrKohortVerisi)),
-  'acil-tip': k('atKohortVerisi', () => import('@/app/api/doktor/acil-tip/_kohort').then((m) => m.atKohortVerisi)),
-  'plastik-cerrahi': k('plastikKohortVerisi', () => import('@/app/api/doktor/plastik-cerrahi/_kohort').then((m) => m.plastikKohortVerisi)),
-  'gogus-cerrahisi': k('gcKohortVerisi', () => import('@/app/api/doktor/gogus-cerrahisi/_kohort').then((m) => m.gcKohortVerisi)),
-  'kalp-damar-cerrahisi': k('kdcKohortVerisi', () => import('@/app/api/doktor/kalp-damar-cerrahisi/_kohort').then((m) => m.kdcKohortVerisi)),
-  'genel-cerrahi': k('gcKohortVerisi', () => import('@/app/api/doktor/genel-cerrahi/_kohort').then((m) => m.gcKohortVerisi)),
-  'cocuk-cerrahisi': k('ccKohortVerisi', () => import('@/app/api/doktor/cocuk-cerrahisi/_kohort').then((m) => m.ccKohortVerisi)),
-  'nefroloji': k('nefKohortVerisi', () => import('@/app/api/doktor/nefroloji/_kohort').then((m) => m.nefKohortVerisi)),
-  'psikiyatri': k('psikKohortVerisi', () => import('@/app/api/doktor/psikiyatri/_kohort').then((m) => m.psikKohortVerisi)),
-  'kulak-burun-bogaz': k('kbbKohortVerisi', () => import('@/app/api/doktor/kulak-burun-bogaz/_kohort').then((m) => m.kbbKohortVerisi)),
-  'spor-hekimligi': k('sporKohortVerisi', () => import('@/app/api/doktor/spor-hekimligi/_kohort').then((m) => m.sporKohortVerisi)),
-  'ortopedi': k('ortoKohortVerisi', () => import('@/app/api/doktor/ortopedi/_kohort').then((m) => m.ortoKohortVerisi)),
-  'gogus-hastaliklari': k('gogusKohortVerisi', () => import('@/app/api/doktor/gogus-hastaliklari/_kohort').then((m) => m.gogusKohortVerisi)),
-  'romatoloji': k('romaKohortVerisi', () => import('@/app/api/doktor/romatoloji/_kohort').then((m) => m.romaKohortVerisi)),
-  'enfeksiyon-hastaliklari': k('enfKohortVerisi', () => import('@/app/api/doktor/enfeksiyon-hastaliklari/_kohort').then((m) => m.enfKohortVerisi)),
-  'aile-hekimligi': k('aileKohortVerisi', () => import('@/app/api/doktor/aile-hekimligi/_kohort').then((m) => m.aileKohortVerisi)),
-  'onkoloji': k('onkoKohortVerisi', () => import('@/app/api/doktor/onkoloji/_kohort').then((m) => m.onkoKohortVerisi)),
   'goz-hastaliklari': k('gozKohortVerisi', () => import('@/app/api/doktor/goz/_kohort').then((m) => m.gozKohortVerisi)),
-  'endokrinoloji': k('endoKohortVerisi', () => import('@/app/api/doktor/endokrinoloji/_kohort').then((m) => m.endoKohortVerisi)),
-  'beyin-cerrahisi': k('bcKohortVerisi', () => import('@/app/api/doktor/beyin-cerrahisi/_kohort').then((m) => m.bcKohortVerisi)),
   'kadin-hastaliklari-dogum': k('kdKohortVerisi', () => import('@/app/api/doktor/gebelik/_kohort').then((m) => m.kdKohortVerisi), true),
-  'radyoloji': k('radyoKohortVerisi', () => import('@/app/api/doktor/radyoloji/_kohort').then((m) => m.radyoKohortVerisi)),
 }
 
 export interface HastaFisiltisi {
   /** The doctor's branch has a Fısıltı engine (the same list the Fısıltı card uses). */
   destekli: boolean
+  /** That engine can be read from here (see WHICH BRANCHES above). false: the caller says so and does not guess. */
+  bagli: boolean
   brans: string | null
   /** What the engine reports for this patient; null = it reports nothing for this patient. */
   oge: FisiltiItem | null
@@ -86,28 +72,30 @@ const bugunTrt = (d: Date) => new Date(d.getTime() + 3 * 3600e3).toISOString().s
 
 /** `patientId` must already be resolved among this doctor's patients. */
 export async function hastaFisiltisi(supabase: SupabaseClient, doktorId: string, patientId: string, simdi = new Date()): Promise<HastaFisiltisi> {
+  const bos = { oge: null, gizli: false, sessiz: false, hata: false }
   const { data: profil } = await supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle()
   const brans = bransAnahtari(String((profil as { specialty?: string } | null)?.specialty || '')) || null
-  const kayit = brans && FISILTI_DESTEKLI_BRANSLAR.has(brans) ? BRANS_KOHORTLARI[brans] : undefined
-  if (!brans || !kayit) return { destekli: false, brans, oge: null, gizli: false, sessiz: false, hata: false }
+  const destekli = Boolean(brans) && FISILTI_DESTEKLI_BRANSLAR.has(String(brans))
+  const kayit = destekli && brans ? BRANS_KOHORTLARI[brans] : undefined
+  if (!brans || !kayit) return { destekli, bagli: false, brans, ...bos }
   try {
     const kohort = await kayit.yukle()
     const { satirlar } = await kohort(supabase, doktorId, kayit.trt ? bugunTrt(simdi) : bugunUtc(simdi), [patientId])
     const satir = ((satirlar || []) as Record<string, unknown>[]).find((s) => String(s.patientId || s.patient_id || '') === patientId)
     const oge = satir ? normalizeKohortSatiri(satir, brans) : null
-    if (!oge) return { destekli: true, brans, oge: null, gizli: false, sessiz: false, hata: false }
+    if (!oge) return { destekli: true, bagli: true, brans, ...bos }
     const [gizlemeler, sessizQ] = await Promise.all([
       fisiltiGizlemeleri(supabase, doktorId).catch(() => []),
       supabase.from('fisilti_sessizler').select('patient_id').eq('doctor_id', doktorId).eq('brans', brans).eq('patient_id', patientId).is('kaldirildi_at', null),
     ])
     return {
-      destekli: true, brans, oge,
+      destekli: true, bagli: true, brans, oge,
       gizli: fisiltiAyir([oge], gizlemeler, simdi).gizli.length > 0,
       sessiz: Boolean((sessizQ.data || []).length),
       hata: false,
     }
   } catch (e) {
     console.error('[fisilti/hasta]', e instanceof Error ? e.message : String(e))
-    return { destekli: true, brans, oge: null, gizli: false, sessiz: false, hata: true }
+    return { destekli: true, bagli: true, brans, ...bos, hata: true }
   }
 }
