@@ -37,6 +37,7 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     dose: 'Standart başlangıç: yemekle birlikte günde 2–3 kez 500 mg veya 850 mg. 10–15 gün sonra kan glukozuna göre titre edilir. Önerilen maksimum 3 g/gün (üçe bölünmüş).',
     pediatricDose: '10 yaş ve üzeri: başlangıç günde 1 kez 500–850 mg; maksimum 2 g/gün (iki-üçe bölünmüş)',
     pediatrik: {
+      sabitDoz: true,
       min: 500, max: 850, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 2000, enAzAy: 120,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): 10 yaş veya üzeri çocuk ve ergenlerde monoterapi veya insülinle birlikte standart başlangıç dozu yemekle birlikte günde 1 kez 500 mg veya 850 mg; 10–15 gün sonra kan glukozuna göre ayarlanır. Bu yaş grubunda önerilen maksimum doz iki veya üçe bölünmüş şekilde günlük 2 g\'dır.',
@@ -302,6 +303,7 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     dose: 'Doz laboratuvar testleri ve klinik muayeneye göre bireyselleştirilir (25–200 mcg tablet formları mevcuttur). Sabah aç karnına, kahvaltıdan en az 30 dakika önce.',
     pediatricDose: 'İdame 100–150 mikrogram/m² vücut yüzey alanı; bebeklerde ilk öğünden en az yarım saat önce tek doz',
     pediatrik: {
+      sabitDoz: true,
       min: 100, max: 150, birim: 'mikrogram/kg/gün', gunlukBolum: 1,
       metin: 'KÜB §4.2 (vücut YÜZEY ALANI başına, kilogram başına değil): konjenital hipotiroidi idame tedavisinde 100–150 mikrogram/m² vücut yüzey alanı. Bebeklerde doz günün ilk öğününden en az yarım saat önce tek seferde verilir; tablet ezilip su içinde süspansiyon haline getirilir.',
     },
@@ -339,6 +341,7 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >10 yaş: orta şiddetli hipertiroidide başlangıç 100–300 mg/gün, 2–3 doza bölünmüş (her doz 50–100 mg). Ağır hipertiroidide 300–600 mg/gün. 6–8 saatte bir alınır.',
     pediatricDose: '6–10 yaş: başlangıç 50–150 mg/gün (tek doz veya bölünmüş). 6 yaş altında güvenlilik bilinmemektedir',
     pediatrik: {
+      sabitDoz: true,
       min: 50, max: 150, birim: 'mg/kg/gün', gunlukBolum: 3, enAzAy: 72,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): 6–10 yaş arası çocuklarda başlangıç dozu günde bir kere veya bölünmüş dozlar halinde 50–150 mg. 6 yaşından küçük çocuklarda ilacın güvenlilik ve etkililiği bilinmemektedir.',
     },
@@ -436,6 +439,7 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     dose: 'Statine yeni başlayanda günde tek doz 5 veya 10 mg. Maksimum 40 mg (yalnız yüksek riskli ve hedefe ulaşamayan hastada).',
     pediatricDose: 'Heterozigot ailesel hiperkolesterolemide 6–9 yaş: 5–10 mg/gün; 10–17 yaş: 5–20 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 5, max: 20, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 20, enAzAy: 72,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): heterozigot ailesel hiperkolesterolemili çocuk ve ergenlerde normal başlangıç dozu günde 5 mg. 6–9 yaş arasında normal doz aralığı günde bir kez 5–10 mg (10 mg üzeri çalışılmamıştır); 10–17 yaş arasında pediyatrik maksimum doz günde bir defa 20 mg\'dır. 6 yaşın altında kullanımı önerilmemektedir.',
@@ -475,6 +479,7 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     dose: 'Akşamları tek doz 5–80 mg/gün. Doz ayarlamaları en az 4 haftalık aralıklarla. 80 mg yalnız yüksek riskli ve hedefe ulaşamayan hastada.',
     pediatricDose: 'Heterozigot ailesel hiperkolesterolemide 10–17 yaş: akşamları 10 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 10, max: 10, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 40, enAzAy: 120,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): heterozigot ailesel hiperkolesterolemili 10–17 yaş arası çocuk ve adolesanlarda (erkeklerde Tanner evresi II ve üzeri, kızlarda menarştan en az bir yıl sonra) tavsiye edilen klasik başlangıç dozu akşamları günde bir kez 10 mg.',

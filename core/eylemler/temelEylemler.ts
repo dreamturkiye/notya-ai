@@ -687,12 +687,19 @@ export const ILAC_DOZ_DEGISTIR = eylem({
   },
   // A dose change is still a drug decision: the same check runs, with the edited row excluded from
   // the duplicate test (it is the row being changed, not a second box of the same molecule).
-  uyariKontrol: (ctx, v) =>
-    ilacUyarilariHesapla(ctx, {
+  // NOTYA-AYSE-GUVENLIK-01: "dozunu 10 miligrama çıkar" changes the dose and keeps the frequency — the daily total
+  // the verdict is measured against is the NEW dose at the row's EXISTING frequency (and the other way round).
+  // Reading the new dose alone as once a day would under-count a twice-daily drug.
+  uyariKontrol: async (ctx, v) => {
+    const liste = String(v.ilac_adi ?? '').trim() ? await aktifIlac(ctx, String(v.ilac_adi)) : []
+    const mevcut = liste.length === 1 ? liste[0] : null
+    return ilacUyarilariHesapla(ctx, {
       ilacAdi: String(v.ilac_adi || ''),
-      doz: (v.yeni_doz as string | null) ?? null,
-      kullanimSikligi: (v.yeni_kullanim as string | null) ?? null,
-    }),
+      doz: (v.yeni_doz as string | null) || (mevcut?.doz as string | null) || null,
+      kullanimSikligi: (v.yeni_kullanim as string | null) || (mevcut?.kullanim_sikli as string | null) || null,
+      haricTutulanId: mevcut?.id ? String(mevcut.id) : null,
+    })
+  },
   calistir: async (ctx, v) => {
     if (!v.yeni_doz && !v.yeni_kullanim) throw new Error('Yeni doz ya da yeni kullanım girin.')
     const liste = await aktifIlac(ctx, String(v.ilac_adi))

@@ -162,6 +162,58 @@ describe('NOTYA-AYSE-GERI-02 — sesli onay Fish rotasında (denetim §4.6, PR 3
     assert.equal(ortam.db.tablo('hasta_ilaclar').length, 0)
   })
 
+  // NOTYA-AYSE-GUVENLIK-01 — the action audit's two sentences (2026-10-02, no. 10 and 15) on the audit's own
+  // synthetic chart: the forced card must SAY the conflict, in both channels, and a plain "Evet" must not pass it.
+  it('denetim cümlesi 10: alerjisi yalnız ilk kayıt formunda duran hastada Amoksisilin kartı çatışmayı söyler; "Evet" kaydetmez', async () => {
+    const deniz = gercekciHastaEkle(ortam.db, encrypt, s.doktor.id)
+    const ilacSayisi = () => ortam.db.tablo('hasta_ilaclar').filter((r) => r.patient_id === deniz).length
+    const once = ilacSayisi()
+    const amoksisilin = {
+      metin: '',
+      araclar: [{ name: 'ilac_ekle', input: { ilac_adi: 'Amoksisilin', doz: '250 mg', kullanim_sikli: 'günde iki kez', alan_kaynaklari: { ilac_adi: { kaynak: 'doktor_soyledi' }, doz: { kaynak: 'doktor_soyledi' }, kullanim_sikli: { kaynak: 'doktor_soyledi' } } } }],
+    }
+    const oturum = oturumAc(s, { id: deniz, ad: GERCEKCI_HASTA_ADI })
+    ortam.yanit = amoksisilin
+    const ses = await fishTur(s, 'Amoksisilin 250 mg günde iki kez ilaçlarına ekle', { oturum })
+    assert.match(ses.soz, /Deniz Aksoy için İlaç ekle hazırladım/)
+    assert.match(ses.soz, /Dikkat Hocam: Alerji kaydı — Dosyada "Penisilin \(ürtiker, 3 yaşında amoksisilin sonrası\)" alerjisi kayıtlı/)
+    assert.match(ses.soz, /tek “Evet” yetmez; ekrandaki kartta “Uyarıyı gördüm, kaydet” ile onaylayın\.$/)
+    assert.ok(!/Onaylıyor musunuz\?/.test(ses.soz), ses.soz)
+    const kart = taslaklar()[0]
+    assert.ok((kart.uyari_detay as { tur: string; siddet: string }[]).some((u) => u.tur === 'alerji' && u.siddet === 'ciddi'), 'kartın kendisi uyarıyı taşır')
+
+    const e = await fishTur(s, 'Evet', { oturum })
+    assert.match(e.soz, /Ciddi bir ilaç uyarısı var — bunu sesle onaylayamam/)
+    assert.equal(ilacSayisi(), once, 'düz "Evet" alerji çatışmasını geçirmez')
+    assert.equal(taslaklar().length, 1)
+
+    // Written channel, same sentence: the answer on screen states the conflict too.
+    const yaziOturumu = oturumAc(s, { id: deniz, ad: GERCEKCI_HASTA_ADI })
+    ortam.yanit = amoksisilin
+    const y = await yazi(s, 'Amoksisilin 250 mg günde iki kez ilaçlarına ekle', { oturum: yaziOturumu })
+    assert.match(y.speech, /Dikkat Hocam: Alerji kaydı — Dosyada "Penisilin/)
+    assert.ok(!/Onaylıyor musunuz\?/.test(y.speech), y.speech)
+    // The model wrote its own sentence and never mentioned the allergy: the server adds the warning anyway.
+    ortam.yanit = { ...amoksisilin, metin: JSON.stringify({ speech: 'Amoksisilin kartını hazırladım Hocam.' }) }
+    const y2 = await yazi(s, 'Amoksisilin 250 mg günde iki kez ilaçlarına ekle', { oturum: oturumAc(s, { id: deniz, ad: GERCEKCI_HASTA_ADI }) })
+    assert.match(y2.speech, /Dikkat Hocam: Alerji kaydı — Dosyada "Penisilin/)
+    assert.match(y2.speech, /“Uyarıyı gördüm, kaydet” ile onaylayın\.$/)
+    assert.equal(ilacSayisi(), once)
+  })
+
+  it('denetim cümlesi 15: 7 yaşında Singulair 10 mg kartı doz çatışmasını söyler; "Evet" dozu değiştirmez', async () => {
+    const deniz = gercekciHastaEkle(ortam.db, encrypt, s.doktor.id)
+    const singulair = () => ortam.db.tablo('hasta_ilaclar').find((r) => r.patient_id === deniz && r.ilac_adi === 'Singulair')!
+    const oturum = oturumAc(s, { id: deniz, ad: GERCEKCI_HASTA_ADI })
+    ortam.yanit = { metin: '', araclar: [{ name: 'ilac_doz_degistir', input: { ilac_adi: 'Singulair', yeni_doz: '10 mg', alan_kaynaklari: { ilac_adi: { kaynak: 'doktor_soyledi' }, yeni_doz: { kaynak: 'doktor_soyledi' } } } }] }
+    const t = await fishTur(s, 'Singulair dozunu 10 miligrama çıkar', { oturum })
+    assert.match(t.soz, /Dikkat Hocam: Pediatrik doz aşımı — Yazılan günlük doz \(10 mg\), kaynakta bu yaş grubu için verilen dozun \(5 mg\/gün\) ÜZERİNDE/)
+    assert.ok(!/Onaylıyor musunuz\?/.test(t.soz), t.soz)
+    const e = await fishTur(s, 'Evet', { oturum })
+    assert.match(e.soz, /Ciddi bir ilaç uyarısı var/)
+    assert.equal(singulair().doz, '5 mg')
+  })
+
   it('zorunlu alanı boş kart sesle onaylanamaz', async () => {
     const oturum = oturumAc(s, { id: hasta, ad: AD })
     ortam.yanit = { metin: JSON.stringify({ speech: 'Kartı hazırladım.' }), araclar: [{ name: 'asi_kaydi_ekle', input: { asi_adi: 'KKK', alan_kaynaklari: { asi_adi: { kaynak: 'doktor_soyledi' } } } }] }

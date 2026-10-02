@@ -28,6 +28,7 @@ export const KADIN_DOGUM: Record<string, TürkishDrug> = {
     dose: 'Folat eksikliği megaloblastik anemi: 4 ay süreyle 5 mg/gün; malabsorbsiyonda 15 mg/gün\'e kadar. Kronik hemolitik durumlarda günde veya haftada 5 mg profilaksi.',
     pediatricDose: '1–18 yaş megaloblastik anemi: 4 ay süreyle 5 mg/gün; idamede her 1–7 günde bir 5 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 5, max: 5, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 15, enAzAy: 12,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): folat eksikliğine bağlı megaloblastik anemide 1–18 yaş arası çocuklarda 4 ay süreyle günde 5 mg (1 tablet); idame tedavisi için her 1–7 günde bir 5 mg. Küçük çocuklar için daha uygun bir dozaj formu kullanılmalıdır.',
@@ -416,6 +417,7 @@ export const KADIN_DOGUM: Record<string, TürkishDrug> = {
     dose: 'Yaşa göre önerilen miktar: 19 yaş üstü 11 mg/gün (tolere edilebilen maksimum 40 mg/gün). Diyare tedavisinde 6 aydan büyük çocuklarda 7 günden uzun ve 20 mg/günden fazla kullanılmaz.',
     pediatricDose: '7–12 ay: 3 mg/gün; 1–3 yaş: 3 mg/gün; 4–8 yaş: 5 mg/gün; 9–13 yaş: 8 mg/gün; 14–18 yaş: 11 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 3, max: 11, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 34, enAzAy: 6,
       metin: 'KÜB §4.2 (yaşa göre sabit doz, mg/kg değil): 7–12 ay 3 mg/gün (tolere edilebilen maksimum 5), 1–3 yaş 3 mg/gün (max 7), 4–8 yaş 5 mg/gün (max 12), 9–13 yaş 8 mg/gün (max 23), 14–18 yaş 11 mg/gün (max 34), 19 yaş üstü 11 mg/gün (max 40). Çinko, 6 aydan büyük çocuklarda diyare tedavisinde 7 günden uzun ve 20 mg/günden fazla kullanılmamalıdır. 0–6 ay arası bebeklerde kullanılmaz.',

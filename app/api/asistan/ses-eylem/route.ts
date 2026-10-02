@@ -204,6 +204,7 @@ export async function POST(req: NextRequest) {
       eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)),
       ek: [takvimEk, ...(o.uyarilar || [])].filter(Boolean).join(' '),
       bugun: eylemZamani(saatDilimi).bugun,
+      uyariDetay: o.uyari_detay,
     })
     return sesYanit(ozet, {
       ok: true,
@@ -211,7 +212,8 @@ export async function POST(req: NextRequest) {
       hastaId: hasta.id,
       eylemAnahtar: o.eylem_anahtar,
       eksik: o.eksik_alanlar,
-      onayBekliyor: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)).length === 0,
+      // A serious warning is not confirmed by a spoken "Evet" — the client must not wait for one.
+      onayBekliyor: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)).length === 0 && !sesCiddiUyariEngeli(o.uyari_detay),
       kart: true,
     })
   }

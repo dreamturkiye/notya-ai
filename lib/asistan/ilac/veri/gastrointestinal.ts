@@ -27,6 +27,7 @@ export const GASTROINTESTINAL: Record<string, TürkishDrug> = {
     dose: 'Duodenal ülser: 20 mg 1x1, 2–4 hafta. Zayıf yanıtta 40 mg 1x1. GÖRH idame: 20 mg 1x1. Sabah aç karnına.',
     pediatricDose: '≥1 yaş ve 10–20 kg: 10 mg/gün; ≥2 yaş ve >20 kg: 20 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 10, max: 20, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 40, enAzAy: 12,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): 1 yaşından büyük ve ≥10 kg çocukta reflü özofajit/GÖRH tedavisinde 10–20 kg için günde bir defa 10 mg (gerekirse 20 mg); ≥2 yaş ve >20 kg için günde bir defa 20 mg (gerekirse 40 mg). Tedavi süresi 4–8 hafta.',
@@ -57,6 +58,7 @@ export const GASTROINTESTINAL: Record<string, TürkishDrug> = {
     dose: 'Semptomatik GÖRH: 20 mg 1x1. Reflü özofajit tedavisi: 40 mg 1x1, 4–8 hafta. İdame: 20 mg 1x1.',
     pediatricDose: '40 kg altındaki çocuklarda günde 20 mg aşılmamalıdır; 5 yaş altında kullanılmaz',
     pediatrik: {
+      sabitDoz: true,
       min: 20, max: 20, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 20, enAzAy: 60,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): 40 kilonun altındaki çocuklarda günde 20 mg pantoprazol dozu aşılmamalıdır. 5 yaşından küçük çocuklarda kullanılmamalıdır.',
@@ -116,6 +118,7 @@ export const GASTROINTESTINAL: Record<string, TürkishDrug> = {
     dose: 'Duodenal ülser: 30 mg 1x1, 2 hafta. Gastrik ülser / reflü özofajit: 30 mg 1x1, 4 hafta. İdame: 15 mg 1x1.',
     pediatricDose: '1–11 yaş ≤30 kg: 15 mg/gün; >30 kg: 30 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 15, max: 30, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 30, enAzAy: 12,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): 1–11 yaş arası ≤30 kg çocukta GÖRH/eroziv özofajitin kısa süreli tedavisinde 12 haftaya kadar günde bir defa 15 mg; 30 kg üstünde günde bir defa 30 mg. Klinik zorunluluk yoksa günlük 30 mg aşılmamalıdır.',
@@ -305,6 +308,7 @@ export const GASTROINTESTINAL: Record<string, TürkishDrug> = {
     dose: 'Konstipasyon yetişkin: başlangıç 15–45 mL/gün, idame 15–30 mL/gün. Hepatik ensefalopati: başlangıç günde 3 defa 30–50 mL.',
     pediatricDose: '<1 yaş: 5 mL/güne kadar; 1–6 yaş: 5–10 mL/gün; 7–14 yaş: başlangıç 15 mL/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 5, max: 15, birim: 'mg/kg/gün', gunlukBolum: 1,
       metin: 'KÜB §4.2 (mL olarak sabit doz, mg/kg değil): 1 yaşın altındaki bebeklerde 5 mL\'ye kadar (3 g laktüloza kadar); 1–6 yaş arası 5–10 mL (3–7 g); 7–14 yaş arası başlangıç 15 mL (10 g), idame 10–15 mL. Hepatik ensefalopati dozu yalnızca erişkinler içindir.',
     },
@@ -336,6 +340,7 @@ export const GASTROINTESTINAL: Record<string, TürkishDrug> = {
     dose: 'Yetişkin: 4–6 saatte bir 30–45 damla (1,2–1,8 mL).',
     pediatricDose: 'Yenidoğan: 10 damla, günde 4 defaya kadar; >4 hafta–12 ay: 15 damla, günde 6 defaya kadar',
     pediatrik: {
+      sabitDoz: true,
       min: 10, max: 30, birim: 'mg/kg/doz', gunlukBolum: 4,
       metin: 'KÜB §4.2 (damla sayısıyla sabit doz, mg/kg değil): yenidoğanlarda tek doz 10 damla (0,4 mL), maksimum günde 4 defa; >4 hafta–12 ay arası 15 damla (0,6 mL), günde 6 defaya kadar; >12 ay–6 yaş 15 damla; >6 yaş–18 yaş 20–30 damla. Doz 4–6 saatte bir alınır.',
     },

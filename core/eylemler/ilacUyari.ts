@@ -37,6 +37,13 @@
  *   • the pediatric line is computed from a UNIT-TYPED dose and, where the source stated a ceiling,
  *     carries an overdose verdict (NOTYA-EYLEM-30). A drug still outside the table gets no verdict
  *     and the card says so — and when NOTHING fires, the card says that silence is not safety.
+ *
+ * NOTYA-AYSE-GUVENLIK-01 (2026-10-02, action audit): two holes a forced card fell through —
+ *   • the allergy check read only `patients.notes_encrypted.alerjiler`; an allergy that lived on the intake
+ *     form (which the file card shows) never reached the card. Both are read now;
+ *   • a fixed dose (montelukast 4 / 5 mg by age) was typed per kilogram and multiplied by the weight. A
+ *     `sabitDoz` entry is never multiplied; its verdict is measured against the source's own age band, and a
+ *     card whose dose could not be measured against any sourced reference says so (`doz_denetimsiz`).
  */
 import {
   MOLEKUL_SAYISI,
@@ -47,7 +54,7 @@ import {
   ifadeMetindeGecerMi,
   pediatrikDozHesapla,
 } from '@/lib/asistan/turkishDrugs'
-import { alerjiListe, notAlanlariCoz } from '@/lib/doktor/hastaKayitAlanlari'
+import { ilkKayitAlerjiMetni, notAlanlariCoz } from '@/lib/doktor/hastaKayitAlanlari'
 import type { EylemBaglami } from './types'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
@@ -58,6 +65,8 @@ export type UyariTuru =
   | 'etkilesim'
   | 'pediatrik'
   | 'pediatrik_asim'
+  /** NOTYA-AYSE-GUVENLIK-01 — the written dose could NOT be measured against a sourced reference; said, not hidden. */
+  | 'doz_denetimsiz'
   | 'kapsam_disi'
   | 'kapsam_notu'
   | 'ayse_notu'
@@ -95,9 +104,29 @@ export interface AktifIlacSatiri {
   etken_madde?: string | null
 }
 
-/** "Penisilin alerjisi" / "penisilin alerjik" → "penisilin"; the allergen itself is what matches. */
+/** Words a doctor or a parent writes around the allergen ("penisiline alerjisi var") — not part of its name. */
+const ALERJI_DOLGU = new Set(['alerjisi', 'alerji', 'alerjik', 'allerjisi', 'allerji', 'var', 'mevcut', 'karşı'])
+
+/** "Penisilin alerjisi" / "penisiline alerjisi var" → "penisilin(e)"; the allergen itself is what matches. */
 function alerjeniSadelestir(a: string): string {
-  return a.replace(/\s*(alerjisi|alerji|alerjik|allerjisi)\s*$/i, '').trim()
+  return a
+    .split(/\s+/)
+    .filter((s) => !ALERJI_DOLGU.has(s.toLocaleLowerCase('tr').replace(/[.,;:!]+$/, '')))
+    .join(' ')
+    .trim()
+}
+
+const ALERJI_YOK = /^(yok|hay[ıi]r|bilinen alerjisi? yok|bilinen yok|-|none)$/i
+
+/**
+ * One free-text allergy line → its entries. Splits on , ; and newline but NOT inside parentheses:
+ * "Penisilin (ürtiker, 3 yaşında amoksisilin sonrası)" is one allergy with an aside, not two.
+ */
+export function alerjiParcalari(metin: string | null | undefined): string[] {
+  return String(metin ?? '')
+    .split(/[,;\n]+(?![^(]*\))/)
+    .map((x) => x.trim())
+    .filter((x) => x && !ALERJI_YOK.test(x))
 }
 
 function ilacMetni(ilacAdi: string, etkenMadde?: string | null): string {
@@ -295,13 +324,18 @@ export function pediatrikUyarilar(
   // b) The dose line. `hekimDogruladi` is false for every entry today, so every computed pediatric
   //    dose carries "KÜB'den teyit edin" — the number is the KÜB's, the responsibility is the
   //    hekim's, and the card must not let the two blur.
-  const hesap = kiloKg ? pediatrikDozHesapla(anahtar, kiloKg, verilenGunlukMg ?? undefined) : null
+  //    NOTYA-AYSE-GUVENLIK-01: a fixed-dose entry needs no weight and is never multiplied by one; its verdict
+  //    is measured against the age band the source gives for this patient's age.
+  const p = ilac.pediatrik
+  const hesap = p?.sabitDoz
+    ? pediatrikDozHesapla(anahtar, kiloKg ?? 0, verilenGunlukMg ?? undefined, yasAy)
+    : kiloKg ? pediatrikDozHesapla(anahtar, kiloKg, verilenGunlukMg ?? undefined) : null
   if (hesap) {
     out.push({
       tur: 'pediatrik',
       siddet: 'bilgi',
       baslik: 'Pediatrik doz',
-      metin: `${ilac.name} (${kiloKg} kg): ${hesap.metin} Dozu siz belirliyorsunuz.${hesap.hekimDogruladi ? '' : ` ${TEYIT_CUMLESI}`}`,
+      metin: `${ilac.name}${p?.sabitDoz ? '' : ` (${kiloKg} kg)`}: ${hesap.metin} Dozu siz belirliyorsunuz.${hesap.hekimDogruladi ? '' : ` ${TEYIT_CUMLESI}`}`,
       kaynak: `${TABLO_KAYNAK} — ${ilac.kaynak.belge}`,
     })
     // c) The verdict, only when a ceiling was sourced AND a written daily total was readable.
@@ -323,26 +357,66 @@ export function pediatrikUyarilar(
       kaynak: `${TABLO_KAYNAK} — ${ilac.kaynak.belge}`,
     })
   }
+
+  // d) NOTYA-AYSE-GUVENLIK-01: no verdict could be given → the card SAYS the dose was not checked, and why.
+  //    A card that prints a reference line and stays silent about the written dose reads as "dose is fine".
+  if (!hesap || hesap.asim === undefined) {
+    const tavanKaynakli = Boolean(p) && (typeof p?.maxMgKgGun === 'number' || typeof p?.mutlakMaxMgGun === 'number')
+    const neden = !p
+      ? `${ilac.name} için Notya ilaç tablosunda yapılandırılmış pediatrik doz bilgisi yok; yazılan doz otomatik denetlenmedi.`
+      : hesap
+        ? hesap.tavanMgGun === undefined
+          ? `${ilac.name} için Notya ilaç tablosunda bu yaşa ait kaynaklı bir doz üst sınırı yok; yazılan doz otomatik denetlenmedi.`
+          : 'Yazılan doz günlük miligram olarak okunamadı; kaynaktaki üst sınırla karşılaştırılamadı.'
+        : tavanKaynakli
+          ? 'Dosyada güncel kilo olmadığı için yazılan doz kaynaktaki üst sınırla karşılaştırılamadı.'
+          : `${ilac.name} için Notya ilaç tablosunda kaynaklı bir pediatrik doz üst sınırı yok; yazılan doz otomatik denetlenmedi.`
+    out.push({ tur: 'doz_denetimsiz', siddet: 'bilgi', baslik: 'Doz denetimi yapılamadı', metin: neden, kaynak: TABLO_KAYNAK })
+  }
   return out
 }
 
+const SAYI_SOZU: Record<string, number> = { bir: 1, tek: 1, iki: 2, üç: 3, dört: 4, beş: 5, altı: 6 }
+const SAYI = String.raw`(\d+|bir|tek|iki|üç|dört|beş|altı)`
+const sayiOku = (s: string): number => (/^\d+$/.test(s) ? Number(s) : SAYI_SOZU[s.toLocaleLowerCase('tr')] ?? NaN)
+
 /**
- * Daily milligram total from a written dose field ("500 mg 3x1", "2x250 mg", "10 mL 3x1").
- * Returns null when the line cannot be read as milligrams — an unreadable dose must produce NO
- * verdict rather than a guessed one.
+ * Daily milligram total from a written dose field ("500 mg 3x1", "2x250 mg", "250 mg günde iki kez",
+ * "8 saatte bir"). Returns null when the line cannot be read as milligrams — an unreadable dose must
+ * produce NO verdict rather than a guessed one. That includes a per-kilogram dose ("45 mg/kg/gün" is
+ * not 45 mg) and an as-needed line with no stated frequency.
+ *
+ * A dose with no frequency at all is read as ONE dose a day: the lowest daily total it can mean, so an
+ * "exceeds" verdict from it is sound.
  */
 export function gunlukMgOku(doz: string | null | undefined, siklik?: string | null): number | null {
   const metin = `${doz || ''} ${siklik || ''}`.trim()
   if (!metin) return null
-  const mg = /(\d+(?:[.,]\d+)?)\s*mg\b/i.exec(metin)
+  if (/(?:mg|miligram)\s*\/\s*kg/i.test(metin)) return null
+  const mg = /(\d+(?:[.,]\d+)?)\s*(?:mg|miligram)/i.exec(metin)
   if (!mg) return null
   const birim = Number(mg[1].replace(',', '.'))
   if (!Number.isFinite(birim) || birim <= 0) return null
-  // "3x1", "2 x 1", "günde 3", "3 kez"
-  const carpim = /(\d+)\s*[xX×]\s*(\d+)/.exec(metin)
-  if (carpim) return birim * Number(carpim[1]) * Number(carpim[2])
-  const kez = /(?:günde|gunde)\s*(\d+)|(\d+)\s*(?:kez|defa)/i.exec(metin)
-  if (kez) return birim * Number(kez[1] || kez[2])
+  // "3x1", "2 x 1" → 3 × 1 doses; "2x250 mg" → 2 doses of the milligram figure itself.
+  const carpim = /(\d+)\s*[xX×]\s*(\d+(?:[.,]\d+)?)(\s*(?:mg|miligram))?/.exec(metin)
+  if (carpim) return carpim[3] ? birim * Number(carpim[1]) : birim * Number(carpim[1]) * Number(carpim[2].replace(',', '.'))
+  // "günde 3", "günde iki kez", "3 kez", "iki defa"
+  const kez = new RegExp(String.raw`(?:günde|gunde)\s*${SAYI}(?![\d.,]*\s*(?:mg|miligram))|${SAYI}\s*(?:kez|defa|kere)`, 'i').exec(metin)
+  if (kez) {
+    const n = sayiOku(kez[1] || kez[2])
+    return Number.isFinite(n) && n > 0 ? birim * n : null
+  }
+  // "8 saatte bir" → 3 doses a day.
+  const saatte = /(\d+)\s*saatte\s*bir/i.exec(metin)
+  if (saatte) {
+    const n = Number(saatte[1])
+    return n > 0 && n <= 24 ? birim * Math.floor(24 / n) : null
+  }
+  // "sabah akşam", "sabah öğle akşam" → one dose per named time of day.
+  const vakit = new Set((metin.toLocaleLowerCase('tr').match(/sabah|öğle|akşam|gece/g) || []))
+  if (vakit.size >= 2) return birim * vakit.size
+  // As needed, no stated frequency: the daily total is not known.
+  if (/gerekti[ğg]inde|gerekirse|l[üu]zum/i.test(metin)) return null
   return birim
 }
 
@@ -382,7 +456,32 @@ async function hastaAlerjileri(ctx: EylemBaglami): Promise<string[]> {
     .eq('doctor_id', ctx.doktorId)
     .maybeSingle()
   if (!data) return []
-  return alerjiListe(notAlanlariCoz((data as { notes_encrypted?: string | null }).notes_encrypted ?? null))
+  // The raw line, split here: `alerjiListe` cuts on every comma and breaks "Penisilin (ürtiker, 3 yaşında …)" in two.
+  const kayit = alerjiParcalari(notAlanlariCoz((data as { notes_encrypted?: string | null }).notes_encrypted ?? null).alerjiler)
+  const form = await ilkKayitAlerjileri(ctx)
+  const gorulen = new Set(kayit.map((a) => a.toLocaleLowerCase('tr')))
+  return [...kayit, ...form.filter((a) => !gorulen.has(a.toLocaleLowerCase('tr')))]
+}
+
+/**
+ * NOTYA-AYSE-GUVENLIK-01 — the allergy the patient (or the parent) wrote on the intake form.
+ *
+ * The file card and "Alerjisi var mı" read it from there (lib/doktor/hastaDosyaDerleyici.ts); the drug check read
+ * only `patients.notes_encrypted.alerjiler`. A chart whose allergy lived only on the form therefore SHOWED
+ * "Penisilin" and prepared an amoksisilin card with no allergy warning (action audit 2026-10-02, sentence 10).
+ * Both sources are read and merged: an allergy the doctor can see in the file must reach the card.
+ *
+ * HASTA-IZOLASYON-01: the form row is read by patient id AND this doctor's id.
+ */
+async function ilkKayitAlerjileri(ctx: EylemBaglami): Promise<string[]> {
+  const { data } = await ctx.supabase
+    .from('hasta_intake_formlari')
+    .select('form_data_encrypted')
+    .eq('patient_id', ctx.hasta.id)
+    .eq('doktor_id', ctx.doktorId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  return alerjiParcalari(ilkKayitAlerjiMetni((data?.[0] as { form_data_encrypted?: string | null } | undefined)?.form_data_encrypted))
 }
 
 /**
@@ -446,8 +545,8 @@ export async function ilacUyarilariHesapla(ctx: EylemBaglami, girdi: IlacUyariGi
       siddet: 'bilgi',
       baslik: 'Etkileşim kontrolü yapılamadı',
       metin: aktif.length
-        ? `"${ad}" Notya ilaç tablosunda yok; hastanın ${aktif.length} aktif ilacıyla etkileşim otomatik kontrol edilemedi.`
-        : `"${ad}" Notya ilaç tablosunda yok; bu ilaç için otomatik etkileşim/alerji kontrolü yapılamadı.`,
+        ? `"${ad}" Notya ilaç tablosunda yok; hastanın ${aktif.length} aktif ilacıyla etkileşim ve yazılan doz otomatik kontrol edilemedi.`
+        : `"${ad}" Notya ilaç tablosunda yok; bu ilaç için otomatik etkileşim, alerji ve doz kontrolü yapılamadı.`,
       kaynak: TABLO_KAYNAK,
     })
   } else if (uyarilar.length === 0) {

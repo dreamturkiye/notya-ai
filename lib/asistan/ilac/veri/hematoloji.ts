@@ -63,6 +63,7 @@ export const HEMATOLOJI: Record<string, TürkishDrug> = {
     dose: 'NVAF\'ta inme/sistemik emboli önlenmesi: günde 1 kez 20 mg (önerilen maksimum doz). Böbrek yetmezliğinde kanama riski tromboz riskinden fazlaysa 15 mg/gün.',
     pediatricDose: '30–50 kg: günde bir kez 15 mg; ≥50 kg: günde bir kez 20 mg (bu dozlar maksimum günlük dozdur)',
     pediatrik: {
+      sabitDoz: true,
       min: 15, max: 20, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 20,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): 30–50 kg vücut ağırlığında günde bir kez 15 mg, 50 kg ve üzerinde günde bir kez 20 mg — her ikisi de maksimum günlük dozdur. Tedavi en az 5 günlük başlangıç antikoagülan tedavisinin ardından başlatılır. Çocuğun kilosu takip edilip doz düzenli gözden geçirilmelidir.',

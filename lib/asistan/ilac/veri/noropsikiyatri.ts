@@ -42,6 +42,7 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     dose: 'Depresyon ve OKB: 50 mg/gün ile başlanır. Panik bozukluk, TSSB, sosyal fobi: 25 mg/gün ile başlanır, bir hafta sonra 50 mg\'a çıkılır. Maksimum 200 mg/gün.',
     pediatricDose: 'OKB\'de 13–17 yaş: 50 mg/gün; 6–12 yaş: 25 mg/gün ile başlanıp bir hafta sonra 50 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 25, max: 50, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 200, enAzAy: 72,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): etkililik ve güvenlilik 6–17 yaş arası OKB\'li pediyatrik hastalarda gösterilmiştir. 13–17 yaşta 50 mg/gün, 6–12 yaşta 25 mg/gün ile başlanır ve bir hafta sonra 50 mg/gün\'e yükseltilir. Maksimum doz 200 mg/gün.',
@@ -101,6 +102,7 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     dose: 'Depresyon (erişkin ve yaşlı): 20 mg/gün. Yetersizse kademeli olarak maksimum 60 mg/gün\'e çıkarılabilir. Doz 3–4 hafta sonra değerlendirilir.',
     pediatricDose: '8 yaş ve üzeri orta-şiddetli majör depresif epizodda: başlangıç 10 mg/gün, 1–2 hafta sonra 20 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 10, max: 20, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 20, enAzAy: 96,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): 8 yaş ve üzeri çocuk ve adolesanlarda tedavi uzman gözetiminde başlatılır; başlangıç dozu 10 mg/gün, bir-iki hafta sonra 20 mg/gün\'e yükseltilebilir. 20 mg üzerindeki günlük dozlarda pediyatrik klinik veri sınırlıdır. 8 yaşın altında kullanımı önerilmez.',
@@ -304,6 +306,7 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     dose: 'Şizofreni (erişkin): 2 mg/gün ile başlanır, 2. gün 4 mg\'a çıkarılabilir; çoğu hastada optimal doz 4–6 mg/gün.',
     pediatricDose: '<20 kg: 0,25 mg/gün ile başlanır; ≥20 kg: 0,5 mg/gün. 4. günde aynı miktarda artırılabilir',
     pediatrik: {
+      sabitDoz: true,
       min: 0.25, max: 0.5, birim: 'mg/kg/gün', gunlukBolum: 1,
       metin: 'KÜB §4.2 (kiloya göre sabit doz, mg/kg değil): dozlamaya 20 kg\'ın altındaki hastalar için günde 0,25 mg, 20 kg ve üstündeki hastalar için günde 0,5 mg ile başlanır. 4. günde doz sırasıyla 0,25 mg / 0,5 mg artırılabilir; yanıt yaklaşık 14. günde değerlendirilir. 18 yaş altı bipolar manide veri yetersizliği nedeniyle önerilmez.',
     },
@@ -337,6 +340,7 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     dose: 'Şizofreni (erişkin): başlangıç 10–15 mg/gün, idame 15 mg/gün. Etkili aralık 10–30 mg/gün; günlük maksimum doz 30 mg\'ı aşmamalıdır.',
     pediatricDose: '13–17 yaş şizofrenide: 2 gün 2 mg, sonraki 2 gün 5 mg, ardından önerilen 10 mg/gün; maksimum 30 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 2, max: 10, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 30, enAzAy: 156,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): 13–17 yaş ergenlerde şizofrenide önerilen doz günde tek doz 10 mg. Tedavi ilk 2 gün 2 mg ile başlatılır, sonraki 2 gün 5 mg\'a titre edilir ve 10 mg/gün\'e ulaşılır. Doz artışları 5 mg\'lık adımlarla, günlük maksimum 30 mg\'ı geçmeyecek şekilde yapılır.',
@@ -659,6 +663,7 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     dose: 'Tedavi DEHB\'de uzmanlaşmış hekim tarafından başlatılır ve denetlenir. Adolesanlarda (13–17 yaş) uzatılmış salımlı formda maksimum günlük doz 54 mg.',
     pediatricDose: '6–12 yaş ve 13–17 yaş adolesanlarda kullanılabilir; 6 yaş altında KULLANILMAZ',
     pediatrik: {
+      sabitDoz: true,
       min: 18, max: 54, birim: 'mg/kg/gün', gunlukBolum: 1,
       mutlakMaxMgGun: 54, enAzAy: 72,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): uzatılmış salımlı formda çocuklarda (6–12 yaş) ve adolesanlarda (13–17 yaş) kullanılabilir; adolesanlarda kullanılabilecek maksimum günlük doz 54 mg\'dır. 6 yaşın altındaki çocuklarda kontrollü çalışmalarda incelenmemiştir ve kullanılmamalıdır.',

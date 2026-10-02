@@ -266,6 +266,7 @@ export const DERM_ROMATOLOJI: Record<string, TürkishDrug> = {
     dose: 'Gut profilaksisi: başlangıçta günde 1×0,5 mg; gerekirse 2×0,5 mg. Akut atakta ilk belirtiyle 0,5–1 mg, sonra ağrı geçene veya GİS yan etki çıkana kadar; toplam maksimum 6 mg.',
     pediatricDose: 'Ailevi Akdeniz Ateşi: <5 yaş günde 1×0,5 mg; ≥5 yaş günde 1–2×0,5 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 0.5, max: 1.0, birim: 'mg/kg/gün', gunlukBolum: 2,
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): Ailevi Akdeniz Hastalığı olan çocuklarda 5 yaşından küçüklerde günde bir defa 1 film kaplı tablet (0,5 mg); 5 yaş ve daha büyüklerde günde bir-iki tablet. Tedaviye 5 yaşından önce başlanan çocuklarda genellikle 7 yaş civarında doz artışı gerekir.',
     },

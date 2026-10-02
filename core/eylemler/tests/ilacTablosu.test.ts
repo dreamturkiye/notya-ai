@@ -92,6 +92,43 @@ describe('NOTYA-EYLEM-28 · şema bütünlüğü (her giriş)', () => {
     }
   })
 
+  // NOTYA-AYSE-GUVENLIK-01: montelukast 4–5 mg was typed "mg/kg/gün" and printed as "98,4–123 mg/gün" on a
+  // 24,6 kg child's card. An entry whose own source sentence says the dose is not per kilogram must say so in a
+  // typed field, and the calculator must never hand back a weight-multiplied total for it.
+  it('kaynağı "mg/kg değil" diyen her giriş sabitDoz işaretlidir ve kiloyla ÇARPILMAZ', () => {
+    let sabit = 0
+    for (const [anahtar, d] of GIRDILER) {
+      const p = d.pediatrik
+      if (!p) continue
+      if (/mg\/kg değil|kilogram başına değil/.test(p.metin)) assert.equal(p.sabitDoz, true, `${anahtar}: kaynak sabit doz diyor ama sabitDoz işaretli değil`)
+      if (!p.sabitDoz) {
+        assert.equal(p.yasBantlari, undefined, `${anahtar}: yaş bandı yalnız sabit dozlu girişte olur`)
+        continue
+      }
+      sabit++
+      assert.equal(p.maxMgKgGun, undefined, `${anahtar}: sabit dozlu girişte kilogram başına tavan olamaz`)
+      const h = pediatrikDozHesapla(anahtar, 24.6, 10, 85)!
+      assert.equal(h.gunlukMinMg, undefined, `${anahtar}: sabit doz kiloyla çarpıldı`)
+      assert.equal(h.gunlukMaxMg, undefined, `${anahtar}: sabit doz kiloyla çarpıldı`)
+      assert.ok(h.metin.startsWith('Sabit doz (kiloya göre hesaplanmaz)'), `${anahtar}: ${h.metin}`)
+      for (const b of p.yasBantlari || []) assert.ok(b.ustAy > b.enAzAy && b.mgGun > 0, `${anahtar}: yaş bandı geçersiz`)
+    }
+    assert.ok(sabit >= 30, `sabit dozlu giriş sayısı: ${sabit}`)
+  })
+
+  it('montelukast yaş bantları girişin kendi pediatrik doz satırıdır; bant dışında hüküm yok', () => {
+    const d = GIRDILER.find(([a]) => a === 'montelukast')![1]
+    assert.equal(d.pediatricDose, '12 ay–5 yaş: 4 mg/gün; 6–14 yaş: 5 mg/gün (akşam tek doz)')
+    assert.deepEqual(d.pediatrik!.yasBantlari, [{ enAzAy: 12, ustAy: 72, mgGun: 4 }, { enAzAy: 72, ustAy: 180, mgGun: 5 }])
+    assert.equal(pediatrikDozHesapla('montelukast', 0, 10, 85)!.asim, true)
+    assert.equal(pediatrikDozHesapla('montelukast', 0, 5, 85)!.asim, false)
+    assert.equal(pediatrikDozHesapla('montelukast', 0, 5, 40)!.asim, true, '3 yaşında bant 4 mg/gün')
+    assert.equal(pediatrikDozHesapla('montelukast', 0, 4, 40)!.asim, false)
+    assert.equal(pediatrikDozHesapla('montelukast', 0, 10, 190)!.asim, undefined, '15 yaş ve üzeri için bant yazılmadı')
+    assert.equal(pediatrikDozHesapla('montelukast', 0, 10, 8)!.asim, undefined, '12 ay altı için bant yok')
+    assert.equal(pediatrikDozHesapla('montelukast', 0, undefined, 85)!.asim, undefined, 'doz okunamadıysa hüküm yok')
+  })
+
   it('etkileşim satırlarının hepsinde şiddet ve Türkçe gerekçe var', () => {
     for (const [anahtar, d] of GIRDILER) {
       for (const e of d.etkilesimler || []) {

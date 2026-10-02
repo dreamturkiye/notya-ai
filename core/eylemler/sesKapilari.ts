@@ -37,6 +37,22 @@ export function sesCiddiUyariEngeli(uyariDetay: IlacUyarisi[] | null | undefined
   return null
 }
 
+/** What the read-back asks for instead of "Onaylıyor musunuz?" when the card carries a serious warning. */
+export const UYARI_ONAY_SOZU = 'Bu uyarı nedeniyle tek “Evet” yetmez; ekrandaki kartta “Uyarıyı gördüm, kaydet” ile onaylayın.'
+
+/**
+ * NOTYA-AYSE-GUVENLIK-01 — the serious warnings of a card as ONE spoken / written sentence group, said BEFORE the
+ * confirmation is asked for: "Dikkat Hocam: Alerji kaydı — Dosyada "Penisilin" alerjisi kayıtlı ve …". The text is
+ * the deterministic check's own (core/eylemler/ilacUyari.ts), never the model's. Null when nothing is serious.
+ */
+export function ciddiUyariSozu(uyariDetay: IlacUyarisi[] | null | undefined): string | null {
+  const ciddi = (uyariDetay || []).filter((u) => u.siddet === 'ciddi')
+  if (!ciddi.length) return null
+  const cumleler = ciddi.slice(0, 3).map((u) => `${u.baslik} — ${String(u.metin).replace(/\s+/g, ' ').trim().slice(0, 300)}`)
+  const kalan = ciddi.length > 3 ? ` Kartta ${ciddi.length - 3} ciddi uyarı daha var.` : ''
+  return `Dikkat Hocam: ${cumleler.join(' ')}${kalan}`
+}
+
 /** Voice commit needs every required field filled (no empty yellow box). */
 export function sesEksikAlanEngeli(
   zorunlu: readonly string[],
@@ -105,6 +121,11 @@ export function sesOzetMetni(g: {
   ek?: string | null
   /** Today in the doctor's timezone (yyyy-mm-dd) — lets a date be read as "bugün, 1 Ekim 2026 Perşembe". */
   bugun?: string | null
+  /**
+   * NOTYA-AYSE-GUVENLIK-01 — the card's warnings. A serious one is said before the confirmation is asked for, and
+   * the line then asks for the explicit acknowledgement instead of a one-word "Evet" (which the gates refuse).
+   */
+  uyariDetay?: IlacUyarisi[] | null
 }): string {
   const parcalar: string[] = [`${g.hastaAd} için ${g.etiket} hazırladım`]
   for (const a of g.alanlar) {
@@ -115,10 +136,12 @@ export function sesOzetMetni(g: {
     // NOTYA-AYSE-GERI-04: the date is read aloud in words, before "Onaylıyor musunuz?".
     parcalar.push(`${a.etiket}: ${a.tip === 'tarih' ? tarihOkunusu(v, g.bugun) : v}`)
   }
-  const ek = g.ek ? ` ${g.ek.replace(/\s+/g, ' ').trim()}` : ''
+  const uyari = ciddiUyariSozu(g.uyariDetay)
+  const ek = `${g.ek ? ` ${g.ek.replace(/\s+/g, ' ').trim()}` : ''}${uyari ? ` ${uyari}` : ''}`
   if (g.eksik.length) {
     const etiketler = g.eksik.map((k) => g.alanlar.find((a) => a.anahtar === k)?.etiket || k)
     return `${parcalar.join('. ')}.${ek} Ama ${etiketler.join(', ')} boş — ekrandaki karttan doldurup onaylayın.`
   }
+  if (uyari) return `${parcalar.join('. ')}.${ek} Kart ekranda. Henüz dosyaya yazılmadı. ${UYARI_ONAY_SOZU}`
   return `${parcalar.join('. ')}.${ek} Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz?`
 }

@@ -65,7 +65,7 @@ import { sunucuTarihDegerleri } from "@/lib/asistan/sunucuTarihi"
 import { asiKaydiSorusuMu, asiTablosuCevabi } from "@/lib/asistan/asiTablosu"
 import { kayitCevabi, kayitIstegiBul, type KayitCevabi } from "@/lib/asistan/kayitTablosu"
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
-import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
+import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
@@ -1002,6 +1002,12 @@ ${ilacBaglamMetni(drugs[0])}`
       ? kartOkumasi(eylemOnerileri, kartHastasi.ad, bugunTz(saatDilimi))
       : "Bu soruya şu an cevap üretemedim Hocam; bir daha sorar mısınız?"
     if (ses && !sozler.some(Boolean)) sozEkle(konusmaYap(aiData.speech))
+  } else if (eylemOnerileri.length) {
+    // NOTYA-AYSE-GUVENLIK-01: the model wrote its own sentence next to the card. Whatever it says, the written
+    // answer still states the card's serious warning and how it is acknowledged — a conflict is never left to
+    // the model's wording (the voice channel has already said it in kartOkumasi above).
+    const uyari = kartUyariSozu(eylemOnerileri)
+    if (uyari) aiData.speech = `${String(aiData.speech).trimEnd()}\n\n${uyari}`
   }
 
   // NOTYA-SES-DEVAM-01 (Dr. Gökhan: "özet yarıda kesilmesin"): the voice turn closed before everything was said
@@ -1138,8 +1144,20 @@ export function kimlikSozu(k: KimlikCevabi): string {
 
 /** Kart(lar) için sözlü okuma — "Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz?" (ses-eylem ile aynı cümle). */
 function kartOkumasi(kartlar: HazirOneri[], hastaAd: string, bugun?: string): string {
-  if (kartlar.length > 1) return `${hastaAd} için ${kartlar.length} kayıt kartı hazırladım, ekranda. Henüz dosyaya yazılmadı. Ekrandan onaylayın ya da tek tek söyleyin.`
+  if (kartlar.length > 1) {
+    const uyari = kartUyariSozu(kartlar)
+    return `${hastaAd} için ${kartlar.length} kayıt kartı hazırladım, ekranda. Henüz dosyaya yazılmadı.${uyari ? ` ${uyari}` : ''} Ekrandan onaylayın ya da tek tek söyleyin.`
+  }
   const o = kartlar[0]
-  return sesOzetMetni({ etiket: o.etiket, hastaAd, veri: o.veri, alanlar: o.alanlar, eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)), ek: (o.uyarilar || []).join(' '), bugun })
+  return sesOzetMetni({ etiket: o.etiket, hastaAd, veri: o.veri, alanlar: o.alanlar, eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)), ek: (o.uyarilar || []).join(' '), bugun, uyariDetay: o.uyari_detay })
+}
+
+/**
+ * NOTYA-AYSE-GUVENLIK-01 — the serious warnings of the prepared card(s) and how they are acknowledged, as one
+ * paragraph. Null when no card carries one. The words are the deterministic check's, not the model's.
+ */
+export function kartUyariSozu(kartlar: HazirOneri[]): string | null {
+  const uyari = ciddiUyariSozu(kartlar.flatMap((o) => o.uyari_detay || []))
+  return uyari ? `${uyari} ${UYARI_ONAY_SOZU}` : null
 }
 

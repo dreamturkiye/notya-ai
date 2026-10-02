@@ -30,6 +30,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'İnhaler: gerektiğinde 100–200 mcg (1–2 püskürtme). Oral (şurup) yetişkin: günde 3–4 kez 4 mg.',
     pediatricDose: 'Şurup 2–6 yaş: 3–4×1–2 mg; 6–12 yaş: 3–4×2 mg; >12 yaş: 3–4×2–4 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 1, max: 4, birim: 'mg/kg/doz', gunlukBolum: 4, enAzAy: 24,
       metin: 'KÜB §4.2 (yaşa göre sabit doz, mg/kg değil): şurup formunda 2–6 yaş günde 3–4 kez 1–2 mg; 6–12 yaş günde 3–4 kez 2 mg; 12 yaş üzeri günde 3–4 kez 2–4 mg. İnhaler form dozu püskürtme sayısıyla ifade edilir.',
     },
@@ -59,6 +60,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin: günde 2 kez 1 inhalasyon (50/100, 50/250 veya 50/500 mcg — astım şiddetine göre). Sadece idame tedavisi.',
     pediatricDose: '4–12 yaş: günde 2 kez 1 inhalasyon (50 mcg salmeterol + 100 mcg flutikazon)',
     pediatrik: {
+      sabitDoz: true,
       min: 50, max: 100, birim: 'mikrogram/kg/gün', gunlukBolum: 2, enAzAy: 48,
       metin: 'KÜB §4.2 (inhalasyon başına sabit doz, mg/kg değil): 4–12 yaş arası çocuklarda günde 2 kez 1 inhalasyon (50 mikrogram salmeterol + 100 mikrogram flutikazon propiyonat). 4 yaşından küçük çocuklarda kullanım bilgisi yoktur.',
     },
@@ -115,6 +117,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Bronşiyal astım erişkin başlangıç: günlük toplam 1–2 mg. Astım kontrol altına alındıktan sonra en düşük idame dozuna inilir.',
     pediatricDose: '6 aylık ve daha büyük çocuklarda günlük toplam 0,25–0,5 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 0.25, max: 0.5, birim: 'mg/kg/gün', gunlukBolum: 2, enAzAy: 6,
       metin: 'KÜB §4.2 (sabit günlük doz, mg/kg değil): bronşiyal astımda 6 aylık ve daha büyük çocuklarda günlük toplam doz 0,25–0,5 mg (nebülizasyon süspansiyonu). Erişkinde günlük toplam 1–2 mg. Günde tek doz uygulaması 0,25–1 mg/gün dozları içindir.',
     },
@@ -139,6 +142,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >12 yaş: başlangıç her burun deliğine günde bir kez 2 sprey (toplam 110 mcg); idamede günde bir kez 1 sprey (55 mcg).',
     pediatricDose: '2–11 yaş: her burun deliğine günde bir kez 1 sprey (toplam 55 mcg)',
     pediatrik: {
+      sabitDoz: true,
       min: 55, max: 110, birim: 'mikrogram/kg/gün', gunlukBolum: 1, enAzAy: 24,
       metin: 'KÜB §4.2 (sprey sayısıyla ifade edilen sabit doz, mg/kg değil): 2–11 yaş arası çocuklarda başlangıç her burun deliğine günde bir kez 1 sprey (günlük toplam 55 mikrogram); yeterli yanıt alınmazsa doz artırılabilir. 2–6 yaşta yarar/zarar gözetilerek kullanılmalıdır.',
     },
@@ -185,6 +189,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >12 yaş (nebül): günde 3–4 kez 250–500 mcg. Akut bronkospazmda 500 mcg, hasta stabilize olana kadar tekrarlanabilir.',
     pediatricDose: '12 yaş ve altında sadece 250 mcg/2 mL formu kullanılır',
     pediatrik: {
+      sabitDoz: true,
       min: 250, max: 250, birim: 'mikrogram/kg/gün', gunlukBolum: 3,
       metin: 'KÜB §4.2 (flakon başına sabit doz, mg/kg değil): 12 yaşındaki veya daha küçük çocuklarda sadece 250 mcg/2 mL formu kullanılmalıdır. 12 yaşından büyük çocuk ve erişkinde günde 3–4 kez 250–500 mcg.',
     },
@@ -233,7 +238,14 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >15 yaş: günde bir kez 10 mg, akşam. 6–14 yaş: 5 mg. 2–5 yaş: 4 mg.',
     pediatricDose: '12 ay–5 yaş: 4 mg/gün; 6–14 yaş: 5 mg/gün (akşam tek doz)',
     pediatrik: {
+      sabitDoz: true,
       min: 4, max: 5, birim: 'mg/kg/gün', gunlukBolum: 1, enAzAy: 6,
+      // NOTYA-AYSE-GUVENLIK-01: the two bands of this entry's own `pediatricDose` line, typed — no new number.
+      // 12 ay–5 yaş: 4 mg/gün; 6–14 yaş: 5 mg/gün. 15 yaş ve üzeri erişkin dozudur; bant yazılmadı.
+      yasBantlari: [
+        { enAzAy: 12, ustAy: 72, mgGun: 4 },
+        { enAzAy: 72, ustAy: 180, mgGun: 5 },
+      ],
       metin: 'KÜB §4.2 (yaşa göre sabit doz, mg/kg değil): 12 aylık–5 yaş arası astımda günde 1 kez 4 mg saşe, akşam. Alerjik rinitte 2–5 yaş mevsimsel, 6 aylık ve üstü pereniyal alerjik rinitte günde bir kez. 2 yaşın altında mevsimsel alerjik rinitte ve 6 aydan küçükte pereniyal alerjik rinitte güvenlilik gösterilmemiştir.',
     },
     form: 'Film tablet, çiğneme tableti, granül saşe',
@@ -261,6 +273,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >12 yaş: günde bir kez 10 mg.',
     pediatricDose: '2–6 yaş: günde iki kez 2,5 mg; 6–12 yaş: günde iki kez 5 mg',
     pediatrik: {
+      sabitDoz: true,
       min: 2.5, max: 5, birim: 'mg/kg/doz', gunlukBolum: 2, enAzAy: 24,
       metin: 'KÜB §4.2 (yaşa göre sabit doz, mg/kg değil): 2–6 yaş arası çocuklarda günde iki kez 2,5 mg; 6–12 yaş arası çocuklarda günde iki kez 5 mg; 12 yaş üstünde günde bir kez 10 mg.',
     },
@@ -288,6 +301,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >12 yaş: günde bir kez 5 mg.',
     pediatricDose: '2–6 yaş: günde iki kez 1,25 mg (toplam 2,5 mg); 6–12 yaş: 5 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 1.25, max: 5, birim: 'mg/kg/doz', gunlukBolum: 2, enAzAy: 24,
       metin: 'KÜB §4.2 (yaşa göre sabit doz, mg/kg değil): 2–6 yaş arası çocuklarda günde iki defa 1,25 mg (toplam 2,5 mg/gün); 6–12 yaş ve üzerinde günlük doz 5 mg. 2 yaşından küçük çocuklarda kullanımı destekleyecek yeterli veri yoktur.',
     },
@@ -314,6 +328,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve >12 yaş: günde bir kez 5 mg.',
     pediatricDose: '6–11 ay: 1 mg/gün; 1–5 yaş: 1,25 mg/gün; 6–11 yaş: 2,5 mg/gün',
     pediatrik: {
+      sabitDoz: true,
       min: 1, max: 2.5, birim: 'mg/kg/gün', gunlukBolum: 1, enAzAy: 6,
       metin: 'KÜB §4.2 (yaşa göre sabit doz, mg/kg değil): şurup formunda 6–11 aylık çocuklarda 1 mg/gün, 1–5 yaş 1,25 mg/gün, 6–11 yaş 2,5 mg/gün; 12 yaş ve üzeri 5 mg/gün.',
     },
@@ -337,6 +352,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve 30 kg üstü 6 yaş üzeri çocuk: günde bir kez 10 mg.',
     pediatricDose: '30 kg üstü ve 6 yaş üzeri: 10 mg/gün. 30 kg altı için 5 mg\'lık form kullanılır',
     pediatrik: {
+      sabitDoz: true,
       min: 5, max: 10, birim: 'mg/kg/gün', gunlukBolum: 1, enAzAy: 24,
       metin: 'KÜB §4.2 (kilo/yaşa göre sabit doz, mg/kg değil): yetişkinler ve vücut ağırlığı 30 kg\'dan fazla olan 6 yaş üzeri çocuklarda günde 1 kez 10 mg. 10 mg tablet 6 yaşından küçük ve 30 kg altındaki çocuklar için uygun değildir; 2 yaşından küçükte güvenlilik/etkililik belirlenmemiştir.',
     },
@@ -382,6 +398,7 @@ export const SOLUNUM_ALERJI: Record<string, TürkishDrug> = {
     dose: 'Yetişkin ve ergen: şurup günde 2–3 kez 1 ölçek. Tablet 22,7 mg günde 1–3 kez.',
     pediatricDose: '1–3 yaş: günde 2–3 kez yarım ölçek; 12 yaşa kadar: günde 2–3 kez 1 ölçek',
     pediatrik: {
+      sabitDoz: true,
       min: 0.5, max: 1, birim: 'mg/kg/doz', gunlukBolum: 3, enAzAy: 12,
       metin: 'KÜB §4.2 (ölçek sayısıyla ifade edilen sabit doz, mg/kg değil): 1–3 yaş arası çocuklarda günde 2–3 defa yarım ölçek; 12 yaşına kadar olan çocuklarda günde 2–3 defa 1 ölçek. 1 yaşın altında kontrendikedir.',
     },
