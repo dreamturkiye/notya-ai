@@ -10,6 +10,7 @@
  * hastayı "hasta" olarak anar; kimlik doktorun ekranında zaten görünür. Şifreli alanlar
  * yalnız klinik değer taşıyanlar için çözülür (doğum tarihi, cinsiyet, doktor notu).
  */
+import { vizitGunu, vizitGununeGoreSirala } from '@/lib/doktor/vizitTarihi'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
@@ -85,6 +86,10 @@ export async function hastaDosyaPaketiniDerle(
   }
   const notHaritasi = new Map<string, Record<string, unknown>>()
   for (const n of notlar) notHaritasi.set(String(n.session_id), n)
+  // NOTYA-VIZIT-TARIHI-01: a visit day is the note day (visits entered after the fact), the row creation time only without a note.
+  const notGunuHarita = new Map<string, string>()
+  for (const [id, n] of notHaritasi) notGunuHarita.set(id, String(n.created_at || ''))
+  seanslar.splice(0, seanslar.length, ...vizitGununeGoreSirala(seanslar, notGunuHarita))
 
   const b: string[] = []
   const dogum = coz(hasta.dob_encrypted)
@@ -201,10 +206,10 @@ export async function hastaDosyaPaketiniDerle(
     const olcum = vizitOlcumleri(n)
     if (!sonlardan) {
       const kisa = n?.content_subjektif ? String(n.content_subjektif).slice(0, 160) : '(not yok)'
-      b.push(`\n### Vizit ${sira} — ${trTarih(s.created_at)}\n- Özet: ${kisa}${olcum ? `\n- Ölçümler (yaşamsal bulgu alanı): ${olcum}` : ''}`)
+      b.push(`\n### Vizit ${sira} — ${trTarih(vizitGunu(s.created_at, notGunuHarita.get(String(s.id))))}\n- Özet: ${kisa}${olcum ? `\n- Ölçümler (yaşamsal bulgu alanı): ${olcum}` : ''}`)
       return
     }
-    b.push(`\n### Vizit ${sira} — ${trTarih(s.created_at)} [TAM SOAP]`)
+    b.push(`\n### Vizit ${sira} — ${trTarih(vizitGunu(s.created_at, notGunuHarita.get(String(s.id))))} [TAM SOAP]`)
     if (!n) { b.push('- Not bulunamadı.'); return }
     if (olcum) b.push(`Ölçümler (yaşamsal bulgu alanı): ${olcum}`)
     if (n.content_subjektif) b.push(`S (Subjektif): ${n.content_subjektif}`)
@@ -344,11 +349,14 @@ function kartKur(g: {
   const notlarSirali = [...g.notlar].sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
   k.vizitSayisi = g.seanslar.length
   if (g.seanslar.length) {
-    k.vizitAralik = `${trTarih(g.seanslar[0].created_at)} – ${trTarih(g.seanslar[g.seanslar.length - 1].created_at)}`
-    const son = g.seanslar[g.seanslar.length - 1]
+    const notGunu = new Map(g.notlar.map((x) => [String(x.session_id), String(x.created_at || '')]))
+    const gunluk = vizitGununeGoreSirala(g.seanslar, notGunu)
+    const gunuOf = (s: { id: string; created_at: string }) => vizitGunu(s.created_at, notGunu.get(String(s.id)))
+    k.vizitAralik = `${trTarih(gunuOf(gunluk[0]))} – ${trTarih(gunuOf(gunluk[gunluk.length - 1]))}`
+    const son = gunluk[gunluk.length - 1]
     const n = notlarSirali.find((x) => String(x.session_id) === String(son.id))
     const sikayet = String(n?.basvuru_yakinmasi || '').trim() || String(n?.content_subjektif || '').slice(0, 120).trim()
-    k.sonVizit = `${trTarih(son.created_at)}${sikayet ? ` — ${sikayet}` : ''}`
+    k.sonVizit = `${trTarih(gunuOf(son))}${sikayet ? ` — ${sikayet}` : ''}`
     if (sikayet) k.sonSikayet = sikayet
     if (n?.content_tani) k.sonTani = String(n.content_tani)
     // NOTYA-SES-KART-01 (Dr. Gökhan): the voice card also carries the examination and the plan / follow-up;
