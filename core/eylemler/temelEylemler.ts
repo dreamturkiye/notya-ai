@@ -640,6 +640,9 @@ export const ILAC_SONLANDIR = eylem({
   branslar: 'hepsi',
   portalaYansir: true,
   mukerrerKontrol: async (ctx, v) => {
+    // NOTYA-AYSE-GERI-08: no drug named yet → the missing-field question covers it; this used to say
+    // '"undefined" hastanın aktif ilaç listesinde bulunamadı' out loud.
+    if (!String(v.ilac_adi ?? '').trim()) return null
     const liste = await aktifIlac(ctx, String(v.ilac_adi || ''))
     if (!liste.length) return `"${v.ilac_adi}" hastanın aktif ilaç listesinde bulunamadı.`
     if (liste.length > 1) return `"${v.ilac_adi}" ile eşleşen birden çok aktif kayıt var — hangisi olduğunu ekrandan seçin.`
@@ -674,6 +677,9 @@ export const ILAC_DOZ_DEGISTIR = eylem({
   branslar: 'hepsi',
   portalaYansir: true,
   mukerrerKontrol: async (ctx, v) => {
+    // NOTYA-AYSE-GERI-08: no drug named yet → the missing-field question covers it; this used to say
+    // '"undefined" hastanın aktif ilaç listesinde bulunamadı' out loud.
+    if (!String(v.ilac_adi ?? '').trim()) return null
     const liste = await aktifIlac(ctx, String(v.ilac_adi || ''))
     if (!liste.length) return `"${v.ilac_adi}" hastanın aktif ilaç listesinde bulunamadı.`
     if (liste.length > 1) return `"${v.ilac_adi}" ile eşleşen birden çok aktif kayıt var — hangisi olduğunu ekrandan seçin.`

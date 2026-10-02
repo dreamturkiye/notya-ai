@@ -21,7 +21,9 @@ process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-ayse-sahne-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
-// The fake model stands in for the direct SDK client; no OpenRouter request may leave a test.
+// The fake model stands in for the direct SDK client; no OpenRouter request may leave a test. The audit runner
+// (eylemDenetimi.kos.ts) puts the key back through gercekModelAc() — nothing else can.
+const ortamdakiAnahtar = process.env.OPENROUTER_API_KEY || ''
 delete process.env.OPENROUTER_API_KEY
 
 export type SahteArac = { name: string; input: Record<string, unknown> }
@@ -116,7 +118,89 @@ class SahteAnthropic {
   }
 }
 mock.module(pathToFileURL(join(__dirname, '../../doktor/hizLimiti.ts')).href, { namedExports: { aiKotaKullan: async () => ({ izin: true }), KOTA_MESAJI: 'kota', KOVA_LIMITLERI: {} } })
-globalThis.fetch = (async (g: unknown) => { throw new Error(`Ayşe sahne testi ağ erişimi yapamaz: ${String(g)}`) }) as typeof fetch
+
+/** One recorded OpenRouter call (audit mode): what was asked for and what the model did. No prompt text is kept. */
+export type AgCagrisi = {
+  model: string; akis: boolean
+  /** tool_choice as sent: 'required', a tool name, or null when nothing was forced. */
+  zorlanan: string | null
+  sunulanArac: number
+  durum: number; ms: number
+  bitis: string | null; metin: number
+  /** Names of the tools the model called, in order. */
+  araclar: string[]
+  girdi: number; cikti: number; maliyet: number
+  hata: string | null
+}
+const gercekFetch = globalThis.fetch
+let ag: ((url: string, init?: RequestInit) => Promise<Response>) | null = null
+export const agCagrilari: AgCagrisi[] = []
+let bekleyenOkumalar: Promise<void>[] = []
+
+/**
+ * NOTYA-AYSE-GERI-08 — audit mode: the model is the REAL primary through OpenRouter (or `vekil`, a stand-in that
+ * speaks the same wire format). Everything else stays the scene: in-memory Supabase, real routes, synthetic
+ * patient. Only openrouter.ai may be reached. Returns false when there is neither a key nor a stand-in.
+ */
+export function gercekModelAc(vekil?: (govde: Record<string, any>) => Response): boolean {
+  if (!vekil && !ortamdakiAnahtar) return false
+  process.env.OPENROUTER_API_KEY = vekil ? 'sk-or-vekil' : ortamdakiAnahtar
+  ag = vekil ? async (_u, o) => vekil(JSON.parse(String(o?.body || '{}'))) : (u, o) => gercekFetch(u, o)
+  return true
+}
+/** Wait until every streamed answer of the turn has been read into `agCagrilari`. */
+export async function agOkumalariBitsin(): Promise<void> {
+  const b = bekleyenOkumalar
+  bekleyenOkumalar = []
+  await Promise.all(b)
+}
+function yanitiIsle(k: AgCagrisi, ham: string, akis: boolean): void {
+  type Secim = { finish_reason?: string | null; message?: { content?: string | null; tool_calls?: { function?: { name?: string } }[] }; delta?: { content?: string | null; tool_calls?: { index?: number; function?: { name?: string } }[] } }
+  type Govde = { choices?: Secim[]; usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number }; error?: { message?: string } }
+  /** A streamed tool name may arrive in pieces — joined per call index, like lib/ai/saglayici.ts does. */
+  const akisAdlari: string[] = []
+  const isle = (j: Govde) => {
+    if (j.error?.message) k.hata = String(j.error.message).slice(0, 120)
+    if (j.usage) { k.girdi = j.usage.prompt_tokens ?? k.girdi; k.cikti = j.usage.completion_tokens ?? k.cikti; k.maliyet = Number(j.usage.cost) || k.maliyet }
+    const c = j.choices?.[0]
+    if (!c) return
+    if (c.finish_reason) k.bitis = c.finish_reason
+    k.metin += (c.message?.content || c.delta?.content || '').length
+    for (const t of c.message?.tool_calls || []) if (t.function?.name) k.araclar.push(t.function.name)
+    for (const t of c.delta?.tool_calls || []) {
+      const i = Number(t.index ?? akisAdlari.length)
+      akisAdlari[i] = (akisAdlari[i] || '') + (t.function?.name || '')
+    }
+  }
+  try {
+    if (!akis) { isle(JSON.parse(ham) as Govde); return }
+    for (const satir of ham.split('\n')) {
+      const m = satir.trim()
+      if (!m.startsWith('data:') || m.includes('[DONE]')) continue
+      try { isle(JSON.parse(m.slice(5)) as Govde) } catch { /* partial line */ }
+    }
+    k.araclar.push(...akisAdlari.filter(Boolean))
+  } catch { k.hata = k.hata || 'yanıt okunamadı' }
+}
+globalThis.fetch = (async (g: unknown, o?: RequestInit) => {
+  const url = typeof g === 'string' ? g : g instanceof URL ? g.href : String((g as { url?: string })?.url || g)
+  if (!ag || !/^https:\/\/openrouter\.ai\//.test(url)) throw new Error(`Ayşe sahne testi ağ erişimi yapamaz: ${url}`)
+  const govde = JSON.parse(String(o?.body || '{}')) as Record<string, any>
+  const secim = govde.tool_choice
+  const k: AgCagrisi = {
+    model: String(govde.model || '?'), akis: govde.stream === true,
+    zorlanan: secim === 'required' ? 'required' : secim && typeof secim === 'object' ? String(secim.function?.name || '?') : null,
+    sunulanArac: Array.isArray(govde.tools) ? govde.tools.length : 0,
+    durum: 0, ms: 0, bitis: null, metin: 0, araclar: [], girdi: 0, cikti: 0, maliyet: 0, hata: null,
+  }
+  agCagrilari.push(k)
+  const t0 = Date.now()
+  let r: Response
+  try { r = await ag(url, o) } catch (e) { k.ms = Date.now() - t0; k.hata = `ağ: ${String((e as Error)?.message || e).slice(0, 80)}`; throw e }
+  k.durum = r.status
+  bekleyenOkumalar.push(r.clone().text().then((ham) => { k.ms = Date.now() - t0; yanitiIsle(k, ham, k.akis) }).catch(() => { k.ms = Date.now() - t0 }))
+  return r
+}) as typeof fetch
 
 export type Kullanici = { id: string; token: string }
 export type Sahne = { doktor: Kullanici; diger: Kullanici; oturum: string }

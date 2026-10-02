@@ -90,6 +90,15 @@ export type Kanal = "yazi" | "ses"
  */
 export type AyseRota = "kapsam" | "takvim" | "gurultu" | "kimlik" | "oku" | "arama" | "dosya-ac" | "hizli-kart" | "kayit" | "model"
 
+/**
+ * NOTYA-AYSE-GERI-08 (audit §9, PR 11): audit switch, like NOTYA_KORUYUCU_KAPALI. With NOTYA_ARAC_ZORLAMA_KAPALI=1 a
+ * command turn sends the whole tool list with no forced tool_choice — the only way to measure how often the primary
+ * model calls a tool unprompted (lib/asistan/tests/eylemDenetimi.kos.ts). Never set in production.
+ */
+export function aracZorlamaKapali(): boolean {
+  return process.env.NOTYA_ARAC_ZORLAMA_KAPALI === "1"
+}
+
 export interface AyseGirdisi {
   supabase: SupabaseClient
   doktorId: string
@@ -733,6 +742,9 @@ ${ilacBaglamMetni(drugs[0])}`
       : komut.randevu === "tasi" ? Boolean(buTurTarih || buTurSaat)
       : komutDevami.hastasiz && adlaCozuldu
   }
+  // NOTYA-AYSE-GERI-08: audit switch — the tool list is offered whole and nothing is forced, so the audit can
+  // measure whether the primary model calls a tool on its own. Never set in production.
+  if (aracZorlamaKapali()) komutZorla = false
   const zorlanan = komutZorla && eylemHastasi ? komut?.arac ?? null : null
   const hastasizArac = !eylemHastasi && Boolean(komut) && !eylemKapali()
   const araclar = eylemHastasi
