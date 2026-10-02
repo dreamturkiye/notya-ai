@@ -34,7 +34,7 @@ import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { fishBirlestir, fishCalarOlustur, fishYeniCumleler, type FishCalar } from '@/lib/asistan/fishCalar'
 import { fishAkisAc, fishAkisKapat, fishAsrDosyaAdi, fishBirTurKaydet, fishDinleBaglamAc, fishVadGunlukSifirla, wavBirlestir, type FishKlip } from '@/lib/asistan/fishMikrofon'
-import { klipGeldi, sesBasladi, sttGeldi, turBitti, turSirasiBaslat, type TurSirasi } from '@/lib/asistan/fishTurSirasi'
+import { klipGeldi, sesBasladi, sttGeldi, turBitti, turSirasiBaslat, yarimKaldi, type TurSirasi } from '@/lib/asistan/fishTurSirasi'
 import { fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
 import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
 import { KelimeKesici, base64Pcm, sesDusKesimi } from '@/lib/asistan/fishWs'
@@ -755,6 +755,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         }
         let hataSoylendi = false
         let atlandi = false
+        // NOTYA-SES-YARIM-01: the server held an unfinished sentence — no answer; the clips wait for the continuation.
+        let bekletildi = false
         // NOTYA-FISH-WS-01: socket opens during ASR; `stt` then `ses_hazir` before the first `soz`.
         let wsYazici: ReturnType<FishCalar["akisAc"]> | null = null
         let wsAktif = false
@@ -814,6 +816,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
               void endConversation()
               kontrol.abort()
             }
+          } else if (j.t === "bekle") {
+            bekletildi = true
+            if (benim()) sira = yarimKaldi(sira)
+            console.info("[fish-vad]", { karar: `bekle:${j.neden || "?"}`, sunucu: true })
           } else if (j.t === "kapat" && j.m) {
             kapatildi = true
             addMsg("user", String(j.m).trim())
@@ -848,7 +854,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           }
         })
         if (sesBekci) { clearTimeout(sesBekci); sesBekci = null }
-        if (kapatildi || atlandi) return
+        if (kapatildi || atlandi || bekletildi) return
         if (!sesHazir) console.info("[fish-ses]", { yol: "rest", ses_hazir: false })
         if (canli() && !hataSoylendi && !wsAktif) fishIsle(fishBirikimRef.current, true)
         ;(wsYazici as ReturnType<FishCalar["akisAc"]> | null)?.bitir()
@@ -862,7 +868,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         if (canli() && benim()) sesliHataSoyle(FISH_TUR_HATA)
       } finally {
         clearTimeout(turZamani)
-        if (benim()) { sira = turBitti(sira); aktifKontrol = null }
+        // A held turn stays in the sequencer (yarim) until the continuation arrives or its window passes.
+        if (benim()) { if (!sira.aktif?.yarim) sira = turBitti(sira); aktifKontrol = null }
       }
     }
 

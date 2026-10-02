@@ -11,6 +11,12 @@
  *    (the doctor was mid-thought), always capped by the first answer audio;
  *  - a clip after the turn already merged is ignored (no ping-pong: the merged answer plays, the doctor
  *    can barge in); a clip outside the window before any audio replaces the turn (newer speech wins).
+ *
+ * NOTYA-SES-YARIM-01 (Kaan, 2026-10-01) — the server found the transcript unfinished ("Ayşe lütfen bana",
+ * "… bana Umutcan") and sent `bekle` instead of an answer. The turn stays here as `yarim`: nothing was said,
+ * nothing is in flight. The next clip within FISH_YARIM_BEKLEME_MS is the continuation — the clips go out as
+ * ONE utterance (a still-unfinished merge is held again, up to FISH_YARIM_AZAMI_KLIP clips). After the window
+ * the fragment is stale: the next clip is a plain new turn and the fragment is never answered.
  */
 
 export const FISH_BIRLESTIR_PENCERE_MS = 1500
@@ -19,14 +25,19 @@ export const FISH_BIRLESTIR_AZAMI_KELIME = 40
 export const FISH_BIRLESTIR_AZAMI_MS = 16_000
 /** A clip that arrives while the brain works must carry this much voiced audio; a cough / "hmm" must not restart the turn. */
 export const FISH_BIRLESTIR_MIN_SESLI_MS = 350
+/** NOTYA-SES-YARIM-01: how long an unfinished sentence waits for its continuation (from the end of its last clip). */
+export const FISH_YARIM_BEKLEME_MS = 8000
+export const FISH_YARIM_AZAMI_KLIP = 4
+/** The merged WAV must stay under the clip size limit (FISH_KLIP_AZAMI_BAYT, ~30 s at 48 kHz). */
+export const FISH_YARIM_AZAMI_SES_MS = 24_000
 
-export type TurKlipBilgisi = { konusmaBas: number; bitis: number; sesliMs: number }
+export type TurKlipBilgisi = { konusmaBas: number; bitis: number; sesliMs: number; toplamMs?: number }
 
-export type AktifTur<K> = { klipler: K[]; stt: string | null; sesBasladi: boolean; birlesti: boolean }
+export type AktifTur<K> = { klipler: K[]; stt: string | null; sesBasladi: boolean; birlesti: boolean; yarim?: boolean }
 export type TurSirasi<K> = { aktif: AktifTur<K> | null }
 
 export type TurKarari<K> =
-  | { k: 'gonder'; klipler: K[]; birlesik: boolean; iptal: 'yok' | 'barge' | 'birlestir' | 'yeni' }
+  | { k: 'gonder'; klipler: K[]; birlesik: boolean; iptal: 'yok' | 'barge' | 'birlestir' | 'yeni' | 'devam' }
   | { k: 'yoksay'; neden: 'birlesti' | 'kisa' }
 
 export function turSirasiBaslat<K>(): TurSirasi<K> {
@@ -62,6 +73,20 @@ export function klipGeldi<K extends TurKlipBilgisi>(
     karar: { k: 'gonder', klipler: [klip], birlesik: false, iptal },
   })
   if (!a) return yeni('yok')
+  if (a.yarim) {
+    // Held, not in flight: the junk gate already passed this clip, so a short surname ("Ak") still continues it.
+    const son = a.klipler[a.klipler.length - 1]
+    const klipler = [...a.klipler, klip]
+    const sesMs = klipler.reduce((t, k) => t + (k.toplamMs ?? k.bitis - k.konusmaBas), 0)
+    const surede = klip.konusmaBas - son.bitis <= FISH_YARIM_BEKLEME_MS && sesMs <= FISH_YARIM_AZAMI_SES_MS
+    if (birlesebilir && surede && klipler.length <= FISH_YARIM_AZAMI_KLIP) {
+      return {
+        durum: { aktif: { klipler, stt: null, sesBasladi: false, birlesti: true } },
+        karar: { k: 'gonder', klipler, birlesik: true, iptal: 'devam' },
+      }
+    }
+    return yeni('yok')
+  }
   if (a.sesBasladi) return yeni('barge')
   if (klip.sesliMs < FISH_BIRLESTIR_MIN_SESLI_MS) return { durum: d, karar: { k: 'yoksay', neden: 'kisa' } }
   if (a.birlesti) return { durum: d, karar: { k: 'yoksay', neden: 'birlesti' } }
@@ -87,6 +112,11 @@ export function sttGeldi<K>(d: TurSirasi<K>, metin: string): TurSirasi<K> {
 /** First answer audio is playing: from here on new speech is barge-in, never a merge. */
 export function sesBasladi<K>(d: TurSirasi<K>): TurSirasi<K> {
   return d.aktif ? { aktif: { ...d.aktif, sesBasladi: true } } : d
+}
+
+/** NOTYA-SES-YARIM-01: the server held this turn (`bekle`) — no answer, the clips wait for the continuation. */
+export function yarimKaldi<K>(d: TurSirasi<K>): TurSirasi<K> {
+  return d.aktif ? { aktif: { ...d.aktif, sesBasladi: false, yarim: true } } : d
 }
 
 export function turBitti<K>(_d: TurSirasi<K>): TurSirasi<K> {

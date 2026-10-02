@@ -74,7 +74,7 @@ import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
-import { sesOzetKurali, sesTamDosyaGerekirMi } from "@/lib/asistan/sesDosya"
+import { SES_TAM_DOSYA_ISARETI, sesOzetKurali, sesTamDosyaGerekirMi, sesTamDosyaIstendiMi } from "@/lib/asistan/sesDosya"
 import { takvimSorusuCoz, sesGurultusuMu, takvimTakipCoz, takvimRecantMi, sonTakvimCevabiMi, takvimSapmasiMi } from "@/lib/randevu/takvimSorusu"
 import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar, asrOnar, type Niyet } from "@/lib/asistan/konusmaBaglami"
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
@@ -485,6 +485,8 @@ ${ilacBaglamMetni(drugs[0])}`
   let baskaKisiAnildi: string | null = null
   /** The patient was resolved from a name in THIS sentence (not the open chart). */
   let adlaCozuldu = false
+  /** NOTYA-AYSE-GERI-06: the full chart body of a voice turn that was sent the short one (empty otherwise). */
+  let sesTamGovde = ""
   /** NOTYA-AYSE-GERI-05: a record shown from stored values (vaccine table, anthropometrics, exam summaries). */
   let kayitCevap: KayitCevabi | null = null
   let kayitNiyeti: Niyet = "hasta-dosya"
@@ -542,7 +544,10 @@ ${ilacBaglamMetni(drugs[0])}`
       const acikAd = aktifOnceden && baglam.patientName ? duzle(String(baglam.patientName)).split(" ") : []
       if (anilan && !duzle(anilan).split(" ").some((p) => p.length >= 3 && acikAd.includes(p))) baskaKisiAnildi = anilan
     }
-    const aktifeDon = !baskaKisiAnildi && aktifHastaKullanilsinMi({
+    // NOTYA-SES-YARIM-01: the name the doctor said matches too many patients to list — Ayşe asks for the surname;
+    // the open patient must not answer a question that named someone else.
+    const adBelirsiz = cozum.tur === "yok" && Boolean(cozum.cokAday)
+    const aktifeDon = !baskaKisiAnildi && !adBelirsiz && aktifHastaKullanilsinMi({
       aktifHastaVar: Boolean(aktifOnceden),
       cozumTur: cozum.tur,
       aramaSonucu: Boolean((cozum as { sayiMetin?: string }).sayiMetin),
@@ -621,9 +626,12 @@ ${ilacBaglamMetni(drugs[0])}`
             : ""
           dosyaGuvenlikMetni = String(paket.metin || "")
           const sesOzeti = ses && (Boolean(soruTuru) || !sesTamDosyaGerekirMi(String(message || "")))
+          const tamGovde = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Bu bloktan sonra KESİN DOSYA CEVABI varsa o cümleyi AYNEN söyle. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
           dosyaGovde = sesOzeti
             ? `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${hastaOzetiKisa(paket)}\n=== DOSYA SONU ===\n${sesOzetKurali(aktifAd)}`
-            : `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Bu bloktan sonra KESİN DOSYA CEVABI varsa o cümleyi AYNEN söyle. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+            : tamGovde
+          // NOTYA-AYSE-GERI-06: kept for the server-side retry when the short chart turns out not to hold the answer.
+          if (sesOzeti) sesTamGovde = tamGovde
           dosyaTur = kesinBlok
           if (sorgu && soruTuru) {
             dosyaTur += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
@@ -645,7 +653,7 @@ ${ilacBaglamMetni(drugs[0])}`
 
   // A command skips the model-free answers — except the "which of these patients?" question: an ambiguous name must
   // be settled before any card is prepared (docs §2: ambiguous → ask, no card), and the open chart is no stand-in.
-  const hangiHasta = Boolean(aramaCevabi) && cozum?.tur === "coklu"
+  const hangiHasta = Boolean(aramaCevabi) && (cozum?.tur === "coklu" || (cozum?.tur === "yok" && Boolean(cozum.cokAday)))
   if ((aramaCevabi || kesinDosyaCevap) && (!komut || hangiHasta)) {
     const speech = aramaCevabi || kesinDosyaCevap || ""
     turNiyeti = aramaCevabi && cozum && cozum.tur !== "tek" ? "hasta-sayim" : niyetBul(message) ?? "hasta-dosya"
@@ -750,12 +758,15 @@ ${ilacBaglamMetni(drugs[0])}`
   const liste = kdMi ? kdDogrulanmisKaynaklar() : []
   // Ses: model yazarken her cümle ekrandakiyle aynı kilitlerden geçer — doğrulanmamış doz / kılavuz numarası söylenmez.
   const sesTemizle = (c: string) => {
+    // NOTYA-AYSE-GERI-06: the "ask again with the full chart" marker is never spoken.
+    if (sesTamDosyaIstendiMi(c)) return ""
     let t = uydurmaDozTemizle(doktorMetniTemizle(c), dozKaynak).metin
     if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
     return t
   }
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
-  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null
+  const sesAkisiKur = () => (ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null)
+  let sesAkisi = sesAkisiKur()
 
   const cagriTaban = {
     gorev: yonlendirme.gorev,
@@ -781,12 +792,27 @@ ${ilacBaglamMetni(drugs[0])}`
   })
   const cagri = kademe.caba ? { ...cagriTaban, caba: kademe.caba } : cagriTaban
   let akanHam = ""
-  const response = sesAkisi
-    ? await aiAkis(cagri, (p) => { akanHam += p; sesAkisi.ekle(speechOneki(akanHam)) })
-    : await aiCagir(cagri)
+  const modeliCagir = async (c: typeof cagri) => {
+    const akis = sesAkisi
+    return akis ? aiAkis(c, (p) => { akanHam += p; akis.ekle(speechOneki(akanHam)) }) : aiCagir(c)
+  }
+  let response = await modeliCagir(cagri)
 
   // NOTYA-AYSE-100 M1: the text block is not always first (tool_use first, thinking first) — join every text block.
-  const rawResponse = yanitMetni(response)
+  let rawResponse = yanitMetni(response)
+
+  // NOTYA-AYSE-GERI-06 (audit §4.6, PR 7): the voice turn was sent the SHORT chart and the answer is not in it. The
+  // model no longer tells the doctor so ("Bu ayrıntı sesli özetimde yok Hocam…") — it writes a marker, nothing has
+  // been spoken, and the same turn is asked once more with the full chart. One retry; a second marker is answered
+  // plainly below.
+  if (sesTamGovde && sesTamDosyaIstendiMi(rawResponse) && !toolUseBloklari(response as unknown as { content?: unknown }).length) {
+    console.info("[asistan/chat] ses tam dosya yeniden", { kanal: g.kanal })
+    akanHam = ""
+    sesAkisi = sesAkisiKur()
+    response = await modeliCagir({ ...cagri, system: asistanOnbellekBloklari({ global: sistem.global, hekim: sistem.hekim, kararli: sistem.degisken + bransKilidi + sesTamGovde, kuyruk }) })
+    rawResponse = yanitMetni(response)
+    if (sesTamDosyaIstendiMi(rawResponse)) rawResponse = JSON.stringify({ speech: `${odakHastaAdi || "Hastanın"} dosyasında bu bilgi yok Hocam.` })
+  }
 
   // KD-DERM-SAFETY-FINDINGS F3: never raw JSON to the doctor — a max_tokens cut is salvaged (speech up to the cut +
   // "yanıt kesildi" note) and a half-written action is dropped.
@@ -794,6 +820,8 @@ ${ilacBaglamMetni(drugs[0])}`
   if (aiData.kesildi) console.warn("[asistan/chat] yanıt kesildi", { stop_reason: response.stop_reason, uzunluk: rawResponse.length })
   // KD-DERM-SAFETY-FINDINGS F4: no internal field names / invented consent form numbers in the bubble
   aiData.speech = doktorMetniTemizle(aiData.speech)
+  // NOTYA-AYSE-GERI-06: the full-chart marker is an instruction to the server, never text for the doctor.
+  if (String(aiData.speech || "").includes(SES_TAM_DOSYA_ISARETI)) aiData.speech = String(aiData.speech).split(SES_TAM_DOSYA_ISARETI).join(" ").replace(/\s+/g, " ").trim()
   if (aiData.proactiveWarning) aiData.proactiveWarning = doktorMetniTemizle(aiData.proactiveWarning)
 
   const dozTemiz = uydurmaDozTemizle(String(aiData.speech || ""), dozKaynak)
@@ -828,6 +856,14 @@ ${ilacBaglamMetni(drugs[0])}`
   // Ses: modelin cevabı söylendi (ya da akış yoksa şimdi kurulur); aşağıdaki ekler (yönlendirme, kart okuması) sona eklenir.
   const sozler: string[] = []
   if (ses) sozler.push(sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle))
+  // The stream said nothing (the full-chart marker was all the model wrote, twice) but there is an answer on screen:
+  // it is spoken now — a voice turn never ends in silence while the screen shows a sentence.
+  if (ses && sesAkisi && !sozler[0] && String(aiData.speech || "").trim() && !toolUseBloklari(response as unknown as { content?: unknown }).length) {
+    sozler.length = 0
+    const soz = konusmaYap(aiData.speech, sesTemizle)
+    sozler.push(soz)
+    soyle(soz)
+  }
   const sozEkle = (s: string) => { if (!ses || !s) return; sozler.push(s); soyle(s) }
 
   // NOTYA-KONUSMA-BAGLAMI-06 (Kaan live, 2026-09-30): a calendar question is answered by the calendar reader, never by

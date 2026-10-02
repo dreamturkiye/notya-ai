@@ -9,9 +9,10 @@
  * S2 (NOTYA-AYSE-GERI-02): spoken Evet / Hayır on a pending card, withdrawal of the superseded draft and
  * continuation of a cut answer — all through this route.
  */
-import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, oturumBaglami, fishTur, sonRota, sonAsistanMesaji, encrypt, type Sahne } from './tests/ayseSahne'
+import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, oturumBaglami, fishTur, yazi, sonRota, sonAsistanMesaji, encrypt, type Sahne } from './tests/ayseSahne'
 import { describe, it, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { gercekciHastaEkle, GERCEKCI_HASTA_ADI } from './tests/gercekciHasta'
 
 let s: Sahne
 let hasta: string
@@ -286,4 +287,95 @@ describe('NOTYA-AYSE-GERI-02 — kesilen sesli cevabın devamı (NOTYA-SES-DEVAM
   })
 })
 
-void encrypt
+describe('NOTYA-AYSE-GERI-06 — yarım söz cevaplanmaz (NOTYA-SES-YARIM-01)', () => {
+  it('"Ayşe lütfen bana." askıda bir istektir: stt → bekle → bit; model yok, oturuma hiçbir şey yazılmaz', async () => {
+    for (const soz of ['Ayşe lütfen bana.', 'Lütfen', 'Ayşe Hocam bana bir']) {
+      const t = await fishTur(s, soz, { oturum: oturumAc(s) })
+      assert.deepEqual(t.sira, ['stt', 'bekle', 'bit'], soz)
+      assert.equal(t.olaylar[1].neden, 'askida', soz)
+      assert.equal(t.soz, '')
+    }
+    assert.equal(ortam.modelIstekleri.length, 0)
+    assert.equal(sonRota(), null, 'beyin çağrılmadı')
+    assert.ok(ortam.db.tablo('asistan_sessions').every((o) => (o.messages as unknown[]).length === 0))
+  })
+
+  it('"… bana Umutcan" [duraklama]: ad doktorun bir hastasının ad parçasıysa beklenir; soyadı gelince tek cümle cevaplanır', async () => {
+    const yarim = await fishTur(s, 'Ayşe lütfen bana Umutcan')
+    assert.deepEqual(yarim.sira, ['stt', 'bekle', 'bit'])
+    assert.equal(yarim.olaylar[1].neden, 'ad')
+    assert.equal(ortam.modelIstekleri.length, 0)
+    // The browser merges the next clip; the server then hears ONE utterance.
+    const tam = await fishTur(s, 'Ayşe lütfen bana Umutcan Türkoğlu’nun alerjisi var mı söyle')
+    assert.ok(!tam.sira.includes('bekle'))
+    assert.equal(sonRota(), 'hizli-kart')
+    assert.match(tam.soz, /Umutcan Türkoğlu/)
+  })
+
+  it('ad değilse beklenmez: istekten sonraki tek kelime bu doktorun hastası değil (başka doktorun hastası da değil)', async () => {
+    hastaEkle(s.diger.id, 'Kerem Sönmez', { dogum: '2019-01-01' })
+    for (const soz of ['Lütfen devam', 'Bana kerem', 'Bana yardım']) {
+      ortam.yanit = { metin: JSON.stringify({ speech: 'Buyurun Hocam.' }) }
+      const t = await fishTur(s, soz, { oturum: oturumAc(s) })
+      assert.ok(!t.sira.includes('bekle'), soz)
+    }
+  })
+
+  it('tam cümle hiç bekletilmez', async () => {
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Buyurun Hocam.' }) }
+    for (const soz of ['Umutcan Türkoğlu dosyasını aç', 'Bugün randevum var mı?', 'Bana Umutcan’ı aç', 'Evet']) {
+      const t = await fishTur(s, soz, { oturum: oturumAc(s) })
+      assert.ok(!t.sira.includes('bekle'), soz)
+    }
+  })
+})
+
+describe('NOTYA-AYSE-GERI-06 — sesli turda dosya ayrıntısı (PR 7)', () => {
+  const kur = (): { id: string; oturum: string } => {
+    const id = gercekciHastaEkle(ortam.db, encrypt, s.doktor.id)
+    return { id, oturum: oturumAc(s, { id, ad: GERCEKCI_HASTA_ADI }) }
+  }
+  const sistem = (i: number) => JSON.stringify(ortam.modelIstekleri[i].govde.system)
+  /** The rule line that follows the FULL chart (the short one says "yukarıdaki özete" and "SESLİ ÖZETTİR"). */
+  const TAM_DOSYA = 'YALNIZCA yukarıdaki dosyaya ve HIZLI KART'
+
+  it('liste / geçmiş isteği sesli turda TAM dosyayla gider: eski vizitler model isteğinde', async () => {
+    const { oturum } = kur()
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Reçeteler ekranda Hocam.' }) }
+    await fishTur(s, 'Reçete geçmişini göster', { oturum })
+    assert.equal(ortam.modelIstekleri.length, 1)
+    assert.ok(sistem(0).includes(TAM_DOSYA), 'tam dosya ve tam dosyanın kuralı')
+    assert.ok(!sistem(0).includes('SESLİ ÖZETTİR'))
+  })
+
+  it('kısa özette cevap yoksa model işaret yazar, sunucu aynı turu tam dosyayla yeniden sorar; işaret söylenmez, gösterilmez', async () => {
+    const { oturum } = kur()
+    ortam.yanit = (istek) => (JSON.stringify(istek.system).includes('SESLİ ÖZETTİR')
+      ? { metin: JSON.stringify({ speech: '[TAM-DOSYA]' }) }
+      : { metin: JSON.stringify({ speech: 'Deniz Aksoy — astım tanısı üçüncü vizitte kondu.' }) })
+    const t = await fishTur(s, 'Astım tanısını kim koymuş', { oturum })
+    assert.equal(ortam.modelIstekleri.length, 2, 'kısa özet + tam dosya')
+    assert.ok(sistem(0).includes('SESLİ ÖZETTİR') && !sistem(0).includes(TAM_DOSYA))
+    assert.ok(sistem(1).includes(TAM_DOSYA) && !sistem(1).includes('SESLİ ÖZETTİR'))
+    assert.ok(sistem(1).length > sistem(0).length, 'ikinci istek daha geniş dosyayı taşır')
+    assert.equal(t.soz, 'Deniz Aksoy — astım tanısı üçüncü vizitte kondu.')
+    assert.ok(!t.olaylar.some((e) => JSON.stringify(e).includes('TAM-DOSYA')), 'işaret hiçbir olayda yok')
+    assert.equal(sonAsistanMesaji(oturum), 'Deniz Aksoy — astım tanısı üçüncü vizitte kondu.')
+  })
+
+  it('tam dosyada da yoksa tek cümleyle söylenir (ikinci kez sorulmaz)', async () => {
+    const { oturum } = kur()
+    ortam.yanit = { metin: JSON.stringify({ speech: '[TAM-DOSYA]' }) }
+    const t = await fishTur(s, 'Babasının mesleği ne', { oturum })
+    assert.equal(ortam.modelIstekleri.length, 2)
+    assert.equal(t.soz, 'Deniz Aksoy dosyasında bu bilgi yok Hocam.')
+  })
+
+  it('yazılı kanal her zaman tam dosyadır: yeniden sorma yok', async () => {
+    const { oturum } = kur()
+    ortam.yanit = { metin: JSON.stringify({ speech: 'Astım tanısı üçüncü vizitte.' }) }
+    await yazi(s, 'Astım tanısını kim koymuş', { oturum })
+    assert.equal(ortam.modelIstekleri.length, 1)
+    assert.ok(sistem(0).includes(TAM_DOSYA))
+  })
+})

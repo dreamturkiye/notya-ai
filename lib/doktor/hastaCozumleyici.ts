@@ -41,7 +41,8 @@ export type HastaCozumu =
   /** `cevap`: NOTYA-AYSE-100 S2 — a who-question ("son kaydettiğim hasta kim") answered in the resolver; spoken as is. */
   | { tur: 'tek'; patientId: string; ad: string; sayiMetin?: string; cevap?: string }
   | { tur: 'coklu'; adaylar: CozumAday[]; sayiMetin?: string }
-  | { tur: 'yok'; sayiMetin?: string }
+  /** `cokAday`: NOTYA-SES-YARIM-01 — the name in the message matches more than 5 patients; nobody is picked, Ayşe asks for the surname. */
+  | { tur: 'yok'; sayiMetin?: string; cokAday?: number }
 
 /** Ses + sohbet aynı cümleyi söyler — pratik sıralama / çoklu aday LLM'e gitmez. */
 export function cozumKonus(cozum: HastaCozumu): string | null {
@@ -52,6 +53,7 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
     const bas = (cozum.sayiMetin || `${cozum.adaylar.length} hasta`).replace(/\.$/, '')
     return `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`
   }
+  if (cozum.tur === 'yok' && cozum.cokAday) return `Bu adla eşleşen ${cozum.cokAday} hasta var Hocam; soyadını da söyler misiniz?`
   if (cozum.tur === 'yok' && cozum.sayiMetin) return cozum.sayiMetin
   if (cozum.tur === 'tek' && cozum.cevap) return cozum.cevap
   return null
@@ -219,6 +221,12 @@ export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
   return kelime.length > 0 && kelime.every(guvenliKelimeMi)
 }
+/**
+ * NOTYA-SES-YARIM-01: what is left of a message word after a name part is a Turkish case / possessive ending
+ * ("umutcanin" → "in", "yesile" → "e") — the word IS that name. "atesli" (→ "li") is a clinical word, not Ateş.
+ */
+const AD_EKI = /^(n?[iu]n|y?[iu]|y?[ae]|[dt][ae]n?|y?l[ae])$/
+const SON_ZIYARET_YOK = 'henüz muayene kaydı yok'
 /** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
 export function hastaAdiCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
@@ -276,7 +284,7 @@ async function sonZiyaretOzeti(supabase: SupabaseClient, doctorId: string, patie
     .order('created_at', { ascending: false }).limit(1)
   const n = data?.[0] as { basvuru_yakinmasi?: string | null; content_degerlendirme?: string | null } | undefined
   const t = (n?.basvuru_yakinmasi || n?.content_degerlendirme || '').trim()
-  if (!t) return 'henüz muayene kaydı yok'
+  if (!t) return SON_ZIYARET_YOK
   const ilkCumle = t.split(/(?<=[.!?])\s/)[0] || t
   return ilkCumle.length > 90 ? `${ilkCumle.slice(0, 89)}…` : ilkCumle
 }
@@ -386,6 +394,10 @@ export async function hastaninSozunuCoz(
   const hastalar = await adAdaylariniYukle(supabase, doctorId, tokenlar)
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
+  /** Candidates whose name is said as a word of its own ("Umutcan", "Umutcan'ın", "Umutcanın") — not a clinical word that merely starts like a name ("ateşli"). */
+  const kesin = new Set<string>()
+  const tokenDizisi = Array.from(tokenlar)
+  const adOlarakGecer = (p: string) => tokenlar.has(p) || tokenDizisi.some((t) => t.startsWith(p) && AD_EKI.test(t.slice(p.length)))
   for (const h of hastalar) {
     const ad = hastaAdiCoz(h.name_encrypted)
     if (!ad) continue
@@ -399,11 +411,14 @@ export async function hastaninSozunuCoz(
     const parcaUzatilmisVarMi = (p: string) => tokenlar.has(p) || Array.from(tokenlar).some((t) => t.startsWith(p))
     const parcalarUzun = adDuz.split(' ').filter((p) => p.length >= 3)
     const tumParcalarVarGevsek = parcalarUzun.length > 0 && parcalarUzun.every(parcaUzatilmisVarMi)
-    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar) || tumParcalarVarGevsek) { tam.push({ id: h.id, ad }); continue }
+    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar) || tumParcalarVarGevsek) { tam.push({ id: h.id, ad }); kesin.add(h.id); continue }
     // NOTYA-HASTA-ODAK-01: a persona first name alone ("Ayşe") never partially matches a patient —
     // unless the sentence uses it as a patient reference ("Ayşe'nin", "Ayşe için"), NOTYA-AYSE-GERI-01.
     const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && (!hitapAdiMi(p) || anilanPersona.has(p)))
-    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || parcaUzatilmisVarMi(p))) kismi.push({ id: h.id, ad })
+    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || parcaUzatilmisVarMi(p))) {
+      kismi.push({ id: h.id, ad })
+      if (parcalar.some(adOlarakGecer)) kesin.add(h.id)
+    }
   }
 
   const cozAdaylar = async (adaylar: { id: string; ad: string }[]): Promise<HastaCozumu> => {
@@ -426,6 +441,8 @@ export async function hastaninSozunuCoz(
     // 3) Son ziyaret özetindeki bir kelimeyle daraltma (ör. "öksürük olan")
     const mDuz = duzle(mesaj)
     const kelimeEslesen = zengin.filter((z) => {
+      // The "no visit yet" placeholder is not the patient's complaint: "muayene" in the question must not pick the one without a visit.
+      if (z.ozet === SON_ZIYARET_YOK) return false
       const ozetKelime = duzle(z.ozet).split(' ').filter((k) => k.length >= 4)
       return ozetKelime.some((k) => mDuz.includes(k))
     })
@@ -440,9 +457,15 @@ export async function hastaninSozunuCoz(
   // (at least two words) appears in the sentence is final. Single-word names never qualify, so addressing
   // the assistant ("Merhaba Ayşe") cannot pick a patient.
   if (tam.length === 1 && duzle(tam[0].ad).includes(' ')) return { tur: 'tek', patientId: tam[0].id, ad: tam[0].ad }
-  if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam), secenek.tz, secenek.kohortsuz)
-  if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi), secenek.tz, secenek.kohortsuz)
-  return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' }, secenek.tz, secenek.kohortsuz)
+  const adaylar = tam.length > 0 ? tam : kismi
+  if (adaylar.length === 0) return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' }, secenek.tz, secenek.kohortsuz)
+  // NOTYA-SES-YARIM-01 (Kaan, 2026-10-01; ported from fix/ayse-voice-endpointing-vaccine-table): a name said as a
+  // word of its own that matches several patients is a question to the doctor — never a silent pick by the clinical
+  // words of the same sentence ("Umutcan'ın aşı karnesi" with two Umutcans), and never the open patient.
+  const adKesin = adaylar.every((a) => kesin.has(a.id))
+  const sonuc = await dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(adaylar), secenek.tz, secenek.kohortsuz, adKesin)
+  if (sonuc.tur === 'yok' && adKesin && adaylar.length > 5 && !kohortSorusuMu(mesaj)) return { ...sonuc, cokAday: adaylar.length }
+  return sonuc
 }
 
 async function dosyaIleDaralt(
@@ -451,7 +474,9 @@ async function dosyaIleDaralt(
   mesaj: string,
   ad: HastaCozumu,
   tz?: string,
-  kohortsuz = false
+  kohortsuz = false,
+  /** The name was said as a word of its own (hastaninSozunuCoz `kesin`). */
+  adKesin = false
 ): Promise<HastaCozumu> {
   const sorgu = sorguyuAyikla(mesaj, undefined, tz)
   const klinik = sorgu.klinik
@@ -462,6 +487,8 @@ async function dosyaIleDaralt(
   // NOTYA-AYSE-HASTA-01: adı geçen tek hastanın sıralama sorusu o hastanın dosyasından cevaplanır.
   if (tekHastaSorusuMu(ad.tur, mesaj)) return ad
   if (ad.tur === 'coklu' && !klinik) return ad
+  // NOTYA-SES-YARIM-01: several patients carry the name the doctor said — ask which one (mirror of the 'tek' rule above).
+  if (ad.tur === 'coklu' && adKesin && !kohortSorusuMu(mesaj)) return ad
   if (ad.tur === 'yok' && !klinik) return ad
   // NOTYA-AYSE-GERI-01: the all-patients search answers only an explicit count / list question, or looks for one
   // described patient. Any other sentence — a command, a knowledge question, a request about an unnamed patient —

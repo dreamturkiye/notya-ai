@@ -6,7 +6,8 @@
  * live socket is opened for the turn. Word-sized text events go to the socket as Luna writes;
  * PCM comes back as `ses` events (base64) on this same SSE, so the browser never holds a Fish
  * credential. Event order: `stt` (or `atlandi` / `kapat`) → `ses_hazir` (before the first `soz`) →
- * `soz`* → `soz_bit` → `ses`* → `ses_bit` → `bit`. The socket opens while Transcribe-1 runs so
+ * `soz`* → `soz_bit` → `ses`* → `ses_bit` → `bit`. An unfinished request ends as `stt` → `bekle` → `bit`
+ * (NOTYA-SES-YARIM-01: no brain call, no answer). The socket opens while Transcribe-1 runs so
  * handshake overlaps ASR. Socket failure before the first word: no `ses_hazir`, browser speaks
  * via /fish-ses as before. Failure mid-turn: `ses_dus` with the transcript offset already handed
  * to Fish; the browser speaks the rest via REST.
@@ -27,8 +28,12 @@
  *      page, when it reads the remainder itself, mark it as read so it is never read twice.
  */
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { kendiSelamiMi } from '@/lib/asistan/acilis'
+import { PERSONAS, type PersonaId } from '@/lib/asistan/personaEngine'
+import { yarimSozCoz } from '@/lib/asistan/yarimSoz'
+import { adParcasiMi } from '@/lib/doktor/hastaAramaIndeksi'
+import { personaIlkAdi } from '@/lib/doktor/hastaCozumleyici'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { fishAsrBlob } from '@/lib/asistan/fishAsr'
 import { FISH_KLIP_AZAMI_BAYT, fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
@@ -105,6 +110,20 @@ async function turGirdi(req: NextRequest): Promise<{
     isit: govde.isit === true || govde.isit === '1',
     devamOkundu: govde.devamOkundu === true,
   }
+}
+
+/**
+ * NOTYA-SES-YARIM-01: should this transcript wait for its continuation? A bare word after a request counts only
+ * when it is a name part of one of THIS doctor's patients (hashed index, doctor-scoped, nothing decrypted); if
+ * the index cannot be read, the ASR's capital letter decides.
+ */
+async function yarimSozKarari(supabase: SupabaseClient, doktorId: string, mesaj: string, personaId: string): Promise<'askida' | 'ad' | null> {
+  const hitap = personaIlkAdi(PERSONAS[personaId as PersonaId]?.name)
+  const y = yarimSozCoz(mesaj, hitap ? ['Ayşe', hitap] : ['Ayşe'])
+  if (y.tur === 'tam') return null
+  if (y.tur === 'yarim') return 'askida'
+  const adMi = await adParcasiMi(supabase, doktorId, y.ad).catch(() => null)
+  return (adMi ?? y.buyukHarf) ? 'ad' : null
 }
 
 export async function POST(req: NextRequest) {
@@ -268,6 +287,16 @@ export async function POST(req: NextRequest) {
         }
         // The hidden continuation marker is not a doctor sentence: it is never shown as a transcript.
         if (mesaj !== DEVAM_ISARETI) gonder({ t: 'stt', m: mesaj })
+        // NOTYA-SES-YARIM-01 (NOTYA-AYSE-GERI-06): an unfinished request ("Ayşe lütfen bana", "… bana Umutcan") gets
+        // no reply — no brain call, nothing written to the session. The browser keeps the clip and merges the
+        // doctor's next one into it.
+        const yarim = mesaj === DEVAM_ISARETI ? null : await yarimSozKarari(supabase, user.id, mesaj, girdi.personaId || 'aysekaya')
+        if (yarim) {
+          console.info('[fish-tur]', { bekle: yarim })
+          gonder({ t: 'bekle', neden: yarim })
+          gonder({ t: 'bit' })
+          return
+        }
         const turuKapat = async () => {
           gonder({ t: 'soz_bit' })
           await bitirWs()
