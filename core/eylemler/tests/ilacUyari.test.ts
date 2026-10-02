@@ -50,7 +50,7 @@ const bebek: HastaOzeti = { id: HASTA_ID, ad: 'QA Bebek UYARI', dogumTarihi: '20
 const yetiskin: HastaOzeti = { id: HASTA_ID, ad: 'QA Yetişkin UYARI', dogumTarihi: '1980-05-05', yasAy: 556, cinsiyet: 'male' }
 
 function ctx(hasta: HastaOzeti = yetiskin): EylemBaglami {
-  return { supabase: sb, doktorId: DOKTOR, hasta, brans: 'pediatri', oneriId: '', bugunTRT: bugunTRT() }
+  return { supabase: sb, doktorId: DOKTOR, hasta, brans: 'pediatri', oneriId: '', bugun: bugunTRT(), saatDilimi: 'Europe/Istanbul' }
 }
 
 function hastaKur(alerjiler: string, dogum: string) {

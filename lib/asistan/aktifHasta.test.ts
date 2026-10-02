@@ -27,6 +27,18 @@ test('çok hastalı sorular arama olarak kalır', () => {
   }
 })
 
+test('NOTYA-AYSE-GERI-01: "toplam / en çok / en sık / vaka" tek başına kohort değildir — açık dosyaya gider', () => {
+  for (const m of ['Toplam kaç aşısı var', 'En çok hangi şikayetle geldi', 'En sık hangi tanıyı aldı', 'Bu vaka için ne önerirsin', 'Toplam kaç kez antibiyotik kullandı']) {
+    assert.equal(kohortSorusuMu(m), false, m)
+    assert.equal(aktif(m), true, m)
+  }
+  // With a sign of the practice (plural patients, a first-person / passive practice verb) they stay a search.
+  for (const m of ['Toplam kaç hasta gördüm', 'En çok yazdığım antibiyotik ne?', 'En sık koyduğum tanı hangisi', 'Bu ay en sık görülen tanı', 'Hastalarımda en çok hangi şikayet var', 'dün gelen ateşli vaka', 'Bu ayki pnömoni vakaları']) {
+    assert.equal(kohortSorusuMu(m), true, m)
+    assert.equal(aktif(m), false, m)
+  }
+})
+
 test('açık hasta yoksa, ad eşleştiyse ya da ad birden çok hastaya uyuyorsa aktif hastaya dönülmez', () => {
   assert.equal(aktif('En son ne zaman geldi?', 'yok', true, false), false)
   assert.equal(aktif('Ayşe Yeşil ne zaman geldi?', 'tek', false), false)

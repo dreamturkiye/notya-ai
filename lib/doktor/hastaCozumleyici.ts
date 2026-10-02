@@ -18,9 +18,9 @@ import { decrypt } from '@/lib/security/encryption'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
-import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
+import { sorguyuAyikla, tekHastaSorusuMu, type SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
-import { mesajAdaylariniBul } from '@/lib/doktor/hastaAramaIndeksi'
+import { indekssizHastalar, mesajAdaylariniBul } from '@/lib/doktor/hastaAramaIndeksi'
 
 /**
  * NOTYA-SAYIM-ANDA-01 (Kaan, 2026-09-30): a small panel is named — "Kayıtlarda 1 hasta: Kaan Arıoğlu." (≤ 5 names,
@@ -41,7 +41,8 @@ export type HastaCozumu =
   /** `cevap`: NOTYA-AYSE-100 S2 — a who-question ("son kaydettiğim hasta kim") answered in the resolver; spoken as is. */
   | { tur: 'tek'; patientId: string; ad: string; sayiMetin?: string; cevap?: string }
   | { tur: 'coklu'; adaylar: CozumAday[]; sayiMetin?: string }
-  | { tur: 'yok'; sayiMetin?: string }
+  /** `cokAday`: NOTYA-SES-YARIM-01 — the name in the message matches more than 5 patients; nobody is picked, Ayşe asks for the surname. */
+  | { tur: 'yok'; sayiMetin?: string; cokAday?: number }
 
 /** Ses + sohbet aynı cümleyi söyler — pratik sıralama / çoklu aday LLM'e gitmez. */
 export function cozumKonus(cozum: HastaCozumu): string | null {
@@ -52,6 +53,7 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
     const bas = (cozum.sayiMetin || `${cozum.adaylar.length} hasta`).replace(/\.$/, '')
     return `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`
   }
+  if (cozum.tur === 'yok' && cozum.cokAday) return `Bu adla eşleşen ${cozum.cokAday} hasta var Hocam; soyadını da söyler misiniz?`
   if (cozum.tur === 'yok' && cozum.sayiMetin) return cozum.sayiMetin
   if (cozum.tur === 'tek' && cozum.cevap) return cozum.cevap
   return null
@@ -74,10 +76,14 @@ const DOLGU = new Set(['e', 'ee', 'eee', 'eeee', 'i', 'ii', 'iii', 'hm', 'hmm', 
  * ardından virgül-nokta gelen ya da "Hocam / Hanım" ile biten ad, mesajın NERESİNDE olursa olsun hitaptır;
  * (3) tek başına bir persona adı kısmi eşleşmede (kismi) hiçbir hastayı seçemez — tam ad ("Ayşe Yeşil") aynen çalışır.
  */
+/** "Prof. Dr. Ayşe Kaya" → "Ayşe". */
+export function personaIlkAdi(ad: string | null | undefined): string {
+  return String(ad || '').replace(/^\s*(prof\.?\s*)?(dr\.?\s*)?/i, '').trim().split(/\s+/)[0] || ''
+}
 function personaIlkAdlari(): string[] {
   const adlar = new Set<string>()
   for (const p of Object.values(PERSONAS)) {
-    const ham = String(p.name || '').replace(/^\s*(prof\.?\s*)?(dr\.?\s*)?/i, '').trim().split(/\s+/)[0] || ''
+    const ham = personaIlkAdi(p.name)
     if (!ham) continue
     adlar.add(ham.toLocaleLowerCase('tr'))
     const duz = duzle(ham)
@@ -101,6 +107,25 @@ export function hitapsiz(mesaj: string): string {
   return String(mesaj || '')
     .replace(HITAP, (_t, bas) => String(bas || '') + ' ')
     .replace(HITAP_HOCAM, ' ')
+}
+/**
+ * NOTYA-AYSE-GERI-01 (audit §4.3): a patient whose first name is also a persona name ("Ayşe Yeşil" on Ayşe's own
+ * panel) could never be found by first name — "Ayşe'nin son aşı tarihi ne" answered "Son 90 gün 0 hasta". The
+ * guard exists for the vocative ("Ayşe, aşı karnesini gösterir misin" opened Ayşe Yeşil's chart while another
+ * patient was being discussed). Turkish marks the difference: nobody ADDRESSES the assistant with a case ending.
+ * A persona name that carries one ("Ayşe'nin", "Ayşeye", "Ayşe'den") or is named as a patient ("Ayşe için",
+ * "Ayşe adlı hasta", "hastam Ayşe") is a patient reference; the bare name stays an address and matches nobody.
+ * Input is the duzle'd message after hitapsiz(); returns the persona names used as a patient reference.
+ */
+export function hastaOlarakAnilanPersonaAdlari(duzMesaj: string): Set<string> {
+  const m = ' ' + duzMesaj + ' '
+  const bulunan = new Set<string>()
+  for (const ad of PERSONA_ADLARI_DUZ) {
+    const ekli = new RegExp(` ${ad}(?: (?:n?[iu]n|[ny][iuae]|[dt][ae]n?|y?l[ae])|(?:n?[iu]n|[ny]?[iuae]|[dt][ae]n?|y?l[ae])) `)
+    const hastaDiye = new RegExp(` ${ad} (?:icin|adli|adinda|adindaki|isimli|ismindeki|hasta\\w*) | (?:hastam|hastamiz|hasta) ${ad} `)
+    if (ekli.test(m) || hastaDiye.test(m)) bulunan.add(ad)
+  }
+  return bulunan
 }
 export function sesliSozTokenlari(duzMesaj: string): Set<string> {
   const t = duzMesaj.split(' ').filter((x) => x.length >= 2 && !DOLGU.has(x))
@@ -168,10 +193,40 @@ function guvenliKelimeMi(k: string): boolean {
 export function listeIstenmisMi(mesaj: string): boolean {
   return /\b(listele|liste|hangileri|hangisi|kimler|kimlerdi|isimleri|adlari|hepsini|say bakalim)\b/.test(duzle(mesaj))
 }
+/**
+ * NOTYA-AYSE-GERI-01 (audit §4.3, PR 2): is the message an EXPLICIT count or list question about patients —
+ * "kaç hasta", "… hastalarım kimler", "… olanları listele", "hangi hastalar", a practice breakdown or a cohort
+ * flag? Only these are answered with the search sentence ("Bugün 3 hasta.", "Kayıtlarda 0 hasta.").
+ * A sentence that merely contains a chart word ("randevu oluştur", "otitte ilk seçenek nedir", "epikriz hazırla")
+ * is not one; it used to get "Son 90 gün 0 hasta. Filtre: …" and never reached the model.
+ */
+export function acikKohortSorusuMu(mesaj: string, q: SorguAyik): boolean {
+  if (q.sayim || q.cogul || q.kirilim || q.minSeans || q.olcum === 'sure') return true
+  if (q.bayrakVe.length || q.seriGecikme || q.mchat || q.persentilEsik || q.yasKirilim || q.ucDeger || q.portalYok || q.hatirlatmaSay || q.ziyaretYok) return true
+  if (q.yas && (q.ziyaret || q.pencere)) return true
+  return kohortSorusuMu(mesaj) || listeIstenmisMi(mesaj)
+}
+/**
+ * A description of ONE unnamed patient the doctor is looking for: "dün gelen ateşli bebek", "kulak iltihabı olan
+ * çocuk". The search may find and open that chart; when it finds nobody the turn goes to the model — a count
+ * sentence is not an answer to it. "Ateşli çocukta parasetamol dozu nedir" has no such participle and is a
+ * knowledge question.
+ */
+export function hastaTarifiMi(mesaj: string): boolean {
+  const n = ' ' + duzle(mesaj) + ' '
+  return / (olan|olmayan|gelen|gelmeyen|kullanan|alan|goren|geciken|gordugum|baktigim|muayene ettigim) /.test(n)
+    && / (hasta|hastam|hastamiz|hastayi|hastami|cocuk|cocugu|bebek|bebegi|vaka|vakasi|kiz|oglan|erkek|kadin|bey|hanim) /.test(n)
+}
 export function adTaramasiGereksizMi(mesaj: string): boolean {
   const kelime = duzle(hitapsiz(mesaj)).split(' ').filter((x) => x.length >= 3 && !DOLGU.has(x))
   return kelime.length > 0 && kelime.every(guvenliKelimeMi)
 }
+/**
+ * NOTYA-SES-YARIM-01: what is left of a message word after a name part is a Turkish case / possessive ending
+ * ("umutcanin" → "in", "yesile" → "e") — the word IS that name. "atesli" (→ "li") is a clinical word, not Ateş.
+ */
+const AD_EKI = /^(n?[iu]n|y?[iu]|y?[ae]|[dt][ae]n?|y?l[ae])$/
+const SON_ZIYARET_YOK = 'henüz muayene kaydı yok'
 /** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
 export function hastaAdiCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
@@ -229,7 +284,7 @@ async function sonZiyaretOzeti(supabase: SupabaseClient, doctorId: string, patie
     .order('created_at', { ascending: false }).limit(1)
   const n = data?.[0] as { basvuru_yakinmasi?: string | null; content_degerlendirme?: string | null } | undefined
   const t = (n?.basvuru_yakinmasi || n?.content_degerlendirme || '').trim()
-  if (!t) return 'henüz muayene kaydı yok'
+  if (!t) return SON_ZIYARET_YOK
   const ilkCumle = t.split(/(?<=[.!?])\s/)[0] || t
   return ilkCumle.length > 90 ? `${ilkCumle.slice(0, 89)}…` : ilkCumle
 }
@@ -246,9 +301,16 @@ async function adaylariZenginlestir(supabase: SupabaseClient, doctorId: string, 
   return zengin.sort((a, b) => a.id.localeCompare(b.id))
 }
 
+/** Name parts that are ordinary words of every sentence about the practice; they select a patient only inside the full name. */
+const GENEL_AD_PARCASI = new Set(['hasta'])
+/** More unindexed patients than this and the id filter is pointless — the doctor's whole list is read instead. */
+const INDEKSSIZ_TAVANI = 100
 /** This doctor's active patients whose indexed name parts may match the message tokens (index miss → full scan). */
 async function adAdaylariniYukle(supabase: SupabaseClient, doctorId: string, tokenlar: Set<string>): Promise<{ id: string; name_encrypted: string | null }[]> {
-  const adaylarIdSeti = await mesajAdaylariniBul(supabase, doctorId, tokenlar)
+  // NOTYA-AYSE-GERI-07: a patient with no index row is a candidate too — the index cannot say "no" for it.
+  const [indeksAdaylari, indekssiz] = await Promise.all([mesajAdaylariniBul(supabase, doctorId, tokenlar), indekssizHastalar(supabase, doctorId)])
+  const tamTarama = indeksAdaylari === null || indekssiz === null || indekssiz.length > INDEKSSIZ_TAVANI
+  const adaylarIdSeti = tamTarama ? null : new Set([...Array.from(indeksAdaylari), ...indekssiz])
   if (adaylarIdSeti !== null && adaylarIdSeti.size === 0) return []
   let sorgu = supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true)
   if (adaylarIdSeti) sorgu = sorgu.in('id', Array.from(adaylarIdSeti))
@@ -286,7 +348,10 @@ export async function hastaninSozunuCoz(
   doctorId: string,
   mesaj: string,
   /** NOTYA-BETA-0925: kimlik sorusu ("annesinin adı ne") yalnız adla çözülür — "anne" kelimesi klinik arama filtresine dönmez. */
-  secenek: { yalnizAd?: boolean; tz?: string } = {}
+  /** `kohortsuz`: a chart is open and the question is about it — no name in the message means no all-patients search. */
+  /** `hitapAdi`: first name of the colleague the doctor is talking to ("Ayşe") — see the bare-name guard below. */
+  /** `adKesin`: the text IS a patient name (a tool call's `hasta_adi`), not a sentence — no address is stripped from it. */
+  secenek: { yalnizAd?: boolean; tz?: string; kohortsuz?: boolean; hitapAdi?: string; adKesin?: boolean } = {}
 ): Promise<HastaCozumu> {
   const m = ' ' + duzle(mesaj) + ' '
   // A bare who-question ("… hasta kim", "hangi hastayı gördüm") is answered here; a question about that patient
@@ -321,9 +386,14 @@ export async function hastaninSozunuCoz(
     if (c) return c
   }
   if (adTaramasiGereksizMi(mesaj)) return { tur: 'yok' }
-  const adMesaji = hitapsiz(mesaj)
+  const adMesaji = secenek.adKesin ? mesaj : hitapsiz(mesaj)
   const mAd = ' ' + duzle(adMesaji) + ' '
   const tokenlar = sesliSozTokenlari(duzle(adMesaji))
+  const anilanPersona = hastaOlarakAnilanPersonaAdlari(duzle(adMesaji))
+  // The bare-name guard protects the colleague being spoken to. When the caller says who that is, the other
+  // personas' first names (Mehmet, Deniz, Elif …) are ordinary patient names; otherwise every persona name is guarded.
+  const hitapDuz = secenek.hitapAdi ? duzle(secenek.hitapAdi) : ''
+  const hitapAdiMi = (p: string) => (secenek.adKesin ? false : hitapDuz ? p === hitapDuz : PERSONA_ADLARI_DUZ.has(p))
   // Eskiden: doktorun TUM aktif hastalari (<=500) cozulup tek tek karsilastirilirdi. Artik mesajin konusma
   // token'lari, hic kimseyi cozmeden, indekslenmis ad-parca ozetleriyle eslestirilir; yalnizca indeksin
   // 'olasi aday' dedigi hastalar cozulur. Indeks kullanilamazsa (hata) eski tam-tarama davranisina guvenli
@@ -331,6 +401,10 @@ export async function hastaninSozunuCoz(
   const hastalar = await adAdaylariniYukle(supabase, doctorId, tokenlar)
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
+  /** Candidates whose name is said as a word of its own ("Umutcan", "Umutcan'ın", "Umutcanın") — not a clinical word that merely starts like a name ("ateşli"). */
+  const kesin = new Set<string>()
+  const tokenDizisi = Array.from(tokenlar)
+  const adOlarakGecer = (p: string) => tokenlar.has(p) || tokenDizisi.some((t) => t.startsWith(p) && AD_EKI.test(t.slice(p.length)))
   for (const h of hastalar) {
     const ad = hastaAdiCoz(h.name_encrypted)
     if (!ad) continue
@@ -344,10 +418,16 @@ export async function hastaninSozunuCoz(
     const parcaUzatilmisVarMi = (p: string) => tokenlar.has(p) || Array.from(tokenlar).some((t) => t.startsWith(p))
     const parcalarUzun = adDuz.split(' ').filter((p) => p.length >= 3)
     const tumParcalarVarGevsek = parcalarUzun.length > 0 && parcalarUzun.every(parcaUzatilmisVarMi)
-    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar) || tumParcalarVarGevsek) { tam.push({ id: h.id, ad }); continue }
-    // NOTYA-HASTA-ODAK-01: a persona first name alone ("Ayşe") never partially matches a patient.
-    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && !PERSONA_ADLARI_DUZ.has(p))
-    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || parcaUzatilmisVarMi(p))) kismi.push({ id: h.id, ad })
+    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar) || tumParcalarVarGevsek) { tam.push({ id: h.id, ad }); kesin.add(h.id); continue }
+    // NOTYA-HASTA-ODAK-01: a persona first name alone ("Ayşe") never partially matches a patient —
+    // unless the sentence uses it as a patient reference ("Ayşe'nin", "Ayşe için"), NOTYA-AYSE-GERI-01.
+    // NOTYA-AYSE-GERI-07: a name part that is the word "hasta" (QA charts: "Deneme Hasta", "QA Hasta") never matches
+    // on its own — "bugün kaç hastam var?" was answered with that chart instead of the count. The full name still works.
+    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && !GENEL_AD_PARCASI.has(p) && (!hitapAdiMi(p) || anilanPersona.has(p)))
+    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || parcaUzatilmisVarMi(p))) {
+      kismi.push({ id: h.id, ad })
+      if (parcalar.some(adOlarakGecer)) kesin.add(h.id)
+    }
   }
 
   const cozAdaylar = async (adaylar: { id: string; ad: string }[]): Promise<HastaCozumu> => {
@@ -370,6 +450,8 @@ export async function hastaninSozunuCoz(
     // 3) Son ziyaret özetindeki bir kelimeyle daraltma (ör. "öksürük olan")
     const mDuz = duzle(mesaj)
     const kelimeEslesen = zengin.filter((z) => {
+      // The "no visit yet" placeholder is not the patient's complaint: "muayene" in the question must not pick the one without a visit.
+      if (z.ozet === SON_ZIYARET_YOK) return false
       const ozetKelime = duzle(z.ozet).split(' ').filter((k) => k.length >= 4)
       return ozetKelime.some((k) => mDuz.includes(k))
     })
@@ -384,9 +466,15 @@ export async function hastaninSozunuCoz(
   // (at least two words) appears in the sentence is final. Single-word names never qualify, so addressing
   // the assistant ("Merhaba Ayşe") cannot pick a patient.
   if (tam.length === 1 && duzle(tam[0].ad).includes(' ')) return { tur: 'tek', patientId: tam[0].id, ad: tam[0].ad }
-  if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam), secenek.tz)
-  if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi), secenek.tz)
-  return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' }, secenek.tz)
+  const adaylar = tam.length > 0 ? tam : kismi
+  if (adaylar.length === 0) return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' }, secenek.tz, secenek.kohortsuz)
+  // NOTYA-SES-YARIM-01 (Kaan, 2026-10-01; ported from fix/ayse-voice-endpointing-vaccine-table): a name said as a
+  // word of its own that matches several patients is a question to the doctor — never a silent pick by the clinical
+  // words of the same sentence ("Umutcan'ın aşı karnesi" with two Umutcans), and never the open patient.
+  const adKesin = adaylar.every((a) => kesin.has(a.id))
+  const sonuc = await dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(adaylar), secenek.tz, secenek.kohortsuz, adKesin)
+  if (sonuc.tur === 'yok' && adKesin && adaylar.length > 5 && !kohortSorusuMu(mesaj)) return { ...sonuc, cokAday: adaylar.length }
+  return sonuc
 }
 
 async function dosyaIleDaralt(
@@ -394,9 +482,13 @@ async function dosyaIleDaralt(
   doctorId: string,
   mesaj: string,
   ad: HastaCozumu,
-  tz?: string
+  tz?: string,
+  kohortsuz = false,
+  /** The name was said as a word of its own (hastaninSozunuCoz `kesin`). */
+  adKesin = false
 ): Promise<HastaCozumu> {
-  const klinik = klinikAramaMi(mesaj, undefined, tz)
+  const sorgu = sorguyuAyikla(mesaj, undefined, tz)
+  const klinik = sorgu.klinik
   if (ad.tur === 'tek' && !klinik) return ad
   // NOTYA-SES-DOLGU-01: a single named patient with a question about him/her ("Umutcan kaç yaşında") is final;
   // only explicit many-patient questions run the clinical search.
@@ -404,7 +496,15 @@ async function dosyaIleDaralt(
   // NOTYA-AYSE-HASTA-01: adı geçen tek hastanın sıralama sorusu o hastanın dosyasından cevaplanır.
   if (tekHastaSorusuMu(ad.tur, mesaj)) return ad
   if (ad.tur === 'coklu' && !klinik) return ad
+  // NOTYA-SES-YARIM-01: several patients carry the name the doctor said — ask which one (mirror of the 'tek' rule above).
+  if (ad.tur === 'coklu' && adKesin && !kohortSorusuMu(mesaj)) return ad
   if (ad.tur === 'yok' && !klinik) return ad
+  // NOTYA-AYSE-GERI-01: the all-patients search answers only an explicit count / list question, or looks for one
+  // described patient. Any other sentence — a command, a knowledge question, a request about an unnamed patient —
+  // is not a search: no patient, no count sentence, the model answers (and asks which patient when it needs one).
+  // With a chart open the caller sets `kohortsuz` for a question that is about that chart; the search is skipped.
+  const acikKohort = acikKohortSorusuMu(mesaj, sorgu)
+  if (ad.tur === 'yok' && (kohortsuz || (!acikKohort && !hastaTarifiMi(mesaj)))) return ad
   // NOTYA-AKTIF-HASTA-01 (Kaan, 2026-09-29): unnamed clinical searches ("dün gelen ateşli bebek",
   // "kulak iltihabı olan çocuk") run klinikAramaYurut again — the DOSYA-ISTE-01 name guard is withdrawn.
 
@@ -418,7 +518,13 @@ async function dosyaIleDaralt(
   // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
   // List/cohort questions ("ateşli hastalarım kimler") keep the old answer, so "Merhaba Ayşe" never picks a patient.
   // NOTYA-SES-DOLGU-01: "kaç yaşında" about a named patient is not a count; only explicit many-patient questions are.
-  if (!ara.length) return ad.tur === 'tek' && !kohortSorusuMu(mesaj) ? ad : { tur: 'yok', sayiMetin: istatistik.cumle }
+  if (!ara.length) {
+    if (ad.tur === 'tek' && !kohortSorusuMu(mesaj)) return ad
+    // NOTYA-AYSE-GERI-01: zero hits is a number only for a count / list question ("Bugün 0 hasta."). A described
+    // patient nobody matched goes to the model; a name that matched several patients still asks which one.
+    if (!acikKohort) return ad.tur === 'coklu' ? ad : { tur: 'yok' }
+    return { tur: 'yok', sayiMetin: istatistik.cumle }
+  }
 
   const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
   if (ad.tur === 'coklu') {

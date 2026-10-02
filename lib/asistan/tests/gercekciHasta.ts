@@ -9,6 +9,7 @@
  *   - vizit planlarında mg/kg ibuprofen (G3 güvenlik sinyali)
  */
 import type { SahteVeritabani } from '@/lib/security/testing/sahteSupabase'
+import { adIndeksParcalari, tokenOzeti } from '@/lib/doktor/hastaAramaIndeksi'
 
 export const GERCEKCI_HASTA_ADI = 'Deniz Aksoy'
 
@@ -75,6 +76,8 @@ export function gercekciHastaEkle(db: SahteVeritabani, encrypt: (s: string) => s
     notes_encrypted: encrypt(JSON.stringify({ anneAdi: 'QA-Anne-Selin', babaAdi: 'QA-Baba-Murat', kanGrubu: 'A Rh+' })),
     created_at: gunOnce(1085),
   }).id as string
+  // NOTYA-AYSE-GERI-07: the fixture writes what every creation path writes — the blind name index rows.
+  for (const parca of adIndeksParcalari(GERCEKCI_HASTA_ADI)) db.ekle('patient_search_tokens', { patient_id: hasta, doctor_id: doktorId, token_hash: tokenOzeti(parca) })
 
   db.ekle('hasta_intake_formlari', {
     patient_id: hasta, doktor_id: doktorId, created_at: gunOnce(1085),

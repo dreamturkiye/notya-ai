@@ -87,3 +87,71 @@ export async function mesajAdaylariniBul(
   if (error) return null
   return new Set((data || []).map((r) => r.patient_id as string))
 }
+
+/**
+ * NOTYA-AYSE-GERI-07 (audit §4.3, PR 10): the index is only as good as its coverage. A patient with NO index row
+ * (created by a path that does not write one, or before the backfill) was invisible to the name lookup — an empty
+ * candidate set meant "no such patient", and a partial one could resolve "Umutcan" to the one indexed Umutcan while
+ * the other was never considered. The full-scan fallback covered a query ERROR only.
+ *
+ * This returns the ids of this doctor's active patients that have no index row, so the caller can consider them
+ * next to the index hits. Ids only — nothing is decrypted here. null = could not be read (caller scans everything).
+ * A complete index is remembered per doctor for a minute, so the normal case costs no extra query; an incomplete
+ * one is re-read every time and heals the moment the backfill runs.
+ */
+const HASTA_TAVANI = 500
+const INDEKS_SAYFASI = 1000
+const INDEKS_SAYFA_TAVANI = 6
+const TAM_INDEKS_SURESI_MS = 60_000
+const tamIndeks = new Map<string, number>()
+
+/** Tests share doctor ids across fresh databases — forget what was learned about them. */
+export function indeksOnbelleginiTemizle(): void {
+  tamIndeks.clear()
+}
+
+export async function indekssizHastalar(supabase: SupabaseClient, doctorId: string): Promise<string[] | null> {
+  const bilinen = tamIndeks.get(doctorId)
+  if (bilinen && bilinen > Date.now()) return []
+  const { data: hastalar, error } = await supabase.from('patients').select('id').eq('doctor_id', doctorId).eq('is_active', true).limit(HASTA_TAVANI)
+  if (error) return null
+  const eksik = new Set((hastalar || []).map((h) => h.id as string))
+  for (let sayfa = 0; sayfa < INDEKS_SAYFA_TAVANI && eksik.size > 0; sayfa++) {
+    const { data, error: hata } = await supabase
+      .from('patient_search_tokens')
+      .select('patient_id')
+      .eq('doctor_id', doctorId)
+      .order('patient_id', { ascending: true })
+      .range(sayfa * INDEKS_SAYFASI, (sayfa + 1) * INDEKS_SAYFASI - 1)
+    if (hata) return null
+    for (const r of data || []) eksik.delete(r.patient_id as string)
+    if ((data || []).length < INDEKS_SAYFASI) break
+    // More index rows than we are willing to page through: we cannot tell, so the caller scans everything.
+    if (sayfa === INDEKS_SAYFA_TAVANI - 1) return null
+  }
+  if (eksik.size === 0) tamIndeks.set(doctorId, Date.now() + TAM_INDEKS_SURESI_MS)
+  else tamIndeks.delete(doctorId)
+  return Array.from(eksik)
+}
+
+/**
+ * NOTYA-SES-YARIM-01: is this single word EXACTLY a name part of one of this doctor's patients? Exact hash only
+ * (no prefix expansion) — "Umutcan" must not be answered by a patient called "Umut". Doctor-scoped; nothing is
+ * decrypted. null = the index could not be read, or does not cover every patient (the caller falls back to its
+ * own signal).
+ */
+export async function adParcasiMi(supabase: SupabaseClient, doctorId: string, kelime: string): Promise<boolean | null> {
+  const parca = duzle(kelime)
+  if (parca.length < 3 || parca.includes(' ')) return false
+  const { data, error } = await supabase
+    .from('patient_search_tokens')
+    .select('patient_id')
+    .eq('doctor_id', doctorId)
+    .eq('token_hash', tokenOzeti(parca))
+    .limit(1)
+  if (error) return null
+  if ((data || []).length > 0) return true
+  // "No" is only an answer when every patient is in the index.
+  const indekssiz = await indekssizHastalar(supabase, doctorId)
+  return indekssiz !== null && indekssiz.length === 0 ? false : null
+}

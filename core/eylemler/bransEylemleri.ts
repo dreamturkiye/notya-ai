@@ -46,7 +46,7 @@ function gorevEylemi(o: {
     kademe: 'T1',
     branslar: o.branslar,
     sema: semaYap(alanlar),
-    makullukKontrol: (ctx, v) => (v.due && String(v.due) < ctx.bugunTRT ? `Son tarih geçmişte (${v.due}).` : null),
+    makullukKontrol: (ctx, v) => (v.due && String(v.due) < ctx.bugun ? `Son tarih geçmişte (${v.due}).` : null),
     mukerrerKontrol: async (ctx: EylemBaglami, v) => {
       const { data } = await (ctx.supabase as SupabaseClient)
         .from(o.tablo)

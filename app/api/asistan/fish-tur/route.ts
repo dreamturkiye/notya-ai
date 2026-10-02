@@ -6,7 +6,8 @@
  * live socket is opened for the turn. Word-sized text events go to the socket as Luna writes;
  * PCM comes back as `ses` events (base64) on this same SSE, so the browser never holds a Fish
  * credential. Event order: `stt` (or `atlandi` / `kapat`) → `ses_hazir` (before the first `soz`) →
- * `soz`* → `soz_bit` → `ses`* → `ses_bit` → `bit`. The socket opens while Transcribe-1 runs so
+ * `soz`* → `soz_bit` → `ses`* → `ses_bit` → `bit`. An unfinished request ends as `stt` → `bekle` → `bit`
+ * (NOTYA-SES-YARIM-01: no brain call, no answer). The socket opens while Transcribe-1 runs so
  * handshake overlaps ASR. Socket failure before the first word: no `ses_hazir`, browser speaks
  * via /fish-ses as before. Failure mid-turn: `ses_dus` with the transcript offset already handed
  * to Fish; the browser speaks the rest via REST.
@@ -15,10 +16,24 @@
  * previous turn ended (or by the `isit` warm-up the browser sends once the mic is granted), so the
  * doctor's sentence never waits for a Fish handshake. `{ isit: true, asistanSessionId }` warms
  * this instance (socket pre-open + one tiny REST TTS on the keep-alive agent) and returns JSON.
+ *
+ * NOTYA-AYSE-GERI-02 (audit §4.6) — what the ElevenLabs route did around the brain call and this route
+ * dropped on 2026-09-29, restored here so a card read back by voice can be finished by voice:
+ *   1. a spoken "Evet / Onaylıyorum / Hayır" on a pending card is NOT a model turn: it goes through
+ *      lib/asistan/sesliOnay.ts (the tap's spine — serious drug warning and empty required field still
+ *      cannot be confirmed by voice);
+ *   2. a card prepared again for the same patient and action withdraws the superseded draft;
+ *   3. a spoken turn cut at the sentence cap stores its remainder (NOTYA-SES-DEVAM-01); "devam et" or the
+ *      page's hidden `[devam]` turn reads it, uncapped, with no model call. `{ devamOkundu: true }` lets the
+ *      page, when it reads the remainder itself, mark it as read so it is never read twice.
  */
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { kendiSelamiMi } from '@/lib/asistan/acilis'
+import { PERSONAS, type PersonaId } from '@/lib/asistan/personaEngine'
+import { yarimSozCoz } from '@/lib/asistan/yarimSoz'
+import { adParcasiMi } from '@/lib/doktor/hastaAramaIndeksi'
+import { personaIlkAdi } from '@/lib/doktor/hastaCozumleyici'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { fishAsrBlob } from '@/lib/asistan/fishAsr'
 import { FISH_KLIP_AZAMI_BAYT, fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
@@ -27,6 +42,10 @@ import { fishWsHavuzu } from '@/lib/asistan/fishWsHavuz'
 import type { FishWsOturumu } from '@/lib/asistan/fishWsSunucu'
 import { fishIsinma } from '@/lib/asistan/fishIsinma'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
+import { DEVAM_ISARETI, devamIstegiMi, SesAkisi } from '@/lib/asistan/konusma'
+import { sesDevamAl } from '@/lib/asistan/sesDevam'
+import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
+import { takvimSorusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
@@ -57,6 +76,7 @@ async function turGirdi(req: NextRequest): Promise<{
   ses: string
   saatDilimi: string | null
   isit: boolean
+  devamOkundu: boolean
 } | null> {
   const ct = req.headers.get('content-type') || ''
   if (ct.includes('multipart/form-data')) {
@@ -73,6 +93,7 @@ async function turGirdi(req: NextRequest): Promise<{
       ses: str(form.get('ses')),
       saatDilimi: str(form.get('saatDilimi')) || null,
       isit: str(form.get('isit')) === '1',
+      devamOkundu: false,
     }
   }
   const govde = (await req.json().catch(() => null)) as Record<string, unknown> | null
@@ -87,7 +108,22 @@ async function turGirdi(req: NextRequest): Promise<{
     ses: str(govde.ses),
     saatDilimi: str(govde.saatDilimi) || null,
     isit: govde.isit === true || govde.isit === '1',
+    devamOkundu: govde.devamOkundu === true,
   }
+}
+
+/**
+ * NOTYA-SES-YARIM-01: should this transcript wait for its continuation? A bare word after a request counts only
+ * when it is a name part of one of THIS doctor's patients (hashed index, doctor-scoped, nothing decrypted); if
+ * the index cannot be read, the ASR's capital letter decides.
+ */
+async function yarimSozKarari(supabase: SupabaseClient, doktorId: string, mesaj: string, personaId: string): Promise<'askida' | 'ad' | null> {
+  const hitap = personaIlkAdi(PERSONAS[personaId as PersonaId]?.name)
+  const y = yarimSozCoz(mesaj, hitap ? ['Ayşe', hitap] : ['Ayşe'])
+  if (y.tur === 'tam') return null
+  if (y.tur === 'yarim') return 'askida'
+  const adMi = await adParcasiMi(supabase, doktorId, y.ad).catch(() => null)
+  return (adMi ?? y.buyukHarf) ? 'ad' : null
 }
 
 export async function POST(req: NextRequest) {
@@ -124,6 +160,13 @@ export async function POST(req: NextRequest) {
     const sonuc = await fishIsinma(anahtar)
     console.info('[fish-isinma]', { ws, ...sonuc })
     return new Response(JSON.stringify({ ok: true, ws, ...sonuc }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+  }
+
+  // NOTYA-SES-DEVAM-01: the page read the cut turn's remainder aloud itself — it is taken, so a later
+  // "devam et" starts a new turn instead of repeating it.
+  if (girdi.devamOkundu) {
+    await sesDevamAl(supabase, user.id, oturumId).catch(() => null)
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
   }
 
   // NOTYA-TAKVIM-TZ-01: doctor's timezone — body first, then the notya_tz cookie, then TRT.
@@ -242,8 +285,54 @@ export async function POST(req: NextRequest) {
           gonder({ t: 'bit' })
           return
         }
-        gonder({ t: 'stt', m: mesaj })
+        // The hidden continuation marker is not a doctor sentence: it is never shown as a transcript.
+        if (mesaj !== DEVAM_ISARETI) gonder({ t: 'stt', m: mesaj })
+        // NOTYA-SES-YARIM-01 (NOTYA-AYSE-GERI-06): an unfinished request ("Ayşe lütfen bana", "… bana Umutcan") gets
+        // no reply — no brain call, nothing written to the session. The browser keeps the clip and merges the
+        // doctor's next one into it.
+        const yarim = mesaj === DEVAM_ISARETI ? null : await yarimSozKarari(supabase, user.id, mesaj, girdi.personaId || 'aysekaya')
+        if (yarim) {
+          console.info('[fish-tur]', { bekle: yarim })
+          gonder({ t: 'bekle', neden: yarim })
+          gonder({ t: 'bit' })
+          return
+        }
+        const turuKapat = async () => {
+          gonder({ t: 'soz_bit' })
+          await bitirWs()
+          gonder({ t: 'bit' })
+        }
+        // NOTYA-AYSE-GERI-02: spoken Evet / Hayır on a pending card — the tap's spine, no model call. A calendar
+        // question is never a confirmation (same exclusion as the ElevenLabs route).
+        const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, user.id, oturumId, mesaj, saatDilimi)
+        if (karar) {
+          console.info('[fish-tur] sesli karar')
+          sozParcasi(`${karar.soz} `)
+          // A new real turn: the previous turn's unspoken remainder is dropped.
+          await sesDevamAl(supabase, user.id, oturumId).catch(() => null)
+          await turuKapat()
+          return
+        }
+        // NOTYA-SES-DEVAM-01: "devam et" / `[devam]` reads the rest of the cut turn, uncapped, sentence by
+        // sentence — no model call and no new screen bubble (the screen already holds the full answer).
+        if (devamIstegiMi(mesaj)) {
+          const kalan = await sesDevamAl(supabase, user.id, oturumId).catch(() => null)
+          if (kalan) {
+            console.info('[fish-tur] devam')
+            const okuma = new SesAkisi((p) => sozParcasi(p), undefined, undefined, Number.POSITIVE_INFINITY)
+            okuma.ekle(kalan)
+            okuma.bitir()
+            await turuKapat()
+            return
+          }
+          // The hidden marker with nothing left is not a question; a spoken "devam" with nothing left is a normal turn.
+          if (mesaj === DEVAM_ISARETI) { await turuKapat(); return }
+        }
         let soylendi = false
+        // What actually went out as speech, and whether the sentence cap was reached — ayseCevapla stores the
+        // unspoken rest from these (and, knowing a continuation exists, does not say "Devamı ekranınızda").
+        let soylenen = ''
+        let sinirGeldi = false
         const sonuc = await ayseCevapla({
           supabase,
           doktorId: user.id,
@@ -255,10 +344,16 @@ export async function POST(req: NextRequest) {
           patientId,
           saatDilimi,
           sinyal: turSinyali.signal,
-          sozParcasi: (p) => { if (p) { soylendi = true; sozParcasi(p) } },
+          sozParcasi: (p) => { if (p) { soylendi = true; soylenen += p; sozParcasi(p) } },
+          sesSiniri: () => { sinirGeldi = true },
+          sesDurumu: () => ({ kesildi: sinirGeldi, soylenen }),
         })
         if (!sonuc.ok) gonder({ t: 'hata', m: sonuc.soz })
         else if (!soylendi && sonuc.cevap.konusma) sozParcasi(sonuc.cevap.konusma)
+        // A card prepared again for the same patient and action replaces the old one: one card on screen, one for "Evet".
+        if (sonuc.ok && sonuc.cevap.kartlar.length) {
+          await eskiSesTaslaklariniCek(supabase, user.id, sonuc.cevap.oncekiBekleyen || [], sonuc.cevap.kartlar, sonuc.cevap.kartHastaId ?? null)
+        }
         gonder({ t: 'soz_bit' })
         await bitirWs()
         gonder({ t: 'bit' })

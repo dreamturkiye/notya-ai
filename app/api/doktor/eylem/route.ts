@@ -20,6 +20,9 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { eylemOnayla, eylemVazgec, suresiDolduMu } from '@/core/eylemler/onayla'
 import { eylemGeriAl } from '@/core/eylemler/geriAl'
 import { eylemBul } from '@/core/eylemler/kayit'
+import { kartAlanlari } from '@/core/eylemler/types'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
+import { saatDilimiSec } from '@/lib/randevu/tarihCozumle'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
@@ -61,7 +64,9 @@ export async function GET(req: NextRequest) {
     .filter((o) => !suresiDolduMu(o as { created_at: string }))
     .map((o) => {
       const e = eylemBul(String(o.eylem_anahtar))
-      return { ...o, etiket: e?.etiket || o.eylem_anahtar, alanlar: e?.alanlar || [], zorunlu: e?.zorunlu || [], portalaYansir: Boolean(e?.portalaYansir) }
+      // NOTYA-AYSE-GERI-03: hidden fields (a server-resolved row id) are not card fields.
+      const kart = e ? kartAlanlari(e) : { alanlar: [], zorunlu: [] }
+      return { ...o, etiket: e?.etiket || o.eylem_anahtar, alanlar: kart.alanlar, zorunlu: kart.zorunlu, portalaYansir: Boolean(e?.portalaYansir) }
     })
   return NextResponse.json({ oneriler, hasta: { ad: hasta.ad, dogumTarihi: hasta.dogumTarihi } })
 }
@@ -74,11 +79,14 @@ export async function POST(req: NextRequest) {
   const govde = await req.json().catch(() => ({}))
   const adim = String((govde as { adim?: string }).adim || '')
   const brans = await hekimBransi(supabase, user.id)
+  // NOTYA-AYSE-GERI-04: the doctor's timezone — body first, then the notya_tz cookie, then TRT.
+  const govdeDilimi = (govde as { saatDilimi?: unknown }).saatDilimi
+  const saatDilimi = saatDilimiSec(typeof govdeDilimi === 'string' ? govdeDilimi : null, istekSaatDilimi())
 
   if (adim === 'onayla') {
     const { oneriId, duzeltmeler, mesajId, uyariGoruldu } = govde as { oneriId?: string; duzeltmeler?: Record<string, unknown>; mesajId?: string; uyariGoruldu?: boolean }
     if (!oneriId) return NextResponse.json({ error: 'oneriId zorunludur.' }, { status: 400 })
-    const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId, duzeltmeler, brans, mesajId, uyariGoruldu: Boolean(uyariGoruldu) })
+    const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId, duzeltmeler, brans, mesajId, uyariGoruldu: Boolean(uyariGoruldu), saatDilimi })
     // NOTYA-EYLEM-21: the warning gate answers with the warnings themselves, so the card can print
     // the CURRENT ones (the med list may have changed since it was drawn) and offer the second tap.
     if (!s.ok) return NextResponse.json({ error: s.hata, uyarilar: s.uyarilar ?? null, uyariOnayiGerekli: Boolean(s.uyariOnayiGerekli) }, { status: s.durum })
@@ -94,7 +102,7 @@ export async function POST(req: NextRequest) {
     for (const id of oneriIdler.slice(0, 25)) {
       // A batch row carrying a `ciddi` warning is NOT swept along: its acknowledgement is per row,
       // so an unacknowledged one refuses here exactly as it would on its own card.
-      const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId: String(id), duzeltmeler: duzeltmeler?.[String(id)], brans, uyariGoruldu: Boolean(uyariGoruldu?.[String(id)]) })
+      const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId: String(id), duzeltmeler: duzeltmeler?.[String(id)], brans, uyariGoruldu: Boolean(uyariGoruldu?.[String(id)]), saatDilimi })
       sonuclar.push(s.ok ? { oneriId: String(id), ok: true, kayitId: s.kayitId } : { oneriId: String(id), ok: false, hata: s.hata })
     }
     return NextResponse.json({ ok: sonuclar.every((s) => s.ok), sonuclar })
@@ -111,7 +119,7 @@ export async function POST(req: NextRequest) {
   if (adim === 'geri_al') {
     const { kayitId } = govde as { kayitId?: string }
     if (!kayitId) return NextResponse.json({ error: 'kayitId zorunludur.' }, { status: 400 })
-    const s = await eylemGeriAl(supabase, user.id, kayitId, brans)
+    const s = await eylemGeriAl(supabase, user.id, kayitId, brans, saatDilimi)
     if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
     return NextResponse.json({ ok: true })
   }

@@ -37,7 +37,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { aiCagir, yanitMetni, type AiMesaj } from '@/lib/ai/cagir'
+import { aiCagir, rotaButcesiMs, yanitMetni, type AiMesaj } from '@/lib/ai/cagir'
 import { aiKotaKullan } from '@/lib/doktor/hizLimiti'
 import { downloadDocument } from '@/lib/vault/service'
 import { yasHesapla } from '@/lib/doktor/yas'
@@ -246,6 +246,7 @@ async function istemTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
       messages: [{ role: 'user', content: `=== HASTA DOSYASI ÖZETİ ===\n${baglam}\n\nBu hasta için ${hedefAdi} konsültasyon istem metninin gövdesini yaz.` }],
       temperature: 0.2,
       doctorId: doktorId,
+      butceMs: rotaButcesiMs(maxDuration),
     })
     ham = yanitMetni(y, '\n')
     kesildi = (y as { stop_reason?: string | null }).stop_reason === 'max_tokens'
@@ -308,7 +309,7 @@ async function yanitTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
   let ham = '', kesildi = false
   try {
     // Düzyazı özet (JSON değil) — G2 (d) JSON kontrolü kapalı.
-    const y = await aiCagir({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [mesaj], temperature: 0.1, doctorId: doktorId, jsonBekleniyor: false })
+    const y = await aiCagir({ gorev: YANIT_TASLAK_GOREVI, system: [{ metin: YANIT_TASLAK_SISTEMI, onbellek: true }], messages: [mesaj], temperature: 0.1, doctorId: doktorId, jsonBekleniyor: false, butceMs: rotaButcesiMs(maxDuration) })
     ham = yanitMetni(y, '\n')
     kesildi = (y as { stop_reason?: string | null }).stop_reason === 'max_tokens'
   } catch (e) {

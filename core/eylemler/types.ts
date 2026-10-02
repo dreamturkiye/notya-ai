@@ -17,6 +17,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import type { ZodType } from './z'
+import { bugunTz, saatDilimiSec } from '@/lib/randevu/tarihCozumle'
 
 /** Risk tier. T3 (reçete, not onayı, silme, dışarı çıkan her şey) is NOT a value: it never enters the registry. */
 export type Kademe = 'T1' | 'T2'
@@ -57,6 +58,26 @@ export interface AlanTanimi {
   enCok?: number
   /** e.g. 'cm', 'kg' — rendered next to the input. */
   birim?: string
+  /**
+   * NOTYA-AYSE-GERI-03 — resolved by the SERVER (`hazirla`), never by the model and never by the card: left out
+   * of the tool schema, ignored in model input and in the doctor's edits. A row id belongs here.
+   */
+  sunucu?: boolean
+  /** Not rendered on the card and not read back by voice (a row id, or a hint only the resolver uses). */
+  gizli?: boolean
+}
+
+/**
+ * NOTYA-AYSE-GERI-03 — outcome of an action's server-side preparation. `soru`: no card can be prepared yet; Ayşe
+ * asks this one question instead ("Hangisi Hocam: 1. …, 2. …?"). Never a write.
+ */
+export type HazirlikSonucu = { veri: Record<string, unknown> } | { soru: string }
+
+/** The fields a doctor sees (card, voice read-back) and the required ones among them. */
+export function kartAlanlari(e: { alanlar: readonly AlanTanimi[]; zorunlu: readonly string[] }): { alanlar: AlanTanimi[]; zorunlu: string[] } {
+  const alanlar = e.alanlar.filter((a) => !a.gizli)
+  const gorunur = new Set(alanlar.map((a) => a.anahtar))
+  return { alanlar, zorunlu: e.zorunlu.filter((k) => gorunur.has(k)) }
 }
 
 /** Identity resolved SERVER-SIDE. A hasta id from model output never reaches this object. */
@@ -78,8 +99,25 @@ export interface EylemBaglami {
   brans: SpecialtyKey | null
   /** The öneri row being committed, for audit linkage. */
   oneriId: string
-  /** Today in Turkish time, yyyy-mm-dd. Actions must not read the host clock directly. */
-  bugunTRT: string
+  /**
+   * Today in the DOCTOR's timezone, yyyy-mm-dd (NOTYA-AYSE-GERI-04). Actions must not read the host clock directly.
+   * Was `bugunTRT` — a doctor west of Turkey got tomorrow's date in the evening.
+   */
+  bugun: string
+  /** The doctor's IANA timezone: the clock every day and time on a card is read in. */
+  saatDilimi: string
+  /** The instant "now" for actions that compare against one (upcoming appointments). Default: the host clock. */
+  simdi?: Date
+}
+
+/**
+ * NOTYA-AYSE-GERI-04 — the clock of an action context. `saatDilimi` comes from the client (request body, then the
+ * notya_tz cookie); an unknown or missing value falls back to Europe/Istanbul, which is what every caller did
+ * before, so a doctor in Turkey sees no change.
+ */
+export function eylemZamani(saatDilimi?: string | null, simdi: Date = new Date()): { bugun: string; saatDilimi: string; simdi: Date } {
+  const dilim = saatDilimiSec(saatDilimi)
+  return { bugun: bugunTz(dilim, simdi), saatDilimi: dilim, simdi }
 }
 
 /** What `calistir` reports back so `eylem_kayitlari` can describe (and `geriAl` can reverse) the write. */
@@ -121,6 +159,14 @@ export interface EylemTanimi<V = Record<string, unknown>> {
   hastaKosulu?: (hasta: HastaOzeti, brans: SpecialtyKey | null) => boolean
   /** The record also becomes visible in Sağlığım — the card says so before the tap. */
   portalaYansir?: boolean
+  /** Spoken after a voice "Evet" commits the card; default "Kaydedildi Hocam — <etiket>." */
+  basariSozu?: string
+  /**
+   * NOTYA-AYSE-GERI-03 — runs when the card is prepared, after the model's values were normalised: fills the
+   * `sunucu` fields from this doctor's own rows (which appointment is meant) or answers with one question when it
+   * cannot. Every read inside is scoped by ctx.doktorId AND ctx.hasta.id. Never a write.
+   */
+  hazirla?: (ctx: EylemBaglami, veri: V) => Promise<HazirlikSonucu>
   /** Derived from `alanlar`; re-validated server-side on every commit. */
   readonly sema: ZodType<V>
   /** THE write. Must call the same shared function the UI form calls — never a second write path. */
@@ -168,7 +214,10 @@ export interface EylemOnerisi {
   karar_at: string | null
 }
 
-/** Turkey is UTC+3 all year. Everything dated in this layer uses this, never the host clock. */
+/**
+ * Turkey is UTC+3 all year. Kept for callers that have no doctor timezone at hand (tests, the calendar page's own
+ * TRT view); the action layer itself dates everything with `eylemZamani` in the doctor's timezone.
+ */
 export function bugunTRT(simdi: Date = new Date()): string {
   return new Date(simdi.getTime() + 3 * 3600e3).toISOString().slice(0, 10)
 }

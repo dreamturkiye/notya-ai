@@ -234,6 +234,10 @@ function basliklar(): Record<string, string> {
   }
 }
 
+/** The one model endpoint. Exported for the audit harness, which lets this URL — and nothing else — through. */
+export function openRouterUcu(): string {
+  return uc()
+}
 function uc(): string {
   return `${(process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, '')}/chat/completions`
 }

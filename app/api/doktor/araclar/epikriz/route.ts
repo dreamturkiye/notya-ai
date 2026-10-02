@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { groqChat } from '@/lib/dr-ayse/groq';
+import { rotaButcesiMs } from '@/lib/ai/cagir';
+import { jsonCikar } from '@/lib/ai/jsonOnar';
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
 import { decrypt } from '@/lib/security/encryption';
 import { hekimAdi } from '@/lib/doktor/hekimAdi';
@@ -20,6 +22,8 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { arsivsizNotlar } from '@/lib/doktor/arsiv';
 
 export const dynamic = 'force-dynamic';
+/** Same value vercel.json gives every API route; named here so the model call can budget against it. */
+export const maxDuration = 60;
 
 interface EpikrizRequest {
   hastaId: string;
@@ -157,12 +161,14 @@ export async function POST(request: NextRequest) {
       assertNoTckn(guvenliKapsamli, 'epikriz-kapsamli');
       const rawKapsamli = await groqChat(
         [{ role: 'system', content: kapsamliSystem }, { role: 'user', content: guvenliKapsamli }],
-        { temperature: 0.2, jsonMode: true, maxTokens: 3000 }
+        { temperature: 0.2, jsonMode: true, maxTokens: 3000, butceMs: rotaButcesiMs(maxDuration) }
       );
       let parsedKapsamli: { taniVeTedavi?: string; taburcuOzeti?: string };
       try {
-        const temiz = rawKapsamli.replace(/```json\n?|\n?```/g, '').trim();
-        parsedKapsamli = restoreDeep(JSON.parse(temiz), kapsamliMap);
+        // NOTYA-AYSE-GERI-07 (PR 13): JSON inside a sentence is still the draft; a cut one is not completed.
+        const govde = jsonCikar(rawKapsamli);
+        if (!govde) throw new Error('json');
+        parsedKapsamli = restoreDeep(govde, kapsamliMap);
       } catch {
         console.error('[epikriz-kapsamli] JSON parse başarısız, ham metin:', rawKapsamli.slice(0, 500));
         return NextResponse.json({ hata: 'Epikriz taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
@@ -212,12 +218,13 @@ Hastanın specialty: ${branş || 'genel'}`;
     assertNoTckn(guvenliPrompt, 'epikriz');
     const raw = await groqChat(
       [{ role: 'system', content: systemPrompt }, { role: 'user', content: guvenliPrompt }],
-      { temperature: 0.2, jsonMode: true, maxTokens: 3000 }
+      { temperature: 0.2, jsonMode: true, maxTokens: 3000, butceMs: rotaButcesiMs(maxDuration) }
     );
     let parsed: { taniVeTedavi?: string; taburcuOzeti?: string };
     try {
-      const temiz = raw.replace(/```json\n?|\n?```/g, '').trim();
-      parsed = restoreDeep(JSON.parse(temiz), epikrizMap);
+      const govde = jsonCikar(raw);
+      if (!govde) throw new Error('json');
+      parsed = restoreDeep(govde, epikrizMap);
     } catch {
       console.error('[epikriz] JSON parse başarısız, ham metin:', raw.slice(0, 500));
       return NextResponse.json({ hata: 'Epikriz taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });

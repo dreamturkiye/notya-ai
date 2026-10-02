@@ -10,7 +10,7 @@ import assert from 'node:assert/strict'
 delete process.env.OPENROUTER_API_KEY
 delete process.env.NEXT_PUBLIC_SUPABASE_URL
 
-import { SoapCiktiHatasi, oneriyiBirlestir, soapKurallari, soapNotuUret, soapSistemBloklari, turkceBolumleriTuret, type SoapOnerisi } from './soapUret'
+import { ONERI_TOKEN_TAVANI, SoapCiktiHatasi, oneriyiBirlestir, soapKurallari, soapNotuUret, soapSistemBloklari, turkceBolumleriTuret, type SoapOnerisi } from './soapUret'
 
 type Istek = { system?: { type: string; text: string; cache_control?: unknown }[]; messages: { content: string }[]; max_tokens: number }
 type Cagri = { tur: 'A' | 'B'; istek: Istek; basladi: number; coz: (v: unknown) => void; reddet: (e: unknown) => void; bitti: boolean }
@@ -161,7 +161,8 @@ describe('soapNotuUret — paralel iki çağrı', () => {
     assert.equal(n.aiDegerlendirme, ONERI.aiDegerlendirme)
   })
 
-  it('gövde çağrısına uzunluk kuralı gider (NOT-HIZ-03); maxTokens A 8000, B 2000', async () => {
+  // NOTYA-AYSE-GERI-07 (PR 12): the advisory cap counts reasoning tokens — 2000 was spent before the JSON began.
+  it('gövde çağrısına uzunluk kuralı gider (NOT-HIZ-03); maxTokens A 8000, B 6000', async () => {
     const sonuc = soapNotuUret(GIRDI, { istemci: sahteIstemci as never })
     await ikiCagriyiBekle()
     const [a, b] = [cagri('A'), cagri('B')]
@@ -170,7 +171,8 @@ describe('soapNotuUret — paralel iki çağrı', () => {
     for (const parca of ['TEKRAR YOK', 'YALNIZ muayene edilen sistemleri', 'her madde TEK satır', '1.200-1.800 token', 'asla dolgu yapma', 'hiçbir alanı atlama']) assert.ok(govdeMesaji.includes(parca), parca)
     assert.ok(!b.istek.messages[0].content.includes('UZUNLUK KURALI (kesin)'))
     assert.equal(a.istek.max_tokens, 8000)
-    assert.equal(b.istek.max_tokens, 2000)
+    assert.equal(b.istek.max_tokens, ONERI_TOKEN_TAVANI)
+    assert.equal(ONERI_TOKEN_TAVANI, 6000)
     a.coz(cevap(GOVDE)); b.coz(cevap(ONERI))
     await sonuc
   })

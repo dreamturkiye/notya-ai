@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { pcmdenWav } from './fishMikrofon'
 import { fishAsrDosyaAdi } from './fishSes'
+import { sessizlikKuyrugu } from './fishVad'
 
 test('Fish ASR dosya adı kapsayıcıya uyum', () => {
   assert.equal(fishAsrDosyaAdi('audio/wav'), 'tur.wav')
@@ -58,21 +59,30 @@ test('defect 1: a first word that starts while the echo guard is still on is kep
   const gercekNow = Date.now
   let simdi = 1_000_000
   Date.now = () => simdi
+  // The recorder polls `iptal` on a 200 ms timer until the turn ends; the test must be able to stop it, or a
+  // turn that never closes keeps the process alive ('Promise resolution is still pending') instead of failing.
+  let dur = false
   try {
     let ajan = true
-    const soz = fishBirTurKaydet({} as MediaStream, ctx, { iptal: () => false, ajanKonusuyorMu: () => ajan, bargeIn: () => { throw new Error('barge olmamalı') } })
+    const soz = fishBirTurKaydet({} as MediaStream, ctx, { iptal: () => dur, ajanKonusuyorMu: () => ajan, bargeIn: () => { throw new Error('barge olmamalı') } })
     const kare = (genlik: number) => { islem.onaudioprocess!({ inputBuffer: { getChannelData: () => new Float32Array(2048).fill(genlik) } }); simdi += kareMs }
     // Ayşe's trailing padding still "playing": the doctor's onset at speech level (0.05 < barge 0.12) — old code wiped it.
     kare(0.05); kare(0.05); kare(0.05)
     ajan = false
     kare(0.05); kare(0.05); kare(0.05); kare(0.05)
-    kare(0); kare(0); kare(0); kare(0)
-    const klip = await soz
-    assert.ok(klip, 'clip must be sent')
-    assert.equal(klip!.blob.size, 44 + 10 * 2048 * 2, '300 ms pre-roll (2 frames) kept from under the guard + 4 voiced + 4 silent; old code: 8 frames')
-    assert.ok(klip!.sesliMs >= 4 * kareMs)
-    assert.equal(klip!.bitis, simdi - kareMs)
+    // The tail is measured from the first silent frame, so the turn closes on the frame that is one whole tail
+    // after it. Derived from the constant: the tail was retuned (300 → 500 ms, #505) and four fixed frames
+    // (384 ms) stopped closing the turn — the hang this test used to produce.
+    const sessizKare = Math.ceil(sessizlikKuyrugu('rms') / kareMs) + 1
+    for (let i = 0; i < sessizKare; i++) kare(0)
+    const klip = await Promise.race([soz, new Promise<'acik'>((r) => setImmediate(() => r('acik')))])
+    assert.notEqual(klip, 'acik', 'the turn must close once the silence tail has passed')
+    assert.ok(klip && klip !== 'acik', 'clip must be sent')
+    assert.equal(klip.blob.size, 44 + (2 + 4 + sessizKare) * 2048 * 2, '300 ms pre-roll (2 frames) kept from under the guard + 4 voiced + the silent tail')
+    assert.ok(klip.sesliMs >= 4 * kareMs)
+    assert.equal(klip.bitis, simdi - kareMs)
   } finally {
+    dur = true
     Date.now = gercekNow
   }
 })

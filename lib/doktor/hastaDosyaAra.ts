@@ -391,7 +391,9 @@ export async function klinikAramaYurut(
 
   for (const a of asilar.data || []) {
     if (!a.patient_id || !gunAralikta(a.uygulama_tarihi as string, p)) continue
-    const metin = `${a.asi_adi || ''} ${a.notlar || ''} ${a.kaynak || ''}`
+    // NOTYA-AYSE-GERI-01: a vaccine row IS an "aşı" hit whatever the vaccine is called — "KKK" alone carries none of
+    // the aşı search terms, so a patient whose only records were KKK / DaBT doses never matched "aşı kaydı olan".
+    const metin = `aşı ${a.asi_adi || ''} ${a.notlar || ''} ${a.kaynak || ''}`
     ham.push({
       patientId: String(a.patient_id),
       kaynak: 'asi',

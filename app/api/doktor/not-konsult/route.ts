@@ -18,13 +18,14 @@ import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgr
 import { NOT_YENIDEN_DEGERLENDIR_ISTEK } from '@/lib/doktor/notYenidenDegerlendir'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
-import { notKonsultSistemParcalari } from '@/lib/doktor/notKonsultPromptu'
+import { notKonsultSistemParcalari, notKonsultZarfi } from '@/lib/doktor/notKonsultPromptu'
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 import { aracTanimlari, eylemKapali } from '@/core/eylemler/araclar'
 import { toolUseOnerileri, kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
-import { bugunTRT } from '@/core/eylemler/types'
+import { eylemZamani } from '@/core/eylemler/types'
+import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { cekBlokSil } from '@/lib/doktor/muayeneCekListesi'
@@ -102,7 +103,10 @@ export async function POST(req: NextRequest) {
     let yanit: Awaited<ReturnType<typeof aiCagir>> | null = null
     try {
       // prompt caching: kimlik/yetenekler/alan anahtarları (branş kapsamı başına sabit) önbellekli; tarih, taslak, dosya, hafıza arkasından
-      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: sistem.degisken })
+      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar, toolChoice, guvenlikBaglami: sistem.degisken,
+        // NOTYA-AYSE-GERI-07 (audit §7, PR 12): the answer is a JSON envelope — a cut or unparseable one goes through
+        // the quality gate instead of reaching the doctor as raw text. A forced tool turn answers with the tool call.
+        jsonBekleniyor: !toolChoice })
       // yanitMetni yalnız text bloklarını birleştirir — tool_use blokları JSON zarfını bozmaz.
       ham = yanitMetni(yanit)
     } catch (e) {
@@ -110,13 +114,8 @@ export async function POST(req: NextRequest) {
       console.error('[not-konsult] ai', e.govde.slice(0, 300))
       return NextResponse.json({ error: 'Ayşe şu an yanıt veremiyor. Lütfen tekrar deneyin.' }, { status: 502 })
     }
-    const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
-    let sonuc: { cevap?: string; duzenlemeler?: Record<string, unknown>; eylemler?: unknown[] }
     // Kaan/Gökhan (2026-09-10): model bazen JSON'u düz metnin içine gömüyor → ilk {...} bloğunu çıkar
-    try { sonuc = JSON.parse(temiz) } catch {
-      const m = temiz.match(/\{[\s\S]*\}/)
-      try { sonuc = m ? JSON.parse(m[0]) : { cevap: temiz } } catch { sonuc = { cevap: temiz } }
-    }
+    const sonuc = notKonsultZarfi(ham)
     // Anahtar normalizasyonu: İngilizce/varyant anahtarlar → beklenen Türkçe anahtarlar
     const ESLE: Record<string, string> = { subjective: 'subjektif', s: 'subjektif', objective: 'objektif', o: 'objektif', assessment: 'degerlendirme', a: 'degerlendirme', degerlendirme: 'degerlendirme', plan: 'plan', p: 'plan', vitals: 'vitaller', vitaller: 'vitaller', alarm: 'alarmBulgulari', alarm_bulgulari: 'alarmBulgulari', alarmbulgulari: 'alarmBulgulari', hasta_ozeti: 'hastaOzeti', hastaozeti: 'hastaOzeti', veliOzeti: 'hastaOzeti', basvuru_yakinmasi: 'basvuruYakinmasi', basvuruyakinmasi: 'basvuruYakinmasi' }
     const dzHam = (sonuc.duzenlemeler && typeof sonuc.duzenlemeler === 'object' ? sonuc.duzenlemeler : {}) as Record<string, unknown>
@@ -133,7 +132,7 @@ export async function POST(req: NextRequest) {
     const eylemOnerileri = eylemHastasi
       ? await toolUseOnerileri(
           (yanit ?? {}) as { content?: unknown },
-          { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', bugunTRT: bugunTRT() },
+          { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', ...eylemZamani(istekSaatDilimi()) },
           'not',
           { brans: eylemBransi, hasta: eylemHastasi },
           // NOTYA-EYLEM-31: not içi kutu da düz metin döndürür; Ayşe'nin uyarı cümlesi karta aynı

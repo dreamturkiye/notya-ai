@@ -19,7 +19,7 @@ import { eylemBul } from './kayit'
 import { eylemUygunMu, type AracSuzgeci } from './araclar'
 import { veriNormalize, tarihAlanlariGecerliMi } from './sema'
 import { ayseNotuUyarisi, type IlacUyarisi } from './ilacUyari'
-import type { AlanKaynagi, AlanKaynakKaydi, AlanTanimi, EylemBaglami, Yuzey } from './types'
+import { kartAlanlari, type AlanKaynagi, type AlanKaynakKaydi, type AlanTanimi, type EylemBaglami, type Yuzey } from './types'
 
 export interface OneriGirdisi {
   ctx: EylemBaglami
@@ -38,6 +38,16 @@ export interface OneriGirdisi {
    */
   modelNotu?: string | null
   suzgec: AracSuzgeci
+  /**
+   * NOTYA-AYSE-GERI-03 — when the action's server-side preparation cannot produce a card yet (which appointment?),
+   * its question is pushed here and no proposal row is written.
+   */
+  sorular?: string[]
+  /**
+   * NOTYA-AYSE-GERI-04 — values the SERVER read from the doctor's own sentence (a day, a time). They override what
+   * the model wrote and are stamped `doktor_soyledi`.
+   */
+  sunucuDegerleri?: Record<string, unknown>
 }
 
 export interface HazirOneri {
@@ -130,16 +140,49 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
 
   const kaynaklar = kaynaklariCoz(g.girdi.alan_kaynaklari)
   const alanAnahtarlari = new Set(eylem.alanlar.map((a) => a.anahtar))
+  // A `sunucu` field is resolved below from the doctor's own rows — a value for it in model output is ignored.
+  const modelAlanlari = new Set(eylem.alanlar.filter((a) => !a.sunucu).map((a) => a.anahtar))
   const ham: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(g.girdi)) if (alanAnahtarlari.has(k)) ham[k] = v
+  for (const [k, v] of Object.entries(g.girdi)) if (modelAlanlari.has(k)) ham[k] = v
+  for (const [k, v] of Object.entries(g.sunucuDegerleri || {})) {
+    if (!modelAlanlari.has(k) || v === undefined || v === null || v === '') continue
+    // The model wrote a different value for a day / time the doctor said: the server's reading wins. Logged by
+    // field name only — it is the signal that the model's clock was wrong (no clinical content in the log).
+    if (ham[k] !== undefined && ham[k] !== null && ham[k] !== '' && String(ham[k]) !== String(v)) {
+      console.warn('[eylem] sunucu değeri modelin değerinin yerine geçti', { eylem: eylem.anahtar, alan: k })
+    }
+    ham[k] = v
+    kaynaklar[k] = { kaynak: 'doktor_soyledi', alinti: kaynaklar[k]?.alinti ?? null, belgeId: null, notId: null }
+  }
 
   const { veri: kaynakli, dusen, belirsiz } = tahminleriAyikla(ham, kaynaklar)
-  const veri = veriNormalize(eylem.alanlar, kaynakli)
+  let veri = veriNormalize(eylem.alanlar, kaynakli)
 
   // A date that came back malformed is worth no more than a guess.
   const tarihHatasi = tarihAlanlariGecerliMi(eylem.alanlar, veri)
   if (tarihHatasi) {
     for (const a of eylem.alanlar) if (a.tip === 'tarih') { delete veri[a.anahtar]; if (!dusen.includes(a.anahtar)) dusen.push(a.anahtar) }
+  }
+
+  // NOTYA-AYSE-GERI-03: server-side preparation (which of the patient's appointments is meant). A question
+  // instead of a card when it cannot be decided — nothing is stored and nothing is guessed.
+  if (eylem.hazirla) {
+    let hazirlik
+    try {
+      hazirlik = await eylem.hazirla(g.ctx, veri as never)
+    } catch (e) {
+      console.error('[eylem] hazırlık çalışmadı', eylem.anahtar, e instanceof Error ? e.message : String(e))
+      g.sorular?.push('Kartı şu an hazırlayamadım Hocam; birazdan tekrar dener misiniz?')
+      return null
+    }
+    if ('soru' in hazirlik) {
+      g.sorular?.push(hazirlik.soru)
+      return null
+    }
+    veri = veriNormalize(eylem.alanlar, hazirlik.veri)
+    for (const a of eylem.alanlar) {
+      if (a.sunucu && veri[a.anahtar] !== undefined) kaynaklar[a.anahtar] = { kaynak: 'dosyadan', alinti: null, belgeId: null, notId: null }
+    }
   }
 
   const eksik = [
@@ -153,7 +196,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
   // Soft: past next-dose is a catch-up reality for neonates — warn on the card, never hard-fail commit.
   if (eylem.anahtar === 'asi_kaydi_ekle') {
     const sonraki = veri.sonraki_doz_tarihi
-    if (sonraki && String(sonraki) < g.ctx.bugunTRT) {
+    if (sonraki && String(sonraki) < g.ctx.bugun) {
       uyarilar.push(`Sonraki doz tarihi (${sonraki}) geçmişte — kontrol edin.`)
     }
   }
@@ -203,6 +246,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
     .single()
   if (error || !data) return null
 
+  const kart = kartAlanlari(eylem)
   return {
     id: String(data.id),
     eylem_anahtar: eylem.anahtar,
@@ -215,8 +259,8 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
     uyari_detay: uyariDetay,
     portalaYansir: Boolean(eylem.portalaYansir),
     grup_id: g.grupId || null,
-    alanlar: eylem.alanlar,
-    zorunlu: eylem.zorunlu,
+    alanlar: kart.alanlar,
+    zorunlu: kart.zorunlu,
     created_at: data.created_at ? String(data.created_at) : undefined,
   }
 }
@@ -236,25 +280,38 @@ export async function toolUseOnerileri(
   ctx: EylemBaglami,
   yuzey: Yuzey,
   suzgec: AracSuzgeci,
-  modelNotu?: string | null
+  modelNotu?: string | null,
+  /**
+   * NOTYA-AYSE-GERI-03 / -04: `sorular` collects the questions of actions that could not prepare a card;
+   * `sunucuDegerleri(anahtar)` gives the values the server read from the doctor's sentence for that action.
+   */
+  ek: { sorular?: string[]; sunucuDegerleri?: (anahtar: string, girdi: Record<string, unknown>) => Record<string, unknown> | undefined } = {}
 ): Promise<HazirOneri[]> {
-  const bloklar = (Array.isArray(yanit?.content) ? yanit.content : []) as { type?: string; name?: string; input?: unknown; id?: string }[]
-  const kullanimlar = bloklar.filter((b) => b?.type === 'tool_use')
+  const kullanimlar = toolUseBloklari(yanit)
   if (!kullanimlar.length) return []
   const grupId = kullanimlar.length > 1 ? randomUUID() : null
   const cikti: HazirOneri[] = []
   for (const k of kullanimlar) {
+    const girdi = (k.input && typeof k.input === 'object' ? k.input : {}) as Record<string, unknown>
     const o = await oneriHazirla({
       ctx,
       anahtar: String(k.name || ''),
-      girdi: (k.input && typeof k.input === 'object' ? k.input : {}) as Record<string, unknown>,
+      girdi,
       yuzey,
       grupId,
       mesajId: k.id || null,
       modelNotu,
       suzgec,
+      sorular: ek.sorular,
+      sunucuDegerleri: ek.sunucuDegerleri?.(String(k.name || ''), girdi),
     })
     if (o) cikti.push(o)
   }
   return cikti
+}
+
+/** The tool_use blocks of a model answer. */
+export function toolUseBloklari(yanit: { content?: unknown }): { type?: string; name?: string; input?: unknown; id?: string }[] {
+  const bloklar = (Array.isArray(yanit?.content) ? yanit.content : []) as { type?: string; name?: string; input?: unknown; id?: string }[]
+  return bloklar.filter((b) => b?.type === 'tool_use')
 }

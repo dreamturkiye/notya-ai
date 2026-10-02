@@ -42,7 +42,7 @@ let sb: SupabaseClient
 const hasta: HastaOzeti = { id: HASTA_ID, ad: 'QA Hasta EYLEM', dogumTarihi: '2024-03-15', yasAy: 18, cinsiyet: 'male' }
 
 function ctx(over: Partial<EylemBaglami> = {}): EylemBaglami {
-  return { supabase: sb, doktorId: DOKTOR, hasta, brans: 'pediatri', oneriId: '', bugunTRT: bugunTRT(), ...over }
+  return { supabase: sb, doktorId: DOKTOR, hasta, brans: 'pediatri', oneriId: '', bugun: bugunTRT(), saatDilimi: 'Europe/Istanbul', ...over }
 }
 
 beforeEach(() => {

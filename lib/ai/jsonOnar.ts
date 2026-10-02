@@ -50,6 +50,27 @@ export function jsonOnarDetay(ham: string): JsonOnarSonucu {
   return { deger: null, neden: 'onarilamadi' }
 }
 
+/**
+ * NOTYA-AYSE-GERI-07 (audit §7, PR 13) — the JSON a model wrapped in a code fence or in prose, WITHOUT repair:
+ * whole text, else from the first '{' to the last '}'. For answers whose values are clinical (a dose, a
+ * prescription line, a report text): a cut answer is not completed here — closing an open string would turn
+ * "560 mg" into "56". null when there is no complete JSON object.
+ */
+export function jsonCikar(ham: string): Record<string, unknown> | null {
+  const metin = String(ham ?? '').replace(/```json\n?|```/g, '').trim()
+  const dene = (s: string): Record<string, unknown> | null => {
+    try {
+      const v = JSON.parse(s) as unknown
+      return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null
+    } catch { return null }
+  }
+  const tam = dene(metin)
+  if (tam) return tam
+  const bas = metin.indexOf('{')
+  const son = metin.lastIndexOf('}')
+  return bas >= 0 && son > bas ? dene(metin.slice(bas, son + 1)) : null
+}
+
 /** Onarılmış JSON değeri ya da null. */
 export function jsonOnar(ham: string): unknown {
   return jsonOnarDetay(ham).deger

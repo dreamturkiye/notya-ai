@@ -92,6 +92,43 @@ export interface AiCagriGirdisi {
   kademe?: 'hizli' | 'derin'
   /** NOTYA-KADEME-01: reasoning.effort aşımı — ayseCevapla tek-slot takip turunda 'none' (sohbetKademesi). */
   caba?: Caba
+  /**
+   * NOTYA-AYSE-GERI-07 (audit §7, PR 13): wall-clock budget of the whole call, given by a route that has a
+   * `maxDuration` (rotaButcesiMs). Without it two primary attempts of up to 60 s each already equal the route's
+   * limit, so the platform killed the request before the guard could answer and the doctor saw a dead page.
+   * With it: primary attempts share the first part of the budget (a retry that cannot fit is skipped), the guard
+   * gets what is left, and a call that still cannot finish fails as an ordinary transport error the route reports.
+   */
+  butceMs?: number
+}
+
+/** Budget for aiCagir from a route's `maxDuration` (seconds) — the margin is for the route's own reads and writes. */
+export function rotaButcesiMs(maxDurationSn: number): number {
+  return Math.max(10_000, (maxDurationSn - 8) * 1000)
+}
+/** Share of the budget the primary attempts may use together. */
+const BIRINCIL_BUTCE_PAYI = 0.55
+/** An attempt shorter than `asgariMs` is not worth starting (tests shorten it). */
+export const SURE_AYARI = { asgariMs: 5_000 }
+
+interface Sure {
+  /** Timeout for the next primary attempt, or null when it no longer fits (→ guard). */
+  birincil(tavanMs: number): number | null
+  /** Timeout for the guard call; undefined = unbounded (no budget given — as before). */
+  koruyucu(): number | undefined
+}
+export function sureHesabi(butceMs: number | undefined, simdi: () => number = Date.now): Sure {
+  if (!butceMs || !Number.isFinite(butceMs) || butceMs <= 0) return { birincil: (t) => t, koruyucu: () => undefined }
+  const bas = simdi()
+  const birincilSonu = bas + butceMs * BIRINCIL_BUTCE_PAYI
+  const son = bas + butceMs
+  return {
+    birincil: (tavanMs) => {
+      const kalan = birincilSonu - simdi()
+      return kalan < SURE_AYARI.asgariMs ? null : Math.min(tavanMs, Math.round(kalan))
+    },
+    koruyucu: () => Math.max(SURE_AYARI.asgariMs, Math.round(son - simdi())),
+  }
 }
 
 /** NOTYA-KADEME-01: metin girdisi bu tahmini aşan arka plan çağrısı DERİN modele gider (chars / 4). */
@@ -419,11 +456,11 @@ function koruyucuKapaliHatasi(neden: YukseltmeNedeni, altKod: string): AiCagriHa
 }
 
 /** Koruyucuya tek çağrı (düşüş). Koruyucunun cevabı kapılardan geçmez — istek başına en fazla bir düşüş. */
-async function koruyucuCagri(g: AiCagriGirdisi, h: Hedef, neden: YukseltmeNedeni, altKod: string, istekId: string): Promise<Anthropic.Message> {
+async function koruyucuCagri(g: AiCagriGirdisi, h: Hedef, neden: YukseltmeNedeni, altKod: string, istekId: string, sure?: Sure): Promise<Anthropic.Message> {
   dususGunlukle(istekId, g.gorev, neden, altKod)
   if (koruyucuKapali()) throw koruyucuKapaliHatasi(neden, altKod)
   const t = gucluyeYukselt(h, neden)
-  const y = await tekCagri(g, t.govde)
+  const y = await tekCagri(g, t.govde, sure?.koruyucu())
   await olcSessiz(g, t, y)
   return isaretle(y, t)
 }
@@ -431,10 +468,11 @@ async function koruyucuCagri(g: AiCagriGirdisi, h: Hedef, neden: YukseltmeNedeni
 export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
   let h = hedefBelirle(g)
   const istekId = istekKimligi(g)
+  const sure = sureHesabi(g.butceMs)
   kademeGunlukle(istekId, g.gorev, h)
   if (h.neden === 'safety') dususGunlukle(istekId, g.gorev, 'safety', 'sinyal')
   if (!lunaKapisiMi(h)) {
-    const yanit = await tekCagri(g, h.govde)
+    const yanit = await tekCagri(g, h.govde, sure.koruyucu())
     await olcSessiz(g, h, yanit)
     return isaretle(yanit, h)
   }
@@ -442,18 +480,20 @@ export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
   // G2 (f): çağıran birincilin cevabını reddetti → doğrudan koruyucu, birincilin devresine hata.
   if (g.koruyucuyaZorla) {
     devreHata(birincil)
-    return koruyucuCagri(g, h, g.koruyucuyaZorla.neden, g.koruyucuyaZorla.altKod, istekId)
+    return koruyucuCagri(g, h, g.koruyucuyaZorla.neden, g.koruyucuyaZorla.altKod, istekId, sure)
   }
   // G4: devre açık → birincil hiç çağrılmaz.
-  if (!devreBirincilIzinli(birincil)) return koruyucuCagri(g, h, 'devre', 'acik', istekId)
+  if (!devreBirincilIzinli(birincil)) return koruyucuCagri(g, h, 'devre', 'acik', istekId, sure)
 
-  // G1 TAŞIMA: birincil → 400 ms → birincil bir kez → koruyucu
+  // G1 TAŞIMA: birincil → 400 ms → birincil bir kez → koruyucu. Bütçe verildiyse sığmayan deneme atlanır.
   let yanit: Anthropic.Message | null = null
   let sonHata: unknown = null
   for (let deneme = 0; deneme < 2 && !yanit; deneme++) {
+    const sinir = sure.birincil(lunaZamanAsimiMs(h.govde.max_tokens))
+    if (sinir === null) { sonHata = sonHata ?? new AiCagriHatasi(504, 'süre bütçesi'); break }
     if (deneme) await bekle(TASIMA_BEKLEME.ms)
     try {
-      yanit = await tekCagri(g, h.govde, lunaZamanAsimiMs(h.govde.max_tokens))
+      yanit = await tekCagri(g, h.govde, sinir)
     } catch (e) {
       if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
       sonHata = e
@@ -461,7 +501,7 @@ export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
   }
   if (!yanit) {
     devreHata(birincil)
-    return koruyucuCagri(g, h, 'transport', tasimaAltKodu(sonHata), istekId)
+    return koruyucuCagri(g, h, 'transport', tasimaAltKodu(sonHata), istekId, sure)
   }
   await olcSessiz(g, h, yanit)
   // NOTYA-KADEME-01: luna-none cevabı kullanılamadı → aynı gövde luna'da bir kez (tier_up); sonra G2 eskisi gibi.
@@ -472,11 +512,11 @@ export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
       h = lunayaYukselt(h)
       kademeGunlukle(istekId, g.gorev, h)
       try {
-        yanit = await tekCagri(g, h.govde, lunaZamanAsimiMs(h.govde.max_tokens))
+        yanit = await tekCagri(g, h.govde, sure.birincil(lunaZamanAsimiMs(h.govde.max_tokens)) ?? SURE_AYARI.asgariMs)
       } catch (e) {
         if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
         devreHata(birincil)
-        return koruyucuCagri(g, h, 'transport', tasimaAltKodu(e), istekId)
+        return koruyucuCagri(g, h, 'transport', tasimaAltKodu(e), istekId, sure)
       }
       await olcSessiz(g, h, yanit)
     }
@@ -485,7 +525,7 @@ export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
   const kod = kaliteKodu(g, yanit)
   if (kod) {
     devreHata(birincil)
-    return koruyucuCagri(g, h, 'low_conf', kod, istekId)
+    return koruyucuCagri(g, h, 'low_conf', kod, istekId, sure)
   }
   devreBasari(birincil)
   return isaretle(yanit, h)

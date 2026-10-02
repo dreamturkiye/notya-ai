@@ -68,7 +68,22 @@ onay kartı HER ZAMAN, sessiz yazma ASLA. Denetim okuması: **hazırlayan = Ayş
 | `dosya_notu_ekle` | bugünkü notun değerlendirmesi | geri alma yok (metin sonradan düzenlenmiş olabilir) |
 
 **T2 — önce → sonra farkı + dokunuş** (`ilac_sonlandir`, `ilac_doz_degistir`, `alerji_kaldir`,
-`hasta_bilgisi_duzelt`). Geri alma yok: fark zaten dokunuştan önce gösterildi; hekim ilgili ekrandan düzeltir.
+`hasta_bilgisi_duzelt`, `randevu_tasi`, `randevu_iptal`). Geri alma yok: fark zaten dokunuştan önce gösterildi; hekim ilgili ekrandan düzeltir.
+
+`randevu_tasi` / `randevu_iptal` (NOTYA-AYSE-GERI-03, 2026-10-01) mevcut bir randevunun saatini değiştirir / randevuyu
+iptal eder. İkisi de modele araç olarak sunulur, ama HANGİ randevu olduğunu model seçmez: `randevu_id` bir **sunucu
+alanıdır** (`AlanTanimi.sunucu`) — araç şemasında yoktur, model çıktısındaki değeri yok sayılır, karttan düzenlenemez.
+Eylemin `hazirla` adımı hekimin o hastaya ait ileri tarihli randevularını okur: tek randevu varsa onu, birden çoksa
+hekimin söylediği gündekini seçer; seçemezse kart hazırlamaz, Ayşe "Hangisi Hocam: 1. …, 2. …?" diye sorar. İkisi de
+takvim ekranının kendi kuralından geçer (`randevuGuncellemePlani` + `randevuCakismasiVarMi`); iptal silme değildir
+(`durum = iptal`, takvimden yeniden aktif edilebilir).
+
+**Hasta çözülmeden araç (NOTYA-AYSE-GERI-03).** Bir komut ("randevu oluştur", "alerji ekle") hasta belli değilken
+geldiğinde araçlar yine sunulur; her araçta `hasta_adi` alanı vardır. Bu bir **ad**tır, kimlik değil: sunucu adı
+hekimin kendi hastaları içinde çözer (`hastaninSozunuCoz`, `doctor_id` kapsamlı). Tek eşleşme → kart o hastaya;
+birden çok → "hangisi?"; eşleşme yok → "… adında bir hasta kayıtlarınızda bulamadım" — başka doktorun hastası ile
+hiç var olmayan ad aynı cümleyi alır (HASTA-IZOLASYON-01). Hastaya bağlı araçlar (`hastaKosulu`, ör. baş çevresi)
+hasta bilinmeden sunulmaz.
 
 **Branşa özel (P3):** `jine_gorevi_ekle` (kadın hastalıkları ve doğum), `derm_gorevi_ekle`
 (dermatoloji), `dahiliye_gorevi_ekle` (dahiliye). Pediatri kendi eylemini gerektirmiyor: aşı ve

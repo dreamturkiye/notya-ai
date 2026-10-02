@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize'
 import { decrypt } from '@/lib/security/encryption'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
-import { aiCagir } from '@/lib/ai/cagir'
+import { aiCagir, rotaButcesiMs, yanitMetni } from '@/lib/ai/cagir'
+import { jsonCikar } from '@/lib/ai/jsonOnar'
 import {
   addDaysTr,
   resolveRaporTipi,
@@ -13,6 +14,8 @@ import {
 } from '@/lib/sgk/raporTipleri'
 
 export const dynamic = 'force-dynamic'
+/** Same value vercel.json gives every API route; named here so the model call can budget against it. */
+export const maxDuration = 60
 
 // NOTYA-SGK-RAPOR-02 (Kaan, 2026-09-23): the SGK draft now uses the patient's approved notes.
 // Routed through the same aiCagir path as every other clinical call (ai-model-politikasi)
@@ -27,17 +30,15 @@ async function taslakUret(system: string, user: string, doctorId: string): Promi
     doctorId,
     system,
     messages: [{ role: 'user', content: user }],
+    butceMs: rotaButcesiMs(maxDuration),
   })
-  const blok = yanit.content.find((c) => c.type === 'text')
-  const content = blok && blok.type === 'text' ? blok.text : ''
-  if (!content) throw new Error('Yanıt boş')
-  const cleaned = String(content)
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim()
-  return JSON.parse(cleaned) as SgkRaporDraft
+  // NOTYA-AYSE-GERI-07 (PR 13): a draft wrapped in a sentence or a code fence is still the draft; one that is not
+  // complete JSON is an ordinary "could not be produced" — the doctor used to get the parser's English error text.
+  const taslak = jsonCikar(yanitMetni(yanit))
+  if (!taslak) throw new Error(TASLAK_URETILEMEDI)
+  return taslak as unknown as SgkRaporDraft
 }
+const TASLAK_URETILEMEDI = 'SGK rapor taslağı üretilemedi. Lütfen tekrar deneyin.'
 
 export async function POST(request: NextRequest) {
   try {
@@ -189,6 +190,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Sunucu hatası'
-    return NextResponse.json({ hata: message }, { status: 500 })
+    return NextResponse.json({ hata: message }, { status: message === TASLAK_URETILEMEDI ? 502 : 500 })
   }
 }

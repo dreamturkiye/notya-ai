@@ -11,7 +11,8 @@ export type GroqMessage = {
 
 export async function groqChat(
   messages: GroqMessage[],
-  options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean }
+  /** `butceMs`: the calling route's time budget (rotaButcesiMs) — passed through to aiCagir. */
+  options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean; butceMs?: number }
 ): Promise<string> {
   if (!String(process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || '').trim()) {
     throw new Error('OPENROUTER_API_KEY missing')
@@ -33,6 +34,7 @@ export async function groqChat(
     maxTokens: options?.maxTokens ?? 1024,
     temperature: options?.temperature ?? 0.4,
     jsonBekleniyor: !!options?.jsonMode,
+    ...(options?.butceMs ? { butceMs: options.butceMs } : {}),
     system: sistemParcalari.join('\n\n') || undefined,
     messages: konusma,
   })

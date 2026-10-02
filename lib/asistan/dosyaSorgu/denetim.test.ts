@@ -289,7 +289,8 @@ describe('ayseCevapla bağlantısı (kaynak metin)', () => {
   const kaynak = readFileSync(new URL('../ayseCevapla.ts', import.meta.url), 'utf8')
   it('dosya sorusu HIZLI KART yolunu atlar, kanıt + kurallar dosyaEk\'e girer', () => {
     assert.ok(kaynak.includes('soruTuruBul(String(message || ""))'))
-    assert.ok(kaynak.includes('const kesinHam = sorgu ? null : dosyaSoruCevap('))
+    // NOTYA-AYSE-GERI-03: a command skips the quick card too (it must reach the tools).
+    assert.ok(kaynak.includes('const kesinHam = sorgu || komut ? null : dosyaSoruCevap('))
     assert.ok(kaynak.includes('dosyaSorguKuralBlogu(aktifAd)'))
     assert.ok(kaynak.includes('kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta'))
   })

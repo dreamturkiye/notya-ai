@@ -9,8 +9,14 @@ export const FISH_BARGE_MS = 300
  * cadence (feat/ayse-100), but that cuts off a doctor speaking slowly and deliberately
  * with natural mid-sentence pauses -- the root cause of the "interrupting / not
  * listening" complaint. Raised to 500 ms; confirm final value by ear.
+ *
+ * NOTYA-SES-YARIM-01 (Kaan, 2026-10-01): 500 ms still closed the turn between a first name
+ * and the surname ("Ayşe lütfen bana Umutcan [pause] Türkoğlu..."). Raised to 700 ms: +200 ms
+ * on every reply, the cost of surviving a name-surname pause. Longer pauses are not bought with
+ * more tail -- the server holds an unfinished sentence (lib/asistan/yarimSoz.ts) and the next
+ * clip is merged into it (fishTurSirasi `yarim`).
  */
-export const FISH_SES_SIZLIGI_MS = 500
+export const FISH_SES_SIZLIGI_MS = 700
 export const FISH_MIN_KONUSMA_MS = 500
 export const FISH_AZAMI_TUR_MS = 16_000
 /** Audio kept from before the first voiced frame (word onsets), everything older is dropped. */
@@ -71,9 +77,9 @@ export function konusuyorMu(rms: number, esik = FISH_KONUSMA_ESIK): boolean {
 /**
  * End-of-turn silence tail with Silero: speech probability does not flicker on breaths
  * like RMS did. Raised alongside FISH_SES_SIZLIGI_MS (NOTYA-VAD-TAIL-01) for the same
- * reason -- 350 ms was still cutting off deliberate speech.
+ * reason -- 350 ms was still cutting off deliberate speech. 500 -> 700 ms with NOTYA-SES-YARIM-01.
  */
-export const FISH_SES_SIZLIGI_SILERO_MS = 500
+export const FISH_SES_SIZLIGI_SILERO_MS = 700
 /** Silero speech probability thresholds (hysteresis: enter above, leave below). */
 export const FISH_SILERO_ESIK = 0.5
 export const FISH_SILERO_CIKIS_ESIK = 0.35

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { aiCagir } from '@/lib/ai/cagir'
+import { aiCagir, rotaButcesiMs } from '@/lib/ai/cagir'
+import { jsonCikar } from '@/lib/ai/jsonOnar'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+
+/** Same value vercel.json gives every API route; named here so the model call can budget against it. */
+export const maxDuration = 60
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -92,13 +96,15 @@ Kiloya/yaşa uygun değilse veya bu ilaç bu yaşta önerilmezse doz'u boş bır
       jsonBekleniyor: true,
       maxTokens: 400,
       messages: [{ role: 'user', content: prompt }],
+      butceMs: rotaButcesiMs(maxDuration),
     })
     const text = resp.content
       .filter((c) => c.type === 'text')
       .map((c) => (c as { text: string }).text)
       .join('')
-    let parsed: { doz?: string; kullanim?: string; aciklama?: string } = {}
-    try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()) } catch { /* boş öneri döner */ }
+    // NOTYA-AYSE-GERI-07 (PR 13): a suggestion wrapped in a sentence is still read; a CUT one is never completed —
+    // half a number is not a dose (jsonCikar does no repair). No complete JSON → empty suggestion, as before.
+    const parsed: { doz?: unknown; kullanim?: unknown; aciklama?: unknown } = jsonCikar(text) ?? {}
 
     return NextResponse.json({
       oneri: {

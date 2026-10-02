@@ -30,6 +30,8 @@ export interface EylemAlan {
   tip: 'metin' | 'uzunMetin' | 'sayi' | 'tarih' | 'secim' | 'mantik'
   secenekler?: { deger: string; etiket: string }[]
   birim?: string
+  /** NOTYA-AYSE-GERI-03: filled by the server (which appointment is meant) — shown, not editable. */
+  sunucu?: boolean
 }
 
 export interface EylemUyarisi {
@@ -312,8 +314,9 @@ export function EylemKarti({
                   type={a.tip === 'tarih' ? 'date' : a.tip === 'sayi' ? 'number' : 'text'}
                   step={a.tip === 'sayi' ? 'any' : undefined}
                   value={deger[a.anahtar] || ''}
-                  onChange={(e) => setDeger((d) => ({ ...d, [a.anahtar]: e.target.value }))}
-                  style={isaretli ? girdiBos : girdi}
+                  readOnly={Boolean(a.sunucu)}
+                  onChange={(e) => { if (!a.sunucu) setDeger((d) => ({ ...d, [a.anahtar]: e.target.value })) }}
+                  style={a.sunucu ? { ...girdi, opacity: 0.75 } : isaretli ? girdiBos : girdi}
                 />
               )}
               {oneri.eylem_anahtar === 'asi_kaydi_ekle' && a.anahtar === 'uygulama_tarihi' && !String(deger[a.anahtar] || '').trim() && hasta.dogumTarihi ? (

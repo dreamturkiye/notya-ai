@@ -34,7 +34,7 @@ export function sesliKararCumlesiMi(mesaj: string): boolean {
  * Bekleyen kart varsa kararı uygular, turu ortak oturuma yazar ve söylenecek cümleyi döner.
  * Bekleyen kart yoksa null — çağıran cümleyi ayseCevapla'ya verir.
  */
-export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: string, oturumId: string, mesaj: string): Promise<{ soz: string } | null> {
+export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: string, oturumId: string, mesaj: string, saatDilimi?: string | null): Promise<{ soz: string } | null> {
   if (!sesliKararCumlesiMi(mesaj)) return null
   const { data: oturum } = await supabase
     .from('asistan_sessions')
@@ -55,7 +55,7 @@ export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: stri
   const taslaklar = (data || []) as { id: string; hasta_id: string; eylem_anahtar: string; veri: Record<string, unknown> | null; uyari_detay: IlacUyarisi[] | null }[]
   if (!taslaklar.length) return null
 
-  const karar = await uygula(supabase, doktorId, taslaklar, sesOnayMetniGecerliMi(mesaj))
+  const karar = await uygula(supabase, doktorId, taslaklar, sesOnayMetniGecerliMi(mesaj), saatDilimi)
   const zaman = new Date().toISOString()
   const mesajlar = ((oturum as { messages?: OturumMesaji[] }).messages || [])
   await supabase.from('asistan_sessions').update({
@@ -74,6 +74,7 @@ async function uygula(
   doktorId: string,
   taslaklar: { id: string; hasta_id: string; eylem_anahtar: string; veri: Record<string, unknown> | null; uyari_detay: IlacUyarisi[] | null }[],
   onay: boolean,
+  saatDilimi?: string | null,
 ): Promise<{ soz: string; kalan: string[] }> {
   if (!onay) {
     for (const t of taslaklar) await eylemVazgec(supabase, doktorId, t.id)
@@ -98,9 +99,11 @@ async function uygula(
     brans: bransAnahtari((u as { specialty?: string } | null)?.specialty),
     // Spoken Evet is the deliberate ack for voice; serious warnings already blocked above.
     uyariGoruldu: false,
+    // NOTYA-AYSE-GERI-04: the commit-time "today" is the doctor's day, as at preparation.
+    saatDilimi,
   })
   if (!s.ok) return { soz: s.hata, kalan: [t.id] }
-  return { soz: `Kaydedildi Hocam — ${s.etiket}.`, kalan: [] }
+  return { soz: eylem.basariSozu || `Kaydedildi Hocam — ${s.etiket}.`, kalan: [] }
 }
 
 /**

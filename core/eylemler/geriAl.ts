@@ -13,7 +13,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { eylemBul } from './kayit'
 import { hastaOzetiGetir } from './hasta'
-import { bugunTRT, type EylemBaglami } from './types'
+import { eylemZamani, type EylemBaglami } from './types'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
@@ -25,7 +25,9 @@ export async function eylemGeriAl(
   sb: SupabaseClient,
   doktorId: string,
   kayitId: string,
-  brans: SpecialtyKey | null
+  brans: SpecialtyKey | null,
+  /** The doctor's IANA timezone (request body / cookie); default Europe/Istanbul. */
+  saatDilimi?: string | null
 ): Promise<GeriAlSonucu> {
   const { data: kayit } = await sb
     .from('eylem_kayitlari')
@@ -63,7 +65,7 @@ export async function eylemGeriAl(
     .select('id')
   if (!kilit || kilit.length === 0) return { ok: false, durum: 409, hata: 'Bu kayıt zaten geri alındı.' }
 
-  const ctx: EylemBaglami = { supabase: sb, doktorId, hasta, brans, oneriId: String(kayit.oneri_id), bugunTRT: bugunTRT() }
+  const ctx: EylemBaglami = { supabase: sb, doktorId, hasta, brans, oneriId: String(kayit.oneri_id), ...eylemZamani(saatDilimi) }
   try {
     await eylem.geriAl(ctx, {
       hedefTablo: String(kayit.hedef_tablo),
