@@ -226,3 +226,27 @@ the visits.
 - `muayene_ara` matches the term in the text, by complaint synonym, by vaccine series and by lab key. A drug's
   active ingredient or a brand's other names are not expanded.
 - A visit with no weight is reported by the digest as a fact of the record. No engine treats it as a gap.
+
+## C. Corpus
+
+The Dr. Gökhan complaint corpus (NOTYA-GOKHAN-KORPUS-01, `audit/gokhan-korpus`) is not in this branch and does not
+merge cleanly into it (`git merge-tree`: conflict in `package.json`; the corpus branch also changes
+`lib/asistan/tests/ayseSahne.ts`). As agreed for that case, the entries were added as plain tests.
+
+- `lib/asistan/tests/alanAnalizKorpusu.ts` — 12 entries in the corpus's own entry shape (sentence, source, chart
+  state, surfaces, intended outcome): 5 for A (the 2026-09-25 live sentence, which the identity router must keep
+  answering, and four phrasings it misses), 7 for B (the two live sentences, with the chart open and with the
+  patient named, and three derived ones). Derived entries say how they were derived.
+- `lib/asistan/alanAnalizKorpus.test.ts` — runs every entry on chat and voice through the real routes with the read
+  routers ON (the acceptance tests stub them), and grades like the corpus: route, tools called, what the answer
+  contains and may not contain (no refusal, no raw placeholder), what was spoken. 24 runs, 0 FAIL.
+
+The model in this run is a stand-in that makes each entry's scripted calls, so a FAIL is a server defect. With the
+read tools switched off (`AYSE_OKUMA_ARACI_KAPALI=1`) 22 of the 24 runs fail; the two that pass are the router-path
+entry.
+
+**Baseline.** The corpus's live number (FAIL 39 of 850 turns with real Luna, recorded for NOTYA-AYSE-ARAC-PARITE)
+could not be re-run: the runner is not in this branch and there is no model key in this environment. What was
+measured here: the suites that were green before are green after, and the new entries add 0 FAIL. When both
+branches are on main the 12 entries move into `gokhanSikayetKorpusu.ts` as they are (drop `vekil`), and the live
+run then measures what is not known today — whether Luna makes these calls.
