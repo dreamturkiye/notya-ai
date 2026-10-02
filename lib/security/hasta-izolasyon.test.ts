@@ -895,17 +895,33 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.ok(modelIstekleri.length >= 1)
         modelYaniti = (istek) => {
           const var_ = JSON.stringify(istek.messages || []).includes('tool_result')
-          return var_ ? [{ type: 'text', text: JSON.stringify({ speech: 'tamam' }) }] : [
+          // NOTYA-AYSE-ALAN-01: hasta_alan gives a placeholder; the model writes it, the server puts the value in.
+          return var_ ? [{ type: 'text', text: JSON.stringify({ speech: 'Annesinin adı {{ALAN:anne_adi}}.' }) }] : [
             { type: 'tool_use', id: 'toolu_a', name: 'hasta_bul', input: { isim: `${AD}’nın alerjisi ne` } },
             { type: 'tool_use', id: 'toolu_c', name: 'randevu_takvim', input: { tarih: bugunTr() } },
+            { type: 'tool_use', id: 'toolu_d', name: 'hasta_alan', input: { alan: 'anne_adi', hasta_adi: AD } },
+            // NOTYA-AYSE-ANALIZ-01: the three analysis tools, by the patient's name.
+            { type: 'tool_use', id: 'toolu_f', name: 'muayene_ara', input: { terim: 'Adli ilac', hasta_adi: AD } },
+            { type: 'tool_use', id: 'toolu_g', name: 'muayeneleri_oku', input: { adet: 4, hasta_adi: AD } },
+            { type: 'tool_use', id: 'toolu_h', name: 'eksikler', input: { hasta_adi: AD } },
           ]
         }
         modelIstekleri.length = 0
-        await okumaTuru(() => c.cagir(A))
+        const y2 = await okumaTuru(() => c.cagir(A))
         const sonIstek = modelIstekleri[modelIstekleri.length - 1]
         assert.ok(sonIstek.includes('tool_result'), 'araç sonucu modele dönmedi — vaka boşa koştu')
         assert.ok(sonIstek.includes(`Alerji ${isaret('A')}`), 'kendi hastasının alerjisi araç sonucunda yok')
         assert.ok(sonIstek.includes(`QA Hasta A ${isaret('A')}`), 'kendi randevusu araç sonucunda yok')
+        // The analysis tools found the doctor's own patient: the drug record, the (empty) visit list, the gaps header.
+        assert.ok(sonIstek.includes(`Adli ilac ${isaret('A')}`), 'muayene_ara kendi hastasının ilaç kaydını bulmadı')
+        assert.ok(sonIstek.includes(`${AD} için onaylı muayene notu yok.`), 'muayeneleri_oku kendi hastasını okumadı')
+        assert.ok(sonIstek.includes(`${AD} — eksikler ve açık işler`), 'eksikler kendi hastasını okumadı')
+        // hasta_alan: the tool issued a placeholder for the doctor's own patient and no model request carries the value.
+        assert.ok(sonIstek.includes('{{ALAN:anne_adi}}'), 'hasta_alan kendi hastası için yer tutucu vermedi')
+        for (const m of modelIstekleri) assert.ok(!m.includes(`Anne ${isaret('A')}`), 'kimlik değeri modele gitti')
+        // Written chat delivers the value; the spoken turn points at the screen (the value is in ses-ekran, not in speech).
+        if (c.ad.includes('/chat')) assert.ok(y2.metin.includes(`Annesinin adı Anne ${isaret('A')}.`), 'kendi hastasının değeri teslim edilmedi')
+        else assert.ok(!y2.metin.includes(`Anne ${isaret('A')}`) && y2.metin.includes('ekranınıza yazdım'), 'sesli turda değer söylendi')
       })
 
       for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
@@ -922,9 +938,17 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
             for (const msg of (istek.messages || []) as { content?: unknown }[]) {
               if (Array.isArray(msg.content)) for (const b of msg.content as { type?: string; content?: unknown }[]) if (b?.type === 'tool_result') sonuclar.push(String(b.content ?? ''))
             }
-            return sonuclar.length ? [{ type: 'text', text: JSON.stringify({ speech: `Araç sonucu: ${sonuclar.join(' | ')}` }) }] : [
+            // NOTYA-AYSE-ALAN-01: the victim's identity fields asked by name; the model also writes placeholders the
+            // tool never issued (a name that is not this doctor's patient gets none) — they must be removed, not filled.
+            return sonuclar.length ? [{ type: 'text', text: JSON.stringify({ speech: `Araç sonucu: ${sonuclar.join(' | ')} Annesi {{ALAN:anne_adi}}, telefonu {{ALAN:telefon}}.` }) }] : [
               { type: 'tool_use', id: 'toolu_a', name: 'hasta_bul', input: { isim: `${AD}’nın alerjisi ne` } },
               { type: 'tool_use', id: 'toolu_c', name: 'randevu_takvim', input: { tarih: bugunTr() } },
+              { type: 'tool_use', id: 'toolu_d', name: 'hasta_alan', input: { alan: 'anne_adi', hasta_adi: AD } },
+              { type: 'tool_use', id: 'toolu_e', name: 'hasta_alan', input: { alan: 'telefon', hasta_adi: AD } },
+              // NOTYA-AYSE-ANALIZ-01: the victim's visits, drug records and gaps, asked by the victim's patient name.
+              { type: 'tool_use', id: 'toolu_f', name: 'muayene_ara', input: { terim: 'Adli ilac', hasta_adi: AD } },
+              { type: 'tool_use', id: 'toolu_g', name: 'muayeneleri_oku', input: { adet: 4, hasta_adi: AD } },
+              { type: 'tool_use', id: 'toolu_h', name: 'eksikler', input: { hasta_adi: AD } },
             ]
           }
           const y2 = await okumaTuru(() => c.cagir(arayan))
@@ -934,6 +958,13 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
             assert.ok(!y.metin.includes(isaret(kurbanHarf)) && !y.metin.includes(kurbanHastasi) && !y.metin.includes(kurban.hasta), `SIZINTI: ${kurbanHarf} hekiminin verisi yanıtta: ${y.metin.slice(0, 400)}`)
           }
           for (const m of modelIstekleri) assert.ok(!m.includes(isaret(kurbanHarf)) && !m.includes(kurbanHastasi) && !m.includes(kurban.hasta), `SIZINTI: ${kurbanHarf} hekiminin verisi modele / araç sonucuna girdi`)
+          // (The prompt rule shows the generic form "{{ALAN:…}}"; an ISSUED placeholder names a field.)
+          assert.ok(modelIstekleri.some((m) => m.includes('Bu hastayı kayıtlarınızda bulamadım.')), 'hasta_alan çağrılmadı — vaka boşa koştu')
+          // Five name-taking calls (two hasta_alan, three analysis tools): every one answered "not found".
+          assert.ok(modelIstekleri.some((m) => m.split('Bu hastayı kayıtlarınızda bulamadım.').length - 1 >= 5), 'analiz araçları yabancı hasta için "bulunamadı" dışında bir şey döndü')
+          assert.ok(!modelIstekleri.some((m) => m.includes('eksikler ve açık işler') || m.includes('onaylı muayenenin')), 'analiz aracı yabancı hastanın dosyasını okudu')
+          assert.ok(!modelIstekleri.some((m) => m.includes('yaz: {{ALAN:')), 'hasta_alan yabancı hasta için yer tutucu verdi')
+          assert.ok(!y2.metin.includes('{{ALAN'), 'verilmeyen yer tutucu yanıtta kaldı')
           // The attacker's assistant session did not take the victim's patient as its focus, and nothing of the victim changed.
           for (const o of tablo('asistan_sessions').filter((r) => r.doctor_id === arayan.id)) {
             assert.ok(!JSON.stringify(o).includes(kurbanHastasi) && !JSON.stringify(o).includes(isaret(kurbanHarf)), 'SIZINTI: kurbanın hastası saldıranın oturumuna yazıldı')

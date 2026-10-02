@@ -17,6 +17,10 @@
 /** Kimlik sorusunun sözlü biçimi gibi değerin hiç okunmadığı yerler için. */
 export const EKRANA_YAZDIM = 'Ayrıntıları ekranınıza yazdım Hocam.'
 export const ILETISIM_EKRANDA = 'İletişim bilgisini ekranınıza yazdım.'
+/** A named patient's identity / contact value: on screen, never read aloud (the identity router and the placeholder path say the same sentence). */
+export function kimlikEkrandaSozu(hastaAdi: string): string {
+  return `${hastaAdi} için istediğiniz bilgiyi ekranınıza yazdım Hocam.`
+}
 export const TABLO_EKRANDA = 'Tabloyu ekranınıza yazdım.'
 /** NOTYA-SES-SLUR-01 (Kaan, 2026-09-26): a spoken turn is at most this many sentences; the rest stays on screen. */
 export const SOZ_BEAT_SINIRI = 5

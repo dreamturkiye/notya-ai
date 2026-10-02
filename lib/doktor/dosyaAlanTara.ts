@@ -16,7 +16,8 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 /** Never surface these to Ayşe / the model even if a belge quotes them. */
 const GIZLI = new Set([
-  'tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres',
+  // 'il' (Şehir): the address the identity answer gives is "adres, il"; the card's `sehir` was already kept back.
+  'tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'il',
   'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik',
   'policeNo', 'kurumAdi',
   'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi',
@@ -194,6 +195,28 @@ export function kimlikAlanlariniTara(metin: string): DosyaAlanBulgu[] {
     }
   }
   return cikti
+}
+
+/** Belge özeti JSON'undaki tüm metin değerleri, satır satır — "Anne Adı: …" satırı etiketle bulunsun. */
+export function metinleriTopla(v: unknown, out: string[] = [], derinlik = 0): string[] {
+  if (derinlik > 5 || v == null) return out
+  if (typeof v === 'string') out.push(v)
+  else if (Array.isArray(v)) v.forEach((x) => metinleriTopla(x, out, derinlik + 1))
+  else if (typeof v === 'object') Object.values(v as Record<string, unknown>).forEach((x) => metinleriTopla(x, out, derinlik + 1))
+  return out
+}
+
+/**
+ * NOTYA-AYSE-ALAN-01 — a document summary on its way to the model: the identity lines the server-side identity
+ * answer reads from it (anne / baba adı, doğum yeri) are taken out of `metin`. `kaynak` is the summary as stored
+ * (the label scan needs its line structure); `metin` is the form that goes into the chart.
+ */
+export function belgeOzetindenKimlikCikar(metin: string, kaynak: unknown): string {
+  let out = metin
+  for (const b of kimlikAlanlariniTara(metinleriTopla(kaynak).join('\n'))) {
+    if (MODELE_GITMEYEN_KIMLIK.has(b.id) && b.deger.trim()) out = out.split(b.deger.trim()).join('[kimlik bilgisi — ekranda]')
+  }
+  return out
 }
 
 export function dosyaAlanOzeti(bulgular: DosyaAlanBulgu[]): string {

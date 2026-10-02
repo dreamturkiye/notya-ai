@@ -107,3 +107,10 @@ The stand-in answers at once and the database is in memory: these numbers are th
 trip. They are not the latency a doctor will see. Live, a round trip costs one more call of the primary model plus
 the tool's database reads, and neither was measured here (no key in this environment). The runner takes a real key:
 `OPENROUTER_API_KEY=… npm run olcum:okuma-araci`.
+
+## 7. After this branch
+
+`feat/ayse-alan-ve-analiz` (NOTYA-AYSE-ALAN-01, NOTYA-AYSE-ANALIZ-01) adds four read tools on top of this round trip:
+`hasta_alan` (an identity / contact field as a placeholder the server fills; the value never reaches the model) and
+`muayene_ara`, `muayeneleri_oku`, `eksikler` (analysis across a patient's visits). They exist in the single brain
+only; the ElevenLabs agents do not have them. Design and limits: `docs/ayse-alan-ve-analiz.md`.

@@ -166,6 +166,11 @@ export function ilacDurumu(
 }
 
 // ─── Olaylar ─────────────────────────────────────────────────────────────────────────────────────────────
+/**
+ * How many characters of each note section the visit event keeps. A reader that shows the sections (the visit digest,
+ * lib/asistan/muayeneAnaliz.ts) says so when a section reached its cap — the index cuts without a mark.
+ */
+export const VIZIT_BOLUM_SINIRI: Record<'Şikayet' | 'Bulgu' | 'Değerlendirme' | 'Tanı' | 'Plan', number> = { 'Şikayet': 300, 'Bulgu': 260, 'Değerlendirme': 220, 'Tanı': 200, 'Plan': 320 }
 const VITAL_OLCUM: Record<string, string> = { kilo: 'kg', boy: 'cm', basCevresi: 'cm', ates: '°C', nabiz: '/dk', spo2: '%' }
 const ALERJI_YOK = /^(yok|hayir|hayır|bilinen alerji yok|bilinen yok|-|none)$/i
 
@@ -247,12 +252,13 @@ export function olaylariKur(ham: HamDosya, bugunIso: string): DosyaOlayi[] {
   for (const v of ham.vizitler) {
     const t = gun(v.tarih)
     const icd = (v.icd || []).map((k) => [k.code, k.description_tr].filter(Boolean).join(' ')).filter(Boolean).join('; ')
+    const s = VIZIT_BOLUM_SINIRI
     const parca = [
-      v.subjektif ? `Şikayet/öykü: ${kisalt(v.subjektif, 300)}` : '',
-      v.objektif ? `Bulgu: ${kisalt(v.objektif, 260)}` : '',
-      v.degerlendirme ? `Değerlendirme: ${kisalt(v.degerlendirme, 220)}` : '',
-      v.tani || icd ? `Tanı: ${kisalt([v.tani, icd].filter(Boolean).join(' — '), 200)}` : '',
-      v.plan ? `Plan: ${kisalt(v.plan, 320)}` : '',
+      v.subjektif ? `Şikayet/öykü: ${kisalt(v.subjektif, s['Şikayet'])}` : '',
+      v.objektif ? `Bulgu: ${kisalt(v.objektif, s['Bulgu'])}` : '',
+      v.degerlendirme ? `Değerlendirme: ${kisalt(v.degerlendirme, s['Değerlendirme'])}` : '',
+      v.tani || icd ? `Tanı: ${kisalt([v.tani, icd].filter(Boolean).join(' — '), s['Tanı'])}` : '',
+      v.plan ? `Plan: ${kisalt(v.plan, s['Plan'])}` : '',
     ].filter(Boolean)
     o.push({ tarih: t, kaynak: 'not', tur: 'vizit', durum: 'tamamlandi', metin: parca.join(' | ') || 'Vizit (not içeriği yok)', kaynakId: v.id, guven: 'kayit', vizitId: v.id })
 

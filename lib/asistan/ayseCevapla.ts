@@ -53,6 +53,7 @@ import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aktifHastaKullanilsinMi, dosyaAcmaIstegiMi, kohortSorusuMu } from "@/lib/asistan/aktifHasta"
 import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
+import { AlanDefteri, alanlariYerineKoy, alanSozcusu, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
 import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
@@ -68,7 +69,7 @@ import { kayitCevabi, kayitIstegiBul, type KayitCevabi } from "@/lib/asistan/kay
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
+import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
@@ -166,6 +167,12 @@ export interface OturumMesaji {
    * sentence the tool was called with (the doctor's own wording was the gap). A question, never a value.
    */
   kimlikSorusu?: string
+  /**
+   * NOTYA-AYSE-ALAN-01: `content` carries identity placeholders ({{ALAN:…}}). These say which field of which patient
+   * each one stands for — references, never a value. The model always gets `content` as stored; the doctor's screen
+   * form is rebuilt on read (lib/asistan/hastaAlan.ts alanlariYerineKoy, doctor-scoped).
+   */
+  alanlar?: AlanRef[]
 }
 
 export interface AyseCevabi {
@@ -333,7 +340,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   let turNiyeti: Niyet | null = null
 
   /** Tek yazma noktası: geçmiş + (varsa) çözülen hasta + (varsa) bekleyen kart listesi. */
-  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; kimlikSorusu?: string; bekleyen?: string[]; sesDevamKalan?: string; bekleyenKomut?: BekleyenKomut | null } = {}) => {
+  const oturumuYaz = async (asistanSozu: string, ek: { hasta?: { id: string; ad: string } | null; kartlar?: string[]; kartHastaId?: string | null; kimlik?: boolean; kimlikSorusu?: string; bekleyen?: string[]; sesDevamKalan?: string; bekleyenKomut?: BekleyenKomut | null; alanlar?: AlanRef[] } = {}) => {
     // NOTYA-SES-TUR-02: this turn was cancelled (barge-in / sentence merge) -- never let its answer reach
     // the session record, where a later poll or follow-up turn could surface it as a fresh answer.
     if (g.sinyal?.aborted) return
@@ -344,8 +351,9 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
           role: "assistant", content: asistanSozu, kanal: "ses", zaman: asistanZamani,
           ...(ek.kartlar?.length ? { kartlar: ek.kartlar, hastaId: ek.kartHastaId ?? null } : {}),
           ...(ek.kimlik ? { kimlik: true, hastaId: ek.hasta?.id ?? (contextPatientId ? String(contextPatientId) : null), ...(ek.kimlikSorusu ? { kimlikSorusu: ek.kimlikSorusu } : {}) } : {}),
+          ...(ek.alanlar?.length ? { alanlar: ek.alanlar } : {}),
         }
-      : { role: "assistant", content: asistanSozu }
+      : { role: "assistant", content: asistanSozu, ...(ek.alanlar?.length ? { alanlar: ek.alanlar } : {}) }
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
     // NOTYA-AYSE-GERI-03: a pending command lives only as long as a turn writes it back.
     const { sesDevam: eskiDevam, bekleyenKomut: eskiBekleyenKomut, currentPatientId, patientName, ...geriBaglam } = baglam
@@ -562,7 +570,9 @@ ${ilacBaglamMetni(drugs[0])}`
   if (ses && okumaIstegiMi(String(message || ""))) {
     const sonEkran = [...messages].reverse().find((m) => m.role === "assistant" && String(m.content || "").trim())
     if (sonEkran) {
-      const tam = konusmaYap(String(sonEkran.content), undefined, { sinirsiz: true }) // screen text is already the cleaned, doctor-visible answer
+      // Screen text is already the cleaned, doctor-visible answer. NOTYA-AYSE-ALAN-01: a stored answer keeps its
+      // identity placeholders; a sentence with one is not read — the value is on screen.
+      const tam = konusmaYap(String(sonEkran.content), alanSozcusu(null), { sinirsiz: true })
       const okuma = tam || "Ekranda okunacak bir cevap bulamadım Hocam."
       soyle(okuma)
       const ekranNotu = "Ekrandaki cevabı sesli okudum Hocam."
@@ -838,13 +848,18 @@ ${ilacBaglamMetni(drugs[0])}`
   let dozKaynak = kaynakSayilari(...dozKaynakMetinleri)
   const kdMi = kadinDogumMi(hekimBransi, specialty)
   const liste = kdMi ? kdDogrulanmisKaynaklar() : []
+  // NOTYA-AYSE-ALAN-01: the identity placeholders issued in this turn (hasta_alan). References only — the values are
+  // read when the final answer is delivered, never before, and never reach a model or the speech provider.
+  const alanDefteri = new AlanDefteri()
+  const alanSoz = alanSozcusu(alanDefteri)
   // Ses: model yazarken her cümle ekrandakiyle aynı kilitlerden geçer — doğrulanmamış doz / kılavuz numarası söylenmez.
   const sesTemizle = (c: string) => {
     // NOTYA-AYSE-GERI-06: the "ask again with the full chart" marker is never spoken.
     if (sesTamDosyaIstendiMi(c)) return ""
     let t = uydurmaDozTemizle(doktorMetniTemizle(c), dozKaynak).metin
     if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
-    return t
+    // A sentence that would carry an identity value is not read: once per turn "… ekranınıza yazdım Hocam".
+    return alanSoz(t)
   }
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
   const sesAkisiKur = () => (ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null)
@@ -896,7 +911,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // HASTA-IZOLASYON-01: the tools get the doctor from the session, text from the model, and the open patient from the
   // session (re-checked in the executor). A named person who was not found is never replaced by the open chart.
   const okumaBaglami = {
-    supabase, doktorId, saatDilimi, hitapAdi: personaIlkAdi(persona.name),
+    supabase, doktorId, saatDilimi, hitapAdi: personaIlkAdi(persona.name), alanDefteri,
     aktifHasta: cozulenHasta ?? (!baskaKisiAnildi && contextPatientId
       ? { id: String(contextPatientId), ad: baglam.currentPatientId && String(baglam.currentPatientId) === String(contextPatientId) && baglam.patientName ? String(baglam.patientName) : "" }
       : null),
@@ -1180,6 +1195,22 @@ ${ilacBaglamMetni(drugs[0])}`
     sesDevamKalan = ekSoylendi ? "" : sesDevamKalani([...sozCumleleri(String(aiData.speech || ""), sesTemizle), ...ekler], durum.soylenen)
   }
 
+  // NOTYA-AYSE-ALAN-01: two forms of the answer from here on.
+  //  · `aiData.speech` — the PLACEHOLDER form. Placeholders issued in this turn stay, any other one is removed. This is
+  //    what is stored, learned from and sent to a model on later turns.
+  //  · `ekranMetni` — the doctor's form: the server puts the values in, for this doctor's own patient, now. It goes to
+  //    the client and nowhere else.
+  const alanTemiz = verilmeyenleriSil(String(aiData.speech || ""), alanDefteri)
+  aiData.speech = alanTemiz.metin
+  if (aiData.proactiveWarning) aiData.proactiveWarning = verilmeyenleriSil(String(aiData.proactiveWarning), null).metin
+  const alanRefleri = alanDefteri.kullanilan(alanTemiz.metin)
+  const ekranMetni = alanRefleri.length ? await alanlariYerineKoy(supabase, doktorId, alanTemiz.metin, alanRefleri) : alanTemiz.metin
+  if (alanRefleri.length || alanTemiz.silinen) {
+    // Audit: field and patient references, never the values.
+    console.info("[asistan/chat] alan", { kanal: g.kanal, alanlar: alanRefleri.map((r) => ({ alan: r.alan, hasta: r.hastaId })), silinen: alanTemiz.silinen })
+    if (alanRefleri.length) void import("@/lib/security/auditLogger").then((m) => m.logKimlikAlani(doktorId, alanRefleri, g.kanal)).catch(() => { /* denetim kaydı turu durdurmaz */ })
+  }
+
   // Update conversation history
   turNiyeti = turNiyeti ?? niyetBul(message) ?? (dosyaEk || currentPatient ? "hasta-dosya" : "genel")
   // NOTYA-AYSE-GERI-03: a command that ended without a card is still open — what was said so far waits for the
@@ -1187,7 +1218,7 @@ ${ilacBaglamMetni(drugs[0])}`
   const yeniBekleyenKomut: BekleyenKomut | null = komut && !eylemOnerileri.length
     ? { arac: komut.arac, randevu: komut.randevu, hastasiz: !kartHastasi, tarih: komut.randevu ? randevuTarih : null, saat: komut.randevu ? randevuSaat : null, deneme: (komutDevami?.deneme ?? -1) + 1, zaman: simdi() }
     : null
-  await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: kartHastasi?.id ?? null, bekleyen, sesDevamKalan, bekleyenKomut: yeniBekleyenKomut })
+  await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: kartHastasi?.id ?? null, bekleyen, sesDevamKalan, bekleyenKomut: yeniBekleyenKomut, alanlar: alanRefleri })
 
   // Log action for learning
   await supabase.from("asistan_actions").insert({
@@ -1240,7 +1271,7 @@ ${ilacBaglamMetni(drugs[0])}`
     ok: true,
     cevap: {
       rota: "model",
-      ekran: aiData.speech,
+      ekran: ekranMetni,
       konusma: sozler.filter(Boolean).join(" ").trim(),
       kartlar: eylemOnerileri,
       kartHastaId: eylemOnerileri.length ? kartHastasi?.id ?? null : null,
@@ -1251,7 +1282,7 @@ ${ilacBaglamMetni(drugs[0])}`
         eylemOnerileri,
         eylemYonlendirme,
         eylemHastasi: kartHastasi ? { ad: kartHastasi.ad, dogumTarihi: kartHastasi.dogumTarihi } : null,
-        speech: aiData.speech,
+        speech: ekranMetni,
         proactiveWarning: aiData.proactiveWarning,
         action: aiData.action,
         actionResult,
@@ -1293,7 +1324,7 @@ export async function asistanOturumuAc(
 
 /** Kimlik cevabının sözlü biçimi: değer ASLA okunmaz. */
 export function kimlikSozu(k: KimlikCevabi): string {
-  if (k.hasta) return `${k.hasta.ad} için istediğiniz bilgiyi ekranınıza yazdım Hocam.`
+  if (k.hasta) return kimlikEkrandaSozu(k.hasta.ad)
   return konusmaYap(k.ekran)
 }
 

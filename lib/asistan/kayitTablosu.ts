@@ -236,7 +236,7 @@ export function olcumCevabi(istek: Extract<KayitIstegi, { tur: 'olcum' }>, olayl
 const BOLUM: [string, RegExp][] = [['Şikayet', /^Şikayet\/öykü:\s*/], ['Bulgu', /^Bulgu:\s*/], ['Değerlendirme', /^Değerlendirme:\s*/], ['Tanı', /^Tanı:\s*/], ['Plan', /^Plan:\s*/]]
 
 /** The parts of a visit event's text (olaylariKur joins them with " | "). */
-function vizitBolumleri(metin: string): Record<string, string> {
+export function vizitBolumleri(metin: string): Record<string, string> {
   const out: Record<string, string> = {}
   for (const parca of String(metin || '').split(' | ')) {
     for (const [ad, re] of BOLUM) if (re.test(parca)) out[ad] = parca.replace(re, '').trim()
