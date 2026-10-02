@@ -15,6 +15,7 @@
  * KVKK: hastanın adı olay metnine yazılmaz; ad yalnız `hasta.ad` alanındadır (cevap cümlesi adla başlar —
  * NOTYA-HASTA-ODAK-01). Kimlik / iletişim alanları okunmaz.
  */
+import { vizitGunu, vizitGununeGoreSirala } from '@/lib/doktor/vizitTarihi'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
@@ -415,7 +416,7 @@ export async function dosyaSorguHamDerle(sb: SupabaseClient, doktorId: string, p
     const n = notHarita.get(String(s.id))
     if (!n) continue
     vizitler.push({
-      id: String(s.id), tarih: String(s.created_at),
+      id: String(s.id), tarih: vizitGunu(String(s.created_at), n.created_at as string | undefined),
       subjektif: n.content_subjektif as string, objektif: n.content_objektif as string, degerlendirme: n.content_degerlendirme as string,
       plan: n.content_plan as string, tani: n.content_tani as string,
       icd: Array.isArray(n.icd10_codes) ? n.icd10_codes as HamVizit['icd'] : null,
