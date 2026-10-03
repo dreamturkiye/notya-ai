@@ -4,6 +4,12 @@
  * ElevenLabs can deliver the agent text (and the screen poll can paint it) before
  * the user transcript of the same turn. The question must be inserted in front of
  * that answer, never in front of the opening greeting, and never twice.
+ *
+ * NOTYA-SES-SIRA-02 (Kaan, 2026-10-03): on tek-beyin ElevenLabs the screen poll paints
+ * the answer with no `olay`, and the user transcript arrives later — `olayYeri` then
+ * appended the question AFTER the reply (screenshot: "iyiyim…" above "nasılsınız?").
+ * When event ids cannot order the turn, a trailing AI block that is not preceded by a
+ * user line is treated as an orphan reply and the question slots in front of it.
  */
 
 export type Balon = { role: 'user' | 'ai'; text: string; olay?: number }
@@ -15,6 +21,20 @@ function olayYeri<T extends Balon>(prev: T[], olay: number | undefined): number 
     if (typeof e === 'number' && e > olay) return i
   }
   return prev.length
+}
+
+/**
+ * Start index of a trailing AI reply that arrived before its user transcript.
+ * Keeps the opening greeting; does not pull a new question in front of a finished turn.
+ */
+export function yetimCevapYeri<T extends Balon>(prev: T[]): number | null {
+  let i = prev.length - 1
+  if (i < 0 || prev[i].role !== 'ai') return null
+  let bas = i
+  while (bas > 0 && prev[bas - 1].role === 'ai') bas--
+  if (bas === 0) return prev.length >= 2 ? 1 : null
+  if (prev[bas - 1].role === 'user') return null
+  return bas
 }
 
 /** Two model generations of the same isolation (or a cut + replay) start the same way. */
@@ -41,21 +61,30 @@ export function kullaniciEkle<T extends Balon>(
   if (!t) return prev
   const ayni = prev.findIndex((m) => m.role === 'user' && m.text === t && (olay == null || m.olay == null || m.olay === olay))
   if (ayni !== -1) {
-    if (olay == null) return prev
     let hedef = ayni
-    for (let i = 0; i < ayni; i++) {
-      const e = prev[i].olay
-      if (typeof e === 'number' && e > olay) { hedef = i; break }
+    if (olay != null) {
+      for (let i = 0; i < ayni; i++) {
+        const e = prev[i].olay
+        if (typeof e === 'number' && e > olay) { hedef = i; break }
+      }
+    }
+    const rest = prev.filter((_, i) => i !== ayni)
+    if (hedef === ayni) {
+      const yetim = yetimCevapYeri(rest)
+      if (yetim != null) hedef = yetim
     }
     const damga = prev[ayni].olay ?? olay
     if (hedef === ayni && prev[ayni].olay === damga) return prev
     const msg = { ...prev[ayni], olay: damga }
-    const rest = prev.filter((_, i) => i !== ayni)
-    const at = hedef === ayni ? ayni : hedef
-    return [...rest.slice(0, at), msg, ...rest.slice(at)]
+    return [...rest.slice(0, hedef), msg, ...rest.slice(hedef)]
   }
   const msg = ekle('user', t, olay)
-  const at = olayYeri(prev, olay)
+  let at = olayYeri(prev, olay)
+  // NOTYA-SES-SIRA-02: no usable event order (poll AI has no olay) → still put the question before the orphan reply.
+  if (at >= prev.length) {
+    const yetim = yetimCevapYeri(prev)
+    if (yetim != null) at = yetim
+  }
   return [...prev.slice(0, at), msg, ...prev.slice(at)]
 }
 

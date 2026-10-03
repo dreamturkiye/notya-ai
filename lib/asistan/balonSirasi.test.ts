@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { benzerCevapMi, cevapEkle, kullaniciEkle, type Balon } from './balonSirasi'
+import { benzerCevapMi, cevapEkle, kullaniciEkle, yetimCevapYeri, type Balon } from './balonSirasi'
 
 const ekle = (role: 'user' | 'ai', text: string, olay?: number): Balon => ({ role, text, ...(olay != null ? { olay } : {}) })
 
@@ -33,6 +33,33 @@ test('olaysız ekran balonu dururken geç gelen döküm soruyu cevabın arkasın
   const yerlesmis = cevapEkle([{ role: 'ai', text: SELAM }], SORU, KAHVE, ekle)
   const sonra = kullaniciEkle(yerlesmis, SORU, 4, ekle)
   assert.deepEqual(sonra.map((m) => m.role), ['ai', 'user', 'ai'])
+})
+
+test('NOTYA-SES-SIRA-02: olaysız ekran cevabından sonra gelen döküm soruyu cevabın önüne koyar (Kaan ekran görüntüsü)', () => {
+  const selam: Balon = { role: 'ai', text: 'Merhaba Kaan Hocam. Nasıl yardımcı olabilirim?' }
+  const cevap: Balon = { role: 'ai', text: 'Merhaba Hocam, iyiyim teşekkür ederim. Siz nasılsınız?' }
+  const soru = 'Merhaba hocam, bugün nasılsınız? İyi misiniz?'
+  // Screen poll painted the answer first (no olay); ElevenLabs transcript arrives late.
+  const sirali = kullaniciEkle([selam, cevap], soru, 12, ekle)
+  assert.deepEqual(sirali.map((m) => m.role), ['ai', 'user', 'ai'])
+  assert.equal(sirali[0].text, selam.text)
+  assert.equal(sirali[1].text, soru)
+  assert.equal(sirali[2].text, cevap.text)
+  assert.equal(yetimCevapYeri([selam, cevap]), 1)
+  assert.equal(yetimCevapYeri([selam]), null)
+  assert.equal(yetimCevapYeri([selam, { role: 'user', text: soru }, cevap]), null)
+})
+
+test('NOTYA-SES-SIRA-02: bitmiş turun ardından gelen yeni soru cevabın önüne çekilmez', () => {
+  const once = [
+    { role: 'ai' as const, text: SELAM },
+    { role: 'user' as const, text: SORU },
+    { role: 'ai' as const, text: KAHVE },
+  ]
+  const yeni = 'Peki Umutcan’ın kilosu kaç?'
+  const sonra = kullaniciEkle(once, yeni, undefined, ekle)
+  assert.deepEqual(sonra.map((m) => m.role), ['ai', 'user', 'ai', 'user'])
+  assert.equal(sonra.at(-1)?.text, yeni)
 })
 
 test('aynı izolasyonun ikinci modeli yeni balon açmaz', () => {
