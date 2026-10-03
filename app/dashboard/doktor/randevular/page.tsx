@@ -198,6 +198,8 @@ export default function RandevularPage() {
   // NOTYA-BETA-0925: kayıtlı hastanın cep telefonu (hasta kaydından dolar, kayıtlı değilse zorunlu) + WhatsApp izni.
   const [hastaTelefon, setHastaTelefon] = useState('');
   const [kayitliTelefon, setKayitliTelefon] = useState<string | null>(null); // null = henüz okunmadı
+  const [hastaEmail, setHastaEmail] = useState('');
+  const [kayitliEmail, setKayitliEmail] = useState<string | null>(null);
   const [whatsappIzniVar, setWhatsappIzniVar] = useState(false);
   const [whatsappKabul, setWhatsappKabul] = useState(false);
   const [telefonHata, setTelefonHata] = useState('');
@@ -451,6 +453,8 @@ export default function RandevularPage() {
     setWhatsappIzniVar(false);
     setKayitliTelefon(null);
     setHastaTelefon('');
+    setKayitliEmail(null);
+    setHastaEmail('');
     if (!seciliHastaId) return;
     let iptal = false;
     (async () => {
@@ -463,8 +467,11 @@ export default function RandevularPage() {
         const tel = String(d.telefon || '');
         setKayitliTelefon(tel);
         setHastaTelefon((mevcut) => mevcut || tel);
+        const mail = String(d.emailAdres || '');
+        setKayitliEmail(mail);
+        setHastaEmail((mevcut) => mevcut || mail);
         setWhatsappIzniVar(d.whatsapp === true);
-      } catch { if (!iptal) setKayitliTelefon(''); }
+      } catch { if (!iptal) { setKayitliTelefon(''); setKayitliEmail(''); } }
     })();
     return () => { iptal = true; };
   }, [seciliHastaId, token]);
@@ -535,6 +542,8 @@ export default function RandevularPage() {
     setSerbestAd('');
     setSerbestTelefon('');
     setSerbestEmail('');
+    setHastaEmail('');
+    setKayitliEmail(null);
     setModalIptalAcik(false);
     setModalIptalNedeni('');
   }
@@ -578,6 +587,7 @@ export default function RandevularPage() {
       // gönderildiğinde serbest metin temizlenip randevu gerçek dosyaya bağlanır).
       setKayitsizMod(true);
       setSerbestAd(rv.hastaAdi); setSerbestTelefon(rv.hastaTelefon); setSerbestEmail(rv.hastaEmail || '');
+      setHastaEmail(rv.hastaEmail || '');
     }
     setHastaArama('');
     setAktifSonucIdx(0);
@@ -618,6 +628,12 @@ export default function RandevularPage() {
     }
     const kayitliNormal = kayitliTelefon ? (cepTelefonuDogrula(kayitliTelefon) as { deger?: string }).deger || kayitliTelefon : '';
     const telefonDegisti = !!seciliHasta && !!telefonDegeri && telefonDegeri !== kayitliNormal;
+    const emailGirdisi = (seciliHasta ? hastaEmail : serbestEmail).trim();
+    if (seciliHasta && emailGirdisi && !emailGirdisi.includes('@')) {
+      setHata('E-posta adresi geçersiz görünüyor.');
+      return;
+    }
+    const emailDegisti = !!seciliHasta && !!emailGirdisi && emailGirdisi !== (kayitliEmail || '');
     const izinVerildi = !!seciliHasta && whatsappKabul && !whatsappIzniVar;
     setKaydediyor(true);
     setHata('');
@@ -635,6 +651,7 @@ export default function RandevularPage() {
         hastaAdiSerbest: seciliHasta ? null : serbestAd.trim(),
         hastaTelefonSerbest: seciliHasta ? null : telefonDegeri || '',
         ...(telefonDegisti ? { hastaTelefon: telefonDegeri } : {}),
+        ...(emailDegisti ? { hastaEmail: emailGirdisi } : {}),
         ...(izinVerildi ? { whatsappIzni: true } : {}),
         hastaEmailSerbest: seciliHasta ? null : serbestEmail.trim(),
         baslangic: baslangicTarihi.toISOString(),
@@ -1583,6 +1600,23 @@ export default function RandevularPage() {
                           : 'Hasta kaydındaki numara. Değiştirirseniz hasta kaydı da güncellenir.'}
                       </p>
                     )}
+                  <label className="ni-label" htmlFor="randevu-hasta-email" style={{ marginTop: 14 }}>
+                    E-posta <span style={{ color: CHROME_RENK.muted, fontWeight: 400 }}>(isteğe bağlı — form / portal)</span>
+                  </label>
+                  <input
+                    id="randevu-hasta-email"
+                    className="ni-input"
+                    type="email"
+                    autoComplete="email"
+                    value={hastaEmail}
+                    onChange={(e) => setHastaEmail(e.target.value)}
+                    placeholder={kayitliEmail === null ? 'Yükleniyor…' : 'ornek@eposta.com'}
+                  />
+                  <p className="ni-hint">
+                    {kayitliEmail
+                      ? 'Hasta kaydındaki e-posta. Değiştirirseniz hasta kaydı da güncellenir.'
+                      : 'Randevuda yazılan e-posta hasta kaydına ve Hasta Formu gönderimine işlenir.'}
+                  </p>
                   {whatsappIzniVar ? (
                     <p className="ni-hint" style={{ color: CHROME_RENK.pine, fontWeight: 600 }}>✓ WhatsApp mesaj izni kayıtlı.</p>
                   ) : (

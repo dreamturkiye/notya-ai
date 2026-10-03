@@ -17,7 +17,7 @@ function metin(v: unknown): string { return Array.isArray(v) ? v.filter(Boolean)
 
 export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, doktorId: string, patientId: string, y: Record<string, unknown>): Promise<string[]> {
   // HASTA-IZOLASYON-01 (NOTYA-FORM-KART-01): the patient is read and written under the form row's own doctor.
-  const { data: p } = await sb.from('patients').select('dob_encrypted, gender_encrypted, email_encrypted, notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: p } = await sb.from('patients').select('dob_encrypted, gender_encrypted, email_encrypted, phone_encrypted, notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
   if (!p) return []
   const guncelleme: Record<string, unknown> = {}
   const doldurulan: string[] = []
@@ -28,8 +28,12 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, doktorId
   const cins = metin(y.cinsiyet)
   if (!coz(p.gender_encrypted) && (cins === 'Kadın' || cins === 'Erkek')) { guncelleme.gender_encrypted = encrypt(cins === 'Kadın' ? 'female' : 'male'); doldurulan.push('cinsiyet') }
 
+  // NOTYA-INTAKE-EMAIL-01: formdaki iletişim, randevudaki / eski kart değerinin üzerine yazılır (daha ayrıntılı kaynak).
   const eposta = metin(y.eposta)
-  if (!coz(p.email_encrypted) && eposta.includes('@')) { guncelleme.email_encrypted = encrypt(eposta); doldurulan.push('eposta') }
+  if (eposta.includes('@') && eposta !== coz(p.email_encrypted)) { guncelleme.email_encrypted = encrypt(eposta); doldurulan.push('eposta') }
+
+  const telefon = metin(y.telefon)
+  if (telefon && telefon !== coz(p.phone_encrypted)) { guncelleme.phone_encrypted = encrypt(telefon); doldurulan.push('telefon') }
 
   let notlar: Record<string, unknown> = {}
   try { notlar = JSON.parse(coz(p.notes_encrypted) || '{}') } catch { notlar = {} }

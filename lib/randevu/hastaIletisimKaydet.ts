@@ -23,6 +23,8 @@ export interface RandevuIletisimGirdisi {
   personelId?: string | null
   /** cepTelefonuDogrula'dan geçmiş, biçimlenmiş numara; null/undefined = dokunma. */
   telefon?: string | null
+  /** NOTYA-INTAKE-EMAIL-01: isteğe bağlı e-posta — hasta kartına yazılır. */
+  eposta?: string | null
   /** true = hasta randevu ve form mesajlarını WhatsApp'tan almayı kabul etti. false/undefined = dokunma. */
   whatsappIzni?: boolean
 }
@@ -30,9 +32,10 @@ export interface RandevuIletisimGirdisi {
 export async function randevuIletisiminiKaydet(
   supabase: SupabaseClient,
   g: RandevuIletisimGirdisi,
-): Promise<{ telefonKaydedildi: boolean; izinKaydedildi: boolean }> {
+): Promise<{ telefonKaydedildi: boolean; epostaKaydedildi: boolean; izinKaydedildi: boolean }> {
   const simdi = new Date().toISOString()
   let telefonKaydedildi = false
+  let epostaKaydedildi = false
   let izinKaydedildi = false
 
   if (g.telefon) {
@@ -41,6 +44,15 @@ export async function randevuIletisiminiKaydet(
       .eq('id', g.patientId).eq('doctor_id', g.doktorId)
     if (error) console.error(`[randevu] telefon kaydedilemedi: ${error.message}`)
     else telefonKaydedildi = true
+  }
+
+  const mail = String(g.eposta || '').trim()
+  if (mail.includes('@')) {
+    const { error } = await supabase.from('patients')
+      .update({ email_encrypted: encrypt(mail), updated_at: simdi })
+      .eq('id', g.patientId).eq('doctor_id', g.doktorId)
+    if (error) console.error(`[randevu] e-posta kaydedilemedi: ${error.message}`)
+    else epostaKaydedildi = true
   }
 
   if (g.whatsappIzni === true) {
@@ -65,5 +77,5 @@ export async function randevuIletisiminiKaydet(
       if (gecmisHata) await supabase.from('iletisim_izin_kayitlari').insert({ ...satir, kaynak: 'gonder_dugmesi' })
     }
   }
-  return { telefonKaydedildi, izinKaydedildi }
+  return { telefonKaydedildi, epostaKaydedildi, izinKaydedildi }
 }

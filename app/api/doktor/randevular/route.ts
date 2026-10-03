@@ -19,14 +19,14 @@ import { randevuIletisiminiKaydet } from '@/lib/randevu/hastaIletisimKaydet'
 
 export const dynamic = 'force-dynamic'
 
-interface HastaOzet { id: string; ad: string; telefon: string }
+interface HastaOzet { id: string; ad: string; telefon: string; eposta: string }
 
 async function hastaBilgisi(supabase: any, doktorId: string, patientId: string | null): Promise<HastaOzet | null> {
   if (!patientId) return null
   // HASTA-IZOLASYON-01: name + phone are decrypted here — only ever for this practice's own patient.
   const { data } = await supabase
     .from('patients')
-    .select('id, name_encrypted, phone_encrypted')
+    .select('id, name_encrypted, phone_encrypted, email_encrypted')
     .eq('id', patientId)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -39,7 +39,11 @@ async function hastaBilgisi(supabase: any, doktorId: string, patientId: string |
   try {
     if (data.phone_encrypted) telefon = decrypt(data.phone_encrypted) || ''
   } catch { /* leave blank */ }
-  return { id: data.id, ad, telefon }
+  let eposta = ''
+  try {
+    if (data.email_encrypted) eposta = decrypt(data.email_encrypted) || ''
+  } catch { /* leave blank */ }
+  return { id: data.id, ad, telefon, eposta }
 }
 
 export async function GET(req: NextRequest) {
@@ -79,7 +83,7 @@ export async function GET(req: NextRequest) {
         patientId: r.patient_id,
         hastaAdi: hasta?.ad || r.hasta_adi_serbest || 'İsimsiz',
         hastaTelefon: hasta?.telefon || r.hasta_telefon_serbest || '',
-        hastaEmail: r.hasta_email_serbest || '',
+        hastaEmail: r.hasta_email_serbest || hasta?.eposta || '',
         kayitliHasta: !!hasta,
       }
     })
@@ -94,7 +98,7 @@ export async function POST(req: NextRequest) {
   const { supabase, doktorId, user, rol, personelId } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, baslangic, bitis, tur, notlar, hastaDurumu, hastaTelefon, whatsappIzni } = body as {
+  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, baslangic, bitis, tur, notlar, hastaDurumu, hastaTelefon, hastaEmail, whatsappIzni } = body as {
     patientId?: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
@@ -106,6 +110,8 @@ export async function POST(req: NextRequest) {
     hastaDurumu?: string
     /** NOTYA-BETA-0925: kayıtlı hastanın cep telefonu — hasta kaydına yazılır. */
     hastaTelefon?: string
+    /** NOTYA-INTAKE-EMAIL-01: kayıtlı hastanın e-postası — hasta kaydına yazılır. */
+    hastaEmail?: string
     /** NOTYA-BETA-0925: "Hasta, randevu ve form mesajlarını WhatsApp'tan almayı kabul etti". */
     whatsappIzni?: boolean
   }
@@ -165,8 +171,13 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: 'Randevu oluşturulamadı.' }, { status: 500 })
 
   // Sahiplik yukarıda (hastaSahibiMi) doğrulandı; yazmalar id + doctor_id ile.
-  const iletisim = patientId && (telefon.deger || whatsappIzni === true)
-    ? await randevuIletisiminiKaydet(supabase, { doktorId, patientId, userId: user.id, rol, personelId, telefon: telefon.deger, whatsappIzni: whatsappIzni === true })
+  const kayitliEmail = patientId ? String(hastaEmail || '').trim() : ''
+  const iletisim = patientId && (telefon.deger || kayitliEmail.includes('@') || whatsappIzni === true)
+    ? await randevuIletisiminiKaydet(supabase, {
+      doktorId, patientId, userId: user.id, rol, personelId,
+      telefon: telefon.deger, eposta: kayitliEmail.includes('@') ? kayitliEmail : null,
+      whatsappIzni: whatsappIzni === true,
+    })
     : null
   return NextResponse.json({ randevu: data, iletisim })
 }

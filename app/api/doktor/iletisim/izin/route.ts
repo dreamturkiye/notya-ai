@@ -39,17 +39,20 @@ export async function GET(req: NextRequest) {
   if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   // NOTYA-BETA-0925: randevu penceresi "Cep telefonu"nu hasta kaydından doldurur (sekreter de) — yalnız bu
   // pratiğin hastası (hastaSahibiMi yukarıda), şifre sunucuda çözülür.
-  const { data: tel } = await supabase.from('patients')
-    .select('phone_encrypted').eq('id', String(patientId)).eq('doctor_id', doktorId).maybeSingle()
+  // NOTYA-INTAKE-EMAIL-01: e-posta adresi de aynı şekilde (izin bayrağı `eposta` ile karışmasın diye `emailAdres`).
+  const { data: iletisim } = await supabase.from('patients')
+    .select('phone_encrypted, email_encrypted').eq('id', String(patientId)).eq('doctor_id', doktorId).maybeSingle()
   let telefon = ''
-  try { telefon = tel?.phone_encrypted ? decrypt(String(tel.phone_encrypted)) : '' } catch { telefon = '' }
+  let emailAdres = ''
+  try { telefon = iletisim?.phone_encrypted ? decrypt(String(iletisim.phone_encrypted)) : '' } catch { telefon = '' }
+  try { emailAdres = iletisim?.email_encrypted ? decrypt(String(iletisim.email_encrypted)) : '' } catch { emailAdres = '' }
   const [{ data, error }, gelen] = await Promise.all([
     supabase.from('patients')
       .select('iletisim_izni_whatsapp, iletisim_izni_eposta, iletisim_izni_guncelleme')
       .eq('id', String(patientId)).eq('doctor_id', doktorId).maybeSingle(),
     gelenBelgeIzni(supabase, doktorId, String(patientId)),
   ])
-  if (error) return NextResponse.json({ whatsapp: null, eposta: null, guncelleme: null, kaydedilebilir: false, telefon, ...gelen })
+  if (error) return NextResponse.json({ whatsapp: null, eposta: null, guncelleme: null, kaydedilebilir: false, telefon, emailAdres, ...gelen })
   const deger = (v: unknown) => (typeof v === 'boolean' ? v : null)
   return NextResponse.json({
     whatsapp: deger(data?.iletisim_izni_whatsapp),
@@ -57,6 +60,7 @@ export async function GET(req: NextRequest) {
     guncelleme: data?.iletisim_izni_guncelleme ?? null,
     kaydedilebilir: true,
     telefon,
+    emailAdres,
     ...gelen,
   })
 }

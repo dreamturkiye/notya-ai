@@ -80,6 +80,24 @@ export const SORU_SABLONLARI: Record<SoruTuru, { no: number; soru: string; sablo
 }
 
 /**
+ * NOTYA-BUYUME-KISA-01 (Dr. Gökhan, 2026-10-03): "büyümesi yaşına uygun mu?" gibi evet/hayır
+ * değerlendirme sorularında uzun persentil/hız listesi istenmez — 1–2 cümle.
+ */
+export const BUYUME_KISA_SABLON =
+  'TAM OLARAK bir veya iki cümle, daha fazla değil. İlk cümle hastanın adıyla başlar ve büyümenin yaşına uygun olup olmadığını (uygun / kısmen uygun / uygun değil / kayıt yetersiz) net söyler; gerekirse son kilo-boy-baş çevresi persentillerini tek kısa parantezde özetle. İkinci cümle YALNIZ kanıtta Kayma / ÇELİŞEN / TUTARSIZ varsa onu bir cümlede belirt; yoksa ikinci cümle yazma. Büyüme hızı satırlarını, bütün ölçüm tarihlerini, z-skor listesini ve tabloyu YAZMA — ekrandadır. Tahmin etme.'
+
+/** "yaşına uygun mu / normal mi / yeterli mi" — kısa büyüme cevabı. */
+export function buyumeKisaSoruMu(mesaj: string): boolean {
+  const n = String(mesaj || '')
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9\s?]/g, ' ')
+  if (!n.trim()) return false
+  return /\b(yasina uygun|yasina gore uygun|normal mi|normal midir|yeterli mi|geri mi|uygun mu|uygun mudur|iyi mi|iyi midir)\b/.test(` ${n} `)
+}
+
+/**
  * NOTYA-AYSE-OZET-01 — TEK MUAYENENİN özeti için biçim (Dr. Gökhan, 2026-10-02): "Dayanak" maddeleri yerine, kanıttaki
  * bölüm sırasıyla, her biri kendi kalın başlığıyla başlayan kısa paragraflar. Başlıklar özetin kendi bölümleridir
  * (vizitOzeti.ts): pediatri dışında aşı ve büyüme başlığı hiç verilmez. İçerik kuralı kanıt bloğunun şablonundadır.

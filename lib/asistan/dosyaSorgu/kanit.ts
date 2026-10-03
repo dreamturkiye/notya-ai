@@ -13,7 +13,7 @@ import { trGun, gunEkleIso } from '@/lib/doktor/dosyaOlaylari'
 import { acikIsleriBul, alerjiCatismalari, asiBeyanCeliskileri, tekrarlayanPaternler, type AcikIs } from '@/lib/doktor/acikIsler'
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { eksikDozEtiketi, parametreSec, type BransSorguParametreleri } from '@/lib/asistan/dosyaSorgu/parametreler'
-import { SORU_SABLONLARI } from '@/lib/asistan/dosyaSorgu/kurallar'
+import { BUYUME_KISA_SABLON, buyumeKisaSoruMu, SORU_SABLONLARI } from '@/lib/asistan/dosyaSorgu/kurallar'
 import type { SoruTuru } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { esanlamGruplariBul, terimlerdenBiriGeciyor, type EsanlamGrubu } from '@/lib/klinik/sikayetEsanlam'
 import { vizitOlcumKaniti, vizitOlcumKanitSatirlari, vizitOlcumSorusuBul, OLCUM_ADI } from '@/lib/asistan/dosyaSorgu/vizitOlcum'
@@ -340,7 +340,13 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
       break
     }
     case 'degisim': govde = degisimBolumu(olaylar, hasta, p); break
-    case 'buyume': { const b = p.buyume(olaylar, hasta); govde = [...vizitOlcumBolumu(olaylar, hasta, p, ek.mesaj || ''), ...b.satirlar, ...(b.bayraklar.length ? ['DİKKAT:', ...isSatirlari(b.bayraklar)] : [])]; break }
+    case 'buyume': {
+      const b = p.buyume(olaylar, hasta)
+      govde = [...vizitOlcumBolumu(olaylar, hasta, p, ek.mesaj || ''), ...b.satirlar, ...(b.bayraklar.length ? ['DİKKAT:', ...isSatirlari(b.bayraklar)] : [])]
+      // NOTYA-BUYUME-KISA-01: "yaşına uygun mu?" → 1–2 cümle (uzun hız/persentil listesi yok).
+      if (buyumeKisaSoruMu(ek.mesaj || '')) sablon = BUYUME_KISA_SABLON
+      break
+    }
     case 'asi': govde = asiBolumu(olaylar, hasta, p); break
     case 'lab': {
       govde = labBolumu(olaylar)

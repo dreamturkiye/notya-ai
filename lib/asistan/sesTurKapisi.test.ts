@@ -62,6 +62,9 @@ describe('NOTYA-SES-ARKA-01 arka plan', () => {
     assert.equal(arkaPlanIstekDegilMi('hemen geliyorum bekle'), true)
     assert.equal(arkaPlanIstekDegilMi('Umutcan’ın Hb kaç?'), false)
     assert.equal(arkaPlanIstekDegilMi('Ayşe laboratuvarı oku'), false)
+    // Eylem komutu (Fish kart yolu) arka plan sayılmaz
+    assert.equal(arkaPlanIstekDegilMi('Penisilin alerjisini dosyaya gir'), false)
+    assert.equal(arkaPlanIstekDegilMi('Rıdvan Dilmen’in büyümesi yaşına uygun mu'), false)
   })
 })
 

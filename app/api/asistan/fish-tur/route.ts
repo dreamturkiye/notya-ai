@@ -48,6 +48,8 @@ import { detayIstegiMi } from '@/lib/ses/tibbiSeslendirme'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { takvimSorusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
+import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
+import { sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { saatDilimiSec } from '@/lib/randevu/tarihCozumle'
@@ -339,6 +341,42 @@ export async function POST(req: NextRequest) {
           // The hidden marker with nothing left is not a question; a spoken "devam" with nothing left is a normal turn.
           if (mesaj === DEVAM_ISARETI) { await turuKapat(); return }
         }
+        // NOTYA-SES-ARKA-01 / NOTYA-BUYUME-KISA-01: Fish'te eko + aynı istek + in-flight kilit.
+        // `arka_plan` EL açık-mik için; Fish ASR zaten gürültüyü eliyor — eylem komutlarını
+        // ("…alerjisini dosyaya gir") yanlışlıkla sessize düşürmemek için arka_plan burada MODEL'e bırakılır.
+        {
+          const { data: oturumSatir } = await supabase.from('asistan_sessions').select('messages').eq('id', oturumId).eq('doctor_id', user.id).maybeSingle()
+          const oturumMsj = Array.isArray((oturumSatir as { messages?: unknown } | null)?.messages)
+            ? (oturumSatir as { messages: { role?: string; content?: unknown; kanal?: string }[] }).messages
+            : []
+          const tur = sesTurKapisi({ mesaj, oturumMesajlari: oturumMsj })
+          if (tur.tip === 'veda') {
+            console.info('[fish-tur] kapı', tur.neden)
+            await turuKapat()
+            return
+          }
+          if (tur.tip === 'sessiz' && (tur.neden === 'ayni_istek' || tur.neden === 'eko_tts' || tur.neden === 'bos')) {
+            console.info('[fish-tur] kapı', tur.neden)
+            await turuKapat()
+            return
+          }
+          if (tur.tip === 'devam_oku') {
+            const kalan = await sesDevamAl(supabase, user.id, oturumId).catch(() => null)
+            if (kalan) {
+              const okuma = new SesAkisi((p) => sozParcasi(p), undefined, undefined, Number.POSITIVE_INFINITY)
+              okuma.ekle(kalan)
+              okuma.bitir()
+            }
+            await turuKapat()
+            return
+          }
+          const kilit = await sesTurKilidiAl(supabase, user.id, oturumId, mesaj).catch(() => true)
+          if (!kilit) {
+            console.info('[fish-tur] kapı', 'in_flight')
+            await turuKapat()
+            return
+          }
+        }
         let soylendi = false
         // What actually went out as speech, and whether the sentence cap was reached — ayseCevapla stores the
         // unspoken rest from these (and, knowing a continuation exists, does not say "Devamı ekranınızda").
@@ -358,7 +396,7 @@ export async function POST(req: NextRequest) {
           sozParcasi: (p) => { if (p) { soylendi = true; soylenen += p; sozParcasi(p) } },
           sesSiniri: () => { sinirGeldi = true },
           sesDurumu: () => ({ kesildi: sinirGeldi, soylenen }),
-        })
+        }).finally(() => { void sesTurKilidiBirak(supabase, user.id, oturumId, mesaj).catch(() => {}) })
         if (!sonuc.ok) gonder({ t: 'hata', m: sonuc.soz })
         else if (!soylendi && sonuc.cevap.konusma) sozParcasi(sonuc.cevap.konusma)
         // A card prepared again for the same patient and action replaces the old one: one card on screen, one for "Evet".

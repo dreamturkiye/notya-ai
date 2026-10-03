@@ -140,7 +140,7 @@ export function arkaPlanIstekDegilMi(mesaj: string): boolean {
   if (ham.length > 120) return false
   const n = ` ${trAramaNormalize(ham)} `
   const istek =
-    /\b(ayse|asistan|asistanim|oku|goster|anlat|soyle|listele|ozet|kac|nedir|nasil|dosya|lab|tahlil|asi|randevu|hasta|ac|kapat|tekrar|devam|son|onceki|bugun|yarin|demir|hb|ferritin|hemoglobin|recete|ilac|muayene|vizit|kilo|boy|ates|evet|hayir)\b/.test(n)
+    /\b(ayse|asistan|asistanim|oku|goster|anlat|soyle|listele|ozet|kac|nedir|nasil|dosya|dosyaya|lab|tahlil|asi|randevu|hasta|ac|kapat|tekrar|devam|son|onceki|bugun|yarin|demir|hb|ferritin|hemoglobin|recete|ilac|muayene|vizit|kilo|boy|ates|evet|hayir|alerji|ekle|gir|kaydet|yaz|sil|guncelle|buyume|buyumesi|persentil)\b/.test(n)
     || /\?/.test(ham)
     || /\b(mi|mı|mu|mü|misin|misiniz|musun|musunuz)\b/i.test(ham)
   if (istek) return false

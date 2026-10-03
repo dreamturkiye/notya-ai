@@ -46,8 +46,14 @@ export function benzerCevapMi(a: string, b: string): boolean {
   if (x === y) return true
   const kisa = x.length <= y.length ? x : y
   const uzun = x.length <= y.length ? y : x
-  if (kisa.length < 72) return false
-  return uzun.startsWith(kisa.slice(0, 72))
+  if (kisa.length < 48) return false
+  if (uzun.startsWith(kisa.slice(0, Math.min(72, kisa.length)))) return true
+  // Aynı büyüme cevabı: kilo/boy/baş çevresi sayıları örtüşüyorsa ikinci balon açma.
+  const sayilar = (s: string) => (s.match(/\d+[.,]?\d*/g) || []).slice(0, 8).join('|')
+  const sx = sayilar(x)
+  const sy = sayilar(y)
+  if (sx && sx === sy && sx.split('|').length >= 3 && kisa.length >= 80) return true
+  return false
 }
 
 /** A late user transcript slots in before the reply, not after it and not before the greeting. */
@@ -122,8 +128,10 @@ export function cevapEkle<T extends Balon>(
     }
   }
   if (cevapIndeksi() === -1) {
-    const sonAi = [...next].reverse().find((m) => m.role === 'ai')
-    if (!sonAi || !benzerCevapMi(sonAi.text, c)) next.push(ekle('ai', c))
+    // NOTYA-BUYUME-KISA-01 / multi-reply: aynı klinik cevabın 2.–3. modeli (araya kullanıcı
+    // satırı girse bile) yeni balon açmasın — son birkaç AI'ya bak.
+    const sonAilar = next.filter((m) => m.role === 'ai').slice(-4)
+    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(ekle('ai', c))
   }
   return next
 }

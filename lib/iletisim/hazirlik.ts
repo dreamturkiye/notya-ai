@@ -88,15 +88,17 @@ export async function iletisimHazirla(
 
   let randevuIso: string | null = null
   let randevu: Hazirlik["randevu"] = null
+  let randevuEmailSerbest: string | null = null
   if (randevuId) {
     const { data: r } = await sb.from('randevular')
-      .select('id, patient_id, baslangic, durum, hatirlatma_gonderildi').eq('id', randevuId).eq('doktor_id', doktorId).maybeSingle()
+      .select('id, patient_id, baslangic, durum, hatirlatma_gonderildi, hasta_email_serbest').eq('id', randevuId).eq('doktor_id', doktorId).maybeSingle()
     if (!r) return { durum: 404, hata: 'Randevu bulunamadı.' }
     if (!r.patient_id) return { durum: 400, hata: 'Bu randevu bir hasta kaydına bağlı değil. Önce hastayı kaydedin; iletişim izni hasta kaydında tutulur.' }
     if (patientId && patientId !== String(r.patient_id)) return { durum: 404, hata: 'Randevu bulunamadı.' }
     patientId = String(r.patient_id)
     randevuIso = String(r.baslangic)
     randevu = { baslangic: randevuIso, durum: String(r.durum ?? ''), hatirlatmaGonderildi: r.hatirlatma_gonderildi === true }
+    randevuEmailSerbest = String(r.hasta_email_serbest || '').trim() || null
   }
 
   let asiTarih: string | null = null
@@ -111,6 +113,9 @@ export async function iletisimHazirla(
   if (!patientId) return { durum: 400, hata: 'Hasta seçilmedi.' }
   const hasta = await hastaIletisimi(sb, doktorId, patientId, secenek.doktorBransi)
   if (!hasta) return { durum: 404, hata: 'Hasta bulunamadı.' }
+  // Bu randevuya özel e-posta kartta yoksa doğrudan bu satırdan (hastaIletisimi son randevuya bakar;
+  // verilen randevuId farklıysa yine de buradaki değeri kullan).
+  if (!hasta.eposta && randevuEmailSerbest?.includes('@')) hasta.eposta = randevuEmailSerbest
 
   let link = guvenliLink(g.link)
   if (tur === 'saglikim_yeni_mesaj') link = await ensurePatientPortalUrl(sb, doktorId, patientId)

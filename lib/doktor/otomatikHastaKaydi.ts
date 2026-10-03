@@ -21,16 +21,20 @@ export async function otomatikHastaKaydiOlustur(
   supabase: SupabaseClient,
   doktorId: string,
   ad: string,
-  telefon?: string | null
+  telefon?: string | null,
+  /** NOTYA-INTAKE-EMAIL-01: randevudaki isteğe bağlı e-posta hasta kartına da yazılır. */
+  eposta?: string | null,
 ): Promise<{ id: string } | null> {
   const temizAd = ad.trim()
   if (!temizAd) return null
+  const mail = String(eposta || '').trim()
   const { data, error } = await supabase
     .from('patients')
     .insert({
       doctor_id: doktorId,
       name_encrypted: encrypt(JSON.stringify({ ad: temizAd })),
       phone_encrypted: telefon?.trim() ? encrypt(telefon.trim()) : null,
+      email_encrypted: mail.includes('@') ? encrypt(mail) : null,
       is_active: true,
     })
     .select('id')

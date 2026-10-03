@@ -33,6 +33,7 @@ import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapi
 import { netSosyalMi } from '@/lib/ai/modeller'
 import { takvimSorusuMu, sesGurultusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
+import { sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 
 const getSupabase = () => createClient(
@@ -218,11 +219,17 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
             bitis = 'tool_calls'
           } else {
+          // NOTYA-BUYUME-KISA-01: aynı istek model bitmeden ikinci Custom LLM'e düşmesin.
+          const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj).catch(() => true)
+          if (!kilitAlindi) {
+            parca({ content: '.' })
+          } else {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
           // NOTYA-TEK-BEYIN-CORE-01: klinik experts use the same Custom LLM mouth; brain is klinikCevapla (no chart tools).
           const klinikSlug = klinikSlugJetonndan(jeton.pe)
+          try {
           if (klinikSlug) {
             const klinik = await klinikCevapla({ slug: klinikSlug, mesaj, doctorId: jeton.d, sozParcasi: cevapYaz })
             if (!klinik.ok && !cevapSoylendi) cevapYaz('Şu an yanıt veremedim, bir daha söyler misiniz?')
@@ -255,6 +262,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
               }
               if (sonuc.cevap.kartlar.length) await eskiSesTaslaklariniCek(supabase, jeton.d, sonuc.cevap.oncekiBekleyen || [], sonuc.cevap.kartlar, sonuc.cevap.kartHastaId ?? null)
             }).catch((e) => { console.error('[ses-llm/arka]', e instanceof Error ? e.name : 'hata') })
+              .finally(() => { void sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj).catch(() => {}) })
             const bekci = new Promise<'bekci'>((r) => setTimeout(() => r('bekci'), SES_BEKCI_MS))
             const kim = await Promise.race([sonrasi.then(() => 'bitti' as const), sesSiniri.then(() => 'sinir' as const), bekci])
             if (kim !== 'bitti') {
@@ -267,6 +275,11 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
               turKapandi = true
               arkaPlandaSurdur(sonrasi)
             }
+          }
+          }
+          } finally {
+            // Takvim / klinik / karar yolları: kilit burada bırakılır. Arka plan ayse yolu finally'de bırakır.
+            if (!turKapandi) await sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj).catch(() => {})
           }
           }
           }

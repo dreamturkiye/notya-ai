@@ -52,8 +52,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     hastaEmailSerbest?: string
     /** NOTYA-BETA-0925: kayıtlı hastanın cep telefonu — hasta kaydına yazılır. */
     hastaTelefon?: string
+    /** NOTYA-INTAKE-EMAIL-01: kayıtlı hastanın e-postası — hasta kaydına yazılır. */
+    hastaEmail?: string
     whatsappIzni?: boolean
   }
+  const hastaEmail = typeof body.hastaEmail === 'string' ? body.hastaEmail.trim() : undefined
   // NOTYA-BETA-0925: yazılan telefon geçerli bir cep numarası olmalı (kayıtsız randevununki de); biçimlenmiş hali saklanır.
   const telefon = telefonAlani(hastaTelefon)
   if ('hata' in telefon) return NextResponse.json({ error: telefon.hata }, { status: 400 })
@@ -116,11 +119,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   } else if (yeniKayitGerekli) {
     const ad = hastaAdiSerbest?.trim() || mevcut.hasta_adi_serbest
     const telefon = hastaTelefonSerbest !== undefined ? hastaTelefonSerbest?.trim() : mevcut.hasta_telefon_serbest
-    const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, ad, telefon)
+    const eposta = hastaEmailSerbest !== undefined ? hastaEmailSerbest?.trim() : mevcut.hasta_email_serbest
+    const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, ad, telefon, eposta)
     if (olusturulan) {
       guncelleme.patient_id = olusturulan.id
       guncelleme.hasta_adi_serbest = null
       guncelleme.hasta_telefon_serbest = null
+      guncelleme.hasta_email_serbest = null
       yeniHasta = { id: olusturulan.id, ad }
     } else if (hastaAdiSerbest !== undefined) {
       // Hasta kaydı açılamadıysa serbest metni yine de güncel tut — randevu güncellemesini bu
@@ -136,7 +141,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (hastaEmailSerbest !== undefined) guncelleme.hasta_email_serbest = hastaEmailSerbest?.trim() || null
   }
 
-  const iletisimVar = !!telefon.deger || whatsappIzni === true
+  const iletisimVar = !!telefon.deger || !!(hastaEmail && hastaEmail.includes('@')) || whatsappIzni === true
   if (Object.keys(guncelleme).length === 0 && !iletisimVar) {
     return NextResponse.json({ error: 'Güncellenecek alan yok.' }, { status: 400 })
   }
@@ -158,7 +163,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // hastaSahibiMi'den geçti; mevcut bağlantı bu doktorun kendi randevu satırından (yazmalar yine doctor_id'li).
   const bagliHasta = (guncelleme.patient_id as string | undefined) || (mevcut.patient_id as string | null)
   const iletisim = bagliHasta && iletisimVar
-    ? await randevuIletisiminiKaydet(supabase, { doktorId, patientId: bagliHasta, userId: user.id, rol, personelId, telefon: telefon.deger, whatsappIzni: whatsappIzni === true })
+    ? await randevuIletisiminiKaydet(supabase, {
+      doktorId, patientId: bagliHasta, userId: user.id, rol, personelId,
+      telefon: telefon.deger,
+      eposta: hastaEmail && hastaEmail.includes('@') ? hastaEmail : null,
+      whatsappIzni: whatsappIzni === true,
+    })
     : null
   return NextResponse.json({ randevu: data, yeniHasta, reaktivasyon: plan.reaktivasyon, iletisim })
 }

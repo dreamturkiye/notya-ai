@@ -72,3 +72,14 @@ test('aynı izolasyonun ikinci modeli yeni balon açmaz', () => {
   assert.equal(tekrar.filter((m) => m.role === 'ai').length, 2, 'selam + bir izolasyon')
   assert.equal(tekrar.at(-1)?.text, a)
 })
+
+test('NOTYA-BUYUME-KISA-01: araya kullanıcı girse de aynı büyüme cevabı ikinci balon açmaz', () => {
+  const a = 'Rıdvan Dilmen\'in büyümesi yaşına uygun: son ölçümünde (28.09.2026) kilo 13,3 kg (p42), boy 91 cm (p48), baş çevresi 49,7 cm (p55).'
+  const b = 'Rıdvan Dilmen\'in büyümesi yaşına uygun görünüyor — 28.09.2026 kilo 13,3 kg (p42), boy 91 cm (p48), baş çevresi 49,7 cm (p55); kayma yok.'
+  assert.ok(benzerCevapMi(a, b))
+  const soru = 'Rıdvan Dilmen\'in büyümesi yaşına uygun mu?'
+  const once = cevapEkle([{ role: 'ai', text: SELAM }], soru, a, ekle)
+  const araya = [...once, { role: 'user' as const, text: 'teşekkürler' }]
+  const tekrar = cevapEkle(araya, soru, b, ekle)
+  assert.equal(tekrar.filter((m) => m.role === 'ai' && benzerCevapMi(m.text, a)).length, 1)
+})

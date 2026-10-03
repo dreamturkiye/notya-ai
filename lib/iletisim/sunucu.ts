@@ -4,7 +4,7 @@
  * consent, no log) — the product must never crash because a table is missing.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { decrypt } from '@/lib/security/encryption'
+import { decrypt, encrypt } from '@/lib/security/encryption'
 import { veliDiliMi } from '@/lib/specialties/kapsam'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { sonrakiDozKarsilandiMi } from '@/lib/asi/hatirlatma'
@@ -80,11 +80,35 @@ export async function hastaIletisimi(sb: Sb, doktorId: string, patientId: string
     izinWhatsapp = typeof izin.iletisim_izni_whatsapp === 'boolean' ? izin.iletisim_izni_whatsapp : null
     izinEposta = typeof izin.iletisim_izni_eposta === 'boolean' ? izin.iletisim_izni_eposta : null
   }
+  let eposta = coz(p.email_encrypted)
+  // NOTYA-INTAKE-EMAIL-01: hasta kartında e-posta yoksa randevudaki serbest e-postayı anında kullan
+  // (ve boş kart alanına yaz — form gönderiminde "kayıtlı e-posta yok" kalmasın).
+  if (!eposta) {
+    const { data: rv } = await sb
+      .from('randevular')
+      .select('hasta_email_serbest')
+      .eq('doktor_id', doktorId)
+      .eq('patient_id', patientId)
+      .not('hasta_email_serbest', 'is', null)
+      .order('baslangic', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const aday = String(rv?.hasta_email_serbest || '').trim()
+    if (aday.includes('@')) {
+      eposta = aday
+      const { error: yazHata } = await sb
+        .from('patients')
+        .update({ email_encrypted: encrypt(aday), updated_at: new Date().toISOString() })
+        .eq('id', patientId)
+        .eq('doctor_id', doktorId)
+      if (yazHata) console.error('[iletisim] randevu e-posta → hasta:', yazHata.message)
+    }
+  }
   return {
     id: String(p.id),
     ad: hastaAdiCoz(p.name_encrypted),
     telefon: coz(p.phone_encrypted),
-    eposta: coz(p.email_encrypted),
+    eposta,
     veliDili: veliDiliMi({ doktorBransi: doktorBransi ?? null, hastaDogumIso: dogumIso(p.dob_encrypted) }),
     izinWhatsapp,
     izinEposta,
