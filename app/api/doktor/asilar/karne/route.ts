@@ -1,8 +1,11 @@
 /**
- * ASI-KARNESI-01 — aşı karnesi okuma + hekim toplu onayı.
+ * ASI-KARNESI-01 — aşı karnesi okuma + hekim toplu onayı + gözlem (JSON).
  *
  * Karne dosyası MEVCUT Kasa yolundan yüklenir (POST /api/doktor/documents, category 'Aşı karnesi' — şifreli
  * medical_documents). Bu rota yeni bir saklama yolu açmaz; yalnız Kasa'daki belgeyi okur.
+ *
+ * GET ?patientId=… — NOTYA-ASI-GOZLEM-01: hekim/sekreter salt-okunur karne JSON'u (gözlem sayfası).
+ *   Sağlığım / PDF ile AYNI veri (asiKarnesiVerisi). Düzenleme yok.
  *
  * POST { adim: 'oku', belgeId }
  *   → Kasa belgesi (hekime kapsanmış) modele gider: görev 'goruntu-inceleme' (lib/ai/modeller.ts; LUNAPRO-01:
@@ -25,12 +28,29 @@ import {
   KARNE_SISTEM, KARNE_KULLANICI_METNI, KARNE_NOT_ONEKI, KarneOkumaHatasi,
   karneYanitiniCoz, karneKimlikUyarisi, takvimEslestir, onaySatirlariniDogrula, karneKategorisi,
 } from '@/lib/asi/karneOkuma'
+import { asiKarnesiVerisi } from '@/lib/asi/karneSunucu'
+import { asiKarnesiDoluMu } from '@/lib/asi/karneBelgesi'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
 const GORSEL_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const bugunTr = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10)
+
+/** NOTYA-ASI-GOZLEM-01 — salt-okunur aşı karnesi (gözlem sayfası / muayene raporu görünümü). */
+export async function GET(req: NextRequest) {
+  const oturum = await pratikOturum(req)
+  if ('hata' in oturum) return oturum.hata
+  const { supabase, doktorId } = oturum
+
+  const patientId = req.nextUrl.searchParams.get('patientId') || ''
+  if (!patientId) return NextResponse.json({ error: 'patientId zorunludur.' }, { status: 400 })
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
+
+  const karne = await asiKarnesiVerisi(supabase, doktorId, patientId)
+  if (!asiKarnesiDoluMu(karne)) return NextResponse.json({ error: 'Kayıtlı aşı yok.' }, { status: 404 })
+  return NextResponse.json({ karne }, { headers: { 'Cache-Control': 'private, no-store' } })
+}
 
 export async function POST(req: NextRequest) {
   const oturum = await pratikOturum(req)

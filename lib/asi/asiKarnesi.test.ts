@@ -284,11 +284,34 @@ describe('PDF — Türkçe karakter, e-Nabız, kaynak ayrımı (üretilen PDF me
   })
 })
 
+describe('NOTYA-ASI-GOZLEM-01 — hekim önce gözlemler, PDF o sayfada', () => {
+  it('Aşılar sekmesi: "Aşı karnesi gözlemle" → rapor sayfası; PDF indir orada', () => {
+    const eylem = oku('components/doktor/AsiKarnesiEylemleri.tsx')
+    assert.match(eylem, /Aşı karnesi gözlemle/)
+    assert.match(eylem, /\/dashboard\/doktor\/hastalar\/\$\{encodeURIComponent\(patientId\)\}\/asi-karnesi/)
+    assert.doesNotMatch(eylem.replace(/\/\*[\s\S]*?\*\//g, ''), />\s*PDF indir\s*</, 'listede doğrudan PDF indir yok')
+    const sayfa = oku('app/dashboard/doktor/hastalar/[id]/asi-karnesi/page.tsx')
+    assert.match(sayfa, /data-asi-karnesi-gozlem/)
+    assert.match(sayfa, /PDF indir/)
+    assert.match(sayfa, /revize edilemez|Salt okunur|düzenlenemez/i)
+    assert.match(sayfa, /\/api\/doktor\/asilar\/karne\?patientId=/)
+    assert.match(sayfa, /\/api\/doktor\/asilar\/karne\/pdf\?patientId=/)
+    assert.doesNotMatch(sayfa, /<input|<textarea|<select/, 'gözlem sayfası düzenlenemez')
+  })
+  it('GET /api/doktor/asilar/karne JSON karne döner (gözlem)', () => {
+    const r = oku('app/api/doktor/asilar/karne/route.ts')
+    assert.match(r, /export async function GET/)
+    assert.match(r, /asiKarnesiVerisi/)
+    assert.match(r, /NOTYA-ASI-GOZLEM-01/)
+  })
+})
+
 describe('portalde e-posta gönderme yüzeyi YOK (Kaan, 2026-09-19 — C6 iptal)', () => {
   const YUZEYLER = [
     'app/portal/_components/AsiKarnesiView.tsx', 'app/portal/hasta/[token]/asi-karnesi/page.tsx',
     'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts', 'lib/asi/karneBelgesi.ts', 'lib/asi/karnePaylasim.ts',
-    'lib/asi/karnePdf.tsx', 'lib/asi/karneSunucu.ts', 'components/doktor/AsiKarnesiEylemleri.tsx', 'app/api/doktor/asilar/karne/pdf/route.ts',
+    'lib/asi/karnePdf.tsx', 'lib/asi/karneSunucu.ts', 'components/doktor/AsiKarnesiEylemleri.tsx',
+    'app/dashboard/doktor/hastalar/[id]/asi-karnesi/page.tsx', 'app/api/doktor/asilar/karne/pdf/route.ts',
   ]
   const kod = (r: string) => oku(r).replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
   it('e-posta gönderen / adres soran hiçbir şey yok (Resend, notifyPatientEmail, mailto, e-posta alanı)', () => {

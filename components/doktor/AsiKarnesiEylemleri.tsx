@@ -1,87 +1,49 @@
 'use client';
 
 /**
- * ASI-KARNESI-01 (C7) — hasta dosyası › Aşılar: aile poliklinikte isterse hekim karneyi basıp verir / gönderir.
- * Sağlığım'daki karneyle AYNI PDF (GET /api/doktor/asilar/karne/pdf → lib/asi/karnePdf.tsx) — ikinci şablon yok.
- * Üç eylem (Kaan): PDF indir · Paylaş (yalnız cihazın paylaşım sayfası; destek yoksa gösterilmez) · Yazdır.
- * Notya e-posta göndermez, adres sormaz.
+ * ASI-KARNESI-01 (C7) + NOTYA-ASI-GOZLEM-01 — hasta dosyası › Aşılar.
+ *
+ * İlk adım: "Aşı karnesi gözlemle" → salt-okunur rapor sayfası
+ * (/dashboard/doktor/hastalar/[id]/asi-karnesi). PDF indir / Paylaş / Yazdır o sayfada.
+ * Sağlığım'daki karneyle AYNI içerik (lib/asi/karneSunucu + karnePdf) — ikinci şablon yok.
  */
 
-import React, { useEffect, useState } from 'react';
-import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
-import { dosyaPaylasimiVar, pdfYazdir } from '@/lib/asi/karnePaylasim';
+import React from 'react';
+import Link from 'next/link';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
-const DOSYA_ADI = 'asi-karnesi.pdf';
-const dugme: React.CSSProperties = { background: '#F6F0E4', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)', borderRadius: 8, padding: '8px 12px', fontSize: 13, cursor: 'pointer', minHeight: 40 };
+const dugme: React.CSSProperties = {
+  background: '#0F9B8E',
+  color: '#fff',
+  border: 'none',
+  borderRadius: 8,
+  padding: '8px 14px',
+  fontSize: 13,
+  fontWeight: 700,
+  cursor: 'pointer',
+  minHeight: 40,
+  textDecoration: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+};
 
 export default function AsiKarnesiEylemleri({ patientId, kayitSayisi }: { patientId: string; kayitSayisi: number }) {
-  const [paylasimVar, setPaylasimVar] = useState(false);
-  const [hazirPdf, setHazirPdf] = useState<Blob | null>(null);
-  const [mesgul, setMesgul] = useState(false);
-  const [hata, setHata] = useState('');
-
-  async function pdfAl(): Promise<Blob | null> {
-    const t = await ensureDoctorAccessToken();
-    if (!t) { setHata('Oturum bulunamadı.'); return null; }
-    const r = await fetch(`/api/doktor/asilar/karne/pdf?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
-    if (!r.ok) { const j = await r.json().catch(() => ({})); setHata(j.error || 'PDF oluşturulamadı.'); return null; }
-    return r.blob();
-  }
-
-  // Paylaşım sayfası (iOS) dokunuştan hemen sonra açılmalı — destek varsa PDF önceden hazırlanır.
-  useEffect(() => {
-    setHazirPdf(null);
-    const destek = kayitSayisi > 0 && dosyaPaylasimiVar(DOSYA_ADI);
-    setPaylasimVar(destek);
-    if (!destek) return;
-    let iptal = false;
-    pdfAl().then((b) => { if (!iptal && b) setHazirPdf(b); }).catch(() => undefined);
-    return () => { iptal = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId, kayitSayisi]);
-
-  async function eylem(tur: 'indir' | 'yazdir') {
-    setHata(''); setMesgul(true);
-    try {
-      const b = tur === 'yazdir' && hazirPdf ? hazirPdf : await pdfAl();
-      if (!b) return;
-      const url = URL.createObjectURL(b);
-      if (tur === 'yazdir') { pdfYazdir(url); return; }
-      const a = document.createElement('a');
-      a.href = url; a.download = DOSYA_ADI;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      setHata('PDF oluşturulamadı.');
-    } finally {
-      setMesgul(false);
-    }
-  }
-
-  async function paylas() {
-    if (!hazirPdf) return;
-    setHata('');
-    try {
-      await navigator.share({ files: [new File([hazirPdf], DOSYA_ADI, { type: 'application/pdf' })], title: 'Aşı Karnesi' });
-    } catch (e) {
-      if ((e as { name?: string })?.name !== 'AbortError') setHata('Paylaşım sayfası açılamadı; PDF\'i indirip gönderebilirsiniz.');
-    }
-  }
-
   if (kayitSayisi === 0) return null;
   return (
     <div data-asi-karnesi-eylemleri="" style={{ background: '#F6F0E4', borderRadius: 12, padding: 12, marginBottom: 16, display: 'grid', gap: 8 }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#3b2e24' }}>Aşı karnesi (Sağlığım'dakiyle aynı)</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" disabled={mesgul} onClick={() => eylem('indir')} style={dugme}>PDF indir</button>
-          {paylasimVar && <button type="button" disabled={!hazirPdf} onClick={paylas} style={{ ...dugme, opacity: hazirPdf ? 1 : 0.6 }}>Paylaş</button>}
-          <button type="button" disabled={mesgul} onClick={() => eylem('yazdir')} style={dugme}>Yazdır</button>
-        </div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#3b2e24' }}>Aşı karnesi (Sağlığım&apos;dakiyle aynı)</div>
+        <Link
+          href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/asi-karnesi`}
+          data-asi-karnesi-gozlemle=""
+          style={dugme}
+        >
+          Aşı karnesi gözlemle
+        </Link>
       </div>
-      {!paylasimVar && <div style={{ fontSize: 12, color: '#8b7d70' }}>Göndermek için PDF'i indirip kendi e-postanızdan ya da mesaj uygulamanızdan iletebilirsiniz.</div>}
-      {hata && <div role="alert" style={{ fontSize: 12, color: CHROME_RENK.warn }}>{hata}</div>}
+      <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>
+        Revize edilemeyen rapor görünümü — PDF indirme o sayfada.
+      </div>
     </div>
   );
 }

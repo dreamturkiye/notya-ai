@@ -361,6 +361,17 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     assert.equal(sekreter.status, 200)
   })
 
+  it('NOTYA-ASI-GOZLEM-01: GET /api/doktor/asilar/karne JSON karne döner; yabancı hasta 404', async () => {
+    const { A, B } = sahneKur()
+    const karne = await import('../../app/api/doktor/asilar/karne/route')
+    const y = await coz(karne.GET(iste('GET', `/api/doktor/asilar/karne?patientId=${A.hasta}`, { token: A.token })))
+    assert.equal(y.status, 200, y.metin.slice(0, 200))
+    assert.ok(y.json.karne?.yapilanlar?.length >= 1)
+    assert.ok(y.json.karne.uyari?.baslik)
+    const yabanci = await coz(karne.GET(iste('GET', `/api/doktor/asilar/karne?patientId=${B.hasta}`, { token: A.token })))
+    assert.equal(yabanci.status, 404)
+  })
+
   it('NOTYA-ASI-TABLO-01: piyasa adı + yaş (ay) POST/PATCH ile kaydedilir ve listede döner', async () => {
     const { A } = sahneKur()
     const liste = await import('../../app/api/doktor/asilar/route')
