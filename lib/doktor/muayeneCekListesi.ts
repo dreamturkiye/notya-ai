@@ -228,7 +228,7 @@ export function cekListeDogrula(
 ): CekDogrulamaSatir[] {
   const ham = trAramaNormalize(`${g.transcript || ''} ${g.soap || ''}`)
   const onceki = new Set(g.oncekiIdler || [])
-  const satirlar = maddeler.map((m) => {
+  const satirlar: CekDogrulamaSatir[] = maddeler.map((m) => {
     const satir = { id: m.id, etiket: m.etiket, grup: m.grup }
     if (g.isaretler?.[m.id]) return { ...satir, durum: 'hekim' as const }
     if (maddeMetindeMi(m, ham)) return { ...satir, durum: 'dosyada' as const }
