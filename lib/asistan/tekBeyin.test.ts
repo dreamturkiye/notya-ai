@@ -427,7 +427,9 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const gurultu = await ses({ sahne: b, mesaj: '...' })
     assert.equal(gurultu.status, 200)
     assert.equal(modelIstekleri.length, once, '"..." model turu değildir')
-    assert.equal(gurultu.metin.trim(), '.', 'ASR duraklaması soketi açık tutar, model cevabı değildir')
+    // NOTYA-SES-ESKI-02: this route is the ElevenLabs Custom LLM; right after a calendar answer the pause now gets
+    // the fixed line instead of a lone period (Flash voiced the period as a sigh). Still no model turn, still no recant.
+    assert.equal(gurultu.metin.trim(), 'Buradayım Hocam.', 'takvimden sonraki duraklama sabit sözdür, model cevabı değildir')
     assert.doesNotMatch(gurultu.metin, /Haklısınız|doğrulamadan|Ana Sayfa/)
     const emin = await ses({ sahne: b, mesaj: 'Emin misin?' })
     assert.equal(emin.status, 200)
