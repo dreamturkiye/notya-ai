@@ -218,9 +218,13 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             yaz('Görüşmek üzere Hocam.', true)
             parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
             bitis = 'tool_calls'
+          } else if (cevaplanmisSonSoruMu(oturum, mesaj)) {
+            // NOTYA-SES-TEK-CEVAP-01: EL önceki ses sorusunu yeniden POST ederse ikinci beyin yok.
+            await devamiOku(mesaj)
+            if (!icerikGitti) parca({ content: '.' })
           } else {
-          // NOTYA-BUYUME-KISA-01: aynı istek model bitmeden ikinci Custom LLM'e düşmesin.
-          const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj).catch(() => true)
+          // NOTYA-BUYUME-KISA-01 / NOTYA-SES-TEK-CEVAP-01: kilit fail-closed — hata = ikinci tur yok.
+          const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj).catch(() => false)
           if (!kilitAlindi) {
             parca({ content: '.' })
           } else {

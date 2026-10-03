@@ -50,6 +50,7 @@ import { takvimSorusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
 import { sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
+import { cevaplanmisSonSoruMu } from '@/lib/asistan/sesLlm'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { saatDilimiSec } from '@/lib/randevu/tarihCozumle'
@@ -370,7 +371,13 @@ export async function POST(req: NextRequest) {
             await turuKapat()
             return
           }
-          const kilit = await sesTurKilidiAl(supabase, user.id, oturumId, mesaj).catch(() => true)
+          // NOTYA-SES-TEK-CEVAP-01: oturumda bu ses sorusu zaten cevaplandıysa ikinci beyin yok.
+          if (cevaplanmisSonSoruMu(oturumMsj, mesaj)) {
+            console.info('[fish-tur] kapı', 'cevaplanmis')
+            await turuKapat()
+            return
+          }
+          const kilit = await sesTurKilidiAl(supabase, user.id, oturumId, mesaj).catch(() => false)
           if (!kilit) {
             console.info('[fish-tur] kapı', 'in_flight')
             await turuKapat()

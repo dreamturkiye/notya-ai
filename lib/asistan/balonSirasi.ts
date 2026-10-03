@@ -53,6 +53,36 @@ export function benzerCevapMi(a: string, b: string): boolean {
   const sx = sayilar(x)
   const sy = sayilar(y)
   if (sx && sx === sy && sx.split('|').length >= 3 && kisa.length >= 80) return true
+  // NOTYA-SES-TEK-CEVAP-01: 24 ay / vizit özeti gibi uzun klinik cevaplar farklı girişle
+  // başlar ama aynı bölümleri tekrarlar — önek yetmez; token + başlık örtüşmesi bak.
+  if (kisa.length >= 120) {
+    const tok = (s: string) =>
+      s
+        .toLocaleLowerCase('tr-TR')
+        .split(/[^a-zçğıöşü0-9]+/i)
+        .filter((w) => w.length > 2)
+    const A = tok(x)
+    const B = tok(y)
+    if (A.length >= 20 && B.length >= 20) {
+      const setA = new Set(A)
+      const setB = new Set(B)
+      let inter = 0
+      for (const t of setA) if (setB.has(t)) inter++
+      const union = setA.size + setB.size - inter
+      if (union > 0 && inter / union >= 0.52) return true
+    }
+    const baslik = (s: string) =>
+      (s.match(/\*\*[^*]{2,40}\*\*|^[A-ZÇĞİÖŞÜa-zçğıöşü][^:\n]{2,28}:/gm) || [])
+        .map((h) => h.replace(/\*/g, '').replace(/:$/, '').trim().toLocaleLowerCase('tr-TR'))
+        .filter(Boolean)
+    const hx = new Set(baslik(x))
+    const hy = new Set(baslik(y))
+    if (hx.size >= 3 && hy.size >= 3) {
+      let ortak = 0
+      for (const h of hx) if (hy.has(h)) ortak++
+      if (ortak >= 3) return true
+    }
+  }
   return false
 }
 

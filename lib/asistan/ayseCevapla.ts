@@ -387,18 +387,21 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       : { role: "assistant", content: asistanSozu, ...(ek.alanlar?.length ? { alanlar: ek.alanlar } : {}) }
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
     // NOTYA-AYSE-GERI-03: a pending command lives only as long as a turn writes it back.
-    const { sesDevam: eskiDevam, bekleyenKomut: eskiBekleyenKomut, currentPatientId, patientName, ...geriBaglam } = baglam
+    // sesTurKilit tur başı anlık görüntüsünden gelmez — canlı oturumdan korunur (NOTYA-SES-TEK-CEVAP-01).
+    const { sesDevam: eskiDevam, bekleyenKomut: eskiBekleyenKomut, currentPatientId, patientName, sesTurKilit: _eskiSesKilit, ...geriBaglam } = baglam
     const oncekiBaglam = personaDegisti ? geriBaglam : { ...geriBaglam, ...(currentPatientId ? { currentPatientId, patientName } : {}) }
     const sesDevam: SesDevam | null = ses && ek.sesDevamKalan ? { anahtar: asistanZamani, kalan: ek.sesDevamKalan, olusturma: simdi() } : null
     // NOTYA-SAYFA-HASTA-01: the doctor opened another patient's page while this turn ran (a voice turn can take
     // 30 s) — that page switch is the more recent explicit signal; this write must not put the old focus back.
     let sayfaOdagi: Record<string, unknown> | null = null
+    let canliSesKilit: unknown = undefined
     {
       const { data: taze } = await supabase.from("asistan_sessions").select("active_context").eq("id", oturumId).eq("doctor_id", doktorId).maybeSingle()
       const t = ((taze as { active_context?: Record<string, unknown> | null } | null)?.active_context || {}) as Record<string, unknown>
       if (t.odakKaynak === "sayfa" && t.currentPatientId && String(t.odakZaman || "") > turBaslangic) {
         sayfaOdagi = { currentPatientId: t.currentPatientId, patientName: t.patientName ?? null, odakKaynak: "sayfa", odakZaman: t.odakZaman }
       }
+      if (t.sesTurKilit) canliSesKilit = t.sesTurKilit
     }
     // NOTYA-KONUSMA-BAGLAMI-01: the record for the next turn — the effective (rewritten) question, the entities it
     // carried and the patient it ended on. Written on every turn, deterministic and model paths alike.
@@ -422,6 +425,8 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
       ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
       ...(sayfaOdagi || {}),
       konusma,
+      // Canlı in-flight kilit: kardeş turun claim'ini veya kendi kilidi silme/ezme.
+      ...(canliSesKilit ? { sesTurKilit: canliSesKilit } : {}),
     }
     await supabase.from("asistan_sessions").update({
       messages: [...messages, kullanici, asistan].slice(-SOHBET_SAKLANAN_MESAJ),

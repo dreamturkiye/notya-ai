@@ -83,3 +83,31 @@ test('NOTYA-BUYUME-KISA-01: araya kullanıcı girse de aynı büyüme cevabı ik
   const tekrar = cevapEkle(araya, soru, b, ekle)
   assert.equal(tekrar.filter((m) => m.role === 'ai' && benzerCevapMi(m.text, a)).length, 1)
 })
+
+test('NOTYA-SES-TEK-CEVAP-01: 24 ay muayene özeti parafrazı ikinci balon açmaz', () => {
+  const a = [
+    '**Kayıt:** Ali Kara, 24 aylık sağlam çocuk muayenesi için dosya hazır.',
+    '**Öykü:** Beslenme, uyku, tuvalet, ekran süresi sorulacak; prematüre doğum kaydı var.',
+    '**Büyüme ve muayene:** Kilo, boy, baş çevresi ölç; büyüme eğrisine işle.',
+    '**Gelişim:** Dil, motor, sosyal iletişim; 24 ay otizm taraması (M-CHAT) kontrol.',
+    '**Aşılar:** e-Nabız aşı karnesini doğrula; eksik doz varsa planla.',
+    '**Danışmanlık:** Güvenlik, beslenme, ekran süresi önerileri.',
+    '**Dikkat / Takip:** Otizm tarama kaydı eksikse bu vizitte tamamla; D vitamini ve probiyotik devam.',
+  ].join('\n')
+  const b = [
+    'Ali Kara için 24 aylık muayene özeti Hocam:',
+    '**Öykü:** Beslenme uyku tuvalet ekran — prematüre öyküsü dosyada.',
+    '**Büyüme ve muayene:** Antropometri ve sistem muayenesi.',
+    '**Gelişim:** Dil / motor / sosyal; M-CHAT 24 ay taraması.',
+    '**Aşılar:** e-Nabız karne kontrolü.',
+    '**Danışmanlık:** Güvenlik ve beslenme.',
+    '**Dikkat / Takip:** Tarama eksikse tamamla; D vitamini + probiyotik.',
+  ].join('\n')
+  assert.ok(benzerCevapMi(a, b), 'bölüm başlığı + token örtüşmesi')
+  const soru = '24 aylık sağlam çocuk muayenesini yapacağım. Bu muayenede dikkat etmem gerekenler nelerdir?'
+  const once = cevapEkle([{ role: 'ai', text: SELAM }], soru, a, ekle)
+  const tekrar = cevapEkle(once, soru, b, ekle)
+  assert.equal(tekrar.filter((m) => m.role === 'ai').length, 2, 'selam + tek özet')
+  const ucuncu = cevapEkle(tekrar, soru, a.replace('dosya hazır', 'hazırlandı'), ekle)
+  assert.equal(ucuncu.filter((m) => m.role === 'ai').length, 2)
+})
