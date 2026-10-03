@@ -6,8 +6,17 @@
  *
  * Duration identity (keep in sync with lib/asistan/sesCalar.ts pcmOranla):
  *   outSamples / contextRate === inSamples / sourceRate
+ *
+ * NOTYA-SES-ACILIS-TEMPO-01 (Dr. Gökhan, 2026-10-03): only the opening greeting
+ * sounded rushed; later turns were fine. Root cause: sourceRate defaulted to the
+ * device rate (often 48 kHz). The greeting's 16 kHz PCM could be converted before
+ * setFormat arrived → ~3× playback. Hold buffers until setFormat; default 16 kHz
+ * (ConvAI pcm_16000) so an early buffer still cannot race to 3×.
  */
 const decodeTable = [0, 132, 396, 924, 1980, 4092, 8316, 16764]
+
+/** ConvAI default agent output — matches parseFormat("pcm_16000"). */
+const EL_VARSAYILAN_HZ = 16000
 
 function decodeSample(muLawSample) {
   muLawSample = ~muLawSample
@@ -45,20 +54,31 @@ class AudioConcatProcessor extends AudioWorkletProcessor {
   constructor() {
     super()
     this.buffers = []
+    this.bekleyen = []
     this.cursor = 0
     this.currentBuffer = null
     this.wasInterrupted = false
     this.finished = false
     this.format = 'pcm'
-    this.sourceRate = sampleRate
+    this.formatHazir = false
+    this.sourceRate = EL_VARSAYILAN_HZ
     this.port.onmessage = ({ data }) => {
       switch (data.type) {
         case 'setFormat':
           this.format = data.format || 'pcm'
-          this.sourceRate = data.sampleRate > 0 ? data.sampleRate : sampleRate
+          this.sourceRate = data.sampleRate > 0 ? data.sampleRate : EL_VARSAYILAN_HZ
+          this.formatHazir = true
+          if (this.bekleyen.length) {
+            for (const ham of this.bekleyen) this.buffers.push(this.floatYap(ham))
+            this.bekleyen = []
+          }
           break
         case 'buffer':
           this.wasInterrupted = false
+          if (!this.formatHazir) {
+            this.bekleyen.push(data.buffer)
+            break
+          }
           this.buffers.push(this.floatYap(data.buffer))
           break
         case 'interrupt':
@@ -68,6 +88,7 @@ class AudioConcatProcessor extends AudioWorkletProcessor {
           if (this.wasInterrupted) {
             this.wasInterrupted = false
             this.buffers = []
+            this.bekleyen = []
             this.currentBuffer = null
             this.cursor = 0
           }

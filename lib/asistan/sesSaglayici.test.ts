@@ -18,13 +18,12 @@ import { AYSE_TTS_SETTINGS } from '@/lib/dr-ayse/tts'
 import { SES_CALAR } from './sesCalar'
 import { PERSONAS, getPersona } from './personaEngine'
 
-/** Values read from lib/asistan/elevenVoices.ts and lib/asistan/sesMotoru.ts at f247ea1b.
- *  NOTYA-SES-TEMPO-01 (2026-10-03): speed deliberately 0.92 (was 1 at f247) after Dr. Gökhan "hızlı konuşuyorsun". */
+/** Values read from lib/asistan/elevenVoices.ts and lib/asistan/sesMotoru.ts at f247ea1b. */
 const AYSE_ELEVEN_SES_ID = 'ir8YO3t6kXwbDO3roXIT'
 const AYSE_TTS_F247 = {
   model_id: 'eleven_flash_v2_5',
   expressive_mode: false,
-  speed: 0.92,
+  speed: 1,
   stability: 0.55,
   similarity_boost: 0.75,
   optimize_streaming_latency: 1,
@@ -88,13 +87,13 @@ test('Ayşe’nin ElevenLabs sesi f247ea1b ile aynı (ses kimliği)', () => {
   assert.equal(PERSONAS.aysekaya.voiceId, AYSE_ELEVEN_SES_ID, 'sayfanın tts.voiceId override’ı')
 })
 
-test('Ayşe’nin ElevenLabs TTS ayarı Flash kilidi (NOTYA-SES-TEMPO-01 hız 0.92)', () => {
+test('Ayşe’nin ElevenLabs TTS ayarı f247ea1b ile aynı (Flash kilidi, sabit hız)', () => {
   assert.equal(SES_MODEL_ID, 'eleven_flash_v2_5')
   assert.deepEqual({ ...SES_TTS_KILIT }, AYSE_TTS_F247)
   assert.equal(AYSE_TTS_SETTINGS.stability, 0.55)
   assert.equal(AYSE_TTS_SETTINGS.similarity_boost, 0.75)
   assert.equal(AYSE_TTS_SETTINGS.style, 0)
-  assert.equal(AYSE_TTS_SETTINGS.speed, 0.92)
+  assert.equal(AYSE_TTS_SETTINGS.speed, 1)
   assert.equal(AYSE_TTS_SETTINGS.optimize_streaming_latency, 1)
   assert.equal(ttsKilitGerekli({ ...AYSE_TTS_F247 }), false, 'kilitli ajan yeniden yazılmaz')
   assert.deepEqual({ ...SES_CALAR.workletPaths }, { audioConcatProcessor: '/ses/ses-calar-islemcisi.js' }, 'hızı değiştiremeyen oynatıcı')

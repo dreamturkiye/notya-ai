@@ -6,16 +6,15 @@ import { pcmOranla } from './sesCalar'
 
 test('TTS kilidi: Flash ve sabit hız temizdir; v3, expressive ve hız sapması kilit ister', () => {
   assert.equal(ttsKilitGerekli({
-    model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 0.92, stability: 0.55, similarity_boost: 0.75,
+    model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75,
   }), false)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_v3_conversational', speed: 0.92, stability: 0.55, similarity_boost: 0.75 }), true)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', expressive_mode: true, speed: 0.92, stability: 0.55, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_v3_conversational', speed: 1, stability: 0.55, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', expressive_mode: true, speed: 1, stability: 0.55, similarity_boost: 0.75 }), true)
   assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1.15, stability: 0.55, similarity_boost: 0.75 }), true)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.55, similarity_boost: 0.75 }), true)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 0.92, stability: 0.3, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.3, similarity_boost: 0.75 }), true)
   assert.equal(ttsKilitGerekli(null), true)
   assert.equal(ttsKilitGerekli({
-    model_id: 'eleven_flash_v2_5', speed: 0.92, stability: 0.55, similarity_boost: 0.75,
+    model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.55, similarity_boost: 0.75,
     suggested_audio_tags: [{ tag: 'slow' }],
   }), true)
 })
@@ -50,7 +49,7 @@ test('ses motoru sapmış ajanı Flash kilidine yazar, temiz ajanı yazmaz', asy
   const temiz: typeof fetch = async (url, init) => {
     cagrilar.push({ url: String(url), method: init?.method || 'GET' })
     return new Response(JSON.stringify({
-      conversation_config: { tts: { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 0.92, stability: 0.55, similarity_boost: 0.75 } },
+      conversation_config: { tts: { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75 } },
     }), { status: 200 })
   }
   const t = await sesMotorunuSabitle('agent_temiz', 'anahtar', temiz)
@@ -115,4 +114,13 @@ test('pcm oranı süreyi korur: 16 kHz bir saniye, 48 kHz cihazda hâlâ bir san
   const ayni = pcmOranla(kaynak, 16000, 16000)
   assert.equal(ayni.length, kaynak.length)
   assert.ok(Math.abs(ayni[100] - kaynak[100] / 32768) < 1e-6)
+})
+
+test('NOTYA-SES-ACILIS-TEMPO-01: cihaz hızını kaynak sanmak açılışı ~3× hızlandırır', () => {
+  // 1 s of 16 kHz greeting PCM. Wrong: treat as 48 kHz (pre-setFormat default). Right: 16 → 48.
+  const birSaniye = new Int16Array(16000)
+  const yanlis = pcmOranla(birSaniye, 48000, 48000)
+  const dogru = pcmOranla(birSaniye, 16000, 48000)
+  assert.equal(yanlis.length / 48000, 1 / 3)
+  assert.ok(Math.abs(dogru.length / 48000 - 1) < 1 / 48000)
 })

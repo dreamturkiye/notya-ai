@@ -11,6 +11,10 @@
  * public/ses/ses-calar-islemcisi.js is the same conversion, stateful across
  * chunks. Passed to Conversation.startSession as workletPaths so the SDK's
  * processor is never used.
+ *
+ * NOTYA-SES-ACILIS-TEMPO-01: the opening greeting was the only turn that rushed.
+ * The worklet must not treat greeting PCM as device-rate before setFormat — see
+ * public/ses/ses-calar-islemcisi.js (hold until setFormat; default 16 kHz).
  */
 export const SES_CALAR = {
   workletPaths: { audioConcatProcessor: '/ses/ses-calar-islemcisi.js' },
