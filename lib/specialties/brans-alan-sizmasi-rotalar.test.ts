@@ -319,7 +319,7 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       adres: 'Test Mah. 1. Sok. No:1', sigortaTuru: 'SGK', kanGrubu: 'A Rh+', kronikHastaliklar: ['Yok'], kullaniyorMu: 'Hayır',
       alerjiVarMi: 'Bilinen alerjisi yok', aileOykusu: 'Yok', sigara: 'Kullanmıyorum', alkol: 'Kullanmıyorum', kvkkOnay: 'Kabul ediyorum',
     })
-    const VELI_YANIT = { veliAd: 'Sentetik', veliSoyad: 'Veli', veliYakinligi: 'Baba', veliTelefon: '05553334455' }
+    const VELI_YANIT = { veliAd: 'Sentetik Veli', veliYakinligi: 'Baba', veliTelefon: '05553334455' }
     // pediatri, göz, kardiyoloji (+ KBB, ortopedi) × reşit olmayan / erişkin hasta
     const yuruyus: Array<[string, string, boolean]> = [
       ['pediatri', 'pediatri', true], ['pediatriYetiskin', 'pediatri', false],

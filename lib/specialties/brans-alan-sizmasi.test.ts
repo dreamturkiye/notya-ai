@@ -389,7 +389,7 @@ describe('INTAKE VELI + ACİL KİŞİ — hasta bilgi formu: veli bölümü yaş
     adres: 'Test Mah. 1. Sok. No:1', sigortaTuru: 'SGK', kanGrubu: 'A Rh+', kronikHastaliklar: ['Yok'], kullaniyorMu: 'Hayır',
     alerjiVarMi: 'Bilinen alerjisi yok', aileOykusu: 'Yok', sigara: 'Kullanmıyorum', alkol: 'Kullanmıyorum', kvkkOnay: 'Kabul ediyorum',
   })
-  const VELI_YANIT = { veliAd: 'Sentetik', veliSoyad: 'Veli', veliYakinligi: 'Anne', veliTelefon: '05553334455' }
+  const VELI_YANIT = { veliAd: 'Sentetik Veli', veliYakinligi: 'Anne', veliTelefon: '05553334455' }
   const ERGEN = '2010-01-10' // NOW'a göre 16 yaş
   const ON_YEDI = '2008-09-18' // NOW'dan bir gün sonra 18 → hâlâ 17
   const ON_SEKIZ = '2008-09-17' // NOW günü 18 → erişkin
@@ -409,9 +409,11 @@ describe('INTAKE VELI + ACİL KİŞİ — hasta bilgi formu: veli bölümü yaş
     assert.ok(s.includes("import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'") && /veliOnamGerekliMi\(dogum, nowMs\)/.test(s), 'yaş kuralı yeniden yazılmadı')
   })
 
-  it('veli alanları: ad, soyad, yakınlık (Anne/Baba/Vasi/Diğer), "Diğer" metni, telefon zorunlu; kimlik teyidi isteğe bağlı', () => {
+  it('veli alanları: adı ve soyadı (tek alan), yakınlık (Anne/Baba/Vasi/Diğer), "Diğer" metni, telefon zorunlu; kimlik teyidi isteğe bağlı', () => {
     const a = Object.fromEntries(VELI_BOLUMU.alanlar.map((x) => [x.id, x]))
-    for (const id of ['veliAd', 'veliSoyad', 'veliYakinligi', 'veliTelefon']) assert.equal(a[id]?.zorunlu, true, id)
+    for (const id of ['veliAd', 'veliYakinligi', 'veliTelefon']) assert.equal(a[id]?.zorunlu, true, id)
+    assert.ok(!a.veliSoyad, 'veli soyadı veliAd (Adı ve Soyadı) içinde')
+    assert.match(a.veliAd.etiket, /Adı ve Soyadı/)
     assert.deepEqual(a.veliYakinligi.secenekler, ['Anne', 'Baba', 'Vasi', 'Diğer'])
     assert.equal(a.veliTelefon.tur, 'tel')
     assert.ok(a.veliDigerAdSoyad && !a.veliDigerAdSoyad.zorunlu && /Diğer/.test(a.veliDigerAdSoyad.yardim || ''))
@@ -470,7 +472,7 @@ describe('INTAKE VELI + ACİL KİŞİ — hasta bilgi formu: veli bölümü yaş
       const core = coreBolumlerIcin(b)
       assert.equal(intakeSunucuHataMetni(core, temel(YETISKIN), NOW), null, `${b}: erişkin, acil boş`)
       assert.equal(intakeIstemciHataMetni(core, temel(YETISKIN), NOW), null, `${b}: erişkin, acil boş (istemci)`)
-      assert.match(String(intakeSunucuHataMetni(core, temel(COCUK), NOW)), /Veli \/ Yasal Temsilcinin Adı/, `${b}: çocukta veli eksik`)
+      assert.match(String(intakeSunucuHataMetni(core, temel(COCUK), NOW)), /Veli \/ Yasal Temsilcinin Adı ve Soyadı/, `${b}: çocukta veli eksik`)
       assert.match(String(intakeIstemciHataMetni(core, { ...temel(COCUK), ...VELI_YANIT, veliTelefon: '' }, NOW)), /Veli \/ Yasal Temsilcinin Telefonu/)
       assert.equal(intakeSunucuHataMetni(core, { ...temel(COCUK), ...VELI_YANIT }, NOW), null, `${b}: çocuk, veli dolu, acil + kimlik teyidi boş`)
     }

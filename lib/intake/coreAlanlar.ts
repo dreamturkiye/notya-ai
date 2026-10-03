@@ -61,13 +61,15 @@ export interface IntakeBolum {
  * branşta aynı, YAŞ güdümlü (veliKosulu → veliOnamGerekliMi) — erişkin hastada hiç çizilmez. Reşit olmayanda zorunlu;
  * yalnız kimlik teyidi isteğe bağlı ("mümkünse"). veliYakinligi / veliDigerAdSoyad id'leri eski pediatri
  * gönderimleriyle aynı (hastaDosyaDerleyici "veli beyanı" kararı veliYakinligi'ne bakar).
+ *
+ * KVKK (6698 / ölçülülük): tıbbi onamı veren yasal temsilci belirlenebilir olmalı — yalnız ad yetmez; ad+soyad
+ * amaç için gerekli (fazla veri değil). Tek alan "Adı ve Soyadı"; eski formlardaki veliSoyad okumada birleşir.
  */
 export const VELI_BOLUMU: IntakeBolum = {
   baslik: 'Veli / Yasal Temsilci',
   veliKosulu: { dogumAlanId: 'dogumTarihi' },
   alanlar: [
-    { id: 'veliAd', etiket: 'Veli / Yasal Temsilcinin Adı', tur: 'text', zorunlu: true, yardim: '18 yaşından küçük hastalarda muayene ve tıbbi onam için veli / yasal temsilci bilgisi gereklidir.' },
-    { id: 'veliSoyad', etiket: 'Veli / Yasal Temsilcinin Soyadı', tur: 'text', zorunlu: true },
+    { id: 'veliAd', etiket: 'Veli / Yasal Temsilcinin Adı ve Soyadı', tur: 'text', zorunlu: true, placeholder: 'Örn. Ayşe Yılmaz', yardim: '18 yaşından küçük hastalarda muayene ve tıbbi onam için yasal temsilcinin adı ve soyadı gerekir (yalnız ad yeterli değildir).' },
     { id: 'veliYakinligi', etiket: 'Veli / Yasal Temsilcinin Yakınlığı', tur: 'radio', zorunlu: true, secenekler: ['Anne', 'Baba', 'Vasi', 'Diğer'] },
     { id: 'veliDigerAdSoyad', etiket: 'Yakınlığı (Diğer ise)', tur: 'text', placeholder: 'Örn. anneanne, bakıcı, koruyucu aile', yardim: 'Yalnız "Diğer" seçildiyse doldurun.' },
     { id: 'veliTelefon', etiket: 'Veli / Yasal Temsilcinin Telefonu', tur: 'tel', zorunlu: true, placeholder: '05xx xxx xx xx' },

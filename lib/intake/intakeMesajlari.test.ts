@@ -55,7 +55,8 @@ describe('boş form: her zorunlu alan kendi Türkçe satırını alır', () => {
   }
   it('reşit olmayan hastada veli alanları da işaretlenir; e-posta biçimi aynı turda denetlenir', () => {
     const hatalar = intakeAlanHatalari(bolumler('pediatri'), { dogumTarihi: '2019-04-10', eposta: 'veli.ornek.com' }, NOW)
-    for (const id of ['veliAd', 'veliSoyad', 'veliYakinligi', 'veliTelefon']) assert.ok(hatalar[id], id)
+    for (const id of ['veliAd', 'veliYakinligi', 'veliTelefon']) assert.ok(hatalar[id], id)
+    assert.ok(!hatalar.veliSoyad, 'veliSoyad ayrı alan değil — Adı ve Soyadı tek alanda')
     assert.equal(hatalar.eposta, INTAKE_MESAJ.eposta)
     assert.equal(hatalar.dogumTarihi, undefined)
   })
