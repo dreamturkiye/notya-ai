@@ -23,6 +23,8 @@ import { klinikCevapla } from '@/lib/asistan/klinikCevapla'
 import { klinikSlugJetonndan } from '@/lib/asistan/agentSec'
 import { kendiSelamiMi } from '@/lib/asistan/acilis'
 import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
+import { elevenMetni } from '@/lib/asistan/elevenMetni'
+import { detayIstegiMi } from '@/lib/ses/tibbiSeslendirme'
 import { SesYayKapisi, sesEtiketTemizle } from '@/lib/asistan/sesYay'
 import { sesDevamAl } from '@/lib/asistan/sesDevam'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
@@ -155,12 +157,17 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       // NOTYA-SES-DEVAM-01: what actually reached ElevenLabs before the voice turn closed (the continuation starts after it).
       let turKapandi = false
       let soylenen = ''
+      // NOTYA-SES-ELEVEN-NORMAL-01: medical speech layer only on what ElevenLabs hears — screen stays written.
       const cevapYaz = (t: string) => {
         const temiz = sesEtiketTemizle(t)
         if (!temiz.trim()) return
+        const okunus = elevenMetni(temiz, {
+          detay: detayIstegiMi(mesaj || '') || devamIstegiMi(mesaj || ''),
+        })
+        if (!okunus.trim()) return
         cevapSoylendi = true
-        if (!turKapandi) soylenen += temiz
-        yaz(temiz)
+        if (!turKapandi) soylenen += okunus.endsWith(' ') ? okunus : `${okunus} `
+        yaz(okunus.endsWith(' ') ? okunus : `${okunus} `)
       }
       /**
        * NOTYA-SES-DEVAM-01: the rest of the cut turn, uncapped, sentence by sentence — no model call, no new screen

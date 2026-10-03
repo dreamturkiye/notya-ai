@@ -9,8 +9,10 @@
  * PURE and DETERMINISTIC: no model call, no network, no clock. IDEMPOTENT: running it on its own output changes
  * nothing. The dictionary is data (tibbiSeslendirmeSozluk.ts) and grows without touching this file.
  *
- * Called from ONE place: fishMetni (lib/asistan/fishSes.ts), the choke point every spoken string passes on its way
- * to Fish TTS. Never call it on the screen text, the stored transcript, a model prompt or the recogniser's output.
+ * Called from the speech choke points only:
+ *   - fishMetni (lib/asistan/fishSes.ts) → Fish TTS
+ *   - elevenMetni (lib/asistan/elevenMetni.ts) → ElevenLabs Custom LLM SSE (NOTYA-SES-ELEVEN-NORMAL-01)
+ * Never call it on the screen text, the stored transcript, a model prompt or the recogniser's output.
  *
  * Left as written, by design: identity and contact values (telephone, e-mail, national id, any number after
  * "no / protokol / barkod …"), bare numbers of five or more digits, a digit glued to letters ("A12"), and every word
@@ -255,7 +257,11 @@ const BIRIMLI_DESEN = new RegExp(
   'giu',
 )
 /** A unit that stands alone: "mg/kg olarak", "kg cinsinden". Only spellings that cannot be a word. */
-const YALIN_BIRIMLER = ['kg', 'mg', 'mcg', 'µg', 'μg', 'mL', 'ml', 'dL', 'dl', 'cm', 'mm', 'mmHg', 'kcal', 'IU', '°C']
+const YALIN_BIRIMLER = [
+  'kg', 'mg', 'mcg', 'µg', 'μg', 'ng', 'pg', 'mL', 'ml', 'dL', 'dl', 'cm', 'mm',
+  'mmHg', 'cmH2O', 'cmH₂O', 'kcal', 'IU', 'İÜ', 'mEq', 'meq', 'mmol', 'µmol', 'μmol',
+  'nmol', 'pmol', 'kPa', 'fL', 'fl', 'µL', 'μL', '°C',
+]
 const YALIN_DESEN = new RegExp(`${ON}(${birimSecenekleri(YALIN_BIRIMLER)})(${BOLENLER})?${EK}${SON}`, 'gu')
 
 function birimleriOku(metin: string): string {

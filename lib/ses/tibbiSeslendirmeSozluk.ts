@@ -196,31 +196,79 @@ export interface BirimGirdisi {
 
 /** Units said after the number: "13,3 kg" → "on üç virgül üç kilogram". */
 export const BIRIM_SOZLUGU: readonly BirimGirdisi[] = [
-  { yazim: ['kg'], soz: 'kilogram', kaynak: 'talimat' }, // talimat
-  { yazim: ['g', 'gr'], soz: 'gram', kaynak: 'talimat' }, // talimat
-  { yazim: ['mg'], soz: 'miligram', kaynak: 'talimat' }, // talimat
-  { yazim: ['mcg', 'µg', 'μg'], soz: 'mikrogram', kaynak: 'talimat' }, // talimat
-  { yazim: ['mL', 'cc'], soz: 'mililitre', kaynak: 'talimat' }, // talimat ("cc": taslak)
-  { yazim: ['L', 'lt'], soz: 'litre', kaynak: 'talimat' }, // talimat
-  { yazim: ['cm'], soz: 'santimetre', kaynak: 'talimat' }, // talimat
-  { yazim: ['mm'], soz: 'milimetre', kaynak: 'talimat' }, // talimat
-  { yazim: ['mmHg', 'mm Hg'], soz: 'milimetre cıva', kaynak: 'talimat' }, // talimat
-  { yazim: ['°C', '° C', '℃', '°'], soz: 'derece', kaynak: 'talimat' }, // talimat
-  { yazim: ['dL'], soz: 'desilitre', kaynak: 'talimat' }, // talimat (in mg/dL, g/dL)
-  { yazim: ['ng'], soz: 'nanogram', kaynak: 'talimat' }, // talimat (in ng/mL)
-  { yazim: ['pg'], soz: 'pikogram', kaynak: 'taslak' }, // taslak
-  { yazim: ['fL'], soz: 'femtolitre', kaynak: 'taslak' }, // taslak
-  { yazim: ['µL', 'μL'], soz: 'mikrolitre', kaynak: 'taslak' }, // taslak
-  { yazim: ['mmol'], soz: 'milimol', kaynak: 'taslak' }, // taslak
-  { yazim: ['µmol', 'μmol'], soz: 'mikromol', kaynak: 'taslak' }, // taslak
-  { yazim: ['mEq'], soz: 'miliekivalan', kaynak: 'taslak' }, // taslak
-  { yazim: ['IU', 'İÜ', 'U'], soz: 'ünite', kaynak: 'taslak' }, // taslak
-  { yazim: ['mIU', 'mU'], soz: 'miliünite', kaynak: 'taslak' }, // taslak
-  { yazim: ['µIU', 'μIU'], soz: 'mikroünite', kaynak: 'taslak' }, // taslak
-  { yazim: ['kcal'], soz: 'kilokalori', kaynak: 'taslak' }, // taslak
-  { yazim: ['dk', 'dak'], soz: 'dakika', kaynak: 'taslak' }, // taslak
-  { yazim: ['sn'], soz: 'saniye', kaynak: 'taslak' }, // taslak
-  { yazim: ['SD', 'SDS'], soz: 'standart sapma', kaynak: 'taslak' }, // taslak
+  // ── Dr. Gökhan / Boss lab-unit list (NOTYA-SES-ELEVEN-NORMAL-01, 2026-10-03) ──
+  { yazim: ['kg'], soz: 'kilogram', kaynak: 'talimat' },
+  { yazim: ['g', 'gr'], soz: 'gram', kaynak: 'talimat' }, // g/dL → gram desilitre
+  { yazim: ['mg'], soz: 'miligram', kaynak: 'talimat' }, // mg/dL → miligram desilitre
+  { yazim: ['mcg', 'µg', 'μg'], soz: 'mikrogram', kaynak: 'talimat' }, // µg/dL → mikrogram desilitre
+  { yazim: ['ng'], soz: 'nanogram', kaynak: 'talimat' }, // ng/mL → nanogram mililitre
+  { yazim: ['pg'], soz: 'pikogram', kaynak: 'talimat' }, // pg/mL → pikogram mililitre
+  { yazim: ['mL', 'ml', 'cc'], soz: 'mililitre', kaynak: 'talimat' },
+  { yazim: ['dL', 'dl'], soz: 'desilitre', kaynak: 'talimat' },
+  { yazim: ['L', 'lt'], soz: 'litre', kaynak: 'talimat' },
+  { yazim: ['mEq', 'meq'], soz: 'miliekivalan', kaynak: 'talimat' }, // mEq/L → miliekivalan litre
+  { yazim: ['mmol'], soz: 'milimol', kaynak: 'talimat' }, // mmol/L → milimol litre
+  { yazim: ['IU', 'İÜ'], soz: 'enternasyonel ünite', kaynak: 'talimat' }, // IU/mL
+  { yazim: ['U'], soz: 'ünite', kaynak: 'talimat' }, // U/L → ünite litre
+  { yazim: ['mmHg', 'mm Hg'], soz: 'milimetre cıva', kaynak: 'talimat' },
+  { yazim: ['cmH2O', 'cmH₂O', 'cm H2O', 'cmH20'], soz: 'santimetre su', kaynak: 'talimat' },
+
+  // ── length / size ──
+  { yazim: ['cm'], soz: 'santimetre', kaynak: 'talimat' },
+  { yazim: ['mm'], soz: 'milimetre', kaynak: 'talimat' },
+
+  // ── temperature ──
+  { yazim: ['°C', '° C', '℃', '°'], soz: 'derece', kaynak: 'talimat' },
+
+  // ── blood-cell / haematology volumes ──
+  { yazim: ['fL', 'fl'], soz: 'femtolitre', kaynak: 'talimat' },
+  { yazim: ['µL', 'μL', 'uL'], soz: 'mikrolitre', kaynak: 'talimat' },
+  { yazim: ['nL', 'nl'], soz: 'nanolitre', kaynak: 'taslak' },
+
+  // ── molar / chemical ──
+  { yazim: ['µmol', 'μmol', 'umol'], soz: 'mikromol', kaynak: 'talimat' },
+  { yazim: ['nmol'], soz: 'nanomol', kaynak: 'talimat' },
+  { yazim: ['pmol'], soz: 'pikomol', kaynak: 'talimat' },
+  { yazim: ['µEq', 'μEq', 'ueq'], soz: 'mikroekivalan', kaynak: 'taslak' },
+  { yazim: ['mOsm', 'mosm'], soz: 'miliosmol', kaynak: 'talimat' },
+
+  // ── enzyme / activity units ──
+  { yazim: ['mIU', 'mU'], soz: 'miliünite', kaynak: 'talimat' },
+  { yazim: ['µIU', 'μIU', 'uIU'], soz: 'mikroünite', kaynak: 'talimat' },
+  { yazim: ['kU', 'kIU'], soz: 'kiloünite', kaynak: 'taslak' },
+  { yazim: ['µkat', 'μkat', 'ukat'], soz: 'mikrokatal', kaynak: 'taslak' },
+  { yazim: ['nkat'], soz: 'nanokatal', kaynak: 'taslak' },
+
+  // ── pressure / gas (beyond mmHg / cmH2O) ──
+  { yazim: ['kPa'], soz: 'kilopaskal', kaynak: 'talimat' },
+  { yazim: ['atm'], soz: 'atmosfer', kaynak: 'taslak' },
+  { yazim: ['torr'], soz: 'torr', kaynak: 'taslak' },
+
+  // ── energy / radiation / imaging ──
+  { yazim: ['kcal'], soz: 'kilokalori', kaynak: 'talimat' },
+  { yazim: ['kJ'], soz: 'kilojul', kaynak: 'taslak' },
+  { yazim: ['mGy'], soz: 'miligray', kaynak: 'taslak' },
+  { yazim: ['cGy'], soz: 'santigray', kaynak: 'taslak' },
+  { yazim: ['Gy'], soz: 'gray', kaynak: 'taslak' },
+  { yazim: ['MBq'], soz: 'megabekerel', kaynak: 'taslak' },
+  { yazim: ['Bq'], soz: 'bekerel', kaynak: 'taslak' },
+  { yazim: ['HU'], soz: 'Hounsfield birimi', kaynak: 'taslak' },
+
+  // ── concentration helpers ──
+  { yazim: ['ppm'], soz: 'milyonda bir', kaynak: 'taslak' },
+  { yazim: ['ppb'], soz: 'milyarda bir', kaynak: 'taslak' },
+  { yazim: ['vol%'], soz: 'hacim yüzde', kaynak: 'taslak' },
+
+  // ── time ──
+  { yazim: ['dk', 'dak'], soz: 'dakika', kaynak: 'talimat' },
+  { yazim: ['sn'], soz: 'saniye', kaynak: 'talimat' },
+  { yazim: ['ms'], soz: 'milisaniye', kaynak: 'taslak' },
+
+  // ── pulse / vent rate shorthand ──
+  { yazim: ['bpm'], soz: 'dakikada atım', kaynak: 'taslak' },
+
+  // ── growth / stats ──
+  { yazim: ['SD', 'SDS'], soz: 'standart sapma', kaynak: 'talimat' },
 ]
 
 export interface PaydaGirdisi {
@@ -236,14 +284,16 @@ export interface PaydaGirdisi {
  * after the numerator, as the instruction gives it: "mg/dL" → "miligram desilitre".
  */
 export const PAYDA_SOZLUGU: readonly PaydaGirdisi[] = [
-  { yazim: ['gün', 'gun'], soz: 'günde', kaynak: 'talimat' }, // talimat (mg/kg/gün)
-  { yazim: ['kg'], soz: 'kilogram başına', kaynak: 'talimat' }, // talimat (mg/kg/gün)
-  { yazim: ['dk', 'dak', 'dakika', 'min'], soz: 'dakikada', kaynak: 'talimat' }, // talimat (per minute)
-  { yazim: ['doz'], soz: 'doz başına', kaynak: 'taslak' }, // taslak
-  { yazim: ['saat', 'sa'], soz: 'saatte', kaynak: 'taslak' }, // taslak
-  { yazim: ['hafta'], soz: 'haftada', kaynak: 'taslak' }, // taslak
-  { yazim: ['m²', 'm2'], soz: 'metrekare başına', kaynak: 'taslak' }, // taslak
-  { yazim: ['mm³', 'mm3'], soz: 'milimetreküpte', kaynak: 'taslak' }, // taslak
+  { yazim: ['gün', 'gun', '24s', '24h'], soz: 'günde', kaynak: 'talimat' },
+  { yazim: ['kg'], soz: 'kilogram başına', kaynak: 'talimat' },
+  { yazim: ['dk', 'dak', 'dakika', 'min'], soz: 'dakikada', kaynak: 'talimat' },
+  { yazim: ['doz'], soz: 'doz başına', kaynak: 'taslak' },
+  { yazim: ['saat', 'sa', 'h', 'hr'], soz: 'saatte', kaynak: 'taslak' },
+  { yazim: ['hafta'], soz: 'haftada', kaynak: 'taslak' },
+  { yazim: ['ay'], soz: 'ayda', kaynak: 'taslak' },
+  { yazim: ['m²', 'm2'], soz: 'metrekare başına', kaynak: 'taslak' },
+  { yazim: ['mm³', 'mm3'], soz: 'milimetreküpte', kaynak: 'taslak' },
+  { yazim: ['µL', 'μL', 'uL'], soz: 'mikrolitrede', kaynak: 'taslak' },
 ]
 
 /** Words that may stand between the number and "/dk": "110 atım/dk" → "dakikada yüz on atım". */

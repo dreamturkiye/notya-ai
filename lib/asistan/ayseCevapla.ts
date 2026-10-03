@@ -75,7 +75,9 @@ import { kayitCevabi, kayitIstegiBul, olcumVarMi, type KayitCevabi } from "@/lib
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, OZET_ANLATIM_SINIRI, SADECE_EKRAN_SOZU, SesAkisi, sesOkunusModu, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
+import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, OZET_ANLATIM_SINIRI, SADECE_EKRAN_SOZU, SesAkisi, sesOkunusModu, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani, devamIstegiMi } from "@/lib/asistan/konusma"
+import { elevenMetni } from "@/lib/asistan/elevenMetni"
+import { detayIstegiMi } from "@/lib/ses/tibbiSeslendirme"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { sonOlcumlerSorusuMu, vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul, vizitSoylenisi } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
@@ -946,13 +948,17 @@ ${ilacBaglamMetni(drugs[0])}`
   const alanDefteri = new AlanDefteri()
   const alanSoz = alanSozcusu(alanDefteri)
   // Ses: model yazarken her cümle ekrandakiyle aynı kilitlerden geçer — doğrulanmamış doz / kılavuz numarası söylenmez.
+  // NOTYA-SES-ELEVEN-NORMAL-01: on ElevenLabs, also rewrite units/abbreviations for the spoken form (screen stays written).
+  const sesDetay = detayIstegiMi(String(message || '')) || devamIstegiMi(String(message || ''))
   const sesTemizle = (c: string) => {
     // NOTYA-AYSE-GERI-06: the "ask again with the full chart" marker is never spoken.
     if (sesTamDosyaIstendiMi(c)) return ""
     let t = uydurmaDozTemizle(doktorMetniTemizle(c), dozKaynak).metin
     if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
     // A sentence that would carry an identity value is not read: once per turn "… ekranınıza yazdım Hocam".
-    return alanSoz(t)
+    t = alanSoz(t)
+    if (g.saglayici === 'elevenlabs' && t.trim()) t = elevenMetni(t, { detay: sesDetay })
+    return t
   }
   // NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02: the summary of a visit reached the screen and nothing was said): the
   // summary of one visit is spoken from the RECORD, now, before the model writes — a condensed narrative, one short
