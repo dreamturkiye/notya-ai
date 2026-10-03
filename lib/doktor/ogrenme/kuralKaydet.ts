@@ -123,7 +123,7 @@ export async function kuralKapat(
     kanit_sayisi: 1,
     kesin: true,
     aktif: true,
-    durum: 'aday',
+    durum: 'uygulanir',
     son_gorulme: simdi,
     updated_at: simdi,
   }, { onConflict: 'doctor_id,kategori,anahtar' })

@@ -14,7 +14,7 @@ test('10. seans satırı yalnız gerçek kural + ilk kez', () => {
   assert.equal(meslektasSelamSatiri({ seans: 10, dahaOnceGosterildi: true, kuralSayisi: 3 }), null)
   assert.equal(meslektasSelamSatiri({ seans: 10, dahaOnceGosterildi: false, kuralSayisi: 0 }), null)
   const s = meslektasSelamSatiri({ seans: 10, dahaOnceGosterildi: false, kuralSayisi: 4, rutinBaslangic: '09:00' })
-  assert.match(s || '', /10\. seansımız Hocam — artık notlarınızı 4 kuralınızla yazıyorum; sabahları genelde 09:00 ile başlıyorsunuz/)
+  assert.match(s || '', /10\. seansımız Hocam — sizi 4 tercihinizle tanıyorum; sabahları genelde 09:00 ile başlıyorsunuz; notlarınızı da buna göre yazıyorum/)
 })
 
 test('chip metni', () => {

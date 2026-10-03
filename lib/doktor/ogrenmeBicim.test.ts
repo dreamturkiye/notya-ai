@@ -10,6 +10,8 @@ const EVET = [
   'Ben ate\u015fli \u00e7ocuklarda \u00f6nce parasetamol tercih ederim.',
   'Bundan sonra re\u00e7ete notlar\u0131n\u0131 k\u0131sa yaz.',
   'Her zaman \u00f6nce alerjiyi kontrol et.',
+  'Kahveyi \u00e7ok s\u00fctl\u00fc ve \u00e7ok \u015fekerli severim.',
+  'Bana Hocam diye hitap et l\u00fctfen.',
 ]
 const HAYIR = [
   'Tamam te\u015fekk\u00fcrler.',

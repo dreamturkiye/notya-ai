@@ -68,6 +68,11 @@ export default function AyseHafizasiPage() {
                   <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 6 }}>{k.ornekler.map((o) => `“${o}”`).join(' · ')}</div>
                 )}
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  {!kapali && k.durum === 'aday' && (
+                    <button type="button" onClick={() => void post({ anahtar: k.anahtar, durum: 'uygulanir' })} style={{ border: `1px solid ${CHROME_RENK.border}`, background: '#fff', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      Uygula
+                    </button>
+                  )}
                   {!kapali && (
                     <button type="button" onClick={() => void post({ kapat: k.anahtar })} style={{ border: `1px solid ${CHROME_RENK.border}`, background: '#fff', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                       Kapat

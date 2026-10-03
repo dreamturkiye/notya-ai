@@ -27,7 +27,7 @@ export function meslektasSelamSatiri(opts: {
   if (opts.kuralSayisi < 1) return null
   const sabahSaatiMi = (() => { const h = Number(String(opts.rutinBaslangic || '').slice(0, 2)); return Number.isFinite(h) && h >= 5 && h <= 12 })() // NOTYA-SELAM-01: a 01:00 start is a timezone or test-session artefact, never said
   const rutin = opts.rutinBaslangic && sabahSaatiMi ? `; sabahları genelde ${opts.rutinBaslangic} ile başlıyorsunuz` : ''
-  return `10. seansımız Hocam — artık notlarınızı ${opts.kuralSayisi} kuralınızla yazıyorum${rutin}.`
+  return `10. seansımız Hocam — sizi ${opts.kuralSayisi} tercihinizle tanıyorum${rutin}; notlarınızı da buna göre yazıyorum.`
 }
 
 export function tarzCipiMetni(n: number): string {

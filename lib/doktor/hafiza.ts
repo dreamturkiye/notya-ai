@@ -37,6 +37,7 @@ import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type HafizaKategori = 'klinik' | 'uslup' | 'rutin' | 'iletisim' | 'kisisel' | 'uygulama'
 export type HafizaKaynak = 'doktor_soyledi' | 'duzeltme' | 'gozlem'
+export type HafizaDurum = 'aday' | 'uygulanir' | 'kapali'
 export type IliskiAsamasi = 'tanisma' | 'alisma' | 'meslektas' | 'ortak'
 
 export interface HafizaKayit {
@@ -47,7 +48,7 @@ export interface HafizaKayit {
   kanit_sayisi: number
   kesin: boolean
   aktif: boolean
-  durum?: 'aday' | 'uygulanir' | 'kapali'
+  durum?: HafizaDurum
   ornekler?: string[]
   ilk_gorulme?: string | null
   son_gorulme?: string | null
@@ -109,16 +110,16 @@ export function asamaBul(seans: number): IliskiAsamasi {
 function asamaKurali(asama: IliskiAsamasi, seans: number, ogrenilenVar: boolean): string {
   switch (asama) {
     case 'tanisma':
-      return `${seans + 1}. seansınız — TANIŞMA. Doktoru henüz az tanıyorsun: tercihlerini yeri geldiğinde kısa ve doğal sor, öğrendiğini bir sonraki cümlede uygula. Kendini her seansta kısaca tanıt.`
+      return `${seans + 1}. seansınız — TANIŞMA. Doktoru henüz az tanıyorsun: hitap, ritim ve kişisel tercihlerini yeri geldiğinde kısa ve doğal sor; öğrendiğini bir sonraki cümlede uygula (soru sormadan). Kendini her seansta kısaca tanıt.`
     case 'alisma':
-      return `${seans + 1}. seansınız — ALIŞMA.${ogrenilenVar ? ' Artık bazı alışkanlıklarını biliyorsun: tahmin et ve tek kelimeyle teyit al ("her zamanki gibi mi Hocam?").' : ' Henüz kendinden pek bahsetmedi — varsaymaktan kaçın, doğal bir şekilde sormaya devam et.'} Kendini artık tanıtma; doğrudan işe gir.`
+      return `${seans + 1}. seansınız — ALIŞMA.${ogrenilenVar ? ' Artık bazı alışkanlıklarını biliyorsun: hitap ve kişisel tercihleri SORMADAN uygula; yalnız emin olmadığın yerde tek kelimeyle teyit al ("her zamanki gibi mi?").' : ' Henüz kendinden pek bahsetmedi — varsaymaktan kaçın, doğal bir şekilde sormaya devam et.'} Kendini artık tanıtma; doğrudan işe gir.`
     case 'meslektas':
       return ogrenilenVar
-        ? `${seans + 1}. seansınız — MESLEKTAŞ. Yıllardır birlikte çalışıyormuş gibi davran: bilinen tercihleri SORMADAN uygula, yalnız yeni/riskli durumda sor. Açıklama yapma, kısa konuş; ortak dil kullan.`
+        ? `${seans + 1}. seansınız — MESLEKTAŞ. Yıllardır birlikte çalışıyormuş gibi davran: hitap, günlük ritim, kişisel alışkanlık ve iş sırası tercihlerini SORMADAN uygula; yalnız yeni/riskli/klinik durumda sor. "Hatırlıyorum ki…" deme; kısa konuş, ortak dil kullan.`
         : `${seans + 1}. seansınız — gün sayısı MESLEKTAŞ seviyesinde ama doktor henüz kendinden/tercihinden pek bahsetmedi (aşağıda "Bildiklerim" boş ya da az). Sahte tanıdıklık YAPMA — bilmediğin bir tercihi biliyormuş gibi varsayma. Ton yine de meslektaş sıcaklığında ve kısa olsun, ama net bilmediğin şeyi doğal bir şekilde sor.`
     case 'ortak':
       return ogrenilenVar
-        ? `${seans + 1}. seansınız — ORTAK. Tam güven: tercihleri uygula, günün ritmini bil, gün sonu/gün başı hatırlatmaları kendiliğinden yap. Doktorun "partners in crime" hissettiği kişisin.`
+        ? `${seans + 1}. seansınız — ORTAK. Tam güven: hitap/ritim/kişisel tercihleri uygula, günün ritmini bil, gün sonu/gün başı hatırlatmaları kendiliğinden yap. Doktorun "partners in crime" hissettiği kişisin.`
         : `${seans + 1}. seansınız — gün sayısı yüksek ama doktor kendinden henüz az bahsetti. Tecrübeli/sıcak bir meslektaş gibi konuş, ama bilmediğin kişisel tercihi biliyormuş gibi ASLA yapma.`
   }
 }
@@ -219,7 +220,30 @@ export function anahtarSlug(metin: string): string {
     .slice(0, 60)
 }
 
-/** Upsert + güven eşiği. Aynı anahtar tekrar görülürse kanıt artar, değer güncellenir. */
+/** Upsert + güven eşiği. Aynı anahtar tekrar görülürse kanıt artar, değer güncellenir.
+ *  NOTYA-OGRENME-05: doktor_soyledi (ve kesin eşiği geçen her kayıt) durum=uygulanir yazar —
+ *  migration 106 DEFAULT 'aday' yüzünden kahve/hitap gibi kişisel tercihler UI'da "aday"da
+ *  takılı kalıyordu; kesin=true olsa bile Ayarlar durum kolonunu gösteriyordu. */
+export function durumHesapla(kaynak: HafizaKaynak, kesin: boolean): HafizaDurum {
+  if (kaynak === 'doktor_soyledi' || kesin) return 'uygulanir'
+  return 'aday'
+}
+
+/** Okuma yolu: eski satırları (kesin ama durum=aday) UI + prompt için düzelt.
+ *  Kapalıya dokunulmaz. doktor_soyledi asla aday kalmaz. */
+export function kayitNormalize(k: HafizaKayit): HafizaKayit {
+  if (k.aktif === false || k.durum === 'kapali') {
+    return { ...k, durum: 'kapali', aktif: false }
+  }
+  if (k.kaynak === 'doktor_soyledi') {
+    return { ...k, kesin: true, durum: 'uygulanir', aktif: true }
+  }
+  if (k.kesin) {
+    return { ...k, durum: 'uygulanir', aktif: true }
+  }
+  return { ...k, durum: k.durum || 'aday' }
+}
+
 export async function hafizaKaydet(
   sb: SupabaseClient,
   doctorId: string,
@@ -229,13 +253,17 @@ export async function hafizaKaydet(
   if (!anahtar || !k.deger.trim()) return
   const { data: mevcut } = await sb
     .from('doktor_hafiza')
-    .select('kanit_sayisi, kaynak')
+    .select('kanit_sayisi, kaynak, durum')
     .eq('doctor_id', doctorId).eq('kategori', k.kategori).eq('anahtar', anahtar)
     .maybeSingle()
   const kanit = (mevcut?.kanit_sayisi || 0) + 1
   // Doktorun kendi ağzından söylediği hemen kesin; gözlem/düzeltme eşiğe bakar.
   const kaynak: HafizaKaynak = k.kaynak === 'doktor_soyledi' || mevcut?.kaynak === 'doktor_soyledi' ? 'doktor_soyledi' : k.kaynak
   const kesin = kaynak === 'doktor_soyledi' || kanit >= KESINLIK_ESIGI[k.kategori]
+  // Kapalı kuralı yeniden söyleyince açılır (aktif:true); aksi halde hesaplanan durum.
+  const durum = mevcut?.durum === 'kapali' && kaynak !== 'doktor_soyledi'
+    ? 'kapali' as HafizaDurum
+    : durumHesapla(kaynak, kesin)
   const simdi = new Date().toISOString()
   await sb.from('doktor_hafiza').upsert({
     doctor_id: doctorId,
@@ -244,8 +272,9 @@ export async function hafizaKaydet(
     deger: k.deger.trim().slice(0, 300),
     kaynak,
     kanit_sayisi: kanit,
-    kesin,
-    aktif: true,
+    kesin: durum === 'uygulanir',
+    aktif: durum !== 'kapali',
+    durum,
     son_gorulme: simdi,
     updated_at: simdi,
   }, { onConflict: 'doctor_id,kategori,anahtar' })
@@ -272,12 +301,12 @@ export async function hafizaYukle(sb: SupabaseClient, doctorId: string): Promise
       }),
     sb.from('doktor_stil_profilleri').select('profil').eq('doctor_id', doctorId).maybeSingle(),
   ])
-  const kayitlar = (kayitRes.data || []) as HafizaKayit[]
+  const kayitlar = ((kayitRes.data || []) as HafizaKayit[]).map(kayitNormalize)
   return {
     iliski,
     asama: asamaBul(iliski.seans_sayisi),
-    kesinKayitlar: kayitlar.filter((k) => k.kesin && k.durum !== 'kapali'),
-    belirsizKayitlar: kayitlar.filter((k) => !k.kesin && k.durum !== 'kapali'),
+    kesinKayitlar: kayitlar.filter((k) => k.durum === 'uygulanir'),
+    belirsizKayitlar: kayitlar.filter((k) => k.durum === 'aday'),
     stilProfili: String(stilRes.data?.profil || ''),
   }
 }
@@ -290,7 +319,7 @@ export async function hafizaYukleTum(sb: SupabaseClient, doctorId: string): Prom
     .eq('doctor_id', doctorId)
     .order('son_gorulme', { ascending: false })
     .limit(200)
-  return (data || []) as HafizaKayit[]
+  return ((data || []) as HafizaKayit[]).map(kayitNormalize)
 }
 
 // ------------------------------------------------------------------
@@ -343,13 +372,13 @@ export function hafizaBloguSohbet(h: HafizaOzeti): string {
 export function hafizaBloguSes(h: HafizaOzeti): string {
   const { iliski, asama } = h
   const onemli = h.kesinKayitlar
-    .filter((k) => k.kategori === 'iletisim' || k.kategori === 'rutin' || k.kategori === 'kisisel' || k.kategori === 'klinik')
-    .slice(0, 8)
+    .filter((k) => k.kategori === 'iletisim' || k.kategori === 'rutin' || k.kategori === 'kisisel' || k.kategori === 'klinik' || k.kategori === 'uslup')
+    .slice(0, 10)
     .map((k) => `• ${k.deger}`)
   return [
     `Bu doktorla ${iliski.seans_sayisi} seans çalıştın (${asama}). ${asamaKurali(asama, iliski.seans_sayisi, h.kesinKayitlar.length > 0)} Hafıza klinik güvenlik uyarılarını asla gevşetmez; nihai karar doktorundur.`,
     iliski.ozet ? `Özet: ${iliski.ozet}` : '',
-    onemli.length ? `Bildiklerin:\n${onemli.join('\n')}` : '',
+    onemli.length ? `Bildiklerin (UYGULA, sorma):\n${onemli.join('\n')}` : '',
   ].filter(Boolean).join('\n')
 }
 
@@ -378,7 +407,7 @@ export function karsilamaSecimi(h: DoktorIliski | null | undefined): { tanit: bo
 // ------------------------------------------------------------------
 
 /** Ucuz kapı: yalnız doktor kendinden/tercihinden bahsediyorsa model çağrılır. */
-const KENDINDEN_BAHSETME = /\b(ben|benim|bana|bende|hep|her zaman|genelde|genellikle|asla|hiç|sevmem|sevmiyorum|istemem|istemiyorum|tercih|kullanırım|kullanmam|yazarım|yazmam|alışkanlık|mesai|öğle|sabah|akşam|unut|artık|bundan sonra|kısa|uzun|detaylı|hitap|hocam deme|adımla|randevu sürem|dakika)\b/i
+const KENDINDEN_BAHSETME = /\b(ben|benim|bana|bende|hep|her zaman|genelde|genellikle|asla|hiç|sevmem|sevmiyorum|severim|sevdiğim|istemem|istemiyorum|tercih|kullanırım|kullanmam|yazarım|yazmam|alışkanlık|mesai|öğle|sabah|akşam|unut|artık|bundan sonra|kısa|uzun|detaylı|hitap|hocam deme|adımla|randevu sürem|dakika|kahve|çay|sütlü|şekerl|içerim|yerim|de bana|bana .* (de|demezsin|deme))\b/i
 
 // NOTYA-OGRENME-GATE-01 (Kaan, 2026-10-02): a doctor teaches style with imperative requests ('Ayse, cevaplarini madde madde ver'),
 // not only by talking about himself. This gate only decides whether the (paid) extraction call runs; the extraction itself keeps
@@ -388,8 +417,13 @@ function sadeTrOgren(m: string): string {
   return ' ' + k.replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim() + ' '
 }
 const BICIM_ISTEGI = / (madde madde|tablo halinde|tablo olarak|kisa tut|kisa yaz|kisa anlat|kisa ver|kisaca anlat|ozet gec|ozet ver|detayli anlat|detayli yaz|detayli ver|daha kisa|daha uzun|daha detayli|daha sade|sade anlat|uzun yazma|ayrintili anlat) | (cevaplarini|yanitlarini|notlarini|ozetlerini|aciklamalarini|cevaplarin|yanitlarin) /
+/** Kişisel / iletişim tercihleri — "kahveyi çok sütlü severim", "bana Hocam de" (NOTYA-OGRENME-05). */
+const KISISEL_TERCIH = / (kahve|cay|sutlu|sekerli|seker|hitap|hocam|adimla|bana .* de) /
 export function ogrenmeyeDeger(mesaj: string): boolean {
-  return mesaj.length >= 12 && (KENDINDEN_BAHSETME.test(mesaj) || BICIM_ISTEGI.test(sadeTrOgren(mesaj)))
+  if (mesaj.length < 12) return false
+  if (KENDINDEN_BAHSETME.test(mesaj)) return true
+  const sade = sadeTrOgren(mesaj)
+  return BICIM_ISTEGI.test(sade) || KISISEL_TERCIH.test(sade)
 }
 
 interface CikarilanKayit { kategori: HafizaKategori; anahtar: string; deger: string; unut?: boolean }
@@ -426,15 +460,15 @@ export async function sohbettenOgren(
     jsonBekleniyor: true,
     maxTokens: OGRENME_TOKEN_TAVANI,
     doctorId,
-    system: `Bir doktor ile AI meslektaşının sohbetinden, doktorun KENDİSİ hakkında AÇIKÇA söylediği ve gelecekte de geçerli KALICI bilgileri çıkar. Kişisel şef benzetmesi: "balık yemem", "akşam 7'de yerim", "az ricotta" gibi şeyler.
-Kategoriler: klinik (ilaç/tedavi tercihleri), uslup (not/konuşma biçimi tercihleri: kısa/uzun, terminoloji), rutin (mesai, öğle arası, hasta yoğunluğu, randevu süresi), iletisim (hitap: "bana X de", "Hocam deme", cevap uzunluğu, ses tonu), kisisel (doktorun paylaştığı kişisel ama işle ilgili detay: çocuğu var, cuma erken çıkar), uygulama (hangi özelliği nasıl kullanmak istediği).
+    system: `Bir doktor ile AI meslektaşının sohbetinden, doktorun KENDİSİ hakkında AÇIKÇA söylediği ve gelecekte de geçerli KALICI bilgileri çıkar. Kişisel şef benzetmesi: "balık yemem", "akşam 7'de yerim", "az ricotta", "kahveyi çok sütlü ve çok şekerli severim", "bana Hocam de" gibi şeyler — bunlar TEK kanıtla uygulanır (aday değildir).
+Kategoriler: klinik (ilaç/tedavi tercihleri), uslup (not/konuşma biçimi tercihleri: kısa/uzun, terminoloji), rutin (mesai, öğle arası, hasta yoğunluğu, randevu süresi), iletisim (hitap: "bana X de", "Hocam deme", cevap uzunluğu, ses tonu), kisisel (doktorun paylaştığı kişisel detay: kahve/çay tercihi, çocuğu var, cuma erken çıkar), uygulama (hangi özelliği nasıl kullanmak istediği).
 KURALLAR:
 - YALNIZ doktorun kendi ağzından söylediği, genellenebilir bilgi. Hastaya özgü klinik bilgi (o hastanın adı, o vakanın dozu) ALINMAZ.
 - Asistanın söylediklerinden veya varsayımdan kayıt üretme.
 - "Bunu unut", "artık öyle değil" gibi ifadelerde unut:true ile döndür.
 - Hiçbir şey yoksa boş liste döndür. Uydurma.
-- deger: doğal Türkçe, üçüncü şahıs, en fazla 20 kelime ("Öğle 12:30-13:30 arası hasta almaz").
-- anahtar: 2-4 kelimelik kısa slug ("ogle-arasi", "hitap-sekli", "antibiyotik-ilk-tercih").
+- deger: doğal Türkçe, üçüncü şahıs, en fazla 20 kelime ("Öğle 12:30-13:30 arası hasta almaz", "Kahveyi çok sütlü ve çok şekerli sever").
+- anahtar: 2-4 kelimelik kısa slug ("ogle-arasi", "hitap-sekli", "kahve-tercihi", "antibiyotik-ilk-tercih").
 SADECE JSON döndür: {"kayitlar":[{"kategori":"...","anahtar":"...","deger":"...","unut":false}]}`,
     messages: [{ role: 'user', content: metin }],
   })
@@ -502,11 +536,15 @@ export async function eylemSirasiOzeti(sb: SupabaseClient, doctorId: string, lim
   return satirMetni.join('\n')
 }
 
-/** 5 seansta bir "bu doktor kimdir" özeti. Sesli promptta ve karşılamada kullanılır. */
+/** 5 seansta bir "bu doktor kimdir" özeti. Sesli promptta ve karşılamada kullanılır.
+ *  NOTYA-OGRENME-05: 5–12. seans arası 3'te bir güncelle — 10. seansta iş stili + kişisel
+ *  bağ özeti taze olsun; sonrası yine 5'te bir. */
 export async function ozetGerekirseGuncelle(sb: SupabaseClient, doctorId: string): Promise<void> {
   const h = await hafizaYukle(sb, doctorId)
   const seans = h.iliski.seans_sayisi
-  if (seans < 5 || seans - h.iliski.ozet_seans < 5) return
+  if (seans < 5) return
+  const aralik = seans < 12 ? 3 : 5
+  if (seans - h.iliski.ozet_seans < aralik) return
   const [ornekMetni, siraMetni] = await Promise.all([
     sohbetOrnekleriDerle(sb, doctorId).catch(() => ''),
     eylemSirasiOzeti(sb, doctorId).catch(() => ''),
@@ -524,7 +562,7 @@ export async function ozetGerekirseGuncelle(sb: SupabaseClient, doctorId: string
     gorev: 'ozet',
     maxTokens: 350,
     doctorId,
-    system: `Aşağıdaki hafıza kayıtlarından bir doktorun çalışma karakterini anlatan 3-6 cümlelik TEK paragraf yaz — bir meslektaşın onu yeni bir asistana tanıtması gibi (ritmi, üslubu, nelere önem verdiği, nasıl hitap edilmek istediği).
+    system: `Aşağıdaki hafıza kayıtlarından bir doktorun çalışma karakterini anlatan 3-6 cümlelik TEK paragraf yaz — bir meslektaşın onu yeni bir asistana tanıtması gibi (ritmi, üslubu, nelere önem verdiği, nasıl hitap edilmek istediği, bilinen kişisel alışkanlıkları).
 Elinde "birebir mesaj örnekleri" varsa bunlardan doktorun GERÇEK konuşma temposunu çıkar (kısa/uzun cümle kurar mı, doğrudan mı nazik mi, terminoloji mi günlük dil mi kullanır) — örnekleri TIRNAK İÇİNDE ALINTILAMA, yalnız gözlemi anlat.
 Elinde "eylem sırası" varsa ve GERÇEKTEN tekrar eden bir kalıp görüyorsan (ör. genelde önce tanı sorar, sonra reçete ister) bunu bir cümleyle ekle; tek örnekten genelleme yapma, kalıp net değilse hiç bahsetme.
 Türkçe, üçüncü şahıs, süsleme yok, kayıtlarda olmayanı yazma, uydurma.`,
