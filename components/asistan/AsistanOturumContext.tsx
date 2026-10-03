@@ -474,7 +474,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           let next = prev
           for (const tur of turlar) {
             const hamSoru = String(tur.soru || "").trim()
-            const soru = hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) ? hamSoru : null
+            // NOTYA-SES-ESKI-01: before the Fish work the poll wrote only the answer; the doctor line came from ElevenLabs alone. A second source made double bubbles.
+            const soru = fishAcikRef.current && hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) ? hamSoru : null
             next = cevapEkle(next, soru, tur.metin, yeniBalon)
           }
           messagesRef.current = next
