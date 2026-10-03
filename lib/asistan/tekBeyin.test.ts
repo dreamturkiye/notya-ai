@@ -619,9 +619,11 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     assert.equal(K.sesDevamKalani([...listeli, 'Kart ekranda.'], 'Özet hazır. '), `${K.listeEkranda(3)} Son cümle. Kart ekranda.`)
   })
   // NOTYA-SES-SLUR-02 (Dr. Gökhan, 2026-10-03): evidence answers are capped again (SES-OZET-TAM lifted briefly).
-  it('sesSiniriSec: dosya-evidence ve sıradan sohbet ikisi de SOZ_BEAT_SINIRI (kısa ses, ayrıntı ekranda)', () => {
+  it('sesSiniriSec: varsayılan SOZ_BEAT_SINIRI; tamSes sınırsız', () => {
     assert.equal(K.sesSiniriSec(true), K.SOZ_BEAT_SINIRI)
     assert.equal(K.sesSiniriSec(false), K.SOZ_BEAT_SINIRI)
+    assert.equal(K.sesSiniriSec(true, 'tam'), Number.POSITIVE_INFINITY)
+    assert.equal(K.sesSiniriSec(false, 'varsayilan'), K.SOZ_BEAT_SINIRI)
   })
   it('sesSiniriSec(true) ile SesAkisi 5 cümleden sonra "Devamı ekranınızda" der', () => {
     const parcalar: string[] = []
@@ -633,6 +635,27 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     assert.match(tam, /Cümle 1 /)
     assert.match(tam, /Cümle 5 /)
     assert.doesNotMatch(tam, /Cümle 8 /)
+  })
+  it('sesSiniriSec(..., tam) ile SesAkisi uzun özeti "Devamı ekranınızda" demeden tam okur', () => {
+    const parcalar: string[] = []
+    const a = new K.SesAkisi((p) => parcalar.push(p), undefined, undefined, K.sesSiniriSec(true, 'tam'))
+    const uzunOzet = Array.from({ length: 8 }, (_, i) => `Cümle ${i + 1} burada klinik bilgi anlatır.`).join(' ')
+    a.ekle(uzunOzet)
+    const tam = a.bitir()
+    assert.doesNotMatch(tam, /Devamı ekranınızda/)
+    assert.match(tam, /Cümle 8 /)
+  })
+  it('NOTYA-SES-OKUNUS-01: hepsini anlat / yalnızca ekrana ses komutları', () => {
+    for (const m of ['Hepsini anlat', 'tamamını oku', 'eksiksiz sesli anlat', 'Umutcan özetini hepsini anlat']) {
+      assert.equal(K.sesOkunusModu(m), 'tam', m)
+      assert.ok(K.tamSesIstegiMi(m), m)
+    }
+    for (const m of ['Yalnızca ekrana ver', 'sadece ekrana yaz', 'ekrana koy', 'sesli okuma', 'sadece yazılı ver']) {
+      assert.equal(K.sesOkunusModu(m), 'ekran', m)
+      assert.ok(K.sadeceEkranIstegiMi(m), m)
+    }
+    assert.equal(K.sesOkunusModu('bunu bana okuyacak mısın yoksa yalnızca yazılı olarak mı vereceksin?'), 'varsayilan')
+    assert.equal(K.sesOkunusModu('Umutcan kaç kilo?'), 'varsayilan')
   })
   it('sessiz sınır: "Devamı ekranınızda" söylenmez, onSinir yine bir kez; varsayılan akış eski davranışta', () => {
     const parcalar: string[] = []

@@ -30,14 +30,62 @@ export const LISTE_ESIGI = 3
 export function listeEkranda(n: number): string { return `${n} madde, ekranınızda.` }
 
 /**
- * NOTYA-SES-OZET-TAM-01 (2026-10-01) briefly lifted the cap for chart-evidence answers so a driving
- * doctor heard the whole özet. NOTYA-SES-SLUR-02 (Dr. Gökhan, 2026-10-03): that full read was too
- * long and too fast in live voice — he got essay-length dumps, then asked the screen to be read
- * because he could not follow. Cap is restored for evidence answers too: short spoken lead, full
- * detail on screen. Explicit "bana anlat / oku" (NOTYA-SES-OKU-01) still reads uncapped.
+ * NOTYA-SES-SLUR-02 + NOTYA-SES-OKUNUS-01 (Dr. Gökhan, 2026-10-03):
+ * Default = short spoken lead (SOZ_BEAT_SINIRI), full detail on screen.
+ * Doctor voice command "hepsini anlat / tamamını oku" → uncapped clear read (breath-paced, not rushed).
+ * Doctor voice command "yalnızca ekrana ver" → no content speech, screen only.
  */
-export function sesSiniriSec(_kanitYoluAktif: boolean): number {
+export type SesOkunusModu = 'varsayilan' | 'tam' | 'ekran'
+
+export function sesSiniriSec(_kanitYoluAktif: boolean, mod: SesOkunusModu = 'varsayilan'): number {
+  if (mod === 'tam') return Number.POSITIVE_INFINITY
   return SOZ_BEAT_SINIRI
+}
+
+/** Confirmation when the doctor asked for screen-only (content is never spoken). */
+export const SADECE_EKRAN_SOZU = 'Tamam Hocam, yalnızca ekrana yazıyorum.'
+
+function sesKomutDuz(mesaj: string): string {
+  return String(mesaj || '')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u')
+    .replace(/[?!.,;:'’"+]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * "Hepsini anlat", "tamamını oku", "eksiksiz sesli anlat" — speak the whole answer clearly.
+ * Also covers a same-turn chart question that ends with that command.
+ */
+export function tamSesIstegiMi(mesaj: string | null | undefined): boolean {
+  const n = sesKomutDuz(String(mesaj || ''))
+  if (!n) return false
+  return /\b(hepsini|tamamini|tumunu|eksiksiz|basindan\s+sona)\s+(sesli\s+)?(anlat|oku|soyle)\b/.test(n)
+    || /\b(tamamen|tam)\s+sesli\s+(anlat|oku|soyle)\b/.test(n)
+    || /\bsesli\s+(hepsini|tamamini|tumunu|tamamen|eksiksiz)\b/.test(n)
+    || /\b(hepsini|tamamini)\s+sesli\b/.test(n)
+}
+
+/**
+ * "Yalnızca ekrana ver", "sadece ekrana yaz", "sesli okuma" — put the answer on screen, do not read it.
+ * Preference questions ("okuyacak mısın yoksa yalnızca yazılı mı?") are not commands.
+ */
+export function sadeceEkranIstegiMi(mesaj: string | null | undefined): boolean {
+  const ham = String(mesaj || '').trim()
+  if (!ham) return false
+  const n = sesKomutDuz(ham)
+  if (/\byoksa\b|\bya da\b/.test(n) && /\b(mi|mu|misin|musun|misiniz|musunuz)\b/.test(n)) return false
+  return /\b(yalnizca|sadece|yalniz)\s+(ekrana|yazili)\b/.test(n)
+    || /\bekrana\s+(ver|yaz|birak|koy)\w*\b/.test(n)
+    || /\b(sesli\s+okuma|sesli\s+anlatma|okuma\s+yeter|okuma\s+yok)\b/.test(n)
+    || /\bsadece\s+yazili\b/.test(n)
+}
+
+export function sesOkunusModu(mesaj: string | null | undefined): SesOkunusModu {
+  if (sadeceEkranIstegiMi(mesaj)) return 'ekran'
+  if (tamSesIstegiMi(mesaj)) return 'tam'
+  return 'varsayilan'
 }
 /**
  * NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02): the summary of one visit is HEARD as a condensed narrative — one
@@ -298,10 +346,13 @@ export function sesliOkumaSozuMu(mesaj: string): boolean {
 
 export function okumaIstegiMi(mesaj: string): boolean {
   const m = String(mesaj || '').trim()
-  if (!sesliOkumaSozuMu(m)) return false
+  if (!sesliOkumaSozuMu(m) && !tamSesIstegiMi(m)) return false
   // NOTYA-SES-OKU-02 (Dr. Gökhan, 2026-10-03): "ekrandaki özetini okur musun?" names the SCREEN
   // answer (ekrandaki), not a new chart summary — "özetini" alone used to skip this route and the
   // model invented a contradictory short read of three weights.
   if (/\bekrandak/i.test(m)) return true
+  // "Hepsini anlat" with no chart object = re-read what is on screen.
+  if (tamSesIstegiMi(m) && !okunacakNesneVar(m)) return true
+  if (!sesliOkumaSozuMu(m)) return false
   return !okunacakNesneVar(m)
 }

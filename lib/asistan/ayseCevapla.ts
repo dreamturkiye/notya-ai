@@ -75,7 +75,7 @@ import { kayitCevabi, kayitIstegiBul, olcumVarMi, type KayitCevabi } from "@/lib
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, OZET_ANLATIM_SINIRI, SesAkisi, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
+import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, OZET_ANLATIM_SINIRI, SADECE_EKRAN_SOZU, SesAkisi, sesOkunusModu, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani } from "@/lib/asistan/konusma"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
 import { sonOlcumlerSorusuMu, vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSorusuBul, vizitSoylenisi } from "@/lib/asistan/dosyaSorgu/vizitOlcum"
@@ -265,7 +265,14 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const specialty = g.specialty || "genel"
   const patientId = g.patientId || null
   const ses = g.kanal === "ses"
-  const soyle = (s: string) => { if (ses && g.sozParcasi && s) g.sozParcasi(`${s} `) }
+  // NOTYA-SES-OKUNUS-01: doctor voice command on the doctor's own words (follow-up rewrite is the clinical question).
+  const okunus = ses ? sesOkunusModu(hamMesaj) : 'varsayilan'
+  const sadeceEkran = okunus === 'ekran'
+  const soyle = (s: string) => {
+    if (!ses || !g.sozParcasi || !s) return
+    if (sadeceEkran) return // content never spoken — confirmation goes through sade()
+    g.sozParcasi(`${s} `)
+  }
   const turBaslangic = simdi()
 
   // HASTA-IZOLASYON-01: the patient context comes from the request — it must be this doctor's patient
@@ -425,10 +432,12 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const rotaYaz = (rota: AyseRota, ek: Record<string, unknown> = {}) => console.info("[asistan/chat] rota", { rota, kanal: g.kanal, ...ek })
   const sade = (rota: AyseRota, ekran: string, konusma: string, aktifHasta: string | null, veriEk: Record<string, unknown> = {}): AyseSonucu => {
     rotaYaz(rota)
+    const soz = sadeceEkran ? SADECE_EKRAN_SOZU : konusma
+    if (sadeceEkran && ses && g.sozParcasi) g.sozParcasi(`${SADECE_EKRAN_SOZU} `)
     return {
       ok: true,
       cevap: {
-        ekran, konusma, kartlar: [], aktifHasta, oturumId, rota,
+        ekran, konusma: soz, kartlar: [], aktifHasta, oturumId, rota,
         veri: {
           eylemOnerileri: [], eylemYonlendirme: null, eylemHastasi: null, speech: ekran, proactiveWarning: null,
           action: null, actionResult: null, asistanSessionId: oturumId, aktifHasta, personaId, personaName: persona.name, rota, ...veriEk,
@@ -612,8 +621,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-SES-OKU-01: "bana anlat / devamını oku" — read the last screen answer aloud, uncapped, no model.
   // NOTYA-AYSE-OZET-01: "… 15 aylık muayenesini özetleyerek anlatır mısın?" asks for a visit's summary, not for the
   // previous answer to be read again ("anlatır mısın" is also a read-aloud phrase).
+  // NOTYA-SES-OKUNUS-01: "yalnızca ekrana" is not a read-aloud request.
   const muayeneOzetiIstegi = soruTuruBul(String(message || "")) === "ozet" && Boolean(vizitOzetHedefiBul(String(message || "")))
-  if (ses && okumaIstegiMi(String(message || "")) && !muayeneOzetiIstegi) {
+  if (ses && !sadeceEkran && okumaIstegiMi(String(message || "")) && !muayeneOzetiIstegi) {
     // The note this route leaves behind is not an answer: a second "oku" reads the same answer again, not the note.
     const sonEkran = [...messages].reverse().find((m) => m.role === "assistant" && String(m.content || "").trim() && m.content !== OKU_NOTU)
     if (sonEkran) {
@@ -949,14 +959,16 @@ ${ilacBaglamMetni(drugs[0])}`
   // sentence per part. The model's eight paragraphs are the screen answer and are not read on top of it: read as
   // written they came out as "Dayanak. N madde, ekranınızda." Sentences beyond the cap wait for the continuation.
   let ozetAnlatimi: { soylenen: string; cumleler: string[] } | null = null
-  if (ses && vizitOzeti) {
+  if (ses && vizitOzeti && !sadeceEkran) {
     const anlatim = vizitOzetSozu(vizitOzeti, odakHastaAdi)
-    const akis = new SesAkisi(g.sozParcasi ?? (() => {}), sesTemizle, g.sesSiniri, OZET_ANLATIM_SINIRI, Boolean(g.sesDurumu))
+    const ozetSinir = okunus === 'tam' ? Number.POSITIVE_INFINITY : OZET_ANLATIM_SINIRI
+    const akis = new SesAkisi(g.sozParcasi ?? (() => {}), sesTemizle, g.sesSiniri, ozetSinir, Boolean(g.sesDurumu))
     akis.ekle(anlatim)
     ozetAnlatimi = { soylenen: akis.bitir(), cumleler: sozCumleleri(anlatim, sesTemizle) }
   }
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
-  const sesAkisiKur = () => (ses && g.sozParcasi && !ozetAnlatimi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif), Boolean(g.sesDurumu)) : null)
+  // NOTYA-SES-OKUNUS-01: "yalnızca ekrana" → no SesAkisi; "hepsini anlat" → uncapped (still breath-paced by SesYayKapisi).
+  const sesAkisiKur = () => (ses && g.sozParcasi && !ozetAnlatimi && !sadeceEkran ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif, okunus), Boolean(g.sesDurumu)) : null)
   let sesAkisi = sesAkisiKur()
 
   const cagriTaban = {
@@ -1139,16 +1151,19 @@ ${ilacBaglamMetni(drugs[0])}`
   // Ses: modelin cevabı söylendi (ya da akış yoksa şimdi kurulur); aşağıdaki ekler (yönlendirme, kart okuması) sona eklenir.
   const sozler: string[] = []
   // NOTYA-AYSE-OZET-01: the visit summary's narrative was spoken before the model call; the screen text is not read again.
-  if (ses) sozler.push(ozetAnlatimi ? ozetAnlatimi.soylenen : sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle))
+  // NOTYA-SES-OKUNUS-01: "yalnızca ekrana" → no content speech; "hepsini anlat" → uncapped spoken form.
+  if (ses && !sadeceEkran) {
+    sozler.push(ozetAnlatimi ? ozetAnlatimi.soylenen : sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle, { sinirsiz: okunus === 'tam' }))
+  }
   // The stream said nothing (the full-chart marker was all the model wrote, twice) but there is an answer on screen:
   // it is spoken now — a voice turn never ends in silence while the screen shows a sentence.
-  if (ses && sesAkisi && !sozler[0] && String(aiData.speech || "").trim() && !toolUseBloklari(response as unknown as { content?: unknown }).length) {
+  if (ses && !sadeceEkran && sesAkisi && !sozler[0] && String(aiData.speech || "").trim() && !toolUseBloklari(response as unknown as { content?: unknown }).length) {
     sozler.length = 0
-    const soz = konusmaYap(aiData.speech, sesTemizle)
+    const soz = konusmaYap(aiData.speech, sesTemizle, { sinirsiz: okunus === 'tam' })
     sozler.push(soz)
     soyle(soz)
   }
-  const sozEkle = (s: string) => { if (!ses || !s) return; sozler.push(s); soyle(s) }
+  const sozEkle = (s: string) => { if (!ses || !s || sadeceEkran) return; sozler.push(s); soyle(s) }
 
   // NOTYA-KONUSMA-BAGLAMI-06 (Kaan live, 2026-09-30): a calendar question is answered by the calendar reader, never by
   // "takvimden kontrol etmek gerekir". When the (rewritten) intent is calendar and a day resolves, the model's
@@ -1375,12 +1390,16 @@ ${ilacBaglamMetni(drugs[0])}`
   })).catch(() => { /* ölçüm */ })
 
   rotaYaz("model", { arac: toolChoice ?? null, aracSayisi: araclar.length, kart: eylemOnerileri.length, okuma: okuma.tur })
+  const modelKonusma = sadeceEkran
+    ? SADECE_EKRAN_SOZU
+    : sozler.filter(Boolean).join(" ").trim()
+  if (sadeceEkran && ses && g.sozParcasi) g.sozParcasi(`${SADECE_EKRAN_SOZU} `)
   return {
     ok: true,
     cevap: {
       rota: "model",
       ekran: ekranMetni,
-      konusma: sozler.filter(Boolean).join(" ").trim(),
+      konusma: modelKonusma,
       kartlar: eylemOnerileri,
       kartHastaId: eylemOnerileri.length ? kartHastasi?.id ?? null : null,
       oncekiBekleyen: Array.isArray(baglam.bekleyenOneriler) ? baglam.bekleyenOneriler.map(String) : [],
