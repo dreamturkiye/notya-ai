@@ -14,6 +14,7 @@ describe('sesle uyandır sözleri', () => {
 
   it('asistanı kapat kapatır, aç ile karışmaz', () => {
     assert.equal(asistaniKapatMi('Asistanı kapat'), true)
+    assert.equal(asistaniKapatMi('Asistanım kapat'), true)
     assert.equal(asistaniKapatMi('asistan kapat'), true)
     assert.equal(asistaniKapatMi('Ayşe kapat'), true)
     assert.equal(asistaniKapatMi('Ayşe, kapat lütfen'), true)

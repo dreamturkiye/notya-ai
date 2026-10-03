@@ -467,7 +467,8 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     // NOTYA-SES-ELEVEN-GERI-01: as at f247ea1b — ElevenLabs Flash gets one breath, not a sentence drip (NOTYA-SES-KILIT-01).
     assert.ok(v.parcalar.length >= 1 && v.parcalar.length <= 3, 'nefes bloğu: cümle cümle damlamaz, tek seferde de boşalmaz')
     assert.ok(!v.metin.includes('0532'), v.metin)
-    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
+    // NOTYA-SES-ELEVEN-NORMAL-01: spoken digits expand (1→bir); screen text stays "Öneri 1".
+    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri bir. Öneri iki. ${K.ILETISIM_EKRANDA}`)
 
     const e = await sesEkrani(b)
     assert.equal(e.turlar.at(-1)?.metin, t.speech, 'ses turunun ekranı yazılı cevapla aynı')

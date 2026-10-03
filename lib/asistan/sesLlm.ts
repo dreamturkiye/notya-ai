@@ -32,6 +32,8 @@ import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOn
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
 import { netSosyalMi } from '@/lib/ai/modeller'
 import { takvimSorusuMu, sesGurultusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
+import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
+import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -192,7 +194,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         const aracSonucu = !mesaj ? sonAracMetni(govde.messages) : null
         if (aracSonucu) {
           cevapYaz(aracSonucu)
-        } else if (mesaj && vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
+        } else if (mesaj && (asistaniKapatMi(mesaj) || vedaMi(mesaj)) && aracVarMi(govde.tools, 'end_call')) {
           yaz('Görüşmek üzere Hocam.', true)
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
           bitis = 'tool_calls'
@@ -201,12 +203,22 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           parca({ content: '.' })
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
           // okundu (ya da söylenecek bir şey kalmadı — boş SSE aşağıda nokta ile tutulur)
-        } else if (mesaj && cevaplanmisSonSoruMu(await oturumMesajlari(getSupabase(), jeton.d, jeton.o), mesaj)) {
-          // ElevenLabs replayed the last doctor question instead of `[devam]`. Do not run the model again.
-          await devamiOku(mesaj)
         } else if (mesaj) {
-          yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           const supabase = getSupabase()
+          const oturum = await oturumMesajlari(supabase, jeton.d, jeton.o)
+          // NOTYA-SES-ARKA-01: eko / aynı istek / arka plan — model + dolgu yok (maliyet/hız).
+          const tur = sesTurKapisi({ mesaj, oturumMesajlari: oturum })
+          if (tur.tip === 'sessiz') {
+            parca({ content: '.' })
+          } else if (tur.tip === 'devam_oku') {
+            // Birebir EL replay — kalanı oku, modeli yeniden çalıştırma.
+            await devamiOku(mesaj)
+          } else if (tur.tip === 'veda' && aracVarMi(govde.tools, 'end_call')) {
+            yaz('Görüşmek üzere Hocam.', true)
+            parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })
+            bitis = 'tool_calls'
+          } else {
+          yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
           // NOTYA-TEK-BEYIN-CORE-01: klinik experts use the same Custom LLM mouth; brain is klinikCevapla (no chart tools).
@@ -255,6 +267,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
               turKapandi = true
               arkaPlandaSurdur(sonrasi)
             }
+          }
           }
           }
         }

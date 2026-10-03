@@ -23,7 +23,8 @@ export function asistaniAcMi(s: string): boolean {
   return /(^|\s)asistan[i]? ac(\s|$)/.test(sozuKatla(s))
 }
 
-/** "Asistanı kapat" / "Ayşe kapat" — görüşmeyi keser, muayene kaydına dokunmaz. */
+/** "Asistanı kapat" / "Asistanım kapat" / "Ayşe kapat" — görüşmeyi keser, muayene kaydına dokunmaz. */
 export function asistaniKapatMi(s: string): boolean {
-  return /(^|\s)(asistan[i]?|ayse) kapat(\s|$)/.test(sozuKatla(s))
+  // asistan | asistani | asistanim (Dr. Gökhan: "Asistanım kapat")
+  return /(^|\s)(asistan(?:im|i)?|ayse) kapat(\s|$)/.test(sozuKatla(s))
 }
