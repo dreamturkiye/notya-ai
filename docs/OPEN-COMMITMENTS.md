@@ -3124,3 +3124,10 @@ Source: `docs/ARCH-IKI-BEYIN-BIRDE.md`. Owner of the code: Claude. Owner of merg
 | NOTYA-IKI-BEYIN-BIRDE-00 | 2026-10-03 | DONE — docs | Architecture note: ElevenLabs stays thin (Custom LLM + Flash lock + spoken beat cap); server brain keeps high-confidence routers as fast path; weak / empty search falls through to Luna + `hasta_bul` / `randevu_takvim` (old voice-brain power). Kill switch `AYSE_IKI_BEYIN_BIRDE_KAPALI=1`. | Claude — done |
 | NOTYA-IKI-BEYIN-BIRDE-01 | 2026-10-03 | CODE | `lib/asistan/ikiBeyinBirde.ts` confidence gate + wire in `ayseCevapla.ts` (search sentence + identity wrong-patient). Unit tests `ikiBeyinBirde.test.ts`. High-confidence counts/lists/calendar/records unchanged (no added latency). | Kaan: merge + deploy; Dr. Gökhan: live mic QoS + speech check |
 | NOTYA-IKI-BEYIN-BIRDE-02 | 2026-10-03 | OPEN | Live proof on production after deploy: named-patient search, ambiguous clinical question (must not end as "0 hasta"), open-chart follow-up, and ElevenLabs speech with no slur/rush/crawl. | Kaan / Dr. Gökhan |
+
+## 2026-10-03 - NOTYA-ASISTAN-AVATAR-01: iPhone Asistan avatar starts cut off at the top
+Source: Kaan live screenshot (iPhone). On open, Ayşe's circular photo was clipped under the persona chips; dragging down fixed it. Cause: empty-idle `scrollIntoView(messagesEndRef)` plus `flex:1` + `justifyContent:center` in the scroll column. Fix in `app/asistan/page.tsx`: no auto-scroll when there are no messages; pin `scrollTop = 0` on empty idle; center the empty state with `marginBlock: auto` so the top of the circle cannot clip.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-ASISTAN-AVATAR-01 | 2026-10-03 | CODE | Empty-idle avatar fully visible on open (iPhone). | Kaan: live retest on iPhone after deploy |

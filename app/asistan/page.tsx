@@ -63,6 +63,7 @@ function AsistanPageInner() {
   } = useAsistanOturum()
   const [isMobile, setIsMobile] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const sohbetKaydirRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const chk = () => setIsMobile(window.innerWidth < 768)
@@ -81,7 +82,16 @@ function AsistanPageInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // NOTYA-ASISTAN-AVATAR-01 (Kaan, iPhone, 2026-10-03): do not scroll on the empty idle screen —
+  // scrollIntoView(messagesEndRef) used to yank the centered avatar up under the persona chips so
+  // her photo started cut off at the top; the doctor then had to drag it down by hand. Keep the
+  // empty idle view pinned to scrollTop 0 so the full circle is visible on open.
   useEffect(() => {
+    if (messages.length === 0) {
+      const el = sohbetKaydirRef.current
+      if (el) el.scrollTop = 0
+      return
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
@@ -146,10 +156,12 @@ function AsistanPageInner() {
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div ref={sohbetKaydirRef} style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
         {messages.length === 0 && status === "idle" && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
-                        justifyContent: "center", gap: "12px" }}>
+          // NOTYA-ASISTAN-AVATAR-01: margin:auto centers when there is room; unlike flex:1 +
+          // justifyContent:center it never clips the top of the avatar under the scroll edge on iPhone.
+          <div style={{ marginBlock: "auto", display: "flex", flexDirection: "column", alignItems: "center",
+                        gap: "12px", width: "100%", flexShrink: 0, paddingTop: 4 }}>
             <div style={{ width: 128, height: 128, borderRadius: '50%',
                           background: '#faf6ee',
                           border: '3px solid ' + persona.color + 'CC',
