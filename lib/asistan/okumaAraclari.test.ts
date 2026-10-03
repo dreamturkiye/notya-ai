@@ -297,3 +297,14 @@ describe('okumaAraciCalistir — sınırlar', () => {
     assert.match(r.sonuc, /Hasta adını anlayamadım/)
   })
 })
+
+describe('NOTYA-ASR-AD-01 — açık hastanın ASR bozulmuş adı başka kişi değildir', () => {
+  it('Umucan Türküoğlu ≈ Umutcan Türkoğlu; Ali Yılmaz ayrı kişi kalır', async () => {
+    const { anilanBaskaKisi, adParcasiAcikHastayaUyuyorMu } = await import('./okumaAraclari')
+    assert.equal(adParcasiAcikHastayaUyuyorMu('umucan', 'umutcan'), true)
+    assert.equal(adParcasiAcikHastayaUyuyorMu('turkuoglu', 'turkoglu'), true)
+    assert.equal(anilanBaskaKisi("Bu Umucan Türküoğlu'nun aşı karnesini gösterir misin?", 'Umutcan Türkoğlu'), null)
+    assert.equal(anilanBaskaKisi("Umutcan Türkoğlu'nun aşı karnesini göster", 'Umutcan Türkoğlu'), null)
+    assert.equal(anilanBaskaKisi("Ali Yılmaz'ın aşı karnesini göster", 'Umutcan Türkoğlu'), 'Ali Yılmaz')
+  })
+})

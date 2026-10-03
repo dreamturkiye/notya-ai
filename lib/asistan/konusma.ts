@@ -30,13 +30,14 @@ export const LISTE_ESIGI = 3
 export function listeEkranda(n: number): string { return `${n} madde, ekranınızda.` }
 
 /**
- * NOTYA-SES-OZET-TAM-01 (Kaan, canlı, 2026-10-01): "hastanın özetini tamamen sesli okuması lazım,
- * yarısını değil ... doktor araba sürüyorsa yarısı olursa voice ile olmaz". A dosya-evidence answer
- * (özet/değişim/büyüme/aşı/lab/ilaç/... — `kanitYoluAktif` in ayseCevapla.ts) is read in full; the
- * 5-sentence cap (NOTYA-SES-SLUR-01) stays for ordinary chat, where the late-turn slur was observed.
+ * NOTYA-SES-OZET-TAM-01 (2026-10-01) briefly lifted the cap for chart-evidence answers so a driving
+ * doctor heard the whole özet. NOTYA-SES-SLUR-02 (Dr. Gökhan, 2026-10-03): that full read was too
+ * long and too fast in live voice — he got essay-length dumps, then asked the screen to be read
+ * because he could not follow. Cap is restored for evidence answers too: short spoken lead, full
+ * detail on screen. Explicit "bana anlat / oku" (NOTYA-SES-OKU-01) still reads uncapped.
  */
-export function sesSiniriSec(kanitYoluAktif: boolean): number {
-  return kanitYoluAktif ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI
+export function sesSiniriSec(_kanitYoluAktif: boolean): number {
+  return SOZ_BEAT_SINIRI
 }
 /**
  * NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02): the summary of one visit is HEARD as a condensed narrative — one
@@ -270,7 +271,7 @@ export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sos
  * to HEAR the answer that is already on screen. No model call — the screen text is read aloud without the
  * sentence cap. Lists are still summarised ("N madde") because a list is not speech; prose is read in full.
  */
-const OKU_ISTEGI = /(?:bana\s+(?:anlat|oku|söyle)|anlat(?:ır|sana)?\s*mısın|anlat\s*bakalım|devam(?:ını|ı)?\s*(?:anlat|oku|söyle)|sesli\s*(?:anlat|oku|söyle)|oku(?:r|sana)?\s*mısın|ekrandakini\s*(?:anlat|oku)|sen\s+bana\s+anlat|tamamını\s*(?:anlat|oku)|hepsini\s*(?:anlat|oku)|(?:^|\s)oku(?:sana)?\s*[.!?]?\s*$)/iu
+const OKU_ISTEGI = /(?:bana\s+(?:anlat|oku|söyle)|anlat(?:ır|sana)?\s*m[ıiuü]s[ıiuü]n|anlat\s*bakalım|devam(?:ını|ı)?\s*(?:anlat|oku|söyle)|sesli\s*(?:anlat|oku|söyle)|oku(?:r|sana|yacak)?\s*m[ıiuü]s[ıiuü]n|ekrandakini\s*(?:anlat|oku)|sen\s+bana\s+anlat|tamamını\s*(?:anlat|oku)|hepsini\s*(?:anlat|oku)|(?:^|\s)oku(?:sana)?\s*[.!?]?\s*$)/iu
 /**
  * NOTYA-KORPUS-KALAN-01 (G-28, Y-063): "MCV ve MCHC değerlerini oku", "Son SOAP notunu oku" name WHAT is to be read —
  * a thing of the chart, in the accusative. That is a question about the chart, not "read me what is on screen": the
@@ -296,5 +297,11 @@ export function sesliOkumaSozuMu(mesaj: string): boolean {
 }
 
 export function okumaIstegiMi(mesaj: string): boolean {
-  return sesliOkumaSozuMu(mesaj) && !okunacakNesneVar(String(mesaj || '').trim())
+  const m = String(mesaj || '').trim()
+  if (!sesliOkumaSozuMu(m)) return false
+  // NOTYA-SES-OKU-02 (Dr. Gökhan, 2026-10-03): "ekrandaki özetini okur musun?" names the SCREEN
+  // answer (ekrandaki), not a new chart summary — "özetini" alone used to skip this route and the
+  // model invented a contradictory short read of three weights.
+  if (/\bekrandak/i.test(m)) return true
+  return !okunacakNesneVar(m)
 }

@@ -618,20 +618,21 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     const listeli = K.sozCumleleri('Özet hazır.\n- a\n- b\n- c\nSon cümle.')
     assert.equal(K.sesDevamKalani([...listeli, 'Kart ekranda.'], 'Özet hazır. '), `${K.listeEkranda(3)} Son cümle. Kart ekranda.`)
   })
-  // NOTYA-SES-OZET-TAM-01 (Kaan, canlı, 2026-10-01)
-  it('sesSiniriSec: dosya-evidence (özet vb.) yanıtı sınırsız, sıradan sohbet SOZ_BEAT_SINIRI', () => {
-    assert.equal(K.sesSiniriSec(true), Number.POSITIVE_INFINITY)
+  // NOTYA-SES-SLUR-02 (Dr. Gökhan, 2026-10-03): evidence answers are capped again (SES-OZET-TAM lifted briefly).
+  it('sesSiniriSec: dosya-evidence ve sıradan sohbet ikisi de SOZ_BEAT_SINIRI (kısa ses, ayrıntı ekranda)', () => {
+    assert.equal(K.sesSiniriSec(true), K.SOZ_BEAT_SINIRI)
     assert.equal(K.sesSiniriSec(false), K.SOZ_BEAT_SINIRI)
   })
-  it('sesSiniriSec(true) ile SesAkisi 5\'ten uzun bir özeti "Devamı ekranınızda" demeden tam okur', () => {
+  it('sesSiniriSec(true) ile SesAkisi 5 cümleden sonra "Devamı ekranınızda" der', () => {
     const parcalar: string[] = []
     const a = new K.SesAkisi((p) => parcalar.push(p), undefined, undefined, K.sesSiniriSec(true))
     const uzunOzet = Array.from({ length: 8 }, (_, i) => `Cümle ${i + 1} burada klinik bilgi anlatır.`).join(' ')
     a.ekle(uzunOzet)
     const tam = a.bitir()
-    assert.doesNotMatch(tam, /Devamı ekranınızda/)
+    assert.match(tam, /Devamı ekranınızda/)
     assert.match(tam, /Cümle 1 /)
-    assert.match(tam, /Cümle 8 /)
+    assert.match(tam, /Cümle 5 /)
+    assert.doesNotMatch(tam, /Cümle 8 /)
   })
   it('sessiz sınır: "Devamı ekranınızda" söylenmez, onSinir yine bir kez; varsayılan akış eski davranışta', () => {
     const parcalar: string[] = []
@@ -657,7 +658,7 @@ describe('NOTYA-SES-OKU-01: "bana anlat" ekrandaki cevabı sınırsız okur, mod
     // NOTYA-KORPUS-KALAN-01 (G-28, Y-063): a sentence that names WHAT to read from the chart is a chart question — the
     // previous answer is not re-read. The words that point at the screen answer itself keep the route.
     for (const m of ['MCV ve MCHC değerlerini oku', 'Son SOAP notunu oku', 'Emircan Karaoğlu’nun son SOAP notunu oku', 'Hastanın özetini oku', 'Son reçeteyi oku', "MCV'yi oku", 'Son muayenesini bana anlat', 'İlaçlarını oku', 'Lab sonuçlarını bana oku']) assert.ok(!K.okumaIstegiMi(m), m)
-    for (const m of ['Devamını ekranda görüyorum ama sen bana anlat', 'bunu bana oku', 'Tamamını oku hocam', 'Ekrandakini oku', 'cevabını sesli oku', 'kalanını da sesli oku', 'Hepsini oku Ayşe', 'listeyi bana oku']) assert.ok(K.okumaIstegiMi(m), m)
+    for (const m of ['Devamını ekranda görüyorum ama sen bana anlat', 'bunu bana oku', 'Tamamını oku hocam', 'Ekrandakini oku', 'cevabını sesli oku', 'kalanını da sesli oku', 'Hepsini oku Ayşe', 'listeyi bana oku', 'Peki, lütfen ekrandaki özetini okur musun?', 'bunu bana okuyacak mısın yoksa yalnızca yazılı olarak mı vereceksin?']) assert.ok(K.okumaIstegiMi(m), m)
     const uzun = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi. Sekiz.'
     assert.equal(K.konusmaYap(uzun, undefined, { sinirsiz: true }), uzun)
     assert.equal(K.konusmaYap(uzun), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)

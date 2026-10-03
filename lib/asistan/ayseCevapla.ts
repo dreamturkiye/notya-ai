@@ -619,9 +619,13 @@ ${ilacBaglamMetni(drugs[0])}`
     if (sonEkran) {
       // Screen text is already the cleaned, doctor-visible answer. NOTYA-AYSE-ALAN-01: a stored answer keeps its
       // identity placeholders; a sentence with one is not read — the value is on screen.
-      const tam = konusmaYap(String(sonEkran.content), alanSozcusu(null), { sinirsiz: true })
-      const okuma = tam || "Ekranda okunacak bir cevap bulamadım Hocam."
-      soyle(okuma)
+      // NOTYA-SES-NEFES-01: stream sentence-by-sentence into sozParcasi (SesYayKapisi breaths) — a single dump of
+      // the whole previous answer was the silent-turn bug (text on screen, no audible TTS).
+      const sozler: string[] = []
+      const akis = new SesAkisi((p) => { sozler.push(p); soyle(p) }, alanSozcusu(null), undefined, Number.POSITIVE_INFINITY)
+      akis.ekle(String(sonEkran.content))
+      const okuma = akis.bitir() || "Ekranda okunacak bir cevap bulamadım Hocam."
+      if (!sozler.length) soyle(okuma)
       await oturumuYaz(OKU_NOTU, {})
       return sade("oku", OKU_NOTU, okuma, baglam.patientName ? String(baglam.patientName) : null)
     }

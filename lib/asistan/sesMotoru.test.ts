@@ -6,15 +6,16 @@ import { pcmOranla } from './sesCalar'
 
 test('TTS kilidi: Flash ve sabit hız temizdir; v3, expressive ve hız sapması kilit ister', () => {
   assert.equal(ttsKilitGerekli({
-    model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75,
+    model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 0.92, stability: 0.55, similarity_boost: 0.75,
   }), false)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_v3_conversational', speed: 1, stability: 0.55, similarity_boost: 0.75 }), true)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', expressive_mode: true, speed: 1, stability: 0.55, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_v3_conversational', speed: 0.92, stability: 0.55, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', expressive_mode: true, speed: 0.92, stability: 0.55, similarity_boost: 0.75 }), true)
   assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1.15, stability: 0.55, similarity_boost: 0.75 }), true)
-  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.3, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.55, similarity_boost: 0.75 }), true)
+  assert.equal(ttsKilitGerekli({ model_id: 'eleven_flash_v2_5', speed: 0.92, stability: 0.3, similarity_boost: 0.75 }), true)
   assert.equal(ttsKilitGerekli(null), true)
   assert.equal(ttsKilitGerekli({
-    model_id: 'eleven_flash_v2_5', speed: 1, stability: 0.55, similarity_boost: 0.75,
+    model_id: 'eleven_flash_v2_5', speed: 0.92, stability: 0.55, similarity_boost: 0.75,
     suggested_audio_tags: [{ tag: 'slow' }],
   }), true)
 })
@@ -40,7 +41,7 @@ test('ses motoru sapmış ajanı Flash kilidine yazar, temiz ajanı yazmaz', asy
   const govde = JSON.parse(yama!.body || '{}')
   assert.equal(govde.conversation_config.tts.model_id, SES_TTS_KILIT.model_id)
   assert.equal(govde.conversation_config.tts.expressive_mode, false)
-  assert.equal(govde.conversation_config.tts.speed, 1)
+  assert.equal(govde.conversation_config.tts.speed, SES_TTS_KILIT.speed)
   assert.equal(govde.conversation_config.tts.voice_id, 'ses', 'ses kimliği yamada kalır')
   assert.deepEqual(govde.conversation_config.tts.suggested_audio_tags, [])
 
@@ -49,7 +50,7 @@ test('ses motoru sapmış ajanı Flash kilidine yazar, temiz ajanı yazmaz', asy
   const temiz: typeof fetch = async (url, init) => {
     cagrilar.push({ url: String(url), method: init?.method || 'GET' })
     return new Response(JSON.stringify({
-      conversation_config: { tts: { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75 } },
+      conversation_config: { tts: { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 0.92, stability: 0.55, similarity_boost: 0.75 } },
     }), { status: 200 })
   }
   const t = await sesMotorunuSabitle('agent_temiz', 'anahtar', temiz)
@@ -71,6 +72,18 @@ test('konuşma kapısı: etiket yok, yarım cümle biriktirilir, nefes dolunca v
   k.ekle('Kuyruk cümlesi. ')
   k.bitir()
   assert.match(parcalar[parcalar.length - 1], /Kuyruk cümlesi\./)
+})
+
+test('NOTYA-SES-NEFES-01: tek seferde dump edilen uzun cevap nefes nefes ElevenLabs\'e gider', () => {
+  const parcalar: string[] = []
+  const k = new SesYayKapisi((p) => parcalar.push(p))
+  const cumleler = Array.from({ length: 12 }, (_, i) => `Klinik cümle numarası ${i + 1} burada hasta dosyasından bilgi verir.`)
+  k.ekle(`${cumleler.join(' ')} `)
+  k.bitir()
+  assert.ok(parcalar.length >= 3, `beklenen ≥3 nefes, gelen ${parcalar.length}: ${parcalar.map((p) => p.length)}`)
+  assert.ok(parcalar.every((p) => p.trim().length > 0))
+  assert.match(parcalar.join(''), /Klinik cümle numarası 1 /)
+  assert.match(parcalar.join(''), /Klinik cümle numarası 12 /)
 })
 
 test('onay sözü beklemez; uzun cevap cümle ortasından bölünmeden birleşir', () => {

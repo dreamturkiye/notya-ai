@@ -333,8 +333,8 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
     { rota: ['oku'] }, { acik: 'bebek', kurulum: ['Son üç muayenesini özetle'], yuzeyler: ['ses'], not: 'Reads the last screen answer aloud, uncapped, without the model.' }),
   g('L-DEVAM-01', 'ses', 'devam et', L('NOTYA-SES-DEVAM-01'),
     'MANUAL', { acik: 'bebek', kurulum: ['Bu hastayı bana kısaca özetler misin?'], yuzeyler: ['ses'], not: 'A remainder exists only when the previous spoken turn was cut; with text input it usually is not.' }),
-  g('L-OZET-TAM', 'ses', 'Hastanın özetini oku', [L('NOTYA-SES-OZET-TAM-01'), G(53)],
-    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icermez: ['[Dd]evamı ekran'] }, { acik: 'bebek', yuzeyler: ['ses'], not: 'A chart-evidence answer is read in full on voice.' }),
+  g('L-OZET-TAM', 'ses', 'Hastanın özetini oku', [L('NOTYA-SES-SLUR-02'), G(53)],
+    { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'] }, { acik: 'bebek', yuzeyler: ['ses'], not: 'NOTYA-SES-SLUR-02 (2026-10-03): chart-evidence spoken lead is capped; full detail stays on screen. Explicit SES-OKU still uncapped.' }),
   g('L-BIRIM-02', 'ses', 'Son muayenede ateşi kaçtı?', [L('NOTYA-TTS-BIRIM-02'), G(54)],
     { hasta: 'tarik', icerir: ['38,7'], okunus: { icerir: ['derece'], icermez: ['°'] } }, { acik: 'tarik', yuzeyler: ['ses'], turetilmis: true, not: 'The complaint is how "39°C" was read; the question that makes Ayşe say a temperature is the corpus\'s. Graded on the text handed to the speech engine (fishMetni): the degree sign must be written out.' }),
 

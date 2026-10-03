@@ -38,7 +38,7 @@ globalThis.fetch = (async (g: unknown, o?: RequestInit) => {
   if (url.includes('/convai/agents/') && (o?.method || 'GET') === 'GET') {
     return new Response(JSON.stringify({
       conversation_config: {
-        tts: { model_id: 'eleven_flash_v2_5', voice_id: AYSE_SES, expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75 },
+        tts: { model_id: 'eleven_flash_v2_5', voice_id: AYSE_SES, expressive_mode: false, speed: 0.92, stability: 0.55, similarity_boost: 0.75 },
         turn: { turn_eagerness: 'normal', speculative_turn: false },
       },
     }), { status: 200 })

@@ -42,10 +42,30 @@ export class SesYayKapisi {
     this.bosalt()
   }
 
+  /**
+   * NOTYA-SES-NEFES-01 (Dr. Gökhan, 2026-10-03): a whole-answer dump in one delta
+   * (SES-OKU re-read, late flush) made ElevenLabs synthesise nothing audible while
+   * the screen still showed text — he asked three times "okuyacak mısın?". Oversized
+   * buffers are split on sentence ends into breath-sized deltas.
+   */
   private bosalt(): void {
-    const t = this.tampon.trim()
+    let t = this.tampon.trim()
     this.tampon = ''
     if (!t) return
-    this.yay(t.endsWith(' ') ? t : `${t} `)
+    const hedef = Math.floor(SES_BLOK_ESIGI * 1.5)
+    while (t.length > hedef * 1.25) {
+      const pencere = t.slice(0, hedef)
+      const kes = Math.max(
+        pencere.lastIndexOf('. '),
+        pencere.lastIndexOf('! '),
+        pencere.lastIndexOf('? '),
+        pencere.lastIndexOf('… '),
+      )
+      const i = kes >= Math.floor(SES_BLOK_ESIGI / 2) ? kes + 1 : hedef
+      const parca = t.slice(0, i).trim()
+      t = t.slice(i).trim()
+      if (parca) this.yay(parca.endsWith(' ') ? parca : `${parca} `)
+    }
+    if (t) this.yay(t.endsWith(' ') ? t : `${t} `)
   }
 }

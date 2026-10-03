@@ -176,8 +176,28 @@ describe('aşı tablosu — karnenin kendi satırları', () => {
     hasta: { adSoyad: AD, dogumTarihi: '2024-07-10' }, hekim: { ad: null, klinik: null }, bugunIso: BUGUN,
   })
   it('kayıt isteği: liste / karne / tablo / sayı; değerlendirme ve adlı aşı değil', () => {
-    for (const m of ['Aşılarını göster', 'Aşı karnesini tablo olarak göster', 'Aşı kayıtlarını getir', 'Uygulanmış aşılar', 'Aşıları neler', 'Toplam kaç aşısı var', 'Kaç aşı yapılmış']) assert.equal(asiKaydiSorusuMu(m), true, m)
-    for (const m of ['Aşıları tam mı?', 'Eksik aşısı var mı', 'Sıradaki aşı ne zaman', 'KKK aşısı ne zaman yapıldı', 'Hepatit B kaç doz oldu', 'Aşıyı dosyaya gir', 'Aşı takvimini anlat', 'Kilosu kaç']) assert.equal(asiKaydiSorusuMu(m), false, m)
+    for (const m of [
+      'Aşılarını göster',
+      'Aşı karnesini tablo olarak göster',
+      'Aşı kayıtlarını getir',
+      'Uygulanmış aşılar',
+      'Aşıları neler',
+      'Toplam kaç aşısı var',
+      'Kaç aşı yapılmış',
+      "Bu Umucan Türküoğlu'nun, eee, aşı karnesini bana bir gösterir misin?",
+    ]) assert.equal(asiKaydiSorusuMu(m), true, m)
+    for (const m of [
+      'Aşıları tam mı?',
+      'Eksik aşısı var mı',
+      'Sıradaki aşı ne zaman',
+      'KKK aşısı ne zaman yapıldı',
+      'Hepatit B kaç doz oldu',
+      'Aşıyı dosyaya gir',
+      'Aşı takvimini anlat',
+      'Kilosu kaç',
+      'Aşı karnesini değerlendir',
+      'Aşı karnesi değerlendirmesini yap',
+    ]) assert.equal(asiKaydiSorusuMu(m), false, m)
   })
   it('tablo: aşı, tarih, doz, yaş; tarihsiz kayıt öyle yazılır; ses tek cümle', () => {
     const c = asiTablosuCevabi(AD, karne)

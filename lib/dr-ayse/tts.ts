@@ -3,7 +3,7 @@ import { TR_VOICES } from '@/lib/asistan/elevenVoices'
 /**
  * REST / sandbox TTS. The live assistant does NOT use this path — ConvAI does.
  * The spoken voice is locked in lib/asistan/sesMotoru.ts (eleven_flash_v2_5,
- * expressive mode off, speed 1). optimize_streaming_latency is kept at 1 for
+ * expressive mode off, speed 0.92). optimize_streaming_latency is kept at 1 for
  * this helper; ElevenLabs now ignores the field on agents, and level 3 used to
  * slurry Turkish ("pediatre" for "pediatri").
  */
@@ -12,7 +12,7 @@ export const AYSE_TTS_SETTINGS = {
   stability: 0.55,
   similarity_boost: 0.75,
   style: 0,
-  speed: 1.0,
+  speed: 0.92,
   optimize_streaming_latency: 1,
 }
 
@@ -45,7 +45,7 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
         stability: 0.55,
         similarity_boost: 0.75,
         style: 0,
-        speed: 1.0,
+        speed: AYSE_TTS_SETTINGS.speed,
         use_speaker_boost: true,
       },
     }),

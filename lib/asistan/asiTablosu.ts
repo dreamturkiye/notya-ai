@@ -27,7 +27,7 @@ const GOSTER = /\b(goster\w*|getir\w*|ac|acar|acsana|acin|listele\w*|dok|cikar\w
 /** How many vaccines are recorded — the count is the table's row count. */
 const SAYIM = /\bkac (tane )?asi(si|lari)?\b|\basi(si|lari)? (sayisi|kac tane)\b|\bkac asi (var|oldu|yapildi|yapilmis|kayitli)\b/
 /** Evaluation / schedule / advice — the evidence path answers these. */
-const DEGERLENDIRME = /eksik|\btam\b|tamam mi|gecik|zamani|yapilmali|yapilacak|yapilmasi|gerek|kalan|kaldi|sonraki|siradaki|sirada|ne zaman|hangi|kac doz|kacinci|durum|guncel|takvim|oner|yan etki|reaksiyon|olur mu|yapalim|yapilir mi|yapildi mi|yapilmis mi|oldu mu|olmus mu|nasil|neden|niye|hatirlat|randevu|\bsonra\b|\bonce\b/
+const DEGERLENDIRME = /eksik|\btam\b|tamam mi|gecik|zamani|yapilmali|yapilacak|yapilmasi|gerek|kalan|kaldi|sonraki|siradaki|sirada|ne zaman|hangi|kac doz|kacinci|durum|guncel|takvim|oner|yan etki|reaksiyon|olur mu|yapalim|yapilir mi|yapildi mi|yapilmis mi|oldu mu|olmus mu|nasil|neden|niye|hatirlat|randevu|\bsonra\b|\bonce\b|degerlendir\w*|yorumla\w*|analiz\w*/
 /** The doctor is reporting or recording, not asking. */
 const BILDIRIM = /\byap(tik|tim|iyoruz|acagiz|acagim)\b|\bvur(duk|dum|uldu)\b|\buygulad(ik|im)\b|kaydet|\bekle\w*|\bgir\b|\byaz\b/
 

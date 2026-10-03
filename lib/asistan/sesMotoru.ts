@@ -15,11 +15,15 @@ import { AYSE_TTS_SETTINGS } from '@/lib/dr-ayse/tts'
 
 export const SES_MODEL_ID = 'eleven_flash_v2_5' as const
 
-/** Fixed delivery. Speed is exactly 1 — v3's "acting" is not allowed on a clinical voice. */
+/**
+ * Fixed delivery. v3's "acting" is not allowed on a clinical voice.
+ * NOTYA-SES-TEMPO-01 (Dr. Gökhan, 2026-10-03): speed 1 still felt rushed on Flash — lock at 0.92
+ * (planned band 0.92–0.98 in OPEN-COMMITMENTS). A dashboard change cannot stick.
+ */
 export const SES_TTS_KILIT = {
   model_id: SES_MODEL_ID,
   expressive_mode: false,
-  speed: 1,
+  speed: 0.92,
   stability: AYSE_TTS_SETTINGS.stability,
   similarity_boost: AYSE_TTS_SETTINGS.similarity_boost,
   optimize_streaming_latency: AYSE_TTS_SETTINGS.optimize_streaming_latency,

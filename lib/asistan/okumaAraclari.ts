@@ -143,12 +143,51 @@ const ULASILAMADI = 'Dosyaya şu an ulaşamadım, kısa bir süre sonra tekrar d
 /**
  * NOTYA-AYSE-GERI-03 (wrong-patient guard), shared by the brain and the tool: the sentence names a person as the one
  * it is about and that name is not the open patient's — the open chart is not a substitute for the person named.
+ *
+ * NOTYA-ASR-AD-01 (Dr. Gökhan, 2026-10-03): ASR often garbles the open patient's own name ("Umucan Türküoğlu"
+ * for "Umutcan Türkoğlu"). Exact token match treated that as somebody else, skipped the aşı-karnesi table path,
+ * and the model dumped a full değerlendirme. Near-match to the open chart still means the open patient.
  */
+function harfMesafesi(a: string, b: string): number {
+  if (a === b) return 0
+  const m = a.length
+  const n = b.length
+  if (!m) return n
+  if (!n) return m
+  const satir = Array.from({ length: n + 1 }, (_, j) => j)
+  for (let i = 1; i <= m; i++) {
+    let onceki = satir[0]
+    satir[0] = i
+    for (let j = 1; j <= n; j++) {
+      const gecici = satir[j]
+      const maliyet = a[i - 1] === b[j - 1] ? 0 : 1
+      satir[j] = Math.min(satir[j] + 1, satir[j - 1] + 1, onceki + maliyet)
+      onceki = gecici
+    }
+  }
+  return satir[n]
+}
+
+/** True when a spoken name part is the open patient's part (exact, prefix/suffix, or 1–2 ASR edits). */
+export function adParcasiAcikHastayaUyuyorMu(anilanParca: string, acikParca: string): boolean {
+  const a = anilanParca
+  const b = acikParca
+  if (a.length < 3 || b.length < 3) return false
+  if (a === b) return true
+  if (a.startsWith(b) || b.startsWith(a)) return true
+  const uzun = Math.max(a.length, b.length)
+  const izin = uzun <= 5 ? 1 : 2
+  return harfMesafesi(a, b) <= izin
+}
+
 export function anilanBaskaKisi(mesaj: string, acikHastaAdi: string | null | undefined): string | null {
   const anilan = anilanKisi(mesaj)
   if (!anilan) return null
-  const acikAd = acikHastaAdi ? duzle(String(acikHastaAdi)).split(' ') : []
-  return duzle(anilan).split(' ').some((p) => p.length >= 3 && acikAd.includes(p)) ? null : anilan
+  const acikAd = acikHastaAdi ? duzle(String(acikHastaAdi)).split(' ').filter((p) => p.length >= 3) : []
+  if (!acikAd.length) return anilan
+  const anilanParcalar = duzle(anilan).split(' ').filter((p) => p.length >= 3)
+  const ayni = anilanParcalar.some((p) => acikAd.some((a) => adParcasiAcikHastayaUyuyorMu(p, a)))
+  return ayni ? null : anilan
 }
 
 /** Calendar read for a resolved calendar question — the same readers, in the same order, as the brain's fast path. */
