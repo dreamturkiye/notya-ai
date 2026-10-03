@@ -57,18 +57,34 @@ const NOT_ALANLARI = 'id, created_at, basvuru_yakinmasi, content_subjektif, cont
 async function pediKayitlariYukle(sb: SupabaseClient, doktorId: string, patientId: string): Promise<{ kayit: SaglamCocukKayitlari; satirlar: string[] } | null> {
   // Kohort / Gelişim paneliyle aynı yükleyici (bebek kartı işitmesi dahil) — kopya sorgu yok.
   const { pediKohortGirdileri } = await import('@/app/api/doktor/pediatri/_kohort')
+  const { pediDogumBirlesik, pediIntakeDogumYukle } = await import('@/lib/doktor/pediIntakeDogum')
   const bugun = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   const { girdiler } = await pediKohortGirdileri(sb, doktorId, bugun, [patientId])
   const g = girdiler[0]
   if (!g) return null
+  // NOTYA-CEK-HASTA-01: bebek kartı boşsa hasta bilgi formundan prematüre / doğum kilosu.
+  let gebelikHaftasi = g.gebelikHaftasi
+  let dogumKiloGr = g.dogumKiloGr
+  if (gebelikHaftasi == null || dogumKiloGr == null) {
+    try {
+      const bir = pediDogumBirlesik(
+        { gebelikHaftasi, dogumKiloGr },
+        await pediIntakeDogumYukle(sb, doktorId, patientId),
+      )
+      gebelikHaftasi = bir.gebelikHaftasi
+      dogumKiloGr = bir.dogumKiloGr
+    } catch (e) { console.error('[cek-liste] intake doğum', e) }
+  }
   const satirlar = [
     ...g.taramalar.map((t) => taramaNotSatiri(t.tur, t.sonuc, t.tarih)),
     ...g.asilar.map((a) => `Aşı: ${a.ad}${a.dozNo ? ` ${a.dozNo}. doz` : ''}${a.tarih ? ` (${a.tarih})` : ''}`),
     ...g.mchat.map((x) => `M-CHAT-R/F (${x.tarih})`),
     ...g.gidr.map((x) => `GİDR gelişim değerlendirmesi (${x.tarih})`),
+    ...(gebelikHaftasi != null && gebelikHaftasi < 37 ? [`Prematüre: gebelik ${gebelikHaftasi} hf`] : []),
+    ...(dogumKiloGr != null && dogumKiloGr < 2500 ? [`Düşük doğum ağırlığı: ${Math.round(dogumKiloGr)} g`] : []),
   ]
   return {
-    kayit: { taramalar: g.taramalar, mchat: g.mchat, gidr: g.gidr, seanslar: g.seanslar, gebelikHaftasi: g.gebelikHaftasi, dogumKiloGr: g.dogumKiloGr },
+    kayit: { taramalar: g.taramalar, mchat: g.mchat, gidr: g.gidr, seanslar: g.seanslar, gebelikHaftasi, dogumKiloGr },
     satirlar,
   }
 }

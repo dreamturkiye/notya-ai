@@ -101,7 +101,7 @@ function taramaCek(dogumIso: string, bugunIso: string, kayitlar?: SaglamCocukKay
   if (p.simdikiVizit) {
     liste.push(m(
       `sc_izlem_${p.simdikiVizit.id}`,
-      `Sağlam çocuk: ${p.simdikiVizit.etiket} izlemi`,
+      `Sağlam çocuk: ${p.simdikiVizit.etiket} izlemi — bu vizite özgü kontroller`,
       'anamnez',
       ['izlem', 'saglam cocuk'],
     ))
@@ -109,16 +109,82 @@ function taramaCek(dogumIso: string, bugunIso: string, kayitlar?: SaglamCocukKay
   for (const k of p.kalemler) {
     if (!taramaBuVizitte(k)) continue
     const t = TARAMA_ANAHTARLARI[k.kod]
-    liste.push(m(`sc_tarama_${k.kod}`, k.ad, t.grup, t.anahtarlar, t.kapsam))
+    const etiket =
+      k.kod === 'gidr' && p.preterm
+        ? `${k.ad} (prematüre: düzeltilmiş yaş)`
+        : (k.durum === 'gecikti' || k.durum === 'dikkat') && k.ne
+          ? `${k.ad} — ${k.ne.length > 90 ? `${k.ne.slice(0, 87)}…` : k.ne}`
+          : k.ad
+    liste.push(m(`sc_tarama_${k.kod}`, etiket, t.grup, t.anahtarlar, t.kapsam))
   }
   return liste
 }
 
-function yasGun(dogumIso: string, bugunIso: string): number {
+/**
+ * NOTYA-CEK-HASTA-01 — dosyadaki riskler (prematüre, M-CHAT, GİDR sevk).
+ * Yaş bandı / SB vizit kalemlerinden ayrı: hastaya özel hatırlatma.
+ */
+export function hastaRiskCekMaddeleri(
+  kayitlar?: SaglamCocukKayitlari | null,
+  dogumIso?: string | null,
+  bugunIso: string = new Date().toISOString(),
+): CekMadde[] {
+  if (!kayitlar) return []
+  const liste: CekMadde[] = []
+  const gh = kayitlar.gebelikHaftasi
+  const kilo = kayitlar.dogumKiloGr
+  const preterm = gh != null && gh < 37
+  const dusukKilo = kilo != null && kilo < 2500
+  if (preterm || dusukKilo) {
+    const parca = [
+      gh != null ? `${Number.isInteger(gh) ? gh : gh.toFixed(1)} hf` : null,
+      kilo != null ? `${Math.round(kilo)} g` : null,
+    ].filter(Boolean).join(', ')
+    const yasGun = dogumIso && /^\d{4}-\d{2}-\d{2}/.test(dogumIso)
+      ? yasGunFn(dogumIso, bugunIso)
+      : -1
+    const gelisimNotu = yasGun >= 0 && yasGun < Math.round(3 * 365.25)
+      ? 'gelişimi düzeltilmiş yaşla değerlendir; nörogelişim / erken müdahale öyküsünü sor'
+      : 'prematüre / DDA öyküsünü muayenede dikkate al'
+    liste.push(m(
+      'sc_risk_prematur',
+      `Dosya: prematüre / düşük doğum ağırlığı${parca ? ` (${parca})` : ''} — ${gelisimNotu}`,
+      'anamnez',
+      ['prematur', 'erken dogum', 'duzeltilmis yas', 'dusuk dogum', 'dda'],
+      'dosya',
+    ))
+  }
+  const sonM = (kayitlar.mchat || []).slice().sort((a, b) => a.tarih.localeCompare(b.tarih)).pop()
+  if (sonM && (sonM.risk === 'orta' || sonM.risk === 'yuksek')) {
+    liste.push(m(
+      'sc_risk_mchat',
+      `Dosya: son M-CHAT-R/F ${sonM.risk === 'yuksek' ? 'yüksek' : 'orta'} risk (${sonM.tarih}) — ileri değerlendirme / sevk`,
+      'fizik',
+      ['m-chat', 'mchat', 'otizm'],
+      'dosya',
+    ))
+  }
+  if ((kayitlar.gidr || []).some((x) => x.sevk)) {
+    liste.push(m(
+      'sc_risk_gidr_sevk',
+      'Dosya: GİDR’de sevk önerisi var — çocuk gelişim birimi / standart test takibi',
+      'kapanis',
+      ['gidr', 'gelisim birim', 'sevk'],
+      'dosya',
+    ))
+  }
+  return liste
+}
+
+function yasGunFn(dogumIso: string, bugunIso: string): number {
   const a = Date.parse(dogumIso.slice(0, 10))
   const b = Date.parse(bugunIso.slice(0, 10))
   if (!Number.isFinite(a) || !Number.isFinite(b)) return -1
   return Math.floor((b - a) / 86_400_000)
+}
+
+function yasGun(dogumIso: string, bugunIso: string): number {
+  return yasGunFn(dogumIso, bugunIso)
 }
 
 function yasBandiEk(gun: number): CekMadde[] {
@@ -144,7 +210,11 @@ export function saglamCocukCekMaddeleri(
   const gun = yasGun(iso, bugunIso)
   if (gun < 0 || gun > Math.round(21 * 365.25)) return []
   const gorulen = new Set<string>()
-  const birlesik = [...taramaCek(iso, bugunIso, kayitlar), ...yasBandiEk(gun)]
+  const birlesik = [
+    ...hastaRiskCekMaddeleri(kayitlar, iso, bugunIso),
+    ...taramaCek(iso, bugunIso, kayitlar),
+    ...yasBandiEk(gun),
+  ]
   return birlesik.filter((x) => {
     if (gorulen.has(x.id)) return false
     gorulen.add(x.id)

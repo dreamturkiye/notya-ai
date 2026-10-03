@@ -28,7 +28,8 @@ describe('muayene çek listesi — evrensel kutu, branşa özel madde', () => {
     const kar = muayeneCekListesi({ seansBransi: 'kardiyoloji', hastaDogumIso: '2022-01-01' })
     assert.ok(ped.some((m) => m.id === 'basCevresi'))
     assert.ok(ped.some((m) => m.id === 'asi'))
-    assert.ok(ped.some((m) => m.id === 'sikayet'))
+    // NOTYA-CEK-HASTA-01: yaş bilinen pediatride genel şikayet şablonu yok
+    assert.ok(!ped.some((m) => m.id === 'sikayet' || m.id === 'solunum' || m.id === 'kbb'))
     assert.ok(!kd.some((m) => m.id === 'basCevresi' || m.id === 'asi'))
     assert.ok(kd.some((m) => m.id === 'sat' || m.id === 'jine'))
     assert.ok(!kar.some((m) => m.id === 'basCevresi' || m.id === 'asi'))
@@ -92,6 +93,8 @@ describe('muayene çek listesi — evrensel kutu, branşa özel madde', () => {
     assert.ok(!/Baş Çevresi/.test(seans))
     assert.match(seans, /cekListeSifirla/)
     assert.match(seans, /hastaDogumIso/)
+    assert.match(seans, /pediKayitlari/)
+    assert.match(seans, /pediatri\/tarama/)
   })
 
   it('yenidoğanda göbek / NTP / 1. hafta izlemi var; 4 yaşta yok; KD yenidoğana sızmaz', () => {
@@ -155,12 +158,27 @@ describe('NOTYA-CEK-DOGRULA-02 — çek listesi doğru ve canlı', () => {
 
   it('dosya kapsamı: önceki kayıt yalnız "dosya" maddelerini karşılar; kalça (vizit) önceki notta olsa da eksik', () => {
     const maddeler = muayeneCekListesi({ seansBransi: 'pediatri', hastaDogumIso: '2024-05-15', referansIso: ZIYARET })
-    const onceki = cekOncekiKarsilanan(maddeler, 'Kalça muayenesinde Ortolani ve Barlow negatif. Göbek düştü. Soygeçmiş: ailede özellik yok.')
+    const onceki = cekOncekiKarsilanan(maddeler, 'Kalça muayenesinde Ortolani ve Barlow negatif. Göbek düştü. Aşı karnesi tam. Soygeçmiş: ailede özellik yok.')
     assert.ok(onceki.includes('sc_gobek'))
-    assert.ok(onceki.includes('soygecmis'))
+    assert.ok(onceki.includes('asi'), 'aşı dosya kapsamında')
+    assert.ok(!onceki.includes('soygecmis'), 'genel soygeçmiş yaşlı ped listesinde yok')
     assert.ok(!onceki.includes('sc_kalca'))
     assert.equal(maddeler.find((m) => m.id === 'sc_kalca')?.kapsam, 'vizit')
     assert.equal(maddeler.find((m) => m.id === 'sc_tarama_dvit')?.kapsam, 'dosya')
+  })
+
+  it('NOTYA-CEK-HASTA-01: 24 ay + prematüre → dosya riski + 24. ay viziti; genel FM yok', () => {
+    const dogum = new Date(Date.now() - Math.round(24 * 30.4375) * 86_400_000).toISOString().slice(0, 10)
+    const liste = muayeneCekListesi({
+      seansBransi: 'pediatri',
+      hastaDogumIso: dogum,
+      pediKayitlari: { gebelikHaftasi: 32, dogumKiloGr: 1480, taramalar: [], mchat: [], gidr: [], seanslar: [] },
+    })
+    assert.ok(liste.some((m) => m.id === 'sc_risk_prematur'), 'prematüre dosya riski')
+    assert.ok(liste.some((m) => /24\.\s*ay/i.test(m.etiket)), '24. ay izlemi')
+    assert.ok(liste.some((m) => /otizm|M-CHAT/i.test(m.etiket)))
+    assert.ok(liste.some((m) => /GİDR|gelişim/i.test(m.etiket)))
+    assert.ok(!liste.some((m) => m.id === 'sikayet' || m.id === 'solunum' || m.id === 'kbb' || m.id === 'ozgecmis'))
   })
 
   it('surekli: gelecekteki pencereler listelenmez; pencere gelince listelenir, kayıt varsa düşer', () => {

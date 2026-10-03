@@ -45,6 +45,20 @@ export async function GET(req: NextRequest) {
       if (s) taramalar.push({ tur, tarih, sonuc: s, kaynak: 'bebek_karti' })
     }
   }
+  // NOTYA-CEK-HASTA-01: bebek kartı boşsa hasta bilgi formundan prematüre / doğum kilosu.
+  let gebelikHaftasi = kart?.gebelik_haftasi != null ? Number(kart.gebelik_haftasi) : null
+  let kiloGram = kart?.kilo_gram != null ? Number(kart.kilo_gram) : null
+  if (gebelikHaftasi == null || kiloGram == null) {
+    try {
+      const { pediDogumBirlesik, pediIntakeDogumYukle } = await import('@/lib/doktor/pediIntakeDogum')
+      const bir = pediDogumBirlesik(
+        { gebelikHaftasi, dogumKiloGr: kiloGram },
+        await pediIntakeDogumYukle(o.sb, o.doktorId, h.id),
+      )
+      gebelikHaftasi = bir.gebelikHaftasi
+      kiloGram = bir.dogumKiloGr
+    } catch { /* intake yok — kart bilgisiyle devam */ }
+  }
   return NextResponse.json({
     dogumIso: h.dogumIso,
     taramalar,
@@ -53,7 +67,7 @@ export async function GET(req: NextRequest) {
     mchat: (mQ.data || []).map((r) => ({ tarih: gun(r.created_at), risk: r.risk_seviyesi, puan: r.toplam_puan })),
     gidr: (gQ.data || []).map((r) => ({ tarih: gun(r.created_at), sevk: !!r.sevk_onerisi })),
     seanslar: (sQ.data || []).map((r) => gun(r.created_at)),
-    dogumBilgisi: kart && (kart.gebelik_haftasi != null || kart.kilo_gram != null) ? { gebelikHaftasi: kart.gebelik_haftasi ?? null, kiloGram: kart.kilo_gram ?? null } : null,
+    dogumBilgisi: (gebelikHaftasi != null || kiloGram != null) ? { gebelikHaftasi, kiloGram } : null,
   })
 }
 

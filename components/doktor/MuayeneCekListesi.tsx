@@ -75,7 +75,7 @@ export default function MuayeneCekListesi({
         <span>
           <span style={{ display: 'block', fontSize: 14, fontWeight: 800, color: yazi }}>{CEK_LISTE_BASLIK}</span>
           <span style={{ display: 'block', fontSize: 12, color: soluk, marginTop: 4 }}>
-            {yapilan}/{maddeler.length} işaretlendi · tanı değildir
+            {yapilan}/{maddeler.length} işaretlendi · dosya riskleri + vizit · tanı değildir
           </span>
         </span>
         <span data-cek-ok="1" aria-hidden style={{ fontSize: 18, fontWeight: 700, color: soluk, lineHeight: 1, paddingTop: 4, minWidth: 20, textAlign: 'right' }}>

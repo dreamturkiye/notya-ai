@@ -19,6 +19,7 @@ import {
   muayeneCekListesi,
   type CekDogrulamaSatir,
 } from "@/lib/doktor/muayeneCekListesi"
+import type { SaglamCocukKayitlari } from "@/specialties/pediatri/engines/saglamCocukCek"
 
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
@@ -95,10 +96,12 @@ function NewSessionInner() {
     })()
   }, [])
 
-  // Yeni muayene: önceki vizitin işaretleri durmasın. Doğum tarihi → yaşa özel sağlam çocuk maddeleri.
+  // Yeni muayene: önceki vizitin işaretleri durmasın.
+  // Doğum + pedi kayıtları → dosya riskleri + sağlam çocuk viziti (NOTYA-CEK-HASTA-01).
   useEffect(() => {
     cekListeSifirla(patientId)
     setCekIsaret({})
+    setPediKayitlari(null)
     if (!patientId) { setHastaDogumIso(null); return }
     let iptal = false
     ;(async () => {
@@ -106,12 +109,31 @@ function NewSessionInner() {
         const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
         const token = await ensureDoctorAccessToken()
         if (!token || iptal) return
-        const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
-        if (!r.ok || iptal) return
-        const d = await r.json()
-        const dob = d?.patient?.dogum_tarihi || d?.dogum_tarihi
-        if (dob && !iptal) setHastaDogumIso(String(dob).slice(0, 10))
-      } catch { /* liste generic pediatri maddeleriyle açılır */ }
+        const [hastaR, taramaR] = await Promise.all([
+          fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`/api/doktor/pediatri/tarama?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` } }),
+        ])
+        if (iptal) return
+        if (hastaR.ok) {
+          const d = await hastaR.json()
+          const dob = d?.patient?.dogum_tarihi || d?.dogum_tarihi
+          if (dob) setHastaDogumIso(String(dob).slice(0, 10))
+        }
+        if (taramaR.ok) {
+          const t = await taramaR.json()
+          if (t?.dogumIso && !iptal) setHastaDogumIso(String(t.dogumIso).slice(0, 10))
+          if (!iptal) {
+            setPediKayitlari({
+              taramalar: Array.isArray(t?.taramalar) ? t.taramalar : [],
+              mchat: Array.isArray(t?.mchat) ? t.mchat : [],
+              gidr: Array.isArray(t?.gidr) ? t.gidr : [],
+              seanslar: Array.isArray(t?.seanslar) ? t.seanslar : [],
+              gebelikHaftasi: t?.dogumBilgisi?.gebelikHaftasi ?? null,
+              dogumKiloGr: t?.dogumBilgisi?.kiloGram ?? null,
+            })
+          }
+        }
+      } catch { /* liste yaş/branş ile açılır; risk satırları sonra gelir */ }
     })()
     return () => { iptal = true }
   }, [patientId])
@@ -139,7 +161,8 @@ function NewSessionInner() {
   const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>({})
   const [cekDogrulama, setCekDogrulama] = useState<CekDogrulamaSatir[] | null>(null)
   const [hastaDogumIso, setHastaDogumIso] = useState<string | null>(null)
-  const cekGirdi = { seansBransi: specialty, hastaDogumIso, referansIso: efektifTarihIso }
+  const [pediKayitlari, setPediKayitlari] = useState<SaglamCocukKayitlari | null>(null)
+  const cekGirdi = { seansBransi: specialty, hastaDogumIso, referansIso: efektifTarihIso, pediKayitlari }
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks

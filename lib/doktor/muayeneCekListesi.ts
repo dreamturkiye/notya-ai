@@ -4,6 +4,9 @@
  * Kaynak (Dr. Gökhan Mamur, 2026-09-03, NOTYA-BASLIK-01): Türk anamnez geleneği
  * şikayet → hikaye → özgeçmiş → soygeçmiş → FM → tanı → tedavi.
  * Pediatri maddeleri (baş çevresi, aşı, büyüme, prenatal) yalnız pediatrik bağlamda.
+ *
+ * NOTYA-CEK-HASTA-01: pediatride doğum tarihi biliniyorsa genel anamnez/FM listesi
+ * basılmaz — kaynak (1) hasta dosyası riskleri, (2) o ayın sağlam çocuk viziti.
  * Karar desteği: hekim işaretler; Asistan notta uydurmaz, doğrular.
  */
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
@@ -90,6 +93,17 @@ const PEDIATRI: CekMadde[] = [
   { id: 'kontrol', etiket: 'Kontrol zamanı', grup: 'kapanis', anahtarlar: ['kontrol', 'tekrar gel'] },
 ]
 
+/** Doğum tarihi bilinen pediatri viziti — yalnız ölçüm + aşı + kapanış (genel FM/anamnez yok). */
+const PEDIATRI_VIZIT: CekMadde[] = [
+  { id: 'asi', etiket: 'Aşı durumu (bu vizitte kontrol)', grup: 'anamnez', anahtarlar: ['asi', 'asisi', 'asi karnesi'], kapsam: 'dosya' },
+  { id: 'kilo', etiket: 'Kilo', grup: 'olcum', anahtarlar: ['kilo', 'kg'] },
+  { id: 'boy', etiket: 'Boy', grup: 'olcum', anahtarlar: ['boy', 'cm'] },
+  { id: 'basCevresi', etiket: 'Baş çevresi', grup: 'olcum', anahtarlar: ['bas cevresi', 'bascevre'] },
+  { id: 'tani', etiket: 'Tanı (hekim)', grup: 'kapanis', anahtarlar: ['tani', 'teshis'] },
+  { id: 'tedavi', etiket: 'Tedavi / plan', grup: 'kapanis', anahtarlar: ['tedavi', 'recete', 'plan'] },
+  { id: 'kontrol', etiket: 'Kontrol / sonraki izlem zamanı', grup: 'kapanis', anahtarlar: ['kontrol', 'tekrar gel', 'izlem'] },
+]
+
 const BRANS_EK: Partial<Record<SpecialtyKey, CekMadde[]>> = {
   kardiyoloji: [
     { id: 'kb', etiket: 'Kan basıncı', grup: 'olcum', anahtarlar: ['tansiyon', 'kan basinci', 'mmhg'] },
@@ -135,11 +149,17 @@ export function muayeneCekListesi(g: CekListeGirdi): CekMadde[] {
     doktorBransi: g.doktorBransi,
     hastaDogumIso: g.hastaDogumIso,
   })
-  const liste = [...ORTAK]
-  if (ped) {
-    liste.push(...PEDIATRI)
-    liste.push(...saglamCocukCekMaddeleri(g.hastaDogumIso, g.referansIso || undefined, g.pediKayitlari || undefined))
-  }
+  const dogumVar = /^\d{4}-\d{2}-\d{2}/.test(String(g.hastaDogumIso || '').trim())
+  // NOTYA-CEK-HASTA-01: yaş bilinen pediatri → dosya riskleri + sağlam çocuk viziti; genel şablon yok.
+  const liste: CekMadde[] = ped && dogumVar
+    ? [
+        ...PEDIATRI_VIZIT,
+        ...saglamCocukCekMaddeleri(g.hastaDogumIso, g.referansIso || undefined, g.pediKayitlari || undefined),
+      ]
+    : [
+        ...ORTAK,
+        ...(ped ? PEDIATRI : []),
+      ]
   if (brans && BRANS_EK[brans]) liste.push(...BRANS_EK[brans]!)
   const gorulen = new Set<string>()
   return liste.filter((m) => {
