@@ -77,8 +77,17 @@ const ORTAK: CekMadde[] = [
   { id: 'tedavi', etiket: 'Tedavi / plan', grup: 'kapanis', anahtarlar: ['tedavi', 'recete', 'plan'] },
 ]
 
+/** Beslenme maddesi — sofra / gıda / süt vb. klinik ifadeler de karşılar (NOTYA-CEK-BESLENME-01). */
+export const BESLENME_ANAHTARLARI = [
+  'beslenme', 'besleniyor', 'emzirme', 'emziriyor', 'anne sutu', 'mama',
+  'sofra', 'sofra gida', 'sofra gidasi', 'gida', 'gidalar',
+  'sut', 'protein', 'kirmizi et', 'beyaz et', 'sebze', 'meyve', 'yogurt', 'peynir',
+  'ek gida', 'tamamlayici', 'pure', 'kati gida', 'yemek', 'yiyor', 'ogun',
+  'istah', 'istahsiz', 'nutrisyon',
+] as const
+
 const PEDIATRI: CekMadde[] = [
-  { id: 'beslenme', etiket: 'Beslenme / alışkanlıklar', grup: 'anamnez', anahtarlar: ['beslenme', 'emzirme', 'mama'] },
+  { id: 'beslenme', etiket: 'Beslenme / alışkanlıklar', grup: 'anamnez', anahtarlar: [...BESLENME_ANAHTARLARI] },
   { id: 'asi', etiket: 'Aşı durumu', grup: 'anamnez', anahtarlar: ['asi', 'asisi', 'asi karnesi'], kapsam: 'dosya' },
   { id: 'prenatal', etiket: 'Prenatal / natal / postnatal öykü', grup: 'anamnez', anahtarlar: ['prenatal', 'dogum', 'natal', 'gebelik'], kapsam: 'dosya' },
   { id: 'ates', etiket: 'Ateş', grup: 'olcum', anahtarlar: ['ates', 'derece', '38'] },
@@ -93,8 +102,9 @@ const PEDIATRI: CekMadde[] = [
   { id: 'kontrol', etiket: 'Kontrol zamanı', grup: 'kapanis', anahtarlar: ['kontrol', 'tekrar gel'] },
 ]
 
-/** Doğum tarihi bilinen pediatri viziti — yalnız ölçüm + aşı + kapanış (genel FM/anamnez yok). */
+/** Doğum tarihi bilinen pediatri viziti — ölçüm + aşı + beslenme + kapanış (genel FM şablonu yok). */
 const PEDIATRI_VIZIT: CekMadde[] = [
+  { id: 'beslenme', etiket: 'Beslenme / alışkanlıklar', grup: 'anamnez', anahtarlar: [...BESLENME_ANAHTARLARI] },
   { id: 'asi', etiket: 'Aşı durumu (bu vizitte kontrol)', grup: 'anamnez', anahtarlar: ['asi', 'asisi', 'asi karnesi'], kapsam: 'dosya' },
   { id: 'kilo', etiket: 'Kilo', grup: 'olcum', anahtarlar: ['kilo', 'kg'] },
   { id: 'boy', etiket: 'Boy', grup: 'olcum', anahtarlar: ['boy', 'cm'] },

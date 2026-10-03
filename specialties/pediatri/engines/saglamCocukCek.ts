@@ -45,7 +45,10 @@ const BEBEK_KALCA: CekMadde[] = [
 ]
 
 const EK_GIDA: CekMadde[] = [
-  m('sc_ek_gida', 'Ek gıda / tamamlayıcı beslenme', 'anamnez', ['ek gida', 'tamamlayici', 'mama', 'püre']),
+  m('sc_ek_gida', 'Ek gıda / tamamlayıcı beslenme', 'anamnez', [
+    'ek gida', 'tamamlayici', 'mama', 'püre', 'pure', 'sofra', 'sofra gida', 'gida', 'gidalar',
+    'sut', 'protein', 'et', 'sebze', 'meyve', 'yemek', 'yiyor', 'beslenme', 'kati gida',
+  ]),
 ]
 
 const YURUME: CekMadde[] = [

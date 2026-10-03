@@ -167,6 +167,17 @@ describe('NOTYA-CEK-DOGRULA-02 — çek listesi doğru ve canlı', () => {
     assert.equal(maddeler.find((m) => m.id === 'sc_tarama_dvit')?.kapsam, 'dosya')
   })
 
+  it('NOTYA-CEK-BESLENME-01: sofra / gıda / süt ifadeleri Beslenme maddesini kapatır', () => {
+    const maddeler = muayeneCekListesi({ seansBransi: 'pediatri', hastaDogumIso: '2024-01-01' })
+    assert.ok(maddeler.some((m) => m.id === 'beslenme'))
+    const sofra = cekListeDogrula(maddeler, { soap: 'Anne beyanına göre sofra gıdaları yiyor, iştahı iyi.' })
+    assert.equal(sofra.find((s) => s.id === 'beslenme')?.durum, 'dosyada')
+    const sut = cekListeDogrula(maddeler, { soap: 'Günde 2 öğün yoğurt ve süt alıyor; protein yeterli.' })
+    assert.equal(sut.find((s) => s.id === 'beslenme')?.durum, 'dosyada')
+    const bos = cekListeDogrula(maddeler, { soap: 'Genel durum iyi. Solunum doğal.' })
+    assert.equal(bos.find((s) => s.id === 'beslenme')?.durum, 'eksik')
+  })
+
   it('NOTYA-CEK-HASTA-01: 24 ay + prematüre → dosya riski + 24. ay viziti; genel FM yok', () => {
     const dogum = new Date(Date.now() - Math.round(24 * 30.4375) * 86_400_000).toISOString().slice(0, 10)
     const liste = muayeneCekListesi({

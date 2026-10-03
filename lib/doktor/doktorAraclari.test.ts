@@ -233,7 +233,7 @@ test('Araçlar landing is a card grid only — Hedef Boy opens as its own page',
 })
 
 // PEDI-ARACLAR-01 / -02 — pediatri-only Araçlar (same shape as the göz block above). Pediatri sees all five studios.
-const PEDI_YENI_ROTALAR = ['/doktor-tools/pedi-asi', '/doktor-tools/pedi-gelisim', '/doktor-tools/pedi-kohort']
+const PEDI_YENI_ROTALAR = ['/doktor-tools/pedi-asi', '/doktor-tools/pedi-gelisim', '/doktor-tools/pedi-mchat', '/doktor-tools/pedi-kohort']
 const PEDI_ROTALAR = ['/doktor-tools/pedi-buyume', '/doktor-tools/pedi-doz', ...PEDI_YENI_ROTALAR]
 
 test('pediatri-only Araçlar: pediatri sees all; dahiliye / kardiyoloji / göz / KD / derm and every other branş never', () => {
@@ -277,13 +277,15 @@ test('pediatri studio pages: guarded by PediAracKabugu, card-opened, never on th
     assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
     assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
   }
-  assert.doesNotMatch(landing, /PediAracKabugu|BuyumeStudyosu|DozAraci|AsiPlanlayici|GelisimPaneli|PediKohortPaneli/)
+  assert.doesNotMatch(landing, /PediAracKabugu|BuyumeStudyosu|DozAraci|AsiPlanlayici|GelisimPaneli|MchatAraci|PediKohortPaneli/)
+  const mchat = fs.readFileSync(path.join(kok, 'app/doktor-tools/pedi-mchat/page.tsx'), 'utf8')
+  assert.match(mchat, /MchatAraci|HastaMchat/)
 })
 
-test('PEDI-ARACLAR-02: aşı / gelişim / kohort — pediatri tek anahtar; 30/30 döngüde her yabancı branş görmez ve derin linki reddedilir', () => {
-  assert.equal(PEDI_ROTALAR.length, 5)
+test('PEDI-ARACLAR-02: aşı / gelişim / M-CHAT / kohort — pediatri tek anahtar; 30/30 döngüde her yabancı branş görmez ve derin linki reddedilir', () => {
+  assert.equal(PEDI_ROTALAR.length, 6)
   const ped = doktorAraclariListesi('pediatri')
-  for (const r of PEDI_ROTALAR) assert.ok(ped.some((a) => a.route === r), `pediatri beşini de görmeli: ${r}`)
+  for (const r of PEDI_ROTALAR) assert.ok(ped.some((a) => a.route === r), `pediatri altısını da görmeli: ${r}`)
   for (const r of PEDI_YENI_ROTALAR) {
     const arac = TUM_DOKTOR_ARACLARI.find((a) => a.route === r)!
     assert.ok(arac, r)
