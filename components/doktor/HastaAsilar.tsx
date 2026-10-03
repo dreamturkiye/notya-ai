@@ -9,15 +9,20 @@
  * ASI-KARNESI-01 (Dr. Gökhan Mamur; Kaan 2026-09-19): "Aşı karnesi yükle" — fotoğraf/PDF → Ayşe okur → hekim toplu
  * onaylar (AsiKarnesiOkuma). Karneden aktarılanlar klinikte uygulananlardan GÖRSEL OLARAK AYRI: her satırda kaynak
  * rozeti (lib/asi/karneOkuma → asiKaynakRozeti, paylaşılan Rozet) ve kaynağa göre kenar rengi.
+ *
+ * NOTYA-ASI-TABLO-01 (Dr. Gökhan; 2026-10-03): kart listesi yerine düzenlenebilir tablo — aşı adı, piyasa adı,
+ * uygulama tarihi, kaç aylıkken, doz, uygulama yeri, lot. Silinebilir. Mobil/tablet: yatay kaydırma + dar
+ * ekranda etiketli satır ızgarası (16px input — iOS zoom yok).
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { ULUSAL_TAKVIM, OZEL_ASILAR, PEDIATRIK_ASI_ADLARI, TAKVIM_SURUM } from '@/lib/asi/ulusalAsiTakvimi';
 import { hitapMetinleri } from '@/lib/specialties/hitap';
 import { Rozet } from '@/lib/doktor/aracUi';
-import { asiKaynakRozeti, asiKaynakTuru, trTarih } from '@/lib/asi/karneOkuma';
-import { LOT_AZAMI, lotYerSatiri, YER_AZAMI } from '@/lib/asi/asiLotYeri';
+import { asiKaynakRozeti, asiKaynakTuru } from '@/lib/asi/karneOkuma';
+import { LOT_AZAMI, YER_AZAMI } from '@/lib/asi/asiLotYeri';
+import { PIYASA_AZAMI, uygulamaYasAy } from '@/lib/asi/karneBelgesi';
 import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
 import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
 import AsiHatirlatmaListesi from '@/components/doktor/AsiHatirlatmaListesi';
@@ -26,10 +31,12 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 interface Asi {
   id: string;
   asi_adi: string;
+  piyasa_adi?: string | null;
   doz_no: number | null;
   kategori: 'pediatrik' | 'yetiskin';
   uygulama_tarihi: string | null;
   sonraki_doz_tarihi: string | null;
+  uygulama_yas_ay?: number | null;
   kaynak: 'beyan' | 'kayit';
   notlar: string | null;
   belge_id?: string | null;
@@ -41,24 +48,68 @@ const KAYNAK_KENAR = { karne: 'rgba(96,165,250,0.55)', beyan: 'rgba(255,255,255,
 
 const YAYGIN_YETISKIN = ['Tetanoz-Difteri (Td)', 'Grip', 'KOVID-19', 'Zona (Herpes Zoster)', 'Pnömokok'];
 
+const GIRIS: React.CSSProperties = {
+  width: '100%',
+  minWidth: 0,
+  background: '#FFFFFF',
+  border: '1px solid rgba(58,44,34,0.16)',
+  color: '#3b2e24',
+  borderRadius: 8,
+  padding: '8px 10px',
+  fontSize: 16, // iOS Safari focus zoom'u engeller
+  boxSizing: 'border-box',
+};
+
+const TH: React.CSSProperties = {
+  padding: '8px 6px',
+  textAlign: 'left',
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#8b7d70',
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  whiteSpace: 'nowrap',
+  borderBottom: '1px solid rgba(58,44,34,0.12)',
+};
+
+function yasAyGoster(a: Asi, dogumTarihi: string | null | undefined): string {
+  if (a.uygulama_yas_ay != null && Number.isFinite(a.uygulama_yas_ay)) return String(a.uygulama_yas_ay);
+  const hesap = uygulamaYasAy(dogumTarihi, a.uygulama_tarihi);
+  return hesap == null ? '' : String(hesap);
+}
+
 /**
  * BRANS-ALAN-SIZMASI: `veliDili` (lib/specialties/kapsam → veliDiliMi; VELI-YASAL-ONAM: reşit olmayan hasta her branşta)
  * "veli" kelimesini açar; `pediatrikBaglam` (pediatrikBaglamMi) ve `cocukHasta` SB çocukluk takvimini ve yeni kaydın
  * varsayılan kategorisini seçer. Eskiden her hastada (KD'nin erişkin hastası dahil) varsayılan 'pediatrik' ve
  * "Hasta/veli beyanı" idi.
  */
-export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDili = pediatrikBaglam, cocukHasta = false }: { patientId: string; pediatrikBaglam?: boolean; veliDili?: boolean; cocukHasta?: boolean }) {
+export default function HastaAsilar({
+  patientId,
+  dogumTarihi = null,
+  pediatrikBaglam = false,
+  veliDili = pediatrikBaglam,
+  cocukHasta = false,
+}: {
+  patientId: string;
+  dogumTarihi?: string | null;
+  pediatrikBaglam?: boolean;
+  veliDili?: boolean;
+  cocukHasta?: boolean;
+}) {
   const hitap = hitapMetinleri(veliDili);
   const [asilar, setAsilar] = useState<Asi[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
   const [formAcik, setFormAcik] = useState(false);
   const [asiAdi, setAsiAdi] = useState('');
+  const [piyasaAdi, setPiyasaAdi] = useState('');
   const [dozNo, setDozNo] = useState('');
   const [kategori, setKategori] = useState<'pediatrik' | 'yetiskin'>(cocukHasta ? 'pediatrik' : 'yetiskin');
   useEffect(() => { setKategori(cocukHasta ? 'pediatrik' : 'yetiskin'); }, [cocukHasta]);
   const [uygulamaTarihi, setUygulamaTarihi] = useState('');
   const [sonrakiDozTarihi, setSonrakiDozTarihi] = useState('');
+  const [uygulamaYasAyForm, setUygulamaYasAyForm] = useState('');
   const [kaynak, setKaynak] = useState<'kayit' | 'beyan'>('kayit');
   const [lotNo, setLotNo] = useState('');
   const [uygulamaYeri, setUygulamaYeri] = useState('');
@@ -66,6 +117,23 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
   const [takvimAcik, setTakvimAcik] = useState(false);
   const [karneAcik, setKarneAcik] = useState(false);
   const [bilgi, setBilgi] = useState('');
+  const [darEkran, setDarEkran] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(max-width: 720px)');
+    const uygula = () => setDarEkran(mq.matches);
+    uygula();
+    mq.addEventListener?.('change', uygula);
+    return () => mq.removeEventListener?.('change', uygula);
+  }, []);
+
+  // Yeni kayıt formunda tarih değişince yaş (ay) ön doldurulur — hekim yine düzeltebilir.
+  useEffect(() => {
+    if (!uygulamaTarihi || !dogumTarihi) return;
+    const ay = uygulamaYasAy(dogumTarihi, uygulamaTarihi);
+    if (ay != null) setUygulamaYasAyForm(String(ay));
+  }, [uygulamaTarihi, dogumTarihi]);
 
   const token = ensureDoctorAccessToken;
 
@@ -89,7 +157,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
   useEffect(() => { yukle(); }, [yukle]);
 
   function formuSifirla() {
-    setAsiAdi(''); setDozNo(''); setUygulamaTarihi(''); setSonrakiDozTarihi(''); setKaynak('kayit'); setLotNo(''); setUygulamaYeri('');
+    setAsiAdi(''); setPiyasaAdi(''); setDozNo(''); setUygulamaTarihi(''); setSonrakiDozTarihi('');
+    setUygulamaYasAyForm(''); setKaynak('kayit'); setLotNo(''); setUygulamaYeri('');
   }
 
   /** NOTYA-ASI-01: takvimden tek tıkla ön dolu ekleme — doktor adı/dozu elle yazmaz. */
@@ -116,6 +185,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
           patientId, asiAdi, dozNo: dozNo ? Number(dozNo) : null, kategori,
           uygulamaTarihi: uygulamaTarihi || null, sonrakiDozTarihi: sonrakiDozTarihi || null, kaynak,
           lotNo: lotNo.trim() || null, uygulamaYeri: uygulamaYeri.trim() || null,
+          piyasaAdi: piyasaAdi.trim() || null,
+          uygulamaYasAy: uygulamaYasAyForm !== '' ? Number(uygulamaYasAyForm) : null,
         }),
       });
       if (!r.ok) { const j = await r.json().catch(() => ({})); setHata(j.error || 'Kaydedilemedi.'); return; }
@@ -139,47 +210,96 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
     } catch { /* ignore */ }
   }
 
+  async function guncelle(id: string, govde: Record<string, unknown>) {
+    setHata('');
+    try {
+      const t = await token();
+      if (!t) { setHata('Oturum bulunamadı.'); return; }
+      const r = await fetch(`/api/doktor/asilar/${id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(govde),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        setHata(j.error || 'Güncellenemedi.');
+        await yukle();
+        return;
+      }
+      const d = await r.json();
+      if (d.asi) {
+        setAsilar((onceki) => onceki.map((a) => (a.id === id ? { ...a, ...d.asi } : a)));
+      }
+    } catch {
+      setHata('Güncellenemedi.');
+    }
+  }
+
   const pediatrikler = asilar.filter((a) => a.kategori === 'pediatrik');
   const yetiskinler = asilar.filter((a) => a.kategori === 'yetiskin');
 
   function Liste({ baslik, kayitlar }: { baslik: string; kayitlar: Asi[] }) {
     if (kayitlar.length === 0) return null;
     return (
-      <div style={{ marginBottom: 16 }}>
+      <div data-asi-tablo-grup="" style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 12, color: '#8b7d70', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{baslik}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {kayitlar.map((a) => {
-            const yaklasan = a.sonraki_doz_tarihi && new Date(a.sonraki_doz_tarihi) >= new Date() && new Date(a.sonraki_doz_tarihi) <= new Date(Date.now() + 7 * 86400000);
-            const tur = asiKaynakTuru(a);
-            const rozet = asiKaynakRozeti(tur, hitap.beyanEtiketi);
-            const lotYer = lotYerSatiri(a);
-            return (
-              <div key={a.id} data-asi-kaynak={tur} style={{ background: '#F6F0E4', borderRadius: 10, padding: 12, borderLeft: `3px solid ${KAYNAK_KENAR[tur]}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{a.asi_adi}{a.doz_no ? ` · ${a.doz_no}. doz` : ''}</div>
-                  <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span>{a.uygulama_tarihi ? `Uygulandı: ${trTarih(a.uygulama_tarihi)}` : 'Uygulama tarihi girilmedi'}</span>
-                    <Rozet ton={rozet.ton}>{rozet.metin}</Rozet>
-                  </div>
-                  {lotYer && <div data-asi-lot-yer="" style={{ fontSize: 12, color: '#8b7d70', marginTop: 2 }}>{lotYer}</div>}
-                  {a.sonraki_doz_tarihi && (
-                    <div style={{ fontSize: 12, marginTop: 2, color: yaklasan ? '#F59E0B' : CHROME_RENK.muted }}>
-                      Sonraki doz: {trTarih(a.sonraki_doz_tarihi)}{yaklasan ? ' · Yaklaşıyor' : ''}
-                    </div>
-                  )}
-                </div>
-                <button type="button" onClick={() => sil(a.id)} style={{ background: '#FBEAE3', border: 'none', color: '#EF4444', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>Sil</button>
-              </div>
-            );
-          })}
-        </div>
+        {darEkran ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {kayitlar.map((a) => (
+              <AsiSatirDuzenle
+                key={a.id}
+                a={a}
+                dogumTarihi={dogumTarihi}
+                hitapBeyan={hitap.beyanEtiketi}
+                mod="kart"
+                onGuncelle={guncelle}
+                onSil={sil}
+              />
+            ))}
+          </div>
+        ) : (
+          <div data-asi-tablo-sarici="" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: 12, background: '#F6F0E4' }}>
+            <table data-asi-tablo="" style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={TH}>Aşı adı</th>
+                  <th style={TH}>Piyasa adı</th>
+                  <th style={TH}>Uygulama tarihi</th>
+                  <th style={TH}>Yaş (ay)</th>
+                  <th style={TH}>Doz</th>
+                  <th style={TH}>Uygulama yeri</th>
+                  <th style={TH}>Lot no</th>
+                  <th style={{ ...TH, width: 56 }} />
+                </tr>
+              </thead>
+              <tbody>
+                {kayitlar.map((a) => (
+                  <AsiSatirDuzenle
+                    key={a.id}
+                    a={a}
+                    dogumTarihi={dogumTarihi}
+                    hitapBeyan={hitap.beyanEtiketi}
+                    mod="tablo"
+                    onGuncelle={guncelle}
+                    onSil={sil}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <style>{`
+        @media (max-width: 720px) {
+          .asi-ekle-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 8, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, color: '#8b7d70', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <button type="button" onClick={() => { setKarneAcik((v) => !v); setBilgi(''); }} style={{ background: '#F6F0E4', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
@@ -250,7 +370,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
 
       {formAcik && (
         <form onSubmit={kaydet} style={{ background: '#F6F0E4', borderRadius: 12, padding: 16, marginBottom: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div className="asi-ekle-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Aşı Adı *</label>
               <input
@@ -258,48 +378,56 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
                 onChange={(e) => setAsiAdi(e.target.value)}
                 list="yaygin-asilar"
                 placeholder="Örn. Hepatit B, Tetanoz-Difteri, Grip"
-                style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
+                style={GIRIS}
               />
               <datalist id="yaygin-asilar">
                 {[...PEDIATRIK_ASI_ADLARI, ...YAYGIN_YETISKIN].map((a) => <option key={a} value={a} />)}
               </datalist>
             </div>
             <div>
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Piyasa adı</label>
+              <input value={piyasaAdi} onChange={(e) => setPiyasaAdi(e.target.value)} maxLength={PIYASA_AZAMI} placeholder="Örn. Priorix, Hexaxim" style={GIRIS} />
+            </div>
+            <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Kategori</label>
-              <select value={kategori} onChange={(e) => setKategori(e.target.value as 'pediatrik' | 'yetiskin')} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
+              <select value={kategori} onChange={(e) => setKategori(e.target.value as 'pediatrik' | 'yetiskin')} style={GIRIS}>
                 <option value="pediatrik">Pediatrik</option>
                 <option value="yetiskin">Yetişkin</option>
               </select>
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Doz No</label>
-              <input type="number" min={1} value={dozNo} onChange={(e) => setDozNo(e.target.value)} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <input type="number" min={1} inputMode="numeric" value={dozNo} onChange={(e) => setDozNo(e.target.value)} style={GIRIS} />
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Uygulama Tarihi</label>
-              <input type="date" value={uygulamaTarihi} onChange={(e) => setUygulamaTarihi(e.target.value)} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <input type="date" value={uygulamaTarihi} onChange={(e) => setUygulamaTarihi(e.target.value)} style={GIRIS} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Yaş (ay) — uygulama anı</label>
+              <input type="number" min={0} max={600} inputMode="numeric" value={uygulamaYasAyForm} onChange={(e) => setUygulamaYasAyForm(e.target.value)} placeholder="Doğum + tarihten" style={GIRIS} />
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Sonraki Doz / Hatırlatma Tarihi</label>
-              <input type="date" value={sonrakiDozTarihi} onChange={(e) => setSonrakiDozTarihi(e.target.value)} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <input type="date" value={sonrakiDozTarihi} onChange={(e) => setSonrakiDozTarihi(e.target.value)} style={GIRIS} />
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Kaynak</label>
-              <select value={kaynak} onChange={(e) => setKaynak(e.target.value as 'kayit' | 'beyan')} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
+              <select value={kaynak} onChange={(e) => setKaynak(e.target.value as 'kayit' | 'beyan')} style={GIRIS}>
                 <option value="kayit">Bu klinikte uygulandı</option>
                 <option value="beyan">{hitap.beyanEtiketi}</option>
               </select>
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Lot no</label>
-              <input value={lotNo} onChange={(e) => setLotNo(e.target.value)} maxLength={LOT_AZAMI} placeholder="İsteğe bağlı" style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <input value={lotNo} onChange={(e) => setLotNo(e.target.value)} maxLength={LOT_AZAMI} placeholder="İsteğe bağlı" style={GIRIS} />
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Uygulama yeri</label>
-              <input value={uygulamaYeri} onChange={(e) => setUygulamaYeri(e.target.value)} maxLength={YER_AZAMI} placeholder="Örn. IM sol deltoid" style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <input value={uygulamaYeri} onChange={(e) => setUygulamaYeri(e.target.value)} maxLength={YER_AZAMI} placeholder="Örn. IM sol deltoid" style={GIRIS} />
             </div>
           </div>
-          <button type="submit" disabled={kaydediyor} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>
+          <button type="submit" disabled={kaydediyor} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
             {kaydediyor ? 'Kaydediliyor…' : 'Kaydet'}
           </button>
         </form>
@@ -311,5 +439,213 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
       <Liste baslik="Pediatrik" kayitlar={pediatrikler} />
       <Liste baslik="Yetişkin" kayitlar={yetiskinler} />
     </div>
+  );
+}
+
+function AsiSatirDuzenle({
+  a,
+  dogumTarihi,
+  hitapBeyan,
+  mod,
+  onGuncelle,
+  onSil,
+}: {
+  a: Asi;
+  dogumTarihi?: string | null;
+  hitapBeyan: string;
+  mod: 'tablo' | 'kart';
+  onGuncelle: (id: string, govde: Record<string, unknown>) => Promise<void>;
+  onSil: (id: string) => void;
+}) {
+  const tur = asiKaynakTuru(a);
+  const rozet = asiKaynakRozeti(tur, hitapBeyan);
+  const [asiAdi, setAsiAdi] = useState(a.asi_adi || '');
+  const [piyasa, setPiyasa] = useState(a.piyasa_adi || '');
+  const [tarih, setTarih] = useState(a.uygulama_tarihi || '');
+  const [yasAy, setYasAy] = useState(yasAyGoster(a, dogumTarihi));
+  const [doz, setDoz] = useState(a.doz_no != null ? String(a.doz_no) : '');
+  const [yer, setYer] = useState(a.uygulama_yeri || '');
+  const [lot, setLot] = useState(a.lot_no || '');
+  const kaydediyor = useRef(false);
+
+  useEffect(() => {
+    setAsiAdi(a.asi_adi || '');
+    setPiyasa(a.piyasa_adi || '');
+    setTarih(a.uygulama_tarihi || '');
+    setYasAy(yasAyGoster(a, dogumTarihi));
+    setDoz(a.doz_no != null ? String(a.doz_no) : '');
+    setYer(a.uygulama_yeri || '');
+    setLot(a.lot_no || '');
+  }, [a, dogumTarihi]);
+
+  async function kaydetAlan(govde: Record<string, unknown>) {
+    if (kaydediyor.current) return;
+    kaydediyor.current = true;
+    try {
+      await onGuncelle(a.id, govde);
+    } finally {
+      kaydediyor.current = false;
+    }
+  }
+
+  function tarihDegisti(v: string) {
+    setTarih(v);
+    if (a.uygulama_yas_ay == null && dogumTarihi) {
+      const ay = uygulamaYasAy(dogumTarihi, v || null);
+      if (ay != null) setYasAy(String(ay));
+    }
+  }
+
+  const lbl = (metin: string) =>
+    mod === 'kart' ? <label style={{ fontSize: 11, color: '#8b7d70', display: 'block', marginBottom: 4 }}>{metin}</label> : null;
+
+  const hucreler = [
+    <div key="adi" data-asi-alan="adi">
+      {lbl('Aşı adı')}
+      <input
+        aria-label="Aşı adı"
+        value={asiAdi}
+        onChange={(e) => setAsiAdi(e.target.value)}
+        onBlur={() => { if (asiAdi.trim() && asiAdi.trim() !== (a.asi_adi || '')) void kaydetAlan({ asiAdi: asiAdi.trim() }); }}
+        style={GIRIS}
+      />
+      <div style={{ marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Rozet ton={rozet.ton}>{rozet.metin}</Rozet>
+      </div>
+    </div>,
+    <div key="piyasa" data-asi-alan="piyasa">
+      {lbl('Piyasa adı')}
+      <input
+        aria-label="Piyasa adı"
+        value={piyasa}
+        maxLength={PIYASA_AZAMI}
+        onChange={(e) => setPiyasa(e.target.value)}
+        onBlur={() => { if ((piyasa.trim() || null) !== (a.piyasa_adi || null)) void kaydetAlan({ piyasaAdi: piyasa.trim() || null }); }}
+        placeholder="—"
+        style={GIRIS}
+      />
+    </div>,
+    <div key="tarih" data-asi-alan="tarih">
+      {lbl('Uygulama tarihi')}
+      <input
+        aria-label="Uygulama tarihi"
+        type="date"
+        value={tarih}
+        onChange={(e) => tarihDegisti(e.target.value)}
+        onBlur={() => {
+          const yeni = tarih || null;
+          if (yeni !== (a.uygulama_tarihi || null)) {
+            const govde: Record<string, unknown> = { uygulamaTarihi: yeni };
+            if (a.uygulama_yas_ay == null && dogumTarihi && yeni) {
+              const ay = uygulamaYasAy(dogumTarihi, yeni);
+              if (ay != null) govde.uygulamaYasAy = ay;
+            }
+            void kaydetAlan(govde);
+          }
+        }}
+        style={GIRIS}
+      />
+    </div>,
+    <div key="yas" data-asi-alan="yas">
+      {lbl('Yaş (ay)')}
+      <input
+        aria-label="Uygulama anında yaş (ay)"
+        type="number"
+        min={0}
+        max={600}
+        inputMode="numeric"
+        value={yasAy}
+        onChange={(e) => setYasAy(e.target.value)}
+        onBlur={() => {
+          const n = yasAy === '' ? null : Number(yasAy);
+          const onceki = a.uygulama_yas_ay != null ? a.uygulama_yas_ay : uygulamaYasAy(dogumTarihi, a.uygulama_tarihi);
+          if (n !== onceki) void kaydetAlan({ uygulamaYasAy: n });
+        }}
+        placeholder="—"
+        style={GIRIS}
+      />
+    </div>,
+    <div key="doz" data-asi-alan="doz">
+      {lbl('Doz')}
+      <input
+        aria-label="Kaçıncı doz"
+        type="number"
+        min={1}
+        inputMode="numeric"
+        value={doz}
+        onChange={(e) => setDoz(e.target.value)}
+        onBlur={() => {
+          const n = doz === '' ? null : Number(doz);
+          if (n !== a.doz_no) void kaydetAlan({ dozNo: n });
+        }}
+        placeholder="—"
+        style={GIRIS}
+      />
+    </div>,
+    <div key="yer" data-asi-alan="yer">
+      {lbl('Uygulama yeri')}
+      <input
+        aria-label="Uygulama yeri"
+        value={yer}
+        maxLength={YER_AZAMI}
+        onChange={(e) => setYer(e.target.value)}
+        onBlur={() => { if ((yer.trim() || null) !== (a.uygulama_yeri || null)) void kaydetAlan({ uygulamaYeri: yer.trim() || null }); }}
+        placeholder="—"
+        style={GIRIS}
+      />
+    </div>,
+    <div key="lot" data-asi-alan="lot">
+      {lbl('Lot no')}
+      <input
+        aria-label="Lot numarası"
+        value={lot}
+        maxLength={LOT_AZAMI}
+        onChange={(e) => setLot(e.target.value)}
+        onBlur={() => { if ((lot.trim() || null) !== (a.lot_no || null)) void kaydetAlan({ lotNo: lot.trim() || null }); }}
+        placeholder="—"
+        style={GIRIS}
+      />
+    </div>,
+  ];
+
+  const silBtn = (
+    <button
+      type="button"
+      onClick={() => onSil(a.id)}
+      style={{ background: '#FBEAE3', border: 'none', color: '#EF4444', borderRadius: 8, padding: '8px 12px', fontSize: 12, cursor: 'pointer', minHeight: 40, whiteSpace: 'nowrap' }}
+    >
+      Sil
+    </button>
+  );
+
+  if (mod === 'kart') {
+    return (
+      <div
+        data-asi-kaynak={tur}
+        data-asi-satir="kart"
+        style={{
+          background: '#F6F0E4',
+          borderRadius: 12,
+          padding: 12,
+          borderLeft: `3px solid ${KAYNAK_KENAR[tur]}`,
+        }}
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+          {hucreler}
+        </div>
+        <div style={{ marginTop: 10, textAlign: 'right' }}>{silBtn}</div>
+      </div>
+    );
+  }
+
+  const td: React.CSSProperties = { padding: '8px 6px', verticalAlign: 'top', borderBottom: '1px solid rgba(58,44,34,0.08)' };
+  const genislik = [140, 110, 140, 72, 64, 110, 100] as const;
+  return (
+    <tr data-asi-kaynak={tur} data-asi-satir="tablo" style={{ borderLeft: `3px solid ${KAYNAK_KENAR[tur]}` }}>
+      {hucreler.map((h, i) => (
+        <td key={i} style={{ ...td, minWidth: genislik[i] }}>{h}</td>
+      ))}
+      <td style={{ ...td, width: 56 }}>{silBtn}</td>
+    </tr>
   );
 }

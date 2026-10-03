@@ -9,6 +9,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { LOT_AZAMI, lotYerTemizle, YER_AZAMI } from '@/lib/asi/asiLotYeri'
+import { piyasaAdiTemizle, uygulamaYasAyTemizle } from '@/lib/asi/karneBelgesi'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
   const { supabase, doktorId } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { patientId, asiAdi, dozNo, kategori, uygulamaTarihi, sonrakiDozTarihi, kaynak, notlar, lotNo, uygulamaYeri } = body as {
+  const { patientId, asiAdi, dozNo, kategori, uygulamaTarihi, sonrakiDozTarihi, kaynak, notlar, lotNo, uygulamaYeri, piyasaAdi, uygulamaYasAy } = body as {
     patientId?: string
     asiAdi?: string
     dozNo?: number
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
     notlar?: string
     lotNo?: string | null
     uygulamaYeri?: string | null
+    piyasaAdi?: string | null
+    uygulamaYasAy?: number | null
   }
   if (!patientId || !asiAdi?.trim()) {
     return NextResponse.json({ error: 'patientId ve a\u015f\u0131 ad\u0131 zorunludur.' }, { status: 400 })
@@ -70,6 +73,9 @@ export async function POST(req: NextRequest) {
       // NOTYA-ASI-LOT-01: optional, only what the doctor typed.
       lot_no: lotYerTemizle(lotNo, LOT_AZAMI),
       uygulama_yeri: lotYerTemizle(uygulamaYeri, YER_AZAMI),
+      // NOTYA-ASI-TABLO-01: piyasa adı + uygulama anı yaş (ay) — hekim tablosundan.
+      piyasa_adi: piyasaAdiTemizle(piyasaAdi),
+      uygulama_yas_ay: uygulamaYasAyTemizle(uygulamaYasAy),
     })
     .select()
     .single()

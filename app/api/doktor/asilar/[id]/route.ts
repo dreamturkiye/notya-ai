@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { LOT_AZAMI, lotYerTemizle, YER_AZAMI } from '@/lib/asi/asiLotYeri'
+import { piyasaAdiTemizle, uygulamaYasAyTemizle } from '@/lib/asi/karneBelgesi'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,21 +12,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { supabase, doktorId } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { asiAdi, dozNo, kategori, uygulamaTarihi, sonrakiDozTarihi, kaynak, notlar, lotNo, uygulamaYeri } = body as {
+  const { asiAdi, dozNo, kategori, uygulamaTarihi, sonrakiDozTarihi, kaynak, notlar, lotNo, uygulamaYeri, piyasaAdi, uygulamaYasAy } = body as {
     asiAdi?: string
-    dozNo?: number
+    dozNo?: number | null
     kategori?: string
-    uygulamaTarihi?: string
-    sonrakiDozTarihi?: string
+    uygulamaTarihi?: string | null
+    sonrakiDozTarihi?: string | null
     kaynak?: string
     notlar?: string
     lotNo?: string | null
     uygulamaYeri?: string | null
+    piyasaAdi?: string | null
+    uygulamaYasAy?: number | null
   }
 
   const guncelleme: Record<string, unknown> = {}
   if (asiAdi !== undefined) guncelleme.asi_adi = asiAdi.trim()
-  if (dozNo !== undefined) guncelleme.doz_no = dozNo
+  if (dozNo !== undefined) guncelleme.doz_no = dozNo == null || Number.isNaN(Number(dozNo)) ? null : Number(dozNo) || null
   if (kategori !== undefined) guncelleme.kategori = kategori === 'pediatrik' ? 'pediatrik' : 'yetiskin'
   if (uygulamaTarihi !== undefined) guncelleme.uygulama_tarihi = uygulamaTarihi || null
   if (sonrakiDozTarihi !== undefined) {
@@ -38,6 +41,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
   if (lotNo !== undefined) guncelleme.lot_no = lotYerTemizle(lotNo, LOT_AZAMI)
   if (uygulamaYeri !== undefined) guncelleme.uygulama_yeri = lotYerTemizle(uygulamaYeri, YER_AZAMI)
+  // NOTYA-ASI-TABLO-01
+  if (piyasaAdi !== undefined) guncelleme.piyasa_adi = piyasaAdiTemizle(piyasaAdi)
+  if (uygulamaYasAy !== undefined) guncelleme.uygulama_yas_ay = uygulamaYasAyTemizle(uygulamaYasAy)
 
   if (Object.keys(guncelleme).length === 0) {
     return NextResponse.json({ error: 'G\u00fcncellenecek alan yok.' }, { status: 400 })

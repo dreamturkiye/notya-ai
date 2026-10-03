@@ -361,6 +361,30 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     assert.equal(sekreter.status, 200)
   })
 
+  it('NOTYA-ASI-TABLO-01: piyasa adı + yaş (ay) POST/PATCH ile kaydedilir ve listede döner', async () => {
+    const { A } = sahneKur()
+    const liste = await import('../../app/api/doktor/asilar/route')
+    const tek = await import('../../app/api/doktor/asilar/[id]/route')
+    const ekle = await coz(liste.POST(iste('POST', '/api/doktor/asilar', { token: A.token, govde: {
+      patientId: A.hasta, asiAdi: 'KKK', dozNo: 1, kategori: 'pediatrik', uygulamaTarihi: '2025-05-15',
+      kaynak: 'kayit', piyasaAdi: '  Priorix ', uygulamaYasAy: 11, lotNo: 'MMR1', uygulamaYeri: 'sol omuz',
+    } })))
+    assert.equal(ekle.status, 200, ekle.metin.slice(0, 200))
+    assert.equal(ekle.json.asi.piyasa_adi, 'Priorix')
+    assert.equal(ekle.json.asi.uygulama_yas_ay, 11)
+    const id = ekle.json.asi.id as string
+    const duzelt = await coz(tek.PATCH(iste('PATCH', `/api/doktor/asilar/${id}`, { token: A.token, govde: {
+      piyasaAdi: 'M-M-RVAXPRO', uygulamaYasAy: 12, asiAdi: 'KKK (kızamık-kızamıkçık-kabakulak)', dozNo: 1,
+    } }), prm({ id })))
+    assert.equal(duzelt.status, 200, duzelt.metin.slice(0, 200))
+    assert.equal(duzelt.json.asi.piyasa_adi, 'M-M-RVAXPRO')
+    assert.equal(duzelt.json.asi.uygulama_yas_ay, 12)
+    assert.equal(duzelt.json.asi.asi_adi, 'KKK (kızamık-kızamıkçık-kabakulak)')
+    const oku = await coz(liste.GET(iste('GET', `/api/doktor/asilar?patientId=${A.hasta}`, { token: A.token })))
+    const kkk = oku.json.asilar.find((x: { id: string }) => x.id === id)
+    assert.deepEqual([kkk.piyasa_adi, kkk.uygulama_yas_ay, kkk.lot_no, kkk.uygulama_yeri], ['M-M-RVAXPRO', 12, 'MMR1', 'sol omuz'])
+  })
+
   it('NOTYA-ASI-LOT-01: Aşılar formu lot / yer kaydeder → liste, Sağlığım bundle, hekim ve portal PDF aynı değeri gösterir', async () => {
     const { A } = sahneKur()
     const liste = await import('../../app/api/doktor/asilar/route')

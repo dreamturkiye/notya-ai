@@ -11,6 +11,8 @@
 
 export const LOT_AZAMI = 60
 export const YER_AZAMI = 80
+/** NOTYA-ASI-TABLO-01: aşı piyasa adı azami (karneBelgesi.PIYASA_AZAMI ile aynı). */
+export const PIYASA_AZAMI = 120
 
 /** Free text → trimmed, single-spaced, capped; empty → null. */
 export function lotYerTemizle(v: unknown, azami: number): string | null {

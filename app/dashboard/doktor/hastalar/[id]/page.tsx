@@ -697,6 +697,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'asilar' && (
           <HastaAsilar
             patientId={patientId}
+            dogumTarihi={patient?.dogum_tarihi || null}
             pediatrikBaglam={pediatrikBaglamMi({ doktorBransi, hastaDogumIso: patient?.dogum_tarihi })}
             veliDili={veliDiliMi({ doktorBransi, hastaDogumIso: patient?.dogum_tarihi })}
             cocukHasta={cocukHastaMi(patient?.dogum_tarihi) || (pediatriAraci && !patient?.dogum_tarihi)}

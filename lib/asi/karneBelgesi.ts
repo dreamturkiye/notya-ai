@@ -156,6 +156,37 @@ export function yasMetni(dogumTarihi: string | null, tarih: string | null): stri
   return `${Math.floor(gun / 365)} yaşında`
 }
 
+/**
+ * NOTYA-ASI-TABLO-01 — uygulama anındaki tamamlanmış ay yaşı (takvim ayı). Hekim tablosundaki
+ * "kaç aylıkken" sütunu: kayıtlı `uygulama_yas_ay` yoksa doğum + uygulama tarihinden hesaplanır.
+ * Negatif / geçersiz → null (uydurulmaz).
+ */
+export function uygulamaYasAy(dogumTarihi: string | null | undefined, uygulamaTarihi: string | null | undefined): number | null {
+  const dogum = (dogumTarihi || '').slice(0, 10)
+  const uyg = (uygulamaTarihi || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dogum) || !/^\d{4}-\d{2}-\d{2}$/.test(uyg)) return null
+  const [y, m, d] = dogum.split('-').map(Number)
+  const [Y, M, D] = uyg.split('-').map(Number)
+  let ay = (Y - y) * 12 + (M - m)
+  if (D < d) ay -= 1
+  return ay < 0 ? null : ay
+}
+
+/** Aşı piyasa / ticari adı — boş → null; azami 120 karakter. */
+export const PIYASA_AZAMI = 120
+export function piyasaAdiTemizle(v: unknown): string | null {
+  const t = (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '').replace(/\s+/g, ' ').trim()
+  return t ? t.slice(0, PIYASA_AZAMI) : null
+}
+
+/** Hekim düzelttiği ay yaşı — 0..600; geçersiz / boş → null. */
+export function uygulamaYasAyTemizle(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null
+  const n = typeof v === 'number' ? v : Number(String(v).trim())
+  if (!Number.isFinite(n) || n < 0 || n > 600) return null
+  return Math.floor(n)
+}
+
 /** İndirilen dosyanın adı — hasta adı dosya adına yazılmaz (paylaşımda / indirilenler klasöründe PHI yok). */
 export function asiKarnesiDosyaAdi(k: Pick<AsiKarnesi, 'uretimTarihi'>): string {
   return `asi-karnesi-${k.uretimTarihi}.pdf`

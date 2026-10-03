@@ -16,7 +16,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   asiKarnesiOlustur, asiKarnesiDoluMu, asiKarnesiDosyaAdi, ASI_KARNESI_YAZDIRMA_CSS, E_NABIZ_BASLIK, E_NABIZ_UYARISI,
-  HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, PAYLAS_IPUCU, yasMetni, type AsiKarnesi,
+  HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, PAYLAS_IPUCU, yasMetni, uygulamaYasAy, piyasaAdiTemizle, uygulamaYasAyTemizle, type AsiKarnesi,
 } from './karneBelgesi'
 import { lotYerHucresi, lotYerSatiri, notlardanLotYeri } from './asiLotYeri'
 import { KARNE_NOT_ONEKI } from './karneOkuma'
@@ -161,6 +161,33 @@ describe('NOTYA-ASI-YAS-01 — uygulama anındaki yaklaşık yaş', () => {
     assert.equal(yasMetni(null, '2024-06-15'), '')
     assert.equal(yasMetni('2024-06-15', null), '')
     assert.equal(yasMetni(null, null), '')
+  })
+})
+
+describe('NOTYA-ASI-TABLO-01 — hekim tablosu: piyasa adı + yaş (ay)', () => {
+  it('uygulamaYasAy: takvim ayı (doğum günü dolmadan ay düşer)', () => {
+    assert.equal(uygulamaYasAy('2024-06-15', '2025-05-15'), 11)
+    assert.equal(uygulamaYasAy('2024-06-15', '2025-06-14'), 11)
+    assert.equal(uygulamaYasAy('2024-06-15', '2025-06-15'), 12)
+    assert.equal(uygulamaYasAy(null, '2025-06-15'), null)
+    assert.equal(uygulamaYasAy('2024-06-15', null), null)
+    assert.equal(piyasaAdiTemizle('  Priorix  '), 'Priorix')
+    assert.equal(piyasaAdiTemizle(''), null)
+    assert.equal(uygulamaYasAyTemizle('14'), 14)
+    assert.equal(uygulamaYasAyTemizle(-1), null)
+  })
+  it('migration 112 piyasa_adi + uygulama_yas_ay ekler; UI düzenlenebilir tablo', () => {
+    const sql = oku('lib/db/migrations/112_asilar_piyasa_adi.sql')
+    assert.match(sql, /add column if not exists piyasa_adi text;/)
+    assert.match(sql, /add column if not exists uygulama_yas_ay integer;/)
+    const ui = oku('components/doktor/HastaAsilar.tsx')
+    assert.match(ui, /data-asi-tablo/)
+    assert.match(ui, /Piyasa adı/)
+    assert.match(ui, /Yaş \(ay\)/)
+    assert.match(ui, /method: 'PATCH'/)
+    assert.match(ui, /dogumTarihi/)
+    assert.match(ui, /fontSize: 16/)
+    assert.match(ui, /max-width: 720px/)
   })
 })
 

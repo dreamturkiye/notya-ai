@@ -194,8 +194,10 @@ describe('UI ve rota kilitleri (kaynak)', () => {
     assert.match(ui, /Özel \/ takvim dışı aşılar/)
     const liste = oku('components/doktor/HastaAsilar.tsx')
     assert.match(liste, /<AsiKarnesiOkuma/)
-    assert.match(liste, /asiKaynakRozeti\(tur, hitap\.beyanEtiketi\)/)
+    assert.match(liste, /asiKaynakRozeti\(tur, hitapBeyan\)/)
+    assert.match(liste, /hitapBeyan=\{hitap\.beyanEtiketi\}/)
     assert.match(liste, /<Rozet ton=\{rozet\.ton\}>\{rozet\.metin\}<\/Rozet>/, 'paylaşılan Rozet — yeni tasarım dili yok')
+    assert.match(liste, /data-asi-tablo/, 'NOTYA-ASI-TABLO-01: düzenlenebilir tablo')
   })
   it("karne okuma görevi 'goruntu-inceleme' (birincil, yapılandırılmış — LUNAPRO-01); model adı rotada yazılmaz; hasta verisi system bloğunda değil", () => {
     const rota = oku('app/api/doktor/asilar/karne/route.ts')
