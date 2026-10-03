@@ -51,6 +51,8 @@ export type AramaGuvenGirdi = {
   /** Deterministic "X dosyası açık" / named who-answer — always trusted. */
   dosyaAcma?: boolean
   cevapliTek?: boolean
+  /** "Bu isimde bir hasta bulamadım" after a chart-open ask — always trusted (no model). */
+  isimBulunamadi?: boolean
 }
 
 /**
@@ -60,6 +62,7 @@ export type AramaGuvenGirdi = {
  *   - multi-match / "which patient?" clarification
  *   - deterministic chart-open
  *   - named who-answer with a real patient
+ *   - name-not-found after a chart-open ask
  *   - explicit count / list / visit-described cohort — even when the answer is "0 hasta"
  *
  * Not trusted (fall through → Luna + `hasta_bul`, old 2-brain power):
@@ -72,6 +75,7 @@ export function aramaCevabiGuvenilirMi(g: AramaGuvenGirdi): boolean {
   if (!cevap) return false
   if (g.cozumTur === 'coklu' || g.cokAday) return true
   if (g.dosyaAcma) return true
+  if (g.isimBulunamadi) return true
   if (g.cevapliTek) return true
   const acik = acikSayimVeyaListeMi(g.mesaj)
   if (acik) return true
@@ -84,13 +88,14 @@ export function aramaCevabiGuvenilirMi(g: AramaGuvenGirdi): boolean {
 /**
  * Identity fast path: if the sentence names a person who is not the open chart, do not answer from the open chart.
  * Fall through to the model + `hasta_bul` (same power the old voice brain had for "X'in annesinin adı ne?").
+ * Only applies when a chart is open AND the identity answer is that open patient — with no open chart the identity
+ * router's own resolve is trusted (named "Umutcan'ın annesi" still answers modelsiz).
  */
 export function kimlikAcikDosyayaDusmesinMi(mesaj: string, kimlikHastaAdi: string | null | undefined, acikHastaAdi: string | null | undefined, anilanBaska: string | null | undefined): boolean {
   if (ikiBeyinBirdeKapali()) return false
   if (!anilanBaska) return false
-  // The identity answer is about the open patient, but the doctor named someone else → not confident.
   const kimlikAd = String(kimlikHastaAdi || '').trim()
   const acikAd = String(acikHastaAdi || '').trim()
-  if (!kimlikAd || !acikAd) return Boolean(anilanBaska)
+  if (!acikAd || !kimlikAd) return false
   return trAramaNormalize(kimlikAd) === trAramaNormalize(acikAd)
 }

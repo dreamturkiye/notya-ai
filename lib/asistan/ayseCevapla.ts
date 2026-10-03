@@ -570,6 +570,7 @@ ${ilacBaglamMetni(drugs[0])}`
   let kesinDosyaCevap: string | null = null
   let aramaCevabi: string | null = null
   let aramaRota: AyseRota = "arama"
+  let aramaIsimBulunamadi = false
   let cozum: HastaCozumu | null = null
   /** The name of a person the sentence is about who is not among this doctor's patients (wrong-patient guard). */
   let baskaKisiAnildi: string | null = null
@@ -737,6 +738,7 @@ ${ilacBaglamMetni(drugs[0])}`
     } else if (cozum.tur === "yok" && dosyaIstegi) {
       // Never "dosyası açık" without a resolved patient.
       aramaCevabi = "Bu isimde bir hasta bulamadım Hocam; adını ve soyadını tam söyler misiniz?"
+      aramaIsimBulunamadi = true
     } else if (cozum.tur === "tek" && dosyaIstegi) {
       // Deterministic open: the chart becomes the session's active patient; follow-ups load it from cache.
       cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
@@ -806,6 +808,7 @@ ${ilacBaglamMetni(drugs[0])}`
     cokAday: Boolean(cozum && cozum.tur === "yok" && cozum.cokAday),
     dosyaAcma: aramaRota === "dosya-ac",
     cevapliTek: Boolean(cozum && cozum.tur === "tek" && cozum.cevap),
+    isimBulunamadi: aramaIsimBulunamadi,
   })) {
     console.info("[asistan/chat] iki-beyin-birde arama", { kanal: g.kanal, rota: aramaRota, dusur: true })
     aramaCevabi = null

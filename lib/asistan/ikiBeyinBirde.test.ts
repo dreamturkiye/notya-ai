@@ -86,6 +86,22 @@ describe('NOTYA-IKI-BEYIN-BIRDE confidence gate', () => {
       'Umutcan Türkoğlu',
       null,
     ), false)
+    // No open chart: the identity router's own named resolve stays trusted.
+    assert.equal(kimlikAcikDosyayaDusmesinMi(
+      "Umutcan Türkoğlu'nun anne ve babasının adı nedir",
+      'Umutcan Türkoğlu',
+      null,
+      'Umutcan Türkoğlu',
+    ), false)
+  })
+
+  it('name-not-found after a chart-open ask stays on the fast path', () => {
+    assert.equal(aramaCevabiGuvenilirMi({
+      mesaj: 'Rıdvan Dilmen dosyasına bakabilir misin?',
+      aramaCevabi: 'Bu isimde bir hasta bulamadım Hocam; adını ve soyadını tam söyler misiniz?',
+      cozumTur: 'yok',
+      isimBulunamadi: true,
+    }), true)
   })
 
   describe('kill switch', () => {
