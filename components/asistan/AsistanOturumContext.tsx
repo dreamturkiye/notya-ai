@@ -7,6 +7,8 @@
  * Asistan oturumunun TEK sahibi burası: ElevenLabs konuşma nesnesi, sesli mesajlar, seçili persona, tek beyin
  * oturumu + ses-ekran yoklaması, hasta_bul / ses-eylem araçları, süre sayaçları ve yazılı sohbet. Provider
  * app/layout.tsx'te bütün sayfaları sarar; istemci tarafı sayfa geçişinde unmount olmaz — ses ve mesajlar yaşar.
+ * NOTYA-ASISTAN-GECMIS-01: son 50 sıra localStorage'da (persona başına FIFO); mikrofona yeniden dokunmak / sayfaya
+ * dönmek geçmişi silmez — WhatsApp gibi.
  * /asistan sayfası ve AsistanYuzenPanel bu context'in görünümleridir; ikisi de oturum AÇMAZ.
  * Mantık app/asistan/page.tsx'ten birebir taşındı — endpoint'ler, onay kartları ve tek beyin ekran biçimi aynı.
  *
@@ -55,6 +57,7 @@ import { kendiSelamiMi, acilisAjanSozuMu } from '@/lib/asistan/acilis'
 import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
+import { sohbetMaxSira, sohbetOku, sohbetYaz, type SakliYaziliMesaj } from '@/lib/asistan/sohbetGecmisi'
 import { cevapEkle, kullaniciEkle } from '@/lib/asistan/balonSirasi'
 
 const SESSIZ_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
@@ -181,6 +184,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   /** NOTYA-OGRENME-03: addMsg ile eş zamanlı tutulur — endConversation()'ın kullandığı kapanışlar
    *  React state'in bayat bir kopyasını görebilir; ref her zaman güncel. */
   const messagesRef = useRef<Message[]>([])
+  const yaziliMesajlarRef = useRef<YaziliMesaj[]>([])
   /** Sesli + yazılı mesajların ortak sıra sayacı (yüzen panelin zaman çizgisi). */
   const siraRef = useRef(0)
   const siradaki = () => ++siraRef.current
@@ -219,6 +223,41 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const [yaziliDinliyor, setYaziliDinliyor] = useState(false)
   const [aktifHasta, setAktifHasta] = useState<string | null>(null)
   const tanimaRef = useRef<Tanima | null>(null)
+
+  // NOTYA-ASISTAN-GECMIS-01: persona değişince (açılış / sekme) son 50 sırayı yükle.
+  // sohbetAtlaYazRef: yükleme sonrası ilk persist turunu atla — boş state ile depoyu silme.
+  const sohbetAtlaYazRef = useRef(true)
+  useEffect(() => {
+    const g = sohbetOku(personaKey)
+    sohbetAtlaYazRef.current = true
+    setMessages(g.ses)
+    messagesRef.current = g.ses
+    const yazili: YaziliMesaj[] = g.yazili.map((m) => ({ rol: m.rol, icerik: m.icerik, sira: m.sira }))
+    setYaziliMesajlar(yazili)
+    yaziliMesajlarRef.current = yazili
+    siraRef.current = sohbetMaxSira(g)
+  }, [personaKey])
+
+  // Her balon değişiminde FIFO 50 ile kalıcı yaz.
+  useEffect(() => {
+    yaziliMesajlarRef.current = yaziliMesajlar
+    if (sohbetAtlaYazRef.current) {
+      sohbetAtlaYazRef.current = false
+      return
+    }
+    const yazili: SakliYaziliMesaj[] = yaziliMesajlar.map((m) => ({ rol: m.rol, icerik: m.icerik, sira: m.sira }))
+    const kirp = sohbetYaz(personaKeyRef.current, messages, yazili)
+    if (kirp.ses.length !== messages.length) {
+      setMessages(kirp.ses)
+      messagesRef.current = kirp.ses
+    }
+    if (kirp.yazili.length !== yazili.length) {
+      const y: YaziliMesaj[] = kirp.yazili.map((m) => ({ rol: m.rol, icerik: m.icerik, sira: m.sira }))
+      setYaziliMesajlar(y)
+      yaziliMesajlarRef.current = y
+    }
+  }, [messages, yaziliMesajlar])
+
 
   /**
    * NOTYA-SAYFA-HASTA-01 (Dr. Gökhan canlı vaka, Kaan kuralı, 2026-09-26): the assistant follows the doctor. Opening a
@@ -996,8 +1035,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     if (yakala) fishYakalaRef.current = yakala
     setStatus("connecting")
     setErrorMsg("")
-    setMessages([])
-    messagesRef.current = []
+    // NOTYA-ASISTAN-GECMIS-01: mikrofona yeniden dokunmak geçmişi silmez — son 50 sıra kalır.
     fishSozRef.current = ""
     fishBirikimRef.current = ""
     fishCevapOlayRef.current = 0
@@ -1479,15 +1517,15 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
 
   function switchPersona(key: PersonaId) {
     void stopConversation()
+    // NOTYA-ASISTAN-GECMIS-01: ayrılmadan önce bu meslektaşın son 50 sırasını sakla; yenisi personaKey effect ile yüklenir.
+    const yazili: SakliYaziliMesaj[] = yaziliMesajlarRef.current.map((m) => ({ rol: m.rol, icerik: m.icerik, sira: m.sira }))
+    sohbetYaz(personaKeyRef.current, messagesRef.current, yazili)
     personaKeyRef.current = key
     setPersonaKey(key)
     setPersona(PERSONAS[key])
-    setMessages([])
-    messagesRef.current = []
     // Önceki meslektaşın oturumu, hastası ve kesik kalanı bu sese taşınmaz.
     setOrtakOturumId(null)
     setAktifHasta(null)
-    setYaziliMesajlar([])
     setYaziliGirdi('')
     setErrorMsg("")
     setSesKarti(null)
@@ -1601,8 +1639,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     await endConversation()
     sureTimerlariTemizle()
     setSureUzatmaGoster(false)
-    setMessages([])
-    messagesRef.current = []
+    // NOTYA-ASISTAN-GECMIS-01: Kapat sesi/paneli durdurur; sohbet geçmişi (son 50) kalır — WhatsApp gibi.
     setErrorMsg("")
     sesKartiniKapat()
     sesKartiIdRef.current = null
@@ -1610,7 +1647,6 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     try { tanimaRef.current?.stop() } catch { /* sessiz */ }
     setYaziliDinliyor(false)
     setYaziliAcik(false)
-    setYaziliMesajlar([])
     setYaziliGirdi('')
     setAktifHasta(null)
     sayfaOdakRef.current.bekleyen = null
