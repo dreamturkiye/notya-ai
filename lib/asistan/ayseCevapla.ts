@@ -24,6 +24,7 @@
  * kartlar yalnız taslaktır. Sesli "Evet / Onaylıyorum / Hayır" model turu değildir; ses ucu onu önce
  * lib/asistan/sesliOnay.ts'e verir (dokunuşla aynı omurga). Yazılı kanalda onay hâlâ karttaki dokunuştur.
  */
+import { BURADAYIM_SOZU, duraklamaKarari, type Saglayici } from "@/lib/asistan/duraklama"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
 import { kapsamKarariHastayla } from "@/lib/asistan/kapsamKilidi"
@@ -128,6 +129,8 @@ export interface AyseGirdisi {
   patientId?: string | null
   sessionId?: string | null
   personaId?: string | null
+  /** NOTYA-SES-ESKI-02: the voice provider that carries this turn; only the ElevenLabs Custom LLM route sets it. */
+  saglayici?: Saglayici
   /** Ses: sözlü biçimin parçaları hazır oldukça (model yazarken) buraya akar. */
   sozParcasi?: (parca: string) => void
   /** NOTYA-SES-ERKEN-01: called once when the spoken cap is reached; the voice channel may close, the screen answer continues. */
@@ -461,7 +464,14 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     : (takvimSorusuCoz(message, { saatDilimi }) || takvimTakipCoz(message, sonTakvimAsistan?.content, { saatDilimi }))
   if (!takvim && sesGurultusuMu(message)) {
     // ASR pause ("...") after a true calendar line must not reach the model — it recants.
-    return sade("gurultu", "", "", baglam.patientName ? String(baglam.patientName) : null)
+    // NOTYA-SES-ESKI-02: on ElevenLabs the pause reaches the model again, as before the Fish work (it answers with a check-in);
+    // only right after a calendar answer the fixed line is spoken. Fish and the default keep the silent route.
+    const sonAsistanMesaji = [...messages].reverse().find((m) => m.role === "assistant")
+    const karar = duraklamaKarari(g.saglayici, !!sonAsistanMesaji && sonTakvimCevabiMi(sonAsistanMesaji.content))
+    if (karar !== "model") {
+      const soz = karar === "buradayim" ? BURADAYIM_SOZU : ""
+      return sade("gurultu", soz, soz, baglam.patientName ? String(baglam.patientName) : null)
+    }
   }
   if (takvim) turNiyeti = "takvim"
   if (takvim?.aralik) {
