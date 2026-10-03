@@ -85,6 +85,21 @@ test('NOTYA-SES-NEFES-01: tek seferde dump edilen uzun cevap nefes nefes ElevenL
   assert.match(parcalar.join(''), /Klinik cümle numarası 12 /)
 })
 
+test('NOTYA-SES-LAB-NEFES-01: uzun virgüllü lab zinciri cümle ortasından değil virgülden nefeslenir', () => {
+  const parcalar: string[] = []
+  const k = new SesYayKapisi((p) => parcalar.push(p))
+  // No periods — only commas. Without the comma fallback Flash would get a hard mid-word cut.
+  const zincir = Array.from({ length: 8 }, (_, i) => `değer ${i + 1} on iki virgül dört gram desilitre`).join(', ')
+  k.ekle(`${zincir} `)
+  k.bitir()
+  assert.ok(parcalar.length >= 2, `beklenen ≥2 nefes, gelen ${parcalar.length}`)
+  for (const p of parcalar.slice(0, -1)) {
+    assert.match(p.trim(), /,$/, `virgülden kesilmeli: "${p.slice(-40)}"`)
+  }
+  assert.match(parcalar.join(''), /değer 1 /)
+  assert.match(parcalar.join(''), /değer 8 /)
+})
+
 test('onay sözü beklemez; uzun cevap cümle ortasından bölünmeden birleşir', () => {
   const parcalar: string[] = []
   const k = new SesYayKapisi((p) => parcalar.push(p))

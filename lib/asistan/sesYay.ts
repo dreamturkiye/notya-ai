@@ -47,21 +47,28 @@ export class SesYayKapisi {
    * (SES-OKU re-read, late flush) made ElevenLabs synthesise nothing audible while
    * the screen still showed text — he asked three times "okuyacak mısın?". Oversized
    * buffers are split on sentence ends into breath-sized deltas.
+   * NOTYA-SES-LAB-NEFES-01: if no sentence end is near, prefer a comma (lab lists) over a
+   * hard mid-word cut — Flash rushes less when the cut is at a natural pause.
    */
   private bosalt(): void {
     let t = this.tampon.trim()
     this.tampon = ''
     if (!t) return
     const hedef = Math.floor(SES_BLOK_ESIGI * 1.5)
+    const minKes = Math.floor(SES_BLOK_ESIGI / 2)
     while (t.length > hedef * 1.25) {
       const pencere = t.slice(0, hedef)
-      const kes = Math.max(
+      let kes = Math.max(
         pencere.lastIndexOf('. '),
         pencere.lastIndexOf('! '),
         pencere.lastIndexOf('? '),
         pencere.lastIndexOf('… '),
       )
-      const i = kes >= Math.floor(SES_BLOK_ESIGI / 2) ? kes + 1 : hedef
+      if (kes < minKes) {
+        const virgul = pencere.lastIndexOf(', ')
+        if (virgul >= minKes) kes = virgul
+      }
+      const i = kes >= minKes ? kes + 1 : hedef
       const parca = t.slice(0, i).trim()
       t = t.slice(i).trim()
       if (parca) this.yay(parca.endsWith(' ') ? parca : `${parca} `)
