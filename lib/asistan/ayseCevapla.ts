@@ -1,4 +1,8 @@
 /**
+ * NOTYA-IKI-BEYIN-BIRDE (Kaan, 2026-10-03) — full power of two brains in one: thin ElevenLabs mouth
+ * (Custom LLM + SES-KILIT / SES-SLUR) + strong server brain. High-confidence routers stay fast; weak/empty
+ * search falls through to Luna + read tools (lib/asistan/ikiBeyinBirde.ts) — old voice-brain lookup power.
+ *
  * NOTYA-TEK-BEYIN (Kaan, 2026-09-25) — Ayşe'nin TEK beyni: yazılı sohbet ve sesli Ayşe aynı fonksiyondan cevaplanır.
  *
  * Önce iki ayrı asistan vardı: yazı /api/asistan/chat boru hattını, ses ise ElevenLabs'te barındırılan bir modeli
@@ -54,6 +58,7 @@ import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { acikDosyaDisiSoruMu, aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from "@/lib/asistan/aktifHasta"
 import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
+import { aramaCevabiGuvenilirMi, kimlikAcikDosyayaDusmesinMi } from "@/lib/asistan/ikiBeyinBirde"
 import { AlanDefteri, alanlariYerineKoy, alanSozcusu, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
 import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
@@ -587,12 +592,21 @@ ${ilacBaglamMetni(drugs[0])}`
     } catch (e) { console.error("[asistan/chat] kimlik cevabı", e instanceof Error ? e.message : String(e)) }
   }
   if (kimlikCevabi) {
-    const kimlikHastasi = kimlikCevabi.hasta
-    turNiyeti = "hasta-dosya"
-    await oturumuYaz(kimlikCevabi.model, { hasta: kimlikHastasi, kimlik: true })
-    const konusma = kimlikSozu(kimlikCevabi)
-    soyle(konusma)
-    return sade("kimlik", kimlikCevabi.ekran, konusma, kimlikHastasi?.ad || null)
+    // NOTYA-IKI-BEYIN-BIRDE: identity from the open chart is not trusted when the sentence named somebody else —
+    // fall through to Luna + hasta_bul (old voice-brain power) instead of answering the wrong patient.
+    const acikAdKimlik = baglam.patientName ? String(baglam.patientName) : null
+    const anilanKimlik = anilanBaskaKisi(String(message || ""), acikAdKimlik)
+    if (kimlikAcikDosyayaDusmesinMi(String(message || ""), kimlikCevabi.hasta?.ad, acikAdKimlik, anilanKimlik)) {
+      console.info("[asistan/chat] iki-beyin-birde kimlik", { anilan: anilanKimlik, acik: acikAdKimlik, kanal: g.kanal })
+      kimlikCevabi = null
+    } else {
+      const kimlikHastasi = kimlikCevabi.hasta
+      turNiyeti = "hasta-dosya"
+      await oturumuYaz(kimlikCevabi.model, { hasta: kimlikHastasi, kimlik: true })
+      const konusma = kimlikSozu(kimlikCevabi)
+      soyle(konusma)
+      return sade("kimlik", kimlikCevabi.ekran, konusma, kimlikHastasi?.ad || null)
+    }
   }
   // NOTYA-SES-OKU-01: "bana anlat / devamını oku" — read the last screen answer aloud, uncapped, no model.
   // NOTYA-AYSE-OZET-01: "… 15 aylık muayenesini özetleyerek anlatır mısın?" asks for a visit's summary, not for the
@@ -782,6 +796,20 @@ ${ilacBaglamMetni(drugs[0])}`
   // A command skips the model-free answers — except the "which of these patients?" question: an ambiguous name must
   // be settled before any card is prepared (docs §2: ambiguous → ask, no card), and the open chart is no stand-in.
   const hangiHasta = Boolean(aramaCevabi) && (cozum?.tur === "coklu" || (cozum?.tur === "yok" && Boolean(cozum.cokAday)))
+  // NOTYA-IKI-BEYIN-BIRDE: search sentence is a FAST PATH only when confident. Empty "0 hasta · Filtre" on a
+  // non-count question falls through to Luna + hasta_bul — the mature 2-brain lookup — instead of ending weak.
+  // Explicit counts/lists, multi-match, chart-open and named who-answers stay model-free (no slowdown).
+  if (aramaCevabi && !aramaCevabiGuvenilirMi({
+    mesaj: String(message || ""),
+    aramaCevabi,
+    cozumTur: cozum?.tur,
+    cokAday: Boolean(cozum && cozum.tur === "yok" && cozum.cokAday),
+    dosyaAcma: aramaRota === "dosya-ac",
+    cevapliTek: Boolean(cozum && cozum.tur === "tek" && cozum.cevap),
+  })) {
+    console.info("[asistan/chat] iki-beyin-birde arama", { kanal: g.kanal, rota: aramaRota, dusur: true })
+    aramaCevabi = null
+  }
   if ((aramaCevabi || kesinDosyaCevap) && (!komut || hangiHasta)) {
     const speech = aramaCevabi || kesinDosyaCevap || ""
     turNiyeti = aramaCevabi && cozum && cozum.tur !== "tek" ? "hasta-sayim" : niyetBul(message) ?? "hasta-dosya"
