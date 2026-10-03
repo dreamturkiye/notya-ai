@@ -167,6 +167,23 @@ describe('NOTYA-CEK-DOGRULA-02 — çek listesi doğru ve canlı', () => {
     assert.equal(maddeler.find((m) => m.id === 'sc_tarama_dvit')?.kapsam, 'dosya')
   })
 
+  it('NOTYA-CEK-KBB-01: "KBB muayenesi" KBB / boğaz maddesini kapatır', () => {
+    const maddeler = muayeneCekListesi({ seansBransi: 'pediatri' }) // DOB yok → PEDIATRI (kbb var)
+    const d = cekListeDogrula(maddeler, { soap: 'Fizik: KBB Muayenesinde sorun yok. Genel durum iyi.' })
+    assert.equal(d.find((s) => s.id === 'kbb')?.durum, 'dosyada')
+  })
+
+  it('NOTYA-CEK-GIDR-01: GİDR yapıldıysa motor oturma/yürüme eksik kalmaz', () => {
+    const dogum = new Date(Date.now() - Math.round(24 * 30.4375) * 86_400_000).toISOString().slice(0, 10)
+    const maddeler = muayeneCekListesi({ seansBransi: 'pediatri', hastaDogumIso: dogum })
+    assert.ok(maddeler.some((m) => m.id === 'sc_yurume'))
+    const d = cekListeDogrula(maddeler, {
+      soap: 'GİDR ile 20-24 ay gelişim basamağı tarandı; kaba ve ince hareket alanlarında yaşına uygun.',
+    })
+    assert.equal(d.find((s) => s.id === 'sc_yurume')?.durum, 'dosyada')
+    assert.notEqual(d.find((s) => s.id === 'sc_yurume')?.durum, 'eksik')
+  })
+
   it('NOTYA-CEK-BESLENME-01: sofra / gıda / süt ifadeleri Beslenme maddesini kapatır', () => {
     const maddeler = muayeneCekListesi({ seansBransi: 'pediatri', hastaDogumIso: '2024-01-01' })
     assert.ok(maddeler.some((m) => m.id === 'beslenme'))

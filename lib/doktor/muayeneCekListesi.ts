@@ -97,7 +97,7 @@ const PEDIATRI: CekMadde[] = [
   { id: 'solunum', etiket: 'Solunum (dinleme)', grup: 'fizik', anahtarlar: ['akciger', 'ral', 'ronkus', 'wheez', 'solunum'] },
   { id: 'kvs', etiket: 'Kardiyovasküler', grup: 'fizik', anahtarlar: ['kalp', 'ufurum', 's1', 's2'] },
   { id: 'batin', etiket: 'Batın', grup: 'fizik', anahtarlar: ['batin', 'karin', 'hassasiyet'] },
-  { id: 'kbb', etiket: 'KBB / boğaz', grup: 'fizik', anahtarlar: ['bogaz', 'tonsil', 'kulak', 'otoskop'] },
+  { id: 'kbb', etiket: 'KBB / boğaz', grup: 'fizik', anahtarlar: ['kbb', 'kbb muayene', 'bogaz', 'tonsil', 'kulak', 'otoskop', 'orofarenks', 'farinks', 'timpan'] },
   { id: 'cilt', etiket: 'Cilt', grup: 'fizik', anahtarlar: ['cilt', 'dokuntu', 'dokunt'] },
   { id: 'kontrol', etiket: 'Kontrol zamanı', grup: 'kapanis', anahtarlar: ['kontrol', 'tekrar gel'] },
 ]
@@ -218,19 +218,33 @@ export function cekOncekiKarsilanan(maddeler: CekMadde[], dosyaMetni: string): s
   return maddeler.filter((m) => m.kapsam === 'dosya' && maddeMetindeMi(m, ham)).map((m) => m.id)
 }
 
+/** GİDR bu vizitte belgelenmişse motor / dil yaş-bandı maddeleri de karşılanmış sayılır. */
+const GIDR_METIN = ['gidr', 'gelisim degerlendir', 'gelisim taramasi', 'gelisim testi', 'gelisim basamag']
+const GIDR_KAPATTIGI = new Set(['sc_yurume', 'sc_dil'])
+
 export function cekListeDogrula(
   maddeler: CekMadde[],
   g: { transcript?: string; soap?: string; isaretler?: Record<string, boolean>; oncekiIdler?: string[] },
 ): CekDogrulamaSatir[] {
   const ham = trAramaNormalize(`${g.transcript || ''} ${g.soap || ''}`)
   const onceki = new Set(g.oncekiIdler || [])
-  return maddeler.map((m) => {
+  const satirlar = maddeler.map((m) => {
     const satir = { id: m.id, etiket: m.etiket, grup: m.grup }
     if (g.isaretler?.[m.id]) return { ...satir, durum: 'hekim' as const }
     if (maddeMetindeMi(m, ham)) return { ...satir, durum: 'dosyada' as const }
     if (m.kapsam === 'dosya' && onceki.has(m.id)) return { ...satir, durum: 'onceki' as const }
     return { ...satir, durum: 'eksik' as const }
   })
+  // NOTYA-CEK-GIDR-01: GİDR yapıldıysa oturma/emekleme/yürüme ve dil hatırlatmaları düşer.
+  const gidrOk =
+    satirlar.some((s) => s.id === 'sc_tarama_gidr' && s.durum !== 'eksik')
+    || GIDR_METIN.some((a) => cekAnahtarVar(ham, a))
+  if (gidrOk) {
+    for (const s of satirlar) {
+      if (GIDR_KAPATTIGI.has(s.id) && s.durum === 'eksik') s.durum = 'dosyada'
+    }
+  }
+  return satirlar
 }
 
 const DURUM_METNI: Record<CekDurum, string> = {

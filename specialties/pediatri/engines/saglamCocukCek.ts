@@ -52,11 +52,16 @@ const EK_GIDA: CekMadde[] = [
 ]
 
 const YURUME: CekMadde[] = [
-  m('sc_yurume', 'Motor: oturma / emekleme / yürüme', 'fizik', ['yurume', 'emekleme', 'oturma']),
+  m('sc_yurume', 'Motor: oturma / emekleme / yürüme', 'fizik', [
+    'yurume', 'emekleme', 'oturma', 'motor', 'kaba hareket', 'ince hareket',
+    'gidr', 'gelisim', 'gelisim basamag',
+  ]),
 ]
 
 const DIL: CekMadde[] = [
-  m('sc_dil', 'Dil / iletişim (kelime, işaret)', 'fizik', ['dil', 'kelime', 'konusma']),
+  m('sc_dil', 'Dil / iletişim (kelime, işaret)', 'fizik', [
+    'dil', 'kelime', 'konusma', 'alici dil', 'anlatim', 'gidr', 'gelisim',
+  ]),
 ]
 
 const OKUL: CekMadde[] = [
