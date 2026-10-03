@@ -10,7 +10,8 @@
  *   4. tarayıcı client tool'ları kopyadan çıkarılır (tool_ids: []) — hasta arama / kart / onay artık sunucuda;
  *      ElevenLabs sistem araçları (end_call …) olduğu gibi kalır;
  *   5. eşleme lib/asistan/tekBeyinAjanlari.ts'e yazılır (commit edilir; ajan kimliği gizli değildir).
- * Hiçbir doktor bu script ile geçmez — geçiş NOTYA_TEK_BEYIN_DOKTORLAR ortam değişkenidir.
+ * NOTYA-TEK-BEYIN-CORE-01: copies are core for every doctor + klinik (default ON).
+ * Kill switch: NOTYA_TEK_BEYIN_DOKTORLAR=off. Optional allowlist: only:id1,id2.
  *
  *   npx tsx scripts/tek-beyin-ajanlari.mts --dry     # yalnız plan
  *   npx tsx scripts/tek-beyin-ajanlari.mts           # kopyala / güncelle
@@ -144,7 +145,7 @@ async function main() {
   }
   if (!DRY) eslemeYaz(esleme)
   console.log('Eşleme:', esleme)
-  console.log('Mevcut ajanlar değişmedi. Doktor geçişi: NOTYA_TEK_BEYIN_DOKTORLAR (+ NOTYA_SES_LLM_SECRET, NOTYA_SES_JETON_SECRET sunucuda).')
+  console.log('Mevcut ajanlar değişmedi. Core default ON; kill: NOTYA_TEK_BEYIN_DOKTORLAR=off (+ NOTYA_SES_LLM_SECRET, NOTYA_SES_JETON_SECRET sunucuda).')
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

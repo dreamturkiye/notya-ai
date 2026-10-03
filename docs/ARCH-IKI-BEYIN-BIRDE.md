@@ -37,6 +37,15 @@ Falls through to model + read tools (old 2-brain power):
 
 Kill switch: `AYSE_IKI_BEYIN_BIRDE_KAPALI=1` (pre-gate behaviour).
 
+## Scope (NOTYA-TEK-BEYIN-CORE-01)
+
+Pediatri Ayşe is the **reference**, not a special case. The same thin mouth + strong brain is core for:
+
+- all **30** doktor specialists (`lib/asistan/specialistsCatalog.ts` → same 3 Custom-LLM agent copies)
+- **klinik** experts (`/asistan/klinik` → same copies; brain = `klinikCevapla`, no chart tools)
+
+`tekBeyinAcikMi` defaults **ON**. Kill switch: `NOTYA_TEK_BEYIN_DOKTORLAR=off`. Optional allowlist: `only:id1,id2`.
+
 ## What this does not change
 
 - TTS lock and spoken-beat caps (speech quality stays protected)

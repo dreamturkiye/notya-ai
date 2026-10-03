@@ -1,26 +1,23 @@
 export const dynamic = "force-dynamic"
 
 /**
- * NOTYA-KLINIK-02 — voice session bootstrap for the klinik experts.
+ * NOTYA-KLINIK-02 + NOTYA-TEK-BEYIN-CORE-01 — voice session bootstrap for klinik experts.
  *
- * Same architecture as the doktor asistan: one base ElevenLabs ConvAI agent per gender, and the
- * client overrides `agent.prompt`, `firstMessage` and `tts.voiceId` per persona. The ten klinik
- * personas therefore need NO new ElevenLabs agents — they ride the existing base agents with
- * their own prompt and voice. This route authenticates, resolves the persona, and returns
- * { signed_url, voice_id, prompt, first_message } for the client to apply as overrides.
+ * Same thin-mouth architecture as Pediatri Ayşe: Flash-locked base agent → Custom-LLM copy
+ * (`TEK_BEYIN_AJANLARI`) → `/api/asistan/ses-llm` with a signed jeton. Klinik brain is
+ * `klinikCevapla` (persona prompt + Luna), not the fat ElevenLabs-hosted LLM.
  */
 import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 import { doktorOturum } from "@/lib/doktor/serverAuth"
 import { KlinikUzmanPersonas } from "@/lib/ai/personas/klinik_uzmanlar"
 import { sesMotorunuSabitle } from "@/lib/asistan/sesMotoru"
-
-const FEMALE_AGENT =
-  process.env.ELEVENLABS_AGENT_PEDIATRI ||
-  process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID ||
-  "agent_3601ktc884ntf3dbdkjtyx6vdfwa"
-const MALE_AGENT =
-  process.env.ELEVENLABS_AGENT_KARDIYOLOJI ||
-  "agent_6501ktc87nmyeca88wskfvr8dfxh"
+import { asistanOturumuAc } from "@/lib/asistan/ayseCevapla"
+import { sesJetonuImzala, tekBeyinAcikMi } from "@/lib/asistan/sesJetonu"
+import { TEK_BEYIN_AJANLARI } from "@/lib/asistan/tekBeyinAjanlari"
+import { klinikPersonaJeton, klinikTabanAgentSec } from "@/lib/asistan/agentSec"
+import { istekSaatDilimi } from "@/lib/doktor/saatDilimi"
+import { saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 
 function voicePrompt(slug: string): string {
   const p = KlinikUzmanPersonas[slug]
@@ -44,7 +41,23 @@ export async function GET(req: NextRequest) {
   const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
   if (!elKey) return NextResponse.json({ error: "Ses servisi yapılandırılmamış." }, { status: 500 })
 
-  const agentId = persona.gender === "male" ? MALE_AGENT : FEMALE_AGENT
+  let agentId = klinikTabanAgentSec(persona.gender)
+  let tekBeyin: { asistan_session_id: string; notya_jeton: string; baslangic: string } | null = null
+
+  // NOTYA-TEK-BEYIN-CORE-01: klinik rides the same Custom-LLM copies as doktor asistan.
+  const kopya = TEK_BEYIN_AJANLARI[agentId]
+  if (kopya && tekBeyinAcikMi(oturum.user.id)) {
+    try {
+      const hazir = await tekBeyinHazirla(oturum.user.id, slug, req)
+      if (hazir?.notya_jeton) {
+        agentId = kopya
+        tekBeyin = hazir
+      }
+    } catch (e) {
+      console.error("[klinik-signed-url] tek beyin", e instanceof Error ? e.name : "hata")
+    }
+  }
+
   await sesMotorunuSabitle(agentId, elKey)
   const resp = await fetch(
     `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${agentId}`,
@@ -59,8 +72,31 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     signed_url: body.signed_url,
+    agent_id: agentId,
     voice_id: persona.voiceId,
-    prompt: voicePrompt(slug),
+    // Fat prompt only when still on the base (non–tek-beyin) agent — Custom LLM ignores it.
+    prompt: tekBeyin ? "" : voicePrompt(slug),
     first_message: persona.greeting,
+    ...(tekBeyin ? { tek_beyin: true, ...tekBeyin } : {}),
   })
+}
+
+async function tekBeyinHazirla(doktorId: string, slug: string, req: NextRequest) {
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    global: { fetch: (u, o) => fetch(u, { ...o, cache: "no-store" }) },
+  })
+  const pe = klinikPersonaJeton(slug)
+  const yeni = await asistanOturumuAc(sb, {
+    doktorId,
+    personaId: pe,
+    specialty: `klinik-${slug}`,
+    hekimBransi: "klinik",
+    patientId: null,
+  })
+  const oturumId = (yeni?.id as string) || null
+  if (!oturumId) return null
+  const tz = saatDilimiSec(String(req.nextUrl.searchParams.get("tz") || "").trim() || null, istekSaatDilimi())
+  const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: `klinik-${slug}`, p: null, pe, tz })
+  if (!jeton) return null
+  return { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString() }
 }

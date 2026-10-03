@@ -66,7 +66,11 @@ function KlinikAsistanInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+  // NOTYA-ASISTAN-AVATAR-01: empty idle must not scrollIntoView — same iPhone clip as /asistan.
+  useEffect(() => {
+    if (messages.length === 0) return
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   function addMsg(role: 'user'|'ai', text: string) {
     if (!text?.trim()) return
@@ -99,12 +103,15 @@ function KlinikAsistanInner() {
         try { const Ctx = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }); const ctx = new (Ctx.AudioContext || Ctx.webkitAudioContext!)(); await ctx.resume() } catch {}
       }
 
+      const tekBeyin = Boolean(body.tek_beyin && body.notya_jeton)
       const conv = await Conversation.startSession({
         signedUrl: body.signed_url as string, connectionType: 'websocket',
         ...SES_CALAR,
+        // NOTYA-TEK-BEYIN-CORE-01: Custom LLM copy — jeton in extra body; fat prompt override stays off.
+        ...(tekBeyin ? { customLlmExtraBody: { notya_jeton: body.notya_jeton as string } } : {}),
         overrides: {
           agent: {
-            prompt: { prompt: body.prompt as string },
+            ...(tekBeyin || !body.prompt ? {} : { prompt: { prompt: body.prompt as string } }),
             language: 'tr',
             firstMessage: body.first_message as string,
           },
@@ -159,7 +166,7 @@ function KlinikAsistanInner() {
 
       <div style={{flex:1,overflowY:'auto',padding:'16px',display:'flex',flexDirection:'column',gap:'10px'}}>
         {messages.length===0 && status==='idle' && (
-          <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'12px',opacity:.45}}>
+          <div style={{marginBlock:'auto',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px',opacity:.45,width:'100%',flexShrink:0,paddingTop:4}}>
             <div style={{fontSize:'56px'}}>{p.emoji}</div>
             <div style={{fontSize:'16px',fontWeight:600,color:'#fff'}}>{p.name}</div>
             <div style={{fontSize:'13px',color:'rgba(255,255,255,.4)'}}>{p.title}</div>

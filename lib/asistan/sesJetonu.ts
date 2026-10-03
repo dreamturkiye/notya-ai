@@ -8,7 +8,9 @@
  *    olarak verir; her istekte `elevenlabs_extra_body.notya_jeton` diye geri gelir. Gövdedeki hiçbir kimliğe
  *    jetonsuz güvenilmez — kimlikler YALNIZ jetonun içinden okunur. İmza anahtarı (NOTYA_SES_JETON_SECRET)
  *    ElevenLabs'e hiç verilmez; ajandaki sır sızsa da jeton üretilemez.
- * 3. Bayrak: NOTYA_TEK_BEYIN_DOKTORLAR (virgüllü doktor kimlikleri). Boş = kimse geçmedi, eski sesli akış sürer.
+ * 3. Bayrak: NOTYA_TEK_BEYIN_DOKTORLAR — CORE default ON for every doctor (and klinik).
+ *    Kill switch: `off` / `none` / `0` / `kapali`. Optional allowlist: `only:id1,id2`.
+ *    Legacy bare id lists are ignored (everyone stays on) — morning QoS is core, not a beta flag.
  */
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
@@ -80,8 +82,25 @@ export function sesSirriGecerliMi(basliklar: Headers): boolean {
   return Boolean(gelen) && esitMi(gelen, sir)
 }
 
-/** Bu doktor tek beyinli sese geçti mi? (NOTYA_TEK_BEYIN_DOKTORLAR, varsayılan boş = kimse). */
+/**
+ * NOTYA-TEK-BEYIN-CORE-01 (Kaan, 2026-10-03): thin mouth + `ayseCevapla` / IKI-BEYIN-BIRDE is core for
+ * every doctor and klinik — not a per-account beta. Pediatri Ayşe's morning setup is the product default.
+ *
+ *   unset / empty / `*` / `all` / `hepsi` → ON for every doctor id
+ *   `off` / `none` / `0` / `kapali` → OFF for everyone (emergency rollback)
+ *   `only:id1,id2` → allowlist (old beta shape, when you must restrict)
+ *   bare `id1,id2` (legacy Vercel value) → treated as ON for everyone (core; list no longer gates)
+ */
 export function tekBeyinAcikMi(doktorId: string, liste = process.env.NOTYA_TEK_BEYIN_DOKTORLAR): boolean {
-  const ids = String(liste || '').split(',').map((s) => s.trim()).filter(Boolean)
-  return Boolean(doktorId) && ids.includes(doktorId)
+  if (!doktorId) return false
+  const raw = String(liste ?? '').trim()
+  const lower = raw.toLocaleLowerCase('tr-TR')
+  if (!raw || lower === '*' || lower === 'all' || lower === 'hepsi') return true
+  if (lower === 'off' || lower === 'none' || lower === '0' || lower === 'kapali' || lower === 'kapalı') return false
+  if (lower.startsWith('only:')) {
+    const ids = raw.slice(raw.indexOf(':') + 1).split(',').map((s) => s.trim()).filter(Boolean)
+    return ids.includes(doktorId)
+  }
+  // Legacy comma list from the beta window — core default is everyone; keep the env readable but do not gate.
+  return true
 }

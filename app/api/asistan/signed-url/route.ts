@@ -4,31 +4,12 @@ import { getPersona, getPersonaForSpecialty } from '@/lib/asistan/personaEngine'
 import { asistanOturumuAc } from '@/lib/asistan/ayseCevapla';
 import { sesJetonuImzala, tekBeyinAcikMi } from '@/lib/asistan/sesJetonu';
 import { TEK_BEYIN_AJANLARI } from '@/lib/asistan/tekBeyinAjanlari';
+import { tabanAgentSec } from '@/lib/asistan/agentSec';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { sesMotorunuSabitle } from '@/lib/asistan/sesMotoru';
 import { ayseFishTamMi } from '@/lib/asistan/fishSes';
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi';
 import { saatDilimiSec } from '@/lib/randevu/tarihCozumle';
-
-const AYSE_AGENT =
-  process.env.ELEVENLABS_AGENT_PEDIATRI ||
-  process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID ||
-  'agent_3601ktc884ntf3dbdkjtyx6vdfwa';
-const MEHMET_AGENT =
-  process.env.ELEVENLABS_AGENT_KARDIYOLOJI ||
-  'agent_6501ktc87nmyeca88wskfvr8dfxh';
-const ELIF_AGENT =
-  process.env.ELEVENLABS_AGENT_ELIF ||
-  process.env.ELEVENLABS_AGENT_NOROLOJI ||
-  'agent_1301kwjdee1afajrqkdxmghna6sx';
-
-/** Base ConvAI agent by gender/specialty; identity+voice always overridden client-side. */
-function agentForPersona(persona: { id: string; gender: string; primarySpecialty: string }): string {
-  if (persona.id === 'aysekaya' || persona.primarySpecialty === 'pediatri') return AYSE_AGENT;
-  if (persona.id === 'mehmetdemir' || persona.primarySpecialty === 'kardiyoloji') return MEHMET_AGENT;
-  if (persona.id === 'elifsahin' || persona.primarySpecialty === 'noroloji') return ELIF_AGENT;
-  return persona.gender === 'male' ? MEHMET_AGENT : AYSE_AGENT;
-}
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
@@ -104,7 +85,7 @@ export async function GET(req: NextRequest) {
     ? getPersona(personaParam)
     : getPersona(getPersonaForSpecialty(specialtyParam));
 
-  let AGENT_ID = agentForPersona(persona);
+  let AGENT_ID = tabanAgentSec(persona);
   const voiceId = persona.voiceId;
 
   // NOTYA-FISH-AYSE-02: with AYSE_SES_SAGLAYICI=fish (and a Fish key) Ayşe is a Fish call — no ConvAI signed URL,

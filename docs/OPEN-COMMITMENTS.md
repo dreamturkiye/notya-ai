@@ -3131,3 +3131,10 @@ Source: Kaan live screenshot (iPhone). On open, Ayşe's circular photo was clipp
 | ID | Date | Status | What | Owner / waiting on |
 |----|------|--------|------|--------------------|
 | NOTYA-ASISTAN-AVATAR-01 | 2026-10-03 | CODE | Empty-idle avatar fully visible on open (iPhone). | Kaan: live retest on iPhone after deploy |
+
+## 2026-10-03 - NOTYA-TEK-BEYIN-CORE-01: Pediatri Ayşe setup is core for all 30 specialties + klinik
+Source: Kaan — morning thin-mouth / strong-brain work (IKI-BEYIN-BIRDE + Custom LLM + SES-KILIT) must not stay Pediatri/Gökhan-only; every doktor specialty and klinik is core. Owner of the code: Claude. Owner of deploy: Kaan.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-TEK-BEYIN-CORE-01 | 2026-10-03 | CODE | `tekBeyinAcikMi` default ON for every doctor (kill `off` / allowlist `only:`). All 30 personas + 10 klinik experts share the 3 Custom-LLM agent copies. Klinik signed-url + page use Custom LLM + `klinikCevapla`; ses-llm routes `klinik:` jetons. Parity test `tekBeyinCore.test.ts`. Avatar idle scroll fix also on `/asistan/klinik`. | Kaan: deploy; spot-check one non-pediatri specialty + one klinik voice call |

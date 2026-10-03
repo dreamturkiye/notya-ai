@@ -19,6 +19,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
+import { klinikCevapla } from '@/lib/asistan/klinikCevapla'
+import { klinikSlugJetonndan } from '@/lib/asistan/agentSec'
 import { kendiSelamiMi } from '@/lib/asistan/acilis'
 import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
 import { SesYayKapisi, sesEtiketTemizle } from '@/lib/asistan/sesYay'
@@ -200,6 +202,12 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           const supabase = getSupabase()
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
+          // NOTYA-TEK-BEYIN-CORE-01: klinik experts use the same Custom LLM mouth; brain is klinikCevapla (no chart tools).
+          const klinikSlug = klinikSlugJetonndan(jeton.pe)
+          if (klinikSlug) {
+            const klinik = await klinikCevapla({ slug: klinikSlug, mesaj, doctorId: jeton.d, sozParcasi: cevapYaz })
+            if (!klinik.ok && !cevapSoylendi) cevapYaz('Şu an yanıt veremedim, bir daha söyler misiniz?')
+          } else {
           const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj, jeton.tz || null)
           if (karar) {
             cevapYaz(karar.soz)
@@ -240,6 +248,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
               turKapandi = true
               arkaPlandaSurdur(sonrasi)
             }
+          }
           }
         }
       } catch (e) {

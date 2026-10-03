@@ -7,8 +7,8 @@
  * Flash lock only — never the turn settings (5e5014ee's SES_DONUS_KILIT is gone). Fish only with the switch AND
  * the key, and only for Ayşe.
  *
- * The flag is the NOTYA_TEK_BEYIN_DOKTORLAR list; signing uses a test secret and the token is verified with the real
- * verifier. ElevenLabs is a stub (no network). Synthetic QA data only.
+ * NOTYA-TEK-BEYIN-CORE-01: tek-beyin is ON by default (empty / unset). Kill with `off`; restrict with `only:…`.
+ * Signing uses a test secret and the token is verified with the real verifier. ElevenLabs is a stub. Synthetic QA data only.
  */
 import { ortam, sahneHazirla, sahneKur, type Sahne } from './tests/ayseSahne'
 import { describe, it, before, beforeEach } from 'node:test'
@@ -74,17 +74,26 @@ beforeEach(() => {
 })
 
 describe('signed-url: Ayşe Kaya ElevenLabs’te (NOTYA-SES-ELEVEN-GERI-01)', () => {
-  it('varsayılan: Fish anahtarı olsa da ConvAI adresi, fish false, taban ajan, Ayşe’nin sesi', async () => {
+  it('varsayılan CORE: Fish anahtarı olsa da ConvAI + Custom-LLM kopyası, fish false, Ayşe’nin sesi', async () => {
     const { status, j } = await iste()
     assert.equal(status, 200, JSON.stringify(j))
     assert.equal(j.fish, false)
     assert.match(String(j.signed_url), /^wss:\/\/api\.elevenlabs\.io\//)
-    assert.equal(j.agent_id, AYSE_TABAN)
+    assert.equal(j.agent_id, AYSE_TEK_BEYIN, 'core default → tek beyin kopyası')
     assert.equal(j.voice_id, AYSE_SES)
     assert.equal(j.persona_id, 'aysekaya')
-    assert.equal(j.tek_beyin, undefined, 'bayraksız doktor tek beyin kopyasını almaz')
+    assert.equal(j.tek_beyin, true)
+    assert.equal(typeof j.notya_jeton, 'string')
+    assert.ok(el.some((c) => c.url.includes(`get_signed_url?agent_id=${AYSE_TEK_BEYIN}`)))
+  })
+
+  it('NOTYA_TEK_BEYIN_DOKTORLAR=off: taban ajan, jeton yok (acil geri dönüş)', async () => {
+    process.env.NOTYA_TEK_BEYIN_DOKTORLAR = 'off'
+    const { status, j } = await iste()
+    assert.equal(status, 200, JSON.stringify(j))
+    assert.equal(j.agent_id, AYSE_TABAN)
+    assert.equal(j.tek_beyin, undefined)
     assert.equal(j.notya_jeton, undefined)
-    assert.ok(el.some((c) => c.url.includes(`get_signed_url?agent_id=${AYSE_TABAN}`)))
   })
 
   it('ajan denetimi yalnız TTS Flash kilidini bilir: dönüş ayarı (turn) hiç yazılmaz', async () => {
@@ -124,8 +133,15 @@ describe('signed-url: Ayşe Kaya ElevenLabs’te (NOTYA-SES-ELEVEN-GERI-01)', ()
     assert.notEqual(r.j.asistan_session_id, yabanci, 'HASTA-IZOLASYON: yabancı oturum jetona girmez')
   })
 
-  it('bayrak başka doktorda: bu doktor taban ajanda kalır', async () => {
+  it('legacy bare list: another doctor id in env still leaves THIS doctor on tek-beyin (core)', async () => {
     process.env.NOTYA_TEK_BEYIN_DOKTORLAR = s.diger.id
+    const { j } = await iste()
+    assert.equal(j.agent_id, AYSE_TEK_BEYIN)
+    assert.equal(j.tek_beyin, true)
+  })
+
+  it('only: allowlist excludes doctors not listed', async () => {
+    process.env.NOTYA_TEK_BEYIN_DOKTORLAR = `only:${s.diger.id}`
     const { j } = await iste()
     assert.equal(j.agent_id, AYSE_TABAN)
     assert.equal(j.tek_beyin, undefined)
@@ -141,14 +157,15 @@ describe('signed-url: Ayşe Kaya ElevenLabs’te (NOTYA-SES-ELEVEN-GERI-01)', ()
     assert.deepEqual(el, [])
   })
 
-  it('AYSE_SES_SAGLAYICI=fish ama anahtar yok: ElevenLabs', async () => {
+  it('AYSE_SES_SAGLAYICI=fish ama anahtar yok: ElevenLabs tek-beyin kopyası (core)', async () => {
     process.env.AYSE_SES_SAGLAYICI = 'fish'
     const anahtar = process.env.FISH_API_KEY
     delete process.env.FISH_API_KEY
     try {
       const { j } = await iste()
       assert.equal(j.fish, false)
-      assert.equal(j.agent_id, AYSE_TABAN)
+      assert.equal(j.agent_id, AYSE_TEK_BEYIN)
+      assert.equal(j.tek_beyin, true)
     } finally {
       process.env.FISH_API_KEY = anahtar
     }

@@ -298,10 +298,17 @@ describe('kilitler — sunucu sırrı + imzalı konuşma jetonu', () => {
     assert.equal(J.sesJetonuImzala(v), null, 'kısa / eksik anahtarla jeton üretilmez')
     process.env.NOTYA_SES_JETON_SECRET = eski
   })
-  it('bayrak: varsayılan boş = kimse geçmedi', () => {
-    assert.equal(J.tekBeyinAcikMi('d1', ''), false)
-    assert.equal(J.tekBeyinAcikMi('d1', undefined), false)
-    assert.equal(J.tekBeyinAcikMi('d1', 'd0, d1'), true)
+  it('bayrak: CORE default ON; off kills; only: allowlists; legacy list does not gate', () => {
+    assert.equal(J.tekBeyinAcikMi('d1', ''), true)
+    assert.equal(J.tekBeyinAcikMi('d1', undefined), true)
+    assert.equal(J.tekBeyinAcikMi('d1', '*'), true)
+    assert.equal(J.tekBeyinAcikMi('d1', 'hepsi'), true)
+    assert.equal(J.tekBeyinAcikMi('d1', 'off'), false)
+    assert.equal(J.tekBeyinAcikMi('d1', 'kapali'), false)
+    assert.equal(J.tekBeyinAcikMi('d1', 'only:d0, d1'), true)
+    assert.equal(J.tekBeyinAcikMi('d2', 'only:d0, d1'), false)
+    assert.equal(J.tekBeyinAcikMi('d9', 'd0, d1'), true, 'legacy beta list is no longer a gate')
+    assert.equal(J.tekBeyinAcikMi('', '*'), false)
   })
   it('uç: sırsız, yanlış sırlı, jetonsuz, sahte jetonlu istek 401 — model hiç çağrılmaz', async () => {
     const s = sahne()
