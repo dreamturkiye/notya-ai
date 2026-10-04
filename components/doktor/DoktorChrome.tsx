@@ -26,7 +26,6 @@ import { hekimProfilOturumOku, hekimProfilOturumSil, hekimProfilOturumYaz, hekim
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
 import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
-import SesleUyandir from '@/components/asistan/SesleUyandir';
 import { GELEN_OLAY, GELEN_SAYI_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
@@ -421,7 +420,6 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     return (
       <ChromeGizleContext.Provider value={setGizli}>
         {children}
-        <SesleUyandir doktor={rol === 'doktor'} gizli />
       </ChromeGizleContext.Provider>
     );
   }
@@ -669,8 +667,6 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           </div>
         </>
       )}
-
-      <SesleUyandir doktor={rol === 'doktor'} />
 
       <div className={pathname === '/dashboard/doktor' ? 'notya-alt-nav notya-alt-nav-akis' : 'notya-alt-nav'} role="navigation" aria-label="Ana menü" style={S({
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 38,

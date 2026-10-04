@@ -61,14 +61,15 @@ test('mikrofonEtiketi Türkçe durumları verir', () => {
   assert.equal(mikrofonEtiketi('idle', false), 'Yazılı sohbet')
 })
 
-test('telefon: sesle uyandır çipi ve otomatik mikrofon yok; ana sayfada Asistan Hızlı araçlar’da ilk', () => {
+test('sesle uyandır arka plan mikrofonu yok; ana sayfada Asistan Hızlı araçlar’da ilk', () => {
   const kok = path.join(import.meta.dirname, '..', '..')
   const oku = (d: string) => fs.readFileSync(path.join(kok, d), 'utf8')
+  // NOTYA-SES-UYANDIR-KAPAT: wake-word listening removed — mic only on Asistana sor tap.
   const uyandir = oku('components/asistan/SesleUyandir.tsx')
-  assert.match(uyandir, /max-width:\s*899px/)
-  assert.match(uyandir, /telefonEkraniMi/)
-  assert.match(uyandir, /if \(!doktor \|\| telefon\) return null/)
-  assert.match(uyandir, /if \(!doktor \|\| telefon\) return/)
+  assert.match(uyandir, /return null/)
+  assert.ok(!/SpeechRecognition|webkitSpeechRecognition|getUserMedia|\.start\(\)/.test(uyandir), 'SesleUyandir mikrofon açmamalı')
+  const chrome = oku('components/doktor/DoktorChrome.tsx')
+  assert.ok(!chrome.includes('<SesleUyandir'), 'DoktorChrome wake-word çipini mount etmemeli')
   const ana = oku('app/dashboard/doktor/page.tsx')
   const hizli = ana.indexOf('>Hızlı araçlar</h2>')
   const asistan = ana.indexOf("router.push('/asistan')")
