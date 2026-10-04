@@ -37,6 +37,51 @@ export default function DavetKabulPage() {
     })();
   }, [token]);
 
+  // Safari üst çubuğu kök layout'un koyu theme-color'ını kullanmasın — cream + light.
+  useEffect(() => {
+    const krem = CHROME_RENK.cream
+    const metas = document.querySelectorAll('meta[name="theme-color"]')
+    const onceki = Array.from(metas).map((m) => (m as HTMLMetaElement).content)
+    let eklenen: HTMLMetaElement | null = null
+    if (metas.length === 0) {
+      eklenen = document.createElement('meta')
+      eklenen.name = 'theme-color'
+      eklenen.content = krem
+      document.head.appendChild(eklenen)
+    } else {
+      metas.forEach((m) => { (m as HTMLMetaElement).content = krem })
+    }
+    let scheme = document.querySelector('meta[name="color-scheme"]') as HTMLMetaElement | null
+    const oncekiScheme = scheme?.content ?? null
+    let schemeEklendi = false
+    if (!scheme) {
+      scheme = document.createElement('meta')
+      scheme.name = 'color-scheme'
+      document.head.appendChild(scheme)
+      schemeEklendi = true
+    }
+    scheme.content = 'light'
+    const html = document.documentElement
+    const body = document.body
+    const oncekiHtml = html.style.background
+    const oncekiBody = body.style.background
+    const oncekiColorScheme = html.style.colorScheme
+    html.style.background = krem
+    body.style.background = krem
+    html.style.colorScheme = 'light'
+    return () => {
+      if (eklenen) eklenen.remove()
+      else metas.forEach((m, i) => { (m as HTMLMetaElement).content = onceki[i] || '#0A1628' })
+      if (scheme) {
+        if (schemeEklendi) scheme.remove()
+        else if (oncekiScheme != null) scheme.content = oncekiScheme
+      }
+      html.style.background = oncekiHtml
+      body.style.background = oncekiBody
+      html.style.colorScheme = oncekiColorScheme
+    }
+  }, []);
+
   async function kabulEt(e: React.FormEvent) {
     e.preventDefault();
     setFormHata('');
