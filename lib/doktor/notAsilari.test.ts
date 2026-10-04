@@ -14,7 +14,9 @@ import { arsivsizAsilar } from './arsiv'
 import {
   asiLotYeriBul,
   asiLotYeriTamamla,
+  asilariMetindenTamamla,
   dozlariTamamla,
+  metindenUygulananAsilariCikar,
   notAsilariniTemizle,
   notAsisiKartDurumu,
   sonrakiDozNo,
@@ -286,5 +288,29 @@ describe('NOTYA-ASI-NOT-03: history lines are not this visit', () => {
     assert.equal(uygulananAsiParcalari('Hepatit B doğum dozu uygulandı.').length, 0)
     assert.equal(uygulananAsiParcalari('Hepatit B 1. doz 15.06.2024 tarihinde uygulandı.').length, 0)
     assert.equal(uygulananAsiParcalari('Bugün Hepatit B 2. doz uygulandı.').length, 1)
+  })
+})
+
+describe('NOTYA-ASI-NOT-05 — extract administered vaccines from hekim note text into asilar', () => {
+  it('yaptım / uygulandı with details → structured list; planned-only stays out', () => {
+    const plan = 'KKK 1. doz (sol omuz, lot: MMR12345) ve Suçiçeği 1. doz (sağ omuz, lot: Rix12345) aşılarını bugün uyguladım; 2. ay kontrolünde DaBT-İPA-Hib 1. doz planlandı.'
+    const liste = metindenUygulananAsilariCikar([plan])
+    assert.deepEqual(liste.map((a) => [a.asi_adi, a.doz_no, a.lot_no]), [
+      ['KKK (kızamık-kızamıkçık-kabakulak)', 1, 'MMR12345'],
+      ['Suçiçeği', 1, 'Rix12345'],
+    ])
+    assert.equal(liste.some((a) => /DaBT|Hib/i.test(a.asi_adi)), false)
+  })
+
+  it('merge fills empty list; does not wipe hekim rows; skips duplicates', () => {
+    const metin = 'Hepatit B 2. doz aşısı bugün uygulandı.'
+    assert.deepEqual(asilariMetindenTamamla([], [metin]).map((a) => [a.asi_adi, a.doz_no]), [['Hepatit B', 2]])
+    const elde = [{ asi_adi: 'Hepatit B', doz_no: 2, uygulama_tarihi: '2026-09-23' }]
+    assert.equal(asilariMetindenTamamla(elde, [metin]), elde)
+    const karisik = asilariMetindenTamamla(
+      [{ asi_adi: 'Grip', doz_no: 1, uygulama_tarihi: null }],
+      ['Bugün KKK 1. doz vuruldu; grip bir sonraki kontrolde yapılacak.'],
+    )
+    assert.deepEqual(karisik.map((a) => a.asi_adi), ['Grip', 'KKK (kızamık-kızamıkçık-kabakulak)'])
   })
 })

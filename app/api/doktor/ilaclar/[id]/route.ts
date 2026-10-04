@@ -20,11 +20,26 @@ export async function PUT(
   }
 
   const body = await request.json();
-  const { aktif, notlar, onay_durumu, bitis_tarihi } = body;
+  const {
+    aktif, notlar, onay_durumu, bitis_tarihi,
+    // NOTYA-ILAC-DUZEN-01: hekim İlaçlar sayfasında satırı doğrudan revize edebilsin.
+    ad, ilac_adi, etkenMadde, etken_madde, doz, kullanim_sikli, baslangic_tarihi,
+  } = body;
 
   const updateData: Record<string, unknown> = {};
   if (typeof aktif === 'boolean') updateData.aktif = aktif;
   if (notlar !== undefined) updateData.notlar = notlar;
+
+  const yeniAd = typeof ad === 'string' ? ad.trim() : typeof ilac_adi === 'string' ? ilac_adi.trim() : '';
+  if (yeniAd) updateData.ilac_adi = yeniAd.slice(0, 200);
+  const yeniEtken = typeof etkenMadde === 'string' ? etkenMadde.trim() : typeof etken_madde === 'string' ? etken_madde.trim() : undefined;
+  if (yeniEtken !== undefined) updateData.etken_madde = yeniEtken ? yeniEtken.slice(0, 200) : null;
+  if (typeof doz === 'string') updateData.doz = doz.trim().slice(0, 120) || null;
+  // Kullanım sıklığı serbest metin — sabit seçenek zorunlu değil.
+  if (typeof kullanim_sikli === 'string') updateData.kullanim_sikli = kullanim_sikli.trim().slice(0, 120) || null;
+  if (typeof baslangic_tarihi === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(baslangic_tarihi.trim())) {
+    updateData.baslangic_tarihi = baslangic_tarihi.trim();
+  }
 
   // NOTYA-RECETE-01: nottan aktarılan reçete 'beklemede' gelir ve hastaya
   // görünmez. Doktor burada karar verir: 'onayli' + aktif=true (kullanmaya devam

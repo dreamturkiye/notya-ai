@@ -39,8 +39,8 @@ import {
   cekNotMetni,
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
-import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
-import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAktarim';
+import { asilariMetindenTamamla, DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
+import { ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi } from '@/lib/doktor/receteAktarim';
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
@@ -142,11 +142,15 @@ export default function NotSayfasi() {
   const [onaylandiSimdi, setOnaylandiSimdi] = useState(false);
   const atlaOtomatikRef = useRef(true);
   const aiBekliyorRef = useRef(false);
+  // NOTYA-RECETE-06: aiYenidenOku closure'da güncel İlaçlar metni (setState gecikmesiz).
+  const ilacRef = useRef('');
   // NOTYA-RECETE-05: not açıldığındaki Plan — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
   const ilkPlanRef = useRef<string | null>(null);
   // NOTYA-NOT-HIZ-03: öneri arka planda hazırlanıyor (yeni not, öneri alanları boş).
   const [oneriBekleniyor, setOneriBekleniyor] = useState(false);
   const ilkAiDegRef = useRef('');
+
+  useEffect(() => { ilacRef.current = ilac }, [ilac])
 
   useEffect(() => {
     (async () => {
@@ -168,7 +172,9 @@ export default function NotSayfasi() {
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
         ilkPlanRef.current = satirBasiNumarala(j.not.plan || '');
-        setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
+        const ilacMetni = (j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n');
+        ilacRef.current = ilacMetni;
+        setIlac(ilacMetni);
         setAsilar(Array.isArray(j.not.asilar) ? j.not.asilar : []);
         setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
         setRecete(Array.isArray(j.not.receteOnerisi) ? j.not.receteOnerisi : []);
@@ -280,6 +286,23 @@ export default function NotSayfasi() {
         setAiDeg(dz.aiDegerlendirme as string);
         setDegisti(true);
       }
+      // NOTYA-RECETE-06: hekim Plan'ı revize ettiyse İlaçlar (reçete kaynağı) Plan'dan dar çıkarımla
+      // senkronlanır — genel yeniden-değerlendirme İlaçlar'ı AI ile ezmez (NOTYA-NOT-HEKIM-01);
+      // yalnız Plan↔liste ayrışınca ILAC_UYUM yolu (önbellekli) yazar.
+      const mevcutIlac = ilacMetniniCoz(ilacRef.current)
+      const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac)
+      if (ilacKontrol.gerekli) {
+        const oneri = await planaGoreIlacOnerisiOnbellekli(t, params.id, taslak.plan, {
+          ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: mevcutIlac,
+          asilar: asiSatirlari(asilar), icdKodlari: icd, receteOnerisi: recete, aiDegerlendirme: aiDeg,
+        }).catch(() => null)
+        if (oneri && ilacKontrolSonucu(ilacKontrol.tutarsiz, mevcutIlac, oneri) === 'oneri' && !ilacListeleriAyniMi(mevcutIlac, oneri)) {
+          const metin = oneri.map((i) => [i.ad, i.doz, i.kullanim, i.sure].filter(Boolean).join(' — ')).join('\n')
+          ilacRef.current = metin
+          setIlac(metin)
+          setDegisti(true)
+        }
+      }
       setAiDurum('guncellendi');
       setTimeout(() => setAiDurum((s) => (s === 'guncellendi' ? 'bos' : s)), 2500);
     } catch {
@@ -290,6 +313,30 @@ export default function NotSayfasi() {
       aiBekliyorRef.current = false;
     }
   };
+
+  // NOTYA-ASI-NOT-05: hekim objektif/plan'da "uygulandı/yaptım" yazdıysa asilar listesini metinden doldur.
+  // AI yeniden-değerlendirme asilar'ı yazmaz (NOTYA-NOT-HEKIM-01); bu yol deterministik çıkarım.
+  useEffect(() => {
+    if (!veri) return
+    const gun = new Date(veri.not.createdAt).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+    setAsilar((prev) => {
+      const sonraki = asilariMetindenTamamla(prev, [taslak.objektif, taslak.plan]).map((a) => ({
+        ...a,
+        uygulama_tarihi: a.uygulama_tarihi || gun,
+      }))
+      return JSON.stringify(sonraki) === JSON.stringify(prev) ? prev : sonraki
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taslak.objektif, taslak.plan, veri?.not.id, veri?.not.createdAt])
+
+  // Metinden aşı doldurulunca kaydedilmemiş değişiklik bayrağı (setState updater içinde setDegisti yok).
+  const asilarImzaRef = useRef('')
+  useEffect(() => {
+    const imza = JSON.stringify(asiSatirlari(asilar))
+    if (!veri) { asilarImzaRef.current = imza; return }
+    if (asilarImzaRef.current && asilarImzaRef.current !== imza) setDegisti(true)
+    asilarImzaRef.current = imza
+  }, [asilar, veri])
 
   useEffect(() => {
     if (!veri) return;

@@ -14,7 +14,7 @@ import {
   toolsErrorBox,
 } from '@/lib/doktor/toolsUi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
-import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAktarim';
+import { ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi } from '@/lib/doktor/receteAktarim';
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import {
@@ -272,6 +272,20 @@ export default function IncelemePage() {
       if (Array.isArray(dz.icdKodlari)) setIcdTaslak((dz.icdKodlari as unknown[]).map((it) => { const o = it as Record<string, unknown>; return { code: String(o.code || ''), description_tr: String(o.description_tr || o.description || ''), is_primary: !!o.is_primary } }).filter((k) => k.code));
       if (Array.isArray(dz.receteOnerisi)) setReceteTaslak((dz.receteOnerisi as unknown[]).map((it) => { const o = it as Record<string, unknown>; return { ticariOrnek: String(o.ticariOrnek || ''), etkenMadde: String(o.etkenMadde || ''), doz: String(o.doz || ''), kullanim: String(o.kullanim || ''), sure: String(o.sure || ''), sgkListesinde: !!o.sgkListesinde, not: String(o.not || '') } }).filter((r) => r.ticariOrnek));
       if (typeof dz.aiDegerlendirme === 'string' && dz.aiDegerlendirme.trim()) setAiDegTaslak(dz.aiDegerlendirme as string);
+      // NOTYA-RECETE-06: yeniden değerlendir İlaçlar'ı AI ile ezmez; Plan↔liste ayrışınca dar Plan çıkarımıyla senkron.
+      if (yenidenMi) {
+        const mevcutIlac = ilacMetniniCoz(ilacTaslak)
+        const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac)
+        if (ilacKontrol.gerekli) {
+          const oneri = await planaGoreIlacOnerisiOnbellekli(token, note.id, taslak.plan, {
+            ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, hastaOzeti: ozetTaslak,
+            ilaclar: mevcutIlac, icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak,
+          }).catch(() => null)
+          if (oneri && ilacKontrolSonucu(ilacKontrol.tutarsiz, mevcutIlac, oneri) === 'oneri' && !ilacListeleriAyniMi(mevcutIlac, oneri)) {
+            setIlacTaslak(oneri.map((i) => [i.ad, i.doz, i.kullanim, i.sure].filter(Boolean).join(' — ')).join('\n'))
+          }
+        }
+      }
       if (Array.isArray(d.eylemler) && d.eylemler.length) {
         setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
       }

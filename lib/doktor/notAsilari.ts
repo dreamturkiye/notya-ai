@@ -108,7 +108,8 @@ export function notAsilariniTemizle(ham: unknown): NotAsisi[] {
 
 // ─── "Given in this visit" — clause reading ─────────────────────────────────────────────────────────
 // Folded text (trAramaNormalize: ı/İ → i, no diacritics).
-const VERILDI = /(yapild|uyguland|vuruld|verild|yaptik|uyguladik|vurduk|yapilmistir|uygulanmistir|verilmistir)/
+// First-person (yaptım / uyguladım) + we-forms (yaptık) + passive (yapıldı / uygulanmıştır).
+const VERILDI = /(yapild|uyguland|vuruld|verild|yaptik|yaptim|uyguladik|uyguladim|vurduk|vurdum|verdik|verdim|yapilmistir|uygulanmistir|verilmistir)/
 const PLAN = /(planlan|planli|yapilacak|uygulanacak|verilecek|vurulacak|yapilmali|uygulanmali|oneril|sonraki|gelecek|randevu|yapilmasi|uygulanmasi|hatirlat|ertelen|yapilmadi|uygulanmadi|verilmedi|vurulmadi|reddet|istemedi)/
 // "Grip", "kızamık", "suçiçeği", "hepatit" are also diseases — a fragment counts only with a vaccine word or abbreviation.
 const ASI_SOZU = /\basi(si|lari|lar|yi|sini|larini|nin|sinin)?\b|\bdoz|\brapel|\b(dabt|kpa|opa|kkk|bcg|td|hpv|mmr|dtap|ipa|hib|hexa|heksa|penta|prevenar|synflorix|priorix|varilrix|varivax|gardasil|rotarix|rotateq|bexsero|nimenrix|menactra|vaxigrip|influvac)\b/
@@ -389,4 +390,59 @@ export function notAsiMetinSatirlari(ham: unknown): string[] {
  */
 export function notMetninAsiIpucuVarMi(metinler: (string | null | undefined)[]): boolean {
   return metinler.some((m) => m && uygulananAsiParcalari(m).length > 0)
+}
+
+/**
+ * NOTYA-ASI-NOT-05 — hekim SOAP/plan'da "X aşısı uygulandı / yaptım" + ayrıntı yazdıysa, yapılandırılmış
+ * "Bu muayenede uygulanan aşılar" listesine deterministik olarak çıkar. Yeniden-değerlendirme
+ * (NOTYA-NOT-HEKIM-01) asilar'ı AI ile yazmaz/ezmez; bu yol hekimin kendi metninden çıkarır —
+ * planlanan / önerilen / geçmiş dozları (uygulananAsiParcalari) asla uydurmaz.
+ *
+ * Kaynak alanlar: objektif + plan + tedavi (anamnez/özgeçmiş değil — NOTYA-ASI-NOT-03).
+ */
+export function metindenUygulananAsilariCikar(metinler: (string | null | undefined)[]): NotAsisi[] {
+  const metin = metinler.map((m) => String(m || '').trim()).filter(Boolean).join('\n')
+  if (!metin) return []
+  const gorulen = new Set<string>()
+  const out: NotAsisi[] = []
+  for (const p of uygulananAsiParcalari(metin)) {
+    const anahtar = `${p.seri}#${p.doz ?? '-'}`
+    if (gorulen.has(anahtar)) continue
+    gorulen.add(anahtar)
+    const ad = seriAdi(p.seri)
+    if (!ad) continue
+    const a: NotAsisi = { asi_adi: ad, doz_no: p.doz, uygulama_tarihi: null }
+    const ly = asiLotYeriBul(metin, ad)
+    if (ly.lot_no) a.lot_no = ly.lot_no
+    if (ly.uygulama_yeri) a.uygulama_yeri = ly.uygulama_yeri
+    out.push(a)
+    if (out.length >= NOT_ASI_AZAMI) break
+  }
+  return out
+}
+
+/** Mevcut listeye metinden çıkarılan uygulanan aşıları ekler; hekimin satırını silmez / ezmez. */
+export function asilariMetindenTamamla(
+  mevcut: NotAsisi[],
+  metinler: (string | null | undefined)[],
+): NotAsisi[] {
+  const cikarilan = metindenUygulananAsilariCikar(metinler)
+  if (!cikarilan.length) return mevcut
+  if (!mevcut.length) return cikarilan
+  const out = [...mevcut]
+  let eklendi = false
+  for (const a of cikarilan) {
+    const seri = asiSeriAnahtari(a.asi_adi)
+    const varMi = out.some((x) => {
+      const xs = asiSeriAnahtari(x.asi_adi)
+      if (xs !== seri) return false
+      if (x.doz_no == null || a.doz_no == null) return true
+      return x.doz_no === a.doz_no
+    })
+    if (varMi) continue
+    out.push(a)
+    eklendi = true
+    if (out.length >= NOT_ASI_AZAMI) break
+  }
+  return eklendi ? out : mevcut
 }

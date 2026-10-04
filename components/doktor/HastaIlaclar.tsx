@@ -43,7 +43,8 @@ interface Ilac {
   doz_guvenligi?: string[] | null;
 }
 
-const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Lüzumlu halde']; // Kaan 2026-09-10: Günde 1 / Haftada 1 kaldırıldı, Gerektiğinde → Lüzumlu halde
+// Öneri listesi — hekim serbest metin de yazabilir (NOTYA-ILAC-SIKLIK-01).
+const SIKLIK_ONERI = ['1x1', '2x1', '3x1', '4x1', 'Lüzumlu halde', 'sabah-akşam', 'günde 1', 'günde 2', 'akşam'];
 
 /**
  * NOTYA-ILAC-04 / NOTYA-AUTH-01: the first version of this component read the literal 'auth-token'
@@ -70,12 +71,16 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   const [ad, setAd] = useState('');
   const [etkenMadde, setEtkenMadde] = useState('');
   const [doz, setDoz] = useState('');
-  const [siklik, setSiklik] = useState('2x1');
+  const [siklik, setSiklik] = useState('');
   const [baslangic, setBaslangic] = useState(() => new Date().toISOString().slice(0, 10));
   const [notlar, setNotlar] = useState('');
   const [dozOnerisi, setDozOnerisi] = useState<{ doz: string; kullanim: string; aciklama: string } | null>(null);
   const [dozOneriYukleniyor, setDozOneriYukleniyor] = useState(false);
   const [dozOneriNot, setDozOneriNot] = useState('');
+  // NOTYA-ILAC-DUZEN-01: mevcut satırı doğrudan revize et.
+  const [duzenId, setDuzenId] = useState<string | null>(null);
+  const [duzen, setDuzen] = useState({ ad: '', etkenMadde: '', doz: '', siklik: '', baslangic: '', notlar: '' });
+  const [duzenKaydediyor, setDuzenKaydediyor] = useState(false);
 
   // Debounced: a doctor types faster than a round trip, and one request per keystroke would both
   // hammer the endpoint and deliver results out of order.
@@ -278,9 +283,61 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const r = await fetch(`/api/doktor/ilaclar/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
       if (!r.ok) { setHata('İlaç silinemedi.'); return; }
+      if (duzenId === id) setDuzenId(null);
       await listele();
     } catch {
       setHata('İlaç silinemedi. Bağlantınızı kontrol edin.');
+    }
+  }
+
+  function duzenAc(i: Ilac) {
+    setDuzenId(i.id);
+    setDuzen({
+      ad: i.ilac_adi || '',
+      etkenMadde: i.etken_madde || '',
+      doz: i.doz || '',
+      siklik: i.kullanim_sikli || '',
+      baslangic: (i.baslangic_tarihi || '').slice(0, 10),
+      notlar: i.notlar || '',
+    });
+    setHata('');
+  }
+
+  async function duzenKaydet(e: React.FormEvent) {
+    e.preventDefault();
+    if (!duzenId) return;
+    if (!duzen.ad.trim() || !duzen.doz.trim() || !duzen.siklik.trim()) {
+      setHata('İlaç adı, doz ve kullanım sıklığı zorunludur.');
+      return;
+    }
+    setDuzenKaydediyor(true);
+    setHata('');
+    try {
+      const t = await token();
+      if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
+      const r = await fetch(`/api/doktor/ilaclar/${duzenId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ad: duzen.ad.trim(),
+          etkenMadde: duzen.etkenMadde.trim() || duzen.ad.trim(),
+          doz: duzen.doz.trim(),
+          kullanim_sikli: duzen.siklik.trim(),
+          baslangic_tarihi: duzen.baslangic || undefined,
+          notlar: duzen.notlar.trim() || null,
+        }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({} as { error?: string }));
+        setHata(j.error || 'İlaç güncellenemedi.');
+        return;
+      }
+      setDuzenId(null);
+      await listele();
+    } catch {
+      setHata('İlaç güncellenemedi. Bağlantınızı kontrol edin.');
+    } finally {
+      setDuzenKaydediyor(false);
     }
   }
 
@@ -421,9 +478,17 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           </div>
           <div className="ni-field">
             <label className="ni-label">Kullanım sıklığı *</label>
-            <select className="ni-input" value={siklik} onChange={(e) => setSiklik(e.target.value)}>
-              {SIKLIK.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <input
+              className="ni-input"
+              list="ni-siklik-onerileri"
+              value={siklik}
+              onChange={(e) => setSiklik(e.target.value)}
+              placeholder="Örn. 2x1, sabah-akşam, lüzumlu halde"
+              autoComplete="off"
+            />
+            <datalist id="ni-siklik-onerileri">
+              {SIKLIK_ONERI.map((s) => <option key={s} value={s} />)}
+            </datalist>
           </div>
           <div className="ni-field">
             <label className="ni-label">Kutu adedi</label>
@@ -460,39 +525,87 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
         {!yukleniyor && onayli.length === 0 && <p className="ni-hint">Bu hasta için kayıtlı ilaç yok.</p>}
         {!yukleniyor && onayli.map((i) => (
           <div key={i.id} className="ni-item">
-            <div className="ni-item-main">
-              <div className="ni-item-name">
-                {i.ilac_adi}
-                {!i.aktif && <span className="ni-tag-passive">Sonlandırıldı</span>}
-              </div>
-              <div className="ni-item-meta">
-                {[i.etken_madde, i.doz, i.kullanim_sikli, i.kutu_adedi ? `${i.kutu_adedi} kutu` : ''].filter(Boolean).join(' · ')}
-              </div>
-              {i.baslangic_tarihi && (
-                <div className="ni-item-date">
-                  Başlangıç: {new Date(i.baslangic_tarihi).toLocaleDateString('tr-TR')}
-                  {i.bitis_tarihi ? ` · Bitiş: ${new Date(i.bitis_tarihi).toLocaleDateString('tr-TR')}` : ''}
+            {duzenId === i.id ? (
+              <form onSubmit={duzenKaydet} style={{ width: '100%' }}>
+                <div className="ni-grid">
+                  <div className="ni-field">
+                    <label className="ni-label">İlaç adı *</label>
+                    <input className="ni-input" value={duzen.ad} onChange={(e) => setDuzen((d) => ({ ...d, ad: e.target.value }))} />
+                  </div>
+                  <div className="ni-field">
+                    <label className="ni-label">Etken madde</label>
+                    <input className="ni-input" value={duzen.etkenMadde} onChange={(e) => setDuzen((d) => ({ ...d, etkenMadde: e.target.value }))} />
+                  </div>
+                  <div className="ni-field">
+                    <label className="ni-label">Doz *</label>
+                    <input className="ni-input" value={duzen.doz} onChange={(e) => setDuzen((d) => ({ ...d, doz: e.target.value }))} />
+                  </div>
+                  <div className="ni-field">
+                    <label className="ni-label">Kullanım sıklığı *</label>
+                    <input
+                      className="ni-input"
+                      list="ni-siklik-onerileri-duzen"
+                      value={duzen.siklik}
+                      onChange={(e) => setDuzen((d) => ({ ...d, siklik: e.target.value }))}
+                      placeholder="Serbest metin"
+                      autoComplete="off"
+                    />
+                    <datalist id="ni-siklik-onerileri-duzen">
+                      {SIKLIK_ONERI.map((s) => <option key={s} value={s} />)}
+                    </datalist>
+                  </div>
+                  <div className="ni-field">
+                    <label className="ni-label">Başlangıç</label>
+                    <input className="ni-input" type="date" value={duzen.baslangic} onChange={(e) => setDuzen((d) => ({ ...d, baslangic: e.target.value }))} />
+                  </div>
+                  <div className="ni-field">
+                    <label className="ni-label">Not</label>
+                    <input className="ni-input" value={duzen.notlar} onChange={(e) => setDuzen((d) => ({ ...d, notlar: e.target.value }))} />
+                  </div>
                 </div>
-              )}
-              {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
-              {i.aktif && (i.doz_guvenligi || []).map((m, n) => (
-                <div key={n} role="alert" style={{ marginTop: 6, padding: '8px 10px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45, color: '#991B1B' }}>
-                  <strong>⚠ Doz güvenliği:</strong> {m}
+                <div className="ni-pending-actions" style={{ marginTop: 10 }}>
+                  <button type="submit" className="ni-btn-yes" disabled={duzenKaydediyor}>{duzenKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
+                  <button type="button" className="ni-btn-no" onClick={() => setDuzenId(null)}>Vazgeç</button>
                 </div>
-              ))}
-            </div>
-            <div className="ni-pending-actions">
-              {i.aktif ? (
-                <button type="button" className="ni-btn-no" onClick={() => receteKarar(i.id, 'bitti')}>
-                  Sonlandır
-                </button>
-              ) : (
-                <button type="button" className="ni-btn-yes" onClick={() => receteKarar(i.id, 'aktif')}>
-                  Yeniden aktif
-                </button>
-              )}
-              <button type="button" className="ni-remove" onClick={() => sil(i.id)} aria-label="İlacı kaldır">Kaldır</button>
-            </div>
+              </form>
+            ) : (
+              <>
+                <div className="ni-item-main">
+                  <div className="ni-item-name">
+                    {i.ilac_adi}
+                    {!i.aktif && <span className="ni-tag-passive">Sonlandırıldı</span>}
+                  </div>
+                  <div className="ni-item-meta">
+                    {[i.etken_madde, i.doz, i.kullanim_sikli, i.kutu_adedi ? `${i.kutu_adedi} kutu` : ''].filter(Boolean).join(' · ')}
+                  </div>
+                  {i.baslangic_tarihi && (
+                    <div className="ni-item-date">
+                      Başlangıç: {new Date(i.baslangic_tarihi).toLocaleDateString('tr-TR')}
+                      {i.bitis_tarihi ? ` · Bitiş: ${new Date(i.bitis_tarihi).toLocaleDateString('tr-TR')}` : ''}
+                    </div>
+                  )}
+                  {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
+                  {i.aktif && (i.doz_guvenligi || []).map((m, n) => (
+                    <div key={n} role="alert" style={{ marginTop: 6, padding: '8px 10px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45, color: '#991B1B' }}>
+                      <strong>⚠ Doz güvenliği:</strong> {m}
+                    </div>
+                  ))}
+                </div>
+                <div className="ni-pending-actions">
+                  <button type="button" className="ni-btn-yes" onClick={() => duzenAc(i)}>Düzenle</button>
+                  {i.aktif ? (
+                    <button type="button" className="ni-btn-no" onClick={() => receteKarar(i.id, 'bitti')}>
+                      Sonlandır
+                    </button>
+                  ) : (
+                    <button type="button" className="ni-btn-yes" onClick={() => receteKarar(i.id, 'aktif')}>
+                      Yeniden aktif
+                    </button>
+                  )}
+                  <button type="button" className="ni-remove" onClick={() => sil(i.id)} aria-label="İlacı kaldır">Kaldır</button>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>

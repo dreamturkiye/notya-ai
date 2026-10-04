@@ -10,8 +10,8 @@ import { cekBlokDegistir, cekBlokVarMi, cekNotMetni } from '@/lib/doktor/muayene
 import { cekListeHesapla, cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { hastaDogumIso } from '@/lib/specialties/kapsamSunucu'
-import { notAsilariniTemizle } from '@/lib/doktor/notAsilari'
-import { nottanAsiAktar, type AsiAktarimSonucu } from '@/lib/doktor/notAsiAktarim'
+import { asilariMetindenTamamla, metindenUygulananAsilariCikar, notAsilariniTemizle } from '@/lib/doktor/notAsilari'
+import { nottanAsiAktar, ziyaretGunu, type AsiAktarimSonucu } from '@/lib/doktor/notAsiAktarim'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,13 +117,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   // NOTYA-ASI-NOT-01: "Bu muayenede uygulanan aşılar" (dizi) — hekim formda düzenler; onayda aşı kartına aktarılır
   // (nottanAsiAktar aşağıda). Liste sunucuda temizlenir: ad normalize, doz 1–12, tarih ISO — değer uydurulmaz.
+  // NOTYA-ASI-NOT-05: liste boşsa objektif/plan/tedavi metninden "uygulandı/yaptım" aşılarını çıkar
+  // (yeniden-değerlendirme asilar'ı AI ile yazmadığı için hekim metni otorite).
   const yeniAsilar = duzenlemeler.asilar
-  if (Array.isArray(yeniAsilar)) {
-    const temiz = notAsilariniTemizle(yeniAsilar)
+  {
+    let temiz = Array.isArray(yeniAsilar) ? notAsilariniTemizle(yeniAsilar) : notAsilariniTemizle(existing.content_asilar)
+    if (!temiz.length) {
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon]) as string | null
+      const gun = ziyaretGunu(existing.created_at as string | null)
+      temiz = metindenUygulananAsilariCikar([son('content_objektif'), son('content_plan'), son('content_tedavi')])
+        .map((a) => ({ ...a, uygulama_tarihi: a.uygulama_tarihi || gun }))
+    } else {
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon]) as string | null
+      const gun = ziyaretGunu(existing.created_at as string | null)
+      temiz = asilariMetindenTamamla(temiz, [son('content_objektif'), son('content_plan'), son('content_tedavi')])
+        .map((a) => ({ ...a, uygulama_tarihi: a.uygulama_tarihi || gun }))
+    }
     const eskiStr = JSON.stringify(existing.content_asilar || [])
     const yeniStr = JSON.stringify(temiz)
     if (eskiStr !== yeniStr) {
-      guncelleme.content_asilar = temiz
+      guncelleme.content_asilar = temiz.length ? temiz : null
       loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'content_asilar', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
     }
   }

@@ -39,7 +39,13 @@ interface NewIlac {
   notlar: string;
 }
 
-const KULLANIM_SECENEKLERI = [
+// Öneri — hekim serbest metin yazabilir (NOTYA-ILAC-SIKLIK-01).
+const KULLANIM_ONERI = [
+  { value: '1x1', label: '1x1' },
+  { value: '2x1', label: '2x1' },
+  { value: '3x1', label: '3x1' },
+  { value: '4x1', label: '4x1' },
+  { value: 'Lüzumlu halde', label: 'Lüzumlu halde' },
   { value: 'Gunluk', label: 'Günlük' },
   { value: '2xGun', label: 'Günde 2 kez' },
   { value: '3xGun', label: 'Günde 3 kez' },
@@ -47,7 +53,7 @@ const KULLANIM_SECENEKLERI = [
   { value: 'Aylik', label: 'Aylık' },
 ];
 
-const KULLANIM_ETIKET: Record<string, string> = KULLANIM_SECENEKLERI.reduce(
+const KULLANIM_ETIKET: Record<string, string> = KULLANIM_ONERI.reduce(
   (acc, o) => ({ ...acc, [o.value]: o.label }),
   {}
 );
@@ -56,7 +62,7 @@ const EMPTY_ILAC: NewIlac = {
   ad: '',
   etkenMadde: '',
   doz: '',
-  kullanim: 'Gunluk',
+  kullanim: '',
   baslangic: '',
   bitis: '',
   notlar: '',
@@ -112,6 +118,8 @@ export default function DoktorIlaclarPage() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [newIlac, setNewIlac] = useState<NewIlac>(EMPTY_ILAC);
+  const [duzenId, setDuzenId] = useState<string | null>(null);
+  const [duzenIlac, setDuzenIlac] = useState<NewIlac>(EMPTY_ILAC);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,6 +282,82 @@ export default function DoktorIlaclarPage() {
     }
   };
 
+  const duzenAc = (ilac: Ilac) => {
+    setDuzenId(ilac.id);
+    setDuzenIlac({
+      ad: ilac.ad,
+      etkenMadde: ilac.etkenMadde,
+      doz: ilac.doz,
+      kullanim: ilac.kullanim,
+      baslangic: (ilac.baslangic || '').slice(0, 10),
+      bitis: (ilac.bitis || '').slice(0, 10),
+      notlar: ilac.notlar,
+    });
+    setError('');
+    setInfo('');
+  };
+
+  const duzenKaydet = async () => {
+    if (!duzenId) return;
+    setError('');
+    setInfo('');
+    if (!duzenIlac.ad.trim() || !duzenIlac.doz.trim() || !duzenIlac.kullanim.trim()) {
+      setError('İlaç adı, doz ve kullanım sıklığı zorunludur.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const token = await getAccessTokenAsync();
+      const res = await fetch(`/api/doktor/ilaclar/${duzenId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ad: duzenIlac.ad.trim(),
+          etkenMadde: duzenIlac.etkenMadde.trim() || duzenIlac.ad.trim(),
+          doz: duzenIlac.doz.trim(),
+          kullanim_sikli: duzenIlac.kullanim.trim(),
+          baslangic_tarihi: duzenIlac.baslangic || undefined,
+          bitis_tarihi: duzenIlac.bitis || null,
+          notlar: duzenIlac.notlar.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        setError(
+          payload && typeof payload === 'object' && typeof (payload as { error?: unknown }).error === 'string'
+            ? (payload as { error: string }).error
+            : 'İlaç güncellenemedi.',
+        );
+        return;
+      }
+      setIlaclar((prev) =>
+        prev.map((i) =>
+          i.id === duzenId
+            ? {
+                ...i,
+                ad: duzenIlac.ad.trim(),
+                etkenMadde: duzenIlac.etkenMadde.trim(),
+                doz: duzenIlac.doz.trim(),
+                kullanim: duzenIlac.kullanim.trim(),
+                baslangic: duzenIlac.baslangic,
+                bitis: duzenIlac.bitis,
+                notlar: duzenIlac.notlar.trim(),
+              }
+            : i,
+        ),
+      );
+      setDuzenId(null);
+      setInfo('İlaç güncellendi.');
+    } catch {
+      setError('İlaç güncellenemedi. Bağlantınızı kontrol edin.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const deleteIlac = async (id: string) => {
     if (!window.confirm('Bu ilacı silmek istediğinize emin misiniz?')) return;
 
@@ -311,67 +395,158 @@ export default function DoktorIlaclarPage() {
         opacity: pasif ? 0.72 : 1,
       }}
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: CHROME_RENK.ink }}>{ilac.ad}</div>
-          {ilac.etkenMadde && (
-            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{ilac.etkenMadde}</div>
+      {duzenId === ilac.id ? (
+        <div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <div>
+              <label style={toolsLabel}>İlaç adı *</label>
+              <input type="text" value={duzenIlac.ad} onChange={(e) => setDuzenIlac((p) => ({ ...p, ad: e.target.value }))} style={toolsInput} />
+            </div>
+            <div>
+              <label style={toolsLabel}>Etken madde</label>
+              <input type="text" value={duzenIlac.etkenMadde} onChange={(e) => setDuzenIlac((p) => ({ ...p, etkenMadde: e.target.value }))} style={toolsInput} />
+            </div>
+            <div>
+              <label style={toolsLabel}>Doz *</label>
+              <input type="text" value={duzenIlac.doz} onChange={(e) => setDuzenIlac((p) => ({ ...p, doz: e.target.value }))} style={toolsInput} />
+            </div>
+            <div>
+              <label style={toolsLabel}>Kullanım sıklığı *</label>
+              <input
+                type="text"
+                list="ilaclar-siklik-onerileri-duzen"
+                value={duzenIlac.kullanim}
+                onChange={(e) => setDuzenIlac((p) => ({ ...p, kullanim: e.target.value }))}
+                placeholder="Serbest metin"
+                style={toolsInput}
+                autoComplete="off"
+              />
+              <datalist id="ilaclar-siklik-onerileri-duzen">
+                {KULLANIM_ONERI.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label style={toolsLabel}>Başlangıç</label>
+              <input type="date" value={duzenIlac.baslangic} onChange={(e) => setDuzenIlac((p) => ({ ...p, baslangic: e.target.value }))} style={toolsInput} />
+            </div>
+            <div>
+              <label style={toolsLabel}>Bitiş</label>
+              <input type="date" value={duzenIlac.bitis} onChange={(e) => setDuzenIlac((p) => ({ ...p, bitis: e.target.value }))} style={toolsInput} />
+            </div>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={toolsLabel}>Notlar</label>
+            <textarea value={duzenIlac.notlar} onChange={(e) => setDuzenIlac((p) => ({ ...p, notlar: e.target.value }))} rows={2} style={{ ...toolsInput, resize: 'vertical', fontFamily: 'inherit' }} />
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+            <button onClick={() => void duzenKaydet()} disabled={saving} style={toolsPrimaryBtn(saving)}>
+              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+            <button
+              onClick={() => setDuzenId(null)}
+              style={{
+                padding: '7px 12px',
+                borderRadius: 9,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: 'transparent',
+                color: CHROME_RENK.muted,
+                border: '1px solid rgba(58,44,34,0.2)',
+              }}
+            >
+              Vazgeç
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: CHROME_RENK.ink }}>{ilac.ad}</div>
+              {ilac.etkenMadde && (
+                <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{ilac.etkenMadde}</div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => duzenAc(ilac)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: 9,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  color: CHROME_RENK.pine,
+                  border: `1px solid ${CHROME_RENK.pine}66`,
+                }}
+              >
+                Düzenle
+              </button>
+              <button
+                onClick={() => updateIlacDurum(ilac.id, pasif)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: 9,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  color: pasif ? '#2E6E4E' : '#7A5B1E',
+                  border: `1px solid ${pasif ? 'rgba(46,110,78,0.4)' : 'rgba(122,91,30,0.4)'}`,
+                }}
+              >
+                {pasif ? 'Yeniden Başlat' : 'Durdur'}
+              </button>
+              <button
+                onClick={() => deleteIlac(ilac.id)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: 9,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  color: CHROME_RENK.warn,
+                  border: `1px solid ${CHROME_RENK.warn}66`,
+                }}
+              >
+                Sil
+              </button>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <span
+              style={{
+                background: '#E4F3F1',
+                color: CHROME_RENK.pine,
+                border: `1px solid ${CHROME_RENK.pine}40`,
+                padding: '4px 11px',
+                borderRadius: 9999,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              {[ilac.doz, KULLANIM_ETIKET[ilac.kullanim] || ilac.kullanim].filter(Boolean).join(' • ') ||
+                'Doz belirtilmemiş'}
+            </span>
+            <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>{tarihAraligi(ilac)}</span>
+          </div>
+
+          {ilac.notlar && (
+            <div style={{ marginTop: 10, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.5 }}>{ilac.notlar}</div>
           )}
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button
-            onClick={() => updateIlacDurum(ilac.id, pasif)}
-            style={{
-              padding: '7px 12px',
-              borderRadius: 9,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: 'transparent',
-              color: pasif ? '#2E6E4E' : '#7A5B1E',
-              border: `1px solid ${pasif ? 'rgba(46,110,78,0.4)' : 'rgba(122,91,30,0.4)'}`,
-            }}
-          >
-            {pasif ? 'Yeniden Başlat' : 'Durdur'}
-          </button>
-          <button
-            onClick={() => deleteIlac(ilac.id)}
-            style={{
-              padding: '7px 12px',
-              borderRadius: 9,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: 'transparent',
-              color: CHROME_RENK.warn,
-              border: `1px solid ${CHROME_RENK.warn}66`,
-            }}
-          >
-            Sil
-          </button>
-        </div>
-      </div>
-
-      <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-        <span
-          style={{
-            background: '#E4F3F1',
-            color: CHROME_RENK.pine,
-            border: `1px solid ${CHROME_RENK.pine}40`,
-            padding: '4px 11px',
-            borderRadius: 9999,
-            fontSize: 12,
-            fontWeight: 600,
-          }}
-        >
-          {[ilac.doz, KULLANIM_ETIKET[ilac.kullanim] || ilac.kullanim].filter(Boolean).join(' • ') ||
-            'Doz belirtilmemiş'}
-        </span>
-        <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>{tarihAraligi(ilac)}</span>
-      </div>
-
-      {ilac.notlar && (
-        <div style={{ marginTop: 10, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.5 }}>{ilac.notlar}</div>
+        </>
       )}
     </div>
   );
@@ -506,17 +681,20 @@ export default function DoktorIlaclarPage() {
 
               <div>
                 <label style={toolsLabel}>Kullanım Sıklığı *</label>
-                <select
+                <input
+                  type="text"
+                  list="ilaclar-siklik-onerileri"
                   value={newIlac.kullanim}
                   onChange={(e) => handleInputChange('kullanim', e.target.value)}
+                  placeholder="Örn. 2x1, sabah-akşam, lüzumlu halde"
                   style={toolsInput}
-                >
-                  {KULLANIM_SECENEKLERI.map((o) => (
-                    <option key={o.value} value={o.value} style={{ background: '#FFFFFF', color: '#000' }}>
-                      {o.label}
-                    </option>
+                  autoComplete="off"
+                />
+                <datalist id="ilaclar-siklik-onerileri">
+                  {KULLANIM_ONERI.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
-                </select>
+                </datalist>
               </div>
 
               <div>
