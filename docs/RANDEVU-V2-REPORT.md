@@ -62,7 +62,7 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 | Check | Result |
 |---|---|
 | `npx tsc --noEmit` | exit 0 |
-| `npm test` | see below |
+| `npm test` | 3690 tests: **3687 pass, 3 fail — all 3 pre-existing on `main` @ 9428fab**, reproduced there unchanged: `lib/asistan/fishMikrofon.test.ts` hangs (killed; reported as a failure) and `lib/asistan/tekBeyin.test.ts` cases 3–4 (`JSON.parse(...).system.map is not a function`). No V2 code is involved in either. |
 | `npm run test:izolasyon` | 386 pass / 0 fail (incl. 7 new cross-doctor cases) |
 | New unit tests | 38 pass / 0 fail |
 
