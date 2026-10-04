@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme";
 
 export const dynamic = 'force-dynamic';
 
@@ -59,40 +60,51 @@ export default function DavetKabulPage() {
     }
   }
 
+  // NOTYA-DAVET-GORUNUM-01 (Kaan, 2026-10-04): secretary invite page uses the same cream/pine look as the login page.
+  const R = CHROME_RENK;
+  const inp: React.CSSProperties = { width: "100%", background: R.paper, border: "1px solid " + R.border, borderRadius: 12, padding: "12px 14px", color: R.ink, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: CHROME_FONT.sans };
+  const etiket: React.CSSProperties = { fontSize: 13, color: R.muted, marginBottom: 6, display: "block", fontWeight: 600, letterSpacing: 0.2 };
+  const baslik: React.CSSProperties = { fontFamily: CHROME_FONT.serif, fontSize: 22, fontWeight: 560, color: R.ink, margin: "0 0 12px" };
+  const hata: React.CSSProperties = { background: "rgba(164,91,62,0.08)", border: "1px solid rgba(164,91,62,0.25)", borderRadius: 10, padding: "10px 12px", fontSize: 13, color: R.warn, marginBottom: 14 };
+  const btn: React.CSSProperties = { width: "100%", padding: 14, background: gonderiliyor ? "rgba(47,67,52,0.35)" : R.pine, border: "none", borderRadius: 12, color: "#fff", fontSize: 15, fontWeight: 600, cursor: gonderiliyor ? "not-allowed" : "pointer", fontFamily: CHROME_FONT.sans, letterSpacing: 0.2 };
+
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div className="ni-card" style={{ width: '100%', maxWidth: 420 }}>
-        {durum === 'yukleniyor' && <p style={{ color: '#64748B' }}>Davet kontrol ediliyor…</p>}
+    <div style={{ minHeight: "100dvh", background: R.cream, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: CHROME_FONT.sans, color: R.ink, padding: "calc(20px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px))", boxSizing: "border-box" }}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      <div style={{ background: R.paper, borderRadius: 24, padding: "clamp(28px, 6vw, 44px)", width: "100%", maxWidth: 420, boxSizing: "border-box", border: "1px solid " + R.border, boxShadow: "0 18px 50px rgba(58,44,34,0.08)" }}>
+        <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 30, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1, textAlign: "center", marginBottom: 22 }}>Notya</div>
+        {durum === 'yukleniyor' && <p style={{ color: R.muted, margin: 0 }}>Davet kontrol ediliyor…</p>}
 
         {durum === 'gecersiz' && (
           <>
-            <h3 className="ni-h3">Davet Kullanılamıyor</h3>
-            <div className="ni-error">{hataMesaji}</div>
+            <h3 style={baslik}>Davet Kullanılamıyor</h3>
+            <div style={hata}>{hataMesaji}</div>
           </>
         )}
 
         {durum === 'gecerli' && bilgi && (
           <>
-            <h3 className="ni-h3">Sekreter Daveti</h3>
-            <p style={{ fontSize: 14, color: 'rgba(10,22,40,0.7)', marginBottom: 16 }}>
-              Merhaba <strong>{bilgi.adSoyad}</strong>, <strong>{bilgi.doktorAdi}</strong> sizi Notya üzerinde sekreter olarak
+            <h3 style={baslik}>Sekreter Daveti</h3>
+            <p style={{ fontSize: 14, color: R.ink, lineHeight: 1.55, marginBottom: 16 }}>
+              Merhaba <strong>{bilgi.adSoyad}</strong>, <strong>{bilgi.doktorAdi || "Doktorunuz"}</strong> sizi Notya üzerinde sekreter olarak
               çalışmaya davet etti. Randevuları görüp yönetebileceksiniz. Devam etmek için bir şifre belirleyin.
             </p>
             <form onSubmit={kabulEt}>
-              <div className="ni-field">
-                <label className="ni-label">E-posta</label>
-                <input className="ni-input" value={bilgi.email} disabled />
+              <div style={{ marginBottom: 14 }}>
+                <label style={etiket}>E-posta</label>
+                <input style={inp} value={bilgi.email} disabled />
               </div>
-              <div className="ni-field">
-                <label className="ni-label">Şifre *</label>
-                <input className="ni-input" type="password" value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder="En az 8 karakter" />
+              <div style={{ marginBottom: 14 }}>
+                <label style={etiket}>Şifre *</label>
+                <input style={inp} type="password" value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder="En az 8 karakter" />
               </div>
-              <div className="ni-field">
-                <label className="ni-label">Şifre (tekrar) *</label>
-                <input className="ni-input" type="password" value={sifreTekrar} onChange={(e) => setSifreTekrar(e.target.value)} />
+              <div style={{ marginBottom: 14 }}>
+                <label style={etiket}>Şifre (tekrar) *</label>
+                <input style={inp} type="password" value={sifreTekrar} onChange={(e) => setSifreTekrar(e.target.value)} />
               </div>
-              {formHata && <div className="ni-error">{formHata}</div>}
-              <button type="submit" className="ni-btn" disabled={gonderiliyor}>
+              {formHata && <div style={hata}>{formHata}</div>}
+              <button type="submit" style={btn} disabled={gonderiliyor}>
                 {gonderiliyor ? 'Hesap oluşturuluyor…' : 'Hesabı Oluştur'}
               </button>
             </form>
@@ -101,8 +113,8 @@ export default function DavetKabulPage() {
 
         {durum === 'tamamlandi' && (
           <>
-            <h3 className="ni-h3">Hesabınız Hazır ✓</h3>
-            <p style={{ fontSize: 14, color: 'rgba(10,22,40,0.7)' }}>Giriş sayfasına yönlendiriliyorsunuz…</p>
+            <h3 style={baslik}>Hesabınız Hazır ✓</h3>
+            <p style={{ fontSize: 14, color: R.ink, lineHeight: 1.55 }}>Giriş sayfasına yönlendiriliyorsunuz…</p>
           </>
         )}
       </div>

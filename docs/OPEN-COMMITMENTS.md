@@ -3153,3 +3153,5 @@ Source: Kaan — morning thin-mouth / strong-brain work (IKI-BEYIN-BIRDE + Custo
 | ID | Date | Status | What | Owner / waiting on |
 |----|------|--------|------|--------------------|
 | NOTYA-TEK-BEYIN-CORE-01 | 2026-10-03 | CODE | `tekBeyinAcikMi` default ON for every doctor (kill `off` / allowlist `only:`). All 30 personas + 10 klinik experts share the 3 Custom-LLM agent copies. Klinik signed-url + page use Custom LLM + `klinikCevapla`; ses-llm routes `klinik:` jetons. Parity test `tekBeyinCore.test.ts`. Avatar idle scroll fix also on `/asistan/klinik`. | Kaan: deploy; spot-check one non-pediatri specialty + one klinik voice call |
+
+- 2026-10-04 NOTYA-DAVET-02: GET /api/personel/davet/[token] returns an empty doktorAdi, so the secretary invite page cannot name the inviting doctor (page now falls back to Doktorunuz). Fix the API to return the doctor name. Waits on: Kaan (say fix).
