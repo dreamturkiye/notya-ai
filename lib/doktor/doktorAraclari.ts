@@ -36,8 +36,8 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // ARACLAR-CILA-01 Faz 4 — her branşta her vizitin kapanış ritüeli ve hekime özel hızlı şablonlar.
   { circleColor: '#0D9488', icon: 'MS', title: 'Muayene sonu paketi', desc: 'Vizitin kapanışı tek akışta: reçete · rapor · kontrol randevusu · portal özeti · SGK provizyon — her adım isteğe bağlı', route: '/doktor-tools/muayene-sonu', branslar: null },
   { circleColor: '#F59E0B', icon: 'SK', title: 'Sık kullandıklarım', desc: 'Kendi vizit şablonlarınız: alışılmış tanı · reçete taslağı · kontrol aralığı — tek dokunuşla ön doldurulur, tamamen düzenlenebilir', route: '/doktor-tools/sablonlarim', branslar: null },
-  // KONSULTASYON-02 — yanıt bekleyen konsültasyon takibi; kohort paneli olsun olmasın her branşta aynı.
-  { circleColor: '#0891B2', icon: 'BK', title: 'Bekleyen Konsültasyonlar', desc: 'Yanıtı gelmeyen konsültasyon istemleriniz tek listede: en uzun bekleyen üstte · yanıt ekle · hastaya hatırlat · yanıtsız kapat', route: '/doktor-tools/bekleyen-konsultasyonlar', branslar: null },
+  // KONSULTASYONLAR-01 — defter · istem · bekleyen (alt sekme) · konsültan portalı; kohort paneli olsun olmasın her branşta aynı.
+  { circleColor: '#0891B2', icon: 'KS', title: 'Konsültasyonlar', desc: 'Güvendiğiniz konsültan defteri · muayeneden istem · yanıt bekleyenler · konsültan e-posta linkiyle rapor bırakır', route: '/doktor-tools/konsultasyonlar', branslar: null },
 ]
 
 /**

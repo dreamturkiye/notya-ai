@@ -19,6 +19,9 @@ const UZANTI: Record<string, { bicim: Bicim; mime: string }> = {
   webp: { bicim: 'gorsel', mime: 'image/webp' },
   heic: { bicim: 'heic', mime: 'image/heic' },
   heif: { bicim: 'heic', mime: 'image/heif' },
+  gif: { bicim: 'gorsel', mime: 'image/gif' },
+  tiff: { bicim: 'gorsel', mime: 'image/tiff' },
+  tif: { bicim: 'gorsel', mime: 'image/tiff' },
   opus: { bicim: 'ses', mime: 'audio/ogg' },
   ogg: { bicim: 'ses', mime: 'audio/ogg' },
   oga: { bicim: 'ses', mime: 'audio/ogg' },
@@ -46,6 +49,9 @@ const MIME: Record<string, { bicim: Bicim; mime: string }> = {
   'image/heif': UZANTI.heif,
   'image/heic-sequence': UZANTI.heic,
   'image/heif-sequence': UZANTI.heif,
+  'image/gif': UZANTI.gif,
+  'image/tiff': UZANTI.tiff,
+  'image/tif': UZANTI.tiff,
   'audio/ogg': UZANTI.ogg,
   'audio/opus': UZANTI.ogg,
   'audio/x-opus+ogg': UZANTI.ogg,
@@ -80,7 +86,8 @@ export function bicimBelirle(ad: string, hamMime: string | null | undefined): Bi
   const u = uzanti(ad)
   // A specific MIME wins, except the generic ones browsers use when they do not know.
   if (mime && mime !== 'application/octet-stream' && MIME[mime]) {
-    // "video/mp4" from a file literally named .mp4 is a video — not taken. From MediaRecorder it has no extension.
+    // "video/mp4" from a file literally named .mp4 is a video — not taken in Gelen Belgeler.
+    // Konsültan portalı ve Kasa çekirdek vault allowlist'ini kullanır (kısa mp4/mov/webm orada).
     if (mime === 'video/mp4' && u === 'mp4') return null
     return MIME[mime]
   }
@@ -103,7 +110,7 @@ export function yapistirmaMetniUygunMu(metin: string): boolean {
 
 /** The accept= attribute of the upload input: documents, images and sound. */
 export const KABUL_EDILEN = [
-  '.pdf', '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.dcm',
+  '.pdf', '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif', '.tiff', '.tif', '.dcm',
   '.opus', '.ogg', '.oga', '.m4a', '.aac', '.mp3', '.wav', '.webm',
   '.doc', '.docx', '.xls', '.xlsx', '.csv', '.txt',
   'application/pdf', 'image/*', 'audio/*', 'application/dicom',

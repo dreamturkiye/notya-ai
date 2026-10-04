@@ -570,9 +570,8 @@ test('KBB tiles stay commercial: no dose, no diagnosis claim, no surgery/OR copy
   }
 })
 
-// KONSULTASYON-02 (Kaan 2026-09-19, seçenek #1) — "yanıt gelmedi" takibi kohort paneli olmayan branşlara da ulaşsın:
-// Bekleyen Konsültasyonlar EVRENSEL (ORTAK_…, branslar: null). 23 ayrı kohort paneli yerine tek araç.
-const BEKLEYEN_KONSULTASYONLAR = '/doktor-tools/bekleyen-konsultasyonlar'
+// KONSULTASYONLAR-01 — Defter · İstem · Bekleyen EVRENSEL (ORTAK_…, branslar: null). Eski bekleyen route 308 → buraya.
+const BEKLEYEN_KONSULTASYONLAR = '/doktor-tools/konsultasyonlar'
 const KOHORT_PANELI_OLAN_BRANSLAR = [
   'dahiliye',
   'goz-hastaliklari',
@@ -606,9 +605,10 @@ const KOHORT_PANELI_OLAN_BRANSLAR = [
   'kalp-damar-cerrahisi',
 ]
 
-test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş görür ve derin linki açar (kohortlu + kohortsuz hepsi)', () => {
+test('Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş görür ve derin linki açar (kohortlu + kohortsuz hepsi)', () => {
   const arac = ORTAK_DOKTOR_ARACLARI.find((a) => a.route === BEKLEYEN_KONSULTASYONLAR)
   assert.ok(arac, 'ORTAK_DOKTOR_ARACLARI içinde olmalı')
+  assert.equal(arac.title, 'Konsültasyonlar')
   assert.equal(arac.branslar, null)
   assert.ok(!BRANS_DOKTOR_ARACLARI.some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), 'branşa özel listeye eklenmemeli')
   assert.equal(TUM_DOKTOR_ARACLARI.filter((a) => a.route === BEKLEYEN_KONSULTASYONLAR).length, 1)
@@ -620,14 +620,14 @@ test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş gö
   // Wave-5: acil / anestezi / radyoloji / kalp-damar hepsi kohort taşıyor — kohortsuz boş kalır.
   assert.deepEqual(kohortsuz.sort(), [].sort())
   for (const b of [...anahtarlar, ...Object.values(BRANS_ETIKETLERI), ...KOHORT_PANELI_OLAN_BRANSLAR, 'kadin-dogum', 'İç Hastalıkları', 'Çocuk Sağlığı ve Hastalıkları']) {
-    assert.ok(doktorAraclariListesi(b).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), `${b} Bekleyen Konsültasyonlar'ı görmeli`)
+    assert.ok(doktorAraclariListesi(b).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), `${b} Konsültasyonlar'ı görmeli`)
     assert.equal(doktorAraciBransaUygun(BEKLEYEN_KONSULTASYONLAR, b), true, `${b} derin link`)
   }
   // Branşı henüz tanımlanmamış hekim de kendi bekleyenlerini izler (evrensel omurga).
   assert.ok(doktorAraclariListesi(null).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR))
 })
 
-test('Bekleyen Konsültasyonlar sayfası: OrtakAracKabugu + kendi rotası, ticari metin, landing yalnız kart', () => {
+test('Konsültasyonlar sayfası: OrtakAracKabugu + kendi rotası, ticari metin, landing yalnız kart; eski route 308', () => {
   const kok = path.join(import.meta.dirname, '../..')
   const sayfa = fs.readFileSync(path.join(kok, `app${BEKLEYEN_KONSULTASYONLAR}/page.tsx`), 'utf8')
   assert.match(sayfa, /OrtakAracKabugu/)
@@ -638,6 +638,8 @@ test('Bekleyen Konsültasyonlar sayfası: OrtakAracKabugu + kendi rotası, ticar
   assert.doesNotMatch(`${arac.title} ${arac.desc}`, /KONSULTASYON|sevk|Kaan|denetim/i)
   const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
   assert.doesNotMatch(landing, /BekleyenKonsultasyonlar/)
+  const cfg = fs.readFileSync(path.join(kok, 'next.config.mjs'), 'utf8')
+  assert.match(cfg, /bekleyen-konsultasyonlar.*konsultasyonlar/)
 })
 
 // ─── KARDIO-EXCEPTIONAL-01 — Kardiyoloji specialty-only Araçlar ─────────────────────────────

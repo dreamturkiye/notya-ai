@@ -10,7 +10,7 @@ export function assertAllowedUpload(fileType: string, fileSize: number, fileName
   if (!fileName?.trim()) throw new VaultValidationError('Dosya adı zorunludur')
   if (!VAULT_ALLOWED_MIME.includes(fileType as VaultAllowedMime)) {
     throw new VaultValidationError(
-      'Desteklenen türler: PDF, Word, Excel, JPEG/PNG/WebP/HEIC, ses (WAV/MP3/M4A), kısa video (mp4/webm)'
+      'Bu dosya türü kabul edilmiyor — JPEG, PNG, WebP, HEIC, GIF, TIFF, PDF, MP3, M4A, WAV, kısa MP4/MOV/WebM veya DICOM yükleyin.'
     )
   }
   if (!Number.isFinite(fileSize) || fileSize <= 0) {

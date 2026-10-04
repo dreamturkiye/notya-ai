@@ -40,6 +40,9 @@ export const VAULT_ALLOWED_MIME = [
   'image/webp',
   'image/heic',
   'image/heif',
+  'image/gif',
+  'image/tiff',
+  'image/tif',
   // Ses dosyaları (muayene / mesaj ekleri)
   'audio/wav',
   'audio/x-wav',
@@ -59,9 +62,13 @@ export const VAULT_ALLOWED_MIME = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',
   'text/plain',
-  // Görüntüler — kısa US klip (vault 4 MB sınırı duruyor)
+  // Kısa video (vault 4 MB sınırı — US klip / EKG videosu)
   'video/mp4',
   'video/webm',
+  'video/quicktime',
+  // DICOM (X-ray / MR; jpeg veya pdf olarak da girer)
+  'application/dicom',
+  'application/dicom+json',
 ] as const
 
 export type VaultAllowedMime = (typeof VAULT_ALLOWED_MIME)[number]

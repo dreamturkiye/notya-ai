@@ -60,11 +60,26 @@ export interface KonsultasyonSatiri {
   durum: string
   son_hatirlatma_at: string | null
   created_at: string
+  /** KONSULTASYONLAR-01 — hekimin yazdığı beklenen yanıt günü (takip vadesi). */
+  beklenen_gun?: string | null
+  defter_id?: string | null
+  /** İsteğe bağlı Fısıltı öğe kimliği; boşsa fısıltı eskisi gibi biter. */
+  fisilti_oge_id?: string | null
+  portal_jeton_hash?: string | null
+  portal_jeton_son?: string | null
+  konsultan_notu?: string | null
+  asistan_on_not?: string | null
+  asistan_on_not_at?: string | null
+  hekim_onay_at?: string | null
+  hastaya_verildi_at?: string | null
+  kaynak_not_id?: string | null
+  portal_gonderildi_at?: string | null
+  belge_idler?: string[] | null
 }
 
 /** GET/PATCH'in döndürdüğü kolonlar (select listesi — tek yerde). */
 export const KONSULTASYON_KOLONLARI =
-  'id, patient_id, hedef, hedef_brans, hedef_hekim, klinik_soru, not_metni, aciliyet, tanilar, mevcut_durum, istem_tarihi, yanit_tarihi, yanit_ozeti, belge_id, note_id, kaynak, durum, son_hatirlatma_at, created_at'
+  'id, patient_id, doctor_id, hedef, hedef_brans, hedef_hekim, klinik_soru, not_metni, aciliyet, tanilar, mevcut_durum, istem_tarihi, yanit_tarihi, yanit_ozeti, belge_id, note_id, kaynak, durum, son_hatirlatma_at, created_at, beklenen_gun, defter_id, fisilti_oge_id, portal_jeton_hash, portal_jeton_son, konsultan_notu, asistan_on_not, asistan_on_not_at, hekim_onay_at, hastaya_verildi_at, kaynak_not_id, portal_gonderildi_at, belge_idler'
 
 export function durumGrubu(durum: string | null | undefined): DurumGrubu {
   if (durum === 'yanitlandi') return 'yanitlandi'
@@ -167,7 +182,22 @@ export function bugunTrIso(simdi: number = Date.now()): string {
   return new Date(simdi + 3 * 3600e3).toISOString().slice(0, 10)
 }
 
-export type IstemGirdisi = { hedef_brans: SpecialtyKey; klinik_soru: string; hedef_hekim: string | null; aciliyet: Aciliyet; not_metni: string | null; tanilar: string | null; mevcut_durum: string | null; istem_tarihi: string }
+export type IstemGirdisi = {
+  hedef_brans: SpecialtyKey
+  klinik_soru: string
+  hedef_hekim: string | null
+  aciliyet: Aciliyet
+  not_metni: string | null
+  tanilar: string | null
+  mevcut_durum: string | null
+  istem_tarihi: string
+  beklenen_gun: string | null
+  defter_id: string | null
+  fisilti_oge_id: string | null
+  kaynak_not_id: string | null
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** POST gövdesini doğrular. Hata varsa Türkçe mesaj döner; yoksa temizlenmiş satır alanları. */
 export function istemDogrula(b: Record<string, unknown> | null | undefined, bugun: string = bugunTrIso()): { hata: string } | { girdi: IstemGirdisi } {
@@ -181,6 +211,15 @@ export function istemDogrula(b: Record<string, unknown> | null | undefined, bugu
   if (istemHam != null && istemHam !== '' && !isoGunMu(istemHam)) return { hata: 'İstem tarihi geçersiz.' }
   const istem = isoGunMu(istemHam) ? istemHam : bugun
   if (istem > bugun) return { hata: 'İstem tarihi ileri bir tarih olamaz.' }
+  const beklenenHam = b?.beklenenGun ?? b?.beklenen_gun
+  if (beklenenHam != null && beklenenHam !== '' && !isoGunMu(beklenenHam)) return { hata: 'Beklenen gün geçersiz.' }
+  const beklenen = isoGunMu(beklenenHam) ? beklenenHam : null
+  if (beklenen && beklenen < istem) return { hata: 'Beklenen gün istem tarihinden önce olamaz.' }
+  const defterId = String(b?.defterId ?? b?.defter_id ?? '').trim()
+  if (defterId && !UUID_RE.test(defterId)) return { hata: 'Defter kaydı geçersiz.' }
+  const fisilti = temiz(b?.fisiltiOgeId ?? b?.fisilti_oge_id, 200)
+  const kaynakNot = String(b?.kaynakNotId ?? b?.kaynak_not_id ?? '').trim()
+  if (kaynakNot && !UUID_RE.test(kaynakNot)) return { hata: 'Muayene notu geçersiz.' }
   const bosNull = (x: string) => (x ? x : null)
   return {
     girdi: {
@@ -192,6 +231,10 @@ export function istemDogrula(b: Record<string, unknown> | null | undefined, bugu
       tanilar: bosNull(cokSatir(b?.tanilar, KONSULTASYON_SINIRLARI.tanilar)),
       mevcut_durum: bosNull(cokSatir(b?.mevcutDurum ?? b?.mevcut_durum, KONSULTASYON_SINIRLARI.mevcutDurum)),
       istem_tarihi: istem,
+      beklenen_gun: beklenen,
+      defter_id: defterId || null,
+      fisilti_oge_id: bosNull(fisilti),
+      kaynak_not_id: kaynakNot || null,
     },
   }
 }
@@ -213,7 +256,7 @@ export function yanitDogrula(
   return { yanit_ozeti: ozet, yanit_tarihi: tarih }
 }
 
-export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil'
+export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil' | 'onayla' | 'hastaya_ver'
 
 /** İstem KİLİDİ (AYSE-KONSULTASYON-01): yanıt gelmiş kayıtta istem metni değişmez — yalnız yanıt tarafı işlenir. */
 export const ISTEM_KILITLI_YANITLANDI = 'Yanıtlanmış konsültasyonun istemi kilitlidir — yalnız yanıt özeti düzeltilebilir.'
@@ -239,6 +282,12 @@ export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: tru
       return g === 'yanitlandi' ? { ok: true } : { ok: false, hata: 'Önce yanıt özetini ekleyin — nota eklenecek yanıt yok.' }
     case 'hatirlat':
       return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyon için hatırlatma gönderilir.' }
+    case 'onayla':
+      return g === 'yanitlandi' || g === 'bekliyor'
+        ? { ok: true }
+        : { ok: false, hata: 'Kapatılmış konsültasyon onaylanamaz.' }
+    case 'hastaya_ver':
+      return g === 'yanitlandi' ? { ok: true } : { ok: false, hata: 'Önce yanıtı onaylayın — hastaya verilecek özet yok.' }
     case 'sil':
       return g === 'kapandi'
         ? { ok: true }
@@ -325,8 +374,20 @@ export function yanitRevizyonu(onceki: string | null | undefined, sonraki: strin
   return { alan: 'yanit_ozeti', onceki: o, sonraki }
 }
 
-/** İstem tarihinden bugüne kaç gün (yanıt bekleyen satırda "N gündür bekliyor"). */
-export function beklemeGunu(s: Pick<KonsultasyonSatiri, 'istem_tarihi' | 'created_at'>, bugun: string = bugunTrIso()): number {
+/**
+ * Yanıt bekleyen satırda "N gündür bekliyor".
+ * Beklenen gün yazıldıysa: gün dolunca sarı eşiğine (BEKLEME_DIKKAT_GUN) oturur; iki aralık
+ * (KIRMIZI − DİKKAT) sonra kırmızı. Beklenen gün yoksa eski davranış: istem tarihinden gün sayılır.
+ */
+export function beklemeGunu(
+  s: Pick<KonsultasyonSatiri, 'istem_tarihi' | 'created_at' | 'beklenen_gun'>,
+  bugun: string = bugunTrIso(),
+): number {
+  if (s.beklenen_gun && isoGunMu(s.beklenen_gun) && isoGunMu(bugun)) {
+    const gecen = Math.round((Date.parse(`${bugun}T00:00:00Z`) - Date.parse(`${s.beklenen_gun}T00:00:00Z`)) / 86400e3)
+    if (gecen < 0) return 0
+    return BEKLEME_DIKKAT_GUN + gecen
+  }
   const istem = s.istem_tarihi && isoGunMu(s.istem_tarihi) ? s.istem_tarihi : String(s.created_at || '').slice(0, 10)
   if (!isoGunMu(istem) || !isoGunMu(bugun)) return 0
   return Math.max(0, Math.round((Date.parse(`${bugun}T00:00:00Z`) - Date.parse(`${istem}T00:00:00Z`)) / 86400e3))
@@ -511,6 +572,9 @@ export interface BekleyenKonsultasyon {
   aciliyet: string | null
   eskiKayit: boolean
   sonHatirlatmaAt: string | null
+  beklenenGun?: string | null
+  fisiltiOgeId?: string | null
+  asistanOnNot?: string | null
 }
 
 const KLINIK_SORU_LISTE_TAVANI = 300
@@ -522,7 +586,7 @@ const ACILIYET_SIRASI: Record<string, number> = { acil: 0, oncelikli: 1 }
  * Sıra: en uzun bekleyen üstte; aynı günde acil → öncelikli → rutin; sonra id (kararlı).
  */
 export function bekleyenListesi(
-  satirlar: ReadonlyArray<Pick<KonsultasyonSatiri, 'id' | 'patient_id' | 'hedef' | 'hedef_brans' | 'klinik_soru' | 'not_metni' | 'aciliyet' | 'istem_tarihi' | 'durum' | 'son_hatirlatma_at' | 'created_at'>>,
+  satirlar: ReadonlyArray<Pick<KonsultasyonSatiri, 'id' | 'patient_id' | 'hedef' | 'hedef_brans' | 'klinik_soru' | 'not_metni' | 'aciliyet' | 'istem_tarihi' | 'durum' | 'son_hatirlatma_at' | 'created_at' | 'beklenen_gun' | 'fisilti_oge_id' | 'asistan_on_not'>>,
   adlar: ReadonlyMap<string, string>,
   bugun: string = bugunTrIso(),
 ): BekleyenKonsultasyon[] {
@@ -541,6 +605,9 @@ export function bekleyenListesi(
         aciliyet: s.aciliyet,
         eskiKayit: !s.hedef_brans,
         sonHatirlatmaAt: s.son_hatirlatma_at || null,
+        beklenenGun: s.beklenen_gun && isoGunMu(s.beklenen_gun) ? s.beklenen_gun : null,
+        fisiltiOgeId: s.fisilti_oge_id || null,
+        asistanOnNot: s.asistan_on_not || null,
       }
     })
     .sort((a, b) => (b.gun - a.gun)

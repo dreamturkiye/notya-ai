@@ -105,8 +105,18 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
   const [taslak, setTaslak] = useState<TaslakDurumu>({ durum: 'yok' });
   const [gonderiyor, setGonderiyor] = useState(false);
   const [hata, setHata] = useState('');
+  const [defterId, setDefterId] = useState('');
+  const [beklenenGun, setBeklenenGun] = useState('');
+  const [defterListe, setDefterListe] = useState<Array<{ id: string; adSoyad: string; bransAnahtar: string; brans: string }>>([]);
+  const [portalLink, setPortalLink] = useState('');
   const kisaltmalar = olasiKisaltmalar(soru);
   const hazir = !!hedef && soru.trim().length >= KLINIK_SORU_EN_AZ && !gonderiyor;
+
+  useEffect(() => {
+    api('/api/doktor/konsultasyon/defter').then(({ ok, j }) => {
+      if (ok && Array.isArray(j.defter)) setDefterListe(j.defter);
+    }).catch(() => {});
+  }, []);
 
   // Ayşe'nin son taslağı + hekimin güncel metni (yanıt geldiğinde hekimin yazdığının üstüne yazmamak için).
   const soruRef = useRef(soru); soruRef.current = soru;
@@ -153,19 +163,53 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
 
   const gonder = async () => {
     if (!hazir) return;
-    setGonderiyor(true); setHata('');
+    setGonderiyor(true); setHata(''); setPortalLink('');
     try {
-      const { ok, j } = await api('/api/doktor/konsultasyon', { method: 'POST', govde: { patientId, hedefBrans: hedef, klinikSoru: soru, aciliyet, hedefHekim: hekim, tanilar, mevcutDurum: durum, not } });
-      if (ok && j.konsultasyon) olustu({ ...j.konsultasyon, eskiKayit: false, gun: 0, belge: null, belgeTaslagi: null });
-      else setHata(j.error || 'Konsültasyon kaydedilemedi.');
+      const { ok, j } = await api('/api/doktor/konsultasyon', {
+        method: 'POST',
+        govde: {
+          patientId,
+          hedefBrans: hedef,
+          klinikSoru: soru,
+          aciliyet,
+          hedefHekim: hekim,
+          tanilar,
+          mevcutDurum: durum,
+          not,
+          ...(defterId ? { defterId } : {}),
+          ...(beklenenGun ? { beklenenGun } : {}),
+        },
+      });
+      if (ok && j.konsultasyon) {
+        if (typeof j.portalLink === 'string' && j.portalLink) setPortalLink(j.portalLink);
+        olustu({ ...j.konsultasyon, eskiKayit: false, gun: 0, belge: null, belgeTaslagi: null });
+      } else setHata(j.error || 'Konsültasyon kaydedilemedi.');
     } catch { setHata('Kaydedilemedi — bağlantıyı kontrol edin.'); }
     finally { setGonderiyor(false); }
+  };
+
+  const defterSec = (id: string) => {
+    setDefterId(id);
+    const k = defterListe.find((x) => x.id === id);
+    if (!k) return;
+    if (k.bransAnahtar) setHedef(k.bransAnahtar);
+    if (k.adSoyad) setHekim(k.adSoyad);
   };
 
   return (
     <div style={stil.kutu}>
       <div style={stil.etiket}>Yeni konsültasyon istemi</div>
       <div style={{ display: 'grid', gap: 12 }}>
+        {defterListe.length > 0 && (
+          <Alan etiket="Defterden konsültan" ipucu="Güvendiğiniz konsültanı seçin — branş ve ad doldurulur; e-posta varsa portal linki gider.">
+            <select aria-label="Defterden konsültan" value={defterId} onChange={(e) => defterSec(e.target.value)} style={stil.input}>
+              <option value="">Seçilmedi</option>
+              {defterListe.map((k) => (
+                <option key={k.id} value={k.id}>{k.adSoyad} — {k.brans}</option>
+              ))}
+            </select>
+          </Alan>
+        )}
         <Alan etiket="Hedef branş" ipucu="Branşı seçtiğinizde Ayşe hasta dosyasından (son muayene ağırlıklı) istem taslağını yazar; siz düzenler ve onaylarsınız.">
           <select aria-label="Hedef branş" value={hedef} onChange={(e) => setHedef(e.target.value)} style={stil.input}>
             <option value="" style={{ color: '#000' }}>Branş seçin</option>
@@ -200,6 +244,9 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
         <Alan etiket="Konsültan hekim (isteğe bağlı)">
           <input aria-label="Konsültan hekim" value={hekim} onChange={(e) => setHekim(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.hedefHekim} placeholder="Ör. Dr. Ad Soyad" style={stil.input} />
         </Alan>
+        <Alan etiket="Beklenen gün (isteğe bağlı)" ipucu="Yanıtı beklediğiniz gün — sekreter ve hekim defterinde vade budur. Gün dolunca satır sarıya döner.">
+          <input aria-label="Beklenen gün" type="date" value={beklenenGun} onChange={(e) => setBeklenenGun(e.target.value)} style={stil.input} />
+        </Alan>
       </div>
       <Katlanir baslik="İstem formu ayrıntıları (isteğe bağlı)">
         <div style={{ display: 'grid', gap: 12 }}>
@@ -214,6 +261,12 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
           </Alan>
         </div>
       </Katlanir>
+      {portalLink && (
+        <div style={{ ...stil.uyari, marginBottom: 10 }} aria-live="polite">
+          Konsültan portal linki hazır (hesap gerekmez). E-posta bağlı değilse kopyalayıp gönderin:{' '}
+          <a href={portalLink} style={{ color: CHROME_RENK.pine, overflowWrap: 'anywhere' }}>{portalLink}</a>
+        </div>
+      )}
       <div style={stil.satir}>
         <button type="button" onClick={gonder} disabled={!hazir} aria-disabled={!hazir} style={{ ...stil.btn, opacity: hazir ? 1 : 0.55, cursor: hazir ? 'pointer' : 'not-allowed' }}>{gonderiyor ? 'Kaydediliyor…' : 'Konsültasyon istemi oluştur'}</button>
         {vazgec && <button type="button" onClick={vazgec} style={stil.ghost}>Vazgeç</button>}

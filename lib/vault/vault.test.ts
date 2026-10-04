@@ -11,12 +11,16 @@ describe('vault validation', () => {
     assert.doesNotThrow(() => assertAllowedUpload('application/pdf', 2048, 'lab.pdf'))
     assert.doesNotThrow(() => assertAllowedUpload('video/mp4', 1024, 'us-klip.mp4'))
     assert.doesNotThrow(() => assertAllowedUpload('video/webm', 2048, 'us-klip.webm'))
+    assert.doesNotThrow(() => assertAllowedUpload('video/quicktime', 1024, 'klip.mov'))
+    assert.doesNotThrow(() => assertAllowedUpload('image/gif', 512, 'a.gif'))
+    assert.doesNotThrow(() => assertAllowedUpload('image/tiff', 512, 'a.tiff'))
+    assert.doesNotThrow(() => assertAllowedUpload('application/dicom', 512, 'a.dcm'))
   })
 
   it('rejects disallowed mime', () => {
     assert.throws(
       () => assertAllowedUpload('application/zip', 100, 'x.zip'),
-      (e: unknown) => e instanceof VaultValidationError
+      (e: unknown) => e instanceof VaultValidationError && /kabul edilmiyor/.test(e.message)
     )
   })
 

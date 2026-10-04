@@ -451,17 +451,84 @@ export async function POST(req: NextRequest) {
   if (!(await hastaSahibiMi(sb, user.id, patientId))) return yok(HASTA_YOK)
   const d = istemDogrula(b)
   if ('hata' in d) return NextResponse.json({ error: d.hata }, { status: 400 })
+
+  // Defter kaydı hekime ait olmalı; hedef hekim/branş defterden doldurulabilir.
+  let defterEposta: string | null = null
+  let hedefHekim = d.girdi.hedef_hekim
+  let hedefBrans = d.girdi.hedef_brans
+  if (d.girdi.defter_id) {
+    const { data: defter } = await sb
+      .from('konsultasyon_defter')
+      .select('id, ad_soyad, brans, eposta')
+      .eq('id', d.girdi.defter_id)
+      .eq('doctor_id', user.id)
+      .maybeSingle()
+    if (!defter) return NextResponse.json({ error: 'Defter kaydı bulunamadı.' }, { status: 404 })
+    if (!hedefHekim) hedefHekim = String(defter.ad_soyad || '').trim() || null
+    if (defter.brans && hedefBransGecerli(defter.brans)) hedefBrans = defter.brans
+    defterEposta = defter.eposta ? String(defter.eposta).trim() : null
+  }
+
   const { data, error } = await sb.from('sevkler').insert({
     patient_id: patientId,
     doctor_id: user.id,
     // `hedef` NOT NULL (033) — geri uyum için kanonik anahtarın aynısı yazılır
-    hedef: d.girdi.hedef_brans,
+    hedef: hedefBrans,
     ...d.girdi,
+    hedef_brans: hedefBrans,
+    hedef_hekim: hedefHekim,
     kaynak: 'konsultasyon',
     durum: 'yanit_bekleniyor',
   }).select(KONSULTASYON_KOLONLARI).maybeSingle()
   if (error || !data) return NextResponse.json({ error: 'Konsültasyon kaydedilemedi — tablo henüz hazır olmayabilir.' }, { status: 500 })
-  const s = data as unknown as KonsultasyonSatiri
+  let s = data as unknown as KonsultasyonSatiri
+
+  // Portal jetonu (HMAC + hash) — konsültan hesap açmadan e-posta linkiyle açar.
+  let portalLink: string | null = null
+  try {
+    const { konsultanJetonu, portalJetonHam, portalJetonHash, portalJetonSonu, konsultanPortalYolu } = await import('@/lib/doktor/konsultanJeton')
+    const sonMs = portalJetonSonu(s.istem_tarihi)
+    const hmac = konsultanJetonu(String(s.id), sonMs)
+    const ham = portalJetonHam()
+    const hash = portalJetonHash(ham)
+    const { data: jetonlu } = await sb.from('sevkler').update({
+      portal_jeton_hash: hash,
+      portal_jeton_son: new Date(sonMs).toISOString(),
+    }).eq('id', s.id).eq('doctor_id', user.id).select(KONSULTASYON_KOLONLARI).maybeSingle()
+    if (jetonlu) s = jetonlu as unknown as KonsultasyonSatiri
+    // Linkte HMAC tercih (randevu deseni); yoksa hash gövdesi.
+    portalLink = hmac ? konsultanPortalYolu(hmac) : konsultanPortalYolu(ham)
+  } catch (e) { console.error('[konsultasyon] portal jeton', e) }
+
+  // Konsültana e-posta (hekimin bağlı kutusu) — klinik dilim linkte; şifre/hesap yok.
+  let epostaDurum: 'gonderildi' | 'bagli_degil' | 'yok' | 'hata' = defterEposta ? 'bagli_degil' : 'yok'
+  if (defterEposta && portalLink) {
+    try {
+      const { epostaGonder } = await import('@/lib/iletisim/otomatik/eposta/gonderim')
+      const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
+      const g = await epostaGonder(sb, {
+        doktorId: user.id,
+        alici: defterEposta,
+        konu: `Konsültasyon istemi — ${hedefEtiketi(s)}`,
+        metin: [
+          `Sayın meslektaşım,`,
+          ``,
+          `${hekim} sizinle bir konsültasyon istemi paylaştı.`,
+          `Bağlantı (hesap veya şifre gerekmez):`,
+          portalLink,
+          ``,
+          `Raporunuzu, filminizi veya EKG'nizi bu sayfadan bırakabilirsiniz.`,
+        ].join('\n'),
+      })
+      if (g.ok) {
+        epostaDurum = 'gonderildi'
+        await sb.from('sevkler').update({ portal_gonderildi_at: new Date().toISOString() }).eq('id', s.id).eq('doctor_id', user.id)
+      } else {
+        epostaDurum = g.hata?.includes('bağlı değil') || g.hata?.includes('bagli') ? 'bagli_degil' : 'hata'
+      }
+    } catch { epostaDurum = 'hata' }
+  }
+
   try {
     const { takipKonsultasyonAcildi } = await import('@/lib/doktor/takip')
     await takipKonsultasyonAcildi(sb, {
@@ -470,9 +537,15 @@ export async function POST(req: NextRequest) {
       sevkId: String(s.id),
       hedef: hedefEtiketi(s),
       istemTarihi: s.istem_tarihi || null,
+      beklenenGun: s.beklenen_gun || null,
     })
   } catch (e) { console.error('[takip] konsultasyon aç', e) }
-  return NextResponse.json({ ok: true, konsultasyon: { ...s, hedefEtiketi: hedefEtiketi(s) } }, { status: 201 })
+  return NextResponse.json({
+    ok: true,
+    konsultasyon: { ...s, hedefEtiketi: hedefEtiketi(s) },
+    portalLink,
+    epostaDurum,
+  }, { status: 201 })
 }
 
 export async function PATCH(req: NextRequest) {
@@ -481,7 +554,9 @@ export async function PATCH(req: NextRequest) {
   const { user, supabase: sb } = oturum
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const islem = String(b?.islem || '') as KonsultasyonIslemi
-  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil'].includes(islem)) return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
+  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil', 'onayla', 'hastaya_ver'].includes(islem)) {
+    return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
+  }
 
   // HASTA-IZOLASYON: satır id + doctor_id, sonra satırın hastası — yabancı id = yok.
   const s = await satirBu(sb, user.id, b?.id)
@@ -567,6 +642,47 @@ export async function PATCH(req: NextRequest) {
     if (!sonuc.eklendi || !sonuc.notId) return NextResponse.json({ ok: false, error: sonuc.sebep || 'Bugünkü muayene formu bulunamadı.' })
     const y = await guncelle({ note_id: sonuc.notId })
     return NextResponse.json({ ok: true, notId: sonuc.notId, konsultasyon: y })
+  }
+
+  // KONSULTASYONLAR-01 — dönüş onayı: asistan ön notu hekim onaylar → yeni randevu teklifi iki deftere.
+  if (islem === 'onayla') {
+    const ozet = String(b?.yanitOzeti ?? b?.yanit_ozeti ?? s.yanit_ozeti ?? s.asistan_on_not ?? '').replace(/\s+/g, ' ').trim().slice(0, 1000)
+    if (ozet.length < 3) return NextResponse.json({ error: 'Onaylanacak yanıt özeti yok.' }, { status: 400 })
+    const simdi = new Date().toISOString()
+    const y = await guncelle({
+      yanit_ozeti: ozet,
+      yanit_tarihi: bugunTrIso(),
+      durum: 'yanitlandi',
+      hekim_onay_at: simdi,
+    })
+    if (!y) return NextResponse.json({ error: 'Onay kaydedilemedi.' }, { status: 500 })
+    try {
+      const { takipKonsultasyonKapandi } = await import('@/lib/doktor/takip')
+      await takipKonsultasyonKapandi(sb, { doktorId: user.id, sevkId: String(s.id), neden: 'yanit' })
+    } catch (e) { console.error('[takip] onayla', e) }
+    // Yeni randevu teklifi — hekim + sekreter defterine satır (saat silinmez; takip/teklif).
+    try {
+      const { takipAc } = await import('@/lib/doktor/takip/yaz')
+      await takipAc(sb, {
+        doktorId: user.id,
+        patientId: s.patient_id,
+        tur: 'kontrol',
+        vade: bugunTrIso(),
+        kaynakSevkId: String(s.id),
+        ozet: `Konsültasyon sonrası kontrol randevusu teklif edildi (${hedefEtiketi(s)}).`,
+        kosullu: false,
+      })
+    } catch (e) { console.error('[takip] randevu teklifi', e) }
+    return NextResponse.json({ ok: true, konsultasyon: y, randevuTeklifi: true })
+  }
+
+  // Onaylı özeti isteğe bağlı hastaya ver (klinik rapor hekim onayı olmadan portalda yok).
+  if (islem === 'hastaya_ver') {
+    if (!s.hekim_onay_at && s.durum !== 'yanitlandi') {
+      return NextResponse.json({ error: 'Önce yanıtı onaylayın.' }, { status: 409 })
+    }
+    const y = await guncelle({ hastaya_verildi_at: new Date().toISOString() })
+    return y ? NextResponse.json({ ok: true, konsultasyon: y }) : NextResponse.json({ error: 'Kaydedilemedi.' }, { status: 500 })
   }
 
   // islem === 'hatirlat' — hastaya Sağlığım mesajı (klinik soru / tanı YOK), 7 günde bir

@@ -53,6 +53,8 @@ const nextConfig = {
       { source: '/', destination: '/doktor', permanent: false },
       { source: '/login', destination: '/giris', permanent: true },
       { source: '/signin', destination: '/giris', permanent: true },
+      // KONSULTASYONLAR-01 — eski "Bekleyen Konsültasyonlar" kapısı yeni araca (308 kalıcı).
+      { source: '/doktor-tools/bekleyen-konsultasyonlar', destination: '/doktor-tools/konsultasyonlar', permanent: true },
     ]
   },
 

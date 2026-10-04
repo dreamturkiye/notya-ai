@@ -24,8 +24,10 @@ export function konsultasyonIslemi(id: string, islem: 'kapat' | 'hatirlat' | 'no
   return konsultasyonApi('/api/doktor/konsultasyon', { method: 'PATCH', govde: { id, islem } })
 }
 
-/** Araçlar › Bekleyen Konsültasyonlar (ORTAK_DOKTOR_ARACLARI — 30 branş). */
-export const BEKLEYEN_KONSULTASYONLAR_ROTASI = '/doktor-tools/bekleyen-konsultasyonlar'
+/** Araçlar › Konsültasyonlar (ORTAK_DOKTOR_ARACLARI — 30 branş). Eski bekleyen route 308 ile buraya gider. */
+export const KONSULTASYONLAR_ROTASI = '/doktor-tools/konsultasyonlar'
+/** @deprecated KONSULTASYONLAR_ROTASI kullanın — geri uyum için aynı hedef. */
+export const BEKLEYEN_KONSULTASYONLAR_ROTASI = KONSULTASYONLAR_ROTASI
 
 export const YANITSIZ_KAPAT_ONAYI = 'Bu konsültasyon yanıt gelmeden kapatılsın mı? Geç gelen rapor yine eklenebilir.'
 export const YANITSIZ_SIL_ONAYI = 'Yanıtsız kapatılmış bu konsültasyon hasta dosyasından silinsin mi? Bu işlem geri alınamaz.'

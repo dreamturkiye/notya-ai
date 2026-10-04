@@ -1,18 +1,11 @@
-'use client'
-/** KONSULTASYON-02 — Araçlar › Bekleyen Konsültasyonlar. Evrensel (ORTAK_DOKTOR_ARACLARI); kapı OrtakAracKabugu içinde. */
-import { OrtakAracKabugu } from '@/lib/doktor/aracUi'
-import BekleyenKonsultasyonlar from '@/components/doktor/araclar/BekleyenKonsultasyonlar'
+/**
+ * KONSULTASYONLAR-01 — eski kapı. next.config.mjs 308 ile /doktor-tools/konsultasyonlar'a gider.
+ * Bu dosya derin link / statik derleme için kalır; istemci de aynı yöne yönlendirir.
+ */
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default function Page() {
-  return (
-    <OrtakAracKabugu
-      route="/doktor-tools/bekleyen-konsultasyonlar"
-      baslik="Bekleyen Konsültasyonlar"
-      aciklama="Yanıtı henüz gelmemiş konsültasyon istemleriniz tek listede, en uzun bekleyen üstte. Buradan hasta dosyasına geçip yanıtı ekleyebilir, hastaya hatırlatma gönderebilir ya da istemi yanıtsız kapatabilirsiniz."
-    >
-      <BekleyenKonsultasyonlar />
-    </OrtakAracKabugu>
-  )
+  redirect('/doktor-tools/konsultasyonlar')
 }

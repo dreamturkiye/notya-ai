@@ -42,12 +42,12 @@ export function KonsultasyonKohortListesi({ bekleyenler, yanitSuresi, hazir = tr
                     <span style={stil.kucuk}>→ {b.hedef} · istem {trGun(b.istemTarihi)}{b.aciliyet === 'acil' ? ' · acil' : b.aciliyet === 'oncelikli' ? ' · öncelikli' : ''}{b.eskiKayit ? ' · eski kayıt' : ''}</span>
                   </a>
                 ))}
-                {bekleyenler.length > 30 && <div style={stil.kucuk}>+{bekleyenler.length - 30} konsültasyon daha — tamamı Bekleyen Konsültasyonlar aracında.</div>}
+                {bekleyenler.length > 30 && <div style={stil.kucuk}>+{bekleyenler.length - 30} konsültasyon daha — tamamı Konsültasyonlar aracında.</div>}
               </div>
             )}
       <div style={{ ...stil.kucuk, marginTop: 8 }}>
         Hatırlatma ve yanıt ekleme hasta dosyası › Konsültasyonlar'dadır; tüm liste ve işlemler için{' '}
-        <a href={BEKLEYEN_KONSULTASYONLAR_ROTASI} style={{ color: '#0F9B8E', display: 'inline-block', padding: '12px 0' }}>Bekleyen Konsültasyonlar ›</a>
+        <a href={BEKLEYEN_KONSULTASYONLAR_ROTASI} style={{ color: '#0F9B8E', display: 'inline-block', padding: '12px 0' }}>Konsültasyonlar ›</a>
       </div>
     </div>
   );

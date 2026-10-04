@@ -80,18 +80,26 @@ export async function takipRandevuAcildi(
   }
 }
 
-/** New konsültasyon / sevk → open case. */
+/** New konsültasyon / sevk → open case. Vade = hekimin yazdığı beklenen gün (yoksa istem günü). */
 export async function takipKonsultasyonAcildi(
   sb: Sb,
-  g: { doktorId: string; patientId: string; sevkId: string; hedef?: string | null; istemTarihi?: string | null },
+  g: {
+    doktorId: string
+    patientId: string
+    sevkId: string
+    hedef?: string | null
+    istemTarihi?: string | null
+    beklenenGun?: string | null
+  },
 ): Promise<string | null> {
   try {
     const hedef = String(g.hedef || 'konsültasyon')
+    const vade = (g.beklenenGun || g.istemTarihi || bugunTrIso()).slice(0, 10)
     return await takipAc(sb, {
       doktorId: g.doktorId,
       patientId: g.patientId,
       tur: 'konsultasyon',
-      vade: (g.istemTarihi || bugunTrIso()).slice(0, 10),
+      vade,
       kaynakSevkId: g.sevkId,
       ozet: `Konsültasyon yanıt bekliyor (${hedef}).`,
     })

@@ -195,11 +195,11 @@ describe('KONSULTASYON-01 — kohort satırı (SSR, mevcut panellere takılır)'
     // KONSULTASYON-01 "yeni araç yok" diyordu; Kaan (2026-09-19) seçenek #1 ile TEK evrensel araç açtı — branşa özel konsültasyon aracı yine yok.
     const { ORTAK_DOKTOR_ARACLARI, BRANS_DOKTOR_ARACLARI } = await import('./doktorAraclari')
     assert.ok(!BRANS_DOKTOR_ARACLARI.some((a) => /konsult/i.test(a.route)))
-    assert.deepEqual(ORTAK_DOKTOR_ARACLARI.filter((a) => /konsult/i.test(a.route)).map((a) => [a.route, a.branslar]), [['/doktor-tools/bekleyen-konsultasyonlar', null]])
+    assert.deepEqual(ORTAK_DOKTOR_ARACLARI.filter((a) => /konsult/i.test(a.route)).map((a) => [a.route, a.branslar]), [['/doktor-tools/konsultasyonlar', null]])
   })
   it('kohort satırı ve araç aynı eşik fonksiyonunu kullanır; satır araca bağlanır', () => {
     const h = sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [] }))
-    assert.match(h, /href="\/doktor-tools\/bekleyen-konsultasyonlar"/)
+    assert.match(h, /href="\/doktor-tools\/konsultasyonlar"/)
     const { readFileSync } = require('node:fs') as typeof import('node:fs')
     for (const f of ['components/doktor/KonsultasyonKohortSatiri.tsx', 'components/doktor/araclar/BekleyenKonsultasyonlar.tsx']) {
       const k = readFileSync(f, 'utf8')
@@ -277,7 +277,7 @@ describe('KONSULTASYON-02 — ana sayfa özeti (yalnız sayı > 0)', () => {
   })
   it('sayı > 0: sayı + en uzun bekleme, araca götürür, 44 px; hasta adı taşımaz', () => {
     const h = renderToStaticMarkup(createElement(BekleyenKonsultasyonOzetiKarti, { ozet: { sayi: 3, dikkat: 1, kirmizi: 1, enUzunGun: 32 } }))
-    assert.match(h, /href="\/doktor-tools\/bekleyen-konsultasyonlar"/)
+    assert.match(h, /href="\/doktor-tools\/konsultasyonlar"/)
     assert.match(h, />3</)
     assert.match(h, /yanıt bekleyen konsültasyon/)
     assert.match(h, /en uzun 32 gündür/)
