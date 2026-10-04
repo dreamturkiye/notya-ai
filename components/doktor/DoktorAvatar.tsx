@@ -22,11 +22,15 @@ export default function DoktorAvatar({
   ad,
   fotoUrl,
   boyut = 52,
+  unvanli = true,
 }: {
   ad: string
   fotoUrl?: string | null
   boyut?: number
+  /** false: sekreter — Dr. unvanı eklenmez. */
+  unvanli?: boolean
 }) {
+  const etiketAd = unvanli ? hekimUnvanli(ad) : ad
   const ortak: React.CSSProperties = {
     width: boyut,
     height: boyut,
@@ -48,7 +52,7 @@ export default function DoktorAvatar({
       // eslint-disable-next-line @next/next/no-img-element -- data URL; next/image optimizasyonu geçersiz
       <img
         src={fotoUrl}
-        alt={`${hekimUnvanli(ad)} profil fotoğrafı`}
+        alt={`${etiketAd} profil fotoğrafı`}
         width={boyut}
         height={boyut}
         style={{ ...ortak, objectFit: 'cover', objectPosition: 'center', display: 'block', background: CHROME_RENK.pine }}
@@ -58,7 +62,7 @@ export default function DoktorAvatar({
 
   return (
     <div
-      aria-label={`${hekimUnvanli(ad)} baş harfleri`}
+      aria-label={`${etiketAd} baş harfleri`}
       style={{
         ...ortak,
         background: 'rgba(15,155,142,0.18)',

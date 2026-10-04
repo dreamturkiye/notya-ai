@@ -293,12 +293,23 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           hekimProfilOturumYaz({ specialty: u?.specialty, profession_type: u?.profession_type, full_name: u?.full_name || u?.first_name })
         }
       } catch { /* header just shows less */ }
-      // NOTYA-SEKRETER-01: sekreter doktor avatarını çekmez — initials + kendi adı.
-      if (!sekreterOturum) try {
-        const r = await fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${t}` } });
+      // NOTYA-SEKRETER-01: sekreter kendi avatarını; doktor kendi avatarını çeker.
+      try {
+        const yol = sekreterOturum ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
+        const r = await fetch(yol, { headers: { Authorization: `Bearer ${t}` } });
         if (r.ok) { const d = await r.json(); if (d?.avatar?.dataUrl) setAvatarUrl(d.avatar.dataUrl); }
       } catch { /* falls back to initials */ }
     })();
+  }, []);
+
+  // Hesabım'dan foto yüklenince üst çubuk anında güncellensin.
+  useEffect(() => {
+    const yenile = (e: Event) => {
+      const detail = (e as CustomEvent<{ dataUrl?: string | null }>).detail;
+      if (detail && 'dataUrl' in detail) setAvatarUrl(detail.dataUrl || null);
+    };
+    window.addEventListener('notya-avatar-guncellendi', yenile as EventListener);
+    return () => window.removeEventListener('notya-avatar-guncellendi', yenile as EventListener);
   }, []);
 
   // NOTYA-GELEN-BELGELER: badge + whether this user may use the inbox at all (doctor; secretary with the switch on).
@@ -592,17 +603,20 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         <div className="notya-icerik">
 
           <div className="notya-masa-ust" style={S({ alignItems: 'center', justifyContent: 'flex-end', gap: 16, color: '#6e6256', fontSize: 15, marginBottom: 24, flexWrap: 'wrap' })}>
-              <div
-                title={ad || (rol === 'sekreter' ? 'Sekreter' : 'Doktor')}
+              <button
+                type="button"
+                onClick={() => handleNav('/dashboard/doktor/hesap')}
+                title={ad ? `${ad} — profil fotoğrafı` : (rol === 'sekreter' ? 'Profil fotoğrafı' : 'Hesabım')}
+                aria-label="Profil fotoğrafını düzenle"
                 style={S({
                   width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
                   background: CHROME_RENK.pine, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: CHROME_RENK.gold, fontWeight: 700, fontSize: 15,
+                  color: CHROME_RENK.gold, fontWeight: 700, fontSize: 15, padding: 0, border: 'none', cursor: 'pointer',
                   boxShadow: `0 0 0 3px ${CHROME_RENK.cream}, 0 0 0 4px rgba(47,67,52,0.16)`,
                 })}
               >
-                {avatarUrl && rol !== 'sekreter' ? <img src={avatarUrl} alt={ad} style={S({ width: '100%', height: '100%', objectFit: 'cover' })} /> : initials}
-              </div>
+                {avatarUrl ? <img src={avatarUrl} alt={ad} style={S({ width: '100%', height: '100%', objectFit: 'cover' })} /> : initials}
+              </button>
               <div>
                 <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 14.5, fontWeight: 650, whiteSpace: 'nowrap' })}>
                   {ad ? (rol === 'sekreter' ? ad : hekimUnvanli(ad)) : '\u00A0'}

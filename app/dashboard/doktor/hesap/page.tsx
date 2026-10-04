@@ -1,9 +1,7 @@
 'use client';
 /**
- * NOTYA-HESAP-01 — Hesabım: profil fotoğrafı + e-posta görünümü + şifre değiştirme.
- * Kaan/Gökhan (2026-09-14): Ayarlar'da hesap/şifre için hiçbir yol yoktu.
- * Kaan (2026-09-17): profil fotoğrafının ayrı bir Ayarlar kartına gerek yok — Hesabım'da,
- * e-postanın üstünde dursun.
+ * NOTYA-HESAP-01 / NOTYA-SEKRETER-01 — Hesabım: profil fotoğrafı + e-posta + şifre.
+ * Doktor ve sekreter aynı sayfa; sekreter personel avatar API + kendi adını kullanır.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DoktorAvatar from '@/components/doktor/DoktorAvatar';
@@ -12,8 +10,10 @@ import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizErro
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 const AVATAR_ONBELLEK = 'notya_doktor_avatar';
+const AVATAR_OLAY = 'notya-avatar-guncellendi';
 
 export default function HesabimPage() {
+  const [sekreterMi, setSekreterMi] = useState(false);
   const [eposta, setEposta] = useState('');
   const [ad, setAd] = useState('Doktor');
   const [adSoyad, setAdSoyad] = useState('');
@@ -31,29 +31,53 @@ export default function HesabimPage() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const [me, av] = await Promise.all([
-          fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).catch(() => null),
-          fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).catch(() => null),
-        ]);
-        setEposta(me?.data?.email || '');
-        setAd(me?.data?.first_name || me?.data?.full_name || 'Doktor');
-        const first = me?.data?.first_name || '';
-        const last = me?.data?.last_name || '';
-        setAdSoyad(`${first} ${last}`.trim() || me?.data?.full_name || '');
-        setFotoUrl(av?.avatar?.dataUrl || null);
+        if (!t) return;
+        const personelRes = await fetch('/api/personel/me', {
+          headers: { Authorization: `Bearer ${t}` },
+          cache: 'no-store',
+        });
+        const pm = personelRes.ok
+          ? await personelRes.json().catch(() => ({} as { rol?: string; personelAdi?: string; personelKisaAdi?: string }))
+          : null;
+        const sekreter = pm?.rol === 'sekreter';
+        setSekreterMi(sekreter);
+
+        if (sekreter) {
+          const adTam = String(pm?.personelAdi || pm?.personelKisaAdi || '').trim() || 'Sekreter';
+          setAd(String(pm?.personelKisaAdi || adTam.split(/\s+/)[0] || 'Sekreter'));
+          setAdSoyad(adTam);
+          const av = await fetch('/api/personel/avatar', { headers: { Authorization: `Bearer ${t}` } })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+          setFotoUrl(av?.avatar?.dataUrl || null);
+          // E-posta auth'tan — users satırı olmayabilir.
+          const me = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+          setEposta(me?.data?.email || '');
+        } else {
+          const [me, av] = await Promise.all([
+            fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).catch(() => null),
+            fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).catch(() => null),
+          ]);
+          setEposta(me?.data?.email || '');
+          setAd(me?.data?.first_name || me?.data?.full_name || 'Doktor');
+          const first = me?.data?.first_name || '';
+          const last = me?.data?.last_name || '';
+          setAdSoyad(`${first} ${last}`.trim() || me?.data?.full_name || '');
+          setFotoUrl(av?.avatar?.dataUrl || null);
+        }
       } catch { /* e-posta/foto gösterimi kritik değil */ }
       setAvatarDurum('bos');
     })();
   }, []);
 
-  /** Karşılama ekranı ilk boyamada bunu okur; sunucu yanıtı gelince tazelenir. */
   const onbellegeYaz = useCallback((deger: string | null) => {
     try {
       if (deger) localStorage.setItem(AVATAR_ONBELLEK, deger);
       else localStorage.removeItem(AVATAR_ONBELLEK);
-    } catch {
-      /* özel sekmede localStorage kapalı olabilir — avatar yine sunucudan gelir */
-    }
+    } catch { /* yok */ }
+    try { window.dispatchEvent(new CustomEvent(AVATAR_OLAY, { detail: { dataUrl: deger } })); } catch { /* yok */ }
   }, []);
 
   const fotoSecildi = async (dosya: File | undefined) => {
@@ -70,7 +94,8 @@ export default function HesabimPage() {
       const t = await ensureDoctorAccessToken();
       const form = new FormData();
       form.append('file', dosya);
-      const r = await fetch('/api/doktor/profil/avatar', { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: form });
+      const yol = sekreterMi ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
+      const r = await fetch(yol, { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: form });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Fotoğraf yüklenemedi');
       setFotoUrl(j.avatar.dataUrl);
@@ -90,7 +115,8 @@ export default function HesabimPage() {
     setAvatarDurum('kaydediyor');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch('/api/doktor/profil/avatar', { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const yol = sekreterMi ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
+      const r = await fetch(yol, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
       if (!r.ok) throw new Error('Fotoğraf kaldırılamadı');
       setFotoUrl(null);
       onbellegeYaz(null);
@@ -128,17 +154,26 @@ export default function HesabimPage() {
 
   return (
     <div>
-      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
+        {sekreterMi ? 'Ön büro' : 'Ayarlar'}
+      </div>
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Hesabım</h1>
-      <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 24 }}>Giriş bilgileriniz, profil fotoğrafınız ve şifreniz.</p>
+      <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 24 }}>
+        {sekreterMi
+          ? 'Profil fotoğrafınız, e-postanız ve şifreniz.'
+          : 'Giriş bilgileriniz, profil fotoğrafınız ve şifreniz.'}
+      </p>
       <div style={{ maxWidth: 480 }}>
 
-        {/* Profil fotoğrafı — e-postanın üstünde (Kaan, 2026-09-17) */}
         <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 18, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
-          <DoktorAvatar ad={ad} fotoUrl={fotoUrl} boyut={56} />
+          <DoktorAvatar ad={adSoyad || ad} fotoUrl={fotoUrl} boyut={56} unvanli={!sekreterMi} />
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 8 }}>
-              {avatarDurum === 'yukleniyor' ? 'Yükleniyor…' : fotoUrl ? 'Karşılama ekranında bu şekilde görünür.' : 'Şu an baş harfli avatar kullanılıyor.'}
+              {avatarDurum === 'yukleniyor'
+                ? 'Yükleniyor…'
+                : fotoUrl
+                  ? 'Üst çubukta bu şekilde görünür.'
+                  : 'Şu an baş harfli avatar kullanılıyor.'}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button type="button" style={{ ...dugme, opacity: avatarDurum === 'kaydediyor' ? 0.6 : 1 }} disabled={avatarDurum === 'kaydediyor'} onClick={() => dosyaRef.current?.click()}>
@@ -176,7 +211,6 @@ export default function HesabimPage() {
             {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Şifre değiştirildi' : 'Şifreyi Kaydet'}
           </button>
         </div>
-        {/* Kaan/Gökhan (2026-09-14): masaüstünde hamburger menüsü yok — çıkış burada da olsun */}
         <button
           type="button"
           onClick={() => {
