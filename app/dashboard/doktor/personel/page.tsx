@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * NOTYA-RANDEVU-01 — personel (sekreter) yönetimi. Doktor bir sekreteri buradan davet eder;
- * davet linkini WhatsApp/SMS ile kendisi paylaşır (bkz. /api/doktor/personel — SMTP henüz
- * kurulmadığı için otomatik e-posta göndermiyoruz).
+ * NOTYA-RANDEVU-01 / NOTYA-SEKRETER-01 — personel (sekreter) yönetimi.
+ * Ad ve soyad ayrı girilir; sekreter dashboard'u kendi adıyla selamlanır.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -14,6 +13,8 @@ export const dynamic = 'force-dynamic';
 
 interface PersonelSatiri {
   id: string;
+  ad: string;
+  soyad: string;
   adSoyad: string;
   email: string;
   rol: string;
@@ -26,7 +27,8 @@ export default function PersonelPage() {
   const [liste, setListe] = useState<PersonelSatiri[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
-  const [adSoyad, setAdSoyad] = useState('');
+  const [ad, setAd] = useState('');
+  const [soyad, setSoyad] = useState('');
   const [email, setEmail] = useState('');
   const [kaydediyor, setKaydediyor] = useState(false);
   const [sonDavetLinki, setSonDavetLinki] = useState<{ adSoyad: string; link: string } | null>(null);
@@ -56,7 +58,10 @@ export default function PersonelPage() {
 
   async function davetGonder(e: React.FormEvent) {
     e.preventDefault();
-    if (!adSoyad.trim() || !email.trim()) { setHata('Ad soyad ve e-posta zorunludur.'); return; }
+    if (!ad.trim() || !soyad.trim() || !email.trim()) {
+      setHata('Ad, soyad ve e-posta zorunludur.');
+      return;
+    }
     setKaydediyor(true);
     setHata('');
     setSonDavetLinki(null);
@@ -66,12 +71,13 @@ export default function PersonelPage() {
       const r = await fetch('/api/doktor/personel', {
         method: 'POST',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adSoyad: adSoyad.trim(), email: email.trim() }),
+        body: JSON.stringify({ ad: ad.trim(), soyad: soyad.trim(), email: email.trim() }),
       });
       const d = await r.json();
       if (!r.ok) { setHata(d.error || 'Personel eklenemedi.'); return; }
-      setSonDavetLinki({ adSoyad: adSoyad.trim(), link: d.davetLinki });
-      setAdSoyad(''); setEmail('');
+      const adSoyad = `${ad.trim()} ${soyad.trim()}`;
+      setSonDavetLinki({ adSoyad, link: d.davetLinki });
+      setAd(''); setSoyad(''); setEmail('');
       await yukle();
     } catch {
       setHata('Personel eklenemedi. Bağlantınızı kontrol edin.');
@@ -115,8 +121,9 @@ export default function PersonelPage() {
     <div>
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 4px', color: '#2e251d', letterSpacing: '-0.02em' }}>Personel</h1>
-      <p style={{ color: CHROME_RENK.muted, fontSize: 14, marginBottom: 20 }}>
-        Sekreterinizi davet edin — randevularınızı sizin adınıza görüp yönetebilir. Klinik notlara, e-reçeteye ve SGK araçlarına erişemez.
+      <p style={{ color: CHROME_RENK.muted, fontSize: 14, marginBottom: 20, maxWidth: 560 }}>
+        Sekreterinizi ad ve soyadıyla davet edin — randevu, hasta kaydı ve mesajları sizin adınıza yönetir.
+        Klinik notlara, e-reçeteye ve SGK araçlarına erişemez; ön büro masasında kendi adıyla karşılanır.
       </p>
       <div style={{ maxWidth: 640 }}>
 
@@ -126,12 +133,16 @@ export default function PersonelPage() {
           <h3 className="ni-h3">Sekreter Davet Et</h3>
           <div className="ni-grid">
             <div className="ni-field">
-              <label className="ni-label">Ad Soyad *</label>
-              <input className="ni-input" value={adSoyad} onChange={(e) => setAdSoyad(e.target.value)} placeholder="Örn. Ayşe Yılmaz" />
+              <label className="ni-label">Ad *</label>
+              <input className="ni-input" value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Örn. Ayşe" autoComplete="given-name" />
             </div>
             <div className="ni-field">
+              <label className="ni-label">Soyad *</label>
+              <input className="ni-input" value={soyad} onChange={(e) => setSoyad(e.target.value)} placeholder="Örn. Yılmaz" autoComplete="family-name" />
+            </div>
+            <div className="ni-field" style={{ gridColumn: '1 / -1' }}>
               <label className="ni-label">E-posta *</label>
-              <input className="ni-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sekreter@ornek.com" />
+              <input className="ni-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sekreter@ornek.com" autoComplete="email" />
             </div>
           </div>
           <button type="submit" className="ni-btn" disabled={kaydediyor}>
@@ -161,7 +172,15 @@ export default function PersonelPage() {
             {liste.map((p) => (
               <div key={p.id} style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
                 <div>
-                  <div style={{ fontWeight: 600, color: CHROME_RENK.ink }}>{p.adSoyad} <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>· Sekreter</span></div>
+                  <div style={{ fontWeight: 600, color: CHROME_RENK.ink }}>
+                    {p.adSoyad || `${p.ad} ${p.soyad}`.trim()}{' '}
+                    <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>· Sekreter</span>
+                  </div>
+                  {(p.ad || p.soyad) && (
+                    <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>
+                      Ad: {p.ad || '—'} · Soyad: {p.soyad || '—'}
+                    </div>
+                  )}
                   <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>{p.email}</div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>
                     {p.davetSuresiDoldu && <span style={{ color: CHROME_RENK.warn }}>Davetin süresi doldu</span>}

@@ -23,6 +23,20 @@ export default function Giris() {
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) { setError(authHataMesaji(ae?.message, 'Giriş başarısız. Lütfen tekrar deneyin.')); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
+    // NOTYA-SEKRETER-01: sekreter onboarding'e gitmez — doğrudan Ön büro (Ana Sayfa) açılır.
+    try {
+      const personelRes = await fetch('/api/personel/me', {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+        cache: 'no-store',
+      })
+      if (personelRes.ok) {
+        const pm = await personelRes.json().catch(() => ({} as { rol?: string }))
+        if (pm.rol === 'sekreter') {
+          router.replace('/dashboard/doktor')
+          return
+        }
+      }
+    } catch { /* doktor akışına düş */ }
     // Prefer users table /me over auth metadata alone — metadata onboarding flag often never stuck.
     try {
       const meRes = await fetch('/api/users/me', {

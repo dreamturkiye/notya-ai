@@ -73,7 +73,8 @@ interface NavItem {
 // highlighted row rather than grouped with the rest.
 const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Asistan', route: '/asistan', sadeceDoktor: true, grup: 'asistan' },
-  { label: 'Ana Sayfa', route: '/dashboard/doktor', sadeceDoktor: true, grup: 'calisma' },
+  // NOTYA-SEKRETER-01: Ana Sayfa sekreterde Ön büro masası (SekreterMasa); doktor klinik ana sayfa.
+  { label: 'Ana Sayfa', route: '/dashboard/doktor', grup: 'calisma' },
   { label: 'Randevular', route: '/dashboard/doktor/randevular', grup: 'calisma' },
   { label: 'Hastalar', route: '/dashboard/doktor/hastalar', grup: 'calisma' },
   { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', grup: 'calisma' },
@@ -190,6 +191,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
+  const [doktorAdi, setDoktorAdi] = useState('');
   const [mesajUnread, setMesajUnread] = useState(0);
   const [gelenSayi, setGelenSayi] = useState(0);
   const [gelenErisim, setGelenErisim] = useState(false);
@@ -253,20 +255,34 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   useEffect(() => {
     const onbellek = hekimProfilOturumOku()
     const tazele = hekimProfilTazeleBasligi()
-    if (onbellek?.full_name) setAd(String(onbellek.full_name))
-    if (onbellek?.specialty) setBrans(String(onbellek.specialty))
     ;(async () => {
       const t = await ensureDoctorAccessToken();
       if (!t) return;
+      let sekreterOturum = false
       try {
-        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
-        if (r.ok) { const d = await r.json(); if (d.rol === 'sekreter') setRol('sekreter'); }
+        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.rol === 'sekreter') {
+            sekreterOturum = true
+            setRol('sekreter');
+            // NOTYA-SEKRETER-01: kendi adı — Dr. unvanı yok. Doktor önbelleğini kullanma.
+            const personelAdi = String(d.personelAdi || d.personelKisaAdi || '').trim();
+            if (personelAdi) setAd(personelAdi);
+            setDoktorAdi(String(d.doktorAdi || '').trim());
+            setBrans('');
+          }
+        }
       } catch { /* stays doktor */ }
+      if (!sekreterOturum) {
+        if (onbellek?.full_name) setAd(String(onbellek.full_name))
+        if (onbellek?.specialty) setBrans(String(onbellek.specialty))
+      }
       try {
         const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
         if (r.ok) { const d = await r.json(); setMesajUnread(Number(d.unreadCount) || 0); }
       } catch { /* badge stays 0 */ }
-      try {
+      if (!sekreterOturum) try {
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}`, ...tazele } });
         if (r.ok) {
           hekimProfilTazeleBitti()
@@ -277,7 +293,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           hekimProfilOturumYaz({ specialty: u?.specialty, profession_type: u?.profession_type, full_name: u?.full_name || u?.first_name })
         }
       } catch { /* header just shows less */ }
-      try {
+      // NOTYA-SEKRETER-01: sekreter doktor avatarını çekmez — initials + kendi adı.
+      if (!sekreterOturum) try {
         const r = await fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${t}` } });
         if (r.ok) { const d = await r.json(); if (d?.avatar?.dataUrl) setAvatarUrl(d.avatar.dataUrl); }
       } catch { /* falls back to initials */ }
@@ -387,7 +404,9 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         <div style={S({ color: '#6a7563', marginTop: 1 })}>{LEAF}</div>
         <div>
           <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1, color: CHROME_RENK.ink })}>Notya</div>
-          <span style={S({ display: 'block', marginTop: 3, fontSize: 9, letterSpacing: '0.28em', fontWeight: 700, color: '#7d7164' })}>DOKTOR</span>
+          <span style={S({ display: 'block', marginTop: 3, fontSize: 9, letterSpacing: '0.28em', fontWeight: 700, color: '#7d7164' })}>
+            {rol === 'sekreter' ? 'ÖN BÜRO' : 'DOKTOR'}
+          </span>
         </div>
       </div>
 
@@ -574,7 +593,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
 
           <div className="notya-masa-ust" style={S({ alignItems: 'center', justifyContent: 'flex-end', gap: 16, color: '#6e6256', fontSize: 15, marginBottom: 24, flexWrap: 'wrap' })}>
               <div
-                title={ad || 'Doktor'}
+                title={ad || (rol === 'sekreter' ? 'Sekreter' : 'Doktor')}
                 style={S({
                   width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
                   background: CHROME_RENK.pine, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -582,13 +601,17 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                   boxShadow: `0 0 0 3px ${CHROME_RENK.cream}, 0 0 0 4px rgba(47,67,52,0.16)`,
                 })}
               >
-                {avatarUrl ? <img src={avatarUrl} alt={ad} style={S({ width: '100%', height: '100%', objectFit: 'cover' })} /> : initials}
+                {avatarUrl && rol !== 'sekreter' ? <img src={avatarUrl} alt={ad} style={S({ width: '100%', height: '100%', objectFit: 'cover' })} /> : initials}
               </div>
               <div>
                 <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 14.5, fontWeight: 650, whiteSpace: 'nowrap' })}>
-                  {ad ? hekimUnvanli(ad) : '\u00A0'}
+                  {ad ? (rol === 'sekreter' ? ad : hekimUnvanli(ad)) : '\u00A0'}
                 </strong>
-                <small style={S({ color: '#8a7b6c', fontSize: 12 })}>{BRANS_ETIKET[brans] || '\u00A0'}</small>
+                <small style={S({ color: '#8a7b6c', fontSize: 12 })}>
+                  {rol === 'sekreter'
+                    ? (doktorAdi ? `${hekimUnvanli(doktorAdi)} · sekreter` : 'Sekreter')
+                    : (BRANS_ETIKET[brans] || '\u00A0')}
+                </small>
               </div>
               <div style={S({ width: 1, height: 40, background: 'rgba(58,44,34,0.16)' })} />
               <div>

@@ -22,6 +22,7 @@ import PaketSayacSeridi from '@/components/doktor/seans/PaketSayacSeridi'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
+import SekreterMasa from '@/components/doktor/SekreterMasa'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -135,6 +136,8 @@ function Ikon({ ad, boyut = 22 }: { ad: string; boyut?: number }) {
 
 export default function DoktorDashboard() {
   const router = useRouter()
+  const [sekreterMi, setSekreterMi] = useState(false)
+  const [rolHazir, setRolHazir] = useState(false)
   const [doktorAdi, setDoktorAdi] = useState('Doktor')
   const [ayseAcilis, setAyseAcilis] = useState<string>('')
   const [asistanKisaAd, setAsistanKisaAd] = useState('Ayşe')
@@ -157,7 +160,26 @@ export default function DoktorDashboard() {
     try { const c = localStorage.getItem('notya_doktor_name'); if (c) setDoktorAdi(c) } catch {}
   }, [])
 
+  // NOTYA-SEKRETER-01: sekreter kendi ön büro masasını görür (Dr. selamı / klinik KPI yok).
   useEffect(() => {
+    let iptal = false
+    ;(async () => {
+      const token = await ensureDoctorAccessToken()
+      if (!token) { router.push(DOKTOR_GIRIS); return }
+      try {
+        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+        if (r.ok) {
+          const d = await r.json()
+          if (!iptal && d.rol === 'sekreter') { setSekreterMi(true); setRolHazir(true); setLoading(false); return }
+        }
+      } catch { /* doktor varsayılanı */ }
+      if (!iptal) setRolHazir(true)
+    })()
+    return () => { iptal = true }
+  }, [router])
+
+  useEffect(() => {
+    if (!rolHazir || sekreterMi) return
     const initDashboard = async () => {
       const token = await ensureDoctorAccessToken()
       if (!token) { router.push(DOKTOR_GIRIS); return }
@@ -252,7 +274,7 @@ export default function DoktorDashboard() {
       setLoading(false)
     }
     initDashboard()
-  }, [router])
+  }, [router, rolHazir, sekreterMi])
 
   const todayFull = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Istanbul' })
 
@@ -263,6 +285,11 @@ export default function DoktorDashboard() {
 
   const S = (s: Record<string, unknown>) => s as React.CSSProperties
   const card: React.CSSProperties = { background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 20, boxShadow: '0 16px 34px rgba(58,44,34,0.06)' }
+
+  if (!rolHazir) {
+    return <p style={{ color: CHROME_RENK.muted, fontSize: 14 }}>Yükleniyor…</p>
+  }
+  if (sekreterMi) return <SekreterMasa />
 
   return (
     <div className="yg-ana" style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>

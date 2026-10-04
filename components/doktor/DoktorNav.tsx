@@ -26,7 +26,7 @@ interface NavItem {
 // that access at all, so it is doctor-only by the same rule.
 const navItems: NavItem[] = [
   { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)", sadeceDoktor: true },
-  { label: "Ana Sayfa", route: "/dashboard/doktor", color: "#0F9B8E", hideOnMobile: true, sadeceDoktor: true },
+  { label: "Ana Sayfa", route: "/dashboard/doktor", color: "#0F9B8E", hideOnMobile: true },
   { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E" },
   { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
   { label: "Mesajlar", route: "/dashboard/doktor/mesajlar", color: "#0D9488" },
