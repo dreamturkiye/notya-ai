@@ -139,6 +139,14 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 | UI | `components/doktor/randevu/{GoogleTakvimKarti,GoogleTakvimOnerileri}.tsx`; one line each in Entegrasyonlar and Randevular |
 | Tests | `lib/randevu/v2/google/google.test.ts`: pure conversion + sync engine against the fake DB with a stubbed Google API |
 
+### Checks (PR2 branch tip)
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` | exit 0 |
+| `npm test` file list | 3697 tests: **3695 pass, 2 fail**. Both failures are the pre-existing `lib/asistan/tekBeyin.test.ts` cases 3–4, which also fail on `main` @ 9428fab. `lib/asistan/fishMikrofon.test.ts` was left out of the run because it hangs on `main` too. |
+| New tests | `google.test.ts`: 11 pass |
+
 ### Manual test steps (needs Kaan's Google client; see NOTYA-RANDEVU-V2-B)
 
 1. In Google Cloud:
