@@ -477,6 +477,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         display: flex;
         flex-direction: column;
       }
+      /* NOTYA-RANDEVU-GENIS-01: takvim yan boşluklarını azalt — ay ızgarası daha geniş. */
+      .notya-icerik.notya-icerik-genis {
+        width: min(1480px, calc(100% - 40px));
+      }
       .notya-alt { margin-top: auto; }
       .notya-bitki { opacity: 0.4; }
       @media (min-width: 900px) {
@@ -600,7 +604,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         />
         </div>
 
-        <div className="notya-icerik">
+        <div className={pathname === '/dashboard/doktor/randevular' || pathname?.startsWith('/dashboard/doktor/randevular/') ? 'notya-icerik notya-icerik-genis' : 'notya-icerik'}>
 
           <div className="notya-masa-ust" style={S({ alignItems: 'center', justifyContent: 'flex-end', gap: 16, color: '#6e6256', fontSize: 15, marginBottom: 24, flexWrap: 'wrap' })}>
               <button

@@ -908,7 +908,7 @@ export default function RandevularPage() {
         .fv-ev:hover { background: rgba(58,44,34,0.08); }
         .fv-mini:hover { background: rgba(58,44,34,0.12) !important; }
       `}</style>
-      <div className="fv-wrap" style={{ maxWidth: 1280, margin: '0 auto', padding: 24 }}>
+      <div className="fv-wrap" style={{ maxWidth: '100%', margin: '0 auto', padding: '12px 4px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>Randevular</h1>
           {rol === 'sekreter' && (
