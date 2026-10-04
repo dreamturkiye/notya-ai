@@ -43,14 +43,48 @@ export function govdeKodla(metin: string): string {
   return (b64.match(/.{1,76}/g) ?? []).join('\r\n')
 }
 
-export function epostaMesaji(m: { kimden?: string; alici: string; konu: string; metin: string }): string {
+/**
+ * NOTYA-RANDEVU-V2: an optional text attachment (the appointment's .ics). Without attachments the message is
+ * byte-for-byte what it was before; with them it becomes multipart/mixed (text part first).
+ */
+export type EpostaEki = { ad: string; tur: string; icerik: string }
+
+const EK_ADI = /^[\w.-]{1,80}$/
+const EK_TURU = /^[\w.+-]+\/[\w.+-]+(; ?[\w-]+=[\w.-]+)*$/
+
+export function ekGecerliMi(e: EpostaEki): boolean {
+  return EK_ADI.test(e.ad) && EK_TURU.test(e.tur) && e.icerik.length > 0 && e.icerik.length <= 100_000
+}
+
+export function epostaMesaji(m: { kimden?: string; alici: string; konu: string; metin: string; ekler?: EpostaEki[] }): string {
+  const ekler = (m.ekler || []).filter(ekGecerliMi)
   const satirlar = [
     ...(m.kimden ? [`From: ${tekSatir(m.kimden)}`] : []),
     `To: ${tekSatir(m.alici)}`,
     `Subject: ${baslikKodla(m.konu)}`,
     'MIME-Version: 1.0',
+  ]
+  if (!ekler.length) {
+    satirlar.push('Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64')
+    return `${satirlar.join('\r\n')}\r\n\r\n${govdeKodla(m.metin)}\r\n`
+  }
+  const sinir = `notya_${Buffer.from(`${m.alici}|${m.konu}|${ekler.length}`).toString('hex').slice(0, 24)}`
+  satirlar.push(`Content-Type: multipart/mixed; boundary="${sinir}"`)
+  const parcalar = [
+    `--${sinir}`,
     'Content-Type: text/plain; charset="UTF-8"',
     'Content-Transfer-Encoding: base64',
+    '',
+    govdeKodla(m.metin),
+    ...ekler.flatMap((e) => [
+      `--${sinir}`,
+      `Content-Type: ${e.tur}; name="${e.ad}"`,
+      `Content-Disposition: attachment; filename="${e.ad}"`,
+      'Content-Transfer-Encoding: base64',
+      '',
+      (Buffer.from(e.icerik, 'utf8').toString('base64').match(/.{1,76}/g) ?? []).join('\r\n'),
+    ]),
+    `--${sinir}--`,
   ]
-  return `${satirlar.join('\r\n')}\r\n\r\n${govdeKodla(m.metin)}\r\n`
+  return `${satirlar.join('\r\n')}\r\n\r\n${parcalar.join('\r\n')}\r\n`
 }

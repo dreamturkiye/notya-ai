@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import RandevuPortalKarti from '@/components/doktor/randevu/RandevuPortalKarti'
+import GoogleTakvimKarti from '@/components/doktor/randevu/GoogleTakvimKarti'
 
 type Provider = 'medula' | 'nvi_kps'
 
@@ -227,6 +229,11 @@ export default function EntegrasyonlarPage() {
         {error && !active ? (
           <div style={{ marginTop: 16, color: '#7A5B1E', fontSize: 14 }}>{error}</div>
         ) : null}
+
+        {/* NOTYA-RANDEVU-V2: per-doctor switch, default OFF */}
+        {!loading && <RandevuPortalKarti />}
+        {/* NOTYA-RANDEVU-V2 PR2: hidden until Google credentials exist */}
+        {!loading && <GoogleTakvimKarti />}
       </div>
 
       {active && (

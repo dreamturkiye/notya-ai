@@ -55,6 +55,16 @@ Live: "bu hasta 12 aylık muayenesine geldiğinde kaç kiloydu" in Ayşe'ye Dan�
 | NOTYA-DANIS-OLCUM-09 | OPEN | Outside this matcher the quick card still answers any sentence containing "kilo / ateş / tansiyon" with the latest measurement (`dosyaSoruCevap`), e.g. "geçen yıl kaç kiloydu". Same class of defect, different phrasing. | Claude, small |
 | NOTYA-DANIS-OLCUM-10 | OPEN | Seen while testing, not changed: the answer template of canonical question 3 (`SORU_SABLONLARI.buyume`) tells the model "kilo / boy / baş çevresini … persentil ve Z" for every branş, adults included (BRANS-ALAN-SIZMASI risk in the model's wording; the evidence itself is clean). | Kaan: template per parameter set? Claude: small |
 | NOTYA-DANIS-OLCUM-11 | OPEN | Note text is read only for LABELLED values ("Kilo 9,8 kg", "TA 142/88"). An unlabelled value ("9800 gr geldi") is not read; `solunum` is not in the index; the note panel (`/api/doktor/not-konsult`) gets the file cut before the visit history and no measurement evidence. | Claude, if seen live |
+## NOTYA-RANDEVU-V2 — Sağlığım randevu, onay, hatırlatma, Google Takvim, bekleme listesi (Kaan, 2026-10-04)
+
+Architecture `docs/RANDEVU-V2.md`; build report `docs/RANDEVU-V2-REPORT.md`. Three stacked PRs to `main`: PR1 engine/portal/approval/reminders, PR2 Google Takvim, PR3 waitlist + Ayşe.
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-RANDEVU-V2-A | OPEN 2026-10-04 | Automatic WhatsApp reminders via Meta coexistence (approved utility template). Today WhatsApp is one-tap only (Hazır mesajlar); the adapter slot exists (`RandevuKanali`, `lib/randevu/v2/kanal.ts`). | Kaan: legal entity + Meta Business verification |
+| NOTYA-RANDEVU-V2-B | OPEN 2026-10-04 | Google OAuth client credentials (`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, scope `calendar.events`), Calendar API enabled, redirect URI `…/api/google-takvim/donus`, domain verification for the push webhook `…/api/google-takvim/bildirim`, and Google app verification (sensitive scope) for the Google Takvim sync (PR2). The feature is hidden until they exist. | Kaan |
+| NOTYA-RANDEVU-V2-C | DONE 2026-10-04 | Migrations `116_randevu_v2.sql`, `117_randevu_v2_google.sql`, `118_randevu_v2_bekleme.sql` applied to live (dry-run in a rolled-back transaction first); stack merged as one squash PR (#549) and deployed. Switch is OFF for every doctor. | — |
+| NOTYA-RANDEVU-V2-D | OPEN 2026-10-04 | Not finished in this build: (1) numeric "randevu talebi" badge on the DoktorNav Randevular item (today: Ana Sayfa + Randevular cards); (2) legacy ElevenLabs voice agent prompt does not mention `randevu_degistir` (tek-beyin voice and text have it); (3) Google Takvim syncs the primary calendar only; (4) Google routes are hand-reviewed ('incelendi') in the isolation inventory, not yet cross-doctor tests; (5) `lib/asistan/fishMikrofon.test.ts` hangs and `tekBeyin.test.ts` cases 3–4 fail on `main` too (pre-existing, not V2). | Claude |
 
 ## NOTYA-SES-TUR-01 — Ayşe 1:1 voice turn-taking (Kaan, 2026-09-30, branch `fix/voice-turn-taking`)
 

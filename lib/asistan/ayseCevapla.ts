@@ -93,6 +93,7 @@ import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar,
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { bugunTz, isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
+import { randevuV2Acik } from "@/lib/randevu/v2/ozellik"
 
 export type Kanal = "yazi" | "ses"
 
@@ -918,8 +919,10 @@ ${ilacBaglamMetni(drugs[0])}`
   if (aracZorlamaKapali()) komutZorla = false
   const zorlanan = komutZorla && eylemHastasi ? komut?.arac ?? null : null
   const hastasizArac = !eylemHastasi && Boolean(komut) && !eylemKapali()
+  // NOTYA-RANDEVU-V2: the appointment move/cancel tool only while the doctor's Hasta Portalı Randevu is ON.
+  const randevuV2 = eylemHastasi ? await randevuV2Acik(supabase, doktorId) : false
   const yazmaAraclari = eylemHastasi
-    ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }, { yalniz: zorlanan })
+    ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi, randevuV2 }, { yalniz: zorlanan })
     : hastasizArac ? aracTanimlari({ brans: eylemBransi, hasta: null, hastasiz: true }) : []
   // NOTYA-AYSE-ARAC-PARITE (2026-10-02): the READ tools the voice model had until 2026-09-25 (hasta_bul,
   // randevu_takvim — lib/asistan/okumaAraclari.ts). The routers above are the fast path; when they did not answer,
@@ -1210,7 +1213,7 @@ ${ilacBaglamMetni(drugs[0])}`
   if (eylemHastasi) {
     // NOTYA-EYLEM-21: Ayşe'nin kendi uyarı cümlesi karta "Ayşe'nin notu" olarak taşınır — deterministik
     // kontrolün yerine değil, yanına; asla `ciddi` sayılmaz (core/eylemler/ilacUyari.ts).
-    eylemOnerileri = await toolUseOnerileri(yanitGovdesi, eylemCtx(eylemHastasi), yuzey, { brans: eylemBransi, hasta: eylemHastasi }, aiData.proactiveWarning, { sorular: kartSorulari, sunucuDegerleri })
+    eylemOnerileri = await toolUseOnerileri(yanitGovdesi, eylemCtx(eylemHastasi), yuzey, { brans: eylemBransi, hasta: eylemHastasi, randevuV2 }, aiData.proactiveWarning, { sorular: kartSorulari, sunucuDegerleri })
   } else if (hastasizArac) {
     // NOTYA-AYSE-GERI-03: a tool call with no patient resolved. The model passed a NAME (`hasta_adi`), never an id.
     // It is resolved here with the doctor-scoped resolver: one match → the card is prepared for that patient;
@@ -1273,7 +1276,7 @@ ${ilacBaglamMetni(drugs[0])}`
           anahtar: karar.eylemAnahtar,
           girdi: { metin, alan_kaynaklari: { metin: { kaynak: "doktor_soyledi", alinti: String(message || "").slice(0, 400) } } },
           yuzey,
-          suzgec: { brans: eylemBransi, hasta: eylemHastasi },
+          suzgec: { brans: eylemBransi, hasta: eylemHastasi, randevuV2 },
         })
         if (o) { eylemOnerileri.push(o); kartCikti = true }
       }

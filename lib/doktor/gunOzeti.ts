@@ -36,6 +36,8 @@ export interface GunVerisi {
   onaysizNotlar?: string[]
   okunmamisMesaj: number
   yeniBelge: number             // son 24 saat
+  /** NOTYA-RANDEVU-V2: Sağlığım randevu talepleri yanıt bekliyor (0 while Hasta Portalı Randevu is OFF). */
+  randevuTalebi?: number
 }
 
 const TZ = 'Europe/Istanbul'
@@ -73,13 +75,13 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string, saatD
   const yarinS = trtGunSinirlari(1)
   const son24 = new Date(simdi.getTime() - 86400000).toISOString()
 
-  const [randevuRes, yarinRes, bugunSeansRes, dunSeansRes, notRes, mesajRes, belgeRes] = await Promise.all([
+  const [randevuRes, yarinRes, bugunSeansRes, dunSeansRes, notRes, mesajRes, belgeRes, talepRes] = await Promise.all([
     sb.from('randevular').select('baslangic, tur, durum, hasta_adi_serbest, patient_id')
       .eq('doktor_id', doctorId).gte('baslangic', bugunS.bas).lt('baslangic', bugunS.son)
-      .not('durum', 'in', '("iptal","gelmedi")').order('baslangic', { ascending: true }).limit(200),
+      .not('durum', 'in', '("iptal","gelmedi","talep")').order('baslangic', { ascending: true }).limit(200),
     sb.from('randevular').select('tur', { count: 'exact' })
       .eq('doktor_id', doctorId).gte('baslangic', yarinS.bas).lt('baslangic', yarinS.son)
-      .not('durum', 'in', '("iptal","gelmedi")').limit(200),
+      .not('durum', 'in', '("iptal","gelmedi","talep")').limit(200),
     // NOTYA-ARSIV-01: arşivlenmiş muayene ne "bugün/dün hasta" ne "onay bekliyor" sayısına girer.
     arsivsizSeanslar(sb, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).gte('started_at', bugunS.bas).lt('started_at', bugunS.son),
@@ -93,6 +95,9 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string, saatD
       .eq('doctor_id', doctorId).eq('okundu_pratik', false).eq('pratik_arsiv', false),
     sb.from('medical_documents').select('id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).gte('created_at', son24),
+    // NOTYA-RANDEVU-V2: pending Sağlığım requests (they hold a slot but are not appointments yet).
+    sb.from('randevular').select('id', { count: 'exact', head: true })
+      .eq('doktor_id', doctorId).eq('durum', 'talep'),
   ])
 
   const randevular = (randevuRes.data || []) as { baslangic: string; tur: string; durum: string; hasta_adi_serbest: string | null; patient_id: string | null }[]
@@ -142,6 +147,7 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string, saatD
     onaysizNotlar,
     okunmamisMesaj: mesajRes.count || 0,
     yeniBelge: belgeRes.count || 0,
+    randevuTalebi: talepRes?.count || 0,
   }
 }
 
@@ -190,6 +196,7 @@ export function gunOzetiMetni(
   if (v.onaysizNot > 0) bekleyen.push(`${v.onaysizNot} not onay bekliyor${v.onaysizNotlar?.length ? ` (${v.onaysizNotlar.slice(0, 2).join(', ')})` : ''}`)
   if (v.okunmamisMesaj > 0) bekleyen.push(`${v.okunmamisMesaj} okunmamış hasta mesajı var`)
   if (v.yeniBelge > 0 && faz !== 'sonu') bekleyen.push(`${v.yeniBelge} yeni belge geldi`)
+  if (v.randevuTalebi) bekleyen.push(`${v.randevuTalebi} randevu talebi yanıt bekliyor`)
   if (bekleyen.length) c.push(`${bekleyen.join(', ')}.`)
 
   if (faz === 'sonu') c.push(yakin ? 'Yarın görüşürüz.' : 'İyi dinlenmeler.')
@@ -201,6 +208,6 @@ export function gunOzetiMetni(
 export function gunBlogu(v: GunVerisi, faz: GunFazi): string {
   return `=== GÜNÜN DURUMU (${v.bugun} ${v.haftaGunu}, saat ${String(v.saatTRT).padStart(2, '0')}:00 TRT, faz: ${faz}) ===
 Bugün randevu: ${v.randevu.toplam} (kontrol ${v.randevu.kontrol}, kalan ${v.randevu.kalan}${v.randevu.ilkSaat ? `, ilki ${v.randevu.ilkSaat}` : ''}) | Bugün seans: ${v.bugunHasta} | Dün: ${v.dunHasta} | Yarın randevu: ${v.yarinRandevu.toplam} (kontrol ${v.yarinRandevu.kontrol})
-Onaysız not: ${v.onaysizNot}${v.onaysizNotlar?.length ? ` — ${v.onaysizNotlar.join(', ')}` : ''} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}
+Onaysız not: ${v.onaysizNot}${v.onaysizNotlar?.length ? ` — ${v.onaysizNotlar.join(', ')}` : ''} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}${v.randevuTalebi ? ` | Yanıt bekleyen randevu talebi: ${v.randevuTalebi}` : ''}
 Sohbet açılışında bunları kendiliğinden okuma. Doktor günü, randevuyu veya bekleyen işi sorarsa doğal ve KISA söyle. Dosyada olmayan hasta, şikayet veya vaka UYDURMA. Doktor konuya girdiyse günü tekrar etme.`
 }
