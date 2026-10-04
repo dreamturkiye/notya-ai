@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { CHROME_BG_IMAGE, CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import type { KonsultanDilim } from '@/lib/doktor/konsultanPortal'
+import { telefonHref } from '@/lib/portal/hekimKarti'
 
 const KABUL = '.jpg,.jpeg,.png,.webp,.heic,.heif,.gif,.tiff,.tif,.pdf,.mp3,.m4a,.wav,.mp4,.mov,.webm,.dcm'
 
@@ -299,7 +300,41 @@ export default function KonsultanPortal({ jeton, baslangicDilim = null, demoMu =
                 >
                   {dilim.hekimAdi}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 14.5, color: CHROME_RENK.muted, lineHeight: 1.4 }}>
+                {(dilim.hekimTelefon || dilim.hekimEposta) && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      fontSize: 15.5,
+                      lineHeight: 1.4,
+                      color: CHROME_RENK.ink,
+                    }}
+                  >
+                    {dilim.hekimTelefon ? (
+                      telefonHref(dilim.hekimTelefon) ? (
+                        <a
+                          href={telefonHref(dilim.hekimTelefon)!}
+                          style={{ color: CHROME_RENK.pine, fontWeight: 600, textDecoration: 'none' }}
+                        >
+                          {dilim.hekimTelefon}
+                        </a>
+                      ) : (
+                        <span style={{ fontWeight: 600 }}>{dilim.hekimTelefon}</span>
+                      )
+                    ) : null}
+                    {dilim.hekimEposta ? (
+                      <a
+                        href={`mailto:${dilim.hekimEposta}`}
+                        style={{ color: CHROME_RENK.pine, fontWeight: 600, textDecoration: 'none', wordBreak: 'break-all' }}
+                      >
+                        {dilim.hekimEposta}
+                      </a>
+                    ) : null}
+                  </div>
+                )}
+                <div style={{ marginTop: 8, fontSize: 14.5, color: CHROME_RENK.muted, lineHeight: 1.4 }}>
                   {dilim.brans}
                   <span aria-hidden> · </span>
                   istem {dilim.istemTarihi}

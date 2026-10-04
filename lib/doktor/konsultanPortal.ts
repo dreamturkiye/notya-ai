@@ -56,6 +56,10 @@ export function portalBelgeDogrula(ad: string, mime: string | null, boyut: numbe
 export interface KonsultanDilim {
   brans: string
   hekimAdi: string
+  /** İsteyen hekimin ofis / görünen telefonu (adın hemen altında). */
+  hekimTelefon: string | null
+  /** İsteyen hekimin e-postası (adın hemen altında). */
+  hekimEposta: string | null
   hastaAdi: string
   soru: string
   ozgecmis: string | null
@@ -67,15 +71,21 @@ export interface KonsultanDilim {
 export function konsultanDilimi(g: {
   satir: Pick<KonsultasyonSatiri, 'hedef_brans' | 'hedef' | 'klinik_soru' | 'not_metni' | 'tanilar' | 'mevcut_durum' | 'istem_tarihi' | 'created_at' | 'beklenen_gun'>
   hekimAdi: string
+  hekimTelefon?: string | null
+  hekimEposta?: string | null
   hastaAdi: string
   /** Onaylı muayene notundan kısa cümleler (transkript değil). */
   onayliCumleler?: string[]
 }): KonsultanDilim {
   const s = g.satir
   const oz = [s.tanilar, s.mevcut_durum].filter(Boolean).join(' · ').trim() || null
+  const tel = String(g.hekimTelefon || '').trim() || null
+  const ep = String(g.hekimEposta || '').trim() || null
   return {
     brans: hedefEtiketi(s),
     hekimAdi: g.hekimAdi || 'İsteyen hekim',
+    hekimTelefon: tel,
+    hekimEposta: ep,
     hastaAdi: g.hastaAdi || 'Hasta',
     soru: istemOzu(s.klinik_soru) || String(s.not_metni || '').trim() || '—',
     ozgecmis: oz,

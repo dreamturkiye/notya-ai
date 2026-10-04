@@ -24,6 +24,9 @@ export default function IletisimAyarKarti() {
   const [whatsapp, setWhatsapp] = useState('')
   const [muayenehane, setMuayenehane] = useState('')
   const [muayenehaneBagli, setMuayenehaneBagli] = useState(false)
+  const [muayenehaneTelefon, setMuayenehaneTelefon] = useState('')
+  const [varsayilanTelefon, setVarsayilanTelefon] = useState('')
+  const [varsayilanOzel, setVarsayilanOzel] = useState(false)
   const [eposta, setEposta] = useState('')
   const [acilis, setAcilis] = useState<EpostaAcilis>('uygulama')
   const [yuklendi, setYuklendi] = useState(false)
@@ -34,10 +37,26 @@ export default function IletisimAyarKarti() {
   useEffect(() => {
     void (async () => {
       try {
-        const j = await iletisimIstek<{ whatsapp: string; eposta: string; epostaAcilis: EpostaAcilis; muayenehane?: string; muayenehaneBagli?: boolean }>('/api/doktor/iletisim/ayarlar')
+        const j = await iletisimIstek<{
+          whatsapp: string
+          eposta: string
+          epostaAcilis: EpostaAcilis
+          muayenehane?: string
+          muayenehaneBagli?: boolean
+          muayenehaneTelefon?: string
+          varsayilanTelefon?: string | null
+          gorunenTelefon?: string
+        }>('/api/doktor/iletisim/ayarlar')
         setWhatsapp(j.whatsapp || '')
         setMuayenehane(j.muayenehane || '')
         setMuayenehaneBagli(Boolean(j.muayenehaneBagli))
+        const ofis = String(j.muayenehaneTelefon || '').trim()
+        const ozel = j.varsayilanTelefon != null && String(j.varsayilanTelefon).trim() !== ''
+          ? String(j.varsayilanTelefon).trim()
+          : ''
+        setMuayenehaneTelefon(ofis)
+        setVarsayilanOzel(Boolean(ozel))
+        setVarsayilanTelefon(ozel || ofis || String(j.gorunenTelefon || '').trim())
         setEposta(j.eposta || '')
         setAcilis(cihazEpostaAcilisi() || j.epostaAcilis || 'uygulama')
       } catch (e) {
@@ -54,10 +73,33 @@ export default function IletisimAyarKarti() {
     setMesaj('')
   }
 
+  const ofisYaz = (ham: string) => {
+    setMuayenehaneTelefon(ham)
+    // Ofis varsayılanı izliyorsa görünen alan ofisle birlikte yürür.
+    if (!varsayilanOzel) setVarsayilanTelefon(ham)
+  }
+
+  const varsayilanYaz = (ham: string) => {
+    setVarsayilanTelefon(ham)
+    const ofis = muayenehaneTelefon.trim()
+    setVarsayilanOzel(ham.trim() !== '' && ham.trim() !== ofis)
+  }
+
   const kaydet = async () => {
     setKaydediliyor(true); setHata(''); setMesaj('')
     try {
-      await iletisimIstek('/api/doktor/iletisim/ayarlar', { method: 'PUT', govde: { whatsapp, eposta, epostaAcilis: acilis, muayenehane } })
+      await iletisimIstek('/api/doktor/iletisim/ayarlar', {
+        method: 'PUT',
+        govde: {
+          whatsapp,
+          eposta,
+          epostaAcilis: acilis,
+          muayenehane,
+          muayenehaneTelefon,
+          // Ofisle aynıysa sunucu NULL yazar → ofisi izlemeye devam.
+          varsayilanTelefon: varsayilanOzel ? varsayilanTelefon : muayenehaneTelefon,
+        },
+      })
       setMesaj('Kaydedildi.')
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'Kaydedilemedi.')
@@ -90,6 +132,40 @@ export default function IletisimAyarKarti() {
         <label style={etiket} htmlFor="iletisim-whatsapp">WhatsApp numaranız</label>
         <input id="iletisim-whatsapp" style={giris} inputMode="tel" autoComplete="tel" placeholder="0532 123 45 67" value={whatsapp} disabled={!yuklendi} onChange={(e) => setWhatsapp(e.target.value)} />
         <button type="button" style={sessiz} onClick={denemeWhatsapp}>Kendime deneme gönder</button>
+
+        <div style={{ height: 16 }} />
+        <label style={etiket} htmlFor="iletisim-ofis-telefon">Muayenehane telefonu</label>
+        <div style={{ fontSize: 14, color: R.muted, lineHeight: 1.5, marginBottom: 8 }}>
+          Ofis / sabit hat veya cep. Hastalar ve konsültan meslektaşlarınız bu numarayı görür — siz ayrı bir varsayılan seçmedikçe.
+        </div>
+        <input
+          id="iletisim-ofis-telefon"
+          style={giris}
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="0216 123 45 67"
+          value={muayenehaneTelefon}
+          disabled={!yuklendi}
+          onChange={(e) => ofisYaz(e.target.value)}
+        />
+
+        <div style={{ height: 14 }} />
+        <label style={etiket} htmlFor="iletisim-varsayilan-telefon">Varsayılan telefon (görünen)</label>
+        <div style={{ fontSize: 14, color: R.muted, lineHeight: 1.5, marginBottom: 8 }}>
+          {varsayilanOzel
+            ? 'Şu an ofisten farklı bir numara gösteriyorsunuz. Ofis telefonuna dönmek için aynı numarayı yazın veya ofis alanını güncelleyin.'
+            : 'Muayenehane telefonu yazıldığında burası da onu izler. Farklı bir numara göstermek isterseniz değiştirin.'}
+        </div>
+        <input
+          id="iletisim-varsayilan-telefon"
+          style={giris}
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="0216 123 45 67"
+          value={varsayilanTelefon}
+          disabled={!yuklendi}
+          onChange={(e) => varsayilanYaz(e.target.value)}
+        />
 
         <div style={{ height: 16 }} />
         <label style={etiket} htmlFor="iletisim-muayenehane">Muayenehane WhatsApp hattı (varsa)</label>

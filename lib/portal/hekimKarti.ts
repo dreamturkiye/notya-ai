@@ -3,7 +3,9 @@
  *
  * Kaynaklar (token'ın doktoru):
  *  - users.full_name / specialty / clinic_name / recete_baslik.satirlar
- *  - users.iletisim_whatsapp_muayenehane (muayenehane hattı)
+ *  - users.iletisim_telefon_varsayilan (bilinçli varsayılan; doluysa öncelikli)
+ *  - users.iletisim_telefon_muayenehane (ofis telefonu — varsayılanın kaynağı)
+ *  - users.iletisim_whatsapp_muayenehane (muayenehane WhatsApp hattı)
  *  - doctor_avatars (şifreli profil fotoğrafı → data URL)
  *
  * recete_baslik.satirlar örneği (mig 017): branş, adres, telefon.
@@ -17,6 +19,14 @@ import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { normalizeTrPhoneE164 } from '@/lib/doktor/twilioNotify'
 import { whatsappNumarasi } from '@/lib/iletisim/baglantilar'
 import type { PortalHekim } from './types'
+
+/** PostgREST “kolon/tablo yok” — mig 124 henüz yoksa soft düş. */
+function kolonYokMu(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: string; message?: string }
+  if (['42P01', '42703', 'PGRST204', 'PGRST205'].includes(String(e.code || ''))) return true
+  return /does not exist|schema cache|could not find the/i.test(String(e.message || ''))
+}
 
 /** Satır telefon gibi görünüyor mu (0216…, 0532…, +90…). */
 export function satirTelefonMu(s: string): boolean {
@@ -60,23 +70,53 @@ export function telefonHref(ham: string | null | undefined): string | null {
   return rakam.length >= 7 ? `tel:${rakam}` : null
 }
 
+/**
+ * Hastaya / meslektaşa görünen telefon sırası:
+ * varsayılan (override) → ofis telefonu → WhatsApp muayenehane → reçete satırı.
+ * Override NULL ise ofis numarası otomatik varsayılandır.
+ */
+export function gorunenTelefonSec(girdi: {
+  varsayilanTelefon?: string | null
+  muayenehaneTelefon?: string | null
+  whatsappMuayenehane?: string | null
+  satirlar?: string[] | null
+}): string {
+  const adaylar = [
+    girdi.varsayilanTelefon,
+    girdi.muayenehaneTelefon,
+    girdi.whatsappMuayenehane,
+    ...(girdi.satirlar || []).filter(satirTelefonMu),
+  ]
+  for (const a of adaylar) {
+    const t = String(a || '').trim()
+    if (t) return t
+  }
+  return ''
+}
+
 export function hekimKartindanSatirlar(girdi: {
   fullName?: string | null
   specialty?: string | null
   clinicName?: string | null
   satirlar?: string[] | null
+  /** Bilinçli varsayılan (override); boşsa ofis izlenir. */
+  varsayilanTelefon?: string | null
+  /** Ofis / muayenehane telefonu. */
   muayenehaneTelefon?: string | null
+  /** Eski WhatsApp muayenehane hattı — ofis yoksa yedek. */
+  whatsappMuayenehane?: string | null
   avatarDataUrl?: string | null
 }): PortalHekim {
   const adHam = String(girdi.fullName || '').trim()
   const ad = adHam ? hekimUnvanli(adHam) : 'Doktorunuz'
   const satirlar = (girdi.satirlar || []).map((s) => String(s || '').trim()).filter(Boolean)
 
-  let telefonHam = String(girdi.muayenehaneTelefon || '').trim()
-  if (!telefonHam) {
-    const telSatir = satirlar.find(satirTelefonMu)
-    if (telSatir) telefonHam = telSatir
-  }
+  const telefonHam = gorunenTelefonSec({
+    varsayilanTelefon: girdi.varsayilanTelefon,
+    muayenehaneTelefon: girdi.muayenehaneTelefon,
+    whatsappMuayenehane: girdi.whatsappMuayenehane,
+    satirlar,
+  })
 
   const bransEtiket = girdi.specialty ? bransEtiketi(girdi.specialty) : ''
   const adresAdaylari = satirlar.filter((s) => {
@@ -101,11 +141,21 @@ export function hekimKartindanSatirlar(girdi: {
   }
 }
 
+type HekimUserRow = {
+  full_name?: string | null
+  specialty?: string | null
+  clinic_name?: string | null
+  recete_baslik?: unknown
+  iletisim_whatsapp_muayenehane?: string | null
+  iletisim_telefon_muayenehane?: string | null
+  iletisim_telefon_varsayilan?: string | null
+}
+
 /** Token doktorunun portal kartı — yabancı hekim satırı okunmaz (doctor_id = token). */
 export async function portalHekimKarti(sb: SupabaseClient, doctorId: string): Promise<PortalHekim> {
   const [userQ, avQ] = await Promise.all([
     sb.from('users')
-      .select('full_name, specialty, clinic_name, recete_baslik, iletisim_whatsapp_muayenehane')
+      .select('full_name, specialty, clinic_name, recete_baslik, iletisim_whatsapp_muayenehane, iletisim_telefon_muayenehane, iletisim_telefon_varsayilan')
       .eq('id', doctorId)
       .maybeSingle(),
     sb.from('doctor_avatars')
@@ -114,8 +164,17 @@ export async function portalHekimKarti(sb: SupabaseClient, doctorId: string): Pr
       .maybeSingle(),
   ])
 
-  const rb = (userQ.data?.recete_baslik && typeof userQ.data.recete_baslik === 'object'
-    ? userQ.data.recete_baslik
+  let row = userQ.data as HekimUserRow | null
+  if (userQ.error && kolonYokMu(userQ.error)) {
+    const eski = await sb.from('users')
+      .select('full_name, specialty, clinic_name, recete_baslik, iletisim_whatsapp_muayenehane')
+      .eq('id', doctorId)
+      .maybeSingle()
+    row = eski.data as HekimUserRow | null
+  }
+
+  const rb = (row?.recete_baslik && typeof row.recete_baslik === 'object'
+    ? row.recete_baslik
     : {}) as { satirlar?: unknown }
   const satirlar = Array.isArray(rb.satirlar)
     ? rb.satirlar.map((x) => String(x ?? '').trim()).filter(Boolean)
@@ -135,13 +194,13 @@ export async function portalHekimKarti(sb: SupabaseClient, doctorId: string): Pr
   }
 
   return hekimKartindanSatirlar({
-    fullName: userQ.data?.full_name ? String(userQ.data.full_name) : null,
-    specialty: userQ.data?.specialty ? String(userQ.data.specialty) : null,
-    clinicName: userQ.data?.clinic_name ? String(userQ.data.clinic_name) : null,
+    fullName: row?.full_name ? String(row.full_name) : null,
+    specialty: row?.specialty ? String(row.specialty) : null,
+    clinicName: row?.clinic_name ? String(row.clinic_name) : null,
     satirlar,
-    muayenehaneTelefon: userQ.data?.iletisim_whatsapp_muayenehane
-      ? String(userQ.data.iletisim_whatsapp_muayenehane)
-      : null,
+    varsayilanTelefon: row?.iletisim_telefon_varsayilan ? String(row.iletisim_telefon_varsayilan) : null,
+    muayenehaneTelefon: row?.iletisim_telefon_muayenehane ? String(row.iletisim_telefon_muayenehane) : null,
+    whatsappMuayenehane: row?.iletisim_whatsapp_muayenehane ? String(row.iletisim_whatsapp_muayenehane) : null,
     avatarDataUrl: avatar,
   })
 }

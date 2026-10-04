@@ -51,3 +51,44 @@ export function telefonAlani(ham: unknown): { deger: string | null } | { hata: s
   const s = cepTelefonuDogrula(t)
   return s.ok ? { deger: s.deger } : { hata: s.hata }
 }
+
+/**
+ * NOTYA-ILETISIM-02 — muayenehane / ofis telefonu: Türk cep + sabit hat (0216…) ve yurt dışı.
+ * Cep alanından farkı: sabit hat kabul edilir (hastanın arayacağı ofis numarası).
+ */
+export const OFIS_TELEFON_MESAJ = {
+  gecersiz: 'Telefon anlaşılamadı. Örnek: 0216 123 45 67 veya 0532 123 45 67.',
+} as const
+
+export function ofisTelefonuDogrula(ham: string | null | undefined): TelefonSonucu {
+  const t = String(ham ?? '').trim()
+  if (!t) return { ok: false, hata: OFIS_TELEFON_MESAJ.gecersiz }
+  if (!/^[0-9+()\-.\s/]+$/.test(t) || (t.indexOf('+') > 0) || (t.split('+').length > 2)) {
+    return { ok: false, hata: OFIS_TELEFON_MESAJ.gecersiz }
+  }
+  let rakam = t.replace(/\D/g, '')
+  const uluslararasi = t.startsWith('+') || rakam.startsWith('00')
+  if (rakam.startsWith('00')) rakam = rakam.slice(2)
+
+  if (uluslararasi) {
+    if (rakam.startsWith('90') && rakam.length === 12) {
+      const on = rakam.slice(2)
+      if (/^[2-5]\d{9}$/.test(on)) return { ok: true, deger: trBicim(on) }
+      return { ok: false, hata: OFIS_TELEFON_MESAJ.gecersiz }
+    }
+    if (/^[1-9]\d{7,14}$/.test(rakam)) return { ok: true, deger: `+${rakam}` }
+    return { ok: false, hata: OFIS_TELEFON_MESAJ.gecersiz }
+  }
+
+  const on = rakam.startsWith('0') ? rakam.slice(1) : rakam
+  if (/^[2-5]\d{9}$/.test(on)) return { ok: true, deger: trBicim(on) }
+  return { ok: false, hata: OFIS_TELEFON_MESAJ.gecersiz }
+}
+
+/** İsteğe bağlı ofis telefonu: boş → null; dolu ve geçerli → biçim; dolu ve geçersiz → hata. */
+export function ofisTelefonAlani(ham: unknown): { deger: string | null } | { hata: string } {
+  const t = typeof ham === 'string' ? ham.trim() : ''
+  if (!t) return { deger: null }
+  const s = ofisTelefonuDogrula(t)
+  return s.ok ? { deger: s.deger } : { hata: s.hata }
+}

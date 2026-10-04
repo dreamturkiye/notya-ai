@@ -62,6 +62,22 @@ describe('PORTAL-HEKIM-01 hekim kartı', () => {
     assert.equal(k.adres, 'Bağdat Cad. No:1')
   })
 
+  it('ofis telefonu varsayılan; özel varsayılan ofisi ezer', () => {
+    const ofis = hekimKartindanSatirlar({
+      fullName: 'Dr. Gökhan Mamur',
+      satirlar: ['0216 111 11 11'],
+      muayenehaneTelefon: '0216 000 00 00',
+      whatsappMuayenehane: '0532 999 88 77',
+    })
+    assert.equal(ofis.telefon, '0216 000 00 00')
+    const ozel = hekimKartindanSatirlar({
+      fullName: 'Dr. Gökhan Mamur',
+      muayenehaneTelefon: '0216 000 00 00',
+      varsayilanTelefon: '0533 111 22 33',
+    })
+    assert.equal(ozel.telefon, '0533 111 22 33')
+  })
+
   it('bundle ve demo hekim taşır; Özet hero hekim kartını bağlar', () => {
     assert.equal(emptyPortalBundle().hekim.ad, 'Doktorunuz')
     assert.equal(SAGLIGIM_DEMO.hekim.ad, 'Dr. Gökhan Mamur')

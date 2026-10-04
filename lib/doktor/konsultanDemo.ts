@@ -7,6 +7,8 @@ import type { KonsultanDilim } from '@/lib/doktor/konsultanPortal'
 export const KONSULTAN_DEMO_DILIM: KonsultanDilim = {
   brans: 'Kulak Burun Boğaz',
   hekimAdi: 'Dr. Gökhan Mamur',
+  hekimTelefon: '0216 000 00 00',
+  hekimEposta: 'dr.gokhan@notya.ai',
   hastaAdi: 'Ali Kara',
   soru:
     '24 aylık erkek. Yenidoğan işitme taraması sonrası KBB değerlendirmesi isteniyor. ' +

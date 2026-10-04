@@ -27,6 +27,9 @@ import {
 } from '@/lib/doktor/konsultanPortal'
 import { uploadDocument, VaultValidationError } from '@/lib/vault/service'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
+import { doktorIletisimAyari, muayenehaneTelefonAyari } from '@/lib/iletisim/sunucu'
+import { epostaAdresi } from '@/lib/iletisim/baglantilar'
+import { gorunenTelefonSec, telefonGorunum } from '@/lib/portal/hekimKarti'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -54,13 +57,38 @@ async function sevkBul(jeton: string): Promise<KonsultasyonSatiri | null> {
   return s
 }
 
-async function hekimAdi(sb: ReturnType<typeof servisSupabase>, doctorId: string): Promise<string> {
-  const { data } = await sb.from('users').select('title, first_name, last_name, full_name').eq('id', doctorId).maybeSingle()
-  if (!data) return 'İsteyen hekim'
-  const ad = [data.title, data.first_name, data.last_name].filter(Boolean).join(' ').trim()
-  if (ad && (data.first_name || data.last_name)) return ad
-  const tam = String(data.full_name || '').trim()
-  return tam || 'İsteyen hekim'
+async function hekimKartBilgisi(
+  sb: ReturnType<typeof servisSupabase>,
+  doctorId: string,
+): Promise<{ ad: string; telefon: string | null; eposta: string | null }> {
+  const [{ data }, ayar, tel] = await Promise.all([
+    sb.from('users').select('title, first_name, last_name, full_name, recete_baslik, iletisim_whatsapp_muayenehane').eq('id', doctorId).maybeSingle(),
+    doktorIletisimAyari(sb, doctorId),
+    muayenehaneTelefonAyari(sb, doctorId),
+  ])
+  let ad = 'İsteyen hekim'
+  if (data) {
+    const parca = [data.title, data.first_name, data.last_name].filter(Boolean).join(' ').trim()
+    if (parca && (data.first_name || data.last_name)) ad = parca
+    else {
+      const tam = String(data.full_name || '').trim()
+      if (tam) ad = tam
+    }
+  }
+  const rb = (data?.recete_baslik && typeof data.recete_baslik === 'object' ? data.recete_baslik : {}) as { satirlar?: unknown }
+  const satirlar = Array.isArray(rb.satirlar) ? rb.satirlar.map((x) => String(x ?? '').trim()).filter(Boolean) : []
+  const telefonHam = tel.gorunenTelefon || gorunenTelefonSec({
+    varsayilanTelefon: tel.varsayilanTelefon,
+    muayenehaneTelefon: tel.muayenehaneTelefon,
+    whatsappMuayenehane: data?.iletisim_whatsapp_muayenehane ? String(data.iletisim_whatsapp_muayenehane) : null,
+    satirlar,
+  })
+  const eposta = epostaAdresi(ayar.eposta) || (ayar.eposta ? String(ayar.eposta).trim() : null)
+  return {
+    ad,
+    telefon: telefonGorunum(telefonHam),
+    eposta: eposta || null,
+  }
 }
 
 async function hastaAdi(sb: ReturnType<typeof servisSupabase>, patientId: string): Promise<string> {
@@ -97,11 +125,18 @@ export async function GET(req: NextRequest) {
   const sb = servisSupabase()
   const doctorId = String(s.doctor_id || '')
   const [hekim, hasta, cumleler] = await Promise.all([
-    hekimAdi(sb, doctorId),
+    hekimKartBilgisi(sb, doctorId),
     hastaAdi(sb, s.patient_id),
     onayliCumleler(sb, s.kaynak_not_id),
   ])
-  const dilim = konsultanDilimi({ satir: s, hekimAdi: hekim, hastaAdi: hasta, onayliCumleler: cumleler })
+  const dilim = konsultanDilimi({
+    satir: s,
+    hekimAdi: hekim.ad,
+    hekimTelefon: hekim.telefon,
+    hekimEposta: hekim.eposta,
+    hastaAdi: hasta,
+    onayliCumleler: cumleler,
+  })
   const kapali = !(BEKLEYEN_DURUMLAR as readonly string[]).includes(s.durum) && s.durum !== 'yanitlandi'
   return NextResponse.json({
     ok: true,

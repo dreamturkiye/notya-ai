@@ -165,6 +165,32 @@ export async function muayenehaneHatti(sb: Sb, doktorId: string): Promise<{ numa
   return { numara, bagli: Boolean(yazilan && gorunen && yazilan === gorunen), kaydedilebilir: true }
 }
 
+/**
+ * NOTYA-ILETISIM-02 — ofis telefonu + görünen varsayılan.
+ * varsayilan null → ofis izlenir (ofis değişince görünen de onu takip eder).
+ * Mig 124 yoksa kaydedilebilir:false, numaralar boş.
+ */
+export async function muayenehaneTelefonAyari(sb: Sb, doktorId: string): Promise<{
+  muayenehaneTelefon: string
+  varsayilanTelefon: string | null
+  gorunenTelefon: string
+  kaydedilebilir: boolean
+}> {
+  const bos = { muayenehaneTelefon: '', varsayilanTelefon: null as string | null, gorunenTelefon: '', kaydedilebilir: false }
+  const { data, error } = await sb
+    .from('users')
+    .select('iletisim_telefon_muayenehane, iletisim_telefon_varsayilan, iletisim_whatsapp_muayenehane')
+    .eq('id', doktorId)
+    .maybeSingle()
+  if (error) return bos
+  const ofis = String(data?.iletisim_telefon_muayenehane || '').trim()
+  const ozel = data?.iletisim_telefon_varsayilan != null ? String(data.iletisim_telefon_varsayilan).trim() : ''
+  const wa = String(data?.iletisim_whatsapp_muayenehane || '').trim()
+  const varsayilanTelefon = ozel || null
+  const gorunenTelefon = varsayilanTelefon || ofis || wa || ''
+  return { muayenehaneTelefon: ofis, varsayilanTelefon, gorunenTelefon, kaydedilebilir: true }
+}
+
 /** Last channel used for this patient (from the log), or null. */
 export async function sonKanal(sb: Sb, doktorId: string, patientId: string): Promise<IletisimKanali | null> {
   const { data, error } = await sb

@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
-import { cepTelefonuDogrula, telefonAlani, TELEFON_MESAJ } from './cepTelefonu'
+import { cepTelefonuDogrula, telefonAlani, ofisTelefonuDogrula, ofisTelefonAlani, TELEFON_MESAJ, OFIS_TELEFON_MESAJ } from './cepTelefonu'
 import { whatsappNumarasi } from './baglantilar'
 
 process.env.ENCRYPTION_MASTER_KEY = 'qa-sentetik-telefon-anahtari'
@@ -81,6 +81,18 @@ describe('cepTelefonuDogrula', () => {
     assert.deepEqual(telefonAlani('   '), { deger: null })
     assert.deepEqual(telefonAlani('0532 123 45 67'), { deger: '0532 123 45 67' })
     assert.deepEqual(telefonAlani('12'), { hata: TELEFON_MESAJ.gecersiz })
+  })
+})
+
+describe('ofisTelefonuDogrula — muayenehane / varsayılan', () => {
+  it('sabit hat ve cep kabul', () => {
+    assert.deepEqual(ofisTelefonuDogrula('0216 000 00 00'), { ok: true, deger: '0216 000 00 00' })
+    assert.deepEqual(ofisTelefonuDogrula('0532 123 45 67'), { ok: true, deger: '0532 123 45 67' })
+    assert.deepEqual(ofisTelefonuDogrula('+90 216 000 00 00'), { ok: true, deger: '0216 000 00 00' })
+  })
+  it('boş alan serbest; bozuk numara hata', () => {
+    assert.deepEqual(ofisTelefonAlani(''), { deger: null })
+    assert.deepEqual(ofisTelefonAlani('12'), { hata: OFIS_TELEFON_MESAJ.gecersiz })
   })
 })
 

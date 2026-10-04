@@ -96,6 +96,8 @@ describe('konsültan portal dilim ve dönüş', () => {
         beklenen_gun: '2026-10-10',
       },
       hekimAdi: 'Dr. Pediatri',
+      hekimTelefon: '0216 000 00 00',
+      hekimEposta: 'dr.gokhan@notya.ai',
       hastaAdi: 'Ali Veli',
       onayliCumleler: ['Saf ses odyogramı planlandı.'],
     })
@@ -103,6 +105,8 @@ describe('konsültan portal dilim ve dönüş', () => {
     assert.doesNotMatch(metin, /fısıltı|fisilti|transkript|claude|gpt|model/i)
     assert.equal(d.soru, 'İşitme kaybı var mı?')
     assert.match(d.ozgecmis || '', /İşitme/)
+    assert.equal(d.hekimTelefon, '0216 000 00 00')
+    assert.equal(d.hekimEposta, 'dr.gokhan@notya.ai')
   })
 
   it('asistan ön not hekim onayı uyarısı taşır', () => {

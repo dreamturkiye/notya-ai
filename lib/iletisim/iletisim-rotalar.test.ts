@@ -338,6 +338,31 @@ describe('Ayarlar › İletişim', () => {
     const u = tablo('users').find((x) => x.id === s.doktor.id)!
     assert.deepEqual([u.iletisim_whatsapp, u.iletisim_eposta, u.iletisim_eposta_acilis], ['0533 444 55 66', 'klinik@ornek.test', 'gmail'])
   })
+
+  it('ofis telefonu varsayılanı izler; özel varsayılan saklanır', async () => {
+    const s = sahne()
+    const ofis = await coz(R.ayarlar.PUT(iste('PUT', '/api/doktor/iletisim/ayarlar', {
+      token: s.doktor.token,
+      govde: { muayenehaneTelefon: '0216 000 00 00', varsayilanTelefon: '0216 000 00 00' },
+    })))
+    assert.equal(ofis.status, 200, ofis.metin)
+    const u1 = tablo('users').find((x) => x.id === s.doktor.id)!
+    assert.equal(u1.iletisim_telefon_muayenehane, '0216 000 00 00')
+    assert.equal(u1.iletisim_telefon_varsayilan, null, 'ofisle aynıysa NULL — ofisi izle')
+    const g = await coz(R.ayarlar.GET(iste('GET', '/api/doktor/iletisim/ayarlar', { token: s.doktor.token })))
+    assert.equal(g.json.gorunenTelefon, '0216 000 00 00')
+    const ozel = await coz(R.ayarlar.PUT(iste('PUT', '/api/doktor/iletisim/ayarlar', {
+      token: s.doktor.token,
+      govde: { varsayilanTelefon: '0533 111 22 33' },
+    })))
+    assert.equal(ozel.status, 200, ozel.metin)
+    const u2 = tablo('users').find((x) => x.id === s.doktor.id)!
+    assert.equal(u2.iletisim_telefon_varsayilan, '0533 111 22 33')
+    assert.equal((await coz(R.ayarlar.PUT(iste('PUT', '/api/doktor/iletisim/ayarlar', {
+      token: s.doktor.token,
+      govde: { muayenehaneTelefon: '0212' },
+    })))).status, 400)
+  })
 })
 
 describe('migration 095 uygulanmadan: yumuşak düşüş', () => {
