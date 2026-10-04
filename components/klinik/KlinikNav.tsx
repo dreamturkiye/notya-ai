@@ -1,5 +1,6 @@
 'use client'
 import { useRouter, usePathname } from 'next/navigation'
+import { CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci'
 
 interface KlinikNavProps {
@@ -29,15 +30,18 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
   }
 
   return (
+    <>
+    {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+    <link rel="stylesheet" href={CHROME_FONT_HREF} />
     <nav style={{
       position: 'sticky', top: 0, zIndex: 100,
-      background: '#FFFAFA', borderBottom: '1px solid rgba(10,22,40,0.08)',
+      background: '#f4eee3', borderBottom: '1px solid rgba(58,44,34,0.08)',
       paddingTop: 'env(safe-area-inset-top, 0px)', paddingLeft: '48px', paddingRight: '48px',
       minHeight: '60px',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      fontFamily: 'system-ui, sans-serif'
+      fontFamily: "'Source Sans 3', system-ui, sans-serif"
     }}>
-      <span style={{ fontFamily: 'Georgia, serif', fontSize: '16px', fontWeight: 400, color: '#0A1628', letterSpacing: '-0.01em' }}>
+      <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 400, color: '#3b2e24', letterSpacing: '-0.01em' }}>
         {clinicName}
       </span>
       <div style={{ display: 'flex', gap: '4px' }}>
@@ -45,11 +49,11 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
           const active = pathname === item.href
           return (
             <button key={item.href} onClick={() => router.push(item.href)} style={{
-              border: 'none', cursor: 'pointer',
+              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
               padding: '6px 14px', borderRadius: '6px', fontSize: '13px',
-              color: active ? '#0A1628' : 'rgba(10,22,40,0.45)',
+              color: active ? '#3b2e24' : '#8b7d70',
               fontWeight: active ? 500 : 400,
-              background: active ? 'rgba(10,22,40,0.05)' : 'none'
+              background: active ? 'rgba(58,44,34,0.045)' : 'none'
             }}>
               {item.label}
             </button>
@@ -57,12 +61,13 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
         })}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <span style={{ fontSize: '13px', color: 'rgba(10,22,40,0.4)' }}>{adminName}</span>
+        <span style={{ fontSize: '13px', color: '#8b7d70' }}>{adminName}</span>
         <button onClick={logout} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          fontSize: '12px', color: '#2563EB', letterSpacing: '0.05em'
+          background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+          fontSize: '12px', color: '#2f4334', letterSpacing: '0.05em'
         }}>Çıkış</button>
       </div>
     </nav>
+    </>
   )
 }

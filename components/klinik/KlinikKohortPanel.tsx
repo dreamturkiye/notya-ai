@@ -13,10 +13,10 @@ function token(): string {
 }
 
 const RENK: Record<KlinikKohortSatir['durum'], string> = {
-  '112': '#DC2626',
+  '112': '#a45b3e',
   'riza-eksik': '#D97706',
   gecikti: '#B45309',
-  bugun: '#2563EB',
+  bugun: '#2f4334',
   yaklasiyor: '#059669',
 }
 
@@ -72,24 +72,24 @@ export default function KlinikKohortPanel() {
     return () => { iptal = true }
   }, [router])
 
-  if (yukleniyor) return <p style={{ color: 'rgba(10,22,40,0.45)' }}>Kohort yükleniyor…</p>
+  if (yukleniyor) return <p style={{ color: '#8b7d70' }}>Kohort yükleniyor…</p>
   if (!satir.length) {
-    return <p style={{ color: 'rgba(10,22,40,0.5)', fontSize: 14 }}>Geciken izlem, eksik rıza veya 112 bayrağı yok. Seans kaydı dosyada tutulur — SBİYS iddia edilmez.</p>
+    return <p style={{ color: '#8b7d70', fontSize: 14 }}>Geciken izlem, eksik rıza veya 112 bayrağı yok. Seans kaydı dosyada tutulur — SBİYS iddia edilmez.</p>
   }
   return (
-    <div style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 12 }}>
+    <div style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 12 }}>
       {satir.map((s) => (
         <button
           key={`${s.patientId}-${s.durum}-${s.vade || ''}`}
           type="button"
           onClick={() => s.patientId.startsWith('rv-') ? undefined : router.push(`/dashboard/klinik/hastalar/${s.patientId}`)}
-          style={{ width: '100%', textAlign: 'left', padding: '14px 16px', border: 'none', borderBottom: '1px solid rgba(10,22,40,0.06)', background: '#fff', cursor: 'pointer' }}
+          style={{ width: '100%', textAlign: 'left', padding: '14px 16px', border: 'none', borderBottom: '1px solid rgba(58,44,34,0.08)', background: '#faf6ee', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-            <b style={{ color: '#0A1628' }}>{s.ad}</b>
+            <b style={{ color: '#3b2e24' }}>{s.ad}</b>
             <span style={{ fontSize: 11, fontWeight: 700, color: RENK[s.durum], textTransform: 'uppercase' }}>{DURUM_ETIKET[s.durum]}</span>
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.55)', marginTop: 4 }}>{s.ozet}</div>
+          <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 4 }}>{s.ozet}</div>
         </button>
       ))}
     </div>

@@ -95,15 +95,15 @@ function KlinikPabauInner() {
     } finally { setBusy(false) }
   }
 
-  const card: React.CSSProperties = { background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: 24 }
+  const card: React.CSSProperties = { background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 12, padding: 24 }
 
   return (
-    <>
+    <div style={{ minHeight: '100dvh', background: '#f4eee3' }}>
       <KlinikNav />
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 64px', fontFamily: 'system-ui, sans-serif', color: '#0F172A' }}>
-        <a href="/dashboard/klinik" style={{ color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '10px 0 4px' }}>Pabau bağlantısı</h1>
-        <p style={{ fontSize: 14, color: '#64748B', margin: '0 0 24px', lineHeight: 1.6 }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 64px', fontFamily: "'Source Sans 3', system-ui, sans-serif", color: '#3b2e24' }}>
+        <a href="/dashboard/klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, fontWeight: 700, margin: '10px 0 4px' }}>Pabau bağlantısı</h1>
+        <p style={{ fontSize: 14, color: '#8b7d70', margin: '0 0 24px', lineHeight: 1.6 }}>
           Kliniğiniz randevu ve hasta yönetimi için Pabau kullanıyorsa hesabınızı bağlayın: hastalarınız ve
           randevularınız Notya&apos;ya akar. Notya, Pabau&apos;nun yerine geçmez — üstüne Türkçe klinik zekâsı ekler.
         </p>
@@ -119,12 +119,12 @@ function KlinikPabauInner() {
                   Bağlı — anahtar {status.keyHint}
                 </div>
                 {status.lastSyncedAt && (
-                  <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 4 }}>
                     Son erişim: {new Date(status.lastSyncedAt).toLocaleString('tr-TR')}
                   </div>
                 )}
               </div>
-              <button onClick={() => void kes()} disabled={busy} style={{ border: '1px solid #FCA5A5', color: '#B91C1C', background: '#FEF2F2', borderRadius: 8, padding: '9px 16px', fontSize: 13, cursor: 'pointer' }}>
+              <button onClick={() => void kes()} disabled={busy} style={{ border: '1px solid rgba(164,91,62,0.25)', color: '#a45b3e', background: 'rgba(164,91,62,0.08)', borderRadius: 8, padding: '9px 16px', fontSize: 13, cursor: 'pointer' }}>
                 Bağlantıyı kaldır
               </button>
             </div>
@@ -132,20 +132,20 @@ function KlinikPabauInner() {
             <div style={card}>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Pabau&apos;dan gelen yaklaşan randevular</div>
               {randevular === null ? (
-                <div style={{ fontSize: 13, color: '#64748B' }}>Randevular yükleniyor…</div>
+                <div style={{ fontSize: 13, color: '#8b7d70' }}>Randevular yükleniyor…</div>
               ) : randevular.length === 0 ? (
-                <div style={{ fontSize: 13, color: '#64748B' }}>Yaklaşan randevu bulunamadı. Bağlantı çalışıyor; Pabau takviminizde gelecek tarihli randevu yok.</div>
+                <div style={{ fontSize: 13, color: '#8b7d70' }}>Yaklaşan randevu bulunamadı. Bağlantı çalışıyor; Pabau takviminizde gelecek tarihli randevu yok.</div>
               ) : (
                 <div>
                   {randevular.map((r, i) => (
-                    <div key={r.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #F1F5F9', fontSize: 13 }}>
+                    <div key={r.id || i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid rgba(58,44,34,0.045)', fontSize: 13 }}>
                       <div>
                         <div style={{ fontWeight: 600 }}>{r.customer_name || 'Hasta'}</div>
-                        <div style={{ color: '#64748B' }}>{[r.service, r.staff_name].filter(Boolean).join(' · ')}</div>
+                        <div style={{ color: '#8b7d70' }}>{[r.service, r.staff_name].filter(Boolean).join(' · ')}</div>
                       </div>
-                      <div style={{ textAlign: 'right', color: '#334155' }}>
+                      <div style={{ textAlign: 'right', color: '#8b7d70' }}>
                         <div>{r.start_date || ''}</div>
-                        <div style={{ color: '#64748B' }}>{(r.start_time || '').slice(0, 5)} {r.appointment_status ? `· ${r.appointment_status}` : ''}</div>
+                        <div style={{ color: '#8b7d70' }}>{(r.start_time || '').slice(0, 5)} {r.appointment_status ? `· ${r.appointment_status}` : ''}</div>
                       </div>
                     </div>
                   ))}
@@ -156,7 +156,7 @@ function KlinikPabauInner() {
         ) : (
           <div style={card}>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Pabau API anahtarınız</div>
-            <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 14px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: '#8b7d70', margin: '0 0 14px', lineHeight: 1.6 }}>
               Anahtarı Pabau&apos;da <strong>Setup → Developer Hub</strong> bölümünden oluşturun ve buraya yapıştırın.
               Kaydetmeden önce Pabau&apos;ya canlı bir çağrıyla doğrularız; anahtar şifrelenerek saklanır, ekranda yalnızca
               son 4 hanesi görünür.
@@ -168,20 +168,20 @@ function KlinikPabauInner() {
                 placeholder="Pabau API anahtarı"
                 autoComplete="off"
                 spellCheck={false}
-                style={{ flex: '1 1 260px', border: '1px solid #CBD5E1', borderRadius: 8, padding: '11px 12px', fontSize: 14, fontFamily: 'ui-monospace, monospace' }}
+                style={{ flex: '1 1 260px', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, padding: '11px 12px', fontSize: 14, fontFamily: 'ui-monospace, monospace' }}
               />
               <button onClick={() => void baglan()} disabled={busy || !apiKey.trim()} style={{ background: '#0E6B66', color: '#fff', border: 0, borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: busy || !apiKey.trim() ? 0.6 : 1 }}>
                 {busy ? 'Doğrulanıyor…' : 'Bağlan'}
               </button>
             </div>
-            {error && <div style={{ marginTop: 12, fontSize: 13, color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 12px', lineHeight: 1.5 }}>{error}</div>}
+            {error && <div style={{ marginTop: 12, fontSize: 13, color: '#a45b3e', background: 'rgba(164,91,62,0.08)', border: '1px solid rgba(164,91,62,0.25)', borderRadius: 8, padding: '10px 12px', lineHeight: 1.5 }}>{error}</div>}
           </div>
         )}
 
-        <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 24, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 11, color: '#8b7d70', marginTop: 24, lineHeight: 1.6 }}>
           Pabau, sahibinin ticari markasıdır. Notya bağımsız bir üründür; entegrasyon resmî bir ortaklık anlamına gelmez.
         </p>
       </div>
-    </>
+    </div>
   )
 }

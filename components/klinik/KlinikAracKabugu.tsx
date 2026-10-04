@@ -41,17 +41,17 @@ export default function KlinikAracKabugu({
   }, [router, route])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '28px 20px 64px' }}>
         {!izin ? (
-          <div style={{ color: 'rgba(10,22,40,0.4)' }}>{izin === null ? 'Yükleniyor…' : `Bu araç yalnızca ${etiket} için.`}</div>
+          <div style={{ color: '#8b7d70' }}>{izin === null ? 'Yükleniyor…' : `Bu araç yalnızca ${etiket} için.`}</div>
         ) : (
           <>
-            <div style={{ fontSize: 12, fontWeight: 700, color: vurgu.ana, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Klinik Araçlar · {etiket}</div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0A1628', margin: 0 }}>{baslik}</h1>
-            <p style={{ margin: '8px 0 12px', fontSize: 15, color: 'rgba(10,22,40,0.55)', maxWidth: 680 }}>{aciklama}</p>
-            {mevzuat ? <p style={{ margin: '0 0 20px', fontSize: 12, color: 'rgba(10,22,40,0.5)', maxWidth: 720, lineHeight: 1.45 }}>{mevzuat}</p> : null}
+            <div style={{ fontSize: 12, fontWeight: 700, color: vurgu.baslik, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Klinik Araçlar · {etiket}</div>
+            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 26, fontWeight: 560, color: '#3b2e24', margin: 0 }}>{baslik}</h1>
+            <p style={{ margin: '8px 0 12px', fontSize: 15, color: '#8b7d70', maxWidth: 680 }}>{aciklama}</p>
+            {mevzuat ? <p style={{ margin: '0 0 20px', fontSize: 12, color: '#8b7d70', maxWidth: 720, lineHeight: 1.45 }}>{mevzuat}</p> : null}
             {children}
           </>
         )}

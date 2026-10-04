@@ -89,33 +89,33 @@ function SeansIc() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <Link href={patientId ? `/dashboard/klinik/hastalar/${patientId}` : '/dashboard/klinik/hastalar'} style={{ fontSize: 13, color: '#2563EB' }}>← Dosya</Link>
-        <h1 style={{ margin: '12px 0 8px', fontSize: 26, color: '#0A1628' }}>Klinik seans</h1>
-        <p style={{ fontSize: 13, color: 'rgba(10,22,40,0.55)' }}>{muttefik ? MUTTEFIK_TANI_KILIT : KLINIK_HEKIM_KILIT}</p>
-        <ul style={{ fontSize: 12, color: 'rgba(10,22,40,0.55)', paddingLeft: 18 }}>
+        <Link href={patientId ? `/dashboard/klinik/hastalar/${patientId}` : '/dashboard/klinik/hastalar'} style={{ fontSize: 13, color: '#2f4334' }}>← Dosya</Link>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '12px 0 8px', fontSize: 26, color: '#3b2e24' }}>Klinik seans</h1>
+        <p style={{ fontSize: 13, color: '#8b7d70' }}>{muttefik ? MUTTEFIK_TANI_KILIT : KLINIK_HEKIM_KILIT}</p>
+        <ul style={{ fontSize: 12, color: '#8b7d70', paddingLeft: 18 }}>
           {KLINIK_ORTAK_KAYIT.slice(0, 4).map((k) => <li key={k}>{k}</li>)}
         </ul>
-        <textarea value={not} onChange={(e) => setNot(e.target.value)} rows={8} placeholder="Yapılan uygulama, vade, 112 bayrağı. Tanı ve doz yok." style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1px solid rgba(10,22,40,0.12)', fontSize: 14 }} />
+        <textarea value={not} onChange={(e) => setNot(e.target.value)} rows={8} placeholder="Yapılan uygulama, vade, 112 bayrağı. Tanı ve doz yok." style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1px solid rgba(58,44,34,0.14)', fontSize: 14 }} />
         <label style={chk}><input type="checkbox" checked={riza} onChange={(e) => setRiza(e.target.checked)} /> İki nüsha rıza (dosya + hasta)</label>
         {kucuk && <label style={chk}><input type="checkbox" checked={veli} onChange={(e) => setVeli(e.target.checked)} /> Veli / yasal temsilci onamı (18 yaş altı)</label>}
         {!muttefik && <label style={chk}><input type="checkbox" checked={foto} onChange={(e) => setFoto(e.target.checked)} /> Klinik foto için ayrı KVKK rızası</label>}
         {muttefik && <label style={chk}><input type="checkbox" checked={plan} onChange={(e) => setPlan(e.target.checked)} /> Hekim tanısı + tedavi planı mevcut</label>}
         <label style={chk}><input type="checkbox" checked={kriz} onChange={(e) => setKriz(e.target.checked)} /> 112 / acil bayrağı</label>
         <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
-          <button type="button" onClick={kaydet} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Dosyaya kaydet</button>
-          <button type="button" onClick={() => router.push('/klinik-tools')} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #2563EB', background: '#fff', color: '#2563EB', fontWeight: 600, cursor: 'pointer' }}>Araçlar</button>
+          <button type="button" onClick={kaydet} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Dosyaya kaydet</button>
+          <button type="button" onClick={() => router.push('/klinik-tools')} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #2f4334', background: '#faf6ee', color: '#2f4334', fontWeight: 600, cursor: 'pointer' }}>Araçlar</button>
         </div>
         {kayit && <p style={{ marginTop: 12, fontSize: 13, color: '#065F46' }}>{kayit}</p>}
         {onceki.length > 0 && (
           <>
-            <h2 style={{ margin: '28px 0 10px', fontSize: 16 }}>Kayıtlı seanslar</h2>
+            <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '28px 0 10px', fontSize: 16 }}>Kayıtlı seanslar</h2>
             {onceki.map((s) => (
-              <div key={s.id} style={{ padding: '10px 12px', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 8, marginBottom: 8, fontSize: 13 }}>
+              <div key={s.id} style={{ padding: '10px 12px', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 8, marginBottom: 8, fontSize: 13 }}>
                 <b>{s.iso}</b> · {s.metin}
-                <div style={{ color: 'rgba(10,22,40,0.5)', fontSize: 12, marginTop: 4 }}>
+                <div style={{ color: '#8b7d70', fontSize: 12, marginTop: 4 }}>
                   {s.rizaIkiNusha ? 'rıza ✓' : 'rıza eksik'} · {s.kriz112 ? '112' : '112 yok'}
                 </div>
               </div>
@@ -127,7 +127,7 @@ function SeansIc() {
   )
 }
 
-const chk: React.CSSProperties = { display: 'block', marginTop: 8, fontSize: 13, color: '#0A1628' }
+const chk: React.CSSProperties = { display: 'block', marginTop: 8, fontSize: 13, color: '#3b2e24' }
 
 export default function Page() {
   return <Suspense fallback={<p style={{ padding: 40 }}>Yükleniyor…</p>}><SeansIc /></Suspense>

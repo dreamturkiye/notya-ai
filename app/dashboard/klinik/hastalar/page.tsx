@@ -55,11 +55,11 @@ export default function KlinikHastalarPage() {
     : hastalar
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 26, color: '#0A1628' }}>Hastalar</h1>
-        <p style={{ color: 'rgba(10,22,40,0.55)', fontSize: 14, maxWidth: 640 }}>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '0 0 8px', fontSize: 26, color: '#3b2e24' }}>Hastalar</h1>
+        <p style={{ color: '#8b7d70', fontSize: 14, maxWidth: 640 }}>
           Klinik hasta kaydı Doktor dosyasından ayrı yüzeydir; aynı izolasyon kuralı geçerlidir
           (yalnız sizin kaydınız). TUS sekmeleri burada açılmaz.
         </p>
@@ -68,21 +68,21 @@ export default function KlinikHastalarPage() {
           <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Yeni hasta adı soyadı" style={inp} />
           <button type="button" onClick={() => void ekle()} style={btn}>Hasta ekle</button>
         </div>
-        {hata && <p style={{ color: '#DC2626', fontSize: 13, marginTop: 10 }}>{hata}</p>}
-        <div style={{ marginTop: 22, background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 12, overflow: 'hidden' }}>
+        {hata && <p style={{ color: '#a45b3e', fontSize: 13, marginTop: 10 }}>{hata}</p>}
+        <div style={{ marginTop: 22, background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 12, overflow: 'hidden' }}>
           {yukleniyor ? (
-            <p style={{ padding: 24, color: 'rgba(10,22,40,0.4)' }}>Yükleniyor…</p>
+            <p style={{ padding: 24, color: '#8b7d70' }}>Yükleniyor…</p>
           ) : filtre.length === 0 ? (
-            <p style={{ padding: 24, color: 'rgba(10,22,40,0.4)' }}>Henüz hasta yok. Ad soyad yazıp ekleyin.</p>
+            <p style={{ padding: 24, color: '#8b7d70' }}>Henüz hasta yok. Ad soyad yazıp ekleyin.</p>
           ) : filtre.map((h) => (
             <button
               key={h.id}
               type="button"
               onClick={() => router.push(`/dashboard/klinik/hastalar/${h.id}`)}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 18px', border: 'none', borderBottom: '1px solid rgba(10,22,40,0.06)', background: '#fff', cursor: 'pointer' }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 18px', border: 'none', borderBottom: '1px solid rgba(58,44,34,0.08)', background: '#faf6ee', cursor: 'pointer' }}
             >
-              <div style={{ fontWeight: 600, color: '#0A1628' }}>{h.name}</div>
-              <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.45)', marginTop: 4 }}>{h.last_visit ? new Date(h.last_visit).toLocaleDateString('tr-TR') : '—'}</div>
+              <div style={{ fontWeight: 600, color: '#3b2e24' }}>{h.name}</div>
+              <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 4 }}>{h.last_visit ? new Date(h.last_visit).toLocaleDateString('tr-TR') : '—'}</div>
             </button>
           ))}
         </div>
@@ -91,5 +91,5 @@ export default function KlinikHastalarPage() {
   )
 }
 
-const inp: React.CSSProperties = { padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(10,22,40,0.12)', fontSize: 14, minWidth: 200 }
-const btn: React.CSSProperties = { padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontWeight: 600, cursor: 'pointer' }
+const inp: React.CSSProperties = { padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(58,44,34,0.14)', fontSize: 14, minWidth: 200 }
+const btn: React.CSSProperties = { padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer' }

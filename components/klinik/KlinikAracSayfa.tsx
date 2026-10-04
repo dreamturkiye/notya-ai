@@ -10,16 +10,16 @@ import { klinikMevzuat, klinikMevzuatOzet, KLINIK_ORTAK_KANUNLAR, KLINIK_ORTAK_K
 import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 
 const V: Record<string, AracVurgu> = {
-  sac: { ana: '#2563EB', anaMetin: '#EFF6FF', yumusak: '#93C5FD', baslik: '#93C5FD' },
-  est: { ana: '#9333EA', anaMetin: '#FAF5FF', yumusak: '#D8B4FE', baslik: '#D8B4FE' },
-  cer: { ana: '#E91E8C', anaMetin: '#FDF2F8', yumusak: '#F9A8D4', baslik: '#F9A8D4' },
-  derm: { ana: '#F59E0B', anaMetin: '#FFFBEB', yumusak: '#FCD34D', baslik: '#FCD34D' },
-  long: { ana: '#059669', anaMetin: '#ECFDF5', yumusak: '#6EE7B7', baslik: '#6EE7B7' },
-  fiz: { ana: '#0EA5E9', anaMetin: '#F0F9FF', yumusak: '#7DD3FC', baslik: '#7DD3FC' },
-  psi: { ana: '#6366F1', anaMetin: '#EEF2FF', yumusak: '#A5B4FC', baslik: '#A5B4FC' },
-  diy: { ana: '#10B981', anaMetin: '#ECFDF5', yumusak: '#6EE7B7', baslik: '#6EE7B7' },
-  erg: { ana: '#8B5CF6', anaMetin: '#F5F3FF', yumusak: '#C4B5FD', baslik: '#C4B5FD' },
-  ody: { ana: '#F97316', anaMetin: '#FFF7ED', yumusak: '#FDBA74', baslik: '#FDBA74' },
+  sac: { ana: '#2563EB', anaMetin: '#EFF6FF', yumusak: '#2563EB', baslik: '#2563EB' },
+  est: { ana: '#9333EA', anaMetin: '#FAF5FF', yumusak: '#7E22CE', baslik: '#7E22CE' },
+  cer: { ana: '#E91E8C', anaMetin: '#FDF2F8', yumusak: '#BE185D', baslik: '#BE185D' },
+  derm: { ana: '#F59E0B', anaMetin: '#FFFBEB', yumusak: '#B45309', baslik: '#B45309' },
+  long: { ana: '#059669', anaMetin: '#ECFDF5', yumusak: '#047857', baslik: '#047857' },
+  fiz: { ana: '#0EA5E9', anaMetin: '#F0F9FF', yumusak: '#0369A1', baslik: '#0369A1' },
+  psi: { ana: '#6366F1', anaMetin: '#EEF2FF', yumusak: '#4F46E5', baslik: '#4F46E5' },
+  diy: { ana: '#10B981', anaMetin: '#ECFDF5', yumusak: '#047857', baslik: '#047857' },
+  erg: { ana: '#8B5CF6', anaMetin: '#F5F3FF', yumusak: '#6D28D9', baslik: '#6D28D9' },
+  ody: { ana: '#F97316', anaMetin: '#FFF7ED', yumusak: '#C2410C', baslik: '#C2410C' },
 }
 
 const META: Record<string, { slug: string; etiket: string; baslik: string; aciklama: string; vurgu: AracVurgu }> = {
@@ -98,23 +98,23 @@ function KayitKvkkPanel() {
   }, [])
   const m = klinikMevzuat(slug)
   return (
-    <div style={{ fontSize: 13, color: '#0A1628', lineHeight: 1.5 }}>
-      <p style={{ color: 'rgba(10,22,40,0.6)', marginTop: 0 }}>{klinikMevzuatOzet(slug) || 'Dal çözülmedi — ortak KVKK / kayıt omurgası.'}</p>
-      <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>Ortak kanunlar</h2>
+    <div style={{ fontSize: 13, color: '#3b2e24', lineHeight: 1.5 }}>
+      <p style={{ color: '#8b7d70', marginTop: 0 }}>{klinikMevzuatOzet(slug) || 'Dal çözülmedi — ortak KVKK / kayıt omurgası.'}</p>
+      <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>Ortak kanunlar</h2>
       <ul>{KLINIK_ORTAK_KANUNLAR.map((k) => <li key={k}>{k}</li>)}</ul>
-      <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>Ortak kayıt</h2>
+      <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>Ortak kayıt</h2>
       <ul>{KLINIK_ORTAK_KAYIT.map((k) => <li key={k}>{k}</li>)}</ul>
       {m && (
         <>
-          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>{KLINIK_ETIKET[m.slug]} — rıza</h2>
+          <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>{KLINIK_ETIKET[m.slug]} — rıza</h2>
           <ul>{m.riza.map((k) => <li key={k}>{k}</li>)}</ul>
-          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>Kayıt</h2>
+          <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>Kayıt</h2>
           <ul>{m.kayit.map((k) => <li key={k}>{k}</li>)}</ul>
-          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>KVKK</h2>
+          <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>KVKK</h2>
           <ul>{m.kvkk.map((k) => <li key={k}>{k}</li>)}</ul>
-          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>Yasak</h2>
+          <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>Yasak</h2>
           <ul>{m.yasak.map((k) => <li key={k}>{k}</li>)}</ul>
-          <h2 style={{ fontSize: 15, margin: '16px 0 8px' }}>Hizmet kalitesi</h2>
+          <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, margin: '16px 0 8px' }}>Hizmet kalitesi</h2>
           <ul>{m.qos.map((k) => <li key={k}>{k}</li>)}</ul>
         </>
       )}
