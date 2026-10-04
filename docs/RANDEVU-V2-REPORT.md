@@ -199,6 +199,15 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 | Touched | `core/eylemler/{types,araclar,kayit}.ts` (feature gate + order); `app/api/doktor/{konsult,not-konsult}/route.ts`, `app/api/asistan/ses-eylem/route.ts`, `lib/asistan/ayseCevapla.ts` (pass the flag); `app/api/notes/[id]/approve/route.ts` (one best-effort hook); `lib/doktor/gunOzeti.ts`; portal route and page; e-mail link route and page; cron |
 | Tests | `lib/randevu/v2/bekleme.test.ts`: waitlist order / expiry / first-accept / foreign-patient refusal / OFF; kontrol date; tool gating keeps the OFF tool list identical |
 
+### Checks (PR3 branch tip)
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` | exit 0 |
+| `npm test` file list | 3705 tests: **3703 pass, 2 fail**. Both failures are the same pre-existing `tekBeyin.test.ts` cases 3–4 (they also fail on `main`). `fishMikrofon.test.ts` was left out because it hangs on `main` too. |
+| `npm run test:izolasyon` | 386 pass / 0 fail |
+| Action layer (`core/eylemler/tests`, incl. the silent-write guard) + all V2 tests | 216 pass / 0 fail |
+
 ### Manual test steps
 
 1. **Waitlist.** With the switch ON:
