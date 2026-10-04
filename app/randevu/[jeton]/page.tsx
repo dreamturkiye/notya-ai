@@ -11,7 +11,7 @@ import { SoftPanel } from '../../portal/_components/ui'
 type Slot = { bas: string; saat: string }
 type Gun = { gun: string; slotlar: Slot[] }
 type Bilgi = {
-  eylem: 'geliyorum' | 'ertele' | 'iptal' | 'kabul'
+  eylem: 'geliyorum' | 'ertele' | 'iptal' | 'kabul' | 'teklif'
   gun: string
   saat: string
   doktorAdi: string
@@ -26,6 +26,7 @@ const DUGME: Record<Bilgi['eylem'], string> = {
   kabul: 'Bu saati kabul ediyorum',
   iptal: 'Randevuyu iptal et',
   ertele: '',
+  teklif: 'Bu saati istiyorum',
 }
 
 const gunAdi = (gun: string) =>
@@ -57,6 +58,7 @@ export default function RandevuEylemSayfasi() {
         ne === 'geliyorum' ? 'Teşekkürler, geleceğinizi muayenehaneye ilettik.'
           : ne === 'kabul' ? `Randevunuz onaylandı: ${j.gun} · ${j.saat}.`
             : ne === 'iptal' ? 'Randevunuz iptal edildi.'
+              : ne === 'teklif' ? (j.onayBekliyor ? `Talebiniz alındı (${j.gun} · ${j.saat}). Muayenehane onayladığında randevunuz bu saate taşınır.` : `Randevunuz ${j.gun} · ${j.saat} saatine taşındı.`)
               : j.onayBekliyor ? `Yeni saat talebiniz alındı (${j.gun} · ${j.saat}). Muayenehane onayladığında size haber vereceğiz.`
                 : `Randevunuz ${j.gun} · ${j.saat} saatine taşındı.`,
       )

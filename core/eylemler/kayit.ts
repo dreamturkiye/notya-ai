@@ -13,10 +13,11 @@
  */
 import { TEMEL_EYLEMLER } from './temelEylemler'
 import { BRANS_EYLEMLERI } from './bransEylemleri'
+import { RANDEVU_EYLEMLERI } from './randevuEylemleri'
 import { eskiSessizTipMi, t3Mi } from './yasakli'
 import type { EylemTanimi } from './types'
 
-const TUMU: EylemTanimi[] = [...TEMEL_EYLEMLER, ...BRANS_EYLEMLERI]
+const TUMU: EylemTanimi[] = [...TEMEL_EYLEMLER, ...BRANS_EYLEMLERI, ...RANDEVU_EYLEMLERI]
 
 {
   const gorulen = new Set<string>()

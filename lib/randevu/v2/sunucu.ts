@@ -17,7 +17,10 @@ import { bosSlotlar, slotUygunMu, type Aralik, type CalismaSaatleri, type Slot, 
 import { aktifMi, eskalasyonGerekliMi, hastaIzinleri, oneriBekliyorMu, onayGerekirMi, v2Durum, V2_ETIKET, type HastaIzinleri, type V2Durum } from './durum'
 import { DAKIKA_MS, GUN_MS, gunEtiketi, saatEtiketi } from './zaman'
 import { disMesgulBloklari } from './disMesgul'
-import { hatirlatmaZamanlari, isGecerliMi, onayIsleri, type IsPlani } from './isPlani'
+import { hatirlatmaZamanlari, isGecerliMi, onayIsleri } from './isPlani'
+import { bekleyenIsleriIptal, cakismaHatasiMi, isEkle } from './isler'
+
+export { bekleyenIsleriIptal, cakismaHatasiMi, isEkle }
 import { randevuEpostasi, type RandevuEpostaTuru } from './eposta'
 import { jetonSonu, randevuJetonu, type JetonEylemi } from './jeton'
 import { randevuIcs } from './ics'
@@ -62,11 +65,6 @@ export const MESAJ = {
 export const EN_FAZLA_ACIK_TALEP = 3
 
 const hata = (durum: number, h: string): Islem<never> => ({ ok: false, durum, hata: h })
-
-/** Postgres exclusion_violation — the 111 constraint or trigger refused an overlapping new-flow row. */
-export function cakismaHatasiMi(e: unknown): boolean {
-  return !!e && typeof e === 'object' && (e as { code?: string }).code === '23P01'
-}
 
 // ── Settings and inputs ──────────────────────────────────────────────────────────────────────────────
 
@@ -156,20 +154,6 @@ export async function olayYaz(sb: Sb, o: { randevuId: string; doktorId: string; 
     yapan_id: o.yapanId ?? null,
     detay: o.detay ?? {},
   }).then(() => undefined, () => undefined)
-}
-
-export async function isEkle(sb: Sb, r: Pick<V2Randevu, 'id' | 'doktor_id'>, isler: IsPlani[]): Promise<void> {
-  if (!isler.length) return
-  await sb.from('randevu_isleri')
-    .upsert(isler.map((i) => ({ randevu_id: r.id, doktor_id: r.doktor_id, tur: i.tur, zaman: i.zaman, durum: 'bekliyor' })), { onConflict: 'randevu_id,tur,zaman', ignoreDuplicates: true })
-    .then(() => undefined, () => undefined)
-}
-
-/** Cancel/reschedule updates the jobs: everything still waiting for this appointment is dropped. */
-export async function bekleyenIsleriIptal(sb: Sb, doktorId: string, randevuId: string): Promise<void> {
-  await sb.from('randevu_isleri').update({ durum: 'iptal', updated_at: new Date().toISOString() })
-    .eq('randevu_id', randevuId).eq('doktor_id', doktorId).eq('durum', 'bekliyor')
-    .then(() => undefined, () => undefined)
 }
 
 async function satirGetir(sb: Sb, doktorId: string, randevuId: string, patientId?: string): Promise<V2Randevu | null> {
@@ -491,6 +475,7 @@ const TUR_LINKLERI: Record<RandevuEpostaTuru, JetonEylemi[]> = {
   iptal_eposta: [],
   gun_once: ['geliyorum', 'ertele', 'iptal'],
   sabah: ['geliyorum', 'iptal'],
+  bekleme_teklif: ['teklif'],
 }
 
 export type IsOzeti = { islenen: number; gonderilen: number; kuyruga: number; atlanan: number; hatali: number; sessiz: boolean }

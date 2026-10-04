@@ -121,6 +121,11 @@ export interface EylemTanimi<V = Record<string, unknown>> {
   hastaKosulu?: (hasta: HastaOzeti, brans: SpecialtyKey | null) => boolean
   /** The record also becomes visible in Sağlığım — the card says so before the tap. */
   portalaYansir?: boolean
+  /**
+   * NOTYA-RANDEVU-V2: offered only when the doctor has this feature ON (AracSuzgeci), and ordered after every
+   * other tool so it can never push an existing one out of the prompt cap.
+   */
+  ozellik?: 'randevu_v2'
   /** Derived from `alanlar`; re-validated server-side on every commit. */
   readonly sema: ZodType<V>
   /** THE write. Must call the same shared function the UI form calls — never a second write path. */

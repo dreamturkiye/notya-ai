@@ -18,25 +18,45 @@ import { hastaIzinleri, oneriBekliyorMu, v2Durum, V2_ETIKET } from '@/lib/randev
 import { gunEtiketi, saatEtiketi } from '@/lib/randevu/v2/zaman'
 import { ayarGetir, hastaIslem, isleriCalistir, musaitSlotlar, type HastaIslemi } from '@/lib/randevu/v2/sunucu'
 import { googleaGonder } from '@/lib/randevu/v2/google/senk'
+import { teklifKabul } from '@/lib/randevu/v2/bekleme'
 
 export const dynamic = 'force-dynamic'
 
-const ISLEM: Record<JetonEylemi, HastaIslemi> = { geliyorum: 'teyit', kabul: 'kabul', iptal: 'iptal', ertele: 'ertele' }
+const ISLEM: Record<Exclude<JetonEylemi, 'teklif'>, HastaIslemi> = { geliyorum: 'teyit', kabul: 'kabul', iptal: 'iptal', ertele: 'ertele' }
 const GECERSIZ = 'Bu bağlantı geçersiz ya da süresi dolmuş.'
 
 async function coz(jeton: string) {
   const icerik = randevuJetonuCoz(jeton)
-  if (!icerik) return null
+  if (!icerik || icerik.eylem === 'teklif') return null
   const sb = servisSupabase()
   const { data: r } = await sb.from('randevular')
     .select('id, doktor_id, patient_id, baslangic, bitis, durum, oneri_at, hasta_teyit_at')
     .eq('id', icerik.randevuId).maybeSingle()
   if (!r || !r.patient_id) return null
-  return { sb, icerik, r }
+  return { sb, icerik: icerik as typeof icerik & { eylem: Exclude<JetonEylemi, 'teklif'> }, r }
+}
+
+/** PR3: a waitlist offer link — the signed id is the offer; it reveals the offered time and the doctor only. */
+async function teklifCoz(jeton: string) {
+  const icerik = randevuJetonuCoz(jeton)
+  if (!icerik || icerik.eylem !== 'teklif') return null
+  const sb = servisSupabase()
+  const { data: t } = await sb.from('randevu_bekleme_teklifleri').select('id, doktor_id, baslangic, son_gecerlilik, durum').eq('id', icerik.randevuId).maybeSingle()
+  return t ? { sb, t } : null
 }
 
 export async function GET(req: NextRequest) {
-  const c = await coz(new URL(req.url).searchParams.get('t') || '')
+  const jeton = new URL(req.url).searchParams.get('t') || ''
+  const tk = await teklifCoz(jeton)
+  if (tk) {
+    const doktor = await doktorIletisimAyari(tk.sb, String(tk.t.doktor_id))
+    const yapilabilir = tk.t.durum === 'acik' && Date.parse(String(tk.t.son_gecerlilik)) > Date.now()
+    return NextResponse.json({
+      eylem: 'teklif', gun: gunEtiketi(String(tk.t.baslangic)), saat: saatEtiketi(String(tk.t.baslangic)), doktorAdi: doktor.doktorAdi,
+      durum: 'teklif', etiket: 'Daha erken saat', yapilabilir, neden: yapilabilir ? null : 'Bu teklifin süresi doldu ya da saat başka bir hastaya verildi.', gunler: null,
+    })
+  }
+  const c = await coz(jeton)
   if (!c) return NextResponse.json({ error: GECERSIZ }, { status: 404 })
   const { sb, icerik, r } = c
   const doktorId = String(r.doktor_id)
@@ -73,6 +93,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const b = (await req.json().catch(() => ({}))) as { t?: string; baslangic?: string }
+  const tk = await teklifCoz(String(b.t || ''))
+  if (tk) {
+    const doktorId = String(tk.t.doktor_id)
+    const s = await teklifKabul(tk.sb, { teklifId: String(tk.t.id), doktorId, kanal: 'eposta' })
+    if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
+    await isleriCalistir(tk.sb, { randevuId: s.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
+    await googleaGonder(tk.sb, doktorId, s.randevu.id)
+    return NextResponse.json({ ok: true, gun: gunEtiketi(s.randevu.baslangic), saat: saatEtiketi(s.randevu.baslangic), durum: v2Durum(s.randevu), onayBekliyor: s.randevu.durum === 'talep' })
+  }
   const c = await coz(String(b.t || ''))
   if (!c) return NextResponse.json({ error: GECERSIZ }, { status: 404 })
   const { sb, icerik, r } = c

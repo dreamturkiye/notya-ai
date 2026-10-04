@@ -9,8 +9,9 @@
  */
 import { createHmac, timingSafeEqual } from 'crypto'
 
-export type JetonEylemi = 'geliyorum' | 'ertele' | 'iptal' | 'kabul'
-const EYLEMLER: readonly JetonEylemi[] = ['geliyorum', 'ertele', 'iptal', 'kabul']
+/** 'teklif' (PR3): the id is a waitlist offer (randevu_bekleme_teklifleri.id), not an appointment. */
+export type JetonEylemi = 'geliyorum' | 'ertele' | 'iptal' | 'kabul' | 'teklif'
+const EYLEMLER: readonly JetonEylemi[] = ['geliyorum', 'ertele', 'iptal', 'kabul', 'teklif']
 
 export type JetonIcerigi = { randevuId: string; eylem: JetonEylemi; son: number }
 

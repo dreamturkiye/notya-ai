@@ -27,6 +27,8 @@ export interface AracSuzgeci {
   brans: SpecialtyKey | null
   /** null = no patient in context: only actions that do not need one are offered (today: none). */
   hasta: HastaOzeti | null
+  /** NOTYA-RANDEVU-V2: the doctor's 'Hasta Portalı Randevu' is ON (lib/randevu/v2/sunucu.ts randevuV2Acik). */
+  randevuV2?: boolean
 }
 
 /** Is this action available to this doctor, for this patient? Specialty gating is explicit — never default-on. */
@@ -34,6 +36,7 @@ export function eylemUygunMu(e: EylemTanimi, s: AracSuzgeci): boolean {
   if (e.branslar !== 'hepsi') {
     if (!s.brans || !e.branslar.includes(s.brans)) return false
   }
+  if (e.ozellik === 'randevu_v2' && !s.randevuV2) return false
   if (!s.hasta) return false
   if (e.hastaKosulu && !e.hastaKosulu(s.hasta, s.brans)) return false
   return true
@@ -43,9 +46,11 @@ export function uygunEylemler(s: AracSuzgeci): EylemTanimi[] {
   if (eylemKapali()) return []
   // Base actions first, then specialty actions: if the cap bites, the shared spine survives it.
   const liste = eylemler().filter((e) => eylemUygunMu(e, s))
-  const temel = liste.filter((e) => e.branslar === 'hepsi')
-  const brans = liste.filter((e) => e.branslar !== 'hepsi')
-  return [...temel, ...brans].slice(0, ARAC_TAVANI)
+  const temel = liste.filter((e) => e.branslar === 'hepsi' && !e.ozellik)
+  const brans = liste.filter((e) => e.branslar !== 'hepsi' && !e.ozellik)
+  // Feature-gated tools last: switching a feature on never displaces an existing tool.
+  const ozellik = liste.filter((e) => e.ozellik)
+  return [...temel, ...brans, ...ozellik].slice(0, ARAC_TAVANI)
 }
 
 export interface AnthropicArac {

@@ -6,6 +6,7 @@
  * GET ?randevuId=<id>       → free times to move that own appointment (same length)
  * POST { islem: 'talep', tur, baslangic }
  * POST { islem: 'iptal' | 'ertele' | 'kabul' | 'teyit', randevuId, baslangic? }
+ * POST { islem: 'bekle' | 'bekleme_iptal', randevuId } · { islem: 'teklif_kabul', teklifId }   (PR3 waitlist)
  *
  * Isolation: the PIN-unlocked token fixes BOTH the doctor and the patient (resolvePortalToken). Free/busy is that
  * doctor's only, as bare times — never who holds a taken slot or why. Own appointments are read with
@@ -27,6 +28,7 @@ import {
   type HastaIslemi,
 } from '@/lib/randevu/v2/sunucu'
 import { googleaGonder } from '@/lib/randevu/v2/google/senk'
+import { beklemedenCik, beklemeyeEkle, hastaBeklemeleri, teklifKabul } from '@/lib/randevu/v2/bekleme'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +79,14 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
 
   const randevular = await hastaRandevulari(sb, doktorId, patientId, ayar, simdi)
   if (!randevular) return NextResponse.json({ error: 'Randevular alınamadı.' }, { status: 500 })
-  return NextResponse.json({ acik: true, turler: acikTurler(ayar), randevular, iptalSinirSaat: ayar.iptalSinirSaat })
+  // PR3: waitlist state per own appointment (on the list? an open earlier-slot offer?).
+  const bekleme = await hastaBeklemeleri(sb, doktorId, patientId, simdi)
+  return NextResponse.json({
+    acik: true,
+    turler: acikTurler(ayar),
+    randevular: randevular.map((r) => ({ ...r, bekleme: bekleme.get(r.id) || { kayitli: false, teklif: null } })),
+    iptalSinirSaat: ayar.iptalSinirSaat,
+  })
 }
 
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
@@ -85,8 +94,25 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if ('hata' in o) return o.hata
   const { sb, doktorId, patientId } = o
 
-  const b = (await req.json().catch(() => ({}))) as { islem?: string; tur?: string; baslangic?: string; randevuId?: string }
+  const b = (await req.json().catch(() => ({}))) as { islem?: string; tur?: string; baslangic?: string; randevuId?: string; teklifId?: string }
   const islem = String(b.islem || '')
+
+  // PR3 waitlist: join / leave for one own appointment; accept an earlier-slot offer made to this patient.
+  if ((islem === 'bekle' || islem === 'bekleme_iptal') && b.randevuId) {
+    if (islem === 'bekleme_iptal') {
+      await beklemedenCik(sb, { doktorId, patientId, randevuId: String(b.randevuId) })
+      return NextResponse.json({ ok: true })
+    }
+    const e = await beklemeyeEkle(sb, { doktorId, patientId, randevuId: String(b.randevuId) })
+    return e.ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: e.hata }, { status: e.durum })
+  }
+  if (islem === 'teklif_kabul' && b.teklifId) {
+    const t = await teklifKabul(sb, { teklifId: String(b.teklifId), doktorId, patientId, kanal: 'portal' })
+    if (!t.ok) return NextResponse.json({ error: t.hata }, { status: t.durum })
+    await isleriCalistir(sb, { randevuId: t.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
+    await googleaGonder(sb, doktorId, t.randevu.id)
+    return NextResponse.json({ ok: true, durum: t.randevu.durum, onayBekliyor: t.randevu.durum === 'talep' })
+  }
 
   const s = islem === 'talep'
     ? await talepOlustur(sb, { doktorId, patientId, tur: String(b.tur || ''), baslangic: String(b.baslangic || '') })

@@ -7,7 +7,8 @@
  *   3. Due jobs (randevu_isleri): confirmation / proposal / outcome e-mails and the day-before 10:00 and
  *      morning-of 08:00 reminders. Idempotent — each job is claimed before anything leaves; a reschedule or
  *      cancel already replaced or dropped its jobs. Quiet hours (21:00–07:00 TRT) hold e-mails until morning.
- *   4. Google Takvim catch-up for connected doctors (PR2; dormant without GOOGLE_OAUTH_CLIENT_ID/SECRET).
+ *   4. Waitlist (PR3): expire unanswered offers, offer free earlier slots to waiting patients in order.
+ *   5. Google Takvim catch-up for connected doctors (PR2; dormant without GOOGLE_OAUTH_CLIENT_ID/SECRET).
  * Only doctors whose 'Hasta Portalı Randevu' is ON ever have jobs; with it OFF this does nothing.
  */
 import { NextResponse } from 'next/server'
@@ -15,6 +16,7 @@ import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { cronYetkiliMi } from '@/lib/cronYetki'
 import { eskalasyonTara, hatirlatmalariTamamla, isleriCalistir } from '@/lib/randevu/v2/sunucu'
 import { googleTara } from '@/lib/randevu/v2/google/senk'
+import { teklifTara } from '@/lib/randevu/v2/bekleme'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -25,8 +27,10 @@ export async function GET(req: Request) {
   const sb = servisSupabase()
   const eskalasyon = await eskalasyonTara(sb).catch(() => 0)
   const tamamlanan = await hatirlatmalariTamamla(sb).catch(() => 0)
-  const isler = await isleriCalistir(sb, { limit: 200, bitis: baslangic + 30_000 })
+  const isler = await isleriCalistir(sb, { limit: 200, bitis: baslangic + 25_000 })
+  // PR3: waitlist — expire offers, offer free earlier slots in list order.
+  const bekleme = await teklifTara(sb, { bitis: baslangic + 35_000 })
   // PR2: Google Takvim catch-up (push, incremental import, channel renewal) — a no-op until credentials exist.
   const google = await googleTara(sb, { bitis: baslangic + 50_000 }).catch(() => ({ doktor: 0 }))
-  return NextResponse.json({ calisma_zamani: new Date().toISOString(), eskalasyon, tamamlanan, ...isler, google })
+  return NextResponse.json({ calisma_zamani: new Date().toISOString(), eskalasyon, tamamlanan, ...isler, bekleme, google })
 }

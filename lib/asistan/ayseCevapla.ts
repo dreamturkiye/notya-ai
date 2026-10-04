@@ -73,6 +73,7 @@ import { baglamOku, takipCoz, baglamKur, baglamBlogu, niyetBul, varliklariCikar,
 import { doktorunGununuOku, gunlukKonusmaMetni, gunlukOzetMetni, haftalikOzetMetni } from "@/lib/randevu/gunlukOzet"
 import { isoGunKaydir, saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 import { zamanBlogu } from "@/lib/asistan/zamanBlogu"
+import { randevuV2Acik } from "@/lib/randevu/v2/ozellik"
 
 export type Kanal = "yazi" | "ses"
 
@@ -563,7 +564,9 @@ ${ilacBaglamMetni(drugs[0])}`
   const yonlendirme = asistanModelYonlendir({ mesaj: String(message || ""), hastaBaglami: Boolean(dosyaEk) || Boolean(currentPatient), niyet: quickIntent })
 
   const eylemBransi = bransAnahtari(hekimBransi)
-  const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
+  // NOTYA-RANDEVU-V2: the appointment move/cancel tool only while the doctor's Hasta Portalı Randevu is ON.
+  const randevuV2 = eylemHastasi ? await randevuV2Acik(supabase, doktorId) : false
+  const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi, randevuV2 }) : []
   const toolChoice = araclar.length && kayitNiyetiMi(String(message || augmentedMessage || '')) ? ('any' as const) : undefined
   // NOTYA-LUNA-ARAMA-01 (2026-09-29): with no chart attached the prompt still says "dosyaya erişimin VAR" and
   // forbids "erişemem" — a compliant model then invents a file ("dosyası açık", made-up aşı/ilaç). Say it plainly.
@@ -686,7 +689,7 @@ ${ilacBaglamMetni(drugs[0])}`
   const eylemOnerileri: HazirOneri[] = eylemHastasi
     // NOTYA-EYLEM-21: Ayşe'nin kendi uyarı cümlesi karta "Ayşe'nin notu" olarak taşınır — deterministik
     // kontrolün yerine değil, yanına; asla `ciddi` sayılmaz (core/eylemler/ilacUyari.ts).
-    ? await toolUseOnerileri(response as unknown as { content?: unknown }, eylemCtx(eylemHastasi), yuzey, { brans: eylemBransi, hasta: eylemHastasi }, aiData.proactiveWarning)
+    ? await toolUseOnerileri(response as unknown as { content?: unknown }, eylemCtx(eylemHastasi), yuzey, { brans: eylemBransi, hasta: eylemHastasi, randevuV2 }, aiData.proactiveWarning)
     : []
 
   // NOTYA-EYLEM-24: the OLD silent write path is closed. A legacy `{ action: { type, data } }`
@@ -714,7 +717,7 @@ ${ilacBaglamMetni(drugs[0])}`
           anahtar: karar.eylemAnahtar,
           girdi: { metin, alan_kaynaklari: { metin: { kaynak: "doktor_soyledi", alinti: String(message || "").slice(0, 400) } } },
           yuzey,
-          suzgec: { brans: eylemBransi, hasta: eylemHastasi },
+          suzgec: { brans: eylemBransi, hasta: eylemHastasi, randevuV2 },
         })
         if (o) { eylemOnerileri.push(o); kartCikti = true }
       }
