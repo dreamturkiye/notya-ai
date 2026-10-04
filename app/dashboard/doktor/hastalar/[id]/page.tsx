@@ -287,8 +287,11 @@ export default function HastaProfilPage() {
         if (!resp.ok) { setError(data.error || 'Hasta bilgisi alınamadı'); return; }
         setPatient(data.patient);
         void fetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId }), keepalive: true })
-        // NOTYA-OZET-CIFT-01: eski dosyalarda özet boşsa bir kez üret (onay kancası sonrası kalıcı).
-        if (!String(data.patient?.genel_ozet || '').trim() || !String(data.patient?.son_muayene_ozeti || '').trim()) {
+        // NOTYA-OZET-CIFT-01: boşsa veya eski kisaltma (…) ile kesilmişse yeniden üret.
+        const genelHam = String(data.patient?.genel_ozet || '').trim()
+        const sonHam = String(data.patient?.son_muayene_ozeti || '').trim()
+        const ozetKesik = /…|\.\.\.\s*$/.test(genelHam) || /…|\.\.\.\s*$/.test(sonHam)
+        if (!genelHam || !sonHam || ozetKesik) {
           setKlinikOzetYukleniyor(true)
           void fetch(`/api/doktor/hastalar/${patientId}/klinik-ozet`, {
             method: 'POST',

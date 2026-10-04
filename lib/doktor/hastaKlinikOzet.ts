@@ -121,9 +121,10 @@ export function genelOzetYaz(g: GenelOzetGirdi): string {
   }
   if (tanilar.length) cumleler.push(`Öne çıkan tanılar / değerlendirmeler: ${tanilar.join('; ')}.`)
 
-  const sonYakinma = satirTemiz(son.basvuru_yakinmasi || son.content_subjektif, 140)
-  const sonTani = satirTemiz(son.content_tani, 140)
-  const sonPlan = satirTemiz(son.content_plan || son.content_tedavi, 140)
+  // Son muayene planı kısaltılmaz — hekim Özet'te lot no / doz satırını eksiksiz okuyabilmeli.
+  const sonYakinma = satirTemiz(son.basvuru_yakinmasi || son.content_subjektif, 400)
+  const sonTani = satirTemiz(son.content_tani, 400)
+  const sonPlan = String(son.content_plan || son.content_tedavi || '').replace(/\s+/g, ' ').trim()
   const sonParca = [
     sonT ? `Son muayene (${sonT})` : 'Son muayene',
     sonYakinma ? `yakınma: ${sonYakinma}` : '',

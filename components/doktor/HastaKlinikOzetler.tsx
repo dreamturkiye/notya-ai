@@ -14,7 +14,8 @@ const panel: React.CSSProperties = {
   boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
   padding: '16px 18px',
   position: 'relative',
-  overflow: 'hidden',
+  // overflow visible — uzun Genel Özet (lot no / plan satırları) kesilmesin
+  overflow: 'visible',
 }
 
 function Kart({

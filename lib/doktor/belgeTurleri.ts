@@ -16,6 +16,7 @@ export const ORTAK_BELGE_TURLERI = [
   'Görüntüleme Raporu',
   'EKG',
   'Röntgen',
+  'İşitme testi',
   'Epikriz',
   'Reçete',
   // KONSULTASYON-01: meslektaştan gelen görüş raporu. "Sevk" yalnız gerçek SGK sevk belgesi içindir.

@@ -26,6 +26,7 @@ export function turEsle(ham: string | null | undefined, bicim?: Bicim): string {
   if (/konsült|konsult|görüş raporu|gorus raporu|consult/.test(t)) return 'Konsültasyon raporu'
   if (/\bekg\b|elektrokardiyo|ecg|ritim şeridi/.test(t)) return 'EKG'
   if (/röntgen|rontgen|x-?ray|grafi|\bcxr\b/.test(t)) return 'Röntgen'
+  if (/işitme|isitme|hearing|odyometri|odiyometri|\boae\b|\babr\b|işitsel|isitsel|yenidoğan.*tarama.*işit|yenidogan.*tarama.*isit/.test(t)) return 'İşitme testi'
   if (/\bmr\b|\bmri\b|\bbt\b|tomografi|ultrason|\busg\b|\bus\b|mamograf|görüntüleme|goruntuleme|radyoloji|ekokardiyo|\beko\b|doppler/.test(t)) return 'Görüntüleme Raporu'
   // Pathology is not a lab table (the lab reader would find no rows) — it stays a plain document.
   if (/patoloji|biyopsi|sitoloji/.test(t)) return 'Diğer'

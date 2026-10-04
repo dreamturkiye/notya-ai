@@ -178,6 +178,7 @@ describe('turEsle — onto the shared belge catalogue only', () => {
   const vakalar: [string, string][] = [
     ['Lab Sonucu', 'Lab Sonucu'], ['Hemogram', 'Lab Sonucu'], ['biyokimya paneli', 'Lab Sonucu'], ['TSH tiroid', 'Lab Sonucu'],
     ['Akciğer grafisi', 'Röntgen'], ['X-ray', 'Röntgen'], ['EKG', 'EKG'], ['12 derivasyon elektrokardiyogram', 'EKG'],
+    ['İşitme testi', 'İşitme testi'], ['Yenidoğan işitme tarama raporu', 'İşitme testi'], ['OAE hearing test', 'İşitme testi'],
     ['Beyin MR raporu', 'Görüntüleme Raporu'], ['Batın USG', 'Görüntüleme Raporu'], ['KBB konsültasyon yanıtı', 'Konsültasyon raporu'],
     ['Epikriz', 'Epikriz'], ['e-Reçete', 'Reçete'], ['Sevk belgesi', 'Sevk'], ['Patoloji raporu', 'Diğer'], ['fatura', 'Diğer'], ['', 'Diğer'],
   ]

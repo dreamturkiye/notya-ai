@@ -56,6 +56,25 @@ describe('NOTYA-OZET-CIFT-01 — Genel Özet + Son muayene özeti', () => {
     assert.match(metin, /Son muayene/)
   })
 
+  it('genel özet: uzun plan (lot no) kısaltılmaz — hekim tamamını okuyabilmeli', () => {
+    const plan = '1. Hepatit A aşısının ikinci dozunun yapıldı. Sol bacak, Havrix, lot no: H1234 2. İlk kez grip aşısı yapıldı; Vaxigrip, sağ bacak, Lot no: G9876. 3. D vitamini devam.'
+    const metin = genelOzetYaz({
+      dogumIso: '2024-10-01',
+      cinsiyetHam: 'male',
+      notes: {},
+      aktifIlaclar: [],
+      onayliNotlar: [{
+        approved_at: '2026-10-04T10:00:00Z',
+        basvuru_yakinmasi: '24 aylık sağlam çocuk muayenesi',
+        content_tani: '24 aylık sağlam çocuk muayenesi',
+        content_plan: plan,
+      }],
+    })
+    assert.match(metin, /Lot no: G9876/)
+    assert.match(metin, /D vitamini devam/)
+    assert.doesNotMatch(metin, /…|\.\.\.\s*$/)
+  })
+
   it('notes okuma/yazma genelOzet ve sonMuayeneOzeti anahtarlarını kullanır', () => {
     const yaz = klinikOzetleriNotesYaz({ sehir: 'İstanbul' }, 'Genel metin', 'Son metin')
     assert.equal(yaz.sehir, 'İstanbul')

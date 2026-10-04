@@ -46,4 +46,11 @@ describe('belgeTurleri — Yenidoğan Taburculuk Epikrizi (brans-alan-sızması)
     assert.equal(yenidoganTaburcuEpikriziBransiMi('dahiliye'), false)
     assert.equal(yenidoganTaburcuEpikriziBransiMi(null), false)
   })
+
+  it('İşitme testi ortak kataloğda — tüm branş select’lerinde', () => {
+    assert.ok((ORTAK_BELGE_TURLERI as readonly string[]).includes('İşitme testi'))
+    assert.ok(belgeTurleriIcinBrans('pediatri').includes('İşitme testi'))
+    assert.ok(belgeTurleriIcinBrans('dahiliye').includes('İşitme testi'))
+    assert.equal(belgeTuruIzinliMi('İşitme testi', 'kulak-burun-bogaz'), true)
+  })
 })
