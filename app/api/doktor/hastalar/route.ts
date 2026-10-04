@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doktorOturum } from '@/lib/doktor/serverAuth';
+import { pratikOturum } from '@/lib/doktor/pratikOturum';
 import { encrypt, decrypt } from '@/lib/security/encryption';
 import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra';
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
@@ -7,14 +7,14 @@ import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  // NOTYA-AUTH-01: one server-side convention, one honest 401.
-  const oturum = await doktorOturum(req);
+  // NOTYA-SEKRETER-01: pratikOturum — sekreter, bağlı hekimin hasta listesini görür (doktorId).
+  const oturum = await pratikOturum(req);
   if ('hata' in oturum) return oturum.hata;
-  const { user, supabase } = oturum;
+  const { supabase, doktorId } = oturum;
 
   const q = String(req.nextUrl.searchParams.get('q') || '').trim()
   if (q && klinikAramaMi(q)) {
-    const ara = await hastaDosyaAra(supabase, user.id, q)
+    const ara = await hastaDosyaAra(supabase, doktorId, q)
     return NextResponse.json({
       arama: true,
       sayi: ara.length,
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const { data: patients, error } = await supabase
     .from('patients')
     .select('id, tc_kimlik_hash, name_encrypted, is_active, created_at')
-    .eq('doctor_id', user.id)
+    .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -72,10 +72,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // NOTYA-AUTH-01: one server-side convention, one honest 401.
-  const oturum = await doktorOturum(req);
+  // NOTYA-SEKRETER-01: ön büro da hekim adına hasta ekleyebilir — doctor_id = doktorId.
+  const oturum = await pratikOturum(req);
   if ('hata' in oturum) return oturum.hata;
-  const { user, supabase } = oturum;
+  const { supabase, doktorId } = oturum;
 
   const body = await req.json();
   const { tcKimlikNo, adSoyad, dogumTarihi, cinsiyet, telefon, eposta, sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol } = body;
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabase
     .from('patients')
     .insert({
-      doctor_id: user.id,
+      doctor_id: doktorId,
       tc_kimlik_hash: tcHash,
       name_encrypted: encryptedAd,
       dob_encrypted: encryptedDob,
@@ -125,6 +125,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Hasta oluşturulamadı: ' + error.message }, { status: 500 });
   }
 
-  await hastaAramaIndeksiniGuncelle(supabase, user.id, data.id, adSoyad);
+  await hastaAramaIndeksiniGuncelle(supabase, doktorId, data.id, adSoyad);
   return NextResponse.json({ patient: data });
 }

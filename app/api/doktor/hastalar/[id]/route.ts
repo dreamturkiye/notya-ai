@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { doktorOturum } from '@/lib/doktor/serverAuth'
+import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 import {
@@ -21,15 +21,16 @@ function coz(v: string | null | undefined): string {
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const oturum = await doktorOturum(req)
+  // NOTYA-SEKRETER-01: sekreter bağlı hekimin hasta dosyasını okuyabilir.
+  const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { user, supabase } = oturum
+  const { supabase, doktorId } = oturum
 
   const { data: patient, error } = await supabase
     .from('patients')
     .select('*')
     .eq('id', params.id)
-    .eq('doctor_id', user.id)
+    .eq('doctor_id', doktorId)
     .single()
 
   if (error || !patient) {
@@ -96,9 +97,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const oturum = await doktorOturum(req)
+  // NOTYA-SEKRETER-01: ön büro iletişim/kimlik güncellemesi — kapsam doktorId.
+  const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { user, supabase } = oturum
+  const { supabase, doktorId } = oturum
 
   const body = await req.json()
 
@@ -106,7 +108,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     .from('patients')
     .select('id, notes_encrypted, email_encrypted')
     .eq('id', params.id)
-    .eq('doctor_id', user.id)
+    .eq('doctor_id', doktorId)
     .maybeSingle()
 
   if (okumaHata || !mevcut) {
@@ -152,7 +154,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     .from('patients')
     .update(updateData)
     .eq('id', params.id)
-    .eq('doctor_id', user.id)
+    .eq('doctor_id', doktorId)
     .select('id')
     .single()
 
@@ -160,7 +162,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Güncelleme başarısız' }, { status: 500 })
   }
 
-  if (yeniAd) await hastaAramaIndeksiniGuncelle(supabase, user.id, data.id, yeniAd)
+  if (yeniAd) await hastaAramaIndeksiniGuncelle(supabase, doktorId, data.id, yeniAd)
 
   return NextResponse.json({ ok: true, id: data.id })
 }
