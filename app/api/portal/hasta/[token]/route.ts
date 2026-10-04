@@ -12,6 +12,7 @@ import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
 import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
 import { pediatriSekmesiUygun, yasYilKesir } from '@/lib/doktor/hastaDosyaSekmeleri'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
+import { portalHekimKarti } from '@/lib/portal/hekimKarti'
 import { portalModulAktif, portalModulleri } from '@/lib/portal/moduller'
 import { asiKarnesiVerisi } from '@/lib/asi/karneSunucu'
 import { asiKarnesiDoluMu, type AsiKarnesi } from '@/lib/asi/karneBelgesi'
@@ -337,6 +338,13 @@ export async function GET(
   const doctorId = tokenData.doctor_id as string
   const bundle: PortalBundle = emptyPortalBundle()
 
+  // PORTAL-HEKIM-01 — Özet hero: ad, foto, adres, muayenehane telefonu (yalnız token doktoru).
+  try {
+    bundle.hekim = await portalHekimKarti(sb, doctorId)
+  } catch (e) {
+    console.error('[portal] hekim-karti:', e)
+  }
+
   // Sessions + notes → visits.
   // KVKK/QA 2026-09-08: the portal must show ONLY notes the doctor has APPROVED. Approval is the
   // share gate — an unapproved note is a draft (provisional wording, possible errors, reasoning
@@ -400,7 +408,7 @@ export async function GET(
       tarih: s.created_at,
       brans: bransEtiketi(s.specialty),
       basvuruNedeni: String(note?.basvuru_yakinmasi || 'Muayene').trim() || 'Muayene',
-      hekim: 'Doktorunuz',
+      hekim: bundle.hekim.ad || 'Doktorunuz',
       ozetKisa: String(note?.content_degerlendirme || note?.content_plan || 'Ziyaret kaydı').slice(0, 160),
       subjektif: note?.content_subjektif ? String(note.content_subjektif) : undefined,
       objektif: note?.content_objektif ? String(note.content_objektif) : undefined,

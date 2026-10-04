@@ -6,6 +6,16 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   // Demo hastası yetişkin iç hastalıkları hastası; demo form gönderemediği için ön anket modülü de bağlanmaz.
   // ASI-KARNESI-01 — sentetik aşı kaydı var → modül + nav açık (aksi halde karne verisi erişilemez kalırdı).
   portal: { moduller: ['asi-karnesi'], nav: [{ key: 'asi-karnesi', label: 'Aşı Karnesi', path: '/asi-karnesi' }] },
+  // PORTAL-HEKIM-01 — sentetik muayenehane kimliği (PHI yok)
+  hekim: {
+    ad: 'Dr. Gökhan Mamur',
+    brans: 'İç Hastalıkları',
+    klinik: 'Notya Muayenehanesi',
+    adres: 'Bağdat Cad. No:12 Kadıköy/İstanbul',
+    telefon: '0216 000 00 00',
+    telefonHref: 'tel:+902160000000',
+    avatarUrl: null,
+  },
   goz: null,
   deri: null,
   kronik: null,

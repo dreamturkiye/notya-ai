@@ -413,12 +413,25 @@ body:has(.sagligim-root) {
   background: var(--sg-ink);
 }
 
+/* PORTAL-HEKIM-01 — Notya sol, hekim sağ (mobilde Notya üstte kompakt, hekim altta). */
+.sg-hero--hekim {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(10, 122, 138, 0.18), transparent 55%),
+    linear-gradient(160deg, #f3efe6 0%, #e8f2f3 48%, #efe6d8 100%);
+  gap: 2px;
+}
+
 .sg-hero-main {
   position: relative;
   min-height: min(58vh, 480px);
   display: flex;
   align-items: flex-end;
   overflow: hidden;
+}
+
+.sg-hero-main--compact {
+  min-height: min(34vh, 260px);
+  flex: 1.2;
 }
 
 .sg-hero-media {
@@ -529,6 +542,149 @@ body:has(.sagligim-root) {
   grid-template-columns: 1fr 1fr;
   gap: 2px;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.sg-hero-side--brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: transparent;
+  min-height: 0;
+}
+
+/* PORTAL-HEKIM-01 — muayenehane kimlik kartı */
+.sg-hekim-kart {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(42vh, 320px);
+  padding: 28px 22px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 248, 250, 0.88) 55%, rgba(232, 242, 243, 0.95) 100%);
+  animation: sgBrandIn 0.75s var(--sg-ease) 0.08s both;
+}
+
+.sg-hekim-kart-glow {
+  position: absolute;
+  inset: -20% auto auto -10%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(10, 122, 138, 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+.sg-hekim-kart-icerik {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+}
+
+.sg-hekim-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(10, 122, 138, 0.55), rgba(212, 193, 150, 0.75));
+  box-shadow: 0 10px 28px rgba(58, 44, 34, 0.12);
+  animation: sgBrandIn 0.7s var(--sg-ease) 0.18s both;
+}
+
+.sg-hekim-avatar-img {
+  border: 3px solid rgba(255, 255, 255, 0.95);
+}
+
+.sg-hekim-avatar-harf {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  background: linear-gradient(160deg, #0a7a8a, #0d5f6b);
+  color: #fff;
+  font-family: var(--sg-font-display);
+  font-size: 1.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.sg-hekim-metin {
+  width: 100%;
+  animation: sgBrandIn 0.7s var(--sg-ease) 0.28s both;
+}
+
+.sg-hekim-etiket {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sg-accent-ink, #0a7a8a);
+}
+
+.sg-hekim-ad {
+  margin: 0;
+  font-family: var(--sg-font-display);
+  font-size: clamp(1.7rem, 6vw, 2.35rem);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--sg-ink);
+}
+
+.sg-hekim-brans {
+  margin: 8px 0 0;
+  font-size: 0.98rem;
+  line-height: 1.4;
+  color: var(--sg-muted);
+  font-weight: 500;
+}
+
+.sg-hekim-iletisim {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.sg-hekim-satir {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: var(--sg-ink);
+}
+
+.sg-hekim-ikon {
+  display: inline-flex;
+  margin-top: 2px;
+  color: var(--sg-accent-ink, #0a7a8a);
+  flex-shrink: 0;
+}
+
+.sg-hekim-tel {
+  color: var(--sg-accent-ink, #0a7a8a) !important;
+  font-weight: 650;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(10, 122, 138, 0.35);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.sg-hekim-tel:hover {
+  border-bottom-color: var(--sg-accent-ink, #0a7a8a);
+}
+
+.sg-hekim-bos {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--sg-muted);
+  line-height: 1.4;
 }
 
 .sg-hero-tile {
@@ -1261,8 +1417,19 @@ body:has(.sagligim-root) {
     min-height: min(62vh, 520px);
   }
 
+  /* PORTAL-HEKIM-01 — sol: Notya + Aşı Karnesi; sağ: hekim kartı (daha geniş) */
+  .sg-hero--hekim {
+    grid-template-columns: 0.88fr 1.42fr;
+    min-height: min(58vh, 480px);
+  }
+
   .sg-hero-main {
     min-height: 100%;
+  }
+
+  .sg-hero--hekim .sg-hero-main--compact {
+    min-height: 0;
+    flex: 1.35;
   }
 
   .sg-hero-side {
@@ -1287,8 +1454,36 @@ body:has(.sagligim-root) {
     flex-direction: column;
   }
 
+  .sg-hekim-kart {
+    min-height: 100%;
+    padding: 36px 32px;
+  }
+
+  .sg-hekim-kart-icerik {
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .sg-hekim-ad {
+    font-size: clamp(2rem, 3.2vw, 2.6rem);
+  }
+
   .sg-hero-copy {
     padding: 40px 28px 36px;
+  }
+
+  .sg-hero--hekim .sg-hero-copy {
+    padding: 28px 22px 24px;
+  }
+
+  .sg-hero--hekim .sg-hero-brand-name {
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  }
+
+  .sg-hero--hekim .sg-hero-lede {
+    font-size: 0.98rem;
+    max-width: 18rem;
   }
 
   .sg-list-panel,

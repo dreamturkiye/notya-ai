@@ -154,6 +154,23 @@ export interface PortalHedefBoy {
   formul?: string
 }
 
+/**
+ * PORTAL-HEKIM-01 — Özet hero'da görünen muayenehane kimliği (token'ın doktoru).
+ * Adres/telefon reçete başlığı + muayenehane hattından; foto doktor avatarından.
+ */
+export interface PortalHekim {
+  ad: string
+  brans: string | null
+  klinik: string | null
+  adres: string | null
+  /** Görünen numara (ör. 0216 000 00 00); yoksa null */
+  telefon: string | null
+  /** tel:+90… — tıklanabilir arama; numara yoksa null */
+  telefonHref: string | null
+  /** data:image/… — yoksa null (baş harf avatarı istemcide) */
+  avatarUrl: string | null
+}
+
 export interface PortalBundle {
   summary: PortalSummary
   messages: PortalMessage[]
@@ -168,6 +185,8 @@ export interface PortalBundle {
    * Yalnız branş + tarih + durum (KVKK m.10 aydınlatma). Klinik soru, tanı, yanıt özeti, rapor ve konsültan adı YOK.
    */
   yonlendirmeler: PortalYonlendirme[]
+  /** PORTAL-HEKIM-01 — Özet'te hekim kartı (çekirdek; her branş). */
+  hekim: PortalHekim
   /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules + their extra nav (lib/portal/moduller.ts). */
   portal: { moduller: PortalModulId[]; nav: PortalNavOge[] }
   // Specialty slices — each is null unless its module attached (never "just in case").
