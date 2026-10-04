@@ -292,7 +292,7 @@ export default function NotSayfasi() {
       const mevcutIlac = ilacMetniniCoz(ilacRef.current)
       const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac)
       if (ilacKontrol.gerekli) {
-        const oneri = await planaGoreIlacOnerisiOnbellekli(t, params.id, taslak.plan, {
+        const oneri = await planaGoreIlacOnerisiOnbellekli(t || '', params.id, taslak.plan, {
           ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: mevcutIlac,
           asilar: asiSatirlari(asilar), icdKodlari: icd, receteOnerisi: recete, aiDegerlendirme: aiDeg,
         }).catch(() => null)
