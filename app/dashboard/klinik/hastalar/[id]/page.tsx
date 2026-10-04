@@ -55,26 +55,26 @@ export default function KlinikHastaDosyaPage() {
   const araclar = klinikAraclariListesi(dal)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <Link href="/dashboard/klinik/hastalar" style={{ fontSize: 13, color: '#2563EB' }}>← Hastalar</Link>
-        <h1 style={{ margin: '12px 0 8px', fontSize: 26, color: '#0A1628' }}>{ad}</h1>
-        {hata && <p style={{ color: '#DC2626' }}>{hata}</p>}
-        <p style={{ color: 'rgba(10,22,40,0.55)', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı yerelde tutulur; SBİYS iddia edilmez.</p>
+        <Link href="/dashboard/klinik/hastalar" style={{ fontSize: 13, color: '#2f4334' }}>← Hastalar</Link>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '12px 0 8px', fontSize: 26, color: '#3b2e24' }}>{ad}</h1>
+        {hata && <p style={{ color: '#a45b3e' }}>{hata}</p>}
+        <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı yerelde tutulur; SBİYS iddia edilmez.</p>
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => router.push(`/dashboard/klinik/seans?patientId=${id}`)} style={btn}>Seansı başlat</button>
-          <button type="button" onClick={() => router.push(`/klinik-tools/hasta-portali?patientId=${id}`)} style={{ ...btn, background: '#059669' }}>Portal ver</button>
-          <button type="button" onClick={() => router.push('/dashboard/klinik/randevular')} style={{ ...btn, background: '#fff', color: '#2563EB', border: '1px solid #2563EB' }}>Randevular</button>
+          <button type="button" onClick={() => router.push(`/klinik-tools/hasta-portali?patientId=${id}`)} style={{ ...btn, background: '#2f4334' }}>Portal ver</button>
+          <button type="button" onClick={() => router.push('/dashboard/klinik/randevular')} style={{ ...btn, background: '#faf6ee', color: '#2f4334', border: '1px solid #2f4334' }}>Randevular</button>
         </div>
         {seanslar.length > 0 && (
           <>
-            <h2 style={{ margin: '28px 0 12px', fontSize: 16, color: '#0A1628' }}>Seans kaydı</h2>
+            <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '28px 0 12px', fontSize: 16, color: '#3b2e24' }}>Seans kaydı</h2>
             {seanslar.slice(0, 6).map((s) => (
-              <div key={s.id} style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 10, padding: 12, marginBottom: 8, fontSize: 13 }}>
+              <div key={s.id} style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 10, padding: 12, marginBottom: 8, fontSize: 13 }}>
                 <b>{s.iso}</b> · {s.metin}
-                <div style={{ color: 'rgba(10,22,40,0.5)', fontSize: 12, marginTop: 4 }}>
+                <div style={{ color: '#8b7d70', fontSize: 12, marginTop: 4 }}>
                   {s.rizaIkiNusha ? 'iki nüsha rıza' : 'rıza eksik'}{s.kriz112 ? ' · 112' : ''}
                 </div>
               </div>
@@ -82,16 +82,16 @@ export default function KlinikHastaDosyaPage() {
           </>
         )}
         {slug && (
-          <div style={{ marginTop: 28, background: '#0D1526', borderRadius: 14, padding: 16 }}>
+          <div style={{ marginTop: 28, background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 14, padding: 16 }}>
             <KlinikBolumHome slug={slug} patientId={id} />
           </div>
         )}
-        <h2 style={{ margin: '28px 0 12px', fontSize: 16, color: '#0A1628' }}>Dal araçları</h2>
+        <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '28px 0 12px', fontSize: 16, color: '#3b2e24' }}>Dal araçları</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
           {araclar.map((a) => (
             <button key={a.route} type="button" onClick={() => router.push(a.route)} style={kart}>
-              <div style={{ fontWeight: 700, color: '#0A1628' }}>{a.title}</div>
-              <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)', marginTop: 6 }}>{a.desc}</div>
+              <div style={{ fontWeight: 700, color: '#3b2e24' }}>{a.title}</div>
+              <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 6 }}>{a.desc}</div>
             </button>
           ))}
         </div>
@@ -100,5 +100,5 @@ export default function KlinikHastaDosyaPage() {
   )
 }
 
-const btn: React.CSSProperties = { padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontWeight: 600, cursor: 'pointer' }
-const kart: React.CSSProperties = { textAlign: 'left', background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 12, padding: 14, cursor: 'pointer' }
+const btn: React.CSSProperties = { padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer' }
+const kart: React.CSSProperties = { textAlign: 'left', background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 12, padding: 14, cursor: 'pointer' }

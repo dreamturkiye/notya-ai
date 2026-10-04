@@ -59,53 +59,53 @@ export default function AyarlarPage() {
     setSelectedSpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
   }
 
-  const inp: React.CSSProperties = { width: '100%', border: '1px solid rgba(10,22,40,0.12)', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', fontFamily: 'system-ui', color: '#0A1628', background: '#fff', boxSizing: 'border-box', outline: 'none' }
+  const inp: React.CSSProperties = { width: '100%', border: '1px solid rgba(58,44,34,0.14)', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', fontFamily: "'Source Sans 3', system-ui, sans-serif", color: '#3b2e24', background: '#faf6ee', boxSizing: 'border-box', outline: 'none' }
 
-  if (loading) return <div style={{ minHeight: '100vh', background: '#FFFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(10,22,40,0.4)' }}>Yükleniyor...</div>
+  if (loading) return <div style={{ minHeight: '100vh', background: '#f4eee3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b7d70' }}>Yükleniyor...</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName={name || 'Klinik'} adminName={adminName} />
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px' }}>
-        <a href="/dashboard/klinik" style={{ color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#0A1628', margin: '12px 0 32px', letterSpacing: '-0.02em' }}>Klinik Ayarları</h1>
+        <a href="/dashboard/klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '28px', fontWeight: 400, color: '#3b2e24', margin: '12px 0 32px', letterSpacing: '-0.02em' }}>Klinik Ayarları</h1>
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: '12px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: '12px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
-                <label style={{ fontSize: '13px', color: 'rgba(10,22,40,0.5)', display: 'block', marginBottom: '6px' }}>Klinik Adı</label>
+                <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Klinik Adı</label>
                 <input value={name} onChange={e => setName(e.target.value)} style={inp} placeholder='Klinik adınız' />
               </div>
               <div>
-                <label style={{ fontSize: '13px', color: 'rgba(10,22,40,0.5)', display: 'block', marginBottom: '6px' }}>Şehir</label>
+                <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Şehir</label>
                 <input value={city} onChange={e => setCity(e.target.value)} style={inp} placeholder='İstanbul' />
               </div>
               <div>
-                <label style={{ fontSize: '13px', color: 'rgba(10,22,40,0.5)', display: 'block', marginBottom: '6px' }}>Telefon</label>
+                <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Telefon</label>
                 <input value={phone} onChange={e => setPhone(e.target.value)} style={inp} placeholder='+90 212 000 00 00' />
               </div>
               <div>
-                <label style={{ fontSize: '13px', color: 'rgba(10,22,40,0.5)', display: 'block', marginBottom: '6px' }}>Web Sitesi</label>
+                <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Web Sitesi</label>
                 <input value={website} onChange={e => setWebsite(e.target.value)} style={inp} placeholder='https://kliniginiz.com' />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: 'rgba(10,22,40,0.5)', display: 'block', marginBottom: '6px' }}>Logo URL</label>
+              <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Logo URL</label>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} style={{ ...inp, flex: 1 }} placeholder='https://...' />
-                {logoUrl && <img src={logoUrl} alt='logo' style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '6px', border: '1px solid rgba(10,22,40,0.08)' }} onError={e => (e.currentTarget.style.display = 'none')} />}
+                {logoUrl && <img src={logoUrl} alt='logo' style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '6px', border: '1px solid rgba(58,44,34,0.08)' }} onError={e => (e.currentTarget.style.display = 'none')} />}
               </div>
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: 'rgba(10,22,40,0.5)', display: 'block', marginBottom: '10px' }}>Uzmanlık Alanları</label>
+              <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '10px' }}>Uzmanlık Alanları</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {SPECIALTIES.map(s => (
                   <button key={s} type='button' onClick={() => toggleSpecialty(s)} style={{
                     padding: '6px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
-                    border: `1px solid ${selectedSpecialties.includes(s) ? '#2563EB' : 'rgba(10,22,40,0.15)'}`,
-                    background: selectedSpecialties.includes(s) ? '#EEF4FF' : '#fff',
-                    color: selectedSpecialties.includes(s) ? '#2563EB' : 'rgba(10,22,40,0.5)',
-                    fontFamily: 'system-ui'
+                    border: `1px solid ${selectedSpecialties.includes(s) ? '#2f4334' : 'rgba(58,44,34,0.14)'}`,
+                    background: selectedSpecialties.includes(s) ? 'rgba(47,67,52,0.08)' : '#faf6ee',
+                    color: selectedSpecialties.includes(s) ? '#2f4334' : '#8b7d70',
+                    fontFamily: "'Source Sans 3', system-ui, sans-serif"
                   }}>
                     {UZMANLIK_ETIKET[s] || s}
                   </button>
@@ -114,11 +114,11 @@ export default function AyarlarPage() {
             </div>
           </div>
           {msg && (
-            <div style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '13px', background: msg.includes('kaydedildi') ? 'rgba(0,168,157,0.08)' : 'rgba(220,38,38,0.08)', color: msg.includes('kaydedildi') ? '#00A89D' : '#DC2626' }}>
+            <div style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '13px', background: msg.includes('kaydedildi') ? 'rgba(47,67,52,0.08)' : 'rgba(164,91,62,0.08)', color: msg.includes('kaydedildi') ? '#2f4334' : '#a45b3e' }}>
               {msg}
             </div>
           )}
-          <button type='submit' disabled={saving} style={{ padding: '13px 32px', background: '#0A1628', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, alignSelf: 'flex-start' }}>
+          <button type='submit' disabled={saving} style={{ padding: '13px 32px', background: '#2f4334', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, alignSelf: 'flex-start' }}>
             {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </form>

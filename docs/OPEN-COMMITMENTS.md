@@ -3155,3 +3155,10 @@ Source: Kaan — morning thin-mouth / strong-brain work (IKI-BEYIN-BIRDE + Custo
 | NOTYA-TEK-BEYIN-CORE-01 | 2026-10-03 | CODE | `tekBeyinAcikMi` default ON for every doctor (kill `off` / allowlist `only:`). All 30 personas + 10 klinik experts share the 3 Custom-LLM agent copies. Klinik signed-url + page use Custom LLM + `klinikCevapla`; ses-llm routes `klinik:` jetons. Parity test `tekBeyinCore.test.ts`. Avatar idle scroll fix also on `/asistan/klinik`. | Kaan: deploy; spot-check one non-pediatri specialty + one klinik voice call |
 
 - 2026-10-04 NOTYA-DAVET-02: GET /api/personel/davet/[token] returns an empty doktorAdi, so the secretary invite page cannot name the inviting doctor (page now falls back to Doktorunuz). Fix the API to return the doctor name. Waits on: Kaan (say fix).
+
+## 2026-10-04 - NOTYA-KLINIK-SHELL-01: klinik still has its own shell (structural gap after the cream/pine color sweep)
+Source: yeni gorunum sweep. Klinik pages now use the cream/pine colors and fonts, but not the doctor shell. Structural work was out of scope for the sweep.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-KLINIK-SHELL-01 | 2026-10-04 | OPEN | `KlinikNav` is a top bar with 8 buttons (Genel Bakış, Hastalar, Randevular, Araçlar, Uzmanlar, Kullanıcılar, Klinik Ayarları, Pabau); doktor uses `DoktorChrome` (header + dock, Sidebar B) through `app/dashboard/doktor/layout.tsx` and `app/doktor-tools/layout.tsx`. There is no layout for `app/dashboard/klinik/*`, `app/klinik-tools/*` or `app/giris/klinik`; each page wraps itself in `KlinikNav` plus its own cream background. `app/klinik-tools/*` has no `doktorViewport` themeColor (cream status bar in the installed app) and no layout-level font link (`KlinikNav` carries the link for now). Klinik tool panels use hand-rolled card/button styles (`inp`/`btn` in `KlinikBolumHome`) instead of the shared `aracStil` / `toolsUi` helpers. | Kaan: decide whether klinik moves to DoktorChrome / Sidebar B |

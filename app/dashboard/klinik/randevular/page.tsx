@@ -64,26 +64,26 @@ export default function KlinikRandevularPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 26, color: '#0A1628' }}>Randevular</h1>
-        <p style={{ color: 'rgba(10,22,40,0.55)', fontSize: 14 }}>Klinik takvimi Doktor ekranından ayrıdır; aynı çakışma ve izolasyon kuralları geçerlidir.</p>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '0 0 8px', fontSize: 26, color: '#3b2e24' }}>Randevular</h1>
+        <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik takvimi Doktor ekranından ayrıdır; aynı çakışma ve izolasyon kuralları geçerlidir.</p>
         <div style={{ marginTop: 18, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <input type="date" value={gun} onChange={(e) => setGun(e.target.value)} style={inp} />
           <input type="time" value={saat} onChange={(e) => setSaat(e.target.value)} style={inp} />
           <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Hasta adı" style={inp} />
           <button type="button" onClick={() => void ekle()} style={btn}>Randevu ekle</button>
         </div>
-        {hata && <p style={{ color: '#DC2626', fontSize: 13, marginTop: 10 }}>{hata}</p>}
-        <div style={{ marginTop: 20, background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 12 }}>
+        {hata && <p style={{ color: '#a45b3e', fontSize: 13, marginTop: 10 }}>{hata}</p>}
+        <div style={{ marginTop: 20, background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 12 }}>
           {liste.length === 0 ? (
-            <p style={{ padding: 24, color: 'rgba(10,22,40,0.4)' }}>Bu günde randevu yok.</p>
+            <p style={{ padding: 24, color: '#8b7d70' }}>Bu günde randevu yok.</p>
           ) : liste.map((rv) => (
-            <div key={rv.id} style={{ padding: '14px 18px', borderBottom: '1px solid rgba(10,22,40,0.06)', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+            <div key={rv.id} style={{ padding: '14px 18px', borderBottom: '1px solid rgba(58,44,34,0.08)', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 600, color: '#0A1628' }}>{rv.hastaAdi}</div>
-                <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>{new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · {DURUM_ETIKET[rv.durum] || rv.durum}</div>
+                <div style={{ fontWeight: 600, color: '#3b2e24' }}>{rv.hastaAdi}</div>
+                <div style={{ fontSize: 12, color: '#8b7d70' }}>{new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · {DURUM_ETIKET[rv.durum] || rv.durum}</div>
               </div>
               {rv.patientId && (
                 <button type="button" onClick={() => router.push(`/dashboard/klinik/seans?patientId=${rv.patientId}`)} style={btn}>Seansı başlat</button>
@@ -96,5 +96,5 @@ export default function KlinikRandevularPage() {
   )
 }
 
-const inp: React.CSSProperties = { padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(10,22,40,0.12)', fontSize: 14 }
-const btn: React.CSSProperties = { padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontWeight: 600, cursor: 'pointer' }
+const inp: React.CSSProperties = { padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(58,44,34,0.14)', fontSize: 14 }
+const btn: React.CSSProperties = { padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer' }

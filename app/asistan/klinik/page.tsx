@@ -17,6 +17,7 @@ import { isAndroid, connectionErrorHelp, micPermissionHelp } from '@/lib/asistan
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { KlinikUzmanPersonas, type KlinikUzmanPersona } from '@/lib/ai/personas/klinik_uzmanlar'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
 type Msg = { id: string; role: 'user'|'ai'; text: string }
@@ -139,25 +140,26 @@ function KlinikAsistanInner() {
   const label = { idle:'Konuşmak için dokunun', connecting:'Bağlanıyor...', listening:'Dinliyor — konuşun', speaking:`${p.name.split(' ').slice(-2).join(' ')} konuşuyor...`, error:'Tekrar deneyin' }[status]
 
   return (
-    <div style={{height:'calc(100dvh - var(--sat) - var(--sab))',minHeight:0,background:'#080F1A',display:'flex',flexDirection:'column',fontFamily:'system-ui,sans-serif',overflow:'hidden',userSelect:'none'}}>
+    <div style={{height:'calc(100dvh - var(--sat) - var(--sab))',minHeight:0,background:CHROME_RENK.cream,display:'flex',flexDirection:'column',fontFamily:CHROME_FONT.sans,color:CHROME_RENK.ink,overflow:'hidden',userSelect:'none'}}>
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <style>{'@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}'}</style>
 
-      <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'12px',borderBottom:'1px solid rgba(255,255,255,.08)',background:'#0A1525'}}>
-        <div onClick={() => { void endConv(); router.push('/dashboard/klinik') }} style={{color:'rgba(255,255,255,.5)',cursor:'pointer',fontSize:'24px',padding:'4px'}}>&#8249;</div>
+      <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'12px',borderBottom:'1px solid rgba(58,44,34,0.08)',background:CHROME_RENK.paper}}>
+        <div onClick={() => { void endConv(); router.push('/dashboard/klinik') }} style={{color:CHROME_RENK.muted,cursor:'pointer',fontSize:'24px',padding:'4px'}}>&#8249;</div>
         <div style={{flex:1}}>
-          <div style={{fontSize:'15px',fontWeight:600,color:'#fff'}}>{p.name}</div>
-          <div style={{fontSize:'11px',color:'rgba(255,255,255,.4)'}}>{p.title}</div>
+          <div style={{fontSize:'15px',fontWeight:600,color:CHROME_RENK.ink,fontFamily:CHROME_FONT.serif}}>{p.name}</div>
+          <div style={{fontSize:'11px',color:CHROME_RENK.muted}}>{p.title}</div>
         </div>
         <div style={{width:32,height:32,borderRadius:'50%',background:p.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px'}}>{p.emoji}</div>
       </div>
 
       {/* Persona picker — one expert per discipline, switching ends the running session. */}
-      <div style={{display:'flex',gap:'8px',overflowX:'auto',padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,.06)',background:'#0A1525',WebkitOverflowScrolling:'touch'}}>
+      <div style={{display:'flex',gap:'8px',overflowX:'auto',padding:'10px 16px',borderBottom:'1px solid rgba(58,44,34,0.08)',background:CHROME_RENK.paper,WebkitOverflowScrolling:'touch'}}>
         {SLUGS.map(s => {
           const u = KlinikUzmanPersonas[s]
           const active = s === slug
           return (
-            <button key={s} onClick={() => void pickPersona(s)} style={{flexShrink:0,display:'flex',alignItems:'center',gap:'6px',padding:'7px 12px',borderRadius:'999px',border:'1px solid '+(active?u.color:'rgba(255,255,255,.14)'),background:active?u.color+'22':'transparent',color:active?'#fff':'rgba(255,255,255,.6)',fontSize:'12px',cursor:'pointer',whiteSpace:'nowrap'}}>
+            <button key={s} onClick={() => void pickPersona(s)} style={{flexShrink:0,display:'flex',alignItems:'center',gap:'6px',padding:'7px 12px',borderRadius:'999px',border:'1px solid '+(active?u.color:'rgba(58,44,34,0.14)'),background:active?u.color+'22':'transparent',color:active?CHROME_RENK.ink:CHROME_RENK.muted,fontSize:'12px',cursor:'pointer',whiteSpace:'nowrap'}}>
               <span>{u.emoji}</span>{u.specialty}
             </button>
           )
@@ -168,38 +170,38 @@ function KlinikAsistanInner() {
         {messages.length===0 && status==='idle' && (
           <div style={{marginBlock:'auto',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px',opacity:.45,width:'100%',flexShrink:0,paddingTop:4}}>
             <div style={{fontSize:'56px'}}>{p.emoji}</div>
-            <div style={{fontSize:'16px',fontWeight:600,color:'#fff'}}>{p.name}</div>
-            <div style={{fontSize:'13px',color:'rgba(255,255,255,.4)'}}>{p.title}</div>
-            <div style={{fontSize:'12px',color:'rgba(255,255,255,.25)',marginTop:'8px',textAlign:'center',maxWidth:'280px',lineHeight:'1.6'}}>{p.specialty} — sesli görüşme. Mikrofona dokunun, Türkçe konuşun.</div>
+            <div style={{fontSize:'16px',fontWeight:600,color:CHROME_RENK.ink,fontFamily:CHROME_FONT.serif}}>{p.name}</div>
+            <div style={{fontSize:'13px',color:CHROME_RENK.muted}}>{p.title}</div>
+            <div style={{fontSize:'12px',color:CHROME_RENK.muted,marginTop:'8px',textAlign:'center',maxWidth:'280px',lineHeight:'1.6'}}>{p.specialty} — sesli görüşme. Mikrofona dokunun, Türkçe konuşun.</div>
           </div>
         )}
         {messages.map(msg => (
           <div key={msg.id} style={{display:'flex',justifyContent:msg.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:'8px'}}>
             {msg.role==='ai' && <div style={{width:'28px',height:'28px',borderRadius:'50%',background:p.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',flexShrink:0}}>{p.emoji}</div>}
-            <div style={{maxWidth:'78%',padding:'10px 14px',fontSize:'14px',lineHeight:'1.55',borderRadius:msg.role==='user'?'16px 16px 3px 16px':'16px 16px 16px 3px',background:msg.role==='user'?p.color:'#1A2B40',color:'#fff'}}>{msg.text}</div>
+            <div style={{maxWidth:'78%',padding:'10px 14px',fontSize:'14px',lineHeight:'1.55',borderRadius:msg.role==='user'?'16px 16px 3px 16px':'16px 16px 16px 3px',background:msg.role==='user'?p.color:CHROME_RENK.paper,border:msg.role==='user'?'none':'1px solid '+CHROME_RENK.border,color:msg.role==='user'?'#fff':CHROME_RENK.ink}}>{msg.text}</div>
           </div>
         ))}
         {status==='connecting' && (
           <div style={{display:'flex',alignItems:'flex-end',gap:'8px'}}>
             <div style={{width:'28px',height:'28px',borderRadius:'50%',background:p.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px'}}>{p.emoji}</div>
-            <div style={{padding:'12px 16px',background:'#1A2B40',borderRadius:'16px 16px 16px 3px',display:'flex',gap:'5px',alignItems:'center'}}>
-              {[0,1,2].map(i => <div key={i} style={{width:'6px',height:'6px',borderRadius:'50%',background:'rgba(255,255,255,.4)',animation:'bounce 1.2s ease-in-out '+(i*.2)+'s infinite'}} />)}
+            <div style={{padding:'12px 16px',background:CHROME_RENK.paper,border:'1px solid '+CHROME_RENK.border,borderRadius:'16px 16px 16px 3px',display:'flex',gap:'5px',alignItems:'center'}}>
+              {[0,1,2].map(i => <div key={i} style={{width:'6px',height:'6px',borderRadius:'50%',background:CHROME_RENK.muted,animation:'bounce 1.2s ease-in-out '+(i*.2)+'s infinite'}} />)}
             </div>
           </div>
         )}
         <div ref={endRef} />
       </div>
 
-      <div style={{padding:'16px 16px 24px',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px',borderTop:'1px solid rgba(255,255,255,.06)',background:'#0A1525'}}>
-        {errorMsg && <div style={{fontSize:'12px',color:'#F87171',background:'rgba(239,68,68,.12)',padding:'10px 18px',borderRadius:'10px',textAlign:'center',maxWidth:'320px',lineHeight:'1.5'}}>{errorMsg}</div>}
-        <div style={{fontSize:'13px',color:'rgba(255,255,255,.45)',display:'flex',alignItems:'center',gap:'8px'}}>
+      <div style={{padding:'16px 16px 24px',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px',borderTop:'1px solid rgba(58,44,34,0.08)',background:CHROME_RENK.paper}}>
+        {errorMsg && <div style={{fontSize:'12px',color:CHROME_RENK.warn,background:'rgba(164,91,62,0.08)',border:'1px solid rgba(164,91,62,0.25)',padding:'10px 18px',borderRadius:'10px',textAlign:'center',maxWidth:'320px',lineHeight:'1.5'}}>{errorMsg}</div>}
+        <div style={{fontSize:'13px',color:CHROME_RENK.muted,display:'flex',alignItems:'center',gap:'8px'}}>
           {isActive && <div style={{width:'7px',height:'7px',borderRadius:'50%',background:status==='speaking'?p.color:status==='connecting'?'#F59E0B':'#22C55E',boxShadow:'0 0 8px '+(status==='speaking'?p.color:'#22C55E')}} />}
           {label}
         </div>
-        <div onClick={isActive?()=>void endConv().then(()=>setStatus('idle')):()=>void startConv()} style={{width:'80px',height:'80px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'32px',background:isActive?`radial-gradient(circle, ${p.color}, ${p.color}88)`:'rgba(255,255,255,.1)',border:'2px solid '+(isActive?p.color:'rgba(255,255,255,.2)'),boxShadow:isActive?`0 0 32px ${p.color}55`:'none',transition:'all .25s'}}>
+        <div onClick={isActive?()=>void endConv().then(()=>setStatus('idle')):()=>void startConv()} style={{width:'80px',height:'80px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'32px',background:isActive?`radial-gradient(circle, ${p.color}, ${p.color}88)`:'rgba(58,44,34,0.06)',border:'2px solid '+(isActive?p.color:CHROME_RENK.muted),boxShadow:isActive?`0 0 32px ${p.color}55`:'none',transition:'all .25s'}}>
           {status==='connecting'?'⏳':status==='speaking'?'🔊':'🎤'}
         </div>
-        <div style={{fontSize:'11px',color:'rgba(255,255,255,.2)'}}>{isActive?'Bitirmek için dokunun':'Konuşmak için dokunun'}</div>
+        <div style={{fontSize:'11px',color:CHROME_RENK.muted}}>{isActive?'Bitirmek için dokunun':'Konuşmak için dokunun'}</div>
       </div>
     </div>
   )
