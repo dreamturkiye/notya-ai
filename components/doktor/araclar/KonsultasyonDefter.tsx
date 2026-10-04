@@ -1,7 +1,7 @@
 'use client'
 /**
- * KONSULTASYONLAR-01 — hekimin güvendiği konsültan defteri.
- * Branş, ad soyad, telefon, adres, e-posta, WhatsApp, kurum içi/dışı. Hekime özel.
+ * KONSULTASYONLAR-01/02 — hekimin güvendiği konsültan defteri.
+ * Ofis + cep telefonu, genel notlar (hekim ve sekreter görür). Pratik defteri.
  */
 import React, { useCallback, useEffect, useState } from 'react'
 import { useAracStil } from '@/lib/doktor/aracUi'
@@ -16,6 +16,7 @@ type Kayit = {
   brans: string
   bransAnahtar: string
   telefon: string | null
+  ofisTelefon: string | null
   adres: string | null
   eposta: string | null
   whatsapp: string | null
@@ -26,6 +27,7 @@ type Kayit = {
 const bos = () => ({
   adSoyad: '',
   brans: 'kulak-burun-bogaz',
+  ofisTelefon: '',
   telefon: '',
   adres: '',
   eposta: '',
@@ -40,7 +42,7 @@ export default function KonsultasyonDefter() {
   const [hata, setHata] = useState('')
   const [form, setForm] = useState(bos())
   const [alanHata, setAlanHata] = useState<Record<string, string>>({})
-  const [kaydediyor, setKaydediyor] = useState(false)
+  const [kaydediyor, setKaydediliyor] = useState(false)
   const [mesaj, setMesaj] = useState('')
 
   const yukle = useCallback(() => {
@@ -57,12 +59,12 @@ export default function KonsultasyonDefter() {
     if (kaydediyor) return
     setAlanHata({})
     setMesaj('')
-    setKaydediyor(true)
+    setKaydediliyor(true)
     const { ok, j } = await konsultasyonApi('/api/doktor/konsultasyon/defter', {
       method: 'POST',
       govde: form,
     })
-    setKaydediyor(false)
+    setKaydediliyor(false)
     if (!ok) {
       const m = j.error || 'Kaydedilemedi.'
       if (/ad/i.test(m)) setAlanHata({ adSoyad: m })
@@ -84,12 +86,12 @@ export default function KonsultasyonDefter() {
     setListe((l) => (l ? l.filter((x) => x.id !== id) : l))
   }
 
-  const alan = (key: keyof ReturnType<typeof bos>, label: string, opts?: { type?: string; max?: number; placeholder?: string }) => (
+  const alan = (key: 'adSoyad' | 'ofisTelefon' | 'telefon' | 'whatsapp' | 'eposta' | 'adres', label: string, opts?: { type?: string; max?: number; placeholder?: string }) => (
     <label style={{ display: 'block', marginBottom: 12 }}>
       <span style={{ ...stil.kucuk, display: 'block', marginBottom: 4 }}>{label}</span>
       <input
         type={opts?.type || 'text'}
-        value={form[key] as string}
+        value={form[key]}
         maxLength={opts?.max}
         placeholder={opts?.placeholder}
         onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
@@ -103,7 +105,7 @@ export default function KonsultasyonDefter() {
   return (
     <div data-konsultasyon-defter="">
       <p style={{ ...stil.metin, marginBottom: 14, color: CHROME_RENK.muted }}>
-        Güvendiğiniz konsültanlar — yalnız sizin defteriniz. Başka hekim görmez.
+        Güvendiğiniz konsültanlar — bu pratiğin defteri. Hekim ve sekreter aynı listeyi görür; başka hekim görmez.
       </p>
 
       <div style={{ ...stil.kutu, marginBottom: 16 }}>
@@ -125,10 +127,28 @@ export default function KonsultasyonDefter() {
           </select>
           {alanHata.brans && <div style={{ fontSize: 13, color: CHROME_RENK.warn, marginTop: 4 }}>{alanHata.brans}</div>}
         </label>
-        {alan('telefon', 'Telefon', { max: DEFTER_SINIRLARI.telefon, placeholder: '05xx…' })}
-        {alan('whatsapp', 'WhatsApp', { max: DEFTER_SINIRLARI.whatsapp })}
+        {alan('ofisTelefon', 'Ofis telefonu', { max: DEFTER_SINIRLARI.ofisTelefon, placeholder: '0216 123 45 67' })}
+        {alan('telefon', 'Cep telefonu', { max: DEFTER_SINIRLARI.telefon, placeholder: '0532 123 45 67' })}
+        {alan('whatsapp', 'WhatsApp', { max: DEFTER_SINIRLARI.whatsapp, placeholder: '0532 123 45 67' })}
         {alan('eposta', 'E-posta', { type: 'email', max: DEFTER_SINIRLARI.eposta, placeholder: 'ad@ornek.com' })}
         {alan('adres', 'Adres', { max: DEFTER_SINIRLARI.adres })}
+
+        <label style={{ display: 'block', marginBottom: 12 }}>
+          <span style={{ ...stil.kucuk, display: 'block', marginBottom: 4 }}>Genel notlar</span>
+          <div style={{ fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.45, marginBottom: 6 }}>
+            Hekim ve sekreter görür — ör. Cumartesi çalışmaz; hafta içi ofis 09:00–16:00.
+          </div>
+          <textarea
+            value={form.not}
+            maxLength={DEFTER_SINIRLARI.not}
+            rows={5}
+            placeholder={'Cumartesi çalışmaz.\nHafta içi ofis 09:00–16:00.\nRapor için önceki gün arayın.'}
+            onChange={(e) => setForm((f) => ({ ...f, not: e.target.value }))}
+            style={{ ...stil.input, resize: 'vertical', minHeight: 110, lineHeight: 1.45, fontFamily: CHROME_FONT.sans }}
+            aria-label="Genel notlar"
+          />
+        </label>
+
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, color: CHROME_RENK.ink }}>
           <input type="checkbox" checked={form.kurumIci} onChange={(e) => setForm((f) => ({ ...f, kurumIci: e.target.checked }))} />
           Kurum içi
@@ -154,8 +174,30 @@ export default function KonsultasyonDefter() {
             {k.kurumIci ? <span style={stil.kucuk}>· kurum içi</span> : <span style={stil.kucuk}>· dışarı</span>}
           </div>
           <div style={{ ...stil.kucuk, marginTop: 6, lineHeight: 1.5 }}>
-            {[k.telefon && `Tel: ${k.telefon}`, k.whatsapp && `WA: ${k.whatsapp}`, k.eposta, k.adres].filter(Boolean).join(' · ')}
+            {[
+              k.ofisTelefon && `Ofis: ${k.ofisTelefon}`,
+              k.telefon && `Cep: ${k.telefon}`,
+              k.whatsapp && `WA: ${k.whatsapp}`,
+              k.eposta,
+              k.adres,
+            ].filter(Boolean).join(' · ')}
           </div>
+          {k.not ? (
+            <div
+              style={{
+                marginTop: 8,
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'rgba(47,67,52,0.06)',
+                fontSize: 13.5,
+                lineHeight: 1.45,
+                color: CHROME_RENK.ink,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {k.not}
+            </div>
+          ) : null}
           <button type="button" onClick={() => sil(k.id)} style={{ ...stil.ghost, marginTop: 8 }}>Sil</button>
         </div>
       ))}

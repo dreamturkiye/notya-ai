@@ -8,7 +8,15 @@ import { useAracStil } from '@/lib/doktor/aracUi'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { konsultasyonApi } from '@/lib/doktor/konsultasyonIstemci'
 
-type Kayit = { id: string; adSoyad: string; brans: string; eposta: string | null }
+type Kayit = {
+  id: string
+  adSoyad: string
+  brans: string
+  eposta: string | null
+  ofisTelefon?: string | null
+  telefon?: string | null
+  not?: string | null
+}
 
 export default function KonsultasyonIstemSekmesi() {
   const stil = useAracStil()
@@ -48,7 +56,12 @@ export default function KonsultasyonIstemSekmesi() {
           <div key={k.id} style={{ ...stil.kutu, marginBottom: 8 }}>
             <strong style={{ color: CHROME_RENK.ink }}>{k.adSoyad}</strong>
             <span style={{ ...stil.kucuk, marginLeft: 8 }}>{k.brans}</span>
-            {k.eposta && <div style={{ ...stil.kucuk, marginTop: 4 }}>{k.eposta}</div>}
+            <div style={{ ...stil.kucuk, marginTop: 4, lineHeight: 1.45 }}>
+              {[k.ofisTelefon && `Ofis: ${k.ofisTelefon}`, k.telefon && `Cep: ${k.telefon}`, k.eposta].filter(Boolean).join(' · ')}
+            </div>
+            {k.not ? (
+              <div style={{ ...stil.kucuk, marginTop: 6, whiteSpace: 'pre-wrap', color: CHROME_RENK.ink }}>{k.not}</div>
+            ) : null}
           </div>
         ))
       )}

@@ -64,6 +64,8 @@ interface NavItem {
   label: string;
   route: string;
   sadeceDoktor?: boolean;
+  /** Ön büro: yalnız sekreter menüsünde (doktor Araçlar › Konsültasyonlar’dan açar). */
+  sadeceSekreter?: boolean;
   /** NOTYA-GELEN-BELGELER: shown to a secretary only when the doctor opened access (server decides). */
   gelenBelge?: boolean;
 }
@@ -79,6 +81,8 @@ const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Hastalar', route: '/dashboard/doktor/hastalar', grup: 'calisma' },
   { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', grup: 'calisma' },
   { label: 'Gelen Belgeler', route: '/dashboard/doktor/gelen-belgeler', gelenBelge: true, grup: 'calisma' },
+  // KONSULTASYONLAR-02: sekreter ofis saatleri / telefon notlarını defterden görür ve günceller.
+  { label: 'Konsültan defteri', route: '/doktor-tools/konsultasyonlar', sadeceSekreter: true, grup: 'calisma' },
   { label: 'Raporlar', route: '/dashboard/doktor/raporlar', sadeceDoktor: true, grup: 'diger' },
   { label: 'e-Nabız', route: '/doktor-tools/enabiz', grup: 'diger' },
   { label: 'Araçlar', route: '/doktor-tools', sadeceDoktor: true, grup: 'diger' },
@@ -351,7 +355,11 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     window.location.href = '/giris/doktor';
   }
 
-  const gorunurItems = navItems.filter((i) => !(i.sadeceDoktor && rol === 'sekreter') && !(i.gelenBelge && !gelenErisim));
+  const gorunurItems = navItems.filter((i) =>
+    !(i.sadeceDoktor && rol === 'sekreter')
+    && !(i.sadeceSekreter && rol !== 'sekreter')
+    && !(i.gelenBelge && !gelenErisim)
+  );
   const asistanItem = gorunurItems.find((i) => i.grup === 'asistan');
   const calismaItems = gorunurItems.filter((i) => i.grup === 'calisma');
   const digerItems = gorunurItems.filter((i) => i.grup === 'diger');

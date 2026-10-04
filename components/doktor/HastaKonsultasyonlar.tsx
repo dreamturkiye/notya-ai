@@ -107,7 +107,15 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
   const [hata, setHata] = useState('');
   const [defterId, setDefterId] = useState('');
   const [beklenenGun, setBeklenenGun] = useState('');
-  const [defterListe, setDefterListe] = useState<Array<{ id: string; adSoyad: string; bransAnahtar: string; brans: string }>>([]);
+  const [defterListe, setDefterListe] = useState<Array<{
+    id: string
+    adSoyad: string
+    bransAnahtar: string
+    brans: string
+    ofisTelefon?: string | null
+    telefon?: string | null
+    not?: string | null
+  }>>([]);
   const [portalLink, setPortalLink] = useState('');
   const kisaltmalar = olasiKisaltmalar(soru);
   const hazir = !!hedef && soru.trim().length >= KLINIK_SORU_EN_AZ && !gonderiyor;
@@ -208,6 +216,17 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
                 <option key={k.id} value={k.id}>{k.adSoyad} — {k.brans}</option>
               ))}
             </select>
+            {(() => {
+              const secili = defterListe.find((x) => x.id === defterId)
+              if (!secili) return null
+              const tel = [secili.ofisTelefon && `Ofis ${secili.ofisTelefon}`, secili.telefon && `Cep ${secili.telefon}`].filter(Boolean).join(' · ')
+              return (
+                <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.45, color: CHROME_RENK.muted }}>
+                  {tel ? <div>{tel}</div> : null}
+                  {secili.not ? <div style={{ marginTop: 4, whiteSpace: 'pre-wrap', color: CHROME_RENK.ink }}>{secili.not}</div> : null}
+                </div>
+              )
+            })()}
           </Alan>
         )}
         <Alan etiket="Hedef branş" ipucu="Branşı seçtiğinizde Ayşe hasta dosyasından (son muayene ağırlıklı) istem taslağını yazar; siz düzenler ve onaylarsınız.">

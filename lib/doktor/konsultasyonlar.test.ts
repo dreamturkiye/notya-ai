@@ -35,6 +35,8 @@ describe('konsultasyon defter', () => {
       brans: 'kulak-burun-bogaz',
       eposta: 'ayse@ornek.com',
       telefon: '05321234567',
+      ofisTelefon: '0216 000 00 00',
+      not: 'Cumartesi çalışmaz.\nHafta içi 09:00–16:00.',
       kurumIci: false,
     })
     assert.ok(!('hata' in d))
@@ -42,6 +44,10 @@ describe('konsultasyon defter', () => {
     assert.equal(d.girdi.ad_soyad, 'Dr. Ayşe KBB')
     assert.equal(d.girdi.brans, 'kulak-burun-bogaz')
     assert.equal(d.girdi.eposta, 'ayse@ornek.com')
+    assert.equal(d.girdi.telefon, '05321234567')
+    assert.equal(d.girdi.ofis_telefon, '0216 000 00 00')
+    assert.match(d.girdi.not_metni || '', /Cumartesi/)
+    assert.match(d.girdi.not_metni || '', /\n/)
     assert.ok(defterBransEtiketi('kulak-burun-bogaz').length > 1)
   })
 
