@@ -10,6 +10,7 @@
 import React from 'react';
 import type { IntakeAlan, IntakeBolum } from '@/lib/intake/coreAlanlar';
 import { intakeAlanGorunur, intakeGorunurBolumler } from '@/lib/intake/dogrula';
+import { CHROME_RENK as R } from '@/lib/doktor/chromeTheme';
 
 /** Kaç sütun VE minimum sütun genişliği: uzun etiketli seçenekler (>14 karakter) 2 sütuna, kısa
  * olanlar 3 sütuna sığar — ama bu üst sınır, alt sınır değil. auto-fit/minmax kullanıyoruz ki
@@ -24,8 +25,8 @@ function gridSablonu(secenekler: string[]): string {
 
 function AlanGirdisi({ alan, deger, onChange, hata }: { alan: IntakeAlan; deger: unknown; onChange: (v: unknown) => void; hata?: string }) {
   const ortakStil: React.CSSProperties = {
-    width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${hata ? '#DC2626' : 'rgba(10,22,40,0.15)'}`,
-    fontSize: 14, background: 'white', color: '#0A1628',
+    width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${hata ? '#DC2626' : 'rgba(58,44,34,0.18)'}`,
+    fontSize: 14, background: '#fff', color: R.ink,
   };
   // NOTYA-BETA-0925: hata satırı ekran okuyucuya da bağlı (tarayıcı baloncuğu yok — form noValidate).
   const erisim = hata ? { 'aria-invalid': true, 'aria-describedby': `alan-hata-${alan.id}` } : {};
@@ -106,12 +107,12 @@ export default function IntakeBolumleri({ bolumler, yanitlar, onDegis, nowMs, ha
         <div key={bolum.baslik} style={{ marginBottom: 26 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{
-              width: 22, height: 22, borderRadius: '50%', background: '#0F9B8E', color: 'white',
+              width: 22, height: 22, borderRadius: '50%', background: R.pine, color: '#fff',
               fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               {bolumIndex + 1}
             </span>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0A1628', margin: 0, letterSpacing: '0.01em' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: R.ink, margin: 0, letterSpacing: '0.01em' }}>
               {bolum.baslik}
             </h3>
           </div>
@@ -119,7 +120,7 @@ export default function IntakeBolumleri({ bolumler, yanitlar, onDegis, nowMs, ha
             {bolum.alanlar.map((alan) => {
               if (alan.tur === 'bolum-basligi') {
                 return (
-                  <div key={alan.id} style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 6, borderTop: '1px solid rgba(15,155,142,0.15)', paddingTop: 12 }}>
+                  <div key={alan.id} style={{ fontSize: 12, fontWeight: 700, color: R.pine, textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 6, borderTop: '1px solid rgba(47,67,52,0.15)', paddingTop: 12 }}>
                     {alan.etiket}
                   </div>
                 );
@@ -128,12 +129,12 @@ export default function IntakeBolumleri({ bolumler, yanitlar, onDegis, nowMs, ha
               const hata = hatalar[alan.id];
               return (
                 <div key={alan.id} id={`alan-${alan.id}`}>
-                  <label style={{ display: 'block', fontSize: 13, color: '#0A1628', marginBottom: 6, fontWeight: 500 }}>
+                  <label style={{ display: 'block', fontSize: 13, color: R.ink, marginBottom: 6, fontWeight: 500 }}>
                     {alan.etiket}{alan.zorunlu && <span style={{ color: '#EF4444' }}> *</span>}
                   </label>
                   <AlanGirdisi alan={alan} deger={yanitlar[alan.id]} onChange={(v) => onDegis(alan.id, v)} hata={hata} />
                   {hata && <div id={`alan-hata-${alan.id}`} role="alert" style={{ fontSize: 12.5, color: '#DC2626', marginTop: 4 }}>{hata}</div>}
-                  {alan.yardim && <p style={{ fontSize: 11.5, color: 'rgba(10,22,40,0.5)', marginTop: 4 }}>{alan.yardim}</p>}
+                  {alan.yardim && <p style={{ fontSize: 11.5, color: R.muted, marginTop: 4 }}>{alan.yardim}</p>}
                 </div>
               );
             })}

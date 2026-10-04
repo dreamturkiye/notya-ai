@@ -13,7 +13,7 @@ import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 /** Ortopedi vurgusu — amber gövde (üroloji teal'den ayrışır). */
-export const ORTO_VURGU: AracVurgu = { ana: '#D97706', anaMetin: '#FFFBEB', yumusak: '#FCD34D', baslik: '#FBBF24' }
+export const ORTO_VURGU: AracVurgu = { ana: '#D97706', anaMetin: '#FFFBEB', yumusak: '#A16207', baslik: '#B45309' }
 export const ortoStil = aracStil(ORTO_VURGU)
 
 export {

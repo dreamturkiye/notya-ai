@@ -22,13 +22,13 @@ export function KararKartlari({ kartlar }: { kartlar: DermKararKart[] }) {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#38BDF8' }}>{k.solBaslik}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8' }}>{k.solBaslik}</div>
               <ul style={{ margin: '4px 0 0', paddingLeft: 16, fontSize: 12.5, color: CHROME_RENK.muted }}>
                 {k.sol.map((s) => <li key={s}>{s}</li>)}
               </ul>
             </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24' }}>{k.sagBaslik}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#B45309' }}>{k.sagBaslik}</div>
               <ul style={{ margin: '4px 0 0', paddingLeft: 16, fontSize: 12.5, color: CHROME_RENK.muted }}>
                 {k.sag.map((s) => <li key={s}>{s}</li>)}
               </ul>

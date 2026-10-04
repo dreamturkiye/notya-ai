@@ -32,7 +32,7 @@ export default function MuayeneCekListesi({
 }) {
   const [acik, setAcik] = useState(!!dogrulama)
   // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): both branches now converge on the same cream/pine
-  // tokens -- acikRenk's dark branch was still #0D1C33 + white-based fills (the redesign never
+  // tokens -- acikRenk's dark branch was still #faf6ee + white-based fills (the redesign never
   // reached it), and even its "light" branch used an off-palette blue-gray (#F8FAFC/#E5E7EB/
   // #0A1628) instead of the established warm tokens. Kept the acikRenk prop itself (callers still
   // pass it) rather than removing it, since that's a bigger change than this pass calls for.

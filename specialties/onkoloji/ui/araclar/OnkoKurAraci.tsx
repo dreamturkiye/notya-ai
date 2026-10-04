@@ -73,8 +73,8 @@ export default function OnkoKurAraci() {
           <button type="button" style={onkoStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...onkoStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...onkoStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...onkoStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...onkoStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — kür sayacı karar desteğidir; mg/m², AUC, BSA ve eczane doz şeması yazılmaz.</TaslakNotu>
       </div>
     </>

@@ -64,19 +64,19 @@ export default function KasaKonsultasyonBaglantisi({ hastaId, secim, setSecim }:
   if (!hastaId || !liste || !liste.length) return null
 
   return (
-    <div style={{ marginBottom: 16, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 12px' }}>
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center', minHeight: 44, cursor: 'pointer', color: '#E2E8F0', fontSize: 14 }}>
+    <div style={{ marginBottom: 16, border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: '10px 12px' }}>
+      <label style={{ display: 'flex', gap: 10, alignItems: 'center', minHeight: 44, cursor: 'pointer', color: '#3b2e24', fontSize: 14 }}>
         <input type="checkbox" checked={secim.acik} onChange={(e) => setSecim({ ...secim, acik: e.target.checked })} style={{ width: 20, height: 20, flex: 'none' }} />
-        <span>Bu bir konsültasyon yanıtı mı? <span style={{ color: '#94A3B8', fontSize: 12 }}>(isteğe bağlı)</span></span>
+        <span>Bu bir konsültasyon yanıtı mı? <span style={{ color: '#8b7d70', fontSize: 12 }}>(isteğe bağlı)</span></span>
       </label>
       {secim.acik && (
         <div style={{ display: 'grid', gap: 12, marginTop: 8 }}>
           <div>
             <label style={toolsLabel} htmlFor="belge-konsultasyon">Hangi konsültasyon?</label>
             <select id="belge-konsultasyon" value={secim.id} onChange={(e) => setSecim({ ...secim, id: e.target.value })} style={{ ...toolsInput, width: '100%', boxSizing: 'border-box' }}>
-              <option value="" style={{ background: '#0A1628', color: '#fff' }}>Konsültasyon seçin</option>
+              <option value="" style={{ background: '#fff', color: '#3b2e24' }}>Konsültasyon seçin</option>
               {liste.map((k) => (
-                <option key={k.id} value={k.id} style={{ background: '#0A1628', color: '#fff' }}>
+                <option key={k.id} value={k.id} style={{ background: '#fff', color: '#3b2e24' }}>
                   {(k.hedefEtiketi || hedefEtiketi(k))} · {trGun(k.istem_tarihi || k.created_at)} · {String(istemOzu(k.klinik_soru) || k.not_metni || '').slice(0, 60)}
                 </option>
               ))}
@@ -86,7 +86,7 @@ export default function KasaKonsultasyonBaglantisi({ hastaId, secim, setSecim }:
             <label style={toolsLabel} htmlFor="belge-konsultasyon-ozet">Yanıt özeti — kendi cümleniz (isteğe bağlı)</label>
             <textarea id="belge-konsultasyon-ozet" value={secim.ozet} onChange={(e) => setSecim({ ...secim, ozet: e.target.value })} maxLength={KONSULTASYON_SINIRLARI.yanitOzeti} rows={2}
               placeholder="Ör. İşitme kaybı saptanmadı." style={{ ...toolsInput, width: '100%', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
-            <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 4, lineHeight: 1.45 }}>Yazarsanız konsültasyon “yanıtlandı” olur. Boş bırakırsanız rapor bağlanır; özeti hasta dosyası › Konsültasyonlar'dan yazarsınız. Notya tanı iddia etmez.</div>
+            <div style={{ color: '#8b7d70', fontSize: 12, marginTop: 4, lineHeight: 1.45 }}>Yazarsanız konsültasyon “yanıtlandı” olur. Boş bırakırsanız rapor bağlanır; özeti hasta dosyası › Konsültasyonlar'dan yazarsınız. Notya tanı iddia etmez.</div>
           </div>
         </div>
       )}

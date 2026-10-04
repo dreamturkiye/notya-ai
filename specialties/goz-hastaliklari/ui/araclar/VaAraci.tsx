@@ -104,7 +104,7 @@ export default function VaAraci() {
           <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 8, alignItems: 'center', minWidth: 280 }}>
             <span />
             <b style={{ color: '#0F9B8E', fontSize: 13 }}>OD (sağ)</b>
-            <b style={{ color: '#60A5FA', fontSize: 13 }}>OS (sol)</b>
+            <b style={{ color: '#1D4ED8', fontSize: 13 }}>OS (sol)</b>
             <span style={kucuk}>Önceki vizit</span>{alan('odOnce', '0,5', 'Sağ önceki VA')}{alan('osOnce', '0,6', 'Sol önceki VA')}
             <span style={kucuk}>Bugün</span>{alan('odSimdi', '0,8', 'Sağ bugünkü VA')}{alan('osSimdi', '6/12', 'Sol bugünkü VA')}
           </div>
@@ -157,7 +157,7 @@ export default function VaAraci() {
           <Istatistik deger={harf(os.harf)} etiket="OS (sol) ETDRS farkı" ton={ton(os.harf)} />
         </div>
         {([['OD (sağ)', od], ['OS (sol)', os]] as const).map(([ad, k]) => (
-          <div key={ad} style={{ ...metin, padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div key={ad} style={{ ...metin, padding: '10px 0', borderTop: '1px solid rgba(58,44,34,0.12)' }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
               <span style={{ fontWeight: 700 }}>{ad}</span>
               <Rozet ton={ton(k.harf)}>{yon(k.harf)}</Rozet>

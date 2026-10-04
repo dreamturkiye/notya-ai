@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 export default function DashboardRedirect() {
   const router = useRouter()
@@ -30,12 +31,13 @@ export default function DashboardRedirect() {
     go()
   }, [router])
   return (
-    <div style={{minHeight:'100vh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:24}}>
-      <div style={{width:56,height:56,borderRadius:'50%',background:'#0F9B8E',display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <span style={{color:'#fff',fontSize:28,fontWeight:700}}>N</span>
+    <div style={{minHeight:'100dvh',background:CHROME_RENK.cream,fontFamily:CHROME_FONT.sans,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:24}}>
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      <div style={{width:56,height:56,borderRadius:'50%',background:CHROME_RENK.pine,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{color:'#fff',fontSize:28,fontWeight:700,fontFamily:CHROME_FONT.serif}}>N</span>
       </div>
-      <div style={{width:40,height:40,borderRadius:'50%',border:'4px solid #0F9B8E',borderTopColor:'transparent',animation:'spin 0.8s linear infinite'}} />
-      <p style={{color:'#fff',fontSize:16}}>Yükleniyor...</p>
+      <div style={{width:40,height:40,borderRadius:'50%',border:`4px solid ${CHROME_RENK.pine}`,borderTopColor:'transparent',animation:'spin 0.8s linear infinite'}} />
+      <p style={{color:CHROME_RENK.muted,fontSize:16}}>Yükleniyor...</p>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )

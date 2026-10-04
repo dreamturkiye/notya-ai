@@ -65,9 +65,9 @@ export default function FtrKohortAraci() {
             </button>
           ))}
         </div>
-        {hata && <div style={{ ...S.kucuk, color: '#F87171' }}>{hata}</div>}
+        {hata && <div style={{ ...S.kucuk, color: '#B42318' }}>{hata}</div>}
         {gorunen.map((s) => (
-          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
             <input type="checkbox" checked={secili.includes(s.patientId)} onChange={() => setSecili((p) => (p.includes(s.patientId) ? p.filter((x) => x !== s.patientId) : [...p, s.patientId]))} />
             <div>
               <div style={S.metin}>{s.ad}</div>
@@ -83,7 +83,7 @@ export default function FtrKohortAraci() {
           <button type="button" style={S.btn} disabled={!secili.length || gonderiliyor} onClick={gonder}>1-tap hatırlatma gönder</button>
           <button type="button" style={S.ghost} onClick={yukle}>Yenile</button>
         </div>
-        {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
+        {durum && <div style={{ ...S.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
         <TaslakNotu>Hatırlatma tanı, VAS/ODI skoru, ilaç adı ve doz yazılmaz. Açık kırmızı bayrak bayrağında “sizi arayacağız” dili kullanılır.</TaslakNotu>
       </div>
     </>

@@ -14,11 +14,11 @@ const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 const govde: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' };
 const kirmiziBtn: React.CSSProperties = { ...btn, background: '#B91C1C' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const Liste = ({ x, renk, on }: { x: string[]; renk?: string; on?: string }) => <>{x.map((y) => <div key={y} style={{ color: renk || CHROME_RENK.ink }}>{on || '•'} {y}</div>)}</>;
-const SIDDET_RENK: Record<string, string> = { durdur: '#F87171', gozden_gecir: '#FBBF24', baslat: '#0F9B8E' };
+const SIDDET_RENK: Record<string, string> = { durdur: '#B42318', gozden_gecir: '#B45309', baslat: '#0F9B8E' };
 const SIDDET_AD: Record<string, string> = { durdur: 'DURDURMA ÖNERİSİ', gozden_gecir: 'gözden geçir', baslat: 'eksik tedavi (START)' };
 
 /** Kilitli plan + "Nota ekle" — plan kilitlenmeden nota gitmez. */
@@ -73,10 +73,10 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
     return (<div>
       <div style={etiket}>Hasta hedef kartı + eğitim yaprakları <span style={kucuk}>· yalnız hekimin kilitlediği hedefler · hasta dilinde tek sayfa · yazdırma hekim onayıyla</span></div>
       <table style={{ ...govde, borderCollapse: 'collapse', width: '100%' }}><tbody>
-        {r.satirlar.map((x) => <tr key={x.kod} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}><td style={{ padding: 4 }}>{x.ad}</td><td style={{ padding: 4, fontWeight: 700, color: x.durum === 'hekim_belirleyecek' ? '#FBBF24' : CHROME_RENK.ink }}>{x.hedef}</td><td style={{ padding: 4 }}>{x.son || '—'}</td><td style={{ padding: 4, color: x.durum === 'hedefte' ? '#22C55E' : x.durum === 'hedef_disi' ? '#F87171' : CHROME_RENK.muted }}>{x.kod === 'kvr' ? '' : x.durum.replace('_', ' ')}</td></tr>)}
+        {r.satirlar.map((x) => <tr key={x.kod} style={{ borderBottom: '1px solid rgba(58,44,34,0.12)' }}><td style={{ padding: 4 }}>{x.ad}</td><td style={{ padding: 4, fontWeight: 700, color: x.durum === 'hekim_belirleyecek' ? '#B45309' : CHROME_RENK.ink }}>{x.hedef}</td><td style={{ padding: 4 }}>{x.son || '—'}</td><td style={{ padding: 4, color: x.durum === 'hedefte' ? '#22C55E' : x.durum === 'hedef_disi' ? '#B42318' : CHROME_RENK.muted }}>{x.kod === 'kvr' ? '' : x.durum.replace('_', ' ')}</td></tr>)}
       </tbody></table>
       {!r.satirlar.length && <div style={kucuk}>Aktif HT/DM/lipid kartı yok — yalnız yaşam tarzı yaprağı basılabilir.</div>}
-      {r.eksikKilit.length > 0 && <div style={{ ...kucuk, color: '#FBBF24', marginTop: 4 }}>Kilitsiz hedef: {r.eksikKilit.join(', ')} — kartta “Hekiminiz belirleyecek” yazar. HbA1c hedefi DM sekmesinde, LDL hedefi ve KVR kategorisi KVR sekmesinde kilitlenir.</div>}
+      {r.eksikKilit.length > 0 && <div style={{ ...kucuk, color: '#B45309', marginTop: 4 }}>Kilitsiz hedef: {r.eksikKilit.join(', ')} — kartta “Hekiminiz belirleyecek” yazar. HbA1c hedefi DM sekmesinde, LDL hedefi ve KVR kategorisi KVR sekmesinde kilitlenir.</div>}
       <div style={satir}>
         <span style={kucuk}>KB hedefi kilidi:</span>
         <input value={s('sbpU', h.kbHedefKilit ? String(h.kbHedefKilit.sbpUst) : t ? String(t.sbpUst) : '')} onChange={(e) => set('sbpU', e.target.value)} placeholder="SBP <" style={{ ...toolsInput, width: 70 }} />
@@ -114,9 +114,9 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
       <div style={satir}><button type="button" style={btn} onClick={() => calistir(govdeBody(), 'Sigara kartı güncellendi.')}>Değerlendir</button><button type="button" style={ghost} onClick={() => calistir({ ...govdeBody(), gorevAc: true }, 'İzlem görevleri açıldı.')}>Kaydet + izlem görevleri</button></div>
       <div style={govde}>
         <div>Paket-yıl: <b>{r.paketYil ?? '—'}</b> · HSI: <b>{r.hsi ?? '—'}</b>{r.bagimlilik ? ` (${r.bagimlilik} bağımlılık)` : ''}{r.evreAd ? ` · evre: ${r.evreAd}` : ''}</div>
-        <Liste x={r.yaklasim} /><Liste x={r.farmakoterapiSinifi} renk="#0F9B8E" on="℞ sınıf:" /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" />
+        <Liste x={r.yaklasim} /><Liste x={r.farmakoterapiSinifi} renk="#0F9B8E" on="℞ sınıf:" /><Liste x={r.uyarilar} renk="#B45309" on="⚠" />
         {r.gorevler.length > 0 && <div style={kucuk}>Görevler: {r.gorevler.map((x) => `${x.ad} (${x.due})`).join(' · ')}</div>}
-        <Liste x={r.sevk} renk="#F87171" on="→" />
+        <Liste x={r.sevk} renk="#B42318" on="→" />
         {r.sevk.length > 0 && <button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'sigara_birakma', not: r.sevk.join(' · ') }, 'Sigara bırakma polikliniği sevki kaydedildi.')}>Sigara bırakma polikliniği sevk</button>}
         <div style={kucuk}>{r.kaynaklar.join(' · ')}</div>
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
@@ -133,9 +133,9 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
       <div style={kucuk}>25-OH D: {v.vitD?.kanonik_deger ?? '—'} ng/mL {v.vitD?.numune_tarihi || ''} · B12: {v.b12?.kanonik_deger ?? '—'} pg/mL {v.b12?.numune_tarihi || ''}</div>
       <div style={satir}>{chk('nörolojik bulgu', bv('noro', !!k?.noro_semptom), (x) => set('noro', x))}{chk('malabsorpsiyon / gastrektomi', bv('mal', !!k?.malabsorpsiyon), (x) => set('mal', x))}{chk('vegan', bv('veg', !!k?.vegan), (x) => set('veg', x))}<button type="button" style={btn} onClick={() => calistir(body, 'Kart güncellendi.')}>Değerlendir</button><button type="button" style={ghost} onClick={() => calistir({ ...body, gorevAc: true }, 'Kontrol görevleri açıldı.')}>+ kontrol görevleri</button></div>
       <div style={govde}>
-        <div><b>D vitamini:</b> {r.d.durum || 'lab yok'}</div><Liste x={r.d.plan} /><Liste x={r.d.sonrakiTest} on="sonraki test:" /><Liste x={r.d.uyarilar} renk="#FBBF24" on="⚠" />
-        <div style={{ marginTop: 6 }}><b>B12:</b> {r.b12.durum || 'lab yok'}</div><Liste x={r.b12.plan} /><Liste x={r.b12.sonrakiTest} on="sonraki test:" /><Liste x={r.b12.uyarilar} renk="#FBBF24" on="⚠" />
-        <Liste x={r.sevk} renk="#F87171" on="→" />
+        <div><b>D vitamini:</b> {r.d.durum || 'lab yok'}</div><Liste x={r.d.plan} /><Liste x={r.d.sonrakiTest} on="sonraki test:" /><Liste x={r.d.uyarilar} renk="#B45309" on="⚠" />
+        <div style={{ marginTop: 6 }}><b>B12:</b> {r.b12.durum || 'lab yok'}</div><Liste x={r.b12.plan} /><Liste x={r.b12.sonrakiTest} on="sonraki test:" /><Liste x={r.b12.uyarilar} renk="#B45309" on="⚠" />
+        <Liste x={r.sevk} renk="#B42318" on="→" />
         {r.sevk.length > 0 && <button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'noroloji', not: r.sevk.join(' · ') }, 'Nöroloji sevki kaydedildi.')}>Nöroloji sevk</button>}
         {r.sgkSablonlari.length > 0 && <div style={satir}><span style={kucuk}>SGK rapor taslağı:</span>{r.sgkSablonlari.map((x) => <button key={x} type="button" style={ghost} onClick={() => calistir({ adim: 'sgkrapor', sablon: x, sureAy: 3 }, 'SGK rapor taslağı oluşturuldu — Belge › SGK rapor sekmesinde hekim düzenler ve kilitler.')}>{x === 'vitd' ? 'D vitamini' : 'B12'} raporu</button>)}</div>}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
@@ -163,7 +163,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
     return (<div>
       <div style={etiket}>e-Nabız geçmiş PDF → Belgeler <span style={kucuk}>· yalnız hekimin yüklediği PDF (canlı e-Nabız çekimi yok) · aynı lab hattı: çıkar → tablo onayla → raporla → Onayla · kimlik kontrolü aynı</span></div>
       <div style={kucuk}>Hasta e-Nabız’dan “Tahlillerim” çıktısını PDF olarak verir. Her satır basılı tarihini taşır; tarihi okunamayan satır onaylanana kadar kartlara ve şeride girmez.</div>
-      <div style={satir}><DosyaSecDugmesi dosya={null} etiket="PDF seç" accept="application/pdf" onSec={(x) => { if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#F87171' : '#0F9B8E' }}>{yukleme}</span>}</div>
+      <div style={satir}><DosyaSecDugmesi dosya={null} etiket="PDF seç" accept="application/pdf" onSec={(x) => { if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#B42318' : '#0F9B8E' }}>{yukleme}</span>}</div>
       <div style={govde}>{w5.enabiz.paneller.map((p) => <div key={p.id}><a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab?geriTab=dahiliye`} style={{ color: '#0F9B8E' }}>e-Nabız geçmiş · {String(p.created_at).slice(0, 10)}</a> <span style={kucuk}>· durum {p.durum}{p.numune_tarihi ? ` · en yeni ${p.numune_tarihi}` : ''}{(p.kimlik_uyari as { eslesme?: boolean } | null)?.eslesme === false ? ' · ⚠ kimlik eşleşmiyor' : ''}</span></div>)}{!w5.enabiz.paneller.length && <span style={kucuk}>Henüz içe aktarma yok.</span>}</div>
     </div>);
   }
@@ -177,11 +177,11 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
       <div style={satir}>{chk('aktif atak', bv('aa', !!k?.atak_aktif), (x) => set('aa', x))}{chk('ateş', bv('at', !!k?.ates), (x) => set('at', x))}{chk('MSU kristali (aspirasyon)', bv('kk', !!k?.kristal_kanit), (x) => set('kk', x))}<input value={s('as', k?.atak_sayisi_12ay != null ? String(k.atak_sayisi_12ay) : '0')} onChange={(e) => set('as', e.target.value)} placeholder="atak/12 ay" style={{ ...toolsInput, width: 80 }} />{chk('tofüs', bv('to', !!k?.tofus), (x) => set('to', x))}{chk('radyografik hasar', bv('rh', !!k?.radyografik_hasar), (x) => set('rh', x))}{chk('ürat taşı', bv('ur', !!k?.urolitiyazis), (x) => set('ur', x))}</div>
       <div style={satir}><button type="button" style={btn} onClick={() => calistir(body, 'Gut kartı güncellendi.')}>Değerlendir</button><button type="button" style={ghost} onClick={() => calistir({ ...body, gorevAc: true }, 'Ürik asit görevleri açıldı.')}>+ görevler</button></div>
       <div style={govde}>
-        <Liste x={r.kirmizi} renk="#F87171" on="⛔" />
+        <Liste x={r.kirmizi} renk="#B42318" on="⛔" />
         <div>Evre taslak: <b>{r.evre.replace(/_/g, ' ')}</b>{g.kilitTani ? ` · hekim tanısı: ${g.kilitTani}` : ''}{r.ultEndikasyon ? ` · ULT endikasyonu: ${r.ultEndikasyon}` : ''}{r.hedefUrik ? ` · hedef <${r.hedefUrik} mg/dL` : ''}</div>
-        <Liste x={r.atakSinif} renk="#0F9B8E" on="atak:" /><Liste x={r.ultNeden} on="·" /><Liste x={r.ultMerdiven} /><Liste x={r.profilaksi} /><Liste x={r.ilacUyari} renk="#FBBF24" on="⚠" />
+        <Liste x={r.atakSinif} renk="#0F9B8E" on="atak:" /><Liste x={r.ultNeden} on="·" /><Liste x={r.ultMerdiven} /><Liste x={r.profilaksi} /><Liste x={r.ilacUyari} renk="#B45309" on="⚠" />
         {r.diyet.length > 0 && <div style={{ marginTop: 4 }}><b>Diyet danışmanlığı</b><Liste x={r.diyet} /></div>}
-        <Liste x={r.sevk} renk="#F87171" on="→" />
+        <Liste x={r.sevk} renk="#B42318" on="→" />
         {r.sevk.length > 0 && <div style={satir}>{r.sevk.some((x) => /[Rr]omatoloji|aspirasyon|Acil/.test(x)) && <button type="button" style={r.kirmizi.length ? kirmiziBtn : ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'romatoloji', not: r.sevk.join(' · ') }, 'Romatoloji sevki kaydedildi.')}>Romatoloji sevk</button>}{r.sevk.some((x) => /Üroloji/.test(x)) && <button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'uroloji', not: 'Ürat taşı öyküsü' }, 'Üroloji sevki kaydedildi.')}>Üroloji sevk</button>}</div>}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
       </div>
@@ -214,10 +214,10 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
         <div>Sınıf taslak: <b>{r.sinif ? r.sinif.replace('_', ' ') : 'T-skoru yok'}</b>{r.enDusukT != null ? ` · en düşük T ${String(r.enDusukT).replace('.', ',')} (${r.enDusukBolge ? o.bolgeAd[r.enDusukBolge] : ''})` : ''}{r.klinikOsteoporoz ? ' · kırılganlık kırığı → klinik osteoporoz' : ''}{o.kilitTani ? ` · hekim tanısı: ${o.kilitTani}` : ''}</div>
         {r.riskBayraklari.length > 0 && <div style={kucuk}>Risk bayrakları: {r.riskBayraklari.join(' · ')}</div>}
         <div style={kucuk}>{r.fraxNotu}</div>
-        <Liste x={r.tedaviSinifi} renk="#0F9B8E" on="℞ sınıf:" /><Liste x={r.plan} /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" />
+        <Liste x={r.tedaviSinifi} renk="#0F9B8E" on="℞ sınıf:" /><Liste x={r.plan} /><Liste x={r.uyarilar} renk="#B45309" on="⚠" />
         {r.sekonderTetkik.length > 0 && <div style={kucuk}>Sekonder neden tetkikleri: {r.sekonderTetkik.join(' · ')}</div>}
         <div>DXA aralığı taslak: {r.dxaAraligiAy ? `${r.dxaAraligiAy} ay` : '—'}{r.sonrakiDxa ? ` → ${r.sonrakiDxa}` : ''}</div>
-        <Liste x={r.sevk} renk="#F87171" on="→" />
+        <Liste x={r.sevk} renk="#B42318" on="→" />
         {r.sevk.length > 0 && <div style={satir}><button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'endokrinoloji', not: r.sevk.join(' · ') }, 'Endokrinoloji sevki kaydedildi.')}>Endokrinoloji sevk</button><button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'fiziksel_tip', not: r.sevk.join(' · ') }, 'FTR sevki kaydedildi.')}>FTR sevk</button></div>}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
       </div>

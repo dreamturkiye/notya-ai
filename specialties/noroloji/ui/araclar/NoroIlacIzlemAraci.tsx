@@ -49,7 +49,7 @@ export default function NoroIlacIzlemAraci() {
       <div style={noroStil.kutu}>
         <div style={noroStil.etiket}>Hasta</div>
         <NoroHastaSecici secili={hastaId} sec={(id) => { setHastaId(id); yukle(id) }} />
-        {hata && <div style={{ ...noroStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {hata && <div style={{ ...noroStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
       </div>
       {veri && (
         <div style={noroStil.kutu}>
@@ -61,7 +61,7 @@ export default function NoroIlacIzlemAraci() {
           </div>
           {!veri.ilaclar.length && <div style={noroStil.kucuk}>Aktif ilaç kaydı yok. Görevler hasta ilaç listesinden üretilir; Notya ilaç veya doz eklemez.</div>}
           {veri.izlem.map((g) => (
-            <div key={g.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div key={g.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
               <div style={{ ...noroStil.metin, color: g.due < bugun ? CHROME_RENK.warn : CHROME_RENK.ink }}>{g.ad}</div>
               <div style={noroStil.kucuk}>{g.ilac} · vade {g.due}{g.labs.length ? ` · ${g.labs.join(', ')}` : ''}</div>
             </div>
@@ -69,7 +69,7 @@ export default function NoroIlacIzlemAraci() {
           <div style={noroStil.satir}>
             <button type="button" style={noroStil.btn} onClick={gorevAc} disabled={!veri.izlem.length}>Görevleri hasta dosyasında aç</button>
           </div>
-          {durum && <div style={{ ...noroStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
+          {durum && <div style={{ ...noroStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
           <KopyalaButonu metin={veri.izlem.map((g) => `${g.ad} — ${g.ilac} — vade ${g.due}`).join('\n')} etiket="İzlem planını kopyala" />
           <MuayeneFormunaEkle hastaId={hastaId} arac="AED izlem" satirlar={veri.izlem.map((g) => `${g.ad} (${g.ilac}) — ${g.due}`)} alan="content_degerlendirme" />
           <TaslakNotu>SINIF düzeyi izlem; doz, titrasyon ve kesme kararı hekimindir.</TaslakNotu>
@@ -78,7 +78,7 @@ export default function NoroIlacIzlemAraci() {
       <div style={noroStil.kutu}>
         <div style={noroStil.etiket}>Kural kütüphanesi (doz yok)</div>
         {NORO_IZLEM_KURALLARI.map((k) => (
-          <div key={k.kod} style={{ padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div key={k.kod} style={{ padding: '6px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
             <div style={noroStil.metin}>{k.ad}</div>
             <div style={noroStil.kucuk}>{k.dipnot}</div>
           </div>

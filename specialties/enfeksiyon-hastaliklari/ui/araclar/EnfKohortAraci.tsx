@@ -73,9 +73,9 @@ export default function EnfKohortAraci() {
       </div>
       <div style={S.kutu}>
         {satirlar === null && <div style={S.kucuk}>Yükleniyor…</div>}
-        {hata && <div style={{ ...S.kucuk, color: '#F87171' }}>{hata}</div>}
+        {hata && <div style={{ ...S.kucuk, color: '#B42318' }}>{hata}</div>}
         {gorunen.map((s) => (
-          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
+          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid rgba(58,44,34,0.12)', cursor: 'pointer' }}>
             <input type="checkbox" checked={secili.includes(s.patientId)}
               onChange={() => setSecili((p) => p.includes(s.patientId) ? p.filter((x) => x !== s.patientId) : [...p, s.patientId])} />
             <div>
@@ -93,7 +93,7 @@ export default function EnfKohortAraci() {
           </button>
           <button type="button" style={S.ghost} onClick={yukle}>Yenile</button>
         </div>
-        {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
+        {durum && <div style={{ ...S.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
         <TaslakNotu>TASLAK — hatırlatma tanı, skor, ilaç adı ve doz taşımaz. Acil bayrakta 112 yolu metinde yer alır.</TaslakNotu>
       </div>
     </>

@@ -35,19 +35,19 @@ type Veri = {
 
 const ACCENT = '#9F1239'
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 }
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#FDA4AF', marginBottom: 6 }
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' }
+const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#BE123C', marginBottom: 6 }
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 }
 const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 }
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }
 
 const SEKMELER = ['Özet', 'Pre-op', 'Greft/Yara', 'Antikoag', 'Acil', 'Görevler'] as const
 type Sekme = (typeof SEKMELER)[number]
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted }
+const RENK: Record<string, string> = { iyi: '#047857', dikkat: '#B45309', kotu: '#B42318', yok: CHROME_RENK.muted }
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
       <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
       {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
@@ -111,9 +111,9 @@ export default function KalpDamarHome({ patientId }: { patientId: string }) {
         {v.serit.chips.map((c) => <Cip key={c.ad} {...c} />)}
       </div>
       {v.serit.kirmizi.length > 0 && (
-        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#FDA4AF', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
+        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#BE123C', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
           {v.serit.kirmizi.map((k) => <div key={k}>⚑ {k}</div>)}
-          <div style={{ ...kucuk, color: '#FDA4AF', marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
+          <div style={{ ...kucuk, color: '#BE123C', marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
         </div>
       )}
 
@@ -125,7 +125,7 @@ export default function KalpDamarHome({ patientId }: { patientId: string }) {
 
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: /amadı|zorunlu|eksik|Geçersiz|geçersiz|bayrak|Hata/.test(mesaj) ? '#F87171' : '#34D399' }}>{mesaj}</span>
+          <span style={{ fontSize: 12, color: /amadı|zorunlu|eksik|Geçersiz|geçersiz|bayrak|Hata/.test(mesaj) ? '#B42318' : '#047857' }}>{mesaj}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}

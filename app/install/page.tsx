@@ -1,25 +1,29 @@
+import { CHROME_RENK as R, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 export default function InstallPage() {
+  const kart = {background:R.paper,border:`1px solid ${R.border}`,borderRadius:"16px",
+                padding:"20px",textAlign:"left" as const,boxShadow:"0 18px 50px rgba(58,44,34,0.08)"}
   return (
-    <div style={{minHeight:"100dvh",background:"#0A1628",color:"#fff",fontFamily:"system-ui,sans-serif",
+    <div style={{minHeight:"100dvh",background:R.cream,color:R.ink,fontFamily:CHROME_FONT.sans,
                  display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))",boxSizing:"border-box"}}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <div style={{maxWidth:"400px",width:"100%",textAlign:"center"}}>
         <div style={{fontSize:"64px",marginBottom:"16px"}}>🩺</div>
-        <h1 style={{fontSize:"28px",fontWeight:"700",marginBottom:"8px"}}>
-          <span style={{color:"#2563EB"}}>Notya</span> AI
+        <h1 style={{fontSize:"28px",fontWeight:"560",marginBottom:"8px",fontFamily:CHROME_FONT.serif,color:R.ink}}>
+          <span style={{color:R.pine}}>Notya</span> AI
         </h1>
-        <p style={{fontSize:"15px",color:"rgba(255,255,255,.6)",marginBottom:"36px"}}>
+        <p style={{fontSize:"15px",color:R.muted,marginBottom:"36px"}}>
           Yapay Zekâ Uzman Asistanı — Cebinizde dünyaca ünlü uzman
         </p>
 
         {/* iPhone */}
-        <div style={{background:"#0F2040",border:"1px solid rgba(255,255,255,.1)",borderRadius:"16px",
-                     padding:"20px",marginBottom:"16px",textAlign:"left"}}>
+        <div style={{...kart,marginBottom:"16px"}}>
           <div style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"16px"}}>
             <span style={{fontSize:"28px"}}>🍎</span>
             <div>
               <div style={{fontWeight:"600",fontSize:"16px"}}>iPhone'a Yükle</div>
-              <div style={{fontSize:"12px",color:"rgba(255,255,255,.5)"}}>Safari ile aç</div>
+              <div style={{fontSize:"12px",color:R.muted}}>Safari ile aç</div>
             </div>
           </div>
           {[
@@ -29,22 +33,21 @@ export default function InstallPage() {
             ["4", "Sağ üstte \"Ekle\" ye bas"],
           ].map(([n, t]) => (
             <div key={n} style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"10px"}}>
-              <div style={{width:"24px",height:"24px",borderRadius:"50%",background:"#2563EB",
+              <div style={{width:"24px",height:"24px",borderRadius:"50%",background:R.pine,color:"#fff",
                            display:"flex",alignItems:"center",justifyContent:"center",
                            fontSize:"12px",fontWeight:"700",flexShrink:0}}>{n}</div>
-              <div style={{fontSize:"14px",color:"rgba(255,255,255,.8)"}}>{t}</div>
+              <div style={{fontSize:"14px",color:R.ink}}>{t}</div>
             </div>
           ))}
         </div>
 
         {/* Android */}
-        <div style={{background:"#0F2040",border:"1px solid rgba(255,255,255,.1)",borderRadius:"16px",
-                     padding:"20px",marginBottom:"32px",textAlign:"left"}}>
+        <div style={{...kart,marginBottom:"32px"}}>
           <div style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"16px"}}>
             <span style={{fontSize:"28px"}}>🤖</span>
             <div>
               <div style={{fontWeight:"600",fontSize:"16px"}}>Android'e Yükle</div>
-              <div style={{fontSize:"12px",color:"rgba(255,255,255,.5)"}}>Chrome ile aç</div>
+              <div style={{fontSize:"12px",color:R.muted}}>Chrome ile aç</div>
             </div>
           </div>
           {[
@@ -54,21 +57,21 @@ export default function InstallPage() {
             ["4", "\"Yükle\" ye bas — hazır!"],
           ].map(([n, t]) => (
             <div key={n} style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"10px"}}>
-              <div style={{width:"24px",height:"24px",borderRadius:"50%",background:"#059669",
+              <div style={{width:"24px",height:"24px",borderRadius:"50%",background:R.pine,color:"#fff",
                            display:"flex",alignItems:"center",justifyContent:"center",
                            fontSize:"12px",fontWeight:"700",flexShrink:0}}>{n}</div>
-              <div style={{fontSize:"14px",color:"rgba(255,255,255,.8)"}}>{t}</div>
+              <div style={{fontSize:"14px",color:R.ink}}>{t}</div>
             </div>
           ))}
         </div>
 
-        <a href="/dashboard/doktor" style={{display:"block",background:"linear-gradient(135deg,#7C3AED,#2563EB)",
+        <a href="/dashboard/doktor" style={{display:"block",background:R.pine,
                                     color:"#fff",textDecoration:"none",borderRadius:"14px",
                                     padding:"16px",fontSize:"16px",fontWeight:"700"}}>
           🩺 Hemen Başla — Tarayıcıda Aç
         </a>
 
-        <p style={{fontSize:"11px",color:"rgba(255,255,255,.3)",marginTop:"20px"}}>
+        <p style={{fontSize:"11px",color:R.muted,marginTop:"20px"}}>
           App Store veya Google Play indirmesi gerekmez.<br/>
           Tamamen ücretsiz kurulum — uygulama gibi çalışır.
         </p>

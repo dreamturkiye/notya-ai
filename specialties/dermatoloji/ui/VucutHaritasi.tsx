@@ -28,16 +28,16 @@ const semaKutu: CSSProperties = {
   width: '100%',
   maxWidth: 260,
   aspectRatio: '1 / 2',
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 10,
 }
 
 function bolgeStili(secili: boolean, onam: boolean): CSSProperties {
   return {
     position: 'absolute',
-    border: `1px solid ${secili ? 'rgba(45,212,191,0.9)' : 'rgba(255,255,255,0.18)'}`,
-    background: secili ? 'rgba(15,155,142,0.45)' : 'rgba(255,255,255,0.04)',
+    border: `1px solid ${secili ? 'rgba(45,212,191,0.9)' : 'rgba(58,44,34,0.12)'}`,
+    background: secili ? 'rgba(15,155,142,0.45)' : 'rgba(58,44,34,0.12)',
     color: CHROME_RENK.ink,
     borderRadius: 6,
     fontSize: 8.5,

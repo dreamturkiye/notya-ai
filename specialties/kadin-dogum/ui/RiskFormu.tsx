@@ -29,7 +29,7 @@ export function RiskFormu({
           <label key={m.id} style={{ fontSize: 13, color: CHROME_RENK.muted, display: 'flex', gap: 8, alignItems: 'center' }}>
             <input type="checkbox" checked={maddeler.includes(m.id)} onChange={() => toggle(m.id)} />
             {m.etiket}
-            <span style={{ fontSize: 11, color: m.sinif === 'yuksek' ? '#F87171' : '#FBBF24' }}>
+            <span style={{ fontSize: 11, color: m.sinif === 'yuksek' ? '#B42318' : '#B45309' }}>
               {m.sinif === 'yuksek' ? 'Yüksek' : 'Orta'}
             </span>
           </label>

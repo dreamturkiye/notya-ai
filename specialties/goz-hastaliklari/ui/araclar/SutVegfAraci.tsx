@@ -82,7 +82,7 @@ export default function SutVegfAraci() {
         {hasta.id && <div style={{ marginTop: 6 }}><a href={hastaDosyaHref(hasta.id, 'goz')} style={{ color: '#0F9B8E', fontSize: 13, fontWeight: 700 }}>Hastada aç (Göz) →</a></div>}
         <div style={kaydir}>
         {gecmis.map((e, i) => (
-          <div key={e.id || i} style={{ ...satir, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+          <div key={e.id || i} style={{ ...satir, borderTop: '1px solid rgba(58,44,34,0.12)', paddingTop: 8 }}>
             <input type="date" aria-label="Geçmiş tarih" value={e.tarih} onChange={(x) => satirGuncelle(i, { tarih: x.target.value })} style={{ ...input, width: 170 }} />
             <Secim etiket="Geçmiş göz" deger={e.goz} set={(x) => satirGuncelle(i, { goz: x as 'sag' | 'sol' })} secenekler={GOZ} />
             <Secim etiket="Geçmiş ajan" deger={e.ajan} set={(x) => satirGuncelle(i, { ajan: x as Ajan })} secenekler={Object.entries(AJAN_ADI)} />
@@ -102,11 +102,11 @@ export default function SutVegfAraci() {
           <Istatistik deger={kapi.uyarilar.length} etiket="uyarı" ton={kapi.uyarilar.length ? 'uyari' : 'notr'} />
           <Istatistik deger={gecmis.length} etiket="geçmiş enjeksiyon" />
         </div>
-        <div style={{ ...metin, fontWeight: 700, color: kapi.engeller.length ? '#F87171' : kapi.odenebilir === null ? '#FBBF24' : '#0F9B8E' }}>
+        <div style={{ ...metin, fontWeight: 700, color: kapi.engeller.length ? '#B42318' : kapi.odenebilir === null ? '#B45309' : '#0F9B8E' }}>
           {kapi.engeller.length ? 'SGK ödeme engeli var' : kapi.odenebilir === null ? 'Muayenehane — SGK basamağı değil (uyarıları okuyun)' : 'SUT kapılarında engel yok'}
         </div>
-        {kapi.engeller.map((x) => <div key={x} style={{ ...metin, color: '#F87171' }}>✕ {x}</div>)}
-        {kapi.uyarilar.map((x) => <div key={x} style={{ ...metin, color: '#FBBF24' }}>⚠ {x}</div>)}
+        {kapi.engeller.map((x) => <div key={x} style={{ ...metin, color: '#B42318' }}>✕ {x}</div>)}
+        {kapi.uyarilar.map((x) => <div key={x} style={{ ...metin, color: '#B45309' }}>⚠ {x}</div>)}
         <div style={{ ...metin, marginTop: 8 }}>{goz === 'sag' ? 'OD' : 'OS'} sıradaki doz: {sira.not}{sira.enErken ? ` — pencere ${sira.enErken} → ${sira.enGec}` : ''}</div>
         {takvim.length > 0 && <div style={{ ...metin, marginTop: 4 }}>Yükleme takvimi taslağı: {takvim.map((t) => `${t.dozNo}. doz ${t.enErken === t.enGec ? t.enErken : `${t.enErken}–${t.enGec}`}`).join(' · ')}</div>}
         <Katlanir baslik={`SUT dayanakları (${kapi.dipnotlar.length})`}>

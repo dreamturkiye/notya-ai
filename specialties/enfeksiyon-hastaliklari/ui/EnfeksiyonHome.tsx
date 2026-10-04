@@ -40,7 +40,7 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 
 const SEKMELER = ['Özet', 'İzolasyon', 'ATB süre', 'Viral', 'Acil', 'Görevler'] as const
 type Sekme = (typeof SEKMELER)[number]
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted }
+const RENK: Record<string, string> = { iyi: '#047857', dikkat: '#B45309', kotu: '#B42318', yok: CHROME_RENK.muted }
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
@@ -98,7 +98,7 @@ export default function EnfeksiyonHome({ patientId }: { patientId: string }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {v.serit.chips.map((c) => <Cip key={c.ad} {...c} />)}
         </div>
-        {v.serit.kirmizi.length > 0 && <div style={{ ...kucuk, color: '#F87171', marginTop: 8 }}>{v.serit.kirmizi.join(' · ')}</div>}
+        {v.serit.kirmizi.length > 0 && <div style={{ ...kucuk, color: '#B42318', marginTop: 8 }}>{v.serit.kirmizi.join(' · ')}</div>}
       </div>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -107,7 +107,7 @@ export default function EnfeksiyonHome({ patientId }: { patientId: string }) {
         ))}
       </div>
 
-      {mesaj && <div style={{ ...kucuk, color: mesaj.includes('Hata') || mesaj.includes('bayrak') ? '#F87171' : '#34D399' }}>{mesaj}</div>}
+      {mesaj && <div style={{ ...kucuk, color: mesaj.includes('Hata') || mesaj.includes('bayrak') ? '#B42318' : '#047857' }}>{mesaj}</div>}
       {eklenenNot && <MuayeneFormunaDon notId={eklenenNot} />}
 
       {sekme === 'Özet' && (
@@ -190,7 +190,7 @@ export default function EnfeksiyonHome({ patientId }: { patientId: string }) {
             Hekim gördü ve eylemi yazdı
           </label>
           <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({ adim: 'risk', bayraklar: riskKodlari, eylem: riskEylem, hekimOnay: riskOnay })}>Kaydet</button>
-          <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>{v.kutuphane.acilYonlendirme}</div>
+          <div style={{ ...kucuk, marginTop: 8, color: '#B45309' }}>{v.kutuphane.acilYonlendirme}</div>
         </div>
       )}
 

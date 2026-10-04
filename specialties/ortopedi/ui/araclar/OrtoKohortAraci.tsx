@@ -80,7 +80,7 @@ export default function OrtoKohortAraci() {
         {satirlar == null && <div style={S.kucuk}>Yükleniyor…</div>}
         {satirlar && !gorunen.length && <div style={S.kucuk}>Bayraklı hasta yok.</div>}
         {gorunen.map((s) => (
-          <label key={s.patientId} style={{ ...S.metin, display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <label key={s.patientId} style={{ ...S.metin, display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
             <input
               type="checkbox"
               checked={secili.includes(s.patientId)}
@@ -94,7 +94,7 @@ export default function OrtoKohortAraci() {
         <button type="button" style={{ ...S.btn, marginTop: 12 }} disabled={!secili.length || gonderiliyor} onClick={gonder}>
           {gonderiliyor ? 'Gönderiliyor…' : `Seçilenlere hatırlat (${secili.length})`}
         </button>
-        {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
+        {durum && <div style={{ ...S.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
         <TaslakNotu>Hatırlatma metni tanı, VAS sayı, skor ve ilaç adı yazılmaz. Açık bayrakta &quot;sizi arayacağız&quot; dili kullanılır.</TaslakNotu>
       </div>
     </>

@@ -36,12 +36,12 @@ export function AktifIsler({
             </div>
           ))}
           {acikPencereler.map((w) => (
-            <div key={w.id} style={{ fontSize: 13, color: '#FBBF24', borderLeft: '3px solid #F59E0B', padding: '4px 10px' }}>
+            <div key={w.id} style={{ fontSize: 13, color: '#B45309', borderLeft: '3px solid #F59E0B', padding: '4px 10px' }}>
               Açık pencere · {w.label} · {kdLabel(KD_WINDOW_STATUS, w.status)}
             </div>
           ))}
           {eksikLab.map((k) => (
-            <div key={k} style={{ fontSize: 13, color: CHROME_RENK.muted, borderLeft: '3px solid #38BDF8', padding: '4px 10px' }}>
+            <div key={k} style={{ fontSize: 13, color: CHROME_RENK.muted, borderLeft: '3px solid #1D4ED8', padding: '4px 10px' }}>
               Eksik lab · {k}
             </div>
           ))}

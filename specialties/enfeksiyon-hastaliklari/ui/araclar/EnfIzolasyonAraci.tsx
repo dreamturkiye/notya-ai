@@ -66,8 +66,8 @@ export default function EnfIzolasyonAraci() {
           <button type="button" style={enfStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={plan.ozet} />
         </div>
-        {durum && <div style={{ ...enfStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...enfStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...enfStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...enfStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — izolasyon/bildirim hatırlatmasıdır. Hastane enfeksiyon kontrolü için tam HIS bu araçta yoktur. Tanı yazılmaz.</TaslakNotu>
       </div>
     </>

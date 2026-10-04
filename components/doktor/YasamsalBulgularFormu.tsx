@@ -41,7 +41,7 @@ export default function YasamsalBulgularFormu({
               {etiket}
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <input value={degerler[anahtar] ?? ''} onChange={(e) => onDegis(anahtar, e.target.value)} placeholder="—"
-                  style={girdiStili ?? { width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: CHROME_RENK.ink, fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
+                  style={girdiStili ?? { width: 72, background: 'rgba(58,44,34,0.04)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 6, color: CHROME_RENK.ink, fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
                 <span style={{ color: CHROME_RENK.muted }}>{birim}</span>
               </span>
               {persentil && <span style={{ fontSize: 10, color: persentilRengi }}>{persentil}</span>}

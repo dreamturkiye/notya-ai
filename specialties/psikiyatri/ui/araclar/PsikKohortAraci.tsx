@@ -66,7 +66,7 @@ export default function PsikKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...psikStil.ghost, background: suzgec.includes(b) ? 'rgba(99,102,241,0.25)' : 'transparent', color: suzgec.includes(b) ? '#C7D2FE' : CHROME_RENK.muted }}
+              style={{ ...psikStil.ghost, background: suzgec.includes(b) ? 'rgba(99,102,241,0.25)' : 'transparent', color: suzgec.includes(b) ? '#4F46E5' : CHROME_RENK.muted }}
             >{PSIK_BAYRAK_AD[b]}</button>
           ))}
         </div>
@@ -81,7 +81,7 @@ export default function PsikKohortAraci() {
       <div style={psikStil.kutu}>
         {satirlar != null && !gorunen.length && <div style={psikStil.metin}>Bayraklı hasta yok.</div>}
         {gorunen.map((s) => (
-          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
+          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid rgba(58,44,34,0.12)', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={secili.includes(s.patientId)}

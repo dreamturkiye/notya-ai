@@ -58,8 +58,8 @@ export default function NoroMigrenAraci() {
           <button type="button" onClick={kaydet} style={noroStil.btn}>Kaydet</button>
         </div>
         <MuayeneFormunaEkle hastaId={hasta} arac="MIDAS" satirlar={[sonuc.ozet]} alan="content_objektif" />
-        {durum && <div style={{ ...noroStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...noroStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...noroStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...noroStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <div style={{ ...noroStil.kucuk, marginTop: 10 }}>{REF_ACIKLAMA.MIDAS}</div>
       </div>
     </>

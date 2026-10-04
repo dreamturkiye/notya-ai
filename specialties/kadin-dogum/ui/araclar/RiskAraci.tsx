@@ -21,7 +21,7 @@ function Cipler({ liste, secili, degis, renk }: { liste: RiskFaktoru[]; secili: 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
       {liste.map((f) => { const on = secili.includes(f.kod); return (
-        <button key={f.kod} type="button" aria-pressed={on} onClick={() => degis(f.kod)} style={{ minHeight: 44, borderRadius: 999, padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', border: `1px solid ${on ? renk : 'rgba(255,255,255,0.14)'}`, background: on ? `${renk}26` : 'rgba(255,255,255,0.03)', color: on ? '#FFFFFF' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{f.ad}</button>
+        <button key={f.kod} type="button" aria-pressed={on} onClick={() => degis(f.kod)} style={{ minHeight: 44, borderRadius: 999, padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', border: `1px solid ${on ? renk : 'rgba(58,44,34,0.12)'}`, background: on ? `${renk}26` : 'rgba(58,44,34,0.12)', color: on ? '#FFFFFF' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{f.ad}</button>
       ); })}
     </div>
   );
@@ -85,7 +85,7 @@ export default function RiskAraci() {
   };
 
   const alan = (k: keyof typeof f, ph: string, ad: string, w: number | string = 150, mod: 'numeric' | 'decimal' | 'text' = 'numeric') => <Etiketli ad={ad} genislik={w}><input inputMode={mod} value={f[k]} onChange={(e) => set(k, e.target.value)} placeholder={ph} aria-label={ad} style={{ ...input, width: w, maxWidth: '100%' }} /></Etiketli>;
-  const pencereRenk = asp.pencere === 'ideal_kapaniyor' ? '#FB923C' : asp.pencere === 'ideal' ? '#6EE7B7' : asp.pencere === 'gec' ? '#FCD34D' : asp.pencere === 'kapandi' ? CHROME_RENK.warn : '#93C5FD';
+  const pencereRenk = asp.pencere === 'ideal_kapaniyor' ? '#C2410C' : asp.pencere === 'ideal' ? '#047857' : asp.pencere === 'gec' ? '#A16207' : asp.pencere === 'kapandi' ? CHROME_RENK.warn : '#1D4ED8';
 
   return (
     <>
@@ -98,16 +98,16 @@ export default function RiskAraci() {
           <Segment etiket="Fetüs sayısı" deger={cogul ? 'cogul' : 'tekil'} set={(x) => { setCogul(x === 'cogul'); setKilitli(false); }} secenekler={[['tekil', 'Tekil'], ['cogul', 'Çoğul']]} />
         </div>
         <div style={{ marginTop: 10 }}><div style={kucuk}>Hasta (isteğe bağlı)</div><KdHastaSecici secili={hasta.id} sec={hastadanDoldur} /></div>
-        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#F9A8D4' }}>{mesaj}</div>}
+        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#BE185D' }}>{mesaj}</div>}
       </div>
 
       <div style={kutu} aria-live="polite">
         <div style={etiket}>Preeklampsi risk faktörleri → aspirin profilaksisi</div>
         <div style={{ ...kucuk, marginBottom: 6 }}>Yüksek risk</div>
-        <Cipler liste={PE_YUKSEK} secili={peSecili} degis={peDegis} renk="#F87171" />
+        <Cipler liste={PE_YUKSEK} secili={peSecili} degis={peDegis} renk="#B42318" />
         <div style={{ ...kucuk, margin: '10px 0 6px' }}>Orta risk</div>
-        <Cipler liste={PE_ORTA} secili={peSecili} degis={peDegis} renk="#FBBF24" />
-        <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: asp.karar === 'onerilir' ? 'rgba(219,39,119,0.14)' : 'rgba(0,0,0,0.18)', border: `1px solid ${asp.karar === 'onerilir' ? 'rgba(244,114,182,0.5)' : 'rgba(255,255,255,0.08)'}` }}>
+        <Cipler liste={PE_ORTA} secili={peSecili} degis={peDegis} renk="#B45309" />
+        <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: asp.karar === 'onerilir' ? 'rgba(219,39,119,0.14)' : 'rgba(0,0,0,0.18)', border: `1px solid ${asp.karar === 'onerilir' ? 'rgba(244,114,182,0.5)' : 'rgba(58,44,34,0.12)'}` }}>
           <div style={{ ...metin, fontWeight: 700, fontSize: 16 }}>{asp.kararMetni}</div>
           {asp.karar !== 'yok' && <div style={{ fontSize: asp.pencere === 'ideal_kapaniyor' ? 17 : 14, fontWeight: asp.pencere === 'ideal_kapaniyor' ? 800 : 600, color: pencereRenk, marginTop: 6 }}>{asp.pencereMetni}</div>}
           {asp.karar !== 'yok' && asp.baslangic && <div style={{ ...kucuk, marginTop: 4 }}>Pencere: {trTarih(asp.baslangic)} (12+0) → ideal son {trTarih(asp.idealSon)} (15+6) → son {trTarih(asp.son)} (28+0)</div>}
@@ -118,7 +118,7 @@ export default function RiskAraci() {
 
       <div style={kutu}>
         <div style={etiket}>GDM riski <span style={{ ...kucuk, fontWeight: 600 }}>· öneri — hekim kilitler</span></div>
-        <Cipler liste={GDM_RISK} secili={gdm} degis={degis(gdm, setGdm)} renk="#60A5FA" />
+        <Cipler liste={GDM_RISK} secili={gdm} degis={degis(gdm, setGdm)} renk="#1D4ED8" />
         <div style={{ ...metin, marginTop: 10 }}>{gd.metin}</div>
         {gd.pencere && <div style={kucuk}>24–28. hafta OGTT penceresi: {gd.pencere}</div>}
       </div>
@@ -142,8 +142,8 @@ export default function RiskAraci() {
             <div style={satir}><span style={kucuk}>Hasta tercihi</span><Segment etiket="Hasta tercihi" deger={(v.tercih || '') as 'ssvd'} set={(x) => setV({ ...v, tercih: x })} secenekler={[['ssvd', 'SSVD denemek'], ['elektif_cs', 'Tekrar sezaryen'], ['kararsiz', 'Kararsız']]} /></div>
             <div style={{ marginTop: 10 }}>
               {vb.engel.map((x) => <div key={x} style={{ ...metin, color: CHROME_RENK.warn }}>✕ {x}</div>)}
-              {vb.dikkat.map((x) => <div key={x} style={{ ...metin, color: '#FCD34D' }}>⚠ {x}</div>)}
-              {vb.lehte.map((x) => <div key={x} style={{ ...metin, color: '#6EE7B7' }}>✓ {x}</div>)}
+              {vb.dikkat.map((x) => <div key={x} style={{ ...metin, color: '#A16207' }}>⚠ {x}</div>)}
+              {vb.lehte.map((x) => <div key={x} style={{ ...metin, color: '#047857' }}>✓ {x}</div>)}
               {vb.eksik.map((x) => <div key={x} style={{ ...kucuk }}>Eksik: {x}</div>)}
             </div>
             <div style={{ ...kucuk, marginTop: 6 }}>Tartışma notlarıdır, karar değildir. Klinik derinlik: ACOG PB 205. Bu konuda doğrulanmış Türk rehberi araçta yer almıyor — karar hekim ve hastanındır; SSVD onamı Doğum sekmesinde.</div>
@@ -159,12 +159,12 @@ export default function RiskAraci() {
         <div style={kucuk}>Tıbbi endikasyon kaydı, sezaryen kararının gerekçesini ve zamanını gösterir; kayıt incelemelerinde hekimin dayanağıdır. Endikasyonu siz seçer ve kilitlersiniz — araç öneri yapmaz.</div>
         {csAcik && (kilitli ? (
           <>
-            <pre style={{ ...metin, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '12px 0 0', padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.2)' }}>{not}</pre>
+            <pre style={{ ...metin, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '12px 0 0', padding: 12, borderRadius: 12, background: 'rgba(58,44,34,0.05)' }}>{not}</pre>
             <div style={satir}>
               <button type="button" style={btn} onClick={async () => setKopya((await panoya(not)) ? 'Kopyalandı — dosyaya siz ekleyin.' : 'Pano erişimi yok — metni elle seçin.')}>Notu kopyala</button>
               <button type="button" style={ghost} onClick={() => { setKilitli(false); setKopya(''); }}>Kilidi aç, düzenle</button>
               {hasta.id && <a href={hastaDosyaHref(hasta.id, 'gebelik')} style={{ ...ghost, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Doğum) →</a>}
-              {kopya && <span style={{ ...kucuk, color: '#F9A8D4' }}>{kopya}</span>}
+              {kopya && <span style={{ ...kucuk, color: '#BE185D' }}>{kopya}</span>}
             </div>
             <MuayeneFormunaEkle hastaId={hasta.id} arac="Sezaryen endikasyon notu (hekim kilitli)" satirlar={not.split('\n')} />
           </>
@@ -172,7 +172,7 @@ export default function RiskAraci() {
           <>
             <div style={{ ...kucuk, margin: '12px 0 6px' }}>Endikasyon (birden fazla seçilebilir)</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {CS_ENDIKASYONLARI.map((e) => { const on = endikasyon.includes(e); return <button key={e} type="button" aria-pressed={on} onClick={() => setEndikasyon(on ? endikasyon.filter((x) => x !== e) : [...endikasyon, e])} style={{ minHeight: 44, borderRadius: 12, padding: '9px 12px', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', border: `1px solid ${on ? '#F472B6' : 'rgba(255,255,255,0.14)'}`, background: on ? 'rgba(219,39,119,0.18)' : 'rgba(255,255,255,0.03)', color: on ? '#FFFFFF' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{e}</button>; })}
+              {CS_ENDIKASYONLARI.map((e) => { const on = endikasyon.includes(e); return <button key={e} type="button" aria-pressed={on} onClick={() => setEndikasyon(on ? endikasyon.filter((x) => x !== e) : [...endikasyon, e])} style={{ minHeight: 44, borderRadius: 12, padding: '9px 12px', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', border: `1px solid ${on ? '#BE185D' : 'rgba(58,44,34,0.12)'}`, background: on ? 'rgba(219,39,119,0.18)' : 'rgba(58,44,34,0.12)', color: on ? '#FFFFFF' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{e}</button>; })}
             </div>
             {endikasyon.some((x) => x.startsWith('Diğer')) && <div style={satir}>{alan('diger', 'Diğer endikasyonu açıklayın', 'Diğer endikasyon açıklaması', '100%', 'text')}</div>}
             <div style={satir}>
@@ -193,7 +193,7 @@ export default function RiskAraci() {
               <Kutu on={onay.onam} set={(x) => setOnay({ ...onay, onam: x })}>Sezaryen onamı alındı (ayrı belge)</Kutu>
               {endikasyon.some((x) => x.startsWith('Anne isteği')) && <Kutu on={onay.anneIstegi} set={(x) => setOnay({ ...onay, anneIstegi: x })}>Anne isteği: 39+ hafta ve bilgilendirme belgelendi</Kutu>}
             </div>
-            {eksik.length > 0 && <div style={{ marginTop: 8 }}>{eksik.map((x) => <div key={x} style={{ ...metin, fontSize: 13, color: '#FCD34D' }}>• {x}</div>)}</div>}
+            {eksik.length > 0 && <div style={{ marginTop: 8 }}>{eksik.map((x) => <div key={x} style={{ ...metin, fontSize: 13, color: '#A16207' }}>• {x}</div>)}</div>}
             <div style={satir}>
               <button type="button" disabled={eksik.length > 0} onClick={() => { setKilitli(true); setKopya(''); }} style={{ ...btn, opacity: eksik.length ? 0.45 : 1, cursor: eksik.length ? 'not-allowed' : 'pointer' }}>Endikasyonu kilitle</button>
               <span style={kucuk}>Kilitlenen not yalnız kopyalanır; dosyaya ve e-Doğum'a siz eklersiniz.</span>

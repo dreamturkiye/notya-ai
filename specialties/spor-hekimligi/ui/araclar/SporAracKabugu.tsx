@@ -13,7 +13,7 @@ import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 /** Spor vurgusu — amber gövde (üroloji teal / kardiyo kırmızıdan ayrışır). */
-export const SPOR_VURGU: AracVurgu = { ana: '#B45309', anaMetin: '#FFFBEB', yumusak: '#FCD34D', baslik: '#FBBF24' }
+export const SPOR_VURGU: AracVurgu = { ana: '#B45309', anaMetin: '#FFFBEB', yumusak: '#A16207', baslik: '#B45309' }
 export const sporStil = aracStil(SPOR_VURGU)
 
 export {

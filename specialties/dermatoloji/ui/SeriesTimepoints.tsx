@@ -40,7 +40,7 @@ export function SeriesTimepoints({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={src} alt="" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8 }} />
                       ) : (
-                        <div style={{ width: 120, height: 90, borderRadius: 8, background: 'rgba(255,255,255,0.06)', fontSize: 11, color: CHROME_RENK.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Önizleme yok</div>
+                        <div style={{ width: 120, height: 90, borderRadius: 8, background: 'rgba(58,44,34,0.04)', fontSize: 11, color: CHROME_RENK.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Önizleme yok</div>
                       )}
                     </div>
                   )

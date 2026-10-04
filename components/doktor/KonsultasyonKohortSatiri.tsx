@@ -36,7 +36,7 @@ export function KonsultasyonKohortListesi({ bekleyenler, yanitSuresi, hazir = tr
               <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
                 {bekleyenler.slice(0, 30).map((b) => (
                   <a key={b.id} href={konsultasyonDosyaYolu(b.patientId)}
-                    style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', minHeight: 44, padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.12)', textDecoration: 'none', color: CHROME_RENK.ink }}>
+                    style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', minHeight: 44, padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(58,44,34,0.12)', background: 'rgba(58,44,34,0.05)', textDecoration: 'none', color: CHROME_RENK.ink }}>
                     <Rozet ton={beklemeVurgusu(b.gun)}>{b.gun === 0 ? 'bugün' : `${b.gun} gündür açık`}</Rozet>
                     <span style={{ fontWeight: 700, fontSize: 14, minWidth: 0, overflowWrap: 'anywhere' }}>{b.hastaAdi}</span>
                     <span style={stil.kucuk}>→ {b.hedef} · istem {trGun(b.istemTarihi)}{b.aciliyet === 'acil' ? ' · acil' : b.aciliyet === 'oncelikli' ? ' · öncelikli' : ''}{b.eskiKayit ? ' · eski kayıt' : ''}</span>

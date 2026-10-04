@@ -114,7 +114,7 @@ export default function GelisimPaneli() {
         </Katlanir>
       </div>
 
-      <div style={{ ...kutu, borderColor: plan ? 'rgba(45,212,191,0.3)' : 'rgba(255,255,255,0.1)' }} aria-live="polite">
+      <div style={{ ...kutu, borderColor: plan ? 'rgba(45,212,191,0.3)' : 'rgba(58,44,34,0.12)' }} aria-live="polite">
         {!plan ? (
           <div style={{ ...kucuk, fontSize: 14 }}>Doğum tarihini (ya da yaşı) yazın — bu vizitte gereken taramalar yazdıkça listelenir.</div>
         ) : (
@@ -155,7 +155,7 @@ export default function GelisimPaneli() {
               <div style={{ ...kucuk, marginBottom: 8 }}>{hastaId && veri ? 'Pencere içinde muayene kaydı varsa "muayene var".' : 'Hasta seçerseniz muayene kayıtlarıyla eşleştirilir.'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {plan.izlem.map((v) => (
-                  <span key={v.id} title={`${tarihGoster(v.bas)} – ${tarihGoster(v.son)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', padding: '6px 10px', borderRadius: 10, background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 13, color: CHROME_RENK.ink }}>
+                  <span key={v.id} title={`${tarihGoster(v.bas)} – ${tarihGoster(v.son)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', padding: '6px 10px', borderRadius: 10, background: 'rgba(58,44,34,0.05)', border: '1px solid rgba(58,44,34,0.12)', fontSize: 13, color: CHROME_RENK.ink }}>
                     {v.etiket} <Rozet ton={IZLEM_TON[v.durum]}>{IZLEM_AD[v.durum]}</Rozet>
                   </span>
                 ))}
@@ -211,7 +211,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
 
   const vurgu = k.durum === 'gecikti' || k.durum === 'dikkat';
   return (
-    <div style={{ ...kutu, marginBottom: 0, borderColor: vurgu ? 'rgba(248,113,113,0.35)' : k.durum === 'simdi' ? 'rgba(96,165,250,0.3)' : 'rgba(255,255,255,0.1)' }}>
+    <div style={{ ...kutu, marginBottom: 0, borderColor: vurgu ? 'rgba(248,113,113,0.35)' : k.durum === 'simdi' ? 'rgba(96,165,250,0.3)' : 'rgba(58,44,34,0.12)' }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: '1 1 220px' }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: CHROME_RENK.ink }}>{k.ad}</div>
@@ -233,7 +233,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
             ))}
           </div>
           {secim && (
-            <div style={{ background: 'rgba(0,0,0,0.18)', borderRadius: 12, padding: 10, marginTop: 8 }}>
+            <div style={{ background: 'rgba(58,44,34,0.05)', borderRadius: 12, padding: 10, marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
                 <Alan etiket="Tarih" ipucu={tarihHam && !tarihGecerli ? 'Doğumla bugün arasında bir tarih — ör. 18.09.2026' : undefined}>
                   <input value={tarihHam} onChange={(e) => setTarihHam(e.target.value)} placeholder={`bugün (${tarihGoster(bugun)})`} aria-label={`${k.ad} tarihi`} inputMode="decimal" style={input} />

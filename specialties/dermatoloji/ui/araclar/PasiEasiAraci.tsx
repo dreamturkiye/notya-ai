@@ -63,9 +63,9 @@ function Derece({ etiketAd, deger, enCok, set }: { etiketAd: string; deger: numb
             onClick={() => set(n)}
             style={{
               minWidth: 44, minHeight: 44, borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
-              background: deger === n ? '#DB2777' : 'rgba(255,255,255,0.05)',
+              background: deger === n ? '#DB2777' : 'rgba(58,44,34,0.12)',
               color: deger === n ? '#FFF1F7' : CHROME_RENK.muted,
-              border: `1px solid ${deger === n ? 'rgba(244,114,182,0.6)' : 'rgba(255,255,255,0.14)'}`,
+              border: `1px solid ${deger === n ? 'rgba(244,114,182,0.6)' : 'rgba(58,44,34,0.12)'}`,
             }}
           >{n}</button>
         ))}

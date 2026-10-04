@@ -74,13 +74,13 @@ export interface EylemHasta {
   dogumTarihi?: string | null
 }
 
-const kart: React.CSSProperties = { marginTop: 8, background: 'rgba(15,155,142,0.08)', border: '1px solid rgba(15,155,142,0.35)', borderRadius: 12, padding: '12px 14px', fontSize: 13, color: '#EDF1F7' }
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5' }
-const btn: React.CSSProperties = { border: '1px solid rgba(15,155,142,0.45)', color: '#2DD4BF', background: 'rgba(15,155,142,0.14)', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }
-const birincil: React.CSSProperties = { ...btn, background: '#0F9B8E', color: '#fff', borderColor: '#0F9B8E' }
-const hayalet: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', borderColor: 'rgba(255,255,255,0.15)' }
-const girdi: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '7px 9px', color: '#EDF1F7', fontSize: 13 }
-const girdiBos: React.CSSProperties = { ...girdi, borderColor: 'rgba(250,204,21,0.55)', background: 'rgba(250,204,21,0.08)' }
+const kart: React.CSSProperties = { marginTop: 8, background: 'rgba(47,67,52,0.06)', border: '1px solid rgba(47,67,52,0.2)', borderRadius: 12, padding: '12px 14px', fontSize: 13, color: '#3b2e24' }
+const kucuk: React.CSSProperties = { fontSize: 11, color: '#8b7d70' }
+const btn: React.CSSProperties = { border: '1px solid rgba(47,67,52,0.3)', color: '#2f4334', background: 'rgba(47,67,52,0.08)', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }
+const birincil: React.CSSProperties = { ...btn, background: '#2f4334', color: '#fff', borderColor: '#2f4334' }
+const hayalet: React.CSSProperties = { ...btn, background: 'transparent', color: '#8b7d70', borderColor: 'rgba(58,44,34,0.2)' }
+const girdi: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.18)', borderRadius: 8, padding: '7px 9px', color: '#3b2e24', fontSize: 13 }
+const girdiBos: React.CSSProperties = { ...girdi, borderColor: 'rgba(180,131,47,0.6)', background: 'rgba(212,193,150,0.25)' }
 
 const KAYNAK_ETIKET: Record<string, string> = {
   doktor_soyledi: 'Hekim söyledi',
@@ -97,9 +97,9 @@ const KAYNAK_ETIKET: Record<string, string> = {
  * drug table, from this patient's own file, or from Ayşe.
  */
 const UYARI_RENK: Record<string, { cizgi: string; zemin: string; yazi: string }> = {
-  ciddi: { cizgi: 'rgba(239,68,68,0.55)', zemin: 'rgba(239,68,68,0.12)', yazi: '#FCA5A5' },
-  orta: { cizgi: 'rgba(245,158,11,0.5)', zemin: 'rgba(245,158,11,0.10)', yazi: '#FCD34D' },
-  bilgi: { cizgi: 'rgba(59,130,246,0.45)', zemin: 'rgba(59,130,246,0.10)', yazi: '#93C5FD' },
+  ciddi: { cizgi: 'rgba(239,68,68,0.55)', zemin: 'rgba(239,68,68,0.12)', yazi: '#B42318' },
+  orta: { cizgi: 'rgba(245,158,11,0.5)', zemin: 'rgba(245,158,11,0.10)', yazi: '#8A5A12' },
+  bilgi: { cizgi: 'rgba(59,130,246,0.45)', zemin: 'rgba(59,130,246,0.10)', yazi: '#1D4ED8' },
 }
 
 function UyariSatiri({ u }: { u: EylemUyarisi }) {
@@ -157,7 +157,7 @@ function Baslik({ hasta, etiket, kademe, createdAt }: { hasta: EylemHasta; etike
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.25 }}>{hasta.ad}</div>
-      {hasta.dogumTarihi ? <div style={{ fontSize: 14, color: '#94A3B8' }}>{trTarih(hasta.dogumTarihi)}</div> : null}
+      {hasta.dogumTarihi ? <div style={{ fontSize: 14, color: '#8b7d70' }}>{trTarih(hasta.dogumTarihi)}</div> : null}
       <div style={{ ...kucuk, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
         {etiket}
         {kademe === 'T2' ? ' · değişiklik' : ''}
@@ -251,8 +251,8 @@ export function EylemKarti({
     setDurum('geri_alindi')
   }
 
-  if (durum === 'vazgecildi') return <div style={{ ...kart, background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.12)', color: '#8FA0B5' }}>Vazgeçildi — dosyaya hiçbir şey yazılmadı.</div>
-  if (durum === 'geri_alindi') return <div style={{ ...kart, background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.12)', color: '#8FA0B5' }}>Geri alındı.</div>
+  if (durum === 'vazgecildi') return <div style={{ ...kart, background: 'rgba(58,44,34,0.04)', borderColor: 'rgba(58,44,34,0.12)', color: '#8b7d70' }}>Vazgeçildi — dosyaya hiçbir şey yazılmadı.</div>
+  if (durum === 'geri_alindi') return <div style={{ ...kart, background: 'rgba(58,44,34,0.04)', borderColor: 'rgba(58,44,34,0.12)', color: '#8b7d70' }}>Geri alındı.</div>
 
   if (durum === 'kaydedildi') {
     return (
@@ -267,7 +267,7 @@ export function EylemKarti({
           ) : null}
           <button type="button" onClick={geriAl} style={hayalet}>Geri al</button>
         </div>
-        {hata ? <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 6 }}>{hata}</div> : null}
+        {hata ? <div style={{ ...kucuk, color: '#B42318', marginTop: 6 }}>{hata}</div> : null}
       </div>
     )
   }
@@ -279,7 +279,7 @@ export function EylemKarti({
       <EylemUyarilari uyarilar={uyarilar} />
 
       {(oneri.uyarilar || []).map((u, i) => (
-        <div key={i} style={{ ...kucuk, color: '#FCD34D', marginBottom: 6 }}>⚠ {u}</div>
+        <div key={i} style={{ ...kucuk, color: '#8A5A12', marginBottom: 6 }}>⚠ {u}</div>
       ))}
 
       <div style={{ display: 'grid', gap: 10 }}>
@@ -297,7 +297,7 @@ export function EylemKarti({
               </div>
               {oneri.kademe === 'T2' && oncekiDeger != null && String(oncekiDeger) !== '' ? (
                 <div style={{ ...kucuk, marginBottom: 3 }}>
-                  <span style={{ textDecoration: 'line-through' }}>{String(oncekiDeger)}</span> → <span style={{ color: '#2DD4BF' }}>{deger[a.anahtar] || '…'}</span>
+                  <span style={{ textDecoration: 'line-through' }}>{String(oncekiDeger)}</span> → <span style={{ color: '#2f4334' }}>{deger[a.anahtar] || '…'}</span>
                 </div>
               ) : null}
               {a.tip === 'secim' ? (
@@ -328,7 +328,7 @@ export function EylemKarti({
                   Doğum tarihinde uygulandı
                 </button>
               ) : null}
-              {isaretli ? <div style={{ ...kucuk, color: '#FCD34D', marginTop: 3 }}>Ayşe bu alandan emin değil — siz girin.</div> : null}
+              {isaretli ? <div style={{ ...kucuk, color: '#8A5A12', marginTop: 3 }}>Ayşe bu alandan emin değil — siz girin.</div> : null}
               {!bos && k && KAYNAK_ETIKET[k.kaynak] ? (
                 <div style={{ ...kucuk, marginTop: 3 }}>Kaynak: {KAYNAK_ETIKET[k.kaynak]}{k.alinti ? ` — “${k.alinti}”` : ''}</div>
               ) : null}
@@ -337,8 +337,8 @@ export function EylemKarti({
         })}
       </div>
 
-      {oneri.portalaYansir ? <div style={{ ...kucuk, marginTop: 8, color: '#2DD4BF' }}>Hasta portalında da görünecek.</div> : null}
-      {hata ? <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 8 }}>{hata}</div> : null}
+      {oneri.portalaYansir ? <div style={{ ...kucuk, marginTop: 8, color: '#2f4334' }}>Hasta portalında da görünecek.</div> : null}
+      {hata ? <div style={{ ...kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div> : null}
 
       <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button
@@ -356,7 +356,7 @@ export function EylemKarti({
           {durum === 'kaydediliyor' ? 'Kaydediliyor…' : onayBekliyor ? 'Uyarıyı gördüm, kaydet' : 'Kaydet'}
         </button>
         <button type="button" onClick={vazgec} style={hayalet}>Vazgeç</button>
-        {doldurulmamis.length ? <span style={{ ...kucuk, color: '#FCD34D' }}>Önce doldurun: {doldurulmamis.map((a) => a.etiket).join(', ')}</span> : null}
+        {doldurulmamis.length ? <span style={{ ...kucuk, color: '#8A5A12' }}>Önce doldurun: {doldurulmamis.map((a) => a.etiket).join(', ')}</span> : null}
       </div>
     </div>
   )
@@ -426,7 +426,7 @@ export function EylemToplu({
           const eksik = eksikOlan(o)
           const r = rapor.find((x) => x.oneriId === o.id)
           return (
-            <div key={o.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div key={o.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 8, borderBottom: '1px solid rgba(58,44,34,0.08)' }}>
               <input
                 type="checkbox"
                 checked={Boolean(secili[o.id]) && !eksik.length && (!ciddiOlan(o) || Boolean(gorulen[o.id]))}
@@ -439,17 +439,17 @@ export function EylemToplu({
                 <div style={kucuk}>{ozet(o) || '—'}</div>
                 <EylemUyarilari uyarilar={o.uyari_detay} />
                 {ciddiOlan(o) ? (
-                  <label style={{ display: 'flex', gap: 6, alignItems: 'center', minHeight: 44, fontSize: 12.5, color: '#FCA5A5', fontWeight: 700 }}>
+                  <label style={{ display: 'flex', gap: 6, alignItems: 'center', minHeight: 44, fontSize: 12.5, color: '#B42318', fontWeight: 700 }}>
                     <input type="checkbox" checked={Boolean(gorulen[o.id])} disabled={durum !== 'acik'} onChange={(e) => setGorulen((g) => ({ ...g, [o.id]: e.target.checked }))} />
                     Uyarıyı gördüm, kaydedilebilir
                   </label>
                 ) : null}
                 {eksik.length ? (
-                  <div style={{ ...kucuk, color: '#FCD34D' }}>
+                  <div style={{ ...kucuk, color: '#8A5A12' }}>
                     Eksik alan var — tek tek açıp doldurmanız gerekiyor ({eksik.map((k) => o.alanlar.find((a) => a.anahtar === k)?.etiket || k).join(', ')}).
                   </div>
                 ) : null}
-                {r ? <div style={{ ...kucuk, color: r.ok ? '#22C55E' : '#FCA5A5' }}>{r.ok ? 'Kaydedildi' : r.hata}</div> : null}
+                {r ? <div style={{ ...kucuk, color: r.ok ? '#1E7A3E' : '#B42318' }}>{r.ok ? 'Kaydedildi' : r.hata}</div> : null}
               </div>
             </div>
           )

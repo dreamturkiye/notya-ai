@@ -105,17 +105,17 @@ export default function MuayeneEkleri({
           style={{ display: 'none' }}
           onChange={(e) => void ekle(e.target.files?.[0] || null)}
         />
-        {!visitId && <span style={{ fontSize: 11, color: '#94A3B8' }}>Muayene kaydı yok — belge hasta dosyasına gider.</span>}
+        {!visitId && <span style={{ fontSize: 11, color: '#8b7d70' }}>Muayene kaydı yok — belge hasta dosyasına gider.</span>}
       </div>
       {ekler.length > 0 && (
-        <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12, color: '#CBD5E1' }}>
+        <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12, color: '#8b7d70' }}>
           {ekler.map((e) => (
             <li key={e.id}>{e.fileName}{e.category ? ` · ${e.category}` : ''}</li>
           ))}
         </ul>
       )}
       {mesaj && <div style={{ fontSize: 11, color: '#0F9B8E', marginTop: 4 }}>{mesaj}</div>}
-      {hata && <div style={{ fontSize: 11, color: '#F87171', marginTop: 4 }}>{hata}</div>}
+      {hata && <div style={{ fontSize: 11, color: '#B42318', marginTop: 4 }}>{hata}</div>}
     </div>
   )
 }

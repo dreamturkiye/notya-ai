@@ -87,7 +87,7 @@ export default function RomaLabIzlemAraci() {
           <div style={romaStil.etiket}>Hassas (TJC) / Şişkin (SJC)</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 6 }}>
             {EKLEM_28.map((kod) => (
-              <div key={kod} style={{ ...romaStil.kucuk, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 6 }}>
+              <div key={kod} style={{ ...romaStil.kucuk, border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 6 }}>
                 <div style={{ marginBottom: 4 }}>{EKLEM_28_ETIKET[kod]}</div>
                 <label><input type="checkbox" checked={hassas.includes(kod)} onChange={() => toggle(hassas, setHassas, kod)} /> Hassas</label>{' '}
                 <label><input type="checkbox" checked={siskin.includes(kod)} onChange={() => toggle(siskin, setSiskin, kod)} /> Şişkin</label>
@@ -102,8 +102,8 @@ export default function RomaLabIzlemAraci() {
           <button type="button" style={romaStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sekme === 'lab' ? labSonuc.ozet : eklemSonuc.ozet} />
         </div>
-        {durum && <div style={{ ...romaStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...romaStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...romaStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...romaStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — lab bandı ve eklem sayısı karar desteğidir; tanı/doz yok.</TaslakNotu>
       </div>
     </>

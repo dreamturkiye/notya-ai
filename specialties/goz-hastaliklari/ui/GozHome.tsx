@@ -79,7 +79,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
     if (j) { setForm(bosForm()); setKopyaOnay(false); }
   };
 
-  const chip = (ad: string, deger: string, renk: string = CHROME_RENK.ink) => <span style={{ border: `1px solid ${renk === CHROME_RENK.ink ? 'rgba(255,255,255,0.12)' : renk}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: renk, whiteSpace: 'nowrap' }}><span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}</span>;
+  const chip = (ad: string, deger: string, renk: string = CHROME_RENK.ink) => <span style={{ border: `1px solid ${renk === CHROME_RENK.ink ? 'rgba(58,44,34,0.12)' : renk}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: renk, whiteSpace: 'nowrap' }}><span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}</span>;
   const harf = (x: number | null) => (x == null ? '' : ` (${x > 0 ? '+' : ''}${x} harf)`);
 
   return (
@@ -87,22 +87,22 @@ export default function GozHome({ patientId }: { patientId: string }) {
       {/* Acil bandı — gecikme yok */}
       {v.acil.length > 0 && (
         <div role="alert" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.6)', color: CHROME_RENK.warn, borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12 }}>
-          {v.acil.map((a) => <div key={a.kod}><b style={{ color: '#F87171' }}>{a.oncelik === 'hemen' ? 'HEMEN' : 'AYNI GÜN'} · {a.ad}:</b> {a.eylem}</div>)}
+          {v.acil.map((a) => <div key={a.kod}><b style={{ color: '#B42318' }}>{a.oncelik === 'hemen' ? 'HEMEN' : 'AYNI GÜN'} · {a.ad}:</b> {a.eylem}</div>)}
           <div style={{ ...kucuk, marginTop: 4 }}>Şikâyet metni / ön form kırmızı bayrak kutularından otomatik eşleşme — klinik karar hekimin; 112 / acil yönlendirmesini geciktirmeyin.</div>
           <AcilSablon acil={v.acil} v={v} calistir={calistir} salt={salt} />
         </div>
       )}
 
       {/* Yapışkan şerit */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0D1526', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '6px 0 8px', marginBottom: 8, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        {chip('VA OD', `${s.va.sag}${harf(s.va.harfSag)}`, s.va.harfSag != null && s.va.harfSag <= -5 ? '#FBBF24' : CHROME_RENK.ink)}
-        {chip('VA OS', `${s.va.sol}${harf(s.va.harfSol)}`, s.va.harfSol != null && s.va.harfSol <= -5 ? '#FBBF24' : CHROME_RENK.ink)}
-        {chip('GİB OD', `${s.gib.sag ?? '—'}${s.gib.hedefSag != null ? ` / hedef ${s.gib.hedefSag}` : ''}`, s.gib.ustSag ? '#F87171' : CHROME_RENK.ink)}
-        {chip('GİB OS', `${s.gib.sol ?? '—'}${s.gib.hedefSol != null ? ` / hedef ${s.gib.hedefSol}` : ''}`, s.gib.ustSol ? '#F87171' : CHROME_RENK.ink)}
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#faf6ee', borderBottom: '1px solid rgba(58,44,34,0.12)', padding: '6px 0 8px', marginBottom: 8, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {chip('VA OD', `${s.va.sag}${harf(s.va.harfSag)}`, s.va.harfSag != null && s.va.harfSag <= -5 ? '#B45309' : CHROME_RENK.ink)}
+        {chip('VA OS', `${s.va.sol}${harf(s.va.harfSol)}`, s.va.harfSol != null && s.va.harfSol <= -5 ? '#B45309' : CHROME_RENK.ink)}
+        {chip('GİB OD', `${s.gib.sag ?? '—'}${s.gib.hedefSag != null ? ` / hedef ${s.gib.hedefSag}` : ''}`, s.gib.ustSag ? '#B42318' : CHROME_RENK.ink)}
+        {chip('GİB OS', `${s.gib.sol ?? '—'}${s.gib.hedefSol != null ? ` / hedef ${s.gib.hedefSol}` : ''}`, s.gib.ustSol ? '#B42318' : CHROME_RENK.ink)}
         {s.drEvre && chip('DR', s.drEvre)}
         {s.sonrakiEnjeksiyon && chip('Enjeksiyon', s.sonrakiEnjeksiyon, '#0F9B8E')}
-        {s.gecikenGorev > 0 && chip('Geciken görev', String(s.gecikenGorev), '#F87171')}
-        {!s.bugunOlcumVar && chip('Bugün', 'VA/GİB girilmedi', '#FBBF24')}
+        {s.gecikenGorev > 0 && chip('Geciken görev', String(s.gecikenGorev), '#B42318')}
+        {!s.bugunOlcumVar && chip('Bugün', 'VA/GİB girilmedi', '#B45309')}
         {!salt && <button type="button" onClick={() => calistir({ adim: 'serit_nota' }, 'Şerit (VA + GİB + son göz dibi) bugünkü notun Objektif bölümüne yazıldı.')} style={{ ...ghost, padding: '2px 8px', fontSize: 11, marginLeft: 'auto' }} title="VA + GİB + RAPD + son fundus satırı">Şeridi Objektif&apos;e yaz</button>}
         <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#0F9B8E' : CHROME_RENK.muted, marginLeft: salt ? 'auto' : undefined }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
       </div>
@@ -117,7 +117,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
           <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12 }}>
             <span />
             <b style={{ color: '#0F9B8E' }}>OD (sağ)</b>
-            <b style={{ color: '#60A5FA' }}>OS (sol)</b>
+            <b style={{ color: '#1D4ED8' }}>OS (sol)</b>
             {ALANLAR.map(([k, ad]) => (
               <React.Fragment key={k}>
                 <span style={kucuk}>{ad}</span>
@@ -142,7 +142,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
             <select value={form.gibYontem} onChange={(e) => setForm({ ...form, gibYontem: e.target.value })} style={{ ...toolsInput, width: 'auto' }}>
               {[['nct', 'NCT (hava)'], ['applanasyon', 'Aplanasyon'], ['tonopen', 'Tono-Pen'], ['icare', 'iCare'], ['diger', 'Diğer']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
             </select>
-            {form.kopya && <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', color: kopyaOnay ? '#0F9B8E' : '#FBBF24' }}><input type="checkbox" checked={kopyaOnay} onChange={(e) => setKopyaOnay(e.target.checked)} />Kopyalanan değerleri bugün ölçtüm / onaylıyorum</label>}
+            {form.kopya && <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', color: kopyaOnay ? '#0F9B8E' : '#B45309' }}><input type="checkbox" checked={kopyaOnay} onChange={(e) => setKopyaOnay(e.target.checked)} />Kopyalanan değerleri bugün ölçtüm / onaylıyorum</label>}
             <button type="button" onClick={kaydet} style={btn}>Kaydet</button>
             <button type="button" onClick={() => calistir({ adim: 'olcum_nota' }, 'Son VA/GİB bugünkü notun Objektif bölümüne eklendi.')} style={ghost}>Nota ekle (O)</button>
           </div>
@@ -154,7 +154,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
       </div>
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#F87171' : '#0F9B8E' }}>{mesaj}</span>
+          <span style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#B42318' : '#0F9B8E' }}>{mesaj}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}

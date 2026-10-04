@@ -48,7 +48,7 @@ export function AsiHatirlatmaListesiGorunum({
           : (
             <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
               {satirlar.map((s) => (
-                <div key={s.asiId} data-asi-hatirlatma-satir={s.asiId} style={{ padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.12)', display: 'grid', gap: 8 }}>
+                <div key={s.asiId} data-asi-hatirlatma-satir={s.asiId} style={{ padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(58,44,34,0.12)', background: 'rgba(58,44,34,0.05)', display: 'grid', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', minHeight: 44 }}>
                     <Rozet ton={s.durum === 'gecikti' ? 'kirmizi' : 'uyari'}>{s.durumEtiketi}</Rozet>
                     {!hastaModu && <a href={asiDosyaYolu(s.patientId)} style={{ fontWeight: 700, fontSize: 14, color: CHROME_RENK.ink, textDecoration: 'none', overflowWrap: 'anywhere' }}>{s.hastaAdi}</a>}
@@ -60,9 +60,9 @@ export function AsiHatirlatmaListesiGorunum({
                     </span>
                   </div>
                   {acik === s.asiId && !s.gonderildi && (
-                    <div data-onizleme="" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8, display: 'grid', gap: 8 }}>
+                    <div data-onizleme="" style={{ borderTop: '1px solid rgba(58,44,34,0.12)', paddingTop: 8, display: 'grid', gap: 8 }}>
                       <div style={stil.kucuk}>Gidecek mesaj (Sağlığım › Mesajlar, konu: “{s.onizleme.konu}”):</div>
-                      <div style={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.5, color: CHROME_RENK.ink, background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '8px 10px' }}>{s.onizleme.metin}</div>
+                      <div style={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.5, color: CHROME_RENK.ink, background: 'rgba(58,44,34,0.04)', borderRadius: 10, padding: '8px 10px' }}>{s.onizleme.metin}</div>
                       {!s.portalVar && <div style={stil.kucuk}>Hastanın geçerli Sağlığım bağlantısı yok — mesaj, bağlantı açıldığında görünür.</div>}
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <button type="button" disabled={gonderilen === s.asiId} onClick={() => gonder(s.asiId)} style={{ ...stil.btn, minHeight: 44 }}>{gonderilen === s.asiId ? 'Gönderiliyor…' : 'Onayla ve gönder'}</button>

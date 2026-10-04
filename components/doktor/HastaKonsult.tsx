@@ -183,14 +183,14 @@ export default function HastaKonsult({
     }
   }
 
-  // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): this whole panel was still dark-navy (#0D1C33 +
+  // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): this whole panel was still dark-navy (#faf6ee +
   // white-based translucent fills) -- the redesign never reached it. Recolored to the cream/pine
   // language: a light, teal-tinted card (matching the "profilinizden" badge treatment used
   // elsewhere for Ayşe-branded surfaces) rather than plain white, so it keeps its own identity
   // without the dark theme's near-invisible borders and white-on-white inputs.
   const panel: React.CSSProperties = {
     background: '#F0FDFA',
-    border: '1px solid #99F6E4',
+    border: '1px solid #0F766E',
     borderRadius: 16,
     marginBottom: 16,
     overflow: 'hidden',
@@ -263,7 +263,7 @@ export default function HastaKonsult({
       </div>
 
       {acik && (
-        <div style={{ padding: '0 16px 14px', borderTop: '1px solid #99F6E4' }}>
+        <div style={{ padding: '0 16px 14px', borderTop: '1px solid #0F766E' }}>
           {mesajlar.length === 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '12px 0 10px' }}>
               {HAZIR_SORULAR.map((s) => (

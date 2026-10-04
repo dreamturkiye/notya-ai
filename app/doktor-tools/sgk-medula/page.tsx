@@ -184,7 +184,7 @@ export default function SGKMedulaPage() {
       </div>
 
       {showProvizyonModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(58,44,34,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ width: '440px', maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '24px' }}>
             <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Provizyon Sorgulama</div>
             
@@ -213,7 +213,7 @@ export default function SGKMedulaPage() {
       )}
 
       {showBasvuruModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(58,44,34,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ width: '440px', maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '24px' }}>
             <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>Bekleyen Başvurular</div>
             <div style={{ fontSize: '14px', color: mutedText }}>Demo verisi: 2 rapor beklemede • 1 provizyon onayı</div>

@@ -21,7 +21,7 @@ const { btn, ghost, etiket, kucuk, satir, metin } = stil;
 type Calistir = (b: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null>;
 const bugun = () => new Date().toISOString().slice(0, 10);
 const gozAd = (g: string | null | undefined) => (g === 'sag' ? 'OD' : g === 'sol' ? 'OS' : g === 'iki' ? 'OU' : '—');
-const kutu: React.CSSProperties = { border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginTop: 10 };
+const kutu: React.CSSProperties = { border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 8, marginTop: 10 };
 const inp = (w: number | string): React.CSSProperties => ({ ...toolsInput, width: w, minWidth: 0 });
 const Secim = ({ deger, set, secenekler, bos, ad }: { deger: string; set: (x: string) => void; secenekler: Array<[string, string]>; bos?: string; ad?: string }) => (
   <select aria-label={ad} value={deger} onChange={(e) => set(e.target.value)} style={{ ...toolsInput, width: 'auto' }}>
@@ -83,7 +83,7 @@ export function AcilSablon({ acil, v, calistir, salt }: { acil: AcilBayrak[]; v:
         <div style={{ marginTop: 8, color: CHROME_RENK.ink }}>
           {(kimyasal || aktif) && !salt && (
             <div style={{ border: '1px solid rgba(248,113,113,0.5)', borderRadius: 8, padding: 8, marginBottom: 8 }}>
-              <div style={{ ...etiket, color: '#F87171' }}>Kimyasal yıkama zamanlayıcısı</div>
+              <div style={{ ...etiket, color: '#B42318' }}>Kimyasal yıkama zamanlayıcısı</div>
               {!aktif ? (
                 <div style={satir}>
                   <input value={yerel.phOnce || ''} onChange={(e) => setYerel({ ...yerel, phOnce: e.target.value })} placeholder="pH önce (imkân varsa)" aria-label="pH önce" style={inp(150)} />
@@ -184,7 +184,7 @@ export function IvtKontrolPaneli({ goz, maddeler, onay, iptal }: { goz: 'sag' | 
           <input value={String(k.lot || '')} onChange={(e) => setK({ ...k, lot: e.target.value })} placeholder="lot / seri no" aria-label="Lot" style={inp(150)} />
           <input type="time" value={String(k.saat || '')} onChange={(e) => setK({ ...k, saat: e.target.value })} aria-label="Uygulama saati" style={inp(110)} />
         </div>
-        {!!k.isaretliGoz && k.isaretliGoz !== goz && <div style={{ ...metin, color: '#F87171', fontWeight: 700 }}>YANLIŞ GÖZ: kayıt {gozAd(goz)}, işaretlenen {gozAd(String(k.isaretliGoz))}.</div>}
+        {!!k.isaretliGoz && k.isaretliGoz !== goz && <div style={{ ...metin, color: '#B42318', fontWeight: 700 }}>YANLIŞ GÖZ: kayıt {gozAd(goz)}, işaretlenen {gozAd(String(k.isaretliGoz))}.</div>}
       </>}
       <Kutu c={gecmis} set={setGecmis}>Geçmiş kayıt (başka merkezde / önceden yapıldı — liste uygulanamaz)</Kutu>
       <div style={satir}>
@@ -205,7 +205,7 @@ export function KataraktEk({ k, ek3g, calistir, salt }: { k: { id: string; goz: 
   const val = (key: keyof Biyometri) => (bi[key] ?? (b?.[key] != null ? (typeof b[key] === 'number' ? d(b[key] as number) : String(b[key])) : ''));
   return (
     <div style={{ marginTop: 6 }}>
-      {(k.postopUyari || []).map((u) => <div key={u} role="alert" style={{ ...metin, color: '#F87171', fontWeight: 700 }}>⚠ {u}</div>)}
+      {(k.postopUyari || []).map((u) => <div key={u} role="alert" style={{ ...metin, color: '#B42318', fontWeight: 700 }}>⚠ {u}</div>)}
       <div style={kucuk}>Biyometri (hekim girer) · GİL gücü Notya tarafından hesaplanmaz{b?.alMm != null ? ` · kayıtlı: AL ${d(b.alMm)} mm, K1 ${d(b.k1D)} / K2 ${d(b.k2D)} D, A ${d(b.aSabiti)}` : ''}</div>
       {!salt && <>
         <div style={satir}>
@@ -218,7 +218,7 @@ export function KataraktEk({ k, ek3g, calistir, salt }: { k: { id: string; goz: 
           <button type="button" onClick={() => calistir({ adim: 'katarakt', id: k.id, goz: k.goz, gilTipi: k.gil_tipi_hekim || null, planlananTarih: k.planlanan_tarih || null, checklist: k.checklist, durum: k.durum, biyometri: Object.fromEntries((['alMm', 'k1D', 'k2D', 'kAks', 'aSabiti', 'cihaz', 'tarih'] as const).map((x) => [x, val(x)])), ek3gKod: bi.ek3g ?? k.ek3g_kod ?? null }, 'Biyometri / EK-3/G kaydedildi.')} style={ghost}>Biyometriyi kaydet</button>
         </div>
       </>}
-      {(['gun1', 'hafta1'] as const).map((z) => k.postop?.[z] ? <div key={z} style={metin}><b>{z === 'gun1' ? 'Post-op 1. gün' : 'Post-op 1. hafta'}</b> {k.postop[z]!.tarih || ''}: VA {k.postop[z]!.va || '—'} · GİB {k.postop[z]!.gib ?? '—'} · kornea {k.postop[z]!.kornea || '—'}{k.postop[z]!.endoftalmiBayrak ? <b style={{ color: '#F87171' }}> · ENDOFTALMİ ŞÜPHESİ</b> : ''}</div> : null)}
+      {(['gun1', 'hafta1'] as const).map((z) => k.postop?.[z] ? <div key={z} style={metin}><b>{z === 'gun1' ? 'Post-op 1. gün' : 'Post-op 1. hafta'}</b> {k.postop[z]!.tarih || ''}: VA {k.postop[z]!.va || '—'} · GİB {k.postop[z]!.gib ?? '—'} · kornea {k.postop[z]!.kornea || '—'}{k.postop[z]!.endoftalmiBayrak ? <b style={{ color: '#B42318' }}> · ENDOFTALMİ ŞÜPHESİ</b> : ''}</div> : null)}
       {!salt && <>
         <div style={satir}>
           <Secim ad="Post-op zamanı" deger={po.zaman} set={(x) => setPo({ ...po, zaman: x })} secenekler={[['gun1', 'Post-op 1. gün'], ['hafta1', 'Post-op 1. hafta']]} />
@@ -228,7 +228,7 @@ export function KataraktEk({ k, ek3g, calistir, salt }: { k: { id: string; goz: 
           <input value={po.kornea || ''} onChange={(e) => setPo({ ...po, kornea: e.target.value })} placeholder="kornea (ör. saydam / ödem)" aria-label="Kornea" style={{ ...inp(160), flex: 1 }} />
         </div>
         <div style={satir}>
-          <Kutu c={endof} set={setEndof}><span style={{ color: endof ? '#F87171' : undefined }}>Endoftalmi şüphesi (hekim işareti)</span></Kutu>
+          <Kutu c={endof} set={setEndof}><span style={{ color: endof ? '#B42318' : undefined }}>Endoftalmi şüphesi (hekim işareti)</span></Kutu>
           <button type="button" onClick={async () => { const j = await calistir({ adim: 'katarakt_postop', id: k.id, zaman: po.zaman, kayit: { ...po, endoftalmiBayrak: endof } }, 'Post-op kaydedildi.'); if (j) { setPo({ zaman: po.zaman === 'gun1' ? 'hafta1' : 'hafta1', tarih: bugun() }); setEndof(false); } }} style={btn}>Post-op kaydet</button>
           <button type="button" onClick={() => calistir({ adim: 'katarakt_nota', id: k.id }, 'Biyometri / post-op bugünkü notun Objektif bölümüne eklendi.')} style={ghost}>Nota ekle (O)</button>
         </div>
@@ -250,10 +250,10 @@ export function BiyoKarti({ v, calistir, salt }: { v: GozEkVeri; calistir: Calis
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={etiket}>Biyomikroskopi (ön segment) <span style={kucuk}>· OD/OS · gözlem kaydı, tanı yok</span></div>
-      {son && <div style={{ ...metin, padding: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 8, marginBottom: 6 }}>{son.tarih}: {biyoMetni(son)}</div>}
+      {son && <div style={{ ...metin, padding: 8, background: 'rgba(58,44,34,0.04)', borderRadius: 8, marginBottom: 6 }}>{son.tarih}: {biyoMetni(son)}</div>}
       {!salt && <>
         <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12 }}>
-          <span /><b style={{ color: '#0F9B8E' }}>OD (sağ)</b><b style={{ color: '#60A5FA' }}>OS (sol)</b>
+          <span /><b style={{ color: '#0F9B8E' }}>OD (sağ)</b><b style={{ color: '#1D4ED8' }}>OS (sol)</b>
           {BIYO_ALANLAR.map(([a, ad]) => <React.Fragment key={a}><span style={kucuk}>{ad}</span><input aria-label={`Sağ ${ad}`} value={al('sag', a)} onChange={(e) => setF({ ...f, [`sag_${a}`]: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} /><input aria-label={`Sol ${ad}`} value={al('sol', a)} onChange={(e) => setF({ ...f, [`sol_${a}`]: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} /></React.Fragment>)}
         </div>
         <div style={satir}>
@@ -310,7 +310,7 @@ export function RopKarti({ v, calistir, salt }: { v: GozEkVeri; calistir: Calist
   return (
     <div style={{ ...kutu, borderColor: 'rgba(251,191,36,0.4)' }}>
       <div style={etiket}>ROP tarama kartı <span style={kucuk}>· zon / evre / plus hekim girer (ICROP adları) · sonraki taramayı hekim kilitler</span></div>
-      {v.ropEndikasyon && <div style={{ ...metin, color: v.ropEndikasyon.var ? '#FBBF24' : CHROME_RENK.muted }}>{v.ropEndikasyon.metin}</div>}
+      {v.ropEndikasyon && <div style={{ ...metin, color: v.ropEndikasyon.var ? '#B45309' : CHROME_RENK.muted }}>{v.ropEndikasyon.metin}</div>}
       {v.rop.map((x) => <div key={x.id} style={metin}>• {x.metin}</div>)}
       {!salt && <>
         <div style={satir}>
@@ -359,7 +359,7 @@ export function RefraksiyonAlanlari({ deger, set }: { deger: Record<string, stri
       <span /><span style={kucuk}>Sferik (D)</span><span style={kucuk}>Silindir (D)</span><span style={kucuk}>Aks (°)</span>
       {(['sag', 'sol'] as const).map((t) => (
         <React.Fragment key={t}>
-          <b style={{ color: t === 'sag' ? '#0F9B8E' : '#60A5FA' }}>{t === 'sag' ? 'OD' : 'OS'}</b>
+          <b style={{ color: t === 'sag' ? '#0F9B8E' : '#1D4ED8' }}>{t === 'sag' ? 'OD' : 'OS'}</b>
           {(['sph', 'cyl', 'aks'] as const).map((a) => <input key={a} aria-label={`${t === 'sag' ? 'Sağ' : 'Sol'} ${a}`} value={deger[`${t}_${a}`] || ''} onChange={(e) => set({ ...deger, [`${t}_${a}`]: e.target.value })} placeholder={a === 'aks' ? '0–180' : '−1,25'} inputMode="decimal" style={{ ...toolsInput, minWidth: 0 }} />)}
         </React.Fragment>
       ))}
@@ -373,9 +373,9 @@ export function GlokomOneriDugmeleri({ oneriler, etiketMetni, secili, sec, kayna
   const o = oneriler.find((x) => x.kod === secili);
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={kucuk}>Aralık ön ayarı (EGS 5 — TOD birim metni doğrulanana dek) · <b style={{ color: '#FBBF24' }}>{etiketMetni}</b></div>
-      <div style={satir}>{oneriler.map((x) => <button key={x.kod} type="button" onClick={() => sec(x)} title={x.aralikMetni} style={{ ...ghost, color: secili === x.kod ? '#0F9B8E' : CHROME_RENK.muted, borderColor: secili === x.kod ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.15)' }}>{x.ad}</button>)}</div>
-      {o && <div style={{ ...metin, marginTop: 4 }}>{o.ad}: {o.aralikMetni} — {o.not} <span style={{ ...kucuk, color: '#FBBF24' }}>Kaydet'e basınca hekim kilidi olur.</span>{kaynak([o.dipnot])}</div>}
+      <div style={kucuk}>Aralık ön ayarı (EGS 5 — TOD birim metni doğrulanana dek) · <b style={{ color: '#B45309' }}>{etiketMetni}</b></div>
+      <div style={satir}>{oneriler.map((x) => <button key={x.kod} type="button" onClick={() => sec(x)} title={x.aralikMetni} style={{ ...ghost, color: secili === x.kod ? '#0F9B8E' : CHROME_RENK.muted, borderColor: secili === x.kod ? 'rgba(45,212,191,0.5)' : 'rgba(58,44,34,0.12)' }}>{x.ad}</button>)}</div>
+      {o && <div style={{ ...metin, marginTop: 4 }}>{o.ad}: {o.aralikMetni} — {o.not} <span style={{ ...kucuk, color: '#B45309' }}>Kaydet'e basınca hekim kilidi olur.</span>{kaynak([o.dipnot])}</div>}
     </div>
   );
 }
@@ -417,7 +417,7 @@ export function AsistanaRaporla({ g, calistir }: { g: { id: string; modalite: st
       <div style={satir}>
         <button type="button" disabled={durum !== 'hazir'} onClick={gonder} style={{ ...btn, opacity: durum === 'hazir' ? 1 : 0.6 }}>{durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'yaziyor' ? 'Asistan yazıyor…' : 'Gönder'}</button>
         <button type="button" onClick={() => setAcik(false)} style={ghost}>Vazgeç</button>
-        {hata && <span style={{ ...metin, color: '#F87171' }}>{hata}</span>}
+        {hata && <span style={{ ...metin, color: '#B42318' }}>{hata}</span>}
       </div>
       <div style={kucuk}>Görüntü okunamazsa kontrol listesi taslağı eklenir. DR evresi yazılmaz — evre DR kartında hekim kilidi.</div>
     </div>

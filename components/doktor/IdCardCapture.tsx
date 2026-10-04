@@ -137,8 +137,8 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: '#fff', marginBottom: 8 }}>Kimlik kartı</h2>
-      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 16 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: '#3b2e24', marginBottom: 8 }}>Kimlik kartı</h2>
+      <p style={{ color: '#8b7d70', fontSize: 14, marginBottom: 16 }}>
         Kartı çerçeveye hizala (eski veya yeni kimlik). Fotoğraf kaydedilmez.
       </p>
 
@@ -150,7 +150,7 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
           borderRadius: 16,
           overflow: 'hidden',
           background: '#000',
-          border: '1px solid rgba(255,255,255,0.12)',
+          border: '1px solid rgba(58,44,34,0.15)',
         }}
       >
         {preview ? (
@@ -190,7 +190,7 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
       </div>
 
       {error ? (
-        <div style={{ color: '#FBBF24', fontSize: 13, marginTop: 12 }}>{error}</div>
+        <div style={{ color: '#a45b3e', fontSize: 13, marginTop: 12 }}>{error}</div>
       ) : null}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
@@ -202,8 +202,8 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
             height: 48,
             border: 'none',
             borderRadius: 12,
-            background: '#14B8A6',
-            color: '#041016',
+            background: '#2f4334',
+            color: '#fff',
             fontWeight: 650,
             fontSize: 16,
             cursor: busy ? 'wait' : 'pointer',
@@ -218,9 +218,9 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
           style={{
             height: 44,
             borderRadius: 12,
-            border: '1.5px solid rgba(255,255,255,0.25)',
+            border: '1.5px solid rgba(58,44,34,0.25)',
             background: 'transparent',
-            color: '#E2E8F0',
+            color: '#3b2e24',
             fontSize: 15,
             cursor: 'pointer',
           }}
@@ -237,7 +237,7 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
             height: 40,
             border: 'none',
             background: 'transparent',
-            color: 'rgba(255,255,255,0.5)',
+            color: '#8b7d70',
             cursor: 'pointer',
           }}
         >

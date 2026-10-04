@@ -97,7 +97,7 @@ export default function DozAraci() {
         </Katlanir>
       </div>
 
-      <div style={{ ...kutu, borderColor: s ? 'rgba(45,212,191,0.35)' : 'rgba(255,255,255,0.1)' }} aria-live="polite">
+      <div style={{ ...kutu, borderColor: s ? 'rgba(45,212,191,0.35)' : 'rgba(58,44,34,0.12)' }} aria-live="polite">
         <div style={etiket}>Sonuç</div>
         {!s ? (
           <div style={{ ...kucuk, fontSize: 14 }}>Kilo ve mg/kg girin — sonuç yazdıkça hesaplanır.</div>

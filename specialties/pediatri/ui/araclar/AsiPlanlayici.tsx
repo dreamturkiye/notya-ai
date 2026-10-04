@@ -185,7 +185,7 @@ export default function AsiPlanlayici() {
         </Katlanir>
       </div>
 
-      <div style={{ ...kutu, borderColor: plan ? 'rgba(45,212,191,0.3)' : 'rgba(255,255,255,0.1)' }} aria-live="polite">
+      <div style={{ ...kutu, borderColor: plan ? 'rgba(45,212,191,0.3)' : 'rgba(58,44,34,0.12)' }} aria-live="polite">
         {!plan ? (
           <div style={{ ...kucuk, fontSize: 14 }}>Doğum tarihini (ya da yaşı) yazın — takvim, geciken dozlar ve telafi planı yazdıkça hesaplanır.</div>
         ) : (
@@ -231,7 +231,7 @@ export default function AsiPlanlayici() {
             )}
             {plan.hicAsisiz && (
               <div style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: 12, padding: 12, marginTop: 14 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#BFDBFE', marginBottom: 6 }}>{plan.hicAsisiz.baslik}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#1D4ED8', marginBottom: 6 }}>{plan.hicAsisiz.baslik}</div>
                 <div style={{ display: 'grid', gap: 4 }}>
                   {plan.hicAsisiz.adimlar.map((a) => <div key={a.zaman} style={{ ...pediStil.metin, display: 'flex', gap: 10, flexWrap: 'wrap' }}><span style={{ minWidth: 92, color: CHROME_RENK.muted }}>{a.zaman}</span><span>{a.asilar}</span></div>)}
                 </div>
@@ -259,7 +259,7 @@ export default function AsiPlanlayici() {
 
           {yerelSayisi > 0 && (
             // Kabuk overflow-x: hidden taşır (sticky orada çalışmaz) → ekranın altına sabit çubuk + altta boşluk.
-            <div role="status" style={{ position: 'fixed', left: 12, right: 12, bottom: 12, zIndex: 20, maxWidth: 968, margin: '0 auto', boxSizing: 'border-box', background: '#0C1830', border: '1px solid rgba(45,212,191,0.45)', borderRadius: 16, padding: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.55)' }}>
+            <div role="status" style={{ position: 'fixed', left: 12, right: 12, bottom: 12, zIndex: 20, maxWidth: 968, margin: '0 auto', boxSizing: 'border-box', background: '#faf6ee', border: '1px solid rgba(45,212,191,0.45)', borderRadius: 16, padding: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.55)' }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 220px', ...pediStil.metin }}><b>{yerelSayisi} doz işaretlendi</b> {hastaId ? '— henüz kayda yazılmadı.' : '— hasta seçilmedi, yalnız bu ekranda.'}</div>
                 {hastaId ? (
@@ -309,7 +309,7 @@ function DozSatiri({ d, isaret, isaretle, geriAl, ilkBekleyen, bugun, vurgu }: {
     ? `${yerel ? 'İşaretlendi' : d.kayit?.kaynak === 'beyan' ? 'Beyan' : 'Kayıtlı'} · ${d.kayit?.tarih ? tarihGoster(d.kayit.tarih) : 'tarih yok'}`
     : DURUM_AD[d.durum];
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: vurgu ? 'rgba(96,165,250,0.06)' : 'rgba(0,0,0,0.16)', border: `1px solid ${vurgu ? 'rgba(96,165,250,0.25)' : 'rgba(255,255,255,0.06)'}` }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: vurgu ? 'rgba(96,165,250,0.06)' : 'rgba(0,0,0,0.16)', border: `1px solid ${vurgu ? 'rgba(96,165,250,0.25)' : 'rgba(58,44,34,0.12)'}` }}>
       <div style={{ flex: '1 1 200px', minWidth: 0 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>{dozKisa(d)}</div>
         <div style={kucuk}>
@@ -380,7 +380,7 @@ function OzelAsilar({ ozel }: { ozel: OzelPlan[] }) {
       <div style={{ ...kucuk, marginBottom: 10 }}>SB ücretsiz takviminde yok — aileyle ücret ve tercih konuşması için ayrı tutuldu. Doz sayısı ve şema ürüne göre değişir; hekim belirler.</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 10 }}>
         {ozel.map((o) => (
-          <div key={o.kod} style={{ background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12, minWidth: 0 }}>
+          <div key={o.kod} style={{ background: 'rgba(58,44,34,0.05)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: 12, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>{o.ad}</span>
               {o.kayitlar.length ? <Rozet ton="iyi">{o.kayitlar.length} doz kayıtlı</Rozet> : <Rozet ton={ton[o.uygunluk]}>{metin[o.uygunluk]}</Rozet>}
@@ -414,7 +414,7 @@ function OnAyarlar({ onAyar, kaydet }: { onAyar: Partial<Record<SeriKod, SeriKur
           const k = kural(s);
           const dozlar = [...new Set([...Object.keys(k.minYasGun), ...Object.keys(k.minAralikGun)].map(Number))].sort((a, b) => a - b);
           return (
-            <div key={s} style={{ background: 'rgba(0,0,0,0.14)', borderRadius: 12, padding: 10 }}>
+            <div key={s} style={{ background: 'rgba(58,44,34,0.05)', borderRadius: 12, padding: 10 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: CHROME_RENK.ink }}>{SERI_AD[s]}</span>
                 {onAyar[s] ? <Rozet ton="bilgi">hekim ön ayarı</Rozet> : VARSAYILAN_KURALLAR[s].dogrulandi ? <Rozet ton="iyi">GBP Genelgesi</Rozet> : <OneriRozet />}

@@ -177,7 +177,7 @@ export default function Score2Araci() {
           <Istatistik deger={sonuc.statinAcigi.length} etiket="statin açığı uyarısı" ton={sonuc.statinAcigi.length ? 'uyari' : 'notr'} />
         </div>
         {sonuc.kovaNedeni && <div style={{ ...kucuk, marginTop: 4 }}>{sonuc.kovaNedeni}</div>}
-        {sonuc.score2Notu && <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>{sonuc.score2Notu}</div>}
+        {sonuc.score2Notu && <div style={{ ...kucuk, marginTop: 8, color: '#B45309' }}>{sonuc.score2Notu}</div>}
         <div style={{ ...metin, marginTop: 10 }}>{sonuc.hedefNotu}</div>
         {sonuc.statinAcigi.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6, color: CHROME_RENK.muted }}>• {x}</div>)}
         {!riskAd && <div style={satir}><Rozet ton="uyari">yaş, SBP, kolesterol ve HDL girilince sayısal risk hesaplanır</Rozet></div>}

@@ -49,7 +49,7 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
     setMesaj({ iyi: s.ok, metin: s.metin });
   };
 
-  const kenar = vurgu === 'kirmizi' ? 'rgba(248,113,113,0.45)' : vurgu === 'uyari' ? 'rgba(251,191,36,0.35)' : 'rgba(255,255,255,0.1)';
+  const kenar = vurgu === 'kirmizi' ? 'rgba(248,113,113,0.45)' : vurgu === 'uyari' ? 'rgba(251,191,36,0.35)' : 'rgba(58,44,34,0.12)';
   return (
     <div style={{ ...stil.kutu, marginBottom: 10, borderColor: kenar }} data-bekleyen-konsultasyon={b.id} data-vurgu={vurgu}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

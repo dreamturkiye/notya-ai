@@ -19,7 +19,7 @@ type Props = {
 }
 
 const dark: React.CSSProperties = {
-  color: '#2DD4BF',
+  color: '#2f4334',
   fontSize: 12,
   fontWeight: 600,
   textDecoration: 'none',
@@ -61,7 +61,7 @@ export default function GeriLink({
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
       {geri}
       {ileriHref && ileriLabel ? (
-        <Link href={ileriHref} style={{ ...base, color: variant === 'light' ? '#64748B' : '#8FA0B5' }}>
+        <Link href={ileriHref} style={{ ...base, color: variant === 'light' ? '#8b7d70' : '#8b7d70' }}>
           {ileriLabel} →
         </Link>
       ) : null}

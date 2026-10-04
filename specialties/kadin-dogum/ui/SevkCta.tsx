@@ -77,7 +77,7 @@ export function SevkCta({
       >
         Sevk oluştur / not ekle
       </button>
-      {mesaj && <p style={{ fontSize: 12, color: mesaj.includes('Kaydedildi') || mesaj.includes('kaydedildi') ? '#22C55E' : '#F87171', margin: '6px 0 0' }}>{mesaj}</p>}
+      {mesaj && <p style={{ fontSize: 12, color: mesaj.includes('Kaydedildi') || mesaj.includes('kaydedildi') ? '#22C55E' : '#B42318', margin: '6px 0 0' }}>{mesaj}</p>}
     </section>
   )
 }

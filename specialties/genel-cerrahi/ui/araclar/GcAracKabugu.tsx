@@ -11,7 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
 
-export const GC_VURGU: AracVurgu = { ana: '#EF4444', anaMetin: '#FEF2F2', yumusak: CHROME_RENK.warn, baslik: '#F87171' }
+export const GC_VURGU: AracVurgu = { ana: '#EF4444', anaMetin: '#FEF2F2', yumusak: CHROME_RENK.warn, baslik: '#B42318' }
 export const gcStil = aracStil(GC_VURGU)
 
 export {

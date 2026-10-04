@@ -31,7 +31,7 @@ export function KolposkopiGaleri({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={urls[img.coreImageId]} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
               ) : (
-                <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.06)' }} />
+                <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(58,44,34,0.04)' }} />
               )}
               <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>
                 {img.capturedAt}

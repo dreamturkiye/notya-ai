@@ -30,7 +30,7 @@ const strip: CSSProperties = {
 }
 
 const chip: CSSProperties = {
-  background: 'rgba(255,255,255,0.06)',
+  background: 'rgba(58,44,34,0.04)',
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12.5,

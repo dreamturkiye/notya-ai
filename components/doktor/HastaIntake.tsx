@@ -7,7 +7,7 @@
  *
  * NOTYA-YENI-GORUNUM-04 (Kaan, 2026-09-25): "Abi bu sayfa da siyah kalmış" — bu bileşen orijinal
  * redesign denetiminin kapsamı dışında kalmış (components/doktor/HastaAsilar.tsx ve
- * app/asistan/page.tsx ile aynı sebep), baştan sona hâlâ tam koyu lacivertti (#111C33/#0B1424,
+ * app/asistan/page.tsx ile aynı sebep), baştan sona hâlâ tam koyu lacivertti (#faf6ee/#faf6ee,
  * translucent-white dolgular). Kremsi/çam paletine çevrildi; işlevsel mantığın tamamı korundu.
  */
 

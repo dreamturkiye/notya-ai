@@ -67,7 +67,7 @@ export default function IlacIzlemAraci() {
           </div>
           {!veri.ilaclar.length && <div style={psikStil.kucuk}>Aktif psikotrop kaydı yok. Görevler hasta ilaç listesinden üretilir; Notya ilaç eklemez.</div>}
           {veri.izlem.map((g) => (
-            <div key={g.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div key={g.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
               <div style={{ ...psikStil.metin, color: g.due < bugun ? CHROME_RENK.warn : CHROME_RENK.ink }}>{g.ad}</div>
               <div style={psikStil.kucuk}>{g.ilac} · vade {g.due}{g.labs.length ? ` · ${g.labs.join(', ')}` : ''}</div>
             </div>
@@ -91,7 +91,7 @@ export default function IlacIzlemAraci() {
         <div style={psikStil.etiket}>Kural kütüphanesi</div>
         <div style={psikStil.kucuk}>Sınıf düzeyi izlem: hangi tetkik, hangi aralık. Doz ve titrasyon yazılmaz.</div>
         {PSIK_IZLEM_KURALLARI.map((k) => (
-          <div key={k.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div key={k.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
             <div style={psikStil.metin}>{k.ad}</div>
             <div style={psikStil.kucuk}>
               {k.labs.length ? `Tetkik: ${k.labs.join(', ')} · ` : ''}periyot {k.periyotAy} ay{k.baslangicGun ? ` · yeni başlangıçta ${k.baslangicGun}. gün` : ''}

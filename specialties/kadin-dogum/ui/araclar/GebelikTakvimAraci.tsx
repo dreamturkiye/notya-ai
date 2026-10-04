@@ -71,7 +71,7 @@ export default function GebelikTakvimAraci() {
 
   const zaman: Satir[] = t ? [...t.izlemler.map((x) => ({ tur: 'izlem' as const, x })), ...t.taramalar.map((x) => ({ tur: 'tarama' as const, x }))]
     .sort((a, b) => a.x.acilis.localeCompare(b.x.acilis) || (a.tur === 'izlem' ? -1 : 1)) : [];
-  const yorum = (ham: string, deger: string | null, bicim: (x: string) => string = trTarih) => (ham.trim() ? (deger ? <span style={{ ...kucuk, color: '#6EE7B7' }}>→ {bicim(deger)}</span> : <span style={hata}>Okunamadı</span>) : null);
+  const yorum = (ham: string, deger: string | null, bicim: (x: string) => string = trTarih) => (ham.trim() ? (deger ? <span style={{ ...kucuk, color: '#047857' }}>→ {bicim(deger)}</span> : <span style={hata}>Okunamadı</span>) : null);
   const alan = (k: keyof typeof f, ph: string, ad: string, w: number | string = 170) => <Etiketli ad={ad}><input inputMode="numeric" value={f[k]} onChange={(e) => set(k, e.target.value)} placeholder={ph} aria-label={ad} style={{ ...input, width: w, maxWidth: '100%' }} /></Etiketli>;
 
   return (
@@ -96,7 +96,7 @@ export default function GebelikTakvimAraci() {
       <div style={kutu}>
         <div style={etiket}>Hasta (isteğe bağlı)</div>
         <KdHastaSecici secili={hasta.id} sec={hastadanDoldur} />
-        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#F9A8D4' }}>{mesaj}</div>}
+        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#BE185D' }}>{mesaj}</div>}
         <div style={satir}>
           <button type="button" onClick={() => setAyrinti(!ayrinti)} style={ghost} aria-expanded={ayrinti}>{ayrinti ? 'Ayrıntıları gizle' : 'Ayrıntılar: Rh, çoğul, risk, yapılanlar'}</button>
         </div>
@@ -109,7 +109,7 @@ export default function GebelikTakvimAraci() {
             <div style={satir}><span style={kucuk}>Hesap tarihi</span>{alan('bugun', 'bugün', 'Hesap tarihi', 150)}{yorum(f.bugun, okunan.bugun)}</div>
             {t && <div style={{ marginTop: 8 }}>
               <div style={kucuk}>Yapılanları işaretleyin (hasta seçiliyse kayıttan gelir):</div>
-              <div style={satir}>{t.taramalar.map((x) => { const on = yapilan.includes(x.id); return <button key={x.id} type="button" aria-pressed={on} onClick={() => setYapilan(on ? yapilan.filter((y) => y !== x.id) : [...yapilan, x.id])} style={{ ...ghost, minHeight: 40, padding: '8px 12px', background: on ? 'rgba(16,185,129,0.14)' : 'transparent', color: on ? '#6EE7B7' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{x.ad}</button>; })}</div>
+              <div style={satir}>{t.taramalar.map((x) => { const on = yapilan.includes(x.id); return <button key={x.id} type="button" aria-pressed={on} onClick={() => setYapilan(on ? yapilan.filter((y) => y !== x.id) : [...yapilan, x.id])} style={{ ...ghost, minHeight: 40, padding: '8px 12px', background: on ? 'rgba(16,185,129,0.14)' : 'transparent', color: on ? '#047857' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{x.ad}</button>; })}</div>
             </div>}
           </div>
         )}
@@ -130,7 +130,7 @@ export default function GebelikTakvimAraci() {
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <div style={kucuk}>Tahmini doğum</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#F9A8D4' }}>{trTarih(t.edd)}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#BE185D' }}>{trTarih(t.edd)}</div>
               <div style={kucuk}>{t.dogumaKalanGun >= 0 ? `${t.dogumaKalanGun} gün kaldı` : `${-t.dogumaKalanGun} gün geçti`}</div>
             </div>
             <div style={{ flex: '1 1 160px' }}>
@@ -148,11 +148,11 @@ export default function GebelikTakvimAraci() {
           {t.uyari.map((u) => <div key={u} style={{ ...kutu, borderColor: 'rgba(251,191,36,0.4)', color: '#7A5B1E', fontSize: 14 }}>{u}</div>)}
 
           {t.kapaniyor.length > 0 && (
-            <div role="alert" style={{ background: 'linear-gradient(135deg, #9A3412, #C2410C)', border: '2px solid #FB923C', borderRadius: 16, padding: 18, marginBottom: 14, boxShadow: '0 8px 28px rgba(194,65,12,0.35)' }}>
+            <div role="alert" style={{ background: 'linear-gradient(135deg, #9A3412, #C2410C)', border: '2px solid #C2410C', borderRadius: 16, padding: 18, marginBottom: 14, boxShadow: '0 8px 28px rgba(194,65,12,0.35)' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#FFEDD5', letterSpacing: '1px', textTransform: 'uppercase' }}>Kapanmak üzere — geri alınamaz</div>
               {t.kapaniyor.map((x) => (
                 <div key={x.id} style={{ marginTop: 10 }}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#FFFFFF' }}>{x.ad}: {x.kalanGun === 0 ? 'bugün son gün' : `${x.kalanGun} gün kaldı`}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#3b2e24' }}>{x.ad}: {x.kalanGun === 0 ? 'bugün son gün' : `${x.kalanGun} gün kaldı`}</div>
                   <div style={{ fontSize: 14, color: '#FFEDD5' }}>Son gün {trTarih(x.kapanis)} ({x.pencereHafta.split('–')[1]}). Bu tarihten sonra bu test bu pencerede yapılamaz.{x.sut ? ` SUT ${x.sut}.` : ''}</div>
                 </div>
               ))}
@@ -160,7 +160,7 @@ export default function GebelikTakvimAraci() {
           )}
           {t.kapaniyorDiger.length > 0 && (
             <div style={{ ...kutu, background: 'rgba(245,158,11,0.10)', borderColor: 'rgba(251,191,36,0.5)' }}>
-              <div style={{ ...etiket, color: '#FCD34D' }}>Bu hafta kapanıyor</div>
+              <div style={{ ...etiket, color: '#A16207' }}>Bu hafta kapanıyor</div>
               {t.kapaniyorDiger.map((x) => <div key={x.id} style={{ ...metin, marginTop: 4 }}><b>{x.ad}</b>: {x.kalanGun === 0 ? 'bugün son gün' : `${x.kalanGun} gün kaldı`} ({trTarih(x.kapanis)})</div>)}
             </div>
           )}
@@ -178,7 +178,7 @@ export default function GebelikTakvimAraci() {
                 const r = DURUM_RENK[s.x.durum];
                 const baskin = s.x.durum === 'kapaniyor' && (s.tur === 'izlem' || s.x.geriAlinamaz);
                 return (
-                  <div key={`${s.tur}-${s.tur === 'izlem' ? s.x.no : s.x.id}`} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', padding: '10px 12px', borderRadius: 12, border: `1px solid ${baskin ? '#FB923C' : r.kenar}`, background: baskin ? 'rgba(194,65,12,0.18)' : 'rgba(0,0,0,0.12)', opacity: s.x.durum === 'yapildi' ? 0.7 : 1 }}>
+                  <div key={`${s.tur}-${s.tur === 'izlem' ? s.x.no : s.x.id}`} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', padding: '10px 12px', borderRadius: 12, border: `1px solid ${baskin ? '#C2410C' : r.kenar}`, background: baskin ? 'rgba(194,65,12,0.18)' : 'rgba(0,0,0,0.12)', opacity: s.x.durum === 'yapildi' ? 0.7 : 1 }}>
                     <div style={{ flex: '1 1 210px', minWidth: 0 }}>
                       <div style={{ ...metin, fontWeight: 700 }}>{s.tur === 'izlem' ? `DÖBYR ${s.x.no}. izlem` : s.x.ad}{s.tur === 'tarama' && s.x.sut ? <span style={kucuk}> · SUT {s.x.sut}</span> : null}{s.tur === 'tarama' && s.x.cepten ? <span style={kucuk}> · genellikle cepten</span> : null}</div>
                       <div style={kucuk}>{s.x.pencereHafta} · {trTarih(s.x.acilis)} – {trTarih(s.x.kapanis)}</div>
@@ -190,7 +190,7 @@ export default function GebelikTakvimAraci() {
                 );
               })}
             </div>
-            <div style={{ ...kucuk, marginTop: 10 }}>Tekil gebelikte doğum öncesi analık istirahati {trTarih(t.analikRaporuBaslangic.tekil)} (32+0){cogul ? `, çoğulda ${trTarih(t.analikRaporuBaslangic.cogul)} (30+0)` : ''} tarihinde başlar. <a href={`/doktor-tools/kd-dogum-rapor?tdt=${t.edd}${cogul ? '&cogul=1' : ''}`} style={{ color: '#F9A8D4', fontWeight: 700 }}>Doğum & Analık Rapor Asistanı →</a></div>
+            <div style={{ ...kucuk, marginTop: 10 }}>Tekil gebelikte doğum öncesi analık istirahati {trTarih(t.analikRaporuBaslangic.tekil)} (32+0){cogul ? `, çoğulda ${trTarih(t.analikRaporuBaslangic.cogul)} (30+0)` : ''} tarihinde başlar. <a href={`/doktor-tools/kd-dogum-rapor?tdt=${t.edd}${cogul ? '&cogul=1' : ''}`} style={{ color: '#BE185D', fontWeight: 700 }}>Doğum & Analık Rapor Asistanı →</a></div>
           </div>
 
           <div style={kutu}>
@@ -206,7 +206,7 @@ export default function GebelikTakvimAraci() {
             <div style={satir}>
               <button type="button" style={btn} onClick={async () => setKopya((await panoya(takvimHastaMetni(t))) ? 'Kopyalandı — göndermeden önce kontrol edin.' : 'Pano erişimi yok — metni elle seçin.')}>Takvimi kopyala</button>
               {hasta.id && <a href={hastaDosyaHref(hasta.id, 'gebelik')} style={{ ...ghost, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Gebelik) →</a>}
-              {kopya && <span style={{ ...kucuk, color: '#F9A8D4' }}>{kopya}</span>}
+              {kopya && <span style={{ ...kucuk, color: '#BE185D' }}>{kopya}</span>}
             </div>
             <MuayeneFormunaEkle
               hastaId={hasta.id}

@@ -30,23 +30,23 @@ export {
 
 /** Pencere durum renkleri — "kapanmak üzere" en baskın (geri alınamaz). */
 export const DURUM_RENK: Record<PencereDurum, { fg: string; bg: string; kenar: string }> = {
-  kapaniyor: { fg: '#FFFFFF', bg: '#C2410C', kenar: '#FB923C' },
+  kapaniyor: { fg: '#FFFFFF', bg: '#C2410C', kenar: '#C2410C' },
   kacirildi: { fg: CHROME_RENK.warn, bg: 'rgba(248,113,113,0.12)', kenar: 'rgba(248,113,113,0.45)' },
-  gecti: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
-  acik: { fg: '#6EE7B7', bg: 'rgba(16,185,129,0.12)', kenar: 'rgba(16,185,129,0.4)' },
-  yaklasiyor: { fg: '#93C5FD', bg: 'rgba(59,130,246,0.12)', kenar: 'rgba(59,130,246,0.35)' },
-  yapildi: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
-  ileride: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.08)' },
+  gecti: { fg: CHROME_RENK.muted, bg: 'rgba(58,44,34,0.12)', kenar: 'rgba(58,44,34,0.12)' },
+  acik: { fg: '#047857', bg: 'rgba(16,185,129,0.12)', kenar: 'rgba(16,185,129,0.4)' },
+  yaklasiyor: { fg: '#1D4ED8', bg: 'rgba(59,130,246,0.12)', kenar: 'rgba(59,130,246,0.35)' },
+  yapildi: { fg: CHROME_RENK.muted, bg: 'rgba(58,44,34,0.12)', kenar: 'rgba(58,44,34,0.12)' },
+  ileride: { fg: CHROME_RENK.muted, bg: 'rgba(58,44,34,0.12)', kenar: 'rgba(58,44,34,0.12)' },
 };
 
 /** Çift sütun (yasal asgari vs klinik öneri) — çakışma asla tek öneriye indirgenmez. */
 export function CiftSutun({ baslik, sb, klinik }: { baslik: string; sb: string; klinik: string }) {
   return (
-    <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 0' }}>
+    <div style={{ borderTop: '1px solid rgba(58,44,34,0.12)', padding: '10px 0' }}>
       <div style={{ ...kdStil.metin, fontWeight: 700, marginBottom: 6 }}>{baslik}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 10 }}><div style={{ ...kdStil.kucuk, fontWeight: 700, color: '#F9A8D4' }}>Yasal asgari (SB / SUT)</div><div style={kdStil.metin}>{sb}</div></div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 10 }}><div style={{ ...kdStil.kucuk, fontWeight: 700, color: '#93C5FD' }}>Klinik öneri (uluslararası)</div><div style={kdStil.metin}>{klinik}</div></div>
+        <div style={{ background: 'rgba(58,44,34,0.04)', borderRadius: 10, padding: 10 }}><div style={{ ...kdStil.kucuk, fontWeight: 700, color: '#BE185D' }}>Yasal asgari (SB / SUT)</div><div style={kdStil.metin}>{sb}</div></div>
+        <div style={{ background: 'rgba(58,44,34,0.04)', borderRadius: 10, padding: 10 }}><div style={{ ...kdStil.kucuk, fontWeight: 700, color: '#1D4ED8' }}>Klinik öneri (uluslararası)</div><div style={kdStil.metin}>{klinik}</div></div>
       </div>
     </div>
   );

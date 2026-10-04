@@ -81,7 +81,7 @@ export default function BiyolojikSutAraci() {
           <Istatistik deger={sonuc.eksikler.length} etiket="eksik madde" ton={sonuc.eksikler.length ? 'uyari' : 'iyi'} />
           <Rozet ton="notr">doz yazılmaz</Rozet>
         </div>
-        {sonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#FBBF24' }}>• {e}</div>)}
+        {sonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#B45309' }}>• {e}</div>)}
         <pre style={{ ...kucuk, whiteSpace: 'pre-wrap', marginTop: 8 }}>{metinTaslak}</pre>
         <div style={satir}><KopyalaButonu metin={metinTaslak} etiket="Taslağı kopyala" /></div>
         <TaslakNotu>{sonuc.dozKilidi} Medula girişi ve e-imza hekimindir; Notya canlı gönderim yapmaz.</TaslakNotu>

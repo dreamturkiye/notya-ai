@@ -1343,7 +1343,7 @@ export default function RandevularPage() {
               )}
 
               {duzenlenenId && duzenlenenRandevu && (
-                <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(10,22,40,0.08)' }}>
+                <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(58,44,34,0.08)' }}>
                   {(() => {
                     const durumBilgi = DURUM_ETIKET[duzenlenenRandevu.durum] || DURUM_ETIKET.planlandi;
                     const gecmis = new Date(duzenlenenRandevu.bitis) < new Date();
@@ -1351,7 +1351,7 @@ export default function RandevularPage() {
                     return (
                       <>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                          <span style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>Mevcut durum:</span>
+                          <span style={{ fontSize: 12, color: 'rgba(58,44,34,0.6)' }}>Mevcut durum:</span>
                           <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg }}>
                             {durumBilgi.label}
                           </span>
@@ -1362,29 +1362,29 @@ export default function RandevularPage() {
                             doktorun elinde randevuyu geri açacak tek bir yol bulunmuyordu. */}
                         {duzenlenenRandevu.durum === 'iptal' && (
                           <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 12px' }}>
-                            <div style={{ fontSize: 12.5, lineHeight: 1.5, color: '#0A1628' }}>
+                            <div style={{ fontSize: 12.5, lineHeight: 1.5, color: CHROME_RENK.ink }}>
                               Bu randevu iptal edildi{duzenlenenRandevu.iptalNedeni ? ` — ${duzenlenenRandevu.iptalNedeni}` : ''}. Tarih/saat değiştirip
                               Güncelle demek randevuyu yeniden aktif etmez; iptali geri almak için Aktif Hale Getir düğmesini kullanın.
                             </div>
                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-                              <button type="button" onClick={modalAktifEt} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>↺ Aktif Hale Getir</button>
+                              <button type="button" onClick={modalAktifEt} style={{ ...modalAksiyonBtn, background: CHROME_RENK.pine, color: 'white', borderColor: CHROME_RENK.pine, fontWeight: 700 }}>↺ Aktif Hale Getir</button>
                               <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: CHROME_RENK.muted }}>Sil</button>
                             </div>
                           </div>
                         )}
                         {basariMesaji && (
-                          <div style={{ fontSize: 12.5, color: '#0F9B8E', fontWeight: 600, marginTop: 8 }}>{basariMesaji}</div>
+                          <div style={{ fontSize: 12.5, color: CHROME_RENK.pine, fontWeight: 600, marginTop: 8 }}>{basariMesaji}</div>
                         )}
                         {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {duzenlenenRandevu.patientId && (
-                              <button type="button" onClick={() => router.push(`/session/new?patientId=${duzenlenenRandevu.patientId}&randevuBaslangic=${encodeURIComponent(duzenlenenRandevu.baslangic)}`)} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                              <button type="button" onClick={() => router.push(`/session/new?patientId=${duzenlenenRandevu.patientId}&randevuBaslangic=${encodeURIComponent(duzenlenenRandevu.baslangic)}`)} style={{ ...modalAksiyonBtn, background: CHROME_RENK.pine, color: 'white', borderColor: CHROME_RENK.pine, fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
                             )}
                             {duzenlenenRandevu.patientId && (
-                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', fontWeight: 600, borderColor: '#0F9B8E' }}>Hasta Dosyasını Aç</button>
+                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, color: CHROME_RENK.pine, fontWeight: 600, borderColor: CHROME_RENK.pine }}>Hasta Dosyasını Aç</button>
                             )}
                             {duzenlenenRandevu.patientId && (
-                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}?tab=formu`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', borderColor: '#0F9B8E' }}>Hasta Formu</button>
+                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}?tab=formu`)} style={{ ...modalAksiyonBtn, color: CHROME_RENK.pine, borderColor: CHROME_RENK.pine }}>Hasta Formu</button>
                             )}
                             {aks.onayla && (
                               <button type="button" onClick={() => modalDurumDegistir('onaylandi')} style={modalAksiyonBtn}>Onayla</button>
@@ -1479,16 +1479,16 @@ export default function RandevularPage() {
                       </button>
                     ))}
                     {hastaEslesmeleri.length > hastaSonuclari.length && (
-                      <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>
+                      <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(58,44,34,0.6)' }}>
                         {hastaEslesmeleri.length} sonuçtan ilk {hastaSonuclari.length} tanesi — yazmaya devam edin.
                       </div>
                     )}
                   </div>
                 )}
                 {seciliHasta && (
-                  <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 12, background: '#ECFDF5', border: '2px solid #0F9B8E' }}>
+                  <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 12, background: '#ECFDF5', border: `2px solid ${CHROME_RENK.pine}` }}>
                     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: '#0F766E', textTransform: 'uppercase' }}>Seçilen hasta</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#0A1628', lineHeight: 1.2, marginTop: 2 }}>{seciliHasta.name}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: CHROME_RENK.ink, lineHeight: 1.2, marginTop: 2 }}>{seciliHasta.name}</div>
                     <button type="button" onClick={() => { setSeciliHasta(null); setKayitsizMod(false); }} style={{ marginTop: 8, background: 'none', border: 'none', color: CHROME_RENK.muted, cursor: 'pointer', textDecoration: 'underline', fontSize: 13, padding: 0 }}>değiştir</button>
                   </div>
                 )}
@@ -1676,14 +1676,14 @@ export default function RandevularPage() {
                 const gunListe = siraliGunlukRandevular.filter((r) => r.durum !== 'iptal' && r.id !== duzenlenenId)
                 const cakisan = gunListe.filter((r) => new Date(r.baslangic) < formSlotBit && new Date(r.bitis) > formSlotBas)
                 return (
-                  <div style={{ margin: '4px 0 12px', padding: '10px 12px', borderRadius: 10, background: cakisan.length ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${cakisan.length ? '#FECACA' : 'rgba(10,22,40,0.08)'}` }}>
+                  <div style={{ margin: '4px 0 12px', padding: '10px 12px', borderRadius: 10, background: cakisan.length ? '#FEF2F2' : CHROME_RENK.paper, border: `1px solid ${cakisan.length ? '#FECACA' : 'rgba(58,44,34,0.08)'}` }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: cakisan.length ? '#991B1B' : '#334155', marginBottom: 6 }}>
                       {cakisan.length ? `Bu saat dolu (${cakisan.map((r) => r.hastaAdi).join(', ')})` : `Bu günün randevuları${gunListe.length ? ` (${gunListe.length})` : ''}`}
                     </div>
                     {gunListe.length === 0 ? (
                       <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Bu günde başka randevu yok — {saat} boş.</div>
                     ) : (
-                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#0A1628', lineHeight: 1.55 }}>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.55 }}>
                         {gunListe.map((r) => {
                           const dolu = cakisan.some((c) => c.id === r.id)
                           return (
@@ -1702,7 +1702,7 @@ export default function RandevularPage() {
               <div className="ni-field">
                 <label className="ni-label">Hasta Durumu</label>
                 <div style={{ display: 'flex', gap: 16 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: '#0A1628' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: CHROME_RENK.ink }}>
                     <input
                       type="checkbox"
                       checked={hastaDurumu === 'saglikli'}
@@ -1710,7 +1710,7 @@ export default function RandevularPage() {
                     />
                     Sağlam
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: '#0A1628' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: CHROME_RENK.ink }}>
                     <input
                       type="checkbox"
                       checked={hastaDurumu === 'sikayetli'}
@@ -1735,7 +1735,7 @@ export default function RandevularPage() {
                 <button
                   type="button"
                   onClick={() => { setFormAcik(false); formuSifirla(); }}
-                  style={{ background: 'rgba(10,22,40,0.08)', border: 'none', color: '#0A1628', borderRadius: 10, padding: '0 20px' }}
+                  style={{ background: 'rgba(58,44,34,0.08)', border: 'none', color: CHROME_RENK.ink, borderRadius: 10, padding: '0 20px' }}
                 >Vazgeç</button>
               </div>
             </form>
@@ -1838,8 +1838,8 @@ const aksiyonBtn: React.CSSProperties = {
 
 const modalAksiyonBtn: React.CSSProperties = {
   background: 'white',
-  border: '1px solid rgba(10,22,40,0.15)',
-  color: '#0A1628',
+  border: '1px solid rgba(58,44,34,0.15)',
+  color: CHROME_RENK.ink,
   borderRadius: 8,
   padding: '6px 12px',
   minHeight: 36,

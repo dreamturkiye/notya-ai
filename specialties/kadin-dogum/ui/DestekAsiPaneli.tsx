@@ -31,7 +31,7 @@ export function DestekAsiPaneli({
         {DESTEK_ASI_KALEMLERI.map((k) => {
           const row = state[k.id] || { durum: 'bekliyor' as const }
           return (
-            <div key={k.id} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 10 }}>
+            <div key={k.id} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 10 }}>
               <div style={{ fontSize: 13, color: CHROME_RENK.ink, fontWeight: 600 }}>{k.etiket}</div>
               <div style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>{k.pencere} · {k.not}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginTop: 8 }}>

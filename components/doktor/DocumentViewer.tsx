@@ -61,9 +61,9 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
   const isAudio = fileType.startsWith('audio/')
 
   return (
-    <div style={{ background: '#020812', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+    <div style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid rgba(58,44,34,0.08)' }}>
+        <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#3b2e24', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {fileName}
         </div>
         <a
@@ -83,9 +83,9 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
         )}
       </div>
 
-      <div style={{ minHeight: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f14', padding: 12 }}>
-        {loading && <span style={{ color: '#94A3B8', fontSize: 13 }}>Yükleniyor…</span>}
-        {!loading && error && <span style={{ color: '#F87171', fontSize: 13 }}>{error}</span>}
+      <div style={{ minHeight: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#efe8da', padding: 12 }}>
+        {loading && <span style={{ color: '#8b7d70', fontSize: 13 }}>Yükleniyor…</span>}
+        {!loading && error && <span style={{ color: '#a45b3e', fontSize: 13 }}>{error}</span>}
         {!loading && !error && isImage && objectUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={objectUrl} alt={fileName} style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />
@@ -101,7 +101,7 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
           <audio controls src={objectUrl} style={{ width: '100%' }} />
         )}
         {!loading && !error && !isImage && !isPdf && !isAudio && (
-          <span style={{ color: '#94A3B8', fontSize: 13 }}>Bu dosya türü tarayıcıda önizlenemez. İndirin.</span>
+          <span style={{ color: '#8b7d70', fontSize: 13 }}>Bu dosya türü tarayıcıda önizlenemez. İndirin.</span>
         )}
       </div>
     </div>
@@ -109,9 +109,9 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
 }
 
 const navBtn: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.06)',
-  border: '1px solid rgba(255,255,255,0.12)',
-  color: '#E2E8F0',
+  background: '#fff',
+  border: '1px solid rgba(58,44,34,0.15)',
+  color: '#3b2e24',
   borderRadius: 999,
   padding: '6px 12px',
   fontSize: 12,

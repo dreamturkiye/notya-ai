@@ -9,8 +9,8 @@ import { belgeAnalizHref, belgelerTabHref, goruntulemeCaptureHref } from '../eng
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }
@@ -42,7 +42,7 @@ export function LezyonKarti({
       )}
       <ul style={{ fontSize: 13, paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 8 }}>
         {lesions.map((l) => (
-          <li key={l.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
+          <li key={l.id} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 8 }}>
             {bolgeEtiketi(l.region)} · {dermLabel(DERM_MORPHOLOGY, l.morphology)}
             {l.body_map_node ? ` · işaret ${l.body_map_node}` : ''}
             {patientId && (

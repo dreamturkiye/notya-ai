@@ -123,9 +123,9 @@ export function UnitePanelleri({
       )}
 
       {unit === 'bullu' && (
-        <section style={{ ...kutu, borderColor: bullous?.dif ? 'rgba(255,255,255,0.09)' : 'rgba(248,113,113,0.45)' }} data-derm="bullu-panel">
+        <section style={{ ...kutu, borderColor: bullous?.dif ? 'rgba(58,44,34,0.12)' : 'rgba(248,113,113,0.45)' }} data-derm="bullu-panel">
           <h2 style={{ margin: 0, fontSize: 16 }}>Büllü hastalık — DIF kapısı</h2>
-          <p style={{ fontSize: 13, color: bullous?.dif ? '#86EFAC' : CHROME_RENK.warn }}>
+          <p style={{ fontSize: 13, color: bullous?.dif ? '#15803D' : CHROME_RENK.warn }}>
             {bullous?.dif ? 'DIF yapılmış.' : 'Biyopsi + DIF zorunlu. DIF olmadan tanı kilitlenmez.'}
           </p>
           <label style={{ display: 'flex', gap: 8, fontSize: 13 }}>

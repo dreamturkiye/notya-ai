@@ -39,7 +39,7 @@ export function PsikMadde({
   no, metin, secenekler, deger, set,
 }: { no: number; metin: string; secenekler: ReadonlyArray<{ deger: 0 | 1 | 2 | 3; etiket: string }>; deger: number | null; set: (v: number | null) => void }) {
   return (
-    <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+    <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
       <div style={psikStil.metin}>{no}. {metin}</div>
       <div style={{ marginTop: 8 }}>
         <Segment

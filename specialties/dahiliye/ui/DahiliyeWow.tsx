@@ -33,16 +33,16 @@ const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: Record<string, string> }) => (!acik || !d?.length ? null : <div style={{ ...kucuk, marginTop: 4, borderLeft: '2px solid rgba(45,212,191,0.4)', paddingLeft: 6 }}>{d.map((x, i) => <div key={i}>[{refler[x.ref] || x.ref}] {x.not}</div>)}</div>);
-const RENK: Record<string, string> = { yesil: '#22C55E', sari: '#FBBF24', turuncu: '#FB923C', kirmizi: '#F87171' };
+const RENK: Record<string, string> = { yesil: '#22C55E', sari: '#B45309', turuncu: '#C2410C', kirmizi: '#B42318' };
 const KOVA_AD: Record<string, string> = { dusuk_orta: 'Düşük–orta', yuksek: 'Yüksek', cok_yuksek: 'Çok yüksek' };
 
 export function VizitSeridiBar({ s, onPlan }: { s: VizitSeridi; onPlan: () => void }) {
   const [acik, setAcik] = useState(false);
-  const renk = (d: string) => (d === 'kotu' ? '#F87171' : d === 'dikkat' ? '#FBBF24' : d === 'iyi' ? '#22C55E' : CHROME_RENK.muted);
+  const renk = (d: string) => (d === 'kotu' ? '#B42318' : d === 'dikkat' ? '#B45309' : d === 'iyi' ? '#22C55E' : CHROME_RENK.muted);
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0B1B2F', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '6px 10px', marginBottom: 8 }}>
+    <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#faf6ee', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 10, padding: '6px 10px', marginBottom: 8 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ ...kucuk, fontWeight: 700, color: '#0F9B8E' }}>BUGÜNKÜ VİZİT</span>
         {s.chips.map((c) => <span key={c.ad} title={c.alt || ''} style={{ fontSize: 12, color: CHROME_RENK.ink, border: `1px solid ${renk(c.durum)}`, borderRadius: 999, padding: '2px 8px' }}>{c.ad} <b>{c.deger}</b>{c.alt ? <span style={{ ...kucuk, marginLeft: 4 }}>{c.alt}</span> : null}</span>)}
@@ -50,9 +50,9 @@ export function VizitSeridiBar({ s, onPlan }: { s: VizitSeridi; onPlan: () => vo
       </div>
       {acik && (<div style={{ marginTop: 6, fontSize: 12, color: CHROME_RENK.ink }}>
         {s.planTaslagi.length === 0 && <div style={kucuk}>Plan maddesi yok — kartları çalıştırın.</div>}
-        {s.planTaslagi.map((p, i) => <div key={i} style={{ color: p.startsWith('⚑') ? '#F87171' : CHROME_RENK.ink }}>{p}</div>)}
+        {s.planTaslagi.map((p, i) => <div key={i} style={{ color: p.startsWith('⚑') ? '#B42318' : CHROME_RENK.ink }}>{p}</div>)}
         <div style={{ ...kucuk, marginTop: 4 }}>Taslak — SOAP P'ye kopyalamadan önce hekim kilitleri (evre / hedef / kategori) tamamlanmalı.</div>
-        <button type="button" onClick={() => navigator.clipboard?.writeText(s.planTaslagi.join('\n'))} style={{ ...btn, marginTop: 6, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }}>📋 Planı kopyala</button>
+        <button type="button" onClick={() => navigator.clipboard?.writeText(s.planTaslagi.join('\n'))} style={{ ...btn, marginTop: 6, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' }}>📋 Planı kopyala</button>
       </div>)}
     </div>
   );
@@ -77,13 +77,13 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
         <button type="button" style={btn} onClick={() => calistir({ adim: 'kvr', ...(f.dty !== undefined ? { dmTaniYasi: s('dty') } : {}), sigara: bv('sigara', !!k?.sigara), askvh: bv('askvh', !!k?.askvh), dmTod: bv('dmTod', !!k?.dm_tod), dmSure10Yil: bv('dmSure', !!k?.dm_sure_10y), statinYogunluk: s('sy') || k?.statin_yogunluk || 'yok', ezetimib: bv('ez', !!k?.ezetimib) }, 'KVR hesaplandı.')}>Hesapla</button>
       </div>
       {r && (<div style={{ fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 }}>
-        <div>Kova taslak: <b style={{ color: r.kova === 'cok_yuksek' ? '#F87171' : r.kova === 'yuksek' ? '#FBBF24' : '#22C55E' }}>{r.kova ? KOVA_AD[r.kova] : 'belirlenemedi'}</b>{r.kovaNedeni ? ` — ${r.kovaNedeni}` : ''}{k?.kilitKategori ? ` · hekim kilidi: ${KOVA_AD[k.kilitKategori] || k.kilitKategori}` : ''}</div>
+        <div>Kova taslak: <b style={{ color: r.kova === 'cok_yuksek' ? '#B42318' : r.kova === 'yuksek' ? '#B45309' : '#22C55E' }}>{r.kova ? KOVA_AD[r.kova] : 'belirlenemedi'}</b>{r.kovaNedeni ? ` — ${r.kovaNedeni}` : ''}{k?.kilitKategori ? ` · hekim kilidi: ${KOVA_AD[k.kilitKategori] || k.kilitKategori}` : ''}</div>
         {r.score2 != null && <div>SCORE2: <b>%{r.score2}</b> (yüksek risk bölgesi)</div>}
         {r.score2Diabetes != null && <div>SCORE2-Diabetes: <b>%{r.score2Diabetes}</b> (yüksek risk bölgesi · HbA1c, eGFR, tanı yaşı onaylı kaynaktan)</div>}
         {r.score2Op != null && <div>SCORE2-OP: <b>%{r.score2Op}</b> (yüksek risk bölgesi)</div>}
-        {r.score2Notu && <div style={{ color: '#FBBF24' }}>ⓘ {r.score2Notu}</div>}
+        {r.score2Notu && <div style={{ color: '#B45309' }}>ⓘ {r.score2Notu}</div>}
         <div>{r.hedefNotu}{k?.kilitHedefLdl ? ` · kilitli hedef <${k.kilitHedefLdl}` : ''}</div>
-        {r.statinAcigi.map((x) => <div key={x} style={{ color: '#FBBF24' }}>⚠ {x}</div>)}
+        {r.statinAcigi.map((x) => <div key={x} style={{ color: '#B45309' }}>⚠ {x}</div>)}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
         <div style={satir}>
           <select value={s('kk')} onChange={(e) => set('kk', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">kategori kilitle (hekim)</option>{Object.entries(KOVA_AD).map(([v, a]) => <option key={v} value={v} style={{ color: '#000' }}>{a}</option>)}</select>
@@ -110,9 +110,9 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
           <span style={{ width: 14, height: 14, borderRadius: 3, background: r.renk ? RENK[r.renk] : CHROME_RENK.muted, display: 'inline-block' }} />
           <span>KDIGO taslak: <b>{r.g ?? '—'} {r.a ?? '(UACR yok)'}</b> · kronisite: {r.kronikMi}{r.hizliDusus ? ' · HIZLI DÜŞÜŞ' : ''}{r.izlemAy ? ` · izlem her ${r.izlemAy} ay` : ''}{c?.kilitEvre ? ` · hekim kilidi: ${c.kilitEvre}` : ''}</span>
         </div>
-        {r.uyarilar.map((x) => <div key={x} style={{ color: '#FBBF24' }}>⚠ {x}</div>)}
+        {r.uyarilar.map((x) => <div key={x} style={{ color: '#B45309' }}>⚠ {x}</div>)}
         {r.plan.map((x) => <div key={x}>• {x}</div>)}
-        {r.sevk.map((x) => <div key={x} style={{ color: '#F87171' }}>→ {x}</div>)}
+        {r.sevk.map((x) => <div key={x} style={{ color: '#B42318' }}>→ {x}</div>)}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
         <div style={satir}>
           <input value={s('ke')} onChange={(e) => set('ke', e.target.value)} placeholder="evre kilitle örn. G3a A2" style={{ ...toolsInput, width: 170 }} />
@@ -135,7 +135,7 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
         <button type="button" style={btn} onClick={() => calistir({ adim: 'evkayit', tip: s('tip') || 'kb', sbp: s('esbp') || undefined, dbp: s('edbp') || undefined, deger: s('edeger') || undefined, aclik: bv('ac', true), olcumAt: s('eat') || undefined }, 'Ev kaydı eklendi.')}>Ekle</button>
       </div>
       <div style={{ fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 }}>
-        <div>Ev KB: {e.kb.n} ölçüm{e.kb.ortSbp != null ? ` · ort ${e.kb.ortSbp}/${e.kb.ortDbp}` : ''} · <b style={{ color: e.kb.fenotip === 'kontrolde' ? '#22C55E' : e.kb.fenotip === 'yetersiz_veri' ? CHROME_RENK.muted : '#FBBF24' }}>{e.kb.fenotip.replace('_', ' ')}</b></div>
+        <div>Ev KB: {e.kb.n} ölçüm{e.kb.ortSbp != null ? ` · ort ${e.kb.ortSbp}/${e.kb.ortDbp}` : ''} · <b style={{ color: e.kb.fenotip === 'kontrolde' ? '#22C55E' : e.kb.fenotip === 'yetersiz_veri' ? CHROME_RENK.muted : '#B45309' }}>{e.kb.fenotip.replace('_', ' ')}</b></div>
         <div style={kucuk}>{e.kb.not}</div>
         <div style={{ marginTop: 4 }}>Ev glukoz: {e.glukoz.n} ölçüm{e.glukoz.aclikOrt != null ? ` · açlık ort ${e.glukoz.aclikOrt}` : ''} · hipo {e.glukoz.hipo} · &gt;180: {e.glukoz.yuksek}</div>
         <div style={kucuk}>{e.glukoz.not}</div>
@@ -150,7 +150,7 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
       <div style={etiket}>İlaç izlem takvimi <span style={kucuk}>· hasta_ilaclar → lab izlem görevleri · kural tabanlı, doz yok</span></div>
       <div style={satir}><button type="button" style={btn} onClick={() => calistir({ adim: 'ilacizlem' }, 'İzlem görevleri açık görevlere eklendi.')}>Görevleri oluştur / yenile</button></div>
       {wow.izlem.length === 0 && <div style={{ ...kucuk, marginTop: 6 }}>Aktif ilaçlar için bekleyen izlem yok (veya son lablar taze).</div>}
-      {wow.izlem.map((g) => <div key={g.kod} style={{ fontSize: 12, color: g.due < new Date().toISOString().slice(0, 10) ? '#F87171' : CHROME_RENK.ink, marginTop: 4 }}>{g.ad} <span style={kucuk}>· {g.ilac} · {g.labs.join('/')} · due {g.due}</span><Kaynak d={g.dipnot ? [g.dipnot] : null} acik={kaynak} refler={refler} /></div>)}
+      {wow.izlem.map((g) => <div key={g.kod} style={{ fontSize: 12, color: g.due < new Date().toISOString().slice(0, 10) ? '#B42318' : CHROME_RENK.ink, marginTop: 4 }}>{g.ad} <span style={kucuk}>· {g.ilac} · {g.labs.join('/')} · due {g.due}</span><Kaynak d={g.dipnot ? [g.dipnot] : null} acik={kaynak} refler={refler} /></div>)}
     </div>);
   }
   if (sekme === 'SGK rapor') {
@@ -176,19 +176,19 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
         <div><b>{sgk.draft.tani.icd10}</b> — {sgk.draft.tani.aciklama} · {sgk.draft.onerilen_sure_ay} ay · etken: {(sgk.draft.etkenMaddeler || []).join(', ') || '—'}{sgk.chaVascSkor != null ? ` · CHA₂DS₂-VASc ${sgk.chaVascSkor}` : ''}</div>
         <div style={{ whiteSpace: 'pre-wrap', marginTop: 4 }}>{sgk.draft.mevcutDurum}</div>
         {(sgk.draft.zorunluTetkikler || []).length > 0 && <div style={kucuk}>Tetkik: {(sgk.draft.zorunluTetkikler || []).join(' · ')}</div>}
-        {sgk.eksikler.map((x) => <div key={x} style={{ color: '#F87171' }}>✗ {x}</div>)}
-        {sgk.sutKontrol.map((x) => <div key={x.madde} style={{ color: x.tamam === true ? '#22C55E' : x.tamam === false ? '#FBBF24' : CHROME_RENK.muted }}>{x.tamam === true ? '✓' : x.tamam === false ? '!' : '○'} {x.madde}</div>)}
-        {!sgk.hekim.medulaBagli && <div style={{ color: '#FBBF24' }}>ⓘ Medula kimliği yok — Ayarlar › e-Reçete'den tesis kodu / diploma tescil girin.</div>}
+        {sgk.eksikler.map((x) => <div key={x} style={{ color: '#B42318' }}>✗ {x}</div>)}
+        {sgk.sutKontrol.map((x) => <div key={x.madde} style={{ color: x.tamam === true ? '#22C55E' : x.tamam === false ? '#B45309' : CHROME_RENK.muted }}>{x.tamam === true ? '✓' : x.tamam === false ? '!' : '○'} {x.madde}</div>)}
+        {!sgk.hekim.medulaBagli && <div style={{ color: '#B45309' }}>ⓘ Medula kimliği yok — Ayarlar › e-Reçete'den tesis kodu / diploma tescil girin.</div>}
         <Kaynak d={sgk.dipnotlar} acik={kaynak} refler={refler} />
         <textarea value={s('sgkdeg') || sgk.draft.hekim_degerlendirmesi || ''} onChange={(e) => set('sgkdeg', e.target.value)} rows={3} style={{ ...toolsInput, width: '100%', marginTop: 6 }} />
         <div style={satir}>
           <button type="button" style={btn} disabled={!sgk.raporId} onClick={() => calistir({ adim: 'sgkkilit', raporId: sgk.raporId, draft: { hekim_degerlendirmesi: s('sgkdeg') || sgk.draft.hekim_degerlendirmesi } }, 'Rapor hekim onayıyla kilitlendi; bugünkü nota eklendi.')}>Hekim onayı (kilitle)</button>
-          <button type="button" style={{ ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }} onClick={() => yazdir(sgk)}>🖨 Yazdır / PDF</button>
-          <button type="button" style={{ ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }} onClick={() => navigator.clipboard?.writeText(JSON.stringify(sgk.enabiz, null, 2))}>📋 e-Nabız / Medula zarfı</button>
+          <button type="button" style={{ ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' }} onClick={() => yazdir(sgk)}>🖨 Yazdır / PDF</button>
+          <button type="button" style={{ ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' }} onClick={() => navigator.clipboard?.writeText(JSON.stringify(sgk.enabiz, null, 2))}>📋 e-Nabız / Medula zarfı</button>
         </div>
       </div>)}
       {(wow.sgkRaporlar || []).length > 0 && <div style={{ ...etiket, marginTop: 10 }}>Önceki raporlar</div>}
-      {(wow.sgkRaporlar || []).map((r) => <div key={r.id} style={kucuk}>{new Date(r.created_at).toLocaleDateString('tr-TR')} · {r.sablon} · {r.draft?.tani?.icd10} · <b style={{ color: r.durum === 'kilitli' ? '#22C55E' : '#FBBF24' }}>{r.durum}</b>{r.eksikler?.length ? ` · ${r.eksikler.length} eksik` : ''}</div>)}
+      {(wow.sgkRaporlar || []).map((r) => <div key={r.id} style={kucuk}>{new Date(r.created_at).toLocaleDateString('tr-TR')} · {r.sablon} · {r.draft?.tani?.icd10} · <b style={{ color: r.durum === 'kilitli' ? '#22C55E' : '#B45309' }}>{r.durum}</b>{r.eksikler?.length ? ` · ${r.eksikler.length} eksik` : ''}</div>)}
     </div>);
   }
   return null;

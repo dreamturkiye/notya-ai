@@ -7,8 +7,8 @@ import { KD_GA_LOCK, KD_USG_KIND, kdLabel } from './labels'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }
@@ -38,7 +38,7 @@ export function UsgCompare({
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {cells.map((c) => (
-          <div key={c.label} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 10 }}>
+          <div key={c.label} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 10, padding: 10 }}>
             <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{c.label}</div>
             <div style={{ fontSize: 13 }}>{studyCaption(c.study)}</div>
             {c.study && urls[c.study.coreImageId] ? (

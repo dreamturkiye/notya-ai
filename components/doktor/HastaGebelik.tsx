@@ -89,7 +89,7 @@ type Bio = { deger: number; p50: number; persentil: number; z: number; durum: 'd
 type LohusaIzlem = { id: string; tarih: string; dogum_sonrasi_gun: number; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; kanama: string | null; emzirme: string | null; duygu_durumu: string | null; epds_puan: number | null };
 type Mod = 'klinik' | 'jinekoloji' | 'lohusa' | 'infertilite';
 
-const RENK = { kritik: '#EF4444', dikkat: '#F59E0B', bilgi: '#38BDF8' } as const;
+const RENK = { kritik: '#EF4444', dikkat: '#F59E0B', bilgi: '#1D4ED8' } as const;
 
 function trTarih(iso: string | null | undefined) { return iso ? new Date(iso).toLocaleDateString('tr-TR') : '—'; }
 
@@ -427,7 +427,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           </button>
         ))}
       </div>
-      {hata && <div style={{ color: '#F87171', fontSize: 13 }}>{hata}</div>}
+      {hata && <div style={{ color: '#B42318', fontSize: 13 }}>{hata}</div>}
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</span>
@@ -741,7 +741,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                   <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Hafta</th><th>Kilo</th><th>TA</th><th>Fundus</th><th>FKA</th><th>Prot.</th><th>USG</th></tr></thead>
                   <tbody>
                     {[...veri.izlemler].reverse().map((i) => (
-                      <tr key={i.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                      <tr key={i.id} style={{ borderTop: '1px solid rgba(58,44,34,0.12)' }}>
                         <td style={{ padding: 6 }}>{trTarih(i.tarih)}</td><td>{i.hafta}</td><td>{i.kilo ?? '—'}</td>
                         <td>{i.tansiyon_sistolik && i.tansiyon_diastolik ? `${i.tansiyon_sistolik}/${i.tansiyon_diastolik}` : '—'}</td>
                         <td>{i.fundus_yuksekligi ?? '—'}</td><td>{i.fetal_kalp_atimi ?? '—'}</td><td>{i.proteinuri ?? '—'}</td>
@@ -779,7 +779,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               ))}
             </div>
             {genetikTurAcik === 'ikili' && (
-              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(58,44,34,0.04)', borderRadius: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                   {alan('ntMm', 'NT (mm)', n, setN, 'number')}{alan('papA', 'PAPP-A (MoM)', n, setN)}{alan('freeBhcg', 'Serbest β-hCG (MoM)', n, setN)}
                   {alan('kombineRisk', 'Kombine risk (laboratuvar sonucu, ör. 1/1250)', n, setN)}
@@ -789,7 +789,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </div>
             )}
             {genetikTurAcik === 'uclu-dortlu' && (
-              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(58,44,34,0.04)', borderRadius: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                   {alan('afp', 'AFP (MoM)', n, setN)}{alan('hcg2', 'hCG (MoM)', n, setN)}{alan('estriol', 'Estriol (MoM)', n, setN)}{alan('inhibinA', 'İnhibin A (MoM, dörtlü)', n, setN)}
                   {alan('kombineRisk2', 'Kombine risk (laboratuvar sonucu)', n, setN)}
@@ -798,7 +798,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </div>
             )}
             {genetikTurAcik === 'nipt' && (
-              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(58,44,34,0.04)', borderRadius: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                   <label style={{ display: 'block' }}><span style={etiketS}>Durum</span><select value={n.niptDurum || ''} onChange={(e) => setN({ ...n, niptDurum: e.target.value })} style={giris}><option value="istendi">İstendi</option><option value="sonuclandi">Sonuçlandı</option><option value="basarisiz-tekrar">Başarısız / tekrar gerekti</option></select></label>
                   {(['t21', 't18', 't13'] as const).map((k) => (
@@ -810,7 +810,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </div>
             )}
             {genetikTurAcik === 'invazif' && (
-              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(58,44,34,0.04)', borderRadius: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                   <label style={{ display: 'block' }}><span style={etiketS}>Tür</span><select value={n.invazifTur || 'amniyosentez'} onChange={(e) => setN({ ...n, invazifTur: e.target.value })} style={giris}><option value="cvs">CVS (koryon villus örneklemesi)</option><option value="amniyosentez">Amniyosentez</option></select></label>
                   {alan('endikasyon', 'Endikasyon', n, setN)}{alan('invazifSonuc', 'Sonuç', n, setN)}{alan('karyotip', 'Karyotip', n, setN)}
@@ -821,7 +821,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             {veri.genetikTaramalar && veri.genetikTaramalar.length > 0 && (
               <div style={{ display: 'grid', gap: 6 }}>
                 {[...veri.genetikTaramalar].reverse().map((gRow) => (
-                  <div key={gRow.id} style={{ fontSize: 12.5, color: CHROME_RENK.muted, borderLeft: gRow.ntDegerlendirme?.bayrak ? '3px solid #F59E0B' : '3px solid rgba(255,255,255,0.1)', padding: '6px 10px', background: gRow.ntDegerlendirme?.bayrak ? '#F59E0B10' : 'transparent', borderRadius: 6 }}>
+                  <div key={gRow.id} style={{ fontSize: 12.5, color: CHROME_RENK.muted, borderLeft: gRow.ntDegerlendirme?.bayrak ? '3px solid #F59E0B' : '3px solid rgba(58,44,34,0.12)', padding: '6px 10px', background: gRow.ntDegerlendirme?.bayrak ? '#F59E0B10' : 'transparent', borderRadius: 6 }}>
                     <b style={{ color: CHROME_RENK.ink }}>{{ ikili: 'İkili Test', 'uclu-dortlu': 'Üçlü/Dörtlü Test', nipt: 'NIPT', invazif: 'İnvaziv Test', 'risk-sorgu': 'Risk Sorgusu' }[gRow.tur] || gRow.tur}</b>
                     {' · '}{trTarih(gRow.tarih)}{gRow.hafta ? ` · ${gRow.hafta}. hafta` : ''}
                     {' — '}{Object.entries(gRow.veri).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(', ')}
@@ -898,7 +898,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 10 }}>Doğum Sonu Bakım Yönetim Rehberi — ilk 24 saat hastane, sonrası 42. güne kadar. EPDS, emzirme ve postpartum kontrasepsiyon bu izlemde.</div>
             <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
               {(veri.lohusa?.takvim || []).map((p) => (
-                <details key={p.no} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px' }}>
+                <details key={p.no} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 10, padding: '8px 12px' }}>
                   <summary style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5, color: CHROME_RENK.ink }}>
                     <span><b>{p.etiket}</b></span>
                     <span style={{ color: DURUM_RENK[p.durum], fontWeight: 700, fontSize: 12 }}>{DURUM_ETIKET[p.durum]}</span>
@@ -910,7 +910,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             {visits.filter((v) => v.layer === 'lohusa').length > 0 && (
               <ul style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>
                 {visits.filter((v) => v.layer === 'lohusa').map((v, i) => (
-                  <li key={i} style={{ color: v.done ? '#86EFAC' : undefined }}>
+                  <li key={i} style={{ color: v.done ? '#15803D' : undefined }}>
                     {v.kind === 'lohusa_hastane' ? 'Hastane' : 'ASM'} · PP {v.ga_or_pp_day}. gün{v.done ? ' · Yapıldı' : ''} · {v.checklist.join(', ')}
                   </li>
                 ))}
@@ -920,7 +920,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: CHROME_RENK.muted, marginTop: 12 }}>
                 <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Gün</th><th>TA</th><th>Loşi</th><th>Emzirme</th><th>Duygu</th><th>EPDS</th></tr></thead>
                 <tbody>{[...veri.lohusa.izlemler].reverse().map((x) => (
-                  <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 6 }}>{trTarih(x.tarih)}</td><td>{x.dogum_sonrasi_gun}</td><td>{x.tansiyon_sistolik && x.tansiyon_diastolik ? `${x.tansiyon_sistolik}/${x.tansiyon_diastolik}` : '—'}</td><td>{x.kanama ?? '—'}</td><td>{x.emzirme ?? '—'}</td><td>{x.duygu_durumu ?? '—'}</td><td>{x.epds_puan ?? '—'}</td></tr>
+                  <tr key={x.id} style={{ borderTop: '1px solid rgba(58,44,34,0.12)' }}><td style={{ padding: 6 }}>{trTarih(x.tarih)}</td><td>{x.dogum_sonrasi_gun}</td><td>{x.tansiyon_sistolik && x.tansiyon_diastolik ? `${x.tansiyon_sistolik}/${x.tansiyon_diastolik}` : '—'}</td><td>{x.kanama ?? '—'}</td><td>{x.emzirme ?? '—'}</td><td>{x.duygu_durumu ?? '—'}</td><td>{x.epds_puan ?? '—'}</td></tr>
                 ))}</tbody>
               </table>
             )}
@@ -996,7 +996,7 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
         ))}
       </div>
       {!acik && d.kayit && (
-        <div style={{ fontSize: 12.5, color: '#9FB3C8' }}>
+        <div style={{ fontSize: 12.5, color: '#8b7d70' }}>
           {d.kayit.kontrasepsiyon_yontemi ? `Kontrasepsiyon: ${d.kayit.kontrasepsiyon_yontemi}` : 'Kontrasepsiyon: kayıt yok'}{d.kayit.adet_duzeni ? ` · Adet: ${d.kayit.adet_duzeni}` : ''}{d.kayit.menopoz_durumu ? ` · ${d.kayit.menopoz_durumu}` : ''}
         </div>
       )}

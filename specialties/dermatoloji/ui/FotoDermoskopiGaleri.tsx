@@ -8,8 +8,8 @@ import { belgeAnalizHref, belgelerTabHref, goruntulemeCaptureHref } from '../eng
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }
@@ -42,7 +42,7 @@ export function FotoDermoskopiGaleri({
         {photos.map((p) => {
           const kilit = genitalOrChildBlocked(p)
           return (
-            <li key={p.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 8 }}>
+            <li key={p.id} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 10, padding: 8 }}>
               {kilit ? (
                 <div style={{ height: 110, borderRadius: 8, background: 'rgba(248,113,113,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: CHROME_RENK.warn, textAlign: 'center', padding: 8 }}>
                   Genital onam yok — görüntü kilitli
@@ -51,7 +51,7 @@ export function FotoDermoskopiGaleri({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={urls[p.coreImageId]} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8 }} />
               ) : (
-                <div style={{ height: 110, borderRadius: 8, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: CHROME_RENK.muted }}>
+                <div style={{ height: 110, borderRadius: 8, background: 'rgba(58,44,34,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: CHROME_RENK.muted }}>
                   Önizleme yok
                 </div>
               )}

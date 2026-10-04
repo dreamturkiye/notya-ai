@@ -19,6 +19,7 @@ import { useParams } from 'next/navigation';
 import { intakeFormBolumleri, type IntakeBolum } from '@/lib/intake/coreAlanlar';
 import { intakeAlanHatalari, intakeGorunmeyenYanitlariAyikla } from '@/lib/intake/dogrula';
 import IntakeBolumleri from '@/components/intake/IntakeBolumleri';
+import { CHROME_RENK as R, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,30 +108,32 @@ export default function IntakeFormPage() {
     }
   }
 
-  const kutu: React.CSSProperties = { background: 'white', borderRadius: 16, padding: 24, maxWidth: 600, width: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
+  const kutu: React.CSSProperties = { background: R.paper, border: `1px solid ${R.border}`, borderRadius: 16, padding: 24, maxWidth: 600, width: '100%', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' };
 
   const tumBolumler = sema ? intakeFormBolumleri(sema.coreBolumler, sema.bransBolumu) : [];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F9', display: 'flex', alignItems: durum === 'gecerli' ? 'flex-start' : 'center', justifyContent: 'center', padding: '32px 16px' }}>
-      {durum === 'yukleniyor' && <div style={{ color: '#64748B' }}>Yükleniyor…</div>}
+    <div style={{ minHeight: '100vh', background: R.cream, color: R.ink, fontFamily: CHROME_FONT.sans, display: 'flex', alignItems: durum === 'gecerli' ? 'flex-start' : 'center', justifyContent: 'center', padding: '32px 16px' }}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      {durum === 'yukleniyor' && <div style={{ color: R.muted }}>Yükleniyor…</div>}
 
       {durum === 'gecersiz' && (
         <div style={kutu}>
-          <h2 style={{ fontSize: 20, marginBottom: 8, color: '#0A1628' }}>Form Kullanılamıyor</h2>
-          <p style={{ color: '#EF4444', fontSize: 14 }}>{hataMesaji}</p>
+          <h2 style={{ fontSize: 20, marginBottom: 8, color: R.ink, fontFamily: CHROME_FONT.serif }}>Form Kullanılamıyor</h2>
+          <p style={{ color: R.warn, fontSize: 14 }}>{hataMesaji}</p>
         </div>
       )}
 
       {durum === 'gecerli' && sema && (
         <form onSubmit={gonder} noValidate style={kutu}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-            <h2 style={{ fontSize: 22, margin: 0, color: '#0A1628' }}>Hasta Bilgi Formu</h2>
-            <span style={{ fontSize: 11, color: '#0F9B8E', background: 'rgba(15,155,142,0.1)', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', fontWeight: 600 }}>
+            <h2 style={{ fontSize: 22, margin: 0, color: R.ink, fontFamily: CHROME_FONT.serif }}>Hasta Bilgi Formu</h2>
+            <span style={{ fontSize: 11, color: R.pine, background: 'rgba(47,67,52,0.08)', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', fontWeight: 600 }}>
               ~3-5 dakika
             </span>
           </div>
-          <p style={{ color: 'rgba(10,22,40,0.6)', fontSize: 14, marginBottom: 24 }}>
+          <p style={{ color: R.muted, fontSize: 14, marginBottom: 24 }}>
             {sema.hastaAdi ? `Merhaba ${sema.hastaAdi}, ` : ''}
             {sema.doktorAdi ? `${sema.doktorAdi} ile ` : ''}
             randevunuz öncesinde bu kısa formu doldurmanız muayene sürenizi daha verimli kılar.
@@ -139,7 +142,7 @@ export default function IntakeFormPage() {
           <IntakeBolumleri bolumler={tumBolumler} yanitlar={yanitlar} onDegis={alanDegistir} hatalar={alanHatalari} />
 
           {formHata && (
-            <div style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#991B1B', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: 'rgba(164,91,62,0.08)', border: '1px solid rgba(164,91,62,0.25)', color: R.warn, borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 16 }}>
               {formHata}
             </div>
           )}
@@ -147,7 +150,7 @@ export default function IntakeFormPage() {
           <button
             type="submit"
             disabled={gonderiliyor}
-            style={{ width: '100%', padding: '14px', background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+            style={{ width: '100%', padding: '14px', background: R.pine, color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
           >
             {gonderiliyor ? 'Gönderiliyor…' : 'Formu Gönder'}
           </button>
@@ -156,8 +159,8 @@ export default function IntakeFormPage() {
 
       {durum === 'tamamlandi' && (
         <div style={kutu}>
-          <h2 style={{ fontSize: 20, marginBottom: 8, color: '#0A1628' }}>Teşekkürler ✓</h2>
-          <p style={{ color: 'rgba(10,22,40,0.6)', fontSize: 14 }}>
+          <h2 style={{ fontSize: 20, marginBottom: 8, color: R.ink, fontFamily: CHROME_FONT.serif }}>Teşekkürler ✓</h2>
+          <p style={{ color: R.muted, fontSize: 14 }}>
             Formunuz başarıyla iletildi. {sema?.doktorAdi ? `${sema.doktorAdi} randevunuzdan önce inceleyecek` : 'Doktorunuz randevunuzdan önce inceleyecek'}. Yakında görüşmek üzere.
           </p>
         </div>

@@ -188,7 +188,7 @@ export default function SgkRaporAraci() {
       {!!sonuc.eksikler.length && (
         <div style={kutu}>
           <div style={etiket}>Eksikler</div>
-          {sonuc.eksikler.map((e) => <div key={e} style={{ ...metin, marginTop: 6, color: '#FBBF24' }}>• {e}</div>)}
+          {sonuc.eksikler.map((e) => <div key={e} style={{ ...metin, marginTop: 6, color: '#B45309' }}>• {e}</div>)}
         </div>
       )}
 
