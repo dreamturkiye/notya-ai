@@ -27,6 +27,7 @@ import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
 import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
 import AsiHatirlatmaListesi from '@/components/doktor/AsiHatirlatmaListesi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan';
 
 interface Asi {
   id: string;
@@ -400,16 +401,16 @@ export default function HastaAsilar({
               <input type="number" min={1} inputMode="numeric" value={dozNo} onChange={(e) => setDozNo(e.target.value)} style={GIRIS} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Uygulama Tarihi</label>
-              <input type="date" value={uygulamaTarihi} onChange={(e) => setUygulamaTarihi(e.target.value)} style={GIRIS} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Uygulama Tarihi <span style={{ fontWeight: 400 }}>(gg.aa.yyyy)</span></label>
+              <TrTarihAlan value={uygulamaTarihi} onChange={setUygulamaTarihi} style={GIRIS} name="uygulama_tarihi" />
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Yaş (ay) — uygulama anı</label>
               <input type="number" min={0} max={600} inputMode="numeric" value={uygulamaYasAyForm} onChange={(e) => setUygulamaYasAyForm(e.target.value)} placeholder="Doğum + tarihten" style={GIRIS} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Sonraki Doz / Hatırlatma Tarihi</label>
-              <input type="date" value={sonrakiDozTarihi} onChange={(e) => setSonrakiDozTarihi(e.target.value)} style={GIRIS} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Sonraki Doz / Hatırlatma Tarihi <span style={{ fontWeight: 400 }}>(gg.aa.yyyy)</span></label>
+              <TrTarihAlan value={sonrakiDozTarihi} onChange={setSonrakiDozTarihi} style={GIRIS} name="sonraki_doz_tarihi" />
             </div>
             <div>
               <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Kaynak</label>
@@ -526,14 +527,14 @@ function AsiSatirDuzenle({
       />
     </div>,
     <div key="tarih" data-asi-alan="tarih">
-      {lbl('Uygulama tarihi')}
-      <input
-        aria-label="Uygulama tarihi"
-        type="date"
+      {lbl('Uygulama tarihi (gg.aa.yyyy)')}
+      <TrTarihAlan
         value={tarih}
-        onChange={(e) => tarihDegisti(e.target.value)}
-        onBlur={() => {
-          const yeni = tarih || null;
+        name={`uygulama_tarihi_${a.id}`}
+        style={GIRIS}
+        onChange={(iso) => {
+          tarihDegisti(iso);
+          const yeni = iso || null;
           if (yeni !== (a.uygulama_tarihi || null)) {
             const govde: Record<string, unknown> = { uygulamaTarihi: yeni };
             if (a.uygulama_yas_ay == null && dogumTarihi && yeni) {
@@ -543,7 +544,6 @@ function AsiSatirDuzenle({
             void kaydetAlan(govde);
           }
         }}
-        style={GIRIS}
       />
     </div>,
     <div key="yas" data-asi-alan="yas">
