@@ -15,6 +15,7 @@ import { hekimUnvanli } from '@/lib/doktor/hekimAdi'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
+import OnBuroFisildiyor from '@/components/doktor/OnBuroFisildiyor'
 
 type RandevuSatir = {
   id: string
@@ -188,6 +189,11 @@ export default function SekreterMasa() {
           </div>
         )}
       </header>
+
+      {/* Ön büro fısıltısı — mesaj, talep, belge, telefon, gelmedi, form (klinik kohort yok) */}
+      <section className="sek-gir-2" aria-label="Ön büro fısıltısı">
+        <OnBuroFisildiyor />
+      </section>
 
       {/* Hemen yap */}
       <section className="sek-gir-2" aria-label="Hızlı işlemler">
