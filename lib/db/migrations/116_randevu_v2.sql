@@ -1,4 +1,4 @@
--- 111 — NOTYA-RANDEVU-V2 PR1 (2026-10-04): hasta portalından randevu, onay akışı, hatırlatma işleri.
+-- 116 — NOTYA-RANDEVU-V2 PR1 (2026-10-04): hasta portalından randevu, onay akışı, hatırlatma işleri.
 -- Architecture: docs/RANDEVU-V2.md. Everything here is ADDITIVE:
 --   • new tables only (settings, exceptions, event log, reminder jobs);
 --   • new nullable columns on randevular (NULL on every existing row);
@@ -189,5 +189,5 @@ begin
 end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
-values ('111', '111_randevu_v2.sql', null, now(), false, 'NOTYA-RANDEVU-V2 PR1: portal randevu ayarları, istisnalar, talep durumu, v2 çakışma garantisi, olay günlüğü, hatırlatma işleri')
+values ('116', '116_randevu_v2.sql', null, now(), false, 'NOTYA-RANDEVU-V2 PR1: portal randevu ayarları, istisnalar, talep durumu, v2 çakışma garantisi, olay günlüğü, hatırlatma işleri')
 on conflict (version) do nothing;

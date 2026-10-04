@@ -5,7 +5,7 @@
  *   • the e-mail links   app/api/randevu/eylem                       (one signed appointment)
  *   • the practice route app/api/doktor/randevu-portal/talepler      (doktor + sekreter, pratikOturum)
  *   • the cron           app/api/cron/randevu-v2                     (jobs + escalation)
- * Fail-soft until migration 111 is applied: settings read as OFF, so nothing here is reachable.
+ * Fail-soft until migration 116 is applied: settings read as OFF, so nothing here is reachable.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { RESMI_TATILLER_2026 } from '@/lib/randevu/resmiTatiller'
@@ -387,7 +387,7 @@ export async function talepListesi(sb: Sb, doktorId: string, simdi: number = Dat
   const ayar = await ayarGetir(sb, doktorId)
   const { data, error } = await sb.from('randevular').select(RANDEVU_ALANLARI)
     .eq('doktor_id', doktorId).eq('durum', 'talep').order('baslangic', { ascending: true }).limit(200)
-  // Before migration 111 the new columns do not exist → no requests can exist either.
+  // Before migration 116 the new columns do not exist → no requests can exist either.
   if (error) return tabloYokMu(error) ? { acik: ayar.acik, talepler: [] } : null
   const satirlar = (data || []) as unknown as V2Randevu[]
   const ids = Array.from(new Set(satirlar.map((r) => r.patient_id).filter(Boolean))) as string[]

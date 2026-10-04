@@ -1,4 +1,4 @@
--- 112 — NOTYA-RANDEVU-V2 PR2 (2026-10-04): Google Takvim two-way sync. New tables only; nothing existing changes.
+-- 117 — NOTYA-RANDEVU-V2 PR2 (2026-10-04): Google Takvim two-way sync. New tables only; nothing existing changes.
 -- Dormant until GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET exist and a doctor connects. Safe to re-run.
 
 -- ── 1. One connection per doctor (refresh token encrypted at rest with lib/security/encryption.ts) ──
@@ -88,5 +88,5 @@ begin
 end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
-values ('112', '112_randevu_v2_google.sql', null, now(), false, 'NOTYA-RANDEVU-V2 PR2: Google Takvim bağlantısı, dış meşgul blokları, eşleşme, öneriler')
+values ('117', '117_randevu_v2_google.sql', null, now(), false, 'NOTYA-RANDEVU-V2 PR2: Google Takvim bağlantısı, dış meşgul blokları, eşleşme, öneriler')
 on conflict (version) do nothing;

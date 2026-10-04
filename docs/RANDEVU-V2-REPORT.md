@@ -6,9 +6,9 @@ Brief: Kaan via Claude, 2026-10-04. The architecture is in `docs/RANDEVU-V2.md`.
 
 | PR | Branch | Based on | Migration |
 |---|---|---|---|
-| PR1: engine, portal booking, approval, reminders | `claude/randevu-v2-engine-l4bec9` | `main` | `lib/db/migrations/111_randevu_v2.sql` |
-| PR2: Google Takvim two-way sync | `claude/randevu-v2-google-l4bec9` | PR1 | `lib/db/migrations/112_randevu_v2_google.sql` |
-| PR3: waitlist and Ayşe | `claude/randevu-v2-waitlist-l4bec9` | PR2 | `lib/db/migrations/113_randevu_v2_bekleme.sql` |
+| PR1: engine, portal booking, approval, reminders | `claude/randevu-v2-engine-l4bec9` | `main` | `lib/db/migrations/116_randevu_v2.sql` |
+| PR2: Google Takvim two-way sync | `claude/randevu-v2-google-l4bec9` | PR1 | `lib/db/migrations/117_randevu_v2_google.sql` |
+| PR3: waitlist and Ayşe | `claude/randevu-v2-waitlist-l4bec9` | PR2 | `lib/db/migrations/118_randevu_v2_bekleme.sql` |
 
 Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previous one's commits.
 
@@ -50,7 +50,7 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 
 | Area | Files |
 |---|---|
-| Migration | `lib/db/migrations/111_randevu_v2.sql` |
+| Migration | `lib/db/migrations/116_randevu_v2.sql` |
 | Core | `lib/randevu/v2/{zaman,slot,ayar,durum,jeton,ics,isPlani,eposta,kanal,disMesgul,sunucu}.ts` |
 | Tests | `lib/randevu/v2/slot.test.ts`, `lib/randevu/v2/akis.test.ts`; cross-doctor cases in `lib/security/hasta-izolasyon.test.ts` |
 | API | `app/api/doktor/randevu-portal/{ayar,talepler}/route.ts`, `app/api/portal/hasta/[token]/randevu/route.ts`, `app/api/randevu/eylem/route.ts`, `app/api/cron/randevu-v2/route.ts` |
@@ -68,7 +68,7 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 | `npm run test:izolasyon` | 386 pass / 0 fail (incl. 7 new cross-doctor cases) |
 | New unit tests | 38 pass / 0 fail |
 
-### Manual test steps (on a preview with migration 111 applied to a **non-production** database)
+### Manual test steps (on a preview with migration 116 applied to a **non-production** database)
 
 1. **Switch OFF (default).** Open Entegrasyonlar: the "Hasta Portalı Randevu" card shows the switch off.
    - Sağlığım shows no Randevu tab.
@@ -134,7 +134,7 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 
 | Area | Files |
 |---|---|
-| Migration | `lib/db/migrations/112_randevu_v2_google.sql` |
+| Migration | `lib/db/migrations/117_randevu_v2_google.sql` |
 | Core | `lib/randevu/v2/google/{donustur,istemci,senk,baglan}.ts`; `lib/randevu/v2/disMesgul.ts` now reads busy blocks |
 | API | `app/api/doktor/google-takvim/{route,baslat/route,oneriler/route}.ts`, `app/api/google-takvim/{donus,bildirim}/route.ts`; push hooks in the three PR1 action routes; one step in `app/api/cron/randevu-v2/route.ts` |
 | UI | `components/doktor/randevu/{GoogleTakvimKarti,GoogleTakvimOnerileri}.tsx`; one line each in Entegrasyonlar and Randevular |
@@ -194,7 +194,7 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 
 | Area | Files |
 |---|---|
-| Migration | `lib/db/migrations/113_randevu_v2_bekleme.sql` |
+| Migration | `lib/db/migrations/118_randevu_v2_bekleme.sql` |
 | Core | `lib/randevu/v2/{bekleme,kontrolOnerisi,ozellik,isler}.ts`; `core/eylemler/randevuEylemleri.ts` |
 | Touched | `core/eylemler/{types,araclar,kayit}.ts` (feature gate + order); `app/api/doktor/{konsult,not-konsult}/route.ts`, `app/api/asistan/ses-eylem/route.ts`, `lib/asistan/ayseCevapla.ts` (pass the flag); `app/api/notes/[id]/approve/route.ts` (one best-effort hook); `lib/doktor/gunOzeti.ts`; portal route and page; e-mail link route and page; cron |
 | Tests | `lib/randevu/v2/bekleme.test.ts`: waitlist order / expiry / first-accept / foreign-patient refusal / OFF; kontrol date; tool gating keeps the OFF tool list identical |

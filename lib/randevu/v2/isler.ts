@@ -8,7 +8,7 @@ import type { IsPlani } from './isPlani'
 
 type Sb = SupabaseClient
 
-/** Postgres exclusion_violation — the 111 constraint or trigger refused an overlapping new-flow row. */
+/** Postgres exclusion_violation — the 116 constraint or trigger refused an overlapping new-flow row. */
 export function cakismaHatasiMi(e: unknown): boolean {
   return !!e && typeof e === 'object' && (e as { code?: string }).code === '23P01'
 }

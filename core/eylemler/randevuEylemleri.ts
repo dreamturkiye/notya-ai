@@ -5,7 +5,7 @@
  * (`ozellik: 'randevu_v2'` → AracSuzgeci.randevuV2), and ordered after every existing tool so it never pushes one
  * out of the prompt cap.
  *
- * Writes go through the same rules as the calendar: overlap check (lib/randevu/cakisma.ts, plus the migration-111
+ * Writes go through the same rules as the calendar: overlap check (lib/randevu/cakisma.ts, plus the migration 116
  * guarantee on new-flow rows), V2 reminder jobs dropped/re-planned. Nothing leaves the system from this tap: no
  * patient message is sent (T3 'hastaya_mesaj_gonder' stays absent) — the card tells the doctor to inform the patient.
  */

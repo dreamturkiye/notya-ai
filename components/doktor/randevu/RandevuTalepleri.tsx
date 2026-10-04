@@ -2,7 +2,7 @@
 /**
  * NOTYA-RANDEVU-V2 — patient appointment requests on Ana Sayfa and Randevular (doktor + sekreter).
  * Onayla / Başka saat öner / Reddet. Hidden when there is nothing open — with 'Hasta Portalı Randevu' OFF
- * (or before migration 111) the list is always empty, so the screen is exactly as before.
+ * (or before migration 116) the list is always empty, so the screen is exactly as before.
  * Requests past the doctor's escalation period, or whose time has passed, are pinned on top in red.
  */
 import React, { useCallback, useEffect, useState } from 'react'

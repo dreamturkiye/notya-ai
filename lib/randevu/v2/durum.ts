@@ -2,7 +2,7 @@
  * NOTYA-RANDEVU-V2 — appointment states of the new flow, mapped onto what already exists. Pure, client-safe.
  *
  *   V2 state       stored as
- *   talep          durum = 'talep'                          (new value, migration 111)
+ *   talep          durum = 'talep'                          (new value, migration 116)
  *   onaylandi      durum = 'onaylandi', hasta_teyit_at NULL (existing value)
  *   teyit_edildi   durum = 'onaylandi', hasta_teyit_at set  (column, not a durum: existing queue / reminder
  *                                                            code only knows planlandi + onaylandi)

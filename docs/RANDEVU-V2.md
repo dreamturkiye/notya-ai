@@ -10,10 +10,10 @@ NOTYA-RANDEVU-V2 (brief from Kaan, 2026-10-04). Three stacked PRs: **PR1** engin
   - the e-mail link API answers "kapalı";
   - the cron finds no jobs;
   - the practice request list is empty and renders nothing.
-- Before migration 111 is applied, every V2 read fails soft and the feature reads as OFF.
+- Before migration 116 is applied, every V2 read fails soft and the feature reads as OFF.
 - Existing behaviour is untouched. That covers the randevu routes (`/api/doktor/randevular[/id]`), the overlap check (`lib/randevu/cakisma.ts`), the reminder cron (`/api/cron/randevu-hatirlatma`), the Hazır mesajlar queue and dispatcher, and every existing column.
 
-## Data (migration `lib/db/migrations/111_randevu_v2.sql`)
+## Data (migration `lib/db/migrations/116_randevu_v2.sql`)
 
 | Object | What |
 |---|---|
@@ -126,7 +126,7 @@ All server code uses the service-role client `servisSupabase()`, the shared no-s
 
 | Piece | What |
 |---|---|
-| Migration `112_randevu_v2_google.sql` | `google_takvim_baglantilari`: one row per doctor, refresh token **encrypted with `encryptPII`**, sync token, page token, channel id/resource/expiry, **SHA-256 hash** of the channel token, `tam_ad` (default false). `randevu_dis_mesgul`: busy blocks, start/end only. `randevu_google_eslesme`: appointment → event mirror. `randevu_takvim_onerileri`: Google-side changes awaiting the doctor. New tables only. |
+| Migration `117_randevu_v2_google.sql` | `google_takvim_baglantilari`: one row per doctor, refresh token **encrypted with `encryptPII`**, sync token, page token, channel id/resource/expiry, **SHA-256 hash** of the channel token, `tam_ad` (default false). `randevu_dis_mesgul`: busy blocks, start/end only. `randevu_google_eslesme`: appointment → event mirror. `randevu_takvim_onerileri`: Google-side changes awaiting the doctor. New tables only. |
 | `lib/randevu/v2/google/donustur.ts` (pure) | Event body; title = initials ("A. Y.") unless full name is chosen (KVKK); stable event id `n0<uuid hex>` (base32hex, so a retried insert cannot duplicate); incoming-event classification (busy / free / cancelled / ours); the conflict decision. |
 | `lib/randevu/v2/google/istemci.ts` | OAuth (PKCE, `access_type=offline`, `prompt=consent`) and Calendar v3 over `fetch`: insert, patch, delete, list (singleEvents, showDeleted, syncToken/pageToken), watch, stop. |
 | `lib/randevu/v2/google/senk.ts` | **Push:** confirmed (`onaylandi`) appointments from now − 1 day to + 90 days. The mirror is recorded **before** the call, so the push's own echo is not mistaken for a Google edit. Events whose appointment is no longer confirmed are deleted, mirror marked first. **Import:** incremental with `syncToken`; `410` → clear busy blocks and full resync; the first full sync can span cron ticks (`sayfa_jetonu`). **Conflicts:** an event carrying our private `notyaRandevuId` that moved or was deleted becomes a proposal. The id is honoured only when this doctor's own mirror has it, which defeats a copied marker. **Notya wins on its own appointments:** "Notya'daki kalsın" force-pushes Notya's version back. "Uygula" takes Google's change: a move is overlap-checked (+ the 111 trigger) and the patient's jobs are re-planned; a delete cancels and e-mails the patient. **Channel:** `events.watch` (7-day TTL), renewed a day before expiry; the old channel is stopped. **Disconnect:** best-effort delete of future Notya events, stop the channel, revoke at Google, delete token, mirrors and busy blocks. |
@@ -157,7 +157,7 @@ All server code uses the service-role client `servisSupabase()`, the shared no-s
 
 | Piece | What |
 |---|---|
-| Migration `113_randevu_v2_bekleme.sql` | `randevu_bekleme_listesi`: one open entry per appointment, with `en_gec` = that appointment's start; carries the 052-style restrictive patient-ownership policy. `randevu_bekleme_teklifleri`: offers, each with a deadline. New tables only. |
+| Migration `118_randevu_v2_bekleme.sql` | `randevu_bekleme_listesi`: one open entry per appointment, with `en_gec` = that appointment's start; carries the 052-style restrictive patient-ownership policy. `randevu_bekleme_teklifleri`: offers, each with a deadline. New tables only. |
 | `lib/randevu/v2/bekleme.ts` | Join/leave, the portal state, accepting an offer (`teklifKabul`), and the cron matcher `teklifTara`. |
 | Portal | One checkbox per movable appointment: "Daha erken bir saat açılırsa haber ver". An open offer shows "Bu saati istiyorum". |
 | E-mail link | Token action `teklif` (the id is the offer), handled by `/api/randevu/eylem` and `/randevu/[jeton]`. |
@@ -177,7 +177,7 @@ How `teklifTara` works:
 - **Move / cancel: new `randevu_degistir`** (`core/eylemler/randevuEylemleri.ts`):
   - It is a card the doctor confirms, same spine (`core/eylemler/onayla.ts`), T1, undoable within 24 h.
   - It is a base action (every branş) but **offered only while Hasta Portalı Randevu is ON** (`ozellik: 'randevu_v2'` → `AracSuzgeci.randevuV2`, read-only check `lib/randevu/v2/ozellik.ts`). It is ordered **after** every existing tool, so it never pushes one out of the 15-tool cap.
-  - Writes use the calendar's overlap check plus the 111 guarantee. V2 reminder jobs are dropped or re-planned.
+  - Writes use the calendar's overlap check plus the 116 guarantee. V2 reminder jobs are dropped or re-planned.
   - **No patient message is sent** (T3 `hastaya_mesaj_gonder` stays absent). The tool description tells Ayşe to remind the doctor to inform the patient.
 - **Kontrol proposal at note approval** (`lib/randevu/v2/kontrolOnerisi.ts`, one hook in `app/api/notes/[id]/approve/route.ts`):
   - The approved plan says "2 hafta sonra kontrol" → a `kontrol_randevusu_olustur` taslak in the existing pending-cards tray.

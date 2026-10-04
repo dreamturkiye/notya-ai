@@ -327,7 +327,7 @@ export async function oneriYanitla(sb: Sb, doktorId: string, oneriId: string, is
       await bekleyenIsleriIptal(sb, doktorId, satir.id)
       if (satir.patient_id) await isEkle(sb, satir, [{ tur: 'iptal_eposta', zaman: new Date().toISOString() }])
     } else {
-      // Same overlap rule as the calendar (non-cancelled rows); a new-flow row is also guarded by migration 111.
+      // Same overlap rule as the calendar (non-cancelled rows); a new-flow row is also guarded by migration 116.
       const { data: cak } = await sb.from('randevular').select('id').eq('doktor_id', doktorId).neq('durum', 'iptal').neq('id', satir.id)
         .lt('baslangic', o.yeni_bitis).gt('bitis', o.yeni_baslangic).limit(1)
       if (cak?.length) return { ok: false, durum: 409, hata: 'Google’daki yeni saat başka bir randevuyla çakışıyor.' }

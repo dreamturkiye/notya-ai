@@ -1,7 +1,7 @@
 /**
  * NOTYA-RANDEVU-V2 — external busy blocks that feed the slot engine (start/end only, no titles).
  * PR2: Google Takvim events imported into randevu_dis_mesgul (lib/randevu/v2/google/senk.ts). Fail-soft: before
- * migration 112, or for a doctor who never connected, there are none.
+ * migration 117, or for a doctor who never connected, there are none.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Aralik } from './slot'

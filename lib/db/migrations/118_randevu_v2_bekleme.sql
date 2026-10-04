@@ -1,4 +1,4 @@
--- 113 — NOTYA-RANDEVU-V2 PR3 (2026-10-04): waitlist ("daha erken saat çıkarsa haber ver") and its e-mail offers.
+-- 118 — NOTYA-RANDEVU-V2 PR3 (2026-10-04): waitlist ("daha erken saat çıkarsa haber ver") and its e-mail offers.
 -- New tables only. Reached only while the doctor's 'Hasta Portalı Randevu' is ON. Safe to re-run.
 
 create table if not exists public.randevu_bekleme_listesi (
@@ -57,5 +57,5 @@ begin
 end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
-values ('113', '113_randevu_v2_bekleme.sql', null, now(), false, 'NOTYA-RANDEVU-V2 PR3: bekleme listesi + e-posta teklifleri')
+values ('118', '118_randevu_v2_bekleme.sql', null, now(), false, 'NOTYA-RANDEVU-V2 PR3: bekleme listesi + e-posta teklifleri')
 on conflict (version) do nothing;
