@@ -110,3 +110,43 @@ All server code uses the service-role client `servisSupabase()`, the shared no-s
 - The practice resolves request ids with `doktor_id` (pratikOturum); patient names are decrypted only for `patients.doctor_id = doktorId`.
 - Signed links expose time, doctor name and state, never patient data.
 - Cross-doctor tests are in `lib/security/hasta-izolasyon.test.ts`: practice list, slots for a foreign request, rejecting a foreign request, settings, portal list, foreign cancel and foreign slots, PIN required.
+
+## PR2: Google Takvim two-way sync (dormant until credentials exist)
+
+### Dormancy and scope
+
+- The feature is hidden unless all three are set: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (the same names the Gmail connect already reads) and `ENCRYPTION_MASTER_KEY`.
+  - The Entegrasyonlar card renders nothing.
+  - Routes answer 503 or empty.
+  - The cron step is a no-op.
+- **Scope: only `https://www.googleapis.com/auth/calendar.events`.** No openid/email and no calendar list. The address shown on the card is the primary calendar's `summary` from the first list call.
+- Connecting a calendar is a doctor's own action and is independent of the portal switch. Busy blocks only matter to online booking.
+
+### Pieces
+
+| Piece | What |
+|---|---|
+| Migration `112_randevu_v2_google.sql` | `google_takvim_baglantilari`: one row per doctor, refresh token **encrypted with `encryptPII`**, sync token, page token, channel id/resource/expiry, **SHA-256 hash** of the channel token, `tam_ad` (default false). `randevu_dis_mesgul`: busy blocks, start/end only. `randevu_google_eslesme`: appointment → event mirror. `randevu_takvim_onerileri`: Google-side changes awaiting the doctor. New tables only. |
+| `lib/randevu/v2/google/donustur.ts` (pure) | Event body; title = initials ("A. Y.") unless full name is chosen (KVKK); stable event id `n0<uuid hex>` (base32hex, so a retried insert cannot duplicate); incoming-event classification (busy / free / cancelled / ours); the conflict decision. |
+| `lib/randevu/v2/google/istemci.ts` | OAuth (PKCE, `access_type=offline`, `prompt=consent`) and Calendar v3 over `fetch`: insert, patch, delete, list (singleEvents, showDeleted, syncToken/pageToken), watch, stop. |
+| `lib/randevu/v2/google/senk.ts` | **Push:** confirmed (`onaylandi`) appointments from now − 1 day to + 90 days. The mirror is recorded **before** the call, so the push's own echo is not mistaken for a Google edit. Events whose appointment is no longer confirmed are deleted, mirror marked first. **Import:** incremental with `syncToken`; `410` → clear busy blocks and full resync; the first full sync can span cron ticks (`sayfa_jetonu`). **Conflicts:** an event carrying our private `notyaRandevuId` that moved or was deleted becomes a proposal. The id is honoured only when this doctor's own mirror has it, which defeats a copied marker. **Notya wins on its own appointments:** "Notya'daki kalsın" force-pushes Notya's version back. "Uygula" takes Google's change: a move is overlap-checked (+ the 111 trigger) and the patient's jobs are re-planned; a delete cancels and e-mails the patient. **Channel:** `events.watch` (7-day TTL), renewed a day before expiry; the old channel is stopped. **Disconnect:** best-effort delete of future Notya events, stop the channel, revoke at Google, delete token, mirrors and busy blocks. |
+| `disMesgul.ts` | Now reads `randevu_dis_mesgul` for the slot engine. |
+
+### Routes
+
+| Route | What |
+|---|---|
+| `GET/PATCH/DELETE /api/doktor/google-takvim` | Status / full-name toggle / disconnect. doktorOturum; doctor only, since it is the doctor's own Google account. |
+| `POST /api/doktor/google-takvim/baslat` | Returns the consent URL. The state is signed with the e-mail connect's signer, type `google_takvim`; the PKCE verifier and nonce go in an encrypted httpOnly cookie on `/api/google-takvim`. |
+| `GET /api/google-takvim/donus` | OAuth callback. Register this exact URL in Google Cloud. |
+| `POST /api/google-takvim/bildirim` | Push webhook. Channel id plus a timing-safe token-hash check, then imports that doctor only. Always 200. |
+| `GET/POST /api/doktor/google-takvim/oneriler` | The doctor's proposals. |
+
+### Triggers and UI
+
+- **Triggers:**
+  - after each V2 change (practice answer, portal action, e-mail link), a best-effort push of that one appointment;
+  - the `randevu-v2` cron runs the catch-up for every connected doctor, oldest sync first, within the time budget.
+- **UI:**
+  - `components/doktor/randevu/GoogleTakvimKarti.tsx` (Entegrasyonlar);
+  - `GoogleTakvimOnerileri.tsx` (inside the card and on Randevular; hidden when empty). Its buttons are "Yeni saati uygula" / "Randevuyu iptal et" and "Notya'daki kalsın".

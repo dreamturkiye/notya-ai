@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { gunlereAyir } from '@/lib/randevu/v2/slot'
 import { ayarGetir, isleriCalistir, musaitSlotlar, pratikIslem, talepListesi, type PratikIslemi } from '@/lib/randevu/v2/sunucu'
+import { googleaGonder } from '@/lib/randevu/v2/google/senk'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,5 +55,6 @@ export async function POST(req: NextRequest) {
   if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
   // Tell the patient now rather than at the next cron tick (quiet hours still hold it until morning).
   await isleriCalistir(supabase, { randevuId: s.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
+  await googleaGonder(supabase, doktorId, s.randevu.id)
   return NextResponse.json({ ok: true, durum: s.randevu.durum, baslangic: s.randevu.baslangic })
 }

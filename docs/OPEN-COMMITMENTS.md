@@ -62,7 +62,7 @@ Architecture `docs/RANDEVU-V2.md`; build report `docs/RANDEVU-V2-REPORT.md`. Thr
 | ID | Status | What | Waits on |
 |---|---|---|---|
 | NOTYA-RANDEVU-V2-A | OPEN 2026-10-04 | Automatic WhatsApp reminders via Meta coexistence (approved utility template). Today WhatsApp is one-tap only (Hazır mesajlar); the adapter slot exists (`RandevuKanali`, `lib/randevu/v2/kanal.ts`). | Kaan: legal entity + Meta Business verification |
-| NOTYA-RANDEVU-V2-B | OPEN 2026-10-04 | Google OAuth client credentials (`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, scope `calendar.events`) and Google app verification for the Google Takvim sync (PR2). The feature is hidden until they exist. | Kaan |
+| NOTYA-RANDEVU-V2-B | OPEN 2026-10-04 | Google OAuth client credentials (`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, scope `calendar.events`), Calendar API enabled, redirect URI `…/api/google-takvim/donus`, domain verification for the push webhook `…/api/google-takvim/bildirim`, and Google app verification (sensitive scope) for the Google Takvim sync (PR2). The feature is hidden until they exist. | Kaan |
 | NOTYA-RANDEVU-V2-C | OPEN 2026-10-04 | Apply migrations (111 for PR1; PR2/PR3 numbers in the report), merge and deploy PR1 → PR2 → PR3 in order. Nothing was applied, merged or deployed. | Kaan's explicit go |
 | NOTYA-RANDEVU-V2-D | OPEN 2026-10-04 | Items not finished in this build — listed in `docs/RANDEVU-V2-REPORT.md` § "Not built / follow-ups" (kept current per PR). | Claude |
 
