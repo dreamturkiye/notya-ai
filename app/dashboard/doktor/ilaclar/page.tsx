@@ -680,7 +680,7 @@ export default function DoktorIlaclarPage() {
               </div>
 
               <div>
-                <label style={toolsLabel}>Kullanım Sıklığı *</label>
+                <label style={toolsLabel}>Kullanım Sıklığı * <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(serbest metin)</span></label>
                 <input
                   type="text"
                   list="ilaclar-siklik-onerileri"

@@ -477,7 +477,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             <input className="ni-input" value={doz} onChange={(e) => setDoz(e.target.value)} placeholder="500 mg" />
           </div>
           <div className="ni-field">
-            <label className="ni-label">Kullanım sıklığı *</label>
+            <label className="ni-label">Kullanım sıklığı * <span style={{ fontWeight: 400, color: '#94A3B8' }}>(serbest metin)</span></label>
             <input
               className="ni-input"
               list="ni-siklik-onerileri"
