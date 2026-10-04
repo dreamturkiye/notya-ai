@@ -34,7 +34,7 @@ export function bleYetenek(): BleYetenek {
   if (nav.bluetooth) return { destekli: true, sebep: 'ok', mesaj: '' }
   const ua = navigator.userAgent
   const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  if (ios) return { destekli: false, sebep: 'ios-safari', mesaj: 'iPhone/iPad Safari, Bluetooth cihaz bağlantısını desteklemiyor (Apple bu özelliği eklemiyor). Seçenekler: Android telefon/tablet veya bilgisayarda Chrome/Edge kullanın; ya da iPhone için "iOSWebBLE" Safari eklentisini kurun.' }
+  if (ios) return { destekli: false, sebep: 'ios-safari', mesaj: 'iPhone/iPad Safari Bluetooth’u natively desteklemiyor. Seçenekler: (1) App Store’dan ücretsiz beacio veya iOSWebBLE Safari eklentisini kurup Notya’yı Safari’de açın, (2) Bluefy tarayıcısında notya-ai.vercel.app’i açın, veya (3) Android / bilgisayarda Chrome ya da Edge kullanın.' }
   if (/Firefox/.test(ua)) return { destekli: false, sebep: 'firefox', mesaj: 'Firefox Bluetooth cihaz bağlantısını desteklemiyor — Chrome veya Edge kullanın.' }
   return { destekli: false, sebep: 'tarayici-desteklemiyor', mesaj: 'Bu tarayıcı Bluetooth cihaz bağlantısını desteklemiyor — Chrome veya Edge kullanın.' }
 }
@@ -90,6 +90,37 @@ export async function bluetoothOlcumAl(opts: { profilIds?: string[]; zamanAsimiM
       ch.startNotifications().catch((err: unknown) => { temizle(); reject(err instanceof Error ? err : new Error('Bildirim başlatılamadı.')) })
     })
     return { cihaz, profil, olcumler }
+  } finally {
+    try { device.gatt.disconnect() } catch { /* zaten kapalı */ }
+  }
+}
+
+/**
+ * Kurulum (Ayarlar › Cihazlar): cihazı seçip tanı — ölçüm beklemez.
+ * DIS + standart tıbbi profil bulunur; doktor sonra vitallerde "Cihazdan al" ile ölçer.
+ */
+export async function bluetoothCihazTani(opts: { profilIds?: string[] } = {}): Promise<{ cihaz: CihazBilgisi; profil: GattProfil }> {
+  const nav = navigator as unknown as NavigatorBle
+  if (!nav.bluetooth) throw new Error(bleYetenek().mesaj || 'Bluetooth desteklenmiyor.')
+  const profiller = opts.profilIds?.length ? GATT_PROFILLER.filter((p) => opts.profilIds!.includes(p.id)) : GATT_PROFILLER
+  const device = await nav.bluetooth.requestDevice({
+    filters: profiller.map((p) => ({ services: [p.serviceUuid] })),
+    optionalServices: [DEVICE_INFORMATION_SERVICE, ...profiller.map((p) => p.serviceUuid)],
+  })
+  if (!device.gatt) throw new Error('Cihaz GATT desteklemiyor.')
+  const server = await device.gatt.connect()
+  try {
+    let profil: GattProfil | null = null
+    for (const p of profiller) {
+      try {
+        await server.getPrimaryService(p.serviceUuid)
+        profil = p
+        break
+      } catch { /* sonraki */ }
+    }
+    if (!profil) throw new Error('Cihazda tanınan bir tıbbi ölçüm profili bulunamadı. (OneTouch gibi özel protokollü cihazlar bu yolla bağlanmaz.)')
+    const cihaz = await cihazBilgisiOku(server, device.name ?? null)
+    return { cihaz, profil }
   } finally {
     try { device.gatt.disconnect() } catch { /* zaten kapalı */ }
   }
