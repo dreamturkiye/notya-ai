@@ -75,6 +75,19 @@ export function arsivsizAsilar(sb: Istemci, secim: string, o?: Sayim) {
     .or('kaynak_note_id.is.null,arsiv_kaynak.not.is.null')
 }
 
+/**
+ * NOTYA-TETKIK-NOT-01: a lab order a muayene's note wrote (`hasta_tetkik_istemleri.kaynak_note_id`)
+ * is hidden with that muayene — same read filter as arsivsizIlaclar / arsivsizAsilar.
+ */
+export const TETKIK_ARSIV_GOMME = ILAC_ARSIV_GOMME
+
+/** `hasta_tetkik_istemleri` without orders written by an archived muayene's note. */
+export function arsivsizTetkikler(sb: Istemci, secim: string, o?: Sayim) {
+  return sb.from('hasta_tetkik_istemleri').select(`${secim}, ${TETKIK_ARSIV_GOMME}` as '*', o)
+    .is('arsiv_kaynak.arsiv_seans.archived_at', null)
+    .or('kaynak_note_id.is.null,arsiv_kaynak.not.is.null')
+}
+
 /** Embedded `sessions` value (object or 1-element array) → is that muayene archived? */
 export function seansArsivdeMi(seans: unknown): boolean {
   const s = (Array.isArray(seans) ? seans[0] : seans) as { archived_at?: string | null } | null | undefined

@@ -710,6 +710,7 @@ export default function IncelemePage() {
                         {note.ilaclar.length > 0 && (
                           <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank'); }} style={{ fontSize: 12, color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600 }}>🧾 Reçete ({note.ilaclar.length} ilaç)</span>
                         )}
+                        <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/tetkikler`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/tetkikler`, '_blank'); }} style={{ fontSize: 12, color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600 }}>🧪 Tetkikler</span>
                       </div>
                     </div>
                   ) : (

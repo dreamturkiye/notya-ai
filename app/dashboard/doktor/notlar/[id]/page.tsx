@@ -40,6 +40,7 @@ import {
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
 import { asilariMetindenTamamla, DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
+import { metindenTetkikleriCikar, tetkikMetnine, tetkikMetniniCoz, type NotTetkik } from '@/lib/doktor/notTetkikler';
 import { ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi } from '@/lib/doktor/receteAktarim';
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
@@ -72,6 +73,8 @@ interface NotVeri {
     ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]
     /** NOTYA-ASI-NOT-01: bu muayenede uygulanan aşılar (onayda aşı kartına geçer) + kart (bu notun satırları hariç). */
     asilar?: NotAsisi[]
+    /** NOTYA-TETKIK-NOT-01: istenen tetkikler (yazdırma + onayda elektronik kayıt). */
+    tetkikler?: NotTetkik[]
     asiKart?: KartAsisi[]
     buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null
     hastaOzeti: string
@@ -130,6 +133,7 @@ export default function NotSayfasi() {
   const [ozet, setOzet] = useState('');
   const [ilac, setIlac] = useState('');
   const [asilar, setAsilar] = useState<NotAsisi[]>([]);
+  const [tetkik, setTetkik] = useState('');
   const [icd, setIcd] = useState<IcdOner[]>([]);
   const [recete, setRecete] = useState<ReceteOner[]>([]);
   const [aiDeg, setAiDeg] = useState('');
@@ -176,6 +180,12 @@ export default function NotSayfasi() {
         ilacRef.current = ilacMetni;
         setIlac(ilacMetni);
         setAsilar(Array.isArray(j.not.asilar) ? j.not.asilar : []);
+        {
+          const liste = Array.isArray(j.not.tetkikler) && j.not.tetkikler.length
+            ? (j.not.tetkikler as NotTetkik[])
+            : metindenTetkikleriCikar(j.not.plan || '')
+          setTetkik(tetkikMetnine(liste))
+        }
         setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
         setRecete(Array.isArray(j.not.receteOnerisi) ? j.not.receteOnerisi : []);
         setAiDeg(String(j.not.aiDegerlendirme || ''));
@@ -422,6 +432,7 @@ export default function NotSayfasi() {
             hastaOzeti: ozet,
             ilaclar: ilacMetniniCoz(ilacMetni),
             asilar: asiSatirlari(asilar),
+            tetkikler: tetkikMetniniCoz(tetkik),
             icdKodlari: icd,
             receteOnerisi: recete,
             aiDegerlendirme: aiDegGuncel(),
@@ -434,8 +445,8 @@ export default function NotSayfasi() {
       // NOTYA-AKTARIM-HATA-01 (Kaan, 2026-09-24): aşı/reçete aktarımı (sistem hatası —
       // çakışma değil) sessizce yutuluyordu; not onaylanıyor ama hasta dosyasına/karta
       // hiçbir şey yazılmıyordu ve hekimin bunu fark etmesinin hiçbir yolu yoktu.
-      const aktarimHatalari = [j.asiAktarim?.hata, j.receteAktarim?.hata].filter(Boolean) as string[];
-      if (aktarimHatalari.length) alert(`Not onaylandı, ama aşağıdaki aktarım(lar) başarısız oldu — hasta dosyasına/aşı kartına/reçeteye yansımamış olabilir:\n${aktarimHatalari.map((h) => `• ${h}`).join('\n')}\nLütfen notu tekrar açıp yeniden onaylayın; sorun devam ederse destek ekibine bildirin.`);
+      const aktarimHatalari = [j.asiAktarim?.hata, j.receteAktarim?.hata, j.tetkikAktarim?.hata].filter(Boolean) as string[];
+      if (aktarimHatalari.length) alert(`Not onaylandı, ama aşağıdaki aktarım(lar) başarısız oldu — hasta dosyasına/aşı kartına/reçeteye/tetkike yansımamış olabilir:\n${aktarimHatalari.map((h) => `• ${h}`).join('\n')}\nLütfen notu tekrar açıp yeniden onaylayın; sorun devam ederse destek ekibine bildirin.`);
       setDurum('kaydedildi'); setDegisti(false);
       setOnaylandiSimdi(true);
       kullanimEylem('not_onayla', `/dashboard/doktor/notlar/${params.id}`);
@@ -489,6 +500,7 @@ export default function NotSayfasi() {
         </div>
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
+        <a href={`/dashboard/doktor/notlar/${not.id}/tetkikler`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧪 Tetkikler</a>
         {!onayli && (
           <button type="button" onClick={() => { void notuSil() }} disabled={durum === 'kaydediyor'} style={{ background: 'transparent', border: '1px solid rgba(178,58,58,0.5)', color: '#B23A3A', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             Sil
@@ -559,6 +571,29 @@ export default function NotSayfasi() {
         <div>
           <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
           <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />
+        </div>
+        <div>
+          <div style={{ ...etiket, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span>Tetkikler <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(her satır bir istem · onayda elektronik kayda · üstteki Tetkikler ile yazdırılır)</span></span>
+            <button
+              type="button"
+              onClick={() => {
+                const cikan = metindenTetkikleriCikar(taslak.plan)
+                if (!cikan.length) { window.alert('Plandan tetkik çıkarılamadı — satırları elle yazabilirsiniz.'); return }
+                isaretle(setTetkik)(tetkikMetnine(cikan))
+              }}
+              style={{ background: 'transparent', border: '1px solid rgba(47,67,52,0.35)', color: CHROME_RENK.pine, borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: 'pointer' }}
+            >
+              Plandan doldur
+            </button>
+          </div>
+          <textarea
+            value={tetkik}
+            onChange={(e) => isaretle(setTetkik)(e.target.value)}
+            rows={Math.max(2, tetkik.split('\n').filter(Boolean).length || 2)}
+            placeholder="Örn. Tam kan sayımı (Hemogram)&#10;Demir&#10;Ferritin&#10;25-OH Vitamin D&#10;Tam idrar tetkiki (TİT)"
+            style={kutu}
+          />
         </div>
         <div>
           <div style={etiket}>Bu muayenede uygulanan aşılar <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(onayda aşı kartına işlenir · planlanan aşılar burada değil, planda kalır)</span></div>

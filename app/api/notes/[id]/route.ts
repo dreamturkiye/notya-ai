@@ -18,6 +18,7 @@ import { cekBlokVarMi } from '@/lib/doktor/muayeneCekListesi'
 import { cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
 import { notAsilariniTemizle, type KartAsisi } from '@/lib/doktor/notAsilari'
 import { notAsiKarti } from '@/lib/doktor/notAsiAktarim'
+import { metindenTetkikleriCikar, notTetkikleriniTemizle } from '@/lib/doktor/notTetkikler'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,6 +148,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       tani: not.content_tani || '',
       ilaclar: Array.isArray(not.content_ilaclar) ? not.content_ilaclar : [],
       asilar: notAsilariniTemizle(not.content_asilar),
+      // NOTYA-TETKIK-NOT-01: kayıtlı liste; boşsa plandan çıkarım (yazdırma / form için — onayda kalıcılaşır)
+      tetkikler: (() => {
+        const kayitli = notTetkikleriniTemizle(not.content_tetkikler)
+        return kayitli.length ? kayitli : metindenTetkikleriCikar(not.content_plan, not.content_tedavi)
+      })(),
       asiKart,
       receteOnerisi: Array.isArray(not.recete_onerisi) ? not.recete_onerisi : [],
       icdKodlari: Array.isArray(not.icd10_codes) ? not.icd10_codes : [],
@@ -199,6 +205,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await supabase.from('cihaz_olcumleri').update({ note_id: null }).eq('note_id', id)
   await supabase.from('belge_analizleri').update({ note_id: null }).eq('note_id', id)
   await supabase.from('asilar').update({ kaynak_note_id: null }).eq('kaynak_note_id', id)
+  try { await supabase.from('hasta_tetkik_istemleri').update({ kaynak_note_id: null }).eq('kaynak_note_id', id) } catch { /* tablo yoksa geç */ }
   await supabase.from('not_duzenlemeleri').delete().eq('note_id', id)
   const { error } = await supabase.from('notes').delete().eq('id', id).eq('doctor_id', doktorId)
   if (error) return NextResponse.json({ error: 'Bu nota bağlı kayıtlar var, silinemedi.' }, { status: 409 })

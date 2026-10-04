@@ -12,6 +12,8 @@ import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { hastaDogumIso } from '@/lib/specialties/kapsamSunucu'
 import { asilariMetindenTamamla, metindenUygulananAsilariCikar, notAsilariniTemizle } from '@/lib/doktor/notAsilari'
 import { nottanAsiAktar, ziyaretGunu, type AsiAktarimSonucu } from '@/lib/doktor/notAsiAktarim'
+import { metindenTetkikleriCikar, notTetkikleriniTemizle } from '@/lib/doktor/notTetkikler'
+import { nottanTetkikAktar, type TetkikAktarimSonucu } from '@/lib/doktor/notTetkikAktarim'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,6 +60,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!existing) {
     return NextResponse.json({ success: false, error: 'Not bulunamadı' }, { status: 404 })
   }
+
+  // content_tetkikler (migration 114) — kolon yoksa null; onay yine çalışır.
+  let mevcutTetkikler: unknown = null
+  try {
+    const { data: tRow } = await supabase.from('notes').select('content_tetkikler').eq('id', noteId).eq('doctor_id', user.id).maybeSingle()
+    mevcutTetkikler = tRow?.content_tetkikler ?? null
+  } catch { mevcutTetkikler = null }
 
   // NOTYA-SOAP-02: doktor onaylamadan önce düzenleyebilir. Düzenlemeler hem nota yazılır
   // hem de not_duzenlemeleri tablosuna önce/sonra olarak loglanır — Ayşe'nin "10. seansta
@@ -141,6 +150,25 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
+  // NOTYA-TETKIK-NOT-01: istenen tetkikler (dizi) — hekim formda düzenler; boşsa plan/tedavi metninden çıkarılır;
+  // onayda hasta_tetkik_istemleri'ne aktarılır (nottanTetkikAktar aşağıda).
+  const yeniTetkikler = duzenlemeler.tetkikler
+  let onayTetkikler: ReturnType<typeof notTetkikleriniTemizle> = []
+  {
+    let temiz = Array.isArray(yeniTetkikler) ? notTetkikleriniTemizle(yeniTetkikler) : notTetkikleriniTemizle(mevcutTetkikler)
+    if (!temiz.length) {
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon]) as string | null
+      temiz = metindenTetkikleriCikar(son('content_plan'), son('content_tedavi'))
+    }
+    onayTetkikler = temiz
+    const eskiStr = JSON.stringify(mevcutTetkikler || [])
+    const yeniStr = JSON.stringify(temiz)
+    if (eskiStr !== yeniStr) {
+      guncelleme.content_tetkikler = temiz.length ? temiz : null
+      loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'content_tetkikler', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
+    }
+  }
+
   // ICD-10 önerileri (dizi) — Ayşe tanı değişince yeniden üretebilir, doktor onaylar
   const yeniIcd = duzenlemeler.icdKodlari
   if (Array.isArray(yeniIcd)) {
@@ -207,14 +235,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'vitaller', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
     }
   }
-  const { error: updateError } = await supabase
-    .from('notes')
-    .update(guncelleme)
-    .eq('id', noteId)
-    .eq('doctor_id', user.id)
+  {
+    let { error: updateError } = await supabase
+      .from('notes')
+      .update(guncelleme)
+      .eq('id', noteId)
+      .eq('doctor_id', user.id)
 
-  if (updateError) {
-    return NextResponse.json({ success: false, error: updateError.message }, { status: 500 })
+    // Migration 114 henüz yoksa content_tetkikler kolonunu atlayıp tekrar dene.
+    if (updateError && 'content_tetkikler' in guncelleme && /content_tetkikler|column/i.test(updateError.message || '')) {
+      const { content_tetkikler: _atla, ...kalan } = guncelleme as Record<string, unknown>
+      const tekrar = await supabase.from('notes').update(kalan).eq('id', noteId).eq('doctor_id', user.id)
+      updateError = tekrar.error
+    }
+
+    if (updateError) {
+      return NextResponse.json({ success: false, error: updateError.message }, { status: 500 })
+    }
   }
 
   // NOTYA-RECETE-01: onay aynı zamanda paylaşım kapısı. Nottaki reçeteler burada
@@ -227,6 +264,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // göremiyordu (çakışma uyarısı vardı, gerçek hata yoktu).
   let receteAktarim: { aktarilan: number; atlanan: number; sonlandirilan: number; hata: string | null } | null = null
   let asiAktarim: AsiAktarimSonucu | null = null
+  let tetkikAktarim: TetkikAktarimSonucu | null = null
   const seansA = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
   const hastaIdA = (seansA as { patient_id?: string } | null)?.patient_id
   // HASTA-IZOLASYON-01: only into this doctor's OWN patient — a session can carry a foreign patient_id
@@ -266,6 +304,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   } catch (e) {
     console.error('[recete-aktarim]', e)
+  }
+
+  // NOTYA-TETKIK-NOT-01: not onayı = tetkik istemi kaydı. Her onayda (ilk + yeniden) eşitlenir.
+  if (hastaBenim && hastaIdA) {
+    try {
+      const s = await nottanTetkikAktar(supabase, {
+        noteId, doctorId: user.id, patientId: hastaIdA, tetkikler: onayTetkikler,
+        notTarihi: existing.created_at as string | null,
+      })
+      if (s.hata) console.error('[tetkik-aktarim]', s.hata)
+      tetkikAktarim = s
+    } catch (e) { console.error('[tetkik-aktarim]', e) }
   }
 
   // NOTYA-ILAC-SONLANDIR-01 (Kaan / Dr. Gökhan, 2026-09-25): not bir ilacı kesiyorsa ("Klacid'i keselim",
@@ -357,5 +407,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error('[klinik-ozet] onay', e) }
   }
 
-  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim, ilacSonlandirma })
+  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim, tetkikAktarim, ilacSonlandirma })
 }
