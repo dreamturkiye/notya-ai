@@ -5,7 +5,7 @@
  *  - PDF: Türkçe karakterler (ı ş ğ İ Ş Ğ ö ç ü) üretilen PDF METNİNDE bozulmadan — gömülü TrueType, Helvetica değil
  *  - yazdırma: kabuk/düğmeler gizli, beyaz zemin + sıcak koyu (kahverengi) metin, satırlar bölünmez
  *  - portalde e-posta gönderme yüzeyi YOK (Kaan, 2026-09-19 — regresyon koruması)
- *  - evrensel modül: branş kapısı yok, yalnız aşı kaydı varsa
+ *  - evrensel modül: branş kapısı yok; pediatride her zaman, diğer branşlarda aşı kaydı varsa
  * Sentetik veri.
  */
 import { describe, it, before } from 'node:test'
@@ -336,9 +336,13 @@ describe('portalde e-posta gönderme yüzeyi YOK (Kaan, 2026-09-19 — C6 iptal)
 
 describe('evrensel portal modülü (branş kapısı yok)', () => {
   const g = (o: Partial<PortalUygunlukGirdisi>): PortalUygunlukGirdisi => ({ doktorBransi: null, hastaYasYil: 40, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: false, ...o })
-  it('aşı kaydı varsa her branşta açılır, yoksa hiçbirinde', () => {
+  it('aşı kaydı varsa her branşta açılır; pediatri kayıtsızda da açık, diğer branş kayıtsızda kapalı', () => {
     for (const b of ['pediatri', 'goz-hastaliklari', 'dahiliye', 'aile-hekimligi', 'kardiyoloji', null]) {
       assert.ok(portalModulleri(g({ doktorBransi: b, asiKaydi: true })).moduller.includes('asi-karnesi'), String(b))
+    }
+    assert.ok(portalModulleri(g({ doktorBransi: 'pediatri', asiKaydi: false })).moduller.includes('asi-karnesi'))
+    assert.ok(portalModulleri(g({ doktorBransi: 'pediatri' })).moduller.includes('asi-karnesi'))
+    for (const b of ['goz-hastaliklari', 'dahiliye', 'aile-hekimligi', 'kardiyoloji', null]) {
       assert.ok(!portalModulleri(g({ doktorBransi: b, asiKaydi: false })).moduller.includes('asi-karnesi'), String(b))
       assert.ok(!portalModulleri(g({ doktorBransi: b })).moduller.includes('asi-karnesi'), String(b))
     }
@@ -348,12 +352,18 @@ describe('evrensel portal modülü (branş kapısı yok)', () => {
     assert.deepEqual(r.moduller, ['gozlerim', 'asi-karnesi'])
     assert.deepEqual(r.nav.map((n) => [n.label, n.path]), [['Gözlerim', '/gozlerim'], ['Aşı Karnesi', '/asi-karnesi']])
   })
-  it('boş bundle: asiKarnesi null; sayfa ve bundle rotası modüle kapılı', () => {
+  it('pediatri: kayıtsızda da nav "Aşı Karnesi" + Büyüme (çocuk)', () => {
+    const r = portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 2, asiKaydi: false }))
+    assert.ok(r.moduller.includes('asi-karnesi'))
+    assert.ok(r.moduller.includes('buyume'))
+    assert.ok(r.nav.some((n) => n.path === '/asi-karnesi' && n.label === 'Aşı Karnesi'))
+  })
+  it('boş bundle: asiKarnesi null; sayfa ve bundle rotası modüle kapılı; boş karne null kalır', () => {
     assert.equal(emptyPortalBundle().asiKarnesi, null)
     assert.match(oku('app/portal/hasta/[token]/asi-karnesi/page.tsx'), /portalModulAktif\(data, 'asi-karnesi'\)/)
     const rota = oku('app/api/portal/hasta/[token]/route.ts')
-    assert.match(rota, /asiKaydi: asiKarnesiDoluMu\(asiKarnesi\)/)
-    assert.match(rota, /if \(modulAktif\('asi-karnesi'\)\) bundle\.asiKarnesi = asiKarnesi/)
+    assert.match(rota, /asiKaydi: asiDolu/)
+    assert.match(rota, /if \(modulAktif\('asi-karnesi'\)\) bundle\.asiKarnesi = asiDolu \? asiKarnesi : null/)
   })
 })
 

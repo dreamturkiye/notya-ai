@@ -533,8 +533,11 @@ body:has(.sagligim-root) {
 
 .sg-hero-tile {
   position: relative;
+  display: block;
   min-height: 120px;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
 
 .sg-hero-tile img {

@@ -1,5 +1,5 @@
 'use client'
-/** ASI-KARNESI-01 — Sağlığım › Aşı Karnesi. EVRENSEL modül (branş kapısı yok): yalnız bu token'a aşı kaydı bağlandıysa. */
+/** ASI-KARNESI-01 — Sağlığım › Aşı Karnesi. EVRENSEL: pediatride her zaman; diğer branşlarda aşı kaydı varsa. */
 import Link from 'next/link'
 import { AsiKarnesiView } from '../../../_components/AsiKarnesiView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
@@ -16,5 +16,8 @@ export default function HastaAsiKarnesiPage() {
       </div>
     )
   }
-  return <AsiKarnesiView karne={data.asiKarnesi} basePath={basePath} pdfUrl={`/api/portal/hasta/${encodeURIComponent(token)}/asi-karnesi/pdf`} />
+  const pdfUrl = data.asiKarnesi
+    ? `/api/portal/hasta/${encodeURIComponent(token)}/asi-karnesi/pdf`
+    : null
+  return <AsiKarnesiView karne={data.asiKarnesi} basePath={basePath} pdfUrl={pdfUrl} />
 }

@@ -222,7 +222,8 @@ export interface PortalBundle {
   radyo: PortalRadyo | null
   /**
    * ASI-KARNESI-01 — "Aşı Karnesi" (EVRENSEL, branş kapısı yok): kayıtlı aşı · doz · tarih · kaynak, hekimin girdiği
-   * sonraki doz tarihi, e-Nabız uyarısı. PDF ve yazdırma AYNI modelden çizilir. Klinik yorum yok. Kayıt yoksa null.
+   * sonraki doz tarihi, e-Nabız uyarısı. PDF ve yazdırma AYNI modelden çizilir. Klinik yorum yok.
+   * Pediatride modül her zaman açık; kayıt yoksa null (boş durum). Diğer branşlarda kayıt yoksa modül kapalı.
    */
   asiKarnesi: PortalAsiKarnesi | null
 }

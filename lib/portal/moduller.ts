@@ -12,9 +12,10 @@
  *    branch has no portal module of its own — a göz / derm / dahiliye / KD doctor never gets pediatri
  *    growth curves, and only a KD doctor gets Pap/HPV as a default card. Same for the dahiliye ön anket
  *    (dahiliye doctor, or a baseline-branch doctor whose patient has dahiliye cards).
- * ASI-KARNESI-01: "Aşı Karnesi" EVRENSEL modüldür — branş kapısı yok; hastanın (bu token'ın doktoruna ait) aşı kaydı varsa
- * açılır. Aşı kaydı pediatri dışında da tutulur (yetişkin aşıları; `kategori` ayırır). Nav'ı hiçbir chapter profilinde
- * değil, burada (ASI_KARNESI_NAV) tanımlıdır.
+ * ASI-KARNESI-01: "Aşı Karnesi" EVRENSEL modüldür — branş kapısı yok. Pediatri hekiminin token'ında her zaman açılır
+ * (boş karne dahil — ebeveyn cep telefonundan bulabilsin). Diğer branşlarda hastanın (bu token'ın doktoruna ait) aşı
+ * kaydı varsa açılır (yetişkin aşıları; `kategori` ayırır). Nav'ı hiçbir chapter profilinde değil, burada
+ * (ASI_KARNESI_NAV) tanımlıdır.
  * KONSULTASYON-01: "Yönlendirmeleriniz" bir chapter modülü DEĞİLDİR — her branşın hastasına aynı, çekirdek omurgadır
  * (PortalBundle.yonlendirmeler, Ziyaretler sayfası). Bu çözücüye bilerek eklenmedi; branş kapısı yok.
  * Pure + client-safe (no fs, no Supabase).
@@ -47,7 +48,10 @@ export interface PortalUygunlukGirdisi {
   buyumeOlcumu: boolean
   /** at least one dahiliye card (HT/DM/lipid/…) on the patient */
   dahiliyeKaydi: boolean
-  /** ASI-KARNESI-01 — at least one asilar row (this token's doctor) — universal Aşı Karnesi, any branch */
+  /**
+   * ASI-KARNESI-01 — at least one asilar row (this token's doctor). Non-pediatrics: opens Aşı Karnesi.
+   * Pediatrics opens the module even when false (empty-state discoverability for parents).
+   */
   asiKaydi?: boolean
 }
 
@@ -148,8 +152,8 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     aktif.delete('ameliyatim')
   }
   if (klinikDal) aktif.add(KLINIK_PORTAL_MODUL[klinikDal])
-  // ASI-KARNESI-01 — evrensel: kayıt varsa her branşta (göz hekiminin kaydettiği grip aşısı da karnede görünür).
-  if (g.asiKaydi) aktif.add('asi-karnesi')
+  // ASI-KARNESI-01 — evrensel: pediatride her zaman; diğer branşlarda kayıt varsa (göz hekiminin grip aşısı da).
+  if (brans === 'pediatri' || g.asiKaydi) aktif.add('asi-karnesi')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]

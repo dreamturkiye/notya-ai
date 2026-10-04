@@ -4,7 +4,8 @@ import { E_NABIZ_BASLIK, E_NABIZ_UYARISI } from '@/lib/asi/karneBelgesi'
 /** Rich Turkish fixture for /portal/demo — reference-grade Sağlığım experience. */
 export const SAGLIGIM_DEMO: PortalBundle = {
   // Demo hastası yetişkin iç hastalıkları hastası; demo form gönderemediği için ön anket modülü de bağlanmaz.
-  portal: { moduller: [], nav: [] },
+  // ASI-KARNESI-01 — sentetik aşı kaydı var → modül + nav açık (aksi halde karne verisi erişilemez kalırdı).
+  portal: { moduller: ['asi-karnesi'], nav: [{ key: 'asi-karnesi', label: 'Aşı Karnesi', path: '/asi-karnesi' }] },
   goz: null,
   deri: null,
   kronik: null,

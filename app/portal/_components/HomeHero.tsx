@@ -8,6 +8,7 @@ import { portalModulAktif } from '@/lib/portal/moduller'
 import { KLINIK_PORTAL_IPUCU } from '@/lib/klinik/klinikPortal'
 
 const MODUL_IPUCU: Record<string, string> = {
+  'asi-karnesi': 'Kayıtlı aşılar · PDF · yazdır',
   gozlerim: 'Kontrol, damla ve ölçümleriniz',
   derim: 'Kontrol, fotoğraf ve hatırlatmalarınız',
   ruhsagligim: 'Kontrol ve hatırlatmalarınız',
@@ -84,11 +85,20 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
         </div>
 
         <div className="sg-hero-side" aria-label="Koruyucu sağlık">
-          <figure className="sg-hero-tile">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sagligim/preventive-care.jpg" alt="" />
-            <figcaption className="sg-hero-tile-caption">Koruyucu tıp</figcaption>
-          </figure>
+          {/* ASI-KARNESI-01 — Koruyucu tıp karosu Aşı Karnesi'ne gider (modül açıksa; pediatride her zaman). */}
+          {portalModulAktif(data, 'asi-karnesi') ? (
+            <Link href={`${basePath}/asi-karnesi`} className="sg-hero-tile" aria-label="Aşı Karnesi">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/sagligim/preventive-care.jpg" alt="" />
+              <span className="sg-hero-tile-caption">Aşı Karnesi</span>
+            </Link>
+          ) : (
+            <figure className="sg-hero-tile">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/sagligim/preventive-care.jpg" alt="" />
+              <figcaption className="sg-hero-tile-caption">Koruyucu tıp</figcaption>
+            </figure>
+          )}
           {/* BRANS-ALAN-SIZMASI: "Bebek sağlığı" yalnız büyüme modülü bağlı (pediatrik) portalda — KD/göz/derm hastasına bebek görseli yok */}
           <figure className="sg-hero-tile">
             {/* eslint-disable-next-line @next/next/no-img-element */}

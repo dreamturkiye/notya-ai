@@ -17,13 +17,16 @@ describe('pediatri portal is not göz portal', () => {
       assert.deepEqual(portalModulleri(hasta).moduller, ['gozlerim'])
     }
   })
-  it('pediatri doctor: büyüme for a child (or unknown DOB), never Gözlerim', () => {
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller, ['buyume'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: null })).moduller, ['buyume'])
+  it('pediatri doctor: büyüme for a child (or unknown DOB) + Aşı Karnesi always, never Gözlerim', () => {
+    // ASI-KARNESI-01 — pediatride Aşı Karnesi kayıtsızda da açık (ebeveyn keşfi).
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller, ['buyume', 'asi-karnesi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: null })).moduller, ['buyume', 'asi-karnesi'])
     assert.ok(!portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller.includes('gozlerim'))
   })
   it('adult patient never gets büyüme (bug: curves were built for every patient with a DOB)', () => {
     for (const b of ['pediatri', 'aile-hekimligi', null]) assert.ok(!portalModulleri(g({ doktorBransi: b, hastaYasYil: 35, buyumeOlcumu: true })).moduller.includes('buyume'))
+    // Pediatri yetişkininde Aşı Karnesi yine açık; büyüme kapalı.
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 35 })).moduller, ['asi-karnesi'])
   })
 })
 
@@ -82,11 +85,13 @@ describe('registry contract', () => {
     }
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', dahiliyeKaydi: true })).nav.map((n) => n.key), ['takibim', 'on-anket'])
   })
-  it('bundle carries typed module state; empty + demo bundles attach nothing', () => {
+  it('bundle carries typed module state; empty + demo bundles attach nothing chapter-specific', () => {
     assert.deepEqual(emptyPortalBundle().portal, { moduller: [], nav: [] })
     assert.equal(emptyPortalBundle().goz, null)
     assert.equal(emptyPortalBundle().deri, null)
     assert.ok(!portalModulAktif(SAGLIGIM_DEMO, 'buyume') && !portalModulAktif(SAGLIGIM_DEMO, 'gebelik'))
+    // ASI-KARNESI-01 — demo sentetik aşı kaydı taşıdığı için evrensel Aşı Karnesi açıktır.
+    assert.ok(portalModulAktif(SAGLIGIM_DEMO, 'asi-karnesi'))
   })
   it('shell/Takip/API mount specialty slices only through the registry (no stacking just in case)', () => {
     const takip = fs.readFileSync(path.join(kok, 'app/portal/_components/TrackingView.tsx'), 'utf8')
