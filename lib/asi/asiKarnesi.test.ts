@@ -5,7 +5,7 @@
  *  - PDF: Türkçe karakterler (ı ş ğ İ Ş Ğ ö ç ü) üretilen PDF METNİNDE bozulmadan — gömülü TrueType, Helvetica değil
  *  - yazdırma: kabuk/düğmeler gizli, beyaz zemin + sıcak koyu (kahverengi) metin, satırlar bölünmez
  *  - portalde e-posta gönderme yüzeyi YOK (Kaan, 2026-09-19 — regresyon koruması)
- *  - evrensel modül: branş kapısı yok; pediatride her zaman, diğer branşlarda aşı kaydı varsa
+ *  - evrensel modül: branş / klinik kapısı yok; 30 TUS + klinik dikeylerde kayıtsızda da açık
  * Sentetik veri.
  */
 import { describe, it, before } from 'node:test'
@@ -23,6 +23,8 @@ import { KARNE_NOT_ONEKI } from './karneOkuma'
 import { asiKarnesiPdf, KARNE_FONT_DOSYALARI } from './karnePdf'
 import { portalModulleri, type PortalUygunlukGirdisi } from '../portal/moduller'
 import { emptyPortalBundle } from '../portal/emptyBundle'
+import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
+import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
 
 // Portal bileşenleri otomatik JSX çalışma zamanıyla yazılır (React import etmez); tsx klasik dönüşüm yapar.
 ;(globalThis as { React?: unknown }).React = React
@@ -334,21 +336,19 @@ describe('portalde e-posta gönderme yüzeyi YOK (Kaan, 2026-09-19 — C6 iptal)
   })
 })
 
-describe('evrensel portal modülü (branş kapısı yok)', () => {
+describe('evrensel portal modülü (branş / klinik kapısı yok)', () => {
   const g = (o: Partial<PortalUygunlukGirdisi>): PortalUygunlukGirdisi => ({ doktorBransi: null, hastaYasYil: 40, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: false, ...o })
-  it('aşı kaydı varsa her branşta açılır; pediatri kayıtsızda da açık, diğer branş kayıtsızda kapalı', () => {
-    for (const b of ['pediatri', 'goz-hastaliklari', 'dahiliye', 'aile-hekimligi', 'kardiyoloji', null]) {
+  it('her branş + klinik dikey + branşsızda kayıtsızda da açık (yetişkin grip/COVID/zona dahil)', () => {
+    const tum = [...Object.keys(BRANS_ETIKETLERI), ...KLINIK_YENI_SLUGS, null]
+    assert.equal(Object.keys(BRANS_ETIKETLERI).length, 30, '30 TUS branşı')
+    for (const b of tum) {
+      assert.ok(portalModulleri(g({ doktorBransi: b, asiKaydi: false })).moduller.includes('asi-karnesi'), String(b))
+      assert.ok(portalModulleri(g({ doktorBransi: b })).moduller.includes('asi-karnesi'), String(b))
       assert.ok(portalModulleri(g({ doktorBransi: b, asiKaydi: true })).moduller.includes('asi-karnesi'), String(b))
-    }
-    assert.ok(portalModulleri(g({ doktorBransi: 'pediatri', asiKaydi: false })).moduller.includes('asi-karnesi'))
-    assert.ok(portalModulleri(g({ doktorBransi: 'pediatri' })).moduller.includes('asi-karnesi'))
-    for (const b of ['goz-hastaliklari', 'dahiliye', 'aile-hekimligi', 'kardiyoloji', null]) {
-      assert.ok(!portalModulleri(g({ doktorBransi: b, asiKaydi: false })).moduller.includes('asi-karnesi'), String(b))
-      assert.ok(!portalModulleri(g({ doktorBransi: b })).moduller.includes('asi-karnesi'), String(b))
     }
   })
   it('nav: "Aşı Karnesi" → /asi-karnesi; chapter modülünün yerini almaz, yanına eklenir', () => {
-    const r = portalModulleri(g({ doktorBransi: 'goz-hastaliklari', asiKaydi: true }))
+    const r = portalModulleri(g({ doktorBransi: 'goz-hastaliklari', asiKaydi: false }))
     assert.deepEqual(r.moduller, ['gozlerim', 'asi-karnesi'])
     assert.deepEqual(r.nav.map((n) => [n.label, n.path]), [['Gözlerim', '/gozlerim'], ['Aşı Karnesi', '/asi-karnesi']])
   })

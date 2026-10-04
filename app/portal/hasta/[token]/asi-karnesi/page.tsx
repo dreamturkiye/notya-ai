@@ -1,5 +1,5 @@
 'use client'
-/** ASI-KARNESI-01 — Sağlığım › Aşı Karnesi. EVRENSEL: pediatride her zaman; diğer branşlarda aşı kaydı varsa. */
+/** ASI-KARNESI-01 — Sağlığım › Aşı Karnesi. EVRENSEL: her branş + klinik dikeyde her zaman (boş karne dahil). */
 import Link from 'next/link'
 import { AsiKarnesiView } from '../../../_components/AsiKarnesiView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'

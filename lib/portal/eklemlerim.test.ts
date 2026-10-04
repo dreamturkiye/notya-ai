@@ -41,7 +41,7 @@ describe('ORTOPEDI-EXCEPTIONAL-01 Eklemlerim portal', () => {
   it('Ortopedi doctor gets no foreign chapter module', () => {
     const cocuk: PortalUygunlukGirdisi = { doktorBransi: 'ortopedi', hastaYasYil: 6, gebelikAktif: false, kdKaydi: true, buyumeOlcumu: true, dahiliyeKaydi: true }
     const m = portalModulleri(cocuk).moduller
-    assert.deepEqual(m, ['eklemlerim'])
+    assert.deepEqual(m, ['eklemlerim', 'asi-karnesi'])
     assert.ok(!m.includes('buyume'))
     assert.ok(!m.includes('ftrm'))
   })

@@ -42,7 +42,7 @@ describe('KBB-EXCEPTIONAL-01 Kulaklarım portal', () => {
   it('KBB doctor gets no foreign chapter module (no büyüme / jinekoloji / ruh sağlığı leak)', () => {
     const cocuk: PortalUygunlukGirdisi = { doktorBransi: 'kulak-burun-bogaz', hastaYasYil: 6, gebelikAktif: false, kdKaydi: true, buyumeOlcumu: true, dahiliyeKaydi: true }
     const m = portalModulleri(cocuk).moduller
-    assert.deepEqual(m, ['kulaklarim'])
+    assert.deepEqual(m, ['kulaklarim', 'asi-karnesi'])
     assert.ok(!m.includes('buyume'))
     assert.ok(!m.includes('jinekoloji'))
     assert.ok(!m.includes('dahiliye'))
@@ -54,13 +54,14 @@ describe('KBB-EXCEPTIONAL-01 Kulaklarım portal', () => {
     assert.equal(SAGLIGIM_DEMO.kulak, null)
   })
 
-  it('KBB demo fixture attaches only Kulaklarım — no dB / tanı / ilaç', () => {
-    assert.deepEqual(SAGLIGIM_DEMO_KBB.portal?.moduller, ['kulaklarim'])
-    assert.deepEqual(SAGLIGIM_DEMO_KBB.portal?.nav.map((n) => n.path), ['/kulaklarim'])
+  it('KBB demo fixture attaches Kulaklarım + Aşı Karnesi — no dB / tanı / ilaç', () => {
+    assert.deepEqual(SAGLIGIM_DEMO_KBB.portal?.moduller, ['kulaklarim', 'asi-karnesi'])
+    assert.deepEqual(SAGLIGIM_DEMO_KBB.portal?.nav.map((n) => n.path), ['/kulaklarim', '/asi-karnesi'])
     assert.equal(SAGLIGIM_DEMO_KBB.buyume, null)
     assert.equal(SAGLIGIM_DEMO_KBB.gebelik, null)
     assert.equal(SAGLIGIM_DEMO_KBB.hedefBoy, null)
     assert.ok(portalModulAktif(SAGLIGIM_DEMO_KBB, 'kulaklarim'))
+    assert.ok(portalModulAktif(SAGLIGIM_DEMO_KBB, 'asi-karnesi'))
     const k = SAGLIGIM_DEMO_KBB.kulak
     assert.ok(k)
     assert.ok(k.sonrakiKontrol)

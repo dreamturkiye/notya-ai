@@ -10,14 +10,15 @@ const kok = path.join(import.meta.dirname, '..', '..')
 const oku = (p: string) => fs.readFileSync(path.join(kok, p), 'utf8')
 
 describe('göz demo fixture', () => {
-  it('attaches only Gözlerim — no pediatri / KD slices', () => {
-    assert.deepEqual(SAGLIGIM_DEMO_GOZ.portal?.moduller, ['gozlerim'])
-    assert.deepEqual(SAGLIGIM_DEMO_GOZ.portal?.nav.map((n) => n.path), ['/gozlerim'])
+  it('attaches Gözlerim + Aşı Karnesi — no pediatri / KD slices', () => {
+    assert.deepEqual(SAGLIGIM_DEMO_GOZ.portal?.moduller, ['gozlerim', 'asi-karnesi'])
+    assert.deepEqual(SAGLIGIM_DEMO_GOZ.portal?.nav.map((n) => n.path), ['/gozlerim', '/asi-karnesi'])
     assert.equal(SAGLIGIM_DEMO_GOZ.buyume, null)
     assert.equal(SAGLIGIM_DEMO_GOZ.gebelik, null)
     assert.equal(SAGLIGIM_DEMO_GOZ.jinekoloji, null)
     assert.equal(SAGLIGIM_DEMO_GOZ.hedefBoy, null)
     assert.ok(portalModulAktif(SAGLIGIM_DEMO_GOZ, 'gozlerim'))
+    assert.ok(portalModulAktif(SAGLIGIM_DEMO_GOZ, 'asi-karnesi'))
     const g = SAGLIGIM_DEMO_GOZ.goz
     assert.ok(g)
     assert.equal(g.damlalar.length, 2)

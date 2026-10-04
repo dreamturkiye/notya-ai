@@ -12,13 +12,13 @@ const g = (o: Partial<PortalUygunlukGirdisi>): PortalUygunlukGirdisi => ({ dokto
 const kok = path.join(import.meta.dirname, '..', '..')
 
 describe('pediatri portal is not göz portal', () => {
-  it('göz doctor: Gözlerim only — no büyüme / gebelik / jine / anket by default, even for a child with growth data', () => {
+  it('göz doctor: Gözlerim + Aşı Karnesi — no büyüme / gebelik / jine / anket by default, even for a child with growth data', () => {
     for (const hasta of [g({ doktorBransi: 'goz-hastaliklari' }), g({ doktorBransi: 'Göz Hastalıkları', hastaYasYil: 6, buyumeOlcumu: true, kdKaydi: true, dahiliyeKaydi: true })]) {
-      assert.deepEqual(portalModulleri(hasta).moduller, ['gozlerim'])
+      assert.deepEqual(portalModulleri(hasta).moduller, ['gozlerim', 'asi-karnesi'])
     }
   })
   it('pediatri doctor: büyüme for a child (or unknown DOB) + Aşı Karnesi always, never Gözlerim', () => {
-    // ASI-KARNESI-01 — pediatride Aşı Karnesi kayıtsızda da açık (ebeveyn keşfi).
+    // ASI-KARNESI-01 — Aşı Karnesi kayıtsızda da açık (ebeveyn / yetişkin keşfi).
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller, ['buyume', 'asi-karnesi'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: null })).moduller, ['buyume', 'asi-karnesi'])
     assert.ok(!portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller.includes('gozlerim'))
@@ -32,19 +32,19 @@ describe('pediatri portal is not göz portal', () => {
 
 describe('KD / dahiliye / derm eligibility', () => {
   it('Gebeliğim fires on an active pregnancy for any practice (mixed care), jine reminders only for KD', () => {
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'goz-hastaliklari', gebelikAktif: true, kdKaydi: true })).moduller, ['gozlerim', 'gebelik'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'kadin-hastaliklari-dogum', gebelikAktif: true })).moduller, ['gebelik', 'jinekoloji'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['dahiliye'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'goz-hastaliklari', gebelikAktif: true, kdKaydi: true })).moduller, ['gozlerim', 'gebelik', 'asi-karnesi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'kadin-hastaliklari-dogum', gebelikAktif: true })).moduller, ['gebelik', 'jinekoloji', 'asi-karnesi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['dahiliye', 'asi-karnesi'])
   })
   it('baseline-branch doctor without own portal gets chart-data modules; aile hekimliği owns Sağlık Paketim', () => {
     // AILE-HEKIMLIGI-EXCEPTIONAL-01: aile artık kendi portal modülüne sahip — çapraz kart verisi açılmaz.
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, ['saglik-paketim'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['saglik-paketim'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, ['saglik-paketim', 'asi-karnesi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['saglik-paketim', 'asi-karnesi'])
     // ANESTEZI-EXCEPTIONAL-01: anestezi kendi portalına sahip — çapraz kart verisi açılmaz.
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'anestezi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['anestezi-oncesi'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'romatoloji' })).moduller, ['romatizmam'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'anestezi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['anestezi-oncesi', 'asi-karnesi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'romatoloji' })).moduller, ['romatizmam', 'asi-karnesi'])
     // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: Damar Cerrahisi takibi; Kalbim yok.
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'kalp-damar-cerrahisi' })).moduller, ['damar-cerrahisi-takibi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'kalp-damar-cerrahisi' })).moduller, ['damar-cerrahisi-takibi', 'asi-karnesi'])
     assert.ok(!portalModulleri(g({ doktorBransi: 'kalp-damar-cerrahisi' })).moduller.includes('kalbim'))
     assert.ok(!portalModulleri(g({ doktorBransi: 'kardiyoloji' })).moduller.includes('damar-cerrahisi-takibi'))
   })
@@ -53,7 +53,7 @@ describe('KD / dahiliye / derm eligibility', () => {
     const m = specialtyProfile('dermatoloji').portal!
     assert.equal(m[0].derinlik, 'Strong')
     assert.deepEqual(m[0].nav.map((n) => n.path), ['/derim'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['dermatoloji'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['dermatoloji', 'asi-karnesi'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji' })).nav[0]?.label, 'Derim')
   })
   // PSIK-EXCEPTIONAL-01: Ruh Sağlığım Strong, kendi yolunda (/ruhsagligim ≠ dahiliye /takibim).
@@ -61,7 +61,7 @@ describe('KD / dahiliye / derm eligibility', () => {
     const m = specialtyProfile('psikiyatri').portal!
     assert.equal(m[0].derinlik, 'Strong')
     assert.deepEqual(m[0].nav.map((n) => n.path), ['/ruhsagligim'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'psikiyatri', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['psikiyatri'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'psikiyatri', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['psikiyatri', 'asi-karnesi'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'Ruh Sağlığı ve Hastalıkları' })).nav[0]?.label, 'Ruh Sağlığım')
     // ...and no other branch mounts it
     for (const b of ['dahiliye', 'dermatoloji', 'goz-hastaliklari', 'kadin-hastaliklari-dogum', 'pediatri', 'aile-hekimligi']) {
@@ -83,14 +83,14 @@ describe('registry contract', () => {
     for (const k of ['pediatri', 'kadin-hastaliklari-dogum', 'dermatoloji', 'dahiliye', 'goz-hastaliklari'] as const) {
       assert.ok((specialtyProfile(k).portal || []).length > 0, k)
     }
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', dahiliyeKaydi: true })).nav.map((n) => n.key), ['takibim', 'on-anket'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', dahiliyeKaydi: true })).nav.map((n) => n.key), ['takibim', 'on-anket', 'asi-karnesi'])
   })
   it('bundle carries typed module state; empty + demo bundles attach nothing chapter-specific', () => {
     assert.deepEqual(emptyPortalBundle().portal, { moduller: [], nav: [] })
     assert.equal(emptyPortalBundle().goz, null)
     assert.equal(emptyPortalBundle().deri, null)
     assert.ok(!portalModulAktif(SAGLIGIM_DEMO, 'buyume') && !portalModulAktif(SAGLIGIM_DEMO, 'gebelik'))
-    // ASI-KARNESI-01 — demo sentetik aşı kaydı taşıdığı için evrensel Aşı Karnesi açıktır.
+    // ASI-KARNESI-01 — demo evrensel Aşı Karnesi taşır.
     assert.ok(portalModulAktif(SAGLIGIM_DEMO, 'asi-karnesi'))
   })
   it('shell/Takip/API mount specialty slices only through the registry (no stacking just in case)', () => {

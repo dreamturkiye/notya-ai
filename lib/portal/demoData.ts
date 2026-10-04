@@ -430,7 +430,13 @@ export function demoMessageById(id: string) {
 const GOZ_HEKIM = 'Op. Dr. Deniz Aksoy'
 export const SAGLIGIM_DEMO_GOZ: PortalBundle = {
   ...SAGLIGIM_DEMO,
-  portal: { moduller: ['gozlerim'], nav: [{ key: 'gozlerim', label: 'Gözlerim', path: '/gozlerim' }] },
+  portal: {
+    moduller: ['gozlerim', 'asi-karnesi'],
+    nav: [
+      { key: 'gozlerim', label: 'Gözlerim', path: '/gozlerim' },
+      { key: 'asi-karnesi', label: 'Aşı Karnesi', path: '/asi-karnesi' },
+    ],
+  },
   yonlendirmeler: [],
   buyume: null,
   gebelik: null,
@@ -564,7 +570,13 @@ export function demoGozResultById(id: string) {
 const KBB_HEKIM = 'Op. Dr. Ece Yılmaz'
 export const SAGLIGIM_DEMO_KBB: PortalBundle = {
   ...SAGLIGIM_DEMO,
-  portal: { moduller: ['kulaklarim'], nav: [{ key: 'kulaklarim', label: 'Kulaklarım', path: '/kulaklarim' }] },
+  portal: {
+    moduller: ['kulaklarim', 'asi-karnesi'],
+    nav: [
+      { key: 'kulaklarim', label: 'Kulaklarım', path: '/kulaklarim' },
+      { key: 'asi-karnesi', label: 'Aşı Karnesi', path: '/asi-karnesi' },
+    ],
+  },
   yonlendirmeler: [],
   buyume: null,
   gebelik: null,

@@ -85,7 +85,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
         </div>
 
         <div className="sg-hero-side" aria-label="Koruyucu sağlık">
-          {/* ASI-KARNESI-01 — Koruyucu tıp karosu Aşı Karnesi'ne gider (modül açıksa; pediatride her zaman). */}
+          {/* ASI-KARNESI-01 — Koruyucu tıp karosu Aşı Karnesi'ne gider (her branş + klinik; boş karne dahil). */}
           {portalModulAktif(data, 'asi-karnesi') ? (
             <Link href={`${basePath}/asi-karnesi`} className="sg-hero-tile" aria-label="Aşı Karnesi">
               {/* eslint-disable-next-line @next/next/no-img-element */}

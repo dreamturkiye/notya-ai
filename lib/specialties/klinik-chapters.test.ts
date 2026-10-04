@@ -76,13 +76,13 @@ describe('KLINIK-10-EXCEPTIONAL — 10 dal Klinik kategorisi', () => {
 
   it('portal: Klinik derm ≠ TUS Derim; estetik cerrahi ≠ Yaram', () => {
     const tus = portalModulleri({ doktorBransi: 'Dermatoloji', hastaYasYil: 40, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: false })
-    assert.deepEqual(tus.moduller, ['dermatoloji'])
+    assert.deepEqual(tus.moduller, ['dermatoloji', 'asi-karnesi'])
     const klinik = portalModulleri({ doktorBransi: 'klinik-dermatoloji', hastaYasYil: 40, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: false })
-    assert.deepEqual(klinik.moduller, ['klinik-derim'])
+    assert.deepEqual(klinik.moduller, ['klinik-derim', 'asi-karnesi'])
     const cer = portalModulleri({ doktorBransi: 'estetik-cerrahi', hastaYasYil: 40, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: false })
-    assert.deepEqual(cer.moduller, ['estetik-ameliyatim'])
+    assert.deepEqual(cer.moduller, ['estetik-ameliyatim', 'asi-karnesi'])
     const plastik = portalModulleri({ doktorBransi: 'plastik-cerrahi', hastaYasYil: 40, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: false })
-    assert.deepEqual(plastik.moduller, ['yaram'])
+    assert.deepEqual(plastik.moduller, ['yaram', 'asi-karnesi'])
   })
 
   it('müttefik Klinik’te e-reçete görmez', () => {
