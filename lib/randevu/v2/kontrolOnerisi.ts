@@ -52,7 +52,7 @@ export async function kontrolOnerisiHazirla(
     if (!hasta) return null
     const brans = bransAnahtari(g.brans)
     const o = await oneriHazirla({
-      ctx: { supabase: sb, doktorId: g.doktorId, hasta, brans, oneriId: '', bugunTRT: bugun },
+      ctx: { supabase: sb, doktorId: g.doktorId, hasta, brans, oneriId: '', bugun, saatDilimi: 'Europe/Istanbul' },
       anahtar: 'kontrol_randevusu_olustur',
       girdi: {
         tarih: k.tarih,

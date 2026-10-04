@@ -69,7 +69,7 @@ export const RANDEVU_DEGISTIR: EylemTanimi<Veri> = {
     if (v.islem === 'tasi') {
       if (!v.yeni_tarih || !v.yeni_saat) return 'Yeni gün ve saat gerekli.'
       if (!SAAT.test(String(v.yeni_saat))) return 'Yeni saat SS:DD biçiminde olmalı (ör. 14:30).'
-      if (String(v.yeni_tarih) < ctx.bugunTRT) return `Yeni tarih geçmişte (${v.yeni_tarih}).`
+      if (String(v.yeni_tarih) < ctx.bugun) return `Yeni tarih geçmişte (${v.yeni_tarih}).`
     }
     return null
   },
