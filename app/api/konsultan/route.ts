@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
   for (const d of liste) {
     const ad = String(d?.ad || 'rapor.bin')
     const bytes = Buffer.from(String(d?.base64 || ''), 'base64')
-    const dog = portalBelgeDogrula(ad, d?.mime, bytes.length)
+    const dog = portalBelgeDogrula(ad, d?.mime ?? null, bytes.length)
     if ('hata' in dog) return NextResponse.json({ error: dog.hata }, { status: 400 })
     try {
       const meta = await uploadDocument({ supabase: sb }, {
