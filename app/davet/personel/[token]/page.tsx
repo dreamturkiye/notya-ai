@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme";
 
 export const dynamic = 'force-dynamic';
@@ -96,8 +97,29 @@ export default function DavetKabulPage() {
       });
       const d = await r.json();
       if (!r.ok) { setFormHata(d.error || 'Hesap oluşturulamadı.'); return; }
+      // NOTYA-SEKRETER-01: kabul sonrası otomatik giriş → Ön büro (doktor onboarding yok).
+      const email = String(d.email || bilgi?.email || '').trim().toLowerCase();
+      if (email) {
+        try {
+          const supabase = createClient(
+            'https://anjayzospuurymjmmtim.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE',
+          );
+          const { data: oturum, error: girisHata } = await supabase.auth.signInWithPassword({ email, password: sifre });
+          if (!girisHata && oturum.session) {
+            localStorage.setItem('auth-token', JSON.stringify({
+              access_token: oturum.session.access_token,
+              refresh_token: oturum.session.refresh_token,
+              expires_at: oturum.session.expires_at,
+            }));
+            setDurum('tamamlandi');
+            router.replace('/dashboard/doktor');
+            return;
+          }
+        } catch { /* giriş sayfasına düş */ }
+      }
       setDurum('tamamlandi');
-      setTimeout(() => router.push('/giris/doktor'), 2000);
+      setTimeout(() => router.push('/giris/doktor'), 1500);
     } catch {
       setFormHata('Hesap oluşturulamadı. Bağlantınızı kontrol edin.');
     } finally {
@@ -159,7 +181,7 @@ export default function DavetKabulPage() {
         {durum === 'tamamlandi' && (
           <>
             <h3 style={baslik}>Hesabınız Hazır ✓</h3>
-            <p style={{ fontSize: 14, color: R.ink, lineHeight: 1.55 }}>Giriş sayfasına yönlendiriliyorsunuz…</p>
+            <p style={{ fontSize: 14, color: R.ink, lineHeight: 1.55 }}>Ön büro masanıza yönlendiriliyorsunuz…</p>
           </>
         )}
       </div>

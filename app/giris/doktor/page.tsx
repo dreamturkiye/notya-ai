@@ -37,6 +37,11 @@ export default function Giris() {
         }
       }
     } catch { /* doktor akışına düş */ }
+    // Davet kabulünde user_metadata.personel=true yazılır; bağ kopuk olsa bile onboarding'e itme.
+    if (data.user?.user_metadata?.personel === true) {
+      router.replace('/dashboard/doktor')
+      return
+    }
     // Prefer users table /me over auth metadata alone — metadata onboarding flag often never stuck.
     try {
       const meRes = await fetch('/api/users/me', {
@@ -71,7 +76,7 @@ export default function Giris() {
       <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(28px, 6vw, 44px)', maxWidth: 420, width: '100%', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
         <div style={{ textAlign: 'center', marginBottom: 26 }}>
           <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1 }}>Notya</div>
-          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>Hekim girişi</div>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>Hekim ve ön büro girişi</div>
         </div>
         <form onSubmit={handleLogin} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>

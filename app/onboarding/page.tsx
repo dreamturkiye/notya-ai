@@ -103,6 +103,7 @@ function OnboardingInner() {
   const [checking, setChecking] = useState(true);
 
   // If already onboarded, never show this screen again (iPhone PWA reopen bug).
+  // NOTYA-SEKRETER-01: sekreter bu ekranı hiç görmez — doğrudan Ön büro.
   useEffect(() => {
     ;(async () => {
       const token = await ensureDoctorAccessToken()
@@ -110,6 +111,19 @@ function OnboardingInner() {
         setChecking(false)
         return
       }
+      try {
+        const personelRes = await fetch('/api/personel/me', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+        })
+        if (personelRes.ok) {
+          const pm = await personelRes.json().catch(() => ({} as { rol?: string }))
+          if (pm.rol === 'sekreter') {
+            router.replace('/dashboard/doktor')
+            return
+          }
+        }
+      } catch { /* doktor onboarding */ }
       try {
         const res = await fetch('/api/users/me', {
           headers: { Authorization: `Bearer ${token}` },
