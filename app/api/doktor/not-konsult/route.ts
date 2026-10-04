@@ -30,6 +30,7 @@ import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { cekBlokSil } from '@/lib/doktor/muayeneCekListesi'
 import { notAsilariniTemizle } from '@/lib/doktor/notAsilari'
+import { randevuV2Acik } from '@/lib/randevu/v2/ozellik'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -87,7 +88,9 @@ export async function POST(req: NextRequest) {
   // NOTYA-EYLEM: hasta SUNUCUDA çözülür — notun seansındaki patient_id, doctor_id ile kapsanmış olarak.
   const eylemHastasi = eylemKapali() ? null : await hastaOzetiGetir(supabase, doktorId, seans?.patient_id ? String(seans.patient_id) : null)
   const eylemBransi = bransAnahtari(seans?.specialty) ?? kapsam.brans
-  const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
+  // NOTYA-RANDEVU-V2: the appointment move/cancel tool only while the doctor's Hasta Portalı Randevu is ON.
+  const randevuV2 = eylemHastasi ? await randevuV2Acik(supabase, doktorId) : false
+  const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi, randevuV2 }) : []
 
   const gecmis = mesajlar.slice(-16).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
@@ -137,7 +140,7 @@ export async function POST(req: NextRequest) {
           (yanit ?? {}) as { content?: unknown },
           { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', ...eylemZamani(istekSaatDilimi()) },
           'not',
-          { brans: eylemBransi, hasta: eylemHastasi },
+          { brans: eylemBransi, hasta: eylemHastasi, randevuV2 },
           // NOTYA-EYLEM-31: not içi kutu da düz metin döndürür; Ayşe'nin uyarı cümlesi karta aynı
           // deterministik seçimle taşınır, böylece üç yüzey de aynı kartı gösterir.
           ayseUyariCumlesi(String(sonuc.cevap || '')),

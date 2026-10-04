@@ -31,6 +31,7 @@ import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 import { kanitBlogu } from '@/lib/asistan/dosyaSorgu/kanit'
 import { dosyaSorguKuralBlogu } from '@/lib/asistan/dosyaSorgu/kurallar'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
+import { randevuV2Acik } from '@/lib/randevu/v2/ozellik'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -91,7 +92,9 @@ export async function POST(req: NextRequest) {
   // Araçlar yalnız DOKTOR turunda sunulur (docs §5): belge metni güvenilmezdir, kendi başına
   // bir araç çağrısı tetikleyemez. Danış sekmesinde her istek zaten hekimin bir mesajıyla gelir.
   const sonMesajDoktorun = mesajlar[mesajlar.length - 1]?.rol !== 'asistan'
-  const araclar = hasta && sonMesajDoktorun ? aracTanimlari({ brans, hasta }) : []
+  // NOTYA-RANDEVU-V2: the appointment move/cancel tool only while the doctor's Hasta Portalı Randevu is ON.
+  const randevuV2 = hasta ? await randevuV2Acik(supabase, doktorId) : false
+  const araclar = hasta && sonMesajDoktorun ? aracTanimlari({ brans, hasta, randevuV2 }) : []
 
   // NOTYA-EYLEM P2 — proaktif boşluk teklifi. LLM'siz: derlenmiş dosya metni belgelerde aşı/ilaç/
   // alerji/ölçüm geçtiğini söylüyor ama yapılandırılmış kayıt boşsa, Ayşe İLK turda BİR KEZ teklif
@@ -202,7 +205,7 @@ export async function POST(req: NextRequest) {
           veri,
           { supabase, doktorId, hasta, brans, oneriId: '', ...eylemZamani(istekSaatDilimi()) },
           'danis',
-          { brans, hasta },
+          { brans, hasta, randevuV2 },
           // NOTYA-EYLEM-31: Danış düz metin döndürür, bu yüzden Ayşe'nin uyarı cümlesi karta
           // deterministik olarak metinden seçilir — üç yüzeyde de kartta aynı satır çıksın diye.
           ayseUyariCumlesi(kayitliCevap)

@@ -63,8 +63,8 @@ Architecture `docs/RANDEVU-V2.md`; build report `docs/RANDEVU-V2-REPORT.md`. Thr
 |---|---|---|---|
 | NOTYA-RANDEVU-V2-A | OPEN 2026-10-04 | Automatic WhatsApp reminders via Meta coexistence (approved utility template). Today WhatsApp is one-tap only (Hazır mesajlar); the adapter slot exists (`RandevuKanali`, `lib/randevu/v2/kanal.ts`). | Kaan: legal entity + Meta Business verification |
 | NOTYA-RANDEVU-V2-B | OPEN 2026-10-04 | Google OAuth client credentials (`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, scope `calendar.events`), Calendar API enabled, redirect URI `…/api/google-takvim/donus`, domain verification for the push webhook `…/api/google-takvim/bildirim`, and Google app verification (sensitive scope) for the Google Takvim sync (PR2). The feature is hidden until they exist. | Kaan |
-| NOTYA-RANDEVU-V2-C | OPEN 2026-10-04 | Apply migrations (111 for PR1; PR2/PR3 numbers in the report), merge and deploy PR1 → PR2 → PR3 in order. Nothing was applied, merged or deployed. | Kaan's explicit go |
-| NOTYA-RANDEVU-V2-D | OPEN 2026-10-04 | Items not finished in this build — listed in `docs/RANDEVU-V2-REPORT.md` § "Not built / follow-ups" (kept current per PR). | Claude |
+| NOTYA-RANDEVU-V2-C | OPEN 2026-10-04 | Apply migrations `111_randevu_v2.sql`, `112_randevu_v2_google.sql`, `113_randevu_v2_bekleme.sql` (in order, non-production first), merge and deploy PR1 → PR2 → PR3 in order. Nothing was applied, merged or deployed. | Kaan's explicit go |
+| NOTYA-RANDEVU-V2-D | OPEN 2026-10-04 | Not finished in this build: (1) numeric "randevu talebi" badge on the DoktorNav Randevular item (today: Ana Sayfa + Randevular cards); (2) legacy ElevenLabs voice agent prompt does not mention `randevu_degistir` (tek-beyin voice and text have it); (3) Google Takvim syncs the primary calendar only; (4) Google routes are hand-reviewed ('incelendi') in the isolation inventory, not yet cross-doctor tests; (5) `lib/asistan/fishMikrofon.test.ts` hangs and `tekBeyin.test.ts` cases 3–4 fail on `main` too (pre-existing, not V2). | Claude |
 
 ## NOTYA-SES-TUR-01 — Ayşe 1:1 voice turn-taking (Kaan, 2026-09-30, branch `fix/voice-turn-taking`)
 

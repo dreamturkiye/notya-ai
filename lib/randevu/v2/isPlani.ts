@@ -55,5 +55,8 @@ export function isGecerliMi(tur: RandevuEpostaTuru, zamanIso: string, r: IsRande
     case 'red_eposta':
     case 'iptal_eposta':
       return r.durum === 'iptal'
+    case 'bekleme_teklif':
+      // Offers are sent directly by lib/randevu/v2/bekleme.ts, never queued as jobs.
+      return false
   }
 }

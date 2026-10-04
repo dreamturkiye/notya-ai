@@ -31,6 +31,7 @@ import { istekSaatDilimi } from '@/lib/doktor/saatDilimi'
 import { bugunTz } from '@/lib/randevu/tarihCozumle'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import type { IlacUyarisi } from '@/core/eylemler/ilacUyari'
+import { randevuV2Acik } from '@/lib/randevu/v2/ozellik'
 
 export const dynamic = 'force-dynamic'
 
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
       anahtar: eylemAnahtar,
       girdi,
       yuzey: 'ses',
-      suzgec: { brans, hasta },
+      suzgec: { brans, hasta, randevuV2: await randevuV2Acik(supabase, user.id) },
     })
     if (!o) return sesYanit('Bu kaydı bu hasta / branş için hazırlayamadım. Ekrandan deneyin.')
     if (eskiTaslakId && eskiTaslakId !== o.id) {

@@ -20,6 +20,7 @@ type Randevu = {
   durum: string
   oneri: boolean
   izinler: { iptal: boolean; ertele: boolean; teyit: boolean; neden: string | null }
+  bekleme?: { kayitli: boolean; teklif: { id: string; gun: string; saat: string } | null }
 }
 
 const gunAdi = (gun: string) =>
@@ -158,6 +159,21 @@ export default function HastaRandevuPage() {
               {r.izinler.ertele && <button type="button" className="sg-chip-btn" disabled={mesgul} onClick={() => setErtele(ertele === r.id ? '' : r.id)}>Başka saat seç</button>}
               {r.izinler.iptal && <button type="button" className="sg-chip-btn" disabled={mesgul} onClick={() => { if (window.confirm('Randevunuz iptal edilsin mi?')) void gonder({ islem: 'iptal', randevuId: r.id }, () => 'Randevunuz iptal edildi.') }}>İptal et</button>}
             </div>
+          )}
+          {r.bekleme?.teklif && (
+            <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--sg-accent-soft)' }}>
+              <div style={{ fontSize: 14, marginBottom: 8 }}>Daha erken bir saat açıldı: <b>{r.bekleme.teklif.gun} · {r.bekleme.teklif.saat}</b></div>
+              <button type="button" className="sg-chip-btn is-active" disabled={mesgul} onClick={() => void gonder({ islem: 'teklif_kabul', teklifId: r.bekleme!.teklif!.id }, (j) =>
+                j.onayBekliyor ? 'Talebiniz alındı. Muayenehane onayladığında randevunuz yeni saate taşınır.' : 'Randevunuz yeni saate taşındı.')}>Bu saati istiyorum</button>
+            </div>
+          )}
+          {r.izinler.ertele && r.durum !== 'talep' && !r.bekleme?.teklif && (
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: 'var(--sg-muted)', marginTop: 10 }}>
+              <input type="checkbox" checked={!!r.bekleme?.kayitli} disabled={mesgul}
+                onChange={(e) => void gonder({ islem: e.target.checked ? 'bekle' : 'bekleme_iptal', randevuId: r.id }, () =>
+                  e.target.checked ? 'Daha erken bir saat açılırsa size haber vereceğiz.' : 'Bekleme listesinden çıkarıldınız.')} />
+              Daha erken bir saat açılırsa haber ver
+            </label>
           )}
           {r.izinler.neden && r.durum !== 'iptal' && <p style={{ color: 'var(--sg-muted)', fontSize: 13, margin: '8px 0 0' }}>{r.izinler.neden}</p>}
           {ertele === r.id && (

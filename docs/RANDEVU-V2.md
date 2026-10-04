@@ -150,3 +150,40 @@ All server code uses the service-role client `servisSupabase()`, the shared no-s
 - **UI:**
   - `components/doktor/randevu/GoogleTakvimKarti.tsx` (Entegrasyonlar);
   - `GoogleTakvimOnerileri.tsx` (inside the card and on Randevular; hidden when empty). Its buttons are "Yeni saati uygula" / "Randevuyu iptal et" and "Notya'daki kalsın".
+
+## PR3: waitlist and Ayşe
+
+### Waitlist
+
+| Piece | What |
+|---|---|
+| Migration `113_randevu_v2_bekleme.sql` | `randevu_bekleme_listesi`: one open entry per appointment, with `en_gec` = that appointment's start; carries the 052-style restrictive patient-ownership policy. `randevu_bekleme_teklifleri`: offers, each with a deadline. New tables only. |
+| `lib/randevu/v2/bekleme.ts` | Join/leave, the portal state, accepting an offer (`teklifKabul`), and the cron matcher `teklifTara`. |
+| Portal | One checkbox per movable appointment: "Daha erken bir saat açılırsa haber ver". An open offer shows "Bu saati istiyorum". |
+| E-mail link | Token action `teklif` (the id is the offer), handled by `/api/randevu/eylem` and `/randevu/[jeton]`. |
+
+How `teklifTara` works:
+- It runs every cron tick, outside quiet hours, only for doctors whose switch is ON.
+- Waiting entries are walked **in list order**. Each gets the earliest free slot (same slot engine, same length) that starts at least 60 minutes before its appointment, is not already offered to anyone, and was not offered to that entry before.
+- One open offer per entry and one open offer per slot. An offer lives 2 hours (`TEKLIF_SURESI_SAAT`); when it expires, the slot passes to the next patient in line.
+- The offer goes by e-mail through the existing path (consent + the doctor's own mailbox) and always appears in the portal.
+- **First to accept** wins: their appointment moves to the slot via `hastaIslem('ertele')`. The slot is re-validated and the DB guarantee applies. Under the default approval mode it becomes a **talep** the practice approves.
+- Nobody learns whose appointment was cancelled.
+
+### Ayşe
+
+- **List:** the existing calendar reader (`takvimSorusu`, voice `randevu_takvim`), unchanged.
+- **Create:** the existing `kontrol_randevusu_olustur` card, unchanged.
+- **Move / cancel: new `randevu_degistir`** (`core/eylemler/randevuEylemleri.ts`):
+  - It is a card the doctor confirms, same spine (`core/eylemler/onayla.ts`), T1, undoable within 24 h.
+  - It is a base action (every branş) but **offered only while Hasta Portalı Randevu is ON** (`ozellik: 'randevu_v2'` → `AracSuzgeci.randevuV2`, read-only check `lib/randevu/v2/ozellik.ts`). It is ordered **after** every existing tool, so it never pushes one out of the 15-tool cap.
+  - Writes use the calendar's overlap check plus the 111 guarantee. V2 reminder jobs are dropped or re-planned.
+  - **No patient message is sent** (T3 `hastaya_mesaj_gonder` stays absent). The tool description tells Ayşe to remind the doctor to inform the patient.
+- **Kontrol proposal at note approval** (`lib/randevu/v2/kontrolOnerisi.ts`, one hook in `app/api/notes/[id]/approve/route.ts`):
+  - The approved plan says "2 hafta sonra kontrol" → a `kontrol_randevusu_olustur` taslak in the existing pending-cards tray.
+  - The date is computed from the doctor's sentence (`kaynak: dosyadan`, quoted); the **hour is left empty**.
+  - Only while ON, and only if the patient has no upcoming appointment and no open kontrol card.
+- **Morning brief** (`lib/doktor/gunOzeti.ts`): appointments were already in it.
+  - Pending requests are now excluded from "Bugün N randevu" (always 0 while OFF).
+  - They are reported as "N randevu talebi yanıt bekliyor".
+- **Guard:** the chat/voice import graph stays free of clinical writes (`core/eylemler/tests/sessizYol.test.ts`). Job helpers live in `lib/randevu/v2/isler.ts`, which writes `randevu_isleri` only.

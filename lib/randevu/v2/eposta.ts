@@ -6,7 +6,7 @@
 import { gunIfadesi, saatIfadesi, bugunTrIso } from '@/lib/iletisim/sablonlar'
 import type { JetonEylemi } from './jeton'
 
-export type RandevuEpostaTuru = 'onay_eposta' | 'oneri_eposta' | 'red_eposta' | 'iptal_eposta' | 'gun_once' | 'sabah'
+export type RandevuEpostaTuru = 'onay_eposta' | 'oneri_eposta' | 'red_eposta' | 'iptal_eposta' | 'gun_once' | 'sabah' | 'bekleme_teklif'
 
 export type RandevuEpostaGirdisi = {
   hastaAdi?: string | null
@@ -44,6 +44,7 @@ const LINK_ETIKETI: Record<JetonEylemi, string> = {
   kabul: 'Bu saati kabul ediyorum',
   ertele: 'Başka bir saat seçmek istiyorum',
   iptal: 'İptal etmek istiyorum',
+  teklif: 'Bu saati istiyorum',
 }
 
 function linkSatirlari(g: RandevuEpostaGirdisi, sira: JetonEylemi[]): string[] {
@@ -99,6 +100,14 @@ export function randevuEpostasi(tur: RandevuEpostaTuru, g: RandevuEpostaGirdisi)
         metin: imzala([
           `${merhaba(g)} ${z} için ${doktorIle(g)}${kimin(g)} var. Gelebilecekseniz “Geliyorum”a dokunmanız yeterli; gelemeyecekseniz lütfen bize haber verin.`,
           ...linkSatirlari(g, ['geliyorum', 'ertele', 'iptal']),
+        ], g),
+      }
+    case 'bekleme_teklif':
+      return {
+        konu: konu('Daha erken bir saat açıldı', g),
+        metin: imzala([
+          `${merhaba(g)} istediğiniz gibi daha erken bir saat açıldı: ${z}. Bu saati isterseniz aşağıdaki bağlantıya dokunun; mevcut randevunuz bu saate taşınır. Saat, ilk isteyene verilir ve kısa süre ayrılı kalır.`,
+          ...linkSatirlari(g, ['teklif']),
         ], g),
       }
     case 'sabah':

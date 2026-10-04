@@ -8,6 +8,7 @@ Brief: Kaan via Claude, 2026-10-04. The architecture is in `docs/RANDEVU-V2.md`.
 |---|---|---|---|
 | PR1: engine, portal booking, approval, reminders | `claude/randevu-v2-engine-l4bec9` | `main` | `lib/db/migrations/111_randevu_v2.sql` |
 | PR2: Google Takvim two-way sync | `claude/randevu-v2-google-l4bec9` | PR1 | `lib/db/migrations/112_randevu_v2_google.sql` |
+| PR3: waitlist and Ayşe | `claude/randevu-v2-waitlist-l4bec9` | PR2 | `lib/db/migrations/113_randevu_v2_bekleme.sql` |
 
 Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previous one's commits.
 
@@ -172,3 +173,50 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 - **Push webhook:** needs a domain verified in Google Search Console. Until then the cron catch-up (every 10 minutes, 06:00–23:00 TRT) is the sync path.
 - **Fail-soft busy blocks:** a failed busy-block read counts as "no external busy" (fail soft). Notya's own appointments remain the hard check.
 - **What is pushed:** only `onaylandi` appointments. Pending requests and legacy `planlandi` bookings stay out of Google.
+
+---
+
+## PR3: waitlist and Ayşe
+
+### Built
+
+- **Waitlist:**
+  - The patient ticks "Daha erken bir saat açılırsa haber ver" on an upcoming appointment.
+  - A freed (or any free) earlier slot is offered **in list order**, one patient at a time, by e-mail (existing path, consent-gated) and in the portal. An unanswered offer expires after 2 hours and moves to the next patient.
+  - The **first to accept** gets a **talep**: their appointment moves to the slot through the normal reschedule path.
+- **Ayşe:**
+  - list and create use the existing tools;
+  - new **`randevu_degistir`** (move/cancel) is always a card the doctor confirms, offered only while the switch is ON and never displacing an existing tool;
+  - a **kontrol randevusu** card is prepared at note approval from "N gün/hafta/ay sonra kontrol" in the approved plan (date from the doctor's sentence, hour left empty);
+  - the **morning brief** reports pending requests and no longer counts them as appointments.
+
+### Files
+
+| Area | Files |
+|---|---|
+| Migration | `lib/db/migrations/113_randevu_v2_bekleme.sql` |
+| Core | `lib/randevu/v2/{bekleme,kontrolOnerisi,ozellik,isler}.ts`; `core/eylemler/randevuEylemleri.ts` |
+| Touched | `core/eylemler/{types,araclar,kayit}.ts` (feature gate + order); `app/api/doktor/{konsult,not-konsult}/route.ts`, `app/api/asistan/ses-eylem/route.ts`, `lib/asistan/ayseCevapla.ts` (pass the flag); `app/api/notes/[id]/approve/route.ts` (one best-effort hook); `lib/doktor/gunOzeti.ts`; portal route and page; e-mail link route and page; cron |
+| Tests | `lib/randevu/v2/bekleme.test.ts`: waitlist order / expiry / first-accept / foreign-patient refusal / OFF; kontrol date; tool gating keeps the OFF tool list identical |
+
+### Manual test steps
+
+1. **Waitlist.** With the switch ON:
+   - patient A books next week and ticks "Daha erken…";
+   - cancel an appointment this week from another patient's portal;
+   - within 10 minutes, A sees "Daha erken bir saat açıldı" (and gets the e-mail if possible);
+   - tap **Bu saati istiyorum** → the practice sees a request at the earlier time; approve it.
+   Leave an offer unanswered for 2 hours: the next waiting patient receives it.
+2. **Ayşe, move.** With a patient open, say "Yarınki randevusunu perşembe 14:00'e al". A "Randevu değişikliği" card appears; confirm it; the calendar moves; **Geri al** restores it.
+3. **Ayşe, cancel.** Say "Cuma randevusunu iptal et" → card → confirm.
+4. **Switch OFF.** Ayşe offers no move/cancel card (the tool list is identical to today).
+5. **Kontrol proposal.** Approve a note whose plan says "2 hafta sonra kontrol". The patient file's pending cards show a Kontrol randevusu card with the date filled and the hour empty.
+6. **Morning brief.** With a pending request, Ayşe's opener mentions "1 randevu talebi yanıt bekliyor".
+
+### Risks and decisions
+
+- **Voice:** voice through the tek-beyin path (ayseCevapla) gets the new tool. The legacy ElevenLabs client-tool path (`/api/asistan/ses-eylem`) accepts it when the agent names it, but its agent prompt was **not** changed (that would change behaviour for everyone).
+- **No patient message from Ayşe:** a move/cancel by Ayşe does not message the patient (T3 rule). Already-scheduled V2 reminders follow the new time.
+- **What the waitlist offers:** any free earlier slot, not only one freed by a cancellation. That is a superset of the brief and simpler to keep correct.
+- **Waitlist eligibility:** it works from an existing appointment only. A patient with no appointment books normally.
+- **Approval hook timing:** the kontrol hook runs inside the approval request (a few small queries, wrapped in try/catch). A failure never affects the approval.
