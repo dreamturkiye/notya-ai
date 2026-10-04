@@ -63,10 +63,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   // content_tetkikler (migration 114) — kolon yoksa null; onay yine çalışır.
   let mevcutTetkikler: unknown = null
-  try {
-    const { data: tRow } = await supabase.from('notes').select('content_tetkikler').eq('id', noteId).eq('doctor_id', user.id).maybeSingle()
-    mevcutTetkikler = tRow?.content_tetkikler ?? null
-  } catch { mevcutTetkikler = null }
+  {
+    const { data: tRow, error: tErr } = await supabase.from('notes').select('content_tetkikler').eq('id', noteId).eq('doctor_id', user.id).maybeSingle()
+    if (!tErr) mevcutTetkikler = tRow?.content_tetkikler ?? null
+  }
 
   // NOTYA-SOAP-02: doktor onaylamadan önce düzenleyebilir. Düzenlemeler hem nota yazılır
   // hem de not_duzenlemeleri tablosuna önce/sonra olarak loglanır — Ayşe'nin "10. seansta

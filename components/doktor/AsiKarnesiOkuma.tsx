@@ -22,6 +22,7 @@ import {
   type KarneEslesme, type KarneSatiri, type Okunabilirlik,
 } from '@/lib/asi/karneOkuma';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan';
 
 type TaslakSatir = KarneSatiri & { eslesme: KarneEslesme; hekimDuzeltti: boolean };
 
@@ -173,8 +174,13 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
           <label style={{ fontSize: 11, color: '#8b7d70' }}>Doz
             <input aria-label="Doz no" type="number" min={1} max={10} value={s.dozNo ?? ''} onChange={(e) => duzelt(s.anahtar, { dozNo: e.target.value ? Number(e.target.value) : null })} placeholder="—" style={girdi} />
           </label>
-          <label style={{ fontSize: 11, color: '#8b7d70' }}>Uygulama tarihi
-            <input aria-label="Uygulama tarihi" type="date" value={s.uygulamaTarihi ?? ''} onChange={(e) => duzelt(s.anahtar, { uygulamaTarihi: e.target.value || null })} style={girdi} />
+          <label style={{ fontSize: 11, color: '#8b7d70' }}>Uygulama tarihi (gg.aa.yyyy)
+            <TrTarihAlan
+              value={s.uygulamaTarihi ?? ''}
+              onChange={(iso) => duzelt(s.anahtar, { uygulamaTarihi: iso || null })}
+              style={girdi}
+              name={`karne_tarih_${s.anahtar}`}
+            />
           </label>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
