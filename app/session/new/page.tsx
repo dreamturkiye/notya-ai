@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { anamnezParcala, fizikParcala } from "@/lib/doktor/anamnezBolumleri"
+import { motorAfisiTemizle } from "@/core/belgeler/yazar"
 import { useRouter, useSearchParams } from "next/navigation"
 import { BRANS_ETIKETLERI } from "@/lib/intake/bransSorulari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
@@ -647,7 +648,7 @@ function NewSessionInner() {
                 <div style={S({fontSize:"13px",color:"#3b2e24",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F6F0E4",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
               </div>
             ))}
-            {fizikParcala(String((note as Record<string, unknown>).content_objektif || '')).map((b, bi) => (
+            {fizikParcala(motorAfisiTemizle(String((note as Record<string, unknown>).content_objektif || ''))).map((b, bi) => (
               <div key={'fm' + bi} style={S({marginBottom:"14px"})}>
                 <div style={S({fontSize:"10px",fontWeight:"600",color:"#059669",textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{b.baslik}</div>
                 <div style={S({fontSize:"13px",color:"#3b2e24",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F6F0E4",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
