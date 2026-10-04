@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ensureDoctorAccessToken, isOnboardingDone } from '@/lib/doktor/clientAuth';
 import { hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci';
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 
 interface Profession {
   id: string;
@@ -87,7 +88,7 @@ const agentMapping: Record<string, string> = {
 
 export default function OnboardingPage() {
   return (
-    <React.Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#060C18' }} />}>
+    <React.Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: CHROME_RENK.cream }} />}>
       <OnboardingInner />
     </React.Suspense>
   );
@@ -323,11 +324,11 @@ function OnboardingInner() {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Unvan</label>
+            <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Unvan</label>
             <select
               value={unvan}
               onChange={(e) => setUnvan(e.target.value)}
-              style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+              style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             >
               <option value="">Seçiniz</option>
               {unvanOptions.map(u => <option key={u} value={u}>{u}</option>)}
@@ -335,11 +336,11 @@ function OnboardingInner() {
           </div>
 
           <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanı</label>
+            <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanı</label>
             <select
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value)}
-              style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+              style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             >
               <option value="">Seçiniz</option>
               {doctorSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
@@ -347,13 +348,13 @@ function OnboardingInner() {
           </div>
 
           <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Klinik / Hastane Adı</label>
+            <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Klinik / Hastane Adı</label>
             <input
               type="text"
               value={hospital}
               onChange={(e) => setHospital(e.target.value)}
               placeholder="Klinik veya hastane adını girin"
-              style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+              style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             />
           </div>
         </div>
@@ -363,7 +364,7 @@ function OnboardingInner() {
     if (selectedProfession === 'mali') {
       return (
         <div>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '12px', display: 'block' }}>Uzmanlık Alanlarınız</label>
+          <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '12px', display: 'block' }}>Uzmanlık Alanlarınız</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {maliChips.map(chip => (
               <div
@@ -372,9 +373,9 @@ function OnboardingInner() {
                 style={{
                   padding: '10px 18px',
                   borderRadius: '9999px',
-                  backgroundColor: selectedMaliChips.includes(chip) ? '#134E4B' : '#0D1425',
-                  border: selectedMaliChips.includes(chip) ? '1px solid #14B8A6' : '1px solid #374151',
-                  color: '#fff',
+                  backgroundColor: selectedMaliChips.includes(chip) ? 'rgba(47,67,52,0.12)' : CHROME_RENK.paper,
+                  border: selectedMaliChips.includes(chip) ? '1px solid ' + CHROME_RENK.pine : '1px solid ' + CHROME_RENK.border,
+                  color: CHROME_RENK.ink,
                   fontSize: '14px',
                   cursor: 'pointer',
                 }}
@@ -391,21 +392,21 @@ function OnboardingInner() {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Baro</label>
+            <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Baro</label>
             <input
               type="text"
               value={baro}
               onChange={(e) => setBaro(e.target.value)}
               placeholder="Baro adını girin"
-              style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+              style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             />
           </div>
           <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanı</label>
+            <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanı</label>
             <select
               value={avukatUzmanlikSec}
               onChange={(e) => setAvukatUzmanlikSec(e.target.value)}
-              style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+              style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             >
               <option value="">Seçiniz</option>
               {avukatUzmanlik.map(u => <option key={u} value={u}>{u}</option>)}
@@ -418,11 +419,11 @@ function OnboardingInner() {
     if (selectedProfession === 'klinik-uzman') {
       return (
         <div>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanınız</label>
+          <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanınız</label>
           <select
             value={uzmanlikSecimi}
             onChange={(e) => setUzmanlikSecimi(e.target.value)}
-            style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+            style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
           >
             <option value="">Seçiniz</option>
             {klinikUzmanSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
@@ -434,11 +435,11 @@ function OnboardingInner() {
     if (selectedProfession === 'saglik-uzmani') {
       return (
         <div>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanınız</label>
+          <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanınız</label>
           <select
             value={uzmanlikSecimi}
             onChange={(e) => setUzmanlikSecimi(e.target.value)}
-            style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+            style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
           >
             <option value="">Seçiniz</option>
             {saglikUzmaniSpecialties.map(s => <option key={s} value={s}>{s}</option>)}
@@ -447,31 +448,33 @@ function OnboardingInner() {
       );
     }
 
-    return <div style={{ color: '#9CA3AF' }}>Kişisel bilgilerinize geçebilirsiniz.</div>;
+    return <div style={{ color: CHROME_RENK.muted }}>Kişisel bilgilerinize geçebilirsiniz.</div>;
   };
 
   if (checking) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#060C18', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: CHROME_RENK.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CHROME_RENK.muted }}>
         Yükleniyor…
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100dvh', backgroundColor: '#060C18', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#fff', padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: CHROME_RENK.cream, fontFamily: CHROME_FONT.sans, color: CHROME_RENK.ink, padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
         <div style={{ marginBottom: '40px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '13px', color: '#14B8A6', marginBottom: '8px' }}>KAYIT</div>
+              <div style={{ fontSize: '13px', color: CHROME_RENK.pine, marginBottom: '8px' }}>KAYIT</div>
               <div style={{ fontSize: '28px', fontWeight: 600 }}>
                 {step === 1 && 'Hangi alanda çalışıyorsunuz?'}
                 {step === 2 && (selectedProfession === 'doktor' ? 'Uzmanlık alanı ve klinik bilgileriniz' : 'Uzmanlık bilgileriniz')}
                 {step === 3 && 'Hesabınızı tamamlayın'}
               </div>
             </div>
-            <div style={{ fontSize: '12px', color: '#9CA3AF', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => router.push('/giris')}>
+            <div style={{ fontSize: '12px', color: CHROME_RENK.muted, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => router.push('/giris')}>
               Giriş sayfasına dön
             </div>
           </div>
@@ -486,9 +489,9 @@ function OnboardingInner() {
                   key={prof.id}
                   onClick={() => setSelectedProfession(prof.id)}
                   style={{
-                    backgroundColor: '#0D1425',
-                    border: isSelected ? '2px solid #14B8A6' : '1px solid #1F2937',
-                    borderLeft: isSelected ? '4px solid #14B8A6' : '4px solid #374151',
+                    backgroundColor: CHROME_RENK.paper,
+                    border: isSelected ? '2px solid ' + CHROME_RENK.pine : '1px solid ' + CHROME_RENK.border,
+                    borderLeft: isSelected ? '4px solid ' + CHROME_RENK.pine : '4px solid ' + CHROME_RENK.border,
                     borderRadius: '12px',
                     padding: '24px',
                     cursor: 'pointer',
@@ -496,7 +499,7 @@ function OnboardingInner() {
                 >
                   <div style={{ fontSize: '32px', marginBottom: '16px' }}>{prof.emoji}</div>
                   <div style={{ fontSize: '17px', fontWeight: 600, marginBottom: '6px' }}>{prof.label}</div>
-                  <div style={{ fontSize: '14px', color: '#9CA3AF' }}>{prof.desc}</div>
+                  <div style={{ fontSize: '14px', color: CHROME_RENK.muted }}>{prof.desc}</div>
                 </div>
               );
             })}
@@ -509,18 +512,18 @@ function OnboardingInner() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Ad</label>
-                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }} />
+                <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Ad</label>
+                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }} />
               </div>
               <div>
-                <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Soyad</label>
-                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }} />
+                <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Soyad</label>
+                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }} />
               </div>
             </div>
 
             <div>
-              <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Cinsiyet</label>
-              <select value={gender} onChange={e => setGender(e.target.value)} style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}>
+              <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Cinsiyet</label>
+              <select value={gender} onChange={e => setGender(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}>
                 <option value="">Seçiniz</option>
                 <option value="Erkek">Erkek</option>
                 <option value="Kadın">Kadın</option>
@@ -528,8 +531,8 @@ function OnboardingInner() {
             </div>
 
             <div>
-              <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Hitap Tercihi</label>
-              <select value={addressingPreference} onChange={e => setAddressingPreference(e.target.value)} style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}>
+              <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Hitap Tercihi</label>
+              <select value={addressingPreference} onChange={e => setAddressingPreference(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}>
                 <option value="">Seçiniz</option>
                 <option value="Hocam">Hocam</option>
                 <option value="[isim] Hocam">[isim] Hocam</option>
@@ -541,7 +544,7 @@ function OnboardingInner() {
 
         <div style={{ marginTop: '40px', display: 'flex', gap: '12px' }}>
           {step > 1 && (
-            <button onClick={handleBack} style={{ flex: 1, padding: '14px', backgroundColor: '#1F2937', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
+            <button onClick={handleBack} style={{ flex: 1, padding: '14px', backgroundColor: 'rgba(47,67,52,0.10)', color: CHROME_RENK.ink, border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
               Geri
             </button>
           )}
@@ -553,7 +556,7 @@ function OnboardingInner() {
               style={{
                 flex: 1,
                 padding: '14px',
-                backgroundColor: (step === 1 ? isStep1Complete : canProceedToStep3()) ? '#14B8A6' : '#374151',
+                backgroundColor: (step === 1 ? isStep1Complete : canProceedToStep3()) ? CHROME_RENK.pine : 'rgba(47,67,52,0.35)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '10px',
@@ -573,7 +576,7 @@ function OnboardingInner() {
               style={{
                 flex: 1,
                 padding: '14px',
-                backgroundColor: canSubmit ? '#14B8A6' : '#374151',
+                backgroundColor: canSubmit ? CHROME_RENK.pine : 'rgba(47,67,52,0.35)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '10px',
