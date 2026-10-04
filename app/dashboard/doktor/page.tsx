@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
 import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
+import TakipPaneli from '@/components/doktor/TakipPaneli'
 import PaketSayacSeridi from '@/components/doktor/seans/PaketSayacSeridi'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
@@ -631,8 +632,9 @@ export default function DoktorDashboard() {
           </div>
 
           {/* Phone: directly under today's calendar. Desktop: stays under Bu Hafta Özeti. */}
-          <div className="yg-fisilti" style={S({ marginTop: 16 })}>
+          <div className="yg-fisilti" style={S({ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 })}>
             <NotyaFisildiyor specialty={specialty} />
+            <TakipPaneli />
           </div>
         </div>
       </div>

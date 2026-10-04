@@ -7,29 +7,17 @@
  * appointment or an open kontrol card.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { planIfadeleriniCikar } from '@/lib/doktor/planIfadesi'
-import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import { oneriHazirla } from '@/core/eylemler/oneri'
 import { bugunTRT } from '@/core/eylemler/types'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { kontrolVadesiBul } from '@/lib/doktor/takip'
 import { randevuV2Acik } from './ozellik'
-import { gunEkle } from './zaman'
 
-const SAYI: Record<string, number> = { bir: 1, iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10 }
-
-/** "2 hafta sonra kontrol" / "kontrol: bir ay sonra" → the TRT date (from `bugun`) and the sentence. Pure. */
+/** "2 hafta sonra kontrol" / "1-2 gün içinde" → the TRT date (from `bugun`) and the sentence. Pure. */
 export function kontrolTarihi(plan: string | null | undefined, bugun: string): { tarih: string; cumle: string } | null {
-  for (const p of planIfadeleriniCikar(plan)) {
-    if (p.konu !== 'kontrol') continue
-    const m = trAramaNormalize(p.cumle).match(/\b(\d{1,3}|bir|iki|uc|dort|bes|alti|yedi|sekiz|dokuz|on) (gun|hafta|ay) sonra\b/)
-    if (!m) continue
-    const n = /^\d+$/.test(m[1]) ? Number(m[1]) : SAYI[m[1]]
-    if (!n || n > 400) continue
-    const gun = m[2] === 'hafta' ? n * 7 : m[2] === 'ay' ? n * 30 : n
-    return { tarih: gunEkle(bugun, gun), cumle: p.cumle }
-  }
-  return null
+  const k = kontrolVadesiBul(plan, bugun)
+  return k ? { tarih: k.vade, cumle: k.cumle } : null
 }
 
 export async function kontrolOnerisiHazirla(

@@ -844,13 +844,18 @@ export async function GET(
       sb.from('dahiliye_ev_kayitlari').select('tip, sbp, dbp, deger, olcum_at').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('tip', 'kb').order('olcum_at', { ascending: false }).limit(14),
       sb.from('dahiliye_ev_kayitlari').select('tip, deger, olcum_at').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('tip', 'glukoz').order('olcum_at', { ascending: false }).limit(14),
     ])
+    let dahiliyeKontrolIso: string | null = null
+    try {
+      const { portalSonrakiKontrolIso } = await import('@/lib/doktor/takip')
+      dahiliyeKontrolIso = await portalSonrakiKontrolIso(sb, doctorId, patientId)
+    } catch { /* soft */ }
     const hatirlatmalar = takibimHatirlatmalari({
       bugun,
       gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
       hedefler: [],
       evKbOzet: null,
       evGlukozOzet: null,
-      sonrakiKontrolIso: null,
+      sonrakiKontrolIso: dahiliyeKontrolIso,
     })
     // Latest lock per kart|alan — hedef metinleri hasta-güvenli özetlenir
     const gorulen = new Set<string>()
@@ -1509,11 +1514,33 @@ export async function GET(
   const aktifIlac = medications.filter((m) => m.aktif).length
   const lastLab = results.find((r) => r.tur === 'laboratuvar')
   const unreadMsgs = messages.filter((m) => !m.okundu).length
+  // NOTYA-TAKIP-01: open kontrol / gelmedi → Sağlığım "Yaklaşan kontrol" chip (patient-safe).
+  let yaklasanKontrol: string | null = null
+  try {
+    const { portalYaklasanKontrol } = await import('@/lib/doktor/takip')
+    yaklasanKontrol = await portalYaklasanKontrol(sb, doctorId, patientId)
+  } catch { /* takip tablosu yoksa Planlanmadı */ }
+  // Fallback: next future practice appointment date (still patient-safe).
+  if (!yaklasanKontrol) {
+    try {
+      const { data: rv } = await sb.from('randevular').select('baslangic')
+        .eq('doktor_id', doctorId).eq('patient_id', patientId)
+        .in('durum', ['planlandi', 'onaylandi'])
+        .gt('baslangic', new Date().toISOString())
+        .order('baslangic', { ascending: true }).limit(1).maybeSingle()
+      if (rv?.baslangic) {
+        yaklasanKontrol = new Intl.DateTimeFormat('tr-TR', {
+          timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        }).format(new Date(String(rv.baslangic)))
+      }
+    } catch { /* soft */ }
+  }
   bundle.summary = {
     aktifIlac,
     bekleyenMesaj: unreadMsgs,
     sonLabOzet: lastLab?.ozet || 'Henüz lab sonucu yok',
-    yaklasanKontrol: null,
+    yaklasanKontrol,
     sonAktivite: [
       ...messages.slice(0, 2).map((m) => ({
         id: `m-${m.id}`,

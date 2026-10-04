@@ -7,9 +7,11 @@ import {
   telefonOgeleri,
   gelmediOgeleri,
   formOgeleri,
+  takipOgeleri,
   onBuroSirala,
   trtGunAraligi,
 } from './onBuroFisilti'
+import type { TakipIsi } from './takip/tipler'
 
 describe('NOTYA-ONBURO-FISILTI-01 — Ön büro fısıltısı', () => {
   it('mesaj: yalnızca gecikme eşiğini aşan okunmamışlar aday olur', () => {
@@ -88,5 +90,18 @@ describe('NOTYA-ONBURO-FISILTI-01 — Ön büro fısıltısı', () => {
     const { bas, bit } = trtGunAraligi('2026-10-04')
     assert.ok(bas.includes('2026-10-03') || bas.includes('2026-10-04'))
     assert.ok(Date.parse(bit) > Date.parse(bas))
+  })
+
+  it('takip: geciken kontrol masa fısıltısına düşer', () => {
+    const is: TakipIsi = {
+      id: 'x1', doktorId: 'd', patientId: 'p', tur: 'kontrol', durum: 'acik',
+      vade: '2026-10-01', kosullu: false, kaynakNotId: 'n1', kaynakRandevuId: null, kaynakSevkId: null,
+      ozet: 'Kontrol penceresi', alinti: '2 gün içinde kontrol', kapandiAt: null, kapandiNeden: null,
+      createdAt: '2026-09-28T10:00:00Z', hastaAdi: 'Ayşe',
+    }
+    const liste = takipOgeleri([is], '2026-10-04')
+    assert.equal(liste.length, 1)
+    assert.equal(liste[0].oncelik, 0)
+    assert.match(liste[0].baslik, /doldu|kontrol/i)
   })
 })

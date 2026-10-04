@@ -386,15 +386,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // NOTYA-RANDEVU-V2 PR3: "N hafta sonra kontrol" in the approved plan → a kontrol randevusu card for the doctor
   // to confirm (existing eylem flow). Only while Hasta Portalı Randevu is ON; never books anything by itself.
   let kontrolOnerisi: string | null = null
+  const planMetni = (guncelleme.content_plan as string | undefined) ?? (existing as { content_plan?: string | null }).content_plan
   if (hastaBenim && hastaIdA) {
     try {
       const { kontrolOnerisiHazirla } = await import('@/lib/randevu/v2/kontrolOnerisi')
       kontrolOnerisi = await kontrolOnerisiHazirla(supabase, {
         doktorId: user.id, patientId: hastaIdA, notId: noteId,
-        plan: (guncelleme.content_plan as string | undefined) ?? (existing as { content_plan?: string | null }).content_plan,
+        plan: planMetni,
         brans: (seansA as { specialty?: string } | null)?.specialty || null,
       })
     } catch (e) { console.error('[randevu-v2] kontrol önerisi', e) }
+  }
+
+  // NOTYA-TAKIP-01: durable kontrol case for desk + portal + reminders (even when V2 portal is OFF).
+  if (hastaBenim && hastaIdA) {
+    try {
+      const { takipNotOnayinda } = await import('@/lib/doktor/takip')
+      await takipNotOnayinda(supabase, {
+        doktorId: user.id,
+        patientId: hastaIdA,
+        notId: noteId,
+        plan: planMetni,
+        notTarihi: (existing.created_at as string | null) || null,
+      })
+    } catch (e) { console.error('[takip] not onay', e) }
   }
 
   if (hastaBenim && hastaIdA) {

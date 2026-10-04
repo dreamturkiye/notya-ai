@@ -16,6 +16,7 @@ import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
 import OnBuroFisildiyor from '@/components/doktor/OnBuroFisildiyor'
+import TakipPaneli from '@/components/doktor/TakipPaneli'
 
 type RandevuSatir = {
   id: string
@@ -349,6 +350,7 @@ export default function SekreterMasa() {
         })}>
           Bekleyenler
         </h2>
+        <TakipPaneli kartStili={kart} />
         <RandevuTalepleri kartStili={kart} />
         <GelenBelgelerKarti kartStili={kart} />
         {mesajlar.length > 0 && (

@@ -15,8 +15,16 @@ import { talepListesi } from '@/lib/randevu/v2/sunucu'
 import { yeniSayisi } from '@/lib/gelenBelgeler/sunucu'
 import { gelenBelgeErisimi, sekreterErisimiAcikMi } from '@/lib/gelenBelgeler/yetki'
 import type { PratikRol } from '@/lib/doktor/pratikOturum'
+import {
+  takipAcikListe,
+  takipBaslik,
+  takipSenkronize,
+  takipSirala,
+  type TakipIsi,
+} from '@/lib/doktor/takip'
+import { bugunTrIso } from '@/lib/iletisim/sablonlar'
 
-export type OnBuroKaynak = 'mesaj' | 'talep' | 'belge' | 'telefon' | 'gelmedi' | 'form'
+export type OnBuroKaynak = 'mesaj' | 'talep' | 'belge' | 'telefon' | 'gelmedi' | 'form' | 'takip'
 
 export interface OnBuroFisiltiItem {
   id: string
@@ -147,7 +155,7 @@ export function telefonOgeleri(
     }))
 }
 
-/** Pure: today's no-shows that still need a callback. */
+/** Pure: today's no-shows that still need a callback (fallback before takip_isleri). */
 export function gelmediOgeleri(
   randevular: Array<{
     id: string
@@ -167,9 +175,32 @@ export function gelmediOgeleri(
       detay: ['Bugün gelmedi olarak işaretlendi; hastayı arayıp yeni saat önerin.'],
       enErkenTarih: r.baslangic,
       hedefYol: '/dashboard/doktor/randevular',
-      oncelik: 3,
+      oncelik: 0,
       patientId: r.patientId || null,
     }))
+}
+
+/** Pure: durable takip cases (kontrol / gelmedi / konsültasyon) → desk whisper items. */
+export function takipOgeleri(isler: TakipIsi[], bugunIso: string): OnBuroFisiltiItem[] {
+  return takipSirala(isler, bugunIso).map((t) => {
+    const gecikti = t.tur === 'gelmedi' || (!!t.vade && t.vade <= bugunIso)
+    const hedefYol = t.tur === 'konsultasyon'
+      ? `/dashboard/doktor/hastalar/${t.patientId}`
+      : t.tur === 'gelmedi'
+        ? '/dashboard/doktor/randevular'
+        : `/dashboard/doktor/randevular?yeni=1&hasta=${t.patientId}`
+    return {
+      id: `takip:${t.id}`,
+      kaynak: (t.tur === 'gelmedi' ? 'gelmedi' : 'takip') as OnBuroKaynak,
+      ad: t.hastaAdi || 'Hasta',
+      baslik: takipBaslik(t, bugunIso),
+      detay: t.ozet ? [t.ozet] : [],
+      enErkenTarih: t.vade || t.createdAt,
+      hedefYol,
+      oncelik: gecikti ? 0 : 2,
+      patientId: t.patientId,
+    }
+  })
 }
 
 /** Pure: filled intake forms awaiting practice review. */
@@ -351,12 +382,30 @@ export async function onBuroFisiltiOgeleri(
     }
   } catch { /* soft */ }
 
-  // Bugünün telefon eksikleri + gelmedi
+  // Bugünün telefon eksikleri
   try {
     const bugunku = await bugunRandevulari(supabase, doktorId, bugun)
     ogeler.push(...telefonOgeleri(bugunku))
-    ogeler.push(...gelmediOgeleri(bugunku))
   } catch { /* soft */ }
+
+  // NOTYA-TAKIP-01: kontrol / gelmedi (multi-day) / konsültasyon — durable ops cases
+  let takipVar = false
+  try {
+    await takipSenkronize(supabase, doktorId)
+    const isler = await takipAcikListe(supabase, doktorId, { isimlerle: true, limit: 50 })
+    if (isler.length) {
+      takipVar = true
+      ogeler.push(...takipOgeleri(isler, bugunTrIso()))
+    }
+  } catch { /* soft before migration 121 */ }
+
+  // Fallback: today's gelmedi only when takip_isleri is empty / unavailable
+  if (!takipVar) {
+    try {
+      const bugunku = await bugunRandevulari(supabase, doktorId, bugun)
+      ogeler.push(...gelmediOgeleri(bugunku))
+    } catch { /* soft */ }
+  }
 
   // Doldurulmuş bilgi formları
   try {

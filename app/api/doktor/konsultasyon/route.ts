@@ -462,6 +462,16 @@ export async function POST(req: NextRequest) {
   }).select(KONSULTASYON_KOLONLARI).maybeSingle()
   if (error || !data) return NextResponse.json({ error: 'Konsültasyon kaydedilemedi — tablo henüz hazır olmayabilir.' }, { status: 500 })
   const s = data as unknown as KonsultasyonSatiri
+  try {
+    const { takipKonsultasyonAcildi } = await import('@/lib/doktor/takip')
+    await takipKonsultasyonAcildi(sb, {
+      doktorId: user.id,
+      patientId,
+      sevkId: String(s.id),
+      hedef: hedefEtiketi(s),
+      istemTarihi: s.istem_tarihi || null,
+    })
+  } catch (e) { console.error('[takip] konsultasyon aç', e) }
   return NextResponse.json({ ok: true, konsultasyon: { ...s, hedefEtiketi: hedefEtiketi(s) } }, { status: 201 })
 }
 
@@ -521,11 +531,23 @@ export async function PATCH(req: NextRequest) {
     if (!iz) return NextResponse.json({ error: IZ_YAZILAMADI }, { status: 500 })
     const y = await guncelle({ ...v, belge_id: belgeId, durum: 'yanitlandi', ...(hekim ? { hedef_hekim: hekim } : {}) })
     if (!y && iz.length) await sb.from('konsultasyon_revizyonlar').delete().in('id', iz).eq('doctor_id', user.id)
+    if (y) {
+      try {
+        const { takipKonsultasyonKapandi } = await import('@/lib/doktor/takip')
+        await takipKonsultasyonKapandi(sb, { doktorId: user.id, sevkId: String(s.id), neden: 'yanit' })
+      } catch (e) { console.error('[takip] konsultasyon yanit', e) }
+    }
     return y ? NextResponse.json({ ok: true, konsultasyon: y }) : NextResponse.json({ error: 'Kaydedilemedi.' }, { status: 500 })
   }
 
   if (islem === 'kapat') {
     const y = await guncelle({ durum: 'kapandi_yanitsiz' })
+    if (y) {
+      try {
+        const { takipKonsultasyonKapandi } = await import('@/lib/doktor/takip')
+        await takipKonsultasyonKapandi(sb, { doktorId: user.id, sevkId: String(s.id), neden: 'iptal' })
+      } catch (e) { console.error('[takip] konsultasyon kapat', e) }
+    }
     return y ? NextResponse.json({ ok: true, konsultasyon: y }) : NextResponse.json({ error: 'Kaydedilemedi.' }, { status: 500 })
   }
 

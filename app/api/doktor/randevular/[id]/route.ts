@@ -170,6 +170,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       whatsappIzni: whatsappIzni === true,
     })
     : null
+
+  // NOTYA-TAKIP-01: gelmedi → open callback; future active appt → clear kontrol/gelmedi.
+  try {
+    const { takipGelmedi, takipRandevuAcildi } = await import('@/lib/doktor/takip')
+    const yeniDurum = String((guncelleme.durum as string | undefined) || mevcut.durum || '')
+    if (yeniDurum === 'gelmedi' && bagliHasta) {
+      await takipGelmedi(supabase, { doktorId, patientId: bagliHasta, randevuId: params.id })
+    } else if (bagliHasta && ['planlandi', 'onaylandi'].includes(yeniDurum)) {
+      const bas = String((guncelleme.baslangic as string | undefined) || mevcut.baslangic || '')
+      if (bas && Date.parse(bas) > Date.now()) {
+        await takipRandevuAcildi(supabase, { doktorId, patientId: bagliHasta })
+      }
+    }
+  } catch (e) { console.error('[takip] randevu patch', e) }
+
   return NextResponse.json({ randevu: data, yeniHasta, reaktivasyon: plan.reaktivasyon, iletisim })
 }
 

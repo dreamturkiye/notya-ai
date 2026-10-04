@@ -91,7 +91,34 @@ export async function fisiltiOgeleri(req: NextRequest, supabase: SupabaseClient,
     // Tablo yoksa Kalkan kapalı; diğer fısıltılar durur.
   }
 
-  const ogeler = [...kalkanOgeleri, ...klinikOgeleri, ...mesajOgeleri]
+  // NOTYA-TAKIP-01: overdue / due kontrol + gelmedi + waiting konsültasyon (ops cases, not kohort).
+  let takipOgeleri: FisiltiItem[] = []
+  try {
+    const { takipSenkronize, takipAcikListe, takipBaslik, takipSirala } = await import('@/lib/doktor/takip')
+    const { bugunTrIso } = await import('@/lib/iletisim/sablonlar')
+    await takipSenkronize(supabase, doktorId)
+    const bugun = bugunTrIso()
+    const isler = takipSirala(await takipAcikListe(supabase, doktorId, { isimlerle: true, limit: 40 }), bugun)
+      .filter((t) => t.tur === 'gelmedi' || t.tur === 'konsultasyon' || (!!t.vade && t.vade <= bugun))
+    takipOgeleri = isler.map((t) => ({
+      id: `takip:${t.id}`,
+      brans: brans || '',
+      patientId: t.patientId,
+      ad: t.hastaAdi || 'Hasta',
+      baslik: takipBaslik(t, bugun),
+      detay: t.ozet ? [t.ozet] : [],
+      enErkenTarih: t.vade || t.createdAt,
+      hedefYol: t.tur === 'gelmedi'
+        ? '/dashboard/doktor/randevular'
+        : `/dashboard/doktor/hastalar/${t.patientId}`,
+      toplamBekleyen: 0,
+      kaynak: 'takip' as const,
+    }))
+  } catch {
+    // Migration 121 yoksa sessiz.
+  }
+
+  const ogeler = [...kalkanOgeleri, ...takipOgeleri, ...klinikOgeleri, ...mesajOgeleri]
   // En eski gecikme üstte -- klinik motorlarının kendi kuralıyla aynı; tarihi olmayan öğeler en sona düşer.
   ogeler.sort((a, b) => String(a.enErkenTarih || '9999').localeCompare(String(b.enErkenTarih || '9999')))
   ogeler.sort((a, b) => Number(a.kaynak !== 'kalkan') - Number(b.kaynak !== 'kalkan'))

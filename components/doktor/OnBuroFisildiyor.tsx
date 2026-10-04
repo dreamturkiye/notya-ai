@@ -29,6 +29,7 @@ const CTA: Record<OnBuroFisiltiItem['kaynak'], string> = {
   telefon: 'Randevuyu aç',
   gelmedi: 'Randevuyu aç',
   form: 'Dosyayı aç',
+  takip: 'Takibi aç',
 }
 
 export default function OnBuroFisildiyor() {

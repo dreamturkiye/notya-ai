@@ -179,5 +179,14 @@ export async function POST(req: NextRequest) {
       whatsappIzni: whatsappIzni === true,
     })
     : null
+
+  // NOTYA-TAKIP-01: booking a future visit clears open kontrol / gelmedi for that patient.
+  if (patientId && Date.parse(String(baslangic)) > Date.now()) {
+    try {
+      const { takipRandevuAcildi } = await import('@/lib/doktor/takip')
+      await takipRandevuAcildi(supabase, { doktorId, patientId })
+    } catch (e) { console.error('[takip] randevu create', e) }
+  }
+
   return NextResponse.json({ randevu: data, iletisim })
 }
