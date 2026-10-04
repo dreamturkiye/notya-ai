@@ -30,6 +30,8 @@ export default function PatientDocumentVault({
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
   // NOTYA-LAB-03: lab summaries per document + Lab filter
   const [labOzet, setLabOzet] = useState<Record<string, { toplam: number; yuksek: number; dusuk: number; kritik: number; onemli: string[]; durum: string; panel_type?: string; sample_no?: string | null }>>({})
+  // NOTYA-BELGE-02: asistan/röntgen analiz durumu — yapılmış CTA “Raporlandı / Değerlendirildi”
+  const [analizDurum, setAnalizDurum] = useState<Record<string, string>>({})
   const [filtre, setFiltre] = useState<'hepsi' | 'lab' | 'yenidogan' | 'muayene'>('hepsi')
   const [seanslar, setSeanslar] = useState<{ id: string; etiket: string }[]>([])
   const [visitId, setVisitId] = useState('')
@@ -49,6 +51,18 @@ export default function PatientDocumentVault({
       if (!res.ok) throw new Error('Belgeler yüklenemedi')
       const data = await res.json()
       fetch(`/api/doktor/belgeler/lab?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }).then((r) => (r.ok ? r.json() : { ozet: {} })).then((j) => setLabOzet(j.ozet || {})).catch(() => {})
+      fetch(`/api/doktor/belgeler/analiz?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : { analizler: [] }))
+        .then((j) => {
+          const map: Record<string, string> = {}
+          for (const a of (j.analizler || j || []) as { belge_id?: string; durum?: string }[]) {
+            const bid = String(a?.belge_id || '')
+            if (!bid || map[bid]) continue
+            if (a?.durum) map[bid] = String(a.durum)
+          }
+          setAnalizDurum(map)
+        })
+        .catch(() => {})
       setDocs(
         (data.documents || []).map((d: VaultDoc) => ({
           id: d.id,
@@ -194,22 +208,28 @@ export default function PatientDocumentVault({
             >
               <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#7A5B1E', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: CHROME_RENK.muted, marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(74,92,138,0.5)' : 'rgba(164,91,62,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#4A5C8A' : CHROME_RENK.warn, fontWeight: 700 }}>{o}</span>)}</span>}</span>
               <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · muayene' : ''}</span>
-              {belgeDegerlendirmeCtalari(d).map((cta) => {
+              {belgeDegerlendirmeCtalari(d, {
+                labDurum: labOzet[d.id]?.durum || null,
+                analizDurum: analizDurum[d.id] || null,
+              }).map((cta) => {
                 const base =
                   cta.yol === 'lab'
                     ? `/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`
                     : `/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`
                 const href = specialtyGeri ? `${base}?geriTab=${specialtyGeri}` : base
-                const color = cta.tur === 'lab' ? '#7A5B1E' : '#0F9B8E'
-                const border = cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(15,155,142,0.4)'
+                const color = cta.yapildi ? '#2E6E4E' : cta.tur === 'lab' ? '#7A5B1E' : '#0F9B8E'
+                const border = cta.yapildi
+                  ? 'rgba(46,110,78,0.45)'
+                  : cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(15,155,142,0.4)'
                 return (
                   <a
                     key={cta.tur}
                     href={href}
                     onClick={(e) => e.stopPropagation()}
-                    style={{ fontSize: 11, fontWeight: 700, color, border: `1px solid ${border}`, borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                    data-yapildi={cta.yapildi ? '1' : '0'}
+                    style={{ fontSize: 11, fontWeight: 700, color, border: `1px solid ${border}`, borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap', background: cta.yapildi ? 'rgba(46,110,78,0.08)' : 'transparent' }}
                   >
-                    {cta.label}
+                    {cta.yapildi ? `✓ ${cta.label}` : cta.label}
                   </a>
                 )
               })}

@@ -5,8 +5,10 @@ export function emptyPortalBundle(): PortalBundle {
     summary: {
       aktifIlac: 0,
       bekleyenMesaj: 0,
-      sonLabOzet: 'Henüz lab sonucu yok',
+      sonLabOzet: 'Henüz tetkik sonucu yok',
+      tetkikSayisi: 0,
       yaklasanKontrol: null,
+      muayeneUyari48s: null,
       sonAktivite: [],
     },
     messages: [],

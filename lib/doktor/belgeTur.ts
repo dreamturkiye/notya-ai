@@ -37,6 +37,8 @@ export type BelgeDegerlendirmeCta = {
   tur: 'lab' | 'rontgen' | 'asistan'
   label: string
   yol: 'lab' | 'analiz'
+  /** true → zaten çıkarılmış / raporlanmış; buton “yapılmamış” gibi görünmez. */
+  yapildi?: boolean
 }
 
 /** Epikriz / reçete / konsültasyon PDF’lerine lab paneli CTA’sı sızmasın. */
@@ -47,28 +49,58 @@ function belgeIkincilLabCtaUygunMu(doc: { fileName?: string | null; category?: s
   return true
 }
 
+/** Lab paneli (çıkarılmış / onaylı) varsa “Değerlendir” yapılmış sayılır. */
+export function belgeLabYapildiMi(labDurum?: string | null): boolean {
+  const d = String(labDurum || '').trim()
+  if (!d || d === 'hata') return false
+  return true
+}
+
+/** Asistan / röntgen analizi taslak veya onaylıysa “Asistana raporla” yapılmış sayılır. */
+export function belgeAnalizYapildiMi(analizDurum?: string | null): boolean {
+  const d = String(analizDurum || '').trim()
+  if (!d || d === 'hata') return false
+  return true
+}
+
 /**
  * Lab / röntgen / asistan yolları. Etiket nötr “Değerlendir” — her yükleme laboratuvar değil
  * (Boss / Gökhan 2026-09-20). Epikriz vb. PDF’lerde ikincil lab CTA yok.
+ * NOTYA-BELGE-02: labOzet / belge_analizleri durumu verilirse yapılmış CTA “✓ …” olur.
  */
 export function belgeDegerlendirmeCtalari(doc: {
   fileName?: string | null
   category?: string | null
   fileType?: string | null
+}, durum?: {
+  labDurum?: string | null
+  analizDurum?: string | null
 }): BelgeDegerlendirmeCta[] {
+  const labYapildi = belgeLabYapildiMi(durum?.labDurum)
+  const analizYapildi = belgeAnalizYapildiMi(durum?.analizDurum)
+  const lab = (yapildi: boolean): BelgeDegerlendirmeCta => ({
+    tur: 'lab', label: yapildi ? 'Değerlendirildi' : 'Değerlendir', yol: 'lab', yapildi,
+  })
+  const asistan = (yapildi: boolean): BelgeDegerlendirmeCta => ({
+    tur: 'asistan', label: yapildi ? 'Raporlandı' : 'Asistana raporla', yol: 'analiz', yapildi,
+  })
+  const rontgen = (yapildi: boolean): BelgeDegerlendirmeCta => ({
+    tur: 'rontgen', label: yapildi ? 'Değerlendirildi' : 'Değerlendir', yol: 'analiz', yapildi,
+  })
+
   if (belgeYenidoganTaburcuEpikriziMi(doc)) {
-    return [{ tur: 'asistan', label: 'Asistana raporla', yol: 'analiz' }]
+    return [asistan(analizYapildi)]
   }
   if (belgeLabMi(doc)) {
-    return [{ tur: 'lab', label: 'Değerlendir', yol: 'lab' }]
+    return [lab(labYapildi)]
   }
   if (belgeRontgenMi(doc)) {
-    return [{ tur: 'rontgen', label: 'Değerlendir', yol: 'analiz' }]
+    return [rontgen(analizYapildi)]
   }
-  const ctas: BelgeDegerlendirmeCta[] = [{ tur: 'asistan', label: 'Asistana raporla', yol: 'analiz' }]
+  const ctas: BelgeDegerlendirmeCta[] = [asistan(analizYapildi)]
   const ft = String(doc.fileType || '')
   if (belgeIkincilLabCtaUygunMu(doc) && (ft === 'application/pdf' || /csv|excel|spreadsheet/.test(ft))) {
-    ctas.push({ tur: 'lab', label: 'Değerlendir', yol: 'lab' })
+    ctas.push(lab(labYapildi))
   }
   return ctas
 }

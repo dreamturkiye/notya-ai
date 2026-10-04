@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { ilacAdiniSadelestir, ilacDetayMetni, ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi, ilacOnerisiCoz, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
+import { ilacAdiniSadelestir, ilacDetayMetni, ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi, ilacOnerisiCoz, ilacUyumImzasi, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
 
 test('ilacAdiniSadelestir: alternatif ve açıklama kuyruğunu atar, dozu korur', () => {
   assert.equal(
@@ -194,6 +194,20 @@ test('ilacKontrolSonucu: Ayşe okuyamadı → somut uyuşmazlıkta uyarı, yaln�
   assert.equal(ilacKontrolSonucu(true, LISTE, null), 'uyari')
   assert.equal(ilacKontrolSonucu(false, LISTE, null), 'devam')
   assert.equal(ilacKontrolSonucu(true, LISTE, []), 'uyari')
+})
+
+test('ilacUyumImzasi + oncekiImza: aynı Plan+liste bir kez onaylandıysa yeniden sormaz', () => {
+  // Plan’da Augmentin, listede hâlâ Amoksisilin → tutarsız (canlı revizyon vakası)
+  const plan = '1. TEDAVİ: a) Augmentin ES süspansiyon 2x7.5 ml 10 gün b) Calpol şurup 5ml lüzumunda'
+  const liste = LISTE
+  const imza = ilacUyumImzasi(plan, liste)
+  assert.equal(ilacUyumImzasi(plan, liste), imza, 'deterministik')
+  assert.deepEqual(ilacKontroluGerekliMi(plan, PLAN_ILK, liste), { gerekli: true, tutarsiz: true })
+  // Aynı imza kayıtlıysa kart açılmaz
+  assert.deepEqual(ilacKontroluGerekliMi(plan, PLAN_ILK, liste, imza), { gerekli: false, tutarsiz: true })
+  // Liste değişince imza eşleşmez → yeniden sor
+  const degisen = [...liste, { ad: 'Ventolin', doz: '', kullanim: '3x1', sure: '5 gün' }]
+  assert.equal(ilacKontroluGerekliMi(plan, PLAN_ILK, degisen, imza).gerekli, true)
 })
 
 test('ilacDetayMetni: boş alanlar atlanır, çift tire yok (Kaan, 2026-09-25)', () => {

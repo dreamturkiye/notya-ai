@@ -95,4 +95,27 @@ describe('belgeTur', () => {
       false,
     )
   })
+
+  it('yapılmış lab / analiz CTA etiketi Değerlendirildi / Raporlandı olur', () => {
+    const lab = belgeDegerlendirmeCtalari(
+      { fileName: 'Ali_Kara_Lab.pdf', category: 'Lab Sonucu', fileType: 'application/pdf' },
+      { labDurum: 'cikarildi' },
+    )
+    assert.equal(lab[0]?.yapildi, true)
+    assert.equal(lab[0]?.label, 'Değerlendirildi')
+
+    const asistan = belgeDegerlendirmeCtalari(
+      { fileName: 'epikriz.pdf', category: YENIDOGAN_TABURCULUK_EPIKRIZI, fileType: 'application/pdf' },
+      { analizDurum: 'onaylandi' },
+    )
+    assert.equal(asistan[0]?.yapildi, true)
+    assert.equal(asistan[0]?.label, 'Raporlandı')
+
+    const ham = belgeDegerlendirmeCtalari(
+      { fileName: 'chest.jpg', category: 'Röntgen', fileType: 'image/jpeg' },
+      {},
+    )
+    assert.equal(ham[0]?.yapildi, false)
+    assert.equal(ham[0]?.label, 'Değerlendir')
+  })
 })

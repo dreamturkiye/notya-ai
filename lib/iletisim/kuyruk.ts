@@ -48,6 +48,8 @@ export type KuyrukAdayi = {
 
 export const tekilAnahtar = {
   randevu: (randevuId: string, baslangicIso: string) => `randevu_hatirlatma:${randevuId}:${baslangicIso}`,
+  /** 48 saat önce (2 gün sonraki randevu) — 24s anahtarından ayrı; ikisi de gidebilir. */
+  randevu48s: (randevuId: string, baslangicIso: string) => `randevu_hatirlatma_48s:${randevuId}:${baslangicIso}`,
   saglikimMesaji: (konuId: string, gunIso: string) => `saglikim_yeni_mesaj:${konuId}:${gunIso}`,
   /** Without a thread id: one notice per patient per day. */
   saglikimMesajiHasta: (patientId: string, gunIso: string) => `saglikim_yeni_mesaj:hasta:${patientId}:${gunIso}`,
@@ -103,6 +105,26 @@ export function randevuAdaylari(randevular: RandevuSatiri[], bugunIso: string): 
       randevu_id: r.id,
       planlanan_gun: bugunIso,
       tekil_anahtar: tekilAnahtar.randevu(r.id, new Date(r.baslangic).toISOString()),
+    }))
+}
+
+/**
+ * 48 saat önce (bugünden 2 takvim günü sonraki randevular) — Boss 2026-10-04.
+ * Aynı tur (`randevu_hatirlatma`); tekil anahtar `_48s` ile 24s hatırlatmadan ayrılır.
+ */
+export function randevu48SaatAdaylari(randevular: RandevuSatiri[], bugunIso: string): KuyrukAdayi[] {
+  const ikiGunSonra = gunEkle(bugunIso, 2)
+  const { bas, son } = trGunAraligi(ikiGunSonra)
+  return randevular
+    .filter((r) => r.patient_id && ['planlandi', 'onaylandi'].includes(r.durum))
+    .filter((r) => { const t = Date.parse(r.baslangic); return t >= Date.parse(bas) && t < Date.parse(son) })
+    .map((r) => ({
+      doctor_id: r.doktor_id,
+      patient_id: String(r.patient_id),
+      tur: 'randevu_hatirlatma' as const,
+      randevu_id: r.id,
+      planlanan_gun: bugunIso,
+      tekil_anahtar: tekilAnahtar.randevu48s(r.id, new Date(r.baslangic).toISOString()),
     }))
 }
 

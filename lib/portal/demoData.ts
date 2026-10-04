@@ -67,7 +67,9 @@ export const SAGLIGIM_DEMO: PortalBundle = {
     aktifIlac: 3,
     bekleyenMesaj: 2,
     sonLabOzet: 'HbA1c  ·  %6.4 — hafif yüksek',
+    tetkikSayisi: 2,
     yaklasanKontrol: '28 Kasım 2026 · 10:30',
+    muayeneUyari48s: null,
     sonAktivite: [
       {
         id: 'a1',
@@ -456,7 +458,9 @@ export const SAGLIGIM_DEMO_GOZ: PortalBundle = {
     aktifIlac: 2,
     bekleyenMesaj: 1,
     sonLabOzet: 'OCT görüntünüz dosyanıza eklendi',
+    tetkikSayisi: 1,
     yaklasanKontrol: '15 Ekim 2026 · 09:30',
+    muayeneUyari48s: null,
     sonAktivite: [
       { id: 'ga1', tur: 'mesaj', baslik: 'Yeni mesaj: Kontrol öncesi bilgilendirme', tarih: '2026-09-10T09:00:00Z', href: 'mesajlar' },
       { id: 'ga2', tur: 'sonuc', baslik: 'OCT · Sağ göz', tarih: '2026-09-03T10:20:00Z', href: 'sonuclar' },
@@ -598,7 +602,9 @@ export const SAGLIGIM_DEMO_KBB: PortalBundle = {
     aktifIlac: 0,
     bekleyenMesaj: 1,
     sonLabOzet: 'İşitme testi randevunuz planlandı',
+    tetkikSayisi: 1,
     yaklasanKontrol: '10 Ekim 2026 · 11:00',
+    muayeneUyari48s: null,
     sonAktivite: [
       { id: 'ka1', tur: 'mesaj', baslik: 'Yeni mesaj: Kontrol öncesi bilgi', tarih: '2026-09-20T09:00:00Z', href: 'mesajlar' },
       { id: 'ka2', tur: 'ziyaret', baslik: 'Kulak Burun Boğaz ziyareti', tarih: '2026-09-18T10:00:00Z', href: 'ziyaretler' },

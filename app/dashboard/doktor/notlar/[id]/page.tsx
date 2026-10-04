@@ -59,6 +59,8 @@ interface NotVeri {
     id: string
     createdAt: string
     approvedAt: string | null
+    /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası. */
+    ilacUyumImza?: string | null
     /** NOTYA-ARSIV-01: muayenesi arşivde — hiçbir listede görünmez, yalnız doğrudan açılır. */
     arsivde?: boolean
     specialty: string
@@ -300,7 +302,7 @@ export default function NotSayfasi() {
       // senkronlanır — genel yeniden-değerlendirme İlaçlar'ı AI ile ezmez (NOTYA-NOT-HEKIM-01);
       // yalnız Plan↔liste ayrışınca ILAC_UYUM yolu (önbellekli) yazar.
       const mevcutIlac = ilacMetniniCoz(ilacRef.current)
-      const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac)
+      const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac, veri?.not.ilacUyumImza)
       if (ilacKontrol.gerekli) {
         const oneri = await planaGoreIlacOnerisiOnbellekli(t || '', params.id, taslak.plan, {
           ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: mevcutIlac,
@@ -404,7 +406,7 @@ export default function NotSayfasi() {
       // NOTYA-RECETE-04 (Kaan, 2026-09-25): Plan metni ile İlaçlar listesi (reçeteye/dosyaya giden TEK kaynak)
       // ayrışmışsa Ayşe Plan'dan listeyi çıkarır, hekim kartta seçer. Listeler aynı çıkarsa kart açılmaz.
       const mevcut = ilacMetniniCoz(ilac)
-      const kontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcut)
+      const kontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcut, veri?.not.ilacUyumImza)
       if (kontrol.gerekli) {
         setUyum({ tur: 'kontrol' })
         const oneri = await planaGoreIlacOnerisiOnbellekli((await ensureDoctorAccessToken()) || '', params.id, taslak.plan, {
@@ -450,7 +452,10 @@ export default function NotSayfasi() {
       setDurum('kaydedildi'); setDegisti(false);
       setOnaylandiSimdi(true);
       kullanimEylem('not_onayla', `/dashboard/doktor/notlar/${params.id}`);
-      setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
+      // NOTYA-RECETE-07: istemci imzayı da günceller — aynı oturumda yeniden onayda kart açılmaz.
+      const { ilacUyumImzasi } = await import('@/lib/doktor/receteAktarim')
+      const yeniImza = ilacUyumImzasi(taslak.plan, ilacMetniniCoz(ilacMetni))
+      setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString(), ilacUyumImza: yeniImza } } : v);
       // NOTYA-ILAC-SONLANDIR-01: not bir ilacı kestiyse sayfa hemen geçmez — hekim satırı (ve Geri al'ı) görür, Devam ile geçer.
       const sonlanan = ilacSonlandirmaBilgisi(params.id, j);
       if (sonlanan) setSonlandirma(sonlanan);

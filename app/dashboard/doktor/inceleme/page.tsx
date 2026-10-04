@@ -62,6 +62,8 @@ interface PendingNote {
   plan: string;
   tani: string;
   ilaclar: IlacOner[];
+  /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası. */
+  ilacUyumImza?: string | null;
   icdKodlari: IcdOner[];
   kritikBulgular: string[];
   hastaOzeti: string;
@@ -95,6 +97,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       plan: satirBasiNumarala(String(n.plan ?? '')),
       tani: String(n.tani ?? ''),
       ilaclar: Array.isArray(n.ilaclar) ? (n.ilaclar as IlacOner[]) : [],
+      ilacUyumImza: typeof n.ilacUyumImza === 'string' ? n.ilacUyumImza : null,
       icdKodlari: Array.isArray(n.icdKodlari) ? (n.icdKodlari as IcdOner[]) : [],
       kritikBulgular: Array.isArray(n.kritikBulgular) ? (n.kritikBulgular as string[]).map(String) : [],
       hastaOzeti: String(n.hastaOzeti ?? ''),
@@ -155,6 +158,8 @@ export default function IncelemePage() {
   const kBekliyorRef = useRef(false);
   // NOTYA-RECETE-05: açık notun ilk Plan metni — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
   const ilkPlanRef = useRef<string | null>(null);
+  // NOTYA-RECETE-07: açık notun kayıtlı Plan↔İlaç imzası.
+  const ilacUyumImzaRef = useRef<string | null>(null);
   // NOTYA-NOT-HIZ-03: öneri arka planda hazırlanan açık not (yeni, öneri alanları boş).
   const [oneriBekleyenId, setOneriBekleyenId] = useState('');
 
@@ -169,6 +174,7 @@ export default function IncelemePage() {
     atlaOtomatikRef.current = true;
     setAcikId(note.id);
     ilkPlanRef.current = note.plan;
+    ilacUyumImzaRef.current = note.ilacUyumImza || null;
     setTaslak({ subjektif: note.subjektif, objektif: note.objektif, degerlendirme: note.degerlendirme, plan: note.plan });
     setBasvuruTaslak(note.basvuruYakinmasi || '');
     setAlarmTaslak((note.alarmBulgulari || []).join('\n'));
@@ -275,7 +281,7 @@ export default function IncelemePage() {
       // NOTYA-RECETE-06: yeniden değerlendir İlaçlar'ı AI ile ezmez; Plan↔liste ayrışınca dar Plan çıkarımıyla senkron.
       if (yenidenMi) {
         const mevcutIlac = ilacMetniniCoz(ilacTaslak)
-        const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac)
+        const ilacKontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcutIlac, ilacUyumImzaRef.current)
         if (ilacKontrol.gerekli) {
           const oneri = await planaGoreIlacOnerisiOnbellekli(token, note.id, taslak.plan, {
             ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, hastaOzeti: ozetTaslak,
@@ -424,7 +430,7 @@ export default function IncelemePage() {
     // NOTYA-RECETE-04 (Kaan, 2026-09-25): açık notta Plan ile İlaçlar listesi ayrışmışsa önce uyum kartı.
     if (acikId === id && ilacOnayli === undefined) {
       const mevcut = ilacMetniniCoz(ilacTaslak);
-      const kontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcut);
+      const kontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcut, ilacUyumImzaRef.current);
       if (kontrol.gerekli) {
         setUyum({ id, durum: { tur: 'kontrol' } });
         const oneri = await planaGoreIlacOnerisiOnbellekli(await getAccessTokenAsync(), id, taslak.plan, { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, hastaOzeti: ozetTaslak, ilaclar: mevcut, icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak }).catch(() => null);

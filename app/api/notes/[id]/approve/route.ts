@@ -235,6 +235,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'vitaller', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
     }
   }
+  // NOTYA-RECETE-07: onaylanan Plan + İlaçlar imzası — revizyonda aynı çift için kart yeniden açılmaz.
+  try {
+    const { ilacUyumImzasi } = await import('@/lib/doktor/receteAktarim')
+    const sonPlan = String(('content_plan' in guncelleme ? guncelleme.content_plan : existing.content_plan) || '')
+    const sonIlac = (('content_ilaclar' in guncelleme ? guncelleme.content_ilaclar : existing.content_ilaclar) || []) as {
+      ad?: string; doz?: string; kullanim?: string; sure?: string
+    }[]
+    guncelleme.ilac_uyum_imza = ilacUyumImzasi(sonPlan, Array.isArray(sonIlac) ? sonIlac : [])
+  } catch (e) { console.error('[approve] ilac-uyum-imza', e) }
+
   {
     let { error: updateError } = await supabase
       .from('notes')
@@ -245,6 +255,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Migration 114 henüz yoksa content_tetkikler kolonunu atlayıp tekrar dene.
     if (updateError && 'content_tetkikler' in guncelleme && /content_tetkikler|column/i.test(updateError.message || '')) {
       const { content_tetkikler: _atla, ...kalan } = guncelleme as Record<string, unknown>
+      const tekrar = await supabase.from('notes').update(kalan).eq('id', noteId).eq('doctor_id', user.id)
+      updateError = tekrar.error
+    }
+    // Migration 123 henüz yoksa ilac_uyum_imza kolonunu atlayıp tekrar dene.
+    if (updateError && 'ilac_uyum_imza' in guncelleme && /ilac_uyum_imza|column/i.test(updateError.message || '')) {
+      const { ilac_uyum_imza: _atla, ...kalan } = guncelleme as Record<string, unknown>
       const tekrar = await supabase.from('notes').update(kalan).eq('id', noteId).eq('doctor_id', user.id)
       updateError = tekrar.error
     }

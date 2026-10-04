@@ -777,6 +777,94 @@ body:has(.sagligim-root) {
   letter-spacing: 0.01em;
 }
 
+/* Yeni mesaj — sevimli, göze çarpan chip */
+.sg-chip--yeni-mesaj {
+  border-color: rgba(196, 92, 110, 0.45) !important;
+  background: linear-gradient(145deg, #fff7f5 10%, #ffe4e0 55%, #ffd6cf) !important;
+  box-shadow: 0 6px 18px rgba(196, 92, 110, 0.12);
+  animation: sg-mesaj-nabiz 2.4s ease-in-out infinite;
+}
+.sg-chip-yeni-mesaj {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.sg-chip-yeni-mesaj-balon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #fff;
+  color: #c45c6e;
+  border: 1px solid rgba(196, 92, 110, 0.28);
+  flex-shrink: 0;
+}
+.sg-chip-yeni-mesaj-metin {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sg-chip-yeni-mesaj-baslik {
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.3;
+  color: #8a3344;
+  letter-spacing: -0.01em;
+}
+.sg-chip-yeni-mesaj-sayi {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(138, 51, 68, 0.72);
+}
+@keyframes sg-mesaj-nabiz {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Muayene 48s uyarı bandı */
+.sg-muayene-uyari {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border-radius: var(--sg-radius);
+  border: 1px solid rgba(180, 131, 47, 0.35);
+  background: linear-gradient(120deg, #fffaf0, #fff3d6);
+  color: #5c4318;
+}
+.sg-muayene-uyari-ikon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sg-muayene-uyari-baslik {
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.sg-muayene-uyari-metin {
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(92, 67, 24, 0.88);
+}
+.sg-muayene-uyari-cta {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #7a5b1e;
+  text-decoration: none;
+  border: 1px solid rgba(180, 131, 47, 0.4);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: #fff;
+}
+
 .sg-home-section {
   margin-top: 28px;
 }

@@ -12,7 +12,7 @@ import { ACIL_SATIRI, gunIfadesi, mesajHazirla } from './sablonlar'
 import { gonderilebilirMi, kanalDurumu, onerilenKanal } from './izin'
 import { IZIN_ALANI, IZIN_EVET, intakeIzinleri } from './izinMetni'
 import {
-  PERSONEL_TURLERI, bugunGosterilecekler, kuyrukGuncellemesi, randevuAdaylari, tekilAnahtar, trGunAraligi, turIzinliMi, yeniAdaylar,
+  PERSONEL_TURLERI, bugunGosterilecekler, kuyrukGuncellemesi, randevu48SaatAdaylari, randevuAdaylari, tekilAnahtar, trGunAraligi, turIzinliMi, yeniAdaylar,
   type KuyrukAdayi,
 } from './kuyruk'
 import { hazirOtomatikGonderici, otomatikGondericiler } from './otomatik'
@@ -220,6 +220,18 @@ describe('Hazır mesajlar kuyruğu', () => {
     assert.deepEqual(a.map((x) => x.randevu_id).sort(), ['onayli', 'yarin-aksam', 'yarin-sabah'])
     assert.equal(a.find((x) => x.randevu_id === 'yarin-sabah')!.tekil_anahtar, tekilAnahtar.randevu('yarin-sabah', '2026-09-25T21:30:00.000Z'))
     assert.deepEqual(trGunAraligi('2026-09-26'), { bas: '2026-09-25T21:00:00.000Z', son: '2026-09-26T21:00:00.000Z' })
+  })
+  it('48s adayları: bugünden 2 gün sonraki randevu; anahtar _48s ile 24s’ten ayrı', () => {
+    const r = (id: string, baslangic: string, durum = 'planlandi', patient_id: string | null = 'P1') => ({ id, doktor_id: 'D1', patient_id, baslangic, durum })
+    // bugün 25 Eyl → 2 gün sonra = 27 Eyl TRT = 2026-09-26T21:00Z .. 2026-09-27T21:00Z
+    const a = randevu48SaatAdaylari([
+      r('iki-gun', '2026-09-27T08:00:00.000Z'), // 11:00 TRT 27 Eylül
+      r('yarin', '2026-09-26T08:00:00.000Z'), // yarın — 48s değil
+      r('serbest', '2026-09-27T09:00:00.000Z', 'planlandi', null),
+    ], '2026-09-25')
+    assert.deepEqual(a.map((x) => x.randevu_id), ['iki-gun'])
+    assert.equal(a[0]!.tekil_anahtar, tekilAnahtar.randevu48s('iki-gun', '2026-09-27T08:00:00.000Z'))
+    assert.notEqual(tekilAnahtar.randevu48s('x', 't'), tekilAnahtar.randevu('x', 't'))
   })
   it('bugün gösterilecekler: bekleyen + bugüne kadar; "Sonra" en sona; sekreter yalnız randevu türleri', () => {
     const s = [

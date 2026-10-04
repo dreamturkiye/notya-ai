@@ -62,7 +62,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
 
   return (
     <div className="sg-fade">
-      <SectionHeader title="Test sonuçları" subtitle="Laboratuvar, görüntüleme ve diğer tetkikler." />
+      <SectionHeader title="Tetkik sonuçlarınız" subtitle="Laboratuvar, rapor, görüntüleme ve dosyanızdaki diğer belgeler — görüntüleyin veya indirin." />
       <div className="sg-filter-row">
         {FILTERS.map((f) => (
           <button
@@ -217,7 +217,7 @@ export function ResultDetailView({
         </SoftPanel>
       ) : null}
 
-      {(result.gorselUrl || result.raporMetni || isImagingKind(result.tur)) && (
+      {(result.gorselUrl || result.belgeUrl || result.raporMetni || isImagingKind(result.tur)) && (
         <SoftPanel style={{ marginTop: 12, padding: 0, overflow: 'hidden' }}>
           {result.gorselUrl ? (
             <div className="sg-imaging-frame">
@@ -229,8 +229,8 @@ export function ResultDetailView({
               />
               <div className="sg-imaging-actions">
                 <a
-                  href={result.gorselUrl}
-                  download={`${(result.baslik || 'goruntuleme').replace(/\s+/g, '-').toLowerCase()}.jpg`}
+                  href={result.belgeUrl ? `${result.belgeUrl}?indir=1` : result.gorselUrl}
+                  download={result.belgeAdi || `${(result.baslik || 'goruntuleme').replace(/\s+/g, '-').toLowerCase()}.jpg`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="sg-chip-btn is-active"
@@ -243,6 +243,26 @@ export function ResultDetailView({
               </div>
             </div>
           ) : null}
+          {result.belgeUrl && !result.gorselUrl ? (
+            <div style={{ padding: 16 }} data-testid="belge-indir-panel">
+              <div style={{ fontWeight: 800, marginBottom: 6 }}>{result.belgeAdi || result.baslik}</div>
+              <p style={{ margin: '0 0 12px', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.45 }}>
+                Bu belge dosyanızda kayıtlı. Görüntüleyebilir veya cihazınıza indirebilirsiniz.
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <a href={result.belgeUrl} target="_blank" rel="noopener noreferrer" className="sg-chip-btn">
+                  Görüntüle
+                </a>
+                <a
+                  href={`${result.belgeUrl}?indir=1`}
+                  download={result.belgeAdi || 'belge'}
+                  className="sg-chip-btn is-active"
+                >
+                  İndir
+                </a>
+              </div>
+            </div>
+          ) : null}
           {result.raporMetni ? (
             <div style={{ padding: '16px' }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 8 }}>
@@ -251,7 +271,7 @@ export function ResultDetailView({
               <p className="sg-prose">{result.raporMetni}</p>
             </div>
           ) : null}
-          {!result.gorselUrl && isImagingKind(result.tur) ? (
+          {!result.gorselUrl && !result.belgeUrl && isImagingKind(result.tur) ? (
             <div style={{ padding: '16px', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.5 }}>
               Görüntü dosyası paylaşılmadı. Görüntülerinizi istemek için doktorunuza yazabilirsiniz.
             </div>

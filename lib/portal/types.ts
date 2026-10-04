@@ -20,8 +20,13 @@ export type ResultKind = 'laboratuvar' | 'goruntuleme' | 'ekg' | 'diger'
 export interface PortalSummary {
   aktifIlac: number
   bekleyenMesaj: number
+  /** @deprecated UI “Tetkik sonuçlarınız” + tetkikSayisi kullanır; geriye uyum için metin kalır. */
   sonLabOzet: string
+  /** Vault + lab + görüntüleme toplamı — “Tetkik sonuçlarınız” chip sayısı. */
+  tetkikSayisi: number
   yaklasanKontrol: string | null
+  /** Muayeneye ≤48 saat kala portal uyarısı (TR tarih metni veya null). */
+  muayeneUyari48s?: string | null
   sonAktivite: Array<{
     id: string
     tur: 'ziyaret' | 'sonuc' | 'mesaj' | 'ilac'
@@ -91,6 +96,10 @@ export interface PortalResult {
   raporMetni?: string
   modalite?: string
   gorselUrl?: string | null
+  /** Belge kasası / indirilebilir dosya (PDF, görüntü, rapor). */
+  belgeUrl?: string | null
+  belgeAdi?: string | null
+  belgeMime?: string | null
 }
 
 export interface PortalMedication {

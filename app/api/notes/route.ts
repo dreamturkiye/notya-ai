@@ -174,6 +174,9 @@ export async function GET(req: NextRequest) {
       plan: String(row.content_plan || ''),
       tani: String(row.content_tani || ''),
       ilaclar: Array.isArray(row.content_ilaclar) ? row.content_ilaclar : [],
+      ilacUyumImza: typeof (row as unknown as { ilac_uyum_imza?: string | null }).ilac_uyum_imza === 'string'
+        ? (row as unknown as { ilac_uyum_imza: string }).ilac_uyum_imza
+        : null,
       icdKodlari: Array.isArray(row.icd10_codes) ? row.icd10_codes : [],
       kritikBulgular: Array.isArray(row.kritik_bulgular) ? row.kritik_bulgular : [],
       hastaOzeti: String(row.hasta_ozeti || ''),

@@ -545,6 +545,56 @@ export async function GET(
     })
   }
 
+  // NOTYA-PORTAL-TETKIK-01: belge kasası → hasta kayıt istasyonu (görüntüle / indir).
+  // Lab satırları zaten hasta_lab_sonuclari'ndan geldiyse çift saymamak için belge_id ile eşleştirilir.
+  const labBelgeIds = new Set<string>()
+  try {
+    const { data: labPaneller } = await sb
+      .from('lab_paneller')
+      .select('belge_id')
+      .eq('patient_id', patientId)
+      .eq('doctor_id', doctorId)
+      .not('belge_id', 'is', null)
+      .limit(80)
+    for (const p of labPaneller || []) {
+      if (p.belge_id) labBelgeIds.add(String(p.belge_id))
+    }
+  } catch { /* soft */ }
+  try {
+    const { data: belgeler } = await sb
+      .from('medical_documents')
+      .select('id, file_name, file_type, category, created_at')
+      .eq('patient_id', patientId)
+      .eq('doctor_id', doctorId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(40)
+    for (const b of belgeler || []) {
+      const id = String(b.id)
+      if (labBelgeIds.has(id)) continue // lab paneli zaten results'ta
+      if (results.some((r) => r.id === id)) continue
+      const cat = String(b.category || '')
+      const ad = String(b.file_name || 'Belge')
+      const mime = String(b.file_type || '')
+      const labMi = /lab|laboratuvar|biyokimya|hemogram|idrar/i.test(`${cat} ${ad}`)
+      const goruntuMu = mime.startsWith('image/') || /röntgen|rontgen|x-?ray|grafi|görüntü|goruntu/i.test(`${cat} ${ad}`)
+      const tur = labMi ? 'laboratuvar' as const : goruntuMu ? 'goruntuleme' as const : 'diger' as const
+      const belgeUrl = `/api/portal/hasta/${encodeURIComponent(token)}/belge/${id}`
+      results.push({
+        id,
+        tur,
+        baslik: cat || ad,
+        tarih: String(b.created_at),
+        ozet: ad,
+        durum: 'raporlandi',
+        belgeUrl,
+        belgeAdi: ad,
+        belgeMime: mime || null,
+        gorselUrl: mime.startsWith('image/') ? belgeUrl : null,
+      })
+    }
+  } catch (e) { console.error('[portal] medical_documents:', e) }
+
   const { data: ceket } = await sb
     .from('goruntu_calisma')
     .select('id, tip, modalite, bolge, tarih, onay_durum, hekim_yorum, created_at')
@@ -1514,33 +1564,42 @@ export async function GET(
   const aktifIlac = medications.filter((m) => m.aktif).length
   const lastLab = results.find((r) => r.tur === 'laboratuvar')
   const unreadMsgs = messages.filter((m) => !m.okundu).length
+  const tetkikSayisi = results.length
   // NOTYA-TAKIP-01: open kontrol / gelmedi → Sağlığım "Yaklaşan kontrol" chip (patient-safe).
   let yaklasanKontrol: string | null = null
+  let muayeneUyari48s: string | null = null
   try {
     const { portalYaklasanKontrol } = await import('@/lib/doktor/takip')
     yaklasanKontrol = await portalYaklasanKontrol(sb, doctorId, patientId)
   } catch { /* takip tablosu yoksa Planlanmadı */ }
   // Fallback: next future practice appointment date (still patient-safe).
-  if (!yaklasanKontrol) {
-    try {
-      const { data: rv } = await sb.from('randevular').select('baslangic')
-        .eq('doktor_id', doctorId).eq('patient_id', patientId)
-        .in('durum', ['planlandi', 'onaylandi'])
-        .gt('baslangic', new Date().toISOString())
-        .order('baslangic', { ascending: true }).limit(1).maybeSingle()
-      if (rv?.baslangic) {
-        yaklasanKontrol = new Intl.DateTimeFormat('tr-TR', {
-          timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        }).format(new Date(String(rv.baslangic)))
-      }
-    } catch { /* soft */ }
-  }
+  try {
+    const { data: rv } = await sb.from('randevular').select('baslangic')
+      .eq('doktor_id', doctorId).eq('patient_id', patientId)
+      .in('durum', ['planlandi', 'onaylandi'])
+      .gt('baslangic', new Date().toISOString())
+      .order('baslangic', { ascending: true }).limit(1).maybeSingle()
+    if (rv?.baslangic) {
+      const bas = new Date(String(rv.baslangic))
+      const etiket = new Intl.DateTimeFormat('tr-TR', {
+        timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      }).format(bas)
+      if (!yaklasanKontrol) yaklasanKontrol = etiket
+      // NOTYA-PORTAL-48S: muayeneye ≤48 saat kala portal uyarısı.
+      const ms = bas.getTime() - Date.now()
+      if (ms > 0 && ms <= 48 * 3600e3) muayeneUyari48s = etiket
+    }
+  } catch { /* soft */ }
   bundle.summary = {
     aktifIlac,
     bekleyenMesaj: unreadMsgs,
-    sonLabOzet: lastLab?.ozet || 'Henüz lab sonucu yok',
+    sonLabOzet: tetkikSayisi
+      ? (lastLab?.ozet || `${tetkikSayisi} belge`)
+      : 'Henüz tetkik sonucu yok',
+    tetkikSayisi,
     yaklasanKontrol,
+    muayeneUyari48s,
     sonAktivite: [
       ...messages.slice(0, 2).map((m) => ({
         id: `m-${m.id}`,

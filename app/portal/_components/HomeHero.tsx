@@ -121,21 +121,38 @@ function HekimKarti({ hekim }: { hekim: PortalHekim }) {
 }
 
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
+  const yeniMesaj = (data.summary.bekleyenMesaj || 0) > 0
+  const tetkikSayisi = data.summary.tetkikSayisi ?? data.results?.length ?? 0
   const chips = [
-    { label: 'Aktif ilaç', value: String(data.summary.aktifIlac), href: `${basePath}/ilaclar` },
-    { label: 'Bekleyen mesaj', value: String(data.summary.bekleyenMesaj), href: `${basePath}/mesajlar` },
-    { label: 'Son lab', value: data.summary.sonLabOzet, href: `${basePath}/sonuclar` },
+    { key: 'ilac', label: 'Aktif ilaç', value: String(data.summary.aktifIlac), href: `${basePath}/ilaclar`, vurgu: false as const },
     {
+      key: 'mesaj',
+      label: yeniMesaj ? 'Yeni mesaj' : 'Bekleyen mesaj',
+      value: yeniMesaj ? 'Yeni mesajınız var!' : String(data.summary.bekleyenMesaj),
+      href: `${basePath}/mesajlar`,
+      vurgu: yeniMesaj,
+      sayi: data.summary.bekleyenMesaj,
+    },
+    {
+      key: 'tetkik',
+      label: 'Tetkik sonuçlarınız',
+      value: tetkikSayisi > 0 ? String(tetkikSayisi) : (data.summary.sonLabOzet || 'Henüz tetkik sonucu yok'),
+      href: `${basePath}/sonuclar`,
+      vurgu: false as const,
+    },
+    {
+      key: 'kontrol',
       label: 'Yaklaşan kontrol',
       value: data.summary.yaklasanKontrol || 'Planlanmadı',
       href: `${basePath}/ziyaretler`,
+      vurgu: false as const,
     },
   ]
 
   const shortcuts = [
     { label: 'Mesajlar', href: `${basePath}/mesajlar`, hint: 'Doktorunuzla yazışın' },
     { label: 'Ziyaretler', href: `${basePath}/ziyaretler`, hint: 'Ziyaret özetleri' },
-    { label: 'Sonuçlar', href: `${basePath}/sonuclar`, hint: 'Lab ve görüntüleme' },
+    { label: 'Sonuçlar', href: `${basePath}/sonuclar`, hint: 'Tetkik, rapor ve belgeler' },
     { label: 'İlaçlarım', href: `${basePath}/ilaclar`, hint: 'Aktif reçeteler' },
     { label: 'Öykü', href: `${basePath}/gecmis`, hint: 'Alerji ve geçmiş' },
     { label: 'Takip', href: `${basePath}/takip`, hint: 'Yaşamsal bulgular' },
@@ -202,11 +219,48 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
       </section>
 
       <div className="sg-home-body">
+        {data.summary.muayeneUyari48s ? (
+          <div className="sg-muayene-uyari sg-fade" role="status" data-testid="muayene-uyari-48s">
+            <span className="sg-muayene-uyari-ikon" aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </span>
+            <div>
+              <div className="sg-muayene-uyari-baslik">Muayeneniz yaklaşıyor</div>
+              <div className="sg-muayene-uyari-metin">
+                {data.summary.muayeneUyari48s} için randevunuz var. Gelemeyecekseniz lütfen haber verin.
+              </div>
+            </div>
+            <Link href={`${basePath}/ziyaretler`} className="sg-muayene-uyari-cta">Detay</Link>
+          </div>
+        ) : null}
+
         <div className="sg-chip-grid sg-fade sg-fade-delay-1">
           {chips.map((c) => (
-            <Link key={c.label} href={c.href} className="sg-chip">
+            <Link
+              key={c.key}
+              href={c.href}
+              className={`sg-chip${c.vurgu ? ' sg-chip--yeni-mesaj' : ''}`}
+              data-testid={c.key === 'mesaj' ? 'chip-bekleyen-mesaj' : c.key === 'tetkik' ? 'chip-tetkik' : undefined}
+            >
               <div className="sg-chip-label">{c.label}</div>
-              <div className="sg-chip-value">{c.value}</div>
+              {c.vurgu ? (
+                <div className="sg-chip-yeni-mesaj">
+                  <span className="sg-chip-yeni-mesaj-balon" aria-hidden>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </span>
+                  <div className="sg-chip-yeni-mesaj-metin">
+                    <span className="sg-chip-yeni-mesaj-baslik">{c.value}</span>
+                    <span className="sg-chip-yeni-mesaj-sayi">{c.sayi} okunmamış</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="sg-chip-value">{c.value}</div>
+              )}
             </Link>
           ))}
         </div>

@@ -139,6 +139,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       id: not.id,
       createdAt: not.created_at,
       approvedAt: not.approved_at,
+      /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası — aynıysa uyum kartı sorulmaz. */
+      ilacUyumImza: typeof (not as { ilac_uyum_imza?: string | null }).ilac_uyum_imza === 'string'
+        ? (not as { ilac_uyum_imza: string }).ilac_uyum_imza
+        : null,
       specialty: seans?.specialty || not.specialty || 'genel',
       basvuruYakinmasi: not.basvuru_yakinmasi || '',
       subjektif: not.content_subjektif || '',

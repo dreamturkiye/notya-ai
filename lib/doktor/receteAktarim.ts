@@ -175,20 +175,52 @@ export function ilacDetayMetni(i: { doz?: string | null; kullanim?: string | nul
 }
 
 /**
+ * NOTYA-RECETE-07: Plan + İlaçlar listesinin taşınabilir imzası (browser + node).
+ * Hekim bir kez onayladıysa aynı çift için kart yeniden açılmaz.
+ */
+export function ilacUyumImzasi(
+  plan: string | null | undefined,
+  ilaclar: { ad?: string; doz?: string; kullanim?: string; sure?: string }[] | null | undefined,
+): string {
+  const p = String(plan || '').trim().replace(/\s+/g, ' ')
+  const liste = (Array.isArray(ilaclar) ? ilaclar : [])
+    .map((i) => [i?.ad, i?.doz, i?.kullanim, i?.sure]
+      .map((x) => String(x || '').trim().toLocaleLowerCase('tr-TR'))
+      .join('|'))
+    .filter((s) => s.replace(/\|/g, ''))
+    .sort()
+    .join(';')
+  const ham = `${p}\n${liste}`
+  // FNV-1a 32-bit — crypto import yok; istemci ve onay rotası aynı değeri üretir.
+  let h = 0x811c9dc5
+  for (let i = 0; i < ham.length; i++) {
+    h ^= ham.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return `${(h >>> 0).toString(16).padStart(8, '0')}:${ham.length.toString(16)}`
+}
+
+/**
  * NOTYA-RECETE-05 (Kaan, 2026-09-25): Onayla anında Ayşe karşılaştırması gerekir mi?
  * - tutarsiz: listedeki bir ilaç Plan metninde geçmiyor (değişen/çıkarılan ilaç).
  * - Plan düzenlendi: listedeki ilaçlar dururken Plan'a YENİ bir ilaç eklenmesini de yakalar
  *   (kelime eşleşmesi bunu göremez). ilkPlan = not açıldığında Plan metni; null ise bilinmiyor.
+ * - NOTYA-RECETE-07: oncekiImza = bu notta daha önce onaylanan (plan+ilaç) imzası; aynıysa kart yok.
  */
 export function ilacKontroluGerekliMi(
   plan: string | null | undefined,
   ilkPlan: string | null | undefined,
-  ilaclar: { ad: string }[],
+  ilaclar: { ad: string; doz?: string; kullanim?: string; sure?: string }[],
+  oncekiImza?: string | null,
 ): { gerekli: boolean; tutarsiz: boolean } {
   const tutarsiz = planIlacTutarsizMi(plan, ilaclar)
   const simdi = String(plan || '').trim()
   const planDegisti = !!simdi && ilkPlan != null && simdi !== String(ilkPlan).trim()
-  return { gerekli: tutarsiz || planDegisti, tutarsiz }
+  let gerekli = tutarsiz || planDegisti
+  if (gerekli && oncekiImza && ilacUyumImzasi(plan, ilaclar) === String(oncekiImza)) {
+    gerekli = false
+  }
+  return { gerekli, tutarsiz }
 }
 
 /**

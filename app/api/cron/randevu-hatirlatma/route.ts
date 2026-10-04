@@ -8,6 +8,9 @@
  * doctor who connected nothing, patients without consent for a ready channel, failures — waits in the queue and
  * the doctor or the secretary sends it with one tap.
  *
+ * NOTYA-RANDEVU-48S (Boss, 2026-10-04): also enqueues appointments 2 calendar days ahead (≈48h)
+ * with a distinct tekil_anahtar so both the 48h and the day-before notice can fire.
+ *
  * Runs every day at 07:00 and 17:00 TRT (vercel.json) — the second run catches bookings made during the
  * day for tomorrow. De-duplicated by (doctor_id, tekil_anahtar = appointment id + start time):
  * running it twice, or the doctor moving the appointment, never doubles an item. Only bookings that
@@ -17,7 +20,7 @@ import { NextResponse } from 'next/server'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { cronYetkiliMi } from '@/lib/cronYetki'
 import { bugunTrIso } from '@/lib/iletisim/sablonlar'
-import { gunEkle, randevuAdaylari, trGunAraligi, type RandevuSatiri } from '@/lib/iletisim/kuyruk'
+import { gunEkle, randevu48SaatAdaylari, randevuAdaylari, trGunAraligi, type RandevuSatiri } from '@/lib/iletisim/kuyruk'
 import { kuyrugaEkle } from '@/lib/iletisim/sunucu'
 import { otomatikGonder } from '@/lib/iletisim/otomatikGonderim'
 
@@ -33,7 +36,10 @@ export async function GET(req: Request) {
   const baslangic = Date.now()
   const supabase = servisSupabase()
   const bugun = bugunTrIso()
-  const { bas, son } = trGunAraligi(gunEkle(bugun, 1))
+  const yarin = trGunAraligi(gunEkle(bugun, 1))
+  const ikiGun = trGunAraligi(gunEkle(bugun, 2))
+  const bas = yarin.bas < ikiGun.bas ? yarin.bas : ikiGun.bas
+  const son = yarin.son > ikiGun.son ? yarin.son : ikiGun.son
 
   const { data: randevular, error } = await supabase
     .from('randevular')
@@ -45,7 +51,8 @@ export async function GET(req: Request) {
     .limit(5000)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const adaylar = randevuAdaylari((randevular || []) as RandevuSatiri[], bugun)
+  const satirlar = (randevular || []) as RandevuSatiri[]
+  const adaylar = [...randevuAdaylari(satirlar, bugun), ...randevu48SaatAdaylari(satirlar, bugun)]
 
   // HASTA-IZOLASYON-01: a reminder is only prepared for the patient of the doctor who owns the booking.
   const gecerli: typeof adaylar = []
@@ -65,7 +72,8 @@ export async function GET(req: Request) {
   })
   return NextResponse.json({
     calisma_zamani: new Date().toISOString(),
-    yarin_randevu: randevular?.length || 0,
+    yarin_randevu: randevuAdaylari(satirlar, bugun).length,
+    kirksekiz_saat_randevu: randevu48SaatAdaylari(satirlar, bugun).length,
     hazirlanan: eklenen,
     zaten_hazir_veya_atlandi: gecerli.length - eklenen,
     kendiliginden_gonderilen: otomatik.gonderilen,
