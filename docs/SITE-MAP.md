@@ -86,6 +86,14 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - Overlap prevention is server-side in both POST (create) and PATCH (reschedule) on `/api/doktor/randevular`.
 - `DoktorNav.tsx` is role-aware: items tagged `sadeceDoktor: true` are hidden when `/api/personel/me` reports `rol: 'sekreter'`.
 
+## Randevu V2 — Sağlığım'dan randevu (NOTYA-RANDEVU-V2, 2026-10-04) — full map: `docs/RANDEVU-V2.md`
+- Per-doctor switch **Hasta Portalı Randevu** (Entegrasyonlar card `components/doktor/randevu/RandevuPortalKarti.tsx`), default OFF; OFF = nothing below is reachable. Tables `randevu_portal_ayarlari`, `randevu_istisnalari`, `randevu_olaylari` (append-only), `randevu_isleri`; `randevular.kaynak/talep_at/oneri_at/hasta_teyit_at/eskalasyon_at`, durum `'talep'` (migration 111).
+- Pure core `lib/randevu/v2/` (`slot.ts` engine, `zaman.ts` Istanbul↔UTC, `durum.ts`, `jeton.ts` signed links, `ics.ts`, `isPlani.ts`, `eposta.ts`, `kanal.ts` channel adapters); server ops `sunucu.ts`.
+- API: `/api/doktor/randevu-portal/{ayar,talepler}` (pratikOturum; settings writes doctor-only), `/api/portal/hasta/[token]/randevu` (patient, PIN), `/api/randevu/eylem` (signed e-mail links, page `/randevu/[jeton]`), cron `/api/cron/randevu-v2` (every 10 min 06–23 TRT).
+- UI: Sağlığım nav **Randevu** (only while ON), Ana Sayfa + Randevular **RandevuTalepleri** (Onayla / Başka saat öner / Reddet; hidden when empty).
+- Double booking: new-flow rows are protected by an exclusion constraint + per-doctor locked trigger; legacy rows keep the app-level check (`lib/randevu/cakisma.ts`).
+- Reminders: e-mail automatic via the doctor's own connected mailbox (existing NOTYA-ILETISIM-02 path, `.ics` on confirmation); WhatsApp only as one-tap items in the existing Hazır mesajlar queue.
+
 ## Klinik (team) wiring
 - Separate multi-user model from the above — klinik uses `clinics`/`clinic_members`/`clinic_invitations` (Pabau-oriented, seat-based). Randevu/personel is unrelated infrastructure for the plain doktor vertical (solo muayenehane + one secretary), not the klinik team model.
 - Tables: clinics, clinic_members, clinic_invitations (seats/roles), pabau_connections (encrypted API key; `lib/pabau/{client,crypto}.ts`).

@@ -1,5 +1,16 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-RANDEVU-V2 — Sağlığım randevu, onay, hatırlatma, Google Takvim, bekleme listesi (Kaan, 2026-10-04)
+
+Architecture `docs/RANDEVU-V2.md`; build report `docs/RANDEVU-V2-REPORT.md`. Three stacked PRs to `main`: PR1 engine/portal/approval/reminders, PR2 Google Takvim, PR3 waitlist + Ayşe.
+
+| ID | Status | What | Waits on |
+|---|---|---|---|
+| NOTYA-RANDEVU-V2-A | OPEN 2026-10-04 | Automatic WhatsApp reminders via Meta coexistence (approved utility template). Today WhatsApp is one-tap only (Hazır mesajlar); the adapter slot exists (`RandevuKanali`, `lib/randevu/v2/kanal.ts`). | Kaan: legal entity + Meta Business verification |
+| NOTYA-RANDEVU-V2-B | OPEN 2026-10-04 | Google OAuth client credentials (`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, scope `calendar.events`) and Google app verification for the Google Takvim sync (PR2). The feature is hidden until they exist. | Kaan |
+| NOTYA-RANDEVU-V2-C | OPEN 2026-10-04 | Apply migrations (111 for PR1; PR2/PR3 numbers in the report), merge and deploy PR1 → PR2 → PR3 in order. Nothing was applied, merged or deployed. | Kaan's explicit go |
+| NOTYA-RANDEVU-V2-D | OPEN 2026-10-04 | Items not finished in this build — listed in `docs/RANDEVU-V2-REPORT.md` § "Not built / follow-ups" (kept current per PR). | Claude |
+
 ## NOTYA-SES-TUR-01 — Ayşe 1:1 voice turn-taking (Kaan, 2026-09-30, branch `fix/voice-turn-taking`)
 
 Two live defects on Mac Safari (RMS VAD, fish-tur WS TTS, s2-pro). Code: `lib/asistan/fishTurSirasi.ts` (pure turn sequencer + tests), `lib/asistan/fishMikrofon.ts` (clip metadata, pre-roll under the echo guard, `wavBirlestir`), `lib/asistan/fishCalar.ts` (guard lifts at her last voiced sample), `components/asistan/AsistanOturumContext.tsx` (recorder runs for the whole session, turns run concurrently), `app/api/asistan/fish-tur/route.ts` (socket pre-open on cancel).

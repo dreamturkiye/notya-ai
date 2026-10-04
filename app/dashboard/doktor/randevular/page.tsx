@@ -23,6 +23,7 @@ import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import RandevuMesaji from '@/components/doktor/iletisim/RandevuMesaji';
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar';
+import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 import { cepTelefonuDogrula, TELEFON_MESAJ } from '@/lib/iletisim/cepTelefonu';
 
@@ -1011,6 +1012,8 @@ export default function RandevularPage() {
 
             <div style={{ padding: '12px 16px 0' }}>
               {hata && <div style={{ background: '#FBEAE3', border: '1px solid rgba(164,91,62,0.4)', color: '#a45b3e', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 10 }}>{hata}</div>}
+              {/* NOTYA-RANDEVU-V2: Sağlığım requests — renders nothing when there are none */}
+              <RandevuTalepleri kartStili={{ marginBottom: 10 }} />
               {resmiTatilMi(new Date()) && (
                 <div style={{ background: '#FBEAE3', border: '1px solid rgba(164,91,62,0.4)', color: '#a45b3e', borderRadius: 10, padding: '8px 12px', fontSize: 13, marginBottom: 10 }}>
                   🔔 Bugün resmi tatil: <strong>{resmiTatilMi(new Date())?.ad}</strong> — randevu planlarken dikkat edin.

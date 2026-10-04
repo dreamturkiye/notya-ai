@@ -79,6 +79,10 @@
     {
       "path": "/api/cron/meslektas-onbellek",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/randevu-v2",
+      "schedule": "*/10 3-19 * * *"
     }
   ]
 }

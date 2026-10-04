@@ -120,6 +120,8 @@ type Hekim = {
   hasta: string; seans: string; not: string; bekleyenNot: string; ilac: string; panel: string; belge: string
   randevu: string; serbestRandevu: string; hastaDerm: string; lezyon: string; dogum: string; bebekKart: string
   portalToken: string; konu: string; asistanEylem: string
+  /** NOTYA-RANDEVU-V2: a pending Sağlığım appointment request (durum 'talep') of the doctor's own patient */
+  talep: string
   /** GOZ-EXCEPTIONAL-01: göz OCT görüntüsü + fundus Belge analizi (dual-sign köprüsü) */
   gozGoruntu: string; belgeAnaliz: string
   /** DERM-EXCEPTIONAL-01: dermatoskopi Belge analizi (derm dual-sign köprüsü) */
@@ -183,6 +185,9 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('lab_satirlar', { panel_id: panel, patient_id: hasta, doctor_id: id, sira: 0, raw_name: `Satir ${m}`, canonical_key: 'Hb', value_num: 12 })
   const randevu = db.ekle('randevular', { doktor_id: id, patient_id: hasta, baslangic: trGun(0, 10), bitis: dakikaSonra(trGun(0, 10), 20), durum: 'planlandi', tur: 'muayene', notlar: `Randevu ${m}` }).id
   const serbestRandevu = db.ekle('randevular', { doktor_id: id, patient_id: null, hasta_adi_serbest: `Serbest ${m}`, baslangic: trGun(1, 11), bitis: dakikaSonra(trGun(1, 11), 20), durum: 'planlandi', tur: 'muayene' }).id
+  // NOTYA-RANDEVU-V2: 'Hasta Portalı Randevu' ON + one pending request from the doctor's own patient (outside trAralik)
+  db.ekle('randevu_portal_ayarlari', { doktor_id: id, acik: true })
+  const talep = db.ekle('randevular', { doktor_id: id, patient_id: hasta, baslangic: trGun(5, 10), bitis: dakikaSonra(trGun(5, 10), 20), durum: 'talep', tur: 'muayene', kaynak: 'portal', talep_at: new Date().toISOString(), oneri_at: null, eskalasyon_at: null, hasta_teyit_at: null }).id
   const hastaDerm = db.ekle('hasta_derm', { patient_id: hasta, doctor_id: id, unit: 'genel', visit_type: 'genel-poliklinik' }).id
   const lezyon = db.ekle('derm_lezyonlar', { hasta_derm_id: hastaDerm, region: `Bolge ${m}`, morphology: 'unspecified', resmi_tani: null }).id
   const dogum = db.ekle('dogum_olaylari', { doctor_id: id, patient_id: hasta, gebelik_id: null }).id
@@ -240,7 +245,7 @@ function hekimKur(harf: Harf): Hekim {
     doctor_id: id, patient_id: null, persona_id: 'aysekaya', active_context: {},
     messages: [{ role: 'user', content: 'Sentetik soru', kanal: 'ses', zaman }, { role: 'assistant', content: `Cevap ${m}`, kanal: 'ses', zaman }],
   }).id
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -419,6 +424,16 @@ const VAKALAR: Vaka[] = [
   { ad: 'DELETE /api/doktor/randevular/[id]',
     yazdi: (a) => !tablo('randevular').some((x) => x.id === a.randevu),
     cagir: (r, a, h) => coz(r.randevu.DELETE(iste('DELETE', `/api/doktor/randevular/${h.randevu}`, { token: a.token }), prm({ id: h.randevu }))) },
+  // NOTYA-RANDEVU-V2 — Sağlığım randevu talepleri (doktor + sekreter). Yabancı talep görülmez, yanıtlanamaz.
+  { ad: 'GET /api/doktor/randevu-portal/talepler', okur: true,
+    cagir: (r, a) => coz(r.randevuTalepleri.GET(iste('GET', '/api/doktor/randevu-portal/talepler', { token: a.token }))) },
+  { ad: 'GET /api/doktor/randevu-portal/talepler?slotlar (Başka saat öner)', red: 404,
+    cagir: (r, a, h) => coz(r.randevuTalepleri.GET(iste('GET', `/api/doktor/randevu-portal/talepler?slotlar=${h.talep}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/randevu-portal/talepler (reddet)', red: 404,
+    yazdi: (a) => tablo('randevular').find((x) => x.id === a.talep)?.durum === 'iptal',
+    cagir: (r, a, h) => coz(r.randevuTalepleri.POST(iste('POST', '/api/doktor/randevu-portal/talepler', { token: a.token, govde: { id: h.talep, islem: 'reddet' } }))) },
+  { ad: 'GET /api/doktor/randevu-portal/ayar',
+    cagir: (r, a) => coz(r.randevuPortalAyar.GET(iste('GET', '/api/doktor/randevu-portal/ayar', { token: a.token }))) },
   // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar. Yabancı bir öneri okunamaz, onaylanamaz, geri alınamaz.
   { ad: 'GET /api/doktor/eylem (bekleyen öneriler)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.eylem.GET(iste('GET', `/api/doktor/eylem?hastaId=${h.hasta}`, { token: a.token }))) },
@@ -748,6 +763,9 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       sesJetonuImzala: (await import('../asistan/sesJetonu')).sesJetonuImzala,
       portal: await ice('app/api/portal/hasta/[token]/route'),
       portalMesajlar: await ice('app/api/portal/hasta/[token]/mesajlar/route'),
+      portalRandevu: await ice('app/api/portal/hasta/[token]/randevu/route'),
+      randevuTalepleri: await ice('app/api/doktor/randevu-portal/talepler/route'),
+      randevuPortalAyar: await ice('app/api/doktor/randevu-portal/ayar/route'),
       MCHAT_R_SORULARI: (await import('../clinical/mchatR')).MCHAT_R_SORULARI,
       RESMI_TANI_SECENEKLERI: (await import('../../specialties/dermatoloji/engines/derm-spine')).RESMI_TANI_SECENEKLERI,
     }
@@ -920,6 +938,26 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.equal(y.status, 200, y.metin.slice(0, 200))
         const yok = await coz(R.portalAsiKarnesiPdf.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/asi-karnesi/pdf`, {}), prm({ token: h.portalToken })))
         assert.equal(yok.status, 401, 'PIN çerezi olmadan PDF verilmez')
+      })
+      it(`${hastaHarf} hastasının portal randevuları yalnız kendi doktoruyla; yabancı randevuya dokunamaz (NOTYA-RANDEVU-V2)`, async () => {
+        const s = sahneKur()
+        const h = s[hastaHarf], diger = s[digerHarf]
+        // hileliKur: the other doctor booked this patient once — that row is the other doctor's calendar, not this portal's.
+        const yabanci = tablo('randevular').find((x) => x.doktor_id === diger.id && x.patient_id === h.hasta)!
+        const cerez = await portalCerezi(h.portalToken)
+        const y = await coz(R.portalRandevu.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/randevu`, { cerez }), prm({ token: h.portalToken })))
+        assert.equal(y.status, 200, y.metin.slice(0, 300))
+        assert.ok(y.metin.includes(h.talep), 'kendi talebi portalda görünmeli')
+        assert.ok(!y.metin.includes(String(yabanci.id)), `başka doktorun randevusu portala sızdı: ${y.metin.slice(0, 300)}`)
+        assert.ok(!y.metin.includes(isaret(digerHarf)))
+        const once = JSON.stringify(yabanci)
+        const p = await coz(R.portalRandevu.POST(iste('POST', `/api/portal/hasta/${h.portalToken}/randevu`, { cerez, govde: { islem: 'iptal', randevuId: yabanci.id } }), prm({ token: h.portalToken })))
+        assert.equal(p.status, 404, p.metin.slice(0, 200))
+        assert.equal(JSON.stringify(tablo('randevular').find((x) => x.id === yabanci.id)), once, 'yabancı randevu değişti')
+        const sl = await coz(R.portalRandevu.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/randevu?randevuId=${yabanci.id}`, { cerez }), prm({ token: h.portalToken })))
+        assert.equal(sl.status, 404)
+        const pin = await coz(R.portalRandevu.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/randevu`, {}), prm({ token: h.portalToken })))
+        assert.equal(pin.status, 401, 'PIN çerezi olmadan randevu görünmez')
       })
       it(`${hastaHarf} hastasının portal mesajları yalnız kendi doktoruyla`, async () => {
         const s = sahneKur()

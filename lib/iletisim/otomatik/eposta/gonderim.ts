@@ -9,7 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decryptPII, encryptPII } from '@/lib/security/encryption'
 import { saglayiciHazirMi, type Saglayici } from './ayar'
 import { baglantiGetir, baglantiGuncelle } from './depo'
-import { epostaGecerliMi } from './mime'
+import { epostaGecerliMi, type EpostaEki } from './mime'
 import { erisimAl, gonder as saglayiciyaGonder } from './saglayicilar'
 
 export type GonderGirdisi = {
@@ -19,6 +19,8 @@ export type GonderGirdisi = {
   metin: string
   sablonKodu?: string
   degiskenler?: string[]
+  /** NOTYA-RANDEVU-V2: optional text attachments (the appointment's .ics). */
+  ekler?: EpostaEki[]
 }
 
 /** `saglayici` tells the caller which mailbox actually sent (logged by the automatic sender, NOTYA-ILETISIM-04). */
@@ -87,7 +89,7 @@ export async function epostaGonder(sb: SupabaseClient, g: GonderGirdisi): Promis
     await baglantiGuncelle(sb, g.doktorId, { refresh_token_encrypted: encryptPII(erisim.yeniYenilemeJetonu) }).catch(() => {})
   }
 
-  const sonuc = await saglayiciyaGonder(b.saglayici, erisim.erisimJetonu, { alici, konu, metin })
+  const sonuc = await saglayiciyaGonder(b.saglayici, erisim.erisimJetonu, { alici, konu, metin, ...(g.ekler?.length ? { ekler: g.ekler } : {}) })
   if (!sonuc.ok) {
     if (sonuc.yetkisiz) {
       await yenilenmeliIsaretle(sb, g.doktorId, sonuc.hata)
