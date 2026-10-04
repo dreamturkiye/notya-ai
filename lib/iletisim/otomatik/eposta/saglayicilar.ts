@@ -6,7 +6,7 @@
  * Every call goes through global fetch so tests can replace it; no SDKs.
  * Sources (checked 2026-09-25) are listed in docs/iletisim-kurulum-eposta.md.
  */
-import { epostaMesaji } from './mime'
+import { ekGecerliMi, epostaMesaji, type EpostaEki } from './mime'
 import { donusAdresi, saglayiciAyari, type Saglayici } from './ayar'
 
 export const GMAIL_GONDER_KAPSAMI = 'https://www.googleapis.com/auth/gmail.send'
@@ -49,7 +49,8 @@ export type Gonderim =
   | { ok: true; disId?: string }
   | { ok: false; yetkisiz: boolean; hata: string }
 
-export type Mesaj = { alici: string; konu: string; metin: string }
+/** `ekler` (NOTYA-RANDEVU-V2): optional text attachments, e.g. the appointment's .ics. */
+export type Mesaj = { alici: string; konu: string; metin: string; ekler?: EpostaEki[] }
 
 function ayarZorunlu(s: Saglayici) {
   const a = saglayiciAyari(s)
@@ -217,6 +218,16 @@ export async function gonder(s: Saglayici, erisimJetonu: string, m: Mesaj): Prom
             subject: m.konu,
             body: { contentType: 'Text', content: m.metin },
             toRecipients: [{ emailAddress: { address: m.alici } }],
+            ...(m.ekler?.some(ekGecerliMi)
+              ? {
+                  attachments: m.ekler.filter(ekGecerliMi).map((e) => ({
+                    '@odata.type': '#microsoft.graph.fileAttachment',
+                    name: e.ad,
+                    contentType: e.tur,
+                    contentBytes: Buffer.from(e.icerik, 'utf8').toString('base64'),
+                  })),
+                }
+              : {}),
           },
           saveToSentItems: true,
         }),

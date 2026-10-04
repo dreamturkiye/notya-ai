@@ -20,6 +20,7 @@ import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonO
 import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
 import PaketSayacSeridi from '@/components/doktor/seans/PaketSayacSeridi'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
+import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
 import { useState, useEffect, useMemo } from 'react'
@@ -357,6 +358,9 @@ export default function DoktorDashboard() {
 
       {/* NOTYA-ILETISIM-01: prepared patient messages — hidden when there are none */}
       <HazirMesajlar />
+
+      {/* NOTYA-RANDEVU-V2: Sağlığım appointment requests — hidden when there are none */}
+      <RandevuTalepleri />
 
       {/* NOTYA-GELEN-BELGELER: "N yeni belge" — hidden when 0 */}
       <GelenBelgelerKarti />

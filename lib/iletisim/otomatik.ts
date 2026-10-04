@@ -11,6 +11,7 @@ import type { IletisimKanali, MesajTuru } from './tipler'
 import { gonderici as epostaGondericisi } from './otomatik/eposta'
 import { gonderici as whatsappGondericisi } from './otomatik/whatsapp'
 import { SAGLIKIM_KOK, type SablonKodu } from './otomatik/whatsapp/sablonlar'
+import type { EpostaEki } from './otomatik/eposta/mime'
 
 /** An approved WhatsApp template and its variables in template order. */
 export type WhatsappSablonu = { kod: SablonKodu; degiskenler: string[] }
@@ -29,6 +30,8 @@ export type OtomatikGonderimIstegi = {
   kuyrukId?: string | null
   /** WhatsApp only: the approved template for this message type (whatsappSablonu). No template → not sent. */
   sablon?: WhatsappSablonu | null
+  /** E-posta only (NOTYA-RANDEVU-V2): text attachments such as the appointment's .ics. Ignored by WhatsApp. */
+  ekler?: EpostaEki[]
 }
 
 export type OtomatikGonderimSonucu =
@@ -101,7 +104,7 @@ export function whatsappSablonu(
 
 type EpostaCekirdegi = {
   hazirMi(doktorId: string): Promise<boolean>
-  gonder(g: { doktorId: string; alici: string; konu?: string; metin: string }): Promise<
+  gonder(g: { doktorId: string; alici: string; konu?: string; metin: string; ekler?: EpostaEki[] }): Promise<
     { ok: true; disId?: string; saglayici?: 'google' | 'microsoft' } | { ok: false; hata: string }
   >
 }
@@ -130,7 +133,7 @@ export function epostaAdaptoru(c: EpostaCekirdegi = epostaGondericisi): Otomatik
     hazirMi: (doktorId) => guvenli(() => c.hazirMi(doktorId), false),
     gonder: (i) =>
       guvenli<OtomatikGonderimSonucu>(async () => {
-        const s = await c.gonder({ doktorId: i.doktorId, alici: i.alici, konu: i.konu, metin: i.metin })
+        const s = await c.gonder({ doktorId: i.doktorId, alici: i.alici, konu: i.konu, metin: i.metin, ...(i.ekler?.length ? { ekler: i.ekler } : {}) })
         if (!s.ok) return { ok: false, hata: s.hata }
         return {
           ok: true,

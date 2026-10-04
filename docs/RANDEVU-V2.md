@@ -1,0 +1,112 @@
+# Randevu V2: as-built architecture
+
+NOTYA-RANDEVU-V2 (brief from Kaan, 2026-10-04). Three stacked PRs: **PR1** engine, portal booking, approval and reminders · **PR2** Google Takvim two-way sync (dormant until credentials exist) · **PR3** waitlist and Ayşe. This file describes what is built. Status and test results are in `docs/RANDEVU-V2-REPORT.md`.
+
+## The one rule: additive, OFF by default
+
+- Each doctor has a switch, **Hasta Portalı Randevu** (`randevu_portal_ayarlari.acik`). It defaults to `false`.
+- While it is OFF, no V2 code path writes anything:
+  - the portal Randevu API answers `{ acik: false }`, so Sağlığım shows no Randevu tab;
+  - the e-mail link API answers "kapalı";
+  - the cron finds no jobs;
+  - the practice request list is empty and renders nothing.
+- Before migration 111 is applied, every V2 read fails soft and the feature reads as OFF.
+- Existing behaviour is untouched. That covers the randevu routes (`/api/doktor/randevular[/id]`), the overlap check (`lib/randevu/cakisma.ts`), the reminder cron (`/api/cron/randevu-hatirlatma`), the Hazır mesajlar queue and dispatcher, and every existing column.
+
+## Data (migration `lib/db/migrations/111_randevu_v2.sql`)
+
+| Object | What |
+|---|---|
+| `randevu_portal_ayarlari` | Per-doctor switch and policy. Fields: types with durations, buffer, minimum notice, max days ahead, cancel/reschedule cutoff, approval mode (`hepsi_onay` default, or `mevcut_hasta_otomatik`), escalation hours. |
+| `randevu_istisnalari` | The doctor's izin/tatil ranges. Official holidays come from `lib/randevu/resmiTatiller.ts`; an arife closes from 13:00. |
+| `randevular.kaynak` | `'portal'` on rows the new flow wrote or moved; NULL on every existing row. |
+| `randevular.talep_at`, `oneri_at`, `hasta_teyit_at`, `eskalasyon_at` | When the request was made, when the practice proposed another time, when the patient tapped Geliyorum, and when the request escalated. |
+| `randevular.durum` | The CHECK constraint gains one value, `'talep'`. It is a superset of the old list, added `NOT VALID`, so existing rows are never re-checked. |
+| `randevular_v2_cakisma_yok` | `EXCLUDE USING gist (doktor_id =, tstzrange(baslangic, bitis) &&) WHERE kaynak IS NOT NULL AND durum <> 'iptal'`. See the double-booking section. |
+| `trg_randevu_v2_cakisma` | A new-flow row must not overlap **any** non-cancelled row. Serialised per doctor with `pg_advisory_xact_lock`; raises `23P01`, which the API maps to 409. |
+| `randevu_olaylari` | Append-only event log: who (`hasta`, `doktor`, `sekreter`, `sistem`), what, when. An UPDATE or a direct DELETE raises an error; only an account-deletion cascade may delete. There is no FK to `randevular`, so the log outlives a deleted row. |
+| `randevu_isleri` | Notification jobs, unique on `(randevu_id, tur, zaman)`. |
+
+### Status mapping (brief: talep, onaylandı, teyit edildi, geldi, gelmedi, iptal)
+
+| V2 state | Stored as |
+|---|---|
+| talep | `durum = 'talep'` (new value) |
+| onaylandı | `durum = 'onaylandi'` (existing) |
+| teyit edildi | `durum = 'onaylandi'` + `hasta_teyit_at` set. It is a column, not a new durum, because the existing queue, dispatcher and reminder cron accept only `planlandi`/`onaylandi`. |
+| geldi | `durum = 'tamamlandi'` (existing) |
+| gelmedi | `durum = 'gelmedi'` (existing) |
+| iptal | `durum = 'iptal'` (existing). A rejected request is `iptal` with `iptal_nedeni = 'Talep karşılanamadı'`. |
+
+### Double booking: what the database guarantees
+
+- **New flow vs new flow:** the exclusion constraint makes an overlap impossible, with no race. Two patients tapping the same slot at the same moment cannot both win.
+- **New flow vs any existing row:** the trigger re-checks under a per-doctor advisory lock, inside the inserting transaction.
+- **Why the constraint is scoped by `kaynak`:**
+  - Existing rows were overlap-checked only in application code (`lib/randevu/cakisma.ts`, check-then-insert), so live data may already contain overlaps.
+  - An unscoped constraint could fail to build on those rows.
+  - Every existing row has `kaynak IS NULL`, so the scoped constraint and the trigger cannot fail on, or change the behaviour of, existing data.
+- **Residual race:** a booking from the existing calendar form (legacy path, no lock) racing a portal request in the same few milliseconds. This gap is the same one that exists today between two calendar bookings.
+
+## Pure core (`lib/randevu/v2/`, unit-tested)
+
+| File | What |
+|---|---|
+| `zaman.ts` | Europe/Istanbul wall clock ↔ UTC. The offset is read from the tz database, not hardcoded. |
+| `slot.ts` | `bosSlotlar`: working hours (existing `doktor_calisma_saatleri`, grid = existing `slot_dakika`) − holidays/izin − busy blocks (all non-cancelled appointments + external busy) ± buffer − minimum notice − max-days window. `slotUygunMu` re-validates one start on the server. The output carries times only. |
+| `ayar.ts` | Settings shape, defaults (OFF), normalisation of a DB row or a request body. |
+| `durum.ts` | V2 state mapping, the patient's permissions under the cutoff, escalation, the approval rule. |
+| `jeton.ts` | Signed single-appointment links. HMAC-SHA256 with `PORTAL_TOKEN_SECRET`, same pattern as the Sağlığım unlock cookie. Each link covers one appointment and one action (`geliyorum`, `ertele`, `iptal`, `kabul`) and expires the day after the visit. With no secret, no links are generated (never a fallback secret). |
+| `ics.ts` | RFC 5545 `METHOD:PUBLISH` event, folded lines. Content is logistics only. |
+| `isPlani.ts` | Reminder instants (day before at 10:00, morning of at 08:00, Istanbul time) and the check that a due job still applies. A moved appointment's old jobs no longer match. |
+| `eposta.ts` | Patient e-mail texts. Same rules as `lib/iletisim/sablonlar.ts`: no clinical content, guardian wording by age, signed by the doctor. |
+| `kanal.ts` | **Channel adapter interface** `RandevuKanali`; see the next section. |
+
+## Channels (`kanal.ts`)
+
+| Adapter | Behaviour |
+|---|---|
+| `epostaKanali` | Automatic, through the **existing** e-mail path: `hazirOtomatikGonderici` → the doctor's own connected Gmail/Outlook (NOTYA-ILETISIM-02). Consent-gated (`iletisim_izni_eposta === true`). Logged to `iletisim_kayitlari` exactly like the NOTYA-ILETISIM-04 dispatcher. The confirmation carries `randevu.ics`: the e-mail path gained an optional `ekler` (multipart/mixed); without it the message is byte-identical to before. |
+| `whatsappTekDokunusKanali` | **Not automatic.** The day-before reminder goes into the existing Hazır mesajlar queue (`iletisim_kuyrugu`) under the same de-dup key as the daily cron (`tekilAnahtar.randevu`), so it appears once in "Yarın N randevu" and is sent with one tap from the practice's own number. |
+| Later | Automatic WhatsApp (Meta coexistence, approved template only) is one more `RandevuKanali` with `otomatik: true`, registered first in `randevuKanallari()`. No change is needed in jobs, routes or UI. |
+
+## Server (`lib/randevu/v2/sunucu.ts`)
+
+All server code uses the service-role client `servisSupabase()`, the shared no-store client.
+
+| Operation | What it does |
+|---|---|
+| `talepOlustur` | Patient request. Re-validates the slot, then inserts `kaynak='portal'`, `durum='talep'` (or `onaylandi` when auto-confirm applies). Logs an event. |
+| `pratikIslem` | Practice answer: `onayla` confirms; `oner` moves to another free time, stays `talep`, and `oneri_at` is set; `reddet` sets `iptal`. Conditional on `durum='talep'`, so a double tap cannot double-apply. |
+| `hastaIslem` | Patient: `teyit` (Geliyorum), `kabul` (accept the proposal), `iptal`, `ertele` (move; becomes a request again unless auto-confirm applies). Cutoff enforced. |
+| Jobs | `isEkle`, `bekleyenIsleriIptal`, `isleriCalistir`. Each job is claimed `bekliyor → isleniyor` before anything leaves, then re-validated against the current row. Quiet hours (21:00–07:00 TRT) hold e-mails, same as the existing dispatcher. A day-before e-mail sets `hatirlatma_gonderildi` (the dispatcher's own mark), so the existing 17:00 run does not e-mail a second time. |
+| `eskalasyonTara` | An unanswered request older than `eskalasyon_saat` gets `eskalasyon_at` and an event, and is pinned red at the top of the practice list. Requests never expire: past-due ones stay listed as "Saati geçti — hastaya bilgi verin". |
+| `hatirlatmalariTamamla` | Re-plans reminders for confirmed new-flow appointments moved from the existing calendar. The existing PATCH route is not touched; the upsert is idempotent. |
+
+## Routes
+
+| Route | Who | What |
+|---|---|---|
+| `GET/PUT/POST/DELETE /api/doktor/randevu-portal/ayar` | pratikOturum; write = doctor only | settings, izin ranges |
+| `GET/POST /api/doktor/randevu-portal/talepler` | doktor + sekreter | open requests; free times for "Başka saat öner"; Onayla / Öner / Reddet |
+| `GET/POST /api/portal/hasta/[token]/randevu` | patient (PIN-unlocked token) | types, own appointments, free times, request / cancel / move / accept / Geliyorum |
+| `GET/POST /api/randevu/eylem` | signed link (no login) | GET changes nothing (mail scanners); POST performs the one action |
+| `GET /api/cron/randevu-v2` | CRON_SECRET | escalation, reminder re-plan, due jobs. `vercel.json`: `*/10 3-19 * * *` UTC (06:00–22:59 TRT) |
+
+## UI
+
+| Surface | What |
+|---|---|
+| Entegrasyonlar › **Hasta Portalı Randevu** (`components/doktor/randevu/RandevuPortalKarti.tsx`) | One switch. When ON, one card: working hours (the existing `doktor_calisma_saatleri`, same API as Randevular), types with duration, rules, approval mode, izin days, one Kaydet. |
+| Ana Sayfa + Randevular (`components/doktor/randevu/RandevuTalepleri.tsx`) | "N randevu talebi" with Onayla / Başka saat öner / Reddet. Renders nothing when empty. |
+| Sağlığım › **Randevu** (`app/portal/hasta/[token]/randevu/page.tsx`) | The nav item appears only while ON. Type → day → time (the time tap sends; a single open type skips the first tap). Below it: own appointments with Geliyorum / Bu saati kabul et / Başka saat seç / İptal et under the doctor's cutoff. |
+| `/randevu/<token>` (`app/randevu/[jeton]/page.tsx`) | E-mail action page, Sağlığım look, one confirm tap. |
+
+## Isolation (brief rule 5)
+
+- A patient sees only bare free times for **their own** doctor, never who holds a taken slot or why.
+- Own appointments are read with `doktor_id + patient_id` from the PIN-unlocked token.
+- A body-supplied appointment id is re-resolved with both before any write.
+- The practice resolves request ids with `doktor_id` (pratikOturum); patient names are decrypted only for `patients.doctor_id = doktorId`.
+- Signed links expose time, doctor name and state, never patient data.
+- Cross-doctor tests are in `lib/security/hasta-izolasyon.test.ts`: practice list, slots for a foreign request, rejecting a foreign request, settings, portal list, foreign cancel and foreign slots, PIN required.
