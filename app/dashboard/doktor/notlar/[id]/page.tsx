@@ -29,6 +29,7 @@ import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
+  yenidenDegerlendirDuzenlemeTemizle,
 } from '@/lib/doktor/notYenidenDegerlendir';
 import {
   CEK_BLOK_BASLIK,
@@ -256,18 +257,11 @@ export default function NotSayfasi() {
       clearTimeout(zamanAsimi);
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
-      const dz = (d.duzenlemeler || {}) as Record<string, unknown>;
+      // NOTYA-NOT-HEKIM-01: yeniden değerlendir — İlaçlar / aşı / SOAP hekimindir; yalnız öneri alanları işlenir.
+      const dz = yenidenDegerlendirDuzenlemeTemizle((d.duzenlemeler || {}) as Record<string, unknown>);
       atlaOtomatikRef.current = true;
       if (Array.isArray(dz.alarmBulgulari)) { setAlarm((dz.alarmBulgulari as unknown[]).map(String).join('\n')); setDegisti(true); }
       if (typeof dz.hastaOzeti === 'string') { setOzet(dz.hastaOzeti as string); setDegisti(true); }
-      if (Array.isArray(dz.ilaclar)) {
-        setIlac((dz.ilaclar as unknown[]).map((it) => {
-          const o = it as Record<string, unknown>
-          return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ')
-        }).join('\n'));
-        setDegisti(true);
-      }
-      if (Array.isArray(dz.asilar)) { setAsilar(dz.asilar as NotAsisi[]); setDegisti(true); }
       if (Array.isArray(dz.icdKodlari)) {
         setIcd((dz.icdKodlari as unknown[]).map((it) => {
           const o = it as Record<string, unknown>

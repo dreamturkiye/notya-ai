@@ -36,6 +36,7 @@ import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
+  yenidenDegerlendirDuzenlemeTemizle,
 } from '@/lib/doktor/notYenidenDegerlendir';
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
@@ -250,9 +251,13 @@ export default function IncelemePage() {
       if (!res.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
       if (!opts?.sessiz) setKMesajlar([...yeni, { rol: 'asistan', icerik: String(d.cevap || '') }]);
       else if (d.cevap) setKMesajlar((prev) => [...prev, { rol: 'asistan', icerik: `↻ ${String(d.cevap)}` }]);
-      const dz = (d.duzenlemeler || {}) as Record<string, unknown>;
+      // NOTYA-NOT-HEKIM-01: otomatik yeniden değerlendir hekim İlaçlar/SOAP'ına dokunmaz; açık sohbet isteği dokunabilir.
+      const yenidenMi = yeni[yeni.length - 1]?.icerik === NOT_YENIDEN_DEGERLENDIR_ISTEK;
+      const dz = yenidenMi
+        ? yenidenDegerlendirDuzenlemeTemizle((d.duzenlemeler || {}) as Record<string, unknown>)
+        : ((d.duzenlemeler || {}) as Record<string, unknown>);
       atlaOtomatikRef.current = true;
-      if (!opts?.sabitleSoap) {
+      if (!opts?.sabitleSoap && !yenidenMi) {
         const g: Taslak = { ...taslak };
         (['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).forEach((a) => {
           if (typeof dz[a] === 'string' && (dz[a] as string).trim()) g[a] = dz[a] as string;
@@ -263,7 +268,7 @@ export default function IncelemePage() {
       }
       if (Array.isArray(dz.alarmBulgulari)) setAlarmTaslak((dz.alarmBulgulari as unknown[]).map(String).join('\n'));
       if (typeof dz.hastaOzeti === 'string') setOzetTaslak(dz.hastaOzeti as string);
-      if (Array.isArray(dz.ilaclar)) setIlacTaslak((dz.ilaclar as unknown[]).map((it) => { const o = it as Record<string, unknown>; return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ') }).join('\n'));
+      if (!yenidenMi && Array.isArray(dz.ilaclar)) setIlacTaslak((dz.ilaclar as unknown[]).map((it) => { const o = it as Record<string, unknown>; return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ') }).join('\n'));
       if (Array.isArray(dz.icdKodlari)) setIcdTaslak((dz.icdKodlari as unknown[]).map((it) => { const o = it as Record<string, unknown>; return { code: String(o.code || ''), description_tr: String(o.description_tr || o.description || ''), is_primary: !!o.is_primary } }).filter((k) => k.code));
       if (Array.isArray(dz.receteOnerisi)) setReceteTaslak((dz.receteOnerisi as unknown[]).map((it) => { const o = it as Record<string, unknown>; return { ticariOrnek: String(o.ticariOrnek || ''), etkenMadde: String(o.etkenMadde || ''), doz: String(o.doz || ''), kullanim: String(o.kullanim || ''), sure: String(o.sure || ''), sgkListesinde: !!o.sgkListesinde, not: String(o.not || '') } }).filter((r) => r.ticariOrnek));
       if (typeof dz.aiDegerlendirme === 'string' && dz.aiDegerlendirme.trim()) setAiDegTaslak(dz.aiDegerlendirme as string);

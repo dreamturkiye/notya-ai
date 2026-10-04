@@ -80,8 +80,8 @@ DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İng
 - "aiDegerlendirme" → metin (ayırıcı tanı/öneri yorumun — hastaya görünmez)
 ${g.kapsam.pediatrik ? PEDIATRIK_PERSENTIL_KURALI : ERISKIN_PERSENTIL_KURALI}
 
-DOKTOR "notu yeniden değerlendir", "tanıya göre güncelle" gibi KAPSAMLI bir istek yaparsa ya da tanıyı/değerlendirmeyi değiştirdiyse: mevcut subjektif/objektif/degerlendirme/plan'ı SABİT kabul edip, buna göre icdKodlari, receteOnerisi, aiDegerlendirme, alarmBulgulari ve hastaOzeti'ni BAŞTAN, TUTARLI biçimde yeniden üret — eski tanıya göre kalmış ICD kodu veya öneri bırakma.
-Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
+DOKTOR "notu yeniden değerlendir", "tanıya göre güncelle" gibi KAPSAMLI bir istek yaparsa ya da tanıyı/değerlendirmeyi değiştirdiyse: mevcut subjektif/objektif/degerlendirme/plan ile hekimin "ilaclar" ve "asilar" listesini SABİT kabul et — bu alanları duzenlemeler'e KOYMA. Buna göre yalnız icdKodlari, receteOnerisi, aiDegerlendirme, alarmBulgulari ve hastaOzeti'ni BAŞTAN, TUTARLI biçimde yeniden üret — eski tanıya göre kalmış ICD kodu veya öneri bırakma. Plan / aşı öyküsü ile İlaçlar veya bu-muayenede-aşılar arasında çelişki görürsen yalnız aiDegerlendirme'de uyar; hekimin listesini "düzeltmek" için yeniden yazma (NOTYA-NOT-HEKIM-01).
+Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap — ama yalnızca doktor vital değişikliğini senden İSTERSE. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
 Bir düzenleme yaptığında cevap metninde JSON gösterme; JSON yalnız zarfın kendisidir.`
   const degisken = `Bugün (TRT): ${trtBugun}.
 

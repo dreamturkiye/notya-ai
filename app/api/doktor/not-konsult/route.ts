@@ -15,7 +15,7 @@ import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren } from '@/lib/doktor/hafiza'
-import { NOT_YENIDEN_DEGERLENDIR_ISTEK } from '@/lib/doktor/notYenidenDegerlendir'
+import { NOT_YENIDEN_DEGERLENDIR_ISTEK, yenidenDegerlendirDuzenlemeTemizle } from '@/lib/doktor/notYenidenDegerlendir'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { notKonsultSistemParcalari, notKonsultZarfi } from '@/lib/doktor/notKonsultPromptu'
@@ -126,7 +126,10 @@ export async function POST(req: NextRequest) {
     if (typeof dz.aiDegerlendirme === 'string') dz.aiDegerlendirme = cekBlokSil(dz.aiDegerlendirme)
     // NOTYA-ASI-NOT-01: aşı listesi düzenlemesi sunucuda temizlenir (ad normalize, doz 1–12, tarih ISO; boş satır atılır).
     if ('asilar' in dz) { if (Array.isArray(dz.asilar)) dz.asilar = notAsilariniTemizle(dz.asilar); else delete dz.asilar }
-    sonuc.duzenlemeler = dz
+    // NOTYA-NOT-HEKIM-01: otomatik / "yeniden değerlendir" — hekim İlaçlar/SOAP/aşı alanına dokunulmaz.
+    sonuc.duzenlemeler = sonMetin === NOT_YENIDEN_DEGERLENDIR_ISTEK
+      ? yenidenDegerlendirDuzenlemeTemizle(dz)
+      : dz
     if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
     // NOTYA-EYLEM: tool_use → taslak öneri. Hiçbir şey yazılmadı; hekim kartta onaylayacak.
     const eylemOnerileri = eylemHastasi
