@@ -7,6 +7,7 @@ import {
   notlardanOzetAlanlari,
   notesOzetGuncelle,
 } from '@/lib/doktor/hastaOzetKayit'
+import { klinikOzetleriNotesOku } from '@/lib/doktor/hastaKlinikOzet'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,11 +68,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     telefon: phone,
     eposta: email,
   })
+  const klinik = klinikOzetleriNotesOku(notesData)
 
   return NextResponse.json({
     patient: {
       id: patient.id,
       ...ozet,
+      genel_ozet: klinik.genelOzet,
+      son_muayene_ozeti: klinik.sonMuayeneOzeti,
+      klinik_ozet_guncelleme: klinik.klinikOzetGuncelleme,
       anne_boy_cm:
         typeof notesData.anneBoyCm === 'number'
           ? notesData.anneBoyCm

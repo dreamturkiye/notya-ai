@@ -49,6 +49,7 @@ import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HastaGoruntuler from '@/components/doktor/HastaGoruntuler';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
+import HastaKlinikOzetler from '@/components/doktor/HastaKlinikOzetler';
 import HastaIletisim from '@/components/doktor/iletisim/HastaIletisim';
 import KalkanTaslak from '@/components/doktor/iletisim/KalkanTaslak';
 import EnabizIzinKutusu from '@/components/doktor/seans/EnabizIzinKutusu';
@@ -116,6 +117,10 @@ interface PatientData {
   sigara_alkol: string | null
   anne_boy_cm?: number | null
   baba_boy_cm?: number | null
+  /** NOTYA-OZET-CIFT-01 */
+  genel_ozet?: string | null
+  son_muayene_ozeti?: string | null
+  klinik_ozet_guncelleme?: string | null
 }
 
 interface SeansNotu {
@@ -155,6 +160,7 @@ export default function HastaProfilPage() {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [klinikOzetYukleniyor, setKlinikOzetYukleniyor] = useState(false);
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
   // NOTYA-MUAYENE-ARSIV: yanlışlıkla açılmış ya da notsuz kalmış bir muayeneyi hekimin
@@ -281,6 +287,24 @@ export default function HastaProfilPage() {
         if (!resp.ok) { setError(data.error || 'Hasta bilgisi alınamadı'); return; }
         setPatient(data.patient);
         void fetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId }), keepalive: true })
+        // NOTYA-OZET-CIFT-01: eski dosyalarda özet boşsa bir kez üret (onay kancası sonrası kalıcı).
+        if (!String(data.patient?.genel_ozet || '').trim() || !String(data.patient?.son_muayene_ozeti || '').trim()) {
+          setKlinikOzetYukleniyor(true)
+          void fetch(`/api/doktor/hastalar/${patientId}/klinik-ozet`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then(async (r) => (r.ok ? r.json() : null))
+            .then((j) => {
+              if (!j) return
+              setPatient((onceki) => (onceki ? {
+                ...onceki,
+                genel_ozet: j.genel_ozet || onceki.genel_ozet,
+                son_muayene_ozeti: j.son_muayene_ozeti || onceki.son_muayene_ozeti,
+              } : onceki))
+            })
+            .finally(() => setKlinikOzetYukleniyor(false))
+        }
         if (meRes.ok) {
           const me = await meRes.json();
           const sp = String(me?.data?.specialty || '');
@@ -500,7 +524,16 @@ export default function HastaProfilPage() {
           </div>
         </div>
 
-        {/* Ayşe şeridi: sekmeler ↔ içerik (Konuş + Yaz) — Gökhan/Boss 2026-09-20 */}
+        {/* NOTYA-OZET-CIFT-01: Özet sekmesinde Genel + Son muayene özeti Ayşe'nin ÜSTÜNDE */}
+        {!loading && !error && patient && activeTab === 'ozet' && (
+          <HastaKlinikOzetler
+            genelOzet={patient.genel_ozet || ''}
+            sonMuayeneOzeti={patient.son_muayene_ozeti || ''}
+            guncelleniyor={klinikOzetYukleniyor}
+          />
+        )}
+
+        {/* Ayşe şeridi: Özet'te iki özetin altında; diğer sekmelerde sekmeler ↔ içerik — Gökhan/Boss 2026-09-20 */}
         {!loading && !error && patient && (
           <HastaKonsult patientId={patientId} baslangicAcik={tabParam === 'ayse'} hastaDogumIso={patient.dogum_tarihi} />
         )}

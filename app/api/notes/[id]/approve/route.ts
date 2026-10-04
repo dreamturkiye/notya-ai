@@ -338,5 +338,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     void onbellekKirlet(supabase, user.id, hastaIdA).catch(() => { /* önbellek */ })
   }
 
+  // NOTYA-OZET-CIFT-01: onay sonrası Genel Özet + Son muayene özeti (dosya Özet sekmesi).
+  if (hastaBenim && hastaIdA) {
+    try {
+      const { hastaKlinikOzetleriGuncelle } = await import('@/lib/doktor/hastaKlinikOzet')
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon])
+      void hastaKlinikOzetleriGuncelle(supabase, user.id, hastaIdA, {
+        created_at: existing.created_at as string | null,
+        approved_at: (guncelleme.approved_at as string) || new Date().toISOString(),
+        basvuru_yakinmasi: son('basvuru_yakinmasi') as string | null,
+        content_tani: son('content_tani') as string | null,
+        content_degerlendirme: son('content_degerlendirme') as string | null,
+        content_plan: son('content_plan') as string | null,
+        content_tedavi: son('content_tedavi') as string | null,
+        content_subjektif: son('content_subjektif') as string | null,
+        hasta_ozeti: son('hasta_ozeti') as string | null,
+      }).catch((e) => console.error('[klinik-ozet] onay', e))
+    } catch (e) { console.error('[klinik-ozet] onay', e) }
+  }
+
   return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim, ilacSonlandirma })
 }
