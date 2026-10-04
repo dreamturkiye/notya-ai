@@ -26,6 +26,7 @@ import {
   talepOlustur,
   type HastaIslemi,
 } from '@/lib/randevu/v2/sunucu'
+import { googleaGonder } from '@/lib/randevu/v2/google/senk'
 
 export const dynamic = 'force-dynamic'
 
@@ -96,5 +97,6 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
 
   await isleriCalistir(sb, { randevuId: s.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
+  await googleaGonder(sb, doktorId, s.randevu.id)
   return NextResponse.json({ ok: true, durum: s.randevu.durum, onayBekliyor: s.randevu.durum === 'talep' })
 }

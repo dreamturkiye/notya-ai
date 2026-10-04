@@ -93,6 +93,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - UI: Sağlığım nav **Randevu** (only while ON), Ana Sayfa + Randevular **RandevuTalepleri** (Onayla / Başka saat öner / Reddet; hidden when empty).
 - Double booking: new-flow rows are protected by an exclusion constraint + per-doctor locked trigger; legacy rows keep the app-level check (`lib/randevu/cakisma.ts`).
 - Reminders: e-mail automatic via the doctor's own connected mailbox (existing NOTYA-ILETISIM-02 path, `.ics` on confirmation); WhatsApp only as one-tap items in the existing Hazır mesajlar queue.
+- Google Takvim (PR2, dormant until `GOOGLE_OAUTH_CLIENT_ID/SECRET`): `lib/randevu/v2/google/*`, API `/api/doktor/google-takvim[/baslat|/oneriler]` (doctor only), `/api/google-takvim/{donus,bildirim}` (OAuth callback, push webhook); tables `google_takvim_baglantilari`, `randevu_dis_mesgul`, `randevu_google_eslesme`, `randevu_takvim_onerileri` (migration 112). Card `GoogleTakvimKarti`, proposals `GoogleTakvimOnerileri` (Randevular).
 
 ## Klinik (team) wiring
 - Separate multi-user model from the above — klinik uses `clinics`/`clinic_members`/`clinic_invitations` (Pabau-oriented, seat-based). Randevu/personel is unrelated infrastructure for the plain doktor vertical (solo muayenehane + one secretary), not the klinik team model.

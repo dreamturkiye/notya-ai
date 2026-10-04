@@ -7,6 +7,7 @@ Brief: Kaan via Claude, 2026-10-04. The architecture is in `docs/RANDEVU-V2.md`.
 | PR | Branch | Based on | Migration |
 |---|---|---|---|
 | PR1: engine, portal booking, approval, reminders | `claude/randevu-v2-engine-l4bec9` | `main` | `lib/db/migrations/111_randevu_v2.sql` |
+| PR2: Google Takvim two-way sync | `claude/randevu-v2-google-l4bec9` | PR1 | `lib/db/migrations/112_randevu_v2_google.sql` |
 
 Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previous one's commits.
 
@@ -111,3 +112,55 @@ Merge order: PR1 → PR2 → PR3. Each PR targets `main` and contains the previo
 ### Not built / follow-ups (PR1)
 
 - The "N randevu talebi" signal is on Ana Sayfa and Randevular. It is **not** yet a numeric badge on the DoktorNav Randevular item (the existing nav badge is wired only for Mesajlar). This is a small follow-up.
+
+---
+
+## PR2: Google Takvim two-way sync (dormant until credentials exist)
+
+### Built
+
+- **Entegrasyonlar card "Google Takvim":** connect, reconnect when revoked, disconnect. It is hidden unless `GOOGLE_OAUTH_CLIENT_ID` + `GOOGLE_OAUTH_CLIENT_SECRET` (+ `ENCRYPTION_MASTER_KEY`) are set. Scope: `calendar.events` only.
+- **Notya → Google:** confirmed appointments are pushed (whichever path confirmed them; the cron catches legacy-path changes). The title is the patient's initials by default; a full-name option exists, off by default, with a KVKK note. No note, type or phone goes to Google.
+- **Google → Notya:** other events are imported as busy blocks (start/end only, no title stored) and feed the slot engine. Free and cancelled events release their block.
+- **Sync mechanics:**
+  - incremental sync with sync tokens (410 → full resync);
+  - a push channel with renewal and a token-hash-verified webhook;
+  - the periodic catch-up runs in the existing `randevu-v2` cron.
+- **Conflicts:** Notya wins on its own appointments. A Notya event moved or deleted in Google appears to the doctor as a proposal (Entegrasyonlar card + Randevular) and is never applied silently.
+- **Tokens:** the refresh token is encrypted at rest with the existing `encryptPII`; the channel token is stored only as a SHA-256 hash.
+
+### Files
+
+| Area | Files |
+|---|---|
+| Migration | `lib/db/migrations/112_randevu_v2_google.sql` |
+| Core | `lib/randevu/v2/google/{donustur,istemci,senk,baglan}.ts`; `lib/randevu/v2/disMesgul.ts` now reads busy blocks |
+| API | `app/api/doktor/google-takvim/{route,baslat/route,oneriler/route}.ts`, `app/api/google-takvim/{donus,bildirim}/route.ts`; push hooks in the three PR1 action routes; one step in `app/api/cron/randevu-v2/route.ts` |
+| UI | `components/doktor/randevu/{GoogleTakvimKarti,GoogleTakvimOnerileri}.tsx`; one line each in Entegrasyonlar and Randevular |
+| Tests | `lib/randevu/v2/google/google.test.ts`: pure conversion + sync engine against the fake DB with a stubbed Google API |
+
+### Manual test steps (needs Kaan's Google client; see NOTYA-RANDEVU-V2-B)
+
+1. In Google Cloud:
+   - create an OAuth client (Web);
+   - add the redirect URI `https://<host>/api/google-takvim/donus`;
+   - enable the Calendar API;
+   - verify the domain for push notifications (`https://<host>/api/google-takvim/bildirim`).
+   Then set the two env vars on a **preview** environment.
+2. Entegrasyonlar → **Google Takvim’i bağla** → consent → back on Entegrasyonlar with "Google Takvim bağlandı."
+3. Confirm a portal request. Within seconds the event appears in Google as "A. Y." Turn on the full-name toggle and the title updates.
+4. Create a private event in Google tomorrow at 10:00. After the webhook, or within 10 minutes via the cron, the 10:00 slot disappears from the patient's portal.
+5. Drag the Notya event in Google to another hour. A proposal appears on Randevular:
+   - **Notya’daki kalsın** moves it back in Google;
+   - **Yeni saati uygula** moves the appointment and e-mails the patient a new confirmation.
+6. Delete the Notya event in Google → a proposal to cancel appears.
+7. Disconnect → the future Notya events are removed from Google and the grant is revoked.
+
+### Risks and decisions
+
+- **Dormant by design:** with no credentials, nothing is visible or called. Tested: `dormant without credentials: nothing is called`.
+- **Client reuse:** the env names are the ones the Gmail connect already uses. If Kaan creates one Google client for both, the consent screen and verification must list both `gmail.send` and `calendar.events` (sensitive scope → Google verification).
+- **Initial full sync:** it cannot use `timeMin` (Google returns a sync token only without it), so the whole calendar is paged once. Only events overlapping [now − 1 day, now + 400 days] are stored.
+- **Push webhook:** needs a domain verified in Google Search Console. Until then the cron catch-up (every 10 minutes, 06:00–23:00 TRT) is the sync path.
+- **Fail-soft busy blocks:** a failed busy-block read counts as "no external busy" (fail soft). Notya's own appointments remain the hard check.
+- **What is pushed:** only `onaylandi` appointments. Pending requests and legacy `planlandi` bookings stay out of Google.

@@ -17,6 +17,7 @@ import { gunlereAyir } from '@/lib/randevu/v2/slot'
 import { hastaIzinleri, oneriBekliyorMu, v2Durum, V2_ETIKET } from '@/lib/randevu/v2/durum'
 import { gunEtiketi, saatEtiketi } from '@/lib/randevu/v2/zaman'
 import { ayarGetir, hastaIslem, isleriCalistir, musaitSlotlar, type HastaIslemi } from '@/lib/randevu/v2/sunucu'
+import { googleaGonder } from '@/lib/randevu/v2/google/senk'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
   })
   if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
   await isleriCalistir(sb, { randevuId: s.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
+  await googleaGonder(sb, doktorId, s.randevu.id)
   return NextResponse.json({
     ok: true,
     gun: gunEtiketi(s.randevu.baslangic),
