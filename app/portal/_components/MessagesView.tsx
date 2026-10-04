@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import type { MessageFolder, PortalBundle, PortalMessage } from '@/lib/portal/types'
+import type { MessageFolder, PortalBundle, PortalMessage, PortalMesajEk } from '@/lib/portal/types'
 import { COMPOSE_DISCLAIMER } from '@/lib/portal/messageCopy'
+import { MESAJ_EK_ACCEPT, MESAJ_EK_AZAMI } from '@/lib/portal/mesajEk'
+import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
 import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
 import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 
@@ -13,6 +15,57 @@ type Props = {
   onMessagesUpdated?: (messages: PortalMessage[]) => void
 }
 
+function boyutuYaz(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function EkListesi({
+  ekler,
+  token,
+}: {
+  ekler?: PortalMesajEk[]
+  token?: string
+}) {
+  if (!ekler?.length) return null
+  return (
+    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {ekler.map((ek) => {
+        const href = token
+          ? `/api/portal/hasta/${encodeURIComponent(token)}/mesajlar/ek/${encodeURIComponent(ek.id)}`
+          : null
+        return (
+          <div
+            key={ek.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 10px',
+              borderRadius: 10,
+              background: 'rgba(10,122,138,0.08)',
+              border: '1px solid rgba(10,122,138,0.2)',
+              fontSize: 13,
+            }}
+          >
+            <span aria-hidden>📎</span>
+            <span style={{ flex: 1, overflowWrap: 'anywhere' }}>
+              {ek.fileName}{' '}
+              <span style={{ color: 'var(--sg-muted)', fontSize: 12 }}>({boyutuYaz(ek.fileSize)})</span>
+            </span>
+            {href ? (
+              <a href={href} target="_blank" rel="noreferrer" className="sg-chip-btn" style={{ padding: '4px 10px', fontSize: 12 }}>
+                Aç
+              </a>
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function MessagesView({ data, token, onMessagesUpdated }: Props) {
   const [folder, setFolder] = useState<MessageFolder>('gelen')
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -20,7 +73,9 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
   const [composeOpen, setComposeOpen] = useState(false)
   const [draftKonu, setDraftKonu] = useState('')
   const [draftMetin, setDraftMetin] = useState('')
+  const [draftEkler, setDraftEkler] = useState<File[]>([])
   const [replyMetin, setReplyMetin] = useState('')
+  const [replyEkler, setReplyEkler] = useState<File[]>([])
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [localMessages, setLocalMessages] = useState<PortalMessage[] | null>(null)
@@ -49,6 +104,15 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
   function applyMessages(next: PortalMessage[]) {
     setLocalMessages(next)
     onMessagesUpdated?.(next)
+  }
+
+  function ekEkle(mevcut: File[], dosya: File | null, set: (f: File[]) => void) {
+    if (!dosya) return
+    if (mevcut.length >= MESAJ_EK_AZAMI) {
+      setSendError(`En fazla ${MESAJ_EK_AZAMI} dosya ekleyebilirsiniz.`)
+      return
+    }
+    set([...mevcut, dosya])
   }
 
   async function markRead(konuId: string) {
@@ -86,17 +150,44 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown?.id, shown?.okundu, threadOpen])
 
-  async function postMessage(payload: { konuId?: string; konu?: string; metin: string }) {
+  async function postMessage(payload: {
+    konuId?: string
+    konu?: string
+    metin: string
+    ekler: File[]
+  }) {
     if (!token) return
+    if (!payload.metin.trim() && !payload.ekler.length) {
+      setSendError('Mesaj yazın veya dosya ekleyin.')
+      return
+    }
     setSending(true)
     setSendError(null)
     try {
-      const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      })
+      let res: Response
+      if (payload.ekler.length) {
+        const fd = new FormData()
+        if (payload.konuId) fd.set('konuId', payload.konuId)
+        if (payload.konu) fd.set('konu', payload.konu)
+        fd.set('metin', payload.metin)
+        for (const f of payload.ekler.slice(0, MESAJ_EK_AZAMI)) fd.append('ek', f)
+        res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+          method: 'POST',
+          credentials: 'include',
+          body: fd,
+        })
+      } else {
+        res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            konuId: payload.konuId,
+            konu: payload.konu,
+            metin: payload.metin,
+          }),
+        })
+      }
       const json = await res.json()
       if (!res.ok) throw new Error(json?.error || 'Gönderilemedi')
       const next = (json.messages || []) as PortalMessage[]
@@ -108,7 +199,9 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
       }
       setDraftKonu('')
       setDraftMetin('')
+      setDraftEkler([])
       setReplyMetin('')
+      setReplyEkler([])
       setComposeOpen(false)
     } catch (e) {
       setSendError(turkceHataMesaji(e instanceof Error ? e.message : '') || 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.')
@@ -123,7 +216,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
     <div className="sg-fade">
       <SectionHeader
         title="Mesajlar"
-        subtitle="Doktorunuz ve klinik ekibinizle güvenli yazışmalar."
+        subtitle="Doktorunuz ve klinik ekibinizle güvenli yazışmalar. Tetkik, görüntü ve raporları buradan ekleyebilirsiniz."
         action={
           canSend ? (
             <button
@@ -157,6 +250,35 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
             className="sg-field"
             style={{ marginTop: 8, resize: 'vertical', minHeight: 96 }}
           />
+          <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <DosyaSecDugmesi
+              dosya={null}
+              onSec={(f) => ekEkle(draftEkler, f, setDraftEkler)}
+              accept={MESAJ_EK_ACCEPT}
+              etiket="Dosya ekle"
+              disabled={draftEkler.length >= MESAJ_EK_AZAMI}
+            />
+            <span style={{ fontSize: 12, color: 'var(--sg-muted)' }}>
+              PDF, Word, Excel, görüntü, ses, kısa video · en fazla {MESAJ_EK_AZAMI} · 4 MB
+            </span>
+          </div>
+          {draftEkler.length ? (
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 13 }}>
+              {draftEkler.map((f, i) => (
+                <li key={`${f.name}-${i}`}>
+                  {f.name}{' '}
+                  <button
+                    type="button"
+                    className="sg-chip-btn"
+                    style={{ padding: '2px 8px', fontSize: 11 }}
+                    onClick={() => setDraftEkler((arr) => arr.filter((_, j) => j !== i))}
+                  >
+                    Kaldır
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--sg-muted)', lineHeight: 1.45 }}>
             {COMPOSE_DISCLAIMER}
           </p>
@@ -167,8 +289,14 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
             <button
               type="button"
               className="sg-chip-btn is-active"
-              disabled={sending || !draftMetin.trim()}
-              onClick={() => postMessage({ konu: draftKonu.trim() || undefined, metin: draftMetin.trim() })}
+              disabled={sending || (!draftMetin.trim() && !draftEkler.length)}
+              onClick={() =>
+                postMessage({
+                  konu: draftKonu.trim() || undefined,
+                  metin: draftMetin.trim(),
+                  ekler: draftEkler,
+                })
+              }
             >
               {sending ? 'Gönderiliyor…' : 'Gönder'}
             </button>
@@ -185,7 +313,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
           title="Henüz mesaj yok"
           body={
             canSend
-              ? 'Doktorunuza güvenli bir mesaj göndererek başlayabilirsiniz.'
+              ? 'Doktorunuza güvenli bir mesaj göndererek başlayabilirsiniz. Tetkik ve görüntüleri de buradan ekleyin.'
               : 'Doktorunuz bir not paylaştığında veya size yazdığında burada görünecek.'
           }
         />
@@ -293,7 +421,8 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
                         <div style={{ fontSize: 12, fontWeight: 650, color: 'var(--sg-accent)', marginBottom: 4 }}>
                           {msg.kimden}
                         </div>
-                        <div>{msg.metin}</div>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{msg.metin}</div>
+                        <EkListesi ekler={msg.ekler} token={token} />
                         <div style={{ fontSize: 11, color: 'var(--sg-muted)', marginTop: 6 }}>
                           {formatTrDate(msg.tarih, true)}
                         </div>
@@ -311,6 +440,28 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
                         className="sg-field"
                         style={{ resize: 'vertical' }}
                       />
+                      <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                        <DosyaSecDugmesi
+                          dosya={null}
+                          onSec={(f) => ekEkle(replyEkler, f, setReplyEkler)}
+                          accept={MESAJ_EK_ACCEPT}
+                          etiket="Dosya ekle"
+                          disabled={replyEkler.length >= MESAJ_EK_AZAMI}
+                        />
+                        {replyEkler.map((f, i) => (
+                          <span key={`${f.name}-${i}`} style={{ fontSize: 12 }}>
+                            {f.name}{' '}
+                            <button
+                              type="button"
+                              className="sg-chip-btn"
+                              style={{ padding: '2px 8px', fontSize: 11 }}
+                              onClick={() => setReplyEkler((arr) => arr.filter((_, j) => j !== i))}
+                            >
+                              Kaldır
+                            </button>
+                          </span>
+                        ))}
+                      </div>
                       <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--sg-muted)' }}>{COMPOSE_DISCLAIMER}</p>
                       {sendError ? (
                         <p style={{ margin: '8px 0 0', color: 'var(--sg-warn)', fontSize: 13 }}>{sendError}</p>
@@ -319,8 +470,10 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
                         type="button"
                         className="sg-chip-btn is-active"
                         style={{ marginTop: 10 }}
-                        disabled={sending || !replyMetin.trim()}
-                        onClick={() => postMessage({ konuId: shown.id, metin: replyMetin.trim() })}
+                        disabled={sending || (!replyMetin.trim() && !replyEkler.length)}
+                        onClick={() =>
+                          postMessage({ konuId: shown.id, metin: replyMetin.trim(), ekler: replyEkler })
+                        }
                       >
                         {sending ? 'Gönderiliyor…' : 'Yanıtla'}
                       </button>

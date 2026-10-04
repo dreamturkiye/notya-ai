@@ -1,11 +1,12 @@
 /**
- * Eski "Dış film yükle" yolu kapatıldı — hasta belgeler'e doğrudan yükleyemez.
- * Dosyalar Sağlığım › Mesajlar ekiyle gönderilir; hekim Belgeler'e kaydeder.
+ * Hasta kendi mesaj ekini görüntüler / indirir (PIN + token kapsamı).
  */
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePortalToken } from '@/lib/portal/messages'
+import { mesajEkOku } from '@/lib/portal/mesajEk'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
-import { createClient } from '@supabase/supabase-js'
+import { contentDispositionAd } from '@/lib/vault/validation'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,10 @@ function sb() {
   return createClient(url, key, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) }, auth: { persistSession: false } })
 }
 
-export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { token: string; ekId: string } }
+) {
   const client = sb()
   if (!client) return NextResponse.json({ error: 'Portal yapılandırılmamış.' }, { status: 500 })
   const tok = await resolvePortalToken(client, params.token)
@@ -24,12 +28,16 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const locked = requirePortalUnlock(req, params.token, tok)
   if (locked) return locked
 
-  return NextResponse.json(
-    {
-      error:
-        'Dosyayı doğrudan yükleyemezsiniz. Röntgen, lab veya raporları Mesajlar üzerinden ekleyerek doktorunuza gönderin.',
-      yonlendir: 'mesajlar',
+  const ek = await mesajEkOku(client, params.ekId, tok.doctor_id, tok.patient_id)
+  if (!ek) return NextResponse.json({ error: 'Ek bulunamadı' }, { status: 404 })
+
+  return new NextResponse(new Uint8Array(ek.bytes), {
+    status: 200,
+    headers: {
+      'Content-Type': ek.meta.fileType || 'application/octet-stream',
+      'Content-Disposition': `inline; ${contentDispositionAd(ek.meta.fileName)}`,
+      'Cache-Control': 'private, no-store',
+      'Content-Length': String(ek.bytes.length),
     },
-    { status: 410 }
-  )
+  })
 }

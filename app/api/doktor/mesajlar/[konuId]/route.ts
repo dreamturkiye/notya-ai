@@ -1,11 +1,13 @@
 /**
  * GET  /api/doktor/mesajlar/[konuId] — thread + messages; marks practice-read
  * POST /api/doktor/mesajlar/[konuId] — reply { metin }
+ * DELETE /api/doktor/mesajlar/[konuId] — { mesajId } sil (ekler CASCADE)
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
+import { mesajEkleriGetir } from '@/lib/portal/mesajEk'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,6 +56,7 @@ export async function GET(
     .order('created_at', { ascending: true })
 
   const hastaAdi = await patientLabel(supabase, konu.patient_id)
+  const ekMap = await mesajEkleriGetir(supabase, (msgs || []).map((m: { id: string }) => m.id))
 
   return NextResponse.json({
     thread: {
@@ -70,6 +73,7 @@ export async function GET(
       tarih: m.created_at,
       kimden:
         m.taraf === 'hasta' ? hastaAdi : m.taraf === 'klinik' ? 'Klinik' : 'Doktor',
+      ekler: ekMap.get(m.id) || [],
     })),
   })
 }
@@ -132,4 +136,52 @@ export async function POST(
   }
 
   return NextResponse.json({ ok: true })
+}
+
+/** Delete one message (attachments CASCADE). Empty thread is removed. */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { konuId: string } }
+) {
+  const oturum = await pratikOturum(req)
+  if ('hata' in oturum) return oturum.hata
+  const { supabase, doktorId } = oturum
+
+  let body: { mesajId?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 })
+  }
+  const mesajId = String(body.mesajId || '').trim()
+  if (!mesajId) return NextResponse.json({ error: 'mesajId gerekli' }, { status: 400 })
+
+  const { data: konu } = await supabase
+    .from('hasta_mesaj_konulari')
+    .select('id')
+    .eq('id', params.konuId)
+    .eq('doctor_id', doktorId)
+    .maybeSingle()
+  if (!konu) return NextResponse.json({ error: 'Konu bulunamadı' }, { status: 404 })
+
+  const { data: msg } = await supabase
+    .from('hasta_mesajlar')
+    .select('id')
+    .eq('id', mesajId)
+    .eq('konu_id', konu.id)
+    .maybeSingle()
+  if (!msg) return NextResponse.json({ error: 'Mesaj bulunamadı' }, { status: 404 })
+
+  const { error } = await supabase.from('hasta_mesajlar').delete().eq('id', mesajId)
+  if (error) return NextResponse.json({ error: 'Mesaj silinemedi' }, { status: 500 })
+
+  const { count } = await supabase
+    .from('hasta_mesajlar')
+    .select('id', { count: 'exact', head: true })
+    .eq('konu_id', konu.id)
+  if (!count) {
+    await supabase.from('hasta_mesaj_konulari').delete().eq('id', konu.id)
+    return NextResponse.json({ ok: true, konuSilindi: true })
+  }
+  return NextResponse.json({ ok: true, konuSilindi: false })
 }

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { MessageFolder, PortalMessage } from './types'
+import { mesajEkleriGetir } from './mesajEk'
 
 export { AUTO_ACK_TEXT, COMPOSE_DISCLAIMER } from './messageCopy'
 
@@ -85,15 +86,22 @@ export async function loadPortalMessages(
     byKonu.set(m.konu_id, arr)
   }
 
+  const allMsgIds = (msgs || []).map((m: MsgRow) => m.id)
+  const ekMap = await mesajEkleriGetir(sb, allMsgIds)
+
   return list.map((k) => {
     const thread = byKonu.get(k.id) || []
     const last = thread[thread.length - 1]
+    const lastEk = last ? ekMap.get(last.id) : undefined
+    const ozetMetin = last
+      ? String(last.metin).slice(0, 140) || (lastEk?.length ? `📎 ${lastEk[0].fileName}` : '')
+      : ''
     return {
       id: k.id,
       klasor: k.hasta_klasor,
       konu: k.konu,
       gonderen: last ? gonderenFor(last.taraf) : 'Klinik',
-      ozet: last ? String(last.metin).slice(0, 140) : '',
+      ozet: ozetMetin,
       tarih: k.son_mesaj_at || k.created_at,
       okundu: Boolean(k.okundu_hasta),
       mesajlar: thread.map((m) => ({
@@ -102,6 +110,7 @@ export async function loadPortalMessages(
         metin: m.metin,
         tarih: m.created_at,
         taraf: m.taraf,
+        ekler: ekMap.get(m.id) || [],
       })),
     }
   })

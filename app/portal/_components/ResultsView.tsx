@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
-import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 import type { PortalBundle, PortalResult, ResultKind } from '@/lib/portal/types'
 import { imagingDisplayLabel } from '@/lib/doktor/imagingModalities'
 import { EmptyState, ListRow, SectionHeader, SoftPanel, formatTrDate } from './ui'
@@ -77,7 +75,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
           </button>
         ))}
       </div>
-      <HastaDisFilmYukle basePath={basePath} />
+      <HastaBelgeMesajIpucu basePath={basePath} />
       {!list.length ? (
         <EmptyState art="sonuclar" title="Sonuç yok" body="Bu filtrede yayınlanmış sonuç bulunmuyor." />
       ) : (
@@ -101,54 +99,18 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
   )
 }
 
-function HastaDisFilmYukle({ basePath }: { basePath: string }) {
-  const token = basePath.match(/\/portal\/hasta\/([^/]+)/)?.[1]
-  const [tip, setTip] = useState('xr')
-  const [dosya, setDosya] = useState<File | null>(null)
-  const [mesaj, setMesaj] = useState('')
-  const [yukleniyor, setYukleniyor] = useState(false)
-  if (!token) return null
-
-  const gonder = async () => {
-    if (!dosya) { setMesaj('Dosya seçin.'); return }
-    setYukleniyor(true)
-    setMesaj('')
-    const fd = new FormData()
-    fd.set('file', dosya)
-    fd.set('tip', tip)
-    const r = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/goruntu`, {
-      method: 'POST',
-      credentials: 'include',
-      body: fd,
-    })
-    const j = await r.json().catch(() => ({}))
-    setYukleniyor(false)
-    if (!r.ok) { setMesaj(turkceHataMesaji(j.error) || 'Dosya yüklenemedi. Lütfen tekrar deneyin.'); return }
-    setDosya(null)
-    setMesaj('Dosya doktorunuza iletildi. Değerlendirme onaylanınca burada görünür.')
-  }
-
+/** Hasta belgelere doğrudan yükleyemez — röntgen/lab/rapor mesaj ekiyle gönderilir. */
+function HastaBelgeMesajIpucu({ basePath }: { basePath: string }) {
   return (
     <SoftPanel style={{ marginBottom: 16, padding: 16 }}>
-      <div style={{ fontWeight: 800, marginBottom: 6 }}>Dış film yükle</div>
+      <div style={{ fontWeight: 800, marginBottom: 6 }}>Tetkik veya görüntü göndermek</div>
       <p style={{ margin: '0 0 10px', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.45 }}>
-        Dışarıda çekilmiş bir filmi dosyanıza ekleyin. Doktorunuz görmeden sonuçlarda yayınlanmaz.
+        Röntgen, lab sonucu, EKG, ultrason veya PDF/Word dosyalarını doğrudan dosyanıza yükleyemezsiniz.
+        Doktorunuza <strong>Mesajlar</strong> üzerinden ekleyerek gönderin.
       </p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-        <select value={tip} onChange={(e) => setTip(e.target.value)} className="sg-chip-btn" style={{ padding: '8px 10px' }}>
-          <option value="xr">Röntgen</option>
-          <option value="ekg">EKG</option>
-          <option value="goz">Göz</option>
-          <option value="derm">Deri</option>
-          <option value="mg">Mamografi</option>
-          <option value="us">Ultrason</option>
-        </select>
-        <DosyaSecDugmesi dosya={dosya} onSec={setDosya} accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} />
-        <button type="button" className="sg-chip-btn is-active" disabled={yukleniyor} onClick={() => void gonder()}>
-          {yukleniyor ? 'Gönderiliyor…' : 'Gönder'}
-        </button>
-      </div>
-      {mesaj && <p style={{ margin: '10px 0 0', fontSize: 13, color: /iletildi/.test(mesaj) ? 'var(--sg-ok)' : 'var(--sg-warn)' }}>{mesaj}</p>}
+      <Link href={`${basePath}/mesajlar`} className="sg-chip-btn is-active" style={{ display: 'inline-flex' }}>
+        Mesajlara git
+      </Link>
     </SoftPanel>
   )
 }

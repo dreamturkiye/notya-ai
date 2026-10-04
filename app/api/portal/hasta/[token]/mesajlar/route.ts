@@ -5,10 +5,13 @@ import {
   loadPortalMessages,
   resolvePortalToken,
 } from '@/lib/portal/messages'
+import { MESAJ_EK_AZAMI, VaultValidationError, mesajEkleriYukle } from '@/lib/portal/mesajEk'
 import { pingDoctorNewMessage } from '@/lib/portal/notifyPractice'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 
 export const dynamic = 'force-dynamic'
+/** Multipart message + attachments (vault 4 MB each). */
+export const runtime = 'nodejs'
 
 function sb() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -79,6 +82,40 @@ export async function PATCH(
   return NextResponse.json({ ok: true, messages })
 }
 
+async function okuGovde(req: NextRequest): Promise<{
+  konuId?: string
+  konu?: string
+  metin: string
+  files: Array<{ fileName: string; fileType: string; bytes: Buffer }>
+}> {
+  const ct = req.headers.get('content-type') || ''
+  if (ct.includes('multipart/form-data')) {
+    const fd = await req.formData()
+    const metin = String(fd.get('metin') || '').trim()
+    const konuId = fd.get('konuId') ? String(fd.get('konuId')) : undefined
+    const konu = fd.get('konu') ? String(fd.get('konu')) : undefined
+    const raw = [...fd.getAll('ek'), ...fd.getAll('file')].filter((x): x is File => typeof File !== 'undefined' && x instanceof File)
+    const files: Array<{ fileName: string; fileType: string; bytes: Buffer }> = []
+    for (const f of raw.slice(0, MESAJ_EK_AZAMI)) {
+      const ab = await f.arrayBuffer()
+      files.push({ fileName: f.name || 'belge', fileType: f.type || '', bytes: Buffer.from(ab) })
+    }
+    return { konuId, konu, metin, files }
+  }
+  let body: { konuId?: string; konu?: string; metin?: string }
+  try {
+    body = await req.json()
+  } catch {
+    throw new Error('Geçersiz istek')
+  }
+  return {
+    konuId: body.konuId ? String(body.konuId) : undefined,
+    konu: body.konu ? String(body.konu) : undefined,
+    metin: String(body.metin || '').trim(),
+    files: [],
+  }
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { token: string } }
@@ -92,20 +129,23 @@ export async function POST(
   const locked = requirePortalUnlock(req, params.token, tok)
   if (locked) return locked
 
-  let body: { konuId?: string; konu?: string; metin?: string }
+  let govde: Awaited<ReturnType<typeof okuGovde>>
   try {
-    body = await req.json()
+    govde = await okuGovde(req)
   } catch {
     return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 })
   }
 
-  const metin = String(body.metin || '').trim()
+  const metin = govde.metin || (govde.files.length ? '📎 Dosya eki' : '')
   if (!metin || metin.length > 4000) {
-    return NextResponse.json({ error: 'Mesaj 1–4000 karakter olmalı.' }, { status: 400 })
+    return NextResponse.json({ error: 'Mesaj 1–4000 karakter olmalı veya en az bir dosya ekleyin.' }, { status: 400 })
+  }
+  if (govde.files.length > MESAJ_EK_AZAMI) {
+    return NextResponse.json({ error: `En fazla ${MESAJ_EK_AZAMI} dosya ekleyebilirsiniz.` }, { status: 400 })
   }
 
   const now = new Date().toISOString()
-  let konuId = body.konuId ? String(body.konuId) : ''
+  let konuId = govde.konuId ? String(govde.konuId) : ''
   let isNew = false
 
   if (konuId) {
@@ -118,7 +158,7 @@ export async function POST(
       .maybeSingle()
     if (!existing) return NextResponse.json({ error: 'Konu bulunamadı' }, { status: 404 })
   } else {
-    const konu = String(body.konu || '').trim() || metin.slice(0, 80)
+    const konu = String(govde.konu || '').trim() || metin.slice(0, 80)
     const { data: created, error } = await client
       .from('hasta_mesaj_konulari')
       .insert({
@@ -139,14 +179,34 @@ export async function POST(
     isNew = true
   }
 
-  const { error: msgErr } = await client.from('hasta_mesajlar').insert({
-    konu_id: konuId,
-    taraf: 'hasta',
-    yazar_user_id: null,
-    metin,
-  })
-  if (msgErr) {
+  const { data: msg, error: msgErr } = await client
+    .from('hasta_mesajlar')
+    .insert({
+      konu_id: konuId,
+      taraf: 'hasta',
+      yazar_user_id: null,
+      metin,
+    })
+    .select('id')
+    .single()
+  if (msgErr || !msg) {
     return NextResponse.json({ error: 'Mesaj kaydedilemedi' }, { status: 500 })
+  }
+
+  if (govde.files.length) {
+    try {
+      await mesajEkleriYukle(client, {
+        mesajId: msg.id,
+        doctorId: tok.doctor_id,
+        patientId: tok.patient_id,
+        files: govde.files,
+      })
+    } catch (e) {
+      await client.from('hasta_mesajlar').delete().eq('id', msg.id)
+      if (isNew) await client.from('hasta_mesaj_konulari').delete().eq('id', konuId)
+      const err = e instanceof VaultValidationError ? e.message : 'Dosya eklenemedi'
+      return NextResponse.json({ error: err }, { status: 400 })
+    }
   }
 
   if (isNew) {
@@ -164,12 +224,11 @@ export async function POST(
       son_mesaj_at: now,
       okundu_pratik: false,
       okundu_hasta: true,
-      hasta_klasor: isNew ? 'gonderilen' : 'gonderilen',
+      hasta_klasor: 'gonderilen',
       pratik_arsiv: false,
     })
     .eq('id', konuId)
 
-  // Fire-and-forget style: await but never fail the patient response on ping errors
   try {
     await pingDoctorNewMessage(client, tok.doctor_id)
   } catch {

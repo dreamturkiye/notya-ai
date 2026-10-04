@@ -31,6 +31,15 @@ export interface PortalSummary {
   }>
 }
 
+/** Sağlığım mesaj eki — bayt listede yok; indirme ayrı rota. */
+export interface PortalMesajEk {
+  id: string
+  fileName: string
+  fileType: string
+  fileSize: number
+  belgeId?: string | null
+}
+
 export interface PortalMessage {
   id: string
   klasor: MessageFolder
@@ -45,6 +54,7 @@ export interface PortalMessage {
     metin: string
     tarih: string
     taraf: 'doktor' | 'hasta' | 'klinik'
+    ekler?: PortalMesajEk[]
   }>
 }
 

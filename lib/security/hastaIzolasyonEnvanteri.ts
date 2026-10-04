@@ -25,6 +25,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil/route.ts': I('same session ownership check as arsivle (doctor_id + patient_id together, 404 otherwise), plus requires archived_at already set; every child-table delete is additionally scoped by ids derived from that owned session/note, never from raw request input'),
   'app/api/doktor/hastalar/[id]/buyume-egrileri/route.ts': T,
   'app/api/doktor/hastalar/[id]/hedef-boy/route.ts': T,
+  'app/api/doktor/hastalar/[id]/klinik-ozet/route.ts': I('hastaKlinikOzetleriGuncelle: reads/writes scoped doctor_id+patient_id; foreign patient → fail'),
   // ── Notlar / seanslar ──
   'app/api/notes/route.ts': T,
   'app/api/notes/[id]/route.ts': T,
@@ -75,6 +76,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/calisma-saatleri/route.ts': I('doctor working hours only (doktor_id); no patient data'),
   'app/api/doktor/mesajlar/route.ts': T,
   'app/api/doktor/mesajlar/[konuId]/route.ts': T,
+  'app/api/doktor/mesajlar/ek/[ekId]/route.ts': I('pratikOturum doktorId; ek row .eq(doctor_id); belgeye-kaydet → uploadDocument patient ownership re-check; DELETE scoped doctor_id'),
   'app/api/doktor/mesajlar/unread-count/route.ts': I('count scoped by doctor_id'),
   // NOTYA-ILETISIM-01 — tek dokunuş iletişim (hekimin kendi WhatsApp / e-postası), Hazır mesajlar, izin, kayıt
   'app/api/doktor/iletisim/hazirla/route.ts': T,
@@ -280,9 +282,10 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/mali-signed-url/route.ts': I('accountant product; no patient data'),
   // ── Sağlığım portalı / intake (token = kimlik) ──
   'app/api/portal/hasta/[token]/route.ts': T,
-  'app/api/portal/hasta/[token]/goruntu/route.ts': I('token → patient_id+doctor_id; vault upload as doctor; jacket kaynak=hasta_yukleme taslak'),
+  'app/api/portal/hasta/[token]/goruntu/route.ts': I('410 — patient cannot upload to belgeler; redirects to Mesajlar (no vault write)'),
   'app/api/portal/hasta/[token]/goruntu/[id]/route.ts': I('token unlock; jacket id+patient_id+doctor_id; portaldaGorunurMu else 404; vault download doctor-scoped'),
   'app/api/portal/hasta/[token]/mesajlar/route.ts': T,
+  'app/api/portal/hasta/[token]/mesajlar/ek/[ekId]/route.ts': I('token → patient_id+doctor_id; mesajEkOku filters both; no foreign patient bytes'),
   'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts': T,
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),

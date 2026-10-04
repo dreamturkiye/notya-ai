@@ -2,11 +2,24 @@
 
 /**
  * Shared practice inbox — doktor + sekreter.
+ * Hasta mesaj ekleri: gözlemle · Belgeler'e kaydet · mesajla birlikte sil.
  */
 import React, { useCallback, useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import MesajEkViewer from '@/components/doktor/MesajEkViewer'
+import { ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
+import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon'
+
+type Ek = {
+  id: string
+  fileName: string
+  fileType: string
+  fileSize: number
+  belgeId: string | null
+}
 
 type Thread = {
   id: string
@@ -25,14 +38,10 @@ type Msg = {
   metin: string
   tarih: string
   kimden: string
+  ekler?: Ek[]
 }
 
 export default function DoktorMesajlarPage() {
-  // NOTYA-FISILTI-UNIVERSAL fix: useSearchParams() forces client-side rendering for whatever
-  // reads it -- Next requires that piece behind a Suspense boundary for static prerendering to
-  // succeed (dev server doesn't enforce this, `next build` does). Isolated to its own inner
-  // component so the rest of the page (list of threads, an open conversation, replying) has
-  // nothing to do with why the wrapper exists.
   return (
     <Suspense fallback={null}>
       <DoktorMesajlarIcerik />
@@ -45,12 +54,17 @@ function DoktorMesajlarIcerik() {
   const [threads, setThreads] = useState<Thread[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [patientId, setPatientId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Msg[]>([])
   const [threadMeta, setThreadMeta] = useState<{ konu: string; hastaAdi: string } | null>(null)
   const [reply, setReply] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [viewer, setViewer] = useState<Ek | null>(null)
+  const [kaydetEk, setKaydetEk] = useState<Ek | null>(null)
+  const [kategori, setKategori] = useState<string>('Röntgen')
+  const [busyEk, setBusyEk] = useState<string | null>(null)
 
   const authHeaders = useCallback(async () => {
     const t = await ensureDoctorAccessToken()
@@ -76,6 +90,7 @@ function DoktorMesajlarIcerik() {
       const json = await res.json()
       if (!res.ok) throw new Error(json?.error || 'Konu açılamadı')
       setThreadMeta({ konu: json.thread.konu, hastaAdi: json.thread.hastaAdi })
+      setPatientId(json.thread.patientId || null)
       setMessages(json.messages || [])
       setThreads((prev) => {
         const wasUnread = prev.some((t) => t.id === id && !t.okundu)
@@ -90,8 +105,6 @@ function DoktorMesajlarIcerik() {
     ;(async () => {
       try {
         await loadList()
-        // NOTYA-FISILTI-UNIVERSAL: ?konu=<id> deep-link, e.g. from fısıltı or the anasayfa "Yeni
-        // Mesajlar" card -- opens straight to that thread instead of just the inbox list.
         const konuId = searchParams?.get('konu')
         if (konuId) await openThread(konuId)
       } catch (e) {
@@ -125,6 +138,58 @@ function DoktorMesajlarIcerik() {
     }
   }
 
+  async function mesajSil(mesajId: string) {
+    if (!activeId) return
+    if (!window.confirm('Bu mesaj ve ekleri silinsin mi?')) return
+    setBusyEk(mesajId)
+    setError(null)
+    try {
+      const headers = await authHeaders()
+      const res = await fetch(`/api/doktor/mesajlar/${encodeURIComponent(activeId)}`, {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ mesajId }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Silinemedi')
+      if (json.konuSilindi) {
+        setActiveId(null)
+        setMessages([])
+        setThreadMeta(null)
+        await loadList()
+      } else {
+        await openThread(activeId)
+        await loadList()
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Silinemedi')
+    } finally {
+      setBusyEk(null)
+    }
+  }
+
+  async function belgeyeKaydet() {
+    if (!kaydetEk) return
+    setBusyEk(kaydetEk.id)
+    setError(null)
+    try {
+      const headers = await authHeaders()
+      const res = await fetch(`/api/doktor/mesajlar/ek/${encodeURIComponent(kaydetEk.id)}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'belgeye-kaydet', category: kategori }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Kaydedilemedi')
+      setKaydetEk(null)
+      if (activeId) await openThread(activeId)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Kaydedilemedi')
+    } finally {
+      setBusyEk(null)
+    }
+  }
+
   return (
     <div>
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
@@ -132,7 +197,7 @@ function DoktorMesajlarIcerik() {
         Mesajlar {unreadCount > 0 ? <span style={{ color: CHROME_RENK.pine }}>({unreadCount})</span> : null}
       </h1>
       <p style={{ margin: '0 0 18px', color: CHROME_RENK.muted, fontSize: 14 }}>
-        Hasta portalı (Sağlığım) gelen kutusu — doktor ve sekreter ortak görür.
+        Hasta portalı (Sağlığım) gelen kutusu — ekleri gözlemleyin, belgelere kaydedin veya mesajla silin.
       </p>
 
       {error ? <p style={{ color: CHROME_RENK.warn, fontSize: 14 }}>{error}</p> : null}
@@ -202,14 +267,24 @@ function DoktorMesajlarIcerik() {
           ) : (
             <>
               <h2 style={{ margin: '0 0 4px', fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 20, color: '#2e251d' }}>{threadMeta?.konu}</h2>
-              <p style={{ margin: 0, color: CHROME_RENK.muted, fontSize: 13 }}>{threadMeta?.hastaAdi}</p>
+              <p style={{ margin: 0, color: CHROME_RENK.muted, fontSize: 13 }}>
+                {threadMeta?.hastaAdi}
+                {patientId ? (
+                  <>
+                    {' · '}
+                    <Link href={hastaDosyaHref(patientId, 'belgeler')} style={{ color: CHROME_RENK.pine, fontWeight: 700 }}>
+                      Belgeler
+                    </Link>
+                  </>
+                ) : null}
+              </p>
               <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {messages.map((m) => (
                   <div
                     key={m.id}
                     style={{
                       alignSelf: m.taraf === 'hasta' ? 'flex-start' : 'flex-end',
-                      maxWidth: '90%',
+                      maxWidth: '94%',
                       padding: '10px 12px',
                       borderRadius: 12,
                       background: m.taraf === 'hasta' ? '#F6F0E4' : CHROME_RENK.pine,
@@ -218,8 +293,64 @@ function DoktorMesajlarIcerik() {
                   >
                     <div style={{ fontSize: 11, color: m.taraf === 'hasta' ? CHROME_RENK.pine : CHROME_RENK.gold, fontWeight: 700, marginBottom: 4 }}>{m.kimden}</div>
                     <div style={{ fontSize: 14, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{m.metin}</div>
-                    <div style={{ fontSize: 11, color: m.taraf === 'hasta' ? CHROME_RENK.muted : 'rgba(250,248,244,0.7)', marginTop: 6 }}>
-                      {new Date(m.tarih).toLocaleString('tr-TR')}
+                    {m.ekler?.length ? (
+                      <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {m.ekler.map((ek) => (
+                          <div
+                            key={ek.id}
+                            style={{
+                              padding: '8px 10px',
+                              borderRadius: 10,
+                              background: m.taraf === 'hasta' ? 'rgba(47,67,52,0.06)' : 'rgba(255,255,255,0.12)',
+                              fontSize: 13,
+                            }}
+                          >
+                            <div style={{ fontWeight: 650, marginBottom: 6 }}>📎 {ek.fileName}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              <button type="button" style={ekBtn(m.taraf === 'hasta')} onClick={() => setViewer(ek)}>
+                                Gözlemle
+                              </button>
+                              {ek.belgeId ? (
+                                patientId ? (
+                                  <Link
+                                    href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(ek.belgeId)}`}
+                                    style={{ ...ekBtn(m.taraf === 'hasta'), textDecoration: 'none' }}
+                                  >
+                                    Belgelerde aç
+                                  </Link>
+                                ) : (
+                                  <span style={{ fontSize: 12, opacity: 0.85 }}>Belgelere kaydedildi</span>
+                                )
+                              ) : (
+                                <button type="button" style={ekBtn(m.taraf === 'hasta')} onClick={() => { setKaydetEk(ek); setKategori(tahminKategori(ek.fileName, ek.fileType)) }}>
+                                  Belgeler&apos;e kaydet
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, color: m.taraf === 'hasta' ? CHROME_RENK.muted : 'rgba(250,248,244,0.7)' }}>
+                        {new Date(m.tarih).toLocaleString('tr-TR')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void mesajSil(m.id)}
+                        disabled={busyEk === m.id}
+                        style={{
+                          border: 'none',
+                          background: 'transparent',
+                          color: m.taraf === 'hasta' ? CHROME_RENK.warn : 'rgba(250,248,244,0.85)',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        Sil
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -265,6 +396,89 @@ function DoktorMesajlarIcerik() {
           )}
         </div>
       </div>
+
+      {viewer ? (
+        <MesajEkViewer
+          ekId={viewer.id}
+          fileName={viewer.fileName}
+          fileType={viewer.fileType}
+          onClose={() => setViewer(null)}
+        />
+      ) : null}
+
+      {kaydetEk ? (
+        <div
+          role="dialog"
+          aria-label="Belgeler'e kaydet"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 70,
+            background: 'rgba(20,16,12,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => setKaydetEk(null)}
+        >
+          <div
+            style={{ background: '#fff', borderRadius: 16, padding: 18, width: 'min(420px, 100%)', border: `1px solid ${CHROME_RENK.border}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, marginBottom: 8 }}>Belgeler&apos;e kaydet</div>
+            <p style={{ margin: '0 0 12px', fontSize: 13, color: CHROME_RENK.muted }}>{kaydetEk.fileName}</p>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 4 }}>Belge türü</label>
+            <select
+              value={kategori}
+              onChange={(e) => setKategori(e.target.value)}
+              style={{ width: '100%', padding: 10, borderRadius: 10, border: `1px solid ${CHROME_RENK.border}`, marginBottom: 14 }}
+            >
+              {ORTAK_BELGE_TURLERI.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => void belgeyeKaydet()}
+                disabled={busyEk === kaydetEk.id}
+                style={{ padding: '10px 16px', borderRadius: 999, border: 'none', background: CHROME_RENK.pine, color: '#FAF8F4', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Kaydet
+              </button>
+              <button type="button" onClick={() => setKaydetEk(null)} style={{ padding: '10px 16px', borderRadius: 999, border: `1px solid ${CHROME_RENK.border}`, background: '#fff', cursor: 'pointer' }}>
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
+}
+
+function ekBtn(hasta: boolean): React.CSSProperties {
+  return {
+    border: `1px solid ${hasta ? 'rgba(47,67,52,0.25)' : 'rgba(255,255,255,0.35)'}`,
+    background: hasta ? '#fff' : 'rgba(255,255,255,0.12)',
+    color: hasta ? CHROME_RENK.pine : '#FAF8F4',
+    borderRadius: 999,
+    padding: '5px 10px',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+  }
+}
+
+function tahminKategori(fileName: string, fileType: string): string {
+  const n = `${fileName} ${fileType}`.toLocaleLowerCase('tr-TR')
+  if (/ekg|ecg/.test(n)) return 'EKG'
+  if (/rontgen|röntgen|x-?ray|xr|akci[gğ]er/.test(n)) return 'Röntgen'
+  if (/lab|hemogram|kan|sonu[cç]/.test(n)) return 'Lab Sonucu'
+  if (/usg|ultrason|ultrasound/.test(n)) return 'Görüntüleme Raporu'
+  if (/epikriz/.test(n)) return 'Epikriz'
+  if (/audio|ses|mp3|wav|m4a/.test(n)) return 'Muayene ses kaydı'
+  if (/image|jpg|png|foto/.test(n)) return 'Muayene görüntüsü'
+  return 'Diğer'
 }

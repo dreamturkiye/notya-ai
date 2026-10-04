@@ -146,11 +146,12 @@ describe('görüntü ceketi — portal yükleme + göz fundus', () => {
   const portalSonuc = readFileSync(new URL('../../app/portal/_components/ResultsView.tsx', import.meta.url), 'utf8')
   const portalPaket = readFileSync(new URL('../../app/api/portal/hasta/[token]/route.ts', import.meta.url), 'utf8')
 
-  it('hasta yüklemesi taslak başlar; demo yükleme yok', () => {
-    assert.match(portalYukle, /kaynak: 'hasta_yukleme'/)
-    assert.match(portalYukle, /onay_durum: 'taslak'/)
-    assert.match(portalSonuc, /Dış film yükle/)
-    assert.match(portalSonuc, /\/portal\/hasta\//)
+  it('hasta belgelere doğrudan yükleyemez; Mesajlar üzerinden yönlendirilir', () => {
+    assert.match(portalYukle, /status: 410/)
+    assert.match(portalYukle, /Mesajlar üzerinden/)
+    assert.doesNotMatch(portalYukle, /uploadDocument|kaynak: 'hasta_yukleme'/)
+    assert.match(portalSonuc, /HastaBelgeMesajIpucu|Mesajlara git/)
+    assert.doesNotMatch(portalSonuc, /Dış film yükle|\/goruntu/)
   })
 
   it('göz portalına yalnız onaylı fundus ceketi eklenir', () => {
