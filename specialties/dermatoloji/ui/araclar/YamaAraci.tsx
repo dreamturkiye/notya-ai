@@ -100,9 +100,9 @@ export default function YamaAraci() {
           <button type="button" onClick={() => setUygulanan(EUROPEAN_BASELINE.map((a) => a.kod))} style={ghost}>Tüm seriyi işaretle</button>
           <button type="button" onClick={() => { setUygulanan([]); setPozitif([]); }} style={ghost}>Temizle</button>
         </div>
-        <div style={{ ...kaydir, marginTop: 10, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ ...kaydir, marginTop: 10, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(58,44,34,0.12)' }}>
           {gorunen.map((a, i) => (
-            <div key={a.kod} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '10px 12px', background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)' }}>
+            <div key={a.kod} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '10px 12px', background: i % 2 ? 'rgba(58,44,34,0.12)' : 'rgba(0,0,0,0.15)' }}>
               <label style={{ display: 'flex', gap: 8, alignItems: 'center', flex: '1 1 260px', minHeight: 44, cursor: 'pointer' }}>
                 <input type="checkbox" checked={uygulanan.includes(a.kod)} onChange={() => cevir(uygulanan, setUygulanan, a.kod)} style={{ width: 20, height: 20 }} />
                 <span>
@@ -118,7 +118,7 @@ export default function YamaAraci() {
                   minHeight: 40, borderRadius: 999, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                   background: pozitif.includes(a.kod) ? 'rgba(248,113,113,0.18)' : 'transparent',
                   color: pozitif.includes(a.kod) ? CHROME_RENK.warn : CHROME_RENK.muted,
-                  border: `1px solid ${pozitif.includes(a.kod) ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.16)'}`,
+                  border: `1px solid ${pozitif.includes(a.kod) ? 'rgba(248,113,113,0.5)' : 'rgba(58,44,34,0.12)'}`,
                 }}
               >Pozitif</button>
             </div>

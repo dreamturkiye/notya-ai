@@ -123,7 +123,7 @@ export default function Sablonlarim() {
         {liste != null && !!liste.length && !gorunen.length && <div style={{ ...kucuk, marginTop: 10 }}>Aramaya uyan şablon yok.</div>}
         <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
           {gorunen.map((s) => (
-            <div key={s.id} style={{ border: `1px solid ${acik === s.id ? 'rgba(45,212,191,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '10px 12px', background: 'rgba(0,0,0,0.14)' }}>
+            <div key={s.id} style={{ border: `1px solid ${acik === s.id ? 'rgba(45,212,191,0.4)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 14, padding: '10px 12px', background: 'rgba(58,44,34,0.05)' }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                 <div style={{ minWidth: 0, flex: '1 1 200px' }}>
                   <div style={{ ...metin, fontWeight: 700 }}>{s.ad}</div>
@@ -135,7 +135,7 @@ export default function Sablonlarim() {
                 </span>
               </div>
               {acik === s.id && (
-                <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                <div style={{ marginTop: 10, borderTop: '1px solid rgba(58,44,34,0.12)', paddingTop: 10 }}>
                   {acikSatirlar.length
                     ? <div style={{ ...metin, whiteSpace: 'pre-wrap' }}>{acikSatirlar.join('\n')}</div>
                     : <div style={kucuk}>Bu şablonda içerik yok — düzenleyip doldurun.</div>}

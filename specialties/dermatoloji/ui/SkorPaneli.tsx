@@ -123,7 +123,7 @@ function BolgeSayfasi({
             {PASI_BOLGELERI.map((b) => {
               const satir = dokum.bolgeler.find((x) => x.id === b.id)
               return (
-                <tr key={b.id} style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <tr key={b.id} style={{ borderTop: '1px solid rgba(58,44,34,0.12)' }}>
                   <td style={hucre}>
                     <div style={{ fontWeight: 600 }}>{b.ad}</div>
                     <div style={{ fontSize: 10.5, color: CHROME_RENK.muted }}>×{b.agirlik} · {b.ipucu}</div>
@@ -354,7 +354,7 @@ export function SkorPaneli({
               <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>7 gün × (kabartı 0–3 + kaşıntı 0–3) = 0–42.</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 6 }}>
                 {uasGun.map((g, i) => (
-                  <div key={i} style={{ border: '1px solid rgba(255,255,255,0.09)', borderRadius: 8, padding: 6 }}>
+                  <div key={i} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 6 }}>
                     <div style={{ ...etiketS, marginBottom: 2 }}>{i + 1}. gün</div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <label style={{ fontSize: 11.5 }}>Kabartı

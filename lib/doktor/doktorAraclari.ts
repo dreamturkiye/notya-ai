@@ -34,7 +34,7 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula', branslar: null },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız', desc: 'e-Nabız’a siz girersiniz; Notya alanları kopyalamaya hazırlar', route: '/doktor-tools/enabiz', branslar: null },
   // ARACLAR-CILA-01 Faz 4 — her branşta her vizitin kapanış ritüeli ve hekime özel hızlı şablonlar.
-  { circleColor: '#14B8A6', icon: 'MS', title: 'Muayene sonu paketi', desc: 'Vizitin kapanışı tek akışta: reçete · rapor · kontrol randevusu · portal özeti · SGK provizyon — her adım isteğe bağlı', route: '/doktor-tools/muayene-sonu', branslar: null },
+  { circleColor: '#0D9488', icon: 'MS', title: 'Muayene sonu paketi', desc: 'Vizitin kapanışı tek akışta: reçete · rapor · kontrol randevusu · portal özeti · SGK provizyon — her adım isteğe bağlı', route: '/doktor-tools/muayene-sonu', branslar: null },
   { circleColor: '#F59E0B', icon: 'SK', title: 'Sık kullandıklarım', desc: 'Kendi vizit şablonlarınız: alışılmış tanı · reçete taslağı · kontrol aralığı — tek dokunuşla ön doldurulur, tamamen düzenlenebilir', route: '/doktor-tools/sablonlarim', branslar: null },
   // KONSULTASYON-02 — yanıt bekleyen konsültasyon takibi; kohort paneli olsun olmasın her branşta aynı.
   { circleColor: '#0891B2', icon: 'BK', title: 'Bekleyen Konsültasyonlar', desc: 'Yanıtı gelmeyen konsültasyon istemleriniz tek listede: en uzun bekleyen üstte · yanıt ekle · hastaya hatırlat · yanıtsız kapat', route: '/doktor-tools/bekleyen-konsultasyonlar', branslar: null },
@@ -46,9 +46,9 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
  * keep those in docs/ or repo paths, never on /doktor-tools.
  */
 export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
-  { circleColor: '#E8C547', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın', route: '/doktor-tools/hedef-boy', branslar: ['pediatri'] },
+  { circleColor: '#A16207', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın', route: '/doktor-tools/hedef-boy', branslar: ['pediatri'] },
   // Pediatri — specialty-only (not kardiyoloji / dahiliye / göz / KD / dermatoloji / …). Chapter engines: specialties/pediatri/engines.
-  { circleColor: '#14B8A6', icon: 'BP', title: 'Büyüme & Persentil', desc: 'Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)', route: '/doktor-tools/pedi-buyume', branslar: ['pediatri'] },
+  { circleColor: '#0D9488', icon: 'BP', title: 'Büyüme & Persentil', desc: 'Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)', route: '/doktor-tools/pedi-buyume', branslar: ['pediatri'] },
   { circleColor: '#F97316', icon: 'DH', title: 'Doz Hesaplayıcı (mg/kg)', desc: 'Girdiğiniz mg/kg ve konsantrasyonla doz başına mg ve mL — günlük toplam ve tavan uyarısı', route: '/doktor-tools/pedi-doz', branslar: ['pediatri'] },
   { circleColor: '#22C55E', icon: 'AT', title: 'Aşı Takvimi & Telafi', desc: 'SB ulusal takvimi: yapıldı · zamanı geldi · gecikti, bugün yapılabilecekler ve seriyi baştan başlatmayan telafi planı · özel aşılar ayrı', route: '/doktor-tools/pedi-asi', branslar: ['pediatri'] },
   { circleColor: '#6366F1', icon: 'GT', title: 'Gelişim & Tarama Paneli', desc: 'Bu vizitte hangi tarama: işitme, görme, GİDR, M-CHAT-R/F, D vitamini ve demir — işaretle, muayene formuna ekle', route: '/doktor-tools/pedi-gelisim', branslar: ['pediatri'] },
@@ -107,7 +107,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // Chapter engines: specialties/gogus-hastaliklari/engines. CAT/mMRC/GOLD grubu karar desteğidir; tanı ve doz hekimde.
   { circleColor: '#0284C7', icon: 'CM', title: 'CAT / mMRC skorları', desc: 'CAT 8 madde ve mMRC ile GOLD ABE grubu (karar desteği) · alevlenme öyküsü · tanı ve doz yazılmaz', route: '/doktor-tools/gogus-cat-mmrc', branslar: ['gogus-hastaliklari'] },
   { circleColor: '#0EA5E9', icon: 'AP', title: 'Astım-KOAH aksiyon planı', desc: 'Yeşil / sarı / kırmızı yazılı plan taslağı · inhaler sınıfı (doz yok) · hasta eğitimi metni', route: '/doktor-tools/gogus-aksiyon-plani', branslar: ['gogus-hastaliklari'] },
-  { circleColor: '#38BDF8', icon: 'İN', title: 'İnhaler teknik & izlem', desc: 'ÖDİ / KTİ / soft mist teknik kontrol listesi · tekrar kontrol takvimi · miktar şeması yazılmaz', route: '/doktor-tools/gogus-inhaler', branslar: ['gogus-hastaliklari'] },
+  { circleColor: '#0284C7', icon: 'İN', title: 'İnhaler teknik & izlem', desc: 'ÖDİ / KTİ / soft mist teknik kontrol listesi · tekrar kontrol takvimi · miktar şeması yazılmaz', route: '/doktor-tools/gogus-inhaler', branslar: ['gogus-hastaliklari'] },
   { circleColor: '#16A34A', icon: 'SR', title: 'SGK solunum raporu', desc: 'USOT · nebulizatör · solunum değerlendirme taslağı ve SUT kontrol listesi — T.C. kimlik ve doz yazılmaz', route: '/doktor-tools/gogus-sgk', branslar: ['gogus-hastaliklari'] },
   { circleColor: '#0369A1', icon: 'GK', title: 'Göğüs kohort paneli', desc: 'Geciken kontrol · spirometri · açık kırmızı bayrak · inhaler teknik · tek dokunuşla hatırlatma', route: '/doktor-tools/gogus-kohort', branslar: ['gogus-hastaliklari'] },
   // NOROLOJI-EXCEPTIONAL-01 — specialty-only (not pediatri / dahiliye / göz / KBB / psikiyatri / göğüs).
@@ -166,7 +166,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // NEFROLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / üroloji / kardiyoloji / pediatri).
   // Chapter engines: specialties/nefroloji/engines. KDIGO/Hb karar desteği; tanı ve ESA dozu hekimde.
   // Visibility: nefroloji only — NOT dahiliye (CKD tools stay dahiliye), NOT uroloji, NOT kardiyoloji.
-  { circleColor: '#06B6D4', icon: 'eG', title: 'eGFR / KDIGO şerit', desc: 'eGFR × UACR ısı haritası · izlem aralığı (karar desteği) · tanı ve ESA dozu yok', route: '/doktor-tools/nef-egfr-kdigo', branslar: ['nefroloji'] },
+  { circleColor: '#0E7490', icon: 'eG', title: 'eGFR / KDIGO şerit', desc: 'eGFR × UACR ısı haritası · izlem aralığı (karar desteği) · tanı ve ESA dozu yok', route: '/doktor-tools/nef-egfr-kdigo', branslar: ['nefroloji'] },
   { circleColor: '#0891B2', icon: 'DY', title: 'Diyaliz seans / takip', desc: 'Modalite · seans tarihleri · makine / HBYS / UF / reçete yok', route: '/doktor-tools/nef-diyaliz', branslar: ['nefroloji'] },
   { circleColor: '#0E7490', icon: 'AN', title: 'Anemi-CKD izlem', desc: 'Hb (± ferritin) → izlem aralığı · ESA dozu yazılmaz', route: '/doktor-tools/nef-anemi', branslar: ['nefroloji'] },
   { circleColor: '#0F766E', icon: 'SG', title: 'SGK nefro rapor', desc: 'KBH · diyaliz · ESA/anemi · mineral-kemik · nakil izlem taslağı · SUT kontrol listesi · T.C./doz yok · Medula canlı yok', route: '/doktor-tools/nef-sgk', branslar: ['nefroloji'] },
@@ -174,8 +174,8 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // ENFEKSIYON-EXCEPTIONAL-01 — specialty-only (not dahiliye / pediatri / kardiyoloji / göğüs).
   // Visibility: enfeksiyon-hastaliklari only — NOT dahiliye, NOT pediatri, NOT kardiyoloji, NOT gogus-hastaliklari.
   { circleColor: '#0D9488', icon: 'İZ', title: 'İzolasyon / bildirim hatırlatma', desc: 'İzolasyon tipi · başlangıç/bitiş · bildirim tarihi — tanı yok · HBYS yok', route: '/doktor-tools/enfeksiyon-izolasyon', branslar: ['enfeksiyon-hastaliklari'] },
-  { circleColor: '#14B8A6', icon: 'AT', title: 'Antibiyotik süre sayacı', desc: 'Başlangıç · süre gün → bitiş/kontrol · doz ve etken madde uydurulmaz', route: '/doktor-tools/enfeksiyon-atb-sure', branslar: ['enfeksiyon-hastaliklari'] },
-  { circleColor: '#2DD4BF', icon: 'HV', title: 'HIV / viral izlem vadeleri', desc: 'Son izlem tarihi · tür → önerilen vade (karar desteği) · CD4/viral yorumu ve tanı hekimde', route: '/doktor-tools/enfeksiyon-viral-izlem', branslar: ['enfeksiyon-hastaliklari'] },
+  { circleColor: '#0D9488', icon: 'AT', title: 'Antibiyotik süre sayacı', desc: 'Başlangıç · süre gün → bitiş/kontrol · doz ve etken madde uydurulmaz', route: '/doktor-tools/enfeksiyon-atb-sure', branslar: ['enfeksiyon-hastaliklari'] },
+  { circleColor: '#0F766E', icon: 'HV', title: 'HIV / viral izlem vadeleri', desc: 'Son izlem tarihi · tür → önerilen vade (karar desteği) · CD4/viral yorumu ve tanı hekimde', route: '/doktor-tools/enfeksiyon-viral-izlem', branslar: ['enfeksiyon-hastaliklari'] },
   { circleColor: '#0F766E', icon: 'EK', title: 'Enfeksiyon kohort paneli', desc: 'Geciken kontrol · ATB süre · viral izlem · izolasyon · açık acil bayrak · tek dokunuşla hatırlatma', route: '/doktor-tools/enfeksiyon-kohort', branslar: ['enfeksiyon-hastaliklari'] },
   // ONKOLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / hematoloji / radyasyon / pediatri / kardiyoloji).
   // Chapter engines: specialties/onkoloji/engines. Kür sayacı / toksisite karar desteği; tanı/evre/doz hekimde.

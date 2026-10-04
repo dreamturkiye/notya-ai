@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 export const metadata = {
   title: 'KVKK Aydınlatma Metni — Notya AI',
@@ -7,19 +8,23 @@ export const metadata = {
 }
 
 const S = {
-  page: { maxWidth: '820px', margin: '0 auto', padding: '64px 20px 96px', fontFamily: 'system-ui', color: '#0A1628', lineHeight: 1.7 },
-  h1: { fontSize: '32px', fontWeight: 400, fontFamily: "'Georgia',serif", marginBottom: '8px' },
-  meta: { fontSize: '13px', color: 'rgba(10,22,40,0.5)', marginBottom: '40px' },
+  wrap: { minHeight: '100dvh', background: CHROME_RENK.cream },
+  page: { maxWidth: '820px', margin: '0 auto', padding: '64px 20px 96px', fontFamily: CHROME_FONT.sans, color: CHROME_RENK.ink, lineHeight: 1.7 },
+  h1: { fontSize: '32px', fontWeight: 480, fontFamily: CHROME_FONT.serif, marginBottom: '8px' },
+  meta: { fontSize: '13px', color: CHROME_RENK.muted, marginBottom: '40px' },
   h2: { fontSize: '19px', fontWeight: 500, marginTop: '40px', marginBottom: '12px' },
   p: { fontSize: '15px', marginBottom: '14px' },
   li: { fontSize: '15px', marginBottom: '8px' },
-  box: { background: '#EEF4FF', border: '1px solid #2563EB', borderRadius: '8px', padding: '16px 18px', fontSize: '14px', marginBottom: '28px' },
+  box: { background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: '8px', padding: '16px 18px', fontSize: '14px', marginBottom: '28px' },
 }
 
 export default function KvkkPage() {
   return (
+    <div style={S.wrap}>
+    {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+    <link rel="stylesheet" href={CHROME_FONT_HREF} />
     <div style={S.page}>
-      <Link href="/doktor" style={{ fontSize: '13px', color: '#2563EB', textDecoration: 'none' }}>← Notya AI</Link>
+      <Link href="/doktor" style={{ fontSize: '13px', color: '#2f4334', textDecoration: 'none' }}>← Notya AI</Link>
       <h1 style={S.h1}>Kişisel Verilerin Korunması ve İşlenmesi Aydınlatma Metni</h1>
       <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 26 Eylül 2026 (v5)</p>
 
@@ -32,7 +37,7 @@ export default function KvkkPage() {
       <h2 style={S.h2}>1. Veri Sorumlusu</h2>
       <p style={S.p}>
         Veri sorumlusu: <strong>Dream Türkiye</strong> (&quot;Notya AI&quot;). İletişim:
-        <a href="mailto:kvkk@notya.ai" style={{ color: '#2563EB' }}> kvkk@notya.ai</a>
+        <a href="mailto:kvkk@notya.ai" style={{ color: '#2f4334' }}> kvkk@notya.ai</a>
       </p>
       <p style={S.p}>
         Hekimin kendi hastalarına ait verileri bakımından <strong>hekim/klinik veri sorumlusu</strong>,
@@ -128,7 +133,7 @@ export default function KvkkPage() {
       <h2 style={S.h2}>8. İlgili Kişinin Hakları (KVKK m.11)</h2>
       <p style={S.p}>Kişisel verisi işlenen herkes; verisinin işlenip işlenmediğini öğrenme, buna ilişkin bilgi talep etme, işlenme amacını öğrenme, yurt içinde/dışında aktarıldığı üçüncü kişileri bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini isteme, bu işlemlerin aktarılan üçüncü kişilere bildirilmesini isteme, otomatik sistemlerle analiz sonucu aleyhine bir sonuç çıkmasına itiraz etme ve zarara uğraması hâlinde tazminat talep etme haklarına sahiptir.</p>
       <p style={S.p}>
-        Başvurularınızı <a href="mailto:kvkk@notya.ai" style={{ color: '#2563EB' }}>kvkk@notya.ai</a> adresine
+        Başvurularınızı <a href="mailto:kvkk@notya.ai" style={{ color: '#2f4334' }}>kvkk@notya.ai</a> adresine
         iletebilirsiniz. Talepler en geç <strong>30 gün</strong> içinde sonuçlandırılır.
       </p>
 
@@ -172,7 +177,7 @@ export default function KvkkPage() {
       <p style={S.p}>
         <strong>Google kullanıcı verileri.</strong> Notya&apos;nın Google API&apos;lerinden aldığı bilgileri
         kullanması ve başka bir uygulamaya aktarması, Sınırlı Kullanım (Limited Use) koşulları dâhil{' '}
-        <a href="https://developers.google.com/terms/api-services-user-data-policy" style={{ color: '#2563EB' }}>
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" style={{ color: '#2f4334' }}>
           Google API Hizmetleri Kullanıcı Verileri Politikası
         </a>
         &apos;na uygundur. Notya yalnızca e-posta gönderme iznini (gmail.send) ve bağlanan e-posta adresini
@@ -185,7 +190,7 @@ export default function KvkkPage() {
       <p style={S.p} lang="en">
         <strong>Google user data.</strong> Notya&apos;s use and transfer to any other app of information
         received from Google APIs will adhere to the{' '}
-        <a href="https://developers.google.com/terms/api-services-user-data-policy" style={{ color: '#2563EB' }}>
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" style={{ color: '#2f4334' }}>
           Google API Services User Data Policy
         </a>
         , including the Limited Use requirements. Notya requests only permission to send email
@@ -198,6 +203,7 @@ export default function KvkkPage() {
       <p style={{ ...S.meta, marginTop: '48px' }}>
         Bu metin bilgilendirme amaçlıdır ve hukuki danışmanlık yerine geçmez.
       </p>
+    </div>
     </div>
   )
 }

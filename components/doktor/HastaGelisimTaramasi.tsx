@@ -82,7 +82,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
     } catch { setNotEklendi('Nota eklenemedi.'); setEklenenNot(null); } finally { setDegerlendiriliyor(false); }
   };
 
-  const kutu: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 16 };
+  const kutu: React.CSSProperties = { background: 'rgba(58,44,34,0.04)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: 16 };
 
   if (yukleniyor) return <div style={{ padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</div>;
 
@@ -116,7 +116,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
                   {maddeler.map((m) => {
                     const key = `${m.alan}::${m.madde}`;
                     return (
-                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
                         <span style={{ color: CHROME_RENK.ink, fontSize: 13.5, flex: 1 }}>{m.madde}</span>
                         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                           {(['Yapıyor', 'Yapmıyor'] as const).map((etiket, i) => {
@@ -124,7 +124,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
                             const secili = yanitlar[key] === deger;
                             return (
                               <button key={etiket} type="button" onClick={() => setYanitlar((y) => ({ ...y, [key]: deger }))}
-                                style={{ background: secili ? '#0F9B8E' : 'rgba(255,255,255,0.06)', border: '1px solid ' + (secili ? '#0F9B8E' : 'rgba(255,255,255,0.12)'), color: secili ? 'white' : '#9FB3C8', borderRadius: 8, padding: '6px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+                                style={{ background: secili ? '#0F9B8E' : 'rgba(58,44,34,0.12)', border: '1px solid ' + (secili ? '#0F9B8E' : 'rgba(58,44,34,0.12)'), color: secili ? 'white' : '#9FB3C8', borderRadius: 8, padding: '6px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
                                 {etiket}
                               </button>
                             );
@@ -139,7 +139,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
           </div>
 
           <button type="button" disabled={!hepsiYanitlandi || degerlendiriliyor} onClick={degerlendir}
-            style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: hepsiYanitlandi ? 'white' : CHROME_RENK.muted, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
+            style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(58,44,34,0.12)', border: 'none', color: hepsiYanitlandi ? 'white' : CHROME_RENK.muted, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
             {degerlendiriliyor ? 'Değerlendiriliyor…' : 'Testi Değerlendir'}
           </button>
 
@@ -158,7 +158,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
               )}
             </div>
           )}
-          {hata && <div style={{ fontSize: 12, color: '#F87171' }}>{hata}</div>}
+          {hata && <div style={{ fontSize: 12, color: '#B42318' }}>{hata}</div>}
         </>
       )}
 
@@ -166,7 +166,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
         <div style={kutu}>
           <div style={{ fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Geçmiş Taramalar</div>
           {gecmis.map((g) => (
-            <div key={g.id} style={{ padding: '8px 0', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div key={g.id} style={{ padding: '8px 0', fontSize: 13, borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: CHROME_RENK.muted }}>{new Date(g.created_at).toLocaleDateString('tr-TR')} · {g.yas_basamak_etiket}</span>
                 <span style={{ color: g.sevk_onerisi ? '#F59E0B' : '#22C55E' }}>{g.sevk_onerisi ? 'İleri değerlendirme önerildi' : 'Uygun'}</span>

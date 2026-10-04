@@ -37,7 +37,7 @@ export function OnamPaneli({
       {photos.length === 0 && <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Onam bağlanacak görüntü yok.</p>}
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
         {photos.map((p) => (
-          <li key={p.id} style={{ fontSize: 12.5, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
+          <li key={p.id} style={{ fontSize: 12.5, border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 8 }}>
             <div style={{ marginBottom: 6 }}>{bolgeEtiketi(p.region)} · {p.capturedAt}</div>
             <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <input

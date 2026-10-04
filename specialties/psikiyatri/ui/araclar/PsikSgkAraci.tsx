@@ -105,7 +105,7 @@ export default function PsikSgkAraci() {
           <Istatistik deger={sonuc.draft.etkenMaddeler.length} etiket="Eşleşen etken madde" />
           <Istatistik deger={`${Object.values(isaretli).filter(Boolean).length} / ${sonuc.kontrolListesi.length}`} etiket="Kontrol listesi" />
         </div>
-        {sonuc.eksikler.map((e) => <div key={e} style={{ ...psikStil.metin, color: '#FBBF24' }}>• {e}</div>)}
+        {sonuc.eksikler.map((e) => <div key={e} style={{ ...psikStil.metin, color: '#B45309' }}>• {e}</div>)}
         {!sonuc.eksikler.length && <div style={psikStil.iyi}>Tüm alanlar dolu — rapor kilidi hekimin.</div>}
         <div style={{ ...psikStil.etiket, marginTop: 12 }}>Taslak çıktı</div>
         <pre style={{ ...psikStil.kucuk, whiteSpace: 'pre-wrap', margin: 0 }}>{metin}</pre>

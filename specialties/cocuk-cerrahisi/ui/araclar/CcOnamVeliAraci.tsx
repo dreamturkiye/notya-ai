@@ -58,14 +58,14 @@ export default function CcOnamVeliAraci() {
         <Istatistik deger={`${sonuc.secilen.length}/${maddeler.length}`} etiket="İşaretli" ton={sonuc.tamamMi ? 'iyi' : 'uyari'} />
         <div style={{ ...ccStil.metin, marginTop: 8 }}>{sonuc.ozet}</div>
         {sonuc.taslak && (
-          <pre style={{ ...ccStil.kucuk, whiteSpace: 'pre-wrap', marginTop: 10, background: 'rgba(0,0,0,0.25)', padding: 10, borderRadius: 8 }}>{sonuc.taslak}</pre>
+          <pre style={{ ...ccStil.kucuk, whiteSpace: 'pre-wrap', marginTop: 10, background: 'rgba(58,44,34,0.05)', padding: 10, borderRadius: 8 }}>{sonuc.taslak}</pre>
         )}
         <div style={{ ...ccStil.satir, marginTop: 12 }}>
           <button type="button" style={ccStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.taslak || sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...ccStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...ccStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...ccStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...ccStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>Yazılı onam klinik süreçtedir. Doz / tanı kilidi / ameliyathane planı yazılmaz.</TaslakNotu>
       </div>
     </>

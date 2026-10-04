@@ -65,8 +65,8 @@ export default function RadyoKritikAraci() {
           <button type="button" style={radyoStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {ok && <div style={{ ...radyoStil.kucuk, color: '#34D399', marginTop: 8 }}>{ok}</div>}
-        {hata && <div style={{ ...radyoStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {ok && <div style={{ ...radyoStil.kucuk, color: '#047857', marginTop: 8 }}>{ok}</div>}
+        {hata && <div style={{ ...radyoStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — kritik bulgu hekim işaretler; AI tanı/uydurma bulgu yok. Acilde 112.</TaslakNotu>
       </div>
     </>

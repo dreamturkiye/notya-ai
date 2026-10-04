@@ -6,8 +6,8 @@ import { KD_GA_LOCK, KD_USG_KIND, kdLabel } from './labels'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }
@@ -33,7 +33,7 @@ export function UsgGallery({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={urls[s.coreImageId]} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
             ) : (
-              <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: CHROME_RENK.muted, textAlign: 'center', padding: 6 }}>
+              <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(58,44,34,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: CHROME_RENK.muted, textAlign: 'center', padding: 6 }}>
                 Görüntü yok
               </div>
             )}

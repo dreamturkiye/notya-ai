@@ -13,10 +13,10 @@ const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 const govde: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' };
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 export const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: Record<string, string> }) => (!acik || !d?.length ? null : <div style={{ ...kucuk, marginTop: 4, borderLeft: '2px solid rgba(45,212,191,0.4)', paddingLeft: 6 }}>{d.map((x, i) => <div key={i}>[{refler[x.ref] || x.ref}] {x.not}</div>)}</div>);
-const DURUM_RENK: Record<string, string> = { gecikti: '#F87171', sevk: '#F87171', zamani: '#FBBF24', seroloji: '#FBBF24', yaklasiyor: '#FBBF24', planli: CHROME_RENK.muted, tamam: '#22C55E', bilgi: CHROME_RENK.muted, uygun_degil: CHROME_RENK.muted };
+const DURUM_RENK: Record<string, string> = { gecikti: '#B42318', sevk: '#B42318', zamani: '#B45309', seroloji: '#B45309', yaklasiyor: '#B45309', planli: CHROME_RENK.muted, tamam: '#22C55E', bilgi: CHROME_RENK.muted, uygun_degil: CHROME_RENK.muted };
 const ASILAR: [string, string][] = [['grip', 'Grip'], ['pcv20', 'PCV20'], ['pcv13', 'PCV13'], ['ppsv23', 'PPSV23'], ['zona', 'Zona'], ['td', 'Td/Tdap'], ['hbv', 'HBV'], ['covid', 'COVID-19']];
 
 /** Hekim plan kilidi — anemi / obezite / aşı / tarama kartları için tek satır. */
@@ -41,9 +41,9 @@ export default function DahiliyeWow2({ sekme, w2, kaynak, refler, calistir }: Pr
         <button type="button" style={btn} onClick={() => calistir({ adim: 'dmdongu', kky: bv('kky', d.kky), sonAyakFoto: s('af') || d.son_ayak_foto }, 'DM döngü güncellendi.')}>Kaydet</button>
       </div>
       {r && (<div style={govde}>
-        {r.kardiyoRenal.map((k) => <div key={k.sinif + k.neden} style={{ color: k.kullaniyor ? '#22C55E' : '#FBBF24' }}>{k.kullaniyor ? '✓' : '⚑'} {k.sinif} — {k.neden}{k.kullaniyor ? ' (kullanıyor)' : ' (endikasyon bayrağı — hekim)'}</div>)}
-        {r.hipoRiski && <div style={{ color: '#F87171' }}>⚠ {r.hipoRiski}</div>}
-        <div>FIB-4: {r.fib4 ? <b style={{ color: r.fib4.kategori === 'yuksek' ? '#F87171' : r.fib4.kategori === 'belirsiz' ? '#FBBF24' : '#22C55E' }}>{String(r.fib4.skor).replace('.', ',')}</b> : '—'} {r.fib4 ? <span style={kucuk}>({r.fib4.tarih}) {r.fib4.aksiyon}</span> : <span style={kucuk}>ALT + AST + trombosit onaylı lab gerekli</span>}</div>
+        {r.kardiyoRenal.map((k) => <div key={k.sinif + k.neden} style={{ color: k.kullaniyor ? '#22C55E' : '#B45309' }}>{k.kullaniyor ? '✓' : '⚑'} {k.sinif} — {k.neden}{k.kullaniyor ? ' (kullanıyor)' : ' (endikasyon bayrağı — hekim)'}</div>)}
+        {r.hipoRiski && <div style={{ color: '#B42318' }}>⚠ {r.hipoRiski}</div>}
+        <div>FIB-4: {r.fib4 ? <b style={{ color: r.fib4.kategori === 'yuksek' ? '#B42318' : r.fib4.kategori === 'belirsiz' ? '#B45309' : '#22C55E' }}>{String(r.fib4.skor).replace('.', ',')}</b> : '—'} {r.fib4 ? <span style={kucuk}>({r.fib4.tarih}) {r.fib4.aksiyon}</span> : <span style={kucuk}>ALT + AST + trombosit onaylı lab gerekli</span>}</div>
         {r.plan.filter((p) => !/hipoglisemi/.test(p)).map((p) => <div key={p}>• {p}</div>)}
         {r.gorevler.map((g) => <div key={g.kod} style={kucuk}>□ {g.ad} · {g.due}</div>)}
         <div style={kucuk}>Ayak fotoğrafı: hasta dosyası › Belgeler › Yükle (tür: fotoğraf) — sonra tarihi buraya girin.</div>
@@ -66,11 +66,11 @@ export default function DahiliyeWow2({ sekme, w2, kaynak, refler, calistir }: Pr
       </div>
       <div style={govde}>
         <div>{r.anemi == null ? 'Hb onaylı lab satırı yok' : r.anemi ? <>Anemi: <b>{r.derece}</b>{r.morfoloji ? ` · ${r.morfoloji}` : ''}</> : 'Anemi yok (Hb eşik üstünde)'}</div>
-        {r.kirmizi.map((x) => <div key={x} style={{ color: '#F87171', fontWeight: 700 }}>⚑ {x}</div>)}
+        {r.kirmizi.map((x) => <div key={x} style={{ color: '#B42318', fontWeight: 700 }}>⚑ {x}</div>)}
         {r.olasiNeden.map((x) => <div key={x}>◦ {x}</div>)}
-        {r.sonrakiTestler.length > 0 && <div style={{ color: '#FBBF24' }}>Sonraki test: {r.sonrakiTestler.join(' · ')}</div>}
+        {r.sonrakiTestler.length > 0 && <div style={{ color: '#B45309' }}>Sonraki test: {r.sonrakiTestler.join(' · ')}</div>}
         {r.plan.map((x) => <div key={x}>• {x}</div>)}
-        {r.sevk.map((x) => <div key={x} style={{ color: '#F87171' }}>→ {x}</div>)}
+        {r.sevk.map((x) => <div key={x} style={{ color: '#B42318' }}>→ {x}</div>)}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
         {r.anemi && <PlanKilit kart="anemi" calistir={calistir} />}
       </div>
@@ -94,7 +94,7 @@ export default function DahiliyeWow2({ sekme, w2, kaynak, refler, calistir }: Pr
       <div style={govde}>
         <div>VKİ <b>{r.vki != null ? String(r.vki).replace('.', ',') : '—'}</b> · {r.sinifAd}{r.belRiski ? ` · bel riski: ${r.belRiski}` : ''}{r.basamak ? ` · basamak: ${r.basamak.replace('_', ' ')}` : ''}</div>
         {r.plan.map((x) => <div key={x}>• {x}</div>)}
-        {r.sevk.map((x) => <div key={x} style={{ color: '#F87171' }}>→ {x}</div>)}
+        {r.sevk.map((x) => <div key={x} style={{ color: '#B42318' }}>→ {x}</div>)}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
         {r.gerekceMetni && (r.basamak === 'farmakoterapi' || r.basamak === 'bariatrik_degerlendirme') && (<details style={{ marginTop: 6 }}><summary style={{ ...kucuk, cursor: 'pointer' }}>Ödeme onayı gerekçe metni (taslak)</summary><pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, color: CHROME_RENK.ink }}>{r.gerekceMetni}</pre><button type="button" style={ghost} onClick={() => navigator.clipboard?.writeText(r.gerekceMetni)}>📋 Kopyala</button></details>)}
         {r.vki != null && r.vki >= 25 && <PlanKilit kart="obezite" calistir={calistir} />}
@@ -140,8 +140,8 @@ export default function DahiliyeWow2({ sekme, w2, kaynak, refler, calistir }: Pr
       <div style={etiket}>Muayene öncesi hasta anketi <span style={kucuk}>· Sağlığım portalı › Takip › Ön anket · ev ölçümleri Ev kayıt'a (portal) düşer</span></div>
       {!a && <div style={kucuk}>Son 14 günde yanıt yok. Hastaya Sağlığım linki verin (Araçlar › Hasta Portalı); anket Takip sayfasında.</div>}
       {a && (<div style={govde}>
-        <div>{a.tarih} {a.okundu ? <span style={{ color: '#22C55E' }}>· Subjektif'e eklendi</span> : <span style={{ color: '#FBBF24' }}>· yeni</span>}</div>
-        {a.alarmlar.map((x) => <div key={x} style={{ color: '#F87171', fontWeight: 700 }}>⚑ {x}</div>)}
+        <div>{a.tarih} {a.okundu ? <span style={{ color: '#22C55E' }}>· Subjektif'e eklendi</span> : <span style={{ color: '#B45309' }}>· yeni</span>}</div>
+        {a.alarmlar.map((x) => <div key={x} style={{ color: '#B42318', fontWeight: 700 }}>⚑ {x}</div>)}
         <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: CHROME_RENK.ink, fontFamily: 'inherit' }}>{a.soap}</pre>
         <div style={satir}>
           <button type="button" style={btn} onClick={() => calistir({ adim: 'anketsoap', anketId: a.id }, "Bugünkü muayenenin Subjektif bölümüne eklendi.")}>Subjektif'e ekle</button>
@@ -153,12 +153,12 @@ export default function DahiliyeWow2({ sekme, w2, kaynak, refler, calistir }: Pr
 
   if (sekme === 'HT panel') {
     const p = w2.htPanel;
-    return (<div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8 }}>
+    return (<div style={{ marginTop: 12, borderTop: '1px solid rgba(58,44,34,0.12)', paddingTop: 8 }}>
       <div style={etiket}>HT başlangıç paneli <span style={kucuk}>· tek tıkla istem · 14 gün sonuçlanmazsa takip görevi · yalnız onaylı lab "geldi" sayılır</span></div>
       <div style={kucuk}>{p.kalemler.map((k) => k.ad).join(' · ')}</div>
       <div style={satir}><button type="button" style={btn} onClick={() => calistir({ adim: 'htpanel' }, 'HT başlangıç paneli istendi (bugünkü nota eklendi). Tetkik İstek formundan yazdırabilirsiniz.')}>1-tık panel iste</button><a href="/doktor-tools/tetkik" style={{ ...kucuk, color: '#0F9B8E' }}>Tetkik İstek formu →</a></div>
       {p.istemler.map((i) => (<div key={i.id} style={{ ...govde, marginTop: 6 }}>
-        <div>{i.tarih} · {i.durum.gunGecen} gün · <b style={{ color: i.durum.tamam ? '#22C55E' : i.durum.gecikti ? '#F87171' : '#FBBF24' }}>{i.durum.tamam ? 'tamam' : i.durum.gecikti ? 'GECİKTİ' : 'bekleniyor'}</b></div>
+        <div>{i.tarih} · {i.durum.gunGecen} gün · <b style={{ color: i.durum.tamam ? '#22C55E' : i.durum.gecikti ? '#B42318' : '#B45309' }}>{i.durum.tamam ? 'tamam' : i.durum.gecikti ? 'GECİKTİ' : 'bekleniyor'}</b></div>
         {i.durum.bekleyen.length > 0 && <div style={kucuk}>Bekleyen: {i.durum.bekleyen.join(', ')}</div>}
         <div style={satir}>
           {i.durum.takipGorevi && <button type="button" style={{ ...btn, background: '#B91C1C' }} onClick={() => calistir({ adim: 'duegorev', gorevler: [{ ...i.durum.takipGorevi, kaynak: 'lab_takip' }] }, 'Takip görevi açıldı.')}>Takip görevi aç</button>}

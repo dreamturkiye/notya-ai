@@ -9,8 +9,8 @@ import { KD_ACTOR, KD_VISION_STATUS, KD_VISION_TASK, kdLabel } from './labels'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }
@@ -71,14 +71,14 @@ export function AsistanGorselPanel({
   return (
     <section style={box} data-tab="AsistanGorselPanel" data-specialty="kadin-dogum" data-disclaimer={VISION_DISCLAIMER}>
       <h2 style={{ margin: 0, fontSize: 16 }}>Asistan USG / NST taslağı</h2>
-      <p style={{ fontSize: 12, color: '#FBBF24', margin: '8px 0' }}>
+      <p style={{ fontSize: 12, color: '#B45309', margin: '8px 0' }}>
         Ölçüm ve tarama desteği, tanı değildir. Uzman onayı gerekir.
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
         <button type="button" style={btn} onClick={draftUsg} disabled={!studies.length}>
           USG taslağı oluştur
         </button>
-        <button type="button" style={{ ...btn, background: '#1E3A5F' }} onClick={draftNst} disabled={!nst}>
+        <button type="button" style={{ ...btn, background: '#2f4334' }} onClick={draftNst} disabled={!nst}>
           NST taslağı oluştur
         </button>
       </div>

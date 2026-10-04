@@ -66,15 +66,15 @@ export default function FtrSeansAraci() {
       <div style={ftrStil.kutu}>
         <div style={ftrStil.etiket}>Taslak özet</div>
         <div style={ftrStil.metin}>{sonuc.ozet}</div>
-        {sonuc.uyari.map((u) => <div key={u} style={{ ...ftrStil.kucuk, color: '#FBBF24' }}>{u}</div>)}
+        {sonuc.uyari.map((u) => <div key={u} style={{ ...ftrStil.kucuk, color: '#B45309' }}>{u}</div>)}
         <TaslakNotu>Seans planı ilaç ve doz yazmaz. SGK/SUT seans üst sınırını hekim doğrular. Tanı yazılmaz.</TaslakNotu>
         <div style={{ ...ftrStil.satir, marginTop: 10 }}>
           <KopyalaButonu metin={sonuc.ozet} etiket="Notu kopyala" />
           <button type="button" onClick={kaydet} style={ftrStil.btn}>Kaydet</button>
         </div>
         <MuayeneFormunaEkle hastaId={hasta} arac="FTR seans" satirlar={[sonuc.ozet]} alan="content_degerlendirme" />
-        {durum && <div style={{ ...ftrStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...ftrStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...ftrStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...ftrStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <div style={{ ...ftrStil.kucuk, marginTop: 10 }}>{REF_ACIKLAMA.SGK_SUT}</div>
       </div>
     </>

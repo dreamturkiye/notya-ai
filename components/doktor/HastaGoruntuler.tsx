@@ -191,7 +191,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
           {satir?.tip === tip && <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>Seçili çalışmaya eklenir (MG iki kare / seri).</span>}
         </div>
         {hacimAiKapali(tip) && <div style={{ fontSize: 11, color: '#B45309', marginTop: 8 }}>CT/MR/PET: yalnız anahtar kare + rapor. Hacim arşivi yok.</div>}
-        {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#0F9B8E' : '#F87171', marginTop: 8 }}>{mesaj}</div>}
+        {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#0F9B8E' : '#B42318', marginTop: 8 }}>{mesaj}</div>}
       </div>
 
       {satir && (

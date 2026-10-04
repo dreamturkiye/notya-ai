@@ -149,7 +149,7 @@ export function YamaTakvimi({
           </button>
 
           {izgaraAcik && (
-            <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginTop: 8 }} data-derm="yama-alerjen-izgarasi">
+            <div style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 8, marginTop: 8 }} data-derm="yama-alerjen-izgarasi">
               <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, margin: '0 0 6px' }}>
                 Her madde için D2 ve D4 okuma derecesi (ICDRG). Konsantrasyon ve vehikül ünitenin hazır bandındadır.
               </p>

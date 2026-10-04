@@ -12,7 +12,7 @@ import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
-export const AT_VURGU: AracVurgu = { ana: '#F97316', anaMetin: '#FFF7ED', yumusak: '#FDBA74', baslik: '#FB923C' }
+export const AT_VURGU: AracVurgu = { ana: '#F97316', anaMetin: '#FFF7ED', yumusak: '#C2410C', baslik: '#C2410C' }
 export const atStil = aracStil(AT_VURGU)
 
 export {

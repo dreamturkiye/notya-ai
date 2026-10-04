@@ -1,6 +1,7 @@
 'use client'
 
 import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
+import { CHROME_RENK as R, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 export default function GlobalError({
   error,
@@ -11,7 +12,12 @@ export default function GlobalError({
 }) {
   return (
     <html lang="tr">
-      <body style={{ margin: 0, background: '#060C18', color: '#F8FAFC', fontFamily: 'system-ui, sans-serif' }}>
+      <head>
+        {/* global-error kendi <html>'ini çizer; layout fontları yok — link burada. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      </head>
+      <body style={{ margin: 0, background: R.cream, color: R.ink, fontFamily: CHROME_FONT.sans }}>
         <div
           style={{
             minHeight: '100dvh',
@@ -24,18 +30,18 @@ export default function GlobalError({
             gap: '14px',
           }}
         >
-          <div style={{ fontSize: '18px', fontWeight: 700, color: '#FFFFFF' }}>Bir hata oluştu</div>
-          <div style={{ fontSize: '14px', color: '#E2E8F0', maxWidth: '420px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: R.ink, fontFamily: CHROME_FONT.serif }}>Bir hata oluştu</div>
+          <div style={{ fontSize: '14px', color: R.muted, maxWidth: '420px', lineHeight: 1.5 }}>
             Sayfa yüklenemedi. Lütfen tekrar deneyin.
           </div>
           {/* KURAL — TÜRKÇE: tarayıcının İngilizce çalışma hatası ("Cannot read properties…") gösterilmez; yalnız Türkçe mesaj. */}
-      {turkceHataMesaji(error?.message) && (
+          {turkceHataMesaji(error?.message) && (
             <div
               style={{
                 fontSize: '12px',
-                color: '#FECACA',
-                background: 'rgba(220,38,38,0.18)',
-                border: '1px solid rgba(248,113,113,0.45)',
+                color: R.warn,
+                background: 'rgba(164,91,62,0.08)',
+                border: '1px solid rgba(164,91,62,0.25)',
                 borderRadius: '12px',
                 padding: '10px 12px',
                 maxWidth: '420px',
@@ -50,8 +56,8 @@ export default function GlobalError({
             onClick={() => reset()}
             style={{
               marginTop: '8px',
-              background: '#0F9B8E',
-              color: '#041016',
+              background: R.pine,
+              color: '#fff',
               border: 'none',
               borderRadius: '12px',
               padding: '12px 18px',

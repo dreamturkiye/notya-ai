@@ -23,8 +23,8 @@ const T: Record<Tema, {
   olcer: string; olcerCizgi: string; zemin: string
 }> = {
   doktor: {
-    yazi: '#F4F1E8', soluk: '#C5D0DC', cocuk: '#E8C547',
-    olcer: '#F3E6CF', olcerCizgi: '#3D2C18', zemin: 'rgba(232,197,71,0.22)',
+    yazi: '#0A1628', soluk: '#5C6578', cocuk: '#C9A227',
+    olcer: '#F6EBDA', olcerCizgi: '#3D2C18', zemin: 'rgba(201,162,39,0.22)',
   },
   portal: {
     yazi: '#0A1628', soluk: '#5C6578', cocuk: '#C9A227',
@@ -34,9 +34,9 @@ const T: Record<Tema, {
 
 const SAHNE: Record<Tema, CSSProperties> = {
   doktor: {
-    background: 'radial-gradient(ellipse 58% 48% at 54% 22%, rgba(232,197,71,0.28), transparent 62%), linear-gradient(180deg, #15233C 0%, #0B1424 58%, #070D18 100%)',
-    border: '1px solid rgba(232,197,71,0.28)',
-    boxShadow: '0 28px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+    background: 'radial-gradient(ellipse 58% 48% at 54% 20%, rgba(201,162,39,0.24), transparent 62%), linear-gradient(180deg, #FFFDF8 0%, #F4EDE0 100%)',
+    border: '1px solid rgba(201,162,39,0.28)',
+    boxShadow: '0 18px 50px rgba(26,22,16,0.08)',
   },
   portal: {
     background: 'radial-gradient(ellipse 58% 48% at 54% 20%, rgba(201,162,39,0.24), transparent 62%), linear-gradient(180deg, #FFFDF8 0%, #F4EDE0 100%)',
@@ -117,7 +117,7 @@ function Olcer({
   const yAlt = y(alt)
   const yUst = y(ust)
   const yHedef = y(hedef)
-  const sayi = tema === 'doktor' ? '#F4F1E8' : '#2A1C10'
+  const sayi = '#2A1C10'
   const genis = genislik >= 140
   const barX = genis ? 10 : 6
   const barW = genis ? 48 : 30

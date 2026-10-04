@@ -15,9 +15,9 @@ import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
 const BAYRAKLAR = Object.keys(PEDI_BAYRAK_AD) as PediKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
-const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)', color: on ? '#0F9B8E' : CHROME_RENK.muted, border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
+const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(58,44,34,0.12)', color: on ? '#0F9B8E' : CHROME_RENK.muted, border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#041016', border: 'none', borderRadius: 12, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 44 };
-const ghost: React.CSSProperties = { background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' };
+const ghost: React.CSSProperties = { background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' };
 
 export default function PediKohortPaneli() {
   const [v, setV] = useState<{ satirlar: PediKohortSatir[]; toplamCocuk: number; taramaTablosu?: boolean } | null>(null);
@@ -56,7 +56,7 @@ export default function PediKohortPaneli() {
   };
 
   return (
-    <div style={{ background: '#0C1830', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '20px 18px 24px', minWidth: 0 }}>
+    <div style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 18, padding: '20px 18px 24px', minWidth: 0 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F9B8E', marginBottom: 6 }}>Pediatri kohortu</div>
@@ -72,7 +72,7 @@ export default function PediKohortPaneli() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         {BAYRAKLAR.map((b) => { const n = (v?.satirlar || []).filter((s) => s.bayraklar.includes(b)).length; const on = filtre.includes(b); return <button key={b} type="button" aria-pressed={on} onClick={() => setFiltre(on ? filtre.filter((x) => x !== b) : [...filtre, b])} style={chip(on)}>{PEDI_BAYRAK_AD[b]} <span style={{ fontWeight: 700 }}>({n})</span></button>; })}
       </div>
-      <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 14px', marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', background: 'rgba(58,44,34,0.05)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 14, padding: '12px 14px', marginBottom: 14 }}>
         <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.muted, cursor: 'pointer', minHeight: 44 }}>
           <input type="checkbox" style={{ width: 20, height: 20 }} checked={gorunen.length > 0 && gorunen.every((s) => secili.includes(s.patientId))} onChange={(e) => setSecili(e.target.checked ? gorunen.map((s) => s.patientId) : [])} />
           Görünenleri seç
@@ -81,13 +81,13 @@ export default function PediKohortPaneli() {
         <button type="button" style={ghost} aria-expanded={onizleme} onClick={() => setOnizleme(!onizleme)}>{onizleme ? 'Önizlemeyi kapat' : 'Mesajı önizle'}</button>
         <span style={{ ...muted, flex: '1 1 220px', fontSize: 13 }}>Veliye giden mesaj tanı, ölçüm ya da ilaç adı içermez — yalnız kontrol zamanı ve acil durumda 112.</span>
       </div>
-      {onizleme && <div style={{ whiteSpace: 'pre-wrap', fontSize: 14, color: CHROME_RENK.muted, background: 'rgba(0,0,0,0.25)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 12, padding: 12, marginBottom: 14 }}>{pediHatirlatmaMesaji(seciliBayraklar.length ? seciliBayraklar : ['asi_gecikti']).metin}</div>}
+      {onizleme && <div style={{ whiteSpace: 'pre-wrap', fontSize: 14, color: CHROME_RENK.muted, background: 'rgba(58,44,34,0.05)', border: '1px dashed rgba(58,44,34,0.12)', borderRadius: 12, padding: 12, marginBottom: 14 }}>{pediHatirlatmaMesaji(seciliBayraklar.length ? seciliBayraklar : ['asi_gecikti']).metin}</div>}
       {mesaj && <div style={{ fontSize: 15, color: '#0F9B8E', marginBottom: 12 }}>{mesaj}</div>}
-      <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(58,44,34,0.12)' }}>
         {gorunen.map((s, i) => (
-          <div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)', padding: '12px 14px', borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
+          <div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(58,44,34,0.12)' : 'rgba(0,0,0,0.15)', padding: '12px 14px', borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(58,44,34,0.12)' }}>
             <input type="checkbox" aria-label={`${s.ad} seç`} style={{ width: 20, height: 20 }} checked={secili.includes(s.patientId)} onChange={(e) => setSecili(e.target.checked ? [...secili, s.patientId] : secili.filter((x) => x !== s.patientId))} />
-            <a href={hastaDosyaHref(s.patientId, s.sekme === 'ozet' ? null : s.sekme)} style={{ color: '#F1F5F9', minWidth: 150, fontWeight: 700, fontSize: 16, textDecoration: 'none', overflowWrap: 'anywhere' }}>{s.ad} <span style={{ fontWeight: 500, fontSize: 13, color: CHROME_RENK.muted }}>· {s.yas}</span></a>
+            <a href={hastaDosyaHref(s.patientId, s.sekme === 'ozet' ? null : s.sekme)} style={{ color: '#3b2e24', minWidth: 150, fontWeight: 700, fontSize: 16, textDecoration: 'none', overflowWrap: 'anywhere' }}>{s.ad} <span style={{ fontWeight: 500, fontSize: 13, color: CHROME_RENK.muted }}>· {s.yas}</span></a>
             <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: '1 1 200px' }}>
               {s.bayraklar.map((b) => <span key={b} style={{ border: '1px solid rgba(248,113,113,0.45)', borderRadius: 999, padding: '4px 10px', fontSize: 13, fontWeight: 600, color: CHROME_RENK.warn, background: 'rgba(248,113,113,0.08)' }}>{PEDI_BAYRAK_AD[b]}</span>)}
             </span>

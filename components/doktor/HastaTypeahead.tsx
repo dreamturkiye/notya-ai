@@ -209,7 +209,7 @@ export default function HastaTypeahead({
               transform: 'translateY(-50%)',
               border: 'none',
               background: 'transparent',
-              color: '#94A3B8',
+              color: '#8b7d70',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
@@ -245,13 +245,13 @@ export default function HastaTypeahead({
             maxHeight: 280,
             overflowY: 'auto',
             borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.14)',
-            background: '#0B1524',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+            border: '1px solid rgba(58,44,34,0.12)',
+            background: '#faf6ee',
+            boxShadow: '0 12px 40px rgba(58,44,34,0.14)',
           }}
         >
           {filtered.length === 0 && (
-            <li style={{ padding: '12px 10px', color: '#94A3B8', fontSize: 13 }}>
+            <li style={{ padding: '12px 10px', color: '#8b7d70', fontSize: 13 }}>
               Eşleşen hasta yok.
             </li>
           )}
@@ -270,7 +270,7 @@ export default function HastaTypeahead({
                     borderRadius: 8,
                     border: 'none',
                     background: active ? 'rgba(15,155,142,0.22)' : 'transparent',
-                    color: '#F8FAFC',
+                    color: '#3b2e24',
                     fontSize: 14,
                     cursor: 'pointer',
                   }}

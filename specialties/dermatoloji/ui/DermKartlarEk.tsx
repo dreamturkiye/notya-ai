@@ -71,7 +71,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type Kaydet = (body: Record<string, unknown>, ok?: string) => void
 
-const ic: CSSProperties = { border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginTop: 8 }
+const ic: CSSProperties = { border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 8, marginTop: 8 }
 const kucuk: CSSProperties = { fontSize: 11.5, color: CHROME_RENK.muted }
 const satirlik: CSSProperties = { fontSize: 12.5 }
 
@@ -154,7 +154,7 @@ export function AcilBandi({
     <div
       style={{
         ...kutu,
-        borderColor: bayraklar.length ? (hemen ? 'rgba(239,68,68,0.75)' : 'rgba(245,158,11,0.7)') : 'rgba(255,255,255,0.09)',
+        borderColor: bayraklar.length ? (hemen ? 'rgba(239,68,68,0.75)' : 'rgba(245,158,11,0.7)') : 'rgba(58,44,34,0.12)',
         background: bayraklar.length
           ? `linear-gradient(135deg, rgba(11,22,40,0.97), ${hemen ? 'rgba(239,68,68,0.22)' : 'rgba(245,158,11,0.18)'})`
           : undefined,
@@ -380,7 +380,7 @@ export function BiyolojikSutKarti({
         <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 3 }}>
           {sonuc.sutKontrol.map((k, i) => (
             <li key={i} style={satirlik}>
-              <span style={{ color: k.tamam === true ? '#86EFAC' : k.tamam === false ? CHROME_RENK.warn : '#7A5B1E' }}>
+              <span style={{ color: k.tamam === true ? '#15803D' : k.tamam === false ? CHROME_RENK.warn : '#7A5B1E' }}>
                 {k.tamam === true ? '✓' : k.tamam === false ? '✗' : '•'}
               </span>{' '}
               {k.madde}
@@ -506,7 +506,7 @@ export function PsoriasisMerdiveniKarti({
             <li
               key={b.id}
               style={{
-                border: `1px solid ${kilitli ? 'rgba(15,155,142,0.8)' : onerilen ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.09)'}`,
+                border: `1px solid ${kilitli ? 'rgba(15,155,142,0.8)' : onerilen ? 'rgba(45,212,191,0.5)' : 'rgba(58,44,34,0.12)'}`,
                 borderRadius: 8,
                 padding: 8,
               }}
@@ -591,7 +591,7 @@ export function AtopiKarti({
           const onerilen = karar.onerilenBasamakId === b.id
           const kilitli = kilitliBasamak === b.id
           return (
-            <li key={b.id} style={{ border: `1px solid ${kilitli ? 'rgba(15,155,142,0.8)' : onerilen ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.09)'}`, borderRadius: 8, padding: 8 }}>
+            <li key={b.id} style={{ border: `1px solid ${kilitli ? 'rgba(15,155,142,0.8)' : onerilen ? 'rgba(45,212,191,0.5)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 8, padding: 8 }}>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{b.ad}{onerilen && !kilitli ? ' · önerilen' : ''}{kilitli ? ' · hekim kilitledi' : ''}</div>

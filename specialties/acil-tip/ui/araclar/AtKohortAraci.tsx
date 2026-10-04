@@ -71,7 +71,7 @@ export default function AtKohortAraci() {
         {!satirlar && <div style={S.kucuk}>Yükleniyor…</div>}
         {satirlar && !gorunen.length && <div style={S.kucuk}>Bayraklı hasta yok.</div>}
         {gorunen.map((s) => (
-          <label key={s.patientId} style={{ ...S.metin, display: 'flex', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', alignItems: 'flex-start' }}>
+          <label key={s.patientId} style={{ ...S.metin, display: 'flex', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(58,44,34,0.12)', alignItems: 'flex-start' }}>
             <input type="checkbox" checked={secili.includes(s.patientId)} onChange={() => setSecili((p) => (p.includes(s.patientId) ? p.filter((x) => x !== s.patientId) : [...p, s.patientId]))} />
             <span style={{ flex: 1 }}>
               <strong>{s.ad}</strong>
@@ -85,8 +85,8 @@ export default function AtKohortAraci() {
           </button>
           <button type="button" style={S.ghost} onClick={yukle}>Yenile</button>
         </div>
-        {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...S.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...S.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...S.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>Hatırlatma tanı / doz / ESI sayı taşımaz. Acil servis yatak panosu HIS yoktur.</TaslakNotu>
       </div>
     </>

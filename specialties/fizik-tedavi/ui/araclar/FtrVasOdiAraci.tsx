@@ -74,8 +74,8 @@ export default function FtrVasOdiAraci() {
           <button type="button" onClick={() => kaydet('odi')} style={ftrStil.btn}>ODI kaydet</button>
         </div>
         <MuayeneFormunaEkle hastaId={hasta} arac="VAS/ODI" satirlar={[vasSonuc.ozet, odiSonuc.ozet]} alan="content_objektif" />
-        {durum && <div style={{ ...ftrStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...ftrStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...ftrStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...ftrStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <div style={{ ...ftrStil.kucuk, marginTop: 10 }}>{REF_ACIKLAMA.VAS} · {REF_ACIKLAMA.ODI}</div>
       </div>
     </>

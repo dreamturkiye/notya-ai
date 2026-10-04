@@ -26,10 +26,10 @@ export default function RrsBekleyenler(props: { ilacAdlari: string[] }) {
 
   const kontrollu = props.ilacAdlari.map((ad) => ({ ad, renk: receteRengi('', ad) })).filter((x) => x.ad && x.renk !== 'normal')
   if (!kontrollu.length && !kayitlar.length) return null
-  const renkHex = (r: RrsRenk) => (r === 'kirmizi' ? '#F87171' : '#4ADE80')
+  const renkHex = (r: RrsRenk) => (r === 'kirmizi' ? '#B42318' : '#15803D')
 
   return (
-    <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: 'rgba(58,44,34,0.04)', border: '1px solid rgba(58,44,34,0.12)' }}>
       <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1.5, color: '#F59E0B', marginBottom: 8 }}>RENKLİ REÇETE (REÇETEM)</div>
       {kontrollu.length > 0 && (
         <div style={{ fontSize: 14, marginBottom: 10 }}>
@@ -38,9 +38,9 @@ export default function RrsBekleyenler(props: { ilacAdlari: string[] }) {
       )}
       {kayitlar.length > 0 && (
         <div style={{ fontSize: 13 }}>
-          <div style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Reçetem numarası bekleyen reçeteler</div>
+          <div style={{ color: '#8b7d70', marginBottom: 6 }}>Reçetem numarası bekleyen reçeteler</div>
           {kayitlar.map((k) => (
-            <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
+            <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderTop: '1px solid rgba(58,44,34,0.12)', flexWrap: 'wrap' }}>
               <span><b style={{ color: renkHex(k.renk) }}>{RRS_ETIKET[k.renk]}</b> · {k.hastaAd} · {(k.satirlar || []).map((s) => s.ilacAdi).filter(Boolean).join(', ') || `${(k.satirlar || []).length} ilaç`} · {new Date(k.created_at).toLocaleDateString('tr-TR')}</span>
               {k.note_id && <a href={`/dashboard/doktor/notlar/${k.note_id}/recete`} style={{ color: '#F59E0B', textDecoration: 'none' }}>Reçete sayfası →</a>}
             </div>

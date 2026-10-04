@@ -68,8 +68,8 @@ export default function OnkoSutAraci() {
           <button type="button" style={onkoStil.btn} onClick={kaydet}>Taslağı kaydet</button>
           <KopyalaButonu metin={sonuc.taslak || sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...onkoStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...onkoStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...onkoStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...onkoStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — canlı Medula e-imza yoktur. Güncel SUT maddesi ve doz hekimdedir; evre/TNM otomatik yazılmaz.</TaslakNotu>
       </div>
     </>

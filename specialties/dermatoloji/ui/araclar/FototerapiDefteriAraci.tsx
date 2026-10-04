@@ -135,9 +135,9 @@ export default function FototerapiDefteriAraci() {
         )}
         {ozet.yanik > 0 && <div style={{ ...metin, color: CHROME_RENK.warn }}>Son seansta yanık işaretliyse doz taslağı verilmez.</div>}
         {!ozet.medJ && ozet.seans > 0 && <div style={satir}><Rozet ton="uyari">MED eşiği girilmedi — SUT defterinde MED kaydı aranır</Rozet></div>}
-        <div style={{ ...kaydir, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', marginTop: 10 }}>
+        <div style={{ ...kaydir, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(58,44,34,0.12)', marginTop: 10 }}>
           {cihazSeanslari.map((s, i) => (
-            <div key={`${s.date}-${i}`} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', padding: '10px 12px', fontSize: 14, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)' }}>
+            <div key={`${s.date}-${i}`} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', padding: '10px 12px', fontSize: 14, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(58,44,34,0.12)' : 'rgba(0,0,0,0.15)' }}>
               <span style={{ minWidth: 100, fontWeight: 700 }}>{s.date}</span>
               <span style={{ minWidth: 90 }}>{s.j_cm2} J/cm²</span>
               {s.dose_step != null && <span style={kucuk}>adım +{s.dose_step}</span>}

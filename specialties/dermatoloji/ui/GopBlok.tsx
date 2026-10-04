@@ -7,7 +7,7 @@ import { btn, giris, etiketS } from './clinic-styles'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
+  background: 'rgba(58,44,34,0.04)',
   border: '1px solid rgba(248,113,113,0.35)',
   borderRadius: 12,
   padding: 16,
@@ -50,7 +50,7 @@ export function GopBlok({
   })
   const boxStyle: CSSProperties = {
     ...box,
-    border: maleNa || result.allowed ? '1px solid rgba(255,255,255,0.09)' : box.border,
+    border: maleNa || result.allowed ? '1px solid rgba(58,44,34,0.12)' : box.border,
   }
   return (
     <section style={boxStyle} data-tab="GopBlok" data-gop={result.allowed ? 'ok' : 'blocked'} data-sex={sex}>
@@ -61,7 +61,7 @@ export function GopBlok({
         </p>
       )}
       {acitretinBan && (
-        <p style={{ fontSize: 13, color: '#FBBF24' }}>
+        <p style={{ fontSize: 13, color: '#B45309' }}>
           Asitretin: gebelik yasağı {acitretinPregnancyBanYears()} yıl (izotretinoinden uzun).
         </p>
       )}

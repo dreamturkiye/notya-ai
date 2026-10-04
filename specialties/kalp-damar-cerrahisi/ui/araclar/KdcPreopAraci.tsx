@@ -59,8 +59,8 @@ export default function KdcPreopAraci() {
           <button type="button" style={kdcStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...kdcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...kdcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...kdcStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...kdcStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — pre-op kontrol listesi karar desteğidir; SCORE2, doz ve ameliyathane planı yazılmaz.</TaslakNotu>
       </div>
     </>

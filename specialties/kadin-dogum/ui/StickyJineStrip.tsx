@@ -23,7 +23,7 @@ const strip: CSSProperties = {
 }
 
 const chipS: CSSProperties = {
-  background: 'rgba(255,255,255,0.06)',
+  background: 'rgba(58,44,34,0.04)',
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12.5,
@@ -44,7 +44,7 @@ export function StickyJineStrip(p: StickyJineStripProps) {
             <button
               type="button"
               onClick={p.onKlinikMod}
-              style={{ ...chipS, background: 'rgba(251,191,36,0.18)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.45)', cursor: 'pointer' }}
+              style={{ ...chipS, background: 'rgba(251,191,36,0.18)', color: '#B45309', border: '1px solid rgba(251,191,36,0.45)', cursor: 'pointer' }}
               data-kd="jine-gebe-chip"
             >
               {p.gebeChip}

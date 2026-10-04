@@ -22,7 +22,7 @@ export function TehlikeIsaretleri({ onKopyala }: { onKopyala?: (metin: string) =
       <ul style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 8 }}>
         {TEHLIKE_ISARETLERI.map((t) => <li key={t.id}>{t.etiket}</li>)}
       </ul>
-      <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: CHROME_RENK.muted, background: 'rgba(0,0,0,0.2)', padding: 10, borderRadius: 8 }}>
+      <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: CHROME_RENK.muted, background: 'rgba(58,44,34,0.05)', padding: 10, borderRadius: 8 }}>
         {metin}
       </pre>
     </section>

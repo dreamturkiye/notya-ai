@@ -57,8 +57,8 @@ export default function GcPatolojiAraci() {
           <button type="button" style={gcStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...gcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...gcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...gcStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...gcStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — patoloji köprü yalnız tarih / hazır bayrağıdır; tanı, ICD, CAT/mMRC yazılmaz.</TaslakNotu>
       </div>
     </>

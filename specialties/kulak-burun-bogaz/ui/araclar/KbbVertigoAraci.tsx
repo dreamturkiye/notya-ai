@@ -66,7 +66,7 @@ export default function KbbVertigoAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Manevralar ve testler</div>
         {MANEVRA_LISTESI.map((m) => (
-          <div key={m} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div key={m} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
             <span style={{ ...S.metin, flex: '1 1 200px' }}>{MANEVRA_AD[m]}</span>
             <Secim etiket={`${MANEVRA_AD[m]} sonucu`} deger={sonuclar[m] || ''} set={(v) => setSonuclar({ ...sonuclar, [m]: v })} bos="—" secenekler={SONUC_SECENEK} />
             <Secim etiket={`${MANEVRA_AD[m]} tarafı`} deger={yanlar[m] || ''} set={(v) => setYanlar({ ...yanlar, [m]: v })} bos="Taraf yok" secenekler={YAN_SECENEK} />

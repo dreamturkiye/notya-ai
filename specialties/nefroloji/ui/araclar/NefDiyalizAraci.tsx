@@ -58,8 +58,8 @@ export default function NefDiyalizAraci() {
           <button type="button" style={nefStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...nefStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...nefStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...nefStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...nefStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — yalnız seans tarihleri. Makine HIS, UF, Kt/V ve reçete bu araçta yoktur.</TaslakNotu>
       </div>
     </>

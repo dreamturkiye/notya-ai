@@ -188,7 +188,7 @@ export function BugunkuJineMuayene({
           </div>
           <button type="button" style={btn()} onClick={() => setFormAcik((x) => !x)}>{formAcik ? 'Küçült' : 'Aç'}</button>
         </div>
-        {hata && <div style={{ color: '#F87171', fontSize: 13, marginTop: 8 }}>{hata}</div>}
+        {hata && <div style={{ color: '#B42318', fontSize: 13, marginTop: 8 }}>{hata}</div>}
         {mesaj && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
             <span style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</span>
@@ -242,15 +242,15 @@ export function BugunkuJineMuayene({
               </div>
               {(papBos || hpvBos) && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                  {papBos && <span style={{ ...kucuk, color: '#FBBF24' }}>Pap sonucu gir</span>}
-                  {hpvBos && <span style={{ ...kucuk, color: '#FBBF24' }}>HPV sonucu gir</span>}
+                  {papBos && <span style={{ ...kucuk, color: '#B45309' }}>Pap sonucu gir</span>}
+                  {hpvBos && <span style={{ ...kucuk, color: '#B45309' }}>HPV sonucu gir</span>}
                 </div>
               )}
               {v.due.length > 0 && (
                 <div style={{ marginTop: 10 }}>
                   {v.due.map((d) => (
-                    <div key={d.kod} style={{ fontSize: 12, color: CHROME_RENK.muted, padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <b style={{ color: d.durum === 'gecikti' ? '#F87171' : d.takvim === 'SB' ? '#93C5FD' : '#0F9B8E' }}>{d.takvim === 'her_ikisi' ? 'SB + ofis' : d.takvim === 'SB' ? 'SB/KETEM' : 'Ofis'}</b>
+                    <div key={d.kod} style={{ fontSize: 12, color: CHROME_RENK.muted, padding: '3px 0', borderTop: '1px solid rgba(58,44,34,0.12)' }}>
+                      <b style={{ color: d.durum === 'gecikti' ? '#B42318' : d.takvim === 'SB' ? '#1D4ED8' : '#0F9B8E' }}>{d.takvim === 'her_ikisi' ? 'SB + ofis' : d.takvim === 'SB' ? 'SB/KETEM' : 'Ofis'}</b>
                       {' · '}{d.ad}{d.due ? ` · ${isoToTr(d.due)}` : ''} · {d.not}
                     </div>
                   ))}

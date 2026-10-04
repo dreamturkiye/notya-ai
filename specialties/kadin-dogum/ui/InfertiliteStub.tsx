@@ -51,16 +51,16 @@ export function InfertiliteStub({ patientId }: { patientId?: string }) {
           </label>
         ))}
       </div>
-      <div style={{ marginTop: 12, fontSize: 13, color: paket.hazir ? '#22C55E' : '#FBBF24' }}>{paket.sevkMetni}</div>
+      <div style={{ marginTop: 12, fontSize: 13, color: paket.hazir ? '#22C55E' : '#B45309' }}>{paket.sevkMetni}</div>
       {paket.eksik.length > 0 && (
         <div style={{ marginTop: 6 }}>
           <span style={etiketS}>Eksik zorunlu maddeler</span>
-          {paket.eksik.map((e) => <div key={e} style={{ fontSize: 12, color: '#FBBF24' }}>• {e}</div>)}
+          {paket.eksik.map((e) => <div key={e} style={{ fontSize: 12, color: '#B45309' }}>• {e}</div>)}
         </div>
       )}
       <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <button type="button" style={btn(true)} onClick={kaydet}>Sevk paketini kaydet</button>
-        {mesaj && <span style={{ fontSize: 12, color: /amadı|Hata/.test(mesaj) ? '#F87171' : '#22C55E' }}>{mesaj}</span>}
+        {mesaj && <span style={{ fontSize: 12, color: /amadı|Hata/.test(mesaj) ? '#B42318' : '#22C55E' }}>{mesaj}</span>}
       </div>
     </section>
   )

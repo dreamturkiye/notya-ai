@@ -21,7 +21,7 @@ const bugun = () => new Date().toISOString().slice(0, 10);
 const sayi = (s: string): number | null => { const t = s.trim().replace(',', '.'); return t === '' || !Number.isFinite(Number(t)) ? null : Number(t); };
 
 const RENK_AD: Record<Renk, string> = { yesil: 'Düşük risk', sari: 'Orta derecede artmış risk', turuncu: 'Yüksek risk', kirmizi: 'Çok yüksek risk' };
-const RENK_KOD: Record<Renk, string> = { yesil: '#34D399', sari: '#FBBF24', turuncu: '#FB923C', kirmizi: '#F87171' };
+const RENK_KOD: Record<Renk, string> = { yesil: '#047857', sari: '#B45309', turuncu: '#C2410C', kirmizi: '#B42318' };
 const KRONIK_AD = { evet: 'kronik (≥3 ay doğrulandı)', olasi: 'olası (≥3 ay ikinci ölçüm yok)', bilinmiyor: 'bilinmiyor' } as const;
 const CINSIYET: Array<[string, string]> = [['erkek', 'Erkek'], ['kadin', 'Kadın']];
 
@@ -151,7 +151,7 @@ export default function CkdAraci() {
         ) : (
           <div style={{ ...metin, fontWeight: 700 }}>eGFR girilmedi — evre verilmez</div>
         )}
-        {sonuc.uyarilar.map((u) => <div key={u} style={{ ...metin, marginTop: 8, color: '#FBBF24' }}>⚠ {u}</div>)}
+        {sonuc.uyarilar.map((u) => <div key={u} style={{ ...metin, marginTop: 8, color: '#B45309' }}>⚠ {u}</div>)}
         <MuayeneFormunaEkle hastaId={hasta.id} arac="KDIGO CKD evrelemesi" satirlar={notSatirlari} />
         <TaslakNotu>KDIGO evresi ve izlem aralığı karar desteğidir; kronisite doğrulaması ve tedavi kararı hekimindir. Nota otomatik yazılmaz.</TaslakNotu>
       </div>

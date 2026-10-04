@@ -10,7 +10,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' };
 
 export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kaynak: boolean; refler: Record<string, string>; calistir: (body: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null> }) {
   const [acik, setAcik] = useState<string | null>(null);
@@ -21,8 +21,8 @@ export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kayna
   return (
     <div style={{ border: '1px dashed rgba(251,191,36,0.4)', borderRadius: 10, padding: '6px 10px', marginBottom: 8 }}>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ ...kucuk, fontWeight: 700, color: '#FBBF24' }}>BAKIM KALİTESİ</span>
-        {w4.nudgeler.map((n) => <button key={n.kod} type="button" onClick={() => { setAcik(acik === n.kod ? null : n.kod); setC({}); }} title={n.neden} style={{ ...ghost, color: acik === n.kod ? '#FBBF24' : CHROME_RENK.ink, padding: '2px 8px' }}>{n.ad}</button>)}
+        <span style={{ ...kucuk, fontWeight: 700, color: '#B45309' }}>BAKIM KALİTESİ</span>
+        {w4.nudgeler.map((n) => <button key={n.kod} type="button" onClick={() => { setAcik(acik === n.kod ? null : n.kod); setC({}); }} title={n.neden} style={{ ...ghost, color: acik === n.kod ? '#B45309' : CHROME_RENK.ink, padding: '2px 8px' }}>{n.ad}</button>)}
       </div>
       {acik && (<div style={{ marginTop: 6, fontSize: 12, color: CHROME_RENK.ink }}>
         <div style={kucuk}>{w4.nudgeler.find((n) => n.kod === acik)?.neden}</div>
@@ -34,7 +34,7 @@ export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kayna
           <button type="button" style={{ ...btn, marginTop: 4 }} onClick={() => calistir({ adim: 'nudge', tip: 'phq2', cevaplar: c }, 'PHQ-2 kaydedildi — nota eklemek için "Nota ekle".')}>Kaydet</button></>)}
         <Kaynak d={w4.nudgeler.filter((n) => n.kod === acik).map((n) => n.dipnot)} acik={kaynak} refler={refler} />
       </div>)}
-      {([['frail', w4.son.frail], ['dusme', w4.son.dusme], ['phq2', w4.son.phq2]] as const).filter(([, x]) => x).map(([tip, x]) => <div key={tip} style={{ ...kucuk, marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ color: x!.pozitif ? '#FBBF24' : CHROME_RENK.muted }}>{String(x!.created_at).slice(0, 10)} · {x!.not_metni}</span>{x!.nota_eklendi_at ? <span style={{ color: '#22C55E', fontSize: 10 }}>✓ notta</span> : <button type="button" style={{ ...ghost, padding: '4px 10px', fontSize: 11, minHeight: 28, flexShrink: 0, whiteSpace: 'nowrap' }} onClick={() => calistir({ adim: 'notaekle', tip }, 'Tarama sonucu bugünkü nota eklendi.')}>Nota ekle</button>}</div>)}
+      {([['frail', w4.son.frail], ['dusme', w4.son.dusme], ['phq2', w4.son.phq2]] as const).filter(([, x]) => x).map(([tip, x]) => <div key={tip} style={{ ...kucuk, marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ color: x!.pozitif ? '#B45309' : CHROME_RENK.muted }}>{String(x!.created_at).slice(0, 10)} · {x!.not_metni}</span>{x!.nota_eklendi_at ? <span style={{ color: '#22C55E', fontSize: 10 }}>✓ notta</span> : <button type="button" style={{ ...ghost, padding: '4px 10px', fontSize: 11, minHeight: 28, flexShrink: 0, whiteSpace: 'nowrap' }} onClick={() => calistir({ adim: 'notaekle', tip }, 'Tarama sonucu bugünkü nota eklendi.')}>Nota ekle</button>}</div>)}
     </div>
   );
 }
@@ -42,17 +42,17 @@ export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kayna
 const BAYRAKLAR = Object.keys(BAYRAK_AD) as KohortBayrak[];
 
 const kohortKutu: React.CSSProperties = {
-  background: 'linear-gradient(165deg, #10223D 0%, #0C1830 55%, #0A1528 100%)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'linear-gradient(165deg, #faf6ee 0%, #faf6ee 55%, #faf6ee 100%)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 18,
   padding: '22px 24px 26px',
   boxShadow: '0 12px 40px rgba(0,0,0,0.28)',
 }
 const kohortMuted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 }
 const kohortChip = (on: boolean): React.CSSProperties => ({
-  background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)',
+  background: on ? 'rgba(15,155,142,0.22)' : 'rgba(58,44,34,0.12)',
   color: on ? '#0F9B8E' : CHROME_RENK.muted,
-  border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`,
+  border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(58,44,34,0.12)'}`,
   borderRadius: 999,
   padding: '10px 16px',
   fontSize: 14,
@@ -127,7 +127,7 @@ export function KohortPanel() {
 
       <div style={{
         display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
-        background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '14px 16px', marginBottom: 16,
+        background: 'rgba(58,44,34,0.05)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 14, padding: '14px 16px', marginBottom: 16,
       }}>
         <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.muted, cursor: 'pointer' }}>
           <input
@@ -146,16 +146,16 @@ export function KohortPanel() {
 
       {mesaj && <div style={{ fontSize: 15, color: '#0F9B8E', marginBottom: 14, lineHeight: 1.45 }}>{mesaj}</div>}
 
-      <div style={{ display: 'grid', gap: 0, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'grid', gap: 0, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(58,44,34,0.12)' }}>
         {gorunen.map((s, i) => (
           <div
             key={s.patientId}
             style={{
               display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center',
               fontSize: 15, color: CHROME_RENK.ink,
-              background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)',
+              background: i % 2 ? 'rgba(58,44,34,0.12)' : 'rgba(0,0,0,0.15)',
               padding: '14px 16px',
-              borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.06)',
+              borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(58,44,34,0.12)',
             }}
           >
             <input
@@ -164,7 +164,7 @@ export function KohortPanel() {
               checked={secili.includes(s.patientId)}
               onChange={(e) => setSecili(e.target.checked ? [...secili, s.patientId] : secili.filter((x) => x !== s.patientId))}
             />
-            <a href={`/dashboard/doktor/hastalar/${s.patientId}`} style={{ color: '#F1F5F9', minWidth: 170, fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>{s.ad}</a>
+            <a href={`/dashboard/doktor/hastalar/${s.patientId}`} style={{ color: '#3b2e24', minWidth: 170, fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>{s.ad}</a>
             <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: '1 1 180px' }}>
               {s.bayraklar.map((b) => (
                 <span key={b} style={{ border: '1px solid rgba(248,113,113,0.45)', borderRadius: 999, padding: '5px 12px', fontSize: 13, fontWeight: 600, color: CHROME_RENK.warn, whiteSpace: 'nowrap', background: 'rgba(248,113,113,0.08)' }}>{BAYRAK_AD[b]}</span>

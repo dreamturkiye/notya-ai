@@ -3,7 +3,7 @@
 import type { DualUyari } from '../engines/clinic-fit'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
-const RENK = { kritik: '#EF4444', dikkat: '#F59E0B', bilgi: '#38BDF8' } as const
+const RENK = { kritik: '#EF4444', dikkat: '#F59E0B', bilgi: '#1D4ED8' } as const
 
 export function DualUyarilar({ uyarilar }: { uyarilar: DualUyari[] }) {
   if (uyarilar.length === 0) return null

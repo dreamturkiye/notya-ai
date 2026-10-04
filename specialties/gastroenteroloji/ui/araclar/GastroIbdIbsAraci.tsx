@@ -62,8 +62,8 @@ export default function GastroIbdIbsAraci() {
           <button type="button" style={gastroStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={ozet} />
         </div>
-        {durum && <div style={{ ...gastroStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...gastroStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...gastroStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...gastroStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — bant karar desteğidir; tanı yazmaz, doz yazmaz. Crohn / ÜK tanısı hekim kilidindedir.</TaslakNotu>
       </div>
     </>

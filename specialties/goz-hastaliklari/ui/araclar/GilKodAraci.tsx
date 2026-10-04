@@ -61,7 +61,7 @@ export default function GilKodAraci() {
         {!liste.length && <div style={kucuk}>Eşleşen kalem yok — aramayı değiştirin.</div>}
         <div style={kaydir}>
           {liste.map((k) => (
-            <div key={k.kod} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div key={k.kod} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', padding: '12px 0', borderTop: '1px solid rgba(58,44,34,0.12)' }}>
               <b style={{ ...metin, fontVariantNumeric: 'tabular-nums', minWidth: 72 }}>{k.kod}</b>
               <div style={{ flex: '1 1 220px', minWidth: 0 }}><div style={metin}>{k.ad}</div><div style={kucuk}>{k.not}</div></div>
               <KopyalaButonu metin={k.kod} etiket="Kodu kopyala" />

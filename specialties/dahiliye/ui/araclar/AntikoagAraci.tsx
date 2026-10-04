@@ -177,7 +177,7 @@ export default function AntikoagAraci() {
       <div style={kutu}>
         <div style={{ ...etiket, display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
           <span>HAS-BLED maddeleri — kontrol listesi</span>
-          <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>SKOR İDDİASI YOK</span>
+          <span style={{ ...kucuk, color: '#B45309', fontWeight: 700 }}>SKOR İDDİASI YOK</span>
         </div>
         {sonuc.hasBledMaddeleri.map((m) => (
           <div key={m.madde} style={{ ...metin, marginTop: 6, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -191,9 +191,9 @@ export default function AntikoagAraci() {
       <div style={kutu}>
         <div style={etiket}>DOAK uygunluk</div>
         {sonuc.krkl != null && <div style={{ ...metin, marginTop: 4 }}>KrKl (Cockcroft-Gault): {sonuc.krkl} mL/dk</div>}
-        {sonuc.kirmizi.map((x) => <div key={x} style={{ ...metin, marginTop: 6, color: '#F87171', fontWeight: 700 }}>⛔ {x}</div>)}
+        {sonuc.kirmizi.map((x) => <div key={x} style={{ ...metin, marginTop: 6, color: '#B42318', fontWeight: 700 }}>⛔ {x}</div>)}
         {sonuc.uygunluk.map((x) => <div key={x} style={{ ...metin, marginTop: 6 }}>• {x}</div>)}
-        {sonuc.uyarilar.map((x) => <div key={x} style={{ ...metin, marginTop: 6, color: '#FBBF24' }}>⚠ {x}</div>)}
+        {sonuc.uyarilar.map((x) => <div key={x} style={{ ...metin, marginTop: 6, color: '#B45309' }}>⚠ {x}</div>)}
         {sonuc.plan.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6 }}>{x}</div>)}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Değerlendirmeyi kopyala" /></div>
         <MuayeneFormunaEkle hastaId={hasta.id} arac="CHA₂DS₂-VASc / HAS-BLED değerlendirmesi" satirlar={notSatirlari} />

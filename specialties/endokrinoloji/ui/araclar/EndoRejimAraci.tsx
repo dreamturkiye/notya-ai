@@ -60,8 +60,8 @@ export default function EndoRejimAraci() {
           <button type="button" style={endoStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={ozet} />
         </div>
-        {durum && <div style={{ ...endoStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...endoStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...endoStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...endoStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — ünite, mcg, mg ve kayan ölçek (sliding scale) şeması yazılmaz. Yalnız başlangıç / kontrol tarihleri.</TaslakNotu>
       </div>
     </>

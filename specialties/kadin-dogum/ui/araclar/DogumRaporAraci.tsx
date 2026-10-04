@@ -15,9 +15,9 @@ const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 
 
 function Tarih({ ad, t, alt, vurgu }: { ad: string; t: string; alt?: string; vurgu?: boolean }) {
   return (
-    <div style={{ flex: '1 1 150px', background: vurgu ? 'rgba(219,39,119,0.12)' : 'rgba(0,0,0,0.15)', border: `1px solid ${vurgu ? 'rgba(244,114,182,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, padding: '10px 12px' }}>
+    <div style={{ flex: '1 1 150px', background: vurgu ? 'rgba(219,39,119,0.12)' : 'rgba(0,0,0,0.15)', border: `1px solid ${vurgu ? 'rgba(244,114,182,0.45)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 12, padding: '10px 12px' }}>
       <div style={kucuk}>{ad}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: vurgu ? '#F9A8D4' : CHROME_RENK.ink }}>{trTarih(t)}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: vurgu ? '#BE185D' : CHROME_RENK.ink }}>{trTarih(t)}</div>
       {alt && <div style={kucuk}>{alt}</div>}
     </div>
   );
@@ -69,7 +69,7 @@ export default function DogumRaporAraci() {
   const serit = a ? [
     { ad: 'Doğum öncesi', gun: a.kullanilanOncesiGun || (a.dogumGercek ? 0 : a.oncesiPlanGun - a.calismaGun), renk: '#DB2777' },
     { ad: 'Doğum sonrası', gun: a.sonrasiTemelGun, renk: '#7C3AED' },
-    { ad: 'Eklenen', gun: a.sonrasiEklenenGun, renk: '#A78BFA' },
+    { ad: 'Eklenen', gun: a.sonrasiEklenenGun, renk: '#6D28D9' },
   ].filter((x) => x.gun > 0) : [];
   const seritToplam = serit.reduce((s, x) => s + x.gun, 0) || 1;
 
@@ -83,13 +83,13 @@ export default function DogumRaporAraci() {
         </div>
         <div style={satir}>
           <Etiketli ad={kaynak === 'tdt' ? 'Tahmini doğum tarihi' : 'Son adet tarihi'}><input inputMode="numeric" value={girisHam} onChange={(e) => set(kaynak, e.target.value)} placeholder={kaynak === 'tdt' ? 'Tahmini doğum tarihi — 20.11.2026' : 'Son adet tarihi — 13.02.2026'} aria-label={kaynak === 'tdt' ? 'Tahmini doğum tarihi' : 'Son adet tarihi'} style={{ ...input, width: 280, maxWidth: '100%' }} /></Etiketli>
-          {girisHam.trim() && (tdt ? <span style={{ ...kucuk, color: '#6EE7B7' }}>→ TDT {trTarih(tdt)}</span> : <span style={hata}>Okunamadı</span>)}
+          {girisHam.trim() && (tdt ? <span style={{ ...kucuk, color: '#047857' }}>→ TDT {trTarih(tdt)}</span> : <span style={hata}>Okunamadı</span>)}
         </div>
         <Kutu on={dogdu} set={(x) => { setDogdu(x); setKilitli(false); }}>Doğum gerçekleşti — gerçek doğum tarihiyle yeniden hesapla</Kutu>
         {dogdu && (
           <div style={satir}>
             <Etiketli ad="Doğum tarihi"><input inputMode="numeric" value={ham.dogum} onChange={(e) => set('dogum', e.target.value)} placeholder="Doğum tarihi — 05.11.2026" aria-label="Doğum tarihi" style={{ ...input, width: 240, maxWidth: '100%' }} /></Etiketli>
-            {ham.dogum.trim() && (dogum ? <span style={{ ...kucuk, color: '#6EE7B7' }}>→ {trTarih(dogum)}</span> : <span style={hata}>Okunamadı</span>)}
+            {ham.dogum.trim() && (dogum ? <span style={{ ...kucuk, color: '#047857' }}>→ {trTarih(dogum)}</span> : <span style={hata}>Okunamadı</span>)}
           </div>
         )}
         <div style={satir}><button type="button" onClick={() => setAyrinti(!ayrinti)} style={ghost} aria-expanded={ayrinti}>{ayrinti ? 'Ayrıntıları gizle' : 'Ayrıntılar: çalışma izni, hesap tarihi, hasta, not'}</button></div>
@@ -106,7 +106,7 @@ export default function DogumRaporAraci() {
             <div style={satir}><textarea value={hekimNotu} onChange={(e) => { setHekimNotu(e.target.value); setKilitli(false); }} placeholder="Taslağa eklenecek hekim notu (isteğe bağlı)" aria-label="Hekim notu" rows={2} style={{ ...input, width: '100%', fontFamily: 'inherit' }} /></div>
           </div>
         )}
-        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#F9A8D4' }}>{mesaj}</div>}
+        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#BE185D' }}>{mesaj}</div>}
       </div>
 
       {!a ? (
@@ -124,7 +124,7 @@ export default function DogumRaporAraci() {
               <Tarih ad="Doğum sonrası bitiş" t={a.sonrasiBitis} alt={`${a.sonrasiGun} gün`} />
               <Tarih ad="İşbaşı" t={a.isBasi} />
             </div>
-            <div style={{ display: 'flex', height: 14, borderRadius: 999, overflow: 'hidden', marginTop: 14, background: 'rgba(255,255,255,0.06)' }} aria-hidden>
+            <div style={{ display: 'flex', height: 14, borderRadius: 999, overflow: 'hidden', marginTop: 14, background: 'rgba(58,44,34,0.04)' }} aria-hidden>
               {serit.map((s) => <div key={s.ad} style={{ width: `${(s.gun / seritToplam) * 100}%`, background: s.renk }} />)}
             </div>
             <div style={{ ...satir, marginTop: 6 }}>{serit.map((s) => <span key={s.ad} style={{ ...kucuk, display: 'inline-flex', gap: 6, alignItems: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: s.renk, display: 'inline-block' }} />{s.ad} {s.gun} gün</span>)}</div>
@@ -153,7 +153,7 @@ export default function DogumRaporAraci() {
               <span style={{ ...ghost, display: 'inline-flex', alignItems: 'center', cursor: 'default' }} title="Notya Medula'ya canlı gönderim yapmaz">Medula'da hekim e-imza ile girilir</span>
               {hasta.id && <a href={hastaDosyaHref(hasta.id, 'gebelik')} style={{ ...ghost, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Gebelik) →</a>}
             </div>
-            {kopya && <div style={{ ...kucuk, color: '#F9A8D4', marginTop: 6 }}>{kopya}</div>}
+            {kopya && <div style={{ ...kucuk, color: '#BE185D', marginTop: 6 }}>{kopya}</div>}
             <MuayeneFormunaEkle
               hastaId={hasta.id}
               arac="Analık istirahati tarihleri"

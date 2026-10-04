@@ -24,7 +24,7 @@ export function AktifIsler({ isler }: { isler: DermAktifIs[] }) {
               style={{
                 fontSize: 13,
                 color: CHROME_RENK.ink,
-                borderLeft: `3px solid ${g.durum === 'gecikmis' ? DURUM_RENK.gecikmis : g.durum === 'zamani' ? DURUM_RENK.zamani : '#38BDF8'}`,
+                borderLeft: `3px solid ${g.durum === 'gecikmis' ? DURUM_RENK.gecikmis : g.durum === 'zamani' ? DURUM_RENK.zamani : '#1D4ED8'}`,
                 padding: '4px 10px',
               }}
             >

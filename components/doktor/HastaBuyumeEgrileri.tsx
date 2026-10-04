@@ -36,9 +36,9 @@ function yasMetniUzun(ay: number): string {
 }
 
 const RENK_50 = '#0F9B8E';
-const RENK_BAND_DIS = 'rgba(148,163,184,0.55)'; // 3/97
-const RENK_BAND_ORTA = 'rgba(94,234,212,0.55)'; // 10/90
-const RENK_BAND_IC = 'rgba(45,212,191,0.75)';   // 25/75
+const RENK_BAND_DIS = 'rgba(100,116,139,0.55)'; // 3/97
+const RENK_BAND_ORTA = 'rgba(15,118,110,0.45)'; // 10/90
+const RENK_BAND_IC = 'rgba(15,118,110,0.75)';   // 25/75
 const RENK_NOKTA = '#F59E0B';
 
 function bandRenk(persentil: number): string {
@@ -82,14 +82,14 @@ export function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string;
         const v = min + (max - min) * (1 - f);
         return (
           <g key={i}>
-            <line x1={L} x2={W - R} y1={T + f * (H - T - B)} y2={T + f * (H - T - B)} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+            <line x1={L} x2={W - R} y1={T + f * (H - T - B)} y2={T + f * (H - T - B)} stroke="rgba(58,44,34,0.12)" strokeWidth="1" />
             <text x={L - (buyuk ? 10 : 6)} y={T + f * (H - T - B) + 3.5} textAnchor="end" fontSize={buyuk ? 13 : 9.5} fill={CHROME_RENK.muted}>{Math.round(v * 10) / 10}</text>
           </g>
         );
       })}
       {etiketler.map((ay, i) => (
         <g key={i}>
-          <line x1={x(ay)} x2={x(ay)} y1={T} y2={H - B} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+          <line x1={x(ay)} x2={x(ay)} y1={T} y2={H - B} stroke="rgba(58,44,34,0.12)" strokeWidth="1" />
           <text x={x(ay)} y={H - B + (buyuk ? 20 : 12)} textAnchor="middle" fontSize={buyuk ? 12.5 : 9} fill={CHROME_RENK.muted}>{yasEtiketi(ay)}</text>
         </g>
       ))}
@@ -104,7 +104,7 @@ export function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string;
       ))}
       {veri.noktalar.map((n, i) => (
         <g key={i}>
-          <circle cx={x(n.ay)} cy={y(n.deger)} r={buyuk ? 7 : 4} fill={RENK_NOKTA} stroke="#0B1628" strokeWidth={buyuk ? 2.5 : 1.5}>
+          <circle cx={x(n.ay)} cy={y(n.deger)} r={buyuk ? 7 : 4} fill={RENK_NOKTA} stroke="#faf6ee" strokeWidth={buyuk ? 2.5 : 1.5}>
             <title>{`${yasEtiketi(n.ay)} — ${n.deger} ${birim} (${new Date(n.tarih).toLocaleDateString('tr-TR')})`}</title>
           </circle>
           {buyuk && (
@@ -166,7 +166,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
   if (hata) {
     return (
       <div style={{ display: 'grid', gap: 16, padding: 4 }}>
-        <div style={{ padding: '8px 4px', color: '#F87171', fontSize: 13 }}>{hata}</div>
+        <div style={{ padding: '8px 4px', color: '#B42318', fontSize: 13 }}>{hata}</div>
         {hedefKart}
       </div>
     );
@@ -189,15 +189,15 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
     const [anahtar, pVeri] = paramlar[buyukIndex];
     const sonOlcum = pVeri.noktalar[pVeri.noktalar.length - 1];
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#080F1A', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
-        <div className="buyume-buyuk-bas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: 10 }}>
-          <button type="button" onClick={() => setBuyukIndex(null)} style={{ background: 'transparent', border: 'none', color: '#9FB3C8', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>← Geri</button>
+      <div style={{ position: 'fixed', inset: 0, background: '#f4eee3', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+        <div className="buyume-buyuk-bas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(58,44,34,0.12)', flexWrap: 'wrap', gap: 10 }}>
+          <button type="button" onClick={() => setBuyukIndex(null)} style={{ background: 'transparent', border: 'none', color: '#8b7d70', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>← Geri</button>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: CHROME_RENK.ink }}>{PARAM_BASLIK[anahtar]} Büyüme Eğrisi <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 14 }}>({pVeri.birim})</span></div>
             <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni} · Neyzi Türk çocukları standartları</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" disabled={buyukIndex === 0} onClick={() => setBuyukIndex((i) => (i! - 1 + paramlar.length) % paramlar.length)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: buyukIndex === 0 ? '#475569' : CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', cursor: buyukIndex === 0 ? 'default' : 'pointer', fontSize: 14 }}>‹ Önceki</button>
+            <button type="button" disabled={buyukIndex === 0} onClick={() => setBuyukIndex((i) => (i! - 1 + paramlar.length) % paramlar.length)} style={{ background: 'rgba(58,44,34,0.04)', border: '1px solid rgba(58,44,34,0.12)', color: buyukIndex === 0 ? '#475569' : CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', cursor: buyukIndex === 0 ? 'default' : 'pointer', fontSize: 14 }}>‹ Önceki</button>
             <button type="button" onClick={() => setBuyukIndex((i) => (i! + 1) % paramlar.length)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>Sonraki ›</button>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
             type="button"
             onClick={() => setBuyukIndex(i)}
             className="buyume-karti"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: 16, textAlign: 'left', cursor: 'pointer', transition: 'transform .15s, border-color .15s, background .15s' }}
+            style={{ background: 'rgba(58,44,34,0.04)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 14, padding: 16, textAlign: 'left', cursor: 'pointer', transition: 'transform .15s, border-color .15s, background .15s' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>{PARAM_BASLIK[anahtar]} <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>({pVeri.birim})</span></span>
@@ -250,7 +250,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
       )}
       {hedefKart}
       <style>{`
-        .buyume-karti:hover { border-color: rgba(45,212,191,0.4) !important; background: rgba(45,212,191,0.05) !important; transform: translateY(-2px); }
+        .buyume-karti:hover { border-color: rgba(15,118,110,0.4) !important; background: rgba(15,118,110,0.05) !important; transform: translateY(-2px); }
         @media (max-width: 640px) { .buyume-buyuk-bas { justify-content: center !important; text-align: center; padding: 12px 14px !important; } }
       `}</style>
     </div>

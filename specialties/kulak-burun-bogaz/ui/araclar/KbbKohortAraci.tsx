@@ -68,7 +68,7 @@ export default function KbbKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(79,70,229,0.25)' : 'transparent', color: suzgec.includes(b) ? '#C7D2FE' : CHROME_RENK.muted }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(79,70,229,0.25)' : 'transparent', color: suzgec.includes(b) ? '#4F46E5' : CHROME_RENK.muted }}
             >{KBB_BAYRAK_AD[b]}</button>
           ))}
         </div>
@@ -83,7 +83,7 @@ export default function KbbKohortAraci() {
       <div style={S.kutu}>
         {satirlar != null && !gorunen.length && <div style={S.metin}>Bayraklı hasta yok.</div>}
         {gorunen.map((s) => (
-          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
+          <label key={s.patientId} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid rgba(58,44,34,0.12)', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={secili.includes(s.patientId)}

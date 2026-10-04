@@ -68,7 +68,7 @@ export default function MuayeneSonuPaketi() {
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
           {ADIMLAR.map((a) => (
-            <div key={a.kod} style={{ border: `1px solid ${secildi(a.kod) ? 'rgba(45,212,191,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '10px 12px', background: 'rgba(0,0,0,0.14)' }}>
+            <div key={a.kod} style={{ border: `1px solid ${secildi(a.kod) ? 'rgba(45,212,191,0.4)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 14, padding: '10px 12px', background: 'rgba(58,44,34,0.05)' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                 <Kutu on={secildi(a.kod)} set={() => cevir(a.kod)}>{a.ad}</Kutu>
                 <a href={a.yol} style={ghost}>{a.baglantiAd} →</a>
@@ -94,7 +94,7 @@ export default function MuayeneSonuPaketi() {
         </div>
         {!notSatirlari.length && <div style={{ ...kucuk, marginTop: 10 }}>Adım işaretleyin ya da kontrol aralığını yazın — özet burada oluşur.</div>}
         {!!notSatirlari.length && (
-          <div style={{ ...metin, marginTop: 12, background: 'rgba(0,0,0,0.18)', borderRadius: 12, padding: 12, whiteSpace: 'pre-wrap' }}>{notSatirlari.join('\n')}</div>
+          <div style={{ ...metin, marginTop: 12, background: 'rgba(58,44,34,0.05)', borderRadius: 12, padding: 12, whiteSpace: 'pre-wrap' }}>{notSatirlari.join('\n')}</div>
         )}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Kapanış özetini kopyala" /></div>
         <MuayeneFormunaEkle hastaId={hasta.id} arac="Vizit kapanışı" satirlar={notSatirlari} />

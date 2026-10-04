@@ -5,8 +5,8 @@ import { CERVIX_SCREENING, CONTRACEPTION, cycleNote } from '../protocols/jinekol
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }

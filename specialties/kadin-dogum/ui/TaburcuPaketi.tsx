@@ -78,7 +78,7 @@ export default function TaburcuPaketi({
   return (
     <div style={kutu} data-kd="taburcu-paketi">
       <div style={{ fontWeight: 800, color: CHROME_RENK.ink, marginBottom: 4 }}>Taburcu paketi</div>
-      <div style={{ fontSize: 12, color: '#FBBF24', marginBottom: 8 }}>{NTP_DISCLAIMER}</div>
+      <div style={{ fontSize: 12, color: '#B45309', marginBottom: 8 }}>{NTP_DISCLAIMER}</div>
       <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginBottom: 12 }}>
         {KADIN_HASTALIKLARI_DOGUM_ETIKETI}: doğum + ilk örnek + lohusa. Pediatri (Ayşe) taburcu sonrası bebeği sahiplenir. Notya e-Nabız yerine geçmez.
       </div>
@@ -93,8 +93,8 @@ export default function TaburcuPaketi({
           <input type="checkbox" disabled={kilitli} checked={Boolean(at)} onChange={(e) => tik(alan, e.target.checked)} />
           <span>
             <b>{etiket}</b>
-            {at && <span style={{ color: '#86EFAC', marginLeft: 8 }}>· {new Date(at).toLocaleString('tr-TR')}</span>}
-            {redler.some((r) => r.kalem === kalem) && <span style={{ color: '#F87171', marginLeft: 8 }}>· reddedildi</span>}
+            {at && <span style={{ color: '#15803D', marginLeft: 8 }}>· {new Date(at).toLocaleString('tr-TR')}</span>}
+            {redler.some((r) => r.kalem === kalem) && <span style={{ color: '#B42318', marginLeft: 8 }}>· reddedildi</span>}
           </span>
         </label>
       ))}
@@ -135,7 +135,7 @@ export default function TaburcuPaketi({
       </label>
 
       <details style={{ marginBottom: 10 }}>
-        <summary style={{ cursor: 'pointer', color: '#FBBF24', fontSize: 13 }}>Ebeveyn reddi (ret kaydı — takvim satırı silinmez)</summary>
+        <summary style={{ cursor: 'pointer', color: '#B45309', fontSize: 13 }}>Ebeveyn reddi (ret kaydı — takvim satırı silinmez)</summary>
         <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
           <select value={redKalem} onChange={(e) => setRedKalem(e.target.value)} style={giris}>
             <option value="ntp1">NTP-1</option>

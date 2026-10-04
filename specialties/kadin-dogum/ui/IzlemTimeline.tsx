@@ -6,15 +6,15 @@ import { UI_HINT_YASAL_VS_KLINIK } from '../protocols/sources'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 12,
   padding: 16,
 }
 
 const col: CSSProperties = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 10,
   padding: 12,
 }
@@ -27,7 +27,7 @@ function badge(label: string, tone: 'yasal' | 'klinik'): CSSProperties {
     borderRadius: 999,
     padding: '2px 8px',
     background: tone === 'yasal' ? 'rgba(245,158,11,0.18)' : 'rgba(56,189,248,0.18)',
-    color: tone === 'yasal' ? '#FBBF24' : '#38BDF8',
+    color: tone === 'yasal' ? '#B45309' : '#1D4ED8',
   }
 }
 
@@ -50,7 +50,7 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
           <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>Yasal asgari (DÖBYR)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {yasal.map((v, i) => (
-              <li key={`sb-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
+              <li key={`sb-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#15803D' : undefined }}>
                 {rowLabel(v)}
                 {v.acog_recommended ? ' · her iki sütun' : ''}
                 {v.done ? ' · Yapıldı' : ''}
@@ -63,7 +63,7 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
           <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>Klinik öneri (ACOG)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {klinik.map((v, i) => (
-              <li key={`acog-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
+              <li key={`acog-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#15803D' : undefined }}>
                 {rowLabel(v)}
                 {v.sb_required ? '' : ' · klinik ek izlem'}
                 {v.done ? ' · Yapıldı' : ''}

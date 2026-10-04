@@ -18,7 +18,7 @@ import { AracVurguSaglayici, aracStil, HastaSecici, Segment, type AracVurgu } fr
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 /** KBB vurgusu — indigo gövde, teal başlık (psikiyatri indigo'sundan ayrışır). */
-export const KBB_VURGU: AracVurgu = { ana: '#4F46E5', anaMetin: '#EEF2FF', yumusak: '#99F6E4', baslik: '#0F9B8E' };
+export const KBB_VURGU: AracVurgu = { ana: '#4F46E5', anaMetin: '#EEF2FF', yumusak: '#0F766E', baslik: '#0F9B8E' };
 export const kbbStil = aracStil(KBB_VURGU);
 
 export {

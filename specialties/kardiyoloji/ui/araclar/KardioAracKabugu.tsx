@@ -12,7 +12,7 @@ import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi';
 
 /** Kardiyoloji vurgusu — kırmızı/coral (TKD klinik hissi). */
-export const KARDIO_VURGU: AracVurgu = { ana: '#DC2626', anaMetin: '#FEF2F2', yumusak: CHROME_RENK.warn, baslik: '#F87171' };
+export const KARDIO_VURGU: AracVurgu = { ana: '#DC2626', anaMetin: '#FEF2F2', yumusak: CHROME_RENK.warn, baslik: '#B42318' };
 export const kardioStil = aracStil(KARDIO_VURGU);
 
 export {

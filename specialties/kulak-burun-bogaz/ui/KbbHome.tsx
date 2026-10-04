@@ -46,8 +46,8 @@ type Veri = {
 
 const ACCENT = '#4F46E5';
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#99F6E4', marginBottom: 6 };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' };
+const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F766E', marginBottom: 6 };
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 };
 const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
@@ -55,11 +55,11 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 const SEKMELER = ['Özet', 'Otoskopi', 'Odyometri', 'Burun', 'Vertigo', 'Risk', 'Görevler', 'SGK'] as const;
 type Sekme = (typeof SEKMELER)[number];
 
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted };
+const RENK: Record<string, string> = { iyi: '#047857', dikkat: '#B45309', kotu: '#B42318', yok: CHROME_RENK.muted };
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
       <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
       {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
@@ -189,13 +189,13 @@ export default function KbbHome({ patientId }: { patientId: string }) {
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => (
-          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(79,70,229,0.22)' : 'transparent', color: sekme === x ? '#C7D2FE' : CHROME_RENK.muted }}>{x}</button>
+          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(79,70,229,0.22)' : 'transparent', color: sekme === x ? '#4F46E5' : CHROME_RENK.muted }}>{x}</button>
         ))}
       </div>
 
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: /amadı|zorunlu|eksik|Geçersiz|geçersiz|bayrak|Hata/.test(mesaj) ? '#F87171' : '#34D399' }}>{mesaj}</span>
+          <span style={{ fontSize: 12, color: /amadı|zorunlu|eksik|Geçersiz|geçersiz|bayrak|Hata/.test(mesaj) ? '#B42318' : '#047857' }}>{mesaj}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}
@@ -208,7 +208,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
               ? <>Son odyometri <b>{v.sonOdyometri.pta_db ?? '—'} dB</b> ({String(v.sonOdyometri.tarih).slice(0, 10)}) — {v.sonOdyometri.bantAd}. {v.sonOdyometri.degisim.not}</>
               : 'Odyometri kaydı yok — Odyometri sekmesinden girin.'}
           </div>
-          {v.asimetri && <div style={{ ...metin, color: '#FBBF24' }}>{v.asimetri}</div>}
+          {v.asimetri && <div style={{ ...metin, color: '#B45309' }}>{v.asimetri}</div>}
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot; olarak görünür</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -254,7 +254,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
               ekBulgular: otoEk, hekimNotu: otoNot,
             }, 'Otoskopi notu muayene formuna eklendi.')}>Nota ekle</button>
             <button type="button" style={ghost} onClick={() => { setSagDis([]); setSagTm([]); setSolDis([]); setSolTm([]); setOtoEk([]); setOtoNot(''); }}>Temizle</button>
-            <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>TASLAK · tanı hekimin</span>
+            <span style={{ ...kucuk, color: '#B45309', fontWeight: 700 }}>TASLAK · tanı hekimin</span>
           </div>
         </div>
       )}
@@ -274,9 +274,9 @@ export default function KbbHome({ patientId }: { patientId: string }) {
                 ))}
               </div>
               <div style={satir}>
-                <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#C7D2FE' : CHROME_RENK.muted }}>{sonuc.pta ?? '—'}</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#4F46E5' : CHROME_RENK.muted }}>{sonuc.pta ?? '—'}</span>
                 <span style={metin}>{sonuc.tamamMi ? sonuc.bantAd : `${sonuc.eksikFrekans} frekans boş — ortalama yorumlanmaz`}</span>
-                <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ</span>
+                <span style={{ ...kucuk, color: '#B45309', fontWeight: 700 }}>KARAR DESTEĞİ</span>
               </div>
             </div>
           ))}
@@ -317,7 +317,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
             }, 'Timpanometri notu eklendi.')}>Nota ekle</button>
           </div>
           {timpSonuc.satirlar.length > 0 && <div style={{ ...kucuk, marginTop: 6 }}>{timpSonuc.satirlar.join(' ')}</div>}
-          <div style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ · tanı hekimin</div>
+          <div style={{ ...kucuk, color: '#B45309', fontWeight: 700 }}>KARAR DESTEĞİ · tanı hekimin</div>
 
           {v.odyometriler.length > 0 && (
             <>
@@ -339,7 +339,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Burun / sinüs <span style={kucuk}>· kontrol listesi · tanı ve doz hekimin</span></div>
           <div style={satir}>
             {Object.entries(v.kutuphane.burun.sureler).map(([k, ad]) => (
-              <button key={k} type="button" onClick={() => setBurunSure(k as 'akut' | 'subakut' | 'kronik')} style={{ ...ghost, background: burunSure === k ? 'rgba(79,70,229,0.22)' : 'transparent', color: burunSure === k ? '#C7D2FE' : CHROME_RENK.muted }}>{ad}</button>
+              <button key={k} type="button" onClick={() => setBurunSure(k as 'akut' | 'subakut' | 'kronik')} style={{ ...ghost, background: burunSure === k ? 'rgba(79,70,229,0.22)' : 'transparent', color: burunSure === k ? '#4F46E5' : CHROME_RENK.muted }}>{ad}</button>
             ))}
           </div>
           <div style={{ ...etiket, marginTop: 12 }}>Şikâyetler</div>
@@ -350,8 +350,8 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           {v.kutuphane.burun.basamaklar.map((x) => <Kutucuk key={x} ad={x} secili={burunBasamak.includes(x)} tikla={() => setBurunBasamak((p) => cevir(p, x))} />)}
           {burunSonuc.kararBasliklari.length > 0 && (
             <>
-              <div style={{ ...etiket, marginTop: 12, color: '#FBBF24' }}>Bu vizitte karara bağla</div>
-              {burunSonuc.kararBasliklari.map((k) => <div key={k} style={{ ...kucuk, color: '#FBBF24' }}>• {k}</div>)}
+              <div style={{ ...etiket, marginTop: 12, color: '#B45309' }}>Bu vizitte karara bağla</div>
+              {burunSonuc.kararBasliklari.map((k) => <div key={k} style={{ ...kucuk, color: '#B45309' }}>• {k}</div>)}
             </>
           )}
           <div style={satir}>
@@ -362,7 +362,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
               adim: 'burun', sikayetler: burunSikayet, sure: burunSure, muayeneBulgulari: burunBulgu, basamaklar: burunBasamak, hekimNotu: burunNot,
             }, 'Burun / sinüs notu eklendi.')}>Nota ekle</button>
             <button type="button" style={ghost} onClick={() => { setBurunSikayet([]); setBurunBulgu([]); setBurunBasamak([]); setBurunNot(''); }}>Temizle</button>
-            <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>TASLAK · tanı hekimin</span>
+            <span style={{ ...kucuk, color: '#B45309', fontWeight: 700 }}>TASLAK · tanı hekimin</span>
           </div>
         </div>
       )}
@@ -448,7 +448,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Açık görevler ({v.gorevler.length})</div>
           {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
           {v.gorevler.map((g) => (
-            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#F87171' : CHROME_RENK.ink, padding: '2px 0' }}>
+            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#B42318' : CHROME_RENK.ink, padding: '2px 0' }}>
               <span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due || ''}{g.kaynak ? ` · ${g.kaynak}` : ''}</span></span>
               <button type="button" style={{ ...ghost, padding: '4px 10px', minWidth: 36, minHeight: 28, flexShrink: 0 }} onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })}>✓</button>
             </div>
@@ -477,8 +477,8 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           {raporSonuc.kontrolListesi.map((k) => <div key={k.madde} style={kucuk}>☐ {k.madde}</div>)}
           {raporSonuc.eksikler.length > 0 && (
             <>
-              <div style={{ ...etiket, marginTop: 10, color: '#FBBF24' }}>Eksikler <span style={kucuk}>· hepsi kapanmadan rapor kilitlenmez</span></div>
-              {raporSonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#FBBF24' }}>• {e}</div>)}
+              <div style={{ ...etiket, marginTop: 10, color: '#B45309' }}>Eksikler <span style={kucuk}>· hepsi kapanmadan rapor kilitlenmez</span></div>
+              {raporSonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#B45309' }}>• {e}</div>)}
             </>
           )}
           <div style={satir}>

@@ -45,7 +45,7 @@ interface Asi {
   uygulama_yeri?: string | null;
 }
 
-const KAYNAK_KENAR = { karne: 'rgba(96,165,250,0.55)', beyan: 'rgba(255,255,255,0.18)', klinik: 'rgba(45,212,191,0.55)' } as const;
+const KAYNAK_KENAR = { karne: 'rgba(96,165,250,0.55)', beyan: 'rgba(58,44,34,0.12)', klinik: 'rgba(45,212,191,0.55)' } as const;
 
 const YAYGIN_YETISKIN = ['Tetanoz-Difteri (Td)', 'Grip', 'KOVID-19', 'Zona (Herpes Zoster)', 'Pnömokok'];
 

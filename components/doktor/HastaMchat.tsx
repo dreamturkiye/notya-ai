@@ -73,7 +73,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
     }
   };
 
-  const kutu: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 16 };
+  const kutu: React.CSSProperties = { background: 'rgba(58,44,34,0.04)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: 16 };
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
@@ -83,7 +83,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
 
       <div style={kutu}>
         {MCHAT_R_SORULARI.map((s) => (
-          <div key={s.no} style={{ padding: '10px 0', borderBottom: s.no < 20 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+          <div key={s.no} style={{ padding: '10px 0', borderBottom: s.no < 20 ? '1px solid rgba(58,44,34,0.12)' : 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <span style={{ color: CHROME_RENK.ink, fontSize: 13.5 }}>{s.no}. {s.metin}</span>
@@ -95,7 +95,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
                   const secili = cevaplar[s.no] === deger;
                   return (
                     <button key={etiket} type="button" onClick={() => setCevaplar((c) => ({ ...c, [s.no]: deger }))}
-                      style={{ background: secili ? '#0F9B8E' : 'rgba(255,255,255,0.06)', border: '1px solid ' + (secili ? '#0F9B8E' : 'rgba(255,255,255,0.12)'), color: secili ? 'white' : '#9FB3C8', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      style={{ background: secili ? '#0F9B8E' : 'rgba(58,44,34,0.12)', border: '1px solid ' + (secili ? '#0F9B8E' : 'rgba(58,44,34,0.12)'), color: secili ? 'white' : '#9FB3C8', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                       {etiket}
                     </button>
                   );
@@ -107,7 +107,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
       </div>
 
       <button type="button" disabled={!hepsiYanitlandi} onClick={degerlendir}
-        style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: hepsiYanitlandi ? 'white' : CHROME_RENK.muted, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
+        style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(58,44,34,0.12)', border: 'none', color: hepsiYanitlandi ? 'white' : CHROME_RENK.muted, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
         Testi Değerlendir {!hepsiYanitlandi && `(${MCHAT_R_SORULARI.filter((s) => cevaplar[s.no] === null).length} soru kaldı)`}
       </button>
 
@@ -119,7 +119,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
             <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 8 }}>Not: 3-7 puan resmi araçta önce İzlem (Follow-Up) görüşmesi gerektirir; bu uygulama şimdilik doğrudan sevk önerisi veriyor.</div>
           )}
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>Sadece Kaydet</button>
+            <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(false)} style={{ background: 'rgba(58,44,34,0.04)', border: 'none', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>Sadece Kaydet</button>
             <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(true)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{kaydediyor ? 'Kaydediliyor…' : 'Bugünkü Muayene Formuna Ekle'}</button>
           </div>
           {notEklendi && (
@@ -128,7 +128,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
               <MuayeneFormunaDon notId={eklenenNot} />
             </div>
           )}
-          {hata && <div style={{ fontSize: 12, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+          {hata && <div style={{ fontSize: 12, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         </div>
       )}
 
@@ -136,7 +136,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
         <div style={kutu}>
           <div style={{ fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Geçmiş Uygulamalar</div>
           {gecmis.map((g) => (
-            <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
               <span style={{ color: CHROME_RENK.muted }}>{new Date(g.created_at).toLocaleDateString('tr-TR')}</span>
               <span style={{ color: RISK_RENK[g.risk_seviyesi] }}>{g.toplam_puan}/20 — {g.sonuc_metni}</span>
             </div>

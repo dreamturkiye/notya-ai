@@ -53,7 +53,7 @@ export function BelgeAnalizOzet({
   return (
     <section style={kutu} data-derm="belge-analiz">
       <h2 style={{ margin: 0, fontSize: 16 }}>Belgeler AI — deri analizleri</h2>
-      <p style={{ fontSize: 12, color: '#C4B5FD', margin: '6px 0 10px' }}>
+      <p style={{ fontSize: 12, color: '#6D28D9', margin: '6px 0 10px' }}>
         Tarama desteği, tanı değildir. Doktor onayı gerekir.
       </p>
       {analizler.length === 0 && (
@@ -66,8 +66,8 @@ export function BelgeAnalizOzet({
       </datalist>
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8, margin: 0 }}>
         {analizler.map((a) => (
-          <li key={a.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 10 }}>
-            <div style={{ fontSize: 12, color: belgeHekimOnayli(a.durum) ? '#86EFAC' : '#7A5B1E' }}>
+          <li key={a.id} style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 12, color: belgeHekimOnayli(a.durum) ? '#15803D' : '#7A5B1E' }}>
               {belgeDurumEtiket(a.durum)} · {a.modality}
               {belgeHekimOnayli(a.durum) ? '' : ' — tanı değildir'}
             </div>
@@ -81,7 +81,7 @@ export function BelgeAnalizOzet({
               Asistana raporla
             </a>
             {KOPRU_MODALITELERI.includes(a.modality) && a.durum !== 'kalite_dusuk' && a.durum !== 'hata' && (
-              <div style={{ marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8 }}>
+              <div style={{ marginTop: 8, borderTop: '1px solid rgba(58,44,34,0.12)', paddingTop: 8 }}>
                 <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginBottom: 6 }}>
                   Dual-sign taslak — uzman onayı Deri › Görüntü okumalarında. Tanı aktarılmaz; resmî tanı lezyon kartında hekim kilididir.
                 </div>
@@ -104,7 +104,7 @@ export function BelgeAnalizOzet({
                   </button>
                 </div>
                 {mesaj[a.id] && (
-                  <div style={{ fontSize: 12, marginTop: 6, color: /gönderildi/.test(mesaj[a.id]) ? '#0F9B8E' : '#F87171' }}>{mesaj[a.id]}</div>
+                  <div style={{ fontSize: 12, marginTop: 6, color: /gönderildi/.test(mesaj[a.id]) ? '#0F9B8E' : '#B42318' }}>{mesaj[a.id]}</div>
                 )}
                 {!fitzpatrick && (
                   <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>

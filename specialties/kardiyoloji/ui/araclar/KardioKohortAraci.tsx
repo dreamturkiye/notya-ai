@@ -80,7 +80,7 @@ export default function KardioKohortAraci() {
 
       <div style={S.kutu}>
         {(gorunen || []).map((s) => (
-          <label key={s.patientId} style={{ ...S.metin, display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <label key={s.patientId} style={{ ...S.metin, display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
             <input type="checkbox" checked={secili.includes(s.patientId)} onChange={(e) => setSecili((p) => e.target.checked ? [...p, s.patientId] : p.filter((x) => x !== s.patientId))} />
             <span style={{ flex: 1 }}>
               <strong>{s.ad}</strong>
@@ -94,7 +94,7 @@ export default function KardioKohortAraci() {
         <button type="button" disabled={!secili.length || gonderiliyor} onClick={gonder} style={{ ...S.btn, marginTop: 12, opacity: secili.length ? 1 : 0.5 }}>
           {gonderiliyor ? 'Gönderiliyor…' : `Seçilenlere hatırlat (${secili.length})`}
         </button>
-        {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
+        {durum && <div style={{ ...S.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
       </div>
     </>
   );

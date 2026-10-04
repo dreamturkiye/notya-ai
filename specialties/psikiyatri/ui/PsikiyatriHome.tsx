@@ -45,8 +45,8 @@ type Veri = {
 
 const ACCENT = '#6366F1';
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#A5B4FC', marginBottom: 6 };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.12)' };
+const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#4F46E5', marginBottom: 6 };
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 };
 const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
@@ -54,11 +54,11 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 const SEKMELER = ['Özet', 'Ölçekler', 'Risk', 'İlaç izlem', 'Görevler', 'SGK'] as const;
 type Sekme = (typeof SEKMELER)[number];
 
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted };
+const RENK: Record<string, string> = { iyi: '#047857', dikkat: '#B45309', kotu: '#B42318', yok: CHROME_RENK.muted };
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
       <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
       {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
@@ -78,7 +78,7 @@ function OlcekFormu({
       <div style={etiket}>{baslik}</div>
       <div style={{ ...kucuk, marginBottom: 8 }}>{yonerge}</div>
       {maddeler.map((m, i) => (
-        <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid rgba(58,44,34,0.12)' }}>
           <div style={metin}>{i + 1}. {m}</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
             {siklik.map((s) => (
@@ -87,7 +87,7 @@ function OlcekFormu({
                 type="button"
                 onClick={() => set(i, degerler[i] === s.deger ? null : s.deger)}
                 aria-pressed={degerler[i] === s.deger}
-                style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: degerler[i] === s.deger ? 'rgba(99,102,241,0.25)' : 'transparent', color: degerler[i] === s.deger ? '#C7D2FE' : CHROME_RENK.muted }}
+                style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: degerler[i] === s.deger ? 'rgba(99,102,241,0.25)' : 'transparent', color: degerler[i] === s.deger ? '#4F46E5' : CHROME_RENK.muted }}
               >{s.deger} · {s.etiket}</button>
             ))}
           </div>
@@ -95,9 +95,9 @@ function OlcekFormu({
       ))}
       {ek}
       <div style={{ ...satir, marginTop: 10 }}>
-        <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#C7D2FE' : CHROME_RENK.muted }}>{sonuc.toplam}</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#4F46E5' : CHROME_RENK.muted }}>{sonuc.toplam}</span>
         <span style={metin}>{sonuc.tamamMi ? sonuc.bantAd : `${sonuc.eksikMadde} madde boş — toplam yorumlanmaz`}</span>
-        <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ</span>
+        <span style={{ ...kucuk, color: '#B45309', fontWeight: 700 }}>KARAR DESTEĞİ</span>
       </div>
     </div>
   );
@@ -174,13 +174,13 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => (
-          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(99,102,241,0.2)' : 'transparent', color: sekme === x ? '#C7D2FE' : CHROME_RENK.muted }}>{x}</button>
+          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(99,102,241,0.2)' : 'transparent', color: sekme === x ? '#4F46E5' : CHROME_RENK.muted }}>{x}</button>
         ))}
       </div>
 
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: /amadı|zorunlu|eksik|Geçersiz|geçersiz|bayrağı|Hata/.test(mesaj) ? '#F87171' : '#34D399' }}>{mesaj}</span>
+          <span style={{ fontSize: 12, color: /amadı|zorunlu|eksik|Geçersiz|geçersiz|bayrağı|Hata/.test(mesaj) ? '#B42318' : '#047857' }}>{mesaj}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}
@@ -224,7 +224,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
                 <div style={kucuk}>{PHQ9_ISLEVSELLIK_SORUSU} <span style={{ opacity: 0.8 }}>(toplama girmez)</span></div>
                 <div style={satir}>
                   {PHQ9_ISLEVSELLIK_SECENEKLERI.map((s) => (
-                    <button key={s} type="button" onClick={() => setIslevsellik(islevsellik === s ? '' : s)} style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: islevsellik === s ? 'rgba(99,102,241,0.25)' : 'transparent', color: islevsellik === s ? '#C7D2FE' : CHROME_RENK.muted }}>{s}</button>
+                    <button key={s} type="button" onClick={() => setIslevsellik(islevsellik === s ? '' : s)} style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: islevsellik === s ? 'rgba(99,102,241,0.25)' : 'transparent', color: islevsellik === s ? '#4F46E5' : CHROME_RENK.muted }}>{s}</button>
                   ))}
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
             <button type="button" style={ghost} onClick={() => { setPhq(Array(9).fill(null)); setIslevsellik(''); }}>Temizle</button>
           </div>
 
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '16px 0' }} />
+          <div style={{ height: 1, background: 'rgba(58,44,34,0.04)', margin: '16px 0' }} />
 
           <OlcekFormu
             baslik="GAD-7 çalışma sayfası"
@@ -256,7 +256,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
             <button type="button" style={ghost} onClick={() => setGad(Array(7).fill(null))}>Temizle</button>
           </div>
 
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '16px 0' }} />
+          <div style={{ height: 1, background: 'rgba(58,44,34,0.04)', margin: '16px 0' }} />
 
           <div style={etiket}>CGI <span style={kucuk}>· klinisyen değerlendirmesi; hasta doldurmaz, hasta yüzünde görünmez</span></div>
           <div style={satir}>
@@ -355,7 +355,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Açık görevler ({v.gorevler.length})</div>
           {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
           {v.gorevler.map((g) => (
-            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#F87171' : CHROME_RENK.ink, padding: '2px 0' }}>
+            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#B42318' : CHROME_RENK.ink, padding: '2px 0' }}>
               <span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due || ''}{g.kaynak ? ` · ${g.kaynak}` : ''}</span></span>
               <button type="button" style={{ ...ghost, padding: '4px 10px', minWidth: 36, minHeight: 28, flexShrink: 0 }} onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })}>✓</button>
             </div>
@@ -382,7 +382,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
             <>
               <div style={{ ...etiket, marginTop: 10 }}>Reçete türü</div>
               {raporSonuc.receteNotlari.map((r) => (
-                <div key={r.ilac} style={{ ...kucuk, color: r.renk === 'normal' ? CHROME_RENK.muted : '#FBBF24' }}>
+                <div key={r.ilac} style={{ ...kucuk, color: r.renk === 'normal' ? CHROME_RENK.muted : '#B45309' }}>
                   {r.ilac} — {r.etiket}{r.dogrulanmali ? ` · ${r.dogrulanmali}` : ''}
                 </div>
               ))}
@@ -392,8 +392,8 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
           {raporSonuc.kontrolListesi.map((k) => <div key={k.madde} style={kucuk}>☐ {k.madde}</div>)}
           {raporSonuc.eksikler.length > 0 && (
             <>
-              <div style={{ ...etiket, marginTop: 10, color: '#FBBF24' }}>Eksikler <span style={kucuk}>· hepsi kapanmadan rapor kilitlenmez</span></div>
-              {raporSonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#FBBF24' }}>• {e}</div>)}
+              <div style={{ ...etiket, marginTop: 10, color: '#B45309' }}>Eksikler <span style={kucuk}>· hepsi kapanmadan rapor kilitlenmez</span></div>
+              {raporSonuc.eksikler.map((e) => <div key={e} style={{ ...kucuk, color: '#B45309' }}>• {e}</div>)}
             </>
           )}
           <div style={{ ...kucuk, marginTop: 10 }}>Çıktı taslaktır. Medula girişi ve e-imza hekimindedir; Notya canlı gönderim yapmaz.</div>

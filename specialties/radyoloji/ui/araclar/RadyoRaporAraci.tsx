@@ -59,8 +59,8 @@ export default function RadyoRaporAraci() {
           <button type="button" style={radyoStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {ok && <div style={{ ...radyoStil.kucuk, color: '#34D399', marginTop: 8 }}>{ok}</div>}
-        {hata && <div style={{ ...radyoStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {ok && <div style={{ ...radyoStil.kucuk, color: '#047857', marginTop: 8 }}>{ok}</div>}
+        {hata && <div style={{ ...radyoStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — BI-RADS-style şablon klinik araçtır; AI otomatik tanı ve uydurma bulgu yazılmaz. Hasta portalında kategori sayısı gösterilmez.</TaslakNotu>
       </div>
     </>

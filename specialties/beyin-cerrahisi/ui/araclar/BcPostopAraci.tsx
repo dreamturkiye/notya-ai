@@ -53,8 +53,8 @@ export default function BcPostopAraci() {
           <button type="button" style={bcStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...bcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...bcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...bcStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...bcStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — post-op kontrol listesi karar desteğidir; tanı, ameliyathane/HIS ve AED dozu yazılmaz.</TaslakNotu>
       </div>
     </>

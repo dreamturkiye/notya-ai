@@ -6,8 +6,8 @@ import { kutu } from './clinic-styles'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const col: CSSProperties = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'rgba(58,44,34,0.04)',
+  border: '1px solid rgba(58,44,34,0.12)',
   borderRadius: 10,
   padding: 12,
 }
@@ -26,7 +26,7 @@ export function KlinikTakvim({
     <section style={kutu} data-kd="klinik-takvim">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0, fontSize: 16 }}>Klinik izlem (ACOG)</h2>
-        <span style={{ fontSize: 12, fontWeight: 700, color: '#86EFAC' }} data-kd="dobyr-badge">
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#15803D' }} data-kd="dobyr-badge">
           DÖBYR uyum {sbYapildi}/{sbToplam}
         </span>
       </div>
@@ -35,7 +35,7 @@ export function KlinikTakvim({
       </p>
       <ol style={{ fontSize: 13, paddingLeft: 18, color: CHROME_RENK.muted, margin: 0 }}>
         {clinic.map((v, i) => (
-          <li key={`acog-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
+          <li key={`acog-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#15803D' : undefined }}>
             {v.ga_or_pp_day} hf · {v.duration_min} dk
             {v.done ? ' · Yapıldı' : ''}
           </li>
@@ -56,10 +56,10 @@ export function DualTakvimAccordion({ visits }: { visits: PlannedVisit[] }) {
       <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Sütunlar birleştirilmez. Kayıtlı izlem haftaları Yapıldı işaretler.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={col} data-column="yasal">
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24', marginBottom: 6 }}>Yasal (DÖBYR)</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#B45309', marginBottom: 6 }}>Yasal (DÖBYR)</div>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {yasal.map((v, i) => (
-              <li key={`sb-${v.izlem_no}-${i}`} style={{ color: v.done ? '#86EFAC' : CHROME_RENK.muted }}>
+              <li key={`sb-${v.izlem_no}-${i}`} style={{ color: v.done ? '#15803D' : CHROME_RENK.muted }}>
                 {v.izlem_no ? `İzlem ${v.izlem_no} · ` : ''}{v.ga_or_pp_day} hf
                 {v.done ? ' · Yapıldı' : ''}
               </li>
@@ -67,10 +67,10 @@ export function DualTakvimAccordion({ visits }: { visits: PlannedVisit[] }) {
           </ol>
         </div>
         <div style={col} data-column="klinik">
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#38BDF8', marginBottom: 6 }}>Klinik (ACOG)</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#1D4ED8', marginBottom: 6 }}>Klinik (ACOG)</div>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {klinik.map((v, i) => (
-              <li key={`k-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : CHROME_RENK.muted }}>
+              <li key={`k-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#15803D' : CHROME_RENK.muted }}>
                 {v.ga_or_pp_day} hf{v.sb_required ? '' : ' · klinik ek izlem'}
                 {v.done ? ' · Yapıldı' : ''}
               </li>

@@ -164,7 +164,7 @@ export default function BuyumeStudyosu() {
                 const r = son.sonuc[p];
                 const sinif = r ? vkiSinifi(ref, son.ay, r.persentil) : null;
                 return (
-                  <button key={p} type="button" onClick={() => setParam(p)} style={{ textAlign: 'left', background: param === p ? 'rgba(45,212,191,0.08)' : 'rgba(0,0,0,0.18)', border: `1px solid ${param === p ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 14, padding: 12, cursor: 'pointer', minHeight: 44, color: CHROME_RENK.ink }}>
+                  <button key={p} type="button" onClick={() => setParam(p)} style={{ textAlign: 'left', background: param === p ? 'rgba(45,212,191,0.08)' : 'rgba(0,0,0,0.18)', border: `1px solid ${param === p ? 'rgba(45,212,191,0.45)' : 'rgba(58,44,34,0.12)'}`, borderRadius: 14, padding: 12, cursor: 'pointer', minHeight: 44, color: CHROME_RENK.ink }}>
                     <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>{PARAM_AD[p]} · {tr(son.deger[p]!, 2)} {PARAM_BIRIM[p]}</div>
                     {r ? (<><PersentilRozet p={r.persentil} /><div style={kucuk}>z {zMetni(r.z)}{sinif ? ` · ${sinif}` : ''}</div></>) : (
                       <div style={{ ...kucuk, marginTop: 4 }}>{ref === 'who' && p === 'basCevresi' ? 'WHO baş çevresi 5 yaşa kadar' : ref === 'who' && p === 'kilo' ? 'WHO yaşa göre kilo 10 yaşa kadar' : 'Bu yaş referans kapsamı dışında'}</div>
@@ -184,7 +184,7 @@ export default function BuyumeStudyosu() {
             {hizlar.length > 0 && (
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
                 {hizlar.map((h) => (
-                  <div key={h.param} style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 12px', minWidth: 150, flex: '1 1 150px' }}>
+                  <div key={h.param} style={{ background: 'rgba(58,44,34,0.05)', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: '10px 12px', minWidth: 150, flex: '1 1 150px' }}>
                     <div style={kucuk}>{PARAM_AD[h.param]} hızı</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: CHROME_RENK.ink }}>{tr(h.yillik, 1)} {h.param === 'kilo' ? 'kg' : 'cm'}/yıl</div>
                     <div style={kucuk}>{tr(h.fark, 1)} {h.param === 'kilo' ? 'kg' : 'cm'} / {tr(h.aralikAy, 1)} ay{h.kisaAralik ? ' · aralık 6 aydan kısa, ölçüm hatasına duyarlı' : ''}</div>

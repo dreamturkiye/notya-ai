@@ -44,7 +44,7 @@ export function IzlemChecklist({
                 onClick={() => setDurum(m, row.durum === 'reddedildi' ? 'bekliyor' : 'reddedildi')}
                 style={{
                   background: row.durum === 'reddedildi' ? 'rgba(239,68,68,0.2)' : 'transparent',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(58,44,34,0.12)',
                   color: row.durum === 'reddedildi' ? CHROME_RENK.warn : CHROME_RENK.muted,
                   borderRadius: 6,
                   fontSize: 11,

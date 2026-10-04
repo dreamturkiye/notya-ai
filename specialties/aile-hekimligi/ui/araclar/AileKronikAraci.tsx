@@ -48,8 +48,8 @@ export default function AileKronikAraci() {
           <KopyalaButonu metin={ozet} etiket="Özeti kopyala" />
           <button type="button" onClick={kaydet} style={aileStil.btn}>Kaydet</button>
         </div>
-        {durum && <div style={{ ...aileStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...aileStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...aileStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...aileStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
       </div>
     </>
   )

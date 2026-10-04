@@ -68,7 +68,7 @@ export default function HastaKdChapter({
     <>
     {/* NOTYA-KD-02: obstetrics spine — görevler · onam · travay/partograf · doğum & C/S · lohusa/taburcu · bebek kartı (kadın-doğum only) */}
     {veri.gebelik?.id && <DogumSpine gebelikId={veri.gebelik.id} patientId={patientId} />}
-    <details style={{ border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '10px 14px' }} data-chapter="kadin-dogum">
+    <details style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: '10px 14px' }} data-chapter="kadin-dogum">
       <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>
         Bölüm derinliği (ACOG / DÖBYR / Williams)
       </summary>

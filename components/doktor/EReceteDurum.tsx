@@ -30,7 +30,7 @@ export default function EReceteDurum(props: { en: number }) {
   }
   const bagli = g.sonTest?.durum === 'baglandi'
   return (
-    <div className="yazdirma-gizle" style={{ ...stil, background: bagli ? '#ECFDF5' : '#FFFBEB', border: `1px solid ${bagli ? '#6EE7B7' : '#FCD34D'}`, color: bagli ? '#065F46' : '#78350F' }}>
+    <div className="yazdirma-gizle" style={{ ...stil, background: bagli ? '#ECFDF5' : '#FFFBEB', border: `1px solid ${bagli ? '#047857' : '#A16207'}`, color: bagli ? '#065F46' : '#78350F' }}>
       <span>Medula e-reçete: {bagli ? 'bağlantı doğrulandı' : 'bağlantı testi bekliyor'} · e-imza: {g.imzaYontemi === 'token' ? 'kart/token' : g.imzaYontemi === 'mobil' ? 'mobil imza' : 'yok'}</span>
       <button type="button" disabled title={g.gonderebilir ? 'e-imza aracı (Notya İmzacı) kurulunca aktif olur' : 'Bağlantı testi ve e-imza yöntemi gerekli'} style={{ border: '1px solid #9CA3AF', background: '#F9FAFB', color: '#6B7280', borderRadius: 6, padding: '4px 10px', cursor: 'not-allowed' }}>📤 Medula&apos;ya gönder (yakında)</button>
       <a href="/dashboard/doktor/ayarlar/erecete" style={{ color: '#1D4ED8', textDecoration: 'none' }}>Ayarlar</a>

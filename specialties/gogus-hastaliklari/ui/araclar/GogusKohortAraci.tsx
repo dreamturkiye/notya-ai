@@ -60,7 +60,7 @@ export default function GogusKohortAraci() {
       {yukleniyor && <div style={S.kucuk}>Yükleniyor…</div>}
       {!yukleniyor && !satirlar.length && <div style={S.kucuk}>Bayraklı hasta yok.</div>}
       {satirlar.map((s) => (
-        <div key={s.patientId} style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '10px 0', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div key={s.patientId} style={{ borderTop: '1px solid rgba(58,44,34,0.12)', padding: '10px 0', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{s.ad}</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>

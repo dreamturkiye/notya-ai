@@ -29,7 +29,7 @@ const strip: CSSProperties = {
 }
 
 const chip: CSSProperties = {
-  background: 'rgba(255,255,255,0.06)',
+  background: 'rgba(58,44,34,0.04)',
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12.5,
@@ -47,7 +47,7 @@ export function StickyGebeStrip(p: StickyGebeStripProps) {
           <span style={chip}><b>Rh</b> · {p.rh}</span>
           <span style={chip}><b>Sonraki randevu</b> · {p.sonrakiRandevu}</span>
           {p.dobyrBadge && (
-            <span style={{ ...chip, background: 'rgba(34,197,94,0.18)', color: '#86EFAC' }} data-kd="dobyr-badge">
+            <span style={{ ...chip, background: 'rgba(34,197,94,0.18)', color: '#15803D' }} data-kd="dobyr-badge">
               DÖBYR uyum {p.dobyrBadge}
             </span>
           )}

@@ -60,8 +60,8 @@ export default function PlastikFotoAraci() {
           <button type="button" style={plastikStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...plastikStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...plastikStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...plastikStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...plastikStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — foto köprüsü tarih+etikettir; dermatoloji skoru / yapay zekâ tanısı ve doz yazılmaz.</TaslakNotu>
       </div>
     </>

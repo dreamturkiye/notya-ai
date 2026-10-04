@@ -13,7 +13,7 @@ import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 /** Üroloji vurgusu — teal gövde, emerald başlık (KBB indigo'dan ayrışır). */
-export const URO_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#6EE7B7', baslik: '#34D399' }
+export const URO_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#047857', baslik: '#047857' }
 export const uroStil = aracStil(URO_VURGU)
 
 export {

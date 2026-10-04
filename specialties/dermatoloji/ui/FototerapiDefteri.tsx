@@ -118,7 +118,7 @@ export function FototerapiDefteri({
                 <span>{c.seans} seans</span>
                 <span>kümülatif {c.kumulatifJ} J/cm²</span>
                 {c.sonSeans && <span>son {c.sonSeans}</span>}
-                <span style={{ color: m ? '#86EFAC' : '#7A5B1E' }}>
+                <span style={{ color: m ? '#15803D' : '#7A5B1E' }}>
                   {m ? `MED ${m.deger} ${m.birim} (${m.date})` : 'MED kaydı yok'}
                 </span>
               </li>
@@ -157,7 +157,7 @@ export function FototerapiDefteri({
             </thead>
             <tbody>
               {sessions.map((s, i) => (
-                <tr key={`${s.date}-${s.device}-${s.j_cm2}-${i}`} style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <tr key={`${s.date}-${s.device}-${s.j_cm2}-${i}`} style={{ borderTop: '1px solid rgba(58,44,34,0.12)' }}>
                   <td style={{ padding: 4 }}>{s.date}</td>
                   <td style={{ padding: 4 }}>{dermLabel(DERM_PHOTO_DEVICE, s.device)}</td>
                   <td style={{ padding: 4 }}>{s.seans_no ?? '—'}</td>
@@ -181,7 +181,7 @@ export function FototerapiDefteri({
             {medAcik ? 'MED formunu kapat' : 'MED / MPD kaydı ekle'}
           </button>
           {medAcik && (
-            <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginTop: 8 }}>
+            <div style={{ border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: 8, marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
                 <label><span style={etiketS}>Test tarihi</span>
                   <input type="date" style={giris} value={medForm.date} onChange={(e) => setMedForm((p) => ({ ...p, date: e.target.value }))} />

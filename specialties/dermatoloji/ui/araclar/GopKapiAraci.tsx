@@ -118,10 +118,10 @@ export default function GopKapiAraci() {
           <Istatistik deger={engeller.length} etiket="açık kapı engeli" ton={engeller.length ? 'kirmizi' : 'iyi'} />
           <Istatistik deger={(sonuc.notApplicable || []).length} etiket="uygulanmayan kapı" />
         </div>
-        <div style={{ ...metin, fontWeight: 800, fontSize: 18, color: sonuc.allowed ? '#0F9B8E' : '#F87171' }}>
+        <div style={{ ...metin, fontWeight: 800, fontSize: 18, color: sonuc.allowed ? '#0F9B8E' : '#B42318' }}>
           {sonuc.allowed ? 'Kapılarda engel yok — başlatma kararı hekimindir' : `${engeller.length} engel var — başlatılamaz`}
         </div>
-        {engeller.map((b) => <div key={b} style={{ ...metin, color: '#F87171' }}>✕ {b}</div>)}
+        {engeller.map((b) => <div key={b} style={{ ...metin, color: '#B42318' }}>✕ {b}</div>)}
         {(sonuc.notApplicable || []).map((n) => <div key={n} style={{ ...metin, color: CHROME_RENK.muted }}>— {n}: uygulanmaz</div>)}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
         <Katlanir baslik="Asitretin farkı">

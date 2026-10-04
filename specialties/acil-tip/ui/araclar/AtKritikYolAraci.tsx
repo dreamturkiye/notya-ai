@@ -59,8 +59,8 @@ export default function AtKritikYolAraci() {
           <button type="button" style={atStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={sonuc.ozet} />
         </div>
-        {durum && <div style={{ ...atStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
-        {hata && <div style={{ ...atStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
+        {durum && <div style={{ ...atStil.kucuk, color: '#047857', marginTop: 8 }}>{durum}</div>}
+        {hata && <div style={{ ...atStil.kucuk, color: '#B42318', marginTop: 8 }}>{hata}</div>}
         <TaslakNotu>TASLAK — kritik yol bayrağıdır; STEMI/inme tanısı kilidi ve doz yazılmaz. Kardiyoloji/nöroloji aracı değildir.</TaslakNotu>
       </div>
     </>
