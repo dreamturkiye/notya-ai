@@ -23,6 +23,7 @@ import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
 import { BIRLESTIRILEN_FORM_SAYISI, formlariBirlestir, sifreliFormlariCoz } from '@/lib/intake/formBirlestir'
+import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -187,7 +188,7 @@ export async function hastaDosyaPaketiniDerle(
     for (const a of analizler) {
       const tani = (a.hekim_tanisi || []).map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', ')
       const ozet = (a.hekim_ozet || a.sonuc?.ozet || '').replace(/\s+/g, ' ').slice(0, 400)
-      b.push(`- Belge değerlendirmesi [${a.modality_final}, ${a.onaylandi_at ? trTarih(a.onaylandi_at) : 'onaylı'}]${a.sonuc?.acil_bayrak ? ' ⚠ acil bayrak' : ''}: ${ozet}${tani ? ` — Hekim tanısı: ${tani}` : ''} (motorlar: ${(a.sonuc?.engines_used || []).join(', ')})`)
+      b.push(`- Belge değerlendirmesi [${a.modality_final}, ${a.onaylandi_at ? trTarih(a.onaylandi_at) : 'onaylı'}]${a.sonuc?.acil_bayrak ? ' ⚠ acil bayrak' : ''}: ${ozet}${tani ? ` — Hekim tanısı: ${tani}` : ''}`)
     }
     b.push('- Not: bu değerlendirmeler yapay zekâ taslağı üzerinden hekim onayıyla kaydedilmiştir; klinik karar hekime aittir.')
   }
@@ -216,7 +217,7 @@ export async function hastaDosyaPaketiniDerle(
     if (!n) { b.push('- Not bulunamadı.'); return }
     if (olcum) b.push(`Ölçümler (yaşamsal bulgu alanı): ${olcum}`)
     if (n.content_subjektif) b.push(`S (Subjektif): ${n.content_subjektif}`)
-    if (n.content_objektif) b.push(`O (Objektif): ${n.content_objektif}`)
+    if (n.content_objektif) b.push(`O (Objektif): ${motorAfisiTemizle(n.content_objektif as string)}`)
     if (n.content_degerlendirme) b.push(`A (Değerlendirme): ${n.content_degerlendirme}`)
     if (n.content_plan) b.push(`P (Plan): ${n.content_plan}`)
     if (n.content_tani) b.push(`Tanı: ${n.content_tani}`)

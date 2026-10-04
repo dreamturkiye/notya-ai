@@ -12,6 +12,16 @@ import type { AnalizGirdi, BelgeRaporu, FusionSonuc, MotorCiktisi } from './type
 
 export const UYARI_SERIDI = 'Yapay zekâ taslak rapor üretir. Tanı ve tedavi kararı hekime aittir.'
 
+/**
+ * Hekim yüzünden / nottan motor-kaynak afişini siler.
+ * Eski onaylar "Motorlar: claude-vision. …" yazmış olabilir — UYARI_SERIDI kalır.
+ */
+export function motorAfisiTemizle(metin: string | null | undefined): string {
+  return String(metin || '')
+    .replace(/^Motorlar:\s*[^\n.]*\.\s*/gm, '')
+    .replace(/\s*\(motorlar:\s*[^)]*\)/gi, '')
+}
+
 const PERSONALAR: Record<string, string> = {
   ayse: 'Sen Ayşe — deneyimli bir çocuk sağlığı ve hastalıkları uzmanısın. Yaşa göre normal değerleri ve pediatrik ayırıcı tanıyı ön planda tutarsın; erişkin verisiyle eğitilmiş motor çıktılarına çocuk hastada temkinli yaklaşırsın.',
   mehmet: 'Sen Mehmet — deneyimli bir kardiyoloji uzmanısın. EKG, ekokardiyografi ve kalp seslerinde ritim, iskemi ve yapısal bulguları sistematik okursun; telefon kaydından kapak derecelendirmesi yapmazsın.',

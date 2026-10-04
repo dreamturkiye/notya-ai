@@ -1,8 +1,9 @@
 'use client';
 /**
  * NOTYA-BELGE-01 — /dashboard/doktor/hastalar/[id]/belgeler/[belgeId]
- * Media + "Asistana raporla" + taslak rapor + Motorlar chips + resmi tanı kilidi + Onayla (→ SOAP Objektif)
+ * Media + "Asistana raporla" + taslak rapor + resmi tanı kilidi + Onayla (→ SOAP Objektif)
  * + Plan düzenle → Muayeneyi onayla (revizyon). Disclaimer strip always visible (locked).
+ * Motor / kaynak adları hekim yüzünde gösterilmez (nota da yazılmaz).
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -295,10 +296,10 @@ export default function BelgeAnalizPage() {
                   <span>Görüntüde hasta adı, TC, doğum tarihi gibi kimlik bilgisi yok. (Fotoğraf üst verisi cihazınızda temizlenir; yalnız kimliksiz kopya gönderilir.)</span>
                 </label>
               )}
-              {yetenek && <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>{yetenek.not} Tarayıcı motorları: {tierBMotorlari(bransKey, (modalite || 'serbest') as Modalite).join(', ') || 'bu modalite için yok (yalnız asistan)'}.</div>}
+              {yetenek?.not && <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>{yetenek.not}</div>}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={raporla} disabled={durum !== 'hazir' && durum !== 'hata' || !modalite} style={{ ...btn, opacity: durum === 'hazir' || durum === 'hata' ? 1 : 0.6 }}>
-                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Motorlar çalışıyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
+                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Değerlendiriliyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
                 </button>
                 {doc && belgeLabMi(doc) && (
                   <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab${geriTab ? `?geriTab=${geriTab}` : ''}`} style={{ fontSize: 12, fontWeight: 700, color: '#B4832F' }}>Laboratuvarı değerlendir →</a>
@@ -400,23 +401,6 @@ export default function BelgeAnalizPage() {
                 )}
                 {rapor.oneri && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: CHROME_RENK.ink }}><div style={etiket}>Öneri</div>{rapor.oneri}</div>}
                 {rapor.sinirlar.length > 0 && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 12, color: CHROME_RENK.muted }}><div style={etiket}>Sınırlar</div><ul style={{ margin: 0, paddingLeft: 18 }}>{rapor.sinirlar.map((s, i) => <li key={i}>{s}</li>)}</ul></div>}
-
-                <div style={{ ...toolsCard, fontSize: 12 }}>
-                  <div style={etiket}>Motorlar</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {(analiz.motor_ciktilari || []).map((m, i) => (
-                      <span key={i} style={{ border: `1px solid ${m.hata ? 'rgba(164,91,62,0.5)' : m.dogrulanmis ? 'rgba(47,67,52,0.5)' : 'rgba(58,44,34,0.16)'}`, borderRadius: 999, padding: '3px 9px', color: m.hata ? '#a45b3e' : CHROME_RENK.ink }} title={m.hata || (m.dogrulanmis ? 'doğrulanmış motor' : 'genel değerlendirme')}>
-                        {m.motor} · {m.tier}{m.dogrulanmis ? ' ✓' : ''}{m.hata ? ' ✗' : ''}
-                      </span>
-                    ))}
-                  </div>
-                  {analiz.fusion?.fused?.length ? (
-                    <div style={{ marginTop: 8, color: CHROME_RENK.muted }}>
-                      {analiz.fusion.fused.map((f) => <div key={f.kod}>{f.label_tr} <span style={{ color: CHROME_RENK.ink }}>p={f.p}</span> · destek {f.sources.join(', ') || '—'}{f.karsi.length ? ` · karşı ${f.karsi.join(', ')}` : ''}</div>)}
-                    </div>
-                  ) : null}
-                  {analiz.fusion?.duzeltmeler?.length ? <div style={{ marginTop: 6, color: CHROME_RENK.muted }}>Sistem düzeltmeleri: {analiz.fusion.duzeltmeler.join('; ')}</div> : null}
-                </div>
               </>
             )}
           </div>

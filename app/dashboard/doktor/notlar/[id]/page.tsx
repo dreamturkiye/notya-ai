@@ -45,6 +45,7 @@ import { ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi } from '@
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import SonrakiAdim from '@/components/doktor/SonrakiAdim'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
@@ -169,7 +170,7 @@ export default function NotSayfasi() {
         setVital(Object.fromEntries(Object.entries((j.not.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
         setTaslak({
           subjektif: satirBasiNumarala(j.not.subjektif || ''),
-          objektif: satirBasiNumarala(j.not.objektif || ''),
+          objektif: satirBasiNumarala(motorAfisiTemizle(j.not.objektif || '')),
           degerlendirme: satirBasiNumarala(j.not.degerlendirme || ''),
           plan: satirBasiNumarala(j.not.plan || ''),
         });

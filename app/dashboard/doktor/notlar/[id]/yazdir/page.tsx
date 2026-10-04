@@ -21,6 +21,7 @@ import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SeansKapilari from '@/components/doktor/seans/SeansKapilari'
 
 interface NotVeri {
@@ -97,7 +98,7 @@ export default function NotYazdir() {
     bolumler: [
       ['Başvuru Yakınması', not.basvuruYakinmasi || ''],
       ['Anamnez', not.subjektif || ''],
-      ['Fizik Muayene', not.objektif || ''],
+      ['Fizik Muayene', motorAfisiTemizle(not.objektif || '')],
       ['Tanı', not.tani || not.degerlendirme || ''],
       ['Tedavi', not.plan || ''],
     ],
@@ -218,7 +219,7 @@ export default function NotYazdir() {
         {not.subjektif && anamnezParcala(not.subjektif).map((b, bi) => (
           <div key={'anm' + bi} className="not-bolum"><div className="not-etiket">{b.baslik}</div><div className="not-metin">{b.metin}</div></div>
         ))}
-        {not.objektif && fizikParcala(not.objektif).map((b, bi) => (
+        {not.objektif && fizikParcala(motorAfisiTemizle(not.objektif)).map((b, bi) => (
           <div key={'fm' + bi} className="not-bolum"><div className="not-etiket">{b.baslik}</div><div className="not-metin">{b.metin}</div></div>
         ))}
         {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Tanı</div><div className="not-metin">{satirBasiNumarala(not.degerlendirme)}</div></div>}

@@ -27,6 +27,7 @@ import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
+import { motorAfisiTemizle } from '@/core/belgeler/yazar';
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip';
 import SonrakiAdim from '@/components/doktor/SonrakiAdim';
@@ -90,7 +91,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       date: String(n.date ?? ''),
       createdAt: n.createdAt ? String(n.createdAt) : null,
       subjektif: satirBasiNumarala(String(n.subjektif ?? '')),
-      objektif: satirBasiNumarala(String(n.objektif ?? '')),
+      objektif: satirBasiNumarala(motorAfisiTemizle(String(n.objektif ?? ''))),
       degerlendirme: satirBasiNumarala(String(n.degerlendirme ?? '')),
       plan: satirBasiNumarala(String(n.plan ?? '')),
       tani: String(n.tani ?? ''),

@@ -44,7 +44,8 @@ function raporBlogu(a: { sonuc: BelgeRaporu; hekim_tanisi: { ad: string; icd10?:
   if (r.bulgular?.length) satirlar.push('Bulgular: ' + r.bulgular.join('; '))
   if (a.hekim_tanisi?.length) satirlar.push('Hekim tanısı: ' + a.hekim_tanisi.map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', '))
   if (r.acil_bayrak) satirlar.push('⚠ Acil bayrak: değerlendirmede kırmızı bayrak bulgu işaretlendi.')
-  satirlar.push(`Motorlar: ${(r.engines_used || []).join(', ')}. ${UYARI_SERIDI}`)
+  // Motor / kaynak adı nota yazılmaz — hekime yalnız klinik uyarı (Kaan: afişe etme).
+  satirlar.push(UYARI_SERIDI)
   return satirlar.filter(Boolean).join('\n')
 }
 

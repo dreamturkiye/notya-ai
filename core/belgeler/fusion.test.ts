@@ -2,6 +2,9 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { fuse, capHesapla, acilKurali, raporuDogrula, bant, fusionYap } from './fusion'
 import { bransAnahtari, etkinModalite, tierBMotorlari } from './router'
+import { motorAfisiTemizle, UYARI_SERIDI } from './yazar'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { BULGULAR, gecerliKod } from './ontoloji'
 import type { MotorCiktisi, BelgeRaporu } from './types'
 
@@ -97,5 +100,19 @@ describe('router', () => {
     assert.equal(etkinModalite('pediatri', 'ses_akciger').modalite, 'ses_akciger')
     assert.deepEqual(tierBMotorlari('psikiyatri', 'ses_konusma'), [])
     assert.deepEqual(tierBMotorlari('pediatri', 'cxr'), ['txrv-densenet121'])
+  })
+})
+
+describe('motor afişi hekim yüzünde yok', () => {
+  it('motorAfisiTemizle: Motorlar satırını siler, UYARI_SERIDI kalır', () => {
+    const ham = `— Belge değerlendirmesi (Röntgen (akciğer grafisi), 04.10.2026) —\nÖzet.\nMotorlar: claude-vision. ${UYARI_SERIDI}`
+    const temiz = motorAfisiTemizle(ham)
+    assert.ok(!/Motorlar:|claude-vision|txrv/i.test(temiz))
+    assert.ok(temiz.includes(UYARI_SERIDI))
+  })
+  it('onayla rota nota Motorlar: yazmaz', () => {
+    const r = readFileSync(join(import.meta.dirname, '../../app/api/doktor/belgeler/analiz/onayla/route.ts'), 'utf8')
+    assert.doesNotMatch(r, /Motorlar:\s*\$\{/)
+    assert.match(r, /satirlar\.push\(UYARI_SERIDI\)/)
   })
 })
