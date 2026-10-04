@@ -17,7 +17,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
-import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import { onaylananNotYolu, hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import GeriLink from '@/components/navigasyon/GeriLink';
 import { notDuzenleGeriHref } from '@/lib/doktor/geriNavigasyon';
@@ -526,11 +525,7 @@ export default function NotSayfasi() {
           <input value={basvuru} onChange={(e) => isaretle(setBasvuru)(e.target.value)} style={{ ...kutu, fontStyle: 'italic' }} />
         </div>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <div style={etiket}>Yaşamsal Bulgular</div>
-            <CihazdanAl hastaId={veri.hasta.patientId} notId={veri.not.id} onOlcum={(v) => isaretle((x: Record<string, string>) => setVital({ ...vital, ...x }))(v)} />
-            <CihazDosyasi hastaId={veri.hasta.patientId} notId={veri.not.id} />
-          </div>
+          <div style={etiket}>Yaşamsal Bulgular</div>
           <YasamsalBulgularFormu
             olcumler={kapsam.olcumler}
             degerler={vital}

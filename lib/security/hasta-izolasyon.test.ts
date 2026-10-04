@@ -572,9 +572,6 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/belgeler/ingest', red: 404,
     yazdi: (a) => tablo('hasta_belgeler').some((x) => x.patient_id === a.hasta),
     cagir: (r, a, h) => coz(r.ingest.POST(iste('POST', '/api/doktor/belgeler/ingest', { token: a.token, govde: { base64: Buffer.from('sentetik').toString('base64'), mimeType: 'application/pdf', hastaId: h.hasta, belgeType: 'Lab Sonucu' } }))) },
-  { ad: 'POST /api/doktor/cihaz-olcum', red: 404,
-    yazdi: (a) => tablo('cihaz_olcumleri').some((x) => x.patient_id === a.hasta),
-    cagir: (r, a, h) => coz(r.cihaz.POST(iste('POST', '/api/doktor/cihaz-olcum', { token: a.token, govde: { hastaId: h.hasta, transport: 'manuel', olcumler: [{ tur: 'ates', deger: '37.2', birim: '°C', kaynak: 'manuel' }] } }))) },
   // Mesajlar / hatırlatma / intake
   { ad: 'POST /api/doktor/mesajlar', red: 404,
     yazdi: (a) => tablo('hasta_mesaj_konulari').filter((x) => x.patient_id === a.hasta).length > 1,
@@ -750,7 +747,6 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       goruntuleme: await ice('app/api/doktor/goruntuleme/route'),
       goruntulemeYukle: await ice('app/api/doktor/goruntuleme/yukle/route'),
       ingest: await ice('app/api/doktor/belgeler/ingest/route'),
-      cihaz: await ice('app/api/doktor/cihaz-olcum/route'),
       mesajlar: await ice('app/api/doktor/mesajlar/route'),
       mesajKonu: await ice('app/api/doktor/mesajlar/[konuId]/route'),
       iletisimHazirla: await ice('app/api/doktor/iletisim/hazirla/route'),

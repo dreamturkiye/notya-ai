@@ -16,8 +16,8 @@
  *     the same glance as the value.
  *   • T2 shows önce → sonra. An edit is never presented as if it were an addition.
  *
- * Inline styles, matching components/core/CihazdanAl.tsx (this codebase does not use Tailwind in
- * app components). Works at 390px: fields stack, buttons wrap.
+ * Inline styles (this codebase does not use Tailwind in app components). Works at 390px: fields
+ * stack, buttons wrap.
  */
 import React, { useMemo, useState } from 'react'
 // NOTYA-ASISTAN-YUZEN-01: next/link — kart asistan oturumunun içinde; tam sayfa yüklemesi oturumu öldürürdü.

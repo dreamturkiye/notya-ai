@@ -67,10 +67,6 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/goruntuleme/yukle/route.ts': T,
   'app/api/doktor/goruntuler/route.ts': I('GET/POST: hastaSahibiMi then goruntu_calisma.eq(doctor_id); vault uploadDocument assertPatientOwned'),
   'app/api/doktor/goruntuler/[id]/route.ts': I('GET/PATCH row by id AND doctor_id; priors/seri scoped doctor_id+patient_id'),
-  'app/api/doktor/cihaz-olcum/route.ts': T,
-  'app/api/doktor/cihaz-olcum/dosya/route.ts': I('patient ownership check before vault upload (vault re-checks)'),
-  // NOTYA-BLE-SANDBOX-01 — Ayarlar › Cihazlar (hatırlanan BLE cihazları); hasta kimliği yok
-  'app/api/doktor/cihazlar/route.ts': I('doktor_cihazlar scoped by doctor_id = user.id; cihazSandboxAcikMi gate (Kaan + Dr. Gökhan only — others GET yetkili:false / POST·DELETE 403); takes no patient id and reads no patient table; DELETE also .eq(doctor_id)'),
   // ── Randevu / takvim / mesaj / hatırlatma / intake ──
   'app/api/doktor/randevular/route.ts': T,
   'app/api/doktor/randevular/[id]/route.ts': T,

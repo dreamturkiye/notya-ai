@@ -40,7 +40,7 @@ export const VAULT_ALLOWED_MIME = [
   'image/webp',
   'image/heic',
   'image/heif',
-  // NOTYA-BLE-02: steteskop kayıtları (Eko/Littmann WAV/MP3/M4A) — cihaz köprüsü dosya yolu
+  // Ses dosyaları (muayene / mesaj ekleri)
   'audio/wav',
   'audio/x-wav',
   'audio/wave',

@@ -45,24 +45,5 @@
       "description": "Notlarım"
     }
   ],
-  "prefer_related_applications": false,
-  "share_target": {
-    "action": "/cihaz/paylas",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "files": [
-        {
-          "name": "dosya",
-          "accept": [
-            "audio/*",
-            "application/pdf",
-            "image/*"
-          ]
-        }
-      ]
-    }
-  }
+  "prefer_related_applications": false
 }

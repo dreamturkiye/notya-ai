@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import {
   getAccessToken, getAccessTokenAsync,
   toolsShell,
@@ -586,9 +585,6 @@ export default function IncelemePage() {
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
                           <span style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· düzenlenebilir</span></span>
-                          {/* NOTYA-BLE-01/02 (Kaan 2026-09-15): Bluetooth cihazdan ölçüm + cihaz uygulamasından dosya — core, tüm branşlar */}
-                          <CihazdanAl hastaId={note.patientId} notId={note.id} onOlcum={(v) => setVitalTaslak({ ...vitalTaslak, ...v })} />
-                          <CihazDosyasi hastaId={note.patientId} notId={note.id} />
                         </div>
                         <MuayeneEkleri hastaId={note.patientId} visitId={note.sessionId} kompakt />
                         {/* BRANS-ALAN-SIZMASI (Kaan 2026-09-17): alanlar notun branş profilinden — baş çevresi yalnız pediatrik bağlamda (KD formunda çıkıyordu) */}

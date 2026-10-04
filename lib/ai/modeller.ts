@@ -304,7 +304,7 @@ const SOSYAL_DOLGU = new Set(['iyi', 'sen', 'siz', 'ben', 'de', 'da', 'çok', 's
 const SOSYAL_AZAMI_KELIME = 8
 // HIZLI istisnası 2 — uygulama kullanımı sorusu: açık bir uygulama/ekran/hesap terimi, kısa, klinik sinyalsiz, hastasız.
 // Belirsiz kelimeler BİLEREK yok ("dil" = organ, "bildirim" = bildirimi zorunlu hastalık, "hesapla" = doz hesabı).
-const UYGULAMA_TERIMI = /(?<![\p{L}])(uygulama|notya|ekran|menü|menu|buton|düğme|sekme|ayarlar|şifre|parola|abonelik|fatura|ödeme|kota|tema|karanlık mod|hesabım|hesabımı|giriş yap|çıkış yap|oturum aç|mikrofon|kulaklık|bluetooth)/iu
+const UYGULAMA_TERIMI = /(?<![\p{L}])(uygulama|notya|ekran|menü|menu|buton|düğme|sekme|ayarlar|şifre|parola|abonelik|fatura|ödeme|kota|tema|karanlık mod|hesabım|hesabımı|giriş yap|çıkış yap|oturum aç|mikrofon|kulaklık)/iu
 const UYGULAMA_AZAMI_KELIME = 25
 
 function kelimeler(kucuk: string): string[] {

@@ -58,7 +58,7 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
 
   const isImage = fileType.startsWith('image/')
   const isPdf = fileType === 'application/pdf'
-  const isAudio = fileType.startsWith('audio/') // NOTYA-BLE-02: steteskop kaydı
+  const isAudio = fileType.startsWith('audio/')
 
   return (
     <div style={{ background: '#020812', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>

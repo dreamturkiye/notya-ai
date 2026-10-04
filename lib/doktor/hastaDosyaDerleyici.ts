@@ -61,7 +61,7 @@ export async function hastaDosyaPaketiniDerle(
 
   // HASTA-IZOLASYON-01: every child read is scoped to the doctor as well as the patient, so a row
   // another doctor filed under this patient id can never enter this doctor's file or AI context.
-  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ, randevuQ, labQ, calismaQ] = await Promise.all([
+  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, analizQ, hekimQ, randevuQ, labQ, calismaQ] = await Promise.all([
     // NOTYA-ARSIV-01: arşivlenmiş muayene (ve notu) Ayşe'nin dosyasına / kartına girmez.
     arsivsizSeanslar(supabase, 'id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
     // NOTYA-ARSIV-02: arşivlenmiş muayenenin yazdığı ilaç da dosyaya / etkileşim bağlamına girmez.
@@ -72,8 +72,7 @@ export async function hastaDosyaPaketiniDerle(
     supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).not('form_data_encrypted', 'is', null).order('created_at', { ascending: false }).limit(BIRLESTIRILEN_FORM_SAYISI),
     supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
-    // NOTYA-BLE-06 + NOTYA-BELGE-05: cihazdan gelen ölçümler/dosyalar ve onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
-    supabase.from('cihaz_olcumleri').select('tur, deger, birim, cihaz, profil, kaynak, alindi, onaylandi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onaylandi', true).order('alindi', { ascending: false }).limit(12),
+    // NOTYA-BELGE-05: onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
     supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
     supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle(),
     supabase.from('randevular').select('baslangic, tur, durum').eq('patient_id', patientId).eq('doktor_id', doktorId).neq('durum', 'iptal').order('baslangic', { ascending: true }).limit(20),
@@ -174,17 +173,10 @@ export async function hastaDosyaPaketiniDerle(
     b.push(`- ${trTarih(r.baslangic)}${r.tur ? ` — ${r.tur}` : ''}${r.durum ? ` (${r.durum})` : ''}`)
   }
 
-  // NOTYA-BLE-06 / NOTYA-BELGE-05 — cihaz kaynaklı ölçümler ve onaylı belge değerlendirmeleri (VİZİT GEÇMİŞİ'nden önce: SOAP bağlam dilimine girsin)
-  const cihazOlcumleri = (cihazQ?.data || []) as { tur: string; deger: string | null; birim: string | null; cihaz: { ad?: string; uretici?: string; model?: string } | null; profil: string | null; kaynak: string; alindi: string }[]
+  // NOTYA-BELGE-05 — onaylı belge değerlendirmeleri (VİZİT GEÇMİŞİ'nden önce: SOAP bağlam dilimine girsin)
   const analizler = (analizQ?.data || []) as { modality_final: string; durum: string; sonuc: { ozet?: string; acil_bayrak?: boolean; engines_used?: string[] } | null; hekim_tanisi: { ad: string; icd10?: string | null }[] | null; hekim_ozet: string | null; onaylandi_at: string | null }[]
-  if (cihazOlcumleri.length || analizler.length) {
-    b.push('\n## CİHAZ VE BELGE DEĞERLENDİRMELERİ (en yeni üstte)')
-    const TUR: Record<string, string> = { ates: 'Ateş', tansiyon: 'Tansiyon', nabiz: 'Nabız', spo2: 'SpO₂', kilo: 'Kilo', glukoz: 'Glukoz', steteskop: 'Steteskop kaydı', ekg: 'EKG dosyası', usg: 'USG görüntüsü', diger: 'Cihaz çıktısı' }
-    for (const o of cihazOlcumleri) {
-      const c = o.cihaz || {}
-      const cihazAd = [c.uretici, c.model].filter(Boolean).join(' ') || c.ad || o.profil || 'cihaz'
-      b.push(o.deger ? `- ${TUR[o.tur] || o.tur}: ${o.deger} ${o.birim || ''} (cihazdan: ${cihazAd}, ${trTarih(o.alindi)})` : `- ${TUR[o.tur] || o.tur} mevcut (cihazdan: ${cihazAd}, ${trTarih(o.alindi)}) — ses/dosya yorumlanmadı`)
-    }
+  if (analizler.length) {
+    b.push('\n## BELGE DEĞERLENDİRMELERİ (en yeni üstte)')
     for (const a of analizler) {
       const tani = (a.hekim_tanisi || []).map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', ')
       const ozet = (a.hekim_ozet || a.sonuc?.ozet || '').replace(/\s+/g, ' ').slice(0, 400)
@@ -280,7 +272,7 @@ export async function hastaDosyaPaketiniDerle(
     asilar: asilarQ.data || [],
     seanslar,
     notlar,
-    cihaz: cihazQ.data || [],
+    cihaz: [],
     lablar: labQ.data || [],
     randevular: randevuQ.data || [],
     pediatrik,

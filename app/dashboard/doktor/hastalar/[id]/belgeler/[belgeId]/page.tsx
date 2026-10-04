@@ -100,7 +100,7 @@ export default function BelgeAnalizPage() {
       return;
     }
     if (!doc) return;
-    if (doc.fileType.startsWith('audio/')) { setModalite(kural.modaliteler.includes('ses_kalp') && doc.category === 'cihaz-kaydi' ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp'); setModaliteGuvenli(false) }
+    if (doc.fileType.startsWith('audio/')) { setModalite(kural.modaliteler.includes('ses_kalp') ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp'); setModaliteGuvenli(false) }
     else if (belgeRontgenMi(doc) && kural.modaliteler.includes('cxr')) { setModalite('cxr'); setModaliteGuvenli(false) }
     else if (doc.fileType === 'application/pdf') { setModalite('pdf_rapor'); setModaliteGuvenli(true) } // file type alone is deterministic here
     else { setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest'); setModaliteGuvenli(false) }
