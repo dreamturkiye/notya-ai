@@ -21,7 +21,8 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import {
   konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir,
   YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, ISTEM_IPTAL_ONAYI, HATIRLATMA_GONDERILDI,
-  KONSULTAN_EPOSTA_GONDERILDI, KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, ILETISIM_EPOSTA_AYAR_YOLU,
+  KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, ILETISIM_EPOSTA_AYAR_YOLU,
+  konsultanEpostasiniAc, konsultanEpostaGonderAkisi,
 } from '@/lib/doktor/konsultasyonIstemci';
 import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
@@ -200,8 +201,22 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
       if (ok && j.konsultasyon) {
         if (typeof j.portalLink === 'string' && j.portalLink) setPortalLink(j.portalLink);
         const durum = String(j.epostaDurum || '')
-        if (gidecekEposta && durum && durum !== 'gonderildi' && typeof window !== 'undefined') {
-          window.alert(epostaDurumMetni(durum, typeof j.aliciEposta === 'string' ? j.aliciEposta : gidecekEposta))
+        const alici = typeof j.aliciEposta === 'string' ? j.aliciEposta : gidecekEposta
+        // Cihaz postası (Mac Mail / iPhone Mail) — OAuth kutusu gerekmez.
+        if (alici && typeof j.epostaKonu === 'string' && typeof j.epostaMetin === 'string') {
+          const acildi = konsultanEpostasiniAc({ alici, konu: j.epostaKonu, metin: j.epostaMetin })
+          if (acildi && j.konsultasyon?.id) {
+            void konsultasyonIslemi(String(j.konsultasyon.id), 'eposta_gonder', { aliciEposta: alici, isaretle: true })
+              .then(({ ok: isOk, j: ij }) => {
+                if (isOk && ij.konsultasyon) {
+                  // listeye zaten eklenecek; portal_gonderildi_at güncellenir
+                }
+              })
+          } else if (!acildi && typeof window !== 'undefined') {
+            window.alert(epostaDurumMetni('hata', alici))
+          }
+        } else if (gidecekEposta && durum === 'yok' && typeof window !== 'undefined') {
+          window.alert(epostaDurumMetni('yok', gidecekEposta))
         }
         olustu({
           ...j.konsultasyon,
@@ -209,8 +224,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
           gun: 0,
           belge: null,
           belgeTaslagi: null,
-          portal_gonderildi_at: j.konsultasyon.portal_gonderildi_at
-            || (durum === 'gonderildi' ? new Date().toISOString() : null),
+          portal_gonderildi_at: j.konsultasyon.portal_gonderildi_at || null,
         });
       } else setHata(j.error || 'Konsültasyon kaydedilemedi.');
     } catch { setHata('Kaydedilemedi — bağlantıyı kontrol edin.'); }
@@ -285,7 +299,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
         <Alan etiket="Konsültan hekim (isteğe bağlı)">
           <input aria-label="Konsültan hekim" value={hekim} onChange={(e) => setHekim(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.hedefHekim} placeholder="Ör. Dr. Ad Soyad" style={stil.input} />
         </Alan>
-        <Alan etiket="Konsültan e-posta (isteğe bağlı)" ipucu="Yazarsanız oluştururken portal linki bu adrese gider (hekimin Ayarlar › İletişim’de bağlı Gmail/Outlook kutusu). Hatırlat düğmesi hastayadır; bu alan konsültanadır.">
+        <Alan etiket="Konsültan e-posta (isteğe bağlı)" ipucu="Yazarsanız oluştururken cihazınızdaki posta uygulaması açılır (Mac Mail, iPhone Mail… — Ayarlar › İletişim’deki tercih). Hatırlat düğmesi hastayadır; bu alan konsültanadır.">
           <input
             aria-label="Konsültan e-posta"
             type="email"
@@ -329,7 +343,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
       {!hedef || soru.trim().length < KLINIK_SORU_EN_AZ
         ? <div style={{ ...stil.kucuk, marginTop: 6 }}>Hedef branş ve en az {KLINIK_SORU_EN_AZ} karakterlik istem metni gerekli.</div>
         : gidecekEposta
-          ? <div style={{ ...stil.kucuk, marginTop: 6 }}>E-posta {gidecekEposta} adresine gidecek — kutunuz bağlı değilse <a href={ILETISIM_EPOSTA_AYAR_YOLU} style={{ color: CHROME_RENK.pine }}>Ayarlar › İletişim</a>’den bağlayın.</div>
+          ? <div style={{ ...stil.kucuk, marginTop: 6 }}>E-posta {gidecekEposta} — oluşturunca cihazınızdaki posta uygulaması açılır (Mac Mail / iPhone Mail). Tercih: <a href={ILETISIM_EPOSTA_AYAR_YOLU} style={{ color: CHROME_RENK.pine }}>Ayarlar › İletişim</a>.</div>
           : <div style={{ ...stil.kucuk, marginTop: 6 }}>E-posta yazılmazsa yalnız kayıt oluşur; konsültana sonra «E-posta gönder» ile iletebilirsiniz.</div>}
       {hata && <div style={{ ...stil.hata, marginTop: 8 }}>{hata}</div>}
       <div style={{ ...stil.kucuk, marginTop: 10 }}>Bu bir konsültasyon (meslektaş görüşü) istemidir; SGK sevk belgesi değildir. Kurumlar arası SGK sevki gerekiyorsa MEDULA üzerinden düzenlenir.</div>
@@ -607,10 +621,9 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
     }
     setCalisiyor(ad); setMesaj(null);
     try {
-      const epostaGonder = async (alici?: string) => konsultasyonIslemi(k.id, 'eposta_gonder', alici ? { aliciEposta: alici } : undefined)
       if (ad === 'eposta_gonder') {
-        let { ok, j } = await epostaGonder()
-        if (!ok && j.epostaDurum === 'yok' && typeof window !== 'undefined') {
+        let sonuc = await konsultanEpostaGonderAkisi(k.id)
+        if (!sonuc.ok && /e-posta yok|Konsültan e-posta/i.test(sonuc.metin) && typeof window !== 'undefined') {
           const girilen = window.prompt(KONSULTAN_EPOSTA_ALICI_SOR, '')
           if (girilen == null) { setCalisiyor(''); return }
           if (!girilen.trim()) {
@@ -618,13 +631,13 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
             setCalisiyor('')
             return
           }
-          ;({ ok, j } = await epostaGonder(girilen.trim()))
+          sonuc = await konsultanEpostaGonderAkisi(k.id, girilen.trim())
         }
-        if (ok) {
-          if (j.konsultasyon) guncelle(j.konsultasyon)
-          setMesaj({ iyi: true, metin: KONSULTAN_EPOSTA_GONDERILDI + (j.aliciEposta ? ` · ${j.aliciEposta}` : '') })
+        if (sonuc.ok) {
+          if (sonuc.konsultasyon) guncelle(sonuc.konsultasyon as Partial<KonsultasyonGorunumu>)
+          setMesaj({ iyi: true, metin: sonuc.metin })
         } else {
-          setMesaj({ iyi: false, metin: epostaDurumMetni(String(j.epostaDurum || ''), typeof j.aliciEposta === 'string' ? j.aliciEposta : null) || j.error || 'E-posta gönderilemedi.' })
+          setMesaj({ iyi: false, metin: sonuc.metin })
         }
         return
       }
@@ -711,9 +724,9 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
               onClick={() => islem('eposta_gonder')}
               disabled={!!calisiyor}
               style={k.portal_gonderildi_at ? stil.ghost : stil.btn}
-              title="Konsültana portal linki gönderir (hastaya Hatırlat değil)."
+              title="Konsültana portal linki — cihazınızdaki posta uygulaması (Mac Mail / iPhone Mail)."
             >
-              {calisiyor === 'eposta_gonder' ? 'Gönderiliyor…' : (k.portal_gonderildi_at ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
+              {calisiyor === 'eposta_gonder' ? 'Açılıyor…' : (k.portal_gonderildi_at ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
             </button>
             <button type="button" onClick={() => islem('hatirlat')} disabled={!!calisiyor} style={stil.ghost} title="Hastaya Sağlığım hatırlatması (klinik yok).">{calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}</button>
             <button type="button" onClick={() => islem('kapat')} disabled={!!calisiyor} style={stil.ghost}>Yanıtsız kapat</button>

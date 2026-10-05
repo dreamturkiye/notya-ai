@@ -1,9 +1,15 @@
 /**
  * KONSULTASYON-02 — konsültasyon rotasının tarayıcı istemcisi. TEK yer: hasta dosyası › Konsültasyonlar kartı ve
  * Araçlar › Bekleyen Konsültasyonlar aynı çağrıyı ve aynı metinleri kullanır (iki yüzey aynı işlemi farklı yapmasın).
+ *
+ * Konsültan e-postası: cihazdaki posta uygulaması (mailto → Mac Mail / iPhone Mail) veya Ayarlar › İletişim tercihi
+ * (Gmail/Outlook web). Sunucu OAuth kutusu gerekmez — NOTYA-ILETISIM-01 ile aynı desen.
  */
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
+import { epostaLinki } from '@/lib/iletisim/baglantilar'
+import { baglantiyiAc, cihazEpostaAcilisi } from '@/lib/iletisim/istemci'
 import { TASLAK_OLUSTURULAMADI } from '@/lib/doktor/konsultasyonTaslagi'
+import { epostaDurumMetni } from '@/lib/doktor/konsultasyonEposta'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function konsultasyonApi(yol: string, init?: { method?: string; govde?: unknown }): Promise<{ ok: boolean; j: Record<string, any> }> {
@@ -23,12 +29,29 @@ export async function konsultasyonApi(yol: string, init?: { method?: string; gov
 export function konsultasyonIslemi(
   id: string,
   islem: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil' | 'eposta_gonder',
-  ek?: { aliciEposta?: string },
+  ek?: { aliciEposta?: string; isaretle?: boolean },
 ) {
   return konsultasyonApi('/api/doktor/konsultasyon', {
     method: 'PATCH',
-    govde: { id, islem, ...(ek?.aliciEposta ? { aliciEposta: ek.aliciEposta } : {}) },
+    govde: {
+      id,
+      islem,
+      ...(ek?.aliciEposta ? { aliciEposta: ek.aliciEposta } : {}),
+      ...(ek?.isaretle ? { isaretle: true } : {}),
+    },
   })
+}
+
+/**
+ * Taslak alanlarından cihaz postasını açar (Mac Mail / iPhone Mail / tercih edilen web).
+ * iOS Safari için senkron çağrılmalı (tap handler içinde).
+ */
+export function konsultanEpostasiniAc(taslak: { alici: string; konu: string; metin: string }): boolean {
+  const acilis = cihazEpostaAcilisi() || 'uygulama'
+  const link = epostaLinki(taslak.alici, taslak.konu, taslak.metin, acilis)
+  if (!link) return false
+  baglantiyiAc(link)
+  return true
 }
 
 /** Araçlar › Konsültasyonlar (ORTAK_DOKTOR_ARACLARI — 30 branş). Eski bekleyen route 308 ile buraya gider. */
@@ -41,10 +64,45 @@ export const YANITSIZ_SIL_ONAYI = 'Yanıtsız kapatılmış bu konsültasyon has
 /** Yanıt bekleyen istemi iptal / sil — hekim yeniden yazmak veya vazgeçmek ister. */
 export const ISTEM_IPTAL_ONAYI = 'Bu konsültasyon istemi iptal edilsin mi? Kayıt silinir; isterseniz yeniden yazabilirsiniz. Bu işlem geri alınamaz.'
 export const HATIRLATMA_GONDERILDI = 'Hastaya Sağlığım üzerinden hatırlatma gönderildi (klinik bilgi içermez).'
-/** Konsültana portal linki — Hatırlat (hasta) ile karışmasın. */
-export const KONSULTAN_EPOSTA_GONDERILDI = 'Konsültana e-posta gönderildi (portal linki; hesap gerekmez).'
+/** Konsültana portal linki — cihaz postası; Hatırlat (hasta) ile karışmasın. */
+export const KONSULTAN_EPOSTA_GONDERILDI = 'Gönderildi olarak işaretlendi (posta uygulamanızda Gönder’e bastığınızdan emin olun).'
 export const KONSULTAN_EPOSTA_ALICI_SOR = 'Konsültanın e-posta adresi (ör. ad@ornek.com):'
 export { epostaDurumMetni, ILETISIM_EPOSTA_AYAR_YOLU } from '@/lib/doktor/konsultasyonEposta'
+
+/**
+ * Konsültana e-posta: sunucudan taslak al → cihaz postasını aç → gönderildi işaretle.
+ * Alıcı yoksa sunucu 400 döner; çağıran prompt edebilir.
+ */
+export async function konsultanEpostaGonderAkisi(
+  id: string,
+  aliciEposta?: string,
+): Promise<{ ok: boolean; metin: string; konsultasyon?: Record<string, unknown>; aliciEposta?: string }> {
+  const hazir = await konsultasyonIslemi(id, 'eposta_gonder', aliciEposta ? { aliciEposta } : undefined)
+  if (!hazir.ok) {
+    return {
+      ok: false,
+      metin: epostaDurumMetni(String(hazir.j.epostaDurum || ''), typeof hazir.j.aliciEposta === 'string' ? hazir.j.aliciEposta : null)
+        || hazir.j.error || 'E-posta hazırlanamadı.',
+    }
+  }
+  const alici = String(hazir.j.aliciEposta || aliciEposta || '')
+  const konu = String(hazir.j.epostaKonu || '')
+  const metin = String(hazir.j.epostaMetin || '')
+  if (!alici || !konu || !metin) {
+    return { ok: false, metin: epostaDurumMetni('hata') }
+  }
+  const acildi = konsultanEpostasiniAc({ alici, konu, metin })
+  if (!acildi) return { ok: false, metin: 'Posta uygulaması açılamadı — e-posta adresini kontrol edin.' }
+
+  // Hekim posta uygulamasında Gönder’e basacak; biz açıldıktan sonra işaretleriz.
+  const isaret = await konsultasyonIslemi(id, 'eposta_gonder', { aliciEposta: alici, isaretle: true })
+  return {
+    ok: true,
+    metin: epostaDurumMetni('hazir', alici),
+    konsultasyon: (isaret.ok && isaret.j.konsultasyon) || hazir.j.konsultasyon,
+    aliciEposta: alici,
+  }
+}
 
 /** Hasta dosyası › Konsültasyonlar; `yanit` verilirse o konsültasyonun yanıt formu açık gelir. */
 export function konsultasyonDosyaYolu(patientId: string, yanitId?: string): string {

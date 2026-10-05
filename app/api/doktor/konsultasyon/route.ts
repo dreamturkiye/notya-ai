@@ -23,7 +23,8 @@
  *         KİLİDİ sunucuda). Her değişen alanın önceki metni konsultasyon_revizyonlar'a yazılır — önce iz, sonra güncelleme;
  *         iz yazılamazsa değişiklik YAPILMAZ. Yanıt özeti düzeltmesi ('yanit', önceki özet varken) de iz bırakır.
  *         'sil': yanıt bekleyen veya yanıtsız kapatılmış kayıt — hard delete (iptal / yeniden yaz); doctor_id kapsamlı.
- *         'eposta_gonder': yanıt beklerken konsültana portal linki (defter e-postası veya aliciEposta); hekimin bağlı kutusu.
+ *         'eposta_gonder': yanıt beklerken konsültan e-posta TASLAĞI (portal linki); istemci cihaz postasını açar
+ *         (mailto / Mac Mail). isaretle:true → portal_gonderildi_at. OAuth kutusu gerekmez.
  *
  * VERİ: tablo `sevkler` (033; dahiliye/göz/KD aynı tabloya yazmaya devam eder). Terim "sevk" UI'de kullanılmaz —
  * SGK sevki (SUT EK-2/F / e-sevk) ayrı ve düzenleyici bir belgedir. lib/doktor/konsultasyon.ts başlığına bakın.
@@ -78,7 +79,7 @@ import {
   type Revizyon,
 } from '@/lib/doktor/konsultasyon'
 import {
-  konsultanaEpostaGonder,
+  konsultanaEpostaHazirla,
   konsultanAliciDogrula,
   portalLinkHazirla,
   type EpostaDurum,
@@ -494,15 +495,19 @@ export async function POST(req: NextRequest) {
   if (error || !data) return NextResponse.json({ error: 'Konsültasyon kaydedilemedi — tablo henüz hazır olmayabilir.' }, { status: 500 })
   let s = data as unknown as KonsultasyonSatiri
 
-  // Portal jetonu + isteğe bağlı e-posta (hekimin bağlı kutusu) — klinik dilim linkte; şifre/hesap yok.
-  let epostaDurum: EpostaDurum = aliciEposta ? 'bagli_degil' : 'yok'
+  // Portal jetonu + isteğe bağlı e-posta TASLAĞI — istemci cihaz postasını açar (mailto / Mac Mail). OAuth yok.
+  let epostaDurum: EpostaDurum = aliciEposta ? 'hazir' : 'yok'
   let portalLink: string | null = null
+  let epostaKonu: string | null = null
+  let epostaMetin: string | null = null
   if (aliciEposta) {
     const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
-    const g = await konsultanaEpostaGonder({ sb, doktorId: user.id, satir: s, alici: aliciEposta, hekimAdi: hekim })
+    const g = await konsultanaEpostaHazirla({ sb, doktorId: user.id, satir: s, alici: aliciEposta, hekimAdi: hekim })
     s = g.satir
-    portalLink = g.portalLink
     epostaDurum = g.epostaDurum
+    portalLink = g.taslak?.portalLink || null
+    epostaKonu = g.taslak?.konu || null
+    epostaMetin = g.taslak?.metin || null
   } else {
     const p = await portalLinkHazirla(sb, user.id, s)
     s = p.satir
@@ -526,6 +531,8 @@ export async function POST(req: NextRequest) {
     portalLink,
     epostaDurum,
     aliciEposta: aliciEposta || null,
+    epostaKonu,
+    epostaMetin,
   }, { status: 201 })
 }
 
@@ -619,7 +626,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (islem === 'eposta_gonder') {
-    // Alıcı: istek gövdesi > Defter e-postası. Portal linki yoksa üretilir.
+    // Alıcı: istek gövdesi > Defter e-postası. Sunucu GÖNDERMEZ — taslak döner; istemci mailto / Mac Mail açar.
     const aliciD = konsultanAliciDogrula(b?.aliciEposta ?? b?.konsultanEposta ?? b?.eposta)
     if (!aliciD.ok) return NextResponse.json({ error: aliciD.hata }, { status: 400 })
     let alici = aliciD.alici
@@ -636,24 +643,23 @@ export async function PATCH(req: NextRequest) {
       }, { status: 400 })
     }
     const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
-    const g = await konsultanaEpostaGonder({ sb, doktorId: user.id, satir: s, alici, hekimAdi: hekim })
-    if (g.epostaDurum !== 'gonderildi') {
+    const isaretle = b?.isaretle === true || b?.isaretle === 'true' || b?.isaretle === 1
+    const g = await konsultanaEpostaHazirla({ sb, doktorId: user.id, satir: s, alici, hekimAdi: hekim, isaretle })
+    if (!g.taslak) {
       return NextResponse.json({
         ok: false,
-        error: g.epostaDurum === 'bagli_degil'
-          ? 'E-posta kutunuz bağlı değil — Ayarlar › İletişim’den Gmail/Outlook bağlayın.'
-          : 'E-posta gönderilemedi — yeniden deneyin.',
+        error: 'E-posta taslağı hazırlanamadı — yeniden deneyin.',
         epostaDurum: g.epostaDurum,
-        portalLink: g.portalLink,
-        aliciEposta: alici,
         konsultasyon: { ...g.satir, hedefEtiketi: hedefEtiketi(g.satir) },
-      }, { status: g.epostaDurum === 'bagli_degil' ? 409 : 502 })
+      }, { status: 502 })
     }
     return NextResponse.json({
       ok: true,
       epostaDurum: g.epostaDurum,
-      portalLink: g.portalLink,
+      portalLink: g.taslak.portalLink,
       aliciEposta: alici,
+      epostaKonu: g.taslak.konu,
+      epostaMetin: g.taslak.metin,
       konsultasyon: { ...g.satir, hedefEtiketi: hedefEtiketi(g.satir) },
     })
   }

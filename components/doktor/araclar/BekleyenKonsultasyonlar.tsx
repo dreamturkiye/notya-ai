@@ -21,7 +21,7 @@ import {
 } from '@/lib/doktor/konsultasyon';
 import {
   HATIRLATMA_GONDERILDI, ISTEM_IPTAL_ONAYI, YANITSIZ_KAPAT_ONAYI,
-  KONSULTAN_EPOSTA_GONDERILDI, KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni,
+  KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, konsultanEpostaGonderAkisi,
   konsultasyonApi, konsultasyonDosyaYolu, konsultasyonIslemi,
 } from '@/lib/doktor/konsultasyonIstemci';
 
@@ -92,9 +92,9 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
           onClick={() => calistir('eposta_gonder')}
           disabled={!!calisiyor}
           style={gonderildiAt ? stil.ghost : stil.btn}
-          title="Konsültana portal linki (hastaya Hatırlat değil)."
+          title="Konsültana portal linki — cihazınızdaki posta uygulaması (Mac Mail / iPhone Mail)."
         >
-          {calisiyor === 'eposta_gonder' ? 'Gönderiliyor…' : (gonderildiAt ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
+          {calisiyor === 'eposta_gonder' ? 'Açılıyor…' : (gonderildiAt ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
         </button>
         <button type="button" onClick={() => calistir('hatirlat')} disabled={!!calisiyor || !!sonraki} aria-disabled={!!calisiyor || !!sonraki}
           title={sonraki ? `Aynı konsültasyon için ${HATIRLATMA_ARALIGI_GUN} günde bir hatırlatma gönderilir.` : 'Hastaya Sağlığım hatırlatması'}
@@ -150,9 +150,9 @@ export function BekleyenKonsultasyonListesi({ bekleyenler, yanitSuresi, hazir = 
 
       <div style={{ ...stil.kucuk, marginTop: 4 }}>
         En uzun bekleyen üstte. Sarı: {BEKLEME_DIKKAT_GUN} gün ve üzeri · kırmızı: {BEKLEME_KIRMIZI_GUN} gün ve üzeri — bu vurgu takibi
-        kolaylaştıran bir ipucudur, klinik bir süre sınırı değildir. «E-posta gönder» konsültana portal linkidir (Ayarlar › İletişim’de
-        bağlı kutu gerekir). «Hatırlat» hastaya Sağlığım üzerinden gider, klinik bilgi içermez; aynı konsültasyon için{' '}
-        {HATIRLATMA_ARALIGI_GUN} günde bir gönderilebilir.
+        kolaylaştıran bir ipucudur, klinik bir süre sınırı değildir. «E-posta gönder» konsültana portal linkini cihazınızdaki posta
+        uygulamasında açar (Mac Mail, iPhone Mail… — Ayarlar › İletişim tercihi). «Hatırlat» hastaya Sağlığım üzerinden gider;
+        aynı konsültasyon için {HATIRLATMA_ARALIGI_GUN} günde bir gönderilebilir.
       </div>
     </div>
   );
@@ -178,24 +178,25 @@ export default function BekleyenKonsultasyonlar() {
 
   const islemYap = useCallback<BekleyenIslemi>(async (id, islem, ek) => {
     try {
+      if (islem === 'eposta_gonder') {
+        const s = await konsultanEpostaGonderAkisi(id, ek?.aliciEposta)
+        if (!s.ok) return { ok: false, metin: s.metin }
+        const at = (s.konsultasyon?.portal_gonderildi_at as string | undefined) ?? new Date().toISOString()
+        setBekleyenler((l) => (l ? l.map((b) => (b.id === id ? { ...b, portalGonderildiAt: at } : b)) : l));
+        return { ok: true, metin: s.metin, portalGonderildiAt: at }
+      }
       const { ok, j } = await konsultasyonIslemi(id, islem, ek);
       if (!ok) {
         const durumMetin = j.epostaDurum ? epostaDurumMetni(String(j.epostaDurum), typeof j.aliciEposta === 'string' ? j.aliciEposta : null) : ''
         return { ok: false, metin: durumMetin || j.error || 'İşlem yapılamadı.' };
       }
       if (islem === 'kapat') {
-        // Kapanan konsültasyon bekleyenler listesinden çıkar (hasta dosyasında "Yanıtsız kapatıldı" olarak kalır).
         setBekleyenler((l) => (l ? l.filter((b) => b.id !== id) : l));
         return { ok: true, metin: 'Yanıtsız kapatıldı.' };
       }
       if (islem === 'sil') {
         setBekleyenler((l) => (l ? l.filter((b) => b.id !== id) : l));
         return { ok: true, metin: 'İstem iptal edildi.' };
-      }
-      if (islem === 'eposta_gonder') {
-        const at = j.konsultasyon?.portal_gonderildi_at ?? new Date().toISOString()
-        setBekleyenler((l) => (l ? l.map((b) => (b.id === id ? { ...b, portalGonderildiAt: at } : b)) : l));
-        return { ok: true, metin: KONSULTAN_EPOSTA_GONDERILDI + (j.aliciEposta ? ` · ${j.aliciEposta}` : ''), portalGonderildiAt: at };
       }
       const son = j.konsultasyon?.son_hatirlatma_at ?? new Date().toISOString();
       setBekleyenler((l) => (l ? l.map((b) => (b.id === id ? { ...b, sonHatirlatmaAt: son } : b)) : l));

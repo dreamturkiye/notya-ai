@@ -36,9 +36,8 @@ export default function KonsultasyonIstemSekmesi() {
         </div>
         <p style={{ ...stil.metin, color: CHROME_RENK.muted, margin: 0 }}>
           Konsültasyon istemi hasta dosyasından açılır. Dilimde kısa özgeçmiş, klinik soru ve onaylı not cümleleri gider —
-          fısıltı, ham transkript ve model adı gitmez. Defterden konsültan + e-posta seçin (veya yazın); portal linki
-          sizin bağlı Gmail/Outlook kutunuzdan gider. Kutunuz yoksa Ayarlar › İletişim’den bağlayın; sonra karttaki
-          «E-posta gönder» ile iletebilirsiniz.
+          fısıltı, ham transkript ve model adı gitmez.           Defterden konsültan + e-posta seçin (veya yazın); «E-posta gönder» cihazınızdaki posta uygulamasını açar
+          (Mac Mail, iPhone Mail… — Ayarlar › İletişim tercihi). Sunucuya Gmail bağlamanız gerekmez.
         </p>
         <a
           href="/dashboard/doktor/hastalar"

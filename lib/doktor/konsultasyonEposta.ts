@@ -1,15 +1,24 @@
 /**
  * KONSULTASYONLAR — konsültana portal linki e-postası.
- * Gönderim hekimin bağlı Gmail/Outlook kutusundan (lib/iletisim/otomatik/eposta).
- * Klinik dilim linktedir; şifre/hesap yok.
+ * Gönderim hekimin CİHAZINDAKİ posta uygulamasından (mailto / Mac Mail / iPhone Mail /
+ * Ayarlar › İletişim’deki tercih: uygulama | Gmail web | Outlook web) — NOTYA-ILETISIM-01 ile aynı desen.
+ * Sunucu OAuth kutusu gerekmez. Klinik dilim linktedir; şifre/hesap yok.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { epostaGecerliMi } from '@/lib/iletisim/otomatik/eposta/mime'
 import { KONSULTASYON_KOLONLARI, hedefEtiketi, type KonsultasyonSatiri } from '@/lib/doktor/konsultasyon'
 
-export type EpostaDurum = 'gonderildi' | 'bagli_degil' | 'yok' | 'hata'
+/** hazir = taslak hazır (cihazda açılacak); gonderildi = hekim posta uygulamasında gönderdi (işaretlendi). */
+export type EpostaDurum = 'hazir' | 'gonderildi' | 'yok' | 'hata'
 
 export const ILETISIM_EPOSTA_AYAR_YOLU = '/dashboard/doktor/ayarlar/iletisim'
+
+export type KonsultanEpostaTaslagi = {
+  alici: string
+  konu: string
+  metin: string
+  portalLink: string
+}
 
 /** Tek satır alıcı; boş → null; geçersiz → hata. */
 export function konsultanAliciDogrula(ham: unknown): { ok: true; alici: string | null } | { ok: false; hata: string } {
@@ -23,15 +32,35 @@ export function epostaDurumMetni(d: EpostaDurum | string | null | undefined, ali
   const a = alici ? ` (${alici})` : ''
   switch (d) {
     case 'gonderildi':
-      return `Konsültana e-posta gönderildi${a}.`
-    case 'bagli_degil':
-      return `E-posta kutunuz bağlı değil — Ayarlar › İletişim’den Gmail/Outlook bağlayın, sonra «E-posta gönder»e basın.`
+      return `Konsültana e-posta gönderildi olarak işaretlendi${a}.`
+    case 'hazir':
+      return `Posta uygulamanız açıldı${a} — orada Gönder’e basın (Mac Mail, iPhone Mail vb.).`
     case 'yok':
       return 'Konsültan e-postası yok — Defterden seçin veya e-posta yazın; ardından «E-posta gönder».'
     case 'hata':
-      return 'E-posta gönderilemedi — bağlantıyı kontrol edip yeniden deneyin.'
+      return 'E-posta taslağı hazırlanamadı — yeniden deneyin.'
+    case 'bagli_degil':
+      // Eski istemci / yanıt — artık OAuth gerekmez.
+      return `Posta uygulamanızda açın${a} — Ayarlar › İletişim’den «Bu cihazdaki posta uygulaması» seçili olsun.`
     default:
       return ''
+  }
+}
+
+export function konsultanEpostaTaslagi(hekimAdi: string, satir: Pick<KonsultasyonSatiri, 'hedef' | 'hedef_brans'>, portalLink: string, alici: string): KonsultanEpostaTaslagi {
+  return {
+    alici,
+    konu: `Konsültasyon istemi — ${hedefEtiketi(satir)}`,
+    metin: [
+      `Sayın meslektaşım,`,
+      ``,
+      `${hekimAdi} sizinle bir konsültasyon istemi paylaştı.`,
+      `Bağlantı (hesap veya şifre gerekmez):`,
+      portalLink,
+      ``,
+      `Raporunuzu, filminizi veya EKG'nizi bu sayfadan bırakabilirsiniz.`,
+    ].join('\n'),
+    portalLink,
   }
 }
 
@@ -61,45 +90,33 @@ export async function portalLinkHazirla(
   }
 }
 
-export async function konsultanaEpostaGonder(g: {
+/**
+ * Konsültan e-posta taslağı — sunucu göndermez; istemci cihaz postasını açar.
+ * `isaretle: true` → hekim Gönder’e bastı / açıldıktan sonra portal_gonderildi_at yazılır.
+ */
+export async function konsultanaEpostaHazirla(g: {
   sb: SupabaseClient
   doktorId: string
   satir: KonsultasyonSatiri
   alici: string
   hekimAdi: string
-}): Promise<{ epostaDurum: EpostaDurum; portalLink: string | null; satir: KonsultasyonSatiri }> {
+  isaretle?: boolean
+}): Promise<{ epostaDurum: EpostaDurum; taslak: KonsultanEpostaTaslagi | null; satir: KonsultasyonSatiri }> {
   const { satir, portalLink } = await portalLinkHazirla(g.sb, g.doktorId, g.satir)
-  if (!portalLink) return { epostaDurum: 'hata', portalLink: null, satir }
+  if (!portalLink) return { epostaDurum: 'hata', taslak: null, satir }
 
-  try {
-    const { epostaGonder } = await import('@/lib/iletisim/otomatik/eposta/gonderim')
-    const sonuc = await epostaGonder(g.sb, {
-      doktorId: g.doktorId,
-      alici: g.alici,
-      konu: `Konsültasyon istemi — ${hedefEtiketi(satir)}`,
-      metin: [
-        `Sayın meslektaşım,`,
-        ``,
-        `${g.hekimAdi} sizinle bir konsültasyon istemi paylaştı.`,
-        `Bağlantı (hesap veya şifre gerekmez):`,
-        portalLink,
-        ``,
-        `Raporunuzu, filminizi veya EKG'nizi bu sayfadan bırakabilirsiniz.`,
-      ].join('\n'),
-    })
-    if (sonuc.ok) {
-      const simdi = new Date().toISOString()
-      await g.sb.from('sevkler').update({ portal_gonderildi_at: simdi }).eq('id', satir.id).eq('doctor_id', g.doktorId)
-      return {
-        epostaDurum: 'gonderildi',
-        portalLink,
-        satir: { ...satir, portal_gonderildi_at: simdi },
-      }
+  const taslak = konsultanEpostaTaslagi(g.hekimAdi, satir, portalLink, g.alici)
+  if (g.isaretle) {
+    const simdi = new Date().toISOString()
+    await g.sb.from('sevkler').update({ portal_gonderildi_at: simdi }).eq('id', satir.id).eq('doctor_id', g.doktorId)
+    return {
+      epostaDurum: 'gonderildi',
+      taslak,
+      satir: { ...satir, portal_gonderildi_at: simdi },
     }
-    const h = sonuc.hata || ''
-    const bagliDegil = h.includes('bağlı değil') || h.includes('bagli') || h.includes('yenilenmesi')
-    return { epostaDurum: bagliDegil ? 'bagli_degil' : 'hata', portalLink, satir }
-  } catch {
-    return { epostaDurum: 'hata', portalLink, satir }
   }
+  return { epostaDurum: 'hazir', taslak, satir }
 }
+
+/** @deprecated OAuth sunucu gönderimi kaldırıldı — hazirla kullanın. */
+export const konsultanaEpostaGonder = konsultanaEpostaHazirla
