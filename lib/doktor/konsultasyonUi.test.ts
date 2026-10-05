@@ -16,6 +16,7 @@ import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '../../compo
 import { hedefSecenekleri } from './konsultasyon'
 import { KonsultasyonKohortListesi } from '../../components/doktor/KonsultasyonKohortSatiri'
 import { BekleyenKonsultasyonListesi } from '../../components/doktor/araclar/BekleyenKonsultasyonlar'
+import { DefterKayitKarti } from '../../components/doktor/araclar/KonsultasyonDefter'
 import { BekleyenKonsultasyonOzetiKarti } from '../../components/doktor/BekleyenKonsultasyonOzeti'
 import type { BekleyenKonsultasyon } from './konsultasyon'
 import { YonlendirmelerView } from '../../app/portal/_components/VisitsView'
@@ -386,5 +387,26 @@ describe('AYSE-KONSULTASYON-01 — Ayşe taslağı arayüzü (SSR)', () => {
   it('bekleyen kart: rapor bağlıysa Ayşe\'nin özet taslağına yönlendirir', () => {
     const h = sar(createElement(KonsultasyonKarti, { k: satir({ belge_id: 'b1', belge: { id: 'b1', ad: 'kbb.pdf', tur: 'application/pdf', tarih: '2026-09-18T10:00:00Z', silindi: false } }), patientId: 'p', guncelle: () => {} }))
     assert.match(h, /Ayşe(&#x27;|')nin özet taslağını görün, onaylayın/)
+  })
+})
+
+describe('KONSULTASYONLAR — Defter kartı: Düzenle + Sil', () => {
+  const k = {
+    id: 'd1', adSoyad: 'Atilla Şengör', brans: 'KBB', bransAnahtar: 'kulak-burun-bogaz',
+    telefon: '+15716399183', ofisTelefon: null, adres: 'Akmerkez, İstanbul',
+    eposta: 'dr.gokhanmamur@gmail.com', whatsapp: '+15716399183', kurumIci: false,
+    not: 'Hafta içi ofis 09:00–16:00.',
+  }
+  it('iletişim satırı, Düzenle ve Sil ≥ 44 px; düzenlenirken rozet', () => {
+    const h = sar(createElement(DefterKayitKarti, { k, onDuzenle: () => {}, onSil: () => {} }))
+    assert.match(h, /Atilla Şengör/)
+    assert.match(h, /dr\.gokhanmamur@gmail\.com/)
+    assert.match(h, /Cep: \+15716399183/)
+    assert.match(h, />Düzenle</)
+    assert.match(h, />Sil</)
+    for (const m of h.match(/<button\b[^>]*>/g) || []) assert.match(m, /min-height:44px/, m)
+    const d = sar(createElement(DefterKayitKarti, { k, duzenleniyor: true, onDuzenle: () => {}, onSil: () => {} }))
+    assert.match(d, /düzenleniyor/)
+    assert.match(d, /data-duzenleniyor="1"/)
   })
 })

@@ -1,16 +1,16 @@
 'use client'
 /**
  * KONSULTASYONLAR-01/02 — hekimin güvendiği konsültan defteri.
- * Ofis + cep telefonu, genel notlar (hekim ve sekreter görür). Pratik defteri.
+ * Ofis + cep telefonu, genel notlar (hekim ve sekreter görür). Ekle · Düzenle · Sil.
  */
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useAracStil } from '@/lib/doktor/aracUi'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
 import { konsultasyonApi } from '@/lib/doktor/konsultasyonIstemci'
 import { DEFTER_SINIRLARI } from '@/lib/doktor/konsultasyonDefter'
 
-type Kayit = {
+export type DefterKayit = {
   id: string
   adSoyad: string
   brans: string
@@ -24,7 +24,21 @@ type Kayit = {
   not: string | null
 }
 
-const bos = () => ({
+type Form = {
+  adSoyad: string
+  brans: string
+  ofisTelefon: string
+  telefon: string
+  adres: string
+  eposta: string
+  whatsapp: string
+  kurumIci: boolean
+  not: string
+}
+
+type MetinAlani = 'adSoyad' | 'ofisTelefon' | 'telefon' | 'whatsapp' | 'eposta' | 'adres'
+
+const bos = (): Form => ({
   adSoyad: '',
   brans: 'kulak-burun-bogaz',
   ofisTelefon: '',
@@ -36,14 +50,101 @@ const bos = () => ({
   not: '',
 })
 
+function kayittanForm(k: DefterKayit): Form {
+  return {
+    adSoyad: k.adSoyad || '',
+    brans: k.bransAnahtar || k.brans || 'kulak-burun-bogaz',
+    ofisTelefon: k.ofisTelefon || '',
+    telefon: k.telefon || '',
+    adres: k.adres || '',
+    eposta: k.eposta || '',
+    whatsapp: k.whatsapp || '',
+    kurumIci: !!k.kurumIci,
+    not: k.not || '',
+  }
+}
+
+/** Kart sunumu — SSR testleri için ayrı. */
+export function DefterKayitKarti({
+  k,
+  duzenleniyor = false,
+  onDuzenle,
+  onSil,
+}: {
+  k: DefterKayit
+  duzenleniyor?: boolean
+  onDuzenle?: () => void
+  onSil?: () => void
+}) {
+  const stil = useAracStil()
+  return (
+    <div
+      style={{
+        ...stil.kutu,
+        marginBottom: 10,
+        ...(duzenleniyor ? { borderColor: 'rgba(47,67,52,0.45)', boxShadow: '0 0 0 1px rgba(47,67,52,0.2)' } : {}),
+      }}
+      data-defter-kayit={k.id}
+      data-duzenleniyor={duzenleniyor ? '1' : undefined}
+    >
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'baseline' }}>
+        <span style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{k.adSoyad}</span>
+        <span style={stil.kucuk}>{k.brans}</span>
+        {k.kurumIci ? <span style={stil.kucuk}>· kurum içi</span> : <span style={stil.kucuk}>· dışarı</span>}
+        {duzenleniyor ? <span style={{ ...stil.kucuk, color: CHROME_RENK.pine, fontWeight: 600 }}>· düzenleniyor</span> : null}
+      </div>
+      <div style={{ ...stil.kucuk, marginTop: 6, lineHeight: 1.5 }}>
+        {[
+          k.ofisTelefon && `Ofis: ${k.ofisTelefon}`,
+          k.telefon && `Cep: ${k.telefon}`,
+          k.whatsapp && `WA: ${k.whatsapp}`,
+          k.eposta,
+          k.adres,
+        ].filter(Boolean).join(' · ') || 'İletişim bilgisi yok'}
+      </div>
+      {k.not ? (
+        <div
+          style={{
+            marginTop: 8,
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: 'rgba(47,67,52,0.06)',
+            fontSize: 13.5,
+            lineHeight: 1.45,
+            color: CHROME_RENK.ink,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {k.not}
+        </div>
+      ) : null}
+      <div style={{ ...stil.satir, marginTop: 8 }}>
+        <button type="button" onClick={onDuzenle} disabled={!onDuzenle || duzenleniyor} style={stil.ghost}>
+          Düzenle
+        </button>
+        <button
+          type="button"
+          onClick={onSil}
+          disabled={!onSil}
+          style={{ ...stil.ghost, color: 'var(--warn, #7a4a22)', borderColor: 'rgba(122,74,34,0.35)' }}
+        >
+          Sil
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function KonsultasyonDefter() {
   const stil = useAracStil()
-  const [liste, setListe] = useState<Kayit[] | null>(null)
+  const [liste, setListe] = useState<DefterKayit[] | null>(null)
   const [hata, setHata] = useState('')
-  const [form, setForm] = useState(bos())
+  const [form, setForm] = useState<Form>(bos())
+  const [duzenleId, setDuzenleId] = useState<string | null>(null)
   const [alanHata, setAlanHata] = useState<Record<string, string>>({})
   const [kaydediyor, setKaydediliyor] = useState(false)
   const [mesaj, setMesaj] = useState('')
+  const formRef = useRef<HTMLDivElement>(null)
 
   const yukle = useCallback(() => {
     konsultasyonApi('/api/doktor/konsultasyon/defter').then(({ ok, j }) => {
@@ -55,14 +156,29 @@ export default function KonsultasyonDefter() {
 
   useEffect(() => { yukle() }, [yukle])
 
+  const duzenlemeyiIptal = () => {
+    setDuzenleId(null)
+    setForm(bos())
+    setAlanHata({})
+    setMesaj('')
+  }
+
+  const duzenleBaslat = (k: DefterKayit) => {
+    setDuzenleId(k.id)
+    setForm(kayittanForm(k))
+    setAlanHata({})
+    setMesaj('')
+    formRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }
+
   const kaydet = async () => {
     if (kaydediyor) return
     setAlanHata({})
     setMesaj('')
     setKaydediliyor(true)
     const { ok, j } = await konsultasyonApi('/api/doktor/konsultasyon/defter', {
-      method: 'POST',
-      govde: form,
+      method: duzenleId ? 'PATCH' : 'POST',
+      govde: duzenleId ? { id: duzenleId, ...form } : form,
     })
     setKaydediliyor(false)
     if (!ok) {
@@ -73,44 +189,62 @@ export default function KonsultasyonDefter() {
       else setMesaj(m)
       return
     }
-    setForm(bos())
-    setMesaj('Konsültan deftere eklendi.')
-    if (j.kayit) setListe((l) => [...(l || []), j.kayit as Kayit].sort((a, b) => a.adSoyad.localeCompare(b.adSoyad, 'tr')))
-    else yukle()
+    const kayit = j.kayit as DefterKayit | undefined
+    if (duzenleId) {
+      setMesaj('Konsültan güncellendi.')
+      if (kayit) {
+        setListe((l) => (l
+          ? l.map((x) => (x.id === duzenleId ? kayit : x)).sort((a, b) => a.adSoyad.localeCompare(b.adSoyad, 'tr'))
+          : l))
+      } else yukle()
+      setDuzenleId(null)
+      setForm(bos())
+    } else {
+      setForm(bos())
+      setMesaj('Konsültan deftere eklendi.')
+      if (kayit) setListe((l) => [...(l || []), kayit].sort((a, b) => a.adSoyad.localeCompare(b.adSoyad, 'tr')))
+      else yukle()
+    }
   }
 
   const sil = async (id: string) => {
     if (typeof window !== 'undefined' && !window.confirm('Bu konsültan defterden silinsin mi?')) return
     const { ok, j } = await konsultasyonApi(`/api/doktor/konsultasyon/defter?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
     if (!ok) { setMesaj(j.error || 'Silinemedi.'); return }
+    if (duzenleId === id) duzenlemeyiIptal()
     setListe((l) => (l ? l.filter((x) => x.id !== id) : l))
+    setMesaj('Konsültan silindi.')
   }
 
-  const alan = (key: 'adSoyad' | 'ofisTelefon' | 'telefon' | 'whatsapp' | 'eposta' | 'adres', label: string, opts?: { type?: string; max?: number; placeholder?: string }) => (
-    <label style={{ display: 'block', marginBottom: 12 }}>
-      <span style={{ ...stil.kucuk, display: 'block', marginBottom: 4 }}>{label}</span>
-      <input
-        type={opts?.type || 'text'}
-        value={form[key]}
-        maxLength={opts?.max}
-        placeholder={opts?.placeholder}
-        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-        style={stil.input}
-        aria-label={label}
-      />
-      {alanHata[key] && <div style={{ fontSize: 13, color: CHROME_RENK.warn, marginTop: 4 }}>{alanHata[key]}</div>}
-    </label>
-  )
+  const alan = (key: MetinAlani, label: string, opts?: { type?: string; max?: number; placeholder?: string }) => {
+    const hataMetni = alanHata[key]
+    return (
+      <label style={{ display: 'block', marginBottom: 12 }}>
+        <span style={{ ...stil.kucuk, display: 'block', marginBottom: 4 }}>{label}</span>
+        <input
+          type={opts?.type || 'text'}
+          value={form[key]}
+          maxLength={opts?.max}
+          placeholder={opts?.placeholder}
+          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+          style={stil.input}
+          aria-label={label}
+        />
+        {hataMetni ? <div style={{ fontSize: 13, color: CHROME_RENK.warn, marginTop: 4 }}>{hataMetni}</div> : null}
+      </label>
+    )
+  }
+
 
   return (
     <div data-konsultasyon-defter="">
       <p style={{ ...stil.metin, marginBottom: 14, color: CHROME_RENK.muted }}>
-        Güvendiğiniz konsültanlar — bu pratiğin defteri. Hekim ve sekreter aynı listeyi görür; başka hekim görmez.
+        Güvendiğiniz konsültanlar — bu pratiğin defteri. İletişim bilgilerini ekleyin, düzenleyin veya silin; hekim ve sekreter aynı listeyi görür.
       </p>
 
-      <div style={{ ...stil.kutu, marginBottom: 16 }}>
+      <div ref={formRef} style={{ ...stil.kutu, marginBottom: 16, scrollMarginTop: 72 }}>
         <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 18, fontWeight: 560, color: CHROME_RENK.ink, marginBottom: 12 }}>
-          Konsültan ekle
+          {duzenleId ? 'Konsültanı düzenle' : 'Konsültan ekle'}
         </div>
         {alan('adSoyad', 'Ad soyad', { max: DEFTER_SINIRLARI.adSoyad, placeholder: 'Ör. Dr. Ayşe Yılmaz' })}
         <label style={{ display: 'block', marginBottom: 12 }}>
@@ -153,9 +287,16 @@ export default function KonsultasyonDefter() {
           <input type="checkbox" checked={form.kurumIci} onChange={(e) => setForm((f) => ({ ...f, kurumIci: e.target.checked }))} />
           Kurum içi
         </label>
-        <button type="button" onClick={kaydet} disabled={kaydediyor} style={stil.btn}>
-          {kaydediyor ? 'Kaydediliyor…' : 'Deftere ekle'}
-        </button>
+        <div style={stil.satir}>
+          <button type="button" onClick={kaydet} disabled={kaydediyor} style={stil.btn}>
+            {kaydediyor ? 'Kaydediliyor…' : (duzenleId ? 'Değişiklikleri kaydet' : 'Deftere ekle')}
+          </button>
+          {duzenleId && (
+            <button type="button" onClick={duzenlemeyiIptal} disabled={kaydediyor} style={stil.ghost}>
+              Vazgeç
+            </button>
+          )}
+        </div>
         {mesaj && <div style={{ fontSize: 13, marginTop: 10, color: CHROME_RENK.pine }} aria-live="polite">{mesaj}</div>}
       </div>
 
@@ -167,39 +308,13 @@ export default function KonsultasyonDefter() {
         </div>
       )}
       {liste && liste.map((k) => (
-        <div key={k.id} style={{ ...stil.kutu, marginBottom: 10 }} data-defter-kayit={k.id}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{k.adSoyad}</span>
-            <span style={stil.kucuk}>{k.brans}</span>
-            {k.kurumIci ? <span style={stil.kucuk}>· kurum içi</span> : <span style={stil.kucuk}>· dışarı</span>}
-          </div>
-          <div style={{ ...stil.kucuk, marginTop: 6, lineHeight: 1.5 }}>
-            {[
-              k.ofisTelefon && `Ofis: ${k.ofisTelefon}`,
-              k.telefon && `Cep: ${k.telefon}`,
-              k.whatsapp && `WA: ${k.whatsapp}`,
-              k.eposta,
-              k.adres,
-            ].filter(Boolean).join(' · ')}
-          </div>
-          {k.not ? (
-            <div
-              style={{
-                marginTop: 8,
-                padding: '10px 12px',
-                borderRadius: 10,
-                background: 'rgba(47,67,52,0.06)',
-                fontSize: 13.5,
-                lineHeight: 1.45,
-                color: CHROME_RENK.ink,
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {k.not}
-            </div>
-          ) : null}
-          <button type="button" onClick={() => sil(k.id)} style={{ ...stil.ghost, marginTop: 8 }}>Sil</button>
-        </div>
+        <DefterKayitKarti
+          key={k.id}
+          k={k}
+          duzenleniyor={duzenleId === k.id}
+          onDuzenle={() => duzenleBaslat(k)}
+          onSil={() => void sil(k.id)}
+        />
       ))}
     </div>
   )
