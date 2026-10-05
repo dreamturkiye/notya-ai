@@ -256,7 +256,7 @@ export function yanitDogrula(
   return { yanit_ozeti: ozet, yanit_tarihi: tarih }
 }
 
-export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil' | 'onayla' | 'hastaya_ver'
+export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil' | 'onayla' | 'hastaya_ver' | 'eposta_gonder'
 
 /** İstem KİLİDİ (AYSE-KONSULTASYON-01): yanıt gelmiş kayıtta istem metni değişmez — yalnız yanıt tarafı işlenir. */
 export const ISTEM_KILITLI_YANITLANDI = 'Yanıtlanmış konsültasyonun istemi kilitlidir — yalnız yanıt özeti düzeltilebilir.'
@@ -283,6 +283,8 @@ export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: tru
       return g === 'yanitlandi' ? { ok: true } : { ok: false, hata: 'Önce yanıt özetini ekleyin — nota eklenecek yanıt yok.' }
     case 'hatirlat':
       return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyon için hatırlatma gönderilir.' }
+    case 'eposta_gonder':
+      return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyona e-posta gönderilir.' }
     case 'onayla':
       return g === 'yanitlandi' || g === 'bekliyor'
         ? { ok: true }
@@ -566,6 +568,11 @@ export interface BekleyenKonsultasyon {
   hastaAdi: string
   /** Hedef branşın görünen adı */
   hedef: string
+  /** Serbest metin konsültan adı (defter veya elle) */
+  hedefHekim: string | null
+  defterId: string | null
+  /** Konsültana portal e-postası gönderildiyse */
+  portalGonderildiAt: string | null
   /** Hekimin kendi yazdığı klinik soru (eski kayıtta not metni) — liste için kısaltılmış */
   klinikSoru: string
   istemTarihi: string
@@ -587,7 +594,7 @@ const ACILIYET_SIRASI: Record<string, number> = { acil: 0, oncelikli: 1 }
  * Sıra: en uzun bekleyen üstte; aynı günde acil → öncelikli → rutin; sonra id (kararlı).
  */
 export function bekleyenListesi(
-  satirlar: ReadonlyArray<Pick<KonsultasyonSatiri, 'id' | 'patient_id' | 'hedef' | 'hedef_brans' | 'klinik_soru' | 'not_metni' | 'aciliyet' | 'istem_tarihi' | 'durum' | 'son_hatirlatma_at' | 'created_at' | 'beklenen_gun' | 'fisilti_oge_id' | 'asistan_on_not'>>,
+  satirlar: ReadonlyArray<Pick<KonsultasyonSatiri, 'id' | 'patient_id' | 'hedef' | 'hedef_brans' | 'hedef_hekim' | 'defter_id' | 'portal_gonderildi_at' | 'klinik_soru' | 'not_metni' | 'aciliyet' | 'istem_tarihi' | 'durum' | 'son_hatirlatma_at' | 'created_at' | 'beklenen_gun' | 'fisilti_oge_id' | 'asistan_on_not'>>,
   adlar: ReadonlyMap<string, string>,
   bugun: string = bugunTrIso(),
 ): BekleyenKonsultasyon[] {
@@ -600,6 +607,9 @@ export function bekleyenListesi(
         patientId: s.patient_id,
         hastaAdi: adlar.get(s.patient_id) || 'Hasta',
         hedef: hedefEtiketi(s),
+        hedefHekim: s.hedef_hekim || null,
+        defterId: s.defter_id || null,
+        portalGonderildiAt: s.portal_gonderildi_at || null,
         klinikSoru: soru.length > KLINIK_SORU_LISTE_TAVANI ? `${soru.slice(0, KLINIK_SORU_LISTE_TAVANI - 1)}…` : soru,
         istemTarihi: s.istem_tarihi && isoGunMu(s.istem_tarihi) ? s.istem_tarihi : String(s.created_at || '').slice(0, 10),
         gun: beklemeGunu(s, bugun),

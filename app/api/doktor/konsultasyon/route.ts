@@ -18,11 +18,12 @@
  *         Taslak üretilemezse 200 { ok: false, error } — form boş ama kullanılabilir (hekim asla kilitlenmez).
  *         Yanıt taslağı önce mevcut belge_analizleri taslağını KULLANIR (ikinci analiz yolu açılmaz); yoksa PDF kasadan
  *         (hekim kapsamlı) okunur, fotoğraf tarayıcıda kimliksizleştirilmiş türev olarak gelir (NOTYA-BELGE-01 sözleşmesi).
- *   PATCH { id, islem: 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil', … }
+ *   PATCH { id, islem: 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil' | 'eposta_gonder', … }
  *         'duzenle' (AYSE-KONSULTASYON-01): istem alanları yalnız yanıt beklerken; 'yanitlandi' / kapanmış → 409 (istem
  *         KİLİDİ sunucuda). Her değişen alanın önceki metni konsultasyon_revizyonlar'a yazılır — önce iz, sonra güncelleme;
  *         iz yazılamazsa değişiklik YAPILMAZ. Yanıt özeti düzeltmesi ('yanit', önceki özet varken) de iz bırakır.
  *         'sil': yanıt bekleyen veya yanıtsız kapatılmış kayıt — hard delete (iptal / yeniden yaz); doctor_id kapsamlı.
+ *         'eposta_gonder': yanıt beklerken konsültana portal linki (defter e-postası veya aliciEposta); hekimin bağlı kutusu.
  *
  * VERİ: tablo `sevkler` (033; dahiliye/göz/KD aynı tabloya yazmaya devam eder). Terim "sevk" UI'de kullanılmaz —
  * SGK sevki (SUT EK-2/F / e-sevk) ayrı ve düzenleyici bir belgedir. lib/doktor/konsultasyon.ts başlığına bakın.
@@ -76,6 +77,12 @@ import {
   type KonsultasyonSatiri,
   type Revizyon,
 } from '@/lib/doktor/konsultasyon'
+import {
+  konsultanaEpostaGonder,
+  konsultanAliciDogrula,
+  portalLinkHazirla,
+  type EpostaDurum,
+} from '@/lib/doktor/konsultasyonEposta'
 import {
   ISTEM_TASLAK_GOREVI,
   ISTEM_TASLAK_SISTEMI,
@@ -466,8 +473,12 @@ export async function POST(req: NextRequest) {
     if (!defter) return NextResponse.json({ error: 'Defter kaydı bulunamadı.' }, { status: 404 })
     if (!hedefHekim) hedefHekim = String(defter.ad_soyad || '').trim() || null
     if (defter.brans && hedefBransGecerli(defter.brans)) hedefBrans = defter.brans
-    defterEposta = defter.eposta ? String(defter.eposta).trim() : null
+    defterEposta = defter.eposta ? String(defter.eposta).trim().toLowerCase() : null
   }
+  // Elle yazılan alıcı — Defter e-postası yoksa veya hekim ayrıca yazdıysa.
+  const aliciD = konsultanAliciDogrula(b?.konsultanEposta ?? b?.aliciEposta ?? b?.eposta)
+  if (!aliciD.ok) return NextResponse.json({ error: aliciD.hata }, { status: 400 })
+  const aliciEposta = defterEposta || aliciD.alici
 
   const { data, error } = await sb.from('sevkler').insert({
     patient_id: patientId,
@@ -483,50 +494,19 @@ export async function POST(req: NextRequest) {
   if (error || !data) return NextResponse.json({ error: 'Konsültasyon kaydedilemedi — tablo henüz hazır olmayabilir.' }, { status: 500 })
   let s = data as unknown as KonsultasyonSatiri
 
-  // Portal jetonu (HMAC + hash) — konsültan hesap açmadan e-posta linkiyle açar.
+  // Portal jetonu + isteğe bağlı e-posta (hekimin bağlı kutusu) — klinik dilim linkte; şifre/hesap yok.
+  let epostaDurum: EpostaDurum = aliciEposta ? 'bagli_degil' : 'yok'
   let portalLink: string | null = null
-  try {
-    const { konsultanJetonu, portalJetonHam, portalJetonHash, portalJetonSonu, konsultanPortalYolu } = await import('@/lib/doktor/konsultanJeton')
-    const sonMs = portalJetonSonu(s.istem_tarihi)
-    const hmac = konsultanJetonu(String(s.id), sonMs)
-    const ham = portalJetonHam()
-    const hash = portalJetonHash(ham)
-    const { data: jetonlu } = await sb.from('sevkler').update({
-      portal_jeton_hash: hash,
-      portal_jeton_son: new Date(sonMs).toISOString(),
-    }).eq('id', s.id).eq('doctor_id', user.id).select(KONSULTASYON_KOLONLARI).maybeSingle()
-    if (jetonlu) s = jetonlu as unknown as KonsultasyonSatiri
-    // Linkte HMAC tercih (randevu deseni); yoksa hash gövdesi.
-    portalLink = hmac ? konsultanPortalYolu(hmac) : konsultanPortalYolu(ham)
-  } catch (e) { console.error('[konsultasyon] portal jeton', e) }
-
-  // Konsültana e-posta (hekimin bağlı kutusu) — klinik dilim linkte; şifre/hesap yok.
-  let epostaDurum: 'gonderildi' | 'bagli_degil' | 'yok' | 'hata' = defterEposta ? 'bagli_degil' : 'yok'
-  if (defterEposta && portalLink) {
-    try {
-      const { epostaGonder } = await import('@/lib/iletisim/otomatik/eposta/gonderim')
-      const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
-      const g = await epostaGonder(sb, {
-        doktorId: user.id,
-        alici: defterEposta,
-        konu: `Konsültasyon istemi — ${hedefEtiketi(s)}`,
-        metin: [
-          `Sayın meslektaşım,`,
-          ``,
-          `${hekim} sizinle bir konsültasyon istemi paylaştı.`,
-          `Bağlantı (hesap veya şifre gerekmez):`,
-          portalLink,
-          ``,
-          `Raporunuzu, filminizi veya EKG'nizi bu sayfadan bırakabilirsiniz.`,
-        ].join('\n'),
-      })
-      if (g.ok) {
-        epostaDurum = 'gonderildi'
-        await sb.from('sevkler').update({ portal_gonderildi_at: new Date().toISOString() }).eq('id', s.id).eq('doctor_id', user.id)
-      } else {
-        epostaDurum = g.hata?.includes('bağlı değil') || g.hata?.includes('bagli') ? 'bagli_degil' : 'hata'
-      }
-    } catch { epostaDurum = 'hata' }
+  if (aliciEposta) {
+    const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
+    const g = await konsultanaEpostaGonder({ sb, doktorId: user.id, satir: s, alici: aliciEposta, hekimAdi: hekim })
+    s = g.satir
+    portalLink = g.portalLink
+    epostaDurum = g.epostaDurum
+  } else {
+    const p = await portalLinkHazirla(sb, user.id, s)
+    s = p.satir
+    portalLink = p.portalLink
   }
 
   try {
@@ -545,6 +525,7 @@ export async function POST(req: NextRequest) {
     konsultasyon: { ...s, hedefEtiketi: hedefEtiketi(s) },
     portalLink,
     epostaDurum,
+    aliciEposta: aliciEposta || null,
   }, { status: 201 })
 }
 
@@ -554,7 +535,7 @@ export async function PATCH(req: NextRequest) {
   const { user, supabase: sb } = oturum
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const islem = String(b?.islem || '') as KonsultasyonIslemi
-  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil', 'onayla', 'hastaya_ver'].includes(islem)) {
+  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil', 'onayla', 'hastaya_ver', 'eposta_gonder'].includes(islem)) {
     return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
   }
 
@@ -635,6 +616,46 @@ export async function PATCH(req: NextRequest) {
     const { error } = await sb.from('sevkler').delete().eq('id', s.id).eq('doctor_id', user.id)
     if (error) return NextResponse.json({ error: 'Silinemedi.' }, { status: 500 })
     return NextResponse.json({ ok: true, silindi: true, id: s.id })
+  }
+
+  if (islem === 'eposta_gonder') {
+    // Alıcı: istek gövdesi > Defter e-postası. Portal linki yoksa üretilir.
+    const aliciD = konsultanAliciDogrula(b?.aliciEposta ?? b?.konsultanEposta ?? b?.eposta)
+    if (!aliciD.ok) return NextResponse.json({ error: aliciD.hata }, { status: 400 })
+    let alici = aliciD.alici
+    if (!alici && s.defter_id) {
+      const { data: defter } = await sb.from('konsultasyon_defter').select('eposta')
+        .eq('id', s.defter_id).eq('doctor_id', user.id).maybeSingle()
+      alici = defter?.eposta ? String(defter.eposta).trim().toLowerCase() : null
+      if (alici && !konsultanAliciDogrula(alici).ok) alici = null
+    }
+    if (!alici) {
+      return NextResponse.json({
+        error: 'Konsültan e-postası yok — Deftere ekleyin veya buraya yazın.',
+        epostaDurum: 'yok' as EpostaDurum,
+      }, { status: 400 })
+    }
+    const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
+    const g = await konsultanaEpostaGonder({ sb, doktorId: user.id, satir: s, alici, hekimAdi: hekim })
+    if (g.epostaDurum !== 'gonderildi') {
+      return NextResponse.json({
+        ok: false,
+        error: g.epostaDurum === 'bagli_degil'
+          ? 'E-posta kutunuz bağlı değil — Ayarlar › İletişim’den Gmail/Outlook bağlayın.'
+          : 'E-posta gönderilemedi — yeniden deneyin.',
+        epostaDurum: g.epostaDurum,
+        portalLink: g.portalLink,
+        aliciEposta: alici,
+        konsultasyon: { ...g.satir, hedefEtiketi: hedefEtiketi(g.satir) },
+      }, { status: g.epostaDurum === 'bagli_degil' ? 409 : 502 })
+    }
+    return NextResponse.json({
+      ok: true,
+      epostaDurum: g.epostaDurum,
+      portalLink: g.portalLink,
+      aliciEposta: alici,
+      konsultasyon: { ...g.satir, hedefEtiketi: hedefEtiketi(g.satir) },
+    })
   }
 
   if (islem === 'nota_ekle') {

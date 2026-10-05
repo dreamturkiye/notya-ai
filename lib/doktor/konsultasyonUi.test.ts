@@ -51,13 +51,14 @@ describe('KONSULTASYON-01 — zaman çizelgesi (SSR)', () => {
     assert.match(h, /2 yanıt bekliyor · 2 yanıtlandı/)
     assert.match(h, /\+ Yeni konsültasyon/)
   })
-  it('yanıt bekleyen: kaç gündür, aciliyet, Yanıt ekle / Hatırlat / Yanıtsız kapat / İptal et, istem formu', () => {
+  it('yanıt bekleyen: kaç gündür, aciliyet, Yanıt ekle / E-posta gönder / Hatırlat / Yanıtsız kapat / İptal et, istem formu', () => {
     const k = kart('bekleyen')
     assert.match(k, /Yanıt bekleniyor · 7 gündür/)
     assert.match(k, /Öncelikli/)
     assert.match(k, /İşitme kaybı var mı\?/)
     assert.match(k, /İstem: 12\.09\.2026/)
-    for (const d of ['Yanıt ekle', 'Hatırlat', 'Yanıtsız kapat', 'İptal et', 'İstem formu']) assert.ok(k.includes(d), d)
+    assert.match(k, /e-posta henüz gönderilmedi/)
+    for (const d of ['Yanıt ekle', 'E-posta gönder', 'Hatırlat', 'Yanıtsız kapat', 'İptal et', 'İstem formu']) assert.ok(k.includes(d), d)
     assert.match(k, /\/dashboard\/doktor\/hastalar\/p\/konsultasyon\/bekleyen\/yazdir/)
   })
   it('"show proof": yanıt özeti + tarih + konsültan + 📎 rapor + muayene notu bağlantısı', () => {
@@ -173,8 +174,8 @@ describe('KONSULTASYON-01 — Konsültasyon İstem Formu kağıdı (SSR)', () =>
 describe('KONSULTASYON-01 — kohort satırı (SSR, mevcut panellere takılır)', () => {
   it('en uzun bekleyen, gün rozeti, hasta dosyasına bağlantı, SKS medyanı; boş durum dürüst', () => {
     const h = sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [
-      { id: 'x', patientId: 'p1', hastaAdi: 'QA Hasta', hedef: 'KBB', klinikSoru: 'İşitme kaybı var mı?', istemTarihi: '2026-08-10', gun: 40, aciliyet: 'acil', eskiKayit: false, sonHatirlatmaAt: null },
-      { id: 'y', patientId: 'p2', hastaAdi: 'QA Diğer', hedef: 'Nefroloji', klinikSoru: 'eGFR düşüşü', istemTarihi: '2026-09-15', gun: 4, aciliyet: null, eskiKayit: true, sonHatirlatmaAt: null },
+      { id: 'x', patientId: 'p1', hastaAdi: 'QA Hasta', hedef: 'KBB', hedefHekim: null, defterId: null, portalGonderildiAt: null, klinikSoru: 'İşitme kaybı var mı?', istemTarihi: '2026-08-10', gun: 40, aciliyet: 'acil', eskiKayit: false, sonHatirlatmaAt: null },
+      { id: 'y', patientId: 'p2', hastaAdi: 'QA Diğer', hedef: 'Nefroloji', hedefHekim: null, defterId: null, portalGonderildiAt: null, klinikSoru: 'eGFR düşüşü', istemTarihi: '2026-09-15', gun: 4, aciliyet: null, eskiKayit: true, sonHatirlatmaAt: null },
     ], yanitSuresi: { adet: 3, medyanGun: 6, enUzunGun: 12 } }))
     assert.match(h, /Yanıt bekleyen konsültasyonlar \(2\)/)
     assert.match(h, /40 gündür açık/)
@@ -211,7 +212,8 @@ describe('KONSULTASYON-01 — kohort satırı (SSR, mevcut panellere takılır)'
 
 describe('KONSULTASYON-02 — Araçlar › Bekleyen Konsültasyonlar (SSR, evrensel)', () => {
   const B = (o: Partial<BekleyenKonsultasyon>): BekleyenKonsultasyon => ({
-    id: 'k', patientId: 'p1', hastaAdi: 'QA Hasta GIZLI-A', hedef: 'KBB', klinikSoru: 'İşitme kaybı var mı?', istemTarihi: '2026-08-10',
+    id: 'k', patientId: 'p1', hastaAdi: 'QA Hasta GIZLI-A', hedef: 'KBB', hedefHekim: null, defterId: null, portalGonderildiAt: null,
+    klinikSoru: 'İşitme kaybı var mı?', istemTarihi: '2026-08-10',
     gun: 40, aciliyet: 'rutin', eskiKayit: false, sonHatirlatmaAt: null, ...o,
   })
   const LISTE2 = [
@@ -242,13 +244,15 @@ describe('KONSULTASYON-02 — Araçlar › Bekleyen Konsültasyonlar (SSR, evren
     assert.ok(h.indexOf('"kirmizi"') < h.indexOf('"dikkat"') && h.indexOf('"dikkat"') < h.indexOf('"yeni"'))
     assert.match(h, /klinik bir süre sınırı değildir/)
   })
-  it('eylemler: Yanıt ekle (hasta dosyasındaki form açık gelir), Hasta dosyası, Hatırlat, Yanıtsız kapat, İptal et — ≥44 px', () => {
+  it('eylemler: Yanıt ekle, E-posta gönder, Hasta dosyası, Hatırlat, Yanıtsız kapat, İptal et — ≥44 px', () => {
     const k = kart('kirmizi')
     assert.match(k, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon&amp;yanit=kirmizi"[^>]*>Yanıt ekle</)
     assert.match(k, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon"[^>]*>Hasta dosyası</)
+    assert.match(k, />E-posta gönder</)
     assert.match(k, />Hatırlat</)
     assert.match(k, />Yanıtsız kapat</)
     assert.match(k, />İptal et</)
+    assert.match(k, /e-posta henüz gönderilmedi|e-posta yok/)
     for (const m of k.match(/<(a|button)\b[^>]*>/g) || []) assert.match(m, /min-height:44px/, m)
     // 7 gün içinde hatırlatılmışsa düğme pasif ve neden yazılı
     assert.match(kart('yeni'), /disabled=""[^>]*>Hatırlat</)

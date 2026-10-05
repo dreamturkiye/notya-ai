@@ -20,8 +20,15 @@ export async function konsultasyonApi(yol: string, init?: { method?: string; gov
 }
 
 /** Kart ve bekleyenler listesinin tek dokunuşlu işlemleri (yanıt ekleme formu hasta dosyasındadır). */
-export function konsultasyonIslemi(id: string, islem: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil') {
-  return konsultasyonApi('/api/doktor/konsultasyon', { method: 'PATCH', govde: { id, islem } })
+export function konsultasyonIslemi(
+  id: string,
+  islem: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil' | 'eposta_gonder',
+  ek?: { aliciEposta?: string },
+) {
+  return konsultasyonApi('/api/doktor/konsultasyon', {
+    method: 'PATCH',
+    govde: { id, islem, ...(ek?.aliciEposta ? { aliciEposta: ek.aliciEposta } : {}) },
+  })
 }
 
 /** Araçlar › Konsültasyonlar (ORTAK_DOKTOR_ARACLARI — 30 branş). Eski bekleyen route 308 ile buraya gider. */
@@ -34,6 +41,10 @@ export const YANITSIZ_SIL_ONAYI = 'Yanıtsız kapatılmış bu konsültasyon has
 /** Yanıt bekleyen istemi iptal / sil — hekim yeniden yazmak veya vazgeçmek ister. */
 export const ISTEM_IPTAL_ONAYI = 'Bu konsültasyon istemi iptal edilsin mi? Kayıt silinir; isterseniz yeniden yazabilirsiniz. Bu işlem geri alınamaz.'
 export const HATIRLATMA_GONDERILDI = 'Hastaya Sağlığım üzerinden hatırlatma gönderildi (klinik bilgi içermez).'
+/** Konsültana portal linki — Hatırlat (hasta) ile karışmasın. */
+export const KONSULTAN_EPOSTA_GONDERILDI = 'Konsültana e-posta gönderildi (portal linki; hesap gerekmez).'
+export const KONSULTAN_EPOSTA_ALICI_SOR = 'Konsültanın e-posta adresi (ör. ad@ornek.com):'
+export { epostaDurumMetni, ILETISIM_EPOSTA_AYAR_YOLU } from '@/lib/doktor/konsultasyonEposta'
 
 /** Hasta dosyası › Konsültasyonlar; `yanit` verilirse o konsültasyonun yanıt formu açık gelir. */
 export function konsultasyonDosyaYolu(patientId: string, yanitId?: string): string {

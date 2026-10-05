@@ -18,7 +18,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
-import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, ISTEM_IPTAL_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
+import {
+  konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir,
+  YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, ISTEM_IPTAL_ONAYI, HATIRLATMA_GONDERILDI,
+  KONSULTAN_EPOSTA_GONDERILDI, KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, ILETISIM_EPOSTA_AYAR_YOLU,
+} from '@/lib/doktor/konsultasyonIstemci';
 import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
 import {
@@ -112,13 +116,17 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
     adSoyad: string
     bransAnahtar: string
     brans: string
+    eposta?: string | null
     ofisTelefon?: string | null
     telefon?: string | null
     not?: string | null
   }>>([]);
+  const [konsultanEposta, setKonsultanEposta] = useState('');
   const [portalLink, setPortalLink] = useState('');
   const kisaltmalar = olasiKisaltmalar(soru);
   const hazir = !!hedef && soru.trim().length >= KLINIK_SORU_EN_AZ && !gonderiyor;
+  const seciliDefter = defterListe.find((x) => x.id === defterId);
+  const gidecekEposta = (konsultanEposta.trim() || seciliDefter?.eposta || '').trim();
 
   useEffect(() => {
     api('/api/doktor/konsultasyon/defter').then(({ ok, j }) => {
@@ -185,12 +193,25 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
           mevcutDurum: durum,
           not,
           ...(defterId ? { defterId } : {}),
+          ...(konsultanEposta.trim() ? { konsultanEposta: konsultanEposta.trim() } : {}),
           ...(beklenenGun ? { beklenenGun } : {}),
         },
       });
       if (ok && j.konsultasyon) {
         if (typeof j.portalLink === 'string' && j.portalLink) setPortalLink(j.portalLink);
-        olustu({ ...j.konsultasyon, eskiKayit: false, gun: 0, belge: null, belgeTaslagi: null });
+        const durum = String(j.epostaDurum || '')
+        if (gidecekEposta && durum && durum !== 'gonderildi' && typeof window !== 'undefined') {
+          window.alert(epostaDurumMetni(durum, typeof j.aliciEposta === 'string' ? j.aliciEposta : gidecekEposta))
+        }
+        olustu({
+          ...j.konsultasyon,
+          eskiKayit: false,
+          gun: 0,
+          belge: null,
+          belgeTaslagi: null,
+          portal_gonderildi_at: j.konsultasyon.portal_gonderildi_at
+            || (durum === 'gonderildi' ? new Date().toISOString() : null),
+        });
       } else setHata(j.error || 'Konsültasyon kaydedilemedi.');
     } catch { setHata('Kaydedilemedi — bağlantıyı kontrol edin.'); }
     finally { setGonderiyor(false); }
@@ -202,6 +223,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
     if (!k) return;
     if (k.bransAnahtar) setHedef(k.bransAnahtar);
     if (k.adSoyad) setHekim(k.adSoyad);
+    if (k.eposta && !konsultanEposta.trim()) setKonsultanEposta(k.eposta);
   };
 
   return (
@@ -209,24 +231,24 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
       <div style={stil.etiket}>Yeni konsültasyon istemi</div>
       <div style={{ display: 'grid', gap: 12 }}>
         {defterListe.length > 0 && (
-          <Alan etiket="Defterden konsültan" ipucu="Güvendiğiniz konsültanı seçin — branş ve ad doldurulur; e-posta varsa portal linki gider.">
+          <Alan etiket="Defterden konsültan" ipucu="Güvendiğiniz konsültanı seçin — branş, ad ve e-posta doldurulur; e-posta varsa oluştururken portal linki gider.">
             <select aria-label="Defterden konsültan" value={defterId} onChange={(e) => defterSec(e.target.value)} style={stil.input}>
               <option value="">Seçilmedi</option>
               {defterListe.map((k) => (
-                <option key={k.id} value={k.id}>{k.adSoyad} — {k.brans}</option>
+                <option key={k.id} value={k.id}>{k.adSoyad} — {k.brans}{k.eposta ? ` · ${k.eposta}` : ' · e-posta yok'}</option>
               ))}
             </select>
-            {(() => {
-              const secili = defterListe.find((x) => x.id === defterId)
-              if (!secili) return null
-              const tel = [secili.ofisTelefon && `Ofis ${secili.ofisTelefon}`, secili.telefon && `Cep ${secili.telefon}`].filter(Boolean).join(' · ')
-              return (
-                <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.45, color: CHROME_RENK.muted }}>
-                  {tel ? <div>{tel}</div> : null}
-                  {secili.not ? <div style={{ marginTop: 4, whiteSpace: 'pre-wrap', color: CHROME_RENK.ink }}>{secili.not}</div> : null}
-                </div>
-              )
-            })()}
+            {seciliDefter && (
+              <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.45, color: CHROME_RENK.muted }}>
+                {seciliDefter.eposta
+                  ? <div>E-posta: {seciliDefter.eposta}</div>
+                  : <div>Defterde e-posta yok — aşağıya yazın veya Araçlar › Defter’den ekleyin.</div>}
+                {[seciliDefter.ofisTelefon && `Ofis ${seciliDefter.ofisTelefon}`, seciliDefter.telefon && `Cep ${seciliDefter.telefon}`].filter(Boolean).join(' · ')
+                  ? <div>{[seciliDefter.ofisTelefon && `Ofis ${seciliDefter.ofisTelefon}`, seciliDefter.telefon && `Cep ${seciliDefter.telefon}`].filter(Boolean).join(' · ')}</div>
+                  : null}
+                {seciliDefter.not ? <div style={{ marginTop: 4, whiteSpace: 'pre-wrap', color: CHROME_RENK.ink }}>{seciliDefter.not}</div> : null}
+              </div>
+            )}
           </Alan>
         )}
         <Alan etiket="Hedef branş" ipucu="Branşı seçtiğinizde Ayşe hasta dosyasından (son muayene ağırlıklı) istem taslağını yazar; siz düzenler ve onaylarsınız.">
@@ -263,6 +285,18 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
         <Alan etiket="Konsültan hekim (isteğe bağlı)">
           <input aria-label="Konsültan hekim" value={hekim} onChange={(e) => setHekim(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.hedefHekim} placeholder="Ör. Dr. Ad Soyad" style={stil.input} />
         </Alan>
+        <Alan etiket="Konsültan e-posta (isteğe bağlı)" ipucu="Yazarsanız oluştururken portal linki bu adrese gider (hekimin Ayarlar › İletişim’de bağlı Gmail/Outlook kutusu). Hatırlat düğmesi hastayadır; bu alan konsültanadır.">
+          <input
+            aria-label="Konsültan e-posta"
+            type="email"
+            value={konsultanEposta}
+            onChange={(e) => setKonsultanEposta(e.target.value)}
+            maxLength={160}
+            placeholder="ad@ornek.com"
+            autoComplete="email"
+            style={stil.input}
+          />
+        </Alan>
         <Alan etiket="Beklenen gün (isteğe bağlı)" ipucu="Yanıtı beklediğiniz gün — sekreter ve hekim defterinde vade budur. Gün dolunca satır sarıya döner.">
           <input aria-label="Beklenen gün" type="date" value={beklenenGun} onChange={(e) => setBeklenenGun(e.target.value)} style={stil.input} />
         </Alan>
@@ -282,17 +316,21 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
       </Katlanir>
       {portalLink && (
         <div style={{ ...stil.uyari, marginBottom: 10 }} aria-live="polite">
-          Konsültan portal linki hazır (hesap gerekmez). E-posta bağlı değilse kopyalayıp gönderin:{' '}
+          Konsültan portal linki:{' '}
           <a href={portalLink} style={{ color: CHROME_RENK.pine, overflowWrap: 'anywhere' }}>{portalLink}</a>
         </div>
       )}
       <div style={stil.satir}>
-        <button type="button" onClick={gonder} disabled={!hazir} aria-disabled={!hazir} style={{ ...stil.btn, opacity: hazir ? 1 : 0.55, cursor: hazir ? 'pointer' : 'not-allowed' }}>{gonderiyor ? 'Kaydediliyor…' : 'Konsültasyon istemi oluştur'}</button>
+        <button type="button" onClick={gonder} disabled={!hazir} aria-disabled={!hazir} style={{ ...stil.btn, opacity: hazir ? 1 : 0.55, cursor: hazir ? 'pointer' : 'not-allowed' }}>
+          {gonderiyor ? (gidecekEposta ? 'Kaydedilip gönderiliyor…' : 'Kaydediliyor…') : (gidecekEposta ? 'Oluştur ve e-posta gönder' : 'Konsültasyon istemi oluştur')}
+        </button>
         {vazgec && <button type="button" onClick={vazgec} style={stil.ghost}>Vazgeç</button>}
       </div>
       {!hedef || soru.trim().length < KLINIK_SORU_EN_AZ
         ? <div style={{ ...stil.kucuk, marginTop: 6 }}>Hedef branş ve en az {KLINIK_SORU_EN_AZ} karakterlik istem metni gerekli.</div>
-        : null}
+        : gidecekEposta
+          ? <div style={{ ...stil.kucuk, marginTop: 6 }}>E-posta {gidecekEposta} adresine gidecek — kutunuz bağlı değilse <a href={ILETISIM_EPOSTA_AYAR_YOLU} style={{ color: CHROME_RENK.pine }}>Ayarlar › İletişim</a>’den bağlayın.</div>
+          : <div style={{ ...stil.kucuk, marginTop: 6 }}>E-posta yazılmazsa yalnız kayıt oluşur; konsültana sonra «E-posta gönder» ile iletebilirsiniz.</div>}
       {hata && <div style={{ ...stil.hata, marginTop: 8 }}>{hata}</div>}
       <div style={{ ...stil.kucuk, marginTop: 10 }}>Bu bir konsültasyon (meslektaş görüşü) istemidir; SGK sevk belgesi değildir. Kurumlar arası SGK sevki gerekiyorsa MEDULA üzerinden düzenlenir.</div>
     </div>
@@ -560,7 +598,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
   const [mesaj, setMesaj] = useState<{ iyi: boolean; metin: string } | null>(null);
   const [eklenenNot, setEklenenNot] = useState<string | null>(null);
 
-  const islem = async (ad: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil') => {
+  const islem = async (ad: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil' | 'eposta_gonder') => {
     if (calisiyor) return;
     if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_KAPAT_ONAYI)) return;
     if (ad === 'sil') {
@@ -569,6 +607,27 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
     }
     setCalisiyor(ad); setMesaj(null);
     try {
+      const epostaGonder = async (alici?: string) => konsultasyonIslemi(k.id, 'eposta_gonder', alici ? { aliciEposta: alici } : undefined)
+      if (ad === 'eposta_gonder') {
+        let { ok, j } = await epostaGonder()
+        if (!ok && j.epostaDurum === 'yok' && typeof window !== 'undefined') {
+          const girilen = window.prompt(KONSULTAN_EPOSTA_ALICI_SOR, '')
+          if (girilen == null) { setCalisiyor(''); return }
+          if (!girilen.trim()) {
+            setMesaj({ iyi: false, metin: epostaDurumMetni('yok') })
+            setCalisiyor('')
+            return
+          }
+          ;({ ok, j } = await epostaGonder(girilen.trim()))
+        }
+        if (ok) {
+          if (j.konsultasyon) guncelle(j.konsultasyon)
+          setMesaj({ iyi: true, metin: KONSULTAN_EPOSTA_GONDERILDI + (j.aliciEposta ? ` · ${j.aliciEposta}` : '') })
+        } else {
+          setMesaj({ iyi: false, metin: epostaDurumMetni(String(j.epostaDurum || ''), typeof j.aliciEposta === 'string' ? j.aliciEposta : null) || j.error || 'E-posta gönderilemedi.' })
+        }
+        return
+      }
       const { ok, j } = await konsultasyonIslemi(k.id, ad);
       if (ok) {
         if (ad === 'sil') { silindi?.(); return; }
@@ -604,6 +663,9 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
       <div style={{ ...stil.kucuk, marginTop: 6 }}>
         İstem: {trGun(k.istem_tarihi || k.created_at)}{k.hedef_hekim ? ` · ${k.hedef_hekim}` : ''}
         {g === 'yanitlandi' ? ' · istem kilitli (yanıt geldi)' : ''}
+        {g === 'bekliyor' && k.portal_gonderildi_at
+          ? ` · e-posta gönderildi ${trGun(String(k.portal_gonderildi_at).slice(0, 10))}`
+          : g === 'bekliyor' ? ' · e-posta henüz gönderilmedi' : ''}
       </div>
 
       {g === 'yanitlandi' && (
@@ -644,7 +706,16 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
         )}
         {g === 'bekliyor' && (
           <>
-            <button type="button" onClick={() => islem('hatirlat')} disabled={!!calisiyor} style={stil.ghost}>{calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}</button>
+            <button
+              type="button"
+              onClick={() => islem('eposta_gonder')}
+              disabled={!!calisiyor}
+              style={k.portal_gonderildi_at ? stil.ghost : stil.btn}
+              title="Konsültana portal linki gönderir (hastaya Hatırlat değil)."
+            >
+              {calisiyor === 'eposta_gonder' ? 'Gönderiliyor…' : (k.portal_gonderildi_at ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
+            </button>
+            <button type="button" onClick={() => islem('hatirlat')} disabled={!!calisiyor} style={stil.ghost} title="Hastaya Sağlığım hatırlatması (klinik yok).">{calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}</button>
             <button type="button" onClick={() => islem('kapat')} disabled={!!calisiyor} style={stil.ghost}>Yanıtsız kapat</button>
             <button
               type="button"

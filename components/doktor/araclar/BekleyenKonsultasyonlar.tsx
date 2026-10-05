@@ -8,8 +8,8 @@
  * satırları, yalnız kendi hastaları). Sıra ve vurgu lib/doktor/konsultasyon.ts'teki TEK tanımdan (bekleyenListesi /
  * beklemeVurgusu) — kohort satırı ve ana sayfa özetiyle aynı veri.
  *
- * İşlemler: hasta dosyası · Yanıt ekle (hasta dosyası › Konsültasyonlar'daki mevcut yanıt formu açık gelir) ·
- * Hatırlat · Yanıtsız kapat · İptal et (aynı PATCH, aynı metinler — lib/doktor/konsultasyonIstemci.ts).
+ * İşlemler: hasta dosyası · Yanıt ekle · E-posta gönder (konsültan) · Hatırlat (hasta) · Yanıtsız kapat · İptal et
+ * (aynı PATCH, aynı metinler — lib/doktor/konsultasyonIstemci.ts).
  * Eşikler takip ipucudur, klinik süre sınırı değildir. Ortak UI: lib/doktor/aracUi.tsx.
  */
 import React, { useCallback, useEffect, useState } from 'react';
@@ -20,12 +20,14 @@ import {
   beklemeVurgusu, bekleyenOzeti, hatirlatmaBeklemesi, trGun, type Aciliyet, type BekleyenKonsultasyon,
 } from '@/lib/doktor/konsultasyon';
 import {
-  HATIRLATMA_GONDERILDI, ISTEM_IPTAL_ONAYI, YANITSIZ_KAPAT_ONAYI, konsultasyonApi, konsultasyonDosyaYolu, konsultasyonIslemi,
+  HATIRLATMA_GONDERILDI, ISTEM_IPTAL_ONAYI, YANITSIZ_KAPAT_ONAYI,
+  KONSULTAN_EPOSTA_GONDERILDI, KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni,
+  konsultasyonApi, konsultasyonDosyaYolu, konsultasyonIslemi,
 } from '@/lib/doktor/konsultasyonIstemci';
 
 export type YanitSuresi = { adet: number; medyanGun: number | null; enUzunGun: number | null }
-type IslemSonucu = { ok: boolean; metin: string; sonHatirlatmaAt?: string | null }
-export type BekleyenIslemi = (id: string, islem: 'hatirlat' | 'kapat' | 'sil') => Promise<IslemSonucu>
+type IslemSonucu = { ok: boolean; metin: string; sonHatirlatmaAt?: string | null; portalGonderildiAt?: string | null }
+export type BekleyenIslemi = (id: string, islem: 'hatirlat' | 'kapat' | 'sil' | 'eposta_gonder', ek?: { aliciEposta?: string }) => Promise<IslemSonucu>
 
 function AciliyetRozeti({ aciliyet }: { aciliyet: string | null }) {
   if (aciliyet === 'acil') return <Rozet ton="kirmizi">{ACILIYET_ETIKETI.acil}</Rozet>;
@@ -35,19 +37,31 @@ function AciliyetRozeti({ aciliyet }: { aciliyet: string | null }) {
 
 export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemYap: BekleyenIslemi }) {
   const stil = useAracStil();
-  const [calisiyor, setCalisiyor] = useState<'' | 'hatirlat' | 'kapat' | 'sil'>('');
+  const [calisiyor, setCalisiyor] = useState<'' | 'hatirlat' | 'kapat' | 'sil' | 'eposta_gonder'>('');
   const [mesaj, setMesaj] = useState<{ iyi: boolean; metin: string } | null>(null);
+  const [gonderildiAt, setGonderildiAt] = useState(b.portalGonderildiAt);
   const vurgu = beklemeVurgusu(b.gun);
   const sonraki = hatirlatmaBeklemesi(b.sonHatirlatmaAt);
 
-  const calistir = async (ad: 'hatirlat' | 'kapat' | 'sil') => {
+  const calistir = async (ad: 'hatirlat' | 'kapat' | 'sil' | 'eposta_gonder') => {
     if (calisiyor) return;
     if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_KAPAT_ONAYI)) return;
     if (ad === 'sil' && typeof window !== 'undefined' && !window.confirm(ISTEM_IPTAL_ONAYI)) return;
     setCalisiyor(ad); setMesaj(null);
-    const s = await islemYap(b.id, ad);
+    let s = await islemYap(b.id, ad);
+    if (ad === 'eposta_gonder' && !s.ok && /e-posta yok|eposta yok|Konsültan e-posta/i.test(s.metin) && typeof window !== 'undefined') {
+      const girilen = window.prompt(KONSULTAN_EPOSTA_ALICI_SOR, '')
+      if (girilen == null) { setCalisiyor(''); return }
+      if (!girilen.trim()) {
+        setMesaj({ iyi: false, metin: epostaDurumMetni('yok') })
+        setCalisiyor('')
+        return
+      }
+      s = await islemYap(b.id, 'eposta_gonder', { aliciEposta: girilen.trim() })
+    }
     setCalisiyor('');
     if (ad === 'sil' && s.ok) return; // satır listeden düştü
+    if (ad === 'eposta_gonder' && s.ok && s.portalGonderildiAt) setGonderildiAt(s.portalGonderildiAt)
     setMesaj({ iyi: s.ok, metin: s.metin });
   };
 
@@ -57,19 +71,33 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <Rozet ton={vurgu}>{b.gun === 0 ? 'bugün istendi' : `${b.gun} gündür bekliyor`}</Rozet>
         <span style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink, minWidth: 0, overflowWrap: 'anywhere' }}>{b.hastaAdi}</span>
-        <span style={{ ...stil.kucuk }}>→ {b.hedef}</span>
+        <span style={{ ...stil.kucuk }}>→ {b.hedef}{b.hedefHekim ? ` · ${b.hedefHekim}` : ''}</span>
         <AciliyetRozeti aciliyet={b.aciliyet} />
         {b.eskiKayit && <Rozet ton="bilgi">eski kayıt</Rozet>}
+        {gonderildiAt
+          ? <Rozet ton="iyi">e-posta gitti</Rozet>
+          : <Rozet ton="uyari">e-posta yok</Rozet>}
       </div>
       {b.klinikSoru && <div style={{ ...stil.metin, marginTop: 8, overflowWrap: 'anywhere' }}>{b.klinikSoru}</div>}
       <div style={{ ...stil.kucuk, marginTop: 6 }}>
-        İstem: {trGun(b.istemTarihi)}{b.sonHatirlatmaAt ? ` · son hatırlatma ${trGun(b.sonHatirlatmaAt.slice(0, 10))}` : ''}
+        İstem: {trGun(b.istemTarihi)}
+        {gonderildiAt ? ` · e-posta ${trGun(gonderildiAt.slice(0, 10))}` : ' · e-posta henüz gönderilmedi'}
+        {b.sonHatirlatmaAt ? ` · son hatırlatma ${trGun(b.sonHatirlatmaAt.slice(0, 10))}` : ''}
       </div>
       <div style={stil.satir}>
         <a href={konsultasyonDosyaYolu(b.patientId, b.id)} style={{ ...stil.btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Yanıt ekle</a>
         <a href={konsultasyonDosyaYolu(b.patientId)} style={stil.ghost}>Hasta dosyası</a>
+        <button
+          type="button"
+          onClick={() => calistir('eposta_gonder')}
+          disabled={!!calisiyor}
+          style={gonderildiAt ? stil.ghost : stil.btn}
+          title="Konsültana portal linki (hastaya Hatırlat değil)."
+        >
+          {calisiyor === 'eposta_gonder' ? 'Gönderiliyor…' : (gonderildiAt ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
+        </button>
         <button type="button" onClick={() => calistir('hatirlat')} disabled={!!calisiyor || !!sonraki} aria-disabled={!!calisiyor || !!sonraki}
-          title={sonraki ? `Aynı konsültasyon için ${HATIRLATMA_ARALIGI_GUN} günde bir hatırlatma gönderilir.` : undefined}
+          title={sonraki ? `Aynı konsültasyon için ${HATIRLATMA_ARALIGI_GUN} günde bir hatırlatma gönderilir.` : 'Hastaya Sağlığım hatırlatması'}
           style={{ ...stil.ghost, opacity: sonraki ? 0.55 : 1, cursor: sonraki ? 'not-allowed' : 'pointer' }}>
           {calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}
         </button>
@@ -122,8 +150,9 @@ export function BekleyenKonsultasyonListesi({ bekleyenler, yanitSuresi, hazir = 
 
       <div style={{ ...stil.kucuk, marginTop: 4 }}>
         En uzun bekleyen üstte. Sarı: {BEKLEME_DIKKAT_GUN} gün ve üzeri · kırmızı: {BEKLEME_KIRMIZI_GUN} gün ve üzeri — bu vurgu takibi
-        kolaylaştıran bir ipucudur, klinik bir süre sınırı değildir. Hatırlatma hastaya Sağlığım üzerinden gider, klinik bilgi
-        içermez; aynı konsültasyon için {HATIRLATMA_ARALIGI_GUN} günde bir gönderilebilir.
+        kolaylaştıran bir ipucudur, klinik bir süre sınırı değildir. «E-posta gönder» konsültana portal linkidir (Ayarlar › İletişim’de
+        bağlı kutu gerekir). «Hatırlat» hastaya Sağlığım üzerinden gider, klinik bilgi içermez; aynı konsültasyon için{' '}
+        {HATIRLATMA_ARALIGI_GUN} günde bir gönderilebilir.
       </div>
     </div>
   );
@@ -147,10 +176,13 @@ export default function BekleyenKonsultasyonlar() {
     return () => { iptal = true; };
   }, []);
 
-  const islemYap = useCallback<BekleyenIslemi>(async (id, islem) => {
+  const islemYap = useCallback<BekleyenIslemi>(async (id, islem, ek) => {
     try {
-      const { ok, j } = await konsultasyonIslemi(id, islem);
-      if (!ok) return { ok: false, metin: j.error || 'İşlem yapılamadı.' };
+      const { ok, j } = await konsultasyonIslemi(id, islem, ek);
+      if (!ok) {
+        const durumMetin = j.epostaDurum ? epostaDurumMetni(String(j.epostaDurum), typeof j.aliciEposta === 'string' ? j.aliciEposta : null) : ''
+        return { ok: false, metin: durumMetin || j.error || 'İşlem yapılamadı.' };
+      }
       if (islem === 'kapat') {
         // Kapanan konsültasyon bekleyenler listesinden çıkar (hasta dosyasında "Yanıtsız kapatıldı" olarak kalır).
         setBekleyenler((l) => (l ? l.filter((b) => b.id !== id) : l));
@@ -159,6 +191,11 @@ export default function BekleyenKonsultasyonlar() {
       if (islem === 'sil') {
         setBekleyenler((l) => (l ? l.filter((b) => b.id !== id) : l));
         return { ok: true, metin: 'İstem iptal edildi.' };
+      }
+      if (islem === 'eposta_gonder') {
+        const at = j.konsultasyon?.portal_gonderildi_at ?? new Date().toISOString()
+        setBekleyenler((l) => (l ? l.map((b) => (b.id === id ? { ...b, portalGonderildiAt: at } : b)) : l));
+        return { ok: true, metin: KONSULTAN_EPOSTA_GONDERILDI + (j.aliciEposta ? ` · ${j.aliciEposta}` : ''), portalGonderildiAt: at };
       }
       const son = j.konsultasyon?.son_hatirlatma_at ?? new Date().toISOString();
       setBekleyenler((l) => (l ? l.map((b) => (b.id === id ? { ...b, sonHatirlatmaAt: son } : b)) : l));
