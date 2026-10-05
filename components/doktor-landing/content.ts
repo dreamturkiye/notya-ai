@@ -7,18 +7,26 @@ export const LINKS = {
 } as const;
 
 export const NAV = [
-  { href: "#konusma", label: "Konuşma", index: "01" },
-  { href: "#ogrenme", label: "Öğrenme", index: "02" },
-  { href: "#uzmanlar", label: "Uzmanlar", index: "03" },
-  { href: "#guvenlik", label: "Güvenlik", index: "04" },
-  { href: "#fiyat", label: "Fiyat", index: "05" },
+  { href: "#konusma", label: "Asistan", index: "01" },
+  { href: "#portal", label: "Portal", index: "03" },
+  { href: "#brans", label: "Branşlar", index: "06" },
+  { href: "#guvenlik", label: "Güvenlik", index: "09" },
+  { href: "#fiyat", label: "Fiyat", index: "10" },
 ] as const;
 
-export const HERO_FACTS = [
-  { k: "Ses", v: "Gerçek zamanlı Türkçe" },
-  { k: "Not", v: "SOAP, seans biter bitmez" },
-  { k: "Kaynak", v: "Nelson · Braunwald · Harrison" },
-  { k: "Deneme", v: "15 gün, kart gerekmez" },
+export const HERO = {
+  eyebrow: "Hekimler için yapay zekâ klinik asistanı",
+  title: "Hasta odadan çıktığında",
+  titleItalic: "işiniz bitmiş olsun.",
+  lede:
+    "Prof. Ayşe muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar. Her karar sizin onayınızla kesinleşir.",
+} as const;
+
+export const HERO_STRIP = [
+  "30 branş",
+  "Sesli, gerçek zamanlı",
+  "Hasta portalı dahil",
+  "Her adım hekim onaylı",
 ] as const;
 
 export const BRANCHES = [
@@ -55,46 +63,6 @@ export const BRANCHES = [
   "Diğer",
 ] as const;
 
-export const BOOKS = [
-  { title: "Nelson 22e", field: "Pediatri" },
-  { title: "Braunwald 12e", field: "Kardiyoloji" },
-  { title: "Harrison's 22e", field: "Dahiliye" },
-  { title: "Adams & Victor 12e", field: "Nöroloji" },
-  { title: "DSM-5-TR", field: "Psikiyatri" },
-  { title: "Harriet Lane 23e", field: "Pediatri" },
-  { title: "ESC 2024", field: "Kardiyoloji" },
-] as const;
-
-export const SPECIALISTS = [
-  {
-    name: "Prof. Ayşe",
-    surname: "Kaya",
-    title: "Pediatri",
-    character: "Sıcak · Sabırlı",
-    books: "Nelson 22e  ·  Harriet Lane 23e",
-    photo: "/doctors/dr_ayse.jpg",
-    index: "01",
-  },
-  {
-    name: "Prof. Mehmet",
-    surname: "Demir",
-    title: "Kardiyoloji",
-    character: "Hızlı · Net",
-    books: "Braunwald 12e  ·  ESC 2024",
-    photo: "/doctors/dr_mehmet.jpg",
-    index: "02",
-  },
-  {
-    name: "Prof. Elif",
-    surname: "Şahin",
-    title: "Nöroloji ve dahiliye",
-    character: "Analitik · Dikkatli",
-    books: "Harrison's 22e  ·  Adams & Victor 12e",
-    photo: "/doctors/dr_elif.jpg",
-    index: "03",
-  },
-] as const;
-
 export const INDIVIDUAL_PLANS = [
   {
     name: "Başlangıç",
@@ -109,7 +77,7 @@ export const INDIVIDUAL_PLANS = [
     price: "1.299",
     unit: "/ ay",
     highlight: true,
-    items: ["Sınırsız seans", "1 kullanıcı", "Pabau bağlantısı", "ICD-10 kodlama", "Öğrenen sistem"],
+    items: ["Sınırsız seans", "1 kullanıcı", "ICD-10 kodlama", "Öğrenen sistem"],
     href: LINKS.signup,
   },
   {
@@ -117,7 +85,7 @@ export const INDIVIDUAL_PLANS = [
     price: "2.499",
     unit: "/ ay",
     highlight: false,
-    items: ["Sınırsız seans", "Pabau bağlantısı", "Öncelikli destek", "Özel yapay zekâ ayarı", "Öğrenen sistem"],
+    items: ["Sınırsız seans", "Öncelikli destek", "Özel yapay zekâ ayarı", "Öğrenen sistem"],
     href: LINKS.signup,
   },
 ] as const;
@@ -128,7 +96,7 @@ export const CLINIC_PLANS = [
     price: "3.999",
     unit: "/ ay",
     highlight: false,
-    items: ["5 kullanıcı", "Yönetim paneli", "Tüm uzmanlar", "Pabau"],
+    items: ["5 kullanıcı", "Yönetim paneli", "Tüm uzmanlar"],
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
@@ -136,7 +104,7 @@ export const CLINIC_PLANS = [
     price: "6.999",
     unit: "/ ay",
     highlight: true,
-    items: ["10 kullanıcı", "Yönetim paneli", "Pabau bağlantısı", "Marka ayarları", "Öncelikli destek"],
+    items: ["10 kullanıcı", "Yönetim paneli", "Marka ayarları", "Öncelikli destek"],
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
@@ -158,11 +126,81 @@ export const CLINIC_PLANS = [
 ] as const;
 
 export const PROOF = [
-  { k: "KVKK", v: "Kişisel veriler Türkiye'de ve AB Frankfurt'ta. Tam denetim kaydı." },
-  { k: "AES-256", v: "Seanslar GCM ile şifrelenir. Notlar hekim hesabına kilitlenir." },
-  { k: "SGK", v: "Medula kısıtlamaları ve doz sınırları, sormadan hatırlatılır." },
-  { k: "Pabau", v: "Klinik yazılımına SOAP ve ICD-10 aktarımı, Pro ve üzeri." },
+  { k: "KVKK", v: "KVKK'ya göre kurgulandı. Saklama süresi dolan veri imha edilir." },
+  { k: "AES-256", v: "Hasta kimlik bilgileri şifrelenir. Notlar hekim hesabına kilitlenir." },
+  { k: "SUT", v: "SUT kuralları ve doz sınırları, sormadan hatırlatılır." },
+  { k: "Karar desteği", v: "Notya karar desteğidir; tanı ve tedavi kararı hekime aittir." },
 ] as const;
+
+/** NOTYA-LANDING-2026-10 — practice-system sections, in page order. Outcomes only, no mechanisms. */
+export const VIZIT = {
+  eyebrow: "02 — Muayene sonu",
+  title: "Vizit tek akışta",
+  titleItalic: "kapanır.",
+  body: "Muayene sonu adımları sırayla önünüzde. İstemediğiniz adımı atlarsınız.",
+  bullets: [
+    "Kendi vizit şablonlarınız tek dokunuşla",
+    "Kontrol randevusu muayene bitmeden planlanır",
+    "Hasta, özetini kendi portalında görür",
+  ],
+  steps: ["Reçete taslağı", "Rapor", "Kontrol randevusu", "Hasta özeti"],
+} as const;
+
+export const PORTAL = {
+  eyebrow: "03 — Hasta portalı",
+  title: "Hastanız muayenehanenizi",
+  titleItalic: "cebinde taşır.",
+  body: "Her hastaya özel, güvenli bir sayfa: ziyaret özeti, sonuçlar, ilaçlar, takip planı ve size ulaşan mesajlar. Uygulama indirmek gerekmez.",
+  bullets: [
+    "Branşa göre düzenlenmiş içerik",
+    "Randevu talebi ve hatırlatmalar",
+    "Paylaşılan her bilgi hekim onayından geçer",
+  ],
+  rows: ["Ziyaret özeti", "Sonuçlar", "İlaçlar", "Takip planı", "Mesajlar"],
+} as const;
+
+export const KONSULTASYON = {
+  eyebrow: "04 — Konsültasyon",
+  title: "Konsültasyon,",
+  titleItalic: "telefon trafiği olmadan.",
+  body: "Muayeneden çıkmadan istem açın; konsültan hekim kendisine gelen güvenli bağlantıdan yanıtını bıraksın. Yanıt hastanın dosyasına işlenir.",
+  bullets: [
+    "Güvendiğiniz konsültanların defteri",
+    "Yanıt bekleyenler tek listede",
+    "Konsültanın hesap açması gerekmez",
+  ],
+} as const;
+
+export const ON_BURO = {
+  eyebrow: "05 — Randevu ve iletişim",
+  title: "Ön büronuz da",
+  titleItalic: "aynı sistemde.",
+  body: "Randevu takvimi, hatırlatmalar ve hasta mesajları tek yerde. Sekreteriniz kendi hesabıyla yalnızca görmesi gerekeni görür.",
+  bullets: [
+    "Gelen belgeler hasta dosyasına bağlanır",
+    "Sekreter hesabı ayrı yetkiyle çalışır",
+  ],
+} as const;
+
+export const BRANS = {
+  eyebrow: "06 — Branşınıza özel",
+  title: "Genel bir asistan değil.",
+  titleItalic: "Sizin branşınız.",
+  body: "30 branşta, o branşın gündelik işine göre hazırlanmış çalışma alanı. Kayıt olurken branşınızı seçersiniz; ekranınız ona göre kurulur.",
+  examples: [
+    { k: "Pediatri", v: "Büyüme, aşı ve gelişim takibi tek bakışta." },
+    { k: "Kadın Doğum", v: "Gebelik takvimi ve izlem pencereleri kendiliğinden." },
+    { k: "Göz", v: "Görme takibi, vizitten vizite karşılaştırmalı." },
+  ],
+} as const;
+
+export const TAKIP = {
+  eyebrow: "07 — Takip",
+  title: "Hiçbir hasta",
+  titleItalic: "takipten düşmez.",
+  body: "Kontrolü geciken ve izlemi kaçan hastalar kendiliğinden listelenir. Tek dokunuşla hatırlatma gönderirsiniz.",
+  rows: ["Kontrolü geciken", "İzlemi kaçan"],
+} as const;
 
 export type ChartTurn = {
   speaker: string;
@@ -195,7 +233,7 @@ export const CONVO_SCENES: ChartScene[] = [
       {
         speaker: "Ayşe",
         role: "uzman",
-        text: "Akut otitis media. Amoksisilin 40 mg/kg/gün, bu kiloda 720 mg. Amoksiklav mı tercih edersiniz?",
+        text: "Akut otitis media ile uyumlu. Amoksisilin 40 mg/kg/gün, bu kiloda 720 mg. Amoksiklav mı tercih edersiniz?",
       },
     ],
   },
@@ -214,7 +252,7 @@ export const CONVO_SCENES: ChartScene[] = [
       {
         speaker: "Uyarı",
         role: "uyari",
-        text: "Doktor, bir saniye — bu doz yetişkin dozudur. Nelson'a göre bu kiloda en fazla 250 mg olmalı. Düzelteyim mi?",
+        text: "Doktor, bir saniye — bu doz yetişkin dozudur. Kılavuza göre bu kiloda en fazla 250 mg olmalı. Düzelteyim mi?",
       },
     ],
   },

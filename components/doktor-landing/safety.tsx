@@ -5,18 +5,18 @@ export function Safety() {
     <section id="guvenlik" className="bg-paper py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:items-end lg:gap-16">
         <div>
-          <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">04 — Güvenlik ağı</p>
+          <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">09 — Güvenlik ağı</p>
           <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
             Elli hasta, yorgun bir gün —
             <span className="block italic font-normal text-pine">o asla susmaz.</span>
           </h2>
           <blockquote className="mt-8 max-w-xl border-l-2 border-pine pl-5">
             <p className="font-display text-title font-normal italic leading-snug text-ink">
-              “Doktor, bir saniye — bu doz yetişkin dozudur. Nelson'a göre bu kiloda en fazla 250
+              “Doktor, bir saniye — bu doz yetişkin dozudur. Kılavuza göre bu kiloda en fazla 250
               mg olmalı. Düzelteyim mi?”
             </p>
             <footer className="mt-6 font-outfit text-sm leading-relaxed text-ink-2">
-              Yanlış doz, tehlikeli kombinasyon, atlanmış SGK kısıtlaması. Sormadan söyler. Duraksatır.
+              Yanlış doz, tehlikeli kombinasyon, atlanmış SUT kuralı. Sormadan söyler. Duraksatır.
               Doğrusunu önerir.
             </footer>
           </blockquote>

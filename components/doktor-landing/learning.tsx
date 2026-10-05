@@ -23,14 +23,13 @@ export function Learning() {
         </div>
 
         <div>
-          <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">02 — Öğrenme</p>
+          <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">08 — Öğrenme</p>
           <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
             On seans sonra
             <span className="block italic font-normal text-pine">yıllardır birliktesiniz.</span>
           </h2>
           <p className="mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">
-            Her düzelttiğiniz ilaç, her değiştirdiğiniz doz, her tercih — öğrenir. Sorulmadan hatırlar.
-            Meslektaş gibi davranır.
+            Tercihlerinizi hatırlar; aynı şeyi ikinci kez söyletmez. Meslektaş gibi davranır.
           </p>
 
           <div className="mt-8 inline-flex rounded-full bg-cream p-1 shadow-border" role="tablist">
