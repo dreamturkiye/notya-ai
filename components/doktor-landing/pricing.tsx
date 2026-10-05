@@ -61,7 +61,7 @@ export function Pricing() {
                   ) : null}
                 </p>
                 <p className="mt-1 font-outfit text-sm text-ink-muted">
-                  {plan.price === "Fiyat alın" ? "Kurumsal görüşme" : `₺${plan.price} ${plan.unit}`}
+                  {plan.price === "Fiyat alın" ? "Teklif alın" : `₺${plan.price} ${plan.unit}`}
                 </p>
               </div>
               <ul className="flex flex-wrap gap-x-3 gap-y-1 font-outfit text-sm text-ink-2">
@@ -87,7 +87,7 @@ export function Pricing() {
           ))}
         </ol>
         <p className="mt-6 font-outfit text-sm text-ink-muted">
-          İlk 15 gün ücretsiz. Kredi kartı gerekmez. İstediğiniz an iptal.
+          {clinic ? "İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyat, kullanıcı sayısına ve dalınıza göre belirlenir." : "İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyatlara KDV dahil değildir. Yıllık ödemede 2 ay bizden. Kurucu hekim programı: ilk 50 hekime 12 ay boyunca %40 indirim."}
         </p>
       </div>
     </section>
