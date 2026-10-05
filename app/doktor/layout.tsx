@@ -17,9 +17,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Notya — Cebinizdeki uzman",
+  title: "Notya — Hekimler için yapay zekâ klinik asistanı",
   description:
-    "Türkiye'nin ilk yapay zekâ tıp uzmanı. Sesli konuşun, tanı alın, reçete yazın. Her seans sizi daha iyi tanır.",
+    "Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar. Hasta portalı dahil, 30 branş. Her karar hekim onayıyla.",
 };
 
 export default function DoktorLayout({ children }: { children: ReactNode }) {

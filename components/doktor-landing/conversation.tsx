@@ -19,8 +19,8 @@ export function Conversation() {
             <span className="block italic font-normal text-pine">gibi konuşun.</span>
           </h2>
           <p className="mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">
-            Bir kez dokunun — Prof. Ayşe sizi karşılar. Cümlenizin ortasında araya girseniz, anında
-            durur. Tuşa basmanıza gerek yok. İki saniyede yanıt.
+            Bir kez dokunun, Prof. Ayşe dinlemeye başlar. Araya girdiğinizde susar. Tuşa basmanız
+            gerekmez.
           </p>
           <ul className="mt-8 flex flex-col gap-3 font-outfit text-sm text-ink-2">
             <li className="flex items-center gap-3">
@@ -30,10 +30,6 @@ export function Conversation() {
             <li className="flex items-center gap-3">
               <span className="inline-block size-1.5 bg-pine" aria-hidden="true" />
               SOAP notu, seans biter bitmez
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="inline-block size-1.5 bg-pine" aria-hidden="true" />
-              Nelson, Braunwald, Harrison — kaynaklı öneri
             </li>
           </ul>
         </div>
@@ -58,7 +54,7 @@ export function Conversation() {
           </div>
           <MedicalChart key={scene.id} scene={scene} />
           <p className="mt-4 max-w-md font-outfit text-sm leading-relaxed text-ink-muted">
-            Soldaki seanslar kurgusal örneklerdir. Gerçek klinikte her cümle hekimin onayına bağlıdır.
+            Bu seanslar kurgusal örneklerdir. Gerçek klinikte her cümle hekimin onayına bağlıdır.
           </p>
         </div>
       </div>

@@ -20,9 +20,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Notya Klinik — Her koltuğa bir uzman",
+  title: "Notya Klinik — Kliniğiniz ve hastanız aynı sayfada",
   description:
-    "Saç ekimi, estetik, fizyoterapi ve sağlık klinikleri için Türkçe yapay zekâ uzmanları. Sesli seans, otomatik not, KVKK'ya uygun. Pabau ile entegre çalışır.",
+    "Saç ekimi, estetik, fizyoterapi ve sağlık klinikleri için: kliniğinizin dalına göre kurulan çalışma alanı ve her hastaya uygulama gerektirmeyen, şifreli bir sayfa.",
 };
 
 export default function KlinikLayout({ children }: { children: ReactNode }) {

@@ -1,19 +1,18 @@
 "use client";
 
 /**
- * NOTYA-KLINIK-01 — /klinik landing. The klinik vertical shipped with ten personas and a Pabau
- * integration but no public page: it was reachable only through an onboarding dropdown. This is
- * its front door. Pricing reuses CLINIC_PLANS from the doktor landing — one source of truth for
- * seat prices, no invented numbers.
+ * NOTYA-KLINIK-01 — /klinik landing, the klinik vertical's front door. Pricing reuses CLINIC_PLANS
+ * from the doktor landing — one source of truth for seat prices, no invented numbers.
+ * NOTYA-LANDING-2026-10: section order and copy per Kaan's 2026-10-05 brief; see
+ * docs/LANDING-REFRESH-2026-10.md.
  */
 import { useEffect } from "react";
 import { KlinikNav } from "@/components/klinik-landing/nav";
 import {
-  Branslar,
-  Entegrasyonlar,
-  Guvenlik,
+  Dallar,
+  GuvenSatiri,
+  HastaPortali,
   Hero,
-  Isleyis,
   KlinikFooter,
   SonCta,
 } from "@/components/klinik-landing/sections";
@@ -24,7 +23,7 @@ function Fiyat() {
   return (
     <section id="fiyat" className="bg-paper py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">05 — Fiyat</p>
+        <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">03 — Fiyat</p>
         <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
           Koltuk başına.
           <span className="italic font-normal"> Şeffaf.</span>
@@ -77,7 +76,7 @@ function Fiyat() {
 
 export default function KlinikLandingPage() {
   // Anchor targets sit behind a fixed header; scroll-mt handles in-page clicks, this handles
-  // arriving from outside with a #hash (e.g. /klinik#sac-ekimi from an ad).
+  // arriving from outside with a #hash (e.g. /klinik#dallar from an ad).
   useEffect(() => {
     if (window.location.hash) {
       document.querySelector(window.location.hash)?.scrollIntoView();
@@ -89,10 +88,9 @@ export default function KlinikLandingPage() {
       <KlinikNav />
       <main>
         <Hero />
-        <Branslar />
-        <Isleyis />
-        <Guvenlik />
-        <Entegrasyonlar />
+        <HastaPortali />
+        <Dallar />
+        <GuvenSatiri />
         <Fiyat />
         <SonCta />
       </main>

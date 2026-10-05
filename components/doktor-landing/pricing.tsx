@@ -14,7 +14,7 @@ export function Pricing() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">05 — Fiyat</p>
+            <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">10 — Fiyat</p>
             <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
               Sade. Şeffaf.
               <span className="italic font-normal"> Adil.</span>

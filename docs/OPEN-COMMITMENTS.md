@@ -3162,3 +3162,12 @@ Source: yeni gorunum sweep. Klinik pages now use the cream/pine colors and fonts
 | ID | Date | Status | What | Owner / waiting on |
 |----|------|--------|------|--------------------|
 | NOTYA-KLINIK-SHELL-01 | 2026-10-04 | OPEN | `KlinikNav` is a top bar with 8 buttons (Genel Bakış, Hastalar, Randevular, Araçlar, Uzmanlar, Kullanıcılar, Klinik Ayarları, Pabau); doktor uses `DoktorChrome` (header + dock, Sidebar B) through `app/dashboard/doktor/layout.tsx` and `app/doktor-tools/layout.tsx`. There is no layout for `app/dashboard/klinik/*`, `app/klinik-tools/*` or `app/giris/klinik`; each page wraps itself in `KlinikNav` plus its own cream background. `app/klinik-tools/*` has no `doktorViewport` themeColor (cream status bar in the installed app) and no layout-level font link (`KlinikNav` carries the link for now). Klinik tool panels use hand-rolled card/button styles (`inp`/`btn` in `KlinikBolumHome`) instead of the shared `aracStil` / `toolsUi` helpers. | Kaan: decide whether klinik moves to DoktorChrome / Sidebar B |
+
+## 2026-10-05 - NOTYA-LANDING-2026-10: doktor + klinik landing refresh follow-ups
+Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-2026-urhwhg`). Details in `docs/LANDING-REFRESH-2026-10.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-LANDING-2026-10a | 2026-10-05 | OPEN | Legal review of the health-advertising wording on `/doktor` and `/klinik` by a Turkish lawyer. | Kaan |
+| NOTYA-LANDING-2026-10b | 2026-10-05 | OPEN | Add integration claims back to the landings once Kaan confirms which integrations are live. All were removed in this refresh. | Kaan |
+| NOTYA-LANDING-2026-10c | 2026-10-05 | OPEN | Klinik product visuals on `/klinik` after NOTYA-KLINIK-SHELL-01 lands. | Kaan |
