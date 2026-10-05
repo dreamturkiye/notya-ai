@@ -131,9 +131,14 @@ test('ondalık — virgül "virgül" okunur', () => {
   assert.equal(sayiMetniOku('12.500'), 'on iki bin beş yüz')
   assert.equal(sayiMetniOku('1.250,5'), 'bin iki yüz elli virgül beş')
   assert.equal(sayiMetniOku('0.125'), 'sıfır virgül yüz yirmi beş')
+  // Urine SG / ratios: lone "1.005" is decimal, not Turkish thousands ("bin beş").
+  assert.equal(sayiMetniOku('1.005'), 'bir virgül sıfır sıfır beş')
+  assert.equal(sayiMetniOku('1.020'), 'bir virgül sıfır yirmi')
   assert.equal(sayiMetniOku('abc'), null)
   esit('Lökosit 12.500.', 'Lökosit on iki bin beş yüz.')
   esit('Kilosu 12.', 'Kilosu on iki.')
+  esit('İdrar densitesi 1,02', 'İdrar densitesi bir virgül sıfır iki')
+  esit('SG 1.005', 'SG bir virgül sıfır sıfır beş')
 })
 
 test('birimler — her biri', () => {
@@ -213,11 +218,18 @@ test('yüzdelik, Z skoru, aralık, tansiyon, sıra, doz', () => {
   esit('z skoru −2', 'Z skoru eksi iki')
   esit('Z skoru 0', 'Z skoru sıfır')
   esit('Z: +1,5', 'Z skoru artı bir virgül beş')
+  // Growth chart shorthand in exam summaries (Boss Beta sample)
+  esit('z -0,47', 'Z skoru eksi sıfır virgül kırk yedi')
+  esit('z +0,45', 'Z skoru artı sıfır virgül kırk beş')
+  esit('(p32, z -0,47)', '(yüzdelik otuz iki, Z skoru eksi sıfır virgül kırk yedi)')
   esit('-2 SD', 'eksi iki standart sapma')
   esit('40–50 mg/kg/gün', 'günde kilogram başına kırk ile elli miligram')
   esit('13,3–14,1 kg', 'on üç virgül üç ile on dört virgül bir kilogram')
   esit('3–5 gün', 'üç ile beş gün')
   esit('5-10 mg', 'beş ile on miligram')
+  esit('0-5', 'sıfır ile beş')
+  esit('1.005-1.03', 'bir virgül sıfır sıfır beş ile bir virgül sıfır üç')
+  esit('20-24 ay', 'yirmi ile yirmi dört ay')
   esit('%10–15', 'yüzde on ile on beş')
   esit('3–10. persentil arası', 'üç ile onuncu persentil arası')
   esit('Tansiyon 132/85 mmHg', 'Tansiyon yüz otuz iki bölü seksen beş milimetre cıva')
@@ -231,6 +243,13 @@ test('yüzdelik, Z skoru, aralık, tansiyon, sıra, doz', () => {
   esit('Saat 14:30', 'Saat on dört otuz')
   esit('Saat 09:00', 'Saat dokuz')
   esit('14.30', 'on dört otuz')
+})
+
+test('bilimsel gösterim — ×10³ / 10^3 WBC (NOTYA-SES-SAYI-NET-01)', () => {
+  esit('9,1 ×10³/µL', 'dokuz virgül bir çarpı on üssü üç mikrolitre')
+  esit('7,8 10³/µL', 'yedi virgül sekiz çarpı on üssü üç mikrolitre')
+  esit('WBC 8,4 ×10^3/µL', 'lökosit sekiz virgül dört çarpı on üssü üç mikrolitre')
+  esit('10³/µL', 'on üssü üç mikrolitre')
 })
 
 test('tarih — gün Ay yıl, sözle', () => {

@@ -312,6 +312,9 @@ export const SAYI_SOZLERI = {
   bolu: 'bölü',
   /** taslak: posology "3x1" → "üç kere bir". */
   kere: 'kere',
+  /** Scientific notation: "×10³" / "10^3" → "çarpı on üssü üç". */
+  carpi: 'çarpı',
+  ussu: 'üssü',
 } as const
 
 export const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'] as const

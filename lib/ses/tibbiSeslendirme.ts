@@ -82,15 +82,23 @@ function kesirOku(rakamlar: string): string {
 
 /**
  * A number as it is written in a Turkish text: "13,3" and "13.3" are decimals, "12.500" is twelve thousand five hundred.
- * Null when it cannot be read (more than twelve digits).
+ * Lone "1.005" (single digit + one .ddd group, no Turkish comma) is a decimal — urine SG / ratios — not "bin beş".
+ * "1.250,5" and "1.234.567" stay thousands. Null when it cannot be read (more than twelve digits).
  */
 export function sayiMetniOku(ham: string): string | null {
   const s = ham.trim()
   let tam = s
   let kesir = ''
-  const binlik = /^([1-9]\d{0,2}(?:\.\d{3})+)(?:,(\d+))?$/.exec(s)
+  // Explicit Turkish thousands+comma decimal: "1.250,5"
+  const binlikVirgul = /^([1-9]\d{0,2}(?:\.\d{3})+),(\d+)$/.exec(s)
+  // Two or more thousand groups: "1.234.567"
+  const binlikCok = /^([1-9]\d{0,2}(?:\.\d{3}){2,})$/.exec(s)
+  // Single thousand group only when the left side has ≥2 digits: "12.500" (not "1.005")
+  const binlikIki = /^([1-9]\d{1,2}(?:\.\d{3})+)$/.exec(s)
   const ondalik = /^(\d+)[.,](\d+)$/.exec(s)
-  if (binlik) { tam = binlik[1].replace(/\./g, ''); kesir = binlik[2] || '' }
+  if (binlikVirgul) { tam = binlikVirgul[1].replace(/\./g, ''); kesir = binlikVirgul[2] }
+  else if (binlikCok) { tam = binlikCok[1].replace(/\./g, '') }
+  else if (binlikIki) { tam = binlikIki[1].replace(/\./g, '') }
   else if (ondalik) { tam = ondalik[1]; kesir = ondalik[2] }
   else if (!/^\d+$/.test(s)) return null
   if (tam.length > 12) return null
@@ -313,7 +321,11 @@ const TARIH_ARALIGI = new RegExp(String.raw`(?<![\d./])(${TARIH})\s?[–—-]\s?
 const TARIH_DESENI = new RegExp(String.raw`(?<![\d./])${TARIH}${EK}(?!\d|[./]\d)`, 'gu')
 const ISO_TARIH = new RegExp(String.raw`(?<![\d-])(\d{4})-(\d{2})-(\d{2})${EK}(?![\d-])`, 'gu')
 const SAAT = new RegExp(String.raw`(?<![\p{L}\p{N}.,:])(\d{1,2}):(\d{2})${EK}(?![\p{L}\p{N}:])`, 'gu')
-const Z_SKORU = new RegExp(String.raw`${ON}[Zz](?:[\s-]?(?:skoru|skor|score|puanı)\s*[:=]?|\s*[:=])\s*\(?\s*([+\-−–])?\s*(${SAYI})${EK}${SON}`, 'gu')
+/** "Z skoru +1,2", "Z: -0,5", and bare growth shorthand "z -0,47" / "z +0,45". */
+const Z_SKORU = new RegExp(
+  String.raw`${ON}[Zz](?:[\s-]?(?:skoru|skor|score|puanı)\s*[:=]?|\s*[:=]|\s*(?=[+\-−–]))\s*\(?\s*([+\-−–])?\s*(${SAYI})${EK}${SON}`,
+  'gu',
+)
 const SD_EKSI = new RegExp(String.raw`(?<=^|[\s(:=])-(?=(?:${SAYI})\s?SDS?${SON})`, 'gu')
 const YUZDELIK_ARALIGI = new RegExp(String.raw`${ON}[pP]\s?(\d{1,2}(?:[.,]\d)?)\s?${TIRE}\s?[pP]\s?(\d{1,2}(?:[.,]\d)?)${EK}${SON}`, 'gu')
 const YUZDELIK = new RegExp(String.raw`${ON}[pP](\d{1,2}(?:[.,]\d)?)${EK}${SON}`, 'gu')
@@ -322,16 +334,68 @@ const YUZDE_SONDA = new RegExp(String.raw`${ON}((?:${SAYI})(?:\s?${TIRE}\s?(?:${
 const TANSIYON_BIRIMLI = new RegExp(String.raw`${ON}(\d{2,3})\s?\/\s?(\d{2,3})\s?mm\s?Hg${EK}${SON}`, 'giu')
 const TANSIYON_SOZLU = new RegExp(String.raw`((?:tansiyon|kan basınc)\p{L}*\s*[:=]?\s*)(\d{2,3})\s?\/\s?(\d{2,3})(?![\d/])`, 'giu')
 const KERE = new RegExp(String.raw`${ON}(\d{1,2})\s?[x×]\s?(?=\d)`, 'gu')
-const ARALIK = new RegExp(String.raw`${ON}(${SAYI})\s?–\s?(?=\d)`, 'gu')
+/** En dash or ASCII hyphen ranges: "13,3–14,1", "0-5", "1.005-1.03". */
+const ARALIK = new RegExp(String.raw`${ON}(${SAYI})\s?[-–—]\s?(?=\d)`, 'gu')
 const SIRA_DESENI = /(?<![\p{L}\p{N}.,/])(\d{1,3})\.(?=\s+\p{Ll})/gu
-const ISARET = /(?<![\p{L}\p{N})])([+−])\s?(?=\d)/gu
+/** Plus / minus before a number — ASCII hyphen-minus included (growth z-scores, SDS). */
+const ISARET = /(?<![\p{L}\p{N})])([+\-−–])\s?(?=\d)/gu
 const SAYI_DESENI = new RegExp(`${ON}(${SAYI})${EK}${SON}`, 'gu')
 
-/** A bare number. "14.30" keeps the clock reading it always had; five or more digits in a row are an id and stay. */
+/** Unicode / caret exponents on 10ⁿ (WBC ×10³/µL). */
+const USLU_HANE: Readonly<Record<string, number>> = {
+  '⁰': 0, '¹': 1, '²': 2, '³': 3, '⁴': 4, '⁵': 5, '⁶': 6, '⁷': 7, '⁸': 8, '⁹': 9,
+}
+const USLU_GOVDE = String.raw`(?:[⁰¹²³⁴⁵⁶⁷⁸⁹]|\^(?:\d{1,2}))`
+/**
+ * "9,1 ×10³/µL", "7,8 10³/µL", "×10^3 / mm³" — coefficient optional; unit/denominator optional.
+ * Must run before bare number + unit so "10³" is not left as digit islands for Flash.
+ */
+const BILIMSEL = new RegExp(
+  String.raw`${ON}(?:(${SAYI})\s*)?(?:[×xX]\s*)?10\s*(${USLU_GOVDE})(${BOLENLER})?${EK}${SON}`,
+  'giu',
+)
+
+function usluOku(ham: string): string | null {
+  if (ham.startsWith('^')) return sayiOku(Number(ham.slice(1)))
+  const n = USLU_HANE[ham]
+  return n === undefined ? null : sayiOku(n)
+}
+
+function bilimselOku(hepsi: string, katsayi: string | undefined, us: string, bolenler: string | undefined, ek?: string): string {
+  const usSoz = usluOku(us)
+  if (!usSoz) return hepsi
+  const kat = katsayi ? sayiMetniOku(katsayi) : null
+  if (katsayi && !kat) return hepsi
+  // /µL after ×10ⁿ is the unit of the count ("… mikrolitre"), not the "per µL" dose pattern ("mikrolitrede …").
+  const sonra: string[] = []
+  for (const ham of (bolenler || '').split('/').map((x) => x.trim()).filter(Boolean)) {
+    const k = birimAnahtari(ham)
+    const birim = BIRIM_HARITASI.get(k)
+    if (birim) { sonra.push(birim); continue }
+    const payda = PAYDA_HARITASI.get(k)
+    if (!payda) return hepsi
+    sonra.push(payda.replace(/d[ae]$/u, ''))
+  }
+  const govde = birlestir(
+    kat || undefined,
+    kat ? SAYI_SOZLERI.carpi : undefined,
+    'on',
+    SAYI_SOZLERI.ussu,
+    usSoz,
+    ...sonra,
+  )
+  return ek ? ekUyarla(govde, ek) : govde
+}
+
+/** A bare number. "14.30" keeps the clock reading it always had; "1.03" is a lab decimal (SG), not one-oh-three.
+ * Five or more digits in a row are an id and stay. */
 function yalinSayiOku(ham: string): string | null {
   if (/^\d{5,}$/.test(ham)) return null
   const saat = /^(\d{1,2})\.(\d{2})$/.exec(ham)
-  if (saat && Number(saat[1]) < 24 && Number(saat[2]) < 60) return saatOku(saat[1], saat[2])
+  // Dotted clock needs hour ≥ 2 — "1.03" / "0.25" are ratios & decimals in medical Turkish, not times.
+  if (saat && Number(saat[1]) >= 2 && Number(saat[1]) < 24 && Number(saat[2]) < 60) {
+    return saatOku(saat[1], saat[2])
+  }
   return sayiMetniOku(ham)
 }
 function saatOku(s: string, dk: string): string {
@@ -345,6 +409,9 @@ function sayilariOku(metin: string): string {
     return t ? ekli(t, ek) : hepsi
   }
   let s = metin
+    // Scientific notation first — before × as "kere" and before bare 10 + unit.
+    .replace(BILIMSEL, (hepsi: string, kat: string | undefined, us: string, bolenler: string | undefined, ek?: string) =>
+      bilimselOku(hepsi, kat, us, bolenler, ek))
     .replace(TARIH_ARALIGI, (hepsi: string, t1: string, g1: string, a1: string, y1: string, t2: string, g2: string, a2: string, y2: string) => {
       const a = tarihOku(Number(g1), Number(a1), Number(y1))
       const b = tarihOku(Number(g2), Number(a2), Number(y2))

@@ -1,10 +1,11 @@
 /**
- * NOTYA-SES-ELEVEN-NORMAL-01 + NOTYA-SES-LAB-NEFES-01 — ElevenLabs hears spoken Turkish units;
- * dense lab lists are breath-paced so Flash does not slur.
+ * NOTYA-SES-ELEVEN-NORMAL-01 + NOTYA-SES-LAB-NEFES-01 + NOTYA-SES-SAYI-NET-01 —
+ * ElevenLabs hears spoken Turkish units; dense lab lists are breath-paced; no digit islands
+ * reach Flash (Beta QoS — number slur is a ship blocker).
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { elevenMetni, labNefesAyir } from './elevenMetni'
+import { elevenMetni, labNefesAyir, kalanRakamlariOku, rakamKaldiMi } from './elevenMetni'
 import { seslendirilmemisler } from '@/lib/ses/tibbiSeslendirme'
 import { SES_BLOK_ESIGI, SesYayKapisi } from './sesYay'
 
@@ -70,5 +71,36 @@ describe('elevenMetni — ElevenLabs choke point', () => {
       assert.match(p.trim(), /[.,…!?]$/, `bad cut: "${p}"`)
       assert.ok(p.length <= SES_BLOK_ESIGI * 2.5, `oversized breath ${p.length}`)
     }
+  })
+
+  it('NOTYA-SES-SAYI-NET-01: Boss exam-summary sample leaves zero digit islands', () => {
+    const sample = [
+      'İdrar pH 6. İdrar densitesi (SG) 1,02 — referans içinde (1.005-1.03).',
+      'Lökosit (WBC) 0 — referans içinde (0-5).',
+      'Lökosit (WBC) 7,8 10³/µL — referans içinde (5-15.5).',
+      'kilo 12 kg; boy 90 cm; baş çevresi 48 cm; ateş 36,5 °C; nabız 100/dk; SpO₂ %99; tansiyon 90/60 mmHg.',
+      'Kilo 12 kg (p32, z -0,47); Boy 90 cm (p68, z +0,45); Baş çevresi 48 cm (p20, z -0,85).',
+      'Aşı kaydı, 03.10.2026. M-CHAT-R/F: dusuk risk (puan 0). GİDR (20-24 ay).',
+      'Reçete: Wellcare 1000 ünite d vitamini haftada 5 fiss; NBL Probiotik Kids günde bir adet.',
+      'lot no: H1234 2. Lot no: V1234.',
+    ].join(' ')
+    const okunus = elevenMetni(sample)
+    assert.equal(rakamKaldiMi(okunus), false, okunus)
+    assert.match(okunus, /çarpı on üssü üç mikrolitre/)
+    assert.match(okunus, /Z skoru eksi sıfır virgül kırk yedi/)
+    assert.match(okunus, /Z skoru artı sıfır virgül kırk beş/)
+    assert.match(okunus, /bir virgül sıfır sıfır beş ile bir virgül sıfır üç/)
+    assert.match(okunus, /H bir iki üç dört/)
+    assert.match(okunus, /V bir iki üç dört/)
+    // Abbreviations stay on the existing dictionary path — not expanded into prose just for TTS.
+    assert.match(okunus, /em çat/)
+    assert.match(okunus, /Gelişimi İzleme ve Destekleme Rehberi/)
+    assert.equal(elevenMetni(okunus), okunus)
+  })
+
+  it('NOTYA-SES-SAYI-NET-01: leftover codes are spelled digit-by-digit', () => {
+    assert.equal(kalanRakamlariOku('lot H1234'), 'lot H bir iki üç dört')
+    assert.equal(kalanRakamlariOku('kalan 10³'), 'kalan on üssü üç')
+    assert.equal(rakamKaldiMi(kalanRakamlariOku('WBC 7,8 10³')), false)
   })
 })
