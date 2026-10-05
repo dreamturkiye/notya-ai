@@ -266,7 +266,8 @@ export const ISTEM_KILITLI_KAPANDI = 'Kapatılmış konsültasyonun istemi düze
  * Durum geçiş kuralı (PATCH). Kapanmış (yanıtsız) bir konsültasyona geç gelen rapor YİNE eklenebilir;
  * yanıtlanmış kayıtta yanıt düzeltilebilir. Yanıtlanmış kayıt "yanıtsız" kapatılamaz.
  * İstem ('duzenle') yalnız yanıt beklerken ('acik' / 'yanit_bekleniyor') düzenlenir; yanıt geldikten sonra KİLİTLİ.
- * Silme yalnız yanıtsız kapatılmış kayıtlar için (hekim hatalı/boş istemi dosyadan kaldırmak ister).
+ * Silme / iptal: yanıt bekleyen veya yanıtsız kapatılmış kayıtlar (yeniden yazmak / hatalı istemi kaldırmak).
+ * Yanıtlanmış kayıt silinmez — kanıt olarak kalır.
  */
 export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: true } | { ok: false; hata: string } {
   const g = durumGrubu(durum)
@@ -289,9 +290,9 @@ export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: tru
     case 'hastaya_ver':
       return g === 'yanitlandi' ? { ok: true } : { ok: false, hata: 'Önce yanıtı onaylayın — hastaya verilecek özet yok.' }
     case 'sil':
-      return g === 'kapandi'
+      return g === 'bekliyor' || g === 'kapandi'
         ? { ok: true }
-        : { ok: false, hata: g === 'yanitlandi' ? 'Yanıtlanmış konsültasyon silinemez — kayıt kanıt olarak kalır.' : 'Yalnız yanıtsız kapatılmış konsültasyon silinebilir.' }
+        : { ok: false, hata: 'Yanıtlanmış konsültasyon silinemez — kayıt kanıt olarak kalır.' }
   }
 }
 

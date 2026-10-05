@@ -31,6 +31,8 @@ export const BEKLEYEN_KONSULTASYONLAR_ROTASI = KONSULTASYONLAR_ROTASI
 
 export const YANITSIZ_KAPAT_ONAYI = 'Bu konsültasyon yanıt gelmeden kapatılsın mı? Geç gelen rapor yine eklenebilir.'
 export const YANITSIZ_SIL_ONAYI = 'Yanıtsız kapatılmış bu konsültasyon hasta dosyasından silinsin mi? Bu işlem geri alınamaz.'
+/** Yanıt bekleyen istemi iptal / sil — hekim yeniden yazmak veya vazgeçmek ister. */
+export const ISTEM_IPTAL_ONAYI = 'Bu konsültasyon istemi iptal edilsin mi? Kayıt silinir; isterseniz yeniden yazabilirsiniz. Bu işlem geri alınamaz.'
 export const HATIRLATMA_GONDERILDI = 'Hastaya Sağlığım üzerinden hatırlatma gönderildi (klinik bilgi içermez).'
 
 /** Hasta dosyası › Konsültasyonlar; `yanit` verilirse o konsültasyonun yanıt formu açık gelir. */

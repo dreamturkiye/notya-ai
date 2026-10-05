@@ -9,7 +9,7 @@
  * beklemeVurgusu) — kohort satırı ve ana sayfa özetiyle aynı veri.
  *
  * İşlemler: hasta dosyası · Yanıt ekle (hasta dosyası › Konsültasyonlar'daki mevcut yanıt formu açık gelir) ·
- * Hatırlat · Yanıtsız kapat (aynı PATCH, aynı metinler — lib/doktor/konsultasyonIstemci.ts).
+ * Hatırlat · Yanıtsız kapat · İptal et (aynı PATCH, aynı metinler — lib/doktor/konsultasyonIstemci.ts).
  * Eşikler takip ipucudur, klinik süre sınırı değildir. Ortak UI: lib/doktor/aracUi.tsx.
  */
 import React, { useCallback, useEffect, useState } from 'react';
@@ -20,12 +20,12 @@ import {
   beklemeVurgusu, bekleyenOzeti, hatirlatmaBeklemesi, trGun, type Aciliyet, type BekleyenKonsultasyon,
 } from '@/lib/doktor/konsultasyon';
 import {
-  HATIRLATMA_GONDERILDI, YANITSIZ_KAPAT_ONAYI, konsultasyonApi, konsultasyonDosyaYolu, konsultasyonIslemi,
+  HATIRLATMA_GONDERILDI, ISTEM_IPTAL_ONAYI, YANITSIZ_KAPAT_ONAYI, konsultasyonApi, konsultasyonDosyaYolu, konsultasyonIslemi,
 } from '@/lib/doktor/konsultasyonIstemci';
 
 export type YanitSuresi = { adet: number; medyanGun: number | null; enUzunGun: number | null }
 type IslemSonucu = { ok: boolean; metin: string; sonHatirlatmaAt?: string | null }
-export type BekleyenIslemi = (id: string, islem: 'hatirlat' | 'kapat') => Promise<IslemSonucu>
+export type BekleyenIslemi = (id: string, islem: 'hatirlat' | 'kapat' | 'sil') => Promise<IslemSonucu>
 
 function AciliyetRozeti({ aciliyet }: { aciliyet: string | null }) {
   if (aciliyet === 'acil') return <Rozet ton="kirmizi">{ACILIYET_ETIKETI.acil}</Rozet>;
@@ -35,17 +35,19 @@ function AciliyetRozeti({ aciliyet }: { aciliyet: string | null }) {
 
 export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemYap: BekleyenIslemi }) {
   const stil = useAracStil();
-  const [calisiyor, setCalisiyor] = useState<'' | 'hatirlat' | 'kapat'>('');
+  const [calisiyor, setCalisiyor] = useState<'' | 'hatirlat' | 'kapat' | 'sil'>('');
   const [mesaj, setMesaj] = useState<{ iyi: boolean; metin: string } | null>(null);
   const vurgu = beklemeVurgusu(b.gun);
   const sonraki = hatirlatmaBeklemesi(b.sonHatirlatmaAt);
 
-  const calistir = async (ad: 'hatirlat' | 'kapat') => {
+  const calistir = async (ad: 'hatirlat' | 'kapat' | 'sil') => {
     if (calisiyor) return;
     if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_KAPAT_ONAYI)) return;
+    if (ad === 'sil' && typeof window !== 'undefined' && !window.confirm(ISTEM_IPTAL_ONAYI)) return;
     setCalisiyor(ad); setMesaj(null);
     const s = await islemYap(b.id, ad);
     setCalisiyor('');
+    if (ad === 'sil' && s.ok) return; // satır listeden düştü
     setMesaj({ iyi: s.ok, metin: s.metin });
   };
 
@@ -72,6 +74,14 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
           {calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}
         </button>
         <button type="button" onClick={() => calistir('kapat')} disabled={!!calisiyor} style={stil.ghost}>{calisiyor === 'kapat' ? 'Kapatılıyor…' : 'Yanıtsız kapat'}</button>
+        <button
+          type="button"
+          onClick={() => calistir('sil')}
+          disabled={!!calisiyor}
+          style={{ ...stil.ghost, color: 'var(--warn, #7a4a22)', borderColor: 'rgba(122,74,34,0.35)' }}
+        >
+          {calisiyor === 'sil' ? 'İptal ediliyor…' : 'İptal et'}
+        </button>
       </div>
       {sonraki && !mesaj && <div style={{ ...stil.kucuk, marginTop: 6 }}>Sonraki hatırlatma {trGun(sonraki)} tarihinden itibaren gönderilebilir.</div>}
       {mesaj && <div style={{ fontSize: 13, marginTop: 8, color: mesaj.iyi ? '#2E6E4E' : '#7A5B1E' }} aria-live="polite">{mesaj.metin}</div>}
@@ -145,6 +155,10 @@ export default function BekleyenKonsultasyonlar() {
         // Kapanan konsültasyon bekleyenler listesinden çıkar (hasta dosyasında "Yanıtsız kapatıldı" olarak kalır).
         setBekleyenler((l) => (l ? l.filter((b) => b.id !== id) : l));
         return { ok: true, metin: 'Yanıtsız kapatıldı.' };
+      }
+      if (islem === 'sil') {
+        setBekleyenler((l) => (l ? l.filter((b) => b.id !== id) : l));
+        return { ok: true, metin: 'İstem iptal edildi.' };
       }
       const son = j.konsultasyon?.son_hatirlatma_at ?? new Date().toISOString();
       setBekleyenler((l) => (l ? l.map((b) => (b.id === id ? { ...b, sonHatirlatmaAt: son } : b)) : l));

@@ -204,15 +204,27 @@ describe('KONSULTASYON-01 — kapalı döngü (gerçek rota, sahte veritabanı)'
     assert.equal((await patch({ islem: 'belge_bagla', belgeId: silinmis })).status, 404)
   })
 
-  it('yanıtsız kapatılmış kayıt silinebilir; açık/yanıtlanmış silinemez', async () => {
+  it('açık istem iptal/silinebilir; yanıtlanmış silinemez; yanıtsız kapatılmış da silinebilir', async () => {
     const k = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'İşitme kaybı var mı, odyometri?' })))).j.konsultasyon
-    const patch = (g: Record<string, unknown>) => coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, ...g })))
-    assert.equal((await patch({ islem: 'sil' })).status, 409, 'açık istem silinmez')
-    assert.equal((await patch({ islem: 'kapat' })).status, 200)
-    const sil = await patch({ islem: 'sil' })
-    assert.equal(sil.status, 200, JSON.stringify(sil.j))
-    assert.equal(sil.j.silindi, true)
+    const patch = (id: string, g: Record<string, unknown>) => coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id, ...g })))
+    const iptal = await patch(k.id, { islem: 'sil' })
+    assert.equal(iptal.status, 200, JSON.stringify(iptal.j))
+    assert.equal(iptal.j.silindi, true)
     assert.equal(db.tablo('sevkler').find((x) => x.id === k.id), undefined)
+
+    const k2 = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'İşitme kaybı var mı, odyometri?' })))).j.konsultasyon
+    assert.equal((await patch(k2.id, { islem: 'kapat' })).status, 200)
+    const silKapali = await patch(k2.id, { islem: 'sil' })
+    assert.equal(silKapali.status, 200, JSON.stringify(silKapali.j))
+    assert.equal(silKapali.j.silindi, true)
+
+    const k3 = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'İşitme kaybı var mı, odyometri?' })))).j.konsultasyon
+    assert.equal((await patch(k3.id, {
+      islem: 'yanit',
+      yanitOzeti: 'İşitme kaybı saptanmadı.',
+      yanitTarihi: new Date().toISOString().slice(0, 10),
+    })).status, 200)
+    assert.equal((await patch(k3.id, { islem: 'sil' })).status, 409, 'yanıtlanmış kanıt silinmez')
   })
 
   it('istem doğrulaması: serbest metin hedef ve kısa soru reddedilir, satır yazılmaz', async () => {

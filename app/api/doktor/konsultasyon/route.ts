@@ -22,7 +22,7 @@
  *         'duzenle' (AYSE-KONSULTASYON-01): istem alanları yalnız yanıt beklerken; 'yanitlandi' / kapanmış → 409 (istem
  *         KİLİDİ sunucuda). Her değişen alanın önceki metni konsultasyon_revizyonlar'a yazılır — önce iz, sonra güncelleme;
  *         iz yazılamazsa değişiklik YAPILMAZ. Yanıt özeti düzeltmesi ('yanit', önceki özet varken) de iz bırakır.
- *         'sil': yalnız yanıtsız kapatılmış kayıt (kapandi / kapandi_yanitsiz) — hard delete, doctor_id kapsamlı.
+ *         'sil': yanıt bekleyen veya yanıtsız kapatılmış kayıt — hard delete (iptal / yeniden yaz); doctor_id kapsamlı.
  *
  * VERİ: tablo `sevkler` (033; dahiliye/göz/KD aynı tabloya yazmaya devam eder). Terim "sevk" UI'de kullanılmaz —
  * SGK sevki (SUT EK-2/F / e-sevk) ayrı ve düzenleyici bir belgedir. lib/doktor/konsultasyon.ts başlığına bakın.
@@ -627,7 +627,11 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (islem === 'sil') {
-    // HASTA-IZOLASYON: yalnız kendi satırı; yanıtsız kapatılmış kayıt (gecisIzinli). Hard delete — sevkler'de soft-delete kolonu yok.
+    // HASTA-IZOLASYON: yalnız kendi satırı; bekleyen veya yanıtsız kapatılmış (gecisIzinli). Hard delete — sevkler'de soft-delete kolonu yok.
+    try {
+      const { takipKonsultasyonKapandi } = await import('@/lib/doktor/takip')
+      await takipKonsultasyonKapandi(sb, { doktorId: user.id, sevkId: String(s.id), neden: 'iptal' })
+    } catch (e) { console.error('[takip] konsultasyon iptal', e) }
     const { error } = await sb.from('sevkler').delete().eq('id', s.id).eq('doctor_id', user.id)
     if (error) return NextResponse.json({ error: 'Silinemedi.' }, { status: 500 })
     return NextResponse.json({ ok: true, silindi: true, id: s.id })

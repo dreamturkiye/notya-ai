@@ -51,13 +51,13 @@ describe('KONSULTASYON-01 — zaman çizelgesi (SSR)', () => {
     assert.match(h, /2 yanıt bekliyor · 2 yanıtlandı/)
     assert.match(h, /\+ Yeni konsültasyon/)
   })
-  it('yanıt bekleyen: kaç gündür, aciliyet, Yanıt ekle / Hatırlat / Yanıtsız kapat, istem formu', () => {
+  it('yanıt bekleyen: kaç gündür, aciliyet, Yanıt ekle / Hatırlat / Yanıtsız kapat / İptal et, istem formu', () => {
     const k = kart('bekleyen')
     assert.match(k, /Yanıt bekleniyor · 7 gündür/)
     assert.match(k, /Öncelikli/)
     assert.match(k, /İşitme kaybı var mı\?/)
     assert.match(k, /İstem: 12\.09\.2026/)
-    for (const d of ['Yanıt ekle', 'Hatırlat', 'Yanıtsız kapat', 'İstem formu']) assert.ok(k.includes(d), d)
+    for (const d of ['Yanıt ekle', 'Hatırlat', 'Yanıtsız kapat', 'İptal et', 'İstem formu']) assert.ok(k.includes(d), d)
     assert.match(k, /\/dashboard\/doktor\/hastalar\/p\/konsultasyon\/bekleyen\/yazdir/)
   })
   it('"show proof": yanıt özeti + tarih + konsültan + 📎 rapor + muayene notu bağlantısı', () => {
@@ -242,12 +242,13 @@ describe('KONSULTASYON-02 — Araçlar › Bekleyen Konsültasyonlar (SSR, evren
     assert.ok(h.indexOf('"kirmizi"') < h.indexOf('"dikkat"') && h.indexOf('"dikkat"') < h.indexOf('"yeni"'))
     assert.match(h, /klinik bir süre sınırı değildir/)
   })
-  it('eylemler: Yanıt ekle (hasta dosyasındaki form açık gelir), Hasta dosyası, Hatırlat, Yanıtsız kapat — ≥44 px', () => {
+  it('eylemler: Yanıt ekle (hasta dosyasındaki form açık gelir), Hasta dosyası, Hatırlat, Yanıtsız kapat, İptal et — ≥44 px', () => {
     const k = kart('kirmizi')
     assert.match(k, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon&amp;yanit=kirmizi"[^>]*>Yanıt ekle</)
     assert.match(k, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon"[^>]*>Hasta dosyası</)
     assert.match(k, />Hatırlat</)
     assert.match(k, />Yanıtsız kapat</)
+    assert.match(k, />İptal et</)
     for (const m of k.match(/<(a|button)\b[^>]*>/g) || []) assert.match(m, /min-height:44px/, m)
     // 7 gün içinde hatırlatılmışsa düğme pasif ve neden yazılı
     assert.match(kart('yeni'), /disabled=""[^>]*>Hatırlat</)

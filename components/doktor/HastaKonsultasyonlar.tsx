@@ -18,7 +18,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
-import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
+import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, ISTEM_IPTAL_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
 import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
 import {
@@ -563,7 +563,10 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
   const islem = async (ad: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil') => {
     if (calisiyor) return;
     if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_KAPAT_ONAYI)) return;
-    if (ad === 'sil' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_SIL_ONAYI)) return;
+    if (ad === 'sil') {
+      const onay = g === 'bekliyor' ? ISTEM_IPTAL_ONAYI : YANITSIZ_SIL_ONAYI
+      if (typeof window !== 'undefined' && !window.confirm(onay)) return
+    }
     setCalisiyor(ad); setMesaj(null);
     try {
       const { ok, j } = await konsultasyonIslemi(k.id, ad);
@@ -643,6 +646,14 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
           <>
             <button type="button" onClick={() => islem('hatirlat')} disabled={!!calisiyor} style={stil.ghost}>{calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}</button>
             <button type="button" onClick={() => islem('kapat')} disabled={!!calisiyor} style={stil.ghost}>Yanıtsız kapat</button>
+            <button
+              type="button"
+              onClick={() => islem('sil')}
+              disabled={!!calisiyor}
+              style={{ ...stil.ghost, color: 'var(--warn, #7a4a22)', borderColor: 'rgba(122,74,34,0.35)' }}
+            >
+              {calisiyor === 'sil' ? 'İptal ediliyor…' : 'İptal et'}
+            </button>
           </>
         )}
         {g === 'kapandi' && (
