@@ -3171,3 +3171,6 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 | NOTYA-LANDING-2026-10a | 2026-10-05 | OPEN | Legal review of the health-advertising wording on `/doktor` and `/klinik` by a Turkish lawyer. | Kaan |
 | NOTYA-LANDING-2026-10b | 2026-10-05 | OPEN | Add integration claims back to the landings once Kaan confirms which integrations are live. All were removed in this refresh. | Kaan |
 | NOTYA-LANDING-2026-10c | 2026-10-05 | OPEN | Klinik product visuals on `/klinik` after NOTYA-KLINIK-SHELL-01 lands. | Kaan |
+
+- 2026-10-05 NOTYA-FIYAT-01: landing prices raised (Baslangic 1.490 / Pro 3.490 / Muayenehane 5.990 TRY per month, klinik by quote only, founding-doctor 40 percent off for the first 50 doctors for 12 months, annual prepay 2 months free). The app does NOT enforce these tiers yet: no plan limits, no tier feature gating, no billing for them. Waits on: Kaan (decide when to build).
+- 2026-10-05 NOTYA-FIYAT-02: measure the real cost per voice session and define the fair-use limit behind the Pro promise of unlimited sessions (fair use). Waits on: Kaan (say olc).

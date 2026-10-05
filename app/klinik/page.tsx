@@ -41,7 +41,7 @@ function Fiyat() {
                   ) : null}
                 </p>
                 <p className="mt-1 font-outfit text-sm text-ink-muted">
-                  {plan.price === "Fiyat alın" ? "Kurumsal görüşme" : `₺${plan.price} ${plan.unit}`}
+                  {plan.price === "Fiyat alın" ? "Teklif alın" : `₺${plan.price} ${plan.unit}`}
                 </p>
               </div>
               <ul className="flex flex-wrap gap-x-3 gap-y-1 font-outfit text-sm text-ink-2">
@@ -67,7 +67,7 @@ function Fiyat() {
           ))}
         </ol>
         <p className="mt-6 font-outfit text-sm text-ink-muted">
-          İlk 15 gün ücretsiz. Kredi kartı gerekmez. İstediğiniz an iptal.
+          İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyat, kullanıcı sayısına ve dalınıza göre belirlenir.
         </p>
       </div>
     </section>
