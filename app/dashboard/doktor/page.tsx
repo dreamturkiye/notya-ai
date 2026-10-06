@@ -331,6 +331,8 @@ export default function DoktorDashboard() {
 
       <PaketSayacSeridi />
 
+      <NotyaFisildiyor specialty={specialty} />
+
       {/* Hızlı araçlar — masaüstü. Telefonda yg-mobil-ust bunun yerini alır. */}
       <div className="yg-masa-arac">
         <h2 style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı araçlar</h2>
@@ -633,7 +635,6 @@ export default function DoktorDashboard() {
 
           {/* Phone: directly under today's calendar. Desktop: stays under Bu Hafta Özeti. */}
           <div className="yg-fisilti" style={S({ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 })}>
-            <NotyaFisildiyor specialty={specialty} />
             <TakipPaneli />
           </div>
         </div>
