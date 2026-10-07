@@ -80,6 +80,8 @@ import {
 } from '@/lib/doktor/konsultasyon'
 import {
   konsultanaEpostaHazirla,
+  epostaAcilisTahmini,
+  konsultanWhatsappMetni,
   konsultanAliciDogrula,
   portalLinkHazirla,
   type EpostaDurum,
@@ -533,6 +535,7 @@ export async function POST(req: NextRequest) {
     aliciEposta: aliciEposta || null,
     epostaKonu,
     epostaMetin,
+    acilisOnerisi: epostaAcilisTahmini((user as { email?: string | null }).email),
   }, { status: 201 })
 }
 
@@ -542,7 +545,7 @@ export async function PATCH(req: NextRequest) {
   const { user, supabase: sb } = oturum
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const islem = String(b?.islem || '') as KonsultasyonIslemi
-  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil', 'onayla', 'hastaya_ver', 'eposta_gonder'].includes(islem)) {
+  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil', 'onayla', 'hastaya_ver', 'eposta_gonder', 'whatsapp_metni'].includes(islem)) {
     return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
   }
 
@@ -625,6 +628,25 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true, silindi: true, id: s.id })
   }
 
+  if ((islem as string) === 'whatsapp_metni') {
+    // NOTYA-KONSULT-GONDERIM-01 — WhatsApp için metin + portal linki; e-posta adresi gerekmez. Sunucu göndermez.
+    const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
+    const p = await portalLinkHazirla(sb, user.id, s)
+    if (!p.portalLink) return NextResponse.json({ ok: false, error: 'Bağlantı hazırlanamadı — yeniden deneyin.' }, { status: 502 })
+    let numara: string | null = null
+    if (p.satir.defter_id) {
+      const { data: defter } = await sb.from('konsultasyon_defter').select('whatsapp, telefon')
+        .eq('id', p.satir.defter_id).eq('doctor_id', user.id).maybeSingle()
+      numara = (defter?.whatsapp ? String(defter.whatsapp).trim() : '') || (defter?.telefon ? String(defter.telefon).trim() : '') || null
+    }
+    return NextResponse.json({
+      ok: true,
+      metin: konsultanWhatsappMetni(hekim, p.satir, p.portalLink),
+      portalLink: p.portalLink,
+      numara,
+      konsultasyon: { ...p.satir, hedefEtiketi: hedefEtiketi(p.satir) },
+    })
+  }
   if (islem === 'eposta_gonder') {
     // Alıcı: istek gövdesi > Defter e-postası. Sunucu GÖNDERMEZ — taslak döner; istemci mailto / Mac Mail açar.
     const aliciD = konsultanAliciDogrula(b?.aliciEposta ?? b?.konsultanEposta ?? b?.eposta)
@@ -660,6 +682,7 @@ export async function PATCH(req: NextRequest) {
       aliciEposta: alici,
       epostaKonu: g.taslak.konu,
       epostaMetin: g.taslak.metin,
+      acilisOnerisi: epostaAcilisTahmini((user as { email?: string | null }).email),
       konsultasyon: { ...g.satir, hedefEtiketi: hedefEtiketi(g.satir) },
     })
   }

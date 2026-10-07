@@ -13,6 +13,7 @@ import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 import { CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
+import { onerilerPaneliGorunurMu } from "@/lib/doktor/oneriPaneli"
 import {
   cekListeDogrula,
   cekListeSifirla,
@@ -64,6 +65,8 @@ function NewSessionInner() {
     const t = new Date(randevuBaslangicParam)
     return Number.isNaN(t.getTime()) ? null : t.toISOString()
   })()
+  // NOTYA-PEDI-ONERI-01: randevuda seçilen ziyaret tipi (Sağlam / Hasta). Yoksa (walk-in, eski kayıt) null → pediatride hasta çocuk sayılır.
+  const hastaDurumuParam = searchParams?.get("hastaDurumu") || null
   const [specialty, setSpecialty] = useState("genel")
   const [bransKilitli, setBransKilitli] = useState(false)
 
@@ -164,6 +167,8 @@ function NewSessionInner() {
   const [hastaDogumIso, setHastaDogumIso] = useState<string | null>(null)
   const [pediKayitlari, setPediKayitlari] = useState<SaglamCocukKayitlari | null>(null)
   const cekGirdi = { seansBransi: specialty, hastaDogumIso, referansIso: efektifTarihIso, pediKayitlari }
+  // NOTYA-PEDI-ONERI-01: pediatride öneriler paneli yalnız sağlam çocuk muayenesinde; diğer branşlar değişmez.
+  const oneriPaneli = onerilerPaneliGorunurMu({ seansBransi: specialty, hastaDurumu: hastaDurumuParam })
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
@@ -554,7 +559,7 @@ function NewSessionInner() {
         )}
 
         {step === "recording" && (
-          <div className="notya-grid-yigin notya-seans-cek" style={S({display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(240px,0.85fr)",gap:"16px",alignItems:"start"})}>
+          <div className="notya-grid-yigin notya-seans-cek" style={S({display:"grid",gridTemplateColumns:oneriPaneli?"minmax(0,1.15fr) minmax(240px,0.85fr)":"minmax(0,1fr)",gap:"16px",alignItems:"start"})}>
           <div className="notya-seans-kayit" style={S({background:"#faf6ee",border:"1px solid rgba(58,44,34,0.08)",borderRadius:"20px",padding:"24px"})}>
             <div style={S({textAlign:"center",marginBottom:"20px"})}>
               <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#e8ede6",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
@@ -613,6 +618,7 @@ function NewSessionInner() {
               Notları yazdıktan sonra "Seansı Bitir" butonuna basın
             </div>
           </div>
+          {oneriPaneli && (
           <MuayeneCekListesi
             acikRenk
             maddeler={muayeneCekListesi(cekGirdi)}
@@ -623,6 +629,7 @@ function NewSessionInner() {
               cekListeYaz(patientId, sonraki)
             }}
           />
+          )}
           </div>
         )}
 
@@ -689,7 +696,7 @@ function NewSessionInner() {
               </button>
             </div>
             {onayHata && <div style={S({marginTop:"8px",color:"#DC2626",fontSize:"13px",textAlign:"center"})}>{onayHata}</div>}
-            {cekDogrulama && (
+            {oneriPaneli && cekDogrulama && (
               <div style={S({marginTop:"16px"})}>
                 <MuayeneCekListesi
                   acikRenk

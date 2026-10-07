@@ -19,9 +19,12 @@ const NAV: Array<{ key: PortalNavKey; label: string; path: string }> = [
 export function PortalShell({
   basePath,
   ekNav = [],
+  hastaAdi = null,
   children,
 }: {
   basePath: string
+  /** PORTAL-HASTA-ADI — unlocked bundle's patient name; null/empty → nothing rendered. */
+  hastaAdi?: string | null
   /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules' nav (e.g. Gözlerim), never hardcoded per branş */
   ekNav?: PortalNavOge[]
   children: React.ReactNode
@@ -43,7 +46,13 @@ export function PortalShell({
               <span className="sg-brand-mark">Notya</span>
               <span className="sg-brand-product">Sağlığım</span>
             </Link>
-            <span className="sg-header-tag">Hasta alanı</span>
+            {hastaAdi ? (
+              <span className="sg-header-hasta" data-testid="portal-header-hasta-adi" title={hastaAdi}>
+                {hastaAdi}
+              </span>
+            ) : (
+              <span className="sg-header-tag">Hasta alanı</span>
+            )}
           </div>
           <nav ref={navRef} className="sg-nav" aria-label="Sağlığım bölümleri">
             {[...NAV, ...ekNav].map((item) => {

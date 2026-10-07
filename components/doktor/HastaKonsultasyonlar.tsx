@@ -22,7 +22,7 @@ import {
   konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir,
   YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, ISTEM_IPTAL_ONAYI, HATIRLATMA_GONDERILDI,
   KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, ILETISIM_EPOSTA_AYAR_YOLU,
-  konsultanEpostasiniAc, konsultanEpostaGonderAkisi,
+  konsultanEpostasiniAc, konsultanEpostaGonderAkisi, konsultanWhatsappAkisi,
 } from '@/lib/doktor/konsultasyonIstemci';
 import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
@@ -204,7 +204,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
         const alici = typeof j.aliciEposta === 'string' ? j.aliciEposta : gidecekEposta
         // Cihaz postası (Mac Mail / iPhone Mail) — OAuth kutusu gerekmez.
         if (alici && typeof j.epostaKonu === 'string' && typeof j.epostaMetin === 'string') {
-          const acildi = konsultanEpostasiniAc({ alici, konu: j.epostaKonu, metin: j.epostaMetin })
+          const acildi = konsultanEpostasiniAc({ alici, konu: j.epostaKonu, metin: j.epostaMetin }, typeof j.acilisOnerisi === 'string' ? j.acilisOnerisi : null)
           if (acildi && j.konsultasyon?.id) {
             void konsultasyonIslemi(String(j.konsultasyon.id), 'eposta_gonder', { aliciEposta: alici, isaretle: true })
               .then(({ ok: isOk, j: ij }) => {
@@ -213,7 +213,8 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
                 }
               })
           } else if (!acildi && typeof window !== 'undefined') {
-            window.alert(epostaDurumMetni('hata', alici))
+            void navigator.clipboard?.writeText(`${j.epostaKonu}\n\n${j.epostaMetin}`).catch(() => undefined)
+            window.alert('Konsültasyon oluşturuldu. E-posta metni kopyalandı — kendi e-postanıza yapıştırabilir ya da listeden «WhatsApp» ile gönderebilirsiniz.')
           }
         } else if (gidecekEposta && durum === 'yok' && typeof window !== 'undefined') {
           window.alert(epostaDurumMetni('yok', gidecekEposta))
@@ -724,10 +725,11 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
               onClick={() => islem('eposta_gonder')}
               disabled={!!calisiyor}
               style={k.portal_gonderildi_at ? stil.ghost : stil.btn}
-              title="Konsültana portal linki — cihazınızdaki posta uygulaması (Mac Mail / iPhone Mail)."
+              title="Konsültana portal linki — kendi e-postanızda hazır açılır."
             >
               {calisiyor === 'eposta_gonder' ? 'Açılıyor…' : (k.portal_gonderildi_at ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
             </button>
+            <button type="button" onClick={() => { void konsultanWhatsappAkisi(k.id).then((w) => setMesaj({ iyi: w.ok, metin: w.metin })) }} disabled={!!calisiyor} style={stil.ghost} title="Konsültana portal linki — WhatsApp metnini kopyalar; numara Defterdeyse WhatsApp’ı açar.">WhatsApp</button>
             <button type="button" onClick={() => islem('hatirlat')} disabled={!!calisiyor} style={stil.ghost} title="Hastaya Sağlığım hatırlatması (klinik yok).">{calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}</button>
             <button type="button" onClick={() => islem('kapat')} disabled={!!calisiyor} style={stil.ghost}>Yanıtsız kapat</button>
             <button

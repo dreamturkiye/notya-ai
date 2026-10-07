@@ -215,6 +215,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // ── Araçlar ──
   'app/api/doktor/araclar/epikriz/route.ts': T,
   'app/api/doktor/araclar/enabiz/route.ts': T,
+  'app/api/doktor/araclar/enabiz/mbys/route.ts': T,
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/sgk-rapor/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/hasta-portali/route.ts': I('patient ownership check before token mint; share preview scoped by doctor_id'),

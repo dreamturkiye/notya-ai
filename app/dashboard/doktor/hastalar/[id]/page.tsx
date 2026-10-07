@@ -163,6 +163,8 @@ export default function HastaProfilPage() {
   const [klinikOzetYukleniyor, setKlinikOzetYukleniyor] = useState(false);
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
+  // MBYS-YARDIMCI-01: per-visit MBYS state (Aktarıldı / Kaydedildi) set from the Gün sonu MBYS kuyruğu.
+  const [mbysDurumlari, setMbysDurumlari] = useState<Record<string, string>>({});
   // NOTYA-MUAYENE-ARSIV: yanlışlıkla açılmış ya da notsuz kalmış bir muayeneyi hekimin
   // temizleyebilmesi için -- yumuşak arşivleme, sert silme değil.
   const [arsivleniyor, setArsivleniyor] = useState<string | null>(null);
@@ -372,6 +374,18 @@ export default function HastaProfilPage() {
   useEffect(() => {
     if (activeTab === 'muayene' || activeTab === 'ozet') seansYukle()
   }, [activeTab, seansYukle])
+
+  useEffect(() => {
+    if (activeTab !== 'muayene') return
+    (async () => {
+      try {
+        const token = await ensureDoctorAccessToken();
+        const r = await fetch(`/api/doktor/araclar/enabiz/mbys?hastaId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.durumlar && typeof d.durumlar === 'object') setMbysDurumlari(d.durumlar);
+      } catch { /* durum rozeti isteğe bağlı */ }
+    })();
+  }, [activeTab, patientId])
 
   // NOTYA-MUAYENE-ARSIV: yumuşak arşivleme -- listeden çıkarır, kaydı silmez.
   const muayeneArsivle = async (sessionId: string) => {
@@ -669,6 +683,11 @@ export default function HastaProfilPage() {
                         <span style={{ display: 'block', fontSize: 12, color: CHROME_RENK.muted }}>{trTarih(seansTarihi(s))}</span>
                         <span style={{ display: 'block', fontSize: 13.5, color: CHROME_RENK.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
                       </span>
+                      {n?.id && mbysDurumlari[n.id] && (
+                        <span title="MBYS durumu (Gün sonu MBYS kuyruğu)" style={{ background: mbysDurumlari[n.id] === 'kaydedildi' ? '#EEF5EF' : '#EAF0FA', color: mbysDurumlari[n.id] === 'kaydedildi' ? '#2E6E4E' : '#2D4A7A', borderRadius: 999, padding: '4px 10px', fontSize: 11.5, fontWeight: 800, flexShrink: 0 }}>
+                          MBYS: {mbysDurumlari[n.id] === 'kaydedildi' ? 'Kaydedildi' : 'Aktarıldı'}
+                        </span>
+                      )}
                       {n?.id && (
                         <button
                           type="button"

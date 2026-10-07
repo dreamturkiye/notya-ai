@@ -6,7 +6,7 @@
  * Every call goes through global fetch so tests can replace it; no SDKs.
  * Sources (checked 2026-09-25) are listed in docs/iletisim-kurulum-eposta.md.
  */
-import { ekGecerliMi, epostaMesaji, type EpostaEki } from './mime'
+import { ekGecerliMi, epostaMesaji, htmlGecerliMi, type EpostaEki } from './mime'
 import { donusAdresi, saglayiciAyari, type Saglayici } from './ayar'
 
 export const GMAIL_GONDER_KAPSAMI = 'https://www.googleapis.com/auth/gmail.send'
@@ -50,7 +50,8 @@ export type Gonderim =
   | { ok: false; yetkisiz: boolean; hata: string }
 
 /** `ekler` (NOTYA-RANDEVU-V2): optional text attachments, e.g. the appointment's .ics. */
-export type Mesaj = { alici: string; konu: string; metin: string; ekler?: EpostaEki[] }
+/** `html` (NOTYA-INTAKE-EPOSTA): optional designed part; the mail then goes as multipart/alternative with `metin`. */
+export type Mesaj = { alici: string; konu: string; metin: string; html?: string; ekler?: EpostaEki[] }
 
 function ayarZorunlu(s: Saglayici) {
   const a = saglayiciAyari(s)
@@ -207,6 +208,15 @@ export async function gonder(s: Saglayici, erisimJetonu: string, m: Mesaj): Prom
         method: 'POST',
         headers: { Authorization: `Bearer ${erisimJetonu}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ raw }),
+        cache: 'no-store',
+      })
+    } else if (htmlGecerliMi(m.html)) {
+      // NOTYA-INTAKE-EPOSTA: Graph's JSON body holds one content type, so a text + HTML mail goes as MIME
+      // (sendMail accepts a base64 RFC 5322 message with Content-Type text/plain) — the same bytes Gmail gets.
+      yanit = await fetch(MICROSOFT.gonder, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${erisimJetonu}`, 'Content-Type': 'text/plain' },
+        body: Buffer.from(epostaMesaji(m), 'utf8').toString('base64'),
         cache: 'no-store',
       })
     } else {

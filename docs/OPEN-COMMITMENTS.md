@@ -3195,3 +3195,24 @@ Source: Kaan, 2026-10-07 (voice recognition is a must; optional, offered in onbo
 | NOTYA-SES-PROFILI-b | 2026-10-07 | OPEN | Threshold tuning with Dr. Gökhan and one more voice (`SES_PROFILI_AYAR` in `lib/asistan/sesProfili/ayar.ts`; anonymous counters in `ses_profili_sayaclari`). Current values come from public test recordings, not clinic audio. | Kaan |
 | NOTYA-SES-PROFILI-c | 2026-10-07 | OPEN | Doctor / patient labels in the visit transcript using the same match. Not done here: the ElevenLabs transcript arrives as text with no per-line audio, so the match has nothing to align to without new plumbing. | Claude |
 | NOTYA-SES-PROFILI-d | 2026-10-07 | OPEN | Apply migration `127_doktor_ses_profili.sql` on Supabase before the preview test (the API answers 500 on the voice-profile calls until the table exists; voice sessions are unaffected). | Kaan |
+## 2026-10-07 - NOTYA-INTAKE-DENETIM / NOTYA-PORTAL-YAPRAK: intake audit review and portal background
+Source: Kaan's 2026-10-07 job (intake email, intake form audit, pediatric suggestions rule, portal background). Report: `docs/INTAKE-PORTAL-RAPOR.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-INTAKE-DENETIM-a | 2026-10-07 | OPEN | Clinical review of the pediatric intake form changes (parents' marital status options and whether it stays required, smoking at home, new feeding / vaccination / kreş-okul questions, child hospital stays). See `docs/INTAKE-DENETIM.md` → Pediatri. | Kaan → Dr. Gökhan |
+| NOTYA-INTAKE-DENETIM-b | 2026-10-07 | OPEN | Clinical review of every other audited form: every item marked REVIEW in `docs/INTAKE-DENETIM.md` (10 new Klinik sections, çocuk cerrahisi child core, pregnancy / nursing question, hospital stays, minors in adult branches, duplicate questions). | Kaan (name reviewers) |
+| NOTYA-PORTAL-YAPRAK-01 | 2026-10-07 | STOPPED | Sağlığım leaves background not built: the only leaves artwork in the repo is `public/doktor-chrome/plant.jpg`, which has the stethoscope across the middle. A leaves-only image (light, ideally transparent PNG/WebP or SVG, under ~100 KB) is needed. | Kaan (supply the image) |
+- 2026-10-07 NOTYA-KONSULT-GONDERIM-01: consultation email no longer opens an unconfigured mail program; it opens Gmail or Outlook web chosen from the doctor's account email, otherwise copies the text. A true send-by-Notya needs a transactional mail service, which Notya does not have yet. Waits on: Kaan (decide whether to add one).
+- 2026-10-07 NOTYA-KONSULT-GONDERIM-02: unit tests around the consultation email flow were not updated or run for this change; update them. Waits on: Claude.
+
+## 2026-10-07 - MBYS-YARDIMCI-01: MBYS Yardımcısı, stage 1 (assisted form filling, no Ministry integration)
+Source: Kaan's 2026-10-07 brief. Code: Gün sonu MBYS kuyruğu (`/doktor-tools/enabiz/mbys`), Chrome extension `extensions/mbys-yardimci`, migration 126. Details: `docs/MBYS-YARDIMCI.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| MBYS-YARDIMCI-01a | 2026-10-07 | OPEN | Capture the real form map on both MBYS screens (Hasta Kayıt, Muayene) from a practicing doctor with "Form haritasını kopyala", correct `harita.json`, and verify every field (set `dogrulandi: true`). Until then every selector and label is a guess from the 2017 guide. | Kaan |
+| MBYS-YARDIMCI-01b | 2026-10-07 | OPEN | Chrome Web Store listing for the helper (then set `NEXT_PUBLIC_MBYS_YARDIMCI_ID` to the store id). | Kaan (developer account) |
+| MBYS-YARDIMCI-01c | 2026-10-07 | OPEN | Check the Ministry's terms on assisted form filling (browser extension filling MBYS fields on the doctor's click) with a Turkish lawyer. | Kaan |
+| MBYS-YARDIMCI-01d | 2026-10-07 | OPEN | Stage 2: registration with the Ministry as software and direct e-Nabız sending. After the company is formed. | Kaan |
+| MBYS-YARDIMCI-01e | 2026-10-07 | OPEN | Apply migration `126_mbys_yardimci.sql` before deploying the queue (the route reads `users.mbys_ayar`, `mbys_aktarimlar`, `mbys_hasta_kimlik`). | Kaan |

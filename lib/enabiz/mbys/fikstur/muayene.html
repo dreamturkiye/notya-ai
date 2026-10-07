@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Mock of MBYS "Muayene" built from the 2017 guide's field list (MBYS-YARDIMCI-01). Not the real page.
+     Mixed on purpose: some fields carry the harita.json guessed ids (selector path), the rest only Turkish labels. -->
+<html lang="tr"><head><title>MBYS - Muayene</title></head>
+<body>
+  <h3>Muayene Bilgisi</h3>
+  <form id="muayeneForm" action="/Muayene/Kaydet" method="post">
+    <div class="row"><label for="cmbMuayeneTur">Muayene Türü</label>
+      <select id="cmbMuayeneTur" name="Muayene.Tur"><option>Seçiniz</option><option>Normal Muayene</option><option>Kontrol Muayenesi</option></select></div>
+    <div class="row"><label for="cmbVaka">Vaka Türü</label>
+      <select id="cmbVaka" name="Muayene.Vaka"><option>Seçiniz</option><option>Normal Vaka</option><option>Adli Vaka</option></select></div>
+    <div class="row"><label for="cmbOzellikli">Özellikli Hizmet</label>
+      <select id="cmbOzellikli" name="Muayene.Ozellikli"><option></option><option>Evde Sağlık</option></select></div>
+    <div class="row"><label for="Hikaye">Hikaye</label><textarea id="Hikaye" name="Hikaye"></textarea></div>
+    <div class="row"><span>Şikayet</span><textarea id="txtSikayet" name="Muayene.Sikayet"></textarea></div>
+    <div class="row"><span>Bulgu/Gözlem</span><textarea id="txtBulgu" name="Muayene.Bulgu"></textarea></div>
+    <div class="row"><span>Açıklama</span><textarea id="txtAciklama" name="Muayene.Aciklama"></textarea></div>
+    <div class="row"><span>Boy</span><input type="text" id="txtBoy" name="Muayene.Boy"> cm
+      <span>Kilo</span><input type="text" id="txtKilo" name="Muayene.Kilo"> kg</div>
+    <h4>Reçete ve Tanı Bilgisi</h4>
+    <div class="row"><label for="txtTaniAra">Tanı Ara</label><input type="text" id="txtTaniAra" name="TaniAra" placeholder="ICD-10 kodu veya tanı adı"></div>
+    <button type="button" id="btnTaniEkle">Ekle</button>
+    <button type="submit" id="btnKaydet">Kaydet</button>
+  </form>
+</body></html>

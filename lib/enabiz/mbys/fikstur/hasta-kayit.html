@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Mock of MBYS "Hasta Kayıt" built from the 2017 guide's field list (MBYS-YARDIMCI-01). Not the real page:
+     ids/names are invented and deliberately do NOT match harita.json selectors, so the Turkish-label fallback is
+     what finds the fields. Synthetic data only. -->
+<html lang="tr"><head><title>MBYS - Hasta İşlem Listesi</title></head>
+<body>
+  <h3>Hasta Kayıt</h3>
+  <form id="hastaKayitForm" action="/Hasta/Kaydet" method="post">
+    <table class="form-table">
+      <tr><td>Kayıt Türü</td><td><select id="ddlKayit" name="Kayit.Tur">
+        <option value="">Seçiniz</option><option value="1">Vatandaş</option><option value="2">Yabancı</option>
+        <option value="3">Vatansız</option><option value="4">Yeni Doğan</option><option value="5">Kimliksiz</option>
+      </select></td></tr>
+      <tr><td>Hasta T.C. :</td><td><input type="text" id="txtTc" name="Kayit.Tc" maxlength="11"></td></tr>
+      <tr><td>Pasaport No</td><td><input type="text" id="txtPasaport" name="Kayit.Pasaport"></td></tr>
+      <tr><td>Şahıs Numarası</td><td><input type="text" id="txtSahis" name="Kayit.Sahis"></td></tr>
+      <tr><td><label for="txtAd">Hasta Adı</label></td><td><input type="text" id="txtAd" name="Kayit.Ad"></td></tr>
+      <tr><td><label for="txtSoyad">Hasta Soyadı</label></td><td><input type="text" id="txtSoyad" name="Kayit.Soyad"></td></tr>
+      <tr><td>Cinsiyet</td><td><select id="ddlCins" name="Kayit.Cinsiyet">
+        <option value="">Seçiniz</option><option value="E">Erkek</option><option value="K">Kadın</option>
+      </select></td></tr>
+      <tr><td>Doğum Tarihi</td><td><input type="text" id="txtDogum" name="Kayit.DogumTarihi" placeholder="gg.aa.yyyy"></td></tr>
+      <tr><td>Uyruk</td><td><select id="ddlUyruk" name="Kayit.Uyruk">
+        <option value="">Seçiniz</option><option value="TR">TÜRKİYE CUMHURİYETİ</option><option value="DE">ALMANYA</option><option value="SY">SURİYE</option>
+      </select></td></tr>
+    </table>
+    <input type="hidden" name="__RequestVerificationToken" value="gizli-token-degeri">
+    <button type="button" id="btnSorgula">Sorgula</button>
+    <button type="button" id="btnBekleyen">Bekleyen hastalara ekle</button>
+    <button type="submit" id="btnKaydet">Kaydet ve Devam Et</button>
+  </form>
+  <h4>Bekleyen hastalar</h4>
+  <table id="bekleyenler"><tbody>
+    <tr><td>QA Bekleyen GIZLI-1</td><td><input type="checkbox" name="sec1"></td></tr>
+    <tr><td>QA Bekleyen GIZLI-2</td><td><input type="checkbox" name="sec2"></td></tr>
+    <tr><td>QA Bekleyen GIZLI-3</td><td><input type="checkbox" name="sec3"></td></tr>
+    <tr><td>QA Bekleyen GIZLI-4</td><td><input type="checkbox" name="sec4"></td></tr>
+    <tr><td>QA Bekleyen GIZLI-5 98765432109</td><td><select name="islem5"><option>Hastayı işleme al</option></select></td></tr>
+  </tbody></table>
+</body></html>

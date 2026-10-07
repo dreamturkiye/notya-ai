@@ -34,7 +34,7 @@ export function epostaDurumMetni(d: EpostaDurum | string | null | undefined, ali
     case 'gonderildi':
       return `Konsültana e-posta gönderildi olarak işaretlendi${a}.`
     case 'hazir':
-      return `Posta uygulamanız açıldı${a} — orada Gönder’e basın (Mac Mail, iPhone Mail vb.).`
+      return `E-postanız açıldı${a} — Gönder’e basmanız yeterli.`
     case 'yok':
       return 'Konsültan e-postası yok — Defterden seçin veya e-posta yazın; ardından «E-posta gönder».'
     case 'hata':
@@ -45,6 +45,23 @@ export function epostaDurumMetni(d: EpostaDurum | string | null | undefined, ali
     default:
       return ''
   }
+}
+
+/** Hekimin hesap e-postasından posta sistemi tahmini — hekime «hangi posta» diye sorulmaz (NOTYA-KONSULT-GONDERIM-01). */
+export function epostaAcilisTahmini(hekimEposta: string | null | undefined): 'gmail' | 'outlook' | null {
+  const alan = String(hekimEposta || '').trim().toLowerCase().split('@')[1] || ''
+  if (alan === 'gmail.com' || alan === 'googlemail.com') return 'gmail'
+  if (/^(outlook|hotmail|live|msn|windowslive)\./.test(alan)) return 'outlook'
+  return null
+}
+
+/** WhatsApp için kısa metin — e-posta taslağıyla aynı gizlilik düzeyi (hasta kimliği yok, yalnız portal linki). */
+export function konsultanWhatsappMetni(hekimAdi: string, satir: Pick<KonsultasyonSatiri, 'hedef' | 'hedef_brans'>, portalLink: string): string {
+  return [
+    `Sayın meslektaşım, ${hekimAdi} sizinle bir konsültasyon istemi paylaştı (${hedefEtiketi(satir)}).`,
+    `Bağlantı (hesap veya şifre gerekmez):`,
+    portalLink,
+  ].join('\n')
 }
 
 export function konsultanEpostaTaslagi(hekimAdi: string, satir: Pick<KonsultasyonSatiri, 'hedef' | 'hedef_brans'>, portalLink: string, alici: string): KonsultanEpostaTaslagi {
