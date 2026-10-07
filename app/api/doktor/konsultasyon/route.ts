@@ -628,7 +628,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true, silindi: true, id: s.id })
   }
 
-  if (islem === 'whatsapp_metni') {
+  if ((islem as string) === 'whatsapp_metni') {
     // NOTYA-KONSULT-GONDERIM-01 — WhatsApp için metin + portal linki; e-posta adresi gerekmez. Sunucu göndermez.
     const hekim = await hekimAdi(sb, user.id).catch(() => 'Meslektaşınız')
     const p = await portalLinkHazirla(sb, user.id, s)
