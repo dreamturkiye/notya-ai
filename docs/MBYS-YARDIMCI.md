@@ -90,7 +90,7 @@ Hard rules and what checks them (`lib/enabiz/mbys/motor.test.ts`):
 
 ## Beta install (load unpacked)
 
-1. Get the `extensions/mbys-yardimci` folder onto the doctor's computer (zip from the repo, unzip).
+1. On the MBYS queue page (`/doktor-tools/enabiz/mbys`) press **Yardımcıyı indir** (signed-in doctors only; MBYS-YARDIMCI-02) and unzip it. The zip is built by `npm run paket:mbys` (also part of `prebuild`) from `extensions/mbys-yardimci` and served by `/api/doktor/araclar/enabiz/mbys/yardimci`. The same card carries the Turkish install guide and the form-map capture (`Haritayı kopyala`).
 2. Chrome → `chrome://extensions` → turn on **Geliştirici modu** (Developer mode, top right).
 3. **Paketlenmemiş öğe yükle** (Load unpacked) → choose the `mbys-yardimci` folder.
 4. The id shown must be `fcpohjcocgcobbognbpdkgmcgfnnhjpe`. It comes from the manifest `key`, and Notya uses this id

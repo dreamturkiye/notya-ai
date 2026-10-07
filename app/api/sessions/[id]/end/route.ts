@@ -244,8 +244,14 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     const isaretler = body.cekListe && typeof body.cekListe === 'object' && !Array.isArray(body.cekListe)
       ? body.cekListe as Record<string, boolean>
       : {}
+    // NOTYA-PEDI-ONERI-02: pediatride çek listesi (sağlam çocuk önerileri) yalnız sağlam çocuk vizitinde kurulur —
+    // ekrandaki panelle AYNI çözücü (onerilerPaneliGorunurMu). Hasta çocuk ya da tipi yoksa: ne prompta ne ai_degerlendirme'ye.
+    const { onerilerPaneliGorunurMu } = await import('@/lib/doktor/oneriPaneli')
+    const cekListesiVar = onerilerPaneliGorunurMu({ seansBransi: specialty, doktorBransi, hastaDurumu: body.hastaDurumu })
     // NOTYA-CEK-DOGRULA-02: not sayfası / onay ile aynı tek kaynak — hastanın tarama kayıtları ve dosyası dahil.
-    const cekVeri = await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
+    const cekVeri = cekListesiVar
+      ? await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
+      : { maddeler: [], oncekiIdler: [] }
     // NOTYA-BETA-0925 (a): geçici hatada (bozuk JSON, overloaded / 5xx / 529, ağ, zaman aşımı) bir kez daha — yalnız
     // maxDuration içinde yeterli pay kaldıysa (lib/doktor/soapYeniden.ts).
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir (son denemeninki).
@@ -261,11 +267,13 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       notAsilari = await muayeneAsilariniHazirla(getSupabase(), { doktorId: user.id, patientId: hastaId, transcript, ham: noteData?.asilar, ziyaretIso: gecmisTarihIso })
     } catch (e) { console.error('[asi-not] sessions/end', e) }
     // Çek listesi yalnız notun kendisine bakar (sayfada yeniden hesaplandığında aynı sonucu versin); LLM bloğu yazamaz.
-    const { satirlar: cekListeDogrulama, metin: cekMetin } = cekListeHesapla(cekVeri, cekNotMetni({
+    const { satirlar: cekListeDogrulama, metin: cekMetinHam } = cekListeHesapla(cekVeri, cekNotMetni({
       basvuruYakinmasi: noteData?.basvuruYakinmasi, subjektif: noteData?.soap?.subjektif, objektif: noteData?.soap?.objektif,
       degerlendirme: noteData?.soap?.degerlendirme, plan: noteData?.soap?.plan, anamnez: noteData?.anamnez, fizikMuayene: noteData?.fizik_muayene,
       tani: noteData?.tani, tedavi: noteData?.tedavi, vitaller: noteData?.vitaller, ilaclar: noteData?.ilaclar, asilar: notAsilari,
     }), isaretler)
+    // Boş liste "0/0 madde" bloğu yazmasın: çek listesi yoksa ai_degerlendirme'ye blok girmez.
+    const cekMetin = cekVeri.maddeler.length ? cekMetinHam : ''
     if (typeof noteData?.aiDegerlendirme === 'string') noteData.aiDegerlendirme = cekBlokSil(noteData.aiDegerlendirme)
     const { bransKapsami } = await import('@/lib/specialties/kapsam')
     const { buyumePersentilleriniHesapla, buyumeYorumunuEkle } = await import('@/lib/clinical/buyumeEgrisi')

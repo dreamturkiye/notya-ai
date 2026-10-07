@@ -34,7 +34,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
   } as CSSProperties
 
   return (
-    <div className={`sagligim-root ${newsreader.variable} ${outfit.variable}`} style={fontVars}>
+    <div className={`sagligim-root sg-yapraklar ${newsreader.variable} ${outfit.variable}`} style={fontVars}>
       {children}
     </div>
   )

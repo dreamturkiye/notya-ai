@@ -85,6 +85,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/mesajlar/unread-count/route.ts': I('count scoped by doctor_id'),
   // NOTYA-ILETISIM-01 — tek dokunuş iletişim (hekimin kendi WhatsApp / e-postası), Hazır mesajlar, izin, kayıt
   'app/api/doktor/iletisim/hazirla/route.ts': T,
+  // NOTYA-INTAKE-EPOSTA-02 — intake invitation from the doctor's connected mailbox (resolved via iletisimHazirla)
+  'app/api/doktor/iletisim/eposta-gonder/route.ts': I('every id (patientId, randevuId, kuyrukId) is resolved only through iletisimHazirla with the caller doctor id, the same resolver the tested hazirla route uses (foreign id → 404 before any send); the log row is written with doctor_id + that resolved patient; lib/iletisim/bilgiFormuKutudan.test.ts asserts the 404 passes through with no send'),
   'app/api/doktor/iletisim/kayit/route.ts': T,
   'app/api/doktor/iletisim/izin/route.ts': T,
   'app/api/doktor/iletisim/kuyruk/route.ts': T,
@@ -216,6 +218,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/araclar/epikriz/route.ts': T,
   'app/api/doktor/araclar/enabiz/route.ts': T,
   'app/api/doktor/araclar/enabiz/mbys/route.ts': T,
+  'app/api/doktor/araclar/enabiz/mbys/yardimci/route.ts': I('MBYS-YARDIMCI-02 extension zip download: doctor role only, takes no id and reads no patient table'),
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/sgk-rapor/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/hasta-portali/route.ts': I('patient ownership check before token mint; share preview scoped by doctor_id'),

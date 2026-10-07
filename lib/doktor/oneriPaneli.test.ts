@@ -46,3 +46,24 @@ test('kaynak kilidi: randevu ekranı yolu yardımcıdan kurar; dikte sayfası pa
   assert.match(sayfa, /\{oneriPaneli && \(\s*<MuayeneCekListesi/)
   assert.match(sayfa, /\{oneriPaneli && cekDogrulama && \(/)
 })
+
+test('NOTYA-PEDI-ONERI-02 sunucu: not üretimi aynı çözücüyle karar verir; hasta çocukta çek listesi kurulmaz', () => {
+  const rota = readFileSync('app/api/sessions/[id]/end/route.ts', 'utf8')
+  assert.match(rota, /onerilerPaneliGorunurMu\(\{ seansBransi: specialty, doktorBransi, hastaDurumu: body\.hastaDurumu \}\)/)
+  // liste yokken veri yüklenmez, prompt bloğu boş kalır, ai_degerlendirme'ye "0/0" bloğu yazılmaz
+  assert.match(rota, /const cekVeri = cekListesiVar\s*\?\s*await cekListeVerisiYukle\(/)
+  assert.match(rota, /: \{ maddeler: \[\], oncekiIdler: \[\] \}/)
+  assert.match(rota, /const cekMetin = cekVeri\.maddeler\.length \? cekMetinHam : ''/)
+  const sayfa = readFileSync('app/session/new/page.tsx', 'utf8')
+  assert.match(sayfa, /hastaDurumu: hastaDurumuParam/)
+  assert.match(sayfa, /cekListe: oneriPaneli \? cekIsaret : \{\}/)
+})
+
+test('NOTYA-PEDI-ONERI-02: sunucunun aldığı her değer için ekranla aynı karar', () => {
+  // sunucu body.hastaDurumu'yu (her tür) doğrudan çözücüye verir; bozuk tipler hasta çocuk sayılır
+  for (const d of [{}, [], 1, true, 'saglikli ', 'Saglikli']) {
+    assert.equal(onerilerPaneliGorunurMu({ seansBransi: 'pediatri', doktorBransi: 'pediatri', hastaDurumu: d }), false, JSON.stringify(d))
+  }
+  assert.equal(onerilerPaneliGorunurMu({ seansBransi: 'pediatri', doktorBransi: 'pediatri', hastaDurumu: 'saglikli' }), true)
+  assert.equal(onerilerPaneliGorunurMu({ seansBransi: 'kardiyoloji', doktorBransi: 'kardiyoloji', hastaDurumu: undefined }), true)
+})

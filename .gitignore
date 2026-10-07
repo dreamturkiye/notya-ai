@@ -165,3 +165,6 @@ smoke-out/
 
 # ayse-denetim: real patient names / ids for the {{...}} placeholders in sorular-*.json (never committed)
 scripts/ayse-denetim/adlar.local.json
+
+# MBYS-YARDIMCI-02: extension zip built in prebuild (scripts/mbys-yardimci-paketle.mjs)
+.mbys-paket/

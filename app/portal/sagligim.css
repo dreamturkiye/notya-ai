@@ -1984,3 +1984,27 @@ body:has(.sagligim-root) {
   font-weight: 560;
   color: var(--sg-muted);
 }
+
+/* NOTYA-PORTAL-YAPRAK-02 (2026-10-07): soft leaves on the cream background, composed from the Notya leaf mark
+   (the inline logo SVG in components/doktor/DoktorChrome.tsx). Pure SVG, no image file, no stethoscope.
+   Two low-opacity pine clusters sit at the top-left and bottom-right edges, fixed to the viewport behind the content,
+   so text never sits on a strong shape. Every Sağlığım page (app/portal/layout.tsx → .sg-yapraklar). */
+.sagligim-root.sg-yapraklar {
+  position: relative;
+  isolation: isolate;
+}
+
+.sagligim-root.sg-yapraklar::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 xmlns:xlink=%22http://www.w3.org/1999/xlink%22 viewBox=%220 0 300 300%22%3E%3Cdefs%3E%3Cg id=%22y%22%3E%3Cpath d=%22M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z%22 fill=%22%232f4334%22 fill-opacity=%22.07%22 stroke=%22%232f4334%22 stroke-opacity=%22.15%22 stroke-width=%22.2%22/%3E%3Cpath d=%22M10 13.2c2-2 4.2-3 6.8-3.4M6.2 20c1.2-4 2.2-6.6 4.8-9.8%22 fill=%22none%22 stroke=%22%232f4334%22 stroke-opacity=%22.13%22 stroke-width=%22.18%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/defs%3E%3Cuse xlink:href=%22%23y%22 href=%22%23y%22 transform=%22translate(-47 -29) scale(12) rotate(35 11 12)%22/%3E%3Cuse xlink:href=%22%23y%22 href=%22%23y%22 transform=%22translate(98 -24) scale(7) rotate(80 11 12)%22/%3E%3Cuse xlink:href=%22%23y%22 href=%22%23y%22 transform=%22translate(-18 139) scale(8) rotate(-15 11 12)%22/%3E%3C/svg%3E") no-repeat left -24px top 72px / min(340px, 64vw) auto,
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 xmlns:xlink=%22http://www.w3.org/1999/xlink%22 viewBox=%220 0 300 300%22%3E%3Cdefs%3E%3Cg id=%22y%22%3E%3Cpath d=%22M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z%22 fill=%22%232f4334%22 fill-opacity=%22.07%22 stroke=%22%232f4334%22 stroke-opacity=%22.15%22 stroke-width=%22.2%22/%3E%3Cpath d=%22M10 13.2c2-2 4.2-3 6.8-3.4M6.2 20c1.2-4 2.2-6.6 4.8-9.8%22 fill=%22none%22 stroke=%22%232f4334%22 stroke-opacity=%22.13%22 stroke-width=%22.18%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C/defs%3E%3Cuse xlink:href=%22%23y%22 href=%22%23y%22 transform=%22translate(83 41) scale(12) rotate(215 11 12)%22/%3E%3Cuse xlink:href=%22%23y%22 href=%22%23y%22 transform=%22translate(53 161) scale(7) rotate(260 11 12)%22/%3E%3Cuse xlink:href=%22%23y%22 href=%22%23y%22 transform=%22translate(152 -21) scale(8) rotate(165 11 12)%22/%3E%3C/svg%3E") no-repeat right -24px bottom -8px / min(380px, 70vw) auto;
+}
+
+@media print {
+  .sagligim-root.sg-yapraklar::before { display: none; }
+}
