@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import { KAYIT_BRANSLARI, adSoyadTemiz, kayitBransiListeDegeri, kayitBransiNorm } from '@/lib/doktor/kayitBrans';
 
 const supabase = createClient(
   'https://anjayzospuurymjmmtim.supabase.co',
@@ -11,7 +12,18 @@ const supabase = createClient(
 );
 
 export default function KayitPage() {
+  return (
+    <React.Suspense fallback={<div style={{ minHeight: '100dvh', backgroundColor: CHROME_RENK.cream }} />}>
+      <KayitForm />
+    </React.Suspense>
+  );
+}
+
+function KayitForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [adSoyad, setAdSoyad] = useState('');
+  const [uzmanlik, setUzmanlik] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,9 +36,30 @@ export default function KayitPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Açılıştaki deneme formu ad, e-posta ve branşı buraya taşır. Doğrudan /kayit boş gelir.
+  useEffect(() => {
+    const ad = searchParams.get('ad') || '';
+    const posta = searchParams.get('email') || '';
+    const brans = kayitBransiListeDegeri(searchParams.get('uzmanlik'));
+    if (ad) setAdSoyad(ad);
+    if (posta) setEmail(posta);
+    if (brans) setUzmanlik(brans);
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const ad = adSoyadTemiz(adSoyad);
+    const brans = kayitBransiNorm(uzmanlik);
+    if (!ad) {
+      setError('Ad ve soyadınızı birlikte yazın.');
+      return;
+    }
+    if (!brans) {
+      setError('Branşınızı seçin.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Şifreler eşleşmiyor.');
@@ -48,6 +81,8 @@ export default function KayitPage() {
           // Consent must be PROVABLE, not merely collected: the moment and the text version mean a
           // later dispute can be answered with what was actually agreed to.
           data: {
+            full_name: ad,
+            signup_specialty: brans,
             kvkk_onay: true,
             kvkk_onay_tarihi: new Date().toISOString(),
             kvkk_metin_versiyonu: '2026-08-25-v2',
@@ -82,6 +117,17 @@ export default function KayitPage() {
 
       if (data.session) {
         localStorage.setItem('auth-token', JSON.stringify({ access_token: data.session.access_token }));
+        // Profil satırı yazılamasa da ad ve branş auth metadata'da durur; onboarding oradan okur.
+        try {
+          await fetch('/api/users/kayit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data.session.access_token}`,
+            },
+            body: JSON.stringify({ full_name: ad, signup_specialty: brans }),
+          });
+        } catch { /* hesap oluştu */ }
         router.replace('/onboarding?p=doktor');
       } else {
         // NOTYA-SIGNUP-02: no session here means the account was created and e-mail confirmation
@@ -134,6 +180,19 @@ export default function KayitPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 14 }}>
+            <label htmlFor="kayit-ad" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: R.muted, marginBottom: 6 }}>Ad soyad</label>
+            <input id="kayit-ad" type="text" placeholder="Adınız ve soyadınız" aria-label="Ad soyad" autoComplete="name" value={adSoyad} onChange={(e) => setAdSoyad(e.target.value)} required style={girdi} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label htmlFor="kayit-brans" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: R.muted, marginBottom: 6 }}>Uzmanlık</label>
+            <select id="kayit-brans" aria-label="Uzmanlık" value={uzmanlik} onChange={(e) => setUzmanlik(e.target.value)} required style={{ ...girdi, appearance: 'auto' }}>
+              <option value="" disabled>Uzmanlık seçin</option>
+              {KAYIT_BRANSLARI.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
           <div style={{ marginBottom: 14 }}>
             <input type="email" placeholder="E-posta adresiniz" aria-label="E-posta adresiniz" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={girdi} />
           </div>

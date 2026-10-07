@@ -18,13 +18,10 @@ export function Hero() {
           <p className="dl-reveal mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">
             {HERO.lede}
           </p>
-          <div className="dl-reveal mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="dl-reveal mt-8 flex">
             <Button href={LINKS.signup} variant="pine" size="lg" className="w-full sm:w-auto">
               Ücretsiz başlayın
               <ArrowUpRight className="size-4" />
-            </Button>
-            <Button href="#konusma" variant="outline" size="lg" className="w-full sm:w-auto">
-              Muayeneyi izleyin
             </Button>
           </div>
         </div>

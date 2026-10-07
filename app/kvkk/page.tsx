@@ -38,7 +38,7 @@ export default function KvkkPage() {
       <h2 style={S.h2}>1. Veri Sorumlusu</h2>
       <p style={S.p}>
         Veri sorumlusu: <strong>Dream Türkiye</strong> (&quot;Notya AI&quot;). İletişim:
-        <a href="mailto:kvkk@notya.ai" style={{ color: '#2f4334' }}> kvkk@notya.ai</a>
+        <a href="mailto:kvkk@notya.io" style={{ color: '#2f4334' }}> kvkk@notya.io</a>
       </p>
       <p style={S.p}>
         Hekimin kendi hastalarına ait verileri bakımından <strong>hekim/klinik veri sorumlusu</strong>,
@@ -134,7 +134,7 @@ export default function KvkkPage() {
       <h2 style={S.h2}>8. İlgili Kişinin Hakları (KVKK m.11)</h2>
       <p style={S.p}>Kişisel verisi işlenen herkes; verisinin işlenip işlenmediğini öğrenme, buna ilişkin bilgi talep etme, işlenme amacını öğrenme, yurt içinde/dışında aktarıldığı üçüncü kişileri bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini isteme, bu işlemlerin aktarılan üçüncü kişilere bildirilmesini isteme, otomatik sistemlerle analiz sonucu aleyhine bir sonuç çıkmasına itiraz etme ve zarara uğraması hâlinde tazminat talep etme haklarına sahiptir.</p>
       <p style={S.p}>
-        Başvurularınızı <a href="mailto:kvkk@notya.ai" style={{ color: '#2f4334' }}>kvkk@notya.ai</a> adresine
+        Başvurularınızı <a href="mailto:kvkk@notya.io" style={{ color: '#2f4334' }}>kvkk@notya.io</a> adresine
         iletebilirsiniz. Talepler en geç <strong>30 gün</strong> içinde sonuçlandırılır.
       </p>
 

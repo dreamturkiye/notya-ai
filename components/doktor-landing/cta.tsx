@@ -12,10 +12,12 @@ export function FinalCta() {
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const email = String(data.get("email") ?? "");
-    const field = String(data.get("field") ?? "");
+    const name = String(data.get("name") ?? "").trim();
+    const email = String(data.get("email") ?? "").trim();
+    const field = String(data.get("field") ?? "").trim();
     setSending(true);
     const params = new URLSearchParams();
+    if (name) params.set("ad", name);
     if (email) params.set("email", email);
     if (field) params.set("uzmanlik", field);
     const q = params.toString();
@@ -78,7 +80,7 @@ export function FinalCta() {
               {sending ? "Yönlendiriliyor…" : "15 günü başlatın"}
             </Button>
             <p className="font-outfit text-xs leading-relaxed text-ink-muted">
-              Kayıt, Notya hesabınızda tamamlanır. Kredi kartı gerekmez.
+              Ad, e-posta ve branş kayıt formuna aktarılır. Şifrenizi ve KVKK onayınızı orada tamamlarsınız. Kredi kartı gerekmez.
             </p>
           </form>
         </div>

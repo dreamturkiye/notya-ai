@@ -228,7 +228,7 @@ export function openRouterYanitiniCevir(y: any, istenenModel: string): Anthropic
 function basliklar(): Record<string, string> {
   return {
     Authorization: `Bearer ${process.env.OPENROUTER_API_KEY?.trim() || ''}`,
-    'HTTP-Referer': process.env.NOTYA_OPENROUTER_APP_URL || 'https://notya.ai',
+    'HTTP-Referer': process.env.NOTYA_OPENROUTER_APP_URL || 'https://notya.io',
     'X-Title': process.env.NOTYA_OPENROUTER_APP_TITLE || 'Notya AI',
     'content-type': 'application/json',
   }

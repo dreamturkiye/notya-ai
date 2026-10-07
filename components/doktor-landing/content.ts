@@ -1,3 +1,5 @@
+import { KAYIT_BRANSLARI } from "@/lib/doktor/kayitBrans";
+
 export const LINKS = {
   signup: "/kayit",
   login: "/giris/doktor",
@@ -29,39 +31,8 @@ export const HERO_STRIP = [
   "Her adım hekim onaylı",
 ] as const;
 
-export const BRANCHES = [
-  "Pediatri",
-  "Kardiyoloji",
-  "Nöroloji",
-  "Dahiliye",
-  "Psikiyatri",
-  "Genel Cerrahi",
-  "Ortopedi",
-  "Dermatoloji",
-  "KBB",
-  "Göz Hastalıkları",
-  "Kadın Hastalıkları ve Doğum",
-  "Üroloji",
-  "Radyoloji",
-  "Anestezi",
-  "Acil Tıp",
-  "Fizik Tedavi",
-  "Enfeksiyon Hastalıkları",
-  "Endokrinoloji",
-  "Gastroenteroloji",
-  "Nefroloji",
-  "Romatoloji",
-  "Onkoloji",
-  "Göğüs Hastalıkları",
-  "Göğüs Cerrahisi",
-  "Plastik Cerrahi",
-  "Beyin Cerrahisi",
-  "Kalp Damar Cerrahisi",
-  "Çocuk Cerrahisi",
-  "Aile Hekimliği",
-  "Spor Hekimliği",
-  "Diğer",
-] as const;
+/** Açılış formu ve /kayit aynı listeyi kullanır. */
+export const BRANCHES = KAYIT_BRANSLARI;
 
 export const INDIVIDUAL_PLANS = [
   {
