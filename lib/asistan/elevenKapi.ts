@@ -8,10 +8,13 @@
  * - Mute: only the SDK's own API, `setMicMuted` (the SDK keeps streaming silence while muted).
  * - Fail open: no flag, no stream, no Silero, or any throw → the microphone is unmuted and the gate is gone.
  *   A watchdog unmutes whenever Ayşe is not speaking, whatever the state machine says.
+ * - NOTYA-SES-PROFILI-01: with a doctor voice profile, the same 16 kHz Silero frames are scored against it
+ *   (ProfilDogrulayici, in a Web Worker) and the verdict feeds the gate. Engine failure → as without a profile.
  */
 import { kapiAdimi, kapiBaslat, kapiTarayicidaAcikMi, type KapiDurumu } from '@/lib/asistan/konusmaKapisi'
 import { FISH_SILERO_TAZELIK_MS, rmsHesapla } from '@/lib/asistan/fishVad'
 import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
+import type { ProfilDogrulayici } from '@/lib/asistan/sesProfili/istemci'
 
 export const KAPI_BEKCI_MS = 100
 
@@ -22,6 +25,8 @@ export type ElevenKapi = {
   ajanModu: (konusuyor: boolean) => void
   /** Local speech evidence right now (Silero + RMS floor) — the resume window listens to this. */
   konusmaVarMi: () => boolean
+  /** NOTYA-SES-PROFILI-01: the profile arrives after the gate is up (first session downloads the model). */
+  profilVer: (profil: ProfilDogrulayici | null) => void
   kapat: () => void
 }
 
@@ -43,7 +48,10 @@ function sessizlestir(konusma: SusturulabilirKonusma, sessiz: boolean): void {
   try { konusma.setMicMuted(sessiz) } catch { /* session already closed */ }
 }
 
-export async function elevenKapiKur(konusma: SusturulabilirKonusma, g: { onKonusma?: (sesli: boolean, t: number) => void } = {}): Promise<ElevenKapi | null> {
+export async function elevenKapiKur(
+  konusma: SusturulabilirKonusma,
+  g: { onKonusma?: (sesli: boolean, t: number) => void; profil?: ProfilDogrulayici | null } = {},
+): Promise<ElevenKapi | null> {
   if (typeof window === 'undefined') return null
   if (!kapiTarayicidaAcikMi()) {
     console.info('[ses-kapi]', { kapi: 'kapali', neden: 'anahtar' })
@@ -80,12 +88,16 @@ export async function elevenKapiKur(konusma: SusturulabilirKonusma, g: { onKonus
     if (b && b.state !== 'closed') void b.close().catch(() => undefined)
   }
 
-  const adim = (t: number, p: number | null) => {
+  let profil = g.profil ?? null
+  const adim = (t: number, p: number | null, kare?: Float32Array) => {
     if (kapali) return
     try {
       let rms = 0
       if (olcer) { olcer.getFloatTimeDomainData(ornek); rms = rmsHesapla(ornek) }
-      durum = kapiAdimi(durum, { t, ajanKonusuyor: ajan, p, rms })
+      const pr = profil && profil.calisiyor() ? { karar: profil.karar() } : null
+      durum = kapiAdimi(durum, { t, ajanKonusuyor: ajan, p, rms, profil: pr })
+      // Profile scoring rides on Silero frames only (16 kHz audio); it is skipped while Ayşe is silent.
+      if (kare && profil) profil.kare(t, durum.konusuyor, kare, ajan)
       const istenen = ajan && !durum.acik
       if (istenen !== sessiz) {
         sessiz = istenen
@@ -114,7 +126,7 @@ export async function elevenKapiKur(konusma: SusturulabilirKonusma, g: { onKonus
     olcer.connect(kis)
     kis.connect(baglam.destination)
     dugumler.push(kaynak, olcer, kis)
-    silero = await sileroAc(akis, baglam, { zorla: true, etiket: '[ses-kapi]', onKare: (p, t) => adim(t, p) })
+    silero = await sileroAc(akis, baglam, { zorla: true, etiket: '[ses-kapi]', onKare: (p, t, kare) => adim(t, p, kare) })
     if (!silero) throw new Error('silero_yok')
     if (kapali) { birak(); return null }
   } catch (e) {
@@ -132,7 +144,7 @@ export async function elevenKapiKur(konusma: SusturulabilirKonusma, g: { onKonus
     const t = Date.now()
     adim(t, s && t - s.zaman <= FISH_SILERO_TAZELIK_MS ? s.p : null)
   }, KAPI_BEKCI_MS)
-  console.info('[ses-kapi]', { kapi: 'acik' })
+  console.info('[ses-kapi]', { kapi: 'acik', profil: Boolean(profil) })
 
   return {
     ajanModu: (konusuyor: boolean) => {
@@ -144,6 +156,10 @@ export async function elevenKapiKur(konusma: SusturulabilirKonusma, g: { onKonus
       adim(t, s && t - s.zaman <= FISH_SILERO_TAZELIK_MS ? s.p : null)
     },
     konusmaVarMi: () => !kapali && durum.konusuyor,
+    profilVer: (p) => {
+      profil = p
+      console.info('[ses-kapi]', { profil: Boolean(p) })
+    },
     kapat: birak,
   }
 }

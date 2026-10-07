@@ -1,0 +1,8 @@
+ge2e-v1.bin — speaker encoder weights for the Notya doctor voice profile (NOTYA-SES-PROFILI-01).
+
+Derived from Resemblyzer 0.1.4 (resemblyzer/pretrained.pt), Copyright Resemble AI,
+licensed under the Apache License, Version 2.0 (see LICENSE-Resemblyzer.txt).
+Source: https://pypi.org/project/Resemblyzer/0.1.4/ — https://github.com/resemble-ai/Resemblyzer
+
+Modification: only the inference weights (3-layer LSTM 40->256 and a 256->256 linear layer) were kept and
+converted to float16 by scripts/ses-profili/ge2e-donustur.py. The optimizer state was dropped.

@@ -9,8 +9,12 @@
  * turn-taking is unchanged. Unknown (Silero missing / stale) is always open — fail open, never fail mute.
  *
  * Pure state machine, one step per Silero frame or watchdog tick. Browser glue: lib/asistan/elevenKapi.ts.
+ *
+ * NOTYA-SES-PROFILI-01: with a doctor voice profile the gate also weighs the segment's profile verdict — a strong
+ * preference, never a hard lock (see `kapiAdimi`). Without a profile (`profil` null) nothing changes.
  */
 import { FISH_SILERO_CIKIS_ESIK, FISH_SILERO_ESIK } from '@/lib/asistan/fishVad'
+import { SES_PROFILI_AYAR, type ProfilKarari } from '@/lib/asistan/sesProfili/ayar'
 
 /** Speech (Silero ≥ enter AND RMS ≥ floor) needed before the gate opens while Ayşe speaks. */
 export const KAPI_ACMA_MS = 200
@@ -24,7 +28,7 @@ export const KAPI_RMS_TABAN = 0.03
 /** One step never adds more than this (a stalled tab must not "accumulate" 2 s of speech in one frame). */
 export const KAPI_ADIM_AZAMI_MS = 120
 
-export type KapiNedeni = 'ajan_susuyor' | 'bilinmiyor' | 'konusma' | 'kuyruk' | 'kapali'
+export type KapiNedeni = 'ajan_susuyor' | 'bilinmiyor' | 'konusma' | 'kuyruk' | 'kapali' | 'profil_red' | 'profil_bekle'
 
 export type KapiDurumu = {
   acik: boolean
@@ -34,6 +38,12 @@ export type KapiDurumu = {
   konusmaMs: number
   /** Silence since the last speech frame (Infinity at start: an agent turn starting in silence closes at once). */
   sessizMs: number
+  /** Speech in the current segment (a segment ends after KAPI_KUYRUK_MS of silence) — the voice-profile clock. */
+  bolumMs: number
+  /** The profile rejected this segment: closed until the segment ends. */
+  bolumRed: boolean
+  /** Last rejection time (ms clock); 0 = never. */
+  sonRed: number
   sonT: number
   neden: KapiNedeni
 }
@@ -44,10 +54,15 @@ export type KapiGirdi = {
   /** Fresh Silero speech probability, or null when unknown (not loaded, stalled, failed). */
   p: number | null
   rms: number
+  /**
+   * NOTYA-SES-PROFILI-01: null = no usable profile (no profile, model not loaded, engine failed).
+   * Otherwise the current segment's verdict, null while not scored yet.
+   */
+  profil?: { karar: ProfilKarari | null } | null
 }
 
 export function kapiBaslat(): KapiDurumu {
-  return { acik: true, konusuyor: false, konusmaMs: 0, sessizMs: Number.POSITIVE_INFINITY, sonT: 0, neden: 'ajan_susuyor' }
+  return { acik: true, konusuyor: false, konusmaMs: 0, sessizMs: Number.POSITIVE_INFINITY, bolumMs: 0, bolumRed: false, sonRed: 0, sonT: 0, neden: 'ajan_susuyor' }
 }
 
 /** Speech detector frame decision: Silero hysteresis AND the RMS floor. */
@@ -60,26 +75,42 @@ export function kapiKonusmaMi(p: number, rms: number, onceki: boolean): boolean 
  * One step. While Ayşe speaks:
  * - closed: speech accumulates; at KAPI_ACMA_MS the gate opens; a non-speech frame resets the count;
  * - open: speech keeps it open; KAPI_KUYRUK_MS of silence closes it.
+ * With a voice profile (NOTYA-SES-PROFILI-01) — a strong preference, never a hard lock:
+ * - 'red' (clearly not the doctor) closes the gate for the rest of that speech segment;
+ * - 'kabul' opens it as usual;
+ * - short words (dur, evet) end before any verdict exists, so they follow the speech-only rule above;
+ * - only right after a rejection (SES_PROFILI_AYAR.redSonrasiMs — a crying child cries again) does a new segment
+ *   wait for its verdict instead of opening at KAPI_ACMA_MS, and never longer than dogrulaAzamiMs of speech.
  */
 export function kapiAdimi(d: KapiDurumu, g: KapiGirdi): KapiDurumu {
   const dt = d.sonT > 0 ? Math.min(Math.max(0, g.t - d.sonT), KAPI_ADIM_AZAMI_MS) : 0
   const bilinmiyor = g.p === null || !Number.isFinite(g.p)
   const konusuyor = bilinmiyor ? false : kapiKonusmaMi(g.p as number, g.rms, d.konusuyor)
   const sessizMs = konusuyor ? 0 : d.sessizMs + dt
-  const ortak = { konusuyor, sessizMs, sonT: g.t }
+  const bolumBitti = sessizMs >= KAPI_KUYRUK_MS
+  const bolumMs = konusuyor ? d.bolumMs + dt : (bolumBitti ? 0 : d.bolumMs)
+  const profil = g.profil ?? null
+  const karar = profil?.karar ?? null
+  let bolumRed = bolumBitti || !profil ? false : d.bolumRed
+  let sonRed = d.sonRed
+  if (karar === 'red' && !bolumBitti && !bolumRed) { bolumRed = true; sonRed = g.t }
+  const ortak = { konusuyor, sessizMs, bolumMs, bolumRed, sonRed, sonT: g.t }
 
   if (!g.ajanKonusuyor) return { ...ortak, acik: true, konusmaMs: 0, neden: 'ajan_susuyor' }
   if (bilinmiyor) return { ...ortak, acik: true, konusmaMs: 0, neden: 'bilinmiyor' }
+  if (bolumRed) return { ...ortak, acik: false, konusmaMs: 0, neden: 'profil_red' }
 
   if (d.acik) {
     if (konusuyor) return { ...ortak, acik: true, konusmaMs: 0, neden: 'konusma' }
-    if (sessizMs >= KAPI_KUYRUK_MS) return { ...ortak, acik: false, konusmaMs: 0, neden: 'kapali' }
+    if (bolumBitti) return { ...ortak, acik: false, konusmaMs: 0, neden: 'kapali' }
     return { ...ortak, acik: true, konusmaMs: 0, neden: 'kuyruk' }
   }
 
   if (!konusuyor) return { ...ortak, acik: false, konusmaMs: 0, neden: 'kapali' }
   const konusmaMs = d.konusmaMs + dt
   if (konusmaMs < KAPI_ACMA_MS) return { ...ortak, acik: false, konusmaMs, neden: 'kapali' }
+  const redYeni = profil !== null && karar !== 'kabul' && sonRed > 0 && g.t - sonRed < SES_PROFILI_AYAR.redSonrasiMs
+  if (redYeni && bolumMs < SES_PROFILI_AYAR.dogrulaAzamiMs) return { ...ortak, acik: false, konusmaMs, neden: 'profil_bekle' }
   return { ...ortak, acik: true, konusmaMs: 0, neden: 'konusma' }
 }
 

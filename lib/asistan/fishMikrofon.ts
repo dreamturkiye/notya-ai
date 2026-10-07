@@ -5,6 +5,7 @@
  */
 import { FISH_BARGE_ESIK, bargeSayaci, kareKonusmasi, klipGonderilirMi, onTamponuKirp, rmsHesapla, tazeSileroP, turAdimi, turBaslat, type SileroOlasilik, type TurDurumu } from '@/lib/asistan/fishVad'
 import { fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
+import type { ProfilKarari } from '@/lib/asistan/sesProfili/ayar'
 
 export { fishAsrDosyaAdi }
 
@@ -108,6 +109,8 @@ type DinleGirdi = {
   silero?: () => SileroOlasilik
   /** NOTYA-AYSE-GURULTU-02: one call per frame outside Ayşe's playback — local speech evidence for the resume window. */
   sesKaresi?: (sesli: boolean, simdi: number) => void
+  /** NOTYA-SES-PROFILI-01: current voice-profile verdict, or null when the doctor has no usable profile. */
+  profil?: () => { karar: ProfilKarari | null; redYeni: boolean } | null
 }
 
 /** Last engine written to the console — the `[fish-vad]` engine line appears at session start and on every switch, not per turn. */
@@ -206,7 +209,7 @@ function pcmTurKaydet(
       if (!ajan) g.sesKaresi?.(ses, simdi)
 
       // NOTYA-AYSE-GURULTU-01: loud AND (when Silero is up) speech — a chirp or a clap no longer cuts her.
-      const barge = bargeSayaci(bargeMs, ajan, rms, (2048 / baglam.sampleRate) * 1000, tazeSileroP(silero, simdi))
+      const barge = bargeSayaci(bargeMs, ajan, rms, (2048 / baglam.sampleRate) * 1000, tazeSileroP(silero, simdi), g.profil?.() ?? null)
       bargeMs = barge.ms
       if (barge.kes) g.bargeIn()
 
@@ -309,7 +312,7 @@ function mediaTurKaydet(
       const ajan = g.ajanKonusuyorMu()
       if (!ajan) g.sesKaresi?.(ses, simdi)
 
-      const barge = bargeSayaci(bargeMs, ajan, rms, 50, tazeSileroP(silero, simdi))
+      const barge = bargeSayaci(bargeMs, ajan, rms, 50, tazeSileroP(silero, simdi), g.profil?.() ?? null)
       bargeMs = barge.ms
       if (barge.kes) g.bargeIn()
 

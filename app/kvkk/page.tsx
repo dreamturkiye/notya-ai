@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
+import { RIZA_TAM_ARA_BASLIK, RIZA_TAM_BASLIK, RIZA_TAM_GIRIS, RIZA_TAM_MADDELER } from '@/lib/asistan/sesProfili/rizaMetni'
 
 export const metadata = {
   title: 'KVKK Aydınlatma Metni — Notya AI',
@@ -199,6 +200,14 @@ export default function KvkkPage() {
         train artificial intelligence or machine learning models. No human reads this data unless the
         doctor asks us to for support, it is needed for security, or the law requires it.
       </p>
+
+      {/* NOTYA-SES-PROFILI-01: metin lib/asistan/sesProfili/rizaMetni.ts'ten gelir — AVUKAT ONAYI BEKLİYOR. */}
+      <h2 id="ses-profili" style={S.h2}>11. {RIZA_TAM_BASLIK}</h2>
+      <p style={S.p}>{RIZA_TAM_GIRIS}</p>
+      <p style={S.p}>{RIZA_TAM_ARA_BASLIK}</p>
+      <ol style={{ paddingLeft: '22px' }}>
+        {RIZA_TAM_MADDELER.map((m) => <li key={m} style={S.li}>{m}</li>)}
+      </ol>
 
       <p style={{ ...S.meta, marginTop: '48px' }}>
         Bu metin bilgilendirme amaçlıdır ve hukuki danışmanlık yerine geçmez.

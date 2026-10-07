@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ensureDoctorAccessToken, isOnboardingDone } from '@/lib/doktor/clientAuth';
 import { hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import SesProfiliKayit from '@/components/sesProfili/SesProfiliKayit';
 
 interface Profession {
   id: string;
@@ -102,6 +103,8 @@ function OnboardingInner() {
   const [step, setStep] = useState(validPreset ? 2 : 1);
   const [selectedProfession, setSelectedProfession] = useState<string>(validPreset);
   const [checking, setChecking] = useState(true);
+  /** NOTYA-SES-PROFILI-01: optional step 4 for doctors after the account is created; skipping only navigates on. */
+  const [sesSonrasiYol, setSesSonrasiYol] = useState<string | null>(null);
 
   // If already onboarded, never show this screen again (iPhone PWA reopen bug).
   // NOTYA-SEKRETER-01: sekreter bu ekranı hiç görmez — doğrudan Ön büro.
@@ -312,6 +315,11 @@ function OnboardingInner() {
       });
 
       const redirectPath = getRedirectPath(profession_type);
+      if (profession_type === 'doktor') {
+        setSesSonrasiYol(redirectPath);
+        setStep(4);
+        return;
+      }
       router.push(redirectPath);
     } catch (error) {
       console.error(error);
@@ -472,11 +480,14 @@ function OnboardingInner() {
                 {step === 1 && 'Hangi alanda çalışıyorsunuz?'}
                 {step === 2 && (selectedProfession === 'doktor' ? 'Uzmanlık alanı ve klinik bilgileriniz' : 'Uzmanlık bilgileriniz')}
                 {step === 3 && 'Hesabınızı tamamlayın'}
+                {step === 4 && 'Ayşe sesinizi tanısın'}
               </div>
             </div>
-            <div style={{ fontSize: '12px', color: CHROME_RENK.muted, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => router.push('/giris')}>
-              Giriş sayfasına dön
-            </div>
+            {step < 4 && (
+              <div style={{ fontSize: '12px', color: CHROME_RENK.muted, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => router.push('/giris')}>
+                Giriş sayfasına dön
+              </div>
+            )}
           </div>
         </div>
 
@@ -542,8 +553,16 @@ function OnboardingInner() {
           </div>
         )}
 
-        <div style={{ marginTop: '40px', display: 'flex', gap: '12px' }}>
-          {step > 1 && (
+        {step === 4 && (
+          <SesProfiliKayit
+            baslik={false}
+            onSimdiDegil={() => router.push(sesSonrasiYol || '/dashboard/doktor')}
+            onBitti={() => router.push(sesSonrasiYol || '/dashboard/doktor')}
+          />
+        )}
+
+        <div style={{ marginTop: '40px', display: step === 4 ? 'none' : 'flex', gap: '12px' }}>
+          {step > 1 && step < 4 && (
             <button onClick={handleBack} style={{ flex: 1, padding: '14px', backgroundColor: 'rgba(47,67,52,0.10)', color: CHROME_RENK.ink, border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
               Geri
             </button>

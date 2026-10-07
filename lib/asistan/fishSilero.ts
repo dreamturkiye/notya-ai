@@ -52,8 +52,11 @@ export type SileroSecenek = {
    * (NEXT_PUBLIC_NOTYA_SILERO*), which govern Fish turn-ending only. The gate has its own kill switch.
    */
   zorla?: boolean
-  /** Called on every processed frame with the speech probability (drives the gate state machine). */
-  onKare?: (p: number, zaman: number) => void
+  /**
+   * Called on every processed frame with the speech probability (drives the gate state machine) and the frame's
+   * 16 kHz audio (NOTYA-SES-PROFILI-01 scores the doctor's voice from it; copy it before keeping it).
+   */
+  onKare?: (p: number, zaman: number, kare: Float32Array) => void
   /** Console tag. */
   etiket?: string
 }
@@ -93,11 +96,11 @@ export async function sileroAc(akis: MediaStream, baglam: AudioContext, secenek:
       processorType: 'auto',
       // We do not use vad-web's own segmenter; frames only.
       submitUserSpeechOnPause: false,
-      onFrameProcessed: (olasilik) => {
+      onFrameProcessed: (olasilik, ses) => {
         kare += 1
         son = { p: olasilik.isSpeech, zaman: Date.now() }
         if (ilkKare) { ilkKare(); ilkKare = null }
-        if (secenek.onKare) { try { secenek.onKare(son.p, son.zaman) } catch { /* the listener fails open on its own */ } }
+        if (secenek.onKare) { try { secenek.onKare(son.p, son.zaman, ses) } catch { /* the listener fails open on its own */ } }
       },
       onSpeechStart: () => undefined,
       onSpeechRealStart: () => undefined,

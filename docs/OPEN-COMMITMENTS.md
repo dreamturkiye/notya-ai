@@ -3185,3 +3185,13 @@ Source: Kaan, 2026-10-07 (a smoke-alarm low-battery chirp cut Ayşe off mid-sent
 | NOTYA-AYSE-GURULTU-a | 2026-10-07 | OPEN | Manual microphone test on the preview deployment by Dr. Gökhan before merge (the 5-step test in `docs/AYSE-GURULTU.md`, laptop speakers and headset, iPhone included). | Kaan |
 | NOTYA-AYSE-GURULTU-b | 2026-10-07 | PARKED | Optional tap-to-interrupt setting for very noisy rooms. | Kaan |
 | NOTYA-AYSE-GURULTU-c | 2026-10-07 | UNDER DISCUSSION | Doctor voice profile so Ayşe listens only to the doctor. | Kaan |
+
+## 2026-10-07 - NOTYA-SES-PROFILI: doctor voice profile (Ayşe listens to the doctor's voice)
+Source: Kaan, 2026-10-07 (voice recognition is a must; optional, offered in onboarding). Builds on NOTYA-AYSE-GURULTU and answers NOTYA-AYSE-GURULTU-c. Details in `docs/SES-PROFILI.md`. Not authentication.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-SES-PROFILI-a | 2026-10-07 | OPEN | Turkish lawyer review of the biometric consent texts (checkbox line + full text, `lib/asistan/sesProfili/rizaMetni.ts`, shown on `/kvkk#ses-profili`) before the step is shown to real doctors. Also confirm whether the full trade title must replace "Dream Türkiye". | Kaan |
+| NOTYA-SES-PROFILI-b | 2026-10-07 | OPEN | Threshold tuning with Dr. Gökhan and one more voice (`SES_PROFILI_AYAR` in `lib/asistan/sesProfili/ayar.ts`; anonymous counters in `ses_profili_sayaclari`). Current values come from public test recordings, not clinic audio. | Kaan |
+| NOTYA-SES-PROFILI-c | 2026-10-07 | OPEN | Doctor / patient labels in the visit transcript using the same match. Not done here: the ElevenLabs transcript arrives as text with no per-line audio, so the match has nothing to align to without new plumbing. | Claude |
+| NOTYA-SES-PROFILI-d | 2026-10-07 | OPEN | Apply migration `126_doktor_ses_profili.sql` on Supabase before the preview test (the API answers 500 on the voice-profile calls until the table exists; voice sessions are unaffected). | Kaan |

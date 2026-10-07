@@ -43,6 +43,10 @@ import { ayseFishIstemcideMi } from '@/lib/asistan/sesSaglayici'
 import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
 import { KelimeKesici, base64Pcm, sesDusKesimi, sesDusOfseti } from '@/lib/asistan/fishWs'
 import { elevenKapiKur, type ElevenKapi } from '@/lib/asistan/elevenKapi'
+import { kapiKonusmaMi } from '@/lib/asistan/konusmaKapisi'
+import { rmsHesapla } from '@/lib/asistan/fishVad'
+import { SES_PROFILI_MODEL_SURUMU } from '@/lib/asistan/sesProfili/ayar'
+import { ProfilDogrulayici, sayaclariGonder, sesProfiliGetir, sesProfiliMotoru } from '@/lib/asistan/sesProfili/istemci'
 import { doktorKonustu as kesintiDoktorKonustu, elevenKalan, fishKalan, kalanGeldi, kesildi, kesintiBaslat, kesintiDevamMesaji, kesintiMesajiMi, kesintiTik, sesKaresi, type KesintiDurumu } from '@/lib/asistan/kesintiDevam'
 
 /** NOTYA-SES-1TO1: client-side ceilings for one Fish turn; the server has its own 20 s / 60 s limits. */
@@ -222,6 +226,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const kesintiRef = useRef<KesintiDurumu>(kesintiBaslat())
   const sonDuzeltmeRef = useRef<{ cevap: string; kalan: string | null; t: number } | null>(null)
   const fishCevapNoRef = useRef(0)
+  /**
+   * NOTYA-SES-PROFILI-01: the doctor's voice profile for this voice session (null = none / engine not loaded).
+   * Fetched in parallel with the session start; never blocks or fails the call.
+   */
+  const profilSozuRef = useRef<Promise<ProfilDogrulayici | null>>(Promise.resolve(null))
+  const profilRef = useRef<ProfilDogrulayici | null>(null)
   const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
 
   // NOTYA-KADEME-01 — yazılı sohbet (components/asistan/YaziliSohbet.tsx'ten taşındı; görünüm orada kaldı).
@@ -412,6 +422,43 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     kesintiRef.current = kesildi(kesintiRef.current, { cevap: `fish-${fishCevapNoRef.current}`, t: Date.now(), kalan: fishKalan(tam, kesim) })
   }
 
+  /** Loads the profile + engine only for a doctor who has a profile. Any failure → null (as without a profile). */
+  function sesProfiliHazirla(): Promise<ProfilDogrulayici | null> {
+    profilRef.current = null
+    const jeton = authTokenRef.current
+    const soz = (async () => {
+      if (!jeton || typeof Worker === "undefined") return null
+      const k = await sesProfiliGetir(jeton)
+      if (!k?.var || !k.profil || k.modelSurumu !== SES_PROFILI_MODEL_SURUMU) return null
+      try {
+        const m = sesProfiliMotoru()
+        await m.hazir()
+        return new ProfilDogrulayici(k.profil, m)
+      } catch (e) {
+        console.info("[ses-profili]", { profil: "yok", neden: e instanceof Error ? e.message : "hata" })
+        return null
+      }
+    })().catch(() => null)
+    profilSozuRef.current = soz
+    void soz.then((d) => {
+      if (profilSozuRef.current !== soz) return
+      profilRef.current = d
+      if (d) {
+        console.info("[ses-profili]", { profil: "acik" })
+        elevenKapiRef.current?.profilVer(d)
+      }
+    })
+    return soz
+  }
+
+  /** Session end: anonymous verdict counters (no audio, no text, no doctor id stored), then forget the profile. */
+  function sesProfiliBirak() {
+    const d = profilRef.current
+    profilRef.current = null
+    profilSozuRef.current = Promise.resolve(null)
+    if (d) sayaclariGonder(authTokenRef.current, d.sayac())
+  }
+
   function elevenKapiKapat() {
     elevenKapiNesilRef.current += 1
     const k = elevenKapiRef.current
@@ -425,10 +472,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     const nesil = elevenKapiNesilRef.current
     void elevenKapiKur(conv, {
       onKonusma: (sesli, t) => { kesintiRef.current = sesKaresi(kesintiRef.current, { t, sesli }) },
+      // NOTYA-SES-PROFILI-01: if the profile is still loading, sesProfiliHazirla hands it over when it is ready.
+      profil: profilRef.current,
     }).then((k) => {
       if (!k) return
       if (nesil !== elevenKapiNesilRef.current || conversationRef.current !== conv) { k.kapat(); return }
       elevenKapiRef.current = k
+      if (profilRef.current) k.profilVer(profilRef.current)
       k.ajanModu(sesDevamRef.current.mod === "speaking")
     }).catch(() => undefined)
   }
@@ -541,6 +591,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
 
   async function endConversation() {
     elevenKapiKapat()
+    sesProfiliBirak()
     kesintiRef.current = kesintiBaslat()
     sonDuzeltmeRef.current = null
     fishDinleNesilRef.current += 1
@@ -814,7 +865,16 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     // Silero (opt-in, NEXT_PUBLIC_NOTYA_SILERO=1) loads in the background; the first turn may still run on RMS.
     fishSileroKapat()
     fishVadGunlukSifirla()
-    void sileroAc(akis, baglam).then((s) => {
+    // NOTYA-SES-PROFILI-01: with a profile, Silero's 16 kHz frames are scored against it (barge-in preference).
+    let profilOnceki = false
+    void sileroAc(akis, baglam, {
+      onKare: (p, t, kare) => {
+        const d = profilRef.current
+        if (!d) return
+        profilOnceki = kapiKonusmaMi(p, rmsHesapla(kare), profilOnceki)
+        d.kare(t, profilOnceki, kare, Boolean(fishRef.current?.caliyorMu()))
+      },
+    }).then((s) => {
       if (!s) return
       if (nesil !== fishDinleNesilRef.current || !fishAcikRef.current) { void s.kapat(); return }
       fishSileroRef.current = s
@@ -1030,6 +1090,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           bargeIn: () => fishBargeKes(),
           silero: () => fishSileroRef.current?.olasilik() ?? null,
           sesKaresi: (sesli, t) => { kesintiRef.current = sesKaresi(kesintiRef.current, { t, sesli }) },
+          profil: () => {
+            const d = profilRef.current
+            return d && d.calisiyor() ? { karar: d.karar(), redYeni: d.redYeni(Date.now()) } : null
+          },
         })
         if (!canli()) return
         ustUsteHata = 0
@@ -1119,6 +1183,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       return
     }
     await endConversation()
+    // NOTYA-SES-PROFILI-01: in parallel with the connection; the gate picks it up when it attaches.
+    void sesProfiliHazirla()
     if (yakala) fishYakalaRef.current = yakala
     setStatus("connecting")
     setErrorMsg("")
