@@ -21,7 +21,7 @@ import {
 } from '@/lib/doktor/konsultasyon';
 import {
   HATIRLATMA_GONDERILDI, ISTEM_IPTAL_ONAYI, YANITSIZ_KAPAT_ONAYI,
-  KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, konsultanEpostaGonderAkisi,
+  KONSULTAN_EPOSTA_ALICI_SOR, epostaDurumMetni, konsultanEpostaGonderAkisi, konsultanWhatsappAkisi,
   konsultasyonApi, konsultasyonDosyaYolu, konsultasyonIslemi,
 } from '@/lib/doktor/konsultasyonIstemci';
 
@@ -92,10 +92,11 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
           onClick={() => calistir('eposta_gonder')}
           disabled={!!calisiyor}
           style={gonderildiAt ? stil.ghost : stil.btn}
-          title="Konsültana portal linki — cihazınızdaki posta uygulaması (Mac Mail / iPhone Mail)."
+          title="Konsültana portal linki — kendi e-postanızda hazır açılır."
         >
           {calisiyor === 'eposta_gonder' ? 'Açılıyor…' : (gonderildiAt ? 'Yeniden e-posta gönder' : 'E-posta gönder')}
         </button>
+        <button type="button" onClick={() => { void konsultanWhatsappAkisi(b.id).then((w) => { if (!w.acildi && typeof window !== 'undefined') window.alert(w.metin) }) }} disabled={!!calisiyor} style={stil.ghost} title="Konsültana portal linki — WhatsApp metnini kopyalar; numara Defterdeyse WhatsApp’ı açar.">WhatsApp</button>
         <button type="button" onClick={() => calistir('hatirlat')} disabled={!!calisiyor || !!sonraki} aria-disabled={!!calisiyor || !!sonraki}
           title={sonraki ? `Aynı konsültasyon için ${HATIRLATMA_ARALIGI_GUN} günde bir hatırlatma gönderilir.` : 'Hastaya Sağlığım hatırlatması'}
           style={{ ...stil.ghost, opacity: sonraki ? 0.55 : 1, cursor: sonraki ? 'not-allowed' : 'pointer' }}>

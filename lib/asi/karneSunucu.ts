@@ -7,6 +7,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { hastaAdSoyad } from '@/lib/portal/hastaAdi'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { asiKarnesiOlustur, type AsiKarnesi, type AsiKaydiSatiri } from './karneBelgesi'
 
@@ -26,11 +27,7 @@ export async function asiKarnesiVerisi(sb: SupabaseClient, doctorId: string, pat
     sb.from('patients').select('name_encrypted, dob_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle(),
     sb.from('users').select('full_name, recete_baslik').eq('id', doctorId).maybeSingle(),
   ])
-  let adSoyad: string | null = null
-  try {
-    const j = JSON.parse(coz(hastaQ.data?.name_encrypted) || '{}') as { ad?: string; soyad?: string }
-    adSoyad = `${j.ad || ''} ${j.soyad || ''}`.trim() || null
-  } catch { adSoyad = null }
+  const adSoyad = hastaAdSoyad(coz(hastaQ.data?.name_encrypted))
   const baslik = (hekimQ.data?.recete_baslik || null) as { satirlar?: unknown } | null
   const satirlar = Array.isArray(baslik?.satirlar) ? (baslik!.satirlar as unknown[]).map((x) => String(x || '').trim()).filter(Boolean) : []
   return asiKarnesiOlustur({

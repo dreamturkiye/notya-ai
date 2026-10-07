@@ -6,7 +6,8 @@
  * (Gmail/Outlook web). Sunucu OAuth kutusu gerekmez — NOTYA-ILETISIM-01 ile aynı desen.
  */
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
-import { epostaLinki } from '@/lib/iletisim/baglantilar'
+import { epostaLinki, whatsappLinki } from '@/lib/iletisim/baglantilar'
+import { epostaAcilisMi } from '@/lib/iletisim/tipler'
 import { baglantiyiAc, cihazEpostaAcilisi } from '@/lib/iletisim/istemci'
 import { TASLAK_OLUSTURULAMADI } from '@/lib/doktor/konsultasyonTaslagi'
 import { epostaDurumMetni } from '@/lib/doktor/konsultasyonEposta'
@@ -46,8 +47,12 @@ export function konsultasyonIslemi(
  * Taslak alanlarından cihaz postasını açar (Mac Mail / iPhone Mail / tercih edilen web).
  * iOS Safari için senkron çağrılmalı (tap handler içinde).
  */
-export function konsultanEpostasiniAc(taslak: { alici: string; konu: string; metin: string }): boolean {
-  const acilis = cihazEpostaAcilisi() || 'uygulama'
+export function konsultanEpostasiniAc(taslak: { alici: string; konu: string; metin: string }, oneri?: string | null): boolean {
+  // NOTYA-KONSULT-GONDERIM-01: hekime posta sistemi sorulmaz. Sıra: bu cihazdaki tercih → hekimin hesap e-postasından
+  // tahmin (Gmail / Outlook web). İkisi de yoksa posta programı AÇILMAZ (ayarsız Apple Mail kurulum penceresi çıkmasın).
+  const tahmin = epostaAcilisMi(oneri) && oneri !== 'uygulama' ? oneri : null
+  const acilis = cihazEpostaAcilisi() || tahmin
+  if (!acilis) return false
   const link = epostaLinki(taslak.alici, taslak.konu, taslak.metin, acilis)
   if (!link) return false
   baglantiyiAc(link)
@@ -91,8 +96,12 @@ export async function konsultanEpostaGonderAkisi(
   if (!alici || !konu || !metin) {
     return { ok: false, metin: epostaDurumMetni('hata') }
   }
-  const acildi = konsultanEpostasiniAc({ alici, konu, metin })
-  if (!acildi) return { ok: false, metin: 'Posta uygulaması açılamadı — e-posta adresini kontrol edin.' }
+  const acildi = konsultanEpostasiniAc({ alici, konu, metin }, typeof hazir.j.acilisOnerisi === 'string' ? hazir.j.acilisOnerisi : null)
+  if (!acildi) {
+    // Posta sistemi bilinmiyor → program açma; metni panoya ver (hekim kendi postasına ya da WhatsApp’a yapıştırır).
+    const kopya = await panoyaKopyala(`${konu}\n\n${metin}`)
+    return { ok: false, metin: kopya ? KONSULTAN_EPOSTA_KOPYALANDI : 'E-posta açılamadı — «WhatsApp» ile gönderin veya portal linkini kopyalayın.' }
+  }
 
   // Hekim posta uygulamasında Gönder’e basacak; biz açıldıktan sonra işaretleriz.
   const isaret = await konsultasyonIslemi(id, 'eposta_gonder', { aliciEposta: alici, isaretle: true })
@@ -160,4 +169,30 @@ export async function yanitTaslagiIsteVeGerekirseKimliksizlestir(id: string, bel
   } catch {
     return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
   }
+}
+
+/* ───── NOTYA-KONSULT-GONDERIM-01 — pano + WhatsApp ───── */
+export const KONSULTAN_EPOSTA_KOPYALANDI = 'E-posta metni kopyalandı — kendi e-postanıza ya da WhatsApp’a yapıştırıp gönderin.'
+export const KONSULTAN_WHATSAPP_KOPYALANDI = 'WhatsApp metni kopyalandı — konsültanla sohbete yapıştırıp gönderin.'
+
+export async function panoyaKopyala(metin: string): Promise<boolean> {
+  try {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) return false
+    await navigator.clipboard.writeText(metin)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Konsültana WhatsApp: metin panoya kopyalanır; Defterde numara varsa WhatsApp hazır metinle açılır. Göndermek hekimin dokunuşudur. */
+export async function konsultanWhatsappAkisi(id: string): Promise<{ ok: boolean; metin: string; acildi: boolean }> {
+  const r = await konsultasyonApi('/api/doktor/konsultasyon', { method: 'PATCH', govde: { id, islem: 'whatsapp_metni' } })
+  const metin = typeof r.j.metin === 'string' ? r.j.metin : ''
+  if (!r.ok || !metin) return { ok: false, metin: (typeof r.j.error === 'string' && r.j.error) || 'WhatsApp metni hazırlanamadı — yeniden deneyin.', acildi: false }
+  const kopya = await panoyaKopyala(metin)
+  const link = typeof r.j.numara === 'string' && r.j.numara ? whatsappLinki(r.j.numara, metin) : null
+  if (link) baglantiyiAc(link)
+  if (!kopya && !link) return { ok: false, metin: 'Metin kopyalanamadı — portal linkini elle paylaşın.', acildi: false }
+  return { ok: true, metin: link ? 'WhatsApp açıldı, metin hazır — Gönder’e basmanız yeterli.' : KONSULTAN_WHATSAPP_KOPYALANDI, acildi: !!link }
 }

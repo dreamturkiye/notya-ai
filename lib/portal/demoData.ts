@@ -6,6 +6,8 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   // Demo hastası yetişkin iç hastalıkları hastası; demo form gönderemediği için ön anket modülü de bağlanmaz.
   // ASI-KARNESI-01 — sentetik aşı kaydı var → modül + nav açık (aksi halde karne verisi erişilemez kalırdı).
   portal: { moduller: ['asi-karnesi'], nav: [{ key: 'asi-karnesi', label: 'Aşı Karnesi', path: '/asi-karnesi' }] },
+  // PORTAL-HASTA-ADI — sentetik ad (aşı karnesindeki ile aynı; PHI yok)
+  hasta: { adSoyad: 'Demo Hasta' },
   // PORTAL-HEKIM-01 — sentetik muayenehane kimliği (PHI yok)
   hekim: {
     ad: 'Dr. Gökhan Mamur',
