@@ -135,6 +135,8 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       { id: 'kronikHastaliklar', etiket: 'Bilinen Kronik Hastalıklarınız', tur: 'checkbox-grup', zorunlu: true, secenekler: ['Diyabet', 'Hipertansiyon', 'Astım / KOAH', 'Kalp Hastalığı', 'Böbrek Hastalığı', 'Tiroid Hastalığı', 'Kanser', 'Yok'] },
       // Aynı gerekçe (NOTYA-INTAKE-08): 'yoksa "Yok" yazın' ipucu → alan isteğe bağlı.
       { id: 'gecirilmisAmeliyatlar', etiket: 'Geçirdiğiniz Ameliyatlar', tur: 'textarea', placeholder: 'Ameliyat adı ve yılı — yoksa "Yok" yazın' },
+      // NOTYA-INTAKE-DENETIM (2026-10-07): hastane yatışları çekirdekte yoktu. Yeni alan, isteğe bağlı.
+      { id: 'hastaneYatislari', etiket: 'Daha Önce Hastanede Yattınız mı?', tur: 'textarea', placeholder: 'Neden ve yılı — yoksa boş bırakın' },
       { id: 'kullaniyorMu', etiket: 'Düzenli ilaç kullanıyor musunuz?', tur: 'radio', zorunlu: true, secenekler: ['Hayır', 'Evet'] },
       { id: 'kullanilanIlaclar', etiket: 'İlaç Adı ve Dozu', tur: 'textarea', placeholder: 'Yoksa "Yok" yazın' },
       { id: 'alerjiVarMi', etiket: 'Bilinen Alerjileriniz', tur: 'radio', zorunlu: true, dikey: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
@@ -168,13 +170,39 @@ export function intakeFormBolumleri(coreBolumler: IntakeBolum[], bransBolumu: In
 }
 
 /** NOTYA-INTAKE-05: branşa göre çekirdek alan uyarlaması (Dr. Gökhan Mamur canlı test
- * geri bildirimi, 2026-09-02). Pediatride sağlık geçmişi ebeveynin serbest metinle
+ * geri bildirimi, 2026-09-02). Pediatride (ve 2026-10-07'den beri çocuk cerrahisinde) sağlık geçmişi ebeveynin serbest metinle
  * anlatacağı şekilde sadeleştirildi; sigara sorusu "ailede" bağlamına çevrildi, alkol
  * sorusu kaldırıldı. Diğer branşlar çekirdeği olduğu gibi kullanır. Alan id'leri
  * DEĞİŞMEDİ — eski gönderimlerle veri uyumluluğu korunur. */
+/**
+ * NOTYA-INTAKE-DENETIM (2026-10-07): the child forms. Çocuk cerrahisi used to get the adult core (medeni durum, the
+ * child's own smoking and alcohol); it now gets the same child adaptation as pediatri.
+ */
+export const COCUK_FORMU_BRANSLARI = ['pediatri', 'cocuk-cerrahisi'] as const
+
+export function cocukFormuMu(brans: string): boolean {
+  return (COCUK_FORMU_BRANSLARI as readonly string[]).includes(brans)
+}
+
+/**
+ * Pediatri (Kaan, 2026-10-07): "Medeni durumu" sorusu çocuğa değil ebeveynlere sorulur. Alan id'si (medeniDurum) ve
+ * eski yanıtlar korunur — 'Evli' ve 'Boşanmış' aynı metin; ebeveynleri tarif etmeyen 'Bekâr' / 'Dul' yerine
+ * 'Evli değil' / 'Anne veya baba vefat etti'. REVIEW (Dr. Gökhan).
+ */
+export const EBEVEYN_MEDENI_DURUM: IntakeAlan = {
+  id: 'medeniDurum',
+  etiket: 'Anne ve babanın medeni durumu',
+  tur: 'radio',
+  zorunlu: true,
+  secenekler: ['Evli', 'Boşanmış', 'Ayrı yaşıyor', 'Evli değil', 'Anne veya baba vefat etti'],
+}
+
 export function coreBolumlerIcin(brans: string): IntakeBolum[] {
-  if (brans !== 'pediatri') return CORE_BOLUMLER
+  if (!cocukFormuMu(brans)) return CORE_BOLUMLER
   return CORE_BOLUMLER.map((bolum) => {
+    if (bolum.baslik === 'Kimlik Bilgileri') {
+      return { ...bolum, alanlar: bolum.alanlar.map((a) => (a.id === 'medeniDurum' ? EBEVEYN_MEDENI_DURUM : a)) }
+    }
     if (bolum.baslik !== 'Sağlık Geçmişi') return bolum
     return {
       ...bolum,
@@ -198,8 +226,11 @@ export function coreBolumlerIcin(brans: string): IntakeBolum[] {
             ]
           case 'alerjiAciklama':
             return [] // yukarıda alerjiVarMi ile birlikte üretildi
+          case 'hastaneYatislari':
+            return [{ id: 'hastaneYatislari', etiket: 'Çocuğunuz daha önce hastanede yattı mı?', tur: 'textarea', placeholder: 'Neden ve yılı — yenidoğan yoğun bakım dahil; yoksa boş bırakın' }]
           case 'sigara':
-            return [{ id: 'sigara', etiket: 'Ailede Sigara Kullanımı', tur: 'radio', zorunlu: true, secenekler: ['Evet', 'Hayır'] }]
+            // NOTYA-INTAKE-DENETIM: çocuğun kendi sigarası değil, evdeki maruziyet. Evet/Hayır yanıtları aynı.
+            return [{ id: 'sigara', etiket: 'Evde sigara içen var mı?', tur: 'radio', zorunlu: true, secenekler: ['Evet', 'Hayır'] }]
           case 'alkol':
             return [] // pediatrik formda anlamsız
           default:

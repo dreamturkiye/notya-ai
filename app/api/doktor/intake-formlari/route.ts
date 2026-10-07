@@ -10,8 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes, createHash } from 'crypto'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
-import { bransAnahtari } from '@/lib/specialties/kapsam'
-import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
+import { intakeFormAnahtari, intakeFormBransi } from '@/lib/intake/formBransi'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,11 +65,12 @@ export async function POST(req: NextRequest) {
   }
   // NOTYA-BETA-0925: bran\u015f verilmezse (randevu penceresi, sekreter) prati\u011fin hekiminin bran\u015f\u0131 \u2014 pediatri hastas\u0131
   // genel form de\u011fil pediatri formu als\u0131n (HastaIntake varsay\u0131lan\u0131yla ayn\u0131 karar).
-  let formBransi = brans || ''
+  // NOTYA-INTAKE-DENETIM: Klinik dalları artık 'genel' değil kendi slug'ıyla kaydedilir (kendi branş soruları); istekle
+  // gelen branş da bilinen bir form anahtarı değilse 'genel'e düşer (rastgele metin saklanmaz).
+  let formBransi = brans ? intakeFormAnahtari(brans) : ''
   if (!formBransi) {
     const { data: hekim } = await supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle()
-    const k = bransAnahtari((hekim as { specialty?: string } | null)?.specialty)
-    formBransi = k && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, k) ? k : 'genel'
+    formBransi = intakeFormBransi((hekim as { specialty?: string } | null)?.specialty)
   }
 
   const token = randomBytes(24).toString('hex')

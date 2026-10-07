@@ -23,7 +23,7 @@ export function onerilerPaneliGorunurMu(g: { seansBransi?: string | null; doktor
 }
 
 /** The dikte page URL for "Muayeneyi Başlat" on an appointment. */
-export function muayeneBaslatYolu(r: { patientId: string; baslangic: string; hastaDurumu?: string | null }): string {
+export function muayeneBaslatYolu(r: { patientId: string | null; baslangic: string; hastaDurumu?: string | null }): string {
   const durum = randevuHastaDurumu(r.hastaDurumu)
-  return `/session/new?patientId=${encodeURIComponent(r.patientId)}&randevuBaslangic=${encodeURIComponent(r.baslangic)}${durum ? `&hastaDurumu=${durum}` : ''}`
+  return `/session/new?patientId=${encodeURIComponent(String(r.patientId))}&randevuBaslangic=${encodeURIComponent(r.baslangic)}${durum ? `&hastaDurumu=${durum}` : ''}`
 }

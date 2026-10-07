@@ -66,8 +66,8 @@ export async function intakeDoktorOg(token: string): Promise<IntakeDoktorOg | nu
     if (hasta?.name_encrypted) hastaAdi = (JSON.parse(decrypt(hasta.name_encrypted)).ad || '').trim()
   } catch { /* leave blank */ }
 
-  const { BRANS_ETIKETLERI } = await import('@/lib/intake/bransSorulari')
-  const bransEtiket = BRANS_ETIKETLERI[form.brans as keyof typeof BRANS_ETIKETLERI] || null
+  const { intakeBransEtiketi } = await import('@/lib/intake/formBransi')
+  const bransEtiket = intakeBransEtiketi(form.brans)
 
   return {
     doktorAdi,

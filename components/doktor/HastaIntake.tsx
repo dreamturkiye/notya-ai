@@ -13,10 +13,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
-import { BRANS_ETIKETLERI, BRANS_SORULARI } from '@/lib/intake/bransSorulari';
-import { bransAnahtari } from '@/lib/specialties/kapsam';
+import { intakeBransBolumu, intakeBransEtiketi, intakeFormBransi, intakeFormBranslari } from '@/lib/intake/formBransi';
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar';
-import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
@@ -41,8 +39,7 @@ const DURUM_ETIKET: Record<string, { label: string; color: string; bg: string }>
 function etiketHaritasi(brans: string): Record<string, string> {
   const h: Record<string, string> = {};
   for (const b of coreBolumlerIcin(brans)) for (const a of b.alanlar) h[a.id] = a.etiket;
-  const bs = (BRANS_SORULARI as Record<string, { alanlar: { id: string; etiket: string; tur?: string }[] }>)[brans];
-  if (bs) for (const a of bs.alanlar) if (a.tur !== 'bolum-basligi') h[a.id] = a.etiket;
+  for (const a of intakeBransBolumu(brans).alanlar) if (a.tur !== 'bolum-basligi') h[a.id] = a.etiket;
   return h;
 }
 function degerGoster(v: unknown): string {
@@ -71,8 +68,8 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
         const j = await r.json();
         const sp = String(j?.data?.specialty || '');
         // BRANS-ALAN-SIZMASI / KD-ISIMLENDIRME-01: gerçek KD profilleri 'kadin-dogum' taşır (BRANS_ETIKETLERI anahtarı değil) — tek çözücüyle kanonik anahtara çöz
-        const k = bransAnahtari(sp);
-        if (k && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, k)) setSecilenBrans(k);
+        // NOTYA-INTAKE-DENETIM: Klinik dalları (saç ekimi, diyetisyen…) kendi formlarını varsayılan alır.
+        setSecilenBrans(intakeFormBransi(sp));
       } catch { /* varsayılan genel kalır */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -161,7 +158,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     });
   }
 
-  const branslar = Object.entries(BRANS_ETIKETLERI) as [SpecialtyKey, string][];
+  const branslar = intakeFormBranslari();
 
   return (
     <div>
@@ -189,7 +186,12 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
                 style={{ width: '100%', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
               >
                 <option value="genel">Genel (branşsız)</option>
-                {branslar.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                <optgroup label="Hekim branşları">
+                  {branslar.filter((b) => !b.klinik).map((b) => <option key={b.anahtar} value={b.anahtar}>{b.etiket}</option>)}
+                </optgroup>
+                <optgroup label="Klinik">
+                  {branslar.filter((b) => b.klinik).map((b) => <option key={b.anahtar} value={b.anahtar}>{b.etiket}</option>)}
+                </optgroup>
               </select>
             </div>
           </div>
@@ -225,7 +227,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {formlar.map((f) => {
           const durumBilgi = DURUM_ETIKET[f.durum] || DURUM_ETIKET.gonderildi;
-          const bransEtiket = BRANS_ETIKETLERI[f.brans as SpecialtyKey] || 'Genel';
+          const bransEtiket = intakeBransEtiketi(f.brans) || 'Genel';
           return (
             <div key={f.id}>
               <div
