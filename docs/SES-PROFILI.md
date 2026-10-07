@@ -24,7 +24,7 @@ enrolment screen says `Bu bir güvenlik kilidi değildir.`
      third party. The profile is the L2-normalised mean of the four sentence embeddings.
    - Ayarlar › Ses profili (`/dashboard/doktor/ayarlar/ses-profili`): enrol later, `Yeniden kaydet`, and
      `Ses profilimi sil`, which deletes the row immediately (the route re-reads and fails if the row is still there).
-2. **Storage** (`lib/db/migrations/126_doktor_ses_profili.sql`, `app/api/doktor/ses-profili/route.ts`).
+2. **Storage** (`lib/db/migrations/127_doktor_ses_profili.sql`, `app/api/doktor/ses-profili/route.ts`).
    - Table `doktor_ses_profilleri`, one row per doctor: `profil_encrypted` (the embedding as JSON, encrypted with
      the existing AES-256-GCM `encryptPII`), `model_surumu`, `riza_zamani`, `created_at`, `updated_at`.
    - Owner-only: the route scopes every read/write/delete by the session's doctor id (`pratikOturum` +
@@ -127,7 +127,7 @@ Both texts (the checkbox line and the full `Ses Profili İçin Açık Rıza Metn
 
 ## Before the manual test
 
-Apply `lib/db/migrations/126_doktor_ses_profili.sql` (NOTYA-SES-PROFILI-d). Until then the profile API answers 500,
+Apply `lib/db/migrations/127_doktor_ses_profili.sql` (NOTYA-SES-PROFILI-d). Until then the profile API answers 500,
 onboarding shows that the profile could not be saved, and voice sessions run exactly as without a profile.
 
 ## Manual test (preview deployment)
@@ -158,6 +158,6 @@ Console lines: `[ses-profili]` (profile on / why not), `[ses-kapi]` (gate, `prof
 - UI: `components/sesProfili/SesProfiliKayit.tsx`, `app/onboarding/page.tsx` (step 4),
   `app/dashboard/doktor/ayarlar/ses-profili/page.tsx`, `app/kvkk/page.tsx` (§11)
 - API / DB: `app/api/doktor/ses-profili/route.ts`, `app/api/asistan/ses-profili-sayac/route.ts`,
-  `lib/db/migrations/126_doktor_ses_profili.sql`
+  `lib/db/migrations/127_doktor_ses_profili.sql`
 - Wiring: `lib/asistan/elevenKapi.ts`, `lib/asistan/fishVad.ts`, `lib/asistan/fishMikrofon.ts`,
   `lib/asistan/fishSilero.ts`, `components/asistan/AsistanOturumContext.tsx`

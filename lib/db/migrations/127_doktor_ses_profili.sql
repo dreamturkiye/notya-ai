@@ -55,6 +55,6 @@ $$;
 revoke execute on function public.ses_profili_sayac_ekle(date, text, int, int, int, int) from public, anon, authenticated;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
-values ('126', '126_doktor_ses_profili.sql', null, now(), false,
+values ('127', '127_doktor_ses_profili.sql', null, now(), false,
   'NOTYA-SES-PROFILI-01: doctor voice profile (encrypted embedding, owner-only) + anonymous verdict counters')
 on conflict (version) do nothing;
