@@ -126,6 +126,19 @@ export default function EnabizMasa({ gizliBaslik }: { gizliBaslik?: boolean }) {
         </div>
       </div>
 
+      {!gizliBaslik && (
+        <a
+          href="/doktor-tools/enabiz/mbys"
+          style={{ ...toolsCard, marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', color: CHROME_RENK.ink }}
+        >
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>Gün sonu MBYS kuyruğu</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 12, marginTop: 4 }}>Günün kapanmış vizitleri, eksik kontrolü ve MBYS Yardımcısı ile aktarım.</div>
+          </div>
+          <span style={{ color: CHROME_RENK.pine, fontWeight: 700 }}>Aç ›</span>
+        </a>
+      )}
+
       <div style={{ ...toolsCard, marginTop: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 8 }}>Hasta</div>
         <input
