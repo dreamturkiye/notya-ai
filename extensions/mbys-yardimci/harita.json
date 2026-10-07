@@ -1,0 +1,211 @@
+{
+  "surum": 1,
+  "kaynak": "HSYS MBYS modülü kullanım kılavuzu (2017) arama alıntıları — canlı formda doğrulanmadı. Düzeltme: docs/MBYS-YARDIMCI.md › Haritayı tamamlama.",
+  "adresler": {
+    "eslesme": ["https://mbys2.saglik.gov.tr/*"],
+    "dokunma": ["/Account/Login"]
+  },
+  "ekranlar": {
+    "hastaKayit": {
+      "ad": "Hasta Kayıt",
+      "tanimaEsik": 3,
+      "tanima": ["kayitTuru", "tcKimlikNo", "pasaportNo", "sahisNo", "ad", "soyad", "cinsiyet", "dogumTarihi", "uyruk"],
+      "bitisMesaji": "Kimlik alanları dolduruldu. Sorgulayıp listeye eklemek size ait.",
+      "alanlar": [
+        {
+          "anahtar": "kayitTuru",
+          "etiket": "Kayıt türü",
+          "kaynak": "kayitTuru",
+          "tur": "secim",
+          "secici": ["#KayitTuru", "select[name='KayitTuru']", "select[name$='.KayitTuru']"],
+          "etiketler": ["Kayıt Türü", "Kayıt Tipi", "Hasta Kayıt Türü"],
+          "secenekler": {
+            "vatandas": ["Vatandaş", "T.C. Vatandaşı", "TC Vatandaşı", "T.C. Vatandaş"],
+            "yabanci": ["Yabancı", "Yabancı Uyruklu", "Yabancı Hasta"],
+            "vatansiz": ["Vatansız", "Vatansız Kişi"]
+          },
+          "sonraBekleMs": 700,
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "tcKimlikNo",
+          "etiket": "Hasta T.C.",
+          "kaynak": "kimlik.tcKimlikNo",
+          "tur": "metin",
+          "kayitTurleri": ["vatandas"],
+          "secici": ["#HastaTC", "input[name='HastaTC']", "#TcKimlikNo", "input[name='TcKimlikNo']"],
+          "etiketler": ["Hasta T.C.", "Hasta TC", "Hasta T.C. Kimlik No", "T.C. Kimlik No", "TC Kimlik No", "T.C. No"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "pasaportNo",
+          "etiket": "Pasaport No",
+          "kaynak": "kimlik.pasaportNo",
+          "tur": "metin",
+          "kayitTurleri": ["yabanci"],
+          "secici": ["#PasaportNo", "input[name='PasaportNo']"],
+          "etiketler": ["Pasaport No", "Pasaport Numarası"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "sahisNo",
+          "etiket": "Şahıs Numarası",
+          "kaynak": "kimlik.sahisNo",
+          "tur": "metin",
+          "kayitTurleri": ["vatansiz"],
+          "secici": ["#SahisNumarasi", "input[name='SahisNumarasi']"],
+          "etiketler": ["Şahıs Numarası", "Şahıs No"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "ad",
+          "etiket": "Hasta Adı",
+          "kaynak": "kimlik.ad",
+          "tur": "metin",
+          "secici": ["#HastaAdi", "input[name='HastaAdi']"],
+          "etiketler": ["Hasta Adı", "Adı", "Ad"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "soyad",
+          "etiket": "Hasta Soyadı",
+          "kaynak": "kimlik.soyad",
+          "tur": "metin",
+          "secici": ["#HastaSoyadi", "input[name='HastaSoyadi']"],
+          "etiketler": ["Hasta Soyadı", "Soyadı", "Soyad"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "cinsiyet",
+          "etiket": "Cinsiyet",
+          "kaynak": "kimlik.cinsiyet",
+          "tur": "secim",
+          "secici": ["#Cinsiyet", "select[name='Cinsiyet']"],
+          "etiketler": ["Cinsiyet", "Cinsiyeti"],
+          "secenekler": { "E": ["Erkek", "E"], "K": ["Kadın", "K"] },
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "dogumTarihi",
+          "etiket": "Doğum Tarihi",
+          "kaynak": "kimlik.dogumTarihi",
+          "tur": "tarih",
+          "bicim": "GG.AA.YYYY",
+          "secici": ["#DogumTarihi", "input[name='DogumTarihi']"],
+          "etiketler": ["Doğum Tarihi"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "uyruk",
+          "etiket": "Uyruk",
+          "kaynak": "kimlik.uyruk",
+          "tur": "secim",
+          "secici": ["#Uyruk", "select[name='Uyruk']", "input[name='Uyruk']"],
+          "etiketler": ["Uyruk", "Uyruğu", "Uyruk Ülke"],
+          "secenekler": { "TR": ["Türkiye Cumhuriyeti", "Türkiye", "T.C.", "TC"] },
+          "dogrulandi": false
+        }
+      ]
+    },
+    "muayene": {
+      "ad": "Muayene",
+      "tanimaEsik": 3,
+      "tanima": ["sikayet", "hikaye", "bulgu", "aciklama", "boy", "kilo", "taniArama", "muayeneTuru", "vakaTuru"],
+      "bitisMesaji": "Notya doldurdu. Kontrol edip kaydetmek size ait.",
+      "alanlar": [
+        {
+          "anahtar": "muayeneTuru",
+          "etiket": "Muayene türü",
+          "kaynak": "muayene.muayeneTuru",
+          "tur": "secim",
+          "secici": ["#MuayeneTuru", "select[name='MuayeneTuru']"],
+          "etiketler": ["Muayene Türü", "Muayene Tipi"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "vakaTuru",
+          "etiket": "Vaka türü",
+          "kaynak": "muayene.vakaTuru",
+          "tur": "secim",
+          "secici": ["#VakaTuru", "select[name='VakaTuru']"],
+          "etiketler": ["Vaka Türü", "Vaka Tipi"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "ozellikliHizmet",
+          "etiket": "Özellikli hizmet",
+          "kaynak": "muayene.ozellikliHizmet",
+          "tur": "secim",
+          "secici": ["#OzellikliHizmet", "select[name='OzellikliHizmet']"],
+          "etiketler": ["Özellikli Hizmet"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "sikayet",
+          "etiket": "Şikayet",
+          "kaynak": "muayene.sikayet",
+          "tur": "metin",
+          "secici": ["#Sikayet", "textarea[name='Sikayet']", "input[name='Sikayet']"],
+          "etiketler": ["Şikayet", "Şikayeti", "Şikâyet"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "hikaye",
+          "etiket": "Hikaye",
+          "kaynak": "muayene.hikaye",
+          "tur": "metin",
+          "secici": ["#Hikaye", "textarea[name='Hikaye']"],
+          "etiketler": ["Hikaye", "Hikâye", "Hikayesi", "Hasta Hikayesi"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "bulgu",
+          "etiket": "Bulgu / Gözlem",
+          "kaynak": "muayene.bulgu",
+          "tur": "metin",
+          "secici": ["#Bulgu", "textarea[name='Bulgu']", "#BulguGozlem", "textarea[name='BulguGozlem']"],
+          "etiketler": ["Bulgu/Gözlem", "Bulgu / Gözlem", "Bulgu", "Muayene Bulgusu"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "aciklama",
+          "etiket": "Açıklama",
+          "kaynak": "muayene.aciklama",
+          "tur": "metin",
+          "secici": ["#Aciklama", "textarea[name='Aciklama']"],
+          "etiketler": ["Açıklama"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "boy",
+          "etiket": "Boy",
+          "kaynak": "muayene.boy",
+          "tur": "sayi",
+          "ondalik": ",",
+          "secici": ["#Boy", "input[name='Boy']"],
+          "etiketler": ["Boy", "Boy (cm)"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "kilo",
+          "etiket": "Kilo",
+          "kaynak": "muayene.kilo",
+          "tur": "sayi",
+          "ondalik": ",",
+          "secici": ["#Kilo", "input[name='Kilo']"],
+          "etiketler": ["Kilo", "Kilo (kg)", "Ağırlık"],
+          "dogrulandi": false
+        },
+        {
+          "anahtar": "taniArama",
+          "etiket": "Tanı (ICD-10)",
+          "kaynak": "tanilar",
+          "tur": "arama",
+          "secici": ["#TaniAra", "input[name='TaniAra']", "#Tani", "input[name='Tani']"],
+          "etiketler": ["Tanı", "Tanı Ara", "Tanı Kodu", "ICD-10", "ICD10", "Tanı Bilgisi"],
+          "dogrulandi": false
+        }
+      ]
+    }
+  }
+}

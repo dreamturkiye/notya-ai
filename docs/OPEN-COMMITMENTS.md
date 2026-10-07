@@ -3187,3 +3187,14 @@ Source: Kaan's 2026-10-07 job (intake email, intake form audit, pediatric sugges
 | NOTYA-PORTAL-YAPRAK-01 | 2026-10-07 | STOPPED | Sağlığım leaves background not built: the only leaves artwork in the repo is `public/doktor-chrome/plant.jpg`, which has the stethoscope across the middle. A leaves-only image (light, ideally transparent PNG/WebP or SVG, under ~100 KB) is needed. | Kaan (supply the image) |
 - 2026-10-07 NOTYA-KONSULT-GONDERIM-01: consultation email no longer opens an unconfigured mail program; it opens Gmail or Outlook web chosen from the doctor's account email, otherwise copies the text. A true send-by-Notya needs a transactional mail service, which Notya does not have yet. Waits on: Kaan (decide whether to add one).
 - 2026-10-07 NOTYA-KONSULT-GONDERIM-02: unit tests around the consultation email flow were not updated or run for this change; update them. Waits on: Claude.
+
+## 2026-10-07 - MBYS-YARDIMCI-01: MBYS Yardımcısı, stage 1 (assisted form filling, no Ministry integration)
+Source: Kaan's 2026-10-07 brief. Code: Gün sonu MBYS kuyruğu (`/doktor-tools/enabiz/mbys`), Chrome extension `extensions/mbys-yardimci`, migration 126. Details: `docs/MBYS-YARDIMCI.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| MBYS-YARDIMCI-01a | 2026-10-07 | OPEN | Capture the real form map on both MBYS screens (Hasta Kayıt, Muayene) from a practicing doctor with "Form haritasını kopyala", correct `harita.json`, and verify every field (set `dogrulandi: true`). Until then every selector and label is a guess from the 2017 guide. | Kaan |
+| MBYS-YARDIMCI-01b | 2026-10-07 | OPEN | Chrome Web Store listing for the helper (then set `NEXT_PUBLIC_MBYS_YARDIMCI_ID` to the store id). | Kaan (developer account) |
+| MBYS-YARDIMCI-01c | 2026-10-07 | OPEN | Check the Ministry's terms on assisted form filling (browser extension filling MBYS fields on the doctor's click) with a Turkish lawyer. | Kaan |
+| MBYS-YARDIMCI-01d | 2026-10-07 | OPEN | Stage 2: registration with the Ministry as software and direct e-Nabız sending. After the company is formed. | Kaan |
+| MBYS-YARDIMCI-01e | 2026-10-07 | OPEN | Apply migration `126_mbys_yardimci.sql` before deploying the queue (the route reads `users.mbys_ayar`, `mbys_aktarimlar`, `mbys_hasta_kimlik`). | Kaan |

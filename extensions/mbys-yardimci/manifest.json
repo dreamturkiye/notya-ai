@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Notya MBYS Yardımcısı",
+  "short_name": "Notya MBYS",
+  "version": "0.1.0",
+  "description": "Notya'da hazırlanan muayene kaydını MBYS formundaki alanlara sizin tıklamanızla doldurur. Hiçbir MBYS düğmesine basmaz.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqAnbY2EVoi7/Z+BS3e1QYlFpzUtlKwm8IZc+/VeC5xW0N5ZTVEFkbj6NHktBEhrC2Oa8OlTh2mzt6fKxWbXeVbe45/1ZfTRDmcHs90FxejuABAnDWMQpTJEb8DNVAyMYUl8VY20IpRCCnFpc8GZ3lEynJe8KdhGQaLP9piw/ac1EEddqFjKUaRobu82fMLYEZLfbaKzf9Jfyyit2omt2OmgvqLXgQslzHVlX21G/MhAhD/ow5mNlib4QqPNZwqUWrG0t7oVm+2GYFUukfQlhf5yrSxJ8uv7IQtiuOJCJZneJsPFZBhd2vMcCS1fap+TlJfA67ZBl9xSGB4Ea8KjTYwIDAQAB",
+  "minimum_chrome_version": "116",
+  "permissions": ["storage", "alarms"],
+  "background": { "service_worker": "arkaplan.js" },
+  "externally_connectable": {
+    "matches": ["https://notya.io/*", "https://www.notya.io/*"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mbys2.saglik.gov.tr/*"],
+      "js": ["motor.js", "icerik.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}
