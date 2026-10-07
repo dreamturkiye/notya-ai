@@ -32,6 +32,8 @@ export type OtomatikGonderimIstegi = {
   sablon?: WhatsappSablonu | null
   /** E-posta only (NOTYA-RANDEVU-V2): text attachments such as the appointment's .ics. Ignored by WhatsApp. */
   ekler?: EpostaEki[]
+  /** E-posta only (NOTYA-INTAKE-EPOSTA): designed HTML part next to `metin`. Ignored by WhatsApp. */
+  html?: string
 }
 
 export type OtomatikGonderimSonucu =
@@ -104,7 +106,7 @@ export function whatsappSablonu(
 
 type EpostaCekirdegi = {
   hazirMi(doktorId: string): Promise<boolean>
-  gonder(g: { doktorId: string; alici: string; konu?: string; metin: string; ekler?: EpostaEki[] }): Promise<
+  gonder(g: { doktorId: string; alici: string; konu?: string; metin: string; html?: string; ekler?: EpostaEki[] }): Promise<
     { ok: true; disId?: string; saglayici?: 'google' | 'microsoft' } | { ok: false; hata: string }
   >
 }
@@ -133,7 +135,7 @@ export function epostaAdaptoru(c: EpostaCekirdegi = epostaGondericisi): Otomatik
     hazirMi: (doktorId) => guvenli(() => c.hazirMi(doktorId), false),
     gonder: (i) =>
       guvenli<OtomatikGonderimSonucu>(async () => {
-        const s = await c.gonder({ doktorId: i.doktorId, alici: i.alici, konu: i.konu, metin: i.metin, ...(i.ekler?.length ? { ekler: i.ekler } : {}) })
+        const s = await c.gonder({ doktorId: i.doktorId, alici: i.alici, konu: i.konu, metin: i.metin, ...(i.html ? { html: i.html } : {}), ...(i.ekler?.length ? { ekler: i.ekler } : {}) })
         if (!s.ok) return { ok: false, hata: s.hata }
         return {
           ok: true,

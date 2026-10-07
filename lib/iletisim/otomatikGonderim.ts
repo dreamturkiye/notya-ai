@@ -30,6 +30,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { normalizeTrPhoneE164 } from '@/lib/doktor/twilioNotify'
 import { epostaAdresi } from './baglantilar'
+import { bilgiFormuEpostasi } from './bilgiFormuEposta'
 import { hataMi, iletisimHazirla, type Hazirlik } from './hazirlik'
 import { gonderilebilirMi } from './izin'
 import { gunEkle } from './kuyruk'
@@ -186,7 +187,13 @@ function istekKur(h: Hazirlik, kanal: IletisimKanali, doktorId: string, doktorAd
     return alici && sablon ? { ...temel, alici, sablon } : null
   }
   const alici = epostaAdresi(h.hasta.eposta)
-  return alici && h.mesaj ? { ...temel, alici } : null
+  if (!alici || !h.mesaj) return null
+  // NOTYA-INTAKE-EPOSTA: the intake invitation goes as text + designed HTML; every other type stays plain text.
+  if (h.tur === 'bilgi_formu' && h.link) {
+    const e = bilgiFormuEpostasi({ hastaAdi: h.hasta.ad, veliDili: h.hasta.veliDili, doktorAdi, link: h.link })
+    return { ...temel, alici, metin: e.metin, ...(e.html ? { html: e.html } : {}) }
+  }
+  return { ...temel, alici }
 }
 
 type DoktorSonucu = { gonderilen: number; basarisiz: number; dokunulmadi: number }

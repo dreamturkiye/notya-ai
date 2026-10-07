@@ -172,6 +172,17 @@ test('gonder microsoft: /me/sendMail düz metin, gönderilenlere kaydet, 202', a
   })
 })
 
+test('gonder microsoft + html (NOTYA-INTAKE-EPOSTA): MIME gövde, multipart/alternative; gmail ile aynı bayt', async () => {
+  yanitlar.push(json(202, undefined))
+  const m = { alici: 'hasta@ornek.com', konu: 'Hasta bilgi formu', metin: 'Merhaba', html: '<p>Merhaba</p>' }
+  assert.deepEqual(await gonder('microsoft', 'at', m), { ok: true })
+  assert.equal(cagrilar[0].url, 'https://graph.microsoft.com/v1.0/me/sendMail')
+  assert.equal((cagrilar[0].init.headers as Record<string, string>)['Content-Type'], 'text/plain')
+  const ham = Buffer.from(String(cagrilar[0].init.body), 'base64').toString('utf8')
+  assert.match(ham, /^Content-Type: multipart\/alternative; boundary=/m)
+  assert.match(ham, /Content-Type: text\/html; charset="UTF-8"/)
+})
+
 test('gonder: 401 ve yetki eksikliği yenilenmeli; gönderim sınırı (403/429) değil', async () => {
   yanitlar.push(json(401, { error: { code: 401, message: 'Invalid Credentials', status: 'UNAUTHENTICATED' } }))
   assert.equal(((await gonder('google', 'at', { alici: 'a@b.com', konu: 'k', metin: 'm' })) as { yetkisiz: boolean }).yetkisiz, true)

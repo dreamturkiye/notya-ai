@@ -56,8 +56,42 @@ export function ekGecerliMi(e: EpostaEki): boolean {
   return EK_ADI.test(e.ad) && EK_TURU.test(e.tur) && e.icerik.length > 0 && e.icerik.length <= 100_000
 }
 
-export function epostaMesaji(m: { kimden?: string; alici: string; konu: string; metin: string; ekler?: EpostaEki[] }): string {
+/** HTML part limit; a designed mail stays a few KB (NOTYA-INTAKE-EPOSTA). */
+export const HTML_SINIRI = 50_000
+
+/** A usable HTML part: non-empty, small, no script. Anything else → the mail goes as plain text only. */
+export function htmlGecerliMi(html: string | undefined | null): html is string {
+  return !!html && !!html.trim() && html.length <= HTML_SINIRI && !/<script\b/i.test(html)
+}
+
+/**
+ * NOTYA-INTAKE-EPOSTA: text + HTML as multipart/alternative (text first, so a client that cannot show HTML shows
+ * the same content). Used as the whole body, or as the first part of multipart/mixed when there are attachments.
+ */
+function alternatifParca(m: { alici: string; konu: string; metin: string; html: string }): { tur: string; govde: string } {
+  const sinir = `notya_alt_${Buffer.from(`${m.alici}|${m.konu}|alt`).toString('hex').slice(0, 24)}`
+  const govde = [
+    `--${sinir}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    govdeKodla(m.metin),
+    `--${sinir}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    govdeKodla(m.html),
+    `--${sinir}--`,
+  ].join('\r\n')
+  return { tur: `multipart/alternative; boundary="${sinir}"`, govde }
+}
+
+/**
+ * Without `html` and attachments the message is byte-for-byte the old text/plain one (every other mail is unchanged).
+ */
+export function epostaMesaji(m: { kimden?: string; alici: string; konu: string; metin: string; html?: string; ekler?: EpostaEki[] }): string {
   const ekler = (m.ekler || []).filter(ekGecerliMi)
+  const html = htmlGecerliMi(m.html) ? m.html : null
   const satirlar = [
     ...(m.kimden ? [`From: ${tekSatir(m.kimden)}`] : []),
     `To: ${tekSatir(m.alici)}`,
@@ -65,17 +99,25 @@ export function epostaMesaji(m: { kimden?: string; alici: string; konu: string; 
     'MIME-Version: 1.0',
   ]
   if (!ekler.length) {
+    if (html) {
+      const a = alternatifParca({ ...m, html })
+      satirlar.push(`Content-Type: ${a.tur}`)
+      return `${satirlar.join('\r\n')}\r\n\r\n${a.govde}\r\n`
+    }
     satirlar.push('Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64')
     return `${satirlar.join('\r\n')}\r\n\r\n${govdeKodla(m.metin)}\r\n`
   }
   const sinir = `notya_${Buffer.from(`${m.alici}|${m.konu}|${ekler.length}`).toString('hex').slice(0, 24)}`
   satirlar.push(`Content-Type: multipart/mixed; boundary="${sinir}"`)
+  const ilk = html
+    ? (() => {
+        const a = alternatifParca({ ...m, html })
+        return [`Content-Type: ${a.tur}`, '', a.govde]
+      })()
+    : ['Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', govdeKodla(m.metin)]
   const parcalar = [
     `--${sinir}`,
-    'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: base64',
-    '',
-    govdeKodla(m.metin),
+    ...ilk,
     ...ekler.flatMap((e) => [
       `--${sinir}`,
       `Content-Type: ${e.tur}; name="${e.ad}"`,

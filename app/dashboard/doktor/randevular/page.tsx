@@ -27,6 +27,7 @@ import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri';
 import GoogleTakvimOnerileri from '@/components/doktor/randevu/GoogleTakvimOnerileri';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 import { cepTelefonuDogrula, TELEFON_MESAJ } from '@/lib/iletisim/cepTelefonu';
+import { muayeneBaslatYolu } from '@/lib/doktor/oneriPaneli';
 
 export const dynamic = 'force-dynamic';
 
@@ -1193,7 +1194,7 @@ export default function RandevularPage() {
                               )}
                               {!aks.aktifEt && rv.patientId && (
                                 <>
-                                  <button type="button" onClick={() => router.push(`/session/new?patientId=${rv.patientId}&randevuBaslangic=${encodeURIComponent(rv.baslangic)}`)} style={{ ...aksiyonBtn, background: CHROME_RENK.pine, color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                                  <button type="button" onClick={() => router.push(muayeneBaslatYolu(rv))} style={{ ...aksiyonBtn, background: CHROME_RENK.pine, color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
                                   <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: CHROME_RENK.pine, fontWeight: 600 }}>Hasta Dosyasını Aç</button>
                                   <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}?tab=formu`)} style={{ ...aksiyonBtn, color: CHROME_RENK.pine }}>Hasta Formu</button>
                                 </>
@@ -1378,7 +1379,7 @@ export default function RandevularPage() {
                         {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {duzenlenenRandevu.patientId && (
-                              <button type="button" onClick={() => router.push(`/session/new?patientId=${duzenlenenRandevu.patientId}&randevuBaslangic=${encodeURIComponent(duzenlenenRandevu.baslangic)}`)} style={{ ...modalAksiyonBtn, background: CHROME_RENK.pine, color: 'white', borderColor: CHROME_RENK.pine, fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                              <button type="button" onClick={() => router.push(muayeneBaslatYolu(duzenlenenRandevu))} style={{ ...modalAksiyonBtn, background: CHROME_RENK.pine, color: 'white', borderColor: CHROME_RENK.pine, fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
                             )}
                             {duzenlenenRandevu.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, color: CHROME_RENK.pine, fontWeight: 600, borderColor: CHROME_RENK.pine }}>Hasta Dosyasını Aç</button>

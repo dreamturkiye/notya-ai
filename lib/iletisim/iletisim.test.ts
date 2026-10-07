@@ -160,10 +160,25 @@ describe('şablonlar', () => {
     assert.doesNotMatch(mesajHazirla('saglikim_yeni_mesaj', { ...temel, link: null })!.metin, /https?:/)
   })
 
-  it('bilgi formu metni eski Twilio metnini korur', () => {
-    const m = mesajHazirla('bilgi_formu', temel)!.metin
-    assert.match(m, /randevunuzdan önce doldurmanızı rica ettiğimiz Hasta Bilgi Formu hazır:/)
-    assert.match(m, /Bu kısa formu doldurmanız muayene süresini sizin için daha verimli kılacak\. Teşekkürler\./)
+  it('bilgi formu metni (NOTYA-INTAKE-EPOSTA): selam, doktor + hasta cümlesi, tek başına bağlantı, neden, gizlilik, imza', () => {
+    const m = mesajHazirla('bilgi_formu', temel)!
+    assert.equal(m.konu, 'Hasta bilgi formu · Dr. Gökhan Mamur')
+    assert.equal(m.metin, [
+      'Merhaba Ayşe Yılmaz,',
+      '',
+      'Dr. Gökhan Mamur, Ayşe Yılmaz için hazırlanan Hasta Bilgi Formu’nu randevudan önce doldurmanızı rica ediyor.',
+      '',
+      'https://www.notya.io/intake/abc',
+      '',
+      'Bilgileri önceden almamız, muayene süresini asıl konuya ayırmamızı sağlar.',
+      'Bu bağlantı size özeldir; lütfen başkalarıyla paylaşmayın.',
+      '',
+      'Saygılarımızla,',
+      'Dr. Gökhan Mamur',
+    ].join('\n'))
+    assert.doesNotMatch(m.metin, /dakika|saniye|kısa form/i, 'süre vaadi yok')
+    const c = mesajHazirla('bilgi_formu', { ...temel, hastaAdi: '', veliDili: true })!.metin
+    assert.match(c, /^Merhaba,\n\nDr\. Gökhan Mamur, çocuğunuz için hazırlanan/)
   })
 })
 

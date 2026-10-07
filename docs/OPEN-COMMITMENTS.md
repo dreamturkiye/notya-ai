@@ -3177,5 +3177,13 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 
 - 2026-10-06 NOTYA-DEMO-DECK-01: the Canva pre-demo deck (Notya Urun Tanitimi, 11 slides, shared with Dr. Gokhan) still shows illustrative screens on slides 4 (exam with Ayse), 7 (visit closing) and 9 (consultation / follow-up), and the slide 3 calendar screenshot is a near-empty month view. Real screenshots from a test account with test patients are still needed. Parked by Kaan. Waits on: Kaan or Dr. Gokhan for the screenshots; Claude can place them afterwards.
 
+## 2026-10-07 - NOTYA-INTAKE-DENETIM / NOTYA-PORTAL-YAPRAK: intake audit review and portal background
+Source: Kaan's 2026-10-07 job (intake email, intake form audit, pediatric suggestions rule, portal background). Report: `docs/INTAKE-PORTAL-RAPOR.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-INTAKE-DENETIM-a | 2026-10-07 | OPEN | Clinical review of the pediatric intake form changes (parents' marital status options and whether it stays required, smoking at home, new feeding / vaccination / kreş-okul questions, child hospital stays). See `docs/INTAKE-DENETIM.md` → Pediatri. | Kaan → Dr. Gökhan |
+| NOTYA-INTAKE-DENETIM-b | 2026-10-07 | OPEN | Clinical review of every other audited form: every item marked REVIEW in `docs/INTAKE-DENETIM.md` (10 new Klinik sections, çocuk cerrahisi child core, pregnancy / nursing question, hospital stays, minors in adult branches, duplicate questions). | Kaan (name reviewers) |
+| NOTYA-PORTAL-YAPRAK-01 | 2026-10-07 | STOPPED | Sağlığım leaves background not built: the only leaves artwork in the repo is `public/doktor-chrome/plant.jpg`, which has the stethoscope across the middle. A leaves-only image (light, ideally transparent PNG/WebP or SVG, under ~100 KB) is needed. | Kaan (supply the image) |
 - 2026-10-07 NOTYA-KONSULT-GONDERIM-01: consultation email no longer opens an unconfigured mail program; it opens Gmail or Outlook web chosen from the doctor's account email, otherwise copies the text. A true send-by-Notya needs a transactional mail service, which Notya does not have yet. Waits on: Kaan (decide whether to add one).
 - 2026-10-07 NOTYA-KONSULT-GONDERIM-02: unit tests around the consultation email flow were not updated or run for this change; update them. Waits on: Claude.
