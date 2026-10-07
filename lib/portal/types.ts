@@ -196,6 +196,11 @@ export interface PortalBundle {
   yonlendirmeler: PortalYonlendirme[]
   /** PORTAL-HEKIM-01 — Özet'te hekim kartı (çekirdek; her branş). */
   hekim: PortalHekim
+  /**
+   * PORTAL-HASTA-ADI — whose page this is (çekirdek; her branş). Name ONLY — no T.C., doğum tarihi or iletişim.
+   * Filled after requirePortalUnlock; null when the record has no name (UI then shows nothing).
+   */
+  hasta: { adSoyad: string | null }
   /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules + their extra nav (lib/portal/moduller.ts). */
   portal: { moduller: PortalModulId[]; nav: PortalNavOge[] }
   // Specialty slices — each is null unless its module attached (never "just in case").
