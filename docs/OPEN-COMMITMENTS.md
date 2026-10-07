@@ -3174,3 +3174,5 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 
 - 2026-10-05 NOTYA-FIYAT-01: landing prices raised (Baslangic 1.490 / Pro 3.490 / Muayenehane 5.990 TRY per month, klinik by quote only, founding-doctor 40 percent off for the first 50 doctors for 12 months, annual prepay 2 months free). The app does NOT enforce these tiers yet: no plan limits, no tier feature gating, no billing for them. Waits on: Kaan (decide when to build).
 - 2026-10-05 NOTYA-FIYAT-02: measure the real cost per voice session and define the fair-use limit behind the Pro promise of unlimited sessions (fair use). Waits on: Kaan (say olc).
+
+- 2026-10-06 NOTYA-DEMO-DECK-01: the Canva pre-demo deck (Notya Urun Tanitimi, 11 slides, shared with Dr. Gokhan) still shows illustrative screens on slides 4 (exam with Ayse), 7 (visit closing) and 9 (consultation / follow-up), and the slide 3 calendar screenshot is a near-empty month view. Real screenshots from a test account with test patients are still needed. Parked by Kaan. Waits on: Kaan or Dr. Gokhan for the screenshots; Claude can place them afterwards.
