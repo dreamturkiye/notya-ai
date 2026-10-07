@@ -42,6 +42,8 @@ import { fishAsrDilUyumluMu } from '@/lib/asistan/fishSes'
 import { ayseFishIstemcideMi } from '@/lib/asistan/sesSaglayici'
 import { sileroAc, type SileroKapi } from '@/lib/asistan/fishSilero'
 import { KelimeKesici, base64Pcm, sesDusKesimi, sesDusOfseti } from '@/lib/asistan/fishWs'
+import { elevenKapiKur, type ElevenKapi } from '@/lib/asistan/elevenKapi'
+import { doktorKonustu as kesintiDoktorKonustu, elevenKalan, fishKalan, kalanGeldi, kesildi, kesintiBaslat, kesintiDevamMesaji, kesintiMesajiMi, kesintiTik, sesKaresi, type KesintiDurumu } from '@/lib/asistan/kesintiDevam'
 
 /** NOTYA-SES-1TO1: client-side ceilings for one Fish turn; the server has its own 20 s / 60 s limits. */
 const FISH_TUR_ISTEMCI_MS = 55_000
@@ -213,6 +215,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const sesDevamRef = useRef<{ mod: "speaking" | "listening"; doktorSozu: number; ajanSustu: number; gonderilen: Set<string>; bekleyen: { anahtar: string; kalan: string } | null }>({
     mod: "listening", doktorSozu: 0, ajanSustu: 0, gonderilen: new Set(), bekleyen: null,
   })
+  /** NOTYA-AYSE-GURULTU-01: ElevenLabs speech gate (mutes the mic while Ayşe speaks unless the doctor really speaks). */
+  const elevenKapiRef = useRef<ElevenKapi | null>(null)
+  const elevenKapiNesilRef = useRef(0)
+  /** NOTYA-AYSE-GURULTU-02: resume-after-false-stop state; `sonDuzeltme` = last agent_response_correction remainder. */
+  const kesintiRef = useRef<KesintiDurumu>(kesintiBaslat())
+  const sonDuzeltmeRef = useRef<{ cevap: string; kalan: string | null; t: number } | null>(null)
+  const fishCevapNoRef = useRef(0)
   const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
 
   // NOTYA-KADEME-01 — yazılı sohbet (components/asistan/YaziliSohbet.tsx'ten taşındı; görünüm orada kaldı).
@@ -390,6 +399,77 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishRef.current?.kes()
   }
 
+  /**
+   * NOTYA-AYSE-GURULTU-02 (Fish): barge-in from the microphone. Before the answer text is wiped, note where she was
+   * so a false stop can resume from the cut sentence.
+   */
+  function fishBargeKes() {
+    const tam = fishBirikimRef.current
+    fishKes()
+    // The barge rule keeps firing while the sound lasts; only the call that actually stopped her playback counts.
+    const kesim = fishRef.current?.sonKesim() ?? null
+    if (!kesim) return
+    kesintiRef.current = kesildi(kesintiRef.current, { cevap: `fish-${fishCevapNoRef.current}`, t: Date.now(), kalan: fishKalan(tam, kesim) })
+  }
+
+  function elevenKapiKapat() {
+    elevenKapiNesilRef.current += 1
+    const k = elevenKapiRef.current
+    elevenKapiRef.current = null
+    k?.kapat()
+  }
+
+  /** NOTYA-AYSE-GURULTU-01: attach the speech gate to a live ElevenLabs session (fails open, never blocks the call). */
+  function elevenKapiBagla(conv: ActiveConversation) {
+    elevenKapiKapat()
+    const nesil = elevenKapiNesilRef.current
+    void elevenKapiKur(conv, {
+      onKonusma: (sesli, t) => { kesintiRef.current = sesKaresi(kesintiRef.current, { t, sesli }) },
+    }).then((k) => {
+      if (!k) return
+      if (nesil !== elevenKapiNesilRef.current || conversationRef.current !== conv) { k.kapat(); return }
+      elevenKapiRef.current = k
+      k.ajanModu(sesDevamRef.current.mod === "speaking")
+    }).catch(() => undefined)
+  }
+
+  /**
+   * NOTYA-AYSE-GURULTU-02: resume clock (100 ms). When the window after a cut passed with no doctor words, Ayşe
+   * continues from the cut sentence: ElevenLabs gets the hidden nudge, Fish speaks the remainder itself.
+   */
+  function kesintiYokla() {
+    const d0 = kesintiRef.current
+    if (!d0.bekleyen) return
+    // Never resume into a doctor who is talking right now.
+    if (elevenKapiRef.current?.konusmaVarMi()) {
+      kesintiRef.current = sesKaresi(d0, { t: Date.now(), sesli: true })
+      return
+    }
+    const r = kesintiTik(d0, Date.now())
+    kesintiRef.current = r.durum
+    if (!r.devam) return
+    if (fishAcikRef.current) {
+      if (fishRef.current?.caliyorMu()) return
+      console.info("[ses-kesinti]", { yol: "fish", devam: true, uzunluk: r.devam.length })
+      fishSozRef.current = ""
+      fishBirikimRef.current = r.devam
+      sesDevamRef.current.mod = "speaking"
+      setStatus("speaking")
+      fishIsle(r.devam, true)
+      return
+    }
+    const conv = conversationRef.current
+    if (!conv) return
+    console.info("[ses-kesinti]", { yol: "elevenlabs", devam: true, uzunluk: r.devam.length })
+    try { conv.sendUserMessage(kesintiDevamMesaji(r.devam)) } catch { /* bağlantı kapandıysa devam yok */ }
+  }
+
+  useEffect(() => {
+    const z = setInterval(kesintiYokla, 100)
+    return () => clearInterval(z)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function fishSileroKapat() {
     const s = fishSileroRef.current
     fishSileroRef.current = null
@@ -408,6 +488,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     if (!text?.trim()) return
     const trimmed = text.trim()
     if (role === "user" && trimmed === DEVAM_ISARETI) return // NOTYA-SES-DEVAM-01: gizli devam turu baloncuk değildir
+    if (role === "user" && kesintiMesajiMi(trimmed)) return // NOTYA-AYSE-GURULTU-02: gizli kaldığı yerden devam turu da
     setMessages((prev) => {
       const next = role === "user"
         ? kullaniciEkle(prev, trimmed, olay, yeniBalon)
@@ -459,6 +540,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   async function endConversation() {
+    elevenKapiKapat()
+    kesintiRef.current = kesintiBaslat()
+    sonDuzeltmeRef.current = null
     fishDinleNesilRef.current += 1
     fishTurAbortRef.current?.abort()
     fishTurAbortRef.current = null
@@ -770,6 +854,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     async function turCalistir(klipler: FishKlip[], degistir: string | null) {
       // Synchronous, before any await: the in-flight turn is cancelled now (fetch abort → route cancel → Fish socket closed).
       fishKes()
+      fishCevapNoRef.current += 1
       fishSozRef.current = ""
       fishBirikimRef.current = ""
       fishTurAbortRef.current?.abort()
@@ -872,6 +957,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             }
             if (benim()) sira = sttGeldi(sira, metin)
             sesDevamRef.current.doktorSozu = Date.now()
+            kesintiRef.current = kesintiDoktorKonustu(kesintiRef.current)
             if (degistir) kullaniciBalonDegistir(degistir, metin)
             else addMsg("user", metin)
             if (asistaniKapatMi(metin)) {
@@ -941,8 +1027,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         const klip = await fishBirTurKaydet(akis, baglam, {
           iptal: () => !canli(),
           ajanKonusuyorMu: () => Boolean(fishRef.current?.caliyorMu()),
-          bargeIn: () => fishKes(),
+          bargeIn: () => fishBargeKes(),
           silero: () => fishSileroRef.current?.olasilik() ?? null,
+          sesKaresi: (sesli, t) => { kesintiRef.current = sesKaresi(kesintiRef.current, { t, sesli }) },
         })
         if (!canli()) return
         ustUsteHata = 0
@@ -1102,6 +1189,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       )
       setStatus("error")
       conversationRef.current = null
+      elevenKapiKapat()
       yoklamayiDurdur()
       fishDinleNesilRef.current += 1
       fishSileroKapat()
@@ -1138,6 +1226,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     let activeSignedUrl = signedUrl
 
     const endCurrentSession = async () => {
+      elevenKapiKapat()
       const old = conversationRef.current
       conversationRef.current = null
       if (old) {
@@ -1330,6 +1419,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (tekBeyin) yoklamayiBaslat()
         },
         onDisconnect: (details) => {
+          elevenKapiKapat()
+          kesintiRef.current = kesintiBaslat()
           if (fishAcikRef.current) fishRef.current?.kes()
           sureTimerlariTemizle()
           if (tekBeyin) yoklamayiDurdur()
@@ -1362,8 +1453,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             skipNextAgentTranscript = false
             return
           }
-          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kendiSelamiMi(message) || sesGurultusuMu(message))) return
+          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kesintiMesajiMi(message) || kendiSelamiMi(message) || sesGurultusuMu(message))) return
           if (role === "user") {
+            // NOTYA-AYSE-GURULTU-02: real doctor words — a pending resume is cancelled.
+            kesintiRef.current = kesintiDoktorKonustu(kesintiRef.current)
             const gecikenSoru = typeof olay === "number" && fishCevapOlayRef.current > olay
             if (!gecikenSoru) fishKes()
             if (!gecikenSoru) sesDevamRef.current.doktorSozu = Date.now()
@@ -1413,11 +1506,25 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           fishBirikimRef.current = fishBirlestir(fishBirikimRef.current, String(part.text || ""))
           fishIsle(fishBirikimRef.current, part.type === "stop", olay)
         },
-        onInterruption: () => {
+        onInterruption: (kesinti) => {
           fishKes()
+          // NOTYA-AYSE-GURULTU-02: the resume window starts; the remainder comes with agent_response_correction.
+          const t = Date.now()
+          const cevap = String(kesinti?.event_id ?? t)
+          const d = sonDuzeltmeRef.current
+          const kalan = d && t - d.t < 1000 ? d.kalan : null
+          kesintiRef.current = kesildi(kesintiRef.current, { cevap, t, kalan })
+          console.info("[ses-kesinti]", { yol: "elevenlabs", kesildi: true, kalan: Boolean(kalan) })
+        },
+        onAgentResponseCorrection: (duzeltme) => {
+          const cevap = String(duzeltme?.event_id ?? "")
+          const kalan = elevenKalan(String(duzeltme?.original_agent_response || ""), String(duzeltme?.corrected_agent_response || ""))
+          sonDuzeltmeRef.current = { cevap, kalan, t: Date.now() }
+          kesintiRef.current = kalanGeldi(kesintiRef.current, { cevap, kalan })
         },
         onVadScore: ({ vadScore }) => {
           if (fishAcikRef.current && vadScore >= 0.55 && fishRef.current?.caliyorMu()) fishKes()
+          kesintiRef.current = sesKaresi(kesintiRef.current, { t: Date.now(), sesli: vadScore >= 0.6 })
         },
         onModeChange: ({ mode }) => {
           const d = sesDevamRef.current
@@ -1425,10 +1532,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (!fishSuruyor && d.mod === "speaking" && mode !== "speaking") d.ajanSustu = Date.now()
           if (fishSuruyor || mode === "speaking") {
             d.mod = "speaking"
+            elevenKapiRef.current?.ajanModu(true)
             setStatus("speaking")
             return
           }
           d.mod = "listening"
+          elevenKapiRef.current?.ajanModu(false)
           setStatus("listening")
         },
         onStatusChange: ({ status: sdkStatus }) => {
@@ -1437,6 +1546,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         },
       })
       conversationRef.current = conversation
+      elevenKapiBagla(conversation)
     }
 
     try {

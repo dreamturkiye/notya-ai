@@ -3176,3 +3176,12 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 - 2026-10-05 NOTYA-FIYAT-02: measure the real cost per voice session and define the fair-use limit behind the Pro promise of unlimited sessions (fair use). Waits on: Kaan (say olc).
 
 - 2026-10-06 NOTYA-DEMO-DECK-01: the Canva pre-demo deck (Notya Urun Tanitimi, 11 slides, shared with Dr. Gokhan) still shows illustrative screens on slides 4 (exam with Ayse), 7 (visit closing) and 9 (consultation / follow-up), and the slide 3 calendar screenshot is a near-empty month view. Real screenshots from a test account with test patients are still needed. Parked by Kaan. Waits on: Kaan or Dr. Gokhan for the screenshots; Claude can place them afterwards.
+
+## 2026-10-07 - NOTYA-AYSE-GURULTU: Ayşe must not be cut off by noise
+Source: Kaan, 2026-10-07 (a smoke-alarm low-battery chirp cut Ayşe off mid-sentence in a doctor 1:1). Details in `docs/AYSE-GURULTU.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-AYSE-GURULTU-a | 2026-10-07 | OPEN | Manual microphone test on the preview deployment by Dr. Gökhan before merge (the 5-step test in `docs/AYSE-GURULTU.md`, laptop speakers and headset, iPhone included). | Kaan |
+| NOTYA-AYSE-GURULTU-b | 2026-10-07 | PARKED | Optional tap-to-interrupt setting for very noisy rooms. | Kaan |
+| NOTYA-AYSE-GURULTU-c | 2026-10-07 | UNDER DISCUSSION | Doctor voice profile so Ayşe listens only to the doctor. | Kaan |

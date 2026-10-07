@@ -13,6 +13,8 @@
  * NOTYA-SES-DEVAM-01: kesilen sesli turun söylenmeyen kalanı (active_context.sesDevam) gizli `[devam]` turunda
  * (ya da doktor "devam" deyince) modelsiz, sınırsız okunur. Ayşe yalnız AYSE_SES_SAGLAYICI=fish iken bu rotaya
  * gelmez; kalanı Fish'te sayfa okur (NOTYA-SES-ELEVEN-GERI-01).
+ * NOTYA-AYSE-GURULTU-02: gizli `[kesinti-devam]` turu (gürültü Ayşe'yi yanlışlıkla kesti, doktor konuşmadı) — sayfanın
+ * gönderdiği kesilen cümleden itibaren kalan modelsiz okunur; oturuma, nota, hafızaya hiçbir şey yazılmaz.
  * Günlüğe klinik içerik yazılmaz — yalnız hata türü.
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -35,6 +37,7 @@ import { takvimSorusuMu, sesGurultusuMu, takvimTakibiMi } from '@/lib/randevu/ta
 import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
 import { sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
+import { kesintiKalani, kesintiMesajiMi } from '@/lib/asistan/kesintiDevam'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -195,6 +198,11 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         const aracSonucu = !mesaj ? sonAracMetni(govde.messages) : null
         if (aracSonucu) {
           cevapYaz(aracSonucu)
+        } else if (mesaj && kesintiMesajiMi(mesaj)) {
+          // NOTYA-AYSE-GURULTU-02: the remainder is already spoken form (what this route streamed before the cut) —
+          // straight to the breath gate, no second speech normalisation, no model, no session write.
+          const kalan = kesintiKalani(mesaj)
+          if (kalan) yaz(`${kalan} `)
         } else if (mesaj && (asistaniKapatMi(mesaj) || vedaMi(mesaj)) && aracVarMi(govde.tools, 'end_call')) {
           yaz('Görüşmek üzere Hocam.', true)
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'Doktor görüşmeyi bitirdi.' }) } }] })

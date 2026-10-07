@@ -3,7 +3,7 @@
  * Capture AudioContext is separate from Haberci playback. Analyser / ScriptProcessor
  * must reach destination (muted) or Safari reports silence and the turn never starts.
  */
-import { FISH_BARGE_ESIK, bargeSayaci, kareKonusmasi, klipGonderilirMi, onTamponuKirp, rmsHesapla, turAdimi, turBaslat, type SileroOlasilik, type TurDurumu } from '@/lib/asistan/fishVad'
+import { FISH_BARGE_ESIK, bargeSayaci, kareKonusmasi, klipGonderilirMi, onTamponuKirp, rmsHesapla, tazeSileroP, turAdimi, turBaslat, type SileroOlasilik, type TurDurumu } from '@/lib/asistan/fishVad'
 import { fishAsrDosyaAdi } from '@/lib/asistan/fishSes'
 
 export { fishAsrDosyaAdi }
@@ -106,6 +106,8 @@ type DinleGirdi = {
   bargeIn: () => void
   /** NOTYA-SILERO-01: latest Silero speech probability, or null → RMS gate. */
   silero?: () => SileroOlasilik
+  /** NOTYA-AYSE-GURULTU-02: one call per frame outside Ayşe's playback — local speech evidence for the resume window. */
+  sesKaresi?: (sesli: boolean, simdi: number) => void
 }
 
 /** Last engine written to the console — the `[fish-vad]` engine line appears at session start and on every switch, not per turn. */
@@ -195,13 +197,16 @@ function pcmTurKaydet(
       const ch = ev.inputBuffer.getChannelData(0)
       const rms = rmsHesapla(ch)
       const simdi = Date.now()
-      const kare = kareKonusmasi({ rms, silero: g.silero?.() ?? null, onceki: oncekiSes, simdi })
+      const silero = g.silero?.() ?? null
+      const kare = kareKonusmasi({ rms, silero, onceki: oncekiSes, simdi })
       const ses = kare.ses
       oncekiSes = ses
       motoruYaz(kare.kaynak)
       const ajan = g.ajanKonusuyorMu()
+      if (!ajan) g.sesKaresi?.(ses, simdi)
 
-      const barge = bargeSayaci(bargeMs, ajan, rms, (2048 / baglam.sampleRate) * 1000)
+      // NOTYA-AYSE-GURULTU-01: loud AND (when Silero is up) speech — a chirp or a clap no longer cuts her.
+      const barge = bargeSayaci(bargeMs, ajan, rms, (2048 / baglam.sampleRate) * 1000, tazeSileroP(silero, simdi))
       bargeMs = barge.ms
       if (barge.kes) g.bargeIn()
 
@@ -296,13 +301,15 @@ function mediaTurKaydet(
       olcer.getFloatTimeDomainData(ornek)
       const rms = rmsHesapla(ornek)
       const simdi = Date.now()
-      const kare = kareKonusmasi({ rms, silero: g.silero?.() ?? null, onceki: oncekiSes, simdi })
+      const silero = g.silero?.() ?? null
+      const kare = kareKonusmasi({ rms, silero, onceki: oncekiSes, simdi })
       const ses = kare.ses
       oncekiSes = ses
       motoruYaz(kare.kaynak)
       const ajan = g.ajanKonusuyorMu()
+      if (!ajan) g.sesKaresi?.(ses, simdi)
 
-      const barge = bargeSayaci(bargeMs, ajan, rms)
+      const barge = bargeSayaci(bargeMs, ajan, rms, 50, tazeSileroP(silero, simdi))
       bargeMs = barge.ms
       if (barge.kes) g.bargeIn()
 

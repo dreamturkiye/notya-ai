@@ -51,10 +51,21 @@ export function onTamponuKirp(parcalar: Float32Array[], hz: number, tamponMs = F
   }
 }
 
-export function bargeSayaci(oncekiMs: number, ajanKonusuyor: boolean, rms: number, tikMs = 50): { ms: number; kes: boolean } {
+/**
+ * Barge-in counter. RMS ≥ FISH_BARGE_ESIK protects against Ayşe's own speaker leak (Silero hears the leak as
+ * speech). NOTYA-AYSE-GURULTU-01: when a fresh Silero probability exists (`sileroP` not null) it must ALSO say
+ * speech (≥ FISH_SILERO_ESIK) — a smoke-alarm chirp or a clap is loud but not speech. Without Silero: today's rule.
+ */
+export function bargeSayaci(oncekiMs: number, ajanKonusuyor: boolean, rms: number, tikMs = 50, sileroP: number | null = null): { ms: number; kes: boolean } {
   if (!ajanKonusuyor || rms < FISH_BARGE_ESIK) return { ms: 0, kes: false }
+  if (sileroP !== null && !(sileroP >= FISH_SILERO_ESIK)) return { ms: 0, kes: false }
   const ms = oncekiMs + tikMs
   return { ms, kes: ms >= FISH_BARGE_MS }
+}
+
+/** The Silero probability to hand to `bargeSayaci`: only a fresh one counts, a stale one is "no Silero". */
+export function tazeSileroP(s: SileroOlasilik, simdi: number): number | null {
+  return s && simdi - s.zaman <= FISH_SILERO_TAZELIK_MS ? s.p : null
 }
 
 export function rmsHesapla(ornek: ArrayLike<number>): number {
