@@ -21,6 +21,8 @@ export type GonderGirdisi = {
   degiskenler?: string[]
   /** NOTYA-RANDEVU-V2: optional text attachments (the appointment's .ics). */
   ekler?: EpostaEki[]
+  /** NOTYA-INTAKE-EPOSTA: optional HTML part; `metin` stays the text part with the same content. */
+  html?: string
 }
 
 /** `saglayici` tells the caller which mailbox actually sent (logged by the automatic sender, NOTYA-ILETISIM-04). */
@@ -89,7 +91,7 @@ export async function epostaGonder(sb: SupabaseClient, g: GonderGirdisi): Promis
     await baglantiGuncelle(sb, g.doktorId, { refresh_token_encrypted: encryptPII(erisim.yeniYenilemeJetonu) }).catch(() => {})
   }
 
-  const sonuc = await saglayiciyaGonder(b.saglayici, erisim.erisimJetonu, { alici, konu, metin, ...(g.ekler?.length ? { ekler: g.ekler } : {}) })
+  const sonuc = await saglayiciyaGonder(b.saglayici, erisim.erisimJetonu, { alici, konu, metin, ...(g.html ? { html: g.html } : {}), ...(g.ekler?.length ? { ekler: g.ekler } : {}) })
   if (!sonuc.ok) {
     if (sonuc.yetkisiz) {
       await yenilenmeliIsaretle(sb, g.doktorId, sonuc.hata)

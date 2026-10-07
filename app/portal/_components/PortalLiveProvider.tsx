@@ -45,6 +45,8 @@ export function PortalLiveProvider({
     })
     const json = await res.json().catch(() => ({}))
     if (res.status === 401 && (json as { code?: string }).code === 'pin_required') {
+      // PORTAL-HASTA-ADI — a lapsed unlock drops the previous bundle (patient name included) from memory.
+      setData(emptyPortalBundle())
       setUnlockPhase('need_pin')
       throw new Error('PIN_REQUIRED')
     }

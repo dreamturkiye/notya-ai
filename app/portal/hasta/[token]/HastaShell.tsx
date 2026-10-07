@@ -21,7 +21,11 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
   }, [token, loading])
   const nav = data.portal?.nav || []
   return (
-    <PortalShell basePath={`/portal/hasta/${token}`} ekNav={randevuAcik ? [RANDEVU_NAV, ...nav] : nav}>
+    <PortalShell
+      basePath={`/portal/hasta/${token}`}
+      ekNav={randevuAcik ? [RANDEVU_NAV, ...nav] : nav}
+      hastaAdi={loading ? null : data.hasta?.adSoyad}
+    >
       <LiveGate>{children}</LiveGate>
     </PortalShell>
   )

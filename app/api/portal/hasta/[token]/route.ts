@@ -238,6 +238,7 @@ import {
   AILE_IPUCLARI,
 } from '@/specialties/aile-hekimligi/engines/portal-saglik-paketim'
 import { decrypt } from '@/lib/security/encryption'
+import { hastaAdSoyad } from '@/lib/portal/hastaAdi'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import type {
   PortalBundle,
@@ -656,8 +657,10 @@ export async function GET(
   // SAGLIGIM-PORTAL-REGISTRY — specialty slices attach ONLY via lib/portal/moduller.ts eligibility
   // (token doctor's specialty × patient records × age). Previously büyüme was computed for every patient
   // with a DOB (adults included) and Pap/HPV reminders for every woman, whatever the practice.
-  const hastaRow = (await sb.from('patients').select('dob_encrypted, gender_encrypted, notes_encrypted, gender').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()).data
+  const hastaRow = (await sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted, notes_encrypted, gender').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()).data
   const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : null } catch { return null } }
+  // PORTAL-HASTA-ADI — name only (this point is past requirePortalUnlock); null → UI shows nothing.
+  bundle.hasta = { adSoyad: hastaAdSoyad(coz(hastaRow?.name_encrypted)) }
   const dogumIso = coz(hastaRow?.dob_encrypted)
   const cinsiyetHam = coz(hastaRow?.gender_encrypted) || ''
   const doktorBransi = await hekimBransi(sb, tokenData.doctor_id as string)

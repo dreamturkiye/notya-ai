@@ -30,6 +30,7 @@ export function emptyPortalBundle(): PortalBundle {
       nabiz: [],
       spo2: [],
     },
+    hasta: { adSoyad: null },
     hekim: {
       ad: 'Doktorunuz',
       brans: null,

@@ -12,8 +12,7 @@ import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar'
 import { intakeGorunmeyenYanitlariAyikla, intakeSunucuHataMetni } from '@/lib/intake/dogrula'
-import { BRANS_SORULARI, BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
-import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+import { intakeBransBolumu, intakeBransEtiketi } from '@/lib/intake/formBransi'
 import { intakeGelenBelgeIzni, intakeIzinleri } from '@/lib/iletisim/izinMetni'
 
 export const dynamic = 'force-dynamic'
@@ -51,9 +50,8 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
     .maybeSingle()
   const doktorAdi = doktor ? [doktor.title, doktor.first_name, doktor.last_name].filter(Boolean).join(' ') : ''
 
-  const bransKey = form.brans as SpecialtyKey
-  const bransBolumu = BRANS_SORULARI[bransKey] || null
-  const bransEtiket = BRANS_ETIKETLERI[bransKey] || null
+  const bransBolumu = intakeBransBolumu(form.brans)
+  const bransEtiket = intakeBransEtiketi(form.brans)
 
   return NextResponse.json({
     hastaAdi,

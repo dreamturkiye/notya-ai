@@ -10,7 +10,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 export default function DemoGozLayout({ children }: { children: React.ReactNode }) {
   return (
     <DemoOturumKapisi>
-      <PortalShell basePath="/portal/demo-goz" ekNav={SAGLIGIM_DEMO_GOZ.portal?.nav || []}>{children}</PortalShell>
+      <PortalShell basePath="/portal/demo-goz" ekNav={SAGLIGIM_DEMO_GOZ.portal?.nav || []} hastaAdi={SAGLIGIM_DEMO_GOZ.hasta.adSoyad}>{children}</PortalShell>
     </DemoOturumKapisi>
   )
 }

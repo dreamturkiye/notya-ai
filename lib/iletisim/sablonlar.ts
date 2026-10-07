@@ -105,6 +105,34 @@ function konuYap(konu: string, g: SablonGirdisi): string {
 }
 
 /**
+ * NOTYA-INTAKE-EPOSTA (2026-10-07) — the intake invitation, one piece per line. The compose links (mailto / Gmail /
+ * Outlook web) carry `metin` as is; the connected mailbox sends the same pieces as the text part of a
+ * multipart/alternative mail next to an HTML part (lib/iletisim/bilgiFormuEposta.ts). No duration is promised.
+ */
+export type BilgiFormuSatirlari = {
+  selam: string
+  giris: string
+  link: string
+  neden: string
+  gizlilik: string
+  /** "Dr. Ad Soyad", or '' when the practice has no doctor name */
+  doktor: string
+  metin: string
+}
+
+export function bilgiFormuSatirlari(g: SablonGirdisi, link: string): BilgiFormuSatirlari {
+  const doktor = temiz(g.doktorAdi)
+  const ad = temiz(g.hastaAdi)
+  const kimIcin = ad ? `${ad} için` : g.veliDili ? 'çocuğunuz için' : 'sizin için'
+  const selam = merhaba(g)
+  const giris = `${doktor || 'Muayenehanemiz'}, ${kimIcin} hazırlanan Hasta Bilgi Formu’nu randevudan önce doldurmanızı rica ediyor.`
+  const neden = 'Bilgileri önceden almamız, muayene süresini asıl konuya ayırmamızı sağlar.'
+  const gizlilik = 'Bu bağlantı size özeldir; lütfen başkalarıyla paylaşmayın.'
+  const metin = [selam, '', giris, '', link, '', neden, gizlilik, '', 'Saygılarımızla,', ...(doktor ? [doktor] : [])].join('\n')
+  return { selam, giris, link, neden, gizlilik, doktor, metin }
+}
+
+/**
  * The prepared message for a patient, or null when a required piece is missing (no appointment
  * time for a reminder, no link for a form, no text for a free message). Never throws.
  */
@@ -161,11 +189,8 @@ export function mesajHazirla(tur: MesajTuru, g: SablonGirdisi): HazirMesaj | nul
     }
     case 'bilgi_formu': {
       if (!link) return null
-      const kimin = g.veliDili ? `${temiz(g.hastaAdi) || 'çocuğunuz'} için ` : ''
-      return {
-        konu: konuYap('Hasta bilgi formu', g),
-        metin: imzala([`${merhaba(g)} randevunuzdan önce doldurmanızı rica ettiğimiz ${kimin}Hasta Bilgi Formu hazır:`, link, 'Bu kısa formu doldurmanız muayene süresini sizin için daha verimli kılacak. Teşekkürler.'], g),
-      }
+      const b = bilgiFormuSatirlari(g, link)
+      return { konu: konuYap('Hasta bilgi formu', g), metin: b.metin }
     }
     case 'asi_hatirlatma': {
       const t = String(g.tarihIso || '').slice(0, 10)

@@ -15,11 +15,11 @@
  * rehberlere dayalı) + yaygın Türkiye özel hastane hasta bilgi formu pratiği + kullanıcının
  * göz-hastaliklari referans örneği.
  */
-import type { IntakeBolum } from './coreAlanlar'
+import type { IntakeAlan, IntakeBolum } from './coreAlanlar'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
-const BASVURU_NEDENI = {
+export const BASVURU_NEDENI = {
   id: 'basvuruNedeni',
   etiket: 'Bugünkü başvuru nedeniniz nedir?',
   tur: 'textarea' as const,
@@ -27,7 +27,21 @@ const BASVURU_NEDENI = {
   placeholder: 'Sizi bugün kliniğe getiren ana şikayeti kısaca yazın.',
 }
 
-const SIKAYET_SURESI_STANDART = { tur: 'radio' as const, secenekler: ['Bugün başladı', 'Bu hafta', 'Bu ay', 'Daha uzun süredir'] }
+export const SIKAYET_SURESI_STANDART = { tur: 'radio' as const, secenekler: ['Bugün başladı', 'Bu hafta', 'Bu ay', 'Daha uzun süredir'] }
+
+/**
+ * NOTYA-INTAKE-DENETIM (2026-10-07) — pregnancy / nursing where it changes what may be done (procedures, anaesthesia,
+ * drugs, supplements). Shown only when the form's own Cinsiyet answer is Kadın; "Bu soru bana uygun değil" stays for
+ * everyone it does not fit. Same wording as the dermatoloji question (gebelikDurumuDerm). REVIEW.
+ */
+export const GEBELIK_EMZIRME: IntakeAlan = {
+  id: 'gebelikEmzirme',
+  etiket: 'Gebelik / emzirme durumu (sizin için geçerliyse)',
+  tur: 'checkbox-grup',
+  secenekler: ['Gebe değilim', 'Gebe olabilirim / şüphem var', 'Gebeyim', 'Emziriyorum', 'Yakın dönemde gebelik planlıyorum', 'Bu soru bana uygun değil'],
+  yardim: 'Bazı işlem, ilaç ve takviyeler gebelikte veya emzirirken uygulanmaz; bu yüzden soruyoruz.',
+  gosterEger: { alanId: 'cinsiyet', deger: 'Kadın' },
+}
 
 export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
   pediatri: {
@@ -49,6 +63,12 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'dogumSekliPed', etiket: 'Doğum Şekli', tur: 'radio', zorunlu: true, secenekler: ['Normal Doğum', 'Sezaryen'] },
       { id: 'dogumSonrasiPed', etiket: 'Doğum Sonrası', tur: 'radio', zorunlu: true, secenekler: ['Sorun Yaşanmadı', 'Sorun Yaşandı'] },
       { id: 'dogumSonrasiAciklamaPed', etiket: 'Doğum sonrası yaşanan sorun (açıklama)', tur: 'textarea', placeholder: 'Örn. sarılık nedeniyle fototerapi, yenidoğan yoğun bakım, solunum desteği…', yardim: 'Yalnız "Sorun Yaşandı" seçildiyse doldurun.' },
+
+      // NOTYA-INTAKE-DENETIM (2026-10-07): beslenme, aşı ve kreş/okul — pediatri-only, isteğe bağlı. REVIEW (Dr. Gökhan).
+      { id: 'baslikBeslenmeAsiPed', etiket: 'Beslenme, Aşılar ve Günlük Yaşam', tur: 'bolum-basligi' },
+      { id: 'beslenmePed', etiket: 'Çocuğunuz şu an nasıl besleniyor?', tur: 'checkbox-grup', secenekler: ['Anne sütü', 'Mama', 'Ek gıdaya başladı', 'Aile sofrasından besleniyor'] },
+      { id: 'asiTakvimiPed', etiket: 'Aşıları takvime göre tam mı?', tur: 'radio', secenekler: ['Evet, tam', 'Eksik var', 'Emin değilim'], yardim: 'Aşı kartınızı muayeneye getirmeniz yeterli.' },
+      { id: 'okulKresPed', etiket: 'Kreş veya okula gidiyor mu?', tur: 'radio', secenekler: ['Hayır, evde bakılıyor', 'Kreş / anaokulu', 'İlkokul', 'Ortaokul', 'Lise'] },
     ],
   },
 
@@ -333,6 +353,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'anesteziRiskFaktorleri', etiket: 'Aşağıdakilerden biri var mı?', tur: 'checkbox-grup', secenekler: ['Uyku Apnesi', 'Reflü', 'Astım / KOAH', 'Kalp Hastalığı', 'Sigara Kullanımı', 'Obezite', 'Yok'] },
       { id: 'kullanilanIlaclarAnestezi', etiket: 'Kullandığınız tüm ilaçlar', tur: 'textarea' },
       { id: 'gecirilmisAnestezi', etiket: 'Daha önce aldığınız anestezi türleri', tur: 'checkbox-grup', secenekler: ['Genel Anestezi', 'Bölgesel / Spinal Anestezi', 'Lokal Anestezi', 'Hiç Anestezi Almadım'] },
+      GEBELIK_EMZIRME, // NOTYA-INTAKE-DENETIM: anestezi öncesi, REVIEW
     ],
   },
 
@@ -513,6 +534,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'baslikPlastikGecmisi', etiket: 'Sağlık Geçmişi', tur: 'bolum-basligi' },
       { id: 'kanamaBozukluguPlastik', etiket: 'Bilinen bir kanama/pıhtılaşma bozukluğunuz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'keloitEgilimi', etiket: 'Keloit (aşırı skar) eğiliminiz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'] },
+      GEBELIK_EMZIRME, // NOTYA-INTAKE-DENETIM: işlem öncesi, REVIEW
       // PLASTIK-CERRAHI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/plastik-cerrahi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
       { id: 'baslikPlastikAcil', etiket: 'Acil belirtiler (şimdi)', tur: 'bolum-basligi' },
       { id: 'acilBelirtilerPlastik', etiket: 'Aşağıdakilerden hangileri şu anda var?', tur: 'checkbox-grup', secenekler: [
