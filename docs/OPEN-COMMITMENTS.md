@@ -3176,3 +3176,6 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 - 2026-10-05 NOTYA-FIYAT-02: measure the real cost per voice session and define the fair-use limit behind the Pro promise of unlimited sessions (fair use). Waits on: Kaan (say olc).
 
 - 2026-10-06 NOTYA-DEMO-DECK-01: the Canva pre-demo deck (Notya Urun Tanitimi, 11 slides, shared with Dr. Gokhan) still shows illustrative screens on slides 4 (exam with Ayse), 7 (visit closing) and 9 (consultation / follow-up), and the slide 3 calendar screenshot is a near-empty month view. Real screenshots from a test account with test patients are still needed. Parked by Kaan. Waits on: Kaan or Dr. Gokhan for the screenshots; Claude can place them afterwards.
+
+- 2026-10-07 NOTYA-KONSULT-GONDERIM-01: consultation email no longer opens an unconfigured mail program; it opens Gmail or Outlook web chosen from the doctor's account email, otherwise copies the text. A true send-by-Notya needs a transactional mail service, which Notya does not have yet. Waits on: Kaan (decide whether to add one).
+- 2026-10-07 NOTYA-KONSULT-GONDERIM-02: unit tests around the consultation email flow were not updated or run for this change; update them. Waits on: Claude.
