@@ -415,7 +415,9 @@ function NewSessionInner() {
           segments: [{ speaker: "doktor", text: transcript, start_ms: 0, end_ms: seconds*1000, confidence: 0.9 }],
           transcript, duration_seconds: seconds, profession: "doktor",
           context: { specialty, session_type: sessionType },
-          cekListe: cekIsaret,
+          cekListe: oneriPaneli ? cekIsaret : {},
+          // NOTYA-PEDI-ONERI-02: ziyaret tipi sunucuya da gider — aynı çözücü çek listesinin kurulup kurulmayacağına karar verir.
+          ...(hastaDurumuParam ? { hastaDurumu: hastaDurumuParam } : {}),
           ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}),
         })
       })
@@ -436,7 +438,7 @@ function NewSessionInner() {
       const dog = (result.data as { cekListeDogrulama?: CekDogrulamaSatir[] }).cekListeDogrulama
       if (dog) setCekDogrulama(dog)
       else {
-        const maddeler = muayeneCekListesi(cekGirdi)
+        const maddeler = oneriPaneli ? muayeneCekListesi(cekGirdi) : []
         setCekDogrulama(cekListeDogrula(maddeler, { transcript, soap: JSON.stringify(not), isaretler: cekIsaret }))
       }
       // NOTYA-NOT-DUZENLE-01 (Gökhan, 2026-09-23): "Notu oluştur"dan sonra salt-okunur "Not Hazır"

@@ -3,7 +3,7 @@
  *
  * Body: { tur, patientId? , randevuId?, asiId?, kuyrukId?, link?, metin? }
  * → { hasta: { ad, telefon, eposta, izinWhatsapp, izinEposta, izinKaydedilebilir }, mesaj: { konu, metin } | null,
- *     sonKanal, epostaAcilis }
+ *     sonKanal, epostaAcilis, epostaKutusu }
  *
  * Nothing is sent here: the browser opens the sender's own WhatsApp / mail with the prepared text.
  * With kuyrukId (NOTYA-ILETISIM-04): opening a queue item claims it for people, so the automatic sender never
@@ -17,6 +17,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { iletisimHazirla, hataMi } from '@/lib/iletisim/hazirlik'
 import { doktorIletisimAyari } from '@/lib/iletisim/sunucu'
 import { elleSahiplen } from '@/lib/iletisim/otomatikGonderim'
+import { epostaKutusuHazirMi } from '@/lib/iletisim/bilgiFormuKutudan'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,5 +53,7 @@ export async function POST(req: NextRequest) {
     asiId: h.asiId,
     kuyrukId: h.kuyrukId,
     epostaAcilis: ayar.epostaAcilis,
+    // NOTYA-INTAKE-EPOSTA-02: the intake invitation goes from the connected mailbox (designed mail, no compose window).
+    epostaKutusu: h.tur === 'bilgi_formu' && !h.kuyrukId ? await epostaKutusuHazirMi(doktorId) : false,
   })
 }

@@ -54,6 +54,8 @@ type Hazirlik = {
   asiId: string | null
   kuyrukId: string | null
   epostaAcilis: EpostaAcilis
+  /** NOTYA-INTAKE-EPOSTA-02: bilgi_formu + connected mailbox → "E-posta ile gönder" sends from it, no compose window. */
+  epostaKutusu?: boolean
 }
 
 const R = CHROME_RENK
@@ -90,9 +92,12 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
   const [bitti, setBitti] = useState(false)
   const [izinIsaretleniyor, setIzinIsaretleniyor] = useState<IletisimKanali | null>(null)
   const [tamMetin, setTamMetin] = useState(false)
+  const [kutudanGonderiliyor, setKutudanGonderiliyor] = useState(false)
+  const kutudanKilit = React.useRef(false)
+  const [kutudanAlici, setKutudanAlici] = useState<string | null>(null)
 
   const hazirla = useCallback(async () => {
-    setYukleniyor(true); setHata(''); setAcilan(null); setKayitId(null); setBitti(false)
+    setYukleniyor(true); setHata(''); setAcilan(null); setKayitId(null); setBitti(false); setKutudanAlici(null)
     try {
       const j = await iletisimIstek<Hazirlik>('/api/doktor/iletisim/hazirla', {
         method: 'POST',
@@ -118,9 +123,33 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
   const oneri = bilgi ? onerilenKanal(bilgi, sonKanal) : null
   const diger: IletisimKanali | null = oneri ? (oneri === 'whatsapp' ? 'eposta' : 'whatsapp') : null
 
+  // NOTYA-INTAKE-EPOSTA-02: the intake invitation leaves from the doctor's connected mailbox. One send per tap:
+  // the ref blocks a second tap before React re-renders, the server refuses a repeat of the same invitation.
+  const kutudanGonder = async () => {
+    if (!v || !hasta || kutudanKilit.current) return
+    kutudanKilit.current = true
+    setKutudanGonderiliyor(true); setHata('')
+    try {
+      const r = await iletisimIstek<{ ok: true; alici: string }>('/api/doktor/iletisim/eposta-gonder', {
+        method: 'POST',
+        govde: { patientId: hasta.id, randevuId: v.randevuId, link: p.link },
+      })
+      cihazSonKanaliKaydet(hasta.id, 'eposta')
+      setKutudanAlici(r.alici)
+      setBitti(true)
+      p.onGonderildi?.()
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : 'E-posta gönderilemedi.')
+      kutudanKilit.current = false
+    } finally {
+      setKutudanGonderiliyor(false)
+    }
+  }
+
   // Synchronous on purpose (iOS Safari): the link is already built, no await before opening it.
   const ac = (kanal: IletisimKanali, acilis?: EpostaAcilis) => {
     if (!v?.mesaj || !hasta) return
+    if (kanal === 'eposta' && !acilis && v.tur === 'bilgi_formu' && v.epostaKutusu) { void kutudanGonder(); return }
     const secilenAcilis = acilis || epostaAcilis
     const link = kanal === 'whatsapp'
       ? whatsappLinki(hasta.telefon, v.mesaj.metin)
@@ -215,6 +244,11 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
 
       {yukleniyor && <div style={{ color: R.muted, fontSize: 15, padding: '8px 0' }}>Mesaj hazırlanıyor…</div>}
       {!yukleniyor && hata && <div style={{ color: R.warn, fontSize: 14, margin: '4px 0 10px' }}>{hata}</div>}
+      {!yukleniyor && hata && v?.epostaKutusu && v.tur === 'bilgi_formu' && !bitti && !kutudanGonderiliyor && (
+        <button type="button" style={{ ...sessizLink, fontSize: 13, marginBottom: 8 }} onClick={() => ac('eposta', epostaAcilis)}>
+          E-postayı {YENIDEN_AC[epostaAcilis]}
+        </button>
+      )}
       {!yukleniyor && !v && hata && <button type="button" style={sessizLink} onClick={() => void hazirla()}>Yeniden dene</button>}
 
       {!yukleniyor && v && !v.mesaj && (
@@ -258,12 +292,12 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
             </div>
           ) : oneri ? (
             <div>
-              <button type="button" style={anaDugme(buyuk)} onClick={() => ac(oneri)}>
-                {oneri === 'whatsapp' ? 'WhatsApp ile gönder' : 'E-posta ile gönder'}
+              <button type="button" style={anaDugme(buyuk, kutudanGonderiliyor)} disabled={kutudanGonderiliyor} onClick={() => ac(oneri)}>
+                {oneri === 'whatsapp' ? 'WhatsApp ile gönder' : kutudanGonderiliyor ? 'Gönderiliyor…' : 'E-posta ile gönder'}
               </button>
               {diger && bilgi && kanalDurumu(bilgi, diger) === 'hazir' && (
                 <div style={{ textAlign: 'center', marginTop: 6 }}>
-                  <button type="button" style={sessizLink} onClick={() => ac(diger)}>
+                  <button type="button" style={sessizLink} disabled={kutudanGonderiliyor} onClick={() => ac(diger)}>
                     {diger === 'whatsapp' ? 'ya da WhatsApp ile gönder' : 'ya da e-posta ile gönder'}
                   </button>
                 </div>
@@ -283,7 +317,9 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
       )}
 
       {bitti && (
-        <div style={{ fontSize: buyuk ? 17 : 15, color: R.pine, fontWeight: 700, padding: '6px 0' }}>Gönderildi olarak kaydedildi.</div>
+        <div style={{ fontSize: buyuk ? 17 : 15, color: R.pine, fontWeight: 700, padding: '6px 0' }}>
+          {kutudanAlici ? `E-posta gönderildi: ${kutudanAlici}` : 'Gönderildi olarak kaydedildi.'}
+        </div>
       )}
     </div>
   )

@@ -21,6 +21,7 @@ import {
   type MbysKayitTuru,
 } from '@/lib/enabiz/mbys/kontrol'
 import { MBYS_ADRES, yardimciKuruluMu, yardimciyaGonder } from '@/lib/enabiz/mbys/yardimci'
+import MbysYardimciKurulum from '@/components/doktor/MbysYardimciKurulum'
 
 type KimlikOzet = { kayitTuru: MbysKayitTuru | ''; ad: string; soyad: string; cinsiyet: string; dogumTarihi: string; uyruk: string }
 type Satir = { notId: string; hastaId: string; hastaAd: string; saat: string; durum: MbysDurum; eksikler: MbysEksik[]; kimlik: KimlikOzet }
@@ -206,6 +207,9 @@ export default function MbysKuyrugu() {
           <a href={MBYS_ADRES} target="_blank" rel="noreferrer" style={{ ...ikincilBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>MBYS'yi aç</a>
         </div>
       </div>
+
+      {/* MBYS-YARDIMCI-02: download + install guide + form-map capture, doctors only (the route checks it too). */}
+      {rol === 'doktor' && yardimci !== null && <MbysYardimciKurulum acikBaslat={!yardimci} />}
 
       {ayarAcik && rol === 'doktor' && (
         <div style={{ ...toolsCard, marginTop: 12 }}>

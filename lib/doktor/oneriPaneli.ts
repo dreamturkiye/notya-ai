@@ -8,6 +8,10 @@
  *   null / anything else (walk-in, old record, no box ticked) → treated as hasta çocuk → panel hidden
  * How it reaches the page: "Muayeneyi Başlat" on the randevu screen puts it in the URL (`hastaDurumu`, below).
  * Other branşlar keep today's behaviour (panel always shown). Pure, client-safe.
+ *
+ * NOTYA-PEDI-ONERI-02: the SAME resolver decides on the server (app/api/sessions/[id]/end): when it says no, the
+ * checklist is not built, not added to the SOAP prompt and not written into ai_degerlendirme. The dikte page sends the
+ * visit type it read from the URL as `hastaDurumu` in the end request.
  */
 import { etkinBrans } from '@/lib/specialties/kapsam'
 
