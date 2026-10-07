@@ -343,6 +343,22 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     assert.ok(!bos.json.portal.moduller.includes('asi-karnesi'))
   })
 
+  it('PORTAL-HASTA-ADI: bundle carries the name only after unlock; nameless record → null; nothing else of the patient', async () => {
+    const { A } = sahneKur()
+    const kilitli = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.portalToken}`), prm({ token: A.portalToken })))
+    assert.equal(kilitli.status, 401)
+    assert.ok(!kilitli.metin.includes('Işıkoğlu') && !kilitli.metin.includes('QA Çocuk'), 'PIN öncesi ad gönderilmez')
+    const y = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.portalToken}`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
+    assert.equal(y.status, 200, y.metin.slice(0, 200))
+    assert.deepEqual(y.json.hasta, { adSoyad: 'QA Çocuk A Işıkoğlu' })
+    assert.ok(!y.metin.includes('QA Çocuk B'), 'başka hekimin hastasının adı yok')
+    const adsiz = db.ekle('patients', { doctor_id: A.id, is_active: true, dob_encrypted: encrypt('1990-05-05') }).id
+    db.ekle('hasta_portal_tokens', { token_hash: 'qa-asi-portal-adsiz', doctor_id: A.id, patient_id: adsiz, expires_at: new Date(Date.now() + 86400e3).toISOString(), pin_hash: 'sentetik' })
+    const a = await coz(portal.GET(iste('GET', '/api/portal/hasta/qa-asi-portal-adsiz', { cerez: await portalCerezi('qa-asi-portal-adsiz') }), prm({ token: 'qa-asi-portal-adsiz' })))
+    assert.equal(a.status, 200, a.metin.slice(0, 200))
+    assert.deepEqual(a.json.hasta, { adSoyad: null })
+  })
+
   it('hekim PDF: kendi hastası 200 (portal ile aynı içerik); yabancı hasta 404; oturumsuz 401; sekreter basabilir', async () => {
     const { A, B } = sahneKur()
     const y = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.token })))

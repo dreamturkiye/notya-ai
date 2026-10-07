@@ -1946,3 +1946,41 @@ body:has(.sagligim-root) {
     margin-right: 16px;
   }
 }
+
+/* PORTAL-HASTA-ADI — whose page this is: hero identity + small header name (no other styling touched). */
+.sg-hero-hasta {
+  margin: 0 0 14px;
+  animation: sgBrandIn 0.7s var(--sg-ease) 0.22s both;
+}
+
+.sg-hero-hasta-etiket {
+  display: block;
+  font-family: var(--sg-font-ui);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(244, 248, 250, 0.72);
+}
+
+.sg-hero-hasta-ad {
+  margin: 6px 0 0;
+  font-family: var(--sg-font-display);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 560;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.sg-header-hasta {
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 560;
+  color: var(--sg-muted);
+}

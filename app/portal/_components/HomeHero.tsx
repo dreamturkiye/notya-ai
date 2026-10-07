@@ -164,6 +164,8 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
     })),
   ]
 
+  const hastaAdi = data.hasta?.adSoyad || null
+
   const hekim = data.hekim || {
     ad: 'Doktorunuz',
     brans: null,
@@ -189,6 +191,13 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
                 <span className="sg-hero-brand-sub">Sağlığım</span>
               </div>
               <span className="sg-hero-rule" aria-hidden />
+              {/* PORTAL-HASTA-ADI — whose page this is (adult or a parent on a child's page); nothing when unnamed. */}
+              {hastaAdi ? (
+                <div className="sg-hero-hasta" data-testid="portal-hasta-adi">
+                  <span className="sg-hero-hasta-etiket">Hasta</span>
+                  <p className="sg-hero-hasta-ad">{hastaAdi}</p>
+                </div>
+              ) : null}
               <p className="sg-hero-lede">
                 Kayıtlar, sonuçlar ve mesajlar tek yerde.
               </p>
