@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bargeSayaci, konusuyorMu, rmsHesapla, klipGonderilirMi, onTamponuKirp, FISH_BARGE_MS } from './fishVad'
+import { bargeSayaci, konusuyorMu, rmsHesapla, klipGonderilirMi, onTamponuKirp, tazeSileroP, FISH_BARGE_MS, FISH_SILERO_TAZELIK_MS } from './fishVad'
 
 test('RMS sessizlik ve konuşmayı ayırır', () => {
   assert.equal(rmsHesapla([]), 0)
@@ -28,6 +28,35 @@ test('barge-in speaker sızıntısında kesmez, doktor mikrofonda süreyle keser
   assert.ok(ms >= FISH_BARGE_MS)
   assert.deepEqual(bargeSayaci(ms, true, 0.03), { ms: 0, kes: false })
   assert.deepEqual(bargeSayaci(ms, false, 0.2), { ms: 0, kes: false })
+})
+
+test('NOTYA-AYSE-GURULTU-01: barge-in needs RMS AND Silero speech when Silero is up; without Silero the RMS rule', () => {
+  // Smoke-alarm chirp: loud, Silero low → never cuts her.
+  let ms = 0
+  for (let i = 0; i < 20; i++) {
+    const r = bargeSayaci(ms, true, 0.5, 50, 0.1)
+    ms = r.ms
+    assert.equal(r.kes, false)
+  }
+  // Doctor: loud AND speech → cuts after FISH_BARGE_MS.
+  ms = 0
+  let kes = false
+  for (let i = 0; i < 10 && !kes; i++) {
+    const r = bargeSayaci(ms, true, 0.2, 50, 0.8)
+    ms = r.ms
+    kes = r.kes
+  }
+  assert.equal(kes, true)
+  // Speaker leak: Silero says speech, RMS low → no.
+  assert.deepEqual(bargeSayaci(0, true, 0.03, 50, 0.95), { ms: 0, kes: false })
+  // Silero unavailable (null) → today's RMS rule.
+  assert.deepEqual(bargeSayaci(250, true, 0.2, 50, null), { ms: 300, kes: true })
+})
+
+test('NOTYA-AYSE-GURULTU-01: only a fresh Silero probability reaches the barge rule', () => {
+  assert.equal(tazeSileroP({ p: 0.7, zaman: 1000 }, 1100), 0.7)
+  assert.equal(tazeSileroP({ p: 0.7, zaman: 1000 }, 1000 + FISH_SILERO_TAZELIK_MS + 1), null)
+  assert.equal(tazeSileroP(null, 1000), null)
 })
 
 test('tek tık / öksürük gönderilmez; gerçek tur gönderilir', () => {

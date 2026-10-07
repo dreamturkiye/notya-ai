@@ -34,9 +34,10 @@ export function sileroKullanilirMi(g: { ua: string; dokunma?: number; genel?: st
   return true
 }
 
-function tarayicidaKullanilirMi(): boolean {
+function tarayicidaKullanilirMi(zorla = false): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
   if (typeof WebAssembly === 'undefined') return false
+  if (zorla) return true
   return sileroKullanilirMi({
     ua: navigator.userAgent,
     dokunma: navigator.maxTouchPoints || 0,
@@ -45,13 +46,29 @@ function tarayicidaKullanilirMi(): boolean {
   })
 }
 
+export type SileroSecenek = {
+  /**
+   * NOTYA-AYSE-GURULTU-01: the ElevenLabs speech gate loads Silero regardless of the Fish opt-in flags
+   * (NEXT_PUBLIC_NOTYA_SILERO*), which govern Fish turn-ending only. The gate has its own kill switch.
+   */
+  zorla?: boolean
+  /**
+   * Called on every processed frame with the speech probability (drives the gate state machine) and the frame's
+   * 16 kHz audio (NOTYA-SES-PROFILI-01 scores the doctor's voice from it; copy it before keeping it).
+   */
+  onKare?: (p: number, zaman: number, kare: Float32Array) => void
+  /** Console tag. */
+  etiket?: string
+}
+
 /**
  * Attach Silero to an existing mic stream on the capture AudioContext. Resolves `null` on any
  * failure (no throw) so the caller simply keeps the RMS gate.
  */
-export async function sileroAc(akis: MediaStream, baglam: AudioContext): Promise<SileroKapi | null> {
-  if (!tarayicidaKullanilirMi()) {
-    console.info('[fish-vad]', { motor: 'rms', silero: 'kapali', neden: 'ayar' })
+export async function sileroAc(akis: MediaStream, baglam: AudioContext, secenek: SileroSecenek = {}): Promise<SileroKapi | null> {
+  const etiket = secenek.etiket || '[fish-vad]'
+  if (!tarayicidaKullanilirMi(Boolean(secenek.zorla))) {
+    console.info(etiket, { motor: 'rms', silero: 'kapali', neden: 'ayar' })
     return null
   }
   const t0 = Date.now()
@@ -79,10 +96,11 @@ export async function sileroAc(akis: MediaStream, baglam: AudioContext): Promise
       processorType: 'auto',
       // We do not use vad-web's own segmenter; frames only.
       submitUserSpeechOnPause: false,
-      onFrameProcessed: (olasilik) => {
+      onFrameProcessed: (olasilik, ses) => {
         kare += 1
         son = { p: olasilik.isSpeech, zaman: Date.now() }
         if (ilkKare) { ilkKare(); ilkKare = null }
+        if (secenek.onKare) { try { secenek.onKare(son.p, son.zaman, ses) } catch { /* the listener fails open on its own */ } }
       },
       onSpeechStart: () => undefined,
       onSpeechRealStart: () => undefined,
@@ -94,7 +112,7 @@ export async function sileroAc(akis: MediaStream, baglam: AudioContext): Promise
     // Safari can create the worklet and never feed it — no frame within the window means RMS.
     await Promise.race([ilkKareSozu, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('silero_kare_yok')), SILERO_ILK_KARE_MS))])
     const islemci = (kapi as unknown as { _audioProcessorAdapterType?: string })._audioProcessorAdapterType ?? null
-    console.info('[fish-vad]', { motor: 'silero', silero: 'acik', islemci, hz: baglam.sampleRate, yukleme_ms: Date.now() - t0 })
+    console.info(etiket, { motor: 'silero', silero: 'acik', islemci, hz: baglam.sampleRate, yukleme_ms: Date.now() - t0 })
     return {
       olasilik: () => son,
       kareSayisi: () => kare,
@@ -102,7 +120,7 @@ export async function sileroAc(akis: MediaStream, baglam: AudioContext): Promise
     }
   } catch (e) {
     if (vad) { try { await vad.destroy() } catch { /* */ } }
-    console.info('[fish-vad]', { motor: 'rms', silero: 'kapali', neden: e instanceof Error ? e.message : 'hata', ms: Date.now() - t0 })
+    console.info(etiket, { motor: 'rms', silero: 'kapali', neden: e instanceof Error ? e.message : 'hata', ms: Date.now() - t0 })
     return null
   }
 }

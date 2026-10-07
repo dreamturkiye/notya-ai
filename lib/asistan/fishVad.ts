@@ -1,4 +1,5 @@
 /** Energy + silence for one spoken turn. No ElevenLabs VAD. */
+import { SES_PROFILI_AYAR, type ProfilKarari } from '@/lib/asistan/sesProfili/ayar'
 
 export const FISH_KONUSMA_ESIK = 0.02
 /** Speaker leak of Haberci is quieter than the doctor at the mic. Barge-in must not fire on her own playback. */
@@ -51,10 +52,33 @@ export function onTamponuKirp(parcalar: Float32Array[], hz: number, tamponMs = F
   }
 }
 
-export function bargeSayaci(oncekiMs: number, ajanKonusuyor: boolean, rms: number, tikMs = 50): { ms: number; kes: boolean } {
+/**
+ * Barge-in counter. RMS ≥ FISH_BARGE_ESIK protects against Ayşe's own speaker leak (Silero hears the leak as
+ * speech). NOTYA-AYSE-GURULTU-01: when a fresh Silero probability exists (`sileroP` not null) it must ALSO say
+ * speech (≥ FISH_SILERO_ESIK) — a smoke-alarm chirp or a clap is loud but not speech. Without Silero: today's rule.
+ */
+export function bargeSayaci(
+  oncekiMs: number,
+  ajanKonusuyor: boolean,
+  rms: number,
+  tikMs = 50,
+  sileroP: number | null = null,
+  profil: { karar: ProfilKarari | null; redYeni: boolean } | null = null,
+): { ms: number; kes: boolean } {
   if (!ajanKonusuyor || rms < FISH_BARGE_ESIK) return { ms: 0, kes: false }
+  if (sileroP !== null && !(sileroP >= FISH_SILERO_ESIK)) return { ms: 0, kes: false }
+  // NOTYA-SES-PROFILI-01 (same preference as the ElevenLabs gate): a voice the profile rejected never cuts her;
+  // right after a rejection a new voice waits for its verdict, at most dogrulaAzamiMs. Short words: speech-only rule.
+  if (profil?.karar === 'red') return { ms: 0, kes: false }
   const ms = oncekiMs + tikMs
-  return { ms, kes: ms >= FISH_BARGE_MS }
+  if (ms < FISH_BARGE_MS) return { ms, kes: false }
+  if (profil && profil.redYeni && profil.karar !== 'kabul' && ms < SES_PROFILI_AYAR.dogrulaAzamiMs) return { ms, kes: false }
+  return { ms, kes: true }
+}
+
+/** The Silero probability to hand to `bargeSayaci`: only a fresh one counts, a stale one is "no Silero". */
+export function tazeSileroP(s: SileroOlasilik, simdi: number): number | null {
+  return s && simdi - s.zaman <= FISH_SILERO_TAZELIK_MS ? s.p : null
 }
 
 export function rmsHesapla(ornek: ArrayLike<number>): number {

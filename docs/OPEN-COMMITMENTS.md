@@ -3177,6 +3177,24 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 
 - 2026-10-06 NOTYA-DEMO-DECK-01: the Canva pre-demo deck (Notya Urun Tanitimi, 11 slides, shared with Dr. Gokhan) still shows illustrative screens on slides 4 (exam with Ayse), 7 (visit closing) and 9 (consultation / follow-up), and the slide 3 calendar screenshot is a near-empty month view. Real screenshots from a test account with test patients are still needed. Parked by Kaan. Waits on: Kaan or Dr. Gokhan for the screenshots; Claude can place them afterwards.
 
+## 2026-10-07 - NOTYA-AYSE-GURULTU: Ayşe must not be cut off by noise
+Source: Kaan, 2026-10-07 (a smoke-alarm low-battery chirp cut Ayşe off mid-sentence in a doctor 1:1). Details in `docs/AYSE-GURULTU.md`.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-AYSE-GURULTU-a | 2026-10-07 | OPEN | Manual microphone test on the preview deployment by Dr. Gökhan before merge (the 5-step test in `docs/AYSE-GURULTU.md`, laptop speakers and headset, iPhone included). | Kaan |
+| NOTYA-AYSE-GURULTU-b | 2026-10-07 | PARKED | Optional tap-to-interrupt setting for very noisy rooms. | Kaan |
+| NOTYA-AYSE-GURULTU-c | 2026-10-07 | UNDER DISCUSSION | Doctor voice profile so Ayşe listens only to the doctor. | Kaan |
+
+## 2026-10-07 - NOTYA-SES-PROFILI: doctor voice profile (Ayşe listens to the doctor's voice)
+Source: Kaan, 2026-10-07 (voice recognition is a must; optional, offered in onboarding). Builds on NOTYA-AYSE-GURULTU and answers NOTYA-AYSE-GURULTU-c. Details in `docs/SES-PROFILI.md`. Not authentication.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-SES-PROFILI-a | 2026-10-07 | OPEN | Turkish lawyer review of the biometric consent texts (checkbox line + full text, `lib/asistan/sesProfili/rizaMetni.ts`, shown on `/kvkk#ses-profili`) before the step is shown to real doctors. Also confirm whether the full trade title must replace "Dream Türkiye". | Kaan |
+| NOTYA-SES-PROFILI-b | 2026-10-07 | OPEN | Threshold tuning with Dr. Gökhan and one more voice (`SES_PROFILI_AYAR` in `lib/asistan/sesProfili/ayar.ts`; anonymous counters in `ses_profili_sayaclari`). Current values come from public test recordings, not clinic audio. | Kaan |
+| NOTYA-SES-PROFILI-c | 2026-10-07 | OPEN | Doctor / patient labels in the visit transcript using the same match. Not done here: the ElevenLabs transcript arrives as text with no per-line audio, so the match has nothing to align to without new plumbing. | Claude |
+| NOTYA-SES-PROFILI-d | 2026-10-07 | OPEN | Apply migration `127_doktor_ses_profili.sql` on Supabase before the preview test (the API answers 500 on the voice-profile calls until the table exists; voice sessions are unaffected). | Kaan |
 ## 2026-10-07 - NOTYA-INTAKE-DENETIM / NOTYA-PORTAL-YAPRAK: intake audit review and portal background
 Source: Kaan's 2026-10-07 job (intake email, intake form audit, pediatric suggestions rule, portal background). Report: `docs/INTAKE-PORTAL-RAPOR.md`.
 

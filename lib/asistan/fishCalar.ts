@@ -130,6 +130,11 @@ export type FishCalar = {
   akisAc: () => FishAkisYazici
   kes: () => void
   caliyorMu: () => boolean
+  /**
+   * NOTYA-AYSE-GURULTU-02: what was playing at the last `kes` — the sentence text (REST jobs; null for a PCM
+   * stream) and how many seconds of it had played. Null when nothing was playing.
+   */
+  sonKesim: () => { metin: string | null; sn: number } | null
   kapat: () => void
 }
 
@@ -139,7 +144,7 @@ export function fishCalarOlustur(
   hazirBaglam?: AudioContext | null,
 ): FishCalar {
   let nesil = 0
-  let sira: { kontrol: AbortController; akis: Promise<ReadableStream<Uint8Array> | null>; iptal: boolean; hata: boolean }[] = []
+  let sira: { kontrol: AbortController; akis: Promise<ReadableStream<Uint8Array> | null>; iptal: boolean; hata: boolean; metin?: string }[] = []
   let calisiyor = false
   let ctx: AudioContext | null = hazirBaglam ?? null
   let kaynaklar: AudioBufferSourceNode[] = []
@@ -147,6 +152,9 @@ export function fishCalarOlustur(
   let kapali = false
   let sonBitisCt = -Infinity // AudioContext time at which the last playback ended
   let uyanik: AudioBufferSourceNode | null = null // inaudible keep-alive so the output device does not sleep between turns
+  let calanMetin: string | null = null // text of the job now playing (null for a PCM stream)
+  let calanBas = -1 // AudioContext time its first chunk was scheduled; -1 = not started
+  let sonKesim: { metin: string | null; sn: number } | null = null
 
   function uyaniktaTut(c: AudioContext): void {
     if (uyanik) return
@@ -185,6 +193,9 @@ export function fishCalarOlustur(
 
   function kes(): void {
     const vardi = calisiyor || sira.length > 0 || kaynaklar.length > 0
+    sonKesim = calisiyor ? { metin: calanMetin, sn: calanBas >= 0 && ctx ? Math.max(0, ctx.currentTime - calanBas) : 0 } : null
+    calanMetin = null
+    calanBas = -1
     nesil += 1
     for (const is of sira) { is.iptal = true; is.kontrol.abort() }
     sira = []
@@ -222,6 +233,7 @@ export function fishCalarOlustur(
       kaynaklar.push(src)
       if (!basladi) {
         basladi = true
+        calanBas = basla
         olay?.onBasladi?.()
       }
     }
@@ -259,6 +271,8 @@ export function fishCalarOlustur(
     const ben = nesil
     calisiyor = true
     aktifKontrol = is.kontrol
+    calanMetin = is.metin ?? null
+    calanBas = -1
     const akis = await is.akis
     if (ben !== nesil || kapali) return
     if (!akis) {
@@ -298,7 +312,7 @@ export function fishCalarOlustur(
       const t = String(metin || '').trim()
       if (kapali || !t) return
       const kontrol = new AbortController()
-      const is = { kontrol, iptal: false, hata: false, akis: Promise.resolve(null as ReadableStream<Uint8Array> | null) }
+      const is = { kontrol, iptal: false, hata: false, metin: t, akis: Promise.resolve(null as ReadableStream<Uint8Array> | null) }
       is.akis = getir(t, kontrol.signal).then((s) => {
         if (!s && !is.iptal) is.hata = true
         return s
@@ -342,6 +356,7 @@ export function fishCalarOlustur(
     },
     kes,
     caliyorMu: () => calisiyor,
+    sonKesim: () => sonKesim,
     kapat() {
       kapali = true
       kes()
