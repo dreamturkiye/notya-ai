@@ -182,7 +182,7 @@ describe('OpenRouter açık — kalite kapısı çağrıdan önce', () => {
     const i = istekler[0]
     assert.equal(i.url, 'https://openrouter.ai/api/v1/chat/completions')
     assert.equal(i.basliklar.Authorization, 'Bearer sk-or-test')
-    assert.equal(i.basliklar['HTTP-Referer'], 'https://notya.ai')
+    assert.equal(i.basliklar['HTTP-Referer'], 'https://notya.io')
     assert.equal(i.basliklar['X-Title'], 'Notya AI')
     assert.deepEqual(i.govde.provider, { data_collection: 'deny' })
     assert.deepEqual(i.govde.messages[0], { role: 'system', content: [

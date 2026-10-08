@@ -6,6 +6,7 @@ import { ensureDoctorAccessToken, isOnboardingDone } from '@/lib/doktor/clientAu
 import { hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 import SesProfiliKayit from '@/components/sesProfili/SesProfiliKayit';
+import { adSoyadBol, kayitBransiNorm } from '@/lib/doktor/kayitBrans';
 
 interface Profession {
   id: string;
@@ -106,6 +107,27 @@ function OnboardingInner() {
   /** NOTYA-SES-PROFILI-01: optional step 4 for doctors after the account is created; skipping only navigates on. */
   const [sesSonrasiYol, setSesSonrasiYol] = useState<string | null>(null);
 
+  // Doctor fields
+  const [unvan, setUnvan] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [hospital, setHospital] = useState('');
+
+  // Mali fields
+  const [selectedMaliChips, setSelectedMaliChips] = useState<string[]>([]);
+
+  // Avukat fields
+  const [baro, setBaro] = useState('');
+  const [avukatUzmanlikSec, setAvukatUzmanlikSec] = useState('');
+
+  // Klinik Uzman / Saglik Uzmani fields
+  const [uzmanlikSecimi, setUzmanlikSecimi] = useState('');
+
+  // Step 3 fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('');
+  const [addressingPreference, setAddressingPreference] = useState('');
+
   // If already onboarded, never show this screen again (iPhone PWA reopen bug).
   // NOTYA-SEKRETER-01: sekreter bu ekranı hiç görmez — doğrudan Ön büro.
   useEffect(() => {
@@ -137,7 +159,16 @@ function OnboardingInner() {
           return
         }
         const json = await res.json().catch(() => ({}))
-        const profile = (json as { data?: { profession_type?: string; onboarding_completed?: boolean; specialty?: string } }).data
+        const profile = (json as { data?: { profession_type?: string; onboarding_completed?: boolean; specialty?: string; full_name?: string; kayit_bransi?: string } }).data
+        if (!isOnboardingDone(profile)) {
+          const secim = kayitBransiNorm(profile?.kayit_bransi || '')
+          if (secim && doctorSpecialties.includes(secim)) setSpecialty(secim)
+          const bol = adSoyadBol(profile?.full_name || '')
+          if (bol) {
+            setFirstName(bol.ad)
+            setLastName(bol.soyad)
+          }
+        }
         if (isOnboardingDone(profile)) {
           const type = profile?.profession_type || validPreset || 'doktor'
           if (type === 'mali' || type === 'mali_musavirlik') router.replace('/dashboard/mali')
@@ -152,27 +183,6 @@ function OnboardingInner() {
       setChecking(false)
     })()
   }, [router, validPreset])
-  
-  // Doctor fields
-  const [unvan, setUnvan] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [hospital, setHospital] = useState('');
-  
-  // Mali fields
-  const [selectedMaliChips, setSelectedMaliChips] = useState<string[]>([]);
-  
-  // Avukat fields
-  const [baro, setBaro] = useState('');
-  const [avukatUzmanlikSec, setAvukatUzmanlikSec] = useState('');
-
-  // Klinik Uzman / Saglik Uzmani fields
-  const [uzmanlikSecimi, setUzmanlikSecimi] = useState('');
-  
-  // Step 3 fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [gender, setGender] = useState('');
-  const [addressingPreference, setAddressingPreference] = useState('');
 
   const isStep1Complete = !!selectedProfession;
   

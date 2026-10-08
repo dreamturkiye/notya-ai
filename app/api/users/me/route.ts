@@ -28,6 +28,13 @@ function deriveOnboardingCompleted(
 }
 
 /** `users.specialty = genel` is a leftover default and must not hide a real branş in auth metadata. */
+/** Kayıtta seçilen branş. users.specialty değildir; onboarding bitene kadar sihirbazı atlatmaz. */
+function kayitBransi(profile: { signup_specialty?: unknown } | null, meta: Record<string, unknown>): string | null {
+  const kolon = typeof profile?.signup_specialty === 'string' ? profile.signup_specialty.trim() : ''
+  const metaDeger = typeof meta.signup_specialty === 'string' ? meta.signup_specialty.trim() : ''
+  return kolon || metaDeger || null
+}
+
 function effectiveSpecialty(profileSpecialty: unknown, metaSpecialty: unknown): string | null {
   const profile = typeof profileSpecialty === 'string' ? profileSpecialty.trim() : ''
   const meta = typeof metaSpecialty === 'string' ? metaSpecialty.trim() : ''
@@ -68,6 +75,7 @@ export async function GET(req: NextRequest) {
       full_name: meta.full_name || user.email?.split('@')[0] || '',
       profession_type: meta.profession_type || null,
       specialty: meta.specialty || null,
+      kayit_bransi: kayitBransi(null, meta),
       onboarding_completed,
     }
     hekimProfilYaz(user.id, govde)
@@ -95,6 +103,7 @@ export async function GET(req: NextRequest) {
     email: profile.email || user.email,
     profession_type: profile.profession_type || meta.profession_type || null,
     specialty: effectiveSpecialty(profile.specialty, meta.specialty),
+    kayit_bransi: kayitBransi(profile as { signup_specialty?: unknown }, meta),
     onboarding_completed,
   }
 
