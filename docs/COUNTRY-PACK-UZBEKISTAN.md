@@ -59,7 +59,7 @@ Everything else is off: tools, the voice assistant, appointments, the patient po
 
 ## Slice 2: all 40 roles, assistant names, note templates (2026-10-08)
 
-Kaan, 2026-10-08: "Just build the uzbek one completely now." Scope given earlier: all 30 doctor specialties and all clinic roles; nothing Turkish may appear in the Uzbek version. Branch `feat/uz-branslar`, stacked on `feat/uz-acilis-tr-eslesme` (PR #568). **Unmerged. Nothing deployed. Migration 134 is written and not applied anywhere. No Turkish screen or content file was edited.**
+Kaan, 2026-10-08: "Just build the uzbek one completely now." Scope given earlier: all 30 doctor specialties and all clinic roles; nothing Turkish may appear in the Uzbek version. Branch `feat/uz-branslar`, stacked on `feat/uz-acilis-tr-eslesme` (PR #568); pull request #569, base `feat/uz-acilis-tr-eslesme`, never `main`. **Unmerged. Nothing deployed. Migration 134 is written and not applied anywhere. No Turkish screen or content file was edited.**
 
 What it adds, all under `/uzbek`:
 
