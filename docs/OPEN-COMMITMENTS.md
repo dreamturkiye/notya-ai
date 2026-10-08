@@ -3216,3 +3216,35 @@ Source: Kaan's 2026-10-07 brief. Code: Gün sonu MBYS kuyruğu (`/doktor-tools/e
 | MBYS-YARDIMCI-01c | 2026-10-07 | OPEN | Check the Ministry's terms on assisted form filling (browser extension filling MBYS fields on the doctor's click) with a Turkish lawyer. | Kaan |
 | MBYS-YARDIMCI-01d | 2026-10-07 | OPEN | Stage 2: registration with the Ministry as software and direct e-Nabız sending. After the company is formed. | Kaan |
 | MBYS-YARDIMCI-01e | 2026-10-07 | OPEN | Apply migration `126_mbys_yardimci.sql` before deploying the queue (the route reads `users.mbys_ayar`, `mbys_aktarimlar`, `mbys_hasta_kimlik`). | Kaan |
+
+## 2026-10-08 - NOTYA-ULKE-01: second country (Uzbekistan) — country foundation and Uzbek landing page
+Source: Kaan's decisions of 2026-10-08 (one repository, walled areas, separate deployment and database per country; core shared). Code: `countries/`, `lib/ulke/`, `middleware.ulke.ts`, migration 128 (PR A); the Uzbek landing page, login, invitation sign-up and holding page (PR B, stacked on A). Standard: `docs/COUNTRY-PACK-CHECKLIST.md`. Country file: `docs/COUNTRY-PACK-UZBEKISTAN.md`. Order of the remaining work: `docs/COUNTRY-PACK-SPLIT-PLAN.md`.
+
+**Not shipped.** Two pull requests are open and unmerged. No migration was applied to any database, nothing was deployed, no Vercel or Supabase setting was changed.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-ULKE-01a | 2026-10-08 | OPEN | Review and merge PR A (country foundation) and PR B (Uzbek landing page and holding page). | Kaan |
+| NOTYA-ULKE-01b | 2026-10-08 | OPEN | Create the separate Uzbek deployment and database. Settings listed in `docs/COUNTRY-PACK-UZBEKISTAN.md` ("Before the Uzbek deployment is created"). | Kaan: approval (cost and settings); Claude sets up |
+| NOTYA-ULKE-01c | 2026-10-08 | OPEN | Later split jobs per `docs/COUNTRY-PACK-SPLIT-PLAN.md`, one job at a time. | Kaan: go for each; Claude launches |
+| NOTYA-ULKE-01d | 2026-10-08 | OPEN | Uzbekistan research: authorities and laws (checklist B). | Kaan: go; Claude runs |
+| NOTYA-ULKE-01e | 2026-10-08 | OPEN | Uzbekistan research: clinical references for all specialties and clinic types (checklist C). Needs a local clinical lead to confirm. | Kaan: go; Claude runs |
+| NOTYA-ULKE-01f | 2026-10-08 | OPEN | Tools audit (`docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md`) confirmed by a local clinical lead. | Kaan: find the lead |
+| NOTYA-ULKE-01g | 2026-10-08 | OPEN | Speech test on real Uzbek and Russian clinic audio (checklist A5). | Testers |
+| NOTYA-ULKE-01h | 2026-10-08 | OPEN | Native review of the Uzbek and Russian landing copy (`docs/uz-landing/COPY.md`), and Kaan's choice between the two versions. | Kaan |
+| NOTYA-ULKE-01i | 2026-10-08 | OPEN | Lawyer questions: is Türkiye on the country list for sending data abroad; is a voiceprint biometric data; database registration. | Kaan |
+| NOTYA-ULKE-01j | 2026-10-08 | OPEN | Confirm Eleven v4 Turbo price and live-agent support before the voice job. | Claude |
+| NOTYA-ULKE-01k | 2026-10-08 | OPEN | Local name and background for Ayşe in Uzbekistan. | Kaan and the clinical lead |
+
+Found while doing the job (not in the brief; recorded so they are not lost):
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-ULKE-01l | 2026-10-08 | OPEN | Apply migration `128_hesap_ulke_dil.sql` to the Turkish database. Additive (two columns with default `tr`, two format checks, one guard trigger). The code works before and after it. | Kaan |
+| NOTYA-ULKE-01p | 2026-10-08 | OPEN | Uzbek in Cyrillic script is declared in the pack but not switched on: no text was written in it. Decide whether the pilot needs it; then write and review the catalogue (checklist E2). | Kaan and the clinical lead |
+| NOTYA-ULKE-01q | 2026-10-08 | OPEN | The Turkish database address is written into 8 client files as a literal. Split plan job 1; do it before any second deployment is created. | Claude, on Kaan's go |
+| NOTYA-ULKE-01r | 2026-10-08 | OPEN | The clinic tool registry (`lib/klinik/klinikAraclari.ts`, 33 tools) has no countries field yet. Split plan job 2. | Claude, on Kaan's go |
+| NOTYA-ULKE-01s | 2026-10-08 | OPEN | From now on `npm test` fails when a NEW shared file carries Turkish text (ceiling 1,687). Branches opened before this merges and adding such files will fail after rebasing: move the text into `countries/tr`, or lower nothing and tell Kaan. | Everyone opening a branch |
+| NOTYA-ULKE-01t | 2026-10-08 | OPEN | `CLAUDE.md` was not changed (the brief did not ask, and it is the standing instruction file). Suggested short paragraph "Countries" for it is in the description of PR A. | Kaan |
+| NOTYA-ULKE-01u | 2026-10-08 | OPEN | A full production build (`npm run build`) was not run by the job: the machine it ran on has 7 GB and the build asks for 8. The build-time choice of pack was checked on the development compiler instead. The first Vercel preview of PR A runs the real check (`postbuild`); if it fails there, the preview fails and production is untouched. | Kaan: look at the first preview build |
+| NOTYA-ULKE-01v | 2026-10-08 | OPEN | Seen, not changed: in `middleware.ts` the public list contains `'/'` and is matched by prefix, so every path counts as public and the "protected routes" branch below it never runs. The API routes check the session themselves, so nothing is exposed by this; the middleware check is simply not doing what its comments say. | Kaan: decide; Claude: small |
