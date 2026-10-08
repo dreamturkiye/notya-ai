@@ -8,6 +8,7 @@
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { UZ_ACIK_SABLONLAR } from './branslar'
+import { uzDigerDil, uzNotGirdisi, uzNotTalimati, uzYenidenYazimGirdisi, uzYenidenYazimTalimati } from './talimatlar'
 
 export const UZ_KLINIK: UlkeKlinigi = {
   konusma: {
@@ -32,4 +33,10 @@ export const UZ_KLINIK: UlkeKlinigi = {
   sablonlar: UZ_ACIK_SABLONLAR,
   // Same ceiling the pre-split application gives a doctor for visit notes per day.
   gunlukMuayeneLimiti: 200,
+  // Instructions to the model: written fresh in Uzbek (both scripts) and Russian, no source cited (./talimatlar.ts).
+  notTalimati: uzNotTalimati,
+  notGirdisi: uzNotGirdisi,
+  yenidenYazimTalimati: uzYenidenYazimTalimati,
+  yenidenYazimGirdisi: uzYenidenYazimGirdisi,
+  digerDil: uzDigerDil,
 }

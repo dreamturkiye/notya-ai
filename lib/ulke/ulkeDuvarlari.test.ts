@@ -174,6 +174,27 @@ describe('build-time selection: the entry point and the import graph', () => {
       neden: 'The one cipher for patient data (AES-256-GCM). Its only Turkish text is the error thrown when the deployment has no master key — a configuration fault that ends in a 500 with a machine code, never in an answer.',
       azamiSatir: 1,
     },
+    // The model gateway (.cursor/skills/ai-model-politikasi/SKILL.md: every call to a model goes through ONE door).
+    // Reached from lib/ulke/uygulama/notModeli.ts only. A second gateway for another country would break the policy
+    // (model choice, fallback gates, usage rows, "do not train on this" header) — so the one gateway is reused as it is.
+    // What its Turkish text is, file by file, and why none of it reaches a doctor: notModeli.ts catches everything the
+    // gateway throws and returns null; the route answers with a code (tested: countries/uz/uygulama/not.test.ts).
+    'lib/ai/cagir.ts': {
+      neden: 'The gateway itself. Turkish text: two messages of errors it throws (no key configured, time budget used up) and one console line about a broken stream. Thrown errors are caught in notModeli.ts; console lines stay in the server log.',
+      azamiSatir: 3,
+    },
+    'lib/ai/saglayici.ts': {
+      neden: 'Transport to the provider. Turkish text: the messages of the transport errors it throws (timeout, network, empty body, broken stream). All of them are AiCagriHatasi, caught in notModeli.ts, which logs only the HTTP status.',
+      azamiSatir: 7,
+    },
+    'lib/ai/modeller.ts': {
+      neden: 'The model policy table. Turkish text: word lists that CLASSIFY Turkish chat input (safety words, small talk, application terms) for the assistant, one error message for an unknown task name, and reason labels written to logs. None of it is output; a country note call uses only the task-to-model lookup.',
+      azamiSatir: 17,
+    },
+    'lib/ai/kullanim.ts': {
+      neden: 'Writes the usage row of every model call (token counts, model, task, doctor id — never content). Turkish text: one console warning when the row cannot be written.',
+      azamiSatir: 1,
+    },
   }
 
   // Every route file of a build that is not the pre-split application: the *.ulke.* files under app/, the root

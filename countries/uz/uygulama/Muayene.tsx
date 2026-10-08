@@ -6,7 +6,10 @@
  *   (none)            choose the patient                         → ?hasta=<id>
  *   ?hasta=<id>       the note template, the recording consent, the recording itself
  *   ?seans=<id>       a recorded visit: what was heard, in which language, how sure the engine was
- *   ?not=<id>         the visit's note (./Not.tsx)
+ *   ?not=<id>         the visit's note: draft, second draft in the other language, approval (./Not.tsx)
+ *
+ * After the recording is transcribed the note is written straight away and the note opens. If the note cannot be
+ * written, the recorded visit opens instead: the transcript is kept, and the note can be asked for again there.
  *
  * RECORDING. Nothing is recorded until the consent box is ticked: the button is disabled, and the server refuses a
  * visit without it as well. The audio is held in the browser while it records, uploaded once to the doctor's own
@@ -21,6 +24,7 @@ import { UZ_ACIK_SABLONLAR, type UzSablon } from '../klinik/branslar'
 import { AramaFormu } from './Bugun'
 import { Bilgi, Cerceve, Hata, Secim, tarihYaz, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
+import { Not } from './Not'
 import type { UygulamaMetni } from './metinler'
 
 export type KonusmaOzeti = { dil: string; dilKesin: boolean; ikinciGecis: boolean; dusukGuven: boolean }
@@ -225,8 +229,11 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
       if (error) { geri('SES_OKUNAMADI'); return }
       setDurum('isleniyor')
       const r = await api('/api/ulke/muayene', { method: 'POST', govde: { yol, hastaId, sablon, riza: true } })
-      if (r.ok && r.j.seansId) { window.location.assign(`${YOL.muayene}?seans=${r.j.seansId}`); return }
-      geri(typeof r.j.code === 'string' ? r.j.code : 'BASARISIZ')
+      if (!r.ok || !r.j.seansId) { geri(typeof r.j.code === 'string' ? r.j.code : 'BASARISIZ'); return }
+      // The visit is saved. Now its note; if that fails, the recorded visit opens and says so — nothing is lost.
+      let notId = ''
+      try { const n = await api('/api/ulke/not', { method: 'POST', govde: { seansId: r.j.seansId } }); if (n.ok && typeof n.j.notId === 'string') notId = n.j.notId } catch { /* the visit screen offers to try again */ }
+      window.location.assign(notId ? `${YOL.muayene}?not=${notId}` : `${YOL.muayene}?seans=${r.j.seansId}&xato=not`)
     } catch { geri('BAGLANTI') }
   }
 
@@ -280,10 +287,33 @@ export function MuayeneOzetiGorunumu({ m, muayene, children }: { m: UygulamaMetn
   )
 }
 
-function KayitliMuayene({ u, seansId }: { u: ReturnType<typeof useUygulama>; seansId: string }) {
+/** On a recorded visit: open its note, or — when it has none — ask for it (again). */
+export function NotEylemi({ m, muayene, yaziliyor, yazilamadi, yaz }: { m: UygulamaMetni; muayene: MuayeneDetayi; yaziliyor: boolean; yazilamadi: boolean; yaz: () => void }) {
+  if (muayene.notId) return <div className="uza-eylemler"><a className="uza-dugme" href={`${YOL.muayene}?not=${muayene.notId}`}>{m.muayene.notuAc}</a></div>
+  return (
+    <div style={{ marginTop: 14 }}>
+      <Hata>{yazilamadi ? m.muayene.notYazilamadi : null}</Hata>
+      <div className="uza-eylemler" style={{ marginTop: yazilamadi ? 10 : 0 }}>
+        <button type="button" className="uza-dugme" disabled={yaziliyor} onClick={yaz} data-eylem="not-yaz">{yaziliyor ? m.muayene.notYaziliyor : yazilamadi ? m.muayene.yenidenDene : m.muayene.notHazirla}</button>
+      </div>
+    </div>
+  )
+}
+
+function KayitliMuayene({ u, seansId, yazilamadiBaslangic }: { u: ReturnType<typeof useUygulama>; seansId: string; yazilamadiBaslangic: boolean }) {
   const [muayene, setMuayene] = useState<MuayeneDetayi | null>(null)
   const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
+  const [yaziliyor, setYaziliyor] = useState(false)
+  const [yazilamadi, setYazilamadi] = useState(yazilamadiBaslangic)
   const { hesap, api } = u
+  async function yaz() {
+    setYaziliyor(true); setYazilamadi(false)
+    try {
+      const r = await api('/api/ulke/not', { method: 'POST', govde: { seansId } })
+      if (r.ok && typeof r.j.notId === 'string') { window.location.assign(`${YOL.muayene}?not=${r.j.notId}`); return }
+    } catch { /* shown below */ }
+    setYazilamadi(true); setYaziliyor(false)
+  }
   useEffect(() => {
     if (!hesap) return
     let iptal = false
@@ -292,7 +322,7 @@ function KayitliMuayene({ u, seansId }: { u: ReturnType<typeof useUygulama>; sea
       .catch(() => { if (!iptal) setYuk('hata') })
     return () => { iptal = true }
   }, [hesap, api, seansId])
-  if (yuk === 'tamam' && muayene) return <MuayeneOzetiGorunumu m={u.m} muayene={muayene} />
+  if (yuk === 'tamam' && muayene) return <MuayeneOzetiGorunumu m={u.m} muayene={muayene}><NotEylemi m={u.m} muayene={muayene} yaziliyor={yaziliyor} yazilamadi={yazilamadi && !muayene.notId} yaz={yaz} /></MuayeneOzetiGorunumu>
   return (
     <section className="uza-kart">
       {yuk === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{yuk === 'yok' ? u.m.muayene.bulunamadi : u.m.kabuk.hata}</Hata>}
@@ -318,20 +348,15 @@ function HastaSec({ u, q }: { u: ReturnType<typeof useUygulama>; q: string }) {
 
 export default function Muayene() {
   const u = useUygulama('muayene')
-  const [param, setParam] = useState<{ hasta: string; seans: string; not: string; q: string } | null>(null)
+  const [param, setParam] = useState<{ hasta: string; seans: string; not: string; q: string; xato: string } | null>(null)
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    setParam({ hasta: p.get('hasta') ?? '', seans: p.get('seans') ?? '', not: p.get('not') ?? '', q: p.get('q') ?? '' })
+    setParam({ hasta: p.get('hasta') ?? '', seans: p.get('seans') ?? '', not: p.get('not') ?? '', q: p.get('q') ?? '', xato: p.get('xato') ?? '' })
   }, [])
   if (!u.hesap || !param) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="bugun" cikis={u.cikis}>
-      {param.not ? (
-        <section className="uza-kart">
-          <Hata>{u.m.not.bulunamadi}</Hata>
-          <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.bugun}>{u.m.kabuk.geri}</a></p>
-        </section>
-      ) : param.seans ? <KayitliMuayene u={u} seansId={param.seans} /> : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} /> : <HastaSec u={u} q={param.q} />}
+      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} /> : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} /> : <HastaSec u={u} q={param.q} />}
     </Cerceve>
   )
 }

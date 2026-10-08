@@ -318,7 +318,7 @@ describe('an Uzbekistan build: routes', () => {
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
     assert.deepEqual(d.sayfalar, ['/', '/login', '/patient', '/patients', '/patients/new', '/settings', '/signup', '/start', '/today', '/visit', '/welcome'])
-    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/tercihler'])
+    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
     assert.deepEqual(d.ozel, ['/error', '/global-error', '/layout', '/not-found'])
@@ -411,7 +411,7 @@ describe('an Uzbekistan build: routes', () => {
 
   it('middleware: listed paths pass with "do not index"; every other path of the application is 404 before any screen', () => {
     const git = (yol: string) => ara.middleware(new NextRequest(`https://uz.notya.test${yol}`))
-    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients?q=karim', '/patients/new', '/patient?id=x', '/visit', '/visit?hasta=x', '/visit?seans=x', '/visit?not=x', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/api/ulke/hastalar?q=a', '/api/ulke/hasta?id=x', '/api/ulke/muayene', '/api/ulke/muayene?id=x', '/_next/static/chunks/x.js']) {
+    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients?q=karim', '/patients/new', '/patient?id=x', '/visit', '/visit?hasta=x', '/visit?seans=x', '/visit?not=x', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/api/ulke/hastalar?q=a', '/api/ulke/hasta?id=x', '/api/ulke/muayene', '/api/ulke/muayene?id=x', '/api/ulke/not?id=x', '/api/ulke/not/yeniden-yaz', '/api/ulke/not/onayla', '/_next/static/chunks/x.js']) {
       const r = git(yol)
       assert.equal(r.status, 200, yol)
       assert.match(r.headers.get('x-robots-tag') || '', /noindex, nofollow/, yol)

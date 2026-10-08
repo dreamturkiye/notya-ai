@@ -317,4 +317,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/ulke/hasta/route.ulke.ts': I('hastaGetir: patient id from the address matched with doctor_id in the same query BEFORE anything else is read; foreign id → 404, identical to a missing id'),
   'app/api/ulke/bugun/route.ulke.ts': I('takes no id from the request; sessions, notes and patient names are each read by doctor_id (lib/ulke/uygulama/muayeneler.ts)'),
   'app/api/ulke/muayene/route.ulke.ts': I('muayeneKaydet: patient id proven the caller\'s (hastaGetir) and the recording path proven to lie in the caller\'s own folder BEFORE storage is read; muayeneGetir: visit id + doctor_id in one query, foreign id → 404'),
+  'app/api/ulke/not/route.ulke.ts': I('notYaz: visit id + doctor_id in one query (muayeneGetir), patient re-read by doctor_id; notGetir / notKaydet: note id + doctor_id in one query, every later read or write carries doctor_id; foreign id → 404'),
+  'app/api/ulke/not/yeniden-yaz/route.ulke.ts': I('notYenidenYaz: note id + doctor_id in one query; the second draft is written to not_dil_kaydi by note_id AND doctor_id; target language is not taken from the request'),
+  'app/api/ulke/not/onayla/route.ulke.ts': I('notOnayla: note id + doctor_id in one query; the approving update carries id, doctor_id and approved_at IS NULL in the same statement; foreign id → 404'),
 }

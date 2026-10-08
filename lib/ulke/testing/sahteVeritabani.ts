@@ -62,7 +62,7 @@ export function sahteVeritabani() {
       let sonuc: Satir[]
       if (this.islem === 'select') sonuc = satirlar.filter(uyan)
       else if (this.islem === 'insert') {
-        sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(this.ad === 'hasta_ulke_bilgisi' || this.ad === 'hekim_dil_tercihleri' || this.ad === 'muayene_dil_kaydi' || this.ad === 'not_ikinci_taslak' ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'sessions' ? { started_at: new Date().toISOString() } : {}), ...y }))
+        sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(this.ad === 'hasta_ulke_bilgisi' || this.ad === 'hekim_dil_tercihleri' || this.ad === 'muayene_dil_kaydi' || this.ad === 'not_dil_kaydi' ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'sessions' ? { started_at: new Date().toISOString() } : {}), ...y }))
         satirlar.push(...sonuc)
       } else if (this.islem === 'upsert') {
         const y = this.yuk as Satir

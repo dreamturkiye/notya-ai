@@ -150,6 +150,9 @@ const UZ_LATN = {
     metinKaydedildi: 'Suhbat matni saqlandi.',
     bulunamadi: 'Koʻrik topilmadi.',
     yeniHasta: 'Yangi bemor qoʻshish',
+    notHazirla: 'Qaydni tayyorlash',
+    notYaziliyor: 'Qayd tayyorlanmoqda…',
+    notuAc: 'Koʻrik qaydini ochish',
     hastaSec: 'Avval bemorni tanlang.',
   },
   not: {
@@ -173,6 +176,10 @@ const UZ_LATN = {
     transkript: 'Suhbat matni',
     dosyayaDon: 'Bemor varaqasiga oʻtish',
     bulunamadi: 'Qayd topilmadi.',
+    kaydedilemedi: 'Qoralamani saqlab boʻlmadi. Qaytadan urinib koʻring.',
+    onaylanamadi: 'Tasdiqlab boʻlmadi. Qaytadan urinib koʻring.',
+    zatenOnayli: 'Bu qayd allaqachon tasdiqlangan. Tasdiqlangan qayd oʻzgartirilmaydi.',
+    ikinciTaslak: 'Bu ikkinchi qoralama. Birinchi qoralama oʻzgarmagan: tasdiqlash uchun ulardan birini tanlang.',
   },
 }
 
@@ -309,6 +316,9 @@ const UZ_CYRL: UygulamaMetni = {
     metinKaydedildi: 'Суҳбат матни сақланди.',
     bulunamadi: 'Кўрик топилмади.',
     yeniHasta: 'Янги бемор қўшиш',
+    notHazirla: 'Қайдни тайёрлаш',
+    notYaziliyor: 'Қайд тайёрланмоқда…',
+    notuAc: 'Кўрик қайдини очиш',
     hastaSec: 'Аввал беморни танланг.',
   },
   not: {
@@ -332,6 +342,10 @@ const UZ_CYRL: UygulamaMetni = {
     transkript: 'Суҳбат матни',
     dosyayaDon: 'Бемор варақасига ўтиш',
     bulunamadi: 'Қайд топилмади.',
+    kaydedilemedi: 'Қораламани сақлаб бўлмади. Қайтадан уриниб кўринг.',
+    onaylanamadi: 'Тасдиқлаб бўлмади. Қайтадан уриниб кўринг.',
+    zatenOnayli: 'Бу қайд аллақачон тасдиқланган. Тасдиқланган қайд ўзгартирилмайди.',
+    ikinciTaslak: 'Бу иккинчи қоралама. Биринчи қоралама ўзгармаган: тасдиқлаш учун улардан бирини танланг.',
   },
 }
 
@@ -464,6 +478,9 @@ const RU: UygulamaMetni = {
     metinKaydedildi: 'Текст беседы сохранён.',
     bulunamadi: 'Приём не найден.',
     yeniHasta: 'Добавить нового пациента',
+    notHazirla: 'Подготовить запись приёма',
+    notYaziliyor: 'Готовим запись приёма…',
+    notuAc: 'Открыть запись приёма',
     hastaSec: 'Сначала выберите пациента.',
   },
   not: {
@@ -487,6 +504,10 @@ const RU: UygulamaMetni = {
     transkript: 'Текст беседы',
     dosyayaDon: 'Перейти в карту пациента',
     bulunamadi: 'Запись не найдена.',
+    kaydedilemedi: 'Не удалось сохранить черновик. Попробуйте ещё раз.',
+    onaylanamadi: 'Не удалось утвердить. Попробуйте ещё раз.',
+    zatenOnayli: 'Эта запись уже утверждена. Утверждённая запись не изменяется.',
+    ikinciTaslak: 'Это второй черновик. Первый черновик не изменён: для утверждения выберите один из них.',
   },
 }
 

@@ -231,6 +231,12 @@ export type KonusmaTanimaAyarlari = {
   asgariKarakter: number
 }
 
+/** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
+export type NotIcerigi = { s: string; o: string; a: string; p: string }
+
+/** What the note is written from, besides the transcript: no name, no identity number, no phone. */
+export type NotGirdisi = { dogumTarihi: string; cinsiyet: string; muayeneTarihi: string; metin: string }
+
 /** What a pack brings for the visit: recording → transcript → note. Server-side only. null = the country has none. */
 export type UlkeKlinigi = {
   konusma: KonusmaTanimaAyarlari
@@ -240,6 +246,21 @@ export type UlkeKlinigi = {
   sablonlar: readonly string[]
   /** Visits (recordings turned into notes) one account may make per day of the country. */
   gunlukMuayeneLimiti: number
+  /**
+   * INSTRUCTIONS TO THE MODEL — the pack's own, in the language the note is written in. Core holds no instruction
+   * text at all. null = the pack has none for that language or template: the note is not written.
+   */
+  notTalimati: (dil: DilKodu, sablon: string) => string | null
+  /** The message that carries the transcript, in the note's language. */
+  notGirdisi: (dil: DilKodu, g: NotGirdisi) => string
+  /** Instructions for rewriting an existing note in `hedefDil`, written in that language. null = not offered. */
+  yenidenYazimTalimati: (hedefDil: DilKodu) => string | null
+  yenidenYazimGirdisi: (hedefDil: DilKodu, icerik: NotIcerigi) => string
+  /**
+   * "The other language" for a note written in `dil` — what one click rewrites it in. `hesapDilleri` are the
+   * account's own languages (interface, notes), so that a script it already uses is chosen. null = there is none.
+   */
+  digerDil: (dil: DilKodu, hesapDilleri: readonly DilKodu[]) => DilKodu | null
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

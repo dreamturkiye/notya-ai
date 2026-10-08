@@ -13,7 +13,7 @@
  * Never part of a build and never loaded in a deployment: it exists only on the command line above.
  *
  * Scenario and log are two files, because the command above starts more than one process:
- *   <dir>/senaryo.json     { "stt": "yuksek" | "dusuk" }       written by the walk-through before a visit
+ *   <dir>/senaryo.json     { "stt": "yuksek" | "dusuk", "model": "tamam" | "hata" }   written by the walk-through before a visit
  *   <dir>/cagrilar.jsonl   one line per provider call           read by the walk-through
  * <dir> = $YURUYUS_DIZIN or <os tmp>/notya-yuruyus.
  */
@@ -36,6 +36,15 @@ const UZ_IKINCI = 'Shifokor: Salom, nima bezovta qilyapti? Ona: Qizimda uch kund
 const kelimeler = (metin, logprob) => metin.split(' ').flatMap((k, i) => [{ text: k, type: 'word', start: i * 0.4, end: i * 0.4 + 0.3, logprob }, { text: ' ', type: 'spacing', start: i * 0.4 + 0.3, end: i * 0.4 + 0.4, logprob: 0 }])
 const scribe = (metin, dil, olasilik, logprob) => ({ language_code: dil, language_probability: olasilik, text: metin, words: kelimeler(metin, logprob) })
 
+// Synthetic notes, one per language a note can be written in.
+const notlar = {
+  'uz-Latn': { s: 'Onasining aytishicha, qizida uch kundan beri isitma (38,5 gacha), yoʻtal va burun bitishi. Ishtahasi pasaygan, suyuqlikni yaxshi ichyapti.', o: 'Tomogʻi qizargan. Oʻpkada xirillash yoʻq, nafas olishi erkin.', a: 'Shifokor tashxisni aytmadi.', p: 'Koʻp suyuqlik. Isitma koʻtarilsa paratsetamol. Uch kundan keyin qayta koʻrik.' },
+  'uz-Cyrl': { s: 'Онасининг айтишича, қизида уч кундан бери иситма, йўтал ва бурун битиши.', o: 'Томоғи қизарган. Ўпкада хириллаш йўқ.', a: 'Шифокор ташхисни айтмади.', p: 'Кўп суюқлик. Уч кундан кейин қайта кўрик.' },
+  ru: { s: 'Со слов матери, у девочки третий день температура (до 38,5), кашель и заложенность носа. Аппетит снижен, пьёт хорошо.', o: 'Зев гиперемирован. Хрипов в лёгких нет, дыхание свободное.', a: 'Врач диагноз не назвал.', p: 'Обильное питьё. При повышении температуры парацетамол. Повторный приём через три дня.' },
+  // A rewrite keeps what the doctor changed: the stand-in carries the edited dose over, as a faithful rewrite would.
+  ruYeniden: (kullanici) => ({ ...notlar.ru, p: kullanici.includes('250 mg') ? 'Обильное питьё. При повышении температуры парацетамол 250 мг. Повторный приём через три дня.' : notlar.ru.p }),
+}
+
 const gercek = globalThis.fetch
 globalThis.fetch = async function sahteFetch(girdi, secenek) {
   const adres = typeof girdi === 'string' ? girdi : girdi instanceof URL ? girdi.href : girdi?.url ?? String(girdi)
@@ -54,6 +63,27 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
       return dil ? json(scribe(UZ_IKINCI, dil, 1, -0.5)) : json(scribe(UZ_BULANIK, 'uzb', 0.52, -0.7))
     }
     return json(scribe(UZ_ILK, 'uzb', 0.97, -0.08))
+  }
+
+  if (u.origin === 'https://openrouter.ai' && u.pathname === '/api/v1/chat/completions') {
+    let b = {}
+    try { b = JSON.parse(String(secenek?.body ?? '{}')) } catch { /* answered as an empty request below */ }
+    const mesajlar = Array.isArray(b.messages) ? b.messages : []
+    const duz = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.map((p) => p?.text ?? '').join('\n') : '')
+    const sistem = duz(mesajlar.find((m) => m.role === 'system')?.content)
+    const kullanici = mesajlar.filter((m) => m.role === 'user').map((m) => duz(m.content)).join('\n')
+    const yeniden = /^(QAYD|ҚАЙД|ЗАПИСЬ):/.test(kullanici)
+    const dil = sistem.includes('на русском языке') ? 'ru' : sistem.includes('кирилл ёзувида') ? 'uz-Cyrl' : sistem.includes('lotin yozuvida') ? 'uz-Latn' : '?'
+    // The log keeps what the walk-through must be able to prove — never the text itself.
+    kaydet({
+      tur: 'model', is: yeniden ? 'yeniden' : 'not', dil, model: String(b.model || ''), veriToplama: b.provider?.data_collection ?? null,
+      sistemUzunluk: sistem.length, kimlikVar: /Karimova|Dilnoza|Rustam|Иванов|\+998|aaaaaaaa-0000/.test(sistem + kullanici),
+      yasVar: /yoshi — 5 yosh|возраст — /.test(kullanici), duzeltmeVar: kullanici.includes('250 mg'),
+    })
+    if (senaryo().model === 'hata') return json({ error: { code: 503, message: 'stand-in: the model provider is down' } }, 503)
+    const cevap = yeniden ? (dil === 'ru' ? notlar.ruYeniden(kullanici) : notlar[dil]) : notlar[dil]
+    if (!cevap) return json({ error: { code: 400, message: 'stand-in: no instruction it knows' } }, 400)
+    return json({ id: 'sahte', model: b.model, choices: [{ message: { role: 'assistant', content: JSON.stringify(cevap) }, finish_reason: 'stop' }], usage: { prompt_tokens: 800, completion_tokens: 200 } })
   }
 
   kaydet({ tur: 'REFUSED', adres: u.origin + u.pathname })

@@ -38,7 +38,7 @@ const tablolar = { users: [] }
 for (const h of Object.values(hesaplar)) if (h.ulke) tablolar.users.push({ id: h.id, full_name: h.ad, country: h.ulke, ui_language: h.dil })
 const tablo = (ad) => (tablolar[ad] ??= [])
 /** Tables whose rows have no id of their own (the key is another table's id). */
-const KIMLIKSIZ = new Set(['hekim_dil_tercihleri', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_ikinci_taslak', 'ai_kullanim'])
+const KIMLIKSIZ = new Set(['hekim_dil_tercihleri', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ai_kullanim'])
 /** bucket/path → { tur, veri: Buffer } */
 const depo = new Map()
 
