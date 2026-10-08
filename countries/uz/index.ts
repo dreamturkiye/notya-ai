@@ -58,6 +58,9 @@ export const UZ_PAKETI: UlkePaketi = {
     // patients, visit recording to an approved note. Where it is on, a signed-in account lands on /today instead of
     // the holding page. Sign-up is still by invitation code only, so nobody reaches it uninvited.
     cekirdekMuayene: true,
+    // NOTYA-UZ-RANDEVU-01 (2026-10-08): appointments — working pattern, calendar, booking, status, the link from an
+    // appointment to its visit, a reminder text the doctor copies. Nothing is sent to anybody automatically.
+    randevu: true,
   },
   // No tool is valid in Uzbekistan yet: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md is a proposal awaiting a local clinical lead.
   araclar: [],
@@ -88,5 +91,14 @@ export const UZ_PAKETI: UlkePaketi = {
     // NOTYA-UZ-BRANSLAR-01: the 40 roles an account chooses from at first login (30 doctor specialties, 5 clinic
     // doctors, 5 clinic allied professions). Keys only; the names are in ./klinik/rolAdlari.ts.
     roller: UZ_ROLLER,
+    // NOTYA-UZ-RANDEVU-01 — appointment norms. STARTING VALUES, to verify with the local clinical lead (checklist J4):
+    // the usual working week and hours of a private clinic in Uzbekistan were not checked against a local source.
+    // An account changes all of it for itself on the calendar's settings view. The time zone is `saatDilimi` above
+    // and the week starts on `bicim.haftaBasi`. PUBLIC HOLIDAYS are deliberately absent: they are local content
+    // (docs/COUNTRY-PACK-UZBEKISTAN.md, "needs local content"), and a hard-coded list would silently go stale.
+    randevu: {
+      varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] },
+      sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
+    },
   },
 }

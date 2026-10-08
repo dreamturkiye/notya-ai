@@ -334,7 +334,7 @@ describe('an Uzbekistan build: routes', () => {
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
     assert.deepEqual(d.sayfalar, ['/', '/login', '/patient', '/patients', '/patients/new', '/settings', '/signup', '/start', '/today', '/visit', '/welcome'])
-    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/rol', '/api/ulke/tercihler'])
+    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/calisma-duzeni', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/randevu', '/api/ulke/randevular', '/api/ulke/rol', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
     assert.deepEqual(d.ozel, ['/error', '/global-error', '/layout', '/not-found'])

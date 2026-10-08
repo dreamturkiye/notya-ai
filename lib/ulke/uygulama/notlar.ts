@@ -19,10 +19,12 @@
  * pack names the keys a template owns for this patient (`notAlanlari`); `alanlariSuz` keeps those and DROPS every
  * other key — on the model's answer, on what a request sends, and again on what is read back to be shown. A note
  * of one role can therefore neither store nor show a field of another, whatever the model or a client sends.
- *   Approving the note's own language writes the fields AFTER the decisive statement on `notes`, and only when
- *   that statement won — so the fields of an approved note cannot be changed by a late request either. (Two
- *   statements, not one transaction: if the second fails the answer is 'BASARISIZ' and the approved note keeps
- *   the fields of its last saved draft. One database function would close that; see docs/OPEN-COMMITMENTS.md.)
+ *
+ * APPROVAL IS ALL OR NOTHING (NOTYA-UZ-RANDEVU-01). Approving is ONE call to one database function,
+ * `ulke_not_onayla` (migration 135), which runs in one transaction: the note's text and approval, its role fields
+ * (and the exchange of the two drafts when the other one is approved), and "done" on the appointment the visit was
+ * started from. This file makes no other write while approving — so a failure anywhere leaves the note unapproved
+ * and every row as it was. (Before, the fields were a second statement after the approval.)
  *
  *   draft           notes.content_* = the text in `not_dili`;  not_dil_kaydi.ikinci_* = the other draft, if asked for
  *   approve (same)  notes.content_* ← the text on the screen, approved_at set
@@ -64,6 +66,8 @@ const DIL_KOLONLARI = 'not_dili, ikinci_dil, ikinci_s, ikinci_o, ikinci_a, ikinc
 
 const satirdan = (n: NotSatiri): NotIcerigi => ({ s: n.content_subjektif ?? '', o: n.content_objektif ?? '', a: n.content_degerlendirme ?? '', p: n.content_plan ?? '' })
 const kolonlara = (i: NotIcerigi) => ({ content_subjektif: i.s, content_objektif: i.o, content_degerlendirme: i.a, content_plan: i.p })
+/** The database function that approves a note in one transaction (migration 135). */
+export const NOT_ONAY_ISLEVI = 'ulke_not_onayla'
 const bosMu = (i: NotIcerigi) => !(i.s.trim() || i.o.trim() || i.a.trim() || i.p.trim())
 
 /**
@@ -248,36 +252,30 @@ export async function notOnayla(supabase: SupabaseClient, doktorId: string, notI
   const alanVar = icerik.alanlar !== undefined || o.dil.alanlar != null || o.dil.ikinci_alanlar != null
   const izinli = alanVar ? izinliAlanlar(await muayeneGetir(supabase, doktorId, o.not.session_id)) : []
   const ekrandaki = icerik.alanlar === undefined ? undefined : alanlariSuz(icerik.alanlar, izinli)
+  // What `not_dil_kaydi` must hold afterwards. Only the keys named here are written; null = the row is left alone.
+  let dilKaydi: Record<string, unknown> | null = null
   if (!ayni) {
     // The other draft is the one being approved: the two change places, so the draft that is not chosen is kept
-    // beside the note. If the next step fails, a retry lands in the "same language" branch with the text from the screen.
+    // beside the note. The fields change places with the text: the chosen draft's (as on the screen) become the note's.
     const eski = satirdan(o.not)
-    const { error } = await supabase
-      .from('not_dil_kaydi')
-      .update({
-        not_dili: dil as string, ikinci_dil: o.dil.not_dili, ikinci_s: eski.s, ikinci_o: eski.o, ikinci_a: eski.a, ikinci_p: eski.p,
-        // The fields change places with the text: the chosen draft's (as on the screen) become the note's.
-        ...(alanVar ? { alanlar: ekrandaki !== undefined ? ekrandaki : alanlariSuz(o.dil.ikinci_alanlar, izinli), ikinci_alanlar: alanlariSuz(o.dil.alanlar, izinli) } : {}),
-        updated_at: simdi,
-      })
-      .eq('note_id', notId)
-      .eq('doctor_id', doktorId)
-    if (error) return ret('BASARISIZ')
+    dilKaydi = {
+      not_dili: dil as string, ikinci_dil: o.dil.not_dili, ikinci_s: eski.s, ikinci_o: eski.o, ikinci_a: eski.a, ikinci_p: eski.p,
+      ...(alanVar ? { alanlar: ekrandaki !== undefined ? ekrandaki : alanlariSuz(o.dil.ikinci_alanlar, izinli), ikinci_alanlar: alanlariSuz(o.dil.alanlar, izinli) } : {}),
+    }
+  } else if (ekrandaki !== undefined) {
+    // Same language: the fields as they stand on the screen.
+    dilKaydi = { alanlar: ekrandaki }
   }
-  // The decisive write: text and approval together, and only while the note is still unapproved.
-  const { data, error } = await supabase
-    .from('notes')
-    .update({ ...kolonlara(icerik), approved_at: simdi, approved_by: doktorId })
-    .eq('id', notId)
-    .eq('doctor_id', doktorId)
-    .is('approved_at', null)
-    .select('id')
+  // THE ONE WRITE. Text, approval, fields and the appointment's "done" happen together or not at all; the function
+  // itself refuses a note that is already approved (and one that is not this doctor's) without changing anything.
+  const { data, error } = await supabase.rpc(NOT_ONAY_ISLEVI, {
+    p_note_id: notId, p_doctor_id: doktorId, p_onay_ani: simdi,
+    p_s: icerik.s, p_o: icerik.o, p_a: icerik.a, p_p: icerik.p,
+    p_dil_kaydi: dilKaydi,
+  })
   if (error) return ret('BASARISIZ')
-  if (!(data as unknown[] | null)?.length) return ret('ONAYLI')
-  // Same language: the fields as they stand on the screen, written only now that THIS request has approved the note.
-  if (ayni && ekrandaki !== undefined) {
-    const { error: alanHatasi } = await supabase.from('not_dil_kaydi').update({ alanlar: ekrandaki, updated_at: simdi }).eq('note_id', notId).eq('doctor_id', doktorId)
-    if (alanHatasi) return ret('BASARISIZ')
-  }
+  if (data === 'ONAYLI') return ret('ONAYLI')
+  if (data === 'NOT_FOUND') return ret('NOT_FOUND')
+  if (data !== 'TAMAM') return ret('BASARISIZ')
   return { tamam: true, onayTarihi: simdi }
 }

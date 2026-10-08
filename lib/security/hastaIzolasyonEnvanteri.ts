@@ -320,4 +320,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/ulke/not/route.ulke.ts': I('notYaz: visit id + doctor_id in one query (muayeneGetir), patient re-read by doctor_id; notGetir / notKaydet: note id + doctor_id in one query, every later read or write carries doctor_id; foreign id → 404'),
   'app/api/ulke/not/yeniden-yaz/route.ulke.ts': I('notYenidenYaz: note id + doctor_id in one query; the second draft is written to not_dil_kaydi by note_id AND doctor_id; target language is not taken from the request'),
   'app/api/ulke/not/onayla/route.ulke.ts': I('notOnayla: note id + doctor_id in one query; the approving update carries id, doctor_id and approved_at IS NULL in the same statement; foreign id → 404'),
+  // NOTYA-UZ-RANDEVU-01: appointments of a country build. Tested in countries/uz/uygulama/randevu.test.ts (A→B and B→A).
+  'app/api/ulke/calisma-duzeni/route.ulke.ts': I('takes no id from the request; the working pattern is read and written by the authenticated account\'s own id; no patient data'),
+  'app/api/ulke/randevu/route.ulke.ts': I('randevuOlustur: patient id proven the caller\'s (hastaGetir) before anything is written; randevuGetir / randevuTasi / randevuDurumDegistir: appointment id + doctor_id in the same statement, the patient re-read by doctor_id; foreign id → 404, identical to a missing id'),
+  'app/api/ulke/randevular/route.ulke.ts': I('the list is read by doctor_id; a patient id from the address is proven the caller\'s (hastaGetir) before anything is read with it; patient names are read by doctor_id AND patient id'),
 }

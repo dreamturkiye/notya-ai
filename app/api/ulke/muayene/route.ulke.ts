@@ -1,10 +1,12 @@
 /**
  * NOTYA-UZ-MUAYENE-01 — /api/ulke/muayene: a visit of the caller.
  *
- *   POST { yol, hastaId, sablon, riza: true }
+ *   POST { yol, hastaId, sablon, riza: true, randevuId? }
  *        The recording at `yol` (uploaded by the browser to the caller's own folder of the recordings bucket) is
  *        transcribed and removed; the visit is stored with its transcript and its language record.
- *        200 { seansId, ikinciGecis, dusukGuven }
+ *        200 { seansId, ikinciGecis, dusukGuven, randevuBagli }
+ *        `randevuId` (NOTYA-UZ-RANDEVU-01): the appointment the visit is started from — it must be the caller's and for
+ *        this patient (anything else: 404, before the recording is read); the stored visit is then linked to it.
  *        400 { code: 'RIZA_GEREKLI' }           the recording-consent box was not ticked
  *        400 { code: 'GECERSIZ', alan }         a path outside the caller's folder, or an unknown template
  *        404 { code: 'NOT_FOUND' }              no such patient FOR THIS DOCTOR (another doctor's patient: the same)
@@ -47,9 +49,11 @@ export const POST = sinirda('muayene POST', async (req: NextRequest) => {
     hastaId: g.hastaId,
     sablon: metinAlani(g.sablon, 40),
     riza: g.riza === true,
+    // NOTYA-UZ-RANDEVU-01: a malformed appointment id is the same "not found" as a foreign one.
+    randevuId: g.randevuId === undefined || g.randevuId === null ? null : uuidMi(g.randevuId) ? g.randevuId : 'x',
   })
   if (!r.tamam) return cevap({ code: r.kod, ...(r.alan ? { alan: r.alan } : {}) }, DURUM[r.kod])
-  return cevap({ seansId: r.seansId, ikinciGecis: r.ikinciGecis, dusukGuven: r.dusukGuven })
+  return cevap({ seansId: r.seansId, ikinciGecis: r.ikinciGecis, dusukGuven: r.dusukGuven, randevuBagli: r.randevuBagli })
 })
 
 export const GET = sinirda('muayene GET', async (req: NextRequest) => {

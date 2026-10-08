@@ -383,8 +383,8 @@ describe('Uzbekistan application: language choices API', () => {
     assert.equal((await hesap('jeton-a')).dilSoruldu, false)
   })
 
-  it('home: today\'s visits of a doctor with none', async () => {
-    assert.deepEqual(await cevap(await bugun.GET(istek('/api/ulke/bugun', 'jeton-a'))), { s: 200, j: { muayeneler: [] } })
+  it('home: today\'s visits and appointments (NOTYA-UZ-RANDEVU-01) of a doctor with none', async () => {
+    assert.deepEqual(await cevap(await bugun.GET(istek('/api/ulke/bugun', 'jeton-a'))), { s: 200, j: { muayeneler: [], randevular: [] } })
   })
 })
 
