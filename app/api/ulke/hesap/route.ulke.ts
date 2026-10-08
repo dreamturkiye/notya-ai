@@ -12,6 +12,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { HESAP_REDDI_KODU, satirBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 import { aktifUlke, dilSec, ozellikAcik } from '@/lib/ulke/ulke'
 import { dilTercihleriniOku } from '@/lib/ulke/uygulama/dilTercihleri'
@@ -21,7 +22,7 @@ export const dynamic = 'force-dynamic'
 const cevap = (govde: Record<string, unknown>, status: number) =>
   NextResponse.json(govde, { status, headers: { 'Cache-Control': 'no-store' } })
 
-export async function GET(req: NextRequest) {
+export const GET = sinirda('hesap GET', async (req: NextRequest) => {
   const oturum = await ulkeOturum(req)
   if (!oturum) return cevap({ code: 'OTURUM_YOK' }, 401)
   const { data: satir, error } = await oturum.supabase
@@ -37,4 +38,4 @@ export async function GET(req: NextRequest) {
   // The application has its own language list (a script variant may exist there before the public pages have it).
   const t = await dilTercihleriniOku(oturum.supabase, oturum.user.id, satir.ui_language)
   return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu }, 200)
-}
+})

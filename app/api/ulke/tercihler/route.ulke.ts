@@ -12,13 +12,14 @@
  */
 import { NextRequest } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik, uygulamaDiliMi } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD } from '@/lib/ulke/uygulama/cevap'
 import { dilTercihleriniYaz } from '@/lib/ulke/uygulama/dilTercihleri'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
+export const POST = sinirda('tercihler POST', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
@@ -28,4 +29,4 @@ export async function POST(req: NextRequest) {
   const tamam = await dilTercihleriniYaz(oturum.supabase, oturum.user.id, { arayuzDili: g.arayuzDili, notDili: g.notDili })
   if (!tamam) return KOD.basarisiz()
   return cevap({ ok: true, dil: g.arayuzDili, notDili: g.notDili })
-}
+})

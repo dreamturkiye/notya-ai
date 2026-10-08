@@ -10,10 +10,10 @@ import type { UygulamaMetni } from './metinler'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
-export function AramaFormu({ m, q }: { m: UygulamaMetni; q?: string }) {
+export function AramaFormu({ m, q, hedef }: { m: UygulamaMetni; q?: string; /** Where the search lands; the patient list unless told otherwise. */ hedef?: string }) {
   // A plain GET form: the search works before any script has loaded, and the address can be shared with nobody but the doctor.
   return (
-    <form className="uza-arama" action={YOL.hastalar} method="get" role="search">
+    <form className="uza-arama" action={hedef ?? YOL.hastalar} method="get" role="search">
       <label className="uza-etiket" htmlFor="uza-arama">{m.arama.etiket}</label>
       <div className="uza-arama-satir">
         <input id="uza-arama" name="q" type="search" defaultValue={q} placeholder={m.arama.ornek} autoComplete="off" className="uza-girdi" />
@@ -46,7 +46,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata }: { m: UygulamaMetni; a
         ) : (
           <ul className="uza-liste">
             {muayeneler.map((v) => {
-              const hedef = v.notId && HAZIR.muayene ? `${YOL.muayene}?not=${v.notId}` : v.hastaId ? `${YOL.hasta}?id=${v.hastaId}` : null
+              // A visit with a note opens the note; one without opens the recorded visit (its transcript).
+              const hedef = !HAZIR.muayene ? (v.hastaId ? `${YOL.hasta}?id=${v.hastaId}` : null) : v.notId ? `${YOL.muayene}?not=${v.notId}` : `${YOL.muayene}?seans=${v.seansId}`
               const icerik = (
                 <>
                   <span className="uza-saat">{saatYaz(v.baslangic)}</span>

@@ -8,17 +8,18 @@
  */
 import { NextRequest } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, KOD } from '@/lib/ulke/uygulama/cevap'
 import { bugunkuMuayeneler } from '@/lib/ulke/uygulama/muayeneler'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
+export const GET = sinirda('bugun GET', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
   const muayeneler = await bugunkuMuayeneler(oturum.supabase, oturum.user.id)
   if (!muayeneler) return KOD.basarisiz()
   return cevap({ muayeneler })
-}
+})

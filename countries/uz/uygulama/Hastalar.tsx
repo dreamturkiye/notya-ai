@@ -177,6 +177,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun }: { m: Uygul
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
   const onayli = muayeneler.filter((v) => v.durum === 'onayli' && v.notId)
   const taslak = muayeneler.filter((v) => v.durum === 'taslak' && v.notId)
+  // Recorded, transcribed, but no note yet: listed so that the visit can be reached again.
+  const notsuz = HAZIR.muayene ? muayeneler.filter((v) => v.durum === 'notsuz') : []
   const satir = (v: DosyaMuayenesi) => (
     <li key={v.seansId}>
       <a className="uza-satir" href={HAZIR.muayene ? `${YOL.muayene}?not=${v.notId}` : undefined}>
@@ -207,6 +209,21 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun }: { m: Uygul
         <section className="uza-kart">
           <h2 className="uza-h2">{m.hasta.taslaklar}</h2>
           <ul className="uza-liste">{taslak.map(satir)}</ul>
+        </section>
+      ) : null}
+      {notsuz.length ? (
+        <section className="uza-kart">
+          <h2 className="uza-h2">{m.hasta.notsuzlar}</h2>
+          <ul className="uza-liste">
+            {notsuz.map((v) => (
+              <li key={v.seansId}>
+                <a className="uza-satir" href={`${YOL.muayene}?seans=${v.seansId}`}>
+                  <span className="uza-saat">{tarihYaz(v.baslangic)}</span>
+                  <span className="uza-liste-ad">{m.hasta.notsuz}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
       <section className="uza-kart">

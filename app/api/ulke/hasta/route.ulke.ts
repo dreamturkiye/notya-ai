@@ -11,6 +11,7 @@
  */
 import { NextRequest } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, KOD, uuidMi } from '@/lib/ulke/uygulama/cevap'
 import { hastaGetir } from '@/lib/ulke/uygulama/hastalar'
@@ -18,7 +19,7 @@ import { hastaninMuayeneleri } from '@/lib/ulke/uygulama/muayeneler'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
+export const GET = sinirda('hasta GET', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
@@ -29,4 +30,4 @@ export async function GET(req: NextRequest) {
   const muayeneler = await hastaninMuayeneleri(oturum.supabase, oturum.user.id, hasta.id)
   if (!muayeneler) return KOD.basarisiz()
   return cevap({ hasta, muayeneler: muayeneler.map(({ seansId, notId, baslangic, durum }) => ({ seansId, notId, baslangic, durum })) })
-}
+})

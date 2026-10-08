@@ -13,13 +13,14 @@
  */
 import { NextRequest } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD, metinAlani } from '@/lib/ulke/uygulama/cevap'
 import { hastaGirdisiHatasi, hastalariListele, hastaOlustur, type HastaGirdisi } from '@/lib/ulke/uygulama/hastalar'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
+export const GET = sinirda('hastalar GET', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
@@ -27,9 +28,9 @@ export async function GET(req: NextRequest) {
   const hastalar = await hastalariListele(oturum.supabase, oturum.user.id, q)
   if (!hastalar) return KOD.basarisiz()
   return cevap({ hastalar })
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = sinirda('hastalar POST', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
@@ -49,4 +50,4 @@ export async function POST(req: NextRequest) {
   const hasta = await hastaOlustur(oturum.supabase, oturum.user.id, girdi)
   if (!hasta) return KOD.basarisiz()
   return cevap({ hasta })
-}
+})

@@ -16,6 +16,9 @@
  * a type error and fails the build (same guarantee as lib/ulke/tipler.ts gives the core surfaces).
  *
  * Uzbek Latin uses U+02BB (ʻ) in oʻ / gʻ and U+02BC (ʼ) for the tutuq belgisi.
+ *
+ * CONSENT WORDING (`muayene.riza`, in all three forms) is marked "NOT REVIEWED BY A LAWYER" where it is written;
+ * a test fails if the mark is removed while the pack still says no lawyer has reviewed it.
  */
 
 const UZ_LATN = {
@@ -109,12 +112,19 @@ const UZ_LATN = {
     notlar: 'Tasdiqlangan qaydlar',
     notYok: 'Hali tasdiqlangan qayd yoʻq.',
     taslaklar: 'Tasdiqlanmagan qoralamalar',
+    notsuzlar: 'Qayd yozilmagan koʻriklar',
+    notsuz: 'Suhbat matni',
     ac: 'Ochish',
   },
   muayene: {
     baslik: 'Koʻrik',
     hasta: 'Bemor',
     sablon: 'Qayd shabloni',
+    sablonGenel: 'Umumiy',
+    sablonPediatri: 'Pediatriya',
+    // NOT REVIEWED BY A LAWYER — recording-consent wording (docs/COUNTRY-PACK-CHECKLIST.md A3, I1). Shown beside the
+    // tick-box that unlocks recording. The version stamped on every visit is `riza.surum` in ../klinik/index.ts:
+    // change both together when a reviewed wording arrives.
     riza: 'Bemor yoki uning qonuniy vakili suhbatni yozib olishga rozilik berdi.',
     rizaGerekli: 'Yozishni boshlash uchun rozilikni belgilang.',
     kayitBaslat: 'Yozishni boshlash',
@@ -133,8 +143,13 @@ const UZ_LATN = {
     taninanDil: 'Koʻrik tili',
     dilUz: 'oʻzbekcha',
     dilRu: 'ruscha',
-    dilKarma: 'aralash (oʻzbekcha va ruscha)',
+    dilKarma: 'aniqlanmadi (aralash boʻlishi mumkin)',
+    dilBaska: 'boshqa til',
     ikinciGecis: 'Aniqlik past boʻlgani uchun yozuv ikkinchi marta qayta ishlandi.',
+    dusukGuven: 'Yozuv sifati yoki tili sababli matn notoʻgʻri tanilgan boʻlishi mumkin. Qaydni diqqat bilan tekshiring.',
+    metinKaydedildi: 'Suhbat matni saqlandi.',
+    bulunamadi: 'Koʻrik topilmadi.',
+    yeniHasta: 'Yangi bemor qoʻshish',
     hastaSec: 'Avval bemorni tanlang.',
   },
   not: {
@@ -256,12 +271,19 @@ const UZ_CYRL: UygulamaMetni = {
     notlar: 'Тасдиқланган қайдлар',
     notYok: 'Ҳали тасдиқланган қайд йўқ.',
     taslaklar: 'Тасдиқланмаган қораламалар',
+    notsuzlar: 'Қайд ёзилмаган кўриклар',
+    notsuz: 'Суҳбат матни',
     ac: 'Очиш',
   },
   muayene: {
     baslik: 'Кўрик',
     hasta: 'Бемор',
     sablon: 'Қайд шаблони',
+    sablonGenel: 'Умумий',
+    sablonPediatri: 'Педиатрия',
+    // NOT REVIEWED BY A LAWYER — recording-consent wording (docs/COUNTRY-PACK-CHECKLIST.md A3, I1). Shown beside the
+    // tick-box that unlocks recording. The version stamped on every visit is `riza.surum` in ../klinik/index.ts:
+    // change both together when a reviewed wording arrives.
     riza: 'Бемор ёки унинг қонуний вакили суҳбатни ёзиб олишга розилик берди.',
     rizaGerekli: 'Ёзишни бошлаш учун розиликни белгиланг.',
     kayitBaslat: 'Ёзишни бошлаш',
@@ -280,8 +302,13 @@ const UZ_CYRL: UygulamaMetni = {
     taninanDil: 'Кўрик тили',
     dilUz: 'ўзбекча',
     dilRu: 'русча',
-    dilKarma: 'аралаш (ўзбекча ва русча)',
+    dilKarma: 'аниқланмади (аралаш бўлиши мумкин)',
+    dilBaska: 'бошқа тил',
     ikinciGecis: 'Аниқлик паст бўлгани учун ёзув иккинчи марта қайта ишланди.',
+    dusukGuven: 'Ёзув сифати ёки тили сабабли матн нотўғри танилган бўлиши мумкин. Қайдни диққат билан текширинг.',
+    metinKaydedildi: 'Суҳбат матни сақланди.',
+    bulunamadi: 'Кўрик топилмади.',
+    yeniHasta: 'Янги бемор қўшиш',
     hastaSec: 'Аввал беморни танланг.',
   },
   not: {
@@ -399,12 +426,19 @@ const RU: UygulamaMetni = {
     notlar: 'Утверждённые записи',
     notYok: 'Утверждённых записей пока нет.',
     taslaklar: 'Неутверждённые черновики',
+    notsuzlar: 'Приёмы без записи',
+    notsuz: 'Текст беседы',
     ac: 'Открыть',
   },
   muayene: {
     baslik: 'Приём',
     hasta: 'Пациент',
     sablon: 'Шаблон записи',
+    sablonGenel: 'Общий',
+    sablonPediatri: 'Педиатрия',
+    // NOT REVIEWED BY A LAWYER — recording-consent wording (docs/COUNTRY-PACK-CHECKLIST.md A3, I1). Shown beside the
+    // tick-box that unlocks recording. The version stamped on every visit is `riza.surum` in ../klinik/index.ts:
+    // change both together when a reviewed wording arrives.
     riza: 'Пациент или его законный представитель дал согласие на запись беседы.',
     rizaGerekli: 'Чтобы начать запись, отметьте согласие.',
     kayitBaslat: 'Начать запись',
@@ -423,8 +457,13 @@ const RU: UygulamaMetni = {
     taninanDil: 'Язык приёма',
     dilUz: 'узбекский',
     dilRu: 'русский',
-    dilKarma: 'смешанный (узбекский и русский)',
+    dilKarma: 'не определён (возможно, смешанный)',
+    dilBaska: 'другой язык',
     ikinciGecis: 'Из-за низкой уверенности распознавания запись была обработана повторно.',
+    dusukGuven: 'Из-за качества или языка записи текст мог быть распознан неточно. Внимательно проверьте запись приёма.',
+    metinKaydedildi: 'Текст беседы сохранён.',
+    bulunamadi: 'Приём не найден.',
+    yeniHasta: 'Добавить нового пациента',
     hastaSec: 'Сначала выберите пациента.',
   },
   not: {

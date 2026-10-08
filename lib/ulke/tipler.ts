@@ -193,6 +193,7 @@ export const UYGULAMA_EKRANLARI = {
   hastalar: '/patients',
   yeniHasta: '/patients/new',
   hasta: '/patient',
+  /** One address, three views: ?hasta=<id> records a visit, ?seans=<id> shows a recorded visit, ?not=<id> is its note. */
   muayene: '/visit',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
@@ -202,6 +203,43 @@ export type UlkeSayfalari = {
   acilis: ComponentType<AcilisSayfasiProps> | null
   /** Signed-in application screens. null = none; a screen the pack does not bring answers "not found". */
   uygulama: Partial<Record<UygulamaEkrani, ComponentType>> | null
+}
+
+// ───────────────────────── the clinical half of a pack (countries/active/klinik) ─────────────────────────
+
+/** Storage bucket a visit recording is uploaded to, under a folder named after the doctor's account id (migration 132). */
+export const MUAYENE_SES_KOVASI = 'muayene-sesleri'
+
+/**
+ * Speech recognition for a visit (checklist E5). The ENGINE is core (lib/ulke/uygulama/konusmaTanima.ts); every
+ * choice in it is the pack's: which model, which languages, and when a recording counts as "low confidence".
+ */
+export type KonusmaTanimaAyarlari = {
+  /** The only engine there is today. A pack names it, so that a second one is a decision and not a default. */
+  saglayici: 'elevenlabs-scribe'
+  /** Model id sent to the provider. */
+  model: string
+  /** Note language → the provider's code for that language, used ONLY to force the language of a second pass. */
+  zorlamaDilKodlari: Partial<Record<DilKodu, string>>
+  /** Provider language codes this country expects to hear → the short name the screens know ('uz', 'ru'). */
+  beklenenDiller: Readonly<Record<string, string>>
+  /** Below this probability of the predicted language (0–1) the first pass is "low confidence". */
+  dilOlasiligiEsigi: number
+  /** Below this average word log-probability (≤ 0) a pass is "low confidence". */
+  ortalamaLogOlasilikEsigi: number
+  /** A transcript shorter than this many characters is "not enough speech". */
+  asgariKarakter: number
+}
+
+/** What a pack brings for the visit: recording → transcript → note. Server-side only. null = the country has none. */
+export type UlkeKlinigi = {
+  konusma: KonusmaTanimaAyarlari
+  /** Recording consent shown as a tick-box before recording. The wording is in the pack's catalogue. */
+  riza: { surum: string; hukukcuInceledi: boolean }
+  /** Note templates that are switched on, first = default. */
+  sablonlar: readonly string[]
+  /** Visits (recordings turned into notes) one account may make per day of the country. */
+  gunlukMuayeneLimiti: number
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

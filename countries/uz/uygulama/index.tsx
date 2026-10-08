@@ -9,6 +9,7 @@ import Baslangic from './Baslangic'
 import Bugun from './Bugun'
 import Ayarlar from './Ayarlar'
 import { HastaDosyasi, Hastalar, YeniHasta } from './Hastalar'
+import Muayene from './Muayene'
 
 export const UZ_UYGULAMA: NonNullable<UlkeSayfalari['uygulama']> = {
   baslangic: Baslangic,
@@ -17,4 +18,5 @@ export const UZ_UYGULAMA: NonNullable<UlkeSayfalari['uygulama']> = {
   hastalar: Hastalar,
   yeniHasta: YeniHasta,
   hasta: HastaDosyasi,
+  muayene: Muayene,
 }

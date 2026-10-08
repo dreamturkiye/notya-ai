@@ -27,7 +27,7 @@ export const YOL = Object.fromEntries(Object.entries(UYGULAMA_EKRANLARI).map(([e
  * Screens that exist in this build. A link to a screen that has not landed yet is not rendered at all — an address
  * that answers "not found" is never offered. (The route test proves every `true` here has its page.)
  */
-export const HAZIR = { muayene: false } as const
+export const HAZIR = { muayene: true } as const
 const GIRIS = ulkeYolu('/login')
 const BEKLETME = ulkeYolu('/welcome')
 

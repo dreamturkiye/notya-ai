@@ -23,7 +23,8 @@
  * Exit code 0 only when every check passed.
  */
 import { createRequire } from 'node:module'
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const gerek = createRequire(join(process.env.YURUYUS_MODULLER || process.cwd(), 'x.js'))
@@ -36,6 +37,11 @@ const SUPA = process.env.SUPA || 'http://127.0.0.1:54399'
 const ON_EK = process.env.ON_EK ?? '/uzbek'
 const CIKTI = process.env.CIKTI || './cikti'
 mkdirSync(CIKTI, { recursive: true })
+// Scenario and call log shared with the stand-in providers inside the server (./sahte-saglayicilar.cjs).
+const YURUYUS_DIZIN = process.env.YURUYUS_DIZIN || join(tmpdir(), 'notya-yuruyus')
+mkdirSync(YURUYUS_DIZIN, { recursive: true })
+const SENARYO = join(YURUYUS_DIZIN, 'senaryo.json')
+const GUNLUK = join(YURUYUS_DIZIN, 'cagrilar.jsonl')
 const adres = (rota) => (rota === '/' || /^\/[?#]/.test(rota) ? `${ON_EK}${rota.slice(1)}` : `${ON_EK}${rota}`) || '/'
 const OTURUM_ANAHTARI = 'sb-notya-uz-auth-token'
 
@@ -350,7 +356,114 @@ let hastaB = ''
   kontrol('without a valid session the API says "no session", with a code and no sentence', jetonsuz.s === 401 && jetonsuz.t === '{"code":"OTURUM_YOK"}', `${jetonsuz.s} ${jetonsuz.t}`)
 }
 
-// VISIT — sections 7 and 8 are added with the visit screen (recording → transcript → note → approve).
+// ───────────────────────── 7. a visit: consent, recording, transcript (speech provider is a stand-in) ─────────────────────────
+const cagrilar = () => (existsSync(GUNLUK) ? readFileSync(GUNLUK, 'utf8').split('\n').filter(Boolean).map((x) => JSON.parse(x)) : [])
+const senaryoYaz = (s) => writeFileSync(SENARYO, JSON.stringify(s))
+const tabloOku = async (ad) => (await fetch(`${SUPA}/__tablo/${ad}`)).json()
+/** From the patient's visit screen: tick consent, record the test tone for a moment, stop, and wait for the result. */
+async function kayitYap(p) {
+  await p.waitForSelector('input[name=riza]')
+  await p.click('input[name=riza]')
+  await p.waitForFunction(() => !document.querySelector('.uza-form button.uza-dugme').disabled)
+  await p.click('.uza-form button.uza-dugme')
+  await p.waitForSelector('.uza-sure', { timeout: 20000 })
+  await bekle(2600)
+  const sure = await metin(p, '.uza-sure')
+  await p.click('.uza-kayit .uza-dugme')
+  await p.waitForFunction(() => new URLSearchParams(location.search).has('seans') || new URLSearchParams(location.search).has('not'), { timeout: 120000 })
+  await p.waitForSelector('[data-alan=transkript], [data-alan=not]', { timeout: 60000 })
+  return sure
+}
+let seansYuksek = '', seansDusuk = ''
+{
+  const p = A
+  writeFileSync(GUNLUK, '')
+  senaryoYaz({ stt: 'yuksek' })
+  await git(p, '/today')
+  await p.waitForSelector('.uza-karsilama a.uza-dugme')
+  kontrol('the home now offers "start a visit"', (await metin(p, '.uza-karsilama a.uza-dugme')) === 'Koʻrikni boshlash')
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('.uza-karsilama a.uza-dugme')])
+  await p.waitForSelector('.uza-liste a.uza-satir')
+  kontrol(`"start a visit" → choose the patient, at ${adres('/visit')}`, new URL(p.url()).pathname === adres('/visit') && (await govde(p)).includes('Avval bemorni tanlang.') && (await govde(p)).includes('QA Karimova Dilnoza'))
+  await onEkAltinda(p, 'visit: choose the patient')
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('.uza-liste a.uza-satir')])
+  await p.waitForSelector('input[name=riza]')
+  kontrol('the visit screen of that patient', new URL(p.url()).searchParams.get('hasta') === hastaA && (await metin(p, 'h1')) === 'QA Karimova Dilnoza Rustam qizi')
+  kontrol('a five-year-old: the pediatric template is preselected; only the two open templates are offered', await p.$eval('input[name=sablon][value=pediatri]', (e) => e.checked) && (await p.$$eval('input[name=sablon]', (l) => l.map((e) => e.value).join())) === 'genel,pediatri')
+  // CONSENT blocks recording.
+  const once = await p.evaluate(() => ({ kapali: document.querySelector('.uza-form button.uza-dugme').disabled, isaretli: document.querySelector('input[name=riza]').checked, ipucu: document.querySelector('#uza-riza-ipucu')?.innerText }))
+  kontrol('consent: the box starts unticked and the record button is disabled, with the reason under it', once.kapali && !once.isaretli && once.ipucu === 'Yozishni boshlash uchun rozilikni belgilang.', JSON.stringify(once))
+  await p.evaluate(() => document.querySelector('.uza-form button.uza-dugme').click())
+  await bekle(500)
+  kontrol('consent: pressing the disabled button records nothing', !(await p.$('.uza-sure')) && cagrilar().length === 0)
+  const rizasiz = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'genel' } })
+  kontrol('consent: the server refuses a visit without it as well', rizasiz.s === 400 && rizasiz.t === '{"code":"RIZA_GEREKLI"}', `${rizasiz.s} ${rizasiz.t}`)
+  await onEkAltinda(p, 'visit: consent')
+  await cek(p, 'visit-consent-uz.png', false)
+
+  // HIGH confidence: one pass.
+  const sure = await kayitYap(p)
+  seansYuksek = new URL(p.url()).searchParams.get('seans') || ''
+  let g = await govde(p)
+  kontrol('recording ran with a timer, then the recorded visit opened', /^00:0[2-9]$/.test(sure) && /^[0-9a-f-]{36}$/.test(seansYuksek), `${sure} ${p.url()}`)
+  kontrol('high confidence: the transcript is shown, the language is named, and there is no notice', g.includes('Qizimning uch kundan beri isitmasi bor') && g.includes('oʻzbekcha') && g.includes('Pediatriya') && !g.includes('diqqat bilan tekshiring') && !g.includes('ikkinchi marta'))
+  let c = cagrilar()
+  kontrol('high confidence: the speech engine was asked ONCE, with scribe_v2, no language, and the recording', c.length === 1 && c[0].tur === 'stt' && c[0].model === 'scribe_v2' && c[0].dil === null && c[0].bayt > 200 && c[0].anahtar, JSON.stringify(c))
+  const yuklemeler = (await (await fetch(`${SUPA}/__gunluk`)).json()).filter((x) => x.startsWith('POST /storage/v1/object/'))
+  kontrol('the recording was uploaded to the doctor\'s own folder of the recordings bucket', yuklemeler.length === 1 && yuklemeler[0].startsWith('POST /storage/v1/object/muayene-sesleri/aaaaaaaa-0000-4000-8000-000000000001/'), yuklemeler.join(' '))
+  kontrol('the recording is gone from storage once transcribed', (await (await fetch(`${SUPA}/__depo`)).json()).length === 0)
+  let kayitlar = await tabloOku('muayene_dil_kaydi')
+  kontrol('stored with the visit: predicted language and its probability, consent stamp, one pass', kayitlar.length === 1 && kayitlar[0].taninan_dil === 'uzb' && kayitlar[0].dil_olasiligi === 0.97 && kayitlar[0].gecis_sayisi === 1 && kayitlar[0].ikinci_gecis === false && kayitlar[0].dusuk_guven === false && kayitlar[0].riza_surumu === 'uz-taslak-2026-10-08' && !!kayitlar[0].riza_at && kayitlar[0].not_dili === 'uz-Latn', JSON.stringify(kayitlar[0]))
+  await onEkAltinda(p, 'recorded visit')
+  await cek(p, 'visit-transcript-uz.png')
+
+  // LOW confidence: the second pass.
+  senaryoYaz({ stt: 'dusuk' })
+  await git(p, `/visit?hasta=${hastaA}`)
+  await kayitYap(p)
+  seansDusuk = new URL(p.url()).searchParams.get('seans') || ''
+  g = await govde(p)
+  c = cagrilar().slice(1)
+  kontrol('low confidence: a SECOND pass ran, forced to the doctor\'s note language (Uzbek) — and no third', c.length === 2 && c[0].dil === null && c[1].dil === 'uzb' && c[0].bayt === c[1].bayt && c.every((x) => x.model === 'scribe_v2'), JSON.stringify(c))
+  kontrol('low confidence: the better transcript (the second) was kept', g.includes('Qizimda uch kundan beri isitma') && !g.includes('yotal burun ishtaha past'))
+  kontrol('low confidence stayed low: a plain notice asks the doctor to check carefully, and says a second pass ran', g.includes('Qaydni diqqat bilan tekshiring.') && g.includes('ikkinchi marta qayta ishlandi') && g.includes('aniqlanmadi'))
+  kayitlar = await tabloOku('muayene_dil_kaydi')
+  const k2 = kayitlar.find((k) => k.session_id === seansDusuk)
+  kontrol('stored with the visit: the second pass (for counting cost), which pass was kept, still low', !!k2 && k2.ikinci_gecis === true && k2.ikinci_gecis_dili === 'uzb' && k2.gecis_sayisi === 2 && k2.secilen_gecis === 2 && k2.dusuk_guven === true && k2.taninan_dil === 'uzb' && k2.dil_olasiligi === 0.52, JSON.stringify(k2))
+  await cek(p, 'visit-low-confidence-uz.png')
+  kontrol('no outside address was contacted by the server', !cagrilar().some((x) => x.tur === 'REFUSED'), JSON.stringify(cagrilar().filter((x) => x.tur === 'REFUSED')))
+  senaryoYaz({ stt: 'yuksek' })
+
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('.uza-liste')
+  const dosya = await adresler(p)
+  kontrol('the patient file lists both visits and leads to each', (await govde(p)).includes('Qayd yozilmagan koʻriklar') && dosya.hepsi.includes(`${ON_EK}/visit?seans=${seansYuksek}`) && dosya.hepsi.includes(`${ON_EK}/visit?seans=${seansDusuk}`) && dosya.hepsi.includes(`${ON_EK}/visit?hasta=${hastaA}`), dosya.hepsi.join(' '))
+  await git(p, '/today')
+  await p.waitForSelector('.uza-liste')
+  kontrol('the home lists today\'s two visits', (await p.$$eval('.uza-liste a.uza-satir', (l) => l.map((e) => e.getAttribute('href')))).filter((h) => h.startsWith(`${ON_EK}/visit?seans=`)).length === 2)
+}
+{
+  // ISOLATION on visits: doctor B and doctor A's visit, patient and folder.
+  const p = B
+  const r = await api(p, `/api/ulke/muayene?id=${seansYuksek}`)
+  const yok = await api(p, '/api/ulke/muayene?id=30000000-0000-4000-8000-00000000dead')
+  kontrol('doctor B asks the API for doctor A\'s visit: the same answer as for a visit that does not exist', r.s === 404 && r.t === '{"code":"NOT_FOUND"}' && yok.t === r.t, `${r.s} ${r.t}`)
+  await git(p, `/visit?seans=${seansYuksek}`)
+  await p.waitForSelector('[role=alert]')
+  const g = await govde(p)
+  kontrol('doctor B opens the address of doctor A\'s visit: "visit not found", no transcript, no patient', g.includes('Приём не найден.') && !/isitma|Karimova|Qizim/.test(g), g.replace(/\s+/g, ' ').slice(0, 100))
+  const once = cagrilar().length
+  const yabanciHasta = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000002/x.webm', hastaId: hastaA, sablon: 'genel', riza: true } })
+  kontrol('doctor B cannot record a visit for doctor A\'s patient', yabanciHasta.s === 404 && yabanciHasta.t === '{"code":"NOT_FOUND"}', `${yabanciHasta.s} ${yabanciHasta.t}`)
+  const yabanciYol = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/x.webm', hastaId: hastaB, sablon: 'genel', riza: true } })
+  kontrol('doctor B cannot name a recording in doctor A\'s folder', yabanciYol.s === 400 && yabanciYol.j?.alan === 'yol', `${yabanciYol.s} ${yabanciYol.t}`)
+  kontrol('neither attempt reached the speech engine', cagrilar().length === once)
+  await git(p, '/visit')
+  await p.waitForSelector('.uza-liste a.uza-satir')
+  kontrol('doctor B\'s patient picker offers only doctor B\'s patient', (await govde(p)).includes('Иванов') && !(await govde(p)).includes('Karimova'))
+}
+
+// NOTE — section 8 is added with the note screen (note in Uzbek → rewrite in Russian → approve).
 
 // ───────────────────────── 9. every other screen of the application is closed, signed in or not ─────────────────────────
 {
