@@ -26,9 +26,12 @@
 --   - the RESTRICTIVE patient-ownership policy of migration 052 on the table that names a patient.
 -- The function takes the doctor's id as an argument, so it is closed to the browser roles: only the server may call it.
 --
--- NOT APPLIED by the job that wrote it, and NOT RUN against any PostgreSQL server (none was available to that job):
--- the application was tested against a stand-in that follows this file statement by statement. Run it on an empty
--- copy of the country's database first. Apply after 134, before the calendar is used.
+-- NOT APPLIED to any database by the job that wrote it. It HAS been run, with migrations 130–134, on a throwaway
+-- PostgreSQL 18.4 inside the build machine (scripts/ulke-goc-kaniti.mjs, 2026-10-08): every file runs twice without
+-- error, the constraint refuses a double booking also between two open transactions, and the function leaves every
+-- row unchanged when it fails in the middle. Supabase's own objects (roles, auth, storage) were minimal stand-ins
+-- there, so run it on an empty copy of the country's Supabase database first. Apply after 134, before the calendar
+-- is used. The application's own tests use a stand-in that follows this file statement by statement.
 
 create extension if not exists btree_gist;
 
