@@ -20,6 +20,10 @@
  *   # terminal 3 — this file, from the folder that has the browser
  *   cd /tmp/yuruyus && node <repo>/scripts/ulke-yuruyus/yuruyus.mjs
  *
+ * NOTYA-UZ-RANDEVU-01 — step 8b walks through appointments: set working hours, book from the calendar, the
+ * double-booking and outside-hours answers, copy a reminder in Russian, move, start the visit from the appointment,
+ * approve the note and see the appointment done, the week view, the home, a phone.
+ *
  * Settings: TABAN (http://localhost:3111), SUPA (http://127.0.0.1:54399), ON_EK (/uzbek), CIKTI (./cikti, screenshots).
  * Exit code 0 only when every check passed.
  */
@@ -745,6 +749,179 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   kontrol('four notes in the database, each under its own doctor', notlar.length === 4 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001').length === 3 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000002').length === 1)
   const kullanim = await tabloOku('ai_token_kullanim')
   kontrol('every model call left a usage row with the doctor and the task — and no patient', kullanim.length >= 4 && kullanim.every((k) => /^aaaaaaaa-0000-4000-8000-00000000000[12]$/.test(k.doctor_id) && ['soap', 'not-uretimi'].includes(k.gorev) && !('patient_id' in k)), JSON.stringify(kullanim[0]))
+}
+
+// ───────────────────────── 8b. appointments (NOTYA-UZ-RANDEVU-01): working pattern → book → move → visit → approved note → done; a reminder in Russian ─────────────────────────
+{
+  const p = A
+  const A_ID = 'aaaaaaaa-0000-4000-8000-000000000001'
+  const hesap = (await api(p, '/api/ulke/hesap')).j
+  const gunEkle = (gun, n) => { const [y, a, g] = gun.split('-').map(Number); return new Date(Date.UTC(y, a - 1, g + n)).toISOString().slice(0, 10) }
+  const haftaGunu = (gun) => { const [y, a, g] = gun.split('-').map(Number); return new Date(Date.UTC(y, a - 1, g)).getUTCDay() || 7 }
+  const yazGun = (gun) => gun.split('-').reverse().join('.')
+  const randevular = async () => (await tabloOku('ulke_randevulari')).filter((r) => r.doctor_id === A_ID)
+  const randevuAc = async (id) => { await git(p, `/calendar?randevu=${id}`); await p.waitForSelector('[data-alan=gun]', { timeout: 60000 }) }
+  // A Russian-speaking patient of doctor A: the reminder must be in the PATIENT's language.
+  const ru = await api(p, '/api/ulke/hastalar', { method: 'POST', govde: { ad: 'QA Иванова Мария', otaIsmi: 'Петровна', dogumTarihi: '1990-05-02', cinsiyet: 'female', telefon: '+998 90 000 00 09', dil: 'ru', ulusalKimlik: '' } })
+  const hastaRu = ru.j?.hasta?.id
+  kontrol('a Russian-speaking patient exists for the appointment steps', ru.s === 200 && /^[0-9a-f-]{36}$/.test(hastaRu || ''), `${ru.s} ${ru.t}`)
+
+  // 1. SET WORKING HOURS.
+  const bugun = (await api(p, '/api/ulke/calisma-duzeni')).j.bugun
+  let PZT = gunEkle(bugun, 2); while (haftaGunu(PZT) !== 1) PZT = gunEkle(PZT, 1)
+  await git(p, '/calendar?duzen=1')
+  await p.waitForSelector('[data-eylem=duzen-kaydet]', { timeout: 60000 })
+  const ilk = await p.evaluate(() => ({ gunler: [...document.querySelectorAll('input[name=gunler]')].map((e) => [e.value, e.checked]), bas: document.querySelector('#uza-d-bas').value, bit: document.querySelector('#uza-d-bit').value, tatil: document.querySelector('[data-alan=tatil-notu]')?.innerText || '' }))
+  kontrol('working pattern: the country\'s standard first — Monday to Friday, Monday first, 09:00–18:00', JSON.stringify(ilk.gunler) === JSON.stringify([['1', true], ['2', true], ['3', true], ['4', true], ['5', true], ['6', false], ['7', false]]) && ilk.bas === '09:00' && ilk.bit === '18:00', JSON.stringify(ilk))
+  kontrol('working pattern: the screen says public holidays are not taken into account', ilk.tatil.length > 30 && !TURKCE_HARF.test(ilk.tatil), ilk.tatil)
+  await onEkAltinda(p, 'working pattern')
+  await p.click('input[name=gunler][value="6"]')
+  await yazDeger(p, '#uza-d-bas', '08:00')
+  // (A notice is already on the screen before saving — "the standard pattern applies" — so the answer itself is awaited.)
+  await Promise.all([p.waitForResponse((r) => r.url().endsWith('/api/ulke/calisma-duzeni') && r.request().method() === 'POST', { timeout: 30000 }), p.click('[data-eylem=duzen-kaydet]')])
+  await p.waitForFunction(() => !document.querySelector('[data-eylem=duzen-kaydet]').disabled, { timeout: 30000 })
+  const duzen = (await tabloOku('hekim_calisma_duzeni')).filter((d) => d.doctor_id === A_ID)
+  kontrol('working pattern saved for this doctor: Saturday added, the day begins at 08:00', duzen.length === 1 && JSON.stringify(duzen[0].gunler) === '[1,2,3,4,5,6]' && duzen[0].baslangic_dk === 480 && duzen[0].bitis_dk === 1080 && duzen[0].sure_dk === 30, JSON.stringify(duzen))
+  await cek(p, 'calendar-working-pattern.png')
+
+  // 2. THE CALENDAR: the day, with the free times of the new pattern.
+  await git(p, `/calendar?gun=${PZT}`)
+  await p.waitForSelector('[data-bos]', { timeout: 60000 })
+  const boslar = await p.$$eval('[data-bos]', (l) => l.map((e) => e.getAttribute('data-bos')))
+  kontrol('calendar, day view: free times follow the saved pattern (from 08:00, none in the break)', boslar[0] === '08:00' && boslar.includes('10:00') && !boslar.includes('13:00') && !boslar.includes('13:30') && boslar.at(-1) === '17:30', boslar.join(' '))
+  kontrol('calendar, day view: the day is written in the country\'s pattern', (await metin(p, '[data-gorunum=gun] h2')).endsWith(yazGun(PZT)))
+  await onEkAltinda(p, 'calendar (day)')
+  await cek(p, 'calendar-day.png')
+
+  // 3. BOOK from the calendar: a free time → choose the patient → the form, with day and time already there.
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('a[data-bos="10:00"]')])
+  await p.waitForSelector(`a[href*="hasta=${hastaRu}"]`, { timeout: 60000 })
+  await onEkAltinda(p, 'booking: choose the patient')
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click(`a[href*="hasta=${hastaRu}"]`)])
+  await p.waitForSelector('#uza-rf-gun', { timeout: 60000 })
+  const form = await p.evaluate(() => ({ gun: document.querySelector('#uza-rf-gun').value, saat: document.querySelector('#uza-rf-saat').value, sure: document.querySelector('#uza-rf-sure').value, ad: document.querySelector('h1').innerText }))
+  kontrol('booking form: the patient, the day in DD.MM.YYYY, the time and the default length are filled in', form.gun === yazGun(PZT) && form.saat === '10:00' && form.sure === '30' && form.ad === 'QA Иванова Мария Петровна', JSON.stringify(form))
+  await p.type('#uza-rf-neden', 'QA nazorat')
+  await onEkAltinda(p, 'booking form')
+  await cek(p, 'calendar-booking.png')
+  await p.click('[data-eylem=kaydet]')
+  await p.waitForFunction(() => new URLSearchParams(location.search).has('randevu'), { timeout: 60000 })
+  await p.waitForSelector('[data-alan=gun]', { timeout: 60000 })
+  const randevuId = new URL(p.url()).searchParams.get('randevu')
+  let satirlar = await randevular()
+  kontrol('BOOKED: one appointment of this doctor, for that patient, at 10:00 Tashkent time (05:00 UTC), planned, reason not readable in the table', satirlar.length === 1 && satirlar[0].id === randevuId && satirlar[0].patient_id === hastaRu && satirlar[0].baslangic === `${PZT}T05:00:00.000Z` && satirlar[0].bitis === `${PZT}T05:30:00.000Z` && satirlar[0].durum === 'planlandi' && satirlar[0].mesai_disi === false && !JSON.stringify(satirlar[0]).includes('nazorat'), JSON.stringify(satirlar))
+
+  // NO DOUBLE BOOKING, and "outside working hours" with its explicit "book anyway".
+  await git(p, `/calendar?yeni=1&hasta=${hastaA}&gun=${PZT}&saat=10:15`)
+  await p.waitForSelector('[data-eylem=kaydet]', { timeout: 60000 })
+  await p.click('[data-eylem=kaydet]')
+  await p.waitForSelector('[role=alert]', { timeout: 30000 })
+  const doluMetni = await metin(p, '[role=alert]')
+  kontrol('a taken time: a clear message in the doctor\'s language, NO "book anyway", nothing written', doluMetni.length > 20 && !TURKCE_HARF.test(doluMetni) && !(await p.$('[data-eylem=yine-de]')) && (await randevular()).length === 1, doluMetni)
+  await yazDeger(p, '#uza-rf-saat', '19:30')
+  await p.click('[data-eylem=kaydet]')
+  await p.waitForSelector('[data-eylem=yine-de]', { timeout: 30000 })
+  const disMetni = await metin(p, '[role=alert]')
+  kontrol('outside working hours: a different message, an explicit "book anyway", and nothing written yet', disMetni !== doluMetni && disMetni.length > 20 && !TURKCE_HARF.test(disMetni) && (await randevular()).length === 1, disMetni)
+  await cek(p, 'calendar-outside-hours.png')
+  await p.click('[data-eylem=yine-de]')
+  await p.waitForFunction(() => new URLSearchParams(location.search).has('randevu'), { timeout: 60000 })
+  satirlar = await randevular()
+  kontrol('"book anyway": booked at 19:30 and marked as outside working hours', satirlar.length === 2 && satirlar[1].baslangic === `${PZT}T14:30:00.000Z` && satirlar[1].mesai_disi === true && satirlar[1].patient_id === hastaA, JSON.stringify(satirlar[1]))
+  const ikiKez = await Promise.all([1, 2].map(() => api(p, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: hastaA, gun: yazGun(PZT), saat: '15:00', sureDk: 30 } })))
+  kontrol('two bookings of the same time sent at the same moment: one is booked, one is refused', ikiKez.map((r) => r.s).sort().join() === '200,409' && ikiKez.find((r) => r.s === 409).t === '{"code":"DOLU"}' && (await randevular()).length === 3, ikiKez.map((r) => `${r.s} ${r.t.slice(0, 40)}`).join(' | '))
+
+  // 4. COPY A REMINDER IN RUSSIAN: the patient's language, whatever the doctor reads; nothing is sent anywhere.
+  await randevuAc(randevuId)
+  await p.waitForSelector('[data-alan=hatirlatma]', { timeout: 30000 })
+  const beklenen = `Здравствуйте! Напоминаем: вы записаны на приём к врачу ${hesap.ad} ${yazGun(PZT)} в 10:00.`
+  const hatirlatma = await p.$eval('[data-alan=hatirlatma]', (e) => ({ metin: e.value, dil: e.getAttribute('data-dil'), lang: e.lang }))
+  kontrol('reminder: Russian for a Russian-speaking patient, with the date in DD.MM.YYYY, the time and the doctor\'s name', hatirlatma.metin === beklenen && hatirlatma.dil === 'ru' && hatirlatma.lang === 'ru', JSON.stringify(hatirlatma))
+  kontrol('reminder: no Turkish letter, and the doctor reads the application in another form than the reminder', !TURKCE_HARF.test(hatirlatma.metin) && hesap.dil !== 'ru', `${hesap.dil}`)
+  // What the button puts on the clipboard is caught here; the real clipboard of a headless browser is not relied on.
+  await p.evaluate(() => { window.__kopya = []; const pano = { writeText: async (t) => { window.__kopya.push(t) } }; Object.defineProperty(navigator, 'clipboard', { value: pano, configurable: true }) })
+  const istekOnce = p.istekler.length, supaOnce = (await (await fetch(`${SUPA}/__gunluk`)).json()).length
+  await p.click('[data-eylem=hatirlatma-kopyala]')
+  await p.waitForSelector('[data-alan=hatirlatma-karti] .uza-bilgi-kutu', { timeout: 15000 })
+  const kopya = await p.evaluate(() => window.__kopya)
+  kontrol('ONE BUTTON copies exactly that text, and says so', kopya.length === 1 && kopya[0] === beklenen && (await metin(p, '[data-alan=hatirlatma-karti] .uza-bilgi-kutu')).length > 10, JSON.stringify(kopya))
+  await bekle(600)
+  kontrol('copying sends NOTHING: no request to the application, to the database or to any outside address', p.istekler.length === istekOnce && (await (await fetch(`${SUPA}/__gunluk`)).json()).length === supaOnce && p.disari.length === 0, `${p.istekler.slice(istekOnce).join(' ')} ${p.disari.join(' ')}`)
+  await onEkAltinda(p, 'one appointment')
+  await cek(p, 'calendar-appointment-reminder-ru.png')
+
+  // 5. MOVE it: to 11:30 the same day.
+  await yazDeger(p, '#uza-rt-saat', '11:30')
+  await p.click('[data-eylem=tasi]')
+  await p.waitForSelector('[data-alan=tasi] .uza-bilgi-kutu', { timeout: 30000 })
+  satirlar = await randevular()
+  const tasinan = satirlar.find((r) => r.id === randevuId)
+  kontrol('MOVED: the same appointment now starts at 11:30 Tashkent time; no second row was made', tasinan.baslangic === `${PZT}T06:30:00.000Z` && tasinan.bitis === `${PZT}T07:00:00.000Z` && satirlar.length === 3 && (await metin(p, '[data-alan=saat]')).startsWith('11:30–12:00'), JSON.stringify(tasinan))
+  kontrol('the reminder follows the new time', (await p.$eval('[data-alan=hatirlatma]', (e) => e.value)) === beklenen.replace('в 10:00', 'в 11:30'))
+  await yazDeger(p, '#uza-rt-saat', '15:10')
+  await p.click('[data-eylem=tasi]')
+  await p.waitForSelector('[data-alan=tasi] [role=alert]', { timeout: 30000 })
+  kontrol('moving onto another appointment: refused, no "move anyway", the appointment stays where it was', !(await p.$('[data-eylem=tasi-yine-de]')) && (await randevular()).find((r) => r.id === randevuId).baslangic === `${PZT}T06:30:00.000Z`)
+
+  // 6. START THE VISIT FROM THE APPOINTMENT → record → note → approve → the appointment is done.
+  await randevuAc(randevuId)
+  writeFileSync(GUNLUK, '')
+  senaryoYaz({ stt: 'yuksek', model: 'tamam' })
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('[data-eylem=muayene-baslat]')])
+  await p.waitForSelector('input[name=riza]', { timeout: 60000 })
+  const u = new URL(p.url())
+  kontrol('"start the visit" opens the visit screen for THAT patient, carrying the appointment, and shows which appointment it is', u.pathname === adres('/visit') && u.searchParams.get('hasta') === hastaRu && u.searchParams.get('randevu') === randevuId && (await metin(p, 'h1')) === 'QA Иванова Мария Петровна' && (await metin(p, '[data-alan=randevu]')).includes(`${yazGun(PZT)} · 11:30`), p.url())
+  await onEkAltinda(p, 'visit from an appointment')
+  await kayitYap(p)
+  const notId = new URL(p.url()).searchParams.get('not') || ''
+  let bagli = (await randevular()).find((r) => r.id === randevuId)
+  const seanslar = (await tabloOku('sessions')).filter((x) => x.id === bagli.session_id)
+  kontrol('the recorded visit is LINKED to the appointment, and the patient has arrived', /^[0-9a-f-]{36}$/.test(notId) && seanslar.length === 1 && seanslar[0].patient_id === hastaRu && seanslar[0].doctor_id === A_ID && bagli.durum === 'geldi', JSON.stringify(bagli))
+  kontrol('the note is still a draft: the appointment is not done yet', !(await tabloOku('notes')).find((n) => n.id === notId).approved_at && bagli.durum === 'geldi')
+  await p.click('[data-eylem=onayla]')
+  await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
+  bagli = (await randevular()).find((r) => r.id === randevuId)
+  const onayliNot = (await tabloOku('notes')).find((n) => n.id === notId)
+  kontrol('APPROVING THE NOTE marks the appointment DONE', !!onayliNot.approved_at && onayliNot.session_id === bagli.session_id && bagli.durum === 'tamamlandi', JSON.stringify(bagli))
+  await randevuAc(randevuId)
+  const bitmis = await p.evaluate(() => ({ rozet: document.querySelector('.uza-baslik-satiri [data-randevu-durum]')?.getAttribute('data-randevu-durum'), eylemler: [...document.querySelectorAll('[data-eylem]')].map((e) => e.getAttribute('data-eylem')), muayene: document.querySelector('[data-eylem=muayene-ac]')?.getAttribute('href') }))
+  kontrol('the appointment screen shows it as done, links to its visit, and offers no way to reopen, move or remind', bitmis.rozet === 'tamamlandi' && JSON.stringify(bitmis.eylemler) === '["muayene-ac"]' && bitmis.muayene === `${adres('/visit')}?seans=${bagli.session_id}`, JSON.stringify(bitmis))
+  await cek(p, 'calendar-appointment-done.png')
+
+  // 7. THE WEEK and THE HOME.
+  await git(p, `/calendar?gun=${PZT}&gorunum=hafta`)
+  await p.waitForSelector('.uza-hafta-gun', { timeout: 60000 })
+  const hafta = await p.evaluate(() => [...document.querySelectorAll('.uza-hafta-gun')].map((g) => [g.getAttribute('data-gun'), [...g.querySelectorAll('[data-randevu]')].map((r) => `${r.querySelector('.uza-saat').innerText} ${r.getAttribute('data-randevu-durum')}`)]))
+  kontrol('calendar, week view: seven days from Monday; the three appointments under their own day, in time order, with status', hafta.length === 7 && hafta[0][0] === PZT && hafta[6][0] === gunEkle(PZT, 6) && JSON.stringify(hafta[0][1]) === JSON.stringify(['11:30 tamamlandi', '15:00 planlandi', '19:30 planlandi']) && hafta.slice(1).every((g) => g[1].length === 0), JSON.stringify(hafta))
+  await onEkAltinda(p, 'calendar (week)')
+  await cek(p, 'calendar-week.png')
+  const bugunku = await api(p, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: hastaA, gun: yazGun(bugun), saat: '23:40', sureDk: 15, yineDe: true } })
+  await git(p, '/today')
+  await p.waitForSelector('[data-alan=bugun-randevular] .uza-randevu-satiri', { timeout: 60000 })
+  const ev = await p.evaluate(() => [...document.querySelectorAll('[data-alan=bugun-randevular] .uza-randevu-satiri')].map((li) => ({ id: li.getAttribute('data-randevu'), saat: li.querySelector('.uza-saat').innerText, durum: li.querySelector('[data-randevu-durum]').getAttribute('data-randevu-durum'), baslat: li.querySelector('[data-eylem=muayene-baslat]')?.getAttribute('href') || null })))
+  kontrol('the home lists TODAY\'s appointments (not next week\'s), with time and status, and offers "start the visit"', bugunku.s === 200 && ev.length === 1 && ev[0].id === bugunku.j.randevu.id && ev[0].saat === '23:40–23:55' && ev[0].durum === 'planlandi' && ev[0].baslat === `${adres('/visit')}?hasta=${hastaA}&randevu=${ev[0].id}`, JSON.stringify(ev))
+  await onEkAltinda(p, 'home with appointments')
+  await cek(p, 'today-appointments.png')
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('[data-eylem=randevu-al]', { timeout: 60000 })
+  kontrol('the patient\'s file offers "book an appointment" for that patient and lists the coming ones', (await p.$eval('[data-eylem=randevu-al]', (e) => e.getAttribute('href'))) === `${adres('/calendar')}?yeni=1&hasta=${hastaA}` && (await p.$$('[data-alan=hasta-randevular] [data-randevu]')).length === 3)
+  await onEkAltinda(p, 'patient file with appointments')
+
+  // 8. ISOLATION and A PHONE: doctor B (on a phone) sees none of doctor A's appointments and cannot reach one.
+  const yabanci = await api(B, `/api/ulke/randevu?id=${randevuId}`)
+  const olmayan = await api(B, '/api/ulke/randevu?id=30000000-0000-4000-8000-00000000dead')
+  const yabanciDegistir = await api(B, '/api/ulke/randevu', { method: 'PATCH', govde: { id: satirlar[1].id, durum: 'iptal' } })
+  const yabanciHasta = await api(B, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: hastaA, gun: yazGun(PZT), saat: '09:00', sureDk: 30 } })
+  kontrol('doctor B and doctor A\'s appointment: read, cancel, and booking A\'s patient all answer exactly like "does not exist"', yabanci.s === 404 && yabanci.t === '{"code":"NOT_FOUND"}' && olmayan.t === yabanci.t && yabanciDegistir.t === yabanci.t && yabanciHasta.t === yabanci.t && (await randevular()).find((r) => r.id === satirlar[1].id).durum === 'planlandi' && (await tabloOku('ulke_randevulari')).every((r) => r.doctor_id === A_ID), `${yabanci.s} ${yabanciDegistir.s} ${yabanciHasta.s}`)
+  for (const gorunum of ['gun', 'hafta']) {
+    await git(B, `/calendar?gun=${PZT}${gorunum === 'hafta' ? '&gorunum=hafta' : ''}`)
+    await B.waitForSelector(gorunum === 'hafta' ? '.uza-hafta-gun' : '[data-gorunum=gun]', { timeout: 60000 })
+    const tel = await B.evaluate(() => ({ tasma: document.documentElement.scrollWidth - window.innerWidth, randevu: document.querySelectorAll('[data-randevu]').length, govde: document.body.innerText, kucuk: [...document.querySelectorAll('.uza-govde a, .uza-govde button')].filter((e) => e.getBoundingClientRect().height < 30 && e.getBoundingClientRect().height > 0).length }))
+    kontrol(`ON A PHONE (390 px), ${gorunum === 'hafta' ? 'week' : 'day'} view: nothing runs off the side; doctor B sees none of doctor A's appointments; no Turkish letter`, tel.tasma <= 0 && tel.randevu === 0 && !TURKCE_HARF.test(tel.govde) && !tel.govde.includes('Иванова'), JSON.stringify({ tasma: tel.tasma, randevu: tel.randevu }))
+    await onEkAltinda(B, `calendar on a phone (${gorunum})`)
+    await cek(B, `calendar-${gorunum === 'hafta' ? 'week' : 'day'}-phone-ru.png`)
+  }
+  kontrol('appointments: no request left for any outside address during these steps', p.disari.length === 0 && B.disari.length === 0, [...p.disari, ...B.disari].join(' '))
 }
 
 // ───────────────────────── 9. every other screen of the application is closed, signed in or not ─────────────────────────
