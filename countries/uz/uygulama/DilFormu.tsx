@@ -21,8 +21,8 @@ export function dilSecenekleri(yazi: Yazi): { deger: TemelDil; ad: string; dil: 
 
 /** Each script named in that script. */
 export const YAZI_SECENEKLERI: { deger: Yazi; ad: string; dil: string }[] = [
-  { deger: 'Latn', ad: UZ_UYGULAMA_METINLERI['uz-Latn'].diller.latin, dil: 'uz-Latn' },
-  { deger: 'Cyrl', ad: UZ_UYGULAMA_METINLERI['uz-Cyrl'].diller.kiril, dil: 'uz-Cyrl' },
+  { deger: 'Latn', ad: UZ_UYGULAMA_METINLERI['uz-Latn'].yazilar.Latn, dil: 'uz-Latn' },
+  { deger: 'Cyrl', ad: UZ_UYGULAMA_METINLERI['uz-Cyrl'].yazilar.Cyrl, dil: 'uz-Cyrl' },
 ]
 
 export function DilSecimi({ etiket, ad, deger, yazi, sec }: { etiket: string; ad: string; deger: TemelDil; yazi: Yazi; sec: (d: TemelDil) => void }) {

@@ -860,7 +860,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       // PLANNED, a Russian-speaking patient: everything is offered, and the reminder is in Russian whatever the doctor reads.
       const planli = detay(randevu('r1', PZT, '10:00', 'planlandi', { neden: 'QA sabab', hastaDili: 'ru', mesaiDisi: true }))
       const g = gorunurMetin(planli)
-      for (const s of [r.randevu.baslik, 'QA Karimova Dilnoza', `${r.gunUzun[1]}, 12.10.2026`, '10:00–10:30', `(30 ${r.form.dakika})`, 'QA sabab', r.durum.planlandi, r.randevu.mesaiDisiIsareti, m.bugun.muayeneBaslat, r.randevu.geldi, r.randevu.gelmedi, r.randevu.iptalEt, r.randevu.tasi, r.randevu.tasiKaydet, r.hatirlatma.baslik, r.hatirlatma.kopyala, r.hatirlatma.izoh, `${r.hatirlatma.dil}: ${r.hatirlatma.dilRu}`, r.randevu.takvimeDon, r.randevu.dosya]) assert.ok(g.includes(s), s)
+      for (const s of [r.randevu.baslik, 'QA Karimova Dilnoza', `${r.gunUzun[1]}, 12.10.2026`, '10:00–10:30', `(30 ${r.form.dakika})`, 'QA sabab', r.durum.planlandi, r.randevu.mesaiDisiIsareti, m.bugun.muayeneBaslat, r.randevu.geldi, r.randevu.gelmedi, r.randevu.iptalEt, r.randevu.tasi, r.randevu.tasiKaydet, r.hatirlatma.baslik, r.hatirlatma.kopyala, r.hatirlatma.izoh, `${r.hatirlatma.dil}: ${r.hatirlatma.dilAdi.ru}`, r.randevu.takvimeDon, r.randevu.dosya]) assert.ok(g.includes(s), s)
       assert.deepEqual(eylemler(planli), ['muayene-baslat', 'durum-geldi', 'durum-gelmedi', 'durum-iptal', 'hatirlatma-kopyala', 'tasi'])
       assert.ok(planli.includes(href(`/uzbek/visit?hasta=${HASTA.id}&randevu=r1`)), '"start the visit" must carry the patient and the appointment')
       const beklenen = H.uzHatirlatmaMetni({ hastaDili: 'ru', hekim, gun: PZT, saat: '10:00' })
@@ -872,7 +872,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       const uz = detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'uz' }))
       const uzForm = f === 'ru' ? 'uz-Latn' : f
       assert.match(uz, new RegExp(`data-alan="hatirlatma" data-dil="${uzForm}"`)); assert.ok(uz.includes(`>${H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim, gun: PZT, saat: '10:00' }).metin}</textarea>`))
-      assert.ok(gorunurMetin(uz).includes(`${r.hatirlatma.dil}: ${r.hatirlatma.dilUz}`)); ekranTemiz(uz, `/calendar appointment, uz patient (${f})`)
+      assert.ok(gorunurMetin(uz).includes(`${r.hatirlatma.dil}: ${r.hatirlatma.dilAdi.uz}`)); ekranTemiz(uz, `/calendar appointment, uz patient (${f})`)
       // After the click: said so, in the account's form. Copying failed: said so too.
       assert.ok(gorunurMetin(detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'ru' }), { bildirim: 'kopyalandi' })).includes(r.hatirlatma.kopyalandi))
       assert.ok(gorunurMetin(detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'ru' }), { bildirim: 'kopyalanamadi' })).includes(r.hatirlatma.kopyalanamadi))

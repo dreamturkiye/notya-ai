@@ -655,13 +655,13 @@ describe('Uzbekistan note: screens in the three forms', () => {
       const m = M.uygulamaMetni(f)
       const html = ciz(f, TASLAK)
       const g = gorunurMetin(html)
-      for (const x of [m.not.baslik, 'QA Karimova Dilnoza Rustam qizi', '08.10.2026', m.durum.taslak, m.not.uyari, m.not.s, m.not.o, m.not.a, m.not.p, m.not.notDili, m.diller.uz, m.not.kaydet, m.not.cevirRu, m.not.onayla, m.not.transkript, m.not.dosyayaDon, UZ_NOT.s, UZ_METIN]) assert.ok(g.includes(x), x)
+      for (const x of [m.not.baslik, 'QA Karimova Dilnoza Rustam qizi', '08.10.2026', m.durum.taslak, m.not.uyari, m.not.s, m.not.o, m.not.a, m.not.p, m.not.notDili, m.diller.uz, m.not.kaydet, m.not.cevir.ru, m.not.onayla, m.not.transkript, m.not.dosyayaDon, UZ_NOT.s, UZ_METIN]) assert.ok(g.includes(x), x)
       assert.deepEqual([...html.matchAll(/<textarea id="uza-not-([soap])" name="[soap]" class="uza-girdi" lang="uz-Latn">/g)].map((x) => x[1]), ['s', 'o', 'a', 'p'])
       assert.deepEqual([...html.matchAll(/data-eylem="([a-z-]+)"/g)].map((x) => x[1]), ['onayla', 'kaydet', 'yeniden-yaz'])
       assert.ok(!g.includes(m.muayene.dusukGuven), 'no low-confidence notice for a confident recording')
       ekranTemiz(html, `/visit?not= draft (${f})`)
       // A Russian note offers the rewrite in Uzbek.
-      assert.ok(gorunurMetin(ciz(f, { ...TASLAK, dil: 'ru', icerik: RU_NOT, yenidenYazilabilir: 'uz-Latn' })).includes(m.not.cevirUz))
+      assert.ok(gorunurMetin(ciz(f, { ...TASLAK, dil: 'ru', icerik: RU_NOT, yenidenYazilabilir: 'uz-Latn' })).includes(m.not.cevir.uz))
     })
 
     it(`${f}: LOW CONFIDENCE — a plain notice asks the doctor to check the note carefully; the note is still there`, () => {
@@ -704,7 +704,7 @@ describe('Uzbekistan note: screens in the three forms', () => {
       const g = gorunurMetin(html)
       for (const x of [m.durum.onayli, '10:10', m.not.onaylandi, UZ_NOT.s, UZ_NOT.o, UZ_NOT.a, UZ_NOT.p, m.not.dosyayaDon]) assert.ok(g.includes(x), x)
       assert.doesNotMatch(html, /<textarea|<button type="(submit|button)" class="uza-dugme[^"]*"[^>]*data-eylem|name="taslak-dili"/)
-      assert.ok(!g.includes(m.not.uyari) && !g.includes(m.not.kaydet) && !g.includes(m.not.onayla) && !g.includes(m.not.cevirRu))
+      assert.ok(!g.includes(m.not.uyari) && !g.includes(m.not.kaydet) && !g.includes(m.not.onayla) && !g.includes(m.not.cevir.ru))
       ekranTemiz(html, `/visit?not= approved (${f})`)
     })
 

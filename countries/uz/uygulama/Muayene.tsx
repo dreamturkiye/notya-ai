@@ -63,7 +63,7 @@ export const hesapSablonu = (rol: string | null | undefined): string => (rol && 
 export function konusmaDiliAdi(m: UygulamaMetni, k: KonusmaOzeti | null): string {
   if (!k || !k.dil) return ''
   if (!k.dilKesin) return m.muayene.dilKarma
-  return k.dil === 'uz' ? m.muayene.dilUz : k.dil === 'ru' ? m.muayene.dilRu : m.muayene.dilBaska
+  return k.dil === 'uz' ? m.muayene.konusmaDili.uz : k.dil === 'ru' ? m.muayene.konusmaDili.ru : m.muayene.dilBaska
 }
 
 const sureYaz = (sn: number) => `${String(Math.floor(sn / 60)).padStart(2, '0')}:${String(sn % 60).padStart(2, '0')}`

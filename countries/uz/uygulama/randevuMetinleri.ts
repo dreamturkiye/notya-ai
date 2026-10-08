@@ -25,7 +25,10 @@
  */
 import { UZ_UYGULAMA_DILLERI, uzUygulamaDili, type UzUygulamaDili } from './metinler'
 
-const UZ_LATN = {
+import type { RandevuMetni } from '@/lib/ulke/arayuz/metinTipleri'
+export type { RandevuMetni }
+
+const UZ_LATN: RandevuMetni = {
   kabuk: { takvim: 'Taqvim' },
   // ISO weekdays: 1 = Monday … 7 = Sunday. The week starts on Monday (the pack's `bicim.haftaBasi`).
   gunKisa: { 1: 'Du', 2: 'Se', 3: 'Chor', 4: 'Pay', 5: 'Ju', 6: 'Shan', 7: 'Yak' },
@@ -107,8 +110,7 @@ const UZ_LATN = {
     kopyalanamadi: 'Nusxalab boʻlmadi. Matnni belgilab, qoʻlda nusxalang.',
     izoh: 'Hech narsa avtomatik yuborilmaydi: matnni bemorga oʻzingiz yuborasiz.',
     dil: 'Matn tili (bemorning tili)',
-    dilUz: 'oʻzbekcha',
-    dilRu: 'ruscha',
+    dilAdi: { uz: 'oʻzbekcha', ru: 'ruscha' },
     // PATIENT-FACING. %1 day, %2 time, %3 the doctor's name.
     metin: 'Assalomu alaykum! Eslatma: siz %1 kuni soat %2 da shifokor %3 qabuliga yozilgansiz.',
     // The same without a name, for an account that has none.
@@ -150,8 +152,6 @@ const UZ_LATN = {
 }
 
 /** Same keys, any text. */
-type Bicim<T> = { readonly [K in keyof T]: T[K] extends string ? string : Bicim<T[K]> }
-export type RandevuMetni = Bicim<typeof UZ_LATN>
 
 const UZ_CYRL: RandevuMetni = {
   kabuk: { takvim: 'Тақвим' },
@@ -234,8 +234,7 @@ const UZ_CYRL: RandevuMetni = {
     kopyalanamadi: 'Нусхалаб бўлмади. Матнни белгилаб, қўлда нусхаланг.',
     izoh: 'Ҳеч нарса автоматик юборилмайди: матнни беморга ўзингиз юборасиз.',
     dil: 'Матн тили (беморнинг тили)',
-    dilUz: 'ўзбекча',
-    dilRu: 'русча',
+    dilAdi: { uz: 'ўзбекча', ru: 'русча' },
     // PATIENT-FACING. %1 day, %2 time, %3 the doctor's name.
     metin: 'Ассалому алайкум! Эслатма: сиз %1 куни соат %2 да шифокор %3 қабулига ёзилгансиз.',
     metinAdsiz: 'Ассалому алайкум! Эслатма: сиз %1 куни соат %2 да шифокор қабулига ёзилгансиз.',
@@ -357,8 +356,7 @@ const RU: RandevuMetni = {
     kopyalanamadi: 'Не удалось скопировать. Выделите текст и скопируйте вручную.',
     izoh: 'Ничего не отправляется автоматически: текст пациенту отправляете вы сами.',
     dil: 'Язык текста (язык пациента)',
-    dilUz: 'узбекский',
-    dilRu: 'русский',
+    dilAdi: { uz: 'узбекский', ru: 'русский' },
     // PATIENT-FACING. %1 day, %2 time, %3 the doctor's name.
     metin: 'Здравствуйте! Напоминаем: вы записаны на приём к врачу %3 %1 в %2.',
     metinAdsiz: 'Здравствуйте! Напоминаем: вы записаны на приём к врачу %1 в %2.',

@@ -436,7 +436,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
       {h && h.metin ? (
         <section className="uza-kart" data-alan="hatirlatma-karti">
           <h2 className="uza-h2">{r.hatirlatma.baslik}</h2>
-          <p className="uza-ust-yazi">{r.hatirlatma.dil}: {h.dil === 'ru' ? r.hatirlatma.dilRu : r.hatirlatma.dilUz}</p>
+          <p className="uza-ust-yazi">{r.hatirlatma.dil}: {h.dil === 'ru' ? r.hatirlatma.dilAdi.ru : r.hatirlatma.dilAdi.uz}</p>
           <textarea className="uza-girdi uza-hatirlatma" readOnly rows={3} value={h.metin} lang={h.dil} data-alan="hatirlatma" data-dil={h.dil} aria-label={r.hatirlatma.baslik} onFocus={(e) => e.currentTarget.select()} />
           {bildirim === 'kopyalandi' ? <div style={{ marginTop: 10 }}><Bilgi>{r.hatirlatma.kopyalandi}</Bilgi></div> : null}
           {bildirim === 'kopyalanamadi' ? <div style={{ marginTop: 10 }}><Hata>{r.hatirlatma.kopyalanamadi}</Hata></div> : null}

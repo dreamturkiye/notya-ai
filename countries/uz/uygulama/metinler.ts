@@ -21,7 +21,10 @@
  * a test fails if the mark is removed while the pack still says no lawyer has reviewed it.
  */
 
-const UZ_LATN = {
+import type { UygulamaMetni } from '@/lib/ulke/arayuz/metinTipleri'
+export type { UygulamaMetni }
+
+const UZ_LATN: UygulamaMetni = {
   kabuk: {
     bugun: 'Bugun',
     hastalar: 'Bemorlar',
@@ -33,12 +36,8 @@ const UZ_LATN = {
     baglanti: 'Ulanib boʻlmadi. Internet aloqasini tekshiring.',
     geri: 'Orqaga',
   },
-  diller: {
-    uz: 'Oʻzbekcha',
-    ru: 'Ruscha',
-    latin: 'Lotin yozuvi',
-    kiril: 'Kirill yozuvi',
-  },
+  diller: { uz: 'Oʻzbekcha', ru: 'Ruscha' },
+  yazilar: { Latn: 'Lotin yozuvi', Cyrl: 'Kirill yozuvi' },
   baslangic: {
     baslik: 'Qaysi tilda ishlaysiz?',
     aciklama: 'Interfeys va koʻrik qaydlari shu tilda boʻladi. Keyin Sozlamalar boʻlimida oʻzgartirishingiz mumkin.',
@@ -141,8 +140,7 @@ const UZ_LATN = {
     limit: 'Bugungi qayd limiti tugadi. Ertaga qaytadan urinib koʻring.',
     hazirDegil: 'Ovozni matnga aylantirish hozircha sozlanmagan.',
     taninanDil: 'Koʻrik tili',
-    dilUz: 'oʻzbekcha',
-    dilRu: 'ruscha',
+    konusmaDili: { uz: 'oʻzbekcha', ru: 'ruscha' },
     dilKarma: 'aniqlanmadi (aralash boʻlishi mumkin)',
     dilBaska: 'boshqa til',
     ikinciGecis: 'Aniqlik past boʻlgani uchun yozuv ikkinchi marta qayta ishlandi.',
@@ -163,8 +161,7 @@ const UZ_LATN = {
     a: 'Tashxis va baholash',
     p: 'Reja',
     notDili: 'Qayd tili',
-    cevirRu: 'Rus tilida qayta yozish',
-    cevirUz: 'Oʻzbek tilida qayta yozish',
+    cevir: { ru: 'Rus tilida qayta yozish', uz: 'Oʻzbek tilida qayta yozish' },
     cevriliyor: 'Qayta yozilmoqda…',
     cevrilemedi: 'Qayta yozib boʻlmadi. Qayd oʻzgarmadi.',
     kaydet: 'Qoralamani saqlash',
@@ -210,9 +207,6 @@ const UZ_LATN = {
   },
 }
 
-/** Same keys, any text. */
-type Bicim<T> = { readonly [K in keyof T]: T[K] extends string ? string : Bicim<T[K]> }
-export type UygulamaMetni = Bicim<typeof UZ_LATN>
 
 const UZ_CYRL: UygulamaMetni = {
   kabuk: {
@@ -226,12 +220,8 @@ const UZ_CYRL: UygulamaMetni = {
     baglanti: 'Уланиб бўлмади. Интернет алоқасини текширинг.',
     geri: 'Орқага',
   },
-  diller: {
-    uz: 'Ўзбекча',
-    ru: 'Русча',
-    latin: 'Лотин ёзуви',
-    kiril: 'Кирилл ёзуви',
-  },
+  diller: { uz: 'Ўзбекча', ru: 'Русча' },
+  yazilar: { Latn: 'Лотин ёзуви', Cyrl: 'Кирилл ёзуви' },
   baslangic: {
     baslik: 'Қайси тилда ишлайсиз?',
     aciklama: 'Интерфейс ва кўрик қайдлари шу тилда бўлади. Кейин Созламалар бўлимида ўзгартиришингиз мумкин.',
@@ -334,8 +324,7 @@ const UZ_CYRL: UygulamaMetni = {
     limit: 'Бугунги қайд лимити тугади. Эртага қайтадан уриниб кўринг.',
     hazirDegil: 'Овозни матнга айлантириш ҳозирча созланмаган.',
     taninanDil: 'Кўрик тили',
-    dilUz: 'ўзбекча',
-    dilRu: 'русча',
+    konusmaDili: { uz: 'ўзбекча', ru: 'русча' },
     dilKarma: 'аниқланмади (аралаш бўлиши мумкин)',
     dilBaska: 'бошқа тил',
     ikinciGecis: 'Аниқлик паст бўлгани учун ёзув иккинчи марта қайта ишланди.',
@@ -356,8 +345,7 @@ const UZ_CYRL: UygulamaMetni = {
     a: 'Ташхис ва баҳолаш',
     p: 'Режа',
     notDili: 'Қайд тили',
-    cevirRu: 'Рус тилида қайта ёзиш',
-    cevirUz: 'Ўзбек тилида қайта ёзиш',
+    cevir: { ru: 'Рус тилида қайта ёзиш', uz: 'Ўзбек тилида қайта ёзиш' },
     cevriliyor: 'Қайта ёзилмоқда…',
     cevrilemedi: 'Қайта ёзиб бўлмади. Қайд ўзгармади.',
     kaydet: 'Қораламани сақлаш',
@@ -412,12 +400,8 @@ const RU: UygulamaMetni = {
     baglanti: 'Нет соединения. Проверьте интернет.',
     geri: 'Назад',
   },
-  diller: {
-    uz: 'Узбекский',
-    ru: 'Русский',
-    latin: 'Латиница',
-    kiril: 'Кириллица',
-  },
+  diller: { uz: 'Узбекский', ru: 'Русский' },
+  yazilar: { Latn: 'Латиница', Cyrl: 'Кириллица' },
   baslangic: {
     baslik: 'На каком языке вы работаете?',
     aciklama: 'На этом языке будут интерфейс и записи приёмов. Позже это можно изменить в разделе «Настройки».',
@@ -520,8 +504,7 @@ const RU: UygulamaMetni = {
     limit: 'Дневной лимит записей исчерпан. Попробуйте завтра.',
     hazirDegil: 'Распознавание речи пока не настроено.',
     taninanDil: 'Язык приёма',
-    dilUz: 'узбекский',
-    dilRu: 'русский',
+    konusmaDili: { uz: 'узбекский', ru: 'русский' },
     dilKarma: 'не определён (возможно, смешанный)',
     dilBaska: 'другой язык',
     ikinciGecis: 'Из-за низкой уверенности распознавания запись была обработана повторно.',
@@ -542,8 +525,7 @@ const RU: UygulamaMetni = {
     a: 'Диагноз и оценка',
     p: 'План',
     notDili: 'Язык записи',
-    cevirRu: 'Переписать на русском',
-    cevirUz: 'Переписать на узбекском',
+    cevir: { ru: 'Переписать на русском', uz: 'Переписать на узбекском' },
     cevriliyor: 'Переписываем…',
     cevrilemedi: 'Не удалось переписать. Запись не изменена.',
     kaydet: 'Сохранить черновик',

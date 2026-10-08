@@ -138,7 +138,7 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
               <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={mesgul} onClick={kaydet} data-eylem="kaydet">{n.kaydet}</button>
               {not.yenidenYazilabilir ? (
                 <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={mesgul} onClick={yenidenYaz} data-eylem="yeniden-yaz">
-                  {islem === 'cevriliyor' ? n.cevriliyor : not.yenidenYazilabilir === 'ru' ? n.cevirRu : n.cevirUz}
+                  {islem === 'cevriliyor' ? n.cevriliyor : not.yenidenYazilabilir === 'ru' ? n.cevir.ru : n.cevir.uz}
                 </button>
               ) : null}
             </div>
