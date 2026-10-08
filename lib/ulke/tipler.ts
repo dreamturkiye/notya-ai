@@ -8,6 +8,8 @@
  * Fail closed: anything a pack does not list is OFF. Nothing ever falls back to another country's content.
  */
 
+import type { ComponentType } from 'react'
+
 /** ISO 3166-1 alpha-2, lower case. Adding a country = a new folder under countries/ + a branch in countries/active/. */
 export const ULKE_KODLARI = ['tr', 'uz'] as const
 export type UlkeKodu = (typeof ULKE_KODLARI)[number]
@@ -140,6 +142,20 @@ export type UlkePaketi = {
   dilAdlari: Partial<Record<DilKodu, string>>
 }
 
+// ───────────────────────── pages a pack brings itself (countries/active/sayfalar) ─────────────────────────
+
+export type AcilisSayfasiProps = {
+  /** A switched-on language of the country, already narrowed by dilSec. */
+  dil: DilKodu
+  /** Where "request a price" messages go. null = not configured: the pack must hide the request form. */
+  iletisimEposta: string | null
+}
+
+/** UI a pack brings itself. null = the country has no page of its own there. */
+export type UlkeSayfalari = {
+  acilis: ComponentType<AcilisSayfasiProps> | null
+}
+
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────
 
 /**
@@ -150,6 +166,19 @@ export type UlkePaketi = {
 export type YuzeyAnahtarlari = {
   /** Account messages returned by the server. */
   hesap: 'girisReddi'
+  /** Login form (components/ulke/GirisFormu.tsx). */
+  giris:
+    | 'altBaslik' | 'eposta' | 'epostaOrnek' | 'sifre' | 'sifreOrnek' | 'gonder' | 'gonderiliyor'
+    | 'bosAlan' | 'hata' | 'baglantiHatasi' | 'cokDeneme' | 'hazirDegil' | 'davetSorusu' | 'kayitBaglantisi' | 'anaSayfa'
+  /** Sign-up with an invitation code (components/ulke/DavetliKayitFormu.tsx). */
+  davetliKayit:
+    | 'baslik' | 'aciklama' | 'adSoyad' | 'eposta' | 'sifre' | 'sifreTekrar' | 'davetKodu' | 'dil' | 'gonder' | 'gonderiliyor'
+    | 'eksikAlan' | 'epostaGecersiz' | 'sifreKisa' | 'sifreUyusmuyor' | 'kodGecersiz' | 'olusturulamadi' | 'baglantiHatasi'
+    | 'basarili' | 'girisSorusu' | 'girisBaglantisi' | 'kodYokSorusu' | 'fiyatBaglantisi'
+  /** The one page an account sees while its pilot access is prepared (components/ulke/BekletmeEkrani.tsx). */
+  bekletme: 'baslik' | 'govde' | 'cikis' | 'yukleniyor'
+  /** Not-found and error pages of the root shell. */
+  sistem: 'bulunamadiBaslik' | 'bulunamadiGovde' | 'anaSayfa' | 'hataBaslik' | 'hataGovde' | 'tekrarDene'
 }
 export type Yuzey = keyof YuzeyAnahtarlari
 export type YuzeyMetinleri<Y extends Yuzey> = Readonly<Record<YuzeyAnahtarlari[Y], string>>

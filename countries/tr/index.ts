@@ -9,12 +9,12 @@ import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { cepTelefonuDogrula } from '@/lib/iletisim/cepTelefonu'
 import { tcKimlikGecerli } from '@/lib/enabiz/mbys/kontrol'
 import { TR_ARACLARI } from './araclar'
-import { TR_HESAP } from './metinler'
+import { TR_BEKLETME, TR_DAVETLI_KAYIT, TR_GIRIS, TR_HESAP, TR_SISTEM } from './metinler'
 
 const metin = paketMetinleri({
   acikDiller: ['tr'],
-  yuzeyler: ['hesap'],
-  metinler: { tr: { hesap: TR_HESAP } },
+  yuzeyler: ['hesap', 'giris', 'davetliKayit', 'bekletme', 'sistem'],
+  metinler: { tr: { hesap: TR_HESAP, giris: TR_GIRIS, davetliKayit: TR_DAVETLI_KAYIT, bekletme: TR_BEKLETME, sistem: TR_SISTEM } },
 })
 
 export const TR_PAKETI: UlkePaketi = {
