@@ -1,0 +1,64 @@
+-- 129 NOTYA-ULKE-01 (Kaan, 2026-10-08)
+-- Invitation codes for a country whose sign-up is not open yet (docs/COUNTRY-PACK-CHECKLIST.md, rule 9:
+-- "sign-ups for a country stay closed until section A passes and the clinical lead signs off").
+--
+-- A code is issued by hand (scripts/ulke-davet-kodu.mjs prints the code and the INSERT for its hash), shown once to
+-- the person it is for, and stored here ONLY as a SHA-256 hash. The table holds no patient data and no account data.
+-- Server routes use the service role; nobody else can read or write it (RLS on, no policy, privileges revoked).
+--
+-- Purely additive: one new table, two functions. Nothing existing is changed.
+-- NOT APPLIED by the job that wrote it. Türkiye does not use invitation codes; there the table simply stays empty.
+
+create table if not exists public.davet_kodlari (
+  kod_hash text primary key check (kod_hash ~ '^[0-9a-f]{64}$'),
+  ulke text not null check (ulke ~ '^[a-z]{2}$'),
+  azami_kullanim integer not null default 1 check (azami_kullanim > 0),
+  kullanim integer not null default 0 check (kullanim >= 0),
+  son_gecerlilik timestamptz,
+  -- Free text for the operator: who the code was issued to. Never shown to a visitor.
+  aciklama text,
+  created_at timestamptz not null default now(),
+  son_kullanim_at timestamptz,
+  constraint davet_kodlari_kullanim_siniri check (kullanim <= azami_kullanim)
+);
+
+alter table public.davet_kodlari enable row level security;
+revoke all on table public.davet_kodlari from anon, authenticated;
+
+-- Takes one use of a code, atomically: true only when the code exists for THIS country, is not expired and has a use
+-- left. Two sign-ups racing for the last use cannot both win.
+create or replace function public.davet_kodu_kullan(p_hash text, p_ulke text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare
+  n integer;
+begin
+  update public.davet_kodlari
+     set kullanim = kullanim + 1, son_kullanim_at = now()
+   where kod_hash = p_hash
+     and ulke = p_ulke
+     and kullanim < azami_kullanim
+     and (son_gecerlilik is null or son_gecerlilik > now());
+  get diagnostics n = row_count;
+  return n = 1;
+end $$;
+
+-- Gives a use back when the account could not be created after the code was taken.
+create or replace function public.davet_kodu_iade(p_hash text)
+returns void language sql security definer set search_path = public as $$
+  update public.davet_kodlari set kullanim = greatest(kullanim - 1, 0) where kod_hash = p_hash;
+$$;
+
+revoke execute on function public.davet_kodu_kullan(text, text) from public, anon, authenticated;
+revoke execute on function public.davet_kodu_iade(text) from public, anon, authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant execute on function public.davet_kodu_kullan(text, text) to service_role;
+    grant execute on function public.davet_kodu_iade(text) to service_role;
+  end if;
+end $$;
+
+insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
+values ('129', '129_davet_kodlari.sql', null, now(), false,
+  'NOTYA-ULKE-01: invitation codes (hash only) for countries whose sign-up is not open yet; atomic use / give-back functions')
+on conflict (version) do nothing;

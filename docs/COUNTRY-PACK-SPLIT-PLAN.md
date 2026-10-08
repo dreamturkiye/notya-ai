@@ -10,7 +10,7 @@ Done by the foundation job (2026-10-08):
 
 - A build serves one country (`NOTYA_COUNTRY`, default `tr`); the pack is chosen at build time; walls are checked before every build and the output after it.
 - `countries/tr` and `countries/uz` exist with the same shape. Türkiye's pack opens the whole existing application (`bolunmemisUygulama`); Uzbekistan's opens only what has been built for it.
-- A build for a country that is not Türkiye takes **only files named `*.ulke.tsx` / `*.ulke.ts` as routes** (`pageExtensions` in `next.config.mjs`), and its middleware (`middleware.ulke.ts`) serves only the paths its pack lists. The Turkish route files are not compiled into that build at all, and the `*.ulke.*` files are not routes in a Türkiye build. This is what keeps the 1,687 Turkish files away from another country while they are still unsplit — and what lets Türkiye's own root files (`app/layout.tsx`, `app/page.tsx`, `middleware.ts`, error pages) stay byte-for-byte as they were.
+- A build for a country that is not Türkiye takes **only files named `*.ulke.tsx` / `*.ulke.ts` as routes** (`pageExtensions` in `next.config.mjs`), and its middleware (`middleware.ulke.ts`) serves only the paths its pack lists. One exception forced by the framework: the root not-found page of such a build is `app/not-found.mjs`, because Next 14.2 builds that page only from a file with a single extension; tests allow no second `.mjs` route file. The Turkish route files are not compiled into that build at all, and the `*.ulke.*` files are not routes in a Türkiye build. This is what keeps the 1,687 Turkish files away from another country while they are still unsplit — and what lets Türkiye's own root files (`app/layout.tsx`, `app/page.tsx`, `middleware.ts`, error pages) stay byte-for-byte as they were.
 - Accounts carry a country; tools carry their countries; a translation mechanism, a leak harness and a ratchet exist.
 
 Not done: the application itself. **1,687 of 2,067** shipped source files still carry Turkish text and nearly all Türkiye-specific logic is still in shared code. Each job below takes one surface, moves its Türkiye-specific half into `countries/tr`, and leaves a core half that another country can fill.
@@ -79,7 +79,7 @@ Not done: the application itself. **1,687 of 2,067** shipped source files still 
 | 23 | **Mali and Avukat verticals** | 53 | Türkiye-only by nature (Turkish tax and court practice). Move behind a Türkiye feature as they are; no translation. |
 | 24 | **Payment and plans** | ~10 | Payment provider, plans, tax display and invoices per country (J6, H5). |
 | 25 | **Static files and settings per country** | `public/`, config | The 87 static pages and other files in `public/` served to every country today; `.env.example`; CORS list; security policy list of outside providers (I6). |
-| 26 | **Retire the "whole application" switch** | few | When no surface depends on `bolunmemisUygulama`, Türkiye gets a route list like every other country, the `*.ulke.*` files take the plain names back, `pageExtensions` goes, and the switch is deleted. Checklist rule 1 is then true. |
+| 26 | **Retire the "whole application" switch** | few | When no surface depends on `bolunmemisUygulama`, Türkiye gets a route list like every other country, the `*.ulke.*` files and `app/not-found.mjs` take the plain names back, `pageExtensions` goes, and the switch is deleted. Checklist rule 1 is then true. |
 
 ## Order and dependencies
 

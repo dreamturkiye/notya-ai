@@ -158,14 +158,15 @@ describe('build-time selection: the entry point and the import graph', () => {
     }
   })
 
-  // Every route file of a build that is not the pre-split application: the *.ulke.* files under app/ and middleware.ulke.ts.
+  // Every route file of a build that is not the pre-split application: the *.ulke.* files under app/, the root
+  // not-found page (app/not-found.mjs — the one route file with a single extension) and middleware.ulke.ts.
   function ulkeRotaDosyalari(): string[] {
     const out: string[] = existsSync(join(KOK, 'middleware.ulke.ts')) ? [join(KOK, 'middleware.ulke.ts')] : []
     const gez = (dizin: string) => {
       for (const ad of readdirSync(dizin)) {
         const yol = join(dizin, ad)
         if (statSync(yol).isDirectory()) gez(yol)
-        else if (/\.ulke\.(ts|tsx)$/.test(ad)) out.push(yol)
+        else if (/\.ulke\.(ts|tsx)$/.test(ad) || yol === join(KOK, 'app', 'not-found.mjs')) out.push(yol)
       }
     }
     gez(join(KOK, 'app'))
@@ -176,6 +177,7 @@ describe('build-time selection: the entry point and the import graph', () => {
     // Start from everything such a build compiles: its route files (*.ulke.*), its middleware, and the pack doors.
     const girisler = [...ulkeRotaDosyalari(), ...readdirSync(join(KOK, 'countries/active')).filter((d) => /\.(ts|tsx)$/.test(d)).map((d) => join(KOK, 'countries/active', d))]
     assert.ok(girisler.some((g) => g.endsWith('middleware.ulke.ts')), 'middleware.ulke.ts must be among the starting points')
+    assert.ok(girisler.includes(join(KOK, 'app', 'not-found.mjs')), 'app/not-found.mjs must be among the starting points')
     const yorumsuz = (k: string) => k.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
     for (const ulke of ULKE_KODLARI) {
       if (ulke === 'tr') continue

@@ -28,7 +28,7 @@ describe('Turkish text outside countries/tr: ceiling', () => {
 
   it('nothing new in this foundation carries Turkish text: lib/ulke, the other packs, the entry point', () => {
     const liste = r.stdout.split('\n').map((s) => s.trim())
-    const yasak = liste.filter((d) => /^(lib\/ulke\/|countries\/(?!tr\/)|components\/ulke\/|app\/(login|signup|welcome|api\/ulke)\/|middleware\.ulke\.ts$)|\.ulke\.(ts|tsx)$/.test(d))
+    const yasak = liste.filter((d) => /^(lib\/ulke\/|countries\/(?!tr\/)|components\/ulke\/|app\/(login|signup|welcome|api\/ulke)\/|middleware\.ulke\.ts$|app\/not-found\.mjs$)|\.ulke\.(ts|tsx)$/.test(d))
     assert.deepEqual(yasak, [])
   })
 

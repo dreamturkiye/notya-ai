@@ -8,14 +8,17 @@
  * Values marked "to verify" are from secondary sources and wait for the local clinical lead / lawyer.
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
-import { UZ_LATN_HESAP, UZ_RU_HESAP } from './metinler'
+import {
+  UZ_LATN_BEKLETME, UZ_LATN_DAVETLI_KAYIT, UZ_LATN_GIRIS, UZ_LATN_HESAP, UZ_LATN_SISTEM,
+  UZ_RU_BEKLETME, UZ_RU_DAVETLI_KAYIT, UZ_RU_GIRIS, UZ_RU_HESAP, UZ_RU_SISTEM,
+} from './metinler'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
-  yuzeyler: ['hesap'],
+  yuzeyler: ['hesap', 'giris', 'davetliKayit', 'bekletme', 'sistem'],
   metinler: {
-    'uz-Latn': { hesap: UZ_LATN_HESAP },
-    ru: { hesap: UZ_RU_HESAP },
+    'uz-Latn': { hesap: UZ_LATN_HESAP, giris: UZ_LATN_GIRIS, davetliKayit: UZ_LATN_DAVETLI_KAYIT, bekletme: UZ_LATN_BEKLETME, sistem: UZ_LATN_SISTEM },
+    ru: { hesap: UZ_RU_HESAP, giris: UZ_RU_GIRIS, davetliKayit: UZ_RU_DAVETLI_KAYIT, bekletme: UZ_RU_BEKLETME, sistem: UZ_RU_SISTEM },
   },
 })
 
@@ -41,13 +44,23 @@ export const UZ_PAKETI: UlkePaketi = {
   telefon: { ulkeOnEki: '+998', ulusalHane: 9, ornek: '+998 90 123 45 67', cepGecerliMi: uzCepGecerliMi },
   // JSHSHIR (PINFL): 14 digits. Format only — the check-digit rule is to verify (checklist G5).
   ulusalKimlik: { ad: 'JSHSHIR', hane: 14, gecerliMi: (ham) => /^\d{14}$/.test(String(ham ?? '').trim()) },
-  // Fail closed: nothing is switched on until the pull request that builds it lands (the landing page comes next).
-  ozellikler: {},
+  // Fail closed: only what has been built FOR Uzbekistan is on. Landing page, login, sign-up by invitation code, and
+  // the single holding page an account sees after login (NOTYA-ULKE-01, 2026-10-08). Everything else is off —
+  // including the voice profile and image evaluation, until the law is confirmed (checklist A2, A4, I7).
+  ozellikler: {
+    acilisSayfasi: true,
+    cekirdekGiris: true,
+    davetliKayit: true,
+    bekletmeSayfasi: true,
+  },
   // No tool is valid in Uzbekistan yet: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md is a proposal awaiting a local clinical lead.
   araclar: [],
-  // The ONLY paths that exist in an Uzbekistan deployment: none yet. A path is added here in the same pull request
-  // that brings its *.ulke.* route file, its Uzbek and Russian text and its leak test.
-  rotalar: { sayfalar: [], apiOnEkleri: [] },
+  // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
+  // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
+  rotalar: {
+    sayfalar: ['/', '/login', '/signup', '/welcome'],
+    apiOnEkleri: ['/api/ulke/'],
+  },
   aramaMotorlarinaGizli: true,
   kabuk: {
     baslik: 'Notya',

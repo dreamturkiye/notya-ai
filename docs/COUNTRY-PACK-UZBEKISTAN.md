@@ -63,14 +63,14 @@ Set by the foundation job on 2026-10-08. Items marked *to verify* come from gene
 | Dates and numbers | `DD.MM.YYYY`, decimal comma, space as thousands separator, week starts Monday | *to verify* with the clinical lead |
 | Phone | `+998` and nine digits | operator prefixes not checked, *to verify* |
 | National identity number | JSHSHIR (PINFL), 14 digits, format only | check-digit rule *to verify* (checklist G5) |
-| Features on | none | the landing-page pull request switches on the landing page, login, sign-up by invitation code and the holding page; everything else stays off |
+| Features on | landing page, login, sign-up by invitation code, holding page | everything else is off |
 | Voice profile, image evaluation | off | until the law is confirmed (checklist A2, A4, I7) |
-| Paths that exist | none | every path of the application answers 404 until its route is built for Uzbekistan |
+| Paths that exist | `/`, `/login`, `/signup`, `/welcome`, `/api/ulke/*` | every other path of the application answers 404 |
 | Tools | none | `docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md` is a proposal |
 | Search engines | hidden (noindex header on every response, robots.txt disallows all, no sitemap) | until the pilot approves the page (checklist K2) |
 | Spelling | Uzbek Latin text uses U+02BB (ʻ) in oʻ and gʻ and U+02BC (ʼ) for the tutuq belgisi | native reviewer to confirm what doctors expect on screen |
 
-All Uzbek and Russian text in the pack is **machine-written** and must be read by a native speaker before anything goes public (checklist E11).
+All Uzbek and Russian text in the pack is **machine-written** and must be read by a native speaker before anything goes public (checklist E11). The landing copy, in two versions with English beside every line, is in `docs/uz-landing/COPY.md`; screenshots are in the same folder.
 
 ## Before the Uzbek deployment is created
 
@@ -80,5 +80,7 @@ These are settings and decisions, not code, and none was touched by the foundati
 2. Build setting `NOTYA_COUNTRY=uz`. The build refuses any value that has no folder under `countries/`.
 3. `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` of the Uzbek project. The Uzbek login refuses to work without them; it never falls back to another project.
 4. Public sign-up **disabled** in that Supabase project's Auth settings. Invitation sign-up creates accounts on the server; with public sign-up left on, the invitation step could be bypassed by calling Supabase directly.
-5. All migrations applied to the Uzbek database, including `128_hesap_ulke_dil.sql`.
-6. The cron jobs in `vercel.json` are shared by every deployment; in Uzbekistan they answer 404 (their routes are not on the country's list) until each is split.
+5. All migrations applied to the Uzbek database, including `128_hesap_ulke_dil.sql` and `129_davet_kodlari.sql`.
+6. `NOTYA_ILETISIM_EPOSTA`: the address that receives "request a price" messages. Without it the request form is not shown. Nothing is stored: the form opens the visitor's own mail app.
+7. A consent and privacy text on the sign-up form (checklist I1) **before** the first invitation code is issued (`node scripts/ulke-davet-kodu.mjs --ulke uz`).
+8. The cron jobs in `vercel.json` are shared by every deployment; in Uzbekistan they answer 404 (their routes are not on the country's list) until each is split.
