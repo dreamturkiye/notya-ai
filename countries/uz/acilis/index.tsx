@@ -5,7 +5,9 @@
 import './acilis.css'
 import type { UlkeSayfalari } from '@/lib/ulke/tipler'
 import { AcilisSayfasi } from './AcilisSayfasi'
+import { UZ_UYGULAMA } from '../uygulama'
 
 export const UZ_SAYFALARI: UlkeSayfalari = {
   acilis: AcilisSayfasi,
+  uygulama: UZ_UYGULAMA,
 }

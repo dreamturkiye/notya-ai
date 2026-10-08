@@ -154,10 +154,15 @@ describe('every country pack: same shape, complete text, own content only', () =
   const paketler = ULKE_KODLARI.map((k) => [k, TUM_ULKELER[k].paket] as const)
 
   it('same keys in every pack, and the code matches the folder', () => {
-    const anahtarlar = (p: UlkePaketi) => Object.keys(p).sort()
+    // `uygulama` (settings of the signed-in application) is the one optional part: present exactly where that
+    // feature is on (NOTYA-UZ-MUAYENE-01) — Türkiye's pack does not gain a field for a screen it does not have.
+    const anahtarlar = (p: UlkePaketi) => Object.keys(p).filter((k) => k !== 'uygulama').sort()
     for (const [kod, p] of paketler) {
       assert.equal(p.kod, kod)
       assert.deepEqual(anahtarlar(p), anahtarlar(TUM_ULKELER.tr.paket), kod)
+      assert.equal(Boolean(p.uygulama), p.ozellikler.cekirdekMuayene === true, `${kod}: application settings and the feature go together`)
+      for (const d of p.uygulama?.diller ?? []) assert.ok(p.diller.includes(d), `${kod}: application language ${d} is not a declared language`)
+      if (p.uygulama) assert.ok(p.uygulama.diller.includes(p.varsayilanDil), `${kod}: the default language must be an application language`)
       assert.match(p.iz, new RegExp(`^notya-ulke-paketi:${kod}:[0-9a-f]{10}$`))
     }
     assert.equal(new Set(paketler.map(([, p]) => p.iz)).size, paketler.length, 'markers must be unique')

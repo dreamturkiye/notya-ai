@@ -39,6 +39,12 @@ export type Ozellik =
   | 'davetliKayit'
   /** The single page an account sees while its pilot access is prepared, at /welcome. */
   | 'bekletmeSayfasi'
+  /**
+   * NOTYA-UZ-MUAYENE-01 — the core loop of the signed-in application, built country-first: first-login language
+   * question, settings, home, patients, visit recording to an approved note. Screens and clinical text come from the
+   * pack (countries/active/sayfalar, countries/active/klinik). Replaces the holding page where it is on.
+   */
+  | 'cekirdekMuayene'
   /** Doktor Araçları (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -140,6 +146,25 @@ export type UlkePaketi = {
   yuzeyler: readonly Yuzey[]
   /** What each of the country's languages calls itself (for a language switch). */
   dilAdlari: Partial<Record<DilKodu, string>>
+  /** Settings of the signed-in application. Present exactly where the feature `cekirdekMuayene` is on. */
+  uygulama?: UygulamaAyarlari
+}
+
+/** What a pack says about the signed-in application (feature `cekirdekMuayene`). */
+export type UygulamaAyarlari = {
+  /**
+   * Languages (and scripts) an account may choose for its interface and for its visit notes. Separate from
+   * `acikDiller`, which are the languages of the public core surfaces (login, sign-up, system pages): a script
+   * variant can be offered inside the application before the public pages exist in it.
+   */
+  diller: readonly DilKodu[]
+  /** ISO 639 codes of the languages a PATIENT can be recorded with (checklist E7). */
+  hastaDilleri: readonly string[]
+  /**
+   * Folding for finding a name whatever script it was typed in (checklist E10): lower case, apostrophe variants
+   * dropped, the country's other script mapped onto one. Pure. Omitted = plain lower case.
+   */
+  aramaKatla?: (ham: string) => string
 }
 
 // ───────────────────────── pages a pack brings itself (countries/active/sayfalar) ─────────────────────────
@@ -151,9 +176,26 @@ export type AcilisSayfasiProps = {
   iletisimEposta: string | null
 }
 
+/**
+ * Screens of the signed-in application (feature `cekirdekMuayene`). Each is one address, served by a one-line
+ * *.ulke.* route file (components/ulke/UlkeUygulamaSayfasi.tsx); the screen itself, with its text, is the pack's.
+ */
+export const UYGULAMA_EKRANLARI = {
+  baslangic: '/start',
+  bugun: '/today',
+  ayarlar: '/settings',
+  hastalar: '/patients',
+  yeniHasta: '/patients/new',
+  hasta: '/patient',
+  muayene: '/visit',
+} as const
+export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
+
 /** UI a pack brings itself. null = the country has no page of its own there. */
 export type UlkeSayfalari = {
   acilis: ComponentType<AcilisSayfasiProps> | null
+  /** Signed-in application screens. null = none; a screen the pack does not bring answers "not found". */
+  uygulama: Partial<Record<UygulamaEkrani, ComponentType>> | null
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

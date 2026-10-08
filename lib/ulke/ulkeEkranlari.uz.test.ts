@@ -36,6 +36,7 @@ const KOK = resolve(__dirname, '../..')
 type Hesap = { id: string; email: string; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }
 let hesaplar: Record<string, Hesap>
 let satirlar: Record<string, Record<string, unknown> | undefined>
+let tercihler: Record<string, Record<string, unknown> | undefined>
 let kodlar: Map<string, { ulke: string; kalan: number }>
 let olaylar: string[]
 let boz: { hesapOlustur?: boolean; satirYaz?: boolean; satirOku?: boolean }
@@ -59,6 +60,8 @@ function sifirla() {
     [hesaplar['jeton-uz-eski-sema'].id]: { id: hesaplar['jeton-uz-eski-sema'].id, full_name: 'QA Toʻrt' },
   }
   kodlar = new Map([[davetKoduHash(GECERLI_KOD), { ulke: 'uz', kalan: 1 }], [davetKoduHash('QATEST0000000TRR'), { ulke: 'tr', kalan: 1 }]])
+  // The Russian-language account has answered the first-login question and writes its notes in Uzbek Cyrillic.
+  tercihler = { [hesaplar['jeton-uz-ru'].id]: { not_dili: 'uz-Cyrl', soruldu_at: '2026-10-08T05:00:00Z' } }
   olaylar = []
   boz = {}
 }
@@ -95,8 +98,17 @@ function sahteCreateClient() {
       throw new Error(`stand-in: rpc ${ad} not implemented`)
     },
     from: (tablo: string) => {
-      assert.equal(tablo, 'users', `the country API touched a table it has no business with: ${tablo}`)
+      assert.ok(tablo === 'users' || tablo === 'hekim_dil_tercihleri', `the account API touched a table it has no business with: ${tablo}`)
       let id = ''
+      if (tablo === 'hekim_dil_tercihleri') {
+        // NOTYA-UZ-MUAYENE-01: read by /api/ulke/hesap, always by the caller's own id. Its behaviour is tested in countries/uz/uygulama/uygulama.test.ts.
+        const t: Record<string, unknown> = {
+          select: () => t,
+          eq: (k: string, v: string) => { assert.equal(k, 'doctor_id'); id = v; return t },
+          maybeSingle: async () => ({ data: tercihler[id] ?? null, error: null }),
+        }
+        return t
+      }
       const z: Record<string, unknown> = {
         select: () => z,
         eq: (_k: string, v: string) => { id = v; return z },
@@ -235,10 +247,11 @@ describe('an Uzbekistan build: screens', () => {
     })
   }
 
-  it('holding page before the account is known: only "loading", in the default language; text for every switched-on language is ready', () => {
-    const html = belge(Welcome.default())
-    assert.ok(html.includes('Yuklanmoqda…'))
-    temiz(html, '/welcome (loading)')
+  it('holding page address: where the application is switched on, /welcome sends the account to its home', () => {
+    // NOTYA-UZ-MUAYENE-01: the pack switches `cekirdekMuayene` on, so the home (/today) replaces the holding page.
+    assert.throws(() => Welcome.default(), (e: unknown) => /NEXT_REDIRECT;[a-z]+;\/today;/.test(String((e as { digest?: string }).digest)))
+    const giris = belge(Login.default({ searchParams: {} }))
+    assert.doesNotMatch(giris, /\/welcome/)
   })
 
   it('not-found and error pages: Uzbek, from the pack, never the browser error text', () => {
@@ -282,8 +295,8 @@ describe('an Uzbekistan build: routes', () => {
     if (izin === 'hepsi') return
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
-    assert.deepEqual(d.sayfalar, ['/', '/login', '/signup', '/welcome'])
-    assert.deepEqual(d.api, ['/api/ulke/hesap', '/api/ulke/kayit'])
+    assert.deepEqual(d.sayfalar, ['/', '/login', '/settings', '/signup', '/start', '/today', '/welcome'])
+    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
     assert.deepEqual(d.ozel, ['/error', '/global-error', '/layout', '/not-found'])
@@ -308,7 +321,7 @@ describe('an Uzbekistan build: routes', () => {
 
   it('middleware: listed paths pass with "do not index"; every other path of the application is 404 before any screen', () => {
     const git = (yol: string) => ara.middleware(new NextRequest(`https://uz.notya.test${yol}`))
-    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/api/ulke/hesap', '/api/ulke/kayit', '/_next/static/chunks/x.js']) {
+    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/_next/static/chunks/x.js']) {
       const r = git(yol)
       assert.equal(r.status, 200, yol)
       assert.match(r.headers.get('x-robots-tag') || '', /noindex, nofollow/, yol)
@@ -372,9 +385,9 @@ describe('an Uzbekistan build: account API', () => {
   }
   const GECERLI = { adSoyad: 'QA Yangi Shifokor', eposta: 'QA-Yangi@Notya.Test', sifre: 'yangi-parol-9', davetKodu: 'qate-st00-0000-0001', dil: 'ru' }
 
-  it('hesap: an Uzbek account gets its country, language and "holding"; nothing else', async () => {
-    assert.deepEqual(await hesap('jeton-uz'), { s: 200, j: { ulke: 'uz', dil: 'uz-Latn', durum: 'bekletme', ad: 'QA Shifokor Bir' } })
-    assert.deepEqual((await hesap('jeton-uz-ru')).j.dil, 'ru')
+  it('hesap: an Uzbek account gets its country, its languages and whether the language question was answered; nothing else', async () => {
+    assert.deepEqual(await hesap('jeton-uz'), { s: 200, j: { ulke: 'uz', dil: 'uz-Latn', durum: 'uygulama', ad: 'QA Shifokor Bir', notDili: 'uz-Latn', dilSoruldu: false } })
+    assert.deepEqual(await hesap('jeton-uz-ru'), { s: 200, j: { ulke: 'uz', dil: 'ru', durum: 'uygulama', ad: 'QA Shifokor Ikki', notDili: 'uz-Cyrl', dilSoruldu: true } })
   })
 
   it('hesap: no session, a Turkish account and an unstamped account all get the same "no session"', async () => {

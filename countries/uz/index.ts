@@ -12,6 +12,7 @@ import {
   UZ_LATN_BEKLETME, UZ_LATN_DAVETLI_KAYIT, UZ_LATN_GIRIS, UZ_LATN_HESAP, UZ_LATN_SISTEM,
   UZ_RU_BEKLETME, UZ_RU_DAVETLI_KAYIT, UZ_RU_GIRIS, UZ_RU_HESAP, UZ_RU_SISTEM,
 } from './metinler'
+import { uzAramaKatla } from './arama'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -52,13 +53,17 @@ export const UZ_PAKETI: UlkePaketi = {
     cekirdekGiris: true,
     davetliKayit: true,
     bekletmeSayfasi: true,
+    // NOTYA-UZ-MUAYENE-01 (2026-10-08): the first product slice — first-login language question, settings, home,
+    // patients, visit recording to an approved note. Where it is on, a signed-in account lands on /today instead of
+    // the holding page. Sign-up is still by invitation code only, so nobody reaches it uninvited.
+    cekirdekMuayene: true,
   },
   // No tool is valid in Uzbekistan yet: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md is a proposal awaiting a local clinical lead.
   araclar: [],
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings'],
     apiOnEkleri: ['/api/ulke/'],
   },
   aramaMotorlarinaGizli: true,
@@ -70,4 +75,12 @@ export const UZ_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'uz-Latn': 'Oʻzbekcha', 'uz-Cyrl': 'Ўзбекча', ru: 'Русский' },
+  uygulama: {
+    // Inside the signed-in application an account may also choose Uzbek in Cyrillic script: those screens are written
+    // in all three forms (countries/uz/uygulama/metinler.ts). The public pages above stay in the two `acikDiller`.
+    diller: ['uz-Latn', 'uz-Cyrl', 'ru'],
+    // The patient's own language, recorded per patient (script is the doctor's choice, not the patient's).
+    hastaDilleri: ['uz', 'ru'],
+    aramaKatla: uzAramaKatla,
+  },
 }
