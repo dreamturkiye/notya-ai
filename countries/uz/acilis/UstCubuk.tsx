@@ -2,8 +2,9 @@
 
 /**
  * NOTYA-UZ-ACILIS-02 — top bar of the Uzbekistan landing page. Same markup and classes as the Turkish page's bar
- * (components/doktor-landing/site-nav.tsx, which holds Turkish text and so is not reused), with two differences:
+ * (components/doktor-landing/site-nav.tsx, which holds Turkish text and so is not reused), with three differences:
  *   - a language switch, set in the same type as the section links;
+ *   - the bar has its paper ground at 92% (see the note at the class below);
  *   - the section links appear from 1280px, not 1024px: with the switch and the longer Russian labels the bar does
  *     not fit before that. Below it the links are in the menu, as on a phone.
  * All text arrives as properties, from the pack's catalogue.
@@ -62,7 +63,9 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref }: { metin: Acili
     <>
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-40 bg-paper/92 text-ink transition-shadow duration-300',
+          // The Turkish bar says bg-paper/92, which is not a step of the opacity scale and compiles to nothing (its bar
+          // is see-through). The intended 92% is written here in the form that compiles.
+          'fixed inset-x-0 top-0 z-40 bg-paper/[0.92] text-ink transition-shadow duration-300',
           scrolled || open ? 'shadow-border' : '',
         )}
       >

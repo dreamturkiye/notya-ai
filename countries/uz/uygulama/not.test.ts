@@ -23,6 +23,8 @@ process.env.ELEVENLABS_API_KEY = 'sahte-konusma-anahtari'
 process.env.OPENROUTER_API_KEY = 'sahte-model-anahtari'
 delete process.env.OPENROUTER_BASE_URL
 
+// NOTYA-UZ-ACILIS-02: the pack's page entry now imports photographs and shared landing components.
+import '@/lib/ulke/testing/varlikTaklidi'
 import { describe, it, before, beforeEach, mock } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
