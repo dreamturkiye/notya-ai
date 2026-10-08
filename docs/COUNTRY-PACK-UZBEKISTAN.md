@@ -193,3 +193,14 @@ These are settings and decisions, not code, and none was touched by the foundati
 8. Server settings for the visit: `ENCRYPTION_MASTER_KEY` (patient data cipher; its own key, never Türkiye's), `ELEVENLABS_API_KEY` (speech; without it the visit screen says speech recognition is not configured), `OPENROUTER_API_KEY` (the note model; without it no note is written). Before any of them is set with a real key: the lawyer's answer on sending health data abroad (checklist A1).
 9. The first real provider call must use synthetic audio, never a patient's.
 10. The cron jobs in `vercel.json` are shared by every deployment; in Uzbekistan they answer 404 (their routes are not on the country's list) until each is split.
+
+
+## Assistant names (owner's list, 2026-10-08)
+
+Kaan supplied one assistant name per specialty and clinic role: 30 doctor specialties, 5 clinic doctors, 5 clinic allied roles. They are stored exactly as given in `countries/uz/klinik/asistanAdlari.ts` and are **not yet used** by any screen or model instruction.
+
+Open before they are used:
+- A native reader's check of the spellings. To look at: `Holmatov`/`Holmatova` (Uzbek Latin usually writes `Xolmatov`), `Shohruh` (`Shohrux`), `Ulugbek` (`Ulugʻbek`), `Ismailov`/`Ismailova` (`Ismoilov`), and the title `Fizyoterapevt` (`Fizioterapevt`). These are Claude's observations, not corrections; nothing was changed.
+- Cyrillic and Russian forms of every name.
+- Each assistant's background (the owner asked for a senior clinician with 20+ years of practice in Uzbekistan) and which name the landing page shows.
+- Key check (script, 2026-10-08): all 30 doctor keys match the product's specialty list after one correction. The owner's table wrote `kadin-dogum`; the product's key is `kadin-hastaliklari-dogum`, and that is what is stored. The 10 clinic keys are not in the doctor specialist catalogue and were not cross-checked against the clinic lists.
