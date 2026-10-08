@@ -22,6 +22,7 @@ import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
 import { muayeneKotasiKullan } from './kota'
+import { hekimRolunuOku, uygulamaRolleri } from './rol'
 
 export type MuayeneGirdisi = { yol: string; hastaId: string; sablon: string; riza: boolean }
 export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ'
@@ -75,6 +76,10 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     // Consent first: without the tick-box the recording is not read, only removed.
     if (g.riza !== true) return { tamam: false, kod: 'RIZA_GEREKLI' }
     if (!klinik.sablonlar.includes(g.sablon)) return { tamam: false, kod: 'GECERSIZ', alan: 'sablon' }
+    // NOTYA-UZ-BRANSLAR-01 — where the country has roles, an account writes with ITS OWN role's template or with the
+    // neutral one (the pack's first template). Another role's template is refused: a cardiologist's visit cannot be
+    // stored as an audiologist's, whatever the request says. A country without roles is as before.
+    if (uygulamaRolleri().length && g.sablon !== klinik.sablonlar[0] && g.sablon !== (await hekimRolunuOku(supabase, doktorId))) return { tamam: false, kod: 'GECERSIZ', alan: 'sablon' }
     // ISOLATION: the patient must be this doctor's before the recording is read or a visit is written for them.
     const hasta = await hastaGetir(supabase, doktorId, g.hastaId)
     if (!hasta) return { tamam: false, kod: 'NOT_FOUND' }

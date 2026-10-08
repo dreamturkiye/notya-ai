@@ -97,9 +97,15 @@ function sifirla() {
   vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' }, { id: C, full_name: 'QA Шифокор В', country: 'uz', ui_language: 'uz-Cyrl' })
   // A: Uzbek Latin everywhere. B: Russian everywhere. C: reads the application in Uzbek Cyrillic, writes notes in Russian.
   vt.tablo('hekim_dil_tercihleri').push({ doctor_id: A, not_dili: 'uz-Latn', soruldu_at: 'x' }, { doctor_id: B, not_dili: 'ru', soruldu_at: 'x' }, { doctor_id: C, not_dili: 'ru', soruldu_at: 'x' })
+  // NOTYA-UZ-BRANSLAR-01: the template is the account's role. All three are paediatricians here.
+  vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'pediatri' }, { doctor_id: B, rol: 'pediatri' }, { doctor_id: C, rol: 'pediatri' })
 }
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
+/** The line the visit message carries for a patient under 18 (NOTYA-UZ-BRANSLAR-01), in each form. */
+const MINOR_LAT = 'Bemor 18 yoshga toʻlmagan. Maʼlumotni kim bergani (ota-onasi yoki qonuniy vakili) aytilgan boʻlsa, uni "fields" ichidagi history_giver maydoniga yozing.'
+const MINOR_CYR = 'Бемор 18 ёшга тўлмаган. Маълумотни ким бергани (ота-онаси ёки қонуний вакили) айтилган бўлса, уни "fields" ичидаги history_giver майдонига ёзинг.'
+const MINOR_RU = 'Пациенту нет 18 лет. Если прозвучало, кто сообщил сведения (родители или законный представитель), запишите это в поле history_giver внутри "fields".'
 const ON_EK = '/uzbek'
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak }), [])
 const TURKCE = /[çğıİşĞŞ]/
@@ -176,7 +182,9 @@ describe('INSTRUCTIONS to the model: the Uzbek pack\'s own, in three forms', () 
   let T: typeof import('../klinik/talimatlar')
   before(async () => { T = await import('../klinik/talimatlar') })
   /** Text a person reads: the JSON keys and the bracket marker are the contract with the code, not prose. */
-  const duzyazi = (t: string) => t.replace(/\{"s": "…", "o": "…", "a": "…", "p": "…"\}/g, '').replace(/\bJSON\b/g, '').replace(/(^|\n)[soap] (—|бўлимида|boʻlimida)/g, '$1').replace(/раздел[еа] [so]\b/g, '')
+  const duzyazi = (t: string) => t.replace(/\{"s": "…", "o": "…", "a": "…", "p": "…"(, "fields": \{[^}]*\})?\}/g, '').replace(/\bJSON\b/g, '').replace(/(^|\n)[soap] (—|бўлимида|boʻlimida|бўлимига|boʻlimiga)/g, '$1').replace(/раздел[еа]? [soa]\b/g, '')
+    // NOTYA-UZ-BRANSLAR-01: field keys ("- chest_pain — …", history_giver) and the word "fields" are the contract too.
+    .replace(/(^|\n)- [a-z][a-z0-9_]* — /g, '$1').replace(/"fields"/g, '').replace(/\bhistory_giver\b/g, '')
 
   it('the file says it is machine-written, awaits a clinician, was written fresh, and claims no protocol', () => {
     const bas = readFileSync(join(KOK, 'countries/uz/klinik/talimatlar.ts'), 'utf8').slice(0, 2600)
@@ -194,14 +202,14 @@ describe('INSTRUCTIONS to the model: the Uzbek pack\'s own, in three forms', () 
         if (f === 'uz-Latn') { assert.doesNotMatch(d, /[Ѐ-ӿ]/, `${f}: Cyrillic`); assert.doesNotMatch(d, /['`‘’]/, `${f}: plain apostrophe`); assert.match(d, /oʻzbek tilida, lotin yozuvida/) }
         if (f === 'uz-Cyrl') { assert.doesNotMatch(d, /[A-Za-z]/, `${f}: Latin letter in ${d.match(/[A-Za-z]+/)?.[0]}`); assert.match(d, /ўзбек тилида, кирилл ёзувида/); assert.match(d, /[ўқғҳ]/) }
         if (f === 'ru') { assert.doesNotMatch(d, /[A-Za-zўқғҳЎҚҒҲ]/, `${f}: Latin or Uzbek-only letter in ${d.match(/[A-Za-zўқғҳ]+/)?.[0]}`); assert.match(d, /только на русском языке/) }
-        assert.ok(t!.includes('{"s": "…", "o": "…", "a": "…", "p": "…"}'), 'the answer format')
+        assert.ok(t!.includes(sablon === 'genel' ? '{"s": "…", "o": "…", "a": "…", "p": "…"}' : '{"s": "…", "o": "…", "a": "…", "p": "…", "fields": {"birth_history": "…", '), 'the answer format')
       }
       assert.notEqual(T.uzNotTalimati(f, 'pediatri'), T.uzNotTalimati(f, 'genel'))
       const y = T.uzYenidenYazimTalimati(f)
       assert.ok(y && y.length > 500 && y !== T.uzNotTalimati(f, 'genel'))
     }
-    // A specialty without a template of its own, and a language that is not this country's, get no instruction at all.
-    for (const sablon of ['kardiyoloji', 'dahiliye', '', 'Pediatri']) assert.equal(T.uzNotTalimati('uz-Latn', sablon), null, sablon)
+    // Something that is not a template, and a language that is not this country's, get no instruction at all.
+    for (const sablon of ['kadin-dogum', 'cardiology', '', 'Pediatri']) assert.equal(T.uzNotTalimati('uz-Latn', sablon), null, sablon)
     assert.equal(T.uzNotTalimati('tr', 'genel'), null); assert.equal(T.uzYenidenYazimTalimati('tr'), null)
   })
 
@@ -230,9 +238,17 @@ describe('INSTRUCTIONS to the model: the Uzbek pack\'s own, in three forms', () 
   it('the instruction is fixed text: nothing about a doctor or a patient is in it; the patient goes in the message as age and sex only', () => {
     assert.equal(T.uzNotTalimati('uz-Latn', 'pediatri'), T.uzNotTalimati('uz-Latn', 'pediatri'))
     const g = (dil: (typeof FORMLAR)[number]) => T.uzNotGirdisi(dil, { dogumTarihi: '2021-03-07', cinsiyet: 'female', muayeneTarihi: '2026-10-08', metin: 'MATN' })
-    assert.equal(g('uz-Latn'), 'BEMOR: yoshi — 5 yosh; jinsi — ayol.\n\nSUHBAT MATNI:\nMATN')
-    assert.equal(g('uz-Cyrl'), 'БЕМОР: ёши — 5 ёш; жинси — аёл.\n\nСУҲБАТ МАТНИ:\nMATN')
-    assert.equal(g('ru'), 'ПАЦИЕНТ: возраст — 5 лет; пол — женский.\n\nТЕКСТ БЕСЕДЫ:\nMATN')
+    // GUARDIAN WORDING BY AGE (NOTYA-UZ-BRANSLAR-01): a patient under 18 gets one line asking who gave the information — in every template.
+    assert.equal(g('uz-Latn'), `BEMOR: yoshi — 5 yosh; jinsi — ayol.\n${MINOR_LAT}\n\nSUHBAT MATNI:\nMATN`)
+    assert.equal(g('uz-Cyrl'), `БЕМОР: ёши — 5 ёш; жинси — аёл.\n${MINOR_CYR}\n\nСУҲБАТ МАТНИ:\nMATN`)
+    assert.equal(g('ru'), `ПАЦИЕНТ: возраст — 5 лет; пол — женский.\n${MINOR_RU}\n\nТЕКСТ БЕСЕДЫ:\nMATN`)
+    // An adult gets no such line, in paediatrics as everywhere; an unknown age is not a child outside the children's roles.
+    for (const sablon of ['genel', 'pediatri', 'kardiyoloji', 'odyoloji']) assert.equal(T.uzNotGirdisi('uz-Latn', { dogumTarihi: '1980-12-31', cinsiyet: 'male', muayeneTarihi: '2026-10-08', metin: 'MATN', sablon }), 'BEMOR: yoshi — 45 yosh; jinsi — erkak.\n\nSUHBAT MATNI:\nMATN', sablon)
+    for (const sablon of ['genel', 'kardiyoloji', 'odyoloji', undefined]) assert.ok(!T.uzNotGirdisi('ru', { dogumTarihi: '', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_RU), String(sablon))
+    for (const sablon of ['pediatri', 'cocuk-cerrahisi']) assert.ok(T.uzNotGirdisi('ru', { dogumTarihi: '', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_RU), sablon)
+    for (const sablon of ['genel', 'kardiyoloji', 'goz-hastaliklari', 'diyetisyen']) assert.ok(T.uzNotGirdisi('uz-Cyrl', { dogumTarihi: '2016-10-09', cinsiyet: 'male', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_CYR), sablon)
+    // The day of the eighteenth birthday is the first adult day.
+    assert.ok(T.uzNotGirdisi('ru', { dogumTarihi: '2008-10-09', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x' }).includes(MINOR_RU)); assert.ok(!T.uzNotGirdisi('ru', { dogumTarihi: '2008-10-08', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x' }).includes(MINOR_RU))
     assert.equal(T.uzYasMetni('uz-Latn', '2026-03-09', '2026-10-08'), '6 oylik')
     assert.equal(T.uzNotGirdisi('ru', { dogumTarihi: '', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x' }).split('\n')[0], 'ПАЦИЕНТ: возраст — не указан; пол — не указан.')
   })
@@ -283,7 +299,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.equal(c.sistem, T.uzNotTalimati('uz-Latn', 'pediatri'))
     assert.equal(c.onbellekli, true, 'the fixed instruction is the cached block')
     assert.equal(c.veriToplama, 'deny')
-    assert.equal(c.kullanici, `BEMOR: yoshi — 5 yosh; jinsi — ayol.\n\nSUHBAT MATNI:\n${UZ_METIN}`)
+    assert.equal(c.kullanici, `BEMOR: yoshi — 5 yosh; jinsi — ayol.\n${MINOR_LAT}\n\nSUHBAT MATNI:\n${UZ_METIN}`)
     for (const gizli of ['Karimova', 'Dilnoza', '+998', '00000000000001', m.hasta, A, m.seans]) assert.ok(!`${c.sistem}\n${c.kullanici}`.includes(gizli), `sent to the model: ${gizli}`)
     // Stored: a DRAFT in the core notes table, its language beside it.
     const [n] = vt.tablo('notes')
@@ -325,7 +341,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const n = await notOku('jeton-a', v.notId)
     assert.equal(n.s, 200)
     const { muayene, ...not } = n.j.not
-    assert.deepEqual(not, { notId: v.notId, seansId: v.seans, onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru' })
+    assert.deepEqual(not, { notId: v.notId, seansId: v.seans, onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', alanAnahtarlari: ['history_giver', 'birth_history', 'feeding', 'sleep', 'development', 'vaccination_said', 'weight_height', 'head_circumference', 'temperature'] })
     assert.deepEqual([muayene.seansId, muayene.metin, muayene.hasta.ad, muayene.notId, muayene.notDurumu], [v.seans, UZ_METIN, 'QA Karimova Dilnoza', v.notId, 'taslak'])
     // The note is still written; the screen is told to ask the doctor to check it carefully.
     assert.deepEqual(muayene.konusma, { dil: 'uz', dilKesin: true, ikinciGecis: true, dusukGuven: true })

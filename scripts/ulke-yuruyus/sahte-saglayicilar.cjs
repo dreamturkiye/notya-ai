@@ -45,6 +45,15 @@ const notlar = {
   ruYeniden: (kullanici) => ({ ...notlar.ru, p: kullanici.includes('250 mg') ? 'Обильное питьё. При повышении температуры парацетамол 250 мг. Повторный приём через три дня.' : notlar.ru.p }),
 }
 
+// NOTYA-UZ-BRANSLAR-01 — synthetic FIELDS, the same for every role on purpose: paediatric, cardiology, dietetic and
+// audiology fields together, the guardian field, and one key that belongs to nobody. The application must keep only
+// what the note's own template owns; the walk-through proves it for three roles.
+const alanlar = {
+  'uz-Latn': { history_giver: 'Onasi.', feeding: 'Kuniga toʻrt mahal ovqatlanadi.', temperature: '38,5 gacha koʻtarilgan.', head_circumference: '', chest_pain: 'Koʻkrakda ogʻriq yoʻq.', ecg: 'Oʻzgarishsiz.', diet_history: 'Shirinlikni koʻp yeydi.', nutrition_plan: 'Koʻp suyuqlik.', audiometry: 'Bajarilmadi.', made_up_key: 'XATO-MAYDON' },
+  'uz-Cyrl': { history_giver: 'Онаси.', feeding: 'Кунига тўрт маҳал овқатланади.', temperature: '38,5 гача кўтарилган.', chest_pain: 'Кўкракда оғриқ йўқ.', ecg: 'Ўзгаришсиз.', diet_history: 'Ширинликни кўп ейди.', nutrition_plan: 'Кўп суюқлик.', audiometry: 'Бажарилмади.', made_up_key: 'XATO-MAYDON' },
+  ru: { history_giver: 'Мать.', feeding: 'Ест четыре раза в день.', temperature: 'До 38,5.', chest_pain: 'Боли в груди нет.', ecg: 'Без изменений.', diet_history: 'Любит сладкое.', nutrition_plan: 'Обильное питьё.', audiometry: 'Не проводилась.', made_up_key: 'XATO-MAYDON' },
+}
+
 const gercek = globalThis.fetch
 globalThis.fetch = async function sahteFetch(girdi, secenek) {
   const adres = typeof girdi === 'string' ? girdi : girdi instanceof URL ? girdi.href : girdi?.url ?? String(girdi)
@@ -79,9 +88,12 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
       tur: 'model', is: yeniden ? 'yeniden' : 'not', dil, model: String(b.model || ''), veriToplama: b.provider?.data_collection ?? null,
       sistemUzunluk: sistem.length, kimlikVar: /Karimova|Dilnoza|Rustam|Иванов|\+998|aaaaaaaa-0000/.test(sistem + kullanici),
       yasVar: /yoshi — 5 yosh|возраст — /.test(kullanici), duzeltmeVar: kullanici.includes('250 mg'),
+      // Which fields the instruction asks for (keys only), and whether it says the colleague is not a doctor.
+      alanAnahtarlari: [...sistem.matchAll(/^- ([a-z][a-z0-9_]*) — /gm)].map((x) => x[1]).join(), muttefik: /shifokor emas|шифокор эмас|не врач/.test(sistem),
     })
     if (senaryo().model === 'hata') return json({ error: { code: 503, message: 'stand-in: the model provider is down' } }, 503)
-    const cevap = yeniden ? (dil === 'ru' ? notlar.ruYeniden(kullanici) : notlar[dil]) : notlar[dil]
+    const dort = yeniden ? (dil === 'ru' ? notlar.ruYeniden(kullanici) : notlar[dil]) : notlar[dil]
+    const cevap = dort ? { ...dort, fields: alanlar[dil] } : null
     if (!cevap) return json({ error: { code: 400, message: 'stand-in: no instruction it knows' } }, 400)
     return json({ id: 'sahte', model: b.model, choices: [{ message: { role: 'assistant', content: JSON.stringify(cevap) }, finish_reason: 'stop' }], usage: { prompt_tokens: 800, completion_tokens: 200 } })
   }

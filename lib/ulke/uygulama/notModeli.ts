@@ -20,7 +20,7 @@
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import { modelSec } from '@/lib/ai/modeller'
-import type { NotIcerigi } from '../tipler'
+import { NOT_ALANLARI_ANAHTARI, type NotIcerigi } from '../tipler'
 
 export type NotGorevi = 'soap' | 'not-uretimi'
 
@@ -32,13 +32,36 @@ const bolum = (ham: unknown): string => {
   return t.trim().slice(0, BOLUM_AZAMI)
 }
 
+/** Longest field text the application keeps, and the most fields it reads from one answer. */
+export const ALAN_AZAMI = 4_000
+const ALAN_SAYISI_AZAMI = 400
+const ALAN_ANAHTARI = /^[a-z][a-z0-9_]{0,59}$/
+
+/**
+ * NOTYA-UZ-BRANSLAR-01 — the fields of an answer or of a request: plain keys, text values, empty ones dropped.
+ * SHAPE only. Which keys a note may keep is decided afterwards, against the pack's list for the note's template
+ * (lib/ulke/uygulama/notlar.ts → alanlariSuz). undefined = none.
+ */
+export function alanlariOku(ham: unknown): Record<string, string> | undefined {
+  if (!ham || typeof ham !== 'object' || Array.isArray(ham)) return undefined
+  const cikti: Record<string, string> = {}
+  for (const [k, v] of Object.entries(ham as Record<string, unknown>).slice(0, ALAN_SAYISI_AZAMI)) {
+    if (!ALAN_ANAHTARI.test(k) || (v !== null && typeof v === 'object' && !Array.isArray(v))) continue
+    const t = bolum(v).slice(0, ALAN_AZAMI)
+    if (t) cikti[k] = t
+  }
+  return Object.keys(cikti).length ? cikti : undefined
+}
+
 /** The model's answer as a note, or null when it is not one (no object, or all four sections empty). Pure. */
 export function notIceriginiOku(metin: string): NotIcerigi | null {
   const r = jsonOnarDetay(metin)
   if (r.deger === null || typeof r.deger !== 'object' || Array.isArray(r.deger)) return null
   const o = r.deger as Record<string, unknown>
-  const icerik = { s: bolum(o.s), o: bolum(o.o), a: bolum(o.a), p: bolum(o.p) }
-  return icerik.s || icerik.o || icerik.a || icerik.p ? icerik : null
+  const icerik: NotIcerigi = { s: bolum(o.s), o: bolum(o.o), a: bolum(o.a), p: bolum(o.p) }
+  if (!(icerik.s || icerik.o || icerik.a || icerik.p)) return null
+  const alanlar = alanlariOku(o[NOT_ALANLARI_ANAHTARI])
+  return alanlar ? { ...icerik, alanlar } : icerik
 }
 
 /** The label stored with a note for "which model wrote this": the policy's model for the note task, never a literal. */
