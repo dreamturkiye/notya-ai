@@ -57,9 +57,9 @@ function sifirla() {
     'jeton-tr': { id: '10000000-0000-4000-8000-00000000000c', email: 'qa-tr@notya.test', app_metadata: { country: 'tr' } },
     'jeton-damgasiz': { id: '10000000-0000-4000-8000-00000000000d', email: 'qa-d@notya.test', app_metadata: {} },
   })
-  vt.tablo('users').push(
-    { id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' },
-    { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' },
+  vt.tablo('ulke_hesaplari').push(
+    { id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: 'uz-Latn' },
+    { id: B, full_name: 'QA Врач Б', ulke: 'uz', ui_language: 'ru' },
   )
 }
 
@@ -342,7 +342,7 @@ describe('Uzbekistan application: language choices API', () => {
     // The other doctor is untouched.
     assert.deepEqual(await hesap('jeton-b'), { ulke: 'uz', dil: 'ru', durum: 'uygulama', ad: 'QA Врач Б', notDili: 'ru', dilSoruldu: false })
     assert.deepEqual(vt.tablo('hekim_dil_tercihleri').map((s) => s.doctor_id), [A])
-    assert.equal(vt.tablo('users').find((u) => u.id === A)!.country, 'uz', 'the country stamp is not something this route writes')
+    assert.equal(vt.tablo('ulke_hesaplari').find((u) => u.id === A)!.ulke, 'uz', 'the country stamp is not something this route writes')
     // Settings: interface in Russian, notes in Uzbek Latin — both stay changeable.
     assert.equal((await tercihler.POST(istek('/api/ulke/tercihler', 'jeton-a', { arayuzDili: 'ru', notDili: 'uz-Latn' }))).status, 200)
     assert.deepEqual(await hesap('jeton-a'), { ulke: 'uz', dil: 'ru', durum: 'uygulama', ad: 'QA Shifokor A', notDili: 'uz-Latn', dilSoruldu: true })
@@ -355,13 +355,13 @@ describe('Uzbekistan application: language choices API', () => {
       assert.equal(r.s, 400, JSON.stringify(g)); assert.equal(r.j.code, 'GECERSIZ')
     }
     assert.deepEqual(vt.tablo('hekim_dil_tercihleri'), [])
-    assert.equal(vt.tablo('users').find((u) => u.id === A)!.ui_language, 'uz-Latn')
+    assert.equal(vt.tablo('ulke_hesaplari').find((u) => u.id === A)!.ui_language, 'uz-Latn')
   })
 
   it('a body cannot name another account: only the caller\'s rows are written', async () => {
     await tercihler.POST(istek('/api/ulke/tercihler', 'jeton-a', { arayuzDili: 'ru', notDili: 'ru', doctor_id: B, id: B, doktorId: B }))
     assert.deepEqual(vt.tablo('hekim_dil_tercihleri').map((s) => s.doctor_id), [A])
-    assert.equal(vt.tablo('users').find((u) => u.id === B)!.ui_language, 'ru')
+    assert.equal(vt.tablo('ulke_hesaplari').find((u) => u.id === B)!.ui_language, 'ru')
     for (const q of vt.sorgular.filter((x) => x.islem !== 'select')) assert.ok(!q.filtreler.join(' ').includes(B), JSON.stringify(q))
   })
 
@@ -424,7 +424,7 @@ describe('Uzbekistan application: patients API and patient isolation', () => {
     assert.deepEqual({ ...dosya.j.hasta, olusturuldu: undefined }, { ...r.j.hasta, olusturuldu: undefined })
     assert.deepEqual(dosya.j.muayeneler, [])
     // In the database: the doctor is the caller, personal data is encrypted, and no Turkish identity number exists.
-    const [satir] = vt.tablo('patients')
+    const [satir] = vt.tablo('ulke_hastalar')
     assert.equal(satir.doctor_id, A)
     assert.ok(!('tc_kimlik_hash' in satir) || satir.tc_kimlik_hash == null)
     const ham = JSON.stringify(vt.tablolar)
@@ -444,7 +444,7 @@ describe('Uzbekistan application: patients API and patient isolation', () => {
       [{ ...KARIMOVA, dil: '' }, 'dil'], [{ ...KARIMOVA, dil: 'tr' }, 'dil'], [{ ...KARIMOVA, dil: 'uz-Latn' }, 'dil'], [{ ...KARIMOVA, dil: undefined }, 'dil'],
     ]
     for (const [g, alan] of vakalar) assert.deepEqual(await ekle('jeton-a', g as Record<string, unknown>), { s: 400, j: { code: 'GECERSIZ', alan } }, JSON.stringify(g).slice(0, 80))
-    assert.equal(vt.tablo('patients').length, 1)
+    assert.equal(vt.tablo('ulke_hastalar').length, 1)
   })
 
   it('find: by name in either script, by patronymic, by phone digits; sorted by name', async () => {
@@ -484,11 +484,11 @@ describe('Uzbekistan application: patients API and patient isolation', () => {
   it('ISOLATION: a body cannot create a patient for another doctor, and every patient query carries the caller\'s id', async () => {
     const r = await ekle('jeton-a', { ...KARIMOVA, doctor_id: B, doktorId: B, id: '30000000-0000-4000-8000-000000000bad', patient_id: 'x' })
     assert.equal(r.s, 200)
-    assert.deepEqual(vt.tablo('patients').map((s) => s.doctor_id), [A])
+    assert.deepEqual(vt.tablo('ulke_hastalar').map((s) => s.doctor_id), [A])
     assert.notEqual(r.j.hasta.id, '30000000-0000-4000-8000-000000000bad')
     assert.deepEqual(await liste('jeton-b'), [])
     await liste('jeton-a', 'karim'); await hasta.GET(istek(`/api/ulke/hasta?id=${r.j.hasta.id}`, 'jeton-a')); await bugun.GET(istek('/api/ulke/bugun', 'jeton-a'))
-    const hastaTablolari = new Set(['patients', 'hasta_ulke_bilgisi', 'sessions', 'notes'])
+    const hastaTablolari = new Set(['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'ulke_notlar'])
     const sorgular = vt.sorgular.filter((q) => hastaTablolari.has(q.tablo) && q.islem !== 'insert')
     assert.ok(sorgular.length >= 6, 'the routes did not run')
     for (const q of sorgular) assert.ok(q.filtreler.some((f) => f === `doctor_id=eq.${A}` || f === `doctor_id=eq.${B}`), `a query on ${q.tablo} without the doctor: ${JSON.stringify(q)}`)
@@ -498,7 +498,7 @@ describe('Uzbekistan application: patients API and patient isolation', () => {
     vt.boz.yaz.add('hasta_ulke_bilgisi')
     // The stand-in fails every write on the table it is told to break; the clean-up delete is on `patients`.
     assert.deepEqual(await ekle('jeton-a', KARIMOVA), { s: 500, j: { code: 'BASARISIZ' } })
-    assert.deepEqual(vt.tablo('patients'), [])
+    assert.deepEqual(vt.tablo('ulke_hastalar'), [])
   })
 
   it('no session, another country\'s account: "no session" on every patient route, nothing read', async () => {
@@ -508,6 +508,6 @@ describe('Uzbekistan application: patients API and patient isolation', () => {
         assert.deepEqual(await cevap(r), { s: 401, j: { code: 'OTURUM_YOK' } }, String(jeton))
       }
     }
-    assert.equal(vt.tablo('patients').length, 1)
+    assert.equal(vt.tablo('ulke_hastalar').length, 1)
   })
 })

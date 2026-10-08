@@ -1,9 +1,10 @@
--- 135 NOTYA-UZ-RANDEVU-01 (Kaan, 2026-10-08)
+-- 135 NOTYA-UZ-RANDEVU-01 (Kaan, 2026-10-08) · reshaped for the shared database by NOTYA-ULKE-SABLON-01
 -- Appointments of a country's signed-in application (docs/COUNTRY-PACK-CHECKLIST.md J4), and an all-or-nothing
 -- approval of a visit note.
 --
 --   1. hekim_calisma_duzeni   one row per account: working days, working hours, default appointment length, breaks.
---                             Minutes are WALL-CLOCK minutes of the country's own time zone (the pack's `saatDilimi`).
+--                             Minutes are WALL-CLOCK minutes of the account's own time zone (the pack's default, or
+--                             the one the account chose from the pack's list).
 --   2. ulke_randevulari       one row per appointment. Instants (timestamptz). The reason is encrypted like the
 --                             rest of a patient's data. `session_id` links the appointment to the visit that was
 --                             started from it.
@@ -11,33 +12,37 @@
 --                             (and the exchange of the two drafts), and "done" on the appointment the visit was
 --                             started from. Either all of it happens or none of it.
 --
--- NEW objects only. `notes`, `sessions`, `patients`, `users` and the pre-split application's own `randevular` and
--- `doktor_calisma_saatleri` are not altered: no column, row, policy, index or trigger of an existing table changes.
--- Türkiye does not use any of this; there the two tables stay empty and the function is never called.
+-- NEW objects only, all of them a country's (rules of the shared database: migration 130). `notes`, `sessions`,
+-- `patients`, `users` and Türkiye's own `randevular` and `doktor_calisma_saatleri` are not read, written or altered.
+-- The function reads and writes country tables only, and every statement in it carries the country it was called for.
+--
+-- The extension `btree_gist` is created if it is missing. It adds operator classes; it changes no existing table,
+-- index or query of Türkiye.
 --
 -- NO DOUBLE BOOKING is a database guarantee, not an application check: an exclusion constraint refuses two
 -- appointments of one doctor whose times overlap while both hold their time (planned, arrived, done). Two requests
 -- at the same moment cannot both win; the loser gets error 23P01, which the application answers as "slot taken".
--- A cancelled appointment and a "did not come" give their time back.
+-- A cancelled appointment and a "did not come" give their time back. (An account belongs to one country, so "one
+-- doctor" needs no country in the constraint.)
 --
 -- Patient isolation (.cursor/skills/hasta-izolasyon/SKILL.md): server routes use the service role and scope every
--- query by doctor_id. Row-level security is the second line, in the same migration as the tables:
---   - a signed-in doctor may read only rows that carry their own id, and cannot write from the browser;
---   - the RESTRICTIVE patient-ownership policy of migration 052 on the table that names a patient.
--- The function takes the doctor's id as an argument, so it is closed to the browser roles: only the server may call it.
+-- statement by country and doctor_id. An appointment belongs to (country, doctor, patient) by its foreign key; its
+-- visit link is (country, doctor, visit). Row-level security is the second line, as in 131.
+-- The function takes the country and the doctor's id as arguments, so it is closed to the browser roles: only the
+-- server may call it.
 --
--- NOT APPLIED to any database by the job that wrote it. It HAS been run, with migrations 130–134, on a throwaway
--- PostgreSQL 18.4 inside the build machine (scripts/ulke-goc-kaniti.mjs, 2026-10-08): every file runs twice without
--- error, the constraint refuses a double booking also between two open transactions, and the function leaves every
--- row unchanged when it fails in the middle. Supabase's own objects (roles, auth, storage) were minimal stand-ins
--- there, so run it on an empty copy of the country's Supabase database first. Apply after 134, before the calendar
--- is used. The application's own tests use a stand-in that follows this file statement by statement.
+-- Safe to run twice. One transaction. NOT APPLIED to any database by the job that wrote it. Run on a throwaway local
+-- PostgreSQL by scripts/ulke-goc-kaniti.mjs. Apply after 134, before the calendar is used.
+
+begin;
+set local lock_timeout = '4s';
 
 create extension if not exists btree_gist;
 
 -- ── 1. Working pattern ───────────────────────────────────────────────────────────────────────────────────────
 create table if not exists public.hekim_calisma_duzeni (
-  doctor_id uuid primary key references auth.users(id) on delete cascade,
+  doctor_id uuid primary key,
+  ulke text not null check (ulke ~ '^[a-z]{2}$'),
   -- ISO weekdays the account works: 1 = Monday … 7 = Sunday.
   gunler smallint[] not null check (gunler <@ array[1,2,3,4,5,6,7]::smallint[] and cardinality(gunler) between 1 and 7),
   -- Minutes after local midnight.
@@ -49,14 +54,15 @@ create table if not exists public.hekim_calisma_duzeni (
   molalar jsonb not null default '[]'::jsonb check (jsonb_typeof(molalar) = 'array'),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (bitis_dk > baslangic_dk)
+  check (bitis_dk > baslangic_dk),
+  constraint hekim_calisma_duzeni_hesap_fk foreign key (ulke, doctor_id) references public.ulke_hesaplari (ulke, id) on delete cascade
 );
 
 alter table public.hekim_calisma_duzeni enable row level security;
 
 drop policy if exists "hekim kendi calisma duzeni" on public.hekim_calisma_duzeni;
 create policy "hekim kendi calisma duzeni" on public.hekim_calisma_duzeni
-  for select to authenticated using (doctor_id = auth.uid());
+  for select to authenticated using (doctor_id = auth.uid() and ulke = public.ulke_oturum_ulkesi());
 
 revoke all on table public.hekim_calisma_duzeni from anon, authenticated;
 grant select on table public.hekim_calisma_duzeni to authenticated;
@@ -64,22 +70,27 @@ grant select on table public.hekim_calisma_duzeni to authenticated;
 -- ── 2. Appointments ──────────────────────────────────────────────────────────────────────────────────────────
 create table if not exists public.ulke_randevulari (
   id uuid primary key default gen_random_uuid(),
-  doctor_id uuid not null references auth.users(id) on delete cascade,
-  patient_id uuid not null references public.patients(id) on delete cascade,
+  ulke text not null check (ulke ~ '^[a-z]{2}$'),
+  doctor_id uuid not null,
+  patient_id uuid not null,
   baslangic timestamptz not null,
   bitis timestamptz not null,
-  -- AES-256-GCM, same helper as patients.*_encrypted (lib/security/encryption.ts). A short reason for the visit.
+  -- AES-256-GCM, same helper as ulke_hastalar.*_encrypted (lib/security/encryption.ts). A short reason for the visit.
   neden_encrypted text,
   -- planned, arrived, done, did not come, cancelled.
   durum text not null default 'planlandi' check (durum in ('planlandi', 'geldi', 'tamamlandi', 'gelmedi', 'iptal')),
   -- true = booked outside the working hours on purpose (the doctor confirmed "book anyway").
   mesai_disi boolean not null default false,
   -- The visit started from this appointment. One visit belongs to at most one appointment.
-  session_id uuid references public.sessions(id) on delete set null,
+  session_id uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (bitis > baslangic),
-  check (bitis <= baslangic + interval '8 hours')
+  check (bitis <= baslangic + interval '8 hours'),
+  constraint ulke_randevulari_hasta_fk foreign key (ulke, doctor_id, patient_id) references public.ulke_hastalar (ulke, doctor_id, id) on delete cascade,
+  -- The linked visit must be the same country's and the same doctor's. Checked only when there is a link. A visit
+  -- is never removed by itself once it is linked (only together with its patient, which removes the appointment too).
+  constraint ulke_randevulari_muayene_fk foreign key (ulke, doctor_id, session_id) references public.ulke_muayeneler (ulke, doctor_id, id)
 );
 
 do $$
@@ -91,27 +102,30 @@ begin
   end if;
 end $$;
 
-create index if not exists ulke_randevulari_doctor_idx on public.ulke_randevulari (doctor_id, baslangic);
-create index if not exists ulke_randevulari_patient_idx on public.ulke_randevulari (doctor_id, patient_id, baslangic);
+create index if not exists ulke_randevulari_doctor_idx on public.ulke_randevulari (ulke, doctor_id, baslangic);
+create index if not exists ulke_randevulari_patient_idx on public.ulke_randevulari (ulke, doctor_id, patient_id, baslangic);
 create unique index if not exists ulke_randevulari_session_idx on public.ulke_randevulari (session_id) where session_id is not null;
 
 alter table public.ulke_randevulari enable row level security;
 
 drop policy if exists "hasta_izolasyon_kendi_satiri" on public.ulke_randevulari;
 create policy "hasta_izolasyon_kendi_satiri" on public.ulke_randevulari
-  for select to authenticated using (doctor_id = auth.uid());
+  for select to authenticated using (doctor_id = auth.uid() and ulke = public.ulke_oturum_ulkesi());
 
 drop policy if exists "hasta_izolasyon_hasta_sahipligi" on public.ulke_randevulari;
 create policy "hasta_izolasyon_hasta_sahipligi" on public.ulke_randevulari as restrictive for all to authenticated, anon
-  using (exists (select 1 from public.patients p where p.id = patient_id and p.doctor_id = auth.uid()))
-  with check (exists (select 1 from public.patients p where p.id = patient_id and p.doctor_id = auth.uid()));
+  using (exists (select 1 from public.ulke_hastalar p where p.id = patient_id and p.doctor_id = auth.uid() and p.ulke = public.ulke_oturum_ulkesi()))
+  with check (exists (select 1 from public.ulke_hastalar p where p.id = patient_id and p.doctor_id = auth.uid() and p.ulke = public.ulke_oturum_ulkesi()));
 
 revoke all on table public.ulke_randevulari from anon, authenticated;
 grant select on table public.ulke_randevulari to authenticated;
 
 -- ── 3. Approval of a note, all or nothing ────────────────────────────────────────────────────────────────────
--- Until this function, approving wrote `notes` and then, in a second request, the role fields in `not_dil_kaydi`:
+-- Until this function, approving wrote the note and then, in a second request, the role fields in `not_dil_kaydi`:
 -- a failure between the two left an approved note with the fields of its last saved draft.
+--
+-- COUNTRY. `p_ulke` is the country of the build that calls. Every statement below carries it: a note, a language
+-- record or an appointment of another country is never read, locked or changed, whatever ids are passed.
 --
 -- A function body runs inside the caller's transaction: if any statement below fails, or the function raises,
 -- every statement before it is undone. The application sends the values exactly as they must stand afterwards;
@@ -123,8 +137,10 @@ grant select on table public.ulke_randevulari to authenticated;
 --
 -- Returns  'TAMAM'      approved now
 --          'ONAYLI'     the note was already approved: NOTHING was changed
---          'NOT_FOUND'  no such note for this doctor: nothing was changed
+--          'NOT_FOUND'  no such note for this doctor IN THIS COUNTRY: nothing was changed
+drop function if exists public.ulke_not_onayla(uuid, uuid, timestamptz, text, text, text, text, jsonb);
 create or replace function public.ulke_not_onayla(
+  p_ulke text,
   p_note_id uuid,
   p_doctor_id uuid,
   p_onay_ani timestamptz,
@@ -144,8 +160,8 @@ declare
 begin
   -- The row is locked, so a second approval or a late save of the same note waits for this one to finish.
   select n.session_id, n.approved_at into v_session, v_onayli
-    from public.notes n
-   where n.id = p_note_id and n.doctor_id = p_doctor_id
+    from public.ulke_notlar n
+   where n.id = p_note_id and n.doctor_id = p_doctor_id and n.ulke = p_ulke
      for update;
   if not found then
     return 'NOT_FOUND';
@@ -154,14 +170,14 @@ begin
     return 'ONAYLI';
   end if;
 
-  update public.notes
+  update public.ulke_notlar
      set content_subjektif = p_s,
          content_objektif = p_o,
          content_degerlendirme = p_a,
          content_plan = p_p,
          approved_at = p_onay_ani,
          approved_by = p_doctor_id
-   where id = p_note_id and doctor_id = p_doctor_id and approved_at is null;
+   where id = p_note_id and doctor_id = p_doctor_id and ulke = p_ulke and approved_at is null;
 
   if p_dil_kaydi is not null then
     update public.not_dil_kaydi d
@@ -174,7 +190,7 @@ begin
            ikinci_a       = case when p_dil_kaydi ? 'ikinci_a' then p_dil_kaydi ->> 'ikinci_a' else d.ikinci_a end,
            ikinci_p       = case when p_dil_kaydi ? 'ikinci_p' then p_dil_kaydi ->> 'ikinci_p' else d.ikinci_p end,
            updated_at     = p_onay_ani
-     where d.note_id = p_note_id and d.doctor_id = p_doctor_id;
+     where d.note_id = p_note_id and d.doctor_id = p_doctor_id and d.ulke = p_ulke;
     if not found then
       -- A note of this application always has its language record. Without it nothing is approved.
       raise exception 'ulke_not_onayla: not_dil_kaydi row missing' using errcode = 'P0002';
@@ -185,15 +201,22 @@ begin
   -- (planned or arrived), so this statement can never run into the no-double-booking constraint.
   update public.ulke_randevulari
      set durum = 'tamamlandi', updated_at = p_onay_ani
-   where session_id = v_session and doctor_id = p_doctor_id and durum in ('planlandi', 'geldi');
+   where session_id = v_session and doctor_id = p_doctor_id and ulke = p_ulke and durum in ('planlandi', 'geldi');
 
   return 'TAMAM';
 end $$;
 
-revoke all on function public.ulke_not_onayla(uuid, uuid, timestamptz, text, text, text, text, jsonb) from public, anon, authenticated;
-grant execute on function public.ulke_not_onayla(uuid, uuid, timestamptz, text, text, text, text, jsonb) to service_role;
+revoke all on function public.ulke_not_onayla(text, uuid, uuid, timestamptz, text, text, text, text, jsonb) from public, anon, authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant execute on function public.ulke_not_onayla(text, uuid, uuid, timestamptz, text, text, text, text, jsonb) to service_role;
+  end if;
+end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
 values ('135', '135_ulke_randevu.sql', null, now(), false,
-  'NOTYA-UZ-RANDEVU-01: per-account working pattern + country appointments (new tables, owner-only, exclusion constraint against double booking) + ulke_not_onayla (note approval in one transaction)')
+  'NOTYA-ULKE-SABLON-01: per-account working pattern + country appointments (new tables, country and doctor in every key, exclusion constraint against double booking) + ulke_not_onayla (note approval in one transaction, bound to the country)')
 on conflict (version) do nothing;
+
+commit;

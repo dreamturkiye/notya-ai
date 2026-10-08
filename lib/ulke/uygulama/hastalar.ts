@@ -6,10 +6,12 @@
  * id, and a patient id that came from a request is matched against that doctor in the SAME query that reads the row.
  * A foreign id and a missing id give the same answer (null → the route says 404).
  *
- * Storage: the core `patients` table, written exactly as the rest of the product writes it (name / birth date / sex /
- * phone encrypted with lib/security/encryption.ts), so every later core feature finds these patients. What the core
- * table has no place for — patronymic, the patient's own language, an optional national identity number — lives in
- * `hasta_ulke_bilgisi` (migration 131), one row per patient, carrying the doctor's id as well.
+ * COUNTRY (lib/ulke/uygulama/tablolar.ts). Every statement below is also bound to this build's country: a patient
+ * of another country is not found here even with its id and its doctor's id.
+ *
+ * Storage (migration 131, country tables — never Türkiye's `patients`): `ulke_hastalar` holds the patient (name /
+ * birth date / sex / phone encrypted with lib/security/encryption.ts); `hasta_ulke_bilgisi`, one row per patient,
+ * holds the second name field, the patient's own language and an optional national identity number.
  *
  * No Turkish identity number is read, asked for or written: `tc_kimlik_hash` stays null. The national identity
  * number is optional free text, stored encrypted and NOT validated (docs/COUNTRY-PACK-CHECKLIST.md G5 is open).
@@ -17,6 +19,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { ulkePaketi } from '../ulke'
+import { ulkeTablosu } from './tablolar'
 
 export type Cinsiyet = 'male' | 'female'
 
@@ -95,8 +98,7 @@ const EK_KOLONLARI = 'patient_id, ota_ismi_encrypted, dil, ulusal_kimlik_encrypt
 
 /** Creates the patient for THIS doctor. null = nothing was saved (a half-written patient is removed again). */
 export async function hastaOlustur(supabase: SupabaseClient, doktorId: string, g: HastaGirdisi): Promise<Hasta | null> {
-  const { data: h, error } = await supabase
-    .from('patients')
+  const { data: h, error } = await ulkeTablosu(supabase, 'ulke_hastalar')
     .insert({
       doctor_id: doktorId,
       name_encrypted: encrypt(JSON.stringify({ ad: g.ad })),
@@ -115,10 +117,10 @@ export async function hastaOlustur(supabase: SupabaseClient, doktorId: string, g
     dil: g.dil,
     ulusal_kimlik_encrypted: g.ulusalKimlik ? encrypt(g.ulusalKimlik) : null,
   }
-  const { error: ekHatasi } = await supabase.from('hasta_ulke_bilgisi').insert(ek)
+  const { error: ekHatasi } = await ulkeTablosu(supabase, 'hasta_ulke_bilgisi').insert(ek)
   if (ekHatasi) {
     // The patient's language is part of the record this country requires: without it the patient is not saved.
-    try { await supabase.from('patients').delete().eq('id', ek.patient_id).eq('doctor_id', doktorId) } catch { /* reported as a failure either way */ }
+    try { await ulkeTablosu(supabase, 'ulke_hastalar').delete().eq('id', ek.patient_id).eq('doctor_id', doktorId) } catch { /* reported as a failure either way */ }
     return null
   }
   return birlestir(h as HastaSatiri, ek)
@@ -126,17 +128,17 @@ export async function hastaOlustur(supabase: SupabaseClient, doktorId: string, g
 
 /** One patient of THIS doctor, or null — for a foreign id exactly as for an id that does not exist. */
 export async function hastaGetir(supabase: SupabaseClient, doktorId: string, hastaId: string): Promise<Hasta | null> {
-  const { data: h, error } = await supabase.from('patients').select(HASTA_KOLONLARI).eq('id', hastaId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: h, error } = await ulkeTablosu(supabase, 'ulke_hastalar').select(HASTA_KOLONLARI).eq('id', hastaId).eq('doctor_id', doktorId).maybeSingle()
   if (error || !h) return null
-  const { data: ek } = await supabase.from('hasta_ulke_bilgisi').select(EK_KOLONLARI).eq('patient_id', hastaId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: ek } = await ulkeTablosu(supabase, 'hasta_ulke_bilgisi').select(EK_KOLONLARI).eq('patient_id', hastaId).eq('doctor_id', doktorId).maybeSingle()
   return birlestir(h as HastaSatiri, (ek as EkSatiri | null) ?? undefined)
 }
 
 /** Every patient of THIS doctor, by name. `q` narrows the list by name, patronymic, phone digits or identity number. */
 export async function hastalariListele(supabase: SupabaseClient, doktorId: string, q = ''): Promise<Hasta[] | null> {
-  const { data: satirlar, error } = await supabase.from('patients').select(HASTA_KOLONLARI).eq('doctor_id', doktorId).order('created_at', { ascending: false })
+  const { data: satirlar, error } = await ulkeTablosu(supabase, 'ulke_hastalar').select(HASTA_KOLONLARI).eq('doctor_id', doktorId).order('created_at', { ascending: false })
   if (error || !satirlar) return null
-  const { data: ekler } = await supabase.from('hasta_ulke_bilgisi').select(EK_KOLONLARI).eq('doctor_id', doktorId)
+  const { data: ekler } = await ulkeTablosu(supabase, 'hasta_ulke_bilgisi').select(EK_KOLONLARI).eq('doctor_id', doktorId)
   const ekHaritasi = new Map(((ekler as EkSatiri[] | null) ?? []).map((e) => [e.patient_id, e]))
   let hastalar = (satirlar as HastaSatiri[]).map((h) => birlestir(h, ekHaritasi.get(h.id)))
   const aranan = q.trim()
@@ -159,6 +161,6 @@ export async function hastalariListele(supabase: SupabaseClient, doktorId: strin
 export async function hastaAdlari(supabase: SupabaseClient, doktorId: string, idler: string[]): Promise<Map<string, string>> {
   const tekil = [...new Set(idler.filter(Boolean))]
   if (!tekil.length) return new Map()
-  const { data } = await supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doktorId).in('id', tekil)
+  const { data } = await ulkeTablosu(supabase, 'ulke_hastalar').select('id, name_encrypted').eq('doctor_id', doktorId).in('id', tekil)
   return new Map(((data as { id: string; name_encrypted: string | null }[] | null) ?? []).map((h) => [h.id, adCoz(h.name_encrypted)]))
 }

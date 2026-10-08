@@ -11,6 +11,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ulkePaketi } from '../ulke'
 import { GUN_DK, saatCoz } from './zaman'
+import { ulkeTablosu } from './tablolar'
 
 export type Mola = { bas: number; bit: number }
 export type CalismaDuzeni = {
@@ -99,7 +100,7 @@ function satirdan(s: DuzenSatiri): CalismaDuzeni | null {
 export async function calismaDuzeniniOku(supabase: SupabaseClient, hesapId: string): Promise<{ duzen: CalismaDuzeni; kayitli: boolean } | null> {
   const varsayilan = varsayilanDuzen()
   if (!varsayilan) return null
-  const { data, error } = await supabase.from('hekim_calisma_duzeni').select('gunler, baslangic_dk, bitis_dk, sure_dk, molalar').eq('doctor_id', hesapId).maybeSingle()
+  const { data, error } = await ulkeTablosu(supabase, 'hekim_calisma_duzeni').select('gunler, baslangic_dk, bitis_dk, sure_dk, molalar').eq('doctor_id', hesapId).maybeSingle()
   const duzen = !error && data ? satirdan(data as DuzenSatiri) : null
   return duzen ? { duzen, kayitli: true } : { duzen: varsayilan, kayitli: false }
 }
@@ -107,8 +108,7 @@ export async function calismaDuzeniniOku(supabase: SupabaseClient, hesapId: stri
 /** Writes the caller's pattern. false = nothing was saved. */
 export async function calismaDuzeniniYaz(supabase: SupabaseClient, hesapId: string, d: CalismaDuzeni): Promise<boolean> {
   const simdi = new Date().toISOString()
-  const { error } = await supabase
-    .from('hekim_calisma_duzeni')
+  const { error } = await ulkeTablosu(supabase, 'hekim_calisma_duzeni')
     .upsert({ doctor_id: hesapId, gunler: d.gunler, baslangic_dk: d.baslangicDk, bitis_dk: d.bitisDk, sure_dk: d.sureDk, molalar: d.molalar, updated_at: simdi }, { onConflict: 'doctor_id' })
   return !error
 }

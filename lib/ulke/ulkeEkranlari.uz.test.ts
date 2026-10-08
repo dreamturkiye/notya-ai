@@ -56,10 +56,10 @@ function sifirla() {
     'jeton-uz-eski-sema': { id: '10000000-0000-4000-8000-000000000007', email: 'qa-eski@notya.test', app_metadata: { country: 'uz' } },
   }
   satirlar = {
-    [hesaplar['jeton-uz'].id]: { id: hesaplar['jeton-uz'].id, full_name: 'QA Shifokor Bir', country: 'uz', ui_language: 'uz-Latn' },
-    [hesaplar['jeton-uz-ru'].id]: { id: hesaplar['jeton-uz-ru'].id, full_name: 'QA Shifokor Ikki', country: 'uz', ui_language: 'ru' },
-    [hesaplar['jeton-uz-satir-tr'].id]: { id: hesaplar['jeton-uz-satir-tr'].id, full_name: 'QA Uch', country: 'tr', ui_language: 'tr' },
-    // A database where migration 128 was never applied: the row has no country column at all.
+    [hesaplar['jeton-uz'].id]: { id: hesaplar['jeton-uz'].id, full_name: 'QA Shifokor Bir', ulke: 'uz', ui_language: 'uz-Latn' },
+    [hesaplar['jeton-uz-ru'].id]: { id: hesaplar['jeton-uz-ru'].id, full_name: 'QA Shifokor Ikki', ulke: 'uz', ui_language: 'ru' },
+    [hesaplar['jeton-uz-satir-tr'].id]: { id: hesaplar['jeton-uz-satir-tr'].id, full_name: 'QA Uch', ulke: 'tr', ui_language: 'tr' },
+    // A row that carries no country at all (cannot exist in the real table, where `ulke` is NOT NULL): still refused.
     [hesaplar['jeton-uz-eski-sema'].id]: { id: hesaplar['jeton-uz-eski-sema'].id, full_name: 'QA Toʻrt' },
   }
   kodlar = new Map([[davetKoduHash(GECERLI_KOD), { ulke: 'uz', kalan: 1 }], [davetKoduHash('QATEST0000000TRR'), { ulke: 'tr', kalan: 1 }]])
@@ -97,28 +97,38 @@ function sahteCreateClient() {
         k.kalan--; olaylar.push('kod-kullanildi')
         return { data: true, error: null }
       }
-      if (ad === 'davet_kodu_iade') { if (k) k.kalan++; olaylar.push('kod-iade'); return { data: null, error: null } }
+      // Bound to the country like the SQL: a code of another country is not given back from here.
+      if (ad === 'davet_kodu_iade') { assert.equal(typeof a.p_ulke, 'string', 'davet_kodu_iade must be called with the build\'s country'); if (k && k.ulke === a.p_ulke) k.kalan++; olaylar.push('kod-iade'); return { data: null, error: null } }
       throw new Error(`stand-in: rpc ${ad} not implemented`)
     },
     from: (tablo: string) => {
-      assert.ok(tablo === 'users' || tablo === 'hekim_dil_tercihleri', `the account API touched a table it has no business with: ${tablo}`)
+      // SHARED DATABASE: the account API reads and writes the country's own account table — never Türkiye's `users`.
+      assert.ok(tablo === 'ulke_hesaplari' || tablo === 'hekim_dil_tercihleri', `the account API touched a table it has no business with: ${tablo}`)
       let id = ''
+      let ulkeFiltresi = ''
       if (tablo === 'hekim_dil_tercihleri') {
         // NOTYA-UZ-MUAYENE-01: read by /api/ulke/hesap, always by the caller's own id. Its behaviour is tested in countries/uz/uygulama/uygulama.test.ts.
         const t: Record<string, unknown> = {
           select: () => t,
-          eq: (k: string, v: string) => { assert.equal(k, 'doctor_id'); id = v; return t },
-          maybeSingle: async () => ({ data: tercihler[id] ?? null, error: null }),
+          eq: (k: string, v: string) => { if (k === 'ulke') { assert.equal(v, 'uz'); ulkeFiltresi = v } else { assert.equal(k, 'doctor_id'); id = v } return t },
+          maybeSingle: async () => { assert.equal(ulkeFiltresi, 'uz', 'hekim_dil_tercihleri read without the country'); return { data: tercihler[id] ?? null, error: null } },
         }
         return t
       }
       const z: Record<string, unknown> = {
         select: () => z,
-        eq: (_k: string, v: string) => { id = v; return z },
-        maybeSingle: async () => (boz.satirOku ? { data: null, error: { code: '42703', message: 'column users.country does not exist' } } : { data: satirlar[id] ?? null, error: null }),
-        upsert: async (g: Record<string, unknown>) => {
+        eq: (k: string, v: string) => { if (k === 'ulke') ulkeFiltresi = v; else { assert.equal(k, 'id'); id = v } return z },
+        // Like the real table: the row is found only when BOTH the id and the country of the statement match.
+        maybeSingle: async () => {
+          assert.equal(ulkeFiltresi, 'uz', 'ulke_hesaplari read without the country')
+          if (boz.satirOku) return { data: null, error: { code: '42P01', message: 'relation "public.ulke_hesaplari" does not exist' } }
+          const satir = satirlar[id]
+          return { data: satir && satir.ulke === ulkeFiltresi ? satir : null, error: null }
+        },
+        insert: async (g: Record<string, unknown>) => {
           if (boz.satirYaz) return { data: null, error: { code: '23505', message: 'duplicate' } }
-          satirlar[String(g.id)] = g; olaylar.push(`satir:${g.email}:${g.country}:${g.ui_language}`)
+          assert.deepEqual(Object.keys(g).sort(), ['full_name', 'id', 'ui_language', 'ulke'], 'the account row holds the country, the name and the interface language — no e-mail, nothing else')
+          satirlar[String(g.id)] = g; olaylar.push(`satir:${g.full_name}:${g.ulke}:${g.ui_language}`)
           return { data: null, error: null }
         },
       }
@@ -502,7 +512,7 @@ describe('an Uzbekistan build: account API', () => {
     }
   })
 
-  it('hesap: fail closed — no row, a row of another country, a database without the country column, an unreadable row', async () => {
+  it('hesap: fail closed — no row, a row of another country, a row without a country, an unreadable table', async () => {
     for (const jeton of ['jeton-uz-satirsiz', 'jeton-uz-satir-tr', 'jeton-uz-eski-sema']) {
       assert.deepEqual(await hesap(jeton), { s: 403, j: { code: 'HESAP_REDDI' } }, jeton)
     }
@@ -512,7 +522,7 @@ describe('an Uzbekistan build: account API', () => {
 
   it('kayit: a valid code creates the account stamped uz, with the chosen language, and uses the code up', async () => {
     assert.deepEqual(await kayit(GECERLI), { s: 200, j: { ok: true } })
-    assert.deepEqual(olaylar, ['kod-kullanildi', 'hesap:qa-yangi@notya.test:{"country":"uz"}', 'satir:qa-yangi@notya.test:uz:ru'])
+    assert.deepEqual(olaylar, ['kod-kullanildi', 'hesap:qa-yangi@notya.test:{"country":"uz"}', 'satir:QA Yangi Shifokor:uz:ru'])
     assert.equal(kodlar.get(davetKoduHash(GECERLI_KOD))!.kalan, 0)
     // The same code again: refused, nothing created.
     olaylar = []
@@ -548,7 +558,7 @@ describe('an Uzbekistan build: account API', () => {
     for (const dil of ['tr', 'uz-Cyrl', '', undefined]) {
       sifirla()
       assert.equal((await kayit({ ...GECERLI, dil })).s, 200, String(dil))
-      assert.ok(olaylar.includes('satir:qa-yangi@notya.test:uz:uz-Latn'), `${dil}: ${olaylar.join(' | ')}`)
+      assert.ok(olaylar.includes('satir:QA Yangi Shifokor:uz:uz-Latn'), `${dil}: ${olaylar.join(' | ')}`)
     }
   })
 

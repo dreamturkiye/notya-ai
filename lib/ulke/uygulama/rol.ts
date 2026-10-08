@@ -10,6 +10,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ulkePaketi } from '../ulke'
+import { ulkeTablosu } from './tablolar'
 
 /** Roles an account may choose in this country. Empty where the pack has none. */
 export function uygulamaRolleri(): readonly string[] {
@@ -23,7 +24,7 @@ export function uygulamaRoluMu(ham: unknown): ham is string {
 
 /** The account's role, or null: not chosen yet, not readable (a database without migration 134), or not a role here. */
 export async function hekimRolunuOku(supabase: SupabaseClient, hesapId: string): Promise<string | null> {
-  const { data, error } = await supabase.from('hekim_rolu').select('rol').eq('doctor_id', hesapId).maybeSingle()
+  const { data, error } = await ulkeTablosu(supabase, 'hekim_rolu').select('rol').eq('doctor_id', hesapId).maybeSingle()
   if (error || !data) return null
   const rol = (data as { rol?: unknown }).rol
   return uygulamaRoluMu(rol) ? rol : null
@@ -33,6 +34,6 @@ export async function hekimRolunuOku(supabase: SupabaseClient, hesapId: string):
 export async function hekimRolunuYaz(supabase: SupabaseClient, hesapId: string, rol: string): Promise<boolean> {
   if (!uygulamaRoluMu(rol)) return false
   const simdi = new Date().toISOString()
-  const { error } = await supabase.from('hekim_rolu').upsert({ doctor_id: hesapId, rol, secildi_at: simdi, updated_at: simdi }, { onConflict: 'doctor_id' })
+  const { error } = await ulkeTablosu(supabase, 'hekim_rolu').upsert({ doctor_id: hesapId, rol, secildi_at: simdi, updated_at: simdi }, { onConflict: 'doctor_id' })
   return !error
 }

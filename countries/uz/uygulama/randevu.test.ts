@@ -74,9 +74,9 @@ function sifirla() {
     'jeton-b': { id: B, email: 'qa-b@notya.test', app_metadata: { country: 'uz' } },
     'jeton-tr': { id: '10000000-0000-4000-8000-00000000000d', email: 'qa-tr@notya.test', app_metadata: { country: 'tr' } },
   })
-  vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' })
-  vt.tablo('hekim_dil_tercihleri').push({ doctor_id: A, not_dili: 'uz-Latn', soruldu_at: 'x' }, { doctor_id: B, not_dili: 'ru', soruldu_at: 'x' })
-  vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'pediatri' }, { doctor_id: B, rol: 'pediatri' })
+  vt.tablo('ulke_hesaplari').push({ id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', ulke: 'uz', ui_language: 'ru' })
+  vt.tablo('hekim_dil_tercihleri').push({ ulke: 'uz', doctor_id: A, not_dili: 'uz-Latn', soruldu_at: 'x' }, { ulke: 'uz', doctor_id: B, not_dili: 'ru', soruldu_at: 'x' })
+  vt.tablo('hekim_rolu').push({ ulke: 'uz', doctor_id: A, rol: 'pediatri' }, { ulke: 'uz', doctor_id: B, rol: 'pediatri' })
 }
 
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak }), [])
@@ -436,8 +436,8 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
   let h1 = '', h2 = '', hb = ''
   beforeEach(async () => { sifirla(); R.devreSifirla(); h1 = await hastaEkle('jeton-a', 'QA Karimova Dilnoza'); h2 = await hastaEkle('jeton-a', 'QA Yusupov Sardor', 'ru'); hb = await hastaEkle('jeton-b', 'QA Тестовый Пациент', 'ru') })
   const muayene = async (jeton: string, doktor: string, hastaId: string, randevuId?: unknown) => {
-    vt.depo.set(`muayene-sesleri/${doktor}/k.webm`, new Blob(['sentetik ses']))
-    return oku(await R.muayene.POST(istek('/api/ulke/muayene', jeton, { yol: `${doktor}/k.webm`, hastaId, sablon: 'pediatri', riza: true, ...(randevuId === undefined ? {} : { randevuId }) })))
+    vt.depo.set(`muayene-sesleri/uz/${doktor}/k.webm`, new Blob(['sentetik ses']))
+    return oku(await R.muayene.POST(istek('/api/ulke/muayene', jeton, { yol: `uz/${doktor}/k.webm`, hastaId, sablon: 'pediatri', riza: true, ...(randevuId === undefined ? {} : { randevuId }) })))
   }
   const sessiz = async <T>(is: () => Promise<T>): Promise<T> => {
     const e = console.error, w = console.warn, l = console.log
@@ -448,7 +448,7 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
   /** An appointment today, written straight into the table (today's hours may be over; the rules are tested above). */
   const bugunRandevu = (doktor: string, hasta: string, basDk: number, durum = 'planlandi') => {
     const id = `50000000-0000-4000-8000-${String(satirlar().length + 1).padStart(12, '0')}`
-    satirlar().push({ id, doctor_id: doktor, patient_id: hasta, baslangic: new Date(yerelUtc(BUGUN, basDk, DILIM)).toISOString(), bitis: new Date(yerelUtc(BUGUN, basDk + 15, DILIM)).toISOString(), neden_encrypted: null, durum, mesai_disi: false, session_id: null })
+    satirlar().push({ ulke: 'uz', id, doctor_id: doktor, patient_id: hasta, baslangic: new Date(yerelUtc(BUGUN, basDk, DILIM)).toISOString(), bitis: new Date(yerelUtc(BUGUN, basDk + 15, DILIM)).toISOString(), neden_encrypted: null, durum, mesai_disi: false, session_id: null })
     return id
   }
 
@@ -460,7 +460,7 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
     assert.equal((await getir('jeton-a', id)).j.randevu.seansId, m.j.seansId)
     // The link is one statement that carries doctor, patient, "no visit yet" and a status a visit can start from.
     const bag = vt.sorgular.filter((q) => q.tablo === 'ulke_randevulari' && q.islem === 'update')
-    assert.deepEqual(bag.map((q) => q.filtreler), [[`id=eq.${id}`, `doctor_id=eq.${A}`, `patient_id=eq.${h1}`, 'session_id=is.null', 'durum=in.(planlandi,geldi)']])
+    assert.deepEqual(bag.map((q) => q.filtreler), [['ulke=eq.uz', `id=eq.${id}`, `doctor_id=eq.${A}`, `patient_id=eq.${h1}`, 'session_id=is.null', 'durum=in.(planlandi,geldi)']])
     // The note is written and saved as a draft: the appointment has not changed.
     const notId = (await sessiz(async () => oku(await R.not.POST(istek('/api/ulke/not', 'jeton-a', { seansId: m.j.seansId }))))).j.notId as string
     assert.equal(satirlar()[0].durum, 'geldi')
@@ -477,12 +477,12 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
     const id = bugunRandevu(A, h1, 600)
     const m = await muayene('jeton-a', A, h1, id)
     const notId = (await sessiz(async () => oku(await R.not.POST(istek('/api/ulke/not', 'jeton-a', { seansId: m.j.seansId }))))).j.notId as string
-    const once = JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi'), satirlar()])
+    const once = JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi'), satirlar()])
     vt.boz.yaz.add('ulke_randevulari')
     assert.deepEqual(await oku(await R.onayla.POST(istek('/api/ulke/not/onayla', 'jeton-a', { notId, dil: 'uz-Latn', ...UZ_NOT, a: 'EKRANDAGI' }))), { s: 500, j: { code: 'BASARISIZ' } })
     vt.boz.yaz.clear()
-    assert.equal(JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi'), satirlar()]), once)
-    assert.deepEqual([vt.tablo('notes')[0].approved_at ?? null, satirlar()[0].durum], [null, 'geldi'])
+    assert.equal(JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi'), satirlar()]), once)
+    assert.deepEqual([vt.tablo('ulke_notlar')[0].approved_at ?? null, satirlar()[0].durum], [null, 'geldi'])
   })
 
   it('a visit without an appointment is as before; an appointment that was cancelled meanwhile does not cost the recording', async () => {
@@ -491,7 +491,7 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
     const iptal = bugunRandevu(A, h1, 660, 'iptal')
     const m = await muayene('jeton-a', A, h1, iptal)
     assert.deepEqual([m.s, m.j.randevuBagli, satirlar()[0].session_id, satirlar()[0].durum], [200, false, null, 'iptal'])
-    assert.equal(vt.tablo('sessions').length, 2, 'the visit itself is kept')
+    assert.equal(vt.tablo('ulke_muayeneler').length, 2, 'the visit itself is kept')
     // One appointment, one visit: a second recording "from" the same appointment is stored but not linked.
     const id = bugunRandevu(A, h2, 720)
     const ilk = await muayene('jeton-a', A, h2, id)
@@ -505,9 +505,9 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
     for (const [ad, hasta, randevu] of [['another doctor\'s appointment', h1, onun], ['my appointment, for another patient of mine', h2, benim], ['an id that does not exist', h1, YOK], ['a malformed id', h1, 'abc'], ['not a string', h1, 42]] as const) {
       vt.sorgular.length = 0
       assert.deepEqual(await muayene('jeton-a', A, hasta, randevu), { s: 404, j: { code: 'NOT_FOUND' } }, ad)
-      assert.deepEqual(vt.tablo('sessions'), [], ad)
+      assert.deepEqual(vt.tablo('ulke_muayeneler'), [], ad)
       assert.equal(vt.depo.size, 0, `${ad}: the recording was left in storage`)
-      assert.equal(vt.sorgular.some((q) => q.tablo === 'ai_kullanim'), false, `${ad}: got as far as the day's counter`)
+      assert.equal(vt.sorgular.some((q) => q.tablo === 'ulke_kullanim'), false, `${ad}: got as far as the day's counter`)
     }
     assert.deepEqual(satirlar().map((s) => [s.session_id, s.durum]), [[null, 'planlandi'], [null, 'planlandi']])
   })
@@ -519,8 +519,8 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
     const iptal = bugunRandevu(A, h1, t0 + 120, 'iptal')
     bugunRandevu(B, hb, t0)
     // Yesterday's and tomorrow's are not today's.
-    satirlar().push({ id: '50000000-0000-4000-8000-0000000000f1', doctor_id: A, patient_id: h1, baslangic: new Date(yerelUtc(gunEkle(BUGUN, 1), 5, DILIM)).toISOString(), bitis: new Date(yerelUtc(gunEkle(BUGUN, 1), 20, DILIM)).toISOString(), durum: 'planlandi', neden_encrypted: null, mesai_disi: true, session_id: null })
-    satirlar().push({ id: '50000000-0000-4000-8000-0000000000f2', doctor_id: A, patient_id: h1, baslangic: new Date(yerelUtc(gunEkle(BUGUN, -1), 1430, DILIM)).toISOString(), bitis: new Date(yerelUtc(gunEkle(BUGUN, -1), 1439, DILIM)).toISOString(), durum: 'gelmedi', neden_encrypted: null, mesai_disi: true, session_id: null })
+    satirlar().push({ ulke: 'uz', id: '50000000-0000-4000-8000-0000000000f1', doctor_id: A, patient_id: h1, baslangic: new Date(yerelUtc(gunEkle(BUGUN, 1), 5, DILIM)).toISOString(), bitis: new Date(yerelUtc(gunEkle(BUGUN, 1), 20, DILIM)).toISOString(), durum: 'planlandi', neden_encrypted: null, mesai_disi: true, session_id: null })
+    satirlar().push({ ulke: 'uz', id: '50000000-0000-4000-8000-0000000000f2', doctor_id: A, patient_id: h1, baslangic: new Date(yerelUtc(gunEkle(BUGUN, -1), 1430, DILIM)).toISOString(), bitis: new Date(yerelUtc(gunEkle(BUGUN, -1), 1439, DILIM)).toISOString(), durum: 'gelmedi', neden_encrypted: null, mesai_disi: true, session_id: null })
     const r = await oku(await R.bugun.GET(istek('/api/ulke/bugun', 'jeton-a')))
     assert.equal(r.s, 200)
     assert.deepEqual(r.j.randevular.map((x: Record<string, unknown>) => [x.id, x.hastaAdi, x.durum, x.gun]), [[sabah, 'QA Karimova Dilnoza', 'planlandi', BUGUN], [iptal, 'QA Karimova Dilnoza', 'iptal', BUGUN], [ogle, 'QA Yusupov Sardor', 'geldi', BUGUN]])
@@ -567,7 +567,7 @@ describe('Uzbekistan appointments: ISOLATION between two doctors, both direction
         assert.ok(!JSON.stringify(l.j).includes('GIZLI'), sorgu)
       }
       // A row that points at the other doctor's patient (left by some fault) shows no name and no language.
-      satirlar().push({ id: '50000000-0000-4000-8000-0000000000aa', doctor_id: t.benId, patient_id: onunHasta, baslangic: an(SALI, '09:00'), bitis: an(SALI, '09:30'), durum: 'planlandi', neden_encrypted: null, mesai_disi: false, session_id: null })
+      satirlar().push({ ulke: 'uz', id: '50000000-0000-4000-8000-0000000000aa', doctor_id: t.benId, patient_id: onunHasta, baslangic: an(SALI, '09:00'), bitis: an(SALI, '09:30'), durum: 'planlandi', neden_encrypted: null, mesai_disi: false, session_id: null })
       const kirli = await getir(t.ben, '50000000-0000-4000-8000-0000000000aa')
       assert.deepEqual([kirli.j.randevu.hastaAdi, kirli.j.randevu.hastaDili], ['', ''])
       assert.ok(!JSON.stringify((await liste(t.ben, `?gun=${SALI}`)).j).includes('GIZLI'))

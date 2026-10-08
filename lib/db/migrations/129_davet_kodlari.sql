@@ -6,8 +6,17 @@
 -- the person it is for, and stored here ONLY as a SHA-256 hash. The table holds no patient data and no account data.
 -- Server routes use the service role; nobody else can read or write it (RLS on, no policy, privileges revoked).
 --
--- Purely additive: one new table, two functions. Nothing existing is changed.
--- NOT APPLIED by the job that wrote it. Türkiye does not use invitation codes; there the table simply stays empty.
+-- Purely additive: one new table, two functions. No table Türkiye uses is changed (one row is added to the
+-- migration ledger `schema_migrations`). Türkiye does not use invitation codes.
+--
+-- SHARED DATABASE (NOTYA-ULKE-SABLON-01): one table for every country. A code belongs to ONE country (`ulke`);
+-- both functions take the build's country, so a build can neither use nor give back another country's code.
+--
+-- Safe to run twice. One transaction: applied completely or not at all.
+-- NOT APPLIED by the job that wrote it.
+
+begin;
+set local lock_timeout = '4s';
 
 create table if not exists public.davet_kodlari (
   kod_hash text primary key check (kod_hash ~ '^[0-9a-f]{64}$'),
@@ -42,23 +51,27 @@ begin
   return n = 1;
 end $$;
 
--- Gives a use back when the account could not be created after the code was taken.
-create or replace function public.davet_kodu_iade(p_hash text)
+-- Gives a use back when the account could not be created after the code was taken. Bound to the country as well:
+-- a build can give back only a code of its own country.
+drop function if exists public.davet_kodu_iade(text);
+create or replace function public.davet_kodu_iade(p_hash text, p_ulke text)
 returns void language sql security definer set search_path = public as $$
-  update public.davet_kodlari set kullanim = greatest(kullanim - 1, 0) where kod_hash = p_hash;
+  update public.davet_kodlari set kullanim = greatest(kullanim - 1, 0) where kod_hash = p_hash and ulke = p_ulke;
 $$;
 
 revoke execute on function public.davet_kodu_kullan(text, text) from public, anon, authenticated;
-revoke execute on function public.davet_kodu_iade(text) from public, anon, authenticated;
+revoke execute on function public.davet_kodu_iade(text, text) from public, anon, authenticated;
 do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     grant execute on function public.davet_kodu_kullan(text, text) to service_role;
-    grant execute on function public.davet_kodu_iade(text) to service_role;
+    grant execute on function public.davet_kodu_iade(text, text) to service_role;
   end if;
 end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
 values ('129', '129_davet_kodlari.sql', null, now(), false,
-  'NOTYA-ULKE-01: invitation codes (hash only) for countries whose sign-up is not open yet; atomic use / give-back functions')
+  'NOTYA-ULKE-01: invitation codes (hash only, one country each) for countries whose sign-up is not open yet; atomic use / give-back functions bound to the country')
 on conflict (version) do nothing;
+
+commit;

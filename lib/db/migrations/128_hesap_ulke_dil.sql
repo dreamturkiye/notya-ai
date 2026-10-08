@@ -1,17 +1,23 @@
 -- 128 NOTYA-ULKE-01 (Kaan, 2026-10-08)
--- Country and interface language on the account (docs/COUNTRY-PACK-CHECKLIST.md, rule 4).
+-- Country and interface language on Türkiye's own account table (`users`).
 --
--- One deployment and one database per country; the account still carries its country so that a row can never be
--- mistaken for another country's, and login can refuse an account that does not belong to the deployment
--- (lib/ulke/hesapUlkesi.ts). Purely additive: two columns with defaults, two format checks, one guard trigger.
--- No existing column, row, policy or index is changed.
+-- SHARED DATABASE (Kaan, 2026-10-08 19:09: "use the same database as what we are using for notya turkiye").
+-- THIS IS THE ONLY MIGRATION FROM 128 ON THAT CHANGES A TABLE TÜRKİYE USES, AND NO COUNTRY BUILD NEEDS IT:
+-- since NOTYA-ULKE-SABLON-01 a country's accounts live in `ulke_hesaplari` (migration 130), never in `users`.
+-- It only serves the Turkish application's own stamping (lib/ulke/hesapDamga.ts), which tolerates the columns being
+-- absent. docs/COUNTRY-PACK-DB-ROLLOUT.md recommends NOT running this file on the live database for the country
+-- rollout; run it, if ever, together with the pull request that brings the Turkish-side country check to `main`.
 --
--- Every existing row becomes 'tr' / 'tr' through the default: every account that exists today is Türkiye's.
--- The default is for THAT backfill only. Application code writes the country explicitly at sign-up; in another
--- country's database an account that still carries the default 'tr' is refused at login (fail closed).
+-- Purely additive: two columns with constant defaults (no table rewrite), two format checks, one guard trigger.
+-- No existing column, row, policy or index is changed. Every existing row reads 'tr' / 'tr' through the default.
 --
--- NOT APPLIED by the job that wrote it. Apply to a country's database before that country's sign-up is opened.
--- The application tolerates the columns being absent (they read as a pre-country account = Türkiye).
+-- Safe to run twice. One transaction: it is applied completely or not at all. `lock_timeout` makes it give up
+-- instead of queueing behind a long query on `users` (and blocking logins behind itself).
+--
+-- NOT APPLIED by the job that wrote it.
+
+begin;
+set local lock_timeout = '4s';
 
 alter table public.users add column if not exists country text not null default 'tr';
 alter table public.users add column if not exists ui_language text not null default 'tr';
@@ -53,3 +59,5 @@ insert into schema_migrations (version, filename, checksum, applied_at, backfill
 values ('128', '128_hesap_ulke_dil.sql', null, now(), false,
   'NOTYA-ULKE-01: users.country + users.ui_language (default tr for every existing row), format checks, country guard trigger')
 on conflict (version) do nothing;
+
+commit;

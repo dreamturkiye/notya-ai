@@ -57,7 +57,7 @@ function sifirla() {
     'jeton-tr': { id: '10000000-0000-4000-8000-00000000000c', email: 'qa-tr@notya.test', app_metadata: { country: 'tr' } },
     'jeton-damgasiz': { id: '10000000-0000-4000-8000-00000000000d', email: 'qa-d@notya.test', app_metadata: {} },
   })
-  vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' })
+  vt.tablo('ulke_hesaplari').push({ id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', ulke: 'uz', ui_language: 'ru' })
 }
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
@@ -242,7 +242,7 @@ describe('40 roles: the account (API)', () => {
   })
 
   it('a stored value that is not a role of this country reads as "no role" — never shown, never guessed', async () => {
-    vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'kadin-dogum' }, { doctor_id: B, rol: 'genel' })
+    vt.tablo('hekim_rolu').push({ ulke: 'uz', doctor_id: A, rol: 'kadin-dogum' }, { ulke: 'uz', doctor_id: B, rol: 'genel' })
     assert.deepEqual([(await al('jeton-a')).j, (await al('jeton-b')).j], [{ rol: null }, { rol: null }])
   })
 

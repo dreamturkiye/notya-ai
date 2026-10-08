@@ -248,7 +248,10 @@ export type UlkeSayfalari = {
 
 // ───────────────────────── the clinical half of a pack (countries/active/klinik) ─────────────────────────
 
-/** Storage bucket a visit recording is uploaded to, under a folder named after the doctor's account id (migration 132). */
+/**
+ * Storage bucket a visit recording is uploaded to — one bucket for every country, and inside it a folder per country
+ * and, below that, per account: `<country>/<account id>/<file>` (migration 132; lib/ulke/uygulama/tablolar.ts).
+ */
 export const MUAYENE_SES_KOVASI = 'muayene-sesleri'
 
 /**

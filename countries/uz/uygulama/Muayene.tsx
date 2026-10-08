@@ -23,6 +23,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { MUAYENE_SES_KOVASI } from '@/lib/ulke/tipler'
+import { sesKlasoru } from '@/lib/ulke/uygulama/tablolar'
 import { UZ_GENEL_SABLON, uzSablonMu } from '../klinik/notSablonlari'
 import { uzRolAdi } from '../klinik/rolAdlari'
 import { AramaFormu } from './Bugun'
@@ -245,7 +246,7 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
       if (!supabase || !hesapId) { u.cikis(); return }
       // The recording goes to the doctor's OWN folder; the storage policy accepts nothing else.
       const ad = (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)
-      const yol = `${hesapId}/${ad}.${ses.type.includes('mp4') ? 'm4a' : 'webm'}`
+      const yol = `${sesKlasoru(hesapId)}/${ad}.${ses.type.includes('mp4') ? 'm4a' : 'webm'}`
       const { error } = await supabase.storage.from(MUAYENE_SES_KOVASI).upload(yol, ses, { contentType: ses.type || 'audio/webm' })
       if (error) { geri('SES_OKUNAMADI'); return }
       setDurum('isleniyor')

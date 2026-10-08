@@ -2,14 +2,18 @@
  * NOTYA-ULKE-01 — POST /api/ulke/kayit: create an account with an invitation code.
  *
  * Only where the country's pack switches `davetliKayit` on; anywhere else 404. The account is created HERE, on the
- * server, with the service role — the browser never calls the auth service's public sign-up, which must be switched
- * off in that country's Supabase project (docs/COUNTRY-PACK-UZBEKISTAN.md).
+ * server, with the service role — the browser never calls the auth service's public sign-up.
+ *
+ * SHARED DATABASE: the auth service is shared with Türkiye, whose public sign-up stays ON. That does not open this
+ * country: an account made through the public sign-up carries no country stamp (`app_metadata` can only be written
+ * with the service role) and has no row in `ulke_hesaplari`, so every screen and route of this build refuses it
+ * (lib/ulke/hesapUlkesi.ts, /api/ulke/hesap). Only this route stamps an account, and only for a valid code.
  *
  * Order, so that a failure leaves nothing behind:
  *   1. validate the body
  *   2. consume the code atomically (davet_kodu_kullan: right country, not expired, uses left)   → 400 KOD_GECERSIZ
  *   3. create the auth user, stamped with the deployment's country (app_metadata, not user-writable)
- *   4. write the users row with country and interface language
+ *   4. write the account's row in `ulke_hesaplari` (country, name, interface language) — never in Türkiye's `users`
  *   on a failure in 3 or 4: remove what was created and give the use of the code back.
  *
  * Answers with machine codes only. An e-mail that already has an account gets the same answer as any other failure
@@ -21,6 +25,7 @@ import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { aktifUlke, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { davetKoduBicimiGecerli, davetKoduHash } from '@/lib/ulke/davet'
+import { ulkeIslevi, ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,10 +54,10 @@ export const POST = sinirda('kayit POST', async (req: NextRequest) => {
   const kodHash = davetKoduHash(g.davetKodu)
   const supabase = ulkeServisSupabase()
 
-  const { data: alindi, error: kodHatasi } = await supabase.rpc('davet_kodu_kullan', { p_hash: kodHash, p_ulke: ulke })
+  const { data: alindi, error: kodHatasi } = await ulkeIslevi(supabase, 'davet_kodu_kullan', { p_hash: kodHash })
   if (kodHatasi) return cevap({ code: 'OLUSTURULAMADI' }, 500)
   if (alindi !== true) return cevap({ code: 'KOD_GECERSIZ' }, 400)
-  const koduGeriVer = async () => { try { await supabase.rpc('davet_kodu_iade', { p_hash: kodHash }) } catch { /* the code stays used: safe side */ } }
+  const koduGeriVer = async () => { try { await ulkeIslevi(supabase, 'davet_kodu_iade', { p_hash: kodHash }) } catch { /* the code stays used: safe side */ } }
 
   const { data: yeni, error: hesapHatasi } = await supabase.auth.admin.createUser({
     email: eposta,
@@ -67,13 +72,12 @@ export const POST = sinirda('kayit POST', async (req: NextRequest) => {
     return cevap({ code: 'OLUSTURULAMADI' }, 400)
   }
 
-  const { error: satirHatasi } = await supabase
-    .from('users')
-    .upsert({ id: userId, email: eposta, full_name: adSoyad, country: ulke, ui_language: dil, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+  const { error: satirHatasi } = await ulkeTablosu(supabase, 'ulke_hesaplari')
+    .insert({ id: userId, full_name: adSoyad, ui_language: dil })
   if (satirHatasi) {
     try { await supabase.auth.admin.deleteUser(userId) } catch { /* reported below either way */ }
     await koduGeriVer()
-    console.error('[ulke/kayit] users row could not be written', { ulke, kod: satirHatasi.code })
+    console.error('[ulke/kayit] country account row could not be written', { ulke, kod: satirHatasi.code })
     return cevap({ code: 'OLUSTURULAMADI' }, 500)
   }
 

@@ -83,11 +83,11 @@ function sifirla() {
     'jeton-b': { id: B, email: 'qa-b@notya.test', app_metadata: { country: 'uz' } },
     'jeton-tr': { id: '10000000-0000-4000-8000-00000000000c', email: 'qa-tr@notya.test', app_metadata: { country: 'tr' } },
   })
-  vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' })
+  vt.tablo('ulke_hesaplari').push({ id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', ulke: 'uz', ui_language: 'ru' })
   // Doctor A writes notes in Uzbek (Latin), doctor B in Russian.
   // NOTYA-UZ-BRANSLAR-01: the template is the account's role. A is a paediatrician; B has chosen no role (general template).
-  vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'pediatri' })
-  vt.tablo('hekim_dil_tercihleri').push({ doctor_id: A, not_dili: 'uz-Latn', soruldu_at: '2026-10-08T05:00:00Z' }, { doctor_id: B, not_dili: 'ru', soruldu_at: '2026-10-08T05:00:00Z' })
+  vt.tablo('hekim_rolu').push({ ulke: 'uz', doctor_id: A, rol: 'pediatri' })
+  vt.tablo('hekim_dil_tercihleri').push({ ulke: 'uz', doctor_id: A, not_dili: 'uz-Latn', soruldu_at: '2026-10-08T05:00:00Z' }, { ulke: 'uz', doctor_id: B, not_dili: 'ru', soruldu_at: '2026-10-08T05:00:00Z' })
 }
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
@@ -115,7 +115,7 @@ const oku = async (r: Response) => {
   return { s: r.status, j: JSON.parse(t) as Record<string, any> }
 }
 const hastaEkle = async (jeton: string, ad: string, dil = 'uz', dogumTarihi = '2021-03-07') => (await oku(await R.hastalar.POST(istek('/api/ulke/hastalar', jeton, { ad, dil, dogumTarihi })))).j.hasta.id as string
-const sesKoy = (doktor: string, ad = 'kayit-1.webm') => { const yol = `${doktor}/${ad}`; vt.depo.set(`${KOVA}/${yol}`, new Blob(['sentetik ses — hech qanday haqiqiy yozuv emas'])); return yol }
+const sesKoy = (doktor: string, ad = 'kayit-1.webm') => { const yol = `uz/${doktor}/${ad}`; vt.depo.set(`${KOVA}/${yol}`, new Blob(['sentetik ses — hech qanday haqiqiy yozuv emas'])); return yol }
 const muayeneYap = async (jeton: string, g: Record<string, unknown>) => oku(await R.muayene.POST(istek('/api/ulke/muayene', jeton, g)))
 
 before(async () => {
@@ -139,7 +139,7 @@ describe('BOUNDARY: Turkish error text of shared infrastructure never reaches th
     assert.equal(await r.text(), '{"code":"BASARISIZ"}')
     // The log names the route and the kind of error — not its message.
     assert.deepEqual(gunluk, ['[ulke/sinir] hastalar POST: Error'])
-    assert.deepEqual(vt.tablo('patients'), [])
+    assert.deepEqual(vt.tablo('ulke_hastalar'), [])
     // What the doctor reads for that code is the pack's own sentence.
     const M = await import('./metinler')
     assert.equal(M.uygulamaMetni('uz-Latn').yeniHasta.kaydedilemedi, 'Bemorni saqlab boʻlmadi. Qaytadan urinib koʻring.')
@@ -249,7 +249,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     assert.deepEqual(stt.cagrilar, [{ adres: SCRIBE, model: 'scribe_v2', dil: null, bayt: vt.depo.size === 0 ? stt.cagrilar[0].bayt : -1, anahtar: 'sahte-konusma-anahtari' }])
     assert.ok(stt.cagrilar[0].bayt > 10, 'the recording itself was sent')
     assert.equal(vt.depo.size, 0, 'the recording is removed once transcribed')
-    const [seans] = vt.tablo('sessions')
+    const [seans] = vt.tablo('ulke_muayeneler')
     assert.deepEqual([seans.id, seans.doctor_id, seans.patient_id, seans.specialty, seans.status, seans.transcript_cleaned], [r.j.seansId, A, hasta, 'pediatri', 'completed', UZ_METIN])
     const [k] = vt.tablo('muayene_dil_kaydi')
     assert.deepEqual(
@@ -280,7 +280,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     const [k] = vt.tablo('muayene_dil_kaydi')
     // The language of the visit is what the FIRST pass predicted, with its probability — whichever pass was kept.
     assert.deepEqual([k.taninan_dil, k.dil_olasiligi, k.ikinci_gecis, k.ikinci_gecis_dili, k.secilen_gecis, k.gecis_sayisi, k.dusuk_guven], ['uzb', 0.55, true, 'uzb', 2, 2, false])
-    assert.equal(vt.tablo('sessions')[0].transcript_cleaned, iyi)
+    assert.equal(vt.tablo('ulke_muayeneler')[0].transcript_cleaned, iyi)
     assert.equal(vt.depo.size, 0)
     const d = await oku(await R.muayene.GET(istek(`/api/ulke/muayene?id=${r.j.seansId}`, 'jeton-a')))
     assert.deepEqual(d.j.muayene.konusma, { dil: 'uz', dilKesin: false, ikinciGecis: true, dusukGuven: false })
@@ -294,7 +294,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     assert.deepEqual(stt.cagrilar.map((c) => c.dil), [null, 'rus'], 'low word confidence alone triggers the second pass')
     const [k] = vt.tablo('muayene_dil_kaydi')
     assert.deepEqual([k.ikinci_gecis, k.ikinci_gecis_dili, k.secilen_gecis, k.gecis_sayisi, k.dusuk_guven, k.not_dili], [true, 'rus', 1, 2, true, 'ru'])
-    assert.equal(vt.tablo('sessions')[0].transcript_cleaned, RU_METIN)
+    assert.equal(vt.tablo('ulke_muayeneler')[0].transcript_cleaned, RU_METIN)
     // Confidence stayed low: the visit says so (the note screen will ask the doctor to check carefully).
     assert.deepEqual([r.j.ikinciGecis, r.j.dusukGuven], [true, true])
   })
@@ -320,7 +320,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     stt.cevaplar = [cevap(UZ_METIN, 'uzb', 0.5, -0.2), 503]
     const r = await muayeneYap('jeton-a', { yol: sesKoy(A), hastaId: hasta, sablon: 'genel', riza: true })
     assert.deepEqual([r.s, r.j.ikinciGecis, r.j.dusukGuven], [200, true, true])
-    assert.equal(vt.tablo('sessions')[0].transcript_cleaned, UZ_METIN)
+    assert.equal(vt.tablo('ulke_muayeneler')[0].transcript_cleaned, UZ_METIN)
   })
 
   it('CONSENT: without the tick the server refuses, the provider is never called, nothing is stored, the audio is removed', async () => {
@@ -332,7 +332,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
       assert.equal(vt.depo.size, 0, 'a recording made without consent is not kept')
     }
     assert.equal(stt.cagrilar.length, 0)
-    assert.deepEqual([vt.tablo('sessions'), vt.tablo('muayene_dil_kaydi')], [[], []])
+    assert.deepEqual([vt.tablo('ulke_muayeneler'), vt.tablo('muayene_dil_kaydi')], [[], []])
   })
 
   it('ISOLATION: another doctor\'s patient, and a recording in another doctor\'s folder, are refused before anything is read — both directions', async () => {
@@ -347,12 +347,15 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
       assert.equal(r1.status, 404); assert.equal(await r1.text(), '{"code":"NOT_FOUND"}'); assert.equal(await yok.text(), '{"code":"NOT_FOUND"}')
       // 2. The other doctor's recording, my own patient: refused as text — their file is neither read nor removed.
       const otekiYol = sesKoy(oteki, 'oteki.webm')
-      for (const yol of [otekiYol, `${ben}/../${oteki}/oteki.webm`, `${ben}/alt/oteki.webm`, `/${otekiYol}`, '', `${ben}/`]) {
+      for (const yol of [otekiYol, `uz/${ben}/../${oteki}/oteki.webm`, `uz/${ben}/alt/oteki.webm`, `/${otekiYol}`, '', `uz/${ben}/`,
+        // COUNTRY (shared database): the caller's own account id under another country's folder, under no country
+        // folder at all (the path shape before countries shared a bucket), and a climb out of the country folder.
+        `tr/${ben}/benim.webm`, `kz/${ben}/benim.webm`, `${ben}/benim.webm`, `uz/../tr/${ben}/benim.webm`, `UZ/${ben}/benim.webm`]) {
         assert.deepEqual(await muayeneYap(jeton, { yol, hastaId: kendiHasta, sablon: 'genel', riza: true }), { s: 400, j: { code: 'GECERSIZ', alan: 'yol' } }, yol)
       }
       assert.ok(vt.depo.has(`${KOVA}/${otekiYol}`), 'another doctor\'s recording was touched')
       assert.equal(stt.cagrilar.length, 0, 'nothing was sent to the provider for a refused request')
-      assert.equal(vt.tablo('sessions').filter((s) => s.doctor_id === ben).length, 0)
+      assert.equal(vt.tablo('ulke_muayeneler').filter((s) => s.doctor_id === ben).length, 0)
       vt.depo.clear()
     }
     // Positive control, then: each doctor reads only their own visit.
@@ -369,7 +372,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
       assert.deepEqual(bugun.j.muayeneler.map((m: Record<string, unknown>) => m.seansId), [kendi])
     }
     // Every read or change of a visit table carried the caller's id.
-    const tablolar = new Set(['sessions', 'muayene_dil_kaydi', 'notes', 'patients', 'hasta_ulke_bilgisi'])
+    const tablolar = new Set(['ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'ulke_hastalar', 'hasta_ulke_bilgisi'])
     for (const q of vt.sorgular.filter((x) => tablolar.has(x.tablo) && x.islem !== 'insert')) assert.ok(q.filtreler.some((f) => f === `doctor_id=eq.${A}` || f === `doctor_id=eq.${B}`), `a query on ${q.tablo} without the doctor: ${JSON.stringify(q)}`)
   })
 
@@ -378,7 +381,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     stt.cevaplar = [cevap(UZ_METIN, 'uzb', 0.97, -0.08)]
     const r = await muayeneYap('jeton-a', { yol: sesKoy(A), hastaId: hasta, sablon: 'genel', riza: true, doctor_id: B, doktorId: B, patient_id: 'x', notDili: 'tr' })
     assert.equal(r.s, 200)
-    assert.deepEqual([vt.tablo('sessions')[0].doctor_id, vt.tablo('muayene_dil_kaydi')[0].doctor_id, vt.tablo('muayene_dil_kaydi')[0].not_dili], [A, A, 'uz-Latn'])
+    assert.deepEqual([vt.tablo('ulke_muayeneler')[0].doctor_id, vt.tablo('muayene_dil_kaydi')[0].doctor_id, vt.tablo('muayene_dil_kaydi')[0].not_dili], [A, A, 'uz-Latn'])
   })
 
   it('failures answer with codes and remove the audio: provider error, too little speech, unknown template, not configured, daily ceiling', async () => {
@@ -401,10 +404,10 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     try { assert.deepEqual(await dene(), { s: 503, j: { code: 'HAZIR_DEGIL' } }) } finally { process.env.ELEVENLABS_API_KEY = anahtar }
     // The day's ceiling, counted on the country's own day.
     const { ulkeGunu } = await import('@/lib/ulke/uygulama/gun')
-    vt.tablo('ai_kullanim').length = 0
-    vt.tablo('ai_kullanim').push({ doctor_id: A, gun: ulkeGunu(), kova: 'soap', sayac: 200 })
+    vt.tablo('ulke_kullanim').length = 0
+    vt.tablo('ulke_kullanim').push({ ulke: 'uz', doctor_id: A, gun: ulkeGunu(), kova: 'soap', sayac: 200 })
     assert.deepEqual(await dene(), { s: 429, j: { code: 'LIMIT' } })
-    assert.deepEqual([vt.tablo('sessions'), vt.tablo('muayene_dil_kaydi')], [[], []])
+    assert.deepEqual([vt.tablo('ulke_muayeneler'), vt.tablo('muayene_dil_kaydi')], [[], []])
     assert.equal(stt.cagrilar.length, 2, 'only the first two attempts reached the provider')
   })
 
@@ -413,7 +416,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     stt.cevaplar = [cevap(UZ_METIN, 'uzb', 0.97, -0.08)]
     vt.boz.yaz.add('muayene_dil_kaydi')
     assert.deepEqual(await muayeneYap('jeton-a', { yol: sesKoy(A), hastaId: hasta, sablon: 'genel', riza: true }), { s: 500, j: { code: 'BASARISIZ' } })
-    assert.deepEqual(vt.tablo('sessions'), []); assert.equal(vt.depo.size, 0)
+    assert.deepEqual(vt.tablo('ulke_muayeneler'), []); assert.equal(vt.depo.size, 0)
   })
 
   it('no session, another country\'s account: "no session", nothing read', async () => {
