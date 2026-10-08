@@ -9,6 +9,7 @@
 import React from 'react'
 import { useState, type FormEvent } from 'react'
 import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { ULKE_STIL as S, UlkeKart, type DilSecenegi } from './UlkeKart'
 
@@ -41,7 +42,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
     if (alan.sifre !== alan.sifreTekrar) { setHata(metin.sifreUyusmuyor); return }
     setBekliyor(true); setHata('')
     try {
-      const r = await fetch('/api/ulke/kayit', {
+      const r = await fetch(ulkeYolu('/api/ulke/kayit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',

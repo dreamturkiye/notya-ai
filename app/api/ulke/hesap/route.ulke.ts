@@ -3,7 +3,8 @@
  * language does it read?" Called by the core login form and the holding page.
  *
  * Answers with machine codes only (the caller shows text in the visitor's language):
- *   200 { ulke, dil, durum: 'bekletme', ad }
+ *   200 { ulke, dil, durum: 'bekletme', ad }                         where the application is not switched on
+ *   200 { ulke, dil, durum: 'uygulama', ad, notDili, dilSoruldu }    where it is (feature `cekirdekMuayene`)
  *   401 { code: 'OTURUM_YOK' }    no session, an invalid one, or an account stamped with another country
  *   403 { code: 'HESAP_REDDI' }   a session whose users row is missing or belongs to another country
  *
@@ -11,15 +12,17 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { HESAP_REDDI_KODU, satirBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
-import { aktifUlke, dilSec } from '@/lib/ulke/ulke'
+import { aktifUlke, dilSec, ozellikAcik } from '@/lib/ulke/ulke'
+import { dilTercihleriniOku } from '@/lib/ulke/uygulama/dilTercihleri'
 
 export const dynamic = 'force-dynamic'
 
 const cevap = (govde: Record<string, unknown>, status: number) =>
   NextResponse.json(govde, { status, headers: { 'Cache-Control': 'no-store' } })
 
-export async function GET(req: NextRequest) {
+export const GET = sinirda('hesap GET', async (req: NextRequest) => {
   const oturum = await ulkeOturum(req)
   if (!oturum) return cevap({ code: 'OTURUM_YOK' }, 401)
   const { data: satir, error } = await oturum.supabase
@@ -30,5 +33,9 @@ export async function GET(req: NextRequest) {
   // Fail closed: no row, an unreadable row (for example the columns of migration 128 are missing) or another
   // country's row is not an account of this deployment.
   if (error || !satir || typeof satir.country !== 'string' || !satirBuUlkedeMi(satir)) return cevap({ code: HESAP_REDDI_KODU }, 403)
-  return cevap({ ulke: aktifUlke(), dil: dilSec(satir.ui_language), durum: 'bekletme', ad: String(satir.full_name || '') }, 200)
-}
+  const ad = String(satir.full_name || '')
+  if (!ozellikAcik('cekirdekMuayene')) return cevap({ ulke: aktifUlke(), dil: dilSec(satir.ui_language), durum: 'bekletme', ad }, 200)
+  // The application has its own language list (a script variant may exist there before the public pages have it).
+  const t = await dilTercihleriniOku(oturum.supabase, oturum.user.id, satir.ui_language)
+  return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu }, 200)
+})

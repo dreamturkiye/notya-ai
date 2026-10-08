@@ -158,6 +158,45 @@ describe('build-time selection: the entry point and the import graph', () => {
     }
   })
 
+  /**
+   * NOTYA-UZ-MUAYENE-01 — SHARED INFRASTRUCTURE a country build is allowed to reuse although the file still carries
+   * Turkish text outside comments. Reuse is deliberate: copying the patient-data cipher or the model gateway into a
+   * second implementation would be the larger risk (two ciphers drift apart and data stops decrypting; the model
+   * policy allows exactly one gateway). And the files are NOT edited to remove the text, because the Turkish
+   * product is in beta and nothing it runs on is touched (Kaan, 2026-10-08).
+   *
+   * What makes each entry safe is stated per file, and checked below: the Turkish text is an internal error or log
+   * line (or a classifier of Turkish input) that no country route shows to anyone. `azamiSatir` is a ratchet.
+   * Removing these exceptions is docs/COUNTRY-PACK-SPLIT-PLAN.md, job 5 ("server messages as codes").
+   */
+  const PAYLASILAN_ALTYAPI: Record<string, { neden: string; azamiSatir: number }> = {
+    'lib/security/encryption.ts': {
+      neden: 'The one cipher for patient data (AES-256-GCM). Its only Turkish text is the error thrown when the deployment has no master key — a configuration fault that ends in a 500 with a machine code, never in an answer.',
+      azamiSatir: 1,
+    },
+    // The model gateway (.cursor/skills/ai-model-politikasi/SKILL.md: every call to a model goes through ONE door).
+    // Reached from lib/ulke/uygulama/notModeli.ts only. A second gateway for another country would break the policy
+    // (model choice, fallback gates, usage rows, "do not train on this" header) — so the one gateway is reused as it is.
+    // What its Turkish text is, file by file, and why none of it reaches a doctor: notModeli.ts catches everything the
+    // gateway throws and returns null; the route answers with a code (tested: countries/uz/uygulama/not.test.ts).
+    'lib/ai/cagir.ts': {
+      neden: 'The gateway itself. Turkish text: two messages of errors it throws (no key configured, time budget used up) and one console line about a broken stream. Thrown errors are caught in notModeli.ts; console lines stay in the server log.',
+      azamiSatir: 3,
+    },
+    'lib/ai/saglayici.ts': {
+      neden: 'Transport to the provider. Turkish text: the messages of the transport errors it throws (timeout, network, empty body, broken stream). All of them are AiCagriHatasi, caught in notModeli.ts, which logs only the HTTP status.',
+      azamiSatir: 7,
+    },
+    'lib/ai/modeller.ts': {
+      neden: 'The model policy table. Turkish text: word lists that CLASSIFY Turkish chat input (safety words, small talk, application terms) for the assistant, one error message for an unknown task name, and reason labels written to logs. None of it is output; a country note call uses only the task-to-model lookup.',
+      azamiSatir: 17,
+    },
+    'lib/ai/kullanim.ts': {
+      neden: 'Writes the usage row of every model call (token counts, model, task, doctor id — never content). Turkish text: one console warning when the row cannot be written.',
+      azamiSatir: 1,
+    },
+  }
+
   // Every route file of a build that is not the pre-split application: the *.ulke.* files under app/, the root
   // not-found page (app/not-found.mjs — the one route file with a single extension) and middleware.ulke.ts.
   function ulkeRotaDosyalari(): string[] {
@@ -179,12 +218,39 @@ describe('build-time selection: the entry point and the import graph', () => {
     assert.ok(girisler.some((g) => g.endsWith('middleware.ulke.ts')), 'middleware.ulke.ts must be among the starting points')
     assert.ok(girisler.includes(join(KOK, 'app', 'not-found.mjs')), 'app/not-found.mjs must be among the starting points')
     const yorumsuz = (k: string) => k.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+    const turkceSatirlar = (d: string) => yorumsuz(readFileSync(d, 'utf8')).split('\n').filter((satir) => /[çğıöşüİĞŞÇÖÜ]/.test(satir)).length
     for (const ulke of ULKE_KODLARI) {
       if (ulke === 'tr') continue
-      const turkceli = [...new Set(girisler.flatMap((g) => [...erisilen(g, ulke)]))]
-        .filter((d) => /[çğıöşüİĞŞÇÖÜ]/.test(yorumsuz(readFileSync(d, 'utf8'))))
-        .map((d) => relative(KOK, d).split(sep).join('/'))
-      assert.deepEqual(turkceli, [], `a ${ulke} build pulls Turkish text in through these files (outside comments)`)
+      const erisilenler = [...new Set(girisler.flatMap((g) => [...erisilen(g, ulke)]))]
+      const goreli = (d: string) => relative(KOK, d).split(sep).join('/')
+      const turkceli = erisilenler.filter((d) => turkceSatirlar(d) > 0).map(goreli)
+      assert.deepEqual(turkceli.filter((d) => !(d in PAYLASILAN_ALTYAPI)), [], `a ${ulke} build pulls Turkish text in through these files (outside comments)`)
+      // The exceptions are a short, reasoned list — and a ratchet: a file on it may not gain Turkish lines, and an
+      // entry nobody reaches any more must be removed.
+      const ulasilan = new Set(erisilenler.map(goreli))
+      for (const [dosya, k] of Object.entries(PAYLASILAN_ALTYAPI)) {
+        assert.ok(ulasilan.has(dosya), `stale exception: ${dosya} is no longer reachable from a ${ulke} build — remove it from PAYLASILAN_ALTYAPI`)
+        assert.ok(k.neden.length > 40, `${dosya}: say why this shared file is allowed`)
+        const n = turkceSatirlar(join(KOK, dosya))
+        assert.ok(n <= k.azamiSatir, `${dosya} now carries ${n} lines with Turkish text (allowed: ${k.azamiSatir}). New Turkish text in shared infrastructure reaches every country's build.`)
+      }
+    }
+  })
+
+  it('no route of such a build hands a shared module\'s error text to the caller', () => {
+    const yorumsuz = (k: string) => k.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+    // The exceptions above are safe only while their Turkish sentences stay inside the server: thrown errors and log
+    // lines. A country route answers with machine codes (lib/ulke/uygulama/cevap.ts) and never forwards `.message`.
+    for (const yol of ulkeRotaDosyalari().filter((d) => /[\\/]route\.ulke\.ts$/.test(d))) {
+      const kaynak = yorumsuz(readFileSync(yol, 'utf8'))
+      assert.doesNotMatch(kaynak, /\.message\b|String\(\s*(e|err|error|hata)\s*\)/, `${relative(KOK, yol)} may put an error's own text into its answer`)
+    }
+    // The Turkish sentences that ARE exported for showing to a person must never be imported on this side.
+    for (const ulke of ULKE_KODLARI) {
+      if (ulke === 'tr') continue
+      for (const d of new Set(ulkeRotaDosyalari().flatMap((g) => [...erisilen(g, ulke)]))) {
+        assert.doesNotMatch(readFileSync(d, 'utf8'), /\b(OTURUM_YOK|KOTA_MESAJI)\b\s*[,}]\s*(from|\})|import\s*\{[^}]*\b(KOTA_MESAJI)\b/, `${relative(KOK, d)} imports a Turkish sentence`)
+      }
     }
   })
 

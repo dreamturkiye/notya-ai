@@ -16,6 +16,7 @@ import { pathToFileURL } from 'node:url'
 import { aktifUlke, aracUlkedeGecerli, dilSec, ozellikAcik, ulkePaketi } from './ulke'
 import { metin, yuzeyMetinleri } from './metin'
 import { rotaAcikMi } from './rotaKapisi'
+import { ulkeYolOnEki, ulkeYolu, YOL_ON_EKI_BICIMI } from './yol'
 import { ULKE_KODLARI, type Ozellik, type UlkePaketi } from './tipler'
 import { TUM_ULKELER } from '../../countries/tumu'
 import { sizintiTara } from './testing/sizintiTarayici'
@@ -25,7 +26,7 @@ import { VARSAYILAN_SAAT_DILIMI } from '../doktor/selam'
 
 const KOK = resolve(__dirname, '../..')
 const oku = (p: string) => readFileSync(join(KOK, p), 'utf8')
-const derleme = async (kod: string) => (await import(pathToFileURL(join(KOK, 'countries', kod, 'derleme.mjs')).href)).default as { kod: string; saatDilimi: string; bolunmemisUygulama: boolean; yonlendirmeler: unknown[] }
+const derleme = async (kod: string) => (await import(pathToFileURL(join(KOK, 'countries', kod, 'derleme.mjs')).href)).default as { kod: string; saatDilimi: string; bolunmemisUygulama: boolean; yonlendirmeler: unknown[]; yolOnEki?: string }
 
 describe('no country configured = Türkiye, as before', () => {
   it('the active country is tr and the active pack is the Türkiye pack', () => {
@@ -53,6 +54,21 @@ describe('no country configured = Türkiye, as before', () => {
       "{ source: '/doktor-tools/bekleyen-konsultasyonlar', destination: '/doktor-tools/konsultasyonlar', permanent: true },",
     ])
     assert.match(config, /const ULKE = process\.env\.NOTYA_COUNTRY \|\| 'tr'/)
+  })
+
+  it('path prefix: Türkiye is the domain root — no basePath is set and every address is what it was', async () => {
+    // NOTYA-UZ-MUAYENE-01: another country may be served under a path of the main site; Türkiye must not notice.
+    const d = await derleme('tr')
+    assert.equal(d.yolOnEki, '')
+    assert.equal(ulkePaketi().yolOnEki, undefined)
+    assert.equal(ulkeYolOnEki(), '')
+    for (const y of ['/', '/doktor', '/giris?x=1', '/api/users/me', '#top', '/?a=1#b']) assert.equal(ulkeYolu(y), y)
+    const config = oku('next.config.mjs')
+    // The ONLY place basePath is written: spread in when the country's build file names a prefix, absent otherwise.
+    assert.equal((config.match(/basePath/g) || []).length, 1, 'basePath is written in exactly one place')
+    assert.match(config, /\.\.\.\(YOL_ON_EKI \? \{ basePath: YOL_ON_EKI \} : \{\}\),/)
+    assert.match(config, /const YOL_ON_EKI = ulkeDerleme\.yolOnEki \|\| ''/)
+    assert.doesNotMatch(config, /assetPrefix|trailingSlash|async rewrites/, 'no forwarding rule and no other path setting belongs in this file')
   })
 
   it('language, currency, formats', () => {
@@ -154,10 +170,16 @@ describe('every country pack: same shape, complete text, own content only', () =
   const paketler = ULKE_KODLARI.map((k) => [k, TUM_ULKELER[k].paket] as const)
 
   it('same keys in every pack, and the code matches the folder', () => {
-    const anahtarlar = (p: UlkePaketi) => Object.keys(p).sort()
+    // `uygulama` (settings of the signed-in application) is the one optional part: present exactly where that
+    // feature is on (NOTYA-UZ-MUAYENE-01) — Türkiye's pack does not gain a field for a screen it does not have.
+    // `yolOnEki` (path prefix) is the other: present only for a country served under a path of the main site.
+    const anahtarlar = (p: UlkePaketi) => Object.keys(p).filter((k) => k !== 'uygulama' && k !== 'yolOnEki').sort()
     for (const [kod, p] of paketler) {
       assert.equal(p.kod, kod)
       assert.deepEqual(anahtarlar(p), anahtarlar(TUM_ULKELER.tr.paket), kod)
+      assert.equal(Boolean(p.uygulama), p.ozellikler.cekirdekMuayene === true, `${kod}: application settings and the feature go together`)
+      for (const d of p.uygulama?.diller ?? []) assert.ok(p.diller.includes(d), `${kod}: application language ${d} is not a declared language`)
+      if (p.uygulama) assert.ok(p.uygulama.diller.includes(p.varsayilanDil), `${kod}: the default language must be an application language`)
       assert.match(p.iz, new RegExp(`^notya-ulke-paketi:${kod}:[0-9a-f]{10}$`))
     }
     assert.equal(new Set(paketler.map(([, p]) => p.iz)).size, paketler.length, 'markers must be unique')
@@ -171,6 +193,10 @@ describe('every country pack: same shape, complete text, own content only', () =
       if (!d.bolunmemisUygulama) assert.ok(Array.isArray(d.yonlendirmeler), kod)
       assert.equal(p.saatDilimi, d.saatDilimi, kod)
       assert.doesNotThrow(() => new Intl.DateTimeFormat('en-US', { timeZone: p.saatDilimi }), kod)
+      // NOTYA-UZ-MUAYENE-01: the path prefix is written twice (the build cannot import the pack); the two must agree.
+      assert.equal(p.yolOnEki ?? '', d.yolOnEki ?? '', `${kod}: path prefix in the pack and in the build file disagree`)
+      assert.match(p.yolOnEki ?? '', YOL_ON_EKI_BICIMI, kod)
+      if (p.rotalar === 'hepsi') assert.equal(p.yolOnEki, undefined, `${kod}: the pre-split application is served at the domain root`)
     }
   })
 
@@ -225,6 +251,7 @@ describe('every country pack: same shape, complete text, own content only', () =
     assert.equal(p.paraBirimi.kod, 'UZS')
     assert.deepEqual(p.araclar, [])
     assert.equal(p.aramaMotorlarinaGizli, true)
+    assert.equal(p.yolOnEki, '/uzbek', 'Kaan, 2026-10-08: Uzbekistan is served at notya.io/uzbek')
     assert.notEqual(p.rotalar, 'hepsi')
     assert.equal(p.ozellikler.bolunmemisUygulama, undefined, 'only the pack whose content IS the pre-split application may open it')
     for (const o of ['doktorAraclari', 'asistan', 'sesProfili', 'goruntuDegerlendirme'] as Ozellik[]) assert.equal(p.ozellikler[o], undefined, o)

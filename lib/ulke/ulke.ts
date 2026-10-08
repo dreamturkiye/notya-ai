@@ -40,3 +40,19 @@ export function dilSec(ham: string | null | undefined): DilKodu {
   const istenen = String(ham ?? '').trim()
   return (AKTIF_PAKET.acikDiller as readonly string[]).includes(istenen) ? (istenen as DilKodu) : AKTIF_PAKET.varsayilanDil
 }
+
+/** Languages (and scripts) an account may choose inside the signed-in application. */
+export function uygulamaDilleri(): readonly DilKodu[] {
+  return AKTIF_PAKET.uygulama?.diller ?? AKTIF_PAKET.acikDiller
+}
+
+/** Same narrowing as dilSec, over the application's languages. Anything else is the country's own default. */
+export function uygulamaDiliSec(ham: string | null | undefined): DilKodu {
+  const istenen = String(ham ?? '').trim()
+  return (uygulamaDilleri() as readonly string[]).includes(istenen) ? (istenen as DilKodu) : AKTIF_PAKET.varsayilanDil
+}
+
+/** true = `ham` is exactly one of the application's languages (no narrowing: for validating what a client sent). */
+export function uygulamaDiliMi(ham: unknown): ham is DilKodu {
+  return typeof ham === 'string' && (uygulamaDilleri() as readonly string[]).includes(ham)
+}

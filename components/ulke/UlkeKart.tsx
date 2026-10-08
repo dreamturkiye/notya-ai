@@ -8,6 +8,7 @@ import React from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 
 export const ULKE_STIL = {
   etiket: { fontSize: 13, color: R.muted, marginBottom: 6, display: 'block', fontWeight: 600, letterSpacing: 0.2 } as CSSProperties,
@@ -45,7 +46,7 @@ export function UlkeKart({
       <div style={{ width: '100%', maxWidth: 440 }}>
         <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(26px, 6vw, 44px)', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <a href={anaSayfa?.href ?? '/'} style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1, textDecoration: 'none' }}>Notya</a>
+            <a href={anaSayfa?.href ?? ulkeYolu('/')} style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1, textDecoration: 'none' }}>Notya</a>
             {altBaslik ? <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>{altBaslik}</div> : null}
           </div>
           {children}

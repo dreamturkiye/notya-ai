@@ -18,6 +18,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { aktifUlke, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { davetKoduBicimiGecerli, davetKoduHash } from '@/lib/ulke/davet'
 
@@ -27,7 +28,7 @@ const EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const cevap = (govde: Record<string, unknown>, status: number) =>
   NextResponse.json(govde, { status, headers: { 'Cache-Control': 'no-store' } })
 
-export async function POST(req: NextRequest) {
+export const POST = sinirda('kayit POST', async (req: NextRequest) => {
   if (!ozellikAcik('davetliKayit')) return cevap({ code: 'NOT_FOUND' }, 404)
 
   const g = (await req.json().catch(() => null)) as Record<string, unknown> | null
@@ -77,4 +78,4 @@ export async function POST(req: NextRequest) {
   }
 
   return cevap({ ok: true }, 200)
-}
+})

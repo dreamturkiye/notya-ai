@@ -5,6 +5,8 @@
  *      not-found, error — in Uzbek and in Russian — and over every answer of its API. Nothing of Türkiye.
  *   2. ROUTE TEST: the route files of the build (*.ulke.*) are exactly the paths the pack lists; the middleware
  *      closes every other path of the application, signed in or not; each API route checks the account's country.
+ *      PATH PREFIX: the build is served under /uzbek — every link on every screen is under it, the middleware
+ *      gates the route behind it, and nothing outside it is offered.
  *   3. Login and invitation sign-up behave: another country's account is refused with the neutral code; a code is
  *      needed, is used once, and a failed sign-up leaves nothing behind.
  *
@@ -36,6 +38,7 @@ const KOK = resolve(__dirname, '../..')
 type Hesap = { id: string; email: string; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }
 let hesaplar: Record<string, Hesap>
 let satirlar: Record<string, Record<string, unknown> | undefined>
+let tercihler: Record<string, Record<string, unknown> | undefined>
 let kodlar: Map<string, { ulke: string; kalan: number }>
 let olaylar: string[]
 let boz: { hesapOlustur?: boolean; satirYaz?: boolean; satirOku?: boolean }
@@ -59,6 +62,8 @@ function sifirla() {
     [hesaplar['jeton-uz-eski-sema'].id]: { id: hesaplar['jeton-uz-eski-sema'].id, full_name: 'QA Toʻrt' },
   }
   kodlar = new Map([[davetKoduHash(GECERLI_KOD), { ulke: 'uz', kalan: 1 }], [davetKoduHash('QATEST0000000TRR'), { ulke: 'tr', kalan: 1 }]])
+  // The Russian-language account has answered the first-login question and writes its notes in Uzbek Cyrillic.
+  tercihler = { [hesaplar['jeton-uz-ru'].id]: { not_dili: 'uz-Cyrl', soruldu_at: '2026-10-08T05:00:00Z' } }
   olaylar = []
   boz = {}
 }
@@ -95,8 +100,17 @@ function sahteCreateClient() {
       throw new Error(`stand-in: rpc ${ad} not implemented`)
     },
     from: (tablo: string) => {
-      assert.equal(tablo, 'users', `the country API touched a table it has no business with: ${tablo}`)
+      assert.ok(tablo === 'users' || tablo === 'hekim_dil_tercihleri', `the account API touched a table it has no business with: ${tablo}`)
       let id = ''
+      if (tablo === 'hekim_dil_tercihleri') {
+        // NOTYA-UZ-MUAYENE-01: read by /api/ulke/hesap, always by the caller's own id. Its behaviour is tested in countries/uz/uygulama/uygulama.test.ts.
+        const t: Record<string, unknown> = {
+          select: () => t,
+          eq: (k: string, v: string) => { assert.equal(k, 'doctor_id'); id = v; return t },
+          maybeSingle: async () => ({ data: tercihler[id] ?? null, error: null }),
+        }
+        return t
+      }
       const z: Record<string, unknown> = {
         select: () => z,
         eq: (_k: string, v: string) => { id = v; return z },
@@ -123,6 +137,20 @@ globalThis.fetch = (async (g: unknown) => { throw new Error(`this test may not u
 
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak }), [])
 const DILLER: DilKodu[] = ['uz-Latn', 'ru']
+/** NOTYA-UZ-MUAYENE-01: the path of the main site this build is served under (notya.io/uzbek). */
+const ON_EK = '/uzbek'
+/**
+ * Every address a screen offers (link or form) is inside the build's path prefix: '#anchor', the font stylesheet and
+ * a mail link are the only other things allowed. A link to '/login' would leave the Uzbek build and land on Türkiye's.
+ */
+function altinda(html: string, kaynak: string) {
+  const adresler = [...html.matchAll(/\b(?:href|action|src)="([^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
+  for (const a of adresler) {
+    if (a.startsWith('#') || a.startsWith('mailto:') || a.startsWith('https://fonts.googleapis.com/')) continue
+    assert.ok(a === ON_EK || a.startsWith(`${ON_EK}/`) || a.startsWith(`${ON_EK}?`) || a.startsWith(`${ON_EK}#`), `${kaynak}: "${a}" is outside ${ON_EK}`)
+  }
+  return adresler
+}
 const sp = (dil: DilKodu) => (dil === 'uz-Latn' ? {} : { dil })
 
 /**
@@ -201,6 +229,7 @@ describe('an Uzbekistan build: screens', () => {
       assert.match(html, new RegExp(`<div class="uzl" lang="${dil}"`))
       assert.ok(html.includes(dil === 'ru' ? 'запись ведёт Notya.' : 'yozuvni Notya yozadi.'))
       temiz(html, `/ (${dil})`)
+      altinda(html, `/ (${dil})`)
       temiz(gorunurMetin(html), `/ (${dil}, visible text)`)
     })
 
@@ -209,7 +238,9 @@ describe('an Uzbekistan build: screens', () => {
       const g = metin.yuzeyMetinleri('giris', dil)
       for (const s of [g.altBaslik, g.eposta, g.sifre, g.gonder, g.davetSorusu, g.kayitBaglantisi]) assert.ok(html.includes(s), s)
       assert.match(html, new RegExp(`<div lang="${dil}"`))
-      assert.match(html, /href="\/signup(\?dil=ru)?"/)
+      assert.match(html, /href="\/uzbek\/signup(\?dil=ru)?"/)
+      assert.match(html, /href="\/uzbek(\?dil=ru)?"/, 'the way back to the landing page')
+      altinda(html, `/login (${dil})`)
       assert.doesNotMatch(html, /\/giris|\/kayit|\/dashboard|\/onboarding|supabase\.co/)
       temiz(html, `/login (${dil})`)
     })
@@ -221,6 +252,7 @@ describe('an Uzbekistan build: screens', () => {
       // The account chooses its interface language among the country's switched-on languages — and only those.
       assert.deepEqual([...html.matchAll(/<option[^>]*value="([^"]+)"/g)].map((m) => m[1]), ['uz-Latn', 'ru'])
       assert.doesNotMatch(html, /\/giris|\/kayit|\/kvkk|checkbox/)
+      altinda(html, `/signup (${dil})`)
       temiz(html, `/signup (${dil})`)
     })
 
@@ -229,21 +261,24 @@ describe('an Uzbekistan build: screens', () => {
       const html = belge(React.createElement(Bekletme.BekletmeIcerigi, { dil, metin: m, ad: 'QA Shifokor', yukleniyor: false, cikis: () => {} }))
       assert.ok(html.includes(m.baslik) && html.includes(m.govde) && html.includes(m.cikis))
       // It offers exactly one thing to do: log out. No link into the application.
-      assert.deepEqual([...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((x) => x[1]), ['/'])
+      assert.deepEqual([...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((x) => x[1]), ['/uzbek'])
       assert.equal((html.match(/<button\b/g) || []).length, 1)
       temiz(html, `/welcome (${dil})`)
     })
   }
 
-  it('holding page before the account is known: only "loading", in the default language; text for every switched-on language is ready', () => {
-    const html = belge(Welcome.default())
-    assert.ok(html.includes('Yuklanmoqda…'))
-    temiz(html, '/welcome (loading)')
+  it('holding page address: where the application is switched on, /welcome sends the account to its home', () => {
+    // NOTYA-UZ-MUAYENE-01: the pack switches `cekirdekMuayene` on, so the home (/today) replaces the holding page.
+    assert.throws(() => Welcome.default(), (e: unknown) => /NEXT_REDIRECT;[a-z]+;\/today;/.test(String((e as { digest?: string }).digest)))
+    const giris = belge(Login.default({ searchParams: {} }))
+    assert.doesNotMatch(giris, /\/welcome/)
   })
 
   it('not-found and error pages: Uzbek, from the pack, never the browser error text', () => {
     const yok = belge(Bulunamadi.default())
     assert.ok(yok.includes('Sahifa topilmadi'))
+    assert.match(yok, /<a href="\/uzbek"/, 'the not-found page leads back to the Uzbek landing page, not to the domain root')
+    altinda(yok, 'not-found')
     temiz(yok, 'not-found')
     const hata = belge(Hata.default({ error: Object.assign(new Error('Cannot read properties of undefined (reading "id") — Hasta bulunamadı.'), {}), reset: () => {} }))
     assert.ok(hata.includes('Xatolik yuz berdi') && hata.includes('Qaytadan urinish'))
@@ -282,8 +317,8 @@ describe('an Uzbekistan build: routes', () => {
     if (izin === 'hepsi') return
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
-    assert.deepEqual(d.sayfalar, ['/', '/login', '/signup', '/welcome'])
-    assert.deepEqual(d.api, ['/api/ulke/hesap', '/api/ulke/kayit'])
+    assert.deepEqual(d.sayfalar, ['/', '/login', '/patient', '/patients', '/patients/new', '/settings', '/signup', '/start', '/today', '/visit', '/welcome'])
+    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
     assert.deepEqual(d.ozel, ['/error', '/global-error', '/layout', '/not-found'])
@@ -306,15 +341,83 @@ describe('an Uzbekistan build: routes', () => {
     assert.deepEqual(derleme.yonlendirmeler, [])
   })
 
+  it('PATH PREFIX: the build is served under /uzbek — a setting of the country, switched on here and nowhere else', async () => {
+    const derleme = (await import(pathToFileURL(join(KOK, 'countries/uz/derleme.mjs')).href)).default
+    assert.equal(derleme.yolOnEki, ON_EK)
+    assert.equal(paket.ulkePaketi().yolOnEki, ON_EK)
+    const yol = await import('./yol')
+    assert.equal(yol.ulkeYolOnEki(), ON_EK)
+    assert.deepEqual(['/', '/today', '/patient?id=1', '/?dil=ru', '/#narx', '/?dil=ru#narx', '/api/ulke/hesap'].map(yol.ulkeYolu),
+      ['/uzbek', '/uzbek/today', '/uzbek/patient?id=1', '/uzbek?dil=ru', '/uzbek#narx', '/uzbek?dil=ru#narx', '/uzbek/api/ulke/hesap'])
+    // Not a route of this build: left alone.
+    assert.deepEqual(['#top', 'mailto:a@b.c', 'https://example.com/x', '//example.com/x'].map(yol.ulkeYolu), ['#top', 'mailto:a@b.c', 'https://example.com/x', '//example.com/x'])
+    // The route list stays relative to the prefix: a route is not an address.
+    const izin = paket.ulkePaketi().rotalar
+    if (izin !== 'hepsi') for (const s of [...izin.sayfalar, ...izin.apiOnEkleri]) assert.ok(!s.startsWith(ON_EK), s)
+    const config = readFileSync(join(KOK, 'next.config.mjs'), 'utf8')
+    assert.match(config, /\.\.\.\(YOL_ON_EKI \? \{ basePath: YOL_ON_EKI \} : \{\}\),/)
+  })
+
+  it('PATH PREFIX: no screen or helper of the build writes a root-relative address by hand', () => {
+    // A plain <a href="/…">, a fetch('/api/…') or window.location = '/…' would leave /uzbek. They all go through
+    // lib/ulke/yol.ts (ulkeYolu, dilliYol, the application's YOL table and its `api` helper).
+    const dosyalar: string[] = []
+    const gez = (dizin: string, kosul: (ad: string) => boolean) => {
+      for (const ad of readdirSync(dizin)) {
+        const y = join(dizin, ad)
+        if (statSync(y).isDirectory()) gez(y, kosul)
+        else if (/\.(tsx|ts|mjs)$/.test(ad) && !/\.test\.tsx?$/.test(ad) && kosul(ad)) dosyalar.push(y)
+      }
+    }
+    gez(join(KOK, 'countries/uz'), () => true)
+    gez(join(KOK, 'components/ulke'), () => true)
+    gez(join(KOK, 'app'), (ad) => /\.ulke\.(tsx|ts)$/.test(ad) || ad === 'not-found.mjs')
+    assert.ok(dosyalar.length > 25, `scan found only ${dosyalar.length} files`)
+    const yorumsuz = (k: string) => k.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+    for (const d of dosyalar) {
+      const k = yorumsuz(readFileSync(d, 'utf8'))
+      const ad = relative(KOK, d)
+      assert.doesNotMatch(k, /\b(?:href|action|src)=["'{]\s*["'`]?\/(?!\/)/, `${ad}: a root-relative address written by hand`)
+      assert.doesNotMatch(k, /\bfetch\(\s*["'`]\//, `${ad}: fetch() of a root-relative address — use ulkeYolu`)
+      assert.doesNotMatch(k, /location\.(?:assign|replace)\(\s*["'`]\/|location(?:\.href)?\s*=\s*["'`]\//, `${ad}: navigation to a root-relative address — use ulkeYolu`)
+    }
+  })
+
+  it('PATH PREFIX: the browser session is stored under a key that names the country; no cookie is set anywhere', async () => {
+    // Under notya.io/uzbek the browser storage is shared with the Turkish site. The key says whose session it is.
+    const istemci = await import('./istemciSupabase')
+    assert.equal(istemci.ulkeOturumAnahtari(), 'sb-notya-uz-auth-token')
+    assert.match(readFileSync(join(KOK, 'lib/ulke/istemciSupabase.ts'), 'utf8'), /auth: \{ storageKey: ulkeOturumAnahtari\(\) \}/)
+    const kaynaklar = ['middleware.ulke.ts', 'lib/ulke/sunucuOturum.ts', 'lib/ulke/istemciSupabase.ts', 'components/ulke/GirisFormu.tsx', 'countries/uz/uygulama/Kabuk.tsx']
+    for (const d of kaynaklar) assert.doesNotMatch(readFileSync(join(KOK, d), 'utf8'), /document\.cookie|cookies\(\)|Set-Cookie|\.cookies\./i, `${d} uses a cookie: it would need the path prefix`)
+  })
+
+  it('PATH PREFIX: behind /uzbek the gate sees the route — listed routes pass, everything else is 404', () => {
+    // Next strips the base path before the middleware reads `nextUrl.pathname`; this is that request.
+    const git = (yol: string) => ara.middleware(new NextRequest(`https://notya.test${yol}`, { nextConfig: { basePath: ON_EK } }))
+    for (const yol of ['/uzbek', '/uzbek?dil=ru', '/uzbek/login', '/uzbek/signup', '/uzbek/today', '/uzbek/patients/new', '/uzbek/patient?id=x', '/uzbek/api/ulke/hesap', '/uzbek/_next/static/chunks/x.js']) {
+      const r = git(yol)
+      assert.equal(r.status, 200, yol)
+      assert.match(r.headers.get('x-robots-tag') || '', /noindex, nofollow/, yol)
+    }
+    for (const yol of ['/uzbek/doktor', '/uzbek/giris', '/uzbek/dashboard/doktor', '/uzbek/doktor-tools', '/uzbek/api/users/me', '/uzbek/api/doktor/hastalar', '/uzbek/manifest.json', '/uzbek/sw.js', '/uzbek/uzbek', '/uzbek/uzbek/today']) {
+      assert.equal(git(yol).status, 404, yol)
+    }
+    assert.deepEqual(git('/uzbek/robots.txt').status, 200)
+    // The landing page is at exactly '/uzbek' (no slash after the prefix): the matcher must name '/' by itself, or
+    // Next serves that one page without the gate and without "do not index" (seen on the first production build).
+    assert.deepEqual(ara.config.matcher, ['/', '/((?!_next/static|_next/image|favicon.ico).*)'])
+  })
+
   it('middleware: listed paths pass with "do not index"; every other path of the application is 404 before any screen', () => {
     const git = (yol: string) => ara.middleware(new NextRequest(`https://uz.notya.test${yol}`))
-    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/api/ulke/hesap', '/api/ulke/kayit', '/_next/static/chunks/x.js']) {
+    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients?q=karim', '/patients/new', '/patient?id=x', '/visit', '/visit?hasta=x', '/visit?seans=x', '/visit?not=x', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/api/ulke/hastalar?q=a', '/api/ulke/hasta?id=x', '/api/ulke/muayene', '/api/ulke/muayene?id=x', '/api/ulke/not?id=x', '/api/ulke/not/yeniden-yaz', '/api/ulke/not/onayla', '/_next/static/chunks/x.js']) {
       const r = git(yol)
       assert.equal(r.status, 200, yol)
       assert.match(r.headers.get('x-robots-tag') || '', /noindex, nofollow/, yol)
       assert.equal(r.headers.get('x-frame-options'), 'DENY', yol)
     }
-    const kapali = ['/doktor', '/klinik', '/home', '/kvkk', '/giris', '/giris/doktor', '/kayit', '/onboarding', '/dashboard', '/dashboard/doktor', '/dashboard/klinik', '/asistan', '/doktor-tools', '/doktor-tools/erecete', '/doktor-tools/enabiz', '/klinik-tools', '/portal/demo', '/intake/x', '/install', '/session/new', '/login/x', '/welcome/x', '/api', '/api/users/me', '/api/users/profile', '/api/doktor/hastalar', '/api/notes', '/api/sessions/start', '/api/cron/kvkk-imha', '/api/billing/webhook', '/api/ulkeler', '/manifest.json', '/sw.js', '/sitemap.xml', '/dahiliye-final-audit.html', '/sagligim/a.png', '/icon-192.png']
+    const kapali = ['/doktor', '/klinik', '/home', '/kvkk', '/giris', '/giris/doktor', '/kayit', '/onboarding', '/dashboard', '/dashboard/doktor', '/dashboard/klinik', '/asistan', '/doktor-tools', '/doktor-tools/erecete', '/doktor-tools/enabiz', '/klinik-tools', '/portal/demo', '/intake/x', '/install', '/session/new', '/login/x', '/welcome/x', '/patient/x', '/patients/x', '/visit/x', '/visits', '/note', '/dashboard/doktor/hastalar', '/api/doktor/hastalar/x', '/api', '/api/users/me', '/api/users/profile', '/api/doktor/hastalar', '/api/notes', '/api/sessions/start', '/api/sessions/ses-yukle', '/api/cron/kvkk-imha', '/api/billing/webhook', '/api/ulkeler', '/manifest.json', '/sw.js', '/sitemap.xml', '/dahiliye-final-audit.html', '/sagligim/a.png', '/icon-192.png']
     for (const yol of kapali) {
       const r = git(yol)
       assert.equal(r.status, 404, yol)
@@ -372,9 +475,9 @@ describe('an Uzbekistan build: account API', () => {
   }
   const GECERLI = { adSoyad: 'QA Yangi Shifokor', eposta: 'QA-Yangi@Notya.Test', sifre: 'yangi-parol-9', davetKodu: 'qate-st00-0000-0001', dil: 'ru' }
 
-  it('hesap: an Uzbek account gets its country, language and "holding"; nothing else', async () => {
-    assert.deepEqual(await hesap('jeton-uz'), { s: 200, j: { ulke: 'uz', dil: 'uz-Latn', durum: 'bekletme', ad: 'QA Shifokor Bir' } })
-    assert.deepEqual((await hesap('jeton-uz-ru')).j.dil, 'ru')
+  it('hesap: an Uzbek account gets its country, its languages and whether the language question was answered; nothing else', async () => {
+    assert.deepEqual(await hesap('jeton-uz'), { s: 200, j: { ulke: 'uz', dil: 'uz-Latn', durum: 'uygulama', ad: 'QA Shifokor Bir', notDili: 'uz-Latn', dilSoruldu: false } })
+    assert.deepEqual(await hesap('jeton-uz-ru'), { s: 200, j: { ulke: 'uz', dil: 'ru', durum: 'uygulama', ad: 'QA Shifokor Ikki', notDili: 'uz-Cyrl', dilSoruldu: true } })
   })
 
   it('hesap: no session, a Turkish account and an unstamped account all get the same "no session"', async () => {

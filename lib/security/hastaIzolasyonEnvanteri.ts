@@ -310,4 +310,14 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path (NOTYA-GELEN-BELGELER: deletes unfiled inbox rows + their files by age only, returns counts)'),
   'app/api/cron/meslektas-rutin/route.ts': I('cron-secret gated; 30-day usage purge + per-doctor rutinTuret on that doctor_id only; no patient ids'),
   'app/api/cron/meslektas-onbellek/route.ts': I('cron-secret gated; builds hasta_dosya_onbellek per randevu row doctor_id+patient_id; no cross-doctor key'),
+  // ── NOTYA-UZ-MUAYENE-01: routes of a country build (*.ulke.*). Not part of a Türkiye build. Their cross-doctor
+  //    tests (positive control, A→B, B→A, "every query carries the doctor") live with the country pack, on its own
+  //    stand-in database: countries/uz/uygulama/uygulama.test.ts and countries/uz/uygulama/muayene.test.ts. ──
+  'app/api/ulke/hastalar/route.ulke.ts': I('doctor = the authenticated account only; the body cannot name a doctor and no patient id is accepted; list reads patients + hasta_ulke_bilgisi by doctor_id'),
+  'app/api/ulke/hasta/route.ulke.ts': I('hastaGetir: patient id from the address matched with doctor_id in the same query BEFORE anything else is read; foreign id → 404, identical to a missing id'),
+  'app/api/ulke/bugun/route.ulke.ts': I('takes no id from the request; sessions, notes and patient names are each read by doctor_id (lib/ulke/uygulama/muayeneler.ts)'),
+  'app/api/ulke/muayene/route.ulke.ts': I('muayeneKaydet: patient id proven the caller\'s (hastaGetir) and the recording path proven to lie in the caller\'s own folder BEFORE storage is read; muayeneGetir: visit id + doctor_id in one query, foreign id → 404'),
+  'app/api/ulke/not/route.ulke.ts': I('notYaz: visit id + doctor_id in one query (muayeneGetir), patient re-read by doctor_id; notGetir / notKaydet: note id + doctor_id in one query, every later read or write carries doctor_id; foreign id → 404'),
+  'app/api/ulke/not/yeniden-yaz/route.ulke.ts': I('notYenidenYaz: note id + doctor_id in one query; the second draft is written to not_dil_kaydi by note_id AND doctor_id; target language is not taken from the request'),
+  'app/api/ulke/not/onayla/route.ulke.ts': I('notOnayla: note id + doctor_id in one query; the approving update carries id, doctor_id and approved_at IS NULL in the same statement; foreign id → 404'),
 }

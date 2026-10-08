@@ -48,5 +48,8 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // NOTYA-UZ-MUAYENE-01: '/' is listed by itself on purpose. Under a path prefix (basePath '/uzbek') Next compiles the
+  // second pattern to '/uzbek/(…)', which needs a slash after the prefix and so does NOT match the landing page at
+  // exactly '/uzbek' — it was served without the gate and without its headers. Without a prefix '/' changes nothing.
+  matcher: ['/', '/((?!_next/static|_next/image|favicon.ico).*)'],
 }

@@ -10,6 +10,12 @@ if (!/^[a-z]{2}$/.test(ULKE) || !existsSync(new URL(`./countries/${ULKE}/derleme
   throw new Error(`NOTYA_COUNTRY="${ULKE}" is not a country in countries/. Refusing to build.`)
 }
 const { default: ulkeDerleme } = await import(`./countries/${ULKE}/derleme.mjs`)
+// NOTYA-UZ-MUAYENE-01: a country may be served under a path of the main site (Uzbekistan: /uzbek). Empty / absent = the
+// domain root, and then NOTHING is set below — Türkiye's config is what it was. A malformed value stops the build.
+const YOL_ON_EKI = ulkeDerleme.yolOnEki || ''
+if (!/^(\/[a-z0-9][a-z0-9-]*)?$/.test(YOL_ON_EKI)) {
+  throw new Error(`countries/${ULKE}/derleme.mjs: yolOnEki="${YOL_ON_EKI}" must be empty or one path segment like "/uzbek". Refusing to build.`)
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -20,6 +26,9 @@ const nextConfig = {
   // `mjs` is there for ONE file, app/not-found.mjs: Next 14.2 builds the root not-found page only when its file name
   // has a single extension (see that file). Tests allow no other .mjs route file. Türkiye never treats .mjs as a route.
   ...(ulkeDerleme.bolunmemisUygulama ? {} : { pageExtensions: ['ulke.tsx', 'ulke.ts', 'mjs'] }),
+  // NOTYA-UZ-MUAYENE-01: pages, API routes, assets (/_next/…), redirects and the middleware all move under the prefix.
+  // Plain links and fetch() calls of the country screens add it themselves (lib/ulke/yol.ts).
+  ...(YOL_ON_EKI ? { basePath: YOL_ON_EKI } : {}),
   env: {
     TZ: ulkeDerleme.saatDilimi,
     NOTYA_COUNTRY: ULKE,

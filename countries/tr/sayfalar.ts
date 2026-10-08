@@ -6,4 +6,5 @@ import type { UlkeSayfalari } from '@/lib/ulke/tipler'
 
 export const TR_SAYFALARI: UlkeSayfalari = {
   acilis: null,
+  uygulama: null,
 }

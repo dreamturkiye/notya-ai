@@ -39,6 +39,12 @@ export type Ozellik =
   | 'davetliKayit'
   /** The single page an account sees while its pilot access is prepared, at /welcome. */
   | 'bekletmeSayfasi'
+  /**
+   * NOTYA-UZ-MUAYENE-01 — the core loop of the signed-in application, built country-first: first-login language
+   * question, settings, home, patients, visit recording to an approved note. Screens and clinical text come from the
+   * pack (countries/active/sayfalar, countries/active/klinik). Replaces the holding page where it is on.
+   */
+  | 'cekirdekMuayene'
   /** Doktor Araçları (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -131,6 +137,12 @@ export type UlkePaketi = {
   /** /doktor-tools routes valid in this country. A tool must ALSO name the country in its own `ulkeler` field. */
   araclar: readonly string[]
   rotalar: RotaIzni
+  /**
+   * NOTYA-UZ-MUAYENE-01 — the path of the main site this country is served under ('/uzbek'). Omitted = the domain
+   * root. One segment, no trailing slash. Same value as countries/<kod>/derleme.mjs (read there by next.config as
+   * `basePath`); addresses are built with lib/ulke/yol.ts. `rotalar` stays relative to it.
+   */
+  yolOnEki?: string
   /** true = noindex on every response, robots.txt disallows everything, no sitemap. */
   aramaMotorlarinaGizli: boolean
   kabuk: KabukBilgisi
@@ -140,6 +152,25 @@ export type UlkePaketi = {
   yuzeyler: readonly Yuzey[]
   /** What each of the country's languages calls itself (for a language switch). */
   dilAdlari: Partial<Record<DilKodu, string>>
+  /** Settings of the signed-in application. Present exactly where the feature `cekirdekMuayene` is on. */
+  uygulama?: UygulamaAyarlari
+}
+
+/** What a pack says about the signed-in application (feature `cekirdekMuayene`). */
+export type UygulamaAyarlari = {
+  /**
+   * Languages (and scripts) an account may choose for its interface and for its visit notes. Separate from
+   * `acikDiller`, which are the languages of the public core surfaces (login, sign-up, system pages): a script
+   * variant can be offered inside the application before the public pages exist in it.
+   */
+  diller: readonly DilKodu[]
+  /** ISO 639 codes of the languages a PATIENT can be recorded with (checklist E7). */
+  hastaDilleri: readonly string[]
+  /**
+   * Folding for finding a name whatever script it was typed in (checklist E10): lower case, apostrophe variants
+   * dropped, the country's other script mapped onto one. Pure. Omitted = plain lower case.
+   */
+  aramaKatla?: (ham: string) => string
 }
 
 // ───────────────────────── pages a pack brings itself (countries/active/sayfalar) ─────────────────────────
@@ -151,9 +182,85 @@ export type AcilisSayfasiProps = {
   iletisimEposta: string | null
 }
 
+/**
+ * Screens of the signed-in application (feature `cekirdekMuayene`). Each is one address, served by a one-line
+ * *.ulke.* route file (components/ulke/UlkeUygulamaSayfasi.tsx); the screen itself, with its text, is the pack's.
+ */
+export const UYGULAMA_EKRANLARI = {
+  baslangic: '/start',
+  bugun: '/today',
+  ayarlar: '/settings',
+  hastalar: '/patients',
+  yeniHasta: '/patients/new',
+  hasta: '/patient',
+  /** One address, three views: ?hasta=<id> records a visit, ?seans=<id> shows a recorded visit, ?not=<id> is its note. */
+  muayene: '/visit',
+} as const
+export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
+
 /** UI a pack brings itself. null = the country has no page of its own there. */
 export type UlkeSayfalari = {
   acilis: ComponentType<AcilisSayfasiProps> | null
+  /** Signed-in application screens. null = none; a screen the pack does not bring answers "not found". */
+  uygulama: Partial<Record<UygulamaEkrani, ComponentType>> | null
+}
+
+// ───────────────────────── the clinical half of a pack (countries/active/klinik) ─────────────────────────
+
+/** Storage bucket a visit recording is uploaded to, under a folder named after the doctor's account id (migration 132). */
+export const MUAYENE_SES_KOVASI = 'muayene-sesleri'
+
+/**
+ * Speech recognition for a visit (checklist E5). The ENGINE is core (lib/ulke/uygulama/konusmaTanima.ts); every
+ * choice in it is the pack's: which model, which languages, and when a recording counts as "low confidence".
+ */
+export type KonusmaTanimaAyarlari = {
+  /** The only engine there is today. A pack names it, so that a second one is a decision and not a default. */
+  saglayici: 'elevenlabs-scribe'
+  /** Model id sent to the provider. */
+  model: string
+  /** Note language → the provider's code for that language, used ONLY to force the language of a second pass. */
+  zorlamaDilKodlari: Partial<Record<DilKodu, string>>
+  /** Provider language codes this country expects to hear → the short name the screens know ('uz', 'ru'). */
+  beklenenDiller: Readonly<Record<string, string>>
+  /** Below this probability of the predicted language (0–1) the first pass is "low confidence". */
+  dilOlasiligiEsigi: number
+  /** Below this average word log-probability (≤ 0) a pass is "low confidence". */
+  ortalamaLogOlasilikEsigi: number
+  /** A transcript shorter than this many characters is "not enough speech". */
+  asgariKarakter: number
+}
+
+/** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
+export type NotIcerigi = { s: string; o: string; a: string; p: string }
+
+/** What the note is written from, besides the transcript: no name, no identity number, no phone. */
+export type NotGirdisi = { dogumTarihi: string; cinsiyet: string; muayeneTarihi: string; metin: string }
+
+/** What a pack brings for the visit: recording → transcript → note. Server-side only. null = the country has none. */
+export type UlkeKlinigi = {
+  konusma: KonusmaTanimaAyarlari
+  /** Recording consent shown as a tick-box before recording. The wording is in the pack's catalogue. */
+  riza: { surum: string; hukukcuInceledi: boolean }
+  /** Note templates that are switched on, first = default. */
+  sablonlar: readonly string[]
+  /** Visits (recordings turned into notes) one account may make per day of the country. */
+  gunlukMuayeneLimiti: number
+  /**
+   * INSTRUCTIONS TO THE MODEL — the pack's own, in the language the note is written in. Core holds no instruction
+   * text at all. null = the pack has none for that language or template: the note is not written.
+   */
+  notTalimati: (dil: DilKodu, sablon: string) => string | null
+  /** The message that carries the transcript, in the note's language. */
+  notGirdisi: (dil: DilKodu, g: NotGirdisi) => string
+  /** Instructions for rewriting an existing note in `hedefDil`, written in that language. null = not offered. */
+  yenidenYazimTalimati: (hedefDil: DilKodu) => string | null
+  yenidenYazimGirdisi: (hedefDil: DilKodu, icerik: NotIcerigi) => string
+  /**
+   * "The other language" for a note written in `dil` — what one click rewrites it in. `hesapDilleri` are the
+   * account's own languages (interface, notes), so that a script it already uses is chosen. null = there is none.
+   */
+  digerDil: (dil: DilKodu, hesapDilleri: readonly DilKodu[]) => DilKodu | null
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────
