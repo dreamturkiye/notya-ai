@@ -46,17 +46,16 @@ export default function Baslangic() {
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState(false)
 
-  const [adim, setAdim] = useState<'dil' | 'rol'>('dil')
+  /** null until the language has been saved on this screen: then the step follows what the account has answered. */
+  const [adim, setAdim] = useState<'rol' | null>(null)
   const [rol, setRol] = useState('')
   const [rolHatasi, setRolHatasi] = useState<'gerekli' | 'kaydedilemedi' | null>(null)
   const [hazir, setHazir] = useState(false)
 
-  // Start from the language chosen at sign-up; an account that has answered the language question goes straight to the role.
+  // Start from the language chosen at sign-up.
   useEffect(() => {
     if (!u.hesap || hazir) return
     setTemel(temelDil(u.hesap.dil)); setYazi(yaziSec(u.hesap.dil))
-    if (u.hesap.dilSoruldu) setAdim('rol')
-    if (u.hesap.rol) setRol(u.hesap.rol)
     setHazir(true)
   }, [u.hesap, hazir])
 
@@ -84,7 +83,8 @@ export default function Baslangic() {
     setBekliyor(false)
   }
 
-  if (adim === 'rol') return <RolGorunumu dil={u.dil} m={u.m} rol={rol} setRol={(r) => { setRol(r); setRolHatasi(null) }} gonder={rolGonder} bekliyor={bekliyor} hata={rolHatasi} />
+  // An account that has answered the language question (before roles existed, or a moment ago) is asked only the role.
+  if (adim === 'rol' || u.hesap.dilSoruldu) return <RolGorunumu dil={u.dil} m={u.m} rol={rol} setRol={(r) => { setRol(r); setRolHatasi(null) }} gonder={rolGonder} bekliyor={bekliyor} hata={rolHatasi} />
 
   return <BaslangicGorunumu temel={temel} yazi={yazi} setTemel={setTemel} setYazi={setYazi} gonder={gonder} bekliyor={bekliyor} hata={hata} />
 }

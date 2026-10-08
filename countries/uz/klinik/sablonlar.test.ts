@@ -228,6 +228,21 @@ describe('40 roles: note templates', () => {
   })
 })
 
+describe('40 roles: the Uzbekistan document', () => {
+  it('has a status row for every role (machine-built, no reviewer) and a "needs local content" row for every slot', () => {
+    const belge = readFileSync(join(KOK, 'docs/COUNTRY-PACK-UZBEKISTAN.md'), 'utf8')
+    for (const { rol, tamAd } of ROLLER) {
+      const satir = belge.split('\n').find((x) => x.startsWith('| ') && x.includes(`| \`${rol}\` |`) && x.includes('| yes |'))
+      assert.ok(satir, `${rol}: no status row`)
+      for (const x of [tamAd, UZ_ROL_ADLARI[rol]['uz-Latn'], UZ_ROL_ADLARI[rol].ru, `| ${UZ_ROL_ALANLARI[rol].length} |`, '| none yet |', ...UZ_YEREL_ICERIK[rol].map((y) => `\`${y.anahtar}\``)]) assert.ok(satir!.includes(x), `${rol}: status row lacks "${x}"`)
+      for (const y of UZ_YEREL_ICERIK[rol]) assert.ok(belge.includes(`| \`${rol}\` (${UZ_ROL_ADLARI[rol].ru}) | \`${y.anahtar}\` | ${y.eksik} | a local clinician |`), `${rol}/${y.anahtar}: no "needs local content" row`)
+    }
+    for (const y of UZ_ORTAK_YEREL_ICERIK) assert.ok(belge.includes(`| all 40 roles | \`${y.anahtar}\` | ${y.eksik} | a local clinician |`), y.anahtar)
+    assert.equal(belge.split('\n').filter((x) => x.endsWith('| a local clinician |')).length, 75)
+    assert.match(belge, /Machine-derived\*\* from the Latin form by rule/)
+  })
+})
+
 describe('40 roles: instructions to the model', () => {
   let T: typeof import('./talimatlar')
   before(async () => { T = await import('./talimatlar') })
