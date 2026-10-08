@@ -3218,7 +3218,7 @@ Source: Kaan's 2026-10-07 brief. Code: Gün sonu MBYS kuyruğu (`/doktor-tools/e
 | MBYS-YARDIMCI-01e | 2026-10-07 | OPEN | Apply migration `126_mbys_yardimci.sql` before deploying the queue (the route reads `users.mbys_ayar`, `mbys_aktarimlar`, `mbys_hasta_kimlik`). | Kaan |
 
 ## 2026-10-08 - NOTYA-ULKE-01: second country (Uzbekistan) — country foundation and Uzbek landing page
-Source: Kaan's decisions of 2026-10-08 (one repository, walled areas, separate deployment and database per country; core shared). Code: `countries/`, `lib/ulke/`, `middleware.ulke.ts`, migration 128 (PR A); the Uzbek landing page, login, invitation sign-up and holding page (PR B, stacked on A). Standard: `docs/COUNTRY-PACK-CHECKLIST.md`. Country file: `docs/COUNTRY-PACK-UZBEKISTAN.md`. Order of the remaining work: `docs/COUNTRY-PACK-SPLIT-PLAN.md`.
+Source: Kaan's decisions of 2026-10-08 (one repository, walled areas, separate deployment and database per country; core shared). Code: `countries/`, `lib/ulke/`, `middleware.ulke.ts`, migration 128 (PR A); `countries/uz/acilis/`, `app/*.ulke.tsx`, `app/login`, `app/signup`, `app/welcome`, `app/api/ulke/`, `components/ulke/`, migration 129 (PR B, stacked on A). Standard: `docs/COUNTRY-PACK-CHECKLIST.md`. Country file: `docs/COUNTRY-PACK-UZBEKISTAN.md`. Order of the remaining work: `docs/COUNTRY-PACK-SPLIT-PLAN.md`.
 
 **Not shipped.** Two pull requests are open and unmerged. No migration was applied to any database, nothing was deployed, no Vercel or Supabase setting was changed.
 
@@ -3241,6 +3241,9 @@ Found while doing the job (not in the brief; recorded so they are not lost):
 | ID | Date | Status | What | Owner / waiting on |
 |----|------|--------|------|--------------------|
 | NOTYA-ULKE-01l | 2026-10-08 | OPEN | Apply migration `128_hesap_ulke_dil.sql` to the Turkish database. Additive (two columns with default `tr`, two format checks, one guard trigger). The code works before and after it. | Kaan |
+| NOTYA-ULKE-01m | 2026-10-08 | OPEN | "Request a price" on the Uzbek page. The brief asked for the mechanism behind "Teklif alın" on the Turkish clinic page; there is none (that label is a link to sign-up). Built instead: a short form that opens the visitor's own mail app with the message addressed to `NOTYA_ILETISIM_EPOSTA`; nothing is stored. Decide: keep this, or a stored request list (needs a table in the Uzbek database and an answer to checklist A1 first). The address itself must also be provided. | Kaan |
+| NOTYA-ULKE-01n | 2026-10-08 | OPEN | No consent or privacy text exists for Uzbekistan (checklist I1). The invitation sign-up collects name, e-mail and password without one. Do not issue an invitation code until the text is on the form. | Kaan (lawyer), then Claude |
+| NOTYA-ULKE-01o | 2026-10-08 | OPEN | Public sign-up must be switched off in the Uzbek Supabase project, or the invitation step can be bypassed by calling Supabase directly. A setting, not code. | Kaan / Claude at set-up (01b) |
 | NOTYA-ULKE-01p | 2026-10-08 | OPEN | Uzbek in Cyrillic script is declared in the pack but not switched on: no text was written in it. Decide whether the pilot needs it; then write and review the catalogue (checklist E2). | Kaan and the clinical lead |
 | NOTYA-ULKE-01q | 2026-10-08 | OPEN | The Turkish database address is written into 8 client files as a literal. Split plan job 1; do it before any second deployment is created. | Claude, on Kaan's go |
 | NOTYA-ULKE-01r | 2026-10-08 | OPEN | The clinic tool registry (`lib/klinik/klinikAraclari.ts`, 33 tools) has no countries field yet. Split plan job 2. | Claude, on Kaan's go |
