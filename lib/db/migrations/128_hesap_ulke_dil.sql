@@ -1,20 +1,29 @@
 -- 128 NOTYA-ULKE-01 (Kaan, 2026-10-08)
--- Country and interface language on Türkiye's own account table (`users`).
 --
--- SHARED DATABASE (Kaan, 2026-10-08 19:09: "use the same database as what we are using for notya turkiye").
--- THIS IS THE ONLY MIGRATION FROM 128 ON THAT CHANGES A TABLE TÜRKİYE USES, AND NO COUNTRY BUILD NEEDS IT:
--- since NOTYA-ULKE-SABLON-01 a country's accounts live in `ulke_hesaplari` (migration 130), never in `users`.
--- It only serves the Turkish application's own stamping (lib/ulke/hesapDamga.ts), which tolerates the columns being
--- absent. docs/COUNTRY-PACK-DB-ROLLOUT.md recommends NOT running this file on the live database for the country
--- rollout; run it, if ever, together with the pull request that brings the Turkish-side country check to `main`.
+-- ██ SUPERSEDED — DO NOT RUN. NOT PART OF THE COUNTRY ROLLOUT. (NOTYA-ULKE-SABLON-01, 2026-10-08) ██
 --
--- Purely additive: two columns with constant defaults (no table rewrite), two format checks, one guard trigger.
--- No existing column, row, policy or index is changed. Every existing row reads 'tr' / 'tr' through the default.
+-- What it is: country and interface language as two columns on Türkiye's own account table (`users`), written when
+-- each country was going to have a database of its own.
 --
--- Safe to run twice. One transaction: it is applied completely or not at all. `lock_timeout` makes it give up
--- instead of queueing behind a long query on `users` (and blocking logins behind itself).
+-- Why it is superseded: Kaan, 2026-10-08 19:09 — "use the same database as what we are using for notya turkiye".
+-- In the shared database a country's accounts live in `ulke_hesaplari` (migration 130), never in `users`.
+-- NO COUNTRY BUILD NEEDS IT: no country code reads or writes `users` (lib/ulke/ulkeVeritabani.paket.test.ts fails if
+-- one does). THIS IS THE ONLY FILE FROM 128 ON THAT WOULD CHANGE A TABLE TÜRKİYE USES, which is the reason to leave
+-- it out: docs/COUNTRY-PACK-DB-ROLLOUT.md runs 129–135 and skips this file.
 --
--- NOT APPLIED by the job that wrote it.
+-- Does the Turkish application need it for its own country check? No. That check (pull request #565, not on `main`)
+-- reads the country stamped on the SESSION (auth `app_metadata.country`): no stamp = an account of Türkiye, a stamp of
+-- another country = refused. It needs nothing in the database. The two places on that branch that touch
+-- `users.country` (a second look at the row in /api/users/me; a best-effort stamp at first onboarding,
+-- lib/ulke/hesapDamga.ts) both tolerate the column being absent. Whether those two are dropped, or this file is
+-- revived for them, is a separate, later decision of the owner's — see docs/OPEN-COMMITMENTS.md.
+--
+-- The file is kept, not deleted, so that the record of what was written stays. If it is ever run: purely additive
+-- (two columns with constant defaults — no table rewrite — two format checks, one guard trigger), safe to run twice,
+-- one transaction with a lock timeout; rollback in geri-al/128_hesap_ulke_dil.geri-al.sql. The local proof
+-- (scripts/ulke-goc-kaniti.mjs, part F) runs it only to put on record what it would change.
+--
+-- NOT APPLIED to any database.
 
 begin;
 set local lock_timeout = '4s';
