@@ -17,7 +17,9 @@ const nextConfig = {
   // set, exactly as before. Any other country's build takes ONLY files named *.ulke.tsx / *.ulke.ts as routes
   // (app/layout.ulke.tsx, app/page.ulke.tsx, middleware.ulke.ts, …): the Turkish route files are not part of that
   // build at all, and the *.ulke.* files are not routes in a Türkiye build. See app/layout.ulke.tsx.
-  ...(ulkeDerleme.bolunmemisUygulama ? {} : { pageExtensions: ['ulke.tsx', 'ulke.ts'] }),
+  // `mjs` is there for ONE file, app/not-found.mjs: Next 14.2 builds the root not-found page only when its file name
+  // has a single extension (see that file). Tests allow no other .mjs route file. Türkiye never treats .mjs as a route.
+  ...(ulkeDerleme.bolunmemisUygulama ? {} : { pageExtensions: ['ulke.tsx', 'ulke.ts', 'mjs'] }),
   env: {
     TZ: ulkeDerleme.saatDilimi,
     NOTYA_COUNTRY: ULKE,

@@ -34,7 +34,7 @@ How each rule is enforced today:
 | 3 | Required `ulkeler` on every tool + the pack's own route list (two locks) | `lib/doktor/doktorAraclari.ts`, `countries/<code>/araclar.ts` |
 | 4 | `users.country`, `users.ui_language` (migration 128) + `app_metadata.country`; login refuses another country's account | `lib/ulke/hesapUlkesi.ts` |
 | 5 | Not built yet (Ayşe is not split) | split plan, step 9 |
-| 6 | Pack chosen at build time; walls checked before every build; build output checked after. A build for a country that is not the pre-split application compiles only the route files named `*.ulke.*` | `countries/active/`, `next.config.mjs` (`pageExtensions`), `scripts/ulke-duvarlari.mjs`, `scripts/ulke-derleme-kaniti.mjs` |
+| 6 | Pack chosen at build time; walls checked before every build; build output checked after. A build for a country that is not the pre-split application compiles only the route files named `*.ulke.*`, plus `app/not-found.mjs` (the root not-found page; Next 14.2 builds it only from a file with a single extension) | `countries/active/`, `next.config.mjs` (`pageExtensions`), `scripts/ulke-duvarlari.mjs`, `scripts/ulke-derleme-kaniti.mjs` |
 | 7 | Leak harness; each country declares its own terms | `lib/ulke/testing/sizintiTarayici.ts`, `countries/<code>/sizintiTerimleri.ts` |
 | 8 | Tool lists snapshot; the existing test suite | `lib/doktor/doktorAraclariUlke.test.ts`, `npm test` |
 | 9 | A route exists in another country only as a `*.ulke.*` file that the country's pack also lists; sign-up by invitation code | `middleware.ulke.ts`, `lib/ulke/rotaKapisi.ts` |

@@ -63,13 +63,13 @@ describe('invitation codes', () => {
 })
 
 describe('a Türkiye build and the core country routes', () => {
-  it('*.ulke.* files are not routes: Next reads page.tsx / route.ts / middleware.ts, exactly as before', () => {
+  it('*.ulke.* files and app/not-found.mjs are not routes: Next reads page.tsx / route.ts / middleware.ts, exactly as before', () => {
     const config = oku('next.config.mjs')
     // pageExtensions is set ONLY for a build that is not the pre-split application; Türkiye's config carries no such key.
     assert.equal((config.match(/pageExtensions/g) || []).length, 1)
     assert.match(config, /\.\.\.\(ulkeDerleme\.bolunmemisUygulama \? \{\} : \{ pageExtensions:/)
     const varsayilan = /^(page|route|layout|not-found|error|global-error|middleware)\.(tsx|ts|jsx|js)$/
-    for (const ad of ['page.ulke.tsx', 'route.ulke.ts', 'layout.ulke.tsx', 'not-found.ulke.tsx', 'error.ulke.tsx', 'global-error.ulke.tsx', 'middleware.ulke.ts']) assert.doesNotMatch(ad, varsayilan, ad)
+    for (const ad of ['page.ulke.tsx', 'route.ulke.ts', 'layout.ulke.tsx', 'not-found.mjs', 'error.ulke.tsx', 'global-error.ulke.tsx', 'middleware.ulke.ts']) assert.doesNotMatch(ad, varsayilan, ad)
   })
 
   it('the root files of the pre-split application know nothing about countries (they are byte-for-byte main)', () => {

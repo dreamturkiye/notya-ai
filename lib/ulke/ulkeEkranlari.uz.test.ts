@@ -125,14 +125,23 @@ const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(me
 const DILLER: DilKodu[] = ['uz-Latn', 'ru']
 const sp = (dil: DilKodu) => (dil === 'uz-Latn' ? {} : { dil })
 
-/** Route files of a build that is not the pre-split application: *.ulke.tsx / *.ulke.ts under app/. */
+/**
+ * Route files of a build that is not the pre-split application: *.ulke.tsx / *.ulke.ts under app/, and ONE file with
+ * the third route extension of such a build, app/not-found.mjs (that file says why it cannot be not-found.ulke.tsx).
+ */
 function ulkeRotaDosyalari() {
   const sayfalar: string[] = [], api: string[] = [], ozel: string[] = []
   const gez = (dizin: string) => {
     for (const ad of readdirSync(dizin)) {
       const yol = join(dizin, ad)
       if (statSync(yol).isDirectory()) { gez(yol); continue }
-      const m = /^(page|route|layout|not-found|error|global-error|loading|template|default)\.ulke\.(tsx|ts)$/.exec(ad)
+      if (ad.endsWith('.mjs')) {
+        assert.equal(relative(KOK, yol).split(sep).join('/'), 'app/not-found.mjs', 'mjs is a route extension in a country build: the only .mjs file allowed under app/ is app/not-found.mjs')
+        ozel.push('/not-found')
+        continue
+      }
+      // not-found is absent on purpose: as not-found.ulke.tsx the production build fails (app/not-found.mjs).
+      const m = /^(page|route|layout|error|global-error|loading|template|default)\.ulke\.(tsx|ts)$/.exec(ad)
       if (!m) { assert.doesNotMatch(ad, /\.ulke\./, `unexpected *.ulke.* file that is not a route file: ${relative(KOK, yol)}`); continue }
       const url = '/' + relative(join(KOK, 'app'), dizin).split(sep).filter(Boolean).filter((p) => !(p.startsWith('(') && p.endsWith(')'))).join('/')
       if (m[1] === 'page') sayfalar.push(url)
@@ -150,7 +159,7 @@ describe('an Uzbekistan build: screens', () => {
   let Login: typeof import('../../app/login/page.ulke')
   let Signup: typeof import('../../app/signup/page.ulke')
   let Welcome: typeof import('../../app/welcome/page.ulke')
-  let Bulunamadi: typeof import('../../app/not-found.ulke')
+  let Bulunamadi: typeof import('../../app/not-found.mjs')
   let Hata: typeof import('../../app/error.ulke')
   let GenelHata: typeof import('../../app/global-error.ulke')
   let Bekletme: typeof import('../../components/ulke/BekletmeEkrani')
@@ -162,7 +171,7 @@ describe('an Uzbekistan build: screens', () => {
     Login = await import('../../app/login/page.ulke')
     Signup = await import('../../app/signup/page.ulke')
     Welcome = await import('../../app/welcome/page.ulke')
-    Bulunamadi = await import('../../app/not-found.ulke')
+    Bulunamadi = await import('../../app/not-found.mjs')
     Hata = await import('../../app/error.ulke')
     GenelHata = await import('../../app/global-error.ulke')
     Bekletme = await import('../../components/ulke/BekletmeEkrani')
@@ -281,9 +290,17 @@ describe('an Uzbekistan build: routes', () => {
     assert.ok(existsSync(join(KOK, 'middleware.ulke.ts')))
   })
 
-  it('the build takes only *.ulke.* files as routes (so no Turkish route file is compiled into it)', async () => {
+  it('the build takes only *.ulke.* files as routes, plus app/not-found.mjs (so no Turkish route file is compiled into it)', async () => {
     const config = readFileSync(join(KOK, 'next.config.mjs'), 'utf8')
-    assert.match(config, /\.\.\.\(ulkeDerleme\.bolunmemisUygulama \? \{\} : \{ pageExtensions: \['ulke\.tsx', 'ulke\.ts'\] \}\)/)
+    assert.match(config, /\.\.\.\(ulkeDerleme\.bolunmemisUygulama \? \{\} : \{ pageExtensions: \['ulke\.tsx', 'ulke\.ts', 'mjs'\] \}\)/)
+    // `mjs` exists for the root not-found page alone. Nothing else may become a route through it: no other .mjs under
+    // app/ (ulkeRotaDosyalari above), and none of the root files or folders Next would also read with that extension.
+    assert.deepEqual(ulkeRotaDosyalari().ozel.filter((o) => o === '/not-found'), ['/not-found'])
+    assert.ok(!existsSync(join(KOK, 'app/not-found.ulke.tsx')), 'app/not-found.ulke.tsx breaks the production build of a country — the page is app/not-found.mjs')
+    for (const ad of ['middleware.mjs', 'instrumentation.mjs', 'pages', 'src']) assert.ok(!existsSync(join(KOK, ad)), `${ad} would be read as a route source by a country build`)
+    // One line, no text of its own: the page is the pack-driven component every country shares.
+    const yok = readFileSync(join(KOK, 'app/not-found.mjs'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').trim()
+    assert.equal(yok, "export { UlkeBulunamadi as default } from '../components/ulke/UlkeSistemSayfasi'")
     const derleme = (await import(pathToFileURL(join(KOK, 'countries/uz/derleme.mjs')).href)).default
     assert.equal(derleme.bolunmemisUygulama, false)
     assert.deepEqual(derleme.yonlendirmeler, [])

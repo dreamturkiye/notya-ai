@@ -102,7 +102,7 @@ describe('no country configured = Türkiye, as before', () => {
     assert.ok(m.indexOf('rotaAcikMi(izin, pathname)') > 0 && m.indexOf('rotaAcikMi(izin, pathname)') < m.indexOf('NextResponse.next()'))
     // Built by mistake for a pack that claims the whole application, it closes everything rather than opening everything.
     assert.match(m, /AKTIF_PAKET\.rotalar === 'hepsi' \? \{ sayfalar: \[\], apiOnEkleri: \[\] \}/)
-    assert.match(oku('next.config.mjs'), /\.\.\.\(ulkeDerleme\.bolunmemisUygulama \? \{\} : \{ pageExtensions: \['ulke\.tsx', 'ulke\.ts'\] \}\)/)
+    assert.match(oku('next.config.mjs'), /\.\.\.\(ulkeDerleme\.bolunmemisUygulama \? \{\} : \{ pageExtensions: \['ulke\.tsx', 'ulke\.ts', 'mjs'\] \}\)/)
   })
 })
 

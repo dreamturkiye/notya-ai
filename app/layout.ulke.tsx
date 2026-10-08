@@ -4,7 +4,8 @@
  * Why this file has a second extension. next.config.mjs sets `pageExtensions` per build:
  *   - the pre-split application (Türkiye today): the usual tsx / ts — its routes are every file named as always
  *     (layout.tsx, page.tsx, route.ts, middleware.ts). Files named *.ulke.* are not routes there and do not exist for it.
- *   - any other country: ulke.tsx / ulke.ts ONLY — its routes are the *.ulke.* files and nothing else. The thousands of
+ *   - any other country: ulke.tsx / ulke.ts ONLY — its routes are the *.ulke.* files and nothing else (one exception
+ *     forced by the framework: the root not-found page is app/not-found.mjs — that file says why). The thousands of
  *     Turkish route files are not compiled into that build at all; this layout replaces app/layout.tsx, which stays
  *     untouched (Turkish title, lang="tr", the assistant session and panel, the app manifest, the service worker).
  * So a route exists outside Türkiye only when somebody creates a *.ulke.* file for it AND the country's pack lists
