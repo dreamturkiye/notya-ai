@@ -73,9 +73,12 @@ const ekranTemiz = (html: string, kaynak: string) => {
   for (const m of html.matchAll(/(?:href|action)="([^"]+)"/g)) {
     if (m[1].startsWith('https://fonts.googleapis.com/')) continue
     assert.doesNotMatch(m[1], TURKCE_ADRES, `${kaynak}: links to a page of the pre-split application: ${m[1]}`)
-    assert.match(m[1], /^\/(start|today|settings|patients|patients\/new|patient|visit|login)?(\?[^"]*)?$/, `${kaynak}: unexpected address ${m[1]}`)
+    // "Never offer an address that answers not found": every link is a page this country's pack lists.
+    const yol = m[1].split('?')[0]
+    assert.ok(ACIK_SAYFALAR.includes(yol), `${kaynak}: links to ${m[1]}, which is not a page of this build (${ACIK_SAYFALAR.join(' ')})`)
   }
 }
+let ACIK_SAYFALAR: readonly string[] = []
 /** Every string of a catalogue, with its dotted key. */
 function yaprak(o: unknown, on = ''): [string, string][] {
   return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'string' ? [[`${on}${k}`, v] as [string, string]] : yaprak(v, `${on}${k}.`)))
@@ -83,7 +86,12 @@ function yaprak(o: unknown, on = ''): [string, string][] {
 
 describe('Uzbekistan application: text in three forms', () => {
   let M: typeof import('./metinler')
-  before(async () => { M = await import('./metinler') })
+  before(async () => {
+    M = await import('./metinler')
+    const izin = (await import('@/lib/ulke/ulke')).ulkePaketi().rotalar
+    assert.notEqual(izin, 'hepsi')
+    if (izin !== 'hepsi') ACIK_SAYFALAR = izin.sayfalar
+  })
 
   it('the catalogue says, at its top, that it is machine-written and awaits native review', () => {
     const bas = readFileSync(join(KOK, 'countries/uz/uygulama/metinler.ts'), 'utf8').slice(0, 1400)
@@ -132,6 +140,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
   let Baslangic: typeof import('./Baslangic')
   let Ayarlar: typeof import('./Ayarlar')
   let Bugun: typeof import('./Bugun')
+  let Hastalar: typeof import('./Hastalar')
   let M: typeof import('./metinler')
   let Layout: typeof import('../../../app/layout.ulke')
   before(async () => {
@@ -139,6 +148,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
     Baslangic = await import('./Baslangic')
     Ayarlar = await import('./Ayarlar')
     Bugun = await import('./Bugun')
+    Hastalar = await import('./Hastalar')
     M = await import('./metinler')
     Layout = await import('../../../app/layout.ulke')
   })
@@ -147,7 +157,16 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
     belge(React.createElement(Kabuk.Cerceve, { dil: f, m: M.uygulamaMetni(f), ad: 'QA Shifokor', aktif, cikis: () => {}, children: ic }))
 
   it('the route pages render the pack\'s screens; before the account is known they show only "loading"', async () => {
-    for (const [dosya, ekran] of [['start', 'baslangic'], ['today', 'bugun'], ['settings', 'ayarlar']] as const) {
+    const { UYGULAMA_EKRANLARI } = await import('@/lib/ulke/tipler')
+    const { UZ_UYGULAMA } = await import('./index')
+    // Every screen the pack brings has its page, and the pack lists that page — and the other way round.
+    for (const [ekran, yol] of Object.entries(UYGULAMA_EKRANLARI)) {
+      const var_ = ekran in UZ_UYGULAMA
+      assert.equal(ACIK_SAYFALAR.includes(yol), var_, `${yol}: the pack's page list and its screens disagree`)
+      assert.equal(require('node:fs').existsSync(join(KOK, 'app', yol.slice(1), 'page.ulke.tsx')), var_, `${yol}: route file`)
+    }
+    assert.equal(Kabuk.HAZIR.muayene, 'muayene' in UZ_UYGULAMA, 'HAZIR.muayene must say whether the visit screen exists')
+    for (const [dosya, ekran] of [['start', 'baslangic'], ['today', 'bugun'], ['settings', 'ayarlar'], ['patients', 'hastalar'], ['patients/new', 'yeniHasta'], ['patient', 'hasta']] as const) {
       const Sayfa = (await import(`../../../app/${dosya}/page.ulke`)) as { default: () => React.ReactElement }
       const html = belge(Sayfa.default())
       assert.ok(html.includes('Yuklanmoqda…'), dosya)
@@ -198,16 +217,76 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       ]
       const html = cerceve(f, 'bugun', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA Shifokor', muayeneler, hata: false }))
       const g = gorunurMetin(html)
-      for (const s of [m.bugun.selam, m.bugun.baslik, m.bugun.muayeneBaslat, m.bugun.yeniHasta, m.arama.etiket, m.arama.ornek, m.arama.dugme, m.durum.taslak, m.durum.onayli, m.bugun.hastasiz, 'QA Bemor Karimova']) assert.ok(g.includes(s), s)
+      for (const s of [m.bugun.selam, m.bugun.baslik, m.bugun.yeniHasta, m.arama.etiket, m.arama.ornek, m.arama.dugme, m.durum.taslak, m.durum.onayli, m.bugun.hastasiz, 'QA Bemor Karimova']) assert.ok(g.includes(s), s)
       // Times are shown in Tashkent time (UTC+5), digits only.
       assert.ok(g.includes('09:30') && g.includes('11:05') && g.includes('12:00'))
-      for (const h of ['/visit', '/patients/new', '/patients', '/visit?not=n1']) assert.ok(html.includes(`href="${h}"`), h)
+      for (const h of ['/patients/new', '/patients', ...(Kabuk.HAZIR.muayene ? ['/visit', '/visit?not=n1'] : [])]) assert.ok(html.includes(`href="${h}"`), h)
+      // A screen that has not landed is not linked at all (it would answer "not found").
+      assert.equal(html.includes('href="/visit'), Kabuk.HAZIR.muayene)
+      assert.equal(g.includes(m.bugun.muayeneBaslat), Kabuk.HAZIR.muayene)
       assert.match(html, /<form class="uza-arama" action="\/patients" method="get"/)
       ekranTemiz(html, `/today (${f})`)
       const bos = cerceve(f, 'bugun', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA', muayeneler: [], hata: false }))
       assert.ok(gorunurMetin(bos).includes(m.bugun.bos))
     })
   }
+
+  for (const f of FORMLAR) {
+    const HASTA = { id: '30000000-0000-4000-8000-000000000001', ad: 'QA Karimova Dilnoza', otaIsmi: 'Rustam qizi', dogumTarihi: '2021-03-07', cinsiyet: 'female' as const, telefon: '+998 90 000 00 01', dil: 'uz', ulusalKimlik: '00000000000001' }
+
+    it(`${f}: patients — list with search, and the empty states`, () => {
+      const m = M.uygulamaMetni(f)
+      const html = cerceve(f, 'hastalar', React.createElement(Hastalar.HastalarGorunumu, { m, q: 'karim', hastalar: [HASTA, { ...HASTA, id: 'x2', ad: 'QA Иванов Пётр', otaIsmi: '', dil: 'ru' }], hata: false }))
+      const g = gorunurMetin(html)
+      for (const x of [m.hastalar.baslik, m.bugun.yeniHasta, m.arama.etiket, 'QA Karimova Dilnoza Rustam qizi', 'QA Иванов Пётр', '07.03.2021', 'karim']) assert.ok(g.includes(x), x)
+      assert.ok(html.includes(`href="/patient?id=${HASTA.id}"`))
+      ekranTemiz(html, `/patients (${f})`)
+      const bos = (q: string) => gorunurMetin(cerceve(f, 'hastalar', React.createElement(Hastalar.HastalarGorunumu, { m, q, hastalar: [], hata: false })))
+      assert.ok(bos('').includes(m.hastalar.bos)); assert.ok(bos('zzz').includes(m.arama.sonucYok))
+    })
+
+    it(`${f}: new patient — name, patronymic, birth date, sex, phone, the patient's language, optional identity number`, () => {
+      const m = M.uygulamaMetni(f)
+      const html = cerceve(f, 'hastalar', React.createElement(Hastalar.YeniHastaGorunumu, { m, dil: f, a: Hastalar.BOS_HASTA, set: () => {}, gonder: () => {}, bekliyor: false, hata: 'dil', telefonOrnek: '+998 90 123 45 67' }))
+      const g = gorunurMetin(html)
+      const y = m.yeniHasta
+      for (const x of [y.baslik, y.ad, y.otaIsmi, y.istegeBagli, y.dogumTarihi, y.cinsiyet, y.kadin, y.erkek, y.telefon, y.dil, y.ulusalKimlik, y.kaydet, y.iptal, y.dilGerekli]) assert.ok(g.includes(x), x)
+      const girdiler = [...html.matchAll(/<input\b[^>]*>/g)].map((x) => x[0])
+      assert.deepEqual(girdiler.filter((x) => x.includes('name="hasta-dili"')).map((x) => /value="([^"]+)"/.exec(x)![1]), ['uz', 'ru'])
+      assert.ok(html.includes('>Русский</span>'), 'Russian is offered in Russian')
+      // Nothing of Türkiye's patient form: no Turkish identity number, no field that validates one.
+      assert.doesNotMatch(html, /maxLength="11"|pattern=/i)
+      assert.doesNotMatch(html, /required/)
+      ekranTemiz(html, `/patients/new (${f})`)
+    })
+
+    it(`${f}: patient file — details in the doctor's language, approved notes, drafts`, () => {
+      const m = M.uygulamaMetni(f)
+      const muayeneler = [
+        { seansId: 's1', notId: 'n1', baslangic: '2026-10-07T20:30:00Z', durum: 'onayli' as const },
+        { seansId: 's2', notId: 'n2', baslangic: '2026-10-08T05:00:00Z', durum: 'taslak' as const },
+        { seansId: 's3', notId: null, baslangic: '2026-10-08T06:00:00Z', durum: 'notsuz' as const },
+      ]
+      const html = cerceve(f, 'hastalar', React.createElement(Hastalar.HastaDosyasiGorunumu, { m, hasta: HASTA, muayeneler, bugun: new Date('2026-10-08T12:00:00Z') }))
+      const g = gorunurMetin(html)
+      for (const x of [m.hasta.baslik, 'QA Karimova Dilnoza Rustam qizi', '07.03.2021', m.hasta.yas, '5', m.yeniHasta.kadin, '+998 90 000 00 01', m.diller.uz, '00000000000001', m.hasta.notlar, m.hasta.taslaklar, m.durum.onayli, m.durum.taslak, '08.10.2026']) assert.ok(g.includes(x), x)
+      assert.equal(html.includes(`href="/visit?hasta=${HASTA.id}"`), Kabuk.HAZIR.muayene)
+      ekranTemiz(html, `/patient (${f})`)
+      const bos = gorunurMetin(cerceve(f, 'hastalar', React.createElement(Hastalar.HastaDosyasiGorunumu, { m, hasta: { ...HASTA, otaIsmi: '', dogumTarihi: '', cinsiyet: '', telefon: '', ulusalKimlik: '' }, muayeneler: [] })))
+      assert.ok(bos.includes(m.hasta.notYok)); assert.ok(!bos.includes(m.hasta.yas)); assert.ok(!bos.includes(m.hasta.taslaklar))
+    })
+  }
+
+  it('age: whole years, months under two years, nothing without a birth date', () => {
+    const m = M.uygulamaMetni('uz-Latn')
+    const bugun = new Date('2026-10-08T12:00:00Z')
+    assert.equal(Hastalar.yasYaz(m, '2021-03-07', bugun), '5')
+    assert.equal(Hastalar.yasYaz(m, '2026-03-09', bugun), '6 oy')
+    assert.equal(Hastalar.yasYaz(m, '2024-10-09', bugun), '23 oy')
+    assert.equal(Hastalar.yasYaz(m, '2024-10-08', bugun), '2')
+    assert.equal(Hastalar.yasYaz(M.uygulamaMetni('ru'), '2026-03-09', bugun), '6 мес.')
+    assert.equal(Hastalar.yasYaz(m, '', bugun), ''); assert.equal(Hastalar.yasYaz(m, '2027-01-01', bugun), '')
+  })
 
   it('settings read the account as two languages and one script', () => {
     assert.deepEqual(Ayarlar.ayarDurumu({ dil: 'ru', notDili: 'uz-Cyrl' }), { arayuz: 'ru', not: 'uz', yazi: 'Cyrl' })
@@ -298,5 +377,129 @@ describe('Uzbekistan application: language choices API', () => {
 
   it('home: today\'s visits of a doctor with none', async () => {
     assert.deepEqual(await cevap(await bugun.GET(istek('/api/ulke/bugun', 'jeton-a'))), { s: 200, j: { muayeneler: [] } })
+  })
+})
+
+describe('Uzbekistan application: patients API and patient isolation', () => {
+  let hastalar: typeof import('../../../app/api/ulke/hastalar/route.ulke')
+  let hasta: typeof import('../../../app/api/ulke/hasta/route.ulke')
+  let bugun: typeof import('../../../app/api/ulke/bugun/route.ulke')
+  let NextRequest: typeof import('next/server').NextRequest
+  before(async () => {
+    hastalar = await import('../../../app/api/ulke/hastalar/route.ulke')
+    hasta = await import('../../../app/api/ulke/hasta/route.ulke')
+    bugun = await import('../../../app/api/ulke/bugun/route.ulke')
+    NextRequest = (await import('next/server')).NextRequest
+  })
+  beforeEach(sifirla)
+
+  const istek = (yol: string, jeton?: string, govde?: unknown) => new NextRequest(`https://uz.notya.test${yol}`, {
+    method: govde === undefined ? 'GET' : 'POST',
+    headers: { ...(jeton ? { authorization: `Bearer ${jeton}` } : {}), 'content-type': 'application/json' },
+    ...(govde === undefined ? {} : { body: typeof govde === 'string' ? govde : JSON.stringify(govde) }),
+  })
+  const cevap = async (r: Response) => { const j = await r.json(); temiz(JSON.stringify(j), 'API answer'); return { s: r.status, j } }
+  const ekle = async (jeton: string, g: Record<string, unknown>) => cevap(await hastalar.POST(istek('/api/ulke/hastalar', jeton, g)))
+  const liste = async (jeton: string, q = '') => (await cevap(await hastalar.GET(istek(`/api/ulke/hastalar${q ? `?q=${encodeURIComponent(q)}` : ''}`, jeton)))).j.hastalar as { id: string; ad: string }[]
+  const KARIMOVA = { ad: '  QA Karimova   Dilnoza ', otaIsmi: 'Rustam qizi', dogumTarihi: '2021-03-07', cinsiyet: 'female', telefon: '+998 90 000 00 01', dil: 'uz', ulusalKimlik: '00000000000001' }
+  const IVANOV = { ad: 'QA Иванов Пётр', otaIsmi: 'Сергеевич', dogumTarihi: '1980-12-31', cinsiyet: 'male', telefon: '', dil: 'ru', ulusalKimlik: '' }
+
+  it('create and read back: every field, the patient\'s language per patient, nothing Turkish stored', async () => {
+    const r = await ekle('jeton-a', KARIMOVA)
+    assert.equal(r.s, 200)
+    const { id, olusturuldu, ...alanlar } = r.j.hasta
+    assert.match(id, /^[0-9a-f-]{36}$/); assert.ok(olusturuldu)
+    assert.deepEqual(alanlar, { ad: 'QA Karimova Dilnoza', otaIsmi: 'Rustam qizi', dogumTarihi: '2021-03-07', cinsiyet: 'female', telefon: '+998 90 000 00 01', dil: 'uz', ulusalKimlik: '00000000000001' })
+    assert.equal((await ekle('jeton-a', IVANOV)).j.hasta.dil, 'ru')
+    const dosya = await cevap(await hasta.GET(istek(`/api/ulke/hasta?id=${id}`, 'jeton-a')))
+    assert.equal(dosya.s, 200)
+    assert.deepEqual({ ...dosya.j.hasta, olusturuldu: undefined }, { ...r.j.hasta, olusturuldu: undefined })
+    assert.deepEqual(dosya.j.muayeneler, [])
+    // In the database: the doctor is the caller, personal data is encrypted, and no Turkish identity number exists.
+    const [satir] = vt.tablo('patients')
+    assert.equal(satir.doctor_id, A)
+    assert.ok(!('tc_kimlik_hash' in satir) || satir.tc_kimlik_hash == null)
+    const ham = JSON.stringify(vt.tablolar)
+    for (const acik of ['Karimova', 'Rustam', '2021-03-07', '+998 90 000 00 01', '00000000000001', 'Иванов', 'Сергеевич']) assert.ok(!ham.includes(acik), `stored in the clear: ${acik}`)
+    const [ek] = vt.tablo('hasta_ulke_bilgisi')
+    assert.deepEqual([ek.patient_id, ek.doctor_id, ek.dil], [id, A, 'uz'])
+  })
+
+  it('only the name and the patient\'s language are required; the identity number is not validated', async () => {
+    const r = await ekle('jeton-a', { ad: 'QA Yolgʻiz Ism', dil: 'uz', ulusalKimlik: 'AB-12 / yoʻq' })
+    assert.equal(r.s, 200)
+    assert.deepEqual([r.j.hasta.otaIsmi, r.j.hasta.dogumTarihi, r.j.hasta.cinsiyet, r.j.hasta.telefon, r.j.hasta.ulusalKimlik], ['', '', '', '', 'AB-12 / yoʻq'])
+    const vakalar: [Record<string, unknown> | string, string][] = [
+      [{ ...KARIMOVA, ad: '' }, 'ad'], [{ ...KARIMOVA, ad: 'x' }, 'ad'], [{ ...KARIMOVA, ad: 12345 }, 'ad'], ['not json', 'ad'],
+      [{ ...KARIMOVA, dogumTarihi: '2021-02-30' }, 'dogumTarihi'], [{ ...KARIMOVA, dogumTarihi: '07.03.2021' }, 'dogumTarihi'], [{ ...KARIMOVA, dogumTarihi: '2999-01-01' }, 'dogumTarihi'], [{ ...KARIMOVA, dogumTarihi: '1700-01-01' }, 'dogumTarihi'],
+      [{ ...KARIMOVA, cinsiyet: 'Kadin' }, 'cinsiyet'],
+      [{ ...KARIMOVA, dil: '' }, 'dil'], [{ ...KARIMOVA, dil: 'tr' }, 'dil'], [{ ...KARIMOVA, dil: 'uz-Latn' }, 'dil'], [{ ...KARIMOVA, dil: undefined }, 'dil'],
+    ]
+    for (const [g, alan] of vakalar) assert.deepEqual(await ekle('jeton-a', g as Record<string, unknown>), { s: 400, j: { code: 'GECERSIZ', alan } }, JSON.stringify(g).slice(0, 80))
+    assert.equal(vt.tablo('patients').length, 1)
+  })
+
+  it('find: by name in either script, by patronymic, by phone digits; sorted by name', async () => {
+    await ekle('jeton-a', KARIMOVA); await ekle('jeton-a', IVANOV)
+    await ekle('jeton-a', { ad: 'QA Gʻulomov Hasan', dil: 'uz', telefon: '90 555 44 33' })
+    // Order is the collation of the pack's locale (uz-Latn-UZ): in the Uzbek Latin alphabet Gʻ comes after Z.
+    assert.deepEqual((await liste('jeton-a')).map((h) => h.ad), ['QA Karimova Dilnoza', 'QA Gʻulomov Hasan', 'QA Иванов Пётр'])
+    const bul = async (q: string) => (await liste('jeton-a', q)).map((h) => h.ad)
+    for (const q of ['karimova', 'КАРИМОВА', 'Каримова Дилноза', 'dilnoza karim', 'rustam']) assert.deepEqual(await bul(q), ['QA Karimova Dilnoza'], q)
+    for (const q of ['Иванов', 'ivanov', 'Ivanov Pyotr', 'сергеевич']) assert.deepEqual(await bul(q), ['QA Иванов Пётр'], q)
+    for (const q of ['Gʻulomov', "G'ulomov", 'Gulomov', 'Ғуломов', 'Ғуломов Ҳасан', 'Xasan', 'Khasan']) assert.deepEqual(await bul(q), ['QA Gʻulomov Hasan'], q)
+    assert.deepEqual(await bul('555 44'), ['QA Gʻulomov Hasan'])
+    assert.deepEqual(await bul('0000 01'), ['QA Karimova Dilnoza'])
+    assert.deepEqual(await bul('zzz'), [])
+  })
+
+  it('ISOLATION: a doctor lists, finds and opens only their own patients — in both directions', async () => {
+    const a = (await ekle('jeton-a', KARIMOVA)).j.hasta
+    const b = (await ekle('jeton-b', { ...IVANOV, ad: 'QA GIZLI-B Иванов' })).j.hasta
+    for (const [jeton, kendi, yabanci] of [['jeton-a', a, b], ['jeton-b', b, a]] as const) {
+      assert.deepEqual((await liste(jeton)).map((h) => h.id), [kendi.id], jeton)
+      for (const q of ['QA', 'karimova', 'иванов', 'GIZLI', '0000', '998']) {
+        const idler = (await liste(jeton, q)).map((h) => h.id)
+        assert.ok(!idler.includes(yabanci.id), `${jeton} found the other doctor's patient with "${q}"`)
+      }
+      // Positive control: the route does read a file — the caller's own.
+      assert.equal((await cevap(await hasta.GET(istek(`/api/ulke/hasta?id=${kendi.id}`, jeton)))).s, 200)
+      // The other doctor's patient: the same answer as an id that does not exist, and nothing of the patient in it.
+      const r = await hasta.GET(istek(`/api/ulke/hasta?id=${yabanci.id}`, jeton))
+      const govde = await r.text()
+      assert.equal(r.status, 404); assert.equal(govde, '{"code":"NOT_FOUND"}')
+      assert.equal(await (await hasta.GET(istek('/api/ulke/hasta?id=30000000-0000-4000-8000-00000000dead', jeton))).text(), govde)
+    }
+    for (const id of ['', 'abc', "' or 1=1 --", `${a.id},${b.id}`]) assert.equal((await hasta.GET(istek(`/api/ulke/hasta?id=${encodeURIComponent(id)}`, 'jeton-b'))).status, 404, id)
+  })
+
+  it('ISOLATION: a body cannot create a patient for another doctor, and every patient query carries the caller\'s id', async () => {
+    const r = await ekle('jeton-a', { ...KARIMOVA, doctor_id: B, doktorId: B, id: '30000000-0000-4000-8000-000000000bad', patient_id: 'x' })
+    assert.equal(r.s, 200)
+    assert.deepEqual(vt.tablo('patients').map((s) => s.doctor_id), [A])
+    assert.notEqual(r.j.hasta.id, '30000000-0000-4000-8000-000000000bad')
+    assert.deepEqual(await liste('jeton-b'), [])
+    await liste('jeton-a', 'karim'); await hasta.GET(istek(`/api/ulke/hasta?id=${r.j.hasta.id}`, 'jeton-a')); await bugun.GET(istek('/api/ulke/bugun', 'jeton-a'))
+    const hastaTablolari = new Set(['patients', 'hasta_ulke_bilgisi', 'sessions', 'notes'])
+    const sorgular = vt.sorgular.filter((q) => hastaTablolari.has(q.tablo) && q.islem !== 'insert')
+    assert.ok(sorgular.length >= 6, 'the routes did not run')
+    for (const q of sorgular) assert.ok(q.filtreler.some((f) => f === `doctor_id=eq.${A}` || f === `doctor_id=eq.${B}`), `a query on ${q.tablo} without the doctor: ${JSON.stringify(q)}`)
+  })
+
+  it('a patient whose language record cannot be written is not saved at all', async () => {
+    vt.boz.yaz.add('hasta_ulke_bilgisi')
+    // The stand-in fails every write on the table it is told to break; the clean-up delete is on `patients`.
+    assert.deepEqual(await ekle('jeton-a', KARIMOVA), { s: 500, j: { code: 'BASARISIZ' } })
+    assert.deepEqual(vt.tablo('patients'), [])
+  })
+
+  it('no session, another country\'s account: "no session" on every patient route, nothing read', async () => {
+    const a = (await ekle('jeton-a', KARIMOVA)).j.hasta
+    for (const jeton of [undefined, 'jeton-olmayan', 'jeton-tr', 'jeton-damgasiz']) {
+      for (const r of [await hastalar.GET(istek('/api/ulke/hastalar', jeton)), await hastalar.POST(istek('/api/ulke/hastalar', jeton, KARIMOVA)), await hasta.GET(istek(`/api/ulke/hasta?id=${a.id}`, jeton))]) {
+        assert.deepEqual(await cevap(r), { s: 401, j: { code: 'OTURUM_YOK' } }, String(jeton))
+      }
+    }
+    assert.equal(vt.tablo('patients').length, 1)
   })
 })

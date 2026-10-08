@@ -5,7 +5,7 @@
  * Replaces the holding page for accounts of a country where the application is switched on.
  */
 import React, { useEffect, useState } from 'react'
-import { Cerceve, Hata, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
+import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import type { UygulamaMetni } from './metinler'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -30,8 +30,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata }: { m: UygulamaMetni; a
         <p className="uza-ust-yazi">{m.bugun.selam}</p>
         <h1 className="uza-h1">{ad}</h1>
         <div className="uza-eylemler">
-          <a className="uza-dugme" href={YOL.muayene}>{m.bugun.muayeneBaslat}</a>
-          <a className="uza-dugme uza-dugme-cizgi" href={YOL.yeniHasta}>{m.bugun.yeniHasta}</a>
+          {HAZIR.muayene ? <a className="uza-dugme" href={YOL.muayene}>{m.bugun.muayeneBaslat}</a> : null}
+          <a className={HAZIR.muayene ? 'uza-dugme uza-dugme-cizgi' : 'uza-dugme'} href={YOL.yeniHasta}>{m.bugun.yeniHasta}</a>
         </div>
       </section>
       <section className="uza-kart">
@@ -46,7 +46,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata }: { m: UygulamaMetni; a
         ) : (
           <ul className="uza-liste">
             {muayeneler.map((v) => {
-              const hedef = v.notId ? `${YOL.muayene}?not=${v.notId}` : v.hastaId ? `${YOL.hasta}?id=${v.hastaId}` : null
+              const hedef = v.notId && HAZIR.muayene ? `${YOL.muayene}?not=${v.notId}` : v.hastaId ? `${YOL.hasta}?id=${v.hastaId}` : null
               const icerik = (
                 <>
                   <span className="uza-saat">{saatYaz(v.baslangic)}</span>

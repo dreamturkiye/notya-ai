@@ -63,7 +63,7 @@ export const UZ_PAKETI: UlkePaketi = {
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient'],
     apiOnEkleri: ['/api/ulke/'],
   },
   aramaMotorlarinaGizli: true,

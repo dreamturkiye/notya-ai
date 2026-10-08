@@ -18,6 +18,11 @@ import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/ch
 import { uygulamaMetni, uzUygulamaDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
 
 export const YOL = UYGULAMA_EKRANLARI
+/**
+ * Screens that exist in this build. A link to a screen that has not landed yet is not rendered at all — an address
+ * that answers "not found" is never offered. (The route test proves every `true` here has its page.)
+ */
+export const HAZIR = { muayene: false } as const
 const GIRIS = '/login'
 
 export type Hesap = { dil: UzUygulamaDili; notDili: UzUygulamaDili; ad: string }

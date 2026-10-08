@@ -295,8 +295,8 @@ describe('an Uzbekistan build: routes', () => {
     if (izin === 'hepsi') return
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
-    assert.deepEqual(d.sayfalar, ['/', '/login', '/settings', '/signup', '/start', '/today', '/welcome'])
-    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler'])
+    assert.deepEqual(d.sayfalar, ['/', '/login', '/patient', '/patients', '/patients/new', '/settings', '/signup', '/start', '/today', '/welcome'])
+    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
     assert.deepEqual(d.ozel, ['/error', '/global-error', '/layout', '/not-found'])
@@ -321,13 +321,13 @@ describe('an Uzbekistan build: routes', () => {
 
   it('middleware: listed paths pass with "do not index"; every other path of the application is 404 before any screen', () => {
     const git = (yol: string) => ara.middleware(new NextRequest(`https://uz.notya.test${yol}`))
-    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/_next/static/chunks/x.js']) {
+    for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients?q=karim', '/patients/new', '/patient?id=x', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/api/ulke/hastalar?q=a', '/api/ulke/hasta?id=x', '/_next/static/chunks/x.js']) {
       const r = git(yol)
       assert.equal(r.status, 200, yol)
       assert.match(r.headers.get('x-robots-tag') || '', /noindex, nofollow/, yol)
       assert.equal(r.headers.get('x-frame-options'), 'DENY', yol)
     }
-    const kapali = ['/doktor', '/klinik', '/home', '/kvkk', '/giris', '/giris/doktor', '/kayit', '/onboarding', '/dashboard', '/dashboard/doktor', '/dashboard/klinik', '/asistan', '/doktor-tools', '/doktor-tools/erecete', '/doktor-tools/enabiz', '/klinik-tools', '/portal/demo', '/intake/x', '/install', '/session/new', '/login/x', '/welcome/x', '/api', '/api/users/me', '/api/users/profile', '/api/doktor/hastalar', '/api/notes', '/api/sessions/start', '/api/cron/kvkk-imha', '/api/billing/webhook', '/api/ulkeler', '/manifest.json', '/sw.js', '/sitemap.xml', '/dahiliye-final-audit.html', '/sagligim/a.png', '/icon-192.png']
+    const kapali = ['/doktor', '/klinik', '/home', '/kvkk', '/giris', '/giris/doktor', '/kayit', '/onboarding', '/dashboard', '/dashboard/doktor', '/dashboard/klinik', '/asistan', '/doktor-tools', '/doktor-tools/erecete', '/doktor-tools/enabiz', '/klinik-tools', '/portal/demo', '/intake/x', '/install', '/session/new', '/login/x', '/welcome/x', '/patient/x', '/patients/x', '/visit', '/dashboard/doktor/hastalar', '/api/doktor/hastalar/x', '/api', '/api/users/me', '/api/users/profile', '/api/doktor/hastalar', '/api/notes', '/api/sessions/start', '/api/cron/kvkk-imha', '/api/billing/webhook', '/api/ulkeler', '/manifest.json', '/sw.js', '/sitemap.xml', '/dahiliye-final-audit.html', '/sagligim/a.png', '/icon-192.png']
     for (const yol of kapali) {
       const r = git(yol)
       assert.equal(r.status, 404, yol)
