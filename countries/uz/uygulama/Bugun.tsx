@@ -6,6 +6,7 @@
  */
 import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
+import { AsistanKarti } from './Asistan'
 import type { UygulamaMetni } from './metinler'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -23,7 +24,11 @@ export function AramaFormu({ m, q, hedef }: { m: UygulamaMetni; q?: string; /** 
   )
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata }: { m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean }) {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol }: {
+  m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
+  /** NOTYA-UZ-BRANSLAR-01: the account's role — decides which assistant is shown. No role = the neutral assistant. */
+  rol?: string | null
+}) {
   return (
     <>
       <section className="uza-karsilama">
@@ -34,6 +39,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata }: { m: UygulamaMetni; a
           <a className={HAZIR.muayene ? 'uza-dugme uza-dugme-cizgi' : 'uza-dugme'} href={YOL.yeniHasta}>{m.bugun.yeniHasta}</a>
         </div>
       </section>
+      <AsistanKarti m={m} rol={rol} />
       <section className="uza-kart">
         <AramaFormu m={m} />
         <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
@@ -82,7 +88,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} />
     </Cerceve>
   )
 }

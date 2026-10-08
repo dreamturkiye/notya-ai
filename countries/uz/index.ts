@@ -13,6 +13,7 @@ import {
   UZ_RU_BEKLETME, UZ_RU_DAVETLI_KAYIT, UZ_RU_GIRIS, UZ_RU_HESAP, UZ_RU_SISTEM,
 } from './metinler'
 import { uzAramaKatla } from './arama'
+import { UZ_ROLLER } from './klinik/rolAdlari'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -84,5 +85,8 @@ export const UZ_PAKETI: UlkePaketi = {
     // The patient's own language, recorded per patient (script is the doctor's choice, not the patient's).
     hastaDilleri: ['uz', 'ru'],
     aramaKatla: uzAramaKatla,
+    // NOTYA-UZ-BRANSLAR-01: the 40 roles an account chooses from at first login (30 doctor specialties, 5 clinic
+    // doctors, 5 clinic allied professions). Keys only; the names are in ./klinik/rolAdlari.ts.
+    roller: UZ_ROLLER,
   },
 }

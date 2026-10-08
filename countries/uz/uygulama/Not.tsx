@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Bilgi, Hata, Secim, tarihYaz, saatYaz, YOL, type Uygulama } from './Kabuk'
 import { tamAd } from './Hastalar'
 import { KonusmaBildirimleri, konusmaDiliAdi, sablonAdi, type MuayeneDetayi } from './Muayene'
+import { asistanAdi } from './Asistan'
 import type { UygulamaMetni, UzUygulamaDili } from './metinler'
 
 export type NotIcerigi = { s: string; o: string; a: string; p: string }
@@ -63,6 +64,8 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
           <dt>{m.muayene.sablon}</dt><dd>{sablonAdi(m, v.sablon)}</dd>
           {dil ? <><dt>{m.muayene.taninanDil}</dt><dd>{dil}</dd></> : null}
           <dt>{n.notDili}</dt><dd>{notDiliAdi(m, not.onayli ? not.dil : aktifDil)}</dd>
+          {/* NOTYA-UZ-BRANSLAR-01: the assistant of the template the visit was recorded with — not of whatever role the account has today. */}
+          {not.onayli ? null : <><dt>{m.asistan.qoralama}</dt><dd data-alan="asistan-ad">{asistanAdi(m, v.sablon)}</dd></>}
           {not.onayli && not.onayTarihi ? <><dt>{m.durum.onayli}</dt><dd>{tarihYaz(not.onayTarihi)} {saatYaz(not.onayTarihi)}</dd></> : null}
         </dl>
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>

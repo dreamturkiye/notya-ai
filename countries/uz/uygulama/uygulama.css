@@ -103,3 +103,6 @@ a.uza-satir:hover { background: rgba(47, 67, 52, 0.04); border-radius: 10px; }
 .uza-transkript { margin-top: 14px; font-size: 14px; color: var(--uza-soluk); }
 .uza-transkript summary { cursor: pointer; font-weight: 600; color: var(--uza-cam); }
 .uza-transkript p { white-space: pre-wrap; margin-top: 8px; }
+/* NOTYA-UZ-BRANSLAR-01 — the assistant's name on the home screen; the role picker is a plain select. */
+.uza-asistan-ad { font-family: var(--uza-serif); font-weight: 560; font-size: 1.25rem; line-height: 1.25; }
+select.uza-girdi { appearance: auto; }

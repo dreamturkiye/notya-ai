@@ -171,6 +171,12 @@ export type UygulamaAyarlari = {
    * dropped, the country's other script mapped onto one. Pure. Omitted = plain lower case.
    */
   aramaKatla?: (ham: string) => string
+  /**
+   * NOTYA-UZ-BRANSLAR-01 — ROLES an account may work as in this country (doctor specialties, clinic roles): internal
+   * keys, never shown; their names are the pack's text. Asked once at first login, stored per account
+   * (lib/ulke/uygulama/rol.ts). Omitted = the country asks for no role, exactly as before roles existed.
+   */
+  roller?: readonly string[]
 }
 
 // ───────────────────────── pages a pack brings itself (countries/active/sayfalar) ─────────────────────────

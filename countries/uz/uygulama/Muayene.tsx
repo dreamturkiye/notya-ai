@@ -25,6 +25,7 @@ import { AramaFormu } from './Bugun'
 import { Bilgi, Cerceve, Hata, Secim, tarihYaz, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
+import { asistanAdi } from './Asistan'
 import type { UygulamaMetni } from './metinler'
 
 export type KonusmaOzeti = { dil: string; dilKesin: boolean; ikinciGecis: boolean; dusukGuven: boolean }
@@ -102,16 +103,19 @@ export function HastaSecGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
 
 export type KayitDurumu = 'hazir' | 'kayit' | 'yukleniyor' | 'isleniyor'
 
-export function KayitGorunumu({ m, hasta, sablon, setSablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec }: {
+export function KayitGorunumu({ m, hasta, sablon, setSablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol }: {
   m: UygulamaMetni; hasta: Pick<HastaKaydi, 'id' | 'ad' | 'otaIsmi'>; sablon: UzSablon; setSablon: (s: UzSablon) => void
   riza: boolean; setRiza: (r: boolean) => void; durum: KayitDurumu; sure: number; hataKodu: string | null
   baslat: () => void; durdur: () => void; vazgec: () => void
+  /** NOTYA-UZ-BRANSLAR-01: the account's role — names the assistant that will prepare the note. No role = the neutral assistant. */
+  rol?: string | null
 }) {
   const v = m.muayene
   return (
     <section className="uza-kart uza-dar">
       <p className="uza-ust-yazi">{v.baslik}</p>
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
+      <p className="uza-ipucu" data-alan="asistan">{m.asistan.qayd}: <span data-alan="asistan-ad">{asistanAdi(m, rol)}</span></p>
       {durum === 'hazir' ? (
         <div className="uza-form">
           <Secim etiket={v.sablon} ad="sablon" deger={sablon} sec={setSablon} secenekler={UZ_ACIK_SABLONLAR.map((s) => ({ deger: s, ad: sablonAdi(m, s) }))} />
@@ -245,7 +249,7 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
       </section>
     )
   }
-  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} setSablon={setSablon} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} />
+  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} setSablon={setSablon} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
 }
 
 // ───────────────────────── a recorded visit ─────────────────────────
