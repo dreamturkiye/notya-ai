@@ -6,7 +6,8 @@
  * useUygulama(ekran)   resolves the browser session against the deployment's OWN Supabase project, asks the server
  *                      who the account is (/api/ulke/hesap) and in which language it reads. No session, or an
  *                      account that does not belong to this country → back to /login. An account that has not
- *                      answered the language question is sent to /start before anything else.
+ *                      answered the language question, or has not chosen its role (NOTYA-UZ-BRANSLAR-01), is sent
+ *                      to /start before anything else.
  * Cerceve              the visible frame (word mark, three links, log out). Pure: it renders in a plain test.
  *
  * Every sentence comes from the pack's catalogue (./metinler) in the ACCOUNT's language, never the browser's.
@@ -16,6 +17,7 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
+import { uzRolMu } from '../klinik/rolAdlari'
 import { uygulamaMetni, uzUygulamaDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
 
 /**
@@ -31,7 +33,13 @@ export const HAZIR = { muayene: true } as const
 const GIRIS = ulkeYolu('/login')
 const BEKLETME = ulkeYolu('/welcome')
 
-export type Hesap = { dil: UzUygulamaDili; notDili: UzUygulamaDili; ad: string }
+export type Hesap = {
+  dil: UzUygulamaDili; notDili: UzUygulamaDili; ad: string
+  /** The role the account works as (a key of ../klinik/rolAdlari.ts), or null while it has not chosen one. */
+  rol: string | null
+  /** false = the first-login language question is still to be answered. */
+  dilSoruldu: boolean
+}
 export type ApiCevabi = { ok: boolean; status: number; j: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
 /** `yol` is a ROUTE of the API ('/api/ulke/hesap'); the call adds the country's path prefix. */
 export type Api = (yol: string, secenek?: { method?: 'GET' | 'POST' | 'PATCH'; govde?: unknown }) => Promise<ApiCevabi>
@@ -85,9 +93,14 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       if (iptal) return
       if (!r.ok) { await cikis(); return }
       if (r.j.durum !== 'uygulama') { window.location.replace(BEKLETME); return }
-      if (!r.j.dilSoruldu && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
-      if (r.j.dilSoruldu && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
-      setHesap({ dil: uzUygulamaDili(r.j.dil), notDili: uzUygulamaDili(r.j.notDili), ad: String(r.j.ad || '') })
+      // The role: asked after the language. A value that is not one of this country's roles counts as "not chosen".
+      let rol: string | null = null
+      try { const rr = await api('/api/ulke/rol'); if (rr.ok && uzRolMu(rr.j.rol)) rol = rr.j.rol } catch { return }
+      if (iptal) return
+      const dilSoruldu = Boolean(r.j.dilSoruldu)
+      if ((!dilSoruldu || !rol) && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
+      if (dilSoruldu && rol && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
+      setHesap({ dil: uzUygulamaDili(r.j.dil), notDili: uzUygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu })
     })()
     return () => { iptal = true }
   }, [api, cikis, ekran])

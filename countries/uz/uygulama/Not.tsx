@@ -9,26 +9,46 @@
  * as text and offers nothing that could change it; the server refuses a change as well.
  *
  * When the recording was heard with low confidence, a plain notice asks the doctor to check the note carefully.
+ *
+ * NOTYA-UZ-BRANSLAR-01 — ROLE FIELDS. A note written with a role's template has that role's fields under the four
+ * sections. LEAK RULE on the screen: a field is drawn only when BOTH the server lists its key for this note AND the
+ * pack's template for this visit owns it (../klinik/notSablonlari.ts → uzSablonAlanlari) — a key of another role is
+ * not drawn even if it arrives. The label is the pack's, in the account's form; the key is never shown.
  */
 import React, { useCallback, useEffect, useState } from 'react'
 import { Bilgi, Hata, Secim, tarihYaz, saatYaz, YOL, type Uygulama } from './Kabuk'
 import { tamAd } from './Hastalar'
 import { KonusmaBildirimleri, konusmaDiliAdi, sablonAdi, type MuayeneDetayi } from './Muayene'
-import type { UygulamaMetni, UzUygulamaDili } from './metinler'
+import { asistanAdi } from './Asistan'
+import { UZ_BOLUMLER, uzAlanAdi, uzAlanTanimi, uzBolumAdi, uzSablonAlanlari, type UzBolum } from '../klinik/notSablonlari'
+import { metninDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
 
-export type NotIcerigi = { s: string; o: string; a: string; p: string }
+export type NotIcerigi = { s: string; o: string; a: string; p: string; /** Role fields: key → text. */ alanlar?: Record<string, string> }
 export type NotDetayi = {
   notId: string; seansId: string; onayli: boolean; onayTarihi: string | null
   dil: UzUygulamaDili; icerik: NotIcerigi
   ikinci: { dil: UzUygulamaDili; icerik: NotIcerigi } | null
   yenidenYazilabilir: UzUygulamaDili | null
+  /** Field keys the server allows for this note, in order. */
+  alanAnahtarlari?: readonly string[]
   muayene: MuayeneDetayi
 }
 export type NotIslemi = 'kaydediliyor' | 'cevriliyor' | 'onaylaniyor' | null
 /** What the last action answered: a code of the note API, or one of the two good outcomes. */
 export type NotBildirimi = 'KAYDEDILDI' | 'ONAYLANDI' | 'KAYDEDILEMEDI' | 'ONAYLANAMADI' | 'YENIDEN_YAZILAMADI' | 'ONAYLI' | 'BOS' | 'BAGLANTI' | null
 
-const BOLUMLER = ['s', 'o', 'a', 'p'] as const
+const BOLUMLER = UZ_BOLUMLER
+
+/**
+ * The fields this note shows, per section: what the server lists AND the visit's template owns. Both, or nothing.
+ */
+export function notAlanlari(not: Pick<NotDetayi, 'alanAnahtarlari' | 'muayene'>): Record<UzBolum, string[]> {
+  const v = not.muayene
+  const sablonun = new Set(uzSablonAlanlari(v.sablon, { dogumTarihi: v.hasta?.dogumTarihi, muayeneTarihi: v.baslangic.slice(0, 10) }))
+  const cikti: Record<UzBolum, string[]> = { s: [], o: [], a: [], p: [] }
+  for (const k of new Set(not.alanAnahtarlari ?? [])) { const t = sablonun.has(k) ? uzAlanTanimi(k) : null; if (t) cikti[t.bolum].push(k) }
+  return cikti
+}
 /** A language of notes, named in the screen's language (the script is not named: both Uzbek forms are "Uzbek"). */
 export const notDiliAdi = (m: UygulamaMetni, dil: string): string => (dil === 'ru' ? m.diller.ru : m.diller.uz)
 
@@ -51,6 +71,9 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
   const mesgul = islem !== null
   const { iyi, kotu } = bildirimMetni(m, bildirim)
   const taslaklar = not.ikinci ? [not.dil, not.ikinci.dil] : [not.dil]
+  const ekranDili = metninDili(m)
+  const alanlar = notAlanlari(not)
+  const bolumBasligi = (b: UzBolum) => uzBolumAdi(v.sablon, b, ekranDili) ?? n[b]
   return (
     <>
       <section className="uza-kart">
@@ -63,6 +86,8 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
           <dt>{m.muayene.sablon}</dt><dd>{sablonAdi(m, v.sablon)}</dd>
           {dil ? <><dt>{m.muayene.taninanDil}</dt><dd>{dil}</dd></> : null}
           <dt>{n.notDili}</dt><dd>{notDiliAdi(m, not.onayli ? not.dil : aktifDil)}</dd>
+          {/* NOTYA-UZ-BRANSLAR-01: the assistant of the template the visit was recorded with — not of whatever role the account has today. */}
+          {not.onayli ? null : <><dt>{m.asistan.qoralama}</dt><dd data-alan="asistan-ad">{asistanAdi(m, v.sablon)}</dd></>}
           {not.onayli && not.onayTarihi ? <><dt>{m.durum.onayli}</dt><dd>{tarihYaz(not.onayTarihi)} {saatYaz(not.onayTarihi)}</dd></> : null}
         </dl>
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -76,8 +101,14 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
         {not.onayli ? (
           BOLUMLER.map((b) => (
             <div className="uza-not-bolum" key={b}>
-              <h2 className="uza-h2">{n[b]}</h2>
+              <h2 className="uza-h2">{bolumBasligi(b)}</h2>
               <p className="uza-not-metin" data-bolum={b}>{not.icerik[b]}</p>
+              {alanlar[b].filter((k) => (not.icerik.alanlar?.[k] ?? '').trim()).map((k) => (
+                <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
+                  <h3 className="uza-alt-baslik">{uzAlanAdi(k, ekranDili)}</h3>
+                  <p className="uza-not-metin">{not.icerik.alanlar?.[k]}</p>
+                </div>
+              ))}
             </div>
           ))
         ) : (
@@ -90,8 +121,14 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
             ) : null}
             {BOLUMLER.map((b) => (
               <div className="uza-alan" key={b}>
-                <label className="uza-etiket" htmlFor={`uza-not-${b}`}>{n[b]}</label>
+                <label className="uza-etiket" htmlFor={`uza-not-${b}`}>{bolumBasligi(b)}</label>
                 <textarea id={`uza-not-${b}`} name={b} className="uza-girdi" lang={aktifDil} value={icerik[b]} onChange={(e) => setIcerik({ ...icerik, [b]: e.target.value })} disabled={mesgul} />
+                {alanlar[b].map((k) => (
+                  <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
+                    <label className="uza-etiket uza-alt-etiket" htmlFor={`uza-alan-${k}`}>{uzAlanAdi(k, ekranDili)}</label>
+                    <textarea id={`uza-alan-${k}`} name={`alan-${k}`} className="uza-girdi uza-alt-girdi" rows={2} lang={aktifDil} value={icerik.alanlar?.[k] ?? ''} onChange={(e) => setIcerik({ ...icerik, alanlar: { ...(icerik.alanlar ?? {}), [k]: e.target.value } })} disabled={mesgul} />
+                  </div>
+                ))}
               </div>
             ))}
             <Hata>{kotu}</Hata>
@@ -153,7 +190,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   }
 
   const icerik = metinler[aktifDil] ?? (aktifDil === not.dil ? not.icerik : not.ikinci?.icerik ?? not.icerik)
-  const govde = (dil: UzUygulamaDili) => ({ notId, dil, ...(metinler[dil] ?? not.icerik) })
+  // A note that has fields always sends them (an empty object clears them); a note without fields sends none.
+  const govde = (dil: UzUygulamaDili) => { const i = metinler[dil] ?? not.icerik; return { notId, dil, s: i.s, o: i.o, a: i.a, p: i.p, ...((not.alanAnahtarlari ?? []).length ? { alanlar: i.alanlar ?? {} } : {}) } }
   const kodu = (j: Record<string, unknown>, yedek: NotBildirimi): NotBildirimi => (j.code === 'ONAYLI' ? 'ONAYLI' : j.code === 'BOS' ? 'BOS' : yedek)
 
   async function kaydet() {

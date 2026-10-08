@@ -309,8 +309,26 @@ const A = await sayfaAc(MASA) // doctor A — stays signed in for the rest of th
   await cek(p, 'start-uz-cyrl.png', false)
   await sec(p, 'yazi', 'Latn'); await bekle(150)
   await p.click('button[type=submit]')
+  // NOTYA-UZ-BRANSLAR-01 — the second question, in the language just chosen: what are you? One of 40 roles.
+  await p.waitForSelector('[data-alan=rol-sorusu] select[name=rol]', { timeout: 60000 })
+  const rolSorusu = await p.evaluate(() => ({
+    yol: location.pathname, h1: document.querySelector('h1').innerText, nav: !!document.querySelector('.uza-nav'),
+    gruplar: [...document.querySelectorAll('select[name=rol] optgroup')].map((g) => `${g.label}:${g.children.length}`).join('|'),
+    adlar: [...document.querySelectorAll('select[name=rol] optgroup option')].map((o) => o.textContent),
+  }))
+  kontrol('after the language: "what are you?", in Uzbek Latin, on the same address, with no navigation', rolSorusu.yol === adres('/start') && rolSorusu.h1 === 'Mutaxassisligingiz qaysi?' && !rolSorusu.nav, JSON.stringify(rolSorusu).slice(0, 160))
+  kontrol('40 roles in three groups (30 doctor specialties, 5 clinic doctors, 5 clinic allied professions), by name — never by internal key, no Turkish letter', rolSorusu.gruplar === 'Shifokor mutaxassisligi:30|Klinika shifokori:5|Klinika mutaxassisi:5' && rolSorusu.adlar.includes('Kardiologiya') && rolSorusu.adlar.includes('Diyetolog') && !rolSorusu.adlar.some((a) => /kardiyoloji|diyetisyen|-hastaliklari|-cerrahi/.test(a)) && !TURKCE_HARF.test(rolSorusu.adlar.join(' ')), rolSorusu.gruplar)
+  await p.click('button[type=submit]'); await bekle(400)
+  kontrol('the role question cannot be skipped: without a choice nothing is saved and the page stays', new URL(p.url()).pathname === adres('/start') && (await (await fetch(`${SUPA}/__tablo/hekim_rolu`)).json()).length === 0)
+  await p.select('select[name=rol]', 'pediatri')
+  await cek(p, 'start-role-uz.png', false)
+  await p.click('button[type=submit]')
   await yolda(p, '/today')
   await p.waitForSelector('h1', { timeout: 60000 })
+  const rolSatiri = await (await fetch(`${SUPA}/__tablo/hekim_rolu`)).json()
+  kontrol('the role is stored for this account and for no other', rolSatiri.length === 1 && rolSatiri[0].doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001' && rolSatiri[0].rol === 'pediatri', JSON.stringify(rolSatiri))
+  await p.waitForSelector('[data-alan=asistan-ad]')
+  kontrol('the home shows this role\'s assistant by the owner\'s name, with one neutral line and no biography', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova' && (await metin(p, '[data-alan=asistan-satir]')) === 'Katta hamkasbingiz · Pediatriya' && !/\d+\s*yil|professor|tajriba/i.test(await metin(p, '[data-alan=asistan]')), await metin(p, '[data-alan=asistan]'))
   kontrol('answer saved → the home, in Uzbek Latin', (await govde(p)).includes('Bugungi koʻriklar') && (await metin(p, 'h1')) === 'QA Shifokor Bir')
   const tercih = await (await fetch(`${SUPA}/__tablo/hekim_dil_tercihleri`)).json()
   kontrol('the answer is stored for this account: notes in Uzbek Latin, question answered', tercih.length === 1 && tercih[0].doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001' && tercih[0].not_dili === 'uz-Latn' && !!tercih[0].soruldu_at, JSON.stringify(tercih))
@@ -318,7 +336,7 @@ const A = await sayfaAc(MASA) // doctor A — stays signed in for the rest of th
   await cek(p, 'today-uz.png', false)
   await git(p, '/start')
   await yolda(p, '/today')
-  kontrol('the question is asked once: going back to it returns to the home', true)
+  kontrol('both questions are asked once: going back to them returns to the home', true)
   await git(p, '/welcome')
   await yolda(p, '/today')
   kontrol(`the old holding page address now leads to the home (${adres('/welcome')} → ${adres('/today')})`, true)
@@ -389,7 +407,16 @@ let hastaB = ''
   await p.waitForSelector('h1')
   kontrol('doctor B: first-login question in Russian (the language of the account)', (await metin(p, 'h1')) === 'На каком языке вы работаете?')
   await p.click('button[type=submit]')
+  // NOTYA-UZ-BRANSLAR-01 — B is not a doctor: a clinic allied profession (dietitian), chosen in Russian.
+  await p.waitForSelector('[data-alan=rol-sorusu] select[name=rol]', { timeout: 60000 })
+  kontrol('doctor B: the role question in Russian, with the allied professions as their own group', (await metin(p, 'h1')) === 'Какая у вас специальность?' && (await p.$$eval('select[name=rol] optgroup', (l) => l.map((g) => g.label).join('|'))) === 'Врачебная специальность|Врач клиники|Специалист клиники' && (await p.$eval('select[name=rol] option[value=diyetisyen]', (o) => o.textContent)) === 'Диетолог')
+  await p.select('select[name=rol]', 'diyetisyen')
+  await p.click('button[type=submit]')
   await yolda(p, '/today')
+  await p.waitForSelector('[data-alan=asistan-ad]', { timeout: 60000 })
+  // The Russian form of the owner's name is DERIVED by rule (countries/uz/yozuv.ts) and awaits a native reader.
+  kontrol('B\'s home: the allied role\'s assistant with the profession\'s own title (not "Dr."), in the machine-derived Russian form', (await metin(p, '[data-alan=asistan-ad]')) === 'Диетолог Махлиё Турсунова' && (await metin(p, '[data-alan=asistan-satir]')) === 'Ваш старший коллега · Диетолог', await metin(p, '[data-alan=asistan]'))
+  kontrol('two accounts, two roles, one row each', JSON.stringify((await (await fetch(`${SUPA}/__tablo/hekim_rolu`)).json()).map((r) => r.rol).sort()) === '["diyetisyen","pediatri"]')
   await git(p, '/patients')
   await p.waitForSelector('.uza-bos')
   kontrol('doctor B: an empty patient list — doctor A\'s patient is not in it', (await govde(p)).includes('Пациентов пока нет.') && !(await govde(p)).includes('Karimova'))
@@ -433,6 +460,13 @@ const cagrilar = () => (existsSync(GUNLUK) ? readFileSync(GUNLUK, 'utf8').split(
 const senaryoYaz = (s) => writeFileSync(SENARYO, JSON.stringify(s))
 const tabloOku = async (ad) => (await fetch(`${SUPA}/__tablo/${ad}`)).json()
 const alan = (p, b) => p.$eval(`#uza-not-${b}`, (e) => e.value)
+// NOTYA-UZ-BRANSLAR-01 — a role's fields on the note screen: the labels that are drawn, and one field's text.
+const alanEtiketleri = (p) => p.$$eval('[data-alan-anahtar] label, [data-alan-anahtar] h3', (l) => l.map((e) => e.innerText.trim()))
+const alanDegeri = (p, k) => p.$eval(`#uza-alan-${k}`, (e) => e.value).catch(() => null)
+const anahtarlar = (o) => Object.keys(o || {}).sort().join()
+const PEDIATRI_ALANLARI = 'birth_history,feeding,sleep,development,vaccination_said,weight_height,head_circumference,temperature'
+const KARDIYOLOJI_ALANLARI = 'chest_pain,effort_tolerance,risk_factors,regular_medicines,blood_pressure_pulse,cardiac_exam,ecg,echo'
+const DIYETISYEN_ALANLARI = 'referral_diagnosis,diet_history,food_intolerances,weight_change,weight_height,body_composition,nutrition_plan,nutrition_goals'
 /** From the patient's visit screen: tick consent, record the test tone for a moment, stop, and wait for what opens. */
 async function kayitYap(p) {
   await p.waitForSelector('input[name=riza]')
@@ -462,7 +496,9 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('.uza-liste a.uza-satir')])
   await p.waitForSelector('input[name=riza]')
   kontrol('the visit screen of that patient', new URL(p.url()).searchParams.get('hasta') === hastaA && (await metin(p, 'h1')) === 'QA Karimova Dilnoza Rustam qizi')
-  kontrol('a five-year-old: the pediatric template is preselected; only the two open templates are offered', await p.$eval('input[name=sablon][value=pediatri]', (e) => e.checked) && (await p.$$eval('input[name=sablon]', (l) => l.map((e) => e.value).join())) === 'genel,pediatri')
+  kontrol('the note template is the account\'s role, shown by name — it is not a choice — and the assistant that will prepare the note is named', (await metin(p, '[data-alan=sablon]')) === 'Pediatriya' && !(await p.$('input[name=sablon]')) && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova')
+  const yabanciSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'odyoloji', riza: true } })
+  kontrol('the server refuses another role\'s template for this account', yabanciSablon.s === 400 && yabanciSablon.t === '{"code":"GECERSIZ","alan":"sablon"}', `${yabanciSablon.s} ${yabanciSablon.t}`)
   // CONSENT blocks recording.
   const once = await p.evaluate(() => ({ kapali: document.querySelector('.uza-form button.uza-dugme').disabled, isaretli: document.querySelector('input[name=riza]').checked, ipucu: document.querySelector('#uza-riza-ipucu')?.innerText }))
   kontrol('consent: the box starts unticked and the record button is disabled, with the reason under it', once.kapali && !once.isaretli && once.ipucu === 'Yozishni boshlash uchun rozilikni belgilang.', JSON.stringify(once))
@@ -491,6 +527,17 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   seansYuksek = kayitlar[0]?.session_id || ''
   kontrol('stored with the visit: predicted language and its probability, consent stamp, one pass', kayitlar.length === 1 && kayitlar[0].taninan_dil === 'uzb' && kayitlar[0].dil_olasiligi === 0.97 && kayitlar[0].gecis_sayisi === 1 && kayitlar[0].ikinci_gecis === false && kayitlar[0].dusuk_guven === false && kayitlar[0].riza_surumu === 'uz-taslak-2026-10-08' && !!kayitlar[0].riza_at && kayitlar[0].not_dili === 'uz-Latn', JSON.stringify(kayitlar[0]))
   kontrol('NOTE in Uzbek: a draft with four sections to edit, written from the visit', (await alan(p, 's')).includes('uch kundan beri isitma') && (await alan(p, 'p')).includes('Uch kundan keyin qayta koʻrik.') && g.includes('Qoralama') && g.includes('Shikoyatlar va anamnez') && g.includes('Obyektiv koʻrik') && g.includes('Tashxis va baholash') && g.includes('Reja'))
+  // NOTYA-UZ-BRANSLAR-01 — the note is in the ROLE's template. The stand-in model answers with fields of several
+  // roles and one made-up key; only paediatrics' own fields (and, the patient being five, the guardian field) survive.
+  {
+    const et = await alanEtiketleri(p)
+    kontrol('PAEDIATRIC TEMPLATE: the draft has paediatrics\' own fields under the four sections, and for a child "who gave the history"', et.length === 9 && ['Anamnezni kim bergani (ota-onasi yoki qonuniy vakili)', 'Ovqatlanishi', 'Bosh aylanasi (aytilgan raqam)', 'Tana harorati', 'Emlash haqida aytilganlar'].every((x) => et.includes(x)), et.join(' | '))
+    kontrol('fields hold only what the visit contained: filled where something was said, empty where nothing was', (await alanDegeri(p, 'history_giver')) === 'Onasi.' && (await alanDegeri(p, 'feeding')) === 'Kuniga toʻrt mahal ovqatlanadi.' && (await alanDegeri(p, 'temperature')) === '38,5 gacha koʻtarilgan.' && (await alanDegeri(p, 'head_circumference')) === '' && (await alanDegeri(p, 'vaccination_said')) === '')
+    kontrol('LEAK: no field of another role is drawn or filled — cardiology, dietetics, audiology, a made-up key', !et.some((x) => /Koʻkrakdagi|Elektrokardiogramma|Ovqatlanish tartibi|Audiometriya/.test(x)) && (await alanDegeri(p, 'chest_pain')) === null && (await alanDegeri(p, 'diet_history')) === null && !/XATO-MAYDON|Koʻkrakda ogʻriq yoʻq|Shirinlikni koʻp yeydi/.test(g))
+    kontrol('in the database the note carries only its own role\'s fields', anahtarlar((await tabloOku('not_dil_kaydi'))[0].alanlar) === 'feeding,history_giver,temperature', JSON.stringify((await tabloOku('not_dil_kaydi'))[0].alanlar))
+    kontrol('the model was instructed with paediatrics\' fields and no other role\'s', mdl[0].alanAnahtarlari === PEDIATRI_ALANLARI && mdl[0].muttefik === false, JSON.stringify(mdl[0]))
+    kontrol('the draft names the assistant of the template it was written with', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova')
+  }
   kontrol('the doctor is told the model wrote it; the visit language is named; no low-confidence notice', g.includes('Qaydni sunʼiy intellekt tayyorladi.') && g.includes('oʻzbekcha') && !g.includes('diqqat bilan tekshiring') && !g.includes('ikkinchi marta'))
   kontrol('the transcript is kept with the note', (await p.$eval('[data-alan=transkript]', (e) => e.textContent)).includes('Qizimning uch kundan beri isitmasi bor'))
   await onEkAltinda(p, 'note (draft)')
@@ -519,6 +566,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   notSatiri = (await tabloOku('notes'))[0]
   let dilSatiri = (await tabloOku('not_dil_kaydi'))[0]
   kontrol('in the database the Uzbek note is untouched; the Russian draft is stored beside it', notSatiri.content_subjektif.includes('uch kundan beri isitma') && !notSatiri.approved_at && dilSatiri.not_dili === 'uz-Latn' && dilSatiri.ikinci_dil === 'ru' && dilSatiri.ikinci_s.includes('температура'))
+  kontrol('the second draft carries the same fields, rewritten in Russian — none added, none of another role', anahtarlar(dilSatiri.ikinci_alanlar) === 'feeding,history_giver,temperature' && dilSatiri.ikinci_alanlar.history_giver === 'Мать.' && dilSatiri.alanlar.history_giver === 'Onasi.' && (await alanDegeri(p, 'feeding')) === 'Ест четыре раза в день.', JSON.stringify(dilSatiri.ikinci_alanlar))
   await sec(p, 'taslak-dili', 'uz-Latn'); await bekle(150)
   kontrol('switching back shows the Uzbek draft, with the doctor\'s edit', (await alan(p, 'p')).endsWith('Paratsetamol 250 mg.') && !(await govde(p)).includes('Bu ikkinchi qoralama.'))
   await sec(p, 'taslak-dili', 'ru'); await bekle(150)
@@ -532,11 +580,12 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   notSatiri = (await tabloOku('notes'))[0]
   dilSatiri = (await tabloOku('not_dil_kaydi'))[0]
   kontrol('in the database: approved by this doctor, Russian text; the Uzbek draft is kept beside it', !!notSatiri.approved_at && notSatiri.approved_by === 'aaaaaaaa-0000-4000-8000-000000000001' && notSatiri.content_plan.includes('парацетамол 250 мг') && dilSatiri.not_dili === 'ru' && dilSatiri.ikinci_dil === 'uz-Latn' && dilSatiri.ikinci_p.endsWith('Paratsetamol 250 mg.'))
+  kontrol('the approved note keeps its fields: the Russian ones are the note\'s, the Uzbek ones stay with the other draft; empty fields are not shown', dilSatiri.alanlar.feeding === 'Ест четыре раза в день.' && dilSatiri.ikinci_alanlar.feeding === 'Kuniga toʻrt mahal ovqatlanadi.' && (await metin(p, '[data-alan-anahtar=feeding] p')) === 'Ест четыре раза в день.' && (await metin(p, '[data-alan-anahtar=feeding] h3')) === 'Ovqatlanishi' && !(await p.$('[data-alan-anahtar=head_circumference]')))
   await cek(p, 'note-approved-ru.png')
   // AN APPROVED NOTE IS NEVER OVERWRITTEN.
   const onceki = JSON.stringify([await tabloOku('notes'), await tabloOku('not_dil_kaydi')])
   const modelOnce = cagrilar().filter((x) => x.tur === 'model').length
-  const gecKayit = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId: notYuksek, dil: 'ru', s: 'OʻZGARTIRILDI', o: '', a: '', p: '' } })
+  const gecKayit = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId: notYuksek, dil: 'ru', s: 'OʻZGARTIRILDI', o: '', a: '', p: '', alanlar: { feeding: 'OʻZGARTIRILDI' } } })
   const ikinciOnay = await api(p, '/api/ulke/not/onayla', { method: 'POST', govde: { notId: notYuksek, dil: 'ru', s: 'OʻZGARTIRILDI', o: 'x', a: 'x', p: 'x' } })
   const gecYeniden = await api(p, '/api/ulke/not/yeniden-yaz', { method: 'POST', govde: { notId: notYuksek } })
   kontrol('approved note: a late save, a second approval and a rewrite are all refused (409 ONAYLI)', [gecKayit, ikinciOnay, gecYeniden].every((r) => r.s === 409 && r.t === '{"code":"ONAYLI"}'), [gecKayit, ikinciOnay, gecYeniden].map((r) => `${r.s} ${r.t}`).join(' | '))
@@ -583,6 +632,59 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await p.waitForSelector('.uza-liste')
   const bugun = await p.$$eval('.uza-liste a.uza-satir', (l) => l.map((e) => `${e.getAttribute('href')} ${e.innerText.replace(/\s+/g, ' ')}`))
   kontrol('the home lists today\'s two visits, one approved and one draft, each leading to its note', bugun.length === 2 && bugun.some((b) => b.includes(`?not=${notYuksek}`) && b.includes('Tasdiqlangan')) && bugun.some((b) => b.includes(`?not=${notDusuk}`) && b.includes('Qoralama')), bugun.join(' | '))
+
+  // ───── NOTYA-UZ-BRANSLAR-01 — ANOTHER DOCTOR SPECIALTY, END TO END: the account changes its role to cardiology ─────
+  await git(p, '/settings')
+  await p.waitForSelector('[data-alan=rol-ayari] select[name=rol]')
+  kontrol('settings: the role is shown by name with its assistant, and can be changed', (await p.$eval('[data-alan=rol-ayari] select[name=rol]', (e) => e.value)) === 'pediatri' && (await metin(p, '[data-alan=rol-ayari] [data-alan=asistan-ad]')) === 'Dr. Malika Nazarova' && (await metin(p, '[data-alan=rol-ayari] h2')) === 'Mutaxassislik')
+  await p.select('[data-alan=rol-ayari] select[name=rol]', 'kardiyoloji')
+  await p.click('[data-alan=rol-ayari] [data-eylem=rol-kaydet]')
+  await p.waitForSelector('[data-alan=rol-ayari] .uza-bilgi-kutu')
+  kontrol('settings: the new role is saved for this account only, and the card names the new assistant', (await metin(p, '[data-alan=rol-ayari] .uza-bilgi-kutu')) === 'Saqlandi.' && (await metin(p, '[data-alan=rol-ayari] [data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova' && JSON.stringify((await tabloOku('hekim_rolu')).map((r) => `${r.doctor_id.slice(-1)}:${r.rol}`).sort()) === '["1:kardiyoloji","2:diyetisyen"]', JSON.stringify(await tabloOku('hekim_rolu')))
+  await cek(p, 'settings-role-uz.png', false)
+  await git(p, '/today')
+  await p.waitForSelector('[data-alan=asistan-ad]')
+  kontrol('home: the assistant is now cardiology\'s, by the owner\'s name', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova' && (await metin(p, '[data-alan=asistan-satir]')) === 'Katta hamkasbingiz · Kardiologiya')
+  await cek(p, 'today-cardiology-uz.png', false)
+  senaryoYaz({ stt: 'yuksek', model: 'tamam' })
+  await git(p, `/visit?hasta=${hastaA}`)
+  await p.waitForSelector('input[name=riza]')
+  kontrol('visit screen: the cardiology template and its assistant', (await metin(p, '[data-alan=sablon]')) === 'Kardiologiya' && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova')
+  const eskiSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'pediatri', riza: true } })
+  kontrol('the role the account had before is now another role\'s template: refused', eskiSablon.s === 400 && eskiSablon.j?.alan === 'sablon', `${eskiSablon.s} ${eskiSablon.t}`)
+  await kayitYap(p)
+  const notKardio = new URL(p.url()).searchParams.get('not') || ''
+  {
+    const et = await alanEtiketleri(p)
+    const gk = await govde(p)
+    const m = cagrilar().filter((x) => x.tur === 'model').pop()
+    const kayit = (await tabloOku('muayene_dil_kaydi')).find((k) => k.sablon === 'kardiyoloji')
+    const satir = (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notKardio)
+    kontrol('CARDIOLOGY TEMPLATE: the visit is stored under the role and the draft has cardiology\'s own fields', /^[0-9a-f-]{36}$/.test(notKardio) && !!kayit && et.length === 9 && ['Koʻkrakdagi ogʻriq tavsifi', 'Jismoniy zoʻriqishga chidamlilik', 'Qon bosimi va puls (aytilgan raqamlar)', 'Elektrokardiogramma xulosasi (aytilgani boʻyicha)', 'Exokardiografiya xulosasi (aytilgani boʻyicha)'].every((x) => et.includes(x)), et.join(' | '))
+    kontrol('guardian wording follows the patient\'s AGE, not the role: a cardiologist\'s five-year-old has "who gave the history"', et.includes('Anamnezni kim bergani (ota-onasi yoki qonuniy vakili)') && (await alanDegeri(p, 'history_giver')) === 'Onasi.')
+    kontrol('LEAK: nothing of paediatrics or of any other role on a cardiology note — no head circumference, no feeding, no diet history', !et.some((x) => /Bosh aylanasi|Ovqatlanishi|Emlash|Ovqatlanish tartibi|Audiometriya/.test(x)) && (await alanDegeri(p, 'head_circumference')) === null && (await alanDegeri(p, 'feeding')) === null && !/XATO-MAYDON|Kuniga toʻrt mahal|Shirinlikni koʻp yeydi/.test(gk) && (await alanDegeri(p, 'chest_pain')) === 'Koʻkrakda ogʻriq yoʻq.' && (await alanDegeri(p, 'ecg')) === 'Oʻzgarishsiz.')
+    kontrol('in the database the cardiology note carries cardiology\'s fields only', anahtarlar(satir?.alanlar) === 'chest_pain,ecg,history_giver', JSON.stringify(satir?.alanlar))
+    kontrol('the model was instructed with cardiology\'s fields and no other role\'s, and with nothing that says who the patient is', m.alanAnahtarlari === KARDIYOLOJI_ALANLARI && m.kimlikVar === false && m.dil === 'uz-Latn', JSON.stringify(m))
+    kontrol('the draft names cardiology\'s assistant', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova')
+    await cek(p, 'note-cardiology-draft-uz.png')
+    await p.click('#uza-alan-ecg'); await p.keyboard.down('Control'); await p.keyboard.press('End'); await p.keyboard.up('Control')
+    await p.type('#uza-alan-ecg', ' Sinus ritmi.')
+    await p.click('[data-eylem=onayla]')
+    await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
+    const onayli = (await tabloOku('notes')).find((n) => n.id === notKardio)
+    const onayliAlan = (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notKardio)
+    kontrol('the doctor edits a field and approves: the note is in the file with the field as edited, and nothing is left to change it', !!onayli.approved_at && onayliAlan.alanlar.ecg === 'Oʻzgarishsiz. Sinus ritmi.' && (await metin(p, '[data-alan-anahtar=ecg] p')) === 'Oʻzgarishsiz. Sinus ritmi.' && !(await p.$('textarea')) && !(await p.$('[data-eylem]')))
+    const gec = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId: notKardio, dil: 'uz-Latn', s: 'x', o: '', a: '', p: '', alanlar: { ecg: 'OʻZGARTIRILDI' } } })
+    kontrol('approved: a late save of a field is refused and the field is unchanged', gec.s === 409 && (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notKardio).alanlar.ecg === 'Oʻzgarishsiz. Sinus ritmi.')
+    await cek(p, 'note-cardiology-approved-uz.png')
+  }
+  // A note keeps the template it was written with: the earlier paediatric draft is still paediatric.
+  await git(p, `/visit?not=${notDusuk}`)
+  await p.waitForSelector('#uza-not-s', { timeout: 60000 })
+  {
+    const et = await alanEtiketleri(p)
+    kontrol('an earlier note keeps its own template and its own assistant after the role changed', et.includes('Bosh aylanasi (aytilgan raqam)') && !et.some((x) => /Koʻkrakdagi|Elektrokardiogramma/.test(x)) && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova', et.join(' | '))
+  }
 }
 {
   // ISOLATION on visits and notes: doctor B and doctor A's visit, note, patient and folder.
@@ -621,8 +723,26 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   const mdl = cagrilar().filter((x) => x.tur === 'model').pop()
   kontrol('doctor B: the note is written in Russian, on a phone-sized screen, and can be rewritten in Uzbek', new URL(p.url()).searchParams.has('not') && (await alan(p, 's')).includes('третий день температура') && mdl.is === 'not' && mdl.dil === 'ru' && (await metin(p, '[data-eylem=yeniden-yaz]')) === 'Переписать на узбекском' && (await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0)
   await cek(p, 'note-phone-ru.png')
+  // ───── NOTYA-UZ-BRANSLAR-01 — AN ALLIED ROLE, END TO END: B is a dietitian; the note is a specialist's, not a doctor's ─────
+  {
+    const et = await alanEtiketleri(p)
+    const gb = await govde(p)
+    const notB = new URL(p.url()).searchParams.get('not') || ''
+    const satir = (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notB)
+    kontrol('DIETITIAN TEMPLATE: the draft has the dietitian\'s own fields, in Russian', et.length === 8 && ['Направивший врач и диагноз направления', 'Режим и привычки питания', 'Непереносимые продукты и ограничения', 'План питания (со слов специалиста)', 'Цели по питанию'].every((x) => et.includes(x)) && (await alanDegeri(p, 'diet_history')) === 'Любит сладкое.' && (await alanDegeri(p, 'nutrition_plan')) === 'Обильное питьё.', et.join(' | '))
+    kontrol('an allied role\'s note has "the specialist\'s assessment" where a doctor\'s has "diagnosis and assessment"', gb.includes('Оценка специалиста') && !gb.includes('Диагноз и оценка'))
+    kontrol('an unknown age is not a child: no guardian field for this patient; and no field of any other role', !et.some((x) => /Кто сообщил анамнез|Окружность головы|Питание$|боли в груди|электрокардиограммы|аудиометрии/.test(x)) && (await alanDegeri(p, 'history_giver')) === null && (await alanDegeri(p, 'chest_pain')) === null && !/XATO-MAYDON|Боли в груди нет|Ест четыре раза/.test(gb) && anahtarlar(satir?.alanlar) === 'diet_history,nutrition_plan', JSON.stringify(satir?.alanlar))
+    kontrol('the model was instructed with the dietitian\'s fields only, and told the colleague is not a doctor', mdl.alanAnahtarlari === DIYETISYEN_ALANLARI && mdl.muttefik === true && mdl.kimlikVar === false, JSON.stringify(mdl))
+    kontrol('the draft names the dietitian\'s assistant, with the profession\'s title', (await metin(p, '[data-alan=asistan-ad]')) === 'Диетолог Махлиё Турсунова')
+    await cek(p, 'note-dietitian-draft-ru.png')
+    await p.click('[data-eylem=onayla]')
+    await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
+    const onayli = (await tabloOku('notes')).find((n) => n.id === notB)
+    kontrol('the dietitian approves: the note is in the file with its fields, read-only', !!onayli.approved_at && onayli.approved_by === 'aaaaaaaa-0000-4000-8000-000000000002' && (await metin(p, '[data-alan-anahtar=diet_history] p')) === 'Любит сладкое.' && (await p.$$eval('h2', (l) => l.map((e) => e.innerText))).includes('Оценка специалиста') && !(await p.$('textarea')))
+    await cek(p, 'note-dietitian-approved-ru.png')
+  }
   const notlar = await tabloOku('notes')
-  kontrol('three notes in the database, each under its own doctor', notlar.length === 3 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001').length === 2 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000002').length === 1)
+  kontrol('four notes in the database, each under its own doctor', notlar.length === 4 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001').length === 3 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000002').length === 1)
   const kullanim = await tabloOku('ai_token_kullanim')
   kontrol('every model call left a usage row with the doctor and the task — and no patient', kullanim.length >= 4 && kullanim.every((k) => /^aaaaaaaa-0000-4000-8000-00000000000[12]$/.test(k.doctor_id) && ['soap', 'not-uretimi'].includes(k.gorev) && !('patient_id' in k)), JSON.stringify(kullanim[0]))
 }

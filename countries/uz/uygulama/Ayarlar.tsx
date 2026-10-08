@@ -4,10 +4,17 @@
  * NOTYA-UZ-MUAYENE-01 — /settings: interface language, note language, script. Three small questions; the script
  * applies wherever Uzbek is chosen (interface, notes, or both). Saved together; the page then re-reads itself in
  * the new interface language.
+ *
+ * NOTYA-UZ-BRANSLAR-01 — and, in a card of its own, the role the account works as (./RolFormu.tsx). Saved on its
+ * own: changing it changes the assistant shown and the structure of the NEXT visit notes; notes already written
+ * keep the structure they were written with.
  */
 import React, { useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, Yukleniyor, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
+import { RolSecimi } from './RolFormu'
+import { asistanAdi } from './Asistan'
+import { uzRolMu } from '../klinik/rolAdlari'
 import { dilBirlestir, temelDil, yaziSec, type TemelDil, type UygulamaMetni, type UzUygulamaDili, type Yazi } from './metinler'
 
 export type AyarDurumu = { arayuz: TemelDil; not: TemelDil; yazi: Yazi }
@@ -41,6 +48,25 @@ export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc }: {
   )
 }
 
+export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor, sonuc }: {
+  m: UygulamaMetni; rol: string; /** The role as saved: its assistant is the one named. */ kayitliRol: string | null
+  setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gerekli' | null
+}) {
+  return (
+    <section className="uza-kart uza-dar" data-alan="rol-ayari">
+      <h2 className="uza-h2">{m.rol.ayarBaslik}</h2>
+      <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
+        <RolSecimi m={m} deger={rol} sec={setRol} kimlik="uza-rol-ayar" />
+        <p className="uza-ipucu">{m.asistan.etiket}: <span data-alan="asistan-ad">{asistanAdi(m, kayitliRol)}</span></p>
+        <p className="uza-ipucu">{m.rol.ayarIzoh}</p>
+        <Hata>{sonuc === 'hata' ? m.rol.kaydedilemedi : sonuc === 'gerekli' ? m.rol.gerekli : null}</Hata>
+        <Bilgi>{sonuc === 'tamam' ? m.rol.kaydedildi : null}</Bilgi>
+        <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="rol-kaydet">{bekliyor ? m.rol.kaydediliyor : m.rol.kaydet}</button>
+      </form>
+    </section>
+  )
+}
+
 export default function Ayarlar() {
   const u = useUygulama('ayarlar')
   const [d, setD] = useState<AyarDurumu>({ arayuz: 'uz', not: 'uz', yazi: 'Latn' })
@@ -48,7 +74,11 @@ export default function Ayarlar() {
   const [bekliyor, setBekliyor] = useState(false)
   const [sonuc, setSonuc] = useState<'tamam' | 'hata' | null>(null)
 
-  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setHazir(true) } }, [u.hesap, hazir])
+  const [rol, setRol] = useState('')
+  const [rolBekliyor, setRolBekliyor] = useState(false)
+  const [rolSonucu, setRolSonucu] = useState<'tamam' | 'hata' | 'gerekli' | null>(null)
+
+  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setHazir(true) } }, [u.hesap, hazir])
 
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
 
@@ -63,9 +93,20 @@ export default function Ayarlar() {
     setBekliyor(false)
   }
 
+  async function rolGonder() {
+    if (!uzRolMu(rol)) { setRolSonucu('gerekli'); return }
+    setRolBekliyor(true); setRolSonucu(null)
+    try {
+      const r = await u.api('/api/ulke/rol', { method: 'POST', govde: { rol } })
+      if (r.ok) { u.hesabiGuncelle({ rol }); setRolSonucu('tamam') } else setRolSonucu('hata')
+    } catch { setRolSonucu('hata') }
+    setRolBekliyor(false)
+  }
+
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="ayarlar" cikis={u.cikis}>
       <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} />
+      <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} />
     </Cerceve>
   )
 }

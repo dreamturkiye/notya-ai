@@ -171,6 +171,12 @@ export type UygulamaAyarlari = {
    * dropped, the country's other script mapped onto one. Pure. Omitted = plain lower case.
    */
   aramaKatla?: (ham: string) => string
+  /**
+   * NOTYA-UZ-BRANSLAR-01 — ROLES an account may work as in this country (doctor specialties, clinic roles): internal
+   * keys, never shown; their names are the pack's text. Asked once at first login, stored per account
+   * (lib/ulke/uygulama/rol.ts). Omitted = the country asks for no role, exactly as before roles existed.
+   */
+  roller?: readonly string[]
 }
 
 // ───────────────────────── pages a pack brings itself (countries/active/sayfalar) ─────────────────────────
@@ -237,11 +243,24 @@ export type KonusmaTanimaAyarlari = {
   asgariKarakter: number
 }
 
-/** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
-export type NotIcerigi = { s: string; o: string; a: string; p: string }
+/**
+ * The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text.
+ *
+ * NOTYA-UZ-BRANSLAR-01 — `alanlar`: fields a note has BESIDE the four sections because of the template it was written
+ * with (a role's own fields). Key → text. Which keys a template owns is the pack's business (`notAlanlari`); core
+ * drops every other key before it stores or shows a note. Absent = the note has none, exactly as before fields existed.
+ */
+export type NotIcerigi = { s: string; o: string; a: string; p: string; alanlar?: Record<string, string> }
+
+/** The key under which the model returns a note's `alanlar`, beside s, o, a, p. One word, shared by packs and core. */
+export const NOT_ALANLARI_ANAHTARI = 'fields'
 
 /** What the note is written from, besides the transcript: no name, no identity number, no phone. */
-export type NotGirdisi = { dogumTarihi: string; cinsiyet: string; muayeneTarihi: string; metin: string }
+export type NotGirdisi = {
+  dogumTarihi: string; cinsiyet: string; muayeneTarihi: string; metin: string
+  /** NOTYA-UZ-BRANSLAR-01: the template the note is written with — for wording that depends on template and age together. */
+  sablon?: string
+}
 
 /** What a pack brings for the visit: recording → transcript → note. Server-side only. null = the country has none. */
 export type UlkeKlinigi = {
@@ -259,6 +278,12 @@ export type UlkeKlinigi = {
   notTalimati: (dil: DilKodu, sablon: string) => string | null
   /** The message that carries the transcript, in the note's language. */
   notGirdisi: (dil: DilKodu, g: NotGirdisi) => string
+  /**
+   * NOTYA-UZ-BRANSLAR-01 — the field keys a note written with `sablon` may carry for this patient, in the order they
+   * are shown. THE filter between the model's answer (or a request) and the record: a key that is not on this list
+   * is dropped. Omitted, or an empty list = notes have the four sections only, exactly as before fields existed.
+   */
+  notAlanlari?: (sablon: string, hasta: { dogumTarihi: string; muayeneTarihi: string }) => readonly string[]
   /** Instructions for rewriting an existing note in `hedefDil`, written in that language. null = not offered. */
   yenidenYazimTalimati: (hedefDil: DilKodu) => string | null
   yenidenYazimGirdisi: (hedefDil: DilKodu, icerik: NotIcerigi) => string

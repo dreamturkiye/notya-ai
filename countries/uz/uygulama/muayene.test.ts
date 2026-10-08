@@ -85,6 +85,8 @@ function sifirla() {
   })
   vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' })
   // Doctor A writes notes in Uzbek (Latin), doctor B in Russian.
+  // NOTYA-UZ-BRANSLAR-01: the template is the account's role. A is a paediatrician; B has chosen no role (general template).
+  vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'pediatri' })
   vt.tablo('hekim_dil_tercihleri').push({ doctor_id: A, not_dili: 'uz-Latn', soruldu_at: '2026-10-08T05:00:00Z' }, { doctor_id: B, not_dili: 'ru', soruldu_at: '2026-10-08T05:00:00Z' })
 }
 
@@ -182,15 +184,17 @@ describe('Uzbekistan visit: pack settings', () => {
     assert.match(readFileSync(join(KOK, 'countries/tr/klinik.ts'), 'utf8'), /export const TR_KLINIK: UlkeKlinigi \| null = null\n/)
   })
 
-  it('templates: pediatrics and one general template are on; the full specialty list is structured and off', async () => {
+  it('templates: the general one first, then one per role — all 30 specialties write with their own; none is signed off', async () => {
     const b = await import('../klinik/branslar')
-    assert.deepEqual([...b.UZ_ACIK_SABLONLAR], ['genel', 'pediatri'])
+    const { UZ_ROLLER } = await import('../klinik/rolAdlari')
+    assert.deepEqual([...b.UZ_ACIK_SABLONLAR], ['genel', ...UZ_ROLLER])
+    assert.equal(b.UZ_ACIK_SABLONLAR.length, 41)
     const liste = Object.entries(b.UZ_BRANSLAR)
     assert.equal(liste.length, 30)
-    assert.deepEqual(liste.filter(([, x]) => x.kendiSablonuAcik).map(([k]) => k), ['pediatri'])
-    for (const [k, x] of liste) assert.equal(x.sablon, k === 'pediatri' ? 'pediatri' : 'genel', k)
+    for (const [k, x] of liste) assert.deepEqual(x, { kendiSablonuAcik: true, sablon: k, yerelInceleyen: null }, k)
     const { UZ_KLINIK } = await import('../klinik/index')
-    assert.deepEqual([...UZ_KLINIK.sablonlar], ['genel', 'pediatri'])
+    assert.deepEqual([...UZ_KLINIK.sablonlar], ['genel', ...UZ_ROLLER])
+    for (const ham of ['kadin-dogum', 'Pediatri', '', 'cardiology', null]) assert.equal(b.uzSablonMu(ham), false, String(ham))
   })
 
   it('consent wording is marked "NOT REVIEWED BY A LAWYER" in every form, and the visit is stamped with a draft version', async () => {
@@ -389,7 +393,8 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     assert.deepEqual(gunluk, ['[ulke/konusma] provider answered 500 (pass 1)'])
     stt.cevaplar = [cevap('juda qisqa', 'uzb', 0.99, -0.05)]
     assert.deepEqual(await dene(), { s: 422, j: { code: 'KISA_KAYIT' } })
-    for (const sablon of ['kardiyoloji', 'dahiliye', '', 'Pediatri']) assert.deepEqual(await dene({ sablon }), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } }, sablon)
+    // Another role's template (A is a paediatrician), and something that is no template at all.
+    for (const sablon of ['kardiyoloji', 'dahiliye', 'odyoloji', '', 'Pediatri', 'kadin-dogum']) assert.deepEqual(await dene({ sablon }), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } }, sablon)
     const anahtar = process.env.ELEVENLABS_API_KEY
     delete process.env.ELEVENLABS_API_KEY
     try { assert.deepEqual(await dene(), { s: 503, j: { code: 'HAZIR_DEGIL' } }) } finally { process.env.ELEVENLABS_API_KEY = anahtar }
@@ -473,18 +478,19 @@ describe('Uzbekistan visit: screens in the three forms', () => {
 
     it(`${f}: consent blocks recording — the button is disabled until the box is ticked`, () => {
       const m = M.uygulamaMetni(f)
-      const ciz = (riza: boolean, hataKodu: string | null = null) => cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', setSablon: bos, riza, setRiza: bos, durum: 'hazir', sure: 0, hataKodu, baslat: bos, durdur: bos, vazgec: bos }))
+      const ciz = (riza: boolean, hataKodu: string | null = null) => cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', riza, setRiza: bos, durum: 'hazir', sure: 0, hataKodu, baslat: bos, durdur: bos, vazgec: bos }))
       const kapali = ciz(false)
       const g = gorunurMetin(kapali)
-      for (const x of [m.muayene.baslik, 'QA Karimova Dilnoza Rustam qizi', m.muayene.sablon, m.muayene.sablonGenel, m.muayene.sablonPediatri, m.muayene.riza, m.muayene.kayitBaslat, m.muayene.rizaGerekli]) assert.ok(g.includes(x), x)
+      for (const x of [m.muayene.baslik, 'QA Karimova Dilnoza Rustam qizi', m.muayene.sablon, m.muayene.sablonPediatri, m.muayene.riza, m.muayene.kayitBaslat, m.muayene.rizaGerekli]) assert.ok(g.includes(x), x)
       assert.match(kapali, /<input type="checkbox" name="riza"\/>/, 'the consent box starts unticked')
       assert.match(kapali, new RegExp(`<button type="button" class="uza-dugme" disabled="">${m.muayene.kayitBaslat}</button>`))
       const acik = ciz(true)
       assert.match(acik, /<input type="checkbox" name="riza" checked=""\/>/)
       assert.match(acik, new RegExp(`<button type="button" class="uza-dugme">${m.muayene.kayitBaslat}</button>`))
       assert.ok(!gorunurMetin(acik).includes(m.muayene.rizaGerekli))
-      // Only the two templates that are switched on are offered.
-      assert.deepEqual([...kapali.matchAll(/<input\b[^>]*name="sablon"[^>]*>/g)].map((x) => /value="([^"]+)"/.exec(x[0])![1]), ['genel', 'pediatri'])
+      // The template is not a choice: it is the account's role, shown by name. No template control exists.
+      assert.equal([...kapali.matchAll(/<input\b[^>]*name="sablon"[^>]*>/g)].length, 0)
+      assert.match(kapali, new RegExp(`<dd data-alan="sablon">${m.muayene.sablonPediatri}</dd>`))
       ekranTemiz(kapali, `/visit?hasta= (${f})`)
       // Every code of the visit API has its own sentence in this form — and none of them is the code itself.
       for (const kod of ['RIZA_GEREKLI', 'KISA_KAYIT', 'SES_OKUNAMADI', 'LIMIT', 'HAZIR_DEGIL', 'NOT_FOUND', 'MIKROFON', 'BAGLANTI', 'BASARISIZ', 'GECERSIZ', 'bilinmeyen']) {
@@ -493,11 +499,11 @@ describe('Uzbekistan visit: screens in the three forms', () => {
         assert.ok(uyari && uyari[1].length > 12 && !uyari[1].includes(kod), `${f}/${kod}: ${uyari?.[1]}`)
         ekranTemiz(html, `/visit error ${kod} (${f})`)
       }
-      const kayitta = cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'genel', setSablon: bos, riza: true, setRiza: bos, durum: 'kayit', sure: 75, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos }))
+      const kayitta = cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'genel', riza: true, setRiza: bos, durum: 'kayit', sure: 75, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos }))
       for (const x of [m.muayene.kaydediliyor, '01:15', m.muayene.kayitDurdur, m.muayene.vazgec]) assert.ok(gorunurMetin(kayitta).includes(x), x)
       ekranTemiz(kayitta, `/visit recording (${f})`)
       for (const durum of ['yukleniyor', 'isleniyor'] as const) {
-        const html = cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'genel', setSablon: bos, riza: true, setRiza: bos, durum, sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos }))
+        const html = cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'genel', riza: true, setRiza: bos, durum, sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos }))
         assert.ok(gorunurMetin(html).includes(durum === 'yukleniyor' ? m.muayene.yukleniyor : m.muayene.isleniyor))
       }
     })
@@ -522,13 +528,14 @@ describe('Uzbekistan visit: screens in the three forms', () => {
     })
   }
 
-  it('the pediatric template is offered first for a patient under 18, the general one otherwise', () => {
-    const bugun = new Date('2026-10-08T12:00:00Z')
-    assert.equal(Muayene.varsayilanSablon('2021-03-07', bugun), 'pediatri')
-    assert.equal(Muayene.varsayilanSablon('2008-10-09', bugun), 'pediatri')
-    assert.equal(Muayene.varsayilanSablon('2008-10-08', bugun), 'genel')
-    assert.equal(Muayene.varsayilanSablon('1980-12-31', bugun), 'genel')
-    assert.equal(Muayene.varsayilanSablon('', bugun), 'genel')
+  it('the template is the account\'s role — never the patient\'s age; no role (or a value that is not one) is the general template', () => {
+    assert.equal(Muayene.hesapSablonu('kardiyoloji'), 'kardiyoloji')
+    assert.equal(Muayene.hesapSablonu('odyoloji'), 'odyoloji')
+    for (const ham of [null, undefined, '', 'kadin-dogum', 'Pediatri']) assert.equal(Muayene.hesapSablonu(ham), 'genel', String(ham))
+    // A template is named for a person in the screen's form; a key is never the name.
+    assert.deepEqual(FORMLAR.map((f) => Muayene.sablonAdi(M.uygulamaMetni(f), 'kardiyoloji')), ['Kardiologiya', 'Кардиология', 'Кардиология'])
+    assert.deepEqual(FORMLAR.map((f) => Muayene.sablonAdi(M.uygulamaMetni(f), 'genel')), FORMLAR.map((f) => M.uygulamaMetni(f).muayene.sablonGenel))
+    assert.equal(Muayene.sablonAdi(M.uygulamaMetni('uz-Latn'), 'yok-boyle'), M.uygulamaMetni('uz-Latn').muayene.sablonGenel)
   })
 
   it('the home and the patient file lead to the visit; a visit without a note opens the recorded visit', async () => {

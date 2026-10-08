@@ -181,6 +181,33 @@ const UZ_LATN = {
     zatenOnayli: 'Bu qayd allaqachon tasdiqlangan. Tasdiqlangan qayd oʻzgartirilmaydi.',
     ikinciTaslak: 'Bu ikkinchi qoralama. Birinchi qoralama oʻzgarmagan: tasdiqlash uchun ulardan birini tanlang.',
   },
+  // NOTYA-UZ-BRANSLAR-01 — the assistant's identity. `%` is the product's name, put in by the screen (the catalogue
+  // of a Cyrillic form carries no Latin letter). The assistant's own name is NOT here: it comes from the owner's
+  // list (../klinik/asistanAdlari.ts). No biography, no years of practice — one neutral line only.
+  asistan: {
+    etiket: 'Yordamchingiz',
+    notr: '% yordamchisi',
+    satir: 'Katta hamkasbingiz',
+    qayd: 'Qaydni tayyorlaydi',
+    qoralama: 'Qoralamani tayyorladi',
+  },
+  rol: {
+    baslik: 'Mutaxassisligingiz qaysi?',
+    aciklama: 'Yordamchingiz va koʻrik qaydining tuzilishi shunga qarab belgilanadi. Keyin Sozlamalar boʻlimida oʻzgartirishingiz mumkin.',
+    etiket: 'Mutaxassislik yoki kasb',
+    sec: 'Roʻyxatdan tanlang',
+    grupDoktor: 'Shifokor mutaxassisligi',
+    grupKlinikHekim: 'Klinika shifokori',
+    grupKlinikMuttefik: 'Klinika mutaxassisi',
+    devam: 'Davom etish',
+    kaydediliyor: 'Saqlanmoqda…',
+    kaydedilemedi: 'Saqlab boʻlmadi. Qaytadan urinib koʻring.',
+    gerekli: 'Roʻyxatdan mutaxassislikni tanlang.',
+    ayarBaslik: 'Mutaxassislik',
+    ayarIzoh: 'Oʻzgarish keyingi koʻriklardan boshlab amal qiladi. Avval yozilgan qaydlar oʻzgarmaydi.',
+    kaydet: 'Mutaxassislikni saqlash',
+    kaydedildi: 'Saqlandi.',
+  },
 }
 
 /** Same keys, any text. */
@@ -347,6 +374,30 @@ const UZ_CYRL: UygulamaMetni = {
     zatenOnayli: 'Бу қайд аллақачон тасдиқланган. Тасдиқланган қайд ўзгартирилмайди.',
     ikinciTaslak: 'Бу иккинчи қоралама. Биринчи қоралама ўзгармаган: тасдиқлаш учун улардан бирини танланг.',
   },
+  asistan: {
+    etiket: 'Ёрдамчингиз',
+    notr: '% ёрдамчиси',
+    satir: 'Катта ҳамкасбингиз',
+    qayd: 'Қайдни тайёрлайди',
+    qoralama: 'Қораламани тайёрлади',
+  },
+  rol: {
+    baslik: 'Мутахассислигингиз қайси?',
+    aciklama: 'Ёрдамчингиз ва кўрик қайдининг тузилиши шунга қараб белгиланади. Кейин Созламалар бўлимида ўзгартиришингиз мумкин.',
+    etiket: 'Мутахассислик ёки касб',
+    sec: 'Рўйхатдан танланг',
+    grupDoktor: 'Шифокор мутахассислиги',
+    grupKlinikHekim: 'Клиника шифокори',
+    grupKlinikMuttefik: 'Клиника мутахассиси',
+    devam: 'Давом этиш',
+    kaydediliyor: 'Сақланмоқда…',
+    kaydedilemedi: 'Сақлаб бўлмади. Қайтадан уриниб кўринг.',
+    gerekli: 'Рўйхатдан мутахассисликни танланг.',
+    ayarBaslik: 'Мутахассислик',
+    ayarIzoh: 'Ўзгариш кейинги кўриклардан бошлаб амал қилади. Аввал ёзилган қайдлар ўзгармайди.',
+    kaydet: 'Мутахассисликни сақлаш',
+    kaydedildi: 'Сақланди.',
+  },
 }
 
 const RU: UygulamaMetni = {
@@ -509,6 +560,30 @@ const RU: UygulamaMetni = {
     zatenOnayli: 'Эта запись уже утверждена. Утверждённая запись не изменяется.',
     ikinciTaslak: 'Это второй черновик. Первый черновик не изменён: для утверждения выберите один из них.',
   },
+  asistan: {
+    etiket: 'Ваш ассистент',
+    notr: 'Ассистент %',
+    satir: 'Ваш старший коллега',
+    qayd: 'Запись подготовит',
+    qoralama: 'Автор черновика',
+  },
+  rol: {
+    baslik: 'Какая у вас специальность?',
+    aciklama: 'От этого зависят ваш ассистент и структура записи приёма. Позже это можно изменить в разделе «Настройки».',
+    etiket: 'Специальность или профессия',
+    sec: 'Выберите из списка',
+    grupDoktor: 'Врачебная специальность',
+    grupKlinikHekim: 'Врач клиники',
+    grupKlinikMuttefik: 'Специалист клиники',
+    devam: 'Продолжить',
+    kaydediliyor: 'Сохраняем…',
+    kaydedilemedi: 'Не удалось сохранить. Попробуйте ещё раз.',
+    gerekli: 'Выберите специальность из списка.',
+    ayarBaslik: 'Специальность',
+    ayarIzoh: 'Изменение действует со следующих приёмов. Уже написанные записи не меняются.',
+    kaydet: 'Сохранить специальность',
+    kaydedildi: 'Сохранено.',
+  },
 }
 
 /** The three forms an account of this country can choose. Same list as the pack's `uygulamaDilleri`. */
@@ -528,6 +603,11 @@ export function uzUygulamaDili(ham: unknown): UzUygulamaDili {
 
 export function uygulamaMetni(dil: unknown): UygulamaMetni {
   return UZ_UYGULAMA_METINLERI[uzUygulamaDili(dil)]
+}
+
+/** The form a catalogue is written in — for the few things a screen shows that are not sentences of the catalogue (a role's name, the assistant's name). */
+export function metninDili(m: UygulamaMetni): UzUygulamaDili {
+  return UZ_UYGULAMA_DILLERI.find((d) => UZ_UYGULAMA_METINLERI[d] === m) ?? 'uz-Latn'
 }
 
 /** Language and script as two questions: 'uz' + 'Latn' | 'Cyrl', or 'ru'. */

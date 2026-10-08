@@ -8,6 +8,7 @@
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { UZ_ACIK_SABLONLAR } from './branslar'
+import { uzSablonAlanlari } from './notSablonlari'
 import { uzDigerDil, uzNotGirdisi, uzNotTalimati, uzYenidenYazimGirdisi, uzYenidenYazimTalimati } from './talimatlar'
 
 export const UZ_KLINIK: UlkeKlinigi = {
@@ -36,6 +37,9 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // Instructions to the model: written fresh in Uzbek (both scripts) and Russian, no source cited (./talimatlar.ts).
   notTalimati: uzNotTalimati,
   notGirdisi: uzNotGirdisi,
+  // NOTYA-UZ-BRANSLAR-01: the fields a note of a template may carry — a role's own, plus the guardian field for a
+  // patient under 18. Everything else the model returns, or a request sends, is dropped by core.
+  notAlanlari: uzSablonAlanlari,
   yenidenYazimTalimati: uzYenidenYazimTalimati,
   yenidenYazimGirdisi: uzYenidenYazimGirdisi,
   digerDil: uzDigerDil,

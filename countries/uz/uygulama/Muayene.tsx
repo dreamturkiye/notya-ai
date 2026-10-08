@@ -4,7 +4,8 @@
  * NOTYA-UZ-MUAYENE-01 — /visit: a visit, from the microphone to the transcript. One address, by its parameter:
  *
  *   (none)            choose the patient                         → ?hasta=<id>
- *   ?hasta=<id>       the note template, the recording consent, the recording itself
+ *   ?hasta=<id>       the recording consent, the recording itself. The note template is not a choice: it is the
+ *                     account's ROLE (NOTYA-UZ-BRANSLAR-01), or the general template for an account without one
  *   ?seans=<id>       a recorded visit: what was heard, in which language, how sure the engine was
  *   ?not=<id>         the visit's note: draft, second draft in the other language, approval (./Not.tsx)
  *
@@ -20,12 +21,14 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { MUAYENE_SES_KOVASI } from '@/lib/ulke/tipler'
-import { UZ_ACIK_SABLONLAR, type UzSablon } from '../klinik/branslar'
+import { UZ_GENEL_SABLON, uzSablonMu } from '../klinik/notSablonlari'
+import { uzRolAdi } from '../klinik/rolAdlari'
 import { AramaFormu } from './Bugun'
-import { Bilgi, Cerceve, Hata, Secim, tarihYaz, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
+import { Bilgi, Cerceve, Hata, tarihYaz, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
-import type { UygulamaMetni } from './metinler'
+import { asistanAdi } from './Asistan'
+import { metninDili, type UygulamaMetni } from './metinler'
 
 export type KonusmaOzeti = { dil: string; dilKesin: boolean; ikinciGecis: boolean; dusukGuven: boolean }
 export type MuayeneDetayi = {
@@ -45,22 +48,17 @@ export function muayeneHataMetni(m: UygulamaMetni, kod: string | null): string |
   return harita[kod] ?? m.kabuk.hata
 }
 
-export const sablonAdi = (m: UygulamaMetni, s: string): string => (s === 'pediatri' ? m.muayene.sablonPediatri : m.muayene.sablonGenel)
+/** A template named for a person: the role's name in the screen's form, or "General". The key itself is never shown. */
+export const sablonAdi = (m: UygulamaMetni, s: string): string => uzRolAdi(s, metninDili(m)) ?? m.muayene.sablonGenel
+
+/** The template an account's visits are written with: its role's, or the general one while it has no role. */
+export const hesapSablonu = (rol: string | null | undefined): string => (rol && uzSablonMu(rol) ? rol : UZ_GENEL_SABLON)
 
 /** The language of a visit, named in the screen's language; "not determined" when the engine was not sure. */
 export function konusmaDiliAdi(m: UygulamaMetni, k: KonusmaOzeti | null): string {
   if (!k || !k.dil) return ''
   if (!k.dilKesin) return m.muayene.dilKarma
   return k.dil === 'uz' ? m.muayene.dilUz : k.dil === 'ru' ? m.muayene.dilRu : m.muayene.dilBaska
-}
-
-/** Under 18 on the day of the visit → the pediatric template is offered first. */
-export function varsayilanSablon(dogumTarihi: string, bugun: Date = new Date()): UzSablon {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dogumTarihi) || !UZ_ACIK_SABLONLAR.includes('pediatri')) return UZ_ACIK_SABLONLAR[0]
-  const [y, a, g] = dogumTarihi.split('-').map(Number)
-  let yas = bugun.getUTCFullYear() - y
-  if (bugun.getUTCMonth() + 1 < a || (bugun.getUTCMonth() + 1 === a && bugun.getUTCDate() < g)) yas -= 1
-  return yas >= 0 && yas < 18 ? 'pediatri' : UZ_ACIK_SABLONLAR[0]
 }
 
 const sureYaz = (sn: number) => `${String(Math.floor(sn / 60)).padStart(2, '0')}:${String(sn % 60).padStart(2, '0')}`
@@ -102,19 +100,22 @@ export function HastaSecGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
 
 export type KayitDurumu = 'hazir' | 'kayit' | 'yukleniyor' | 'isleniyor'
 
-export function KayitGorunumu({ m, hasta, sablon, setSablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec }: {
-  m: UygulamaMetni; hasta: Pick<HastaKaydi, 'id' | 'ad' | 'otaIsmi'>; sablon: UzSablon; setSablon: (s: UzSablon) => void
+export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol }: {
+  m: UygulamaMetni; hasta: Pick<HastaKaydi, 'id' | 'ad' | 'otaIsmi'>; /** The template the note will be written with: shown, not chosen. */ sablon: string
   riza: boolean; setRiza: (r: boolean) => void; durum: KayitDurumu; sure: number; hataKodu: string | null
   baslat: () => void; durdur: () => void; vazgec: () => void
+  /** NOTYA-UZ-BRANSLAR-01: the account's role — names the assistant that will prepare the note. No role = the neutral assistant. */
+  rol?: string | null
 }) {
   const v = m.muayene
   return (
     <section className="uza-kart uza-dar">
       <p className="uza-ust-yazi">{v.baslik}</p>
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
+      <p className="uza-ipucu" data-alan="asistan">{m.asistan.qayd}: <span data-alan="asistan-ad">{asistanAdi(m, rol)}</span></p>
       {durum === 'hazir' ? (
         <div className="uza-form">
-          <Secim etiket={v.sablon} ad="sablon" deger={sablon} sec={setSablon} secenekler={UZ_ACIK_SABLONLAR.map((s) => ({ deger: s, ad: sablonAdi(m, s) }))} />
+          <dl className="uza-bilgiler" style={{ marginTop: 0 }}><dt>{v.sablon}</dt><dd data-alan="sablon">{sablonAdi(m, sablon)}</dd></dl>
           <label className="uza-onay">
             <input type="checkbox" name="riza" checked={riza} onChange={(e) => setRiza(e.target.checked)} />
             <span>{v.riza}</span>
@@ -148,7 +149,6 @@ export function KayitGorunumu({ m, hasta, sablon, setSablon, riza, setRiza, duru
 function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaId: string }) {
   const [hasta, setHasta] = useState<HastaKaydi | null>(null)
   const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
-  const [sablon, setSablon] = useState<UzSablon>(UZ_ACIK_SABLONLAR[0])
   const [riza, setRiza] = useState(false)
   const [durum, setDurum] = useState<KayitDurumu>('hazir')
   const [sure, setSure] = useState(0)
@@ -158,6 +158,8 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
   const parcalar = useRef<Blob[]>([])
   const sayac = useRef<ReturnType<typeof setInterval> | null>(null)
   const { hesap, api } = u
+  // The template is the account's role. The server checks it again: another role's template is refused there.
+  const sablon = hesapSablonu(hesap?.rol)
 
   useEffect(() => {
     if (!hesap) return
@@ -165,7 +167,7 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
     api(`/api/ulke/hasta?id=${encodeURIComponent(hastaId)}`)
       .then((r) => {
         if (iptal) return
-        if (r.ok && r.j.hasta) { setHasta(r.j.hasta); setSablon(varsayilanSablon(String(r.j.hasta.dogumTarihi || ''))); setYuk('tamam') } else setYuk(r.status === 404 ? 'yok' : 'hata')
+        if (r.ok && r.j.hasta) { setHasta(r.j.hasta); setYuk('tamam') } else setYuk(r.status === 404 ? 'yok' : 'hata')
       })
       .catch(() => { if (!iptal) setYuk('hata') })
     return () => { iptal = true }
@@ -245,7 +247,7 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
       </section>
     )
   }
-  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} setSablon={setSablon} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} />
+  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
 }
 
 // ───────────────────────── a recorded visit ─────────────────────────
