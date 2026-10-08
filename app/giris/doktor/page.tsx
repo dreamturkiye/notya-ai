@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import { authHataMesaji } from '../authHataMesaji'
+import { authHataMesaji, GIRIS_HATALI } from '../authHataMesaji'
+import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 
@@ -22,6 +23,8 @@ export default function Giris() {
     const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) { setError(authHataMesaji(ae?.message, 'Giriş başarısız. Lütfen tekrar deneyin.')); setLoading(false); return }
+    // NOTYA-ULKE-01: an account of another country is refused with the sentence a wrong password gets.
+    if (!hesapBuUlkedeMi(data.user)) { await supabase.auth.signOut(); setError(GIRIS_HATALI); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
     // NOTYA-SEKRETER-01: sekreter onboarding'e gitmez — doğrudan Ön büro (Ana Sayfa) açılır.
     try {

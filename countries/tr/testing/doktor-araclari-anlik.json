@@ -1,0 +1,4065 @@
+{
+ "kaynak": "main@9891987 (2026-10-08) — captured before NOTYA-ULKE-01 touched lib/doktor/doktorAraclari.ts",
+ "not": "Every tool exactly as doktorAraclariListesi returned it on main, and for each raw specialty value the routes of the list, of the groups, and of the deep-link guard. Do not edit by hand: a Türkiye tool change must update this file in the same commit, on purpose.",
+ "araclar": [
+  {
+   "circleColor": "#0F9B8E",
+   "icon": "Rx",
+   "title": "e-Reçete Asistanı",
+   "desc": "Elektronik reçete oluştur ve SGK entegrasyonunu tamamla",
+   "route": "/doktor-tools/erecete",
+   "branslar": null
+  },
+  {
+   "circleColor": "#8B5CF6",
+   "icon": "EP",
+   "title": "Epikriz Üretici",
+   "desc": "Hasta özetlerini otomatik oluştur ve profesyonel epikriz raporları hazırla",
+   "route": "/doktor-tools/epikriz",
+   "branslar": null
+  },
+  {
+   "circleColor": "#F59E0B",
+   "icon": "IK",
+   "title": "ICD-10 Kodlayıcı",
+   "desc": "Türkçe tanı girişiyle anlık ICD-10 kodlama",
+   "route": "/doktor-tools/icd10",
+   "branslar": null
+  },
+  {
+   "circleColor": "#EF4444",
+   "icon": "II",
+   "title": "İlaç Etkileşimi",
+   "desc": "Reçetedeki ilaç etkileşimlerini kontrol et ve uyarıları görüntüle",
+   "route": "/doktor-tools/ilac-interaksiyon",
+   "branslar": null
+  },
+  {
+   "circleColor": "#166534",
+   "icon": "HR",
+   "title": "Hasta Raporları",
+   "desc": "SGK e-İstirahat / e-Rapor ve muayenehane belgesi oluştur",
+   "route": "/doktor-tools/sgk-rapor",
+   "branslar": null
+  },
+  {
+   "circleColor": "#EA580C",
+   "icon": "TX",
+   "title": "Tetkik İstek",
+   "desc": "Lab ve görüntüleme istek formu oluştur",
+   "route": "/doktor-tools/tetkik",
+   "branslar": null
+  },
+  {
+   "circleColor": "#0284C7",
+   "icon": "HP",
+   "title": "Hasta Portalı",
+   "desc": "Hastalara güvenli portal erişimi ver",
+   "route": "/doktor-tools/hasta-portali",
+   "branslar": null
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "SG",
+   "title": "SGK Medula",
+   "desc": "E-reçete ve provizyon sorgulama entegrasyonu",
+   "route": "/doktor-tools/sgk-medula",
+   "branslar": null
+  },
+  {
+   "circleColor": "#0F9B8E",
+   "icon": "EN",
+   "title": "e-Nabız",
+   "desc": "e-Nabız’a siz girersiniz; Notya alanları kopyalamaya hazırlar",
+   "route": "/doktor-tools/enabiz",
+   "branslar": null
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "MS",
+   "title": "Muayene sonu paketi",
+   "desc": "Vizitin kapanışı tek akışta: reçete · rapor · kontrol randevusu · portal özeti · SGK provizyon — her adım isteğe bağlı",
+   "route": "/doktor-tools/muayene-sonu",
+   "branslar": null
+  },
+  {
+   "circleColor": "#F59E0B",
+   "icon": "SK",
+   "title": "Sık kullandıklarım",
+   "desc": "Kendi vizit şablonlarınız: alışılmış tanı · reçete taslağı · kontrol aralığı — tek dokunuşla ön doldurulur, tamamen düzenlenebilir",
+   "route": "/doktor-tools/sablonlarim",
+   "branslar": null
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "KS",
+   "title": "Konsültasyonlar",
+   "desc": "Güvendiğiniz konsültan defteri · muayeneden istem · yanıt bekleyenler · konsültan e-posta linkiyle rapor bırakır",
+   "route": "/doktor-tools/konsultasyonlar",
+   "branslar": null
+  },
+  {
+   "circleColor": "#A16207",
+   "icon": "HB",
+   "title": "Hedef Boy",
+   "desc": "Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın",
+   "route": "/doktor-tools/hedef-boy",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "BP",
+   "title": "Büyüme & Persentil",
+   "desc": "Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)",
+   "route": "/doktor-tools/pedi-buyume",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#F97316",
+   "icon": "DH",
+   "title": "Doz Hesaplayıcı (mg/kg)",
+   "desc": "Girdiğiniz mg/kg ve konsantrasyonla doz başına mg ve mL — günlük toplam ve tavan uyarısı",
+   "route": "/doktor-tools/pedi-doz",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#22C55E",
+   "icon": "AT",
+   "title": "Aşı Takvimi & Telafi",
+   "desc": "SB ulusal takvimi: yapıldı · zamanı geldi · gecikti, bugün yapılabilecekler ve seriyi baştan başlatmayan telafi planı · özel aşılar ayrı",
+   "route": "/doktor-tools/pedi-asi",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#6366F1",
+   "icon": "GT",
+   "title": "Gelişim & Tarama Paneli",
+   "desc": "Bu vizitte hangi tarama: işitme, görme, GİDR, M-CHAT-R/F, D vitamini ve demir — işaretle, muayene formuna ekle",
+   "route": "/doktor-tools/pedi-gelisim",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#7C3AED",
+   "icon": "MC",
+   "title": "M-CHAT-R/F",
+   "desc": "Otizm tarama (16–30 ay): 20 soru · risk bandı · kaydet · muayene formuna ekle — tanı değil, karar desteği",
+   "route": "/doktor-tools/pedi-mchat",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "PK",
+   "title": "Pediatri Kohort Paneli",
+   "desc": "Aşısı geciken · izlemi kaçan · persentil kayması · D vit / demir · tarama gecikmesi · tek dokunuşla veli hatırlatması",
+   "route": "/doktor-tools/pedi-kohort",
+   "branslar": [
+    "pediatri"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "KH",
+   "title": "Dahiliye Kohort Paneli",
+   "desc": "HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/dahiliye-kohort",
+   "branslar": [
+    "dahiliye"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "S2",
+   "title": "SCORE2 / KVR",
+   "desc": "ESC SCORE2 · Diabetes · OP · kova taslak — hekim kilidi olmadan kesinleşmez",
+   "route": "/doktor-tools/dahiliye-score2",
+   "branslar": [
+    "dahiliye"
+   ]
+  },
+  {
+   "circleColor": "#2563EB",
+   "icon": "CK",
+   "title": "KDIGO CKD evreleme",
+   "desc": "eGFR × UACR ısı haritası · kronisite · nefro sevk paketi",
+   "route": "/doktor-tools/dahiliye-ckd",
+   "branslar": [
+    "dahiliye"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "SR",
+   "title": "SGK ilaç raporu",
+   "desc": "HT · DM · statin · DOAK · Vit D/B12 taslak · SUT kontrol listesi",
+   "route": "/doktor-tools/dahiliye-sgk",
+   "branslar": [
+    "dahiliye"
+   ]
+  },
+  {
+   "circleColor": "#9333EA",
+   "icon": "PF",
+   "title": "Polifarmasi STOPP/START",
+   "desc": "≥65 yaş tarama · engelleyici öneriler · öneriye uymama gerekçesi",
+   "route": "/doktor-tools/dahiliye-polifarmasi",
+   "branslar": [
+    "dahiliye"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "AK",
+   "title": "CHA₂DS₂-VASc / HAS-BLED",
+   "desc": "AF risk bileşenleri · HAS-BLED kontrol listesi (skor iddiası yok) · DOAK uygunluk",
+   "route": "/doktor-tools/dahiliye-antikoag",
+   "branslar": [
+    "dahiliye"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "VA",
+   "title": "VA / logMAR",
+   "desc": "Ondalık · Snellen · PS/EH/IH → logMAR ve iki vizit arası ETDRS harf farkı, OD/OS",
+   "route": "/doktor-tools/goz-va",
+   "branslar": [
+    "goz-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#2563EB",
+   "icon": "SV",
+   "title": "SUT anti-VEGF kapı",
+   "desc": "Ajan · göz · basamak · MI/SVO + enjeksiyon geçmişi → SUT 4.2.33 engel ve uyarıları",
+   "route": "/doktor-tools/goz-sut-vegf",
+   "branslar": [
+    "goz-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "SR",
+   "title": "SGK rapor taslağı",
+   "desc": "Anti-VEGF başlangıç / idame / implant ve GİL bilgi notu — zorunlu maddeler ve eksikler",
+   "route": "/doktor-tools/goz-sgk-rapor",
+   "branslar": [
+    "goz-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#9333EA",
+   "icon": "GL",
+   "title": "GİL EK-3/G kodları",
+   "desc": "Göz içi lens kodlarını ara ve kopyala — bedel gösterilmez",
+   "route": "/doktor-tools/goz-gil-kod",
+   "branslar": [
+    "goz-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "GK",
+   "title": "Göz kohort paneli",
+   "desc": "Geciken GA/OCT · planlı IVT · DR tarama · kontrol zamanı · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/goz-kohort",
+   "branslar": [
+    "goz-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#DB2777",
+   "icon": "PE",
+   "title": "PASI / EASI hesap",
+   "desc": "Bölge skoru · toplam ve şiddet bandı · SCORAD alanları",
+   "route": "/doktor-tools/derm-pasi",
+   "branslar": [
+    "dermatoloji"
+   ]
+  },
+  {
+   "circleColor": "#BE185D",
+   "icon": "GÖ",
+   "title": "GÖP izotretinoin kapı",
+   "desc": "β-hCG · kontrasepsiyon · siklus günü · reçete süresi",
+   "route": "/doktor-tools/derm-gop",
+   "branslar": [
+    "dermatoloji"
+   ]
+  },
+  {
+   "circleColor": "#7C3AED",
+   "icon": "FT",
+   "title": "Fototerapi defteri",
+   "desc": "Cihaz · J/cm² · kümülatif doz · MED · yanık bayrağı",
+   "route": "/doktor-tools/derm-fototerapi",
+   "branslar": [
+    "dermatoloji"
+   ]
+  },
+  {
+   "circleColor": "#C026D3",
+   "icon": "YT",
+   "title": "Yama D2 / D4",
+   "desc": "Uygulama → okuma takvimi · Avrupa baz serisi antijenleri",
+   "route": "/doktor-tools/derm-yama",
+   "branslar": [
+    "dermatoloji"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "DK",
+   "title": "Derm kohort paneli",
+   "desc": "TBSE · yama okuma · fototerapi arası · β-hCG · lab · lezyon görevi",
+   "route": "/doktor-tools/derm-kohort",
+   "branslar": [
+    "dermatoloji"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "SR",
+   "title": "Biyolojik SUT taslağı",
+   "desc": "PASI / DLQI · tarama · önceki basamak · kopyalanabilir taslak — doz ve T.C. yazılmaz",
+   "route": "/doktor-tools/derm-biyolojik-sut",
+   "branslar": [
+    "dermatoloji"
+   ]
+  },
+  {
+   "circleColor": "#DB2777",
+   "icon": "GT",
+   "title": "Gebelik takvimi",
+   "desc": "SAT · USG · CRL → gebelik haftası, DÖBYR izlemleri ve tarama pencereleri: açık · kapanmak üzere · kaçırıldı",
+   "route": "/doktor-tools/kd-gebelik-takvim",
+   "branslar": [
+    "kadin-hastaliklari-dogum"
+   ]
+  },
+  {
+   "circleColor": "#7C3AED",
+   "icon": "AR",
+   "title": "Doğum & analık raporu",
+   "desc": "TDT → SGK analık istirahati tarihleri, erken / geç doğumda yeniden hesap ve istirahat raporu taslağı",
+   "route": "/doktor-tools/kd-dogum-rapor",
+   "branslar": [
+    "kadin-hastaliklari-dogum"
+   ]
+  },
+  {
+   "circleColor": "#059669",
+   "icon": "MC",
+   "title": "Kontrasepsiyon MEC",
+   "desc": "Hasta faktörleri → yöntem başına WHO MEC 1–4 ve gerekçe · acil kontrasepsiyon · doğum sonrası başlama",
+   "route": "/doktor-tools/kd-mec",
+   "branslar": [
+    "kadin-hastaliklari-dogum"
+   ]
+  },
+  {
+   "circleColor": "#E11D48",
+   "icon": "OR",
+   "title": "Obstetrik risk & sezaryen notu",
+   "desc": "Preeklampsi → aspirin penceresi · GDM riski · SSVD alanları · hekim kilitli sezaryen endikasyon notu",
+   "route": "/doktor-tools/kd-risk",
+   "branslar": [
+    "kadin-hastaliklari-dogum"
+   ]
+  },
+  {
+   "circleColor": "#EA580C",
+   "icon": "KK",
+   "title": "Kadın Hast. ve Doğum kohort paneli",
+   "desc": "Lohusa 1. / 6. hafta · kapanan tarama pencereleri · geciken izlem · OGTT / anti-D / GBS · smear · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/kd-kohort",
+   "branslar": [
+    "kadin-hastaliklari-dogum"
+   ]
+  },
+  {
+   "circleColor": "#6366F1",
+   "icon": "PG",
+   "title": "PHQ-9 / GAD-7",
+   "desc": "Madde madde doldur · toplam ve şiddet bandı (karar desteği, tanı değil) · 9. madde güvenlik uyarısı · vizitler arası değişim",
+   "route": "/doktor-tools/psik-phq-gad",
+   "branslar": [
+    "psikiyatri"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "GR",
+   "title": "Güvenlik & acil triyaj",
+   "desc": "Özkıyım düşüncesi · kendine zarar · şiddet riski · akut psikoz bayrakları → 112 / acil yönlendirme ve hekim onaylı kriz planı",
+   "route": "/doktor-tools/psik-risk",
+   "branslar": [
+    "psikiyatri"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "Lİ",
+   "title": "Psikotrop izlem takvimi",
+   "desc": "Lityum düzey · valproat KCFT/hemogram · atipik AP metabolik panel · SSRI sodyum — sınıf düzeyi görevler, doz yok",
+   "route": "/doktor-tools/psik-ilac-izlem",
+   "branslar": [
+    "psikiyatri"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "PR",
+   "title": "Psikotrop rapor & reçete",
+   "desc": "İlaç raporu taslağı · SUT kontrol listesi · kırmızı / yeşil reçete uyarısı — T.C. kimlik ve doz yazılmaz",
+   "route": "/doktor-tools/psik-sgk",
+   "branslar": [
+    "psikiyatri"
+   ]
+  },
+  {
+   "circleColor": "#9333EA",
+   "icon": "PK",
+   "title": "Psikiyatri kohort paneli",
+   "desc": "PHQ-9 yüksek · açık güvenlik bayrağı · geciken kontrol · geciken lityum/valproat düzeyi · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/psik-kohort",
+   "branslar": [
+    "psikiyatri"
+   ]
+  },
+  {
+   "circleColor": "#4F46E5",
+   "icon": "OT",
+   "title": "Otoskopi / kulak zarı notu",
+   "desc": "Sağ-sol dış kulak ve TM görünümü işaretle → düzenli muayene notu · karar bekleyen bulgular · tanı yazılmaz",
+   "route": "/doktor-tools/kbb-otoskopi",
+   "branslar": [
+    "kulak-burun-bogaz"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "OD",
+   "title": "Odyometri özeti",
+   "desc": "0,5–4 kHz eşiklerden PTA ve şiddet bandı (karar desteği) · önceki ölçümle değişim · asimetri uyarısı · kayıp tipini hekim seçer",
+   "route": "/doktor-tools/kbb-odyometri",
+   "branslar": [
+    "kulak-burun-bogaz"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "VT",
+   "title": "Vertigo / Dix-Hallpike",
+   "desc": "Pozisyonel test ve repozisyon manevrası notu · nistagmus özellikleri · santral şüphesi işaretinde manevra yerine acil",
+   "route": "/doktor-tools/kbb-vertigo",
+   "branslar": [
+    "kulak-burun-bogaz"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "İR",
+   "title": "SGK işitme raporu",
+   "desc": "İşitme cihazı · odyolojik tetkik · iş gücü / öğrenci raporu taslağı ve SUT kontrol listesi — T.C. kimlik, cihaz markası ve bedel yazılmaz",
+   "route": "/doktor-tools/kbb-sgk",
+   "branslar": [
+    "kulak-burun-bogaz"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "KK",
+   "title": "KBB kohort paneli",
+   "desc": "Geciken kontrol · yenilenmesi gereken işitme testi · açık kırmızı bayrak · bekleyen uyku tetkiki sevki · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/kbb-kohort",
+   "branslar": [
+    "kulak-burun-bogaz"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "S2",
+   "title": "SCORE2 / KV risk",
+   "desc": "ESC 2021 SCORE2 · 10 yıllık risk % ve bant (karar desteği, tanı değil) · Türkiye yüksek risk bölgesi · doz yok",
+   "route": "/doktor-tools/kardio-score2",
+   "branslar": [
+    "kardiyoloji"
+   ]
+  },
+  {
+   "circleColor": "#EA580C",
+   "icon": "HT",
+   "title": "HT / KKY izlem",
+   "desc": "Hipertansiyon ve kalp yetersizliği izlem özeti · NYHA hekim seçimi · sınıf düzeyi görev · EKG/belge köprüsü · doz yok",
+   "route": "/doktor-tools/kardio-ht-kky",
+   "branslar": [
+    "kardiyoloji"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "KR",
+   "title": "SGK kardiyo rapor",
+   "desc": "HT · KKY · antikoagülan · koroner izlem taslağı ve SUT kontrol listesi — T.C. kimlik ve doz yazılmaz",
+   "route": "/doktor-tools/kardio-sgk",
+   "branslar": [
+    "kardiyoloji"
+   ]
+  },
+  {
+   "circleColor": "#B91C1C",
+   "icon": "KK",
+   "title": "Kardiyoloji kohort paneli",
+   "desc": "Geciken kontrol · lab/EKG · açık kırmızı bayrak · yüksek risk izlem gecikmesi · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/kardio-kohort",
+   "branslar": [
+    "kardiyoloji"
+   ]
+  },
+  {
+   "circleColor": "#0284C7",
+   "icon": "CM",
+   "title": "CAT / mMRC skorları",
+   "desc": "CAT 8 madde ve mMRC ile GOLD ABE grubu (karar desteği) · alevlenme öyküsü · tanı ve doz yazılmaz",
+   "route": "/doktor-tools/gogus-cat-mmrc",
+   "branslar": [
+    "gogus-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0EA5E9",
+   "icon": "AP",
+   "title": "Astım-KOAH aksiyon planı",
+   "desc": "Yeşil / sarı / kırmızı yazılı plan taslağı · inhaler sınıfı (doz yok) · hasta eğitimi metni",
+   "route": "/doktor-tools/gogus-aksiyon-plani",
+   "branslar": [
+    "gogus-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0284C7",
+   "icon": "İN",
+   "title": "İnhaler teknik & izlem",
+   "desc": "ÖDİ / KTİ / soft mist teknik kontrol listesi · tekrar kontrol takvimi · miktar şeması yazılmaz",
+   "route": "/doktor-tools/gogus-inhaler",
+   "branslar": [
+    "gogus-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "SR",
+   "title": "SGK solunum raporu",
+   "desc": "USOT · nebulizatör · solunum değerlendirme taslağı ve SUT kontrol listesi — T.C. kimlik ve doz yazılmaz",
+   "route": "/doktor-tools/gogus-sgk",
+   "branslar": [
+    "gogus-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0369A1",
+   "icon": "GK",
+   "title": "Göğüs kohort paneli",
+   "desc": "Geciken kontrol · spirometri · açık kırmızı bayrak · inhaler teknik · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/gogus-kohort",
+   "branslar": [
+    "gogus-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "İN",
+   "title": "İnme / TIA kırmızı bayrak",
+   "desc": "Yüz kayması · konuşma bozukluğu · güç kaybı · ani görme kaybı · ani şiddetli (thunderclap) baş ağrısı → 112 / acil · hekim onaylı triyaj",
+   "route": "/doktor-tools/noro-inme",
+   "branslar": [
+    "noroloji"
+   ]
+  },
+  {
+   "circleColor": "#7C3AED",
+   "icon": "MG",
+   "title": "Migren günlüğü / MIDAS",
+   "desc": "Son 3 ay engellilik günleri · toplam ve bant (karar desteği, tanı değil) · eksik madde yorumlanmaz",
+   "route": "/doktor-tools/noro-migren",
+   "branslar": [
+    "noroloji"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "AE",
+   "title": "Nöroloji ilaç izlem (AED)",
+   "desc": "Valproat · karbamazepin · fenitoin · lamotrijin · levetirasetam — sınıf düzeyi lab görevleri, doz yok",
+   "route": "/doktor-tools/noro-ilac-izlem",
+   "branslar": [
+    "noroloji"
+   ]
+  },
+  {
+   "circleColor": "#9333EA",
+   "icon": "NK",
+   "title": "Nöroloji kohort paneli",
+   "desc": "Geciken kontrol · geciken ilaç izlem · açık inme/TIA bayrağı · yüksek MIDAS · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/noro-kohort",
+   "branslar": [
+    "noroloji"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "IP",
+   "title": "IPSS semptom skoru",
+   "desc": "7 madde 0–5 toplamı ve şiddet bandı (karar desteği, tanı değil) · QoL ayrı · BPH yazılmaz",
+   "route": "/doktor-tools/uro-ipss",
+   "branslar": [
+    "uroloji"
+   ]
+  },
+  {
+   "circleColor": "#059669",
+   "icon": "PS",
+   "title": "PSA izlem",
+   "desc": "PSA değeri ve hız (karar desteği) · kanser tanısı yazılmaz · yaş notu hekim karar desteği",
+   "route": "/doktor-tools/uro-psa",
+   "branslar": [
+    "uroloji"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "UA",
+   "title": "Hematuri / taş acil triyaj",
+   "desc": "Makroskopik hematüri · retansiyon · yan ağrısı + ateş · torsiyon · priapizm · üretra travması → 112 · hekim onaylı",
+   "route": "/doktor-tools/uro-acil",
+   "branslar": [
+    "uroloji"
+   ]
+  },
+  {
+   "circleColor": "#10B981",
+   "icon": "UK",
+   "title": "Üroloji kohort paneli",
+   "desc": "Geciken kontrol · PSA izlem · yüksek IPSS · açık kırmızı bayrak · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/uro-kohort",
+   "branslar": [
+    "uroloji"
+   ]
+  },
+  {
+   "circleColor": "#D97706",
+   "icon": "KA",
+   "title": "Kırık / alçı-ortez takip",
+   "desc": "Bölge · NV · alçı alma / yük verme tarihleri · görüntü köprüsü · kaynama yazılmaz",
+   "route": "/doktor-tools/orto-kirik-alci",
+   "branslar": [
+    "ortopedi"
+   ]
+  },
+  {
+   "circleColor": "#F59E0B",
+   "icon": "VS",
+   "title": "VAS / fonksiyon skoru",
+   "desc": "VAS 0–10 + 4 fonksiyon maddesi · şiddet bandı (karar desteği, tanı değil) · artroz yazılmaz",
+   "route": "/doktor-tools/orto-vas",
+   "branslar": [
+    "ortopedi"
+   ]
+  },
+  {
+   "circleColor": "#B45309",
+   "icon": "OP",
+   "title": "Op-sonrası protokol",
+   "desc": "Dikiş · yük verme · görüntü kilometre taşları · ameliyathane takvimi / HBYS yok",
+   "route": "/doktor-tools/orto-op-protokol",
+   "branslar": [
+    "ortopedi"
+   ]
+  },
+  {
+   "circleColor": "#92400E",
+   "icon": "OK",
+   "title": "Ortopedi kohort paneli",
+   "desc": "Geciken kontrol · alçı/yük izlemi · yüksek VAS · açık kırmızı bayrak · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/orto-kohort",
+   "branslar": [
+    "ortopedi"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "SP",
+   "title": "FTR seans planı",
+   "desc": "Bölge · modalite · seans sayısı / haftalık sıklık · SGK notu hekim doğrular · ilaç/doz yok",
+   "route": "/doktor-tools/ftr-seans",
+   "branslar": [
+    "fizik-tedavi"
+   ]
+  },
+  {
+   "circleColor": "#22C55E",
+   "icon": "VO",
+   "title": "VAS / ODI ölçek",
+   "desc": "VAS 0–10 ve ODI 10 madde yüzde bandı (karar desteği, tanı değil) · eksik madde yorumlanmaz",
+   "route": "/doktor-tools/ftr-vas-odi",
+   "branslar": [
+    "fizik-tedavi"
+   ]
+  },
+  {
+   "circleColor": "#15803D",
+   "icon": "EG",
+   "title": "Ev egzersiz reçetesi",
+   "desc": "Genel egzersiz adı · set/tekrar (ilaç dozu değil) · ağrı artınca dur · 112 notu",
+   "route": "/doktor-tools/ftr-egzersiz",
+   "branslar": [
+    "fizik-tedavi"
+   ]
+  },
+  {
+   "circleColor": "#166534",
+   "icon": "FK",
+   "title": "FTR kohort paneli",
+   "desc": "Geciken kontrol · seans/egzersiz · açık kırmızı bayrak · yüksek VAS/ODI · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/ftr-kohort",
+   "branslar": [
+    "fizik-tedavi"
+   ]
+  },
+  {
+   "circleColor": "#15803D",
+   "icon": "AŞ",
+   "title": "Aşı / tarama paketi",
+   "desc": "Ulusal aşı takvimi · grip/pnömokok/HPV · kolon/meme/serviks tarama vadeleri — doz ve lot yok",
+   "route": "/doktor-tools/aile-asi-tarama",
+   "branslar": [
+    "aile-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#16A34A",
+   "icon": "KR",
+   "title": "Kronik paket (DM / HT)",
+   "desc": "Diyabet · hipertansiyon · lipid · solunum izlem vadeleri · sınıf düzeyi görev — doz ve hedef sayı yok",
+   "route": "/doktor-tools/aile-kronik",
+   "branslar": [
+    "aile-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "SV",
+   "title": "Sevk / acil triyaj",
+   "desc": "Göğüs ağrısı · ani nefes darlığı · bilinç · kanama · inme bayrağı · anafilaksi → 112 · hekim onaylı",
+   "route": "/doktor-tools/aile-sevk",
+   "branslar": [
+    "aile-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#059669",
+   "icon": "AK",
+   "title": "Aile hekimliği kohort",
+   "desc": "Geciken kontrol · aşı/tarama · kronik izlem · açık sevk/acil bayrağı · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/aile-kohort",
+   "branslar": [
+    "aile-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#CA8A04",
+   "icon": "RT",
+   "title": "RTP (spora dönüş) basamakları",
+   "desc": "0–5 basamak karar desteği · kontrol takvimi · spora dönüş ve tanı yazılmaz",
+   "route": "/doktor-tools/spor-rtp",
+   "branslar": [
+    "spor-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#A16207",
+   "icon": "SG",
+   "title": "Sakatlık günlüğü",
+   "desc": "Bölge · mekanizma · şiddet bandı (karar desteği) · isteğe bağlı yüklenme uyarısı · tanı/doz yok",
+   "route": "/doktor-tools/spor-sakatlik",
+   "branslar": [
+    "spor-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#854D0E",
+   "icon": "SK",
+   "title": "Spor kohort paneli",
+   "desc": "Geciken kontrol · RTP · aktif sakatlık · yüklenme uyarısı · açık kırmızı bayrak · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/spor-kohort",
+   "branslar": [
+    "spor-hekimligi"
+   ]
+  },
+  {
+   "circleColor": "#A855F7",
+   "icon": "Hb",
+   "title": "HbA1c / tiroid izlem döngüsü",
+   "desc": "HbA1c · TSH · FT4 değeri → önerilen izlem aralığı (karar desteği) · tanı ve doz yok · CGM yok",
+   "route": "/doktor-tools/endo-lab-izlem",
+   "branslar": [
+    "endokrinoloji"
+   ]
+  },
+  {
+   "circleColor": "#9333EA",
+   "icon": "DX",
+   "title": "Osteoporoz / DXA hatırlatma",
+   "desc": "Son DXA tarihi · risk bandı → tekrar aralığı · T-skor / tanı / ilaç dozu yazılmaz",
+   "route": "/doktor-tools/endo-dxa",
+   "branslar": [
+    "endokrinoloji"
+   ]
+  },
+  {
+   "circleColor": "#7E22CE",
+   "icon": "RJ",
+   "title": "İnsülin / tiroid rejim kartı",
+   "desc": "Yalnız başlangıç ve kontrol tarihleri · doz birimi yazılmaz",
+   "route": "/doktor-tools/endo-rejim",
+   "branslar": [
+    "endokrinoloji"
+   ]
+  },
+  {
+   "circleColor": "#6B21A8",
+   "icon": "EK",
+   "title": "Endokrinoloji kohort paneli",
+   "desc": "Geciken kontrol · lab/DXA · açık acil bayrak · yüksek HbA1c bandı · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/endo-kohort",
+   "branslar": [
+    "endokrinoloji"
+   ]
+  },
+  {
+   "circleColor": "#F43F5E",
+   "icon": "IB",
+   "title": "IBD / IBS skor takip",
+   "desc": "Mayo kısmi · HBI · IBS-SSS → aktivite bandı (karar desteği) · tanı ve doz yok",
+   "route": "/doktor-tools/gastro-ibd-ibs",
+   "branslar": [
+    "gastroenteroloji"
+   ]
+  },
+  {
+   "circleColor": "#E11D48",
+   "icon": "EN",
+   "title": "Endoskopi belge köprüsü",
+   "desc": "İşlem türü · tarih · dosya belgesine köprü · sonraki kontrol · HBYS / ameliyathane yok",
+   "route": "/doktor-tools/gastro-endoskopi",
+   "branslar": [
+    "gastroenteroloji"
+   ]
+  },
+  {
+   "circleColor": "#BE123C",
+   "icon": "HV",
+   "title": "HBV / HCV izlem vadeleri",
+   "desc": "İzlem bandı → önerilen kontrol aralığı · antiviral doz yazılmaz",
+   "route": "/doktor-tools/gastro-hepatit",
+   "branslar": [
+    "gastroenteroloji"
+   ]
+  },
+  {
+   "circleColor": "#9F1239",
+   "icon": "GK",
+   "title": "Gastroenteroloji kohort paneli",
+   "desc": "Geciken kontrol · skor/hepatit/endoskopi · PPI/biyolojik tarih · açık acil · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/gastro-kohort",
+   "branslar": [
+    "gastroenteroloji"
+   ]
+  },
+  {
+   "circleColor": "#0E7490",
+   "icon": "eG",
+   "title": "eGFR / KDIGO şerit",
+   "desc": "eGFR × UACR ısı haritası · izlem aralığı (karar desteği) · tanı ve ESA dozu yok",
+   "route": "/doktor-tools/nef-egfr-kdigo",
+   "branslar": [
+    "nefroloji"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "DY",
+   "title": "Diyaliz seans / takip",
+   "desc": "Modalite · seans tarihleri · makine / HBYS / UF / reçete yok",
+   "route": "/doktor-tools/nef-diyaliz",
+   "branslar": [
+    "nefroloji"
+   ]
+  },
+  {
+   "circleColor": "#0E7490",
+   "icon": "AN",
+   "title": "Anemi-CKD izlem",
+   "desc": "Hb (± ferritin) → izlem aralığı · ESA dozu yazılmaz",
+   "route": "/doktor-tools/nef-anemi",
+   "branslar": [
+    "nefroloji"
+   ]
+  },
+  {
+   "circleColor": "#0F766E",
+   "icon": "SG",
+   "title": "SGK nefro rapor",
+   "desc": "KBH · diyaliz · ESA/anemi · mineral-kemik · nakil izlem taslağı · SUT kontrol listesi · T.C./doz yok · Medula canlı yok",
+   "route": "/doktor-tools/nef-sgk",
+   "branslar": [
+    "nefroloji"
+   ]
+  },
+  {
+   "circleColor": "#155E75",
+   "icon": "NK",
+   "title": "Nefroloji kohort paneli",
+   "desc": "Geciken kontrol · eGFR/anemi/diyaliz · açık acil · KDIGO kırmızı · ilaç kontrol listesi (doz yazılmaz) · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/nef-kohort",
+   "branslar": [
+    "nefroloji"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "İZ",
+   "title": "İzolasyon / bildirim hatırlatma",
+   "desc": "İzolasyon tipi · başlangıç/bitiş · bildirim tarihi — tanı yok · HBYS yok",
+   "route": "/doktor-tools/enfeksiyon-izolasyon",
+   "branslar": [
+    "enfeksiyon-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "AT",
+   "title": "Antibiyotik süre sayacı",
+   "desc": "Başlangıç · süre gün → bitiş/kontrol · doz ve etken madde uydurulmaz",
+   "route": "/doktor-tools/enfeksiyon-atb-sure",
+   "branslar": [
+    "enfeksiyon-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0F766E",
+   "icon": "HV",
+   "title": "HIV / viral izlem vadeleri",
+   "desc": "Son izlem tarihi · tür → önerilen vade (karar desteği) · CD4/viral yorumu ve tanı hekimde",
+   "route": "/doktor-tools/enfeksiyon-viral-izlem",
+   "branslar": [
+    "enfeksiyon-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#0F766E",
+   "icon": "EK",
+   "title": "Enfeksiyon kohort paneli",
+   "desc": "Geciken kontrol · ATB süre · viral izlem · izolasyon · açık acil bayrak · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/enfeksiyon-kohort",
+   "branslar": [
+    "enfeksiyon-hastaliklari"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "Kür",
+   "title": "Tedavi döngü / kür sayacı",
+   "desc": "Kür numarası · tarihler · protokol etiketi — doz ve vücut yüzeyi hesabı yazılmaz",
+   "route": "/doktor-tools/onko-kur",
+   "branslar": [
+    "onkoloji"
+   ]
+  },
+  {
+   "circleColor": "#B91C1C",
+   "icon": "Tx",
+   "title": "Toksisite kontrol listesi",
+   "desc": "Yan etki maddeleri · izlem tarihi · derece tanı değildir · doz azaltma hekimde",
+   "route": "/doktor-tools/onko-toksisite",
+   "branslar": [
+    "onkoloji"
+   ]
+  },
+  {
+   "circleColor": "#991B1B",
+   "icon": "SUT",
+   "title": "SUT rapor taslağı",
+   "desc": "SGK/SUT endikasyon taslağı · canlı Medula e-imza yok · güncel madde hekim doğrular",
+   "route": "/doktor-tools/onko-sut",
+   "branslar": [
+    "onkoloji"
+   ]
+  },
+  {
+   "circleColor": "#7F1D1D",
+   "icon": "OK",
+   "title": "Onkoloji kohort paneli",
+   "desc": "Geciken kontrol · kür · toksisite · açık acil · görüntü zaman çizelgesi · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/onko-kohort",
+   "branslar": [
+    "onkoloji"
+   ]
+  },
+  {
+   "circleColor": "#EF4444",
+   "icon": "PO",
+   "title": "Pre-op kontrol listesi",
+   "desc": "Onam · lab · görüntü · antikoagülan planı — doz ve ameliyathane takvimi yazılmaz",
+   "route": "/doktor-tools/gc-preop",
+   "branslar": [
+    "genel-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#DC2626",
+   "icon": "YD",
+   "title": "Yara / dren izlem",
+   "desc": "Yara · dren · dikiş · taburcu kontrol tarihleri — enfeksiyon tanısı ve doz yok",
+   "route": "/doktor-tools/gc-yara-dren",
+   "branslar": [
+    "genel-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#B91C1C",
+   "icon": "PT",
+   "title": "Patoloji belge köprüsü",
+   "desc": "Rapor bekleniyor / geldi / hekim gördü — tanı, evre, ICD yazılmaz",
+   "route": "/doktor-tools/gc-patoloji",
+   "branslar": [
+    "genel-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#991B1B",
+   "icon": "GK",
+   "title": "Genel cerrahi kohort",
+   "desc": "Geciken kontrol · pre-op · yara/dren · patoloji · açık acil · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/gc-kohort",
+   "branslar": [
+    "genel-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#BE185D",
+   "icon": "FT",
+   "title": "Foto zaman çizgisi köprü",
+   "desc": "Klinik foto tarih+etiket · yapay zekâ tanısı yok · derm skor sızmaz",
+   "route": "/doktor-tools/plastik-foto",
+   "branslar": [
+    "plastik-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#DB2777",
+   "icon": "YG",
+   "title": "Yara / greft izlem",
+   "desc": "Bölge · pansuman · dikiş alma tarihleri · tanı ve doz yazılmaz · ameliyathane planı yok",
+   "route": "/doktor-tools/plastik-yara",
+   "branslar": [
+    "plastik-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#EC4899",
+   "icon": "On",
+   "title": "Onam taslağı kontrol listesi",
+   "desc": "Bilgilendirilmiş onam maddeleri · tanı otomatik kilitlenmez · canlı e-imza yok",
+   "route": "/doktor-tools/plastik-onam",
+   "branslar": [
+    "plastik-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#9D174D",
+   "icon": "PK",
+   "title": "Plastik kohort paneli",
+   "desc": "Geciken kontrol · yara/greft · foto · açık acil · onam · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/plastik-kohort",
+   "branslar": [
+    "plastik-cerrahi"
+   ]
+  },
+  {
+   "circleColor": "#F97316",
+   "icon": "ESI",
+   "title": "ESI triyaj",
+   "desc": "ESI 1–5 · kaynak bayrakları · karar desteği — tanı, doz ve acil yatak panosu / HBYS yazılmaz",
+   "route": "/doktor-tools/acil-esi",
+   "branslar": [
+    "acil-tip"
+   ]
+  },
+  {
+   "circleColor": "#EA580C",
+   "icon": "KY",
+   "title": "Kritik yol kontrol listesi",
+   "desc": "STEMI · inme · travma · sepsis · hava yolu bayrakları — tanı kilidi yok · doz yok",
+   "route": "/doktor-tools/acil-kritik-yol",
+   "branslar": [
+    "acil-tip"
+   ]
+  },
+  {
+   "circleColor": "#C2410C",
+   "icon": "SV",
+   "title": "Sevk / yatış paket taslağı",
+   "desc": "Yatış · sevk · taburcu · konsültasyon maddeleri — acilde bekletme / HBYS yok",
+   "route": "/doktor-tools/acil-sevk",
+   "branslar": [
+    "acil-tip"
+   ]
+  },
+  {
+   "circleColor": "#9A3412",
+   "icon": "AK",
+   "title": "Acil Tıp kohort paneli",
+   "desc": "Geciken kontrol · ESI 1–2 · kritik yol · sevk · açık bayrak · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/acil-kohort",
+   "branslar": [
+    "acil-tip"
+   ]
+  },
+  {
+   "circleColor": "#7C3AED",
+   "icon": "PO",
+   "title": "Nöro post-op kontrol listesi",
+   "desc": "Yara · nöro muayene · ağrı · DVT hatırlatma — tanı, ameliyathane / HBYS ve AED dozu yazılmaz",
+   "route": "/doktor-tools/bc-postop",
+   "branslar": [
+    "beyin-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#6D28D9",
+   "icon": "GB",
+   "title": "Görüntü belge köprü",
+   "desc": "BT/MR/belge kontrol tarihi + etiket · yapay zekâ tanısı yok · rapor yorumu hekimde",
+   "route": "/doktor-tools/bc-goruntu",
+   "branslar": [
+    "beyin-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#5B21B6",
+   "icon": "NB",
+   "title": "Nöbet / bilinç izlem",
+   "desc": "Bayraklar ve tarihler · tanı değil · AED dozu yazılmaz · nöroloji Migren/İnme değildir",
+   "route": "/doktor-tools/bc-bilinc",
+   "branslar": [
+    "beyin-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#4C1D95",
+   "icon": "BK",
+   "title": "Beyin cerrahisi kohort",
+   "desc": "Geciken kontrol · post-op · bilinç · açık acil · görüntü · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/bc-kohort",
+   "branslar": [
+    "beyin-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#8B5CF6",
+   "icon": "ASA",
+   "title": "ASA / pre-op kontrol listesi",
+   "desc": "Pre-op maddeler · ASA sınıfı · alerji/ilaç — tanı, ameliyathane, anestezi makinesi, HBYS ve doz yazılmaz",
+   "route": "/doktor-tools/anestezi-asa",
+   "branslar": [
+    "anestezi"
+   ]
+  },
+  {
+   "circleColor": "#7C3AED",
+   "icon": "HY",
+   "title": "Hava yolu notu",
+   "desc": "Mallampati · zor hava yolu bayrakları · tarih — tanı ve ilaç dozu yazılmaz",
+   "route": "/doktor-tools/anestezi-hava-yolu",
+   "branslar": [
+    "anestezi"
+   ]
+  },
+  {
+   "circleColor": "#6D28D9",
+   "icon": "Ağ",
+   "title": "Post-op ağrı izlem",
+   "desc": "Skor 0–10 · bayraklar · tarih — analjezik dozu yazılmaz",
+   "route": "/doktor-tools/anestezi-agri",
+   "branslar": [
+    "anestezi"
+   ]
+  },
+  {
+   "circleColor": "#5B21B6",
+   "icon": "AK",
+   "title": "Anestezi kohort",
+   "desc": "Geciken kontrol · ASA · hava yolu · ağrı · alerji/ilaç · açık acil · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/anestezi-kohort",
+   "branslar": [
+    "anestezi"
+   ]
+  },
+  {
+   "circleColor": "#0D9488",
+   "icon": "TK",
+   "title": "Tetkik kuyruğu / öncelik",
+   "desc": "Modalite · öncelik · durum — PACS/RIS/HBYS ve yapay zekâ tanısı yazılmaz",
+   "route": "/doktor-tools/radyo-kuyruk",
+   "branslar": [
+    "radyoloji"
+   ]
+  },
+  {
+   "circleColor": "#0F766E",
+   "icon": "BR",
+   "title": "Yapılandırılmış rapor taslağı",
+   "desc": "BI-RADS tarzı kategori hekim seçer — otomatik tanı değildir · uydurma bulgu yok",
+   "route": "/doktor-tools/radyo-rapor",
+   "branslar": [
+    "radyoloji"
+   ]
+  },
+  {
+   "circleColor": "#115E59",
+   "icon": "KB",
+   "title": "Kritik bulgu bildirimi",
+   "desc": "Bayrak + klinisyen kontrol listesi — yapay zekâ tanısı yok · acilde 112",
+   "route": "/doktor-tools/radyo-kritik",
+   "branslar": [
+    "radyoloji"
+   ]
+  },
+  {
+   "circleColor": "#134E4A",
+   "icon": "RK",
+   "title": "Radyoloji kohort",
+   "desc": "Geciken kontrol · kuyruk · rapor · kritik · belge · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/radyo-kohort",
+   "branslar": [
+    "radyoloji"
+   ]
+  },
+  {
+   "circleColor": "#B91C1C",
+   "icon": "PO",
+   "title": "Pre-op solunum kontrol listesi",
+   "desc": "SFT · görüntü · anestezi · onam maddeleri — doz ve ameliyathane planı yazılmaz",
+   "route": "/doktor-tools/gogus-cerrahi-preop",
+   "branslar": [
+    "gogus-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#991B1B",
+   "icon": "TY",
+   "title": "Toraks tüp / yara izlem",
+   "desc": "Tüp · dren · yara durumu · sonraki kontrol — tanı ve doz yok",
+   "route": "/doktor-tools/gogus-cerrahi-tup-yara",
+   "branslar": [
+    "gogus-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#7F1D1D",
+   "icon": "PT",
+   "title": "Patoloji köprü",
+   "desc": "Örnek/rapor tarihleri · hazır bayrağı — tanı, ICD, CAT yazılmaz",
+   "route": "/doktor-tools/gogus-cerrahi-patoloji",
+   "branslar": [
+    "gogus-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#450A0A",
+   "icon": "GK",
+   "title": "Göğüs cerrahisi kohort",
+   "desc": "Geciken kontrol · pre-op · tüp/yara · patoloji · açık acil · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/gogus-cerrahi-kohort",
+   "branslar": [
+    "gogus-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#9F1239",
+   "icon": "PO",
+   "title": "Pre-op risk kontrol listesi",
+   "desc": "Görüntü · anestezi · lab · onam · antikoagülan sorgusu — doz, SCORE2 ve ameliyathane planı yazılmaz",
+   "route": "/doktor-tools/kdc-preop",
+   "branslar": [
+    "kalp-damar-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#BE123C",
+   "icon": "GY",
+   "title": "Greft / yara izlem",
+   "desc": "Greft · bypass · yara durumu · sonraki kontrol — tanı ve doz yok",
+   "route": "/doktor-tools/kdc-greft-yara",
+   "branslar": [
+    "kalp-damar-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#E11D48",
+   "icon": "AK",
+   "title": "Antikoagülan izlem vadeleri",
+   "desc": "Kontrol / lab vadeleri · sınıf etiketi — mg ve INR sayısı üretilmez",
+   "route": "/doktor-tools/kdc-antikoag",
+   "branslar": [
+    "kalp-damar-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#881337",
+   "icon": "KK",
+   "title": "Kalp damar cerrahisi kohort",
+   "desc": "Geciken kontrol · pre-op · greft/yara · antikoag · açık acil · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/kdc-kohort",
+   "branslar": [
+    "kalp-damar-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#D97706",
+   "icon": "D28",
+   "title": "DAS28 / BASDAI",
+   "desc": "Aktivite skoru ve şiddet bandı (karar desteği, tanı değil) · doz yok · infüzyon HBYS yok",
+   "route": "/doktor-tools/roma-das28-basdai",
+   "branslar": [
+    "romatoloji"
+   ]
+  },
+  {
+   "circleColor": "#B45309",
+   "icon": "SUT",
+   "title": "Biyolojik SUT kontrol listesi",
+   "desc": "TB/HBV/HCV · basamak beyanı · hekim kilidi — doz ve yükleme şeması yazılmaz",
+   "route": "/doktor-tools/roma-biyolojik-sut",
+   "branslar": [
+    "romatoloji"
+   ]
+  },
+  {
+   "circleColor": "#F59E0B",
+   "icon": "EH",
+   "title": "Lab izlem / eklem haritası",
+   "desc": "CRP · ESR · RF ve 28 eklem TJC/SJC — karar desteği · tanı yok",
+   "route": "/doktor-tools/roma-lab-izlem",
+   "branslar": [
+    "romatoloji"
+   ]
+  },
+  {
+   "circleColor": "#92400E",
+   "icon": "RK",
+   "title": "Romatoloji kohort paneli",
+   "desc": "Geciken kontrol · lab · yüksek skor bandı · açık acil · SUT eksik · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/roma-kohort",
+   "branslar": [
+    "romatoloji"
+   ]
+  },
+  {
+   "circleColor": "#0891B2",
+   "icon": "PP",
+   "title": "Pre/post-op izlem kontrol listesi",
+   "desc": "Pre-op ve post-op maddeleri · tarihler — doz ve ameliyathane / HBYS yazılmaz",
+   "route": "/doktor-tools/cc-prepost-op",
+   "branslar": [
+    "cocuk-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#0E7490",
+   "icon": "YD",
+   "title": "Yara / dren izlem",
+   "desc": "Pediatrik cerrahi ofis · yara · dren · dikiş — enfeksiyon tanısı ve doz yok",
+   "route": "/doktor-tools/cc-yara-dren",
+   "branslar": [
+    "cocuk-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#155E75",
+   "icon": "OV",
+   "title": "Onam / veli kontrol listesi",
+   "desc": "Yaşa göre veli maddeleri · yazılı onam hatırlatma — canlı e-imza yok",
+   "route": "/doktor-tools/cc-onam-veli",
+   "branslar": [
+    "cocuk-cerrahisi"
+   ]
+  },
+  {
+   "circleColor": "#164E63",
+   "icon": "CK",
+   "title": "Çocuk cerrahisi kohort",
+   "desc": "Geciken kontrol · pre-op · yara · onam/veli · açık acil · tek dokunuşla hatırlatma",
+   "route": "/doktor-tools/cc-kohort",
+   "branslar": [
+    "cocuk-cerrahisi"
+   ]
+  }
+ ],
+ "branslar": {
+  "pediatri": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hedef-boy",
+    "/doktor-tools/pedi-buyume",
+    "/doktor-tools/pedi-doz",
+    "/doktor-tools/pedi-asi",
+    "/doktor-tools/pedi-gelisim",
+    "/doktor-tools/pedi-mchat",
+    "/doktor-tools/pedi-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Pediatri Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/hedef-boy",
+      "/doktor-tools/pedi-buyume",
+      "/doktor-tools/pedi-doz",
+      "/doktor-tools/pedi-asi",
+      "/doktor-tools/pedi-gelisim",
+      "/doktor-tools/pedi-mchat",
+      "/doktor-tools/pedi-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hedef-boy",
+    "/doktor-tools/pedi-buyume",
+    "/doktor-tools/pedi-doz",
+    "/doktor-tools/pedi-asi",
+    "/doktor-tools/pedi-gelisim",
+    "/doktor-tools/pedi-mchat",
+    "/doktor-tools/pedi-kohort"
+   ]
+  },
+  "kardiyoloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kardio-score2",
+    "/doktor-tools/kardio-ht-kky",
+    "/doktor-tools/kardio-sgk",
+    "/doktor-tools/kardio-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Kardiyoloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/kardio-score2",
+      "/doktor-tools/kardio-ht-kky",
+      "/doktor-tools/kardio-sgk",
+      "/doktor-tools/kardio-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kardio-score2",
+    "/doktor-tools/kardio-ht-kky",
+    "/doktor-tools/kardio-sgk",
+    "/doktor-tools/kardio-kohort"
+   ]
+  },
+  "noroloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/noro-inme",
+    "/doktor-tools/noro-migren",
+    "/doktor-tools/noro-ilac-izlem",
+    "/doktor-tools/noro-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Nöroloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/noro-inme",
+      "/doktor-tools/noro-migren",
+      "/doktor-tools/noro-ilac-izlem",
+      "/doktor-tools/noro-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/noro-inme",
+    "/doktor-tools/noro-migren",
+    "/doktor-tools/noro-ilac-izlem",
+    "/doktor-tools/noro-kohort"
+   ]
+  },
+  "dahiliye": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/dahiliye-kohort",
+    "/doktor-tools/dahiliye-score2",
+    "/doktor-tools/dahiliye-ckd",
+    "/doktor-tools/dahiliye-sgk",
+    "/doktor-tools/dahiliye-polifarmasi",
+    "/doktor-tools/dahiliye-antikoag"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Dahiliye Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/dahiliye-kohort",
+      "/doktor-tools/dahiliye-score2",
+      "/doktor-tools/dahiliye-ckd",
+      "/doktor-tools/dahiliye-sgk",
+      "/doktor-tools/dahiliye-polifarmasi",
+      "/doktor-tools/dahiliye-antikoag"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/dahiliye-kohort",
+    "/doktor-tools/dahiliye-score2",
+    "/doktor-tools/dahiliye-ckd",
+    "/doktor-tools/dahiliye-sgk",
+    "/doktor-tools/dahiliye-polifarmasi",
+    "/doktor-tools/dahiliye-antikoag"
+   ]
+  },
+  "psikiyatri": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/psik-phq-gad",
+    "/doktor-tools/psik-risk",
+    "/doktor-tools/psik-ilac-izlem",
+    "/doktor-tools/psik-sgk",
+    "/doktor-tools/psik-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Psikiyatri Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/psik-phq-gad",
+      "/doktor-tools/psik-risk",
+      "/doktor-tools/psik-ilac-izlem",
+      "/doktor-tools/psik-sgk",
+      "/doktor-tools/psik-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/psik-phq-gad",
+    "/doktor-tools/psik-risk",
+    "/doktor-tools/psik-ilac-izlem",
+    "/doktor-tools/psik-sgk",
+    "/doktor-tools/psik-kohort"
+   ]
+  },
+  "genel-cerrahi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gc-preop",
+    "/doktor-tools/gc-yara-dren",
+    "/doktor-tools/gc-patoloji",
+    "/doktor-tools/gc-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Genel Cerrahi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/gc-preop",
+      "/doktor-tools/gc-yara-dren",
+      "/doktor-tools/gc-patoloji",
+      "/doktor-tools/gc-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gc-preop",
+    "/doktor-tools/gc-yara-dren",
+    "/doktor-tools/gc-patoloji",
+    "/doktor-tools/gc-kohort"
+   ]
+  },
+  "ortopedi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/orto-kirik-alci",
+    "/doktor-tools/orto-vas",
+    "/doktor-tools/orto-op-protokol",
+    "/doktor-tools/orto-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Ortopedi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/orto-kirik-alci",
+      "/doktor-tools/orto-vas",
+      "/doktor-tools/orto-op-protokol",
+      "/doktor-tools/orto-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/orto-kirik-alci",
+    "/doktor-tools/orto-vas",
+    "/doktor-tools/orto-op-protokol",
+    "/doktor-tools/orto-kohort"
+   ]
+  },
+  "dermatoloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/derm-pasi",
+    "/doktor-tools/derm-gop",
+    "/doktor-tools/derm-fototerapi",
+    "/doktor-tools/derm-yama",
+    "/doktor-tools/derm-kohort",
+    "/doktor-tools/derm-biyolojik-sut"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Dermatoloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/derm-pasi",
+      "/doktor-tools/derm-gop",
+      "/doktor-tools/derm-fototerapi",
+      "/doktor-tools/derm-yama",
+      "/doktor-tools/derm-kohort",
+      "/doktor-tools/derm-biyolojik-sut"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/derm-pasi",
+    "/doktor-tools/derm-gop",
+    "/doktor-tools/derm-fototerapi",
+    "/doktor-tools/derm-yama",
+    "/doktor-tools/derm-kohort",
+    "/doktor-tools/derm-biyolojik-sut"
+   ]
+  },
+  "kulak-burun-bogaz": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kbb-otoskopi",
+    "/doktor-tools/kbb-odyometri",
+    "/doktor-tools/kbb-vertigo",
+    "/doktor-tools/kbb-sgk",
+    "/doktor-tools/kbb-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "KBB Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/kbb-otoskopi",
+      "/doktor-tools/kbb-odyometri",
+      "/doktor-tools/kbb-vertigo",
+      "/doktor-tools/kbb-sgk",
+      "/doktor-tools/kbb-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kbb-otoskopi",
+    "/doktor-tools/kbb-odyometri",
+    "/doktor-tools/kbb-vertigo",
+    "/doktor-tools/kbb-sgk",
+    "/doktor-tools/kbb-kohort"
+   ]
+  },
+  "goz-hastaliklari": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/goz-va",
+    "/doktor-tools/goz-sut-vegf",
+    "/doktor-tools/goz-sgk-rapor",
+    "/doktor-tools/goz-gil-kod",
+    "/doktor-tools/goz-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Göz Hastalıkları Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/goz-va",
+      "/doktor-tools/goz-sut-vegf",
+      "/doktor-tools/goz-sgk-rapor",
+      "/doktor-tools/goz-gil-kod",
+      "/doktor-tools/goz-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/goz-va",
+    "/doktor-tools/goz-sut-vegf",
+    "/doktor-tools/goz-sgk-rapor",
+    "/doktor-tools/goz-gil-kod",
+    "/doktor-tools/goz-kohort"
+   ]
+  },
+  "kadin-hastaliklari-dogum": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kd-gebelik-takvim",
+    "/doktor-tools/kd-dogum-rapor",
+    "/doktor-tools/kd-mec",
+    "/doktor-tools/kd-risk",
+    "/doktor-tools/kd-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Kadın Hast. ve Doğum Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/kd-gebelik-takvim",
+      "/doktor-tools/kd-dogum-rapor",
+      "/doktor-tools/kd-mec",
+      "/doktor-tools/kd-risk",
+      "/doktor-tools/kd-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kd-gebelik-takvim",
+    "/doktor-tools/kd-dogum-rapor",
+    "/doktor-tools/kd-mec",
+    "/doktor-tools/kd-risk",
+    "/doktor-tools/kd-kohort"
+   ]
+  },
+  "uroloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/uro-ipss",
+    "/doktor-tools/uro-psa",
+    "/doktor-tools/uro-acil",
+    "/doktor-tools/uro-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Üroloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/uro-ipss",
+      "/doktor-tools/uro-psa",
+      "/doktor-tools/uro-acil",
+      "/doktor-tools/uro-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/uro-ipss",
+    "/doktor-tools/uro-psa",
+    "/doktor-tools/uro-acil",
+    "/doktor-tools/uro-kohort"
+   ]
+  },
+  "radyoloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/radyo-kuyruk",
+    "/doktor-tools/radyo-rapor",
+    "/doktor-tools/radyo-kritik",
+    "/doktor-tools/radyo-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Radyoloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/radyo-kuyruk",
+      "/doktor-tools/radyo-rapor",
+      "/doktor-tools/radyo-kritik",
+      "/doktor-tools/radyo-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/radyo-kuyruk",
+    "/doktor-tools/radyo-rapor",
+    "/doktor-tools/radyo-kritik",
+    "/doktor-tools/radyo-kohort"
+   ]
+  },
+  "anestezi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/anestezi-asa",
+    "/doktor-tools/anestezi-hava-yolu",
+    "/doktor-tools/anestezi-agri",
+    "/doktor-tools/anestezi-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Anestezi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/anestezi-asa",
+      "/doktor-tools/anestezi-hava-yolu",
+      "/doktor-tools/anestezi-agri",
+      "/doktor-tools/anestezi-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/anestezi-asa",
+    "/doktor-tools/anestezi-hava-yolu",
+    "/doktor-tools/anestezi-agri",
+    "/doktor-tools/anestezi-kohort"
+   ]
+  },
+  "acil-tip": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/acil-esi",
+    "/doktor-tools/acil-kritik-yol",
+    "/doktor-tools/acil-sevk",
+    "/doktor-tools/acil-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Acil Tıp Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/acil-esi",
+      "/doktor-tools/acil-kritik-yol",
+      "/doktor-tools/acil-sevk",
+      "/doktor-tools/acil-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/acil-esi",
+    "/doktor-tools/acil-kritik-yol",
+    "/doktor-tools/acil-sevk",
+    "/doktor-tools/acil-kohort"
+   ]
+  },
+  "fizik-tedavi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/ftr-seans",
+    "/doktor-tools/ftr-vas-odi",
+    "/doktor-tools/ftr-egzersiz",
+    "/doktor-tools/ftr-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Fizik Tedavi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/ftr-seans",
+      "/doktor-tools/ftr-vas-odi",
+      "/doktor-tools/ftr-egzersiz",
+      "/doktor-tools/ftr-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/ftr-seans",
+    "/doktor-tools/ftr-vas-odi",
+    "/doktor-tools/ftr-egzersiz",
+    "/doktor-tools/ftr-kohort"
+   ]
+  },
+  "enfeksiyon-hastaliklari": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/enfeksiyon-izolasyon",
+    "/doktor-tools/enfeksiyon-atb-sure",
+    "/doktor-tools/enfeksiyon-viral-izlem",
+    "/doktor-tools/enfeksiyon-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Enfeksiyon Hastalıkları Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/enfeksiyon-izolasyon",
+      "/doktor-tools/enfeksiyon-atb-sure",
+      "/doktor-tools/enfeksiyon-viral-izlem",
+      "/doktor-tools/enfeksiyon-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/enfeksiyon-izolasyon",
+    "/doktor-tools/enfeksiyon-atb-sure",
+    "/doktor-tools/enfeksiyon-viral-izlem",
+    "/doktor-tools/enfeksiyon-kohort"
+   ]
+  },
+  "endokrinoloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/endo-lab-izlem",
+    "/doktor-tools/endo-dxa",
+    "/doktor-tools/endo-rejim",
+    "/doktor-tools/endo-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Endokrinoloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/endo-lab-izlem",
+      "/doktor-tools/endo-dxa",
+      "/doktor-tools/endo-rejim",
+      "/doktor-tools/endo-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/endo-lab-izlem",
+    "/doktor-tools/endo-dxa",
+    "/doktor-tools/endo-rejim",
+    "/doktor-tools/endo-kohort"
+   ]
+  },
+  "gastroenteroloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gastro-ibd-ibs",
+    "/doktor-tools/gastro-endoskopi",
+    "/doktor-tools/gastro-hepatit",
+    "/doktor-tools/gastro-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Gastroenteroloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/gastro-ibd-ibs",
+      "/doktor-tools/gastro-endoskopi",
+      "/doktor-tools/gastro-hepatit",
+      "/doktor-tools/gastro-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gastro-ibd-ibs",
+    "/doktor-tools/gastro-endoskopi",
+    "/doktor-tools/gastro-hepatit",
+    "/doktor-tools/gastro-kohort"
+   ]
+  },
+  "nefroloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/nef-egfr-kdigo",
+    "/doktor-tools/nef-diyaliz",
+    "/doktor-tools/nef-anemi",
+    "/doktor-tools/nef-sgk",
+    "/doktor-tools/nef-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Nefroloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/nef-egfr-kdigo",
+      "/doktor-tools/nef-diyaliz",
+      "/doktor-tools/nef-anemi",
+      "/doktor-tools/nef-sgk",
+      "/doktor-tools/nef-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/nef-egfr-kdigo",
+    "/doktor-tools/nef-diyaliz",
+    "/doktor-tools/nef-anemi",
+    "/doktor-tools/nef-sgk",
+    "/doktor-tools/nef-kohort"
+   ]
+  },
+  "romatoloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/roma-das28-basdai",
+    "/doktor-tools/roma-biyolojik-sut",
+    "/doktor-tools/roma-lab-izlem",
+    "/doktor-tools/roma-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Romatoloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/roma-das28-basdai",
+      "/doktor-tools/roma-biyolojik-sut",
+      "/doktor-tools/roma-lab-izlem",
+      "/doktor-tools/roma-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/roma-das28-basdai",
+    "/doktor-tools/roma-biyolojik-sut",
+    "/doktor-tools/roma-lab-izlem",
+    "/doktor-tools/roma-kohort"
+   ]
+  },
+  "onkoloji": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/onko-kur",
+    "/doktor-tools/onko-toksisite",
+    "/doktor-tools/onko-sut",
+    "/doktor-tools/onko-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Onkoloji Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/onko-kur",
+      "/doktor-tools/onko-toksisite",
+      "/doktor-tools/onko-sut",
+      "/doktor-tools/onko-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/onko-kur",
+    "/doktor-tools/onko-toksisite",
+    "/doktor-tools/onko-sut",
+    "/doktor-tools/onko-kohort"
+   ]
+  },
+  "gogus-hastaliklari": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gogus-cat-mmrc",
+    "/doktor-tools/gogus-aksiyon-plani",
+    "/doktor-tools/gogus-inhaler",
+    "/doktor-tools/gogus-sgk",
+    "/doktor-tools/gogus-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Göğüs Hastalıkları Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/gogus-cat-mmrc",
+      "/doktor-tools/gogus-aksiyon-plani",
+      "/doktor-tools/gogus-inhaler",
+      "/doktor-tools/gogus-sgk",
+      "/doktor-tools/gogus-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gogus-cat-mmrc",
+    "/doktor-tools/gogus-aksiyon-plani",
+    "/doktor-tools/gogus-inhaler",
+    "/doktor-tools/gogus-sgk",
+    "/doktor-tools/gogus-kohort"
+   ]
+  },
+  "gogus-cerrahisi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gogus-cerrahi-preop",
+    "/doktor-tools/gogus-cerrahi-tup-yara",
+    "/doktor-tools/gogus-cerrahi-patoloji",
+    "/doktor-tools/gogus-cerrahi-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Göğüs Cerrahisi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/gogus-cerrahi-preop",
+      "/doktor-tools/gogus-cerrahi-tup-yara",
+      "/doktor-tools/gogus-cerrahi-patoloji",
+      "/doktor-tools/gogus-cerrahi-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/gogus-cerrahi-preop",
+    "/doktor-tools/gogus-cerrahi-tup-yara",
+    "/doktor-tools/gogus-cerrahi-patoloji",
+    "/doktor-tools/gogus-cerrahi-kohort"
+   ]
+  },
+  "plastik-cerrahi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/plastik-foto",
+    "/doktor-tools/plastik-yara",
+    "/doktor-tools/plastik-onam",
+    "/doktor-tools/plastik-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Plastik Cerrahi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/plastik-foto",
+      "/doktor-tools/plastik-yara",
+      "/doktor-tools/plastik-onam",
+      "/doktor-tools/plastik-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/plastik-foto",
+    "/doktor-tools/plastik-yara",
+    "/doktor-tools/plastik-onam",
+    "/doktor-tools/plastik-kohort"
+   ]
+  },
+  "beyin-cerrahisi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/bc-postop",
+    "/doktor-tools/bc-goruntu",
+    "/doktor-tools/bc-bilinc",
+    "/doktor-tools/bc-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Beyin Cerrahisi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/bc-postop",
+      "/doktor-tools/bc-goruntu",
+      "/doktor-tools/bc-bilinc",
+      "/doktor-tools/bc-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/bc-postop",
+    "/doktor-tools/bc-goruntu",
+    "/doktor-tools/bc-bilinc",
+    "/doktor-tools/bc-kohort"
+   ]
+  },
+  "kalp-damar-cerrahisi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kdc-preop",
+    "/doktor-tools/kdc-greft-yara",
+    "/doktor-tools/kdc-antikoag",
+    "/doktor-tools/kdc-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Kalp Damar Cerrahisi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/kdc-preop",
+      "/doktor-tools/kdc-greft-yara",
+      "/doktor-tools/kdc-antikoag",
+      "/doktor-tools/kdc-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kdc-preop",
+    "/doktor-tools/kdc-greft-yara",
+    "/doktor-tools/kdc-antikoag",
+    "/doktor-tools/kdc-kohort"
+   ]
+  },
+  "cocuk-cerrahisi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/cc-prepost-op",
+    "/doktor-tools/cc-yara-dren",
+    "/doktor-tools/cc-onam-veli",
+    "/doktor-tools/cc-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Çocuk Cerrahisi Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/cc-prepost-op",
+      "/doktor-tools/cc-yara-dren",
+      "/doktor-tools/cc-onam-veli",
+      "/doktor-tools/cc-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/cc-prepost-op",
+    "/doktor-tools/cc-yara-dren",
+    "/doktor-tools/cc-onam-veli",
+    "/doktor-tools/cc-kohort"
+   ]
+  },
+  "aile-hekimligi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/aile-asi-tarama",
+    "/doktor-tools/aile-kronik",
+    "/doktor-tools/aile-sevk",
+    "/doktor-tools/aile-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Aile Hekimliği Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/aile-asi-tarama",
+      "/doktor-tools/aile-kronik",
+      "/doktor-tools/aile-sevk",
+      "/doktor-tools/aile-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/aile-asi-tarama",
+    "/doktor-tools/aile-kronik",
+    "/doktor-tools/aile-sevk",
+    "/doktor-tools/aile-kohort"
+   ]
+  },
+  "spor-hekimligi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/spor-rtp",
+    "/doktor-tools/spor-sakatlik",
+    "/doktor-tools/spor-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Spor Hekimliği Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/spor-rtp",
+      "/doktor-tools/spor-sakatlik",
+      "/doktor-tools/spor-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/spor-rtp",
+    "/doktor-tools/spor-sakatlik",
+    "/doktor-tools/spor-kohort"
+   ]
+  },
+  "kadin-dogum": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kd-gebelik-takvim",
+    "/doktor-tools/kd-dogum-rapor",
+    "/doktor-tools/kd-mec",
+    "/doktor-tools/kd-risk",
+    "/doktor-tools/kd-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Kadın Hast. ve Doğum Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/kd-gebelik-takvim",
+      "/doktor-tools/kd-dogum-rapor",
+      "/doktor-tools/kd-mec",
+      "/doktor-tools/kd-risk",
+      "/doktor-tools/kd-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kd-gebelik-takvim",
+    "/doktor-tools/kd-dogum-rapor",
+    "/doktor-tools/kd-mec",
+    "/doktor-tools/kd-risk",
+    "/doktor-tools/kd-kohort"
+   ]
+  },
+  "Kadın Hastalıkları ve Doğum": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kd-gebelik-takvim",
+    "/doktor-tools/kd-dogum-rapor",
+    "/doktor-tools/kd-mec",
+    "/doktor-tools/kd-risk",
+    "/doktor-tools/kd-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Kadın Hast. ve Doğum Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/kd-gebelik-takvim",
+      "/doktor-tools/kd-dogum-rapor",
+      "/doktor-tools/kd-mec",
+      "/doktor-tools/kd-risk",
+      "/doktor-tools/kd-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/kd-gebelik-takvim",
+    "/doktor-tools/kd-dogum-rapor",
+    "/doktor-tools/kd-mec",
+    "/doktor-tools/kd-risk",
+    "/doktor-tools/kd-kohort"
+   ]
+  },
+  "Çocuk Sağlığı ve Hastalıkları": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hedef-boy",
+    "/doktor-tools/pedi-buyume",
+    "/doktor-tools/pedi-doz",
+    "/doktor-tools/pedi-asi",
+    "/doktor-tools/pedi-gelisim",
+    "/doktor-tools/pedi-mchat",
+    "/doktor-tools/pedi-kohort"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Pediatri Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/hedef-boy",
+      "/doktor-tools/pedi-buyume",
+      "/doktor-tools/pedi-doz",
+      "/doktor-tools/pedi-asi",
+      "/doktor-tools/pedi-gelisim",
+      "/doktor-tools/pedi-mchat",
+      "/doktor-tools/pedi-kohort"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hedef-boy",
+    "/doktor-tools/pedi-buyume",
+    "/doktor-tools/pedi-doz",
+    "/doktor-tools/pedi-asi",
+    "/doktor-tools/pedi-gelisim",
+    "/doktor-tools/pedi-mchat",
+    "/doktor-tools/pedi-kohort"
+   ]
+  },
+  "İç Hastalıkları": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/dahiliye-kohort",
+    "/doktor-tools/dahiliye-score2",
+    "/doktor-tools/dahiliye-ckd",
+    "/doktor-tools/dahiliye-sgk",
+    "/doktor-tools/dahiliye-polifarmasi",
+    "/doktor-tools/dahiliye-antikoag"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    },
+    {
+     "anahtar": "brans",
+     "baslik": "Dahiliye Araçları",
+     "aciklama": "Branşa özel",
+     "rotalar": [
+      "/doktor-tools/dahiliye-kohort",
+      "/doktor-tools/dahiliye-score2",
+      "/doktor-tools/dahiliye-ckd",
+      "/doktor-tools/dahiliye-sgk",
+      "/doktor-tools/dahiliye-polifarmasi",
+      "/doktor-tools/dahiliye-antikoag"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/dahiliye-kohort",
+    "/doktor-tools/dahiliye-score2",
+    "/doktor-tools/dahiliye-ckd",
+    "/doktor-tools/dahiliye-sgk",
+    "/doktor-tools/dahiliye-polifarmasi",
+    "/doktor-tools/dahiliye-antikoag"
+   ]
+  },
+  "genel": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ]
+  },
+  "sac-ekimi": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ]
+  },
+  "(bos)": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ]
+  },
+  "(null)": {
+   "liste": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ],
+   "gruplar": [
+    {
+     "anahtar": "cekirdek",
+     "baslik": "Temel Araçlar",
+     "aciklama": "Her branşta kullanılan ortak araçlar",
+     "rotalar": [
+      "/doktor-tools/erecete",
+      "/doktor-tools/epikriz",
+      "/doktor-tools/icd10",
+      "/doktor-tools/ilac-interaksiyon",
+      "/doktor-tools/sgk-rapor",
+      "/doktor-tools/tetkik",
+      "/doktor-tools/hasta-portali",
+      "/doktor-tools/sgk-medula",
+      "/doktor-tools/enabiz",
+      "/doktor-tools/muayene-sonu",
+      "/doktor-tools/sablonlarim",
+      "/doktor-tools/konsultasyonlar"
+     ]
+    }
+   ],
+   "derinBaglanti": [
+    "/doktor-tools/erecete",
+    "/doktor-tools/epikriz",
+    "/doktor-tools/icd10",
+    "/doktor-tools/ilac-interaksiyon",
+    "/doktor-tools/sgk-rapor",
+    "/doktor-tools/tetkik",
+    "/doktor-tools/hasta-portali",
+    "/doktor-tools/sgk-medula",
+    "/doktor-tools/enabiz",
+    "/doktor-tools/muayene-sonu",
+    "/doktor-tools/sablonlarim",
+    "/doktor-tools/konsultasyonlar"
+   ]
+  }
+ }
+}

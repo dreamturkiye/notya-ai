@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { bransDegistirebilir } from '@/lib/auth/superuserBranslar'
 import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
+import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
+import { hesapUlkesiDamgala } from '@/lib/ulke/hesapDamga'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,12 +17,18 @@ export async function POST(req: NextRequest) {
     let userId: string | null = null
     let userEmail: string | null = null
     let existingMeta: Record<string, unknown> = {}
+    let appMeta: Record<string, unknown> = {}
+    let buUlkede = false
     if (authHeader?.startsWith('Bearer ')) {
       const { data: { user } } = await getSupabase().auth.getUser(authHeader.split(' ')[1])
       userId = user?.id || null
       userEmail = user?.email || null
       existingMeta = (user?.user_metadata as Record<string, unknown>) || {}
+      appMeta = (user?.app_metadata as Record<string, unknown>) || {}
+      buUlkede = hesapBuUlkedeMi(user)
     }
+    // NOTYA-ULKE-01: an account of another country gets the answer no session gets.
+    if (userId && !buUlkede) userId = null
     if (!userId) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const body = await req.json()
@@ -89,6 +97,8 @@ export async function POST(req: NextRequest) {
       if (error) throw error
       result = data
     }
+    // NOTYA-ULKE-01: first onboarding writes the deployment's country onto the account (best effort — see hesapDamga.ts).
+    if (!kayit?.onboarding_completed) await hesapUlkesiDamgala(getSupabase(), userId, appMeta)
     hekimProfilDusur(userId)
     return NextResponse.json({ success: true, data: { ...result, onboarding_completed: true } })
   } catch (error) {
