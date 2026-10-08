@@ -178,6 +178,12 @@ export type UygulamaAyarlari = {
 export type AcilisSayfasiProps = {
   /** A switched-on language of the country, already narrowed by dilSec. */
   dil: DilKodu
+  /**
+   * The language the address asked for (?dil=…), exactly as written, before any narrowing. For a pack whose landing
+   * page is written in more forms than its switched-on public languages (Uzbekistan: Cyrillic script): the pack
+   * checks the value against its own list and ignores anything else. Never a reason to show another country's text.
+   */
+  istenenDil?: string | null
   /** Where "request a price" messages go. null = not configured: the pack must hide the request form. */
   iletisimEposta: string | null
 }
