@@ -8,8 +8,9 @@
  * Just enough of three services for the country screens:
  *   auth      password login, "who am I", logout, admin create / delete user
  *   rest      a small PostgREST: select / insert / upsert / update / delete with the filters the application uses
- *             (eq, neq, in, gte, lt, is.null, not.is.null), order, limit, single-object answers, and the two
- *             invitation-code functions. An operator it does not know is an ERROR (400) — it never ignores a filter,
+ *             (eq, neq, in, gte, gt, lt, is.null, not.is.null), order, limit, single-object answers, the two
+ *             invitation-code functions, and (NOTYA-UZ-RANDEVU-01) what migration 135 puts in the database: the
+ *             no-double-booking constraint of `ulke_randevulari` and the function `ulke_not_onayla`. An operator it does not know is an ERROR (400) — it never ignores a filter,
  *             because an ignored filter would make a broken ownership check look fine.
  *   storage   upload / download / remove of objects. A browser session may upload only under a folder named after its
  *             own account id (what the storage policy of migration 132 enforces in the real project); the service role
@@ -38,7 +39,7 @@ const tablolar = { users: [] }
 for (const h of Object.values(hesaplar)) if (h.ulke) tablolar.users.push({ id: h.id, full_name: h.ad, country: h.ulke, ui_language: h.dil })
 const tablo = (ad) => (tablolar[ad] ??= [])
 /** Tables whose rows have no id of their own (the key is another table's id). */
-const KIMLIKSIZ = new Set(['hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ai_kullanim'])
+const KIMLIKSIZ = new Set(['hekim_calisma_duzeni', 'hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ai_kullanim'])
 /** bucket/path → { tur, veri: Buffer } */
 const depo = new Map()
 
@@ -59,6 +60,7 @@ function suzgec(kolon, ham) {
   if (ham.startsWith('neq.')) return (s) => !es(s, ham.slice(4))
   if (ham.startsWith('gte.')) return (s) => String(s[kolon] ?? '') >= ham.slice(4)
   if (ham.startsWith('lt.')) return (s) => String(s[kolon] ?? '') < ham.slice(3)
+  if (ham.startsWith('gt.')) return (s) => String(s[kolon] ?? '') > ham.slice(3)
   if (ham === 'is.null') return (s) => (s[kolon] ?? null) === null
   if (ham === 'not.is.null') return (s) => (s[kolon] ?? null) !== null
   if (ham.startsWith('in.(') && ham.endsWith(')')) {
@@ -67,6 +69,38 @@ function suzgec(kolon, ham) {
   }
   return null
 }
+/**
+ * NOTYA-UZ-RANDEVU-01 — the exclusion constraint of migration 135: two appointments of one doctor that still hold
+ * their time (planned, arrived, done) may not overlap. Answered as PostgREST answers a violated constraint.
+ */
+const YER_TUTAN = ['planlandi', 'geldi', 'tamamlandi']
+const cakisiyor = (yeni, digerleri) => YER_TUTAN.includes(String(yeni.durum ?? 'planlandi')) && digerleri.some((s) => s.doctor_id === yeni.doctor_id && YER_TUTAN.includes(String(s.durum ?? 'planlandi')) && String(s.baslangic) < String(yeni.bitis) && String(s.bitis) > String(yeni.baslangic))
+const cakismaHatasi = (res) => hata(res, 409, '23P01', 'conflicting key value violates exclusion constraint "ulke_randevulari_cakisma_yok"')
+
+/** NOTYA-UZ-RANDEVU-01 — `ulke_not_onayla` of migration 135, statement by statement; all of it or none of it. */
+function notOnayla(a) {
+  const yedek = JSON.stringify(tablolar)
+  try {
+    const not = tablo('notes').find((n) => n.id === a.p_note_id && n.doctor_id === a.p_doctor_id)
+    if (!not) return 'NOT_FOUND'
+    if (not.approved_at) return 'ONAYLI'
+    Object.assign(not, { content_subjektif: a.p_s, content_objektif: a.p_o, content_degerlendirme: a.p_a, content_plan: a.p_p, approved_at: a.p_onay_ani, approved_by: a.p_doctor_id })
+    if (a.p_dil_kaydi) {
+      const d = tablo('not_dil_kaydi').find((x) => x.note_id === a.p_note_id && x.doctor_id === a.p_doctor_id)
+      if (!d) throw new Error('not_dil_kaydi row missing')
+      for (const k of ['alanlar', 'ikinci_alanlar', 'not_dili', 'ikinci_dil', 'ikinci_s', 'ikinci_o', 'ikinci_a', 'ikinci_p']) if (Object.prototype.hasOwnProperty.call(a.p_dil_kaydi, k)) d[k] = a.p_dil_kaydi[k] ?? null
+      d.updated_at = a.p_onay_ani
+    }
+    for (const r of tablo('ulke_randevulari')) if (r.session_id === not.session_id && r.doctor_id === a.p_doctor_id && ['planlandi', 'geldi'].includes(r.durum)) Object.assign(r, { durum: 'tamamlandi', updated_at: a.p_onay_ani })
+    return 'TAMAM'
+  } catch (e) {
+    const eski = JSON.parse(yedek)
+    for (const k of Object.keys(tablolar)) delete tablolar[k]
+    Object.assign(tablolar, eski)
+    throw e
+  }
+}
+
 function rest(req, res, url, govde) {
   const ad = decodeURIComponent(url.pathname.slice('/rest/v1/'.length))
   if (!/^[a-z_0-9]+$/.test(ad)) return hata(res, 404, 'PGRST205', `no table ${ad}`)
@@ -93,12 +127,14 @@ function rest(req, res, url, govde) {
       if (var_) { Object.assign(var_, y); sonuc.push(var_); continue }
       if (!KIMLIKSIZ.has(ad) && y.id && satirlar.some((s) => s.id === y.id)) return hata(res, 409, '23505', 'duplicate key value violates unique constraint')
       const yeni = { ...(KIMLIKSIZ.has(ad) ? {} : { id: randomUUID() }), created_at: new Date().toISOString(), ...y }
+      if (ad === 'ulke_randevulari' && cakisiyor(yeni, satirlar)) return cakismaHatasi(res)
       if (ad === 'sessions' && !yeni.started_at) yeni.started_at = yeni.created_at
       satirlar.push(yeni); sonuc.push(yeni)
     }
   } else if (req.method === 'PATCH') {
     if (!suzgecler.length) return hata(res, 400, '21000', 'UPDATE requires a WHERE clause')
     sonuc = satirlar.filter(uyan)
+    if (ad === 'ulke_randevulari') for (const s of sonuc) if (cakisiyor({ ...s, ...govde }, satirlar.filter((x) => x !== s))) return cakismaHatasi(res)
     for (const s of sonuc) Object.assign(s, govde)
   } else if (req.method === 'DELETE') {
     if (!suzgecler.length) return hata(res, 400, '21000', 'DELETE requires a WHERE clause')
@@ -166,6 +202,11 @@ http.createServer(async (req, res) => {
     if (!k || k.ulke !== g.p_ulke || k.kalan < 1) return yaz(res, 200, false)
     k.kalan--
     return yaz(res, 200, true)
+  }
+  if (url.pathname === '/rest/v1/rpc/ulke_not_onayla') {
+    // Closed to the browser roles, as the migration's grants make it.
+    if (!servisMi) return hata(res, 401, '42501', 'permission denied for function ulke_not_onayla')
+    try { return yaz(res, 200, notOnayla(g)) } catch (e) { return hata(res, 400, 'P0002', String(e.message)) }
   }
   if (url.pathname === '/rest/v1/rpc/davet_kodu_iade') { const k = kodlar.get(g.p_hash); if (k) k.kalan++; return yaz(res, 204) }
 

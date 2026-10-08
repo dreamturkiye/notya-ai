@@ -244,7 +244,8 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     stt.cevaplar = [cevap(UZ_METIN, 'uzb', 0.97, -0.08)]
     const r = await muayeneYap('jeton-a', { yol, hastaId: hasta, sablon: 'pediatri', riza: true })
     assert.equal(r.s, 200)
-    assert.deepEqual({ ...r.j, seansId: undefined }, { seansId: undefined, ikinciGecis: false, dusukGuven: false })
+    // randevuBagli (NOTYA-UZ-RANDEVU-01): this visit was not started from an appointment.
+    assert.deepEqual({ ...r.j, seansId: undefined }, { seansId: undefined, ikinciGecis: false, dusukGuven: false, randevuBagli: false })
     assert.deepEqual(stt.cagrilar, [{ adres: SCRIBE, model: 'scribe_v2', dil: null, bayt: vt.depo.size === 0 ? stt.cagrilar[0].bayt : -1, anahtar: 'sahte-konusma-anahtari' }])
     assert.ok(stt.cagrilar[0].bayt > 10, 'the recording itself was sent')
     assert.equal(vt.depo.size, 0, 'the recording is removed once transcribed')

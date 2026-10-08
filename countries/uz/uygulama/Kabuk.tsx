@@ -8,7 +8,7 @@
  *                      account that does not belong to this country → back to /login. An account that has not
  *                      answered the language question, or has not chosen its role (NOTYA-UZ-BRANSLAR-01), is sent
  *                      to /start before anything else.
- * Cerceve              the visible frame (word mark, three links, log out). Pure: it renders in a plain test.
+ * Cerceve              the visible frame (word mark, four links, log out). Pure: it renders in a plain test.
  *
  * Every sentence comes from the pack's catalogue (./metinler) in the ACCOUNT's language, never the browser's.
  */
@@ -19,6 +19,7 @@ import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { uzRolMu } from '../klinik/rolAdlari'
 import { uygulamaMetni, uzUygulamaDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
+import { randevuMetni } from './randevuMetinleri'
 
 /**
  * ADDRESSES of the application's screens: the routes of UYGULAMA_EKRANLARI under the country's path prefix
@@ -29,7 +30,7 @@ export const YOL = Object.fromEntries(Object.entries(UYGULAMA_EKRANLARI).map(([e
  * Screens that exist in this build. A link to a screen that has not landed yet is not rendered at all — an address
  * that answers "not found" is never offered. (The route test proves every `true` here has its page.)
  */
-export const HAZIR = { muayene: true } as const
+export const HAZIR = { muayene: true, takvim: true } as const
 const GIRIS = ulkeYolu('/login')
 const BEKLETME = ulkeYolu('/welcome')
 
@@ -116,7 +117,7 @@ const DEGISKENLER = {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'hastalar' | 'ayarlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'ayarlar'
 
 export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
   dil: UzUygulamaDili
@@ -141,6 +142,8 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
           {sade ? null : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
+              {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
+              {HAZIR.takvim ? baglanti('takvim', YOL.takvim, randevuMetni(dil).kabuk.takvim) : null}
               {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>

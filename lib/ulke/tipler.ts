@@ -45,6 +45,11 @@ export type Ozellik =
    * pack (countries/active/sayfalar, countries/active/klinik). Replaces the holding page where it is on.
    */
   | 'cekirdekMuayene'
+  /**
+   * NOTYA-UZ-RANDEVU-01 — appointments of the signed-in application: working pattern, calendar, booking, status, the
+   * link from an appointment to its visit. Needs `cekirdekMuayene`. Settings come from the pack (`uygulama.randevu`).
+   */
+  | 'randevu'
   /** Doktor Araçları (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -177,6 +182,25 @@ export type UygulamaAyarlari = {
    * (lib/ulke/uygulama/rol.ts). Omitted = the country asks for no role, exactly as before roles existed.
    */
   roller?: readonly string[]
+  /**
+   * NOTYA-UZ-RANDEVU-01 — appointment norms of the country (checklist J4). Present exactly where the feature
+   * `randevu` is on. The time zone and the first day of the week are the pack's own (`saatDilimi`, `bicim.haftaBasi`).
+   * PUBLIC HOLIDAYS ARE NOT HERE: they are local content a local source must supply; nothing is hard-coded.
+   */
+  randevu?: RandevuAyarlari
+}
+
+export type RandevuAyarlari = {
+  /** The working pattern an account has until it saves its own. Weekdays are ISO: 1 = Monday … 7 = Sunday. Times are 'HH:MM'. */
+  varsayilan: {
+    gunler: readonly number[]
+    baslangic: string
+    bitis: string
+    sureDk: number
+    molalar: readonly { baslangic: string; bitis: string }[]
+  }
+  /** Appointment lengths (minutes) an account may choose from. */
+  sureSecenekleri: readonly number[]
 }
 
 // ───────────────────────── pages a pack brings itself (countries/active/sayfalar) ─────────────────────────
@@ -207,6 +231,11 @@ export const UYGULAMA_EKRANLARI = {
   hasta: '/patient',
   /** One address, three views: ?hasta=<id> records a visit, ?seans=<id> shows a recorded visit, ?not=<id> is its note. */
   muayene: '/visit',
+  /**
+   * NOTYA-UZ-RANDEVU-01 — one address, several views: ?gun=<YYYY-MM-DD>&gorunum=gun|hafta is the calendar,
+   * ?yeni=1 the booking form, ?randevu=<id> one appointment, ?duzen=1 the working pattern.
+   */
+  takvim: '/calendar',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

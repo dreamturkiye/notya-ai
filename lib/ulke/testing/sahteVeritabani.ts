@@ -24,6 +24,67 @@ export function sahteVeritabani() {
   const boz: { yaz: Set<string>; oku: Set<string> } = { yaz: new Set(), oku: new Set() }
   const tablo = (ad: string) => (tablolar[ad] ??= [])
 
+  /**
+   * NOTYA-UZ-RANDEVU-01 — the EXCLUSION CONSTRAINT of migration 135 (`ulke_randevulari_cakisma_yok`): two appointments
+   * of one doctor that still hold their time (planned, arrived, done) may not overlap. Checked inside the statement,
+   * as the database does, and answered with PostgreSQL's own code — so a test of "two requests at the same moment"
+   * is decided here, not by the application's earlier read.
+   */
+  const YER_TUTAN = ['planlandi', 'geldi', 'tamamlandi']
+  const cakisma = (ad: string, yeni: Satir, digerleri: Satir[]): { message: string; code: string } | null => {
+    if (ad !== 'ulke_randevulari' || !YER_TUTAN.includes(String(yeni.durum ?? 'planlandi'))) return null
+    const cakisan = digerleri.some((s) => s.doctor_id === yeni.doctor_id && YER_TUTAN.includes(String(s.durum ?? 'planlandi')) && String(s.baslangic) < String(yeni.bitis) && String(s.bitis) > String(yeni.baslangic))
+    return cakisan ? { message: 'conflicting key value violates exclusion constraint "ulke_randevulari_cakisma_yok"', code: '23P01' } : null
+  }
+
+  /**
+   * NOTYA-UZ-RANDEVU-01 — database FUNCTIONS, by name. Each is this file's statement-by-statement copy of the SQL in
+   * its migration, run as ONE TRANSACTION: the tables are copied first and put back if any statement fails or the
+   * function raises. `boz.yaz` makes a statement on that table fail in the MIDDLE of a function, which is how a test
+   * proves "all or nothing". An unknown function name is an error, never a silent success.
+   */
+  type IslevCevabi = { data: unknown; error: { message: string; code?: string } | null }
+  const islevCagrilari: { ad: string; arg: Satir }[] = []
+  const islevler: Record<string, (a: Satir) => unknown> = {
+    // lib/db/migrations/135_ulke_randevu.sql — ulke_not_onayla
+    ulke_not_onayla: (a) => {
+      const yaz = (ad: string) => { if (boz.yaz.has(ad)) throw Object.assign(new Error(`stand-in: ${ad} update failed inside the function`), { code: 'XX000' }) }
+      const not = tablo('notes').find((n) => n.id === a.p_note_id && n.doctor_id === a.p_doctor_id)
+      if (!not) return 'NOT_FOUND'
+      if (not.approved_at) return 'ONAYLI'
+      yaz('notes')
+      Object.assign(not, { content_subjektif: a.p_s, content_objektif: a.p_o, content_degerlendirme: a.p_a, content_plan: a.p_p, approved_at: a.p_onay_ani, approved_by: a.p_doctor_id })
+      const k = a.p_dil_kaydi as Satir | null | undefined
+      if (k) {
+        yaz('not_dil_kaydi')
+        const d = tablo('not_dil_kaydi').find((x) => x.note_id === a.p_note_id && x.doctor_id === a.p_doctor_id)
+        if (!d) throw Object.assign(new Error('ulke_not_onayla: not_dil_kaydi row missing'), { code: 'P0002' })
+        for (const kolon of ['alanlar', 'ikinci_alanlar', 'not_dili', 'ikinci_dil', 'ikinci_s', 'ikinci_o', 'ikinci_a', 'ikinci_p']) if (Object.prototype.hasOwnProperty.call(k, kolon)) d[kolon] = k[kolon] ?? null
+        d.updated_at = a.p_onay_ani
+      }
+      const bagli = tablo('ulke_randevulari').filter((r) => r.session_id === not.session_id && r.doctor_id === a.p_doctor_id && ['planlandi', 'geldi'].includes(String(r.durum)))
+      if (bagli.length) yaz('ulke_randevulari')
+      for (const r of bagli) Object.assign(r, { durum: 'tamamlandi', updated_at: a.p_onay_ani })
+      return 'TAMAM'
+    },
+  }
+  const rpc = async (ad: string, arg: Satir = {}): Promise<IslevCevabi> => {
+    const islev = islevler[ad]
+    if (!islev) throw new Error(`stand-in database: function ${ad} is not implemented`)
+    islevCagrilari.push({ ad, arg })
+    sorgular.push({ tablo: `rpc:${ad}`, islem: 'rpc', filtreler: [] })
+    const yedek = JSON.stringify(tablolar)
+    try {
+      return { data: islev(JSON.parse(JSON.stringify(arg)) as Satir), error: null }
+    } catch (e) {
+      // ROLLBACK: every table is exactly as it was before the function began.
+      const eski = JSON.parse(yedek) as Record<string, Satir[]>
+      for (const k of Object.keys(tablolar)) delete tablolar[k]
+      Object.assign(tablolar, eski)
+      return { data: null, error: { message: e instanceof Error ? e.message : 'function failed', code: (e as { code?: string }).code ?? 'XX000' } }
+    }
+  }
+
   class Sorgu implements PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }> {
     private filtreler: { ad: string; f: (s: Satir) => boolean }[] = []
     private islem: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select'
@@ -42,6 +103,9 @@ export function sahteVeritabani() {
     delete() { this.islem = 'delete'; return this }
     eq(k: string, v: unknown) { this.filtreler.push({ ad: `${k}=eq.${String(v)}`, f: (s) => s[k] === v }); return this }
     in(k: string, v: unknown[]) { this.filtreler.push({ ad: `${k}=in.(${v.join(',')})`, f: (s) => v.includes(s[k]) }); return this }
+    neq(k: string, v: unknown) { this.filtreler.push({ ad: `${k}=neq.${String(v)}`, f: (s) => s[k] !== v }); return this }
+    lt(k: string, v: string) { this.filtreler.push({ ad: `${k}=lt.${v}`, f: (s) => String(s[k] ?? '') < v }); return this }
+    gt(k: string, v: string) { this.filtreler.push({ ad: `${k}=gt.${v}`, f: (s) => String(s[k] ?? '') > v }); return this }
     gte(k: string, v: string) { this.filtreler.push({ ad: `${k}=gte.${v}`, f: (s) => String(s[k] ?? '') >= v }); return this }
     is(k: string, v: null) { this.filtreler.push({ ad: `${k}=is.null`, f: (s) => (s[k] ?? null) === v }); return this }
     not(k: string, op: 'is', v: null) {
@@ -62,7 +126,8 @@ export function sahteVeritabani() {
       let sonuc: Satir[]
       if (this.islem === 'select') sonuc = satirlar.filter(uyan)
       else if (this.islem === 'insert') {
-        sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(this.ad === 'hasta_ulke_bilgisi' || this.ad === 'hekim_dil_tercihleri' || this.ad === 'hekim_rolu' || this.ad === 'muayene_dil_kaydi' || this.ad === 'not_dil_kaydi' ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'sessions' ? { started_at: new Date().toISOString() } : {}), ...y }))
+        sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(this.ad === 'hasta_ulke_bilgisi' || this.ad === 'hekim_dil_tercihleri' || this.ad === 'hekim_rolu' || this.ad === 'muayene_dil_kaydi' || this.ad === 'not_dil_kaydi' || this.ad === 'hekim_calisma_duzeni' ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'sessions' ? { started_at: new Date().toISOString() } : {}), ...y }))
+        for (const y of sonuc) { const c = cakisma(this.ad, y, satirlar); if (c) return { data: null, error: c } }
         satirlar.push(...sonuc)
       } else if (this.islem === 'upsert') {
         const y = this.yuk as Satir
@@ -72,6 +137,8 @@ export function sahteVeritabani() {
       } else if (this.islem === 'update') {
         if (!this.filtreler.length) throw new Error(`stand-in database: update on ${this.ad} without a filter`)
         sonuc = satirlar.filter(uyan)
+        // A constraint is checked on the row as it WOULD be; a refused statement changes nothing.
+        for (const s of sonuc) { const c = cakisma(this.ad, { ...s, ...this.yuk }, satirlar.filter((x) => x !== s)); if (c) return { data: null, error: c } }
         for (const s of sonuc) Object.assign(s, this.yuk)
       } else {
         if (!this.filtreler.length) throw new Error(`stand-in database: delete on ${this.ad} without a filter`)
@@ -103,6 +170,7 @@ export function sahteVeritabani() {
       signOut: async () => ({ error: null }),
     },
     from: (ad: string) => new Sorgu(ad),
+    rpc,
     storage: {
       from: (kova: string) => ({
         download: async (yol: string) => {
@@ -114,5 +182,5 @@ export function sahteVeritabani() {
     },
   })
 
-  return { tablolar, tablo, hesaplar, depo, sorgular, boz, createClient }
+  return { tablolar, tablo, hesaplar, depo, sorgular, boz, islevCagrilari, createClient }
 }

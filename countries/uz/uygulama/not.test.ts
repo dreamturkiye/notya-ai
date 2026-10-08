@@ -86,7 +86,7 @@ const C = '10000000-0000-4000-8000-00000000000c'
 function sifirla() {
   for (const k of Object.keys(vt.tablolar)) delete vt.tablolar[k]
   for (const k of Object.keys(vt.hesaplar)) delete vt.hesaplar[k]
-  vt.depo.clear(); vt.sorgular.length = 0; vt.boz.yaz.clear(); vt.boz.oku.clear()
+  vt.depo.clear(); vt.sorgular.length = 0; vt.islevCagrilari.length = 0; vt.boz.yaz.clear(); vt.boz.oku.clear()
   model.cagrilar = []; model.cevaplar = []
   Object.assign(vt.hesaplar, {
     'jeton-a': { id: A, email: 'qa-a@notya.test', app_metadata: { country: 'uz' } },
@@ -426,8 +426,10 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     // The guard is in the WRITE itself, not only in a check before it: every statement that can change a note's text
     // carries "approved_at IS NULL".
     const yazmalar = vt.sorgular.filter((q) => q.tablo === 'notes' && (q.islem === 'update' || q.islem === 'delete'))
-    assert.ok(yazmalar.length >= 1)
     for (const q of yazmalar) assert.ok(q.filtreler.includes('approved_at=is.null') && q.filtreler.includes(`doctor_id=eq.${A}`), JSON.stringify(q))
+    // NOTYA-UZ-RANDEVU-01: approval itself is no statement of the application any more — it is the one database
+    // function (the first approval above). The two later attempts were refused before it; the race below is refused BY it.
+    assert.equal(vt.islevCagrilari.filter((c) => c.ad === 'ulke_not_onayla').length, 1)
     // And if the note is approved between the check and the write, the write still changes nothing.
     const v2 = await notluMuayene()
     const { notKaydet, notOnayla } = await import('@/lib/ulke/uygulama/notlar')
@@ -444,6 +446,86 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.equal(vt.tablo('notes').find((x) => x.id === v2.notId)!.content_plan, 'TASDIQLANGAN REJA')
     assert.deepEqual(await notOnayla(sb, A, v2.notId, 'uz-Latn', { s: 'KECH', o: 'x', a: 'x', p: 'KECH' }), { tamam: false, kod: 'ONAYLI' })
     assert.equal(vt.tablo('notes').find((x) => x.id === v2.notId)!.content_plan, 'TASDIQLANGAN REJA')
+    // The same race against the function: the note is approved after notOnayla has read it and before the function runs.
+    const v3 = await notluMuayene()
+    ;(sb as { from: unknown }).from = gercekFrom
+    const gercekRpc = (sb as unknown as { rpc: (ad: string, arg: Record<string, unknown>) => Promise<unknown> }).rpc
+    ;(sb as unknown as { rpc: unknown }).rpc = (ad: string, arg: Record<string, unknown>) => {
+      const satir = vt.tablo('notes').find((x) => x.id === v3.notId)!
+      satir.approved_at = '2026-10-08T10:00:00Z'; satir.content_plan = 'TASDIQLANGAN REJA'
+      return gercekRpc(ad, arg)
+    }
+    const cagriSayisi = vt.islevCagrilari.length
+    assert.deepEqual(await notOnayla(sb, A, v3.notId, 'uz-Latn', { s: 'KECH', o: 'x', a: 'x', p: 'KECH' }), { tamam: false, kod: 'ONAYLI' })
+    assert.equal(vt.islevCagrilari.length, cagriSayisi + 1, 'this refusal came from the function')
+    assert.equal(vt.tablo('notes').find((x) => x.id === v3.notId)!.content_plan, 'TASDIQLANGAN REJA')
+  })
+
+  it('APPROVAL IS ALL OR NOTHING (NOTYA-UZ-RANDEVU-01): one call to one database function; a failure in the middle leaves the note unapproved and unchanged', async () => {
+    const { uzSablonAlanlari } = await import('../klinik/notSablonlari')
+    const anahtarlar = [...uzSablonAlanlari('pediatri', { dogumTarihi: '2021-03-07', muayeneTarihi: new Date().toISOString().slice(0, 10) })]
+    assert.ok(anahtarlar.length >= 3, 'this test needs a note with role fields')
+    const taslak = Object.fromEntries(anahtarlar.map((k) => [k, `qoralama ${k}`]))
+    const ekran = Object.fromEntries(anahtarlar.map((k) => [k, `ekrandagi ${k}`]))
+    const m = await muayeneYap('jeton-a', A)
+    model.cevaplar = [JSON.stringify({ ...UZ_NOT, fields: taslak })]
+    const notId = (await notYaz('jeton-a', m.seans)).j.notId as string
+    assert.deepEqual(vt.tablo('not_dil_kaydi')[0].alanlar, taslak)
+    const durum = () => JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')])
+    const yazmalar = () => vt.sorgular.filter((q) => q.islem !== 'select').map((q) => `${q.islem} ${q.tablo}`)
+    const once = durum()
+    const govde = { notId, dil: 'uz-Latn', ...UZ_NOT, a: 'EKRANDAGI TASHXIS', alanlar: ekran }
+
+    // 1. The function fails at its SECOND statement (the role fields), after it has written the text and the approval.
+    for (const bozuk of ['not_dil_kaydi', 'notes']) {
+      vt.sorgular.length = 0; vt.boz.yaz.add(bozuk)
+      assert.deepEqual(await onayla('jeton-a', govde), { s: 500, j: { code: 'BASARISIZ' } }, bozuk)
+      vt.boz.yaz.clear()
+      assert.equal(durum(), once, `${bozuk}: a failed approval changed a row`)
+      assert.equal(vt.tablo('notes')[0].approved_at ?? null, null)
+      // The application's whole part in an approval is ONE call. There is no statement before it or after it that
+      // could succeed on its own.
+      assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'], bozuk)
+      const okunan = (await notOku('jeton-a', notId)).j.not
+      assert.deepEqual([okunan.onayli, okunan.icerik], [false, { ...UZ_NOT, alanlar: taslak }])
+    }
+
+    // 2. Approving the OTHER draft exchanges the two drafts — inside the same function, so a failure exchanges nothing.
+    model.cevaplar = [JSON.stringify({ ...RU_NOT, fields: Object.fromEntries(anahtarlar.map((k) => [k, `черновик ${k}`])) })]
+    assert.equal((await yenidenYaz('jeton-a', notId)).s, 200)
+    const ikiTaslak = durum()
+    vt.sorgular.length = 0; vt.boz.yaz.add('not_dil_kaydi')
+    assert.deepEqual(await onayla('jeton-a', { notId, dil: 'ru', ...RU_NOT }), { s: 500, j: { code: 'BASARISIZ' } })
+    vt.boz.yaz.clear()
+    assert.equal(durum(), ikiTaslak, 'a failed approval of the second draft changed a row')
+    assert.deepEqual([vt.tablo('not_dil_kaydi')[0].not_dili, vt.tablo('not_dil_kaydi')[0].ikinci_dil, vt.tablo('notes')[0].approved_at ?? null], ['uz-Latn', 'ru', null])
+    assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'])
+
+    // 3. The same request again, with nothing failing: approved, with the text and the fields as they stand on the screen.
+    vt.sorgular.length = 0
+    const r = await onayla('jeton-a', govde)
+    assert.equal(r.s, 200)
+    assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'])
+    const [n] = vt.tablo('notes'); const [d] = vt.tablo('not_dil_kaydi')
+    assert.deepEqual([n.content_degerlendirme, n.approved_at, n.approved_by, d.alanlar, d.not_dili], ['EKRANDAGI TASHXIS', r.j.onayTarihi, A, ekran, 'uz-Latn'])
+  })
+
+  it('APPROVAL IS ALL OR NOTHING: the code has no second statement, and the migration\'s function is one transaction closed to the browser', async () => {
+    const kaynak = readFileSync(join(KOK, 'lib/ulke/uygulama/notlar.ts'), 'utf8')
+    const govde = kaynak.slice(kaynak.indexOf('export async function notOnayla'))
+    assert.equal(govde.match(/supabase\.rpc\(/g)?.length, 1)
+    assert.doesNotMatch(govde, /\.(update|insert|upsert|delete)\(/, 'notOnayla writes to a table by itself')
+    const sql = readFileSync(join(KOK, 'lib/db/migrations/135_ulke_randevu.sql'), 'utf8')
+    const islev = sql.slice(sql.indexOf('create or replace function public.ulke_not_onayla'), sql.indexOf('revoke all on function public.ulke_not_onayla'))
+    assert.match(islev, /language plpgsql/)
+    // All three writes are inside the one function body …
+    for (const tablo of ['public.notes', 'public.not_dil_kaydi', 'public.ulke_randevulari']) assert.ok(islev.includes(`update ${tablo}`), tablo)
+    assert.match(islev, /approved_at is null/)
+    // … and nothing in it can keep half of them: no handler that swallows a failure, no commit of its own.
+    assert.doesNotMatch(islev.replace(/--[^\n]*/g, ''), /\bexception\s+when\b|\bcommit\b|\bsavepoint\b/i)
+    // It takes the doctor's id as an argument, so only the server may call it.
+    assert.match(sql, /revoke all on function public\.ulke_not_onayla\([^)]*\) from public, anon, authenticated;/)
+    assert.match(sql, /grant execute on function public\.ulke_not_onayla\([^)]*\) to service_role;/)
   })
 
   it('an empty note cannot be approved; approving saves the text as it stands on the screen', async () => {

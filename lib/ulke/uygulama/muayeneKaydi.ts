@@ -22,12 +22,17 @@ import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
 import { muayeneKotasiKullan } from './kota'
+import { randevuMuayeneyeUygun, randevuyuMuayeneyeBagla } from './randevular'
 import { hekimRolunuOku, uygulamaRolleri } from './rol'
 
-export type MuayeneGirdisi = { yol: string; hastaId: string; sablon: string; riza: boolean }
+export type MuayeneGirdisi = {
+  yol: string; hastaId: string; sablon: string; riza: boolean
+  /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from. Absent = a visit without an appointment. */
+  randevuId?: string | null
+}
 export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ'
 export type MuayeneSonucu =
-  | { tamam: true; seansId: string; ikinciGecis: boolean; dusukGuven: boolean }
+  | { tamam: true; seansId: string; ikinciGecis: boolean; dusukGuven: boolean; /** true = the visit is linked to the appointment it was started from. */ randevuBagli: boolean }
   | { tamam: false; kod: MuayeneRetKodu; alan?: string }
 
 /** What the screens are told about the language of a visit. Never the provider's raw code or a number. */
@@ -83,6 +88,9 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     // ISOLATION: the patient must be this doctor's before the recording is read or a visit is written for them.
     const hasta = await hastaGetir(supabase, doktorId, g.hastaId)
     if (!hasta) return { tamam: false, kod: 'NOT_FOUND' }
+    // NOTYA-UZ-RANDEVU-01 — ISOLATION: an appointment id from the request must be this doctor's AND this patient's
+    // before the recording is read. Another doctor's appointment answers exactly like one that does not exist.
+    if (g.randevuId && !(await randevuMuayeneyeUygun(supabase, doktorId, g.randevuId, hasta.id))) return { tamam: false, kod: 'NOT_FOUND' }
     if (!konusmaTanimaHazir()) return { tamam: false, kod: 'HAZIR_DEGIL' }
     if (!(await muayeneKotasiKullan(supabase, doktorId, klinik.gunlukMuayeneLimiti))) return { tamam: false, kod: 'LIMIT' }
 
@@ -141,7 +149,10 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
       try { await supabase.from('sessions').delete().eq('id', seansId).eq('doctor_id', doktorId) } catch { /* reported as a failure either way */ }
       return { tamam: false, kod: 'BASARISIZ' }
     }
-    return { tamam: true, seansId, ikinciGecis: t.ikinciGecis, dusukGuven: t.dusukGuven }
+    // The visit is stored; now the appointment points at it. If the appointment was cancelled or finished meanwhile
+    // the visit is kept without the link — a recording is never thrown away over its appointment.
+    const randevuBagli = g.randevuId ? await randevuyuMuayeneyeBagla(supabase, doktorId, g.randevuId, hasta.id, seansId) : false
+    return { tamam: true, seansId, ikinciGecis: t.ikinciGecis, dusukGuven: t.dusukGuven, randevuBagli }
   } finally {
     await sesiSil()
   }

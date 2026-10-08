@@ -2,7 +2,7 @@
 
 Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/`.
 
-## Status (2026-10-08, end of slice 1; slice 2 is the next section)
+## Status (2026-10-08, end of slice 1; slices 2 and 3 have their own sections below)
 
 **Nothing is live.** No Uzbek deployment or database exists. No migration has been applied anywhere. Sign-up is closed (invitation only, and no invitation code has been issued). Nothing here has been merged into `main`; the Turkish product is untouched.
 
@@ -30,7 +30,7 @@ How the visit works:
 
 **Landing page (2026-10-08, branch `feat/uz-acilis-tr-eslesme`, PR #568, base `feat/uz-muayene`, unmerged).** The landing page at `/uzbek` was rebuilt to match the Turkish doctor landing page section for section: same layout, colours, type, photographs and section order, with Uzbek text in three forms (Uzbek Latin, Uzbek Cyrillic, Russian) from `countries/uz/acilis/icerik.ts`. It reuses the Turkish page's presentational components and photographs as they are and edits no Turkish file. Section-by-section decisions and every line with English beside it: `docs/uz-landing/COPY.md`. The page describes features that are not switched on here; it must not go public until they are built or the text is cut back (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-ACILIS-02a).
 
-Everything else is off: tools, the voice assistant, appointments, the patient portal, colleague consultation, messaging, voice profile, image evaluation, and anything tied to Turkish state systems. None of their pages or APIs exists in an Uzbek build.
+Everything else is off (appointments were off in slice 1 and are built in slice 3, below): tools, the voice assistant, the patient portal, colleague consultation, messaging, voice profile, image evaluation, and anything tied to Turkish state systems. None of their pages or APIs exists in an Uzbek build.
 
 ### What was tested, and how
 
@@ -139,7 +139,7 @@ The pack had no conversion from Latin to Cyrillic script before this slice (only
 
 ### Needs local content
 
-Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`, `UZ_ORTAK_YEREL_ICERIK`): empty (`icerik: null`), switched off (`acik: false`), and read by no screen and no instruction. A slot is switched on only after a local clinician has supplied and signed its content. 75 rows.
+Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`, `UZ_ORTAK_YEREL_ICERIK`): empty (`icerik: null`), switched off (`acik: false`), and read by no screen and no instruction. A slot is switched on only after a local clinician has supplied and signed its content. 75 rows. Rows 76 and 77 (slice 3, appointments) are not slots of a note template: they are local content the calendar needs, and nothing stands in for them.
 
 | # | Role | Slot | What is missing | Who must supply it |
 |---|---|---|---|---|
@@ -218,6 +218,8 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 | 73 | `odyoloji` (Аудиолог) | `hearing_loss_grading` | Hearing loss grading in local use | a local clinician |
 | 74 | `odyoloji` (Аудиолог) | `newborn_hearing_screening` | Newborn hearing screening programme | a local clinician |
 | 75 | `odyoloji` (Аудиолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
+| 76 | all 40 roles (calendar) | `public_holidays` | Public holidays of Uzbekistan for each year: the fixed dates, the two religious holidays whose dates move every year, and the working days the government transfers. **Nothing is hard-coded**: the calendar treats a holiday as an ordinary day and the working-pattern screen says so. Needs an official source and somebody who updates it every year. | a local source and a yearly owner |
+| 77 | all 40 roles (calendar) | `working_week` | The usual working week, hours, lunch break and appointment length of a private clinic. The pack's values (Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes) are starting values, not checked locally; every account can change its own. | the clinical lead |
 
 ### Assistant names in the three forms, and the forms that look doubtful
 
@@ -324,6 +326,127 @@ Role names (written by machine in each form, not derived) that the machine is le
 | Tests, walk-through | `countries/uz/klinik/roller.test.ts`, `sablonlar.test.ts` (new); slice-1 tests updated; `scripts/ulke-yuruyus/` |
 | What remains | `docs/OPEN-COMMITMENTS.md`, section NOTYA-UZ-BRANSLAR-01 |
 
+## Slice 3: appointments (2026-10-08)
+
+Third slice of Kaan's "Just build the uzbek one completely now". Branch `feat/uz-randevu`, stacked on `feat/uz-branslar` (PR #569); pull request #570, base `feat/uz-branslar`, never `main`. **Unmerged. Nothing deployed. Migration 135 is written and not applied to any Supabase project or remote database. No Turkish screen or content file was edited.**
+
+### Fix carried over from slice 2: approval is all or nothing
+
+Approving a note used to write its role fields in a second statement after the approval. It is now **one call to one database function**, `ulke_not_onayla` (migration 135), which writes the note's text and approval, its role fields (and the exchange of the two drafts when the other one is approved) and "done" on the appointment the visit was started from, in one transaction. The application makes no other write while approving. A test makes the function fail at its second statement and at its third: the note stays unapproved and every row is as it was. **Consequence: without migration 135 no note can be approved in an Uzbek build.**
+
+### What appointments do, all under `/uzbek`
+
+| Step | Where | What it does |
+|---|---|---|
+| Working pattern | `/uzbek/calendar?duzen=1` | Working days (Monday first), working hours, default appointment length, up to four breaks. Until an account saves its own, the pack's applies. Times are Tashkent time. The screen says that public holidays are not taken into account. |
+| Calendar, day | `/uzbek/calendar[?gun=YYYY-MM-DD]` | The day as a list: appointments, breaks, and the free times of the working pattern. A free time opens the booking form for that time. |
+| Calendar, week | `/uzbek/calendar?gun=…&gorunum=hafta` | Seven days from Monday, each with its appointments. Seven columns on a wide screen, stacked on a phone. |
+| Booking | `/uzbek/calendar?yeni=1`, from a free time, from the "+" of a day, or from the patient's file | Patient, day (typed `DD.MM.YYYY`), time, length, a short reason. |
+| One appointment | `/uzbek/calendar?randevu=<id>` | Status, "start the visit", move to another time, cancel, the reminder text. |
+| Home | `/uzbek/today` | Today's appointments in time order with their status, each with "start the visit" where that is possible. Visits of today stay listed below. |
+| Patient file | `/uzbek/patient?id=` | "Book an appointment" for that patient; the coming appointments. |
+
+Rules, each enforced by the server and tested:
+
+- **No double booking of the same doctor.** The guarantee is the database's: a constraint refuses two appointments of one doctor whose times overlap while both still hold their time (planned, arrived, done). Two requests at the same moment cannot both win. The answer is a clear sentence in the doctor's language, and there is **no way round it**.
+- **Working hours.** Outside the working days, the hours or in a break, nothing is written and the screen says so, with an explicit **"book anyway"**; an appointment booked that way is marked.
+- **Status:** planned, arrived, done, did not come, cancelled. "Did not come" and "cancelled" give the time back. "Cancelled" and "done" are final (a "done" set by hand on an appointment without a visit can be taken back). Only a planned or arrived appointment can be moved.
+- **From appointment to visit.** "Start the visit" opens the visit screen for that patient, shows which appointment it is, and the stored visit is linked to it (the patient is marked as arrived). **Approving the note marks the appointment done**, in the same transaction as the approval. If the appointment was cancelled meanwhile, the visit is kept and not linked: a recording is never thrown away over its appointment.
+- **Time.** An appointment is stored as an instant. Every day and hour on the screens is the pack's time zone (Asia/Tashkent), converted through the time-zone database, never a fixed number of hours; the server's and the browser's own zones play no part. The week starts on Monday. A day is typed and shown as `DD.MM.YYYY`; `31.02.2027` is refused, not guessed.
+- **Isolation.** A doctor sees and changes only their own appointments and can book only their own patients. Another doctor's appointment id answers exactly like one that does not exist (404, same body), on every route, in both directions. Another doctor's appointment does not even make a time look taken.
+- **Reminder text.** One button on a planned appointment copies a short reminder for the doctor to paste into whatever messenger they use: date (`DD.MM.YYYY`), time (24 hours) and the doctor's name, in the **patient's** language — Russian for a Russian-speaking patient; Uzbek in the doctor's script (of the interface, else of the notes, else Latin) for an Uzbek-speaking one. **Nothing is sent**: no messaging provider is connected, and the walk-through checks that the click makes no request at all.
+
+### Left off in this slice
+
+Not built, not half-built, and a test fails if a route for one appears in the Uzbek build: **Google Calendar sync, patient self-booking, automatic reminders and any messaging provider, clinic-wide calendars with several doctors** (and a front desk booking for a doctor). Also not here: public holidays (row 76 of "Needs local content"), different hours per weekday, one-off days off or leave, repeating appointments, a waiting list.
+
+### What is machine-written in slice 3
+
+| What | Where | Who must read it |
+|---|---|---|
+| About 120 strings of the appointment screens, three forms, each written by hand | `countries/uz/uygulama/randevuMetinleri.ts` | A native speaker |
+| **The reminder sentences (patient-facing)**, three forms | the same file, `hatirlatma.metin`, `hatirlatma.metinAdsiz` | A native speaker, **first**: a patient reads these under the doctor's name |
+| Weekday names, short and long, three forms | the same file | A native speaker (the short Uzbek forms `Du Se Chor Pay Ju Shan Yak` are the machine's choice) |
+
+The reminder as it stands, for 9 October 2026 at 14:30 and a doctor named Karimov Alisher:
+
+| Form | Text |
+|---|---|
+| Uzbek, Latin | Assalomu alaykum! Eslatma: siz 09.10.2026 kuni soat 14:30 da shifokor Karimov Alisher qabuliga yozilgansiz. |
+| Uzbek, Cyrillic | Ассалому алайкум! Эслатма: сиз 09.10.2026 куни соат 14:30 да шифокор Каримов Алишер қабулига ёзилгансиз. |
+| Russian | Здравствуйте! Напоминаем: вы записаны на приём к врачу Каримов Алишер 09.10.2026 в 14:30. |
+
+The doctor's name is put in as the account wrote it, in whatever script; it is not converted or declined.
+
+### Migrations 130–135 on a real PostgreSQL, and what that did not cover
+
+The Uzbek migrations had never run on a database. On 2026-10-08 migrations **130 to 135 were run, in order, twice**, on a throwaway **PostgreSQL 18.4 inside the build machine**, followed by 59 checks. All passed; **no SQL error was found in any migration file** (only the comment at the top of 135 was changed afterwards). Nothing was applied to a Supabase project or to any remote database.
+
+How to run it again (it needs the npm package `embedded-postgres`, which is **not** a dependency of the repository and must be installed outside it, in a folder an unprivileged user can enter, because PostgreSQL refuses to run as root):
+
+```
+mkdir /var/tmp/notya-pg-check && cd /var/tmp/notya-pg-check && npm init -y && npm install embedded-postgres pg
+node <repo>/scripts/ulke-goc-kaniti.mjs        # exit code 0 = every check passed; NOTYA_PG_PORT changes the port (54391)
+```
+
+What the checks cover: each file runs twice without error; the double-booking constraint (same time, overlapping, a longer one around, a move, a status change back onto a taken time; touching times and another doctor are allowed; **two open transactions for the same time — the second waits and is refused when the first commits**); the check constraints; `ulke_not_onayla` (approved; already approved; another doctor's note; **a failure in the middle leaves every row unchanged**; the exchange of the two drafts; a missing language record; two approvals at the same moment; only the service role may call it); row-level security on the two new tables (a doctor reads only their own rows and cannot write from the browser).
+
+**Stubs.** A Supabase project brings objects the migrations expect. In that run each was the smallest thing that lets the SQL execute:
+
+| Stub | What it stood in for |
+|---|---|
+| Roles `anon`, `authenticated`, `service_role` (the last with BYPASSRLS and all table privileges) | Supabase's roles and their default grants |
+| Schema `auth`, table `auth.users(id)`, function `auth.uid()` reading the setting `request.jwt.claim.sub` | Supabase Auth |
+| Schema `storage`, tables `storage.buckets` and `storage.objects` (row-level security on), function `storage.foldername(text)` | Supabase Storage |
+| `public.patients`, `public.sessions`, `public.notes` with only the columns these migrations and the function use | the core tables of the product (every migration below 128) |
+| `public.schema_migrations` | the migration ledger |
+| An owner policy and a read grant on `public.patients` | migration 052 and the product's own policies |
+
+**Not covered, so the first run on the real Uzbek database must watch for it:**
+
+1. **Migrations 128 and 129** (they alter the core `users` table and add the invitation codes) and **every migration below 128** were not run at all. The Uzbek database needs the whole chain.
+2. **The real core tables.** `ulke_not_onayla` writes six columns of `notes`; the stub had exactly those. A constraint, trigger or column type on the real `notes`, `sessions` or `patients` was not exercised.
+3. **PostgREST.** The application calls the function through `supabase.rpc`; the proof called it in SQL. The argument names, the JSON argument and the text answer were not sent through PostgREST. First call on a scratch project: approve one synthetic note.
+4. **Supabase's real roles and default privileges.** Whether `service_role` may execute the function and whether the browser roles may not was checked against the stubs' grants. Check `has_function_privilege` on the real project.
+5. **Storage.** The bucket and its upload policy (migration 132) ran against stub tables: the real storage schema, its own policies and `storage.foldername` were not exercised.
+6. **The `btree_gist` extension** is created by migration 135 (`create extension if not exists`). It is available on Supabase; on the real project it must be allowed for the role that applies migrations.
+7. **Row-level security of 130–134** beyond one insert per table, and migration 052's restrictive policy on the older tables.
+
+Order for the first real run: an empty scratch Supabase project, all migrations through 135, `node scripts/ulke-goc-kaniti.mjs` again locally for comparison, then one booking, one double booking and one approval through the application with synthetic data.
+
+### What was tested in slice 3, and how
+
+| Check | Result | Against |
+|---|---|---|
+| Country suite (`npm run test:ulke`), 666 tests, of which 53 are new in `countries/uz/uygulama/randevu.test.ts` and 2 in `not.test.ts` | pass | stand-in database, auth, storage, speech and model providers inside the test process |
+| No double booking — also two, and five, requests at the same moment, and two moves onto one free time | pass | the stand-in plays migration 135's constraint inside the statement; the test proves both requests reached the insert |
+| Working-hours rule; "book anyway" for hours only | pass | as above |
+| Time zone: around midnight, New Year's night, a day typed `DD.MM.YYYY`; the test process itself runs in America/Los_Angeles | pass | pure functions and routes |
+| Status changes; appointment-to-visit link; approval marks done; all-or-nothing reaches the appointment | pass | as above |
+| Isolation, both directions, every appointment route; every statement on the appointment table carries the caller's id | pass | two synthetic doctors |
+| Reminder text in each language and script, 27 combinations of patient language and the doctor's two forms; no Turkish word or letter | pass | pure function |
+| Leak test over every new string in all three forms; each form in its own script | pass | the leak harness and Türkiye's term list |
+| Every link on every new screen leads to a page the pack lists and that has a route file | pass | the rendered screens in three forms |
+| Wall check, type check | clean | the repository |
+| Uzbek production build (`NOTYA_COUNTRY=uz npm run build`) | passes; the build holds the Uzbek pack and no other | this machine |
+| Turkish tool-list test (`lib/doktor/doktorAraclariUlke.test.ts`) | pass | the repository |
+| Browser walk-through (`scripts/ulke-yuruyus/`), 344 checks: set working hours, book from the calendar, taken and outside-hours answers, copy a reminder in Russian, move, start the visit from the appointment, approve the note, the appointment done, week view, home, a phone | passes | the Uzbek production build, a headless browser, stand-in Supabase, stand-in providers loaded into the server |
+| Migrations 130–135, constraint and function | pass, 59 checks | a throwaway local PostgreSQL 18.4, Supabase objects stubbed (above) |
+
+**Tested only with stand-ins**, apart from the local PostgreSQL run. No provider was called; no audio or patient text left the machine. The full Turkish suite was not re-run: no Turkish code was edited (the two shared files touched are `package.json`, one test file added to two lists, and `lib/security/hastaIzolasyonEnvanteri.ts`, three routes registered).
+
+### Files added or changed by slice 3
+
+| What | Where |
+|---|---|
+| Pack: appointment norms, feature, route | `countries/uz/index.ts` |
+| Pack: text, reminder, screens | `countries/uz/uygulama/randevuMetinleri.ts`, `hatirlatma.ts`, `Takvim.tsx`, `randevuOrtak.tsx` (new); `Kabuk.tsx`, `Bugun.tsx`, `Hastalar.tsx`, `Muayene.tsx`, `index.tsx`, `uygulama.css` |
+| Core, country-neutral | `lib/ulke/uygulama/zaman.ts`, `calismaDuzeni.ts`, `randevular.ts`, `randevuDurumu.ts` (new); `notlar.ts`, `muayeneKaydi.ts`, `lib/ulke/tipler.ts` |
+| Routes | `app/calendar/page.ulke.tsx`, `app/api/ulke/calisma-duzeni/`, `randevu/`, `randevular/` (new); `app/api/ulke/bugun/`, `muayene/` |
+| Migration (not applied) | `lib/db/migrations/135_ulke_randevu.sql`: two new tables, the constraint, the function |
+| Tests, walk-through, proof | `countries/uz/uygulama/randevu.test.ts` (new); `not.test.ts`, `muayene.test.ts`, `uygulama.test.ts`, `lib/ulke/ulkeEkranlari.uz.test.ts`, `lib/ulke/testing/sahteVeritabani.ts`; `scripts/ulke-yuruyus/`; `scripts/ulke-goc-kaniti.mjs` (new) |
+| What remains | `docs/OPEN-COMMITMENTS.md`, section NOTYA-UZ-RANDEVU-01 |
+
 ## Decisions by Kaan (2026-10-08)
 
 - Uzbekistan is the first country after Türkiye; Azerbaijan and the UAE follow.
@@ -340,6 +463,7 @@ Role names (written by machine in each form, not derived) that the machine is le
 - The note is written in the doctor's chosen note language; one click rewrites it in the other language as a second draft; an approved note is never silently overwritten.
 - First slice of specialties: pediatrics and one general template for every other specialty; the full list stays structured but off.
 - Later the same day: "Just build the uzbek one completely now." All 40 roles get a role choice, an assistant name and a note template (slice 2). He supplied one assistant name per role.
+- Slice 3 of the same instruction: appointments (working pattern, calendar, booking, status, visit from an appointment, reminder text copied by the doctor). Google Calendar sync, patient self-booking, automatic reminders and clinic-wide calendars are left off; public holidays are local content and are not hard-coded.
 
 ## Proposals from Claude, not yet confirmed by Kaan
 
@@ -362,7 +486,11 @@ Defaults chosen while building slice 1. Each is a setting or a small change; eac
 | ~~Pediatrics is preselected for a patient under 18.~~ Replaced in slice 2: the template is the account's role and is not chosen per visit. | visit screen | Kaan |
 | All 40 role templates are switched on without a local reviewer's sign-off (the owner's instruction for slice 2). | `countries/uz/klinik/branslar.ts`, `notSablonlari.ts` | the clinical lead (checklist C14) |
 | Guardian wording and the "who gave the history" field for a patient under 18 on the day of the visit, in every role. | `countries/uz/klinik/notSablonlari.ts` | A lawyer: the age (checklist B12) |
-| Approving a note writes its role fields in a second statement after the approval itself. | `lib/ulke/uygulama/notlar.ts` | Kaan (NOTYA-UZ-BRANSLAR-01) |
+| ~~Approving a note writes its role fields in a second statement after the approval itself.~~ Fixed in slice 3: approval is one database function (migration 135). | `lib/ulke/uygulama/notlar.ts` | — |
+| Appointment norms until an account saves its own: Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes; lengths offered 10, 15, 20, 30, 45, 60, 90 minutes. | `countries/uz/index.ts` | the clinical lead (checklist J4) |
+| "Did not come" and "cancelled" give the time back; "cancelled" and "done" are final; only a planned or arrived appointment can be moved; no booking before today or more than two years ahead. | `lib/ulke/uygulama/randevular.ts` | Kaan |
+| The reminder is offered for a planned appointment only; its Uzbek script follows the doctor, because a patient's script is not recorded. | `countries/uz/uygulama/hatirlatma.ts` | Kaan |
+| The reason for an appointment is stored encrypted; its time and status are not. | `lib/ulke/uygulama/randevular.ts`, migration 135 | A lawyer (checklist G7, I6) |
 | What is sent to the model: the transcript, the patient's age and sex. Never the name, phone, identity number or any id. | `lib/ulke/uygulama/notlar.ts` | A lawyer: the transcript itself is health data and goes to providers outside Uzbekistan (checklist A1, I6). |
 | A second click on "rewrite" returns the existing second draft instead of making a new one. | `lib/ulke/uygulama/notlar.ts` | Kaan |
 | Approving the second draft keeps the first draft beside the note (not shown after approval). | `lib/ulke/uygulama/notlar.ts`, migration 133 | Kaan: keep or delete unapproved drafts (checklist G7). |
@@ -408,12 +536,13 @@ Set by the foundation job on 2026-10-08. Items marked *to verify* come from gene
 | Dates and numbers | `DD.MM.YYYY`, decimal comma, space as thousands separator, week starts Monday | *to verify* with the clinical lead |
 | Phone | `+998` and nine digits | operator prefixes not checked, *to verify* |
 | National identity number | JSHSHIR (PINFL), 14 digits, format only | check-digit rule *to verify* (checklist G5) |
-| Features on | landing page, login, sign-up by invitation code, the first product slice (`cekirdekMuayene`: language question, settings, home, patients, visit to approved note) | everything else is off. The holding page still exists and redirects to the home. |
+| Features on | landing page, login, sign-up by invitation code, the first product slice (`cekirdekMuayene`: language question, settings, home, patients, visit to approved note), appointments (`randevu`, slice 3) | everything else is off. The holding page still exists and redirects to the home. |
 | Voice profile, image evaluation | off | until the law is confirmed (checklist A2, A4, I7) |
 | Served under | `/uzbek` (the pack's `yolOnEki`, the build's `basePath`) | Kaan, 2026-10-08: no separate Uzbek address; the product is reached at `notya.io/uzbek`. Every route below is relative to it. Outside `/uzbek` the Uzbek build answers 404. |
-| Paths that exist | `/`, `/login`, `/signup`, `/welcome`, `/start`, `/today`, `/settings`, `/patients`, `/patients/new`, `/patient`, `/visit`, `/api/ulke/*` | every other path of the application answers 404 |
+| Paths that exist | `/`, `/login`, `/signup`, `/welcome`, `/start`, `/today`, `/settings`, `/patients`, `/patients/new`, `/patient`, `/visit`, `/calendar`, `/api/ulke/*` | every other path of the application answers 404 |
 | Tools | none | `docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md` is a proposal |
 | Speech recognition | ElevenLabs Scribe `scribe_v2`, thresholds 0.80 and −0.36, at most two passes | `countries/uz/klinik/index.ts`; values *to verify* on real audio |
+| Appointment norms | Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes; no public holidays | starting values, *to verify*; each account changes its own |
 | Note templates | `genel` (for an account without a role) and one per role, 40 | `countries/uz/klinik/notSablonlari.ts`; machine-built, no local reviewer |
 | Roles | 40: 30 doctor specialties, 5 clinic doctors, 5 clinic allied professions | keys from the owner's assistant list; names in `countries/uz/klinik/rolAdlari.ts` |
 | Recording consent | version `uz-taslak-2026-10-08`, not reviewed by a lawyer | stamped on every visit |
@@ -458,7 +587,7 @@ These are settings and decisions, not code, and none was touched by the foundati
 2. Build setting `NOTYA_COUNTRY=uz`. The build refuses any value that has no folder under `countries/`.
 3. `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` of the Uzbek project. The Uzbek login refuses to work without them; it never falls back to another project.
 4. Public sign-up **disabled** in that Supabase project's Auth settings. Invitation sign-up creates accounts on the server; with public sign-up left on, the invitation step could be bypassed by calling Supabase directly.
-5. All migrations applied to the Uzbek database, including `128_hesap_ulke_dil.sql`, `129_davet_kodlari.sql`, `130_hekim_dil_tercihleri.sql`, `131_hasta_ulke_bilgisi.sql`, `132_muayene_dil_kaydi.sql` (also creates the private bucket `muayene-sesleri` and its upload policy), `133_not_dil_kaydi.sql` and `134_hekim_rolu.sql`. 130–133 add new tables only; 134 adds one new table and two nullable columns to the table 133 created.
+5. All migrations applied to the Uzbek database, including `128_hesap_ulke_dil.sql`, `129_davet_kodlari.sql`, `130_hekim_dil_tercihleri.sql`, `131_hasta_ulke_bilgisi.sql`, `132_muayene_dil_kaydi.sql` (also creates the private bucket `muayene-sesleri` and its upload policy), `133_not_dil_kaydi.sql`, `134_hekim_rolu.sql` and `135_ulke_randevu.sql`. 130–133 add new tables only; 134 adds one new table and two nullable columns to the table 133 created; 135 adds two new tables, the no-double-booking constraint (it needs the `btree_gist` extension) and the function `ulke_not_onayla`, without which no note can be approved. **Run them on an empty scratch project first**: 130–135 have run only on a local PostgreSQL with Supabase's objects stubbed (section "Slice 3", "Migrations 130–135 on a real PostgreSQL").
 6. `NOTYA_ILETISIM_EPOSTA`: the address that receives "request a price" messages. Without it the request form is not shown. Nothing is stored: the form opens the visitor's own mail app.
 7. A consent and privacy text on the sign-up form (checklist I1) **before** the first invitation code is issued (`node scripts/ulke-davet-kodu.mjs --ulke uz`).
 8. Server settings for the visit: `ENCRYPTION_MASTER_KEY` (patient data cipher; its own key, never Türkiye's), `ELEVENLABS_API_KEY` (speech; without it the visit screen says speech recognition is not configured), `OPENROUTER_API_KEY` (the note model; without it no note is written). Before any of them is set with a real key: the lawyer's answer on sending health data abroad (checklist A1).

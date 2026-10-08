@@ -1,13 +1,16 @@
 'use client'
 
 /**
- * NOTYA-UZ-MUAYENE-01 — /today: the doctor's home. Today's visits, a patient search, "new patient", "start a visit".
+ * NOTYA-UZ-MUAYENE-01 — /today: the doctor's home. Today's appointments in time order with their status
+ * (NOTYA-UZ-RANDEVU-01), today's visits, a patient search, "new patient", "start a visit".
  * Replaces the holding page for accounts of a country where the application is switched on.
  */
 import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { AsistanKarti } from './Asistan'
-import type { UygulamaMetni } from './metinler'
+import { metninDili, type UygulamaMetni } from './metinler'
+import { randevuMetni } from './randevuMetinleri'
+import { bitisSaati, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
@@ -24,8 +27,40 @@ export function AramaFormu({ m, q, hedef }: { m: UygulamaMetni; q?: string; /** 
   )
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol }: {
+/**
+ * NOTYA-UZ-RANDEVU-01 — today's appointments, in time order, each with its status. A row opens the appointment;
+ * one that is planned or has arrived also offers "start the visit" right here.
+ */
+export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevular: RandevuKaydi[] }) {
+  const r = randevuMetni(metninDili(m))
+  return (
+    <section className="uza-kart" data-alan="bugun-randevular">
+      <div className="uza-baslik-satiri" style={{ marginBottom: 6 }}>
+        <h2 className="uza-h2" style={{ marginBottom: 0 }}>{r.bugun.randevular}</h2>
+        <a className="uza-baglanti" href={takvimYolu()}>{r.bugun.takvimiAc}</a>
+      </div>
+      {randevular.length === 0 ? <p className="uza-bos">{r.bugun.randevuYok}</p> : (
+        <ul className="uza-liste">
+          {randevular.map((x) => (
+            <li key={x.id} className="uza-randevu-satiri" data-randevu={x.id} data-soluk={x.durum === 'iptal' || x.durum === 'gelmedi' ? 'evet' : undefined}>
+              <a className="uza-satir" href={takvimYolu({ randevu: x.id })}>
+                <span className="uza-saat">{x.saat}–{bitisSaati(x.saat, x.sureDk)}</span>
+                <span className="uza-liste-ad">{x.hastaAdi || m.bugun.hastasiz}{x.neden ? <span className="uza-liste-alt">{x.neden}</span> : null}</span>
+                <DurumRozeti r={r} durum={x.durum} />
+              </a>
+              {muayeneBaslatilabilir(x) ? <a className="uza-dugme uza-dugme-kucuk" href={muayeneBaslatYolu(x)} data-eylem="muayene-baslat">{m.bugun.muayeneBaslat}</a> : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
+  /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
+  randevular?: RandevuKaydi[] | null
   /** NOTYA-UZ-BRANSLAR-01: the account's role — decides which assistant is shown. No role = the neutral assistant. */
   rol?: string | null
 }) {
@@ -40,6 +75,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol }: {
         </div>
       </section>
       <AsistanKarti m={m} rol={rol} />
+      {HAZIR.takvim && randevular ? <BugunRandevulari m={m} randevular={randevular} /> : null}
       <section className="uza-kart">
         <AramaFormu m={m} />
         <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
@@ -73,6 +109,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol }: {
 export default function Bugun() {
   const u = useUygulama('bugun')
   const [muayeneler, setMuayeneler] = useState<BugunMuayenesi[] | null>(null)
+  const [randevular, setRandevular] = useState<RandevuKaydi[] | null>(null)
   const [hata, setHata] = useState(false)
   const { hesap, api } = u
 
@@ -80,7 +117,7 @@ export default function Bugun() {
     if (!hesap) return
     let iptal = false
     api('/api/ulke/bugun')
-      .then((r) => { if (iptal) return; if (r.ok && Array.isArray(r.j.muayeneler)) setMuayeneler(r.j.muayeneler); else setHata(true) })
+      .then((r) => { if (iptal) return; if (r.ok && Array.isArray(r.j.muayeneler)) { setMuayeneler(r.j.muayeneler); setRandevular(Array.isArray(r.j.randevular) ? r.j.randevular : null) } else setHata(true) })
       .catch(() => { if (!iptal) setHata(true) })
     return () => { iptal = true }
   }, [hesap, api])
@@ -88,7 +125,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} />
     </Cerceve>
   )
 }
