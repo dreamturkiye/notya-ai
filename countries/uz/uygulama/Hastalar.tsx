@@ -8,7 +8,9 @@
 import React, { useEffect, useState, type FormEvent } from 'react'
 import { AramaFormu } from './Bugun'
 import { Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
-import { UZ_UYGULAMA_METINLERI, yaziSec, type UygulamaMetni, type UzUygulamaDili } from './metinler'
+import { metninDili, UZ_UYGULAMA_METINLERI, yaziSec, type UygulamaMetni, type UzUygulamaDili } from './metinler'
+import { randevuMetni } from './randevuMetinleri'
+import { bitisSaati, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export type DosyaMuayenesi = { seansId: string; notId: string | null; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -173,7 +175,12 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun }: { m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date }) {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular }: {
+  m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
+  /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
+  randevular?: RandevuKaydi[] | null
+}) {
+  const r = randevuMetni(metninDili(m))
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
   const onayli = muayeneler.filter((v) => v.durum === 'onayli' && v.notId)
   const taslak = muayeneler.filter((v) => v.durum === 'taslak' && v.notId)
@@ -194,7 +201,11 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun }: { m: Uygul
         <p className="uza-ust-yazi">{m.hasta.baslik}</p>
         <div className="uza-baslik-satiri">
           <h1 className="uza-h1">{tamAd(hasta)}</h1>
-          {HAZIR.muayene ? <a className="uza-dugme" href={`${YOL.muayene}?hasta=${hasta.id}`}>{m.bugun.muayeneBaslat}</a> : null}
+          <div className="uza-eylemler" style={{ marginTop: 0 }}>
+            {HAZIR.muayene ? <a className="uza-dugme" href={`${YOL.muayene}?hasta=${hasta.id}`}>{m.bugun.muayeneBaslat}</a> : null}
+            {/* NOTYA-UZ-RANDEVU-01: booking from the patient's file — the form opens with this patient chosen. */}
+            {HAZIR.takvim ? <a className="uza-dugme uza-dugme-cizgi" href={takvimYolu({ yeni: '1', hasta: hasta.id })} data-eylem="randevu-al">{r.hasta.randevuAl}</a> : null}
+          </div>
         </div>
         <dl className="uza-bilgiler">
           {hasta.dogumTarihi ? <><dt>{m.yeniHasta.dogumTarihi}</dt><dd>{tarihYaz(hasta.dogumTarihi)}</dd></> : null}
@@ -205,6 +216,22 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun }: { m: Uygul
           {hasta.ulusalKimlik ? <><dt>{m.yeniHasta.ulusalKimlik}</dt><dd>{hasta.ulusalKimlik}</dd></> : null}
         </dl>
       </section>
+      {HAZIR.takvim && randevular && randevular.length ? (
+        <section className="uza-kart" data-alan="hasta-randevular">
+          <h2 className="uza-h2">{r.hasta.randevular}</h2>
+          <ul className="uza-liste">
+            {randevular.map((x) => (
+              <li key={x.id}>
+                <a className="uza-satir" href={takvimYolu({ randevu: x.id })} data-randevu={x.id}>
+                  <span className="uza-saat">{tarihYaz(x.gun)} {x.saat}–{bitisSaati(x.saat, x.sureDk)}</span>
+                  <span className="uza-liste-ad">{x.neden}</span>
+                  <DurumRozeti r={r} durum={x.durum} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {taslak.length ? (
         <section className="uza-kart">
           <h2 className="uza-h2">{m.hasta.taslaklar}</h2>
@@ -237,6 +264,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun }: { m: Uygul
 export function HastaDosyasi() {
   const u = useUygulama('hasta')
   const [veri, setVeri] = useState<{ hasta: HastaKaydi; muayeneler: DosyaMuayenesi[] } | null>(null)
+  const [randevular, setRandevular] = useState<RandevuKaydi[] | null>(null)
   const [durum, setDurum] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
   const { hesap, api } = u
 
@@ -251,13 +279,15 @@ export function HastaDosyasi() {
         else setDurum(r.status === 404 ? 'yok' : 'hata')
       })
       .catch(() => { if (!iptal) setDurum('hata') })
+    // The file is the file without them: if the appointments cannot be read, the list is simply not drawn.
+    if (HAZIR.takvim) api(`/api/ulke/randevular?hasta=${encodeURIComponent(id)}`).then((r) => { if (!iptal && r.ok && Array.isArray(r.j.randevular)) setRandevular(r.j.randevular) }).catch(() => { /* no list */ })
     return () => { iptal = true }
   }, [hesap, api])
 
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} /> : (
+      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} /> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
           {durum === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{u.m.kabuk.geri}</a></p>}

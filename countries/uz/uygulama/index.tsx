@@ -10,6 +10,7 @@ import Bugun from './Bugun'
 import Ayarlar from './Ayarlar'
 import { HastaDosyasi, Hastalar, YeniHasta } from './Hastalar'
 import Muayene from './Muayene'
+import Takvim from './Takvim'
 
 export const UZ_UYGULAMA: NonNullable<UlkeSayfalari['uygulama']> = {
   baslangic: Baslangic,
@@ -19,4 +20,6 @@ export const UZ_UYGULAMA: NonNullable<UlkeSayfalari['uygulama']> = {
   yeniHasta: YeniHasta,
   hasta: HastaDosyasi,
   muayene: Muayene,
+  // NOTYA-UZ-RANDEVU-01: the calendar, the booking form, one appointment, the working pattern.
+  takvim: Takvim,
 }

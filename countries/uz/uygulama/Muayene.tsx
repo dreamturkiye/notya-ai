@@ -4,7 +4,9 @@
  * NOTYA-UZ-MUAYENE-01 — /visit: a visit, from the microphone to the transcript. One address, by its parameter:
  *
  *   (none)            choose the patient                         → ?hasta=<id>
- *   ?hasta=<id>       the recording consent, the recording itself. The note template is not a choice: it is the
+ *   ?hasta=<id>       the recording consent, the recording itself. With &randevu=<id> (NOTYA-UZ-RANDEVU-01) the visit is
+ *                     started FROM AN APPOINTMENT: it is shown here, and the stored visit is linked to it.
+ *                     The recording consent and the recording are the same. The note template is not a choice: it is the
  *                     account's ROLE (NOTYA-UZ-BRANSLAR-01), or the general template for an account without one
  *   ?seans=<id>       a recorded visit: what was heard, in which language, how sure the engine was
  *   ?not=<id>         the visit's note: draft, second draft in the other language, approval (./Not.tsx)
@@ -29,6 +31,8 @@ import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
 import { asistanAdi } from './Asistan'
 import { metninDili, type UygulamaMetni } from './metinler'
+import { randevuMetni } from './randevuMetinleri'
+import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 
 export type KonusmaOzeti = { dil: string; dilKesin: boolean; ikinciGecis: boolean; dusukGuven: boolean }
 export type MuayeneDetayi = {
@@ -100,7 +104,9 @@ export function HastaSecGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
 
 export type KayitDurumu = 'hazir' | 'kayit' | 'yukleniyor' | 'isleniyor'
 
-export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol }: {
+export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu }: {
+  /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from, if any — shown, and where "back" leads. */
+  randevu?: Pick<RandevuKaydi, 'id' | 'gun' | 'saat'> | null
   m: UygulamaMetni; hasta: Pick<HastaKaydi, 'id' | 'ad' | 'otaIsmi'>; /** The template the note will be written with: shown, not chosen. */ sablon: string
   riza: boolean; setRiza: (r: boolean) => void; durum: KayitDurumu; sure: number; hataKodu: string | null
   baslat: () => void; durdur: () => void; vazgec: () => void
@@ -113,6 +119,7 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
       <p className="uza-ust-yazi">{v.baslik}</p>
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
       <p className="uza-ipucu" data-alan="asistan">{m.asistan.qayd}: <span data-alan="asistan-ad">{asistanAdi(m, rol)}</span></p>
+      {randevu ? <p className="uza-ipucu" data-alan="randevu">{randevuMetni(metninDili(m)).randevu.baslik}: {gunBasligi(randevuMetni(metninDili(m)), randevu.gun)} · {randevu.saat}</p> : null}
       {durum === 'hazir' ? (
         <div className="uza-form">
           <dl className="uza-bilgiler" style={{ marginTop: 0 }}><dt>{v.sablon}</dt><dd data-alan="sablon">{sablonAdi(m, sablon)}</dd></dl>
@@ -126,7 +133,7 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
             <button type="button" className="uza-dugme" disabled={!riza} onClick={baslat}>{v.kayitBaslat}</button>
             {riza ? null : <p className="uza-ipucu" id="uza-riza-ipucu">{v.rizaGerekli}</p>}
           </div>
-          <p className="uza-ipucu"><a className="uza-baglanti" href={`${YOL.hasta}?id=${hasta.id}`}>{m.kabuk.geri}</a></p>
+          <p className="uza-ipucu"><a className="uza-baglanti" href={randevu ? takvimYolu({ randevu: randevu.id }) : `${YOL.hasta}?id=${hasta.id}`}>{m.kabuk.geri}</a></p>
         </div>
       ) : durum === 'kayit' ? (
         <div className="uza-kayit" role="status">
@@ -146,9 +153,10 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
   )
 }
 
-function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaId: string }) {
+function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygulama>; hastaId: string; /** NOTYA-UZ-RANDEVU-01: '' = a visit without an appointment. */ randevuId: string }) {
   const [hasta, setHasta] = useState<HastaKaydi | null>(null)
-  const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
+  const [randevu, setRandevu] = useState<RandevuKaydi | null>(null)
+  const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'randevu-yok' | 'hata' | 'tamam'>('yukleniyor')
   const [riza, setRiza] = useState(false)
   const [durum, setDurum] = useState<KayitDurumu>('hazir')
   const [sure, setSure] = useState(0)
@@ -164,14 +172,25 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
   useEffect(() => {
     if (!hesap) return
     let iptal = false
-    api(`/api/ulke/hasta?id=${encodeURIComponent(hastaId)}`)
-      .then((r) => {
+    ;(async () => {
+      try {
+        const r = await api(`/api/ulke/hasta?id=${encodeURIComponent(hastaId)}`)
         if (iptal) return
-        if (r.ok && r.j.hasta) { setHasta(r.j.hasta); setYuk('tamam') } else setYuk(r.status === 404 ? 'yok' : 'hata')
-      })
-      .catch(() => { if (!iptal) setYuk('hata') })
+        if (!r.ok || !r.j.hasta) { setYuk(r.status === 404 ? 'yok' : 'hata'); return }
+        if (randevuId) {
+          // The appointment is checked BEFORE anything is recorded: it must exist for this doctor, be this patient's
+          // and still be one a visit can start from. Otherwise nothing is recorded "for" it at all.
+          const a = await api(`/api/ulke/randevu?id=${encodeURIComponent(randevuId)}`)
+          if (iptal) return
+          const x = a.ok ? (a.j.randevu as RandevuKaydi | undefined) : undefined
+          if (!x || x.hastaId !== hastaId || !muayeneBaslatilabilir(x)) { setYuk(a.ok || a.status === 404 ? 'randevu-yok' : 'hata'); return }
+          setRandevu(x)
+        }
+        setHasta(r.j.hasta); setYuk('tamam')
+      } catch { if (!iptal) setYuk('hata') }
+    })()
     return () => { iptal = true }
-  }, [hesap, api, hastaId])
+  }, [hesap, api, hastaId, randevuId])
 
   const birak = () => {
     if (sayac.current) { clearInterval(sayac.current); sayac.current = null }
@@ -230,7 +249,7 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
       const { error } = await supabase.storage.from(MUAYENE_SES_KOVASI).upload(yol, ses, { contentType: ses.type || 'audio/webm' })
       if (error) { geri('SES_OKUNAMADI'); return }
       setDurum('isleniyor')
-      const r = await api('/api/ulke/muayene', { method: 'POST', govde: { yol, hastaId, sablon, riza: true } })
+      const r = await api('/api/ulke/muayene', { method: 'POST', govde: { yol, hastaId, sablon, riza: true, ...(randevu ? { randevuId: randevu.id } : {}) } })
       if (!r.ok || !r.j.seansId) { geri(typeof r.j.code === 'string' ? r.j.code : 'BASARISIZ'); return }
       // The visit is saved. Now its note; if that fails, the recorded visit opens and says so — nothing is lost.
       let notId = ''
@@ -242,12 +261,12 @@ function YeniMuayene({ u, hastaId }: { u: ReturnType<typeof useUygulama>; hastaI
   if (yuk !== 'tamam' || !hasta) {
     return (
       <section className="uza-kart">
-        {yuk === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{yuk === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
-        {yuk === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.muayene}>{u.m.kabuk.geri}</a></p>}
+        {yuk === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{yuk === 'yok' ? u.m.hasta.bulunamadi : yuk === 'randevu-yok' ? randevuMetni(u.dil).randevu.bulunamadi : u.m.kabuk.hata}</Hata>}
+        {yuk === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={yuk === 'randevu-yok' ? takvimYolu() : YOL.muayene}>{u.m.kabuk.geri}</a></p>}
       </section>
     )
   }
-  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
+  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
 }
 
 // ───────────────────────── a recorded visit ─────────────────────────
@@ -350,15 +369,15 @@ function HastaSec({ u, q }: { u: ReturnType<typeof useUygulama>; q: string }) {
 
 export default function Muayene() {
   const u = useUygulama('muayene')
-  const [param, setParam] = useState<{ hasta: string; seans: string; not: string; q: string; xato: string } | null>(null)
+  const [param, setParam] = useState<{ hasta: string; seans: string; not: string; q: string; xato: string; randevu: string } | null>(null)
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    setParam({ hasta: p.get('hasta') ?? '', seans: p.get('seans') ?? '', not: p.get('not') ?? '', q: p.get('q') ?? '', xato: p.get('xato') ?? '' })
+    setParam({ hasta: p.get('hasta') ?? '', seans: p.get('seans') ?? '', not: p.get('not') ?? '', q: p.get('q') ?? '', xato: p.get('xato') ?? '', randevu: p.get('randevu') ?? '' })
   }, [])
   if (!u.hesap || !param) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="bugun" cikis={u.cikis}>
-      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} /> : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} /> : <HastaSec u={u} q={param.q} />}
+      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} /> : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} randevuId={param.randevu} /> : <HastaSec u={u} q={param.q} />}
     </Cerceve>
   )
 }

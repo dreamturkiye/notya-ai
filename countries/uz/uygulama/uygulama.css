@@ -110,3 +110,34 @@ select.uza-girdi { appearance: auto; }
 .uza-alt-alan { margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--uza-cizgi); }
 .uza-alt-etiket, .uza-alt-baslik { font-size: 13.5px; font-weight: 600; color: var(--uza-soluk); margin-bottom: 4px; display: block; }
 textarea.uza-alt-girdi { min-height: 58px; font-size: 15px; }
+
+/* ── NOTYA-UZ-RANDEVU-01 — calendar. The day is a list; the week is seven blocks, stacked on a phone, side by side on a wide screen. ── */
+.uza-takvim-ust { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.uza-takvim-gorunumler { display: flex; gap: 4px; }
+.uza-takvim-gezinme { display: flex; flex-wrap: wrap; gap: 6px; }
+.uza-takvim-bos .uza-liste-ad { font-weight: 400; color: var(--uza-soluk); }
+.uza-takvim-bos .uza-rozet { background: transparent; border: 1px solid var(--uza-cizgi); color: var(--uza-cam); }
+.uza-takvim-mola { color: var(--uza-soluk); }
+.uza-takvim-mola .uza-liste-ad { font-weight: 400; font-style: italic; }
+[data-soluk='evet'] .uza-liste-ad, a[data-soluk='evet'] .uza-liste-ad { color: var(--uza-soluk); text-decoration: line-through; }
+.uza-rozet[data-randevu-durum='geldi'] { background: rgba(47, 67, 52, 0.12); color: var(--uza-cam); }
+.uza-rozet[data-randevu-durum='tamamlandi'] { background: var(--uza-cam); color: #fff; }
+.uza-rozet[data-randevu-durum='gelmedi'], .uza-rozet[data-randevu-durum='iptal'] { background: rgba(164, 91, 62, 0.1); color: var(--uza-uyari); }
+.uza-hafta { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .uza-hafta { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; } }
+.uza-hafta-gun { border: 1px solid var(--uza-cizgi); border-radius: 12px; padding: 10px; min-width: 0; background: #fff; }
+.uza-hafta-gun[data-bugun='evet'] { border-color: var(--uza-cam); }
+.uza-hafta-baslik { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 14px; margin-bottom: 6px; }
+.uza-hafta-ekle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--uza-cizgi); color: var(--uza-cam); font-weight: 600; flex: none; }
+.uza-hafta-bos { color: var(--uza-soluk); font-size: 14px; }
+.uza-hafta-liste { display: flex; flex-direction: column; gap: 6px; }
+.uza-hafta-randevu { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 8px; border-radius: 10px; background: rgba(47, 67, 52, 0.06); font-size: 14px; min-height: 44px; }
+.uza-hafta-randevu[data-randevu-durum='iptal'], .uza-hafta-randevu[data-randevu-durum='gelmedi'] { background: transparent; border: 1px dashed var(--uza-cizgi); color: var(--uza-soluk); }
+.uza-hafta-ad { font-weight: 600; overflow-wrap: anywhere; flex: 1; min-width: 0; }
+.uza-hafta-durum { font-size: 12.5px; color: var(--uza-soluk); width: 100%; }
+@media (min-width: 900px) { .uza-hafta-ad { flex-basis: 100%; } }
+.uza-randevu-satiri { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.uza-randevu-satiri > .uza-satir { flex: 1; min-width: 220px; }
+.uza-randevu-satiri > .uza-dugme { margin-bottom: 8px; }
+.uza-mola { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 8px; }
+textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }

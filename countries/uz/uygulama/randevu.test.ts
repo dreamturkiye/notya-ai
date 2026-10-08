@@ -607,3 +607,356 @@ describe('Uzbekistan appointments: ISOLATION between two doctors, both direction
     assert.doesNotMatch(sql.replace(/--[^\n]*/g, ''), /\b(randevular|doktor_calisma_saatleri)\b/)
   })
 })
+
+// ───────────────────────── text, reminder and screens in the three forms ─────────────────────────
+
+import React from 'react'
+import { existsSync } from 'node:fs'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { gorunurMetin } from '@/lib/ulke/testing/sizintiTarayici'
+
+const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
+type Form = (typeof FORMLAR)[number]
+const ON_EK = '/uzbek'
+/** Addresses of the pre-split application that must never appear on a screen of this build. */
+const TURKCE_ADRES = /\/(giris|kayit|dashboard|doktor|doktor-tools|onboarding|asistan|portal|klinik|kvkk|session|intake|randevu)(\/|"|\?|$)/
+let ACIK_SAYFALAR: readonly string[] = []
+/** Leak test, no Turkish letter, and EVERY LINK LEADS TO A REAL PAGE: under /uzbek, and a page the pack lists. */
+const ekranTemiz = (html: string, kaynak: string) => {
+  temiz(html, kaynak); temiz(gorunurMetin(html), `${kaynak} (visible text)`)
+  assert.doesNotMatch(html, /[çğıİşĞŞ]/, `${kaynak}: a Turkish letter`)
+  let baglanti = 0
+  for (const m of html.matchAll(/(?:href|action)="([^"]+)"/g)) {
+    if (m[1].startsWith('https://fonts.googleapis.com/')) continue
+    baglanti++
+    assert.doesNotMatch(m[1], TURKCE_ADRES, `${kaynak}: links to a page of the pre-split application: ${m[1]}`)
+    const adres = m[1].split('?')[0]
+    assert.ok(adres === ON_EK || adres.startsWith(`${ON_EK}/`), `${kaynak}: "${m[1]}" is outside ${ON_EK}`)
+    const yol = adres.slice(ON_EK.length) || '/'
+    assert.ok(ACIK_SAYFALAR.includes(yol), `${kaynak}: links to ${m[1]}, which is not a page of this build (${ACIK_SAYFALAR.join(' ')})`)
+    assert.ok(existsSync(join(KOK, 'app', yol === '/' ? '' : yol.slice(1), 'page.ulke.tsx')), `${kaynak}: ${m[1]} has no route file`)
+  }
+  assert.ok(baglanti > 0, `${kaynak}: no link was checked`)
+}
+function yaprak(o: unknown, on = ''): [string, string][] {
+  return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'string' ? [[`${on}${k}`, v] as [string, string]] : yaprak(v, `${on}${k}.`)))
+}
+const href = (yol: string) => `href="${yol.replace(/&/g, '&amp;')}"`
+
+describe('Uzbekistan appointments: text, reminder and screens in the three forms', () => {
+  let M: typeof import('./metinler')
+  let RM: typeof import('./randevuMetinleri')
+  let H: typeof import('./hatirlatma')
+  let T: typeof import('./Takvim')
+  let Kabuk: typeof import('./Kabuk')
+  let Bugun: typeof import('./Bugun')
+  let Hastalar: typeof import('./Hastalar')
+  let Muayene: typeof import('./Muayene')
+  before(async () => {
+    M = await import('./metinler'); RM = await import('./randevuMetinleri'); H = await import('./hatirlatma')
+    T = await import('./Takvim'); Kabuk = await import('./Kabuk'); Bugun = await import('./Bugun'); Hastalar = await import('./Hastalar'); Muayene = await import('./Muayene')
+    const izin = (await import('@/lib/ulke/ulke')).ulkePaketi().rotalar
+    assert.notEqual(izin, 'hepsi')
+    if (izin !== 'hepsi') ACIK_SAYFALAR = izin.sayfalar
+  })
+  const cerceve = (f: Form, aktif: 'bugun' | 'takvim' | 'hastalar', ic: React.ReactNode) => renderToStaticMarkup(React.createElement(Kabuk.Cerceve, { dil: f, m: M.uygulamaMetni(f), ad: 'QA Shifokor', aktif, cikis: () => {}, children: ic }))
+  const bos = () => {}
+  const HASTA = { id: 'aaaaaaaa-0000-4000-8000-000000000001', ad: 'QA Karimova Dilnoza', otaIsmi: 'Rustamovna', dogumTarihi: '2021-03-07', cinsiyet: 'female' as const, telefon: '+998 90 000 00 01', dil: 'uz', ulusalKimlik: '' }
+  const DUZEN = { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] }
+  // 2026-10-12 is a Monday.
+  const PZT = '2026-10-12'
+  const randevu = (id: string, gun: string, saat: string, durum: string, ek: Record<string, unknown> = {}) => ({ id, hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: `${gun}T00:00:00.000Z`, bitis: `${gun}T00:30:00.000Z`, gun, saat, sureDk: 30, neden: '', durum, mesaiDisi: false, seansId: null, ...ek }) as import('./Takvim').RandevuKaydi
+
+  it('the catalogue says, at its top, that it is machine-written, that the reminder is patient-facing, and that it awaits native review', () => {
+    const bas = readFileSync(join(KOK, 'countries/uz/uygulama/randevuMetinleri.ts'), 'utf8').slice(0, 1600)
+    assert.match(bas, /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW\./); assert.match(bas, /PATIENT-FACING/)
+  })
+
+  it('LEAK TEST over every new string, in all three forms: same keys, nothing empty, each form in its own script, no Turkish word or letter', () => {
+    const [lat, kir, ru] = FORMLAR.map((f) => yaprak(RM.UZ_RANDEVU_METINLERI[f]))
+    assert.ok(lat.length >= 110, `only ${lat.length} strings`)
+    assert.deepEqual(kir.map((x) => x[0]), lat.map((x) => x[0])); assert.deepEqual(ru.map((x) => x[0]), lat.map((x) => x[0]))
+    for (let i = 0; i < lat.length; i++) {
+      const k = lat[i][0]
+      for (const [f, v] of [['uz-Latn', lat[i][1]], ['uz-Cyrl', kir[i][1]], ['ru', ru[i][1]]] as const) {
+        assert.ok(v.trim().length > 0, `${f}/${k} is empty`)
+        temiz(v, `${f}/${k}`)
+        assert.doesNotMatch(v, /[çğıİşĞŞöüÖÜâîû]/, `${f}/${k} has a Turkish letter`)
+        assert.doesNotMatch(v, /'|`/, `${f}/${k}: a typewriter apostrophe (Uzbek Latin uses ʻ and ʼ)`)
+      }
+      assert.doesNotMatch(lat[i][1], /[Ѐ-ӿ]/, `uz-Latn/${k} has a Cyrillic letter`)
+      assert.doesNotMatch(kir[i][1], /[A-Za-z]/, `uz-Cyrl/${k} has a Latin letter`)
+      assert.doesNotMatch(ru[i][1], /[A-Za-zўқғҳЎҚҒҲ]/, `ru/${k} has a Latin or Uzbek-only letter`)
+      // The three forms really are three texts: Cyrillic Uzbek is not the Russian line, nor the Latin one.
+      if (kir[i][1].length > 12) assert.notEqual(kir[i][1], ru[i][1], `${k}: uz-Cyrl and ru are the same sentence`)
+    }
+    for (const f of FORMLAR) {
+      const h = RM.UZ_RANDEVU_METINLERI[f].hatirlatma
+      assert.deepEqual([...h.metin.matchAll(/%\d/g)].map((x) => x[0]).sort(), ['%1', '%2', '%3'], f)
+      assert.deepEqual([...h.metinAdsiz.matchAll(/%\d/g)].map((x) => x[0]).sort(), ['%1', '%2'], f)
+      assert.equal(RM.randevuMetninDili(RM.randevuMetni(f)), f)
+      assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map((g) => RM.gunAdi(RM.randevuMetni(f), g)).filter(Boolean).length, 7)
+    }
+    assert.equal(RM.randevuMetni('tr'), RM.UZ_RANDEVU_METINLERI['uz-Latn'], 'an unknown form must fall to Uzbek Latin, never to another country')
+  })
+
+  it('REMINDER TEXT in each language: the patient\'s language, the doctor\'s script, the pack\'s date and time, the doctor\'s name — and no Turkish word', async () => {
+    const { ulkePaketi } = await import('@/lib/ulke/ulke')
+    assert.equal(H.UZ_TARIH_DESENI, ulkePaketi().bicim.tarihDeseni)
+    const hekim = (dil: Form, notDili: Form, ad = 'Karimov Alisher') => ({ dil, notDili, ad })
+    const yap = (hastaDili: string, h: ReturnType<typeof hekim>) => H.uzHatirlatmaMetni({ hastaDili, hekim: h, gun: '2026-10-09', saat: '14:30' })
+    assert.deepEqual(yap('uz', hekim('uz-Latn', 'uz-Latn')), { dil: 'uz-Latn', metin: 'Assalomu alaykum! Eslatma: siz 09.10.2026 kuni soat 14:30 da shifokor Karimov Alisher qabuliga yozilgansiz.' })
+    assert.deepEqual(yap('uz', hekim('uz-Cyrl', 'uz-Cyrl', 'Каримов Алишер')), { dil: 'uz-Cyrl', metin: 'Ассалому алайкум! Эслатма: сиз 09.10.2026 куни соат 14:30 да шифокор Каримов Алишер қабулига ёзилгансиз.' })
+    assert.deepEqual(yap('ru', hekim('uz-Latn', 'uz-Latn', 'Каримов Алишер')), { dil: 'ru', metin: 'Здравствуйте! Напоминаем: вы записаны на приём к врачу Каримов Алишер 09.10.2026 в 14:30.' })
+    // The PATIENT's language decides, not the doctor's: a Russian-speaking patient of an Uzbek-reading doctor, and the reverse.
+    for (const d of FORMLAR) for (const n of FORMLAR) assert.equal(yap('ru', hekim(d, n)).dil, 'ru', `${d}/${n}`)
+    // Uzbek for the patient → the DOCTOR's script: of the interface if that is Uzbek, else of the notes, else Latin.
+    assert.deepEqual([yap('uz', hekim('uz-Cyrl', 'ru')).dil, yap('uz', hekim('uz-Latn', 'uz-Cyrl')).dil, yap('uz', hekim('ru', 'uz-Cyrl')).dil, yap('uz', hekim('ru', 'uz-Latn')).dil, yap('uz', hekim('ru', 'ru')).dil], ['uz-Cyrl', 'uz-Latn', 'uz-Cyrl', 'uz-Latn', 'uz-Latn'])
+    // A patient whose language was not recorded gets the doctor's own form.
+    assert.deepEqual([yap('', hekim('ru', 'uz-Latn')).dil, yap('', hekim('uz-Cyrl', 'ru')).dil, yap('kk', hekim('uz-Latn', 'ru')).dil], ['ru', 'uz-Cyrl', 'uz-Latn'])
+    for (const hd of ['uz', 'ru', '']) for (const d of FORMLAR) for (const n of FORMLAR) {
+      const { dil, metin } = yap(hd, hekim(d, n, 'QA Shifokor'))
+      const ad = `${hd || '-'}/${d}/${n}`
+      assert.ok(metin.includes('09.10.2026') && metin.includes('14:30') && metin.includes('QA Shifokor'), ad)
+      assert.ok(metin.length < 160, `${ad}: not short (${metin.length})`)
+      assert.doesNotMatch(metin, /%\d/, `${ad}: a placeholder is left`)
+      temiz(metin, `reminder ${ad}`); assert.doesNotMatch(metin, /[çğıİşĞŞöüÖÜ]/, `${ad}: a Turkish letter`)
+      assert.doesNotMatch(metin, /\b(randevu|hatırlatma|hatirlatma|sayın|sayin|merhaba|doktor|saat:|tarih)\b/i, `${ad}: a Turkish word`)
+      // Apart from the doctor's name, the text is in the script of its form.
+      const adsiz = metin.replace('QA Shifokor', '')
+      if (dil === 'uz-Latn') assert.doesNotMatch(adsiz, /[Ѐ-ӿ]/, ad); else assert.doesNotMatch(adsiz, /[A-Za-z]/, ad)
+      if (dil === 'ru') assert.doesNotMatch(adsiz, /[ўқғҳЎҚҒҲ]/, ad)
+    }
+    // 24-hour clock, digits only, never a month name, never the browser's or the server's pattern.
+    assert.ok(yap('ru', hekim('ru', 'ru')).metin.includes('09.10.2026 в 14:30'))
+    assert.ok(H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2027-01-02', saat: '00:15' }).metin.includes('02.01.2027 kuni soat 00:15'))
+    // No name on the account: the sentence without one, not a hole. A name that looks like a placeholder stays a name.
+    assert.equal(yap('ru', hekim('ru', 'ru', '  ')).metin, 'Здравствуйте! Напоминаем: вы записаны на приём к врачу 09.10.2026 в 14:30.')
+    assert.ok(yap('uz', hekim('uz-Latn', 'uz-Latn', 'Dr %1 %2')).metin.includes('shifokor Dr %1 %2 qabuliga'))
+    // A day or time that cannot be written gives no text at all.
+    assert.equal(H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2026-13-40', saat: '14:30' }).metin, '')
+    assert.equal(H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2026-10-09', saat: '2 pm' }).metin, '')
+  })
+
+  it('NOTHING IS SENT: the reminder is a string; no messaging route, provider or automatic sender exists in this build', async () => {
+    const kod = (d: string) => readFileSync(join(KOK, d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+    assert.doesNotMatch(kod('countries/uz/uygulama/hatirlatma.ts'), /fetch\(|api\(|supabase|iletisim|whatsapp|telegram|sms|eposta|mailto/i)
+    // On the screen the only thing the button does with the text is put it on the clipboard.
+    const takvim = kod('countries/uz/uygulama/Takvim.tsx')
+    assert.match(takvim, /navigator\.clipboard\.writeText\(metin\)/)
+    assert.doesNotMatch(takvim, /whatsapp|telegram|wa\.me|t\.me|sms:|mailto:|tel:/i)
+    const { ulkePaketi } = await import('@/lib/ulke/ulke')
+    const izin = ulkePaketi().rotalar
+    if (izin !== 'hepsi') assert.deepEqual(izin.apiOnEkleri, ['/api/ulke/'])
+    for (const d of ['hatirlatma', 'iletisim', 'mesaj', 'cron', 'randevu/hatirlatma']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
+    // Not in this job, and not half-built either: no calendar sync, no self-booking by patients, no clinic-wide calendar.
+    for (const d of ['google', 'takvim-esitleme', 'portal', 'klinik']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
+    assert.doesNotMatch(kod('lib/ulke/uygulama/randevular.ts') + takvim, /google|googleapis|ics\b|portal/i)
+  })
+
+  it('the calendar screen exists: route file, pack list, screen — and the shell links to it in the account\'s form', async () => {
+    const { UZ_UYGULAMA } = await import('./index')
+    assert.ok(ACIK_SAYFALAR.includes('/calendar') && existsSync(join(KOK, 'app/calendar/page.ulke.tsx')) && UZ_UYGULAMA.takvim === T.default)
+    assert.deepEqual([Kabuk.YOL.takvim, Kabuk.HAZIR.takvim], ['/uzbek/calendar', true])
+    for (const f of FORMLAR) {
+      const html = cerceve(f, 'takvim', React.createElement('p', null, 'x'))
+      assert.match(html, new RegExp(`<a href="/uzbek/calendar" class="uza-sekme" aria-current="page">${RM.randevuMetni(f).kabuk.takvim}</a>`))
+      ekranTemiz(html, `shell (${f})`)
+    }
+  })
+
+  it('the rows of a day: appointments, breaks and the free times of the working pattern — a taken time is not offered, a cancelled one is', () => {
+    const r = [randevu('r1', PZT, '10:00', 'planlandi'), randevu('r2', PZT, '11:00', 'iptal'), randevu('r3', PZT, '11:30', 'gelmedi'), randevu('r4', PZT, '15:10', 'geldi', { sureDk: 20 }), randevu('r5', '2026-10-13', '09:00', 'planlandi')]
+    const s = T.gunSatirlari(DUZEN, PZT, r)
+    const bosSaatler = s.filter((x) => x.tur === 'bos').map((x) => (x as { saat: string }).saat)
+    assert.deepEqual(bosSaatler, ['09:00', '09:30', '10:30', '11:00', '11:30', '12:00', '12:30', '14:00', '14:30', '15:30', '16:00', '16:30', '17:00', '17:30'])
+    assert.deepEqual(s.filter((x) => x.tur === 'randevu').map((x) => (x as { randevu: { id: string } }).randevu.id), ['r1', 'r2', 'r3', 'r4'])
+    assert.deepEqual(s.filter((x) => x.tur === 'mola').map((x) => [(x as { saat: string }).saat, (x as { bitis: string }).bitis]), [['13:00', '14:00']])
+    assert.deepEqual(s.map((x) => x.dk), [...s.map((x) => x.dk)].sort((a, b) => a - b), 'not in time order')
+    // Not a working day (Saturday), and no pattern at all: the day's appointments, no free rows.
+    assert.deepEqual(T.gunSatirlari(DUZEN, '2026-10-17', [randevu('r9', '2026-10-17', '10:00', 'planlandi')]).map((x) => x.tur), ['randevu'])
+    assert.deepEqual(T.gunSatirlari(null, PZT, r).map((x) => x.tur), ['randevu', 'randevu', 'randevu', 'randevu'])
+  })
+
+  for (const f of FORMLAR) {
+    it(`${f}: THE CALENDAR, day view — the day in the pack's pattern, free times lead to booking THAT time, every appointment to itself`, () => {
+      const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
+      const randevular = [randevu('r1', PZT, '10:00', 'planlandi', { neden: 'QA sabab' }), randevu('r2', PZT, '11:00', 'iptal'), randevu('r3', PZT, '19:00', 'geldi', { mesaiDisi: true })]
+      const html = cerceve(f, 'takvim', React.createElement(T.TakvimGorunumu, { m, r, gorunum: 'gun', gun: PZT, gunler: [PZT], bugun: '2026-10-09', duzen: DUZEN, randevular, hata: false }))
+      const g = gorunurMetin(html)
+      for (const s of [r.takvim.baslik, r.takvim.gun, r.takvim.hafta, r.takvim.bugun, r.takvim.onceki, r.takvim.sonraki, r.takvim.yeni, r.takvim.duzen, r.takvim.bosSaat, r.takvim.mola, r.takvim.mesaiDisi, r.duzen.saatDilimi, `${r.gunUzun[1]}, 12.10.2026`, 'QA Karimova Dilnoza', 'QA sabab', '10:00–10:30', '13:00–14:00', r.durum.planlandi, r.durum.iptal, r.durum.geldi]) assert.ok(g.includes(s), s)
+      assert.ok(!g.includes('2026-10-12'), 'a day is shown in the machine pattern')
+      for (const h of ['/uzbek/calendar?yeni=1&gun=2026-10-12', '/uzbek/calendar?yeni=1&gun=2026-10-12&saat=09%3A00', '/uzbek/calendar?yeni=1&gun=2026-10-12&saat=11%3A00', '/uzbek/calendar?randevu=r1', '/uzbek/calendar?randevu=r3', '/uzbek/calendar?gun=2026-10-11', '/uzbek/calendar?gun=2026-10-13', '/uzbek/calendar?gun=2026-10-09', '/uzbek/calendar?gun=2026-10-12&gorunum=hafta', '/uzbek/calendar?duzen=1']) assert.ok(html.includes(href(h)), h)
+      assert.ok(!html.includes('saat=10%3A00'), 'a taken time is offered as free')
+      assert.match(html, /<a class="uza-sekme" href="[^"]+" aria-current="page">/)
+      ekranTemiz(html, `/calendar day (${f})`)
+      // Not a working day: said plainly, nothing offered as free; an empty day; loading; a failure.
+      const cmt = cerceve(f, 'takvim', React.createElement(T.TakvimGorunumu, { m, r, gorunum: 'gun', gun: '2026-10-17', gunler: ['2026-10-17'], bugun: '2026-10-09', duzen: DUZEN, randevular: [], hata: false }))
+      assert.ok(gorunurMetin(cmt).includes(r.takvim.isGunuDegil) && gorunurMetin(cmt).includes(r.takvim.bos) && !cmt.includes('data-bos='))
+      ekranTemiz(cmt, `/calendar day off (${f})`)
+      assert.ok(gorunurMetin(cerceve(f, 'takvim', React.createElement(T.TakvimGorunumu, { m, r, gorunum: 'gun', gun: PZT, gunler: [PZT], bugun: PZT, duzen: null, randevular: null, hata: false }))).includes(m.kabuk.yukleniyor))
+      assert.ok(gorunurMetin(cerceve(f, 'takvim', React.createElement(T.TakvimGorunumu, { m, r, gorunum: 'gun', gun: PZT, gunler: [PZT], bugun: PZT, duzen: null, randevular: null, hata: true }))).includes(m.kabuk.hata))
+    })
+
+    it(`${f}: THE CALENDAR, week view — seven days, MONDAY FIRST, each appointment under its own day; a list that stacks on a phone`, () => {
+      const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
+      const gunler = Array.from({ length: 7 }, (_, i) => gunEkle(PZT, i))
+      const randevular = [randevu('r1', PZT, '10:00', 'planlandi'), randevu('r2', gunEkle(PZT, 2), '09:00', 'tamamlandi'), randevu('r3', gunEkle(PZT, 6), '12:00', 'gelmedi')]
+      const html = cerceve(f, 'takvim', React.createElement(T.TakvimGorunumu, { m, r, gorunum: 'hafta', gun: gunEkle(PZT, 3), gunler, bugun: gunEkle(PZT, 2), duzen: DUZEN, randevular, hata: false }))
+      assert.deepEqual([...html.matchAll(/<section class="uza-hafta-gun" data-gun="([0-9-]+)"/g)].map((x) => x[1]), gunler)
+      const basliklar = [...html.matchAll(/<a class="uza-baglanti" href="\/uzbek\/calendar\?gun=[0-9-]+" title="[^"]*">([^<]+)<\/a>/g)].map((x) => x[1])
+      assert.deepEqual(basliklar, [1, 2, 3, 4, 5, 6, 7].map((g, i) => `${r.gunKisa[g as 1]} · ${String(12 + i).padStart(2, '0')}.10`))
+      // Each appointment sits inside its own day's block.
+      for (const [id, gun] of [['r1', gunler[0]], ['r2', gunler[2]], ['r3', gunler[6]]]) {
+        const blok = html.slice(html.indexOf(`data-gun="${gun}"`), gun === gunler[6] ? undefined : html.indexOf(`data-gun="${gunEkle(gun, 1)}"`))
+        assert.ok(blok.includes(`data-randevu="${id}"`), `${id} is not under ${gun}`)
+      }
+      assert.match(html, new RegExp(`data-gun="${gunler[2]}" data-bugun="evet"`))
+      // A week back and a week on; "day" keeps the day; every day can be booked.
+      for (const h of ['/uzbek/calendar?gun=2026-10-08&gorunum=hafta', '/uzbek/calendar?gun=2026-10-22&gorunum=hafta', '/uzbek/calendar?gun=2026-10-15', '/uzbek/calendar?yeni=1&gun=2026-10-18', '/uzbek/calendar?randevu=r2']) assert.ok(html.includes(href(h)), h)
+      for (const s of [r.durum.planlandi, r.durum.tamamlandi, r.durum.gelmedi]) assert.ok(gorunurMetin(html).includes(s), s)
+      // The phone layout is the default; the seven columns come only on a wide screen.
+      const css = readFileSync(join(KOK, 'countries/uz/uygulama/uygulama.css'), 'utf8')
+      assert.match(css, /\.uza-hafta \{ display: grid; gap: 10px; grid-template-columns: 1fr; \}\n@media \(min-width: 900px\) \{ \.uza-hafta \{ grid-template-columns: repeat\(7,/)
+      ekranTemiz(html, `/calendar week (${f})`)
+    })
+
+    it(`${f}: BOOKING — the form; "taken" has no way round it; "outside working hours" offers an explicit "book anyway"`, () => {
+      const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
+      const a = { gun: '12.10.2026', saat: '10:00', sureDk: 30, neden: '' }
+      const form = (hata: import('./Takvim').FormHatasi, bekliyor = false) => cerceve(f, 'takvim', React.createElement(T.RandevuFormuGorunumu, { m, r, hasta: HASTA, a, set: bos, sureler: [10, 15, 20, 30, 45, 60, 90], gonder: bos, bekliyor, hata, geri: T.takvimYolu({ gun: PZT }) }))
+      const html = form(null)
+      const g = gorunurMetin(html)
+      for (const s of [r.form.baslik, 'QA Karimova Dilnoza Rustamovna', r.form.tarih, r.form.saat, r.form.sure, r.form.neden, r.form.kaydet, r.form.vazgec, r.form.hastaDegistir, r.duzen.saatDilimi, `30 ${r.form.dakika}`]) assert.ok(g.includes(s), s)
+      assert.match(html, new RegExp(`name="gun"[^>]*placeholder="${r.form.tarihOrnek}"[^>]*value="12\\.10\\.2026"`), 'the day is typed in the pack\'s pattern')
+      assert.match(html, /name="saat" type="time"[^>]*value="10:00"/)
+      assert.equal(html.includes('data-eylem="yine-de"'), false)
+      ekranTemiz(html, `/calendar booking (${f})`)
+      // TAKEN: the sentence, and no second button of any kind.
+      const dolu = form({ kod: 'DOLU' })
+      assert.ok(gorunurMetin(dolu).includes(r.form.dolu)); assert.equal(dolu.includes('data-eylem="yine-de"'), false); assert.ok(!gorunurMetin(dolu).includes(r.form.yineDe))
+      // OUTSIDE WORKING HOURS: the sentence says nothing was booked, and the explicit button appears.
+      const dis = form({ kod: 'MESAI_DISI' })
+      assert.ok(gorunurMetin(dis).includes(r.form.mesaiDisi)); assert.match(dis, new RegExp(`data-eylem="yine-de">${r.form.yineDe}</button>`))
+      for (const [hata, metin] of [[{ kod: 'GECERSIZ', alan: 'gun' }, r.form.tarihGecersiz], [{ kod: 'GECERSIZ', alan: 'saat' }, r.form.saatGecersiz], [{ kod: 'GECERSIZ', alan: 'sure' }, r.form.sureGecersiz], [{ kod: 'NOT_FOUND' }, m.hasta.bulunamadi], [{ kod: 'BAGLANTI' }, m.kabuk.baglanti], [{ kod: 'BASARISIZ' }, r.form.kaydedilemedi], [{ kod: 'YANGI_KOD' }, r.form.kaydedilemedi]] as const) {
+        const h = form(hata as import('./Takvim').FormHatasi)
+        assert.ok(gorunurMetin(h).includes(metin), JSON.stringify(hata)); assert.equal(h.includes('data-eylem="yine-de"'), false, JSON.stringify(hata)); ekranTemiz(h, `/calendar booking error (${f})`)
+      }
+      assert.ok(gorunurMetin(form(null, true)).includes(r.form.kaydediliyor))
+      // Without a patient: choose one first; the day and time already chosen travel with every link.
+      const sec = cerceve(f, 'takvim', React.createElement(T.RandevuHastaSecGorunumu, { m, r, q: '', hastalar: [HASTA], hata: false, gun: PZT, saat: '10:00' }))
+      assert.ok(gorunurMetin(sec).includes(r.form.hastaSec) && gorunurMetin(sec).includes('QA Karimova Dilnoza Rustamovna'))
+      assert.ok(sec.includes(href(`/uzbek/calendar?yeni=1&hasta=${HASTA.id}&gun=2026-10-12&saat=10%3A00`)))
+      assert.match(sec, /<form class="uza-arama" action="\/uzbek\/calendar" method="get" role="search"><input type="hidden" name="yeni" value="1"\/><input type="hidden" name="gun" value="2026-10-12"\/><input type="hidden" name="saat" value="10:00"\/>/)
+      ekranTemiz(sec, `/calendar choose patient (${f})`)
+      assert.ok(gorunurMetin(cerceve(f, 'takvim', React.createElement(T.RandevuHastaSecGorunumu, { m, r, q: 'zzz', hastalar: [], hata: false }))).includes(m.arama.sonucYok))
+    })
+
+    it(`${f}: ONE APPOINTMENT — status, "start the visit", move, cancel, and the reminder in the PATIENT's language with one button to copy it`, () => {
+      const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
+      const hekim = { dil: f, notDili: f, ad: 'QA Shifokor' }
+      const detay = (x: import('./Takvim').RandevuKaydi, ek: Record<string, unknown> = {}) => cerceve(f, 'takvim', React.createElement(T.RandevuDetayGorunumu, { m, r, randevu: x, hekim, sureler: [15, 30, 45], tasi: { gun: '12.10.2026', saat: x.saat, sureDk: x.sureDk }, setTasi: bos, hata: null, bildirim: null, bekliyor: false, durumDegistir: bos, tasiGonder: bos, kopyala: bos, ...ek }))
+      const eylemler = (html: string) => [...html.matchAll(/data-eylem="([a-z-]+)"/g)].map((x) => x[1])
+      // PLANNED, a Russian-speaking patient: everything is offered, and the reminder is in Russian whatever the doctor reads.
+      const planli = detay(randevu('r1', PZT, '10:00', 'planlandi', { neden: 'QA sabab', hastaDili: 'ru', mesaiDisi: true }))
+      const g = gorunurMetin(planli)
+      for (const s of [r.randevu.baslik, 'QA Karimova Dilnoza', `${r.gunUzun[1]}, 12.10.2026`, '10:00–10:30', `(30 ${r.form.dakika})`, 'QA sabab', r.durum.planlandi, r.randevu.mesaiDisiIsareti, m.bugun.muayeneBaslat, r.randevu.geldi, r.randevu.gelmedi, r.randevu.iptalEt, r.randevu.tasi, r.randevu.tasiKaydet, r.hatirlatma.baslik, r.hatirlatma.kopyala, r.hatirlatma.izoh, `${r.hatirlatma.dil}: ${r.hatirlatma.dilRu}`, r.randevu.takvimeDon, r.randevu.dosya]) assert.ok(g.includes(s), s)
+      assert.deepEqual(eylemler(planli), ['muayene-baslat', 'durum-geldi', 'durum-gelmedi', 'durum-iptal', 'hatirlatma-kopyala', 'tasi'])
+      assert.ok(planli.includes(href(`/uzbek/visit?hasta=${HASTA.id}&randevu=r1`)), '"start the visit" must carry the patient and the appointment')
+      const beklenen = H.uzHatirlatmaMetni({ hastaDili: 'ru', hekim, gun: PZT, saat: '10:00' })
+      assert.equal(beklenen.metin, 'Здравствуйте! Напоминаем: вы записаны на приём к врачу QA Shifokor 12.10.2026 в 10:00.')
+      assert.match(planli, new RegExp(`<textarea class="uza-girdi uza-hatirlatma" readonly="" rows="3" lang="ru" data-alan="hatirlatma" data-dil="ru"[^>]*>${beklenen.metin}</textarea>`))
+      for (const h of [`/uzbek/calendar?gun=2026-10-12`, `/uzbek/patient?id=${HASTA.id}`]) assert.ok(planli.includes(href(h)), h)
+      ekranTemiz(planli, `/calendar appointment (${f})`)
+      // An Uzbek-speaking patient: Uzbek in the doctor's script (Latin for a doctor who reads Russian and writes Russian).
+      const uz = detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'uz' }))
+      const uzForm = f === 'ru' ? 'uz-Latn' : f
+      assert.match(uz, new RegExp(`data-alan="hatirlatma" data-dil="${uzForm}"`)); assert.ok(uz.includes(`>${H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim, gun: PZT, saat: '10:00' }).metin}</textarea>`))
+      assert.ok(gorunurMetin(uz).includes(`${r.hatirlatma.dil}: ${r.hatirlatma.dilUz}`)); ekranTemiz(uz, `/calendar appointment, uz patient (${f})`)
+      // After the click: said so, in the account's form. Copying failed: said so too.
+      assert.ok(gorunurMetin(detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'ru' }), { bildirim: 'kopyalandi' })).includes(r.hatirlatma.kopyalandi))
+      assert.ok(gorunurMetin(detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'ru' }), { bildirim: 'kopyalanamadi' })).includes(r.hatirlatma.kopyalanamadi))
+      // ARRIVED · DID NOT COME · DONE by hand · DONE with its visit · CANCELLED.
+      const geldi = detay(randevu('r1', PZT, '10:00', 'geldi'))
+      assert.deepEqual(eylemler(geldi), ['muayene-baslat', 'durum-tamamlandi', 'durum-planlandi', 'durum-gelmedi', 'durum-iptal', 'tasi'])
+      for (const s of [r.randevu.tamamla, r.randevu.planaAl]) assert.ok(gorunurMetin(geldi).includes(s), s)
+      const gelmedi = detay(randevu('r1', PZT, '10:00', 'gelmedi'))
+      assert.deepEqual(eylemler(gelmedi), ['durum-geldi', 'durum-planlandi', 'durum-iptal']); assert.ok(gorunurMetin(gelmedi).includes(r.randevu.yenidenYaz) && gelmedi.includes(href(`/uzbek/calendar?yeni=1&hasta=${HASTA.id}`)))
+      const elle = detay(randevu('r1', PZT, '10:00', 'tamamlandi'))
+      assert.deepEqual(eylemler(elle), ['durum-geldi']); assert.ok(gorunurMetin(elle).includes(r.randevu.geldiyeAl))
+      const muayeneli = detay(randevu('r1', PZT, '10:00', 'tamamlandi', { seansId: 's1' }))
+      assert.deepEqual(eylemler(muayeneli), ['muayene-ac']); assert.ok(muayeneli.includes(href('/uzbek/visit?seans=s1')) && gorunurMetin(muayeneli).includes(r.randevu.muayeneyiAc))
+      const surmekte = detay(randevu('r1', PZT, '10:00', 'geldi', { seansId: 's1' }))
+      assert.ok(!eylemler(surmekte).includes('muayene-baslat') && eylemler(surmekte).includes('muayene-ac'), 'an appointment with a visit must not offer a second one')
+      const iptal = detay(randevu('r1', PZT, '10:00', 'iptal'))
+      assert.deepEqual(eylemler(iptal), []); assert.ok(!iptal.includes('data-alan="tasi"') && !iptal.includes('data-alan="hatirlatma"'))
+      for (const h of [geldi, gelmedi, elle, muayeneli, iptal]) { ekranTemiz(h, `/calendar appointment states (${f})`); assert.ok(!h.includes('data-alan="hatirlatma"'), 'the reminder is for a planned appointment only') }
+      // MOVING: taken → the sentence, no way round; outside hours → "nothing was moved" and the explicit button.
+      const tDolu = detay(randevu('r1', PZT, '10:00', 'planlandi'), { hata: { nerede: 'tasi', kod: 'DOLU' } })
+      assert.ok(gorunurMetin(tDolu).includes(r.form.dolu)); assert.ok(!eylemler(tDolu).includes('tasi-yine-de'))
+      const tDis = detay(randevu('r1', PZT, '10:00', 'planlandi'), { hata: { nerede: 'tasi', kod: 'MESAI_DISI' } })
+      assert.ok(gorunurMetin(tDis).includes(r.randevu.tasiMesaiDisi) && gorunurMetin(tDis).includes(r.randevu.tasiYineDe)); assert.ok(eylemler(tDis).includes('tasi-yine-de'))
+      assert.ok(gorunurMetin(detay(randevu('r1', PZT, '10:00', 'planlandi'), { bildirim: 'tasindi' })).includes(r.randevu.tasindi))
+      for (const [hata, metin] of [[{ nerede: 'durum', kod: 'GECIS_YOK' }, r.randevu.gecisYok], [{ nerede: 'durum', kod: 'DOLU' }, r.form.dolu], [{ nerede: 'durum', kod: 'RANDEVU_YOK' }, r.randevu.bulunamadi], [{ nerede: 'tasi', kod: 'GECERSIZ', alan: 'gun' }, r.form.tarihGecersiz], [{ nerede: 'tasi', kod: 'BASARISIZ' }, r.randevu.degistirilemedi], [{ nerede: 'durum', kod: 'BAGLANTI' }, m.kabuk.baglanti]] as const) {
+        const h = detay(randevu('r1', PZT, '10:00', 'planlandi'), { hata })
+        assert.ok(gorunurMetin(h).includes(metin), JSON.stringify(hata)); ekranTemiz(h, `/calendar appointment error (${f})`)
+      }
+    })
+
+    it(`${f}: THE WORKING PATTERN — days Monday first, hours, default length, breaks; the screen says that public holidays are not known`, () => {
+      const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
+      const duzen = (ek: Record<string, unknown> = {}) => cerceve(f, 'takvim', React.createElement(T.DuzenGorunumu, { m, r, a: DUZEN, set: bos, sureler: [10, 15, 20, 30, 45, 60, 90], gonder: bos, bekliyor: false, hata: null, kaydedildi: false, kayitli: true, ...ek }))
+      const html = duzen()
+      const g = gorunurMetin(html)
+      for (const s of [r.duzen.baslik, r.duzen.aciklama, r.duzen.gunler, r.duzen.baslangic, r.duzen.bitis, r.duzen.sure, r.duzen.molalar, r.duzen.molaBas, r.duzen.molaBit, r.duzen.molaEkle, r.duzen.molaSil, r.duzen.kaydet, r.duzen.saatDilimi, r.duzen.tatilNotu, r.randevu.takvimeDon]) assert.ok(g.includes(s), s)
+      assert.deepEqual([...html.matchAll(/<input type="checkbox" name="gunler"( checked="")? value="(\d)"\/><span>([^<]+)<\/span>/g)].map((x) => [x[2], Boolean(x[1]), x[3]]), [1, 2, 3, 4, 5, 6, 7].map((gn) => [String(gn), gn <= 5, r.gunKisa[gn as 1]]))
+      assert.match(html, /name="baslangic" type="time"[^>]*value="09:00"/); assert.match(html, /name="bitis" type="time"[^>]*value="18:00"/); assert.match(html, /name="mola-bas-0"[^>]*value="13:00"/)
+      assert.ok(!g.includes(r.duzen.varsayilan)); assert.ok(gorunurMetin(duzen({ kayitli: false })).includes(r.duzen.varsayilan))
+      for (const [hata, metin] of [['gunler', r.duzen.gunGerekli], ['saatler', r.duzen.saatGecersiz], ['sure', r.duzen.sureGecersiz], ['molalar', r.duzen.molaGecersiz], ['kayit', r.duzen.kaydedilemedi], ['baglanti', m.kabuk.baglanti]] as const) assert.ok(gorunurMetin(duzen({ hata })).includes(metin), hata)
+      assert.ok(gorunurMetin(duzen({ kaydedildi: true })).includes(r.duzen.kaydedildi)); assert.ok(gorunurMetin(duzen({ bekliyor: true })).includes(r.duzen.kaydediliyor))
+      // Four breaks is the ceiling: no fifth is offered.
+      assert.ok(!duzen({ a: { ...DUZEN, molalar: Array.from({ length: 4 }, () => ({ baslangic: '10:00', bitis: '10:10' })) } }).includes('data-eylem="mola-ekle"'))
+      ekranTemiz(html, `/calendar working pattern (${f})`)
+    })
+
+    it(`${f}: THE HOME lists today's appointments in the order given, with status; the patient file books and lists; the visit screen shows its appointment`, () => {
+      const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
+      const randevular = [randevu('r1', PZT, '09:00', 'tamamlandi', { seansId: 's1' }), randevu('r2', PZT, '10:00', 'geldi', { hastaAdi: 'QA Yusupov Sardor' }), randevu('r3', PZT, '11:00', 'planlandi', { neden: 'QA sabab' }), randevu('r4', PZT, '12:00', 'iptal'), randevu('r5', PZT, '14:00', 'gelmedi', { hastaAdi: '' })]
+      const ev = cerceve(f, 'bugun', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA Shifokor', muayeneler: [], hata: false, randevular }))
+      const g = gorunurMetin(ev)
+      for (const s of [r.bugun.randevular, r.bugun.takvimiAc, '09:00–09:30', 'QA Yusupov Sardor', 'QA sabab', m.bugun.hastasiz, ...Object.values(r.durum)]) assert.ok(g.includes(s), s)
+      assert.deepEqual([...ev.matchAll(/<li class="uza-randevu-satiri" data-randevu="(r\d)"/g)].map((x) => x[1]), ['r1', 'r2', 'r3', 'r4', 'r5'])
+      assert.deepEqual([...ev.matchAll(/data-randevu-durum="([a-z]+)"/g)].map((x) => x[1]), ['tamamlandi', 'geldi', 'planlandi', 'iptal', 'gelmedi'])
+      // "Start the visit" right on the home, for the two it is possible for — and only those.
+      assert.deepEqual([...ev.matchAll(/href="\/uzbek\/visit\?hasta=[^"]*&amp;randevu=(r\d)" data-eylem="muayene-baslat"/g)].map((x) => x[1]), ['r2', 'r3'])
+      for (const h of ['/uzbek/calendar', '/uzbek/calendar?randevu=r1', '/uzbek/calendar?randevu=r5']) assert.ok(ev.includes(href(h)), h)
+      ekranTemiz(ev, `/today with appointments (${f})`)
+      const bosEv = cerceve(f, 'bugun', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA Shifokor', muayeneler: [], hata: false, randevular: [] }))
+      assert.ok(gorunurMetin(bosEv).includes(r.bugun.randevuYok)); ekranTemiz(bosEv, `/today, none (${f})`)
+      // Not loaded (or a country without appointments): no list, no heading.
+      for (const yok of [null, undefined]) assert.ok(!cerceve(f, 'bugun', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA', muayeneler: [], hata: false, randevular: yok })).includes('data-alan="bugun-randevular"'))
+      // The patient's file: "book an appointment" opens the form with THIS patient; the coming appointments are listed.
+      const dosya = cerceve(f, 'hastalar', React.createElement(Hastalar.HastaDosyasiGorunumu, { m, hasta: HASTA, muayeneler: [], randevular: [randevu('r3', PZT, '11:00', 'planlandi', { neden: 'QA sabab' })] }))
+      assert.match(dosya, new RegExp(`href="/uzbek/calendar\\?yeni=1&amp;hasta=${HASTA.id}" data-eylem="randevu-al">${r.hasta.randevuAl}</a>`))
+      for (const s of [r.hasta.randevular, '12.10.2026 11:00–11:30', 'QA sabab', r.durum.planlandi]) assert.ok(gorunurMetin(dosya).includes(s), s)
+      assert.ok(dosya.includes(href('/uzbek/calendar?randevu=r3'))); ekranTemiz(dosya, `/patient with appointments (${f})`)
+      assert.ok(!cerceve(f, 'hastalar', React.createElement(Hastalar.HastaDosyasiGorunumu, { m, hasta: HASTA, muayeneler: [], randevular: [] })).includes('data-alan="hasta-randevular"'))
+      // The visit screen, started from an appointment: it says which one, and "back" leads to it.
+      const kayit = cerceve(f, 'bugun', React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', riza: false, setRiza: bos, durum: 'hazir', sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos, rol: 'pediatri', randevu: { id: 'r3', gun: PZT, saat: '11:00' } }))
+      assert.ok(gorunurMetin(kayit).includes(`${r.randevu.baslik}: ${r.gunUzun[1]}, 12.10.2026 · 11:00`)); assert.ok(kayit.includes(href('/uzbek/calendar?randevu=r3')))
+      assert.match(kayit, /<button type="button" class="uza-dugme" disabled="">/, 'consent still blocks recording')
+      ekranTemiz(kayit, `/visit from an appointment (${f})`)
+      const duz = cerceve(f, 'bugun', React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', riza: false, setRiza: bos, durum: 'hazir', sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos, rol: 'pediatri' }))
+      assert.ok(!duz.includes('data-alan="randevu"') && duz.includes(href(`/uzbek/patient?id=${HASTA.id}`)))
+    })
+  }
+
+  it('the screens carry no sentence of their own: no Uzbek, Russian or Turkish text is written in the screen files, only in the catalogue', () => {
+    for (const d of ['Takvim.tsx', 'randevuOrtak.tsx']) {
+      const kod = readFileSync(join(KOK, 'countries/uz/uygulama', d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+      assert.doesNotMatch(kod, /[Ѐ-ӿʻʼçğışöüÇĞİŞÖÜ]/, `${d} carries text outside the catalogue`)
+      // No address is written by hand: every one comes from YOL (the country's path prefix).
+      assert.doesNotMatch(kod, /['"`]\/(calendar|visit|patient|today|settings|uzbek)/, `${d} writes an address by hand`)
+    }
+  })
+})
