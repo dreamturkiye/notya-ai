@@ -73,12 +73,17 @@ const ekranTemiz = (html: string, kaynak: string) => {
   for (const m of html.matchAll(/(?:href|action)="([^"]+)"/g)) {
     if (m[1].startsWith('https://fonts.googleapis.com/')) continue
     assert.doesNotMatch(m[1], TURKCE_ADRES, `${kaynak}: links to a page of the pre-split application: ${m[1]}`)
+    // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek — an address outside it is another country's site.
+    const adres = m[1].split('?')[0]
+    assert.ok(adres === ON_EK || adres.startsWith(`${ON_EK}/`), `${kaynak}: "${m[1]}" is outside ${ON_EK}`)
     // "Never offer an address that answers not found": every link is a page this country's pack lists.
-    const yol = m[1].split('?')[0]
+    const yol = adres.slice(ON_EK.length) || '/'
     assert.ok(ACIK_SAYFALAR.includes(yol), `${kaynak}: links to ${m[1]}, which is not a page of this build (${ACIK_SAYFALAR.join(' ')})`)
   }
 }
 let ACIK_SAYFALAR: readonly string[] = []
+/** The path of the main site this build is served under (the pack's `yolOnEki`). */
+const ON_EK = '/uzbek'
 /** Every string of a catalogue, with its dotted key. */
 function yaprak(o: unknown, on = ''): [string, string][] {
   return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'string' ? [[`${on}${k}`, v] as [string, string]] : yaprak(v, `${on}${k}.`)))
@@ -220,11 +225,12 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       for (const s of [m.bugun.selam, m.bugun.baslik, m.bugun.yeniHasta, m.arama.etiket, m.arama.ornek, m.arama.dugme, m.durum.taslak, m.durum.onayli, m.bugun.hastasiz, 'QA Bemor Karimova']) assert.ok(g.includes(s), s)
       // Times are shown in Tashkent time (UTC+5), digits only.
       assert.ok(g.includes('09:30') && g.includes('11:05') && g.includes('12:00'))
-      for (const h of ['/patients/new', '/patients', ...(Kabuk.HAZIR.muayene ? ['/visit', '/visit?not=n1'] : [])]) assert.ok(html.includes(`href="${h}"`), h)
+      for (const h of ['/uzbek/today', '/uzbek/settings', '/uzbek/patients/new', '/uzbek/patients', ...(Kabuk.HAZIR.muayene ? ['/uzbek/visit', '/uzbek/visit?not=n1'] : [])]) assert.ok(html.includes(`href="${h}"`), h)
       // A screen that has not landed is not linked at all (it would answer "not found").
-      assert.equal(html.includes('href="/visit'), Kabuk.HAZIR.muayene)
+      assert.equal(html.includes('href="/uzbek/visit'), Kabuk.HAZIR.muayene)
+      assert.doesNotMatch(html, /href="\/(?!uzbek[\/"?#])/, 'a link outside the path prefix')
       assert.equal(g.includes(m.bugun.muayeneBaslat), Kabuk.HAZIR.muayene)
-      assert.match(html, /<form class="uza-arama" action="\/patients" method="get"/)
+      assert.match(html, /<form class="uza-arama" action="\/uzbek\/patients" method="get"/)
       ekranTemiz(html, `/today (${f})`)
       const bos = cerceve(f, 'bugun', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA', muayeneler: [], hata: false }))
       assert.ok(gorunurMetin(bos).includes(m.bugun.bos))
@@ -239,7 +245,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       const html = cerceve(f, 'hastalar', React.createElement(Hastalar.HastalarGorunumu, { m, q: 'karim', hastalar: [HASTA, { ...HASTA, id: 'x2', ad: 'QA Иванов Пётр', otaIsmi: '', dil: 'ru' }], hata: false }))
       const g = gorunurMetin(html)
       for (const x of [m.hastalar.baslik, m.bugun.yeniHasta, m.arama.etiket, 'QA Karimova Dilnoza Rustam qizi', 'QA Иванов Пётр', '07.03.2021', 'karim']) assert.ok(g.includes(x), x)
-      assert.ok(html.includes(`href="/patient?id=${HASTA.id}"`))
+      assert.ok(html.includes(`href="/uzbek/patient?id=${HASTA.id}"`))
       ekranTemiz(html, `/patients (${f})`)
       const bos = (q: string) => gorunurMetin(cerceve(f, 'hastalar', React.createElement(Hastalar.HastalarGorunumu, { m, q, hastalar: [], hata: false })))
       assert.ok(bos('').includes(m.hastalar.bos)); assert.ok(bos('zzz').includes(m.arama.sonucYok))
@@ -270,7 +276,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       const html = cerceve(f, 'hastalar', React.createElement(Hastalar.HastaDosyasiGorunumu, { m, hasta: HASTA, muayeneler, bugun: new Date('2026-10-08T12:00:00Z') }))
       const g = gorunurMetin(html)
       for (const x of [m.hasta.baslik, 'QA Karimova Dilnoza Rustam qizi', '07.03.2021', m.hasta.yas, '5', m.yeniHasta.kadin, '+998 90 000 00 01', m.diller.uz, '00000000000001', m.hasta.notlar, m.hasta.taslaklar, m.durum.onayli, m.durum.taslak, '08.10.2026']) assert.ok(g.includes(x), x)
-      assert.equal(html.includes(`href="/visit?hasta=${HASTA.id}"`), Kabuk.HAZIR.muayene)
+      assert.equal(html.includes(`href="/uzbek/visit?hasta=${HASTA.id}"`), Kabuk.HAZIR.muayene)
       ekranTemiz(html, `/patient (${f})`)
       const bos = gorunurMetin(cerceve(f, 'hastalar', React.createElement(Hastalar.HastaDosyasiGorunumu, { m, hasta: { ...HASTA, otaIsmi: '', dogumTarihi: '', cinsiyet: '', telefon: '', ulusalKimlik: '' }, muayeneler: [] })))
       assert.ok(bos.includes(m.hasta.notYok)); assert.ok(!bos.includes(m.hasta.yas)); assert.ok(!bos.includes(m.hasta.taslaklar))

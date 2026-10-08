@@ -12,6 +12,7 @@ import React from 'react'
 import { useState, type FormEvent } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
 import { ULKE_STIL as S, UlkeKart, type DilSecenegi } from './UlkeKart'
 
@@ -24,7 +25,7 @@ export type GirisFormuProps = {
   anaSayfa: string
   /** Where "sign up" goes; null when the country has no sign-up. */
   kayit: string | null
-  /** Where a signed-in account lands. */
+  /** Where a signed-in account lands: an address (already under the country's path prefix). */
   sonra: string
 }
 
@@ -50,7 +51,7 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
       }
       const reddet = async () => { await supabase.auth.signOut(); setHata(ret); setBekliyor(false) }
       if (!hesapBuUlkedeMi(data.user)) { await reddet(); return }
-      const r = await fetch('/api/ulke/hesap', { headers: { Authorization: `Bearer ${data.session.access_token}` }, cache: 'no-store' })
+      const r = await fetch(ulkeYolu('/api/ulke/hesap'), { headers: { Authorization: `Bearer ${data.session.access_token}` }, cache: 'no-store' })
       if (!r.ok) { await reddet(); return }
       window.location.assign(sonra)
     } catch {

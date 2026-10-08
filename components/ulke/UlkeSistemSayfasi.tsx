@@ -6,6 +6,7 @@
 import React from 'react'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { ULKE_STIL as S, UlkeKart } from './UlkeKart'
 
@@ -21,7 +22,7 @@ export function UlkeBulunamadi() {
         <h1 style={baslik}>{m.bulunamadiBaslik}</h1>
         <p style={govde}>{m.bulunamadiGovde}</p>
         <div style={{ marginTop: 24 }}>
-          <a href="/" style={S.cizgiDugme}>{m.anaSayfa}</a>
+          <a href={ulkeYolu('/')} style={S.cizgiDugme}>{m.anaSayfa}</a>
         </div>
       </div>
     </UlkeKart>

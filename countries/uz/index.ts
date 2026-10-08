@@ -66,6 +66,8 @@ export const UZ_PAKETI: UlkePaketi = {
     sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient'],
     apiOnEkleri: ['/api/ulke/'],
   },
+  // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
+  yolOnEki: '/uzbek',
   aramaMotorlarinaGizli: true,
   kabuk: {
     baslik: 'Notya',

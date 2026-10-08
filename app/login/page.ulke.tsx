@@ -13,6 +13,7 @@ import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { dilliYol, dilSecenekleri, sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
@@ -29,7 +30,7 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
       diller={dilSecenekleri('/login')}
       anaSayfa={dilliYol('/', dil)}
       kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
-      sonra={ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome'}
+      sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
     />
   )
 }

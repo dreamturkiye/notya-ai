@@ -9,6 +9,8 @@ const derleme = {
   // Türkiye is the pre-split application: its redirects are still the list written in next.config.mjs, untouched.
   // They move here when the landing and login surfaces are split (docs/COUNTRY-PACK-SPLIT-PLAN.md, jobs 3 and 7).
   bolunmemisUygulama: true,
+  // Türkiye is the domain root: no path prefix, so next.config.mjs sets no `basePath` (as before).
+  yolOnEki: '',
   yonlendirmeler: [],
 }
 

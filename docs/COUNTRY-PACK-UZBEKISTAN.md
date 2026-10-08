@@ -65,7 +65,8 @@ Set by the foundation job on 2026-10-08. Items marked *to verify* come from gene
 | National identity number | JSHSHIR (PINFL), 14 digits, format only | check-digit rule *to verify* (checklist G5) |
 | Features on | landing page, login, sign-up by invitation code, holding page | everything else is off |
 | Voice profile, image evaluation | off | until the law is confirmed (checklist A2, A4, I7) |
-| Paths that exist | `/`, `/login`, `/signup`, `/welcome`, `/api/ulke/*` | every other path of the application answers 404 |
+| Served under | `/uzbek` (the pack's `yolOnEki`, the build's `basePath`) | Kaan, 2026-10-08: no separate Uzbek address; the product is reached at `notya.io/uzbek`. Every route below is relative to it. Outside `/uzbek` the Uzbek build answers 404. |
+| Paths that exist | `/`, `/login`, `/signup`, `/welcome`, `/start`, `/today`, `/settings`, `/patients`, `/patients/new`, `/patient`, `/api/ulke/*` | every other path of the application answers 404 |
 | Tools | none | `docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md` is a proposal |
 | Search engines | hidden (noindex header on every response, robots.txt disallows all, no sitemap) | until the pilot approves the page (checklist K2) |
 | Spelling | Uzbek Latin text uses U+02BB (ʻ) in oʻ and gʻ and U+02BC (ʼ) for the tutuq belgisi | native reviewer to confirm what doctors expect on screen |

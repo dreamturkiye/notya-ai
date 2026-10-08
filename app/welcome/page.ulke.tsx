@@ -11,6 +11,7 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
 import { UYGULAMA_EKRANLARI, type DilKodu, type YuzeyMetinleri } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
@@ -19,9 +20,10 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 export default function WelcomePage() {
   if (!ozellikAcik('bekletmeSayfasi')) notFound()
   // NOTYA-UZ-MUAYENE-01: where the application is switched on, the home replaces this page.
+  // redirect() takes a ROUTE: Next adds the country's path prefix (basePath) itself.
   if (ozellikAcik('cekirdekMuayene')) redirect(UYGULAMA_EKRANLARI.bugun)
   const p = ulkePaketi()
   const metinler: Partial<Record<DilKodu, YuzeyMetinleri<'bekletme'>>> = {}
   for (const dil of p.acikDiller) metinler[dil] = yuzeyMetinleri('bekletme', dil)
-  return <BekletmeEkrani varsayilanDil={p.varsayilanDil} metinler={metinler} giris="/login" />
+  return <BekletmeEkrani varsayilanDil={p.varsayilanDil} metinler={metinler} giris={ulkeYolu('/login')} />
 }

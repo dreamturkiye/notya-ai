@@ -14,19 +14,26 @@
 import React, { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { uygulamaMetni, uzUygulamaDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
 
-export const YOL = UYGULAMA_EKRANLARI
+/**
+ * ADDRESSES of the application's screens: the routes of UYGULAMA_EKRANLARI under the country's path prefix
+ * (notya.io/uzbek/today). Every link, form action and `window.location` on these screens uses them.
+ */
+export const YOL = Object.fromEntries(Object.entries(UYGULAMA_EKRANLARI).map(([ekran, rota]) => [ekran, ulkeYolu(rota)])) as { readonly [E in UygulamaEkrani]: string }
 /**
  * Screens that exist in this build. A link to a screen that has not landed yet is not rendered at all — an address
  * that answers "not found" is never offered. (The route test proves every `true` here has its page.)
  */
 export const HAZIR = { muayene: false } as const
-const GIRIS = '/login'
+const GIRIS = ulkeYolu('/login')
+const BEKLETME = ulkeYolu('/welcome')
 
 export type Hesap = { dil: UzUygulamaDili; notDili: UzUygulamaDili; ad: string }
 export type ApiCevabi = { ok: boolean; status: number; j: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
+/** `yol` is a ROUTE of the API ('/api/ulke/hesap'); the call adds the country's path prefix. */
 export type Api = (yol: string, secenek?: { method?: 'GET' | 'POST' | 'PATCH'; govde?: unknown }) => Promise<ApiCevabi>
 
 export type Uygulama = {
@@ -54,7 +61,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
       if (data.session?.access_token) jeton.current = data.session.access_token
     } catch { /* keep the last known token */ }
-    const r = await fetch(yol, {
+    const r = await fetch(ulkeYolu(yol), {
       method: secenek?.method ?? 'GET',
       headers: { Authorization: `Bearer ${jeton.current}`, ...(secenek?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
       body: secenek?.govde !== undefined ? JSON.stringify(secenek.govde) : undefined,
@@ -77,7 +84,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       try { r = await api('/api/ulke/hesap') } catch { return } // offline: stay on "loading"; a reload tries again
       if (iptal) return
       if (!r.ok) { await cikis(); return }
-      if (r.j.durum !== 'uygulama') { window.location.replace('/welcome'); return }
+      if (r.j.durum !== 'uygulama') { window.location.replace(BEKLETME); return }
       if (!r.j.dilSoruldu && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
       if (r.j.dilSoruldu && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
       setHesap({ dil: uzUygulamaDili(r.j.dil), notDili: uzUygulamaDili(r.j.notDili), ad: String(r.j.ad || '') })

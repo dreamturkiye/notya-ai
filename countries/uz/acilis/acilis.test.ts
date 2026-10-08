@@ -4,9 +4,12 @@
  *   1. Leak test: nothing of Türkiye in what the page shows — terms, reference names, letters (the harness).
  *   2. Uzbekistan's own rules for this page: no price, no demo, no integration claim, no voice profile, no image
  *      evaluation, the assistant unnamed.
- *   3. It links only to itself, /login and /signup — never to a Turkish page — and the switch to Russian is there.
+ *   3. It links only to itself, /login and /signup, all under the build's path prefix (/uzbek) — never to a Turkish
+ *      page — and the switch to Russian is there.
  *   4. Both languages carry the same sections; the copy file documents every line that is on the page.
  */
+// First import: fixes the country of this process before the page (and through it the active pack) is loaded.
+import '@/lib/ulke/testing/uzDerlemesi'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -58,14 +61,15 @@ describe('Uzbekistan landing page', () => {
       const hrefler = [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
       assert.ok(hrefler.length > 12)
       const ek = dil === 'uz-Latn' ? '' : `\\?dil=${dil}`
-      const izinli = new RegExp(`^(#[a-z]+|/(\\?dil=(uz-Latn|ru))?(#top)?|/${ek}(#top)?|/login(${ek})?|/signup(${ek})?)$`)
+      // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek; a link to '/login' would land on Türkiye's site.
+      const izinli = new RegExp(`^(#[a-z]+|/uzbek(\\?dil=(uz-Latn|ru))?(#top)?|/uzbek${ek}(#top)?|/uzbek/login(${ek})?|/uzbek/signup(${ek})?)$`)
       for (const h of hrefler) assert.match(h, izinli, `link to ${h}`)
-      assert.ok(hrefler.includes(dil === 'uz-Latn' ? '/login' : `/login?dil=${dil}`))
-      assert.ok(hrefler.includes(dil === 'uz-Latn' ? '/signup' : `/signup?dil=${dil}`))
+      assert.ok(hrefler.includes(dil === 'uz-Latn' ? '/uzbek/login' : `/uzbek/login?dil=${dil}`))
+      assert.ok(hrefler.includes(dil === 'uz-Latn' ? '/uzbek/signup' : `/uzbek/signup?dil=${dil}`))
       // The switch: both languages named in their own words, the other one a real link.
       assert.match(html, /hrefLang="ru"[^>]*>[\s\S]*?Русский/)
       assert.match(html, /hrefLang="uz-Latn"[^>]*>[\s\S]*?Oʻzbekcha/)
-      assert.ok(hrefler.includes('/?dil=ru') && hrefler.includes('/'))
+      assert.ok(hrefler.includes('/uzbek?dil=ru') && hrefler.includes('/uzbek'))
       assert.match(html, new RegExp(`<div class="uzl" lang="${dil}"`))
       assert.doesNotMatch(html, /<img\b|<script\b|\/landing\/|\/doktor|\/klinik|\/giris|\/kayit|\/kvkk|notya\.(io|ai)/)
     })

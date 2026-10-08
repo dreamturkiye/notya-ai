@@ -12,6 +12,7 @@ import React from 'react'
 import type { CSSProperties } from 'react'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK } from '@/lib/doktor/chromeRenk'
 import type { AcilisSayfasiProps, DilKodu } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import { ACILIS_ICERIGI, acilisIcerigi, type AcilisBolumu } from './icerik'
 import { IletisimFormu } from './IletisimFormu'
 
@@ -22,9 +23,9 @@ const DIL_SECENEKLERI: readonly { kod: keyof typeof ACILIS_ICERIGI; ad: string; 
 ]
 const VARSAYILAN_DIL: DilKodu = 'uz-Latn'
 
-/** Internal links keep the visitor's language; the default language needs no parameter. */
+/** Internal links keep the visitor's language (the default language needs no parameter) and the country's path prefix. */
 function yol(taban: string, dil: DilKodu, capa = ''): string {
-  return `${taban}${dil === VARSAYILAN_DIL ? '' : `?dil=${dil}`}${capa}`
+  return ulkeYolu(`${taban}${dil === VARSAYILAN_DIL ? '' : `?dil=${dil}`}${capa}`)
 }
 
 function Ok() {

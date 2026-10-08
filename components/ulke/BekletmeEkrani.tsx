@@ -10,6 +10,7 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { ULKE_STIL as S, UlkeKart } from './UlkeKart'
 
@@ -32,7 +33,7 @@ export default function BekletmeEkrani({ varsayilanDil, metinler, giris }: Bekle
       const jeton = data.session?.access_token
       if (!jeton) { window.location.replace(giris); return }
       try {
-        const r = await fetch('/api/ulke/hesap', { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        const r = await fetch(ulkeYolu('/api/ulke/hesap'), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
         if (!r.ok) { await cik(); return }
         const j = (await r.json()) as { dil?: string; ad?: string }
         const dil = (j.dil && metinler[j.dil as DilKodu] ? j.dil : varsayilanDil) as DilKodu

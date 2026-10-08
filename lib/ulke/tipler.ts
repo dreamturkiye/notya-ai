@@ -137,6 +137,12 @@ export type UlkePaketi = {
   /** /doktor-tools routes valid in this country. A tool must ALSO name the country in its own `ulkeler` field. */
   araclar: readonly string[]
   rotalar: RotaIzni
+  /**
+   * NOTYA-UZ-MUAYENE-01 — the path of the main site this country is served under ('/uzbek'). Omitted = the domain
+   * root. One segment, no trailing slash. Same value as countries/<kod>/derleme.mjs (read there by next.config as
+   * `basePath`); addresses are built with lib/ulke/yol.ts. `rotalar` stays relative to it.
+   */
+  yolOnEki?: string
   /** true = noindex on every response, robots.txt disallows everything, no sitemap. */
   aramaMotorlarinaGizli: boolean
   kabuk: KabukBilgisi
