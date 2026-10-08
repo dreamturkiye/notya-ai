@@ -1,0 +1,7 @@
+{
+  "aciklama": "Ceiling for source files outside countries/tr that carry user-visible Turkish text (letters ç ğ ı ö ş ü İ in a string, template or JSX text — a proxy). May only go down. scripts/ulke-turkce-tavan.mjs",
+  "tavan": 1687,
+  "taranan": 2068,
+  "harfIcerenHerhangi": 1863,
+  "kayit": "2026-10-08"
+}

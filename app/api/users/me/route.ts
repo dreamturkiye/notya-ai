@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hekimProfilOku, hekimProfilYaz } from '@/lib/doktor/hekimProfilOnbellek'
 import { klinikYuzuAcikMi } from '@/lib/klinik/klinikErisim'
+import { HESAP_REDDI_KODU, hesapBuUlkedeMi, satirBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
+import { metin } from '@/lib/ulke/metin'
+
+/** NOTYA-ULKE-01: an account of another country is refused at login with the sentence a wrong password gets. */
+const hesapReddi = () => NextResponse.json({ success: false, code: HESAP_REDDI_KODU, error: metin('hesap', 'girisReddi') }, { status: 403 })
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,6 +46,7 @@ export async function GET(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
   }
+  if (!hesapBuUlkedeMi(user)) return hesapReddi()
 
   const meta = (user.user_metadata || {}) as Record<string, unknown>
   // Branş değişimi başka izolde kalmış 60 sn'lik kopyayı ezmesin.
@@ -59,6 +65,8 @@ export async function GET(req: NextRequest) {
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
+
+  if (profile && !satirBuUlkedeMi(profile)) return hesapReddi()
 
   if (!profile) {
     const onboarding_completed = deriveOnboardingCompleted(null, meta)
