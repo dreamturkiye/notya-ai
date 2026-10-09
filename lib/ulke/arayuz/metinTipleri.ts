@@ -633,4 +633,52 @@ export type AraclarMetni = {
   readonly portal: {
     readonly nasil: string
   }
+  /** Keeping a tool's result on a patient (migration 139). A tool keeps nothing unless the doctor presses "keep". */
+  readonly kayit: {
+    /** Above the tools when they were opened from a patient's file. % the patient's name */
+    readonly hastaIcin: string
+    /** The address names a patient this account does not have. */
+    readonly hastaBulunamadi: string
+    /** On a tool opened without a patient: how a result is kept. */
+    readonly hastasiz: string
+    /** Heading of the part of a tool's screen that keeps the result. */
+    readonly baslik: string
+    /** What is kept, where, and that nothing is sent to anybody. */
+    readonly aciklama: string
+    /** The follow-up day. The doctor enters it; the application proposes none. */
+    readonly takipTarihi: string
+    readonly takipIpucu: string
+    readonly kaydet: string
+    readonly kaydedildi: string
+    readonly dosyayaGit: string
+    /** The tool has no result yet. */
+    readonly eksik: string
+    /** The follow-up day is not a day from today on. */
+    readonly takipGecersiz: string
+    readonly yapilamadi: string
+    /** The card on the patient's file. */
+    readonly dosyaBaslik: string
+    readonly dosyaAciklama: string
+    readonly dosyaBos: string
+    readonly araclariAc: string
+    /** % the day */
+    readonly takipGunu: string
+    /** % the day */
+    readonly takipKapandi: string
+    /** A kept result whose stored value cannot be read. */
+    readonly okunamadi: string
+    /** A kept result of a tool the application no longer has. */
+    readonly aracYok: string
+  }
+  /** The follow-up list (the tile `takip-paneli`). */
+  readonly takip: {
+    readonly aciklama: string
+    readonly bos: string
+    readonly gecikti: string
+    readonly bugun: string
+    readonly kapat: string
+    readonly kapatildi: string
+    readonly yapilamadi: string
+    readonly okunamadi: string
+  }
 }

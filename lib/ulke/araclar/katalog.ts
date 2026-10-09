@@ -22,7 +22,15 @@ import { ORTO_PEDI_RADYO_ROMA } from './tanimlar/ortoPediRadyoRoma'
  */
 const HASTA_PORTALI: AracTanimi = { anahtar: 'hasta-portali', tur: 'ekran', ekran: 'hastaPortali', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
 
-export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA]
+/**
+ * The follow-up list as a tile (migration 139; ./kayit.ts): the results the doctor kept on patients WITH a follow-up
+ * day the doctor entered, earliest first, overdue ones marked; the doctor marks one as done. The screen is the kit's
+ * own. It replaces the per-specialty cohort panels of the pre-split application with ONE list: what it shows is the
+ * follow-up the doctor set, not columns of one disease. The kit proposes no day.
+ */
+const TAKIP_PANELI: AracTanimi = { anahtar: 'takip-paneli', tur: 'ekran', ekran: 'takipPaneli', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
+
+export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA]
 
 const DIZIN: ReadonlyMap<string, AracTanimi> = new Map(KIT_ARACLARI.map((a) => [a.anahtar, a]))
 

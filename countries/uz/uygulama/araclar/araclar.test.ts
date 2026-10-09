@@ -32,35 +32,35 @@ const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|P
 /** Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart. */
 const TEMEL = ['hasta-portali']
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
-  'acil-tip': ['esi-triyaj', 'kritik-yol'],
+  'acil-tip': ['esi-triyaj', 'kritik-yol', 'takip-paneli'],
   'aile-hekimligi': [],
-  anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri'],
-  'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc'],
-  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem'],
-  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop'],
-  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara'],
-  'gogus-hastaliklari': ['inhaler-teknik'],
-  'goz-hastaliklari': ['gorme-keskinligi'],
-  dahiliye: ['kdigo-evre'],
-  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma'],
-  endokrinoloji: ['rejim-karti'],
-  'enfeksiyon-hastaliklari': ['antibiyotik-sure'],
+  anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', 'takip-paneli'],
+  'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', 'takip-paneli'],
+  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem', 'takip-paneli'],
+  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop', 'takip-paneli'],
+  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', 'takip-paneli'],
+  'gogus-hastaliklari': ['inhaler-teknik', 'takip-paneli'],
+  'goz-hastaliklari': ['gorme-keskinligi', 'takip-paneli'],
+  dahiliye: ['kdigo-evre', 'takip-paneli'],
+  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'takip-paneli'],
+  endokrinoloji: ['rejim-karti', 'takip-paneli'],
+  'enfeksiyon-hastaliklari': ['antibiyotik-sure', 'takip-paneli'],
   gastroenteroloji: [],
   'kadin-hastaliklari-dogum': [],
-  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri'],
+  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', 'takip-paneli'],
   kardiyoloji: [],
-  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu'],
-  nefroloji: ['kdigo-serit', 'diyaliz-seans'],
+  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', 'takip-paneli'],
+  nefroloji: ['kdigo-serit', 'diyaliz-seans', 'takip-paneli'],
   noroloji: [],
-  onkoloji: ['kur-sayaci', 'toksisite-listesi'],
-  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon'],
-  pediatri: ['hedef-boy', 'doz-hesabi'],
-  'plastik-cerrahi': ['plastik-yara-greft'],
+  onkoloji: ['kur-sayaci', 'toksisite-listesi', 'takip-paneli'],
+  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', 'takip-paneli'],
+  pediatri: ['hedef-boy', 'doz-hesabi', 'takip-paneli'],
+  'plastik-cerrahi': ['plastik-yara-greft', 'takip-paneli'],
   psikiyatri: [],
-  radyoloji: ['tetkik-kuyrugu', 'rapor-taslagi'],
-  romatoloji: ['das28', 'eklem-28'],
-  uroloji: ['psa-hizi'],
-  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu'],
+  radyoloji: ['tetkik-kuyrugu', 'rapor-taslagi', 'takip-paneli'],
+  romatoloji: ['das28', 'eklem-28', 'takip-paneli'],
+  uroloji: ['psa-hizi', 'takip-paneli'],
+  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', 'takip-paneli'],
   'fizik-tedavi': [],
   // clinic doctors and allied professions: base tools only (their own tools are a separate registry of the pre-split application)
   'sac-ekimi': [], 'estetik-cerrahi': [], 'medikal-estetik': [], 'klinik-dermatoloji': [], longevity: [], fizyoterapi: [], 'klinik-psikolog': [], diyetisyen: [], ergoterapi: [], odyoloji: [],
@@ -98,6 +98,24 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     assert.ok(P.hesabinAraci(icerik, 'pediatri', 'hedef-boy'))
   })
 
+  it('THE FOLLOW-UP LIST over the 40-role table: a role sees it exactly when it has a tool whose result can be kept — 23 roles see it, 17 do not', async () => {
+    const { kitAraci } = await import('@/lib/ulke/araclar/katalog')
+    const saklanabilir = (anahtar: string) => kitAraci(anahtar)!.tur !== 'ekran'
+    const goren: string[] = [], gormeyen: string[] = []
+    for (const rol of roller) {
+      const kendi = P.hesabinAraclari(icerik, rol).rol.map((x) => x.tanim.anahtar)
+      const araciVar = kendi.some(saklanabilir)
+      const panel = P.hesabinAraci(icerik, rol, 'takip-paneli')
+      assert.equal(Boolean(panel), araciVar, `${rol}: the follow-up list is ${panel ? 'shown' : 'not shown'} and the role ${araciVar ? 'has' : 'has no'} tool whose result can be kept`)
+      if (panel) { goren.push(rol); assert.equal(kendi[kendi.length - 1], 'takip-paneli', `${rol}: the list comes after the role's own tools`) } else gormeyen.push(rol)
+    }
+    assert.deepEqual([goren.length, gormeyen.length], [23, 17])
+    // the 17: the roles that are base-only here, written out — a role that gains its first tool must gain the list with it
+    assert.deepEqual(gormeyen.sort(), ['aile-hekimligi', 'diyetisyen', 'ergoterapi', 'estetik-cerrahi', 'fizik-tedavi', 'fizyoterapi', 'gastroenteroloji', 'kadin-hastaliklari-dogum', 'kardiyoloji', 'klinik-dermatoloji', 'klinik-psikolog', 'longevity', 'medikal-estetik', 'noroloji', 'odyoloji', 'psikiyatri', 'sac-ekimi'])
+    assert.equal(P.hesabinAraci(icerik, null, 'takip-paneli'), null, 'an account without a role has no tool to keep and no list')
+    assert.equal(icerik.araclar.find((p) => p.anahtar === 'takip-paneli')!.roller!.length, 23)
+  })
+
   it('every text is in its own script, and the three forms are three texts', () => {
     const metinler: [string, Record<string, string>][] = []
     const topla = (yol: string, o: unknown) => {
@@ -128,7 +146,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     const bas = readFileSync(join(DIZIN, 'index.ts'), 'utf8').slice(0, 3200)
     for (const d of [/MACHINE-WRITTEN\. AWAITS NATIVE AND CLINICAL REVIEW\./, /UZBEK IN CYRILLIC SCRIPT DERIVED FROM\s+\* THE LATIN TEXT BY RULE/, /NO national reference content/, /items of published questionnaires are NOT translated/]) assert.match(bas, d)
     assert.deepEqual(icerik.inceleme, { makineYazimi: true, klinisyen: null })
-    for (const ad of readdirSync(DIZIN).filter((x) => /^(temel|rol\d+|yardimci|metinler|birimler)\.ts$/.test(x))) assert.match(readFileSync(join(DIZIN, ad), 'utf8').slice(0, 1600), /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW/, `${ad} does not say it is machine-written`)
+    for (const ad of readdirSync(DIZIN).filter((x) => /^(temel|rol\d+|takip|yardimci|metinler|birimler)\.ts$/.test(x))) assert.match(readFileSync(join(DIZIN, ad), 'utf8').slice(0, 1600), /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW/, `${ad} does not say it is machine-written`)
   })
 
   it('a tool that leaves its numbers to the country is NOT switched on here: no threshold or interval was supplied by a local clinician', async () => {

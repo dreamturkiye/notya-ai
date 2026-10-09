@@ -28,6 +28,7 @@ const dolu = (x: unknown): x is string => typeof x === 'string' && x.trim().leng
 /** Sentences of the tools area's catalogue that carry a value: path → the placeholders they must hold. */
 export const ARACLAR_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
   ['izgara.rol', ['%']], ['arac.madde', ['%']], ['arac.aralik', ['%1', '%2']], ['arac.oran', ['%1', '%2']], ['arac.kaynak', ['%']],
+  ['kayit.hastaIcin', ['%']], ['kayit.takipGunu', ['%']], ['kayit.takipKapandi', ['%']],
 ]
 
 /** The unit codes a tool shows: its fields' own, its results', and the pack's for length, weight and laboratory values. */

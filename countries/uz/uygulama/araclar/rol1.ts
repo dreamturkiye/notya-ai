@@ -57,7 +57,7 @@ export const UZ_ROL_ARACLARI_1: readonly PaketAraci[] = [
         travma_primer: u('Birlamchi koʻrik oʻtkazildi (ABCDE)', 'Бирламчи кўрик ўтказилди (ABCDE)', 'Проведён первичный осмотр (ABCDE)'),
         kan_kultur: u('Infeksiya yoki sepsis boʻyicha chora-tadbirlar boshlandi (dozani shifokor belgilaydi)', 'Инфекция ёки сепсис бўйича чора-тадбирлар бошланди (дозани шифокор белгилайди)', 'Начаты мероприятия при инфекции или сепсисе (дозы определяет врач)'),
         hava_yolu_hazir: u('Nafas yoʻllari uchun jihozlar tayyor, yordam chaqirildi', 'Нафас йўллари учун жиҳозлар тайёр, ёрдам чақирилди', 'Оборудование для дыхательных путей готово, помощь вызвана'),
-        hekim_yonlendirme: u('Yoʻllanma, konsultatsiya yoki yotqizish boʻyicha qarorni shifokor qabul qildi', 'Йўлланма, консултация ёки ётқизиш бўйича қарорни шифокор қабул қилди', 'Решение о направлении, консультации или госпитализации принято врачом'),
+        hekim_yonlendirme: u('Yoʻllanma, konsultatsiya yoki yotqizish boʻyicha qarorni shifokor qabul qildi', 'Йўлланма, консультация ёки ётқизиш бўйича қарорни шифокор қабул қилди', 'Решение о направлении, консультации или госпитализации принято врачом'),
       },
       sayilar: {
         yol: u('Belgilangan kritik yoʻnalishlar', 'Белгиланган критик йўналишлар', 'Отмечено критических путей'),

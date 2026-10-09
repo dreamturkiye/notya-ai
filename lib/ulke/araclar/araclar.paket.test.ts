@@ -12,6 +12,10 @@
  *   D. the screens              the grid per role and form; every tool's screen in every form, empty and filled;
  *                               the summary that is copied; the patient page's tile; the way in from the home screen
  *   E. leak                     no other country's term or letter in any tool text or on any screen
+ *   F. KEEPING A RESULT         the screens of migration 139: a tool opened for a patient offers to keep its result
+ *                               and asks for a follow-up day without proposing one; opened without a patient it
+ *                               keeps nothing and says how to; the patient's file lists what was kept; the
+ *                               follow-up list. (The server's rules: ./kayit.paket.test.ts.)
  */
 import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
@@ -41,6 +45,8 @@ let A: typeof import('../arayuz')
 let Ekran: typeof import('@/components/ulke/uygulama/Araclar')
 let Bugun: typeof import('@/components/ulke/uygulama/Bugun')
 let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+let Kayit: typeof import('@/components/ulke/uygulama/AracKayitlari')
+let Hastalar: typeof import('@/components/ulke/uygulama/Hastalar')
 
 before(async () => {
   paket = (await import('@/countries/active')).AKTIF_PAKET
@@ -54,6 +60,8 @@ before(async () => {
   Ekran = await import('@/components/ulke/uygulama/Araclar')
   Bugun = await import('@/components/ulke/uygulama/Bugun')
   Kabuk = await import('@/components/ulke/uygulama/Kabuk')
+  Kayit = await import('@/components/ulke/uygulama/AracKayitlari')
+  Hastalar = await import('@/components/ulke/uygulama/Hastalar')
 })
 
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: paket.kod, kaynak }), [])
@@ -278,12 +286,14 @@ describe('tools — the screens', () => {
         const baslik = renderToStaticMarkup(h(Ekran.AracBasligi, { x, a, dil }))
         assert.ok(gorunurMetin(baslik).includes(bicimli(p.metin.ad, dil)) && gorunurMetin(baslik).includes(a.arac.geri))
         assert.ok(baslik.includes(`href="${Kabuk.YOL.araclar}"`), 'the way back to the grid')
-        if (t.tur === 'ekran') {
+        if (t.ekran === 'hastaPortali') {
           const html = cerceve(dil, h(Ekran.HastaPortaliAraci, { a, m: A.uygulamaMetni(dil) }))
           assert.ok(gorunurMetin(html).includes(a.portal.nasil)); assert.ok(html.includes(`action="${Kabuk.YOL.hastalar}"`), 'the patient search')
           temiz(html, `tool ${p.anahtar} ${dil}`)
           continue
         }
+        // the follow-up list has its own section below (F)
+        if (t.tur === 'ekran') { assert.equal(t.ekran, 'takipPaneli', `${p.anahtar}: a screen tool this test does not know`); continue }
         const ortak = { x, a, dil, notDili: dil, icerik, degistir: () => {}, temizle: () => {}, bugun: '2026-10-09', kopya: 'yok' as const, kopyalaTikla: () => {} }
         const bosHtml = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham: {} }))
         const bosMetin = gorunurMetin(bosHtml)
@@ -292,7 +302,8 @@ describe('tools — the screens', () => {
         // a field with a condition is not there until its choice is made; every other field is drawn with its label
         for (const al of t.alanlar) assert.equal(bosHtml.includes(`data-alan="${al.anahtar}"`), !al.kosul, `${p.anahtar}/${dil}: field ${al.anahtar}`)
         for (const al of t.alanlar) if (!al.numarali && !al.kosul) assert.ok(bosMetin.includes(bicimli(p.metin.alanlar[al.anahtar], dil)), `${p.anahtar}/${dil}: label of ${al.anahtar}`)
-        assert.ok(bosMetin.includes(bicimli(p.metin.not, dil)) && bosMetin.includes(a.arac.saklanmaz))
+        assert.ok(bosMetin.includes(bicimli(p.metin.not, dil)) && bosMetin.includes(a.arac.saklanmaz) && bosMetin.includes(a.kayit.hastasiz))
+        assert.doesNotMatch(bosHtml, /data-bolum="kayit"|data-eylem="arac-kaydet"/, `${p.anahtar}/${dil}: a tool opened without a patient offers to keep its result`)
         if (t.kaynak) assert.ok(bosMetin.includes(t.kaynak), `${p.anahtar}/${dil}: the source is not shown`)
         temiz(bosHtml, `tool ${p.anahtar} ${dil} (empty)`)
 
@@ -360,11 +371,143 @@ describe('tools — the screens', () => {
     const ekran = kod('components/ulke/uygulama/Araclar.tsx')
     assert.doesNotMatch(ekran, />\s*[A-Za-z][A-Za-z ]{3,}\s*</, 'a word is written into the tools screen')
     assert.doesNotMatch(ekran, /[^\x00-\x7F]/, 'a non-ASCII character in the tools screen')
-    assert.doesNotMatch(ekran, /fetch\(|api\(|localStorage|sessionStorage|document\.cookie/, 'a tool stores or sends something')
+    assert.doesNotMatch(ekran, /fetch\(|api\(|localStorage|sessionStorage|document\.cookie/, 'the tool screen itself stores or sends something')
+    // keeping a result is ONE file's business, and it talks to two routes of the country's own API and to nothing else
+    const kayit = kod('components/ulke/uygulama/AracKayitlari.tsx')
+    for (const [ad, k] of [['AracKayitlari.tsx', kayit], ['aracOrtak.ts', kod('components/ulke/uygulama/aracOrtak.ts')]] as const) {
+      assert.doesNotMatch(k, />\s*[A-Za-z][A-Za-z ]{3,}\s*</, `a word is written into ${ad}`)
+      assert.doesNotMatch(k, /[^\x00-\x7F]/, `a non-ASCII character in ${ad}`)
+      assert.doesNotMatch(k, /fetch\(|localStorage|sessionStorage|document\.cookie|indexedDB/, `${ad} stores or sends something by itself`)
+    }
+    assert.deepEqual([...new Set([...kayit.matchAll(/api\(([^,)]+)/g)].map((x) => x[1].trim().replace(/\$\{.*$/, '')))].sort(), ['ARAC_KAYDI_API', '`', '`/api/ulke/hasta?id='].sort())
     assert.match(kod('components/ulke/UlkeUygulamaSayfasi.tsx'), /\(ekran !== 'araclar' \|\| ozellikAcik\('araclar'\)\)/)
     assert.match(kod('components/ulke/uygulama/Kabuk.tsx'), /ozellikAcik\('araclar'\) \? baglanti\('araclar', YOL\.araclar, araclarMetni\(dil\)\.kabuk\.araclar\) : null/)
     assert.match(kod('components/ulke/uygulama/Bugun.tsx'), /ozellikAcik\('araclar'\) \? /)
     assert.match(kod('app/tools/page.ulke.tsx'), /<UlkeUygulamaSayfasi ekran="araclar" \/>/)
+  })
+})
+
+describe('tools — keeping a result: the screens', () => {
+  const HASTA = { id: '30000000-0000-4000-8000-000000000001', ad: 'QA Patient One' }
+  /** The first tool of the pack whose result can be kept, with an input that gives one. */
+  const ilkSaklanabilir = () => {
+    for (const p of icerik!.araclar) {
+      const t = kitAraci(p.anahtar)!
+      if (t.tur === 'ekran') continue
+      const g = doluGirdi(t, p.parametreler)
+      if (g) return { x: { tanim: t, paket: p }, g }
+    }
+    return null
+  }
+
+  it('a tool opened FOR A PATIENT: the part that keeps the result names the patient, asks for a follow-up day WITHOUT proposing one, and is off until the tool has a result', () => {
+    if (!icerik) return
+    const s = ilkSaklanabilir()
+    if (!s) { assert.ok(!icerik.araclar.some((p) => kitAraci(p.anahtar)!.tur !== 'ekran'), 'the samples fill in no tool of this pack: nothing was checked'); return }
+    for (const dil of FORMLAR) {
+      const a = A.araclarMetni(dil)
+      const kart = (tamam: boolean, durum: 'yok' | 'bekliyor' | 'tamam' | 'eksik' | 'takip' | 'hata' = 'yok') => h(Kayit.AracKayitKarti, { a, hasta: HASTA, tamam, takip: '', takipDegistir: () => {}, kaydet: () => {}, durum })
+      const ortak = { x: s.x, a, dil, notDili: dil, icerik, degistir: () => {}, temizle: () => {}, bugun: '2026-10-09', kopya: 'yok' as const, kopyalaTikla: () => {}, kayit: (tamam: boolean) => kart(tamam) }
+      const dolu = renderToStaticMarkup(h(Ekran.AracGorunumu, { ...ortak, ham: hamGirdi(s.g) }))
+      const metin = gorunurMetin(dolu)
+      assert.match(dolu, new RegExp(`data-bolum="kayit" data-hasta="${HASTA.id}"`))
+      for (const beklenen of [a.kayit.baslik, a.kayit.hastaIcin.replace('%', HASTA.ad), a.kayit.aciklama, a.kayit.takipTarihi, a.kayit.takipIpucu, a.kayit.kaydet, a.kayit.dosyayaGit]) assert.ok(metin.includes(beklenen), `${dil}: "${beklenen}"`)
+      // THE KIT PROPOSES NO DAY: the field is there and it is empty
+      assert.match(dolu, /<input id="uza-arac-takip" type="date" class="uza-girdi" value=""\/>/)
+      assert.match(dolu, /<button type="button" class="uza-dugme" data-eylem="arac-kaydet">/, 'with a result the button is on')
+      assert.ok(dolu.includes(`href="${Kabuk.YOL.hasta}?id=${HASTA.id}"`), 'the way back to the patient\'s file')
+      // "nothing is stored" is not said where something can be: the two sentences never stand together
+      assert.ok(!metin.includes(a.arac.saklanmaz) && !metin.includes(a.kayit.hastasiz))
+      temiz(dolu, `keep ${dil}`)
+      const bos = renderToStaticMarkup(h(Ekran.AracGorunumu, { ...ortak, ham: {} }))
+      assert.match(bos, /<button type="button" class="uza-dugme" disabled="" data-eylem="arac-kaydet">/, 'without a result the button is off')
+      assert.ok(gorunurMetin(bos).includes(a.kayit.eksik))
+      // what the server answered, in the pack's words
+      for (const [durum, beklenen] of [['tamam', a.kayit.kaydedildi], ['eksik', a.kayit.eksik], ['takip', a.kayit.takipGecersiz], ['hata', a.kayit.yapilamadi]] as const) {
+        const html = renderToStaticMarkup(kart(true, durum))
+        assert.ok(gorunurMetin(html).includes(beklenen), `${dil}/${durum}`)
+        if (durum === 'tamam') assert.match(html, /disabled="" data-eylem="arac-kaydet"/, 'kept once: the button does not keep it twice')
+      }
+    }
+  })
+
+  it('the tools opened from a patient\'s file: the grid says for whom, every tile and the search carry the patient, and the way back from a tool keeps them', () => {
+    if (!icerik) return
+    for (const dil of FORMLAR) {
+      const a = A.araclarMetni(dil)
+      for (const rol of [null, ...ROLLER]) {
+        const html = renderToStaticMarkup(h(Ekran.AraclarIzgarasi, { a, dil, icerik, rol, q: '', hasta: HASTA }))
+        const { temel, rol: kendi } = hesabinAraclari(icerik, rol)
+        for (const x of [...temel, ...kendi]) assert.ok(html.includes(`href="${Ekran.aracYolu(x.tanim.anahtar, HASTA.id).replace(/&/g, '&amp;')}"`), `${dil}/${rol}: ${x.tanim.anahtar} loses the patient`)
+        assert.match(html, new RegExp(`data-alan="arac-hastasi" data-hasta="${HASTA.id}"`)); assert.ok(gorunurMetin(html).includes(a.kayit.hastaIcin.replace('%', HASTA.ad)))
+        if (temel.length + kendi.length) assert.match(html, new RegExp(`<input type="hidden" name="hasta" value="${HASTA.id}"/>`))
+      }
+      const s = ilkSaklanabilir()
+      if (s) assert.ok(renderToStaticMarkup(h(Ekran.AracBasligi, { x: s.x, a, dil, hastaId: HASTA.id })).includes(`href="${Ekran.araclarYolu(HASTA.id)}"`))
+    }
+    assert.match(Ekran.aracYolu('x', HASTA.id), /\?arac=x&hasta=30000000-/); assert.doesNotMatch(Ekran.aracYolu('x'), /hasta/)
+  })
+
+  it('the patient\'s file: what was kept, newest first as the server sent it, each with the summary in the pack\'s words; the follow-up; a record that cannot be read; a tool that is gone; nothing yet', () => {
+    if (!icerik) return
+    const s = ilkSaklanabilir()
+    if (!s) { assert.ok(!icerik.araclar.some((p) => kitAraci(p.anahtar)!.tur !== 'ekran'), 'the samples fill in no tool of this pack: nothing was checked'); return }
+    const sonuc = s.x.tanim.hesapla(s.g, ornekOrtam(s.x.tanim, s.x.paket.parametreler))
+    const kayit = (id: string, ek: Record<string, unknown> = {}) => ({ id, arac: s.x.tanim.anahtar, olusturuldu: '2026-10-09T05:00:00.000Z', gun: '2026-10-09', takipTarihi: null, kapandi: null, girdiler: s.g, sonuc, ...ek })
+    for (const dil of FORMLAR) {
+      const a = A.araclarMetni(dil)
+      const y = Ekran.yazici(icerik, dil), o = Ekran.birimOrtami(icerik)
+      const html = renderToStaticMarkup(h(Kayit.HastaAracKayitlariGorunumu, { a, dil, icerik, hastaId: HASTA.id, kayitlar: [kayit('k1', { takipTarihi: '2026-11-01' }), kayit('k2', { takipTarihi: '2026-10-01', kapandi: '2026-10-02T05:00:00.000Z' }), kayit('k3', { girdiler: null, sonuc: null }), kayit('k4', { arac: 'no-such-tool' })] }))
+      const metin = gorunurMetin(html)
+      assert.deepEqual([...html.matchAll(/data-kayit="([^"]+)"/g)].map((m) => m[1]), ['k1', 'k2', 'k3', 'k4'])
+      for (const beklenen of [a.kayit.dosyaBaslik, a.kayit.dosyaAciklama, a.kayit.araclariAc, bicimli(s.x.paket.metin.ad, dil), a.kayit.takipGunu.replace('%', y.tarih('2026-11-01')), a.kayit.takipKapandi.replace('%', y.tarih('2026-10-01')), a.kayit.okunamadi, a.kayit.aracYok]) assert.ok(metin.includes(beklenen), `${dil}: "${beklenen}"`)
+      // the summary is the same text the doctor copies from the tool
+      const ozet = aracOzeti(s.x, s.g, sonuc, dil, a, y, o)
+      assert.ok(ozet.length > 0 && html.includes(`<pre class="uza-arac-ozet">${ozet.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;')}</pre>`), `${dil}: the kept result does not show its summary`)
+      assert.equal((html.match(/data-okunamadi/g) ?? []).length, 2, 'the unreadable record and the record of a tool that is gone show no content')
+      assert.ok(html.includes(`href="${Ekran.araclarYolu(HASTA.id)}"`), 'the way to the tools for this patient')
+      assert.doesNotMatch(metin, /undefined|null|NaN|\[object/)
+      temiz(html, `kept results ${dil}`)
+      const bos = renderToStaticMarkup(h(Kayit.HastaAracKayitlariGorunumu, { a, dil, icerik, hastaId: HASTA.id, kayitlar: [] }))
+      assert.ok(gorunurMetin(bos).includes(a.kayit.dosyaBos) && bos.includes(`href="${Ekran.araclarYolu(HASTA.id)}"`))
+      // not loaded: no list and no "nothing yet" — only the way in
+      const yuklenmedi = renderToStaticMarkup(h(Kayit.HastaAracKayitlariGorunumu, { a, dil, icerik, hastaId: HASTA.id, kayitlar: null }))
+      assert.ok(!gorunurMetin(yuklenmedi).includes(a.kayit.dosyaBos) && !yuklenmedi.includes('data-kayit='))
+      // the file draws the card where the country has the tools area, below the form and the portal
+      const dosya = renderToStaticMarkup(h(Hastalar.HastaDosyasiGorunumu, { m: A.uygulamaMetni(dil), hasta: { id: HASTA.id, ad: HASTA.ad, otaIsmi: '', dogumTarihi: '1990-05-05', cinsiyet: '', telefon: '', dil: '', ulusalKimlik: '' }, muayeneler: [], araclar: h(Kayit.HastaAracKayitlariGorunumu, { a, dil, icerik, hastaId: HASTA.id, kayitlar: [] }) }))
+      assert.match(dosya, /data-alan="hasta-arac-kayitlari"/)
+    }
+  })
+
+  it('THE FOLLOW-UP LIST: earliest first as the server sent it, the patient and the tool named, overdue and today marked, one "done" per row; empty, loading and unreadable each say so', () => {
+    if (!icerik) return
+    const panel = icerik.araclar.find((p) => kitAraci(p.anahtar)?.ekran === 'takipPaneli')
+    const s = ilkSaklanabilir()
+    if (!panel) return
+    assert.ok(s, 'the pack has the follow-up list and no tool whose result can be kept')
+    assert.notEqual(panel.roller, null, 'the follow-up list is a role tool: an account without a tool to keep has no list')
+    const satirlar = [
+      { id: 't1', hastaId: HASTA.id, hastaAdi: HASTA.ad, arac: s.x.tanim.anahtar, takipTarihi: '2026-10-01', gecikti: true },
+      { id: 't2', hastaId: HASTA.id, hastaAdi: 'QA Patient Two', arac: s.x.tanim.anahtar, takipTarihi: '2026-10-09', gecikti: false },
+      { id: 't3', hastaId: HASTA.id, hastaAdi: 'QA Patient Three', arac: 'no-such-tool', takipTarihi: '2026-12-01', gecikti: false },
+    ]
+    for (const dil of FORMLAR) {
+      const a = A.araclarMetni(dil)
+      const ortak = { a, dil, icerik, bugun: '2026-10-09', hata: false, yukleniyor: A.uygulamaMetni(dil).kabuk.yukleniyor, bekleyen: null, bildirim: null, kapat: () => {} }
+      const html = renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: satirlar }))
+      const metin = gorunurMetin(html)
+      assert.deepEqual([...html.matchAll(/data-takip="([^"]+)"/g)].map((m) => m[1]), ['t1', 't2', 't3'])
+      for (const beklenen of [a.takip.aciklama, HASTA.ad, 'QA Patient Two', bicimli(s.x.paket.metin.ad, dil), a.kayit.aracYok, a.takip.gecikti, a.takip.bugun, a.takip.kapat]) assert.ok(metin.includes(beklenen), `${dil}: "${beklenen}"`)
+      assert.deepEqual([(html.match(/data-takip-durum="gecikti"/g) ?? []).length, (html.match(/data-takip-durum="bugun"/g) ?? []).length, (html.match(/data-eylem="takip-kapat"/g) ?? []).length, (html.match(/data-gecikti="evet"/g) ?? []).length], [1, 1, 3, 1])
+      assert.ok(html.includes(`href="${Kabuk.YOL.hasta}?id=${HASTA.id}"`), 'each row opens the patient\'s file')
+      temiz(html, `follow-up list ${dil}`)
+      assert.ok(gorunurMetin(renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: [] }))).includes(a.takip.bos))
+      assert.ok(gorunurMetin(renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: null }))).includes(ortak.yukleniyor))
+      assert.ok(gorunurMetin(renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: null, hata: true }))).includes(a.takip.okunamadi))
+      assert.ok(gorunurMetin(renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: [], bildirim: 'kapatildi' }))).includes(a.takip.kapatildi))
+      assert.ok(gorunurMetin(renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: satirlar, bildirim: 'yapilamadi' }))).includes(a.takip.yapilamadi))
+      assert.match(renderToStaticMarkup(h(Kayit.TakipPaneliGorunumu, { ...ortak, takipler: satirlar, bekleyen: 't2' })), /disabled="" data-eylem="takip-kapat"/)
+    }
   })
 })
 
