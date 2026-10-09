@@ -2,7 +2,7 @@
  * NOTYA-ULKE-01 — the walls between countries hold, and the checker really catches a breach.
  *
  *   1. The repository as it is: zero violations (the same check runs before every country build, so a breach stops it).
- *   2. Synthetic repositories with one breach each: every rule D1–D6 fires.
+ *   2. Synthetic repositories with one breach each: every rule D1–D6 fires, and D8 (language sets, NOTYA-ULKE-EN-01).
  *   3. The entry point has the shape the bundler needs to drop the other packs (constant branches, require inside).
  *   4. Import graph: starting from the active entry point of country X, no file of another country is reachable.
  */
@@ -84,6 +84,17 @@ describe('walls: every rule catches its breach', () => {
     ['D5', 'core reads the country variable itself', { 'lib/sizinti.ts': "export const tr = process.env.NOTYA_COUNTRY === 'aa'\n" }],
     ['D5', 'core compares the active country with a code', { 'components/X.tsx': "import { aktifUlke } from '@/lib/ulke/ulke'\nexport const X = () => (aktifUlke() === 'aa' ? 1 : 2)\n" }],
     ['D6', 'a country folder without its leak terms', { 'countries/dd/index.ts': "export const P = { kod: 'dd' }\n", 'countries/dd/derleme.mjs': 'export default {}\n', 'countries/active/index.ts': "let p\nif (process.env.NOTYA_COUNTRY === 'aa') {\n  p = require('../aa/index').P\n} else if (process.env.NOTYA_COUNTRY === 'bb') {\n  p = require('../bb/index').P\n} else if (process.env.NOTYA_COUNTRY === 'dd') {\n  p = require('../dd/index').P\n}\nexport const AKTIF_PAKET = p\n" }],
+    // NOTYA-ULKE-EN-01 — language sets (countries/_dil/<language>/)
+    ['D8', 'a language set imports a pack', { 'countries/_dil/xx/metin.ts': "import { P } from '../../aa/index'\nexport const m = P\n" }],
+    ['D8', 'a language set imports a pack (alias)', { 'countries/_dil/xx/metin.ts': "import { P } from '@/countries/bb/index'\nexport const m = P\n" }],
+    ['D8', 'a language set imports the entry point', { 'countries/_dil/xx/metin.ts': "import { AKTIF_PAKET } from '@/countries/active'\nexport const m = AKTIF_PAKET\n" }],
+    ['D8', 'a language set imports the all-packs registry', { 'countries/_dil/xx/metin.ts': "import { TUMU } from '../../tumu'\nexport const m = TUMU\n" }],
+    ['D8', 'a language set imports another language set', { 'countries/_dil/xx/metin.ts': "import { y } from '../yy/metin'\nexport const m = y\n", 'countries/_dil/yy/metin.ts': 'export const y = 1\n' }],
+    ['D8', 'core imports a language set directly', { 'countries/_dil/xx/metin.ts': 'export const m = 1\n', 'lib/sizinti.ts': "import { m } from '@/countries/_dil/xx/metin'\nexport const s = m\n" }],
+    ['D8', 'a route imports a language set directly', { 'countries/_dil/xx/metin.ts': 'export const m = 1\n', 'app/x/page.tsx': "import { m } from '../../countries/_dil/xx/metin'\nexport default function X() { return m }\n" }],
+    ['D8', 'the entry point imports a language set', { 'countries/_dil/xx/metin.ts': 'export const m = 1\n', 'countries/active/index.ts': "import { m } from '../_dil/xx/metin'\nlet p\nif (process.env.NOTYA_COUNTRY === 'aa') {\n  p = require('../aa/index').P\n} else if (process.env.NOTYA_COUNTRY === 'bb') {\n  p = require('../bb/index').P\n}\nexport const AKTIF_PAKET = p ?? m\n" }],
+    ['D8', 'a language set carries a pack marker', { 'countries/_dil/xx/metin.ts': "export const iz = 'notya-ulke-paketi:xx:0000000000'\n" }],
+    ['D5', 'a language set reads the country variable', { 'countries/_dil/xx/metin.ts': "export const m = process.env.NOTYA_COUNTRY === 'aa' ? 1 : 2\n" }],
   ]
   for (const [kural, ad, dosyalar] of beklenen) {
     it(kural === 'clean synthetic repository' ? kural : `${kural} — ${ad}`, () => {
@@ -96,6 +107,25 @@ describe('walls: every rule catches its breach', () => {
       } finally { rmSync(kok, { recursive: true, force: true }) }
     })
   }
+
+  it('D8 — a pack takes a language set, two packs take the same one, a set leans on core, a test looks at one: all allowed, and a set is not a country', () => {
+    const kok = sahteDepo({
+      'countries/_dil/xx/metin.ts': "import { x } from '@/lib/cekirdek'\nimport { y } from './yazim'\nexport const m = [x, y]\n",
+      'countries/_dil/xx/yazim.ts': 'export const y = 1\n',
+      'countries/_dil/xx/yazim.test.ts': "import { y } from './yazim'\nexport const t = y\n",
+      'countries/aa/metin.ts': "import { m } from '../_dil/xx/metin'\nexport const a = m\n",
+      'countries/bb/metin.ts': "import { m } from '@/countries/_dil/xx/metin'\nexport const b = m\n",
+      'countries/bb/metin.test.ts': "import { y } from '../_dil/xx/yazim'\nexport const t = y\n",
+      'lib/set.test.ts': "import { m } from '@/countries/_dil/xx/metin'\nexport const t = m\n",
+      'scripts/say.mjs': "import { m } from '../countries/_dil/xx/metin'\nexport const s = m\n",
+    })
+    try {
+      const r = kos(kok)
+      assert.equal(r.status, 0, r.stderr)
+      // the folder of language sets is not a country: no branch is asked of the entry point for it, no build file, no leak list
+      assert.match(r.stdout, /walls hold — countries: aa, bb\n/)
+    } finally { rmSync(kok, { recursive: true, force: true }) }
+  })
 
   it('a sentence about an import in a comment is not an import', () => {
     const kok = sahteDepo({ 'lib/yorum.ts': "// never write: import { P } from '@/countries/aa/index'\n/* nor require('@/countries/bb/index') */\nexport const y = 1\n" })
