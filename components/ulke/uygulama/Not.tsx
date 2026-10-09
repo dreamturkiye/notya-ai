@@ -13,6 +13,9 @@
  * NOTYA-ULKE-PORTAL-01 — under an APPROVED note, where the country has the patient portal: the summary for the
  * patient and the doctor's decision to share it (./PortalOzeti.tsx). Nothing about the note itself changes.
  *
+ * NOTYA-ULKE-INTAKE-01 — beside a DRAFT, where the country has the intake form: the patient's submitted answers,
+ * read-only, under the line that says whose words they are (./HastaFormuKarti.tsx). They are not part of the note.
+ *
  * NOTYA-UZ-BRANSLAR-01 — ROLE FIELDS. A note written with a role's template has that role's fields under the four
  * sections. LEAK RULE on the screen: a field is drawn only when BOTH the server lists its key for this note AND the
  * pack's template for this visit owns it (../klinik/notSablonlari.ts → uzSablonAlanlari) — a key of another role is
@@ -26,6 +29,7 @@ import { asistanAdi } from './Asistan'
 import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { PortalOzetKarti } from './PortalOzeti'
+import { HastaFormuKarti } from './HastaFormuKarti'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type NotIcerigi = { s: string; o: string; a: string; p: string; /** Role fields: key → text. */ alanlar?: Record<string, string> }
@@ -240,6 +244,9 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
       <NotGorunumu m={u.m} not={not} aktifDil={aktifDil} setAktifDil={(d) => { setAktifDil(d); setBildirim(null) }} icerik={icerik}
         setIcerik={(i) => { setMetinler((eski) => ({ ...eski, [aktifDil]: i })); setBildirim(null) }} islem={islem} bildirim={bildirim} kaydet={kaydet} yenidenYaz={yenidenYaz} onayla={onayla} />
       {/* NOTYA-ULKE-PORTAL-01: only an APPROVED note of a patient can have a summary for that patient; the server decides again. */}
+      {/* NOTYA-ULKE-INTAKE-01: beside a DRAFT, what the patient wrote before the visit — for the doctor to read while the note is
+          still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}
+      {!not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={not.muayene.hasta.id} mod="muayene" /> : null}
       {not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') ? <PortalOzetKarti key={`${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
     </>
   )

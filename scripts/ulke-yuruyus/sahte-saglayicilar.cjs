@@ -107,6 +107,8 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
       yasVar: /yoshi — 5 yosh|возраст — /.test(kullanici), duzeltmeVar: kullanici.includes('250 mg'),
       // pack-neutral walk-through: its synthetic patient is "QA-PATIENT …", its accounts are aaaaaaaa-0000-…
       genelKimlikVar: /QA-PATIENT|WALKTHROUGH|aaaaaaaa-0000/.test(sistem + kullanici), kullaniciUzunluk: kullanici.length,
+      // NOTYA-ULKE-INTAKE-01: every answer the walk-through types into an intake form carries this mark. The model is never given one.
+      formCevabiVar: /QA-FORM/.test(sistem + kullanici),
       // Which fields the instruction asks for (keys only), and whether it says the colleague is not a doctor.
       alanAnahtarlari: [...sistem.matchAll(/^- ([a-z][a-z0-9_]*) — /gm)].map((x) => x[1]).join(), muttefik: /shifokor emas|шифокор эмас|не врач/.test(sistem),
     })

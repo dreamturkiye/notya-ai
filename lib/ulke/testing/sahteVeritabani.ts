@@ -85,7 +85,7 @@ export function sahteVeritabani() {
     const c = cakisma(ad, yeni, digerleri)
     if (c) return c
     const hata = (code: string, message: string) => ({ code, message })
-    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri']
+    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari']
     // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
     if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
     if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
@@ -102,6 +102,35 @@ export function sahteVeritabani() {
     }
     if (ad === 'ulke_portal_oturumlari' && !tablo('ulke_portal_erisimleri').some((e) => e.id === yeni.erisim_id && e.ulke === yeni.ulke && e.doctor_id === yeni.doctor_id && e.patient_id === yeni.patient_id)) return hata('23503', 'insert or update on table "ulke_portal_oturumlari" violates foreign key constraint "ulke_portal_oturumlari_erisim_fk"')
     if (ad === 'ulke_randevu_istekleri' && (yeni.durum ?? 'bekliyor') === 'bekliyor' && digerleri.some((x) => x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && (x.durum ?? 'bekliyor') === 'bekliyor')) return hata('23505', 'duplicate key value violates unique constraint "ulke_randevu_istekleri_tek_bekleyen"')
+    // NOTYA-ULKE-INTAKE-01 — migration 138: the checks of ulke_hasta_formlari, its appointment key and "one open form".
+    if (ad === 'ulke_hasta_formlari') {
+      const d = String(yeni.durum ?? 'bekliyor')
+      const acik = (x: Satir) => ['bekliyor', 'taslak'].includes(String(x.durum ?? 'bekliyor'))
+      if (!['bekliyor', 'taslak', 'gonderildi', 'iptal'].includes(d)) return hata('23514', 'new row for relation "ulke_hasta_formlari" violates check constraint (durum)')
+      if ((d === 'gonderildi') !== Boolean(yeni.gonderildi_at) || (d === 'iptal') !== Boolean(yeni.iptal_at)) return hata('23514', 'new row for relation "ulke_hasta_formlari" violates check constraint (state and its moment)')
+      if (yeni.cevaplar_encrypted && !(yeni.riza_at && yeni.riza_surumu && yeni.dil)) return hata('23514', 'new row for relation "ulke_hasta_formlari" violates check constraint (answers without consent)')
+      if ((d === 'gonderildi' && !yeni.cevaplar_encrypted) || (d === 'bekliyor' && yeni.cevaplar_encrypted)) return hata('23514', 'new row for relation "ulke_hasta_formlari" violates check constraint (answers and state)')
+      if (yeni.randevu_id && !tablo('ulke_randevulari').some((r) => r.id === yeni.randevu_id && r.ulke === yeni.ulke && r.doctor_id === yeni.doctor_id && r.patient_id === yeni.patient_id)) return hata('23503', 'insert or update on table "ulke_hasta_formlari" violates foreign key constraint "ulke_hasta_formlari_randevu_fk"')
+      if (acik(yeni) && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && acik(x))) return hata('23505', 'duplicate key value violates unique constraint "ulke_hasta_formlari_tek_acik"')
+    }
+    return null
+  }
+  /**
+   * NOTYA-ULKE-INTAKE-01 — the TRIGGER of migration 138 (`ulke_hasta_formu_kilidi`), which sees the row as it was and
+   * as it would be: a form never moves; its question set is fixed; a withdrawn form does not change; a submitted
+   * form's answers do not change (it can only be reopened).
+   */
+  const guncellemeKilidi = (ad: string, eski: Satir, yeni: Satir): { message: string; code: string } | null => {
+    if (ad !== 'ulke_hasta_formlari' || eski.patient_id === undefined) return null
+    const hata = (message: string) => ({ code: '23514', message })
+    const farkli = (k: string) => (eski[k] ?? null) !== (yeni[k] ?? null)
+    if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return hata('ulke_hasta_formlari: a form never moves to another country, doctor or patient')
+    if (farkli('rol') || farkli('soru_surumu') || farkli('veli')) return hata('ulke_hasta_formlari: the question set of a form is fixed when it is asked for')
+    if (eski.durum === 'iptal') return hata('ulke_hasta_formlari: a withdrawn form does not change')
+    if (eski.durum === 'gonderildi') {
+      if (!['gonderildi', 'taslak'].includes(String(yeni.durum))) return hata('ulke_hasta_formlari: a submitted form is not withdrawn')
+      if (farkli('cevaplar_encrypted') || farkli('dil') || farkli('riza_surumu') || farkli('riza_at')) return hata('ulke_hasta_formlari: the answers of a submitted form do not change; the doctor reopens the form')
+    }
     return null
   }
   /** A row written inside a function, held to the same constraints as a statement. */
@@ -229,6 +258,29 @@ export function sahteVeritabani() {
       Object.assign(i, { durum: 'kabul', randevu_id: r.id, cevap_at: a.p_simdi })
       return { durum: 'TAMAM', randevu_id: r.id }
     },
+
+    // lib/db/migrations/138_ulke_hasta_formu.sql — ulke_hasta_formu_iste. Every statement carries `p_ulke`, as in the SQL.
+    ulke_hasta_formu_iste: (a) => {
+      const bu = (x: Satir) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.patient_id === a.p_patient_id
+      if (!tablo('ulke_hastalar').some((h) => h.id === a.p_patient_id && h.doctor_id === a.p_doctor_id && h.ulke === a.p_ulke)) return { durum: 'NOT_FOUND' }
+      if (a.p_randevu_id != null && !tablo('ulke_randevulari').some((r) => r.id === a.p_randevu_id && r.patient_id === a.p_patient_id && r.doctor_id === a.p_doctor_id && r.ulke === a.p_ulke)) return { durum: 'NOT_FOUND' }
+      const calisan = tablo('ulke_portal_erisimleri').some((e) => bu(e) && !e.iptal_at && !e.kilitlendi_at && String(e.son_gecerlilik) > String(a.p_simdi))
+      const yeniBaglanti = !calisan || a.p_yeni_baglanti === true
+      if (yeniBaglanti && (a.p_token_hash == null || a.p_pin_hash == null || a.p_son_gecerlilik == null)) return { durum: 'GECERSIZ' }
+      let form = tablo('ulke_hasta_formlari').find((f) => bu(f) && ['bekliyor', 'taslak'].includes(String(f.durum)))
+      let yeni = false
+      if (!form) {
+        if (boz.yaz.has('ulke_hasta_formlari')) throw Object.assign(new Error('stand-in: ulke_hasta_formlari insert failed inside the function'), { code: 'XX000' })
+        form = islevdeEkle('ulke_hasta_formlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, randevu_id: a.p_randevu_id ?? null, rol: a.p_rol ?? null, soru_surumu: a.p_soru_surumu, veli: a.p_veli === true, durum: 'bekliyor', cevaplar_encrypted: null, dil: null, riza_surumu: null, riza_at: null, gonderildi_at: null, yeniden_acildi_at: null, iptal_at: null, created_at: a.p_simdi, updated_at: a.p_simdi })
+        yeni = true
+      } else if (a.p_randevu_id != null && form.randevu_id !== a.p_randevu_id) Object.assign(form, { randevu_id: a.p_randevu_id, updated_at: a.p_simdi })
+      if (yeniBaglanti) {
+        // ulke_portal_erisim_ver, called from inside: the link before it is withdrawn, its sessions closed, the event recorded.
+        if (boz.yaz.has('ulke_portal_erisimleri')) throw Object.assign(new Error('stand-in: ulke_portal_erisimleri insert failed inside the function'), { code: 'XX000' })
+        islevler.ulke_portal_erisim_ver({ p_ulke: a.p_ulke, p_doctor_id: a.p_doctor_id, p_patient_id: a.p_patient_id, p_token_hash: a.p_token_hash, p_pin_hash: a.p_pin_hash, p_son_gecerlilik: a.p_son_gecerlilik, p_simdi: a.p_simdi })
+      }
+      return { durum: 'TAMAM', form_id: form.id, yeni_form: yeni, erisim: yeniBaglanti ? 'YENI' : 'VAR' }
+    },
   }
   const rpc = async (ad: string, arg: Satir = {}): Promise<IslevCevabi> => {
     const islev = islevler[ad]
@@ -302,7 +354,7 @@ export function sahteVeritabani() {
         if (!this.filtreler.length) throw new Error(`stand-in database: update on ${this.ad} without a filter`)
         sonuc = satirlar.filter(uyan)
         // A constraint is checked on the row as it WOULD be; a refused statement changes nothing.
-        for (const s of sonuc) { const c = kisit(this.ad, { ...s, ...this.yuk }, satirlar.filter((x) => x !== s)); if (c) return { data: null, error: c } }
+        for (const s of sonuc) { const c = guncellemeKilidi(this.ad, s, { ...s, ...this.yuk }) ?? kisit(this.ad, { ...s, ...this.yuk }, satirlar.filter((x) => x !== s)); if (c) return { data: null, error: c } }
         for (const s of sonuc) Object.assign(s, this.yuk)
       } else {
         if (!this.filtreler.length) throw new Error(`stand-in database: delete on ${this.ad} without a filter`)

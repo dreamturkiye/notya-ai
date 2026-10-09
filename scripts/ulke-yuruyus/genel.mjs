@@ -15,6 +15,12 @@
  * shared and taken back, an appointment request refused on a taken time and then accepted, and isolation (the second
  * account, a doctor's session on the patient's routes and the other way round).
  *
+ * NOTYA-ULKE-INTAKE-01 — where the pack has the intake form, step 4c walks it: asked from the patient's file (the
+ * invitation in the patient's form, the warning before a new link), consent, every part of the form with whatever
+ * questions the pack's set holds (the core set and the account's role, never another role's), saved as a draft,
+ * submitted, read-only, the answers on the doctor's file and visit screen under "not verified", a visit recorded
+ * with none of them given to the model, reopened; and in step 5 the second account and both kinds of session.
+ *
  * A country's OWN deeper walk-through (its wording, its roles, its language switches) stays with that country:
  * Uzbekistan's is ./yuruyus.mjs.
  *
@@ -449,7 +455,145 @@ if (P.portal) {
   if (P.randevu) kontrol('portal: a session answers only its own link — a request sent with another link\'s mark, or with none, is "no session", and with its own mark the page still answers', (await hApi(H, '/api/ulke/portal/randevu-istegi', { method: 'POST', token: 'B'.repeat(43), govde: { gunler: [] } })).s === 401 && (await hApi(H, '/api/ulke/portal/randevu-istegi', { method: 'POST', govde: { gunler: [] } })).s === 401 && (await hApi(H, '/api/ulke/portal', { token })).s === 200)
   kontrol('portal: the patient\'s browser made no request to any outside service and had no script error', H.disari.length === 0 && H.konsol.length === 0, [...H.disari, ...H.konsol].slice(0, 3).join(' | '))
   // (the patient stays signed in: step 5 withdraws the access and looks at this page again)
-  portalOturumu = { H, pin: erisim.pin, PM }
+  portalOturumu = { H, pin: erisim.pin, PM, token }
+}
+
+// ───────────────────────── 4c. the intake form (where the pack has one) ─────────────────────────
+// NOTYA-ULKE-INTAKE-01. The patient of step 2 is signed in on their own phone (step 4b) and holds a link the doctor
+// cannot be shown again. Every sentence expected here is the pack's; every question is whatever the pack's set holds.
+if (P.form && portalOturumu) {
+  const p = A
+  const F = P.form, HF = F.hekim, PF = F.hasta
+  const { H, token, pin } = portalOturumu
+  const KART = '[data-alan=hasta-formu-karti]'
+  // Every answer typed here carries this mark: the stand-in model reports whether it was ever given one.
+  const ISARETLI = 'QA-FORM-ANSWER'
+  const doldur = (m, ...d) => (d.length === 1 ? m.replace('%', () => String(d[0])) : m.replace(/%(\d)/g, (h, n) => String(d[Number(n) - 1] ?? h)))
+  const hApi = (pg, rota, s = {}) => pg.evaluate(async (u, s) => {
+    const r = await fetch(u, { method: s.method || 'GET', credentials: 'same-origin', headers: { ...(s.ozet ? { 'x-notya-portal-baglanti': s.ozet } : {}), ...(s.govde ? { 'Content-Type': 'application/json', 'x-notya-portal': '1' } : {}) }, body: s.govde ? JSON.stringify(s.govde) : undefined })
+    const t = await r.text(); let j = null; try { j = JSON.parse(t) } catch { /* not json */ }
+    return { s: r.status, t: t.slice(0, 300), j }
+  }, adres(rota), { ...s, ozet: s.token ? ozetle(s.token) : '' })
+  const formlar = () => tabloOku('ulke_hasta_formlari')
+  /** The patient's page after a reload: the session stands, or the PIN is asked again — either way the page with its form card. */
+  const sayfayaDon = async () => {
+    await H.reload({ waitUntil: 'networkidle0' })
+    await H.waitForSelector('[data-alan=portal-form-karti], #uzp-pin', { timeout: 30000 })
+    if (await H.$('#uzp-pin')) { await bekle(2200); await yazDeger(H, '#uzp-pin', pin); await H.click('[data-eylem=portal-giris]'); await H.waitForSelector('[data-alan=portal-form-karti]', { timeout: 30000 }) }
+  }
+  // The walk-through's patient was born on 2021-03-07: the form is the guardian's wherever the pack's guardian age is above theirs.
+  const yas = Math.floor((Date.now() - Date.parse('2021-03-07T00:00:00Z')) / 31557600000)
+  const veli = F.veliYasi != null && yas < F.veliYasi
+
+  // asked from the patient's file
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector(`${KART} [data-eylem=form-iste]`, { timeout: 60000 })
+  kontrol('intake: the patient\'s file has the card, in the pack\'s words, and no form was asked for yet', (await metin(p, `${KART} h2`)) === HF.baslik && (await metin(p, `${KART} [data-alan=form-durumu]`)) === HF.durumYok && (await formlar()).length === 0)
+  const erisimOnce = JSON.stringify(await tabloOku('ulke_portal_erisimleri'))
+  await p.click(`${KART} [data-eylem=form-iste]`)
+  await p.waitForSelector(`${KART} [data-alan=form-davet-metni]`, { timeout: 30000 })
+  const davet = await p.$eval(`${KART} [data-alan=form-davet-metni]`, (e) => ({ metin: e.value, dil: e.getAttribute('data-dil') }))
+  const hekimAd = (await api(p, '/api/ulke/hesap')).j?.ad ?? ''
+  const satir = (await formlar())[0]
+  kontrol(`intake: ASKED — one form with this country, this account and this patient, for the account's role, stamped with the pack's question set, addressed ${veli ? 'to a guardian (the pack\'s guardian age)' : 'to the patient'}; no answers yet; the patient's link was not touched`, (await formlar()).length === 1 && satir.ulke === P.kod && satir.doctor_id === HESAP_A && satir.patient_id === hastaA && satir.rol === (P.ilkRol?.anahtar ?? null) && satir.soru_surumu === F.surum && satir.veli === veli && satir.durum === 'bekliyor' && satir.cevaplar_encrypted === null && JSON.stringify(await tabloOku('ulke_portal_erisimleri')) === erisimOnce, JSON.stringify(satir))
+  kontrol('intake: THE INVITATION is the pack\'s sentence in the patient\'s form — without a link, because the patient holds one that cannot be shown again, and the card says so; no PIN anywhere', davet.dil === P.portal.hastaBicimi && davet.metin === (hekimAd ? doldur(F.davet.baglantisiz, hekimAd) : F.davet.baglantisizAdsiz) && (await metin(p, `${KART} [data-alan=form-baglanti-var]`)) === HF.baglantiVar && !(await p.$(`${KART} [data-alan=portal-pin]`)) && !(await p.$(`${KART} [data-alan=portal-baglanti]`)), davet.metin)
+  await p.click(`${KART} [data-eylem=yeni-baglanti]`)
+  await p.waitForSelector('[data-alan=yeni-baglanti-onayi]', { timeout: 15000 })
+  kontrol('intake: "a new link" first says, in the pack\'s words, what it does to the link the patient holds — and does nothing until confirmed', (await metin(p, '[data-alan=yeni-baglanti-onayi] [role=alert]')) === HF.yeniBaglantiUyari && JSON.stringify(await tabloOku('ulke_portal_erisimleri')) === erisimOnce)
+  await p.click('[data-eylem=yeni-baglanti-vazgec]')
+  await p.waitForFunction(() => !document.querySelector('[data-alan=yeni-baglanti-onayi]'), { timeout: 15000 })
+  await tara(p, 'patient file with the intake card')
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-intake-asked.png`), fullPage: true })
+
+  // the patient's own page
+  await sayfayaDon()
+  kontrol('intake: the patient\'s page shows the card in the pack\'s words for this reader', (await metin(H, '[data-alan=portal-form-karti] h2')) === PF.bekliyorBaslik && (await metin(H, '[data-alan=portal-form-karti]')).includes(veli ? PF.veliAciklama : PF.bekliyorAciklama) && (await metin(H, '[data-eylem=form-ac]')) === PF.baslat)
+  const gelen = await hApi(H, '/api/ulke/portal/form', { token })
+  const bolumler = gelen.j?.form?.bolumler ?? []
+  const anahtarlar = bolumler.flatMap((b) => b.sorular.map((q) => q.anahtar))
+  const rolBolumu = bolumler.find((b) => b.anahtar === 'rol')?.sorular.map((q) => q.anahtar) ?? []
+  kontrol(`intake: what the browser is sent is the core questions and the questions of the account's own role (${rolBolumu.length}) — not one key of any other role's set (${F.digerRoller.length} keys looked for)`, gelen.s === 200 && anahtarlar.length > 0 && anahtarlar.every((k) => F.cekirdek.includes(k) || F.ilkRol.includes(k)) && rolBolumu.every((k) => F.ilkRol.includes(k)) && (F.ilkRol.length === 0 || (rolBolumu.length > 0 && bolumler.at(-1).anahtar === 'rol')) && F.digerRoller.every((k) => !JSON.stringify(gelen.j).includes(`"${k}"`)), anahtarlar.join())
+  await H.click('[data-eylem=form-ac]')
+  await H.waitForSelector('[data-alan=hasta-formu][data-bolum=riza]', { timeout: 30000 })
+  kontrol('intake: consent comes first, in the pack\'s sentence for this reader', (await metin(H, '[data-alan=form-riza]')) === (veli ? F.riza.veliMetni : F.riza.metin), await metin(H, '[data-alan=form-riza]'))
+  await H.click('[data-eylem=form-baslat]')
+  await H.waitForSelector('[data-alan=hasta-formu] [role=alert]', { timeout: 15000 })
+  kontrol('intake: without consent nothing starts and nothing is stored', (await metin(H, '[data-alan=hasta-formu] [role=alert]')) === PF.rizaGerekli && (await formlar())[0].riza_at == null && (await formlar())[0].durum === 'bekliyor')
+  await tara(H, 'intake: consent')
+  await H.click('input[name=form-riza]')
+  await H.click('[data-eylem=form-baslat]')
+  // every part in turn: the questions the server sent are the questions drawn; required ones are answered, one line of text is typed, every number is given
+  const gorulen = []
+  const birimler = []
+  let yazildi = false
+  for (let i = 0; i < bolumler.length; i++) {
+    const b = bolumler[i]
+    await H.waitForSelector(`[data-alan=hasta-formu][data-bolum=${b.anahtar}]`, { timeout: 30000 })
+    gorulen.push(...(await H.$$eval('[data-alan=hasta-formu] [data-soru]', (l) => l.map((x) => x.getAttribute('data-soru')))))
+    for (const q of b.sorular) {
+      const metinMi = q.tur === 'kisa-metin' || q.tur === 'uzun-metin'
+      if (q.tur === 'sayi') {
+        birimler.push([q.birim.kod, q.birim.ad, await metin(H, `[data-soru="${q.anahtar}"] [data-alan=birim]`)])
+        await yazDeger(H, `#uzf-${q.anahtar}`, String(Math.min(Math.ceil(q.birim.enAz) + 1, q.birim.enCok)))
+      } else if (metinMi && (q.zorunlu || !yazildi)) { await H.type(`#uzf-${q.anahtar}`, `${ISARETLI} ${q.anahtar}`); yazildi = true }
+      else if (!q.zorunlu) continue
+      else if (q.tur === 'tek-secim' || q.tur === 'cok-secim') await H.click(`input[name="uzf-${q.anahtar}-${q.secenekler[0].anahtar}"]`)
+      else if (q.tur === 'evet-hayir') await H.click(`input[name="uzf-${q.anahtar}-hayir"]`)
+      else if (q.tur === 'tarih') await yazDeger(H, `#uzf-${q.anahtar}`, '2020-01-01')
+    }
+    await tara(H, `intake: part ${i + 1} of ${bolumler.length} of the form`)
+    if (i === 0) {
+      await H.waitForSelector('[data-alan=hasta-formu][data-kayit=kaydedildi]', { timeout: 30000 }).catch(() => null)
+      const ara = (await formlar())[0]
+      kontrol('intake: consent is stored with the pack\'s stamp and the form it was read in before any question; answers are SAVED AS THEY GO, as a draft', ara.durum === 'taslak' && !!ara.riza_at && ara.riza_surumu === F.rizaSurumu && ara.dil === P.portal.hastaBicimi && (await metin(H, '[data-alan=hasta-formu] .uza-ust-yazi')) === `${PF.bekliyorBaslik} · ${doldur(PF.bolum, 1, bolumler.length)}`, JSON.stringify({ d: ara.durum, r: ara.riza_surumu, dil: ara.dil }))
+    }
+    if (i < bolumler.length - 1) await H.click('[data-eylem=form-ileri]')
+  }
+  kontrol('intake: every question the server sent was drawn, in order, and no other', JSON.stringify(gorulen) === JSON.stringify(anahtarlar), `${gorulen.length} drawn, ${anahtarlar.length} sent`)
+  kontrol(`intake: a measure is asked in the PACK's unit, named as the pack names it beside the field (${birimler.filter((x) => x[0]).map((x) => x[1]).join(', ') || 'no measure in this form'})`, birimler.every(([kod, ad, cizilen]) => cizilen === ad && ad.length > 0 && (!kod || F.birim[kod] === ad)), JSON.stringify(birimler))
+  await H.waitForSelector('[data-eylem=form-gonder]', { timeout: 15000 })
+  const uyari = await metin(H, '[data-alan=hasta-formu]')
+  await H.click('[data-eylem=form-gonder]')
+  await H.waitForSelector('[data-alan=hasta-formu][data-form-durumu=gonderildi]', { timeout: 30000 })
+  const sonra = (await formlar())[0]
+  kontrol('intake: SUBMITTED — the patient was told beforehand that answers cannot be changed afterwards; stored as submitted, with its moment; the answers are encrypted (no answer and no question key can be read in the database)', uyari.includes(PF.gonderUyari) && (await formlar()).length === 1 && sonra.durum === 'gonderildi' && !!sonra.gonderildi_at && typeof sonra.cevaplar_encrypted === 'string' && !JSON.stringify(await formlar()).includes(ISARETLI) && anahtarlar.every((k) => !sonra.cevaplar_encrypted.includes(`"${k}"`)))
+  const sonradan = await hApi(H, '/api/ulke/portal/form', { token, method: 'PUT', govde: { cevaplar: {}, riza: true } })
+  kontrol('intake: READ-ONLY AFTERWARDS — the pack\'s heading and sentence, nothing to type into; a change sent later is refused by the server and the stored answers are the same bytes', (await metin(H, '[data-alan=hasta-formu] h1')) === PF.cevaplarim && (await metin(H, '[data-alan=hasta-formu]')).includes(PF.degistirilemez) && (!yazildi || (await metin(H, '[data-alan=hasta-formu]')).includes(ISARETLI)) && (await H.$$('[data-alan=hasta-formu] input, [data-alan=hasta-formu] textarea')).length === 0 && sonradan.s >= 400 && sonradan.s < 500 && (await formlar())[0].cevaplar_encrypted === sonra.cevaplar_encrypted, `${sonradan.s} ${sonradan.t}`)
+  await tara(H, 'intake: the submitted form')
+  await H.screenshot({ path: join(CIKTI, `genel-${P.kod}-intake-submitted.png`), fullPage: true })
+  await H.click('[data-eylem=form-kapat]')
+  await H.waitForSelector('[data-alan=portal-form-karti][data-form-durumu=gonderildi]', { timeout: 30000 })
+  kontrol('intake: back on the patient\'s page the card says the form was sent, in the pack\'s words', (await metin(H, '[data-alan=portal-form-karti] h2')) === PF.gonderildiBaslik && (await metin(H, '[data-eylem=form-ac]')) === PF.cevaplarim)
+
+  // the doctor: the patient's file, the visit screen — and the model
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector(`${KART} [data-alan=form-son] [data-alan=form-cevaplari]`, { timeout: 60000 })
+  kontrol('intake: THE DOCTOR reads the answers on the patient\'s file under the pack\'s line that says whose words they are and that nobody verified them — first, before any answer — and that they are not used to write the note', (await metin(p, `${KART} [data-alan=form-beyan]`)) === (veli ? HF.veliBeyani : HF.beyan) && (await p.$eval(`${KART} [data-alan=form-cevaplari]`, (x) => !!x.firstElementChild?.querySelector('[data-alan=form-beyan]'))) && (!yazildi || (await metin(p, `${KART} [data-alan=form-son]`)).includes(ISARETLI)) && (await metin(p, `${KART} [data-alan=form-nota-girmez]`)) === HF.notaGirmez)
+  await tara(p, 'patient file with the answers')
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-intake-answers.png`), fullPage: true })
+  writeFileSync(GUNLUK, ''); writeFileSync(SENARYO, JSON.stringify({ stt: 'yuksek', model: 'tamam' }))
+  await git(p, `/visit?hasta=${hastaA}`)
+  await p.waitForSelector('[data-alan=muayene-formu] [data-alan=form-cevaplari]', { timeout: 60000 })
+  kontrol('intake: THE VISIT SCREEN shows the same answers under the same line, read-only: nothing to ask for, reopen or withdraw there', (await metin(p, '[data-alan=muayene-formu] h2')) === HF.cevaplar && (await metin(p, '[data-alan=muayene-formu] [data-alan=form-beyan]')) === (veli ? HF.veliBeyani : HF.beyan) && (await metin(p, '[data-alan=muayene-formu] [data-alan=form-nota-girmez]')) === HF.notaGirmez && (await p.$$('[data-alan=muayene-formu] button, [data-alan=muayene-formu] input')).length === 0)
+  await tara(p, 'visit screen with the answers')
+  await p.click('input[name=riza]')
+  await p.waitForFunction(() => !document.querySelector('.uza-form button.uza-dugme').disabled)
+  await p.click('.uza-form button.uza-dugme')
+  await p.waitForSelector('.uza-sure', { timeout: 20000 })
+  await bekle(2600)
+  await p.click('.uza-kayit .uza-dugme')
+  await p.waitForFunction(() => new URLSearchParams(location.search).has('not'), { timeout: 120000 })
+  await p.waitForSelector('#uza-not-s', { timeout: 60000 })
+  const mdl = cagrilar().filter((x) => x.tur === 'model')
+  kontrol('intake: NOT FED TO THE MODEL — a visit of this patient was recorded and its note written, and nothing typed into the form was in what the model was given', yazildi && mdl.length === 1 && mdl[0].formCevabiVar === false, JSON.stringify(mdl.map((x) => [x.is, x.formCevabiVar])))
+
+  // reopened by the doctor
+  const ac = await api(p, '/api/ulke/hasta-formu', { method: 'PATCH', govde: { formId: sonra.id, islem: 'yeniden-ac' } })
+  await sayfayaDon()
+  const acik = (await formlar())[0]
+  kontrol('intake: REOPENED by the doctor — the same form is open again with its answers kept and the moment recorded; the patient\'s page says so in the pack\'s words and offers to continue', ac.s === 200 && (await formlar()).length === 1 && acik.durum === 'taslak' && !!acik.yeniden_acildi_at && acik.cevaplar_encrypted === sonra.cevaplar_encrypted && (await metin(H, '[data-alan=portal-form-karti]')).includes(PF.yenidenAcildi) && (await metin(H, '[data-eylem=form-ac]')) === PF.devam, `${ac.s} ${ac.t}`)
+  await tara(H, 'intake: the patient\'s page with the reopened form')
+  portalOturumu.formId = sonra.id
 }
 
 // ───────────────────────── 5. a second account sees none of it; the shared database holds only this country's rows ─────────────────────────
@@ -478,6 +622,20 @@ if (P.portal) {
     ]
     const olmayan = await api(p, `/api/ulke/hasta-portali?hasta=${yok}`)
     kontrol('portal: account B and account A\'s patient — access, summary and request each answer exactly like "does not exist", and nothing changed', cevaplar.every((r) => r.s === 404 && r.t === olmayan.t) && (await tabloOku('ulke_portal_erisimleri')).filter((e) => !e.iptal_at).length === 1 && (await tabloOku('ulke_hasta_ozetleri')).every((o) => !o.paylasildi_at), cevaplar.map((r) => r.s).join(' '))
+    if (P.form) {
+      // NOTYA-ULKE-INTAKE-01 — the second account and the first account's patient and form.
+      const once = JSON.stringify(await tabloOku('ulke_hasta_formlari'))
+      const formId = portalOturumu.formId
+      const f = [
+        await api(p, `/api/ulke/hasta-formu?hasta=${hastaA}`), await api(p, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaA } }), await api(p, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaA, yeniBaglanti: true } }),
+        await api(p, '/api/ulke/hasta-formu', { method: 'PATCH', govde: { formId, islem: 'yeniden-ac' } }), await api(p, '/api/ulke/hasta-formu', { method: 'PATCH', govde: { formId, islem: 'geri-cek' } }),
+      ]
+      kontrol('intake: account B and account A\'s patient — reading the forms, asking for one (with or without a new link), reopening and withdrawing each answer exactly like "does not exist", and nothing changed (forms and links)', !!formId && f.every((r) => r.s === 404 && r.t === olmayan.t) && JSON.stringify(await tabloOku('ulke_hasta_formlari')) === once && (await tabloOku('ulke_portal_erisimleri')).filter((e) => !e.iptal_at).length === 1, f.map((r) => r.s).join(' '))
+      const { H, token } = portalOturumu
+      const hastayla = await H.evaluate(async (u, o) => { const r = await fetch(u, { credentials: 'same-origin', headers: { 'x-notya-portal-baglanti': o } }); return r.status }, adres(`/api/ulke/hasta-formu?hasta=${hastaA}`), ozetle(token))
+      const hekimle = await api(A, '/api/ulke/portal/form')
+      kontrol('intake: the doctor\'s form routes never accept a patient\'s session, and the patient\'s form route never accepts a doctor\'s', hastayla === 401 && hekimle.s === 401, `${hastayla} ${hekimle.s}`)
+    }
     if (P.randevu) kontrol('portal: account B\'s own list of requests is empty', JSON.stringify((await api(p, '/api/ulke/hasta-portali/istekler')).j) === '{"istekler":[]}')
     // Account A withdraws the access: the patient's open page asks for the PIN again, and the link opens nothing.
     const { H, pin, PM } = portalOturumu
@@ -491,7 +649,7 @@ if (P.portal) {
     await H.close()
   }
   await p.close()
-  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', ...(P.portal ? ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri'] : [])]
+  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', ...(P.portal ? ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri'] : []), ...(P.form ? ['ulke_hasta_formlari'] : [])]
   const yabanciSatir = []
   let toplam = 0
   for (const ad of tablolar) for (const s of await tabloOku(ad)) { toplam++; if (s.ulke !== P.kod) yabanciSatir.push(`${ad}:${s.ulke}`) }

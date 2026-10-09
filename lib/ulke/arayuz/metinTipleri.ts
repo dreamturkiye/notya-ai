@@ -477,3 +477,105 @@ export type PortalMetni = {
     readonly yalniz: string
   }
 }
+
+/**
+ * NOTYA-ULKE-INTAKE-01 — the INTAKE FORM's catalogue (feature `hastaFormu`), once per language form. THE SCREENS' OWN
+ * WORDS ONLY: the questions are clinical content and live in the pack's clinical half (lib/ulke/intake/tipler.ts).
+ *
+ *   hekim   the DOCTOR's controls: asking for the form, the invitation, the answers. Read in the account's form.
+ *   davet   the INVITATION the doctor copies and sends: read by the PATIENT, written in the patient's form.
+ *   hasta   the form as the PATIENT sees it on their own page. Read in the patient's form.
+ *           davet and hasta are PATIENT-FACING: a native reader reads these first.
+ *   birim   the name of each unit of measure the pack uses (key: the unit's code — cm, in, kg, lb, C, F).
+ *
+ * Placeholders: '%' where a sentence carries one value, '%1' '%2' where it carries two (see each key).
+ */
+export type FormMetni = {
+  readonly hekim: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly durumYok: string
+    /** % the day the form was asked for */
+    readonly durumBekliyor: string
+    /** % the day the patient last saved */
+    readonly durumTaslak: string
+    /** % the day the patient submitted */
+    readonly durumGonderildi: string
+    readonly iste: string
+    readonly bekliyor: string
+    readonly yapilamadi: string
+    readonly istendi: string
+    readonly acikVar: string
+    readonly davetBaslik: string
+    readonly davetDil: string
+    readonly davetIzoh: string
+    /** The patient already has a link: it cannot be shown again, and the text refers to it. */
+    readonly baglantiVar: string
+    readonly yeniBaglanti: string
+    /** What a new link does to the old one — shown BEFORE the doctor confirms. */
+    readonly yeniBaglantiUyari: string
+    readonly yeniBaglantiOnay: string
+    readonly vazgec: string
+    readonly cevaplar: string
+    /** "Said by the patient. Not verified." */
+    readonly beyan: string
+    /** The same, for a form a parent or guardian filled in. */
+    readonly veliBeyani: string
+    /** The answers are not used when the note is written. */
+    readonly notaGirmez: string
+    /** The pack's questions changed after this form was asked for. */
+    readonly surumFarkli: string
+    readonly yenidenAc: string
+    readonly yenidenAcUyari: string
+    readonly yenidenAcildi: string
+    readonly geriCek: string
+    readonly geriCekildi: string
+    readonly oncekiler: string
+  }
+  readonly davet: {
+    /** %1 the doctor's name, %2 the address of the patient's page */
+    readonly metin: string
+    /** % the address of the patient's page */
+    readonly metinAdsiz: string
+    /** % the doctor's name. For a patient who already has the link: names no address. */
+    readonly baglantisiz: string
+    readonly baglantisizAdsiz: string
+  }
+  readonly hasta: {
+    readonly bekliyorBaslik: string
+    readonly bekliyorAciklama: string
+    /** The same, for a parent or guardian. */
+    readonly veliAciklama: string
+    readonly baslat: string
+    readonly devam: string
+    readonly yenidenAcildi: string
+    readonly rizaBaslik: string
+    readonly rizaKabul: string
+    readonly rizaGerekli: string
+    readonly zorunlu: string
+    readonly evet: string
+    readonly hayir: string
+    readonly kaydediliyor: string
+    readonly kaydedildi: string
+    readonly kaydedilemedi: string
+    readonly ileri: string
+    readonly geri: string
+    /** %1 the number of this part, %2 how many parts there are */
+    readonly bolum: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly gonderilemedi: string
+    readonly gonderUyari: string
+    readonly eksik: string
+    /** %1 the smallest, %2 the largest number the question accepts */
+    readonly sayiGecersiz: string
+    readonly gonderildiBaslik: string
+    /** % the day the form was submitted */
+    readonly gonderildi: string
+    readonly cevaplarim: string
+    readonly degistirilemez: string
+    readonly kapat: string
+  }
+  /** Key: a unit code of the pack's `uygulama.birimler`. */
+  readonly birim: Readonly<Record<string, string>>
+}

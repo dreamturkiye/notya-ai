@@ -47,6 +47,8 @@ export const ULKE_TABLOLARI = [
   'ulke_hasta_ozetleri',
   'ulke_portal_kayitlari',
   'ulke_randevu_istekleri',
+  // NOTYA-ULKE-INTAKE-01 — the intake form a patient fills in before a visit (migration 138).
+  'ulke_hasta_formlari',
 ] as const
 export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
 
@@ -55,13 +57,15 @@ export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
  * Only the server's routes reach them. (Every other country table lets a signed-in account read its own rows of its
  * own country, as a second line behind the server.)
  */
-export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri']
+export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari']
 
 /** Database functions a country build may call. Each takes the country as `p_ulke`. */
 export const ULKE_ISLEVLERI = [
   'ulke_not_onayla', 'davet_kodu_kullan', 'davet_kodu_iade',
   // NOTYA-ULKE-PORTAL-01 (migrations 136, 137)
   'ulke_kullanim_ekle', 'ulke_portal_erisim_ver', 'ulke_portal_erisim_iptal', 'ulke_portal_deneme_al', 'ulke_portal_deneme_sonucu', 'ulke_ozet_paylas', 'ulke_randevu_istegi_kabul',
+  // NOTYA-ULKE-INTAKE-01 (migration 138)
+  'ulke_hasta_formu_iste',
 ] as const
 export type UlkeIslevi = (typeof ULKE_ISLEVLERI)[number]
 

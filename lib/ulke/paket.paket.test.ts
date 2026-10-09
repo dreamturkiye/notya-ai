@@ -109,6 +109,43 @@ describe('every pack is complete', () => {
       }
       { const p = klon(paket); delete (p.ozellikler as Record<string, unknown>).cekirdekMuayene; iceriyor(yerler(p, arayuz, klinik), 'ozellikler.hastaPortali: the patient portal needs the signed-in application') }
     }
+    // the intake form: no catalogue, an entry to be supplied, a sentence that lost its placeholder, an invitation whose
+    // address is not last, a unit without a name; no questions, a role without a set, a question of an unknown type,
+    // a key used by two roles, a text missing in one form, a set that does not say who reviewed it; the form without the portal
+    if (paket.ozellikler.hastaFormu && arayuz.formMetinleri && klinik?.hastaFormu) {
+      type F = { hekim: { durumBekliyor: string }; davet: { metin: string; baglantisizAdsiz: string }; hasta: { gonder: string }; birim: Record<string, string> }
+      const fm = (a: UlkeArayuzu) => a.formMetinleri![d] as unknown as F
+      { const a = klon(arayuz); delete (a.formMetinleri as Record<string, unknown>)[d]; iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}]: the intake form is on and this form has no catalogue`) }
+      { const a = klon(arayuz); fm(a).hasta.gonder = eksik('send'); iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}].hasta.gonder: to be supplied`) }
+      { const a = klon(arayuz); fm(a).hekim.durumBekliyor = 'Asked.'; iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}].hekim.durumBekliyor: must hold "%"`) }
+      { const a = klon(arayuz); fm(a).davet.metin = 'Open %2 please, says %1.'; iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}].davet.metin: must end with "%2"`) }
+      { const a = klon(arayuz); fm(a).davet.baglantisizAdsiz = 'Open %.'; iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}].davet.baglantisizAdsiz: carries a placeholder`) }
+      { const a = klon(arayuz); const kod = paket.uygulama.birimler.boy; delete fm(a).birim[kod]; iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}].birim.${kod}: the pack measures in this unit`) }
+      { const a = klon(arayuz); (fm(a) as unknown as { birim: unknown }).birim = eksikAyar('unit names'); iceriyor(yerler(paket, a, klinik), `arayuz.formMetinleri[${d}].birim: to be supplied: unit names`) }
+      iceriyor(yerler(paket, arayuz, { ...klinik, hastaFormu: undefined }), 'klinik.hastaFormu: the intake form is on and the clinical half brings no questions')
+      const kl = klinik, kaynak = klinik.hastaFormu
+      const hf = () => klon(kaynak)
+      const ileK = (f: ReturnType<typeof hf>) => yerler(paket, arayuz, { ...kl, hastaFormu: f })
+      { const f = hf(); (f as unknown as { cekirdek: unknown }).cekirdek = eksikAyar('core questions'); const l = ileK(f); iceriyor(l, 'klinik.hastaFormu.cekirdek: to be supplied: core questions'); assert.equal(l.length, 1, `a set still to be supplied is reported once:\n${l.join('\n')}`) }
+      { const f = hf(); (f as unknown as { roller: unknown }).roller = eksikAyar('role questions'); const l = ileK(f); iceriyor(l, 'klinik.hastaFormu.roller: to be supplied: role questions'); assert.equal(l.length, 1, `a set still to be supplied is reported once:\n${l.join('\n')}`) }
+      { const f = hf(); f.surum = eksik('stamp'); iceriyor(ileK(f), 'klinik.hastaFormu.surum: to be supplied') }
+      { const f = hf(); (f.riza.metin as Record<string, string>)[d] = ' '; iceriyor(ileK(f), `klinik.hastaFormu.riza.metin.${d}: no text in this language form`) }
+      const ilk = klinik.hastaFormu.cekirdek.bolumler[0]
+      { const f = hf(); (f.cekirdek.bolumler[0].sorular[0].metin as Record<string, string>)[d] = eksik('question'); iceriyor(ileK(f), `klinik.hastaFormu.cekirdek.${ilk.anahtar}.${ilk.sorular[0].anahtar}.metin.${d}: to be supplied`) }
+      { const f = hf(); (f.cekirdek.bolumler[0].sorular[0] as unknown as { tur: string }).tur = 'slider'; iceriyor(ileK(f), `klinik.hastaFormu.cekirdek.${ilk.anahtar}.${ilk.sorular[0].anahtar}: "slider" is not a question type of the kit`) }
+      { const f = hf(); (f.cekirdek as unknown as { inceleme: unknown }).inceleme = {}; iceriyor(ileK(f), 'klinik.hastaFormu.cekirdek.inceleme: must say who wrote the set') }
+      const roller = paket.uygulama.roller ?? []
+      if (roller.length) {
+        { const f = hf(); delete (f.roller as Record<string, unknown>)[roller[0]]; iceriyor(ileK(f), `klinik.hastaFormu.roller.${roller[0]}: the role has no questions of its own`) }
+        { const f = hf(); (f.roller as Record<string, unknown>)['no-such-role'] = f.roller[roller[0]]; iceriyor(ileK(f), 'klinik.hastaFormu.roller.no-such-role: questions for a role the pack does not have') }
+      }
+      if (roller.length > 1) {
+        // LEAK RULE in the pack check: one key, one question — a question copied into a second role is refused by name.
+        const f = hf(); const q = f.roller[roller[0]].sorular[0]; (f.roller[roller[1]] as unknown as { sorular: unknown[] }).sorular = [...f.roller[roller[1]].sorular, q]
+        iceriyor(ileK(f), `klinik.hastaFormu.roller.${roller[1]}.${q.anahtar}: the key is also used at hastaFormu.roller.${roller[0]}`)
+      }
+      { const p = klon(paket); delete (p.ozellikler as Record<string, unknown>).hastaPortali; iceriyor(yerler(p, arayuz, klinik), 'ozellikler.hastaFormu: the intake form needs the patient portal') }
+    }
     // the landing page
     if (paket.ozellikler.acilisSayfasi && arayuz.acilis) {
       const f = arayuz.acilis.diller[0]
@@ -132,10 +169,10 @@ describe('every pack is complete', () => {
   })
 
   it('the scaffold\'s shape file lists exactly the keys this pack fills (a key added to the kit cannot be forgotten there)', () => {
-    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !arayuz.portalMetinleri || !paket.uygulama) return
+    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !arayuz.portalMetinleri || !arayuz.formMetinleri || !paket.uygulama) return
     const dosya = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'))
     const simdi = paketSekli(paket, arayuz)
-    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
+    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'form', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
     // the file holds key paths only: no sentence of this pack, no letter outside ASCII
     assert.doesNotMatch(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'), /[^\x00-\x7F]/)
   })

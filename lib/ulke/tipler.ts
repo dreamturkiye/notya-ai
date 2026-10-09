@@ -9,6 +9,7 @@
  */
 
 import type { ComponentType } from 'react'
+import type { HastaFormuIcerigi } from './intake/tipler'
 
 /** ISO 3166-1 alpha-2, lower case. Adding a country = a new folder under countries/ + a branch in countries/active/. */
 export const ULKE_KODLARI = ['tr', 'uz'] as const
@@ -56,6 +57,12 @@ export type Ozellik =
    * Needs `cekirdekMuayene`; its appointment parts need `randevu`. Settings come from the pack (`uygulama.portal`).
    */
   | 'hastaPortali'
+  /**
+   * NOTYA-ULKE-INTAKE-01 — the intake form: the doctor asks a patient to fill in a form before a visit; the patient
+   * fills it in on their own page of the portal; the doctor reads the answers, marked as the patient's own words.
+   * Needs `hastaPortali`. The questions are the pack's clinical content (countries/active/klinik → `hastaFormu`).
+   */
+  | 'hastaFormu'
   /** Doktor Araçları (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -409,6 +416,12 @@ export type UlkeKlinigi = {
   hastaOzetiTalimati?: (dil: DilKodu) => string | null
   /** The message that carries the approved note to the model, in the summary's language. The note and nothing else. */
   hastaOzetiGirdisi?: (dil: DilKodu, icerik: NotIcerigi) => string
+  /**
+   * NOTYA-ULKE-INTAKE-01 — THE QUESTIONS of the intake form: a core set and one set per role, the consent sentence,
+   * and who wrote and who reviewed each set (lib/ulke/intake/tipler.ts). The pack's own clinical content; core holds
+   * no question. Required where `hastaFormu` is on. Answers are NOT given to the model that writes a note.
+   */
+  hastaFormu?: HastaFormuIcerigi
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

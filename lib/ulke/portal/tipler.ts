@@ -24,6 +24,11 @@ export type PortalIcerigi = {
     gunler: string[]
     son: { durum: IstekDurumu; gunler: string[]; olusturuldu: string; randevu: { gun: string; saat: string } | null } | null
   } | null
+  /**
+   * NOTYA-ULKE-INTAKE-01 — the intake form: is one waiting to be filled in, or was one sent? null = neither.
+   * Absent = the country has no intake form. No question and no answer is here: the form is read by itself.
+   */
+  form?: { durum: 'bekliyor' | 'taslak' | 'gonderildi'; veli: boolean; gonderildi: string | null; yenidenAcildi: boolean } | null
   /** When this session ends. */
   bitis: string
 }

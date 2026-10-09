@@ -7,7 +7,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 ## The short version
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **769 for a one-language country (735 texts, 34 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **839 for a one-language country (802 texts, 37 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
@@ -40,7 +40,7 @@ node scripts/ulke-yeni.mjs gb --dil en --yol /uk
 
 It writes:
 
-- `countries/<code>/`, 15 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
+- `countries/<code>/`, 17 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
 - the registration: `lib/ulke/tipler.ts` (the code list, and the language if it is new), the three doors `countries/active/{index,klinik,arayuz}.ts`, and `countries/tumu.ts`;
 - `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 119 gates, all unticked, the six about the country's own database among them (section M).
 
@@ -64,11 +64,13 @@ Counts are for one language form. A second language or script repeats every text
 | 8 | **Application**: first login, settings, home, patients, visit, note | `uygulama/metinler.ts` | 144 texts | native writer; the consent sentence with a lawyer |
 | 9 | **Appointments**: working pattern, calendar, booking, reminder | `uygulama/randevuMetinleri.ts` | 113 texts | native writer |
 | 9b | **Patient portal**: the doctor's controls (access, summary, requests) and what the **patient** reads (the PIN page, their own page) | `uygulama/portalMetinleri.ts` | 100 texts, 38 of them patient-facing | native writer; the patient-facing ones first |
+| 9c | **Intake form, the screens**: the doctor's card, the invitation the doctor copies, the form as the **patient** reads it, and the name of each unit of measure the pack uses | `uygulama/formMetinleri.ts` | 63 texts and 1 setting (the unit names); 33 of the texts are patient-facing | native writer; the patient-facing ones first |
+| 9d | **Intake form, the questions**: the core set every patient gets, one set per role, the consent sentence for a patient and for a guardian, and two version stamps | `klinik/hastaFormu.ts` | 4 texts, 2 settings (the core set; the role sets: Uzbekistan 23 and 228 questions) | **a local clinician per role**; the consent sentence with a lawyer |
 | 10 | **Landing page**: copy, 12 section anchors, language names, fonts, word mark; and the **price list** of its price section (what each plan costs a month, or "on request": data, never a number in the copy) | `acilis/icerik.ts` | 298 texts, 1 setting | marketing, native review; prices: the owner |
 | 11 | **Leak list**: what marks content as this country's | `sizintiTerimleri.ts` | 2 entries to start, growing | engineering |
 | 12 | Brand word mark | `arayuz.ts` | 1 text | the owner |
 
-Rows 2 to 4 count as one item each for the build and are the largest pieces of real work: a list of roles is one marker and forty decisions.
+Rows 2 to 4 and the two question sets of row 9d count as one item each for the build and are the largest pieces of real work: a list of roles is one marker and forty decisions; the role sets of the intake form are one marker and, for Uzbekistan, 228 questions in three forms.
 
 Some keys are required only under a condition and are written as comments in the template: the time-zone label and the portal's "times are in … time" sentence (if the country has several zones), the second-name label, the identity-number label. The pack check asks for each exactly when the setting that needs it is on.
 
@@ -78,7 +80,7 @@ Some keys are required only under a condition and are written as comments in the
 
 Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the baseline of a country database and its migrations; the tests.
 
-Off for every new country until built and reviewed for it: tools, the assistant in text and voice, intake forms, consultation and messaging, clinic accounts, the voice profile, image evaluation. The patient portal is part of the kit since 2026-10-09 (next section).
+Off for every new country until built and reviewed for it: tools, the assistant in text and voice, consultation and messaging, clinic accounts, the voice profile, image evaluation. The patient portal and the intake form are part of the kit since 2026-10-09 (next two sections).
 
 ## The patient portal
 
@@ -95,7 +97,46 @@ What a **country** supplies:
 | **How long a link stays valid** | `index.ts`, `uygulama.portal.baglantiGecerlilikGun` | A whole number of days, 1 to 365. No default: **the owner confirms it**; how long a patient's access may stand is a question for a lawyer. |
 | **The ambulance number** | `index.ts`, `uygulama.portal.acilNumara` | **Local content with no default.** A string, confirmed by a local source before any patient sees the portal; or `null`, and the patient's page says only that it is not for emergencies and names no number. The number is never written into a sentence: a catalogue sentence with a digit in it fails the pack check. |
 
-**Not in the portal, and not half-built:** intake forms, messaging, documents and uploads, payments, automatic reminders.
+**Not in the portal, and not half-built:** messaging, documents and uploads, payments, automatic reminders. (Intake forms were added by NOTYA-ULKE-INTAKE-01: next section.)
+
+## The intake form: how a country supplies its questions
+
+Part of the kit since NOTYA-ULKE-INTAKE-01 (2026-10-09), and switched on in a new country's pack by the scaffold (`hastaFormu`; it needs `hastaPortali`). The doctor asks a patient to fill in a form before a visit; the patient fills it in on their own page; the doctor reads the answers, marked as the patient's own words and not verified. What it does, step by step, is in `docs/COUNTRY-PACK-UZBEKISTAN.md` ("The intake form").
+
+What is the **kit's**, the same in every country: the screens; the **seven question types** (one choice, several choices, short text, long text, yes or no with a line of detail, a date, a number with its unit; `lib/ulke/intake/tipler.ts`); the rules (consent before the first question; saved as the patient goes; submitted once and read-only afterwards; the doctor can reopen; a form holds the core questions and the questions of **its doctor's role and of no other**; for a patient below the pack's guardian age the form is addressed to a parent or guardian; the answers are encrypted, bound to country, doctor and patient, and **not given to the model that writes the note**); the table (in the baseline).
+
+What a **country** supplies:
+
+| What | Where | Note |
+|---|---|---|
+| The screens' text, once per language form | `uygulama/formMetinleri.ts` | 63 texts in four groups: `hekim` (the doctor's card), `davet` (the invitation the doctor copies and sends: the link's place is last, and there is no place for the PIN), `hasta` (the form on the patient's page), and `birim`: the name of each unit code the pack chose in `uygulama.birimler`, as a patient reads it. |
+| **The core questions** | `klinik/hastaFormu.ts`, `cekirdek` | Sections, each with its questions. What every patient is asked, whatever the doctor's role. |
+| **One set of questions per role** | `klinik/hastaFormu.ts`, `roller` | Keyed by the role keys of `klinik/roller.ts`. **Every role needs a set**, and a question belongs to one role: every question key is unique in the pack. A country without roles states `{}`. |
+| The consent sentence, for the patient and for a guardian, and two version stamps | `klinik/hastaFormu.ts`, `riza`, `surum` | The stamps are stored with every form. Change the question set's stamp whenever a question changes, and the consent stamp whenever the sentence changes. `hukukcuInceledi` stays `false` until a lawyer has read the sentence. |
+
+How a question is written (the shape is the kit's type, so a mistake is a type error or a line of the pack check):
+
+| Field | Meaning |
+|---|---|
+| `anahtar` | the key the answer is stored under: lower-case letters, digits, underscores; unique in the whole pack. Never shown. Do not reuse the key of a removed question for a different question. |
+| `tur` | one of the seven types. A choice lists `secenekler` (each with its own key and its name; `tek: true` for "none of these"). Yes or no may carry `ayrinti`, the label of the line asked after "yes". |
+| `metin`, `veliMetni` | the question as it is put to the patient, and, where the wording differs, to a parent about their child. One entry per language form of the pack. |
+| `kime` | `'yetiskin'` or `'cocuk'`: asked only of an adult, or only on the guardian form. A whole section can carry it. |
+| `cinsiyet` | asked only where the patient's recorded sex is this one, and where none is recorded. |
+| `zorunlu` | the form cannot be submitted without an answer. |
+| a number | either `olcu: 'boy' \| 'agirlik' \| 'sicaklik'` — the unit is then **the pack's** (`uygulama.birimler`) and must not be written into the question — or a unit of the question's own (`birim`, with `enAz` and `enCok`). |
+| `inceleme` | on the core set and on each role's set: `{ makineYazimi, klinisyen }`. A set is reviewed when `klinisyen` names the local clinician who read and signed it. |
+
+**Rules a pack must keep, because no machine can check them.**
+
+- **Questions, never reference content.** A form may ask "which medicines do you take?" as free text. It must not hold a drug list, a vaccination calendar, a screening schedule, a validated questionnaire, a score, a triage rule or an instruction to a patient unless a local clinician supplied and signed it. Where such content is wanted, keep a marked, empty slot and list it in the country's record (Uzbekistan: `countries/uz/klinik/hastaFormu/yerelIcerik.ts`, 18 slots).
+- **Nothing of another country.** Another country's form may serve as a list of topics; none of its text is copied or translated, and what exists only there (its identity number, its payer and insurance section, its consent wording) is not carried over.
+- **Local clinicians review per role**, and the record says for each role whether its set has been read. Until then every file says "machine-written" at its top.
+- The guardian form should begin with who is filling it in. Questions about the parents (for example their marital status) belong to the guardian form only.
+
+The pack check (`node scripts/ulke-paket-denetimi.mjs --ulke <code>`) refuses: a role without a set; a repeated key; a choice with fewer than two options; a text missing in one of the pack's forms; a unit code without a name; an invitation whose link is not the last thing in it; a sentence without the place for its value; a question for a role the pack does not have; the form switched on without the portal. A country's own content test should scan every question for another country's words and for the wrong script (Uzbekistan's: `countries/uz/klinik/hastaFormu/hastaFormu.test.ts`).
+
+**Not in the intake form, and not half-built:** the answers as input to the model, file uploads, automatic sending, reminders, scoring.
 
 ## The country's own database
 
@@ -173,7 +214,7 @@ The pack check lists whatever is left. Uzbekistan does all of this.
 
 **Each country still needs its own pack.** Law, consent wording, units, time zones, date and clock format, identity rules, phone rules, role names, assistant names and prices differ between them, and the walls and the leak scan work per country; each also has a database of its own.
 
-**What should be written once is the English text.** Of a pack's 735 texts, about 703 are language rather than country: the core surfaces, the application, appointments, the patient portal, the instructions to the model and most of the landing copy. The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
+**What should be written once is the English text.** Of a pack's 802 texts, about 770 are language rather than country: the core surfaces, the application, appointments, the patient portal, the intake form's screens, the instructions to the model and most of the landing copy. (The intake **questions** are clinical content and are counted apart: two markers, however many questions.) The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
 
 **That shared catalogue does not exist yet.** Today the scaffold gives each country its own full set of items to supply. Building the shared catalogue is its own job: the English text, a place for it in the kit, and a scaffold that points an English-speaking pack at it. It is recorded in `docs/OPEN-COMMITMENTS.md`.
 
@@ -198,14 +239,31 @@ A throwaway English-language country, `zz`, was created in a temporary copy of t
 
 Counts in this table are those of that run. Since NOTYA-UZ-FIYAT-UNVAN-01 (2026-10-09) the landing page has a price section with a price list: 36 more texts and one more setting, so the scaffold then answered 665 items (633 texts, 32 settings). Since NOTYA-ULKE-PORTAL-01 (2026-10-09) it writes the patient portal too: 15 files, 119 gates, **769 items (735 texts, 34 settings)**: 100 portal texts, 2 texts for the summary's instruction, and 2 settings (link validity, ambulance number). **For the portal the proof was repeated only in part:** a throwaway `zz` was scaffolded in a temporary copy and type-checked clean; it was not filled, built and walked again (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-PORTAL-01h). The portal's rules and screens run in the test suite for every pack, and both walk-throughs walk it for Uzbekistan.
 
+**Repeated in full with the patient portal and the intake form (2026-10-09, NOTYA-ULKE-INTAKE-01).** The scaffold now writes 17 files and 119 gates and answers **839 items (802 texts, 37 settings)**: 64 more for the intake form's screens (63 texts and the unit names) and 6 more for its questions (two version stamps, two consent sentences, the core set, the role sets). A throwaway `zz` was again created in a temporary copy, filled, type-checked, built, tested, walked through and deleted; nothing of it is in the repository.
+
+| Step | Result |
+|---|---|
+| `node scripts/ulke-yeni.mjs zz --dil en --yol /zz` | 17 files; 839 items to supply |
+| Decided by hand | the 37 settings (with a core set of 7 questions and two role sets of 2 questions each), 34 short texts that are facts with a format, 3 conditional labels |
+| Filled mechanically | 768 texts, each with its own key path as placeholder wording. **Not real English.** |
+| Settings chosen to differ from Uzbekistan | as before: 12-hour clock, month-first dates, two time zones, pounds / inches / Fahrenheit, guardian age 16, two roles; and **no ambulance number** |
+| Type check, pack check | clean |
+| Pack-parameterised tests with three packs | 121 of 121 for each of `tr`, `uz`, `zz` |
+| `NOTYA_COUNTRY=zz npm run build:ulke` | built; build proof: the `zz` pack and no other |
+| Pack-neutral walk-through | 276 of 276: the portal (58 checks) and the intake form (56) among them, with the guardian form at the pack's age of 16, height and weight asked in inches and pounds, the pack's own questions and no other role's |
+| Found by the proof | the build stopped on one mechanically filled sentence that lacked the place for its value (the portal's time-zone sentence): the pack check doing its work, not a fault of the kit |
+
+This closes what was left open for the portal (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-PORTAL-01h): a 12-hour clock, several time zones and a pack with no ambulance number have now been walked in a browser.
+
 From scaffold to a passing walk-through took about 16 minutes of machine time, two production builds included. That measures the mechanism only: supplying real, reviewed content is the work, and it is counted in the table of items above.
 
 ## Known gaps
 
-- **Units** are a setting every pack states and the pack check validates, but no shared screen shows a measurement yet, so nothing reads them.
+- **Units**: the intake form is the first screen that reads them (height, weight and temperature are asked in the pack's units, each named by the pack). The visit note still shows no measurement in a unit.
 - **Instructions to the model** are assembled inside each pack (`klinik/talimatlar.ts`); the kit has no shared builder. The template's own small builder covers one language.
 - **Scaffold hints** are key paths, not reference wording.
 - **Prices** are a list the pack states (plan → amount a month, or on request) and the landing layout writes with the pack's number rules. Nothing else in the kit shows money yet.
-- **Five product pieces** are not in the kit and exist for no country but Türkiye: intake forms, tools, consultation and messaging, the assistant in text and voice, clinic accounts. (The patient portal is in the kit since 2026-10-09, without intake forms, messaging, documents, payments or automatic reminders.)
+- **Four product pieces** are not in the kit and exist for no country but Türkiye: tools, consultation and messaging, the assistant in text and voice, clinic accounts. (The patient portal and the intake form are in the kit since 2026-10-09, without messaging, documents, payments or automatic reminders; the form's answers are not given to the model.)
+- **Intake answers stay beside the note.** They are shown to the doctor and never given to the model that writes the note; whether and how they should be is an open decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-INTAKE-01b).
 - **The portal's link validity and ambulance number** are settings a pack must state and that nothing can verify by machine: the first is the owner's, the second needs a local source.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.

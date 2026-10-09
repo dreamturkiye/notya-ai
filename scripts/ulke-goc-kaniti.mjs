@@ -22,6 +22,10 @@
  *      link locks; a summary exists only for an approved note of that patient; sharing and its record happen
  *      together; accepting a request books under the no-double-booking rule or not at all; none of these tables can
  *      be read by a browser session, and none of the functions called by one.
+ *   F. THE INTAKE FORM (migration 138): asking for the form gives the patient access in the same step or writes
+ *      nothing; one open form per patient, also for two requests at the same moment; a form belongs to one patient
+ *      of one doctor in one country and never moves; the answers of a submitted form do not change and a withdrawn
+ *      form does not change at all; the table cannot be read by a browser session, nor the function called by one.
  *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave nothing.
  *   T. NOT ON ANY OTHER DATABASE. On a database that is NOT a country database — here one shaped like the Turkish
  *      product's, with its own tables and rows — the baseline refuses, and every migration written since the first
@@ -546,6 +550,102 @@ ok('132: the private bucket exists once', (await c.query(`select count(*)::int n
   }
 }
 
+// ── F. the intake form (migration 138) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (tablo, kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ${tablo} where ${kosul}`, par)).rows[0].n
+  const PINH = `scrypt$16384$8$1$${'A'.repeat(22)}==$${'B'.repeat(43)}=`
+  // Token hashes of this section's own (section P used the one-letter ones).
+  const T = (h) => `f${h}`.repeat(32)
+  const SON = '2027-06-01T00:00:00Z', SIMDI = '2027-01-10T08:00:00Z'
+  const iste = async (ulke, d, h, s = {}, istemci = c) => (await istemci.query(`select public.ulke_hasta_formu_iste($1, $2, $3, $4, $5, 'surum-1', $6, $7, $8, $9, $10, $11) as r`, [ulke, d, h, s.randevu ?? null, s.rol ?? 'kardiyoloji', s.veli ?? false, s.yeni ?? false, 'token' in s ? s.token : T('a'), 'pin' in s ? s.pin : PINH, SON, s.simdi ?? SIMDI])).rows[0].r
+  const F1 = await hasta(D1), F2 = await hasta(D1), F3 = await hasta(D2)
+
+  // asking for the form gives access in the same step
+  const r1 = await iste('uz', D1, F1)
+  ok('F. asking: a patient without a link gets the form AND a link in one call', r1.durum === 'TAMAM' && r1.yeni_form === true && r1.erisim === 'YENI' && (await say('ulke_hasta_formlari', 'patient_id = $1', [F1])) === 1 && (await say('ulke_portal_erisimleri', 'patient_id = $1 and iptal_at is null', [F1])) === 1, JSON.stringify(r1))
+  ok('F. asking: the form is stamped with its country, doctor, patient, role, version and guardian mark; nothing is saved yet', JSON.stringify(await q(`select ulke, doctor_id, patient_id, rol, soru_surumu, veli, durum, cevaplar_encrypted from ulke_hasta_formlari where id = $1`, [r1.form_id])) === JSON.stringify([{ ulke: 'uz', doctor_id: D1, patient_id: F1, rol: 'kardiyoloji', soru_surumu: 'surum-1', veli: false, durum: 'bekliyor', cevaplar_encrypted: null }]))
+  ok('F. asking: the link is recorded for the doctor exactly as when access is given by hand', (await say('ulke_portal_kayitlari', `patient_id = $1 and olay = 'erisim'`, [F1])) === 1)
+  const r2 = await iste('uz', D1, F1, { token: T('b') })
+  ok('F. asking again: the open form is kept and the working link is left alone', r2.durum === 'TAMAM' && r2.form_id === r1.form_id && r2.yeni_form === false && r2.erisim === 'VAR' && (await say('ulke_portal_erisimleri', 'patient_id = $1', [F1])) === 1, JSON.stringify(r2))
+  const r3 = await iste('uz', D1, F1, { token: T('c'), yeni: true })
+  ok('F. asking with "a new link": the link before it is withdrawn in the same step', r3.erisim === 'YENI' && r3.form_id === r1.form_id && JSON.stringify(await q(`select token_hash, iptal_at is null acik from ulke_portal_erisimleri where patient_id = $1 order by created_at, token_hash`, [F1])) === JSON.stringify([{ token_hash: T('a'), acik: false }, { token_hash: T('c'), acik: true }]), JSON.stringify(r3))
+  await c.query(`update ulke_portal_erisimleri set kilitlendi_at = now() where patient_id = $1 and iptal_at is null`, [F1])
+  ok('F. asking: a locked link is not access — a new one is made', (await iste('uz', D1, F1, { token: T('d') })).erisim === 'YENI')
+  const once = await say('ulke_hasta_formlari') + await say('ulke_portal_erisimleri')
+  ok('F. asking for ANOTHER doctor\'s patient → NOT_FOUND', (await iste('uz', D1, F3)).durum === 'NOT_FOUND')
+  ok('F. asking under ANOTHER country → NOT_FOUND', (await iste('kz', D1, F1)).durum === 'NOT_FOUND' && (await iste('uz', K1, HK)).durum === 'NOT_FOUND')
+  const ra = (await ekle(D1, F1, '2027-04-01T05:00:00Z', '2027-04-01T05:30:00Z')).rows[0].id, rb = (await ekle(D1, F2, '2027-04-01T06:00:00Z', '2027-04-01T06:30:00Z')).rows[0].id
+  ok('F. asking from ANOTHER patient\'s appointment → NOT_FOUND', (await iste('uz', D1, F1, { randevu: rb })).durum === 'NOT_FOUND')
+  ok('F. asking where a link is needed and no token or PIN hash is given → GECERSIZ', (await iste('uz', D1, F2, { token: null })).durum === 'GECERSIZ' && (await iste('uz', D1, F2, { pin: null })).durum === 'GECERSIZ')
+  ok('F. … and none of the refused calls wrote anything', (await say('ulke_hasta_formlari') + await say('ulke_portal_erisimleri')) === once)
+  ok('F. asking from the patient\'s own appointment: the open form is linked to it', (await iste('uz', D1, F1, { randevu: ra })).durum === 'TAMAM' && (await q(`select randevu_id from ulke_hasta_formlari where id = $1`, [r1.form_id]))[0].randevu_id === ra)
+  {
+    // The link's own constraint fails INSIDE the call (a token hash that is already taken): the form is not left behind.
+    let kod = 'none'
+    try { await iste('uz', D1, F2, { token: T('c') }) } catch (e) { kod = e.code }
+    ok('F. all or nothing: when giving access fails inside the call, no form is left behind', kod === '23505' && (await say('ulke_hasta_formlari', 'patient_id = $1', [F2])) === 0, kod)
+  }
+  {
+    const a = await baglan(), b = await baglan()
+    const [x, y] = await Promise.all([iste('uz', D1, F2, { token: T('e') }, a), iste('uz', D1, F2, { token: T('f') }, b)])
+    ok('F. two requests for the same patient at the same moment: ONE form, ONE link', x.form_id === y.form_id && [x.yeni_form, y.yeni_form].filter(Boolean).length === 1 && [x.erisim, y.erisim].sort().join() === 'VAR,YENI' && (await say('ulke_hasta_formlari', 'patient_id = $1', [F2])) === 1 && (await say('ulke_portal_erisimleri', 'patient_id = $1', [F2])) === 1, JSON.stringify([x, y]))
+    await a.end(); await b.end()
+  }
+
+  // the keys
+  const FORM = `insert into ulke_hasta_formlari (ulke, doctor_id, patient_id, rol, soru_surumu, veli, randevu_id) values ($1, $2, $3, null, 's', false, $4) returning id`
+  await bekle('F. keys: a second OPEN form for the same patient → refused 23505', FORM, ['uz', D1, F1, null], '23505')
+  await bekle('F. keys: a form for ANOTHER doctor\'s patient → refused 23503', FORM, ['uz', D1, F3, null], '23503')
+  await bekle('F. keys: a form under ANOTHER country for this patient → refused 23503', FORM, ['kz', D1, F1, null], '23503')
+  await bekle('F. keys: a form that names ANOTHER patient\'s appointment → refused 23503', `update ulke_hasta_formlari set randevu_id = $2 where id = $1`, [r1.form_id, rb], '23503')
+  await bekle('F. keys: a role that is not a key → refused 23514', `insert into ulke_hasta_formlari (ulke, doctor_id, patient_id, rol, soru_surumu, veli) values ('uz', $1, $2, 'Not A Role', 's', false)`, [D2, F3], '23514')
+
+  // answers and state
+  const KAYDET = `update ulke_hasta_formlari set durum = 'taslak', cevaplar_encrypted = $2, dil = 'ru', riza_surumu = 'r1', riza_at = now() where id = $1`
+  await bekle('F. state: answers without the consent stamp → refused 23514', `update ulke_hasta_formlari set durum = 'taslak', cevaplar_encrypted = 'x' where id = $1`, [r1.form_id], '23514')
+  await bekle('F. state: "submitted" without answers → refused 23514', `update ulke_hasta_formlari set durum = 'gonderildi', gonderildi_at = now() where id = $1`, [r1.form_id], '23514')
+  await bekle('F. state: "submitted" without its moment → refused 23514', `update ulke_hasta_formlari set durum = 'gonderildi', cevaplar_encrypted = 'x', dil = 'ru', riza_surumu = 'r1', riza_at = now() where id = $1`, [r1.form_id], '23514')
+  await c.query(KAYDET, [r1.form_id, 'sifreli-1'])
+  await c.query(`update ulke_hasta_formlari set cevaplar_encrypted = 'sifreli-2' where id = $1`, [r1.form_id])
+  ok('F. state: a draft is saved and saved again', (await q(`select durum, cevaplar_encrypted from ulke_hasta_formlari where id = $1`, [r1.form_id]))[0].cevaplar_encrypted === 'sifreli-2')
+  await bekle('F. trigger: the role of a form is fixed when it is asked for → refused 23514', `update ulke_hasta_formlari set rol = 'pediatri' where id = $1`, [r1.form_id], '23514')
+  await bekle('F. trigger: so is the guardian mark → refused 23514', `update ulke_hasta_formlari set veli = true where id = $1`, [r1.form_id], '23514')
+  await bekle('F. trigger: a form never moves to another patient → refused 23514', `update ulke_hasta_formlari set patient_id = $2 where id = $1`, [r1.form_id, F2], '23514')
+  await bekle('F. trigger: nor to another country → refused 23514', `update ulke_hasta_formlari set ulke = 'kz' where id = $1`, [r1.form_id], '23514')
+  await c.query(`update ulke_hasta_formlari set durum = 'gonderildi', gonderildi_at = now() where id = $1`, [r1.form_id])
+  await bekle('F. trigger: the answers of a SUBMITTED form do not change → refused 23514', `update ulke_hasta_formlari set cevaplar_encrypted = 'sifreli-3' where id = $1`, [r1.form_id], '23514')
+  await bekle('F. trigger: a submitted form is not withdrawn → refused 23514', `update ulke_hasta_formlari set durum = 'iptal', gonderildi_at = null, iptal_at = now() where id = $1`, [r1.form_id], '23514')
+  const r4 = await iste('uz', D1, F1, { token: T('9') })
+  ok('F. after a submitted form, a new one can be asked for; the submitted one stays', r4.yeni_form === true && r4.form_id !== r1.form_id && (await say('ulke_hasta_formlari', 'patient_id = $1', [F1])) === 2)
+  await bekle('F. reopening a submitted form while another is open → refused 23505', `update ulke_hasta_formlari set durum = 'taslak', gonderildi_at = null, yeniden_acildi_at = now() where id = $1`, [r1.form_id], '23505')
+  await c.query(`update ulke_hasta_formlari set durum = 'iptal', iptal_at = now() where id = $1`, [r4.form_id])
+  await bekle('F. trigger: a WITHDRAWN form does not change at all → refused 23514', `update ulke_hasta_formlari set durum = 'bekliyor', iptal_at = null where id = $1`, [r4.form_id], '23514')
+  await c.query(`update ulke_hasta_formlari set durum = 'taslak', gonderildi_at = null, yeniden_acildi_at = now() where id = $1`, [r1.form_id])
+  await c.query(`update ulke_hasta_formlari set cevaplar_encrypted = 'sifreli-4' where id = $1`, [r1.form_id])
+  ok('F. reopened by the doctor: a draft again, the answers change again', JSON.stringify(await q(`select durum, cevaplar_encrypted, gonderildi_at, yeniden_acildi_at is not null y from ulke_hasta_formlari where id = $1`, [r1.form_id])) === JSON.stringify([{ durum: 'taslak', cevaplar_encrypted: 'sifreli-4', gonderildi_at: null, y: true }]))
+  ok('F. the table has ONE column for answers and none per answer', (await q(`select string_agg(column_name, ',' order by ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name = 'ulke_hasta_formlari'`))[0].k === 'id,ulke,doctor_id,patient_id,randevu_id,rol,soru_surumu,veli,durum,cevaplar_encrypted,dil,riza_surumu,riza_at,gonderildi_at,yeniden_acildi_at,iptal_at,created_at,updated_at')
+
+  // SERVER ONLY
+  {
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(D1, ulke); else await c.query(`set role ${rol}`)
+      for (const sql of [`select 1 from ulke_hasta_formlari limit 1`, `delete from ulke_hasta_formlari`, `update ulke_hasta_formlari set updated_at = now()`, `select public.ulke_hasta_formu_iste('uz', '${D1}', '${F1}', null, null, 's', false, false, '${T('8')}', '${PINH}', now(), now())`, `select public.ulke_hasta_formu_kilidi()`]) { try { await c.query(sql); cikti.push(`${sql.slice(0, 40)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 40)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('F. server only: the doctor\'s own signed-in browser session can read, write and call NONE of it (its own rows included)', girisli.length === 0, girisli.join('; '))
+    ok('F. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select count(*) from ulke_hasta_formlari`); await c.query(`select public.ulke_hasta_formu_iste('uz', $1, $2, null, null, 's', false, false, $3, $4, now() + interval '1 day', now())`, [D2, F3, T('7'), PINH]) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('F. server only: the server\'s role can', sunucu === 'ok' && (await say('ulke_hasta_formlari', 'patient_id = $1', [F3])) === 1, sunucu)
+  }
+}
+
 // ── E. the rollback scripts ──
 const GERI = [...DOSYALAR].reverse().map((d) => d.replace(/\.sql$/, '.geri-al.sql'))
 const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 'utf8')
@@ -561,7 +661,7 @@ const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 
   await c.query(`delete from auth.users where id in ($1, $2, $3)`, [D1, D2, K1])
   const kalan = []
   for (const t of (await c.query(`select tablename t from pg_tables where schemaname = 'public' and tablename not in ('schema_migrations') order by 1`)).rows.map((r) => r.t)) { const n = (await c.query(`select count(*)::int n from public.${t}`)).rows[0].n; if (n) kalan.push(`${t}: ${n}`) }
-  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record and requests included', kalan.length === 0, kalan.join(', '))
+  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests and intake forms included', kalan.length === 0, kalan.join(', '))
   for (const tur of ['first run', 'second run (must be repeatable)']) {
     for (const d of GERI) {
       try { await c.query(geriOku(d)); ok(`E. rollback, ${tur}: ${d}`, true) }
