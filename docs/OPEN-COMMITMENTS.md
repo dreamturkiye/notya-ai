@@ -3232,3 +3232,14 @@ Source: Kaan's 2026-10-07 brief. Code: Gün sonu MBYS kuyruğu (`/doktor-tools/e
 | MBYS-YARDIMCI-01c | 2026-10-07 | OPEN | Check the Ministry's terms on assisted form filling (browser extension filling MBYS fields on the doctor's click) with a Turkish lawyer. | Kaan |
 | MBYS-YARDIMCI-01d | 2026-10-07 | OPEN | Stage 2: registration with the Ministry as software and direct e-Nabız sending. After the company is formed. | Kaan |
 | MBYS-YARDIMCI-01e | 2026-10-07 | OPEN | Apply migration `126_mbys_yardimci.sql` before deploying the queue (the route reads `users.mbys_ayar`, `mbys_aktarimlar`, `mbys_hasta_kimlik`). | Kaan |
+
+## NOTYA-BETA-DAVET-01 — four beta doctors invited, 2026-10-09
+
+Context: Kaan sent four invitation e-mails from his own mailbox at 15:10 ET on 2026-10-09 (three new beta doctors and a second account for Dr. Gökhan to test new-doctor onboarding). The e-mail tells each doctor to register at /kayit with that address. Onboarding fix #577 and migration 150 were live before the e-mails went out.
+
+- **01a (2026-10-09) — "Confirm email" is OFF on the Turkish Supabase project.** Switched off by Claude on Kaan's instruction so the four can register (the project has no mail provider, so confirmation e-mails never arrive). While it is off, anyone who finds /kayit can create a working account with an unverified address. Turn it back ON once the four have registered. Waits on: Kaan to say the four are in; then Claude or Kaan flips it.
+- **01b (2026-10-09) — set the four accounts to `subscription_tier = 'pro'`** (the level of the existing beta doctors). There is no `users` row until each doctor finishes onboarding, so it cannot be set in advance. Waits on: Kaan to say they have registered; then Claude.
+- **01c (2026-10-09) — public sign-up had never completed on the live site before today.** The first of the four through /kayit is its first real run. Nobody has watched one complete. Waits on: the first doctor's result; Claude to check the row afterwards.
+- **01d (2026-10-09) — no invitation page.** A page where an invited doctor sets their own password from a personal link (so sign-up can stay closed) was planned for #577 and not built: the job was stopped before it started. Waits on: Kaan's word to build it.
+- **01e (2026-10-09) — no system e-mail.** Custom SMTP is off and the project's Site URL is `http://localhost:3000`, with no redirect URLs. Invitations, sign-up confirmation and password reset by e-mail are all impossible until a mail provider and DNS on the sending domain exist. Waits on: Kaan (provider account and key).
+- **01f (2026-10-09) — two older accounts are stuck unconfirmed** from earlier sign-up attempts. Not touched. Waits on: Kaan to say whether they are real people.
