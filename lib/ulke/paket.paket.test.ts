@@ -95,8 +95,15 @@ describe('every pack is complete', () => {
   it('the country root layout runs the check when it loads; the marker cannot be mistaken for content', () => {
     const duzen = readFileSync(join(KOK, 'app/layout.ulke.tsx'), 'utf8')
     assert.match(duzen, /^aktifPaketiDenetle\(\)$/m, 'app/layout.ulke.tsx must call the pack check at module level')
-    assert.ok(existsSync(join(KOK, 'scripts/ulke-paket-denetimi.mjs')), 'the prebuild scan for "to be supplied" markers is missing')
-    assert.match(readFileSync(join(KOK, 'package.json'), 'utf8'), /"prebuild": "[^"]*node scripts\/ulke-paket-denetimi\.mjs/)
+    assert.ok(existsSync(join(KOK, 'scripts/ulke-paket-denetimi.mjs')), 'the scan for "to be supplied" markers is missing')
+    // The scan runs from the country's OWN build file; the pre-split application (Türkiye) has no such call …
+    const derleme = readFileSync(join(KOK, 'countries', paket.kod, 'derleme.mjs'), 'utf8')
+    if (paket.ozellikler.bolunmemisUygulama) assert.doesNotMatch(derleme, /^import |paketTamOlmali\(/m, 'the pre-split application\'s build file stays plain data')
+    else assert.match(derleme, new RegExp(`^paketTamOlmali\\('${paket.kod}'\\)$`, 'm'), `countries/${paket.kod}/derleme.mjs must call paketTamOlmali('${paket.kod}')`)
+    // … and package.json never runs it: what a build with no country set runs before and after `next build` is not this job's to change.
+    const betikler = JSON.parse(readFileSync(join(KOK, 'package.json'), 'utf8')).scripts as Record<string, string>
+    for (const ad of ['prebuild', 'build', 'postbuild']) assert.doesNotMatch(betikler[ad] ?? '', /ulke-paket-denetimi/, `package.json "${ad}" must not run the pack scan`)
+    assert.equal(betikler.prebuild, 'node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs')
     assert.equal(eksik('Today'), `${EKSIK_ISARETI} Today`)
     assert.match(EKSIK_ISARETI, /^⟦[A-Z]+⟧$/, 'the marker is bracketed in signs no catalogue uses, so it cannot be mistaken for content')
   })

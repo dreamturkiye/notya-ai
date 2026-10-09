@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs && node scripts/ulke-paket-denetimi.mjs",
+    "prebuild": "node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs",
     "postbuild": "node scripts/ulke-derleme-kaniti.mjs",
     "build": "node -e \"if (process.env.VERCEL_ENV === 'preview') require('fs').rmSync('.next/cache', { recursive: true, force: true })\" && NODE_OPTIONS='--max-old-space-size=8192' next build",
     "start": "next start",

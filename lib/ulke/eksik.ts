@@ -6,7 +6,7 @@
  * setting that needs a decision as `eksikAyar('…')`. The text inside is a hint for whoever supplies it — never text
  * for a screen. Until every one of them is replaced:
  *   - the build of that country stops before it compiles, with the list of every place still marked
- *     (scripts/ulke-paket-denetimi.mjs, in `prebuild`);
+ *     (scripts/ulke-paket-denetimi.mjs, called by the country's own countries/<code>/derleme.mjs);
  *   - the pack check (lib/ulke/paketDenetimi.ts) reports each of them, and the country's root layout refuses to load.
  * No other country is affected: a build holds one pack.
  */
