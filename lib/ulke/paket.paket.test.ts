@@ -6,7 +6,9 @@
  *      odds with another, nothing still marked "to be supplied".
  *   2. The check itself is not blind: taking one piece away from this pack, of each kind, is reported by name.
  *   3. No file of the pack carries a "to be supplied" marker (what `prebuild` scans for).
- *   4. The country's root layout runs the check when it loads, so an incomplete pack cannot be built.
+ *   4. The scaffold's shape file (scripts/ulke-sablon/sekil.json) lists exactly the keys this pack fills.
+ *   5. The country's root layout runs the check when it loads, so an incomplete pack cannot be built; the marker
+ *      scan runs from the country's own build file and never from package.json.
  */
 import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
@@ -14,6 +16,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { EKSIK_ISARETI, eksik, eksikAyar } from './eksik'
 import { paketiDenetle, sorunlariYaz } from './paketDenetimi'
+import { iskelet, paketSekli } from './testing/paketSekli'
 import type { UlkeArayuzu } from './arayuz/tipler'
 import type { UlkeKlinigi, UlkePaketi } from './tipler'
 
@@ -90,6 +93,15 @@ describe('every pack is complete', () => {
     iceriyor(yerler(paket, arayuz, null), 'klinik: the application is switched on')
     // … and the real pack was not touched by any of it
     assert.deepEqual(paketiDenetle(paket, arayuz, klinik), [])
+  })
+
+  it('the scaffold\'s shape file lists exactly the keys this pack fills (a key added to the kit cannot be forgotten there)', () => {
+    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !paket.uygulama) return
+    const dosya = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'))
+    const simdi = paketSekli(paket, arayuz)
+    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
+    // the file holds key paths only: no sentence of this pack, no letter outside ASCII
+    assert.doesNotMatch(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'), /[^\x00-\x7F]/)
   })
 
   it('the country root layout runs the check when it loads; the marker cannot be mistaken for content', () => {

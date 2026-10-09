@@ -26,14 +26,20 @@ import { createHash, randomUUID } from 'node:crypto'
 const PORT = Number(process.argv[2] || 54399)
 const SERVIS = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sahte-servis'
 
+// NOTYA-ULKE-SABLON-01 — WHICH COUNTRY IS WALKED. Unset = Uzbekistan, exactly as before (./yuruyus.mjs). The
+// pack-neutral walk-through (./genel.mjs) sets YURUYUS_ULKE=<code> and YURUYUS_DILLER=<form of account 1>,<form of
+// account 2>; the two accounts, the invitation code and the storage folders then belong to that country.
+const ULKE = process.env.YURUYUS_ULKE || 'uz'
+if (!/^[a-z]{2}$/.test(ULKE)) throw new Error(`YURUYUS_ULKE="${ULKE}" is not a country code`)
+const [DIL_1, DIL_2] = (process.env.YURUYUS_DILLER || 'uz-Latn,ru').split(',')
 const hesaplar = {
-  'qa-uz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000001', sifre: 'sinov-parol-1', ulke: 'uz', dil: 'uz-Latn', ad: 'QA Shifokor Bir' },
-  'qa-ru@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000002', sifre: 'sinov-parol-2', ulke: 'uz', dil: 'ru', ad: 'QA Врач Два' },
+  'qa-uz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000001', sifre: 'sinov-parol-1', ulke: ULKE, dil: DIL_1, ad: 'QA Shifokor Bir' },
+  'qa-ru@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000002', sifre: 'sinov-parol-2', ulke: ULKE, dil: DIL_2 || DIL_1, ad: 'QA Врач Два' },
   'qa-tr@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000003', sifre: 'sinov-parol-3', ulke: 'tr', dil: 'tr', ad: 'QA Hekim Uc' },
   'qa-damgasiz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000004', sifre: 'sinov-parol-4', ulke: null, dil: 'tr', ad: 'QA Damgasiz' },
 }
 const GECERLI_KOD = 'QATEST0000000001'
-const kodlar = new Map([[createHash('sha256').update(GECERLI_KOD).digest('hex'), { ulke: 'uz', kalan: 1 }]])
+const kodlar = new Map([[createHash('sha256').update(GECERLI_KOD).digest('hex'), { ulke: ULKE, kalan: 1 }]])
 const jetonlar = new Map()
 const gunluk = []
 /**

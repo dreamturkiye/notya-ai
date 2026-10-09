@@ -21,6 +21,19 @@ export type PaketSorunu = { /** Where: a path inside the pack ("uygulama.saatDil
 const dolu = (x: unknown): x is string => typeof x === 'string' && x.trim().length > 0
 const sahip = (o: unknown, k: string): boolean => typeof o === 'object' && o !== null && Object.prototype.hasOwnProperty.call(o, k)
 const TESLIM = 'to be supplied'
+/** A list, or nothing where the pack has not decided yet (a marker is not a list). */
+const liste = <T,>(x: readonly T[] | null | undefined): readonly T[] => (Array.isArray(x) ? x : [])
+/** A record, or nothing where the pack has not decided yet. */
+const kayit = <T,>(x: Readonly<Record<string, T>> | null | undefined): Readonly<Record<string, T>> => (x && typeof x === 'object' && !eksikAyarMi(x) && !Array.isArray(x) ? x : {})
+
+/** Every setting still marked "to be supplied", anywhere in a half of the pack — so none can hide in a place no rule below looks at. */
+function isaretleriTopla(deger: unknown, yer: string, cikti: PaketSorunu[], gorulen = new Set<unknown>()): void {
+  if (eksikAyarMi(deger)) { cikti.push({ yer, sorun: `${TESLIM}: ${deger.__eksikAyar}` }); return }
+  if (!deger || typeof deger !== 'object' || gorulen.has(deger)) return
+  gorulen.add(deger)
+  if (Array.isArray(deger)) { deger.forEach((x, i) => isaretleriTopla(x, `${yer}[${i}]`, cikti, gorulen)); return }
+  for (const [k, v] of Object.entries(deger)) isaretleriTopla(v, yer ? `${yer}.${k}` : k, cikti, gorulen)
+}
 
 /** Every string, at any depth, must be there and must not be a "to be supplied" marker. Functions are left alone. */
 function metinleriGez(deger: unknown, yer: string, sorunlar: PaketSorunu[], bosOlabilir: (yer: string) => boolean = () => false): void {
@@ -41,6 +54,21 @@ function saatDilimiGecerli(z: unknown): boolean {
 }
 
 export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKlinigi | null): PaketSorunu[] {
+  const s = kurallar(paket, arayuz, klinik)
+  if (paket.ozellikler.bolunmemisUygulama) return s
+  // … and every marker the rules did not name themselves, once each.
+  const isaretler: PaketSorunu[] = []
+  isaretleriTopla({ ...paket, metinler: undefined }, '', isaretler)
+  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
+  isaretleriTopla(klinik, 'klinik', isaretler)
+  const bilinen = new Set(s.map((x) => x.yer))
+  for (const i of isaretler) if (!bilinen.has(i.yer) && !bilinen.has(i.yer.replace(/^uygulama\./, '')) && !bilinen.has(`uygulama.${i.yer}`)) { s.push(i); bilinen.add(i.yer) }
+  // one line per finding, however many rules met it
+  const tek = new Set<string>()
+  return s.filter((x) => { const k = `${x.yer}\u0000${x.sorun}`; if (tek.has(k)) return false; tek.add(k); return true })
+}
+
+function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKlinigi | null): PaketSorunu[] {
   const s: PaketSorunu[] = []
   const ekle = (yer: string, sorun: string) => s.push({ yer, sorun })
   if (paket.ozellikler.bolunmemisUygulama) return s
@@ -49,7 +77,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   metinleriGez({ kabuk: paket.kabuk, paraBirimi: paket.paraBirimi, bicim: paket.bicim, telefon: { ulkeOnEki: paket.telefon.ulkeOnEki, ornek: paket.telefon.ornek }, saatDilimi: paket.saatDilimi, dilAdlari: paket.dilAdlari, ulusalKimlik: paket.ulusalKimlik ? { ad: paket.ulusalKimlik.ad } : null, yolOnEki: paket.yolOnEki ?? '' }, '', s, (yer) => yer === 'yolOnEki' || yer === 'bicim.binlikAyraci' /* a space is a thousands separator */)
   for (const [ad, v] of Object.entries({ varsayilanDil: paket.varsayilanDil, aramaMotorlarinaGizli: paket.aramaMotorlarinaGizli, 'paraBirimi.ondalikHane': paket.paraBirimi?.ondalikHane, 'bicim.haftaBasi': paket.bicim?.haftaBasi, 'telefon.ulusalHane': paket.telefon?.ulusalHane, 'telefon.cepGecerliMi': paket.telefon?.cepGecerliMi, 'ulusalKimlik.gecerliMi': paket.ulusalKimlik?.gecerliMi, 'ulusalKimlik.hane': paket.ulusalKimlik?.hane })) if (eksikAyarMi(v)) ekle(ad, `${TESLIM}: ${v.__eksikAyar}`)
   if (!/^[a-z]{2}$/.test(String(paket.kod))) ekle('kod', 'must be two lower-case letters')
-  if (!saatDilimiGecerli(paket.saatDilimi)) ekle('saatDilimi', 'not a time zone this platform knows')
+  if (!eksikMetinMi(paket.saatDilimi) && !saatDilimiGecerli(paket.saatDilimi)) ekle('saatDilimi', 'not a time zone this platform knows')
   if (!eksikAyarMi(paket.bicim?.haftaBasi) && paket.bicim?.haftaBasi !== 1 && paket.bicim?.haftaBasi !== 7) ekle('bicim.haftaBasi', 'must be 1 (Monday) or 7 (Sunday)')
   {
     const d = String(paket.bicim?.tarihDeseni ?? '')
@@ -114,11 +142,11 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   const temeller = gruplar.map((g) => g.temel)
   const yazilar = gruplar.filter((g) => g.bicimler.length > 1).flatMap((g) => g.bicimler.map((b) => String(b.yazi)))
   const hastaDilleri: readonly string[] = Array.isArray(u.hastaDilleri) ? u.hastaDilleri : []
-  if (!hastaDilleri.length) ekle('uygulama.hastaDilleri', 'no patient language')
+  if (!hastaDilleri.length && !eksikAyarMi(u.hastaDilleri)) ekle('uygulama.hastaDilleri', 'no patient language')
   for (const h of hastaDilleri) if (!temeller.includes(h)) ekle('uygulama.hastaDilleri', `"${h}" is not a language of uygulama.dilGruplari`)
   // time
   const dilimler: readonly string[] = Array.isArray(u.saatDilimleri) ? u.saatDilimleri : []
-  if (!dilimler.includes(paket.saatDilimi)) ekle('uygulama.saatDilimleri', `must hold the pack's default time zone "${paket.saatDilimi}"`)
+  if (!eksikAyarMi(u.saatDilimleri) && !eksikMetinMi(paket.saatDilimi) && !dilimler.includes(paket.saatDilimi)) ekle('uygulama.saatDilimleri', `must hold the pack's default time zone "${paket.saatDilimi}"`)
   for (const z of dilimler) if (!saatDilimiGecerli(z)) ekle('uygulama.saatDilimleri', `"${z}" is not a time zone this platform knows`)
   if (new Set(dilimler).size !== dilimler.length) ekle('uygulama.saatDilimleri', 'a time zone is listed twice')
   if (!eksikAyarMi(u.saatBicimi) && u.saatBicimi !== 24 && u.saatBicimi !== 12) ekle('uygulama.saatBicimi', 'must be 24 or 12')
@@ -131,6 +159,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   if (!eksikAyarMi(u.kayitAcik) && typeof u.kayitAcik !== 'boolean') ekle('uygulama.kayitAcik', 'must be false (invitation only) or true')
   if (!u.adAlanlari || (!eksikAyarMi(u.adAlanlari.ikinciAd) && typeof u.adAlanlari.ikinciAd !== 'boolean')) ekle('uygulama.adAlanlari.ikinciAd', 'must be true or false')
   if (!u.kimlikNumarasi || (!eksikAyarMi(u.kimlikNumarasi.dogrula) && typeof u.kimlikNumarasi.dogrula !== 'boolean')) ekle('uygulama.kimlikNumarasi.dogrula', 'must be true or false')
+  const kimlikVar = Boolean(paket.ulusalKimlik) && !eksikAyarMi(paket.ulusalKimlik)
   if (u.kimlikNumarasi?.dogrula === true && !paket.ulusalKimlik) ekle('uygulama.kimlikNumarasi.dogrula', 'is true and the pack has no identity number (ulusalKimlik: null)')
   if (paket.ozellikler.randevu && !u.randevu) ekle('uygulama.randevu', 'appointments are switched on and the pack has no appointment norms')
   // routes
@@ -150,10 +179,10 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
       metinleriGez(m, `arayuz.metinler[${d}]`, s)
       for (const t of temeller) if (!dolu(m.diller?.[t])) ekle(`arayuz.metinler[${d}].diller.${t}`, 'the language has no name in this form')
       for (const y of yazilar) if (!dolu(m.yazilar?.[y])) ekle(`arayuz.metinler[${d}].yazilar.${y}`, 'the script has no name in this form')
-      for (const t of new Set(Object.values(klinik?.konusma?.beklenenDiller ?? {}))) if (!dolu(m.muayene?.konusmaDili?.[t])) ekle(`arayuz.metinler[${d}].muayene.konusmaDili.${t}`, 'a language the speech settings expect has no name in this form')
+      for (const t of new Set(Object.values(kayit(klinik?.konusma?.beklenenDiller)))) if (!dolu(m.muayene?.konusmaDili?.[t])) ekle(`arayuz.metinler[${d}].muayene.konusmaDili.${t}`, 'a language the speech settings expect has no name in this form')
       if (temeller.length > 1) for (const t of temeller) if (!dolu(m.not?.cevir?.[t])) ekle(`arayuz.metinler[${d}].not.cevir.${t}`, 'the "rewrite in this language" button has no text in this form')
       if (u.adAlanlari?.ikinciAd === true && !dolu(m.yeniHasta?.otaIsmi)) ekle(`arayuz.metinler[${d}].yeniHasta.otaIsmi`, 'the second name field is on and has no label')
-      if (paket.ulusalKimlik && !dolu(m.yeniHasta?.ulusalKimlik)) ekle(`arayuz.metinler[${d}].yeniHasta.ulusalKimlik`, 'the identity number is recorded and has no label')
+      if (kimlikVar && !dolu(m.yeniHasta?.ulusalKimlik)) ekle(`arayuz.metinler[${d}].yeniHasta.ulusalKimlik`, 'the identity number is recorded and has no label')
       if (dilimler.length > 1 && !dolu(m.ayarlar?.saatDilimi)) ekle(`arayuz.metinler[${d}].ayarlar.saatDilimi`, 'the country has several time zones and the setting has no label')
     }
     if (paket.ozellikler.randevu) {
@@ -168,17 +197,17 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
     // roles and templates, per form
     for (const r of roller) if (!sahip(r.ad, d) || !dolu(r.ad[d])) ekle(`arayuz.roller.${r.anahtar}.ad.${d}`, 'the role has no name in this form')
     else if (eksikMetinMi(r.ad[d])) ekle(`arayuz.roller.${r.anahtar}.ad.${d}`, TESLIM)
-    for (const [k, alan] of Object.entries(sablon?.alanlar ?? {})) if (!sahip(alan.ad, d) || !dolu(alan.ad[d])) ekle(`arayuz.notSablonlari.alanlar.${k}.ad.${d}`, 'the field has no label in this form')
+    for (const [k, alan] of Object.entries(kayit(sablon?.alanlar))) if (!sahip(alan.ad, d) || !dolu(alan.ad[d])) ekle(`arayuz.notSablonlari.alanlar.${k}.ad.${d}`, 'the field has no label in this form')
     else if (eksikMetinMi(alan.ad[d])) ekle(`arayuz.notSablonlari.alanlar.${k}.ad.${d}`, TESLIM)
-    if (sablon?.veliAlani && (!dolu(sablon.veliAlani.tanim.ad[d]) || eksikMetinMi(sablon.veliAlani.tanim.ad[d]))) ekle(`arayuz.notSablonlari.veliAlani.ad.${d}`, 'the guardian field has no label in this form')
-    for (const b of sablon?.bolumBasliklari ?? []) if (!dolu(b.ad[d]) || eksikMetinMi(b.ad[d])) ekle(`arayuz.notSablonlari.bolumBasliklari.${b.taraf}.${b.bolum}.${d}`, 'the section heading has no text in this form')
+    if (sablon?.veliAlani && !eksikAyarMi(sablon.veliAlani) && (!dolu(sablon.veliAlani.tanim.ad[d]) || eksikMetinMi(sablon.veliAlani.tanim.ad[d]))) ekle(`arayuz.notSablonlari.veliAlani.ad.${d}`, 'the guardian field has no label in this form')
+    for (const b of liste(sablon?.bolumBasliklari)) if (!dolu(b.ad[d]) || eksikMetinMi(b.ad[d])) ekle(`arayuz.notSablonlari.bolumBasliklari.${b.taraf}.${b.bolum}.${d}`, 'the section heading has no text in this form')
   }
 
   // ── roles ──
   const rolAnahtarlari = roller.map((r) => r.anahtar)
-  for (const r of u.roller ?? []) if (!rolAnahtarlari.includes(r)) ekle(`arayuz.roller`, `the role "${r}" of uygulama.roller has no name`)
+  for (const r of liste(u.roller)) if (!rolAnahtarlari.includes(r)) ekle(`arayuz.roller`, `the role "${r}" of uygulama.roller has no name`)
   for (const r of roller) {
-    if (!(u.roller ?? []).includes(r.anahtar)) ekle('uygulama.roller', `"${r.anahtar}" is named in the content and is not a role of the pack`)
+    if (!liste(u.roller).includes(r.anahtar)) ekle('uygulama.roller', `"${r.anahtar}" is named in the content and is not a role of the pack`)
     if (!/^[a-z]+(-[a-z]+)*$/.test(r.anahtar)) ekle(`arayuz.roller.${r.anahtar}`, 'a role key is lower-case words joined by hyphens')
     if (!ROL_TARAFLARI.includes(r.taraf)) ekle(`arayuz.roller.${r.anahtar}.taraf`, 'must be doktor, klinik-hekim or klinik-muttefik')
   }
@@ -188,16 +217,16 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   if (!sablon) ekle('arayuz.notSablonlari', 'no note templates')
   else {
     if (!dolu(sablon.genelSablon)) ekle('arayuz.notSablonlari.genelSablon', 'the general template has no key')
-    for (const [rol, alanlar] of Object.entries(sablon.rolAlanlari)) {
+    for (const [rol, alanlar] of Object.entries(kayit(sablon.rolAlanlari))) {
       if (!rolAnahtarlari.includes(rol)) ekle(`arayuz.notSablonlari.rolAlanlari.${rol}`, 'a template for a role the pack does not have')
-      for (const k of alanlar) if (!sahip(sablon.alanlar, k)) ekle(`arayuz.notSablonlari.rolAlanlari.${rol}`, `names the field "${k}", which is not defined`)
+      for (const k of liste(alanlar)) if (!sahip(kayit(sablon.alanlar), k)) ekle(`arayuz.notSablonlari.rolAlanlari.${rol}`, `names the field "${k}", which is not defined`)
     }
-    for (const [k, alan] of Object.entries(sablon.alanlar)) {
+    for (const [k, alan] of Object.entries(kayit(sablon.alanlar))) {
       if (!/^[a-z][a-z0-9_]{0,59}$/.test(k)) ekle(`arayuz.notSablonlari.alanlar.${k}`, 'a field key is lower-case letters, digits and underscores')
       if (!NOT_BOLUMLERI.includes(alan.bolum)) ekle(`arayuz.notSablonlari.alanlar.${k}.bolum`, 'must be s, o, a or p')
     }
     if (u.veliYasi !== null && !eksikAyarMi(u.veliYasi) && !sablon.veliAlani) ekle('arayuz.notSablonlari.veliAlani', 'the pack has a guardian age and no guardian field')
-    for (const r of sablon.cocukRolleri) if (!rolAnahtarlari.includes(r)) ekle('arayuz.notSablonlari.cocukRolleri', `"${r}" is not a role of the pack`)
+    for (const r of liste(sablon.cocukRolleri)) if (!rolAnahtarlari.includes(r)) ekle('arayuz.notSablonlari.cocukRolleri', `"${r}" is not a role of the pack`)
   }
 
   // ── the clinical half ──
@@ -208,7 +237,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
     if (!sablonlar.length) ekle('klinik.sablonlar', 'no note template is switched on')
     if (sablon && sablonlar[0] !== sablon.genelSablon) ekle('klinik.sablonlar', 'the first template must be the general one (the template of an account without a role)')
     for (const d of diller) {
-      if (!dolu(klinik.konusma?.zorlamaDilKodlari?.[d])) ekle(`klinik.konusma.zorlamaDilKodlari.${d}`, 'the speech provider\'s code for this note language is not stated')
+      if (!eksikAyarMi(klinik.konusma?.zorlamaDilKodlari) && !dolu(klinik.konusma?.zorlamaDilKodlari?.[d])) ekle(`klinik.konusma.zorlamaDilKodlari.${d}`, 'the speech provider\'s code for this note language is not stated')
       for (const sb of sablonlar) {
         const t = klinik.notTalimati(d, sb)
         if (!dolu(t)) ekle(`klinik.notTalimati(${d}, ${sb})`, 'no instruction to the model: a note in this form with this template cannot be written')
@@ -217,7 +246,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
       const diger = klinik.digerDil(d, [d])
       if (diger) { const t = klinik.yenidenYazimTalimati(diger); if (!dolu(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, 'a rewrite into this form is offered and has no instruction'); else if (eksikMetinMi(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, TESLIM) }
     }
-    for (const t of new Set(Object.values(klinik.konusma?.beklenenDiller ?? {}))) if (!temeller.includes(t)) ekle('klinik.konusma.beklenenDiller', `"${t}" is not a language of uygulama.dilGruplari`)
+    for (const t of new Set(Object.values(kayit(klinik.konusma?.beklenenDiller)))) if (!temeller.includes(t)) ekle('klinik.konusma.beklenenDiller', `"${t}" is not a language of uygulama.dilGruplari`)
   }
   return s
 }
