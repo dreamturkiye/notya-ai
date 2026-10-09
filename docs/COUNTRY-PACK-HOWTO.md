@@ -424,3 +424,16 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 - **Intake answers stay beside the note.** They are shown to the doctor and never given to the model that writes the note; whether and how they should be is an open decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-INTAKE-01b).
 - **The portal's link validity and ambulance number** are settings a pack must state and that nothing can verify by machine: the first is the owner's, the second needs a local source.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.
+
+## One release branch per country (Kaan, 2026-10-09)
+
+Kaan, 2026-10-09: "Each country should indepedently merge and deploy. […] if there is something that goes bad with one country it should never affect the others."
+
+How that is kept:
+
+- **A country is deployed only from its own branch**: `release/uz`, `release/gb`, `release/us`, `release/ca`, `release/au`, `release/nz`. Nothing is ever deployed for a country from a shared branch. Türkiye is deployed from `main` and from nothing else.
+- **Work is developed on a shared branch and reaches a country by that country's own merge**: one pull request per country, from the development branch into `release/<code>`. Merging it changes that one country and no other. A change to the shared kit therefore reaches Uzbekistan only when Uzbekistan's pull request is merged, and can be held back or reverted for one country without touching the rest.
+- **Before a country's pull request is merged**, for THAT country: pack check, its pack tests, `NOTYA_COUNTRY=<code> npm run build:ulke` with the build proof, and its walk-through. Another country's failure does not block it.
+- **Each country has its own**: Vercel project, database, server key, encryption key, invitation codes. A build holds one country's pack and no other (the build proof fails otherwise).
+- **Rolling one country back**: redeploy that country's previous deployment in its own Vercel project, or revert the merge on its `release/<code>` branch. No other country is rebuilt.
+- **A new country** gets its `release/<code>` branch when it is first deployed.
