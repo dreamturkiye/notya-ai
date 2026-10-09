@@ -120,6 +120,8 @@ For each entry: official local name, what it governs, source link, date checked,
 
 ## F. Tools
 
+> **Since 2026-10-09 (NOTYA-ULKE-ARACLAR-01)** a country's tools live in the country kit's tools area, not in the pre-split registry: `docs/COUNTRY-PACK-HOWTO.md`, "The tools area". For every tool a country switches on, check: it is classified (base, or these roles); its text was read by a native speaker and by a clinician of the country (`inceleme.klinisyen`); it holds no national reference content; every number the kit leaves to the country is stated with its source; the follow-up list is given to exactly the roles that have a tool to keep; and every tool not ready is a slot that says what is missing and who supplies it.
+
 - [ ] F1 Every core tool and every specialty tool gets a verdict per country: Remove, Adapt, Keep, or Add.
 - [ ] F2 Remove: tools tied to another country's state or payer systems.
 - [ ] F3 Adapt: same purpose, local content (vaccination, coding, drug names, document formats, consent forms, risk scores calibrated by region).

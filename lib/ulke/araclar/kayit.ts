@@ -30,15 +30,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { arayuz } from '../arayuz'
-import { aktifUlke, ozellikAcik, ulkePaketi } from '../ulke'
+import { aktifUlke, ozellikAcik } from '../ulke'
 import { hastaAdlari, hastaGetir } from '../uygulama/hastalar'
 import { hekimRolunuOku } from '../uygulama/rol'
 import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeTablosu } from '../uygulama/tablolar'
 import { gunEkle, gunGecerli, yerelAn } from '../uygulama/zaman'
-import type { BirimOrtami } from './birimler'
 import { girdiyiCoz, hamdanGosterilen, hamiSuz } from './girdi'
 import { KAYIT_LISTE_AZAMI, TAKIP_EN_UZAK_GUN, TAKIP_LISTE_AZAMI, type AracKaydi, type TakipSatiri } from './kayitTipleri'
+import { birimOrtami } from './ortam'
 import { hesabinAraci } from './paket'
 import type { AracGirdisi, AracSonucu, UlkeAraclari } from './tipler'
 
@@ -50,13 +50,6 @@ const KAYIT_AZAMI = 20_000
 
 /** The pack's tools, or null where the country has no tools area. */
 export const aktifAracIcerigi = (): UlkeAraclari | null => (ozellikAcik('cekirdekMuayene') && ozellikAcik('araclar') ? arayuz().araclar ?? null : null)
-
-/** The pack's units, as the tools need them. */
-function birimOrtami(icerik: UlkeAraclari): BirimOrtami {
-  const u = ulkePaketi().uygulama
-  if (!u) throw new Error('[ulke/araclar] the pack has no application settings')
-  return { birimler: u.birimler, lab: icerik.labBirimleri }
-}
 
 // ───────────────────────── the encrypted value ─────────────────────────
 

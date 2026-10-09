@@ -1,6 +1,6 @@
 # Uzbekistan tools audit
 
-> **Proposal, to be confirmed by a local clinical lead.** Every verdict below was written by Claude on 2026-10-08 from the tool's own description and code, without a local clinician and without Uzbek source documents. Nothing here is switched on: every tool is valid in Türkiye only (`ulkeler: ['tr']` in `lib/doktor/doktorAraclari.ts`) and the Uzbek pack lists no tool. No tool behaviour was changed by the job that wrote this file.
+> **Proposal, to be confirmed by a local clinical lead.** Every verdict below was written by Claude on 2026-10-08 from the tool's own description and code, without a local clinician and without Uzbek source documents. When this file was written nothing was switched on. **Since 2026-10-09 (NOTYA-ULKE-ARACLAR-01) the country kit has its own tools area and the Uzbek pack switches part of it on: see "Outcome in the Uzbek build" below.** The pre-split registry is unchanged: every tool there is still valid in Türkiye only.
 
 Standard: `docs/COUNTRY-PACK-CHECKLIST.md`, section F. A tool enters Uzbekistan only when (1) its verdict is confirmed, (2) any local content is built in `countries/uz/`, (3) it is translated into Uzbek and Russian and read by a native clinician, (4) its specialty has its local sign-off (F7). Then two edits switch it on: the country is added to the tool's `ulkeler`, and the route to the Uzbek pack's `araclar`.
 
@@ -361,6 +361,172 @@ Rows marked "to confirm" state something Claude believes but has not checked aga
 | Onam / veli kontrol listesi | `/doktor-tools/cc-onam-veli` | **Adapt** | Guardian consent: the age of consent and who may sign follow Uzbek law. |
 | Çocuk cerrahisi kohort | `/doktor-tools/cc-kohort` | **Adapt** | Cohort carries the guardian-consent flag above. |
 
+## Outcome in the Uzbek build (2026-10-09, NOTYA-ULKE-ARACLAR-01)
+
+What the tools job did with each of the 144 tools above. This table is checked by a test on every run (`countries/uz/uygulama/araclar/araclar.test.ts`): each row against the Uzbek pack, and the sums against the totals.
+
+| | done | slot | absent | sum |
+|---|---:|---:|---:|---:|
+| **Keep** | 64 | 19 | 13 | 96 |
+| **Adapt** | 2 | 32 | 0 | 34 |
+| **Remove** | 0 | 0 | 14 | 14 |
+
+- **done**: switched on in the Uzbek pack under the kit key in the row, with tests. Machine-written text in Uzbek (Latin and Cyrillic) and Russian, read by no native speaker and no clinician yet.
+- **slot**: a marked, empty, switched-off entry of `countries/uz/uygulama/araclar/yuvalar.ts` under the key in the row, naming what is missing and who supplies it. No screen reads it.
+- **absent**: not in the Uzbek build in any form, and listed here with the reason.
+- **absent (blocked)**: a tool of a Türkiye-only state or payer system. `countries/yasak-araclar.json` and wall rule D7 (`scripts/ulke-duvarlari.mjs`) stop the kit, any other pack and any country route from naming it.
+
+The kit proposes **no follow-up day of its own** in any tool. Where the pre-split tool adds a number of days or months to a date (suture removal, a control visit, a repeat test), the Uzbek tool has an empty date field the doctor fills in. An interval is clinical guidance of a country, and the kit holds no such content.
+
+A cohort panel counts as done only where the generic follow-up list (`takip-paneli`) is shown to that role, which the same test checks over all 40 roles. The list replaces "who is due or overdue"; it does not carry the disease-specific columns of the pre-split panels.
+
+| Route | Verdict | Outcome | Kit key or slot key | Role (cohorts) | Note |
+|---|---|---|---|---|---|
+| `erecete` | Adapt | slot | `recete` |  |  |
+| `epikriz` | Adapt | slot | `muayene-ozeti-belgesi` |  |  |
+| `icd10` | Adapt | slot | `tani-kodlama` |  |  |
+| `ilac-interaksiyon` | Adapt | slot | `ilac-etkilesimi` |  |  |
+| `sgk-rapor` | Adapt | slot | `hasta-belgeleri` |  |  |
+| `tetkik` | Adapt | slot | `tetkik-istek` |  |  |
+| `hasta-portali` | Keep | done | `hasta-portali` |  | Base tool: all 40 roles. |
+| `sgk-medula` | Remove | absent (blocked) |  |  |  |
+| `enabiz` | Remove | absent (blocked) |  |  |  |
+| `muayene-sonu` | Adapt | slot | `muayene-sonu` |  |  |
+| `sablonlarim` | Keep | absent |  |  | The doctor's own templates are editable texts of a doctor with no patient; migration 139 holds unchangeable results bound to a patient. It does not fit without a second table or without weakening both rules. |
+| `konsultasyonlar` | Keep | absent |  |  | Consultation and patient messaging is the next job, not this one (coordinator, 2026-10-09). |
+| `hedef-boy` | Keep | done | `hedef-boy` |  |  |
+| `pedi-buyume` | Adapt | slot | `buyume-persentil` |  |  |
+| `pedi-doz` | Keep | done | `doz-hesabi` |  | Arithmetic only: the doctor types the dose per kilogram; the tool holds no drug and no dose. |
+| `pedi-asi` | Adapt | slot | `asi-takvimi` |  |  |
+| `pedi-gelisim` | Adapt | slot | `gelisim-tarama` |  |  |
+| `pedi-mchat` | Keep | slot | `mchat-rf` |  | Published questionnaire: authorised translation and licence needed. |
+| `pedi-kohort` | Adapt | slot | `pediatri-kohort` |  | Its columns are vaccination and growth, which are national content. (The generic follow-up list is shown to paediatrics all the same.) |
+| `dahiliye-kohort` | Keep | done | `takip-paneli` | dahiliye | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `dahiliye-score2` | Adapt | slot | `kv-risk-score2` |  |  |
+| `dahiliye-ckd` | Keep | done | `kdigo-evre` |  |  |
+| `dahiliye-sgk` | Remove | absent (blocked) |  |  |  |
+| `dahiliye-polifarmasi` | Keep | slot | `polifarmasi` |  | Reclassified from keep: the criteria list is published clinical content with a rights holder. |
+| `dahiliye-antikoag` | Keep | slot | `antikoagulan` |  | Reclassified from keep: the scores drive a treatment threshold that is local guidance. |
+| `goz-va` | Keep | done | `gorme-keskinligi` |  |  |
+| `goz-sut-vegf` | Remove | absent (blocked) |  |  |  |
+| `goz-sgk-rapor` | Remove | absent (blocked) |  |  |  |
+| `goz-gil-kod` | Remove | absent (blocked) |  |  |  |
+| `goz-kohort` | Keep | done | `takip-paneli` | goz-hastaliklari | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `derm-pasi` | Keep | done | `pasi` |  | Three tools: `pasi`, `easi`, `scorad`. |
+| `derm-gop` | Adapt | slot | `izotretinoin-gebelik-onleme` |  |  |
+| `derm-fototerapi` | Keep | absent |  |  | A dose diary is a series per patient with a starting dose from a protocol; it needs its own record shape and local protocol. |
+| `derm-yama` | Keep | done | `yama-okuma` |  |  |
+| `derm-kohort` | Keep | done | `takip-paneli` | dermatoloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `derm-biyolojik-sut` | Remove | absent (blocked) |  |  |  |
+| `kd-gebelik-takvim` | Adapt | slot | `gebelik-takvimi` |  |  |
+| `kd-dogum-rapor` | Adapt | slot | `dogum-analik-raporu` |  |  |
+| `kd-mec` | Keep | slot | `kontrasepsiyon-mec` |  | Reclassified from keep: the eligibility table is published reference content of an authority. |
+| `kd-risk` | Adapt | slot | `obstetrik-risk` |  |  |
+| `kd-kohort` | Adapt | slot | `kd-kohort` |  |  |
+| `psik-phq-gad` | Keep | slot | `phq9-gad7` |  | Published questionnaires: authorised translation and licence needed. |
+| `psik-risk` | Adapt | slot | `psikiyatri-guvenlik-triyaj` |  |  |
+| `psik-ilac-izlem` | Keep | slot | `psikotrop-izlem` |  | Reclassified from keep: monitoring intervals per medicine are local guidance. |
+| `psik-sgk` | Remove | absent (blocked) |  |  |  |
+| `psik-kohort` | Keep | absent |  | psikiyatri | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `kbb-otoskopi` | Keep | done | `otoskopi-notu` |  |  |
+| `kbb-odyometri` | Keep | done | `odyometri-pta` |  | Bands without gaps (the pre-split tool has gaps between whole numbers; see OPEN-COMMITMENTS). |
+| `kbb-vertigo` | Keep | done | `vertigo-notu` |  |  |
+| `kbb-sgk` | Remove | absent (blocked) |  |  |  |
+| `kbb-kohort` | Keep | done | `takip-paneli` | kulak-burun-bogaz | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `kardio-score2` | Adapt | slot | `kv-risk-score2` |  |  |
+| `kardio-ht-kky` | Keep | slot | `kardiyo-izlem` |  | Reclassified from keep: targets and intervals are local guidance. Mechanism in the kit. |
+| `kardio-sgk` | Remove | absent (blocked) |  |  |  |
+| `kardio-kohort` | Keep | absent |  | kardiyoloji | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `gogus-cat-mmrc` | Keep | slot | `cat-mmrc` |  | Published questionnaires: authorised translation and licence needed. |
+| `gogus-aksiyon-plani` | Keep | slot | `akciger-aksiyon-plani` |  | Reclassified from keep: an action plan names medicines and doses. |
+| `gogus-inhaler` | Keep | done | `inhaler-teknik` |  |  |
+| `gogus-sgk` | Remove | absent (blocked) |  |  |  |
+| `gogus-kohort` | Keep | done | `takip-paneli` | gogus-hastaliklari | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `noro-inme` | Adapt | slot | `inme-kirmizi-bayrak` |  |  |
+| `noro-migren` | Keep | slot | `midas` |  | Published questionnaire: authorised translation and licence needed. |
+| `noro-ilac-izlem` | Keep | slot | `antiepileptik-izlem` |  | Reclassified from keep: monitoring per medicine is local guidance. |
+| `noro-kohort` | Keep | absent |  | noroloji | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `uro-ipss` | Keep | slot | `ipss` |  | Published questionnaire: authorised translation and licence needed. |
+| `uro-psa` | Keep | done | `psa-hizi` |  | The velocity arithmetic only; the pre-split tool's bands are not carried (they have gaps, and a band is clinical guidance). |
+| `uro-acil` | Adapt | slot | `uroloji-acil-triyaj` |  |  |
+| `uro-kohort` | Keep | done | `takip-paneli` | uroloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `orto-kirik-alci` | Keep | done | `kirik-alci-takip` |  |  |
+| `orto-vas` | Keep | done | `vas-fonksiyon` |  |  |
+| `orto-op-protokol` | Keep | done | `ortopedi-op-protokol` |  |  |
+| `orto-kohort` | Keep | done | `takip-paneli` | ortopedi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `ftr-seans` | Adapt | slot | `ftr-seans-plani` |  |  |
+| `ftr-vas-odi` | Keep | slot | `vas-odi` |  | Published questionnaire: authorised translation and licence needed. |
+| `ftr-egzersiz` | Adapt | slot | `ev-egzersiz` |  |  |
+| `ftr-kohort` | Keep | absent |  | fizik-tedavi | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `aile-asi-tarama` | Adapt | slot | `aile-asi-tarama` |  |  |
+| `aile-kronik` | Adapt | slot | `aile-kronik` |  |  |
+| `aile-sevk` | Adapt | slot | `aile-sevk` |  |  |
+| `aile-kohort` | Adapt | slot | `aile-kohort` |  |  |
+| `spor-rtp` | Keep | done | `rtp-basamak` |  | The steps as a list; no number of days between steps is proposed. |
+| `spor-sakatlik` | Keep | done | `sakatlik-gunlugu` |  |  |
+| `spor-kohort` | Keep | done | `takip-paneli` | spor-hekimligi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `endo-lab-izlem` | Keep | slot | `lab-izlem` |  | Reclassified from keep: targets and intervals are local guidance. Mechanism in the kit. |
+| `endo-dxa` | Keep | slot | `dxa-tekrar` |  | Reclassified from keep: the repeat interval is local guidance. Mechanism in the kit. |
+| `endo-rejim` | Keep | done | `rejim-karti` |  | A structured card of what the doctor decided; it holds no medicine and no dose. |
+| `endo-kohort` | Keep | done | `takip-paneli` | endokrinoloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `gastro-ibd-ibs` | Keep | slot | `ibd-skor` |  | Reclassified from keep: the bands are published thresholds the country must confirm. Mechanism in the kit. |
+| `gastro-endoskopi` | Keep | absent |  |  | A bridge to uploaded documents; document and image upload stays out of this job. |
+| `gastro-hepatit` | Keep | slot | `hepatit-izlem` |  | Reclassified from keep: intervals are local guidance. Mechanism in the kit. |
+| `gastro-kohort` | Keep | absent |  | gastroenteroloji | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `nef-egfr-kdigo` | Keep | done | `kdigo-serit` |  |  |
+| `nef-diyaliz` | Keep | done | `diyaliz-seans` |  |  |
+| `nef-anemi` | Keep | slot | `anemi-izlem` |  | Reclassified from keep: targets are local guidance. Mechanism in the kit. |
+| `nef-sgk` | Remove | absent (blocked) |  |  |  |
+| `nef-kohort` | Keep | done | `takip-paneli` | nefroloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `enfeksiyon-izolasyon` | Adapt | slot | `enfeksiyon-bildirim` |  |  |
+| `enfeksiyon-atb-sure` | Keep | done | `antibiyotik-sure` |  | A day counter on the doctor's own start day and length; it holds no antibiotic and no duration. |
+| `enfeksiyon-viral-izlem` | Keep | slot | `viral-izlem` |  | Reclassified from keep: intervals are local guidance. Mechanism in the kit. |
+| `enfeksiyon-kohort` | Keep | done | `takip-paneli` | enfeksiyon-hastaliklari | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `onko-kur` | Keep | done | `kur-sayaci` |  |  |
+| `onko-toksisite` | Keep | done | `toksisite-listesi` |  |  |
+| `onko-sut` | Remove | absent (blocked) |  |  |  |
+| `onko-kohort` | Keep | done | `takip-paneli` | onkoloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `gc-preop` | Keep | done | `genel-preop` |  |  |
+| `gc-yara-dren` | Keep | done | `yara-dren-izlem` |  | Shared with paediatric surgery. |
+| `gc-patoloji` | Keep | absent |  |  | A bridge to uploaded documents; document and image upload stays out of this job. |
+| `gc-kohort` | Keep | done | `takip-paneli` | genel-cerrahi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `plastik-foto` | Keep | absent |  |  | A bridge to uploaded photographs; document and image upload stays out of this job. |
+| `plastik-yara` | Keep | done | `plastik-yara-greft` |  |  |
+| `plastik-onam` | Adapt | slot | `plastik-onam` |  |  |
+| `plastik-kohort` | Keep | done | `takip-paneli` | plastik-cerrahi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `acil-esi` | Keep | done | `esi-triyaj` |  |  |
+| `acil-kritik-yol` | Keep | done | `kritik-yol` |  |  |
+| `acil-sevk` | Adapt | slot | `acil-sevk` |  |  |
+| `acil-kohort` | Keep | done | `takip-paneli` | acil-tip | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `bc-postop` | Keep | done | `noro-postop` |  |  |
+| `bc-goruntu` | Keep | absent |  |  | A bridge to uploaded images; document and image upload stays out of this job. |
+| `bc-bilinc` | Keep | done | `nobet-bilinc` |  |  |
+| `bc-kohort` | Keep | done | `takip-paneli` | beyin-cerrahisi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `anestezi-asa` | Keep | done | `asa-preop` |  |  |
+| `anestezi-hava-yolu` | Keep | done | `hava-yolu-notu` |  |  |
+| `anestezi-agri` | Keep | done | `postop-agri` |  |  |
+| `anestezi-kohort` | Keep | done | `takip-paneli` | anestezi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `radyo-kuyruk` | Keep | done | `tetkik-kuyrugu` |  |  |
+| `radyo-rapor` | Keep | done | `rapor-taslagi` |  |  |
+| `radyo-kritik` | Adapt | slot | `radyo-kritik-bildirim` |  |  |
+| `radyo-kohort` | Keep | done | `takip-paneli` | radyoloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `gogus-cerrahi-preop` | Keep | done | `toraks-preop` |  |  |
+| `gogus-cerrahi-tup-yara` | Keep | done | `toraks-tup-yara` |  |  |
+| `gogus-cerrahi-patoloji` | Keep | absent |  |  | A bridge to uploaded documents; document and image upload stays out of this job. |
+| `gogus-cerrahi-kohort` | Keep | done | `takip-paneli` | gogus-cerrahisi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `kdc-preop` | Keep | done | `kalp-damar-preop` |  |  |
+| `kdc-greft-yara` | Keep | done | `greft-yara-izlem` |  |  |
+| `kdc-antikoag` | Keep | done | `antikoagulan-vadeleri` |  | Dates the doctor sets; it holds no medicine, no target and no interval. |
+| `kdc-kohort` | Keep | done | `takip-paneli` | kalp-damar-cerrahisi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `roma-das28-basdai` | Keep | done | `das28` |  | DAS28 only. The BASDAI half is a published questionnaire and is the slot `basdai`. |
+| `roma-biyolojik-sut` | Remove | absent (blocked) |  |  |  |
+| `roma-lab-izlem` | Keep | done | `eklem-28` |  | The joint map only. The laboratory follow-up half leaves its intervals to the country and is the slot `iltihap-lab-izlem` (mechanism in the kit). |
+| `roma-kohort` | Adapt | done | `takip-paneli` | romatoloji | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+| `cc-prepost-op` | Keep | done | `cocuk-prepost-op` |  |  |
+| `cc-yara-dren` | Keep | done | `yara-dren-izlem` |  | Shared with general surgery. |
+| `cc-onam-veli` | Adapt | slot | `cocuk-onam-veli` |  |  |
+| `cc-kohort` | Adapt | done | `takip-paneli` | cocuk-cerrahisi | The follow-up list, shown to this role. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
+
 ## Pages under `app/doktor-tools` that are not registry tiles
 
 | Page | Verdict | Reason |
@@ -385,6 +551,23 @@ Candidates only. Each needs the clinical lead to say whether doctors would use i
 | Clinic registration and consent checklist | What an Uzbek private clinic must have on file for each patient: consent for recording, data processing and treatment (checklist A3, I1, I2). Replaces the Turkish registration and KVKK checklist of the clinic tools. |
 | Note in the other language | One-click rewrite of a finished note from Uzbek to Russian or back (Kaan's decision: the doctor chooses the report language). Core feature rather than a tile; listed here so it is not lost (checklist E6). |
 | Local disease-pattern panels | Follow-up panels for conditions that weigh more in Uzbekistan than in Türkiye. Which ones is a question for the clinical lead (checklist C11); tuberculosis, viral hepatitis, anaemia and iodine deficiency are Claude's guesses, not findings. |
+
+### What each candidate would need (2026-10-09, NOTYA-ULKE-ARACLAR-01)
+
+**None of the ten was built.** They stay proposals. Each needs content that only a local source can give, and the kit holds no such content. What the kit already has for it is said in the last column.
+
+| Candidate | What it needs before it can be built | From whom | What the kit has today |
+|---|---|---|---|
+| State record helper (DMED) | Whether private clinics must use the state record; the fields it asks for; a written decision that Notya only prepares text the doctor enters (no integration, no automated writing) | A lawyer in Uzbekistan and the clinical lead; Kaan for the decision | Nothing. No slot: the need itself is unconfirmed |
+| Prescription in the Uzbek format | The register of authorised medicines, the prescription form and its mandatory fields, the language rule, the controlled-medicine rules | The clinical lead with the national source named | The slot `recete` |
+| Sick-leave certificate draft | The form of the temporary incapacity certificate, its fields and the periods the rules allow | A lawyer in Uzbekistan with the clinical lead | The slot `hasta-belgeleri` |
+| Standard certificates and referral forms | The form numbers and fields an outpatient clinic issues (checklist G1, G4) | The clinical lead | The slots `hasta-belgeleri`, `muayene-ozeti-belgesi`, `aile-sevk`, `acil-sevk` |
+| National vaccination calendar and catch-up | The national calendar in force, with its source and date, and the catch-up rules | The clinical lead, from the Ministry of Health's published calendar | The slots `asi-takvimi` and `aile-asi-tarama`. No calendar is written anywhere |
+| Notifiable disease report | Which diagnoses are notifiable, to whom, by when, and the report form | The clinical lead with the sanitary-epidemiological service's rules | The slot `enfeksiyon-bildirim` |
+| Diagnosis coding in Uzbek and Russian | The coding edition in force and its official titles in both languages | The clinical lead with the official source | The slot `tani-kodlama` |
+| Clinic registration and consent checklist | What a private clinic must hold on file per patient: consent for recording, data processing and treatment | A lawyer in Uzbekistan | Nothing in the tools area. The consent sentences of the visit and of the intake form exist and await the same lawyer |
+| Note in the other language | Nothing local: it is a kit feature | Claude | Built earlier as part of the note screen (rewrite into the other language); it is not a tile and needs none |
+| Local disease-pattern panels | Which conditions, and for each the follow-up content: tests, targets, intervals | The clinical lead (checklist C11) | The generic follow-up list (`takip-paneli`), which holds no disease content, and the mechanism-ready slots `hepatit-izlem`, `viral-izlem`, `anemi-izlem`, `lab-izlem` |
 
 ## Appendix: clinic tools (`lib/klinik/klinikAraclari.ts`, `app/klinik-tools`)
 

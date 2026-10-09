@@ -5,9 +5,7 @@
  */
 import { tarihYaz } from '@/lib/ulke/arayuz/bicim'
 import { sayiYaz } from '@/lib/ulke/arayuz/sayi'
-import { ulkePaketi } from '@/lib/ulke/ulke'
 import { ulkeYolu } from '@/lib/ulke/yol'
-import type { BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { bicimli, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
@@ -20,12 +18,8 @@ export const araclarYolu = (hastaId?: string | null): string => (hastaId ? `${AR
 /** The address of one tool — for one patient when the tools were opened from that patient's file. */
 export const aracYolu = (anahtar: string, hastaId?: string | null): string => `${ARACLAR}?arac=${encodeURIComponent(anahtar)}${hastaId ? `&hasta=${encodeURIComponent(hastaId)}` : ''}`
 
-/** The pack's units, as the tools need them. */
-export function birimOrtami(icerik: UlkeAraclari): BirimOrtami {
-  const u = ulkePaketi().uygulama
-  if (!u) throw new Error('[ulke/araclar] the pack has no application settings')
-  return { birimler: u.birimler, lab: icerik.labBirimleri }
-}
+/** The pack's units, as the tools need them (the same function the server reads a form with). */
+export { birimOrtami } from '@/lib/ulke/araclar/ortam'
 
 /** How this country writes a number, a day and a unit, in the form `dil`. */
 export function yazici(icerik: UlkeAraclari, dil: string): Yazici {

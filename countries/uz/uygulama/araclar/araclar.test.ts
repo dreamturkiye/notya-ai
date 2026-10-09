@@ -116,6 +116,48 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     assert.equal(icerik.araclar.find((p) => p.anahtar === 'takip-paneli')!.roller!.length, 23)
   })
 
+  it('THE AUDIT, LINE BY LINE: every one of the 144 audited tools is done, a slot or absent — as the document says, checked against the pack; the sums are 96, 34 and 14', async () => {
+    const { kitAraci } = await import('@/lib/ulke/araclar/katalog')
+    const belge = readFileSync(join(KOK, 'docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md'), 'utf8')
+    const sonuc = belge.slice(belge.indexOf('## Outcome in the Uzbek build'), belge.indexOf('## Pages under `app/doktor-tools`'))
+    // the audit's own verdicts (the tables per specialty, above the outcome section)
+    const karar = new Map([...belge.slice(0, belge.indexOf('## Outcome in the Uzbek build')).matchAll(/\| `\/doktor-tools\/([a-z0-9-]+)` \| \*\*(Remove|Adapt|Keep)\*\* \|/g)].map((m) => [m[1], m[2]] as const))
+    assert.equal(karar.size, 144)
+    const satirlar = [...sonuc.matchAll(/^\| `([a-z0-9-]+)` \| (Remove|Adapt|Keep) \| (done|slot|absent|absent \(blocked\)) \| (?:`([a-z0-9-]+)`)? ?\| ([a-z-]*) ?\| (.*) \|$/gm)].map((m) => ({ rota: m[1], karar: m[2], durum: m[3], anahtar: m[4] ?? '', rol: m[5], not: m[6] }))
+    assert.deepEqual(satirlar.map((x) => x.rota).sort(), [...karar.keys()].sort(), 'the outcome table and the audit tables do not list the same tools, each once')
+    const acik = new Set(icerik.araclar.map((p) => p.anahtar)), yuvalar = new Set(icerik.yuvalar.map((y) => y.anahtar))
+    const yasak = new Set((JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as { tr: string[] }).tr)
+    const say: Record<string, Record<string, number>> = { Keep: { done: 0, slot: 0, absent: 0 }, Adapt: { done: 0, slot: 0, absent: 0 }, Remove: { done: 0, slot: 0, absent: 0 } }
+    for (const x of satirlar) {
+      assert.equal(x.karar, karar.get(x.rota), `${x.rota}: the verdict in the outcome table is not the audit's`)
+      if (x.durum === 'done') {
+        assert.ok(acik.has(x.anahtar) && kitAraci(x.anahtar), `${x.rota}: said to be done as "${x.anahtar}", which is not switched on`)
+        // a cohort panel is done only where the follow-up list is really shown to that role
+        if (kitAraci(x.anahtar)!.ekran === 'takipPaneli') assert.ok(roller.includes(x.rol) && P.hesabinAraci(icerik, x.rol, x.anahtar), `${x.rota}: the follow-up list is not shown to "${x.rol}"`)
+        else assert.equal(x.rol, '')
+      } else if (x.durum === 'slot') {
+        assert.ok(yuvalar.has(x.anahtar) && !acik.has(x.anahtar), `${x.rota}: said to be the slot "${x.anahtar}", which is not a slot of the pack`)
+      } else {
+        assert.equal(x.anahtar, '', `${x.rota}: absent, and a key is named`)
+        if (x.durum === 'absent (blocked)') assert.ok(x.karar === 'Remove' && yasak.has(x.rota), `${x.rota}: said to be blocked and not on the wall's list`)
+        else { assert.ok(x.not.length > 20, `${x.rota}: absent without a reason`); if (x.rol) assert.equal(P.hesabinAraci(icerik, x.rol, 'takip-paneli'), null, `${x.rota}: listed as absent and the follow-up list IS shown to "${x.rol}"`) }
+      }
+      assert.ok(x.karar !== 'Remove' || x.durum === 'absent (blocked)', `${x.rota}: a removed tool is in the build`)
+      say[x.karar][x.durum === 'absent (blocked)' ? 'absent' : x.durum]++
+    }
+    assert.deepEqual(say, { Keep: { done: 64, slot: 19, absent: 13 }, Adapt: { done: 2, slot: 32, absent: 0 }, Remove: { done: 0, slot: 0, absent: 14 } })
+    const topla = (o: Record<string, number>) => o.done + o.slot + o.absent
+    assert.deepEqual([topla(say.Keep), topla(say.Adapt), topla(say.Remove)], [96, 34, 14])
+    // the document's own summary table says the same numbers
+    assert.match(sonuc, /\| \*\*Keep\*\* \| 64 \| 19 \| 13 \| 96 \|\n\| \*\*Adapt\*\* \| 2 \| 32 \| 0 \| 34 \|\n\| \*\*Remove\*\* \| 0 \| 0 \| 14 \| 14 \|/)
+    // nothing is switched on, and nothing is a slot, that the document does not account for
+    const hesapli = new Set(satirlar.map((x) => x.anahtar).filter(Boolean))
+    const belgesiz = [...acik, ...yuvalar].filter((k) => !hesapli.has(k))
+    // tools the table names in a note rather than in its key column: the second and third score of one audited tile, and two half-tools
+    assert.deepEqual(belgesiz.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad'])
+    for (const k of belgesiz) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)
+  })
+
   it('every text is in its own script, and the three forms are three texts', () => {
     const metinler: [string, Record<string, string>][] = []
     const topla = (yol: string, o: unknown) => {
