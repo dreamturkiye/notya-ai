@@ -1,5 +1,9 @@
 # Country pack: Uzbekistan
 
+> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
+> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
+> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
+
 Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/`.
 
 ## Correction of the record: where Uzbek data is stored (2026-10-08, NOTYA-ULKE-SABLON-01)

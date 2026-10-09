@@ -1,5 +1,9 @@
 # Country packs: database rollout on the shared database
 
+> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
+> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
+> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
+
 > **Open item, 2026-10-09: this plan may be reversed.** Kaan, 2026-10-09 01:43: "Make sure the database tables are seperate. Do not put or mix the database tables in the same database". Read as: a database of its own for Uzbekistan, and no script on the Turkish database. Awaiting his confirmation; until then nothing below is to be run anywhere. See `docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-FIYAT-UNVAN-01a.
 
 Written 2026-10-08 for Kaan (NOTYA-ULKE-SABLON-01). Plain English; the SQL is in the files it names.

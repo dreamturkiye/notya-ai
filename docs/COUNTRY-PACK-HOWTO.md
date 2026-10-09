@@ -1,5 +1,9 @@
 # How to start a new country
 
+> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
+> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
+> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
+
 Written 2026-10-09 (NOTYA-ULKE-SABLON-01). The standard a country must meet is `docs/COUNTRY-PACK-CHECKLIST.md`; this page is the practical side: what a country is made of, the one command that starts it, what has to be supplied and in which order, and what a successful build does **not** prove.
 
 Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked example: three language forms, forty roles, a landing page.

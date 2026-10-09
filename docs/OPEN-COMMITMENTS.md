@@ -3395,3 +3395,14 @@ Pre-existing files edited (everything else is a new file): the Uzbek pack's own 
 | NOTYA-UZ-FIYAT-UNVAN-01h | 2026-10-09 | OPEN | The page now puts prices on plans whose contents are mostly not switched on in the Uzbek version (voice assistant, portal, consultation, reminders, follow-up lists, clinic accounts): NOTYA-UZ-ACILIS-02a applies with more weight. The page stays hidden from search engines and must not go public as it is. | Kaan |
 | NOTYA-UZ-FIYAT-UNVAN-01i | 2026-10-09 | OPEN | The kit's landing layout now has a price section every country fills: plan names and lines in the copy, amounts in a price list of the pack's own (`fiyatlar`), written by the pack's number rules. A new country from the scaffold therefore has **665 items to supply (633 texts, 32 settings)**, not 628; `docs/COUNTRY-PACK-HOWTO.md` says so. The plan ids in the scaffold (`starter`, `pro`, `practice`, `clinic5`, `clinic10`, `clinic20`, `enterprise`) are the layout's suggestion; a country may have other plans. | — (for whoever starts the next country) |
 | NOTYA-UZ-FIYAT-UNVAN-01j | 2026-10-09 | OPEN | The assistant's title is shown inside the application too (home, visit screen, note draft, settings card: "Prof. Dr. Malika Nazarova"). No instruction to the model names an assistant or a title, as before. The earlier wish for a background text (a senior clinician with 20+ years of practice in Uzbekistan) is not met by a title and stays open under NOTYA-UZ-BRANSLAR-01e; tests fail if years of practice, a rank written out or an affiliation appears. | Kaan, with a local clinician |
+
+
+## NOTYA-ULKE-DB-01 — one database per country (2026-10-09)
+
+Decision by Kaan, 2026-10-09 02:26: "We had issues with common databases before. Keep seperation between the two and any other future country versions". Each country (Uzbekistan and every later one) gets its own database; nothing is run on the Turkish database. This settles the open item recorded earlier today about his 01:43 instruction and supersedes the 2026-10-08 19:09 shared-database decision.
+
+- 01a — Create the Uzbek database (separate project), quote the cost first: waits on Kaan's word.
+- 01b — Run migrations 129 to 135 on the new Uzbek database only, then connect the Uzbek preview to it: waits on 01a; Claude runs.
+- 01c — Rewrite the shared-database sections of `COUNTRY-PACK-DB-ROLLOUT.md`, `COUNTRY-PACK-HOWTO.md` and `COUNTRY-PACK-CHECKLIST.md` (a decision banner is at the top of each for now): Claude, in the next country-kit job.
+- 01d — With separate databases the login pools are separate too, so the "no Uzbek invitation codes until the Turkish site has a country check" hold no longer applies. The country check on the Turkish site (#565) becomes optional hardening: Kaan's call, later.
+- 01e — The scaffold and the how-to must state "create the country's own database" as a step: Claude, with 01c.
