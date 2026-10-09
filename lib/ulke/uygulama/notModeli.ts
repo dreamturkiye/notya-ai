@@ -9,7 +9,10 @@
  *     model once, as for every other caller;
  *   - the instruction (the pack's, fixed per language and template) is the cached system block; nothing about a
  *     doctor or a patient is in it. The transcript is the user message;
- *   - `doctorId` is given for the usage row. A patient id is never given.
+ *   - `doctorId` is given for the usage row. A patient id is never given;
+ *   - NOTYA-ULKE-ASISTAN-01: the assistant's answer is the expert-conversation task, STREAMED through the gateway's
+ *     own streaming door (aiAkis), which falls to the guard model only before the first word. Its answer is prose,
+ *     so the call says that no JSON is expected.
  *
  * BOUNDARY. The gateway reports failures in Turkish (its own engineers' language). Nothing it throws leaves this
  * file: the caller gets null, the route answers with a code, the screen shows the pack's wording. The log line
@@ -17,7 +20,7 @@
  *
  * No instruction text lives here: it comes from the active pack (countries/active/klinik).
  */
-import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
+import { aiAkis, aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import { modelSec } from '@/lib/ai/modeller'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -122,4 +125,53 @@ export function hastaOzetiniOku(metin: string, azami: number): string | null {
 export async function modeldenHastaOzeti(g: Omit<ModelGirdisi, 'gorev'> & { azami: number }): Promise<string | null> {
   const metin = await modeldenMetin({ ...g, gorev: 'not-uretimi' }, 'ozet')
   return metin === null ? null : hastaOzetiniOku(metin, g.azami)
+}
+
+// ───────────────────────── NOTYA-ULKE-ASISTAN-01 — the assistant's answer, streamed ─────────────────────────
+
+export type AkisGirdisi = {
+  /** The first block: the pack's instruction for a role and a form. The same for every doctor of that role: cached. */
+  talimat: string
+  /** The second block: "no patient's data was given", or the pack's sentence and one patient's data. Never cached. */
+  ikinciBlok: string
+  /** The patient's data once more, ONLY for the gateway's own safety scan. It is not sent to the model a second time. */
+  guvenlikBaglami?: string
+  /** The conversation so far, oldest first, ending with the question that is being asked. */
+  mesajlar: readonly { yazan: 'hekim' | 'asistan'; metin: string }[]
+  doktorId: string
+  butceMs?: number
+  olcum?: Olcum
+}
+/** `kesildi`: the answer stops short (the provider broke off after the first word, or the answer reached its ceiling). */
+export type AkisSonucu = { metin: string; kesildi: boolean }
+
+/**
+ * The assistant's answer as it is being written: `parca` receives every piece the moment the gateway has it, and the
+ * whole answer comes back at the end. null = nothing was said at all (the provider failed before the first word, the
+ * guard failed too, or the answer was empty). An answer that broke off AFTER it began is returned as far as it got,
+ * marked `kesildi`: a word that was shown is never taken back and never said twice. Nothing the gateway throws
+ * leaves this file.
+ */
+export async function modeldenAkis(g: AkisGirdisi, parca: (metin: string) => void): Promise<AkisSonucu | null> {
+  let soylenen = ''
+  try {
+    const yanit = await aiAkis(
+      {
+        gorev: 'sohbet-uzman',
+        system: [{ metin: g.talimat, onbellek: true }, { metin: g.ikinciBlok }],
+        messages: g.mesajlar.map((m) => ({ role: m.yazan === 'hekim' ? ('user' as const) : ('assistant' as const), content: m.metin })),
+        doctorId: g.doktorId,
+        jsonBekleniyor: false,
+        ...(g.guvenlikBaglami ? { guvenlikBaglami: g.guvenlikBaglami } : {}),
+        ...(g.butceMs ? { butceMs: g.butceMs } : {}),
+      },
+      (p) => { if (p) { soylenen += p; parca(p) } },
+    )
+    if (g.olcum) await kullanimEkle(g.olcum.supabase, g.doktorId, g.olcum.gorev, yanitTokenlari(yanit))
+    if (!soylenen.trim()) return null
+    return { metin: soylenen, kesildi: (yanit as { stop_reason?: unknown }).stop_reason === 'max_tokens' }
+  } catch (e) {
+    console.error(`[ulke/asistan] sohbet-uzman: ${e instanceof AiCagriHatasi ? `gateway ${e.durum}` : e instanceof Error ? e.name : typeof e}`)
+    return soylenen.trim() ? { metin: soylenen, kesildi: true } : null
+  }
 }

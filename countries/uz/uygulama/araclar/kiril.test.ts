@@ -71,6 +71,8 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
     for (const d of readdirSync(dizin).filter((x) => x.endsWith('.ts') && !x.endsWith('.test.ts'))) assert.equal(dosyayiDoldur(readFileSync(join(dizin, d), 'utf8')).n, 0, `${d} still has a text without its Cyrillic form`)
   })
 
+  // NOTYA-ULKE-ASISTAN-01: a TEST of this pack may read the rule (it holds a file's stored Cyrillic text to it, as this
+  // file does for the tools). A test is neither a build step nor an application file; everything else stays refused.
   it('COUNTRY TOOLING ONLY: no build step, no application file and no other script imports or runs it', () => {
     const pkg = readFileSync(join(KOK, 'package.json'), 'utf8')
     assert.doesNotMatch(pkg, /uz-kiril/)
@@ -83,7 +85,7 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
       }
       return cikti
     }
-    const okuyan = ['app', 'components', 'lib', 'countries', 'scripts'].flatMap((d) => gez(d)).filter((d) => !/uz-kiril\.(mjs|d\.mts)$/.test(d) && !d.endsWith('araclar/kiril.test.ts') && /(from\s*|import\(\s*|require\(\s*|spawn\w*\([^)]*)['"`][^'"`]*uz-kiril/.test(readFileSync(join(KOK, d), 'utf8')))
+    const okuyan = ['app', 'components', 'lib', 'countries', 'scripts'].flatMap((d) => gez(d)).filter((d) => !/uz-kiril\.(mjs|d\.mts)$/.test(d) && !(d.startsWith('countries/uz/') && d.endsWith('.test.ts')) && /(from\s*|import\(\s*|require\(\s*|spawn\w*\([^)]*)['"`][^'"`]*uz-kiril/.test(readFileSync(join(KOK, d), 'utf8')))
     assert.deepEqual(okuyan, [])
   })
 })

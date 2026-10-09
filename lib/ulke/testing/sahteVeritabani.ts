@@ -85,6 +85,24 @@ export function sahteVeritabani() {
     const c = cakisma(ad, yeni, digerleri)
     if (c) return c
     const hata = (code: string, message: string) => ({ code, message })
+    // NOTYA-ULKE-ASISTAN-01 — migration 143: the keys and checks of the assistant's two tables. A conversation may be
+    // about nobody (patient_id null); where it names a patient, the patient is this doctor's in this country. A
+    // message hangs from a conversation of the same country and doctor.
+    // (A row a test writes without these columns is not a conversation or a message yet; the database would refuse it for a missing column.)
+    if (ad === 'ulke_asistan_konusmalari' && yeni.rol === undefined && yeni.baslik_encrypted === undefined) return null
+    if (ad === 'ulke_asistan_mesajlari' && yeni.konusma_id === undefined) return null
+    if (ad === 'ulke_asistan_konusmalari') {
+      if (yeni.patient_id != null && !tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', 'insert or update on table "ulke_asistan_konusmalari" violates foreign key constraint "ulke_asistan_konusmalari_hasta_fk"')
+      if (typeof yeni.rol !== 'string' || !/^[a-z]+(-[a-z]+)*$/.test(yeni.rol) || yeni.rol.length > 60) return hata('23514', 'new row for relation "ulke_asistan_konusmalari" violates check constraint (rol)')
+      if (typeof yeni.baslik_encrypted !== 'string' || !yeni.baslik_encrypted) return hata(yeni.baslik_encrypted === '' ? '23514' : '23502', 'new row for relation "ulke_asistan_konusmalari" has no title (baslik_encrypted)')
+      return null
+    }
+    if (ad === 'ulke_asistan_mesajlari') {
+      if (!tablo('ulke_asistan_konusmalari').some((k) => k.id === yeni.konusma_id && k.doctor_id === yeni.doctor_id && k.ulke === yeni.ulke)) return hata('23503', 'insert or update on table "ulke_asistan_mesajlari" violates foreign key constraint "ulke_asistan_mesajlari_konusma_fk"')
+      if (yeni.yazan !== 'hekim' && yeni.yazan !== 'asistan') return hata('23514', 'new row for relation "ulke_asistan_mesajlari" violates check constraint (yazan)')
+      if (typeof yeni.metin_encrypted !== 'string' || !yeni.metin_encrypted) return hata(yeni.metin_encrypted === '' ? '23514' : '23502', 'new row for relation "ulke_asistan_mesajlari" has no text (metin_encrypted)')
+      return null
+    }
     const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari']
     // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
     if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
@@ -127,6 +145,14 @@ export function sahteVeritabani() {
    * form's answers do not change (it can only be reopened).
    */
   const guncellemeKilidi = (ad: string, eski: Satir, yeni: Satir): { message: string; code: string } | null => {
+    // NOTYA-ULKE-ASISTAN-01 — the two triggers of migration 143 (`ulke_asistan_konusma_kilidi`, `ulke_asistan_mesaj_kilidi`).
+    if (ad === 'ulke_asistan_mesajlari') return eski.konusma_id === undefined ? null : { code: '23514', message: 'ulke_asistan_mesajlari: a message does not change; a new answer is a new message' }
+    if (ad === 'ulke_asistan_konusmalari') {
+      const degisti = (k: string) => (eski[k] ?? null) !== (yeni[k] ?? null)
+      if (degisti('ulke') || degisti('doctor_id') || degisti('patient_id')) return { code: '23514', message: 'ulke_asistan_konusmalari: a conversation never moves to another country, doctor or patient' }
+      if (degisti('rol') || degisti('created_at')) return { code: '23514', message: 'ulke_asistan_konusmalari: the role a conversation began with and the moment it began do not change' }
+      return null
+    }
     if ((ad !== 'ulke_hasta_formlari' && ad !== 'ulke_arac_kayitlari') || eski.patient_id === undefined) return null
     const hata = (message: string) => ({ code: '23514', message })
     const farkli = (k: string) => (eski[k] ?? null) !== (yeni[k] ?? null)
@@ -373,6 +399,8 @@ export function sahteVeritabani() {
         if (!this.filtreler.length) throw new Error(`stand-in database: delete on ${this.ad} without a filter`)
         sonuc = satirlar.filter(uyan)
         tablolar[this.ad] = satirlar.filter((s) => !uyan(s))
+        // NOTYA-ULKE-ASISTAN-01 — `on delete cascade` of migration 143: a conversation takes its messages along.
+        if (this.ad === 'ulke_asistan_konusmalari') tablolar.ulke_asistan_mesajlari = tablo('ulke_asistan_mesajlari').filter((m) => !sonuc.some((k) => k.id === m.konusma_id && k.doctor_id === m.doctor_id && k.ulke === m.ulke))
       }
       if (this.sira) {
         const { kolon, artan } = this.sira

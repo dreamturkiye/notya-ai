@@ -23,8 +23,10 @@ import { ulkeIslevi } from './tablolar'
 /**
  * The tasks that are measured. Speech: the first pass of a recording, and the second pass where one ran. The model:
  * a visit note, a rewrite of a note in another language, a summary for the patient.
+ * NOTYA-ULKE-ASISTAN-01 — the assistant: an answer (tokens), a spoken question transcribed (seconds of audio), an
+ * answer read aloud (how many).
  */
-export const KULLANIM_GOREVLERI = ['konusma-ilk', 'konusma-ikinci', 'not', 'yeniden-yazim', 'hasta-ozeti'] as const
+export const KULLANIM_GOREVLERI = ['konusma-ilk', 'konusma-ikinci', 'not', 'yeniden-yazim', 'hasta-ozeti', 'asistan', 'asistan-konusma', 'asistan-ses'] as const
 export type KullanimGorevi = (typeof KULLANIM_GOREVLERI)[number]
 
 export type KullanimOlcusu = {
