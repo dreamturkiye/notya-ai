@@ -192,7 +192,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
           <>
             {sonuc.sayilar.length ? (
               <dl className="uza-bilgiler" style={{ marginTop: 0 }}>
-                {sonuc.sayilar.map((s) => <React.Fragment key={s.anahtar}><dt>{bicimli(t.sayilar?.[s.anahtar], dil)}</dt><dd data-sayi={s.anahtar}>{sayiMetni(s, a, y)}</dd></React.Fragment>)}
+                {sonuc.sayilar.map((s) => <React.Fragment key={s.anahtar}><dt>{bicimli(t.sayilar?.[s.anahtar], dil)}</dt><dd data-sayi={s.anahtar}>{sayiMetni(s, a, y, o)}</dd></React.Fragment>)}
               </dl>
             ) : null}
             {sonuc.bant ? <p className="uza-arac-bant" data-bant={sonuc.bant}>{bicimli(t.bantlar?.[sonuc.bant], dil)}</p> : null}

@@ -53,6 +53,26 @@ import { izlemDegerlendir } from '@/specialties/kardiyoloji/engines/htKky'
 import { asimetriNotu, degisim, skorla as ptaSkorla } from '@/specialties/kulak-burun-bogaz/engines/odyometri'
 import { DIS_KULAK_LISTESI, EK_BULGULAR, TM_LISTESI, otoskopiNotu } from '@/specialties/kulak-burun-bogaz/engines/otoskopi'
 import { MANEVRA_LISTESI, NISTAGMUS_OZELLIKLERI, SANTRAL_ISARETLERI, vertigoNotu } from '@/specialties/kulak-burun-bogaz/engines/vertigo'
+import * as K6 from './tanimlar/nefroOnko'
+import * as K7 from './tanimlar/ortoPediRadyoRoma'
+import { egfrSkorla } from '@/specialties/nefroloji/engines/egfr'
+import { diyalizGorevleri, diyalizSkorla } from '@/specialties/nefroloji/engines/diyaliz'
+import { anemiSkorla, anemiSonrakiTarih } from '@/specialties/nefroloji/engines/anemi'
+import { kurGorevleri, kurSkorla } from '@/specialties/onkoloji/engines/kur'
+import { TOKSISITE_MADDELER, toksisiteSkorla } from '@/specialties/onkoloji/engines/toksisite'
+import { BOLGELER as TR_KIRIK_BOLGELER, NV_DURUMLARI as TR_NV, OP_PROTOKOL_MADDELERI as TR_OP_PROTOKOL, TARAFLAR as TR_TARAFLAR, ozetle as kirikOzetle } from '@/specialties/ortopedi/engines/kirikAlci'
+import { FONKSIYON_MADDELER, skorla as vasSkorla } from '@/specialties/ortopedi/engines/vasFonksiyon'
+import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
+import { dozHesapla } from '@/specialties/pediatri/engines/doz'
+import { yaraGorevleri as plastikYaraGorevleri, yaraNormalize as plastikYaraNormalize, yaraSkorla as plastikYaraSkorla } from '@/specialties/plastik-cerrahi/engines/yara'
+import { RADYO_DURUMLAR, RADYO_MODALITELER, RADYO_ONCELIKLER, kuyrukSkorla } from '@/specialties/radyoloji/engines/kuyruk'
+import { BIRADS_KATEGORILER, RAPOR_SABLON, raporSkorla } from '@/specialties/radyoloji/engines/rapor'
+import { das28Skorla } from '@/specialties/romatoloji/engines/das28Basdai'
+import { EKLEM_28 as TR_EKLEM_28, eklemSay } from '@/specialties/romatoloji/engines/eklemHaritasi'
+import { labSkorla as romaLabSkorla, sonrakiIzlemTarihi as romaSonrakiTarih } from '@/specialties/romatoloji/engines/labIzlem'
+import { rtpDegerlendir } from '@/specialties/spor-hekimligi/engines/rtp'
+import { BOLGELER as TR_SAKATLIK_BOLGELER, MEKANIZMALAR as TR_MEKANIZMALAR, sakatlikDegerlendir, yuklenmeUyariHesapla } from '@/specialties/spor-hekimligi/engines/sakatlik'
+import { bantBul as psaBantBul, skorlaSeri as psaSkorlaSeri } from '@/specialties/uroloji/engines/psa'
 
 const BUGUN = ORNEK_BUGUN
 /** What both sides are reduced to before they are compared. */
@@ -295,9 +315,94 @@ SATIRLAR_4: {
   )
 }
 
+SATIRLAR_5: {
+  const sira = <T extends string>(bizim: readonly T[], onlarin: readonly string[], k: unknown): string | null => (typeof k === 'string' && bizim.includes(k as T) ? onlarin[bizim.indexOf(k as T)] : null)
+  const uzunluk = (a: readonly unknown[], b: readonly unknown[]) => [[String(a.length)], [String(b.length)]] as const
+  SATIRLAR.push(
+    { arac: 'kdigo-serit', karsilik: 'specialties/nefroloji/engines/egfr.ts → egfrSkorla (categories and risk cell; the interval is not the kit\'s)', listeler: [],
+      onlar: (g) => { const r = egfrSkorla(g.egfr as number | null, g.uacr as number | null); return r.tamamMi ? { tamam: true, bant: r.renk, uyarilar: [r.g!, ...(r.a ? [r.a] : [])].sort() } : { tamam: false } } },
+    { arac: 'diyaliz-seans', karsilik: 'specialties/nefroloji/engines/diyaliz.ts → diyalizSkorla, diyalizGorevleri', listeler: [],
+      onlar: (g) => { const r = diyalizSkorla({ modalite: g.modalite ?? '', tarih: g.tarih ?? '', sonrakiSeans: g.sonraki_seans }); if (!r.tamamMi || !r.kayit) return { tamam: false }; assert.deepEqual(diyalizGorevleri(r.kayit).map((x) => x.due), r.kayit.sonrakiSeans ? [r.kayit.sonrakiSeans] : []); return { tamam: true, tarihler: dolu({ tarih: r.kayit.tarih, sonraki_seans: r.kayit.sonrakiSeans }) } } },
+    { arac: 'anemi-izlem', karsilik: 'specialties/nefroloji/engines/anemi.ts → anemiSkorla, anemiSonrakiTarih (with that application\'s own range and months as parameters)', listeler: [], sayilar: ['sonraki_ay'],
+      onlar: (g) => { const r = anemiSkorla(g.hb as number | null); return { tamam: r.tamamMi, bant: r.bant, sayilar: dolu({ sonraki_ay: r.tamamMi ? r.sonrakiAy : null }), tarihler: dolu({ sonraki: r.tamamMi && typeof g.tarih === 'string' ? anemiSonrakiTarih(g.tarih, r.sonrakiAy) : null }) } } },
+    { arac: 'kur-sayaci', karsilik: 'specialties/onkoloji/engines/kur.ts → kurSkorla, kurGorevleri', listeler: [], sayilar: ['kur'],
+      onlar: (g) => { const r = kurSkorla({ mevcutKur: g.mevcut_kur, toplamKur: g.toplam_kur, sonKurTarihi: g.son_kur, sonrakiKurTarihi: g.sonraki_kur }); if (!r.tamamMi) return { tamam: false }; assert.deepEqual(kurGorevleri(r.kart).map((x) => x.due), r.kart.sonrakiKurTarihi ? [r.kart.sonrakiKurTarihi] : []); return { tamam: true, sayilar: { kur: r.kart.mevcutKur as number }, tarihler: dolu({ son_kur: r.kart.sonKurTarihi, sonraki_kur: r.kart.sonrakiKurTarihi }) } } },
+    { arac: 'toksisite-listesi', karsilik: 'specialties/onkoloji/engines/toksisite.ts → toksisiteSkorla', listeler: [[K6.TOKSISITE_MADDELERI, TOKSISITE_MADDELER.map((m) => m.kod)]], sayilar: ['isaretli'],
+      onlar: (g) => { const r = toksisiteSkorla(isaretliler(g, K6.TOKSISITE_MADDELERI)); return { tamam: r.tamamMi, sayilar: (r.tamamMi ? { isaretli: r.gorevOnerileri.length } : {}) as Record<string, number> } } },
+    {
+      arac: 'kirik-alci-takip', karsilik: 'specialties/ortopedi/engines/kirikAlci.ts → ozetle', listeler: [uzunluk(K7.KIRIK_BOLGELERI, TR_KIRIK_BOLGELER), uzunluk(K7.TARAFLAR, TR_TARAFLAR), uzunluk(K7.NV_DURUMLARI, TR_NV)],
+      onlar: (g) => {
+        if (g.tip === null) return { tamam: false }
+        const r = kirikOzetle({ tip: g.tip as 'kirik', bolge: sira(K7.KIRIK_BOLGELERI, TR_KIRIK_BOLGELER, g.bolge) ?? '', taraf: sira(K7.TARAFLAR, TR_TARAFLAR, g.taraf) ?? '', baslangic: g.baslangic as string | null, alciAlma: g.alci_alma as string | null, yukVerme: g.yuk_verme as string | null, nvDurum: sira(K7.NV_DURUMLARI, TR_NV, g.nv) ?? TR_NV[3], goruntuHazir: g.goruntu_hazir === true, notHekim: null, bugun: BUGUN })
+        const uyari = r.uyarilar.map((u) => (/^NV tehdit/.test(u) ? 'nv_tehdit' : /^Al/.test(u) ? 'alci_gecti' : /^Y/.test(u) ? 'yuk_gecti' : `?${u}`))
+        const gorev = r.gorevler.filter((x) => x.kod === 'goruntu_kontrol' || x.kod === 'op_kontrol').map((x) => x.kod)
+        return { tamam: true, uyarilar: [...uyari, ...gorev].sort(), tarihler: dolu({ baslangic: g.baslangic as string | null, alci_alma: r.gorevler.find((x) => x.kod === 'alci_alma')?.due ?? null, yuk_verme: r.gorevler.find((x) => x.kod === 'yuk_verme')?.due ?? null }) }
+      },
+    },
+    { arac: 'vas-fonksiyon', karsilik: 'specialties/ortopedi/engines/vasFonksiyon.ts → skorla', listeler: [[K7.FONKSIYON_MADDELERI, FONKSIYON_MADDELER.map((m) => m.id)]], sayilar: ['vas', 'fonksiyon'],
+      onlar: (g) => { const r = vasSkorla(g.vas as number | null, K7.FONKSIYON_MADDELERI.map((k) => g[k] as number | null)); return { tamam: r.tamamMi, bant: r.bant, sayilar: (r.tamamMi ? { vas: r.vas as number, fonksiyon: r.fonksiyonToplam as number } : {}) as Record<string, number> } } },
+    { arac: 'hedef-boy', karsilik: 'lib/clinical/hedefBoy.ts → hesaplaHedefBoy', listeler: [], sayilar: ['hedef', 'alt', 'ust'],
+      onlar: (g) => { if (g.cinsiyet === null || g.anne === null || g.baba === null) return { tamam: false }; const r = hesaplaHedefBoy({ anneBoy: g.anne as number, babaBoy: g.baba as number, cinsiyet: g.cinsiyet as string }); return r.ok ? { tamam: true, sayilar: { hedef: r.sonuc.cocukCm, alt: r.sonuc.altCm, ust: r.sonuc.ustCm } } : { tamam: false } } },
+    {
+      arac: 'doz-hesabi', karsilik: 'specialties/pediatri/engines/doz.ts → dozHesapla', listeler: [], sayilar: ['doz_mg', 'gunluk_mg', 'aralik_saat', 'doz_ml', 'gunluk_ml', 'tavanli_doz_mg', 'tavanli_doz_ml'],
+      onlar: (g) => {
+        if (g.mod === null) return { tamam: false }
+        const kons = typeof g.kons_mg === 'number' && typeof g.kons_ml === 'number' ? { mg: g.kons_mg, ml: g.kons_ml, mgPerMl: g.kons_mg / g.kons_ml, metin: '' } : null
+        const r = dozHesapla({ kiloKg: g.kilo as number | null, mgKg: g.mg_kg as number | null, mod: g.mod as 'gun', dozSayisi: (g.doz_sayisi as number | null) ?? 0, konsantrasyon: kons, tavanDozMg: g.tavan_doz_mg as number | null, tavanGunMg: g.tavan_gun_mg as number | null })
+        if (!r) return { tamam: false }
+        return { tamam: true, sayilar: dolu({ doz_mg: r.dozMg, gunluk_mg: r.gunlukMg, aralik_saat: r.aralikSaat, doz_ml: r.dozMlYuvarlak, gunluk_ml: r.gunlukMl, tavanli_doz_mg: r.tavanli?.dozMg ?? null, tavanli_doz_ml: r.tavanli?.dozMlYuvarlak ?? null }), uyarilar: r.uyarilar.map((u) => u.kod).sort() }
+      },
+    },
+    {
+      arac: 'plastik-yara-greft', karsilik: 'specialties/plastik-cerrahi/engines/yara.ts → yaraSkorla', listeler: [],
+      onlar: (g) => { const r = plastikYaraSkorla({ tip: g.tip, bolge: g.bolge ? 'x' : null, islemTarihi: g.islem, pansumanTarihi: g.pansuman, dikisAlmaTarihi: g.dikis_alma }); return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ islem: r.kart.islemTarihi, pansuman: r.kart.pansumanTarihi, dikis_alma: r.kart.dikisAlmaTarihi }) : {} } },
+    },
+    {
+      arac: 'tetkik-kuyrugu', karsilik: 'specialties/radyoloji/engines/kuyruk.ts → kuyrukSkorla (the kit asks for priority and state; the other application assumes them)', listeler: [[K7.RADYO_MODALITELER, RADYO_MODALITELER.map((x) => x.kod)], [K7.RADYO_ONCELIKLER, RADYO_ONCELIKLER.map((x) => x.kod)], [K7.RADYO_DURUMLAR, RADYO_DURUMLAR.map((x) => x.kod)]],
+      onlar: (g) => {
+        if (g.modalite === null || g.oncelik === null || g.durum === null) return { tamam: false }
+        const r = kuyrukSkorla({ modalite: g.modalite, oncelik: g.oncelik, durum: g.durum, tarih: g.tarih ?? BUGUN })
+        return { tamam: r.tamamMi, uyarilar: r.gorevOnerileri.map((x) => (x.kod.startsWith('kuyruk_') ? 'kuyrukta' : x.kod)).sort() }
+      },
+    },
+    { arac: 'rapor-taslagi', karsilik: 'specialties/radyoloji/engines/rapor.ts → raporSkorla (the kit asks for the category; the other application assumes "general")', listeler: [[K7.RAPOR_KATEGORILERI, BIRADS_KATEGORILER.map((x) => x.kod)], [K7.RAPOR_BOLUMLERI, RAPOR_SABLON.map((x) => x.kod)]], sayilar: [],
+      onlar: (g) => { if (g.kategori === null) return { tamam: false }; const r = raporSkorla(g.kategori, isaretliler(g, K7.RAPOR_BOLUMLERI)); return { tamam: r.tamamMi, bant: r.tamamMi ? r.kategori : null, uyarilar: r.gorevOnerileri.map((x) => x.kod).sort() } } },
+    { arac: 'das28', karsilik: 'specialties/romatoloji/engines/das28Basdai.ts → das28Skorla', listeler: [], sayilar: ['das28'],
+      onlar: (g) => { if (g.varyant === null) return { tamam: false }; const r = das28Skorla({ tjc: g.tjc as number | null, sjc: g.sjc as number | null, pga: g.pga as number | null, crp: g.crp as number | null, esr: g.esr as number | null, varyant: g.varyant as 'crp' }); return { tamam: r.tamamMi, bant: r.bant, sayilar: (r.tamamMi ? { das28: r.toplam as number } : {}) as Record<string, number> } } },
+    {
+      arac: 'eklem-28', karsilik: 'specialties/romatoloji/engines/eklemHaritasi.ts → eklemSay (the kit counts once the examination is ticked as done)', listeler: [[K7.EKLEM_28, TR_EKLEM_28.map((e) => e.toLowerCase())]], sayilar: ['tjc', 'sjc'],
+      onlar: (g) => { const sec = (on: string) => K7.EKLEM_28.flatMap((e, i) => (g[`${on}_${e}`] === true ? [TR_EKLEM_28[i]] : [])); const r = eklemSay(sec('h'), sec('s')); return { tamam: g.degerlendirildi === true, sayilar: { tjc: r.tjc, sjc: r.sjc } } },
+    },
+    { arac: 'iltihap-lab-izlem', karsilik: 'specialties/romatoloji/engines/labIzlem.ts → labSkorla, sonrakiIzlemTarihi (CRP and ESR; with that application\'s own thresholds and months as parameters)', listeler: [], sayilar: ['sonraki_ay'],
+      onlar: (g) => { if (g.tur === null) return { tamam: false }; const r = romaLabSkorla(g.tur as 'crp', g.deger as number | null); return { tamam: r.tamamMi, bant: r.bant, sayilar: dolu({ sonraki_ay: r.tamamMi ? r.sonrakiAy : null }), tarihler: dolu({ sonraki: r.tamamMi && typeof g.tarih === 'string' ? romaSonrakiTarih(g.tarih, r.sonrakiAy) : null }) } } },
+    { arac: 'rtp-basamak', karsilik: 'specialties/spor-hekimligi/engines/rtp.ts → rtpDegerlendir (the step; the days that application proposes are not the kit\'s)', listeler: [],
+      onlar: (g) => { if (g.basamak === null) return { tamam: false }; const r = rtpDegerlendir(Number(g.basamak)); return 'hata' in r ? { tamam: false } : { tamam: true, bant: `b${r.basamak}` } } },
+    {
+      arac: 'sakatlik-gunlugu', karsilik: 'specialties/spor-hekimligi/engines/sakatlik.ts → sakatlikDegerlendir, yuklenmeUyariHesapla', listeler: [uzunluk(K7.SAKATLIK_BOLGELERI, TR_SAKATLIK_BOLGELER), uzunluk(K7.SAKATLIK_MEKANIZMALARI, TR_MEKANIZMALAR)], sayilar: [],
+      onlar: (g) => {
+        const r = sakatlikDegerlendir({ bolge: sira(K7.SAKATLIK_BOLGELERI, TR_SAKATLIK_BOLGELER, g.bolge) ?? '', siddet: g.siddet as 'hafif' | null, durum: (g.durum as 'aktif' | null) ?? undefined, yuklenmeDakika7: g.dk_7gun as number | null, yuklenmeDakikaOnceki: g.dk_onceki as number | null })
+        if ('hata' in r) return { tamam: false }
+        const y = yuklenmeUyariHesapla(g.dk_7gun as number | null, g.dk_onceki as number | null)
+        assert.equal(r.yuklenmeUyari, y.uyari)
+        return { tamam: true, uyarilar: y.uyari ? [/y\u00fcksek;/.test(y.not ?? '') ? 'yuklenme_yuksek' : 'yuklenme_dikkat'] : [] }
+      },
+    },
+    {
+      arac: 'psa-hizi', karsilik: 'specialties/uroloji/engines/psa.ts → skorlaSeri (the change per year; that application\'s bands are not the kit\'s)', listeler: [], sayilar: ['hiz'],
+      onlar: (g) => {
+        if ([g.onceki_deger, g.son_deger, g.onceki_tarih, g.son_tarih].some((x) => x === null) || (g.onceki_tarih as string) >= (g.son_tarih as string)) return { tamam: false }
+        const r = psaSkorlaSeri([{ tarih: g.onceki_tarih as string, deger: g.onceki_deger as number }, { tarih: g.son_tarih as string, deger: g.son_deger as number }])
+        return r.hizNgMlYil === null ? { tamam: false } : { tamam: true, sayilar: { hiz: r.hizNgMlYil + 0 }, uyarilar: /tercih edilen/.test(r.hizNot) ? ['kisa_aralik'] : [] }
+      },
+    },
+  )
+  void plastikYaraGorevleri; void plastikYaraNormalize; void TR_OP_PROTOKOL; void psaBantBul
+}
+
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
   'hasta-portali': 'a screen of the kit (a patient search that leads to the patient\'s file); it works nothing out',
+  'ortopedi-op-protokol': 'the pre-split application has the six items as a plain list of sentences and no function over them; the length of the two lists is compared below',
 }
 
 describe('tools — the kit\'s arithmetic equals the pre-split application\'s, input for input', () => {
@@ -354,5 +459,18 @@ describe('tools — the kit\'s arithmetic equals the pre-split application\'s, i
     }
     // on every whole number the two agree (the comparison above also runs over hundreds of samples)
     for (let pta = -10; pta <= 130; pta++) assert.equal(t.hesapla(ort(pta), { bugun: BUGUN, p: {} }).bant, ptaSkorla([pta, pta, pta, pta]).bant, `${pta} dB`)
+  })
+
+  it('lists that stand beside a list without a function have the same number of items; follow-up days that application derives are not the kit\'s', () => {
+    assert.equal(K7.OP_PROTOKOL_MADDELERI.length, TR_OP_PROTOKOL.length)
+    // graft, no dressing day given: that application says "three days after the procedure"; the kit returns the day entered and nothing else
+    assert.deepEqual(plastikYaraGorevleri(plastikYaraNormalize({ tip: 'greft', bolge: 'x', islemTarihi: '2026-10-01' })).map((x) => x.due), ['2026-10-04'])
+    assert.deepEqual(kitAraci('plastik-yara-greft')!.hesapla({ tip: 'greft', bolge: 'x', taraf: null, islem: '2026-10-01', pansuman: null, dikis_alma: null }, { bugun: BUGUN, p: {} }).tarihler, [{ anahtar: 'islem', tarih: '2026-10-01' }])
+  })
+
+  it('FOR THE RECORD, not a tool of the kit: the PSA bands of the pre-split application have the same kind of gap (a value between two ranges is called "very high")', () => {
+    assert.equal(psaBantBul(2.49), 'dusuk'); assert.equal(psaBantBul(2.5), 'sinir')
+    assert.equal(psaBantBul(2.495), 'cok_yuksek', 'specialties/uroloji/engines/psa.ts: 2.495 ng/mL falls between 2.49 and 2.5')
+    assert.equal(psaBantBul(3.995), 'cok_yuksek'); assert.equal(psaBantBul(9.995), 'cok_yuksek')
   })
 })

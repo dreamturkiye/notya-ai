@@ -18,6 +18,8 @@ export const ORNEK_PARAMETRELER: Readonly<Record<string, Readonly<Record<string,
   'viral-izlem': { ay_hiv: 3, ay_hepatit: 6, ay_diger: 6 },
   'ibd-skor': { mayo_remisyon_ust: 2, mayo_hafif_ust: 5, mayo_orta_ust: 7, hbi_remisyon_alti: 5, hbi_hafif_ust: 7, hbi_orta_ust: 16, ibs_remisyon_alti: 75, ibs_hafif_alti: 175, ibs_orta_alti: 300, ay_remisyon: 6, ay_hafif: 3, ay_orta: 2, ay_siddetli: 1 },
   'hepatit-izlem': { ay_stabil: 12, ay_aktif_izlem: 6, ay_tedavi_degerlendirme: 3 },
+  'anemi-izlem': { hb_hedef_alt: 11, hb_hedef_ust: 13, hb_dusuk_alti: 10, ay_hedef: 3, ay_dikkat: 2, ay_dusuk: 1 },
+  'iltihap-lab-izlem': { crp_dikkat: 5, crp_yuksek: 20, esr_dikkat: 20, esr_yuksek: 40, ay_hedef: 3, ay_dikkat: 2, ay_yuksek: 1 },
   'kardiyo-izlem': { sbp_dikkat: 140, dbp_dikkat: 90, gun_ht_kontrol: 30, gun_ht_lab: 90, gun_kky_kontrol: 30, gun_kky_kilo: 14, gun_af_kontrol: 60, gun_af_lab: 30, gun_diger_kontrol: 90 },
 }
 
@@ -38,6 +40,8 @@ export function ornekGirdiler(t: AracTanimi, adet = 40): AracGirdisi[] {
   const bos = Object.fromEntries(t.alanlar.map((a) => [a.anahtar, a.tur === 'isaret' ? false : null]))
   const liste: AracGirdisi[] = [bos, Object.fromEntries(t.alanlar.map((a) => [a.anahtar, deger(a, 0)])), Object.fromEntries(t.alanlar.map((a) => [a.anahtar, deger(a, 10)]))]
   for (let i = 1; i <= adet; i++) liste.push(Object.fromEntries(t.alanlar.map((a, j) => [a.anahtar, (i * 7 + j * 3) % 5 === 0 && a.tur !== 'isaret' ? null : deger(a, i * 3 + j * 5 + (i % 2 ? j : 0))])))
+  // … and as many with every field filled, so that a tool which needs all of its fields is exercised across its range
+  for (let i = 1; i <= adet; i++) liste.push(Object.fromEntries(t.alanlar.map((a, j) => [a.anahtar, a.tur === 'metin' ? `QA-TEXT-${a.anahtar}` : deger(a, i * 7 + j * 11 + (i % 3) * j)])))
   // A field whose condition does not hold is not there: the samples are what a screen would hand over.
   return liste.map((g) => kosullariUygula(t.alanlar, g))
 }

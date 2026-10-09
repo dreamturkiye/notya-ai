@@ -65,7 +65,7 @@ export type AracAlani = {
 /** What the doctor entered, already narrowed: a number in the canonical unit, an option key, a tick, an ISO day. */
 export type AracGirdisi = Readonly<Record<string, number | string | boolean | null>>
 
-export type AracSayisi = { anahtar: string; deger: number; /** Decimal places shown. */ ondalik: number; /** The scale's maximum, shown as "12 / 35". */ enCok?: number; /** A unit code the pack names. */ birim?: string }
+export type AracSayisi = { anahtar: string; deger: number; /** Decimal places shown. */ ondalik: number; /** The scale's maximum, shown as "12 / 35". */ enCok?: number; /** A unit code the pack names. */ birim?: string; /** A length or a weight in cm / kg: shown in the PACK's unit of that measure. */ olcu?: 'boy' | 'agirlik' }
 
 /** The answer of a tool: numbers and keys. Every key is named by the pack; the kit writes no sentence. */
 export type AracSonucu = {
@@ -106,6 +106,8 @@ export type AracTanimi = {
   ekran?: 'hastaPortali'
   /** Unit codes the RESULT's numbers carry (the fields' units are on the fields). The pack names each. */
   sonucBirimleri?: readonly string[]
+  /** Measures of the pack (length, weight) a RESULT is written in. */
+  sonucOlculeri?: readonly ('boy' | 'agirlik')[]
 }
 
 // ───────────────────────── the pack's half ─────────────────────────

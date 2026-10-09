@@ -11,7 +11,7 @@
 import type { BicimliMetin } from '../arayuz/tipler'
 import type { AraclarMetni } from '../arayuz/metinTipleri'
 import { yerine as yerlestir } from '../arayuz/yerTutucu'
-import { alanBirimi, type BirimOrtami } from './birimler'
+import { alanBirimi, kanonigeCevir, type BirimOrtami } from './birimler'
 import { kitAraci } from './katalog'
 import type { AracGirdisi, AracSonucu, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
 import { alanVarMi } from './yardimci'
@@ -64,10 +64,13 @@ export function alanEtiketi(x: GorunurArac, alanAnahtari: string, dil: string, m
 export type Yazici = { sayi: (deger: number, ondalik: number) => string; tarih: (iso: string) => string; birim: (kod: string) => string }
 
 /** One number of a result as it is written: "12 / 35", "4,2 ng/mL". */
-export function sayiMetni(s: AracSonucu['sayilar'][number], m: AraclarMetni, y: Yazici): string {
-  const deger = y.sayi(s.deger, s.ondalik)
+export function sayiMetni(s: AracSonucu['sayilar'][number], m: AraclarMetni, y: Yazici, o?: BirimOrtami): string {
+  // A length or a weight the arithmetic worked out in cm / kg is written in the country's own unit of that measure.
+  const carpan = s.olcu && o ? kanonigeCevir({ anahtar: s.anahtar, tur: 'sayi', olcu: s.olcu }, 1, o) ?? 1 : 1
+  const birim = s.olcu && o ? o.birimler[s.olcu] : s.birim
+  const deger = y.sayi(s.deger / carpan, s.ondalik)
   const govde = typeof s.enCok === 'number' ? yerlestir(m.arac.oran, deger, y.sayi(s.enCok, 0)) : deger
-  return s.birim ? `${govde} ${y.birim(s.birim)}` : govde
+  return birim ? `${govde} ${y.birim(birim)}` : govde
 }
 
 /**
@@ -90,7 +93,7 @@ export function aracOzeti(x: GorunurArac, g: AracGirdisi, sonuc: AracSonucu, dil
     else if (a.tur === 'metin') satirlar.push(`${etiket}: ${String(v)}`)
     else if (typeof v === 'number') { const b = alanBirimi(a, o); satirlar.push(`${etiket}: ${y.sayi(v, Number.isInteger(v) ? 0 : 1)}${b ? ` ${y.birim(b)}` : ''}`) }
   }
-  for (const s of sonuc.sayilar) satirlar.push(`${bicimli(t.sayilar?.[s.anahtar], dil)}: ${sayiMetni(s, m, y)}`)
+  for (const s of sonuc.sayilar) satirlar.push(`${bicimli(t.sayilar?.[s.anahtar], dil)}: ${sayiMetni(s, m, y, o)}`)
   if (sonuc.bant) satirlar.push(bicimli(t.bantlar?.[sonuc.bant], dil))
   for (const u of sonuc.uyarilar) satirlar.push(`! ${bicimli(t.uyarilar?.[u], dil)}`)
   for (const d of sonuc.tarihler) satirlar.push(`${bicimli(t.tarihler?.[d.anahtar], dil)}: ${y.tarih(d.tarih)}`)

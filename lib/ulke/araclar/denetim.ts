@@ -41,6 +41,8 @@ export function araciBirimleri(t: AracTanimi, paket: UlkePaketi, lab: Readonly<R
     if (a.lab && dolu(lab[a.lab])) b.add(lab[a.lab] as string)
   }
   for (const k of t.sonucBirimleri ?? []) b.add(k)
+  // a result written in the pack's unit of length or weight needs that unit's name
+  for (const olcu of t.sonucOlculeri ?? []) if (u && !eksikAyarMi(u) && typeof u[olcu] === 'string') b.add(u[olcu])
   return [...b]
 }
 
