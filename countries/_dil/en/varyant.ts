@@ -74,7 +74,7 @@ function harfDuzeni(bulunan: string, yeni: string): string {
   return yeni
 }
 
-const KORUNAN_DESEN = new RegExp(`(?<![A-Za-z])(${KORUNAN.map(kacis).join('|')})(?![A-Za-z])`, 'gi')
+const KORUNAN_DESEN = new RegExp(`(?<![A-Za-z])(${[...KORUNAN].sort(uzundanKisaya).map(kacis).join('|')})(?![A-Za-z])`, 'gi')
 const YER = '\u0000'
 const YER_DESEN = new RegExp(`${YER}(\\d+)${YER}`, 'g')
 
@@ -82,16 +82,12 @@ const YER_DESEN = new RegExp(`${YER}(\\d+)${YER}`, 'g')
 export function enYaz(metin: string, bicim: EnBicim): string {
   const t = tablo(bicim)
   if (!t.kelime && !t.kok) return metin
-  let s = metin
+  // A PROTECTED NAME IS NEVER REWRITTEN: it is set aside before either pass and put back exactly as it was written.
+  const saklanan: string[] = []
+  let s = metin.replace(KORUNAN_DESEN, (m) => { saklanan.push(m); return `${YER}${saklanan.length - 1}${YER}` })
   if (t.kelime) s = s.replace(t.kelime, (m) => harfDuzeni(m, t.kelimeler.get(m.toLowerCase()) ?? m))
-  if (t.kok) {
-    // A protected word is set aside, the stems are written, and it is put back as it was.
-    const saklanan: string[] = []
-    s = s.replace(KORUNAN_DESEN, (m) => { saklanan.push(m); return `${YER}${saklanan.length - 1}${YER}` })
-    s = s.replace(t.kok, (m) => harfDuzeni(m, t.kokler.get(m.toLowerCase()) ?? m))
-    s = s.replace(YER_DESEN, (_m, i: string) => saklanan[Number(i)])
-  }
-  return s
+  if (t.kok) s = s.replace(t.kok, (m) => harfDuzeni(m, t.kokler.get(m.toLowerCase()) ?? m))
+  return saklanan.length ? s.replace(YER_DESEN, (_m, i: string) => saklanan[Number(i)]) : s
 }
 
 /**

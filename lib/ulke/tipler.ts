@@ -19,7 +19,7 @@ export type UlkeKodu = (typeof ULKE_KODLARI)[number]
 export const DAMGASIZ_HESAP_ULKESI: UlkeKodu = 'tr'
 
 /** BCP-47. A script variant is its own language code (checklist E2). */
-export type DilKodu = 'tr' | 'uz-Latn' | 'uz-Cyrl' | 'ru'
+export type DilKodu = 'tr' | 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en-GB' | 'en-US' | 'en-CA' | 'en-AU' | 'en-NZ'
 
 /**
  * Feature table keys. A pack lists the ones that are ON; `ozellikAcik` answers false for everything else.

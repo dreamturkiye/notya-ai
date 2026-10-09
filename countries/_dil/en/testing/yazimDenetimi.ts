@@ -9,7 +9,7 @@
  *                                      another form.
  *   tumMetinler(value)                 every string of a catalogue, at any depth, with its path.
  */
-import { ABD_TIBBI_YAZIMLAR, KELIMELER } from '../sozluk'
+import { ABD_TIBBI_YAZIMLAR, KELIMELER, KORUNAN } from '../sozluk'
 import { yabanciYazimlar, type EnBicim } from '../varyant'
 
 /** Words that END like a family the forms disagree on and are written the same in every form. */
@@ -47,13 +47,16 @@ function bulunanlar(metin: string, aranan: readonly string[], kelimeOlarak: bool
 }
 
 /** What is wrong with the spelling of a text AS A PACK SHOWS IT in `bicim`. Empty = nothing. */
-export function bicimYazimSorunlari(metin: string, bicim: EnBicim): string[] {
+const KORUNAN_DESEN = new RegExp(`(?<![A-Za-z])(${[...KORUNAN].sort((x, y) => y.length - x.length).map(kacis).join('|')})(?![A-Za-z])`, 'gi')
+/** A text without its protected names: a name is written as it is in every form, so no check reads it. */
+export const korunansiz = (metin: string): string => metin.replace(KORUNAN_DESEN, ' ')
+
+export function bicimYazimSorunlari(ham: string, bicim: EnBicim): string[] {
+  const metin = korunansiz(ham)
   const y = yabanciYazimlar(bicim, ABD_TIBBI_YAZIMLAR)
   const s: string[] = []
   for (const k of bulunanlar(metin, y.kelimeler, true)) s.push(`"${k}" is another form's spelling (not ${bicim})`)
-  // a protected Latin name carries a British stem in every form
-  const korumasiz = metin.replace(/Haemophilus|faecalis|faecium/gi, '')
-  for (const k of bulunanlar(korumasiz, y.kokler, false)) s.push(`"${k}…" is the British stem (not ${bicim})`)
+  for (const k of bulunanlar(metin, y.kokler, false)) s.push(`"${k}…" is the British stem (not ${bicim})`)
   for (const k of bulunanlar(metin, y.tibbi, true)) s.push(`"${k}" is the American spelling (not ${bicim})`)
   return s
 }
@@ -61,7 +64,7 @@ export function bicimYazimSorunlari(metin: string, bicim: EnBicim): string[] {
 /** What is wrong with the spelling of a text OF THE SET, written in the base form (en-GB). Empty = nothing. */
 export function temelYazimSorunlari(metin: string): string[] {
   const s = bicimYazimSorunlari(metin, 'en-GB')
-  for (const k of new Set(kelimeler(metin))) {
+  for (const k of new Set(kelimeler(korunansiz(metin)))) {
     if (TABLO_GB.has(k)) continue
     if (/is(e|ed|es|ing|ation|ations)$/.test(k) && k.length > 5 && !ISE_GORUNUMLU.includes(k)) s.push(`"${k}" ends like an -ise word and is not in the spelling table (countries/_dil/en/sozluk.ts) nor on the list of words that only look like one`)
     else if (/iz(e|ed|es|ing|ation|ations)$/.test(k) && !IZE_HER_YERDE.includes(k)) s.push(`"${k}" is written with -ize: the set is written in en-GB (-ise), and the table makes the other forms`)

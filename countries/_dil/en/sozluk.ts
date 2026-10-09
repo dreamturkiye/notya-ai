@@ -21,7 +21,7 @@
  *               ending (organis + e / ed / es / ing / ation). Matched as whole words, capitals kept.
  *   KOKLER      stems of medical words where the difference sits inside the word (haem → hem, paediatr → pediatr).
  *               Matched anywhere inside a word, the capital of the first letter kept.
- *   KORUNAN     words a stem must not touch: Latin names of organisms are written the same everywhere.
+ *   KORUNAN     names that are never rewritten: organisms, medicines, proper nouns.
  *
  * `belirsiz: true` = the American spelling is ALSO a correct British word with another meaning (meter, program,
  * check, practice, license). Finding such a word in British text proves nothing, so the cross-check of
@@ -135,8 +135,23 @@ export const KOKLER: readonly Kok[] = [
   { gb: 'faec', us: 'fec', ca: 'us' },
 ]
 
-/** Written the same in every form: Latin names of organisms. A stem leaves them alone. */
-export const KORUNAN: readonly string[] = ['Haemophilus', 'faecalis', 'faecium']
+/**
+ * NEVER REWRITTEN, in any form: names. Whole words or phrases, set aside before the table is applied and put back
+ * exactly as they were written (capitals included).
+ *   - Latin names of organisms (the same everywhere);
+ *   - names of medicines and of substances, where a text of the set must name one (the set names none today: a
+ *     medicine's NAME differs by country and is the pack's or a slot's, never a spelling);
+ *   - proper nouns: the published name of an instrument, a classification or a body is its own, whatever the form.
+ * A UNIT SYMBOL needs no entry: the table holds whole words of four letters or more, and no symbol is one of them
+ * (./ingilizce.test.ts proves it for every unit the set names).
+ */
+export const KORUNAN: readonly string[] = [
+  // organisms
+  'Haemophilus', 'faecalis', 'faecium',
+  // published names
+  'Generalized Anxiety Disorder', 'Eczema Area and Severity Index', 'Psoriasis Area and Severity Index', 'Emergency Severity Index',
+  'American Society of Anesthesiologists', 'Kidney Disease: Improving Global Outcomes', 'European League Against Rheumatism',
+]
 
 /**
  * American spellings of medical words, as whole words — for the cross-check only (./varyant.test.ts and the packs'
