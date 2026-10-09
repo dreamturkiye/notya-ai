@@ -17,6 +17,9 @@ import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { hesabinAraclari } from '@/lib/ulke/araclar/paket'
 import { ornekGirdiler } from '@/lib/ulke/testing/aracOrnekleri'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
+import { MESAJ_AZAMI } from '@/lib/ulke/mesaj/sabitler'
+import { SABLON_ARACI } from '@/lib/ulke/sablon/sabitler'
+import { KONSULTASYON_ARACI } from '@/lib/ulke/konsultasyon/sabitler'
 
 if (!a || !k || !p.uygulama) throw new Error(`"${p.kod}" does not bring the signed-in application: nothing to walk through`)
 const d = p.varsayilanDil
@@ -77,6 +80,15 @@ process.stdout.write(JSON.stringify({
     m: ar.metinler[d], bugun, ilkRolKutulari: kutular(ilkRol?.anahtar ?? null), ornek: aracOrnegi, ornekRolKutulari: aracOrnegi ? kutular(aracOrnegi.rol) : [],
     // the follow-up list, where the role of the sample tool has it
     panel: aracOrnegi ? (kutular(aracOrnegi.rol).find((k) => kitAraci(k)?.ekran === 'takipPaneli') ?? null) : null,
+  } : null,
+  // NOTYA-ULKE-MESAJ-01 — messages between a doctor and a patient (the doctor's words in the doctor's form, the
+  // patient's in the patient's), "my templates", and consultation between doctors (the asking account's form and the
+  // second account's, the two periods and the stamp of the consent sentence). No sentence is held by the walk-through.
+  mesaj: portalAcik && p.ozellikler.hastaMesajlari && a.mesajMetinleri ? { hekim: a.mesajMetinleri[d]?.hekim, hasta: a.mesajMetinleri[hastaBicimi]?.hasta, azami: MESAJ_AZAMI, disBildirim: p.uygulama.mesaj?.disBildirim ?? null } : null,
+  sablon: ar && p.ozellikler.hekimSablonlari && a.sablonMetinleri ? { m: a.sablonMetinleri[d], kutu: SABLON_ARACI } : null,
+  konsultasyon: ar && p.ozellikler.konsultasyon && a.konsultasyonMetinleri && p.uygulama.konsultasyon ? {
+    m: a.konsultasyonMetinleri[d], ikinci: a.konsultasyonMetinleri[p.uygulama.diller.at(-1) ?? d], kutu: KONSULTASYON_ARACI,
+    acikGun: p.uygulama.konsultasyon.acikGun, kapanisSonrasiGun: p.uygulama.konsultasyon.kapanisSonrasiGun, rizaSurumu: k.konsultasyonRizasi?.surum ?? null,
   } : null,
   // what must NEVER be on a screen of this country: the "to be supplied" marker, and what marks another country's content
   eksikIsareti: EKSIK_ISARETI,

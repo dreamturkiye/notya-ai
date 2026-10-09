@@ -15,6 +15,9 @@
     "136_ulke_kullanim_olcumu.sql",
     "137_ulke_hasta_portali.sql",
     "138_ulke_hasta_formu.sql",
-    "139_ulke_arac_kayitlari.sql"
+    "139_ulke_arac_kayitlari.sql",
+    "140_ulke_hasta_mesajlari.sql",
+    "141_ulke_hekim_sablonlari.sql",
+    "142_ulke_konsultasyon.sql"
   ]
 }

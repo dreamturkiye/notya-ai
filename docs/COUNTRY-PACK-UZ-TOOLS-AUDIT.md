@@ -363,11 +363,11 @@ Rows marked "to confirm" state something Claude believes but has not checked aga
 
 ## Outcome in the Uzbek build (2026-10-09, NOTYA-ULKE-ARACLAR-01)
 
-What the tools job did with each of the 144 tools above. This table is checked by a test on every run (`countries/uz/uygulama/araclar/araclar.test.ts`): each row against the Uzbek pack, and the sums against the totals.
+What the tools job did with each of the 144 tools above, and what the messaging job (NOTYA-ULKE-MESAJ-01, the same day) added to it: `sablonlarim` and `konsultasyonlar`, which the tools job had left absent with the reason. This table is checked by a test on every run (`countries/uz/uygulama/araclar/araclar.test.ts`): each row against the Uzbek pack, and the sums against the totals.
 
 | | done | slot | absent | sum |
 |---|---:|---:|---:|---:|
-| **Keep** | 64 | 19 | 13 | 96 |
+| **Keep** | 66 | 19 | 11 | 96 |
 | **Adapt** | 2 | 32 | 0 | 34 |
 | **Remove** | 0 | 0 | 14 | 14 |
 
@@ -392,8 +392,8 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `sgk-medula` | Remove | absent (blocked) |  |  |  |
 | `enabiz` | Remove | absent (blocked) |  |  |  |
 | `muayene-sonu` | Adapt | slot | `muayene-sonu` |  |  |
-| `sablonlarim` | Keep | absent |  |  | The doctor's own templates are editable texts of a doctor with no patient; migration 139 holds unchangeable results bound to a patient. It does not fit without a second table or without weakening both rules. |
-| `konsultasyonlar` | Keep | absent |  |  | Consultation and patient messaging is the next job, not this one (coordinator, 2026-10-09). |
+| `sablonlarim` | Keep | done | `sablonlarim` |  | Base tool: all 40 roles (NOTYA-ULKE-MESAJ-01). A table of its own (migration 141), no patient in the row, soft delete. The doctor's own text blocks, inserted into a section of a note or into a message by the doctor's click; the pack brings no ready-made template. |
+| `konsultasyonlar` | Keep | done | `konsultasyonlar` |  | Base tool: all 40 roles (NOTYA-ULKE-MESAJ-01). Between two accounts of the same country database, found by a consultation code (no directory); a read-only copy of one approved note or its summary; nothing is sent to anybody, so there is no e-mail template. Tables of its own (migration 142). |
 | `hedef-boy` | Keep | done | `hedef-boy` |  |  |
 | `pedi-buyume` | Adapt | slot | `buyume-persentil` |  |  |
 | `pedi-doz` | Keep | done | `doz-hesabi` |  | Arithmetic only: the doctor types the dose per kilogram; the tool holds no drug and no dose. |

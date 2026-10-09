@@ -682,3 +682,276 @@ export type AraclarMetni = {
     readonly okunamadi: string
   }
 }
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — MESSAGES BETWEEN A DOCTOR AND A PATIENT (feature `hastaMesajlari`), once per language form.
+ *
+ *   hekim   the DOCTOR's card on the patient's file and the list of unread messages on the home screen. Read in the
+ *           account's form.
+ *   hasta   what the PATIENT reads on their own page. Read in the patient's form.
+ *           PATIENT-FACING: a native reader reads these first.
+ *
+ * `hasta.acil` and `hasta.acilNumara` are the notice that messages are NOT FOR EMERGENCIES. It is shown ALWAYS, also
+ * when no conversation is open. The number is the pack's setting (`uygulama.portal.acilNumara`), never text: a
+ * sentence with a digit in it fails the pack check.
+ *
+ * Placeholders: '%' where a sentence carries one value (see each key).
+ */
+export type MesajMetni = {
+  readonly hekim: {
+    readonly baslik: string
+    /** What this is: the patient reads and answers on their own page, after signing in with their link and PIN. */
+    readonly aciklama: string
+    /** Nothing tells the patient that a message is waiting: the doctor does. (The outbound channel is a slot of the pack.) */
+    readonly bildirimYok: string
+    /** The patient has no link that works: they cannot read a message until the doctor gives access. */
+    readonly erisimYok: string
+    readonly bos: string
+    readonly yaz: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly gonderilemedi: string
+    readonly bosMesaj: string
+    /** % the most characters a message holds */
+    readonly cokUzun: string
+    /** Too many messages in one day. */
+    readonly limit: string
+    /** Who wrote a message: the doctor ("you"), the patient. */
+    readonly siz: string
+    readonly hasta: string
+    /** Under a message of the doctor's: the patient has read it / has not yet. */
+    readonly okundu: string
+    readonly okunmadi: string
+    /** On a message of the patient's the doctor has not read yet. */
+    readonly yeni: string
+    readonly acik: string
+    /** % the day the conversation was closed */
+    readonly kapali: string
+    readonly kapat: string
+    /** What closing does — shown BEFORE the doctor confirms. */
+    readonly kapatUyari: string
+    readonly kapatOnay: string
+    readonly vazgec: string
+    readonly kapatildi: string
+    readonly yapilamadi: string
+    readonly yuklenemedi: string
+    /** On the home screen: the heading of the patients whose messages are unread. */
+    readonly okunmamisBaslik: string
+    /** % how many messages of that patient are unread */
+    readonly okunmamisAdet: string
+  }
+  readonly hasta: {
+    readonly baslik: string
+    readonly aciklama: string
+    /** "Messages are not for emergencies." ALWAYS shown. Names no number. */
+    readonly acil: string
+    /** % the pack's ambulance number. Shown only where the pack states one; the sentence itself holds no number. */
+    readonly acilNumara: string
+    /** No answer time is promised. */
+    readonly yanitSuresi: string
+    /** A patient cannot start a conversation: said plainly wherever none is open. */
+    readonly baslatamaz: string
+    /** The doctor has not written yet. */
+    readonly yok: string
+    /** The doctor closed the conversation: it can be read, not written in. */
+    readonly kapali: string
+    /** % the day a conversation was closed */
+    readonly kapandi: string
+    readonly yaz: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly gonderilemedi: string
+    readonly bosMesaj: string
+    /** % the most characters a message holds */
+    readonly cokUzun: string
+    readonly limit: string
+    /** Who wrote a message: the doctor, the patient ("you"). */
+    readonly hekim: string
+    readonly siz: string
+    /** On a message of the doctor's the patient has not read yet. */
+    readonly yeni: string
+    /** % how many messages are unread */
+    readonly okunmamis: string
+    readonly yuklenemedi: string
+  }
+}
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — "MY TEMPLATES" (feature `hekimSablonlari`), once per language form: the screen where a doctor
+ * keeps their own reusable text blocks, and the small picker that puts one into a section of a note or into a
+ * message. The tile's own name and description sit with the tool in the pack's list, like every other tile.
+ *
+ * Placeholders: '%' where a sentence carries one value (see each key).
+ */
+export type SablonMetni = {
+  /** A template is used for many patients: no patient's name or data belongs in one. Always shown on the screen. */
+  readonly uyari: string
+  readonly bos: string
+  readonly yeni: string
+  readonly duzenleBaslik: string
+  readonly ad: string
+  readonly metin: string
+  /** Where the template is offered. */
+  readonly kapsamEtiketi: string
+  readonly kapsam: { readonly not: string; readonly mesaj: string; readonly hepsi: string }
+  readonly kaydet: string
+  readonly kaydediliyor: string
+  readonly kaydedildi: string
+  readonly kaydedilemedi: string
+  readonly adGerekli: string
+  readonly metinGerekli: string
+  /** % the most characters a template's text holds */
+  readonly cokUzun: string
+  /** % the most templates an account keeps */
+  readonly cokFazla: string
+  readonly duzenle: string
+  readonly sil: string
+  /** What deleting does — shown BEFORE the doctor confirms. */
+  readonly silUyari: string
+  readonly silOnay: string
+  readonly vazgec: string
+  readonly silindi: string
+  readonly yuklenemedi: string
+  /** The picker under a section of a note and under a message: its name, what it does, and what it says with no template. */
+  readonly seciciEkle: string
+  /** The text is added at the end of what is already written; nothing is replaced. */
+  readonly seciciNot: string
+  readonly seciciBos: string
+  /** The link from the picker to the screen where templates are kept. */
+  readonly yonet: string
+}
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — CONSULTATION BETWEEN DOCTORS (feature `konsultasyon`), once per language form. Read in the
+ * account's form throughout: both sides are doctors of the same country. The tile's own name and description sit
+ * with the tool in the pack's list.
+ *
+ *   kod     the account's own consultation code: the only way a colleague finds it. There is no directory.
+ *   iste    asking, on the patient's file: the colleague's code, the question, what to share, THE CONSENT SENTENCE.
+ *   giden   what this doctor asked.
+ *   gelen   what this doctor was asked: the question and the copy that was shared, and nothing else of the patient.
+ *
+ * `iste.riza` IS A LEGAL SENTENCE: the basis on which a patient's data is shared with a colleague. A lawyer of the
+ * country reads it; its stamp is the clinical half's `konsultasyonRizasi.surum` and is stored with every consultation.
+ *
+ * Placeholders: '%' where a sentence carries one value, '%1' '%2' where it carries two (see each key).
+ */
+export type KonsultasyonMetni = {
+  readonly kod: {
+    readonly baslik: string
+    /** What the code is for, and that nobody finds the account without it. */
+    readonly aciklama: string
+    readonly yok: string
+    readonly uret: string
+    readonly yenile: string
+    /** What a new code does to the old one — shown BEFORE the doctor confirms. */
+    readonly yenileUyari: string
+    readonly yenileOnay: string
+    readonly vazgec: string
+    readonly kopyala: string
+    readonly kopyalandi: string
+    readonly kopyalanamadi: string
+    readonly yapilamadi: string
+  }
+  readonly iste: {
+    readonly baslik: string
+    /** The colleague sees the question and what is chosen below — nothing else of the file. */
+    readonly aciklama: string
+    readonly kodEtiketi: string
+    readonly bul: string
+    readonly bulunamadi: string
+    /** % the colleague's name and role */
+    readonly bulundu: string
+    readonly soruEtiketi: string
+    /** The patient is not named to the colleague unless the doctor writes the name. */
+    readonly soruIpucu: string
+    readonly paylasimEtiketi: string
+    readonly secenekYok: string
+    readonly secenekNot: string
+    readonly secenekOzet: string
+    readonly notSec: string
+    readonly onayliNotYok: string
+    /** The chosen visit has no summary for the patient. */
+    readonly ozetYok: string
+    readonly rizaBaslik: string
+    /** THE CONSENT SENTENCE the asking doctor ticks. Legal wording: read by a lawyer of the country. */
+    readonly riza: string
+    readonly rizaGerekli: string
+    readonly soruBos: string
+    /** % the most characters a question holds */
+    readonly cokUzun: string
+    readonly meslektasGerekli: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly gonderildi: string
+    readonly gonderilemedi: string
+    readonly limit: string
+    /** Nothing tells the colleague that a consultation is waiting: the doctor does. */
+    readonly bildirimYok: string
+    /** The link from the patient's file to the tile with every consultation. */
+    readonly tumu: string
+  }
+  readonly giden: {
+    readonly baslik: string
+    readonly bos: string
+    /** % the colleague's name and role */
+    readonly meslektas: string
+    readonly soru: string
+    readonly paylasilan: string
+    readonly okunmadi: string
+    /** % the day the colleague first opened it */
+    readonly okundu: string
+    readonly cevapYok: string
+    /** % the day of the answer */
+    readonly cevap: string
+    /** % the day until which the colleague can read it while it is open */
+    readonly durumAcik: string
+    /** Open, and the period is over: the colleague can no longer read or answer it. */
+    readonly durumSuresiDoldu: string
+    /** %1 the day it was closed, %2 the day until which the colleague can still read it */
+    readonly durumKapali: string
+    readonly kapat: string
+    /** What closing does — shown BEFORE the doctor confirms. % the days the colleague can still read it */
+    readonly kapatUyari: string
+    readonly kapatOnay: string
+    readonly vazgec: string
+    readonly kapatildi: string
+    readonly yapilamadi: string
+    readonly yuklenemedi: string
+  }
+  readonly gelen: {
+    readonly baslik: string
+    /** Only what the colleague shared, as a copy; nothing else of the patient is open. */
+    readonly aciklama: string
+    readonly bos: string
+    /** % the asking doctor's name and role */
+    readonly isteyen: string
+    readonly yeni: string
+    readonly soru: string
+    readonly paylasilan: string
+    readonly paylasimYok: string
+    /** % the day of the visit the note is of */
+    readonly paylasimNot: string
+    /** % the day of the visit the summary is of */
+    readonly paylasimOzet: string
+    /** The copy was made when the consultation was asked and does not follow the file. */
+    readonly kopyaNotu: string
+    /** % the day until which it can be read */
+    readonly okunabilir: string
+    readonly kapali: string
+    readonly cevapEtiketi: string
+    /** An answer is sent once and cannot be changed — shown before it is sent. */
+    readonly cevapUyari: string
+    readonly cevapGonder: string
+    readonly cevapGonderiliyor: string
+    readonly cevapBos: string
+    /** % the most characters an answer holds */
+    readonly cokUzun: string
+    readonly cevapGonderilemedi: string
+    /** % the day of the answer */
+    readonly cevabiniz: string
+    /** On the home screen: % how many consultations wait for this doctor's answer */
+    readonly bekleyen: string
+    readonly ac: string
+  }
+}

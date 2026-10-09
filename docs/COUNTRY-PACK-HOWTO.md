@@ -7,7 +7,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 ## The short version
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **897 for a one-language country (859 texts, 38 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **1066 for a one-language country (1026 texts, 40 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
@@ -40,9 +40,9 @@ node scripts/ulke-yeni.mjs gb --dil en --yol /uk
 
 It writes:
 
-- `countries/<code>/`, 17 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
+- `countries/<code>/`, 21 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
 - the registration: `lib/ulke/tipler.ts` (the code list, and the language if it is new), the three doors `countries/active/{index,klinik,arayuz}.ts`, and `countries/tumu.ts`;
-- `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 119 gates, all unticked, the six about the country's own database among them (section M).
+- `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 121 gates, all unticked, the six about the country's own database among them (section M).
 
 It refuses to run twice for the same code and changes nothing when it refuses.
 
@@ -66,6 +66,10 @@ Counts are for one language form. A second language or script repeats every text
 | 9b | **Patient portal**: the doctor's controls (access, summary, requests) and what the **patient** reads (the PIN page, their own page) | `uygulama/portalMetinleri.ts` | 100 texts, 38 of them patient-facing | native writer; the patient-facing ones first |
 | 9c | **Intake form, the screens**: the doctor's card, the invitation the doctor copies, the form as the **patient** reads it, and the name of each unit of measure the pack uses | `uygulama/formMetinleri.ts` | 63 texts and 1 setting (the unit names); 33 of the texts are patient-facing | native writer; the patient-facing ones first |
 | 9d | **Intake form, the questions**: the core set every patient gets, one set per role, the consent sentence for a patient and for a guardian, and two version stamps | `klinik/hastaFormu.ts` | 4 texts, 2 settings (the core set; the role sets: Uzbekistan 23 and 228 questions) | **a local clinician per role**; the consent sentence with a lawyer |
+| 9e | **Tools area**: the area's own words, and one tile's three texts for each of the three base tiles a new country starts with (the patient's page, "my templates", consultations) | `uygulama/araclar.ts` | 63 texts, 1 setting (who wrote and who read the tool texts) | native writer; every further tool with a local clinician |
+| 9f | **Messages between a doctor and a patient**: the doctor's card and home list, and what the **patient** reads on their own page | `uygulama/mesajMetinleri.ts` | 49 texts, 21 of them patient-facing | native writer, the patient-facing ones first; whether a doctor may write to a patient this way: **a lawyer** |
+| 9g | **"My templates"**: the screen's own words. The pack brings no template | `uygulama/sablonMetinleri.ts` | 29 texts | native writer |
+| 9h | **Consultation between doctors**: the account's code, asking, what was asked, what this doctor was asked; the two periods; the stamp of the consent sentence | `uygulama/konsultasyonMetinleri.ts`, `index.ts`, `klinik/index.ts` | 82 texts, 2 settings, 1 stamp | native writer; **the consent sentence and both periods with a lawyer** |
 | 10 | **Landing page**: copy, 12 section anchors, language names, fonts, word mark; and the **price list** of its price section (what each plan costs a month, or "on request": data, never a number in the copy) | `acilis/icerik.ts` | 298 texts, 1 setting | marketing, native review; prices: the owner |
 | 11 | **Leak list**: what marks content as this country's | `sizintiTerimleri.ts` | 2 entries to start, growing | engineering |
 | 12 | Brand word mark | `arayuz.ts` | 1 text | the owner |
@@ -150,8 +154,40 @@ Built once in the kit (NOTYA-ULKE-ARACLAR-01, 2026-10-09); a country fills it in
 - **The kit proposes no follow-up day of its own.** Wherever the pre-split application adds days or months to a date, the kit has an empty date field the doctor fills in. An interval is clinical guidance of a country.
 - **Units.** Length and weight follow the pack's units; a laboratory value follows `labBirimleri`, which the pack must state for every tool that reads one. The kit converts with the exact defined factors.
 - **Keeping a result (migration 139).** A tool stores nothing by itself. Opened from a patient's file, it offers "keep in this patient's file" with an optional follow-up day. The browser sends the form as typed; the server works the result out again and keeps its own, as one encrypted value. The patient's file lists what was kept. The follow-up list (`takip-paneli`) is a role tool: give it to every role that has a tool whose result can be kept, and to no other.
-- **A new country starts with one tile** (the patient's page) and the area's own words: 54 texts, 3 texts for the tile and one setting (who wrote and who read the tool texts).
+- **A new country starts with three base tiles** that hold no clinical content (the patient's page, "my templates", consultations) and the area's own words: 54 texts, 3 texts for each tile and one setting (who wrote and who read the tool texts).
 - **Two scripts.** Where a language has two scripts and one is derived from the other, store the derived text static and mark it. Uzbekistan's rule is `scripts/uz-kiril.mjs` (country tooling only; no build runs it), and its test holds every stored text to the rule.
+
+## Messages, "my templates" and consultation between doctors
+
+Built once in the kit (NOTYA-ULKE-MESAJ-01, 2026-10-09); a country fills them in. Three features, each switched on by the pack (`hastaMesajlari`, `hekimSablonlari`, `konsultasyon`), each with a catalogue of its own and rules in the pack check. **None of them calls a model, and none sends anything to anybody.**
+
+**Messages between a doctor and a patient** (`lib/ulke/mesaj/`, migration 140) live inside the patient portal and nowhere else.
+
+- **Only the doctor opens a conversation**, from the card on the patient's file. The patient reads and answers on their own page while that conversation is open. The patient's page says so plainly where no answer is possible (`hasta.yok`, `hasta.baslatamaz`).
+- **The notice that messages are not for emergencies is always on the patient's page**, also when nobody has written. The sentence is the pack's (`hasta.acil`, `hasta.acilNumara`); the ambulance number is the pack's setting (`uygulama.portal.acilNumara`), and a sentence with a digit in it fails the pack check.
+- **Unread marks on both sides.** Opening the card or the page marks what was shown as read, up to the newest message shown and no further. The doctor's home lists the patients who wrote.
+- **The doctor closes a conversation**, once. A closed conversation takes no message from either side; both still read it. A new message from the doctor opens a new one.
+- **No outbound channel exists.** Nothing tells a patient outside the portal that a message is waiting: no SMS, no e-mail, no messenger. The pack states this as a slot, `uygulama.mesaj.disBildirim: { acik: false, saglayici: null, eksik, kimden }`; the type and the pack check allow nothing else. The doctor's card says it in the pack's words (`hekim.bildirimYok`).
+- **No attachment.** A message is text, one encrypted value bound to its country, doctor, patient, conversation and sender. The table has no column for a file.
+- **Whether a doctor may write to a patient this way is a question of the country's law.** A lawyer answers it before a patient is written to (checklist I8).
+
+**"My templates"** (`lib/ulke/sablon/`, migration 141) are a doctor's own reusable text blocks.
+
+- A table of its own with **no patient in a row**; the name and the text are one encrypted value. Created, edited and deleted softly (the row stays, marked) on the tile `sablonlarim` of the tools area.
+- Inserted by the doctor's own click: under each section of a draft note and under a message, the text goes **at the end** of what is written and replaces nothing.
+- **A pack brings no template.** Ready-made wording for a note is clinical content, and a machine writes none.
+- The feature and its tile go together: the pack check refuses one without the other, and a tile that is not a base tool.
+
+**Consultation between doctors** (`lib/ulke/konsultasyon/`, migration 142) is a written question to a colleague of the same country's database.
+
+- **A colleague is found by their consultation code and by nothing else.** An account makes its code on its own click and can replace it; there is no directory, no search by name, and no lookup by e-mail.
+- The asking doctor writes the question on a patient's file and shares **nothing, one approved note, or that note's summary for the patient**. What is shared is **copied** at that moment and stored encrypted; the colleague reads the copy and never the patient's file. The colleague is shown no name and no id of the patient.
+- **The consent tick is required.** The sentence is the pack's (`iste.riza`); its stamp (`klinik.konsultasyonRizasi.surum`) and the moment are stored with every consultation. **A lawyer reads the sentence** and says whether a consent recorded by the doctor is enough (checklist I9).
+- **One answer.** The colleague answers once while the consultation is open; the asking doctor closes it, once.
+- **Two periods, both the pack's** (`uygulama.konsultasyon`): `acikGun`, how long a consultation may stay open, and `kapanisSonrasiGun`, how long the colleague may still read it after the closing (0 = not at all). The kit has no default. A consultation whose open period has run out is not readable by the colleague, and closing it afterwards does not reopen it.
+- Everything is on the row: who asked whom about whom, when it was opened, answered and closed.
+
+A new country starts with all three switched on, their texts to supply, the two periods and the consent stamp to decide, and the outbound channel as a switched-off slot.
 
 ## The country's own database
 
@@ -198,6 +234,7 @@ NOTYA_COUNTRY=<code> npm run build:ulke                  # pack scan + walls, th
 - `build:ulke` is the build command of a country deployment. A bare `next build` for a country is refused, so the build proof cannot be skipped.
 - A build with no country set is Türkiye's and runs exactly what it runs on `main`.
 - The pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`, run instructions at its top) walks any country in a real browser against the stand-ins: landing, login, first-login questions as far as the pack has any, home, settings, new patient, visit to approved note, appointment, a second account. It reads what to expect from the pack itself.
+- Where the pack has them it also walks the patient portal, the intake form, the tools area, "my templates", messages between the doctor and the patient, and consultation between the two accounts, and checks in each that nothing was asked of the model unasked and nothing left the machine.
 - A country may add a deeper walk-through of its own wording. Uzbekistan's is `scripts/ulke-yuruyus/yuruyus.mjs`.
 
 ## What building does NOT prove
@@ -274,13 +311,17 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 
 **With the tools area (2026-10-09, NOTYA-ULKE-ARACLAR-01) the proof was repeated only in part.** The scaffold now writes 18 files and answers **897 items (859 texts, 38 settings)**: 58 more (54 texts for the tools area's own words, 3 for the patient page's tile, 1 setting). A throwaway `qq` was scaffolded in the repository, type-checked clean, and its build was refused with the list of all 897 items, as it must be; then it was deleted. It was **not** filled, built and walked again (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-ARACLAR-01).
 
+**With messages, "my templates" and consultation (2026-10-09, NOTYA-ULKE-MESAJ-01) the proof was again repeated only in part.** The scaffold now writes 21 files and answers **1066 items (1026 texts, 40 settings)**: 169 more (49 texts for messages, 29 for "my templates", 82 for consultation, 6 for the two new base tiles, 1 for the stamp of the consent sentence, and 2 settings: the two consultation periods). A throwaway `qq` was scaffolded in a copy of the repository, type-checked clean, and its build was refused with the list of all 1066 items, as it must be; then the copy was deleted. It was **not** filled, built and walked. The type check found one hint with an unescaped apostrophe that the scaffold's test had passed; the test now parses every file the scaffold writes (`lib/ulke/ulkeYeni.test.ts`).
+
 ## Known gaps
 
 - **Units**: the intake form is the first screen that reads them (height, weight and temperature are asked in the pack's units, each named by the pack). The visit note still shows no measurement in a unit.
 - **Instructions to the model** are assembled inside each pack (`klinik/talimatlar.ts`); the kit has no shared builder. The template's own small builder covers one language.
 - **Scaffold hints** are key paths, not reference wording.
 - **Prices** are a list the pack states (plan → amount a month, or on request) and the landing layout writes with the pack's number rules. Nothing else in the kit shows money yet.
-- **Four product pieces** are not in the kit and exist for no country but Türkiye: tools, consultation and messaging, the assistant in text and voice, clinic accounts. (The patient portal and the intake form are in the kit since 2026-10-09, without messaging, documents, payments or automatic reminders; the form's answers are not given to the model.)
+- **Two product pieces** are not in the kit and exist for no country but Türkiye: the assistant in text and voice, and clinic accounts. (The patient portal, the intake form, the tools area, messages, "my templates" and consultation are in the kit since 2026-10-09, without documents, attachments, payments, automatic reminders or any outbound notification; the form's answers are not given to the model.)
+- **Messages and consultation have no outbound channel and no attachment.** A patient learns of a message from the doctor, a colleague learns of a question on their own home screen. Both wait on the owner (provider and cost) and on a lawyer (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-MESAJ-01).
+- **A colleague is found by code only.** Lookup by exact e-mail address is not built.
 - **Intake answers stay beside the note.** They are shown to the doctor and never given to the model that writes the note; whether and how they should be is an open decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-INTAKE-01b).
 - **The portal's link validity and ambulance number** are settings a pack must state and that nothing can verify by machine: the first is the owner's, the second needs a local source.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.

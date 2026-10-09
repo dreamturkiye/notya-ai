@@ -27,6 +27,14 @@
  * without a follow-up day (the field starts empty), what the server refuses, the patient's file, the follow-up list
  * and "done"; and in step 5 the second account.
  *
+ * NOTYA-ULKE-MESAJ-01 — where the pack has them, step 4e walks "my templates" (created, edited, deleted softly; no
+ * patient in a row; inserted into a message by the doctor's click) and messages between the doctor and the patient
+ * (only the doctor opens a conversation; the notice that the page is not for emergencies, shown before anybody wrote;
+ * unread marks on both sides; closing; a closed conversation takes no message); step 5 walks consultation between the
+ * two accounts (a code and no directory, the consent tick, the read-only copy, what the consulted account can NOT
+ * open, one answer, closing and the period after it) and the second account against the first one's messages and
+ * templates. Nothing in these steps is asked of the model and nothing is sent to anybody: both are checked.
+ *
  * A country's OWN deeper walk-through (its wording, its roles, its language switches) stays with that country:
  * Uzbekistan's is ./yuruyus.mjs.
  *
@@ -688,6 +696,139 @@ if (P.araclar) {
   }
 }
 
+// ───────────────────────── 4e. "my templates" and messages between the doctor and the patient (NOTYA-ULKE-MESAJ-01) ─────────────────────────
+const kosulBekle = async (kosul, deneme = 120) => { for (let i = 0; i < deneme; i++) { const x = await kosul(); if (x) return x; await bekle(150) } return null }
+let sablonA = '', yazismaA = ''
+if (P.sablon) {
+  const p = A, SM = P.sablon.m
+  const satirlar = () => tabloOku('ulke_hekim_sablonlari')
+  await git(p, `/tools?arac=${P.sablon.kutu}`)
+  await p.waitForSelector('[data-bolum=sablonlarim][data-sablon-adedi]', { timeout: 60000 })
+  kontrol('templates: the tile opens the doctor\'s own list — empty (the pack brings no template), with the pack\'s notice that no patient\'s data belongs in one', (await metin(p, '[data-alan=sablon-bos]')) === SM.bos && (await metin(p, '[data-alan=sablon-uyari]')) === SM.uyari && (await satirlar()).length === 0)
+  await tara(p, 'tools (my templates, empty)')
+  const yaz = async (ad, govdeMetni) => {
+    await yazDeger(p, '#uza-sablon-ad', ad); await yazDeger(p, '#uza-sablon-metin', govdeMetni)
+    const once = (await satirlar()).length
+    await p.click('[data-eylem=sablon-kaydet]')
+    await kosulBekle(async () => (await satirlar()).length > once)
+    await p.waitForFunction((n) => document.querySelectorAll('[data-sablon]').length === n, { timeout: 30000 }, once + 1)
+  }
+  await yaz('QA-TEMPLATE name', 'QA-TEMPLATE-TEXT first wording')
+  let s = await satirlar()
+  sablonA = s[0]?.id ?? ''
+  kontrol('templates: CREATED — one row with this country and this account and NO patient in it; the name and the text are one encrypted value', s.length === 1 && s[0].ulke === P.kod && s[0].doctor_id === HESAP_A && !('patient_id' in s[0]) && !JSON.stringify(s).includes('QA-TEMPLATE') && (await metin(p, `[data-sablon="${sablonA}"] .uza-not-metin`)) === 'QA-TEMPLATE-TEXT first wording', JSON.stringify(s).slice(0, 200))
+  await p.click(`[data-sablon="${sablonA}"] [data-eylem=sablon-duzenle]`)
+  await p.waitForSelector(`[data-bolum=sablon-formu][data-duzenlenen="${sablonA}"]`, { timeout: 30000 })
+  await yazDeger(p, '#uza-sablon-metin', 'QA-TEMPLATE-TEXT edited wording')
+  await p.click('[data-eylem=sablon-kaydet]')
+  await p.waitForFunction((id) => document.querySelector(`[data-sablon="${id}"] .uza-not-metin`)?.textContent === 'QA-TEMPLATE-TEXT edited wording', { timeout: 30000 }, sablonA)
+  s = await satirlar()
+  kontrol('templates: EDITED — the same row with a new encrypted value; still one template', s.length === 1 && s[0].id === sablonA && !s[0].silindi_at && !JSON.stringify(s).includes('QA-TEMPLATE'))
+  // a second one, deleted: the row stays, marked, and is listed no more
+  await yaz('QA-TEMPLATE two', 'QA-TEMPLATE-TEXT to delete')
+  const ikinci = (await satirlar()).find((x) => x.id !== sablonA)?.id ?? ''
+  await p.click(`[data-sablon="${ikinci}"] [data-eylem=sablon-sil]`)
+  await p.waitForSelector('[data-eylem=sablon-sil-onayla]', { timeout: 30000 })
+  kontrol('templates: deleting asks first, in the pack\'s words', (await metin(p, '[data-alan=sablon-sil-onay] [role=alert]')) === SM.silUyari)
+  await p.click('[data-eylem=sablon-sil-onayla]')
+  await p.waitForFunction(() => document.querySelectorAll('[data-sablon]').length === 1, { timeout: 30000 })
+  s = await satirlar()
+  const silinmis = await api(p, '/api/ulke/sablonlar', { method: 'PATCH', govde: { id: ikinci, ad: 'QA', metin: 'QA', kapsam: 'hepsi' } })
+  kontrol('templates: DELETED SOFTLY — the row stays, marked; it is listed no more and answers "not found" like a template that never existed', s.length === 2 && !!s.find((x) => x.id === ikinci)?.silindi_at && !s.find((x) => x.id === sablonA)?.silindi_at && silinmis.s === 404 && ((await api(p, '/api/ulke/sablonlar')).j?.sablonlar ?? []).length === 1, `${silinmis.s} ${silinmis.t}`)
+  await tara(p, 'tools (my templates, one template)')
+}
+if (P.mesaj && portalOturumu) {
+  const p = A, { H, token } = portalOturumu, HM = P.mesaj.hekim, PM = P.mesaj.hasta
+  const doldur = (m, d) => m.replace('%', () => String(d))
+  const hastaApi = (rota, sec = {}) => H.evaluate(async (u, sec) => {
+    const r = await fetch(u, { method: sec.method || 'GET', credentials: 'same-origin', headers: { 'x-notya-portal-baglanti': sec.ozet, ...(sec.govde ? { 'Content-Type': 'application/json', 'x-notya-portal': '1' } : {}) }, body: sec.govde ? JSON.stringify(sec.govde) : undefined })
+    const t = await r.text(); let j = null; try { j = JSON.parse(t) } catch { /* not json */ }
+    return { s: r.status, t: t.slice(0, 300), j }
+  }, adres(rota), { ...sec, ozet: ozetle(token) })
+  const mesajlar = () => tabloOku('ulke_hasta_mesajlari'), yazismalar = () => tabloOku('ulke_mesaj_yazismalari')
+  const hastaSayfasi = async () => { await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('[data-alan=portal-mesajlar][data-yazabilir]', { timeout: 60000 }) }
+  writeFileSync(GUNLUK, '')
+
+  // the patient's page BEFORE anybody wrote
+  await hastaSayfasi()
+  const acil = await metin(H, '[data-alan=mesaj-acil]')
+  const numara = P.portal.acilNumara
+  kontrol('messages: the patient\'s page has the section and — with NO conversation open — the notice that it is not for emergencies (the ambulance number only if the pack states one)', (await metin(H, '[data-alan=portal-mesajlar] h2')) === PM.baslik && acil.startsWith(PM.acil) && (numara ? acil.endsWith(doldur(PM.acilNumara, numara)) : acil === PM.acil), acil)
+  const sorulmadan = await hastaApi('/api/ulke/portal/mesaj', { method: 'POST', govde: { metin: 'QA-UNASKED' } })
+  kontrol('messages: ONLY THE DOCTOR OPENS A CONVERSATION — the page says so in the pack\'s words and offers no text box, and the server refuses a message nobody asked for', (await metin(H, '[data-alan=mesaj-yok]')) === PM.yok && (await metin(H, '[data-alan=mesaj-baslatamaz]')).includes(PM.baslatamaz) && !(await H.$('#uzp-mesaj')) && sorulmadan.s === 409 && sorulmadan.j?.code === 'KAPALI' && (await mesajlar()).length === 0 && (await yazismalar()).length === 0, `${sorulmadan.s} ${sorulmadan.t}`)
+  await tara(H, 'portal: messages, before the doctor wrote')
+
+  // the doctor writes from the patient's file
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('[data-alan=hasta-mesajlari] [data-alan=mesaj-yaz]', { timeout: 60000 })
+  kontrol('messages: the patient\'s file has the card in the pack\'s words, empty, and says that NOTHING tells the patient outside their page that a message is waiting', (await metin(p, '[data-alan=hasta-mesajlari] h2')) === HM.baslik && (await metin(p, '[data-alan=mesaj-bos]')) === HM.bos && (await metin(p, '[data-alan=mesaj-bildirim-yok]')) === HM.bildirimYok && P.mesaj.disBildirim?.acik === false && P.mesaj.disBildirim?.saglayici === null)
+  let ilkMetin = 'QA-MESSAGE from the doctor'
+  if (sablonA) {
+    // "my templates" in a message: the doctor's own click puts the template's text at the end of what is written
+    await p.waitForSelector('[data-alan=sablon-secici][data-hedef=mesaj] summary', { timeout: 30000 })
+    await yazDeger(p, '#uza-mesaj-metin', 'QA-MESSAGE from the doctor')
+    await p.click('[data-alan=sablon-secici][data-hedef=mesaj] summary')
+    await p.waitForSelector(`[data-alan=sablon-secici] [data-sablon="${sablonA}"]`, { timeout: 30000 })
+    const dugmeler = await p.$$eval('[data-alan=sablon-secici] [data-sablon]', (l) => l.length)
+    await p.click(`[data-alan=sablon-secici] [data-sablon="${sablonA}"]`)
+    ilkMetin = 'QA-MESSAGE from the doctor\nQA-TEMPLATE-TEXT edited wording'
+    kontrol('templates: under a message the doctor\'s templates are offered (the deleted one is not), and a click puts the text AT THE END of what was written — nothing is replaced', dugmeler === 1 && (await p.$eval('#uza-mesaj-metin', (e) => e.value)) === ilkMetin)
+  } else await yazDeger(p, '#uza-mesaj-metin', ilkMetin)
+  await p.click('[data-eylem=mesaj-gonder]')
+  await p.waitForSelector('[data-alan=hasta-mesajlari] [data-mesaj]', { timeout: 30000 })
+  let y = await yazismalar(), ms = await mesajlar()
+  yazismaA = y[0]?.id ?? ''
+  kontrol('messages: WRITTEN — one conversation and one message for this country, this account and this patient; the text is one encrypted value; the message is unread', y.length === 1 && y[0].ulke === P.kod && y[0].doctor_id === HESAP_A && y[0].patient_id === hastaA && !y[0].kapandi_at && ms.length === 1 && ms[0].ulke === P.kod && ms[0].doctor_id === HESAP_A && ms[0].patient_id === hastaA && ms[0].yazisma_id === yazismaA && ms[0].gonderen === 'hekim' && !ms[0].okundu_at && !JSON.stringify(ms).includes('QA-MESSAGE') && !JSON.stringify(ms).includes('QA-TEMPLATE') && !!(await p.$('[data-alan=hasta-mesajlari] [data-okundu=hayir]')), JSON.stringify(ms).slice(0, 200))
+  await tara(p, 'patient file (a message written)')
+
+  // the patient reads and answers
+  await hastaSayfasi()
+  await H.waitForSelector('[data-alan=portal-mesajlar] [data-mesaj]', { timeout: 30000 })
+  const hastaGordu = await H.$eval('[data-alan=portal-mesajlar]', (e) => ({ yeni: e.getAttribute('data-okunmamis'), yazabilir: e.getAttribute('data-yazabilir'), metin: e.querySelector('[data-mesaj] .uza-not-metin')?.textContent ?? '', rozet: e.querySelector('[data-alan=mesaj-okunmamis]')?.textContent ?? '' }))
+  kontrol('messages: THE PATIENT SEES IT — the doctor\'s text exactly, marked as new in the pack\'s words, with a text box to answer and the emergency notice still above it', hastaGordu.yeni === '1' && hastaGordu.yazabilir === 'evet' && hastaGordu.metin === ilkMetin && hastaGordu.rozet === doldur(PM.okunmamis, 1) && (await metin(H, '[data-alan=mesaj-acil]')) === acil, JSON.stringify(hastaGordu))
+  const okundu = await kosulBekle(async () => (await mesajlar())[0].okundu_at)
+  await H.type('#uzp-mesaj', 'QA-REPLY of the patient')
+  await H.click('[data-eylem=portal-mesaj-gonder]')
+  await H.waitForFunction(() => document.querySelectorAll('[data-alan=portal-mesajlar] [data-mesaj]').length === 2, { timeout: 30000 })
+  ms = await mesajlar()
+  const cevap = ms.find((m) => m.gonderen === 'hasta')
+  kontrol('messages: READ AND ANSWERED — opening the page marked the doctor\'s message as read, once; the patient\'s answer is a second message of the same conversation, encrypted, unread', !!okundu && ms.length === 2 && cevap?.yazisma_id === yazismaA && cevap?.patient_id === hastaA && cevap?.doctor_id === HESAP_A && !cevap?.okundu_at && !JSON.stringify(ms).includes('QA-REPLY') && (await yazismalar()).length === 1)
+  await tara(H, 'portal: messages, a conversation')
+  await H.screenshot({ path: join(CIKTI, `genel-${P.kod}-portal-messages.png`), fullPage: true })
+
+  // the doctor's home lists who wrote; opening the file marks it as read
+  await git(p, '/today')
+  await p.waitForSelector('[data-alan=bugun-mesajlar] [data-mesaj-hastasi]', { timeout: 60000 })
+  const evde = await metin(p, '[data-alan=bugun-mesajlar]')
+  kontrol('messages: THE DOCTOR\'S HOME lists the patient who wrote, with the count in the pack\'s words, and links to the card on the file', evde.includes(HM.okunmamisBaslik) && evde.includes(HASTA_ADI) && evde.includes(doldur(HM.okunmamisAdet, 1)) && (await p.$eval('[data-alan=bugun-mesajlar] [data-mesaj-hastasi]', (e) => e.getAttribute('href'))).startsWith(`${adres('/patient')}?id=${hastaA}#`))
+  await tara(p, 'home (an unread message)')
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('[data-alan=bugun-mesajlar] [data-mesaj-hastasi]')])
+  await p.waitForFunction(() => document.querySelectorAll('[data-alan=hasta-mesajlari] [data-mesaj]').length === 2, { timeout: 60000 })
+  const dosyada = await p.$eval('[data-alan=hasta-mesajlari]', (e) => ({ yeni: e.getAttribute('data-okunmamis'), okundu: !!e.querySelector('[data-mesaj][data-gonderen=hekim] [data-okundu=evet]'), cevap: e.querySelector('[data-mesaj][data-gonderen=hasta] .uza-not-metin')?.textContent ?? '' }))
+  const hekimOkudu = await kosulBekle(async () => (await mesajlar()).find((m) => m.gonderen === 'hasta')?.okundu_at)
+  await git(p, '/today')
+  await p.waitForSelector('.uza-karsilama', { timeout: 60000 })
+  await bekle(800)
+  kontrol('messages: on the file the doctor sees the answer and that the patient READ the first message; opening it marked the answer as read, and the home lists nobody any more', dosyada.yeni === '1' && dosyada.okundu && dosyada.cevap === 'QA-REPLY of the patient' && !!hekimOkudu && !(await p.$('[data-alan=bugun-mesajlar]')), JSON.stringify(dosyada))
+
+  // the doctor closes the conversation
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('[data-alan=hasta-mesajlari] [data-eylem=mesaj-kapat]', { timeout: 60000 })
+  await p.click('[data-eylem=mesaj-kapat]')
+  await p.waitForSelector('[data-alan=mesaj-kapat-onay]', { timeout: 30000 })
+  const uyari = await metin(p, '[data-alan=mesaj-kapat-onay] [role=alert]')
+  await p.click('[data-eylem=mesaj-kapat-onayla]')
+  await p.waitForSelector('[data-alan=hasta-mesajlari] [data-yazisma-durumu=kapali]', { timeout: 30000 })
+  await hastaSayfasi()
+  const kapaliyken = await hastaApi('/api/ulke/portal/mesaj', { method: 'POST', govde: { metin: 'QA-AFTER-CLOSING' } })
+  const ikinciKapat = await api(p, '/api/ulke/hasta-mesajlari', { method: 'PATCH', govde: { yazismaId: yazismaA, islem: 'kapat' } })
+  y = await yazismalar()
+  kontrol('messages: CLOSED BY THE DOCTOR (asked first, in the pack\'s words) — the patient still reads both messages, is told it is closed, has no text box, and the server takes no message; closing twice is refused', uyari === HM.kapatUyari && !!y[0].kapandi_at && (await metin(H, '[data-alan=mesaj-kapali]')) === PM.kapali && !(await H.$('#uzp-mesaj')) && (await H.$$eval('[data-alan=portal-mesajlar] [data-mesaj]', (l) => l.length)) === 2 && kapaliyken.s === 409 && kapaliyken.j?.code === 'KAPALI' && ikinciKapat.s === 409 && ikinciKapat.j?.code === 'DURUM' && (await mesajlar()).length === 2, `${kapaliyken.s} ${kapaliyken.t} | ${ikinciKapat.s} ${ikinciKapat.t}`)
+  await tara(H, 'portal: messages, a closed conversation')
+  await tara(p, 'patient file (a closed conversation)')
+  kontrol('messages and templates: nothing was asked of the model or of any provider, and no request left this machine from either browser', cagrilar().length === 0 && H.disari.length === 0 && p.disari.length === 0, JSON.stringify(cagrilar()).slice(0, 200))
+}
+
 // ───────────────────────── 5. a second account sees none of it; the shared database holds only this country's rows ─────────────────────────
 {
   const p = await sayfaAc(TEL)
@@ -716,6 +857,129 @@ if (P.araclar) {
     const olmayan = await api(p, `/api/ulke/arac-kaydi?hasta=${yok}`)
     const liste = await api(p, '/api/ulke/arac-kaydi')
     kontrol('tools: account B and account A\'s patient — reading the kept results, keeping one and closing a follow-up each answer exactly like "does not exist"; B\'s own follow-up list is empty; nothing changed', cevaplar.every((r) => r.s === 404 && r.t === olmayan.t) && liste.s === 200 && Array.isArray(liste.j?.takipler) && liste.j.takipler.length === 0 && JSON.stringify(await tabloOku('ulke_arac_kayitlari')) === once, cevaplar.map((r) => `${r.s} ${r.t}`).join(' | '))
+  }
+  if (P.sablon && sablonA) {
+    // NOTYA-ULKE-MESAJ-01 — the second account and the first account's template.
+    const once = JSON.stringify(await tabloOku('ulke_hekim_sablonlari'))
+    const olmayan = await api(p, '/api/ulke/sablonlar', { method: 'DELETE', govde: { id: '30000000-0000-4000-8000-00000000dead' } })
+    const c = [await api(p, '/api/ulke/sablonlar', { method: 'PATCH', govde: { id: sablonA, ad: 'QA-B', metin: 'QA-B', kapsam: 'hepsi' } }), await api(p, '/api/ulke/sablonlar', { method: 'DELETE', govde: { id: sablonA } })]
+    const liste = await api(p, '/api/ulke/sablonlar')
+    kontrol('templates: account B and account A\'s template — editing and deleting each answer exactly like "does not exist"; B\'s own list is empty; nothing changed', c.every((r) => r.s === 404 && r.t === olmayan.t) && liste.s === 200 && JSON.stringify(liste.j) === '{"sablonlar":[]}' && JSON.stringify(await tabloOku('ulke_hekim_sablonlari')) === once, c.map((r) => `${r.s} ${r.t}`).join(' | '))
+  }
+  if (P.mesaj && yazismaA) {
+    // NOTYA-ULKE-MESAJ-01 — the second account and the first account's patient and (closed) conversation.
+    const once = JSON.stringify([await tabloOku('ulke_mesaj_yazismalari'), await tabloOku('ulke_hasta_mesajlari')])
+    const olmayan = await api(p, '/api/ulke/hasta-mesajlari?hasta=30000000-0000-4000-8000-00000000dead')
+    const c = [
+      await api(p, `/api/ulke/hasta-mesajlari?hasta=${hastaA}`), await api(p, '/api/ulke/hasta-mesajlari', { method: 'POST', govde: { hastaId: hastaA, metin: 'QA-B writes' } }),
+      await api(p, '/api/ulke/hasta-mesajlari', { method: 'PATCH', govde: { hastaId: hastaA, islem: 'okundu', kadar: new Date().toISOString() } }), await api(p, '/api/ulke/hasta-mesajlari', { method: 'PATCH', govde: { yazismaId: yazismaA, islem: 'kapat' } }),
+    ]
+    const liste = await api(p, '/api/ulke/hasta-mesajlari')
+    kontrol('messages: account B and account A\'s patient — reading the conversation, writing, marking as read and closing each answer exactly like "does not exist"; B\'s own list of unread messages is empty; nothing changed', c.every((r) => r.s === 404 && r.t === olmayan.t) && JSON.stringify(liste.j) === '{"okunmamis":[]}' && JSON.stringify([await tabloOku('ulke_mesaj_yazismalari'), await tabloOku('ulke_hasta_mesajlari')]) === once, c.map((r) => `${r.s} ${r.t}`).join(' | '))
+    const { H, token } = portalOturumu
+    const hastayla = await H.evaluate(async (u, o) => { const r = await fetch(u, { credentials: 'same-origin', headers: { 'x-notya-portal-baglanti': o } }); return r.status }, adres(`/api/ulke/hasta-mesajlari?hasta=${hastaA}`), ozetle(token))
+    const hekimle = await api(A, '/api/ulke/portal/mesaj')
+    kontrol('messages: the doctor\'s message route never accepts a patient\'s session, and the patient\'s never accepts a doctor\'s', hastayla === 401 && hekimle.s === 401 && hekimle.t === '{"code":"OTURUM_YOK"}', `${hastayla} ${hekimle.s} ${hekimle.t}`)
+  }
+  if (P.konsultasyon) {
+    // NOTYA-ULKE-MESAJ-01 — CONSULTATION between the two accounts of this country. A asks B about A's patient.
+    const K = P.konsultasyon, KA = K.m, KB = K.ikinci
+    const doldur = (m, ...d) => (d.length === 1 ? m.replace('%', () => String(d[0])) : m.replace(/%(\d)/g, (h, n) => String(d[Number(n) - 1] ?? h)))
+    const satirlar = () => tabloOku('ulke_konsultasyonlar')
+    const KAPI = '/api/ulke/konsultasyon'
+    writeFileSync(GUNLUK, '')
+    // B: its own code, made on its own click
+    await git(p, `/tools?arac=${K.kutu}`)
+    await p.waitForSelector('[data-bolum=konsultasyon-kodu][data-kod-durumu]', { timeout: 60000 })
+    await p.waitForSelector('[data-bolum=konsultasyon-gelen][data-adet]', { timeout: 60000 })
+    kontrol('consultation: account B has no code yet and was asked nothing; its screen says, in the pack\'s words, that a colleague sees only what was shared', (await p.$eval('[data-bolum=konsultasyon-kodu]', (e) => e.getAttribute('data-kod-durumu'))) === 'yok' && (await metin(p, '[data-alan=kod-yok]')) === KB.kod.yok && (await metin(p, '[data-alan=gelen-bos]')) === KB.gelen.bos && (await metin(p, '[data-alan=gelen-aciklama]')) === KB.gelen.aciklama)
+    await p.click('[data-eylem=kod-uret]')
+    await p.waitForSelector('[data-alan=konsultasyon-kodu]', { timeout: 30000 })
+    const kodB = await p.$eval('[data-alan=konsultasyon-kodu]', (e) => e.value)
+    const kodlar = await tabloOku('ulke_konsultasyon_kodlari')
+    kontrol('consultation: B\'s code is made on B\'s own click — one row for this country and this account, and the code itself cannot be read in the database', kodB.replace(/[^A-Z0-9]/g, '').length >= 8 && kodlar.length === 1 && kodlar[0].ulke === P.kod && kodlar[0].doctor_id === HESAP_B && /^[0-9a-f]{64}$/.test(kodlar[0].kod_hash) && !JSON.stringify(kodlar).includes(kodB) && !JSON.stringify(kodlar).includes(kodB.replace(/[^A-Z0-9]/g, '')), kodB.replace(/[A-Z0-9]/g, 'x'))
+    await tara(p, 'tools (consultations, account B)')
+
+    // A: finds B by the code, and by nothing else
+    const yanlis = await api(A, KAPI, { method: 'POST', govde: { islem: 'bul', kod: kodB.split('').reverse().join('') } })
+    const dizin = await api(A, `${KAPI}?gorunum=meslektaslar`)
+    await git(A, `/patient?id=${hastaA}`)
+    await A.waitForSelector('[data-alan=hasta-konsultasyon] [data-alan=konsultasyon-iste] summary', { timeout: 60000 })
+    await A.click('[data-alan=konsultasyon-iste] summary')
+    await A.waitForSelector('#uza-ki-kod', { visible: true, timeout: 30000 })
+    await A.type('#uza-ki-kod', kodB)
+    await A.click('[data-eylem=meslektas-bul]')
+    await A.waitForSelector('[data-alan=meslektas]', { timeout: 30000 })
+    const bulunan = await metin(A, '[data-alan=meslektas]')
+    kontrol('consultation: A finds B by B\'s code and by nothing else — another code names nobody, and there is no list of doctors to ask the server for', bulunan.includes((await tabloOku('ulke_hesaplari')).find((h) => h.id === HESAP_B).full_name) && yanlis.s === 404 && yanlis.j?.code === 'MESLEKTAS_YOK' && dizin.s >= 400 && dizin.s < 500 && !JSON.stringify(dizin.j ?? {}).includes(HESAP_B), `${bulunan} | ${yanlis.s} ${yanlis.t} | ${dizin.s}`)
+    await A.type('#uza-ki-soru', 'QA-QUESTION for the colleague')
+    await A.waitForSelector('input[name=konsultasyon-paylasim][value=not]', { timeout: 30000 })
+    await A.click('input[name=konsultasyon-paylasim][value=not]')
+    await A.waitForSelector('#uza-ki-not', { timeout: 30000 })
+    await A.click('[data-eylem=konsultasyon-iste]')
+    await A.waitForSelector('[data-alan=konsultasyon-iste] [role=alert]', { timeout: 30000 })
+    kontrol('consultation: WITHOUT THE CONSENT TICK nothing is sent — the pack\'s sentence, the consent wording on the screen, and no row', (await metin(A, '[data-alan=konsultasyon-iste] [role=alert]')) === KA.iste.rizaGerekli && (await metin(A, '[data-alan=konsultasyon-riza]')).includes(KA.iste.riza) && (await metin(A, '[data-alan=konsultasyon-bildirim-yok]')) === KA.iste.bildirimYok && (await satirlar()).length === 0)
+    await tara(A, 'patient file (asking a colleague)')
+    await A.click('[data-alan=konsultasyon-riza] input[name=riza]')
+    await A.click('[data-eylem=konsultasyon-iste]')
+    await A.waitForSelector('[data-bolum=konsultasyon-giden] [data-konsultasyon]', { timeout: 30000 })
+    let s = await satirlar()
+    const id = s[0]?.id ?? ''
+    const gun = s[0] ? (Date.parse(s[0].son_gecerlilik) - Date.now()) / 86400000 : -1
+    kontrol(`consultation: ASKED — one row for this country: A asks B about A's patient; an approved note is named and its COPY is stored; the question and the copy are encrypted; the consent stamp is the pack's and its moment is recorded; open for the pack's ${K.acikGun} days`, s.length === 1 && s[0].ulke === P.kod && s[0].doctor_id === HESAP_A && s[0].danisilan_id === HESAP_B && s[0].patient_id === hastaA && s[0].paylasim_turu === 'not' && !!s[0].note_id && !!s[0].paylasim_encrypted && s[0].riza_surumu === K.rizaSurumu && !!s[0].riza_at && Math.abs(gun - K.acikGun) < 0.01 && !s[0].okundu_at && !s[0].cevap_at && !s[0].kapandi_at && !/QA-QUESTION|SYNTHETIC|QA-PATIENT/.test(JSON.stringify(s)), `${gun.toFixed(3)} days ${JSON.stringify(s).slice(0, 160)}`)
+
+    // B: is told on the home screen, and sees ONLY what was shared
+    await git(p, '/today')
+    await p.waitForSelector('[data-alan=bugun-konsultasyon]', { timeout: 60000 })
+    kontrol('consultation: B\'s home says that a colleague asked, in the pack\'s words, and names no patient', (await metin(p, '[data-alan=bugun-konsultasyon] h2')) === doldur(KB.gelen.bekleyen, 1) && !(await govde(p)).includes('QA-PATIENT'))
+    await git(p, `/tools?arac=${K.kutu}`)
+    await p.waitForSelector('[data-bolum=konsultasyon-gelen] [data-konsultasyon]', { timeout: 60000 })
+    const gelenApi = await api(p, `${KAPI}?gorunum=gelen`)
+    // the server's whole answer, as text (the helper above keeps only its beginning)
+    const gelenJ = await p.evaluate(async (u, anahtar) => { const o = JSON.parse(localStorage.getItem(anahtar) || 'null'); return (await fetch(u, { headers: { Authorization: `Bearer ${o?.access_token ?? ''}` } })).text() }, adres(`${KAPI}?gorunum=gelen`), OTURUM_ANAHTARI)
+    const ekran = await metin(p, '[data-bolum=konsultasyon-gelen]')
+    const kopya = await metin(p, '[data-alan=konsultasyon-kopya][data-kopya=not]')
+    kontrol('consultation: B SEES ONLY WHAT WAS SHARED — the question, who asked, and a read-only copy of the approved note; no name of the patient, no id of the patient or of the note, no link to anything, neither on the screen nor in the server\'s answer', gelenApi.s === 200 && ekran.includes('QA-QUESTION for the colleague') && ekran.includes('QA Shifokor Bir') && /SYNTHETIC/.test(kopya) && !ekran.includes('QA-PATIENT') && !gelenJ.includes(hastaA) && !gelenJ.includes('QA-PATIENT') && !gelenJ.includes(s[0].note_id) && !gelenJ.includes(P.telefonOrnek) && (await p.$$eval('[data-bolum=konsultasyon-gelen] a[href], [data-bolum=konsultasyon-gelen] [contenteditable], [data-alan=konsultasyon-kopya] textarea, [data-alan=konsultasyon-kopya] input', (l) => l.length)) === 0, kopya.slice(0, 80))
+    const okundu = await kosulBekle(async () => (await satirlar())[0].okundu_at)
+    const baska = [await api(p, `/api/ulke/hasta?id=${hastaA}`), await api(p, `${KAPI}?gorunum=giden&hasta=${hastaA}`), await api(p, `${KAPI}?gorunum=notlar&hasta=${hastaA}`), await api(p, KAPI, { method: 'PATCH', govde: { id, islem: 'kapat' } }), await api(p, KAPI, { method: 'POST', govde: { islem: 'iste', hastaId: hastaA, kod: kodB, soru: 'QA-B asks', paylasimTuru: 'yok', notId: null, riza: true } })]
+    kontrol('consultation: opening it is recorded once, and it OPENS NOTHING ELSE — the patient\'s file, the patient\'s notes and A\'s own list still answer B "not found"; B cannot close what A asked, and cannot ask about A\'s patient', !!okundu && baska.every((r) => r.s === 404) && (await satirlar()).length === 1, baska.map((r) => `${r.s} ${r.t}`).join(' | '))
+    await tara(p, 'tools (consultations, account B was asked)')
+    await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-consultation-asked.png`), fullPage: true })
+
+    // B answers, once
+    await p.type('[data-alan=konsultasyon-cevap-formu] textarea[name=cevap]', 'QA-ANSWER of the colleague')
+    await p.click('[data-eylem=konsultasyon-cevapla]')
+    await p.waitForSelector('[data-bolum=konsultasyon-gelen] [data-alan=konsultasyon-cevap]', { timeout: 30000 })
+    s = await satirlar()
+    const ikinciCevap = await api(p, KAPI, { method: 'PATCH', govde: { id, islem: 'cevap', cevap: 'QA-SECOND answer' } })
+    const kendiCevabi = await api(A, KAPI, { method: 'PATCH', govde: { id, islem: 'cevap', cevap: 'QA-OWN answer' } })
+    kontrol('consultation: ANSWERED ONCE — the answer is encrypted with its moment; a second answer is refused, and the asking account cannot answer its own question', !!s[0].cevap_at && !!s[0].cevap_encrypted && !JSON.stringify(s).includes('QA-ANSWER') && ikinciCevap.s === 409 && ikinciCevap.j?.code === 'DURUM' && kendiCevabi.s === 404 && !(await p.$('[data-alan=konsultasyon-cevap-formu]')), `${ikinciCevap.s} ${ikinciCevap.t} | ${kendiCevabi.s} ${kendiCevabi.t}`)
+
+    // A reads the answer and closes
+    await git(A, `/patient?id=${hastaA}`)
+    await A.waitForSelector('[data-bolum=konsultasyon-giden] [data-alan=konsultasyon-cevap]', { timeout: 60000 })
+    kontrol('consultation: A reads the answer on the patient\'s file and sees that B opened the question', (await metin(A, '[data-bolum=konsultasyon-giden] [data-alan=konsultasyon-cevap]')) === 'QA-ANSWER of the colleague' && !!(await A.$('[data-bolum=konsultasyon-giden] [data-okundu=evet]')) && (await metin(A, '[data-bolum=konsultasyon-giden] [data-alan=konsultasyon-soru]')) === 'QA-QUESTION for the colleague')
+    await A.click('[data-bolum=konsultasyon-giden] [data-eylem=konsultasyon-kapat]')
+    await A.waitForSelector('[data-alan=konsultasyon-kapat-onay]', { timeout: 30000 })
+    const kapatUyari = await metin(A, '[data-alan=konsultasyon-kapat-onay] [role=alert]')
+    await A.click('[data-eylem=konsultasyon-kapat-onayla]')
+    await A.waitForSelector('[data-bolum=konsultasyon-giden] [data-konsultasyon][data-durum=kapali]', { timeout: 30000 })
+    s = await satirlar()
+    const sure = (Date.parse(s[0].erisim_bitis) - Date.parse(s[0].kapandi_at)) / 86400000
+    const yineKapat = await api(A, KAPI, { method: 'PATCH', govde: { id, islem: 'kapat' } })
+    kontrol(`consultation: CLOSED BY A (asked first, with the pack's ${K.kapanisSonrasiGun} day(s) in the sentence) — the row keeps the question, the copy and the answer; B may read it for exactly that long after the closing; closing twice is refused`, kapatUyari === doldur(KA.giden.kapatUyari, K.kapanisSonrasiGun) && s.length === 1 && !!s[0].kapandi_at && Math.abs(sure - K.kapanisSonrasiGun) < 0.01 && !!s[0].cevap_encrypted && !!s[0].paylasim_encrypted && yineKapat.s === 409 && yineKapat.j?.code === 'DURUM', `${sure} | ${yineKapat.s} ${yineKapat.t}`)
+    await tara(A, 'patient file (a closed consultation)')
+
+    // B after the closing
+    await git(p, `/tools?arac=${K.kutu}`)
+    await p.waitForSelector('[data-bolum=konsultasyon-gelen][data-adet]', { timeout: 60000 })
+    const adet = await p.$eval('[data-bolum=konsultasyon-gelen]', (e) => e.getAttribute('data-adet'))
+    kontrol(K.kapanisSonrasiGun > 0 ? 'consultation: AFTER THE CLOSING B still reads it, marked as closed, with no way to write' : 'consultation: AFTER THE CLOSING B is shown nothing (the pack allows no reading after it)', K.kapanisSonrasiGun > 0 ? adet === '1' && !!(await p.$('[data-bolum=konsultasyon-gelen] [data-konsultasyon][data-durum=kapali]')) && !(await p.$('[data-alan=konsultasyon-cevap-formu]')) && !(await p.$('[data-bolum=konsultasyon-gelen] textarea')) : adet === '0', `shown: ${adet}`)
+    await tara(p, 'tools (consultations, after the closing)')
+    await git(p, '/today')
+    await p.waitForSelector('.uza-karsilama', { timeout: 60000 })
+    await bekle(800)
+    kontrol('consultation: nothing waits on B\'s home any more; and in all of it nothing was asked of the model and nothing was sent to anybody', !(await p.$('[data-alan=bugun-konsultasyon]')) && cagrilar().length === 0 && p.disari.length === 0 && A.disari.length === 0, JSON.stringify(cagrilar()).slice(0, 200))
   }
   if (P.portal) {
     // NOTYA-ULKE-PORTAL-01 — the second account and the first account's patient: everything answers like "does not exist".
@@ -754,7 +1018,7 @@ if (P.araclar) {
     await H.close()
   }
   await p.close()
-  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', ...(P.araclar ? ['ulke_arac_kayitlari'] : []), ...(P.portal ? ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri'] : []), ...(P.form ? ['ulke_hasta_formlari'] : [])]
+  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', ...(P.araclar ? ['ulke_arac_kayitlari'] : []), ...(P.portal ? ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri'] : []), ...(P.form ? ['ulke_hasta_formlari'] : []), ...(P.sablon ? ['ulke_hekim_sablonlari'] : []), ...(P.mesaj ? ['ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari'] : []), ...(P.konsultasyon ? ['ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar'] : [])]
   const yabanciSatir = []
   let toplam = 0
   for (const ad of tablolar) for (const s of await tabloOku(ad)) { toplam++; if (s.ulke !== P.kod) yabanciSatir.push(`${ad}:${s.ulke}`) }

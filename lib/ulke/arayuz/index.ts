@@ -11,12 +11,12 @@ import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import type { DilGrubu, DilKodu } from '../tipler'
 import { ulkePaketi, uygulamaDilleri, uygulamaDiliSec } from '../ulke'
 import * as D from './dilSecimi'
-import type { AraclarMetni, FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { AraclarMetni, FormMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
 import * as S from './notSablonu'
 import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
-export type { AraclarMetni, FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+export type { AraclarMetni, FormMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
 export { NOT_BOLUMLERI, ROL_TARAFLARI, type AsistanKimligi, type NotBolumu, type RolTanimi, type RolTarafi } from './tipler'
 
 /** What the active pack brings for the shared screens. A country that brings none has no shared screens. */
@@ -82,6 +82,30 @@ export function formMetni(dil: unknown): FormMetni {
   const f = arayuz().formMetinleri?.[d]
   if (!f) throw new Error(`[ulke/arayuz] no intake-form catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
   return f
+}
+
+/** The messages' catalogue in a form: the account's for the doctor's card, the patient's for the patient's page. */
+export function mesajMetni(dil: unknown): MesajMetni {
+  const d = uygulamaDili(dil)
+  const x = arayuz().mesajMetinleri?.[d]
+  if (!x) throw new Error(`[ulke/arayuz] no messages catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
+  return x
+}
+
+/** The catalogue of "my templates" in an account's form. */
+export function sablonMetni(dil: unknown): SablonMetni {
+  const d = uygulamaDili(dil)
+  const x = arayuz().sablonMetinleri?.[d]
+  if (!x) throw new Error(`[ulke/arayuz] no templates catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
+  return x
+}
+
+/** The catalogue of the consultation between doctors in an account's form. */
+export function konsultasyonMetni(dil: unknown): KonsultasyonMetni {
+  const d = uygulamaDili(dil)
+  const x = arayuz().konsultasyonMetinleri?.[d]
+  if (!x) throw new Error(`[ulke/arayuz] no consultation catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
+  return x
 }
 
 /** The tools area's catalogue in an account's form. */

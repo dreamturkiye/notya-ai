@@ -69,6 +69,23 @@ export type Ozellik =
    * (lib/ulke/araclar/katalog.ts); which are on, for whom and in which words is the pack's (countries/active/arayuz → `araclar`).
    */
   | 'araclar'
+  /**
+   * NOTYA-ULKE-MESAJ-01 — messages between a doctor and a patient, INSIDE the patient portal: the doctor writes from
+   * the patient's file, the patient reads and answers on their own page. Needs `hastaPortali`. Nothing leaves the
+   * product: an outbound notification is a switched-off slot of the pack (`uygulama.mesaj.disBildirim`).
+   */
+  | 'hastaMesajlari'
+  /**
+   * NOTYA-ULKE-MESAJ-01 — "my templates": a doctor's own reusable text blocks, inserted into a section of a note or
+   * into a message. Needs `cekirdekMuayene`. No patient is ever in a template's row.
+   */
+  | 'hekimSablonlari'
+  /**
+   * NOTYA-ULKE-MESAJ-01 — consultation between doctors OF THE SAME COUNTRY DATABASE: a written question about one
+   * patient, a read-only copy of one approved note or summary, the answer, closing. Needs `cekirdekMuayene`.
+   * Settings come from the pack (`uygulama.konsultasyon`); the consent wording's stamp from its clinical half.
+   */
+  | 'konsultasyon'
   /** Doktor Araçları of the pre-split application (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -214,6 +231,10 @@ export type UygulamaAyarlari = {
   randevu?: RandevuAyarlari
   /** NOTYA-ULKE-PORTAL-01 — the patient portal's settings. Present exactly where the feature `hastaPortali` is on. */
   portal?: PortalAyarlari
+  /** NOTYA-ULKE-MESAJ-01 — messages between a doctor and a patient. Present exactly where the feature `hastaMesajlari` is on. */
+  mesaj?: MesajAyarlari
+  /** NOTYA-ULKE-MESAJ-01 — consultation between doctors. Present exactly where the feature `konsultasyon` is on. */
+  konsultasyon?: KonsultasyonAyarlari
 
   // ── NOTYA-ULKE-SABLON-01 — every assumption the shared screens used to carry for one country, as a setting. ──
   // All REQUIRED: a pack that brings the application says each of them out loud. lib/ulke/paketDenetimi.ts checks
@@ -278,6 +299,38 @@ export type PortalAyarlari = {
    * is not for emergencies and names NO number. The catalogue holds the sentence, never the number.
    */
   acilNumara?: string | null
+}
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — A SLOT FOR AN OUTBOUND CHANNEL to a patient (an SMS, an e-mail, a messenger). THE KIT HAS
+ * NONE: no provider is contracted and nothing in the kit sends anything to anybody. A pack states the slot so that
+ * the absence is on record, with what is missing and who decides. The type allows no other value than "off": a
+ * channel becomes possible only when the kit gains one, in a job of its own.
+ */
+export type DisBildirimYuvasi = {
+  acik: false
+  saglayici: null
+  /** What is missing, in plain English. */
+  eksik: string
+  /** Who decides and supplies it. */
+  kimden: string
+}
+
+/** What a pack says about messages between a doctor and a patient (feature `hastaMesajlari`). */
+export type MesajAyarlari = {
+  /** Telling a patient, outside the portal, that their doctor wrote. Off: the doctor tells the patient. */
+  disBildirim: DisBildirimYuvasi
+}
+
+/**
+ * What a pack says about consultation between doctors (feature `konsultasyon`). Both periods are the country's
+ * decision (how long a colleague may hold a copy of a patient's data is a question of its law), never the kit's.
+ */
+export type KonsultasyonAyarlari = {
+  /** The consulted doctor reads an OPEN consultation for at most this many days from the day it was asked. */
+  acikGun: number
+  /** After the asking doctor closed it, the consulted doctor still reads it for this many days. 0 = not at all. */
+  kapanisSonrasiGun: number
 }
 
 export type RandevuAyarlari = {
@@ -430,6 +483,13 @@ export type UlkeKlinigi = {
    * no question. Required where `hastaFormu` is on. Answers are NOT given to the model that writes a note.
    */
   hastaFormu?: HastaFormuIcerigi
+  /**
+   * NOTYA-ULKE-MESAJ-01 — THE CONSENT BASIS FOR SHARING a patient's data with a colleague in a consultation. The
+   * sentence the asking doctor ticks is the pack's catalogue text; this is its STAMP, stored with every consultation
+   * so that it is always known which wording was ticked. Change the stamp whenever the sentence changes.
+   * `hukukcuInceledi` stays false until a lawyer of the country has read the sentence. Required where `konsultasyon` is on.
+   */
+  konsultasyonRizasi?: { surum: string; hukukcuInceledi: boolean }
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

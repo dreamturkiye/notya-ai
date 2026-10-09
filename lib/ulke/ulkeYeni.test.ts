@@ -59,7 +59,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr)
     // the command says, as a step of its own, that the country needs a database of its own and which file makes it
     assert.match(r.stdout, /THE COUNTRY'S OWN DATABASE[\s\S]*the owner creates a new, EMPTY database[\s\S]*000_yeni_ulke_veritabani\.sql on it, once/)
-    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'uygulama/portalMetinleri.ts', 'uygulama/araclar.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
+    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'uygulama/portalMetinleri.ts', 'uygulama/araclar.ts', 'uygulama/mesajMetinleri.ts', 'uygulama/sablonMetinleri.ts', 'uygulama/konsultasyonMetinleri.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
     // registration: the code list, the language, one branch per door, the side-by-side list
     assert.match(oku('lib/ulke/tipler.ts'), new RegExp(`export const ULKE_KODLARI = \\[[^\\]]*'${K}'\\] as const`))
     assert.match(oku('lib/ulke/tipler.ts'), /export type DilKodu = [^\n]*\| 'en'/)
@@ -99,10 +99,28 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.deepEqual(Object.keys(aracSekli).sort(), ['arac', 'izgara', 'kabuk', 'kayit', 'portal', 'takip'])
     const yeniAraclar = oku(`countries/${K}/uygulama/araclar.ts`)
     for (const grup of Object.keys(aracSekli)) assert.match(yeniAraclar, new RegExp(`^  ${grup}: `, 'm'))
-    assert.deepEqual([...yeniAraclar.matchAll(/anahtar: '([a-z0-9-]+)'/g)].map((m) => m[1]), ['hasta-portali'], 'a new country starts with the patient page\'s tile and no other tool')
-    assert.match(yeniAraclar, /anahtar: 'hasta-portali', roller: null,/)
+    assert.deepEqual([...yeniAraclar.matchAll(/anahtar: '([a-z0-9-]+)'/g)].map((m) => m[1]), ['hasta-portali', 'sablonlarim', 'konsultasyonlar'], 'a new country starts with the three base tiles that hold no clinical content, and no other tool')
+    for (const kutu of ['hasta-portali', 'sablonlarim', 'konsultasyonlar']) assert.match(yeniAraclar, new RegExp(`anahtar: '${kutu}', roller: null,`))
     assert.match(yeniAraclar, /^  yuvalar: \[\],\n  inceleme: eksikAyar\('tools: who wrote the tool texts and who read them/m)
     assert.match(oku(`countries/${K}/arayuz.ts`), new RegExp(`^  araclar: ${B}_ARACLAR,$`, 'm'))
+    // NOTYA-ULKE-MESAJ-01: messages, "my templates" and consultation are part of what a new country is given — every
+    // word to supply, no text of any country copied; the outbound channel as a switched-off slot; both consultation
+    // periods and the consent stamp as decisions still to make; the consent sentence not read by a lawyer.
+    for (const ozellik of ['hastaMesajlari', 'hekimSablonlari', 'konsultasyon']) assert.match(yeniIndex, new RegExp(`^\\s+${ozellik}: true,$`, 'm'))
+    assert.match(yeniIndex, /mesaj: \{\n\s+disBildirim: \{\n\s+acik: false, saglayici: null,\n\s+eksik: '[^'\n]{40,}',\n\s+kimden: '[^'\n]{20,}',/)
+    assert.match(yeniIndex, /konsultasyon: \{\n\s+acikGun: eksikAyar\('consultation: days a consultation may stay open[^\n]*\n\s+kapanisSonrasiGun: eksikAyar\('consultation: days the colleague may still read/)
+    assert.doesNotMatch(yeniIndex, /acikGun: \d|kapanisSonrasiGun: \d/, 'the scaffold writes no period: both are the country\'s decision')
+    assert.match(oku(`countries/${K}/klinik/index.ts`), /konsultasyonRizasi: \{ surum: eksik\('consultation: a version stamp for the consent sentence[^\n]*, hukukcuInceledi: false \},/)
+    const sekilDosyasi = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as Record<string, Record<string, unknown>>
+    for (const [bolum, dosya, sabit, gruplar] of [['mesaj', 'mesajMetinleri', 'MESAJ', ['hasta', 'hekim']], ['konsultasyon', 'konsultasyonMetinleri', 'KONSULTASYON', ['gelen', 'giden', 'iste', 'kod']]] as const) {
+      assert.deepEqual(Object.keys(sekilDosyasi[bolum]).sort(), [...gruplar])
+      const yeni = oku(`countries/${K}/uygulama/${dosya}.ts`)
+      for (const grup of gruplar) assert.match(yeni, new RegExp(`^  ${grup}: \\{$`, 'm'))
+      assert.match(oku(`countries/${K}/arayuz.ts`), new RegExp(`^  ${dosya}: ${B}_${sabit}_METINLERI,$`, 'm'))
+      assert.doesNotMatch(yeni.replace(/\/\*[\s\S]*?\*\//, ''), /\d{3}/, `the new ${bolum} catalogue carries a number`)
+    }
+    assert.match(oku(`countries/${K}/arayuz.ts`), new RegExp(`^  sablonMetinleri: ${B}_SABLON_METINLERI,$`, 'm'))
+    for (const [dosya, ad, yol] of [['mesajMetinleri', 'messages', 'hasta.acil'], ['mesajMetinleri', 'messages', 'hasta.acilNumara (keep the placeholders %)'], ['mesajMetinleri', 'messages', 'hasta.yok'], ['sablonMetinleri', 'my templates', 'uyari'], ['konsultasyonMetinleri', 'consultation', 'iste.riza'], ['konsultasyonMetinleri', 'consultation', 'giden.durumKapali (keep the placeholders %1 %2)']] as const) assert.ok(eksikler.some((e) => e.dosya.endsWith(`uygulama/${dosya}.ts`) && e.ipucu.includes(`${ad}: ${yol}`)), `${dosya} key ${yol} is missing from the new pack`)
     assert.match(yeniIndex, /portal: \{\n\s+baglantiGecerlilikGun: eksikAyar\('patient portal: days a patient\\'s link stays valid/)
     // The ambulance number is local content with NO default: the scaffold writes no number, only the decision to make.
     assert.match(yeniIndex, /^\s+acilNumara: eksikAyar\('patient portal: the number a patient dials for an ambulance[^\n]*confirmed by a local source; or null/m)
@@ -123,6 +141,14 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.match(oku(`countries/${K}/derleme.mjs`), new RegExp(`^ulkeDerlemeKapisi\\('${K}'\\)$`, 'm'))
     assert.ok(oku(`countries/${K}/derleme.mjs`).includes(`yolOnEki: '/${K}'`))
     assert.match(oku(`countries/${K}/klinik/index.ts`), /hukukcuInceledi: false/)
+  })
+
+  it('every file it writes PARSES (a hint with an unescaped apostrophe would only be found by the slow type check)', async () => {
+    const ts = (await import('typescript')).default
+    for (const f of hepsi(join(gecici, 'countries', K)).filter((x) => x.endsWith('.ts'))) {
+      const r = ts.transpileModule(readFileSync(f, 'utf8'), { reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } })
+      assert.deepEqual((r.diagnostics ?? []).map((d) => ts.flattenDiagnosticMessageText(d.messageText, ' ')), [], `${f.slice(gecici.length + 1)} does not parse`)
+    }
   })
 
   it('copies no text of any existing country: none of their leak terms or letters is in the new folder', () => {

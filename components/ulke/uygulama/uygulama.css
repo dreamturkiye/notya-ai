@@ -158,3 +158,27 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-arac-ozet { margin: 0 4px 14px; padding: 12px 14px; border-left: 2px solid var(--uza-altin); background: rgba(212, 193, 150, 0.14); font: inherit; font-size: 14.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .uza-rozet[data-takip-durum='gecikti'] { background: rgba(164, 91, 62, 0.1); color: var(--uza-uyari); }
 .uza-rozet[data-takip-durum='kapandi'] { background: rgba(47, 67, 52, 0.12); color: var(--uza-cam); }
+
+/* NOTYA-ULKE-MESAJ-01 — messages between a doctor and a patient (the doctor's card and the patient's page). */
+.uza-yazismalar { display: flex; flex-direction: column; gap: 18px; margin-top: 14px; }
+.uza-yazisma { border-top: 1px solid var(--uza-cizgi); padding-top: 12px; }
+.uza-mesajlar { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.uza-mesaj { border: 1px solid var(--uza-cizgi); border-radius: 10px; padding: 10px 12px; background: var(--uza-kagit); max-width: 92%; }
+.uza-mesaj[data-benim='evet'] { align-self: flex-end; background: rgba(47, 67, 52, 0.06); }
+.uza-mesaj[data-okunmamis='evet'] { border-color: var(--uza-altin); }
+.uza-mesaj-ust { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 13px; color: var(--uza-soluk); }
+.uza-mesaj-yazan { font-weight: 600; color: var(--uza-murekkep); }
+.uza-mesaj-alt { margin: 4px 0 0; }
+.uza-rozet[data-mesaj-durum='yeni'] { background: var(--uza-altin); color: var(--uza-murekkep); }
+
+/* NOTYA-ULKE-MESAJ-01 — "my templates": the list on the tool's screen. */
+.uza-sablonlar { margin-top: 12px; }
+.uza-sablon { padding: 12px 0; border-top: 1px solid var(--uza-cizgi); }
+.uza-sablon:first-child { border-top: 0; }
+.uza-sablon-secici { margin-top: 6px; }
+
+/* NOTYA-ULKE-MESAJ-01 — consultation between doctors: the lists on the tile and on the patient's file. */
+.uza-konsultasyonlar { margin-top: 12px; }
+.uza-konsultasyon { padding: 14px 0; border-top: 1px solid var(--uza-cizgi); }
+.uza-konsultasyon:first-child { border-top: 0; }
+.uza-konsultasyon .uza-alt-baslik { margin-top: 10px; }

@@ -18,6 +18,90 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 
 **Further countries need a paid plan.** The organisation's free plan holds only two projects, and Türkiye and Uzbekistan now use both. A database for the United States, the United Kingdom, Canada, Australia or New Zealand cannot be created until the organisation moves to a paid plan. That is the owner's decision; the monthly figure should be read from the provider's price page on the day.
 
+## Messages, "my templates" and consultation (2026-10-09, NOTYA-ULKE-MESAJ-01)
+
+Built in the country kit and filled in for Uzbekistan, on branch `feat/uz-mesaj`. How each works for any country: `docs/COUNTRY-PACK-HOWTO.md`, "Messages, "my templates" and consultation between doctors". **Nothing is live: migrations 140, 141 and 142 are not applied to any database.** None of the three features calls a model, and none sends anything to anybody.
+
+### What a doctor and a patient have, under `/uzbek`
+
+- **Messages between a doctor and a patient, inside the patient's page.** The doctor writes from the card on the patient's file; the patient reads and answers on their own page (the link and PIN of the patient portal). Only the doctor opens a conversation; the patient's page says so. Unread marks on both sides; the doctor's home lists the patients who wrote. The doctor closes a conversation; a closed one takes no message. The notice that messages are not for emergencies is on the patient's page at all times, with the pack's ambulance number (103, itself still unverified by a local source).
+- **"My templates"**, a tile for all 40 roles: the doctor's own text blocks, created, edited and deleted there, and inserted by the doctor's click at the end of a section of a draft note or of a message. The pack brings no template.
+- **Consultation between doctors**, a tile for all 40 roles and a card on the patient's file. A colleague is found by their consultation code and in no other way. The asking doctor writes a question and shares nothing, one approved note, or that note's summary for the patient, after ticking the consent sentence. The colleague sees the copy that was shared and nothing else of the patient, answers once, and the asking doctor closes it.
+
+### Settings, and which of them are unverified
+
+| Setting | Value | Status |
+|---|---|---|
+| Outbound notification to a patient (`uygulama.mesaj.disBildirim`) | **off, no provider** | A slot. Waits on Kaan (which channel patients here use, which provider, at what cost), then on a lawyer for the consent to be contacted |
+| A consultation stays open (`uygulama.konsultasyon.acikGun`) | 30 days | **A starting value, not a local rule.** To confirm with the owner and a lawyer |
+| The colleague may read it after the closing (`kapanisSonrasiGun`) | 14 days | **A starting value, not a local rule.** Same |
+| Stamp of the consent sentence (`klinik.konsultasyonRizasi`) | `uz-konsultatsiya-taslak-2026-10-09`, `hukukcuInceledi: false` | **A draft no lawyer has read** |
+| Limits (the kit's, the same in every country) | a message 2 000 characters, 30 messages in 24 hours per side and patient; a template 4 000 characters, 200 templates; a question 4 000, an answer 6 000, 20 consultations asked in 24 hours | Not a country's decision |
+
+### What is a slot, and what is absent
+
+- **A slot, switched off:** any notice to a patient outside the portal that a message is waiting (SMS, a messenger, e-mail). No provider is contracted and none is built. Today the doctor tells the patient.
+- **Absent, and not half-built:** attachments to a message or to a consultation; a conversation opened by the patient; finding a colleague by e-mail address (the code is the only way); a directory of doctors; a second answer or a follow-up question inside one consultation (a new consultation is asked instead); any draft of a reply written by a model; any notice to the colleague outside the product (the colleague sees a count on their own home screen); ready-made templates.
+- **Not walked in a browser:** inserting a template into a section of a draft note (proved by render tests; the walk-through inserts one into a message), and the end of a consultation's reading period (proved by the library's tests with a moved clock and, in SQL, by the migration proof).
+
+### What is machine-written
+
+Every text of the three catalogues, in three forms: `countries/uz/uygulama/mesajMetinleri.ts` (49 texts per form), `sablonMetinleri.ts` (29), `konsultasyonMetinleri.ts` (82), and the three texts of each of the two tiles. Uzbek (Latin) and Russian were written by a machine; **Uzbek (Cyrillic) was derived from the Latin text by rule** (`scripts/uz-kiril.mjs`) and stored static; its test holds every stored text to the rule. Each file says so at its top. **Nobody who speaks Uzbek or Russian as a first language has read any of it.**
+
+### The database: migrations 140, 141, 142
+
+Five tables, all server-only (row-level security on, no rule, no privilege for the browser roles), each row stamped with the country: `ulke_mesaj_yazismalari`, `ulke_hasta_mesajlari` (140), `ulke_hekim_sablonlari` (141, no patient column), `ulke_konsultasyon_kodlari`, `ulke_konsultasyonlar` (142). Every text is one encrypted value bound to its row. Five triggers hold what no path of the application may break. Order, the check after applying, and rollback: `docs/COUNTRY-PACK-DB-ROLLOUT.md`. **Each feature fails without its own file; the rest of the application works.**
+
+### What was tested, and how
+
+All of it on commit `a1c9020a` of `feat/uz-mesaj`, in the working copy of the repository on the build machine, on 2026-10-09. The commit after it changes only this paragraph and one row of `docs/OPEN-COMMITMENTS.md`.
+
+- **Tests written against "the active pack", run once for each country folder** (`npm run test:ulke`): 268 pass for `uz` and 268 for `tr`. Of these, 109 are this job's, in six files: the library and route of messages (26), of "my templates" (16) and of consultation (27), and the screens of each (15, 10, 15). They prove, for every route: a second doctor, a second patient, another country, a closed conversation, a consultation whose period ran out, a doctor's session on the patient's route and the reverse — each answered exactly like "does not exist" or "no session", with nothing written.
+- **Ordinary country tests:** 805 pass. Uzbekistan's own for this job (`countries/uz/uygulama/mesaj.test.ts`, 14): the three catalogues in three forms, the leak scan over every string, the settings, that the pack brings no template, the consent sentence, and that this record lists the patient-facing sentences and the consent sentence exactly as they stand in the code.
+- **Migrations 140 to 142 on a real PostgreSQL** (a throwaway local one; nothing left the machine): the migration proof answers 390 of 390, the baseline proof 102 of 102. Not applied to any hosted database.
+- **The Uzbek build** (`NOTYA_COUNTRY=uz npm run build:ulke`): built, 191 output files, the Uzbek pack present and no other country's.
+- **The pack-neutral walk-through** in a real browser against that build and the stand-ins: 440 of 440 checks, 32 of them this job's (templates created, edited, deleted softly and inserted into a message; a patient's page before anybody wrote, a message written, read and answered, the doctor's home, closing; consultation from the code to the reading after the closing; the second account against all of it; no provider call and no request leaving the machine). **Uzbekistan's own walk-through:** 508 of 508; it has no step for these features.
+- **The Turkish suite** (`npm test`): 5 835 tests, 26 fail and 4 are cancelled, **the same tests by name as on `main`** (5 159 tests, 26 and 4); none is new.
+- **Only with stand-ins:** every route ran against the in-process stand-in database and, in the walk-through, against the stand-in server. The provider's roles, grants and API layer, and the application against a real database, are not covered.
+
+### Patient-facing sentences of the messages, for the native reader
+
+Machine-written, in three forms. A patient reads these alone, on their own phone. **Read first:** `hasta.acil` and `hasta.acilNumara` (a patient in an emergency must not wait for an answer here), `hasta.yok` and `hasta.baslatamaz` (a patient must understand that they cannot begin a conversation), `hasta.yanitSuresi` (no promise of a time to answer), `hasta.kapali`. `%` stands for a value the page writes: the ambulance number, a date, a count. A test holds this list to the text in `countries/uz/uygulama/mesajMetinleri.ts`.
+
+| Key | Uzbek (Latin) | Uzbek (Cyrillic, derived by rule) | Russian |
+|---|---|---|---|
+| `hasta.baslik` | Shifokor bilan yozishma | Шифокор билан ёзишма | Переписка с врачом |
+| `hasta.aciklama` | Bu yerda shifokoringiz sizga yozgan xabarlarni oʻqiysiz va ularga javob yozasiz. | Бу ерда шифокорингиз сизга ёзган хабарларни ўқийсиз ва уларга жавоб ёзасиз. | Здесь вы читаете сообщения вашего врача и отвечаете на них. |
+| `hasta.acil` | Xabarlar shoshilinch holatlar uchun emas: shifokor ularni darhol oʻqimasligi mumkin. | Хабарлар шошилинч ҳолатлар учун эмас: шифокор уларни дарҳол ўқимаслиги мумкин. | Сообщения не предназначены для экстренных случаев: врач может прочитать их не сразу. |
+| `hasta.acilNumara` | Shoshilinch holatda % raqamiga qoʻngʻiroq qiling. | Шошилинч ҳолатда % рақамига қўнғироқ қилинг. | В экстренном случае звоните по номеру %. |
+| `hasta.yanitSuresi` | Javob muddati kafolatlanmaydi: shifokor imkoni boʻlganda javob beradi. | Жавоб муддати кафолатланмайди: шифокор имкони бўлганда жавоб беради. | Срок ответа не гарантируется: врач отвечает, когда у него есть возможность. |
+| `hasta.baslatamaz` | Bu yerdan yozishmani oʻzingiz boshlay olmaysiz. Shifokoringiz sizga yozganda javob yozishingiz mumkin boʻladi. | Бу ердан ёзишмани ўзингиз бошлай олмайсиз. Шифокорингиз сизга ёзганда жавоб ёзишингиз мумкин бўлади. | Начать переписку отсюда вы не можете. Вы сможете ответить, когда врач напишет вам. |
+| `hasta.yok` | Shifokoringiz sizga hali yozmagan. | Шифокорингиз сизга ҳали ёзмаган. | Ваш врач вам пока не писал. |
+| `hasta.kapali` | Shifokoringiz bu yozishmani yopgan. Uni oʻqishingiz mumkin, lekin unga yoza olmaysiz. | Шифокорингиз бу ёзишмани ёпган. Уни ўқишингиз мумкин, лекин унга ёза олмайсиз. | Ваш врач закрыл эту переписку. Вы можете её читать, но писать в неё нельзя. |
+| `hasta.kapandi` | Yozishma yopilgan: % | Ёзишма ёпилган: % | Переписка закрыта: % |
+| `hasta.yaz` | Javobingiz | Жавобингиз | Ваш ответ |
+| `hasta.gonder` | Yuborish | Юбориш | Отправить |
+| `hasta.gonderiliyor` | Yuborilmoqda… | Юборилмоқда… | Отправка… |
+| `hasta.gonderilemedi` | Xabarni yuborib boʻlmadi. Qaytadan urinib koʻring. | Хабарни юбориб бўлмади. Қайтадан уриниб кўринг. | Не удалось отправить сообщение. Попробуйте ещё раз. |
+| `hasta.bosMesaj` | Xabar matnini yozing. | Хабар матнини ёзинг. | Напишите текст сообщения. |
+| `hasta.cokUzun` | Xabar juda uzun: koʻpi bilan % ta belgi. | Хабар жуда узун: кўпи билан % та белги. | Сообщение слишком длинное: не более % знаков. |
+| `hasta.limit` | Bugun juda koʻp xabar yozdingiz. Ertaga urinib koʻring. | Бугун жуда кўп хабар ёздингиз. Эртага уриниб кўринг. | Сегодня вы отправили слишком много сообщений. Попробуйте завтра. |
+| `hasta.hekim` | Shifokor | Шифокор | Врач |
+| `hasta.siz` | Siz | Сиз | Вы |
+| `hasta.yeni` | Yangi | Янги | Новое |
+| `hasta.okunmamis` | Yangi xabarlar: % | Янги хабарлар: % | Новых сообщений: % |
+| `hasta.yuklenemedi` | Xabarlarni oʻqib boʻlmadi. Sahifani yangilang. | Хабарларни ўқиб бўлмади. Саҳифани янгиланг. | Не удалось загрузить сообщения. Обновите страницу. |
+
+### The consent sentence of a consultation, for the lawyer
+
+The asking doctor ticks this before a patient's data is shared with a colleague. **A draft no lawyer has read.** Questions for the lawyer: whether medical secrecy and the personal-data law of Uzbekistan allow a doctor to share a patient's data with another doctor for a consultation on the patient's spoken consent as recorded by the doctor, or require the patient's own written or electronic consent; whether a guardian's consent is needed for a minor and how it is recorded; how long the colleague may keep access to the copy (the pack says 30 days while open and 14 days after the closing, both unverified); and whether the copy must be removable on the patient's request. When the sentence changes, the stamp in `countries/uz/klinik/index.ts` changes with it.
+
+| Key | Uzbek (Latin) | Uzbek (Cyrillic, derived by rule) | Russian |
+|---|---|---|---|
+| `iste.rizaBaslik` | Rozilik | Розилик | Согласие |
+| `iste.riza` | Bemor (yoki uning qonuniy vakili) yuqorida tanlangan maʼlumotni konsultatsiya uchun shu hamkasbga ulashishimga rozi boʻlganini tasdiqlayman. | Бемор (ёки унинг қонуний вакили) юқорида танланган маълумотни консультация учун шу ҳамкасбга улашишимга рози бўлганини тасдиқлайман. | Подтверждаю, что пациент (или его законный представитель) согласился с тем, что я передаю выбранные выше сведения этому коллеге для консультации. |
+| `iste.rizaGerekli` | Yuborish uchun rozilikni tasdiqlang. | Юбориш учун розиликни тасдиқланг. | Чтобы отправить, подтвердите согласие. |
+
 ## The intake form (2026-10-09, NOTYA-ULKE-INTAKE-01)
 
 **Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database needs **migration 138** (below), after 136 and 137, before a build that has the form is used. Branch `feat/ulke-intake`, PR #574 (base `feat/ulke-portal`, PR #573), unmerged.
@@ -985,6 +1069,7 @@ Set by the foundation job on 2026-10-08. Items marked *to verify* come from gene
 | Phone | `+998` and nine digits | operator prefixes not checked, *to verify* |
 | National identity number | JSHSHIR (PINFL), 14 digits, format only | check-digit rule *to verify* (checklist G5) |
 | Features on | landing page, login, sign-up by invitation code, the first product slice (`cekirdekMuayene`: language question, settings, home, patients, visit to approved note), appointments (`randevu`, slice 3) | everything else is off. The holding page still exists and redirects to the home. |
+| Messages, "my templates", consultation (2026-10-09) | on in the pack; **migrations 140 to 142 not applied** | outbound notification: off, no provider; consultation periods 30 and 14 days and the consent sentence: starting values and a draft, no lawyer has read them. Section "Messages, "my templates" and consultation" above |
 | Voice profile, image evaluation | off | until the law is confirmed (checklist A2, A4, I7) |
 | Served under | `/uzbek` (the pack's `yolOnEki`, the build's `basePath`) | Kaan, 2026-10-08: no separate Uzbek address; the product is reached at `notya.io/uzbek`. Every route below is relative to it. Outside `/uzbek` the Uzbek build answers 404. |
 | Paths that exist | `/`, `/login`, `/signup`, `/welcome`, `/start`, `/today`, `/settings`, `/patients`, `/patients/new`, `/patient`, `/visit`, `/calendar`, `/api/ulke/*` | every other path of the application answers 404 |

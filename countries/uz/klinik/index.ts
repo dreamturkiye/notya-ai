@@ -53,4 +53,9 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // forms (./hastaFormu/). MACHINE-WRITTEN: no local clinician has read a single set. The consent sentence is a draft
   // no lawyer has read. The answers are never given to the model.
   hastaFormu: UZ_HASTA_FORMU,
+  // NOTYA-ULKE-MESAJ-01 — the consent basis for sharing a patient's data with a colleague in a consultation. The
+  // sentence the asking doctor ticks is `iste.riza` in ../uygulama/konsultasyonMetinleri.ts. This stamp is stored
+  // with every consultation, so it is always known which wording was ticked: CHANGE IT WHENEVER THE SENTENCE CHANGES.
+  // A DRAFT: no lawyer of the country has read the sentence, nor whether a consent recorded this way is enough.
+  konsultasyonRizasi: { surum: 'uz-konsultatsiya-taslak-2026-10-09', hukukcuInceledi: false },
 }

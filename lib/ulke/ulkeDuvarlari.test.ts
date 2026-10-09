@@ -97,6 +97,29 @@ describe('walls: every rule catches its breach', () => {
     })
   }
 
+  it('ANOTHER WORKING COPY under `.claude/` is not judged: the check reads the repository\'s own files, and the same breach in the repository itself is still caught', () => {
+    const ihlal = "import { P } from '@/countries/aa/index'\nexport const tr = process.env.NOTYA_COUNTRY === 'aa'\nexport const p = P\n"
+    // a whole other checkout, with breaches of its own, below `.claude/worktrees/`
+    const baska = sahteDepo({ '.claude/worktrees/agent-x/lib/sizinti.ts': ihlal, '.claude/worktrees/agent-x/countries/active/index.ts': "import { P } from '../aa/index'\nexport const AKTIF_PAKET = P\n", '.claude/worktrees/agent-x/countries/zz/index.ts': "export const P = { kod: 'zz' }\n", '.claude/ayarlar.mjs': ihlal })
+    const r = kos(baska)
+    rmSync(baska, { recursive: true, force: true })
+    assert.equal(r.status, 0, `a file under .claude was judged:\n${r.stderr}`)
+    assert.doesNotMatch(r.stdout + r.stderr, /\.claude/)
+    // … and it finds no extra country there (a folder under another copy's countries/ is not a country of this one)
+    assert.match(r.stdout, /walls hold — countries: aa, bb\b/)
+    // the very same file in the repository's own tree is a breach
+    const kendi = sahteDepo({ 'lib/sizinti.ts': ihlal })
+    const r2 = kos(kendi)
+    rmSync(kendi, { recursive: true, force: true })
+    assert.notEqual(r2.status, 0)
+    assert.match(r2.stderr, /D1\s+lib\/sizinti\.ts/)
+    // nothing else that starts with a dot is waved through by this: only the folders named in the script
+    const gizli = sahteDepo({ '.gizli/sizinti.ts': ihlal })
+    const r3 = kos(gizli)
+    rmSync(gizli, { recursive: true, force: true })
+    assert.notEqual(r3.status, 0, 'a breach in some other dot-folder passed')
+  })
+
   it('a sentence about an import in a comment is not an import', () => {
     const kok = sahteDepo({ 'lib/yorum.ts': "// never write: import { P } from '@/countries/aa/index'\n/* nor require('@/countries/bb/index') */\nexport const y = 1\n" })
     try { assert.equal(kos(kok).status, 0) } finally { rmSync(kok, { recursive: true, force: true }) }

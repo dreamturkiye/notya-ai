@@ -103,7 +103,7 @@ export type AracTanimi = {
   /** The published source of the arithmetic, as a citation; null where the tool is a list of the product's own. Shown under the result. */
   kaynak: string | null
   /** For `tur: 'ekran'`: the kit screen that is the tool (it has no fields). */
-  ekran?: 'hastaPortali' | 'takipPaneli'
+  ekran?: 'hastaPortali' | 'takipPaneli' | 'sablonlarim' | 'konsultasyonlar'
   /** Unit codes the RESULT's numbers carry (the fields' units are on the fields). The pack names each. */
   sonucBirimleri?: readonly string[]
   /** Measures of the pack (length, weight) a RESULT is written in. */
