@@ -56,12 +56,12 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Children: who may consent, and at what age, in England, Wales, Scotland and Northern Ireland; what a guardian form may ask.',
       'Whether any rule of the health service or of the professional regulators applies to a private doctor using such a product, and what may be said in marketing to doctors.',
     ],
-    ekNotlar: ['Public holidays differ between England and Wales, Scotland and Northern Ireland; none is in the pack.', 'A consultant surgeon is addressed as Mr, Ms, Miss or Mrs, not Dr: this matters when an assistant is given a name and a title. No assistant is named today.'],
+    ekNotlar: ['FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in ng/mL; the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).', 'Public holidays differ between England and Wales, Scotland and Northern Ireland; none is in the pack.', 'A consultant surgeon is addressed as Mr, Ms, Miss or Mrs, not Dr: this matters when an assistant is given a name and a title. No assistant is named today.'],
   },
   us: {
     ad: 'United States', dosya: 'COUNTRY-PACK-UNITED-STATES.md',
     kimlikNotu: 'A neutral label, "Patient identifier" (for example a clinic\'s own record number). NEVER A SOCIAL SECURITY NUMBER: no screen asks for one, and a test fails if any text mentions it.',
-    saatNotu: 'Six zones are offered and an account chooses its own; the default (America/New_York) is an unverified choice, and territories are not listed.',
+    saatNotu: 'Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed.',
     veliNotu: '18 as a starting value. The age of majority and the rules on a minor\'s own consent differ by state.',
     kayitRizasiNotu: 'A draft sentence. RECORDING-CONSENT LAW DIFFERS BY STATE (some states require the consent of everyone recorded): the sentence must not be relied on in any state until a lawyer has read it for that state.',
     hukuk: [
@@ -71,12 +71,12 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Minors: consent and confidentiality by state; what a guardian form may ask.',
       'Selling to doctors across states: licensing of the doctors who use it, telehealth rules where they apply, and marketing rules.',
     ],
-    ekNotlar: ['CONVENTIONAL UNITS: weight in pounds, height in inches, temperature in degrees Fahrenheit; laboratory values in mg/dL and g/dL, the albumin-to-creatinine ratio in mg/g. Each is an unverified setting.', 'Weight-based dose arithmetic is kept as a slot because this pack measures weight in pounds.', 'DAS28: the C-reactive protein field takes mg/L, and its label says so and how to convert from mg/dL.'],
+    ekNotlar: ['CONVENTIONAL UNITS: weight in pounds, height in inches, temperature in degrees Fahrenheit; laboratory values in mg/dL and g/dL, the albumin-to-creatinine ratio in mg/g. Each is an unverified setting.', 'FOR A LOCAL CLINICAL LEAD: weight-based dose arithmetic is kept as a slot because this pack measures weight in pounds.', 'FOR A LOCAL CLINICAL LEAD: in DAS28 the C-reactive protein field takes mg/L, and its label says so and how to convert from mg/dL.', 'FOR A LOCAL CLINICAL LEAD: the two KDIGO tools are switched on here because the albumin-to-creatinine ratio is reported in mg/g, the unit the kit classifies in; the ESI triage record and the report outline with the BI-RADS assessment categories are switched on here.', 'The week starts on Sunday and the clock is 12-hour: unverified choices.'],
   },
   ca: {
     ad: 'Canada', dosya: 'COUNTRY-PACK-CANADA.md',
     kimlikNotu: 'Label "Provincial health card number". Format and name differ by province and territory; unverified.',
-    saatNotu: 'Seven zones are offered and an account chooses its own; the default (America/Toronto) is an unverified choice.',
+    saatNotu: 'Several zones are offered (listed in the row) and an account chooses its own; the default (America/Toronto) and the list are unverified choices.',
     veliNotu: '16 as a starting value. Consent of minors is a matter of provincial law and differs by province; Quebec sets its own age.',
     kayitRizasiNotu: 'A draft sentence. Federal and provincial rules on recording a consultation are open.',
     hukuk: [
@@ -86,12 +86,12 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Minors: consent by province; what a guardian form may ask.',
       'Recording a consultation: consent and retention, federally and by province.',
     ],
-    ekNotlar: ['ENGLISH ONLY. French is not written: no screen, no note, no patient text. Waiting on Kaan.', 'Canadian spelling is a mix stated word by word in the language set (colour, centre; organize, pediatric); no Canadian editor has read it.', 'Prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).'],
+    ekNotlar: ['ENGLISH ONLY. French is not written: no screen, no note, no patient text. Waiting on Kaan.', 'Canadian spelling is a mix stated word by word in the language set (colour, centre; organize, pediatric); no Canadian editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'FOR A LOCAL CLINICAL LEAD: the report outline with the BI-RADS assessment categories is switched on here; the ESI triage record and the two KDIGO tools are kept as slots (below).', 'The date is written year first (YYYY-MM-DD), the week starts on Sunday and the clock is 12-hour: unverified choices.'],
   },
   au: {
     ad: 'Australia', dosya: 'COUNTRY-PACK-AUSTRALIA.md',
     kimlikNotu: 'Label "Medicare number". Whether a private clinic should record it in this product at all is unverified.',
-    saatNotu: 'Six zones are offered and an account chooses its own; the default (Australia/Sydney) is an unverified choice.',
+    saatNotu: 'Several zones are offered (listed in the row) and an account chooses its own; the default (Australia/Sydney) and the list are unverified choices.',
     veliNotu: '16 as a starting value. Consent of minors differs by state and territory.',
     kayitRizasiNotu: 'A draft sentence. Recording a consultation is governed by state and territory law, which differs.',
     hukuk: [
@@ -102,7 +102,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Recording a consultation: consent by state and territory; retention.',
       'Advertising rules for health services and for software sold to doctors.',
     ],
-    ekNotlar: ['Australian spelling is the British base with "program"; no Australian editor has read it.', 'Prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).'],
+    ekNotlar: ['Australian spelling is the British base with "program"; no Australian editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'The 12-hour clock is an unverified choice.'],
   },
   nz: {
     ad: 'New Zealand', dosya: 'COUNTRY-PACK-NEW-ZEALAND.md',
@@ -117,7 +117,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Recording a consultation: consent and retention.',
       'Māori data sovereignty and the use of te reo Māori in health services: whether and how they bear on this product is a question for local advice. No te reo Māori text is written.',
     ],
-    ekNotlar: ['New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.', 'Prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).'],
+    ekNotlar: ['New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'The 12-hour clock is an unverified choice.', 'THE PHONE NUMBER SHOWN AS AN EXAMPLE IS NOT KNOWN TO BE FROM A RESERVED RANGE and may be somebody\'s number: to be replaced by a number the owner controls before any person sees the form. WAITING ON KAAN.'],
   },
 }
 const U = ULKELER[p.kod]

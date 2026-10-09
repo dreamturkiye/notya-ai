@@ -47,6 +47,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
 | Sign-up; search | invitation only; hidden | the owner |
 
+- FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in ng/mL; the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).
 - Public holidays differ between England and Wales, Scotland and Northern Ireland; none is in the pack.
 - A consultant surgeon is addressed as Mr, Ms, Miss or Mrs, not Dr: this matters when an assistant is given a name and a title. No assistant is named today.
 
