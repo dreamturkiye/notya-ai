@@ -109,6 +109,9 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
       if (!al?.secenekler) { ekle(`${yer}.secenekler.${k}`, 'option names for a field that has no options'); continue }
       for (const o of Object.keys(secenekler)) if (!al.secenekler.includes(o)) ekle(`${yer}.secenekler.${k}.${o}`, 'a name for an option this field does not have')
     }
+    // NUMBERS THE COUNTRY DECIDES: every one stated, a number, and none the tool does not have
+    for (const k of t.parametreler ?? []) { const v = p.parametreler?.[k]; if (eksikAyarMi(v)) ekle(`${yer}.parametreler.${k}`, `${TESLIM}: ${v.__eksikAyar}`); else if (typeof v !== 'number' || !Number.isFinite(v)) ekle(`${yer}.parametreler.${k}`, 'the tool leaves this number to the country and the pack does not state it') }
+    for (const k of Object.keys(p.parametreler ?? {})) if (!(t.parametreler ?? []).includes(k)) ekle(`${yer}.parametreler.${k}`, 'a number for a key this tool does not have')
     // units and laboratory quantities this tool reads
     for (const al of t.alanlar) if (al.lab) {
       const b = lab[al.lab]

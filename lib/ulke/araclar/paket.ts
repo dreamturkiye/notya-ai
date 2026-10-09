@@ -14,6 +14,7 @@ import { yerine as yerlestir } from '../arayuz/yerTutucu'
 import { alanBirimi, type BirimOrtami } from './birimler'
 import { kitAraci } from './katalog'
 import type { AracGirdisi, AracSonucu, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
+import { alanVarMi } from './yardimci'
 
 export type GorunurArac = { tanim: AracTanimi; paket: PaketAraci }
 
@@ -79,12 +80,14 @@ export function aracOzeti(x: GorunurArac, g: AracGirdisi, sonuc: AracSonucu, dil
   const t = x.paket.metin
   const satirlar: string[] = [bicimli(t.ad, dil)]
   for (const a of x.tanim.alanlar) {
+    if (!alanVarMi(a, g)) continue
     const v = g[a.anahtar]
     const etiket = alanEtiketi(x, a.anahtar, dil, m)
     if (a.tur === 'isaret') { if (v === true) satirlar.push(`- ${etiket}`); continue }
     if (v === null || v === undefined || v === '') continue
     if (a.tur === 'secim') satirlar.push(`${etiket}: ${bicimli(t.secenekler?.[a.anahtar]?.[String(v)], dil)}`)
     else if (a.tur === 'tarih') satirlar.push(`${etiket}: ${y.tarih(String(v))}`)
+    else if (a.tur === 'metin') satirlar.push(`${etiket}: ${String(v)}`)
     else if (typeof v === 'number') { const b = alanBirimi(a, o); satirlar.push(`${etiket}: ${y.sayi(v, Number.isInteger(v) ? 0 : 1)}${b ? ` ${y.birim(b)}` : ''}`) }
   }
   for (const s of sonuc.sayilar) satirlar.push(`${bicimli(t.sayilar?.[s.anahtar], dil)}: ${sayiMetni(s, m, y)}`)

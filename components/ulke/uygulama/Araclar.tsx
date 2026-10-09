@@ -29,6 +29,7 @@ import { ulkePaketi } from '@/lib/ulke/ulke'
 import { alanAraligi, alanBirimi, kanonigeCevir, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { alanEtiketi, aracAra, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { AracAlani, AracGirdisi, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
+import { alanVarMi, kosullariUygula, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { panoyaKopyala } from './pano'
 
@@ -110,13 +111,15 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     if (a.tur === 'isaret') { g[a.anahtar] = v === true; continue }
     if (a.tur === 'secim') { g[a.anahtar] = typeof v === 'string' && (a.secenekler ?? []).includes(v) ? v : null; continue }
     if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
+    if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, METIN_UZUNLUGU) : ''; g[a.anahtar] = t || null; continue }
     const metin = typeof v === 'string' ? v.trim().replace(',', '.') : ''
     const n = metin === '' ? NaN : Number(metin)
     const aralik = alanAraligi(a, o)
     if (!Number.isFinite(n) || (a.tam && !Number.isInteger(n)) || (aralik && (n < aralik.enAz || n > aralik.enCok))) { g[a.anahtar] = null; continue }
     g[a.anahtar] = kanonigeCevir(a, n, o)
   }
-  return g
+  // A field whose condition does not hold is not there: whatever was typed into it earlier is not read.
+  return kosullariUygula(alanlar, g)
 }
 
 function Alan({ x, alan, dil, a, ham, degistir, o, y }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici }) {
@@ -141,6 +144,9 @@ function Alan({ x, alan, dil, a, ham, degistir, o, y }: { x: GorunurArac; alan: 
         </div>
       </fieldset>
     )
+  }
+  if (alan.tur === 'metin') {
+    return <div className="uza-alan" data-alan={alan.anahtar}><label className="uza-etiket" htmlFor={id}>{etiket}</label><input id={id} type="text" maxLength={METIN_UZUNLUGU} autoComplete="off" className="uza-girdi" value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} /></div>
   }
   if (alan.tur === 'tarih') {
     return <div className="uza-alan" data-alan={alan.anahtar}><label className="uza-etiket" htmlFor={id}>{etiket}</label><input id={id} type="date" className="uza-girdi" value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} /></div>
@@ -167,7 +173,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   const o = birimOrtami(icerik)
   const y = yazici(icerik, dil)
   const g = girdiyiCoz(x.tanim.alanlar, ham, o)
-  const sonuc = x.tanim.hesapla(g, { bugun })
+  const sonuc = x.tanim.hesapla(g, { bugun, p: x.paket.parametreler ?? {} })
   const t = x.paket.metin
   // The summary is written in the account's NOTE language: it is pasted into a note.
   const ozet = aracOzeti(x, hamdanGosterilen(x.tanim.alanlar, ham, g), sonuc, notDili, araclarMetni(notDili), yazici(icerik, notDili), o)
@@ -176,7 +182,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
       <section className="uza-kart" data-bolum="girdiler">
         <h2 className="uza-h2">{a.arac.girdiler}</h2>
         <div className="uza-form" style={{ marginTop: 0 }}>
-          {x.tanim.alanlar.map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} ham={ham} degistir={degistir} o={o} y={y} />)}
+          {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} ham={ham} degistir={degistir} o={o} y={y} />)}
         </div>
         <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={temizle}>{a.arac.temizle}</button></div>
       </section>

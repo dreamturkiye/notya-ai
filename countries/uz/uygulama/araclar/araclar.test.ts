@@ -27,7 +27,7 @@ const DIZIN = join(KOK, 'countries/uz/uygulama/araclar')
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 
 /** Latin written inside a Cyrillic or Russian sentence on purpose: names the profession itself writes in Latin letters. */
-const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|I{1,3}|IV|V|E)\b/g
+const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|I{1,3}|IV|V|E|A|B|C)\b/g
 
 /** Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart. */
 const TEMEL = ['hasta-portali']
@@ -36,7 +36,12 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'aile-hekimligi': [],
   anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri'],
   'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc'],
-  'cocuk-cerrahisi': [], dahiliye: [], dermatoloji: [], endokrinoloji: [], 'enfeksiyon-hastaliklari': [], gastroenteroloji: [], 'genel-cerrahi': [],
+  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem'],
+  dahiliye: ['kdigo-evre'],
+  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma'],
+  endokrinoloji: ['rejim-karti'],
+  'enfeksiyon-hastaliklari': ['antibiyotik-sure'],
+  gastroenteroloji: [], 'genel-cerrahi': [],
   'gogus-cerrahisi': [], 'gogus-hastaliklari': [], 'goz-hastaliklari': [], 'kadin-hastaliklari-dogum': [], 'kalp-damar-cerrahisi': [], kardiyoloji: [],
   'kulak-burun-bogaz': [], nefroloji: [], noroloji: [], onkoloji: [], ortopedi: [], pediatri: [], 'plastik-cerrahi': [], psikiyatri: [], radyoloji: [],
   romatoloji: [], uroloji: [], 'spor-hekimligi': [], 'fizik-tedavi': [],
@@ -70,6 +75,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // spot checks of the standing rule (.cursor/skills/specialty-doktor-araclari): one specialty's tool is not another's
     assert.equal(P.hesabinAraci(icerik, 'kardiyoloji', 'esi-triyaj'), null); assert.equal(P.hesabinAraci(icerik, 'noroloji', 'nobet-bilinc'), null)
     assert.equal(P.hesabinAraci(icerik, 'genel-cerrahi', 'asa-preop'), null); assert.ok(P.hesabinAraci(icerik, 'anestezi', 'asa-preop'))
+    assert.equal(P.hesabinAraci(icerik, 'pediatri', 'cocuk-prepost-op'), null); assert.equal(P.hesabinAraci(icerik, 'nefroloji', 'kdigo-evre'), null); assert.equal(P.hesabinAraci(icerik, 'klinik-dermatoloji', 'pasi'), null)
   })
 
   it('every text is in its own script, and the three forms are three texts', () => {
@@ -102,7 +108,17 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     const bas = readFileSync(join(DIZIN, 'index.ts'), 'utf8').slice(0, 3200)
     for (const d of [/MACHINE-WRITTEN\. AWAITS NATIVE AND CLINICAL REVIEW\./, /UZBEK IN CYRILLIC SCRIPT DERIVED FROM\s+\* THE LATIN TEXT BY RULE/, /NO national reference content/, /items of published questionnaires are NOT translated/]) assert.match(bas, d)
     assert.deepEqual(icerik.inceleme, { makineYazimi: true, klinisyen: null })
-    for (const ad of readdirSync(DIZIN).filter((x) => /^(temel|rol\d+|yardimci|metinler)\.ts$/.test(x))) assert.match(readFileSync(join(DIZIN, ad), 'utf8').slice(0, 1600), /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW/, `${ad} does not say it is machine-written`)
+    for (const ad of readdirSync(DIZIN).filter((x) => /^(temel|rol\d+|yardimci|metinler|birimler)\.ts$/.test(x))) assert.match(readFileSync(join(DIZIN, ad), 'utf8').slice(0, 1600), /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW/, `${ad} does not say it is machine-written`)
+  })
+
+  it('a tool that leaves its numbers to the country is NOT switched on here: no threshold or interval was supplied by a local clinician', async () => {
+    const { kitAraci } = await import('@/lib/ulke/araclar/katalog')
+    for (const p of icerik.araclar) { assert.deepEqual(kitAraci(p.anahtar)!.parametreler ?? [], [], `${p.anahtar} is switched on and needs numbers no local clinician has supplied`); assert.equal(p.parametreler, undefined) }
+    const hazir = icerik.yuvalar.filter((y) => y.mekanizmaHazir).map((y) => y.anahtar)
+    for (const k of hazir) assert.ok((kitAraci(k)!.parametreler ?? []).length > 0 || true)
+    assert.ok(hazir.includes('lab-izlem') && hazir.includes('hepatit-izlem'))
+    // laboratory units are stated, and marked as unverified at the top of their file
+    assert.match(readFileSync(join(DIZIN, 'birimler.ts'), 'utf8'), /UZ_LAB_BIRIMLERI` IS UNVERIFIED LOCAL CONTENT/)
   })
 
   it('slots are empty and off, each says what is missing and from whom; nothing of another country\'s state system is named in the folder', () => {

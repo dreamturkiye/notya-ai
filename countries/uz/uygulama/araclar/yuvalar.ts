@@ -36,4 +36,27 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('aile-kronik', ['aile-hekimligi'], 'Follow-up intervals for diabetes and hypertension in primary care, from the national primary-care protocols.'),
   yuva('aile-sevk', ['aile-hekimligi'], 'Referral and emergency triage in primary care: the referral levels of the Uzbek system, the criteria for each, and the emergency number confirmed by a local source.'),
   yuva('aile-kohort', ['aile-hekimligi'], 'The follow-up panel of family medicine: it lists patients by the three tools above and has nothing to list until they exist.'),
+
+  // ── paediatric surgery ──
+  yuva('cocuk-onam-veli', ['cocuk-cerrahisi'], 'Consent for an operation on a child: the age below which a parent or guardian signs, who may sign, and the wording of the consent, under Uzbek law.', HUKUK),
+
+  // ── internal medicine ──
+  yuva('kv-risk-score2', ['dahiliye', 'kardiyoloji'], 'Ten-year cardiovascular risk (SCORE2 family): the risk region Uzbekistan belongs to, with the calibrated tables of that region. The pre-split application is set to another country\'s region and its numbers must not be shown here.'),
+  yuva('polifarmasi', ['dahiliye'], 'Review of medicines in patients aged 65 and over (STOPP/START criteria): the criteria in a licensed edition, and the register of medicines sold in Uzbekistan to recognise each medicine by name. RECLASSIFIED from "keep": on inspection the tool recognises medicines by the names and brands of another country.'),
+  yuva('antikoagulan', ['dahiliye'], 'Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in Uzbekistan (age, weight, kidney function), INR targets and recheck intervals from the national protocol, and the local medicine names. RECLASSIFIED from "keep": the tool carries label criteria and intervals of another country.'),
+
+  // ── dermatology ──
+  yuva('izotretinoin-gebelik-onleme', ['dermatoloji'], 'Pregnancy-prevention checks for isotretinoin: the programme the Uzbek regulator requires (tests, contraception, prescription validity).'),
+
+  // ── endocrinology: the mechanism is in the kit; the numbers are local guidance and are not here ──
+  yuva('lab-izlem', ['endokrinoloji'], 'HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the national diabetes and thyroid protocols, with the reference range the local laboratories report for TSH.', KLINISYEN, true),
+  yuva('dxa-tekrar', ['endokrinoloji'], 'Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the national osteoporosis protocol.', KLINISYEN, true),
+
+  // ── infectious diseases ──
+  yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
+  yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
+
+  // ── gastroenterology ──
+  yuva('ibd-skor', ['gastroenteroloji'], 'Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the local gastroenterology protocols state them.', KLINISYEN, true),
+  yuva('hepatit-izlem', ['gastroenteroloji'], 'Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the national hepatitis programme.', KLINISYEN, true),
 ]

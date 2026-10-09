@@ -6,6 +6,7 @@
  *   ./metinler.ts   the tools area's own words (grid, search, what every tool screen shares)
  *   ./temel.ts      BASE tools: the same for all 40 roles
  *   ./rol1.ts …     ROLE tools, in the order of the pack's role list; each names its roles
+ *   ./birimler.ts   the names of units, and the unit each laboratory value is reported in here
  *   ./yuvalar.ts    tools that wait for local content: marked, empty, switched off
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -28,15 +29,15 @@ import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { UZ_ARACLAR_METINLERI } from './metinler'
 import { UZ_TEMEL_ARACLAR } from './temel'
 import { UZ_ROL_ARACLARI_1 } from './rol1'
+import { UZ_ROL_ARACLARI_2 } from './rol2'
+import { UZ_ARAC_BIRIMLERI, UZ_LAB_BIRIMLERI } from './birimler'
 import { UZ_ARAC_YUVALARI } from './yuvalar'
 
 export const UZ_ARACLAR: UlkeAraclari = {
   metinler: UZ_ARACLAR_METINLERI,
-  araclar: [...UZ_TEMEL_ARACLAR, ...UZ_ROL_ARACLARI_1],
-  // No switched-on tool shows a unit of its own yet.
-  birimler: {},
-  // No switched-on tool reads a laboratory value yet. A unit is stated here in the same change that switches such a tool on.
-  labBirimleri: {},
+  araclar: [...UZ_TEMEL_ARACLAR, ...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2],
+  birimler: UZ_ARAC_BIRIMLERI,
+  labBirimleri: UZ_LAB_BIRIMLERI,
   yuvalar: UZ_ARAC_YUVALARI,
   inceleme: { makineYazimi: true, klinisyen: null },
 }

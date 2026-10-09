@@ -21,7 +21,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { eksik, eksikAyar } from '../eksik'
 import { paketiDenetle } from '../paketDenetimi'
-import { ornekGirdiler } from '../testing/aracOrnekleri'
+import { ORNEK_PARAMETRELER, ornekGirdiler, ornekOrtam } from '../testing/aracOrnekleri'
 import { gorunurMetin, sizintiTara } from '../testing/sizintiTarayici'
 import type { UlkeArayuzu } from '../arayuz/tipler'
 import type { DilKodu, UlkeKlinigi, UlkePaketi } from '../tipler'
@@ -59,7 +59,7 @@ before(async () => {
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: paket.kod, kaynak }), [])
 
 /** The first input a tool answers: what a doctor would see after filling the form in. */
-const doluGirdi = (t: AracTanimi): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, { bugun: '2026-10-09' }).tamam) ?? null
+const doluGirdi = (t: AracTanimi, p?: Readonly<Record<string, number>>): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, ornekOrtam(t, p)).tamam) ?? null
 /** An input as the screen holds it (what was typed). */
 const hamGirdi = (g: AracGirdisi) => Object.fromEntries(Object.entries(g).filter(([, v]) => v !== null).map(([k, v]) => [k, typeof v === 'number' ? String(v) : v])) as Record<string, string | boolean>
 
@@ -87,10 +87,10 @@ describe('tools — the kit\'s catalogue', () => {
     for (const t of KIT_ARACLARI) {
       if (t.tur === 'ekran') continue
       const girdiler = ornekGirdiler(t)
-      assert.equal(t.hesapla(girdiler[0], { bugun: '2026-10-09' }).tamam, false, `${t.anahtar}: an empty form has a result`)
+      assert.equal(t.hesapla(girdiler[0], ornekOrtam(t)).tamam, false, `${t.anahtar}: an empty form has a result`)
       let tamamlanan = 0
       for (const g of girdiler) {
-        const s = t.hesapla(g, { bugun: '2026-10-09' })
+        const s = t.hesapla(g, ornekOrtam(t))
         if (!s.tamam) { assert.deepEqual([s.sayilar.length, s.bant, s.uyarilar.length, s.tarihler.length], [0, null, 0, 0], `${t.anahtar}: an incomplete result carries values`); continue }
         tamamlanan++
         for (const x of s.sayilar) { assert.ok(t.cikti.sayilar.includes(x.anahtar), `${t.anahtar}: undeclared number "${x.anahtar}"`); assert.ok(Number.isFinite(x.deger), `${t.anahtar}.${x.anahtar}: not a number`) }
@@ -99,6 +99,9 @@ describe('tools — the kit\'s catalogue', () => {
         for (const d of s.tarihler) { assert.ok(t.cikti.tarihler.includes(d.anahtar), `${t.anahtar}: undeclared date "${d.anahtar}"`); assert.match(d.tarih, /^\d{4}-\d{2}-\d{2}$/) }
       }
       assert.ok(tamamlanan > 0, `${t.anahtar}: no sample input produced a result — the test would prove nothing`)
+      // a tool that leaves numbers to the country has sample numbers for exactly those keys, and nothing else has any
+      assert.deepEqual(Object.keys(ORNEK_PARAMETRELER[t.anahtar] ?? {}).sort(), [...(t.parametreler ?? [])].sort(), `${t.anahtar}: the sample numbers and the tool's parameters differ`)
+      for (const a of t.alanlar) if (a.kosul) { const kaynak = t.alanlar.find((x) => x.anahtar === a.kosul!.alan); assert.ok(kaynak?.tur === 'secim' && a.kosul.degerler.every((d) => kaynak.secenekler!.includes(d)), `${t.anahtar}.${a.anahtar}: its condition names no choice of the tool`) }
     }
   })
 
@@ -286,8 +289,9 @@ describe('tools — the screens', () => {
         const bosMetin = gorunurMetin(bosHtml)
         assert.ok(bosMetin.includes(a.arac.eksik), `${p.anahtar}/${dil}: an empty tool does not say what to do`)
         assert.doesNotMatch(bosHtml, /data-bant=|data-sayi=|data-uyari=|data-eylem="kopyala"/, `${p.anahtar}/${dil}: an empty tool shows a result`)
-        for (const al of t.alanlar) assert.ok(bosHtml.includes(`data-alan="${al.anahtar}"`), `${p.anahtar}/${dil}: field ${al.anahtar} is not drawn`)
-        for (const al of t.alanlar) if (!al.numarali) assert.ok(bosMetin.includes(bicimli(p.metin.alanlar[al.anahtar], dil)), `${p.anahtar}/${dil}: label of ${al.anahtar}`)
+        // a field with a condition is not there until its choice is made; every other field is drawn with its label
+        for (const al of t.alanlar) assert.equal(bosHtml.includes(`data-alan="${al.anahtar}"`), !al.kosul, `${p.anahtar}/${dil}: field ${al.anahtar}`)
+        for (const al of t.alanlar) if (!al.numarali && !al.kosul) assert.ok(bosMetin.includes(bicimli(p.metin.alanlar[al.anahtar], dil)), `${p.anahtar}/${dil}: label of ${al.anahtar}`)
         assert.ok(bosMetin.includes(bicimli(p.metin.not, dil)) && bosMetin.includes(a.arac.saklanmaz))
         if (t.kaynak) assert.ok(bosMetin.includes(t.kaynak), `${p.anahtar}/${dil}: the source is not shown`)
         temiz(bosHtml, `tool ${p.anahtar} ${dil} (empty)`)
@@ -295,7 +299,7 @@ describe('tools — the screens', () => {
         // every result the samples can produce is drawn in the pack's words
         const gorulen = { sayi: new Set<string>(), bant: new Set<string>(), uyari: new Set<string>(), tarih: new Set<string>() }
         for (const g of ornekGirdiler(t)) {
-          const s = t.hesapla(g, { bugun: '2026-10-09' })
+          const s = t.hesapla(g, ornekOrtam(t, p.parametreler))
           if (!s.tamam) continue
           const html = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham: hamGirdi(g) }))
           const metin = gorunurMetin(html)
@@ -317,20 +321,20 @@ describe('tools — the screens', () => {
       const t = kitAraci(p.anahtar)!
       if (t.tur === 'ekran') continue
       const x = { tanim: t, paket: p }
-      const g = doluGirdi(t)!
+      const g = doluGirdi(t, p.parametreler)!
       assert.ok(g, `${p.anahtar}: no sample input has a result`)
       for (const dil of FORMLAR) {
         const a = A.araclarMetni(dil)
         const y = Ekran.yazici(icerik, dil), o = Ekran.birimOrtami(icerik)
-        const s = t.hesapla(g, { bugun: '2026-10-09' })
+        const s = t.hesapla(g, ornekOrtam(t, p.parametreler))
         const ozet = aracOzeti(x, g, s, dil, a, y, o)
         const satirlar = ozet.split('\n')
         assert.equal(satirlar[0], bicimli(p.metin.ad, dil)); assert.equal(satirlar[satirlar.length - 1], bicimli(p.metin.not, dil))
-        for (const al of t.alanlar) if (al.tur === 'isaret') assert.equal(ozet.includes(`- ${bicimli(p.metin.alanlar[al.anahtar], dil)}`), g[al.anahtar] === true, `${p.anahtar}/${dil}: ${al.anahtar} in the summary`)
+        for (const al of t.alanlar) if (al.tur === 'isaret') assert.equal(ozet.split('\n').includes(`- ${bicimli(p.metin.alanlar[al.anahtar], dil)}`), g[al.anahtar] === true, `${p.anahtar}/${dil}: ${al.anahtar} in the summary`)
         if (s.bant) assert.ok(ozet.includes(bicimli(p.metin.bantlar?.[s.bant], dil)))
         assert.doesNotMatch(ozet, /undefined|null|NaN|\[object/)
         temiz(ozet, `summary ${p.anahtar} ${dil}`)
-        assert.equal(aracOzeti(x, ornekGirdiler(t)[0], t.hesapla(ornekGirdiler(t)[0], { bugun: '2026-10-09' }), dil, a, y, o), '')
+        assert.equal(aracOzeti(x, ornekGirdiler(t)[0], t.hesapla(ornekGirdiler(t)[0], ornekOrtam(t, p.parametreler)), dil, a, y, o), '')
       }
     }
   })

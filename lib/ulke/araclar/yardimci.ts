@@ -9,7 +9,19 @@ export const isaret = (anahtar: string): AracAlani => ({ anahtar, tur: 'isaret' 
 export const secim = (anahtar: string, secenekler: readonly string[], istege = false): AracAlani => ({ anahtar, tur: 'secim', secenekler, ...(istege ? { istege } : {}) })
 export const tarih = (anahtar: string, istege = false): AracAlani => ({ anahtar, tur: 'tarih', ...(istege ? { istege } : {}) })
 export const puan = (anahtar: string, enAz: number, enCok: number, ek: Partial<AracAlani> = {}): AracAlani => ({ anahtar, tur: 'puan', enAz, enCok, tam: true, ...ek })
+export const metin = (anahtar: string, ek: Partial<AracAlani> = {}): AracAlani => ({ anahtar, tur: 'metin', istege: true, ...ek })
 export const sayi = (anahtar: string, enAz: number, enCok: number, ek: Partial<AracAlani> = {}): AracAlani => ({ anahtar, tur: 'sayi', enAz, enCok, ...ek })
+
+/** true = the field is there for this input (its condition, if it has one, holds). */
+export const alanVarMi = (a: AracAlani, g: AracGirdisi): boolean => !a.kosul || (typeof g[a.kosul.alan] === 'string' && a.kosul.degerler.includes(g[a.kosul.alan] as string))
+/** An input with every field that is not there emptied: what a tool's arithmetic is always handed. */
+export function kosullariUygula(alanlar: readonly AracAlani[], g: AracGirdisi): AracGirdisi {
+  const c: Record<string, number | string | boolean | null> = { ...g }
+  for (const a of alanlar) if (!alanVarMi(a, g)) c[a.anahtar] = a.tur === 'isaret' ? false : null
+  return c
+}
+/** The length a free-text field keeps. */
+export const METIN_UZUNLUGU = 80
 
 /** The ticked keys of a list of tick-boxes, in the list's order. */
 export const isaretliler = (g: AracGirdisi, maddeler: readonly string[]): string[] => maddeler.filter((k) => g[k] === true)
@@ -21,6 +33,11 @@ export function gunEkle(iso: string, gun: number): string {
   const d = new Date(`${iso}T12:00:00Z`)
   d.setUTCDate(d.getUTCDate() + gun)
   return d.toISOString().slice(0, 10)
+}
+/** A day `ay` calendar months after `iso` (the 31st plus one month runs into the next month, as a calendar does). */
+export function ayEkle(iso: string, ay: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1 + ay, d)).toISOString().slice(0, 10)
 }
 /** Whole days from `a` to `b`. */
 export const gunFarki = (a: string, b: string): number => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86400000)

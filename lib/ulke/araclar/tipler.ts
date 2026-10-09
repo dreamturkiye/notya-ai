@@ -36,8 +36,9 @@ export type AracAlani = {
    * sayi    a number the doctor types          secim   one of a few options
    * isaret  a tick-box                         tarih   a day
    * puan    a whole score from enAz to enCok   (an item of a scale)
+   * metin   a few words of the doctor's own (a region, a label): never read by the arithmetic, repeated in the summary
    */
-  tur: 'sayi' | 'secim' | 'isaret' | 'tarih' | 'puan'
+  tur: 'sayi' | 'secim' | 'isaret' | 'tarih' | 'puan' | 'metin'
   enAz?: number
   enCok?: number
   /** true = only whole numbers. */
@@ -52,6 +53,8 @@ export type AracAlani = {
   secenekler?: readonly string[]
   /** true = may be left empty; the tool still answers. */
   istege?: boolean
+  /** Shown, and read, only while the choice field `alan` holds one of `degerler`. Otherwise the field is not there. */
+  kosul?: { alan: string; degerler: readonly string[] }
   /**
    * true = an item of a published questionnaire whose WORDING belongs to its authors. The pack need not name it:
    * the screen then shows the item's number, and the doctor reads the item from the authorised form in their hand.
@@ -77,6 +80,8 @@ export type AracSonucu = {
   tarihler: readonly { anahtar: string; tarih: string }[]
 }
 
+export type AracOrtami = { bugun: string; p: Readonly<Record<string, number>> }
+
 export type AracTuru = 'hesap' | 'olcek' | 'liste' | 'takvim' | 'ekran'
 
 export type AracTanimi = {
@@ -87,8 +92,14 @@ export type AracTanimi = {
   alanlar: readonly AracAlani[]
   /** Every key `hesapla` can return. The pack names each one in every form; the pack check requires it. */
   cikti: { sayilar: readonly string[]; bantlar: readonly string[]; uyarilar: readonly string[]; tarihler: readonly string[] }
-  /** Pure. `bugun` is the day in the account's time zone (YYYY-MM-DD). */
-  hesapla: (g: AracGirdisi, ortam: { bugun: string }) => AracSonucu
+  /**
+   * NUMBERS THE COUNTRY DECIDES, by key: a threshold between two bands, the months until the next check. They are
+   * local clinical guidance, not arithmetic, so the kit holds none of them: a pack that switches the tool on states
+   * every one (`PaketAraci.parametreler`), with its source, and a pack that cannot is left with a slot.
+   */
+  parametreler?: readonly string[]
+  /** Pure. `bugun` is the day in the account's time zone (YYYY-MM-DD); `p` holds the pack's value for every key of `parametreler`. */
+  hesapla: (g: AracGirdisi, ortam: AracOrtami) => AracSonucu
   /** The published source of the arithmetic, as a citation; null where the tool is a list of the product's own. Shown under the result. */
   kaynak: string | null
   /** For `tur: 'ekran'`: the kit screen that is the tool (it has no fields). */
@@ -123,6 +134,8 @@ export type PaketAraci = {
   /** null = BASE: every role of the pack sees it, and an account without a role. A list = these roles only. */
   roller: readonly string[] | null
   metin: AracMetni
+  /** The country's value for every number the kit's definition leaves to it (`AracTanimi.parametreler`). */
+  parametreler?: Readonly<Record<string, number>>
 }
 
 /**
