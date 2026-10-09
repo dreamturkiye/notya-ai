@@ -22,8 +22,8 @@
  *
  * ONE INSTRUCTION PER ROLE: the nine rules and four sections, then the role's own block — its name in the country's
  * usage and the list of ITS fields (./notSablonlari.ts), composed from the template, so it cannot name a field of
- * another role. An allied profession's block says that the colleague is not a doctor and that no medical diagnosis is
- * made. GUARDIAN WORDING FOLLOWS THE PATIENT'S AGE in every role: one line of the visit message, for a patient below
+ * another role. AN ALLIED PROFESSION'S INSTRUCTION DOES NOT OPEN WITH THE SENIOR-DOCTOR LINE: its first sentence states
+ * the profession and that the colleague is not a doctor, and its block says that no medical diagnosis is made. GUARDIAN WORDING FOLLOWS THE PATIENT'S AGE in every role: one line of the visit message, for a patient below
  * the country's guardian age (the pack's setting), and never above it.
  *
  * THE SUMMARY FOR THE PATIENT is PATIENT-FACING once the doctor shares it: it comes first for the clinician who
@@ -50,6 +50,9 @@ const YAZIM_ADI: Readonly<Record<EnBicim, string>> = {
 /** `%K` the country's word for a senior doctor; `%Y` the name of the country's spelling. Base spelling: en-GB. */
 const T = {
   rol: 'You are an experienced %K. A colleague gives you the transcript of a visit. Write the visit note from it as a draft: your colleague will read it, correct it and approve it themselves.',
+  // AN ALLIED PROFESSION: the instruction does not open with the senior-doctor line. Its first sentence states the
+  // profession (`%`, the role's name in the country's usage) and that the colleague is not a doctor.
+  rolMuttefik: 'Your colleague is a health professional and not a doctor: their profession is "%". They give you the transcript of a visit. Write the visit note from it as a draft: your colleague will read it, correct it and approve it themselves.',
   kurallar: [
     'RULES',
     '1. Write only what was said at the visit. Add nothing: no finding, no history and no advice that was not spoken.',
@@ -71,7 +74,7 @@ const T = {
   ].join('\n'),
   genel: 'GENERAL VISIT\nIn section s, only if it was said: long-term conditions, regular medicines, allergies.',
   hekim: 'This visit note is written for the specialty "%".',
-  muttefik: 'This is the visit note of a health professional. Your colleague is not a doctor; their profession is "%". The word "doctor" in the rules means this professional here.\nIn section a, write the professional\'s own assessment as it was said. Make no medical diagnosis; if the diagnosis of a referring doctor was named, write it only in the field meant for it.',
+  muttefik: 'This is the visit note of that health professional, not of a doctor. The word "doctor" in the rules and in the sections means this professional here.\nIn section a, write the professional\'s own assessment as it was said. Make no medical diagnosis; if the diagnosis of a referring doctor was named, write it only in the field meant for it.',
   alanlar: 'Besides the four sections, fill in the following fields. Write in each field only what was said at the visit; if nothing was said about it, leave the field empty. Do not repeat in a section what you have written in a field.',
   son: 'Add no field that is not on this list.',
   cevap: 'ANSWER\nAnswer with one JSON object and nothing else:\n%\nAll four keys are required; the values are text in the language of the note.',
@@ -133,7 +136,8 @@ export function enTalimatlar(g: EnKlinikGirdisi) {
   const yaz = (s: string): string => enYaz(s, g.bicim).replace(/%K/g, g.kidemliHekim).replace(/%Y/g, YAZIM_ADI[g.bicim])
   const dilMi = (dil: DilKodu): boolean => dil === g.bicim
   const sablonMu = (ham: unknown): ham is string => S.sablonMu(g.sablonlar, g.roller, ham)
-  const giris = [yaz(T.rol), yaz(T.kurallar), yaz(T.bolumler)]
+  /** The opening, the rules and the sections. For an allied profession the opening names the profession, never the senior doctor. */
+  const giris = (rol?: RolTanimi): string[] => [rol?.taraf === 'klinik-muttefik' ? yaz(T.rolMuttefik).replace('%', rol.ad[g.bicim] ?? rol.anahtar) : yaz(T.rol), yaz(T.kurallar), yaz(T.bolumler)]
 
   /** A role's own block: its name, and the list of ITS fields — key and label. */
   function rolBlogu(sablon: string): string | null {
@@ -141,17 +145,17 @@ export function enTalimatlar(g: EnKlinikGirdisi) {
     const alanlar = g.sablonlar.rolAlanlari[sablon]
     const ad = rol?.ad[g.bicim]
     if (!rol || !alanlar || !ad || sablon === g.sablonlar.genelSablon) return null
-    const cerceve = yaz(rol.taraf === 'klinik-muttefik' ? T.muttefik : T.hekim).replace('%', ad)
+    const cerceve = rol.taraf === 'klinik-muttefik' ? yaz(T.muttefik) : yaz(T.hekim).replace('%', ad)
     return [ad.toLocaleUpperCase('en'), cerceve, yaz(T.alanlar), ...alanlar.map((k) => `- ${k} — ${S.alanAdi(g.sablonlar, k, g.bicim) ?? k}`), yaz(T.son)].join('\n')
   }
 
   /** Instructions for writing a visit note in `dil` with the template `sablon`. null = no such language or template here. */
   function notTalimati(dil: DilKodu, sablon: string): string | null {
     if (!dilMi(dil) || !sablonMu(sablon)) return null
-    if (sablon === g.sablonlar.genelSablon) return [...giris, yaz(T.genel), yaz(T.cevap).replace('%', jsonKalibi([]))].join('\n\n')
+    if (sablon === g.sablonlar.genelSablon) return [...giris(), yaz(T.genel), yaz(T.cevap).replace('%', jsonKalibi([]))].join('\n\n')
     const blok = rolBlogu(sablon)
     // A role without a block has no instruction: its note is not written. Never another role's, never the general one's.
-    return blok ? [...giris, blok, yaz(T.rolCevabi).replace('%', jsonKalibi(g.sablonlar.rolAlanlari[sablon]))].join('\n\n') : null
+    return blok ? [...giris(g.roller.find((r) => r.anahtar === sablon)), blok, yaz(T.rolCevabi).replace('%', jsonKalibi(g.sablonlar.rolAlanlari[sablon]))].join('\n\n') : null
   }
 
   /** The message that carries the visit: age and sex (never a name or a number that identifies), then the transcript. */

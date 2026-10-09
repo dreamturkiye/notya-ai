@@ -24,6 +24,9 @@ ingilizcePaketSinamasi({
   kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
+  kidemliHekim: 'consultant',
+  // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
+  ornekTelefon: /^\+44 7700 900\d{3}$/,
 })
 
 describe('gb: what is the United Kingdom\'s', () => {

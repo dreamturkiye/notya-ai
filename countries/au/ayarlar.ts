@@ -83,7 +83,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     birimAdlari: { 'ng/mL': 'µg/L', 'ng/mL/yil': 'µg/L per year' },
   },
   acilis: {
-    // A number from the range the regulator sets aside for fiction: it reaches nobody. Format unverified.
+    // THE EXAMPLE PHONE NUMBER — UNVERIFIED. One of the mobile numbers the communications regulator sets aside for
+    // creative works (0491 570 006, 0491 570 110, 0491 570 156 to 159): it is not issued to anybody. Not checked
+    // against the regulator's current list by anybody of the country.
     telefonOrnegi: '+61 491 570 006',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '$% a month',

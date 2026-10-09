@@ -36,6 +36,8 @@ const u = p.uygulama
 
 type Ulke = {
   ad: string; dosya: string; kimlikNotu: string; saatNotu: string; veliNotu: string; kayitRizasiNotu: string
+  /** Why the example phone number can be nobody's: a range reserved for fiction, or a shape that is no number. */
+  telefonNotu: string
   /** The open regulatory questions. Asked, never answered: each is for a lawyer of the country. */
   hukuk: readonly string[]
   /** What else is specific to this country and still open. */
@@ -49,6 +51,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
     kimlikNotu: 'Label "NHS number". Whether a clinic outside the health service records one, and whether the label fits Scotland and Northern Ireland (which use other identifiers), is unverified.',
     saatNotu: 'One zone (Europe/London). The 24-hour clock is an unverified choice.',
     veliNotu: '16 as a starting value. How capacity and consent of under-16s and of 16 and 17 year olds bear on the guardian wording and on the form a parent fills in differs between the nations of the United Kingdom.',
+    telefonNotu: 'The example is from the range the communications regulator sets aside for television and radio drama (07700 900000 to 900999). Unverified.',
     kayitRizasiNotu: 'A draft sentence. Whether recording a consultation needs more than the patient\'s agreement recorded by the doctor (a written form, a notice, a retention rule) is open.',
     hukuk: [
       'UK GDPR and the Data Protection Act 2018: lawful basis and the condition for processing health data; the roles of the clinic and of the product (controller, processor) and the contract between them; a data protection impact assessment; registration with the regulator; transfers of patient data outside the United Kingdom to the database host, the speech provider and the model provider; breach notification deadlines.',
@@ -64,6 +67,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
     kimlikNotu: 'A neutral label, "Patient identifier" (for example a clinic\'s own record number). NEVER A SOCIAL SECURITY NUMBER: no screen asks for one, and a test fails if any text mentions it.',
     saatNotu: 'Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed.',
     veliNotu: '18 as a starting value. The age of majority and the rules on a minor\'s own consent differ by state.',
+    telefonNotu: 'The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified.',
     kayitRizasiNotu: 'A draft sentence. RECORDING-CONSENT LAW DIFFERS BY STATE (some states require the consent of everyone recorded): the sentence must not be relied on in any state until a lawyer has read it for that state.',
     hukuk: [
       'HIPAA: whether and when the product acts as a business associate of a clinic, and THE BUSINESS-ASSOCIATE AGREEMENTS NEEDED WITH EVERY VENDOR THAT WOULD SEE PATIENT DATA — the database host, the speech-recognition provider and the model provider — BEFORE ANY REAL PATIENT; the security and breach-notification duties that follow.',
@@ -79,6 +83,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
     kimlikNotu: 'Label "Provincial health card number". Format and name differ by province and territory; unverified.',
     saatNotu: 'Several zones are offered (listed in the row) and an account chooses its own; the default (America/Toronto) and the list are unverified choices.',
     veliNotu: '16 as a starting value. Consent of minors is a matter of provincial law and differs by province; Quebec sets its own age.',
+    telefonNotu: 'The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified.',
     kayitRizasiNotu: 'A draft sentence. Federal and provincial rules on recording a consultation are open.',
     hukuk: [
       'PIPEDA, and THE PROVINCIAL HEALTH-PRIVACY LAWS that apply instead of it or beside it (each province has its own; some are deemed substantially similar): which law governs a private doctor in each province, the roles of the clinic and the product, and storing or processing patient data outside the province or outside Canada.',
@@ -94,6 +99,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
     kimlikNotu: 'Label "Medicare number". Whether a private clinic should record it in this product at all is unverified.',
     saatNotu: 'Several zones are offered (listed in the row) and an account chooses its own; the default (Australia/Sydney) and the list are unverified choices.',
     veliNotu: '16 as a starting value. Consent of minors differs by state and territory.',
+    telefonNotu: 'The example is one of the mobile numbers the communications regulator sets aside for creative works (0491 570 006, 0491 570 110, 0491 570 156 to 159). Unverified.',
     kayitRizasiNotu: 'A draft sentence. Recording a consultation is governed by state and territory law, which differs.',
     hukuk: [
       'The Privacy Act and the Australian Privacy Principles for health information; state and territory health-records laws; sending patient data overseas to the database host, the speech provider and the model provider; breach notification.',
@@ -110,6 +116,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
     kimlikNotu: 'Label "NHI number". Unverified wording; whether a private clinic records it here is open.',
     saatNotu: 'Two zones are offered (the main islands and the Chatham Islands) and an account chooses its own.',
     veliNotu: '16 as a starting value, for a lawyer.',
+    telefonNotu: 'THE EXAMPLE IS A SHAPE, NOT A NUMBER ("X" in place of digits): this job knows of no range New Zealand reserves for fiction with certainty. It cannot be dialled and can be nobody\'s. A number from a reserved range, if a local source names one, may replace it. Unverified.',
     kayitRizasiNotu: 'A draft sentence. What consent and notice a recording needs is open.',
     hukuk: [
       'THE HEALTH INFORMATION PRIVACY CODE and the Privacy Act: collection, use, storage and disclosure of health information by a private doctor; sending it outside New Zealand to the database host, the speech provider and the model provider; breach notification.',
@@ -118,7 +125,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Recording a consultation: consent and retention.',
       'Māori data sovereignty and the use of te reo Māori in health services: whether and how they bear on this product is a question for local advice. No te reo Māori text is written.',
     ],
-    ekNotlar: ['New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'FOR A LOCAL CLINICAL LEAD: the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).', 'The 12-hour clock is an unverified choice.', 'THE PHONE NUMBER SHOWN AS AN EXAMPLE IS NOT KNOWN TO BE FROM A RESERVED RANGE and may be somebody\'s number: to be replaced by a number the owner controls before any person sees the form. WAITING ON KAAN.'],
+    ekNotlar: ['New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'FOR A LOCAL CLINICAL LEAD: the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).', 'The 12-hour clock is an unverified choice.'],
   },
 }
 const U = ULKELER[p.kod]
@@ -243,7 +250,7 @@ ${[
   satir('Recording-consent sentence', `"${a.metinler[d]!.muayene.riza}" — stamp \`${k.riza.surum}\`, NOT READ BY A LAWYER`, `**${LAWYER}**. ${U.kayitRizasiNotu}`),
   satir('Intake-form consent sentence', `the shared draft — stamp \`${hf.riza.surum}\`, NOT READ BY A LAWYER`, `**${LAWYER}**`),
   satir('Word for a senior doctor (in the instructions to the model)', `"${(k.notTalimati(d, a.notSablonlari.genelSablon) ?? '').match(/You are an experienced ([^.]+)\./)?.[1] ?? ''}"`, 'a local clinical lead'),
-  satir('Phone: prefix, example, rule', `${p.telefon.ulkeOnEki}; ${p.telefon.ornek}; a format rule only`, 'a local lead'),
+  satir('Phone: prefix, example, rule', `${p.telefon.ulkeOnEki}; ${p.telefon.ornek}; a format rule only`, `a local lead. ${U.telefonNotu}`),
   satir('Appointment norms', `${u.randevu?.varsayilan.baslangic}–${u.randevu?.varsayilan.bitis}, ${u.randevu?.varsayilan.sureDk} min; no public holiday`, 'a local clinical lead'),
   satir('Speech: model, thresholds', `${k.konusma.model}; ${k.konusma.dilOlasiligiEsigi}, ${k.konusma.ortalamaLogOlasilikEsigi}, ${k.konusma.asgariKarakter} characters`, 'engineering, on real clinic audio of this country'),
   satir('Assistant names', 'NONE. Every role shows the neutral line', '**WAITING ON KAAN**'),
@@ -284,7 +291,7 @@ ${kendiYuvalari.map(yuvaSatiri).join('\n') || '| — | — | — | — |'}
 
 ### Slots in every English-speaking country (${ortakYuvalar.length}) — empty, switched off
 
-No national reference content is written by a machine, and no item of a published questionnaire is reproduced.
+No national reference content is written by a machine, and no item of a published questionnaire is reproduced. The sentences of a slot are written for documents and reviewers and are never shown on a screen; in every pack they stay in the set's base spelling (British), whatever the pack's own form.
 
 | Slot | Who would see it | What is missing | Waits on |
 |---|---|---|---|
@@ -306,6 +313,7 @@ ${kapilar.join('\n').trim()}
 
 - 2026-10-09 (the coordinator, for the owner): spelling is converted when the pack loads; one English role-key set for the five countries; no assistant names; birth weight asked as free text; patient wording kept country-neutral.
 - 2026-10-09 (the coordinator, for the owner): unit and scale decisions accepted as stated — each **for a local clinical lead**: the KDIGO tools are switched on only where laboratories report mg/g; the ESI triage record only in the United States; the BI-RADS report outline only in the United States and Canada; weight-based dose arithmetic is a slot where weight is measured in pounds; the DAS28 C-reactive protein field is labelled mg/L; prostate-specific antigen is shown in µg/L where that is the unit in use.
+- 2026-10-09 (the coordinator, for the owner): an allied profession's instruction does not open with the senior-doctor line — its first sentence states the profession and that the colleague is not a doctor; the example phone number is from a range reserved for fiction where this job is certain of one, otherwise a shape that is no number; the sentences of the slots stay in British spelling in every pack (accepted).
 - Open, with who each waits on: \`docs/OPEN-COMMITMENTS.md\`, NOTYA-ULKE-EN-01.
 `
 

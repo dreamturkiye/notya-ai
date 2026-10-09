@@ -28,6 +28,9 @@ ingilizcePaketSinamasi({
   kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
+  kidemliHekim: 'specialist',
+  // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
+  ornekTelefon: /^\+61 491 570 (006|110|15[6-9])$/,
 })
 
 describe('au: what is Australia\'s', () => {

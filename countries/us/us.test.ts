@@ -35,6 +35,9 @@ ingilizcePaketSinamasi({
   kapaliAraclar: ['doz-hesabi'],
   birimler: BIRIMLER,
   labBirimleri: LAB,
+  kidemliHekim: 'attending physician',
+  // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
+  ornekTelefon: /^\+1 \d{3} 555 01\d{2}$/,
 })
 
 describe('us: what is the United States\'', () => {

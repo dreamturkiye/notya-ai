@@ -83,7 +83,9 @@ export const GB_GIRDI: EnUlkeGirdisi = {
     },
   },
   acilis: {
-    // A number from the range the regulator sets aside for drama: it reaches nobody. Format unverified.
+    // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the range the communications regulator sets aside for television and
+    // radio drama (mobile numbers 07700 900000 to 900999): it is not issued to anybody. Not checked against the
+    // regulator's current list by anybody of the country.
     telefonOrnegi: '+44 7700 900123',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '£% a month',

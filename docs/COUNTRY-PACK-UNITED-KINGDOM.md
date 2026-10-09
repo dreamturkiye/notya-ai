@@ -41,7 +41,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `gb-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Whether recording a consultation needs more than the patient's agreement recorded by the doctor (a written form, a notice, a retention rule) is open. |
 | Intake-form consent sentence | the shared draft — stamp `gb-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "consultant" | a local clinical lead |
-| Phone: prefix, example, rule | +44; +44 7700 900123; a format rule only | a local lead |
+| Phone: prefix, example, rule | +44; +44 7700 900123; a format rule only | a local lead. The example is from the range the communications regulator sets aside for television and radio drama (07700 900000 to 900999). Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
 | Speech: model, thresholds | scribe_v2; 0.8, -0.36, 40 characters | engineering, on real clinic audio of this country |
 | Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
@@ -170,7 +170,7 @@ The shared English set has the words of these tools and the kit has their mechan
 
 ### Slots in every English-speaking country (52) — empty, switched off
 
-No national reference content is written by a machine, and no item of a published questionnaire is reproduced.
+No national reference content is written by a machine, and no item of a published questionnaire is reproduced. The sentences of a slot are written for documents and reviewers and are never shown on a screen; in every pack they stay in the set's base spelling (British), whatever the pack's own form.
 
 | Slot | Who would see it | What is missing | Waits on |
 |---|---|---|---|
@@ -543,4 +543,5 @@ How each step is done: `docs/COUNTRY-PACK-DB-ROLLOUT.md`, "Creating a new countr
 
 - 2026-10-09 (the coordinator, for the owner): spelling is converted when the pack loads; one English role-key set for the five countries; no assistant names; birth weight asked as free text; patient wording kept country-neutral.
 - 2026-10-09 (the coordinator, for the owner): unit and scale decisions accepted as stated — each **for a local clinical lead**: the KDIGO tools are switched on only where laboratories report mg/g; the ESI triage record only in the United States; the BI-RADS report outline only in the United States and Canada; weight-based dose arithmetic is a slot where weight is measured in pounds; the DAS28 C-reactive protein field is labelled mg/L; prostate-specific antigen is shown in µg/L where that is the unit in use.
+- 2026-10-09 (the coordinator, for the owner): an allied profession's instruction does not open with the senior-doctor line — its first sentence states the profession and that the colleague is not a doctor; the example phone number is from a range reserved for fiction where this job is certain of one, otherwise a shape that is no number; the sentences of the slots stay in British spelling in every pack (accepted).
 - Open, with who each waits on: `docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-EN-01.

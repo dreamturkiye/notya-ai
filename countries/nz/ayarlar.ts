@@ -81,8 +81,10 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     birimAdlari: { 'ng/mL': 'µg/L', 'ng/mL/yil': 'µg/L per year' },
   },
   acilis: {
-    // UNVERIFIED, AND NOT KNOWN TO BE A RESERVED RANGE: it may be somebody's number. To be replaced by a number the owner controls before any person sees the form.
-    telefonOrnegi: '+64 21 555 0123',
+    // THE EXAMPLE PHONE NUMBER — UNVERIFIED. A SHAPE, NOT A NUMBER: this job knows of no range New Zealand reserves for
+    // fiction with certainty, so the example shows the form of a mobile number with X in place of digits. It cannot be
+    // dialled and can be nobody's. A number from a reserved range, if a local source names one, may replace it.
+    telefonOrnegi: '+64 2X XXX XXXX',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '$% a month',
     // PRICES: EMPTY, SWITCHED OFF. WAITING ON KAAN. No amount exists for New Zealand; every plan shows "by quote".

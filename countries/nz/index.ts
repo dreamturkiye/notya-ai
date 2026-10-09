@@ -43,7 +43,7 @@ export const NZ_PAKETI: UlkePaketi = {
   // The default time zone of a new account. UNVERIFIED choice.
   saatDilimi: 'Pacific/Auckland',
   bicim: { yerel: 'en-NZ', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
-  telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 21 555 0123', cepGecerliMi: nzCepGecerliMi },
+  telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 2X XXX XXXX', cepGecerliMi: nzCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
   // below). `hane: 0` = no length is assumed. The label ("NHI number") is unverified wording (./ayarlar.ts).
   ulusalKimlik: { ad: 'NHI number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },

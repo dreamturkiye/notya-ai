@@ -53,6 +53,10 @@ export type EnPaketSinamasi = {
   birimler: { agirlik: 'kg' | 'lb'; boy: 'cm' | 'in'; sicaklik: 'C' | 'F' }
   /** The unit each laboratory value is reported in, as its record states it. */
   labBirimleri: Readonly<Record<string, string>>
+  /** The country's word for a senior doctor, as its record states it. */
+  kidemliHekim: string
+  /** The shape of the example phone number: a range the country reserves for fiction, or a shape that is no number at all. */
+  ornekTelefon: RegExp
 }
 
 const TURKIYE_OZBEKISTAN = /Türkiye|Turkey|Turkish|Uzbek|Tashkent|\bSGK\b|MEDULA|e-Nabız|\bKVKK\b|JSHSHIR|PINFL|[çğıöşüİĞŞÇÖÜʻўқғҳЎҚҒҲ]/
@@ -267,6 +271,20 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       const rolluler = EN_ROLLER.filter((r) => a.araclar.some((p) => p.anahtar !== 'takip-paneli' && p.roller?.includes(r)))
       assert.deepEqual([...(a.araclar.find((p) => p.anahtar === 'takip-paneli')?.roller ?? [])], rolluler)
     })
+    it('AN ALLIED PROFESSION IS NEVER ADDRESSED AS A SENIOR DOCTOR: its instruction opens with the profession and "not a doctor"', () => {
+      const muttefikler = arayuz.roller.filter((r) => r.taraf === 'klinik-muttefik')
+      assert.equal(muttefikler.length, 5)
+      for (const r of arayuz.roller) {
+        const talimat = klinik.notTalimati(bicim, r.anahtar) ?? ''
+        const ilkCumle = talimat.split('\n')[0]
+        if (r.taraf === 'klinik-muttefik') {
+          assert.ok(ilkCumle.startsWith(`Your colleague is a health professional and not a doctor: their profession is "${r.ad[bicim]}".`), `${r.anahtar}: ${ilkCumle}`)
+          assert.ok(!talimat.includes(s.kidemliHekim) && !/You are an experienced/.test(talimat), `${r.anahtar}: the senior-doctor line is in an allied profession's instruction`)
+          assert.match(talimat, /Make no medical diagnosis/, r.anahtar)
+        } else assert.ok(ilkCumle.startsWith(`You are an experienced ${s.kidemliHekim}.`), `${r.anahtar}: ${ilkCumle}`)
+      }
+      assert.ok((klinik.notTalimati(bicim, arayuz.notSablonlari.genelSablon) ?? '').startsWith(`You are an experienced ${s.kidemliHekim}.`))
+    })
     it('who wrote the tool texts: a machine; which clinician read them: nobody yet', () => {
       assert.deepEqual(a.inceleme, { makineYazimi: true, klinisyen: null })
     })
@@ -290,6 +308,12 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     it('the country\'s record under docs/ is what the pack says today (scripts/ulke-en-kayit.mts)', () => {
       const r = spawnSync('npx', ['--yes', 'tsx', 'scripts/ulke-en-kayit.mts', '--ulke', kod, '--denetle'], { encoding: 'utf8' })
       assert.equal(r.status, 0, r.stderr || r.stdout)
+    })
+    it('THE EXAMPLE PHONE NUMBER CANNOT BE A PERSON\'S: a number of a range reserved for fiction, or a shape that is no number', () => {
+      assert.match(paket.telefon.ornek, s.ornekTelefon)
+      assert.equal(arayuz.acilis!.icerik[bicim]!.sorov.form.telefonOrnek, paket.telefon.ornek, 'one example, on the landing page and in the application')
+      assert.match(s.ayarlarKaynagi, /EXAMPLE PHONE NUMBER[^\n]*UNVERIFIED/)
+      assert.doesNotMatch(s.ayarlarKaynagi, /may be somebody's number/)
     })
     it('the patient\'s page names an ambulance number only as the pack\'s setting, never in a sentence', () => {
       const sayfa = arayuz.portalMetinleri![bicim]!.sayfa

@@ -275,6 +275,15 @@ describe('English language set: roles, templates, instructions and the intake fo
         assert.deepEqual(bicimYazimSorunlari(metin.replace(/^- [a-z_]+ — /gm, '- ').replace(/"[a-z_]+": /g, ''), b), [], `${b} ${rol}`)
       }
       assert.match(t.notTalimati(b, 'physiotherapy') ?? '', /not a doctor[\s\S]*Make no medical diagnosis/)
+      // AN ALLIED PROFESSION is never addressed as a senior doctor: the first sentence states the profession and that
+      // the colleague is not a doctor; every doctor role opens with the senior-doctor line
+      for (const r of roller) {
+        const ilkCumle = (t.notTalimati(b, r.anahtar) ?? '').split('\n')[0]
+        if (r.taraf === 'klinik-muttefik') {
+          assert.ok(ilkCumle.startsWith(`Your colleague is a health professional and not a doctor: their profession is "${r.ad[b]}".`), `${b} ${r.anahtar}: ${ilkCumle}`)
+          assert.doesNotMatch(t.notTalimati(b, r.anahtar) ?? '', /You are an experienced|senior doctor/, `${b} ${r.anahtar}`)
+        } else assert.ok(ilkCumle.startsWith('You are an experienced senior doctor.'), `${b} ${r.anahtar}: ${ilkCumle}`)
+      }
       assert.doesNotMatch(t.notTalimati(b, 'cardiology') ?? '', /not a doctor/)
       for (const diger of EN_BICIMLER) if (diger !== b) { assert.equal(t.notTalimati(diger, 'general'), null); assert.equal(t.hastaOzetiTalimati(diger), null) }
       assert.equal(t.notTalimati(b, 'no-such-role'), null)

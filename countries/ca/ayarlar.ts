@@ -89,7 +89,9 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     birimAdlari: { 'ng/mL': 'µg/L', 'ng/mL/yil': 'µg/L per year' },
   },
   acilis: {
-    // A number from the range set aside for fiction (555-01xx): it reaches nobody. Format unverified.
+    // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction
+    // (555-0100 to 555-0199 in every area code): it is not issued to anybody. Not checked against the plan's current
+    // rules by anybody of the country.
     telefonOrnegi: '+1 613 555 0123',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '$% a month',

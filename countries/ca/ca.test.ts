@@ -29,6 +29,9 @@ ingilizcePaketSinamasi({
   kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
+  kidemliHekim: 'staff physician',
+  // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
+  ornekTelefon: /^\+1 \d{3} 555 01\d{2}$/,
 })
 
 describe('ca: what is Canada\'s', () => {
