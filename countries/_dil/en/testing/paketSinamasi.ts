@@ -6,7 +6,8 @@
  *
  *   1. SPELLING      every text the pack shows, and every instruction it gives the model, is written in the pack's
  *                    own form of English: no spelling of another form
- *   2. WALLS         nothing of another English-speaking country, of Türkiye or of Uzbekistan in any text
+ *   2. WALLS         nothing of another English-speaking country, of Türkiye or of Uzbekistan in any text — the
+ *                    sentences of the empty slots included (they are never shown, but they are part of the pack)
  *   3. NO CLAIMS     no compliance, approval, certification, endorsement or integration claim; no law or regulator
  *                    named; no testimonial; no price; no free trial; hidden from search; sign-up by invitation
  *   4. IDENTITY      the patient identifier is optional free text, never validated; nothing asks for a Social
@@ -116,6 +117,15 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     })
     it('nothing of Türkiye or of Uzbekistan is shown, and no letter of their alphabets', () => {
       assert.deepEqual(metinler.filter((x) => TURKIYE_OZBEKISTAN.test(x.metin)).map((x) => `${x.yer}: ${TURKIYE_OZBEKISTAN.exec(x.metin)?.[0]}`), [])
+    })
+    it('THE SLOTS TOO: never shown on a screen, but part of the pack — nothing of another country, no claim, no price, no identity number', () => {
+      // a slot's sentences are written for documents and reviewers and stay in the set's base spelling, so the
+      // spelling check does not read them; every other rule of the pack holds for them as for a screen
+      const yuvaMetinleri = a.yuvalar.flatMap((y) => [{ yer: `slot ${y.anahtar}: what is missing`, metin: y.eksik }, { yer: `slot ${y.anahtar}: who supplies it`, metin: y.kimden }])
+      assert.ok(yuvaMetinleri.length >= 2 * s.kapaliAraclar.length && yuvaMetinleri.length > 0)
+      for (const desen of [s.yabanci, TURKIYE_OZBEKISTAN, IDDIA, KIMLIK, PARA]) {
+        assert.deepEqual(yuvaMetinleri.filter((x) => desen.test(x.metin)).map((x) => `${x.yer}: ${desen.exec(x.metin)?.[0]}`), [])
+      }
     })
     it('the role keys are the shared English set, in its order', () => {
       assert.deepEqual([...(paket.uygulama!.roller ?? [])], [...EN_ROLLER])
