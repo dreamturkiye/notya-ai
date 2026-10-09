@@ -59,7 +59,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr)
     // the command says, as a step of its own, that the country needs a database of its own and which file makes it
     assert.match(r.stdout, /THE COUNTRY'S OWN DATABASE[\s\S]*the owner creates a new, EMPTY database[\s\S]*000_yeni_ulke_veritabani\.sql on it, once/)
-    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'uygulama/portalMetinleri.ts', 'uygulama/araclar.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
+    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'uygulama/portalMetinleri.ts', 'uygulama/araclar.ts', 'uygulama/klinikMetinleri.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
     // registration: the code list, the language, one branch per door, the side-by-side list
     assert.match(oku('lib/ulke/tipler.ts'), new RegExp(`export const ULKE_KODLARI = \\[[^\\]]*'${K}'\\] as const`))
     assert.match(oku('lib/ulke/tipler.ts'), /export type DilKodu = [^\n]*\| 'en'/)
@@ -90,7 +90,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.match(oku(`countries/${K}/uygulama/portalMetinleri.ts`), /^    \/\/ saatDilimi: '…',   ← REQUIRED if the country has more than one time zone/m)
     const yeniIndex = oku(`countries/${K}/index.ts`)
     assert.match(yeniIndex, /^\s+hastaPortali: true,$/m)
-    assert.match(yeniIndex, /'\/calendar', '\/portal', '\/tools'\]/)
+    assert.match(yeniIndex, /'\/calendar', '\/portal', '\/tools', '\/clinic', '\/desk'\]/)
     // NOTYA-ULKE-ARACLAR-01: the tools area is part of what a new country is given — its own words (every group), the
     // patient page's tile as the one base tool, and NO other tool: which of the kit's tools a country has, and for
     // which roles, is decided there with a clinician. No tool text of any country is copied.
@@ -111,6 +111,36 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.match(oku(`countries/${K}/klinik/index.ts`), new RegExp(`hastaOzetiTalimati: ${K}HastaOzetiTalimati,\\n\\s+hastaOzetiGirdisi: ${K}HastaOzetiGirdisi,`))
     assert.match(oku(`countries/${K}/klinik/talimatlar.ts`), /ozet: eksik\('instructions: the full instruction to the model for a short plain-language summary of an APPROVED note/)
     for (const yol of ['giris.pinYanlis', 'sayfa.acil', 'sayfa.acilNumara (keep the placeholders %)', 'sayfa.istekKabul', 'erisim.olay.geriAlma', 'ozet.paylas', 'istek.sec']) assert.ok(eksikler.some((e) => e.dosya.endsWith('uygulama/portalMetinleri.ts') && e.ipucu.includes(`patient portal: ${yol}`)), `portal key ${yol} is missing from the new pack`)
+  })
+
+  it('NOTYA-ULKE-KLINIK-01: a new country is given clinic accounts — the catalogue (every group), the two screens, and settings that start on the narrow side', async () => {
+    const yeniIndex = oku(`countries/${K}/index.ts`)
+    assert.match(yeniIndex, /^\s+klinikHesaplari: true,$/m)
+    const klinikSekli = (JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as { klinik: Record<string, unknown> }).klinik
+    assert.deepEqual(Object.keys(klinikSekli).sort(), ['davet', 'giris', 'kabuk', 'kayit', 'klinik', 'konum', 'onBuro', 'paylasilan', 'takvim', 'yetki', 'yetkiAciklama', 'yetkiTuru'])
+    const yeniKlinik = oku(`countries/${K}/uygulama/klinikMetinleri.ts`)
+    for (const grup of Object.keys(klinikSekli)) assert.match(yeniKlinik, new RegExp(`^  ${grup}: `, 'm'))
+    assert.match(yeniKlinik, new RegExp(`^const EN: KlinikMetni = \\{$`, 'm'))
+    assert.match(oku(`countries/${K}/arayuz.ts`), new RegExp(`^  klinikMetinleri: ${B}_KLINIK_METINLERI,$`, 'm'))
+    // THE SETTINGS. Decided by the country: which permissions exist, which allied roles may read a share, the two
+    // periods, who read the answers. WRITTEN by the scaffold, on the narrow side, and not open to "to be decided":
+    // a clinic's owner may not enter a permission for a doctor, and record retention is a slot that stays empty.
+    const ayarlar = /\n    klinikHesaplari: \{\n([\s\S]*?)\n    \},\n/.exec(yeniIndex)?.[1] ?? ''
+    for (const k of ['yetkiTurleri', 'paylasimRolleri', 'davetGecerlilikGun', 'vekaletAzamiGun', 'inceleme']) assert.match(ayarlar, new RegExp(`^      ${k}: eksikAyar\\('clinic accounts: `, 'm'), `${k} must be left for the country to decide`)
+    assert.match(ayarlar, /^      sahipHekimAdinaVerebilir: false,$/m)
+    assert.match(ayarlar, /^      kayitSaklama: null,$/m)
+    assert.doesNotMatch(ayarlar.replace(/^\s*\/\/.*$/gm, '').replace(/eksikAyar\('(?:[^'\\]|\\.)*'\)/g, ''), /\d/, 'the scaffold decides no number for a country')
+    // the hint for the permissions says, where the country decides, that the portal permission shows the link and PIN
+    assert.match(ayarlar, /'on-buro-portal\\' \(front desk: hand a patient the link and PIN of their page — that person sees both\)/)
+    // every key of the catalogue is an item to supply, and the sentences that carry a value say which placeholders
+    const { eksikleriBul } = await import(pathToFileURL(join(KOK, 'scripts/ulke-paket-denetimi.mjs')).href) as { eksikleriBul: (kod: string, kok: string) => { dosya: string; satir: number; tur: string; ipucu: string }[] }
+    const eksikler = eksikleriBul(K, gecici)
+    const klinikte = eksikler.filter((e) => e.dosya.endsWith('uygulama/klinikMetinleri.ts'))
+    const say = (x: unknown): number => (typeof x === 'string' ? 1 : x && typeof x === 'object' ? Object.values(x).reduce((n: number, y) => n + say(y), 0) : 0)
+    assert.equal(klinikte.length, say(klinikSekli))
+    assert.ok(klinikte.every((e) => e.tur === 'text'))
+    for (const yol of ['yetkiAciklama.on-buro-portal', 'konum.on-buro', 'kayit.olay.geri-alindi (keep the placeholders %1 %2)', 'klinik.konumAciklama', 'onBuro.pin', 'paylasilan.saltOkunur']) assert.ok(klinikte.some((e) => e.ipucu.includes(`clinic accounts: ${yol}`)), `clinic key ${yol} is missing from the new pack`)
+    assert.equal(eksikler.filter((e) => e.dosya.endsWith(`countries/${K}/index.ts`) && e.ipucu.startsWith('clinic accounts: ')).length, 5)
   })
 
   it('the new country starts closed: invitation only, hidden from search, and with the scan in its own build file', () => {

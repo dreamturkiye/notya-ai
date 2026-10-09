@@ -30,6 +30,7 @@ export const ISTEGE_BAGLI: Record<string, Record<string, string>> = {
   },
   form: {},
   araclar: {},
+  klinik: {},
   acilis: {},
 }
 const SABIT_ANAHTARLAR = new Set(['id', 'rol'])
@@ -55,7 +56,7 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
 
 /** The shape this pack's content has. Optional keys the pack does not use are added from ISTEGE_BAGLI, so the file never depends on which pack wrote it. */
 export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string, unknown> {
-  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area and a landing page; the shape is read from a pack that brings all five`)
+  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar || !a.klinikMetinleri) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area, clinic accounts and a landing page; the shape is read from a pack that brings all six`)
   const d = p.varsayilanDil
   const ekle = (agac: Record<string, unknown>, bolum: string) => {
     for (const [yol, kosul] of Object.entries(ISTEGE_BAGLI[bolum])) {
@@ -77,6 +78,9 @@ export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string,
     // The tools area's OWN words (grid, a tool's screen, keeping a result, the follow-up list). The tools themselves are not
     // part of the shape: which of the kit's tools a country switches on, and for which roles, is that country's decision.
     araclar: sirala(ekle(sekilCikar(a.araclar.metinler[d], 'araclar') as Record<string, unknown>, 'araclar')),
+    // Clinic accounts: the clinic's screen, permissions, the access record, the front desk. Which permissions a country
+    // has, and for whom, is not part of the shape: it is that country's settings, read by a lawyer.
+    klinik: sirala(ekle(sekilCikar(a.klinikMetinleri[d], 'klinik') as Record<string, unknown>, 'klinik')),
     acilis: sirala(sekilCikar(a.acilis.icerik[d], 'acilis', a.acilis.capalar)),
   }
 }
