@@ -13,6 +13,7 @@
 import type { DilKodu } from '../tipler'
 import type { UlkeAcilisi } from './acilisTipleri'
 import type { FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { UlkeAraclari } from '../araclar/tipler'
 
 /** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
 export type NotBolumu = 's' | 'o' | 'a' | 'p'
@@ -81,6 +82,12 @@ export type UlkeArayuzu = {
   portalMetinleri?: Readonly<Partial<Record<DilKodu, PortalMetni>>>
   /** The intake form's catalogue (the screens' own words, not the questions), once per language form. Required where the feature `hastaFormu` is on. */
   formMetinleri?: Readonly<Partial<Record<DilKodu, FormMetni>>>
+  /**
+   * NOTYA-ULKE-ARACLAR-01 — the tools area: its own words per language form, the tools that are switched on with the
+   * roles that see each and every word of their screens, unit names, and the slots of what is still missing.
+   * Required where the feature `araclar` is on.
+   */
+  araclar?: UlkeAraclari
   /** The roles of `uygulama.roller`, each with its kind and its name in every form, in the order they are offered. */
   roller: readonly RolTanimi[]
   /** The assistant of a role in a form, or null where the role has none: the screens then show the neutral line. */

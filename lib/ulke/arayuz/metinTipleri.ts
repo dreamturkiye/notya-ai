@@ -579,3 +579,58 @@ export type FormMetni = {
   /** Key: a unit code of the pack's `uygulama.birimler`. */
   readonly birim: Readonly<Record<string, string>>
 }
+
+/**
+ * NOTYA-ULKE-ARACLAR-01 — THE TOOLS AREA's own words (feature `araclar`): the grid, the search, and what every tool
+ * screen shares. The words of each TOOL (its title, its fields, its bands) are not here: they sit with the tool in
+ * the pack's list (lib/ulke/araclar/tipler.ts → AracMetni), in every form at once.
+ */
+export type AraclarMetni = {
+  readonly kabuk: {
+    /** The link in the application's navigation. */
+    readonly araclar: string
+  }
+  readonly izgara: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly ara: string
+    readonly araOrnek: string
+    /** Heading of the tools every role has. */
+    readonly temel: string
+    /** Heading of the tools of the account's own role. % the role's name */
+    readonly rol: string
+    /** No tool is switched on for this account. */
+    readonly bos: string
+    readonly sonucYok: string
+    /** On the home screen: the link that opens the tools. */
+    readonly ac: string
+  }
+  readonly arac: {
+    /** Back to the grid. */
+    readonly geri: string
+    readonly girdiler: string
+    readonly sonuc: string
+    /** Shown instead of a result while something required is missing or out of range. */
+    readonly eksik: string
+    /** The label of an item of a published questionnaire the pack does not word. % the item's number */
+    readonly madde: string
+    /** Under a number field. %1 the smallest, %2 the largest value it accepts */
+    readonly aralik: string
+    /** "n of m" for a count. %1 the count, %2 the maximum */
+    readonly oran: string
+    readonly kopyala: string
+    readonly kopyalandi: string
+    readonly kopyalanamadi: string
+    readonly temizle: string
+    /** % the published source of the arithmetic */
+    readonly kaynak: string
+    /** Nothing is stored: what is entered here is gone when the page is left. */
+    readonly saklanmaz: string
+    /** The address names a tool this account does not have. */
+    readonly yok: string
+  }
+  /** The patient portal's tile: how access is given, said in one or two sentences above the patient search. */
+  readonly portal: {
+    readonly nasil: string
+  }
+}

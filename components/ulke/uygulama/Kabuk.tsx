@@ -17,9 +17,9 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
-import { ulkePaketi } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 /**
@@ -127,7 +127,7 @@ const DEGISKENLER = {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'ayarlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'ayarlar'
 
 export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
   dil: DilKodu
@@ -155,6 +155,8 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
               {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
               {HAZIR.takvim ? baglanti('takvim', YOL.takvim, randevuMetni(dil).kabuk.takvim) : null}
               {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
+              {/* NOTYA-ULKE-ARACLAR-01: the tools area, where the country has it. Its name is in the tools catalogue, in the same form. */}
+              {ozellikAcik('araclar') ? baglanti('araclar', YOL.araclar, araclarMetni(dil).kabuk.araclar) : null}
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>
           )}

@@ -19,6 +19,12 @@
  *   D5  Core code does not read NOTYA_COUNTRY or compare aktifUlke() with a country code itself — it asks the pack
  *       (ozellikAcik, ulkePaketi). Allowed readers: countries/active/, next.config.mjs, scripts/, tests.
  *   D6  Every country folder has the same parts: index.ts, derleme.mjs, sizintiTerimleri.ts.
+ *   D7  NOTYA-ULKE-ARACLAR-01 — a tool bound to one country's state or payer system (countries/yasak-araclar.json,
+ *       by key, per owning country) exists in no other country's build: its key is named by no file of the country
+ *       kit (lib/ulke/, components/ulke/, any *.ulke.* route) and by no other country's pack, and no route folder
+ *       under app/tools/ carries it. And the kit never imports the pre-split application's tool code
+ *       (app/doktor-tools, app/klinik-tools, specialties/, lib/doktor/doktorAraclari, lib/klinik/klinikAraclari):
+ *       what the two share is arithmetic, proven equal by test, never a module that carries one country's text.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -89,10 +95,40 @@ export function duvarlariDenetle() {
     }
   }
 
+  // D7: the keys that belong to one country only, per owning country.
+  const yasakDosyasi = join(KOK, ULKELER_DIZINI, 'yasak-araclar.json')
+  const yasak = existsSync(yasakDosyasi) ? JSON.parse(readFileSync(yasakDosyasi, 'utf8')) : {}
+  const yasakAnahtarlar = Object.entries(yasak).filter(([kod, liste]) => /^[a-z]{2}$/.test(kod) && Array.isArray(liste)).map(([kod, liste]) => ({ kod, anahtarlar: liste.map(String) }))
+  const aracRotalari = join(KOK, 'app', 'tools')
+  if (existsSync(aracRotalari)) for (const ad of readdirSync(aracRotalari)) for (const y of yasakAnahtarlar) if (y.anahtarlar.includes(ad)) ekle('D7', `app/tools/${ad}/`, `a route named after "${ad}", a tool of "${y.kod}" only`)
+  const kitDosyasiMi = (g) => !testMi(g) && !g.startsWith('lib/ulke/testing/') && (g.startsWith('lib/ulke/') || g.startsWith('components/ulke/') || /\.ulke\.(ts|tsx)$/.test(g))
+  const ONCEKI_ARAC_KODU = /^(app\/doktor-tools|app\/klinik-tools|specialties|lib\/doktor\/doktorAraclari|lib\/klinik\/klinikAraclari)(\/|$|\.)/
+
   for (const dosya of dosyalar(KOK)) {
     const g = goreli(dosya)
     const ham = readFileSync(dosya, 'utf8')
     const kaynak = yorumsuz(ham)
+    {
+      // D7 — the kit and every pack but the owner's never name such a key; the kit never imports the other application's tool code.
+      const paketi = g.startsWith(`${ULKELER_DIZINI}/`) && ulkeler.includes(g.split('/')[1]) && !testMi(g) ? g.split('/')[1] : null
+      const kit = kitDosyasiMi(g)
+      if (kit || paketi) {
+        for (const y of yasakAnahtarlar) {
+          if (paketi === y.kod) continue
+          for (const k of y.anahtarlar) if (new RegExp(`['"\`/=]${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"\`/?&#]`).test(kaynak)) ekle('D7', g, `names "${k}", a tool of "${y.kod}" only: it does not exist in another country's build`)
+        }
+      }
+      if (kit || (paketi && !yasakAnahtarlar.some((y) => y.kod === paketi))) {
+        for (const desen of IMPORT_DESENLERI) {
+          desen.lastIndex = 0
+          let m
+          while ((m = desen.exec(kaynak))) {
+            const h = hedef(dosya, m[2])
+            if (h && !m[1] && ONCEKI_ARAC_KODU.test(h)) ekle('D7', g, `imports ${h} — the country kit does not load the pre-split application's tool code (${m[2]})`)
+          }
+        }
+      }
+    }
     const icinde = g.startsWith(`${ULKELER_DIZINI}/`) ? g.split('/')[1] : null // 'active' | 'tumu.ts' | '<kod>'
     const paketIcinde = icinde && ulkeler.includes(icinde) ? icinde : null
     const giristeMi = icinde === GIRIS

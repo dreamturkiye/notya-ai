@@ -1,0 +1,21 @@
+{
+  "aciklama": "Tools bound to ONE country's state or payer system, by the key (last route segment) they have in that country. They never exist in another country's build: not as a tool of the country kit (lib/ulke/araclar/), not in another pack, not as a route. Enforced by scripts/ulke-duvarlari.mjs, rule D7, before every country build. Source of the list: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md, verdict Remove.",
+  "tr": [
+    "sgk-medula",
+    "enabiz",
+    "dahiliye-sgk",
+    "goz-sut-vegf",
+    "goz-sgk-rapor",
+    "goz-gil-kod",
+    "derm-biyolojik-sut",
+    "psik-sgk",
+    "kbb-sgk",
+    "kardio-sgk",
+    "gogus-sgk",
+    "nef-sgk",
+    "onko-sut",
+    "roma-biyolojik-sut",
+    "bekleyen-konsultasyonlar",
+    "kayit-kvkk"
+  ]
+}

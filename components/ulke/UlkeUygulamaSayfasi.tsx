@@ -16,7 +16,7 @@ import type { UygulamaEkrani } from '@/lib/ulke/tipler'
 export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
   // A screen exists where the feature is on, the pack brings content for the shared screens, and the pack lists the
   // screen's route. Anything else is "not found": there is no default screen and no other country's.
-  const var_ = ozellikAcik('cekirdekMuayene') && AKTIF_ARAYUZ !== null && rotaAcikMi(ulkePaketi().rotalar, UYGULAMA_EKRANLARI[ekran]) && (ekran !== 'takvim' || ozellikAcik('randevu'))
+  const var_ = ozellikAcik('cekirdekMuayene') && AKTIF_ARAYUZ !== null && rotaAcikMi(ulkePaketi().rotalar, UYGULAMA_EKRANLARI[ekran]) && (ekran !== 'takvim' || ozellikAcik('randevu')) && (ekran !== 'araclar' || ozellikAcik('araclar'))
   const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
   return <Ekran />

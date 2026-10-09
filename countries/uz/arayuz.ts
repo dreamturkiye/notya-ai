@@ -9,6 +9,7 @@
  *   assistant names (owner's list)    ./klinik/asistanAdlari.ts, titles in ./klinik/asistanUnvanlari.ts, the forms a screen
  *                                     shows in ./klinik/asistanKimligi.ts
  *   note templates                    ./klinik/notSablonlari.ts
+ *   tools: which, for whom, in which words  ./uygulama/araclar/ (the tools themselves are the kit's: lib/ulke/araclar/)
  *   landing page copy, three forms    ./acilis/icerik.ts; what its plans cost: ./acilis/fiyatlar.ts
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
@@ -20,6 +21,7 @@ import { UZ_UYGULAMA_METINLERI } from './uygulama/metinler'
 import { UZ_RANDEVU_METINLERI } from './uygulama/randevuMetinleri'
 import { UZ_PORTAL_METINLERI } from './uygulama/portalMetinleri'
 import { UZ_FORM_METINLERI } from './uygulama/formMetinleri'
+import { UZ_ARACLAR } from './uygulama/araclar'
 
 export const UZ_ARAYUZ: UlkeArayuzu = {
   marka: 'Notya',
@@ -27,6 +29,7 @@ export const UZ_ARAYUZ: UlkeArayuzu = {
   randevuMetinleri: UZ_RANDEVU_METINLERI,
   portalMetinleri: UZ_PORTAL_METINLERI,
   formMetinleri: UZ_FORM_METINLERI,
+  araclar: UZ_ARACLAR,
   roller: UZ_ROL_TANIMLARI,
   asistan: uzAsistanKimligi,
   notSablonlari: UZ_NOT_SABLONLARI,
