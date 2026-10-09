@@ -3408,7 +3408,7 @@ Decision by Kaan, 2026-10-09 02:26: "We had issues with common databases before.
 - 01e — The scaffold and the how-to must state "create the country's own database" as a step. **DONE 2026-10-09** (NOTYA-ULKE-PORTAL-01), not merged: the how-to's step 5, the checklist's new section M (six gates, so a country's record now has 119), and the scaffold prints the step and writes it into the record.
 
 ## 2026-10-09 - NOTYA-ULKE-PORTAL-01: one-file database baseline, patient portal in the country kit
-Source: Kaan's decisions of 2026-10-09 (one database per country; the Uzbek database created and migrated the same day; the United States, the United Kingdom, Canada, Australia and New Zealand next, from the same kit), and his standing rule that the Turkish site must not be touched or changed under any circumstance (beta doctors onboarding). Branch `feat/ulke-portal`, stacked on `feat/uz-fiyat-unvan` (PR #572), never `main`.
+Source: Kaan's decisions of 2026-10-09 (one database per country; the Uzbek database created and migrated the same day; the United States, the United Kingdom, Canada, Australia and New Zealand next, from the same kit), and his standing rule that the Turkish site must not be touched or changed under any circumstance (beta doctors onboarding). Branch `feat/ulke-portal`, **PR #573**, base `feat/uz-fiyat-unvan` (PR #572), never `main`. Open, unmerged: merging is Kaan's word.
 
 **Not shipped.** Unmerged; nothing deployed; **nothing applied to any remote database** (the scripts ran only on a throwaway PostgreSQL inside the build machine); no Vercel or Supabase setting changed. No Turkish screen or content file was edited.
 

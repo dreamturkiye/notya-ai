@@ -20,7 +20,7 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 
 ## The patient portal (2026-10-09, NOTYA-ULKE-PORTAL-01)
 
-**Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database holds migrations 129 to 135; **the portal needs 136 and 137** (below) before a build that has it is used. Branch `feat/ulke-portal`, unmerged.
+**Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database holds migrations 129 to 135; **the portal needs 136 and 137** (below) before a build that has it is used. Branch `feat/ulke-portal`, PR #573 (base `feat/uz-fiyat-unvan`, PR #572), unmerged.
 
 **What it is.** A patient gets a page of their own, with no account. The doctor gives them a link and a PIN; the patient opens the link on their phone, types the PIN, and sees their name, their doctor, their coming appointments, and what the doctor chose to share. They can ask for an appointment. Nothing is sent to anybody by the application: the doctor hands the link and the PIN over personally.
 
