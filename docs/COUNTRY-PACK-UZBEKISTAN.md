@@ -458,7 +458,7 @@ Order for the first real run: an empty scratch Supabase project, all migrations 
 
 ## Prices and assistant titles (2026-10-09, NOTYA-UZ-FIYAT-UNVAN-01)
 
-Kaan, 2026-10-09 01:43, three instructions: "On the landing page convert the turkish prices to Uzbek prices in turn. Use todays exchnage prices."; "Use the common name." (for the physiotherapist's title); "If prof. is used then follow the same turkish naming convention." Branch `feat/uz-fiyat-unvan`, stacked on `feat/ulke-sablon` (PR #571); pull request base `feat/ulke-sablon`, never `main`. **Unmerged. Nothing deployed. No migration written or applied. No Turkish screen or content file was edited.** The page stays hidden from search engines and sign-up stays by invitation code.
+Kaan, 2026-10-09 01:43, three instructions: "On the landing page convert the turkish prices to Uzbek prices in turn. Use todays exchnage prices."; "Use the common name." (for the physiotherapist's title); "If prof. is used then follow the same turkish naming convention." Branch `feat/uz-fiyat-unvan`, stacked on `feat/ulke-sablon` (PR #571); pull request #572, base `feat/ulke-sablon`, never `main`. **Unmerged. Nothing deployed. No migration written or applied. No Turkish screen or content file was edited.** The page stays hidden from search engines and sign-up stays by invitation code.
 
 ### Prices on the landing page
 
@@ -529,16 +529,16 @@ Three examples, before and after:
 
 | Check | Result | Against |
 |---|---|---|
-| Country suite (`npm run test:ulke`) | pass (counts in the pull request) | stand-in database, auth, storage, speech and model providers inside the test process |
+| Country suite (`npm run test:ulke`) | pass: 681 of 681, and 22 of 22 for each of `tr` and `uz` | stand-in database, auth, storage, speech and model providers inside the test process |
 | Prices: every shown amount equals the Turkish page's price × the recorded rate, rounded as recorded; written by the pack's number rules; no lira sign, "TL" or lira amount on the page, in the price section of both groups, in the copy or in the price list | pass | the Turkish landing content read as text; the rendered page in three forms |
 | The 40 names: titles role by role against the two Turkish lists; full and short form in three forms; the owner's names unchanged | pass | the Turkish lists read as text |
 | Leak test extended to the price lines, the price list, the titles and all 40 names with their titles, in all three forms | pass | the leak harness and Türkiye's term list |
 | Type check, wall check | clean | the repository |
 | Uzbek production build (`NOTYA_COUNTRY=uz npm run build:ulke`) | passes; the build holds the Uzbek pack and no other | this machine |
-| Turkish tool-list test (`lib/doktor/doktorAraclariUlke.test.ts`) | pass | the repository |
-| Browser walk-through (`scripts/ulke-yuruyus/yuruyus.mjs`) | pass (count in the pull request) | the Uzbek production build, a headless browser, stand-in Supabase, stand-in providers |
+| Turkish tool-list test (`lib/doktor/doktorAraclariUlke.test.ts`) | pass, 47 of 47 | the repository |
+| Browser walk-through (`scripts/ulke-yuruyus/yuruyus.mjs`), 353 checks: as before, and now the price section (three prices, the clinic plans a tap away, the buttons, no lira, no trial) and the named assistant on the landing page and in the application | passes | the Uzbek production build, a headless browser, stand-in Supabase, stand-in providers |
 
-The full Turkish suite was not re-run. **No file the Turkish build executes was edited.**
+The full Turkish suite was not re-run. **No file the Turkish build executes was edited.** New screenshots in `docs/uz-landing/`: `landing-pricing-desktop-{uz,ru}.png` (section 10, doctor plans), `landing-pricing-clinic-desktop-{uz,ru}.png` (clinic plans), `landing-hero-desktop-{uz,ru}.png` (the first screen); the full-page ones were retaken. None is longer than 8 000 pixels on any side.
 
 ### Files added or changed
 
