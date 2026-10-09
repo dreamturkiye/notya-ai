@@ -32,7 +32,10 @@ import { fileURLToPath } from 'node:url'
 
 const argv = process.argv.slice(2)
 const KOK = resolve(argv.includes('--kok') ? argv[argv.indexOf('--kok') + 1] : join(dirname(fileURLToPath(import.meta.url)), '..'))
-const ATLA = new Set(['node_modules', '.next', '.git', 'public', 'backups', 'docs', '.vercel', 'canvases'])
+// `.claude` holds an agent's own files and, under `.claude/worktrees/`, OTHER WORKING COPIES of this repository (other
+// branches, checked out by other jobs). The walls judge this repository's own files, not another working copy's:
+// each of those is judged where it is the repository root.
+const ATLA = new Set(['node_modules', '.next', '.git', 'public', 'backups', 'docs', '.vercel', 'canvases', '.claude'])
 const UZANTI = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
 const ULKELER_DIZINI = 'countries'
 const GIRIS = 'active'
