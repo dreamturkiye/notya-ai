@@ -37,6 +37,7 @@ import { ISTEK_API, IstekCevabiGorunumu, Istekler, IstekYokGorunumu, type IstekC
 import { portalMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import type { BekleyenIstek } from '@/lib/ulke/portal/tipler'
+import { HastaFormuKarti } from './HastaFormuKarti'
 
 export { bitisSaati, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
 
@@ -399,13 +400,15 @@ export function durumEylemleri(x: Pick<RandevuKaydi, 'durum' | 'seansId'>): Rand
   return []
 }
 
-export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setTasi, hata, bildirim, bekliyor, durumDegistir, tasiGonder, kopyala }: {
+export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setTasi, hata, bildirim, bekliyor, durumDegistir, tasiGonder, kopyala, form }: {
   m: UygulamaMetni; r: RandevuMetni; randevu: RandevuKaydi
   /** The account: its two forms and its name, for the reminder text. */
   hekim: { dil: DilKodu; notDili: DilKodu; ad: string }
   sureler: readonly number[]; tasi: Pick<RandevuFormu, 'gun' | 'saat' | 'sureDk'>; setTasi: (y: Partial<RandevuFormu>) => void
   hata: DetayHatasi; bildirim: DetayBildirimi; bekliyor: boolean
   durumDegistir: (d: RandevuDurumu) => void; tasiGonder: (yineDe: boolean) => void; kopyala: (metin: string) => void
+  /** NOTYA-ULKE-INTAKE-01: the intake form's card for this appointment's patient, where the country has the form. */
+  form?: React.ReactNode
 }) {
   const x = randevu
   const tasinabilir = x.durum === 'planlandi' || x.durum === 'geldi'
@@ -454,6 +457,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
           <p className="uza-ipucu">{r.hatirlatma.izoh}</p>
         </section>
       ) : null}
+      {form ?? null}
       {tasinabilir ? (
         <section className="uza-kart" data-alan="tasi">
           <h2 className="uza-h2">{r.randevu.tasi}</h2>
@@ -519,6 +523,8 @@ function RandevuDetay({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string }
       durumDegistir={(d) => { void degistir({ durum: d }, 'durum') }}
       tasiGonder={(yineDe) => { void degistir({ gun: tasi.gun, saat: tasi.saat, sureDk: tasi.sureDk, ...(yineDe ? { yineDe: true } : {}) }, 'tasi') }}
       kopyala={(metin) => { void panoyaKopyala(metin).then((tamam) => setBildirim(tamam ? 'kopyalandi' : 'kopyalanamadi')) }}
+      // The form is asked for an appointment that is still to come; afterwards the patient's file has it.
+      form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') && (randevu.durum === 'planlandi' || randevu.durum === 'geldi') ? <HastaFormuKarti u={u} hastaId={randevu.hastaId} randevuId={randevu.id} /> : null}
     />
   )
 }

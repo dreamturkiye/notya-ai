@@ -26,7 +26,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { gunAdi, marka, portalMetni, randevuMetni, uygulamaDili, type PortalMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
+import { formMetni, gunAdi, marka, portalMetni, randevuMetni, uygulamaDili, type PortalMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
 import { saatGoster, tarihDeseni } from '@/lib/ulke/arayuz/bicim'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { ANAHTAR_BICIMI, ISTEK_GUN_AZAMI, ISTEK_NEDEN_AZAMI, PIN_HANE, PORTAL_API, PORTAL_BAGLANTI_BASLIGI, PORTAL_ISTEK_BASLIGI, pinBicimiGecerli } from '@/lib/ulke/portal/sabitler'
@@ -35,6 +35,7 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { gunYazDesenle, haftaGunu } from '@/lib/ulke/uygulama/zaman'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { PortalFormKarti, PortalFormu, type PortalIstegi } from './HastaFormu'
 
 const DEGISKENLER = {
   '--uza-krem': R.cream, '--uza-kagit': R.paper, '--uza-murekkep': R.ink, '--uza-soluk': R.muted, '--uza-cam': R.pine,
@@ -119,8 +120,10 @@ export type IstekFormu = { gunler: string[]; neden: string }
 export type IstekHatasi = 'gun' | 'cok' | 'gonderilemedi' | 'baglanti' | null
 
 /** The patient's own page. `r` = the appointment catalogue in the same form, or null where the country has no appointments. */
-export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis }: {
+export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis, formKarti }: {
   p: PortalMetni; r: RandevuMetni | null; icerik: PortalIcerigi
+  /** NOTYA-ULKE-INTAKE-01: the card of the intake form, where one is waiting or was sent. Drawn first: it is the thing to do. */
+  formKarti?: ReactNode
   /** The pack's ambulance number, or null where the pack states none: then no number is shown, and no sentence that would need one. */
   acilNumara: string | null
   form: IstekFormu; setForm: (y: IstekFormu) => void; istekGonder: (e: FormEvent) => void; istekBekliyor: boolean; istekHatasi: IstekHatasi
@@ -144,6 +147,8 @@ export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, i
         </dl>
         <p className="uza-ipucu">{s.yalniz}</p>
       </section>
+
+      {formKarti ?? null}
 
       {i.randevular && r ? (
         <section className="uza-kart" data-alan="portal-randevular">
@@ -243,18 +248,20 @@ export default function PortalSayfasi() {
   const [form, setForm] = useState<IstekFormu>({ gunler: [], neden: '' })
   const [istekBekliyor, setIstekBekliyor] = useState(false)
   const [istekHatasi, setIstekHatasi] = useState<IstekHatasi>(null)
+  /** NOTYA-ULKE-INTAKE-01: true = the intake form is open instead of the page. */
+  const [formAcik, setFormAcik] = useState(false)
   const token = useRef('')
   const ozet = useRef('')
 
   /** One request to the portal's own routes: same origin, the cookie, the link's mark; a change also carries the portal's header. */
-  const iste = useCallback(async (yol: string, govde?: unknown): Promise<{ status: number; j: Record<string, any> }> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const iste = useCallback<PortalIstegi>(async (yol, govde, yontem) => {
     const r = await fetch(ulkeYolu(`${PORTAL_API}${yol}`), {
-      method: govde === undefined ? 'GET' : 'POST',
+      method: yontem ?? (govde === undefined ? 'GET' : 'POST'),
       headers: { [PORTAL_BAGLANTI_BASLIGI]: ozet.current, ...(govde === undefined ? {} : { 'Content-Type': 'application/json', [PORTAL_ISTEK_BASLIGI]: '1' }) },
       body: govde === undefined ? undefined : JSON.stringify(govde),
       credentials: 'same-origin', cache: 'no-store', referrerPolicy: 'no-referrer',
     })
-    return { status: r.status, j: (await r.json().catch(() => ({}))) as Record<string, unknown> }
+    return { status: r.status, j: (await r.json().catch(() => ({}))) as Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
   }, [])
 
   /** Asks for the page. 200 = signed in; 401 = the PIN form; anything else = said as it is. */
@@ -266,7 +273,7 @@ export default function PortalSayfasi() {
         setIcerik(yeni); setDil(uygulamaDili(yeni.dil)); setAsama('sayfa'); setOturumBitti(false)
         return
       }
-      setIcerik(null)
+      setIcerik(null); setFormAcik(false)
       if (r.status === 401) { setOturumBitti(bittiMi); setAsama('pin') } else setAsama('gecersiz')
     } catch { setIcerik(null); setAsama('pin'); setHata({ kod: 'BAGLANTI' }) }
   }, [iste])
@@ -292,7 +299,7 @@ export default function PortalSayfasi() {
   useEffect(() => {
     if (asama !== 'sayfa' || !icerik) return
     const kalan = new Date(icerik.bitis).getTime() - Date.now()
-    const z = window.setTimeout(() => { setIcerik(null); setPin(''); setOturumBitti(true); setAsama('pin') }, Math.max(0, Math.min(kalan, 2_000_000_000)))
+    const z = window.setTimeout(() => { setIcerik(null); setFormAcik(false); setPin(''); setOturumBitti(true); setAsama('pin') }, Math.max(0, Math.min(kalan, 2_000_000_000)))
     return () => window.clearTimeout(z)
   }, [asama, icerik])
 
@@ -331,14 +338,17 @@ export default function PortalSayfasi() {
 
   async function cikis() {
     try { await iste('/cikis', {}) } catch { /* the page is put away all the same */ }
-    setIcerik(null); setPin(''); setHata(null); setOturumBitti(false); setAsama('pin')
+    setIcerik(null); setFormAcik(false); setPin(''); setHata(null); setOturumBitti(false); setAsama('pin')
   }
 
   const p = portalMetni(dil)
   return (
     <PortalCercevesi dil={dil}>
-      {asama === 'sayfa' && icerik ? (
-        <PortalSayfaGorunumu p={p} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()} form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
+      {asama === 'sayfa' && icerik && formAcik ? (
+        // The form instead of the page: on a phone there is room for one of them. Closing it reads the page again.
+        <PortalFormu dil={dil} iste={iste} kapat={() => { setFormAcik(false); void yukle(true) }} oturumBitti={() => { void yukle(true) }} />
+      ) : asama === 'sayfa' && icerik ? (
+        <PortalSayfaGorunumu p={p} formKarti={icerik.form ? <PortalFormKarti f={formMetni(dil)} ozet={icerik.form} ac={() => setFormAcik(true)} /> : null} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()} form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
       ) : asama === 'pin' ? (
         <PortalGirisGorunumu p={p} pin={pin} setPin={(y) => { setPin(y); setHata(null) }} gonder={giris} bekliyor={bekliyor} hata={hata} oturumBitti={oturumBitti} />
       ) : (

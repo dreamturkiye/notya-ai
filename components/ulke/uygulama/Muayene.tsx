@@ -30,6 +30,8 @@ import { Bilgi, Cerceve, Hata, tarihYaz, saatYaz, useUygulama, YOL, Yukleniyor }
 import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
 import { asistanAdi } from './Asistan'
+import { HastaFormuKarti } from './HastaFormuKarti'
+import { ozellikAcik } from '@/lib/ulke/ulke'
 import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { metninDili, randevuMetni, rolAdi, genelSablon, sablonMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
@@ -63,6 +65,9 @@ export function konusmaDiliAdi(m: UygulamaMetni, k: KonusmaOzeti | null): string
   if (!k.dilKesin) return m.muayene.dilKarma
   return Object.prototype.hasOwnProperty.call(m.muayene.konusmaDili, k.dil) ? m.muayene.konusmaDili[k.dil] : m.muayene.dilBaska
 }
+
+/** NOTYA-ULKE-INTAKE-01: true = the country has the intake form (which needs the portal). */
+const formAcik = (): boolean => ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu')
 
 const sureYaz = (sn: number) => `${String(Math.floor(sn / 60)).padStart(2, '0')}:${String(sn % 60).padStart(2, '0')}`
 
@@ -265,7 +270,13 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
       </section>
     )
   }
-  return <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
+  return (
+    <>
+      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
+      {/* NOTYA-ULKE-INTAKE-01: what the patient wrote before the visit, to read while it is recorded. Never sent to the model. */}
+      {formAcik() ? <HastaFormuKarti u={u} hastaId={hasta.id} mod="muayene" /> : null}
+    </>
+  )
 }
 
 // ───────────────────────── a recorded visit ─────────────────────────
@@ -342,7 +353,12 @@ function KayitliMuayene({ u, seansId, yazilamadiBaslangic }: { u: ReturnType<typ
       .catch(() => { if (!iptal) setYuk('hata') })
     return () => { iptal = true }
   }, [hesap, api, seansId])
-  if (yuk === 'tamam' && muayene) return <MuayeneOzetiGorunumu m={u.m} muayene={muayene}><NotEylemi m={u.m} muayene={muayene} yaziliyor={yaziliyor} yazilamadi={yazilamadi && !muayene.notId} yaz={yaz} /></MuayeneOzetiGorunumu>
+  if (yuk === 'tamam' && muayene) return (
+    <>
+      <MuayeneOzetiGorunumu m={u.m} muayene={muayene}><NotEylemi m={u.m} muayene={muayene} yaziliyor={yaziliyor} yazilamadi={yazilamadi && !muayene.notId} yaz={yaz} /></MuayeneOzetiGorunumu>
+      {formAcik() && muayene.hasta ? <HastaFormuKarti u={u} hastaId={muayene.hasta.id} mod="muayene" /> : null}
+    </>
+  )
   return (
     <section className="uza-kart">
       {yuk === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{yuk === 'yok' ? u.m.muayene.bulunamadi : u.m.kabuk.hata}</Hata>}

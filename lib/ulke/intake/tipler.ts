@@ -174,6 +174,8 @@ export type HekimFormu = {
   rolAdi: string
   randevuId: string | null
   olusturuldu: string
+  /** When the patient last saved (an open form), or null. */
+  guncellendi: string | null
   gonderildi: string | null
   yenidenAcildi: string | null
   /** true = the pack's question set has changed since this form was asked for: an answer to a question that no longer exists is not shown. */

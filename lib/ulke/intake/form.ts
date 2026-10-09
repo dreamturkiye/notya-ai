@@ -156,7 +156,7 @@ export async function hastaninFormlari(supabase: SupabaseClient, doktorId: strin
     }
     return {
       id: s.id, durum: s.durum as FormDurumu, veli: k.veli, rolAdi: (k.rol ? rolAdi(k.rol, dil) : null) ?? '', randevuId: s.randevu_id ?? null,
-      olusturuldu: s.created_at, gonderildi: s.gonderildi_at ?? null, yenidenAcildi: s.yeniden_acildi_at ?? null,
+      olusturuldu: s.created_at, guncellendi: s.durum === 'taslak' ? s.updated_at ?? null : null, gonderildi: s.gonderildi_at ?? null, yenidenAcildi: s.yeniden_acildi_at ?? null,
       surumFarkli: s.soru_surumu !== icerik.surum, bolumler,
     }
   })

@@ -12,6 +12,7 @@ import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './rande
 import { dilAdi, dilBirlestir, metninDili, randevuMetni, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { PortalErisimKarti } from './PortalErisimi'
+import { HastaFormuKarti } from './HastaFormuKarti'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
@@ -181,12 +182,14 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
   /** NOTYA-ULKE-PORTAL-01: the card that gives this patient access to their page, where the country has the portal. */
   portal?: ReactNode
+  /** NOTYA-ULKE-INTAKE-01: the intake form's card (ask, invitation, answers), where the country has the form. */
+  form?: ReactNode
 }) {
   const r = randevuMetni(metninDili(m))
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
@@ -240,6 +243,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
           </ul>
         </section>
       ) : null}
+      {form ?? null}
       {portal ?? null}
       {taslak.length ? (
         <section className="uza-kart">
@@ -296,7 +300,7 @@ export function HastaDosyasi() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
+      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
           {durum === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{u.m.kabuk.geri}</a></p>}
