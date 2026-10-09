@@ -20,6 +20,7 @@ import { alanBirimi } from '@/lib/ulke/araclar/birimler'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { enFormYuvalari } from '@/countries/_dil/en/klinik/hastaFormu'
 import { paketMetinleri } from '@/countries/_dil/en/testing/paketSinamasi'
+import type { EnUlkeGirdisi } from '@/countries/_dil/en/girdi'
 import type { EnBicim } from '@/countries/_dil/en/varyant'
 
 // `--ulke <code>` names the country for a caller that may not read the build variable itself (the tests of a pack)
@@ -102,7 +103,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Recording a consultation: consent by state and territory; retention.',
       'Advertising rules for health services and for software sold to doctors.',
     ],
-    ekNotlar: ['Australian spelling is the British base with "program"; no Australian editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'The 12-hour clock is an unverified choice.'],
+    ekNotlar: ['Australian spelling is the British base with "program"; no Australian editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'FOR A LOCAL CLINICAL LEAD: the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).', 'The 12-hour clock is an unverified choice.'],
   },
   nz: {
     ad: 'New Zealand', dosya: 'COUNTRY-PACK-NEW-ZEALAND.md',
@@ -117,7 +118,7 @@ const ULKELER: Readonly<Record<string, Ulke>> = {
       'Recording a consultation: consent and retention.',
       'Māori data sovereignty and the use of te reo Māori in health services: whether and how they bear on this product is a question for local advice. No te reo Māori text is written.',
     ],
-    ekNotlar: ['New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'The 12-hour clock is an unverified choice.', 'THE PHONE NUMBER SHOWN AS AN EXAMPLE IS NOT KNOWN TO BE FROM A RESERVED RANGE and may be somebody\'s number: to be replaced by a number the owner controls before any person sees the form. WAITING ON KAAN.'],
+    ekNotlar: ['New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.', 'FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).', 'FOR A LOCAL CLINICAL LEAD: the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).', 'The 12-hour clock is an unverified choice.', 'THE PHONE NUMBER SHOWN AS AN EXAMPLE IS NOT KNOWN TO BE FROM A RESERVED RANGE and may be somebody\'s number: to be replaced by a number the owner controls before any person sees the form. WAITING ON KAAN.'],
   },
 }
 const U = ULKELER[p.kod]
@@ -140,8 +141,12 @@ const yuvaSatiri = (y: (typeof ortakYuvalar)[number]) => `| \`${y.anahtar}\` | $
 const formYuvalari = enFormYuvalari(U.ad === 'United Kingdom' || U.ad === 'United States' ? `the ${U.ad}` : U.ad)
 const hf = k.hastaFormu
 const metinSayisi = paketMetinleri({ paket: p, arayuz: a, klinik: k, bicim: d as EnBicim }).length
-const ayarlar = readFileSync(join(KOK, 'countries', p.kod, 'ayarlar.ts'), 'utf8')
-const kendiMetinSayisi = (ayarlar.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').match(/'(?:[^'\\]|\\.)*[A-Za-z]{3}(?:[^'\\]|\\.)*'/g) ?? []).length
+// THE COUNTRY'S OWN TEXTS, counted from what it states (countries/<code>/ayarlar.ts), not from its source text: the
+// sentences and words it writes itself. Its keys, codes and settings (the language form, unit codes, the speech
+// model, thresholds) are not texts and are not counted.
+const girdi = (await import(`@/countries/${p.kod}/ayarlar`))[`${p.kod.toUpperCase()}_GIRDI`] as EnUlkeGirdisi
+const dizeSayisi = (v: unknown): number => (typeof v === 'string' ? 1 : v && typeof v === 'object' ? Object.values(v).reduce<number>((n, x) => n + dizeSayisi(x), 0) : 0)
+const kendiMetinSayisi = dizeSayisi([{ ...girdi.sozler, bicim: null }, girdi.ulkeAdi, girdi.kidemliHekim, girdi.rolAdlari, girdi.araclar.kapali, girdi.araclar.degisen, girdi.araclar.birimAdlari, girdi.acilis.telefonOrnegi, girdi.acilis.aylikTutarKalibi])
 
 const kontrolListesi = readFileSync(join(KOK, 'docs', 'COUNTRY-PACK-CHECKLIST.md'), 'utf8').split('\n')
 const ilk = kontrolListesi.findIndex((s) => s.startsWith('## Rules that stop one country leaking'))
@@ -215,8 +220,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (\`countries/_dil/en/\`, written once for five countries): ${metinSayisi} texts as this pack shows them or hands the model — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, ${acik.length} tools, the landing copy — written in \`${d}\` spelling by the set's spelling table.
-- **This country's own** (\`countries/${p.kod}/\`, six small files): ${kendiMetinSayisi} texts (its consent sentence, identifier label, time sentence, role names, what its closed tools are missing) and the settings in the table below.
+- **From the shared English set** (\`countries/_dil/en/\`, written once for five countries): ${metinSayisi} texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, ${acik.length} tools, the landing copy — written in \`${d}\` spelling by the set's spelling table.
+- **This country's own** (\`countries/${p.kod}/\`, six small files): ${kendiMetinSayisi} texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 

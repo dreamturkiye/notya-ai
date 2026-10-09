@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1928 texts as this pack shows them or hands the model — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 42 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 43 texts (its consent sentence, identifier label, time sentence, role names, what its closed tools are missing) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1928 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 42 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 24 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -49,6 +49,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 - Australian spelling is the British base with "program"; no Australian editor has read it.
 - FOR A LOCAL CLINICAL LEAD: prostate-specific antigen is shown in µg/L (numerically the same as ng/mL).
+- FOR A LOCAL CLINICAL LEAD: the ESI triage record, the two KDIGO tools and the report outline with the BI-RADS assessment categories are kept as slots (below).
 - The 12-hour clock is an unverified choice.
 
 ## Regulatory questions — none answered here; each is for a lawyer
