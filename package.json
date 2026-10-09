@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs",
+    "prebuild": "node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs && node scripts/ulke-paket-denetimi.mjs",
     "postbuild": "node scripts/ulke-derleme-kaniti.mjs",
     "build": "node -e \"if (process.env.VERCEL_ENV === 'preview') require('fs').rmSync('.next/cache', { recursive: true, force: true })\" && NODE_OPTIONS='--max-old-space-size=8192' next build",
     "start": "next start",
@@ -70,7 +70,9 @@
     "test:plastik": "npx tsx --test specialties/plastik-cerrahi/tests/*.test.ts lib/portal/yaram.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:cc": "npx tsx --test specialties/cocuk-cerrahisi/tests/*.test.ts lib/portal/cocugumun-cerrahisi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:acil": "npx tsx --test specialties/acil-tip/tests/*.test.ts lib/portal/acil-sonrasi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
-    "test:ulke:paket": "node scripts/ulke-test.mjs --yalniz-paket"
+    "test:ulke:paket": "node scripts/ulke-test.mjs --yalniz-paket",
+    "ulke:paket-denetimi": "node scripts/ulke-paket-denetimi.mjs",
+    "ulke:yeni": "node scripts/ulke-yeni.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
