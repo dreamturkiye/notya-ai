@@ -15,6 +15,7 @@ import type { UlkeAcilisi } from './arayuz/acilisTipleri'
 import { NOT_BOLUMLERI, ROL_TARAFLARI, type UlkeArayuzu } from './arayuz/tipler'
 import { eksikAyarMi, eksikMetinMi } from './eksik'
 import { ARACLAR_YER_TUTUCULARI, araclarSorunlari } from './araclar/denetim'
+import { klinikHesabiSorunlari } from './klinikHesabi/denetim'
 import { formIcerigiSorunlari } from './intake/sorular'
 import { mesajSorunlari } from './mesaj/denetim'
 import { sablonSorunlari } from './sablon/denetim'
@@ -78,7 +79,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   // … and every marker the rules did not name themselves, once each.
   const isaretler: PaketSorunu[] = []
   isaretleriTopla({ ...paket, metinler: undefined }, '', isaretler)
-  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, mesajMetinleri: undefined, sablonMetinleri: undefined, konsultasyonMetinleri: undefined, araclar: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
+  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, mesajMetinleri: undefined, sablonMetinleri: undefined, konsultasyonMetinleri: undefined, klinikMetinleri: undefined, araclar: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
   isaretleriTopla(klinik, 'klinik', isaretler)
   const bilinen = new Set(s.map((x) => x.yer))
   for (const i of isaretler) if (!bilinen.has(i.yer) && !bilinen.has(i.yer.replace(/^uygulama\./, '')) && !bilinen.has(`uygulama.${i.yer}`)) { s.push(i); bilinen.add(i.yer) }
@@ -325,6 +326,9 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
 
   // ── tools: which exist here, for whom, and every word of their screens ──
   for (const x of araclarSorunlari(paket, arayuz, diller)) if (x.yer !== 'ozellikler.araclar') ekle(x.yer, x.sorun)
+
+  // ── clinic accounts: the settings a country states, and the catalogue in every form (NOTYA-ULKE-KLINIK-01) ──
+  for (const x of klinikHesabiSorunlari(paket, arayuz, diller)) ekle(x.yer, x.sorun)
 
   // ── roles ──
   const rolAnahtarlari = roller.map((r) => r.anahtar)

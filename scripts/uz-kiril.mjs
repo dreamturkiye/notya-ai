@@ -68,6 +68,25 @@ export function dosyayiDoldur(eski) {
   return { yeni, n }
 }
 
+/**
+ * NOTYA-ULKE-KLINIK-01 — a whole CATALOGUE at once: every text of a Latin catalogue (an object of objects of
+ * strings) through the rule, keys untouched. For a catalogue that is written as one object per language form.
+ */
+export function katalogCevir(latin) {
+  if (typeof latin === 'string') return kirill(latin)
+  if (Array.isArray(latin)) return latin.map(katalogCevir)
+  if (latin && typeof latin === 'object') return Object.fromEntries(Object.entries(latin).map(([k, v]) => [k, katalogCevir(v)]))
+  return latin
+}
+/**
+ * The SOURCE TEXT of the file that stores a derived Cyrillic catalogue: a header that says it is derived, then the
+ * object. The stored file must be exactly this (its test compares them); it is made again by running that test with
+ * UZ_KIRIL_YAZ=1, never by editing the file.
+ */
+export function katalogKaynagi(latin, { ustYazi, ithalat, bildirim }) {
+  return `${ustYazi}\n${ithalat}\n\n${bildirim} ${JSON.stringify(katalogCevir(latin), null, 2)}\n`
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   for (const d of process.argv.slice(2)) {
     const { yeni, n } = dosyayiDoldur(readFileSync(d, 'utf8'))

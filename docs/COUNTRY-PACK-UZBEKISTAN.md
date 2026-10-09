@@ -13,7 +13,7 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 | Checked | the result was compared with the files: **14 tables, 136 columns, 17 row-level rules, 5 functions**. The baseline proof (`scripts/ulke-temel-kaniti.mjs`) builds a local database the same way, lines left out included, and finds it identical to one built from the files as written and to one built from the one-file baseline, with the same four figures. |
 | The preview site | has its **country, database address, public key and encryption key** set |
 | Still to do, by the owner | **add the secret server key** to the preview site. Until then the Uzbek preview cannot sign anybody up or in, or read or write a row. |
-| Still to do, later migrations | every country migration after 135 must be run on this database, in order, before the build that needs it is used (`lib/db/ulke/gocler.json`): today **136, 137** (the patient portal) and **138** (the intake form). The sections below say what each adds. |
+| Still to do, later migrations | every country migration after 135 must be run on this database, in order, before the build that needs it is used (`lib/db/ulke/gocler.json`): today **136, 137** (the patient portal), **138** (the intake form), **139** (the tools' kept results) and **145** (clinic accounts). The sections below say what each adds. |
 | Not checked | public sign-up switched off in the project (a setting; checklist M4); the application against this database (every application test uses a stand-in). |
 
 **Further countries need a paid plan.** The organisation's free plan holds only two projects, and Türkiye and Uzbekistan now use both. A database for the United States, the United Kingdom, Canada, Australia or New Zealand cannot be created until the organisation moves to a paid plan. That is the owner's decision; the monthly figure should be read from the provider's price page on the day.
@@ -970,6 +970,48 @@ Migration `139_ulke_arac_kayitlari.sql`: one table for the results a doctor keep
 - In a browser against a production build: the grid, a tool filled in for a patient, kept with and without a follow-up day, the patient's file, the follow-up list and "done", and the second account.
 
 Not covered: a real database behind the provider's API layer; any reading by a native speaker or a clinician.
+
+## Clinic accounts (2026-10-09, NOTYA-ULKE-KLINIK-01)
+
+Built in the country kit and filled in for Uzbekistan. How they work for any country, and what is the kit's: `docs/COUNTRY-PACK-HOWTO.md`, "Clinic accounts".
+
+### What exists, under `/uzbek/clinic` and `/uzbek/desk`
+
+- **A clinic.** Any account creates one and is its owner, or joins one with an invitation code. One clinic per account. Positions, as the Uzbek screens name them (machine-chosen everyday words, not official post names): Klinika egasi / Владелец клиники (owner), Administrator / Администратор, Shifokor / Врач (doctor), Klinika mutaxassisi / Специалист клиники (allied professional), Registrator / Регистратор (front desk).
+- **A position opens no patient.** The owner and an administrator invite, change positions, remove members, and see the clinic's schedule (who is busy when; nothing of a patient). Nobody reads a patient by position.
+- **"Who can help with my patients"** (`/uzbek/clinic?gorunum=yetkiler`): a doctor gives one member one capability at a time, reads before giving it what the member will see, withdraws it with one press, and reads the record of everything done through it.
+- **The front desk** (`/uzbek/desk`), for each doctor who gave something: that doctor's day, marking arrived / did not come / cancelled, finding a patient by name or phone and seeing the card (name, patronymic, birth date, phone), booking and moving an appointment; registering a new patient for the doctor; giving a patient the link and PIN of their page and asking for the intake form. Each only with its own capability. No note, no visit, no form answer, no reason of an appointment, no JSHSHIR.
+- **A share**: an allied professional reads the approved notes of one named patient. **Cover**: another doctor of the clinic, for a stated period, finds the covered doctor's patients by name and reads their approved notes and the appointments. Both read-only; a draft is never shown.
+
+### The settings, and what is unverified about each (`countries/uz/index.ts`, `uygulama.klinikHesaplari`)
+
+| Setting | Value | State |
+|---|---|---|
+| Capabilities that exist | all five of the kit | **Unverified.** Who may lawfully read a medical record in Uzbekistan, and whether a registrar may register a patient or hand over a patient's link, has not been put to a lawyer. Marked in the pack (`inceleme.hukukcu: null`). No real clinic uses them before a lawyer is named there. |
+| Allied roles that may be given a share | all five allied roles of the pack: physiotherapy, clinical psychology, dietetics, occupational therapy, audiology | **Unverified.** The scope of practice of each profession in Uzbekistan is not researched. |
+| A clinic's owner may enter a permission for a doctor | no | The narrow side. The pack check refuses "yes" while no lawyer is named. |
+| An invitation code lives | 7 days | a product default, the owner may change it (1 to 31) |
+| Cover lasts at most | 14 days | a product default (1 to 31; the database's own limit is 31) |
+| Record retention | a slot, off | No record row is ever deleted by the application; there is no purge. The period is a legal fact nobody has supplied. |
+| Who wrote the answers | a machine | no lawyer has read them |
+
+### What is machine-written
+
+The catalogue: 180 texts per form. Uzbek in Latin script and Russian written by a machine (`countries/uz/uygulama/klinikMetinleri.ts`); **Uzbek in Cyrillic script derived from the Latin text by rule** (`scripts/uz-kiril.mjs`, stored in `klinikMetinleriKiril.ts`; a test holds every stored text to the rule). No native speaker has read a line. The sentence a doctor reads before giving the portal capability says, in each form, that the registrar will see the link and the PIN-kod; the pack check holds that word in it.
+
+### Storage
+
+Migration `145_ulke_klinik.sql`: five tables, and it alters no existing one. **Not applied to the Uzbek database.** Until it is, every clinic screen answers "could not be done"; the rest of the application is unaffected and no patient is exposed (the check fails closed). It goes in after 139: `docs/COUNTRY-PACK-DB-ROLLOUT.md`, "Bringing Uzbekistan's database up to date"; the check must then answer 27 tables, 270 columns, 17 rules, 28 functions.
+
+### What was tested, and how
+
+- **Who may and who may not, per route** (`lib/ulke/klinikHesabi/klinik.paket.test.ts`, 41 tests, run for each pack): every one of the nine routes against every kind of requester — no session, no clinic, each position without a permission, a permission that was withdrawn, not begun, over, of another capability, for another patient, from a doctor who left, to a member who was removed, a forged permission row, another clinic, another country — and the exact keys of what the front desk is answered.
+- **40 mutation checks** (`scripts/ulke-klinik-mutasyon.mjs`): each breaks one rule of the clinic library (a check skipped, a filter dropped, a field added to an answer), and the tests notice every one.
+- **The four screens** rendered in the three forms (`components/ulke/uygulama/klinikEkranlari.paket.test.ts`), and the pack-check rules each broken once on a copy of the pack (`lib/ulke/klinikHesabi/denetim.paket.test.ts`).
+- **Migration 145 on a local throwaway PostgreSQL** (130 checks of `scripts/ulke-goc-kaniti.mjs`, 124 of them its section L), with its rollback, its refusal on a database that is not a country's, and the comparison that shows no existing object changed.
+- **In a browser against a production build, two clinics and five accounts** (`scripts/ulke-yuruyus/genel.mjs`, step 6, 115 checks): the whole path above, each account in a browser of its own, and each refusal read from the running server.
+
+Not covered: a real database behind the provider's API layer (stand-ins only); any reading by a native speaker; any reading by a lawyer.
 
 ## Decisions by Kaan (2026-10-08)
 

@@ -163,6 +163,8 @@ For each entry: official local name, what it governs, source link, date checked,
 
 ## J. Product settings
 
+> **Since 2026-10-09 (NOTYA-ULKE-KLINIK-01)** the country kit has clinic accounts: `docs/COUNTRY-PACK-HOWTO.md`, "Clinic accounts". They touch J2, J3 and J5 here, and G7 and I7 above. For a country that switches them on, check: the five position names are the words clinics of the country use (J3, with the local clinical lead); **a lawyer of the country has read which capabilities exist and which allied roles may be given a share, and is named in the pack** (`uygulama.klinikHesaplari.inceleme.hukukcu`; B, I7) — until then every one of those settings is unverified and no real clinic uses them; the sentence a doctor reads before giving the portal capability says that the member will see the link and PIN; record retention is still a slot (G7: the period comes from the lawyer, and the purge is built then); a clinic's owner may enter a permission for a doctor only where the lawyer said so. Onboarding (J5): an account that joins a clinic at the front desk is asked for no role.
+
 - [ ] J1 Feature table.
 - [ ] J2 Specialties and clinic types enabled.
 - [ ] J3 Staff roles and local names.

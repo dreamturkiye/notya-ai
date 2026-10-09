@@ -14,6 +14,8 @@ import { HastaDosyasi, Hastalar, YeniHasta } from './Hastalar'
 import Muayene from './Muayene'
 import Takvim from './Takvim'
 import Araclar from './Araclar'
+import Klinik from './Klinik'
+import OnBuro from './OnBuro'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
   baslangic: Baslangic,
@@ -27,4 +29,8 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   takvim: Takvim,
   // The tools area: the grid and each tool's own screen (feature `araclar`).
   araclar: Araclar,
+  // The clinic, "who can help with my patients", what was shared with the account (feature `klinikHesaplari`).
+  klinik: Klinik,
+  // The front-desk workspace (features `klinikHesaplari` and `randevu`).
+  onBuro: OnBuro,
 }

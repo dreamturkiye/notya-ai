@@ -89,6 +89,12 @@ export const UZ_PAKETI: UlkePaketi = {
     // colleague is found by their consultation code only; there is no directory. Nothing is sent to anybody. The texts
     // are machine-written, and THE CONSENT SENTENCE HAS NOT BEEN READ BY A LAWYER (./klinik/index.ts).
     konsultasyon: true,
+    // NOTYA-ULKE-KLINIK-01 (2026-10-09): clinic accounts — a clinic with an owner, members who join by a one-use
+    // invitation code and hold one position, and permissions by which a doctor lets a member help with that doctor's
+    // patients (the front desk; a share with a clinic specialist; cover by another doctor, read-only). A patient still
+    // belongs to one doctor, a position alone opens no patient, and every use of a permission is recorded for the
+    // doctor. The texts are machine-written; the legal answers below are unverified (./uygulama/klinikMetinleri.ts).
+    klinikHesaplari: true,
   },
   // Routes of the PRE-SPLIT application's tool registry valid here: none, and it stays so. The country build has its own
   // tools area (/tools, feature `araclar`; ./uygulama/araclar/), which shares no route and no screen with that registry.
@@ -96,7 +102,7 @@ export const UZ_PAKETI: UlkePaketi = {
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
@@ -150,6 +156,26 @@ export const UZ_PAKETI: UlkePaketi = {
     // closed it, the colleague can read it for 14 more days and then no longer. To confirm with the owner and, for how
     // long a colleague may hold a copy of a patient's data, with a lawyer (docs/OPEN-COMMITMENTS.md, NOTYA-ULKE-MESAJ-01).
     konsultasyon: { acikGun: 30, kapanisSonrasiGun: 14 },
+    // NOTYA-ULKE-KLINIK-01 — clinic accounts. EVERY VALUE HERE IS A STARTING VALUE WRITTEN BY A MACHINE, AND NONE HAS
+    // BEEN READ BY A LAWYER OF UZBEKISTAN (`inceleme.hukukcu: null`). Who may lawfully read a medical record, what a
+    // clinic specialist's profession may do, and how long a record of access must be kept are questions of Uzbek law
+    // (docs/COUNTRY-PACK-UZBEKISTAN.md, "Clinic accounts"; docs/OPEN-COMMITMENTS.md, NOTYA-ULKE-KLINIK-01). Until
+    // they are answered the pack takes the narrow side wherever there is one:
+    //   yetkiTurleri              all five, each given by the doctor whose patients they are, one at a time.
+    //   sahipHekimAdinaVerebilir  NO: a clinic's owner cannot give a permission for a doctor's patients. (Kaan / lawyer.)
+    //   paylasimRolleri           the five clinic specialist roles of this pack may be given ONE patient's approved
+    //                             notes by that patient's doctor. UNVERIFIED: the scope of each profession is for a lawyer.
+    //   davetGecerlilikGun        an invitation works for 7 days.   vekaletAzamiGun   cover lasts at most 14 days.
+    //   kayitSaklama              a slot, off: no record row is ever deleted and no purge exists.
+    klinikHesaplari: {
+      yetkiTurleri: ['on-buro-randevu', 'on-buro-hasta', 'on-buro-portal', 'paylasim', 'vekalet'],
+      sahipHekimAdinaVerebilir: false,
+      paylasimRolleri: ['fizyoterapi', 'klinik-psikolog', 'diyetisyen', 'ergoterapi', 'odyoloji'],
+      davetGecerlilikGun: 7,
+      vekaletAzamiGun: 14,
+      kayitSaklama: null,
+      inceleme: { makineYazimi: true, hukukcu: null },
+    },
     // ── NOTYA-ULKE-SABLON-01: what the shared screens used to assume for Uzbekistan, said out loud. Each value is
     // what the Uzbek build did before the screens became shared; none is a new decision.
     // Uzbek in two scripts, Russian in one: the first-login question asks the language and, for Uzbek, the script.

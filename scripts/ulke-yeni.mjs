@@ -239,11 +239,16 @@ export const ${B}_PAKETI: UlkePaketi = {
     // or a typed summary, one answer, closing. A colleague is found by their code only; there is no directory. The
     // consent sentence (uygulama/konsultasyonMetinleri.ts → iste.riza) is read by a lawyer.
     konsultasyon: true,
+    // Clinic accounts (/clinic, /desk): a clinic with an owner, doctors, allied professionals and front-desk staff.
+    // A POSITION OPENS NO PATIENT: every access is a permission a doctor gives for their own patients, checked on the
+    // server on every request, recorded, and withdrawn at once. Which permissions exist here, and who may lawfully
+    // read a record, is this country's decision (uygulama.klinikHesaplari below); switch this off to have no clinics.
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
     apiOnEkleri: ['/api/ulke/'],
   },
 ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new country starts hidden. Only the owner changes this, after the pilot approves the site.
@@ -286,6 +291,23 @@ ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new countr
       acikGun: eksikAyar('consultation: days a consultation may stay open (the colleague reads the shared copy for at most this long from the day it was asked) — a whole number from 1 to 365. The owner decides; how long a colleague may hold a copy of a patient\\'s data is a question for a lawyer'),
       kapanisSonrasiGun: eksikAyar('consultation: days the colleague may still read a consultation after the asking doctor closed it — a whole number from 0 to 365 (0 = not at all). The owner decides, with a lawyer'),
     },
+    // CLINIC ACCOUNTS. The rules are the kit's and the same everywhere (lib/ulke/klinikHesabi/): no position opens a
+    // patient, a permission is given by the patient's own doctor, every use is recorded. What is decided HERE is how
+    // far a permission may reach in this country — and that is A QUESTION FOR A LAWYER OF THE COUNTRY (who may read a
+    // medical record, what an allied profession may see). Start narrow; the pack check refuses the wide side unread.
+    klinikHesaplari: {
+      yetkiTurleri: eksikAyar('clinic accounts: the permissions a doctor may give in this country, from the kit\\'s five — \\'on-buro-randevu\\' (front desk: the doctor\\'s appointments, and finding a patient\\'s card — name, birth date, phone — to book one), \\'on-buro-hasta\\' (front desk: register a new patient for the doctor), \\'on-buro-portal\\' (front desk: hand a patient the link and PIN of their page — that person sees both), \\'paylasim\\' (one patient\\'s approved notes, read by an allied professional), \\'vekalet\\' (cover by another doctor for a period, read-only). List only what a lawyer of the country accepts; at least one'),
+      // Whether a clinic's owner may enter a permission FOR a doctor's patients. false in every new country: the
+      // patient's own doctor gives it. true is refused by the pack check until a lawyer is named in \`inceleme\`.
+      sahipHekimAdinaVerebilir: false,
+      paylasimRolleri: eksikAyar('clinic accounts: keys of the allied roles (./klinik/roller.ts, taraf \\'klinik-muttefik\\') that may be given one patient\\'s approved notes to read — the scope of practice of each profession is a question for a lawyer of the country; [] if none (then leave \\'paylasim\\' out of yetkiTurleri)'),
+      davetGecerlilikGun: eksikAyar('clinic accounts: days an invitation code to a clinic stays valid — a whole number from 1 to 31 (a starting value elsewhere: 7)'),
+      vekaletAzamiGun: eksikAyar('clinic accounts: the longest period of cover between doctors, in days — a whole number from 1 to 31 (a starting value elsewhere: 14)'),
+      // RECORD RETENTION IS A SLOT, switched off: the access record is never deleted by the application and the kit has
+      // no purge. How long a country must or may keep it is stated by a lawyer, and built in then. It stays null.
+      kayitSaklama: null,
+      inceleme: eksikAyar('clinic accounts: who wrote these answers and whether a lawyer read them — { makineYazimi: true | false, hukukcu: null | \\'name of the lawyer of this country who read them\\' }'),
+    },
     // One language in one script: no account is asked a language question. A second language or script is added here.
     dilGruplari: [{ temel: '${TEMEL}', bicimler: [{ yazi: null, dil: '${DIL}' }] }],
     saatDilimleri: eksikAyar('time: EVERY IANA time zone an account of this country may work in, the default first — one entry if the country has one zone, e.g. [\\'Europe/London\\']'),
@@ -327,6 +349,7 @@ import { ${B}_MESAJ_METINLERI } from './uygulama/mesajMetinleri'
 import { ${B}_SABLON_METINLERI } from './uygulama/sablonMetinleri'
 import { ${B}_KONSULTASYON_METINLERI } from './uygulama/konsultasyonMetinleri'
 import { ${B}_ARACLAR } from './uygulama/araclar'
+import { ${B}_KLINIK_METINLERI } from './uygulama/klinikMetinleri'
 
 export const ${B}_ARAYUZ: UlkeArayuzu = {
   marka: eksik('brand: the word mark the screens show, e.g. Notya'),
@@ -338,6 +361,7 @@ export const ${B}_ARAYUZ: UlkeArayuzu = {
   sablonMetinleri: ${B}_SABLON_METINLERI,
   konsultasyonMetinleri: ${B}_KONSULTASYON_METINLERI,
   araclar: ${B}_ARACLAR,
+  klinikMetinleri: ${B}_KLINIK_METINLERI,
   roller: ${B}_ROL_TANIMLARI,
   asistan: ${KOD}AsistanKimligi,
   notSablonlari: ${B}_NOT_SABLONLARI,
@@ -515,7 +539,30 @@ export const ${B}_ARACLAR: UlkeAraclari = {
 }
 `
 
-dosyalar['klinik/hastaFormu.ts'] = `${BAS(`${B}: THE INTAKE FORM's QUESTIONS — what a patient is asked before a visit.`, `CLINICAL CONTENT. The kit owns the question TYPES and the rules (lib/ulke/intake/tipler.ts, sorular.ts); the
+dosyalar['uygulama/klinikMetinleri.ts'] = `${BAS(`${B}: CLINIC ACCOUNTS in "${DIL}" — the clinic's screen, permissions, the access record, the front desk.`, `Typed against the kit's keys (lib/ulke/arayuz/metinTipleri.ts → KlinikMetni, where each key says what it is for).
+  kabuk, giris, klinik, davet, takvim   the clinic: creating or joining one, its members and their positions,
+                                        invitation codes, the schedule (when a member is busy; nothing of a patient)
+  konum                                 the five positions as this country calls them (owner, administrator, doctor,
+                                        allied professional, front desk) — agreed with the local clinical lead
+  yetkiTuru, yetkiAciklama, yetki       the doctor's own screen "who can help with my patients". yetkiAciklama is THE
+                                        SENTENCE A DOCTOR READS BEFORE GIVING a permission: say plainly what the other
+                                        person will see. For 'on-buro-portal' it must say that the person will see the
+                                        patient's link AND PIN (the pack check looks for the word of onBuro.pin in it).
+  kayit                                 the access record the doctor reads: who was given what, who read or wrote what
+  paylasilan                            what an allied professional or a covering doctor sees: read-only
+  onBuro                                the front-desk workspace: a doctor's day, a patient's card, a new patient
+No sentence here may promise more than the kit does: a position opens no patient, cover is read-only, the record is
+kept. What a member may LAWFULLY read is not text: it is the pack's settings (../index.ts, uygulama.klinikHesaplari),
+read by a lawyer. Placeholders %, %1, %2 must stay.`)}import { eksik } from '@/lib/ulke/eksik'
+import type { KlinikMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { DilKodu } from '@/lib/ulke/tipler'
+
+const ${DIL_SABITI}: KlinikMetni = ${yaz(sekil.klinik, 'klinik', 'clinic accounts', '', '')}
+
+export const ${B}_KLINIK_METINLERI: Readonly<Partial<Record<DilKodu, KlinikMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['klinik/hastaFormu.ts'] =`${BAS(`${B}: THE INTAKE FORM's QUESTIONS — what a patient is asked before a visit.`, `CLINICAL CONTENT. The kit owns the question TYPES and the rules (lib/ulke/intake/tipler.ts, sorular.ts); the
 questions are this country's, written with a clinician who practises here:
   cekirdek   the core questions every patient gets, in sections. A patient below the country's guardian age gets the
              GUARDIAN form: mark questions and sections that belong only to it kime: 'cocuk' (who is filling the form

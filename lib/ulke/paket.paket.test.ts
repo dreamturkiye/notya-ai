@@ -169,10 +169,10 @@ describe('every pack is complete', () => {
   })
 
   it('the scaffold\'s shape file lists exactly the keys this pack fills (a key added to the kit cannot be forgotten there)', () => {
-    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !arayuz.portalMetinleri || !arayuz.formMetinleri || !arayuz.mesajMetinleri || !arayuz.sablonMetinleri || !arayuz.konsultasyonMetinleri || !paket.uygulama) return
+    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !arayuz.portalMetinleri || !arayuz.formMetinleri || !arayuz.mesajMetinleri || !arayuz.sablonMetinleri || !arayuz.konsultasyonMetinleri || !arayuz.klinikMetinleri || !paket.uygulama) return
     const dosya = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'))
     const simdi = paketSekli(paket, arayuz)
-    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'form', 'araclar', 'mesaj', 'sablon', 'konsultasyon', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
+    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'form', 'araclar', 'mesaj', 'sablon', 'konsultasyon', 'klinik', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
     // the file holds key paths only: no sentence of this pack, no letter outside ASCII
     assert.doesNotMatch(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'), /[^\x00-\x7F]/)
   })

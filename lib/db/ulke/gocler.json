@@ -18,6 +18,7 @@
     "139_ulke_arac_kayitlari.sql",
     "140_ulke_hasta_mesajlari.sql",
     "141_ulke_hekim_sablonlari.sql",
-    "142_ulke_konsultasyon.sql"
+    "142_ulke_konsultasyon.sql",
+    "145_ulke_klinik.sql"
   ]
 }

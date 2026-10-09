@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * NOTYA-ULKE-SABLON-01 · NOTYA-ULKE-PORTAL-01 — PROOF ON A REAL POSTGRESQL of the country migrations, on a COUNTRY
+ * NOTYA-ULKE-SABLON-01 · NOTYA-ULKE-PORTAL-01 · NOTYA-ULKE-KLINIK-01 — PROOF ON A REAL POSTGRESQL of the country migrations, on a COUNTRY
  * DATABASE OF ITS OWN.
  *
  * ONE DATABASE PER COUNTRY (Kaan, 2026-10-09: "We had issues with common databases before. Keep seperation between
@@ -42,6 +42,15 @@
  *      patient, what, which consent wording, when) and none of it changes; an answer is given once and only while
  *      open; closed stays closed with its end of reading; a code names one account; neither table can be read by a
  *      browser session, the asking doctor's or the consulted one's.
+ *   L. CLINIC ACCOUNTS (migration 145): NO EXISTING OBJECT IS ALTERED (compared with a database built from the
+ *      migrations before it); a clinic keeps its owner and an account is a member of at most one clinic; an
+ *      invitation is a hash with an expiry, used once, also for two accounts at the same moment; a grant names one
+ *      capability, both of its accounts are members of the same clinic by key, its patient is its doctor's by key,
+ *      and it fits the position it is given to; it never changes and is withdrawn once; removing a member or
+ *      changing a position ends every grant in the same step, also when done by a plain statement; the record is
+ *      append-only and names who, whose patient, what and when; a visit by another doctor on a patient is still
+ *      refused by the key it always had; none of the five tables can be read by a browser session, and none of the
+ *      functions called by one.
  *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave nothing.
  *   T. NOT ON ANY OTHER DATABASE. On a database that is NOT a country database — here one shaped like the Turkish
  *      product's, with its own tables and rows — the baseline refuses, and every migration written since the first
@@ -942,6 +951,298 @@ ok('132: the private bucket exists once', (await c.query(`select count(*)::int n
     await c.query('reset role')
     ok('N. server only: the server\'s role can', sunucu === 'ok' && (await say('ulke_konsultasyonlar', 'patient_id = $1', [A3])) === 1, sunucu)
   }
+}
+
+// ── L. clinic accounts (migration 145) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (tablo, kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ${tablo} where ${kosul}`, par)).rows[0].n
+  const islev = async (sql, par) => Object.values((await c.query(sql, par)).rows[0])[0]
+  const durum = async (sql, par) => { const r = await islev(sql, par); return typeof r === 'string' ? r : r.durum }
+
+  // NO EXISTING TABLE WAS ALTERED. A second database is built from the migrations BEFORE 145 only; every object it
+  // has must be in the full database exactly as it is there, and everything the full database has beyond it must
+  // be an object of the clinic migration.
+  {
+    await c.query('create database kanit_oncesi')
+    const o = await baglan('kanit_oncesi')
+    await o.query(STUBLAR)
+    await o.query(readFileSync(join(REPO, LISTE.defter), 'utf8'))
+    for (const d of DOSYALAR.filter((x) => Number(x.slice(0, 3)) < 145)) await o.query(dosyaOku(d))
+    const anahtar = (r) => `${r.tur} ${r.ad}`
+    const once = new Map(JSON.parse(await sema(o)).map((r) => [anahtar(r), r.tanim]))
+    const tam = new Map(JSON.parse(ILK_KOSU).map((r) => [anahtar(r), r.tanim]))
+    await o.end()
+    const degisen = [...once].filter(([k, v]) => tam.get(k) !== v).map(([k]) => k)
+    const eklenen = [...tam.keys()].filter((k) => !once.has(k))
+    ok(`L. NO EXISTING OBJECT WAS ALTERED: every one of the ${once.size} tables, columns, constraints, indexes, rules, triggers and functions a country database had before migration 145 is byte for byte what it was`, once.size > 300 && degisen.length === 0, degisen.slice(0, 5).join('; '))
+    ok(`L. … and all ${eklenen.length} objects the migration added are its own (each is named for the clinic)`, eklenen.length > 60 && eklenen.every((k) => /klinik/.test(k)), eklenen.filter((k) => !/klinik/.test(k)).slice(0, 5).join('; '))
+  }
+
+  // Accounts of this section's own: an owner, an administrator, two doctors, an allied professional, a front-desk
+  // member, the owner of a SECOND clinic, an account without a clinic; and a kz account.
+  const [SA, YO, HE, H2x, MU, OB, S2, BO, KZ] = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9'].map((x) => `cccccccc-${x}${x}-4ccc-8ccc-cccccccccccc`)
+  const HEPSI = [SA, YO, HE, H2x, MU, OB, S2, BO, KZ]
+  const hesapAc = async (id, u = 'uz') => {
+    await c.query(`insert into auth.users (id, raw_app_meta_data) values ($1, $2)`, [id, JSON.stringify({ country: u })])
+    await c.query(`insert into ulke_hesaplari (id, ulke, full_name, ui_language) values ($1, $2, 'QA Klinik', 'ru')`, [id, u])
+  }
+  for (const id of HEPSI) await hesapAc(id, id === KZ ? 'kz' : 'uz')
+  const P1 = await hasta(HE), P2 = await hasta(HE), PH2 = await hasta(H2x), PKZ = await hasta(KZ, V)
+  const AN = '2026-10-12T06:00:00Z'
+  const KUR = `select public.ulke_klinik_kur($1, $2, $3, $4) r`
+  const KATIL = `select public.ulke_klinik_katil($1, $2, $3, $4) r`
+  const VER = `select public.ulke_klinik_yetki_ver($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) r`
+  const H = (x) => x.repeat(64)
+
+  // creating a clinic
+  const k1 = await islev(KUR, ['uz', SA, '  QA Klinika Bir ', AN])
+  const KL = k1.klinik_id
+  ok('L. an account creates a clinic and is its owner, in one step', k1.durum === 'TAMAM' && JSON.stringify(await q(`select k.ad, k.doctor_id, u.konum from ulke_klinikler k join ulke_klinik_uyeleri u on u.klinik_id = k.id and u.doctor_id = k.doctor_id where k.id = $1`, [KL])) === JSON.stringify([{ ad: 'QA Klinika Bir', doctor_id: SA, konum: 'sahip' }]))
+  ok('L. an account that is a member of a clinic cannot create another: nothing is written', (await durum(KUR, ['uz', SA, 'QA Ikkinchi', AN])) === 'UYE' && (await say('ulke_klinikler')) === 1)
+  ok('L. a clinic is not created under a country the account does not belong to', (await durum(KUR, ['uz', KZ, 'QA Kz', AN])) === 'NOT_FOUND' && (await say('ulke_klinikler')) === 1)
+  const KL2 = (await islev(KUR, ['uz', S2, 'QA Klinika Ikki', AN])).klinik_id
+  const KLZ = (await islev(KUR, ['kz', KZ, 'QA Klinika Kz', AN])).klinik_id
+  ok('L. a second clinic, and a clinic of another country, exist beside it', Boolean(KL2 && KLZ) && (await say('ulke_klinikler')) === 3)
+  await bekle('L. keys: a clinic under a country its owner does not belong to → refused 23503', `insert into ulke_klinikler (ulke, doctor_id, ad) values ('kz', $1, 'QA Yot')`, [HE], '23503')
+  await bekle('L. keys: a second clinic for the same owner → refused 23505', `insert into ulke_klinikler (ulke, doctor_id, ad) values ('uz', $1, 'QA Yana')`, [SA], '23505')
+  await bekle('L. keys: a clinic without a name → refused 23514', `insert into ulke_klinikler (ulke, doctor_id, ad) values ('uz', $1, ' ')`, [BO], '23514')
+  await bekle('L. trigger: a clinic does not change owner → refused 23514', `update ulke_klinikler set doctor_id = $2 where id = $1`, [KL, HE], '23514')
+  await bekle('L. trigger: nor country → refused 23514', `update ulke_klinikler set ulke = 'kz' where id = $1`, [KL], '23514')
+
+  // invitations
+  const DAVET = `insert into ulke_klinik_davetleri (ulke, klinik_id, doctor_id, konum, kod_hash, son_gecerlilik, created_at) values ($1, $2, $3, $4, $5, $6, $7) returning id`
+  const SON = '2026-10-19T06:00:00Z'
+  await q(DAVET, ['uz', KL, SA, 'yonetici', H('1'), SON, AN])
+  await q(DAVET, ['uz', KL, SA, 'hekim', H('2'), SON, AN])
+  await q(DAVET, ['uz', KL, SA, 'hekim', H('3'), SON, AN])
+  await q(DAVET, ['uz', KL, SA, 'muttefik', H('4'), SON, AN])
+  await q(DAVET, ['uz', KL, SA, 'on-buro', H('5'), SON, AN])
+  await bekle('L. invitation: the owner\'s position is never offered → refused 23514', DAVET, ['uz', KL, SA, 'sahip', H('6'), SON, AN], '23514')
+  await bekle('L. invitation: issued by somebody who is not a member of that clinic → refused 23514', DAVET, ['uz', KL, S2, 'hekim', H('6'), SON, AN], '23514')
+  await bekle('L. invitation: for ANOTHER country\'s clinic → refused 23514', DAVET, ['uz', KLZ, SA, 'hekim', H('6'), SON, AN], '23514')
+  await bekle('L. invitation: without an expiry → refused 23502', DAVET, ['uz', KL, SA, 'hekim', H('6'), null, AN], '23502')
+  await bekle('L. invitation: an expiry further than 31 days → refused 23514', DAVET, ['uz', KL, SA, 'hekim', H('6'), '2026-12-19T06:00:00Z', AN], '23514')
+  await bekle('L. invitation: a code that is not a hash → refused 23514', DAVET, ['uz', KL, SA, 'hekim', 'QA-OCHIQ-KOD', SON, AN], '23514')
+  await bekle('L. invitation: the same code twice → refused 23505', DAVET, ['uz', KL, SA, 'hekim', H('2'), SON, AN], '23505')
+
+  // joining
+  ok('L. joining: a code that does not exist → KOD', (await durum(KATIL, ['uz', H('9'), YO, AN])) === 'KOD')
+  ok('L. joining: an uz code from a kz build → KOD, and the code is not used up', (await durum(KATIL, ['kz', H('1'), YO, AN])) === 'KOD' && (await say('ulke_klinik_davetleri', 'kullanildi_at is not null')) === 0)
+  ok('L. joining: an account of another country with an uz code → KOD', (await durum(KATIL, ['uz', H('1'), KZ, AN])) === 'KOD' && (await say('ulke_klinik_uyeleri', 'doctor_id = $1 and klinik_id = $2', [KZ, KL])) === 0)
+  ok('L. joining: an expired code → KOD', (await durum(KATIL, ['uz', H('1'), YO, SON])) === 'KOD')
+  const j1 = await islev(KATIL, ['uz', H('1'), YO, AN])
+  ok('L. joining: the administrator joins with the position of the invitation', j1.durum === 'TAMAM' && j1.konum === 'yonetici' && j1.klinik_id === KL && (await say('ulke_klinik_uyeleri', `doctor_id = $1 and klinik_id = $2 and konum = 'yonetici'`, [YO, KL])) === 1)
+  ok('L. joining: ONE USE — the same code a second time → KOD', (await durum(KATIL, ['uz', H('1'), HE, AN])) === 'KOD' && (await say('ulke_klinik_uyeleri', 'doctor_id = $1', [HE])) === 0)
+  for (const [kod, kim] of [['2', HE], ['3', H2x], ['4', MU], ['5', OB]]) await islev(KATIL, ['uz', H(kod), kim, AN])
+  ok('L. joining: the clinic has its owner, administrator, two doctors, an allied professional and a front-desk member', JSON.stringify(await q(`select konum, count(*)::int n from ulke_klinik_uyeleri where klinik_id = $1 group by 1 order by 1`, [KL])) === JSON.stringify([{ konum: 'hekim', n: 2 }, { konum: 'muttefik', n: 1 }, { konum: 'on-buro', n: 1 }, { konum: 'sahip', n: 1 }, { konum: 'yonetici', n: 1 }]))
+  await q(DAVET, ['uz', KL2, S2, 'hekim', H('7'), SON, AN])
+  ok('L. joining: a member of one clinic cannot join another — and the code is NOT used up', (await durum(KATIL, ['uz', H('7'), HE, AN])) === 'UYE' && (await say('ulke_klinik_davetleri', `kod_hash = $1 and kullanildi_at is null`, [H('7')])) === 1)
+  await bekle('L. keys: AT MOST ONE CLINIC PER ACCOUNT, also by a statement → refused 23505', `insert into ulke_klinik_uyeleri (ulke, klinik_id, doctor_id, konum) values ('uz', $1, $2, 'hekim')`, [KL2, HE], '23505')
+  await bekle('L. invitation: an administrator may not invite an administrator → refused 23514', DAVET, ['uz', KL, YO, 'yonetici', H('8'), SON, AN], '23514')
+  await bekle('L. invitation: a doctor may not issue one → refused 23514', DAVET, ['uz', KL, HE, 'on-buro', H('8'), SON, AN], '23514')
+  const dv = (await q(DAVET, ['uz', KL, YO, 'on-buro', H('8'), SON, AN]))[0].id
+  ok('L. invitation: an administrator may invite a front-desk member', Boolean(dv))
+  await bekle('L. trigger: an invitation\'s position does not change → refused 23514', `update ulke_klinik_davetleri set konum = 'hekim' where id = $1`, [dv], '23514')
+  await bekle('L. trigger: nor its expiry → refused 23514', `update ulke_klinik_davetleri set son_gecerlilik = son_gecerlilik + interval '1 day' where id = $1`, [dv], '23514')
+  await c.query(`update ulke_klinik_davetleri set iptal_at = $2 where id = $1`, [dv, AN])
+  ok('L. invitation: a withdrawn code → KOD', (await durum(KATIL, ['uz', H('8'), BO, AN])) === 'KOD' && (await say('ulke_klinik_uyeleri', 'doctor_id = $1', [BO])) === 0)
+  await bekle('L. trigger: a withdrawn invitation is not opened again → refused 23514', `update ulke_klinik_davetleri set iptal_at = null where id = $1`, [dv], '23514')
+  await bekle('L. trigger: a used invitation is not withdrawn afterwards → refused 23514', `update ulke_klinik_davetleri set iptal_at = now() where kod_hash = $1`, [H('1')], '23514')
+  // Two accounts, the same code, the same moment.
+  {
+    await q(DAVET, ['uz', KL2, S2, 'hekim', H('a'), SON, AN])
+    const [X1, X2] = ['b1', 'b2'].map((x) => `cccccccc-${x}${x}-4ccc-8ccc-cccccccccccc`)
+    for (const id of [X1, X2]) await hesapAc(id)
+    HEPSI.push(X1, X2)
+    const a = await baglan(), b = await baglan()
+    await a.query('begin'); await b.query('begin')
+    const ra = (await a.query(KATIL, ['uz', H('a'), X1, AN])).rows[0].r.durum
+    const pb = b.query(KATIL, ['uz', H('a'), X2, AN])
+    await a.query('commit')
+    const rb = (await pb).rows[0].r.durum
+    await b.query('commit'); await a.end(); await b.end()
+    ok('L. joining: two accounts with the same code at the same moment — one joins, the other gets KOD', ra === 'TAMAM' && rb === 'KOD' && (await say('ulke_klinik_uyeleri', 'doctor_id in ($1, $2)', [X1, X2])) === 1, `${ra}/${rb}`)
+  }
+
+  // members
+  await bekle('L. trigger: a second owner by a statement → refused 23514', `insert into ulke_klinik_uyeleri (ulke, klinik_id, doctor_id, konum) values ('uz', $1, $2, 'sahip')`, [KL, BO], '23514')
+  await bekle('L. trigger: the clinic\'s owner in any position but the owner\'s → refused 23514', `update ulke_klinik_uyeleri set konum = 'hekim' where doctor_id = $1`, [SA], '23514')
+  await bekle('L. trigger: nobody is made owner by a statement → refused 23514', `update ulke_klinik_uyeleri set konum = 'sahip' where doctor_id = $1`, [YO], '23514')
+  await bekle('L. trigger: a member is not moved to another clinic → refused 23514', `update ulke_klinik_uyeleri set klinik_id = $2 where doctor_id = $1`, [HE, KL2], '23514')
+  await bekle('L. trigger: the owner is not removed from a clinic that exists → refused 23514', `delete from ulke_klinik_uyeleri where doctor_id = $1`, [SA], '23514')
+  await bekle('L. keys: an unknown position → refused 23514', `update ulke_klinik_uyeleri set konum = 'direktor' where doctor_id = $1`, [HE], '23514')
+  await bekle('L. keys: a member of a clinic of ANOTHER country → refused 23503', `insert into ulke_klinik_uyeleri (ulke, klinik_id, doctor_id, konum) values ('uz', $1, $2, 'hekim')`, [KLZ, BO], '23503')
+  ok('L. who may act on whom: the owner on anybody but the owner; an administrator on a doctor, an allied professional or a front-desk member; nobody else on anybody', JSON.stringify((await q(`select array_agg(public.ulke_klinik_yonetebilir(a, b) order by a, b) r from unnest(array['sahip','yonetici','hekim','muttefik','on-buro']) a, unnest(array['sahip','yonetici','hekim','muttefik','on-buro']) b`))[0].r) === JSON.stringify([
+    /* hekim    */ false, false, false, false, false,
+    /* muttefik */ false, false, false, false, false,
+    /* on-buro  */ false, false, false, false, false,
+    /* sahip    → hekim, muttefik, on-buro, sahip, yonetici */ true, true, true, false, true,
+    /* yonetici → hekim, muttefik, on-buro, sahip, yonetici */ true, true, true, false, false,
+  ]))
+
+  // grants
+  const BAS = '2026-10-12T00:00:00Z', BIT = '2026-10-19T00:00:00Z'
+  const ver = (veren, alan, tur, hastaId = null, bas = null, bit = null, kaydeden = veren, klinik = KL, ulke = 'uz') => islev(VER, [ulke, klinik, veren, alan, tur, hastaId, bas, bit, kaydeden, AN])
+  const y1 = await ver(HE, OB, 'on-buro-randevu')
+  ok('L. grant: a doctor gives the front desk the appointments capability; it is written to the record', y1.durum === 'TAMAM' && JSON.stringify(await q(`select doctor_id, kisi_id, alan_id, patient_id, yetki_id, tur, olay, ne from ulke_klinik_erisim_kayitlari`)) === JSON.stringify([{ doctor_id: HE, kisi_id: HE, alan_id: OB, patient_id: null, yetki_id: y1.yetki_id, tur: 'on-buro-randevu', olay: 'verildi', ne: null }]))
+  const y1b = await ver(HE, OB, 'on-buro-randevu')
+  ok('L. grant: the same grant again → VAR with the same id, nothing written', y1b.durum === 'VAR' && y1b.yetki_id === y1.yetki_id && (await say('ulke_klinik_yetkileri')) === 1 && (await say('ulke_klinik_erisim_kayitlari')) === 1)
+  ok('L. grant: EACH CAPABILITY SEPARATELY — the appointments grant is one row of one kind', (await say('ulke_klinik_yetkileri', `alan_id = $1 and tur <> 'on-buro-randevu'`, [OB])) === 0)
+  ok('L. grant: a front-desk capability for a doctor → KONUM', (await ver(HE, H2x, 'on-buro-randevu')).durum === 'KONUM')
+  ok('L. grant: a share for a front-desk member → KONUM', (await ver(HE, OB, 'paylasim', P1)).durum === 'KONUM')
+  ok('L. grant: cover for an allied professional → KONUM', (await ver(HE, MU, 'vekalet', null, BAS, BIT)).durum === 'KONUM')
+  ok('L. grant: a front-desk member has no patients to give a grant for → KONUM', (await ver(OB, H2x, 'vekalet', null, BAS, BIT)).durum === 'KONUM')
+  ok('L. grant: to oneself → NOT_FOUND', (await ver(HE, HE, 'vekalet', null, BAS, BIT)).durum === 'NOT_FOUND')
+  ok('L. grant: to a member of ANOTHER clinic → NOT_FOUND', (await ver(HE, S2, 'vekalet', null, BAS, BIT)).durum === 'NOT_FOUND')
+  ok('L. grant: named under ANOTHER clinic → NOT_FOUND', (await ver(HE, OB, 'on-buro-hasta', null, null, null, HE, KL2)).durum === 'NOT_FOUND')
+  ok('L. grant: from a kz build → NOT_FOUND', (await ver(HE, OB, 'on-buro-hasta', null, null, null, HE, KL, 'kz')).durum === 'NOT_FOUND')
+  ok('L. grant: a share without a patient, a share with a period, cover without a period → GECERSIZ', (await ver(HE, MU, 'paylasim')).durum === 'GECERSIZ' && (await ver(HE, MU, 'paylasim', P1, BAS, BIT)).durum === 'GECERSIZ' && (await ver(HE, H2x, 'vekalet')).durum === 'GECERSIZ')
+  ok('L. grant: cover longer than 31 days, cover that has already ended, a capability that does not exist → GECERSIZ', (await ver(HE, H2x, 'vekalet', null, BAS, '2026-11-20T00:00:00Z')).durum === 'GECERSIZ' && (await ver(HE, H2x, 'vekalet', null, '2026-10-01T00:00:00Z', '2026-10-05T00:00:00Z')).durum === 'GECERSIZ' && (await ver(HE, OB, 'hamma-narsa')).durum === 'GECERSIZ')
+  ok('L. grant: a share of ANOTHER doctor\'s patient → NOT_FOUND', (await ver(HE, MU, 'paylasim', PH2)).durum === 'NOT_FOUND')
+  ok('L. grant: BY THE CLINIC\'S ADMINISTRATOR on a doctor\'s behalf → YETKI_YOK', (await ver(HE, OB, 'on-buro-hasta', null, null, null, YO)).durum === 'YETKI_YOK')
+  ok('L. grant: by another doctor on a doctor\'s behalf → YETKI_YOK', (await ver(HE, OB, 'on-buro-hasta', null, null, null, H2x)).durum === 'YETKI_YOK')
+  ok('L. … and none of the refused requests wrote a grant or a record row', (await say('ulke_klinik_yetkileri')) === 1 && (await say('ulke_klinik_erisim_kayitlari')) === 1)
+  const y2 = await ver(HE, MU, 'paylasim', P1)
+  const y3 = await ver(HE, H2x, 'vekalet', null, BAS, BIT)
+  ok('L. grant: a share of one named patient with the allied professional; cover for a stated period with the other doctor', y2.durum === 'TAMAM' && y3.durum === 'TAMAM' && (await say('ulke_klinik_yetkileri', `tur = 'paylasim' and patient_id = $1 and alan_id = $2`, [P1, MU])) === 1 && (await say('ulke_klinik_yetkileri', `tur = 'vekalet' and alan_id = $1 and bitis = $2`, [H2x, BIT])) === 1)
+  ok('L. grant: a share is PER PATIENT — the second patient of the same doctor has no row', (await say('ulke_klinik_yetkileri', `patient_id = $1`, [P2])) === 0)
+  const y3b = await ver(HE, H2x, 'vekalet', null, BAS, '2026-10-15T00:00:00Z')
+  ok('L. grant: cover given again replaces the period — the one before it is withdrawn in the same step, and recorded', y3b.durum === 'TAMAM' && (await say('ulke_klinik_yetkileri', `tur = 'vekalet' and iptal_at is null`)) === 1 && (await say('ulke_klinik_yetkileri', `id = $1 and iptal_at is not null`, [y3.yetki_id])) === 1 && (await say('ulke_klinik_erisim_kayitlari', `yetki_id = $1 and olay = 'geri-alindi'`, [y3.yetki_id])) === 1)
+  // The pack may let the clinic's owner enter a grant for a doctor; the database allows the owner and nobody else.
+  const y4 = await ver(H2x, OB, 'on-buro-randevu', null, null, null, SA)
+  ok('L. grant: entered by the clinic\'s OWNER for a doctor — allowed by the database (the application allows it only where the pack says so), and the record names who entered it', y4.durum === 'TAMAM' && (await say('ulke_klinik_erisim_kayitlari', `yetki_id = $1 and kisi_id = $2 and doctor_id = $3`, [y4.yetki_id, SA, H2x])) === 1)
+
+  // the keys and the trigger of a grant, by statements
+  const YETKI = `insert into ulke_klinik_yetkileri (ulke, klinik_id, doctor_id, alan_id, tur, patient_id, baslangic, bitis, kaydeden_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+  await bekle('L. keys: a grant to an account that is not a member of that clinic → refused 23503', YETKI, ['uz', KL, HE, S2, 'vekalet', null, BAS, BIT, HE], '23503')
+  await bekle('L. keys: a grant from an account that is not a member of that clinic → refused 23503', YETKI, ['uz', KL, S2, H2x, 'vekalet', null, BAS, BIT, S2], '23503')
+  await bekle('L. keys: a grant under ANOTHER country → refused 23503', YETKI, ['kz', KL, HE, OB, 'on-buro-hasta', null, null, null, HE], '23503')
+  await bekle('L. keys: a share of ANOTHER doctor\'s patient → refused 23503', YETKI, ['uz', KL, HE, MU, 'paylasim', PH2, null, null, HE], '23503')
+  await bekle('L. keys: a share of a patient of ANOTHER country → refused 23503', YETKI, ['uz', KL, HE, MU, 'paylasim', PKZ, null, null, HE], '23503')
+  await bekle('L. keys: a second open grant of the same kind for the same pair → refused 23505', YETKI, ['uz', KL, HE, OB, 'on-buro-randevu', null, null, null, HE], '23505')
+  await bekle('L. keys: a share without a patient → refused 23514', YETKI, ['uz', KL, HE, MU, 'paylasim', null, null, null, HE], '23514')
+  await bekle('L. keys: cover without a period → refused 23514', YETKI, ['uz', KL, H2x, HE, 'vekalet', null, null, null, H2x], '23514')
+  await bekle('L. keys: cover longer than 31 days → refused 23514', YETKI, ['uz', KL, H2x, HE, 'vekalet', null, BAS, '2026-12-01T00:00:00Z', H2x], '23514')
+  await bekle('L. keys: a grant to oneself → refused 23514', YETKI, ['uz', KL, HE, HE, 'vekalet', null, BAS, BIT, HE], '23514')
+  await bekle('L. trigger: a front-desk capability for a doctor → refused 23514', YETKI, ['uz', KL, H2x, HE, 'on-buro-portal', null, null, null, H2x], '23514')
+  await bekle('L. trigger: a share for a front-desk member → refused 23514', YETKI, ['uz', KL, HE, OB, 'paylasim', P2, null, null, HE], '23514')
+  await bekle('L. trigger: a grant entered by the administrator → refused 23514', YETKI, ['uz', KL, HE, OB, 'on-buro-hasta', null, null, null, YO], '23514')
+  await bekle('L. trigger: a grant does not move to another member → refused 23514', `update ulke_klinik_yetkileri set alan_id = $2 where id = $1`, [y2.yetki_id, OB], '23514')
+  await bekle('L. trigger: its capability does not change → refused 23514', `update ulke_klinik_yetkileri set tur = 'on-buro-hasta' where id = $1`, [y1.yetki_id], '23514')
+  await bekle('L. trigger: its patient does not change → refused 23514', `update ulke_klinik_yetkileri set patient_id = $2 where id = $1`, [y2.yetki_id, P2], '23514')
+  await bekle('L. trigger: the period of cover is not stretched → refused 23514', `update ulke_klinik_yetkileri set bitis = bitis + interval '10 days' where id = $1`, [y3b.yetki_id], '23514')
+
+  // withdrawing
+  const GERI_AL = `select public.ulke_klinik_yetki_geri_al($1, $2, $3, $4) r`
+  ok('L. withdrawal: by somebody who is neither the doctor nor the member — the administrator, the owner → NOT_FOUND, nothing changed', (await durum(GERI_AL, ['uz', y2.yetki_id, YO, AN])) === 'NOT_FOUND' && (await durum(GERI_AL, ['uz', y2.yetki_id, SA, AN])) === 'NOT_FOUND' && (await say('ulke_klinik_yetkileri', 'id = $1 and iptal_at is null', [y2.yetki_id])) === 1)
+  ok('L. withdrawal: from a kz build → NOT_FOUND', (await durum(GERI_AL, ['kz', y2.yetki_id, HE, AN])) === 'NOT_FOUND')
+  ok('L. withdrawal: the doctor withdraws the share; it ends at once and is recorded', (await durum(GERI_AL, ['uz', y2.yetki_id, HE, AN])) === 'TAMAM' && (await say('ulke_klinik_yetkileri', 'id = $1 and iptal_at is not null and iptal_eden_id = $2', [y2.yetki_id, HE])) === 1 && (await say('ulke_klinik_erisim_kayitlari', `yetki_id = $1 and olay = 'geri-alindi' and kisi_id = $2 and patient_id = $3`, [y2.yetki_id, HE, P1])) === 1)
+  ok('L. withdrawal: a second time → AYNI, nothing written', (await durum(GERI_AL, ['uz', y2.yetki_id, HE, AN])) === 'AYNI' && (await say('ulke_klinik_erisim_kayitlari', `yetki_id = $1 and olay = 'geri-alindi'`, [y2.yetki_id])) === 1)
+  await bekle('L. trigger: a withdrawn grant is not opened again → refused 23514', `update ulke_klinik_yetkileri set iptal_at = null, iptal_eden_id = null where id = $1`, [y2.yetki_id], '23514')
+  ok('L. withdrawal: the member gives a grant up themselves', (await durum(GERI_AL, ['uz', y4.yetki_id, OB, AN])) === 'TAMAM')
+  const y2b = await ver(HE, MU, 'paylasim', P1)
+  ok('L. grant: after a withdrawal the same share can be given again, as a new row', y2b.durum === 'TAMAM' && y2b.yetki_id !== y2.yetki_id)
+
+  // the record
+  const KAYIT = `insert into ulke_klinik_erisim_kayitlari (ulke, doctor_id, kisi_id, alan_id, patient_id, yetki_id, tur, olay, ne) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`
+  const kr = (await q(KAYIT, ['uz', HE, OB, OB, P1, y1.yetki_id, 'on-buro-randevu', 'okuma', 'hasta-karti']))[0].id
+  ok('L. record: a read through a grant is one row — who, whose patient, what kind, when', Boolean(kr) && (await say('ulke_klinik_erisim_kayitlari', `id = $1 and created_at is not null`, [kr])) === 1)
+  await bekle('L. record: a read without saying what was read → refused 23514', KAYIT, ['uz', HE, OB, OB, P1, y1.yetki_id, 'on-buro-randevu', 'okuma', null], '23514')
+  await bekle('L. record: a row for a patient who is not that doctor\'s → refused 23503', KAYIT, ['uz', HE, OB, OB, PH2, y1.yetki_id, 'on-buro-randevu', 'okuma', 'hasta-karti'], '23503')
+  await bekle('L. record: a row under another country → refused 23503', KAYIT, ['kz', HE, OB, OB, null, y1.yetki_id, 'on-buro-randevu', 'okuma', 'randevu-listesi'], '23503')
+  await bekle('L. record: a row naming an account that is not a country account → refused 23503', KAYIT, ['uz', HE, L0, L0, null, y1.yetki_id, 'on-buro-randevu', 'okuma', 'randevu-listesi'], '23503')
+  await bekle('L. record: APPEND-ONLY — a row does not change → refused 23514', `update ulke_klinik_erisim_kayitlari set kisi_id = $2 where id = $1`, [kr, HE], '23514')
+  await bekle('L. record: APPEND-ONLY — a row is not deleted by a statement → refused 23514', `delete from ulke_klinik_erisim_kayitlari where id = $1`, [kr], '23514')
+  await bekle('L. record: … not by the doctor\'s id either → refused 23514', `delete from ulke_klinik_erisim_kayitlari where doctor_id = $1`, [HE], '23514')
+  await bekle('L. record: an account that appears in ANOTHER doctor\'s record cannot be removed while that record stands → refused 23503', `delete from auth.users where id = $1`, [OB], '23503')
+  ok('L. record: … and the refused removal left the account, its membership and its grants as they were', (await say('ulke_hesaplari', 'id = $1', [OB])) === 1 && (await say('ulke_klinik_uyeleri', 'doctor_id = $1', [OB])) === 1 && (await say('ulke_klinik_yetkileri', 'id = $1 and iptal_at is null', [y1.yetki_id])) === 1)
+
+  // a position that changes
+  const KONUM = `select public.ulke_klinik_konum_degistir($1, $2, $3, $4, $5, $6) r`
+  ok('L. position: an administrator may not change the owner, an administrator, or make an administrator', (await durum(KONUM, ['uz', KL, SA, 'hekim', YO, AN])) === 'SAHIP' && (await durum(KONUM, ['uz', KL, HE, 'yonetici', YO, AN])) === 'YETKI_YOK' && (await durum(KONUM, ['uz', KL, YO, 'hekim', YO, AN])) === 'YETKI_YOK')
+  ok('L. position: a doctor or a front-desk member may change nobody\'s; nobody is made owner; an unknown position is refused', (await durum(KONUM, ['uz', KL, OB, 'hekim', HE, AN])) === 'YETKI_YOK' && (await durum(KONUM, ['uz', KL, HE, 'hekim', OB, AN])) === 'YETKI_YOK' && (await durum(KONUM, ['uz', KL, HE, 'sahip', SA, AN])) === 'SAHIP' && (await durum(KONUM, ['uz', KL, HE, 'direktor', SA, AN])) === 'YETKI_YOK')
+  ok('L. position: the owner of ANOTHER clinic, and a kz build → NOT_FOUND', (await durum(KONUM, ['uz', KL, OB, 'hekim', S2, AN])) === 'NOT_FOUND' && (await durum(KONUM, ['kz', KL, OB, 'hekim', SA, AN])) === 'NOT_FOUND')
+  ok('L. position: the same position → AYNI, and the grants stand', (await durum(KONUM, ['uz', KL, OB, 'on-buro', YO, AN])) === 'AYNI' && (await say('ulke_klinik_yetkileri', 'alan_id = $1 and iptal_at is null', [OB])) === 1)
+  ok('L. position: the front-desk member becomes an allied professional — EVERY grant they held ends in the same step and is recorded', (await durum(KONUM, ['uz', KL, OB, 'muttefik', YO, AN])) === 'TAMAM' && (await say('ulke_klinik_yetkileri', 'alan_id = $1 and iptal_at is null', [OB])) === 0 && (await say('ulke_klinik_erisim_kayitlari', `yetki_id = $1 and olay = 'bitti' and kisi_id = $2`, [y1.yetki_id, YO])) === 1)
+  await c.query(`update ulke_klinik_uyeleri set konum = 'on-buro' where doctor_id = $1`, [OB])
+  const y5 = await ver(HE, OB, 'on-buro-portal')
+  await c.query(`update ulke_klinik_uyeleri set konum = 'muttefik' where doctor_id = $1`, [OB])
+  ok('L. position: changed by a STATEMENT, past the function — the trigger still ends every grant', y5.durum === 'TAMAM' && (await say('ulke_klinik_yetkileri', 'id = $1 and iptal_at is not null', [y5.yetki_id])) === 1)
+  await c.query(`update ulke_klinik_uyeleri set konum = 'on-buro' where doctor_id = $1`, [OB])
+
+  // removing a member
+  const CIKAR = `select public.ulke_klinik_uye_cikar($1, $2, $3, $4, $5) r`
+  const y6 = await ver(HE, OB, 'on-buro-randevu')
+  ok('L. removal: the owner is not removed, not by themselves and not by an administrator', (await durum(CIKAR, ['uz', KL, SA, SA, AN])) === 'SAHIP' && (await durum(CIKAR, ['uz', KL, SA, YO, AN])) === 'SAHIP')
+  ok('L. removal: a doctor removes nobody else; a front-desk member removes nobody else', (await durum(CIKAR, ['uz', KL, OB, HE, AN])) === 'YETKI_YOK' && (await durum(CIKAR, ['uz', KL, YO, HE, AN])) === 'YETKI_YOK' && (await durum(CIKAR, ['uz', KL, MU, OB, AN])) === 'YETKI_YOK')
+  ok('L. removal: by the owner of ANOTHER clinic, and from a kz build → NOT_FOUND, nobody removed', (await durum(CIKAR, ['uz', KL, OB, S2, AN])) === 'NOT_FOUND' && (await durum(CIKAR, ['kz', KL, OB, SA, AN])) === 'NOT_FOUND' && (await say('ulke_klinik_uyeleri', 'klinik_id = $1', [KL])) === 6)
+  ok('L. REMOVAL IS IMMEDIATE: the administrator removes the front-desk member — the member\'s row AND every grant given to them are gone in the same step', y6.durum === 'TAMAM' && (await durum(CIKAR, ['uz', KL, OB, YO, AN])) === 'TAMAM' && (await say('ulke_klinik_uyeleri', 'doctor_id = $1', [OB])) === 0 && (await say('ulke_klinik_yetkileri', 'alan_id = $1', [OB])) === 0)
+  ok('L. removal: the grant that was open is written to the record first, and the record keeps every earlier row', (await say('ulke_klinik_erisim_kayitlari', `yetki_id = $1 and olay = 'bitti' and kisi_id = $2 and alan_id = $3`, [y6.yetki_id, YO, OB])) === 1 && (await say('ulke_klinik_erisim_kayitlari', 'id = $1', [kr])) === 1)
+  await bekle('L. removal: afterwards no grant can be written for the removed member → refused 23503', `insert into ulke_klinik_yetkileri (ulke, klinik_id, doctor_id, alan_id, tur, kaydeden_id) values ('uz', $1, $2, $3, 'on-buro-randevu', $2)`, [KL, H2x, OB], '23503')
+  ok('L. removal: a removed member joins again only with a NEW invitation (the used one answers KOD)', (await durum(KATIL, ['uz', H('5'), OB, AN])) === 'KOD')
+  await c.query(`delete from ulke_klinik_uyeleri where ulke = 'uz' and doctor_id = $1`, [MU])
+  ok('L. removal by a STATEMENT, past the function: the grants still go with the membership, by key', (await say('ulke_klinik_yetkileri', 'alan_id = $1', [MU])) === 0 && (await say('ulke_klinik_yetkileri', 'id = $1', [y2b.yetki_id])) === 0)
+  await q(DAVET, ['uz', KL, SA, 'muttefik', H('b'), SON, AN])
+  await islev(KATIL, ['uz', H('b'), MU, AN])
+  ok('L. removal: a member who joins again starts with NO grant', (await say('ulke_klinik_uyeleri', `doctor_id = $1 and konum = 'muttefik'`, [MU])) === 1 && (await say('ulke_klinik_yetkileri', 'alan_id = $1', [MU])) === 0)
+  ok('L. removal: a doctor leaves by themselves — the grants THEY gave end with them', (await durum(CIKAR, ['uz', KL, HE, HE, AN])) === 'TAMAM' && (await say('ulke_klinik_yetkileri', 'doctor_id = $1', [HE])) === 0 && (await say('ulke_klinik_uyeleri', 'doctor_id = $1', [HE])) === 0)
+  ok('L. removal: the patients of a doctor who left are still that doctor\'s, untouched', (await say('ulke_hastalar', 'doctor_id = $1', [HE])) === 2)
+  ok('L. A PATIENT STILL BELONGS TO ONE DOCTOR: a visit by another doctor of the clinic on that patient is refused by the key the visit table always had', await (async () => { try { await c.query(`insert into ulke_muayeneler (ulke, doctor_id, patient_id) values ('uz', $1, $2)`, [H2x, P1]); return false } catch (e) { return e.code === '23503' } })())
+
+  // SERVER ONLY
+  {
+    const TABLOLAR = ['ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari']
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(SA, ulke); else await c.query(`set role ${rol}`)
+      const denenen = [
+        ...TABLOLAR.flatMap((t) => [`select 1 from ${t} limit 1`, `delete from ${t}`, `update ${t} set created_at = now()`]),
+        `insert into ulke_klinikler (ulke, doctor_id, ad) values ('uz', '${BO}', 'QA Ochiq')`,
+        `insert into ulke_klinik_uyeleri (ulke, klinik_id, doctor_id, konum) values ('uz', '${KL}', '${BO}', 'hekim')`,
+        `insert into ulke_klinik_yetkileri (ulke, klinik_id, doctor_id, alan_id, tur, kaydeden_id) values ('uz', '${KL}', '${H2x}', '${MU}', 'on-buro-randevu', '${H2x}')`,
+        `select public.ulke_klinik_kur('uz', '${BO}', 'QA Ochiq', now())`,
+        `select public.ulke_klinik_katil('uz', '${H('7')}', '${BO}', now())`,
+        `select public.ulke_klinik_uye_cikar('uz', '${KL}', '${MU}', '${SA}', now())`,
+        `select public.ulke_klinik_konum_degistir('uz', '${KL}', '${MU}', 'yonetici', '${SA}', now())`,
+        `select public.ulke_klinik_yetki_ver('uz', '${KL}', '${H2x}', '${MU}', 'paylasim', '${PH2}', null, null, '${H2x}', now())`,
+        `select public.ulke_klinik_yetki_geri_al('uz', '${y3b.yetki_id}', '${SA}', now())`,
+        `select public.ulke_klinik_yonetebilir('sahip', 'hekim')`,
+      ]
+      for (const sql of denenen) { try { await c.query(sql); cikti.push(`${sql.slice(0, 60)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 60)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('L. server only: the OWNER\'s own signed-in browser session can read, write and call NONE of it (its own clinic included)', girisli.length === 0, girisli.join('; '))
+    ok('L. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { for (const t of TABLOLAR) await c.query(`select count(*) from ${t}`); await c.query(`select public.ulke_klinik_yetki_ver('uz', $1, $2, $3, 'paylasim', $4, null, null, $2, now())`, [KL, H2x, MU, PH2]) } catch (e) { sunucu = `${e.code} ${e.message}` }
+    await c.query('reset role')
+    ok('L. server only: the server\'s role can', sunucu === 'ok' && (await say('ulke_klinik_yetkileri', 'patient_id = $1 and iptal_at is null', [PH2])) === 1, sunucu)
+  }
+
+  // removing a patient, and the accounts
+  await c.query(`delete from ulke_hastalar where id = $1 and doctor_id = $2 and ulke = 'uz'`, [PH2, H2x])
+  ok('L. removing a patient removes that patient\'s share and that patient\'s record rows (the only way a record row goes), and no one else\'s', (await say('ulke_klinik_yetkileri', 'patient_id = $1', [PH2])) === 0 && (await say('ulke_klinik_erisim_kayitlari', 'patient_id = $1', [PH2])) === 0 && (await say('ulke_klinik_erisim_kayitlari', 'id = $1', [kr])) === 1)
+  // The doctors whose records these are go first (their record goes with them); then everybody else.
+  await c.query(`delete from auth.users where id = $1`, [HE])
+  await c.query(`delete from auth.users where id = $1`, [H2x])
+  ok('L. removing a doctor\'s account removes that doctor\'s record with it, after which the accounts named in it can be removed', (await say('ulke_klinik_erisim_kayitlari')) === 0)
+  await c.query(`delete from auth.users where id = any($1::uuid[])`, [HEPSI])
+  const kalan = []
+  for (const t of ['ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari']) { const n = await say(t); if (n) kalan.push(`${t}: ${n}`) }
+  ok('L. removing the accounts removes every clinic they own, every membership, invitation, grant and record row (cascade) — an OWNER\'s account included, with its clinic', kalan.length === 0, kalan.join(', '))
+
+  // For section E: clinic data of the accounts IT removes — a clinic of D1 with D2 as a doctor, an invitation, a
+  // grant and its record row — so that the rollback of 145 has data to refuse over, and the removal of those
+  // accounts has it to cascade through. (The record is D1's: the doctor whose record it is goes first.)
+  const KE = (await islev(KUR, ['uz', D1, 'QA Klinika Qoladi', AN])).klinik_id
+  await q(DAVET, ['uz', KE, D1, 'hekim', H('c'), SON, AN])
+  await islev(KATIL, ['uz', H('c'), D2, AN])
+  const ye = await ver(D1, D2, 'vekalet', null, BAS, BIT, D1, KE)
+  ok('L. (for section E) a clinic, two members, an invitation, a grant and a record row are left for the rollback to refuse over', ye.durum === 'TAMAM' && (await say('ulke_klinik_erisim_kayitlari')) === 1)
 }
 
 // ── E. the rollback scripts ──

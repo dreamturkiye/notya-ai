@@ -54,6 +54,17 @@ const aracOrnegi = (() => {
   }
   return null
 })()
+// NOTYA-ULKE-KLINIK-01 — clinic accounts: the catalogue in the default form, the pack's settings, and the two roles the
+// walk-through signs up with — a doctor's role, and an allied role that may be given a share (null where the pack
+// lists none). The walk-through holds no position name and no sentence: it reads them from here.
+const kh = p.ozellikler.klinikHesaplari ? p.uygulama.klinikHesaplari ?? null : null
+const klinikBilgisi = kh && a.klinikMetinleri?.[d] ? {
+  m: a.klinikMetinleri[d], yetkiTurleri: kh.yetkiTurleri, paylasimRolleri: kh.paylasimRolleri, vekaletAzamiGun: kh.vekaletAzamiGun, davetGecerlilikGun: kh.davetGecerlilikGun, sahipHekimAdinaVerebilir: kh.sahipHekimAdinaVerebilir,
+  hekimRolu: a.roller.find((r) => r.taraf !== 'klinik-muttefik')?.anahtar ?? null,
+  muttefikRolu: a.roller.find((r) => r.taraf === 'klinik-muttefik' && kh.paylasimRolleri.includes(r.anahtar))?.anahtar ?? null,
+  // an allied role that may NOT be given a share, where the pack has one: the grant must be refused for it
+  paylasimsizRol: a.roller.find((r) => r.taraf === 'klinik-muttefik' && !kh.paylasimRolleri.includes(r.anahtar))?.anahtar ?? null,
+} : null
 process.stdout.write(JSON.stringify({
   kod: p.kod, yolOnEki: p.yolOnEki ?? '', dil: d, acikDiller: p.acikDiller, uygulamaDilleri: p.uygulama.diller, dilGruplari: p.uygulama.dilGruplari,
   hastaDilleri: p.uygulama.hastaDilleri, saatDilimleri: p.uygulama.saatDilimleri, saatBicimi: p.uygulama.saatBicimi, tarihDeseni: p.bicim.tarihDeseni,
@@ -90,6 +101,7 @@ process.stdout.write(JSON.stringify({
     m: a.konsultasyonMetinleri[d], ikinci: a.konsultasyonMetinleri[p.uygulama.diller.at(-1) ?? d], kutu: KONSULTASYON_ARACI,
     acikGun: p.uygulama.konsultasyon.acikGun, kapanisSonrasiGun: p.uygulama.konsultasyon.kapanisSonrasiGun, rizaSurumu: k.konsultasyonRizasi?.surum ?? null,
   } : null,
+  klinik: klinikBilgisi,
   // what must NEVER be on a screen of this country: the "to be supplied" marker, and what marks another country's content
   eksikIsareti: EKSIK_ISARETI,
   yabanci: digerleri.map(([kod, u]) => ({ kod, terimler: u.sizintiTerimleri.filter((t) => !t.terim.includes(EKSIK_ISARETI)), harfler: u.sizintiHarfleri, iz: u.paket.iz })),

@@ -13,6 +13,7 @@
  *                                     shows in ./klinik/asistanKimligi.ts
  *   note templates                    ./klinik/notSablonlari.ts
  *   tools: which, for whom, in which words  ./uygulama/araclar/ (the tools themselves are the kit's: lib/ulke/araclar/)
+ *   clinic accounts, three forms      ./uygulama/klinikMetinleri.ts (Cyrillic derived by rule: ./uygulama/klinikMetinleriKiril.ts)
  *   landing page copy, three forms    ./acilis/icerik.ts; what its plans cost: ./acilis/fiyatlar.ts
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
@@ -28,6 +29,7 @@ import { UZ_MESAJ_METINLERI } from './uygulama/mesajMetinleri'
 import { UZ_SABLON_METINLERI } from './uygulama/sablonMetinleri'
 import { UZ_KONSULTASYON_METINLERI } from './uygulama/konsultasyonMetinleri'
 import { UZ_ARACLAR } from './uygulama/araclar'
+import { UZ_KLINIK_METINLERI } from './uygulama/klinikMetinleri'
 
 export const UZ_ARAYUZ: UlkeArayuzu = {
   marka: 'Notya',
@@ -39,6 +41,7 @@ export const UZ_ARAYUZ: UlkeArayuzu = {
   sablonMetinleri: UZ_SABLON_METINLERI,
   konsultasyonMetinleri: UZ_KONSULTASYON_METINLERI,
   araclar: UZ_ARACLAR,
+  klinikMetinleri: UZ_KLINIK_METINLERI,
   roller: UZ_ROL_TANIMLARI,
   asistan: uzAsistanKimligi,
   notSablonlari: UZ_NOT_SABLONLARI,

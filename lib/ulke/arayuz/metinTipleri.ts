@@ -955,3 +955,228 @@ export type KonsultasyonMetni = {
     readonly ac: string
   }
 }
+
+/**
+ * NOTYA-ULKE-KLINIK-01 — the CLINIC ACCOUNTS catalogue (feature `klinikHesaplari`), once per language form. Read in
+ * the account's own form; nothing here is read by a patient.
+ *
+ *   kabuk      the links in the navigation
+ *   konum      the name of each position of a member
+ *   yetkiTuru  the name of each capability a doctor can give, and `yetkiAciklama` what it lets the member do — the
+ *              sentence the DOCTOR reads before giving it. THE ONE FOR `on-buro-portal` MUST SAY PLAINLY that the
+ *              member will see the patient's link and PIN (whoever hands them over has seen them).
+ *   giris      an account in no clinic: create one, or join with a code
+ *   klinik     the clinic: its members, positions, removing and leaving
+ *   davet      invitations
+ *   takvim     the clinic's schedule, for the owner and an administrator
+ *   yetki      "who can help with my patients": giving, withdrawing, what the account itself holds
+ *   kayit      the record of everything done about the doctor's patients through a grant
+ *   paylasilan what was shared with the account, and what it covers
+ *   onBuro     the front-desk workspace
+ *
+ * The names of an appointment's statuses, the labels of a patient's fields and the days are NOT here: the screens
+ * take them from the appointment catalogue and the application's own, in the same form.
+ * Placeholders: '%' where a sentence carries one value, '%1' '%2' where it carries two (see each key).
+ */
+export type KlinikMetni = {
+  readonly kabuk: {
+    readonly klinik: string
+    readonly onBuro: string
+  }
+  readonly konum: Readonly<Record<'sahip' | 'yonetici' | 'hekim' | 'muttefik' | 'on-buro', string>>
+  readonly yetkiTuru: Readonly<Record<'on-buro-randevu' | 'on-buro-hasta' | 'on-buro-portal' | 'paylasim' | 'vekalet', string>>
+  readonly yetkiAciklama: Readonly<Record<'on-buro-randevu' | 'on-buro-hasta' | 'on-buro-portal' | 'paylasim' | 'vekalet', string>>
+  readonly giris: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly kurBaslik: string
+    readonly kurAciklama: string
+    readonly ad: string
+    readonly kur: string
+    readonly katilBaslik: string
+    readonly katilAciklama: string
+    readonly kod: string
+    readonly katil: string
+    readonly bekliyor: string
+    readonly adGerekli: string
+    readonly kodGecersiz: string
+    readonly zatenUye: string
+    readonly yapilamadi: string
+  }
+  readonly klinik: {
+    /** Under the clinic's name. % the name of the account's own position */
+    readonly konumunuz: string
+    /** A position alone opens no patient: said once, on the clinic's screen. */
+    readonly konumAciklama: string
+    readonly uyeler: string
+    /** Beside the account's own row. */
+    readonly siz: string
+    /** A member who has not chosen a role. */
+    readonly rolYok: string
+    readonly konumDegistir: string
+    /** Under the position picker: changing a position ends every permission of that member. */
+    readonly konumUyari: string
+    readonly cikar: string
+    /** Asked before a member is removed. % the member's name */
+    readonly cikarOnay: string
+    readonly ayril: string
+    readonly ayrilOnay: string
+    readonly evet: string
+    readonly vazgec: string
+    readonly degistirildi: string
+    readonly cikarildi: string
+    readonly yetkiYok: string
+    readonly yapilamadi: string
+    readonly yetkilerBaglanti: string
+    readonly paylasilanBaglanti: string
+    readonly onBuroBaglanti: string
+    readonly geri: string
+  }
+  readonly davet: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly konum: string
+    readonly olustur: string
+    /** Over a code that was just made: it is shown this once. */
+    readonly birKez: string
+    readonly kod: string
+    readonly kopyala: string
+    readonly kopyalandi: string
+    readonly kopyalanamadi: string
+    /** % the day the code ends */
+    readonly sonGecerlilik: string
+    readonly liste: string
+    readonly listeBos: string
+    readonly durum: Readonly<Record<'acik' | 'kullanildi' | 'iptal' | 'suresi-doldu', string>>
+    readonly geriAl: string
+    readonly geriAlindi: string
+    readonly yetkiYok: string
+    readonly yapilamadi: string
+  }
+  readonly takvim: {
+    readonly baslik: string
+    /** The schedule shows when a member is busy and nothing of any patient. */
+    readonly aciklama: string
+    readonly bos: string
+  }
+  readonly yetki: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly verilen: string
+    readonly verilenBos: string
+    readonly ver: string
+    readonly uye: string
+    readonly uyeSec: string
+    /** Nobody in the clinic can be given a permission yet. */
+    readonly uyeYok: string
+    readonly tur: string
+    readonly turSec: string
+    readonly hasta: string
+    readonly hastaAra: string
+    readonly hastaSec: string
+    readonly hastaYok: string
+    readonly bitisGun: string
+    /** Under the day field of cover. % the largest number of days the country allows */
+    readonly bitisIpucu: string
+    readonly gonder: string
+    readonly bekliyor: string
+    readonly verildi: string
+    readonly zatenVar: string
+    readonly geriAl: string
+    readonly geriAlindi: string
+    readonly durumGecerli: string
+    readonly durumBitti: string
+    /** The period of cover. %1 its first day, %2 its last */
+    readonly donem: string
+    /** % the patient's name */
+    readonly hastaIcin: string
+    readonly hataKonum: string
+    readonly hataRol: string
+    readonly hataTur: string
+    readonly hataGecersiz: string
+    readonly hataBulunamadi: string
+    readonly yapilamadi: string
+    readonly alinan: string
+    readonly alinanBos: string
+    /** % the doctor's name */
+    readonly hekimden: string
+    readonly birak: string
+  }
+  readonly kayit: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly bos: string
+    /** A permission was given / withdrawn / ended. %1 the capability's name, %2 the member it is about */
+    readonly olay: Readonly<Record<'verildi' | 'geri-alindi' | 'bitti', string>>
+    /** What was read or written through a permission. */
+    readonly ne: Readonly<Record<'randevu-listesi' | 'hasta-arama' | 'hasta-karti' | 'hasta-olusturma' | 'randevu-olusturma' | 'randevu-degisiklik' | 'portal-baglantisi' | 'form-istegi' | 'not-listesi', string>>
+    /** % the patient's name */
+    readonly hasta: string
+  }
+  readonly paylasilan: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly bos: string
+    /** % the doctor's name */
+    readonly hekim: string
+    /** % the last day of cover */
+    readonly bitis: string
+    readonly ac: string
+    /** Over every note: read-only, approved notes only. */
+    readonly saltOkunur: string
+    readonly notlar: string
+    readonly notYok: string
+    /** %1 the day of the visit, %2 the day the note was approved */
+    readonly notTarihi: string
+    /** % the patient's birth date */
+    readonly dogum: string
+    readonly hastaAra: string
+    readonly ara: string
+    readonly aramaKisa: string
+    readonly sonucYok: string
+    readonly randevular: string
+    readonly randevuYok: string
+    readonly okunamadi: string
+    readonly geri: string
+  }
+  readonly onBuro: {
+    readonly baslik: string
+    readonly aciklama: string
+    /** No doctor has given the account a permission. */
+    readonly hekimYok: string
+    readonly hekim: string
+    /** What the front desk sees of a patient, said once. */
+    readonly gordugunuz: string
+    readonly randevular: string
+    readonly randevuYok: string
+    readonly hastaAra: string
+    readonly ara: string
+    readonly aramaKisa: string
+    readonly sonucYok: string
+    readonly sec: string
+    /** % the patient's birth date */
+    readonly dogum: string
+    readonly telefonYok: string
+    readonly randevuAl: string
+    readonly gun: string
+    readonly alindi: string
+    readonly degistirildi: string
+    readonly yeniHasta: string
+    readonly hastaKaydedildi: string
+    readonly portalVer: string
+    /** Over a link and PIN that were just made: shown this once; the link before it stopped working. */
+    readonly portalBirKez: string
+    readonly baglanti: string
+    readonly pin: string
+    readonly kopyala: string
+    readonly kopyalandi: string
+    readonly kopyalanamadi: string
+    readonly formIste: string
+    readonly formIstendi: string
+    /** The doctor has not given this permission. */
+    readonly yetkiYok: string
+    readonly yapilamadi: string
+    readonly bekliyor: string
+    readonly kapat: string
+  }
+}

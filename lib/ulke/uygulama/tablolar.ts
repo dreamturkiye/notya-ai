@@ -58,6 +58,12 @@ export const ULKE_TABLOLARI = [
   'ulke_hekim_sablonlari',
   'ulke_konsultasyon_kodlari',
   'ulke_konsultasyonlar',
+  // NOTYA-ULKE-KLINIK-01 — clinic accounts (migration 145): clinics, members, invitations, grants, the record. Server only.
+  'ulke_klinikler',
+  'ulke_klinik_uyeleri',
+  'ulke_klinik_davetleri',
+  'ulke_klinik_yetkileri',
+  'ulke_klinik_erisim_kayitlari',
 ] as const
 export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
 
@@ -66,7 +72,7 @@ export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
  * Only the server's routes reach them. (Every other country table lets a signed-in account read its own rows of its
  * own country, as a second line behind the server.)
  */
-export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar']
+export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari']
 
 /** Database functions a country build may call. Each takes the country as `p_ulke`. */
 export const ULKE_ISLEVLERI = [
@@ -75,6 +81,8 @@ export const ULKE_ISLEVLERI = [
   'ulke_kullanim_ekle', 'ulke_portal_erisim_ver', 'ulke_portal_erisim_iptal', 'ulke_portal_deneme_al', 'ulke_portal_deneme_sonucu', 'ulke_ozet_paylas', 'ulke_randevu_istegi_kabul',
   // NOTYA-ULKE-INTAKE-01 (migration 138)
   'ulke_hasta_formu_iste',
+  // NOTYA-ULKE-KLINIK-01 (migration 145)
+  'ulke_klinik_kur', 'ulke_klinik_katil', 'ulke_klinik_uye_cikar', 'ulke_klinik_konum_degistir', 'ulke_klinik_yetki_ver', 'ulke_klinik_yetki_geri_al',
 ] as const
 export type UlkeIslevi = (typeof ULKE_ISLEVLERI)[number]
 

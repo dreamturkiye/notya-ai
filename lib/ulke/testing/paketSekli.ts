@@ -36,6 +36,7 @@ export const ISTEGE_BAGLI: Record<string, Record<string, string>> = {
   mesaj: {},
   sablon: {},
   konsultasyon: {},
+  klinik: {},
   acilis: {},
 }
 const SABIT_ANAHTARLAR = new Set(['id', 'rol'])
@@ -61,7 +62,7 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
 
 /** The shape this pack's content has. Optional keys the pack does not use are added from ISTEGE_BAGLI, so the file never depends on which pack wrote it. */
 export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string, unknown> {
-  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar || !a.mesajMetinleri || !a.sablonMetinleri || !a.konsultasyonMetinleri) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area, messages, "my templates", consultation and a landing page; the shape is read from a pack that brings all eight`)
+  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar || !a.mesajMetinleri || !a.sablonMetinleri || !a.konsultasyonMetinleri || !a.klinikMetinleri) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area, messages, "my templates", consultation, clinic accounts and a landing page; the shape is read from a pack that brings all eight`)
   const d = p.varsayilanDil
   const ekle = (agac: Record<string, unknown>, bolum: string) => {
     for (const [yol, kosul] of Object.entries(ISTEGE_BAGLI[bolum])) {
@@ -87,6 +88,9 @@ export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string,
     mesaj: sirala(ekle(sekilCikar(a.mesajMetinleri[d], 'mesaj') as Record<string, unknown>, 'mesaj')),
     sablon: sirala(ekle(sekilCikar(a.sablonMetinleri[d], 'sablon') as Record<string, unknown>, 'sablon')),
     konsultasyon: sirala(ekle(sekilCikar(a.konsultasyonMetinleri[d], 'konsultasyon') as Record<string, unknown>, 'konsultasyon')),
+    // Clinic accounts: the clinic's screen, permissions, the access record, the front desk. Which permissions a country
+    // has, and for whom, is not part of the shape: it is that country's settings, read by a lawyer.
+    klinik: sirala(ekle(sekilCikar(a.klinikMetinleri[d], 'klinik') as Record<string, unknown>, 'klinik')),
     acilis: sirala(sekilCikar(a.acilis.icerik[d], 'acilis', a.acilis.capalar)),
   }
 }

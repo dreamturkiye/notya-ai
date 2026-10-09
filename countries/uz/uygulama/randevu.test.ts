@@ -753,8 +753,11 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     const izin = ulkePaketi().rotalar
     if (izin !== 'hepsi') assert.deepEqual(izin.apiOnEkleri, ['/api/ulke/'])
     for (const d of ['hatirlatma', 'iletisim', 'mesaj', 'cron', 'randevu/hatirlatma']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
-    // Not built, and not half-built either: no calendar sync, no clinic-wide calendar.
-    for (const d of ['google', 'takvim-esitleme', 'klinik']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
+    // Not built, and not half-built either: no calendar sync.
+    for (const d of ['google', 'takvim-esitleme']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
+    // Since NOTYA-ULKE-KLINIK-01 a clinic has a schedule of its own (app/api/ulke/klinik/takvim: when each member has
+    // an appointment, with nothing of any patient). It is read-only and sends nothing either, like everything here.
+    assert.doesNotMatch(kod('lib/ulke/klinikHesabi/onBuro.ts') + kod('lib/ulke/klinikHesabi/klinik.ts') + kod('lib/ulke/klinikHesabi/yetki.ts') + kod('lib/ulke/klinikHesabi/paylasim.ts'), /fetch\(|sendBeacon|whatsapp|telegram|sms:|mailto:|googleapis/i, 'clinic accounts send nothing to anybody')
     assert.doesNotMatch(kod('lib/ulke/uygulama/randevular.ts') + takvim, /google|googleapis|ics\b/i)
     // NOTYA-ULKE-PORTAL-01: the patient portal exists since 2026-10-09. A patient still BOOKS NOTHING: the one thing a
     // portal session may write is a REQUEST, which holds no time; only the doctor's acceptance writes an appointment
