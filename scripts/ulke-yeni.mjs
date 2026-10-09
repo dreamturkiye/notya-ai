@@ -196,7 +196,7 @@ export const ${B}_PAKETI: UlkePaketi = {
   diller: ['${DIL}'],
   acikDiller: metin.acikDiller,
   varsayilanDil: '${DIL}',
-  paraBirimi: { kod: eksik('currency: ISO 4217 code, e.g. GBP'), simge: eksik('currency: the symbol or word people write, e.g. £'), ondalikHane: eksikAyar('currency: decimal places shown to people (2 for most, 0 for some)') },
+  paraBirimi: { kod: eksik('currency: ISO 4217 code, e.g. EUR'), simge: eksik('currency: the symbol or word people write, e.g. €'), ondalikHane: eksikAyar('currency: decimal places shown to people (2 for most, 0 for some)') },
   saatDilimi: eksik('time: the default IANA time zone, e.g. Europe/London — the SAME value as in ./derleme.mjs'),
   bicim: {
     yerel: eksik('format: the Intl locale for dates and numbers, e.g. en-GB'),

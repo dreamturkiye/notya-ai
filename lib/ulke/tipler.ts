@@ -12,14 +12,14 @@ import type { ComponentType } from 'react'
 import type { HastaFormuIcerigi } from './intake/tipler'
 
 /** ISO 3166-1 alpha-2, lower case. Adding a country = a new folder under countries/ + a branch in countries/active/. */
-export const ULKE_KODLARI = ['tr', 'uz'] as const
+export const ULKE_KODLARI = ['tr', 'uz', 'gb', 'us', 'au', 'nz', 'ca'] as const
 export type UlkeKodu = (typeof ULKE_KODLARI)[number]
 
 /** Accounts created before countries existed carry no stamp; they are Türkiye's (the only country there was). */
 export const DAMGASIZ_HESAP_ULKESI: UlkeKodu = 'tr'
 
 /** BCP-47. A script variant is its own language code (checklist E2). */
-export type DilKodu = 'tr' | 'uz-Latn' | 'uz-Cyrl' | 'ru'
+export type DilKodu = 'tr' | 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en-GB' | 'en-US' | 'en-CA' | 'en-AU' | 'en-NZ'
 
 /**
  * Feature table keys. A pack lists the ones that are ON; `ozellikAcik` answers false for everything else.

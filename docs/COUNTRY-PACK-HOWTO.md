@@ -2,7 +2,7 @@
 
 Written 2026-10-09 (NOTYA-ULKE-SABLON-01). The standard a country must meet is `docs/COUNTRY-PACK-CHECKLIST.md`; this page is the practical side: what a country is made of, the one command that starts it, what has to be supplied and in which order, and what a successful build does **not** prove.
 
-Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked example: three language forms, forty roles, a landing page.
+Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked example: three language forms, forty roles, a landing page. A country whose language another country already has is built differently and much smaller: see "Adding a country that shares a language".
 
 ## The short version
 
@@ -225,15 +225,73 @@ The scaffold writes one language in one script. To add another:
 
 The pack check lists whatever is left. Uzbekistan does all of this.
 
-## English-speaking countries (United States, United Kingdom, Canada, Australia, New Zealand)
+## Adding a country that shares a language
 
-**Each country still needs its own pack.** Law, consent wording, units, time zones, date and clock format, identity rules, phone rules, role names, assistant names and prices differ between them, and the walls and the leak scan work per country; each also has a database of its own.
+Written 2026-10-09 (NOTYA-ULKE-EN-01). Five English-speaking countries exist this way: the United Kingdom (`gb`, served at `/uk`), the United States (`us`), Canada (`ca`, English only), Australia (`au`) and New Zealand (`nz`). Their records are `docs/COUNTRY-PACK-UNITED-KINGDOM.md`, `-UNITED-STATES.md`, `-CANADA.md`, `-AUSTRALIA.md` and `-NEW-ZEALAND.md`.
 
-**What should be written once is the English text.** Of a pack's 802 texts, about 770 are language rather than country: the core surfaces, the application, appointments, the patient portal, the intake form's screens, the instructions to the model and most of the landing copy. (The intake **questions** are clinical content and are counted apart: two markers, however many questions.) The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
+**Each country is still a pack of its own**, with its own build, its own walls, its own leak list and its own database. What is written once is the language.
 
-**That shared catalogue does not exist yet.** Today the scaffold gives each country its own full set of items to supply. Building the shared catalogue is its own job: the English text, a place for it in the kit, and a scaffold that points an English-speaking pack at it. It is recorded in `docs/OPEN-COMMITMENTS.md`.
+### The two parts
 
-Canada also needs French, added as a second language as above.
+| Part | Where | What it holds |
+|---|---|---|
+| **The language set** | `countries/_dil/<language>/` (English: `countries/_dil/en/`) | Every text the countries of that language have in common, written once: the screens, the 40 role names, the note templates, the instructions to the model, the intake questions, the tools' words and slots, the landing copy. It names no country. |
+| **The country's folder** | `countries/<code>/`, six small files | Only what is that country's: `ayarlar.ts` (everything it states: its form of the language, consent sentence, identifier label, time-zone sentence, role names where they differ, units, laboratory units, which tools it keeps as slots and why, speech settings, empty prices), `index.ts` (the pack's settings), `arayuz.ts` and `klinik/index.ts` (one line each: the set assembles the two halves from `ayarlar.ts`), `derleme.mjs`, `sizintiTerimleri.ts`, and its own test. |
+
+The country hands the set one object (`EnUlkeGirdisi`, `countries/_dil/en/girdi.ts`); the set returns the pack's two halves (`enArayuz`, `enKlinik`) and the core catalogue (`enCekirdek`). **Nothing in the set is a default**: a country states every field, and marks in its own file what nobody of the country has verified.
+
+### The walls (rule D8 of `scripts/ulke-duvarlari.mjs`)
+
+- A country pack **may** import its language set.
+- A language set imports **no** country pack, not `countries/active`, not `countries/tumu`, and no other language set. It reads no country code and carries no pack marker.
+- Code outside `countries/` never imports a language set: it reaches a language's text only through the active pack. (Tests, scripts and `lib/ulke/testing/` may.)
+- So a build still holds **exactly one country's pack**, plus the set that pack took. The build proof looks for the one marker.
+- The leak hunt works between the countries of one language too: `sizintiTerimleri.ts` lists only what is that country's **alone** (its systems, its name, its identifier), never a word the countries share (a currency sign, an emergency number, a specialty name several of them use).
+
+### Spelling: one text, several forms
+
+The English set is written once in British spelling (`en-GB`) and converted **when the pack loads**; no converted text is stored. `countries/_dil/en/sozluk.ts` is the table, `countries/_dil/en/varyant.ts` the mechanism (`enYaz`, `enCevir`):
+
+- whole words with their endings, each row stating the American form, which form Canada takes (**Canadian spelling is a mix stated word by word**: colour and centre as in Britain, pediatric and organize as in the United States) and, where it differs, the Australian form (`program`);
+- medical stems, where the difference sits inside the word (`paediatr`, `anaesth`, `haem` …);
+- **protected names** that are never rewritten: a unit symbol, a proper noun, the name of a medicine or an organism, a published instrument;
+- **words where blind conversion is wrong in a clinical product**, handled one by one and guarded by test: practise / practice, licence / license, metre / meter (the unit against a measuring device such as a peak-flow meter), programme / program. Every use of such a word in the set is registered in `countries/_dil/en/ingilizce.test.ts` with the sense it is used in; an unregistered use fails the test.
+
+Each pack's own test proves that no text it shows, and no instruction it hands the model, carries another form's spelling. **No native editor has read any of the five forms.**
+
+### Role keys
+
+All five countries share **one** set of 40 role keys, defined once (`countries/_dil/en/klinik/roller.ts`). `docs/COUNTRY-PACK-ROLE-KEYS.md` and `countries/rol-eslemesi.json` map each key to the Turkish product's key and to the Uzbek pack's key; `lib/ulke/rolEslemesi.test.ts` proves forty, none missing, none extra. The file is read by tests and scripts only.
+
+### Units are a clinical-safety matter
+
+A country states its units (`kg`/`lb`, `cm`/`in`, `C`/`F`) and the unit its laboratories report each value in. The kit converts with the exact defined factors, and a measured field is never shown without its unit. Each English-speaking pack's test (`countries/_dil/en/testing/paketSinamasi.ts`, called from `countries/<code>/<code>.test.ts`) **runs every switched-on tool with values typed in that country's units against the kit's reference result**. Where a unit or a scale makes a tool unsafe or out of place, the country keeps the tool as a slot and says why (`araclar.kapali` in its `ayarlar.ts`); each such decision is recorded in the country's record as "for a local clinical lead".
+
+### Steps for the next country of an existing language
+
+1. Write `countries/<code>/` with the six files, following an existing folder of that language as the pattern (for example `countries/nz/`). **Every value is the new country's own statement**; none is taken over because another country has it. Mark the consent sentence `NOT READ BY A LAWYER`, the file `MACHINE-WRITTEN AND UNVERIFIED`, and the prices `EMPTY, SWITCHED OFF`.
+2. Register the code in the five places a country is named: `ULKE_KODLARI` in `lib/ulke/tipler.ts`, one branch in each of `countries/active/index.ts`, `klinik.ts` and `arayuz.ts`, and `countries/tumu.ts`. (If the form of the language is new, add it to `DilKodu` and to the set's spelling table first.)
+3. Write `countries/<code>/<code>.test.ts`: call the set's shared pack test with the country's own expectations (its units, its closed tools, the other countries' words that must not show), and add what is the country's alone.
+4. Add the country to `scripts/ulke-en-kayit.mts` (its name, its open regulatory questions, each "for a lawyer") and run `npx --yes tsx scripts/ulke-en-kayit.mts --ulke <code>`: it writes `docs/COUNTRY-PACK-<NAME>.md` from the pack. The pack's test fails when that record is no longer what the pack says.
+5. `node scripts/ulke-paket-denetimi.mjs --ulke <code>`, `npx tsc --noEmit`, `npm run test:ulke`, `NOTYA_COUNTRY=<code> npm run build:ulke`, the walk-through.
+6. The country's own database, as for any country (below). Hidden, invitation only.
+
+**The scaffold command does not write such a folder yet** (`scripts/ulke-yeni.mjs` writes a full one-language country with every item to supply). Recorded in `docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-EN-01.
+
+### Four things to know before reading a pack's output
+
+- **The sentences of the slots stay in British spelling in every pack** (accepted 2026-10-09). A slot's "what is missing" and "who supplies it" are written for documents and reviewers and are never shown on a screen, so the spelling table does not convert them and the spelling check does not read them. Every other rule holds for them: each pack's test proves they name nothing of another country and carry no claim, no amount of money and no identity number.
+- **An allied profession's instruction does not open with the senior-doctor line.** For the five allied roles (physiotherapist, clinical psychologist, dietitian, occupational therapist, audiologist) the first sentence of the instruction to the model states the profession, in the country's own name for it, and that the colleague is not a doctor; every doctor role opens with "You are an experienced" and the country's word for a senior doctor. Each pack's test checks all forty roles. The instruction for the summary for the patient is one per pack and takes no role: it still opens with the senior-doctor line for every account (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-EN-01ac).
+- **The example phone number can be nobody's.** Where this job is certain of a range the country reserves for fiction, the example is a number of that range (the United Kingdom's drama range, the 555-01xx numbers of the North American plan for the United States and Canada, Australia's numbers for creative works); otherwise it is a shape with X in place of digits (New Zealand). Each is marked unverified in the country's `ayarlar.ts`, and each pack's test checks the shape.
+- **The landing component's internal keys are kit keys in another language, never shown.** The landing page is the kit's component (`components/ulke/acilis/`, `lib/ulke/arayuz/acilisTipleri.ts`), first built for Uzbekistan: its section and field keys (`suhbat`, `qabul`, `narx`, `xavfsizlik` …) and the three values that tell the component how to draw a turn of an example visit (`shifokor`, `yordamchi`, `ogohlantirish`) are Uzbek words, as most other kit keys are Turkish words. They are the contract between a pack and the component, not text: no screen shows them, the leak scan reads the screens and does not find them, and the pack tests leave keys out of the wall check. An English pack therefore holds these keys in its landing content. Renaming them to neutral names is a clean-up of the kit, recorded in `docs/OPEN-COMMITMENTS.md` (NOTYA-ULKE-EN-01aa).
+
+### A new language set
+
+A second language shared by several countries (French for Canada and others, Spanish, Arabic) is a new folder `countries/_dil/<language>/` built the same way: the texts once, an input type that names everything a country states, and — only if the language has national spellings — a table like the English one. A country with two languages takes two sets. **French for Canada is absent and waits on the owner.**
+
+### What this does not change
+
+No claim of compliance, approval, certification or integration is made anywhere, no price is shown, no clinical reference content of a country (vaccination schedule, medicine register, dosing, protocol, screening programme, an authority's threshold) is written by a machine, and no item of a published questionnaire is reproduced: each is an empty, switched-off slot that names what is missing and who supplies it. A test in every pack enforces the first two.
 
 ## The scaffold was proven once, end to end (2026-10-09)
 

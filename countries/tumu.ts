@@ -9,10 +9,25 @@ import { TR_PAKETI } from './tr/index'
 import { TR_SIZINTI_HARFLERI, TR_SIZINTI_TERIMLERI } from './tr/sizintiTerimleri'
 import { UZ_PAKETI } from './uz/index'
 import { UZ_SIZINTI_HARFLERI, UZ_SIZINTI_TERIMLERI } from './uz/sizintiTerimleri'
+import { GB_PAKETI } from './gb/index'
+import { GB_SIZINTI_HARFLERI, GB_SIZINTI_TERIMLERI } from './gb/sizintiTerimleri'
+import { US_PAKETI } from './us/index'
+import { US_SIZINTI_HARFLERI, US_SIZINTI_TERIMLERI } from './us/sizintiTerimleri'
+import { AU_PAKETI } from './au/index'
+import { AU_SIZINTI_HARFLERI, AU_SIZINTI_TERIMLERI } from './au/sizintiTerimleri'
+import { NZ_PAKETI } from './nz/index'
+import { NZ_SIZINTI_HARFLERI, NZ_SIZINTI_TERIMLERI } from './nz/sizintiTerimleri'
+import { CA_PAKETI } from './ca/index'
+import { CA_SIZINTI_HARFLERI, CA_SIZINTI_TERIMLERI } from './ca/sizintiTerimleri'
 
 export type UlkeKaydi = { paket: UlkePaketi; sizintiTerimleri: readonly SizintiTerimi[]; sizintiHarfleri: string }
 
 export const TUM_ULKELER: Record<UlkeKodu, UlkeKaydi> = {
   tr: { paket: TR_PAKETI, sizintiTerimleri: TR_SIZINTI_TERIMLERI, sizintiHarfleri: TR_SIZINTI_HARFLERI },
   uz: { paket: UZ_PAKETI, sizintiTerimleri: UZ_SIZINTI_TERIMLERI, sizintiHarfleri: UZ_SIZINTI_HARFLERI },
+  gb: { paket: GB_PAKETI, sizintiTerimleri: GB_SIZINTI_TERIMLERI, sizintiHarfleri: GB_SIZINTI_HARFLERI },
+  us: { paket: US_PAKETI, sizintiTerimleri: US_SIZINTI_TERIMLERI, sizintiHarfleri: US_SIZINTI_HARFLERI },
+  au: { paket: AU_PAKETI, sizintiTerimleri: AU_SIZINTI_TERIMLERI, sizintiHarfleri: AU_SIZINTI_HARFLERI },
+  nz: { paket: NZ_PAKETI, sizintiTerimleri: NZ_SIZINTI_TERIMLERI, sizintiHarfleri: NZ_SIZINTI_HARFLERI },
+  ca: { paket: CA_PAKETI, sizintiTerimleri: CA_SIZINTI_TERIMLERI, sizintiHarfleri: CA_SIZINTI_HARFLERI },
 }
