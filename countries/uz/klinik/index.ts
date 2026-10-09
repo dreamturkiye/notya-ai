@@ -7,6 +7,7 @@
  * (A3, I1); the specialty list has no local reviewer yet (C1, C14).
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
+import { UZ_ASISTAN } from './asistan'
 import { UZ_ACIK_SABLONLAR } from './branslar'
 import { UZ_HASTA_FORMU } from './hastaFormu'
 import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
@@ -53,4 +54,8 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // forms (./hastaFormu/). MACHINE-WRITTEN: no local clinician has read a single set. The consent sentence is a draft
   // no lawyer has read. The answers are never given to the model.
   hastaFormu: UZ_HASTA_FORMU,
+  // NOTYA-ULKE-ASISTAN-01: the assistant — one named colleague per role, asked in writing and by voice (./asistan/).
+  // MACHINE-WRITTEN instruction sentences that no clinician has read; one unconfirmed authority and no reference
+  // work for any role; hearing the answer is switched off until the owner has chosen the voices.
+  asistan: UZ_ASISTAN,
 }

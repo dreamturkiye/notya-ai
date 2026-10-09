@@ -10,6 +10,7 @@
 
 import type { ComponentType } from 'react'
 import type { HastaFormuIcerigi } from './intake/tipler'
+import type { AsistanIcerigi } from './asistan/tipler'
 
 /** ISO 3166-1 alpha-2, lower case. Adding a country = a new folder under countries/ + a branch in countries/active/. */
 export const ULKE_KODLARI = ['tr', 'uz'] as const
@@ -69,6 +70,14 @@ export type Ozellik =
    * (lib/ulke/araclar/katalog.ts); which are on, for whom and in which words is the pack's (countries/active/arayuz → `araclar`).
    */
   | 'araclar'
+  /**
+   * NOTYA-ULKE-ASISTAN-01 — the assistant of a country build (/assistant): the clinical colleague a doctor asks in
+   * writing and by voice, one named assistant per role. Needs `cekirdekMuayene`. Who the assistant is, every sentence
+   * of its instruction, the authorities it is told to exist, its limits and its voice identifiers are the pack's
+   * (countries/active/klinik → `asistan`; countries/active/arayuz → `asistanMetinleri`). NOT the key `asistan` below,
+   * which is the pre-split application's own assistant and is on in no country build.
+   */
+  | 'ulkeAsistani'
   /** Doktor Araçları of the pre-split application (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -430,6 +439,13 @@ export type UlkeKlinigi = {
    * no question. Required where `hastaFormu` is on. Answers are NOT given to the model that writes a note.
    */
   hastaFormu?: HastaFormuIcerigi
+  /**
+   * NOTYA-ULKE-ASISTAN-01 — THE ASSISTANT: the sentences of its instruction per role and language form, the
+   * authorities and reference works the pack knows to exist, its limits, the patient mode and the voice settings
+   * (lib/ulke/asistan/tipler.ts). The pack's own content; core holds no sentence of an instruction and names no
+   * model and no voice. Required where `ulkeAsistani` is on.
+   */
+  asistan?: AsistanIcerigi
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────
