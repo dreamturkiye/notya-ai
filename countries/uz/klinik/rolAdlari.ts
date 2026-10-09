@@ -19,6 +19,7 @@
  * Three kinds of role (the `taraf` of ./asistanAdlari.ts): a doctor specialty (30), a clinic doctor (5) and a clinic
  * allied profession (5). Doctor roles are named as the specialty; allied roles are named as the profession.
  */
+import type { RolTanimi } from '@/lib/ulke/arayuz/tipler'
 import { UZ_ASISTAN_ADLARI, type AsistanTarafi } from './asistanAdlari'
 
 export type UzAdDili = 'uz-Latn' | 'uz-Cyrl' | 'ru'
@@ -95,3 +96,9 @@ export const UZ_ROL_GRUPLARI: readonly { taraf: AsistanTarafi; roller: readonly 
   taraf,
   roller: UZ_ASISTAN_ADLARI.filter((a) => a.taraf === taraf).map((a) => a.bransAnahtari),
 }))
+
+/**
+ * NOTYA-ULKE-SABLON-01 — the same 40 roles in the shape the shared screens read (lib/ulke/arayuz): key, kind, and the
+ * name in each of the three forms. Built from the two lists above; nothing is written twice.
+ */
+export const UZ_ROL_TANIMLARI: readonly RolTanimi[] = UZ_ASISTAN_ADLARI.filter((a) => a.bransAnahtari in UZ_ROL_ADLARI).map((a) => ({ anahtar: a.bransAnahtari, taraf: a.taraf, ad: UZ_ROL_ADLARI[a.bransAnahtari] }))

@@ -646,15 +646,15 @@ const href = (yol: string) => `href="${yol.replace(/&/g, '&amp;')}"`
 describe('Uzbekistan appointments: text, reminder and screens in the three forms', () => {
   let M: typeof import('./metinler')
   let RM: typeof import('./randevuMetinleri')
-  let H: typeof import('./hatirlatma')
-  let T: typeof import('./Takvim')
-  let Kabuk: typeof import('./Kabuk')
-  let Bugun: typeof import('./Bugun')
-  let Hastalar: typeof import('./Hastalar')
-  let Muayene: typeof import('./Muayene')
+  let H: typeof import('@/lib/ulke/arayuz/hatirlatma')
+  let T: typeof import('@/components/ulke/uygulama/Takvim')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+  let Bugun: typeof import('@/components/ulke/uygulama/Bugun')
+  let Hastalar: typeof import('@/components/ulke/uygulama/Hastalar')
+  let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
   before(async () => {
-    M = await import('./metinler'); RM = await import('./randevuMetinleri'); H = await import('./hatirlatma')
-    T = await import('./Takvim'); Kabuk = await import('./Kabuk'); Bugun = await import('./Bugun'); Hastalar = await import('./Hastalar'); Muayene = await import('./Muayene')
+    M = await import('./metinler'); RM = await import('./randevuMetinleri'); H = await import('@/lib/ulke/arayuz/hatirlatma')
+    T = await import('@/components/ulke/uygulama/Takvim'); Kabuk = await import('@/components/ulke/uygulama/Kabuk'); Bugun = await import('@/components/ulke/uygulama/Bugun'); Hastalar = await import('@/components/ulke/uygulama/Hastalar'); Muayene = await import('@/components/ulke/uygulama/Muayene')
     const izin = (await import('@/lib/ulke/ulke')).ulkePaketi().rotalar
     assert.notEqual(izin, 'hepsi')
     if (izin !== 'hepsi') ACIK_SAYFALAR = izin.sayfalar
@@ -665,7 +665,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
   const DUZEN = { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] }
   // 2026-10-12 is a Monday.
   const PZT = '2026-10-12'
-  const randevu = (id: string, gun: string, saat: string, durum: string, ek: Record<string, unknown> = {}) => ({ id, hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: `${gun}T00:00:00.000Z`, bitis: `${gun}T00:30:00.000Z`, gun, saat, sureDk: 30, neden: '', durum, mesaiDisi: false, seansId: null, ...ek }) as import('./Takvim').RandevuKaydi
+  const randevu = (id: string, gun: string, saat: string, durum: string, ek: Record<string, unknown> = {}) => ({ id, hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: `${gun}T00:00:00.000Z`, bitis: `${gun}T00:30:00.000Z`, gun, saat, sureDk: 30, neden: '', durum, mesaiDisi: false, seansId: null, ...ek }) as import('@/components/ulke/uygulama/Takvim').RandevuKaydi
 
   it('the catalogue says, at its top, that it is machine-written, that the reminder is patient-facing, and that it awaits native review', () => {
     const bas = readFileSync(join(KOK, 'countries/uz/uygulama/randevuMetinleri.ts'), 'utf8').slice(0, 1600)
@@ -702,9 +702,9 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
 
   it('REMINDER TEXT in each language: the patient\'s language, the doctor\'s script, the pack\'s date and time, the doctor\'s name — and no Turkish word', async () => {
     const { ulkePaketi } = await import('@/lib/ulke/ulke')
-    assert.equal(H.UZ_TARIH_DESENI, ulkePaketi().bicim.tarihDeseni)
+    assert.equal(H.tarihDeseni(), ulkePaketi().bicim.tarihDeseni)
     const hekim = (dil: Form, notDili: Form, ad = 'Karimov Alisher') => ({ dil, notDili, ad })
-    const yap = (hastaDili: string, h: ReturnType<typeof hekim>) => H.uzHatirlatmaMetni({ hastaDili, hekim: h, gun: '2026-10-09', saat: '14:30' })
+    const yap = (hastaDili: string, h: ReturnType<typeof hekim>) => H.hatirlatmaMetni({ hastaDili, hekim: h, gun: '2026-10-09', saat: '14:30' })
     assert.deepEqual(yap('uz', hekim('uz-Latn', 'uz-Latn')), { dil: 'uz-Latn', metin: 'Assalomu alaykum! Eslatma: siz 09.10.2026 kuni soat 14:30 da shifokor Karimov Alisher qabuliga yozilgansiz.' })
     assert.deepEqual(yap('uz', hekim('uz-Cyrl', 'uz-Cyrl', 'Каримов Алишер')), { dil: 'uz-Cyrl', metin: 'Ассалому алайкум! Эслатма: сиз 09.10.2026 куни соат 14:30 да шифокор Каримов Алишер қабулига ёзилгансиз.' })
     assert.deepEqual(yap('ru', hekim('uz-Latn', 'uz-Latn', 'Каримов Алишер')), { dil: 'ru', metin: 'Здравствуйте! Напоминаем: вы записаны на приём к врачу Каримов Алишер 09.10.2026 в 14:30.' })
@@ -729,20 +729,20 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     }
     // 24-hour clock, digits only, never a month name, never the browser's or the server's pattern.
     assert.ok(yap('ru', hekim('ru', 'ru')).metin.includes('09.10.2026 в 14:30'))
-    assert.ok(H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2027-01-02', saat: '00:15' }).metin.includes('02.01.2027 kuni soat 00:15'))
+    assert.ok(H.hatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2027-01-02', saat: '00:15' }).metin.includes('02.01.2027 kuni soat 00:15'))
     // No name on the account: the sentence without one, not a hole. A name that looks like a placeholder stays a name.
     assert.equal(yap('ru', hekim('ru', 'ru', '  ')).metin, 'Здравствуйте! Напоминаем: вы записаны на приём к врачу 09.10.2026 в 14:30.')
     assert.ok(yap('uz', hekim('uz-Latn', 'uz-Latn', 'Dr %1 %2')).metin.includes('shifokor Dr %1 %2 qabuliga'))
     // A day or time that cannot be written gives no text at all.
-    assert.equal(H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2026-13-40', saat: '14:30' }).metin, '')
-    assert.equal(H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2026-10-09', saat: '2 pm' }).metin, '')
+    assert.equal(H.hatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2026-13-40', saat: '14:30' }).metin, '')
+    assert.equal(H.hatirlatmaMetni({ hastaDili: 'uz', hekim: hekim('uz-Latn', 'uz-Latn'), gun: '2026-10-09', saat: '2 pm' }).metin, '')
   })
 
   it('NOTHING IS SENT: the reminder is a string; no messaging route, provider or automatic sender exists in this build', async () => {
     const kod = (d: string) => readFileSync(join(KOK, d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
-    assert.doesNotMatch(kod('countries/uz/uygulama/hatirlatma.ts'), /fetch\(|api\(|supabase|iletisim|whatsapp|telegram|sms|eposta|mailto/i)
+    assert.doesNotMatch(kod('lib/ulke/arayuz/hatirlatma.ts'), /fetch\(|api\(|supabase|iletisim|whatsapp|telegram|sms|eposta|mailto/i)
     // On the screen the only thing the button does with the text is put it on the clipboard.
-    const takvim = kod('countries/uz/uygulama/Takvim.tsx')
+    const takvim = kod('components/ulke/uygulama/Takvim.tsx')
     assert.match(takvim, /navigator\.clipboard\.writeText\(metin\)/)
     assert.doesNotMatch(takvim, /whatsapp|telegram|wa\.me|t\.me|sms:|mailto:|tel:/i)
     const { ulkePaketi } = await import('@/lib/ulke/ulke')
@@ -755,7 +755,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
   })
 
   it('the calendar screen exists: route file, pack list, screen — and the shell links to it in the account\'s form', async () => {
-    const { UZ_UYGULAMA } = await import('./index')
+    const { UYGULAMA_EKRAN_BILESENLERI: UZ_UYGULAMA } = await import('@/components/ulke/uygulama')
     assert.ok(ACIK_SAYFALAR.includes('/calendar') && existsSync(join(KOK, 'app/calendar/page.ulke.tsx')) && UZ_UYGULAMA.takvim === T.default)
     assert.deepEqual([Kabuk.YOL.takvim, Kabuk.HAZIR.takvim], ['/uzbek/calendar', true])
     for (const f of FORMLAR) {
@@ -816,7 +816,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       for (const h of ['/uzbek/calendar?gun=2026-10-08&gorunum=hafta', '/uzbek/calendar?gun=2026-10-22&gorunum=hafta', '/uzbek/calendar?gun=2026-10-15', '/uzbek/calendar?yeni=1&gun=2026-10-18', '/uzbek/calendar?randevu=r2']) assert.ok(html.includes(href(h)), h)
       for (const s of [r.durum.planlandi, r.durum.tamamlandi, r.durum.gelmedi]) assert.ok(gorunurMetin(html).includes(s), s)
       // The phone layout is the default; the seven columns come only on a wide screen.
-      const css = readFileSync(join(KOK, 'countries/uz/uygulama/uygulama.css'), 'utf8')
+      const css = readFileSync(join(KOK, 'components/ulke/uygulama/uygulama.css'), 'utf8')
       assert.match(css, /\.uza-hafta \{ display: grid; gap: 10px; grid-template-columns: 1fr; \}\n@media \(min-width: 900px\) \{ \.uza-hafta \{ grid-template-columns: repeat\(7,/)
       ekranTemiz(html, `/calendar week (${f})`)
     })
@@ -824,7 +824,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     it(`${f}: BOOKING — the form; "taken" has no way round it; "outside working hours" offers an explicit "book anyway"`, () => {
       const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
       const a = { gun: '12.10.2026', saat: '10:00', sureDk: 30, neden: '' }
-      const form = (hata: import('./Takvim').FormHatasi, bekliyor = false) => cerceve(f, 'takvim', React.createElement(T.RandevuFormuGorunumu, { m, r, hasta: HASTA, a, set: bos, sureler: [10, 15, 20, 30, 45, 60, 90], gonder: bos, bekliyor, hata, geri: T.takvimYolu({ gun: PZT }) }))
+      const form = (hata: import('@/components/ulke/uygulama/Takvim').FormHatasi, bekliyor = false) => cerceve(f, 'takvim', React.createElement(T.RandevuFormuGorunumu, { m, r, hasta: HASTA, a, set: bos, sureler: [10, 15, 20, 30, 45, 60, 90], gonder: bos, bekliyor, hata, geri: T.takvimYolu({ gun: PZT }) }))
       const html = form(null)
       const g = gorunurMetin(html)
       for (const s of [r.form.baslik, 'QA Karimova Dilnoza Rustamovna', r.form.tarih, r.form.saat, r.form.sure, r.form.neden, r.form.kaydet, r.form.vazgec, r.form.hastaDegistir, r.duzen.saatDilimi, `30 ${r.form.dakika}`]) assert.ok(g.includes(s), s)
@@ -839,7 +839,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       const dis = form({ kod: 'MESAI_DISI' })
       assert.ok(gorunurMetin(dis).includes(r.form.mesaiDisi)); assert.match(dis, new RegExp(`data-eylem="yine-de">${r.form.yineDe}</button>`))
       for (const [hata, metin] of [[{ kod: 'GECERSIZ', alan: 'gun' }, r.form.tarihGecersiz], [{ kod: 'GECERSIZ', alan: 'saat' }, r.form.saatGecersiz], [{ kod: 'GECERSIZ', alan: 'sure' }, r.form.sureGecersiz], [{ kod: 'NOT_FOUND' }, m.hasta.bulunamadi], [{ kod: 'BAGLANTI' }, m.kabuk.baglanti], [{ kod: 'BASARISIZ' }, r.form.kaydedilemedi], [{ kod: 'YANGI_KOD' }, r.form.kaydedilemedi]] as const) {
-        const h = form(hata as import('./Takvim').FormHatasi)
+        const h = form(hata as import('@/components/ulke/uygulama/Takvim').FormHatasi)
         assert.ok(gorunurMetin(h).includes(metin), JSON.stringify(hata)); assert.equal(h.includes('data-eylem="yine-de"'), false, JSON.stringify(hata)); ekranTemiz(h, `/calendar booking error (${f})`)
       }
       assert.ok(gorunurMetin(form(null, true)).includes(r.form.kaydediliyor))
@@ -855,7 +855,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     it(`${f}: ONE APPOINTMENT — status, "start the visit", move, cancel, and the reminder in the PATIENT's language with one button to copy it`, () => {
       const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
       const hekim = { dil: f, notDili: f, ad: 'QA Shifokor' }
-      const detay = (x: import('./Takvim').RandevuKaydi, ek: Record<string, unknown> = {}) => cerceve(f, 'takvim', React.createElement(T.RandevuDetayGorunumu, { m, r, randevu: x, hekim, sureler: [15, 30, 45], tasi: { gun: '12.10.2026', saat: x.saat, sureDk: x.sureDk }, setTasi: bos, hata: null, bildirim: null, bekliyor: false, durumDegistir: bos, tasiGonder: bos, kopyala: bos, ...ek }))
+      const detay = (x: import('@/components/ulke/uygulama/Takvim').RandevuKaydi, ek: Record<string, unknown> = {}) => cerceve(f, 'takvim', React.createElement(T.RandevuDetayGorunumu, { m, r, randevu: x, hekim, sureler: [15, 30, 45], tasi: { gun: '12.10.2026', saat: x.saat, sureDk: x.sureDk }, setTasi: bos, hata: null, bildirim: null, bekliyor: false, durumDegistir: bos, tasiGonder: bos, kopyala: bos, ...ek }))
       const eylemler = (html: string) => [...html.matchAll(/data-eylem="([a-z-]+)"/g)].map((x) => x[1])
       // PLANNED, a Russian-speaking patient: everything is offered, and the reminder is in Russian whatever the doctor reads.
       const planli = detay(randevu('r1', PZT, '10:00', 'planlandi', { neden: 'QA sabab', hastaDili: 'ru', mesaiDisi: true }))
@@ -863,7 +863,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       for (const s of [r.randevu.baslik, 'QA Karimova Dilnoza', `${r.gunUzun[1]}, 12.10.2026`, '10:00–10:30', `(30 ${r.form.dakika})`, 'QA sabab', r.durum.planlandi, r.randevu.mesaiDisiIsareti, m.bugun.muayeneBaslat, r.randevu.geldi, r.randevu.gelmedi, r.randevu.iptalEt, r.randevu.tasi, r.randevu.tasiKaydet, r.hatirlatma.baslik, r.hatirlatma.kopyala, r.hatirlatma.izoh, `${r.hatirlatma.dil}: ${r.hatirlatma.dilAdi.ru}`, r.randevu.takvimeDon, r.randevu.dosya]) assert.ok(g.includes(s), s)
       assert.deepEqual(eylemler(planli), ['muayene-baslat', 'durum-geldi', 'durum-gelmedi', 'durum-iptal', 'hatirlatma-kopyala', 'tasi'])
       assert.ok(planli.includes(href(`/uzbek/visit?hasta=${HASTA.id}&randevu=r1`)), '"start the visit" must carry the patient and the appointment')
-      const beklenen = H.uzHatirlatmaMetni({ hastaDili: 'ru', hekim, gun: PZT, saat: '10:00' })
+      const beklenen = H.hatirlatmaMetni({ hastaDili: 'ru', hekim, gun: PZT, saat: '10:00' })
       assert.equal(beklenen.metin, 'Здравствуйте! Напоминаем: вы записаны на приём к врачу QA Shifokor 12.10.2026 в 10:00.')
       assert.match(planli, new RegExp(`<textarea class="uza-girdi uza-hatirlatma" readonly="" rows="3" lang="ru" data-alan="hatirlatma" data-dil="ru"[^>]*>${beklenen.metin}</textarea>`))
       for (const h of [`/uzbek/calendar?gun=2026-10-12`, `/uzbek/patient?id=${HASTA.id}`]) assert.ok(planli.includes(href(h)), h)
@@ -871,7 +871,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       // An Uzbek-speaking patient: Uzbek in the doctor's script (Latin for a doctor who reads Russian and writes Russian).
       const uz = detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'uz' }))
       const uzForm = f === 'ru' ? 'uz-Latn' : f
-      assert.match(uz, new RegExp(`data-alan="hatirlatma" data-dil="${uzForm}"`)); assert.ok(uz.includes(`>${H.uzHatirlatmaMetni({ hastaDili: 'uz', hekim, gun: PZT, saat: '10:00' }).metin}</textarea>`))
+      assert.match(uz, new RegExp(`data-alan="hatirlatma" data-dil="${uzForm}"`)); assert.ok(uz.includes(`>${H.hatirlatmaMetni({ hastaDili: 'uz', hekim, gun: PZT, saat: '10:00' }).metin}</textarea>`))
       assert.ok(gorunurMetin(uz).includes(`${r.hatirlatma.dil}: ${r.hatirlatma.dilAdi.uz}`)); ekranTemiz(uz, `/calendar appointment, uz patient (${f})`)
       // After the click: said so, in the account's form. Copying failed: said so too.
       assert.ok(gorunurMetin(detay(randevu('r1', PZT, '10:00', 'planlandi', { hastaDili: 'ru' }), { bildirim: 'kopyalandi' })).includes(r.hatirlatma.kopyalandi))
@@ -953,7 +953,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
 
   it('the screens carry no sentence of their own: no Uzbek, Russian or Turkish text is written in the screen files, only in the catalogue', () => {
     for (const d of ['Takvim.tsx', 'randevuOrtak.tsx']) {
-      const kod = readFileSync(join(KOK, 'countries/uz/uygulama', d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+      const kod = readFileSync(join(KOK, 'components/ulke/uygulama', d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
       assert.doesNotMatch(kod, /[Ѐ-ӿʻʼçğışöüÇĞİŞÖÜ]/, `${d} carries text outside the catalogue`)
       // No address is written by hand: every one comes from YOL (the country's path prefix).
       assert.doesNotMatch(kod, /['"`]\/(calendar|visit|patient|today|settings|uzbek)/, `${d} writes an address by hand`)

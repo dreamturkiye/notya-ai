@@ -14,14 +14,15 @@ import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolGorunumu } from './RolFormu'
-import { uzRolMu } from '../klinik/rolAdlari'
-import { dilBirlestir, temelDil, uygulamaMetni, yaziSec, type TemelDil, type UzUygulamaDili, type Yazi } from './metinler'
+import { dilBirlestir, dilSecimiVarMi, roller, rolMu, temelDil, uygulamaMetni, varsayilanYazi, yaziSec, yaziSorulurMu } from '@/lib/ulke/arayuz'
+import { ulkePaketi } from '@/lib/ulke/ulke'
+import type { DilKodu } from '@/lib/ulke/tipler'
 
 export function BaslangicGorunumu({ temel, yazi, setTemel, setYazi, gonder, bekliyor, hata }: {
-  temel: TemelDil; yazi: Yazi; setTemel: (t: TemelDil) => void; setYazi: (y: Yazi) => void
+  temel: string; yazi: string | null; setTemel: (t: string) => void; setYazi: (y: string) => void
   gonder: () => void; bekliyor: boolean; hata: boolean
 }) {
-  const dil: UzUygulamaDili = dilBirlestir(temel, yazi)
+  const dil: DilKodu = dilBirlestir(temel, yazi)
   const m = uygulamaMetni(dil)
   return (
     <Cerceve dil={dil} m={m} sade>
@@ -30,7 +31,7 @@ export function BaslangicGorunumu({ temel, yazi, setTemel, setYazi, gonder, bekl
         <p className="uza-aciklama">{m.baslangic.aciklama}</p>
         <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
           <DilSecimi etiket={m.baslangic.dil} ad="dil" deger={temel} yazi={yazi} sec={setTemel} />
-          {temel === 'uz' ? <YaziSecimi m={m} deger={yazi} sec={setYazi} /> : null}
+          {yaziSorulurMu(temel) ? <YaziSecimi m={m} deger={yazi} sec={setYazi} /> : null}
           <Hata>{hata ? m.baslangic.kaydedilemedi : null}</Hata>
           <button type="submit" className="uza-dugme" disabled={bekliyor}>{bekliyor ? m.baslangic.kaydediliyor : m.baslangic.devam}</button>
         </form>
@@ -41,8 +42,9 @@ export function BaslangicGorunumu({ temel, yazi, setTemel, setYazi, gonder, bekl
 
 export default function Baslangic() {
   const u = useUygulama('baslangic')
-  const [temel, setTemel] = useState<TemelDil>('uz')
-  const [yazi, setYazi] = useState<Yazi>('Latn')
+  // Until the account is known: the pack's default language, and the first script of the language that has several.
+  const [temel, setTemel] = useState<string>(() => temelDil(ulkePaketi().varsayilanDil))
+  const [yazi, setYazi] = useState<string | null>(() => varsayilanYazi())
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState(false)
 
@@ -55,7 +57,7 @@ export default function Baslangic() {
   // Start from the language chosen at sign-up.
   useEffect(() => {
     if (!u.hesap || hazir) return
-    setTemel(temelDil(u.hesap.dil)); setYazi(yaziSec(u.hesap.dil))
+    setTemel(temelDil(u.hesap.dil)); setYazi(yaziSec(u.hesap.dil) ?? varsayilanYazi())
     setHazir(true)
   }, [u.hesap, hazir])
 
@@ -73,7 +75,7 @@ export default function Baslangic() {
   }
 
   async function rolGonder() {
-    if (!uzRolMu(rol)) { setRolHatasi('gerekli'); return }
+    if (!rolMu(rol)) { setRolHatasi('gerekli'); return }
     setBekliyor(true); setRolHatasi(null)
     try {
       const r = await u.api('/api/ulke/rol', { method: 'POST', govde: { rol } })

@@ -222,7 +222,7 @@ describe('40 roles: note templates', () => {
     assert.ok(UZ_ORTAK_YEREL_ICERIK.some((y) => y.anahtar === 'medicines_register'))
     // No screen and no instruction reads a slot.
     const { readdirSync } = require('node:fs') as typeof import('node:fs')
-    for (const d of [...readdirSync(join(KOK, 'countries/uz/uygulama')).map((a) => `countries/uz/uygulama/${a}`), 'countries/uz/klinik/talimatlar.ts', 'countries/uz/klinik/index.ts', 'lib/ulke/uygulama/notlar.ts'].filter((x) => /\.tsx?$/.test(x) && !x.endsWith('.test.ts'))) {
+    for (const d of [...readdirSync(join(KOK, 'countries/uz/uygulama')).map((a) => `countries/uz/uygulama/${a}`), ...readdirSync(join(KOK, 'components/ulke/uygulama')).map((a) => `components/ulke/uygulama/${a}`), 'countries/uz/arayuz.ts', 'countries/uz/klinik/talimatlar.ts', 'countries/uz/klinik/index.ts', 'lib/ulke/uygulama/notlar.ts'].filter((x) => /\.tsx?$/.test(x) && !x.endsWith('.test.ts'))) {
       assert.doesNotMatch(readFileSync(join(KOK, d), 'utf8'), /UZ_YEREL_ICERIK|UZ_ORTAK_YEREL_ICERIK/, `${d} reads a slot`)
     }
   })
@@ -314,19 +314,19 @@ describe('40 roles: instructions to the model', () => {
 })
 
 describe('40 roles: visit → draft in the role\'s template, with a model that returns every role\'s fields', () => {
-  let Not: typeof import('../uygulama/Not')
-  let Muayene: typeof import('../uygulama/Muayene')
-  let Kabuk: typeof import('../uygulama/Kabuk')
+  let Not: typeof import('@/components/ulke/uygulama/Not')
+  let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
   let M: typeof import('../uygulama/metinler')
   let T: typeof import('./talimatlar')
   let K: typeof import('./asistanKimligi')
   let Layout: typeof import('../../../app/layout.ulke')
   before(async () => {
-    Not = await import('../uygulama/Not'); Muayene = await import('../uygulama/Muayene'); Kabuk = await import('../uygulama/Kabuk'); M = await import('../uygulama/metinler')
+    Not = await import('@/components/ulke/uygulama/Not'); Muayene = await import('@/components/ulke/uygulama/Muayene'); Kabuk = await import('@/components/ulke/uygulama/Kabuk'); M = await import('../uygulama/metinler')
     T = await import('./talimatlar'); K = await import('./asistanKimligi'); Layout = await import('../../../app/layout.ulke')
   })
   const bos = () => {}
-  const ciz = (f: Form, not: import('../uygulama/Not').NotDetayi) => renderToStaticMarkup(React.createElement(Layout.default, null, React.createElement(Kabuk.Cerceve, { dil: f, m: M.uygulamaMetni(f), ad: 'QA Shifokor', aktif: 'bugun', cikis: bos, children:
+  const ciz = (f: Form, not: import('@/components/ulke/uygulama/Not').NotDetayi) => renderToStaticMarkup(React.createElement(Layout.default, null, React.createElement(Kabuk.Cerceve, { dil: f, m: M.uygulamaMetni(f), ad: 'QA Shifokor', aktif: 'bugun', cikis: bos, children:
     React.createElement(Not.NotGorunumu, { m: M.uygulamaMetni(f), not, aktifDil: not.dil, setAktifDil: bos, icerik: not.icerik, setIcerik: bos, islem: null, bildirim: null, kaydet: bos, yenidenYaz: bos, onayla: bos }) })))
 
   ROLLER.forEach(({ rol, taraf }, i) => {

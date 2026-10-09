@@ -7,11 +7,11 @@
  * internal key; it is never shown.
  */
 import React from 'react'
-import { UZ_ROL_ADLARI, UZ_ROL_GRUPLARI } from '../klinik/rolAdlari'
 import { Cerceve, Hata } from './Kabuk'
-import { metninDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
+import { metninDili, rolAdi, rolGruplari, type RolTarafi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import type { DilKodu } from '@/lib/ulke/tipler'
 
-const grupAdi = (m: UygulamaMetni, taraf: string): string => (taraf === 'doktor' ? m.rol.grupDoktor : taraf === 'klinik-hekim' ? m.rol.grupKlinikHekim : m.rol.grupKlinikMuttefik)
+const grupAdi = (m: UygulamaMetni, taraf: RolTarafi): string => (taraf === 'doktor' ? m.rol.grupDoktor : taraf === 'klinik-hekim' ? m.rol.grupKlinikHekim : m.rol.grupKlinikMuttefik)
 
 export function RolSecimi({ m, deger, sec, kimlik = 'uza-rol' }: { m: UygulamaMetni; deger: string; sec: (rol: string) => void; kimlik?: string }) {
   const dil = metninDili(m)
@@ -20,9 +20,9 @@ export function RolSecimi({ m, deger, sec, kimlik = 'uza-rol' }: { m: UygulamaMe
       <label className="uza-etiket" htmlFor={kimlik}>{m.rol.etiket}</label>
       <select id={kimlik} name="rol" className="uza-girdi" value={deger} onChange={(e) => sec(e.target.value)} required>
         <option value="" disabled>{m.rol.sec}</option>
-        {UZ_ROL_GRUPLARI.map((g) => (
+        {rolGruplari().map((g) => (
           <optgroup key={g.taraf} label={grupAdi(m, g.taraf)}>
-            {g.roller.map((rol) => <option key={rol} value={rol}>{UZ_ROL_ADLARI[rol][dil]}</option>)}
+            {g.roller.map((rol) => <option key={rol.anahtar} value={rol.anahtar}>{rolAdi(rol.anahtar, dil) ?? ''}</option>)}
           </optgroup>
         ))}
       </select>
@@ -32,7 +32,7 @@ export function RolSecimi({ m, deger, sec, kimlik = 'uza-rol' }: { m: UygulamaMe
 
 /** The first-login step that follows the language question. */
 export function RolGorunumu({ dil, m, rol, setRol, gonder, bekliyor, hata }: {
-  dil: UzUygulamaDili; m: UygulamaMetni; rol: string; setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; hata: 'gerekli' | 'kaydedilemedi' | null
+  dil: DilKodu; m: UygulamaMetni; rol: string; setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; hata: 'gerekli' | 'kaydedilemedi' | null
 }) {
   return (
     <Cerceve dil={dil} m={m} sade>

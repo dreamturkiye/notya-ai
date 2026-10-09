@@ -9,29 +9,25 @@
  * Pure: these render in a plain Node test.
  */
 import React from 'react'
-import { uzAsistanKimligi } from '../klinik/asistanKimligi'
-import { uzRolAdi } from '../klinik/rolAdlari'
-import { metninDili, type UygulamaMetni } from './metinler'
-
-const MARKA = 'Notya'
+import { asistanKimligi, marka, metninDili, rolAdi, rolMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
 /** The name a screen shows for the assistant of `rol`: the owner's name for that role, or the neutral one. */
 export function asistanAdi(m: UygulamaMetni, rol: string | null | undefined): string {
-  return uzAsistanKimligi(rol, metninDili(m))?.tamAd ?? m.asistan.notr.replace('%', MARKA)
+  return asistanKimligi(rol, metninDili(m))?.tamAd ?? m.asistan.notr.replace('%', marka())
 }
 
 /** "Your senior colleague · Cardiology" — only for a role that has an assistant of its own. '' otherwise. */
 export function asistanSatiri(m: UygulamaMetni, rol: string | null | undefined): string {
   const dil = metninDili(m)
-  const rolAdi = uzRolAdi(rol, dil)
-  return uzAsistanKimligi(rol, dil) && rolAdi ? `${m.asistan.satir} · ${rolAdi}` : ''
+  const ad = rolAdi(rol, dil)
+  return asistanKimligi(rol, dil) && ad ? `${m.asistan.satir} · ${ad}` : ''
 }
 
 /** The home screen's card. */
 export function AsistanKarti({ m, rol }: { m: UygulamaMetni; rol: string | null | undefined }) {
   const satir = asistanSatiri(m, rol)
   return (
-    <section className="uza-kart" data-alan="asistan" data-rol={uzRolAdi(rol, 'uz-Latn') ? rol ?? undefined : undefined}>
+    <section className="uza-kart" data-alan="asistan" data-rol={rolMu(rol) ? rol : undefined}>
       <p className="uza-ust-yazi">{m.asistan.etiket}</p>
       <p className="uza-asistan-ad" data-alan="asistan-ad">{asistanAdi(m, rol)}</p>
       {satir ? <p className="uza-ipucu" style={{ marginTop: 2 }} data-alan="asistan-satir">{satir}</p> : null}

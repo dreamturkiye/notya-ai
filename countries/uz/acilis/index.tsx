@@ -16,7 +16,6 @@ import xona from '../../../public/landing/hero-clinic.jpg'
 import stol from '../../../public/landing/desk-notes.jpg'
 import yolak from '../../../public/landing/corridor.jpg'
 import { AcilisSayfasi } from './AcilisSayfasi'
-import { UZ_UYGULAMA } from '../uygulama'
 
 function UzAcilis(props: AcilisSayfasiProps) {
   return <AcilisSayfasi {...props} gorseller={{ xona: xona.src, stol: stol.src, yolak: yolak.src }} />
@@ -24,5 +23,6 @@ function UzAcilis(props: AcilisSayfasiProps) {
 
 export const UZ_SAYFALARI: UlkeSayfalari = {
   acilis: UzAcilis,
-  uygulama: UZ_UYGULAMA,
+  // The signed-in screens are the country kit's (components/ulke/uygulama); the pack brings their content (../arayuz.ts).
+  uygulama: null,
 }

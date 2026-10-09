@@ -8,9 +8,8 @@
 import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { AsistanKarti } from './Asistan'
-import { metninDili, type UygulamaMetni } from './metinler'
-import { randevuMetni } from './randevuMetinleri'
 import { bitisSaati, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
+import { metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 

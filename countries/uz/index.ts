@@ -14,6 +14,7 @@ import {
 } from './metinler'
 import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
+import { UZ_VELI_YASI } from './ayarlar'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -116,7 +117,7 @@ export const UZ_PAKETI: UlkePaketi = {
     // JSHSHIR is optional free text, stored encrypted and NOT validated: the check-digit rule is to verify (checklist G5).
     kimlikNumarasi: { dogrula: false },
     // Guardian wording for a patient under 18 on the day of the visit. An assumption to confirm with a lawyer (checklist B12).
-    veliYasi: 18,
+    veliYasi: UZ_VELI_YASI,
     // Invitation only.
     kayitAcik: false,
   },

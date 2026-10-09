@@ -17,9 +17,10 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { uzRolMu } from '../klinik/rolAdlari'
-import { uygulamaMetni, uzUygulamaDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
-import { randevuMetni } from './randevuMetinleri'
+import { marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
+import { ulkePaketi } from '@/lib/ulke/ulke'
+import type { DilKodu } from '@/lib/ulke/tipler'
 
 /**
  * ADDRESSES of the application's screens: the routes of UYGULAMA_EKRANLARI under the country's path prefix
@@ -35,7 +36,7 @@ const GIRIS = ulkeYolu('/login')
 const BEKLETME = ulkeYolu('/welcome')
 
 export type Hesap = {
-  dil: UzUygulamaDili; notDili: UzUygulamaDili; ad: string
+  dil: DilKodu; notDili: DilKodu; ad: string
   /** The role the account works as (a key of ../klinik/rolAdlari.ts), or null while it has not chosen one. */
   rol: string | null
   /** false = the first-login language question is still to be answered. */
@@ -49,7 +50,7 @@ export type Uygulama = {
   /** null until the account is known. */
   hesap: Hesap | null
   m: UygulamaMetni
-  dil: UzUygulamaDili
+  dil: DilKodu
   api: Api
   hesabiGuncelle: (h: Partial<Hesap>) => void
   cikis: () => void
@@ -96,18 +97,23 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       if (r.j.durum !== 'uygulama') { window.location.replace(BEKLETME); return }
       // The role: asked after the language. A value that is not one of this country's roles counts as "not chosen".
       let rol: string | null = null
-      try { const rr = await api('/api/ulke/rol'); if (rr.ok && uzRolMu(rr.j.rol)) rol = rr.j.rol } catch { return }
+      try { const rr = await api('/api/ulke/rol'); if (rr.ok && rolMu(rr.j.rol)) rol = rr.j.rol } catch { return }
       if (iptal) return
       const dilSoruldu = Boolean(r.j.dilSoruldu)
-      if ((!dilSoruldu || !rol) && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
-      if (dilSoruldu && rol && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
-      setHesap({ dil: uzUygulamaDili(r.j.dil), notDili: uzUygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu })
+      // A country without roles asks for none: only the language question stands between the account and the home.
+      const rolTamam = Boolean(rol) || roller().length === 0
+      if ((!dilSoruldu || !rolTamam) && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
+      if (dilSoruldu && rolTamam && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
+      // Every day and hour the screens write from now on is in the account's own time zone (one of the pack's list).
+      hesapSaatDilimiAyarla(r.j.saatDilimi)
+      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu })
     })()
     return () => { iptal = true }
   }, [api, cikis, ekran])
 
   const hesabiGuncelle = useCallback((h: Partial<Hesap>) => setHesap((eski) => (eski ? { ...eski, ...h } : eski)), [])
-  const dil = hesap?.dil ?? 'uz-Latn'
+  // Until the account is known a screen reads in the pack's default form.
+  const dil = hesap?.dil ?? ulkePaketi().varsayilanDil
   return { hesap, m: uygulamaMetni(dil), dil, api, hesabiGuncelle, cikis }
 }
 
@@ -120,7 +126,7 @@ const DEGISKENLER = {
 export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'ayarlar'
 
 export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
-  dil: UzUygulamaDili
+  dil: DilKodu
   m: UygulamaMetni
   ad?: string
   aktif?: Sekme | null
@@ -138,7 +144,7 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic">
-          <a href={sade ? undefined : YOL.bugun} className="uza-marka">Notya</a>
+          <a href={sade ? undefined : YOL.bugun} className="uza-marka">{marka()}</a>
           {sade ? null : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
@@ -160,7 +166,7 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
 }
 
 /** What a screen shows until the account (and so its language) is known. */
-export function Yukleniyor({ m, dil }: { m: UygulamaMetni; dil: UzUygulamaDili }) {
+export function Yukleniyor({ m, dil }: { m: UygulamaMetni; dil: DilKodu }) {
   return (
     <Cerceve dil={dil} m={m} sade>
       <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>
@@ -170,24 +176,8 @@ export function Yukleniyor({ m, dil }: { m: UygulamaMetni; dil: UzUygulamaDili }
 
 // ───────────────────────── small shared pieces ─────────────────────────
 
-/** DD.MM.YYYY from an ISO date or timestamp, in the country's time zone. Digits only: no month names to translate. */
-export function tarihYaz(iso: string | null | undefined, saatDilimi = 'Asia/Tashkent'): string {
-  if (!iso) return ''
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) { const [y, a, g] = iso.split('-'); return `${g}.${a}.${y}` }
-  const t = new Date(iso)
-  if (Number.isNaN(t.getTime())) return ''
-  const p = new Intl.DateTimeFormat('en-GB', { timeZone: saatDilimi, day: '2-digit', month: '2-digit', year: 'numeric' }).formatToParts(t)
-  const al = (tur: string) => p.find((x) => x.type === tur)?.value ?? ''
-  return `${al('day')}.${al('month')}.${al('year')}`
-}
-
-/** HH:MM in the country's time zone. */
-export function saatYaz(iso: string | null | undefined, saatDilimi = 'Asia/Tashkent'): string {
-  if (!iso) return ''
-  const t = new Date(iso)
-  if (Number.isNaN(t.getTime())) return ''
-  return new Intl.DateTimeFormat('en-GB', { timeZone: saatDilimi, hour: '2-digit', minute: '2-digit', hour12: false }).format(t)
-}
+// A day and a time of day as the country writes them, in the account's time zone: lib/ulke/arayuz/bicim.ts.
+export { saatYaz, tarihYaz } from '@/lib/ulke/arayuz/bicim'
 
 export function Hata({ children }: { children: ReactNode }) {
   return children ? <div role="alert" className="uza-uyari-kutu">{children}</div> : null

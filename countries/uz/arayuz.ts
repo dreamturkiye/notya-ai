@@ -1,0 +1,25 @@
+/**
+ * NOTYA-ULKE-SABLON-01 — Uzbekistan: what the pack brings for the country kit's shared screens. CONTENT ONLY.
+ * Reached only through countries/active/arayuz, read through lib/ulke/arayuz.
+ *
+ * Nothing is written here: each entry points at the file of this folder that holds it.
+ *   catalogues, three forms           ./uygulama/metinler.ts, ./uygulama/randevuMetinleri.ts
+ *   roles (40) and their names        ./klinik/rolAdlari.ts
+ *   assistant names (owner's list)    ./klinik/asistanAdlari.ts, derived forms in ./klinik/asistanKimligi.ts
+ *   note templates                    ./klinik/notSablonlari.ts
+ */
+import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
+import { uzAsistanKimligi } from './klinik/asistanKimligi'
+import { UZ_NOT_SABLONLARI } from './klinik/notSablonlari'
+import { UZ_ROL_TANIMLARI } from './klinik/rolAdlari'
+import { UZ_UYGULAMA_METINLERI } from './uygulama/metinler'
+import { UZ_RANDEVU_METINLERI } from './uygulama/randevuMetinleri'
+
+export const UZ_ARAYUZ: UlkeArayuzu = {
+  marka: 'Notya',
+  metinler: UZ_UYGULAMA_METINLERI,
+  randevuMetinleri: UZ_RANDEVU_METINLERI,
+  roller: UZ_ROL_TANIMLARI,
+  asistan: uzAsistanKimligi,
+  notSablonlari: UZ_NOT_SABLONLARI,
+}

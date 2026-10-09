@@ -414,7 +414,7 @@ describe('an Uzbekistan build: routes', () => {
     const istemci = await import('./istemciSupabase')
     assert.equal(istemci.ulkeOturumAnahtari(), 'sb-notya-uz-auth-token')
     assert.match(readFileSync(join(KOK, 'lib/ulke/istemciSupabase.ts'), 'utf8'), /auth: \{ storageKey: ulkeOturumAnahtari\(\) \}/)
-    const kaynaklar = ['middleware.ulke.ts', 'lib/ulke/sunucuOturum.ts', 'lib/ulke/istemciSupabase.ts', 'components/ulke/GirisFormu.tsx', 'countries/uz/uygulama/Kabuk.tsx']
+    const kaynaklar = ['middleware.ulke.ts', 'lib/ulke/sunucuOturum.ts', 'lib/ulke/istemciSupabase.ts', 'components/ulke/GirisFormu.tsx', 'components/ulke/uygulama/Kabuk.tsx']
     for (const d of kaynaklar) assert.doesNotMatch(readFileSync(join(KOK, d), 'utf8'), /document\.cookie|cookies\(\)|Set-Cookie|\.cookies\./i, `${d} uses a cookie: it would need the path prefix`)
   })
 

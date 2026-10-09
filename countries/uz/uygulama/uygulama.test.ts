@@ -143,19 +143,19 @@ describe('Uzbekistan application: text in three forms', () => {
 })
 
 describe('Uzbekistan application: screens (first-login question, settings, home)', () => {
-  let Kabuk: typeof import('./Kabuk')
-  let Baslangic: typeof import('./Baslangic')
-  let Ayarlar: typeof import('./Ayarlar')
-  let Bugun: typeof import('./Bugun')
-  let Hastalar: typeof import('./Hastalar')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+  let Baslangic: typeof import('@/components/ulke/uygulama/Baslangic')
+  let Ayarlar: typeof import('@/components/ulke/uygulama/Ayarlar')
+  let Bugun: typeof import('@/components/ulke/uygulama/Bugun')
+  let Hastalar: typeof import('@/components/ulke/uygulama/Hastalar')
   let M: typeof import('./metinler')
   let Layout: typeof import('../../../app/layout.ulke')
   before(async () => {
-    Kabuk = await import('./Kabuk')
-    Baslangic = await import('./Baslangic')
-    Ayarlar = await import('./Ayarlar')
-    Bugun = await import('./Bugun')
-    Hastalar = await import('./Hastalar')
+    Kabuk = await import('@/components/ulke/uygulama/Kabuk')
+    Baslangic = await import('@/components/ulke/uygulama/Baslangic')
+    Ayarlar = await import('@/components/ulke/uygulama/Ayarlar')
+    Bugun = await import('@/components/ulke/uygulama/Bugun')
+    Hastalar = await import('@/components/ulke/uygulama/Hastalar')
     M = await import('./metinler')
     Layout = await import('../../../app/layout.ulke')
   })
@@ -165,7 +165,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
 
   it('the route pages render the pack\'s screens; before the account is known they show only "loading"', async () => {
     const { UYGULAMA_EKRANLARI } = await import('@/lib/ulke/tipler')
-    const { UZ_UYGULAMA } = await import('./index')
+    const { UYGULAMA_EKRAN_BILESENLERI: UZ_UYGULAMA } = await import('@/components/ulke/uygulama')
     // Every screen the pack brings has its page, and the pack lists that page — and the other way round.
     for (const [ekran, yol] of Object.entries(UYGULAMA_EKRANLARI)) {
       const var_ = ekran in UZ_UYGULAMA

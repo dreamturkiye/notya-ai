@@ -24,16 +24,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { MUAYENE_SES_KOVASI } from '@/lib/ulke/tipler'
 import { sesKlasoru } from '@/lib/ulke/uygulama/tablolar'
-import { UZ_GENEL_SABLON, uzSablonMu } from '../klinik/notSablonlari'
-import { uzRolAdi } from '../klinik/rolAdlari'
 import { AramaFormu } from './Bugun'
 import { Bilgi, Cerceve, Hata, tarihYaz, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
 import { asistanAdi } from './Asistan'
-import { metninDili, type UygulamaMetni } from './metinler'
-import { randevuMetni } from './randevuMetinleri'
 import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
+import { metninDili, randevuMetni, rolAdi, genelSablon, sablonMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
 export type KonusmaOzeti = { dil: string; dilKesin: boolean; ikinciGecis: boolean; dusukGuven: boolean }
 export type MuayeneDetayi = {
@@ -54,16 +51,16 @@ export function muayeneHataMetni(m: UygulamaMetni, kod: string | null): string |
 }
 
 /** A template named for a person: the role's name in the screen's form, or "General". The key itself is never shown. */
-export const sablonAdi = (m: UygulamaMetni, s: string): string => uzRolAdi(s, metninDili(m)) ?? m.muayene.sablonGenel
+export const sablonAdi = (m: UygulamaMetni, s: string): string => rolAdi(s, metninDili(m)) ?? m.muayene.sablonGenel
 
 /** The template an account's visits are written with: its role's, or the general one while it has no role. */
-export const hesapSablonu = (rol: string | null | undefined): string => (rol && uzSablonMu(rol) ? rol : UZ_GENEL_SABLON)
+export const hesapSablonu = (rol: string | null | undefined): string => (rol && sablonMu(rol) ? rol : genelSablon())
 
 /** The language of a visit, named in the screen's language; "not determined" when the engine was not sure. */
 export function konusmaDiliAdi(m: UygulamaMetni, k: KonusmaOzeti | null): string {
   if (!k || !k.dil) return ''
   if (!k.dilKesin) return m.muayene.dilKarma
-  return k.dil === 'uz' ? m.muayene.konusmaDili.uz : k.dil === 'ru' ? m.muayene.konusmaDili.ru : m.muayene.dilBaska
+  return Object.prototype.hasOwnProperty.call(m.muayene.konusmaDili, k.dil) ? m.muayene.konusmaDili[k.dil] : m.muayene.dilBaska
 }
 
 const sureYaz = (sn: number) => `${String(Math.floor(sn / 60)).padStart(2, '0')}:${String(sn % 60).padStart(2, '0')}`

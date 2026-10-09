@@ -143,7 +143,7 @@ describe('BOUNDARY: Turkish error text of shared infrastructure never reaches th
     // What the doctor reads for that code is the pack's own sentence.
     const M = await import('./metinler')
     assert.equal(M.uygulamaMetni('uz-Latn').yeniHasta.kaydedilemedi, 'Bemorni saqlab boʻlmadi. Qaytadan urinib koʻring.')
-    assert.match(readFileSync(join(KOK, 'countries/uz/uygulama/Hastalar.tsx'), 'utf8'), /setHata\(r\.j\.code === 'GECERSIZ'[^\n]+: 'kayit'\)/)
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Hastalar.tsx'), 'utf8'), /setHata\(r\.j\.code === 'GECERSIZ'[^\n]+: 'kayit'\)/)
   })
 
   it('every handler of the country API runs inside the boundary', () => {
@@ -431,13 +431,13 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
 })
 
 describe('Uzbekistan visit: screens in the three forms', () => {
-  let Kabuk: typeof import('./Kabuk')
-  let Muayene: typeof import('./Muayene')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+  let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
   let M: typeof import('./metinler')
   let Layout: typeof import('../../../app/layout.ulke')
   let ACIK: readonly string[] = []
   before(async () => {
-    Kabuk = await import('./Kabuk'); Muayene = await import('./Muayene'); M = await import('./metinler'); Layout = await import('../../../app/layout.ulke')
+    Kabuk = await import('@/components/ulke/uygulama/Kabuk'); Muayene = await import('@/components/ulke/uygulama/Muayene'); M = await import('./metinler'); Layout = await import('../../../app/layout.ulke')
     const izin = (await import('@/lib/ulke/ulke')).ulkePaketi().rotalar
     if (izin !== 'hepsi') ACIK = izin.sayfalar
   })
@@ -457,7 +457,7 @@ describe('Uzbekistan visit: screens in the three forms', () => {
   const bos = () => {}
 
   it('the visit screen exists: route file, pack list, screen — and the links to it are switched on', async () => {
-    const { UZ_UYGULAMA } = await import('./index')
+    const { UYGULAMA_EKRAN_BILESENLERI: UZ_UYGULAMA } = await import('@/components/ulke/uygulama')
     assert.ok('muayene' in UZ_UYGULAMA)
     assert.ok(ACIK.includes('/visit'))
     assert.ok(existsSync(join(KOK, 'app/visit/page.ulke.tsx')))
@@ -514,7 +514,7 @@ describe('Uzbekistan visit: screens in the three forms', () => {
 
     it(`${f}: a recorded visit — transcript, language by name, plain notices for a second pass and for low confidence`, () => {
       const m = M.uygulamaMetni(f)
-      const muayene = (konusma: import('./Muayene').KonusmaOzeti | null) => ({ seansId: 's1', baslangic: '2026-10-08T04:30:00Z', sablon: 'pediatri', metin: UZ_METIN, hasta: HASTA, notId: null, notDurumu: 'notsuz' as const, konusma })
+      const muayene = (konusma: import('@/components/ulke/uygulama/Muayene').KonusmaOzeti | null) => ({ seansId: 's1', baslangic: '2026-10-08T04:30:00Z', sablon: 'pediatri', metin: UZ_METIN, hasta: HASTA, notId: null, notDurumu: 'notsuz' as const, konusma })
       const temizHal = cerceve(f, React.createElement(Muayene.MuayeneOzetiGorunumu, { m, muayene: muayene({ dil: 'uz', dilKesin: true, ikinciGecis: false, dusukGuven: false }) }))
       const g = gorunurMetin(temizHal)
       for (const x of [m.muayene.baslik, 'QA Karimova Dilnoza Rustam qizi', '08.10.2026', '09:30', m.muayene.sablonPediatri, m.muayene.taninanDil, m.muayene.konusmaDili.uz, m.not.transkript, m.muayene.metinKaydedildi, UZ_METIN, m.not.dosyayaDon]) assert.ok(g.includes(x), x)
@@ -543,7 +543,7 @@ describe('Uzbekistan visit: screens in the three forms', () => {
   })
 
   it('the home and the patient file lead to the visit; a visit without a note opens the recorded visit', async () => {
-    const Bugun = await import('./Bugun'); const Hastalar = await import('./Hastalar')
+    const Bugun = await import('@/components/ulke/uygulama/Bugun'); const Hastalar = await import('@/components/ulke/uygulama/Hastalar')
     const m = M.uygulamaMetni('uz-Latn')
     const ev = cerceve('uz-Latn', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA', hata: false, muayeneler: [{ seansId: 's3', notId: null, hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: '2026-10-08T07:00:00Z', durum: 'notsuz' }] }))
     assert.ok(ev.includes('href="/uzbek/visit"') && ev.includes('href="/uzbek/visit?seans=s3"'))

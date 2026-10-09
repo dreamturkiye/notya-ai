@@ -20,15 +20,16 @@ import { Bilgi, Hata, Secim, tarihYaz, saatYaz, YOL, type Uygulama } from './Kab
 import { tamAd } from './Hastalar'
 import { KonusmaBildirimleri, konusmaDiliAdi, sablonAdi, type MuayeneDetayi } from './Muayene'
 import { asistanAdi } from './Asistan'
-import { UZ_BOLUMLER, uzAlanAdi, uzAlanTanimi, uzBolumAdi, uzSablonAlanlari, type UzBolum } from '../klinik/notSablonlari'
-import { metninDili, type UygulamaMetni, type UzUygulamaDili } from './metinler'
+import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
+import { ulkePaketi } from '@/lib/ulke/ulke'
+import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type NotIcerigi = { s: string; o: string; a: string; p: string; /** Role fields: key → text. */ alanlar?: Record<string, string> }
 export type NotDetayi = {
   notId: string; seansId: string; onayli: boolean; onayTarihi: string | null
-  dil: UzUygulamaDili; icerik: NotIcerigi
-  ikinci: { dil: UzUygulamaDili; icerik: NotIcerigi } | null
-  yenidenYazilabilir: UzUygulamaDili | null
+  dil: DilKodu; icerik: NotIcerigi
+  ikinci: { dil: DilKodu; icerik: NotIcerigi } | null
+  yenidenYazilabilir: DilKodu | null
   /** Field keys the server allows for this note, in order. */
   alanAnahtarlari?: readonly string[]
   muayene: MuayeneDetayi
@@ -37,20 +38,20 @@ export type NotIslemi = 'kaydediliyor' | 'cevriliyor' | 'onaylaniyor' | null
 /** What the last action answered: a code of the note API, or one of the two good outcomes. */
 export type NotBildirimi = 'KAYDEDILDI' | 'ONAYLANDI' | 'KAYDEDILEMEDI' | 'ONAYLANAMADI' | 'YENIDEN_YAZILAMADI' | 'ONAYLI' | 'BOS' | 'BAGLANTI' | null
 
-const BOLUMLER = UZ_BOLUMLER
+const BOLUMLER = NOT_BOLUMLERI
 
 /**
  * The fields this note shows, per section: what the server lists AND the visit's template owns. Both, or nothing.
  */
-export function notAlanlari(not: Pick<NotDetayi, 'alanAnahtarlari' | 'muayene'>): Record<UzBolum, string[]> {
+export function notAlanlari(not: Pick<NotDetayi, 'alanAnahtarlari' | 'muayene'>): Record<NotBolumu, string[]> {
   const v = not.muayene
-  const sablonun = new Set(uzSablonAlanlari(v.sablon, { dogumTarihi: v.hasta?.dogumTarihi, muayeneTarihi: v.baslangic.slice(0, 10) }))
-  const cikti: Record<UzBolum, string[]> = { s: [], o: [], a: [], p: [] }
-  for (const k of new Set(not.alanAnahtarlari ?? [])) { const t = sablonun.has(k) ? uzAlanTanimi(k) : null; if (t) cikti[t.bolum].push(k) }
+  const sablonun = new Set(sablonAlanlari(v.sablon, { dogumTarihi: v.hasta?.dogumTarihi, muayeneTarihi: v.baslangic.slice(0, 10) }))
+  const cikti: Record<NotBolumu, string[]> = { s: [], o: [], a: [], p: [] }
+  for (const k of new Set(not.alanAnahtarlari ?? [])) { const t = sablonun.has(k) ? alanTanimi(k) : null; if (t) cikti[t.bolum].push(k) }
   return cikti
 }
 /** A language of notes, named in the screen's language (the script is not named: both Uzbek forms are "Uzbek"). */
-export const notDiliAdi = (m: UygulamaMetni, dil: string): string => (dil === 'ru' ? m.diller.ru : m.diller.uz)
+export const notDiliAdi = (m: UygulamaMetni, dil: string): string => dilAdi(m, temelDil(dil))
 
 function bildirimMetni(m: UygulamaMetni, b: NotBildirimi): { iyi: string | null; kotu: string | null } {
   const n = m.not
@@ -61,7 +62,7 @@ function bildirimMetni(m: UygulamaMetni, b: NotBildirimi): { iyi: string | null;
 }
 
 export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, islem, bildirim, kaydet, yenidenYaz, onayla }: {
-  m: UygulamaMetni; not: NotDetayi; aktifDil: UzUygulamaDili; setAktifDil: (d: UzUygulamaDili) => void
+  m: UygulamaMetni; not: NotDetayi; aktifDil: DilKodu; setAktifDil: (d: DilKodu) => void
   icerik: NotIcerigi; setIcerik: (i: NotIcerigi) => void; islem: NotIslemi; bildirim: NotBildirimi
   kaydet: () => void; yenidenYaz: () => void; onayla: () => void
 }) {
@@ -73,7 +74,7 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
   const taslaklar = not.ikinci ? [not.dil, not.ikinci.dil] : [not.dil]
   const ekranDili = metninDili(m)
   const alanlar = notAlanlari(not)
-  const bolumBasligi = (b: UzBolum) => uzBolumAdi(v.sablon, b, ekranDili) ?? n[b]
+  const bolumBasligi = (b: NotBolumu) => bolumAdi(v.sablon, b, ekranDili) ?? n[b]
   return (
     <>
       <section className="uza-kart">
@@ -105,7 +106,7 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
               <p className="uza-not-metin" data-bolum={b}>{not.icerik[b]}</p>
               {alanlar[b].filter((k) => (not.icerik.alanlar?.[k] ?? '').trim()).map((k) => (
                 <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
-                  <h3 className="uza-alt-baslik">{uzAlanAdi(k, ekranDili)}</h3>
+                  <h3 className="uza-alt-baslik">{alanAdi(k, ekranDili)}</h3>
                   <p className="uza-not-metin">{not.icerik.alanlar?.[k]}</p>
                 </div>
               ))}
@@ -125,7 +126,7 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
                 <textarea id={`uza-not-${b}`} name={b} className="uza-girdi" lang={aktifDil} value={icerik[b]} onChange={(e) => setIcerik({ ...icerik, [b]: e.target.value })} disabled={mesgul} />
                 {alanlar[b].map((k) => (
                   <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
-                    <label className="uza-etiket uza-alt-etiket" htmlFor={`uza-alan-${k}`}>{uzAlanAdi(k, ekranDili)}</label>
+                    <label className="uza-etiket uza-alt-etiket" htmlFor={`uza-alan-${k}`}>{alanAdi(k, ekranDili)}</label>
                     <textarea id={`uza-alan-${k}`} name={`alan-${k}`} className="uza-girdi uza-alt-girdi" rows={2} lang={aktifDil} value={icerik.alanlar?.[k] ?? ''} onChange={(e) => setIcerik({ ...icerik, alanlar: { ...(icerik.alanlar ?? {}), [k]: e.target.value } })} disabled={mesgul} />
                   </div>
                 ))}
@@ -138,7 +139,7 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
               <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={mesgul} onClick={kaydet} data-eylem="kaydet">{n.kaydet}</button>
               {not.yenidenYazilabilir ? (
                 <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={mesgul} onClick={yenidenYaz} data-eylem="yeniden-yaz">
-                  {islem === 'cevriliyor' ? n.cevriliyor : not.yenidenYazilabilir === 'ru' ? n.cevir.ru : n.cevir.uz}
+                  {islem === 'cevriliyor' ? n.cevriliyor : n.cevir[temelDil(not.yenidenYazilabilir)] ?? ''}
                 </button>
               ) : null}
             </div>
@@ -161,14 +162,14 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
 export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   const [not, setNot] = useState<NotDetayi | null>(null)
   const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
-  const [aktifDil, setAktifDil] = useState<UzUygulamaDili>('uz-Latn')
+  const [aktifDil, setAktifDil] = useState<DilKodu>(() => ulkePaketi().varsayilanDil)
   // The text on the screen, per draft language: what the doctor has typed is kept while they look at the other draft.
-  const [metinler, setMetinler] = useState<Partial<Record<UzUygulamaDili, NotIcerigi>>>({})
+  const [metinler, setMetinler] = useState<Partial<Record<DilKodu, NotIcerigi>>>({})
   const [islem, setIslem] = useState<NotIslemi>(null)
   const [bildirim, setBildirim] = useState<NotBildirimi>(null)
   const { hesap, api } = u
 
-  const yukle = useCallback(async (gecilecekDil?: UzUygulamaDili): Promise<void> => {
+  const yukle = useCallback(async (gecilecekDil?: DilKodu): Promise<void> => {
     const r = await api(`/api/ulke/not?id=${encodeURIComponent(notId)}`)
     if (!r.ok || !r.j.not) { setYuk(r.status === 404 ? 'yok' : 'hata'); return }
     const n = r.j.not as NotDetayi
@@ -191,7 +192,7 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
 
   const icerik = metinler[aktifDil] ?? (aktifDil === not.dil ? not.icerik : not.ikinci?.icerik ?? not.icerik)
   // A note that has fields always sends them (an empty object clears them); a note without fields sends none.
-  const govde = (dil: UzUygulamaDili) => { const i = metinler[dil] ?? not.icerik; return { notId, dil, s: i.s, o: i.o, a: i.a, p: i.p, ...((not.alanAnahtarlari ?? []).length ? { alanlar: i.alanlar ?? {} } : {}) } }
+  const govde = (dil: DilKodu) => { const i = metinler[dil] ?? not.icerik; return { notId, dil, s: i.s, o: i.o, a: i.a, p: i.p, ...((not.alanAnahtarlari ?? []).length ? { alanlar: i.alanlar ?? {} } : {}) } }
   const kodu = (j: Record<string, unknown>, yedek: NotBildirimi): NotBildirimi => (j.code === 'ONAYLI' ? 'ONAYLI' : j.code === 'BOS' ? 'BOS' : yedek)
 
   async function kaydet() {
@@ -212,7 +213,7 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
       const k = await api('/api/ulke/not', { method: 'PATCH', govde: govde(not.dil) })
       if (!k.ok) { setBildirim(kodu(k.j, 'KAYDEDILEMEDI')); setIslem(null); return }
       const r = await api('/api/ulke/not/yeniden-yaz', { method: 'POST', govde: { notId } })
-      if (r.ok && typeof r.j.dil === 'string') await yukle(r.j.dil as UzUygulamaDili)
+      if (r.ok && typeof r.j.dil === 'string') await yukle(r.j.dil as DilKodu)
       else setBildirim(kodu(r.j, 'YENIDEN_YAZILAMADI'))
     } catch { setBildirim('BAGLANTI') }
     setIslem(null)

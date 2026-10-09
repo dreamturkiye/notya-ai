@@ -25,14 +25,14 @@ import React, { useEffect, useState, type FormEvent } from 'react'
 import { gunCoz, gunEkle, gunYazDesenle, haftaGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
-import type { UygulamaMetni, UzUygulamaDili } from './metinler'
-import { gunAdi, randevuMetni, type RandevuMetni } from './randevuMetinleri'
-import { UZ_TARIH_DESENI, uzHatirlatmaMetni } from './hatirlatma'
 import { bitisSaati, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
+import { temelDil, randevuMetni, gunAdi, type UygulamaMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
+import type { DilKodu } from '@/lib/ulke/tipler'
+import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
 
 export { bitisSaati, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
 
-const gunYaz = (gun: string) => gunYazDesenle(gun, UZ_TARIH_DESENI)
+const gunYaz = (gun: string) => gunYazDesenle(gun, tarihDeseni())
 
 /** A code of the appointment API → the catalogue's sentence. `tasima` = the request was a move, not a booking. */
 export function randevuHataMetni(m: UygulamaMetni, r: RandevuMetni, kod: string | null, alan?: string | null, tasima = false): string | null {
@@ -208,7 +208,7 @@ function TakvimEkrani({ u, r, gunParam, gorunum }: { u: Uygulama; r: RandevuMetn
     return () => { iptal = true }
   }, [hesap, api, gunParam, gorunum])
   // Until the server has said which day "today" is, the address's own day is the only day known.
-  const gun = (gunParam && gunCoz(gunParam, UZ_TARIH_DESENI)) || veri?.bugun || ''
+  const gun = (gunParam && gunCoz(gunParam, tarihDeseni())) || veri?.bugun || ''
   if (!gun) return <section className="uza-kart"><Hata>{hata ? u.m.kabuk.hata : null}</Hata>{hata ? null : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>}</section>
   return <TakvimGorunumu m={u.m} r={r} gorunum={gorunum} gun={gun} gunler={veri?.gunler ?? [gun]} bugun={veri?.bugun ?? gun} duzen={duzen} randevular={veri?.randevular ?? null} hata={hata} />
 }
@@ -253,7 +253,7 @@ export function RandevuFormuGorunumu({ m, r, hasta, a, set, sureler, gonder, bek
     <section className="uza-kart uza-dar">
       <p className="uza-ust-yazi">{r.form.baslik}</p>
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
-      <p className="uza-ipucu"><a className="uza-baglanti" href={takvimYolu({ yeni: '1', gun: gunCoz(a.gun, UZ_TARIH_DESENI) ?? undefined, saat: a.saat })}>{r.form.hastaDegistir}</a></p>
+      <p className="uza-ipucu"><a className="uza-baglanti" href={takvimYolu({ yeni: '1', gun: gunCoz(a.gun, tarihDeseni()) ?? undefined, saat: a.saat })}>{r.form.hastaDegistir}</a></p>
       <form className="uza-form" onSubmit={(e: FormEvent) => { e.preventDefault(); gonder(false) }} noValidate>
         <ZamanAlanlari r={r} a={a} set={set} sureler={sureler} on="uza-rf" />
         <div className="uza-alan">
@@ -326,7 +326,7 @@ function YeniRandevu({ u, r, hastaId, gunParam, saatParam, q }: { u: Uygulama; r
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState<FormHatasi>(null)
   const { hesap, api } = u
-  const gun = gunCoz(gunParam, UZ_TARIH_DESENI) ?? ''
+  const gun = gunCoz(gunParam, tarihDeseni()) ?? ''
   const saat = saatCoz(saatParam) !== null ? saatParam : ''
 
   useEffect(() => {
@@ -394,7 +394,7 @@ export function durumEylemleri(x: Pick<RandevuKaydi, 'durum' | 'seansId'>): Rand
 export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setTasi, hata, bildirim, bekliyor, durumDegistir, tasiGonder, kopyala }: {
   m: UygulamaMetni; r: RandevuMetni; randevu: RandevuKaydi
   /** The account: its two forms and its name, for the reminder text. */
-  hekim: { dil: UzUygulamaDili; notDili: UzUygulamaDili; ad: string }
+  hekim: { dil: DilKodu; notDili: DilKodu; ad: string }
   sureler: readonly number[]; tasi: Pick<RandevuFormu, 'gun' | 'saat' | 'sureDk'>; setTasi: (y: Partial<RandevuFormu>) => void
   hata: DetayHatasi; bildirim: DetayBildirimi; bekliyor: boolean
   durumDegistir: (d: RandevuDurumu) => void; tasiGonder: (yineDe: boolean) => void; kopyala: (metin: string) => void
@@ -404,7 +404,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
   const eylemler = durumEylemleri(x)
   const etiket = (d: RandevuDurumu) => d === 'geldi' ? (x.durum === 'tamamlandi' ? r.randevu.geldiyeAl : r.randevu.geldi) : d === 'tamamlandi' ? r.randevu.tamamla : d === 'gelmedi' ? r.randevu.gelmedi : d === 'iptal' ? r.randevu.iptalEt : r.randevu.planaAl
   // The reminder is for an appointment that is still to come: planned.
-  const h = x.durum === 'planlandi' ? uzHatirlatmaMetni({ hastaDili: x.hastaDili ?? '', hekim, gun: x.gun, saat: x.saat }) : null
+  const h = x.durum === 'planlandi' ? hatirlatmaMetni({ hastaDili: x.hastaDili ?? '', hekim, gun: x.gun, saat: x.saat }) : null
   const tasiMesaiDisi = hata?.nerede === 'tasi' && hata.kod === 'MESAI_DISI'
   return (
     <>
@@ -436,7 +436,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
       {h && h.metin ? (
         <section className="uza-kart" data-alan="hatirlatma-karti">
           <h2 className="uza-h2">{r.hatirlatma.baslik}</h2>
-          <p className="uza-ust-yazi">{r.hatirlatma.dil}: {h.dil === 'ru' ? r.hatirlatma.dilAdi.ru : r.hatirlatma.dilAdi.uz}</p>
+          <p className="uza-ust-yazi">{r.hatirlatma.dil}: {r.hatirlatma.dilAdi[temelDil(h.dil)] ?? ''}</p>
           <textarea className="uza-girdi uza-hatirlatma" readOnly rows={3} value={h.metin} lang={h.dil} data-alan="hatirlatma" data-dil={h.dil} aria-label={r.hatirlatma.baslik} onFocus={(e) => e.currentTarget.select()} />
           {bildirim === 'kopyalandi' ? <div style={{ marginTop: 10 }}><Bilgi>{r.hatirlatma.kopyalandi}</Bilgi></div> : null}
           {bildirim === 'kopyalanamadi' ? <div style={{ marginTop: 10 }}><Hata>{r.hatirlatma.kopyalanamadi}</Hata></div> : null}

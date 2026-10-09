@@ -8,9 +8,10 @@
 import React, { useEffect, useState, type FormEvent } from 'react'
 import { AramaFormu } from './Bugun'
 import { Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
-import { metninDili, UZ_UYGULAMA_METINLERI, yaziSec, type UygulamaMetni, type UzUygulamaDili } from './metinler'
-import { randevuMetni } from './randevuMetinleri'
 import { bitisSaati, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
+import { dilAdi, dilBirlestir, metninDili, randevuMetni, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { ulkePaketi } from '@/lib/ulke/ulke'
+import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export type DosyaMuayenesi = { seansId: string; notId: string | null; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -20,7 +21,7 @@ export const tamAd = (h: Pick<HastaKaydi, 'ad' | 'otaIsmi'>) => [h.ad, h.otaIsmi
 
 /** The patient's language, named in the screen's language. */
 export function hastaDiliAdi(m: UygulamaMetni, dil: string): string {
-  return dil === 'uz' ? m.diller.uz : dil === 'ru' ? m.diller.ru : ''
+  return dilAdi(m, dil)
 }
 
 /** Whole years; under two years, months ("7 oy"). '' when there is no birth date. */
@@ -92,17 +93,19 @@ export function Hastalar() {
 
 // ───────────────────────── new patient ─────────────────────────
 
-export type YeniHastaAlanlari = { ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: 'uz' | 'ru' | ''; ulusalKimlik: string }
+export type YeniHastaAlanlari = { ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export const BOS_HASTA: YeniHastaAlanlari = { ad: '', otaIsmi: '', dogumTarihi: '', cinsiyet: '', telefon: '', dil: '', ulusalKimlik: '' }
 export type YeniHastaHatasi = 'ad' | 'dogumTarihi' | 'dil' | 'kayit' | 'baglanti' | null
 
 export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, telefonOrnek }: {
-  m: UygulamaMetni; dil: UzUygulamaDili; a: YeniHastaAlanlari; set: (a: YeniHastaAlanlari) => void
+  m: UygulamaMetni; dil: DilKodu; a: YeniHastaAlanlari; set: (a: YeniHastaAlanlari) => void
   gonder: (e: FormEvent) => void; bekliyor: boolean; hata: YeniHastaHatasi; telefonOrnek: string
 }) {
   const y = m.yeniHasta
   const hataMetni = hata === 'ad' ? y.adGerekli : hata === 'dogumTarihi' ? y.dogumGecersiz : hata === 'dil' ? y.dilGerekli : hata === 'kayit' ? y.kaydedilemedi : hata === 'baglanti' ? m.kabuk.baglanti : null
-  const uz = yaziSec(dil) === 'Cyrl' ? 'uz-Cyrl' : 'uz-Latn'
+  const p = ulkePaketi()
+  // The patient's language is offered in that language (a language with several scripts: in the doctor's script).
+  const hastaDilleri = (p.uygulama?.hastaDilleri ?? []).map((temel) => { const bicim = dilBirlestir(temel, yaziSec(dil)); return { deger: temel, ad: dilAdi(uygulamaMetni(bicim), temel), dil: bicim } })
   const istegeBagli = <small> ({y.istegeBagli})</small>
   return (
     <section className="uza-kart uza-dar">
@@ -112,10 +115,12 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
           <label className="uza-etiket" htmlFor="uza-h-ad">{y.ad}</label>
           <input id="uza-h-ad" className="uza-girdi" value={a.ad} onChange={(e) => set({ ...a, ad: e.target.value })} autoComplete="off" maxLength={160} />
         </div>
-        <div className="uza-alan">
-          <label className="uza-etiket" htmlFor="uza-h-ota">{y.otaIsmi}{istegeBagli}</label>
-          <input id="uza-h-ota" className="uza-girdi" value={a.otaIsmi} onChange={(e) => set({ ...a, otaIsmi: e.target.value })} autoComplete="off" maxLength={120} />
-        </div>
+        {p.uygulama?.adAlanlari.ikinciAd ? (
+          <div className="uza-alan">
+            <label className="uza-etiket" htmlFor="uza-h-ota">{y.otaIsmi}{istegeBagli}</label>
+            <input id="uza-h-ota" className="uza-girdi" value={a.otaIsmi} onChange={(e) => set({ ...a, otaIsmi: e.target.value })} autoComplete="off" maxLength={120} />
+          </div>
+        ) : null}
         <div className="uza-iki">
           <div className="uza-alan">
             <label className="uza-etiket" htmlFor="uza-h-dogum">{y.dogumTarihi}</label>
@@ -128,14 +133,13 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
         </div>
         <Secim etiket={y.cinsiyet} ad="cinsiyet" deger={a.cinsiyet} sec={(cinsiyet) => set({ ...a, cinsiyet })} secenekler={[{ deger: 'female', ad: y.kadin }, { deger: 'male', ad: y.erkek }]} />
         {/* The patient's language is offered in that language, so the patient can point at it. */}
-        <Secim etiket={y.dil} ad="hasta-dili" deger={a.dil} sec={(d) => set({ ...a, dil: d })} secenekler={[
-          { deger: 'uz', ad: UZ_UYGULAMA_METINLERI[uz].diller.uz, dil: uz },
-          { deger: 'ru', ad: UZ_UYGULAMA_METINLERI.ru.diller.ru, dil: 'ru' },
-        ]} />
-        <div className="uza-alan">
-          <label className="uza-etiket" htmlFor="uza-h-kimlik">{y.ulusalKimlik}{istegeBagli}</label>
-          <input id="uza-h-kimlik" className="uza-girdi" value={a.ulusalKimlik} onChange={(e) => set({ ...a, ulusalKimlik: e.target.value })} inputMode="numeric" autoComplete="off" maxLength={40} />
-        </div>
+        {hastaDilleri.length > 1 ? <Secim etiket={y.dil} ad="hasta-dili" deger={a.dil} sec={(d) => set({ ...a, dil: d })} secenekler={hastaDilleri} /> : null}
+        {p.ulusalKimlik ? (
+          <div className="uza-alan">
+            <label className="uza-etiket" htmlFor="uza-h-kimlik">{y.ulusalKimlik}{istegeBagli}</label>
+            <input id="uza-h-kimlik" className="uza-girdi" value={a.ulusalKimlik} onChange={(e) => set({ ...a, ulusalKimlik: e.target.value })} inputMode="numeric" autoComplete="off" maxLength={40} />
+          </div>
+        ) : null}
         <Hata>{hataMetni}</Hata>
         <div className="uza-eylemler">
           <button type="submit" className="uza-dugme" disabled={bekliyor}>{bekliyor ? y.kaydediliyor : y.kaydet}</button>
@@ -148,7 +152,8 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
 
 export function YeniHasta() {
   const u = useUygulama('yeniHasta')
-  const [a, setA] = useState<YeniHastaAlanlari>(BOS_HASTA)
+  // A country with one patient language asks nothing: every patient is recorded with it.
+  const [a, setA] = useState<YeniHastaAlanlari>(() => { const d = ulkePaketi().uygulama?.hastaDilleri ?? []; return d.length === 1 ? { ...BOS_HASTA, dil: d[0] } : BOS_HASTA })
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState<YeniHastaHatasi>(null)
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
@@ -168,7 +173,7 @@ export function YeniHasta() {
 
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      <YeniHastaGorunumu m={u.m} dil={u.dil} a={a} set={(yeni) => { setA(yeni); setHata(null) }} gonder={gonder} bekliyor={bekliyor} hata={hata} telefonOrnek="+998 90 123 45 67" />
+      <YeniHastaGorunumu m={u.m} dil={u.dil} a={a} set={(yeni) => { setA(yeni); setHata(null) }} gonder={gonder} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} />
     </Cerceve>
   )
 }

@@ -41,7 +41,10 @@
  * FIELD KEYS are plain ASCII identifiers: the contract with the model and with the stored note
  * (`not_dil_kaydi.alanlar`, migration 134). A key is never shown; the screen shows the label from here.
  */
-import { uzAdDili, uzRolMu, uzRolTarafi, UZ_ROLLER, type UcBicim } from './rolAdlari'
+import * as S from '@/lib/ulke/arayuz/notSablonu'
+import type { NotSablonVerisi } from '@/lib/ulke/arayuz/tipler'
+import { UZ_VELI_YASI } from '../ayarlar'
+import { uzAdDili, uzRolMu, UZ_ROL_TANIMLARI, UZ_ROLLER, type UcBicim } from './rolAdlari'
 
 export type UzBolum = 's' | 'o' | 'a' | 'p'
 export const UZ_BOLUMLER: readonly UzBolum[] = ['s', 'o', 'a', 'p']
@@ -291,19 +294,30 @@ const BOLALAR_ROLLARI: readonly string[] = ['pediatri', 'cocuk-cerrahisi']
  */
 const MUTAXASSIS_BAHOSI: UcBicim = { 'uz-Latn': 'Mutaxassis bahosi', 'uz-Cyrl': 'Мутахассис баҳоси', ru: 'Оценка специалиста' }
 
+/**
+ * NOTYA-ULKE-SABLON-01 — Uzbekistan's templates as the DATA the country kit reads. The rules that read it (which
+ * fields a note may carry, guardian wording by age, a field's label) are the kit's, lib/ulke/arayuz/notSablonu.ts;
+ * the functions below are that same rule applied to this data, kept under their names for the pack's own code
+ * (the instructions to the model, ./talimatlar.ts) and its tests.
+ */
+export const UZ_NOT_SABLONLARI: NotSablonVerisi = {
+  genelSablon: UZ_GENEL_SABLON,
+  alanlar: UZ_ALANLAR,
+  rolAlanlari: UZ_ROL_ALANLARI,
+  veliAlani: { anahtar: UZ_VASIY_ALANI, tanim: YAS_ALANLARI[UZ_VASIY_ALANI] },
+  cocukRolleri: BOLALAR_ROLLARI,
+  bolumBasliklari: [{ taraf: 'klinik-muttefik', bolum: 'a', ad: MUTAXASSIS_BAHOSI }],
+}
+
 /** true = a template a note can be written with: the general one, or one of the 40 roles. */
-export const uzSablonMu = (ham: unknown): ham is string => ham === UZ_GENEL_SABLON || (uzRolMu(ham) && Object.prototype.hasOwnProperty.call(UZ_ROL_ALANLARI, ham))
+export const uzSablonMu = (ham: unknown): ham is string => S.sablonMu(UZ_NOT_SABLONLARI, UZ_ROL_TANIMLARI, ham)
 
 /** Templates, the general one first (the default of an account without a role), then the 40 roles in the owner's order. */
 export const UZ_SABLONLAR: readonly string[] = [UZ_GENEL_SABLON, ...UZ_ROLLER.filter((r) => r in UZ_ROL_ALANLARI)]
 
 /** Under 18 on the day of the visit. An unknown age is not a child — except in a role whose patients are children. */
 export function uzResitDegilMi(sablon: string, dogumTarihi: string | null | undefined, muayeneTarihi: string | null | undefined): boolean {
-  const d = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dogumTarihi ?? '')), m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(muayeneTarihi ?? ''))
-  if (!d || !m) return BOLALAR_ROLLARI.includes(sablon)
-  let yil = Number(m[1]) - Number(d[1])
-  if (Number(m[2]) < Number(d[2]) || (Number(m[2]) === Number(d[2]) && Number(m[3]) < Number(d[3]))) yil -= 1
-  return yil < 0 ? BOLALAR_ROLLARI.includes(sablon) : yil < 18
+  return S.veliYasindaMi(UZ_NOT_SABLONLARI, UZ_VELI_YASI, sablon, dogumTarihi, muayeneTarihi)
 }
 
 /**
@@ -311,9 +325,7 @@ export function uzResitDegilMi(sablon: string, dogumTarihi: string | null | unde
  * (under 18 only), then the role's own. An unknown template has none.
  */
 export function uzSablonAlanlari(sablon: string, hasta?: { dogumTarihi?: string | null; muayeneTarihi?: string | null } | null): readonly string[] {
-  if (!uzSablonMu(sablon)) return []
-  const rolAlanlari = sablon === UZ_GENEL_SABLON ? [] : UZ_ROL_ALANLARI[sablon]
-  return hasta && uzResitDegilMi(sablon, hasta.dogumTarihi, hasta.muayeneTarihi) ? [UZ_VASIY_ALANI, ...rolAlanlari] : rolAlanlari
+  return S.sablonAlanlari(UZ_NOT_SABLONLARI, UZ_ROL_TANIMLARI, UZ_VELI_YASI, sablon, hasta)
 }
 
 const sahip = (o: object, k: string): boolean => Object.prototype.hasOwnProperty.call(o, k)
@@ -326,7 +338,7 @@ export const uzAlanAdi = (anahtar: string, dil: unknown): string | null => uzAla
 
 /** A section heading that is this template's own, or null when the template uses the shared one. */
 export function uzBolumAdi(sablon: string, bolum: UzBolum, dil: unknown): string | null {
-  return bolum === 'a' && uzRolTarafi(sablon) === 'klinik-muttefik' ? MUTAXASSIS_BAHOSI[uzAdDili(dil)] : null
+  return S.bolumAdi(UZ_NOT_SABLONLARI, UZ_ROL_TANIMLARI, sablon, bolum, uzAdDili(dil))
 }
 
 // ───────────────────────── local reference content: slots, all empty, all off ─────────────────────────

@@ -561,7 +561,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.deepEqual((await sessiz(() => notYaz('jeton-a', m.seans))).sonuc, { s: 502, j: { code: 'NOT_YAZILAMADI' } })
     assert.deepEqual(vt.tablo('ulke_notlar'), [])
     // What the doctor reads for that code, and the way to ask again.
-    const M = await import('./metinler'); const Muayene = await import('./Muayene')
+    const M = await import('./metinler'); const Muayene = await import('@/components/ulke/uygulama/Muayene')
     for (const f of FORMLAR) assert.equal(Muayene.muayeneHataMetni(M.uygulamaMetni(f), 'NOT_YAZILAMADI'), M.uygulamaMetni(f).muayene.notYazilamadi)
     R.devreSifirla(); model.cagrilar = []
     model.cevaplar = [UZ_NOT]
@@ -620,14 +620,14 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
 })
 
 describe('Uzbekistan note: screens in the three forms', () => {
-  let Kabuk: typeof import('./Kabuk')
-  let Not: typeof import('./Not')
-  let Muayene: typeof import('./Muayene')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+  let Not: typeof import('@/components/ulke/uygulama/Not')
+  let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
   let M: typeof import('./metinler')
   let Layout: typeof import('../../../app/layout.ulke')
   let ACIK: readonly string[] = []
   before(async () => {
-    Kabuk = await import('./Kabuk'); Not = await import('./Not'); Muayene = await import('./Muayene'); M = await import('./metinler'); Layout = await import('../../../app/layout.ulke')
+    Kabuk = await import('@/components/ulke/uygulama/Kabuk'); Not = await import('@/components/ulke/uygulama/Not'); Muayene = await import('@/components/ulke/uygulama/Muayene'); M = await import('./metinler'); Layout = await import('../../../app/layout.ulke')
     const izin = (await import('@/lib/ulke/ulke')).ulkePaketi().rotalar
     if (izin !== 'hepsi') ACIK = izin.sayfalar
   })
@@ -646,9 +646,9 @@ describe('Uzbekistan note: screens in the three forms', () => {
   const HASTA = { id: '30000000-0000-4000-8000-000000000001', ad: 'QA Karimova Dilnoza', otaIsmi: 'Rustam qizi', dogumTarihi: '2021-03-07' }
   const muayene = (dusukGuven: boolean, notId: string | null = 'n1') => ({ seansId: 's1', baslangic: '2026-10-08T04:30:00Z', sablon: 'pediatri', metin: UZ_METIN, hasta: HASTA, notId, notDurumu: (notId ? 'taslak' : 'notsuz') as 'taslak' | 'notsuz', konusma: { dil: 'uz', dilKesin: true, ikinciGecis: dusukGuven, dusukGuven } })
   const bos = () => {}
-  const ciz = (f: (typeof FORMLAR)[number], not: import('./Not').NotDetayi, ek: Partial<Parameters<typeof import('./Not').NotGorunumu>[0]> = {}) =>
+  const ciz = (f: (typeof FORMLAR)[number], not: import('@/components/ulke/uygulama/Not').NotDetayi, ek: Partial<Parameters<typeof import('@/components/ulke/uygulama/Not').NotGorunumu>[0]> = {}) =>
     cerceve(f, React.createElement(Not.NotGorunumu, { m: M.uygulamaMetni(f), not, aktifDil: not.dil, setAktifDil: bos, icerik: not.icerik, setIcerik: bos, islem: null, bildirim: null, kaydet: bos, yenidenYaz: bos, onayla: bos, ...ek }))
-  const TASLAK: import('./Not').NotDetayi = { notId: 'n1', seansId: 's1', onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', muayene: muayene(false) }
+  const TASLAK: import('@/components/ulke/uygulama/Not').NotDetayi = { notId: 'n1', seansId: 's1', onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', muayene: muayene(false) }
 
   for (const f of FORMLAR) {
     it(`${f}: the draft — four sections to edit, save, rewrite in the other language, approve; the model wrote it and the doctor must read it`, () => {
@@ -723,7 +723,7 @@ describe('Uzbekistan note: screens in the three forms', () => {
   }
 
   it('the home and the patient file open the note of a visit that has one', async () => {
-    const Bugun = await import('./Bugun'); const Hastalar = await import('./Hastalar')
+    const Bugun = await import('@/components/ulke/uygulama/Bugun'); const Hastalar = await import('@/components/ulke/uygulama/Hastalar')
     const m = M.uygulamaMetni('uz-Latn')
     const ev = cerceve('uz-Latn', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA', hata: false, muayeneler: [{ seansId: 's1', notId: 'n1', hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: '2026-10-08T07:00:00Z', durum: 'taslak' }] }))
     assert.ok(ev.includes('href="/uzbek/visit?not=n1"'))
