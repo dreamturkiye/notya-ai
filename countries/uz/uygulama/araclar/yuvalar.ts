@@ -15,6 +15,8 @@ import type { AracYuvasi } from '@/lib/ulke/araclar/tipler'
 
 const KLINISYEN = 'a local clinical lead, with the national source named'
 const HUKUK = 'a lawyer in Uzbekistan, with the local clinical lead'
+/** A published questionnaire: its wording belongs to its authors or to a rights holder. */
+const ANKET = 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions'
 
 const yuva = (anahtar: string, roller: readonly string[] | null, eksik: string, kimden: string = KLINISYEN, mekanizmaHazir = false): AracYuvasi => ({ anahtar, acik: false, icerik: null, mekanizmaHazir, eksik, kimden, roller })
 
@@ -61,13 +63,13 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
 
   // ── rheumatology ──
   yuva('iltihap-lab-izlem', ['romatoloji'], 'CRP and ESR follow-up: the thresholds between the bands and the months until the next check (7 numbers), with the reference ranges the local laboratories use.', KLINISYEN, true),
-  yuva('basdai', ['romatoloji'], 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index): a published patient questionnaire of six questions. Needed: the authorised Uzbek and Russian versions and, where its owner requires one, the licence. The wording is not translated by a machine. The DAS28 half of the pre-split application\'s tool is switched on; this half is not.', 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions'),
+  yuva('basdai', ['romatoloji'], 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index): a published patient questionnaire of six questions. Needed: the authorised Uzbek and Russian versions and, where its owner requires one, the licence. The wording is not translated by a machine. The DAS28 half of the pre-split application\'s tool is switched on; this half is not.', ANKET),
 
   // ── cardiology ──
   yuva('kardiyo-izlem', ['kardiyoloji'], 'Hypertension, heart-failure and atrial-fibrillation follow-up: the office blood-pressure limits that raise a warning and the days until each next check (9 numbers), from the national cardiology protocols.', KLINISYEN, true),
 
   // ── chest diseases ──
-  yuva('cat-mmrc', ['gogus-hastaliklari'], 'COPD Assessment Test (CAT) with the mMRC dyspnoea grade: CAT is a published questionnaire whose wording belongs to its rights holder. Needed: the authorised Uzbek and Russian translations and the licence to use them. The wording is not translated by a machine; the scoring is not switched on without it.', 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions'),
+  yuva('cat-mmrc', ['gogus-hastaliklari'], 'COPD Assessment Test (CAT) with the mMRC dyspnoea grade: CAT is a published questionnaire whose wording belongs to its rights holder. Needed: the authorised Uzbek and Russian translations and the licence to use them. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
   yuva('akciger-aksiyon-plani', ['gogus-hastaliklari'], 'Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in the green, yellow and red zone), with the emergency number and the local stop-smoking service. RECLASSIFIED from "keep": every sentence is an instruction to a patient and must be supplied and signed by a local chest physician.'),
 
   // ── gastroenterology ──
