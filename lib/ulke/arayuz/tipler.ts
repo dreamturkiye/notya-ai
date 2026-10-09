@@ -12,7 +12,7 @@
  */
 import type { DilKodu } from '../tipler'
 import type { UlkeAcilisi } from './acilisTipleri'
-import type { FormMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
+import type { FormMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
 import type { UlkeAraclari } from '../araclar/tipler'
 
 /** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
@@ -86,6 +86,8 @@ export type UlkeArayuzu = {
   mesajMetinleri?: Readonly<Partial<Record<DilKodu, MesajMetni>>>
   /** NOTYA-ULKE-MESAJ-01 — the catalogue of "my templates", once per language form. Required where the feature `hekimSablonlari` is on. */
   sablonMetinleri?: Readonly<Partial<Record<DilKodu, SablonMetni>>>
+  /** NOTYA-ULKE-MESAJ-01 — the catalogue of the consultation between doctors, once per language form. Required where the feature `konsultasyon` is on. */
+  konsultasyonMetinleri?: Readonly<Partial<Record<DilKodu, KonsultasyonMetni>>>
   /**
    * NOTYA-ULKE-ARACLAR-01 — the tools area: its own words per language form, the tools that are switched on with the
    * roles that see each and every word of their screens, unit names, and the slots of what is still missing.

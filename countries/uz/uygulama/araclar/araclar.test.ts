@@ -30,7 +30,7 @@ const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|I{1,3}|IV|V|E|A|B|C)\b/g
 
 /** Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart. */
-const TEMEL = ['hasta-portali', 'sablonlarim']
+const TEMEL = ['hasta-portali', 'sablonlarim', 'konsultasyonlar']
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'acil-tip': ['esi-triyaj', 'kritik-yol', 'takip-paneli'],
   'aile-hekimligi': [],
@@ -145,11 +145,11 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       assert.ok(x.karar !== 'Remove' || x.durum === 'absent (blocked)', `${x.rota}: a removed tool is in the build`)
       say[x.karar][x.durum === 'absent (blocked)' ? 'absent' : x.durum]++
     }
-    assert.deepEqual(say, { Keep: { done: 65, slot: 19, absent: 12 }, Adapt: { done: 2, slot: 32, absent: 0 }, Remove: { done: 0, slot: 0, absent: 14 } })
+    assert.deepEqual(say, { Keep: { done: 66, slot: 19, absent: 11 }, Adapt: { done: 2, slot: 32, absent: 0 }, Remove: { done: 0, slot: 0, absent: 14 } })
     const topla = (o: Record<string, number>) => o.done + o.slot + o.absent
     assert.deepEqual([topla(say.Keep), topla(say.Adapt), topla(say.Remove)], [96, 34, 14])
     // the document's own summary table says the same numbers
-    assert.match(sonuc, /\| \*\*Keep\*\* \| 65 \| 19 \| 12 \| 96 \|\n\| \*\*Adapt\*\* \| 2 \| 32 \| 0 \| 34 \|\n\| \*\*Remove\*\* \| 0 \| 0 \| 14 \| 14 \|/)
+    assert.match(sonuc, /\| \*\*Keep\*\* \| 66 \| 19 \| 11 \| 96 \|\n\| \*\*Adapt\*\* \| 2 \| 32 \| 0 \| 34 \|\n\| \*\*Remove\*\* \| 0 \| 0 \| 14 \| 14 \|/)
     // nothing is switched on, and nothing is a slot, that the document does not account for
     const hesapli = new Set(satirlar.map((x) => x.anahtar).filter(Boolean))
     const belgesiz = [...acik, ...yuvalar].filter((k) => !hesapli.has(k))

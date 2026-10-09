@@ -367,7 +367,7 @@ What the tools job did with each of the 144 tools above, and what the messaging 
 
 | | done | slot | absent | sum |
 |---|---:|---:|---:|---:|
-| **Keep** | 65 | 19 | 12 | 96 |
+| **Keep** | 66 | 19 | 11 | 96 |
 | **Adapt** | 2 | 32 | 0 | 34 |
 | **Remove** | 0 | 0 | 14 | 14 |
 
@@ -393,7 +393,7 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `enabiz` | Remove | absent (blocked) |  |  |  |
 | `muayene-sonu` | Adapt | slot | `muayene-sonu` |  |  |
 | `sablonlarim` | Keep | done | `sablonlarim` |  | Base tool: all 40 roles (NOTYA-ULKE-MESAJ-01). A table of its own (migration 141), no patient in the row, soft delete. The doctor's own text blocks, inserted into a section of a note or into a message by the doctor's click; the pack brings no ready-made template. |
-| `konsultasyonlar` | Keep | absent |  |  | Consultation and patient messaging is the next job, not this one (coordinator, 2026-10-09). |
+| `konsultasyonlar` | Keep | done | `konsultasyonlar` |  | Base tool: all 40 roles (NOTYA-ULKE-MESAJ-01). Between two accounts of the same country database, found by a consultation code (no directory); a read-only copy of one approved note or its summary; nothing is sent to anybody, so there is no e-mail template. Tables of its own (migration 142). |
 | `hedef-boy` | Keep | done | `hedef-boy` |  |  |
 | `pedi-buyume` | Adapt | slot | `buyume-persentil` |  |  |
 | `pedi-doz` | Keep | done | `doz-hesabi` |  | Arithmetic only: the doctor types the dose per kilogram; the tool holds no drug and no dose. |

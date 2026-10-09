@@ -18,6 +18,7 @@ import { ARACLAR_YER_TUTUCULARI, araclarSorunlari } from './araclar/denetim'
 import { formIcerigiSorunlari } from './intake/sorular'
 import { mesajSorunlari } from './mesaj/denetim'
 import { sablonSorunlari } from './sablon/denetim'
+import { konsultasyonSorunlari } from './konsultasyon/denetim'
 import type { DilGrubu, DilKodu, UlkeKlinigi, UlkePaketi } from './tipler'
 
 export type PaketSorunu = { /** Where: a path inside the pack ("uygulama.saatDilimleri", "metinler[en].kabuk.bugun"). */ yer: string; /** What is wrong, in one line. */ sorun: string }
@@ -77,7 +78,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   // … and every marker the rules did not name themselves, once each.
   const isaretler: PaketSorunu[] = []
   isaretleriTopla({ ...paket, metinler: undefined }, '', isaretler)
-  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, mesajMetinleri: undefined, sablonMetinleri: undefined, araclar: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
+  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, mesajMetinleri: undefined, sablonMetinleri: undefined, konsultasyonMetinleri: undefined, araclar: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
   isaretleriTopla(klinik, 'klinik', isaretler)
   const bilinen = new Set(s.map((x) => x.yer))
   for (const i of isaretler) if (!bilinen.has(i.yer) && !bilinen.has(i.yer.replace(/^uygulama\./, '')) && !bilinen.has(`uygulama.${i.yer}`)) { s.push(i); bilinen.add(i.yer) }
@@ -164,6 +165,7 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
   if (paket.ozellikler.hastaFormu && !paket.ozellikler.hastaPortali) ekle('ozellikler.hastaFormu', 'the intake form needs the patient portal (hastaPortali): a patient fills it in on their own page')
   if (paket.ozellikler.araclar && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.araclar', 'the tools area needs the signed-in application (cekirdekMuayene)')
   if (paket.ozellikler.hastaMesajlari && !paket.ozellikler.hastaPortali) ekle('ozellikler.hastaMesajlari', 'messages between a doctor and a patient need the patient portal (hastaPortali): a patient reads and answers on their own page')
+  if (paket.ozellikler.konsultasyon && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.konsultasyon', 'consultation between doctors needs the signed-in application (cekirdekMuayene)')
   if (paket.ozellikler.hekimSablonlari && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.hekimSablonlari', '"my templates" need the signed-in application (cekirdekMuayene)')
   if (!paket.ozellikler.cekirdekMuayene) return s
   const u = paket.uygulama
@@ -317,6 +319,9 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
 
   // ── "my templates": the catalogue, and the feature and its tile together ──
   for (const x of sablonSorunlari(paket, arayuz, diller, metinleriGez)) ekle(x.yer, x.sorun)
+
+  // ── consultation between doctors: both periods, the consent wording's stamp, the catalogue, the feature and its tile ──
+  for (const x of konsultasyonSorunlari(paket, arayuz, klinik, diller, metinleriGez)) ekle(x.yer, x.sorun)
 
   // ── tools: which exist here, for whom, and every word of their screens ──
   for (const x of araclarSorunlari(paket, arayuz, diller)) if (x.yer !== 'ozellikler.araclar') ekle(x.yer, x.sorun)

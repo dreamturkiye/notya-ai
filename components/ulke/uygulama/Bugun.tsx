@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { AsistanKarti } from './Asistan'
 import { OkunmamisMesajlarKarti } from './HastaMesajlari'
+import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { araclarMetni, metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
@@ -58,7 +59,7 @@ export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevul
   )
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -66,6 +67,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   rol?: string | null
   /** NOTYA-ULKE-MESAJ-01: the patients whose messages are unread, where the country has messages. Draws nothing while there is none. */
   mesajlar?: React.ReactNode
+  /** NOTYA-ULKE-MESAJ-01: how many consultations wait for this doctor's answer, where the country has consultation. Draws nothing while none waits. */
+  konsultasyon?: React.ReactNode
 }) {
   return (
     <>
@@ -79,6 +82,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       </section>
       <AsistanKarti m={m} rol={rol} />
       {mesajlar ?? null}
+      {konsultasyon ?? null}
       {HAZIR.takvim && randevular ? <BugunRandevulari m={m} randevular={randevular} /> : null}
       <section className="uza-kart">
         <AramaFormu m={m} />
@@ -138,7 +142,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} />
     </Cerceve>
   )
 }

@@ -404,6 +404,7 @@ const KARSILIKSIZ: Readonly<Record<string, string>> = {
   'takip-paneli': 'a screen, not arithmetic: one list of the follow-up days the doctor entered on kept results (migration 139). The pre-split application has a panel per specialty with columns of that specialty; there is no function to compare with.',
   'hasta-portali': 'a screen of the kit (a patient search that leads to the patient\'s file); it works nothing out',
   'sablonlarim': 'a screen of the kit, not arithmetic: the doctor\'s own reusable text blocks (migration 141). The pre-split application keeps its templates in its own table with its own screen; there is no function to compare with.',
+  'konsultasyonlar': 'a screen of the kit, not arithmetic: consultation between doctors of the same country database (migration 142). The pre-split application sends its consultation to an outside consultant by e-mail; the kit\'s is between two accounts, by code, with nothing sent. There is no function to compare with.',
   'ortopedi-op-protokol': 'the pre-split application has the six items as a plain list of sentences and no function over them; the length of the two lists is compared below',
 }
 

@@ -139,3 +139,49 @@ describe('Uzbekistan — "my templates": text in three forms, and that the pack 
     assert.match(SM.UZ_SABLON_METINLERI.ru.seciciNot, /в конец написанного; ничего не заменяется/)
   })
 })
+
+describe('Uzbekistan — consultation between doctors: text in three forms, the periods, and the consent sentence that awaits a lawyer', () => {
+  let KM: typeof import('./konsultasyonMetinleri')
+  let P: typeof import('../index')
+  let KL: typeof import('../klinik')
+  let AR: typeof import('./araclar')
+  before(async () => { KM = await import('./konsultasyonMetinleri'); P = await import('../index'); KL = await import('../klinik'); AR = await import('./araclar') })
+
+  it('the catalogue says, at its top, that it is machine-written, and that THE CONSENT SENTENCE HAS NOT BEEN READ BY A LAWYER', () => {
+    const katalog = readFileSync(join(KOK, 'countries/uz/uygulama/konsultasyonMetinleri.ts'), 'utf8').slice(0, 2600)
+    assert.match(katalog, /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW\./); assert.match(katalog, /DERIVED FROM THE LATIN TEXT BY RULE/)
+    assert.match(katalog, /IS A LEGAL SENTENCE AND HAS NOT BEEN READ BY A LAWYER/); assert.match(katalog, /CHANGE THE STAMP\s+\* WHENEVER THE SENTENCE CHANGES/)
+  })
+
+  it('LEAK TEST over every string, in all three forms: same keys, nothing empty, each form in its own script, no Turkish word or letter', () => {
+    ucBicimDenetle(KM.UZ_KONSULTASYON_METINLERI, 'consultation', 82)
+    const kutu = AR.UZ_ARACLAR.araclar.find((p) => p.anahtar === 'konsultasyonlar')
+    assert.ok(kutu); assert.equal(kutu!.roller, null)
+    ucBicimDenetle({ 'uz-Latn': { ad: kutu!.metin.ad['uz-Latn'], aciklama: kutu!.metin.aciklama['uz-Latn'], not: kutu!.metin.not['uz-Latn'] }, 'uz-Cyrl': { ad: kutu!.metin.ad['uz-Cyrl'], aciklama: kutu!.metin.aciklama['uz-Cyrl'], not: kutu!.metin.not['uz-Cyrl'] }, ru: { ad: kutu!.metin.ad.ru, aciklama: kutu!.metin.aciklama.ru, not: kutu!.metin.not.ru } }, 'consultation tile', 3)
+  })
+
+  it('THE PERIODS are the pack\'s, said to be starting values where they are set; THE CONSENT\'S STAMP is stated, and no lawyer has read the sentence', () => {
+    assert.equal(P.UZ_PAKETI.ozellikler.konsultasyon, true)
+    assert.deepEqual(P.UZ_PAKETI.uygulama!.konsultasyon, { acikGun: 30, kapanisSonrasiGun: 14 })
+    assert.match(readFileSync(join(KOK, 'countries/uz/index.ts'), 'utf8'), /STARTING VALUES, NOT A LOCAL RULE: nobody has\s+\/\/ checked them against the country's law/)
+    assert.deepEqual(KL.UZ_KLINIK.konsultasyonRizasi, { surum: 'uz-konsultatsiya-taslak-2026-10-09', hukukcuInceledi: false })
+    assert.match(readFileSync(join(KOK, 'countries/uz/klinik/index.ts'), 'utf8'), /A DRAFT: no lawyer of the country has read the sentence/)
+  })
+
+  it('THE CONSENT SENTENCE says who agreed, to what and for what — and nothing in the catalogue claims a law, a state system or a notification', () => {
+    for (const f of FORMLAR) {
+      const k = KM.UZ_KONSULTASYON_METINLERI[f]
+      assert.ok(k.iste.riza.length > 80, `${f}: the consent sentence`); assert.doesNotMatch(k.iste.riza, /%/)
+      for (const [ad, v] of yaprak(k)) {
+        assert.doesNotMatch(v, /SMS|СМС|Telegram|Телеграм|WhatsApp|e-mail|эл\.\s*почт|электрон|elektron pochta/i, `${f}/${ad} names an outbound channel`)
+        assert.doesNotMatch(v, /qonunga muvofiq|қонунга мувофиқ|соответств\w* закон|в соответствии с|sertifikat|сертифи|litsenziya|лиценз|vazirli|вазирли|министерств/i, `${f}/${ad} claims compliance or names an authority`)
+      }
+      // the doctor is told that nobody is notified, that the colleague sees a copy and nothing else, and that there is no directory
+      assert.ok(k.iste.bildirimYok.length > 30 && k.gelen.aciklama.length > 60 && k.kod.aciklama.length > 60)
+    }
+    assert.match(KM.UZ_KONSULTASYON_METINLERI.ru.iste.riza, /пациент \(или его законный представитель\) согласился/)
+    assert.match(KM.UZ_KONSULTASYON_METINLERI.ru.kod.aciklama, /Списка врачей нет/)
+    assert.match(KM.UZ_KONSULTASYON_METINLERI.ru.gelen.aciklama, /Остальная карта пациента вам не открыта/)
+    assert.match(KM.UZ_KONSULTASYON_METINLERI['uz-Latn'].iste.riza, /rozi boʻlganini tasdiqlayman/)
+  })
+})

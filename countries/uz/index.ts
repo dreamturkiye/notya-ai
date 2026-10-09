@@ -84,6 +84,11 @@ export const UZ_PAKETI: UlkePaketi = {
     // a note or into a message by the doctor's own click. The pack brings NO ready-made template. The screen's words
     // are machine-written and no native reader has read them.
     hekimSablonlari: true,
+    // NOTYA-ULKE-MESAJ-01 (2026-10-09): consultation between doctors of this country's own database — a written
+    // question about one patient, a read-only copy of one approved note or of its summary, the answer, closing. A
+    // colleague is found by their consultation code only; there is no directory. Nothing is sent to anybody. The texts
+    // are machine-written, and THE CONSENT SENTENCE HAS NOT BEEN READ BY A LAWYER (./klinik/index.ts).
+    konsultasyon: true,
   },
   // Routes of the PRE-SPLIT application's tool registry valid here: none, and it stays so. The country build has its own
   // tools area (/tools, feature `araclar`; ./uygulama/araclar/), which shares no route and no screen with that registry.
@@ -140,6 +145,11 @@ export const UZ_PAKETI: UlkePaketi = {
         kimden: 'Kaan (provider and cost; which channel patients in the country really use, checklist H4), then a lawyer of the country for the consent to be contacted',
       },
     },
+    // NOTYA-ULKE-MESAJ-01 — HOW LONG A COLLEAGUE MAY READ A CONSULTATION. STARTING VALUES, NOT A LOCAL RULE: nobody has
+    // checked them against the country's law. A consultation stays open for at most 30 days; after the asking doctor
+    // closed it, the colleague can read it for 14 more days and then no longer. To confirm with the owner and, for how
+    // long a colleague may hold a copy of a patient's data, with a lawyer (docs/OPEN-COMMITMENTS.md, NOTYA-ULKE-MESAJ-01).
+    konsultasyon: { acikGun: 30, kapanisSonrasiGun: 14 },
     // ── NOTYA-ULKE-SABLON-01: what the shared screens used to assume for Uzbekistan, said out loud. Each value is
     // what the Uzbek build did before the screens became shared; none is a new decision.
     // Uzbek in two scripts, Russian in one: the first-login question asks the language and, for Uzbek, the script.

@@ -38,7 +38,15 @@ const TAKIP_PANELI: AracTanimi = { anahtar: 'takip-paneli', tur: 'ekran', ekran:
  */
 const SABLONLARIM: AracTanimi = { anahtar: 'sablonlarim', tur: 'ekran', ekran: 'sablonlarim', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
 
-export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, SABLONLARIM, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA]
+/**
+ * Consultation between doctors as a tile (migration 142; lib/ulke/konsultasyon/): the account's own consultation
+ * code, what it was asked by colleagues and what it asked. The screen is the kit's own; the tool has no fields and
+ * works nothing out. A consultation is ASKED from a patient's file. It exists only where the pack also switches the
+ * feature `konsultasyon` on (the pack check holds the two together).
+ */
+const KONSULTASYONLAR: AracTanimi = { anahtar: 'konsultasyonlar', tur: 'ekran', ekran: 'konsultasyonlar', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
+
+export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, SABLONLARIM, KONSULTASYONLAR, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA]
 
 const DIZIN: ReadonlyMap<string, AracTanimi> = new Map(KIT_ARACLARI.map((a) => [a.anahtar, a]))
 

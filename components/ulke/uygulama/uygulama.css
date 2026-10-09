@@ -176,3 +176,9 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-sablon { padding: 12px 0; border-top: 1px solid var(--uza-cizgi); }
 .uza-sablon:first-child { border-top: 0; }
 .uza-sablon-secici { margin-top: 6px; }
+
+/* NOTYA-ULKE-MESAJ-01 — consultation between doctors: the lists on the tile and on the patient's file. */
+.uza-konsultasyonlar { margin-top: 12px; }
+.uza-konsultasyon { padding: 14px 0; border-top: 1px solid var(--uza-cizgi); }
+.uza-konsultasyon:first-child { border-top: 0; }
+.uza-konsultasyon .uza-alt-baslik { margin-top: 10px; }

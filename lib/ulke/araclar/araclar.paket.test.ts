@@ -293,8 +293,8 @@ describe('tools — the screens', () => {
           continue
         }
         // the follow-up list has its own section below (F)
-        // "my templates" has its own tests (lib/ulke/sablon/, components/ulke/sablonEkranlari.paket.test.ts)
-        if (t.tur === 'ekran') { assert.ok(t.ekran === 'takipPaneli' || t.ekran === 'sablonlarim', `${p.anahtar}: a screen tool this test does not know`); continue }
+        // "my templates" and consultation have their own tests (lib/ulke/sablon/, lib/ulke/konsultasyon/, components/ulke/*Ekranlari.paket.test.ts)
+        if (t.tur === 'ekran') { assert.ok(t.ekran === 'takipPaneli' || t.ekran === 'sablonlarim' || t.ekran === 'konsultasyonlar', `${p.anahtar}: a screen tool this test does not know`); continue }
         const ortak = { x, a, dil, notDili: dil, icerik, degistir: () => {}, temizle: () => {}, bugun: '2026-10-09', kopya: 'yok' as const, kopyalaTikla: () => {} }
         const bosHtml = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham: {} }))
         const bosMetin = gorunurMetin(bosHtml)
