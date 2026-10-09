@@ -88,7 +88,7 @@ export function SoruAlani({ q, f, cevap, ham, eksik, degistir, hamDegistir }: {
   degistir: (c: Cevap | undefined) => void; hamDegistir: (metin: string) => void
 }) {
   const id = `uzf-${q.anahtar}`
-  const baslik = <>{q.metin}{q.zorunlu ? <small> ({f.hasta.zorunlu})</small> : null}</>
+  const baslik = (<>{q.metin}{q.zorunlu ? <small> ({f.hasta.zorunlu})</small> : null}</>)
   const yardim = q.yardim ? <p className="uza-ipucu" style={{ marginTop: 0 }}>{q.yardim}</p> : null
   const sarici = { 'data-soru': q.anahtar, 'data-tur': q.tur, 'data-eksik': eksik ? 'evet' : undefined }
   if (q.tur === 'tek-secim' || q.tur === 'cok-secim') {
@@ -141,9 +141,9 @@ export function SoruAlani({ q, f, cevap, ham, eksik, degistir, hamDegistir }: {
   }
   const ortak = { id, className: 'uza-girdi', 'aria-required': q.zorunlu || undefined }
   let girdi: ReactNode
-  if (q.tur === 'uzun-metin') girdi = <textarea {...ortak} rows={3} maxLength={2000} value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(e.target.value || undefined)} />
-  else if (q.tur === 'kisa-metin') girdi = <input {...ortak} maxLength={200} autoComplete="off" value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(e.target.value || undefined)} />
-  else if (q.tur === 'tarih') girdi = <input {...ortak} type="date" value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : undefined)} />
+  if (q.tur === 'uzun-metin') girdi = (<textarea {...ortak} rows={3} maxLength={2000} value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(e.target.value || undefined)} />)
+  else if (q.tur === 'kisa-metin') girdi = (<input {...ortak} maxLength={200} autoComplete="off" value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(e.target.value || undefined)} />)
+  else if (q.tur === 'tarih') girdi = (<input {...ortak} type="date" value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : undefined)} />)
   else {
     const b = q.birim
     const n = sayiCoz(ham)

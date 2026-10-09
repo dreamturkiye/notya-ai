@@ -206,8 +206,12 @@ export function formIcerigiSorunlari(icerik: HastaFormuIcerigi, rolAnahtarlari: 
       else if (eksikMi(t)) ekle(`${yer}.${d}`, 'to be supplied')
     }
   }
-  if (typeof icerik.surum !== 'string' || !/^[A-Za-z0-9._-]{1,80}$/.test(icerik.surum)) ekle('hastaFormu.surum', 'the question set needs a version stamp (letters, digits, dots, hyphens)')
-  if (!icerik.riza || typeof icerik.riza.surum !== 'string' || !/^[A-Za-z0-9._-]{1,80}$/.test(icerik.riza.surum)) ekle('hastaFormu.riza.surum', 'the consent sentence needs a version stamp')
+  const damga = (ham: unknown, yer: string, ne: string) => {
+    if (typeof ham === 'string' && eksikMi(ham)) ekle(yer, 'to be supplied')
+    else if (typeof ham !== 'string' || !/^[A-Za-z0-9._-]{1,80}$/.test(ham)) ekle(yer, `${ne} needs a version stamp (letters, digits, dots, hyphens)`)
+  }
+  damga(icerik.surum, 'hastaFormu.surum', 'the question set')
+  damga(icerik.riza?.surum, 'hastaFormu.riza.surum', 'the consent sentence')
   if (typeof icerik.riza?.hukukcuInceledi !== 'boolean') ekle('hastaFormu.riza.hukukcuInceledi', 'must be true or false')
   metinVar(icerik.riza?.metin, 'hastaFormu.riza.metin')
   metinVar(icerik.riza?.veliMetni, 'hastaFormu.riza.veliMetni')

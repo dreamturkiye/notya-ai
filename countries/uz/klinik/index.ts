@@ -8,6 +8,7 @@
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { UZ_ACIK_SABLONLAR } from './branslar'
+import { UZ_HASTA_FORMU } from './hastaFormu'
 import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
 import { uzSablonAlanlari } from './notSablonlari'
 import { uzDigerDil, uzNotGirdisi, uzNotTalimati, uzYenidenYazimGirdisi, uzYenidenYazimTalimati } from './talimatlar'
@@ -48,4 +49,8 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // form (./hastaOzeti.ts — machine-written, not read by a native-speaking clinician).
   hastaOzetiTalimati: uzHastaOzetiTalimati,
   hastaOzetiGirdisi: uzHastaOzetiGirdisi,
+  // NOTYA-ULKE-INTAKE-01: the intake form's questions — a core set and one set for each of the 40 roles, in three
+  // forms (./hastaFormu/). MACHINE-WRITTEN: no local clinician has read a single set. The consent sentence is a draft
+  // no lawyer has read. The answers are never given to the model.
+  hastaFormu: UZ_HASTA_FORMU,
 }

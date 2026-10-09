@@ -66,6 +66,11 @@ export const UZ_PAKETI: UlkePaketi = {
     // sees their own name, their doctor, upcoming appointments and what the doctor chose to share, and may ask for an
     // appointment. Nothing is shared automatically and nothing is sent to anybody from here.
     hastaPortali: true,
+    // NOTYA-ULKE-INTAKE-01 (2026-10-09): the intake form — the doctor asks a patient to fill in a form before a visit;
+    // the patient fills it in on their own page; the doctor reads the answers, marked as the patient's own unverified
+    // words. Nothing is sent to anybody, and the answers are not given to the model. The questions are machine-written
+    // and await a local clinician (./klinik/hastaFormu/).
+    hastaFormu: true,
   },
   // No tool is valid in Uzbekistan yet: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md is a proposal awaiting a local clinical lead.
   araclar: [],

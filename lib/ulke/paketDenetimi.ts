@@ -14,6 +14,7 @@
 import type { UlkeAcilisi } from './arayuz/acilisTipleri'
 import { NOT_BOLUMLERI, ROL_TARAFLARI, type UlkeArayuzu } from './arayuz/tipler'
 import { eksikAyarMi, eksikMetinMi } from './eksik'
+import { formIcerigiSorunlari } from './intake/sorular'
 import type { DilGrubu, DilKodu, UlkeKlinigi, UlkePaketi } from './tipler'
 
 export type PaketSorunu = { /** Where: a path inside the pack ("uygulama.saatDilimleri", "metinler[en].kabuk.bugun"). */ yer: string; /** What is wrong, in one line. */ sorun: string }
@@ -55,6 +56,13 @@ const PORTAL_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] =
   ['sayfa.selam', ['%']], ['sayfa.saatDilimi', ['%']], ['sayfa.muayene', ['%']], ['sayfa.istekAciklama', ['%']], ['sayfa.istekCokGun', ['%']], ['sayfa.istekGunler', ['%']], ['sayfa.istekKabul', ['%1', '%2']], ['sayfa.acilNumara', ['%']],
 ]
 
+/** Sentences of the intake form's catalogue that carry a value (lib/ulke/arayuz/metinTipleri.ts → FormMetni). */
+const FORM_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
+  ['hekim.durumBekliyor', ['%']], ['hekim.durumTaslak', ['%']], ['hekim.durumGonderildi', ['%']],
+  ['davet.metin', ['%1', '%2']], ['davet.metinAdsiz', ['%']], ['davet.baglantisiz', ['%']],
+  ['hasta.bolum', ['%1', '%2']], ['hasta.sayiGecersiz', ['%1', '%2']], ['hasta.gonderildi', ['%']],
+]
+
 function saatDilimiGecerli(z: unknown): boolean {
   if (!dolu(z)) return false
   try { new Intl.DateTimeFormat('en-GB', { timeZone: z }); return true } catch { return false }
@@ -66,7 +74,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   // … and every marker the rules did not name themselves, once each.
   const isaretler: PaketSorunu[] = []
   isaretleriTopla({ ...paket, metinler: undefined }, '', isaretler)
-  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
+  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
   isaretleriTopla(klinik, 'klinik', isaretler)
   const bilinen = new Set(s.map((x) => x.yer))
   for (const i of isaretler) if (!bilinen.has(i.yer) && !bilinen.has(i.yer.replace(/^uygulama\./, '')) && !bilinen.has(`uygulama.${i.yer}`)) { s.push(i); bilinen.add(i.yer) }
@@ -150,6 +158,7 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
 
   // ── the signed-in application ──
   if (paket.ozellikler.hastaPortali && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.hastaPortali', 'the patient portal needs the signed-in application (cekirdekMuayene): a patient is given access from a patient file')
+  if (paket.ozellikler.hastaFormu && !paket.ozellikler.hastaPortali) ekle('ozellikler.hastaFormu', 'the intake form needs the patient portal (hastaPortali): a patient fills it in on their own page')
   if (!paket.ozellikler.cekirdekMuayene) return s
   const u = paket.uygulama
   if (!u) { ekle('uygulama', 'the application is switched on and the pack has no settings for it'); return s }
@@ -254,6 +263,27 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
         }
       }
     }
+    // the intake form's own catalogue (its QUESTIONS are the clinical half's, checked below)
+    if (paket.ozellikler.hastaFormu) {
+      const fm = arayuz.formMetinleri?.[d]
+      if (!fm) ekle(`arayuz.formMetinleri[${d}]`, 'the intake form is on and this form has no catalogue for its screens')
+      else {
+        metinleriGez(fm, `arayuz.formMetinleri[${d}]`, s)
+        // UNITS COME FROM THE PACK: every unit the pack measures in has a name a patient reads.
+        if (u.birimler && !eksikAyarMi(u.birimler) && !eksikAyarMi(fm.birim)) for (const kod of new Set([u.birimler.boy, u.birimler.agirlik, u.birimler.sicaklik])) if (typeof kod === 'string' && !dolu(kayit(fm.birim)[kod])) ekle(`arayuz.formMetinleri[${d}].birim.${kod}`, 'the pack measures in this unit and the intake form has no name for it')
+        for (const [yol, yerler] of FORM_YER_TUTUCULARI) {
+          const metin = yol.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), fm)
+          if (typeof metin !== 'string' || eksikMetinMi(metin) || !metin.trim()) continue
+          for (const y of yerler) if (!(y === '%' ? /%(?!\d)/ : new RegExp(`${y}(?!\\d)`)).test(metin)) ekle(`arayuz.formMetinleri[${d}].${yol}`, `must hold "${y}" where the value is written`)
+        }
+        // THE INVITATION: the address is the last thing in the text (a messenger must not glue a full stop to the link),
+        // and the text for a patient who already has a link names no address at all.
+        const dv = fm.davet
+        if (dv && dolu(dv.metin) && !eksikMetinMi(dv.metin) && !/%2$/.test(dv.metin.trim())) ekle(`arayuz.formMetinleri[${d}].davet.metin`, 'must end with "%2": the address is the last thing in the invitation')
+        if (dv && dolu(dv.metinAdsiz) && !eksikMetinMi(dv.metinAdsiz) && !/%$/.test(dv.metinAdsiz.trim())) ekle(`arayuz.formMetinleri[${d}].davet.metinAdsiz`, 'must end with "%": the address is the last thing in the invitation')
+        if (dv && dolu(dv.baglantisizAdsiz) && !eksikMetinMi(dv.baglantisizAdsiz) && /%/.test(dv.baglantisizAdsiz)) ekle(`arayuz.formMetinleri[${d}].davet.baglantisizAdsiz`, 'carries a placeholder: this text names neither a doctor nor an address')
+      }
+    }
     // roles and templates, per form
     for (const r of roller) if (!sahip(r.ad, d) || !dolu(r.ad[d])) ekle(`arayuz.roller.${r.anahtar}.ad.${d}`, 'the role has no name in this form')
     else if (eksikMetinMi(r.ad[d])) ekle(`arayuz.roller.${r.anahtar}.ad.${d}`, TESLIM)
@@ -307,6 +337,23 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       if (diger) { const t = klinik.yenidenYazimTalimati(diger); if (!dolu(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, 'a rewrite into this form is offered and has no instruction'); else if (eksikMetinMi(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, TESLIM) }
     }
     for (const t of new Set(Object.values(kayit(klinik.konusma?.beklenenDiller)))) if (!temeller.includes(t)) ekle('klinik.konusma.beklenenDiller', `"${t}" is not a language of uygulama.dilGruplari`)
+    // THE INTAKE FORM'S QUESTIONS: a core set and one set per role, a text in every form, keys that never repeat,
+    // who wrote and who reviewed each set. What a machine cannot check — whether a question is the right one to
+    // ask — is a clinician's, and is recorded per set.
+    if (paket.ozellikler.hastaFormu) {
+      const hf = klinik.hastaFormu
+      if (!hf) ekle('klinik.hastaFormu', 'the intake form is on and the clinical half brings no questions (hastaFormu)')
+      else if (eksikAyarMi(hf)) ekle('klinik.hastaFormu', `${TESLIM}: ${hf.__eksikAyar}`)
+      else {
+        // A set that is still to be supplied is reported once, by its marker, and not again line by line.
+        const cekirdekEksik = eksikAyarMi(hf.cekirdek), rollerEksik = eksikAyarMi(hf.roller)
+        const denetlenen = { ...hf, cekirdek: cekirdekEksik ? { bolumler: [], inceleme: { makineYazimi: true, klinisyen: null } } : hf.cekirdek, roller: rollerEksik ? {} : hf.roller }
+        for (const x of formIcerigiSorunlari(denetlenen, [...liste(u.roller)], diller, eksikMetinMi)) {
+          if ((cekirdekEksik && x.yer.startsWith('hastaFormu.cekirdek')) || (rollerEksik && x.yer.startsWith('hastaFormu.roller'))) continue
+          ekle(`klinik.${x.yer}`, x.sorun)
+        }
+      }
+    }
     // The patient portal: a summary for the patient is written in the patient's language form — any form of the application.
     if (paket.ozellikler.hastaPortali) {
       if (typeof klinik.hastaOzetiTalimati !== 'function' || typeof klinik.hastaOzetiGirdisi !== 'function') ekle('klinik.hastaOzetiTalimati', 'the patient portal is on and the clinical half has no instruction for a summary for the patient (hastaOzetiTalimati, hastaOzetiGirdisi)')

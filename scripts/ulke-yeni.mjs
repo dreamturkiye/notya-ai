@@ -101,6 +101,8 @@ function yaz(deger, bolum, ad, yol, girinti) {
   if ('$dil' in deger) {
     // One language in one script: its own name, and nothing to say about scripts or about rewriting into another language.
     if (deger.$dil === 'temel') { metinSayisi++; return `{ ${anahtar(TEMEL)}: eksik(${t(`${ad}: ${yol}.${TEMEL} — what this language is called on the screens`)}) }` }
+    // The names of the units the country measures in: decided together with uygulama.birimler (../index.ts).
+    if (deger.$dil === 'birim') return `eksikAyar(${t(`${ad}: ${yol} — the name of each unit of uygulama.birimler as a patient reads it, e.g. { cm: 'cm', kg: 'kg', C: '°C' } (one entry per unit code the pack chose)`)})`
     return '{}'
   }
   const satirlar = []
@@ -221,6 +223,9 @@ export const ${B}_PAKETI: UlkePaketi = {
     randevu: true,
     // The patient's own page: a link and a PIN from the doctor, no account. Nothing is shared or sent by itself.
     hastaPortali: true,
+    // The intake form a patient fills in before a visit, on their own page. Its questions are this country's clinical
+    // content (./klinik/hastaFormu.ts); nothing is sent to anybody and the answers are not given to the model.
+    hastaFormu: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
@@ -290,12 +295,14 @@ import { ${B}_ROL_TANIMLARI } from './klinik/roller'
 import { ${B}_UYGULAMA_METINLERI } from './uygulama/metinler'
 import { ${B}_RANDEVU_METINLERI } from './uygulama/randevuMetinleri'
 import { ${B}_PORTAL_METINLERI } from './uygulama/portalMetinleri'
+import { ${B}_FORM_METINLERI } from './uygulama/formMetinleri'
 
 export const ${B}_ARAYUZ: UlkeArayuzu = {
   marka: eksik('brand: the word mark the screens show, e.g. Notya'),
   metinler: ${B}_UYGULAMA_METINLERI,
   randevuMetinleri: ${B}_RANDEVU_METINLERI,
   portalMetinleri: ${B}_PORTAL_METINLERI,
+  formMetinleri: ${B}_FORM_METINLERI,
   roller: ${B}_ROL_TANIMLARI,
   asistan: ${KOD}AsistanKimligi,
   notSablonlari: ${B}_NOT_SABLONLARI,
@@ -336,6 +343,53 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 const ${DIL_SABITI}: PortalMetni = ${yaz(sekil.portal, 'portal', 'patient portal', '', '')}
 
 export const ${B}_PORTAL_METINLERI: Readonly<Partial<Record<DilKodu, PortalMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['uygulama/formMetinleri.ts'] = `${BAS(`${B}: the INTAKE FORM's screens in "${DIL}" — the screens' own words, NOT the questions.`, `Typed against the kit's keys (lib/ulke/arayuz/metinTipleri.ts → FormMetni, where each key says what it is for).
+  hekim   the doctor's controls: asking for the form, the invitation, the answers
+  davet   PATIENT-FACING: the invitation the doctor copies and sends. The address (%2, or % without a name) is the
+          LAST thing in the text; the two "baglantisiz" texts are for a patient who already has a link and name no
+          address. The PIN is never written into an invitation.
+  hasta   PATIENT-FACING: the form on the patient's own page. A native reader reads davet and hasta first.
+  birim   the name of each unit of measure the pack uses (uygulama.birimler), as a patient reads it
+THE QUESTIONS are clinical content and live in ../klinik/hastaFormu.ts. Placeholders %, %1, %2 must stay.`)}import { eksik, eksikAyar } from '@/lib/ulke/eksik'
+import type { FormMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { DilKodu } from '@/lib/ulke/tipler'
+
+const ${DIL_SABITI}: FormMetni = ${yaz(sekil.form, 'form', 'intake form', '', '')}
+
+export const ${B}_FORM_METINLERI: Readonly<Partial<Record<DilKodu, FormMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['klinik/hastaFormu.ts'] = `${BAS(`${B}: THE INTAKE FORM's QUESTIONS — what a patient is asked before a visit.`, `CLINICAL CONTENT. The kit owns the question TYPES and the rules (lib/ulke/intake/tipler.ts, sorular.ts); the
+questions are this country's, written with a clinician who practises here:
+  cekirdek   the core questions every patient gets, in sections. A patient below the country's guardian age gets the
+             GUARDIAN form: mark questions and sections that belong only to it kime: 'cocuk' (who is filling the form
+             in; the parents' marital status), those an adult alone is asked kime: 'yetiskin' (their own smoking),
+             and give a question its wording for a parent in veliMetni.
+  roller     ONE SET PER ROLE of ./roller.ts, shown after the core questions. A question belongs to ONE role: every
+             question key is unique in the whole pack, and a role's questions are never shown for another.
+Each set says who wrote it and which clinician read it (inceleme: { makineYazimi, klinisyen }); a set is not
+reviewed until klinisyen names somebody.
+
+NO REFERENCE CONTENT: no drug list, no vaccination schedule, no screening interval, no score. A question may ask
+"which medicines do you take?" as free text; it may not offer a list of local brands. Height, weight and temperature
+are asked with olcu (the unit is the pack's, uygulama.birimler), never with a unit written into the question.
+The consent sentence is read by a lawyer; hukukcuInceledi becomes true only then.
+The answers are NOT given to the model that writes a note.`)}import { eksik, eksikAyar } from '@/lib/ulke/eksik'
+import type { HastaFormuIcerigi } from '@/lib/ulke/intake/tipler'
+
+export const ${B}_HASTA_FORMU: HastaFormuIcerigi = {
+  surum: eksik('intake questions: a version stamp for the question set, e.g. ${KOD}-draft-2026-01-01 (letters, digits, dots, hyphens); change it whenever a question changes'),
+  riza: {
+    surum: eksik('intake questions: a version stamp for the consent sentence, e.g. ${KOD}-draft-2026-01-01'),
+    hukukcuInceledi: false,
+    metin: { ${anahtar(DIL)}: eksik('intake questions: the consent sentence a patient reads before the first question — who sees the answers, why they are kept, that filling in is voluntary; a lawyer reads it') },
+    veliMetni: { ${anahtar(DIL)}: eksik('intake questions: the same sentence for a parent or guardian who fills the form in for a child') },
+  },
+  cekirdek: eksikAyar('intake questions: THE CORE QUESTIONS every patient gets — { bolumler: [{ anahtar, baslik, sorular: [...] }], inceleme: { makineYazimi, klinisyen } }; the seven question types are in lib/ulke/intake/tipler.ts'),
+  roller: eksikAyar('intake questions: ONE SET PER ROLE of ./roller.ts — { <role key>: { baslik, sorular: [...], inceleme: { makineYazimi, klinisyen } } }; every role needs a set, a question belongs to one role; {} only for a country without roles'),
+}
 `
 
 dosyalar['acilis/icerik.ts'] = `${BAS(`${B}: the landing page's copy in "${DIL}", and the few facts the shared layout needs.`, `The LAYOUT is the kit's (components/ulke/acilis/): same sections, same order, same look for every country. What the
@@ -519,6 +573,7 @@ dosyalar['klinik/index.ts'] = `${BAS(`${B}: the clinical half of the pack. How a
 NOTHING HERE IS MEASURED OR REVIEWED UNTIL SOMEBODY DOES IT FOR THIS COUNTRY: the speech thresholds are tuned on real
 clinic audio in the country's language (checklist A5, L1); the consent wording is read by a lawyer (A3, I1).`)}import { eksik, eksikAyar } from '@/lib/ulke/eksik'
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
+import { ${B}_HASTA_FORMU } from './hastaFormu'
 import { ${B}_SABLONLAR, ${KOD}SablonAlanlari } from './notSablonlari'
 import { ${KOD}HastaOzetiGirdisi, ${KOD}HastaOzetiTalimati, ${KOD}NotGirdisi, ${KOD}NotTalimati } from './talimatlar'
 import { ${B}_VELI_YASI as VELI_YASI } from '../ayarlar'
@@ -547,6 +602,8 @@ export const ${B}_KLINIK: UlkeKlinigi = {
   // The patient portal: a short summary of an APPROVED note for the patient, which the doctor reads, edits and shares.
   hastaOzetiTalimati: ${KOD}HastaOzetiTalimati,
   hastaOzetiGirdisi: ${KOD}HastaOzetiGirdisi,
+  // The intake form's questions (./hastaFormu.ts): clinical content, written with a clinician. Never given to the model.
+  hastaFormu: ${B}_HASTA_FORMU,
   // One language: a note cannot be rewritten in another. A second language adds these three (see docs/COUNTRY-PACK-HOWTO.md).
   yenidenYazimTalimati: () => null,
   yenidenYazimGirdisi: () => '',
