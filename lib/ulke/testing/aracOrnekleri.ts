@@ -18,6 +18,7 @@ export const ORNEK_PARAMETRELER: Readonly<Record<string, Readonly<Record<string,
   'viral-izlem': { ay_hiv: 3, ay_hepatit: 6, ay_diger: 6 },
   'ibd-skor': { mayo_remisyon_ust: 2, mayo_hafif_ust: 5, mayo_orta_ust: 7, hbi_remisyon_alti: 5, hbi_hafif_ust: 7, hbi_orta_ust: 16, ibs_remisyon_alti: 75, ibs_hafif_alti: 175, ibs_orta_alti: 300, ay_remisyon: 6, ay_hafif: 3, ay_orta: 2, ay_siddetli: 1 },
   'hepatit-izlem': { ay_stabil: 12, ay_aktif_izlem: 6, ay_tedavi_degerlendirme: 3 },
+  'kardiyo-izlem': { sbp_dikkat: 140, dbp_dikkat: 90, gun_ht_kontrol: 30, gun_ht_lab: 90, gun_kky_kontrol: 30, gun_kky_kilo: 14, gun_af_kontrol: 60, gun_af_lab: 30, gun_diger_kontrol: 90 },
 }
 
 /** What a tool's arithmetic is handed in a test: the day, and either a pack's numbers or the sample ones. */

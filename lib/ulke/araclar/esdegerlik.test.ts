@@ -45,6 +45,14 @@ import { PREOP_MADDELER as TR_TORAKS_PREOP, preopSkorla as toraksPreopSkorla } f
 import { TUP_YARA_DURUMLARI, TUP_YARA_TIPLERI, tupYaraSkorla } from '@/specialties/gogus-cerrahisi/engines/tupYara'
 import { INHALER_CIHAZLARI, INHALER_TEKNIK_CIHAZ, INHALER_TEKNIK_ORTAK, inhalerIzlem } from '@/specialties/gogus-hastaliklari/engines/inhaler'
 import { harfFarki, vaCoz } from '@/specialties/goz-hastaliklari/engines/va'
+import * as K5 from './tanimlar/kalpKbb'
+import { PREOP_MADDELER as TR_KDC_PREOP, preopSkorla as kdcPreopSkorla } from '@/specialties/kalp-damar-cerrahisi/engines/preop'
+import { GREFT_YARA_DURUMLARI, GREFT_YARA_TIPLERI, greftYaraSkorla } from '@/specialties/kalp-damar-cerrahisi/engines/greftYara'
+import { ANTIKOAG_SINIFLARI, antikoagSkorla } from '@/specialties/kalp-damar-cerrahisi/engines/antikoag'
+import { izlemDegerlendir } from '@/specialties/kardiyoloji/engines/htKky'
+import { asimetriNotu, degisim, skorla as ptaSkorla } from '@/specialties/kulak-burun-bogaz/engines/odyometri'
+import { DIS_KULAK_LISTESI, EK_BULGULAR, TM_LISTESI, otoskopiNotu } from '@/specialties/kulak-burun-bogaz/engines/otoskopi'
+import { MANEVRA_LISTESI, NISTAGMUS_OZELLIKLERI, SANTRAL_ISARETLERI, vertigoNotu } from '@/specialties/kulak-burun-bogaz/engines/vertigo'
 
 const BUGUN = ORNEK_BUGUN
 /** What both sides are reduced to before they are compared. */
@@ -236,6 +244,57 @@ SATIRLAR_3: {
   )
 }
 
+SATIRLAR_4: {
+  const trDis = (k: string) => (k === 'buson' ? 'bu\u015fon' : k)
+  SATIRLAR.push(
+    { arac: 'kalp-damar-preop', karsilik: 'specialties/kalp-damar-cerrahisi/engines/preop.ts → preopSkorla', listeler: [[K5.KDC_PREOP_MADDELER, TR_KDC_PREOP.map((m) => m.kod)]], sayilar: [],
+      onlar: (g) => { const r = kdcPreopSkorla(isaretliler(g, K5.KDC_PREOP_MADDELER)); return { tamam: r.tamamMi, uyarilar: r.gorevOnerileri.map((x) => x.kod.replace(/^preop_/, '')).sort() } } },
+    { arac: 'greft-yara-izlem', karsilik: 'specialties/kalp-damar-cerrahisi/engines/greftYara.ts → greftYaraSkorla (the kit asks for what and its state; the other application assumes them)', listeler: [[K5.GREFT_TIPLERI, GREFT_YARA_TIPLERI.map((x) => x.kod)], [K5.GREFT_DURUMLARI, GREFT_YARA_DURUMLARI.map((x) => x.kod)]],
+      onlar: (g) => { if (g.tip === null || g.durum === null) return { tamam: false }; const r = greftYaraSkorla({ tip: g.tip, durum: g.durum, tarih: g.tarih, sonrakiKontrol: g.sonraki_kontrol }); return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ tarih: r.kart.tarih, sonraki_kontrol: r.kart.sonrakiKontrol }) : {} } } },
+    { arac: 'antikoagulan-vadeleri', karsilik: 'specialties/kalp-damar-cerrahisi/engines/antikoag.ts → antikoagSkorla (the kit asks for the class; the other application assumes "other")', listeler: [[K5.ANTIKOAG_SINIFLARI, ANTIKOAG_SINIFLARI.map((x) => x.kod)]],
+      onlar: (g) => { if (g.sinif === null) return { tamam: false }; const r = antikoagSkorla({ sinif: g.sinif, sonrakiKontrol: g.sonraki_kontrol, labVadesi: g.lab_vadesi }); return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ sonraki_kontrol: r.kart.sonrakiKontrol, lab_vadesi: r.kart.labVadesi }) : {} } } },
+    {
+      arac: 'kardiyo-izlem', karsilik: 'specialties/kardiyoloji/engines/htKky.ts → izlemDegerlendir (with that application\'s own limits and intervals as parameters; a form with nothing measured has no result in the kit)', listeler: [],
+      onlar: (g) => {
+        if (g.tip === null || !(typeof g.sbp === 'number' || typeof g.dbp === 'number' || typeof g.kilo === 'number' || typeof g.nyha === 'string')) return { tamam: false }
+        const r = izlemDegerlendir({ tip: g.tip as 'ht', bugun: BUGUN, sbp: g.sbp as number | null, dbp: g.dbp as number | null, kiloKg: g.kilo as number | null, nyha: g.nyha as 'I' | null })
+        const ad: Record<string, string> = { kb_kontrol: 'kontrol', lab_elektrolit: 'lab', kky_kontrol: 'kontrol', kilo_izlem: 'kilo', af_kontrol: 'kontrol', inr_lab: 'lab', kontrol_randevu: 'kontrol' }
+        return { tamam: r.eksikler.length === 0, uyarilar: r.uyarilar.map((u) => (/^Sistolik/.test(u) ? 'sbp_yuksek' : /^Diyastolik/.test(u) ? 'dbp_yuksek' : /^NYHA/.test(u) ? 'nyha_ileri' : `?${u}`)).sort(), tarihler: Object.fromEntries(r.gorevler.map((x) => [ad[x.kod] ?? `?${x.kod}`, x.due])) }
+      },
+    },
+    {
+      arac: 'odyometri-pta', karsilik: 'specialties/kulak-burun-bogaz/engines/odyometri.ts → skorla, degisim, asimetriNotu (bands compared wherever that application\'s ranges have no gap; see the test below)', listeler: [], sayilar: ['pta', 'fark'],
+      onlar: (g) => {
+        const r = ptaSkorla(K5.PTA_FREKANSLARI.map((k) => g[k] as number | null))
+        if (!r.tamamMi || r.pta === null) return { tamam: false }
+        const d = degisim(g.onceki_pta as number | null, r.pta)
+        const boslukta = [25, 40, 55, 70, 90].some((ust) => r.pta! > ust && r.pta! < ust + 1)
+        return { tamam: true, sayilar: dolu({ pta: r.pta, fark: d.fark }), ...(boslukta ? {} : { bant: r.bant }), uyarilar: [...(d.fark !== null && d.fark >= 10 ? ['esik_artisi'] : []), ...(d.fark !== null && d.fark <= -10 ? ['esik_azalisi'] : []), ...(asimetriNotu(r.pta, g.karsi_pta as number | null) ? ['asimetri'] : [])].sort() }
+      },
+    },
+    {
+      arac: 'otoskopi-notu', karsilik: 'specialties/kulak-burun-bogaz/engines/otoskopi.ts → otoskopiNotu',
+      listeler: [[K5.DIS_KULAK.map(trDis), DIS_KULAK_LISTESI], [K5.KULAK_ZARI, TM_LISTESI], [[String(K5.OTOSKOPI_EK.length)], [String(EK_BULGULAR.length)]]],
+      onlar: (g) => {
+        const r = otoskopiNotu({ kulaklar: K5.KULAKLAR.map((y) => ({ yan: y, disKulak: K5.DIS_KULAK.filter((k) => g[K5.otoAlani(y, 'dis', k)] === true).map(trDis) as never, tm: K5.KULAK_ZARI.filter((k) => g[K5.otoAlani(y, 'zar', k)] === true) as never })), ekBulgular: K5.OTOSKOPI_EK.flatMap((k, i) => (g[k] === true ? [EK_BULGULAR[i]] : [])) })
+        // that application writes each finding that needs a decision as one sentence; the kit returns one key for each
+        const dikkat = K5.KULAKLAR.flatMap((y) => [...['perforasyon', 'bombe', 'retrakte', 'degerlendirilemedi'].map((k) => K5.otoAlani(y, 'zar', k)), ...['akinti', 'yabanci_cisim', 'odem_hassasiyet'].map((k) => K5.otoAlani(y, 'dis', k))].filter((a) => g[a] === true))
+        if (r.tamamMi) assert.equal(r.dikkat.length, dikkat.length, 'findings that need a decision')
+        return { tamam: r.tamamMi, uyarilar: r.tamamMi ? dikkat.sort() : [] }
+      },
+    },
+    {
+      arac: 'vertigo-notu', karsilik: 'specialties/kulak-burun-bogaz/engines/vertigo.ts → vertigoNotu',
+      listeler: [[K5.MANEVRALAR, MANEVRA_LISTESI], [[String(K5.NISTAGMUS.length)], [String(NISTAGMUS_OZELLIKLERI.length)]], [[String(K5.SANTRAL.length)], [String(SANTRAL_ISARETLERI.length)]]],
+      onlar: (g) => {
+        const r = vertigoNotu({ manevralar: K5.MANEVRALAR.flatMap((k) => (typeof g[k] === 'string' ? [{ manevra: k, sonuc: g[k] as 'pozitif' }] : [])), nistagmus: K5.NISTAGMUS.flatMap((k, i) => (g[k] === true ? [NISTAGMUS_OZELLIKLERI[i]] : [])), santralIsaretleri: K5.SANTRAL.flatMap((k, i) => (g[k] === true ? [SANTRAL_ISARETLERI[i]] : [])), kulakBelirtisi: g.kulak_belirtisi === true })
+        if (r.eksikler.some((x) => /^Hi/.test(x))) return { tamam: false }
+        return { tamam: true, bant: r.manevraUygunMu ? 'manevra_uygun' : 'manevra_uygun_degil', uyarilar: [...(!r.manevraUygunMu ? ['santral_suphe'] : []), ...(r.uyarilar.some((u) => /^Repozisyon/.test(u)) ? ['repozisyon_santral'] : []), ...(r.eksikler.some((x) => /^Pozitif manevra/.test(x)) ? ['nistagmus_eksik'] : [])].sort() }
+      },
+    },
+  )
+}
+
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
   'hasta-portali': 'a screen of the kit (a patient search that leads to the patient\'s file); it works nothing out',
@@ -282,5 +341,18 @@ describe('tools — the kit\'s arithmetic equals the pre-split application\'s, i
     assert.equal(lab.hesapla({ tur: 'hba1c', deger: 6.8, tarih: null }, { bugun: BUGUN, p: ORNEK_PARAMETRELER['lab-izlem'] }).bant, 'hedef_yakin')
     const s2 = lab.hesapla({ tur: 'hba1c', deger: 6.8, tarih: '2026-01-31' }, { bugun: BUGUN, p: baska })
     assert.deepEqual([s2.bant, s2.sayilar[0].deger, s2.tarihler[0].tarih], ['dikkat', 4, '2026-05-31'])
+  })
+
+  it('ONE DELIBERATE DIFFERENCE: a hearing average between two of the other application\'s whole-number bands is "profound" there; in the kit it is the band it lies in', () => {
+    const t = kitAraci('odyometri-pta')!
+    const ort = (pta: number) => ({ kulak: null, e05: pta, e1: pta, e2: pta, e4: pta, onceki_pta: null, karsi_pta: null })
+    for (const [pta, bizim] of [[25.5, 'hafif'], [40.5, 'orta'], [55.5, 'orta_ileri'], [70.5, 'ileri'], [90.5, 'cok_ileri']] as const) {
+      const onlar = ptaSkorla([pta, pta, pta, pta])
+      assert.equal(onlar.pta, pta)
+      assert.equal(onlar.bant, 'cok_ileri', `the other application calls ${pta} dB profound`)
+      assert.equal(t.hesapla(ort(pta), { bugun: BUGUN, p: {} }).bant, bizim, `the kit: ${pta} dB`)
+    }
+    // on every whole number the two agree (the comparison above also runs over hundreds of samples)
+    for (let pta = -10; pta <= 130; pta++) assert.equal(t.hesapla(ort(pta), { bugun: BUGUN, p: {} }).bant, ptaSkorla([pta, pta, pta, pta]).bant, `${pta} dB`)
   })
 })
