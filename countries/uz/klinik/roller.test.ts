@@ -4,7 +4,8 @@
  *
  *   1. NAMES: a catalogue of 40 names in three forms, each in its own script, machine-written and saying so.
  *   2. ASSISTANT: the owner's name for the role — Latin exactly as stored, Cyrillic and Russian derived by rule and
- *      marked as such; no entry → no name, the neutral assistant; never another role's name.
+ *      marked as such; the title by the Turkish product's convention (./asistanAdlari.test.ts), from the catalogue
+ *      of titles; no entry → no name, the neutral assistant; never another role's name.
  *   3. ACCOUNT: the role is chosen at first login after the language, stored for the caller only, changeable.
  *   4. SCREENS: the question, the settings card and the home in three forms; a role's key is never shown.
  *   5. LEAK TEST over every new string in all three forms. No Turkish letter anywhere.
@@ -29,6 +30,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { gorunurMetin, sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
 import { UZ_ASISTAN_ADLARI } from './asistanAdlari'
+import { uzAsistanKimligi } from './asistanKimligi'
 
 const KOK = resolve(__dirname, '../../..')
 ;(require as unknown as { extensions: Record<string, (m: { exports: unknown }) => void> }).extensions['.css'] = (m) => { m.exports = {} }
@@ -62,8 +64,8 @@ function sifirla() {
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 type Form = (typeof FORMLAR)[number]
-/** The 40, from the owner's list: [key, kind, full name as stored]. */
-const ROLLER = UZ_ASISTAN_ADLARI.map((a) => ({ rol: a.bransAnahtari, taraf: a.taraf, tamAd: a.tamAd, kisaAd: a.kisaAd }))
+/** The 40, from the owner's list: key, kind, the full name in Uzbek Latin (title by the Turkish convention + the owner's names), the given name. */
+const ROLLER = UZ_ASISTAN_ADLARI.map((a) => ({ rol: a.bransAnahtari, taraf: a.taraf, unvan: a.unvan, tamAd: uzAsistanKimligi(a.bransAnahtari, 'uz-Latn')!.tamAd, kisaAd: a.kisaAd, soyad: a.soyad }))
 const TURKCE = /[çğıİşĞŞöüÖÜÇ]/
 const KIRILL = /[Ѐ-ӿ]/
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak }), [])
@@ -133,35 +135,49 @@ describe('40 roles: the assistant\'s identity', () => {
 
   it('script conversion, by rule: Uzbek Latin → Uzbek Cyrillic → the letters Russian has', () => {
     const cift = (lat: string) => { const k = Y.uzKirillga(lat); return [k, Y.uzRuschaYozuvga(k)] }
-    assert.deepEqual(cift('Dr. Jasur Tursunov'), ['Др. Жасур Турсунов', 'Др. Жасур Турсунов'])
-    assert.deepEqual(cift('Dr. Otabek Qodirov'), ['Др. Отабек Қодиров', 'Др. Отабек Кодиров'])
-    assert.deepEqual(cift('Dr. Shahnoza Rasulova'), ['Др. Шаҳноза Расулова', 'Др. Шахноза Расулова'])
-    assert.deepEqual(cift('Dr. Alisher Ergashev'), ['Др. Алишер Эргашев', 'Др. Алишер Эргашев'])
-    assert.deepEqual(cift('Dr. Sardor Abdullayev'), ['Др. Сардор Абдуллаев', 'Др. Сардор Абдуллаев'])
-    assert.deepEqual(cift('Psixolog Doniyor Saidov'), ['Психолог Дониёр Саидов', 'Психолог Дониёр Саидов'])
-    assert.deepEqual(cift('Dr. Zulfiya Saidova'), ['Др. Зулфия Саидова', 'Др. Зулфия Саидова'])
+    // Names and the professions' titles are converted; "Prof. Dr." and "Dr." are not (they are the catalogue of titles' own words).
+    const ornek = (rol: string) => { const a = UZ_ASISTAN_ADLARI.find((x) => x.bransAnahtari === rol)!; return cift([a.meslekUnvani, a.kisaAd, a.soyad].filter(Boolean).join(' ')) }
+    assert.deepEqual(ornek('acil-tip'), ['Жасур Турсунов', 'Жасур Турсунов'])
+    assert.deepEqual(ornek('enfeksiyon-hastaliklari'), ['Отабек Қодиров', 'Отабек Кодиров'])
+    assert.deepEqual(ornek('kadin-hastaliklari-dogum'), ['Шаҳноза Расулова', 'Шахноза Расулова'])
+    assert.deepEqual(ornek('beyin-cerrahisi'), ['Алишер Эргашев', 'Алишер Эргашев'])
+    assert.deepEqual(ornek('cocuk-cerrahisi'), ['Сардор Абдуллаев', 'Сардор Абдуллаев'])
+    assert.deepEqual(ornek('klinik-psikolog'), ['Дониёр Саидов', 'Дониёр Саидов'])
+    assert.deepEqual(ornek('psikiyatri'), ['Зулфия Саидова', 'Зулфия Саидова'])
+    // The owner's "Fizioterapevt" (2026-10-09, "Use the common name") reads as the usual word in both forms.
+    assert.deepEqual(ornek('fizyoterapi'), ['Физиотерапевт Жасмина Абдуллаева', 'Физиотерапевт Жасмина Абдуллаева'])
+    assert.deepEqual(cift('Diyetolog Ergoterapevt Audiolog'), ['Диетолог Эрготерапевт Аудиолог', 'Диетолог Эрготерапевт Аудиолог'])
     assert.deepEqual(cift('Oʻgʻil Gʻulom maʼno CHOY'), ['Ўғил Ғулом маъно ЧОЙ', 'Угил Гулом маъно ЧОЙ'])
     // Not a letter of the Latin alphabet → kept as it is.
     assert.equal(Y.uzKirillga('12 — «…»'), '12 — «…»')
   })
 
-  for (const { rol, taraf, tamAd, kisaAd } of ROLLER) {
-    it(`${rol}: ${tamAd} — Latin as stored; Cyrillic and Russian derived and marked; title kept`, () => {
-      assert.deepEqual(K.uzAsistanKimligi(rol, 'uz-Latn'), { tamAd, kisaAd, makineTuretimi: false })
+  for (const { rol, taraf, unvan, tamAd, kisaAd, soyad } of ROLLER) {
+    it(`${rol}: ${tamAd} — the name in Latin as stored; in Cyrillic and Russian derived and marked; the title from the catalogue`, () => {
+      const lat = K.uzAsistanKimligi(rol, 'uz-Latn')!
+      assert.deepEqual({ tamAd: lat.tamAd, kisaAd: lat.kisaAd, makineTuretimi: lat.makineTuretimi }, { tamAd, kisaAd, makineTuretimi: false })
+      // The owner's given name and family name close the full form, untouched; the short form is the title and the given name.
+      assert.ok(tamAd.endsWith(` ${kisaAd} ${soyad}`), tamAd)
+      assert.ok(lat.unvanliKisaAd.endsWith(` ${kisaAd}`) && !lat.unvanliKisaAd.includes(soyad), lat.unvanliKisaAd)
       const kir = K.uzAsistanKimligi(rol, 'uz-Cyrl')!, ru = K.uzAsistanKimligi(rol, 'ru')!
       for (const [f, k] of [['uz-Cyrl', kir], ['ru', ru]] as const) {
         assert.equal(k.makineTuretimi, true, f)
-        assert.doesNotMatch(k.tamAd, /[A-Za-z]/, `${f}: a Latin letter is left in "${k.tamAd}"`)
-        assert.equal(k.tamAd.split(' ').length, 3, k.tamAd)
-        assert.equal(k.tamAd.split(' ')[1], k.kisaAd, 'the short name is the middle word of the full name')
-        assert.doesNotMatch(k.tamAd, TURKCE); temiz(k.tamAd, `assistant ${rol}/${f}`)
+        assert.doesNotMatch(k.tamAd + k.unvanliKisaAd, /[A-Za-z]/, `${f}: a Latin letter is left in "${k.tamAd}"`)
+        const parcalar = k.tamAd.split(' ')
+        assert.equal(parcalar.at(-2), k.kisaAd, 'the short name is the given name of the full name')
+        assert.equal(k.unvanliKisaAd.split(' ').at(-1), k.kisaAd)
+        assert.doesNotMatch(k.tamAd, TURKCE); temiz(k.tamAd, `assistant ${rol}/${f}`); temiz(k.unvanliKisaAd, `assistant ${rol}/${f} (short)`)
       }
       assert.doesNotMatch(ru.tamAd, /[ўқғҳЎҚҒҲ]/, 'the Russian form has an Uzbek-only letter')
-      // Derived by the rule and by nothing else: no hand-corrected spelling hides in the code.
-      assert.equal(kir.tamAd, Y.uzKirillga(tamAd)); assert.equal(ru.tamAd, Y.uzRuschaYozuvga(Y.uzKirillga(tamAd)))
-      // The title: "Dr." for a doctor, the profession's own title for an allied role — converted, never dropped or swapped.
-      assert.equal(kir.tamAd.split(' ')[0], Y.uzKirillga(tamAd.split(' ')[0]))
-      assert.equal(kir.tamAd.startsWith('Др. '), taraf !== 'klinik-muttefik')
+      // The NAME is derived by the rule and by nothing else: no hand-corrected spelling hides in the code.
+      assert.equal(kir.tamAd.split(' ').slice(-2).join(' '), Y.uzKirillga(`${kisaAd} ${soyad}`))
+      assert.equal(ru.tamAd.split(' ').slice(-2).join(' '), Y.uzRuschaYozuvga(Y.uzKirillga(`${kisaAd} ${soyad}`)))
+      // The TITLE: the Turkish convention's, in the catalogue's word for the form — a professor and a doctor are never
+      // swapped, and an allied role without a doctor's title keeps the profession's own.
+      const baslik = (k: { tamAd: string }) => k.tamAd.split(' ').slice(0, -2).join(' ')
+      assert.deepEqual([baslik(lat), baslik(kir), baslik(ru)], unvan === 'prof-dr' ? ['Prof. Dr.', 'Проф. д-р', 'Проф. д-р'] : unvan === 'dr' ? ['Dr.', 'Д-р', 'Д-р'] : [baslik(lat), Y.uzKirillga(baslik(lat)), Y.uzRuschaYozuvga(Y.uzKirillga(baslik(lat)))])
+      if (taraf === 'doktor') assert.equal(unvan, 'prof-dr', 'every doctor specialty carries the professor\'s title, as in the Turkish product')
+      if (unvan === 'meslek') assert.equal(taraf, 'klinik-muttefik')
     })
   }
 
@@ -178,13 +194,15 @@ describe('40 roles: the assistant\'s identity', () => {
     for (const d of dosyalar) {
       const kaynak = readFileSync(d, 'utf8')
       // With the title, and without it (given name + family name).
-      for (const { tamAd } of ROLLER) for (const ad of [tamAd, tamAd.split(' ').slice(1).join(' ')]) assert.ok(!kaynak.includes(ad), `${d} repeats "${ad}"`)
+      for (const { tamAd, kisaAd, soyad } of ROLLER) for (const ad of [tamAd, `${kisaAd} ${soyad}`]) assert.ok(!kaynak.includes(ad), `${d} repeats "${ad}"`)
     }
   })
 
-  it('no biography anywhere: no years of practice, no professor, no affiliation in the identity or in the catalogue', async () => {
+  it('no biography anywhere: no years of practice, no rank written out, no affiliation in the identity, the titles or the catalogue', async () => {
     const M = await import('../uygulama/metinler')
-    const metin = [readFileSync(join(KOK, 'components/ulke/uygulama/Asistan.tsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), ...FORMLAR.flatMap((f) => Object.values(M.uygulamaMetni(f).asistan))].join('\n')
+    // A title is an abbreviation before a name ("Prof. Dr."); the word spelled out, and anything about a career, stays out.
+    const kimlikler = FORMLAR.flatMap((f) => ROLLER.flatMap((r) => { const k = K.uzAsistanKimligi(r.rol, f)!; return [k.tamAd, k.unvanliKisaAd] }))
+    const metin = [readFileSync(join(KOK, 'components/ulke/uygulama/Asistan.tsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), ...FORMLAR.flatMap((f) => Object.values(M.uygulamaMetni(f).asistan)), ...kimlikler].join('\n')
     assert.doesNotMatch(metin, /\d+\s*(yil|йил|лет|года?)|professor|профессор|dotsent|доцент|akademi|академи|universitet|университет|institut|институт|tajriba|тажриба|стаж|опыт/i)
   })
 })

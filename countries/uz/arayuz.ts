@@ -5,9 +5,10 @@
  * Nothing is written here: each entry points at the file of this folder that holds it.
  *   catalogues, three forms           ./uygulama/metinler.ts, ./uygulama/randevuMetinleri.ts
  *   roles (40) and their names        ./klinik/rolAdlari.ts
- *   assistant names (owner's list)    ./klinik/asistanAdlari.ts, derived forms in ./klinik/asistanKimligi.ts
+ *   assistant names (owner's list)    ./klinik/asistanAdlari.ts, titles in ./klinik/asistanUnvanlari.ts, the forms a screen
+ *                                     shows in ./klinik/asistanKimligi.ts
  *   note templates                    ./klinik/notSablonlari.ts
- *   landing page copy, three forms    ./acilis/icerik.ts
+ *   landing page copy, three forms    ./acilis/icerik.ts; what its plans cost: ./acilis/fiyatlar.ts
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { UZ_ACILIS } from './acilis/icerik'

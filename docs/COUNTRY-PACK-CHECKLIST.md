@@ -1,5 +1,9 @@
 # Country pack checklist
 
+> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
+> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
+> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
+
 Standard for taking Notya into any new country, adopted 2026-10-08. Each country records its answers in `docs/COUNTRY-PACK-<COUNTRY>.md`.
 
 Structure agreed with Kaan on 2026-10-08: **one repository, walled areas, a separate live deployment per country, and one shared database.** There is one core, so nothing needs syncing. Each country's build contains the core plus that country's pack only.

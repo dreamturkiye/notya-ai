@@ -6,7 +6,9 @@
  *
  *   cd /tmp/yuruyus && CIKTI=<repo>/docs/uz-landing node <repo>/scripts/ulke-yuruyus/acilis-goruntuleri.mjs
  *
- * Writes: landing-desktop-{uz,ru}[-N].png, landing-phone-{uz,ru}-N.png, landing-hero-desktop-uz.png.
+ * Writes: landing-desktop-{uz,ru}[-N].png, landing-phone-{uz,ru}-N.png, landing-hero-desktop-{uz,ru}.png (the first
+ * screen), and — NOTYA-UZ-FIYAT-UNVAN-01 — landing-pricing-desktop-{uz,ru}.png (section 10 with the doctor plans and
+ * their prices) and landing-pricing-clinic-desktop-{uz,ru}.png (the same section after a tap on the clinic plans).
  * No image is longer than 8,000 pixels on any side: a page taller than that is cut into numbered parts at section
  * boundaries. Animations are switched off (the browser says "reduce motion"), so the typed visit is shown complete.
  * Google Fonts is answered from local files, exactly the faces and axes the page asks for.
@@ -113,8 +115,18 @@ for (const [dil, rota] of [['uz', ''], ['ru', '?dil=ru']]) {
     }))
     console.log(`landing ${dil} ${boyut}: fonts [${durum.yazilar}], photographs ${durum.gorseller ? 'loaded' : 'MISSING'}, overflow ${durum.tasma}px, outside requests ${p.disari.length}`)
     if (!durum.gorseller || durum.tasma > 0 || p.disari.length) process.exitCode = 1
-    if (boyut === 'desktop' && dil === 'uz') { await p.screenshot({ path: join(CIKTI, 'landing-hero-desktop-uz.png') }); console.log('shot landing-hero-desktop-uz.png 1440x900') }
+    if (boyut === 'desktop') { await p.screenshot({ path: join(CIKTI, `landing-hero-desktop-${dil}.png`) }); console.log(`shot landing-hero-desktop-${dil}.png 1440x900`) }
     await tamSayfa(p, `landing-${boyut}-${dil}`, b.olcek)
+    if (boyut === 'desktop') {
+      // Section 10 by itself: the doctor plans as the page first shows them, then the clinic plans after a tap on the switch.
+      const bolum = await p.$('main > section:nth-of-type(11)')
+      // The bar is fixed to the top of the window and would lie over the section's first line in a picture of the section alone.
+      await p.addStyleTag({ content: '.uzl header{visibility:hidden}' })
+      const cek = async (ad) => { const k = await bolum.boundingBox(); await bolum.screenshot({ path: join(CIKTI, ad) }); console.log(`shot ${ad} ${Math.round(k.width)}x${Math.round(k.height)}`); if (Math.max(k.width, k.height) * b.olcek > AZAMI) process.exitCode = 1 }
+      await cek(`landing-pricing-desktop-${dil}.png`)
+      const sekmeler = await bolum.$$('[role=tab]')
+      if (sekmeler.length > 1) { await sekmeler[1].click(); await bekle(300); await cek(`landing-pricing-clinic-desktop-${dil}.png`); await sekmeler[0].click() }
+    }
     await p.browserContext().close()
   }
 }

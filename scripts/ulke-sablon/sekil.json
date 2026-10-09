@@ -821,43 +821,130 @@
    "ustBaslik": "$m",
    "baslik": "$m",
    "baslikVurgu": "$m",
-   "rejalar": [
-    {
-     "ad": "$m",
-     "narx": "$m",
-     "maddeler": [
-      "$m",
-      "$m",
-      "$m",
-      "$m",
-      "$m"
-     ]
-    },
-    {
-     "ad": "$m",
-     "narx": "$m",
-     "maddeler": [
-      "$m",
-      "$m",
-      "$m",
-      "$m",
-      "$m",
-      "$m"
-     ]
-    },
-    {
-     "ad": "$m",
-     "narx": "$m",
-     "maddeler": [
-      "$m",
-      "$m",
-      "$m",
-      "$m"
-     ]
-    }
-   ],
+   "guruhlar": "$m",
+   "tavsiya": "$m",
+   "oylik": "$m:%",
+   "sorovNarx": "$m",
    "dugme": "$m",
-   "izoh": "$m"
+   "sorovDugme": "$m",
+   "gruplar": [
+    {
+     "id": {
+      "$sabit": "solo"
+     },
+     "ad": "$m",
+     "rejalar": [
+      {
+       "id": {
+        "$sabit": "starter"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m"
+       ]
+      },
+      {
+       "id": {
+        "$sabit": "pro"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m"
+       ]
+      },
+      {
+       "id": {
+        "$sabit": "practice"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m"
+       ]
+      }
+     ],
+     "izoh": "$m"
+    },
+    {
+     "id": {
+      "$sabit": "clinic"
+     },
+     "ad": "$m",
+     "rejalar": [
+      {
+       "id": {
+        "$sabit": "clinic5"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m"
+       ]
+      },
+      {
+       "id": {
+        "$sabit": "clinic10"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m",
+        "$m",
+        "$m"
+       ]
+      },
+      {
+       "id": {
+        "$sabit": "clinic20"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m",
+        "$m"
+       ]
+      },
+      {
+       "id": {
+        "$sabit": "enterprise"
+       },
+       "ad": "$m",
+       "maddeler": [
+        "$m",
+        "$m",
+        "$m"
+       ]
+      }
+     ],
+     "izoh": "$m"
+    }
+   ]
   },
   "sorov": {
    "ustBaslik": "$m",

@@ -226,7 +226,32 @@ for (const [dil, rota] of [['uz', '/'], ['ru', '/?dil=ru']]) {
     const form = await p.evaluate(() => { const f = document.querySelector('#sorov form.uzl-form'); if (!f) return null; const k = f.getBoundingClientRect(); return { gorunur: k.top < innerHeight && k.bottom > 0, capa: location.hash, alanlar: f.querySelectorAll('input, textarea').length } })
     kontrol(`landing → request form (${ad}): the form is on screen`, !!form && form.gorunur && form.capa === '#sorov' && form.alanlar === 5, JSON.stringify(form))
   }
-  kontrol('landing: "request a price" never names an amount or a trial', !/\d\s*(soʻm|сум|сўм|UZS|USD|\$)|bepul|бесплатн/i.test(await govde(p)))
+  // NOTYA-UZ-FIYAT-UNVAN-01 — the price section: three plans for one doctor with a monthly price in soʻm, four clinic plans by request.
+  const narxOku = () => p.evaluate(() => ({
+    sekmeler: [...document.querySelectorAll('#narx [role=tab]')].map((b) => `${b.dataset.guruh}:${b.getAttribute('aria-selected')}`),
+    rejalar: [...document.querySelectorAll('#narx li[data-reja]')].map((li) => ({ id: li.dataset.reja, narx: li.querySelector('[data-alan=narx]').innerText.trim(), dugme: li.querySelector('a').innerText.trim(), href: li.querySelector('a').getAttribute('href'), rozet: !!li.querySelector('span.rounded-full') })),
+    metin: document.querySelector('#narx').innerText,
+  }))
+  const yakka = await narxOku()
+  kontrol('landing, prices: the doctor plans are shown first, each with its monthly price in soʻm as the pack writes numbers', yakka.sekmeler.join(' ') === 'solo:true clinic:false' && JSON.stringify(yakka.rejalar.map((r) => [r.id, r.narx])) === JSON.stringify([['starter', '360 000 soʻm / oy'], ['pro', '840 000 soʻm / oy'], ['practice', '1 440 000 soʻm / oy']]), JSON.stringify(yakka.rejalar.map((r) => [r.id, r.narx])))
+  kontrol('landing, prices: the badge is on the second doctor plan only; every button says "leave a request" and leads to the request form', JSON.stringify(yakka.rejalar.map((r) => [r.rozet, r.dugme, r.href])) === JSON.stringify([[false, 'Soʻrov qoldirish', '#sorov'], [true, 'Soʻrov qoldirish', '#sorov'], [false, 'Soʻrov qoldirish', '#sorov']]), JSON.stringify(yakka.rejalar))
+  kontrol('landing, prices: the footnote says taxes are not included, names no tax, and promises no trial', /Narxlarga soliqlar kiritilmagan\./.test(yakka.metin) && /taklif kodi/.test(yakka.metin) && !/QQS|bepul|sinov|kredit/i.test(yakka.metin), yakka.metin.slice(-260))
+  await p.click('#narx [role=tab][data-guruh=clinic]'); await bekle(200)
+  const klinika = await narxOku()
+  kontrol('landing, prices: the clinic plans are one tap away, by request, without any amount', klinika.sekmeler.join(' ') === 'solo:false clinic:true' && klinika.rejalar.map((r) => r.id).join(' ') === 'clinic5 clinic10 clinic20 enterprise' && klinika.rejalar.every((r) => r.narx === 'Narx soʻrov boʻyicha' && r.dugme === 'Narxni soʻrash' && r.href === '#sorov') && !/\d{3,}/.test(klinika.metin), JSON.stringify(klinika.rejalar))
+  await p.click('#narx li[data-reja=clinic10] a'); await bekle(700)
+  kontrol('landing, prices: a plan\'s button brings the request form on screen', await p.evaluate(() => { const k = document.querySelector('#sorov form.uzl-form')?.getBoundingClientRect(); return !!k && k.top < innerHeight && k.bottom > 0 && location.hash === '#sorov' }))
+  await p.click('#narx [role=tab][data-guruh=solo]'); await bekle(200)
+  {
+    const tum = await govde(p)
+    // Every amount of money on the page is one of the three of the price list; nothing of the Turkish currency; no trial.
+    const tutarlar = tum.match(/\d[\d\s.,]*\s*(soʻm|сум|сўм|UZS)/g) || []
+    kontrol('landing: the only amounts of money on the page are the three of the price list', JSON.stringify(tutarlar) === JSON.stringify(['360 000 soʻm', '840 000 soʻm', '1 440 000 soʻm']), tutarlar.join(' | '))
+    kontrol('landing: no lira sign, "TL" or lira amount; no other currency; no trial', !/₺|\bTL\b|\bTRY\b|lira|\b1[ .,]?490\b|\b3[ .,]?490\b|\b5[ .,]?990\b|USD|EUR|\$|€|bepul|бесплатн/i.test(tum))
+    // NOTYA-UZ-FIYAT-UNVAN-01 — the assistant is named as the Turkish page names its own: short title and given name.
+    const giris = await metin(p, '.uzl h1 + p')
+    kontrol('landing: the hero names the assistant by short title and given name; no family name, no biography', giris.startsWith('Prof. Malika ') && !/Nazarova|professor|\d+\s*yil/i.test(tum), giris.slice(0, 80))
+  }
   // the second hero button: the typed illustration on this same page — no other address, no video, no account
   await p.evaluate(() => window.scrollTo(0, 0)); await bekle(150)
   const onceki = p.istekler.length
@@ -332,7 +357,7 @@ const A = await sayfaAc(MASA) // doctor A — stays signed in for the rest of th
   const rolSatiri = await (await fetch(`${SUPA}/__tablo/hekim_rolu`)).json()
   kontrol('the role is stored for this account and for no other', rolSatiri.length === 1 && rolSatiri[0].doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001' && rolSatiri[0].rol === 'pediatri', JSON.stringify(rolSatiri))
   await p.waitForSelector('[data-alan=asistan-ad]')
-  kontrol('the home shows this role\'s assistant by the owner\'s name, with one neutral line and no biography', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova' && (await metin(p, '[data-alan=asistan-satir]')) === 'Katta hamkasbingiz · Pediatriya' && !/\d+\s*yil|professor|tajriba/i.test(await metin(p, '[data-alan=asistan]')), await metin(p, '[data-alan=asistan]'))
+  kontrol('the home shows this role\'s assistant by the owner\'s name, with one neutral line and no biography', (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Malika Nazarova' && (await metin(p, '[data-alan=asistan-satir]')) === 'Katta hamkasbingiz · Pediatriya' && !/\d+\s*yil|professor|tajriba/i.test(await metin(p, '[data-alan=asistan]')), await metin(p, '[data-alan=asistan]'))
   kontrol('answer saved → the home, in Uzbek Latin', (await govde(p)).includes('Bugungi koʻriklar') && (await metin(p, 'h1')) === 'QA Shifokor Bir')
   const tercih = await (await fetch(`${SUPA}/__tablo/hekim_dil_tercihleri`)).json()
   kontrol('the answer is stored for this account: notes in Uzbek Latin, question answered', tercih.length === 1 && tercih[0].doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001' && tercih[0].not_dili === 'uz-Latn' && !!tercih[0].soruldu_at, JSON.stringify(tercih))
@@ -500,7 +525,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('.uza-liste a.uza-satir')])
   await p.waitForSelector('input[name=riza]')
   kontrol('the visit screen of that patient', new URL(p.url()).searchParams.get('hasta') === hastaA && (await metin(p, 'h1')) === 'QA Karimova Dilnoza Rustam qizi')
-  kontrol('the note template is the account\'s role, shown by name — it is not a choice — and the assistant that will prepare the note is named', (await metin(p, '[data-alan=sablon]')) === 'Pediatriya' && !(await p.$('input[name=sablon]')) && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova')
+  kontrol('the note template is the account\'s role, shown by name — it is not a choice — and the assistant that will prepare the note is named', (await metin(p, '[data-alan=sablon]')) === 'Pediatriya' && !(await p.$('input[name=sablon]')) && (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Malika Nazarova')
   const yabanciSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'odyoloji', riza: true } })
   kontrol('the server refuses another role\'s template for this account', yabanciSablon.s === 400 && yabanciSablon.t === '{"code":"GECERSIZ","alan":"sablon"}', `${yabanciSablon.s} ${yabanciSablon.t}`)
   // CONSENT blocks recording.
@@ -540,7 +565,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     kontrol('LEAK: no field of another role is drawn or filled — cardiology, dietetics, audiology, a made-up key', !et.some((x) => /Koʻkrakdagi|Elektrokardiogramma|Ovqatlanish tartibi|Audiometriya/.test(x)) && (await alanDegeri(p, 'chest_pain')) === null && (await alanDegeri(p, 'diet_history')) === null && !/XATO-MAYDON|Koʻkrakda ogʻriq yoʻq|Shirinlikni koʻp yeydi/.test(g))
     kontrol('in the database the note carries only its own role\'s fields', anahtarlar((await tabloOku('not_dil_kaydi'))[0].alanlar) === 'feeding,history_giver,temperature', JSON.stringify((await tabloOku('not_dil_kaydi'))[0].alanlar))
     kontrol('the model was instructed with paediatrics\' fields and no other role\'s', mdl[0].alanAnahtarlari === PEDIATRI_ALANLARI && mdl[0].muttefik === false, JSON.stringify(mdl[0]))
-    kontrol('the draft names the assistant of the template it was written with', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova')
+    kontrol('the draft names the assistant of the template it was written with', (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Malika Nazarova')
   }
   kontrol('the doctor is told the model wrote it; the visit language is named; no low-confidence notice', g.includes('Qaydni sunʼiy intellekt tayyorladi.') && g.includes('oʻzbekcha') && !g.includes('diqqat bilan tekshiring') && !g.includes('ikkinchi marta'))
   kontrol('the transcript is kept with the note', (await p.$eval('[data-alan=transkript]', (e) => e.textContent)).includes('Qizimning uch kundan beri isitmasi bor'))
@@ -640,20 +665,20 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   // ───── NOTYA-UZ-BRANSLAR-01 — ANOTHER DOCTOR SPECIALTY, END TO END: the account changes its role to cardiology ─────
   await git(p, '/settings')
   await p.waitForSelector('[data-alan=rol-ayari] select[name=rol]')
-  kontrol('settings: the role is shown by name with its assistant, and can be changed', (await p.$eval('[data-alan=rol-ayari] select[name=rol]', (e) => e.value)) === 'pediatri' && (await metin(p, '[data-alan=rol-ayari] [data-alan=asistan-ad]')) === 'Dr. Malika Nazarova' && (await metin(p, '[data-alan=rol-ayari] h2')) === 'Mutaxassislik')
+  kontrol('settings: the role is shown by name with its assistant, and can be changed', (await p.$eval('[data-alan=rol-ayari] select[name=rol]', (e) => e.value)) === 'pediatri' && (await metin(p, '[data-alan=rol-ayari] [data-alan=asistan-ad]')) === 'Prof. Dr. Malika Nazarova' && (await metin(p, '[data-alan=rol-ayari] h2')) === 'Mutaxassislik')
   await p.select('[data-alan=rol-ayari] select[name=rol]', 'kardiyoloji')
   await p.click('[data-alan=rol-ayari] [data-eylem=rol-kaydet]')
   await p.waitForSelector('[data-alan=rol-ayari] .uza-bilgi-kutu')
-  kontrol('settings: the new role is saved for this account only, and the card names the new assistant', (await metin(p, '[data-alan=rol-ayari] .uza-bilgi-kutu')) === 'Saqlandi.' && (await metin(p, '[data-alan=rol-ayari] [data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova' && JSON.stringify((await tabloOku('hekim_rolu')).map((r) => `${r.doctor_id.slice(-1)}:${r.rol}`).sort()) === '["1:kardiyoloji","2:diyetisyen"]', JSON.stringify(await tabloOku('hekim_rolu')))
+  kontrol('settings: the new role is saved for this account only, and the card names the new assistant', (await metin(p, '[data-alan=rol-ayari] .uza-bilgi-kutu')) === 'Saqlandi.' && (await metin(p, '[data-alan=rol-ayari] [data-alan=asistan-ad]')) === 'Prof. Dr. Kamola Yusupova' && JSON.stringify((await tabloOku('hekim_rolu')).map((r) => `${r.doctor_id.slice(-1)}:${r.rol}`).sort()) === '["1:kardiyoloji","2:diyetisyen"]', JSON.stringify(await tabloOku('hekim_rolu')))
   await cek(p, 'settings-role-uz.png', false)
   await git(p, '/today')
   await p.waitForSelector('[data-alan=asistan-ad]')
-  kontrol('home: the assistant is now cardiology\'s, by the owner\'s name', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova' && (await metin(p, '[data-alan=asistan-satir]')) === 'Katta hamkasbingiz · Kardiologiya')
+  kontrol('home: the assistant is now cardiology\'s, by the owner\'s name', (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Kamola Yusupova' && (await metin(p, '[data-alan=asistan-satir]')) === 'Katta hamkasbingiz · Kardiologiya')
   await cek(p, 'today-cardiology-uz.png', false)
   senaryoYaz({ stt: 'yuksek', model: 'tamam' })
   await git(p, `/visit?hasta=${hastaA}`)
   await p.waitForSelector('input[name=riza]')
-  kontrol('visit screen: the cardiology template and its assistant', (await metin(p, '[data-alan=sablon]')) === 'Kardiologiya' && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova')
+  kontrol('visit screen: the cardiology template and its assistant', (await metin(p, '[data-alan=sablon]')) === 'Kardiologiya' && (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Kamola Yusupova')
   const eskiSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'pediatri', riza: true } })
   kontrol('the role the account had before is now another role\'s template: refused', eskiSablon.s === 400 && eskiSablon.j?.alan === 'sablon', `${eskiSablon.s} ${eskiSablon.t}`)
   await kayitYap(p)
@@ -669,7 +694,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     kontrol('LEAK: nothing of paediatrics or of any other role on a cardiology note — no head circumference, no feeding, no diet history', !et.some((x) => /Bosh aylanasi|Ovqatlanishi|Emlash|Ovqatlanish tartibi|Audiometriya/.test(x)) && (await alanDegeri(p, 'head_circumference')) === null && (await alanDegeri(p, 'feeding')) === null && !/XATO-MAYDON|Kuniga toʻrt mahal|Shirinlikni koʻp yeydi/.test(gk) && (await alanDegeri(p, 'chest_pain')) === 'Koʻkrakda ogʻriq yoʻq.' && (await alanDegeri(p, 'ecg')) === 'Oʻzgarishsiz.')
     kontrol('in the database the cardiology note carries cardiology\'s fields only', anahtarlar(satir?.alanlar) === 'chest_pain,ecg,history_giver', JSON.stringify(satir?.alanlar))
     kontrol('the model was instructed with cardiology\'s fields and no other role\'s, and with nothing that says who the patient is', m.alanAnahtarlari === KARDIYOLOJI_ALANLARI && m.kimlikVar === false && m.dil === 'uz-Latn', JSON.stringify(m))
-    kontrol('the draft names cardiology\'s assistant', (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova')
+    kontrol('the draft names cardiology\'s assistant', (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Kamola Yusupova')
     await cek(p, 'note-cardiology-draft-uz.png')
     await p.click('#uza-alan-ecg'); await p.keyboard.down('Control'); await p.keyboard.press('End'); await p.keyboard.up('Control')
     await p.type('#uza-alan-ecg', ' Sinus ritmi.')
@@ -687,7 +712,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await p.waitForSelector('#uza-not-s', { timeout: 60000 })
   {
     const et = await alanEtiketleri(p)
-    kontrol('an earlier note keeps its own template and its own assistant after the role changed', et.includes('Bosh aylanasi (aytilgan raqam)') && !et.some((x) => /Koʻkrakdagi|Elektrokardiogramma/.test(x)) && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova', et.join(' | '))
+    kontrol('an earlier note keeps its own template and its own assistant after the role changed', et.includes('Bosh aylanasi (aytilgan raqam)') && !et.some((x) => /Koʻkrakdagi|Elektrokardiogramma/.test(x)) && (await metin(p, '[data-alan=asistan-ad]')) === 'Prof. Dr. Malika Nazarova', et.join(' | '))
   }
 }
 {

@@ -15,14 +15,20 @@
  *   - nothing of Türkiye: its state and payer systems, its law, its ministries, associations and reference books,
  *     its currency;
  *   - no claim of a connection to any state system; no named Uzbek law (none has been confirmed by a lawyer);
- *   - the assistant has no name in Uzbekistan yet: it is "the assistant", a senior colleague, never a person;
- *   - no amount of money, no free trial; sign-up is by invitation code;
+ *   - the assistant is named the way the Turkish page names its own (the owner, 2026-10-09): by the short title and
+ *     given name of ONE persona, the counterpart of the one the Turkish page features (`ACILIS_ASISTAN_ROLU`). The
+ *     name is never written in this file: it is read from the owner's list (../klinik/asistanAdlari.ts), so there
+ *     is one source. No biography: no years of practice, no place of work, no degree;
+ *   - amounts of money come from the pack's price list (./fiyatlar.ts), never from this file; nothing of the
+ *     Turkish currency is shown; no free trial; sign-up is by invitation code;
  *   - no public demo; no mention of the voice profile or of image evaluation;
  *   - the number of specialties is what the product is DESIGNED for, not what is switched on.
  * Uzbek Latin uses U+02BB (ʻ) in oʻ / gʻ and U+02BC (ʼ) for the tutuq belgisi.
  */
 import type { AcilisIcerigi, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { uzAsistanKimligi } from '../klinik/asistanKimligi'
+import { UZ_FIYATLAR } from './fiyatlar'
 
 /** The forms the landing page is written in. Wider than the pack's public `acikDiller`: Cyrillic is here too. */
 export const ACILIS_DILLERI = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
@@ -35,6 +41,29 @@ export const CAPA = {
 } as const
 
 export type { AcilisIcerigi, KartSatiri, OzellikBolumu, Sahne, SahneNavbati } from '@/lib/ulke/arayuz/acilisTipleri'
+
+/**
+ * NOTYA-UZ-FIYAT-UNVAN-01 — THE PERSONA THE PAGE FEATURES. The Turkish landing page names one assistant, its
+ * paediatrics professor, by short title and given name; this page names that role's Uzbek counterpart the same way.
+ * A role key, not a name: the name and its title in each form come from the owner's list through asistanKimligi.
+ * The Russian form speaks of the assistant as "she" in two lines (marked there): a change of role to a man's name
+ * means rewriting those two.
+ */
+export const ACILIS_ASISTAN_ROLU = 'pediatri'
+
+/** How a form of the page names the featured assistant: `unvanli` with the short title, `ad` the given name alone. */
+function acilisAsistani(dil: AcilisDili): { unvanli: string; ad: string } {
+  const k = uzAsistanKimligi(ACILIS_ASISTAN_ROLU, dil)
+  if (!k) throw new Error(`[uz/acilis] the role "${ACILIS_ASISTAN_ROLU}" has no assistant in the owner's list. No fallback to another name.`)
+  return { unvanli: k.unvanliKisaAd, ad: k.kisaAd }
+}
+const Y_LATN = acilisAsistani('uz-Latn')
+const Y_CYRL = acilisAsistani('uz-Cyrl')
+const Y_RU = acilisAsistani('ru')
+
+/** Plan and group ids of the price section: the same in every form, and the keys of the price list (./fiyatlar.ts). */
+const REJA = { starter: 'starter', pro: 'pro', practice: 'practice', clinic5: 'clinic5', clinic10: 'clinic10', clinic20: 'clinic20', enterprise: 'enterprise' } as const
+const GURUH = { solo: 'solo', clinic: 'clinic' } as const
 
 // ───────────────────────── Uzbek, Latin script (source) ─────────────────────────
 
@@ -66,7 +95,7 @@ const UZ_LATN: AcilisIcerigi = {
     baslik: 'Bemor xonadan chiqqanda',
     baslikVurgu: 'ishingiz bitgan boʻlsin.',
     giris:
-      'Notya yordamchisi tajribali hamkasb kabi qabulni tinglaydi, tibbiy yozuvni yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatuvda tutadi. Har bir qaror faqat sizning tasdigʻingiz bilan kuchga kiradi.',
+      `${Y_LATN.unvanli} qabulni tinglaydi, tibbiy yozuvni yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatuvda tutadi. Har bir qaror faqat sizning tasdigʻingiz bilan kuchga kiradi.`,
     birinciDugme: 'Narxni soʻrash',
     ikinciDugme: 'Qabulni koʻring',
     gorselAlt: 'Kunduzgi yorugʻlikdagi xususiy shifokor xonasi: koʻrik kushetkasi, stetoskop, tonometr va diplomlar',
@@ -83,7 +112,7 @@ const UZ_LATN: AcilisIcerigi = {
     baslik: 'Ikki hamkasb',
     baslikVurgu: 'kabi gaplashing.',
     govde:
-      'Bir marta bosing — yordamchi tinglay boshlaydi. Gapini boʻlsangiz, jim boʻladi. Tugma bosib turish shart emas.',
+      `Bir marta bosing — ${Y_LATN.unvanli} tinglay boshlaydi. Gapini boʻlsangiz, jim boʻladi. Tugma bosib turish shart emas.`,
     maddeler: ['Suhbat oʻzbek yoki rus tilida matnga aylanadi', 'Tibbiy yozuv qabul tugashi bilan tayyor'],
     sekmeler: 'Qabul namunalari',
     yozmoqda: 'yozmoqda',
@@ -93,13 +122,13 @@ const UZ_LATN: AcilisIcerigi = {
       {
         id: 'pedia',
         meta: '1-qabul',
-        yordamchi: 'Notya yordamchisi',
+        yordamchi: Y_LATN.unvanli,
         alan: 'Pediatriya',
         saat: '09:14',
         navbatlar: [
           { kim: 'Shifokor', rol: 'shifokor', matn: '7 yosh, 18 kilogramm. Isitma va quloq ogʻrigʻi.' },
           {
-            kim: 'Yordamchi',
+            kim: Y_LATN.ad,
             rol: 'yordamchi',
             matn: 'Oʻtkir oʻrta otitga mos keladi. Amoksitsillin 40 mg/kg/kun — bu vaznda kuniga 720 mg. Yoki amoksitsillin-klavulanatni afzal koʻrasizmi?',
           },
@@ -108,7 +137,7 @@ const UZ_LATN: AcilisIcerigi = {
       {
         id: 'safety',
         meta: 'Xavfsizlik toʻri',
-        yordamchi: 'Notya yordamchisi',
+        yordamchi: Y_LATN.unvanli,
         alan: 'Pediatriya',
         saat: '18:47',
         navbatlar: [
@@ -123,13 +152,13 @@ const UZ_LATN: AcilisIcerigi = {
       {
         id: 'memory',
         meta: '10-qabul',
-        yordamchi: 'Notya yordamchisi',
+        yordamchi: Y_LATN.unvanli,
         alan: 'Pediatriya',
         saat: '11:03',
         navbatlar: [
           { kim: 'Shifokor', rol: 'shifokor', matn: 'Amoksitsillin yozing.' },
           {
-            kim: 'Yordamchi',
+            kim: Y_LATN.ad,
             rol: 'yordamchi',
             matn: '40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozaymi, doktor?',
           },
@@ -285,27 +314,65 @@ const UZ_LATN: AcilisIcerigi = {
   },
   narx: {
     ustBaslik: '10 — Narx',
-    baslik: 'Narx —',
-    baslikVurgu: 'soʻrov boʻyicha.',
-    rejalar: [
+    baslik: 'Sodda. Shaffof.',
+    baslikVurgu: 'Adolatli.',
+    guruhlar: 'Reja turi',
+    tavsiya: 'Tavsiya etamiz',
+    oylik: '% soʻm / oy',
+    sorovNarx: 'Narx soʻrov boʻyicha',
+    dugme: 'Soʻrov qoldirish',
+    sorovDugme: 'Narxni soʻrash',
+    gruplar: [
       {
+        id: GURUH.solo,
         ad: 'Shifokor',
-        narx: 'Narx soʻrov boʻyicha',
-        maddeler: ['Bitta shifokor', 'Ovozli yordamchi', 'Tibbiy yozuv va retsept qoralamasi', 'Yoʻnalishingizga mos ish maydoni', 'Bemor kartasi va arxiv'],
+        rejalar: [
+          {
+            id: REJA.starter,
+            ad: 'Boshlangʻich',
+            maddeler: ['Oyiga 60 ta qabul', 'Bitta shifokor', `Ovozli yordamchi ${Y_LATN.unvanli}`, 'Tibbiy yozuv va retsept qoralamasi', 'Yoʻnalishingizga mos ish maydoni', 'Doza ogohlantirishlari', 'Bemor kartasi va arxiv'],
+          },
+          {
+            id: REJA.pro,
+            ad: 'Pro',
+            maddeler: ['Boshlangʻich rejasidagi hamma narsa', 'Cheklanmagan qabullar (adolatli foydalanish doirasida)', 'Bemor portali', 'Hamkasb maslahati', 'Qabul jadvali va eslatmalar', 'Bemor xabarlari va kelgan hujjatlar', 'Kuzatuv roʻyxatlari', 'Qabulni bitta oqimda yakunlash va shablonlar', 'Xulosa va epikriz qoralamalari', 'Oʻrganuvchi tizim'],
+          },
+          {
+            id: REJA.practice,
+            ad: 'Xususiy amaliyot',
+            maddeler: ['Pro rejasidagi hamma narsa', 'Registrator hisobi, alohida huquq bilan', 'Yordamchini sizga moslab sozlash', 'Oʻrnatishda yordam', 'Ustuvor qoʻllab-quvvatlash'],
+          },
+        ],
+        izoh: 'Notya hozircha taklif kodi bilan ishlaydi. Narxlarga soliqlar kiritilmagan. Yil uchun oldindan toʻlasangiz, 2 oy bizdan. Asoschi shifokorlar dasturi: dastlabki 50 shifokorga 12 oy davomida 40% chegirma.',
       },
       {
-        ad: 'Xususiy amaliyot',
-        narx: 'Narx soʻrov boʻyicha',
-        maddeler: ['Shifokor rejasidagi hamma narsa', 'Bemor portali', 'Hamkasb maslahati', 'Qabul jadvali va eslatmalar', 'Kuzatuv roʻyxatlari', 'Registrator hisobi, alohida huquq bilan'],
-      },
-      {
+        id: GURUH.clinic,
         ad: 'Klinika',
-        narx: 'Narx soʻrov boʻyicha',
-        maddeler: ['Bir nechta shifokor', 'Shifokor va registrator huquqlari', 'Butun klinika uchun jadval va bemor portali', 'Oʻrnatishda yordam'],
+        rejalar: [
+          {
+            id: REJA.clinic5,
+            ad: 'Klinika 5',
+            maddeler: ['5 nafargacha foydalanuvchi', 'Shifokor, mutaxassis va registrator huquqlari', 'Seans va qabul jadvali', 'Muolajadan keyingi parvarish muddatlari va eslatmalar', 'Bemor portali', 'Roʻyxatga olish va rozilik nazorat roʻyxati', 'Kuzatuv roʻyxatlari', 'Boshqaruv paneli'],
+          },
+          {
+            id: REJA.clinic10,
+            ad: 'Klinika 10',
+            maddeler: ['10 nafargacha foydalanuvchi', 'Klinika 5 rejasidagi hamma narsa', 'Brend sozlamalari', 'Oʻrnatishda yordam', 'Ustuvor qoʻllab-quvvatlash'],
+          },
+          {
+            id: REJA.clinic20,
+            ad: 'Klinika 20',
+            maddeler: ['20 nafargacha foydalanuvchi', 'Klinika 10 rejasidagi hamma narsa', 'Jamoani oʻqitish', 'Alohida qoʻllab-quvvatlash'],
+          },
+          {
+            id: REJA.enterprise,
+            ad: 'Korporativ',
+            maddeler: ['Cheklanmagan foydalanuvchilar', 'Alohida xizmat shartnomasi', 'Alohida oʻrnatish va oʻqitish'],
+          },
+        ],
+        izoh: 'Notya hozircha taklif kodi bilan ishlaydi. Narx foydalanuvchilar soni va yoʻnalishingizga qarab belgilanadi.',
       },
     ],
-    dugme: 'Narxni soʻrash',
-    izoh: 'Notya hozircha taklif asosida, cheklangan shifokorlar guruhi bilan ishlamoqda. Narx yoʻnalishingiz va foydalanuvchilar soniga qarab belgilanadi.',
   },
   sorov: {
     ustBaslik: 'Xususiy amaliyot',
@@ -370,7 +437,7 @@ const RU: AcilisIcerigi = {
     baslik: 'Пациент вышел из кабинета —',
     baslikVurgu: 'и ваша работа уже сделана.',
     giris:
-      'Помощник Notya, как опытный коллега, слушает приём, пишет медицинскую запись, готовит черновик рецепта и заключения, держит пациента под наблюдением. Каждое решение вступает в силу только после вашего подтверждения.',
+      `${Y_RU.unvanli} слушает приём, пишет медицинскую запись, готовит черновик рецепта и заключения, держит пациента под наблюдением. Каждое решение вступает в силу только после вашего подтверждения.`,
     birinciDugme: 'Запросить цену',
     ikinciDugme: 'Посмотреть приём',
     gorselAlt: 'Частный врачебный кабинет при дневном свете: кушетка для осмотра, стетоскоп, тонометр и дипломы',
@@ -387,7 +454,7 @@ const RU: AcilisIcerigi = {
     baslik: 'Говорите,',
     baslikVurgu: 'как двое коллег.',
     govde:
-      'Нажмите один раз — помощник начинает слушать. Перебьёте — он замолчит. Удерживать кнопку не нужно.',
+      `Нажмите один раз — ${Y_RU.unvanli} начинает слушать. Перебьёте — замолчит. Удерживать кнопку не нужно.`,
     maddeler: ['Разговор на узбекском или русском превращается в текст', 'Медицинская запись готова, как только приём окончен'],
     sekmeler: 'Примеры приёмов',
     yozmoqda: 'пишет',
@@ -397,13 +464,13 @@ const RU: AcilisIcerigi = {
       {
         id: 'pedia',
         meta: 'Приём 1',
-        yordamchi: 'Помощник Notya',
+        yordamchi: Y_RU.unvanli,
         alan: 'Педиатрия',
         saat: '09:14',
         navbatlar: [
           { kim: 'Врач', rol: 'shifokor', matn: '7 лет, 18 килограммов. Температура и боль в ухе.' },
           {
-            kim: 'Помощник',
+            kim: Y_RU.ad,
             rol: 'yordamchi',
             matn: 'Похоже на острый средний отит. Амоксициллин 40 мг/кг/сут — при этом весе 720 мг в сутки. Или вы предпочитаете амоксициллин-клавуланат?',
           },
@@ -412,7 +479,7 @@ const RU: AcilisIcerigi = {
       {
         id: 'safety',
         meta: 'Страховочная сеть',
-        yordamchi: 'Помощник Notya',
+        yordamchi: Y_RU.unvanli,
         alan: 'Педиатрия',
         saat: '18:47',
         navbatlar: [
@@ -427,13 +494,13 @@ const RU: AcilisIcerigi = {
       {
         id: 'memory',
         meta: 'Приём 10',
-        yordamchi: 'Помощник Notya',
+        yordamchi: Y_RU.unvanli,
         alan: 'Педиатрия',
         saat: '11:03',
         navbatlar: [
           { kim: 'Врач', rol: 'shifokor', matn: 'Запишите амоксициллин.' },
           {
-            kim: 'Помощник',
+            kim: Y_RU.ad,
             rol: 'yordamchi',
             matn: '40 мг/кг/сут, при этом весе 720 мг в сутки. Обычно вы выбираете амоксициллин-клавуланат — записать его, доктор?',
           },
@@ -570,12 +637,14 @@ const RU: AcilisIcerigi = {
       sorov: 'Запишите амоксициллин.',
       javob: '40 мг/кг/сут, при этом весе 720 мг в сутки. Обычно вы выбираете амоксициллин-клавуланат — записать его, доктор?',
     },
-    izoh: 'Вы не спрашивали. Он вспомнил.',
+    // "she": the featured assistant (ACILIS_ASISTAN_ROLU) is a woman
+    izoh: 'Вы не спрашивали. Она вспомнила.',
   },
   xavfsizlik: {
     ustBaslik: '09 — Страховочная сеть',
     baslik: 'Пятьдесят пациентов, тяжёлый день —',
-    baslikVurgu: 'он никогда не промолчит.',
+    // "she": the featured assistant (ACILIS_ASISTAN_ROLU) is a woman
+    baslikVurgu: 'она никогда не промолчит.',
     iqtibos: '«Доктор, одну минуту — это взрослая доза. При этом весе разовая доза не должна превышать 250 мг. Исправить?»',
     izoh: 'Неверная доза, опасное сочетание лекарств. Скажет, даже если не спросили. Остановит. Предложит правильный вариант.',
     gorselAlt: 'Коридор частной клиники при дневном свете: двери врачебных кабинетов и скамья для ожидания',
@@ -589,27 +658,65 @@ const RU: AcilisIcerigi = {
   },
   narx: {
     ustBaslik: '10 — Цена',
-    baslik: 'Цена —',
-    baslikVurgu: 'по запросу.',
-    rejalar: [
+    baslik: 'Просто. Прозрачно.',
+    baslikVurgu: 'Честно.',
+    guruhlar: 'Тип плана',
+    tavsiya: 'Рекомендуем',
+    oylik: '% сум / мес.',
+    sorovNarx: 'Цена по запросу',
+    dugme: 'Оставить запрос',
+    sorovDugme: 'Запросить цену',
+    gruplar: [
       {
+        id: GURUH.solo,
         ad: 'Врач',
-        narx: 'Цена по запросу',
-        maddeler: ['Один врач', 'Голосовой помощник', 'Медицинская запись и черновик рецепта', 'Рабочее пространство под вашу специальность', 'Карта пациента и архив'],
+        rejalar: [
+          {
+            id: REJA.starter,
+            ad: 'Начальный',
+            maddeler: ['60 приёмов в месяц', 'Один врач', `Голосовой помощник ${Y_RU.unvanli}`, 'Медицинская запись и черновик рецепта', 'Рабочее пространство под вашу специальность', 'Предупреждения о дозах', 'Карта пациента и архив'],
+          },
+          {
+            id: REJA.pro,
+            ad: 'Про',
+            maddeler: ['Всё из плана «Начальный»', 'Без ограничения числа приёмов (в рамках добросовестного использования)', 'Портал пациента', 'Консультация коллеги', 'Расписание приёмов и напоминания', 'Сообщения пациентов и входящие документы', 'Списки наблюдения', 'Завершение приёма одним потоком и шаблоны', 'Черновики заключений и эпикризов', 'Система, которая учится'],
+          },
+          {
+            id: REJA.practice,
+            ad: 'Частная практика',
+            maddeler: ['Всё из плана «Про»', 'Аккаунт регистратора с отдельными правами', 'Настройка помощника под вас', 'Помощь при подключении', 'Приоритетная поддержка'],
+          },
+        ],
+        izoh: 'Notya пока работает по коду приглашения. Налоги в цены не включены. При оплате за год вперёд — 2 месяца в подарок. Программа «Врачи-основатели»: первым 50 врачам — скидка 40% на 12 месяцев.',
       },
       {
-        ad: 'Частная практика',
-        narx: 'Цена по запросу',
-        maddeler: ['Всё из плана «Врач»', 'Портал пациента', 'Консультация коллеги', 'Расписание приёмов и напоминания', 'Списки наблюдения', 'Аккаунт регистратора с отдельными правами'],
-      },
-      {
+        id: GURUH.clinic,
         ad: 'Клиника',
-        narx: 'Цена по запросу',
-        maddeler: ['Несколько врачей', 'Права врача и регистратора', 'Расписание и портал пациента для всей клиники', 'Помощь при подключении'],
+        rejalar: [
+          {
+            id: REJA.clinic5,
+            ad: 'Клиника 5',
+            maddeler: ['До 5 пользователей', 'Права врача, специалиста и регистратора', 'Расписание сеансов и приёмов', 'Сроки ухода после процедуры и напоминания', 'Портал пациента', 'Чек-лист регистрации и согласия', 'Списки наблюдения', 'Панель управления'],
+          },
+          {
+            id: REJA.clinic10,
+            ad: 'Клиника 10',
+            maddeler: ['До 10 пользователей', 'Всё из плана «Клиника 5»', 'Настройки бренда', 'Помощь при подключении', 'Приоритетная поддержка'],
+          },
+          {
+            id: REJA.clinic20,
+            ad: 'Клиника 20',
+            maddeler: ['До 20 пользователей', 'Всё из плана «Клиника 10»', 'Обучение команды', 'Персональная поддержка'],
+          },
+          {
+            id: REJA.enterprise,
+            ad: 'Корпоративный',
+            maddeler: ['Без ограничения числа пользователей', 'Отдельный договор на обслуживание', 'Индивидуальное подключение и обучение'],
+          },
+        ],
+        izoh: 'Notya пока работает по коду приглашения. Цена зависит от числа пользователей и вашего направления.',
       },
     ],
-    dugme: 'Запросить цену',
-    izoh: 'Notya пока работает по приглашениям, с ограниченной группой врачей. Цена зависит от вашей специальности и числа пользователей.',
   },
   sorov: {
     ustBaslik: 'Частная практика',
@@ -675,7 +782,7 @@ const UZ_CYRL: AcilisIcerigi = {
     baslik: 'Бемор хонадан чиққанда',
     baslikVurgu: 'ишингиз битган бўлсин.',
     giris:
-      'Notya ёрдамчиси тажрибали ҳамкасб каби қабулни тинглайди, тиббий ёзувни ёзади, рецепт ва хулоса қораламасини тайёрлайди, беморни кузатувда тутади. Ҳар бир қарор фақат сизнинг тасдиғингиз билан кучга киради.',
+      `${Y_CYRL.unvanli} қабулни тинглайди, тиббий ёзувни ёзади, рецепт ва хулоса қораламасини тайёрлайди, беморни кузатувда тутади. Ҳар бир қарор фақат сизнинг тасдиғингиз билан кучга киради.`,
     birinciDugme: 'Нархни сўраш',
     ikinciDugme: 'Қабулни кўринг',
     gorselAlt: 'Кундузги ёруғликдаги хусусий шифокор хонаси: кўрик кушеткаси, стетоскоп, тонометр ва дипломлар',
@@ -692,7 +799,7 @@ const UZ_CYRL: AcilisIcerigi = {
     baslik: 'Икки ҳамкасб',
     baslikVurgu: 'каби гаплашинг.',
     govde:
-      'Бир марта босинг — ёрдамчи тинглай бошлайди. Гапини бўлсангиз, жим бўлади. Тугма босиб туриш шарт эмас.',
+      `Бир марта босинг — ${Y_CYRL.unvanli} тинглай бошлайди. Гапини бўлсангиз, жим бўлади. Тугма босиб туриш шарт эмас.`,
     maddeler: ['Суҳбат ўзбек ёки рус тилида матнга айланади', 'Тиббий ёзув қабул тугаши билан тайёр'],
     sekmeler: 'Қабул намуналари',
     yozmoqda: 'ёзмоқда',
@@ -702,13 +809,13 @@ const UZ_CYRL: AcilisIcerigi = {
       {
         id: 'pedia',
         meta: '1-қабул',
-        yordamchi: 'Notya ёрдамчиси',
+        yordamchi: Y_CYRL.unvanli,
         alan: 'Педиатрия',
         saat: '09:14',
         navbatlar: [
           { kim: 'Шифокор', rol: 'shifokor', matn: '7 ёш, 18 килограмм. Иситма ва қулоқ оғриғи.' },
           {
-            kim: 'Ёрдамчи',
+            kim: Y_CYRL.ad,
             rol: 'yordamchi',
             matn: 'Ўткир ўрта отитга мос келади. Амоксициллин 40 мг/кг/кун — бу вазнда кунига 720 мг. Ёки амоксициллин-клавуланатни афзал кўрасизми?',
           },
@@ -717,7 +824,7 @@ const UZ_CYRL: AcilisIcerigi = {
       {
         id: 'safety',
         meta: 'Хавфсизлик тўри',
-        yordamchi: 'Notya ёрдамчиси',
+        yordamchi: Y_CYRL.unvanli,
         alan: 'Педиатрия',
         saat: '18:47',
         navbatlar: [
@@ -732,13 +839,13 @@ const UZ_CYRL: AcilisIcerigi = {
       {
         id: 'memory',
         meta: '10-қабул',
-        yordamchi: 'Notya ёрдамчиси',
+        yordamchi: Y_CYRL.unvanli,
         alan: 'Педиатрия',
         saat: '11:03',
         navbatlar: [
           { kim: 'Шифокор', rol: 'shifokor', matn: 'Амоксициллин ёзинг.' },
           {
-            kim: 'Ёрдамчи',
+            kim: Y_CYRL.ad,
             rol: 'yordamchi',
             matn: '40 мг/кг/кун, бу вазнда кунига 720 мг. Сиз одатда амоксициллин-клавуланатни танлайсиз — шуни ёзайми, доктор?',
           },
@@ -894,27 +1001,65 @@ const UZ_CYRL: AcilisIcerigi = {
   },
   narx: {
     ustBaslik: '10 — Нарх',
-    baslik: 'Нарх —',
-    baslikVurgu: 'сўров бўйича.',
-    rejalar: [
+    baslik: 'Содда. Шаффоф.',
+    baslikVurgu: 'Адолатли.',
+    guruhlar: 'Режа тури',
+    tavsiya: 'Тавсия этамиз',
+    oylik: '% сўм / ой',
+    sorovNarx: 'Нарх сўров бўйича',
+    dugme: 'Сўров қолдириш',
+    sorovDugme: 'Нархни сўраш',
+    gruplar: [
       {
+        id: GURUH.solo,
         ad: 'Шифокор',
-        narx: 'Нарх сўров бўйича',
-        maddeler: ['Битта шифокор', 'Овозли ёрдамчи', 'Тиббий ёзув ва рецепт қораламаси', 'Йўналишингизга мос иш майдони', 'Бемор картаси ва архив'],
+        rejalar: [
+          {
+            id: REJA.starter,
+            ad: 'Бошланғич',
+            maddeler: ['Ойига 60 та қабул', 'Битта шифокор', `Овозли ёрдамчи ${Y_CYRL.unvanli}`, 'Тиббий ёзув ва рецепт қораламаси', 'Йўналишингизга мос иш майдони', 'Доза огоҳлантиришлари', 'Бемор картаси ва архив'],
+          },
+          {
+            id: REJA.pro,
+            ad: 'Про',
+            maddeler: ['Бошланғич режасидаги ҳамма нарса', 'Чекланмаган қабуллар (адолатли фойдаланиш доирасида)', 'Бемор портали', 'Ҳамкасб маслаҳати', 'Қабул жадвали ва эслатмалар', 'Бемор хабарлари ва келган ҳужжатлар', 'Кузатув рўйхатлари', 'Қабулни битта оқимда якунлаш ва шаблонлар', 'Хулоса ва эпикриз қораламалари', 'Ўрганувчи тизим'],
+          },
+          {
+            id: REJA.practice,
+            ad: 'Хусусий амалиёт',
+            maddeler: ['Про режасидаги ҳамма нарса', 'Регистратор ҳисоби, алоҳида ҳуқуқ билан', 'Ёрдамчини сизга мослаб созлаш', 'Ўрнатишда ёрдам', 'Устувор қўллаб-қувватлаш'],
+          },
+        ],
+        izoh: 'Notya ҳозирча таклиф коди билан ишлайди. Нархларга солиқлар киритилмаган. Йил учун олдиндан тўласангиз, 2 ой биздан. Асосчи шифокорлар дастури: дастлабки 50 шифокорга 12 ой давомида 40% чегирма.',
       },
       {
-        ad: 'Хусусий амалиёт',
-        narx: 'Нарх сўров бўйича',
-        maddeler: ['Шифокор режасидаги ҳамма нарса', 'Бемор портали', 'Ҳамкасб маслаҳати', 'Қабул жадвали ва эслатмалар', 'Кузатув рўйхатлари', 'Регистратор ҳисоби, алоҳида ҳуқуқ билан'],
-      },
-      {
+        id: GURUH.clinic,
         ad: 'Клиника',
-        narx: 'Нарх сўров бўйича',
-        maddeler: ['Бир нечта шифокор', 'Шифокор ва регистратор ҳуқуқлари', 'Бутун клиника учун жадвал ва бемор портали', 'Ўрнатишда ёрдам'],
+        rejalar: [
+          {
+            id: REJA.clinic5,
+            ad: 'Клиника 5',
+            maddeler: ['5 нафаргача фойдаланувчи', 'Шифокор, мутахассис ва регистратор ҳуқуқлари', 'Сеанс ва қабул жадвали', 'Муолажадан кейинги парвариш муддатлари ва эслатмалар', 'Бемор портали', 'Рўйхатга олиш ва розилик назорат рўйхати', 'Кузатув рўйхатлари', 'Бошқарув панели'],
+          },
+          {
+            id: REJA.clinic10,
+            ad: 'Клиника 10',
+            maddeler: ['10 нафаргача фойдаланувчи', 'Клиника 5 режасидаги ҳамма нарса', 'Бренд созламалари', 'Ўрнатишда ёрдам', 'Устувор қўллаб-қувватлаш'],
+          },
+          {
+            id: REJA.clinic20,
+            ad: 'Клиника 20',
+            maddeler: ['20 нафаргача фойдаланувчи', 'Клиника 10 режасидаги ҳамма нарса', 'Жамоани ўқитиш', 'Алоҳида қўллаб-қувватлаш'],
+          },
+          {
+            id: REJA.enterprise,
+            ad: 'Корпоратив',
+            maddeler: ['Чекланмаган фойдаланувчилар', 'Алоҳида хизмат шартномаси', 'Алоҳида ўрнатиш ва ўқитиш'],
+          },
+        ],
+        izoh: 'Notya ҳозирча таклиф коди билан ишлайди. Нарх фойдаланувчилар сони ва йўналишингизга қараб белгиланади.',
       },
     ],
-    dugme: 'Нархни сўраш',
-    izoh: 'Notya ҳозирча таклиф асосида, чекланган шифокорлар гуруҳи билан ишламоқда. Нарх йўналишингиз ва фойдаланувчилар сонига қараб белгиланади.',
   },
   sorov: {
     ustBaslik: 'Хусусий амалиёт',
@@ -964,7 +1109,7 @@ export function acilisIcerigi(dil: DilKodu): AcilisIcerigi {
 
 /**
  * NOTYA-ULKE-SABLON-01 — everything Uzbekistan brings for the landing page, in the shape the shared layout reads
- * (components/ulke/acilis/). The layout is the kit's; the copy above and the five facts below are this pack's.
+ * (components/ulke/acilis/). The layout is the kit's; the copy above and the six facts below are this pack's.
  */
 export const UZ_ACILIS: UlkeAcilisi = {
   diller: ACILIS_DILLERI,
@@ -979,4 +1124,6 @@ export const UZ_ACILIS: UlkeAcilisi = {
   // Google Fonts: the two faces of the layout (upright only) and a Cyrillic companion for each.
   fontHref: 'https://fonts.googleapis.com/css2?family=Fraunces:wght@100..900&family=Outfit:wght@100..900&family=Source+Serif+4:wght@200..900&family=Onest:wght@100..900&display=swap',
   markaYazisi: 'notya',
+  // What each plan of section 10 costs: data, one edit for all three forms (./fiyatlar.ts, with the conversion record).
+  fiyatlar: UZ_FIYATLAR,
 }

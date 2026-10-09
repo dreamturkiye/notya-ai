@@ -1,5 +1,9 @@
 # Country pack: Uzbekistan
 
+> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
+> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
+> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
+
 Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/`.
 
 ## Correction of the record: where Uzbek data is stored (2026-10-08, NOTYA-ULKE-SABLON-01)
@@ -32,7 +36,7 @@ How the visit works:
 6. **Second draft.** One click rewrites the note in the other language (Uzbek ↔ Russian) as a second draft beside the first. A second click does nothing new.
 7. **Approval.** The doctor edits and approves one of the drafts; only then is it in the patient's file. An approved note cannot be changed: the saving statement itself carries "not approved yet", and a late save, a second approval and a rewrite are all refused.
 
-**Landing page (2026-10-08, branch `feat/uz-acilis-tr-eslesme`, PR #568, base `feat/uz-muayene`, unmerged).** The landing page at `/uzbek` was rebuilt to match the Turkish doctor landing page section for section: same layout, colours, type, photographs and section order, with Uzbek text in three forms (Uzbek Latin, Uzbek Cyrillic, Russian) from `countries/uz/acilis/icerik.ts`. It reuses the Turkish page's presentational components and photographs as they are and edits no Turkish file. Section-by-section decisions and every line with English beside it: `docs/uz-landing/COPY.md`. The page describes features that are not switched on here; it must not go public until they are built or the text is cut back (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-ACILIS-02a).
+**Landing page (2026-10-08, branch `feat/uz-acilis-tr-eslesme`, PR #568, base `feat/uz-muayene`, unmerged).** The landing page at `/uzbek` was rebuilt to match the Turkish doctor landing page section for section: same layout, colours, type, photographs and section order, with Uzbek text in three forms (Uzbek Latin, Uzbek Cyrillic, Russian) from `countries/uz/acilis/icerik.ts`. It reuses the Turkish page's presentational components and photographs as they are and edits no Turkish file. Section-by-section decisions and every line with English beside it: `docs/uz-landing/COPY.md`. The page describes features that are not switched on here; it must not go public until they are built or the text is cut back (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-ACILIS-02a). **Since 2026-10-09 it shows prices in soʻm and names the assistant** (section "Prices and assistant titles" below).
 
 Everything else is off (appointments were off in slice 1 and are built in slice 3, below): tools, the voice assistant, the patient portal, colleague consultation, messaging, voice profile, image evaluation, and anything tied to Turkish state systems. None of their pages or APIs exists in an Uzbek build.
 
@@ -71,7 +75,7 @@ What it adds, all under `/uzbek`:
 |---|---|---|
 | Role question | `/uzbek/start`, after the language question | "What are you?" One list of 40, in three groups: a doctor specialty (30), a clinic doctor (5), a clinic allied profession (5). Shown by name in the account's form; the internal key is never shown. Asked once; an account that answered the language question before roles existed is asked only this. |
 | Role in settings | `/uzbek/settings` | The role can be changed. The change applies to the next visits; a note already written keeps the template it was written with. |
-| Assistant identity | home, visit screen, note draft, settings card | The owner's assistant name for the account's role, and one neutral line ("your senior colleague · <role>"). No biography, no years of practice, no affiliation. An account without a role, and a role without an entry, sees the neutral "Notya assistant". Never another role's name. |
+| Assistant identity | home, visit screen, note draft, settings card | The owner's assistant name for the account's role (since 2026-10-09 with the title of its Turkish counterpart), and one neutral line ("your senior colleague · <role>"). No biography, no years of practice, no affiliation. An account without a role, and a role without an entry, sees the neutral "Notya assistant". Never another role's name. |
 | Note template | visit screen and note | The template is the account's role: it is shown, not chosen (slice 1 let the doctor pick "pediatrics" or "general" per visit, with pediatrics preselected under 18; that choice is gone). The server refuses another role's template for the account. An account without a role writes with the general template. |
 | Role fields on the note | `/uzbek/visit?not=` | Under the four shared sections, the role's own fields, each a labelled place for what was said at the visit. Editable in the draft, shown as text once approved, carried into the second-language draft. |
 
@@ -86,8 +90,9 @@ What it adds, all under `/uzbek`:
 | What | Where | How it was made | Who must read it |
 |---|---|---|---|
 | Names of the 40 roles, three forms | `countries/uz/klinik/rolAdlari.ts` | Machine-written, each form by hand (not converted). Usual names, not checked against Uzbekistan's official list of specialties. | A native-speaking clinician |
-| Assistant names, Uzbek Latin | `countries/uz/klinik/asistanAdlari.ts` | The owner's list, exactly as written. Single source: no other file repeats a name. | The owner |
-| Assistant names, Uzbek Cyrillic and Russian | `countries/uz/klinik/asistanKimligi.ts`, `countries/uz/yozuv.ts` | **Machine-derived** from the Latin form by rule, at run time. No exception table, nothing corrected by hand. | A native reader (doubtful forms below) |
+| Assistant names, Uzbek Latin | `countries/uz/klinik/asistanAdlari.ts` | The owner's list: given name and family name exactly as written. Single source: no other file repeats a name. Since 2026-10-09 the title is a field beside the name (the Turkish product's convention, role by role; section "Prices and assistant titles" below). | The owner |
+| Assistant titles "Prof. Dr.", "Prof.", "Dr.", three forms (since 2026-10-09) | `countries/uz/klinik/asistanUnvanlari.ts` | **Machine-written**, each form by hand: «Проф. д-р», «Проф.», «Д-р» in Uzbek Cyrillic and in Russian. | A native reader (doubtful forms below) |
+| Assistant names, Uzbek Cyrillic and Russian | `countries/uz/klinik/asistanKimligi.ts`, `countries/uz/yozuv.ts` | **Machine-derived** from the Latin form by rule, at run time: the given name, the family name and, for four allied roles, the profession's title. No exception table, nothing corrected by hand. | A native reader (doubtful forms below) |
 | Field labels (168 role fields and the guardian field), three forms | `countries/uz/klinik/notSablonlari.ts` | Machine-written, each form by hand. | A native-speaking clinician |
 | Instructions to the model, per role, three forms | `countries/uz/klinik/talimatlar.ts` | Machine-written frame (by hand in each form) plus the role's name and field labels. | A native-speaking clinician |
 | New screen text (role question, assistant line), three forms | `countries/uz/uygulama/metinler.ts` | Machine-written, each form by hand. | A native speaker |
@@ -98,45 +103,45 @@ The pack had no conversion from Latin to Cyrillic script before this slice (only
 
 "Template built by machine: yes" means a machine put the template together; it does not mean anyone confirmed it. No role has a local reviewer.
 
-| # | Role (internal key) | Kind | Name: Uzbek Latin / Uzbek Cyrillic / Russian | Assistant (owner's list) | Template built by machine | Fields | Local reviewer | Local content missing (slots, all empty and off) |
+| # | Role (internal key) | Kind | Name: Uzbek Latin / Uzbek Cyrillic / Russian | Assistant (owner's names; title by the Turkish convention since 2026-10-09) | Template built by machine | Fields | Local reviewer | Local content missing (slots, all empty and off) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `acil-tip` | doctor specialty | Shoshilinch tibbiy yordam / Шошилинч тиббий ёрдам / Скорая и неотложная помощь | Dr. Jasur Tursunov | yes | 6 | none yet | 1: `triage_scale` |
-| 2 | `aile-hekimligi` | doctor specialty | Oilaviy tibbiyot / Оилавий тиббиёт / Семейная медицина | Dr. Nilufar Karimova | yes | 6 | none yet | 2: `screening_programme`, `vaccination_calendar` |
-| 3 | `anestezi` | doctor specialty | Anesteziologiya va reanimatologiya / Анестезиология ва реаниматология / Анестезиология и реаниматология | Dr. Bekzod Yusupov | yes | 8 | none yet | 1: `preop_risk_scale` |
-| 4 | `beyin-cerrahisi` | doctor specialty | Neyroxirurgiya / Нейрохирургия / Нейрохирургия | Dr. Alisher Ergashev | yes | 6 | none yet | 2: `consciousness_scale`, `surgical_consent_form` |
-| 5 | `cocuk-cerrahisi` | doctor specialty | Bolalar xirurgiyasi / Болалар хирургияси / Детская хирургия | Dr. Sardor Abdullayev | yes | 7 | none yet | 3: `growth_standard`, `pediatric_dosing`, `surgical_consent_form` |
-| 6 | `dahiliye` | doctor specialty | Terapiya (ichki kasalliklar) / Терапия (ички касалликлар) / Терапия (внутренние болезни) | Dr. Madina Rahimova | yes | 5 | none yet | 1: `lab_reference_ranges` |
-| 7 | `dermatoloji` | doctor specialty | Dermatovenerologiya / Дерматовенерология / Дерматовенерология | Dr. Sevara Ismailova | yes | 5 | none yet | 1: `severity_indices` |
-| 8 | `endokrinoloji` | doctor specialty | Endokrinologiya / Эндокринология / Эндокринология | Dr. Dilnoza Nazarova | yes | 6 | none yet | 2: `treatment_targets`, `lab_reference_ranges` |
-| 9 | `enfeksiyon-hastaliklari` | doctor specialty | Yuqumli kasalliklar / Юқумли касалликлар / Инфекционные болезни | Dr. Otabek Qodirov | yes | 5 | none yet | 2: `notifiable_diseases`, `vaccination_calendar` |
-| 10 | `gastroenteroloji` | doctor specialty | Gastroenterologiya / Гастроэнтерология / Гастроэнтерология | Dr. Jamshid Mirzayev | yes | 6 | none yet | 1: `endoscopy_classifications` |
-| 11 | `genel-cerrahi` | doctor specialty | Umumiy xirurgiya / Умумий хирургия / Общая хирургия | Dr. Sherzod Saidov | yes | 6 | none yet | 1: `surgical_consent_form` |
-| 12 | `gogus-cerrahisi` | doctor specialty | Torakal xirurgiya / Торакал хирургия / Торакальная хирургия | Dr. Farrux Holmatov | yes | 7 | none yet | 1: `surgical_consent_form` |
-| 13 | `gogus-hastaliklari` | doctor specialty | Pulmonologiya / Пульмонология / Пульмонология | Dr. Gulnoza Alimova | yes | 7 | none yet | 2: `spirometry_reference`, `tb_programme` |
-| 14 | `goz-hastaliklari` | doctor specialty | Oftalmologiya / Офтальмология / Офтальмология | Dr. Aziza Sodiqova | yes | 6 | none yet | 1: `acuity_notation` |
-| 15 | `kadin-hastaliklari-dogum` | doctor specialty | Akusherlik va ginekologiya / Акушерлик ва гинекология / Акушерство и гинекология | Dr. Shahnoza Rasulova | yes | 6 | none yet | 2: `antenatal_schedule`, `pregnancy_record_form` |
-| 16 | `kalp-damar-cerrahisi` | doctor specialty | Yurak-qon tomir xirurgiyasi / Юрак-қон томир хирургияси / Сердечно-сосудистая хирургия | Dr. Temur Karimov | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` |
-| 17 | `kardiyoloji` | doctor specialty | Kardiologiya / Кардиология / Кардиология | Dr. Kamola Yusupova | yes | 8 | none yet | 2: `cv_risk_score`, `bp_lipid_targets` |
-| 18 | `kulak-burun-bogaz` | doctor specialty | Otorinolaringologiya (LOR) / Оториноларингология (ЛОР) / Оториноларингология (ЛОР) | Dr. Nodir Ergashev | yes | 6 | none yet | 1: `hearing_loss_grading` |
-| 19 | `nefroloji` | doctor specialty | Nefrologiya / Нефрология / Нефрология | Dr. Mohira Abdullayeva | yes | 6 | none yet | 2: `ckd_staging`, `dialysis_standards` |
-| 20 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` |
-| 21 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` |
-| 22 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` |
-| 23 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` |
-| 24 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` |
-| 25 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` |
-| 26 | `radyoloji` | doctor specialty | Radiologiya (nur tashxisi) / Радиология (нур ташхиси) / Лучевая диагностика (радиология) | Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` |
-| 27 | `romatoloji` | doctor specialty | Revmatologiya / Ревматология / Ревматология | Dr. Saodat Holmatova | yes | 6 | none yet | 1: `activity_indices` |
-| 28 | `uroloji` | doctor specialty | Urologiya / Урология / Урология | Dr. Javohir Alimov | yes | 7 | none yet | 1: `symptom_questionnaires` |
-| 29 | `spor-hekimligi` | doctor specialty | Sport tibbiyoti / Спорт тиббиёти / Спортивная медицина | Dr. Sanjar Sodiqov | yes | 6 | none yet | 2: `clearance_form`, `prohibited_list` |
-| 30 | `fizik-tedavi` | doctor specialty | Tibbiy reabilitatsiya va fizioterapiya / Тиббий реабилитация ва физиотерапия / Медицинская реабилитация и физиотерапия | Dr. Laziz Rahimov | yes | 7 | none yet | 2: `functional_scales`, `disability_assessment` |
+| 1 | `acil-tip` | doctor specialty | Shoshilinch tibbiy yordam / Шошилинч тиббий ёрдам / Скорая и неотложная помощь | Prof. Dr. Jasur Tursunov | yes | 6 | none yet | 1: `triage_scale` |
+| 2 | `aile-hekimligi` | doctor specialty | Oilaviy tibbiyot / Оилавий тиббиёт / Семейная медицина | Prof. Dr. Nilufar Karimova | yes | 6 | none yet | 2: `screening_programme`, `vaccination_calendar` |
+| 3 | `anestezi` | doctor specialty | Anesteziologiya va reanimatologiya / Анестезиология ва реаниматология / Анестезиология и реаниматология | Prof. Dr. Bekzod Yusupov | yes | 8 | none yet | 1: `preop_risk_scale` |
+| 4 | `beyin-cerrahisi` | doctor specialty | Neyroxirurgiya / Нейрохирургия / Нейрохирургия | Prof. Dr. Alisher Ergashev | yes | 6 | none yet | 2: `consciousness_scale`, `surgical_consent_form` |
+| 5 | `cocuk-cerrahisi` | doctor specialty | Bolalar xirurgiyasi / Болалар хирургияси / Детская хирургия | Prof. Dr. Sardor Abdullayev | yes | 7 | none yet | 3: `growth_standard`, `pediatric_dosing`, `surgical_consent_form` |
+| 6 | `dahiliye` | doctor specialty | Terapiya (ichki kasalliklar) / Терапия (ички касалликлар) / Терапия (внутренние болезни) | Prof. Dr. Madina Rahimova | yes | 5 | none yet | 1: `lab_reference_ranges` |
+| 7 | `dermatoloji` | doctor specialty | Dermatovenerologiya / Дерматовенерология / Дерматовенерология | Prof. Dr. Sevara Ismailova | yes | 5 | none yet | 1: `severity_indices` |
+| 8 | `endokrinoloji` | doctor specialty | Endokrinologiya / Эндокринология / Эндокринология | Prof. Dr. Dilnoza Nazarova | yes | 6 | none yet | 2: `treatment_targets`, `lab_reference_ranges` |
+| 9 | `enfeksiyon-hastaliklari` | doctor specialty | Yuqumli kasalliklar / Юқумли касалликлар / Инфекционные болезни | Prof. Dr. Otabek Qodirov | yes | 5 | none yet | 2: `notifiable_diseases`, `vaccination_calendar` |
+| 10 | `gastroenteroloji` | doctor specialty | Gastroenterologiya / Гастроэнтерология / Гастроэнтерология | Prof. Dr. Jamshid Mirzayev | yes | 6 | none yet | 1: `endoscopy_classifications` |
+| 11 | `genel-cerrahi` | doctor specialty | Umumiy xirurgiya / Умумий хирургия / Общая хирургия | Prof. Dr. Sherzod Saidov | yes | 6 | none yet | 1: `surgical_consent_form` |
+| 12 | `gogus-cerrahisi` | doctor specialty | Torakal xirurgiya / Торакал хирургия / Торакальная хирургия | Prof. Dr. Farrux Holmatov | yes | 7 | none yet | 1: `surgical_consent_form` |
+| 13 | `gogus-hastaliklari` | doctor specialty | Pulmonologiya / Пульмонология / Пульмонология | Prof. Dr. Gulnoza Alimova | yes | 7 | none yet | 2: `spirometry_reference`, `tb_programme` |
+| 14 | `goz-hastaliklari` | doctor specialty | Oftalmologiya / Офтальмология / Офтальмология | Prof. Dr. Aziza Sodiqova | yes | 6 | none yet | 1: `acuity_notation` |
+| 15 | `kadin-hastaliklari-dogum` | doctor specialty | Akusherlik va ginekologiya / Акушерлик ва гинекология / Акушерство и гинекология | Prof. Dr. Shahnoza Rasulova | yes | 6 | none yet | 2: `antenatal_schedule`, `pregnancy_record_form` |
+| 16 | `kalp-damar-cerrahisi` | doctor specialty | Yurak-qon tomir xirurgiyasi / Юрак-қон томир хирургияси / Сердечно-сосудистая хирургия | Prof. Dr. Temur Karimov | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` |
+| 17 | `kardiyoloji` | doctor specialty | Kardiologiya / Кардиология / Кардиология | Prof. Dr. Kamola Yusupova | yes | 8 | none yet | 2: `cv_risk_score`, `bp_lipid_targets` |
+| 18 | `kulak-burun-bogaz` | doctor specialty | Otorinolaringologiya (LOR) / Оториноларингология (ЛОР) / Оториноларингология (ЛОР) | Prof. Dr. Nodir Ergashev | yes | 6 | none yet | 1: `hearing_loss_grading` |
+| 19 | `nefroloji` | doctor specialty | Nefrologiya / Нефрология / Нефрология | Prof. Dr. Mohira Abdullayeva | yes | 6 | none yet | 2: `ckd_staging`, `dialysis_standards` |
+| 20 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Prof. Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` |
+| 21 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Prof. Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` |
+| 22 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Prof. Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` |
+| 23 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` |
+| 24 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` |
+| 25 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Prof. Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` |
+| 26 | `radyoloji` | doctor specialty | Radiologiya (nur tashxisi) / Радиология (нур ташхиси) / Лучевая диагностика (радиология) | Prof. Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` |
+| 27 | `romatoloji` | doctor specialty | Revmatologiya / Ревматология / Ревматология | Prof. Dr. Saodat Holmatova | yes | 6 | none yet | 1: `activity_indices` |
+| 28 | `uroloji` | doctor specialty | Urologiya / Урология / Урология | Prof. Dr. Javohir Alimov | yes | 7 | none yet | 1: `symptom_questionnaires` |
+| 29 | `spor-hekimligi` | doctor specialty | Sport tibbiyoti / Спорт тиббиёти / Спортивная медицина | Prof. Dr. Sanjar Sodiqov | yes | 6 | none yet | 2: `clearance_form`, `prohibited_list` |
+| 30 | `fizik-tedavi` | doctor specialty | Tibbiy reabilitatsiya va fizioterapiya / Тиббий реабилитация ва физиотерапия / Медицинская реабилитация и физиотерапия | Prof. Dr. Laziz Rahimov | yes | 7 | none yet | 2: `functional_scales`, `disability_assessment` |
 | 31 | `sac-ekimi` | clinic doctor | Soch koʻchirib oʻtkazish / Соч кўчириб ўтказиш / Трансплантация волос | Dr. Shohruh Karimov | yes | 7 | none yet | 2: `hair_loss_scale`, `procedure_consent_form` |
-| 32 | `estetik-cerrahi` | clinic doctor | Estetik xirurgiya / Эстетик хирургия / Эстетическая хирургия | Dr. Lobar Yusupova | yes | 7 | none yet | 1: `procedure_consent_form` |
+| 32 | `estetik-cerrahi` | clinic doctor | Estetik xirurgiya / Эстетик хирургия / Эстетическая хирургия | Prof. Dr. Lobar Yusupova | yes | 7 | none yet | 1: `procedure_consent_form` |
 | 33 | `medikal-estetik` | clinic doctor | Kosmetologiya (estetik tibbiyot) / Косметология (эстетик тиббиёт) / Косметология (эстетическая медицина) | Dr. Feruza Rasulova | yes | 8 | none yet | 2: `registered_products`, `procedure_consent_form` |
 | 34 | `klinik-dermatoloji` | clinic doctor | Dermatologiya (klinika) / Дерматология (клиника) / Дерматология (клиника) | Dr. Dilbar Ergasheva | yes | 7 | none yet | 2: `registered_products`, `severity_indices` |
 | 35 | `longevity` | clinic doctor | Profilaktik va yoshga qarshi tibbiyot / Профилактик ва ёшга қарши тиббиёт / Превентивная и антивозрастная медицина | Dr. Asal Qodirova | yes | 7 | none yet | 2: `lab_reference_ranges`, `screening_programme` |
-| 36 | `fizyoterapi` | clinic allied | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | Fizyoterapevt Jasmina Abdullayeva | yes | 7 | none yet | 2: `functional_scales`, `scope_of_practice` |
-| 37 | `klinik-psikolog` | clinic allied | Klinik psixolog / Клиник психолог / Клинический психолог | Psixolog Doniyor Saidov | yes | 7 | none yet | 2: `psychological_tests`, `scope_of_practice` |
+| 36 | `fizyoterapi` | clinic allied | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | Fizioterapevt Jasmina Abdullayeva | yes | 7 | none yet | 2: `functional_scales`, `scope_of_practice` |
+| 37 | `klinik-psikolog` | clinic allied | Klinik psixolog / Клиник психолог / Клинический психолог | Dr. Doniyor Saidov | yes | 7 | none yet | 2: `psychological_tests`, `scope_of_practice` |
 | 38 | `diyetisyen` | clinic allied | Diyetolog / Диетолог / Диетолог | Diyetolog Mahliyo Tursunova | yes | 8 | none yet | 3: `nutrient_reference`, `growth_standard`, `scope_of_practice` |
 | 39 | `ergoterapi` | clinic allied | Ergoterapevt / Эрготерапевт / Эрготерапевт | Ergoterapevt Oybek Holmatov | yes | 8 | none yet | 2: `functional_scales`, `scope_of_practice` |
 | 40 | `odyoloji` | clinic allied | Audiolog / Аудиолог / Аудиолог | Audiolog Rayhon Alimova | yes | 7 | none yet | 3: `hearing_loss_grading`, `newborn_hearing_screening`, `scope_of_practice` |
@@ -227,57 +232,61 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 
 ### Assistant names in the three forms, and the forms that look doubtful
 
-All 40 as the screens show them. The Cyrillic and Russian columns are produced by rule from the owner's Latin spelling.
+All 40 as the screens show them **since 2026-10-09** (NOTYA-UZ-FIYAT-UNVAN-01): the owner's given names and family names, unchanged, with the title the role's counterpart carries in the Turkish product. The names in the Cyrillic and Russian columns are produced by rule from the owner's Latin spelling; the titles «Проф. д-р» and «Д-р» are the catalogue of titles' own words (machine-written). The last column is the short form with the title, the way the Turkish landing page names its assistant.
 
-| Role | As the owner wrote it (Uzbek Latin, shown as stored) | Uzbek Cyrillic, derived | Russian, derived |
-|---|---|---|---|
-| `acil-tip` | Dr. Jasur Tursunov | Др. Жасур Турсунов | Др. Жасур Турсунов |
-| `aile-hekimligi` | Dr. Nilufar Karimova | Др. Нилуфар Каримова | Др. Нилуфар Каримова |
-| `anestezi` | Dr. Bekzod Yusupov | Др. Бекзод Юсупов | Др. Бекзод Юсупов |
-| `beyin-cerrahisi` | Dr. Alisher Ergashev | Др. Алишер Эргашев | Др. Алишер Эргашев |
-| `cocuk-cerrahisi` | Dr. Sardor Abdullayev | Др. Сардор Абдуллаев | Др. Сардор Абдуллаев |
-| `dahiliye` | Dr. Madina Rahimova | Др. Мадина Раҳимова | Др. Мадина Рахимова |
-| `dermatoloji` | Dr. Sevara Ismailova | Др. Севара Исмаилова | Др. Севара Исмаилова |
-| `endokrinoloji` | Dr. Dilnoza Nazarova | Др. Дилноза Назарова | Др. Дилноза Назарова |
-| `enfeksiyon-hastaliklari` | Dr. Otabek Qodirov | Др. Отабек Қодиров | Др. Отабек Кодиров |
-| `gastroenteroloji` | Dr. Jamshid Mirzayev | Др. Жамшид Мирзаев | Др. Жамшид Мирзаев |
-| `genel-cerrahi` | Dr. Sherzod Saidov | Др. Шерзод Саидов | Др. Шерзод Саидов |
-| `gogus-cerrahisi` | Dr. Farrux Holmatov | Др. Фаррух Ҳолматов | Др. Фаррух Холматов |
-| `gogus-hastaliklari` | Dr. Gulnoza Alimova | Др. Гулноза Алимова | Др. Гулноза Алимова |
-| `goz-hastaliklari` | Dr. Aziza Sodiqova | Др. Азиза Содиқова | Др. Азиза Содикова |
-| `kadin-hastaliklari-dogum` | Dr. Shahnoza Rasulova | Др. Шаҳноза Расулова | Др. Шахноза Расулова |
-| `kalp-damar-cerrahisi` | Dr. Temur Karimov | Др. Темур Каримов | Др. Темур Каримов |
-| `kardiyoloji` | Dr. Kamola Yusupova | Др. Камола Юсупова | Др. Камола Юсупова |
-| `kulak-burun-bogaz` | Dr. Nodir Ergashev | Др. Нодир Эргашев | Др. Нодир Эргашев |
-| `nefroloji` | Dr. Mohira Abdullayeva | Др. Моҳира Абдуллаева | Др. Мохира Абдуллаева |
-| `noroloji` | Dr. Bobur Rahimov | Др. Бобур Раҳимов | Др. Бобур Рахимов |
-| `onkoloji` | Dr. Nigora Tursunova | Др. Нигора Турсунова | Др. Нигора Турсунова |
-| `ortopedi` | Dr. Ulugbek Ismailov | Др. Улугбек Исмаилов | Др. Улугбек Исмаилов |
-| `pediatri` | Dr. Malika Nazarova | Др. Малика Назарова | Др. Малика Назарова |
-| `plastik-cerrahi` | Dr. Barno Mirzayeva | Др. Барно Мирзаева | Др. Барно Мирзаева |
-| `psikiyatri` | Dr. Zulfiya Saidova | Др. Зулфия Саидова | Др. Зулфия Саидова |
-| `radyoloji` | Dr. Akmal Qodirov | Др. Акмал Қодиров | Др. Акмал Кодиров |
-| `romatoloji` | Dr. Saodat Holmatova | Др. Саодат Ҳолматова | Др. Саодат Холматова |
-| `uroloji` | Dr. Javohir Alimov | Др. Жавоҳир Алимов | Др. Жавохир Алимов |
-| `spor-hekimligi` | Dr. Sanjar Sodiqov | Др. Санжар Содиқов | Др. Санжар Содиков |
-| `fizik-tedavi` | Dr. Laziz Rahimov | Др. Лазиз Раҳимов | Др. Лазиз Рахимов |
-| `sac-ekimi` | Dr. Shohruh Karimov | Др. Шоҳруҳ Каримов | Др. Шохрух Каримов |
-| `estetik-cerrahi` | Dr. Lobar Yusupova | Др. Лобар Юсупова | Др. Лобар Юсупова |
-| `medikal-estetik` | Dr. Feruza Rasulova | Др. Феруза Расулова | Др. Феруза Расулова |
-| `klinik-dermatoloji` | Dr. Dilbar Ergasheva | Др. Дилбар Эргашева | Др. Дилбар Эргашева |
-| `longevity` | Dr. Asal Qodirova | Др. Асал Қодирова | Др. Асал Кодирова |
-| `fizyoterapi` | Fizyoterapevt Jasmina Abdullayeva | Физётерапевт Жасмина Абдуллаева | Физётерапевт Жасмина Абдуллаева |
-| `klinik-psikolog` | Psixolog Doniyor Saidov | Психолог Дониёр Саидов | Психолог Дониёр Саидов |
-| `diyetisyen` | Diyetolog Mahliyo Tursunova | Диетолог Маҳлиё Турсунова | Диетолог Махлиё Турсунова |
-| `ergoterapi` | Ergoterapevt Oybek Holmatov | Эрготерапевт Ойбек Ҳолматов | Эрготерапевт Ойбек Холматов |
-| `odyoloji` | Audiolog Rayhon Alimova | Аудиолог Райҳон Алимова | Аудиолог Райхон Алимова |
+| Role | Uzbek Latin (the owner's names) | Uzbek Cyrillic | Russian | Short form: Latin / Cyrillic / Russian |
+|---|---|---|---|---|
+| `acil-tip` | Prof. Dr. Jasur Tursunov | Проф. д-р Жасур Турсунов | Проф. д-р Жасур Турсунов | Prof. Jasur / Проф. Жасур / Проф. Жасур |
+| `aile-hekimligi` | Prof. Dr. Nilufar Karimova | Проф. д-р Нилуфар Каримова | Проф. д-р Нилуфар Каримова | Prof. Nilufar / Проф. Нилуфар / Проф. Нилуфар |
+| `anestezi` | Prof. Dr. Bekzod Yusupov | Проф. д-р Бекзод Юсупов | Проф. д-р Бекзод Юсупов | Prof. Bekzod / Проф. Бекзод / Проф. Бекзод |
+| `beyin-cerrahisi` | Prof. Dr. Alisher Ergashev | Проф. д-р Алишер Эргашев | Проф. д-р Алишер Эргашев | Prof. Alisher / Проф. Алишер / Проф. Алишер |
+| `cocuk-cerrahisi` | Prof. Dr. Sardor Abdullayev | Проф. д-р Сардор Абдуллаев | Проф. д-р Сардор Абдуллаев | Prof. Sardor / Проф. Сардор / Проф. Сардор |
+| `dahiliye` | Prof. Dr. Madina Rahimova | Проф. д-р Мадина Раҳимова | Проф. д-р Мадина Рахимова | Prof. Madina / Проф. Мадина / Проф. Мадина |
+| `dermatoloji` | Prof. Dr. Sevara Ismailova | Проф. д-р Севара Исмаилова | Проф. д-р Севара Исмаилова | Prof. Sevara / Проф. Севара / Проф. Севара |
+| `endokrinoloji` | Prof. Dr. Dilnoza Nazarova | Проф. д-р Дилноза Назарова | Проф. д-р Дилноза Назарова | Prof. Dilnoza / Проф. Дилноза / Проф. Дилноза |
+| `enfeksiyon-hastaliklari` | Prof. Dr. Otabek Qodirov | Проф. д-р Отабек Қодиров | Проф. д-р Отабек Кодиров | Prof. Otabek / Проф. Отабек / Проф. Отабек |
+| `gastroenteroloji` | Prof. Dr. Jamshid Mirzayev | Проф. д-р Жамшид Мирзаев | Проф. д-р Жамшид Мирзаев | Prof. Jamshid / Проф. Жамшид / Проф. Жамшид |
+| `genel-cerrahi` | Prof. Dr. Sherzod Saidov | Проф. д-р Шерзод Саидов | Проф. д-р Шерзод Саидов | Prof. Sherzod / Проф. Шерзод / Проф. Шерзод |
+| `gogus-cerrahisi` | Prof. Dr. Farrux Holmatov | Проф. д-р Фаррух Ҳолматов | Проф. д-р Фаррух Холматов | Prof. Farrux / Проф. Фаррух / Проф. Фаррух |
+| `gogus-hastaliklari` | Prof. Dr. Gulnoza Alimova | Проф. д-р Гулноза Алимова | Проф. д-р Гулноза Алимова | Prof. Gulnoza / Проф. Гулноза / Проф. Гулноза |
+| `goz-hastaliklari` | Prof. Dr. Aziza Sodiqova | Проф. д-р Азиза Содиқова | Проф. д-р Азиза Содикова | Prof. Aziza / Проф. Азиза / Проф. Азиза |
+| `kadin-hastaliklari-dogum` | Prof. Dr. Shahnoza Rasulova | Проф. д-р Шаҳноза Расулова | Проф. д-р Шахноза Расулова | Prof. Shahnoza / Проф. Шаҳноза / Проф. Шахноза |
+| `kalp-damar-cerrahisi` | Prof. Dr. Temur Karimov | Проф. д-р Темур Каримов | Проф. д-р Темур Каримов | Prof. Temur / Проф. Темур / Проф. Темур |
+| `kardiyoloji` | Prof. Dr. Kamola Yusupova | Проф. д-р Камола Юсупова | Проф. д-р Камола Юсупова | Prof. Kamola / Проф. Камола / Проф. Камола |
+| `kulak-burun-bogaz` | Prof. Dr. Nodir Ergashev | Проф. д-р Нодир Эргашев | Проф. д-р Нодир Эргашев | Prof. Nodir / Проф. Нодир / Проф. Нодир |
+| `nefroloji` | Prof. Dr. Mohira Abdullayeva | Проф. д-р Моҳира Абдуллаева | Проф. д-р Мохира Абдуллаева | Prof. Mohira / Проф. Моҳира / Проф. Мохира |
+| `noroloji` | Prof. Dr. Bobur Rahimov | Проф. д-р Бобур Раҳимов | Проф. д-р Бобур Рахимов | Prof. Bobur / Проф. Бобур / Проф. Бобур |
+| `onkoloji` | Prof. Dr. Nigora Tursunova | Проф. д-р Нигора Турсунова | Проф. д-р Нигора Турсунова | Prof. Nigora / Проф. Нигора / Проф. Нигора |
+| `ortopedi` | Prof. Dr. Ulugbek Ismailov | Проф. д-р Улугбек Исмаилов | Проф. д-р Улугбек Исмаилов | Prof. Ulugbek / Проф. Улугбек / Проф. Улугбек |
+| `pediatri` | Prof. Dr. Malika Nazarova | Проф. д-р Малика Назарова | Проф. д-р Малика Назарова | Prof. Malika / Проф. Малика / Проф. Малика |
+| `plastik-cerrahi` | Prof. Dr. Barno Mirzayeva | Проф. д-р Барно Мирзаева | Проф. д-р Барно Мирзаева | Prof. Barno / Проф. Барно / Проф. Барно |
+| `psikiyatri` | Prof. Dr. Zulfiya Saidova | Проф. д-р Зулфия Саидова | Проф. д-р Зулфия Саидова | Prof. Zulfiya / Проф. Зулфия / Проф. Зулфия |
+| `radyoloji` | Prof. Dr. Akmal Qodirov | Проф. д-р Акмал Қодиров | Проф. д-р Акмал Кодиров | Prof. Akmal / Проф. Акмал / Проф. Акмал |
+| `romatoloji` | Prof. Dr. Saodat Holmatova | Проф. д-р Саодат Ҳолматова | Проф. д-р Саодат Холматова | Prof. Saodat / Проф. Саодат / Проф. Саодат |
+| `uroloji` | Prof. Dr. Javohir Alimov | Проф. д-р Жавоҳир Алимов | Проф. д-р Жавохир Алимов | Prof. Javohir / Проф. Жавоҳир / Проф. Жавохир |
+| `spor-hekimligi` | Prof. Dr. Sanjar Sodiqov | Проф. д-р Санжар Содиқов | Проф. д-р Санжар Содиков | Prof. Sanjar / Проф. Санжар / Проф. Санжар |
+| `fizik-tedavi` | Prof. Dr. Laziz Rahimov | Проф. д-р Лазиз Раҳимов | Проф. д-р Лазиз Рахимов | Prof. Laziz / Проф. Лазиз / Проф. Лазиз |
+| `sac-ekimi` | Dr. Shohruh Karimov | Д-р Шоҳруҳ Каримов | Д-р Шохрух Каримов | Dr. Shohruh / Д-р Шоҳруҳ / Д-р Шохрух |
+| `estetik-cerrahi` | Prof. Dr. Lobar Yusupova | Проф. д-р Лобар Юсупова | Проф. д-р Лобар Юсупова | Prof. Lobar / Проф. Лобар / Проф. Лобар |
+| `medikal-estetik` | Dr. Feruza Rasulova | Д-р Феруза Расулова | Д-р Феруза Расулова | Dr. Feruza / Д-р Феруза / Д-р Феруза |
+| `klinik-dermatoloji` | Dr. Dilbar Ergasheva | Д-р Дилбар Эргашева | Д-р Дилбар Эргашева | Dr. Dilbar / Д-р Дилбар / Д-р Дилбар |
+| `longevity` | Dr. Asal Qodirova | Д-р Асал Қодирова | Д-р Асал Кодирова | Dr. Asal / Д-р Асал / Д-р Асал |
+| `fizyoterapi` | Fizioterapevt Jasmina Abdullayeva | Физиотерапевт Жасмина Абдуллаева | Физиотерапевт Жасмина Абдуллаева | Fizioterapevt Jasmina / Физиотерапевт Жасмина / Физиотерапевт Жасмина |
+| `klinik-psikolog` | Dr. Doniyor Saidov | Д-р Дониёр Саидов | Д-р Дониёр Саидов | Dr. Doniyor / Д-р Дониёр / Д-р Дониёр |
+| `diyetisyen` | Diyetolog Mahliyo Tursunova | Диетолог Маҳлиё Турсунова | Диетолог Махлиё Турсунова | Diyetolog Mahliyo / Диетолог Маҳлиё / Диетолог Махлиё |
+| `ergoterapi` | Ergoterapevt Oybek Holmatov | Эрготерапевт Ойбек Ҳолматов | Эрготерапевт Ойбек Холматов | Ergoterapevt Oybek / Эрготерапевт Ойбек / Эрготерапевт Ойбек |
+| `odyoloji` | Audiolog Rayhon Alimova | Аудиолог Райҳон Алимова | Аудиолог Райхон Алимова | Audiolog Rayhon / Аудиолог Райҳон / Аудиолог Райхон |
 
-For the native reader. These are observations by the machine that wrote the rule, **not corrections: nothing was changed**, and the owner's list stays authoritative.
+For the native reader. These are observations by the machine that wrote the rule, **not corrections: no name was changed**, and the owner's list stays authoritative.
 
-| What | Derived form | Why it looks doubtful |
+| What | Form shown | Why it looks doubtful |
 |---|---|---|
-| Title `Fizyoterapevt` (owner asked; left exactly as written) | Физётерапевт | The rule reads "yo" as «ё». The word is usually written «Физиотерапевт» (Latin `Fizioterapevt`). |
-| Title `Dr.` | Др. | Whether a Cyrillic text writes «Др.», «Д-р» or no title at all. The owner decides "Dr." or "Prof." separately. |
+| Title `Fizioterapevt` (**changed 2026-10-09**: the owner, "Use the common name"; it was `Fizyoterapevt`) | Физиотерапевт, in Uzbek Cyrillic and in Russian | **Reads as the usual word now** (the rule had made «Физётерапевт» of the old spelling). Still for the reader: in Russian usage «физиотерапевт» is a doctor, and this role is a non-doctor profession (see the role-name table below). |
+| Title "Prof. Dr." (31 roles, **new 2026-10-09**) | Prof. Dr. / Проф. д-р / Проф. д-р | The Turkish double title has no single settled form in Uzbek or in Russian. The closest common abbreviations are kept. A native reader may prefer «Проф.» alone, «профессор» written out, or the degree form ("t.f.d., professor" / «д.м.н., профессор»). Whether Uzbek in Latin script writes "Prof. Dr." before a name at all. |
+| Short title "Prof." before the given name alone (the landing page: "Prof. Malika") | Prof. Malika / Проф. Малика / Проф. Малика | A title before a given name without the family name is the Turkish habit. Whether it reads naturally in Uzbek and in Russian, and whether the capital letter stays in the middle of a sentence. |
+| Title "Dr." (5 roles) | Dr. / Д-р / Д-р | **Changed 2026-10-09:** written «Д-р», the usual Russian abbreviation (the rule had made «Др.»). Whether a Cyrillic text writes «Д-р», «Др.» or no title at all. |
+| `klinik-psikolog`: "Dr." (**changed 2026-10-09**; the owner's first list said "Psixolog") | Dr. Doniyor Saidov / Д-р Дониёр Саидов | The Turkish counterpart is "Dr." with the profession (clinical psychologist) on a second line, so the convention gives "Dr." here. In Uzbekistan "Dr." before a non-physician may be read as "physician". The role's name (Klinik psixolog) stands beside it on every screen. For the owner and the native reader. |
+| Titles of four allied roles: `Fizioterapevt`, `Diyetolog`, `Ergoterapevt`, `Audiolog` | Физиотерапевт, Диетолог, Эрготерапевт, Аудиолог | **No equivalent of the Turkish title.** Their Turkish counterparts carry "Uzm." (specialist) before the name and the profession on a second line. Uzbek and Russian have no such prefix, so the closest common form is kept: the profession's own title before the name, as the owner wrote it. |
 | `Holmatov`, `Holmatova` (3 names) | Ҳолматов(а); Russian Холматов(а) | The rule maps `h` to «ҳ». The surname is usually «Холматов» in Uzbek Cyrillic (Latin `Xolmatov`). The Russian form comes out as usual. |
 | `Shohruh` | Шоҳруҳ; Russian Шохрух | Usually «Шоҳрух» in Uzbek Cyrillic (Latin `Shohrux`). The Russian form comes out as usual. |
 | `Ulugbek` | Улугбек | Usually «Улуғбек» in Uzbek Cyrillic (Latin `Ulugʻbek`). The Russian form is as usual. |
@@ -291,7 +300,7 @@ Role names (written by machine in each form, not derived) that the machine is le
 
 | Role | Name as written (Uzbek Latin / Uzbek Cyrillic / Russian) | Doubt |
 |---|---|---|
-| `fizyoterapi` | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | What the non-doctor profession is called locally («физиотерапевт» is a doctor in Russian usage). The owner's title for this role is "Fizyoterapevt". |
+| `fizyoterapi` | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | What the non-doctor profession is called locally («физиотерапевт» is a doctor in Russian usage). The owner's title for this role is "Fizioterapevt" (his correction of 2026-10-09). |
 | `fizik-tedavi` | Tibbiy reabilitatsiya va fizioterapiya / Тиббий реабилитация ва физиотерапия / Медицинская реабилитация и физиотерапия | The official name of the doctor's specialty. |
 | `klinik-dermatoloji` | Dermatologiya (klinika) / Дерматология (клиника) / Дерматология (клиника) | A name made up to tell it from `dermatoloji` (Dermatovenerologiya). |
 | `longevity` | Profilaktik va yoshga qarshi tibbiyot / Профилактик ва ёшга қарши тиббиёт / Превентивная и антивозрастная медицина | No established local name. |
@@ -451,6 +460,102 @@ Order for the first real run: an empty scratch Supabase project, all migrations 
 | Tests, walk-through, proof | `countries/uz/uygulama/randevu.test.ts` (new); `not.test.ts`, `muayene.test.ts`, `uygulama.test.ts`, `lib/ulke/ulkeEkranlari.uz.test.ts`, `lib/ulke/testing/sahteVeritabani.ts`; `scripts/ulke-yuruyus/`; `scripts/ulke-goc-kaniti.mjs` (new) |
 | What remains | `docs/OPEN-COMMITMENTS.md`, section NOTYA-UZ-RANDEVU-01 |
 
+## Prices and assistant titles (2026-10-09, NOTYA-UZ-FIYAT-UNVAN-01)
+
+Kaan, 2026-10-09 01:43, three instructions: "On the landing page convert the turkish prices to Uzbek prices in turn. Use todays exchnage prices."; "Use the common name." (for the physiotherapist's title); "If prof. is used then follow the same turkish naming convention." Branch `feat/uz-fiyat-unvan`, stacked on `feat/ulke-sablon` (PR #571); pull request #572, base `feat/ulke-sablon`, never `main`. **Unmerged. Nothing deployed. No migration written or applied. No Turkish screen or content file was edited.** The page stays hidden from search engines and sign-up stays by invitation code.
+
+### Prices on the landing page
+
+Section 10 of the Uzbek landing page now mirrors the Turkish price section: the same layout and order, a switch between "Doctor" and "Clinic", three plans for one doctor with a monthly price, four clinic plans by request, the badge on the same two plans, one line under each list.
+
+**Exchange rate.** Source: the Central Bank of Uzbekistan, official rate (cbu.uz, archive of rates, the JSON for one currency: `https://cbu.uz/ru/arkhiv-kursov-valyut/json/TRY/2026-10-09/`), read on 2026-10-09. **1 Turkish lira = 240.71 soʻm**, the rate dated 09.10.2026 (the rate dated 08.10.2026 was 240.04). At the time of reading the bank's page of all rates still listed the rate dated 08.10.2026; the three shown amounts are the same at either rate. The build machine's own network could not reach cbu.uz (its outbound proxy refuses the host); the rate was read through the session's web-fetch tool, three times at different addresses of the same archive, with the same answer.
+
+**Rounding:** each converted monthly price to the nearest 10 000 soʻm.
+
+| Plan (id) | Turkish price per month | Exact conversion at 240.71 | Shown on the page |
+|---|---|---|---|
+| Starter (`starter`) | 1 490 lira | 358 657.90 soʻm | **360 000 soʻm** |
+| Pro (`pro`) | 3 490 lira | 840 077.90 soʻm | **840 000 soʻm** |
+| Private practice (`practice`) | 5 990 lira | 1 441 852.90 soʻm | **1 440 000 soʻm** |
+| Clinic 5, Clinic 10, Clinic 20, Enterprise | by quote on the Turkish page | not converted | "price on request", no amount |
+
+As the three forms write the first of them: `360 000 soʻm / oy` (Uzbek Latin), `360 000 сўм / ой` (Uzbek Cyrillic), `360 000 сум / мес.` (Russian). Numbers follow the pack's rules (`countries/uz/index.ts`: a space between thousands, no decimals). No lira sign, "TL", currency code or lira amount is shown anywhere on the page; a test fails on any of them.
+
+**Prices are data, in one place:** `countries/uz/acilis/fiyatlar.ts` (the price list, and the conversion record in the comment above it). The copy holds no amount; the shared layout writes each one. To change a price, change it there, once, for all three forms. A test holds every shown amount to "Turkish price for the plan in the same position × the recorded rate, rounded as recorded", so a price set by hand later is changed together with its line of the record.
+
+**What each plan includes** mirrors the Turkish plans line for line (7, 10, 5 lines; 8, 5, 4, 3 for the clinic plans), written in the three forms. Left out or changed: the Turkish reimbursement warnings (the line keeps "dose warnings"); "SOAP note" is "medical note", as elsewhere on the page; the assistant is named as in the section below; "most chosen" on the badge became "we recommend", because nobody has chosen yet. No Uzbek law or state system is named.
+
+**Buttons.** Every button of the section leads to the existing request form on the same page: "leave a request" on a plan with a price, "request a price" on a plan without one. No button promises a trial or opens sign-up; sign-up stays by invitation code, linked beside the form as before.
+
+**Footnotes, as they now read in English. Each is a commercial promise mirrored from the Turkish page that the owner has still to confirm for Uzbekistan** (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-FIYAT-UNVAN-01b):
+
+| # | Under | The line, in English | On the Turkish page |
+|---|---|---|---|
+| 1 | Doctor plans | "For now Notya works by invitation code." | stands where the Turkish line says "first 15 days free, no credit card needed"; **that promise was not carried over** |
+| 2 | Doctor plans | "Taxes are not included in the prices." | "VAT is not included" there; no tax is named here |
+| 3 | Doctor plans | "Pay for a year in advance and 2 months are on us." | the same offer |
+| 4 | Doctor plans | "Founding doctors programme: 40% off for 12 months for the first 50 doctors." | the same programme |
+| 5 | Clinic plans | "For now Notya works by invitation code. The price depends on the number of users and your field." | the same second sentence; the trial sentence was not carried over |
+
+Also for the owner: the plans themselves (what each includes, 60 visits a month in Starter, "unlimited within fair use" in Pro, 5 / 10 / 20 users for clinics) are promises too, and the page still describes features that are not switched on in the Uzbek version (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-ACILIS-02a). The page must not go public as it is.
+
+### Titles follow the Turkish naming convention
+
+**The convention found in the Turkish product** (`lib/asistan/specialistsCatalog.ts`, `lib/ai/personas/klinik_uzmanlar.ts`, `components/doktor-landing/content.ts`; read, never imported):
+
+| Turkish roles | Full form there | Short form there | Uzbek roles | Here |
+|---|---|---|---|---|
+| The 30 doctor specialties; aesthetic surgery in the clinic list | "Prof. Dr." + given name + family name | the given name alone inside the application; "Prof." + given name on the landing page | the same 31 roles | Prof. Dr. Malika Nazarova · Prof. Malika · Malika |
+| Clinic doctors: hair transplant, medical aesthetics, clinic dermatology, longevity; and the clinical psychologist | "Dr." + given name + family name | (none shown) | the same 5 roles | Dr. Shohruh Karimov · Dr. Shohruh |
+| Allied professions: physiotherapist, dietitian, occupational therapist, audiologist | "Uzm." + given name + family name, the profession on a second line | (none shown) | the same 4 roles | Fizioterapevt Jasmina Abdullayeva · Fizioterapevt Jasmina |
+
+No Turkish assistant carries "Doç." The landing page features one persona, the paediatrics professor, as "Prof." + given name (hero, section 01, the three example visits, the first plan) and as the given name alone where the persona speaks.
+
+**Applied here, role by role.** Every Uzbek assistant carries the title of its Turkish counterpart, in the same full and short forms. The owner's given names and family names are untouched (a test compares a fingerprint of the list with the one taken before the change). `countries/uz/klinik/asistanAdlari.ts` stays the single source: the title is a field beside each name, no name is written twice, and a test reads the two Turkish lists on every run and fails by name if a title there and a title here part ways.
+
+- "Prof. Dr.", "Prof." and "Dr." in each text form are the catalogue of titles (`countries/uz/klinik/asistanUnvanlari.ts`): Prof. Dr. / Проф. д-р; Prof. / Проф.; Dr. / Д-р. **Machine-written.**
+- **"Uzm." has no natural Uzbek or Russian equivalent.** The four allied roles keep the closest common form, the profession's own title before the name, as the owner wrote it.
+- The clinical psychologist became "Dr." (the owner's first list said "Psixolog"), because the Turkish counterpart is "Dr.". Listed for the owner and the native reader above.
+
+Three examples, before and after:
+
+| Role | Before | After (Uzbek Latin / Uzbek Cyrillic / Russian) |
+|---|---|---|
+| `pediatri` | Dr. Malika Nazarova | Prof. Dr. Malika Nazarova / Проф. д-р Малика Назарова / Проф. д-р Малика Назарова |
+| `sac-ekimi` | Dr. Shohruh Karimov (Cyrillic: Др. Шоҳруҳ Каримов) | Dr. Shohruh Karimov / Д-р Шоҳруҳ Каримов / Д-р Шохрух Каримов |
+| `fizyoterapi` | Fizyoterapevt Jasmina Abdullayeva (Cyrillic: Физётерапевт …) | Fizioterapevt Jasmina Abdullayeva / Физиотерапевт Жасмина Абдуллаева / Физиотерапевт Жасмина Абдуллаева |
+
+**The landing page names the assistant the way the Turkish page does:** "Prof. Malika" («Проф. Малика»), the Uzbek counterpart of the persona the Turkish page features, in the hero, section 01, on the three example visits and in the first plan; "Malika" where she speaks. The name is not written in the landing copy: it is read from the owner's list, and a test fails if the copy file writes it or if any other assistant is named on the page. In Russian two lines now say "she" (the featured assistant is a woman).
+
+**No biography was written.** No years of practice, no place of work or study, no degree, on any screen or in any instruction; tests fail on any of them. A title is an abbreviation before a name and nothing more.
+
+### What was tested, and how
+
+| Check | Result | Against |
+|---|---|---|
+| Country suite (`npm run test:ulke`) | pass: 681 of 681, and 22 of 22 for each of `tr` and `uz` | stand-in database, auth, storage, speech and model providers inside the test process |
+| Prices: every shown amount equals the Turkish page's price × the recorded rate, rounded as recorded; written by the pack's number rules; no lira sign, "TL" or lira amount on the page, in the price section of both groups, in the copy or in the price list | pass | the Turkish landing content read as text; the rendered page in three forms |
+| The 40 names: titles role by role against the two Turkish lists; full and short form in three forms; the owner's names unchanged | pass | the Turkish lists read as text |
+| Leak test extended to the price lines, the price list, the titles and all 40 names with their titles, in all three forms | pass | the leak harness and Türkiye's term list |
+| Type check, wall check | clean | the repository |
+| Uzbek production build (`NOTYA_COUNTRY=uz npm run build:ulke`) | passes; the build holds the Uzbek pack and no other | this machine |
+| Turkish tool-list test (`lib/doktor/doktorAraclariUlke.test.ts`) | pass, 47 of 47 | the repository |
+| Browser walk-through (`scripts/ulke-yuruyus/yuruyus.mjs`), 353 checks: as before, and now the price section (three prices, the clinic plans a tap away, the buttons, no lira, no trial) and the named assistant on the landing page and in the application | passes | the Uzbek production build, a headless browser, stand-in Supabase, stand-in providers |
+
+The full Turkish suite was not re-run. **No file the Turkish build executes was edited.** New screenshots in `docs/uz-landing/`: `landing-pricing-desktop-{uz,ru}.png` (section 10, doctor plans), `landing-pricing-clinic-desktop-{uz,ru}.png` (clinic plans), `landing-hero-desktop-{uz,ru}.png` (the first screen); the full-page ones were retaken. None is longer than 8 000 pixels on any side.
+
+### Files added or changed
+
+| What | Where |
+|---|---|
+| Price list and conversion record (new) | `countries/uz/acilis/fiyatlar.ts` |
+| Landing copy: price section, the named assistant | `countries/uz/acilis/icerik.ts`, `yasakliIfadeler.ts`, `docs/uz-landing/COPY.md` |
+| Names with a title field; titles in three forms (new); identity | `countries/uz/klinik/asistanAdlari.ts`, `asistanUnvanlari.ts`, `asistanKimligi.ts` |
+| Kit, country-neutral: price section of the landing layout (new), number rules (new), the shape of the price copy and of a price list, the pack check | `components/ulke/acilis/Narx.tsx`, `AcilisSayfasi.tsx`, `utilities.css` (recompiled); `lib/ulke/arayuz/sayi.ts`, `acilisTipleri.ts`; `lib/ulke/paketDenetimi.ts` |
+| Scaffold for a new country: the price section and an empty price list | `scripts/ulke-yeni.mjs`, `scripts/ulke-sablon/sekil.json`, `lib/ulke/testing/paketSekli.ts`, `docs/COUNTRY-PACK-HOWTO.md` |
+| Tests, walk-through, screenshots | `countries/uz/acilis/acilis.test.ts`, `countries/uz/klinik/asistanAdlari.test.ts`, `roller.test.ts`, `sablonlar.test.ts`, `lib/ulke/paket.paket.test.ts`; `scripts/ulke-yuruyus/yuruyus.mjs`, `acilis-goruntuleri.mjs`; `docs/uz-landing/` |
+| What remains | `docs/OPEN-COMMITMENTS.md`, section NOTYA-UZ-FIYAT-UNVAN-01 |
+
 ## Decisions by Kaan (2026-10-08)
 
 - Uzbekistan is the first country after Türkiye; Azerbaijan and the UAE follow.
@@ -469,6 +574,10 @@ Order for the first real run: an empty scratch Supabase project, all migrations 
 - First slice of specialties: pediatrics and one general template for every other specialty; the full list stays structured but off.
 - Later the same day: "Just build the uzbek one completely now." All 40 roles get a role choice, an assistant name and a note template (slice 2). He supplied one assistant name per role.
 - Slice 3 of the same instruction: appointments (working pattern, calendar, booking, status, visit from an appointment, reminder text copied by the doctor). Google Calendar sync, patient self-booking, automatic reminders and clinic-wide calendars are left off; public holidays are local content and are not hard-coded.
+- **2026-10-09 01:43, prices:** "On the landing page convert the turkish prices to Uzbek prices in turn. Use todays exchnage prices." Done on the landing page (section "Prices and assistant titles"); the footnotes' promises await his confirmation.
+- **2026-10-09 01:43, the physiotherapist's title:** "Use the common name." `Fizyoterapevt` became `Fizioterapevt`.
+- **2026-10-09 01:43, titles:** "If prof. is used then follow the same turkish naming convention." Every assistant carries the title of its Turkish counterpart; the landing page names "Prof. Malika".
+- **2026-10-09 01:43, the database:** "Make sure the database tables are seperate. Do not put or mix the database tables in the same database". **Not acted on yet.** Claude reads it as reversing the decision of 8 October 19:09 above (one shared database): Uzbekistan would get a database of its own and no script would run on the Turkish database. The reading and the creation of an Uzbek database wait on his confirmation (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-FIYAT-UNVAN-01a). Until then nothing is applied anywhere, and the sections of this document that describe the shared database stand as written.
 
 ## Proposals from Claude, not yet confirmed by Kaan
 
@@ -538,6 +647,8 @@ Set by the foundation job on 2026-10-08. Items marked *to verify* come from gene
 | Languages inside the application | `uz-Latn`, `uz-Cyrl`, `ru` | The signed-in screens and the model instructions are written in all three forms, by hand. An account chooses its form at first login. |
 | Time zone | `Asia/Tashkent` | |
 | Currency | UZS, shown as "soʻm", no decimals | decimals *to verify* |
+| Prices on the landing page | Starter 360 000, Pro 840 000, Private practice 1 440 000 soʻm a month; clinic plans on request | `countries/uz/acilis/fiyatlar.ts`; converted from the Turkish prices on 2026-10-09 at 240.71 (cbu.uz). The footnotes' promises await the owner's confirmation |
+| Assistant titles | the Turkish product's convention, role by role: 31 "Prof. Dr.", 5 "Dr.", 4 by the profession's own title | `countries/uz/klinik/asistanAdlari.ts`, `asistanUnvanlari.ts`; the forms in Cyrillic and Russian are machine-written |
 | Dates and numbers | `DD.MM.YYYY`, decimal comma, space as thousands separator, week starts Monday | *to verify* with the clinical lead |
 | Phone | `+998` and nine digits | operator prefixes not checked, *to verify* |
 | National identity number | JSHSHIR (PINFL), 14 digits, format only | check-digit rule *to verify* (checklist G5) |
@@ -600,12 +711,16 @@ These are settings and decisions, not code, and none was touched by the foundati
 10. The cron jobs in `vercel.json` are shared by every deployment; in Uzbekistan they answer 404 (their routes are not on the country's list) until each is split.
 
 
-## Assistant names (owner's list, 2026-10-08)
+## Assistant names (owner's list, 2026-10-08; titles 2026-10-09)
 
-Kaan supplied one assistant name per specialty and clinic role: 30 doctor specialties, 5 clinic doctors, 5 clinic allied roles. They are stored exactly as given in `countries/uz/klinik/asistanAdlari.ts`, which is the only file that holds them. **Since slice 2 they are used**: the home, the visit screen, the note draft and the settings card show the name for the account's role. The three forms of every name, and the derived forms that look doubtful, are in the section "Slice 2" above.
+Kaan supplied one assistant name per specialty and clinic role: 30 doctor specialties, 5 clinic doctors, 5 clinic allied roles. The given names and family names are stored exactly as given in `countries/uz/klinik/asistanAdlari.ts`, which is the only file that holds them. **Since slice 2 they are used**: the home, the visit screen, the note draft and the settings card show the name for the account's role. **Since 2026-10-09** each carries the title of its counterpart in the Turkish product ("If prof. is used then follow the same turkish naming convention"), and the landing page names one of them, "Prof. Malika". The three forms of every name, and the forms that look doubtful, are in the section "Slice 2" above; the convention is in "Prices and assistant titles".
+
+Settled on 2026-10-09:
+- "Dr." or "Prof.": the Turkish convention, role by role.
+- The title `Fizyoterapevt` is now `Fizioterapevt` ("Use the common name").
+- The landing page names the assistant: the Uzbek counterpart of the persona the Turkish page features.
 
 Still open:
-- A native reader's check of the spellings and of the derived Cyrillic and Russian forms. Earlier observations on the Latin spellings, unchanged: `Holmatov`/`Holmatova` (Uzbek Latin usually writes `Xolmatov`), `Shohruh` (`Shohrux`), `Ulugbek` (`Ulugʻbek`), `Ismailov`/`Ismailova` (`Ismoilov`), and the title `Fizyoterapevt` (`Fizioterapevt`). Nothing was changed.
-- "Dr." or "Prof.", and each assistant's background text (the owner asked earlier for a senior clinician with 20+ years of practice in Uzbekistan). No background text exists anywhere; the screens show one neutral line.
-- Which name, if any, the landing page shows (it still says "the Notya assistant").
+- A native reader's check of the spellings and of the derived Cyrillic and Russian forms, and now of the titles. Earlier observations on the Latin spellings, unchanged: `Holmatov`/`Holmatova` (Uzbek Latin usually writes `Xolmatov`), `Shohruh` (`Shohrux`), `Ulugbek` (`Ulugʻbek`), `Ismailov`/`Ismailova` (`Ismoilov`). No name was changed.
+- Each assistant's background text (the owner asked earlier for a senior clinician with 20+ years of practice in Uzbekistan). No background text exists anywhere; the screens show one neutral line. The title "Prof." is not a background text and none was written with it.
 - Key check (script, 2026-10-08): all 30 doctor keys match the product's specialty list after one correction. The owner's table wrote `kadin-dogum`; the product's key is `kadin-hastaliklari-dogum`, and that is what is stored. The 10 clinic keys match the product's clinic list (`lib/specialties/klinikDikey.ts`, read only).

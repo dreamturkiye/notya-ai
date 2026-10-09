@@ -7,13 +7,13 @@
  *     TypeCard, the icons and `cn` (allowed by name in lib/ulke/ulkeDuvarlari.test.ts).
  *   - Everything else (the bar, hero, the typed visits, the list of specialties, learning, safety, prices, the request
  *     form, the footer) is written here with the same markup and classes, and holds NO TEXT: every word, every anchor,
- *     the names of the language forms, the fonts and the word mark come from the active pack (`UlkeAcilisi`,
+ *     the names of the language forms, the fonts, the word mark and every amount come from the active pack (`UlkeAcilisi`,
  *     lib/ulke/arayuz/acilisTipleri.ts — countries/<code>/acilis/icerik.ts).
  * Styles: ./utilities.css (compiled with the Turkish page's own theme) and ./acilis.css, both imported by ./index.tsx
  * so this file renders in a plain Node test. Photographs: the same three files as the Turkish page (public/landing),
  * handed in by ./index.tsx.
  *
- * Server component. Client parts: the bar, the typed visits, the learning toggle, the request form.
+ * Server component. Client parts: the bar, the typed visits, the learning toggle, the price section, the request form.
  */
 import React from 'react'
 import { Button } from '@/components/doktor-landing/button'
@@ -25,7 +25,9 @@ import type { AcilisSayfasiProps } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import type { AcilisCapasi, AcilisIcerigi, OzellikBolumu, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import type { DilGrubu, DilKodu } from '@/lib/ulke/tipler'
+import { tutarYaz } from '@/lib/ulke/arayuz/sayi'
 import { IletisimFormu } from './IletisimFormu'
+import { Narx, type NarxSatiri } from './Narx'
 import { Organish } from './Organish'
 import { Suhbat } from './Suhbat'
 import { DilSecici, UstCubuk, type DilSecenegi } from './UstCubuk'
@@ -184,56 +186,13 @@ function Xavfsizlik({ t, gorsel, c }: { t: AcilisIcerigi['xavfsizlik']; gorsel: 
   )
 }
 
-/** Section 10. The Turkish page lists plans with amounts and a trial; here: who it is for, no amount, "request a price". */
-function Narx({ t, c }: { t: AcilisIcerigi['narx']; c: Capalar }) {
-  return (
-    <section id={c.narx} className="bg-paper py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">{t.ustBaslik}</p>
-            <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
-              {t.baslik}
-              <span className="italic font-normal"> {t.baslikVurgu}</span>
-            </h2>
-          </div>
-        </div>
-
-        <ol className="mt-12 divide-y divide-line border-y border-line">
-          {t.rejalar.map((reja) => (
-            <li key={reja.ad} className="grid gap-4 py-7 sm:grid-cols-3 sm:items-center">
-              <div>
-                <p className="flex flex-wrap items-baseline gap-3">
-                  <span className="font-display text-3xl italic">{reja.ad}</span>
-                </p>
-                <p className="mt-1 font-outfit text-sm text-ink-muted">{reja.narx}</p>
-              </div>
-              <ul className="flex flex-wrap gap-x-3 gap-y-1 font-outfit text-sm text-ink-2">
-                {reja.maddeler.map((item, i) => (
-                  <li key={item} className="flex items-center gap-3">
-                    {i > 0 ? (
-                      <span className="text-ink-muted" aria-hidden="true">
-                        ·
-                      </span>
-                    ) : null}
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={`#${c.sorov}`}
-                className="inline-flex h-11 w-fit items-center justify-center gap-1.5 rounded-full bg-pine px-5 font-outfit text-sm font-medium text-cream transition-colors hover:bg-pine-2 sm:justify-self-end"
-              >
-                {t.dugme}
-                <ArrowUpRight className="size-3.5" />
-              </a>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-6 font-outfit text-sm text-ink-muted">{t.izoh}</p>
-      </div>
-    </section>
-  )
+/**
+ * Section 10 is ./Narx.tsx (a client part: it has the switch between the groups of plans). The amounts are written
+ * out HERE, on the server, with the pack's own number rules, so the client part receives text and knows no currency.
+ * A plan the price list gives no amount for, or does not name at all, has none: the copy's "on request" line stands.
+ */
+export function narxSatirlari(a: UlkeAcilisi): Record<string, NarxSatiri> {
+  return Object.fromEntries(Object.entries(a.fiyatlar ?? {}).map(([id, f]) => [id, { tutar: typeof f.aylik === 'number' && f.aylik > 0 ? tutarYaz(f.aylik) : null, oneCikan: f.oneCikan === true }]))
 }
 
 /** Closing section. The Turkish page has a trial sign-up form here; this is the request form and the invitation link. */
@@ -303,7 +262,7 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
           <Ozellik id={c.kuzatuv} b={t.kuzatuv} tone="paper" />
           <Organish metin={t.organish} gorsel={gorseller.stol} capa={c.organish} />
           <Xavfsizlik c={c} t={t.xavfsizlik} gorsel={gorseller.yolak} />
-          <Narx c={c} t={t.narx} />
+          <Narx metin={t.narx} fiyatlar={narxSatirlari(a)} capa={c.narx} sorovHref={`#${c.sorov}`} />
           <Sorov c={c} t={t.sorov} iletisimEposta={iletisimEposta} kayitHref={kayitHref} />
         </main>
         <footer className="border-t border-line bg-paper">

@@ -2,6 +2,8 @@
 
 Text of the Uzbek landing page as rebuilt on 2026-10-08 to match the Turkish doctor landing page section for section (Kaan: "I need a landing page just like this for Uzbek"). Source of truth: `countries/uz/acilis/icerik.ts`. A test fails when a line on the page is missing from this file.
 
+**Changed on 2026-10-09 (NOTYA-UZ-FIYAT-UNVAN-01), on the owner's instruction:** section 10 now shows prices in soʻm, converted from the Turkish page's prices ("On the landing page convert the turkish prices to Uzbek prices in turn. Use todays exchnage prices."), and the assistant is named the way the Turkish page names its own ("If prof. is used then follow the same turkish naming convention."). The amounts are not in the copy: they are data (`countries/uz/acilis/fiyatlar.ts`, with the exchange rate and every figure). The name is not in the copy either: it is read from the owner's list of assistant names (`countries/uz/klinik/asistanAdlari.ts`), so the tables below show it as the page does.
+
 **All of it is machine-written.** Nobody who speaks Uzbek or Russian natively has read it. A native speaker must read every line, and a clinician must read the example visits (drug, dose, wording), before the page is shown to anyone outside the team.
 
 The page exists in three forms: Uzbek in Latin script (default), Uzbek in Cyrillic script, and Russian. The tables below give Uzbek Latin and Russian with English beside each line. The Cyrillic form is the same Uzbek text written in Cyrillic letters, line for line (`UZ_CYRL` in the catalogue); it is reached from the footer of the page or at `/uzbek?dil=uz-Cyrl`.
@@ -15,37 +17,38 @@ Keep = same meaning, translated naturally. Adapt = same section, content changed
 | Turkish section | Decision | Why |
 |---|---|---|
 | Top bar | Adapt | Same bar and the same five numbered links. Added: the Uzbek / Russian switch. "15 days free" became "Request a price" (no trial is promised); "Giriş" leads to the Uzbek login. |
-| Hero | Adapt | Same headline idea, same photograph, two buttons. The assistant is not named ("the Notya assistant, like an experienced colleague"). Main button: request a price. Second button scrolls to the typed illustration in section 01 of the same page. |
-| 01 Conversation | Adapt | Same three typed example visits. Assistant unnamed; "real-time Turkish transcription" became "the conversation becomes text, in Uzbek or Russian"; "SOAP note" became "medical note". In the examples: no brand name, no "according to the guideline". |
+| Hero | Adapt | Same headline idea, same photograph, two buttons. The assistant is named as on the Turkish page: short title and given name of the paediatrics persona ("Prof. Malika" where the Turkish page says "Prof. Ayşe"). Main button: request a price. Second button scrolls to the typed illustration in section 01 of the same page. |
+| 01 Conversation | Adapt | Same three typed example visits. The assistant is named as on the Turkish page ("Prof. Malika" on each visit, "Malika" as the speaker); "real-time Turkish transcription" became "the conversation becomes text, in Uzbek or Russian"; "SOAP note" became "medical note". In the examples: no brand name, no "according to the guideline". |
 | 02 End of the visit | Keep | Same meaning. "Rapor" is rendered as a medical report in general, not a Turkish payer report. |
 | 03 Patient portal | Keep | Same meaning. |
 | 04 Consultation | Keep | Same meaning. |
 | 05 Appointments and communication | Keep | Same meaning; "secretary" is the receptionist (registrator), the usual role in a clinic there. |
 | 06 Specialties | Adapt | "30 specialties" is stated as what Notya is designed for, with "switched on step by step". The list of names is written for this page; the Turkish page reads Türkiye's specialty registry, which is not used. |
 | 07 Follow-up | Keep | Same meaning. |
-| 08 Learning | Adapt | Same idea, same photograph. Assistant unnamed; the example asks which form the doctor prefers, not which brand. |
+| 08 Learning | Adapt | Same idea, same photograph. The assistant is not named in this section (nor is it on the Turkish page); the example asks which form the doctor prefers, not which brand. In Russian the closing line says "she remembered", because the featured assistant is a woman. |
 | 09 Safety net | Adapt | Same quote idea and photograph. The Turkish reimbursement rule and "according to the guideline" are gone. The four facts under it say what the product does (encryption, each doctor sees only their own patients, the doctor approves every step, decision support) and name no law. |
-| 10 Price | Adapt | No amounts, no currency, no trial, no discount programme, no "most chosen" badge, no individual / clinic toggle (plans for Uzbekistan are not decided). Three rows say who it is for; every button leads to the request form. |
+| 10 Price | Adapt | Same layout and order as the Turkish section: the doctor / clinic switch, three plans for one doctor with a monthly price, four clinic plans by request, the badge on the same two plans, one line under each list. Prices are the Turkish prices converted to soʻm at the Central Bank of Uzbekistan's rate of 9 October 2026 and rounded to the nearest 10 000 soʻm; no lira sign, code or amount is shown. Left out: the free trial and "no credit card" (sign-up is by invitation code, and the line says so), the Turkish reimbursement warnings (the line keeps "dose warnings"). The tax is not named ("taxes are not included"). The badge says "We recommend", not "most chosen": nobody has chosen yet. Every button leads to the request form. |
 | Closing section (trial sign-up form) | Adapt | Same dark-green section with a form card. The trial sign-up form became the existing Uzbek "request a price" form (opens the visitor's mail app; nothing is stored). Sign-up stays by invitation code, linked beside the form. |
 | Footer | Adapt | Same footer. The company line with its city, the Turkish legal page and the line of Turkish compliance marks are gone. The bottom row lists the three forms of the page (Uzbek Latin, Uzbek Cyrillic, Russian). |
 | Hero strip: "30 specialties" | Adapt | Phrased as "designed for 30 specialties". |
 | Hero strip: "By voice, in real time" | Adapt | "By voice, in Uzbek and Russian": the Uzbek version records and then writes; it is not real-time. |
-| Price: plans with amounts in lira, "first 15 days free", annual discount, founding-doctor discount | Drop | Prices, trial and discounts exist only for Türkiye. |
+| Price: "first 15 days free", "no credit card needed" | Drop | No trial is offered in Uzbekistan: sign-up is by invitation code. |
+| Price: the plans, the annual offer (two months), the founding-doctor discount (40% for 12 months for the first 50 doctors) | Keep | Mirrored from the Turkish page on the owner's instruction of 2026-10-09. **Each is a commercial promise the owner has still to confirm for Uzbekistan** (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-FIYAT-UNVAN-01). |
 | Security: the Turkish data-protection law and the Turkish reimbursement rulebook | Drop | Türkiye only. No Uzbek law is named in their place: none has been confirmed by a lawyer. |
 | Footer: Turkish legal page link, company city, compliance line | Drop | Türkiye only. |
-| The assistant's Turkish name and title | Drop | Not named for Uzbekistan yet; described as an assistant and an experienced colleague. |
+| The assistant's Turkish name and title | Adapt | The Turkish name is never shown. Its place is taken by the Uzbek counterpart of the same persona, with the same title in the same short form ("Prof. Malika"; in Cyrillic and Russian «Проф. Малика»). No biography: no years of practice, no place of work, no degree. |
 
 No whole section of the Turkish page was dropped: all twelve are on the Uzbek page, in the same order.
 
 ## What was removed from the Turkish page, and why
 
-- **The assistant's name and title.** Undecided for Uzbekistan (checklist D1).
-- **Every amount of money, the free trial, the discounts, the "most chosen" badge.** No price is set for Uzbekistan and sign-up is by invitation code only.
+- **The assistant's Turkish name.** Replaced by the Uzbek counterpart of the same persona, titled as on the Turkish page (2026-10-09).
+- **Every amount in lira, the lira sign, the free trial, "no credit card", the "most chosen" wording.** Prices are shown in soʻm; sign-up is by invitation code only; the badge says "we recommend".
+- **The name of the tax.** The line says "taxes are not included" and names none.
 - **The Turkish data-protection law, the reimbursement rulebook, "according to the guideline".** They are Türkiye's; no Uzbek law, protocol or reference is named because none has been confirmed.
 - **The brand name of a medicine in the example visits.** Replaced by the generic name; local brand names are not verified.
 - **"Real-time" transcription.** Not true of the Uzbek version.
 - **The trial sign-up form** (name, e-mail, specialty → Türkiye's registration page). Replaced by the existing Uzbek request form.
-- **The individual / clinic plan toggle and the seven plans.** Plans for Uzbekistan are not decided; three rows without amounts stand in.
 - **The specialty list read from Türkiye's registry.** Replaced by 30 names written for this page.
 - **Company city, Turkish legal page, Turkish support line.**
 - Never present, as before: any state system, the voice profile, image evaluation, a public demo.
@@ -82,7 +85,7 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 | `kahraman.ustBaslik` | Shifokorlar uchun sunʼiy intellektli klinik yordamchi | Клинический ИИ-помощник для врачей | AI clinical assistant for doctors |
 | `kahraman.baslik` | Bemor xonadan chiqqanda | Пациент вышел из кабинета — | When the patient leaves the room |
 | `kahraman.baslikVurgu` | ishingiz bitgan boʻlsin. | и ваша работа уже сделана. | let your work be done. |
-| `kahraman.giris` | Notya yordamchisi tajribali hamkasb kabi qabulni tinglaydi, tibbiy yozuvni yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatuvda tutadi. Har bir qaror faqat sizning tasdigʻingiz bilan kuchga kiradi. | Помощник Notya, как опытный коллега, слушает приём, пишет медицинскую запись, готовит черновик рецепта и заключения, держит пациента под наблюдением. Каждое решение вступает в силу только после вашего подтверждения. | The Notya assistant, like an experienced colleague, listens to the visit, writes the medical note, prepares the prescription and report draft, and keeps the patient in follow-up. Every decision takes effect only with your approval. |
+| `kahraman.giris` | Prof. Malika qabulni tinglaydi, tibbiy yozuvni yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatuvda tutadi. Har bir qaror faqat sizning tasdigʻingiz bilan kuchga kiradi. | Проф. Малика слушает приём, пишет медицинскую запись, готовит черновик рецепта и заключения, держит пациента под наблюдением. Каждое решение вступает в силу только после вашего подтверждения. | Prof. Malika listens to the visit, writes the medical note, prepares the draft prescription and report, and keeps the patient under follow-up. Every decision takes effect only with your approval. |
 | `kahraman.birinciDugme` | Narxni soʻrash | Запросить цену | Request a price |
 | `kahraman.ikinciDugme` | Qabulni koʻring | Посмотреть приём | See a visit |
 | `kahraman.gorselAlt` | Kunduzgi yorugʻlikdagi xususiy shifokor xonasi: koʻrik kushetkasi, stetoskop, tonometr va diplomlar | Частный врачебный кабинет при дневном свете: кушетка для осмотра, стетоскоп, тонометр и дипломы | A private doctor's room in daylight: examination couch, stethoscope, blood-pressure monitor and diplomas |
@@ -99,7 +102,7 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 | `suhbat.ustBaslik` | 01 — Suhbat | 01 — Разговор | 01 — Conversation |
 | `suhbat.baslik` | Ikki hamkasb | Говорите, | Talk like |
 | `suhbat.baslikVurgu` | kabi gaplashing. | как двое коллег. | two colleagues. |
-| `suhbat.govde` | Bir marta bosing — yordamchi tinglay boshlaydi. Gapini boʻlsangiz, jim boʻladi. Tugma bosib turish shart emas. | Нажмите один раз — помощник начинает слушать. Перебьёте — он замолчит. Удерживать кнопку не нужно. | Tap once — the assistant starts listening. Interrupt it and it goes quiet. No need to hold a button. |
+| `suhbat.govde` | Bir marta bosing — Prof. Malika tinglay boshlaydi. Gapini boʻlsangiz, jim boʻladi. Tugma bosib turish shart emas. | Нажмите один раз — Проф. Малика начинает слушать. Перебьёте — замолчит. Удерживать кнопку не нужно. | Tap once — Prof. Malika starts listening. Interrupt and she falls silent. No need to hold a button. |
 | `suhbat.maddeler[1]` | Suhbat oʻzbek yoki rus tilida matnga aylanadi | Разговор на узбекском или русском превращается в текст | The conversation becomes text, in Uzbek or Russian |
 | `suhbat.maddeler[2]` | Tibbiy yozuv qabul tugashi bilan tayyor | Медицинская запись готова, как только приём окончен | The medical note is ready as soon as the visit ends |
 | `suhbat.sekmeler` | Qabul namunalari | Примеры приёмов | Sample visits |
@@ -107,15 +110,15 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 | `suhbat.tayyor` | tayyor | готово | ready |
 | `suhbat.izoh` | Bu qabullar toʻqima namunalardir. Haqiqiy klinikada har bir jumla shifokor tasdigʻiga bogʻliq. | Эти приёмы — вымышленные примеры. В настоящей клинике каждая фраза зависит от подтверждения врача. | These visits are fictional examples. In a real clinic every sentence depends on the doctor's approval. |
 | `suhbat.sahneler[1].meta` | 1-qabul | Приём 1 | Visit 1 |
-| `suhbat.sahneler[1].yordamchi` | Notya yordamchisi | Помощник Notya | Notya assistant |
+| `suhbat.sahneler[1].yordamchi` | Prof. Malika | Проф. Малика | Prof. Malika (the featured assistant, short title and given name) |
 | `suhbat.sahneler[1].alan` | Pediatriya | Педиатрия | Pediatrics |
 | `suhbat.sahneler[1].saat` | 09:14 | 09:14 | 09:14 |
 | `suhbat.sahneler[1].navbatlar[1].kim` | Shifokor | Врач | Doctor |
 | `suhbat.sahneler[1].navbatlar[1].matn` | 7 yosh, 18 kilogramm. Isitma va quloq ogʻrigʻi. | 7 лет, 18 килограммов. Температура и боль в ухе. | 7 years old, 18 kilograms. Fever and ear pain. |
-| `suhbat.sahneler[1].navbatlar[2].kim` | Yordamchi | Помощник | Assistant |
+| `suhbat.sahneler[1].navbatlar[2].kim` | Malika | Малика | Malika (the given name alone, as the speaker) |
 | `suhbat.sahneler[1].navbatlar[2].matn` | Oʻtkir oʻrta otitga mos keladi. Amoksitsillin 40 mg/kg/kun — bu vaznda kuniga 720 mg. Yoki amoksitsillin-klavulanatni afzal koʻrasizmi? | Похоже на острый средний отит. Амоксициллин 40 мг/кг/сут — при этом весе 720 мг в сутки. Или вы предпочитаете амоксициллин-клавуланат? | Consistent with acute otitis media. Amoxicillin 40 mg/kg/day — at this weight 720 mg a day. Or do you prefer amoxicillin-clavulanate? |
 | `suhbat.sahneler[2].meta` | Xavfsizlik toʻri | Страховочная сеть | Safety net |
-| `suhbat.sahneler[2].yordamchi` | Notya yordamchisi | Помощник Notya | Notya assistant |
+| `suhbat.sahneler[2].yordamchi` | Prof. Malika | Проф. Малика | Prof. Malika (the featured assistant, short title and given name) |
 | `suhbat.sahneler[2].alan` | Pediatriya | Педиатрия | Pediatrics |
 | `suhbat.sahneler[2].saat` | 18:47 | 18:47 | 18:47 |
 | `suhbat.sahneler[2].navbatlar[1].kim` | Shifokor | Врач | Doctor |
@@ -123,12 +126,12 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 | `suhbat.sahneler[2].navbatlar[2].kim` | Ogohlantirish | Предупреждение | Warning |
 | `suhbat.sahneler[2].navbatlar[2].matn` | Doktor, bir daqiqa — bu kattalar dozasi. Bu vaznda bir martalik doza 250 mg dan oshmasligi kerak. Tuzataymi? | Доктор, одну минуту — это взрослая доза. При этом весе разовая доза не должна превышать 250 мг. Исправить? | Doctor, one moment — this is an adult dose. At this weight a single dose should not exceed 250 mg. Shall I correct it? |
 | `suhbat.sahneler[3].meta` | 10-qabul | Приём 10 | Visit 10 |
-| `suhbat.sahneler[3].yordamchi` | Notya yordamchisi | Помощник Notya | Notya assistant |
+| `suhbat.sahneler[3].yordamchi` | Prof. Malika | Проф. Малика | Prof. Malika (the featured assistant, short title and given name) |
 | `suhbat.sahneler[3].alan` | Pediatriya | Педиатрия | Pediatrics |
 | `suhbat.sahneler[3].saat` | 11:03 | 11:03 | 11:03 |
 | `suhbat.sahneler[3].navbatlar[1].kim` | Shifokor | Врач | Doctor |
 | `suhbat.sahneler[3].navbatlar[1].matn` | Amoksitsillin yozing. | Запишите амоксициллин. | Write amoxicillin. |
-| `suhbat.sahneler[3].navbatlar[2].kim` | Yordamchi | Помощник | Assistant |
+| `suhbat.sahneler[3].navbatlar[2].kim` | Malika | Малика | Malika (the given name alone, as the speaker) |
 | `suhbat.sahneler[3].navbatlar[2].matn` | 40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozaymi, doktor? | 40 мг/кг/сут, при этом весе 720 мг в сутки. Обычно вы выбираете амоксициллин-клавуланат — записать его, доктор? | 40 mg/kg/day, at this weight 720 mg a day. You usually choose amoxicillin-clavulanate — shall I write that, doctor? |
 
 ### 02 — End of the visit
@@ -286,7 +289,7 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 | `organish.oninchi.etiket` | 10-qabul | Приём 10 | Visit 10 |
 | `organish.oninchi.sorov` | Amoksitsillin yozing. | Запишите амоксициллин. | Write amoxicillin. |
 | `organish.oninchi.javob` | 40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozaymi, doktor? | 40 мг/кг/сут, при этом весе 720 мг в сутки. Обычно вы выбираете амоксициллин-клавуланат — записать его, доктор? | 40 mg/kg/day, at this weight 720 mg a day. You usually choose amoxicillin-clavulanate — shall I write that, doctor? |
-| `organish.izoh` | Siz soʻramadingiz. U esladi. | Вы не спрашивали. Он вспомнил. | You did not ask. It remembered. |
+| `organish.izoh` | Siz soʻramadingiz. U esladi. | Вы не спрашивали. Она вспомнила. | You did not ask. She remembered. (Uzbek has one word for he, she and it.) |
 
 ### 09 — Safety net
 
@@ -294,7 +297,7 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 |---|---|---|---|
 | `xavfsizlik.ustBaslik` | 09 — Xavfsizlik toʻri | 09 — Страховочная сеть | 09 — Safety net |
 | `xavfsizlik.baslik` | Ellik bemor, ogʻir kun — | Пятьдесят пациентов, тяжёлый день — | Fifty patients, a hard day — |
-| `xavfsizlik.baslikVurgu` | u hech qachon jim turmaydi. | он никогда не промолчит. | it never stays silent. |
+| `xavfsizlik.baslikVurgu` | u hech qachon jim turmaydi. | она никогда не промолчит. | she never stays silent. (Uzbek has one word for he, she and it.) |
 | `xavfsizlik.iqtibos` | “Doktor, bir daqiqa — bu kattalar dozasi. Bu vaznda bir martalik doza 250 mg dan oshmasligi kerak. Tuzataymi?” | «Доктор, одну минуту — это взрослая доза. При этом весе разовая доза не должна превышать 250 мг. Исправить?» | “Doctor, one moment — this is an adult dose. At this weight a single dose should not exceed 250 mg. Shall I correct it?” |
 | `xavfsizlik.izoh` | Notoʻgʻri doza, xavfli dori birikmasi. Soʻramasangiz ham aytadi. Toʻxtatadi. Toʻgʻrisini taklif qiladi. | Неверная доза, опасное сочетание лекарств. Скажет, даже если не спросили. Остановит. Предложит правильный вариант. | A wrong dose, a dangerous combination of medicines. It says so even if you do not ask. It stops you. It suggests the right one. |
 | `xavfsizlik.gorselAlt` | Kunduzgi yorugʻlikdagi xususiy klinika yoʻlagi: shifokor xonalari eshiklari va kutish oʻrindigʻi | Коридор частной клиники при дневном свете: двери врачебных кабинетов и скамья для ожидания | A private clinic corridor in daylight: doors of doctors' rooms and a waiting bench |
@@ -310,34 +313,72 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 
 ### 10 — Price
 
+The amounts are **not** in the copy. The page writes them from the price list (`countries/uz/acilis/fiyatlar.ts`) with the pack's number rules, into the line `narx.oylik`: Starter **360 000 soʻm / oy**, Pro **840 000 soʻm / oy**, Private practice **1 440 000 soʻm / oy** (Russian: «360 000 сум / мес.», Uzbek Cyrillic: «360 000 сўм / ой»). The four clinic plans show "price on request". The exchange rate and every figure: `docs/COUNTRY-PACK-UZBEKISTAN.md`, "Prices on the landing page".
+
 | Key | Uzbek (Latin) | Russian | English |
 |---|---|---|---|
 | `narx.ustBaslik` | 10 — Narx | 10 — Цена | 10 — Price |
-| `narx.baslik` | Narx — | Цена — | Price — |
-| `narx.baslikVurgu` | soʻrov boʻyicha. | по запросу. | on request. |
-| `narx.rejalar[1].ad` | Shifokor | Врач | Doctor |
-| `narx.rejalar[1].narx` | Narx soʻrov boʻyicha | Цена по запросу | Price on request |
-| `narx.rejalar[1].maddeler[1]` | Bitta shifokor | Один врач | One doctor |
-| `narx.rejalar[1].maddeler[2]` | Ovozli yordamchi | Голосовой помощник | Voice assistant |
-| `narx.rejalar[1].maddeler[3]` | Tibbiy yozuv va retsept qoralamasi | Медицинская запись и черновик рецепта | Medical note and prescription draft |
-| `narx.rejalar[1].maddeler[4]` | Yoʻnalishingizga mos ish maydoni | Рабочее пространство под вашу специальность | A workspace fitted to your specialty |
-| `narx.rejalar[1].maddeler[5]` | Bemor kartasi va arxiv | Карта пациента и архив | Patient file and archive |
-| `narx.rejalar[2].ad` | Xususiy amaliyot | Частная практика | Private practice |
-| `narx.rejalar[2].narx` | Narx soʻrov boʻyicha | Цена по запросу | Price on request |
-| `narx.rejalar[2].maddeler[1]` | Shifokor rejasidagi hamma narsa | Всё из плана «Врач» | Everything in the Doctor plan |
-| `narx.rejalar[2].maddeler[2]` | Bemor portali | Портал пациента | Patient portal |
-| `narx.rejalar[2].maddeler[3]` | Hamkasb maslahati | Консультация коллеги | Colleague consultation |
-| `narx.rejalar[2].maddeler[4]` | Qabul jadvali va eslatmalar | Расписание приёмов и напоминания | Appointment schedule and reminders |
-| `narx.rejalar[2].maddeler[5]` | Kuzatuv roʻyxatlari | Списки наблюдения | Follow-up lists |
-| `narx.rejalar[2].maddeler[6]` | Registrator hisobi, alohida huquq bilan | Аккаунт регистратора с отдельными правами | Receptionist account, with separate rights |
-| `narx.rejalar[3].ad` | Klinika | Клиника | Clinic |
-| `narx.rejalar[3].narx` | Narx soʻrov boʻyicha | Цена по запросу | Price on request |
-| `narx.rejalar[3].maddeler[1]` | Bir nechta shifokor | Несколько врачей | Several doctors |
-| `narx.rejalar[3].maddeler[2]` | Shifokor va registrator huquqlari | Права врача и регистратора | Doctor and receptionist rights |
-| `narx.rejalar[3].maddeler[3]` | Butun klinika uchun jadval va bemor portali | Расписание и портал пациента для всей клиники | Schedule and patient portal for the whole clinic |
-| `narx.rejalar[3].maddeler[4]` | Oʻrnatishda yordam | Помощь при подключении | Help with set-up |
-| `narx.dugme` | Narxni soʻrash | Запросить цену | Request a price |
-| `narx.izoh` | Notya hozircha taklif asosida, cheklangan shifokorlar guruhi bilan ishlamoqda. Narx yoʻnalishingiz va foydalanuvchilar soniga qarab belgilanadi. | Notya пока работает по приглашениям, с ограниченной группой врачей. Цена зависит от вашей специальности и числа пользователей. | For now Notya works by invitation, with a limited group of doctors. The price depends on your specialty and the number of users. |
+| `narx.baslik` | Sodda. Shaffof. | Просто. Прозрачно. | Simple. Transparent. |
+| `narx.baslikVurgu` | Adolatli. | Честно. | Fair. |
+| `narx.guruhlar` | Reja turi | Тип плана | Plan type (read by a screen reader for the switch) |
+| `narx.tavsiya` | Tavsiya etamiz | Рекомендуем | We recommend (the badge) |
+| `narx.oylik` | % soʻm / oy | % сум / мес. | % soʻm / month — "%" is where the amount from the price list is written |
+| `narx.sorovNarx` | Narx soʻrov boʻyicha | Цена по запросу | Price on request |
+| `narx.dugme` | Soʻrov qoldirish | Оставить запрос | Leave a request (button of a plan with a price) |
+| `narx.sorovDugme` | Narxni soʻrash | Запросить цену | Request a price (button of a plan without one) |
+| `narx.gruplar[1].ad` | Shifokor | Врач | Doctor (position of the switch) |
+| `narx.gruplar[1].rejalar[1].ad` | Boshlangʻich | Начальный | Starter (plan `starter`) |
+| `narx.gruplar[1].rejalar[1].maddeler[1]` | Oyiga 60 ta qabul | 60 приёмов в месяц | 60 visits a month |
+| `narx.gruplar[1].rejalar[1].maddeler[2]` | Bitta shifokor | Один врач | One doctor |
+| `narx.gruplar[1].rejalar[1].maddeler[3]` | Ovozli yordamchi Prof. Malika | Голосовой помощник Проф. Малика | Voice assistant Prof. Malika |
+| `narx.gruplar[1].rejalar[1].maddeler[4]` | Tibbiy yozuv va retsept qoralamasi | Медицинская запись и черновик рецепта | Medical note and prescription draft |
+| `narx.gruplar[1].rejalar[1].maddeler[5]` | Yoʻnalishingizga mos ish maydoni | Рабочее пространство под вашу специальность | A workspace fitted to your specialty |
+| `narx.gruplar[1].rejalar[1].maddeler[6]` | Doza ogohlantirishlari | Предупреждения о дозах | Dose warnings |
+| `narx.gruplar[1].rejalar[1].maddeler[7]` | Bemor kartasi va arxiv | Карта пациента и архив | Patient file and archive |
+| `narx.gruplar[1].rejalar[2].ad` | Pro | Про | Pro (plan `pro`) |
+| `narx.gruplar[1].rejalar[2].maddeler[1]` | Boshlangʻich rejasidagi hamma narsa | Всё из плана «Начальный» | Everything in the Starter plan |
+| `narx.gruplar[1].rejalar[2].maddeler[2]` | Cheklanmagan qabullar (adolatli foydalanish doirasida) | Без ограничения числа приёмов (в рамках добросовестного использования) | Unlimited visits (within fair use) |
+| `narx.gruplar[1].rejalar[2].maddeler[3]` | Bemor portali | Портал пациента | Patient portal |
+| `narx.gruplar[1].rejalar[2].maddeler[4]` | Hamkasb maslahati | Консультация коллеги | Colleague consultation |
+| `narx.gruplar[1].rejalar[2].maddeler[5]` | Qabul jadvali va eslatmalar | Расписание приёмов и напоминания | Appointment schedule and reminders |
+| `narx.gruplar[1].rejalar[2].maddeler[6]` | Bemor xabarlari va kelgan hujjatlar | Сообщения пациентов и входящие документы | Patient messages and incoming documents |
+| `narx.gruplar[1].rejalar[2].maddeler[7]` | Kuzatuv roʻyxatlari | Списки наблюдения | Follow-up lists |
+| `narx.gruplar[1].rejalar[2].maddeler[8]` | Qabulni bitta oqimda yakunlash va shablonlar | Завершение приёма одним потоком и шаблоны | Closing the visit in one flow, and templates |
+| `narx.gruplar[1].rejalar[2].maddeler[9]` | Xulosa va epikriz qoralamalari | Черновики заключений и эпикризов | Drafts of reports and discharge summaries |
+| `narx.gruplar[1].rejalar[2].maddeler[10]` | Oʻrganuvchi tizim | Система, которая учится | A system that learns |
+| `narx.gruplar[1].rejalar[3].ad` | Xususiy amaliyot | Частная практика | Private practice (plan `practice`) |
+| `narx.gruplar[1].rejalar[3].maddeler[1]` | Pro rejasidagi hamma narsa | Всё из плана «Про» | Everything in the Pro plan |
+| `narx.gruplar[1].rejalar[3].maddeler[2]` | Registrator hisobi, alohida huquq bilan | Аккаунт регистратора с отдельными правами | Receptionist account, with separate rights |
+| `narx.gruplar[1].rejalar[3].maddeler[3]` | Yordamchini sizga moslab sozlash | Настройка помощника под вас | The assistant tuned to you |
+| `narx.gruplar[1].rejalar[3].maddeler[4]` | Oʻrnatishda yordam | Помощь при подключении | Help with set-up |
+| `narx.gruplar[1].rejalar[3].maddeler[5]` | Ustuvor qoʻllab-quvvatlash | Приоритетная поддержка | Priority support |
+| `narx.gruplar[1].izoh` | Notya hozircha taklif kodi bilan ishlaydi. Narxlarga soliqlar kiritilmagan. Yil uchun oldindan toʻlasangiz, 2 oy bizdan. Asoschi shifokorlar dasturi: dastlabki 50 shifokorga 12 oy davomida 40% chegirma. | Notya пока работает по коду приглашения. Налоги в цены не включены. При оплате за год вперёд — 2 месяца в подарок. Программа «Врачи-основатели»: первым 50 врачам — скидка 40% на 12 месяцев. | For now Notya works by invitation code. Taxes are not included in the prices. Pay for a year in advance and 2 months are on us. Founding doctors programme: 40% off for 12 months for the first 50 doctors. |
+| `narx.gruplar[2].ad` | Klinika | Клиника | Clinic (position of the switch) |
+| `narx.gruplar[2].rejalar[1].ad` | Klinika 5 | Клиника 5 | Clinic 5 (plan `clinic5`) |
+| `narx.gruplar[2].rejalar[1].maddeler[1]` | 5 nafargacha foydalanuvchi | До 5 пользователей | Up to 5 users |
+| `narx.gruplar[2].rejalar[1].maddeler[2]` | Shifokor, mutaxassis va registrator huquqlari | Права врача, специалиста и регистратора | Doctor, specialist and receptionist rights |
+| `narx.gruplar[2].rejalar[1].maddeler[3]` | Seans va qabul jadvali | Расписание сеансов и приёмов | Session and appointment schedule |
+| `narx.gruplar[2].rejalar[1].maddeler[4]` | Muolajadan keyingi parvarish muddatlari va eslatmalar | Сроки ухода после процедуры и напоминания | After-procedure care deadlines and reminders |
+| `narx.gruplar[2].rejalar[1].maddeler[5]` | Bemor portali | Портал пациента | Patient portal |
+| `narx.gruplar[2].rejalar[1].maddeler[6]` | Roʻyxatga olish va rozilik nazorat roʻyxati | Чек-лист регистрации и согласия | Registration and consent checklist |
+| `narx.gruplar[2].rejalar[1].maddeler[7]` | Kuzatuv roʻyxatlari | Списки наблюдения | Follow-up lists |
+| `narx.gruplar[2].rejalar[1].maddeler[8]` | Boshqaruv paneli | Панель управления | Management panel |
+| `narx.gruplar[2].rejalar[2].ad` | Klinika 10 | Клиника 10 | Clinic 10 (plan `clinic10`) |
+| `narx.gruplar[2].rejalar[2].maddeler[1]` | 10 nafargacha foydalanuvchi | До 10 пользователей | Up to 10 users |
+| `narx.gruplar[2].rejalar[2].maddeler[2]` | Klinika 5 rejasidagi hamma narsa | Всё из плана «Клиника 5» | Everything in the Clinic 5 plan |
+| `narx.gruplar[2].rejalar[2].maddeler[3]` | Brend sozlamalari | Настройки бренда | Brand settings |
+| `narx.gruplar[2].rejalar[2].maddeler[4]` | Oʻrnatishda yordam | Помощь при подключении | Help with set-up |
+| `narx.gruplar[2].rejalar[2].maddeler[5]` | Ustuvor qoʻllab-quvvatlash | Приоритетная поддержка | Priority support |
+| `narx.gruplar[2].rejalar[3].ad` | Klinika 20 | Клиника 20 | Clinic 20 (plan `clinic20`) |
+| `narx.gruplar[2].rejalar[3].maddeler[1]` | 20 nafargacha foydalanuvchi | До 20 пользователей | Up to 20 users |
+| `narx.gruplar[2].rejalar[3].maddeler[2]` | Klinika 10 rejasidagi hamma narsa | Всё из плана «Клиника 10» | Everything in the Clinic 10 plan |
+| `narx.gruplar[2].rejalar[3].maddeler[3]` | Jamoani oʻqitish | Обучение команды | Team training |
+| `narx.gruplar[2].rejalar[3].maddeler[4]` | Alohida qoʻllab-quvvatlash | Персональная поддержка | Dedicated support |
+| `narx.gruplar[2].rejalar[4].ad` | Korporativ | Корпоративный | Enterprise (plan `enterprise`) |
+| `narx.gruplar[2].rejalar[4].maddeler[1]` | Cheklanmagan foydalanuvchilar | Без ограничения числа пользователей | Unlimited users |
+| `narx.gruplar[2].rejalar[4].maddeler[2]` | Alohida xizmat shartnomasi | Отдельный договор на обслуживание | A service contract of its own |
+| `narx.gruplar[2].rejalar[4].maddeler[3]` | Alohida oʻrnatish va oʻqitish | Индивидуальное подключение и обучение | Set-up and training of its own |
+| `narx.gruplar[2].izoh` | Notya hozircha taklif kodi bilan ishlaydi. Narx foydalanuvchilar soni va yoʻnalishingizga qarab belgilanadi. | Notya пока работает по коду приглашения. Цена зависит от числа пользователей и вашего направления. | For now Notya works by invitation code. The price depends on the number of users and your field. |
 
 ### Closing section — request a price
 
@@ -392,3 +433,8 @@ No whole section of the Turkish page was dropped: all twelve are on the Uzbek pa
 - "Bemor portali" / «портал пациента» is used for the patient portal; the bar says "Portal".
 - Specialty names are common-usage names, not the official list (checklist C1).
 - Uzbek Latin uses ʻ (U+02BB) in oʻ and gʻ and ʼ (U+02BC) for the tutuq belgisi.
+- **The assistant's title (2026-10-09).** The page writes "Prof. Malika" / «Проф. Малика». Confirm that a title before a given name reads naturally in Uzbek and in Russian, with a capital letter in the middle of a sentence, or say how it should be written. The full form used inside the application is "Prof. Dr. Malika Nazarova" / «Проф. д-р Малика Назарова».
+- **The currency (2026-10-09).** "soʻm" in Uzbek Latin, «сўм» in Uzbek Cyrillic, «сум» in Russian; the amount is written with a space between thousands and no decimals ("1 440 000 soʻm / oy", «1 440 000 сум / мес.»). Confirm the word, its place after the number and the way "per month" is written.
+- **Plan names.** "Boshlangʻich / Pro / Xususiy amaliyot / Klinika 5, 10, 20 / Korporativ"; in Russian «Начальный / Про / Частная практика / Клиника 5, 10, 20 / Корпоративный». "Pro" is written «Про» in the two Cyrillic forms.
+- **"Fair use"** is rendered "adolatli foydalanish doirasida" / «в рамках добросовестного использования»; **"discharge summary"** as "epikriz" / «эпикриз». Confirm both.
+- **The footnote under the prices** promises two months with yearly prepayment and 40% off for 12 months for the first 50 doctors, and says taxes are not included. The wording is for the native reader; whether each promise holds in Uzbekistan is for the owner.

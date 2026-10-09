@@ -116,6 +116,28 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       const capalar = Object.values(a.capalar ?? {})
       if (new Set(capalar).size !== capalar.length) ekle('acilis.capalar', 'two sections share an anchor')
       for (const c of capalar) if (!eksikMetinMi(c) && !/^[a-z][a-z0-9-]*$/.test(String(c))) ekle('acilis.capalar', `"${c}" is not an anchor (lower-case letters, digits, hyphens)`)
+      // the price section: the copy names plans, the price list says what each costs — the same plans on both sides
+      const fiyatlar = kayit(a.fiyatlar)
+      if (!a.fiyatlar) ekle('acilis.fiyatlar', 'the landing page has no price list (an empty one is {}, with no plan in the copy)')
+      for (const [id, f] of Object.entries(fiyatlar)) {
+        if (!f || !(f.aylik === null || (Number.isInteger(f.aylik) && f.aylik > 0))) ekle(`acilis.fiyatlar.${id}.aylik`, 'must be null (the price is given on request) or a whole number above zero')
+        if (!f || typeof f.oneCikan !== 'boolean') ekle(`acilis.fiyatlar.${id}.oneCikan`, 'must be true or false')
+      }
+      for (const d of a.diller) {
+        const n = a.icerik[d]?.narx
+        if (!n) continue
+        const gruplar = liste(n.gruplar)
+        if (!gruplar.length) ekle(`acilis.icerik[${d}].narx.gruplar`, 'the price section has no group of plans')
+        if (new Set(gruplar.map((g) => g.id)).size !== gruplar.length) ekle(`acilis.icerik[${d}].narx.gruplar`, 'two groups of plans share an id')
+        for (const g of gruplar) if (!liste(g.rejalar).length) ekle(`acilis.icerik[${d}].narx.gruplar.${g.id}`, 'a group without a plan')
+        const idler = gruplar.flatMap((g) => liste(g.rejalar).map((r) => r.id))
+        if (new Set(idler).size !== idler.length) ekle(`acilis.icerik[${d}].narx.gruplar`, 'a plan is listed twice')
+        if (a.fiyatlar && !eksikAyarMi(a.fiyatlar)) {
+          for (const id of idler) if (!sahip(fiyatlar, id)) ekle(`acilis.fiyatlar.${id}`, `the "${d}" copy names this plan and the price list has no entry for it`)
+          for (const id of Object.keys(fiyatlar)) if (!idler.includes(id)) ekle(`acilis.fiyatlar.${id}`, `is in the price list and the "${d}" copy names no such plan`)
+        }
+        if (dolu(n.oylik) && !eksikMetinMi(n.oylik) && !n.oylik.includes('%')) ekle(`acilis.icerik[${d}].narx.oylik`, 'must hold "%" where the amount is written')
+      }
     }
   }
 

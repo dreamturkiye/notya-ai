@@ -34,7 +34,8 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
     if (bolum === 'acilis' && son === 'capa') { const k = Object.keys(capalar).find((x) => capalar[x] === deger); if (!k) throw new Error(`${yol}: "${deger}" is not an anchor of the pack`); return { $capa: k } }
     // A badge number ("01") or a clock time ("09:14") reads the same in every language; anything else is the country's text.
     if (SABIT_ANAHTARLAR.has(son) || /^\d{1,2}(:\d{2})?$/.test(deger)) return { $sabit: deger }
-    const yerler = [...new Set(deger.match(/%\d?/g) ?? [])].sort()
+    // A placeholder is '%' or '%1'. A percent sign straight after a number ("40%") is a percentage, not a placeholder.
+    const yerler = [...new Set(deger.match(/(?<!\d)%\d?/g) ?? [])].sort()
     return yerler.length ? `$m:${yerler.join(',')}` : '$m'
   }
   if (typeof deger === 'number' || typeof deger === 'boolean' || deger === null) return { $sabit: deger }
