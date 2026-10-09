@@ -68,7 +68,7 @@ describe('role keys across countries (countries/rol-eslemesi.json)', () => {
   it('the table is data beside the packs: no application code, no pack and no language set reads it', () => {
     const tarama = (dizin: string, cikti: string[] = []): string[] => {
       for (const ad of require('node:fs').readdirSync(dizin) as string[]) {
-        if (['node_modules', '.next', '.git', 'docs', 'backups', 'public'].includes(ad)) continue
+        if (['node_modules', '.next', '.git', '.claude', 'docs', 'backups', 'public'].includes(ad)) continue
         const yol = join(dizin, ad)
         if ((require('node:fs').statSync(yol) as { isDirectory(): boolean }).isDirectory()) tarama(yol, cikti)
         else if (/\.(ts|tsx|mjs|js|cjs|mts)$/.test(ad) && readFileSync(yol, 'utf8').includes('rol-eslemesi')) cikti.push(yol.slice(KOK.length + 1))

@@ -476,8 +476,13 @@ For each entry: official local name, what it governs, source link, date checked,
   - NOT DECIDED — for a lawyer and the owner. No database, no provider account exists for this country.
 - [ ] I7 Features gated by law.
   - Not answered.
+- [ ] I8 Messages between a doctor and a patient inside the product: whether the country's law permits them, what the patient must be told, who may be written to (minors, guardians), how long they are kept. Read by a lawyer before a patient is written to.
+  - Not answered.
+- [ ] I9 Sharing a patient's data with a colleague for a consultation: the consent sentence the asking doctor ticks, whether a consent recorded by the doctor is enough, and how long the colleague may read the copy. Read by a lawyer; the two periods confirmed by the owner.
+  - Not answered.
 
 ## J. Product settings
+
 
 - [ ] J1 Feature table.
   - Not answered.
