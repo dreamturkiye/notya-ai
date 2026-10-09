@@ -15,6 +15,7 @@ import { join, resolve } from 'node:path'
 import { dosyayiDoldur, kirill } from '../../../../scripts/uz-kiril.mjs'
 import { UZ_ARACLAR } from './index'
 import { UZ_MESAJ_AGACI } from '../mesajMetinleri'
+import { UZ_SABLON_AGACI } from '../sablonMetinleri'
 
 /**
  * NOTYA-ULKE-MESAJ-01 — catalogues of the pack that are written as one tree in the three forms (../uclu.ts): their
@@ -22,6 +23,7 @@ import { UZ_MESAJ_AGACI } from '../mesajMetinleri'
  */
 const UC_BICIMLI_KATALOGLAR: readonly { ad: string; dosya: string; agac: unknown; enAz: number }[] = [
   { ad: 'mesaj', dosya: 'countries/uz/uygulama/mesajMetinleri.ts', agac: UZ_MESAJ_AGACI, enAz: 49 },
+  { ad: 'sablon', dosya: 'countries/uz/uygulama/sablonMetinleri.ts', agac: UZ_SABLON_AGACI, enAz: 29 },
 ]
 
 const KOK = resolve(__dirname, '../../../..')

@@ -170,3 +170,9 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-mesaj-yazan { font-weight: 600; color: var(--uza-murekkep); }
 .uza-mesaj-alt { margin: 4px 0 0; }
 .uza-rozet[data-mesaj-durum='yeni'] { background: var(--uza-altin); color: var(--uza-murekkep); }
+
+/* NOTYA-ULKE-MESAJ-01 — "my templates": the list on the tool's screen. */
+.uza-sablonlar { margin-top: 12px; }
+.uza-sablon { padding: 12px 0; border-top: 1px solid var(--uza-cizgi); }
+.uza-sablon:first-child { border-top: 0; }
+.uza-sablon-secici { margin-top: 6px; }

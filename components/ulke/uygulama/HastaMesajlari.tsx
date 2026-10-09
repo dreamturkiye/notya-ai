@@ -16,7 +16,9 @@
 import React, { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Bilgi, Hata, saatYaz, tarihYaz, YOL, type Uygulama } from './Kabuk'
 import { okunmamisSayisi, sonMesajAni, YazismaListesi } from '../mesajOrtak'
-import { mesajMetni, type MesajMetni } from '@/lib/ulke/arayuz'
+import { SablonSecici, useSablonlar } from './Sablonlarim'
+import { sonaEkle } from '@/lib/ulke/sablon/sabitler'
+import { mesajMetni, sablonMetni, type MesajMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { HEKIM_MESAJ_API, MESAJ_AZAMI, mesajMetniAl, type HekimMesajGorunumu, type OkunmamisHasta } from '@/lib/ulke/mesaj/sabitler'
 
@@ -85,10 +87,10 @@ export function HastaMesajGorunumu({ x, g, yuklenemedi, metin, setMetin, gonder,
   )
 }
 
-export function HastaMesajKarti({ u, hastaId, ek }: {
+export function HastaMesajKarti({ u, hastaId, sablonlar: sablonlarAcik }: {
   u: Uygulama; hastaId: string
-  /** The template picker, given the way to put a text into the message. */
-  ek?: (ekle: (metin: string) => void) => ReactNode
+  /** NOTYA-ULKE-MESAJ-01: true = the country has "my templates": the doctor's templates for a message are offered under the text box. */
+  sablonlar?: boolean
 }) {
   const [g, setG] = useState<HekimMesajGorunumu | null>(null)
   const [yuklenemedi, setYuklenemedi] = useState(false)
@@ -99,6 +101,7 @@ export function HastaMesajKarti({ u, hastaId, ek }: {
   const [kapatSorulan, setKapatSorulan] = useState<string | null>(null)
   const okunan = useRef('')
   const { hesap, api } = u
+  const sablonlar = useSablonlar(api, Boolean(hesap) && sablonlarAcik === true, 'mesaj')
 
   const yukle = useCallback(async () => {
     const r = await api(`${HEKIM_MESAJ_API}?hasta=${encodeURIComponent(hastaId)}`)
@@ -144,7 +147,7 @@ export function HastaMesajKarti({ u, hastaId, ek }: {
   return (
     <HastaMesajGorunumu x={mesajMetni(u.dil).hekim} g={g} yuklenemedi={yuklenemedi} metin={metin} setMetin={(y) => { setMetin(y); setHata(null) }} gonder={gonder} bekliyor={bekliyor} hata={hata}
       kapatildi={kapatildi} kapatSorulan={kapatSorulan} kapatIste={(id) => { setKapatSorulan(id); setKapatildi(false) }} kapatOnayla={() => { void kapat() }} kapatVazgec={() => setKapatSorulan(null)}
-      ek={ek ? ek((t) => { setMetin((eski) => (eski.trim() ? `${eski.replace(/\s+$/, '')}\n${t}` : t).slice(0, MESAJ_AZAMI)); setHata(null) }) : null} />
+      ek={sablonlarAcik ? <SablonSecici x={sablonMetni(u.dil)} sablonlar={sablonlar} hedef="mesaj" mesgul={bekliyor} ekle={(t) => { setMetin((eski) => sonaEkle(eski, t, MESAJ_AZAMI)); setHata(null) }} /> : null} />
   )
 }
 

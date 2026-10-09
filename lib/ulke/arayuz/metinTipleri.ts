@@ -775,3 +775,48 @@ export type MesajMetni = {
     readonly yuklenemedi: string
   }
 }
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — "MY TEMPLATES" (feature `hekimSablonlari`), once per language form: the screen where a doctor
+ * keeps their own reusable text blocks, and the small picker that puts one into a section of a note or into a
+ * message. The tile's own name and description sit with the tool in the pack's list, like every other tile.
+ *
+ * Placeholders: '%' where a sentence carries one value (see each key).
+ */
+export type SablonMetni = {
+  /** A template is used for many patients: no patient's name or data belongs in one. Always shown on the screen. */
+  readonly uyari: string
+  readonly bos: string
+  readonly yeni: string
+  readonly duzenleBaslik: string
+  readonly ad: string
+  readonly metin: string
+  /** Where the template is offered. */
+  readonly kapsamEtiketi: string
+  readonly kapsam: { readonly not: string; readonly mesaj: string; readonly hepsi: string }
+  readonly kaydet: string
+  readonly kaydediliyor: string
+  readonly kaydedildi: string
+  readonly kaydedilemedi: string
+  readonly adGerekli: string
+  readonly metinGerekli: string
+  /** % the most characters a template's text holds */
+  readonly cokUzun: string
+  /** % the most templates an account keeps */
+  readonly cokFazla: string
+  readonly duzenle: string
+  readonly sil: string
+  /** What deleting does — shown BEFORE the doctor confirms. */
+  readonly silUyari: string
+  readonly silOnay: string
+  readonly vazgec: string
+  readonly silindi: string
+  readonly yuklenemedi: string
+  /** The picker under a section of a note and under a message: its name, what it does, and what it says with no template. */
+  readonly seciciEkle: string
+  /** The text is added at the end of what is already written; nothing is replaced. */
+  readonly seciciNot: string
+  readonly seciciBos: string
+  /** The link from the picker to the screen where templates are kept. */
+  readonly yonet: string
+}

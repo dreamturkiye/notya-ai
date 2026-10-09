@@ -110,3 +110,32 @@ describe('Uzbekistan — messages between a doctor and a patient: text in three 
     }
   })
 })
+
+describe('Uzbekistan — "my templates": text in three forms, and that the pack brings no template of its own', () => {
+  let SM: typeof import('./sablonMetinleri')
+  let P: typeof import('../index')
+  let AR: typeof import('./araclar')
+  before(async () => { SM = await import('./sablonMetinleri'); P = await import('../index'); AR = await import('./araclar') })
+
+  it('the catalogue says, at its top, that it is machine-written and awaits native review', () => {
+    const katalog = readFileSync(join(KOK, 'countries/uz/uygulama/sablonMetinleri.ts'), 'utf8').slice(0, 1800)
+    assert.match(katalog, /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW\./); assert.match(katalog, /DERIVED FROM THE LATIN TEXT BY RULE/); assert.match(katalog, /NO TEMPLATE IS IN THIS FILE/)
+  })
+
+  it('LEAK TEST over every string, in all three forms: same keys, nothing empty, each form in its own script, no Turkish word or letter', () => {
+    ucBicimDenetle(SM.UZ_SABLON_METINLERI, 'templates', 29)
+  })
+
+  it('the feature is on, its tile is a BASE tool with its words in three forms, and THE PACK HOLDS NO READY-MADE TEMPLATE', () => {
+    assert.equal(P.UZ_PAKETI.ozellikler.hekimSablonlari, true)
+    const kutu = AR.UZ_ARACLAR.araclar.find((p) => p.anahtar === 'sablonlarim')
+    assert.ok(kutu); assert.equal(kutu!.roller, null)
+    ucBicimDenetle({ 'uz-Latn': { ad: kutu!.metin.ad['uz-Latn'], aciklama: kutu!.metin.aciklama['uz-Latn'], not: kutu!.metin.not['uz-Latn'] }, 'uz-Cyrl': { ad: kutu!.metin.ad['uz-Cyrl'], aciklama: kutu!.metin.aciklama['uz-Cyrl'], not: kutu!.metin.not['uz-Cyrl'] }, ru: { ad: kutu!.metin.ad.ru, aciklama: kutu!.metin.aciklama.ru, not: kutu!.metin.not.ru } }, 'templates tile', 3)
+    // no file of the pack defines a template's text: the only strings about templates are the screen's own words
+    const dosya = readFileSync(join(KOK, 'countries/uz/uygulama/sablonMetinleri.ts'), 'utf8')
+    assert.doesNotMatch(dosya, /kapsam: '(not|mesaj|hepsi)'|icerik_encrypted|SABLONLAR\s*=/, 'the pack ships a template of its own')
+    for (const f of FORMLAR) assert.ok(SM.UZ_SABLON_METINLERI[f].uyari.length > 40, `${f}: the notice that no patient's data belongs in a template`)
+    assert.match(SM.UZ_SABLON_METINLERI.ru.uyari, /Не вносите в шаблон имя или данные пациента/)
+    assert.match(SM.UZ_SABLON_METINLERI.ru.seciciNot, /в конец написанного; ничего не заменяется/)
+  })
+})

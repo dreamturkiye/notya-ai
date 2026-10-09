@@ -80,6 +80,10 @@ export const UZ_PAKETI: UlkePaketi = {
     // SMS, no e-mail, no messenger (see `uygulama.mesaj` below). The texts are machine-written and no native reader
     // has read them; whether a doctor may write to a patient this way under local law has not been read by a lawyer.
     hastaMesajlari: true,
+    // NOTYA-ULKE-MESAJ-01 (2026-10-09): "my templates" — a doctor's own reusable text blocks, inserted into a section of
+    // a note or into a message by the doctor's own click. The pack brings NO ready-made template. The screen's words
+    // are machine-written and no native reader has read them.
+    hekimSablonlari: true,
   },
   // Routes of the PRE-SPLIT application's tool registry valid here: none, and it stays so. The country build has its own
   // tools area (/tools, feature `araclar`; ./uygulama/araclar/), which shares no route and no screen with that registry.

@@ -308,7 +308,7 @@ export function HastaDosyasi() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
+      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} /> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
           {durum === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{u.m.kabuk.geri}</a></p>}

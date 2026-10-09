@@ -34,6 +34,7 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 import { panoyaKopyala } from './pano'
 import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 import { AracKayitKarti, TakipPaneli, useAracHastasi, useAracKaydi, type AracHastasi } from './AracKayitlari'
+import { Sablonlarim } from './Sablonlarim'
 
 // What was typed → what a tool takes: one function for the screen and for the server (lib/ulke/araclar/girdi.ts).
 export { girdiyiCoz, type HamGirdi } from '@/lib/ulke/araclar/girdi'
@@ -223,7 +224,7 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta }: { x: GorunurArac; 
   return (
     <>
       <AracBasligi x={x} a={a} dil={dil} hastaId={hasta?.id} />
-      {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : (
+      {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : (
         <AracGorunumu x={x} a={a} dil={dil} notDili={notDili} icerik={icerik} ham={ham} bugun={bugun} kopya={kopya}
           degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => ({ ...eski, [anahtar]: v })) }}
           temizle={() => { setKopya('yok'); k.degisti(); setHam({}) }}

@@ -21,15 +21,17 @@
  * pack's template for this visit owns it (../klinik/notSablonlari.ts → uzSablonAlanlari) — a key of another role is
  * not drawn even if it arrives. The label is the pack's, in the account's form; the key is never shown.
  */
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Bilgi, Hata, Secim, tarihYaz, saatYaz, YOL, type Uygulama } from './Kabuk'
 import { tamAd } from './Hastalar'
 import { KonusmaBildirimleri, konusmaDiliAdi, sablonAdi, type MuayeneDetayi } from './Muayene'
 import { asistanAdi } from './Asistan'
-import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
+import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, sablonMetni, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { PortalOzetKarti } from './PortalOzeti'
 import { HastaFormuKarti } from './HastaFormuKarti'
+import { SablonSecici, useSablonlar } from './Sablonlarim'
+import { sonaEkle } from '@/lib/ulke/sablon/sabitler'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type NotIcerigi = { s: string; o: string; a: string; p: string; /** Role fields: key → text. */ alanlar?: Record<string, string> }
@@ -69,10 +71,12 @@ function bildirimMetni(m: UygulamaMetni, b: NotBildirimi): { iyi: string | null;
   return { iyi: null, kotu: b ? kotu[b] ?? m.kabuk.hata : null }
 }
 
-export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, islem, bildirim, kaydet, yenidenYaz, onayla }: {
+export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, islem, bildirim, kaydet, yenidenYaz, onayla, sablonEki }: {
   m: UygulamaMetni; not: NotDetayi; aktifDil: DilKodu; setAktifDil: (d: DilKodu) => void
   icerik: NotIcerigi; setIcerik: (i: NotIcerigi) => void; islem: NotIslemi; bildirim: NotBildirimi
   kaydet: () => void; yenidenYaz: () => void; onayla: () => void
+  /** NOTYA-ULKE-MESAJ-01: under each section of a DRAFT, the doctor's own templates for that section, where the country has them. */
+  sablonEki?: (bolum: NotBolumu, mesgul: boolean) => ReactNode
 }) {
   const n = m.not
   const v = not.muayene
@@ -132,6 +136,7 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
               <div className="uza-alan" key={b}>
                 <label className="uza-etiket" htmlFor={`uza-not-${b}`}>{bolumBasligi(b)}</label>
                 <textarea id={`uza-not-${b}`} name={b} className="uza-girdi" lang={aktifDil} value={icerik[b]} onChange={(e) => setIcerik({ ...icerik, [b]: e.target.value })} disabled={mesgul} />
+                {sablonEki ? sablonEki(b, mesgul) : null}
                 {alanlar[b].map((k) => (
                   <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
                     <label className="uza-etiket uza-alt-etiket" htmlFor={`uza-alan-${k}`}>{alanAdi(k, ekranDili)}</label>
@@ -188,6 +193,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   }, [api, notId])
 
   useEffect(() => { if (hesap) yukle().catch(() => setYuk('hata')) }, [hesap, yukle])
+  // NOTYA-ULKE-MESAJ-01: the doctor's own templates for a note — read once, and only while the note is a draft.
+  const sablonlar = useSablonlar(api, Boolean(hesap) && ozellikAcik('hekimSablonlari') && not !== null && !not.onayli, 'not')
 
   if (yuk !== 'tamam' || !not) {
     return (
@@ -242,7 +249,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   return (
     <>
       <NotGorunumu m={u.m} not={not} aktifDil={aktifDil} setAktifDil={(d) => { setAktifDil(d); setBildirim(null) }} icerik={icerik}
-        setIcerik={(i) => { setMetinler((eski) => ({ ...eski, [aktifDil]: i })); setBildirim(null) }} islem={islem} bildirim={bildirim} kaydet={kaydet} yenidenYaz={yenidenYaz} onayla={onayla} />
+        setIcerik={(i) => { setMetinler((eski) => ({ ...eski, [aktifDil]: i })); setBildirim(null) }} islem={islem} bildirim={bildirim} kaydet={kaydet} yenidenYaz={yenidenYaz} onayla={onayla}
+        sablonEki={ozellikAcik('hekimSablonlari') ? (b, mesgul) => <SablonSecici x={sablonMetni(u.dil)} sablonlar={sablonlar} hedef={b} mesgul={mesgul} ekle={(t) => { setMetinler((eski) => ({ ...eski, [aktifDil]: { ...icerik, [b]: sonaEkle(icerik[b], t) } })); setBildirim(null) }} /> : undefined} />
       {/* NOTYA-ULKE-PORTAL-01: only an APPROVED note of a patient can have a summary for that patient; the server decides again. */}
       {/* NOTYA-ULKE-INTAKE-01: beside a DRAFT, what the patient wrote before the visit — for the doctor to read while the note is
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}

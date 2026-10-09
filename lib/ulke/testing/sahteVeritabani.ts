@@ -85,6 +85,16 @@ export function sahteVeritabani() {
     const c = cakisma(ad, yeni, digerleri)
     if (c) return c
     const hata = (code: string, message: string) => ({ code, message })
+    // NOTYA-ULKE-MESAJ-01 — migration 141: a template belongs to an account of the same country, says where it is
+    // offered and has content. (No patient: the checks below, which need one, do not apply.)
+    // (A row a test writes without `kapsam` is not a template row yet; the database would refuse it for a missing column.)
+    if (ad === 'ulke_hekim_sablonlari') {
+      if (yeni.kapsam === undefined) return null
+      if (!tablo('ulke_hesaplari').some((h) => h.id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', 'insert or update on table "ulke_hekim_sablonlari" violates foreign key constraint "ulke_hekim_sablonlari_hesap_fk"')
+      if (!['not', 'mesaj', 'hepsi'].includes(String(yeni.kapsam))) return hata('23514', 'new row for relation "ulke_hekim_sablonlari" violates check constraint (kapsam)')
+      if (typeof yeni.icerik_encrypted !== 'string' || !yeni.icerik_encrypted) return hata(yeni.icerik_encrypted === '' ? '23514' : '23502', 'new row for relation "ulke_hekim_sablonlari" has no content (icerik_encrypted)')
+      return null
+    }
     const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari']
     // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
     if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
@@ -141,9 +151,15 @@ export function sahteVeritabani() {
    * form's answers do not change (it can only be reopened).
    */
   const guncellemeKilidi = (ad: string, eski: Satir, yeni: Satir): { message: string; code: string } | null => {
-    if (!['ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari'].includes(ad) || eski.patient_id === undefined) return null
     const hata = (message: string) => ({ code: '23514', message })
     const farkli = (k: string) => (eski[k] ?? null) !== (yeni[k] ?? null)
+    // NOTYA-ULKE-MESAJ-01 — the trigger of migration 141 (`ulke_hekim_sablonu_kilidi`). A template has no patient.
+    if (ad === 'ulke_hekim_sablonlari' && eski.kapsam !== undefined) {
+      if (farkli('ulke') || farkli('doctor_id') || farkli('created_at')) return hata('ulke_hekim_sablonlari: a template never moves to another country or doctor')
+      if (eski.silindi_at) return hata('ulke_hekim_sablonlari: a deleted template does not change and is not brought back')
+      return null
+    }
+    if (!['ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari'].includes(ad) || eski.patient_id === undefined) return null
     // NOTYA-ULKE-MESAJ-01 — the triggers of migration 140 (`ulke_mesaj_yazismasi_kilidi`, `ulke_hasta_mesaji_kilidi`).
     if (ad === 'ulke_mesaj_yazismalari') {
       if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id') || farkli('created_at')) return hata('ulke_mesaj_yazismalari: a conversation never moves to another country, doctor or patient')
