@@ -12,7 +12,7 @@ import type { ComponentType } from 'react'
 import type { HastaFormuIcerigi } from './intake/tipler'
 
 /** ISO 3166-1 alpha-2, lower case. Adding a country = a new folder under countries/ + a branch in countries/active/. */
-export const ULKE_KODLARI = ['tr', 'uz', 'gb', 'us', 'au', 'nz'] as const
+export const ULKE_KODLARI = ['tr', 'uz', 'gb', 'us', 'au', 'nz', 'ca'] as const
 export type UlkeKodu = (typeof ULKE_KODLARI)[number]
 
 /** Accounts created before countries existed carry no stamp; they are Türkiye's (the only country there was). */
