@@ -54,7 +54,15 @@ Five tables, all server-only (row-level security on, no rule, no privilege for t
 
 ### What was tested, and how
 
-@@TESTED@@
+All of it on commit `a1c9020a` of `feat/uz-mesaj`, in the working copy of the repository on the build machine, on 2026-10-09. The commit after it changes only this paragraph and one row of `docs/OPEN-COMMITMENTS.md`.
+
+- **Tests written against "the active pack", run once for each country folder** (`npm run test:ulke`): 268 pass for `uz` and 268 for `tr`. Of these, 109 are this job's, in six files: the library and route of messages (26), of "my templates" (16) and of consultation (27), and the screens of each (15, 10, 15). They prove, for every route: a second doctor, a second patient, another country, a closed conversation, a consultation whose period ran out, a doctor's session on the patient's route and the reverse — each answered exactly like "does not exist" or "no session", with nothing written.
+- **Ordinary country tests:** 805 pass. Uzbekistan's own for this job (`countries/uz/uygulama/mesaj.test.ts`, 14): the three catalogues in three forms, the leak scan over every string, the settings, that the pack brings no template, the consent sentence, and that this record lists the patient-facing sentences and the consent sentence exactly as they stand in the code.
+- **Migrations 140 to 142 on a real PostgreSQL** (a throwaway local one; nothing left the machine): the migration proof answers 390 of 390, the baseline proof 102 of 102. Not applied to any hosted database.
+- **The Uzbek build** (`NOTYA_COUNTRY=uz npm run build:ulke`): built, 191 output files, the Uzbek pack present and no other country's.
+- **The pack-neutral walk-through** in a real browser against that build and the stand-ins: 440 of 440 checks, 32 of them this job's (templates created, edited, deleted softly and inserted into a message; a patient's page before anybody wrote, a message written, read and answered, the doctor's home, closing; consultation from the code to the reading after the closing; the second account against all of it; no provider call and no request leaving the machine). **Uzbekistan's own walk-through:** 508 of 508; it has no step for these features.
+- **The Turkish suite** (`npm test`): 5 835 tests, 26 fail and 4 are cancelled, **the same tests by name as on `main`** (5 159 tests, 26 and 4); none is new.
+- **Only with stand-ins:** every route ran against the in-process stand-in database and, in the walk-through, against the stand-in server. The provider's roles, grants and API layer, and the application against a real database, are not covered.
 
 ### Patient-facing sentences of the messages, for the native reader
 
