@@ -162,7 +162,7 @@ const UZ_LATN: AcilisIcerigi = {
   meta: {
     baslik: 'Notya — shifokorlar uchun sunʼiy intellektli klinik yordamchi',
     aciklama:
-      'Qabulni tinglaydi, tibbiy yozuvni oʻzbek yoki rus tilida yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatuvda tutadi. Har bir qaror shifokor tasdigʻi bilan.',
+      'Qabulni tinglaydi, tibbiy yozuvni oʻzbek yoki rus tilida yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatib boradi. Har bir qaror shifokor tasdigʻi bilan.',
   },
   nav: {
     bolumler: 'Boʻlimlar',
@@ -186,14 +186,14 @@ const UZ_LATN: AcilisIcerigi = {
     baslik: 'Bemor xonadan chiqqanda',
     baslikVurgu: 'ishingiz bitgan boʻlsin.',
     giris:
-      'Notya yordamchisi tajribali hamkasb kabi qabulni tinglaydi, tibbiy yozuvni yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatuvda tutadi. Har bir qaror faqat sizning tasdigʻingiz bilan kuchga kiradi.',
+      'Notya yordamchisi tajribali hamkasb kabi qabulni tinglaydi, tibbiy yozuvni yozadi, retsept va xulosa qoralamasini tayyorlaydi, bemorni kuzatib boradi. Har bir qaror faqat sizning tasdigʻingiz bilan tasdiqlanadi.',
     birinciDugme: 'Narxni soʻrash',
     ikinciDugme: 'Qabulni koʻring',
     gorselAlt: 'Kunduzgi yorugʻlikdagi xususiy shifokor xonasi: koʻrik kushetkasi, stetoskop, tonometr va diplomlar',
     gorselAlti: 'Shifokor xonasi · tasviriy surat',
     serit: [
       '30 yoʻnalish uchun moʻljallangan',
-      'Ovozli, oʻzbek va rus tillarida',
+      'Ovozli — oʻzbek va rus tillarida',
       'Bemor portali bilan birga',
       'Har bir qadam shifokor tasdigʻi bilan',
     ],
@@ -208,7 +208,7 @@ const UZ_LATN: AcilisIcerigi = {
     sekmeler: 'Qabul namunalari',
     yozmoqda: 'yozmoqda',
     tayyor: 'tayyor',
-    izoh: 'Bu qabullar toʻqima namunalardir. Haqiqiy klinikada har bir jumla shifokor tasdigʻiga bogʻliq.',
+    izoh: 'Bu qabullar namunadir. Haqiqiy klinikada har bir jumla shifokor tasdigʻiga bogʻliq.',
     sahneler: [
       {
         id: 'pedia',
@@ -236,7 +236,7 @@ const UZ_LATN: AcilisIcerigi = {
           {
             kim: 'Ogohlantirish',
             rol: 'ogohlantirish',
-            matn: 'Doktor, bir daqiqa — bu kattalar dozasi. Bu vaznda bir martalik doza 250 mg dan oshmasligi kerak. Tuzataymi?',
+            matn: 'Doktor, bir daqiqa — bu kattalar dozasi. Bu vaznda bir martalik doza 250 mg dan oshmasligi kerak. Tuzatayinmi?',
           },
         ],
       },
@@ -251,7 +251,7 @@ const UZ_LATN: AcilisIcerigi = {
           {
             kim: 'Yordamchi',
             rol: 'yordamchi',
-            matn: '40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozaymi, doktor?',
+            matn: '40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozayinmi, doktor?',
           },
         ],
       },
@@ -264,7 +264,7 @@ const UZ_LATN: AcilisIcerigi = {
     govde: 'Qabul yakunidagi qadamlar tartib bilan oldingizda turadi. Keraksiz qadamni oʻtkazib yuborasiz.',
     maddeler: [
       'Oʻz qabul shablonlaringiz bir bosishda',
-      'Keyingi qabul bemor ketmasidan belgilanadi',
+      'Keyingi qabul bemor ketmasidan oldin belgilanadi',
       'Bemor qabul xulosasini oʻz portalida koʻradi',
     ],
     kart: {
@@ -356,7 +356,7 @@ const UZ_LATN: AcilisIcerigi = {
   kuzatuv: {
     ustBaslik: '07 — Kuzatuv',
     baslik: 'Hech bir bemor',
-    baslikVurgu: 'kuzatuvdan tushib qolmaydi.',
+    baslikVurgu: 'kuzatuvsiz qolmaydi.',
     govde:
       'Qayta koʻrigi kechikkan va kuzatuvi oʻtkazib yuborilgan bemorlar oʻz-oʻzidan roʻyxatga tushadi. Bir bosishda eslatma yuborasiz.',
     kart: {
@@ -371,7 +371,7 @@ const UZ_LATN: AcilisIcerigi = {
   organish: {
     ustBaslik: '08 — Oʻrganish',
     baslik: 'Oʻn qabuldan keyin',
-    baslikVurgu: 'goʻyo yillar davomida birgasiz.',
+    baslikVurgu: 'goʻyo yillar davomida birga ishlagandeksiz.',
     govde: 'Afzal koʻrganlaringizni eslab qoladi; bir gapni ikki marta ayttirmaydi. Oʻzini hamkasb kabi tutadi.',
     gorselAlt: 'Ertalabki yorugʻlikdagi shifokor stoli: qabul yozuvlari, choʻntak daftari, stetoskop va ruchka',
     gorselAlti: 'Qabul yozuvlari · tasviriy surat',
@@ -384,7 +384,7 @@ const UZ_LATN: AcilisIcerigi = {
     oninchi: {
       etiket: '10-qabul',
       sorov: 'Amoksitsillin yozing.',
-      javob: '40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozaymi, doktor?',
+      javob: '40 mg/kg/kun, bu vaznda kuniga 720 mg. Siz odatda amoksitsillin-klavulanatni tanlaysiz — shuni yozayinmi, doktor?',
     },
     izoh: 'Siz soʻramadingiz. U esladi.',
   },
@@ -392,7 +392,7 @@ const UZ_LATN: AcilisIcerigi = {
     ustBaslik: '09 — Xavfsizlik toʻri',
     baslik: 'Ellik bemor, ogʻir kun —',
     baslikVurgu: 'u hech qachon jim turmaydi.',
-    iqtibos: '“Doktor, bir daqiqa — bu kattalar dozasi. Bu vaznda bir martalik doza 250 mg dan oshmasligi kerak. Tuzataymi?”',
+    iqtibos: '“Doktor, bir daqiqa — bu kattalar dozasi. Bu vaznda bir martalik doza 250 mg dan oshmasligi kerak. Tuzatayinmi?”',
     izoh: 'Notoʻgʻri doza, xavfli dori birikmasi. Soʻramasangiz ham aytadi. Toʻxtatadi. Toʻgʻrisini taklif qiladi.',
     gorselAlt: 'Kunduzgi yorugʻlikdagi xususiy klinika yoʻlagi: shifokor xonalari eshiklari va kutish oʻrindigʻi',
     gorselAlti: 'Klinika yoʻlagi · tasviriy surat',
@@ -431,7 +431,7 @@ const UZ_LATN: AcilisIcerigi = {
     ustBaslik: 'Xususiy amaliyot',
     baslik: 'Narxni soʻrang.',
     baslikVurgu: 'Siz bilan bogʻlanamiz.',
-    govde: 'Hozircha faqat taklif kodi bilan. Oʻzbek va rus tillarida. Qabulxonangizga yana bir hamkasb.',
+    govde: 'Hozircha faqat taklif kodi bilan. Oʻzbek va rus tillarida. Qabulxonangizga yana bir hamkasb qoʻshiladi.',
     form: {
       etiket: 'Narx soʻrovi',
       adSoyad: 'Ism va familiya',
@@ -490,14 +490,14 @@ const RU: AcilisIcerigi = {
     baslik: 'Пациент вышел из кабинета —',
     baslikVurgu: 'и ваша работа уже сделана.',
     giris:
-      'Помощник Notya, как опытный коллега, слушает приём, пишет медицинскую запись, готовит черновик рецепта и заключения, держит пациента под наблюдением. Каждое решение вступает в силу только после вашего подтверждения.',
+      'Помощник Notya, как опытный коллега, слушает приём, пишет медицинскую запись, готовит черновик рецепта и заключения, ведёт наблюдение за пациентом. Каждое решение подтверждается только вами.',
     birinciDugme: 'Запросить цену',
     ikinciDugme: 'Посмотреть приём',
     gorselAlt: 'Частный врачебный кабинет при дневном свете: кушетка для осмотра, стетоскоп, тонометр и дипломы',
     gorselAlti: 'Кабинет врача · иллюстрация',
     serit: [
       'Рассчитан на 30 специальностей',
-      'Голосом, на узбекском и русском',
+      'Голосом — на узбекском и русском',
       'Вместе с порталом пациента',
       'Каждый шаг подтверждает врач',
     ],
@@ -735,7 +735,7 @@ const RU: AcilisIcerigi = {
     ustBaslik: 'Частная практика',
     baslik: 'Запросите цену.',
     baslikVurgu: 'Мы свяжемся с вами.',
-    govde: 'Пока только по коду приглашения. На узбекском и русском языках. Ещё один коллега в вашем кабинете.',
+    govde: 'Пока только по коду приглашения. На узбекском и русском языках. В ваш кабинет присоединится ещё один коллега.',
     form: {
       etiket: 'Запрос цены',
       adSoyad: 'Имя и фамилия',
@@ -771,7 +771,7 @@ const UZ_CYRL: AcilisIcerigi = {
   meta: {
     baslik: 'Notya — шифокорлар учун сунъий интеллектли клиник ёрдамчи',
     aciklama:
-      'Қабулни тинглайди, тиббий ёзувни ўзбек ёки рус тилида ёзади, рецепт ва хулоса қораламасини тайёрлайди, беморни кузатувда тутади. Ҳар бир қарор шифокор тасдиғи билан.',
+      'Қабулни тинглайди, тиббий ёзувни ўзбек ёки рус тилида ёзади, рецепт ва хулоса қораламасини тайёрлайди, беморни кузатиб боради. Ҳар бир қарор шифокор тасдиғи билан.',
   },
   nav: {
     bolumler: 'Бўлимлар',
@@ -795,14 +795,14 @@ const UZ_CYRL: AcilisIcerigi = {
     baslik: 'Бемор хонадан чиққанда',
     baslikVurgu: 'ишингиз битган бўлсин.',
     giris:
-      'Notya ёрдамчиси тажрибали ҳамкасб каби қабулни тинглайди, тиббий ёзувни ёзади, рецепт ва хулоса қораламасини тайёрлайди, беморни кузатувда тутади. Ҳар бир қарор фақат сизнинг тасдиғингиз билан кучга киради.',
+      'Notya ёрдамчиси тажрибали ҳамкасб каби қабулни тинглайди, тиббий ёзувни ёзади, рецепт ва хулоса қораламасини тайёрлайди, беморни кузатиб боради. Ҳар бир қарор фақат сизнинг тасдиғингиз билан тасдиқланади.',
     birinciDugme: 'Нархни сўраш',
     ikinciDugme: 'Қабулни кўринг',
     gorselAlt: 'Кундузги ёруғликдаги хусусий шифокор хонаси: кўрик кушеткаси, стетоскоп, тонометр ва дипломлар',
     gorselAlti: 'Шифокор хонаси · тасвирий сурат',
     serit: [
       '30 йўналиш учун мўлжалланган',
-      'Овозли, ўзбек ва рус тилларида',
+      'Овозли — ўзбек ва рус тилларида',
       'Бемор портали билан бирга',
       'Ҳар бир қадам шифокор тасдиғи билан',
     ],
@@ -817,7 +817,7 @@ const UZ_CYRL: AcilisIcerigi = {
     sekmeler: 'Қабул намуналари',
     yozmoqda: 'ёзмоқда',
     tayyor: 'тайёр',
-    izoh: 'Бу қабуллар тўқима намуналардир. Ҳақиқий клиникада ҳар бир жумла шифокор тасдиғига боғлиқ.',
+    izoh: 'Бу қабуллар намунадир. Ҳақиқий клиникада ҳар бир жумла шифокор тасдиғига боғлиқ.',
     sahneler: [
       {
         id: 'pedia',
@@ -845,7 +845,7 @@ const UZ_CYRL: AcilisIcerigi = {
           {
             kim: 'Огоҳлантириш',
             rol: 'ogohlantirish',
-            matn: 'Доктор, бир дақиқа — бу катталар дозаси. Бу вазнда бир марталик доза 250 мг дан ошмаслиги керак. Тузатайми?',
+            matn: 'Доктор, бир дақиқа — бу катталар дозаси. Бу вазнда бир марталик доза 250 мг дан ошмаслиги керак. Тузатайинми?',
           },
         ],
       },
@@ -860,7 +860,7 @@ const UZ_CYRL: AcilisIcerigi = {
           {
             kim: 'Ёрдамчи',
             rol: 'yordamchi',
-            matn: '40 мг/кг/кун, бу вазнда кунига 720 мг. Сиз одатда амоксициллин-клавуланатни танлайсиз — шуни ёзайми, доктор?',
+            matn: '40 мг/кг/кун, бу вазнда кунига 720 мг. Сиз одатда амоксициллин-клавуланатни танлайсиз — шуни ёзайинми, доктор?',
           },
         ],
       },
@@ -873,7 +873,7 @@ const UZ_CYRL: AcilisIcerigi = {
     govde: 'Қабул якунидаги қадамлар тартиб билан олдингизда туради. Кераксиз қадамни ўтказиб юборасиз.',
     maddeler: [
       'Ўз қабул шаблонларингиз бир босишда',
-      'Кейинги қабул бемор кетмасидан белгиланади',
+      'Кейинги қабул бемор кетмасидан олдин белгиланади',
       'Бемор қабул хулосасини ўз порталида кўради',
     ],
     kart: {
@@ -965,7 +965,7 @@ const UZ_CYRL: AcilisIcerigi = {
   kuzatuv: {
     ustBaslik: '07 — Кузатув',
     baslik: 'Ҳеч бир бемор',
-    baslikVurgu: 'кузатувдан тушиб қолмайди.',
+    baslikVurgu: 'кузатувсиз қолмайди.',
     govde:
       'Қайта кўриги кечиккан ва кузатуви ўтказиб юборилган беморлар ўз-ўзидан рўйхатга тушади. Бир босишда эслатма юборасиз.',
     kart: {
@@ -980,7 +980,7 @@ const UZ_CYRL: AcilisIcerigi = {
   organish: {
     ustBaslik: '08 — Ўрганиш',
     baslik: 'Ўн қабулдан кейин',
-    baslikVurgu: 'гўё йиллар давомида биргасиз.',
+    baslikVurgu: 'гўё йиллар давомида бирга ишлагандексиз.',
     govde: 'Афзал кўрганларингизни эслаб қолади; бир гапни икки марта айттирмайди. Ўзини ҳамкасб каби тутади.',
     gorselAlt: 'Эрталабки ёруғликдаги шифокор столи: қабул ёзувлари, чўнтак дафтари, стетоскоп ва ручка',
     gorselAlti: 'Қабул ёзувлари · тасвирий сурат',
@@ -993,7 +993,7 @@ const UZ_CYRL: AcilisIcerigi = {
     oninchi: {
       etiket: '10-қабул',
       sorov: 'Амоксициллин ёзинг.',
-      javob: '40 мг/кг/кун, бу вазнда кунига 720 мг. Сиз одатда амоксициллин-клавуланатни танлайсиз — шуни ёзайми, доктор?',
+      javob: '40 мг/кг/кун, бу вазнда кунига 720 мг. Сиз одатда амоксициллин-клавуланатни танлайсиз — шуни ёзайинми, доктор?',
     },
     izoh: 'Сиз сўрамадингиз. У эслади.',
   },
@@ -1001,7 +1001,7 @@ const UZ_CYRL: AcilisIcerigi = {
     ustBaslik: '09 — Хавфсизлик тўри',
     baslik: 'Эллик бемор, оғир кун —',
     baslikVurgu: 'у ҳеч қачон жим турмайди.',
-    iqtibos: '“Доктор, бир дақиқа — бу катталар дозаси. Бу вазнда бир марталик доза 250 мг дан ошмаслиги керак. Тузатайми?”',
+    iqtibos: '“Доктор, бир дақиқа — бу катталар дозаси. Бу вазнда бир марталик доза 250 мг дан ошмаслиги керак. Тузатайинми?”',
     izoh: 'Нотўғри доза, хавфли дори бирикмаси. Сўрамасангиз ҳам айтади. Тўхтатади. Тўғрисини таклиф қилади.',
     gorselAlt: 'Кундузги ёруғликдаги хусусий клиника йўлаги: шифокор хоналари эшиклари ва кутиш ўриндиғи',
     gorselAlti: 'Клиника йўлаги · тасвирий сурат',
@@ -1040,7 +1040,7 @@ const UZ_CYRL: AcilisIcerigi = {
     ustBaslik: 'Хусусий амалиёт',
     baslik: 'Нархни сўранг.',
     baslikVurgu: 'Сиз билан боғланамиз.',
-    govde: 'Ҳозирча фақат таклиф коди билан. Ўзбек ва рус тилларида. Қабулхонангизга яна бир ҳамкасб.',
+    govde: 'Ҳозирча фақат таклиф коди билан. Ўзбек ва рус тилларида. Қабулхонангизга яна бир ҳамкасб қўшилади.',
     form: {
       etiket: 'Нарх сўрови',
       adSoyad: 'Исм ва фамилия',
