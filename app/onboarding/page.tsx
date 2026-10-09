@@ -6,6 +6,10 @@ import { ensureDoctorAccessToken, isOnboardingDone } from '@/lib/doktor/clientAu
 import { hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 import SesProfiliKayit from '@/components/sesProfili/SesProfiliKayit';
+import KisiselBilgilerAdimi, { type KisiselAlan } from '@/components/onboarding/KisiselBilgilerAdimi';
+import { adDogrula } from '@/lib/onboarding/profilDogrula';
+import { doktorCepTelefonu } from '@/lib/onboarding/cepTelefonu';
+import { KVKK_ONAY_KODU } from '@/lib/onboarding/kvkkOnay';
 
 interface Profession {
   id: string;
@@ -149,6 +153,20 @@ function OnboardingInner() {
       } catch {
         /* continue onboarding */
       }
+      // NOTYA-ONBOARDING-01: giriş e-postası (salt okunur gösterilir) ve KVKK kutusu gerekli mi — kararı sunucu verir.
+      try {
+        const hesapRes = await fetch('/api/users/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+        })
+        if (hesapRes.ok) {
+          const hesap = (await hesapRes.json().catch(() => ({}))) as { data?: { email?: string; kvkk_onay_gerekli?: boolean } }
+          setEposta(String(hesap.data?.email || ''))
+          setKvkkGerekli(hesap.data?.kvkk_onay_gerekli === true)
+        }
+      } catch {
+        /* kutu gizli kalır; sunucu rıza isterse gönderimde görünür olur */
+      }
       setChecking(false)
     })()
   }, [router, validPreset])
@@ -173,6 +191,14 @@ function OnboardingInner() {
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
   const [addressingPreference, setAddressingPreference] = useState('');
+  // NOTYA-ONBOARDING-01: cep telefonu, giriş e-postası, KVKK (yalnız kayıtlı rızası olmayan hesapta).
+  const [cepTelefonu, setCepTelefonu] = useState('');
+  const [eposta, setEposta] = useState('');
+  const [kvkkGerekli, setKvkkGerekli] = useState(false);
+  const [kvkkOnay, setKvkkOnay] = useState(false);
+  const [dokunulan, setDokunulan] = useState<Partial<Record<KisiselAlan, boolean>>>({});
+  const [genelHata, setGenelHata] = useState('');
+  const [gonderiliyor, setGonderiliyor] = useState(false);
 
   const isStep1Complete = !!selectedProfession;
   
@@ -192,7 +218,24 @@ function OnboardingInner() {
     return true; // psikolog
   };
 
-  const canSubmit = firstName && lastName && gender && addressingPreference;
+  // Aynı kurallar sunucuda da uygulanır (app/api/users/profile/route.ts) — buradaki denetim yalnız kolaylıktır.
+  const adSonuc = adDogrula(firstName, 'ad');
+  const soyadSonuc = adDogrula(lastName, 'soyad');
+  const cepSonuc = doktorCepTelefonu(cepTelefonu);
+  const canSubmit = adSonuc.ok && soyadSonuc.ok && cepSonuc.ok && !!gender && !!addressingPreference && (!kvkkGerekli || kvkkOnay) && !gonderiliyor;
+  const alanHatalari: Partial<Record<KisiselAlan, string>> = {
+    ...(dokunulan.firstName && !adSonuc.ok ? { firstName: adSonuc.hata } : {}),
+    ...(dokunulan.lastName && !soyadSonuc.ok ? { lastName: soyadSonuc.hata } : {}),
+    ...(dokunulan.cepTelefonu && !cepSonuc.ok ? { cepTelefonu: cepSonuc.hata } : {}),
+  };
+  const kisiselDegis = (alan: KisiselAlan, deger: string) => {
+    setGenelHata('');
+    if (alan === 'firstName') setFirstName(deger);
+    else if (alan === 'lastName') setLastName(deger);
+    else if (alan === 'cepTelefonu') setCepTelefonu(deger);
+    else if (alan === 'gender') setGender(deger);
+    else setAddressingPreference(deger);
+  };
 
   const toggleMaliChip = (chip: string) => {
     setSelectedMaliChips(prev =>
@@ -222,20 +265,13 @@ function OnboardingInner() {
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || !adSonuc.ok || !soyadSonuc.ok || !cepSonuc.ok) return;
+    setGenelHata('');
 
-    const tokenStr = localStorage.getItem('auth-token');
-    if (!tokenStr) {
-      alert('Oturum bulunamadı');
-      return;
-    }
-
-    let access_token = '';
-    try {
-      const parsed = JSON.parse(tokenStr);
-      access_token = parsed.access_token;
-    } catch {
-      alert('Oturum bilgisi okunamadı. Lütfen yeniden giriş yapın.');
+    // NOTYA-AUTH-01: belirteç tek yerden okunur; süresi dolduysa yenilenir (form doldurmak zaman alır).
+    const access_token = await ensureDoctorAccessToken();
+    if (!access_token) {
+      alert('Oturum bulunamadı. Lütfen yeniden giriş yapın.');
       return;
     }
 
@@ -271,15 +307,19 @@ function OnboardingInner() {
       specialty: finalSpecialty,
       title: unvan || '',
       hospital: hospital || '',
-      firstName,
-      lastName,
+      firstName: adSonuc.deger,
+      lastName: soyadSonuc.deger,
+      cepTelefonu: cepSonuc.deger,
       gender,
       addressingPreference,
+      // Yalnız kutu gösterildiyse ve hekim işaretlediyse gider; gerekip gerekmediğine sunucu karar verir.
+      ...(kvkkGerekli && kvkkOnay ? { kvkk_onay: true } : {}),
       trial_start: new Date().toISOString(),
       plan: 'professional',
       metadata: { agent },
     };
 
+    setGonderiliyor(true);
     try {
       // POST profile
       const profileRes = await fetch('/api/users/profile', {
@@ -291,20 +331,19 @@ function OnboardingInner() {
         body: JSON.stringify(profilePayload),
       });
       if (!profileRes.ok) {
-        const errBody = await profileRes.json().catch(() => ({}));
-        throw new Error(String((errBody as { error?: string }).error || 'Profil kaydedilemedi'));
+        const errBody = (await profileRes.json().catch(() => ({}))) as { error?: string; alan?: string; kod?: string };
+        if (profileRes.status === 400 && errBody.error) {
+          // Sunucunun doğrulama yanıtı: Türkçe iletiyi olduğu gibi göster; rıza isteniyorsa kutuyu görünür kıl.
+          if (errBody.kod === KVKK_ONAY_KODU) setKvkkGerekli(true);
+          setGenelHata(errBody.error);
+          setGonderiliyor(false);
+          return;
+        }
+        throw new Error(String(errBody.error || 'Profil kaydedilemedi'));
       }
+      const profilYanit = (await profileRes.json().catch(() => ({}))) as { telefon_kaydedildi?: boolean };
+      if (profilYanit.telefon_kaydedildi === false) console.warn('[onboarding] cep telefonu kaydedilemedi; diğer bilgiler kaydedildi');
       hekimProfilTazeleIsaretle()
-
-      // Set asistan specialty
-      await fetch('/api/asistan/set-specialty', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access_token}`,
-        },
-        body: JSON.stringify({ specialty: finalSpecialty }),
-      });
 
       // Activate trial
       await fetch('/api/users/trial', {
@@ -323,6 +362,7 @@ function OnboardingInner() {
       router.push(redirectPath);
     } catch (error) {
       console.error(error);
+      setGonderiliyor(false);
       alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
@@ -520,37 +560,21 @@ function OnboardingInner() {
         {step === 2 && renderStep2()}
 
         {step === 3 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Ad</label>
-                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }} />
-              </div>
-              <div>
-                <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Soyad</label>
-                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }} />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Cinsiyet</label>
-              <select value={gender} onChange={e => setGender(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}>
-                <option value="">Seçiniz</option>
-                <option value="Erkek">Erkek</option>
-                <option value="Kadın">Kadın</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Hitap Tercihi</label>
-              <select value={addressingPreference} onChange={e => setAddressingPreference(e.target.value)} style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}>
-                <option value="">Seçiniz</option>
-                <option value="Hocam">Hocam</option>
-                <option value="[isim] Hocam">[isim] Hocam</option>
-                <option value="First name only">Sadece İsim</option>
-              </select>
-            </div>
-          </div>
+          <KisiselBilgilerAdimi
+            firstName={firstName}
+            lastName={lastName}
+            cepTelefonu={cepTelefonu}
+            gender={gender}
+            addressingPreference={addressingPreference}
+            eposta={eposta}
+            kvkkGerekli={kvkkGerekli}
+            kvkkOnay={kvkkOnay}
+            hatalar={alanHatalari}
+            genelHata={genelHata}
+            onDegis={kisiselDegis}
+            onBirak={(alan) => setDokunulan(prev => ({ ...prev, [alan]: true }))}
+            onKvkk={(isaretli) => { setGenelHata(''); setKvkkOnay(isaretli); }}
+          />
         )}
 
         {step === 4 && (
