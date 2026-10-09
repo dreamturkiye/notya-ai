@@ -31,6 +31,8 @@ import { ulkeTablosu } from '../uygulama/tablolar'
 import { yerelAn } from '../uygulama/zaman'
 import type { PortalOturumu } from './giris'
 import { hastaninSonIstegi, istekAcik, istekGunleri } from './istek'
+import { hastaFormuOzeti } from '../intake/form'
+import { formAcik } from '../intake/icerik'
 import type { PortalIcerigi } from './tipler'
 
 export type { PortalIcerigi } from './tipler'
@@ -102,6 +104,8 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
     saatDilimi: (paket.uygulama?.saatDilimleri.length ?? 1) > 1 ? dilim : null,
     ozetler,
     istek,
+    // The intake form, where the country has one: only whether one is waiting or was sent (by doctor AND patient).
+    ...(formAcik() ? { form: await hastaFormuOzeti(supabase, { doktorId, hastaId }) } : {}),
     bitis: o.bitis,
   }
 }

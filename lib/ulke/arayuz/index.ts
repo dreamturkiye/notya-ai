@@ -11,12 +11,12 @@ import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import type { DilGrubu, DilKodu } from '../tipler'
 import { ulkePaketi, uygulamaDilleri, uygulamaDiliSec } from '../ulke'
 import * as D from './dilSecimi'
-import type { PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 import * as S from './notSablonu'
 import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
-export type { PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+export type { FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 export { NOT_BOLUMLERI, ROL_TARAFLARI, type AsistanKimligi, type NotBolumu, type RolTanimi, type RolTarafi } from './tipler'
 
 /** What the active pack brings for the shared screens. A country that brings none has no shared screens. */
@@ -74,6 +74,14 @@ export function portalMetni(dil: unknown): PortalMetni {
   const p = arayuz().portalMetinleri?.[d]
   if (!p) throw new Error(`[ulke/arayuz] no patient-portal catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
   return p
+}
+
+/** The intake form's catalogue in a form: the account's for the doctor's controls, the patient's for the form itself and for the invitation. */
+export function formMetni(dil: unknown): FormMetni {
+  const d = uygulamaDili(dil)
+  const f = arayuz().formMetinleri?.[d]
+  if (!f) throw new Error(`[ulke/arayuz] no intake-form catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
+  return f
 }
 
 /** The name of an ISO weekday (1 = Monday … 7 = Sunday). '' for anything else. */
@@ -136,6 +144,11 @@ export const sablonMu = (ham: unknown): ham is string => S.sablonMu(arayuz().not
 export const sablonAlanlari = (sablon: string, hasta?: S.SablonHastasi): readonly string[] => S.sablonAlanlari(arayuz().notSablonlari, roller(), veliYasi(), sablon, hasta)
 export const alanTanimi = (anahtar: string): NotAlani | null => S.alanTanimi(arayuz().notSablonlari, anahtar)
 export const alanAdi = (anahtar: string, dil: unknown): string | null => S.alanAdi(arayuz().notSablonlari, anahtar, uygulamaDili(dil))
+/**
+ * NOTYA-ULKE-INTAKE-01 — the kit's ONE age rule, for a form as for a note: true = the patient is below the country's
+ * guardian age on `gun`. An unknown age counts as below it only in a role whose patients are children.
+ */
+export const veliYasindaMi = (rol: string | null, dogumTarihi: string | null | undefined, gun: string): boolean => S.veliYasindaMi(arayuz().notSablonlari, veliYasi(), rol ?? arayuz().notSablonlari.genelSablon, dogumTarihi, gun)
 export const bolumAdi = (sablon: string, bolum: NotBolumu, dil: unknown): string | null => S.bolumAdi(arayuz().notSablonlari, roller(), sablon, bolum, uygulamaDili(dil))
 
 // ───────────────────────── landing page ─────────────────────────

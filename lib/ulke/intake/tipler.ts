@@ -176,6 +176,8 @@ export type HekimFormu = {
   olusturuldu: string
   gonderildi: string | null
   yenidenAcildi: string | null
+  /** true = the pack's question set has changed since this form was asked for: an answer to a question that no longer exists is not shown. */
+  surumFarkli: boolean
   /** Present for a SUBMITTED form only: an open form is the patient's working copy and is not shown to anybody. */
   bolumler: { baslik: string; satirlar: CevapSatiri[] }[] | null
 }

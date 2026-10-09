@@ -20,6 +20,9 @@ export const PORTAL_SAYFASI = '/portal'
 export const PORTAL_API = '/api/ulke/portal'
 /** Routes a DOCTOR's session calls to manage a patient's portal. Deliberately not under PORTAL_API. */
 export const HEKIM_PORTAL_API = '/api/ulke/hasta-portali'
+/** NOTYA-ULKE-INTAKE-01 — the intake form: the route a DOCTOR's session calls, and the one a PATIENT's page calls (under PORTAL_API, so the portal cookie reaches it). */
+export const HEKIM_FORM_API = '/api/ulke/hasta-formu'
+export const PORTAL_FORM_API = '/api/ulke/portal/form'
 export const PORTAL_CEREZI = 'notya_portal'
 /** A request that changes something must carry this header: a page of another site cannot send it. */
 export const PORTAL_ISTEK_BASLIGI = 'x-notya-portal'
