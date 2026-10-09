@@ -18,6 +18,8 @@ import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 let arayuz: UlkeArayuzu | null
 if (process.env.NOTYA_COUNTRY === 'uz') {
   arayuz = require('../uz/arayuz').UZ_ARAYUZ
+} else if (process.env.NOTYA_COUNTRY === 'gb') {
+  arayuz = require('../gb/arayuz').GB_ARAYUZ
 } else if (process.env.NOTYA_COUNTRY === 'tr' || !process.env.NOTYA_COUNTRY) {
   arayuz = null
 } else {

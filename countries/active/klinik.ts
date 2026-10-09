@@ -15,6 +15,8 @@ import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 let klinik: UlkeKlinigi | null
 if (process.env.NOTYA_COUNTRY === 'uz') {
   klinik = require('../uz/klinik/index').UZ_KLINIK
+} else if (process.env.NOTYA_COUNTRY === 'gb') {
+  klinik = require('../gb/klinik/index').GB_KLINIK
 } else if (process.env.NOTYA_COUNTRY === 'tr' || !process.env.NOTYA_COUNTRY) {
   klinik = require('../tr/klinik').TR_KLINIK
 } else {

@@ -9,10 +9,13 @@ import { TR_PAKETI } from './tr/index'
 import { TR_SIZINTI_HARFLERI, TR_SIZINTI_TERIMLERI } from './tr/sizintiTerimleri'
 import { UZ_PAKETI } from './uz/index'
 import { UZ_SIZINTI_HARFLERI, UZ_SIZINTI_TERIMLERI } from './uz/sizintiTerimleri'
+import { GB_PAKETI } from './gb/index'
+import { GB_SIZINTI_HARFLERI, GB_SIZINTI_TERIMLERI } from './gb/sizintiTerimleri'
 
 export type UlkeKaydi = { paket: UlkePaketi; sizintiTerimleri: readonly SizintiTerimi[]; sizintiHarfleri: string }
 
 export const TUM_ULKELER: Record<UlkeKodu, UlkeKaydi> = {
   tr: { paket: TR_PAKETI, sizintiTerimleri: TR_SIZINTI_TERIMLERI, sizintiHarfleri: TR_SIZINTI_HARFLERI },
   uz: { paket: UZ_PAKETI, sizintiTerimleri: UZ_SIZINTI_TERIMLERI, sizintiHarfleri: UZ_SIZINTI_HARFLERI },
+  gb: { paket: GB_PAKETI, sizintiTerimleri: GB_SIZINTI_TERIMLERI, sizintiHarfleri: GB_SIZINTI_HARFLERI },
 }
