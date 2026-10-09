@@ -26,6 +26,8 @@ import { dirname, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+// NOTYA-UZ-ACILIS-02: nor is a photograph, and the shared landing components expect React in scope.
+import './testing/varlikTaklidi'
 import { gorunurMetin, sizintiTara } from './testing/sizintiTarayici'
 import { davetKoduHash } from './davet'
 import type { DilKodu } from './tipler'
@@ -33,7 +35,6 @@ import type { DilKodu } from './tipler'
 const KOK = resolve(__dirname, '../..')
 // A stylesheet is not something Node can run; the pack's page entry imports one.
 ;(require as unknown as { extensions: Record<string, (m: { exports: unknown }) => void> }).extensions['.css'] = (m) => { m.exports = {} }
-
 // ───────────────────────── stand-in Supabase ─────────────────────────
 type Hesap = { id: string; email: string; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }
 let hesaplar: Record<string, Hesap>
@@ -223,11 +224,26 @@ describe('an Uzbekistan build: screens', () => {
     assert.doesNotMatch(kaynak, /Asistan|TurkceDogrulama|chromeTheme|globals\.css/, 'the country shell must not pull in the pre-split shell')
   })
 
+  it('uz-Cyrl: the landing page is also written in Cyrillic script, served when the address asks for it; login and sign-up stay in the public languages', () => {
+    const html = belge(Kok.default({ searchParams: { dil: 'uz-Cyrl' } }))
+    assert.match(html, /<div class="uzl" lang="uz-Cyrl"/)
+    assert.ok(html.includes('ишингиз битган бўлсин.'))
+    assert.match(html, /href="\/uzbek\/login"/)
+    assert.match(html, /href="\/uzbek\/signup"/)
+    temiz(html, '/ (uz-Cyrl)')
+    altinda(html, '/ (uz-Cyrl)')
+    temiz(gorunurMetin(html), '/ (uz-Cyrl, visible text)')
+    // A form the page is not written in is not guessed: the public default.
+    assert.match(belge(Kok.default({ searchParams: { dil: 'tr' } })), /<div class="uzl" lang="uz-Latn"/)
+  })
+
   for (const dil of DILLER) {
     it(`${dil}: landing page at the root, inside the root document`, () => {
       const html = belge(Kok.default({ searchParams: sp(dil) }))
       assert.match(html, new RegExp(`<div class="uzl" lang="${dil}"`))
-      assert.ok(html.includes(dil === 'ru' ? 'запись ведёт Notya.' : 'yozuvni Notya yozadi.'))
+      assert.ok(html.includes(dil === 'ru' ? 'и ваша работа уже сделана.' : 'ishingiz bitgan boʻlsin.'))
+      // NOTYA-UZ-ACILIS-02: the three photographs of the Turkish page, served from this build's own asset folder.
+      assert.deepEqual([...html.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]), ['hero-clinic', 'desk-notes', 'corridor'].map((a) => `/uzbek/_next/static/media/${a}.jpg`))
       temiz(html, `/ (${dil})`)
       altinda(html, `/ (${dil})`)
       temiz(gorunurMetin(html), `/ (${dil}, visible text)`)

@@ -8,7 +8,8 @@
  *
  * RUN (nothing here is a dependency of the application; the browser comes from a folder of your own):
  *
- *   mkdir /tmp/yuruyus && cd /tmp/yuruyus && npm i puppeteer-core @sparticuz/chromium @fontsource-variable/fraunces @fontsource/source-sans-3
+ *   mkdir /tmp/yuruyus && cd /tmp/yuruyus && npm i puppeteer-core @sparticuz/chromium @fontsource-variable/fraunces @fontsource/source-sans-3 \
+ *     @fontsource-variable/outfit @fontsource-variable/source-serif-4 @fontsource-variable/onest   # the last three: landing page only
  *   # terminal 1 — stand-in database, auth and storage
  *   SUPABASE_SERVICE_ROLE_KEY=sahte-servis node <repo>/scripts/ulke-yuruyus/sahte-supabase.mjs 54399
  *   # terminal 2 — the Uzbek production build, with the stand-in providers loaded into the server
@@ -65,6 +66,20 @@ const FONT_CSS = [
   ]),
 ].join('\n')
 const FONT_VAR = existsSync(join(FONT, '@fontsource/source-sans-3'))
+// NOTYA-UZ-ACILIS-02 — the landing page asks for other faces than the application screens (the Turkish landing page's
+// two, upright and with the weight axis only, as that page loads them, and a Cyrillic companion for each).
+const ACILIS_FONT_CSS = [
+  ...[['latin', LATIN], ['latin-ext', LATIN_EXT]].flatMap(([alt, aralik]) => [
+    yuz('Fraunces', 'normal', '100 900', `fraunces/fraunces-${alt}-wght-normal.woff2`, aralik),
+    yuz('Outfit', 'normal', '100 900', `outfit/outfit-${alt}-wght-normal.woff2`, aralik),
+  ]),
+  ...[['cyrillic', KIRIL], ['cyrillic-ext', KIRIL_EXT]].flatMap(([alt, aralik]) => [
+    yuz('Source Serif 4', 'normal', '200 900', `source-serif-4/source-serif-4-${alt}-wght-normal.woff2`, aralik),
+    yuz('Onest', 'normal', '100 900', `onest/onest-${alt}-wght-normal.woff2`, aralik),
+  ]),
+].join('\n')
+const ACILIS_FONT_VAR = existsSync(join(FONT, '@fontsource-variable/outfit'))
+const FONT_PAKETI = { fraunces: '@fontsource-variable/fraunces', outfit: '@fontsource-variable/outfit', 'source-serif-4': '@fontsource-variable/source-serif-4', onest: '@fontsource-variable/onest', ss3: '@fontsource/source-sans-3' }
 
 const sonuc = []
 const kontrol = (ad, kosul, ayrinti = '') => { sonuc.push({ ad, tamam: !!kosul, ayrinti }); console.log(`${kosul ? 'ok  ' : 'FAIL'} ${ad}${ayrinti ? ' — ' + ayrinti : ''}`) }
@@ -87,10 +102,13 @@ async function sayfaAc({ genislik, yukseklik, telefon }) {
   await p.setRequestInterception(true)
   p.on('request', (r) => {
     const u = r.url()
-    if (u.startsWith('https://fonts.googleapis.com/')) return r.respond({ status: 200, contentType: 'text/css', body: FONT_VAR ? FONT_CSS : '' })
+    if (u.startsWith('https://fonts.googleapis.com/')) {
+      if (u.includes('family=Outfit')) return r.respond({ status: 200, contentType: 'text/css', body: ACILIS_FONT_VAR ? ACILIS_FONT_CSS : '' })
+      return r.respond({ status: 200, contentType: 'text/css', body: FONT_VAR ? FONT_CSS : '' })
+    }
     if (u.startsWith('https://fonts.gstatic.com/yerel/')) {
       const [paket, dosya] = u.slice('https://fonts.gstatic.com/yerel/'.length).split('/')
-      const yol = paket === 'fraunces' ? join(FONT, '@fontsource-variable/fraunces/files', dosya) : join(FONT, '@fontsource/source-sans-3/files', dosya)
+      const yol = join(FONT, FONT_PAKETI[paket] ?? FONT_PAKETI.ss3, 'files', dosya)
       try { return r.respond({ status: 200, contentType: 'font/woff2', headers: { 'Access-Control-Allow-Origin': '*' }, body: readFileSync(yol) }) } catch { return r.respond({ status: 404, body: '' }) }
     }
     r.continue()
@@ -185,6 +203,60 @@ for (const [dil, rota] of [['uz', '/'], ['ru', '/?dil=ru']]) {
   kontrol('language switch: Russian → Uzbek', p.url() === `${TABAN}${ON_EK}` && (await p.evaluate(() => document.querySelector('.uzl').lang)) === 'uz-Latn', p.url())
   const r = await p.goto(`${TABAN}${ON_EK}/`, { waitUntil: 'networkidle0' })
   kontrol(`${ON_EK}/ (with a trailing slash) ends on ${ON_EK}`, p.url() === `${TABAN}${ON_EK}` && r.status() === 200, `${r.status()} ${p.url()}`)
+  await p.browserContext().close()
+}
+// NOTYA-UZ-ACILIS-02 — the page rebuilt on the Turkish landing page: its three ways out, and its third form.
+{
+  const p = await sayfaAc(MASA)
+  await git(p, '/')
+  const bolumler = await p.evaluate(() => [...document.querySelectorAll('.uzl section[id]')].map((e) => e.id))
+  kontrol('landing: the twelve sections of the Turkish page, in its order', bolumler.join(' ') === 'top suhbat qabul portal maslahat jadval yonalish kuzatuv organish xavfsizlik narx sorov', bolumler.join(' '))
+  const gorseller = await p.evaluate(() => [...document.querySelectorAll('.uzl img')].map((e) => ({ src: e.getAttribute('src'), tamam: e.complete && e.naturalWidth > 0 })))
+  kontrol(`landing: the three photographs load, from ${ON_EK}/_next/static/media/`, gorseller.length === 3 && gorseller.every((g) => g.tamam && g.src.startsWith(`${ON_EK}/_next/static/media/`)), JSON.stringify(gorseller))
+  const yazi = await p.evaluate(() => ({ baslik: getComputedStyle(document.querySelector('.uzl h1')).fontFamily, govde: getComputedStyle(document.querySelector('.uzl h1 + p')).fontFamily, zemin: getComputedStyle(document.querySelector('.uzl')).backgroundColor }))
+  kontrol('landing: the Turkish page\'s faces and ground (Fraunces headline, Outfit text, #f3f6f5)', /^Fraunces/.test(yazi.baslik.replace(/["']/g, '')) && /^Outfit/.test(yazi.govde.replace(/["']/g, '')) && yazi.zemin === 'rgb(243, 246, 245)', JSON.stringify(yazi))
+  // landing → request form: the filled button in the bar and the main hero button
+  for (const [ad, sel] of [['top-bar button', '.uzl header a[href="#sorov"]'], ['hero button', '.uzl #top a[href="#sorov"]']]) {
+    await p.evaluate(() => window.scrollTo(0, 0)); await bekle(150)
+    await p.click(sel); await bekle(700)
+    const form = await p.evaluate(() => { const f = document.querySelector('#sorov form.uzl-form'); if (!f) return null; const k = f.getBoundingClientRect(); return { gorunur: k.top < innerHeight && k.bottom > 0, capa: location.hash, alanlar: f.querySelectorAll('input, textarea').length } })
+    kontrol(`landing → request form (${ad}): the form is on screen`, !!form && form.gorunur && form.capa === '#sorov' && form.alanlar === 5, JSON.stringify(form))
+  }
+  kontrol('landing: "request a price" never names an amount or a trial', !/\d\s*(soʻm|сум|сўм|UZS|USD|\$)|bepul|бесплатн/i.test(await govde(p)))
+  // the second hero button: the typed illustration on this same page — no other address, no video, no account
+  await p.evaluate(() => window.scrollTo(0, 0)); await bekle(150)
+  const onceki = p.istekler.length
+  await p.click('.uzl #top a[href="#suhbat"]'); await bekle(700)
+  const suhbat = await p.evaluate(() => ({ capa: location.hash, yol: location.pathname, ust: Math.round(document.querySelector('#suhbat').getBoundingClientRect().top), video: document.querySelectorAll('video, iframe, audio').length }))
+  kontrol('landing: the second hero button scrolls to the illustration on the page (no video, no other page, no request)', suhbat.capa === '#suhbat' && suhbat.yol === ON_EK && Math.abs(suhbat.ust) < 120 && suhbat.video === 0 && p.istekler.length === onceki, JSON.stringify(suhbat))
+  // landing → login
+  await p.evaluate(() => window.scrollTo(0, 0)); await bekle(150)
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('.uzl header a[href$="/login"]')])
+  kontrol('landing → login: the Uzbek login page', new URL(p.url()).pathname === adres('/login') && !!(await p.$('#ulke-giris-eposta')) && (await metin(p, 'button[type=submit]')) === 'Kirish', p.url())
+  // landing → invitation sign-up (the link beside the request form, and the one in the footer)
+  for (const [ad, sel] of [['beside the request form', '.uzl #sorov a[href$="/signup"]'], ['footer', '.uzl footer a[href$="/signup"]']]) {
+    await git(p, '/')
+    await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.evaluate((s) => document.querySelector(s).click(), sel)])
+    const g = await govde(p)
+    kontrol(`landing → invitation sign-up (${ad}): the sign-up page asks for an invitation code`, new URL(p.url()).pathname === adres('/signup') && /taklif kodi/i.test(g), p.url())
+  }
+  // the third form: Uzbek in Cyrillic script, from the footer; its login link is the public (Latin) one
+  await git(p, '/')
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.evaluate(() => document.querySelector('.uzl footer a[hreflang="uz-Cyrl"]').click())])
+  const kiril = await p.evaluate(() => ({ lang: document.querySelector('.uzl').lang, h1: document.querySelector('h1').innerText, giris: document.querySelector('.uzl footer a[href*="/login"]').getAttribute('href') }))
+  kontrol('landing in Uzbek Cyrillic, from the footer', p.url() === `${TABAN}${ON_EK}?dil=uz-Cyrl` && kiril.lang === 'uz-Cyrl' && /Бемор хонадан чиққанда/.test(kiril.h1) && kiril.giris === adres('/login'), JSON.stringify(kiril))
+  kontrol('landing in Uzbek Cyrillic: no Turkish letter, no console error', !TURKCE_HARF.test(await govde(p)) && p.konsol.length === 0, p.konsol.join(' | ').slice(0, 200))
+  await p.browserContext().close()
+}
+// the menu of the phone layout: section links, request a price, login
+{
+  const p = await sayfaAc(TEL)
+  await git(p, '/?dil=ru')
+  await p.click('.uzl header button[aria-expanded]'); await bekle(200)
+  const menu = await p.evaluate(() => [...document.querySelectorAll('.uzl nav[aria-label="Мобильное меню"] a')].map((a) => `${a.getAttribute('href')} ${a.innerText.replace(/\s+/g, ' ')}`))
+  kontrol('landing, phone: the menu opens with the five section links, request a price and login', menu.length === 7 && menu[5].startsWith('#sorov') && menu[6].startsWith(`${ON_EK}/login?dil=ru`), menu.join(' | '))
+  await p.evaluate(() => document.querySelector('.uzl nav[aria-label="Мобильное меню"] a[href="#narx"]').click()); await bekle(600)
+  kontrol('landing, phone: a menu link closes the menu and goes to its section', !(await p.$('.uzl nav[aria-label="Мобильное меню"]')) && (await p.evaluate(() => location.hash)) === '#narx')
   await p.browserContext().close()
 }
 

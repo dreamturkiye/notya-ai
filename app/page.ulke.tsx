@@ -15,5 +15,6 @@ export default function UlkeKokSayfasi({ searchParams }: { searchParams?: AramaP
   const Acilis = AKTIF_SAYFALAR.acilis
   if (!Acilis || !ozellikAcik('acilisSayfasi')) notFound()
   // Where "request a price" messages go is a setting of the deployment, never a default in code.
-  return <Acilis dil={sayfaDili(searchParams)} iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null} />
+  const ham = searchParams?.dil
+  return <Acilis dil={sayfaDili(searchParams)} istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null} iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null} />
 }

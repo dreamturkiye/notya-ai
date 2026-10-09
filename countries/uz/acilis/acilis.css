@@ -1,153 +1,167 @@
 /*
- * NOTYA-ULKE-01 — Uzbekistan landing page. Layout and responsive rules only; every colour and font is a variable
- * set from lib/doktor/chromeRenk.ts on the .uzl root (AcilisSayfasi.tsx), so the look has one source.
- * Mobile first: one column up to 900px, two from there. All class names are prefixed uzl- (no global leakage).
+ * NOTYA-UZ-ACILIS-02 — Uzbekistan landing page: base rules. The page mirrors the Turkish doctor landing page; its
+ * utility classes are compiled into ./utilities.css (see ./tailwind.config.cjs). This file carries what that page
+ * gets from elsewhere and an Uzbekistan build does not have:
+ *   1. the reset the Turkish application's global stylesheet provides (borders, headings, form controls, images);
+ *   2. the starting values of the variables the utilities build on (rings, shadows, transforms);
+ *   3. the page's own rules and animations (same as app/doktor/landing.css);
+ *   4. the fonts: the same two faces as the Turkish page, each followed by a face that has Cyrillic, because
+ *      Fraunces and Outfit have no Cyrillic letters at all (Russian and Uzbek Cyrillic would fall to a system font).
+ * Everything is scoped to .uzl: this stylesheet is loaded on every screen of the Uzbekistan build.
  */
 .uzl {
-  background: var(--uzl-krem);
-  color: var(--uzl-murekkep);
-  font-family: var(--uzl-sans);
-  font-size: 16px;
-  line-height: 1.6;
+  --font-fraunces: 'Fraunces', 'Source Serif 4';
+  --font-outfit-face: 'Outfit', 'Onest';
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-outfit: var(--font-outfit-face), ui-sans-serif, system-ui, sans-serif;
+  background: #f3f6f5;
+  color: #102428;
   min-height: 100dvh;
   overflow-x: hidden;
+  font-family: var(--font-outfit);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
-/* Resets sit inside :where() so they add no weight: every class below wins over them without tricks. */
-.uzl *, .uzl *::before, .uzl *::after { box-sizing: border-box; }
-.uzl :where(h1, h2, p, ul, ol) { margin: 0; }
-.uzl :where(ul, ol) { padding: 0; list-style: none; }
-.uzl :where(a) { color: inherit; text-decoration: none; }
-.uzl ::selection { background: var(--uzl-cam); color: #fff; }
-.uzl :focus-visible { outline: 2px solid var(--uzl-cam); outline-offset: 3px; border-radius: 4px; }
 
-.uzl-ic { width: 100%; max-width: 1180px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
-@media (min-width: 640px) { .uzl-ic { padding-left: 32px; padding-right: 32px; } }
-
-/* ── header ── */
-.uzl-ust-cubuk {
-  position: sticky; top: 0; z-index: 30;
-  background: color-mix(in srgb, var(--uzl-krem) 92%, transparent);
-  backdrop-filter: saturate(140%) blur(10px);
-  -webkit-backdrop-filter: saturate(140%) blur(10px);
-  border-bottom: 1px solid var(--uzl-cizgi);
-  padding-top: env(safe-area-inset-top, 0px);
+/* 1 — reset (what Tailwind's preflight gives the Turkish page, scoped) */
+.uzl,
+.uzl *,
+.uzl ::before,
+.uzl ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: currentColor;
 }
-.uzl-ust-cubuk-ic { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; }
-.uzl-marka { font-family: var(--uzl-serif); font-style: italic; font-weight: 480; font-size: 26px; letter-spacing: -0.02em; line-height: 1; color: var(--uzl-cam); }
-.uzl-marka-buyuk { font-size: 32px; }
-.uzl-nav { display: none; align-items: baseline; gap: 22px; font-size: 14px; }
-.uzl-nav a { display: inline-flex; align-items: baseline; gap: 6px; border-bottom: 1px solid transparent; padding-bottom: 2px; white-space: nowrap; }
-.uzl-nav a:hover { border-bottom-color: var(--uzl-cam); }
-.uzl-nav-no { font-size: 11px; letter-spacing: 0.12em; color: var(--uzl-soluk); }
-@media (min-width: 1080px) { .uzl-nav { display: flex; } }
-.uzl-ust-sag { display: flex; align-items: center; gap: 10px; }
 
-.uzl-dil { display: inline-flex; border: 1px solid var(--uzl-cizgi); border-radius: 999px; padding: 3px; background: var(--uzl-kagit); }
-.uzl-dil a { border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; line-height: 1; color: var(--uzl-soluk); min-height: 32px; display: inline-flex; align-items: center; }
-.uzl-dil a:hover { color: var(--uzl-murekkep); }
-.uzl-dil .uzl-dil-secili { background: var(--uzl-cam); color: #fff; }
-.uzl-dil-uzun { display: none; }
-@media (min-width: 520px) { .uzl-dil-uzun { display: inline; } .uzl-dil-kisa { display: none; } }
-
-/* ── buttons ── */
-.uzl-dugme {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 48px; padding: 0 24px; border-radius: 999px; border: 0; cursor: pointer;
-  font-family: var(--uzl-sans); font-size: 16px; font-weight: 600; letter-spacing: 0.01em; white-space: nowrap;
-  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+.uzl a {
+  color: inherit;
+  text-decoration: none;
 }
-.uzl-dugme-cam { background: var(--uzl-cam); color: #fff; }
-.uzl-dugme-cam:hover { background: var(--uzl-koyu); }
-.uzl-dugme-cizgi { background: transparent; color: var(--uzl-cam); box-shadow: inset 0 0 0 1px var(--uzl-cam); }
-.uzl-dugme-cizgi:hover { background: color-mix(in srgb, var(--uzl-cam) 8%, transparent); }
-.uzl-dugme-kucuk { min-height: 38px; padding: 0 16px; font-size: 14px; }
-.uzl-dugme-tam { width: 100%; }
 
-/* ── type ── */
-.uzl-ust { font-size: 12px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--uzl-soluk); }
-.uzl-ust-nokta { display: flex; align-items: flex-start; gap: 12px; }
-.uzl-ust-nokta .uzl-nokta { margin-top: 0.55em; }
-.uzl-nokta { display: inline-block; width: 6px; height: 6px; flex: none; background: var(--uzl-cam); }
-.uzl-h1 { font-family: var(--uzl-serif); font-weight: 560; font-size: clamp(2.2rem, 6.4vw, 4.4rem); line-height: 1.06; letter-spacing: -0.03em; margin-top: 20px; }
-.uzl-h2 { font-family: var(--uzl-serif); font-weight: 560; font-size: clamp(1.8rem, 4.4vw, 3.2rem); line-height: 1.12; letter-spacing: -0.025em; margin-top: 16px; }
-.uzl-vurgu { display: block; font-style: italic; font-weight: 480; color: var(--uzl-cam); }
-.uzl-giris { margin-top: 24px; max-width: 34em; font-size: clamp(1.05rem, 1.5vw, 1.25rem); line-height: 1.65; color: color-mix(in srgb, var(--uzl-murekkep) 86%, transparent); }
-.uzl-govde { margin-top: 22px; max-width: 32em; font-size: 1.06rem; line-height: 1.7; color: color-mix(in srgb, var(--uzl-murekkep) 86%, transparent); }
-
-/* ── sections ── */
-.uzl-zemin-krem { background: var(--uzl-krem); }
-.uzl-zemin-kagit { background: var(--uzl-kagit); }
-.uzl-kahraman { padding-top: 44px; }
-.uzl-bolum { padding: 64px 0; scroll-margin-top: 64px; border-top: 1px solid var(--uzl-cizgi); }
-.uzl-iki { display: grid; gap: 36px; align-items: center; }
-.uzl-metin, .uzl-kart-sarici { min-width: 0; }
-@media (min-width: 900px) {
-  .uzl-kahraman { padding-top: 76px; }
-  .uzl-bolum { padding: 104px 0; }
-  .uzl-iki { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 72px; }
-  .uzl-ters .uzl-metin { order: 2; }
-  .uzl-ters .uzl-kart-sarici { order: 1; }
+.uzl button,
+.uzl input,
+.uzl select,
+.uzl textarea {
+  font-family: inherit;
+  font-feature-settings: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
 }
-.uzl-eylemler { margin-top: 30px; display: flex; flex-direction: column; gap: 12px; }
-@media (min-width: 520px) { .uzl-eylemler { flex-direction: row; flex-wrap: wrap; } }
-.uzl-maddeler { margin-top: 28px; display: grid; gap: 12px; font-size: 0.98rem; }
-.uzl-maddeler li { display: flex; align-items: baseline; gap: 12px; }
-.uzl-maddeler .uzl-nokta { transform: translateY(-2px); }
 
-.uzl-serit { margin-top: 48px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; border-top: 1px solid var(--uzl-cizgi); padding-top: 26px; padding-bottom: 34px; }
-.uzl-serit li { font-family: var(--uzl-serif); font-style: italic; font-size: 1.08rem; line-height: 1.3; }
-@media (min-width: 900px) { .uzl-serit { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 72px; } }
-
-/* ── typographic cards ── */
-.uzl-kart { background: var(--uzl-kagit); border: 1px solid var(--uzl-cizgi); border-radius: 22px; padding: 24px; box-shadow: 0 18px 50px rgba(58, 44, 34, 0.08); }
-.uzl-zemin-kagit .uzl-kart { background: var(--uzl-krem); }
-@media (min-width: 640px) { .uzl-kart { padding: 32px; } }
-.uzl-kart-etiket { font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--uzl-soluk); }
-.uzl-kart-liste { margin-top: 18px; border-top: 1px solid var(--uzl-cizgi); }
-.uzl-kart-liste li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 15px 0; border-bottom: 1px solid var(--uzl-cizgi); }
-.uzl-kart-ad { font-family: var(--uzl-serif); font-style: italic; font-size: 1.22rem; line-height: 1.3; }
-.uzl-kart-aciklama { font-size: 0.9rem; color: var(--uzl-soluk); text-align: right; }
-.uzl-kart-not { margin-top: 16px; font-size: 0.92rem; color: var(--uzl-soluk); }
-.uzl-kart-kahraman .uzl-kart-liste li { align-items: center; }
-.uzl-cizgiler { display: grid; gap: 6px; flex: 1; max-width: 55%; }
-.uzl-cizgiler i { display: block; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--uzl-murekkep) 10%, transparent); }
-.uzl-cizgiler i:last-child { width: 62%; }
-.uzl-rozet { display: inline-block; margin-top: 18px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--uzl-altin); background: color-mix(in srgb, var(--uzl-altin) 28%, transparent); font-size: 0.86rem; font-weight: 600; color: var(--uzl-koyu); }
-
-/* ── assurance line ── */
-.uzl-guvence { border-top: 1px solid var(--uzl-cizgi); border-bottom: 1px solid var(--uzl-cizgi); background: var(--uzl-kagit); }
-.uzl-guvence p { padding-top: 28px; padding-bottom: 28px; font-size: 0.98rem; color: color-mix(in srgb, var(--uzl-murekkep) 86%, transparent); }
-
-/* ── price ── */
-.uzl-fiyat { background: var(--uzl-cam); color: var(--uzl-krem); padding: 64px 0; scroll-margin-top: 64px; }
-@media (min-width: 900px) { .uzl-fiyat { padding: 104px 0; } }
-.uzl-fiyat .uzl-ust { color: color-mix(in srgb, var(--uzl-krem) 66%, transparent); }
-.uzl-fiyat .uzl-vurgu { color: var(--uzl-altin); }
-.uzl-fiyat .uzl-govde { color: color-mix(in srgb, var(--uzl-krem) 84%, transparent); }
-.uzl-davet { margin-top: 26px; font-size: 0.98rem; color: color-mix(in srgb, var(--uzl-krem) 84%, transparent); }
-.uzl-davet a { color: var(--uzl-krem); font-weight: 600; border-bottom: 1px solid var(--uzl-altin); padding-bottom: 1px; }
-.uzl-fiyat .uzl-kart { color: var(--uzl-murekkep); background: var(--uzl-krem); }
-
-.uzl-form { display: grid; gap: 14px; }
-.uzl-form label { display: grid; gap: 6px; font-size: 0.88rem; font-weight: 600; color: var(--uzl-soluk); }
-.uzl-form input, .uzl-form textarea {
-  width: 100%; border: 1px solid var(--uzl-cizgi); border-radius: 12px; background: var(--uzl-kagit); color: var(--uzl-murekkep);
-  font-family: var(--uzl-sans); font-size: 16px; padding: 12px 14px; outline: none; min-height: 46px; resize: vertical;
+.uzl button {
+  background: none;
+  border: 0;
+  text-transform: none;
+  cursor: pointer;
 }
-.uzl-form input:focus, .uzl-form textarea:focus { border-color: var(--uzl-cam); box-shadow: 0 0 0 3px color-mix(in srgb, var(--uzl-cam) 16%, transparent); }
-.uzl-form-hata { border: 1px solid color-mix(in srgb, var(--uzl-uyari) 30%, transparent); background: color-mix(in srgb, var(--uzl-uyari) 8%, transparent); color: var(--uzl-uyari); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; }
-.uzl-form-ipucu { font-size: 0.84rem; color: var(--uzl-soluk); }
 
-/* ── footer ── */
-.uzl-alt { background: var(--uzl-kagit); border-top: 1px solid var(--uzl-cizgi); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.uzl-alt-ic { display: flex; flex-direction: column; gap: 28px; padding-top: 44px; padding-bottom: 32px; }
-.uzl-alt-tanim { margin-top: 8px; max-width: 22em; font-size: 0.92rem; color: var(--uzl-soluk); }
-.uzl-alt-nav { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 0.95rem; }
-.uzl-alt-nav a { border-bottom: 1px solid transparent; padding: 6px 0; }
-.uzl-alt-nav a:hover { border-bottom-color: var(--uzl-cam); }
-.uzl-alt-hak { border-top: 1px solid var(--uzl-cizgi); padding-top: 18px; padding-bottom: 22px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--uzl-soluk); }
-@media (min-width: 900px) { .uzl-alt-ic { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
+.uzl textarea {
+  resize: vertical;
+}
 
-@media (prefers-reduced-motion: reduce) { .uzl * { transition: none !important; scroll-behavior: auto !important; } }
+.uzl ::placeholder {
+  opacity: 1;
+  color: #9ca3af;
+}
+
+.uzl img,
+.uzl svg {
+  display: block;
+  vertical-align: middle;
+}
+
+.uzl img {
+  max-width: 100%;
+  height: auto;
+}
+
+.uzl h1,
+.uzl h2,
+.uzl h3 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.uzl h1,
+.uzl h2,
+.uzl h3,
+.uzl p,
+.uzl ul,
+.uzl ol,
+.uzl figure,
+.uzl blockquote,
+.uzl dl,
+.uzl dd {
+  margin: 0;
+}
+
+.uzl ul,
+.uzl ol {
+  padding: 0;
+  list-style: none;
+}
+
+.uzl ::selection {
+  background: #0e6b66;
+  color: #fff;
+}
+
+/* 2 — starting values of the variables the utilities build on */
+.uzl,
+.uzl *,
+.uzl ::before,
+.uzl ::after {
+  --tw-ring-inset: var(--tw-empty, /*!*/ /*!*/);
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-divide-y-reverse: 0;
+}
+
+/* 3 — the page's own rules (same as the Turkish page) */
+.uzl-reveal {
+  animation: uzl-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.uzl-caret {
+  display: inline-block;
+  width: 0.45em;
+  height: 1em;
+  margin-left: 0.08em;
+  background: currentColor;
+  vertical-align: -0.12em;
+  animation: uzl-caret 1s steps(1) infinite;
+}
+
+@keyframes uzl-reveal {
+  from { opacity: 0; transform: translateY(12px); filter: blur(6px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes uzl-caret {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uzl-reveal,
+  .uzl-caret {
+    animation: none;
+  }
+  .uzl-reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}

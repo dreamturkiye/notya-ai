@@ -116,7 +116,8 @@ describe('build-time selection: the entry point and the import graph', () => {
       const ham = b.startsWith('@/') ? join(KOK, b.slice(2)) : b.startsWith('.') ? resolve(dirname(tabandan), b) : null
       if (!ham) return null
       for (const aday of [ham, `${ham}.ts`, `${ham}.tsx`, `${ham}.mjs`, join(ham, 'index.ts'), join(ham, 'index.tsx')]) {
-        if (existsSync(aday) && statSync(aday).isFile()) return aday
+        // Code only: an imported photograph or stylesheet is not text a build could show (NOTYA-UZ-ACILIS-02).
+        if (existsSync(aday) && statSync(aday).isFile() && /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(aday)) return aday
       }
       return null
     }
@@ -233,6 +234,45 @@ describe('build-time selection: the entry point and the import graph', () => {
         assert.ok(k.neden.length > 40, `${dosya}: say why this shared file is allowed`)
         const n = turkceSatirlar(join(KOK, dosya))
         assert.ok(n <= k.azamiSatir, `${dosya} now carries ${n} lines with Turkish text (allowed: ${k.azamiSatir}). New Turkish text in shared infrastructure reaches every country's build.`)
+      }
+    }
+  })
+
+  /**
+   * NOTYA-UZ-ACILIS-02 — SHARED VISUAL COMPONENTS of the Turkish landing pages that another country's landing page
+   * may reuse, BY NAME. The Uzbek landing page mirrors the Turkish one (Kaan, 2026-10-08); these files are reused as
+   * they are — never edited for another country — because they are presentational: every word they show arrives as
+   * a property. Anything else under the Turkish landing folders (their content file, the bar, the hero, the forms,
+   * the price table — all of which hold Turkish text or Türkiye-only content) must not be reachable from such a build.
+   */
+  const PAYLASILAN_GORSEL_BILESENLER: Record<string, string> = {
+    'components/doktor-landing/cn.ts': 'Joins class names. No text.',
+    'components/doktor-landing/button.tsx': 'A link or button in the landing style. Its label is its children.',
+    'components/doktor-landing/icons.tsx': 'Three line icons (arrow, menu, close), hidden from assistive technology. No text.',
+    'components/doktor-landing/feature.tsx': 'The section pattern and the typographic card. Every string is a property.',
+  }
+  const TURKIYE_ACILIS_KLASORLERI = ['components/doktor-landing/', 'components/klinik-landing/', 'app/doktor/', 'app/klinik/']
+
+  it('a build that is not Türkiye reaches the Turkish landing folders only through the presentational components named here', () => {
+    const girisler = [...ulkeRotaDosyalari(), ...readdirSync(join(KOK, 'countries/active')).filter((d) => /\.(ts|tsx)$/.test(d)).map((d) => join(KOK, 'countries/active', d))]
+    const yorumsuz = (k: string) => k.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
+    for (const ulke of ULKE_KODLARI) {
+      if (ulke === 'tr') continue
+      const erisilenler = [...new Set(girisler.flatMap((g) => [...erisilen(g, ulke)]))].map((d) => relative(KOK, d).split(sep).join('/'))
+      const acilistan = erisilenler.filter((d) => TURKIYE_ACILIS_KLASORLERI.some((k) => d.startsWith(k)))
+      assert.deepEqual(acilistan.filter((d) => !(d in PAYLASILAN_GORSEL_BILESENLER)), [], `a ${ulke} build reaches Turkish landing files that are not on the list`)
+      for (const [dosya, neden] of Object.entries(PAYLASILAN_GORSEL_BILESENLER)) {
+        assert.ok(acilistan.includes(dosya), `stale entry: ${dosya} is no longer reachable from a ${ulke} build — remove it from PAYLASILAN_GORSEL_BILESENLER`)
+        assert.ok(neden.length > 10, dosya)
+        const ham = readFileSync(join(KOK, dosya), 'utf8')
+        const kaynak = yorumsuz(ham)
+        // Presentational: no Turkish letter anywhere in the code, no landing content, nothing of the application.
+        assert.doesNotMatch(kaynak, /[çğıöşüİĞŞÇÖÜ]/, `${dosya} now holds Turkish text — it can no longer be shared; write the other country its own component`)
+        const ithal = [...kaynak.matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1])
+        for (const i of ithal) assert.match(i, /^(react|\.\/cn)$/, `${dosya} imports ${i} — a shared presentational component imports nothing but React and cn`)
+        // No sentence of its own: text between tags, or a quoted label / alt / title / placeholder.
+        assert.doesNotMatch(kaynak, />\s*[A-Za-z][a-z]+ [a-z]+[^<{]*</, `${dosya} now shows words of its own`)
+        assert.doesNotMatch(kaynak, /\b(aria-label|alt|title|placeholder)=["'][^"']/, `${dosya} now carries a fixed label`)
       }
     }
   })

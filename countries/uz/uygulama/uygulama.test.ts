@@ -18,6 +18,8 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.ENCRYPTION_MASTER_KEY = 'yalniz-test-icin-sentetik-anahtar-0001'
 
+// NOTYA-UZ-ACILIS-02: the pack's page entry now imports photographs and shared landing components.
+import '@/lib/ulke/testing/varlikTaklidi'
 import { describe, it, before, beforeEach, mock } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
