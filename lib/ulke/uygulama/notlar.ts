@@ -139,7 +139,7 @@ export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId
   // What leaves for the model: age, sex, the transcript. No name, no phone, no identity number, no patient id.
   const muayeneTarihi = muayene.baslangic.slice(0, 10)
   const girdi = klinik.notGirdisi(notDili, { dogumTarihi: hasta.dogumTarihi, cinsiyet: hasta.cinsiyet, muayeneTarihi, metin: muayene.metin.slice(0, 120_000), sablon })
-  const icerik = await modeldenNot({ gorev: 'soap', talimat, girdi, doktorId, butceMs })
+  const icerik = await modeldenNot({ gorev: 'soap', talimat, girdi, doktorId, butceMs, olcum: { supabase, gorev: 'not' } })
   if (!icerik) return ret('NOT_YAZILAMADI')
   // LEAK RULE: of what the model returned, only the fields THIS template owns for THIS patient are kept.
   const alanlar = alanlariSuz(icerik.alanlar, klinik.notAlanlari?.(sablon, { dogumTarihi: hasta.dogumTarihi, muayeneTarihi }) ?? [])
@@ -224,7 +224,7 @@ export async function notYenidenYaz(supabase: SupabaseClient, doktorId: string, 
   const kaynakAlanlari = o.dil.alanlar ? alanlariSuz(o.dil.alanlar, izinliAlanlar(await muayeneGetir(supabase, doktorId, o.not.session_id))) : null
   const kaynak = alanliIcerik(satirdan(o.not), kaynakAlanlari)
   if (bosMu(kaynak)) return ret('BOS')
-  const icerik = await modeldenNot({ gorev: 'not-uretimi', talimat, girdi: klinik.yenidenYazimGirdisi(hedef, kaynak), doktorId, butceMs })
+  const icerik = await modeldenNot({ gorev: 'not-uretimi', talimat, girdi: klinik.yenidenYazimGirdisi(hedef, kaynak), doktorId, butceMs, olcum: { supabase, gorev: 'yeniden-yazim' } })
   if (!icerik) return ret('YENIDEN_YAZILAMADI')
   // A rewrite may return only the fields the note already had: it adds no field, of this role or of any other.
   const ikinciAlanlar = kaynakAlanlari ? alanlariSuz(icerik.alanlar, Object.keys(kaynakAlanlari)) : null

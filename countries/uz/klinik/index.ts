@@ -8,6 +8,7 @@
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { UZ_ACIK_SABLONLAR } from './branslar'
+import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
 import { uzSablonAlanlari } from './notSablonlari'
 import { uzDigerDil, uzNotGirdisi, uzNotTalimati, uzYenidenYazimGirdisi, uzYenidenYazimTalimati } from './talimatlar'
 
@@ -43,4 +44,8 @@ export const UZ_KLINIK: UlkeKlinigi = {
   yenidenYazimTalimati: uzYenidenYazimTalimati,
   yenidenYazimGirdisi: uzYenidenYazimGirdisi,
   digerDil: uzDigerDil,
+  // NOTYA-ULKE-PORTAL-01: a plain-language summary of an approved note, for the patient, in the patient's own language
+  // form (./hastaOzeti.ts — machine-written, not read by a native-speaking clinician).
+  hastaOzetiTalimati: uzHastaOzetiTalimati,
+  hastaOzetiGirdisi: uzHastaOzetiGirdisi,
 }

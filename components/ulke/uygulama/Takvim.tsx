@@ -7,6 +7,8 @@
  *   ?yeni=1[&hasta=<id>][&gun=][&saat=]          the booking form; without a patient, first choose one
  *   ?randevu=<id>                                one appointment: status, start the visit, move, cancel, reminder text
  *   ?duzen=1                                     the working pattern: days, hours, default length, breaks
+ *   ?istek=<id>                                  NOTYA-ULKE-PORTAL-01: the answer to a patient's appointment request
+ *                                                (./PortalIstekleri.tsx); the waiting requests are listed on the calendar
  *
  * BOTH VIEWS WORK ON A PHONE. The day is a list of rows; the week is seven day blocks, stacked on a narrow screen
  * and side by side on a wide one. Nothing depends on dragging or hovering.
@@ -30,6 +32,11 @@ import { bitisSaati, saatAraligi, DurumRozeti, gunBasligi, muayeneBaslatilabilir
 import { temelDil, randevuMetni, gunAdi, type UygulamaMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
+import { panoyaKopyala } from './pano'
+import { ISTEK_API, IstekCevabiGorunumu, Istekler, IstekYokGorunumu, type IstekCevapFormu, type IstekCevapHatasi } from './PortalIstekleri'
+import { portalMetni } from '@/lib/ulke/arayuz'
+import { ozellikAcik } from '@/lib/ulke/ulke'
+import type { BekleyenIstek } from '@/lib/ulke/portal/tipler'
 
 export { bitisSaati, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
 
@@ -465,21 +472,6 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
   )
 }
 
-/** Copies text for the doctor to paste elsewhere. true = it is on the clipboard. Nothing is sent anywhere. */
-async function panoyaKopyala(metin: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(metin); return true }
-  } catch { /* fall through to the older way */ }
-  try {
-    const alan = document.createElement('textarea')
-    alan.value = metin; alan.setAttribute('readonly', ''); alan.style.position = 'fixed'; alan.style.opacity = '0'
-    document.body.appendChild(alan); alan.select()
-    const tamam = document.execCommand('copy')
-    document.body.removeChild(alan)
-    return tamam
-  } catch { return false }
-}
-
 function RandevuDetay({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string }) {
   const [randevu, setRandevu] = useState<RandevuKaydi | null>(null)
   const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
@@ -528,6 +520,59 @@ function RandevuDetay({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string }
       tasiGonder={(yineDe) => { void degistir({ gun: tasi.gun, saat: tasi.saat, sureDk: tasi.sureDk, ...(yineDe ? { yineDe: true } : {}) }, 'tasi') }}
       kopyala={(metin) => { void panoyaKopyala(metin).then((tamam) => setBildirim(tamam ? 'kopyalandi' : 'kopyalanamadi')) }}
     />
+  )
+}
+
+// ───────────────────────── a patient's appointment request (NOTYA-ULKE-PORTAL-01) ─────────────────────────
+
+function IstekCevabi({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string }) {
+  const [istek, setIstek] = useState<BekleyenIstek | null>(null)
+  const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
+  const [sureler, setSureler] = useState<number[]>([])
+  const [a, setA] = useState<IstekCevapFormu>({ gun: '', saat: '', sureDk: 30 })
+  const [bekliyor, setBekliyor] = useState(false)
+  const [hata, setHata] = useState<IstekCevapHatasi>(null)
+  const { hesap, api } = u
+  const p = portalMetni(u.dil)
+
+  useEffect(() => {
+    if (!hesap) return
+    let iptal = false
+    ;(async () => {
+      try {
+        const [c, d] = await Promise.all([api(ISTEK_API), api('/api/ulke/calisma-duzeni')])
+        if (iptal) return
+        if (!c.ok || !Array.isArray(c.j.istekler) || !d.ok || !d.j.duzen) { setYuk('hata'); return }
+        const bulunan = (c.j.istekler as BekleyenIstek[]).find((x) => x.id === id)
+        if (!bulunan) { setYuk('yok'); return }
+        const dc = d.j as unknown as DuzenCevabi
+        setIstek(bulunan); setSureler(dc.sureSecenekleri ?? [])
+        setA({ gun: gunYaz(bulunan.gunler[0] ?? dc.bugun), saat: dc.duzen.baslangic, sureDk: dc.duzen.sureDk })
+        setYuk('tamam')
+      } catch { if (!iptal) setYuk('hata') }
+    })()
+    return () => { iptal = true }
+  }, [hesap, api, id])
+
+  async function cevapla(govde: Record<string, unknown>) {
+    setBekliyor(true); setHata(null)
+    try {
+      const c = await api(ISTEK_API, { method: 'PATCH', govde: { id, ...govde } })
+      if (c.ok && typeof c.j.randevuId === 'string') { window.location.assign(takvimYolu({ randevu: c.j.randevuId })); return }
+      if (c.ok) { window.location.assign(takvimYolu()); return }
+      setHata({ kod: typeof c.j.code === 'string' ? c.j.code : 'BASARISIZ', alan: typeof c.j.alan === 'string' ? c.j.alan : null })
+    } catch { setHata({ kod: 'BAGLANTI' }) }
+    setBekliyor(false)
+  }
+
+  if (yuk !== 'tamam' || !istek) return <IstekYokGorunumu p={p} r={r} m={u.m} durum={yuk === 'tamam' ? 'yok' : yuk} />
+  const set = (y: Partial<IstekCevapFormu>) => { setA({ ...a, ...y }); setHata(null) }
+  const bilinen = hata && ['DOLU', 'MESAI_DISI', 'GECERSIZ', 'BAGLANTI'].includes(hata.kod)
+  return (
+    <IstekCevabiGorunumu p={p} r={r} istek={istek} a={a} set={set} zaman={<ZamanAlanlari r={r} a={a} set={set} sureler={sureler} on="uza-ri" />}
+      hataMetni={bilinen ? randevuHataMetni(u.m, r, hata?.kod ?? null, hata?.alan) : null}
+      gonder={(yineDe) => { void cevapla({ gun: a.gun, saat: a.saat, sureDk: a.sureDk, neden: istek.neden, ...(yineDe ? { yineDe: true } : {}) }) }}
+      reddet={() => { void cevapla({ red: true }) }} bekliyor={bekliyor} hata={hata} />
   )
 }
 
@@ -646,19 +691,22 @@ function Duzen({ u, r }: { u: Uygulama; r: RandevuMetni }) {
 
 export default function Takvim() {
   const u = useUygulama('takvim')
-  const [p, setP] = useState<{ gun: string; gorunum: Gorunum; yeni: boolean; hasta: string; saat: string; randevu: string; duzen: boolean; q: string } | null>(null)
+  const [p, setP] = useState<{ gun: string; gorunum: Gorunum; yeni: boolean; hasta: string; saat: string; randevu: string; duzen: boolean; q: string; istek: string } | null>(null)
   useEffect(() => {
     const s = new URLSearchParams(window.location.search)
-    setP({ gun: s.get('gun') ?? '', gorunum: s.get('gorunum') === 'hafta' ? 'hafta' : 'gun', yeni: s.get('yeni') === '1', hasta: s.get('hasta') ?? '', saat: s.get('saat') ?? '', randevu: s.get('randevu') ?? '', duzen: s.get('duzen') === '1', q: s.get('q') ?? '' })
+    setP({ gun: s.get('gun') ?? '', gorunum: s.get('gorunum') === 'hafta' ? 'hafta' : 'gun', yeni: s.get('yeni') === '1', hasta: s.get('hasta') ?? '', saat: s.get('saat') ?? '', randevu: s.get('randevu') ?? '', duzen: s.get('duzen') === '1', q: s.get('q') ?? '', istek: s.get('istek') ?? '' })
   }, [])
   if (!u.hesap || !p) return <Yukleniyor m={u.m} dil={u.dil} />
   const r = randevuMetni(u.dil)
+  // NOTYA-ULKE-PORTAL-01: patients' requests exist only where the country has the patient portal.
+  const portal = ozellikAcik('hastaPortali')
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="takvim" cikis={u.cikis}>
       {p.randevu ? <RandevuDetay u={u} r={r} id={p.randevu} />
         : p.duzen ? <Duzen u={u} r={r} />
-          : p.yeni ? <YeniRandevu u={u} r={r} hastaId={p.hasta} gunParam={p.gun} saatParam={p.saat} q={p.q} />
-            : <TakvimEkrani u={u} r={r} gunParam={p.gun} gorunum={p.gorunum} />}
+          : p.istek && portal ? <IstekCevabi u={u} r={r} id={p.istek} />
+            : p.yeni ? <YeniRandevu u={u} r={r} hastaId={p.hasta} gunParam={p.gun} saatParam={p.saat} q={p.q} />
+              : <>{portal ? <Istekler u={u} r={r} /> : null}<TakvimEkrani u={u} r={r} gunParam={p.gun} gorunum={p.gorunum} /></>}
     </Cerceve>
   )
 }

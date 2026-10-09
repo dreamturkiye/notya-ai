@@ -20,7 +20,9 @@
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import { modelSec } from '@/lib/ai/modeller'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { NOT_ALANLARI_ANAHTARI, type NotIcerigi } from '../tipler'
+import { kullanimEkle, yanitTokenlari, type KullanimGorevi } from './kullanimOlcumu'
 
 export type NotGorevi = 'soap' | 'not-uretimi'
 
@@ -67,7 +69,16 @@ export function notIceriginiOku(metin: string): NotIcerigi | null {
 /** The label stored with a note for "which model wrote this": the policy's model for the note task, never a literal. */
 export const notModelEtiketi = (): string => modelSec('soap').model
 
-export async function modeldenNot(g: { gorev: NotGorevi; talimat: string; girdi: string; doktorId: string; butceMs?: number }): Promise<NotIcerigi | null> {
+/**
+ * NOTYA-ULKE-PORTAL-01 — `olcum`: where the call is counted (lib/ulke/uygulama/kullanimOlcumu.ts). Every call that
+ * the gateway ANSWERED is counted once, with the tokens of the answer it returned — whether or not that answer then
+ * turns out to be usable. (When the gateway fell back to its guard model, the tokens are the guard's answer's.)
+ */
+type Olcum = { supabase: SupabaseClient; gorev: KullanimGorevi }
+type ModelGirdisi = { gorev: NotGorevi; talimat: string; girdi: string; doktorId: string; butceMs?: number; olcum?: Olcum }
+
+/** The gateway's answer as text, or null. Nothing it throws leaves this file. */
+async function modeldenMetin(g: ModelGirdisi, etiket: string): Promise<string | null> {
   try {
     const yanit = await aiCagir({
       gorev: g.gorev,
@@ -76,9 +87,39 @@ export async function modeldenNot(g: { gorev: NotGorevi; talimat: string; girdi:
       doctorId: g.doktorId,
       ...(g.butceMs ? { butceMs: g.butceMs } : {}),
     })
-    return notIceriginiOku(yanitMetni(yanit))
+    if (g.olcum) await kullanimEkle(g.olcum.supabase, g.doktorId, g.olcum.gorev, yanitTokenlari(yanit))
+    return yanitMetni(yanit)
   } catch (e) {
-    console.error(`[ulke/not] ${g.gorev}: ${e instanceof AiCagriHatasi ? `gateway ${e.durum}` : e instanceof Error ? e.name : typeof e}`)
+    console.error(`[ulke/${etiket}] ${g.gorev}: ${e instanceof AiCagriHatasi ? `gateway ${e.durum}` : e instanceof Error ? e.name : typeof e}`)
     return null
   }
+}
+
+export async function modeldenNot(g: ModelGirdisi): Promise<NotIcerigi | null> {
+  const metin = await modeldenMetin(g, 'not')
+  return metin === null ? null : notIceriginiOku(metin)
+}
+
+/** The key under which the model returns a summary for the patient. One word, shared by packs and core. */
+export const HASTA_OZETI_ANAHTARI = 'summary'
+
+/** The model's answer as a summary for the patient, or null when it is not one. Pure. */
+export function hastaOzetiniOku(metin: string, azami: number): string | null {
+  const r = jsonOnarDetay(metin)
+  if (r.deger === null || typeof r.deger !== 'object' || Array.isArray(r.deger)) return null
+  const ham = (r.deger as Record<string, unknown>)[HASTA_OZETI_ANAHTARI]
+  const t = (Array.isArray(ham) ? ham.map((x) => String(x ?? '')).join('\n') : typeof ham === 'string' ? ham : '').trim()
+  return t ? t.slice(0, azami) : null
+}
+
+/**
+ * NOTYA-ULKE-PORTAL-01 — a plain-language summary of an approved note, for the patient. Same gateway, same rules as
+ * the note: the call names a TASK (the rewriting task: a short structured answer made from an existing note) and
+ * the policy picks the model; the pack's instruction is the cached system block and holds nothing about a doctor or
+ * a patient; the approved note is the user message. Nothing is shown to a patient from here: the doctor reads the
+ * draft, may change it, and shares it or not.
+ */
+export async function modeldenHastaOzeti(g: Omit<ModelGirdisi, 'gorev'> & { azami: number }): Promise<string | null> {
+  const metin = await modeldenMetin({ ...g, gorev: 'not-uretimi' }, 'ozet')
+  return metin === null ? null : hastaOzetiniOku(metin, g.azami)
 }

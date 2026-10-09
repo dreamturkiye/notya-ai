@@ -1,14 +1,143 @@
 # Country pack: Uzbekistan
 
-> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
-> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
-> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
-
 Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/`.
+
+## The Uzbek database (2026-10-09, NOTYA-ULKE-PORTAL-01)
+
+**The decision.** Kaan, 2026-10-09 02:26: "We had issues with common databases before. Keep seperation between the two and any other future country versions". Uzbekistan has **a database of its own**. No Uzbek script is ever run on the Turkish database, and none on another country's. The country code on every row and in every key stays, as the second wall. How a country database is made and kept: `docs/COUNTRY-PACK-DB-ROLLOUT.md`. Where a section further down still describes one database shared with Türkiye, it is history.
+
+| Fact | State on 2026-10-09 |
+|---|---|
+| The database | exists, as its own project: name **"Notya Uzbekistan"**, region **Frankfurt**, **free plan** |
+| Migrations | **129 to 135 applied on 9 October 2026**, by hand, through a tool that refuses `drop … if exists` statements without a confirmation. Those lines were left out; the database was empty, so there was nothing for them to remove. Migration 128 was not run and never will be. |
+| Checked | the result was compared with the files: **14 tables, 136 columns, 17 row-level rules, 5 functions**. The baseline proof (`scripts/ulke-temel-kaniti.mjs`) builds a local database the same way, lines left out included, and finds it identical to one built from the files as written and to one built from the one-file baseline, with the same four figures. |
+| The preview site | has its **country, database address, public key and encryption key** set |
+| Still to do, by the owner | **add the secret server key** to the preview site. Until then the Uzbek preview cannot sign anybody up or in, or read or write a row. |
+| Still to do, later migrations | every country migration after 135 must be run on this database, in order, before the build that needs it is used (`lib/db/ulke/gocler.json`; this document's later sections say which). |
+| Not checked | public sign-up switched off in the project (a setting; checklist M4); the application against this database (every application test uses a stand-in). |
+
+**Further countries need a paid plan.** The organisation's free plan holds only two projects, and Türkiye and Uzbekistan now use both. A database for the United States, the United Kingdom, Canada, Australia or New Zealand cannot be created until the organisation moves to a paid plan. That is the owner's decision; the monthly figure should be read from the provider's price page on the day.
+
+## The patient portal (2026-10-09, NOTYA-ULKE-PORTAL-01)
+
+**Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database holds migrations 129 to 135; **the portal needs 136 and 137** (below) before a build that has it is used. Branch `feat/ulke-portal`, PR #573 (base `feat/uz-fiyat-unvan`, PR #572), unmerged.
+
+**What it is.** A patient gets a page of their own, with no account. The doctor gives them a link and a PIN; the patient opens the link on their phone, types the PIN, and sees their name, their doctor, their coming appointments, and what the doctor chose to share. They can ask for an appointment. Nothing is sent to anybody by the application: the doctor hands the link and the PIN over personally.
+
+| Part | What happens | Where the doctor does it |
+|---|---|---|
+| Access | "Give access" shows a link and a six-digit PIN **once**. The database keeps only a hash of each (the PIN's is slow and salted), so neither can be shown again. "New link and PIN" stops the old link at once. "Withdraw access" stops the link and ends every open session. | the patient's file |
+| Signing in | The link's token is in the address fragment, which a browser never sends to a server. The token alone shows nothing, not even whether the link exists. Two tries closer than 2 seconds: the second is not looked at. **Five wrong PINs lock the link for good**; the doctor gives a new one. A session lasts 30 minutes. | (the patient's phone) |
+| The page | The patient's name, the doctor's name and role as the pack names it, coming appointments with weekday, `DD.MM.YYYY` and 24-hour Tashkent time, shared summaries, the appointment request and its outcome. **Never the clinical note**, the transcript, the reason the doctor wrote on an appointment, a phone number or an id. | (the patient's phone) |
+| Language | Russian for a patient recorded as Russian-speaking, whatever the doctor reads. Uzbek for an Uzbek-speaking patient, **in the doctor's script**: of the doctor's interface if that is Uzbek, else of the doctor's notes, else Latin. | set by the patient's language on the file |
+| A summary | Under an **approved** note the doctor asks for a draft: the model writes a short text in plain words from that note only, in the patient's language. The doctor reads it, changes it and shares it. **Nothing is shared by itself.** A shared summary cannot be edited; "take back" removes it from the patient's page at once. A note that is not approved has no summary (the application refuses, and so does the database). | the note screen |
+| An appointment request | The patient chooses up to 3 of the next 21 days and may add a short reason. **It books nothing.** One waiting request per patient. The doctor sees it on the calendar and either chooses a time (the same rules as any booking: a taken time is refused and cannot be overridden) or declines. The patient reads the outcome on their page. | the calendar |
+| The record | Access given and withdrawn, every sign-in, a link that locked, every share and take-back, with day and time. | the patient's file, under "Tarix" |
+| Usage | Each summary the model writes is counted in the usage record (per account, per day, per task): counts and tokens, no money. | (nobody's screen yet) |
+
+**Isolation.** Every row carries the country, the doctor and the patient, and every read names all three. Another doctor's patient, summary or request answers exactly like one that does not exist. The patient's routes never accept a doctor's session; the doctor's routes never accept a patient's cookie, session key or link. A session answers only the page of its own link: on a shared phone, opening a second patient's link shows the PIN form and ends the first patient's session.
+
+**Privacy.** The page is never indexed and never kept by a cache, and names no referrer. The session is a cookie a script cannot read, sent only to the portal's own routes. The patient's browser stores nothing else.
+
+**Settings and limits.**
+
+| What | Value | Whose decision |
+|---|---|---|
+| A link stays valid | **30 days** (`countries/uz/index.ts`, `uygulama.portal.baglantiGecerlilikGun`) | **the pack's. A starting value chosen by Claude: the owner to confirm** ("Needs local content", row 79), and a lawyer for how long a patient's access may stand (checklist I1). |
+| PIN length, tries before the lock, pause between tries, session length | 6 digits, 5 tries, 2 seconds, 30 minutes | the kit's, the same in every country (`lib/ulke/portal/sabitler.ts`) |
+| Days a request may name, how far ahead | 3 of the next 21 | the kit's |
+| Ambulance number on the patient's page | **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`) | **the pack's: local content. Written by Claude from general knowledge and UNVERIFIED. A local source must confirm it before any patient sees the portal** ("Needs local content", row 78). The kit has no default: a pack that states no number shows none, only "this page is not for emergencies". The number is in no sentence of the catalogue; a sentence with a digit in it fails the pack check. |
+
+**Not in this job, and not half-built either** (no page, no route, no table): intake forms, messaging between patient and doctor, documents and uploads, payments, automatic reminders. The reminder text a doctor copies by hand (slice 3) is unchanged.
+
+**Machine-written text.** 100 entries in each of the three forms (300 strings) in `countries/uz/uygulama/portalMetinleri.ts`, and three instructions to the model in `countries/uz/klinik/hastaOzeti.ts`. Nobody who speaks Uzbek or Russian as a first language has read any of it. The Cyrillic form was written by hand, line by line. 38 of the 100 entries are read by patients; they are listed at the end of this section.
+
+**The database.** Two migrations are new since 135, both for a country database only (each refuses a database that has no `ulke_hesaplari`):
+
+| File | What it adds |
+|---|---|
+| `lib/db/migrations/136_ulke_kullanim_olcumu.sql` | the usage record: 1 table, 1 function |
+| `lib/db/migrations/137_ulke_hasta_portali.sql` | the portal: 5 tables (links, sessions, summaries, the record, requests), 7 functions (six the application calls and the trigger's own), 1 trigger, and one more constraint on the appointments table |
+
+Both are in the one-file baseline for a new country (`lib/db/ulke/000_yeni_ulke_veritabani.sql`). For the Uzbek database, which already has 129 to 135, they are run in order, 136 then 137, each once; each has a rollback beside the others (`lib/db/migrations/geri-al/`). After both the database has **20 tables, 194 columns, 17 row-level rules, 13 functions**, and the ledger lists 129 to 137. **Not applied anywhere by this job.**
+
+### What was tested, and how
+
+Everything below ran on the build machine on 2026-10-09 with **stand-ins for the database, sign-in, storage, speech recognition and the model**. No provider was called and nothing left the machine.
+
+| Check | Result | Against |
+|---|---|---|
+| Country test suite (`npm run test:ulke`) | 697 of 697 ordinary tests; 70 of 70 for each of `tr` and `uz` | stand-in database inside the test process |
+| of which: the portal's rules (`lib/ulke/portal/portal.paket.test.ts`) | 31: access, PIN, lock, sessions, isolation in each direction, sharing, requests, privacy headers | the real route handlers |
+| of which: the portal's screens (`components/ulke/portal/portalEkranlari.paket.test.ts`) | 17: every screen in every form, leak test over every entry and every screen, every link leads to a real page, the ambulance number shown only where the pack states one | the real components |
+| of which: Uzbek text (`countries/uz/uygulama/portal.test.ts`) | 6: three forms, each in its own script, the patient's language rule, the instructions, the two unconfirmed settings, the list for the native reader | the catalogue |
+| Type check, wall check | clean | the repository |
+| Uzbek production build (`NOTYA_COUNTRY=uz npm run build:ulke`) | built; holds the Uzbek pack and no other | this machine |
+| Uzbek walk-through in a real browser (`scripts/ulke-yuruyus/yuruyus.mjs`) | **439 of 439**; 87 of them walk the portal, with the patient in a browser of their own (a phone) | the Uzbek build, stand-in database and providers |
+| Pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`) | 202 of 202 | the same |
+| Migration proof, baseline proof | 195 of 195; 87 of 87 | a throwaway PostgreSQL 18 on this machine |
+| A new country from the scaffold | type-checks with the portal's files; 769 items to supply (735 texts, 34 settings) | a temporary copy of the repository |
+
+The walk-through's portal steps, in order: give access (link and PIN shown once, only hashes stored) → the token alone shows nothing → a PIN that is not six digits → a wrong PIN → too fast → five wrong PINs lock the link, and the right PIN no longer opens it → the doctor sees "locked" → a new link (the old one is dead) → sign in → the page (name, doctor, role, appointments) → a draft summary (not on the patient's page) → edited and shared → seen → cannot be changed while shared → taken back → gone → an unapproved note has no summary → a request with two days and a reason (no appointment made) → a second request refused → the request on the doctor's calendar → a taken time refused → accepted → seen by the patient → answered once only → the other doctor reaches none of it → the other doctor's patient sees only their own page, in Russian → a doctor's session on the patient's routes and a patient's session on the doctor's routes: refused → a second patient's link on the same phone: PIN form, and the first session ends → declined → sign out → withdrawn.
+
+
+**Not tested:** the portal against a real database or a real model provider; a real phone; a patient; the text with a native reader. **Not confirmed by anybody:** the number 103 and the 30 days.
+
+
+### Patient-facing sentences, for the native reader
+
+Machine-written, in three forms; nobody who speaks Uzbek or Russian as a first language has read them. A patient reads these alone, on their own phone. **Read first:** the three instructions the summary is written with (`countries/uz/klinik/hastaOzeti.ts`), because what the model writes with them reaches a patient once the doctor shares it; then the two groups below (`countries/uz/uygulama/portalMetinleri.ts`, groups `giris` and `sayfa`). `%`, `%1`, `%2` are places for a value (a name, a day, a time, a number) and must stay. A test keeps this list equal to the code (`countries/uz/uygulama/portal.test.ts`).
+**`giris`** (the PIN page)
+
+| Key | Uzbek (Latin) | Uzbek (Cyrillic) | Russian |
+|---|---|---|---|
+| `baslik` | Sizning sahifangiz | Сизнинг саҳифангиз | Ваша страница |
+| `aciklama` | Shifokoringiz bergan PIN-kodni kiriting. | Шифокорингиз берган ПИН-кодни киритинг. | Введите ПИН-код, который дал вам врач. |
+| `pin` | PIN-kod | ПИН-код | ПИН-код |
+| `gonder` | Ochish | Очиш | Открыть |
+| `gonderiliyor` | Tekshirilmoqda… | Текширилмоқда… | Проверяем… |
+| `pinBicimi` | PIN-kod % ta raqamdan iborat. | ПИН-код % та рақамдан иборат. | ПИН-код состоит из % цифр. |
+| `pinYanlis` | PIN-kod notoʻgʻri. Qolgan urinishlar: % | ПИН-код нотўғри. Қолган уринишлар: % | Неверный ПИН-код. Осталось попыток: % |
+| `kilitli` | PIN-kod juda koʻp marta notoʻgʻri kiritildi, bu havola yopildi. Shifokoringizdan yangi havola soʻrang. | ПИН-код жуда кўп марта нотўғри киритилди, бу ҳавола ёпилди. Шифокорингиздан янги ҳавола сўранг. | ПИН-код слишком много раз введён неверно, эта ссылка закрыта. Попросите у врача новую ссылку. |
+| `yavas` | Juda tez. Bir necha soniya kutib, qaytadan urinib koʻring. | Жуда тез. Бир неча сония кутиб, қайтадан уриниб кўринг. | Слишком быстро. Подождите несколько секунд и попробуйте ещё раз. |
+| `gecersiz` | Bu havola ishlamaydi yoki muddati tugagan. Shifokoringizdan yangi havola soʻrang. | Бу ҳавола ишламайди ёки муддати тугаган. Шифокорингиздан янги ҳавола сўранг. | Эта ссылка не работает или срок её действия истёк. Попросите у врача новую ссылку. |
+| `hata` | Xatolik yuz berdi. Qaytadan urinib koʻring. | Хатолик юз берди. Қайтадан уриниб кўринг. | Произошла ошибка. Попробуйте ещё раз. |
+| `baglanti` | Ulanib boʻlmadi. Internet aloqasini tekshiring. | Уланиб бўлмади. Интернет алоқасини текширинг. | Нет соединения. Проверьте интернет. |
+| `gizlilik` | Havola va PIN-kodni boshqa hech kimga bermang. | Ҳавола ва ПИН-кодни бошқа ҳеч кимга берманг. | Никому не передавайте ссылку и ПИН-код. |
+| `yukleniyor` | Yuklanmoqda… | Юкланмоқда… | Загрузка… |
+
+**`sayfa`** (the patient's own page)
+
+| Key | Uzbek (Latin) | Uzbek (Cyrillic) | Russian |
+|---|---|---|---|
+| `selam` | Assalomu alaykum, % | Ассалому алайкум, % | Здравствуйте, % |
+| `hekim` | Shifokoringiz | Шифокорингиз | Ваш врач |
+| `cikis` | Chiqish | Чиқиш | Выйти |
+| `oturumBitti` | Xavfsizligingiz uchun sahifa yopildi. PIN-kodni qaytadan kiriting. | Хавфсизлигингиз учун саҳифа ёпилди. ПИН-кодни қайтадан киритинг. | Ради вашей безопасности страница закрыта. Введите ПИН-код ещё раз. |
+| `randevular` | Qabullaringiz | Қабулларингиз | Ваши приёмы |
+| `randevuYok` | Yaqin kunlarda qabulga yozilmagansiz. | Яқин кунларда қабулга ёзилмагансиз. | В ближайшие дни вы не записаны на приём. |
+| `ozetler` | Shifokoringizdan | Шифокорингиздан | От вашего врача |
+| `ozetYok` | Shifokoringiz hali hech narsa ulashmagan. | Шифокорингиз ҳали ҳеч нарса улашмаган. | Врач пока ничем с вами не поделился. |
+| `muayene` | % kungi koʻrik | % кунги кўрик | Приём % |
+| `istekBaslik` | Qabulga yozilishni soʻrash | Қабулга ёзилишни сўраш | Попросить о приёме |
+| `istekAciklama` | Oʻzingizga qulay kunlarni tanlang (koʻpi bilan % ta). Vaqtni shifokoringiz belgilaydi. | Ўзингизга қулай кунларни танланг (кўпи билан % та). Вақтни шифокорингиз белгилайди. | Выберите удобные вам дни (не больше %). Время назначит врач. |
+| `istekNeden` | Sababi (qisqacha, ixtiyoriy) | Сабаби (қисқача, ихтиёрий) | Причина (коротко, необязательно) |
+| `istekGonder` | Soʻrov yuborish | Сўров юбориш | Отправить запрос |
+| `istekGonderiliyor` | Yuborilmoqda… | Юборилмоқда… | Отправляем… |
+| `istekGunGerekli` | Kamida bitta kunni tanlang. | Камида битта кунни танланг. | Выберите хотя бы один день. |
+| `istekCokGun` | Koʻpi bilan % ta kun tanlang. | Кўпи билан % та кун танланг. | Выберите не больше % дней. |
+| `istekGonderilemedi` | Soʻrovni yuborib boʻlmadi. Qaytadan urinib koʻring. | Сўровни юбориб бўлмади. Қайтадан уриниб кўринг. | Не удалось отправить запрос. Попробуйте ещё раз. |
+| `istekBekliyor` | Soʻrovingiz yuborildi. Shifokoringiz hali javob bermadi. | Сўровингиз юборилди. Шифокорингиз ҳали жавоб бермади. | Ваш запрос отправлен. Врач ещё не ответил. |
+| `istekGunler` | Siz soʻragan kunlar: % | Сиз сўраган кунлар: % | Дни, о которых вы просили: % |
+| `istekKabul` | Shifokoringiz sizni qabulga yozdi: %1, soat %2. | Шифокорингиз сизни қабулга ёзди: %1, соат %2. | Врач записал вас на приём: %1, %2. |
+| `istekRed` | Shifokoringiz bu kunlarda qabul qila olmaydi. Yangi soʻrov yuborishingiz mumkin. | Шифокорингиз бу кунларда қабул қила олмайди. Янги сўров юборишингиз мумкин. | Врач не может принять вас в эти дни. Вы можете отправить новый запрос. |
+| `acil` | Bu sahifa shoshilinch holatlar uchun emas. | Бу саҳифа шошилинч ҳолатлар учун эмас. | Эта страница не для экстренных случаев. |
+| `acilNumara` | Ahvolingiz ogʻir boʻlsa, tez yordam chaqiring: %. | Аҳволингиз оғир бўлса, тез ёрдам чақиринг: %. | Если вам очень плохо, вызовите скорую помощь: %. |
+| `yalniz` | Bu yerda faqat shifokoringiz siz bilan ulashgan narsalar koʻrsatiladi. | Бу ерда фақат шифокорингиз сиз билан улашган нарсалар кўрсатилади. | Здесь показано только то, чем с вами поделился врач. |
 
 ## Correction of the record: where Uzbek data is stored (2026-10-08, NOTYA-ULKE-SABLON-01)
 
-**What was true before this job.** The reports of slices 1 to 3 said the Uzbek build used "new tables only". That was true of the migrations (they created only new tables and altered no existing one), but **not of the application**: the Uzbek build wrote its accounts into the core table `users`, its patients into `patients`, its visits into `sessions`, its notes into `notes` and its daily counter into `ai_kullanim`, and kept only the extra facts in new side tables. With a database of its own per country, as decided then, that was harmless. **What is true now.** Kaan decided on 2026-10-08 that every country shares Türkiye's database. Since this job an Uzbek build reads and writes **country tables only** (`ulke_hesaplari`, `ulke_hastalar`, `ulke_muayeneler`, `ulke_notlar`, `ulke_kullanim` and the side tables), each row carrying the country, and never a table Türkiye uses; migration 128, which altered `users`, is superseded and not to be run. Where a section below still names `users`, `patients`, `sessions` or `notes`, or "a separate Supabase project", read it as history. The current facts are in `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
+**What was true before this job.** The reports of slices 1 to 3 said the Uzbek build used "new tables only". That was true of the migrations (they created only new tables and altered no existing one), but **not of the application**: the Uzbek build wrote its accounts into the core table `users`, its patients into `patients`, its visits into `sessions`, its notes into `notes` and its daily counter into `ai_kullanim`, and kept only the extra facts in new side tables. With a database of its own per country, as decided then, that was harmless. **What changed on 2026-10-08.** Kaan decided that day that every country shares Türkiye's database (a decision he replaced on 2026-10-09 with a database per country: see "The Uzbek database" above). Since that job an Uzbek build reads and writes **country tables only** (`ulke_hesaplari`, `ulke_hastalar`, `ulke_muayeneler`, `ulke_notlar`, `ulke_kullanim` and the side tables), each row carrying the country, and never a table Türkiye uses; migration 128, which altered `users`, is superseded and not to be run. Where a section below still names `users`, `patients`, `sessions` or `notes`, or "a separate Supabase project", read it as history. That part stands with a database of its own too: an Uzbek database holds country tables only. The current facts are in `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
 
 ## Status (2026-10-08, end of slice 1; slices 2 and 3 have their own sections below)
 
@@ -148,7 +277,7 @@ The pack had no conversion from Latin to Cyrillic script before this slice (only
 
 ### Needs local content
 
-Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`, `UZ_ORTAK_YEREL_ICERIK`): empty (`icerik: null`), switched off (`acik: false`), and read by no screen and no instruction. A slot is switched on only after a local clinician has supplied and signed its content. 75 rows. Rows 76 and 77 (slice 3, appointments) are not slots of a note template: they are local content the calendar needs, and nothing stands in for them.
+Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`, `UZ_ORTAK_YEREL_ICERIK`): empty (`icerik: null`), switched off (`acik: false`), and read by no screen and no instruction. A slot is switched on only after a local clinician has supplied and signed its content. 75 rows. Rows 76 and 77 (slice 3, appointments) are not slots of a note template: they are local content the calendar needs, and nothing stands in for them. Rows 78 and 79 (the patient portal) are **settings of the pack that are already filled in with an unconfirmed value**: unlike the slots above, a patient would see them.
 
 | # | Role | Slot | What is missing | Who must supply it |
 |---|---|---|---|---|
@@ -229,6 +358,8 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 | 75 | `odyoloji` (Аудиолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
 | 76 | all 40 roles (calendar) | `public_holidays` | Public holidays of Uzbekistan for each year: the fixed dates, the two religious holidays whose dates move every year, and the working days the government transfers. **Nothing is hard-coded**: the calendar treats a holiday as an ordinary day and the working-pattern screen says so. Needs an official source and somebody who updates it every year. | a local source and a yearly owner |
 | 77 | all 40 roles (calendar) | `working_week` | The usual working week, hours, lunch break and appointment length of a private clinic. The pack's values (Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes) are starting values, not checked locally; every account can change its own. | the clinical lead |
+| 78 | all 40 roles (patient portal) | `emergency_number` | The number a patient dials for an ambulance, as it is written and dialled in Uzbekistan. The pack holds **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`), written by Claude from general knowledge: **UNVERIFIED. It must be confirmed by a local source before any patient sees the portal.** A wrong number here is shown to a patient who feels very unwell. If it cannot be confirmed, set it to `null`: the page then says only that it is not for emergencies and names no number. | a local source (the clinical lead, or the health ministry's own page), recorded here with name and date |
+| 79 | all 40 roles (patient portal) | `link_validity` | How long a patient's link works before the doctor must give a new one. The pack holds **30 days** (`uygulama.portal.baglantiGecerlilikGun`), a starting value chosen by Claude, not a local rule. | **the owner** confirms the number; a lawyer says how long a patient's access may stand (checklist I1) |
 
 ### Assistant names in the three forms, and the forms that look doubtful
 
@@ -567,7 +698,7 @@ The full Turkish suite was not re-run. **No file the Turkish build executes was 
 - Ayşe must be a senior professor with 20+ years of Uzbek practice.
 - Nothing Turkish may appear in Uzbek Notya.
 - Structure: one repository with walled areas, separate deployment ~~and database~~ per country, core shared.
-- **Changed later the same day (19:09): "use the same database as what we are using for notya turkiye".** Every country shares Türkiye's database; a country keeps its own deployment. And: "Make this a template so that we can do US, UK, Canada, Australia, and New Zeland possibly tomorrow" (the country kit, `docs/COUNTRY-PACK-HOWTO.md`).
+- **Changed later the same day (19:09), and changed back on 2026-10-09 (below): "use the same database as what we are using for notya turkiye".** ~~Every country shares Türkiye's database~~; a country keeps its own deployment. And: "Make this a template so that we can do US, UK, Canada, Australia, and New Zeland possibly tomorrow" (the country kit, `docs/COUNTRY-PACK-HOWTO.md`).
 - No separate Uzbek address: each country is a folder in the repository and a path on the main site; the Uzbek product is reached at `notya.io/uzbek`.
 - Visit transcription for Uzbekistan: ElevenLabs Scribe `scribe_v2`; language predicted on the first pass and stored with its probability; one second pass with the language forced to the doctor's note language when confidence is low; never more than two passes; the second pass is recorded so cost can be counted.
 - The note is written in the doctor's chosen note language; one click rewrites it in the other language as a second draft; an approved note is never silently overwritten.
@@ -577,7 +708,8 @@ The full Turkish suite was not re-run. **No file the Turkish build executes was 
 - **2026-10-09 01:43, prices:** "On the landing page convert the turkish prices to Uzbek prices in turn. Use todays exchnage prices." Done on the landing page (section "Prices and assistant titles"); the footnotes' promises await his confirmation.
 - **2026-10-09 01:43, the physiotherapist's title:** "Use the common name." `Fizyoterapevt` became `Fizioterapevt`.
 - **2026-10-09 01:43, titles:** "If prof. is used then follow the same turkish naming convention." Every assistant carries the title of its Turkish counterpart; the landing page names "Prof. Malika".
-- **2026-10-09 01:43, the database:** "Make sure the database tables are seperate. Do not put or mix the database tables in the same database". **Not acted on yet.** Claude reads it as reversing the decision of 8 October 19:09 above (one shared database): Uzbekistan would get a database of its own and no script would run on the Turkish database. The reading and the creation of an Uzbek database wait on his confirmation (`docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-FIYAT-UNVAN-01a). Until then nothing is applied anywhere, and the sections of this document that describe the shared database stand as written.
+- **2026-10-09 01:43, the database:** "Make sure the database tables are seperate. Do not put or mix the database tables in the same database". Claude read it as reversing the decision of 8 October 19:09 above (one shared database) and asked him to confirm.
+- **2026-10-09 02:26, the database, confirmed:** "We had issues with common databases before. Keep seperation between the two and any other future country versions". **One database per country.** Acted on the same day: the Uzbek database exists and holds migrations 129 to 135 (section "The Uzbek database" at the top). Nothing was run on the Turkish database.
 
 ## Proposals from Claude, not yet confirmed by Kaan
 
@@ -697,13 +829,13 @@ To settle before the rule is ever added:
 
 ## Before the Uzbek deployment is created
 
-These are settings and decisions, not code, and none was touched by the foundation job. **Items 1, 3, 4 and 5 were written for a database per country and are superseded by the shared database (2026-10-08): see `docs/COUNTRY-PACK-DB-ROLLOUT.md`.** In short: one Supabase project, Türkiye's; the Uzbek deployment uses its address and keys; public sign-up stays on there (the Turkish sign-up page needs it) and a country build refuses any account that was not created by its own invitation route; migrations 129 to 135 only, never 128; and no invitation code until the shared login pool is closed.
+These are settings and decisions, not code, and none was touched by the foundation job. **The list was written for a database per country, was set aside for a day by the shared-database decision of 2026-10-08, and stands again since 2026-10-09** (`docs/COUNTRY-PACK-DB-ROLLOUT.md`). Where things are: item 1's database exists ("The Uzbek database", at the top); item 3 is set on the preview site, together with the encryption key of item 8; item 4 is still to be checked; item 5 is done for 129 to 135, and **128 is never run** (the item's first words are corrected below).
 
 1. A separate Vercel project and a separate Supabase project for Uzbekistan (region to follow checklist A1).
 2. Build setting `NOTYA_COUNTRY=uz`. The build refuses any value that has no folder under `countries/`.
 3. `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` of the Uzbek project. The Uzbek login refuses to work without them; it never falls back to another project.
 4. Public sign-up **disabled** in that Supabase project's Auth settings. Invitation sign-up creates accounts on the server; with public sign-up left on, the invitation step could be bypassed by calling Supabase directly.
-5. All migrations applied to the Uzbek database, including `128_hesap_ulke_dil.sql`, `129_davet_kodlari.sql`, `130_hekim_dil_tercihleri.sql`, `131_hasta_ulke_bilgisi.sql`, `132_muayene_dil_kaydi.sql` (also creates the private bucket `muayene-sesleri` and its upload policy), `133_not_dil_kaydi.sql`, `134_hekim_rolu.sql` and `135_ulke_randevu.sql`. 130–133 add new tables only; 134 adds one new table and two nullable columns to the table 133 created; 135 adds two new tables, the no-double-booking constraint (it needs the `btree_gist` extension) and the function `ulke_not_onayla`, without which no note can be approved. **Run them on an empty scratch project first**: 130–135 have run only on a local PostgreSQL with Supabase's objects stubbed (section "Slice 3", "Migrations 130–135 on a real PostgreSQL").
+5. The country migrations applied to the Uzbek database (~~including `128_hesap_ulke_dil.sql`~~: 128 belongs to the Turkish account table, is superseded and is never run anywhere): `129_davet_kodlari.sql`, `130_hekim_dil_tercihleri.sql`, `131_hasta_ulke_bilgisi.sql`, `132_muayene_dil_kaydi.sql` (also creates the private bucket `muayene-sesleri` and its upload policy), `133_not_dil_kaydi.sql`, `134_hekim_rolu.sql` and `135_ulke_randevu.sql`. 130–133 add new tables only; 134 adds one new table and two nullable columns to the table 133 created; 135 adds two new tables, the no-double-booking constraint (it needs the `btree_gist` extension) and the function `ulke_not_onayla`, without which no note can be approved. **Run them on an empty scratch project first**: 130–135 have run only on a local PostgreSQL with Supabase's objects stubbed (section "Slice 3", "Migrations 130–135 on a real PostgreSQL").
 6. `NOTYA_ILETISIM_EPOSTA`: the address that receives "request a price" messages. Without it the request form is not shown. Nothing is stored: the form opens the visitor's own mail app.
 7. A consent and privacy text on the sign-up form (checklist I1) **before** the first invitation code is issued (`node scripts/ulke-davet-kodu.mjs --ulke uz`).
 8. Server settings for the visit: `ENCRYPTION_MASTER_KEY` (patient data cipher; its own key, never Türkiye's), `ELEVENLABS_API_KEY` (speech; without it the visit screen says speech recognition is not configured), `OPENROUTER_API_KEY` (the note model; without it no note is written). Before any of them is set with a real key: the lawyer's answer on sending health data abroad (checklist A1).

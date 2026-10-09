@@ -11,12 +11,12 @@ import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import type { DilGrubu, DilKodu } from '../tipler'
 import { ulkePaketi, uygulamaDilleri, uygulamaDiliSec } from '../ulke'
 import * as D from './dilSecimi'
-import type { RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 import * as S from './notSablonu'
 import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
-export type { RandevuMetni, UygulamaMetni } from './metinTipleri'
+export type { PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 export { NOT_BOLUMLERI, ROL_TARAFLARI, type AsistanKimligi, type NotBolumu, type RolTanimi, type RolTarafi } from './tipler'
 
 /** What the active pack brings for the shared screens. A country that brings none has no shared screens. */
@@ -66,6 +66,14 @@ export function randevuMetni(dil: unknown): RandevuMetni {
 export function randevuMetninDili(r: RandevuMetni): DilKodu {
   const a = arayuz().randevuMetinleri
   return uygulamaDilleri().find((d) => a[d] === r) ?? ulkePaketi().varsayilanDil
+}
+
+/** The patient portal's catalogue in a form: the account's for the doctor's controls, the patient's for the patient's page. */
+export function portalMetni(dil: unknown): PortalMetni {
+  const d = uygulamaDili(dil)
+  const p = arayuz().portalMetinleri?.[d]
+  if (!p) throw new Error(`[ulke/arayuz] no patient-portal catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
+  return p
 }
 
 /** The name of an ISO weekday (1 = Monday … 7 = Sunday). '' for anything else. */

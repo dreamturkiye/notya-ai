@@ -343,8 +343,8 @@ describe('an Uzbekistan build: routes', () => {
     if (izin === 'hepsi') return
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
-    assert.deepEqual(d.sayfalar, ['/', '/calendar', '/login', '/patient', '/patients', '/patients/new', '/settings', '/signup', '/start', '/today', '/visit', '/welcome'])
-    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/calisma-duzeni', '/api/ulke/hasta', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/randevu', '/api/ulke/randevular', '/api/ulke/rol', '/api/ulke/tercihler'])
+    assert.deepEqual(d.sayfalar, ['/', '/calendar', '/login', '/patient', '/patients', '/patients/new', '/portal', '/settings', '/signup', '/start', '/today', '/visit', '/welcome'])
+    assert.deepEqual(d.api, ['/api/ulke/bugun', '/api/ulke/calisma-duzeni', '/api/ulke/hasta', '/api/ulke/hasta-portali', '/api/ulke/hasta-portali/istekler', '/api/ulke/hasta-portali/ozet', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/portal', '/api/ulke/portal/cikis', '/api/ulke/portal/giris', '/api/ulke/portal/randevu-istegi', '/api/ulke/randevu', '/api/ulke/randevular', '/api/ulke/rol', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
     assert.deepEqual(d.ozel, ['/error', '/global-error', '/layout', '/not-found'])
@@ -464,13 +464,28 @@ describe('an Uzbekistan build: routes', () => {
   })
 
   it('every API route of the build checks the account\'s country, except the short list that must be open', () => {
-    const ACIK = new Map([['app/api/ulke/kayit/route.ulke.ts', 'creates the account: there is no session yet; guarded by the invitation code']])
+    // Open on purpose: why, and the guard each must carry instead (bound to the country inside the database function it calls).
+    const ACIK = new Map<string, [string, RegExp]>([
+      ['app/api/ulke/kayit/route.ulke.ts', ['creates the account: there is no session yet; guarded by the invitation code', /davet_kodu_kullan/]],
+      ['app/api/ulke/portal/giris/route.ulke.ts', ['a PATIENT signs in: there is no session yet; guarded by the link\'s token and the PIN', /portalGiris\(/]],
+      ['app/api/ulke/portal/cikis/route.ulke.ts', ['a PATIENT signs out: closes the session of the cookie it was sent, and nothing else', /portalCikis\(/]],
+    ])
     const d = ulkeRotaDosyalari()
     for (const a of d.api) {
       const yol = `app${a}/route.ulke.ts`
       const kaynak = readFileSync(join(KOK, yol), 'utf8')
-      if (ACIK.has(yol)) { assert.match(kaynak, /davet_kodu_kullan/); continue }
+      const acik = ACIK.get(yol)
+      if (acik) { assert.match(kaynak, acik[1]); continue }
+      // NOTYA-ULKE-PORTAL-01 — a route a PATIENT's browser calls has the patient's own session and no other: read from
+      // the portal cookie, looked up through the country's one door (lib/ulke/portal/giris.ts). A doctor's session is
+      // not accepted there, and a portal session is accepted nowhere else.
+      if (a.startsWith('/api/ulke/portal')) {
+        assert.match(kaynak, /\bportalOturum\(req\)/, `${yol} does not authenticate through the portal session`)
+        assert.doesNotMatch(kaynak.replace(/\/\*[\s\S]*?\*\//g, ''), /\b(ulkeOturum|doktorOturum|pratikOturum)\(/, `${yol}: a patient route must not accept a doctor's session`)
+        continue
+      }
       assert.match(kaynak, /\b(ulkeOturum|doktorOturum|pratikOturum)\(req\)/, `${yol} does not authenticate through a country-checked helper`)
+      assert.doesNotMatch(kaynak.replace(/\/\*[\s\S]*?\*\//g, ''), /\bportalOturum\(/, `${yol}: a doctor route must not accept a portal session`)
     }
     for (const yol of ACIK.keys()) assert.ok(existsSync(join(KOK, yol)), `stale entry: ${yol}`)
   })

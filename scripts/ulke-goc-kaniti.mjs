@@ -1,27 +1,36 @@
 #!/usr/bin/env node
 /**
- * NOTYA-ULKE-SABLON-01 — PROOF ON A REAL POSTGRESQL of the country migrations, for the SHARED DATABASE
- * (Kaan, 2026-10-08: every country lives in the same database as Türkiye). docs/COUNTRY-PACK-DB-ROLLOUT.md.
+ * NOTYA-ULKE-SABLON-01 · NOTYA-ULKE-PORTAL-01 — PROOF ON A REAL POSTGRESQL of the country migrations, on a COUNTRY
+ * DATABASE OF ITS OWN.
  *
- *   A. TÜRKİYE IS UNCHANGED. Tables shaped like Türkiye's (`users`, `patients`, `sessions`, `notes`, `ai_kullanim`,
- *      `randevular`, plus auth.users and the storage tables) are created and seeded FIRST. Their definitions
- *      (columns, constraints, indexes, policies, triggers, row-level security) and their rows are fingerprinted
- *      before the migrations and after them: nothing may differ, except the three things the rollout document
- *      names (one new bucket row, one new policy on storage.objects, the ledger rows).
- *   B. THE MIGRATIONS RUN: 129–135 in order, each as it is written, then all of them a second time.
- *   C. COUNTRIES ARE KEPT APART BY THE DATABASE ITSELF: the country is part of every key — a row of one country
- *      cannot point at a row of another, nor at another doctor's; an account never changes country; row-level
- *      security shows a session only rows of its own account AND its own country; the recordings bucket accepts an
- *      upload only under `<the session's country>/<the session's account>/`; the approval function and the
- *      invitation functions act only inside the country they are called for.
- *   D. What the appointment slice leaves to the database still holds: NO DOUBLE BOOKING (also for two transactions
- *      at the same moment) and the ALL-OR-NOTHING approval of a note.
- *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave Türkiye's
- *      tables exactly as they were at the start.
- *   G. THE OWNER'S BEFORE/AFTER CHECK (scripts/ulke-goc-kontrol.sql) is run as the rollout document says: it reports
- *      exactly the three expected lines after 129–135, and it does notice a change to a table of Türkiye (128).
- *   F. MIGRATION 128 IS SUPERSEDED and is not part of the run above. It is exercised separately at the end, only to
- *      put on record what it WOULD change in Türkiye's `users` and that its rollback undoes it.
+ * ONE DATABASE PER COUNTRY (Kaan, 2026-10-09: "We had issues with common databases before. Keep seperation between
+ * the two and any other future country versions"). A country's migrations are run only on that country's own
+ * database and NEVER on the Turkish one. The list of migrations is lib/db/ulke/gocler.json; a new country's database
+ * is made from the one-file baseline, whose proof is scripts/ulke-temel-kaniti.mjs. This script proves what the
+ * migrations make the DATABASE ITSELF hold — the second wall and everything the application leaves to it:
+ *
+ *   B. THE MIGRATIONS RUN on an empty country database: every file of the list in order, each as it is written, then
+ *      all of them a second time (nothing may change). A file that fails half-way leaves nothing behind.
+ *   C. THE SECOND WALL — THE COUNTRY ON EVERY ROW. The country is part of every key: a row of one country cannot
+ *      point at a row of another, nor at another doctor's; an account never changes country; row-level security
+ *      shows a session only rows of its own account AND its own country; the recordings bucket accepts an upload
+ *      only under `<the session's country>/<the session's account>/`; the approval function and the invitation
+ *      functions act only inside the country they are called for.
+ *   D. NO DOUBLE BOOKING (also for two transactions at the same moment) and the ALL-OR-NOTHING approval of a note.
+ *   P. THE PATIENT PORTAL AND THE USAGE RECORD (migrations 136, 137): a link belongs to one patient of one doctor in
+ *      one country; the PIN try is counted before it is looked at, also for two requests at the same moment, and the
+ *      link locks; a summary exists only for an approved note of that patient; sharing and its record happen
+ *      together; accepting a request books under the no-double-booking rule or not at all; none of these tables can
+ *      be read by a browser session, and none of the functions called by one.
+ *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave nothing.
+ *   T. NOT ON ANY OTHER DATABASE. On a database that is NOT a country database — here one shaped like the Turkish
+ *      product's, with its own tables and rows — the baseline refuses, and every migration written since the first
+ *      country's database exists refuses, each leaving that database exactly as it was.
+ *
+ * (Until 2026-10-09 this script proved another plan's question — every country inside the Turkish database, "is
+ * Türkiye left unchanged?" — with a before/after check file, scripts/ulke-goc-kontrol.sql. That plan was replaced;
+ * the file and those sections are gone. Migration 128, which belongs to the Turkish account table and is superseded,
+ * is not a country migration and is not run here at all.)
  *
  * It starts a THROWAWAY PostgreSQL inside this machine, in a temporary folder, and removes it afterwards. It connects
  * to 127.0.0.1 only. It never touches a Supabase project or any other remote database, and it applies nothing anywhere.
@@ -35,17 +44,16 @@
  * The folder must be reachable by an unprivileged system user (PostgreSQL refuses to run as root; the package creates
  * a `postgres` user for it), so not under a folder only root may enter.
  *
- * STUBS. A Supabase project brings objects these migrations expect. Here each is the smallest thing that lets the
- * SQL run — so this proves the migrations' own SQL, not Supabase's side:
- *   roles           anon, authenticated, service_role (service_role with BYPASSRLS and all table privileges)
- *   auth            schema `auth`, table auth.users, functions auth.uid() and auth.jwt() reading `request.jwt.claims`
- *   storage         schema `storage`, tables storage.buckets and storage.objects (row-level security on, one policy
- *                   of Türkiye's already there), function storage.foldername(text)
- *   Türkiye         the six tables named in A, with a few columns each, an index, a policy, a trigger and rows —
- *                   SHAPED LIKE the live tables, not copies of them
- * NOT covered: the real definitions of Türkiye's tables, every migration below 128, PostgREST (how `supabase.rpc`
- * and the row filters reach the database), Supabase's real roles, grants and storage policies, real lock waits
- * under live traffic.
+ * STUBS. A new project of the database provider brings objects these migrations expect. Here each is the smallest
+ * thing that lets the SQL run — so this proves the migrations' own SQL, not the provider's side:
+ *   roles     anon, authenticated, service_role (service_role with BYPASSRLS)
+ *   grants    the provider's default: every new table and function in `public` is granted to all three roles —
+ *             so "closed to the browser" is something the migrations had to do
+ *   auth      schema `auth`, table auth.users, functions auth.uid() and auth.jwt() reading `request.jwt.claims`
+ *   storage   schema `storage`, tables storage.buckets and storage.objects (row-level security on),
+ *             function storage.foldername(text)
+ * NOT covered: the provider's real roles, grants and storage rules, its API layer (how `supabase.rpc` and the row
+ * filters reach the database), and real lock waits under traffic.
  *
  * Exit code 0 = every check passed.
  */
@@ -53,6 +61,7 @@ import { createRequire } from 'node:module'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { gocListesi, temelUret } from './ulke-temel-uret.mjs'
 
 // The two packages are resolved from the folder the script is RUN in, not from the repository.
 const buradan = createRequire(join(process.cwd(), 'x.js'))
@@ -67,7 +76,7 @@ rmSync(VERI, { recursive: true, force: true })
 const epg = new EmbeddedPostgres({ databaseDir: VERI, user: 'postgres', password: 'yalniz-yerel', port: PORT, persistent: false, createPostgresUser: true, onLog: () => {}, onError: () => {} })
 await epg.initialise()
 await epg.start()
-const baglan = async () => { const c = new pg.Client({ host: '127.0.0.1', port: PORT, user: 'postgres', password: 'yalniz-yerel', database: 'postgres' }); await c.connect(); return c }
+const baglan = async (database = 'postgres') => { const c = new pg.Client({ host: '127.0.0.1', port: PORT, user: 'postgres', password: 'yalniz-yerel', database }); await c.connect(); return c }
 const c = await baglan()
 let hata = 0, toplam = 0
 const ok = (ad, kosul, ek = '') => { toplam++; console.log(`${kosul ? 'ok  ' : 'FAIL'} ${ad}${ek && !kosul ? ` — ${ek}` : ''}`); if (!kosul) hata++ }
@@ -75,9 +84,9 @@ const bekle = async (ad, sql, par, kod) => { try { await c.query(sql, par); ok(a
 
 console.log((await c.query('select version()')).rows[0].version)
 
-// ── STUBS for what Supabase provides and the migrations expect ──
-await c.query(`
-  create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
+// ── STUBS for what a new project of the provider brings and the migrations expect ──
+await c.query(`create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;`)
+const STUBLAR = `
   create schema auth;
   create table auth.users (id uuid primary key, email text, raw_app_meta_data jsonb not null default '{}'::jsonb, created_at timestamptz not null default now());
   create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
@@ -87,86 +96,46 @@ await c.query(`
   create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text, owner uuid);
   alter table storage.objects enable row level security;
   create function storage.foldername(name text) returns text[] language sql immutable as $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
-  create table public.schema_migrations (version text primary key, filename text, checksum text, applied_at timestamptz, backfilled boolean, note text);
   grant usage on schema public, auth, storage to anon, authenticated, service_role;
   grant insert, select on storage.objects to authenticated;
-`)
-
-// ── A. TABLES SHAPED LIKE TÜRKİYE'S, seeded before any migration runs ──
-const TR1 = 'aaaaaaaa-1111-4111-8111-111111111111', TR2 = 'aaaaaaaa-2222-4222-8222-222222222222'
-await c.query(`
-  create table public.users (id uuid primary key references auth.users(id) on delete cascade, email text not null, full_name text, specialty text, profession_type text, onboarding_completed boolean default false, subscription_tier text default 'trial', created_at timestamptz default now(), updated_at timestamptz default now());
-  create table public.patients (id uuid primary key default gen_random_uuid(), doctor_id uuid not null references public.users(id) on delete cascade, name_encrypted text, dob_encrypted text, tc_kimlik_hash text, is_active boolean default true, deleted_at timestamptz, created_at timestamptz default now());
-  create index patients_doctor_idx on public.patients (doctor_id);
-  create table public.sessions (id uuid primary key default gen_random_uuid(), doctor_id uuid not null references public.users(id), patient_id uuid references public.patients(id) on delete cascade, session_type text check (session_type in ('muayene', 'kontrol')), status text, transcript_cleaned text, started_at timestamptz default now(), created_at timestamptz default now());
-  create table public.notes (id uuid primary key default gen_random_uuid(), session_id uuid references public.sessions(id) on delete cascade, doctor_id uuid not null, note_type text, content_subjektif text, content_objektif text, content_degerlendirme text, content_plan text, approved_at timestamptz, approved_by uuid, created_at timestamptz default now());
-  create table public.ai_kullanim (doctor_id uuid not null, gun date not null, kova text not null, sayac integer not null default 0, primary key (doctor_id, gun, kova));
-  create table public.randevular (id uuid primary key default gen_random_uuid(), doctor_id uuid not null, patient_id uuid references public.patients(id), baslangic timestamptz not null, durum text default 'planlandi');
-  alter table public.patients enable row level security;
-  alter table public.sessions enable row level security;
-  alter table public.notes enable row level security;
-  create policy "tr_patients_owner" on public.patients for all to authenticated using (doctor_id = auth.uid());
-  create policy "tr_sessions_owner" on public.sessions for all to authenticated using (doctor_id = auth.uid());
-  create policy "tr_notes_owner" on public.notes for all to authenticated using (doctor_id = auth.uid());
-  create function public.tr_users_updated() returns trigger language plpgsql as $$ begin new.updated_at = now(); return new; end $$;
-  create trigger tr_users_updated before update on public.users for each row execute function public.tr_users_updated();
-  grant select, insert, update, delete on public.patients, public.sessions, public.notes to authenticated;
-  insert into storage.buckets (id, name, public) values ('hasta-belgeler', 'hasta-belgeler', false);
-  create policy "tr_belgeler_kendi_klasoru" on storage.objects for insert to authenticated with check (bucket_id = 'hasta-belgeler' and (storage.foldername(name))[1] = auth.uid()::text);
-`)
-await c.query(`insert into auth.users (id, email) values ($1, 'qa-tr-1@notya.test'), ($2, 'qa-tr-2@notya.test')`, [TR1, TR2])
-await c.query(`insert into public.users (id, email, full_name, specialty, profession_type, onboarding_completed) values ($1, 'qa-tr-1@notya.test', 'QA Hekim Bir', 'pediatri', 'doktor', true), ($2, 'qa-tr-2@notya.test', 'QA Hekim İki', 'kardiyoloji', 'doktor', true)`, [TR1, TR2])
-{
-  const h1 = (await c.query(`insert into public.patients (doctor_id, name_encrypted, tc_kimlik_hash) values ($1, 'sifreli-ad-1', 'hash-1') returning id`, [TR1])).rows[0].id
-  const h2 = (await c.query(`insert into public.patients (doctor_id, name_encrypted) values ($1, 'sifreli-ad-2') returning id`, [TR2])).rows[0].id
-  const s1 = (await c.query(`insert into public.sessions (doctor_id, patient_id, session_type, status, transcript_cleaned) values ($1, $2, 'muayene', 'completed', 'QA sentetik döküm') returning id`, [TR1, h1])).rows[0].id
-  await c.query(`insert into public.notes (session_id, doctor_id, note_type, content_subjektif, content_plan, approved_at, approved_by) values ($1, $2, 'soap', 'QA öykü', 'QA plan', now(), $2)`, [s1, TR1])
-  await c.query(`insert into public.notes (session_id, doctor_id, note_type, content_subjektif) values ($1, $2, 'soap', 'QA taslak')`, [s1, TR1])
-  await c.query(`insert into public.ai_kullanim (doctor_id, gun, kova, sayac) values ($1, current_date, 'soap', 3)`, [TR1])
-  await c.query(`insert into public.randevular (doctor_id, patient_id, baslangic) values ($1, $2, now() + interval '1 day'), ($3, $4, now() + interval '2 days')`, [TR1, h1, TR2, h2])
-  await c.query(`insert into storage.objects (bucket_id, name, owner) values ('hasta-belgeler', $1, $2)`, [`${TR1}/rapor.pdf`, TR1])
-}
-
-/** Everything about a table that Türkiye's application could notice: its definition, and its rows. */
-const TURKIYE = ['public.users', 'public.patients', 'public.sessions', 'public.notes', 'public.ai_kullanim', 'public.randevular', 'auth.users', 'storage.objects', 'storage.buckets']
-async function parmakIzi(tablo) {
-  const [sema, ad] = tablo.split('.')
-  const q = async (sql) => JSON.stringify((await c.query(sql, [sema, ad])).rows)
-  return {
-    kolonlar: await q(`select column_name, data_type, is_nullable, column_default from information_schema.columns where table_schema = $1 and table_name = $2 order by ordinal_position`),
-    // Constraints ON the table. A foreign key that POINTS AT it from a new table belongs to the new table.
-    kisitlar: await q(`select conname, pg_get_constraintdef(oid) as tanim from pg_constraint where conrelid = (quote_ident($1) || '.' || quote_ident($2))::regclass order by conname`),
-    indeksler: await q(`select indexname, indexdef from pg_indexes where schemaname = $1 and tablename = $2 order by indexname`),
-    politikalar: await q(`select policyname, permissive, roles::text, cmd, qual, with_check from pg_policies where schemaname = $1 and tablename = $2 order by policyname`),
-    tetikleyiciler: await q(`select tgname, pg_get_triggerdef(oid) as tanim from pg_trigger where tgrelid = (quote_ident($1) || '.' || quote_ident($2))::regclass and not tgisinternal order by tgname`),
-    rls: await q(`select relrowsecurity, relforcerowsecurity from pg_class where oid = (quote_ident($1) || '.' || quote_ident($2))::regclass`),
-    satirSayisi: (await c.query(`select count(*)::int n from ${tablo}`)).rows[0].n,
-    satirlar: (await c.query(`select coalesce(md5(string_agg(t::text, '|' order by t::text)), '') h from ${tablo} t`)).rows[0].h,
-  }
-}
-const hepsininIzi = async () => { const iz = {}; for (const t of TURKIYE) iz[t] = await parmakIzi(t); return iz }
-const farklar = (a, b) => TURKIYE.flatMap((t) => Object.keys(a[t]).filter((k) => a[t][k] !== b[t][k]).map((k) => `${t}.${k}`))
-const ONCE = await hepsininIzi()
-// G. The owner's own before/after check (scripts/ulke-goc-kontrol.sql), exactly as the rollout document tells it to be run.
-const KONTROL = readFileSync(join(REPO, 'scripts/ulke-goc-kontrol.sql'), 'utf8')
-const kontrol = async () => Object.fromEntries((await c.query(KONTROL)).rows.map((r) => [r.what, r.value]))
-const kontrolFarki = (a, b) => [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => a[k] !== b[k]).sort()
-const KONTROL_ONCE = await kontrol()
-ok('G. the before/after check file runs and covers the Türkiye-shaped tables (rows and definition for each)', ['public.users', 'public.patients', 'public.sessions', 'public.notes', 'public.ai_kullanim', 'public.randevular', 'auth.users', 'storage.objects', 'storage.buckets'].every((t) => `rows ${t}` in KONTROL_ONCE && `definition ${t}` in KONTROL_ONCE), Object.keys(KONTROL_ONCE).join(', '))
-ok('A. Türkiye-shaped tables are seeded (2 accounts, 2 patients, 1 visit, 2 notes, 1 counter, 2 appointments, 1 stored file)', ONCE['public.users'].satirSayisi === 2 && ONCE['public.patients'].satirSayisi === 2 && ONCE['public.notes'].satirSayisi === 2 && ONCE['storage.objects'].satirSayisi === 1)
+  alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+  alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+  alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+`
+await c.query(STUBLAR)
+const LISTE = gocListesi(REPO)
+// The ledger of a country database (lib/db/ulke/defter.sql): the first thing the baseline creates.
+await c.query(readFileSync(join(REPO, LISTE.defter), 'utf8'))
+// A login that is NOT a country account: it exists in the sign-in service and has no row in ulke_hesaplari, no country stamp.
+const L0 = 'aaaaaaaa-1111-4111-8111-111111111111'
+await c.query(`insert into auth.users (id, email) values ($1, 'qa-no-country@notya.test')`, [L0])
 
 // ── B. the migrations, in order, each as it is written; then all of them a second time. 128 is NOT among them. ──
-const DOSYALAR = ['129_davet_kodlari.sql', '130_hekim_dil_tercihleri.sql', '131_hasta_ulke_bilgisi.sql', '132_muayene_dil_kaydi.sql', '133_not_dil_kaydi.sql', '134_hekim_rolu.sql', '135_ulke_randevu.sql']
+// The list every script and test reads (lib/db/ulke/gocler.json): 129 on, never 128.
+const DOSYALAR = LISTE.gocler
+const SURUMLER = DOSYALAR.map((d) => d.slice(0, 3)).join(',')
 const dosyaOku = (d) => readFileSync(join(REPO, 'lib/db/migrations', d), 'utf8')
-let IKINCI_ONCESI = null
+/** Everything in `public`, by name and definition: what a second run of the migrations must leave untouched. */
+const sema = async (istemci = c) => JSON.stringify((await istemci.query(`
+  select 'table' tur, c.relname ad, c.relrowsecurity::text || coalesce(c.relacl::text, '') tanim from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p')
+  union all select 'column', c.relname || '.' || a.attname, format_type(a.atttypid, a.atttypmod) || a.attnotnull::text || coalesce(pg_get_expr(d.adbin, d.adrelid), '') from pg_attribute a join pg_class c on c.oid = a.attrelid left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p') and a.attnum > 0 and not a.attisdropped
+  union all select 'constraint', k.conrelid::regclass::text || '.' || k.conname, pg_get_constraintdef(k.oid) from pg_constraint k where k.connamespace = 'public'::regnamespace
+  union all select 'index', indexname, indexdef from pg_indexes where schemaname = 'public'
+  union all select 'policy', schemaname || '.' || tablename || '.' || policyname, cmd || permissive || roles::text || coalesce(qual, '') || coalesce(with_check, '') from pg_policies where schemaname in ('public', 'storage')
+  union all select 'trigger', g.tgrelid::regclass::text || '.' || g.tgname, pg_get_triggerdef(g.oid) from pg_trigger g join pg_class c on c.oid = g.tgrelid where c.relnamespace = 'public'::regnamespace and not g.tgisinternal
+  union all select 'function', p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')', pg_get_functiondef(p.oid) || coalesce(p.proacl::text, '') from pg_proc p where p.pronamespace = 'public'::regnamespace and not exists (select 1 from pg_depend x where x.objid = p.oid and x.deptype = 'e')
+  union all select 'bucket', id, public::text from storage.buckets
+  order by 1, 2`)).rows)
+let ILK_KOSU = ''
 for (const tur of ['first run', 'second run (must be repeatable)']) {
-  if (tur !== 'first run') IKINCI_ONCESI = await hepsininIzi()
+  if (tur !== 'first run') ILK_KOSU = await sema()
   for (const d of DOSYALAR) {
     try { await c.query(dosyaOku(d)); ok(`B. ${tur}: ${d}`, true) }
     catch (e) { await c.query('rollback').catch(() => {}); ok(`B. ${tur}: ${d}`, false, `sqlstate ${e.code} at position ${e.position ?? '?'}: ${e.message}`) }
   }
 }
-ok('B. schema_migrations has 129–135 once each, and no 128', (await c.query(`select string_agg(version, ',' order by version) v from schema_migrations`)).rows[0].v === '129,130,131,132,133,134,135')
+ok('B. the second run changed nothing at all: every table, column, constraint, index, rule, trigger, function and grant is as the first run left it', ILK_KOSU !== '' && ILK_KOSU === await sema())
+ok(`B. the ledger has ${SURUMLER} once each, and no 128`, (await c.query(`select string_agg(version, ',' order by version) v from schema_migrations`)).rows[0].v === SURUMLER)
 ok('B. a failed statement leaves nothing of its file behind (each file is one transaction)', await (async () => {
   // The same file with a statement that cannot succeed appended before its commit: nothing of it may remain.
   const bozuk = dosyaOku('134_hekim_rolu.sql').replace(/commit;\s*$/, `create table public.kanit_yarim (x int);\nselect 1 / 0;\ncommit;`)
@@ -174,34 +143,6 @@ ok('B. a failed statement leaves nothing of its file behind (each file is one tr
   return (await c.query(`select to_regclass('public.kanit_yarim') r`)).rows[0].r === null
 })())
 
-// ── A (continued). Türkiye after the migrations ──
-const SONRA = await hepsininIzi()
-{
-  const f = farklar(ONCE, SONRA)
-  // Exactly three differences are allowed, all named in the rollout document.
-  ok('A. after 129–135: every Türkiye-shaped table has the same definition and the same rows; the only differences are the new bucket row and the new upload policy', JSON.stringify(f.sort()) === JSON.stringify(['storage.buckets.satirSayisi', 'storage.buckets.satirlar', 'storage.objects.politikalar'].sort()), f.join(', ') || 'no difference at all')
-  for (const t of ['public.users', 'public.patients', 'public.sessions', 'public.notes', 'public.ai_kullanim', 'public.randevular', 'auth.users']) {
-    ok(`A. ${t}: definition and ${ONCE[t].satirSayisi} row(s) identical before and after`, JSON.stringify(ONCE[t]) === JSON.stringify(SONRA[t]))
-  }
-  ok('A. storage.objects: rows identical; policies = the one Türkiye had + exactly one new one that names only the recordings bucket', ONCE['storage.objects'].satirlar === SONRA['storage.objects'].satirlar && (await c.query(`select string_agg(policyname, ',' order by policyname) p from pg_policies where schemaname = 'storage' and tablename = 'objects'`)).rows[0].p === 'muayene_sesleri_ulke_ve_kendi_klasorune_yukle,tr_belgeler_kendi_klasoru')
-  ok('A. storage.buckets: Türkiye\'s bucket untouched, one new private bucket', (await c.query(`select string_agg(id || ':' || public::text, ',' order by id) b from storage.buckets`)).rows[0].b === 'hasta-belgeler:false,muayene-sesleri:false')
-  ok('A. the second run changed nothing at all in Türkiye\'s tables (not even a policy)', farklar(IKINCI_ONCESI, SONRA).length === 0)
-  ok('A. no new table, function or trigger hangs on a Türkiye table except one foreign key to auth.users', (await c.query(`select string_agg(conrelid::regclass::text || '→' || confrelid::regclass::text, ',' order by 1) k from pg_constraint where contype = 'f' and confrelid in ('auth.users'::regclass, 'public.users'::regclass, 'public.patients'::regclass, 'public.sessions'::regclass, 'public.notes'::regclass) and conrelid::regclass::text !~ '^(users|patients|sessions|notes|randevular)$'`)).rows[0].k === 'ulke_hesaplari→auth.users')
-}
-{
-  const f = kontrolFarki(KONTROL_ONCE, await kontrol())
-  ok('G. the check file, before vs after 129–135: exactly the three lines the rollout document names differ, and no line appeared or disappeared', JSON.stringify(f) === JSON.stringify(['definition storage.objects', 'rows public.schema_migrations', 'rows storage.buckets']), f.join(' | ') || 'no difference')
-  ok('G. … row counts it reports are exact (2 accounts, 2 patients, 2 notes; ledger 0 → 7)', KONTROL_ONCE['rows public.users'] === '2' && KONTROL_ONCE['rows public.notes'] === '2' && KONTROL_ONCE['rows public.schema_migrations'] === '0' && (await kontrol())['rows public.schema_migrations'] === '7')
-}
-{
-  // The individual post-check queries of the rollout document, as written there, with the answers it promises.
-  const q = async (sql) => (await c.query(sql)).rows
-  ok('G. post-check: ledger holds 129–135 and no 128', (await q(`select version from schema_migrations where version >= '128' order by 1`)).map((r) => r.version).join() === '129,130,131,132,133,134,135')
-  ok('G. post-check: `users` has neither country nor ui_language', (await q(`select count(*)::int n from information_schema.columns where table_schema = 'public' and table_name = 'users' and column_name in ('country', 'ui_language')`))[0].n === 0)
-  ok('G. post-check: the only foreign key from a country table to anything of Türkiye\'s is ulke_hesaplari → auth.users', JSON.stringify(await q(`select conrelid::regclass::text a, confrelid::regclass::text b from pg_constraint where contype = 'f' and conrelid::regclass::text in ('ulke_hesaplari','hekim_dil_tercihleri','ulke_hastalar','hasta_ulke_bilgisi','ulke_muayeneler','muayene_dil_kaydi','ulke_kullanim','ulke_notlar','not_dil_kaydi','hekim_rolu','hekim_calisma_duzeni','ulke_randevulari') and confrelid::regclass::text !~ '^(ulke_|hekim_)'`)) === JSON.stringify([{ a: 'ulke_hesaplari', b: 'auth.users' }]))
-  ok('G. post-check: the approval function is closed to browser sessions and open to the server', JSON.stringify(await q(`select has_function_privilege('authenticated', 'public.ulke_not_onayla(text,uuid,uuid,timestamptz,text,text,text,text,jsonb)', 'execute') a, has_function_privilege('service_role', 'public.ulke_not_onayla(text,uuid,uuid,timestamptz,text,text,text,text,jsonb)', 'execute') b`)) === JSON.stringify([{ a: false, b: true }]))
-  ok('G. pre-flight: the "no name is taken" query finds the thirteen tables once they exist (so it would have caught a clash)', (await q(`select relname from pg_class where relnamespace = 'public'::regnamespace and relname in ('davet_kodlari','ulke_hesaplari','hekim_dil_tercihleri','ulke_hastalar','hasta_ulke_bilgisi','ulke_muayeneler','muayene_dil_kaydi','ulke_kullanim','ulke_notlar','not_dil_kaydi','hekim_rolu','hekim_calisma_duzeni','ulke_randevulari')`)).length === 13)
-}
 // The service role of a Supabase project owns everything; here it is granted what the server uses.
 await c.query(`grant all on all tables in schema public to service_role`)
 
@@ -217,9 +158,9 @@ const G = '2026-10-12T'
 
 // ── C. countries are kept apart by the keys ──
 await bekle('C. a row without the country → refused 23502 (ulke has no default)', `insert into ulke_hastalar (doctor_id) values ($1)`, [D1], '23502')
-await bekle('C. a malformed country code → refused 23514', `insert into ulke_hesaplari (id, ulke, ui_language) values ($1, 'UZB', 'ru')`, [TR1], '23514')
+await bekle('C. a malformed country code → refused 23514', `insert into ulke_hesaplari (id, ulke, ui_language) values ($1, 'UZB', 'ru')`, [L0], '23514')
 await bekle('C. a patient of country kz for an account of country uz → refused 23503', `insert into ulke_hastalar (ulke, doctor_id) values ('kz', $1)`, [D1], '23503')
-await bekle('C. a patient for an account that is not a country account (a Türkiye account) → refused 23503', `insert into ulke_hastalar (ulke, doctor_id) values ('uz', $1)`, [TR1], '23503')
+await bekle('C. a patient for a login that is not a country account → refused 23503', `insert into ulke_hastalar (ulke, doctor_id) values ('uz', $1)`, [L0], '23503')
 await bekle('C. a visit of country kz that points at an uz patient (valid id) → refused 23503', `insert into ulke_muayeneler (ulke, doctor_id, patient_id) values ('kz', $1, $2)`, [K1, H1], '23503')
 await bekle('C. a visit of one doctor that points at ANOTHER doctor\'s patient in the same country → refused 23503', `insert into ulke_muayeneler (ulke, doctor_id, patient_id) values ('uz', $1, $2)`, [D2, H1], '23503')
 await bekle('C. an appointment of country kz for an uz patient → refused 23503', `insert into ulke_randevulari (ulke, doctor_id, patient_id, baslangic, bitis) values ('kz', $1, $2, now(), now() + interval '30 minutes')`, [K1, H1], '23503')
@@ -397,10 +338,9 @@ const cik = async () => { await c.query('reset role'); await c.query(`select set
   await cik(); await oturum(D1, 'kz')
   ok('C. RLS: THE SAME ACCOUNT ID with a session of another country reads nothing at all', Object.values(await sayilar()).every((n) => n === 0), JSON.stringify(await sayilar()))
   await cik(); await oturum(D1, null)
-  ok('C. RLS: the same account id with no country on the session (a Türkiye-style session) reads nothing at all', Object.values(await sayilar()).every((n) => n === 0))
-  await cik(); await oturum(TR1, null)
-  ok('C. RLS: an account of Türkiye reads nothing in any country table', Object.values(await sayilar()).every((n) => n === 0))
-  ok('C. … and still reads its own Türkiye rows exactly as before', (await c.query(`select count(*)::int n from public.patients`)).rows[0].n === 1 && (await c.query(`select count(*)::int n from public.notes`)).rows[0].n === 2)
+  ok('C. RLS: the same account id with NO country on the session reads nothing at all', Object.values(await sayilar()).every((n) => n === 0))
+  await cik(); await oturum(L0, null)
+  ok('C. RLS: a login that is not a country account reads nothing in any country table', Object.values(await sayilar()).every((n) => n === 0))
   await cik(); await oturum(D2, 'uz')
   try { await c.query(`insert into ulke_randevulari (ulke, doctor_id, patient_id, baslangic, bitis) values ('uz', $1,$2,now(),now() + interval '10 minutes')`, [D2, H2]); ok('C. RLS: a signed-in doctor cannot write appointments from the browser', false) } catch (e) { ok('C. RLS: a signed-in doctor cannot write appointments from the browser', e.code === '42501', `sqlstate ${e.code}`) }
   try { await c.query(`update ulke_hesaplari set full_name = 'x' where id = $1`, [D2]); ok('C. RLS: a signed-in account cannot write its own account row from the browser', false) } catch (e) { ok('C. RLS: a signed-in account cannot write its own account row from the browser', e.code === '42501', `sqlstate ${e.code}`) }
@@ -426,63 +366,248 @@ const cik = async () => { await c.query('reset role'); await c.query(`select set
   await yukle('… a folder deeper → refused', D1, 'uz', `uz/${D1}/alt/kayit-1.webm`, '42501')
   await yukle('a kz account uploads under kz/<its id>/ → allowed', K1, 'kz', `kz/${K1}/kayit-1.webm`, 'allowed')
   await yukle('a kz account under uz/<its id>/ → refused', K1, 'kz', `uz/${K1}/kayit-1.webm`, '42501')
-  await yukle('an account of Türkiye (no country on the session) cannot upload into the recordings bucket at all', TR1, null, `uz/${TR1}/kayit-1.webm`, '42501')
-  await yukle('… not even under a folder named after an empty country', TR1, null, `/${TR1}/kayit-1.webm`, '42501')
-  await yukle('an account of Türkiye still uploads into Türkiye\'s own bucket exactly as before', TR1, null, `${TR1}/yeni-rapor.pdf`, 'allowed', 'hasta-belgeler')
-  await yukle('a country account cannot upload into Türkiye\'s bucket under another account\'s folder (Türkiye\'s own rule, unchanged)', D1, 'uz', `${TR1}/x.pdf`, '42501', 'hasta-belgeler')
-  await c.query(`delete from storage.objects where bucket_id = 'muayene-sesleri' or name like '%yeni-rapor.pdf'`)
+  await yukle('a login with no country on its session cannot upload into the recordings bucket at all', L0, null, `uz/${L0}/kayit-1.webm`, '42501')
+  await yukle('… not even under a folder named after an empty country', L0, null, `/${L0}/kayit-1.webm`, '42501')
+  await c.query(`delete from storage.objects where bucket_id = 'muayene-sesleri'`)
 }
 await bekle('134: a role key with a capital letter → refused 23514', `insert into hekim_rolu (doctor_id, ulke, rol) values ($1, 'uz', 'Pediatri')`, [D2], '23514')
 await bekle('133: second draft in the note\'s own language → refused 23514', `update not_dil_kaydi set ikinci_dil = not_dili where note_id = (select note_id from not_dil_kaydi limit 1)`, [], '23514')
 ok('132: the private bucket exists once', (await c.query(`select count(*)::int n from storage.buckets where id = 'muayene-sesleri' and public = false`)).rows[0].n === 1)
-ok('A. after all of the above (rows written for two countries): Türkiye\'s six tables and auth.users still have their own rows only', await (async () => {
-  const simdi = await hepsininIzi()
-  return ['public.users', 'public.patients', 'public.sessions', 'public.notes', 'public.ai_kullanim', 'public.randevular'].every((t) => JSON.stringify(simdi[t]) === JSON.stringify(ONCE[t])) && simdi['auth.users'].satirSayisi === ONCE['auth.users'].satirSayisi + 3
-})())
+// ── P. the usage record (migration 136) and the patient portal (migration 137) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (tablo, kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ${tablo} where ${kosul}`, par)).rows[0].n
+
+  // usage: counts that add up, also at the same moment
+  await c.query(`select public.ulke_kullanim_ekle('uz', $1, '2026-10-12', 'not', 1, 0, 900, 220)`, [D1])
+  await c.query(`select public.ulke_kullanim_ekle('uz', $1, '2026-10-12', 'not', 1, null, 100, 30)`, [D1])
+  await c.query(`select public.ulke_kullanim_ekle('uz', $1, '2026-10-12', 'konusma-ilk', 1, 61.5, null, null)`, [D1])
+  ok('P. usage: two calls for the same account, day and task ADD UP; another task is its own row', JSON.stringify(await q(`select gorev, adet, saniye::float8 saniye, giris_token::int g, cikis_token::int c from ulke_kullanim_olcumu where doctor_id = $1 order by gorev`, [D1])) === JSON.stringify([{ gorev: 'konusma-ilk', adet: 1, saniye: 61.5, g: 0, c: 0 }, { gorev: 'not', adet: 2, saniye: 0, g: 1000, c: 250 }]))
+  {
+    const a = await baglan(), b = await baglan()
+    const yirmi = async (istemci) => { for (let i = 0; i < 20; i++) await istemci.query(`select public.ulke_kullanim_ekle('uz', $1, '2026-10-13', 'hasta-ozeti', 1, 0, 10, 1)`, [D1]) }
+    await Promise.all([yirmi(a), yirmi(b)])
+    ok('P. usage: forty calls from two connections at the same moment lose no count', JSON.stringify(await q(`select adet, giris_token::int g, cikis_token::int c from ulke_kullanim_olcumu where gun = '2026-10-13'`)) === JSON.stringify([{ adet: 40, g: 400, c: 40 }]))
+    await a.end(); await b.end()
+  }
+  await bekle('P. usage: a row for an account under ANOTHER country → refused 23503', `select public.ulke_kullanim_ekle('kz', $1, '2026-10-12', 'not', 1, 0, 0, 0)`, [D1], '23503')
+  await bekle('P. usage: a login that is not a country account → refused 23503', `select public.ulke_kullanim_ekle('uz', $1, '2026-10-12', 'not', 1, 0, 0, 0)`, [L0], '23503')
+  await bekle('P. usage: a task key that is not one → refused 23514', `select public.ulke_kullanim_ekle('uz', $1, '2026-10-12', 'Not A Task', 1, 0, 0, 0)`, [D1], '23514')
+  ok('P. usage: the table has no column for a patient, a visit or a text', (await q(`select string_agg(column_name, ',' order by ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name = 'ulke_kullanim_olcumu'`))[0].k === 'ulke,doctor_id,gun,gorev,adet,saniye,giris_token,cikis_token,updated_at')
+
+  // links: one patient of one doctor in one country
+  const PINH = `scrypt$16384$8$1$${'A'.repeat(22)}==$${'B'.repeat(43)}=`
+  const T = (h) => h.repeat(64)
+  const BITIS = '2027-01-01T00:00:00Z'
+  const ver = async (ulke, d, h, token, bitis = BITIS, simdi = '2026-10-12T05:00:00Z') => (await c.query(`select public.ulke_portal_erisim_ver($1, $2, $3, $4, $5, $6, $7) id`, [ulke, d, h, token, PINH, bitis, simdi])).rows[0].id
+  const e1 = await ver('uz', D1, H1, T('a'))
+  ok('P. link: a link is given for the doctor\'s own patient, and recorded', Boolean(e1) && (await say('ulke_portal_kayitlari', `olay = 'erisim' and patient_id = $1`, [H1])) === 1)
+  ok('P. link: asked for ANOTHER doctor\'s patient → no link, nothing written', (await ver('uz', D2, H1, T('c'))) === null && (await say('ulke_portal_erisimleri')) === 1)
+  ok('P. link: asked for under ANOTHER country → no link, nothing written', (await ver('kz', D1, H1, T('c'))) === null && (await ver('kz', K1, H1, T('c'))) === null && (await say('ulke_portal_erisimleri')) === 1)
+  const EKLE = `insert into ulke_portal_erisimleri (ulke, doctor_id, patient_id, token_hash, pin_hash, son_gecerlilik) values ($1, $2, $3, $4, $5, now() + interval '1 day')`
+  await bekle('P. link: written past the function — a second link of the same patient that is not withdrawn → refused 23505', EKLE, ['uz', D1, H1, T('d'), PINH], '23505')
+  await bekle('P. link: one doctor\'s link for another doctor\'s patient → refused 23503', EKLE, ['uz', D2, H1, T('d'), PINH], '23503')
+  await bekle('P. link: a link of another country for this patient → refused 23503', EKLE, ['kz', K1, H1, T('d'), PINH], '23503')
+  await bekle('P. link: a PIN in the clear instead of its hash → refused 23514', EKLE, ['uz', D1, H1b, T('d'), '123456'], '23514')
+  await bekle('P. link: a token in the clear instead of its SHA-256 → refused 23514', EKLE, ['uz', D1, H1b, 'AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-AbCdE', PINH], '23514')
+
+  // the PIN: a try is counted before it is looked at; the link locks
+  const al = async (ulke, token, simdi, istemci = c) => (await istemci.query(`select public.ulke_portal_deneme_al($1, $2, 5, 2, $3) r`, [ulke, token, simdi])).rows[0].r
+  const sonuc = async (ulke, id, dogru, simdi, oturum = null, bitis = '2026-10-12T06:00:00Z') => (await c.query(`select public.ulke_portal_deneme_sonucu($1, $2, $3, 5, $4, $5, $6) r`, [ulke, id, dogru, oturum, bitis, simdi])).rows[0].r
+  const link = async (id) => (await q(`select hatali_deneme::int n, kilitlendi_at is not null kilitli, iptal_at is not null iptal from ulke_portal_erisimleri where id = $1`, [id]))[0]
+  ok('P. PIN: a token that does not exist, and the right token asked for under another country, answer the same "no such link"', JSON.stringify([await al('uz', T('0'), '2026-10-12T05:01:00Z'), await al('kz', T('a'), '2026-10-12T05:01:00Z')]) === JSON.stringify([{ durum: 'YOK' }, { durum: 'YOK' }]) && (await link(e1)).n === 0)
+  {
+    const r = await al('uz', T('a'), '2026-10-12T05:01:00Z')
+    ok('P. PIN: a try is TAKEN (counted) before the PIN is looked at, and only then is the hash handed to the server', r.durum === 'DENE' && r.erisim_id === e1 && r.pin_hash === PINH && r.patient_id === H1 && (await link(e1)).n === 1)
+    ok('P. PIN: a try one second later is not looked at and not counted', (await al('uz', T('a'), '2026-10-12T05:01:01Z')).durum === 'YAVAS' && (await link(e1)).n === 1)
+    ok('P. PIN: a wrong PIN says how many tries are left', JSON.stringify(await sonuc('uz', e1, false, '2026-10-12T05:01:02Z')) === JSON.stringify({ durum: 'YANLIS', kalan: 4 }))
+    ok('P. PIN: the result of a try reported under another country changes nothing', (await sonuc('kz', e1, true, '2026-10-12T05:01:02Z', T('9'))).durum === 'YOK' && (await say('ulke_portal_oturumlari')) === 0)
+    await al('uz', T('a'), '2026-10-12T05:01:10Z')
+    const g = await sonuc('uz', e1, true, '2026-10-12T05:01:11Z', T('e'), '2028-01-01T00:00:00Z')
+    const o = (await q(`select ulke, doctor_id, patient_id, erisim_id, son_gecerlilik from ulke_portal_oturumlari where oturum_hash = $1`, [T('e')]))[0]
+    ok('P. PIN: the right PIN gives the tries back, opens a session of that link\'s own country, doctor and patient, and is recorded', g.durum === 'TAMAM' && (await link(e1)).n === 0 && o.ulke === 'uz' && o.doctor_id === D1 && o.patient_id === H1 && o.erisim_id === e1 && (await say('ulke_portal_kayitlari', `olay = 'giris' and patient_id = $1`, [H1])) === 1)
+    ok('P. PIN: a session never outlives its link, whatever end is asked for', o.son_gecerlilik.toISOString() === new Date(BITIS).toISOString())
+  }
+  {
+    // TWO REQUESTS AT THE SAME MOMENT cannot share one try: the second waits for the first, then is "too fast".
+    const a = await baglan(), b = await baglan()
+    await a.query('begin')
+    const ilk = await al('uz', T('a'), '2026-10-12T05:02:00Z', a)
+    let ikinci = 'pending'
+    const bekleyen = al('uz', T('a'), '2026-10-12T05:02:00Z', b).then((r) => { ikinci = r.durum }, (e) => { ikinci = e.code })
+    await new Promise((r) => setTimeout(r, 400))
+    ok('P. PIN: two tries at the same moment — the second waits while the first is undecided', ilk.durum === 'DENE' && ikinci === 'pending', ikinci)
+    await a.query('commit'); await bekleyen
+    ok('P. PIN: … and once the first is counted, the second is refused as too fast: exactly one try was taken', ikinci === 'YAVAS' && (await link(e1)).n === 1, `${ikinci}, ${(await link(e1)).n}`)
+    await a.end(); await b.end()
+    await sonuc('uz', e1, false, '2026-10-12T05:02:01Z')
+  }
+  {
+    // four more wrong tries: the fifth locks the link for good and closes the session that was open
+    let son = null
+    for (let i = 0; i < 4; i++) { await al('uz', T('a'), `2026-10-12T05:03:${String(i * 5).padStart(2, '0')}Z`); son = await sonuc('uz', e1, false, `2026-10-12T05:03:${String(i * 5 + 1).padStart(2, '0')}Z`) }
+    const l = await link(e1)
+    ok('P. PIN: the fifth wrong PIN LOCKS the link, closes its open session, and the lock is recorded once', son.durum === 'KILITLI' && l.kilitli && (await say('ulke_portal_oturumlari', `erisim_id = $1 and kapandi_at is null`, [e1])) === 0 && (await say('ulke_portal_kayitlari', `olay = 'kilit' and patient_id = $1`, [H1])) === 1, JSON.stringify([son, l]))
+    ok('P. PIN: a locked link stays locked — for a new try and for a right PIN reported late', (await al('uz', T('a'), '2026-10-13T05:00:00Z')).durum === 'KILITLI' && (await sonuc('uz', e1, true, '2026-10-13T05:00:01Z', T('8'))).durum === 'KILITLI' && (await say('ulke_portal_oturumlari', `oturum_hash = $1`, [T('8')])) === 0)
+  }
+  // a NEW link withdraws the old one in the same step
+  const e2 = await ver('uz', D1, H1, T('b'), BITIS, '2026-10-13T06:00:00Z')
+  ok('P. link: a new link withdraws the one before it: one link of the patient is not withdrawn, and the old token is "no such link"', Boolean(e2) && (await link(e1)).iptal && (await say('ulke_portal_erisimleri', `patient_id = $1 and iptal_at is null`, [H1])) === 1 && (await al('uz', T('a'), '2026-10-13T06:01:00Z')).durum === 'YOK')
+  {
+    // five tries taken and never reported back (requests cut off after the first step): the sixth finds none left
+    for (let i = 0; i < 5; i++) await al('uz', T('b'), `2026-10-13T07:00:${String(i * 5).padStart(2, '0')}Z`)
+    ok('P. PIN: tries that were taken and never reported still count: the sixth request locks the link', (await al('uz', T('b'), '2026-10-13T07:01:00Z')).durum === 'KILITLI' && (await link(e2)).kilitli)
+  }
+  const e3 = await ver('uz', D1, H1, T('f'), '2026-10-20T00:00:00Z', '2026-10-13T08:00:00Z')
+  ok('P. link: after its end a link is "no such link", and a try reported late opens nothing', (await al('uz', T('f'), '2026-10-20T00:00:00Z')).durum === 'YOK' && (await sonuc('uz', e3, true, '2026-10-20T00:00:01Z', T('7'))).durum === 'YOK' && (await say('ulke_portal_oturumlari', `oturum_hash = $1`, [T('7')])) === 0)
+  {
+    const iptal = async (ulke, d, h) => (await c.query(`select public.ulke_portal_erisim_iptal($1, $2, $3, '2026-10-13T09:00:00Z') r`, [ulke, d, h])).rows[0].r
+    ok('P. link: another doctor, or a call under another country, cannot withdraw it', (await iptal('uz', D2, H1)) === false && (await iptal('kz', D1, H1)) === false && (await link(e3)).iptal === false)
+    ok('P. link: its own doctor withdraws it, once; a second time there is nothing to withdraw and nothing is recorded', (await iptal('uz', D1, H1)) === true && (await iptal('uz', D1, H1)) === false && (await link(e3)).iptal && (await say('ulke_portal_kayitlari', `olay = 'iptal' and patient_id = $1`, [H1])) === 1)
+  }
+  const e4 = await ver('uz', D1, H1b, T('1'), BITIS, '2026-10-13T10:00:00Z')
+  await bekle('P. session: a session of one patient hung from ANOTHER patient\'s link → refused 23503', `insert into ulke_portal_oturumlari (ulke, doctor_id, patient_id, erisim_id, oturum_hash, son_gecerlilik) values ('uz', $1, $2, $3, $4, now() + interval '1 hour')`, [D1, H1, e4, T('6')], '23503')
+  await bekle('P. session: a session of another country hung from this link → refused 23503', `insert into ulke_portal_oturumlari (ulke, doctor_id, patient_id, erisim_id, oturum_hash, son_gecerlilik) values ('kz', $1, $2, $3, $4, now() + interval '1 hour')`, [D1, H1b, e4, T('6')], '23503')
+
+  // summaries: only of an approved note, only for that note's patient; sharing and its record together
+  const x = await notKur(D1, H1, null)
+  const OZET = `insert into ulke_hasta_ozetleri (ulke, doctor_id, patient_id, note_id, dil, ozet_encrypted, paylasildi_at) values ($1, $2, $3, $4, 'uz-Latn', 'sifreli', $5) returning id`
+  await bekle('P. summary: of a note that is NOT approved → refused 23514', OZET, ['uz', D1, H1, x.n, null], '23514')
+  await bekle('P. summary: … not even already marked shared → refused 23514', OZET, ['uz', D1, H1, x.n, '2026-10-13T10:00:00Z'], '23514')
+  await onayla(x.n, D1, null)
+  await bekle('P. summary: of an approved note, for ANOTHER patient of the same doctor → refused 23514', OZET, ['uz', D1, H1b, x.n, null], '23514')
+  await bekle('P. summary: of an approved note, under another doctor → refused 23514', OZET, ['uz', D2, H2, x.n, null], '23514')
+  await bekle('P. summary: of an approved note, under another country → refused 23514', OZET, ['kz', K1, HK, x.n, null], '23514')
+  const z = (await c.query(OZET, ['uz', D1, H1, x.n, null])).rows[0].id
+  ok('P. summary: of an approved note, for its own patient → stored, NOT shared', Boolean(z) && (await say('ulke_hasta_ozetleri', 'paylasildi_at is null')) === 1)
+  await bekle('P. summary: a second summary of the same note → refused 23505', OZET, ['uz', D1, H1, x.n, null], '23505')
+  {
+    const paylas = async (ulke, d, id, p, simdi = '2026-10-13T11:00:00Z') => (await c.query(`select public.ulke_ozet_paylas($1, $2, $3, $4, $5) r`, [ulke, d, id, p, simdi])).rows[0].r
+    const durum = async () => JSON.stringify([(await q(`select paylasildi_at is not null p from ulke_hasta_ozetleri where id = $1`, [z]))[0].p, (await q(`select olay from ulke_portal_kayitlari where ozet_id = $1 order by created_at, olay`, [z])).map((r) => r.olay)])
+    ok('P. sharing: another doctor, or a call under another country → NOT_FOUND, nothing changed', (await paylas('uz', D2, z, true)) === 'NOT_FOUND' && (await paylas('kz', D1, z, true)) === 'NOT_FOUND' && (await durum()) === JSON.stringify([false, []]))
+    ok('P. sharing: shared and recorded together', (await paylas('uz', D1, z, true)) === 'TAMAM' && (await durum()) === JSON.stringify([true, ['paylasim']]))
+    ok('P. sharing: sharing what is already shared changes nothing and records nothing', (await paylas('uz', D1, z, true, '2026-10-13T11:05:00Z')) === 'AYNI' && (await durum()) === JSON.stringify([true, ['paylasim']]))
+    ok('P. sharing: taken back and recorded together', (await paylas('uz', D1, z, false, '2026-10-13T11:10:00Z')) === 'TAMAM' && (await durum()) === JSON.stringify([false, ['paylasim', 'geri-alma']]))
+    // A note that lost its approval (the application never does this; done here by hand) cannot be shared.
+    await c.query(`update ulke_notlar set approved_at = null, approved_by = null where id = $1`, [x.n])
+    await bekle('P. sharing: if the note is not approved, the share is refused by the table\'s own rule → 23514', `select public.ulke_ozet_paylas('uz', $1, $2, true, '2026-10-13T11:20:00Z')`, [D1, z], '23514')
+    ok('P. sharing: … and after that refusal nothing was shared and nothing recorded', (await durum()) === JSON.stringify([false, ['paylasim', 'geri-alma']]))
+    await c.query(`update ulke_notlar set approved_at = now(), approved_by = $2 where id = $1`, [x.n, D1])
+  }
+  await bekle('P. record: an event that is not one of the six → refused 23514', `insert into ulke_portal_kayitlari (ulke, doctor_id, patient_id, olay) values ('uz', $1, $2, 'okundu')`, [D1, H1], '23514')
+  await bekle('P. record: an event of one doctor about another doctor\'s patient → refused 23503', `insert into ulke_portal_kayitlari (ulke, doctor_id, patient_id, olay) values ('uz', $1, $2, 'giris')`, [D2, H1], '23503')
+
+  // appointment requests: one waiting; accepting books under the no-double-booking rule, or nothing happens
+  const ISTEK = `insert into ulke_randevu_istekleri (ulke, doctor_id, patient_id, gunler) values ($1, $2, $3, $4) returning id`
+  const i1 = (await c.query(ISTEK, ['uz', D1, H1, '{2027-03-01,2027-03-02}'])).rows[0].id
+  await bekle('P. request: a second unanswered request of the same patient → refused 23505', ISTEK, ['uz', D1, H1, '{2027-03-03}'], '23505')
+  await bekle('P. request: of one doctor for another doctor\'s patient → refused 23503', ISTEK, ['uz', D2, H1b, '{2027-03-03}'], '23503')
+  await bekle('P. request: under another country for this patient → refused 23503', ISTEK, ['kz', K1, H1b, '{2027-03-03}'], '23503')
+  await bekle('P. request: without a day, or with more than five → refused 23514', ISTEK, ['uz', D1, H1b, '{}'], '23514')
+  await bekle('P. request: marked accepted without an appointment → refused 23514', `update ulke_randevu_istekleri set durum = 'kabul', cevap_at = now() where id = $1`, [i1], '23514')
+  {
+    const kabul = (ulke, d, id, bas) => c.query(`select public.ulke_randevu_istegi_kabul($1, $2, $3, $4::timestamptz, $4::timestamptz + interval '30 minutes', null, false, '2026-10-13T12:00:00Z') r`, [ulke, d, id, bas]).then((r) => r.rows[0].r)
+    const dolu = (await ekle(D1, H1b, '2027-03-01T05:00:00Z', '2027-03-01T05:30:00Z')).rows[0].id
+    const randevuSayisi = await say('ulke_randevulari')
+    ok('P. request: another doctor, or a call under another country → NOT_FOUND', (await kabul('uz', D2, i1, '2027-03-01T06:00:00Z')).durum === 'NOT_FOUND' && (await kabul('kz', D1, i1, '2027-03-01T06:00:00Z')).durum === 'NOT_FOUND')
+    let kod = 'accepted'
+    try { await kabul('uz', D1, i1, '2027-03-01T05:15:00Z') } catch (e) { kod = e.code }
+    ok('P. request: accepted onto a TAKEN time → refused 23P01 by the no-double-booking rule', kod === '23P01', kod)
+    ok('P. request: … and nothing happened: no appointment was written and the request still waits', (await say('ulke_randevulari')) === randevuSayisi && (await q(`select durum, randevu_id from ulke_randevu_istekleri where id = $1`, [i1]))[0].durum === 'bekliyor')
+    const r = await kabul('uz', D1, i1, '2027-03-01T05:30:00Z')
+    const satir = (await q(`select i.durum, i.randevu_id, r.patient_id, r.doctor_id, r.ulke, r.durum rdurum from ulke_randevu_istekleri i join ulke_randevulari r on r.id = i.randevu_id where i.id = $1`, [i1]))[0]
+    ok('P. request: accepted onto a free time → the appointment is booked for the request\'s own patient and the request is marked, together', r.durum === 'TAMAM' && satir.durum === 'kabul' && satir.randevu_id === r.randevu_id && satir.patient_id === H1 && satir.doctor_id === D1 && satir.ulke === 'uz' && satir.rdurum === 'planlandi')
+    ok('P. request: an answered request is not answered again', (await kabul('uz', D1, i1, '2027-03-02T05:00:00Z')).durum === 'CEVAPLANDI' && (await say('ulke_randevulari')) === randevuSayisi + 1)
+    await bekle('P. request: pointed at ANOTHER patient\'s appointment → refused 23503', `update ulke_randevu_istekleri set randevu_id = $2 where id = $1`, [i1, dolu], '23503')
+    ok('P. request: the patient may ask again once the first is answered', Boolean((await c.query(ISTEK, ['uz', D1, H1, '{2027-03-05}'])).rows[0].id))
+  }
+
+  // SERVER ONLY: no browser session reads any of it, not even its own rows; none of the functions can be called by one
+  {
+    const TABLOLAR = ['ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri']
+    const ISLEVLER = [`ulke_kullanim_ekle('uz', '${D1}', '2026-10-12', 'not', 1, 0, 0, 0)`, `ulke_portal_erisim_ver('uz', '${D1}', '${H1}', '${T('5')}', '${PINH}', now(), now())`, `ulke_portal_erisim_iptal('uz', '${D1}', '${H1}', now())`, `ulke_portal_deneme_al('uz', '${T('1')}', 5, 2, now())`, `ulke_portal_deneme_sonucu('uz', '${e4}', true, 5, '${T('4')}', now(), now())`, `ulke_ozet_paylas('uz', '${D1}', '${z}', true, now())`, `ulke_randevu_istegi_kabul('uz', '${D1}', '${i1}', now(), now() + interval '30 minutes', null, false, now())`]
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(D1, ulke); else await c.query(`set role ${rol}`)
+      for (const t of TABLOLAR) { try { await c.query(`select 1 from ${t} limit 1`); cikti.push(`${t}: read`) } catch (e) { if (e.code !== '42501') cikti.push(`${t}: ${e.code}`) } }
+      for (const t of TABLOLAR) { try { await c.query(`delete from ${t}`); cikti.push(`${t}: write`) } catch (e) { if (e.code !== '42501') cikti.push(`${t}: ${e.code}`) } }
+      for (const f of ISLEVLER) { try { await c.query(`select public.${f}`); cikti.push(`${f.split('(')[0]}: called`) } catch (e) { if (e.code !== '42501') cikti.push(`${f.split('(')[0]}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('P. server only: the doctor\'s own signed-in browser session can read, write and call NONE of it (its own rows included)', girisli.length === 0, girisli.join('; '))
+    ok('P. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select public.ulke_kullanim_ekle('uz', $1, '2026-10-14', 'not', 1, 0, 1, 1)`, [D1]); await c.query(`select count(*) from ulke_portal_erisimleri`) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('P. server only: the server\'s role can', sunucu === 'ok', sunucu)
+  }
+}
 
 // ── E. the rollback scripts ──
 const GERI = [...DOSYALAR].reverse().map((d) => d.replace(/\.sql$/, '.geri-al.sql'))
 const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 'utf8')
 {
-  // While a country's data exists, a rollback refuses and changes nothing.
+  // While a country's data exists, a rollback refuses and changes nothing. (129's table was emptied above.)
+  const once = await sema()
+  const denenen = GERI.filter((x) => !x.startsWith('129'))
   let reddedildi = 0
-  for (const d of GERI.filter((x) => !x.startsWith('129'))) { try { await c.query(geriOku(d)) } catch (e) { await c.query('rollback').catch(() => {}); if (/rollback refused/.test(e.message)) reddedildi++ } }
-  ok('E. with country data present, every rollback of 130–135 refuses', reddedildi === 6, `${reddedildi} of 6 refused`)
-  ok('E. … and nothing was dropped', (await c.query(`select count(*)::int n from pg_tables where schemaname = 'public' and tablename in ('ulke_hesaplari','ulke_hastalar','ulke_muayeneler','ulke_notlar','ulke_randevulari','hekim_rolu','ulke_kullanim')`)).rows[0].n === 7 && (await c.query(`select count(*)::int n from schema_migrations`)).rows[0].n === 7)
+  for (const d of denenen) { try { await c.query(geriOku(d)) } catch (e) { await c.query('rollback').catch(() => {}); if (/rollback refused/.test(e.message)) reddedildi++ } }
+  ok(`E. with country data present, every rollback of ${denenen.length} migrations refuses`, reddedildi === denenen.length, `${reddedildi} of ${denenen.length} refused`)
+  ok('E. … and nothing was dropped or changed', (await sema()) === once && (await c.query(`select count(*)::int n from schema_migrations`)).rows[0].n === DOSYALAR.length)
   // Emptied by hand (here: by removing the three country accounts, which cascades through every country table).
   await c.query(`delete from auth.users where id in ($1, $2, $3)`, [D1, D2, K1])
-  ok('E. removing a country account removes every row of it in every country table (cascade), and nothing of Türkiye', (await c.query(`select (select count(*) from ulke_hesaplari) + (select count(*) from ulke_hastalar) + (select count(*) from ulke_muayeneler) + (select count(*) from ulke_notlar) + (select count(*) from not_dil_kaydi) + (select count(*) from ulke_randevulari) + (select count(*) from hekim_rolu) + (select count(*) from ulke_kullanim) as n`)).rows[0].n === '0' && (await c.query(`select count(*)::int n from public.patients`)).rows[0].n === 2)
+  const kalan = []
+  for (const t of (await c.query(`select tablename t from pg_tables where schemaname = 'public' and tablename not in ('schema_migrations') order by 1`)).rows.map((r) => r.t)) { const n = (await c.query(`select count(*)::int n from public.${t}`)).rows[0].n; if (n) kalan.push(`${t}: ${n}`) }
+  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record and requests included', kalan.length === 0, kalan.join(', '))
   for (const tur of ['first run', 'second run (must be repeatable)']) {
     for (const d of GERI) {
       try { await c.query(geriOku(d)); ok(`E. rollback, ${tur}: ${d}`, true) }
       catch (e) { await c.query('rollback').catch(() => {}); ok(`E. rollback, ${tur}: ${d}`, false, `sqlstate ${e.code}: ${e.message}`) }
     }
   }
-  const geri = await hepsininIzi()
-  const f = farklar(ONCE, geri)
-  ok('E. after the rollbacks: Türkiye\'s tables are exactly as at the start; the only thing left is the (empty) recordings bucket, removed in the dashboard', JSON.stringify(f.sort()) === JSON.stringify(['storage.buckets.satirSayisi', 'storage.buckets.satirlar']), f.join(', ') || 'no difference')
-  ok('G. the check file after the rollbacks: only the left-over bucket row differs from the very first run', JSON.stringify(kontrolFarki(KONTROL_ONCE, await kontrol())) === JSON.stringify(['rows storage.buckets']), kontrolFarki(KONTROL_ONCE, await kontrol()).join(' | '))
-  ok('E. no country table, function or ledger row is left', (await c.query(`select count(*)::int n from pg_tables where schemaname = 'public' and (tablename like 'ulke\\_%' or tablename like 'hekim\\_%' or tablename in ('hasta_ulke_bilgisi','muayene_dil_kaydi','not_dil_kaydi','davet_kodlari'))`)).rows[0].n === 0 && (await c.query(`select count(*)::int n from pg_proc where proname in ('ulke_not_onayla','ulke_oturum_ulkesi','ulke_hesaplari_ulke_kilidi','davet_kodu_kullan','davet_kodu_iade')`)).rows[0].n === 0 && (await c.query(`select count(*)::int n from schema_migrations`)).rows[0].n === 0)
+  const tablolar = (await c.query(`select string_agg(tablename, ',' order by tablename) t from pg_tables where schemaname = 'public'`)).rows[0].t
+  const islevler = (await c.query(`select count(*)::int n from pg_proc p where p.pronamespace = 'public'::regnamespace and not exists (select 1 from pg_depend x where x.objid = p.oid and x.deptype = 'e')`)).rows[0].n
+  ok('E. after the rollbacks nothing of the migrations is left: no table but the (empty) ledger, no function, no rule on storage', tablolar === 'schema_migrations' && islevler === 0 && (await c.query(`select count(*)::int n from schema_migrations`)).rows[0].n === 0 && (await c.query(`select count(*)::int n from pg_policies where schemaname = 'storage'`)).rows[0].n === 0, `${tablolar}; ${islevler} function(s)`)
+  ok('E. … except what the scripts say they leave: the (empty) recordings bucket, removed in the dashboard', (await c.query(`select string_agg(id, ',') b from storage.buckets`)).rows[0].b === 'muayene-sesleri')
 }
 
-// ── F. migration 128, SUPERSEDED: not part of the rollout. Run here only to record what it would change. ──
+// ── T. NOT ON ANY OTHER DATABASE: a database that is not a country database is refused and left exactly as it was ──
 {
-  const once = await hepsininIzi()
-  const ESKI_KOLONLAR = `select md5(string_agg(row(id, email, full_name, specialty, profession_type, onboarding_completed, subscription_tier, created_at, updated_at)::text, '|' order by id)) h from public.users`
-  const eskiKolonlarOnce = (await c.query(ESKI_KOLONLAR)).rows[0].h
-  for (const tur of ['first run', 'second run']) {
-    try { await c.query(dosyaOku('128_hesap_ulke_dil.sql')); ok(`F. superseded 128, ${tur}: runs`, true) } catch (e) { await c.query('rollback').catch(() => {}); ok(`F. superseded 128, ${tur}: runs`, false, e.message) }
+  await c.query('create database kanit_baska')
+  const t = await baglan('kanit_baska')
+  await t.query(STUBLAR)
+  // Shaped like the Turkish product's database: its own tables, its own ledger with its own rows. Stand-ins, not copies.
+  await t.query(`
+    create table public.schema_migrations (version text primary key, filename text not null, checksum text, applied_at timestamptz, backfilled boolean not null default false, note text);
+    insert into public.schema_migrations (version, filename) values ('126', '126_x.sql'), ('127', '127_y.sql');
+    create table public.users (id uuid primary key references auth.users(id) on delete cascade, email text not null, full_name text);
+    create table public.patients (id uuid primary key default gen_random_uuid(), doctor_id uuid not null references public.users(id), name_encrypted text);
+    create table public.randevular (id uuid primary key default gen_random_uuid(), doctor_id uuid not null, patient_id uuid references public.patients(id), baslangic timestamptz not null);
+    alter table public.patients enable row level security;
+    create policy "own" on public.patients for all to authenticated using (doctor_id = auth.uid());
+    insert into auth.users (id, email) values ('aaaaaaaa-2222-4222-8222-222222222222', 'qa-other@notya.test');
+    insert into public.users (id, email, full_name) values ('aaaaaaaa-2222-4222-8222-222222222222', 'qa-other@notya.test', 'QA Other');
+    insert into public.patients (doctor_id, name_encrypted) values ('aaaaaaaa-2222-4222-8222-222222222222', 'sifreli');
+  `)
+  const hal = async () => `${await sema(t)}#${(await t.query(`select (select count(*) from public.users) || '/' || (select count(*) from public.patients) || '/' || (select string_agg(version, ',' order by version) from public.schema_migrations) || '/' || (select count(*) from storage.buckets) || '/' || (select count(*) from pg_extension) x`)).rows[0].x}`
+  const once = await hal()
+  const dene = async (sql) => { try { await t.query(sql); return 'IT RAN' } catch (e) { await t.query('rollback').catch(() => {}); return e.message } }
+  {
+    const m = await dene(temelUret(REPO))
+    ok('T. on a database that is not empty, the BASELINE refuses', /baseline refused/.test(m), m)
+    ok('T. … and leaves it exactly as it was: tables, rows, rules, its own ledger, storage, extensions', (await hal()) === once)
   }
-  const sonra = await hepsininIzi()
-  const f = farklar(once, sonra)
-  ok('F. 128 would change `users` and only `users`: its columns, constraints and triggers (and so the text of each row)', f.length > 0 && f.every((x) => x.startsWith('public.users.')), f.join(', '))
-  ok('G. the check file DOES notice a change to a table of Türkiye: after 128 it reports `definition public.users`', JSON.stringify(kontrolFarki(KONTROL_ONCE, await kontrol()).filter((k) => k.includes('public.users'))) === JSON.stringify(['definition public.users']))
-  ok('F. 128 would add exactly two columns, with every existing row reading tr / tr', (await c.query(`select string_agg(distinct country || '/' || ui_language, ',') v, count(*)::int n from public.users`)).rows[0].v === 'tr/tr')
-  ok('F. … and would leave every other column of every row as it was', (await c.query(ESKI_KOLONLAR)).rows[0].h === eskiKolonlarOnce)
-  for (const tur of ['first run', 'second run']) {
-    try { await c.query(geriOku('128_hesap_ulke_dil.geri-al.sql')); ok(`F. rollback of 128, ${tur}: runs`, true) } catch (e) { await c.query('rollback').catch(() => {}); ok(`F. rollback of 128, ${tur}: runs`, false, e.message) }
+  const sonrakiler = DOSYALAR.filter((d) => !LISTE.elleUygulanan.includes(d))
+  ok('T. there are migrations written since the first country\'s database exists, and each is tried here', sonrakiler.length >= 2, sonrakiler.join(', '))
+  for (const d of sonrakiler) {
+    const m = await dene(dosyaOku(d))
+    ok(`T. on a database that is not a country database, ${d} refuses`, new RegExp(`country migration ${d.slice(0, 3)} refused`).test(m), m)
+    ok(`T. … and leaves it exactly as it was (${d})`, (await hal()) === once)
   }
-  ok('F. after its rollback `users` is exactly as before 128', JSON.stringify((await hepsininIzi())['public.users']) === JSON.stringify(once['public.users']))
+  await t.end()
 }
 
 await c.end(); await epg.stop(); rmSync(VERI, { recursive: true, force: true })

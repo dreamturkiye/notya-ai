@@ -12,6 +12,9 @@
  *             invitation-code functions, and (NOTYA-UZ-RANDEVU-01) what migration 135 puts in the database: the
  *             no-double-booking constraint of `ulke_randevulari` and the function `ulke_not_onayla`. An operator it does not know is an ERROR (400) — it never ignores a filter,
  *             because an ignored filter would make a broken ownership check look fine.
+ *             NOTYA-ULKE-PORTAL-01: what migrations 136 and 137 put in the database — the usage record's function, the
+ *             six functions of the patient portal (each all-or-nothing), and the constraints a statement meets there
+ *             (a summary only for an approved note of that patient, one per note; one unanswered request per patient).
  *   storage   upload / download / remove of objects. A browser session may upload only under `<its country>/<its own
  *             account id>/` (what the storage policy of migration 132 enforces in the real project); the service role
  *             may read and remove anything.
@@ -53,7 +56,7 @@ for (const h of Object.values(hesaplar)) if (h.ulke) tablolar.ulke_hesaplari.pus
 const ULKESIZ = new Set(['ai_token_kullanim'])
 const tablo = (ad) => (tablolar[ad] ??= [])
 /** Tables whose rows have no id of their own (the key is another table's id). */
-const KIMLIKSIZ = new Set(['hekim_calisma_duzeni', 'hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ulke_kullanim'])
+const KIMLIKSIZ = new Set(['hekim_calisma_duzeni', 'hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ulke_kullanim', 'ulke_kullanim_olcumu'])
 /** bucket/path → { tur, veri: Buffer } */
 const depo = new Map()
 
@@ -116,6 +119,133 @@ function notOnayla(a) {
   }
 }
 
+// ───────────────────────── NOTYA-ULKE-PORTAL-01: migrations 136 and 137 ─────────────────────────
+/** A violated constraint, as the database raises it. */
+const kisitHatasi = (code, message) => Object.assign(new Error(message), { code })
+/**
+ * What migration 137 makes the database refuse for a row as it WOULD be (`digerleri` = every other row of the table):
+ * the summary's trigger (the note is this doctor's, about this patient, and approved) and one summary per note; one
+ * link per patient that is not withdrawn; one unanswered request per patient; and the patient is this doctor's.
+ */
+function portalKisiti(ad, yeni, digerleri) {
+  if (!['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri'].includes(ad)) return null
+  if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return kisitHatasi('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
+  if (ad === 'ulke_hasta_ozetleri') {
+    const n = tablo('ulke_notlar').find((x) => x.id === yeni.note_id && x.doctor_id === yeni.doctor_id && x.ulke === yeni.ulke)
+    const m = n ? tablo('ulke_muayeneler').find((x) => x.id === n.session_id && x.doctor_id === n.doctor_id && x.ulke === n.ulke) : null
+    if (!n || !m || m.patient_id !== yeni.patient_id) return kisitHatasi('23514', 'ulke_hasta_ozetleri: the note is not a note of this patient')
+    if (!n.approved_at) return kisitHatasi('23514', 'ulke_hasta_ozetleri: a summary for the patient exists only for an approved note')
+    if (digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.note_id === yeni.note_id)) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_hasta_ozetleri_not_tekil"')
+  }
+  if (ad === 'ulke_portal_erisimleri') {
+    if (digerleri.some((x) => x.token_hash === yeni.token_hash)) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_portal_erisimleri_token_tekil"')
+    if (!yeni.iptal_at && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && !x.iptal_at)) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_portal_erisimleri_tek_acik"')
+  }
+  if (ad === 'ulke_portal_oturumlari' && !tablo('ulke_portal_erisimleri').some((e) => e.id === yeni.erisim_id && e.ulke === yeni.ulke && e.doctor_id === yeni.doctor_id && e.patient_id === yeni.patient_id)) return kisitHatasi('23503', 'insert or update on table "ulke_portal_oturumlari" violates foreign key constraint "ulke_portal_oturumlari_erisim_fk"')
+  if (ad === 'ulke_randevu_istekleri' && (yeni.durum ?? 'bekliyor') === 'bekliyor' && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && (x.durum ?? 'bekliyor') === 'bekliyor')) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_randevu_istekleri_tek_bekleyen"')
+  return null
+}
+/** A row written inside a function, held to the same constraints as a statement. */
+function islevdeEkle(ad, satir) {
+  const yeni = { id: randomUUID(), created_at: new Date().toISOString(), ...satir }
+  if (ad === 'ulke_randevulari' && cakisiyor(yeni, tablo(ad))) throw kisitHatasi('23P01', 'conflicting key value violates exclusion constraint "ulke_randevulari_cakisma_yok"')
+  const c = portalKisiti(ad, yeni, tablo(ad))
+  if (c) throw c
+  tablo(ad).push(yeni)
+  return yeni
+}
+/** The functions of migrations 136 and 137, statement by statement. Every one filters by `p_ulke`, as the SQL does. */
+const ISLEVLER = {
+  ulke_kullanim_ekle: (a) => {
+    const poz = (x) => Math.max(Number(x ?? 0) || 0, 0)
+    let s = tablo('ulke_kullanim_olcumu').find((x) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.gun === a.p_gun && x.gorev === a.p_gorev)
+    if (!s) { s = { ulke: a.p_ulke, doctor_id: a.p_doctor_id, gun: a.p_gun, gorev: a.p_gorev, adet: 0, saniye: 0, giris_token: 0, cikis_token: 0 }; tablo('ulke_kullanim_olcumu').push(s) }
+    Object.assign(s, { adet: s.adet + poz(a.p_adet), saniye: s.saniye + poz(a.p_saniye), giris_token: s.giris_token + poz(a.p_giris_token), cikis_token: s.cikis_token + poz(a.p_cikis_token) })
+    return null
+  },
+  ulke_portal_erisim_ver: (a) => {
+    if (!tablo('ulke_hastalar').some((h) => h.id === a.p_patient_id && h.doctor_id === a.p_doctor_id && h.ulke === a.p_ulke)) return null
+    const bu = (x) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.patient_id === a.p_patient_id
+    for (const o of tablo('ulke_portal_oturumlari')) if (bu(o) && !o.kapandi_at) o.kapandi_at = a.p_simdi
+    for (const e of tablo('ulke_portal_erisimleri')) if (bu(e) && !e.iptal_at) e.iptal_at = a.p_simdi
+    const yeni = islevdeEkle('ulke_portal_erisimleri', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, token_hash: a.p_token_hash, pin_hash: a.p_pin_hash, hatali_deneme: 0, son_deneme_at: null, kilitlendi_at: null, son_gecerlilik: a.p_son_gecerlilik, iptal_at: null, son_giris_at: null, created_at: a.p_simdi })
+    islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, olay: 'erisim', ozet_id: null, created_at: a.p_simdi })
+    return yeni.id
+  },
+  ulke_portal_erisim_iptal: (a) => {
+    const bu = (x) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.patient_id === a.p_patient_id
+    const acik = tablo('ulke_portal_erisimleri').filter((e) => bu(e) && !e.iptal_at)
+    if (!acik.length) return false
+    for (const e of acik) e.iptal_at = a.p_simdi
+    for (const o of tablo('ulke_portal_oturumlari')) if (bu(o) && !o.kapandi_at) o.kapandi_at = a.p_simdi
+    islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, olay: 'iptal', ozet_id: null, created_at: a.p_simdi })
+    return true
+  },
+  ulke_portal_deneme_al: (a) => {
+    const e = tablo('ulke_portal_erisimleri').find((x) => x.token_hash === a.p_token_hash && x.ulke === a.p_ulke)
+    if (!e || e.iptal_at || String(e.son_gecerlilik) <= String(a.p_simdi)) return { durum: 'YOK' }
+    if (e.kilitlendi_at) return { durum: 'KILITLI' }
+    if (Number(e.hatali_deneme) >= Number(a.p_azami)) {
+      e.kilitlendi_at = a.p_simdi
+      for (const o of tablo('ulke_portal_oturumlari')) if (o.erisim_id === e.id && o.ulke === a.p_ulke && !o.kapandi_at) o.kapandi_at = a.p_simdi
+      islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, olay: 'kilit', ozet_id: null, created_at: a.p_simdi })
+      return { durum: 'KILITLI' }
+    }
+    if (e.son_deneme_at && new Date(String(a.p_simdi)).getTime() < new Date(String(e.son_deneme_at)).getTime() + Number(a.p_aralik_sn) * 1000) return { durum: 'YAVAS' }
+    Object.assign(e, { hatali_deneme: Number(e.hatali_deneme) + 1, son_deneme_at: a.p_simdi })
+    return { durum: 'DENE', erisim_id: e.id, doctor_id: e.doctor_id, patient_id: e.patient_id, pin_hash: e.pin_hash }
+  },
+  ulke_portal_deneme_sonucu: (a) => {
+    const e = tablo('ulke_portal_erisimleri').find((x) => x.id === a.p_erisim_id && x.ulke === a.p_ulke)
+    if (!e || e.iptal_at || String(e.son_gecerlilik) <= String(a.p_simdi)) return { durum: 'YOK' }
+    if (e.kilitlendi_at) return { durum: 'KILITLI' }
+    const kilitle = () => {
+      e.kilitlendi_at = a.p_simdi
+      for (const o of tablo('ulke_portal_oturumlari')) if (o.erisim_id === e.id && o.ulke === a.p_ulke && !o.kapandi_at) o.kapandi_at = a.p_simdi
+      islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, olay: 'kilit', ozet_id: null, created_at: a.p_simdi })
+      return { durum: 'KILITLI' }
+    }
+    if (a.p_dogru === true) {
+      Object.assign(e, { hatali_deneme: 0, son_giris_at: a.p_simdi })
+      const bitis = String(a.p_oturum_bitis) < String(e.son_gecerlilik) ? a.p_oturum_bitis : e.son_gecerlilik
+      islevdeEkle('ulke_portal_oturumlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, erisim_id: e.id, oturum_hash: a.p_oturum_hash, son_gecerlilik: bitis, kapandi_at: null, created_at: a.p_simdi })
+      islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, olay: 'giris', ozet_id: null, created_at: a.p_simdi })
+      return { durum: 'TAMAM', doctor_id: e.doctor_id, patient_id: e.patient_id }
+    }
+    if (Number(e.hatali_deneme) >= Number(a.p_azami)) return kilitle()
+    return { durum: 'YANLIS', kalan: Number(a.p_azami) - Number(e.hatali_deneme) }
+  },
+  ulke_ozet_paylas: (a) => {
+    const z = tablo('ulke_hasta_ozetleri').find((x) => x.id === a.p_ozet_id && x.doctor_id === a.p_doctor_id && x.ulke === a.p_ulke)
+    if (!z) return 'NOT_FOUND'
+    if (Boolean(z.paylasildi_at) === (a.p_paylas === true)) return 'AYNI'
+    const c = portalKisiti('ulke_hasta_ozetleri', { ...z, paylasildi_at: a.p_paylas ? a.p_simdi : null }, tablo('ulke_hasta_ozetleri').filter((x) => x !== z))
+    if (c) throw c
+    Object.assign(z, { paylasildi_at: a.p_paylas ? a.p_simdi : null, updated_at: a.p_simdi })
+    islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: z.patient_id, olay: a.p_paylas ? 'paylasim' : 'geri-alma', ozet_id: a.p_ozet_id, created_at: a.p_simdi })
+    return 'TAMAM'
+  },
+  ulke_randevu_istegi_kabul: (a) => {
+    const i = tablo('ulke_randevu_istekleri').find((x) => x.id === a.p_istek_id && x.doctor_id === a.p_doctor_id && x.ulke === a.p_ulke)
+    if (!i) return { durum: 'NOT_FOUND' }
+    if ((i.durum ?? 'bekliyor') !== 'bekliyor') return { durum: 'CEVAPLANDI' }
+    const r = islevdeEkle('ulke_randevulari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: i.patient_id, baslangic: a.p_baslangic, bitis: a.p_bitis, neden_encrypted: a.p_neden_encrypted ?? null, durum: 'planlandi', mesai_disi: a.p_mesai_disi === true, session_id: null, created_at: a.p_simdi, updated_at: a.p_simdi })
+    Object.assign(i, { durum: 'kabul', randevu_id: r.id, cevap_at: a.p_simdi })
+    return { durum: 'TAMAM', randevu_id: r.id }
+  },
+}
+/** One function call as ONE TRANSACTION: the tables are put back if a statement fails or the function raises. */
+function islevCalistir(ad, a) {
+  if (!/^[a-z]{2}$/.test(String(a.p_ulke ?? ''))) throw kisitHatasi('P0001', `${ad} called without the country (p_ulke)`)
+  const yedek = JSON.stringify(tablolar)
+  try { return ISLEVLER[ad](a) } catch (e) {
+    const eski = JSON.parse(yedek)
+    for (const k of Object.keys(tablolar)) delete tablolar[k]
+    Object.assign(tablolar, eski)
+    throw e
+  }
+}
+
 function rest(req, res, url, govde) {
   const ad = decodeURIComponent(url.pathname.slice('/rest/v1/'.length))
   if (!/^[a-z_0-9]+$/.test(ad)) return hata(res, 404, 'PGRST205', `no table ${ad}`)
@@ -153,6 +283,7 @@ function rest(req, res, url, govde) {
       if (!KIMLIKSIZ.has(ad) && y.id && satirlar.some((s) => s.id === y.id)) return hata(res, 409, '23505', 'duplicate key value violates unique constraint')
       const yeni = { ...(KIMLIKSIZ.has(ad) ? {} : { id: randomUUID() }), created_at: new Date().toISOString(), ...y }
       if (ad === 'ulke_randevulari' && cakisiyor(yeni, satirlar)) return cakismaHatasi(res)
+      { const c = portalKisiti(ad, yeni, satirlar); if (c) return hata(res, 409, c.code, c.message) }
       if (ad === 'ulke_muayeneler' && !yeni.started_at) yeni.started_at = yeni.created_at
       satirlar.push(yeni); sonuc.push(yeni)
     }
@@ -160,6 +291,7 @@ function rest(req, res, url, govde) {
     if (!suzgecler.length) return hata(res, 400, '21000', 'UPDATE requires a WHERE clause')
     sonuc = satirlar.filter(uyan)
     if (ad === 'ulke_randevulari') for (const s of sonuc) if (cakisiyor({ ...s, ...govde }, satirlar.filter((x) => x !== s))) return cakismaHatasi(res)
+    for (const s of sonuc) { const c = portalKisiti(ad, { ...s, ...govde }, satirlar.filter((x) => x !== s)); if (c) return hata(res, 409, c.code, c.message) }
     for (const s of sonuc) Object.assign(s, govde)
   } else if (req.method === 'DELETE') {
     if (!suzgecler.length) return hata(res, 400, '21000', 'DELETE requires a WHERE clause')
@@ -232,6 +364,12 @@ http.createServer(async (req, res) => {
     // Closed to the browser roles, as the migration's grants make it.
     if (!servisMi) return hata(res, 401, '42501', 'permission denied for function ulke_not_onayla')
     try { return yaz(res, 200, notOnayla(g)) } catch (e) { return hata(res, 400, 'P0002', String(e.message)) }
+  }
+  // NOTYA-ULKE-PORTAL-01 — the functions of migrations 136 and 137: server only, as their grants make them.
+  if (url.pathname.startsWith('/rest/v1/rpc/') && Object.prototype.hasOwnProperty.call(ISLEVLER, url.pathname.slice('/rest/v1/rpc/'.length))) {
+    const ad = url.pathname.slice('/rest/v1/rpc/'.length)
+    if (!servisMi) return hata(res, 401, '42501', `permission denied for function ${ad}`)
+    try { return yaz(res, 200, islevCalistir(ad, g)) } catch (e) { return hata(res, e.code === '23P01' || e.code === '23505' ? 409 : 400, e.code || 'P0001', String(e.message)) }
   }
   if (url.pathname === '/rest/v1/rpc/davet_kodu_iade') { const k = kodlar.get(g.p_hash); if (k && k.ulke === g.p_ulke) k.kalan++; return yaz(res, 204) }
 

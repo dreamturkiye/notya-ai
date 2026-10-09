@@ -1,14 +1,10 @@
 # Country pack checklist
 
-> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
-> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
-> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
-
 Standard for taking Notya into any new country, adopted 2026-10-08. Each country records its answers in `docs/COUNTRY-PACK-<COUNTRY>.md`.
 
-Structure agreed with Kaan on 2026-10-08: **one repository, walled areas, a separate live deployment per country, and one shared database.** There is one core, so nothing needs syncing. Each country's build contains the core plus that country's pack only.
+Structure agreed with Kaan (2026-10-08, the database on 2026-10-09): **one repository, walled areas, and for each country a live deployment of its own and a database of its own.** There is one core, so nothing needs syncing. Each country's build contains the core plus that country's pack only.
 
-**Shared database (Kaan, 2026-10-08 19:09, replaces "a database per country").** Every country uses the same database as Türkiye. Countries are kept apart inside it: every country table carries the country's code, every read and write is bound to the build's country, an account belongs to one country, and recordings are stored per country. A new country therefore needs no migration. How this is rolled out and proven: `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
+**One database per country (Kaan, 2026-10-09 02:26: "We had issues with common databases before. Keep seperation between the two and any other future country versions").** Every country has its own database; this replaced the one-day plan of a database shared with Türkiye. **No country script is ever run on the Turkish database, and none on another country's.** A new country's database is created empty and one file, the baseline, is run on it once (section M below). The country's code stays on every row and in every key as a **second wall**: every country table carries it, every read and write is bound to the build's country, an account belongs to one country, and recordings are stored per country. How a country database is made, kept and proven: `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
 
 **Starting a country** is one command, `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>`, which creates the country's folder with everything marked to be supplied and `docs/COUNTRY-PACK-<CODE>.md` with every gate below unticked. What to supply and in which order: `docs/COUNTRY-PACK-HOWTO.md`.
 
@@ -28,7 +24,7 @@ Where this lives in the code: `countries/<code>/` (one walled folder per country
 - [ ] 3. Every tool, form, reference and feature declares the countries it is valid in; new ones start off everywhere except where they were built.
 - [ ] 4. The account carries its country and language, set at sign-up from that country's landing page.
 - [ ] 5. Ayşe answers only from the account's country pack and says so when no national source exists.
-- [ ] 6. Each country has its own deployment; all countries share one database, in which every country row carries its country's code and no read or write crosses countries; a build contains only its own pack.
+- [ ] 6. Each country has its own deployment and its own database; no country script is ever run on another country's database or on the Turkish one; every country row still carries its country's code and no read or write crosses countries; a build contains only its own pack.
 - [ ] 7. An automated leak test scans every screen, note, answer, message and PDF for another country's terms.
 - [ ] 8. Türkiye is compared before and after every structural change and must match.
 - [ ] 9. Sign-ups for a country stay closed until section A passes and the clinical lead signs off.
@@ -42,7 +38,7 @@ How each rule is enforced today:
 | 3 | Required `ulkeler` on every tool + the pack's own route list (two locks) | `lib/doktor/doktorAraclari.ts`, `countries/<code>/araclar.ts` |
 | 4 | The account's country is stamped on the session (`app_metadata.country`) and on its row in `ulke_hesaplari`, set once at sign-up and locked by a trigger; a country build refuses another country's account. (Migration 128, two columns on Türkiye's `users`, is superseded and not run.) | `lib/ulke/hesapUlkesi.ts`, `app/api/ulke/hesap`, migration 130 |
 | 5 | Not built yet (Ayşe is not split) | split plan, step 9 |
-| 6 | Pack chosen at build time. For a country build: pack scan and walls before it, build output checked after it (`npm run build:ulke`; a bare build of a country is refused). A build with no country set is Türkiye's and runs what `main` runs. One database: every country table has a `ulke` column with no default, one door for every statement, row-level security and foreign keys that carry the country. A build for a country that is not the pre-split application compiles only the route files named `*.ulke.*`, plus `app/not-found.mjs` (the root not-found page; Next 14.2 builds it only from a file with a single extension) | `countries/active/`, `next.config.mjs` (`pageExtensions`), `scripts/ulke-derleme-kapisi.mjs`, `scripts/ulke-duvarlari.mjs`, `scripts/ulke-derleme-kaniti.mjs`, `lib/ulke/uygulama/tablolar.ts`, `lib/ulke/ulkeVeritabani.paket.test.ts` |
+| 6 | Pack chosen at build time. For a country build: pack scan and walls before it, build output checked after it (`npm run build:ulke`; a bare build of a country is refused). A build with no country set is Türkiye's and runs what `main` runs. A database per country, made from one generated baseline that refuses a database that is not empty; and inside it the second wall: every country table has a `ulke` column with no default, one door for every statement, row-level security and foreign keys that carry the country. A build for a country that is not the pre-split application compiles only the route files named `*.ulke.*`, plus `app/not-found.mjs` (the root not-found page; Next 14.2 builds it only from a file with a single extension) | `countries/active/`, `next.config.mjs` (`pageExtensions`), `scripts/ulke-derleme-kapisi.mjs`, `scripts/ulke-duvarlari.mjs`, `scripts/ulke-derleme-kaniti.mjs`, `lib/ulke/uygulama/tablolar.ts`, `lib/ulke/ulkeVeritabani.paket.test.ts`, `lib/db/ulke/`, `scripts/ulke-temel-uret.mjs`, `scripts/ulke-temel-kaniti.mjs`, `lib/ulke/ulkeTemel.test.ts` |
 | 7 | Leak harness; each country declares its own terms | `lib/ulke/testing/sizintiTarayici.ts`, `countries/<code>/sizintiTerimleri.ts` |
 | 8 | Tool lists snapshot; the existing test suite | `lib/doktor/doktorAraclariUlke.test.ts`, `npm test` |
 | 9 | A route exists in another country only as a `*.ulke.*` file that the country's pack also lists; sign-up by invitation code unless the pack says `kayitAcik` (every new country starts closed and hidden from search) | `middleware.ulke.ts`, `lib/ulke/rotaKapisi.ts` |
@@ -189,14 +185,26 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] L3 Content update calendar.
 - [ ] L4 Company, contracts, tax registration, payment account.
 
+## M. The country's own database
+
+How each step is done: `docs/COUNTRY-PACK-DB-ROLLOUT.md`, "Creating a new country's database".
+
+- [ ] M1 The country's own database exists: a separate, empty project, in a region the country's data law allows (A1), created on the owner's word (it has a monthly cost).
+- [ ] M2 The baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`) was run on it once, and the result was checked against the file: tables, columns, row-level rules, functions, the ledger.
+- [ ] M3 Every country migration written after that copy of the baseline has been run on it, in order; the ledger lists them.
+- [ ] M4 Public sign-up is switched off in the country's own project; accounts are created only by the country's invitation route.
+- [ ] M5 The country's deployment holds its own settings: country code, its database's address and keys, and an encryption key of its own, never another country's.
+- [ ] M6 No script of this country was run on any other database: not another country's, not the Turkish one.
+
 ## Order of work
 
 1. Gates.
 2. Split the core from Türkiye, once.
 3. Scaffold the country (`node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>`): its folder, its registration, its record with every gate unticked. It cannot be built, is hidden and is invitation-only from that moment.
-4. Research the country (B, C, G, H).
-5. Tools audit.
-6. Language pack and Ayşe.
-7. Clinician sign-off and Ayşe's audit.
-8. Pilot.
-9. Launch.
+4. Create the country's own database and run the baseline on it (section M). The owner creates it; nothing is run on any other database.
+5. Research the country (B, C, G, H).
+6. Tools audit.
+7. Language pack and Ayşe.
+8. Clinician sign-off and Ayşe's audit.
+9. Pilot.
+10. Launch.

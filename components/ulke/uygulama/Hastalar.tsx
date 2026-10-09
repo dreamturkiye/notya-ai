@@ -5,12 +5,13 @@
  * and one patient's file (/patient?id=…). A doctor sees only their own patients: the server answers with nothing
  * else (lib/ulke/uygulama/hastalar.ts), and another doctor's patient id answers "not found".
  */
-import React, { useEffect, useState, type FormEvent } from 'react'
+import React, { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { AramaFormu } from './Bugun'
 import { Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { dilAdi, dilBirlestir, metninDili, randevuMetni, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
-import { ulkePaketi } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
+import { PortalErisimKarti } from './PortalErisimi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
@@ -180,10 +181,12 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
+  /** NOTYA-ULKE-PORTAL-01: the card that gives this patient access to their page, where the country has the portal. */
+  portal?: ReactNode
 }) {
   const r = randevuMetni(metninDili(m))
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
@@ -237,6 +240,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular }
           </ul>
         </section>
       ) : null}
+      {portal ?? null}
       {taslak.length ? (
         <section className="uza-kart">
           <h2 className="uza-h2">{m.hasta.taslaklar}</h2>
@@ -292,7 +296,7 @@ export function HastaDosyasi() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} /> : (
+      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
           {durum === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{u.m.kabuk.geri}</a></p>}

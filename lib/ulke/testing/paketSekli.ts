@@ -11,6 +11,7 @@ import type { UlkePaketi } from '../tipler'
 export const DIL_BASINA: Record<string, Record<string, string>> = {
   uygulama: { diller: 'temel', yazilar: 'yazi', 'muayene.konusmaDili': 'temel', 'not.cevir': 'cevir' },
   randevu: { 'hatirlatma.dilAdi': 'temel' },
+  portal: {},
   acilis: {},
 }
 /** Keys that are required only under a condition (the type marks them optional; the pack check enforces the condition). */
@@ -22,6 +23,9 @@ export const ISTEGE_BAGLI: Record<string, Record<string, string>> = {
     'yeniHasta.ulusalKimlik': 'REQUIRED if the pack has an identity number (ulusalKimlik is not null): label of that field',
   },
   randevu: {},
+  portal: {
+    'sayfa.saatDilimi': 'REQUIRED if the country has more than one time zone: on the patient\'s page, "Times are in % time." (% = the doctor\'s zone)',
+  },
   acilis: {},
 }
 const SABIT_ANAHTARLAR = new Set(['id', 'rol'])
@@ -46,7 +50,7 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
 
 /** The shape this pack's content has. Optional keys the pack does not use are added from ISTEGE_BAGLI, so the file never depends on which pack wrote it. */
 export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string, unknown> {
-  if (!a || !p.uygulama || !a.acilis) throw new Error(`"${p.kod}" does not bring the application and a landing page; the shape is read from a pack that brings both`)
+  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri) throw new Error(`"${p.kod}" does not bring the application, the patient portal and a landing page; the shape is read from a pack that brings all three`)
   const d = p.varsayilanDil
   const ekle = (agac: Record<string, unknown>, bolum: string) => {
     for (const [yol, kosul] of Object.entries(ISTEGE_BAGLI[bolum])) {
@@ -63,6 +67,7 @@ export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string,
     cekirdek,
     uygulama: sirala(ekle(sekilCikar(a.metinler[d], 'uygulama') as Record<string, unknown>, 'uygulama')),
     randevu: sirala(ekle(sekilCikar(a.randevuMetinleri[d], 'randevu') as Record<string, unknown>, 'randevu')),
+    portal: sirala(ekle(sekilCikar(a.portalMetinleri[d], 'portal') as Record<string, unknown>, 'portal')),
     acilis: sirala(sekilCikar(a.acilis.icerik[d], 'acilis', a.acilis.capalar)),
   }
 }

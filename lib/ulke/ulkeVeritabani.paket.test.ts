@@ -1,5 +1,9 @@
 /**
- * NOTYA-ULKE-SABLON-01 — COUNTRIES INSIDE ONE DATABASE. Runs ONCE PER PACK (scripts/ulke-test.mjs sets NOTYA_COUNTRY
+ * NOTYA-ULKE-SABLON-01 — THE SECOND WALL: THE COUNTRY ON EVERY ROW. Since 2026-10-09 every country has a DATABASE OF ITS
+ * OWN (Kaan: "We had issues with common databases before. Keep seperation between the two and any other future
+ * country versions"); that is the first wall, and it is a setting of each deployment. What this file proves was
+ * written when every country was going to share one database, and all of it is kept: even inside one database no
+ * row of one country can be reached from another. Runs ONCE PER PACK (scripts/ulke-test.mjs sets NOTYA_COUNTRY
  * to each folder under countries/ in turn), so it is always exercised for at least two different country codes, and a
  * new country gets it without anyone writing a test.
  *
@@ -35,6 +39,8 @@ import { pathToFileURL } from 'node:url'
 import { ORTAK_ALTYAPI_TABLOLARI, sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
 
 const KOK = resolve(__dirname, '../..')
+/** The country migrations, in order: the one list every script and test reads (lib/db/ulke/gocler.json). */
+const GOCLER = (JSON.parse(readFileSync(join(KOK, 'lib/db/ulke/gocler.json'), 'utf8')) as { gocler: string[] }).gocler
 const vt = sahteVeritabani()
 {
   const pkgYolu = require.resolve('@supabase/supabase-js/package.json')
@@ -72,7 +78,7 @@ beforeEach(sifirla)
 
 describe('shared database — the door: country tables only, and one door', () => {
   it('the list of country tables holds no table of Türkiye, and every name is a country table by its migration', () => {
-    const sql = readdirSync(join(KOK, 'lib/db/migrations')).filter((f) => /^1(29|3[0-5])_.*\.sql$/.test(f)).map((f) => readFileSync(join(KOK, 'lib/db/migrations', f), 'utf8')).join('\n')
+    const sql = GOCLER.map((f) => readFileSync(join(KOK, 'lib/db/migrations', f), 'utf8')).join('\n')
     for (const t of T.ULKE_TABLOLARI) {
       assert.ok(!TURKIYE_TABLOLARI.includes(t), `${t} is a table of Türkiye`)
       assert.match(sql, new RegExp(`create table if not exists public\\.${t} \\(`), `${t}: no migration from 129 on creates it`)
@@ -129,7 +135,7 @@ describe('shared database — the door: country tables only, and one door', () =
 
 describe('shared database — binding: a row of another country is not read, changed, removed or written', () => {
   /** One row of this build's country and one of each foreign country in EVERY country table, all for the same doctor. */
-  const KIMLIK: Record<string, string> = { ulke_hesaplari: 'id', hekim_dil_tercihleri: 'doctor_id', hekim_rolu: 'doctor_id', hekim_calisma_duzeni: 'doctor_id', hasta_ulke_bilgisi: 'patient_id', muayene_dil_kaydi: 'session_id', not_dil_kaydi: 'note_id', ulke_kullanim: 'kova' }
+  const KIMLIK: Record<string, string> = { ulke_hesaplari: 'id', hekim_dil_tercihleri: 'doctor_id', hekim_rolu: 'doctor_id', hekim_calisma_duzeni: 'doctor_id', hasta_ulke_bilgisi: 'patient_id', muayene_dil_kaydi: 'session_id', not_dil_kaydi: 'note_id', ulke_kullanim: 'kova', ulke_kullanim_olcumu: 'gorev' }
   const anahtar = (t: string) => KIMLIK[t] ?? 'id'
   // Where the key IS the account (one row per account), the "valid id" of the foreign row is the doctor's id itself.
   const kimlik = (t: string, ulke: string) => (anahtar(t) === 'doctor_id' ? D : `${t}-${ulke}`)
@@ -327,7 +333,7 @@ describe('shared database — accounts: one country per account', () => {
 
 describe('shared database — the migrations hold the same rules in SQL', () => {
   const oku = (f: string) => readFileSync(join(KOK, 'lib/db/migrations', f), 'utf8')
-  const dosyalar = () => readdirSync(join(KOK, 'lib/db/migrations')).filter((f) => /^1(29|3[0-5])_.*\.sql$/.test(f)).sort()
+  const dosyalar = () => GOCLER
   const yorumsuz = (s: string) => s.replace(/--[^\n]*/g, '')
 
   it('every country table: `ulke` NOT NULL with a format check and NO default, the country in its foreign key, row-level security on', () => {
@@ -339,10 +345,12 @@ describe('shared database — the migrations hold the same rules in SQL', () => 
       assert.match(govde, /\bulke text not null check \(ulke ~ '\^\[a-z\]\{2\}\$'\)/, `${t}: ulke column`)
       assert.doesNotMatch(govde, /\bulke text[^,\n]*default/i, `${t}: the country must never have a default`)
       if (t === 'ulke_hesaplari') assert.match(govde, /unique \(ulke, id\)/)
-      else assert.match(govde, /foreign key \(ulke, doctor_id(, \w+)?\) references public\.ulke_\w+ \(ulke, (doctor_id, )?id\)/, `${t}: its foreign key must carry the country`)
+      else assert.match(govde, /foreign key \(ulke, doctor_id(, \w+)*\) references public\.ulke_\w+ \(ulke, (doctor_id, )?(patient_id, )?id\)/, `${t}: its foreign key must carry the country`)
       assert.match(sql, new RegExp(`alter table public\\.${t} enable row level security;`), `${t}: row-level security`)
       assert.match(sql, new RegExp(`revoke all on table public\\.${t} from anon, authenticated;`), `${t}: browser privileges`)
-      if (t !== 'ulke_kullanim') assert.match(sql, new RegExp(`on public\\.${t}\\s+for select to authenticated using \\((doctor_id|id) = auth\\.uid\\(\\) and ulke = public\\.ulke_oturum_ulkesi\\(\\)\\)`), `${t}: the read rule must name the session's country`)
+      // A SERVER-ONLY table has no rule at all: no browser session reads it, not even its own rows.
+      if ((T.YALNIZ_SUNUCU_TABLOLARI as readonly string[]).includes(t)) assert.doesNotMatch(yorumsuz(sql), new RegExp(`create policy [^;]*\\bon public\\.${t}\\b`), `${t}: a server-only table must have no row-level rule`)
+      else assert.match(sql, new RegExp(`on public\\.${t}\\s+for select to authenticated using \\((doctor_id|id) = auth\\.uid\\(\\) and ulke = public\\.ulke_oturum_ulkesi\\(\\)\\)`), `${t}: the read rule must name the session's country`)
     }
     assert.match(sql, /before update of ulke on public\.ulke_hesaplari/, 'an account must not be able to change country')
   })

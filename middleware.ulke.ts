@@ -7,11 +7,13 @@
  *      renders. The build already contains only *.ulke.* routes; this is the second lock, and it also closes the
  *      static files in public/ that every build carries (internal pages, the Turkish app manifest, the service worker).
  *   2. Headers: the same security headers the application has always sent, plus "do not index" on every response
- *      and a robots.txt that disallows everything while the country is hidden from search engines.
+ *      and a robots.txt that disallows everything while the country is hidden from search engines. The patient's
+ *      page (/portal) is never indexed, never cached and names no referrer, whatever the country's setting.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { AKTIF_PAKET } from '@/countries/active'
 import { ARAMA_GIZLI_BASLIGI, ROBOTS_HERKESE_KAPALI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
+import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
 
 function guvenlikBasliklari(h: Headers) {
   h.set('X-Frame-Options', 'DENY')
@@ -44,6 +46,13 @@ export function middleware(req: NextRequest) {
 
   const r = NextResponse.next()
   guvenlikBasliklari(r.headers)
+  // NOTYA-ULKE-PORTAL-01: the patient's page is never indexed (whatever the country's own setting), never kept by a
+  // shared cache, and names no referrer. Its API routes set the same headers themselves (lib/ulke/portal/rotaYardimcisi.ts).
+  if (pathname === PORTAL_SAYFASI) {
+    r.headers.set('X-Robots-Tag', ARAMA_GIZLI_BASLIGI)
+    r.headers.set('Cache-Control', 'private, no-store, max-age=0')
+    r.headers.set('Referrer-Policy', 'no-referrer')
+  }
   return r
 }
 

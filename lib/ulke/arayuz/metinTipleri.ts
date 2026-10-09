@@ -335,3 +335,145 @@ export type RandevuMetni = {
     readonly randevuAl: string
   }
 }
+
+/**
+ * NOTYA-ULKE-PORTAL-01 — the PATIENT PORTAL's catalogue (feature `hastaPortali`), once per language form.
+ *
+ *   erisim, ozet, istek   the DOCTOR's controls: access on the patient's file, the summary on an approved note, the
+ *                         patients' appointment requests on the calendar. Read in the account's form.
+ *   giris, sayfa          what the PATIENT reads: the PIN page and their own page. Read in the patient's form.
+ *                         PATIENT-FACING: a native reader reads these first.
+ *
+ * Placeholders: '%' where a sentence carries one value, '%1' '%2' where it carries two (see each key).
+ */
+export type PortalMetni = {
+  readonly erisim: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly durumYok: string
+    /** % the day the link stops working */
+    readonly durumAcik: string
+    readonly durumKilitli: string
+    readonly durumBitti: string
+    /** % the day and time of the patient's last sign-in */
+    readonly sonGiris: string
+    readonly sonGirisYok: string
+    readonly ver: string
+    readonly yenile: string
+    readonly yenileUyari: string
+    readonly iptal: string
+    readonly iptalEdildi: string
+    readonly bekliyor: string
+    readonly yapilamadi: string
+    readonly birKez: string
+    readonly baglanti: string
+    readonly pin: string
+    readonly kopyala: string
+    readonly kopyalandi: string
+    readonly kopyalanamadi: string
+    readonly nasil: string
+    readonly kayitlar: string
+    readonly kayitYok: string
+    /** What the record calls each event (keys: the events of lib/ulke/portal/erisim.ts → PortalOlayi). */
+    readonly olay: {
+      readonly erisim: string
+      readonly iptal: string
+      readonly giris: string
+      readonly kilit: string
+      readonly paylasim: string
+      readonly geriAlma: string
+    }
+  }
+  readonly ozet: {
+    readonly baslik: string
+    readonly aciklama: string
+    /** % the language the summary is written in, by name */
+    readonly dil: string
+    readonly yaz: string
+    readonly yenidenYaz: string
+    readonly yaziliyor: string
+    readonly yazilamadi: string
+    readonly makine: string
+    readonly etiket: string
+    readonly kaydet: string
+    readonly kaydedildi: string
+    readonly kaydedilemedi: string
+    readonly bos: string
+    readonly paylas: string
+    /** % the day it was shared */
+    readonly paylasildi: string
+    readonly paylasilmadi: string
+    readonly geriAl: string
+    readonly geriAlindi: string
+    readonly degistirmekIcin: string
+    readonly yapilamadi: string
+    readonly erisimIpucu: string
+  }
+  readonly istek: {
+    readonly baslik: string
+    readonly gunler: string
+    readonly neden: string
+    readonly sec: string
+    readonly reddet: string
+    readonly reddedildi: string
+    readonly formBaslik: string
+    readonly kabul: string
+    readonly cevaplandi: string
+    readonly yapilamadi: string
+    /** % the day the patient sent the request */
+    readonly istekTarihi: string
+  }
+  readonly giris: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly pin: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly pinBicimi: string
+    /** % tries left */
+    readonly pinYanlis: string
+    readonly kilitli: string
+    readonly yavas: string
+    readonly gecersiz: string
+    readonly hata: string
+    readonly baglanti: string
+    readonly gizlilik: string
+    readonly yukleniyor: string
+  }
+  readonly sayfa: {
+    /** % the patient's name */
+    readonly selam: string
+    readonly hekim: string
+    readonly cikis: string
+    readonly oturumBitti: string
+    readonly randevular: string
+    readonly randevuYok: string
+    /** % the name of the doctor's time zone. Required where the country has more than one zone; never shown elsewhere. */
+    readonly saatDilimi?: string
+    readonly ozetler: string
+    readonly ozetYok: string
+    /** % the day of the visit */
+    readonly muayene: string
+    readonly istekBaslik: string
+    /** % the most days a request may name */
+    readonly istekAciklama: string
+    readonly istekNeden: string
+    readonly istekGonder: string
+    readonly istekGonderiliyor: string
+    readonly istekGunGerekli: string
+    /** % the most days a request may name */
+    readonly istekCokGun: string
+    readonly istekGonderilemedi: string
+    readonly istekBekliyor: string
+    /** % the days the patient asked for */
+    readonly istekGunler: string
+    /** %1 the day, %2 the time of the appointment the doctor booked */
+    readonly istekKabul: string
+    readonly istekRed: string
+    /** "This page is not for emergencies." Always shown. Names no number. */
+    readonly acil: string
+    /** % the pack's ambulance number (`uygulama.portal.acilNumara`). Shown only where the pack states one; the sentence itself holds no number. */
+    readonly acilNumara: string
+    readonly yalniz: string
+  }
+}

@@ -62,13 +62,17 @@ export const UZ_PAKETI: UlkePaketi = {
     // NOTYA-UZ-RANDEVU-01 (2026-10-08): appointments — working pattern, calendar, booking, status, the link from an
     // appointment to its visit, a reminder text the doctor copies. Nothing is sent to anybody automatically.
     randevu: true,
+    // NOTYA-ULKE-PORTAL-01 (2026-10-09): the patient portal — a link and a PIN the doctor gives a patient; the patient
+    // sees their own name, their doctor, upcoming appointments and what the doctor chose to share, and may ask for an
+    // appointment. Nothing is shared automatically and nothing is sent to anybody from here.
+    hastaPortali: true,
   },
   // No tool is valid in Uzbekistan yet: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md is a proposal awaiting a local clinical lead.
   araclar: [],
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
@@ -101,6 +105,12 @@ export const UZ_PAKETI: UlkePaketi = {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
+    // NOTYA-ULKE-PORTAL-01 — a portal link works for 30 days, then the doctor gives a new one. A STARTING VALUE, not a
+    // local rule: to confirm with the owner and, for how long a patient's access may stand, with a lawyer (checklist I1).
+    // The ambulance number the patient's page names is LOCAL CONTENT. 103 was written by Claude from general knowledge
+    // and is UNVERIFIED: a local source must confirm it before any patient sees the portal (docs/COUNTRY-PACK-UZBEKISTAN.md,
+    // "Needs local content", row 78). null here = the page names no number.
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '103' },
     // ── NOTYA-ULKE-SABLON-01: what the shared screens used to assume for Uzbekistan, said out loud. Each value is
     // what the Uzbek build did before the screens became shared; none is a new decision.
     // Uzbek in two scripts, Russian in one: the first-login question asks the language and, for Uzbek, the script.

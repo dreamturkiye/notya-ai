@@ -1,0 +1,18 @@
+{
+  "_": "THE COUNTRY MIGRATIONS, in the order they are run. One database per country (Kaan, 2026-10-09): these files are run only on a country's own database, never on the Turkish one. The baseline for a new, empty country database (lib/db/ulke/000_yeni_ulke_veritabani.sql) is generated from this list by scripts/ulke-temel-uret.mjs. A new country migration is added HERE, then the baseline is regenerated; tests fail until both are done.",
+  "defter": "lib/db/ulke/defter.sql",
+  "temel": "lib/db/ulke/000_yeni_ulke_veritabani.sql",
+  "dizin": "lib/db/migrations",
+  "elleUygulanan": ["129_davet_kodlari.sql", "130_hekim_dil_tercihleri.sql", "131_hasta_ulke_bilgisi.sql", "132_muayene_dil_kaydi.sql", "133_not_dil_kaydi.sql", "134_hekim_rolu.sql", "135_ulke_randevu.sql"],
+  "gocler": [
+    "129_davet_kodlari.sql",
+    "130_hekim_dil_tercihleri.sql",
+    "131_hasta_ulke_bilgisi.sql",
+    "132_muayene_dil_kaydi.sql",
+    "133_not_dil_kaydi.sql",
+    "134_hekim_rolu.sql",
+    "135_ulke_randevu.sql",
+    "136_ulke_kullanim_olcumu.sql",
+    "137_ulke_hasta_portali.sql"
+  ]
+}

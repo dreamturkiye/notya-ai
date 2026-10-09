@@ -151,6 +151,21 @@ async function yerKontrolu(supabase: SupabaseClient, doktorId: string, z: { bas:
 
 export type RandevuGirdisi = ZamanGirdisi & { hastaId: string; neden: string }
 
+/**
+ * NOTYA-ULKE-PORTAL-01 — the same two checks a booking makes, for a caller that writes the appointment itself
+ * (accepting a patient's request: lib/ulke/portal/istek.ts). The requested time as instants of the ACCOUNT's own
+ * zone; then clash first (never overridable) and working hours (overridable by `yineDe`). Nothing is written here,
+ * and the database's own constraint still decides when two requests arrive at the same moment.
+ */
+export async function randevuYeriHazirla(supabase: SupabaseClient, doktorId: string, g: ZamanGirdisi, simdi = Date.now()): Promise<{ tamam: true; bas: number; bit: number; mesaiDisi: boolean; dilim: string } | Ret> {
+  const dilim = await hesapSaatDilimi(supabase, doktorId)
+  const z = zamanCoz(g, simdi, dilim)
+  if (!z.tamam) return z
+  const yer = await yerKontrolu(supabase, doktorId, z, g)
+  if (!yer.tamam) return yer
+  return { tamam: true, bas: z.bas, bit: z.bit, mesaiDisi: yer.mesaiDisi, dilim }
+}
+
 /** Books an appointment for one of THIS doctor's patients. */
 export async function randevuOlustur(supabase: SupabaseClient, doktorId: string, g: RandevuGirdisi, simdi = Date.now()): Promise<{ tamam: true; randevu: Randevu } | Ret> {
   // ISOLATION: the patient must be this doctor's before anything is read or written for them.

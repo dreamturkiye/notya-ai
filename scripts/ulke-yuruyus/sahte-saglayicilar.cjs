@@ -45,6 +45,15 @@ const notlar = {
   ruYeniden: (kullanici) => ({ ...notlar.ru, p: kullanici.includes('250 mg') ? 'Обильное питьё. При повышении температуры парацетамол 250 мг. Повторный приём через три дня.' : notlar.ru.p }),
 }
 
+// NOTYA-ULKE-PORTAL-01 — synthetic SUMMARIES FOR THE PATIENT, one per form. Asked for with the pack's own instruction,
+// which names the answer's one key ("summary"); the walk-through reads these on the doctor's screen and, once shared,
+// on the patient's page.
+const ozetler = {
+  'uz-Latn': 'QA-XULOSA. Koʻrikda tomogʻingiz qizargani aniqlandi, oʻpkangiz toza. Koʻp suyuqlik iching. Isitma koʻtarilsa paratsetamol iching. Uch kundan keyin qayta koʻrikka keling.',
+  'uz-Cyrl': 'QA-XULOSA. Кўрикда томоғингиз қизаргани аниқланди, ўпкангиз тоза. Кўп суюқлик ичинг. Уч кундан кейин қайта кўрикка келинг.',
+  ru: 'QA-XULOSA. На приёме: горло покраснело, в лёгких чисто. Пейте больше жидкости. При повышении температуры принимайте парацетамол. Повторный приём через три дня.',
+}
+
 // NOTYA-UZ-BRANSLAR-01 — synthetic FIELDS, the same for every role on purpose: paediatric, cardiology, dietetic and
 // audiology fields together, the guardian field, and one key that belongs to nobody. The application must keep only
 // what the note's own template owns; the walk-through proves it for three roles.
@@ -87,11 +96,13 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
     const duz = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.map((p) => p?.text ?? '').join('\n') : '')
     const sistem = duz(mesajlar.find((m) => m.role === 'system')?.content)
     const kullanici = mesajlar.filter((m) => m.role === 'user').map((m) => duz(m.content)).join('\n')
-    const yeniden = /^(QAYD|ҚАЙД|ЗАПИСЬ):/.test(kullanici)
+    // A summary for the patient: the instruction names the answer's one key.
+    const ozet = sistem.includes('"summary"')
+    const yeniden = !ozet && /^(QAYD|ҚАЙД|ЗАПИСЬ):/.test(kullanici)
     const dil = sistem.includes('на русском языке') ? 'ru' : sistem.includes('кирилл ёзувида') ? 'uz-Cyrl' : sistem.includes('lotin yozuvida') ? 'uz-Latn' : '?'
     // The log keeps what the walk-through must be able to prove — never the text itself.
     kaydet({
-      tur: 'model', is: yeniden ? 'yeniden' : 'not', dil, model: String(b.model || ''), veriToplama: b.provider?.data_collection ?? null,
+      tur: 'model', is: ozet ? 'ozet' : yeniden ? 'yeniden' : 'not', dil, model: String(b.model || ''), veriToplama: b.provider?.data_collection ?? null,
       sistemUzunluk: sistem.length, kimlikVar: /Karimova|Dilnoza|Rustam|Иванов|\+998|aaaaaaaa-0000/.test(sistem + kullanici),
       yasVar: /yoshi — 5 yosh|возраст — /.test(kullanici), duzeltmeVar: kullanici.includes('250 mg'),
       // pack-neutral walk-through: its synthetic patient is "QA-PATIENT …", its accounts are aaaaaaaa-0000-…
@@ -100,6 +111,11 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
       alanAnahtarlari: [...sistem.matchAll(/^- ([a-z][a-z0-9_]*) — /gm)].map((x) => x[1]).join(), muttefik: /shifokor emas|шифокор эмас|не врач/.test(sistem),
     })
     if (senaryo().model === 'hata') return json({ error: { code: 503, message: 'stand-in: the model provider is down' } }, 503)
+    if (ozet) {
+      const metin = GENEL ? 'SYNTHETIC-SUMMARY for the patient, line one.\nSYNTHETIC-SUMMARY line two.' : ozetler[dil]
+      if (!metin) return json({ error: { code: 400, message: 'stand-in: no summary instruction it knows' } }, 400)
+      return json({ id: 'sahte', model: b.model, choices: [{ message: { role: 'assistant', content: JSON.stringify({ summary: metin }) }, finish_reason: 'stop' }], usage: { prompt_tokens: 500, completion_tokens: 120 } })
+    }
     if (GENEL) {
       // Four sections of synthetic text, every field the instruction asked for, and one key that belongs to nobody.
       const istenen = [...sistem.matchAll(/^- ([a-z][a-z0-9_]*) — /gm)].map((x) => x[1])

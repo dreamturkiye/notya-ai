@@ -24,10 +24,18 @@
  * double-booking and outside-hours answers, copy a reminder in Russian, move, start the visit from the appointment,
  * approve the note and see the appointment done, the week view, the home, a phone.
  *
+ * NOTYA-ULKE-PORTAL-01 — step 8c walks through the patient portal, with the patient in a browser of their own (a
+ * phone, no doctor session): give access, the link and PIN shown once, the token alone shows nothing, too fast, five
+ * wrong PINs lock the link, a new link, sign in, the patient's page (name, doctor, appointments), a summary written
+ * from an approved note, edited, shared, seen, taken back and gone, an appointment request, a taken time refused,
+ * the request accepted and seen, a second request declined, isolation between two patients on one phone and between
+ * two doctors, a doctor's session refused by the patient's routes and the other way round, access withdrawn.
+ *
  * Settings: TABAN (http://localhost:3111), SUPA (http://127.0.0.1:54399), ON_EK (/uzbek), CIKTI (./cikti, screenshots).
  * Exit code 0 only when every check passed.
  */
 import { createRequire } from 'node:module'
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -601,11 +609,12 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await sec(p, 'taslak-dili', 'ru'); await bekle(150)
   await cek(p, 'note-second-draft-ru.png')
 
-  // APPROVE the Russian draft.
+  // APPROVE the Russian draft. (NOTYA-ULKE-PORTAL-01: "nothing left to change it" is about the NOTE's own card; under an
+  // approved note there is now the summary for the patient, which is another text and changes nothing of the note.)
   await p.click('[data-eylem=onayla]')
   await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
   g = await govde(p)
-  kontrol('APPROVE: the Russian draft becomes the note; it is shown as text with nothing left to change it', g.includes('Tasdiqlangan') && g.includes('Qayd tasdiqlandi va bemor varaqasiga saqlandi.') && (await metin(p, '[data-bolum=s]')).includes('третий день температура') && !(await p.$('textarea')) && !(await p.$('[data-eylem]')) && !(await p.$('input[name=taslak-dili]')))
+  kontrol('APPROVE: the Russian draft becomes the note; it is shown as text with nothing left to change it', g.includes('Tasdiqlangan') && g.includes('Qayd tasdiqlandi va bemor varaqasiga saqlandi.') && (await metin(p, '[data-bolum=s]')).includes('третий день температура') && !(await p.$('[data-alan=not] textarea')) && !(await p.$('[data-alan=not] [data-eylem]')) && !(await p.$('input[name=taslak-dili]')))
   notSatiri = (await tabloOku('ulke_notlar'))[0]
   dilSatiri = (await tabloOku('not_dil_kaydi'))[0]
   kontrol('in the database: approved by this doctor, Russian text; the Uzbek draft is kept beside it', !!notSatiri.approved_at && notSatiri.approved_by === 'aaaaaaaa-0000-4000-8000-000000000001' && notSatiri.content_plan.includes('парацетамол 250 мг') && dilSatiri.not_dili === 'ru' && dilSatiri.ikinci_dil === 'uz-Latn' && dilSatiri.ikinci_p.endsWith('Paratsetamol 250 mg.'))
@@ -782,6 +791,8 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   kontrol('every model call left a usage row with the doctor and the task — and no patient', kullanim.length >= 4 && kullanim.every((k) => /^aaaaaaaa-0000-4000-8000-00000000000[12]$/.test(k.doctor_id) && ['soap', 'not-uretimi'].includes(k.gorev) && !('patient_id' in k)), JSON.stringify(kullanim[0]))
 }
 
+/** What step 8b leaves for step 8c (the patient portal): a Russian-speaking patient of doctor A, the Monday it booked on. */
+const PORTAL = {}
 // ───────────────────────── 8b. appointments (NOTYA-UZ-RANDEVU-01): working pattern → book → move → visit → approved note → done; a reminder in Russian ─────────────────────────
 {
   const p = A
@@ -953,6 +964,360 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     await cek(B, `calendar-${gorunum === 'hafta' ? 'week' : 'day'}-phone-ru.png`)
   }
   kontrol('appointments: no request left for any outside address during these steps', p.disari.length === 0 && B.disari.length === 0, [...p.disari, ...B.disari].join(' '))
+  Object.assign(PORTAL, { hastaRu, PZT, hesap })
+}
+
+// ───────────────────────── 8c. the patient portal (NOTYA-ULKE-PORTAL-01): access → PIN → the patient's page → a shared summary → a request → isolation ─────────────────────────
+{
+  const p = A
+  const A_ID = 'aaaaaaaa-0000-4000-8000-000000000001'
+  const { hastaRu, PZT, hesap } = PORTAL
+  const gunEkle = (gun, n) => { const [y, a, g] = gun.split('-').map(Number); return new Date(Date.UTC(y, a - 1, g + n)).toISOString().slice(0, 10) }
+  const haftaGunu = (gun) => { const [y, a, g] = gun.split('-').map(Number); return new Date(Date.UTC(y, a - 1, g)).getUTCDay() || 7 }
+  const yazGun = (gun) => gun.split('-').reverse().join('.')
+  const GUN_UZ = ['', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba']
+  // The role doctor A works as at this point (the visit steps changed it), as the pack names it in two forms.
+  const ROL_ADI = { pediatri: ['Pediatriya', 'Педиатрия'], kardiyoloji: ['Kardiologiya', 'Кардиология'] }[(await tabloOku('hekim_rolu')).find((r) => r.doctor_id === A_ID)?.rol] ?? ['?', '?']
+  const ozetle = (t) => createHash('sha256').update(t).digest('hex')
+  const erisimler = async (hasta) => (await tabloOku('ulke_portal_erisimleri')).filter((e) => e.patient_id === hasta)
+  const olaylar = async (hasta) => (await tabloOku('ulke_portal_kayitlari')).filter((k) => k.patient_id === hasta).map((k) => k.olay)
+  const PORTAL_TABLOLARI = ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri']
+  const portalHam = async () => JSON.stringify(await Promise.all(PORTAL_TABLOLARI.map(tabloOku)))
+  /** A request as the patient's own page sends it: the browser's cookie, the link's mark; a change carries the portal's header. */
+  const hApi = (pg, rota, s = {}) => pg.evaluate(async (u, s) => {
+    const r = await fetch(u, { method: s.method || 'GET', credentials: 'same-origin', headers: { ...(s.token ? { 'x-notya-portal-baglanti': s.ozet } : {}), ...(s.jeton ? { Authorization: `Bearer ${s.jeton}` } : {}), ...(s.govde ? { 'Content-Type': 'application/json', 'x-notya-portal': '1' } : {}) }, body: s.govde ? JSON.stringify(s.govde) : undefined })
+    const t = await r.text()
+    let j = null; try { j = JSON.parse(t) } catch { /* not json */ }
+    return { s: r.status, t: t.slice(0, 300), j }
+  }, adres(rota), { ...s, ozet: s.token ? ozetle(s.token) : '' })
+  const pinGonder = async (pg, pin) => { await pg.waitForSelector('#uzp-pin', { timeout: 60000 }); await yazDeger(pg, '#uzp-pin', pin); await pg.click('[data-eylem=portal-giris]') }
+  /** Opens a link the way a tap on it does: a fresh load of the page. */
+  const baglantiAc = async (pg, tamAdres) => { await pg.goto('about:blank'); const r = await pg.goto(tamAdres, { waitUntil: 'networkidle0', timeout: 180000 }); await pg.evaluate(() => document.fonts.ready); return r }
+  /** A patient's page never links anywhere and asks nothing of the outside; every request it makes is under the prefix and none carries the token. */
+  const hastaSayfasiTemiz = async (pg, ad, tokenlar) => {
+    const d = await pg.evaluate(() => ({ baglanti: document.querySelectorAll('a[href], form[action]').length, tasma: document.documentElement.scrollWidth - window.innerWidth, govde: document.body.innerText, depo: Object.keys(localStorage).length + Object.keys(sessionStorage).length, cerez: document.cookie }))
+    kontrol(`${ad}: no link out of the page, nothing runs off the side of a phone, no Turkish letter`, d.baglanti === 0 && d.tasma <= 0 && !TURKCE_HARF.test(d.govde), JSON.stringify({ baglanti: d.baglanti, tasma: d.tasma }))
+    const kacak = pg.istekler.filter((i) => !(i === ON_EK || i.startsWith(`${ON_EK}/`) || i.startsWith(`${ON_EK}?`)))
+    // (The browser driver writes a document request's address together with its fragment; a browser never SENDS a fragment.
+    // What is checked is what goes over the wire: the address up to the '#'.)
+    kontrol(`${ad}: every request is under ${ON_EK}, none to an outside service, and none carries the token`, kacak.length === 0 && pg.disari.length === 0 && tokenlar.every((t) => pg.istekler.every((i) => !i.split('#')[0].includes(t))), [...kacak, ...pg.disari].slice(0, 3).join(' '))
+    kontrol(`${ad}: the browser keeps nothing a script can read — no storage, no readable cookie`, d.depo === 0 && d.cerez === '', `${d.depo} "${d.cerez}"`)
+  }
+
+  // 1. GIVE ACCESS, on the file of doctor A's Uzbek-speaking patient.
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('[data-alan=portal-erisim] [data-eylem=erisim-ver]', { timeout: 60000 })
+  kontrol('patient file: the access card says, in the doctor\'s language, that the patient has no access yet; nothing to withdraw', (await metin(p, '[data-alan=erisim-durumu]')) === 'Bu bemorga hali kirish berilmagan.' && !(await p.$('[data-eylem=erisim-iptal]')) && (await metin(p, '[data-alan=portal-erisim] h2')) === 'Bemor sahifasi')
+  await p.click('[data-eylem=erisim-ver]')
+  await p.waitForSelector('[data-alan=portal-baglanti]', { timeout: 30000 })
+  const ilk = { adres: await p.$eval('[data-alan=portal-baglanti]', (e) => e.value), pin: await p.$eval('[data-alan=portal-pin]', (e) => e.value) }
+  const tokenIlk = ilk.adres.split('#')[1] || ''
+  kontrol('GIVE ACCESS: a link under /uzbek in the patient\'s own form, an unguessable token in its FRAGMENT, and a six-digit PIN', ilk.adres.startsWith(`${TABAN}${ON_EK}/portal?dil=uz-Latn#`) && /^[A-Za-z0-9_-]{43}$/.test(tokenIlk) && /^\d{6}$/.test(ilk.pin), ilk.adres.replace(tokenIlk, '<token>'))
+  let satir = await erisimler(hastaA)
+  const gunFarki = (Date.parse(satir[0]?.son_gecerlilik) - Date.now()) / 86400000
+  kontrol('in the database: one link of this doctor for this patient, the token and the PIN only as hashes (PIN: slow, salted), valid for the pack\'s 30 days', satir.length === 1 && satir[0].doctor_id === A_ID && satir[0].ulke === 'uz' && satir[0].token_hash === ozetle(tokenIlk) && /^scrypt\$16384\$8\$1\$/.test(satir[0].pin_hash) && !(await portalHam()).includes(tokenIlk) && Object.values(satir[0]).every((v) => v !== ilk.pin) && gunFarki > 29.99 && gunFarki < 30.01, `${gunFarki.toFixed(3)} days`)
+  kontrol('giving access sent the token to no address: the application\'s and the database\'s request logs do not hold it', p.istekler.every((i) => !i.split('#')[0].includes(tokenIlk)) && (await (await fetch(`${SUPA}/__gunluk`)).json()).every((x) => !x.includes(tokenIlk)))
+  await p.evaluate(() => { window.__kopya = []; const pano = { writeText: async (t) => { window.__kopya.push(t) } }; Object.defineProperty(navigator, 'clipboard', { value: pano, configurable: true }) })
+  await p.click('[data-eylem=baglanti-kopyala]'); await p.waitForSelector('[data-alan=portal-erisim] .uza-bilgi-kutu', { timeout: 15000 }); await p.click('[data-eylem=pin-kopyala]'); await bekle(300)
+  kontrol('the two "copy" buttons copy exactly the link and the PIN; the card tells the doctor to hand them over personally and that the system sends nothing', JSON.stringify(await p.evaluate(() => window.__kopya)) === JSON.stringify([ilk.adres, ilk.pin]) && (await govde(p)).includes('Tizim bemorga hech narsa yubormaydi.'))
+  await onEkAltinda(p, 'patient file with the access card')
+  await cek(p, 'portal-access-given.png')
+  await p.reload({ waitUntil: 'networkidle0' })
+  await p.waitForSelector('[data-alan=erisim-durumu]', { timeout: 60000 })
+  kontrol('SHOWN ONCE: after a reload the card says access is open until the day it ends (DD.MM.YYYY) and shows neither the link nor the PIN', !(await p.$('[data-alan=portal-baglanti]')) && !(await p.$('[data-alan=portal-pin]')) && /^Kirish ochiq\. Havola \d{2}\.\d{2}\.\d{4} gacha ishlaydi\. · Bemor hali kirmagan\.$/.test(await metin(p, '[data-alan=erisim-durumu]')), await metin(p, '[data-alan=erisim-durumu]'))
+
+  // 2. THE PATIENT, in a browser of their own (a phone; no doctor session exists in it).
+  const H = await sayfaAc(TEL)
+  const acilis = await baglantiAc(H, ilk.adres)
+  await H.waitForSelector('#uzp-pin', { timeout: 60000 })
+  const bas = acilis.headers()
+  kontrol('the patient\'s page: 200, never indexed (header and meta), never kept by a cache, no referrer', acilis.status() === 200 && /noindex/.test(bas['x-robots-tag'] || '') && /no-store/.test(bas['cache-control'] || '') && bas['referrer-policy'] === 'no-referrer' && /noindex/.test(await H.$eval('meta[name=robots]', (e) => e.content)), `${bas['x-robots-tag']} | ${bas['cache-control']} | ${bas['referrer-policy']}`)
+  let g = await govde(H)
+  kontrol('THE TOKEN ALONE SHOWS NOTHING: the PIN form in the patient\'s language, and no name, doctor or appointment', (await metin(H, 'h1')) === 'Sizning sahifangiz' && g.includes('Shifokoringiz bergan PIN-kodni kiriting.') && g.includes('Havola va PIN-kodni boshqa hech kimga bermang.') && !/Karimova|Dilnoza|Shifokor Bir|Иванов|\d{2}\.\d{2}\.\d{4}/.test(g) && (await H.evaluate(() => document.querySelector('.uza')?.lang)) === 'uz-Latn', g.replace(/\s+/g, ' ').slice(0, 160))
+  const yalnizToken = await hApi(H, '/api/ulke/portal', { token: tokenIlk })
+  kontrol('the page asked for the patient\'s data with the link alone and was refused: "no session", with a code and no sentence', H.istekler.includes(`${ON_EK}/api/ulke/portal`) && yalnizToken.s === 401 && yalnizToken.t === '{"code":"OTURUM_YOK"}', `${yalnizToken.s} ${yalnizToken.t}`)
+  await hastaSayfasiTemiz(H, 'PIN page', [tokenIlk])
+  await cek(H, 'portal-pin-phone-uz.png', false)
+
+  // 3. WRONG PINS: counted, slowed down, and after five the link is locked for good.
+  const yanlis = ilk.pin === '000000' ? '000001' : '000000'
+  await pinGonder(H, '12')
+  await H.waitForSelector('[role=alert]', { timeout: 15000 })
+  kontrol('a PIN that is not six digits is refused in the browser, and no try is counted', (await metin(H, '[role=alert]')) === 'PIN-kod 6 ta raqamdan iborat.' && (await erisimler(hastaA))[0].hatali_deneme === 0)
+  await pinGonder(H, yanlis)
+  await H.waitForFunction(() => document.querySelector('[role=alert]')?.innerText.endsWith('4'), { timeout: 30000 })
+  kontrol('wrong PIN: a plain sentence with the tries that are left (4), and no session', (await metin(H, '[role=alert]')) === 'PIN-kod notoʻgʻri. Qolgan urinishlar: 4' && (await H.cookies(`${TABAN}${ON_EK}/api/ulke/portal`)).length === 0 && (await tabloOku('ulke_portal_oturumlari')).length === 0)
+  await pinGonder(H, ilk.pin)
+  await H.waitForFunction(() => document.querySelector('[role=alert]')?.innerText.startsWith('Juda tez'), { timeout: 30000 })
+  kontrol('TOO FAST: a second try within two seconds is not looked at — even the RIGHT PIN — and is not counted', (await metin(H, '[role=alert]')) === 'Juda tez. Bir necha soniya kutib, qaytadan urinib koʻring.' && (await erisimler(hastaA))[0].hatali_deneme === 1 && (await tabloOku('ulke_portal_oturumlari')).length === 0)
+  for (let kalan = 3; kalan >= 1; kalan--) {
+    await bekle(2200)
+    await pinGonder(H, yanlis)
+    await H.waitForFunction((n) => document.querySelector('[role=alert]')?.innerText.endsWith(String(n)), { timeout: 30000 }, kalan)
+  }
+  await bekle(2200)
+  await pinGonder(H, yanlis)
+  await H.waitForSelector('[data-durum=kilitli]', { timeout: 30000 })
+  satir = await erisimler(hastaA)
+  kontrol('FIVE WRONG PINS LOCK THE LINK: the page says so and asks the patient to get a new link from the doctor; nothing to type into', (await metin(H, '[role=alert]')) === 'PIN-kod juda koʻp marta notoʻgʻri kiritildi, bu havola yopildi. Shifokoringizdan yangi havola soʻrang.' && !(await H.$('#uzp-pin')) && !!satir[0].kilitlendi_at && satir[0].hatali_deneme === 5, JSON.stringify({ kilit: satir[0].kilitlendi_at, n: satir[0].hatali_deneme }))
+  await bekle(2200)
+  await baglantiAc(H, ilk.adres)
+  await pinGonder(H, ilk.pin)
+  await H.waitForSelector('[data-durum=kilitli]', { timeout: 30000 })
+  kontrol('a locked link stays locked: the RIGHT PIN opens nothing any more', (await tabloOku('ulke_portal_oturumlari')).length === 0 && (await H.cookies(`${TABAN}${ON_EK}/api/ulke/portal`)).length === 0)
+  await cek(H, 'portal-locked-phone-uz.png', false)
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('[data-alan=erisim-durumu]', { timeout: 60000 })
+  await p.click('[data-alan=portal-kayitlar] summary')
+  kontrol('the doctor is told: the card says the link is locked, and the record shows "access given" and "link locked"', (await metin(p, '[data-alan=erisim-durumu]')).startsWith('Havola yopilgan: PIN-kod juda koʻp marta notoʻgʻri kiritildi. Yangi havola bering.') && JSON.stringify(await p.$$eval('[data-alan=portal-kayitlar] [data-olay]', (l) => l.map((e) => e.getAttribute('data-olay')))) === '["kilit","erisim"]' && (await govde(p)).includes('Havola yopildi: PIN-kod koʻp marta notoʻgʻri kiritildi'))
+  await cek(p, 'portal-access-locked.png')
+
+  // 4. A NEW LINK: the old one stops at once; the patient signs in with the new one.
+  await p.click('[data-eylem=erisim-ver]')
+  await p.waitForSelector('[data-alan=portal-baglanti]', { timeout: 30000 })
+  const yeni = { adres: await p.$eval('[data-alan=portal-baglanti]', (e) => e.value), pin: await p.$eval('[data-alan=portal-pin]', (e) => e.value) }
+  const token = yeni.adres.split('#')[1] || ''
+  satir = await erisimler(hastaA)
+  kontrol('A NEW LINK AND PIN: a different token; the old link is withdrawn in the same step; one link stands', token !== tokenIlk && /^[A-Za-z0-9_-]{43}$/.test(token) && satir.length === 2 && satir.filter((e) => !e.iptal_at).length === 1 && satir.find((e) => !e.iptal_at).token_hash === ozetle(token))
+  await baglantiAc(H, ilk.adres)
+  await pinGonder(H, ilk.pin)
+  await H.waitForSelector('[data-durum=gecersiz]', { timeout: 30000 })
+  kontrol('the OLD link: "this link does not work or has ended" — the same sentence a link that never existed gets', (await metin(H, '[role=alert]')) === 'Bu havola ishlamaydi yoki muddati tugagan. Shifokoringizdan yangi havola soʻrang.')
+  await baglantiAc(H, `${TABAN}${ON_EK}/portal?dil=uz-Latn#${'x'.repeat(43)}`)
+  await pinGonder(H, '123456')
+  await H.waitForSelector('[data-durum=gecersiz]', { timeout: 30000 })
+  kontrol('a link that never existed: exactly that sentence', (await metin(H, '[role=alert]')) === 'Bu havola ishlamaydi yoki muddati tugagan. Shifokoringizdan yangi havola soʻrang.')
+  await baglantiAc(H, yeni.adres)
+  await pinGonder(H, yeni.pin)
+  await H.waitForSelector('[data-alan=hasta-ad]', { timeout: 30000 })
+  const cerezler = await H.cookies(`${TABAN}${ON_EK}/api/ulke/portal`)
+  kontrol('SIGNED IN: one session cookie, HttpOnly, SameSite=Strict, sent to the portal\'s own routes only — and only its hash is in the database', cerezler.length === 1 && cerezler[0].name === 'notya_portal' && cerezler[0].httpOnly === true && cerezler[0].sameSite === 'Strict' && cerezler[0].path === `${ON_EK}/api/ulke/portal` && (await H.cookies(`${TABAN}${ON_EK}/portal`)).length === 0 && (await tabloOku('ulke_portal_oturumlari')).some((o) => o.oturum_hash === ozetle(cerezler[0].value)) && !(await portalHam()).includes(cerezler[0].value), JSON.stringify(cerezler.map((c) => ({ ad: c.name, yol: c.path, http: c.httpOnly, site: c.sameSite }))))
+  const oturumDk = (Date.parse((await tabloOku('ulke_portal_oturumlari')).at(-1).son_gecerlilik) - Date.now()) / 60000
+  kontrol('the session ends by itself after thirty minutes', oturumDk > 29.5 && oturumDk < 30.1, `${oturumDk.toFixed(2)} minutes`)
+
+  // 5. THE PATIENT'S PAGE: their name, the doctor and the role, the coming appointments — and nothing of the doctor's.
+  const beklenenRandevular = (await tabloOku('ulke_randevulari')).filter((r) => r.patient_id === hastaA && ['planlandi', 'geldi'].includes(r.durum) && Date.parse(r.bitis) > Date.now()).sort((a, b) => (a.baslangic < b.baslangic ? -1 : 1))
+    .map((r) => { const t = new Date(Date.parse(r.baslangic) + 5 * 3600000); const gun = t.toISOString().slice(0, 10); return `${t.toISOString().slice(11, 16)} ${GUN_UZ[haftaGunu(gun)]}, ${yazGun(gun)} ${(Date.parse(r.bitis) - Date.parse(r.baslangic)) / 60000} daqiqa` })
+  const sayfa = await H.evaluate(() => ({ ad: document.querySelector('[data-alan=hasta-ad]').innerText, hekim: document.querySelector('[data-alan=hekim]').innerText, randevular: [...document.querySelectorAll('[data-alan=portal-randevular] .uza-satir')].map((e) => e.innerText.replace(/\s+/g, ' ').trim()), ozet: document.querySelector('[data-alan=portal-ozetler]').innerText, lang: document.querySelector('.uza').lang }))
+  kontrol('the page greets the patient by name, names the doctor and the role as the pack names it, in Uzbek in the doctor\'s script', sayfa.ad === 'Assalomu alaykum, QA Karimova Dilnoza Rustam qizi' && sayfa.hekim === `${hesap.ad} · ${ROL_ADI[0]}` && sayfa.lang === 'uz-Latn', JSON.stringify([sayfa.ad, sayfa.hekim, sayfa.lang]))
+  kontrol(`the coming appointments, in time order: weekday by name, DD.MM.YYYY, 24-hour Tashkent time, length (${beklenenRandevular.length})`, beklenenRandevular.length >= 2 && JSON.stringify(sayfa.randevular) === JSON.stringify(beklenenRandevular), `${JSON.stringify(sayfa.randevular)} vs ${JSON.stringify(beklenenRandevular)}`)
+  g = await govde(H)
+  kontrol('nothing is shared yet, and the page says so; it also says it is not for emergencies, with the ambulance number the PACK states (103, unverified)', sayfa.ozet.includes('Shifokoringiz hali hech narsa ulashmagan.') && (await metin(H, '[data-alan=portal-acil]')) === 'Bu sahifa shoshilinch holatlar uchun emas. Ahvolingiz ogʻir boʻlsa, tez yordam chaqiring: 103.' && (await H.$eval('[data-alan=portal-acil]', (e) => e.getAttribute('data-acil-numara'))) === '103' && g.includes('Bu yerda faqat shifokoringiz siz bilan ulashgan narsalar koʻrsatiladi.'))
+  kontrol('NOTHING OF THE DOCTOR\'S: no note text, no transcript, no reason of an appointment, no phone, no other patient', !/Onasining aytishicha|Tomogʻi qizargan|paratsetamol|nima bezovta|QA nazorat|\+998|Иванов|Мария/.test(g), g.replace(/\s+/g, ' ').slice(0, 200))
+  await hastaSayfasiTemiz(H, 'patient\'s page', [token, tokenIlk])
+  await cek(H, 'portal-page-phone-uz.png')
+
+  // 6. A SUMMARY: written from an APPROVED note on the doctor's request, edited, shared — seen; taken back — gone.
+  const muayeneler = (await tabloOku('ulke_muayeneler')).filter((m) => m.patient_id === hastaA && m.doctor_id === A_ID).map((m) => m.id)
+  const notlar = (await tabloOku('ulke_notlar')).filter((n) => n.doctor_id === A_ID)
+  const onayli = notlar.find((n) => n.approved_at && muayeneler.includes(n.session_id))
+  const taslak = notlar.find((n) => !n.approved_at)
+  kontrol('an approved note of this patient exists from the visit steps', !!onayli)
+  writeFileSync(GUNLUK, ''); senaryoYaz({ stt: 'yuksek', model: 'tamam' })
+  await git(p, `/visit?not=${onayli.id}`)
+  await p.waitForSelector('[data-alan=hasta-ozeti] [data-eylem=ozet-yaz]', { timeout: 60000 })
+  kontrol('under the approved note: the summary card, in the doctor\'s language, naming the PATIENT\'s language; nothing exists and nothing is shared', (await metin(p, '[data-alan=hasta-ozeti] h2')) === 'Bemor uchun xulosa' && (await govde(p)).includes('Xulosa tili: Oʻzbekcha') && (await tabloOku('ulke_hasta_ozetleri')).length === 0 && !(await p.$('#uza-ozet-metni')))
+  await p.click('[data-eylem=ozet-yaz]')
+  await p.waitForSelector('#uza-ozet-metni', { timeout: 60000 })
+  const mdl = cagrilar().filter((x) => x.tur === 'model')
+  kontrol('the model was asked ONCE, for a summary, in Uzbek Latin, with "do not keep this data" and with nothing that says who the patient is', mdl.length === 1 && mdl[0].is === 'ozet' && mdl[0].dil === 'uz-Latn' && mdl[0].veriToplama === 'deny' && mdl[0].kimlikVar === false && cagrilar().every((x) => x.tur !== 'REFUSED'), JSON.stringify(mdl))
+  const ozetIlk = await p.$eval('#uza-ozet-metni', (e) => e.value)
+  kontrol('a DRAFT on the doctor\'s screen, marked as machine-written and as not shared', ozetIlk.startsWith('QA-XULOSA. Koʻrikda') && (await metin(p, '[data-alan=ozet-durumu]')) === 'Ulashilmagan. Bemor buni koʻrmaydi.' && (await metin(p, '[data-alan=hasta-ozeti] [data-bildirim=yapay-zeka]')).startsWith('Qoralamani sunʼiy intellekt tayyorladi.'))
+  const kullanim = (await tabloOku('ulke_kullanim_olcumu')).filter((k) => k.doctor_id === A_ID && k.gorev === 'hasta-ozeti')
+  kontrol('the usage record counted it: one patient summary for this account today, with the tokens the provider reported', kullanim.length === 1 && kullanim[0].adet === 1 && kullanim[0].giris_token === 500 && kullanim[0].cikis_token === 120 && kullanim[0].ulke === 'uz', JSON.stringify(kullanim))
+  await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('[data-alan=hasta-ad]', { timeout: 30000 })
+  kontrol('NOTHING IS SHARED BY ITSELF: the draft exists and the patient\'s page still shows nothing', (await tabloOku('ulke_hasta_ozetleri')).length === 1 && !(await H.$('[data-ozet]')) && !(await govde(H)).includes('QA-XULOSA'))
+  const ozetSon = `${ozetIlk} QA-TAHRIR: 250 mg.`
+  await yazDeger(p, '#uza-ozet-metni', ozetSon)
+  await cek(p, 'portal-summary-draft.png')
+  await p.click('[data-eylem=ozet-paylas]')
+  await p.waitForSelector('[data-alan=hasta-ozeti][data-paylasildi=evet]', { timeout: 30000 })
+  const ozetSatiri = (await tabloOku('ulke_hasta_ozetleri'))[0]
+  kontrol('SHARED, by the doctor\'s own act: the edited text is what was saved (encrypted) and shared; the card offers "take back" and nothing that could change it', !!ozetSatiri.paylasildi_at && ozetSatiri.note_id === onayli.id && ozetSatiri.patient_id === hastaA && ozetSatiri.dil === 'uz-Latn' && !JSON.stringify(ozetSatiri).includes('QA-XULOSA') && !(await p.$('#uza-ozet-metni')) && !!(await p.$('[data-eylem=ozet-geri-al]')) && (await metin(p, '[data-alan=ozet-metni]')) === ozetSon, JSON.stringify({ paylasildi: ozetSatiri.paylasildi_at, dil: ozetSatiri.dil }))
+  await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('[data-ozet]', { timeout: 30000 })
+  const gorulen = await H.evaluate(() => ({ metin: document.querySelector('[data-ozet] .uza-not-metin').innerText, bas: document.querySelector('[data-ozet] .uza-ust-yazi').innerText, n: document.querySelectorAll('[data-ozet]').length }))
+  kontrol('THE PATIENT SEES IT: exactly the text the doctor shared, under the day of the visit — and still nothing of the note itself', gorulen.n === 1 && gorulen.metin === ozetSon && /^\d{2}\.\d{2}\.\d{4} kungi koʻrik$/.test(gorulen.bas) && !/Onasining aytishicha|Shifokor tashxisni aytmadi/.test(await govde(H)), JSON.stringify(gorulen))
+  await cek(H, 'portal-page-summary-phone-uz.png')
+  const degistir = await api(p, '/api/ulke/hasta-portali/ozet', { method: 'PATCH', govde: { notId: onayli.id, metin: 'CHANGED-AFTER-SHARING' } })
+  kontrol('a shared summary cannot be changed under the patient: the server refuses, and nothing changed', degistir.s === 409 && degistir.t === '{"code":"PAYLASILDI"}' && (await H.reload({ waitUntil: 'networkidle0' })) && (await metin(H, '[data-ozet] .uza-not-metin')) === ozetSon, `${degistir.s} ${degistir.t}`)
+  await p.click('[data-eylem=ozet-geri-al]')
+  await p.waitForSelector('[data-alan=hasta-ozeti][data-paylasildi=hayir]', { timeout: 30000 })
+  await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('[data-alan=hasta-ad]', { timeout: 30000 })
+  kontrol('TAKEN BACK → GONE AT ONCE: the patient\'s page shows no summary; the doctor has the draft again; both acts are in the record', !(await H.$('[data-ozet]')) && !(await govde(H)).includes('QA-XULOSA') && (await govde(H)).includes('Shifokoringiz hali hech narsa ulashmagan.') && (await p.$eval('#uza-ozet-metni', (e) => e.value)) === ozetSon && (await metin(p, '[data-alan=hasta-ozeti] .uza-bilgi-kutu')) === 'Qaytarib olindi. Bemor endi buni koʻrmaydi.' && JSON.stringify((await olaylar(hastaA)).filter((o) => o === 'paylasim' || o === 'geri-alma')) === '["paylasim","geri-alma"]', JSON.stringify(await olaylar(hastaA)))
+  if (taslak) {
+    const yaz = await api(p, '/api/ulke/hasta-portali/ozet', { method: 'POST', govde: { notId: taslak.id } })
+    const paylas = await api(p, '/api/ulke/hasta-portali/ozet', { method: 'PUT', govde: { notId: taslak.id, paylas: true } })
+    kontrol('a note that is NOT APPROVED has no summary and nothing to share: both are refused', yaz.s === 409 && yaz.t === '{"code":"ONAYSIZ"}' && paylas.s >= 400 && (await tabloOku('ulke_hasta_ozetleri')).every((o) => o.note_id !== taslak.id), `${yaz.s} ${yaz.t} | ${paylas.s} ${paylas.t}`)
+  } else console.log('   (no unapproved note was left by the visit steps: "an unapproved note is never shared" is proved by lib/ulke/portal/portal.paket.test.ts and by the database trigger in the migration proof)')
+
+  // 7. AN APPOINTMENT REQUEST: the patient names days and a reason; it books nothing; the doctor chooses the time.
+  const g1 = gunEkle(PZT, 1), g2 = gunEkle(PZT, 2)
+  const randevuSayisi = (await tabloOku('ulke_randevulari')).length
+  const sunulan = await H.$$eval('[data-alan=portal-istek] input[name=gunler]', (l) => l.map((e) => e.value))
+  kontrol('the patient may choose among the next 21 days (none in the past), up to three', sunulan.length === 21 && sunulan.includes(g1) && sunulan.includes(g2) && sunulan.every((x, i) => i === 0 || x > sunulan[i - 1]) && (await govde(H)).includes('Oʻzingizga qulay kunlarni tanlang (koʻpi bilan 3 ta). Vaqtni shifokoringiz belgilaydi.'), `${sunulan[0]} … ${sunulan.at(-1)}`)
+  await H.click('[data-eylem=portal-istek]')
+  await H.waitForSelector('[data-alan=portal-istek] [role=alert]', { timeout: 15000 })
+  kontrol('a request without a day is refused in the browser', (await metin(H, '[data-alan=portal-istek] [role=alert]')) === 'Kamida bitta kunni tanlang.' && (await tabloOku('ulke_randevu_istekleri')).length === 0)
+  await H.click(`input[name=gunler][value="${g1}"]`); await H.click(`input[name=gunler][value="${g2}"]`)
+  await H.type('#uzp-neden', 'QA bemor sababi')
+  await cek(H, 'portal-request-form-phone-uz.png')
+  await H.click('[data-eylem=portal-istek]')
+  await H.waitForSelector('[data-istek-durumu=bekliyor]', { timeout: 30000 })
+  let istekler = await tabloOku('ulke_randevu_istekleri')
+  kontrol('REQUEST SENT: one waiting request of this patient for this doctor, with the two days; the reason is not readable in the table; NO appointment was made', istekler.length === 1 && istekler[0].patient_id === hastaA && istekler[0].doctor_id === A_ID && istekler[0].durum === 'bekliyor' && JSON.stringify(istekler[0].gunler) === JSON.stringify([g1, g2]) && !istekler[0].randevu_id && !JSON.stringify(istekler[0]).includes('bemor sababi') && (await tabloOku('ulke_randevulari')).length === randevuSayisi, JSON.stringify(istekler[0].gunler))
+  kontrol('the patient reads that the request was sent and which days they asked for; no second form while one waits', (await govde(H)).includes('Soʻrovingiz yuborildi. Shifokoringiz hali javob bermadi.') && (await govde(H)).includes(`Siz soʻragan kunlar: ${GUN_UZ[haftaGunu(g1)]}, ${yazGun(g1)}; ${GUN_UZ[haftaGunu(g2)]}, ${yazGun(g2)}`) && !(await H.$('[data-eylem=portal-istek]')))
+  const ikinci = await hApi(H, '/api/ulke/portal/randevu-istegi', { method: 'POST', token, govde: { gunler: [g2] } })
+  const bookDene = await hApi(H, '/api/ulke/portal/randevu-istegi', { method: 'POST', token, govde: { gunler: [g1], gun: yazGun(g1), saat: '10:00', sureDk: 30, hastaId: hastaRu, durum: 'kabul' } })
+  kontrol('one request at a time, and a patient can book nothing by naming a time or another patient', ikinci.s === 409 && ikinci.t === '{"code":"BEKLEYEN_VAR"}' && bookDene.s === 409 && (await tabloOku('ulke_randevu_istekleri')).length === 1 && (await tabloOku('ulke_randevulari')).length === randevuSayisi, `${ikinci.s} ${ikinci.t} | ${bookDene.s}`)
+
+  await git(p, '/calendar')
+  await p.waitForSelector('[data-alan=randevu-istekleri] [data-istek]', { timeout: 60000 })
+  const kart = await metin(p, '[data-alan=randevu-istekleri]')
+  kontrol('ON THE DOCTOR\'S CALENDAR: the request, with the patient, the days and the reason, in the doctor\'s language', kart.includes('Qabulga yozilish soʻrovlari') && kart.includes('QA Karimova Dilnoza') && kart.includes(`Qulay kunlar: ${GUN_UZ[haftaGunu(g1)]}, ${yazGun(g1)}; ${GUN_UZ[haftaGunu(g2)]}, ${yazGun(g2)}`) && kart.includes('Sababi: QA bemor sababi'), kart.replace(/\s+/g, ' ').slice(0, 200))
+  await onEkAltinda(p, 'calendar with a request')
+  await cek(p, 'calendar-requests.png')
+  await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('[data-eylem=istek-sec]')])
+  await p.waitForSelector('#uza-ri-gun', { timeout: 60000 })
+  const cevapFormu = await p.evaluate(() => ({ gun: document.querySelector('#uza-ri-gun').value, saat: document.querySelector('#uza-ri-saat').value, ad: document.querySelector('h1').innerText, gunler: [...document.querySelectorAll('[data-istek-gunu]')].map((e) => e.getAttribute('data-istek-gunu')) }))
+  kontrol('"choose a time": the answer form, with the patient, the days asked for, and the first of them filled in', new URL(p.url()).searchParams.get('istek') === istekler[0].id && cevapFormu.ad === 'QA Karimova Dilnoza' && cevapFormu.gun === yazGun(g1) && cevapFormu.saat === '08:00' && JSON.stringify(cevapFormu.gunler) === JSON.stringify([g1, g2]), JSON.stringify(cevapFormu))
+  await onEkAltinda(p, 'answer to a request')
+  // NO DOUBLE BOOKING through a request either: a time this doctor has already given away.
+  await yazDeger(p, '#uza-ri-gun', yazGun(PZT)); await yazDeger(p, '#uza-ri-saat', '15:10')
+  await p.click('[data-eylem=istek-kabul]')
+  await p.waitForSelector('[data-alan=istek-cevabi] [role=alert]', { timeout: 30000 })
+  istekler = await tabloOku('ulke_randevu_istekleri')
+  kontrol('a TAKEN time: the same clear message as any booking, NO "book anyway"; the request still waits and nothing was written', (await metin(p, '[data-alan=istek-cevabi] [role=alert]')) === 'Bu vaqt band: shu vaqtda sizda boshqa qabul bor. Boshqa vaqtni tanlang.' && !(await p.$('[data-eylem=istek-yine-de]')) && istekler[0].durum === 'bekliyor' && (await tabloOku('ulke_randevulari')).length === randevuSayisi)
+  await p.click(`[data-istek-gunu="${g1}"]`)
+  await yazDeger(p, '#uza-ri-saat', '10:00')
+  await cek(p, 'calendar-request-answer.png')
+  await p.click('[data-eylem=istek-kabul]')
+  await p.waitForFunction(() => new URLSearchParams(location.search).has('randevu'), { timeout: 60000 })
+  await p.waitForSelector('[data-alan=gun]', { timeout: 60000 })
+  const kabulRandevu = new URL(p.url()).searchParams.get('randevu')
+  istekler = await tabloOku('ulke_randevu_istekleri')
+  const yeniRandevu = (await tabloOku('ulke_randevulari')).find((r) => r.id === kabulRandevu)
+  kontrol('ACCEPTED: one appointment for that patient at 10:00 Tashkent time on the day the doctor chose; the request is answered and points at it; the patient\'s reason travelled with it, encrypted', istekler[0].durum === 'kabul' && istekler[0].randevu_id === kabulRandevu && yeniRandevu?.patient_id === hastaA && yeniRandevu.doctor_id === A_ID && yeniRandevu.baslangic === `${g1}T05:00:00.000Z` && yeniRandevu.durum === 'planlandi' && !!yeniRandevu.neden_encrypted && !JSON.stringify(yeniRandevu).includes('bemor sababi') && (await tabloOku('ulke_randevulari')).length === randevuSayisi + 1 && (await govde(p)).includes('QA bemor sababi'), JSON.stringify({ durum: istekler[0].durum, bas: yeniRandevu?.baslangic }))
+  await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('[data-istek-durumu=kabul]', { timeout: 30000 })
+  g = await govde(H)
+  kontrol('THE PATIENT SEES THE OUTCOME: "your doctor booked you" with weekday, day and time, and the appointment in the list', g.includes(`Shifokoringiz sizni qabulga yozdi: ${GUN_UZ[haftaGunu(g1)]}, ${yazGun(g1)}, soat 10:00.`) && (await H.$$eval('[data-randevu-gun]', (l) => l.map((e) => e.getAttribute('data-randevu-gun')))).includes(g1) && !g.includes('QA bemor sababi'), g.replace(/\s+/g, ' ').slice(0, 220))
+  await cek(H, 'portal-page-booked-phone-uz.png')
+  const ikinciKabul = await api(p, '/api/ulke/hasta-portali/istekler', { method: 'PATCH', govde: { id: istekler[0].id, gun: yazGun(g2), saat: '11:00', sureDk: 30 } })
+  kontrol('a request is answered once: accepting it again books nothing', ikinciKabul.s === 409 && ikinciKabul.t === '{"code":"CEVAPLANDI"}' && (await tabloOku('ulke_randevulari')).length === randevuSayisi + 1, `${ikinciKabul.s} ${ikinciKabul.t}`)
+  // A second request, which the doctor declines from the calendar.
+  await H.click(`input[name=gunler][value="${g2}"]`)
+  await H.click('[data-eylem=portal-istek]')
+  await H.waitForSelector('[data-istek-durumu=bekliyor]', { timeout: 30000 })
+  const bekleyen = (await tabloOku('ulke_randevu_istekleri')).find((i) => i.durum === 'bekliyor')
+
+  // 8. ISOLATION — two doctors. Doctor B (another account of the same country) and everything of doctor A's patient.
+  {
+    const yokHasta = '30000000-0000-4000-8000-00000000dead'
+    const bOku = await api(B, `/api/ulke/hasta-portali?hasta=${hastaA}`), bYok = await api(B, `/api/ulke/hasta-portali?hasta=${yokHasta}`)
+    const bVer = await api(B, '/api/ulke/hasta-portali', { method: 'POST', govde: { hastaId: hastaA } })
+    const bIptal = await api(B, '/api/ulke/hasta-portali', { method: 'DELETE', govde: { hastaId: hastaA } })
+    const bOzet = await api(B, `/api/ulke/hasta-portali/ozet?not=${onayli.id}`)
+    const bPaylas = await api(B, '/api/ulke/hasta-portali/ozet', { method: 'PUT', govde: { notId: onayli.id, paylas: true } })
+    const bListe = await api(B, '/api/ulke/hasta-portali/istekler')
+    const bKabul = await api(B, '/api/ulke/hasta-portali/istekler', { method: 'PATCH', govde: { id: bekleyen.id, gun: yazGun(g2), saat: '09:00', sureDk: 30 } })
+    const bRed = await api(B, '/api/ulke/hasta-portali/istekler', { method: 'PATCH', govde: { id: bekleyen.id, red: true } })
+    const sonra = { erisim: await erisimler(hastaA), ozet: (await tabloOku('ulke_hasta_ozetleri'))[0], istek: (await tabloOku('ulke_randevu_istekleri')).find((i) => i.id === bekleyen.id) }
+    kontrol('DOCTOR B and doctor A\'s patient: reading access, giving it, withdrawing it, reading or sharing the summary, accepting or declining the request — each answers exactly like "does not exist", and nothing changed', [bOku, bVer, bIptal, bOzet, bPaylas, bKabul, bRed].every((r) => r.s === 404 && r.t === '{"code":"NOT_FOUND"}') && bYok.t === bOku.t && sonra.erisim.filter((e) => !e.iptal_at).length === 1 && sonra.erisim.length === 2 && !sonra.ozet.paylasildi_at && sonra.istek.durum === 'bekliyor', [bOku, bVer, bIptal, bOzet, bPaylas, bKabul, bRed].map((r) => r.s).join(' '))
+    kontrol('doctor B\'s own list of requests is empty: doctor A\'s patient\'s request is not in it', bListe.s === 200 && JSON.stringify(bListe.j) === '{"istekler":[]}', bListe.t)
+    await git(B, '/calendar')
+    await B.waitForSelector('[data-gorunum=gun]', { timeout: 60000 })
+    kontrol('doctor B\'s calendar (a phone) shows no request card', !(await B.$('[data-alan=randevu-istekleri]')) && !(await govde(B)).includes('Karimova'))
+    // B's own patient gets B's own page.
+    const bErisim = await api(B, '/api/ulke/hasta-portali', { method: 'POST', govde: { hastaId: hastaB } })
+    const HB = await sayfaAc(TEL)
+    await baglantiAc(HB, `${TABAN}${ON_EK}${bErisim.j.yol}`)
+    kontrol('doctor B\'s Russian-speaking patient: the link opens in Russian', bErisim.s === 200 && bErisim.j.yol.startsWith('/portal?dil=ru#') && (await metin(HB, 'h1')) === 'Ваша страница' && (await HB.evaluate(() => document.querySelector('.uza').lang)) === 'ru')
+    await pinGonder(HB, bErisim.j.pin)
+    await HB.waitForSelector('[data-alan=hasta-ad]', { timeout: 30000 })
+    const gb = await govde(HB)
+    kontrol('doctor B\'s patient sees their own name, doctor B and B\'s role in Russian — and nothing of doctor A or A\'s patients', (await metin(HB, '[data-alan=hasta-ad]')) === 'Здравствуйте, QA Иванов Пётр' && (await metin(HB, '[data-alan=hekim]')) === 'QA Врач Два · Диетолог' && gb.includes('В ближайшие дни вы не записаны на приём.') && gb.includes('Врач пока ничем с вами не поделился.') && !/Karimova|Shifokor Bir|QA-XULOSA|Мария/.test(gb) && !/[A-Za-z]{4,}/.test(gb.replace(/QA|Notya/g, '')), gb.replace(/\s+/g, ' ').slice(0, 200))
+    await hastaSayfasiTemiz(HB, 'patient\'s page (doctor B\'s patient, Russian)', [bErisim.j.yol.split('#')[1]])
+    await cek(HB, 'portal-page-phone-ru.png')
+    kontrol('doctor B\'s patient: no console errors', HB.konsol.filter((k) => !/40[0-9]|42[39]|Failed to load resource/.test(k)).length === 0, HB.konsol.join(' | ').slice(0, 300))
+    await HB.browserContext().close()
+  }
+
+  // 9. ISOLATION — a doctor's session is no patient, and a patient's session is no doctor.
+  {
+    const hekimJetonu = await p.evaluate((k) => JSON.parse(localStorage.getItem(k) || 'null')?.access_token ?? '', OTURUM_ANAHTARI)
+    const hekimleSayfa = await p.evaluate(async (u, j, o) => { const r = await fetch(u, { headers: { Authorization: `Bearer ${j}`, 'x-notya-portal-baglanti': o } }); return { s: r.status, t: await r.text() } }, adres('/api/ulke/portal'), hekimJetonu, ozetle(token))
+    const hekimleIstek = await p.evaluate(async (u, j, o) => { const r = await fetch(u, { method: 'POST', headers: { Authorization: `Bearer ${j}`, 'x-notya-portal-baglanti': o, 'x-notya-portal': '1', 'Content-Type': 'application/json' }, body: JSON.stringify({ gunler: [] }) }); return { s: r.status, t: await r.text() } }, adres('/api/ulke/portal/randevu-istegi'), hekimJetonu, ozetle(token))
+    kontrol('THE PATIENT\'S ROUTES NEVER ACCEPT A DOCTOR\'S SESSION: with doctor A\'s own token, the page and the request are "no session"', hekimJetonu.length > 10 && hekimleSayfa.s === 401 && hekimleSayfa.t === '{"code":"OTURUM_YOK"}' && hekimleIstek.s === 401, `${hekimleSayfa.s} ${hekimleSayfa.t} | ${hekimleIstek.s}`)
+    const cerez = (await H.cookies(`${TABAN}${ON_EK}/api/ulke/portal`))[0].value
+    const sonuclar = []
+    for (const rota of [`/api/ulke/hasta?id=${hastaA}`, '/api/ulke/hastalar', `/api/ulke/hasta-portali?hasta=${hastaA}`, `/api/ulke/hasta-portali/ozet?not=${onayli.id}`, '/api/ulke/hasta-portali/istekler', '/api/ulke/randevular', '/api/ulke/hesap']) {
+      sonuclar.push(await hApi(H, rota, { token }), await hApi(H, rota, { token, jeton: cerez }), await hApi(H, rota, { token, jeton: token }))
+    }
+    kontrol(`THE DOCTOR'S ROUTES NEVER ACCEPT A PATIENT'S SESSION: with the portal cookie, the session key or the link's token as a bearer, all ${sonuclar.length} requests are "no session"`, sonuclar.every((r) => r.s === 401 && r.t === '{"code":"OTURUM_YOK"}'), [...new Set(sonuclar.map((r) => `${r.s} ${r.t}`))].join(' | '))
+  }
+
+  // 10. ISOLATION — two patients on one phone. The browser still holds patient A's session; it opens patient Ru's link.
+  {
+    const ruErisim = await api(p, '/api/ulke/hasta-portali', { method: 'POST', govde: { hastaId: hastaRu } })
+    const tokenRu = ruErisim.j.yol.split('#')[1]
+    const kendiLinkiyle = await hApi(H, '/api/ulke/portal', { token })
+    const baskaLinkle = await hApi(H, '/api/ulke/portal', { token: tokenRu })
+    const sonra = await hApi(H, '/api/ulke/portal', { token })
+    kontrol('A SESSION ANSWERS ONLY THE PAGE OF ITS OWN LINK: with its own link patient A\'s cookie gives patient A\'s page; with patient Ru\'s link it is "no session" — and that ENDS patient A\'s session (database and cookie), it is not left open behind the other page', ruErisim.s === 200 && kendiLinkiyle.s === 200 && kendiLinkiyle.j.hasta.ad.startsWith('QA Karimova') && baskaLinkle.s === 401 && baskaLinkle.t === '{"code":"OTURUM_YOK"}' && sonra.s === 401 && (await H.cookies(`${TABAN}${ON_EK}/api/ulke/portal`)).length === 0 && (await tabloOku('ulke_portal_oturumlari')).filter((o) => o.patient_id === hastaA).every((o) => !!o.kapandi_at), `${kendiLinkiyle.s} ${baskaLinkle.s} ${sonra.s}`)
+    const H2 = await H.browserContext().newPage()
+    H2.istekler = []; H2.disari = []; H2.konsol = []
+    H2.on('request', (r) => { const u = r.url(); if (u.startsWith(TABAN)) H2.istekler.push(u.slice(TABAN.length)); else if (!u.startsWith('https://fonts.g') && !u.startsWith('data:') && !u.startsWith('about:')) H2.disari.push(u) })
+    await H2.setViewport({ width: TEL.genislik, height: TEL.yukseklik, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
+    await H2.goto(`${TABAN}${ON_EK}${ruErisim.j.yol}`, { waitUntil: 'networkidle0', timeout: 180000 })
+    await H2.waitForSelector('#uzp-pin', { timeout: 60000 })
+    const g2s = await H2.evaluate(() => document.body.innerText)
+    kontrol('the SAME phone opens the second patient\'s link: the PIN form, in that patient\'s language (Russian) — never the first patient\'s page', (await H2.$eval('h1', (e) => e.innerText)) === 'Ваша страница' && !/Karimova|Dilnoza|Shifokor|Assalomu/.test(g2s) && !(await H2.$('[data-alan=hasta-ad]')), g2s.replace(/\s+/g, ' ').slice(0, 120))
+    await yazDeger(H2, '#uzp-pin', ruErisim.j.pin); await H2.click('[data-eylem=portal-giris]')
+    await H2.waitForSelector('[data-alan=hasta-ad]', { timeout: 30000 })
+    const gr = await H2.evaluate(() => document.body.innerText)
+    kontrol('the second patient signs in: Russian page, her own name, her doctor; her appointment is done, so none is coming; nothing of the first patient (no summary, no request, no appointment)', gr.includes('Здравствуйте, QA Иванова Мария Петровна') && gr.includes(`${hesap.ad} · ${ROL_ADI[1]}`) && gr.includes('В ближайшие дни вы не записаны на приём.') && gr.includes('Врач пока ничем с вами не поделился.') && !/Karimova|QA-XULOSA|bemor sababi|Soʻrovingiz|10:00/.test(gr), gr.replace(/\s+/g, ' ').slice(0, 220))
+    await H2.screenshot({ path: join(CIKTI, 'portal-second-patient-phone-ru.png'), fullPage: true })
+    // The first patient's tab, still open: its session is over, so it asks again and gets the PIN form.
+    await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('#uzp-pin', { timeout: 30000 })
+    kontrol('the first patient\'s tab, reloaded, shows the PIN form again — not the second patient\'s page', !(await H.$('[data-alan=hasta-ad]')) && !/Иванова|Мария/.test(await govde(H)))
+    kontrol('the second patient\'s tab: nothing asked of the outside, the token in no request', H2.disari.length === 0 && H2.istekler.every((i) => !i.split('#')[0].includes(tokenRu)), H2.disari.join(' '))
+    await H2.close()
+  }
+
+  // 11. DECLINE, then WITHDRAW.
+  await git(p, '/calendar')
+  await p.waitForSelector('[data-alan=randevu-istekleri] [data-eylem=istek-reddet]', { timeout: 60000 })
+  await p.click('[data-eylem=istek-reddet]')
+  await p.waitForSelector('[data-alan=randevu-istekleri] .uza-bilgi-kutu', { timeout: 30000 })
+  kontrol('DECLINED from the calendar: the doctor is told, the request is answered, no appointment was made', (await metin(p, '[data-alan=randevu-istekleri] .uza-bilgi-kutu')) === 'Soʻrov rad etildi.' && (await tabloOku('ulke_randevu_istekleri')).find((i) => i.id === bekleyen.id).durum === 'red' && !(await p.$('[data-istek]')) && (await tabloOku('ulke_randevulari')).length === randevuSayisi + 1)
+  await bekle(2200)
+  await pinGonder(H, yeni.pin)
+  await H.waitForSelector('[data-istek-durumu=red]', { timeout: 30000 })
+  kontrol('the patient signs in again and reads that the doctor cannot see them on those days, and may ask again', (await govde(H)).includes('Shifokoringiz bu kunlarda qabul qila olmaydi. Yangi soʻrov yuborishingiz mumkin.') && !!(await H.$('[data-eylem=portal-istek]')))
+  await H.click('[data-eylem=portal-cikis]')
+  await H.waitForSelector('#uzp-pin', { timeout: 30000 })
+  const cikisSonrasi = await hApi(H, '/api/ulke/portal', { token })
+  kontrol('SIGN OUT: the PIN form again; the session is closed in the database and the cookie is gone', cikisSonrasi.s === 401 && (await H.cookies(`${TABAN}${ON_EK}/api/ulke/portal`)).length === 0 && (await tabloOku('ulke_portal_oturumlari')).filter((o) => o.patient_id === hastaA).every((o) => !!o.kapandi_at))
+  await bekle(2200)
+  await pinGonder(H, yeni.pin)
+  await H.waitForSelector('[data-alan=hasta-ad]', { timeout: 30000 })
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector('[data-eylem=erisim-iptal]', { timeout: 60000 })
+  kontrol('the doctor\'s card now says when the patient last signed in', /Oxirgi kirish: \d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/.test(await metin(p, '[data-alan=erisim-durumu]')), await metin(p, '[data-alan=erisim-durumu]'))
+  await p.click('[data-eylem=erisim-iptal]')
+  await p.waitForFunction(() => document.querySelector('[data-alan=portal-erisim]')?.getAttribute('data-erisim-durumu') === 'yok', { timeout: 30000 })
+  await p.click('[data-alan=portal-kayitlar] summary')
+  const kayit = await p.$$eval('[data-alan=portal-kayitlar] [data-olay]', (l) => l.map((e) => e.getAttribute('data-olay')))
+  kontrol('WITHDRAWN: the card says so; the record for the doctor holds every sign-in and every share and take-back, newest first', (await metin(p, '[data-alan=portal-erisim] .uza-bilgi-kutu')) === 'Kirish bekor qilindi. Havola endi ishlamaydi.' && kayit[0] === 'iptal' && kayit.filter((o) => o === 'giris').length === 3 && ['erisim', 'kilit', 'paylasim', 'geri-alma'].every((o) => kayit.includes(o)) && kayit.at(-1) === 'erisim', kayit.join(' '))
+  await cek(p, 'portal-access-record.png')
+  await H.reload({ waitUntil: 'networkidle0' }); await H.waitForSelector('#uzp-pin', { timeout: 30000 })
+  kontrol('withdrawing ended the patient\'s open session at once: the page asks for the PIN again', !(await H.$('[data-alan=hasta-ad]')) && (await tabloOku('ulke_portal_oturumlari')).filter((o) => o.patient_id === hastaA).every((o) => !!o.kapandi_at))
+  await pinGonder(H, yeni.pin)
+  await H.waitForSelector('[data-durum=gecersiz]', { timeout: 30000 })
+  kontrol('and the withdrawn link opens nothing, even with the right PIN', (await metin(H, '[role=alert]')) === 'Bu havola ishlamaydi yoki muddati tugagan. Shifokoringizdan yangi havola soʻrang.')
+  const tumSatirlar = (await Promise.all([...PORTAL_TABLOLARI, 'ulke_kullanim_olcumu'].map(tabloOku))).flat()
+  kontrol(`every row the portal wrote carries the country (${tumSatirlar.length} rows in ${PORTAL_TABLOLARI.length + 1} tables)`, tumSatirlar.length > 15 && tumSatirlar.every((s) => s.ulke === 'uz'))
+  kontrol('the patient\'s browser: no console errors beyond the refusals it was meant to get, and no request to any outside address', H.konsol.filter((k) => !/40[0-9]|42[39]|Failed to load resource/.test(k)).length === 0 && H.disari.length === 0, [...H.konsol, ...H.disari].join(' | ').slice(0, 300))
+  await H.browserContext().close()
 }
 
 // ───────────────────────── 9. every other screen of the application is closed, signed in or not ─────────────────────────
