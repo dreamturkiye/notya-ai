@@ -401,6 +401,7 @@ SATIRLAR_5: {
 
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
+  'takip-paneli': 'a screen, not arithmetic: one list of the follow-up days the doctor entered on kept results (migration 139). The pre-split application has a panel per specialty with columns of that specialty; there is no function to compare with.',
   'hasta-portali': 'a screen of the kit (a patient search that leads to the patient\'s file); it works nothing out',
   'ortopedi-op-protokol': 'the pre-split application has the six items as a plain list of sentences and no function over them; the length of the two lists is compared below',
 }
