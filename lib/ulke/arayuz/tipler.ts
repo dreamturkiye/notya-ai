@@ -12,7 +12,7 @@
  */
 import type { DilKodu } from '../tipler'
 import type { UlkeAcilisi } from './acilisTipleri'
-import type { FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { FormMetni, KlinikMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 import type { UlkeAraclari } from '../araclar/tipler'
 
 /** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
@@ -88,6 +88,8 @@ export type UlkeArayuzu = {
    * Required where the feature `araclar` is on.
    */
   araclar?: UlkeAraclari
+  /** NOTYA-ULKE-KLINIK-01 — the clinic accounts catalogue, once per language form. Required where the feature `klinikHesaplari` is on. */
+  klinikMetinleri?: Readonly<Partial<Record<DilKodu, KlinikMetni>>>
   /** The roles of `uygulama.roller`, each with its kind and its name in every form, in the order they are offered. */
   roller: readonly RolTanimi[]
   /** The assistant of a role in a form, or null where the role has none: the screens then show the neutral line. */

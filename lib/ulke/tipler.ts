@@ -389,6 +389,15 @@ export const UYGULAMA_EKRANLARI = {
   takvim: '/calendar',
   /** NOTYA-ULKE-ARACLAR-01 — one address, two views: the grid, and ?arac=<key> one tool. */
   araclar: '/tools',
+  /**
+   * NOTYA-ULKE-KLINIK-01 — the clinic: one address, several views. No clinic yet: create one or join with a code.
+   * A member: the clinic, its members; for the owner and an administrator also invitations, positions and the
+   * clinic's schedule; ?gorunum=yetkiler "who can help with my patients" and the record; ?gorunum=paylasilan what
+   * was shared with the account (a share, cover).
+   */
+  klinik: '/clinic',
+  /** NOTYA-ULKE-KLINIK-01 — the front-desk workspace: the doctors who gave the account a grant, their appointments, the minimal patient card. */
+  onBuro: '/desk',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

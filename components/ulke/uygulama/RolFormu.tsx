@@ -7,8 +7,9 @@
  * internal key; it is never shown.
  */
 import React from 'react'
-import { Cerceve, Hata } from './Kabuk'
-import { metninDili, rolAdi, rolGruplari, type RolTarafi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { Cerceve, Hata, YOL } from './Kabuk'
+import { klinikMetni, metninDili, rolAdi, rolGruplari, type RolTarafi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { ozellikAcik } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 const grupAdi = (m: UygulamaMetni, taraf: RolTarafi): string => (taraf === 'doktor' ? m.rol.grupDoktor : taraf === 'klinik-hekim' ? m.rol.grupKlinikHekim : m.rol.grupKlinikMuttefik)
@@ -44,6 +45,8 @@ export function RolGorunumu({ dil, m, rol, setRol, gonder, bekliyor, hata }: {
           <Hata>{hata === 'gerekli' ? m.rol.gerekli : hata === 'kaydedilemedi' ? m.rol.kaydedilemedi : null}</Hata>
           <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="rol-kaydet">{bekliyor ? m.rol.kaydediliyor : m.rol.devam}</button>
         </form>
+        {/* NOTYA-ULKE-KLINIK-01: somebody invited to a clinic's front desk has no role to choose — the code is entered on the clinic's screen. */}
+        {ozellikAcik('klinikHesaplari') ? <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.klinik} data-eylem="klinik-kodu">{klinikMetni(dil).giris.katilBaslik}</a></p> : null}
       </section>
     </Cerceve>
   )

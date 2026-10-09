@@ -8,7 +8,11 @@
  *                      account that does not belong to this country → back to /login. An account that has not
  *                      answered the language question, or has not chosen its role (NOTYA-UZ-BRANSLAR-01), is sent
  *                      to /start before anything else.
- * Cerceve              the visible frame (word mark, four links, log out). Pure: it renders in a plain test.
+ * Cerceve              the visible frame (word mark, the links, log out). Pure: it renders in a plain test.
+ *
+ * NOTYA-ULKE-KLINIK-01 — two accounts are NOT sent to the role question: one that opens the clinic's screen (an
+ * invitation code is entered before a role is chosen), and a FRONT-DESK member of a clinic, who needs no role and
+ * whose application is the front-desk workspace, the clinic and the settings.
  *
  * Every sentence comes from the pack's catalogue (./metinler) in the ACCOUNT's language, never the browser's.
  */
@@ -17,7 +21,7 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { araclarMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, klinikMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -44,6 +48,11 @@ export type Hesap = {
   /** The account's time zone and the zones it may choose — present only where the country has more than one. */
   saatDilimi?: string
   saatDilimleri?: readonly string[]
+  /**
+   * NOTYA-ULKE-KLINIK-01 — true = a FRONT-DESK member of a clinic who works in no role: the application is the
+   * front-desk workspace, the clinic and the settings, and the navigation shows those and no doctor's screen.
+   */
+  onBuro?: boolean
 }
 export type ApiCevabi = { ok: boolean; status: number; j: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
 /** `yol` is a ROUTE of the API ('/api/ulke/hesap'); the call adds the country's path prefix. */
@@ -105,12 +114,27 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       const dilSoruldu = Boolean(r.j.dilSoruldu)
       // A country without roles asks for none: only the language question stands between the account and the home.
       const rolTamam = Boolean(rol) || roller().length === 0
-      if ((!dilSoruldu || !rolTamam) && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
-      if (dilSoruldu && rolTamam && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
+      // NOTYA-ULKE-KLINIK-01 — only an account WITHOUT a role is asked whether it is a clinic's front desk (one request,
+      // and none for anybody who has chosen a role): a front-desk member needs no role, and works on the front-desk
+      // workspace, the clinic's screen and the settings. The clinic's screen is open to any account that has
+      // answered the language question, so that an invitation code can be entered before a role is chosen.
+      let onBuro = false
+      if (dilSoruldu && !rolTamam && ozellikAcik('klinikHesaplari')) {
+        try { const kr = await api('/api/ulke/klinik'); onBuro = kr.ok && kr.j.klinik?.konum === 'on-buro' } catch { return }
+        if (iptal) return
+      }
+      const onBuroEvi = ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik
+      if (onBuro) {
+        if (ekran !== 'klinik' && ekran !== 'onBuro' && ekran !== 'ayarlar') { window.location.replace(onBuroEvi); return }
+      } else if (!(dilSoruldu && !rolTamam && ekran === 'klinik' && ozellikAcik('klinikHesaplari'))) {
+        // The rule for everybody else, exactly as before clinic accounts existed.
+        if ((!dilSoruldu || !rolTamam) && ekran !== 'baslangic') { window.location.replace(YOL.baslangic); return }
+        if (dilSoruldu && rolTamam && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
+      }
       // Every day and hour the screens write from now on is in the account's own time zone (one of the pack's list).
       hesapSaatDilimiAyarla(r.j.saatDilimi)
       const dilimler = Array.isArray(r.j.saatDilimleri) ? (r.j.saatDilimleri as unknown[]).filter((x): x is string => typeof x === 'string') : []
-      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}) })
+      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(onBuro ? { onBuro: true } : {}), ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}) })
     })()
     return () => { iptal = true }
   }, [api, cikis, ekran])
@@ -127,9 +151,9 @@ const DEGISKENLER = {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'ayarlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar'
 
-export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
+export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
   dil: DilKodu
   m: UygulamaMetni
   ad?: string
@@ -137,6 +161,8 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
   cikis?: () => void
   /** true = no navigation (the first-login question, and "loading" before the account is known). */
   sade?: boolean
+  /** NOTYA-ULKE-KLINIK-01 — true = the navigation of a front-desk member: the workspace, the clinic, the settings. */
+  onBuro?: boolean
   children: ReactNode
 }) {
   const baglanti = (s: Sekme, href: string, ad2: string) => (
@@ -148,8 +174,14 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic">
-          <a href={sade ? undefined : YOL.bugun} className="uza-marka">{marka()}</a>
-          {sade ? null : (
+          <a href={sade ? undefined : onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun} className="uza-marka">{marka()}</a>
+          {sade ? null : onBuro ? (
+            <nav className="uza-nav" aria-label={m.kabuk.menu}>
+              {ozellikAcik('randevu') ? baglanti('onBuro', YOL.onBuro, klinikMetni(dil).kabuk.onBuro) : null}
+              {baglanti('klinik', YOL.klinik, klinikMetni(dil).kabuk.klinik)}
+              {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
+            </nav>
+          ) : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
               {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
@@ -157,6 +189,8 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, children }: {
               {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
               {/* NOTYA-ULKE-ARACLAR-01: the tools area, where the country has it. Its name is in the tools catalogue, in the same form. */}
               {ozellikAcik('araclar') ? baglanti('araclar', YOL.araclar, araclarMetni(dil).kabuk.araclar) : null}
+              {/* NOTYA-ULKE-KLINIK-01: the clinic, where the country has clinic accounts. Its name is in the clinic catalogue, in the same form. */}
+              {ozellikAcik('klinikHesaplari') ? baglanti('klinik', YOL.klinik, klinikMetni(dil).kabuk.klinik) : null}
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>
           )}

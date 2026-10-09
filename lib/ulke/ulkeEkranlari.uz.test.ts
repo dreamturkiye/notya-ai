@@ -343,7 +343,7 @@ describe('an Uzbekistan build: routes', () => {
     if (izin === 'hepsi') return
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
-    assert.deepEqual(d.sayfalar, ['/', '/calendar', '/login', '/patient', '/patients', '/patients/new', '/portal', '/settings', '/signup', '/start', '/today', '/tools', '/visit', '/welcome'])
+    assert.deepEqual(d.sayfalar, ['/', '/calendar', '/clinic', '/desk', '/login', '/patient', '/patients', '/patients/new', '/portal', '/settings', '/signup', '/start', '/today', '/tools', '/visit', '/welcome'])
     assert.deepEqual(d.api, ['/api/ulke/arac-kaydi', '/api/ulke/bugun', '/api/ulke/calisma-duzeni', '/api/ulke/hasta', '/api/ulke/hasta-formu', '/api/ulke/hasta-portali', '/api/ulke/hasta-portali/istekler', '/api/ulke/hasta-portali/ozet', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/klinik', '/api/ulke/klinik/davet', '/api/ulke/klinik/katil', '/api/ulke/klinik/kayit', '/api/ulke/klinik/on-buro', '/api/ulke/klinik/paylasilan', '/api/ulke/klinik/takvim', '/api/ulke/klinik/uye', '/api/ulke/klinik/yetki', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/portal', '/api/ulke/portal/cikis', '/api/ulke/portal/form', '/api/ulke/portal/giris', '/api/ulke/portal/randevu-istegi', '/api/ulke/randevu', '/api/ulke/randevular', '/api/ulke/rol', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)

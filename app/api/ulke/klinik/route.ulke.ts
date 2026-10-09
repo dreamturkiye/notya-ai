@@ -1,8 +1,9 @@
 /**
  * NOTYA-ULKE-KLINIK-01 — /api/ulke/klinik: the caller's own clinic.
  *
- *   GET          200 { klinik: null, ayarlar }                                    the caller is in no clinic
- *                200 { klinik: { id, ad, konum, uyeler: [{ hesapId, ad, konum, rol }] }, ayarlar, davetler? }
+ *   GET          200 { klinik: null, ayarlar, ben }                               the caller is in no clinic
+ *                200 { klinik: { id, ad, konum, uyeler: [{ hesapId, ad, konum, rol }] }, ayarlar, ben, davetler? }
+ *                    `ben`: the caller's own account id (so that a screen can mark the caller's own row).
  *                    `davetler` only for the owner and an administrator: [{ id, konum, durum, olusturuldu, sonGecerlilik }]
  *                    — never a code. `ayarlar`: what the country's pack allows { yetkiTurleri, sahipHekimAdinaVerebilir,
  *                    paylasimRolleri, vekaletAzamiGun }.
@@ -31,9 +32,9 @@ export const GET = sinirda('klinik GET', async (req: NextRequest) => {
   if (!oturum) return KOD.oturumYok()
   const ayarlar = { yetkiTurleri: [...ayar.yetkiTurleri], sahipHekimAdinaVerebilir: ayar.sahipHekimAdinaVerebilir === true, paylasimRolleri: [...ayar.paylasimRolleri], vekaletAzamiGun: ayar.vekaletAzamiGun }
   const klinik = await klinikGetir(oturum.supabase, oturum.user.id)
-  if (!klinik) return cevap({ klinik: null, ayarlar })
+  if (!klinik) return cevap({ klinik: null, ayarlar, ben: oturum.user.id })
   const davetler = await davetleriListele(oturum.supabase, oturum.user.id)
-  return cevap({ klinik, ayarlar, ...(davetler ? { davetler } : {}) })
+  return cevap({ klinik, ayarlar, ben: oturum.user.id, ...(davetler ? { davetler } : {}) })
 })
 
 export const POST = sinirda('klinik POST', async (req: NextRequest) => {

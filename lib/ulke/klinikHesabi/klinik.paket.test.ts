@@ -358,7 +358,8 @@ describe('clinic accounts — the clinic and its members', () => {
     assert.deepEqual(await gonder(BO, 'POST', `${K}/katil`, { kod: yabanciKod }), { status: 400, govde: { code: 'KOD' } }, 'a code of another country')
     assert.equal(tablo('ulke_klinik_uyeleri').some((u) => u.doctor_id === BO), false)
     // There is no list of clinics and no way to ask for one: an account in no clinic sees nothing of any.
-    assert.deepEqual(anahtarlar((await al(BO, K)).govde), ['ayarlar', 'klinik'])
+    assert.deepEqual(anahtarlar((await al(BO, K)).govde), ['ayarlar', 'ben', 'klinik'])
+    assert.equal((await al(BO, K)).govde.ben, BO)
   })
 
   it('REMOVING A MEMBER — who may remove whom (every pair), and what it answers', async () => {

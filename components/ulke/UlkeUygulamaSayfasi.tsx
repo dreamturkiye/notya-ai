@@ -17,6 +17,8 @@ export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
   // A screen exists where the feature is on, the pack brings content for the shared screens, and the pack lists the
   // screen's route. Anything else is "not found": there is no default screen and no other country's.
   const var_ = ozellikAcik('cekirdekMuayene') && AKTIF_ARAYUZ !== null && rotaAcikMi(ulkePaketi().rotalar, UYGULAMA_EKRANLARI[ekran]) && (ekran !== 'takvim' || ozellikAcik('randevu')) && (ekran !== 'araclar' || ozellikAcik('araclar'))
+    // NOTYA-ULKE-KLINIK-01: the clinic's screen where the pack has clinic accounts; the front-desk workspace needs appointments as well.
+    && ((ekran !== 'klinik' && ekran !== 'onBuro') || ozellikAcik('klinikHesaplari')) && (ekran !== 'onBuro' || ozellikAcik('randevu'))
   const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
   return <Ekran />
