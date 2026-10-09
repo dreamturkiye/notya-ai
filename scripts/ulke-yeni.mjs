@@ -19,7 +19,7 @@
  *   3. Writes docs/COUNTRY-PACK-<CODE>.md from docs/COUNTRY-PACK-CHECKLIST.md, every gate unticked.
  *
  * WHAT THE NEW COUNTRY IS, THE MOMENT IT EXISTS
- *   - It CANNOT BE BUILT: `NOTYA_COUNTRY=<code> npm run build` stops at once and prints every item still to supply
+ *   - It CANNOT BE BUILT: `NOTYA_COUNTRY=<code> npm run build:ulke` stops at once and prints every item still to supply
  *     (file, line, hint). Nothing falls back to another country.
  *   - Sign-up is CLOSED (invitation only) and the site is HIDDEN from search. Both are settings of the pack that
  *     only the owner opens (docs/COUNTRY-PACK-HOWTO.md).
@@ -118,10 +118,11 @@ const dosyalar = {}
 const BAS = (baslik, govde) => `/**\n * NOTYA-ULKE-SABLON-01 — ${baslik}\n${govde.split('\n').map((s) => ` * ${s}`.trimEnd()).join('\n')}\n */\n`
 const SUPPLY = '⟦SUPPLY⟧'
 
-dosyalar['derleme.mjs'] = `${BAS(`${B}: build-level facts. Read by next.config.mjs for a build of this country and by nothing else.`, `Plain data, so the config can load it before anything is compiled. Its one import is the "to be supplied" scan:
-while anything in this folder is still marked, the build of THIS country stops here with the whole list.`)}import { paketTamOlmali } from '../../scripts/ulke-paket-denetimi.mjs'
+dosyalar['derleme.mjs'] = `${BAS(`${B}: build-level facts. Read by next.config.mjs for a build of this country and by nothing else.`, `Plain data, so the config can load it before anything is compiled. Its one import is the gate every country build
+passes (scripts/ulke-derleme-kapisi.mjs): while anything in this folder is still marked "to be supplied", the build of
+THIS country stops here with the whole list. Build with:  NOTYA_COUNTRY=${KOD} npm run build:ulke`)}import { ulkeDerlemeKapisi } from '../../scripts/ulke-derleme-kapisi.mjs'
 
-paketTamOlmali('${KOD}')
+ulkeDerlemeKapisi('${KOD}')
 
 const derleme = {
   kod: '${KOD}',

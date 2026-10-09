@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs",
-    "postbuild": "node scripts/ulke-derleme-kaniti.mjs",
+    "prebuild": "node scripts/vad-varliklari.mjs",
     "build": "node -e \"if (process.env.VERCEL_ENV === 'preview') require('fs').rmSync('.next/cache', { recursive: true, force: true })\" && NODE_OPTIONS='--max-old-space-size=8192' next build",
     "start": "next start",
     "lint": "next lint",
@@ -72,6 +71,7 @@
     "test:acil": "npx tsx --test specialties/acil-tip/tests/*.test.ts lib/portal/acil-sonrasi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:ulke:paket": "node scripts/ulke-test.mjs --yalniz-paket",
     "ulke:paket-denetimi": "node scripts/ulke-paket-denetimi.mjs",
+    "build:ulke": "node scripts/ulke-derle.mjs",
     "ulke:yeni": "node scripts/ulke-yeni.mjs"
   },
   "dependencies": {

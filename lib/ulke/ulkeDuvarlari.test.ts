@@ -1,11 +1,12 @@
 /**
  * NOTYA-ULKE-01 — the walls between countries hold, and the checker really catches a breach.
  *
- *   1. The repository as it is: zero violations (the same script runs in `prebuild`, so a breach stops the build).
+ *   1. The repository as it is: zero violations (the same check runs before every country build, so a breach stops it).
  *   2. Synthetic repositories with one breach each: every rule D1–D6 fires.
  *   3. The entry point has the shape the bundler needs to drop the other packs (constant branches, require inside).
  *   4. Import graph: starting from the active entry point of country X, no file of another country is reachable.
  */
+import { pathToFileURL } from 'node:url'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
@@ -47,10 +48,21 @@ describe('walls: the repository', () => {
     assert.match(r.stdout, new RegExp(`walls hold — countries: ${[...ULKE_KODLARI].sort().join(', ')}`))
   })
 
-  it('the check runs before every build', () => {
+  it('the check runs before every COUNTRY build and the build proof after it; a build with no country set runs neither', async () => {
     const pkg = JSON.parse(readFileSync(join(KOK, 'package.json'), 'utf8'))
-    assert.match(pkg.scripts.prebuild, /node scripts\/ulke-duvarlari\.mjs/)
-    assert.match(pkg.scripts.postbuild, /node scripts\/ulke-derleme-kaniti\.mjs/)
+    // Türkiye's build is what it is on main: nothing of the country side in prebuild / build / postbuild.
+    for (const ad of ['prebuild', 'build', 'postbuild']) assert.doesNotMatch(pkg.scripts[ad] ?? '', /ulke/)
+    assert.equal(pkg.scripts['build:ulke'], 'node scripts/ulke-derle.mjs')
+    assert.match(readFileSync(join(KOK, 'scripts/ulke-derle.mjs'), 'utf8'), /kos\('npm', \['run', 'build'\], \{ NOTYA_ULKE_DERLEME: '1' \}\)[\s\S]*scripts\/ulke-derleme-kaniti\.mjs/)
+    assert.doesNotMatch(readFileSync(join(KOK, 'countries/tr/derleme.mjs'), 'utf8'), /^import /m)
+    // The gate a country's build file calls: walls, then the refusal of a bare `next build`.
+    const { ulkeDerlemeKapisi, nextDerlemesiMi } = await import(pathToFileURL(join(KOK, 'scripts/ulke-derleme-kapisi.mjs')).href) as { ulkeDerlemeKapisi: (kod: string, s?: { argv?: string[]; ortam?: Record<string, string | undefined> }) => void; nextDerlemesiMi: (argv: string[]) => boolean }
+    assert.equal(nextDerlemesiMi(['node', '/x/node_modules/.bin/next', 'build']), true)
+    for (const argv of [['node', '/x/node_modules/.bin/next', 'start'], ['node', '/x/node_modules/.bin/next', 'dev'], ['node', '/x/jest-worker/processChild.js'], ['node', '/x/scripts/ulke-derle.mjs'], ['node']]) assert.equal(nextDerlemesiMi(argv), false, argv.join(' '))
+    const derle = ['node', '/x/node_modules/.bin/next', 'build']
+    assert.throws(() => ulkeDerlemeKapisi('uz', { argv: derle, ortam: {} }), /npm run build:ulke[\s\S]*refused/)
+    assert.doesNotThrow(() => ulkeDerlemeKapisi('uz', { argv: derle, ortam: { NOTYA_ULKE_DERLEME: '1' } }))
+    assert.doesNotThrow(() => ulkeDerlemeKapisi('uz', { argv: ['node', '/x/node_modules/.bin/next', 'start'], ortam: {} }))
   })
 })
 

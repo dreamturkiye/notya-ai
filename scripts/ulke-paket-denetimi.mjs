@@ -2,9 +2,9 @@
 /**
  * NOTYA-ULKE-SABLON-01 — "TO BE SUPPLIED" SCAN, before a country is built.
  *
- * WHERE IT RUNS: from the country's own build file, countries/<code>/derleme.mjs, which calls `paketTamOlmali('<code>')`.
- * next.config.mjs loads that file ONLY for the country being built, so a build with no NOTYA_COUNTRY (Türkiye) never
- * runs this and `prebuild` in package.json does not mention it. By hand:
+ * WHERE IT RUNS: from the country's own build file, countries/<code>/derleme.mjs, through the gate every country
+ * build passes (scripts/ulke-derleme-kapisi.mjs). next.config.mjs loads that file ONLY for the country being built,
+ * so a build with no NOTYA_COUNTRY (Türkiye) never runs this and package.json does not mention it. By hand:
  *
  *   node scripts/ulke-paket-denetimi.mjs [--ulke <code>] [--kok <dir>] [--ozet]
  *
@@ -59,7 +59,7 @@ export function eksikListesi(kod, eksikler, ozet = false) {
 }
 
 /**
- * Called by countries/<code>/derleme.mjs. Stops whatever loaded that file (the build of THAT country) while anything
+ * Called by the country build gate (scripts/ulke-derleme-kapisi.mjs). Stops whatever loaded that file (the build of THAT country) while anything
  * in the pack is still marked, with the whole list as the message. There is no switch that lets it through.
  */
 export function paketTamOlmali(kod, kok = KOK) {

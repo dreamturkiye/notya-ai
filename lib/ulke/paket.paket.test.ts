@@ -110,12 +110,14 @@ describe('every pack is complete', () => {
     assert.ok(existsSync(join(KOK, 'scripts/ulke-paket-denetimi.mjs')), 'the scan for "to be supplied" markers is missing')
     // The scan runs from the country's OWN build file; the pre-split application (Türkiye) has no such call …
     const derleme = readFileSync(join(KOK, 'countries', paket.kod, 'derleme.mjs'), 'utf8')
-    if (paket.ozellikler.bolunmemisUygulama) assert.doesNotMatch(derleme, /^import |paketTamOlmali\(/m, 'the pre-split application\'s build file stays plain data')
-    else assert.match(derleme, new RegExp(`^paketTamOlmali\\('${paket.kod}'\\)$`, 'm'), `countries/${paket.kod}/derleme.mjs must call paketTamOlmali('${paket.kod}')`)
+    if (paket.ozellikler.bolunmemisUygulama) assert.doesNotMatch(derleme, /^import |paketTamOlmali\(|ulkeDerlemeKapisi\(/m, 'the pre-split application\'s build file stays plain data')
+    else assert.match(derleme, new RegExp(`^ulkeDerlemeKapisi\\('${paket.kod}'\\)$`, 'm'), `countries/${paket.kod}/derleme.mjs must call ulkeDerlemeKapisi('${paket.kod}')`)
     // … and package.json never runs it: what a build with no country set runs before and after `next build` is not this job's to change.
     const betikler = JSON.parse(readFileSync(join(KOK, 'package.json'), 'utf8')).scripts as Record<string, string>
-    for (const ad of ['prebuild', 'build', 'postbuild']) assert.doesNotMatch(betikler[ad] ?? '', /ulke-paket-denetimi/, `package.json "${ad}" must not run the pack scan`)
-    assert.equal(betikler.prebuild, 'node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs')
+    for (const ad of ['prebuild', 'build', 'postbuild']) assert.doesNotMatch(betikler[ad] ?? '', /ulke/, `package.json "${ad}" must not run a country check: a build with no country set runs what main runs`)
+    assert.equal(betikler.prebuild, 'node scripts/vad-varliklari.mjs')
+    assert.equal(betikler.postbuild, undefined)
+    assert.equal(betikler['build:ulke'], 'node scripts/ulke-derle.mjs')
     assert.equal(eksik('Today'), `${EKSIK_ISARETI} Today`)
     assert.match(EKSIK_ISARETI, /^⟦[A-Z]+⟧$/, 'the marker is bracketed in signs no catalogue uses, so it cannot be mistaken for content')
   })

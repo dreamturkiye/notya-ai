@@ -23,7 +23,7 @@
  *   export YURUYUS_DILLER=$(node -p "const p=require('/tmp/yuruyus/paket.json'); [p.dil, p.uygulamaDilleri.at(-1)].join()") \
  *          YURUYUS_STT_KODU=$(node -p "require('/tmp/yuruyus/paket.json').sttKodu")
  *   node scripts/ulke-yuruyus/sahte-supabase.mjs 54399 &
- *   npm run build && NODE_OPTIONS="--require $PWD/scripts/ulke-yuruyus/sahte-saglayicilar.cjs" npx next start -p 3111 &
+ *   npm run build:ulke && NODE_OPTIONS="--require $PWD/scripts/ulke-yuruyus/sahte-saglayicilar.cjs" npx next start -p 3111 &
  *   cd /tmp/yuruyus && PAKET=/tmp/yuruyus/paket.json node <repo>/scripts/ulke-yuruyus/genel.mjs
  *
  * Settings: PAKET (the JSON above, required), TABAN (http://localhost:3111), SUPA (http://127.0.0.1:54399), CIKTI (./cikti).

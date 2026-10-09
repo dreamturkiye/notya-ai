@@ -1,12 +1,13 @@
 /**
  * NOTYA-ULKE-01 — Uzbekistan, build-level facts. Read by next.config.mjs for an Uzbekistan build and by nothing else.
- * Plain data, so the config can load it before anything is compiled. Its one import is the "to be supplied" scan
- * (NOTYA-ULKE-SABLON-01): a pack with anything still marked cannot be built. It runs here — in the country's own
- * build file — and not in package.json, so a build with no country set never runs it.
+ * Plain data, so the config can load it before anything is compiled. Its one import is the gate every country build
+ * passes (NOTYA-ULKE-SABLON-01, scripts/ulke-derleme-kapisi.mjs): the pack scan, the wall check, and the rule that a
+ * country is built with `npm run build:ulke` so that the build proof runs. The gate is here — in the country's own
+ * build file — and not in package.json, so a build with no country set never meets it.
  */
-import { paketTamOlmali } from '../../scripts/ulke-paket-denetimi.mjs'
+import { ulkeDerlemeKapisi } from '../../scripts/ulke-derleme-kapisi.mjs'
 
-paketTamOlmali('uz')
+ulkeDerlemeKapisi('uz')
 
 const derleme = {
   kod: 'uz',

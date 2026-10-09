@@ -85,7 +85,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.match(index, /yolOnEki: '\/zz'/)
     assert.match(index, /araclar: \[\]/)
     for (const kapali of ['doktorAraclari', 'asistan', 'sesProfili', 'goruntuDegerlendirme', 'bolunmemisUygulama']) assert.doesNotMatch(index, new RegExp(`\\b${kapali}: true`), `${kapali} must be off in a new country`)
-    assert.match(oku('countries/zz/derleme.mjs'), /^paketTamOlmali\('zz'\)$/m)
+    assert.match(oku('countries/zz/derleme.mjs'), /^ulkeDerlemeKapisi\('zz'\)$/m)
     assert.match(oku('countries/zz/derleme.mjs'), /yolOnEki: '\/zz'/)
     assert.match(oku('countries/zz/klinik/index.ts'), /hukukcuInceledi: false/)
   })

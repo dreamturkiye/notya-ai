@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * NOTYA-ULKE-01 — proof, on the BUILD OUTPUT, that a build holds one country's pack and no other.
- * Runs as `postbuild` (so every build is checked) and can be run by hand after `next build` or `next dev`.
+ * Runs after every COUNTRY build: `npm run build:ulke` (scripts/ulke-derle.mjs) builds and then runs this, and a bare
+ * `next build` for a country is refused (scripts/ulke-derleme-kapisi.mjs). It can also be run by hand after any build.
+ * It is not a `postbuild` in package.json: a build with no country set runs what main runs, nothing more.
  *
  *   node scripts/ulke-derleme-kaniti.mjs [--dizin .next]
  *
