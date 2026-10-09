@@ -4,16 +4,21 @@
  * PATIENT ISOLATION (.cursor/skills/hasta-izolasyon/SKILL.md). Service-role client, so this file is the isolation:
  *   - the patient id comes from the request → proven to be THIS doctor's (hastaGetir: id and doctor in one query)
  *     BEFORE the recording is read or anything is written with it;
- *   - the recording's path comes from the request → it must lie in the folder named after THIS doctor's account id,
- *     checked as text before storage is touched (a path into another doctor's folder is refused, not looked up);
+ *   - the recording's path comes from the request → it must lie in THIS country's folder and, inside it, in the
+ *     folder named after THIS doctor's account id, checked as text before storage is touched (a path into another
+ *     doctor's or another country's folder is refused, not looked up);
  *   - a visit id from a request is read with the doctor's id in the same query; a foreign id is "not found".
  *
  * THE RECORDING IS NOT KEPT. Once the path is known to be the caller's own, every way out of `muayeneKaydet` removes
  * the audio from storage — success, refusal or failure. The clinical record is the transcript and the note.
  *
- * Storage: the core `sessions` table, written as the rest of the product writes it (so later core features find
- * these visits), plus `muayene_dil_kaydi` (migration 132) for what the core table has no place for: consent, the
- * predicted language and its probability, whether a second pass ran, and whether confidence stayed low.
+ * COUNTRY (lib/ulke/uygulama/tablolar.ts). Every statement is bound to this build's country, and so is the
+ * recording: it lies under `<country>/<account id>/` in the bucket, and a path under another country's folder is
+ * refused as text, exactly like a path under another doctor's.
+ *
+ * Storage (migration 132, country tables — never Türkiye's `sessions`): `ulke_muayeneler` holds the visit and its
+ * transcript; `muayene_dil_kaydi` holds consent, the predicted language and its probability, whether a second pass
+ * ran, and whether confidence stayed low.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { AKTIF_KLINIK } from '@/countries/active/klinik'
@@ -24,6 +29,7 @@ import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
 import { muayeneKotasiKullan } from './kota'
 import { randevuMuayeneyeUygun, randevuyuMuayeneyeBagla } from './randevular'
 import { hekimRolunuOku, uygulamaRolleri } from './rol'
+import { sesYoluGecerli, ulkeTablosu } from './tablolar'
 
 export type MuayeneGirdisi = {
   yol: string; hastaId: string; sablon: string; riza: boolean
@@ -57,15 +63,11 @@ export type MuayeneDetayi = {
   konusma: KonusmaOzeti | null
 }
 
-/** `<account id>/<file name>` and nothing else: no folders below, no dots that climb. */
-export function sesYoluGecerli(doktorId: string, yol: unknown): yol is string {
-  if (typeof yol !== 'string' || !yol.startsWith(`${doktorId}/`)) return false
-  return /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(yol.slice(doktorId.length + 1)) && !yol.includes('..')
-}
+export { sesYoluGecerli }
 
 /** The account's note language (and interface language), read by its own id. */
 export async function hekimDilleri(supabase: SupabaseClient, doktorId: string): Promise<{ arayuzDili: DilKodu; notDili: DilKodu }> {
-  const { data } = await supabase.from('users').select('ui_language').eq('id', doktorId).maybeSingle()
+  const { data } = await ulkeTablosu(supabase, 'ulke_hesaplari').select('ui_language').eq('id', doktorId).maybeSingle()
   const t = await dilTercihleriniOku(supabase, doktorId, (data as { ui_language?: unknown } | null)?.ui_language)
   return { arayuzDili: t.arayuzDili, notDili: t.notDili }
 }
@@ -104,17 +106,14 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     if (t.secilen.metin.length < klinik.konusma.asgariKarakter) return { tamam: false, kod: 'KISA_KAYIT' }
 
     const rizaAni = new Date().toISOString()
-    const { data: seans, error: seansHatasi } = await supabase
-      .from('sessions')
+    const { data: seans, error: seansHatasi } = await ulkeTablosu(supabase, 'ulke_muayeneler')
       .insert({
         doctor_id: doktorId,
         patient_id: hasta.id,
-        // The core table's own consent columns, so that core code reading a visit sees the consent too.
         patient_consent_given: true,
         patient_consent_at: rizaAni,
         ...(t.secilen.sureSn ? { duration_seconds: Math.round(t.secilen.sureSn) } : {}),
-        // Core columns keep the core's own identifiers: the template key, and the core's word for an ordinary visit
-        // (the only values its check constraint accepts are the pre-split application's). Neither is ever shown.
+        // Internal identifiers, never shown: the template key, and the kind of visit.
         specialty: g.sablon,
         session_type: 'muayene',
         status: 'completed',
@@ -125,7 +124,7 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     const seansId = (seans as { id?: string } | null)?.id
     if (seansHatasi || !seansId) return { tamam: false, kod: 'BASARISIZ' }
 
-    const { error: kayitHatasi } = await supabase.from('muayene_dil_kaydi').insert({
+    const { error: kayitHatasi } = await ulkeTablosu(supabase, 'muayene_dil_kaydi').insert({
       session_id: seansId,
       doctor_id: doktorId,
       patient_id: hasta.id,
@@ -146,7 +145,7 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     })
     if (kayitHatasi) {
       // A visit without its consent and language record is not kept.
-      try { await supabase.from('sessions').delete().eq('id', seansId).eq('doctor_id', doktorId) } catch { /* reported as a failure either way */ }
+      try { await ulkeTablosu(supabase, 'ulke_muayeneler').delete().eq('id', seansId).eq('doctor_id', doktorId) } catch { /* reported as a failure either way */ }
       return { tamam: false, kod: 'BASARISIZ' }
     }
     // The visit is stored; now the appointment points at it. If the appointment was cancelled or finished meanwhile
@@ -175,16 +174,15 @@ export function konusmaOzeti(k: KayitSatiri | null | undefined): KonusmaOzeti | 
 
 /** One visit of THIS doctor with its transcript, or null — for a foreign id exactly as for one that does not exist. */
 export async function muayeneGetir(supabase: SupabaseClient, doktorId: string, seansId: string): Promise<MuayeneDetayi | null> {
-  const { data: s, error } = await supabase
-    .from('sessions')
+  const { data: s, error } = await ulkeTablosu(supabase, 'ulke_muayeneler')
     .select('id, patient_id, started_at, created_at, specialty, transcript_cleaned')
     .eq('id', seansId)
     .eq('doctor_id', doktorId)
     .maybeSingle()
   if (error || !s) return null
   const seans = s as { id: string; patient_id: string | null; started_at: string | null; created_at: string | null; specialty: string | null; transcript_cleaned: string | null }
-  const { data: kayit } = await supabase.from('muayene_dil_kaydi').select('taninan_dil, dil_olasiligi, ikinci_gecis, dusuk_guven').eq('session_id', seansId).eq('doctor_id', doktorId).maybeSingle()
-  const { data: notlar } = await supabase.from('notes').select('id, approved_at').eq('session_id', seansId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(1)
+  const { data: kayit } = await ulkeTablosu(supabase, 'muayene_dil_kaydi').select('taninan_dil, dil_olasiligi, ikinci_gecis, dusuk_guven').eq('session_id', seansId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: notlar } = await ulkeTablosu(supabase, 'ulke_notlar').select('id, approved_at').eq('session_id', seansId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(1)
   const not = ((notlar as { id: string; approved_at: string | null }[] | null) ?? [])[0]
   // The patient is read by doctor AND id: a visit row pointing at somebody else's patient shows no patient.
   const hasta = seans.patient_id ? await hastaGetir(supabase, doktorId, seans.patient_id) : null

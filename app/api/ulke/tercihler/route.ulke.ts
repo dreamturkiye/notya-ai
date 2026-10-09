@@ -16,6 +16,7 @@ import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik, uygulamaDiliMi } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD } from '@/lib/ulke/uygulama/cevap'
 import { dilTercihleriniYaz } from '@/lib/ulke/uygulama/dilTercihleri'
+import { hesapSaatDiliminiYaz, saatDilimiMi } from '@/lib/ulke/uygulama/saatDilimi'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +27,12 @@ export const POST = sinirda('tercihler POST', async (req: NextRequest) => {
   const g = await govdeOku(req)
   if (!uygulamaDiliMi(g.arayuzDili)) return KOD.gecersiz('arayuzDili')
   if (!uygulamaDiliMi(g.notDili)) return KOD.gecersiz('notDili')
+  // NOTYA-ULKE-SABLON-01: the account's time zone, where the country has more than one. Optional; when sent it must
+  // be one of the pack's zones — checked BEFORE anything is written, so a refused request changes nothing.
+  const dilimVar = g.saatDilimi !== undefined && g.saatDilimi !== null
+  if (dilimVar && !saatDilimiMi(g.saatDilimi)) return KOD.gecersiz('saatDilimi')
   const tamam = await dilTercihleriniYaz(oturum.supabase, oturum.user.id, { arayuzDili: g.arayuzDili, notDili: g.notDili })
   if (!tamam) return KOD.basarisiz()
-  return cevap({ ok: true, dil: g.arayuzDili, notDili: g.notDili })
+  if (dilimVar && !(await hesapSaatDiliminiYaz(oturum.supabase, oturum.user.id, g.saatDilimi))) return KOD.basarisiz()
+  return cevap({ ok: true, dil: g.arayuzDili, notDili: g.notDili, ...(dilimVar ? { saatDilimi: g.saatDilimi } : {}) })
 })

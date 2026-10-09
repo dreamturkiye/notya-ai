@@ -20,6 +20,7 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD } from '@/lib/ulke/uygulama/cevap'
 import { calismaDuzeniniOku, calismaDuzeniniYaz, duzenCoz, sureSecenekleri, type CalismaDuzeni } from '@/lib/ulke/uygulama/calismaDuzeni'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
+import { hesapSaatDilimi } from '@/lib/ulke/uygulama/saatDilimi'
 import { saatYazDk } from '@/lib/ulke/uygulama/zaman'
 
 export const dynamic = 'force-dynamic'
@@ -37,7 +38,7 @@ export const GET = sinirda('calisma-duzeni GET', async (req: NextRequest) => {
   const d = await calismaDuzeniniOku(oturum.supabase, oturum.user.id)
   if (!d) return KOD.yok()
   const p = ulkePaketi()
-  return cevap({ duzen: disari(d.duzen), kayitli: d.kayitli, sureSecenekleri: sureSecenekleri(), haftaBasi: p.bicim.haftaBasi, tarihDeseni: p.bicim.tarihDeseni, bugun: ulkeGunu() })
+  return cevap({ duzen: disari(d.duzen), kayitli: d.kayitli, sureSecenekleri: sureSecenekleri(), haftaBasi: p.bicim.haftaBasi, tarihDeseni: p.bicim.tarihDeseni, bugun: ulkeGunu(new Date(), await hesapSaatDilimi(oturum.supabase, oturum.user.id)) })
 })
 
 export const POST = sinirda('calisma-duzeni POST', async (req: NextRequest) => {

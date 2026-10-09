@@ -94,11 +94,11 @@ function sifirla() {
     'jeton-c': { id: C, email: 'qa-c@notya.test', app_metadata: { country: 'uz' } },
     'jeton-tr': { id: '10000000-0000-4000-8000-00000000000d', email: 'qa-tr@notya.test', app_metadata: { country: 'tr' } },
   })
-  vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' }, { id: C, full_name: 'QA Шифокор В', country: 'uz', ui_language: 'uz-Cyrl' })
+  vt.tablo('ulke_hesaplari').push({ id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', ulke: 'uz', ui_language: 'ru' }, { id: C, full_name: 'QA Шифокор В', ulke: 'uz', ui_language: 'uz-Cyrl' })
   // A: Uzbek Latin everywhere. B: Russian everywhere. C: reads the application in Uzbek Cyrillic, writes notes in Russian.
-  vt.tablo('hekim_dil_tercihleri').push({ doctor_id: A, not_dili: 'uz-Latn', soruldu_at: 'x' }, { doctor_id: B, not_dili: 'ru', soruldu_at: 'x' }, { doctor_id: C, not_dili: 'ru', soruldu_at: 'x' })
+  vt.tablo('hekim_dil_tercihleri').push({ ulke: 'uz', doctor_id: A, not_dili: 'uz-Latn', soruldu_at: 'x' }, { ulke: 'uz', doctor_id: B, not_dili: 'ru', soruldu_at: 'x' }, { ulke: 'uz', doctor_id: C, not_dili: 'ru', soruldu_at: 'x' })
   // NOTYA-UZ-BRANSLAR-01: the template is the account's role. All three are paediatricians here.
-  vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'pediatri' }, { doctor_id: B, rol: 'pediatri' }, { doctor_id: C, rol: 'pediatri' })
+  vt.tablo('hekim_rolu').push({ ulke: 'uz', doctor_id: A, rol: 'pediatri' }, { ulke: 'uz', doctor_id: B, rol: 'pediatri' }, { ulke: 'uz', doctor_id: C, rol: 'pediatri' })
 }
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
@@ -137,8 +137,8 @@ const hastaEkle = async (jeton: string, ad: string, dil = 'uz') => (await oku(aw
 /** A recorded visit of `doktor` for a new patient. */
 async function muayeneYap(jeton: string, doktor: string, ad = 'QA Karimova Dilnoza') {
   const hasta = await hastaEkle(jeton, ad)
-  vt.depo.set(`muayene-sesleri/${doktor}/k.webm`, new Blob(['sentetik ses']))
-  const r = await oku(await R.muayene.POST(istek('/api/ulke/muayene', jeton, { yol: `${doktor}/k.webm`, hastaId: hasta, sablon: 'pediatri', riza: true })))
+  vt.depo.set(`muayene-sesleri/uz/${doktor}/k.webm`, new Blob(['sentetik ses']))
+  const r = await oku(await R.muayene.POST(istek('/api/ulke/muayene', jeton, { yol: `uz/${doktor}/k.webm`, hastaId: hasta, sablon: 'pediatri', riza: true })))
   assert.equal(r.s, 200)
   return { hasta, seans: r.j.seansId as string }
 }
@@ -302,7 +302,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.equal(c.kullanici, `BEMOR: yoshi — 5 yosh; jinsi — ayol.\n${MINOR_LAT}\n\nSUHBAT MATNI:\n${UZ_METIN}`)
     for (const gizli of ['Karimova', 'Dilnoza', '+998', '00000000000001', m.hasta, A, m.seans]) assert.ok(!`${c.sistem}\n${c.kullanici}`.includes(gizli), `sent to the model: ${gizli}`)
     // Stored: a DRAFT in the core notes table, its language beside it.
-    const [n] = vt.tablo('notes')
+    const [n] = vt.tablo('ulke_notlar')
     assert.deepEqual([n.id, n.session_id, n.doctor_id, n.note_type, n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.approved_at ?? null, n.ai_model], [r.j.notId, m.seans, A, 'soap', UZ_NOT.s, UZ_NOT.o, UZ_NOT.a, UZ_NOT.p, null, R.modelSec('soap').model])
     const [d] = vt.tablo('not_dil_kaydi')
     assert.deepEqual([d.note_id, d.doctor_id, d.patient_id, d.not_dili, d.ikinci_dil ?? null], [r.j.notId, A, m.hasta, 'uz-Latn', null])
@@ -312,7 +312,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.doesNotMatch(JSON.stringify(vt.tablo('ai_token_kullanim')), new RegExp(`${m.hasta}|isitma|Karimova`))
     // Once per visit: asked again, the same note, and nobody is called.
     assert.deepEqual((await notYaz('jeton-a', m.seans)).j, { notId: r.j.notId })
-    assert.equal(model.cagrilar.length, 1); assert.equal(vt.tablo('notes').length, 1)
+    assert.equal(model.cagrilar.length, 1); assert.equal(vt.tablo('ulke_notlar').length, 1)
     // The home and the patient file now show a draft.
     const bugun = await oku(await R.bugun.GET(istek('/api/ulke/bugun', 'jeton-a')))
     assert.deepEqual(bugun.j.muayeneler.map((x: Record<string, unknown>) => [x.notId, x.durum]), [[r.j.notId, 'taslak']])
@@ -363,7 +363,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.equal(c.kullanici, `ЗАПИСЬ:\n${JSON.stringify(duzeltilmis)}`)
     assert.equal(c.veriToplama, 'deny')
     // Beside the note, not over it.
-    const [n] = vt.tablo('notes')
+    const [n] = vt.tablo('ulke_notlar')
     assert.deepEqual([n.content_subjektif, n.content_plan, n.approved_at ?? null], [UZ_NOT.s, duzeltilmis.p, null])
     const [d] = vt.tablo('not_dil_kaydi')
     assert.deepEqual([d.not_dili, d.ikinci_dil, d.ikinci_s, d.ikinci_o, d.ikinci_a, d.ikinci_p], ['uz-Latn', 'ru', RU_NOT.s, RU_NOT.o, RU_NOT.a, RU_NOT.p])
@@ -397,7 +397,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const ekrandaki = { ...RU_NOT, p: 'Парацетамол 250 мг, повторный приём через три дня.' }
     const r = await onayla('jeton-a', { notId: v.notId, dil: 'ru', ...ekrandaki })
     assert.equal(r.s, 200); assert.equal(r.j.ok, true); assert.match(r.j.onayTarihi, /^\d{4}-\d{2}-\d{2}T/)
-    const [n] = vt.tablo('notes')
+    const [n] = vt.tablo('ulke_notlar')
     assert.deepEqual([n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.approved_at, n.approved_by], [ekrandaki.s, ekrandaki.o, ekrandaki.a, ekrandaki.p, r.j.onayTarihi, A])
     const [d] = vt.tablo('not_dil_kaydi')
     assert.deepEqual([d.not_dili, d.ikinci_dil, d.ikinci_s, d.ikinci_p], ['ru', 'uz-Latn', UZ_NOT.s, UZ_NOT.p], 'the draft that was not chosen is kept')
@@ -413,7 +413,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const v = await notluMuayene()
     const onaylanan = { ...UZ_NOT, a: 'Oʻtkir respirator infeksiya.' }
     assert.equal((await onayla('jeton-a', { notId: v.notId, dil: 'uz-Latn', ...onaylanan })).s, 200)
-    const once = JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')])
+    const once = JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')])
     model.cevaplar = [RU_NOT, RU_NOT]
     for (const [ad, r] of [
       ['save', await kaydet('jeton-a', { notId: v.notId, dil: 'uz-Latn', s: 'OʻZGARTIRILDI', o: '', a: '', p: '' })],
@@ -421,11 +421,11 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
       ['approve another language', await onayla('jeton-a', { notId: v.notId, dil: 'ru', ...RU_NOT })],
       ['rewrite', await yenidenYaz('jeton-a', v.notId)],
     ] as const) assert.deepEqual(r, { s: 409, j: { code: 'ONAYLI' } }, ad)
-    assert.equal(JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')]), once)
+    assert.equal(JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')]), once)
     assert.equal(model.cagrilar.length, 0, 'no model call for an approved note')
     // The guard is in the WRITE itself, not only in a check before it: every statement that can change a note's text
     // carries "approved_at IS NULL".
-    const yazmalar = vt.sorgular.filter((q) => q.tablo === 'notes' && (q.islem === 'update' || q.islem === 'delete'))
+    const yazmalar = vt.sorgular.filter((q) => q.tablo === 'ulke_notlar' && (q.islem === 'update' || q.islem === 'delete'))
     for (const q of yazmalar) assert.ok(q.filtreler.includes('approved_at=is.null') && q.filtreler.includes(`doctor_id=eq.${A}`), JSON.stringify(q))
     // NOTYA-UZ-RANDEVU-01: approval itself is no statement of the application any more — it is the one database
     // function (the first approval above). The two later attempts were refused before it; the race below is refused BY it.
@@ -439,26 +439,26 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     ;(sb as { from: unknown }).from = (ad: string) => {
       const q = gercekFrom(ad)
       // Right after the first read of the note, "another request" approves it.
-      if (ad === 'notes' && ilkOkuma) { ilkOkuma = false; const satir = vt.tablo('notes').find((x) => x.id === v2.notId)!; queueMicrotask(() => { satir.approved_at = '2026-10-08T10:00:00Z'; satir.content_plan = 'TASDIQLANGAN REJA' }) }
+      if (ad === 'ulke_notlar' && ilkOkuma) { ilkOkuma = false; const satir = vt.tablo('ulke_notlar').find((x) => x.id === v2.notId)!; queueMicrotask(() => { satir.approved_at = '2026-10-08T10:00:00Z'; satir.content_plan = 'TASDIQLANGAN REJA' }) }
       return q
     }
     assert.deepEqual(await notKaydet(sb, A, v2.notId, 'uz-Latn', { s: 'KECH', o: '', a: '', p: 'KECH' }), { tamam: false, kod: 'ONAYLI' })
-    assert.equal(vt.tablo('notes').find((x) => x.id === v2.notId)!.content_plan, 'TASDIQLANGAN REJA')
+    assert.equal(vt.tablo('ulke_notlar').find((x) => x.id === v2.notId)!.content_plan, 'TASDIQLANGAN REJA')
     assert.deepEqual(await notOnayla(sb, A, v2.notId, 'uz-Latn', { s: 'KECH', o: 'x', a: 'x', p: 'KECH' }), { tamam: false, kod: 'ONAYLI' })
-    assert.equal(vt.tablo('notes').find((x) => x.id === v2.notId)!.content_plan, 'TASDIQLANGAN REJA')
+    assert.equal(vt.tablo('ulke_notlar').find((x) => x.id === v2.notId)!.content_plan, 'TASDIQLANGAN REJA')
     // The same race against the function: the note is approved after notOnayla has read it and before the function runs.
     const v3 = await notluMuayene()
     ;(sb as { from: unknown }).from = gercekFrom
     const gercekRpc = (sb as unknown as { rpc: (ad: string, arg: Record<string, unknown>) => Promise<unknown> }).rpc
     ;(sb as unknown as { rpc: unknown }).rpc = (ad: string, arg: Record<string, unknown>) => {
-      const satir = vt.tablo('notes').find((x) => x.id === v3.notId)!
+      const satir = vt.tablo('ulke_notlar').find((x) => x.id === v3.notId)!
       satir.approved_at = '2026-10-08T10:00:00Z'; satir.content_plan = 'TASDIQLANGAN REJA'
       return gercekRpc(ad, arg)
     }
     const cagriSayisi = vt.islevCagrilari.length
     assert.deepEqual(await notOnayla(sb, A, v3.notId, 'uz-Latn', { s: 'KECH', o: 'x', a: 'x', p: 'KECH' }), { tamam: false, kod: 'ONAYLI' })
     assert.equal(vt.islevCagrilari.length, cagriSayisi + 1, 'this refusal came from the function')
-    assert.equal(vt.tablo('notes').find((x) => x.id === v3.notId)!.content_plan, 'TASDIQLANGAN REJA')
+    assert.equal(vt.tablo('ulke_notlar').find((x) => x.id === v3.notId)!.content_plan, 'TASDIQLANGAN REJA')
   })
 
   it('APPROVAL IS ALL OR NOTHING (NOTYA-UZ-RANDEVU-01): one call to one database function; a failure in the middle leaves the note unapproved and unchanged', async () => {
@@ -471,18 +471,18 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     model.cevaplar = [JSON.stringify({ ...UZ_NOT, fields: taslak })]
     const notId = (await notYaz('jeton-a', m.seans)).j.notId as string
     assert.deepEqual(vt.tablo('not_dil_kaydi')[0].alanlar, taslak)
-    const durum = () => JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')])
+    const durum = () => JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')])
     const yazmalar = () => vt.sorgular.filter((q) => q.islem !== 'select').map((q) => `${q.islem} ${q.tablo}`)
     const once = durum()
     const govde = { notId, dil: 'uz-Latn', ...UZ_NOT, a: 'EKRANDAGI TASHXIS', alanlar: ekran }
 
     // 1. The function fails at its SECOND statement (the role fields), after it has written the text and the approval.
-    for (const bozuk of ['not_dil_kaydi', 'notes']) {
+    for (const bozuk of ['not_dil_kaydi', 'ulke_notlar']) {
       vt.sorgular.length = 0; vt.boz.yaz.add(bozuk)
       assert.deepEqual(await onayla('jeton-a', govde), { s: 500, j: { code: 'BASARISIZ' } }, bozuk)
       vt.boz.yaz.clear()
       assert.equal(durum(), once, `${bozuk}: a failed approval changed a row`)
-      assert.equal(vt.tablo('notes')[0].approved_at ?? null, null)
+      assert.equal(vt.tablo('ulke_notlar')[0].approved_at ?? null, null)
       // The application's whole part in an approval is ONE call. There is no statement before it or after it that
       // could succeed on its own.
       assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'], bozuk)
@@ -498,7 +498,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.deepEqual(await onayla('jeton-a', { notId, dil: 'ru', ...RU_NOT }), { s: 500, j: { code: 'BASARISIZ' } })
     vt.boz.yaz.clear()
     assert.equal(durum(), ikiTaslak, 'a failed approval of the second draft changed a row')
-    assert.deepEqual([vt.tablo('not_dil_kaydi')[0].not_dili, vt.tablo('not_dil_kaydi')[0].ikinci_dil, vt.tablo('notes')[0].approved_at ?? null], ['uz-Latn', 'ru', null])
+    assert.deepEqual([vt.tablo('not_dil_kaydi')[0].not_dili, vt.tablo('not_dil_kaydi')[0].ikinci_dil, vt.tablo('ulke_notlar')[0].approved_at ?? null], ['uz-Latn', 'ru', null])
     assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'])
 
     // 3. The same request again, with nothing failing: approved, with the text and the fields as they stand on the screen.
@@ -506,20 +506,25 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const r = await onayla('jeton-a', govde)
     assert.equal(r.s, 200)
     assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'])
-    const [n] = vt.tablo('notes'); const [d] = vt.tablo('not_dil_kaydi')
+    const [n] = vt.tablo('ulke_notlar'); const [d] = vt.tablo('not_dil_kaydi')
     assert.deepEqual([n.content_degerlendirme, n.approved_at, n.approved_by, d.alanlar, d.not_dili], ['EKRANDAGI TASHXIS', r.j.onayTarihi, A, ekran, 'uz-Latn'])
   })
 
   it('APPROVAL IS ALL OR NOTHING: the code has no second statement, and the migration\'s function is one transaction closed to the browser', async () => {
     const kaynak = readFileSync(join(KOK, 'lib/ulke/uygulama/notlar.ts'), 'utf8')
     const govde = kaynak.slice(kaynak.indexOf('export async function notOnayla'))
-    assert.equal(govde.match(/supabase\.rpc\(/g)?.length, 1)
+    // ONE call, through the country-bound door (lib/ulke/uygulama/tablolar.ts), which adds `p_ulke` itself.
+    assert.equal(govde.match(/ulkeIslevi\(supabase, NOT_ONAY_ISLEVI,/g)?.length, 1)
+    assert.doesNotMatch(govde, /supabase\.rpc\(|\.from\(/, 'notOnayla reaches the database past the country-bound door')
     assert.doesNotMatch(govde, /\.(update|insert|upsert|delete)\(/, 'notOnayla writes to a table by itself')
     const sql = readFileSync(join(KOK, 'lib/db/migrations/135_ulke_randevu.sql'), 'utf8')
     const islev = sql.slice(sql.indexOf('create or replace function public.ulke_not_onayla'), sql.indexOf('revoke all on function public.ulke_not_onayla'))
     assert.match(islev, /language plpgsql/)
     // All three writes are inside the one function body …
-    for (const tablo of ['public.notes', 'public.not_dil_kaydi', 'public.ulke_randevulari']) assert.ok(islev.includes(`update ${tablo}`), tablo)
+    for (const tablo of ['public.ulke_notlar', 'public.not_dil_kaydi', 'public.ulke_randevulari']) assert.ok(islev.includes(`update ${tablo}`), tablo)
+    // SHARED DATABASE: the function touches country tables only, and each of its four statements names the country.
+    assert.doesNotMatch(islev, /public\.(notes|sessions|patients|users)\b/, 'the function reads or writes a table of Türkiye')
+    assert.equal(islev.match(/\bulke = p_ulke\b/g)?.length, 4, 'the lock on the note, the write of the note, the language record and the appointment each carry p_ulke')
     assert.match(islev, /approved_at is null/)
     // … and nothing in it can keep half of them: no handler that swallows a failure, no commit of its own.
     assert.doesNotMatch(islev.replace(/--[^\n]*/g, ''), /\bexception\s+when\b|\bcommit\b|\bsavepoint\b/i)
@@ -532,10 +537,10 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const v = await notluMuayene()
     assert.deepEqual(await onayla('jeton-a', { notId: v.notId, dil: 'uz-Latn', s: '  ', o: '', a: '\n', p: '' }), { s: 400, j: { code: 'BOS' } })
     assert.deepEqual(await onayla('jeton-a', { notId: v.notId, dil: 'uz-Latn' }), { s: 400, j: { code: 'BOS' } })
-    assert.equal(vt.tablo('notes')[0].approved_at ?? null, null)
+    assert.equal(vt.tablo('ulke_notlar')[0].approved_at ?? null, null)
     assert.deepEqual(await onayla('jeton-a', { notId: v.notId, dil: 'ru', ...RU_NOT }), { s: 400, j: { code: 'GECERSIZ', alan: 'dil' } }, 'there is no Russian draft to approve')
     assert.equal((await onayla('jeton-a', { notId: v.notId, dil: 'uz-Latn', ...UZ_NOT, s: 'Shifokor tuzatgan matn.' })).s, 200)
-    assert.equal(vt.tablo('notes')[0].content_subjektif, 'Shifokor tuzatgan matn.')
+    assert.equal(vt.tablo('ulke_notlar')[0].content_subjektif, 'Shifokor tuzatgan matn.')
     assert.equal(vt.tablo('not_dil_kaydi')[0].not_dili, 'uz-Latn')
   })
 
@@ -548,27 +553,27 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     assert.equal(model.cagrilar.length, 3, 'the gateway\'s own gates ran: primary, primary, guard')
     assert.deepEqual(gunluk.filter((g) => g.startsWith('[ulke/')), ['[ulke/not] soap: gateway 500'])
     for (const g of gunluk) { assert.doesNotMatch(g, /Karimova|Dilnoza|isitma/, `patient text in a log line: ${g}`); assert.doesNotMatch(g, /Sağlayıcı/, `the provider's message in a log line: ${g}`) }
-    assert.deepEqual([vt.tablo('notes'), vt.tablo('not_dil_kaydi')], [[], []])
-    assert.equal(vt.tablo('sessions')[0].transcript_cleaned, UZ_METIN, 'the visit and its transcript are kept')
+    assert.deepEqual([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')], [[], []])
+    assert.equal(vt.tablo('ulke_muayeneler')[0].transcript_cleaned, UZ_METIN, 'the visit and its transcript are kept')
     // An answer that is not a note (twice: primary, then the guard) is not stored as one.
     R.devreSifirla(); model.cagrilar = []
     model.cevaplar = ['Kechirasiz, yordam bera olmayman.', 'Bu JSON emas.']
     assert.deepEqual((await sessiz(() => notYaz('jeton-a', m.seans))).sonuc, { s: 502, j: { code: 'NOT_YAZILAMADI' } })
-    assert.deepEqual(vt.tablo('notes'), [])
+    assert.deepEqual(vt.tablo('ulke_notlar'), [])
     // What the doctor reads for that code, and the way to ask again.
-    const M = await import('./metinler'); const Muayene = await import('./Muayene')
+    const M = await import('./metinler'); const Muayene = await import('@/components/ulke/uygulama/Muayene')
     for (const f of FORMLAR) assert.equal(Muayene.muayeneHataMetni(M.uygulamaMetni(f), 'NOT_YAZILAMADI'), M.uygulamaMetni(f).muayene.notYazilamadi)
     R.devreSifirla(); model.cagrilar = []
     model.cevaplar = [UZ_NOT]
     assert.equal((await sessiz(() => notYaz('jeton-a', m.seans))).sonuc.s, 200)
-    assert.equal(vt.tablo('notes').length, 1)
+    assert.equal(vt.tablo('ulke_notlar').length, 1)
     // The same for a rewrite: a code, and the note is unchanged.
     R.devreSifirla(); model.cagrilar = []
-    const notId = vt.tablo('notes')[0].id as string
+    const notId = vt.tablo('ulke_notlar')[0].id as string
     model.cevaplar = [503, 503, 503]
-    const once = JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')])
+    const once = JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')])
     assert.deepEqual((await sessiz(() => yenidenYaz('jeton-a', notId))).sonuc, { s: 502, j: { code: 'YENIDEN_YAZILAMADI' } })
-    assert.equal(JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')]), once)
+    assert.equal(JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')]), once)
   })
 
   it('a note whose language record cannot be written is not kept', async () => {
@@ -576,7 +581,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     model.cevaplar = [UZ_NOT]
     vt.boz.yaz.add('not_dil_kaydi')
     assert.deepEqual((await sessiz(() => notYaz('jeton-a', m.seans))).sonuc, { s: 500, j: { code: 'BASARISIZ' } })
-    assert.deepEqual(vt.tablo('notes'), [])
+    assert.deepEqual(vt.tablo('ulke_notlar'), [])
   })
 
   it('ISOLATION: a doctor cannot read, write for, save, rewrite or approve another doctor\'s visit or note — both directions', async () => {
@@ -584,7 +589,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const b = await notluMuayene('jeton-b', B, { ...RU_NOT, s: 'GIZLI-B жалобы' })
     const yokId = '30000000-0000-4000-8000-00000000dead'
     for (const [jeton, kendi, yabanci, dil] of [['jeton-a', a, b, 'uz-Latn'], ['jeton-b', b, a, 'ru']] as const) {
-      const once = JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')])
+      const once = JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')])
       model.cagrilar = []; model.cevaplar = []
       // Positive control: the routes do work — on the caller's own note.
       assert.equal((await notOku(jeton, kendi.notId)).s, 200)
@@ -600,11 +605,11 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
         assert.equal(r.status, 404, `${jeton} ${ad}`); assert.equal(govde, '{"code":"NOT_FOUND"}', `${jeton} ${ad}`)
         assert.equal(await (await olmayana()).text(), govde, `${jeton} ${ad}: a foreign id and a missing id must answer alike`)
       }
-      assert.equal(JSON.stringify([vt.tablo('notes'), vt.tablo('not_dil_kaydi')]), once, `${jeton} changed something`)
+      assert.equal(JSON.stringify([vt.tablo('ulke_notlar'), vt.tablo('not_dil_kaydi')]), once, `${jeton} changed something`)
       assert.equal(model.cagrilar.length, 0, `${jeton}: the model was called with another doctor's visit`)
     }
     // Every read or change of a note table carried the caller's id.
-    const tablolar = new Set(['notes', 'not_dil_kaydi', 'sessions', 'muayene_dil_kaydi', 'patients', 'hasta_ulke_bilgisi'])
+    const tablolar = new Set(['ulke_notlar', 'not_dil_kaydi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_hastalar', 'hasta_ulke_bilgisi'])
     for (const q of vt.sorgular.filter((x) => tablolar.has(x.tablo) && x.islem !== 'insert')) assert.ok(q.filtreler.some((f) => f === `doctor_id=eq.${A}` || f === `doctor_id=eq.${B}`), `a query on ${q.tablo} without the doctor: ${JSON.stringify(q)}`)
     for (const jeton of [undefined, 'jeton-olmayan', 'jeton-tr']) {
       for (const r of [await R.not.GET(istek(`/api/ulke/not?id=${a.notId}`, jeton)), await R.not.POST(istek('/api/ulke/not', jeton, { seansId: a.seans })), await R.yeniden.POST(istek('/api/ulke/not/yeniden-yaz', jeton, { notId: a.notId })), await R.onayla.POST(istek('/api/ulke/not/onayla', jeton, { notId: a.notId, dil: 'uz-Latn', ...UZ_NOT }))]) {
@@ -615,14 +620,14 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
 })
 
 describe('Uzbekistan note: screens in the three forms', () => {
-  let Kabuk: typeof import('./Kabuk')
-  let Not: typeof import('./Not')
-  let Muayene: typeof import('./Muayene')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+  let Not: typeof import('@/components/ulke/uygulama/Not')
+  let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
   let M: typeof import('./metinler')
   let Layout: typeof import('../../../app/layout.ulke')
   let ACIK: readonly string[] = []
   before(async () => {
-    Kabuk = await import('./Kabuk'); Not = await import('./Not'); Muayene = await import('./Muayene'); M = await import('./metinler'); Layout = await import('../../../app/layout.ulke')
+    Kabuk = await import('@/components/ulke/uygulama/Kabuk'); Not = await import('@/components/ulke/uygulama/Not'); Muayene = await import('@/components/ulke/uygulama/Muayene'); M = await import('./metinler'); Layout = await import('../../../app/layout.ulke')
     const izin = (await import('@/lib/ulke/ulke')).ulkePaketi().rotalar
     if (izin !== 'hepsi') ACIK = izin.sayfalar
   })
@@ -641,22 +646,22 @@ describe('Uzbekistan note: screens in the three forms', () => {
   const HASTA = { id: '30000000-0000-4000-8000-000000000001', ad: 'QA Karimova Dilnoza', otaIsmi: 'Rustam qizi', dogumTarihi: '2021-03-07' }
   const muayene = (dusukGuven: boolean, notId: string | null = 'n1') => ({ seansId: 's1', baslangic: '2026-10-08T04:30:00Z', sablon: 'pediatri', metin: UZ_METIN, hasta: HASTA, notId, notDurumu: (notId ? 'taslak' : 'notsuz') as 'taslak' | 'notsuz', konusma: { dil: 'uz', dilKesin: true, ikinciGecis: dusukGuven, dusukGuven } })
   const bos = () => {}
-  const ciz = (f: (typeof FORMLAR)[number], not: import('./Not').NotDetayi, ek: Partial<Parameters<typeof import('./Not').NotGorunumu>[0]> = {}) =>
+  const ciz = (f: (typeof FORMLAR)[number], not: import('@/components/ulke/uygulama/Not').NotDetayi, ek: Partial<Parameters<typeof import('@/components/ulke/uygulama/Not').NotGorunumu>[0]> = {}) =>
     cerceve(f, React.createElement(Not.NotGorunumu, { m: M.uygulamaMetni(f), not, aktifDil: not.dil, setAktifDil: bos, icerik: not.icerik, setIcerik: bos, islem: null, bildirim: null, kaydet: bos, yenidenYaz: bos, onayla: bos, ...ek }))
-  const TASLAK: import('./Not').NotDetayi = { notId: 'n1', seansId: 's1', onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', muayene: muayene(false) }
+  const TASLAK: import('@/components/ulke/uygulama/Not').NotDetayi = { notId: 'n1', seansId: 's1', onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', muayene: muayene(false) }
 
   for (const f of FORMLAR) {
     it(`${f}: the draft — four sections to edit, save, rewrite in the other language, approve; the model wrote it and the doctor must read it`, () => {
       const m = M.uygulamaMetni(f)
       const html = ciz(f, TASLAK)
       const g = gorunurMetin(html)
-      for (const x of [m.not.baslik, 'QA Karimova Dilnoza Rustam qizi', '08.10.2026', m.durum.taslak, m.not.uyari, m.not.s, m.not.o, m.not.a, m.not.p, m.not.notDili, m.diller.uz, m.not.kaydet, m.not.cevirRu, m.not.onayla, m.not.transkript, m.not.dosyayaDon, UZ_NOT.s, UZ_METIN]) assert.ok(g.includes(x), x)
+      for (const x of [m.not.baslik, 'QA Karimova Dilnoza Rustam qizi', '08.10.2026', m.durum.taslak, m.not.uyari, m.not.s, m.not.o, m.not.a, m.not.p, m.not.notDili, m.diller.uz, m.not.kaydet, m.not.cevir.ru, m.not.onayla, m.not.transkript, m.not.dosyayaDon, UZ_NOT.s, UZ_METIN]) assert.ok(g.includes(x), x)
       assert.deepEqual([...html.matchAll(/<textarea id="uza-not-([soap])" name="[soap]" class="uza-girdi" lang="uz-Latn">/g)].map((x) => x[1]), ['s', 'o', 'a', 'p'])
       assert.deepEqual([...html.matchAll(/data-eylem="([a-z-]+)"/g)].map((x) => x[1]), ['onayla', 'kaydet', 'yeniden-yaz'])
       assert.ok(!g.includes(m.muayene.dusukGuven), 'no low-confidence notice for a confident recording')
       ekranTemiz(html, `/visit?not= draft (${f})`)
       // A Russian note offers the rewrite in Uzbek.
-      assert.ok(gorunurMetin(ciz(f, { ...TASLAK, dil: 'ru', icerik: RU_NOT, yenidenYazilabilir: 'uz-Latn' })).includes(m.not.cevirUz))
+      assert.ok(gorunurMetin(ciz(f, { ...TASLAK, dil: 'ru', icerik: RU_NOT, yenidenYazilabilir: 'uz-Latn' })).includes(m.not.cevir.uz))
     })
 
     it(`${f}: LOW CONFIDENCE — a plain notice asks the doctor to check the note carefully; the note is still there`, () => {
@@ -699,7 +704,7 @@ describe('Uzbekistan note: screens in the three forms', () => {
       const g = gorunurMetin(html)
       for (const x of [m.durum.onayli, '10:10', m.not.onaylandi, UZ_NOT.s, UZ_NOT.o, UZ_NOT.a, UZ_NOT.p, m.not.dosyayaDon]) assert.ok(g.includes(x), x)
       assert.doesNotMatch(html, /<textarea|<button type="(submit|button)" class="uza-dugme[^"]*"[^>]*data-eylem|name="taslak-dili"/)
-      assert.ok(!g.includes(m.not.uyari) && !g.includes(m.not.kaydet) && !g.includes(m.not.onayla) && !g.includes(m.not.cevirRu))
+      assert.ok(!g.includes(m.not.uyari) && !g.includes(m.not.kaydet) && !g.includes(m.not.onayla) && !g.includes(m.not.cevir.ru))
       ekranTemiz(html, `/visit?not= approved (${f})`)
     })
 
@@ -718,7 +723,7 @@ describe('Uzbekistan note: screens in the three forms', () => {
   }
 
   it('the home and the patient file open the note of a visit that has one', async () => {
-    const Bugun = await import('./Bugun'); const Hastalar = await import('./Hastalar')
+    const Bugun = await import('@/components/ulke/uygulama/Bugun'); const Hastalar = await import('@/components/ulke/uygulama/Hastalar')
     const m = M.uygulamaMetni('uz-Latn')
     const ev = cerceve('uz-Latn', React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA', hata: false, muayeneler: [{ seansId: 's1', notId: 'n1', hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: '2026-10-08T07:00:00Z', durum: 'taslak' }] }))
     assert.ok(ev.includes('href="/uzbek/visit?not=n1"'))

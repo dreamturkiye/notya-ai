@@ -14,6 +14,7 @@ import {
 } from './metinler'
 import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
+import { UZ_VELI_YASI } from './ayarlar'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -100,5 +101,24 @@ export const UZ_PAKETI: UlkePaketi = {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
+    // ── NOTYA-ULKE-SABLON-01: what the shared screens used to assume for Uzbekistan, said out loud. Each value is
+    // what the Uzbek build did before the screens became shared; none is a new decision.
+    // Uzbek in two scripts, Russian in one: the first-login question asks the language and, for Uzbek, the script.
+    dilGruplari: [
+      { temel: 'uz', bicimler: [{ yazi: 'Latn', dil: 'uz-Latn' }, { yazi: 'Cyrl', dil: 'uz-Cyrl' }] },
+      { temel: 'ru', bicimler: [{ yazi: null, dil: 'ru' }] },
+    ],
+    // One time zone in the country: no account is asked.
+    saatDilimleri: ['Asia/Tashkent'],
+    saatBicimi: 24,
+    birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
+    // The patronymic (otasining ismi / отчество) is its own field on the patient form.
+    adAlanlari: { ikinciAd: true },
+    // JSHSHIR is optional free text, stored encrypted and NOT validated: the check-digit rule is to verify (checklist G5).
+    kimlikNumarasi: { dogrula: false },
+    // Guardian wording for a patient under 18 on the day of the visit. An assumption to confirm with a lawyer (checklist B12).
+    veliYasi: UZ_VELI_YASI,
+    // Invitation only.
+    kayitAcik: false,
   },
 }

@@ -54,6 +54,10 @@ const alanlar = {
   ru: { history_giver: 'Мать.', feeding: 'Ест четыре раза в день.', temperature: 'До 38,5.', chest_pain: 'Боли в груди нет.', ecg: 'Без изменений.', diet_history: 'Любит сладкое.', nutrition_plan: 'Обильное питьё.', audiometry: 'Не проводилась.', made_up_key: 'XATO-MAYDON' },
 }
 
+// NOTYA-ULKE-SABLON-01 — YURUYUS_GENEL=1: the pack-neutral walk-through. Answers hold no language's text on purpose.
+const GENEL = process.env.YURUYUS_GENEL === '1'
+const GENEL_METIN = 'synthetic visit one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen'
+
 const gercek = globalThis.fetch
 globalThis.fetch = async function sahteFetch(girdi, secenek) {
   const adres = typeof girdi === 'string' ? girdi : girdi instanceof URL ? girdi.href : girdi?.url ?? String(girdi)
@@ -67,6 +71,8 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
     const dil = form?.get?.('language_code') ?? null
     kaydet({ tur: 'stt', model: form?.get?.('model_id') ?? null, dil, bayt: dosya?.size ?? 0, anahtar: Boolean(secenek?.headers?.['xi-api-key']) })
     if (!dosya || !dosya.size) return json({ detail: 'empty file' }, 400)
+    // NOTYA-ULKE-SABLON-01 — pack-neutral walk-through (./genel.mjs): one confident pass in the language code the pack expects.
+    if (GENEL) return json(scribe(GENEL_METIN, process.env.YURUYUS_STT_KODU || 'und', 0.97, -0.08))
     if (senaryo().stt === 'dusuk') {
       // First pass: the engine is unsure of the language and of the words. The forced pass is better, and still low.
       return dil ? json(scribe(UZ_IKINCI, dil, 1, -0.5)) : json(scribe(UZ_BULANIK, 'uzb', 0.52, -0.7))
@@ -88,10 +94,18 @@ globalThis.fetch = async function sahteFetch(girdi, secenek) {
       tur: 'model', is: yeniden ? 'yeniden' : 'not', dil, model: String(b.model || ''), veriToplama: b.provider?.data_collection ?? null,
       sistemUzunluk: sistem.length, kimlikVar: /Karimova|Dilnoza|Rustam|Иванов|\+998|aaaaaaaa-0000/.test(sistem + kullanici),
       yasVar: /yoshi — 5 yosh|возраст — /.test(kullanici), duzeltmeVar: kullanici.includes('250 mg'),
+      // pack-neutral walk-through: its synthetic patient is "QA-PATIENT …", its accounts are aaaaaaaa-0000-…
+      genelKimlikVar: /QA-PATIENT|WALKTHROUGH|aaaaaaaa-0000/.test(sistem + kullanici), kullaniciUzunluk: kullanici.length,
       // Which fields the instruction asks for (keys only), and whether it says the colleague is not a doctor.
       alanAnahtarlari: [...sistem.matchAll(/^- ([a-z][a-z0-9_]*) — /gm)].map((x) => x[1]).join(), muttefik: /shifokor emas|шифокор эмас|не врач/.test(sistem),
     })
     if (senaryo().model === 'hata') return json({ error: { code: 503, message: 'stand-in: the model provider is down' } }, 503)
+    if (GENEL) {
+      // Four sections of synthetic text, every field the instruction asked for, and one key that belongs to nobody.
+      const istenen = [...sistem.matchAll(/^- ([a-z][a-z0-9_]*) — /gm)].map((x) => x[1])
+      const cevapGenel = { s: 'SYNTHETIC-S reported at the visit.', o: 'SYNTHETIC-O examined.', a: 'SYNTHETIC-A stated by the doctor.', p: 'SYNTHETIC-P plan.', fields: { ...Object.fromEntries(istenen.map((k) => [k, `SYNTHETIC-FIELD ${k}`])), not_a_field_of_anybody: 'SYNTHETIC-LEAK' } }
+      return json({ id: 'sahte', model: b.model, choices: [{ message: { role: 'assistant', content: JSON.stringify(cevapGenel) }, finish_reason: 'stop' }], usage: { prompt_tokens: 800, completion_tokens: 200 } })
+    }
     const dort = yeniden ? (dil === 'ru' ? notlar.ruYeniden(kullanici) : notlar[dil]) : notlar[dil]
     const cevap = dort ? { ...dort, fields: alanlar[dil] } : null
     if (!cevap) return json({ error: { code: 400, message: 'stand-in: no instruction it knows' } }, 400)

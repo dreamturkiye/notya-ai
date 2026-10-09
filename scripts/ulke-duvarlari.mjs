@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * NOTYA-ULKE-01 — the walls between countries (docs/COUNTRY-PACK-CHECKLIST.md, "Rules that stop one country leaking").
- * Runs in `prebuild` (a violation stops the build) and in `npm test` (lib/ulke/ulkeDuvarlari.test.ts).
+ * Runs before every COUNTRY build (scripts/ulke-derleme-kapisi.mjs, called by countries/<code>/derleme.mjs: a
+ * violation stops that build) and in the tests (lib/ulke/ulkeDuvarlari.test.ts, in `npm test` and `npm run test:ulke`).
+ * It is not in package.json's `prebuild`: a build with no country set runs what main runs, nothing more.
  *
  *   node scripts/ulke-duvarlari.mjs [--kok <dir>]
  *

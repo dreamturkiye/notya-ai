@@ -88,6 +88,10 @@ export type TelefonKurallari = {
   cepGecerliMi: (ham: string | null | undefined) => boolean
 }
 
+/**
+ * NOTYA-ULKE-SABLON-01 — the national identity number of a country. `null` on the pack = the country records none:
+ * no field is shown and nothing is stored.
+ */
 export type UlusalKimlikKurallari = {
   /** What people in the country call the number. */
   ad: string
@@ -137,7 +141,8 @@ export type UlkePaketi = {
   saatDilimi: string
   bicim: BicimKurallari
   telefon: TelefonKurallari
-  ulusalKimlik: UlusalKimlikKurallari
+  /** null = this country records no national identity number (NOTYA-ULKE-SABLON-01). */
+  ulusalKimlik: UlusalKimlikKurallari | null
   ozellikler: Partial<Record<Ozellik, true>>
   /** /doktor-tools routes valid in this country. A tool must ALSO name the country in its own `ulkeler` field. */
   araclar: readonly string[]
@@ -188,7 +193,59 @@ export type UygulamaAyarlari = {
    * PUBLIC HOLIDAYS ARE NOT HERE: they are local content a local source must supply; nothing is hard-coded.
    */
   randevu?: RandevuAyarlari
+
+  // ── NOTYA-ULKE-SABLON-01 — every assumption the shared screens used to carry for one country, as a setting. ──
+  // All REQUIRED: a pack that brings the application says each of them out loud. lib/ulke/paketDenetimi.ts checks
+  // them against each other and against the catalogue, and a country's build fails on anything missing.
+
+  /** The languages of `diller`, grouped: which language, in which scripts. Drives the first-login question and settings. */
+  dilGruplari: readonly DilGrubu[]
+  /**
+   * IANA time zones an account of this country may work in. The pack's `saatDilimi` is the default and must be on
+   * the list. One entry = the country has one zone and no account is asked. An account's own choice is stored with
+   * the account (`ulke_hesaplari.saat_dilimi`) and is always one of this list.
+   */
+  saatDilimleri: readonly string[]
+  /** How a time of day is WRITTEN on the screens and in the reminder: 24 = 14:30, 12 = 2:30 PM. Stored times are instants. */
+  saatBicimi: 24 | 12
+  /** Units of measure. Read by the pack's own instructions to the model and by any shared screen that shows a measurement. */
+  birimler: Birimler
+  /** Name fields of a patient beside the name itself. `ikinciAd`: a patronymic / middle name as its own field. */
+  adAlanlari: { ikinciAd: boolean }
+  /**
+   * The national identity number on the patient form: shown exactly where the pack has `ulusalKimlik`.
+   * `dogrula` true = a value that fails the pack's rule (`ulusalKimlik.gecerliMi`) is refused; false = stored as typed.
+   */
+  kimlikNumarasi: { dogrula: boolean }
+  /**
+   * A patient younger than this many years on the day of the visit gets guardian wording ("who gave the history").
+   * null = the country has no such rule. A legal fact of the country (checklist B12), not a default of the kit.
+   */
+  veliYasi: number | null
+  /**
+   * false = sign-up is by invitation code only (the default every new country starts with). true = anyone may sign
+   * up without a code. Opening it is a decision of the owner after section A of the checklist passes.
+   */
+  kayitAcik: boolean
 }
+
+/**
+ * NOTYA-ULKE-SABLON-01 — one LANGUAGE of the signed-in application and the forms it can be written in. A form is a
+ * language code of `uygulama.diller`; a language with one script has one form (`yazi: null`). The kit supports at most
+ * one language with more than one script per country (lib/ulke/arayuz/dilSecimi.ts; the pack check says so).
+ *
+ *   Uzbekistan   [{ temel: 'uz', bicimler: [{ yazi: 'Latn', dil: 'uz-Latn' }, { yazi: 'Cyrl', dil: 'uz-Cyrl' }] },
+ *                 { temel: 'ru', bicimler: [{ yazi: null, dil: 'ru' }] }]
+ *   one language [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en' }] }]      → no language question is asked at all
+ */
+export type DilGrubu = {
+  /** ISO 639 code of the language. Also the key of its name in the catalogue (`diller`) and a patient language. */
+  temel: string
+  bicimler: readonly { /** ISO 15924 script code, or null where the language has one script. */ yazi: string | null; dil: DilKodu }[]
+}
+
+/** Units of measure a country reads and writes (checklist E3, F4). */
+export type Birimler = { agirlik: 'kg' | 'lb'; boy: 'cm' | 'in'; sicaklik: 'C' | 'F' }
 
 export type RandevuAyarlari = {
   /** The working pattern an account has until it saves its own. Weekdays are ISO: 1 = Monday … 7 = Sunday. Times are 'HH:MM'. */
@@ -248,7 +305,10 @@ export type UlkeSayfalari = {
 
 // ───────────────────────── the clinical half of a pack (countries/active/klinik) ─────────────────────────
 
-/** Storage bucket a visit recording is uploaded to, under a folder named after the doctor's account id (migration 132). */
+/**
+ * Storage bucket a visit recording is uploaded to — one bucket for every country, and inside it a folder per country
+ * and, below that, per account: `<country>/<account id>/<file>` (migration 132; lib/ulke/uygulama/tablolar.ts).
+ */
 export const MUAYENE_SES_KOVASI = 'muayene-sesleri'
 
 /**

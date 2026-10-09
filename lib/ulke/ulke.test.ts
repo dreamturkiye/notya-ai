@@ -86,10 +86,10 @@ describe('no country configured = Türkiye, as before', () => {
     for (const ham of ['0532 123 45 67', '5321234567', '+90 532 123 45 67', '0212 123 45 67', '+1 202 555 0143', '', 'abc', '123']) {
       assert.equal(p.telefon.cepGecerliMi(ham), cepTelefonuDogrula(ham).ok, ham)
     }
-    assert.equal(p.ulusalKimlik.gecerliMi, tcKimlikGecerli)
-    assert.equal(p.ulusalKimlik.hane, 11)
-    assert.equal(p.ulusalKimlik.gecerliMi('10000000146'), true)
-    assert.equal(p.ulusalKimlik.gecerliMi('10000000147'), false)
+    assert.equal(p.ulusalKimlik!.gecerliMi, tcKimlikGecerli)
+    assert.equal(p.ulusalKimlik!.hane, 11)
+    assert.equal(p.ulusalKimlik!.gecerliMi('10000000146'), true)
+    assert.equal(p.ulusalKimlik!.gecerliMi('10000000147'), false)
   })
 
   it('root shell: the title and description app/layout.tsx carried on main', () => {
@@ -228,7 +228,7 @@ describe('every country pack: same shape, complete text, own content only', () =
     const kaynak = TUM_ULKELER.tr.paket.metinler.tr! as Record<string, Record<string, string>>
     for (const [kod, p] of paketler) {
       if (kod === 'tr') continue
-      const hepsi: string[] = [p.kabuk.baslik, p.kabuk.aciklama, p.paraBirimi.simge, p.ulusalKimlik.ad, p.telefon.ornek]
+      const hepsi: string[] = [p.kabuk.baslik, p.kabuk.aciklama, p.paraBirimi.simge, p.ulusalKimlik?.ad ?? '', p.telefon.ornek]
       for (const dil of p.acikDiller) {
         for (const yuzey of p.yuzeyler) {
           for (const [k, v] of Object.entries(p.metinler[dil]![yuzey] as Record<string, string>)) {
@@ -257,8 +257,8 @@ describe('every country pack: same shape, complete text, own content only', () =
     for (const o of ['doktorAraclari', 'asistan', 'sesProfili', 'goruntuDegerlendirme'] as Ozellik[]) assert.equal(p.ozellikler[o], undefined, o)
     for (const ham of ['+998 90 123 45 67', '998901234567', '90 123 45 67', '901234567']) assert.equal(p.telefon.cepGecerliMi(ham), true, ham)
     for (const ham of ['', '0532 123 45 67', '+90 532 123 45 67', '12345', 'abc']) assert.equal(p.telefon.cepGecerliMi(ham), false, ham)
-    assert.equal(p.ulusalKimlik.gecerliMi('12345678901234'), true)
-    assert.equal(p.ulusalKimlik.gecerliMi('10000000146'), false, 'a Turkish id number is not an Uzbek one')
+    assert.equal(p.ulusalKimlik!.gecerliMi('12345678901234'), true)
+    assert.equal(p.ulusalKimlik!.gecerliMi('10000000146'), false, 'a Turkish id number is not an Uzbek one')
   })
 
   it('only a pack that opens the whole pre-split application may use rotalar: hepsi', () => {

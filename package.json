@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/vad-varliklari.mjs && node scripts/ulke-duvarlari.mjs",
-    "postbuild": "node scripts/ulke-derleme-kaniti.mjs",
+    "prebuild": "node scripts/vad-varliklari.mjs",
     "build": "node -e \"if (process.env.VERCEL_ENV === 'preview') require('fs').rmSync('.next/cache', { recursive: true, force: true })\" && NODE_OPTIONS='--max-old-space-size=8192' next build",
     "start": "next start",
     "lint": "next lint",
@@ -26,7 +25,7 @@
     "denetim:kalite-cevap": "npx --yes tsx scripts/ayse-denetim/kalite-cevap.mts",
     "denetim:ses-kisaltma": "npx --yes tsx scripts/ayse-denetim/ses-kisaltma.mts",
     "test:liste": "node scripts/test-listesi-denetle.mjs",
-    "test:ulke": "npx --yes tsx --experimental-test-module-mocks --test lib/ulke/ulke.test.ts lib/ulke/ulke.uz.test.ts lib/ulke/hesapUlkesi.test.ts lib/ulke/ulkeDuvarlari.test.ts lib/ulke/turkceTavan.test.ts lib/ulke/sizintiTarayici.test.ts lib/doktor/doktorAraclariUlke.test.ts lib/ulke/ulkeEkranlari.uz.test.ts lib/ulke/davet.test.ts countries/uz/acilis/acilis.test.ts countries/uz/klinik/asistanAdlari.test.ts countries/uz/klinik/roller.test.ts countries/uz/klinik/sablonlar.test.ts countries/uz/uygulama/uygulama.test.ts countries/uz/uygulama/muayene.test.ts countries/uz/uygulama/not.test.ts countries/uz/uygulama/randevu.test.ts",
+    "test:ulke": "node scripts/ulke-test.mjs",
     "ulke:duvarlar": "node scripts/ulke-duvarlari.mjs",
     "ulke:turkce-tavan": "node scripts/ulke-turkce-tavan.mjs",
     "ulke:derleme-kaniti": "node scripts/ulke-derleme-kaniti.mjs",
@@ -69,7 +68,11 @@
     "test:gc": "npx tsx --test specialties/genel-cerrahi/tests/*.test.ts lib/portal/ameliyatim.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:plastik": "npx tsx --test specialties/plastik-cerrahi/tests/*.test.ts lib/portal/yaram.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:cc": "npx tsx --test specialties/cocuk-cerrahisi/tests/*.test.ts lib/portal/cocugumun-cerrahisi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
-    "test:acil": "npx tsx --test specialties/acil-tip/tests/*.test.ts lib/portal/acil-sonrasi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts"
+    "test:acil": "npx tsx --test specialties/acil-tip/tests/*.test.ts lib/portal/acil-sonrasi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
+    "test:ulke:paket": "node scripts/ulke-test.mjs --yalniz-paket",
+    "ulke:paket-denetimi": "node scripts/ulke-paket-denetimi.mjs",
+    "build:ulke": "node scripts/ulke-derle.mjs",
+    "ulke:yeni": "node scripts/ulke-yeni.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

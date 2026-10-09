@@ -1,37 +1,40 @@
--- 134 NOTYA-UZ-BRANSLAR-01 (Kaan, 2026-10-08)
+-- 134 NOTYA-UZ-BRANSLAR-01 (Kaan, 2026-10-08) · reshaped for the shared database by NOTYA-ULKE-SABLON-01
 -- 1. The ROLE of an account inside a country's signed-in application: which doctor specialty, clinic doctor role
 --    or clinic allied profession it works as (docs/COUNTRY-PACK-CHECKLIST.md J2, J5). Chosen at first login, after
---    the language question; changeable in settings. The value is one of the active country pack's role keys — an
---    internal identifier, never shown; the application validates it against the pack on every write and read.
+--    the language question; changeable in settings. The value is one of the account's OWN country pack's role keys —
+--    an internal identifier, never shown; the application validates it against the pack on every write and read.
 -- 2. The role-specific FIELDS of a visit note (a cardiology note has other fields than an audiology note), for the
 --    note and for its second-language draft, beside the language record of migration 133.
 --
--- Country tables only. (1) is a NEW table. (2) adds two nullable columns to `not_dil_kaydi`, a table that migration
--- 133 created for country builds and that Türkiye does not use. No table, column, row, policy or index of the
--- pre-split application changes: `users`, `notes`, `sessions` and `patients` are not touched.
+-- Country tables only. (1) is a NEW table, carrying the country like every other (rules: migration 130). (2) adds
+-- two nullable columns to `not_dil_kaydi`, a country table that migration 133 created. No table Türkiye uses is
+-- read, written or altered.
 --
--- Server routes use the service role and always scope by doctor_id (= the authenticated account). Row-level security
--- is the second line: a signed-in account may read its own role row and nothing else, and cannot write from the
--- browser. The new columns of `not_dil_kaydi` are covered by that table's existing policies (owner-only read, and
--- the restrictive patient-ownership policy of migration 052).
+-- Server routes use the service role and always scope by country and doctor_id (= the authenticated account).
+-- Row-level security is the second line: a signed-in account may read its own role row of its session's country and
+-- nothing else, and cannot write from the browser.
 --
--- NOT APPLIED by the job that wrote it. Apply to a country's database, after 133, before the role question is used.
--- Without it the application asks for the role again at every login and cannot save the answer.
+-- Safe to run twice. One transaction. NOT APPLIED to any database by the job that wrote it. Apply after 133.
+
+begin;
+set local lock_timeout = '4s';
 
 create table if not exists public.hekim_rolu (
-  doctor_id uuid primary key references auth.users(id) on delete cascade,
+  doctor_id uuid primary key,
+  ulke text not null check (ulke ~ '^[a-z]{2}$'),
   -- A role key of the country pack: lower-case words joined by hyphens. Which keys exist is the pack's business.
   rol text not null check (rol ~ '^[a-z]+(-[a-z]+)*$' and char_length(rol) <= 60),
   secildi_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint hekim_rolu_hesap_fk foreign key (ulke, doctor_id) references public.ulke_hesaplari (ulke, id) on delete cascade
 );
 
 alter table public.hekim_rolu enable row level security;
 
 drop policy if exists "hekim kendi rolu" on public.hekim_rolu;
 create policy "hekim kendi rolu" on public.hekim_rolu
-  for select to authenticated using (doctor_id = auth.uid());
+  for select to authenticated using (doctor_id = auth.uid() and ulke = public.ulke_oturum_ulkesi());
 
 revoke all on table public.hekim_rolu from anon, authenticated;
 grant select on table public.hekim_rolu to authenticated;
@@ -45,5 +48,7 @@ alter table public.not_dil_kaydi
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
 values ('134', '134_hekim_rolu.sql', null, now(), false,
-  'NOTYA-UZ-BRANSLAR-01: per-account role (new table, owner-only) + role-specific note fields on not_dil_kaydi (country table)')
+  'NOTYA-ULKE-SABLON-01: per-account role (new table, country in the key, owner-and-country-only) + role-specific note fields on not_dil_kaydi (country table)')
 on conflict (version) do nothing;
+
+commit;

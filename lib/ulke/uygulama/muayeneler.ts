@@ -6,11 +6,14 @@
  * patient names are read by doctor AND patient id (lib/ulke/uygulama/hastalar.ts) — a visit row that points at a
  * patient who is not this doctor's gets no name, it does not borrow one.
  *
- * Storage is the core `sessions` and `notes` tables, as the rest of the product uses them.
+ * Storage is the country tables `ulke_muayeneler` and `ulke_notlar` (migrations 132, 133), bound to this build's
+ * country in every statement (lib/ulke/uygulama/tablolar.ts).
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { hastaAdlari } from './hastalar'
 import { ulkeGunBasi } from './gun'
+import { hesapSaatDilimi } from './saatDilimi'
+import { ulkeTablosu } from './tablolar'
 
 export type MuayeneOzeti = {
   seansId: string
@@ -28,8 +31,7 @@ type NotSatiri = { id: string; session_id: string; approved_at: string | null }
 
 async function ozetle(supabase: SupabaseClient, doktorId: string, seanslar: SeansSatiri[]): Promise<MuayeneOzeti[]> {
   if (!seanslar.length) return []
-  const { data: notlar } = await supabase
-    .from('notes')
+  const { data: notlar } = await ulkeTablosu(supabase, 'ulke_notlar')
     .select('id, session_id, approved_at')
     .eq('doctor_id', doktorId)
     .in('session_id', seanslar.map((s) => s.id))
@@ -52,11 +54,10 @@ async function ozetle(supabase: SupabaseClient, doktorId: string, seanslar: Sean
 
 /** This doctor's visits since the country's day began, newest first. null = could not be read. */
 export async function bugunkuMuayeneler(supabase: SupabaseClient, doktorId: string): Promise<MuayeneOzeti[] | null> {
-  const { data, error } = await supabase
-    .from('sessions')
+  const { data, error } = await ulkeTablosu(supabase, 'ulke_muayeneler')
     .select('id, patient_id, started_at, created_at')
     .eq('doctor_id', doktorId)
-    .gte('started_at', ulkeGunBasi().toISOString())
+    .gte('started_at', ulkeGunBasi(new Date(), await hesapSaatDilimi(supabase, doktorId)).toISOString())
     .order('started_at', { ascending: false })
     .limit(100)
   if (error || !data) return null
@@ -65,8 +66,7 @@ export async function bugunkuMuayeneler(supabase: SupabaseClient, doktorId: stri
 
 /** Visits of ONE patient of this doctor, newest first. The caller has already proven the patient is the doctor's. */
 export async function hastaninMuayeneleri(supabase: SupabaseClient, doktorId: string, hastaId: string): Promise<MuayeneOzeti[] | null> {
-  const { data, error } = await supabase
-    .from('sessions')
+  const { data, error } = await ulkeTablosu(supabase, 'ulke_muayeneler')
     .select('id, patient_id, started_at, created_at')
     .eq('doctor_id', doktorId)
     .eq('patient_id', hastaId)

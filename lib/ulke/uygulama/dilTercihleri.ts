@@ -1,7 +1,7 @@
 /**
  * NOTYA-UZ-MUAYENE-01 — an account's language choices inside the signed-in application.
  *
- *   interface language   users.ui_language (migration 128)
+ *   interface language   ulke_hesaplari.ui_language (migration 130)
  *   note language        hekim_dil_tercihleri.not_dili (migration 130)
  *   asked yet?           hekim_dil_tercihleri.soruldu_at
  *
@@ -12,14 +12,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { DilKodu } from '../tipler'
 import { uygulamaDiliMi, uygulamaDiliSec } from '../ulke'
+import { ulkeTablosu } from './tablolar'
 
 export type DilTercihleri = { arayuzDili: DilKodu; notDili: DilKodu; soruldu: boolean }
 
-/** `arayuzHam` is the account's users.ui_language as already read by the caller. */
+/** `arayuzHam` is the account's ulke_hesaplari.ui_language as already read by the caller. */
 export async function dilTercihleriniOku(supabase: SupabaseClient, hesapId: string, arayuzHam: unknown): Promise<DilTercihleri> {
   const arayuzDili = uygulamaDiliSec(typeof arayuzHam === 'string' ? arayuzHam : null)
-  const { data, error } = await supabase
-    .from('hekim_dil_tercihleri')
+  const { data, error } = await ulkeTablosu(supabase, 'hekim_dil_tercihleri')
     .select('not_dili, soruldu_at')
     .eq('doctor_id', hesapId)
     .maybeSingle()
@@ -39,10 +39,9 @@ export async function dilTercihleriniYaz(
   secim: { arayuzDili: DilKodu; notDili: DilKodu },
 ): Promise<boolean> {
   const simdi = new Date().toISOString()
-  const { error: tercihHatasi } = await supabase
-    .from('hekim_dil_tercihleri')
+  const { error: tercihHatasi } = await ulkeTablosu(supabase, 'hekim_dil_tercihleri')
     .upsert({ doctor_id: hesapId, not_dili: secim.notDili, soruldu_at: simdi, updated_at: simdi }, { onConflict: 'doctor_id' })
   if (tercihHatasi) return false
-  const { error: satirHatasi } = await supabase.from('users').update({ ui_language: secim.arayuzDili, updated_at: simdi }).eq('id', hesapId)
+  const { error: satirHatasi } = await ulkeTablosu(supabase, 'ulke_hesaplari').update({ ui_language: secim.arayuzDili, updated_at: simdi }).eq('id', hesapId)
   return !satirHatasi
 }

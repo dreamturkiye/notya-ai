@@ -18,6 +18,11 @@ import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { ulkeKabukMetadata, ulkeKabukViewport } from '@/lib/ulke/kabuk'
+import { aktifPaketiDenetle } from '@/lib/ulke/paketDenetimiAktif'
+
+// NOTYA-ULKE-SABLON-01: a pack with anything missing, or still marked "to be supplied", does not build and is never
+// served. The error names every missing item. Nothing falls back to another country's text or to a default.
+aktifPaketiDenetle()
 
 export const metadata: Metadata = ulkeKabukMetadata()
 export const viewport: Viewport = ulkeKabukViewport()

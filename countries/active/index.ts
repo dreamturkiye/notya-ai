@@ -2,7 +2,7 @@
  * NOTYA-ULKE-01 — THE entry point to the active country pack (data). The UI half is ./sayfalar.
  *
  * Core code imports a pack from here and from nowhere else; countries/<kod>/ is walled off
- * (scripts/ulke-duvarlari.mjs runs in `prebuild` and in `npm test`).
+ * (scripts/ulke-duvarlari.mjs runs before every country build and in `npm test`).
  *
  * Selected at BUILD time. next.config.mjs inlines process.env.NOTYA_COUNTRY as a literal, so each `if` below has a
  * constant condition; the bundler keeps the one true branch and never even reads the `require` in the others. A build

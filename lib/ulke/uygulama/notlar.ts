@@ -10,9 +10,9 @@
  * statement — not a check made beforehand — so a late save, a second approval or a rewrite cannot change a note
  * the doctor has approved; they answer 'ONAYLI'. A rewrite never touches the note at all: it is stored beside it.
  *
- * Storage: the core `notes` table holds the note (its four SOAP columns), as the rest of the product reads it.
- * `not_dil_kaydi` (migration 133), one row per note, holds what the core table has no place for: the language the
- * note's text is in, and the second draft in the other language.
+ * Storage (migration 133, country tables — never Türkiye's `notes`): `ulke_notlar` holds the note (its four
+ * sections); `not_dil_kaydi`, one row per note, holds the language the note's text is in and the second draft in
+ * the other language. Every statement is bound to this build's country (lib/ulke/uygulama/tablolar.ts).
  *
  * ROLE FIELDS (NOTYA-UZ-BRANSLAR-01). A note written with a role's template has fields beside the four sections.
  * They live in `not_dil_kaydi.alanlar` (and `ikinci_alanlar` for the second draft), migration 134. LEAK RULE: the
@@ -26,8 +26,8 @@
  * started from. This file makes no other write while approving — so a failure anywhere leaves the note unapproved
  * and every row as it was. (Before, the fields were a second statement after the approval.)
  *
- *   draft           notes.content_* = the text in `not_dili`;  not_dil_kaydi.ikinci_* = the other draft, if asked for
- *   approve (same)  notes.content_* ← the text on the screen, approved_at set
+ *   draft           ulke_notlar.content_* = the text in `not_dili`;  not_dil_kaydi.ikinci_* = the other draft, if asked for
+ *   approve (same)  ulke_notlar.content_* ← the text on the screen, approved_at set
  *   approve (other) the two drafts change places first (nothing is lost), then as above
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -37,6 +37,7 @@ import { uygulamaDiliMi } from '../ulke'
 import { hastaGetir } from './hastalar'
 import { hekimDilleri, muayeneGetir, type MuayeneDetayi } from './muayeneKaydi'
 import { ALAN_AZAMI, alanlariOku, BOLUM_AZAMI, modeldenNot, notModelEtiketi } from './notModeli'
+import { ulkeIslevi, ulkeTablosu } from './tablolar'
 
 export type NotDetayi = {
   notId: string
@@ -67,7 +68,7 @@ const DIL_KOLONLARI = 'not_dili, ikinci_dil, ikinci_s, ikinci_o, ikinci_a, ikinc
 const satirdan = (n: NotSatiri): NotIcerigi => ({ s: n.content_subjektif ?? '', o: n.content_objektif ?? '', a: n.content_degerlendirme ?? '', p: n.content_plan ?? '' })
 const kolonlara = (i: NotIcerigi) => ({ content_subjektif: i.s, content_objektif: i.o, content_degerlendirme: i.a, content_plan: i.p })
 /** The database function that approves a note in one transaction (migration 135). */
-export const NOT_ONAY_ISLEVI = 'ulke_not_onayla'
+export const NOT_ONAY_ISLEVI = 'ulke_not_onayla' as const
 const bosMu = (i: NotIcerigi) => !(i.s.trim() || i.o.trim() || i.a.trim() || i.p.trim())
 
 /**
@@ -106,9 +107,9 @@ const alanliIcerik = (icerik: NotIcerigi, alanlar: Record<string, string> | null
 }
 
 async function notuOku(supabase: SupabaseClient, doktorId: string, notId: string): Promise<{ not: NotSatiri; dil: DilSatiri } | null> {
-  const { data: n, error } = await supabase.from('notes').select(NOT_KOLONLARI).eq('id', notId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: n, error } = await ulkeTablosu(supabase, 'ulke_notlar').select(NOT_KOLONLARI).eq('id', notId).eq('doctor_id', doktorId).maybeSingle()
   if (error || !n) return null
-  const { data: d } = await supabase.from('not_dil_kaydi').select(DIL_KOLONLARI).eq('note_id', notId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: d } = await ulkeTablosu(supabase, 'not_dil_kaydi').select(DIL_KOLONLARI).eq('note_id', notId).eq('doctor_id', doktorId).maybeSingle()
   // A note without its language record is not one of this application's notes (it cannot say what language it is in).
   if (!d || !uygulamaDiliMi((d as DilSatiri).not_dili)) return null
   return { not: n as NotSatiri, dil: d as DilSatiri }
@@ -126,7 +127,7 @@ export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId
   if (!muayene || !muayene.hasta) return ret('NOT_FOUND')
   if (muayene.notId) return { tamam: true, notId: muayene.notId }
   if (!muayene.metin.trim()) return ret('NOT_YAZILAMADI')
-  const { data: kayit } = await supabase.from('muayene_dil_kaydi').select('not_dili, sablon').eq('session_id', seansId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: kayit } = await ulkeTablosu(supabase, 'muayene_dil_kaydi').select('not_dili, sablon').eq('session_id', seansId).eq('doctor_id', doktorId).maybeSingle()
   const k = kayit as { not_dili?: unknown; sablon?: unknown } | null
   const notDili = uygulamaDiliMi(k?.not_dili) ? k.not_dili : null
   const sablon = String(k?.sablon ?? muayene.sablon)
@@ -143,16 +144,15 @@ export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId
   // LEAK RULE: of what the model returned, only the fields THIS template owns for THIS patient are kept.
   const alanlar = alanlariSuz(icerik.alanlar, klinik.notAlanlari?.(sablon, { dogumTarihi: hasta.dogumTarihi, muayeneTarihi }) ?? [])
 
-  const { data: n, error } = await supabase
-    .from('notes')
+  const { data: n, error } = await ulkeTablosu(supabase, 'ulke_notlar')
     .insert({ session_id: seansId, doctor_id: doktorId, note_type: 'soap', ...kolonlara(icerik), ai_model: notModelEtiketi() })
     .select('id')
     .single()
   const notId = (n as { id?: string } | null)?.id
   if (error || !notId) return ret('BASARISIZ')
-  const { error: dilHatasi } = await supabase.from('not_dil_kaydi').insert({ note_id: notId, doctor_id: doktorId, patient_id: hasta.id, not_dili: notDili, ...(alanlar ? { alanlar } : {}) })
+  const { error: dilHatasi } = await ulkeTablosu(supabase, 'not_dil_kaydi').insert({ note_id: notId, doctor_id: doktorId, patient_id: hasta.id, not_dili: notDili, ...(alanlar ? { alanlar } : {}) })
   if (dilHatasi) {
-    try { await supabase.from('notes').delete().eq('id', notId).eq('doctor_id', doktorId).is('approved_at', null) } catch { /* reported as a failure either way */ }
+    try { await ulkeTablosu(supabase, 'ulke_notlar').delete().eq('id', notId).eq('doctor_id', doktorId).is('approved_at', null) } catch { /* reported as a failure either way */ }
     return ret('BASARISIZ')
   }
   return { tamam: true, notId }
@@ -188,17 +188,17 @@ export async function notKaydet(supabase: SupabaseClient, doktorId: string, notI
   // Fields are written only when the request carries them, and only the ones this note's template owns.
   const alanlar = icerik.alanlar === undefined ? undefined : alanlariSuz(icerik.alanlar, izinliAlanlar(await muayeneGetir(supabase, doktorId, o.not.session_id)))
   if (dil === o.dil.not_dili) {
-    const { data, error } = await supabase.from('notes').update(kolonlara(icerik)).eq('id', notId).eq('doctor_id', doktorId).is('approved_at', null).select('id')
+    const { data, error } = await ulkeTablosu(supabase, 'ulke_notlar').update(kolonlara(icerik)).eq('id', notId).eq('doctor_id', doktorId).is('approved_at', null).select('id')
     if (error) return ret('BASARISIZ')
     if (!(data as unknown[] | null)?.length) return ret('ONAYLI')
     if (alanlar !== undefined) {
-      const { error: alanHatasi } = await supabase.from('not_dil_kaydi').update({ alanlar, updated_at: new Date().toISOString() }).eq('note_id', notId).eq('doctor_id', doktorId)
+      const { error: alanHatasi } = await ulkeTablosu(supabase, 'not_dil_kaydi').update({ alanlar, updated_at: new Date().toISOString() }).eq('note_id', notId).eq('doctor_id', doktorId)
       if (alanHatasi) return ret('BASARISIZ')
     }
     return { tamam: true }
   }
   if (o.dil.ikinci_dil && dil === o.dil.ikinci_dil) {
-    const { error } = await supabase.from('not_dil_kaydi').update({ ikinci_s: icerik.s, ikinci_o: icerik.o, ikinci_a: icerik.a, ikinci_p: icerik.p, ...(alanlar !== undefined ? { ikinci_alanlar: alanlar } : {}), updated_at: new Date().toISOString() }).eq('note_id', notId).eq('doctor_id', doktorId)
+    const { error } = await ulkeTablosu(supabase, 'not_dil_kaydi').update({ ikinci_s: icerik.s, ikinci_o: icerik.o, ikinci_a: icerik.a, ikinci_p: icerik.p, ...(alanlar !== undefined ? { ikinci_alanlar: alanlar } : {}), updated_at: new Date().toISOString() }).eq('note_id', notId).eq('doctor_id', doktorId)
     return error ? ret('BASARISIZ') : { tamam: true }
   }
   return ret('GECERSIZ', 'dil')
@@ -228,8 +228,7 @@ export async function notYenidenYaz(supabase: SupabaseClient, doktorId: string, 
   if (!icerik) return ret('YENIDEN_YAZILAMADI')
   // A rewrite may return only the fields the note already had: it adds no field, of this role or of any other.
   const ikinciAlanlar = kaynakAlanlari ? alanlariSuz(icerik.alanlar, Object.keys(kaynakAlanlari)) : null
-  const { error } = await supabase
-    .from('not_dil_kaydi')
+  const { error } = await ulkeTablosu(supabase, 'not_dil_kaydi')
     .update({ ikinci_dil: hedef, ikinci_s: icerik.s, ikinci_o: icerik.o, ikinci_a: icerik.a, ikinci_p: icerik.p, ...(kaynakAlanlari ? { ikinci_alanlar: ikinciAlanlar } : {}), updated_at: new Date().toISOString() })
     .eq('note_id', notId)
     .eq('doctor_id', doktorId)
@@ -268,7 +267,7 @@ export async function notOnayla(supabase: SupabaseClient, doktorId: string, notI
   }
   // THE ONE WRITE. Text, approval, fields and the appointment's "done" happen together or not at all; the function
   // itself refuses a note that is already approved (and one that is not this doctor's) without changing anything.
-  const { data, error } = await supabase.rpc(NOT_ONAY_ISLEVI, {
+  const { data, error } = await ulkeIslevi(supabase, NOT_ONAY_ISLEVI, {
     p_note_id: notId, p_doctor_id: doktorId, p_onay_ani: simdi,
     p_s: icerik.s, p_o: icerik.o, p_a: icerik.a, p_p: icerik.p,
     p_dil_kaydi: dilKaydi,

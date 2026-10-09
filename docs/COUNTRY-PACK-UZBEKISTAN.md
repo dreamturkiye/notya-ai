@@ -2,6 +2,10 @@
 
 Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/`.
 
+## Correction of the record: where Uzbek data is stored (2026-10-08, NOTYA-ULKE-SABLON-01)
+
+**What was true before this job.** The reports of slices 1 to 3 said the Uzbek build used "new tables only". That was true of the migrations (they created only new tables and altered no existing one), but **not of the application**: the Uzbek build wrote its accounts into the core table `users`, its patients into `patients`, its visits into `sessions`, its notes into `notes` and its daily counter into `ai_kullanim`, and kept only the extra facts in new side tables. With a database of its own per country, as decided then, that was harmless. **What is true now.** Kaan decided on 2026-10-08 that every country shares Türkiye's database. Since this job an Uzbek build reads and writes **country tables only** (`ulke_hesaplari`, `ulke_hastalar`, `ulke_muayeneler`, `ulke_notlar`, `ulke_kullanim` and the side tables), each row carrying the country, and never a table Türkiye uses; migration 128, which altered `users`, is superseded and not to be run. Where a section below still names `users`, `patients`, `sessions` or `notes`, or "a separate Supabase project", read it as history. The current facts are in `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
+
 ## Status (2026-10-08, end of slice 1; slices 2 and 3 have their own sections below)
 
 **Nothing is live.** No Uzbek deployment or database exists. No migration has been applied anywhere. Sign-up is closed (invitation only, and no invitation code has been issued). Nothing here has been merged into `main`; the Turkish product is untouched.
@@ -457,7 +461,8 @@ Order for the first real run: an empty scratch Supabase project, all migrations 
 - Scope is all 30 specialties and all clinic types, with every core and specialty tool audited for the Uzbek system, Türkiye-only tools removed and Uzbek-specific tools added.
 - Ayşe must be a senior professor with 20+ years of Uzbek practice.
 - Nothing Turkish may appear in Uzbek Notya.
-- Structure: one repository with walled areas, separate deployment and database per country, core shared.
+- Structure: one repository with walled areas, separate deployment ~~and database~~ per country, core shared.
+- **Changed later the same day (19:09): "use the same database as what we are using for notya turkiye".** Every country shares Türkiye's database; a country keeps its own deployment. And: "Make this a template so that we can do US, UK, Canada, Australia, and New Zeland possibly tomorrow" (the country kit, `docs/COUNTRY-PACK-HOWTO.md`).
 - No separate Uzbek address: each country is a folder in the repository and a path on the main site; the Uzbek product is reached at `notya.io/uzbek`.
 - Visit transcription for Uzbekistan: ElevenLabs Scribe `scribe_v2`; language predicted on the first pass and stored with its probability; one second pass with the language forced to the doctor's note language when confidence is low; never more than two passes; the second pass is recorded so cost can be counted.
 - The note is written in the doctor's chosen note language; one click rewrites it in the other language as a second draft; an approved note is never silently overwritten.
@@ -581,7 +586,7 @@ To settle before the rule is ever added:
 
 ## Before the Uzbek deployment is created
 
-These are settings and decisions, not code, and none was touched by the foundation job:
+These are settings and decisions, not code, and none was touched by the foundation job. **Items 1, 3, 4 and 5 were written for a database per country and are superseded by the shared database (2026-10-08): see `docs/COUNTRY-PACK-DB-ROLLOUT.md`.** In short: one Supabase project, Türkiye's; the Uzbek deployment uses its address and keys; public sign-up stays on there (the Turkish sign-up page needs it) and a country build refuses any account that was not created by its own invitation route; migrations 129 to 135 only, never 128; and no invitation code until the shared login pool is closed.
 
 1. A separate Vercel project and a separate Supabase project for Uzbekistan (region to follow checklist A1).
 2. Build setting `NOTYA_COUNTRY=uz`. The build refuses any value that has no folder under `countries/`.

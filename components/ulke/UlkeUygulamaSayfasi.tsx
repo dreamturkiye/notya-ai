@@ -6,12 +6,18 @@
  */
 import React from 'react'
 import { notFound } from 'next/navigation'
-import { AKTIF_SAYFALAR } from '@/countries/active/sayfalar'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
+import { UYGULAMA_EKRAN_BILESENLERI } from '@/components/ulke/uygulama'
+import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
+import { rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import type { UygulamaEkrani } from '@/lib/ulke/tipler'
 
 export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
-  const Ekran = ozellikAcik('cekirdekMuayene') ? AKTIF_SAYFALAR.uygulama?.[ekran] : undefined
+  // A screen exists where the feature is on, the pack brings content for the shared screens, and the pack lists the
+  // screen's route. Anything else is "not found": there is no default screen and no other country's.
+  const var_ = ozellikAcik('cekirdekMuayene') && AKTIF_ARAYUZ !== null && rotaAcikMi(ulkePaketi().rotalar, UYGULAMA_EKRANLARI[ekran]) && (ekran !== 'takvim' || ozellikAcik('randevu'))
+  const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
   return <Ekran />
 }

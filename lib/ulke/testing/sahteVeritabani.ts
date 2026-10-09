@@ -6,11 +6,41 @@
  * (same rule as lib/security/testing/sahteSupabase.ts). Every query is recorded, so a test can prove that a read
  * of a patient table carried the doctor's id.
  *
+ * SHARED DATABASE (NOTYA-ULKE-SABLON-01). Every table here is a COUNTRY table, and the stand-in holds the rule the
+ * real tables hold with `ulke text not null`: a statement that does not carry the country THROWS — a select, update
+ * or delete without `ulke = …`, an insert or upsert whose row has no `ulke`, a function called without `p_ulke`.
+ * So every one of the country tests also proves that the statement it exercised was bound to the build's country.
+ * Rows of ANOTHER country can sit in the same tables (a test seeds them directly with `tablo(…).push`): the
+ * application must behave as if they were not there.
+ *
  * Synthetic data only.
  */
 export type Satir = Record<string, unknown>
 export type SahteHesap = { id: string; email: string; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }
-export type SorguKaydi = { tablo: string; islem: string; filtreler: string[] }
+/** `ulke`: the country the statement was bound to (its `ulke = …` filter, the `ulke` of the row it wrote, or `p_ulke`). */
+export type SorguKaydi = { tablo: string; islem: string; filtreler: string[]; ulke: string }
+
+/**
+ * THE ONE TABLE OF TÜRKİYE a country build is known to write to, through shared infrastructure it does not own:
+ * the model gateway's usage log (lib/ai/kullanim.ts — task, model, token counts, the account's id; no patient data).
+ * It has no `ulke` column. Listed in docs/COUNTRY-PACK-DB-ROLLOUT.md; lib/ulke/ulkeVeritabani.test.ts proves it is the
+ * only one. Every other table name reaching this stand-in is held to the country rule.
+ */
+export const ORTAK_ALTYAPI_TABLOLARI: readonly string[] = ['ai_token_kullanim']
+
+/** The country a statement names, or a thrown error: no statement reaches a country table without one. */
+function ulkeyiBul(ad: string, islem: string, filtreler: string[], yuk: Satir | Satir[] | null): string {
+  if (ORTAK_ALTYAPI_TABLOLARI.includes(ad)) return ''
+  if (islem === 'insert' || islem === 'upsert') {
+    const ulkeler = [...new Set((Array.isArray(yuk) ? yuk : [yuk ?? {}]).map((y) => y.ulke))]
+    if (ulkeler.length !== 1 || typeof ulkeler[0] !== 'string' || !/^[a-z]{2}$/.test(ulkeler[0])) throw new Error(`stand-in database: ${islem} on ${ad} without the country (ulke) on the row`)
+    return ulkeler[0]
+  }
+  const f = filtreler.find((x) => x.startsWith('ulke=eq.'))
+  if (!f || !/^[a-z]{2}$/.test(f.slice(8))) throw new Error(`stand-in database: ${islem} on ${ad} without a country filter (ulke = …)`)
+  if (islem === 'update' && yuk && !Array.isArray(yuk) && 'ulke' in yuk) throw new Error(`stand-in database: update on ${ad} rewrites the country of a row`)
+  return f.slice(8)
+}
 
 let sayac = 0
 const yeniId = () => `90000000-0000-4000-8000-${String(++sayac).padStart(12, '0')}`
@@ -30,6 +60,8 @@ export function sahteVeritabani() {
    * as the database does, and answered with PostgreSQL's own code — so a test of "two requests at the same moment"
    * is decided here, not by the application's earlier read.
    */
+  /** Tables whose key is not a generated `id` (their key is the account, the patient, the visit or the note). */
+  const KIMLIKSIZ = new Set(['hasta_ulke_bilgisi', 'hekim_dil_tercihleri', 'hekim_rolu', 'muayene_dil_kaydi', 'not_dil_kaydi', 'hekim_calisma_duzeni', 'ulke_kullanim'])
   const YER_TUTAN = ['planlandi', 'geldi', 'tamamlandi']
   const cakisma = (ad: string, yeni: Satir, digerleri: Satir[]): { message: string; code: string } | null => {
     if (ad !== 'ulke_randevulari' || !YER_TUTAN.includes(String(yeni.durum ?? 'planlandi'))) return null
@@ -46,23 +78,23 @@ export function sahteVeritabani() {
   type IslevCevabi = { data: unknown; error: { message: string; code?: string } | null }
   const islevCagrilari: { ad: string; arg: Satir }[] = []
   const islevler: Record<string, (a: Satir) => unknown> = {
-    // lib/db/migrations/135_ulke_randevu.sql — ulke_not_onayla
+    // lib/db/migrations/135_ulke_randevu.sql — ulke_not_onayla. Every statement carries `p_ulke`, as in the SQL.
     ulke_not_onayla: (a) => {
       const yaz = (ad: string) => { if (boz.yaz.has(ad)) throw Object.assign(new Error(`stand-in: ${ad} update failed inside the function`), { code: 'XX000' }) }
-      const not = tablo('notes').find((n) => n.id === a.p_note_id && n.doctor_id === a.p_doctor_id)
+      const not = tablo('ulke_notlar').find((n) => n.id === a.p_note_id && n.doctor_id === a.p_doctor_id && n.ulke === a.p_ulke)
       if (!not) return 'NOT_FOUND'
       if (not.approved_at) return 'ONAYLI'
-      yaz('notes')
+      yaz('ulke_notlar')
       Object.assign(not, { content_subjektif: a.p_s, content_objektif: a.p_o, content_degerlendirme: a.p_a, content_plan: a.p_p, approved_at: a.p_onay_ani, approved_by: a.p_doctor_id })
       const k = a.p_dil_kaydi as Satir | null | undefined
       if (k) {
         yaz('not_dil_kaydi')
-        const d = tablo('not_dil_kaydi').find((x) => x.note_id === a.p_note_id && x.doctor_id === a.p_doctor_id)
+        const d = tablo('not_dil_kaydi').find((x) => x.note_id === a.p_note_id && x.doctor_id === a.p_doctor_id && x.ulke === a.p_ulke)
         if (!d) throw Object.assign(new Error('ulke_not_onayla: not_dil_kaydi row missing'), { code: 'P0002' })
         for (const kolon of ['alanlar', 'ikinci_alanlar', 'not_dili', 'ikinci_dil', 'ikinci_s', 'ikinci_o', 'ikinci_a', 'ikinci_p']) if (Object.prototype.hasOwnProperty.call(k, kolon)) d[kolon] = k[kolon] ?? null
         d.updated_at = a.p_onay_ani
       }
-      const bagli = tablo('ulke_randevulari').filter((r) => r.session_id === not.session_id && r.doctor_id === a.p_doctor_id && ['planlandi', 'geldi'].includes(String(r.durum)))
+      const bagli = tablo('ulke_randevulari').filter((r) => r.session_id === not.session_id && r.doctor_id === a.p_doctor_id && r.ulke === a.p_ulke && ['planlandi', 'geldi'].includes(String(r.durum)))
       if (bagli.length) yaz('ulke_randevulari')
       for (const r of bagli) Object.assign(r, { durum: 'tamamlandi', updated_at: a.p_onay_ani })
       return 'TAMAM'
@@ -71,8 +103,9 @@ export function sahteVeritabani() {
   const rpc = async (ad: string, arg: Satir = {}): Promise<IslevCevabi> => {
     const islev = islevler[ad]
     if (!islev) throw new Error(`stand-in database: function ${ad} is not implemented`)
+    if (typeof arg.p_ulke !== 'string' || !/^[a-z]{2}$/.test(arg.p_ulke)) throw new Error(`stand-in database: function ${ad} called without the country (p_ulke)`)
     islevCagrilari.push({ ad, arg })
-    sorgular.push({ tablo: `rpc:${ad}`, islem: 'rpc', filtreler: [] })
+    sorgular.push({ tablo: `rpc:${ad}`, islem: 'rpc', filtreler: [], ulke: arg.p_ulke })
     const yedek = JSON.stringify(tablolar)
     try {
       return { data: islev(JSON.parse(JSON.stringify(arg)) as Satir), error: null }
@@ -118,7 +151,8 @@ export function sahteVeritabani() {
     maybeSingle() { this.tek = 'maybe'; return this }
 
     private calistir(): { data: unknown; error: { message: string; code?: string } | null } {
-      sorgular.push({ tablo: this.ad, islem: this.islem, filtreler: this.filtreler.map((f) => f.ad) })
+      const filtreAdlari = this.filtreler.map((f) => f.ad)
+      sorgular.push({ tablo: this.ad, islem: this.islem, filtreler: filtreAdlari, ulke: ulkeyiBul(this.ad, this.islem, filtreAdlari, this.yuk) })
       const satirlar = tablo(this.ad)
       const uyan = (s: Satir) => this.filtreler.every((f) => f.f(s))
       const yazma = this.islem !== 'select'
@@ -126,7 +160,7 @@ export function sahteVeritabani() {
       let sonuc: Satir[]
       if (this.islem === 'select') sonuc = satirlar.filter(uyan)
       else if (this.islem === 'insert') {
-        sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(this.ad === 'hasta_ulke_bilgisi' || this.ad === 'hekim_dil_tercihleri' || this.ad === 'hekim_rolu' || this.ad === 'muayene_dil_kaydi' || this.ad === 'not_dil_kaydi' || this.ad === 'hekim_calisma_duzeni' ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'sessions' ? { started_at: new Date().toISOString() } : {}), ...y }))
+        sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(KIMLIKSIZ.has(this.ad) ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'ulke_muayeneler' ? { started_at: new Date().toISOString() } : {}), ...y }))
         for (const y of sonuc) { const c = cakisma(this.ad, y, satirlar); if (c) return { data: null, error: c } }
         satirlar.push(...sonuc)
       } else if (this.islem === 'upsert') {

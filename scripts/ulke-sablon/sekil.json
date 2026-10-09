@@ -1,0 +1,900 @@
+{
+ "_": "Written by scripts/ulke-sablon/sekil-uret.mts. Key paths only: no text of any country. Do not edit by hand.",
+ "cekirdek": {
+  "hesap": [
+   "girisReddi"
+  ],
+  "giris": [
+   "altBaslik",
+   "eposta",
+   "epostaOrnek",
+   "sifre",
+   "sifreOrnek",
+   "gonder",
+   "gonderiliyor",
+   "bosAlan",
+   "hata",
+   "baglantiHatasi",
+   "cokDeneme",
+   "hazirDegil",
+   "davetSorusu",
+   "kayitBaglantisi",
+   "anaSayfa"
+  ],
+  "davetliKayit": [
+   "baslik",
+   "aciklama",
+   "adSoyad",
+   "eposta",
+   "sifre",
+   "sifreTekrar",
+   "davetKodu",
+   "dil",
+   "gonder",
+   "gonderiliyor",
+   "eksikAlan",
+   "epostaGecersiz",
+   "sifreKisa",
+   "sifreUyusmuyor",
+   "kodGecersiz",
+   "olusturulamadi",
+   "baglantiHatasi",
+   "basarili",
+   "girisSorusu",
+   "girisBaglantisi",
+   "kodYokSorusu",
+   "fiyatBaglantisi"
+  ],
+  "bekletme": [
+   "baslik",
+   "govde",
+   "cikis",
+   "yukleniyor"
+  ],
+  "sistem": [
+   "bulunamadiBaslik",
+   "bulunamadiGovde",
+   "anaSayfa",
+   "hataBaslik",
+   "hataGovde",
+   "tekrarDene"
+  ]
+ },
+ "uygulama": {
+  "kabuk": {
+   "bugun": "$m",
+   "hastalar": "$m",
+   "ayarlar": "$m",
+   "cikis": "$m",
+   "menu": "$m",
+   "yukleniyor": "$m",
+   "hata": "$m",
+   "baglanti": "$m",
+   "geri": "$m"
+  },
+  "diller": {
+   "$dil": "temel"
+  },
+  "yazilar": {
+   "$dil": "yazi"
+  },
+  "baslangic": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "dil": "$m",
+   "yazi": "$m",
+   "devam": "$m",
+   "kaydediliyor": "$m",
+   "kaydedilemedi": "$m"
+  },
+  "ayarlar": {
+   "baslik": "$m",
+   "dilBolumu": "$m",
+   "arayuzDili": "$m",
+   "notDili": "$m",
+   "yazi": "$m",
+   "yaziIzoh": "$m",
+   "kaydet": "$m",
+   "kaydediliyor": "$m",
+   "kaydedildi": "$m",
+   "kaydedilemedi": "$m",
+   "saatDilimi": {
+    "$istege": "REQUIRED if the country has more than one time zone (uygulama.saatDilimleri): label of the setting"
+   },
+   "saatDilimiIzoh": {
+    "$istege": "REQUIRED if the country has more than one time zone: one line under the setting"
+   }
+  },
+  "arama": {
+   "etiket": "$m",
+   "ornek": "$m",
+   "dugme": "$m",
+   "sonucYok": "$m"
+  },
+  "durum": {
+   "taslak": "$m",
+   "onayli": "$m"
+  },
+  "bugun": {
+   "selam": "$m",
+   "baslik": "$m",
+   "bos": "$m",
+   "yeniHasta": "$m",
+   "muayeneBaslat": "$m",
+   "hastasiz": "$m",
+   "tumHastalar": "$m"
+  },
+  "hastalar": {
+   "baslik": "$m",
+   "bos": "$m",
+   "dosya": "$m"
+  },
+  "yeniHasta": {
+   "baslik": "$m",
+   "ad": "$m",
+   "otaIsmi": {
+    "$istege": "REQUIRED if uygulama.adAlanlari.ikinciAd is true: label of the second name field"
+   },
+   "istegeBagli": "$m",
+   "dogumTarihi": "$m",
+   "cinsiyet": "$m",
+   "erkek": "$m",
+   "kadin": "$m",
+   "telefon": "$m",
+   "dil": "$m",
+   "ulusalKimlik": {
+    "$istege": "REQUIRED if the pack has an identity number (ulusalKimlik is not null): label of that field"
+   },
+   "kaydet": "$m",
+   "kaydediliyor": "$m",
+   "iptal": "$m",
+   "adGerekli": "$m",
+   "dogumGecersiz": "$m",
+   "dilGerekli": "$m",
+   "kaydedilemedi": "$m"
+  },
+  "hasta": {
+   "baslik": "$m",
+   "yas": "$m",
+   "ay": "$m",
+   "bulunamadi": "$m",
+   "notlar": "$m",
+   "notYok": "$m",
+   "taslaklar": "$m",
+   "notsuzlar": "$m",
+   "notsuz": "$m",
+   "ac": "$m"
+  },
+  "muayene": {
+   "baslik": "$m",
+   "hasta": "$m",
+   "sablon": "$m",
+   "sablonGenel": "$m",
+   "sablonPediatri": "$m",
+   "riza": "$m",
+   "rizaGerekli": "$m",
+   "kayitBaslat": "$m",
+   "kayitDurdur": "$m",
+   "kaydediliyor": "$m",
+   "vazgec": "$m",
+   "mikrofonYok": "$m",
+   "yukleniyor": "$m",
+   "isleniyor": "$m",
+   "kisaKayit": "$m",
+   "sesOkunamadi": "$m",
+   "notYazilamadi": "$m",
+   "yenidenDene": "$m",
+   "limit": "$m",
+   "hazirDegil": "$m",
+   "taninanDil": "$m",
+   "konusmaDili": {
+    "$dil": "temel"
+   },
+   "dilKarma": "$m",
+   "dilBaska": "$m",
+   "ikinciGecis": "$m",
+   "dusukGuven": "$m",
+   "metinKaydedildi": "$m",
+   "bulunamadi": "$m",
+   "yeniHasta": "$m",
+   "notHazirla": "$m",
+   "notYaziliyor": "$m",
+   "notuAc": "$m",
+   "hastaSec": "$m"
+  },
+  "not": {
+   "baslik": "$m",
+   "uyari": "$m",
+   "s": "$m",
+   "o": "$m",
+   "a": "$m",
+   "p": "$m",
+   "notDili": "$m",
+   "cevir": {
+    "$dil": "cevir"
+   },
+   "cevriliyor": "$m",
+   "cevrilemedi": "$m",
+   "kaydet": "$m",
+   "kaydedildi": "$m",
+   "onayla": "$m",
+   "onaylaniyor": "$m",
+   "onaylandi": "$m",
+   "bosNot": "$m",
+   "transkript": "$m",
+   "dosyayaDon": "$m",
+   "bulunamadi": "$m",
+   "kaydedilemedi": "$m",
+   "onaylanamadi": "$m",
+   "zatenOnayli": "$m",
+   "ikinciTaslak": "$m"
+  },
+  "asistan": {
+   "etiket": "$m",
+   "notr": "$m:%",
+   "satir": "$m",
+   "qayd": "$m",
+   "qoralama": "$m"
+  },
+  "rol": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "etiket": "$m",
+   "sec": "$m",
+   "grupDoktor": "$m",
+   "grupKlinikHekim": "$m",
+   "grupKlinikMuttefik": "$m",
+   "devam": "$m",
+   "kaydediliyor": "$m",
+   "kaydedilemedi": "$m",
+   "gerekli": "$m",
+   "ayarBaslik": "$m",
+   "ayarIzoh": "$m",
+   "kaydet": "$m",
+   "kaydedildi": "$m"
+  }
+ },
+ "randevu": {
+  "kabuk": {
+   "takvim": "$m"
+  },
+  "gunKisa": {
+   "1": "$m",
+   "2": "$m",
+   "3": "$m",
+   "4": "$m",
+   "5": "$m",
+   "6": "$m",
+   "7": "$m"
+  },
+  "gunUzun": {
+   "1": "$m",
+   "2": "$m",
+   "3": "$m",
+   "4": "$m",
+   "5": "$m",
+   "6": "$m",
+   "7": "$m"
+  },
+  "durum": {
+   "planlandi": "$m",
+   "geldi": "$m",
+   "tamamlandi": "$m",
+   "gelmedi": "$m",
+   "iptal": "$m"
+  },
+  "takvim": {
+   "baslik": "$m",
+   "gun": "$m",
+   "hafta": "$m",
+   "bugun": "$m",
+   "onceki": "$m",
+   "sonraki": "$m",
+   "yeni": "$m",
+   "duzen": "$m",
+   "bos": "$m",
+   "bosSaat": "$m",
+   "mola": "$m",
+   "isGunuDegil": "$m",
+   "mesaiDisi": "$m",
+   "gunuAc": "$m"
+  },
+  "form": {
+   "baslik": "$m",
+   "hasta": "$m",
+   "hastaSec": "$m",
+   "hastaDegistir": "$m",
+   "tarih": "$m",
+   "tarihOrnek": "$m",
+   "saat": "$m",
+   "sure": "$m",
+   "dakika": "$m",
+   "neden": "$m",
+   "nedenOrnek": "$m",
+   "kaydet": "$m",
+   "kaydediliyor": "$m",
+   "vazgec": "$m",
+   "dolu": "$m",
+   "mesaiDisi": "$m",
+   "yineDe": "$m",
+   "tarihGecersiz": "$m",
+   "saatGecersiz": "$m",
+   "sureGecersiz": "$m",
+   "kaydedilemedi": "$m"
+  },
+  "randevu": {
+   "baslik": "$m",
+   "durum": "$m",
+   "vakit": "$m",
+   "geldi": "$m",
+   "tamamla": "$m",
+   "gelmedi": "$m",
+   "iptalEt": "$m",
+   "planaAl": "$m",
+   "geldiyeAl": "$m",
+   "muayeneyiAc": "$m",
+   "tasi": "$m",
+   "tasiKaydet": "$m",
+   "tasiYineDe": "$m",
+   "tasindi": "$m",
+   "tasiMesaiDisi": "$m",
+   "bulunamadi": "$m",
+   "gecisYok": "$m",
+   "mesaiDisiIsareti": "$m",
+   "degistirilemedi": "$m",
+   "yenidenYaz": "$m",
+   "takvimeDon": "$m",
+   "dosya": "$m"
+  },
+  "hatirlatma": {
+   "baslik": "$m",
+   "kopyala": "$m",
+   "kopyalandi": "$m",
+   "kopyalanamadi": "$m",
+   "izoh": "$m",
+   "dil": "$m",
+   "dilAdi": {
+    "$dil": "temel"
+   },
+   "metin": "$m:%1,%2,%3",
+   "metinAdsiz": "$m:%1,%2"
+  },
+  "duzen": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "gunler": "$m",
+   "baslangic": "$m",
+   "bitis": "$m",
+   "sure": "$m",
+   "molalar": "$m",
+   "molaBas": "$m",
+   "molaBit": "$m",
+   "molaEkle": "$m",
+   "molaSil": "$m",
+   "kaydet": "$m",
+   "kaydediliyor": "$m",
+   "kaydedildi": "$m",
+   "kaydedilemedi": "$m",
+   "gunGerekli": "$m",
+   "saatGecersiz": "$m",
+   "sureGecersiz": "$m",
+   "molaGecersiz": "$m",
+   "saatDilimi": "$m",
+   "tatilNotu": "$m",
+   "varsayilan": "$m"
+  },
+  "bugun": {
+   "randevular": "$m",
+   "randevuYok": "$m",
+   "takvimiAc": "$m"
+  },
+  "hasta": {
+   "randevular": "$m",
+   "randevuAl": "$m"
+  }
+ },
+ "acilis": {
+  "meta": {
+   "baslik": "$m",
+   "aciklama": "$m"
+  },
+  "nav": {
+   "bolumler": "$m",
+   "mobil": "$m",
+   "dil": "$m",
+   "havolalar": [
+    {
+     "capa": {
+      "$capa": "suhbat"
+     },
+     "etiket": "$m",
+     "no": {
+      "$sabit": "01"
+     }
+    },
+    {
+     "capa": {
+      "$capa": "portal"
+     },
+     "etiket": "$m",
+     "no": {
+      "$sabit": "03"
+     }
+    },
+    {
+     "capa": {
+      "$capa": "yonalish"
+     },
+     "etiket": "$m",
+     "no": {
+      "$sabit": "06"
+     }
+    },
+    {
+     "capa": {
+      "$capa": "xavfsizlik"
+     },
+     "etiket": "$m",
+     "no": {
+      "$sabit": "09"
+     }
+    },
+    {
+     "capa": {
+      "$capa": "narx"
+     },
+     "etiket": "$m",
+     "no": {
+      "$sabit": "10"
+     }
+    }
+   ],
+   "giris": "$m",
+   "girisUzun": "$m",
+   "sorov": "$m",
+   "menyuAc": "$m",
+   "menyuYop": "$m"
+  },
+  "kahraman": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "giris": "$m",
+   "birinciDugme": "$m",
+   "ikinciDugme": "$m",
+   "gorselAlt": "$m",
+   "gorselAlti": "$m",
+   "serit": [
+    "$m",
+    "$m",
+    "$m",
+    "$m"
+   ]
+  },
+  "suhbat": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "maddeler": [
+    "$m",
+    "$m"
+   ],
+   "sekmeler": "$m",
+   "yozmoqda": "$m",
+   "tayyor": "$m",
+   "izoh": "$m",
+   "sahneler": [
+    {
+     "id": {
+      "$sabit": "pedia"
+     },
+     "meta": "$m",
+     "yordamchi": "$m",
+     "alan": "$m",
+     "saat": {
+      "$sabit": "09:14"
+     },
+     "navbatlar": [
+      {
+       "kim": "$m",
+       "rol": {
+        "$sabit": "shifokor"
+       },
+       "matn": "$m"
+      },
+      {
+       "kim": "$m",
+       "rol": {
+        "$sabit": "yordamchi"
+       },
+       "matn": "$m"
+      }
+     ]
+    },
+    {
+     "id": {
+      "$sabit": "safety"
+     },
+     "meta": "$m",
+     "yordamchi": "$m",
+     "alan": "$m",
+     "saat": {
+      "$sabit": "18:47"
+     },
+     "navbatlar": [
+      {
+       "kim": "$m",
+       "rol": {
+        "$sabit": "shifokor"
+       },
+       "matn": "$m"
+      },
+      {
+       "kim": "$m",
+       "rol": {
+        "$sabit": "ogohlantirish"
+       },
+       "matn": "$m"
+      }
+     ]
+    },
+    {
+     "id": {
+      "$sabit": "memory"
+     },
+     "meta": "$m",
+     "yordamchi": "$m",
+     "alan": "$m",
+     "saat": {
+      "$sabit": "11:03"
+     },
+     "navbatlar": [
+      {
+       "kim": "$m",
+       "rol": {
+        "$sabit": "shifokor"
+       },
+       "matn": "$m"
+      },
+      {
+       "kim": "$m",
+       "rol": {
+        "$sabit": "yordamchi"
+       },
+       "matn": "$m"
+      }
+     ]
+    }
+   ]
+  },
+  "qabul": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "maddeler": [
+    "$m",
+    "$m",
+    "$m"
+   ],
+   "kart": {
+    "etiket": "$m",
+    "satirlar": [
+     {
+      "k": "$m",
+      "mark": {
+       "$sabit": "01"
+      }
+     },
+     {
+      "k": "$m",
+      "mark": {
+       "$sabit": "02"
+      }
+     },
+     {
+      "k": "$m",
+      "mark": {
+       "$sabit": "03"
+      }
+     },
+     {
+      "k": "$m",
+      "mark": {
+       "$sabit": "04"
+      }
+     }
+    ],
+    "not": "$m"
+   }
+  },
+  "portal": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "maddeler": [
+    "$m",
+    "$m",
+    "$m"
+   ],
+   "kart": {
+    "etiket": "$m",
+    "satirlar": [
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m"
+     }
+    ],
+    "not": "$m"
+   }
+  },
+  "maslahat": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "maddeler": [
+    "$m",
+    "$m",
+    "$m"
+   ],
+   "kart": {
+    "etiket": "$m",
+    "satirlar": [
+     {
+      "k": "$m",
+      "v": "$m"
+     },
+     {
+      "k": "$m",
+      "v": "$m"
+     },
+     {
+      "k": "$m",
+      "v": "$m"
+     }
+    ]
+   }
+  },
+  "jadval": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "maddeler": [
+    "$m",
+    "$m"
+   ],
+   "kart": {
+    "etiket": "$m",
+    "satirlar": [
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m"
+     },
+     {
+      "k": "$m",
+      "mark": "$m"
+     }
+    ]
+   }
+  },
+  "yonalish": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "misollar": [
+    {
+     "k": "$m",
+     "v": "$m"
+    },
+    {
+     "k": "$m",
+     "v": "$m"
+    },
+    {
+     "k": "$m",
+     "v": "$m"
+    }
+   ],
+   "royxatEtiketi": "$m",
+   "royxat": [
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m"
+   ]
+  },
+  "kuzatuv": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "kart": {
+    "etiket": "$m",
+    "satirlar": [
+     {
+      "k": "$m",
+      "mark": "$m"
+     },
+     {
+      "k": "$m",
+      "mark": "$m"
+     }
+    ],
+    "not": "$m"
+   }
+  },
+  "organish": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "gorselAlt": "$m",
+   "gorselAlti": "$m",
+   "sekmeler": "$m",
+   "birinchi": {
+    "etiket": "$m",
+    "sorov": "$m",
+    "javob": "$m"
+   },
+   "oninchi": {
+    "etiket": "$m",
+    "sorov": "$m",
+    "javob": "$m"
+   },
+   "izoh": "$m"
+  },
+  "xavfsizlik": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "iqtibos": "$m",
+   "izoh": "$m",
+   "gorselAlt": "$m",
+   "gorselAlti": "$m",
+   "dalillar": [
+    {
+     "k": "$m",
+     "v": "$m"
+    },
+    {
+     "k": "$m",
+     "v": "$m"
+    },
+    {
+     "k": "$m",
+     "v": "$m"
+    },
+    {
+     "k": "$m",
+     "v": "$m"
+    }
+   ]
+  },
+  "narx": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "rejalar": [
+    {
+     "ad": "$m",
+     "narx": "$m",
+     "maddeler": [
+      "$m",
+      "$m",
+      "$m",
+      "$m",
+      "$m"
+     ]
+    },
+    {
+     "ad": "$m",
+     "narx": "$m",
+     "maddeler": [
+      "$m",
+      "$m",
+      "$m",
+      "$m",
+      "$m",
+      "$m"
+     ]
+    },
+    {
+     "ad": "$m",
+     "narx": "$m",
+     "maddeler": [
+      "$m",
+      "$m",
+      "$m",
+      "$m"
+     ]
+    }
+   ],
+   "dugme": "$m",
+   "izoh": "$m"
+  },
+  "sorov": {
+   "ustBaslik": "$m",
+   "baslik": "$m",
+   "baslikVurgu": "$m",
+   "govde": "$m",
+   "form": {
+    "etiket": "$m",
+    "adSoyad": "$m",
+    "kurum": "$m",
+    "telefon": "$m",
+    "telefonOrnek": "$m",
+    "uzmanlik": "$m",
+    "mesaj": "$m",
+    "gonder": "$m",
+    "ipucu": "$m",
+    "eksik": "$m",
+    "konu": "$m",
+    "satir": {
+     "adSoyad": "$m",
+     "kurum": "$m",
+     "telefon": "$m",
+     "uzmanlik": "$m",
+     "mesaj": "$m"
+    }
+   },
+   "formYok": "$m",
+   "davetSorusu": "$m",
+   "davetBaglantisi": "$m"
+  },
+  "altBilgi": {
+   "tanim": "$m",
+   "havolalar": "$m",
+   "giris": "$m",
+   "kayit": "$m",
+   "haklar": "$m",
+   "diller": "$m"
+  }
+ }
+}

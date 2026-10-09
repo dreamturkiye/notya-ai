@@ -1,0 +1,339 @@
+#!/usr/bin/env node
+/**
+ * NOTYA-ULKE-SABLON-01 — THE PACK-NEUTRAL WALK-THROUGH. One script for every country: it names no country and holds
+ * no text. What it must know about the country it walks comes from that country's pack, as JSON written by
+ * ./paket-bilgisi.mts; every sentence it expects on a screen is read from the pack's own catalogue.
+ *
+ * It walks the country kit's core path in a real browser against a production build and the stand-ins: landing page,
+ * login (wrong password, another country's account), first-login questions as far as the pack has any, home,
+ * settings, new patient, visit recording → note → approval, appointment + double booking, a second account that sees
+ * none of it — and on every screen: nothing still marked "to be supplied", nothing of another country, every link
+ * under the country's path, no request to any outside service.
+ *
+ * A country's OWN deeper walk-through (its wording, its roles, its language switches) stays with that country:
+ * Uzbekistan's is ./yuruyus.mjs.
+ *
+ * RUN, for the country <code> (replace it three times; nothing is contacted outside this machine):
+ *
+ *   mkdir /tmp/yuruyus && cd /tmp/yuruyus && npm i puppeteer-core @sparticuz/chromium
+ *   cd <repo> && export NOTYA_COUNTRY=<code> NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54399 NEXT_PUBLIC_SUPABASE_ANON_KEY=sahte-anon \
+ *     SUPABASE_SERVICE_ROLE_KEY=sahte-servis NOTYA_ILETISIM_EPOSTA=pilot@example.com ENCRYPTION_MASTER_KEY=yalniz-yuruyus-icin-sentetik-anahtar \
+ *     ELEVENLABS_API_KEY=sahte-anahtar OPENROUTER_API_KEY=sahte-anahtar YURUYUS_GENEL=1 YURUYUS_ULKE=<code>
+ *   npx --yes tsx scripts/ulke-yuruyus/paket-bilgisi.mts > /tmp/yuruyus/paket.json
+ *   export YURUYUS_DILLER=$(node -p "const p=require('/tmp/yuruyus/paket.json'); [p.dil, p.uygulamaDilleri.at(-1)].join()") \
+ *          YURUYUS_STT_KODU=$(node -p "require('/tmp/yuruyus/paket.json').sttKodu")
+ *   node scripts/ulke-yuruyus/sahte-supabase.mjs 54399 &
+ *   npm run build:ulke && NODE_OPTIONS="--require $PWD/scripts/ulke-yuruyus/sahte-saglayicilar.cjs" npx next start -p 3111 &
+ *   cd /tmp/yuruyus && PAKET=/tmp/yuruyus/paket.json node <repo>/scripts/ulke-yuruyus/genel.mjs
+ *
+ * Settings: PAKET (the JSON above, required), TABAN (http://localhost:3111), SUPA (http://127.0.0.1:54399), CIKTI (./cikti).
+ * Exit code 0 only when every check passed.
+ */
+import { createRequire } from 'node:module'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+if (!process.env.PAKET || !existsSync(process.env.PAKET)) { console.error('PAKET=<the JSON written by scripts/ulke-yuruyus/paket-bilgisi.mts> is required'); process.exit(2) }
+const P = JSON.parse(readFileSync(process.env.PAKET, 'utf8'))
+const gerek = createRequire(join(process.env.YURUYUS_MODULLER || process.cwd(), 'x.js'))
+const puppeteer = gerek('puppeteer-core')
+const chromiumHam = gerek('@sparticuz/chromium')
+const chromium = chromiumHam.default ?? chromiumHam
+
+const TABAN = process.env.TABAN || 'http://localhost:3111'
+const SUPA = process.env.SUPA || 'http://127.0.0.1:54399'
+const ON_EK = P.yolOnEki
+const CIKTI = process.env.CIKTI || './cikti'
+mkdirSync(CIKTI, { recursive: true })
+const YURUYUS_DIZIN = process.env.YURUYUS_DIZIN || join(tmpdir(), 'notya-yuruyus')
+mkdirSync(YURUYUS_DIZIN, { recursive: true })
+const SENARYO = join(YURUYUS_DIZIN, 'senaryo.json')
+const GUNLUK = join(YURUYUS_DIZIN, 'cagrilar.jsonl')
+const adres = (rota) => ((rota === '/' || /^\/[?#]/.test(rota) ? `${ON_EK}${rota.slice(1)}` : `${ON_EK}${rota}`) || '/')
+const OTURUM_ANAHTARI = `sb-notya-${P.kod}-auth-token`
+const HESAP_A = 'aaaaaaaa-0000-4000-8000-000000000001', HESAP_B = 'aaaaaaaa-0000-4000-8000-000000000002'
+const HASTA_ADI = 'QA-PATIENT Walkthrough'
+
+const sonuc = []
+const kontrol = (ad, kosul, ayrinti = '') => { sonuc.push({ ad, tamam: !!kosul, ayrinti }); console.log(`${kosul ? 'ok  ' : 'FAIL'} ${ad}${ayrinti ? ' — ' + String(ayrinti).slice(0, 300) : ''}`) }
+const bekle = (ms) => new Promise((r) => setTimeout(r, ms))
+const tabloOku = async (ad) => (await fetch(`${SUPA}/__tablo/${ad}`)).json()
+const cagrilar = () => (existsSync(GUNLUK) ? readFileSync(GUNLUK, 'utf8').split('\n').filter(Boolean).map((x) => JSON.parse(x)) : [])
+
+const tarayici = await puppeteer.launch({
+  args: [...chromium.args.filter((a) => a !== '--single-process'), '--no-sandbox', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'],
+  executablePath: await chromium.executablePath(), headless: 'shell',
+})
+async function sayfaAc({ genislik, yukseklik, telefon }) {
+  const ctx = await tarayici.createBrowserContext()
+  const p = await ctx.newPage()
+  await p.setViewport({ width: genislik, height: yukseklik, deviceScaleFactor: 1, isMobile: !!telefon, hasTouch: !!telefon })
+  await p.setBypassCSP(true) // the stand-in Supabase is on localhost, outside the security policy
+  await p.setRequestInterception(true)
+  p.istekler = []; p.disari = []
+  p.on('request', (r) => {
+    const u = r.url()
+    // Fonts are the one outside address a page asks for; this machine answers them empty (some machines block the font host).
+    if (u.startsWith('https://fonts.googleapis.com/') || u.startsWith('https://fonts.gstatic.com/')) return r.respond({ status: 200, contentType: 'text/css', body: '' })
+    if (u.startsWith(TABAN)) p.istekler.push(u.slice(TABAN.length))
+    else if (!u.startsWith(SUPA) && !u.startsWith('data:') && !u.startsWith('blob:')) p.disari.push(u)
+    r.continue()
+  })
+  p.konsol = []
+  p.on('pageerror', (e) => p.konsol.push(String(e)))
+  return p
+}
+const git = (p, rota) => p.goto(TABAN + adres(rota), { waitUntil: 'networkidle0', timeout: 180000 })
+const yolda = (p, rota) => p.waitForFunction((a) => location.pathname === a, { timeout: 60000 }, adres(rota).split('?')[0])
+const metin = (p, sel) => p.$eval(sel, (e) => e.innerText)
+const govde = (p) => p.evaluate(() => `${document.title}\n${document.body.innerText}`)
+const yazDeger = (p, sel, v) => p.evaluate((s, d) => {
+  const e = document.querySelector(s)
+  Object.getOwnPropertyDescriptor(Object.getPrototypeOf(e), 'value').set.call(e, d)
+  e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true }))
+}, sel, v)
+const api = (p, rota, secenek = {}) => p.evaluate(async (u, s, anahtar) => {
+  const oturum = JSON.parse(localStorage.getItem(anahtar) || 'null')
+  const r = await fetch(u, { method: s.method || 'GET', headers: { Authorization: `Bearer ${s.jeton ?? oturum?.access_token ?? ''}`, ...(s.govde ? { 'Content-Type': 'application/json' } : {}) }, body: s.govde ? JSON.stringify(s.govde) : undefined })
+  const t = await r.text()
+  let j = null; try { j = JSON.parse(t) } catch { /* not json */ }
+  return { s: r.status, t: t.slice(0, 300), j }
+}, adres(rota), secenek, OTURUM_ANAHTARI)
+
+// ── what must never be on a screen of this country ──
+const kacis = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const YABANCI = P.yabanci.flatMap((u) => u.terimler.map((t) => ({ kod: u.kod, terim: t.terim, desen: t.eslesme === 'kelime' ? new RegExp(`(?<![\\p{L}\\p{N}])${kacis(t.terim)}(?![\\p{L}\\p{N}])`, t.buyukKucukDuyarli ? 'u' : 'iu') : new RegExp(kacis(t.terim), t.buyukKucukDuyarli ? 'u' : 'iu') })))
+const YABANCI_HARF = P.yabanci.filter((u) => u.harfler).map((u) => ({ kod: u.kod, desen: new RegExp(`[${kacis(u.harfler)}]`, 'u') }))
+/** Every screen: no marker, no other country's term or letter, links under the path, nothing asked of the outside. */
+async function tara(p, ad) {
+  const g = await govde(p)
+  const kaynak = await p.content()
+  kontrol(`${ad}: nothing on the screen is still marked "to be supplied"`, !g.includes(P.eksikIsareti) && !kaynak.includes(P.eksikIsareti))
+  const terim = YABANCI.filter((y) => y.desen.test(g)).map((y) => `${y.kod}:${y.terim}`)
+  const harf = YABANCI_HARF.filter((y) => y.desen.test(g)).map((y) => `${y.kod}:${g.match(y.desen)?.[0]}`)
+  kontrol(`${ad}: no term or letter of another country (${P.yabanci.map((u) => u.kod).join(', ')})`, terim.length === 0 && harf.length === 0, [...terim, ...harf].join(' '))
+  const iz = P.yabanci.filter((u) => kaynak.includes(u.iz)).map((u) => u.kod)
+  kontrol(`${ad}: no other country's pack in the page`, iz.length === 0, iz.join(' '))
+  const hepsi = await p.evaluate(() => [...document.querySelectorAll('a[href], form[action]')].map((e) => e.getAttribute('href') ?? e.getAttribute('action')))
+  const altinda = (h) => h.startsWith('#') || h.startsWith('mailto:') || (ON_EK ? h === ON_EK || h.startsWith(`${ON_EK}/`) || h.startsWith(`${ON_EK}?`) || h.startsWith(`${ON_EK}#`) : h.startsWith('/') || h.startsWith('?'))
+  const disari = hepsi.filter((h) => !altinda(h))
+  kontrol(`${ad}: every link and form stays under "${ON_EK || '/'}"`, disari.length === 0, disari.join(' '))
+  const kacak = ON_EK ? p.istekler.filter((i) => !(i === ON_EK || i.startsWith(`${ON_EK}/`) || i.startsWith(`${ON_EK}?`))) : []
+  kontrol(`${ad}: every request to the application is under "${ON_EK || '/'}", and none goes to an outside service`, kacak.length === 0 && p.disari.length === 0, [...new Set([...kacak, ...p.disari])].slice(0, 4).join(' '))
+  kontrol(`${ad}: no script error on the page`, p.konsol.length === 0, p.konsol.slice(0, 2).join(' | '))
+}
+async function giris(p, eposta, sifre) {
+  for (const [id, v] of [['#ulke-giris-eposta', eposta], ['#ulke-giris-sifre', sifre]]) { await p.click(id, { clickCount: 3 }); await p.keyboard.press('Backspace'); await yazDeger(p, id, ''); await p.type(id, v) }
+  await p.click('button[type=submit]')
+}
+/** After a first login: answer whatever questions THIS pack asks (language and script, role), and arrive at the home. */
+async function sorulariGec(p, rol) {
+  const sorulan = []
+  for (let i = 0; i < 4; i++) {
+    // Either the home (drawn — an account with a question left is sent on from there), or the questions' address with a question drawn on it (never the login form that was just sent).
+    const durum = await p.waitForFunction((bugun, soru) => (location.pathname === bugun && document.querySelector('.uza-karsilama') ? 'ev' : location.pathname === soru && document.querySelector('select[name=rol], input[name=dil], input[name=yazi]') ? (document.querySelector('select[name=rol]') ? 'rol' : 'dil') : false), { timeout: 60000 }, adres('/today'), adres('/start')).then((h) => h.jsonValue())
+    if (durum === 'ev') break
+    if (durum === 'rol') { sorulan.push('role'); await p.select('select[name=rol]', rol) } else sorulan.push('language')
+    await p.click('button[type=submit]')
+    // the same address draws the next question, or the home opens: wait until this question is gone
+    await p.waitForFunction((bugun, d) => (location.pathname === bugun && !!document.querySelector('.uza-karsilama')) || (d === 'dil' ? !document.querySelector('input[name=dil], input[name=yazi]') : !document.querySelector('select[name=rol]')), { timeout: 60000 }, adres('/today'), durum)
+  }
+  await yolda(p, '/today')
+  await p.waitForSelector('h1', { timeout: 60000 })
+  return sorulan
+}
+
+const MASA = { genislik: 1440, yukseklik: 900 }, TEL = { genislik: 390, yukseklik: 844, telefon: true }
+console.log(`\nPack-neutral walk-through — country "${P.kod}", served under "${ON_EK || '/'}", form "${P.dil}"\n`)
+
+// ───────────────────────── 1. public pages ─────────────────────────
+{
+  const p = await sayfaAc(MASA)
+  if (P.acilis) {
+    const r = await git(p, '/')
+    const bilgi = await p.evaluate(() => ({ lang: document.documentElement.lang, baslik: document.title, h1: document.querySelector('h1')?.innerText ?? '', robots: document.querySelector('meta[name=robots]')?.getAttribute('content') || '' }))
+    kontrol('landing page: answers at the country\'s path, in the pack\'s default form', r.status() === 200 && bilgi.lang === P.dil, `${r.status()} lang=${bilgi.lang}`)
+    kontrol('landing page: the headline is the pack\'s own', bilgi.h1.replace(/\s+/g, ' ').includes(P.acilisIcerigi.baslik.replace(/\s+/g, ' ')), bilgi.h1)
+    kontrol(`landing page: ${P.gizli ? 'hidden from search (noindex header and meta)' : 'open to search, as the pack says'}`, P.gizli ? /noindex/.test(r.headers()['x-robots-tag'] || '') && /noindex/.test(bilgi.robots) : !/noindex/.test(r.headers()['x-robots-tag'] || ''), `${r.headers()['x-robots-tag']} | ${bilgi.robots}`)
+    const capalar = await p.evaluate((l) => l.filter((c) => !document.getElementById(c)), Object.values(P.acilisIcerigi.capalar))
+    kontrol('landing page: every section anchor of the pack is on the page', capalar.length === 0, capalar.join(' '))
+    await tara(p, 'landing page')
+    await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-landing.png`) })
+  }
+  await git(p, '/signup')
+  const kodAlani = await p.evaluate(() => [...document.querySelectorAll('input')].map((e) => e.id || e.name).join(' '))
+  kontrol(`sign-up: ${P.kayitAcik ? 'open — no invitation code is asked' : 'closed — an invitation code is required'}`, /kod/i.test(kodAlani) === !P.kayitAcik, kodAlani)
+  if (!P.kayitAcik) {
+    const kodsuz = await p.evaluate(async (u) => { const r = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adSoyad: 'QA Uninvited', eposta: 'qa-uninvited@notya.test', sifre: 'sinov-parol-9', dil: null }) }); return r.status }, adres('/api/ulke/kayit'))
+    kontrol('sign-up: the server refuses an account without a valid invitation code', kodsuz >= 400 && kodsuz < 500, String(kodsuz))
+  }
+  await tara(p, 'sign-up page')
+  await git(p, '/login')
+  kontrol('login page: the button is the pack\'s own text', (await metin(p, 'button[type=submit]')) === P.giris.gonder)
+  await tara(p, 'login page')
+  await giris(p, 'qa-uz@notya.test', 'wrong-password')
+  await p.waitForSelector('[role=alert]', { timeout: 30000 })
+  kontrol('login refused (wrong password): the pack\'s own sentence, no session kept', (await metin(p, '[role=alert]')) === P.hesap.girisReddi && !(await p.evaluate(() => Object.keys(localStorage).some((k) => k.includes('auth-token')))))
+  await git(p, '/login')
+  await giris(p, 'qa-tr@notya.test', 'sinov-parol-3')
+  await p.waitForSelector('[role=alert]', { timeout: 30000 })
+  kontrol('login refused (an account of ANOTHER country in the shared database): same sentence, no session kept', (await metin(p, '[role=alert]')) === P.hesap.girisReddi && !(await p.evaluate(() => Object.keys(localStorage).some((k) => k.includes('auth-token')))))
+  for (const yol of ['/doktor', '/giris', '/dashboard/doktor', '/api/users/me']) {
+    const s = await p.evaluate(async (u) => (await fetch(u)).status, adres(yol))
+    kontrol(`a path of the pre-split application does not exist here: ${yol} → 404`, s === 404, String(s))
+  }
+  await p.close()
+}
+
+// ───────────────────────── 2. account A: questions, home, settings, patient ─────────────────────────
+const A = await sayfaAc(MASA)
+let hastaA = ''
+{
+  const p = A
+  await git(p, '/login')
+  await giris(p, 'qa-uz@notya.test', 'sinov-parol-1')
+  const sorulan = await sorulariGec(p, P.ilkRol?.anahtar ?? '')
+  const beklenen = [...(P.uygulamaDilleri.length > 1 ? ['language'] : []), ...(P.roller.length ? ['role'] : [])]
+  kontrol(`first login asks exactly what the pack has to ask (${beklenen.join(' + ') || 'nothing'}) and arrives at the home`, JSON.stringify(sorulan) === JSON.stringify(beklenen), sorulan.join(' + ') || 'nothing')
+  const anahtarlar = await p.evaluate(() => Object.keys(localStorage))
+  kontrol('the session is stored under a key that names this country, and no cookie is set', JSON.stringify(anahtarlar) === JSON.stringify([OTURUM_ANAHTARI]) && (await p.cookies()).length === 0, anahtarlar.join(' '))
+  const g = await govde(p)
+  kontrol('home: the shell and the page speak the pack\'s catalogue', g.includes(P.m.kabuk.hastalar) && g.includes(P.m.kabuk.ayarlar) && g.includes(P.m.bugun.baslik))
+  if (P.roller.length) {
+    const rol = await tabloOku('hekim_rolu')
+    kontrol('the role is stored for this account, with the country', rol.length === 1 && rol[0].doctor_id === HESAP_A && rol[0].rol === P.ilkRol.anahtar && rol[0].ulke === P.kod, JSON.stringify(rol))
+    if (P.ilkRol.asistan) kontrol('home: the role\'s assistant is named as the pack names it', (await metin(p, '[data-alan=asistan-ad]')) === P.ilkRol.asistan.tamAd)
+  }
+  await tara(p, 'home')
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-home.png`) })
+
+  await git(p, '/settings')
+  await p.waitForFunction((b) => document.querySelector('h1')?.innerText === b, { timeout: 30000 }, P.m.ayarlar.baslik)
+  const dilimSecimi = !!(await p.$('select[name=saat-dilimi], [data-alan=saat-dilimi]'))
+  kontrol(`settings: ${P.saatDilimleri.length > 1 ? 'the account chooses its time zone (the country has several)' : 'no time zone is asked (the country has one)'}`, dilimSecimi === P.saatDilimleri.length > 1)
+  kontrol(`settings: ${P.uygulamaDilleri.length > 1 ? 'the account chooses its languages' : 'no language is asked (the country has one form)'}`, !!(await p.$('input[name=arayuz]')) === P.uygulamaDilleri.length > 1)
+  await tara(p, 'settings')
+
+  await git(p, '/patients/new')
+  await p.waitForSelector('#uza-h-ad')
+  kontrol(`new patient: the second name field is ${P.ikinciAd ? 'shown' : 'absent'} and the identity number field is ${P.kimlik ? 'shown' : 'absent'}, as the pack says`, !!(await p.$('#uza-h-ota')) === P.ikinciAd && !!(await p.$('#uza-h-kimlik')) === P.kimlik)
+  kontrol('new patient: the phone example is the pack\'s', (await p.$eval('#uza-h-tel', (e) => e.placeholder)) === P.telefonOrnek)
+  await tara(p, 'new patient')
+  await p.type('#uza-h-ad', HASTA_ADI)
+  await yazDeger(p, '#uza-h-dogum', '2021-03-07')
+  await p.type('#uza-h-tel', P.telefonOrnek)
+  await p.click('input[name="cinsiyet"][value="female"]')
+  if (await p.$('input[name="hasta-dili"]')) await p.click(`input[name="hasta-dili"][value="${P.hastaDilleri[0]}"]`)
+  await p.click('button[type=submit]')
+  await yolda(p, '/patient')
+  await p.waitForFunction((ad) => document.querySelector('h1')?.innerText.includes(ad), { timeout: 60000 }, HASTA_ADI)
+  hastaA = new URL(p.url()).searchParams.get('id')
+  const dogum = P.tarihDeseni.replace('DD', '07').replace('MM', '03').replace('YYYY', '2021')
+  kontrol(`patient saved → the patient file; the birth date is written the country's way (${dogum})`, /^[0-9a-f-]{36}$/.test(hastaA) && (await govde(p)).includes(dogum))
+  const ham = JSON.stringify([await tabloOku('ulke_hastalar'), await tabloOku('hasta_ulke_bilgisi')])
+  kontrol('in the database the name, birth date and phone are encrypted, and the row carries this country and this account', !ham.includes('QA-PATIENT') && !ham.includes('2021-03-07') && (await tabloOku('ulke_hastalar')).every((h) => h.ulke === P.kod && h.doctor_id === HESAP_A))
+  await tara(p, 'patient file')
+  await git(p, `/patients?q=${encodeURIComponent('walkthrough')}`)
+  await p.waitForSelector('.uza-liste, .uza-bos')
+  kontrol('find the patient by name', (await govde(p)).includes(HASTA_ADI))
+}
+
+// ───────────────────────── 3. a visit: consent → recording → note → approval (speech and model are stand-ins) ─────────────────────────
+{
+  const p = A
+  writeFileSync(GUNLUK, ''); writeFileSync(SENARYO, JSON.stringify({ stt: 'yuksek', model: 'tamam' }))
+  await git(p, `/visit?hasta=${hastaA}`)
+  await p.waitForSelector('input[name=riza]')
+  const once = await p.evaluate(() => ({ kapali: document.querySelector('.uza-form button.uza-dugme').disabled, isaretli: document.querySelector('input[name=riza]').checked }))
+  kontrol('consent: the box starts unticked and recording cannot start', once.kapali && !once.isaretli && (await govde(p)).includes(P.m.muayene.riza))
+  const rizasiz = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: `${P.kod}/${HESAP_A}/none.webm`, hastaId: hastaA, sablon: P.genelSablon } })
+  kontrol('consent: the server refuses a visit without it', rizasiz.s === 400 && rizasiz.t === '{"code":"RIZA_GEREKLI"}', `${rizasiz.s} ${rizasiz.t}`)
+  await tara(p, 'visit: consent')
+  await p.click('input[name=riza]')
+  await p.waitForFunction(() => !document.querySelector('.uza-form button.uza-dugme').disabled)
+  await p.click('.uza-form button.uza-dugme')
+  await p.waitForSelector('.uza-sure', { timeout: 20000 })
+  await bekle(2600)
+  await p.click('.uza-kayit .uza-dugme')
+  await p.waitForFunction(() => new URLSearchParams(location.search).has('not'), { timeout: 120000 })
+  await p.waitForSelector('#uza-not-s', { timeout: 60000 })
+  const notId = new URL(p.url()).searchParams.get('not')
+  const c = cagrilar(), stt = c.filter((x) => x.tur === 'stt'), mdl = c.filter((x) => x.tur === 'model')
+  kontrol('speech: asked once, with the pack\'s model and no language', stt.length === 1 && stt[0].model === P.konusmaModeli && stt[0].dil === null && stt[0].bayt > 200, JSON.stringify(stt))
+  kontrol('note: the model was asked once, through the gateway, with "do not keep this data", and with nothing that says who the patient is', mdl.length === 1 && mdl[0].veriToplama === 'deny' && mdl[0].genelKimlikVar === false && mdl[0].sistemUzunluk > 0, JSON.stringify(mdl))
+  kontrol('no outside address was asked for anything', c.every((x) => x.tur !== 'REFUSED'), JSON.stringify(c.filter((x) => x.tur === 'REFUSED')))
+  const yuklemeler = (await (await fetch(`${SUPA}/__gunluk`)).json()).filter((x) => x.startsWith('POST /storage/v1/object/'))
+  kontrol('the recording went to this country\'s folder and, inside it, this account\'s own', yuklemeler.length === 1 && yuklemeler[0].startsWith(`POST /storage/v1/object/muayene-sesleri/${P.kod}/${HESAP_A}/`), yuklemeler.join(' '))
+  kontrol('the recording is gone from storage once transcribed', (await (await fetch(`${SUPA}/__depo`)).json()).length === 0)
+  const kayit = await tabloOku('muayene_dil_kaydi')
+  kontrol('stored with the visit: the pack\'s consent stamp, the predicted language, one pass', kayit.length === 1 && kayit[0].riza_surumu === P.rizaSurumu && kayit[0].taninan_dil === P.sttKodu && kayit[0].gecis_sayisi === 1 && kayit[0].ulke === P.kod, JSON.stringify(kayit))
+  const dort = await p.evaluate(() => ['s', 'o', 'a', 'p'].map((b) => document.querySelector(`#uza-not-${b}`).value))
+  kontrol('NOTE: a draft with the four sections, written from the visit', dort.every((x, i) => x.startsWith(`SYNTHETIC-${'SOAP'[i]}`)), dort.join(' | '))
+  const cizilen = await p.$$eval('[data-alan-anahtar]', (l) => l.map((e) => e.getAttribute('data-alan-anahtar')))
+  const bekAlan = P.ilkRol?.alanlar ?? []
+  kontrol(`NOTE: the role's own fields and no other (${bekAlan.length} of the role; a made-up key the model returned is dropped)`, bekAlan.every((k) => cizilen.includes(k)) && !cizilen.includes('not_a_field_of_anybody') && !(await govde(p)).includes('SYNTHETIC-LEAK') && !JSON.stringify(await tabloOku('not_dil_kaydi')).includes('SYNTHETIC-LEAK'), cizilen.join(' '))
+  await tara(p, 'note draft')
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-note.png`), fullPage: true })
+  await p.click('[data-eylem=onayla]')
+  await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
+  const not = (await tabloOku('ulke_notlar'))[0]
+  kontrol('APPROVE: the note is approved by this doctor, in this country', !!not.approved_at && not.approved_by === HESAP_A && not.ulke === P.kod && not.id === notId)
+  const gec = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId, dil: P.dil, s: 'CHANGED-AFTER-APPROVAL', o: '', a: '', p: '' } })
+  kontrol('an approved note is never overwritten', gec.s >= 400 && !JSON.stringify(await tabloOku('ulke_notlar')).includes('CHANGED-AFTER-APPROVAL'), `${gec.s} ${gec.t}`)
+  await tara(p, 'approved note')
+}
+
+// ───────────────────────── 4. appointments ─────────────────────────
+if (P.randevu) {
+  const p = A
+  const duzen = await api(p, '/api/ulke/calisma-duzeni')
+  const buGun = new Intl.DateTimeFormat('en-CA', { timeZone: P.saatDilimleri[0], year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  kontrol(`"today" is today in the country's time zone (${P.saatDilimleri[0]}), and the date pattern is the pack's`, duzen.s === 200 && duzen.j.bugun === buGun && duzen.j.tarihDeseni === P.tarihDeseni, `${duzen.j?.bugun} vs ${buGun}`)
+  const yarin = new Date(Date.parse(`${buGun}T12:00:00Z`) + 86400000).toISOString().slice(0, 10)
+  const ilk = await api(p, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: hastaA, gun: yarin, saat: '14:30', sureDk: duzen.j.sureSecenekleri[0], yineDe: true } })
+  kontrol('an appointment is booked', ilk.s === 200 && !!ilk.j?.randevu?.id, `${ilk.s} ${ilk.t}`)
+  const cift = await api(p, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: hastaA, gun: yarin, saat: '14:30', sureDk: duzen.j.sureSecenekleri[0], yineDe: true } })
+  kontrol('double booking is refused, with a code and no sentence', cift.s >= 400 && /^\{"code":"[A-Z_]+"/.test(cift.t), `${cift.s} ${cift.t}`)
+  const satirlar = await tabloOku('ulke_randevulari')
+  kontrol('in the database: one appointment, with this country and this account', satirlar.length === 1 && satirlar[0].ulke === P.kod && satirlar[0].doctor_id === HESAP_A)
+  await git(p, `/calendar?gun=${yarin}&gorunum=gun`)
+  await p.waitForFunction((ad) => document.body.innerText.includes(ad), { timeout: 60000 }, HASTA_ADI)
+  const g = await govde(p)
+  const saat = P.saatBicimi === 12 ? /2:30\s?PM/i.test(g) && !g.includes('14:30') : g.includes('14:30')
+  kontrol(`calendar: the appointment is shown, and its time is written the pack's way (${P.saatBicimi}-hour)`, saat, g.match(/\d{1,2}:30[^\n]{0,6}/)?.[0] ?? '')
+  await tara(p, 'calendar')
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-calendar.png`) })
+}
+
+// ───────────────────────── 5. a second account sees none of it; the shared database holds only this country's rows ─────────────────────────
+{
+  const p = await sayfaAc(TEL)
+  await git(p, '/login')
+  await giris(p, 'qa-ru@notya.test', 'sinov-parol-2')
+  await sorulariGec(p, P.roller.at(-1) ?? '')
+  await git(p, '/patients')
+  await p.waitForSelector('.uza-liste, .uza-bos')
+  kontrol('account B (a phone-sized screen): sees no patient of account A', !(await govde(p)).includes('QA-PATIENT'))
+  const r = await api(p, `/api/ulke/hasta?id=${hastaA}`)
+  kontrol('account B asks the API for account A\'s patient: not found', r.s === 404 && r.t === '{"code":"NOT_FOUND"}', `${r.s} ${r.t}`)
+  const v = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: `${P.kod}/${HESAP_B}/none.webm`, hastaId: hastaA, sablon: P.genelSablon, riza: true } })
+  kontrol('account B cannot record a visit for account A\'s patient', v.s >= 400, `${v.s} ${v.t}`)
+  const jetonsuz = await api(p, `/api/ulke/hasta?id=${hastaA}`, { jeton: 'none' })
+  kontrol('without a valid session the API says "no session", with a code and no sentence', jetonsuz.s === 401 && jetonsuz.t === '{"code":"OTURUM_YOK"}', `${jetonsuz.s} ${jetonsuz.t}`)
+  await tara(p, 'patients (account B)')
+  await p.close()
+  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim']
+  const yabanciSatir = []
+  let toplam = 0
+  for (const ad of tablolar) for (const s of await tabloOku(ad)) { toplam++; if (s.ulke !== P.kod) yabanciSatir.push(`${ad}:${s.ulke}`) }
+  kontrol(`every row the walk-through wrote carries this country's code (${toplam} rows in ${tablolar.length} tables)`, toplam > 5 && yabanciSatir.length === 0, yabanciSatir.join(' '))
+  const hesaplar = await tabloOku('ulke_hesaplari')
+  kontrol('the other country\'s account row in the shared table was not touched', hesaplar.some((h) => h.ulke !== P.kod) && hesaplar.filter((h) => h.ulke === P.kod).length >= 2)
+}
+
+await tarayici.close()
+const kalan = sonuc.filter((x) => !x.tamam)
+console.log(`\n${sonuc.length - kalan.length}/${sonuc.length} checks passed — country "${P.kod}"`)
+if (kalan.length) { console.log('FAILED:'); for (const x of kalan) console.log(`  - ${x.ad}${x.ayrinti ? ' — ' + String(x.ayrinti).slice(0, 300) : ''}`) }
+process.exit(kalan.length ? 1 : 0)

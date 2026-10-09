@@ -16,7 +16,7 @@
  *   cd <repo> && export NOTYA_COUNTRY=uz NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54399 NEXT_PUBLIC_SUPABASE_ANON_KEY=sahte-anon \
  *     SUPABASE_SERVICE_ROLE_KEY=sahte-servis NOTYA_ILETISIM_EPOSTA=pilot@example.com ENCRYPTION_MASTER_KEY=yalniz-yuruyus-icin-sentetik-anahtar \
  *     ELEVENLABS_API_KEY=sahte-anahtar OPENROUTER_API_KEY=sahte-anahtar
- *   npm run build && NODE_OPTIONS="--require $PWD/scripts/ulke-yuruyus/sahte-saglayicilar.cjs" npx next start -p 3111
+ *   npm run build:ulke && NODE_OPTIONS="--require $PWD/scripts/ulke-yuruyus/sahte-saglayicilar.cjs" npx next start -p 3111
  *   # terminal 3 — this file, from the folder that has the browser
  *   cd /tmp/yuruyus && node <repo>/scripts/ulke-yuruyus/yuruyus.mjs
  *
@@ -370,7 +370,7 @@ let hastaA = ''
   const g = await govde(p)
   kontrol('patient saved → the patient file, with what was entered', /^[0-9a-f-]{36}$/.test(hastaA) && ['QA Karimova Dilnoza Rustam qizi', '07.03.2021', '+998 90 000 00 01', 'Ayol', 'Oʻzbekcha', 'Hali tasdiqlangan qayd yoʻq.'].every((x) => g.includes(x)), g.replace(/\s+/g, ' ').slice(0, 160))
   await onEkAltinda(p, 'patient file')
-  const ham = JSON.stringify([await (await fetch(`${SUPA}/__tablo/patients`)).json(), await (await fetch(`${SUPA}/__tablo/hasta_ulke_bilgisi`)).json()])
+  const ham = JSON.stringify([await (await fetch(`${SUPA}/__tablo/ulke_hastalar`)).json(), await (await fetch(`${SUPA}/__tablo/hasta_ulke_bilgisi`)).json()])
   kontrol('in the database the name, patronymic, birth date and phone are encrypted', !/Karimova|Rustam|2021-03-07|998 90 000/.test(ham) && ham.includes('aaaaaaaa-0000-4000-8000-000000000001'))
   for (const q of ['karimova', 'Каримова', 'rustam', '0000 01']) {
     await git(p, `/patients?q=${encodeURIComponent(q)}`)
@@ -501,7 +501,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await p.waitForSelector('input[name=riza]')
   kontrol('the visit screen of that patient', new URL(p.url()).searchParams.get('hasta') === hastaA && (await metin(p, 'h1')) === 'QA Karimova Dilnoza Rustam qizi')
   kontrol('the note template is the account\'s role, shown by name — it is not a choice — and the assistant that will prepare the note is named', (await metin(p, '[data-alan=sablon]')) === 'Pediatriya' && !(await p.$('input[name=sablon]')) && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Malika Nazarova')
-  const yabanciSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'odyoloji', riza: true } })
+  const yabanciSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'odyoloji', riza: true } })
   kontrol('the server refuses another role\'s template for this account', yabanciSablon.s === 400 && yabanciSablon.t === '{"code":"GECERSIZ","alan":"sablon"}', `${yabanciSablon.s} ${yabanciSablon.t}`)
   // CONSENT blocks recording.
   const once = await p.evaluate(() => ({ kapali: document.querySelector('.uza-form button.uza-dugme').disabled, isaretli: document.querySelector('input[name=riza]').checked, ipucu: document.querySelector('#uza-riza-ipucu')?.innerText }))
@@ -509,7 +509,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await p.evaluate(() => document.querySelector('.uza-form button.uza-dugme').click())
   await bekle(500)
   kontrol('consent: pressing the disabled button records nothing', !(await p.$('.uza-sure')) && cagrilar().length === 0)
-  const rizasiz = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'genel' } })
+  const rizasiz = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'genel' } })
   kontrol('consent: the server refuses a visit without it as well', rizasiz.s === 400 && rizasiz.t === '{"code":"RIZA_GEREKLI"}', `${rizasiz.s} ${rizasiz.t}`)
   await onEkAltinda(p, 'visit: consent')
   await cek(p, 'visit-consent-uz.png', false)
@@ -525,7 +525,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   kontrol('the note was asked for ONCE, in Uzbek (Latin), through the gateway, with "do not keep this data"', mdl.length === 1 && mdl[0].is === 'not' && mdl[0].dil === 'uz-Latn' && mdl[0].model.length > 3 && mdl[0].veriToplama === 'deny' && mdl[0].sistemUzunluk > 1200, JSON.stringify(mdl))
   kontrol('the model was given the age — and nothing that says who the patient is', mdl[0]?.yasVar === true && mdl[0]?.kimlikVar === false, JSON.stringify(mdl[0]))
   const yuklemeler = (await (await fetch(`${SUPA}/__gunluk`)).json()).filter((x) => x.startsWith('POST /storage/v1/object/'))
-  kontrol('the recording was uploaded to the doctor\'s own folder of the recordings bucket', yuklemeler.length === 1 && yuklemeler[0].startsWith('POST /storage/v1/object/muayene-sesleri/aaaaaaaa-0000-4000-8000-000000000001/'), yuklemeler.join(' '))
+  kontrol('the recording was uploaded to the country\'s folder and, inside it, the doctor\'s own folder of the recordings bucket', yuklemeler.length === 1 && yuklemeler[0].startsWith('POST /storage/v1/object/muayene-sesleri/uz/aaaaaaaa-0000-4000-8000-000000000001/'), yuklemeler.join(' '))
   kontrol('the recording is gone from storage once transcribed', (await (await fetch(`${SUPA}/__depo`)).json()).length === 0)
   let kayitlar = await tabloOku('muayene_dil_kaydi')
   seansYuksek = kayitlar[0]?.session_id || ''
@@ -546,7 +546,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   kontrol('the transcript is kept with the note', (await p.$eval('[data-alan=transkript]', (e) => e.textContent)).includes('Qizimning uch kundan beri isitmasi bor'))
   await onEkAltinda(p, 'note (draft)')
   await cek(p, 'note-draft-uz.png')
-  let notSatiri = (await tabloOku('notes'))[0]
+  let notSatiri = (await tabloOku('ulke_notlar'))[0]
   kontrol('in the database: a note of this doctor, NOT approved', notSatiri.id === notYuksek && notSatiri.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001' && !notSatiri.approved_at && notSatiri.content_plan.includes('Uch kundan keyin'))
 
   // The doctor edits and saves the draft.
@@ -554,7 +554,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await p.type('#uza-not-p', ' Paratsetamol 250 mg.')
   await p.click('[data-eylem=kaydet]')
   await p.waitForSelector('.uza-bilgi-kutu')
-  notSatiri = (await tabloOku('notes'))[0]
+  notSatiri = (await tabloOku('ulke_notlar'))[0]
   kontrol('the doctor edits the draft and saves it', (await metin(p, '.uza-bilgi-kutu')) === 'Qoralama saqlandi.' && notSatiri.content_plan.endsWith('Paratsetamol 250 mg.') && !notSatiri.approved_at)
 
   // ONE CLICK: the same note in Russian, as a second draft.
@@ -567,7 +567,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   kontrol('the rewrite was made from the note as the doctor had edited it', (await alan(p, 'p')).includes('парацетамол 250 мг'))
   c = cagrilar().filter((x) => x.tur === 'model')
   kontrol('the rewrite was ONE more model call, in Russian, with no patient identity in it', c.length === 2 && c[1].is === 'yeniden' && c[1].dil === 'ru' && c[1].duzeltmeVar === true && c[1].kimlikVar === false && c[1].veriToplama === 'deny', JSON.stringify(c[1]))
-  notSatiri = (await tabloOku('notes'))[0]
+  notSatiri = (await tabloOku('ulke_notlar'))[0]
   let dilSatiri = (await tabloOku('not_dil_kaydi'))[0]
   kontrol('in the database the Uzbek note is untouched; the Russian draft is stored beside it', notSatiri.content_subjektif.includes('uch kundan beri isitma') && !notSatiri.approved_at && dilSatiri.not_dili === 'uz-Latn' && dilSatiri.ikinci_dil === 'ru' && dilSatiri.ikinci_s.includes('температура'))
   kontrol('the second draft carries the same fields, rewritten in Russian — none added, none of another role', anahtarlar(dilSatiri.ikinci_alanlar) === 'feeding,history_giver,temperature' && dilSatiri.ikinci_alanlar.history_giver === 'Мать.' && dilSatiri.alanlar.history_giver === 'Onasi.' && (await alanDegeri(p, 'feeding')) === 'Ест четыре раза в день.', JSON.stringify(dilSatiri.ikinci_alanlar))
@@ -581,19 +581,19 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
   g = await govde(p)
   kontrol('APPROVE: the Russian draft becomes the note; it is shown as text with nothing left to change it', g.includes('Tasdiqlangan') && g.includes('Qayd tasdiqlandi va bemor varaqasiga saqlandi.') && (await metin(p, '[data-bolum=s]')).includes('третий день температура') && !(await p.$('textarea')) && !(await p.$('[data-eylem]')) && !(await p.$('input[name=taslak-dili]')))
-  notSatiri = (await tabloOku('notes'))[0]
+  notSatiri = (await tabloOku('ulke_notlar'))[0]
   dilSatiri = (await tabloOku('not_dil_kaydi'))[0]
   kontrol('in the database: approved by this doctor, Russian text; the Uzbek draft is kept beside it', !!notSatiri.approved_at && notSatiri.approved_by === 'aaaaaaaa-0000-4000-8000-000000000001' && notSatiri.content_plan.includes('парацетамол 250 мг') && dilSatiri.not_dili === 'ru' && dilSatiri.ikinci_dil === 'uz-Latn' && dilSatiri.ikinci_p.endsWith('Paratsetamol 250 mg.'))
   kontrol('the approved note keeps its fields: the Russian ones are the note\'s, the Uzbek ones stay with the other draft; empty fields are not shown', dilSatiri.alanlar.feeding === 'Ест четыре раза в день.' && dilSatiri.ikinci_alanlar.feeding === 'Kuniga toʻrt mahal ovqatlanadi.' && (await metin(p, '[data-alan-anahtar=feeding] p')) === 'Ест четыре раза в день.' && (await metin(p, '[data-alan-anahtar=feeding] h3')) === 'Ovqatlanishi' && !(await p.$('[data-alan-anahtar=head_circumference]')))
   await cek(p, 'note-approved-ru.png')
   // AN APPROVED NOTE IS NEVER OVERWRITTEN.
-  const onceki = JSON.stringify([await tabloOku('notes'), await tabloOku('not_dil_kaydi')])
+  const onceki = JSON.stringify([await tabloOku('ulke_notlar'), await tabloOku('not_dil_kaydi')])
   const modelOnce = cagrilar().filter((x) => x.tur === 'model').length
   const gecKayit = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId: notYuksek, dil: 'ru', s: 'OʻZGARTIRILDI', o: '', a: '', p: '', alanlar: { feeding: 'OʻZGARTIRILDI' } } })
   const ikinciOnay = await api(p, '/api/ulke/not/onayla', { method: 'POST', govde: { notId: notYuksek, dil: 'ru', s: 'OʻZGARTIRILDI', o: 'x', a: 'x', p: 'x' } })
   const gecYeniden = await api(p, '/api/ulke/not/yeniden-yaz', { method: 'POST', govde: { notId: notYuksek } })
   kontrol('approved note: a late save, a second approval and a rewrite are all refused (409 ONAYLI)', [gecKayit, ikinciOnay, gecYeniden].every((r) => r.s === 409 && r.t === '{"code":"ONAYLI"}'), [gecKayit, ikinciOnay, gecYeniden].map((r) => `${r.s} ${r.t}`).join(' | '))
-  kontrol('approved note: nothing changed in the database and no model was called', JSON.stringify([await tabloOku('notes'), await tabloOku('not_dil_kaydi')]) === onceki && cagrilar().filter((x) => x.tur === 'model').length === modelOnce)
+  kontrol('approved note: nothing changed in the database and no model was called', JSON.stringify([await tabloOku('ulke_notlar'), await tabloOku('not_dil_kaydi')]) === onceki && cagrilar().filter((x) => x.tur === 'model').length === modelOnce)
   await p.reload({ waitUntil: 'networkidle0' })
   await p.waitForSelector('[data-bolum=s]')
   kontrol('approved note: after a reload it is the same text, still read-only', (await metin(p, '[data-bolum=p]')).includes('парацетамол 250 мг') && !(await p.$('textarea')))
@@ -614,7 +614,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   kayitlar = await tabloOku('muayene_dil_kaydi')
   const k2 = kayitlar.find((k) => k.session_id === seansDusuk)
   kontrol('stored with the visit: the second pass (for counting cost), which pass was kept, still low', !!k2 && k2.ikinci_gecis === true && k2.ikinci_gecis_dili === 'uzb' && k2.gecis_sayisi === 2 && k2.secilen_gecis === 2 && k2.dusuk_guven === true && k2.taninan_dil === 'uzb' && k2.dil_olasiligi === 0.52, JSON.stringify(k2))
-  kontrol('no note was stored for the failed attempt', (await tabloOku('notes')).length === 1)
+  kontrol('no note was stored for the failed attempt', (await tabloOku('ulke_notlar')).length === 1)
   await onEkAltinda(p, 'recorded visit (note failed)')
   await cek(p, 'visit-note-failed-uz.png')
   senaryoYaz({ stt: 'yuksek', model: 'tamam' })
@@ -654,7 +654,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await git(p, `/visit?hasta=${hastaA}`)
   await p.waitForSelector('input[name=riza]')
   kontrol('visit screen: the cardiology template and its assistant', (await metin(p, '[data-alan=sablon]')) === 'Kardiologiya' && (await metin(p, '[data-alan=asistan-ad]')) === 'Dr. Kamola Yusupova')
-  const eskiSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'pediatri', riza: true } })
+  const eskiSablon = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000001/yoq.webm', hastaId: hastaA, sablon: 'pediatri', riza: true } })
   kontrol('the role the account had before is now another role\'s template: refused', eskiSablon.s === 400 && eskiSablon.j?.alan === 'sablon', `${eskiSablon.s} ${eskiSablon.t}`)
   await kayitYap(p)
   const notKardio = new URL(p.url()).searchParams.get('not') || ''
@@ -675,7 +675,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     await p.type('#uza-alan-ecg', ' Sinus ritmi.')
     await p.click('[data-eylem=onayla]')
     await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
-    const onayli = (await tabloOku('notes')).find((n) => n.id === notKardio)
+    const onayli = (await tabloOku('ulke_notlar')).find((n) => n.id === notKardio)
     const onayliAlan = (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notKardio)
     kontrol('the doctor edits a field and approves: the note is in the file with the field as edited, and nothing is left to change it', !!onayli.approved_at && onayliAlan.alanlar.ecg === 'Oʻzgarishsiz. Sinus ritmi.' && (await metin(p, '[data-alan-anahtar=ecg] p')) === 'Oʻzgarishsiz. Sinus ritmi.' && !(await p.$('textarea')) && !(await p.$('[data-eylem]')))
     const gec = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId: notKardio, dil: 'uz-Latn', s: 'x', o: '', a: '', p: '', alanlar: { ecg: 'OʻZGARTIRILDI' } } })
@@ -696,7 +696,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   const r = await api(p, `/api/ulke/muayene?id=${seansYuksek}`)
   const yok = await api(p, '/api/ulke/muayene?id=30000000-0000-4000-8000-00000000dead')
   kontrol('doctor B asks the API for doctor A\'s visit: the same answer as for a visit that does not exist', r.s === 404 && r.t === '{"code":"NOT_FOUND"}' && yok.t === r.t, `${r.s} ${r.t}`)
-  const onceki = JSON.stringify([await tabloOku('notes'), await tabloOku('not_dil_kaydi')])
+  const onceki = JSON.stringify([await tabloOku('ulke_notlar'), await tabloOku('not_dil_kaydi')])
   const once = cagrilar().length
   const denemeler = [
     ['read', await api(p, `/api/ulke/not?id=${notDusuk}`)],
@@ -706,17 +706,23 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     ['approve', await api(p, '/api/ulke/not/onayla', { method: 'POST', govde: { notId: notDusuk, dil: 'uz-Latn', s: 'YABANCI', o: 'x', a: 'x', p: 'x' } })],
   ]
   for (const [ad, d] of denemeler) kontrol(`doctor B cannot ${ad} doctor A's note: not found`, d.s === 404 && d.t === '{"code":"NOT_FOUND"}', `${d.s} ${d.t}`)
-  kontrol('doctor A\'s notes are unchanged and no model was called for doctor B\'s attempts', JSON.stringify([await tabloOku('notes'), await tabloOku('not_dil_kaydi')]) === onceki && cagrilar().length === once)
+  kontrol('doctor A\'s notes are unchanged and no model was called for doctor B\'s attempts', JSON.stringify([await tabloOku('ulke_notlar'), await tabloOku('not_dil_kaydi')]) === onceki && cagrilar().length === once)
   for (const [ad, rota, beklenen] of [['visit', `/visit?seans=${seansYuksek}`, 'Приём не найден.'], ['note', `/visit?not=${notYuksek}`, 'Запись не найдена.']]) {
     await git(p, rota)
     await p.waitForSelector('[role=alert]')
     const g = await govde(p)
     kontrol(`doctor B opens the address of doctor A's ${ad}: "not found", no text of it, no patient`, g.includes(beklenen) && !/isitma|температура|Karimova|Qizim/.test(g), g.replace(/\s+/g, ' ').slice(0, 100))
   }
-  const yabanciHasta = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000002/x.webm', hastaId: hastaA, sablon: 'genel', riza: true } })
+  const yabanciHasta = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000002/x.webm', hastaId: hastaA, sablon: 'genel', riza: true } })
   kontrol('doctor B cannot record a visit for doctor A\'s patient', yabanciHasta.s === 404 && yabanciHasta.t === '{"code":"NOT_FOUND"}', `${yabanciHasta.s} ${yabanciHasta.t}`)
-  const yabanciYol = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'aaaaaaaa-0000-4000-8000-000000000001/x.webm', hastaId: hastaB, sablon: 'genel', riza: true } })
+  const yabanciYol = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol: 'uz/aaaaaaaa-0000-4000-8000-000000000001/x.webm', hastaId: hastaB, sablon: 'genel', riza: true } })
   kontrol('doctor B cannot name a recording in doctor A\'s folder', yabanciYol.s === 400 && yabanciYol.j?.alan === 'yol', `${yabanciYol.s} ${yabanciYol.t}`)
+  // SHARED DATABASE: recordings are kept apart per country. Doctor B's own account id under another country's folder,
+  // and under no country folder at all (the path shape before countries shared a bucket), is refused the same way.
+  for (const [ad, yol] of [['another country\'s folder', 'tr/aaaaaaaa-0000-4000-8000-000000000002/x.webm'], ['no country folder', 'aaaaaaaa-0000-4000-8000-000000000002/x.webm']]) {
+    const r = await api(p, '/api/ulke/muayene', { method: 'POST', govde: { yol, hastaId: hastaB, sablon: 'genel', riza: true } })
+    kontrol(`doctor B cannot name a recording under ${ad}`, r.s === 400 && r.j?.alan === 'yol', `${r.s} ${r.t}`)
+  }
   kontrol('none of it reached the speech engine or the model', cagrilar().length === once)
   // Doctor B's own visit: the same recording, a note in RUSSIAN (B's note language), offered in Uzbek.
   await git(p, '/visit')
@@ -741,11 +747,11 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     await cek(p, 'note-dietitian-draft-ru.png')
     await p.click('[data-eylem=onayla]')
     await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
-    const onayli = (await tabloOku('notes')).find((n) => n.id === notB)
+    const onayli = (await tabloOku('ulke_notlar')).find((n) => n.id === notB)
     kontrol('the dietitian approves: the note is in the file with its fields, read-only', !!onayli.approved_at && onayli.approved_by === 'aaaaaaaa-0000-4000-8000-000000000002' && (await metin(p, '[data-alan-anahtar=diet_history] p')) === 'Любит сладкое.' && (await p.$$eval('h2', (l) => l.map((e) => e.innerText))).includes('Оценка специалиста') && !(await p.$('textarea')))
     await cek(p, 'note-dietitian-approved-ru.png')
   }
-  const notlar = await tabloOku('notes')
+  const notlar = await tabloOku('ulke_notlar')
   kontrol('four notes in the database, each under its own doctor', notlar.length === 4 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000001').length === 3 && notlar.filter((n) => n.doctor_id === 'aaaaaaaa-0000-4000-8000-000000000002').length === 1)
   const kullanim = await tabloOku('ai_token_kullanim')
   kontrol('every model call left a usage row with the doctor and the task — and no patient', kullanim.length >= 4 && kullanim.every((k) => /^aaaaaaaa-0000-4000-8000-00000000000[12]$/.test(k.doctor_id) && ['soap', 'not-uretimi'].includes(k.gorev) && !('patient_id' in k)), JSON.stringify(kullanim[0]))
@@ -875,13 +881,13 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
   await kayitYap(p)
   const notId = new URL(p.url()).searchParams.get('not') || ''
   let bagli = (await randevular()).find((r) => r.id === randevuId)
-  const seanslar = (await tabloOku('sessions')).filter((x) => x.id === bagli.session_id)
+  const seanslar = (await tabloOku('ulke_muayeneler')).filter((x) => x.id === bagli.session_id)
   kontrol('the recorded visit is LINKED to the appointment, and the patient has arrived', /^[0-9a-f-]{36}$/.test(notId) && seanslar.length === 1 && seanslar[0].patient_id === hastaRu && seanslar[0].doctor_id === A_ID && bagli.durum === 'geldi', JSON.stringify(bagli))
-  kontrol('the note is still a draft: the appointment is not done yet', !(await tabloOku('notes')).find((n) => n.id === notId).approved_at && bagli.durum === 'geldi')
+  kontrol('the note is still a draft: the appointment is not done yet', !(await tabloOku('ulke_notlar')).find((n) => n.id === notId).approved_at && bagli.durum === 'geldi')
   await p.click('[data-eylem=onayla]')
   await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
   bagli = (await randevular()).find((r) => r.id === randevuId)
-  const onayliNot = (await tabloOku('notes')).find((n) => n.id === notId)
+  const onayliNot = (await tabloOku('ulke_notlar')).find((n) => n.id === notId)
   kontrol('APPROVING THE NOTE marks the appointment DONE', !!onayliNot.approved_at && onayliNot.session_id === bagli.session_id && bagli.durum === 'tamamlandi', JSON.stringify(bagli))
   await randevuAc(randevuId)
   const bitmis = await p.evaluate(() => ({ rozet: document.querySelector('.uza-baslik-satiri [data-randevu-durum]')?.getAttribute('data-randevu-durum'), eylemler: [...document.querySelectorAll('[data-eylem]')].map((e) => e.getAttribute('data-eylem')), muayene: document.querySelector('[data-eylem=muayene-ac]')?.getAttribute('href') }))

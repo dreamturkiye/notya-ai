@@ -12,9 +12,11 @@
  *             invitation-code functions, and (NOTYA-UZ-RANDEVU-01) what migration 135 puts in the database: the
  *             no-double-booking constraint of `ulke_randevulari` and the function `ulke_not_onayla`. An operator it does not know is an ERROR (400) — it never ignores a filter,
  *             because an ignored filter would make a broken ownership check look fine.
- *   storage   upload / download / remove of objects. A browser session may upload only under a folder named after its
- *             own account id (what the storage policy of migration 132 enforces in the real project); the service role
+ *   storage   upload / download / remove of objects. A browser session may upload only under `<its country>/<its own
+ *             account id>/` (what the storage policy of migration 132 enforces in the real project); the service role
  *             may read and remove anything.
+ *   SHARED DATABASE (NOTYA-ULKE-SABLON-01): every table here is a country table. A statement that does not name the
+ *             country (no `ulke=eq.…` filter, no `ulke` on an inserted row, no `p_ulke`) is answered with an error.
  *
  * Inspection, for the walk-through only:  GET /__gunluk (request log)   GET /__tablo/<name> (rows)   GET /__depo (object paths)
  */
@@ -24,22 +26,34 @@ import { createHash, randomUUID } from 'node:crypto'
 const PORT = Number(process.argv[2] || 54399)
 const SERVIS = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sahte-servis'
 
+// NOTYA-ULKE-SABLON-01 — WHICH COUNTRY IS WALKED. Unset = Uzbekistan, exactly as before (./yuruyus.mjs). The
+// pack-neutral walk-through (./genel.mjs) sets YURUYUS_ULKE=<code> and YURUYUS_DILLER=<form of account 1>,<form of
+// account 2>; the two accounts, the invitation code and the storage folders then belong to that country.
+const ULKE = process.env.YURUYUS_ULKE || 'uz'
+if (!/^[a-z]{2}$/.test(ULKE)) throw new Error(`YURUYUS_ULKE="${ULKE}" is not a country code`)
+const [DIL_1, DIL_2] = (process.env.YURUYUS_DILLER || 'uz-Latn,ru').split(',')
 const hesaplar = {
-  'qa-uz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000001', sifre: 'sinov-parol-1', ulke: 'uz', dil: 'uz-Latn', ad: 'QA Shifokor Bir' },
-  'qa-ru@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000002', sifre: 'sinov-parol-2', ulke: 'uz', dil: 'ru', ad: 'QA Врач Два' },
+  'qa-uz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000001', sifre: 'sinov-parol-1', ulke: ULKE, dil: DIL_1, ad: 'QA Shifokor Bir' },
+  'qa-ru@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000002', sifre: 'sinov-parol-2', ulke: ULKE, dil: DIL_2 || DIL_1, ad: 'QA Врач Два' },
   'qa-tr@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000003', sifre: 'sinov-parol-3', ulke: 'tr', dil: 'tr', ad: 'QA Hekim Uc' },
   'qa-damgasiz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000004', sifre: 'sinov-parol-4', ulke: null, dil: 'tr', ad: 'QA Damgasiz' },
 }
 const GECERLI_KOD = 'QATEST0000000001'
-const kodlar = new Map([[createHash('sha256').update(GECERLI_KOD).digest('hex'), { ulke: 'uz', kalan: 1 }]])
+const kodlar = new Map([[createHash('sha256').update(GECERLI_KOD).digest('hex'), { ulke: ULKE, kalan: 1 }]])
 const jetonlar = new Map()
 const gunluk = []
-/** table → rows. `users` starts with one row per account that has a country stamp. */
-const tablolar = { users: [] }
-for (const h of Object.values(hesaplar)) if (h.ulke) tablolar.users.push({ id: h.id, full_name: h.ad, country: h.ulke, ui_language: h.dil })
+/**
+ * table → rows. SHARED DATABASE (NOTYA-ULKE-SABLON-01): one database for every country, so `ulke_hesaplari` starts
+ * with one row per account that has a country stamp — the Uzbek accounts AND an account of another country, side by
+ * side in the same table. The build under test must behave as if the other country's row were not there.
+ */
+const tablolar = { ulke_hesaplari: [] }
+for (const h of Object.values(hesaplar)) if (h.ulke) tablolar.ulke_hesaplari.push({ id: h.id, full_name: h.ad, ulke: h.ulke, ui_language: h.dil })
+/** The one table of Türkiye a country build writes to, through the shared model gateway: it has no country column. */
+const ULKESIZ = new Set(['ai_token_kullanim'])
 const tablo = (ad) => (tablolar[ad] ??= [])
 /** Tables whose rows have no id of their own (the key is another table's id). */
-const KIMLIKSIZ = new Set(['hekim_calisma_duzeni', 'hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ai_kullanim'])
+const KIMLIKSIZ = new Set(['hekim_calisma_duzeni', 'hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ulke_kullanim'])
 /** bucket/path → { tur, veri: Buffer } */
 const depo = new Map()
 
@@ -81,17 +95,18 @@ const cakismaHatasi = (res) => hata(res, 409, '23P01', 'conflicting key value vi
 function notOnayla(a) {
   const yedek = JSON.stringify(tablolar)
   try {
-    const not = tablo('notes').find((n) => n.id === a.p_note_id && n.doctor_id === a.p_doctor_id)
+    if (!/^[a-z]{2}$/.test(String(a.p_ulke ?? ''))) throw new Error('ulke_not_onayla called without the country (p_ulke)')
+    const not = tablo('ulke_notlar').find((n) => n.id === a.p_note_id && n.doctor_id === a.p_doctor_id && n.ulke === a.p_ulke)
     if (!not) return 'NOT_FOUND'
     if (not.approved_at) return 'ONAYLI'
     Object.assign(not, { content_subjektif: a.p_s, content_objektif: a.p_o, content_degerlendirme: a.p_a, content_plan: a.p_p, approved_at: a.p_onay_ani, approved_by: a.p_doctor_id })
     if (a.p_dil_kaydi) {
-      const d = tablo('not_dil_kaydi').find((x) => x.note_id === a.p_note_id && x.doctor_id === a.p_doctor_id)
+      const d = tablo('not_dil_kaydi').find((x) => x.note_id === a.p_note_id && x.doctor_id === a.p_doctor_id && x.ulke === a.p_ulke)
       if (!d) throw new Error('not_dil_kaydi row missing')
       for (const k of ['alanlar', 'ikinci_alanlar', 'not_dili', 'ikinci_dil', 'ikinci_s', 'ikinci_o', 'ikinci_a', 'ikinci_p']) if (Object.prototype.hasOwnProperty.call(a.p_dil_kaydi, k)) d[k] = a.p_dil_kaydi[k] ?? null
       d.updated_at = a.p_onay_ani
     }
-    for (const r of tablo('ulke_randevulari')) if (r.session_id === not.session_id && r.doctor_id === a.p_doctor_id && ['planlandi', 'geldi'].includes(r.durum)) Object.assign(r, { durum: 'tamamlandi', updated_at: a.p_onay_ani })
+    for (const r of tablo('ulke_randevulari')) if (r.session_id === not.session_id && r.doctor_id === a.p_doctor_id && r.ulke === a.p_ulke && ['planlandi', 'geldi'].includes(r.durum)) Object.assign(r, { durum: 'tamamlandi', updated_at: a.p_onay_ani })
     return 'TAMAM'
   } catch (e) {
     const eski = JSON.parse(yedek)
@@ -112,6 +127,16 @@ function rest(req, res, url, govde) {
     suzgecler.push(f)
   }
   const uyan = (s) => suzgecler.every((f) => f(s))
+  // THE COUNTRY RULE of the shared database, as the real tables hold it (`ulke text not null`, and the application's
+  // one door to the database): a statement that does not name the country is an ERROR here, never a silent success.
+  if (!ULKESIZ.has(ad)) {
+    const filtre = url.searchParams.get('ulke')
+    if (req.method === 'POST') {
+      const gelen = Array.isArray(govde) ? govde : [govde]
+      if (!gelen.every((y) => /^[a-z]{2}$/.test(String(y?.ulke ?? '')))) return hata(res, 400, '23502', `stand-in: insert into ${ad} without the country (ulke)`)
+    } else if (!filtre || !/^eq\.[a-z]{2}$/.test(filtre)) return hata(res, 400, '42P10', `stand-in: ${req.method} on ${ad} without a country filter (ulke=eq.…)`)
+    if (req.method === 'PATCH' && govde && 'ulke' in govde) return hata(res, 400, '23514', `stand-in: update on ${ad} rewrites the country of a row`)
+  }
   const tercih = String(req.headers.prefer || '')
   const tekNesne = String(req.headers.accept || '').includes('vnd.pgrst.object')
   const satirlar = tablo(ad)
@@ -128,7 +153,7 @@ function rest(req, res, url, govde) {
       if (!KIMLIKSIZ.has(ad) && y.id && satirlar.some((s) => s.id === y.id)) return hata(res, 409, '23505', 'duplicate key value violates unique constraint')
       const yeni = { ...(KIMLIKSIZ.has(ad) ? {} : { id: randomUUID() }), created_at: new Date().toISOString(), ...y }
       if (ad === 'ulke_randevulari' && cakisiyor(yeni, satirlar)) return cakismaHatasi(res)
-      if (ad === 'sessions' && !yeni.started_at) yeni.started_at = yeni.created_at
+      if (ad === 'ulke_muayeneler' && !yeni.started_at) yeni.started_at = yeni.created_at
       satirlar.push(yeni); sonuc.push(yeni)
     }
   } else if (req.method === 'PATCH') {
@@ -208,7 +233,7 @@ http.createServer(async (req, res) => {
     if (!servisMi) return hata(res, 401, '42501', 'permission denied for function ulke_not_onayla')
     try { return yaz(res, 200, notOnayla(g)) } catch (e) { return hata(res, 400, 'P0002', String(e.message)) }
   }
-  if (url.pathname === '/rest/v1/rpc/davet_kodu_iade') { const k = kodlar.get(g.p_hash); if (k) k.kalan++; return yaz(res, 204) }
+  if (url.pathname === '/rest/v1/rpc/davet_kodu_iade') { const k = kodlar.get(g.p_hash); if (k && k.ulke === g.p_ulke) k.kalan++; return yaz(res, 204) }
 
   // ── storage ──
   if (url.pathname.startsWith('/storage/v1/object/')) {
@@ -219,10 +244,11 @@ http.createServer(async (req, res) => {
       return yaz(res, 200, [])
     }
     if (req.method === 'POST' || req.method === 'PUT') {
-      // The storage policy: a signed-in account writes only under a folder named after its own id.
-      const [, klasor] = yol.split('/')
-      const sahibi = oturumEposta ? hesaplar[oturumEposta]?.id : null
-      if (!servisMi && (!sahibi || klasor !== sahibi)) return yaz(res, 403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' })
+      // The storage policy of migration 132: a signed-in account writes only under `<its country>/<its own id>/`,
+      // and an account without a country stamp writes nothing here.
+      const [, ulkeKlasoru, klasor, ...kalan] = yol.split('/')
+      const h = oturumEposta ? hesaplar[oturumEposta] : null
+      if (!servisMi && (!h || !h.ulke || ulkeKlasoru !== h.ulke || klasor !== h.id || kalan.length !== 1)) return yaz(res, 403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' })
       // supabase-js sends a browser Blob as multipart form data: keep the bytes of the one file part.
       let veri = ham
       const tur = String(req.headers['content-type'] || '')

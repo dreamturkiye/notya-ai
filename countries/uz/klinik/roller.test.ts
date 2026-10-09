@@ -57,7 +57,7 @@ function sifirla() {
     'jeton-tr': { id: '10000000-0000-4000-8000-00000000000c', email: 'qa-tr@notya.test', app_metadata: { country: 'tr' } },
     'jeton-damgasiz': { id: '10000000-0000-4000-8000-00000000000d', email: 'qa-d@notya.test', app_metadata: {} },
   })
-  vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', country: 'uz', ui_language: 'ru' })
+  vt.tablo('ulke_hesaplari').push({ id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: 'uz-Latn' }, { id: B, full_name: 'QA Врач Б', ulke: 'uz', ui_language: 'ru' })
 }
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
@@ -184,7 +184,7 @@ describe('40 roles: the assistant\'s identity', () => {
 
   it('no biography anywhere: no years of practice, no professor, no affiliation in the identity or in the catalogue', async () => {
     const M = await import('../uygulama/metinler')
-    const metin = [readFileSync(join(KOK, 'countries/uz/uygulama/Asistan.tsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), ...FORMLAR.flatMap((f) => Object.values(M.uygulamaMetni(f).asistan))].join('\n')
+    const metin = [readFileSync(join(KOK, 'components/ulke/uygulama/Asistan.tsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), ...FORMLAR.flatMap((f) => Object.values(M.uygulamaMetni(f).asistan))].join('\n')
     assert.doesNotMatch(metin, /\d+\s*(yil|йил|лет|года?)|professor|профессор|dotsent|доцент|akademi|академи|universitet|университет|institut|институт|tajriba|тажриба|стаж|опыт/i)
   })
 })
@@ -242,7 +242,7 @@ describe('40 roles: the account (API)', () => {
   })
 
   it('a stored value that is not a role of this country reads as "no role" — never shown, never guessed', async () => {
-    vt.tablo('hekim_rolu').push({ doctor_id: A, rol: 'kadin-dogum' }, { doctor_id: B, rol: 'genel' })
+    vt.tablo('hekim_rolu').push({ ulke: 'uz', doctor_id: A, rol: 'kadin-dogum' }, { ulke: 'uz', doctor_id: B, rol: 'genel' })
     assert.deepEqual([(await al('jeton-a')).j, (await al('jeton-b')).j], [{ rol: null }, { rol: null }])
   })
 
@@ -263,18 +263,18 @@ describe('40 roles: the account (API)', () => {
 })
 
 describe('40 roles: screens (the question, settings, home)', () => {
-  let Kabuk: typeof import('../uygulama/Kabuk')
-  let RolFormu: typeof import('../uygulama/RolFormu')
-  let Ayarlar: typeof import('../uygulama/Ayarlar')
-  let Bugun: typeof import('../uygulama/Bugun')
-  let Asistan: typeof import('../uygulama/Asistan')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
+  let RolFormu: typeof import('@/components/ulke/uygulama/RolFormu')
+  let Ayarlar: typeof import('@/components/ulke/uygulama/Ayarlar')
+  let Bugun: typeof import('@/components/ulke/uygulama/Bugun')
+  let Asistan: typeof import('@/components/ulke/uygulama/Asistan')
   let M: typeof import('../uygulama/metinler')
   let R: typeof import('./rolAdlari')
   let K: typeof import('./asistanKimligi')
   let Layout: typeof import('../../../app/layout.ulke')
   before(async () => {
-    Kabuk = await import('../uygulama/Kabuk'); RolFormu = await import('../uygulama/RolFormu'); Ayarlar = await import('../uygulama/Ayarlar')
-    Bugun = await import('../uygulama/Bugun'); Asistan = await import('../uygulama/Asistan'); M = await import('../uygulama/metinler')
+    Kabuk = await import('@/components/ulke/uygulama/Kabuk'); RolFormu = await import('@/components/ulke/uygulama/RolFormu'); Ayarlar = await import('@/components/ulke/uygulama/Ayarlar')
+    Bugun = await import('@/components/ulke/uygulama/Bugun'); Asistan = await import('@/components/ulke/uygulama/Asistan'); M = await import('../uygulama/metinler')
     R = await import('./rolAdlari'); K = await import('./asistanKimligi'); Layout = await import('../../../app/layout.ulke')
   })
   const bos = () => {}
@@ -340,9 +340,11 @@ describe('40 roles: screens (the question, settings, home)', () => {
   }
 
   it('the frame asks the server for the role and sends an account without one to the question', () => {
-    const kaynak = readFileSync(join(KOK, 'countries/uz/uygulama/Kabuk.tsx'), 'utf8')
+    const kaynak = readFileSync(join(KOK, 'components/ulke/uygulama/Kabuk.tsx'), 'utf8')
     assert.match(kaynak, /api\('\/api\/ulke\/rol'\)/)
-    assert.match(kaynak, /\(!dilSoruldu \|\| !rol\) && ekran !== 'baslangic'\) \{ window\.location\.replace\(YOL\.baslangic\)/)
-    assert.match(kaynak, /dilSoruldu && rol && ekran === 'baslangic'\) \{ window\.location\.replace\(YOL\.bugun\)/)
+    // A country WITH roles (this one) needs one chosen; a country without roles is not asked (NOTYA-ULKE-SABLON-01).
+    assert.match(kaynak, /const rolTamam = Boolean\(rol\) \|\| roller\(\)\.length === 0/)
+    assert.match(kaynak, /\(!dilSoruldu \|\| !rolTamam\) && ekran !== 'baslangic'\) \{ window\.location\.replace\(YOL\.baslangic\)/)
+    assert.match(kaynak, /dilSoruldu && rolTamam && ekran === 'baslangic'\) \{ window\.location\.replace\(YOL\.bugun\)/)
   })
 })

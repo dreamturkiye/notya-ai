@@ -91,8 +91,8 @@ function sifirla(dil: Form = 'uz-Latn') {
   for (const k of Object.keys(vt.hesaplar)) delete vt.hesaplar[k]
   vt.depo.clear(); vt.sorgular.length = 0; vt.boz.yaz.clear(); vt.boz.oku.clear(); model.cagrilar = []
   Object.assign(vt.hesaplar, { 'jeton-a': { id: A, email: 'qa-a@notya.test', app_metadata: { country: 'uz' } }, 'jeton-b': { id: B, email: 'qa-b@notya.test', app_metadata: { country: 'uz' } } })
-  vt.tablo('users').push({ id: A, full_name: 'QA Shifokor A', country: 'uz', ui_language: dil }, { id: B, full_name: 'QA Shifokor B', country: 'uz', ui_language: 'ru' })
-  vt.tablo('hekim_dil_tercihleri').push({ doctor_id: A, not_dili: dil, soruldu_at: 'x' }, { doctor_id: B, not_dili: 'ru', soruldu_at: 'x' })
+  vt.tablo('ulke_hesaplari').push({ id: A, full_name: 'QA Shifokor A', ulke: 'uz', ui_language: dil }, { id: B, full_name: 'QA Shifokor B', ulke: 'uz', ui_language: 'ru' })
+  vt.tablo('hekim_dil_tercihleri').push({ ulke: 'uz', doctor_id: A, not_dili: dil, soruldu_at: 'x' }, { ulke: 'uz', doctor_id: B, not_dili: 'ru', soruldu_at: 'x' })
 }
 
 type Rotalar = {
@@ -107,7 +107,7 @@ const hastaEkle = async (jeton: string, dogumTarihi: string) => (await oku(await
 let sesNo = 0
 async function muayeneVeNot(jeton: string, doktor: string, sablon: string, dogumTarihi: string) {
   const hasta = await hastaEkle(jeton, dogumTarihi)
-  const yol = `${doktor}/k${++sesNo}.webm`
+  const yol = `uz/${doktor}/k${++sesNo}.webm`
   vt.depo.set(`muayene-sesleri/${yol}`, new Blob(['sentetik ses']))
   const m = await oku(await R.muayene.POST(istek('/api/ulke/muayene', jeton, { yol, hastaId: hasta, sablon, riza: true })))
   assert.equal(m.s, 200, JSON.stringify(m.j))
@@ -222,7 +222,7 @@ describe('40 roles: note templates', () => {
     assert.ok(UZ_ORTAK_YEREL_ICERIK.some((y) => y.anahtar === 'medicines_register'))
     // No screen and no instruction reads a slot.
     const { readdirSync } = require('node:fs') as typeof import('node:fs')
-    for (const d of [...readdirSync(join(KOK, 'countries/uz/uygulama')).map((a) => `countries/uz/uygulama/${a}`), 'countries/uz/klinik/talimatlar.ts', 'countries/uz/klinik/index.ts', 'lib/ulke/uygulama/notlar.ts'].filter((x) => /\.tsx?$/.test(x) && !x.endsWith('.test.ts'))) {
+    for (const d of [...readdirSync(join(KOK, 'countries/uz/uygulama')).map((a) => `countries/uz/uygulama/${a}`), ...readdirSync(join(KOK, 'components/ulke/uygulama')).map((a) => `components/ulke/uygulama/${a}`), 'countries/uz/arayuz.ts', 'countries/uz/klinik/talimatlar.ts', 'countries/uz/klinik/index.ts', 'lib/ulke/uygulama/notlar.ts'].filter((x) => /\.tsx?$/.test(x) && !x.endsWith('.test.ts'))) {
       assert.doesNotMatch(readFileSync(join(KOK, d), 'utf8'), /UZ_YEREL_ICERIK|UZ_ORTAK_YEREL_ICERIK/, `${d} reads a slot`)
     }
   })
@@ -314,19 +314,19 @@ describe('40 roles: instructions to the model', () => {
 })
 
 describe('40 roles: visit → draft in the role\'s template, with a model that returns every role\'s fields', () => {
-  let Not: typeof import('../uygulama/Not')
-  let Muayene: typeof import('../uygulama/Muayene')
-  let Kabuk: typeof import('../uygulama/Kabuk')
+  let Not: typeof import('@/components/ulke/uygulama/Not')
+  let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
+  let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
   let M: typeof import('../uygulama/metinler')
   let T: typeof import('./talimatlar')
   let K: typeof import('./asistanKimligi')
   let Layout: typeof import('../../../app/layout.ulke')
   before(async () => {
-    Not = await import('../uygulama/Not'); Muayene = await import('../uygulama/Muayene'); Kabuk = await import('../uygulama/Kabuk'); M = await import('../uygulama/metinler')
+    Not = await import('@/components/ulke/uygulama/Not'); Muayene = await import('@/components/ulke/uygulama/Muayene'); Kabuk = await import('@/components/ulke/uygulama/Kabuk'); M = await import('../uygulama/metinler')
     T = await import('./talimatlar'); K = await import('./asistanKimligi'); Layout = await import('../../../app/layout.ulke')
   })
   const bos = () => {}
-  const ciz = (f: Form, not: import('../uygulama/Not').NotDetayi) => renderToStaticMarkup(React.createElement(Layout.default, null, React.createElement(Kabuk.Cerceve, { dil: f, m: M.uygulamaMetni(f), ad: 'QA Shifokor', aktif: 'bugun', cikis: bos, children:
+  const ciz = (f: Form, not: import('@/components/ulke/uygulama/Not').NotDetayi) => renderToStaticMarkup(React.createElement(Layout.default, null, React.createElement(Kabuk.Cerceve, { dil: f, m: M.uygulamaMetni(f), ad: 'QA Shifokor', aktif: 'bugun', cikis: bos, children:
     React.createElement(Not.NotGorunumu, { m: M.uygulamaMetni(f), not, aktifDil: not.dil, setAktifDil: bos, icerik: not.icerik, setIcerik: bos, islem: null, bildirim: null, kaydet: bos, yenidenYaz: bos, onayla: bos }) })))
 
   ROLLER.forEach(({ rol, taraf }, i) => {
@@ -338,9 +338,9 @@ describe('40 roles: visit → draft in the role\'s template, with a model that r
       const alanlar = [...UZ_ROL_ALANLARI[rol]]
       const baskaRol = ROLLER[(i + 7) % 40].rol
       // Another role's template is refused for this account; nothing reaches the speech engine.
-      vt.depo.set(`muayene-sesleri/${A}/yabanci.webm`, new Blob(['sentetik ses']))
-      assert.deepEqual(await oku(await R.muayene.POST(istek('/api/ulke/muayene', 'jeton-a', { yol: `${A}/yabanci.webm`, hastaId: await hastaEkle('jeton-a', YETISKIN), sablon: baskaRol, riza: true }))), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } })
-      assert.equal(vt.tablo('sessions').length, 0)
+      vt.depo.set(`muayene-sesleri/uz/${A}/yabanci.webm`, new Blob(['sentetik ses']))
+      assert.deepEqual(await oku(await R.muayene.POST(istek('/api/ulke/muayene', 'jeton-a', { yol: `uz/${A}/yabanci.webm`, hastaId: await hastaEkle('jeton-a', YETISKIN), sablon: baskaRol, riza: true }))), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } })
+      assert.equal(vt.tablo('ulke_muayeneler').length, 0)
 
       // ── an ADULT patient
       const y = await muayeneVeNot('jeton-a', A, rol, YETISKIN)
@@ -348,7 +348,7 @@ describe('40 roles: visit → draft in the role\'s template, with a model that r
       assert.equal(model.cagrilar[0].sistem, T.uzNotTalimati(f, rol), 'the model got THIS role\'s instruction, in the doctor\'s note language')
       assert.ok(!/QA Bemor|Sinov/.test(model.cagrilar[0].sistem + model.cagrilar[0].kullanici), 'the patient\'s name went to the model')
       assert.ok(!model.cagrilar[0].kullanici.includes(UZ_VASIY_ALANI), 'guardian wording for an adult')
-      assert.deepEqual([vt.tablo('sessions')[0].specialty, vt.tablo('muayene_dil_kaydi')[0].sablon], [rol, rol])
+      assert.deepEqual([vt.tablo('ulke_muayeneler')[0].specialty, vt.tablo('muayene_dil_kaydi')[0].sablon], [rol, rol])
       // Stored: this role's fields, each with what the model said for it — and not one key more.
       const satir = vt.tablo('not_dil_kaydi').find((s) => s.note_id === y.notId)!
       assert.deepEqual(satir.alanlar, Object.fromEntries(alanlar.map((k) => [k, isaret(k)])), `${rol}: stored fields`)
@@ -409,8 +409,8 @@ describe('40 roles: visit → draft in the role\'s template, with a model that r
     const c = await muayeneVeNot('jeton-b', B, 'genel', COCUK)
     assert.deepEqual(c.not.alanAnahtarlari, [UZ_VASIY_ALANI]); assert.deepEqual(c.not.icerik.alanlar, { [UZ_VASIY_ALANI]: isaret(UZ_VASIY_ALANI) })
     // An account without a role cannot borrow a role's template.
-    vt.depo.set(`muayene-sesleri/${B}/x.webm`, new Blob(['sentetik ses']))
-    assert.deepEqual(await oku(await R.muayene.POST(istek('/api/ulke/muayene', 'jeton-b', { yol: `${B}/x.webm`, hastaId: y.hasta, sablon: 'kardiyoloji', riza: true }))), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } })
+    vt.depo.set(`muayene-sesleri/uz/${B}/x.webm`, new Blob(['sentetik ses']))
+    assert.deepEqual(await oku(await R.muayene.POST(istek('/api/ulke/muayene', 'jeton-b', { yol: `uz/${B}/x.webm`, hastaId: y.hasta, sablon: 'kardiyoloji', riza: true }))), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } })
   })
 
   it('second draft and approval keep the fields in their role: a rewrite adds none; approving the other draft swaps them; an approved note\'s fields cannot change; a note keeps its template when the role changes', async () => {
