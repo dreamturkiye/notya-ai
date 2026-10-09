@@ -29,6 +29,8 @@ import { ORNEK_PARAMETRELER, ornekGirdiler, ornekOrtam } from '../testing/aracOr
 import { gorunurMetin, sizintiTara } from '../testing/sizintiTarayici'
 import type { UlkeArayuzu } from '../arayuz/tipler'
 import type { DilKodu, UlkeKlinigi, UlkePaketi } from '../tipler'
+import { kanonigeCevir, type BirimOrtami } from './birimler'
+import { girdiyiCoz } from './girdi'
 import { KIT_ARACLARI, kitAraci } from './katalog'
 import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari } from './paket'
 import type { AracAlani, AracGirdisi, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
@@ -70,6 +72,16 @@ const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(me
 const doluGirdi = (t: AracTanimi, p?: Readonly<Record<string, number>>): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, ornekOrtam(t, p)).tamam) ?? null
 /** An input as the screen holds it (what was typed). */
 const hamGirdi = (g: AracGirdisi) => Object.fromEntries(Object.entries(g).filter(([, v]) => v !== null).map(([k, v]) => [k, typeof v === 'number' ? String(v) : v])) as Record<string, string | boolean>
+/** The same, as a person of the pack's country types it: a measured value in the pack's unit (to two decimals), every other value as it is. */
+function ulkeninHami(t: AracTanimi, g: AracGirdisi, o: BirimOrtami): Record<string, string | boolean> {
+  const ham = hamGirdi(g)
+  for (const a of t.alanlar) {
+    const v = g[a.anahtar]
+    const bir = typeof v === 'number' ? kanonigeCevir(a, 1, o) : null
+    if (typeof v === 'number' && bir && bir !== 1) ham[a.anahtar] = String(Math.round((v / bir) * 100) / 100)
+  }
+  return ham
+}
 
 describe('tools — the kit\'s catalogue', () => {
   it('keys are well-formed and unique; field and result keys too', () => {
@@ -311,9 +323,14 @@ describe('tools — the screens', () => {
         // every result the samples can produce is drawn in the pack's words
         const gorulen = { sayi: new Set<string>(), bant: new Set<string>(), uyari: new Set<string>(), tarih: new Set<string>() }
         for (const g of ornekGirdiler(t)) {
-          const s = t.hesapla(g, ornekOrtam(t, p.parametreler))
+          // the sample is stated in the kit's units; the screen is given what a person of THIS country types (a
+          // length, a weight or a laboratory value in the pack's own unit), and the result expected is the one of
+          // exactly that typing
+          const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: icerik.labBirimleri }
+          const ham = ulkeninHami(t, g, o)
+          const s = t.hesapla(girdiyiCoz(t.alanlar, ham, o), ornekOrtam(t, p.parametreler))
           if (!s.tamam) continue
-          const html = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham: hamGirdi(g) }))
+          const html = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham }))
           const metin = gorunurMetin(html)
           assert.match(html, /data-eylem="kopyala"/)
           for (const n of s.sayilar) { gorulen.sayi.add(n.anahtar); assert.ok(html.includes(`data-sayi="${n.anahtar}"`) && metin.includes(bicimli(p.metin.sayilar?.[n.anahtar], dil)), `${p.anahtar}/${dil}: number ${n.anahtar}`) }

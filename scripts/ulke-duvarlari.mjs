@@ -25,6 +25,12 @@
  *       under app/tools/ carries it. And the kit never imports the pre-split application's tool code
  *       (app/doktor-tools, app/klinik-tools, specialties/, lib/doktor/doktorAraclari, lib/klinik/klinikAraclari):
  *       what the two share is arithmetic, proven equal by test, never a module that carries one country's text.
+ *   D8  NOTYA-ULKE-EN-01 — LANGUAGE SETS (countries/_dil/<language>/): the text a language has in common across the
+ *       countries that speak it. A country pack MAY import a language set. A language set imports NO country pack,
+ *       not countries/active, not countries/tumu and no other language set; it may import core. It reads no country
+ *       code (D5 applies to it), carries no pack marker, and names no tool of D7. Code outside countries/ never
+ *       imports a language set: it reaches a language's text only through the active pack (tests, scripts and
+ *       lib/ulke/testing/ may). So a build still holds exactly ONE country's pack, plus the set that pack took.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -40,6 +46,8 @@ const UZANTI = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
 const ULKELER_DIZINI = 'countries'
 const GIRIS = 'active'
 const TUMU = 'tumu'
+/** Language sets: countries/_dil/<language>/. Not a country: no pack, no build file, no leak list of its own. */
+const DIL_SETLERI = '_dil'
 
 const goreli = (p) => relative(KOK, p).split(sep).join('/')
 
@@ -79,8 +87,11 @@ function hedef(dosya, belirtec) {
 function ulkeKlasorleri() {
   const d = join(KOK, ULKELER_DIZINI)
   if (!existsSync(d)) return []
-  return readdirSync(d).filter((ad) => statSync(join(d, ad)).isDirectory() && ad !== GIRIS).sort()
+  return readdirSync(d).filter((ad) => statSync(join(d, ad)).isDirectory() && ad !== GIRIS && ad !== DIL_SETLERI).sort()
 }
+
+/** The language a file of a language set belongs to ('en' for countries/_dil/en/…), or null. */
+const dilSetiDili = (g) => (g.startsWith(`${ULKELER_DIZINI}/${DIL_SETLERI}/`) ? g.split('/')[2] || null : null)
 
 const testMi = (g) => /\.test\.(ts|tsx|mts)$/.test(g)
 const tumuKullanabilir = (g) => testMi(g) || g.startsWith('lib/ulke/testing/') || g.startsWith('scripts/')
@@ -115,13 +126,15 @@ export function duvarlariDenetle() {
       // D7 — the kit and every pack but the owner's never name such a key; the kit never imports the other application's tool code.
       const paketi = g.startsWith(`${ULKELER_DIZINI}/`) && ulkeler.includes(g.split('/')[1]) && !testMi(g) ? g.split('/')[1] : null
       const kit = kitDosyasiMi(g)
-      if (kit || paketi) {
+      const setDosyasi = Boolean(dilSetiDili(g)) && !testMi(g)
+      if (setDosyasi && /notya-ulke-paketi:/.test(kaynak)) ekle('D8', g, 'a language set carries a pack marker — a set is no country\'s pack')
+      if (kit || paketi || setDosyasi) {
         for (const y of yasakAnahtarlar) {
           if (paketi === y.kod) continue
           for (const k of y.anahtarlar) if (new RegExp(`['"\`/=]${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"\`/?&#]`).test(kaynak)) ekle('D7', g, `names "${k}", a tool of "${y.kod}" only: it does not exist in another country's build`)
         }
       }
-      if (kit || (paketi && !yasakAnahtarlar.some((y) => y.kod === paketi))) {
+      if (kit || setDosyasi || (paketi && !yasakAnahtarlar.some((y) => y.kod === paketi))) {
         for (const desen of IMPORT_DESENLERI) {
           desen.lastIndex = 0
           let m
@@ -135,6 +148,7 @@ export function duvarlariDenetle() {
     const icinde = g.startsWith(`${ULKELER_DIZINI}/`) ? g.split('/')[1] : null // 'active' | 'tumu.ts' | '<kod>'
     const paketIcinde = icinde && ulkeler.includes(icinde) ? icinde : null
     const giristeMi = icinde === GIRIS
+    const setDili = dilSetiDili(g)
 
     for (const desen of IMPORT_DESENLERI) {
       desen.lastIndex = 0
@@ -147,6 +161,21 @@ export function duvarlariDenetle() {
         const hedefUlke = ulkeler.includes(bolum) ? bolum : null
         const hedefGiris = bolum === GIRIS
         const hedefTumu = bolum === TUMU || bolum === `${TUMU}.ts`
+        const hedefSet = bolum === DIL_SETLERI ? h.split('/')[2] || '' : null
+
+        if (setDili) {
+          // D8: a language set stands under every country that speaks the language, so it may lean on none of them.
+          if (hedefUlke) ekle('D8', g, `the language set "${setDili}" imports pack "${hedefUlke}" (${m[2]})`)
+          if (hedefGiris || hedefTumu) ekle('D8', g, `a language set must not import ${h} (${m[2]})`)
+          if (hedefSet !== null && hedefSet !== setDili) ekle('D8', g, `the language set "${setDili}" imports the language set "${hedefSet}" (${m[2]})`)
+          continue
+        }
+        if (hedefSet !== null) {
+          // A pack takes a language set; nobody else does (tests and scripts may look at one).
+          if (paketIcinde || testMi(g) || g.startsWith('lib/ulke/testing/') || g.startsWith('scripts/')) continue
+          ekle('D8', g, `imports ${h} directly — a language set is reached only through the country pack that took it (${m[2]})`)
+          continue
+        }
 
         if (paketIcinde) {
           if (hedefUlke && hedefUlke !== paketIcinde) ekle('D3', g, `pack "${paketIcinde}" imports pack "${hedefUlke}" (${m[2]})`)

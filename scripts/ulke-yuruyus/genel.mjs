@@ -337,7 +337,8 @@ if (P.randevu) {
   await git(p, `/calendar?gun=${yarin}&gorunum=gun`)
   await p.waitForFunction((ad) => document.body.innerText.includes(ad), { timeout: 60000 }, HASTA_ADI)
   const g = await govde(p)
-  const saat = P.saatBicimi === 12 ? /2:30\s?PM/i.test(g) && !g.includes('14:30') : g.includes('14:30')
+  // a 12-hour time is written with the day period as the pack's locale writes it: "2:30 PM", "2:30 pm", "2:30 p.m."
+  const saat = P.saatBicimi === 12 ? /2:30\s?p\.?m\.?/i.test(g) && !g.includes('14:30') : g.includes('14:30')
   kontrol(`calendar: the appointment is shown, and its time is written the pack's way (${P.saatBicimi}-hour)`, saat, g.match(/\d{1,2}:30[^\n]{0,6}/)?.[0] ?? '')
   await tara(p, 'calendar')
   await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-calendar.png`) })
@@ -357,7 +358,7 @@ if (P.portal) {
   const gunYaz = (gun) => { const [y, a, g] = gun.split('-'); return P.tarihDeseni.replace('DD', g).replace('MM', a).replace('YYYY', y) }
   const haftaGunu = (gun) => { const [y, a, g] = gun.split('-').map(Number); return new Date(Date.UTC(y, a - 1, g)).getUTCDay() || 7 }
   const gunAdi = (gun) => (K.hastaRandevu ? `${K.hastaRandevu.gunUzun[haftaGunu(gun)]}, ${gunYaz(gun)}` : gunYaz(gun))
-  const saatYaz = (saat) => { if (P.saatBicimi === 24) return saat; const [s, d] = saat.split(':').map(Number); return new RegExp(`^${s % 12 || 12}:${String(d).padStart(2, '0')}\\s?${s < 12 ? 'AM' : 'PM'}$`, 'i') }
+  const saatYaz = (saat) => { if (P.saatBicimi === 24) return saat; const [s, d] = saat.split(':').map(Number); return new RegExp(`^${s % 12 || 12}:${String(d).padStart(2, '0')}\\s?${s < 12 ? 'a' : 'p'}\\.?m\\.?$`, 'i') }
   const hApi = (pg, rota, s = {}) => pg.evaluate(async (u, s) => {
     const r = await fetch(u, { method: s.method || 'GET', credentials: 'same-origin', headers: { ...(s.ozet ? { 'x-notya-portal-baglanti': s.ozet } : {}), ...(s.jeton ? { Authorization: `Bearer ${s.jeton}` } : {}), ...(s.govde ? { 'Content-Type': 'application/json', 'x-notya-portal': '1' } : {}) }, body: s.govde ? JSON.stringify(s.govde) : undefined })
     const t = await r.text(); let j = null; try { j = JSON.parse(t) } catch { /* not json */ }
