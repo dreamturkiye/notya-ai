@@ -12,8 +12,9 @@
  */
 import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { EKSIK_ISARETI, eksik, eksikAyar } from './eksik'
 import { paketiDenetle, sorunlariYaz } from './paketDenetimi'
 import { iskelet, paketSekli } from './testing/paketSekli'
@@ -35,11 +36,10 @@ describe('every pack is complete', () => {
     assert.deepEqual(sorunlar, [], sorunlariYaz(paket.kod, sorunlar))
   })
 
-  it('no file of the pack carries a "to be supplied" marker', () => {
-    const bulunan: string[] = []
-    const gez = (d: string) => { for (const ad of readdirSync(d)) { const yol = join(d, ad); if (statSync(yol).isDirectory()) gez(yol); else if (/\.(ts|tsx|mjs)$/.test(ad) && !/\.test\.tsx?$/.test(ad) && /\beksik(Ayar)?\(|⟦SUPPLY⟧/.test(readFileSync(yol, 'utf8'))) bulunan.push(yol) } }
-    gez(join(KOK, 'countries', paket.kod))
-    assert.deepEqual(bulunan, [])
+  it('no file of the pack carries a "to be supplied" marker', async () => {
+    // The same scan a country build runs (scripts/ulke-paket-denetimi.mjs), so the test and the build cannot disagree.
+    const { eksikleriBul } = await import(pathToFileURL(join(KOK, 'scripts/ulke-paket-denetimi.mjs')).href) as { eksikleriBul: (kod: string, kok: string) => { dosya: string; satir: number; ipucu: string }[] }
+    assert.deepEqual(eksikleriBul(paket.kod, KOK).map((e) => `${e.dosya}:${e.satir}`), [])
   })
 
   it('the check is not blind: each kind of gap in THIS pack is reported by name', () => {

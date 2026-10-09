@@ -19,9 +19,13 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { TUM_ULKELER } from '@/countries/tumu'
+import { ULKE_KODLARI } from './tipler'
 
 const KOK = resolve(__dirname, '../..')
 const BETIK = join(KOK, 'scripts/ulke-yeni.mjs')
+/** A throwaway code that is no country of this repository (ZZ and its neighbours are ISO's user-assigned codes). */
+const K = ['zz', 'zy', 'zx', 'zw'].find((k) => !(ULKE_KODLARI as readonly string[]).includes(k)) as string
+const B = K.toUpperCase()
 let gecici = ''
 const kos = (...argv: string[]) => spawnSync('node', [BETIK, ...argv, '--kok', gecici], { encoding: 'utf8' })
 const oku = (g: string) => readFileSync(join(gecici, g), 'utf8')
@@ -51,22 +55,22 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
   })
 
   it('creates the pack, registers the code, and says exactly how much is still to supply', async () => {
-    const r = kos('zz', '--dil', 'en', '--yol', '/zz')
+    const r = kos(K, '--dil', 'en', '--yol', `/${K}`)
     assert.equal(r.status, 0, r.stdout + r.stderr)
-    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries/zz', f)), `countries/zz/${f} was not written`)
+    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
     // registration: the code list, the language, one branch per door, the side-by-side list
-    assert.match(oku('lib/ulke/tipler.ts'), /export const ULKE_KODLARI = \[[^\]]*'zz'\] as const/)
+    assert.match(oku('lib/ulke/tipler.ts'), new RegExp(`export const ULKE_KODLARI = \\[[^\\]]*'${K}'\\] as const`))
     assert.match(oku('lib/ulke/tipler.ts'), /export type DilKodu = [^\n]*\| 'en'/)
-    for (const [dosya, ad] of [['index.ts', 'ZZ_PAKETI'], ['klinik.ts', 'ZZ_KLINIK'], ['arayuz.ts', 'ZZ_ARAYUZ']]) {
+    for (const [dosya, ad] of [['index.ts', `${B}_PAKETI`], ['klinik.ts', `${B}_KLINIK`], ['arayuz.ts', `${B}_ARAYUZ`]]) {
       const kaynak = oku(`countries/active/${dosya}`)
-      assert.match(kaynak, new RegExp(`\\} else if \\(process\\.env\\.NOTYA_COUNTRY === 'zz'\\) \\{\\n  \\w+ = require\\('\\.\\./zz/[a-z/]+'\\)\\.${ad}\\n\\} else if \\(process\\.env\\.NOTYA_COUNTRY === 'tr' \\|\\| !process\\.env\\.NOTYA_COUNTRY\\)`), `${dosya}: the branch for "zz" must sit before the pre-split application's, with its require inside it`)
+      assert.match(kaynak, new RegExp(`\\} else if \\(process\\.env\\.NOTYA_COUNTRY === '${K}'\\) \\{\\n  \\w+ = require\\('\\.\\./${K}/[a-z/]+'\\)\\.${ad}\\n\\} else if \\(process\\.env\\.NOTYA_COUNTRY === 'tr' \\|\\| !process\\.env\\.NOTYA_COUNTRY\\)`), `${dosya}: the branch for "${K}" must sit before the pre-split application's, with its require inside it`)
       // every other country's branch is exactly as it was
-      assert.equal(kaynak.replace(/\} else if \(process\.env\.NOTYA_COUNTRY === 'zz'\) \{\n[^\n]+\n/, ''), readFileSync(join(KOK, 'countries/active', dosya), 'utf8'))
+      assert.equal(kaynak.replace(new RegExp(`\\} else if \\(process\\.env\\.NOTYA_COUNTRY === '${K}'\\) \\{\\n[^\\n]+\\n`), ''), readFileSync(join(KOK, 'countries/active', dosya), 'utf8'))
     }
-    assert.match(oku('countries/tumu.ts'), /zz: \{ paket: ZZ_PAKETI, sizintiTerimleri: ZZ_SIZINTI_TERIMLERI, sizintiHarfleri: ZZ_SIZINTI_HARFLERI \},\n\}/)
+    assert.ok(oku('countries/tumu.ts').includes(`  ${K}: { paket: ${B}_PAKETI, sizintiTerimleri: ${B}_SIZINTI_TERIMLERI, sizintiHarfleri: ${B}_SIZINTI_HARFLERI },\n}`))
     // the list: the same count the command printed, texts and settings, each with a hint
     const { eksikleriBul } = await import(pathToFileURL(join(KOK, 'scripts/ulke-paket-denetimi.mjs')).href) as { eksikleriBul: (kod: string, kok: string) => { dosya: string; satir: number; tur: string; ipucu: string }[] }
-    const eksikler = eksikleriBul('zz', gecici)
+    const eksikler = eksikleriBul(K, gecici)
     const yazilan = /TO SUPPLY before the country can be built: (\d+) items — (\d+) texts, (\d+) settings/.exec(r.stdout)
     assert.ok(yazilan, r.stdout)
     assert.equal(eksikler.length, Number(yazilan[1]))
@@ -75,24 +79,24 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     // every catalogue key of the kit is in the new pack
     const sekil = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as { cekirdek: Record<string, string[]>; uygulama: Record<string, unknown> }
     for (const [yuzey, anahtarlar] of Object.entries(sekil.cekirdek)) for (const k of anahtarlar) assert.ok(eksikler.some((e) => e.ipucu.includes(`${yuzey}.${k}`)), `core surface key ${yuzey}.${k} is missing from the new pack`)
-    for (const grup of Object.keys(sekil.uygulama)) assert.match(oku('countries/zz/uygulama/metinler.ts'), new RegExp(`^  ${grup}: `, 'm'))
+    for (const grup of Object.keys(sekil.uygulama)) assert.match(oku(`countries/${K}/uygulama/metinler.ts`), new RegExp(`^  ${grup}: `, 'm'))
   })
 
   it('the new country starts closed: invitation only, hidden from search, and with the scan in its own build file', () => {
-    const index = oku('countries/zz/index.ts')
+    const index = oku(`countries/${K}/index.ts`)
     assert.match(index, /^\s+kayitAcik: false,$/m)
     assert.match(index, /^\s+aramaMotorlarinaGizli: true,$/m)
-    assert.match(index, /yolOnEki: '\/zz'/)
+    assert.ok(index.includes(`yolOnEki: '/${K}'`))
     assert.match(index, /araclar: \[\]/)
     for (const kapali of ['doktorAraclari', 'asistan', 'sesProfili', 'goruntuDegerlendirme', 'bolunmemisUygulama']) assert.doesNotMatch(index, new RegExp(`\\b${kapali}: true`), `${kapali} must be off in a new country`)
-    assert.match(oku('countries/zz/derleme.mjs'), /^ulkeDerlemeKapisi\('zz'\)$/m)
-    assert.match(oku('countries/zz/derleme.mjs'), /yolOnEki: '\/zz'/)
-    assert.match(oku('countries/zz/klinik/index.ts'), /hukukcuInceledi: false/)
+    assert.match(oku(`countries/${K}/derleme.mjs`), new RegExp(`^ulkeDerlemeKapisi\\('${K}'\\)$`, 'm'))
+    assert.ok(oku(`countries/${K}/derleme.mjs`).includes(`yolOnEki: '/${K}'`))
+    assert.match(oku(`countries/${K}/klinik/index.ts`), /hukukcuInceledi: false/)
   })
 
   it('copies no text of any existing country: none of their leak terms or letters is in the new folder', () => {
-    // The record (docs/COUNTRY-PACK-ZZ.md) is the checklist's own wording, which names Türkiye in its rules; the pack folder is what must be clean.
-    const dosyalar = hepsi(join(gecici, 'countries/zz'))
+    // The record (docs/COUNTRY-PACK-<CODE>.md) is the checklist's own wording, which names Türkiye in its rules; the pack folder is what must be clean.
+    const dosyalar = hepsi(join(gecici, 'countries', K))
     for (const [kod, u] of Object.entries(TUM_ULKELER)) {
       for (const f of dosyalar) {
         const icerik = readFileSync(f, 'utf8')
@@ -108,7 +112,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
   })
 
   it('the country\'s record is the checklist with every gate unticked, and says what building does not prove', () => {
-    const kayit = oku('docs/COUNTRY-PACK-ZZ.md')
+    const kayit = oku(`docs/COUNTRY-PACK-${B}.md`)
     const kutu = (s: string) => s.split('\n').filter((x) => /^- \[.\]/.test(x))
     const liste = kutu(readFileSync(join(KOK, 'docs/COUNTRY-PACK-CHECKLIST.md'), 'utf8'))
     assert.equal(kutu(kayit).length, liste.length)
@@ -120,7 +124,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
 
   it('refuses to run twice for the same country, and changes nothing the second time', () => {
     const once = anlik()
-    const r = kos('zz', '--dil', 'en', '--yol', '/zz')
+    const r = kos(K, '--dil', 'en', '--yol', `/${K}`)
     assert.equal(r.status, 1)
     assert.match(r.stderr, /already exists/)
     assert.equal(anlik(), once)
