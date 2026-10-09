@@ -1,18 +1,19 @@
 /**
- * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — onboarding profil alanlarının doğrulaması ve users satırındaki yazıma
- * eşlenmesi. Pure, client-safe: ekran (app/onboarding/page.tsx) ve sunucu (app/api/users/profile/route.ts) aynı
- * kuralı kullanır; sunucu tarayıcının denetimine güvenmez.
+ * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — validation of the onboarding profile fields and their mapping to the
+ * spellings the users row accepts. Pure and client-safe: the screen (app/onboarding/page.tsx) and the server
+ * (app/api/users/profile/route.ts) apply the same rule; the server does not rely on the browser's checks.
  *
- * Neden eşleme tabloları var: canlı `public.users` tablosundaki CHECK kısıtları ekrandaki seçeneklerle AYNI
- * yazımda değil. Ekran "Uzm.Dr." gönderir, kısıt 'Uzm. Dr.' ister; ekran "Erkek" gönderir, kısıt 'male' ister;
- * ekran "[isim] Hocam" gönderir, kısıt 'named_hocam' ister. Eşlemeden yazmak kısıtı ihlal ederdi — bu yüzden
- * bu alanlar bugüne kadar yalnız auth metadata'ya yazılıyor, ürünün okuduğu users satırına hiç ulaşmıyordu.
+ * Why there are mapping tables: the CHECK constraints on the live `public.users` table do NOT use the spellings
+ * of the options on the screen. The screen sends "Uzm.Dr.", the constraint wants 'Uzm. Dr.'; the screen sends
+ * "Erkek", the constraint wants 'male'; the screen sends "[isim] Hocam", the constraint wants 'named_hocam'.
+ * Writing them unmapped would violate the constraint — which is why these answers went only into auth metadata
+ * until now and never reached the users row the product reads.
  */
 import type { AddressingPreference, DoctorTitle, Gender } from '../address'
 import { doktorCepTelefonu } from './cepTelefonu'
 import { KVKK_ONAY_HATASI, KVKK_ONAY_KODU, kvkkKarari } from './kvkkOnay'
 
-/** Ekrandaki unvan seçenekleri (boşluksuz) → users.title CHECK kısıtının yazımı. TEK eşleme tablosu. */
+/** Title options on the screen (no spaces) → the spelling of the users.title CHECK constraint. The ONE mapping table. */
 export const UNVAN_ESLEME: Readonly<Record<string, DoctorTitle>> = {
   'Dr.': 'Dr.',
   'Uzm.Dr.': 'Uzm. Dr.',
@@ -20,7 +21,7 @@ export const UNVAN_ESLEME: Readonly<Record<string, DoctorTitle>> = {
   'Prof.Dr.': 'Prof. Dr.',
 }
 
-/** Boşluk farkını yok sayar: "Uzm.Dr." da "Uzm. Dr." da 'Uzm. Dr.' olur; tabloda olmayan her şey null. */
+/** Ignores spacing: both "Uzm.Dr." and "Uzm. Dr." become 'Uzm. Dr.'; anything not in the table is null. */
 export function unvanEsle(ham: unknown): DoctorTitle | null {
   if (typeof ham !== 'string') return null
   return UNVAN_ESLEME[ham.replace(/\s+/g, '')] ?? null
@@ -45,7 +46,7 @@ export function hitapEsle(ham: unknown): AddressingPreference | null {
   return typeof ham === 'string' ? HITAP_ESLEME[ham.trim()] ?? null : null
 }
 
-/** Onboarding 1. adımdaki meslekler + eski kayıtlarda görülen 'mali_musavirlik'. */
+/** The professions of onboarding step 1, plus 'mali_musavirlik' seen in older rows. */
 export const MESLEK_TURLERI: readonly string[] = ['doktor', 'klinik-uzman', 'saglik-uzmani', 'mali', 'avukat', 'psikolog', 'mali_musavirlik']
 
 export const AD_MESAJ = {
@@ -66,13 +67,13 @@ export const AD_MESAJ = {
 } as const
 
 const AD_KARAKTER = /^[\p{L}][\p{L}\s.'’-]*$/u
-/** Ad alanına yazılmış unvan — title + first_name + last_name birleştiren okuyucularda "Dr. Dr. …" çiftlemesin. */
+/** A title typed into the name field — so readers that join title + first_name + last_name never show "Dr. Dr. …". */
 const AD_UNVAN = /^(prof|doç|doc|uzm|op|dr|dt)\.?(\s|$)/i
 const AD_AZAMI = 60
 
 export type AlanSonucu = { ok: true; deger: string } | { ok: false; hata: string }
 
-/** Baştaki/sondaki boşluk atılır, iç boşluklar teke iner; en az iki harf; harf, boşluk, tire, kesme, nokta. */
+/** Trimmed, inner whitespace collapsed; at least two letters; letters, space, hyphen, apostrophe, full stop. */
 export function adDogrula(ham: unknown, alan: 'ad' | 'soyad'): AlanSonucu {
   const m = AD_MESAJ[alan]
   if (ham != null && typeof ham !== 'string') return { ok: false, hata: m.karakter }
@@ -102,13 +103,13 @@ const metin = (v: unknown): string | null => (typeof v === 'string' ? v.trim() :
 const dolu = (v: unknown): boolean => v != null && !(typeof v === 'string' && !v.trim())
 
 export type ProfilBaglami = {
-  /** Hesap onboarding'i İLK KEZ bitiriyor (users satırı yok ya da onboarding_completed değil). */
+  /** The account is finishing onboarding for the FIRST time (no users row, or onboarding_completed is not set). */
   ilkKayit: boolean
-  /** Kayıtlı KVKK rızası var (bkz. kvkkKayitliMi). */
+  /** KVKK consent is on record (see kvkkKayitliMi). */
   kvkkKayitli: boolean
 }
 
-/** Doğrulanmış, users satırının yazımına çevrilmiş alanlar. Olmayan alan = gövdede gelmedi, yazılmaz. */
+/** Validated fields in the spelling of the users row. A missing field = not sent in the body, not written. */
 export type ProfilDegerleri = {
   firstName?: string
   lastName?: string
@@ -118,7 +119,7 @@ export type ProfilDegerleri = {
   addressingPreference?: AddressingPreference
   /** +905XXXXXXXXX */
   cepTelefonu?: string
-  /** Bu istek KVKK rızasını kaydetmeli (kayıt yoktu, hekim işaretledi). */
+  /** This request must record KVKK consent (none on record, the doctor ticked the box). */
   kvkkDamgala: boolean
 }
 
@@ -127,12 +128,12 @@ export type ProfilSonucu =
   | { ok: false; hata: string; alan: string; kod?: string }
 
 /**
- * POST /api/users/profile gövdesi.
+ * The body of POST /api/users/profile.
  *
- * İki kip:
- *  • ilkKayit — onboarding'in tek çağıranı (app/onboarding/page.tsx): her alan ZORUNLU ve geçerli olmalı.
- *  • ilkKayit değil — onboarding'i bitmiş hesabın çağrısı (ör. branş değiştirebilen iki süper kullanıcı):
- *    bugüne kadarki gibi hiçbir alan zorunlu değil; yalnız GÖNDERİLEN alan doğrulanır.
+ * Two modes:
+ *  • ilkKayit — the one caller, onboarding (app/onboarding/page.tsx): every field is REQUIRED and must be valid.
+ *  • not ilkKayit — a call from an account that already finished onboarding (e.g. the two superusers who may
+ *    switch branch): as before, no field is required; only a field that IS sent is validated.
  */
 export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): ProfilSonucu {
   if (!govde || typeof govde !== 'object' || Array.isArray(govde)) return { ok: false, hata: PROFIL_MESAJ.govde, alan: 'govde' }
@@ -140,34 +141,34 @@ export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): Pro
   const zorunlu = baglam.ilkKayit
   const deger: ProfilDegerleri = { kvkkDamgala: false }
 
-  // Meslek
+  // Profession
   if (dolu(b.profession_type)) {
     if (typeof b.profession_type !== 'string' || !MESLEK_TURLERI.includes(b.profession_type)) return { ok: false, hata: PROFIL_MESAJ.meslek, alan: 'profession_type' }
   } else if (zorunlu) return { ok: false, hata: PROFIL_MESAJ.meslek, alan: 'profession_type' }
   const doktor = b.profession_type === 'doktor'
 
-  // Uzmanlık — içerik (hangi branşlar) burada denetlenmez; yalnız biçim. Eski gövde adları da sayılır.
+  // Specialty — the content (which branches exist) is not checked here, only the shape. Old body names count too.
   const uzmanliklar = [b.specialty, b.uzmanlik_alani, b.uzmanlik].filter(dolu)
   for (const u of uzmanliklar) {
     if (typeof u !== 'string' || u.trim().length > 200) return { ok: false, hata: PROFIL_MESAJ.uzmanlikGecersiz, alan: 'specialty' }
   }
   if (zorunlu && !uzmanliklar.length) return { ok: false, hata: PROFIL_MESAJ.uzmanlik, alan: 'specialty' }
 
-  // Unvan (yalnız hekimde zorunlu)
+  // Title (required for doctors only)
   if (dolu(b.title)) {
     const t = unvanEsle(b.title)
     if (!t) return { ok: false, hata: PROFIL_MESAJ.unvanGecersiz, alan: 'title' }
     deger.title = t
   } else if (zorunlu && doktor) return { ok: false, hata: PROFIL_MESAJ.unvan, alan: 'title' }
 
-  // Klinik / hastane adı (isteğe bağlı)
+  // Clinic / hospital name (optional)
   if (dolu(b.hospital)) {
     const h = metin(b.hospital)
     if (h == null || h.length > 160) return { ok: false, hata: PROFIL_MESAJ.kurum, alan: 'hospital' }
     deger.hospital = h.replace(/\s+/g, ' ')
   }
 
-  // Ad, soyad
+  // First name, last name
   if (dolu(b.firstName) || zorunlu) {
     const s = adDogrula(b.firstName, 'ad')
     if (!s.ok) return { ok: false, hata: s.hata, alan: 'firstName' }
@@ -178,10 +179,10 @@ export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): Pro
     if (!s.ok) return { ok: false, hata: s.hata, alan: 'lastName' }
     deger.lastName = s.deger
   }
-  // Eski gövde: tek alan full_name (bugün hiçbir ekran göndermiyor) — yalnız biçim.
+  // Old body: the single field full_name (no screen sends it today) — shape only.
   if (dolu(b.full_name) && (typeof b.full_name !== 'string' || b.full_name.trim().length > 120)) return { ok: false, hata: PROFIL_MESAJ.adSoyad, alan: 'full_name' }
 
-  // Cep telefonu
+  // Mobile number
   const hamTelefon = dolu(b.cepTelefonu) ? b.cepTelefonu : b.cep_telefonu
   if (dolu(hamTelefon) || zorunlu) {
     const s = doktorCepTelefonu(hamTelefon)
@@ -189,14 +190,14 @@ export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): Pro
     deger.cepTelefonu = s.deger
   }
 
-  // Cinsiyet
+  // Gender
   if (dolu(b.gender)) {
     const g = cinsiyetEsle(b.gender)
     if (!g) return { ok: false, hata: PROFIL_MESAJ.cinsiyet, alan: 'gender' }
     deger.gender = g
   } else if (zorunlu) return { ok: false, hata: PROFIL_MESAJ.cinsiyet, alan: 'gender' }
 
-  // Hitap tercihi — iki gövde adı da (addressingPreference: onboarding; addressing_preference: eski)
+  // Form of address — both body names (addressingPreference: onboarding; addressing_preference: old)
   const hamHitap = dolu(b.addressingPreference) ? b.addressingPreference : b.addressing_preference
   if (dolu(hamHitap)) {
     const h = hitapEsle(hamHitap)
@@ -204,7 +205,7 @@ export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): Pro
     deger.addressingPreference = h
   } else if (zorunlu) return { ok: false, hata: PROFIL_MESAJ.hitap, alan: 'addressingPreference' }
 
-  // KVKK — en sonda: önce düzeltilebilir alan hataları gösterilsin.
+  // KVKK — last, so that fixable field errors are shown first.
   const karar = kvkkKarari({ kayitli: baglam.kvkkKayitli, ilkKayit: baglam.ilkKayit, isaretlendi: b.kvkk_onay })
   if (karar.reddet) return { ok: false, hata: KVKK_ONAY_HATASI, alan: 'kvkk_onay', kod: KVKK_ONAY_KODU }
   deger.kvkkDamgala = karar.damgala
@@ -213,9 +214,9 @@ export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): Pro
 }
 
 /**
- * users.cep_telefonu kolonu henüz yok mu (migration 150 uygulanmadan deploy)? PostgREST şema önbelleği
- * (PGRST204) ya da Postgres "undefined column" (42703) — ve hata bu kolonu adıyla anıyorsa. Başka hiçbir hata
- * bu yola girmez.
+ * Is the users.cep_telefonu column missing (deployed before migration 150 was applied)? PostgREST's schema
+ * cache (PGRST204) or Postgres "undefined column" (42703) — and only when the error names this column. No other
+ * error takes this path.
  */
 export function cepTelefonuKolonuYokMu(hata: unknown): boolean {
   const e = (hata && typeof hata === 'object' ? hata : null) as { code?: unknown; message?: unknown } | null

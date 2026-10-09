@@ -1,17 +1,17 @@
--- 150 — NOTYA-ONBOARDING-01 (Kaan, 2026-10-09): doktorun KENDİ cep telefonu.
+-- 150 — NOTYA-ONBOARDING-01 (Kaan, 2026-10-09): the doctor's OWN mobile number.
 --
--- Onboarding artık her yeni doktora cep telefonunu soruyor (app/onboarding/page.tsx, 3. adım). Bu kolon
--- hekimin kendi numarasıdır; hastaya görünen muayenehane iletişim alanları (iletisim_*) DEĞİLDİR ve onlarla
--- karıştırılmaz. Kayıt biçimi tektir: +905XXXXXXXXX (lib/onboarding/cepTelefonu.ts aynı deseni uygular).
+-- Onboarding now asks every new doctor for a mobile number (app/onboarding/page.tsx, step 3). This column is
+-- the doctor's own number; it is NOT one of the practice contact fields shown to patients (iletisim_*) and must
+-- not be mixed with them. One stored form: +905XXXXXXXXX (lib/onboarding/cepTelefonu.ts applies the same pattern).
 --
--- ADDITIVE only. Idempotent (iki kez çalıştırılabilir). DROP yok. Kolon NULL kabul eder, varsayılanı yok:
--- tablo yeniden yazılmaz. CHECK önce NOT VALID eklenir, sonra VALIDATE edilir (yazmayı kilitlemez; mevcut her
--- satırda değer NULL).
--- Kolon yoksa ürün soft-fail eder: POST /api/users/profile diğer yanıtları kaydeder, telefonu "kaydedilmedi"
--- diye bildirir ve günlüğe yazar. Yine de DEPLOY'DAN ÖNCE uygulanmalıdır — aksi halde o arada onboarding'i
--- bitiren doktorun numarası kaydedilmez.
+-- ADDITIVE only. Idempotent (safe to run twice). No DROP. The column is nullable with no default, so the table
+-- is not rewritten. The CHECK is added NOT VALID and then validated (does not block writes; the value is NULL on
+-- every existing row).
+-- If the column is missing the product soft-fails: POST /api/users/profile saves the other answers, reports the
+-- mobile number as not saved and logs it. It must still be applied BEFORE deploy — otherwise the number of a
+-- doctor who finishes onboarding in between is not saved.
 --
--- Numara: 128–149 aralığı başka bir iş kolu için ayrıldığından 150.
+-- Number: 150, because 128–149 is reserved for another line of work.
 
 alter table public.users add column if not exists cep_telefonu text;
 
@@ -27,5 +27,5 @@ alter table public.users validate constraint users_cep_telefonu_bicim;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
 values ('150', '150_users_cep_telefonu.sql', null, now(), false,
-  'NOTYA-ONBOARDING-01: users.cep_telefonu (doktorun kendi cep telefonu, +905XXXXXXXXX) + biçim CHECK')
+  'NOTYA-ONBOARDING-01: users.cep_telefonu (the doctor''s own mobile, +905XXXXXXXXX) + format CHECK')
 on conflict (version) do nothing;

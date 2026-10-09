@@ -153,7 +153,7 @@ function OnboardingInner() {
       } catch {
         /* continue onboarding */
       }
-      // NOTYA-ONBOARDING-01: giriş e-postası (salt okunur gösterilir) ve KVKK kutusu gerekli mi — kararı sunucu verir.
+      // NOTYA-ONBOARDING-01: the sign-in e-mail (shown read-only) and whether the KVKK box is needed — the server decides.
       try {
         const hesapRes = await fetch('/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
@@ -165,7 +165,7 @@ function OnboardingInner() {
           setKvkkGerekli(hesap.data?.kvkk_onay_gerekli === true)
         }
       } catch {
-        /* kutu gizli kalır; sunucu rıza isterse gönderimde görünür olur */
+        /* the box stays hidden; if the server requires consent it is revealed on submit */
       }
       setChecking(false)
     })()
@@ -191,7 +191,7 @@ function OnboardingInner() {
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
   const [addressingPreference, setAddressingPreference] = useState('');
-  // NOTYA-ONBOARDING-01: cep telefonu, giriş e-postası, KVKK (yalnız kayıtlı rızası olmayan hesapta).
+  // NOTYA-ONBOARDING-01: mobile number, sign-in e-mail, KVKK (only for an account with no consent on record).
   const [cepTelefonu, setCepTelefonu] = useState('');
   const [eposta, setEposta] = useState('');
   const [kvkkGerekli, setKvkkGerekli] = useState(false);
@@ -218,7 +218,7 @@ function OnboardingInner() {
     return true; // psikolog
   };
 
-  // Aynı kurallar sunucuda da uygulanır (app/api/users/profile/route.ts) — buradaki denetim yalnız kolaylıktır.
+  // The same rules are applied on the server (app/api/users/profile/route.ts) — the check here is a convenience only.
   const adSonuc = adDogrula(firstName, 'ad');
   const soyadSonuc = adDogrula(lastName, 'soyad');
   const cepSonuc = doktorCepTelefonu(cepTelefonu);
@@ -268,7 +268,7 @@ function OnboardingInner() {
     if (!canSubmit || !adSonuc.ok || !soyadSonuc.ok || !cepSonuc.ok) return;
     setGenelHata('');
 
-    // NOTYA-AUTH-01: belirteç tek yerden okunur; süresi dolduysa yenilenir (form doldurmak zaman alır).
+    // NOTYA-AUTH-01: the token is read from one place and refreshed when expired (filling the form takes time).
     const access_token = await ensureDoctorAccessToken();
     if (!access_token) {
       alert('Oturum bulunamadı. Lütfen yeniden giriş yapın.');
@@ -312,7 +312,7 @@ function OnboardingInner() {
       cepTelefonu: cepSonuc.deger,
       gender,
       addressingPreference,
-      // Yalnız kutu gösterildiyse ve hekim işaretlediyse gider; gerekip gerekmediğine sunucu karar verir.
+      // Sent only when the box was shown and the doctor ticked it; whether it is needed is the server's decision.
       ...(kvkkGerekli && kvkkOnay ? { kvkk_onay: true } : {}),
       trial_start: new Date().toISOString(),
       plan: 'professional',
@@ -333,7 +333,7 @@ function OnboardingInner() {
       if (!profileRes.ok) {
         const errBody = (await profileRes.json().catch(() => ({}))) as { error?: string; alan?: string; kod?: string };
         if (profileRes.status === 400 && errBody.error) {
-          // Sunucunun doğrulama yanıtı: Türkçe iletiyi olduğu gibi göster; rıza isteniyorsa kutuyu görünür kıl.
+          // The server's validation answer: show its Turkish message as is; reveal the box when consent is required.
           if (errBody.kod === KVKK_ONAY_KODU) setKvkkGerekli(true);
           setGenelHata(errBody.error);
           setGonderiliyor(false);
@@ -342,7 +342,7 @@ function OnboardingInner() {
         throw new Error(String(errBody.error || 'Profil kaydedilemedi'));
       }
       const profilYanit = (await profileRes.json().catch(() => ({}))) as { telefon_kaydedildi?: boolean };
-      if (profilYanit.telefon_kaydedildi === false) console.warn('[onboarding] cep telefonu kaydedilemedi; diğer bilgiler kaydedildi');
+      if (profilYanit.telefon_kaydedildi === false) console.warn('[onboarding] mobile number was not saved; the other answers were');
       hekimProfilTazeleIsaretle()
 
       // Activate trial

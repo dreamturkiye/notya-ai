@@ -24,10 +24,11 @@ async function oturum(req: NextRequest) {
 }
 
 /**
- * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — onboarding 3. adımının sunucudan öğrendiği iki şey:
- *  • hesabın giriş e-postası (salt okunur gösterilir; değiştirme akışı yok),
- *  • KVKK onay kutusu gösterilmeli mi. Bu kararı SUNUCU verir: kayıtlı rıza yoksa (ne users.kvkk_consent_at
- *    ne metadata kvkk_onay) true. POST aynı kararı kendi başına yeniden verir; bu yanıta güvenmez.
+ * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — the two things onboarding step 3 learns from the server:
+ *  • the account's sign-in e-mail (shown read-only; there is no change flow),
+ *  • whether the KVKK consent box must be shown. The SERVER decides: true when no consent is on record (neither
+ *    users.kvkk_consent_at nor metadata kvkk_onay). POST makes the same decision again by itself and does not
+ *    rely on this answer.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -58,8 +59,9 @@ export async function POST(req: NextRequest) {
     const { data: kayit } = await getSupabase().from('users').select('id, specialty, onboarding_completed, kvkk_consent_at').eq('id', userId).maybeSingle()
     const bransYazilabilir = !kayit?.onboarding_completed || bransDegistirebilir(userId)
 
-    // NOTYA-ONBOARDING-01: sunucu tarafı doğrulama. Onboarding'i İLK KEZ bitiren hesapta her alan zorunludur;
-    // onboarding'i bitmiş hesabın çağrısında (önceki davranış) yalnız gönderilen alan doğrulanır.
+    // NOTYA-ONBOARDING-01: server-side validation. For an account finishing onboarding for the FIRST time every
+    // field is required; for a call from an already-onboarded account (the previous behaviour) only the fields
+    // it sends are validated.
     const dogrulama = profilGovdesiDogrula(body, {
       ilkKayit: !kayit?.onboarding_completed,
       kvkkKayitli: kvkkKayitliMi(kayit?.kvkk_consent_at, existingMeta),
@@ -77,9 +79,9 @@ export async function POST(req: NextRequest) {
     }
     if (profession_type) updatePayload.profession_type = profession_type
     if (full_name) updatePayload.full_name = full_name
-    // users.full_name bugüne kadarki gibi "Ad Soyad" (unvansız) — okuyan her yer (hekimUnvanli, toAddressableUser,
-    // avatar baş harfleri) buna göre yazıldı. first_name / last_name / title AYRICA yazılır: onları okuyan
-    // yerler (e-reçete, hasta bilgi formu, personel daveti, konsültasyon, iletişim) bugüne kadar boş buluyordu.
+    // users.full_name stays "First Last" (no title), as before — every reader (hekimUnvanli, toAddressableUser,
+    // avatar initials) is written for that. first_name / last_name / title are written AS WELL: their readers
+    // (e-prescription, patient intake form, staff invitation, consultation, messaging) found them empty until now.
     if (v.firstName || v.lastName) updatePayload.full_name = [v.firstName, v.lastName].filter(Boolean).join(' ') || full_name
     if (v.firstName) updatePayload.first_name = v.firstName
     if (v.lastName) updatePayload.last_name = v.lastName
@@ -108,8 +110,9 @@ export async function POST(req: NextRequest) {
       ? (specialty || uzmanlik || existingMeta.specialty || null)
       : (kayit?.specialty || existingMeta.specialty || null)
 
-    // Önce users satırı, sonra auth metadata. (Eskiden sıra tersti: satır yazılamazsa metadata hesabı
-    // "onboarding bitti" diye işaretlemiş oluyor, hekime bir daha sorulmuyor ve yanıtları kayboluyordu.)
+    // The users row first, auth metadata second. (The order used to be the reverse: when the row could not be
+    // written the metadata had already marked the account as onboarded, so the doctor was never asked again and
+    // the answers were lost.)
     const existing = kayit
     const yaz = (yuk: Record<string, unknown>) => existing
       ? getSupabase().from('users').update(yuk).eq('id', userId).select().single()
@@ -118,9 +121,9 @@ export async function POST(req: NextRequest) {
     let telefonKaydedildi: boolean | undefined = 'cep_telefonu' in updatePayload ? true : undefined
     let { data: result, error } = await yaz(updatePayload)
     if (error && 'cep_telefonu' in updatePayload && cepTelefonuKolonuYokMu(error)) {
-      // Migration 150 (users.cep_telefonu) henüz uygulanmamış: hekimin diğer yanıtları kaybolmasın.
-      // Numaranın kendisi günlüğe yazılmaz.
-      console.error('[profile] users.cep_telefonu kolonu yok (migration 150 uygulanmamış) — cep telefonu KAYDEDİLMEDİ, diğer alanlar kaydediliyor', { userId })
+      // Migration 150 (users.cep_telefonu) is not applied yet: do not lose the doctor's other answers.
+      // The number itself is never logged.
+      console.error('[profile] users.cep_telefonu column is missing (migration 150 not applied) — mobile number NOT saved, saving the other fields', { userId })
       const kalan = { ...updatePayload }
       delete kalan.cep_telefonu
       telefonKaydedildi = false
@@ -145,11 +148,11 @@ export async function POST(req: NextRequest) {
         specialty: uzmanlikMetin,
         profession_type: profession_type || existingMeta.profession_type || null,
         onboarding_completed: true,
-        // KVKK: yalnız kayıtlı rıza yokken VE hekim kutuyu işaretlediyse — /kayit'in yazdığı anahtarların aynısı.
+        // KVKK: only when no consent was on record AND the doctor ticked the box — the same keys /kayit writes.
         ...(v.kvkkDamgala ? kvkkMetaDamgasi(simdi) : {}),
       },
     })
-    if (metaHatasi) console.error('[profile] auth metadata yazılamadı', { userId, hata: metaHatasi.message })
+    if (metaHatasi) console.error('[profile] auth metadata could not be written', { userId, hata: metaHatasi.message })
 
     hekimProfilDusur(userId)
     return NextResponse.json({

@@ -1,13 +1,14 @@
 /**
- * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — POST / GET /api/users/profile, GERÇEK route handler'ıyla (yalnız
- * veritabanı ve oturum sahte: lib/security/testing/sahteSupabase.ts — diğer rota testleriyle aynı altyapı).
- * Yalnız sentetik QA verisi.
+ * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — POST / GET /api/users/profile with the REAL route handler (only the
+ * database and the session are stand-ins: lib/security/testing/sahteSupabase.ts — the same setup as the other
+ * route tests). Synthetic QA data only.
  *
- *   1. Yeni doktor: her yanıt users satırına, ürünün okuduğu kolona ve kısıtın yazımıyla; metadata anahtarları eskisi gibi.
- *   2. Sunucu tarafı doğrulama: eksik / geçersiz alan 400 + Türkçe ileti; hiçbir şey yazılmaz.
- *   3. KVKK: kayıt yoksa zorunlu; işaretlenirse metadata + satır damgası; kayıtlıysa sorulmaz, yeniden damgalanmaz.
- *   4. users.cep_telefonu kolonu yoksa (migration 150 uygulanmamış): diğer yanıtlar kaydedilir, telefon_kaydedildi=false.
- *   5. Diğer çağıranlar: hekim dışı meslekler, onboarding'i bitmiş hesap, branş değiştirebilen süper kullanıcı.
+ *   1. New doctor: every answer reaches the users row, in the column the product reads and in the spelling the
+ *      constraint accepts; the metadata keys are written as before.
+ *   2. Server-side validation: a missing / invalid field → 400 + Turkish message; nothing is written.
+ *   3. KVKK: required when none is on record; ticked → metadata + row stamp; on record → not asked, not re-stamped.
+ *   4. users.cep_telefonu missing (migration 150 not applied): the other answers are saved, telefon_kaydedildi=false.
+ *   5. Other callers: non-doctor professions, an already-onboarded account, a superuser who may switch branch.
  *
  *   npm test (--experimental-test-module-mocks)
  */
@@ -27,17 +28,17 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 
 let db = new SahteVeritabani()
-/** auth.users.user_metadata — sahte veritabanı bunu tutmaz; burada tutulur. */
+/** auth.users.user_metadata — the stand-in database does not keep it; kept here. */
 let metalar = new Map<string, Record<string, unknown>>()
-/** auth.admin.updateUserById çağrıları, sırayla. */
+/** auth.admin.updateUserById calls, in order. */
 let metaYazimlari: Array<{ id: string; user_metadata: Record<string, unknown> }> = []
-/** users tablosuna yapılan insert / update yükleri, sırayla. */
+/** insert / update payloads sent to the users table, in order. */
 let satirYazimlari: Array<Record<string, unknown>> = []
-/** migration 150 uygulanmamış gibi: cep_telefonu taşıyan her yazım "kolon yok" hatası alır. */
+/** As if migration 150 were not applied: every write that carries cep_telefonu gets the "column missing" error. */
 let cepKolonuYok = false
-/** Kolon yok hatasının biçimi: PostgREST şema önbelleği ya da Postgres. */
+/** The shape of the column-missing error: PostgREST schema cache or Postgres. */
 let kolonHatasi: { code: string; message: string } = { code: 'PGRST204', message: "Could not find the 'cep_telefonu' column of 'users' in the schema cache" }
-/** users tablosuna yapılan her yazım bu hatayı alır (kolonla ilgisiz bir arıza). */
+/** Every write to the users table gets this error (a failure that has nothing to do with the column). */
 let genelYazimHatasi: { code: string; message: string } | null = null
 
 function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { headers?: Record<string, string> } }) {
@@ -84,7 +85,7 @@ function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { hea
     mock.module(g, { namedExports: { createClient: sahteCreateClient } })
   }
 }
-globalThis.fetch = (async (g: unknown) => { throw new Error(`profil testi ağ erişimi yapamaz: ${String(g)}`) }) as typeof fetch
+globalThis.fetch = (async (g: unknown) => { throw new Error(`the profile test must not reach the network: ${String(g)}`) }) as typeof fetch
 
 let NextRequestSinifi: typeof import('next/server').NextRequest
 let ROTA: Record<string, any>
@@ -126,7 +127,7 @@ async function oku(token: string | null) {
   return { durum: y.status, veri: (await y.json()) as Record<string, any> }
 }
 
-/** app/onboarding/page.tsx'in hekim için gönderdiği gövde (ekrandaki ham seçenek değerleriyle). */
+/** The body app/onboarding/page.tsx sends for a doctor (with the raw option values of the screen). */
 const HEKIM = {
   profession_type: 'doktor', specialty: 'Kardiyoloji', title: 'Uzm.Dr.', hospital: 'QA Kliniği',
   firstName: 'Işıl', lastName: 'Öztürk', cepTelefonu: '0532 123 45 67', gender: 'Kadın', addressingPreference: '[isim] Hocam',
@@ -144,8 +145,8 @@ beforeEach(() => {
   genelYazimHatasi = null
 })
 
-describe('POST /api/users/profile — yeni doktor (herkese açık kayıttan gelen, rızası kayıtlı)', () => {
-  it('her yanıt users satırına, ürünün okuduğu kolona ve kısıtın yazımıyla yazılır', async () => {
+describe('POST /api/users/profile: new doctor (from public sign-up, consent on record)', () => {
+  it('every answer is written to the users row, in the column the product reads and the spelling the constraint accepts', async () => {
     const h = hesap({ meta: KAYIT_RIZASI })
     const { durum, veri } = await gonder(h.token, HEKIM)
     assert.equal(durum, 200)
@@ -157,21 +158,21 @@ describe('POST /api/users/profile — yeni doktor (herkese açık kayıttan gele
     assert.equal(s.onboarding_completed, true)
     assert.equal(s.profession_type, 'doktor')
     assert.equal(s.specialty, 'Kardiyoloji')
-    assert.equal(s.full_name, 'Işıl Öztürk', 'full_name eskisi gibi "Ad Soyad" (unvansız)')
+    assert.equal(s.full_name, 'Işıl Öztürk', 'full_name stays "First Last" (no title), as before')
     assert.equal(s.first_name, 'Işıl')
     assert.equal(s.last_name, 'Öztürk')
-    assert.equal(s.title, 'Uzm. Dr.', 'kısıtın yazımı (boşluklu)')
+    assert.equal(s.title, 'Uzm. Dr.', 'the spelling of the constraint (with the space)')
     assert.equal(s.hospital, 'QA Kliniği')
     assert.equal(s.gender, 'female')
     assert.equal(s.addressing_preference, 'named_hocam')
     assert.equal(s.cep_telefonu, '+905321234567')
-    // Yazılmaması gerekenler: plan / deneme istemciden yazılmaz; unvan kolonu, muayenehane iletişim alanları, clinic_name.
+    // Must not be written: plan / trial never come from the client; the unvan column, the practice contact fields, clinic_name.
     for (const k of ['plan', 'trial_start', 'metadata', 'subscription_tier', 'unvan', 'clinic_name', 'whatsapp_number', 'iletisim_whatsapp', 'iletisim_telefon_muayenehane']) assert.ok(!(k in s), k)
-    // Rıza zaten kayıtlı: satıra da metadata'ya da yeniden damga basılmaz.
+    // Consent is already on record: neither the row nor the metadata is stamped again.
     assert.ok(!('kvkk_consent_at' in s) && !('kvkk_consent_version' in s))
   })
 
-  it('dört unvan seçeneğinin dördü de kısıt ihlali olmadan yazılır', async () => {
+  it('all four title options are written without violating the constraint', async () => {
     for (const [ekran, kolon] of [['Dr.', 'Dr.'], ['Uzm.Dr.', 'Uzm. Dr.'], ['Doç.Dr.', 'Doç. Dr.'], ['Prof.Dr.', 'Prof. Dr.']]) {
       const h = hesap({ meta: KAYIT_RIZASI })
       const { durum } = await gonder(h.token, { ...HEKIM, title: ekran })
@@ -181,7 +182,7 @@ describe('POST /api/users/profile — yeni doktor (herkese açık kayıttan gele
     }
   })
 
-  it('auth metadata: kodun bugüne kadar yazdığı anahtarlar aynı değerlerle; satır metadata\'dan ÖNCE yazılır', async () => {
+  it('auth metadata: the keys the code always wrote, with the same values', async () => {
     const h = hesap({ meta: { ...KAYIT_RIZASI, baska: 'korunur' } })
     await gonder(h.token, HEKIM)
     assert.equal(metaYazimlari.length, 1)
@@ -193,10 +194,10 @@ describe('POST /api/users/profile — yeni doktor (herkese açık kayıttan gele
         hospital: 'QA Kliniği', specialty: 'Kardiyoloji', profession_type: 'doktor', onboarding_completed: true,
       },
     })
-    assert.equal(metaYazimlari[0].user_metadata.kvkk_onay_tarihi, KAYIT_RIZASI.kvkk_onay_tarihi, 'kayıtlı rıza tarihi değişmez')
+    assert.equal(metaYazimlari[0].user_metadata.kvkk_onay_tarihi, KAYIT_RIZASI.kvkk_onay_tarihi, 'the recorded consent date does not change')
   })
 
-  it('ad ve soyad boşlukları atılarak yazılır; telefon her yazımıyla aynı biçimde saklanır', async () => {
+  it('first and last name are stored trimmed; the mobile is stored in one form however it was typed', async () => {
     for (const cep of ['5321234567', '+90 532 123 45 67', '(0532) 123-45-67', '0090 532 123 45 67']) {
       const h = hesap({ meta: KAYIT_RIZASI })
       const { durum } = await gonder(h.token, { ...HEKIM, firstName: '  Ayşe   Nur ', lastName: ' Kaya-Demir  ', cepTelefonu: cep })
@@ -209,7 +210,7 @@ describe('POST /api/users/profile — yeni doktor (herkese açık kayıttan gele
     }
   })
 
-  it('yönetici tarafından açılmış, satırı olan ama onboarding\'i bitmemiş hesap: update yolu, aynı sonuç', async () => {
+  it('administrator-created account with a row but onboarding not finished: update path, same result', async () => {
     const h = hesap({ meta: KAYIT_RIZASI, satir: { full_name: 'qa', onboarding_completed: false } })
     const { durum } = await gonder(h.token, HEKIM)
     assert.equal(durum, 200)
@@ -219,13 +220,13 @@ describe('POST /api/users/profile — yeni doktor (herkese açık kayıttan gele
   })
 })
 
-describe('POST /api/users/profile — sunucu tarafı doğrulama', () => {
-  it('oturum yoksa 401', async () => {
+describe('POST /api/users/profile: server-side validation', () => {
+  it('no session → 401', async () => {
     assert.equal((await gonder(null, HEKIM)).durum, 401)
     assert.equal((await gonder('gecersiz', HEKIM)).durum, 401)
   })
 
-  it('eksik ya da geçersiz alan: 400 + Türkçe ileti + alan adı; satır da metadata da YAZILMAZ', async () => {
+  it('missing or invalid field: 400 + Turkish message + field name; NEITHER the row NOR the metadata is written', async () => {
     const durumlar: Array<[Record<string, unknown>, string, string]> = [
       [{ firstName: '' }, 'firstName', AD_MESAJ.ad.bos],
       [{ firstName: 'A' }, 'firstName', AD_MESAJ.ad.kisa],
@@ -250,34 +251,34 @@ describe('POST /api/users/profile — sunucu tarafı doğrulama', () => {
       assert.equal(durum, 400, JSON.stringify(ek))
       assert.equal(veri.alan, alan)
       assert.equal(veri.error, ileti)
-      assert.ok(!/invalid|required|must be/i.test(veri.error), 'ileti Türkçe')
-      assert.equal(satir(h.id), null, 'satır yazılmadı')
+      assert.ok(!/invalid|required|must be/i.test(veri.error), 'the message is Turkish')
+      assert.equal(satir(h.id), null, 'no row was written')
     }
     assert.equal(satirYazimlari.length, 0)
-    assert.equal(metaYazimlari.length, 0, 'reddedilen istek hesabı "onboarding bitti" diye işaretlemez')
+    assert.equal(metaYazimlari.length, 0, 'a refused request does not mark the account as onboarded')
   })
 
-  it('bozuk gövde 400', async () => {
+  it('malformed body → 400', async () => {
     const h = hesap({ meta: KAYIT_RIZASI })
     const { durum, veri } = await gonder(h.token, undefined, '{bozuk')
     assert.equal(durum, 400)
     assert.equal(veri.error, PROFIL_MESAJ.govde)
   })
 
-  it('users yazımı kolonla ilgisiz bir nedenle başarısızsa 500 — ve metadata İŞARETLENMEZ (hekim yeniden deneyebilir)', async () => {
+  it('a users write that fails for a reason other than the column → 500, and the metadata is NOT marked (the doctor can retry)', async () => {
     const h = hesap({ meta: KAYIT_RIZASI })
     genelYazimHatasi = { code: '23514', message: 'new row for relation "users" violates check constraint "users_title_check"' }
     const { sonuc, gunluk } = await sessiz(() => gonder(h.token, HEKIM))
     assert.equal(sonuc.durum, 500)
     assert.equal(sonuc.veri.error, 'Profil kaydedilemedi. Lütfen tekrar deneyin.')
-    assert.equal(satirYazimlari.length, 1, 'kolon-yok yedeği başka hatada devreye girmez')
+    assert.equal(satirYazimlari.length, 1, 'the column-missing fallback does not engage on another error')
     assert.equal(metaYazimlari.length, 0)
     assert.ok(gunluk.some((g) => g.includes('[profile]')))
   })
 })
 
-describe('POST /api/users/profile — KVKK rızası', () => {
-  it('kayıtlı rıza yok + kutu işaretli değil → 400, kod KVKK_ONAY_GEREKLI, /kayit ile aynı cümle; hiçbir şey yazılmaz', async () => {
+describe('POST /api/users/profile: KVKK consent', () => {
+  it('none on record + box not ticked → 400, code KVKK_ONAY_GEREKLI, the /kayit sentence; nothing is written', async () => {
     const h = hesap()
     for (const ek of [{}, { kvkk_onay: false }, { kvkk_onay: 'true' }, { kvkk_onay: 1 }, { kvkk_gerekli: false, kvkk_onay_gerekli: false }]) {
       const { durum, veri } = await gonder(h.token, { ...HEKIM, ...ek })
@@ -289,7 +290,7 @@ describe('POST /api/users/profile — KVKK rızası', () => {
     assert.equal(metaYazimlari.length, 0)
   })
 
-  it('kayıtlı rıza yok + kutu işaretli → metadata (/kayit anahtarları) VE users satırı aynı an ve aynı sürümle damgalanır', async () => {
+  it('none on record + box ticked → metadata (the /kayit keys) AND the users row are stamped with the same instant and version', async () => {
     const h = hesap()
     const once = Date.now()
     const { durum } = await gonder(h.token, { ...HEKIM, kvkk_onay: true })
@@ -301,10 +302,10 @@ describe('POST /api/users/profile — KVKK rızası', () => {
     assert.equal(s.kvkk_consent_version, '2026-08-25-v2')
     assert.equal(s.kvkk_consent_at, m.kvkk_onay_tarihi)
     const an = Date.parse(String(s.kvkk_consent_at))
-    assert.ok(an >= once - 1000 && an <= Date.now() + 1000, 'damga sunucunun saatiyle')
+    assert.ok(an >= once - 1000 && an <= Date.now() + 1000, 'stamped with the server clock')
   })
 
-  it('tarayıcının gönderdiği tarih / sürüm yok sayılır — damgayı sunucu basar', async () => {
+  it('a date / version sent by the browser is ignored; the server stamps', async () => {
     const h = hesap()
     await gonder(h.token, { ...HEKIM, kvkk_onay: true, kvkk_onay_tarihi: '1999-01-01T00:00:00.000Z', kvkk_metin_versiyonu: 'uydurma', kvkk_consent_at: '1999-01-01T00:00:00.000Z', kvkk_consent_version: 'uydurma' })
     const s = satir(h.id)!
@@ -313,7 +314,7 @@ describe('POST /api/users/profile — KVKK rızası', () => {
     assert.equal(metalar.get(h.id)!.kvkk_metin_versiyonu, KVKK_METIN_VERSIYONU)
   })
 
-  it('rıza metadata\'da kayıtlı (/kayit) → sorulmaz; gövdede true gelse bile yeniden damgalanmaz', async () => {
+  it('consent on record in metadata (/kayit) → not asked; not re-stamped even when the body says true', async () => {
     const h = hesap({ meta: KAYIT_RIZASI })
     const { durum } = await gonder(h.token, { ...HEKIM, kvkk_onay: true })
     assert.equal(durum, 200)
@@ -321,7 +322,7 @@ describe('POST /api/users/profile — KVKK rızası', () => {
     assert.ok(!('kvkk_consent_at' in satir(h.id)!))
   })
 
-  it('rıza users satırında kayıtlı → sorulmaz; satırdaki tarih ve sürüm değişmez, metadata\'ya rıza yazılmaz', async () => {
+  it('consent on record in the users row → not asked; its date and version do not change, nothing is added to metadata', async () => {
     const h = hesap({ satir: { full_name: 'qa', onboarding_completed: false, kvkk_consent_at: '2026-08-30T10:00:00.000Z', kvkk_consent_version: '1.0' } })
     const { durum } = await gonder(h.token, { ...HEKIM, kvkk_onay: true })
     assert.equal(durum, 200)
@@ -331,11 +332,11 @@ describe('POST /api/users/profile — KVKK rızası', () => {
   })
 })
 
-describe('GET /api/users/profile — e-posta ve "rıza gerekli mi" kararı sunucudan', () => {
-  it('oturum yoksa 401', async () => {
+describe('GET /api/users/profile: the e-mail and the "is consent needed" decision come from the server', () => {
+  it('no session → 401', async () => {
     assert.equal((await oku(null)).durum, 401)
   })
-  it('giriş e-postası auth kaydından; rıza: yok → gerekli, metadata\'da → değil, satırda → değil', async () => {
+  it('sign-in e-mail from the auth record; consent: none → needed, in metadata → not, in the row → not', async () => {
     const yeni = hesap({ email: 'qa-yeni@ornek.test' })
     assert.deepEqual((await oku(yeni.token)).veri, { success: true, data: { email: 'qa-yeni@ornek.test', kvkk_onay_gerekli: true } })
     const kayitli = hesap({ meta: KAYIT_RIZASI })
@@ -344,16 +345,16 @@ describe('GET /api/users/profile — e-posta ve "rıza gerekli mi" kararı sunuc
     assert.equal((await oku(satirda.token)).veri.data.kvkk_onay_gerekli, false)
     const yarim = hesap({ meta: { kvkk_onay: 'true' }, satir: { full_name: 'qa', kvkk_consent_at: null } })
     assert.equal((await oku(yarim.token)).veri.data.kvkk_onay_gerekli, true)
-    assert.equal(satirYazimlari.length + metaYazimlari.length, 0, 'GET hiçbir şey yazmaz')
+    assert.equal(satirYazimlari.length + metaYazimlari.length, 0, 'GET writes nothing')
   })
 })
 
-describe('POST /api/users/profile — users.cep_telefonu kolonu yoksa (migration 150 uygulanmamış)', () => {
+describe('POST /api/users/profile: users.cep_telefonu missing (migration 150 not applied)', () => {
   for (const hata of [
     { code: 'PGRST204', message: "Could not find the 'cep_telefonu' column of 'users' in the schema cache" },
     { code: '42703', message: 'column "cep_telefonu" of relation "users" does not exist' },
   ]) {
-    it(`${hata.code}: hekimin diğer yanıtları kaydedilir, telefon "kaydedilmedi" diye bildirilir ve günlüğe yazılır`, async () => {
+    it(`${hata.code}: the doctor's other answers are saved, the mobile is reported as not saved and it is logged`, async () => {
       cepKolonuYok = true
       kolonHatasi = hata
       const h = hesap()
@@ -372,17 +373,17 @@ describe('POST /api/users/profile — users.cep_telefonu kolonu yoksa (migration
       assert.equal(s.addressing_preference, 'named_hocam')
       assert.equal(s.specialty, 'Kardiyoloji')
       assert.equal(s.onboarding_completed, true)
-      assert.equal(s.kvkk_consent_version, KVKK_METIN_VERSIYONU, 'rıza da kaybolmaz')
+      assert.equal(s.kvkk_consent_version, KVKK_METIN_VERSIYONU, 'consent is not lost either')
       assert.equal(metalar.get(h.id)!.onboarding_completed, true)
-      assert.equal(satirYazimlari.length, 2, 'bir kez kolonla, bir kez kolonsuz')
+      assert.equal(satirYazimlari.length, 2, 'once with the column, once without')
       assert.ok('cep_telefonu' in satirYazimlari[0] && !('cep_telefonu' in satirYazimlari[1]))
       const satirGunlugu = gunluk.find((g) => g.includes('cep_telefonu'))
       assert.ok(satirGunlugu && satirGunlugu.includes('migration 150') && satirGunlugu.includes(h.id))
-      assert.ok(!gunluk.some((g) => g.includes('5321234567') || g.includes('532 123')), 'numaranın kendisi günlüğe yazılmaz')
+      assert.ok(!gunluk.some((g) => g.includes('5321234567') || g.includes('532 123')), 'the number itself is never logged')
     })
   }
 
-  it('satırı olan hesapta (update yolu) da aynı', async () => {
+  it('the same for an account that already has a row (update path)', async () => {
     cepKolonuYok = true
     const h = hesap({ meta: KAYIT_RIZASI, satir: { full_name: 'qa', onboarding_completed: false } })
     const { sonuc } = await sessiz(() => gonder(h.token, HEKIM))
@@ -393,8 +394,8 @@ describe('POST /api/users/profile — users.cep_telefonu kolonu yoksa (migration
   })
 })
 
-describe('POST /api/users/profile — diğer çağıranlar eskisi gibi çalışır', () => {
-  it('hekim dışı meslekler onboarding\'i aynı adımla bitirir; unvan istenmez; uzmanlık eskisi gibi yazılır', async () => {
+describe('POST /api/users/profile: other callers work as before', () => {
+  it('non-doctor professions finish onboarding with the same step; no title required; specialty written as before', async () => {
     const { klinikUzmanlikNorm } = await import('../specialties/klinikDikey')
     const govdeler: Array<[string, string]> = [
       ['klinik-uzman', 'sac-ekimi'], ['saglik-uzmani', 'fizyoterapi'], ['psikolog', 'Psikoloji'],
@@ -409,28 +410,28 @@ describe('POST /api/users/profile — diğer çağıranlar eskisi gibi çalış�
       assert.equal(s.full_name, 'Işıl Öztürk')
       assert.equal(s.cep_telefonu, '+905321234567')
       assert.equal(s.gender, 'female')
-      assert.ok(!('title' in s) && !('hospital' in s), 'boş unvan / kurum yazılmaz')
+      assert.ok(!('title' in s) && !('hospital' in s), 'an empty title / institution is not written')
       if (profession_type === 'mali') assert.equal(s.specialty, specialty)
-      else if (profession_type === 'avukat') assert.ok(!('specialty' in s), 'avukat: rota yalnız `uzmanlik` alanını yazar (önceki davranış)')
+      else if (profession_type === 'avukat') assert.ok(!('specialty' in s), 'avukat: the route writes only the `uzmanlik` field (previous behaviour)')
       else assert.equal(s.specialty, klinikUzmanlikNorm(specialty))
       assert.equal(metalar.get(h.id)!.specialty, specialty)
     }
   })
 
-  it('onboarding\'i bitmiş sıradan hekim: gönderdiği alan yazılır, branş DEĞİŞMEZ, eksik alan istenmez, rıza istenmez / damgalanmaz', async () => {
+  it('ordinary already-onboarded doctor: branch does NOT change, no field is required, consent is neither asked nor stamped', async () => {
     const h = hesap({ satir: { full_name: 'Dr. QA Hekim', specialty: 'pediatri', profession_type: 'doktor', onboarding_completed: true } })
     const { durum, veri } = await gonder(h.token, { profession_type: 'doktor', specialty: 'kardiyoloji' })
     assert.equal(durum, 200)
     assert.ok(!('telefon_kaydedildi' in veri))
     const s = satir(h.id)!
-    assert.equal(s.specialty, 'pediatri', 'branş kilidi yerinde')
-    assert.equal(s.full_name, 'Dr. QA Hekim', 'ad dokunulmadan kalır')
+    assert.equal(s.specialty, 'pediatri', 'the branch lock holds')
+    assert.equal(s.full_name, 'Dr. QA Hekim', 'the name is left untouched')
     assert.ok(!('first_name' in s) && !('cep_telefonu' in s) && !('kvkk_consent_at' in s))
     assert.equal(metalar.get(h.id)!.specialty, 'pediatri')
     assert.ok(!('kvkk_onay' in metalar.get(h.id)!))
   })
 
-  it('branş değiştirebilen süper kullanıcı: onboarding\'i bitmiş olsa da branşı yazılır; başka hiçbir şey istenmez', async () => {
+  it('superuser who may switch branch: the branch is written although onboarding is finished; nothing else is required', async () => {
     const h = hesap({ id: SUPERUSER_BRANS_IDS[0], satir: { full_name: 'QA Süper', specialty: 'pediatri', profession_type: 'doktor', onboarding_completed: true } })
     const { durum } = await gonder(h.token, { profession_type: 'doktor', specialty: 'kadin-dogum' })
     assert.equal(durum, 200)
@@ -439,7 +440,7 @@ describe('POST /api/users/profile — diğer çağıranlar eskisi gibi çalış�
     assert.equal(metalar.get(h.id)!.specialty, 'kadin-dogum')
   })
 
-  it('eski gövde biçimi (unvan / büro_adi / sehir / full_name / uzmanlik_alani / baro / yil) onboarding\'i bitmiş hesapta eskisi gibi yazılır', async () => {
+  it('old body shape (unvan / büro_adi / sehir / full_name / uzmanlik_alani / baro / yil) is written as before for an already-onboarded account', async () => {
     const h = hesap({ id: SUPERUSER_BRANS_IDS[1], satir: { full_name: 'eski', profession_type: 'mali', onboarding_completed: true } })
     const { durum } = await gonder(h.token, { profession_type: 'mali', unvan: 'SMMM', büro_adi: 'QA Büro', sehir: 'İzmir', full_name: 'QA Müşavir', uzmanlik_alani: 'Muhasebe', baro: 'QA Baro', yil: '2010', gender: 'Erkek', addressing_preference: 'Hocam' })
     assert.equal(durum, 200)

@@ -4,11 +4,11 @@ import React from 'react';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 /**
- * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — KVKK açık rıza kutusu, onboarding için.
+ * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — the KVKK explicit-consent box, for onboarding.
  *
- * Metin, bağlantı (/kvkk) ve görünüm app/kayit/page.tsx içindeki kutuyla BİREBİR aynıdır; yeni hukuki metin
- * yazılmadı. /kayit dosyasına dokunulmadığı için kutu orada yerinde durur; iki metnin ayrışmadığını
- * lib/onboarding/adimUi.test.ts her çalıştığında /kayit kaynağını okuyarak doğrular. Asla önceden işaretli gelmez.
+ * Wording, link (/kvkk) and look are EXACTLY those of the box in app/kayit/page.tsx; no new legal wording was
+ * written. /kayit is untouched, so its own box stays where it is; lib/onboarding/adimUi.test.ts reads the /kayit
+ * source on every run to prove the two texts have not drifted apart. Never pre-ticked.
  */
 export default function KvkkOnayKutusu({ isaretli, onDegis }: { isaretli: boolean; onDegis: (isaretli: boolean) => void }) {
   const R = CHROME_RENK;

@@ -5,12 +5,12 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import KvkkOnayKutusu from './KvkkOnayKutusu';
 
 /**
- * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — onboarding 3. adım ("Hesabınızı tamamlayın").
+ * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — onboarding step 3 ("Hesabınızı tamamlayın").
  *
- * Evrensel çerçeve: her meslek ve her branş için aynıdır; branşa göre dallanan hiçbir alan yoktur.
- * Sıra: Ad, Soyad → E-posta (salt okunur) → Cep telefonu → Cinsiyet → Hitap Tercihi → (kayıtlı rıza yoksa) KVKK.
- * Görünüm sayfadaki mevcut alanlarla aynıdır (aynı etiket ve girdi stilleri); yalnız sunum — durum ve
- * doğrulama app/onboarding/page.tsx + lib/onboarding/profilDogrula.ts içindedir.
+ * Universal chrome: the same for every profession and every specialty; no field branches on the specialty.
+ * Order: Ad, Soyad → E-posta (read-only) → Cep telefonu → Cinsiyet → Hitap Tercihi → (no consent on record) KVKK.
+ * The look is that of the page's existing fields (same label and input styles); presentation only — state and
+ * validation live in app/onboarding/page.tsx and lib/onboarding/profilDogrula.ts.
  */
 export type KisiselAlan = 'firstName' | 'lastName' | 'cepTelefonu' | 'gender' | 'addressingPreference';
 
@@ -20,14 +20,14 @@ export type KisiselBilgilerProps = {
   cepTelefonu: string;
   gender: string;
   addressingPreference: string;
-  /** Hesabın giriş e-postası — salt okunur. */
+  /** The account's sign-in e-mail — read-only. */
   eposta: string;
-  /** Sunucunun kararı: bu hesabın kayıtlı KVKK rızası yok. */
+  /** The server's decision: this account has no KVKK consent on record. */
   kvkkGerekli: boolean;
   kvkkOnay: boolean;
-  /** Alan altı Türkçe uyarılar (yalnız hekim alana dokunduktan sonra dolar). */
+  /** Turkish hints under a field (set only after the doctor has left that field). */
   hatalar?: Partial<Record<KisiselAlan, string>>;
-  /** Form geneli hata (sunucunun yanıtı). */
+  /** Form-level error (the server's answer). */
   genelHata?: string;
   onDegis: (alan: KisiselAlan, deger: string) => void;
   onBirak?: (alan: KisiselAlan) => void;

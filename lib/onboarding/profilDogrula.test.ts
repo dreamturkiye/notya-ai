@@ -1,7 +1,7 @@
 /**
- * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — onboarding'in saf kuralları: cep telefonu, unvan / cinsiyet / hitap
- * eşlemesi, ad doğrulaması, KVKK kararı, gövde doğrulaması, "kolon yok" hatasının tanınması.
- * Yalnız sentetik veri.
+ * NOTYA-ONBOARDING-01 (Kaan, 2026-10-09) — the pure rules of onboarding: mobile number, title / gender / form of
+ * address mapping, name validation, the KVKK decision, body validation, recognising the "column missing" error.
+ * Synthetic data only.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -17,8 +17,8 @@ import { KVKK_METIN_VERSIYONU, KVKK_ONAY_HATASI, KVKK_ONAY_KODU, kvkkKarari, kvk
 const KOK = resolve(__dirname, '../..')
 const oku = (yol: string) => readFileSync(join(KOK, yol), 'utf8')
 
-describe('doktorCepTelefonu — Türk cep numarası, tek kayıt biçimi +905XXXXXXXXX', () => {
-  it('hekimin yazabileceği her yaygın biçim aynı değere iner', () => {
+describe('mobile: Turkish mobile number, one stored form +905XXXXXXXXX', () => {
+  it('every common way a doctor types it normalises to the same value', () => {
     for (const ham of [
       '05321234567', '0532 123 45 67', '532 123 45 67', '5321234567', '+90 532 123 45 67', '+905321234567',
       '0090 532 123 45 67', '(0532) 123-45-67', '0532-123-45-67', '0532.123.45.67', '+90 (532) 123 45 67',
@@ -27,15 +27,15 @@ describe('doktorCepTelefonu — Türk cep numarası, tek kayıt biçimi +905XXXX
       assert.deepEqual(doktorCepTelefonu(ham), { ok: true, deger: '+905321234567' }, ham)
     }
   })
-  it('kaydedilen değer migration 150 kısıtındaki desene uyar', () => {
+  it('the stored value matches the pattern of the CHECK in migration 150', () => {
     for (const ham of ['0505 000 00 01', '0555 999 88 77', '+90 544 111 22 33']) {
       const s = doktorCepTelefonu(ham)
       assert.ok(s.ok && DOKTOR_CEP_DESENI.test(s.deger), ham)
     }
     const sql = oku('lib/db/migrations/150_users_cep_telefonu.sql')
-    assert.ok(sql.includes(`'${DOKTOR_CEP_DESENI.source.replace('\\d', '[0-9]')}'`), 'SQL CHECK deseni ile kod deseni aynı olmalı')
+    assert.ok(sql.includes(`'${DOKTOR_CEP_DESENI.source.replace('\\d', '[0-9]')}'`), 'the SQL CHECK pattern and the code pattern must be the same')
   })
-  it('boş, sabit hat, yurt dışı, kısa, uzun, harfli: düz Türkçe hata', () => {
+  it('empty, landline, foreign, short, long, letters: a plain Turkish message', () => {
     assert.deepEqual(doktorCepTelefonu(''), { ok: false, hata: DOKTOR_CEP_MESAJ.bos })
     assert.deepEqual(doktorCepTelefonu('   '), { ok: false, hata: DOKTOR_CEP_MESAJ.bos })
     assert.deepEqual(doktorCepTelefonu(undefined), { ok: false, hata: DOKTOR_CEP_MESAJ.bos })
@@ -51,27 +51,27 @@ describe('doktorCepTelefonu — Türk cep numarası, tek kayıt biçimi +905XXXX
   })
 })
 
-describe('unvan eşlemesi — ekrandaki seçenek → users.title CHECK yazımı', () => {
-  it('dört seçeneğin dördü de kısıtın yazımına çevrilir', () => {
+describe('title mapping: option on the screen → spelling of the users.title CHECK', () => {
+  it('all four options map to the spelling of the constraint', () => {
     assert.equal(unvanEsle('Dr.'), 'Dr.')
     assert.equal(unvanEsle('Uzm.Dr.'), 'Uzm. Dr.')
     assert.equal(unvanEsle('Doç.Dr.'), 'Doç. Dr.')
     assert.equal(unvanEsle('Prof.Dr.'), 'Prof. Dr.')
   })
-  it('eşleme tablosu ekrandaki seçeneklerle ve canlı kısıtın dört değeriyle birebir örtüşür', () => {
+  it('the mapping table covers exactly the options on the screen and the four values of the live constraint', () => {
     const sayfa = oku('app/onboarding/page.tsx')
     const m = sayfa.match(/const unvanOptions = \[([^\]]+)\]/)
-    assert.ok(m, 'unvanOptions bulunamadı')
+    assert.ok(m, 'unvanOptions not found')
     const secenekler = [...m![1].matchAll(/'([^']+)'/g)].map((x) => x[1])
     assert.deepEqual(Object.keys(UNVAN_ESLEME).sort(), [...secenekler].sort())
     assert.deepEqual(Object.values(UNVAN_ESLEME).sort(), ['Doç. Dr.', 'Dr.', 'Prof. Dr.', 'Uzm. Dr.'])
     for (const s of secenekler) assert.ok(unvanEsle(s), s)
   })
-  it('kısıtın kendi yazımı da kabul edilir; tabloda olmayan her şey reddedilir', () => {
+  it('the constraint spelling itself is accepted; anything not in the table is refused', () => {
     for (const k of ['Dr.', 'Uzm. Dr.', 'Doç. Dr.', 'Prof. Dr.']) assert.equal(unvanEsle(k), k)
     for (const k of ['', 'Op.Dr.', 'Dr', 'Prof', 'dr.', 'Uzm.Dr', null, undefined, 3]) assert.equal(unvanEsle(k), null, String(k))
   })
-  it('cinsiyet ve hitap: ekran değeri → kısıt değeri', () => {
+  it('gender and form of address: screen value → constraint value', () => {
     assert.equal(cinsiyetEsle('Erkek'), 'male')
     assert.equal(cinsiyetEsle('Kadın'), 'female')
     assert.equal(cinsiyetEsle('male'), 'male')
@@ -82,7 +82,7 @@ describe('unvan eşlemesi — ekrandaki seçenek → users.title CHECK yazımı'
     assert.equal(hitapEsle('named_hocam'), 'named_hocam')
     assert.equal(hitapEsle('Sayın'), null)
   })
-  it('ekrandaki cinsiyet ve hitap seçeneklerinin hepsi eşlenir', () => {
+  it('every gender and form-of-address option on the screen is mapped', () => {
     const adim = oku('components/onboarding/KisiselBilgilerAdimi.tsx')
     const degerler = [...adim.matchAll(/<option value="([^"]+)">/g)].map((x) => x[1])
     assert.deepEqual(degerler, ['Erkek', 'Kadın', 'Hocam', '[isim] Hocam', 'First name only'])
@@ -91,8 +91,8 @@ describe('unvan eşlemesi — ekrandaki seçenek → users.title CHECK yazımı'
   })
 })
 
-describe('adDogrula — boşluk atılır, en az iki harf', () => {
-  it('geçerli adlar: Türkçe harf, iki ad, tire, kesme; boşluklar toparlanır', () => {
+describe('name: trimmed, at least two letters', () => {
+  it('valid names: Turkish letters, two given names, hyphen, apostrophe; whitespace is tidied', () => {
     assert.deepEqual(adDogrula('  Işıl  ', 'ad'), { ok: true, deger: 'Işıl' })
     assert.deepEqual(adDogrula('Ayşe   Nur', 'ad'), { ok: true, deger: 'Ayşe Nur' })
     assert.deepEqual(adDogrula('Öztürk-Çağlar', 'soyad'), { ok: true, deger: 'Öztürk-Çağlar' })
@@ -100,7 +100,7 @@ describe('adDogrula — boşluk atılır, en az iki harf', () => {
     assert.deepEqual(adDogrula('M. Kemal', 'ad'), { ok: true, deger: 'M. Kemal' })
     assert.deepEqual(adDogrula('Su', 'ad'), { ok: true, deger: 'Su' })
   })
-  it('boş, tek harf, rakam / işaret, çok uzun, alana yazılmış unvan: alanın kendi Türkçe iletisi', () => {
+  it('empty, one letter, digit / symbol, too long, a title typed into the field: the field\'s own Turkish message', () => {
     assert.deepEqual(adDogrula('', 'ad'), { ok: false, hata: AD_MESAJ.ad.bos })
     assert.deepEqual(adDogrula('   ', 'soyad'), { ok: false, hata: AD_MESAJ.soyad.bos })
     assert.deepEqual(adDogrula(undefined, 'ad'), { ok: false, hata: AD_MESAJ.ad.bos })
@@ -110,57 +110,57 @@ describe('adDogrula — boşluk atılır, en az iki harf', () => {
     assert.deepEqual(adDogrula('a'.repeat(61), 'soyad'), { ok: false, hata: AD_MESAJ.soyad.uzun })
     for (const ham of ['Dr. Ayşe', 'Dr Ayşe', 'Prof. Dr. Ayşe', 'Uzm.', 'doç. ayşe']) assert.deepEqual(adDogrula(ham, 'ad'), { ok: false, hata: AD_MESAJ.ad.unvan }, ham)
     assert.equal(adDogrula(42, 'ad').ok, false)
-    // "Dr" ile başlayan gerçek adlar unvan sayılmaz.
+    // Real names that merely start like a title are not taken for one.
     assert.deepEqual(adDogrula('Uzman', 'soyad'), { ok: true, deger: 'Uzman' })
     assert.deepEqual(adDogrula('Doruk', 'ad'), { ok: true, deger: 'Doruk' })
   })
 })
 
-describe('KVKK kararı — sunucu karar verir; işaretlenmeyen rıza damgalanmaz', () => {
-  it('kayıtlı rıza: users.kvkk_consent_at dolu YA DA metadata kvkk_onay === true', () => {
+describe('KVKK decision: the server decides; consent that was not ticked is never stamped', () => {
+  it('on record: users.kvkk_consent_at is set OR metadata kvkk_onay === true', () => {
     assert.equal(kvkkKayitliMi('2026-09-01T10:00:00Z', {}), true)
     assert.equal(kvkkKayitliMi(null, { kvkk_onay: true }), true)
     assert.equal(kvkkKayitliMi(null, {}), false)
     assert.equal(kvkkKayitliMi(undefined, null), false)
-    assert.equal(kvkkKayitliMi('', { kvkk_onay: 'true' }), false, 'yalnız boolean true sayılır')
+    assert.equal(kvkkKayitliMi('', { kvkk_onay: 'true' }), false, 'only boolean true counts')
     assert.equal(kvkkKayitliMi(null, { kvkk_onay: false, kvkk_onay_tarihi: '2026-09-01' }), false)
   })
-  it('gerekli → işaretlendi → damgala', () => {
+  it('needed → ticked → stamp', () => {
     assert.deepEqual(kvkkKarari({ kayitli: false, ilkKayit: true, isaretlendi: true }), { gerekli: true, damgala: true, reddet: false })
   })
-  it('gerekli → işaretlenmedi → reddet (ilk kayıt)', () => {
+  it('needed → not ticked → refused (first completion)', () => {
     for (const isaretlendi of [false, undefined, null, 'true', 1, 'on']) {
       assert.deepEqual(kvkkKarari({ kayitli: false, ilkKayit: true, isaretlendi }), { gerekli: true, damgala: false, reddet: true }, String(isaretlendi))
     }
   })
-  it('zaten kayıtlı → sorulmaz, gövdede true gelse bile YENİDEN damgalanmaz', () => {
+  it('already on record → not needed, NOT re-stamped even when the body says true', () => {
     for (const isaretlendi of [true, false, undefined]) {
       assert.deepEqual(kvkkKarari({ kayitli: true, ilkKayit: true, isaretlendi }), { gerekli: false, damgala: false, reddet: false })
       assert.deepEqual(kvkkKarari({ kayitli: true, ilkKayit: false, isaretlendi }), { gerekli: false, damgala: false, reddet: false })
     }
   })
-  it('onboarding\'i bitmiş hesap (önceki davranış): rızası yoksa reddedilmez ve damgalanmaz', () => {
+  it('already-onboarded account (previous behaviour): without consent it is neither refused nor stamped', () => {
     assert.deepEqual(kvkkKarari({ kayitli: false, ilkKayit: false, isaretlendi: undefined }), { gerekli: true, damgala: false, reddet: false })
   })
-  it('damga: /kayit ile aynı metadata anahtarları ve aynı sürüm dizesi; satırda aynı an ve aynı sürüm', () => {
+  it('stamp: the same metadata keys and version string as /kayit; the row gets the same instant and version', () => {
     const an = '2026-10-09T08:00:00.000Z'
     assert.deepEqual(kvkkMetaDamgasi(an), { kvkk_onay: true, kvkk_onay_tarihi: an, kvkk_metin_versiyonu: '2026-08-25-v2' })
     assert.deepEqual(kvkkSatirDamgasi(an), { kvkk_consent_at: an, kvkk_consent_version: '2026-08-25-v2' })
     const kayit = oku('app/kayit/page.tsx')
-    assert.ok(kayit.includes(`kvkk_metin_versiyonu: '${KVKK_METIN_VERSIYONU}'`), 'sürüm dizesi /kayit ile aynı olmalı')
+    assert.ok(kayit.includes(`kvkk_metin_versiyonu: '${KVKK_METIN_VERSIYONU}'`), 'the version string must be the same as in /kayit')
     assert.ok(kayit.includes('kvkk_onay: true') && kayit.includes('kvkk_onay_tarihi:'))
-    assert.ok(kayit.includes(KVKK_ONAY_HATASI.replace("'", "\\'")), 'hata cümlesi /kayit ile aynı olmalı')
+    assert.ok(kayit.includes(KVKK_ONAY_HATASI.replace("'", "\\'")), 'the error sentence must be the same as in /kayit')
   })
 })
 
-describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
+describe('body validation (server side)', () => {
   const tam = {
     profession_type: 'doktor', specialty: 'Kardiyoloji', title: 'Uzm.Dr.', hospital: '  QA   Kliniği ',
     firstName: ' Işıl ', lastName: 'Öztürk', cepTelefonu: '0532 123 45 67', gender: 'Kadın', addressingPreference: '[isim] Hocam',
   }
   const ilk = { ilkKayit: true, kvkkKayitli: true }
 
-  it('tam ve geçerli gövde: users satırının yazımına çevrilmiş değerler', () => {
+  it('complete valid body: values in the spelling of the users row', () => {
     assert.deepEqual(profilGovdesiDogrula(tam, ilk), {
       ok: true,
       deger: {
@@ -169,7 +169,7 @@ describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
       },
     })
   })
-  it('ilk kayıtta her alan zorunlu — eksik alan kendi Türkçe iletisiyle reddedilir', () => {
+  it('first completion: every field is required; a missing field is refused with its own Turkish message', () => {
     const eksik = (alan: string) => { const g: Record<string, unknown> = { ...tam }; delete g[alan]; return profilGovdesiDogrula(g, ilk) }
     assert.deepEqual(eksik('profession_type'), { ok: false, hata: PROFIL_MESAJ.meslek, alan: 'profession_type' })
     assert.deepEqual(eksik('specialty'), { ok: false, hata: PROFIL_MESAJ.uzmanlik, alan: 'specialty' })
@@ -179,9 +179,9 @@ describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
     assert.deepEqual(eksik('cepTelefonu'), { ok: false, hata: DOKTOR_CEP_MESAJ.bos, alan: 'cepTelefonu' })
     assert.deepEqual(eksik('gender'), { ok: false, hata: PROFIL_MESAJ.cinsiyet, alan: 'gender' })
     assert.deepEqual(eksik('addressingPreference'), { ok: false, hata: PROFIL_MESAJ.hitap, alan: 'addressingPreference' })
-    assert.equal(eksik('hospital').ok, true, 'klinik / hastane adı isteğe bağlı')
+    assert.equal(eksik('hospital').ok, true, 'clinic / hospital name is optional')
   })
-  it('geçersiz değerler reddedilir (tarayıcı denetimi atlanmış gibi)', () => {
+  it('invalid values are refused (as if the browser checks were bypassed)', () => {
     const ile = (ek: Record<string, unknown>) => profilGovdesiDogrula({ ...tam, ...ek }, ilk)
     assert.deepEqual(ile({ title: 'Op.Dr.' }), { ok: false, hata: PROFIL_MESAJ.unvanGecersiz, alan: 'title' })
     assert.deepEqual(ile({ gender: 'x' }), { ok: false, hata: PROFIL_MESAJ.cinsiyet, alan: 'gender' })
@@ -195,7 +195,7 @@ describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
     assert.deepEqual(ile({ hospital: 'k'.repeat(161) }), { ok: false, hata: PROFIL_MESAJ.kurum, alan: 'hospital' })
     for (const g of [null, undefined, 'metin', 3, []]) assert.deepEqual(profilGovdesiDogrula(g, ilk), { ok: false, hata: PROFIL_MESAJ.govde, alan: 'govde' })
   })
-  it('hekim dışı meslekler: unvan istenmez; diğer alanlar aynı', () => {
+  it('non-doctor professions: no title required; the other fields are the same', () => {
     for (const profession_type of ['klinik-uzman', 'saglik-uzmani', 'mali', 'avukat', 'psikolog']) {
       const s = profilGovdesiDogrula({ ...tam, profession_type, title: '', hospital: '' }, ilk)
       assert.ok(s.ok, profession_type)
@@ -203,7 +203,7 @@ describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
       assert.equal(s.ok && s.deger.cepTelefonu, '+905321234567')
     }
   })
-  it('KVKK: kayıt yokken işaretsiz → kodlu ret; işaretli → damgala; kayıtlıyken true gelse de damgalanmaz', () => {
+  it('KVKK: none on record and not ticked → refused with the code; ticked → stamp; on record → not stamped even if true', () => {
     const yok = { ilkKayit: true, kvkkKayitli: false }
     assert.deepEqual(profilGovdesiDogrula(tam, yok), { ok: false, hata: KVKK_ONAY_HATASI, alan: 'kvkk_onay', kod: KVKK_ONAY_KODU })
     assert.deepEqual(profilGovdesiDogrula({ ...tam, kvkk_onay: 'true' }, yok), { ok: false, hata: KVKK_ONAY_HATASI, alan: 'kvkk_onay', kod: KVKK_ONAY_KODU })
@@ -211,10 +211,10 @@ describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
     assert.equal(isaretli.ok && isaretli.deger.kvkkDamgala, true)
     const kayitli = profilGovdesiDogrula({ ...tam, kvkk_onay: true }, ilk)
     assert.equal(kayitli.ok && kayitli.deger.kvkkDamgala, false)
-    // Başka bir alan da hatalıysa önce o söylenir (rıza son denetimdir).
+    // When another field is wrong too, that one is reported first (consent is the last check).
     assert.equal((profilGovdesiDogrula({ ...tam, cepTelefonu: '' }, yok) as { alan: string }).alan, 'cepTelefonu')
   })
-  it('onboarding\'i bitmiş hesap: hiçbir alan zorunlu değil; gönderilen alan yine doğrulanır', () => {
+  it('already-onboarded account: no field is required; a field that is sent is still validated', () => {
     const sonra = { ilkKayit: false, kvkkKayitli: false }
     assert.deepEqual(profilGovdesiDogrula({}, sonra), { ok: true, deger: { kvkkDamgala: false } })
     assert.deepEqual(profilGovdesiDogrula({ profession_type: 'doktor', specialty: 'pediatri' }, sonra), { ok: true, deger: { kvkkDamgala: false } })
@@ -226,12 +226,12 @@ describe('profilGovdesiDogrula — sunucu tarafı doğrulama', () => {
   })
 })
 
-describe('cepTelefonuKolonuYokMu — yalnız "bu kolon yok" hatası', () => {
-  it('PostgREST şema önbelleği ve Postgres undefined column tanınır', () => {
+describe('missing-column detection: only the "this column does not exist" error', () => {
+  it('recognises the PostgREST schema cache error and Postgres undefined column', () => {
     assert.equal(cepTelefonuKolonuYokMu({ code: 'PGRST204', message: "Could not find the 'cep_telefonu' column of 'users' in the schema cache" }), true)
     assert.equal(cepTelefonuKolonuYokMu({ code: '42703', message: 'column "cep_telefonu" of relation "users" does not exist' }), true)
   })
-  it('başka kolon, başka hata kodu, kısıt ihlali ya da boş hata bu yola girmez', () => {
+  it('another column, another code, a constraint violation or an empty error do not take this path', () => {
     assert.equal(cepTelefonuKolonuYokMu({ code: 'PGRST204', message: "Could not find the 'hospital' column of 'users' in the schema cache" }), false)
     assert.equal(cepTelefonuKolonuYokMu({ code: '23514', message: 'new row for relation "users" violates check constraint "users_cep_telefonu_bicim"' }), false)
     assert.equal(cepTelefonuKolonuYokMu({ code: '23505', message: 'duplicate key value violates unique constraint "users_email_key"' }), false)
