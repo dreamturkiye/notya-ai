@@ -14,6 +14,9 @@ export const DIL_BASINA: Record<string, Record<string, string>> = {
   portal: {},
   // The intake form: one name per unit of measure the NEW country decides on (uygulama.birimler).
   form: { birim: 'birim' },
+  mesaj: {},
+  sablon: {},
+  konsultasyon: {},
   acilis: {},
 }
 /** Keys that are required only under a condition (the type marks them optional; the pack check enforces the condition). */
@@ -30,6 +33,9 @@ export const ISTEGE_BAGLI: Record<string, Record<string, string>> = {
   },
   form: {},
   araclar: {},
+  mesaj: {},
+  sablon: {},
+  konsultasyon: {},
   acilis: {},
 }
 const SABIT_ANAHTARLAR = new Set(['id', 'rol'])
@@ -55,7 +61,7 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
 
 /** The shape this pack's content has. Optional keys the pack does not use are added from ISTEGE_BAGLI, so the file never depends on which pack wrote it. */
 export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string, unknown> {
-  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area and a landing page; the shape is read from a pack that brings all five`)
+  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar || !a.mesajMetinleri || !a.sablonMetinleri || !a.konsultasyonMetinleri) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area, messages, "my templates", consultation and a landing page; the shape is read from a pack that brings all eight`)
   const d = p.varsayilanDil
   const ekle = (agac: Record<string, unknown>, bolum: string) => {
     for (const [yol, kosul] of Object.entries(ISTEGE_BAGLI[bolum])) {
@@ -77,6 +83,10 @@ export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string,
     // The tools area's OWN words (grid, a tool's screen, keeping a result, the follow-up list). The tools themselves are not
     // part of the shape: which of the kit's tools a country switches on, and for which roles, is that country's decision.
     araclar: sirala(ekle(sekilCikar(a.araclar.metinler[d], 'araclar') as Record<string, unknown>, 'araclar')),
+    // NOTYA-ULKE-MESAJ-01: messages between a doctor and a patient, "my templates", consultation between doctors.
+    mesaj: sirala(ekle(sekilCikar(a.mesajMetinleri[d], 'mesaj') as Record<string, unknown>, 'mesaj')),
+    sablon: sirala(ekle(sekilCikar(a.sablonMetinleri[d], 'sablon') as Record<string, unknown>, 'sablon')),
+    konsultasyon: sirala(ekle(sekilCikar(a.konsultasyonMetinleri[d], 'konsultasyon') as Record<string, unknown>, 'konsultasyon')),
     acilis: sirala(sekilCikar(a.acilis.icerik[d], 'acilis', a.acilis.capalar)),
   }
 }

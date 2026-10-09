@@ -227,8 +227,18 @@ export const ${B}_PAKETI: UlkePaketi = {
     // content (./klinik/hastaFormu.ts); nothing is sent to anybody and the answers are not given to the model.
     hastaFormu: true,
     // The tools area (/tools): calculators, scales and checklists of the country kit, each switched on HERE for the
-    // roles this country names (./uygulama/araclar.ts). A new country starts with the patient page's tile only.
+    // roles this country names (./uygulama/araclar.ts). A new country starts with the three base tiles only.
     araclar: true,
+    // Messages between a doctor and a patient, INSIDE the patient portal: the doctor writes from the patient's file,
+    // the patient reads and answers on their own page. Nothing leaves the product (see uygulama.mesaj below). Whether
+    // a doctor may write to a patient this way is a question for a lawyer of the country (checklist).
+    hastaMesajlari: true,
+    // "My templates": a doctor's own reusable text blocks. The pack brings NO ready-made template.
+    hekimSablonlari: true,
+    // Consultation between doctors of this country's own database: a question, a read-only copy of one approved note
+    // or a typed summary, one answer, closing. A colleague is found by their code only; there is no directory. The
+    // consent sentence (uygulama/konsultasyonMetinleri.ts → iste.riza) is read by a lawyer.
+    konsultasyon: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
@@ -261,6 +271,20 @@ ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new countr
       baglantiGecerlilikGun: eksikAyar('patient portal: days a patient\\'s link stays valid before the doctor must give a new one — a whole number from 1 to 365 (a starting value elsewhere: 30). The owner confirms it; how long a patient\\'s access may stand is a question for a lawyer'),
       // LOCAL CONTENT with no default. Confirmed by a local source before any patient sees the portal.
       acilNumara: eksikAyar('patient portal: the number a patient dials for an ambulance, as it is written in this country (a string of digits) — confirmed by a local source; or null, and the patient\\'s page names no number'),
+    },
+    // TELLING A PATIENT, OUTSIDE THE PORTAL, THAT THEIR DOCTOR WROTE: A SLOT, SWITCHED OFF. The kit has no outbound
+    // channel (no SMS, no e-mail, no messenger) and the pack check refuses anything but this. The doctor tells the patient.
+    mesaj: {
+      disBildirim: {
+        acik: false, saglayici: null,
+        eksik: 'An outbound channel that tells a patient a message is waiting on their page: no provider is contracted and none is built.',
+        kimden: 'the owner (which channel patients in this country use, which provider, at what cost), then a lawyer of the country for the consent to be contacted',
+      },
+    },
+    // HOW LONG A COLLEAGUE MAY READ A CONSULTATION. Both periods are this country's decision; the kit has no default.
+    konsultasyon: {
+      acikGun: eksikAyar('consultation: days a consultation may stay open (the colleague reads the shared copy for at most this long from the day it was asked) — a whole number from 1 to 365. The owner decides; how long a colleague may hold a copy of a patient\\'s data is a question for a lawyer'),
+      kapanisSonrasiGun: eksikAyar('consultation: days the colleague may still read a consultation after the asking doctor closed it — a whole number from 0 to 365 (0 = not at all). The owner decides, with a lawyer'),
     },
     // One language in one script: no account is asked a language question. A second language or script is added here.
     dilGruplari: [{ temel: '${TEMEL}', bicimler: [{ yazi: null, dil: '${DIL}' }] }],
@@ -299,6 +323,9 @@ import { ${B}_UYGULAMA_METINLERI } from './uygulama/metinler'
 import { ${B}_RANDEVU_METINLERI } from './uygulama/randevuMetinleri'
 import { ${B}_PORTAL_METINLERI } from './uygulama/portalMetinleri'
 import { ${B}_FORM_METINLERI } from './uygulama/formMetinleri'
+import { ${B}_MESAJ_METINLERI } from './uygulama/mesajMetinleri'
+import { ${B}_SABLON_METINLERI } from './uygulama/sablonMetinleri'
+import { ${B}_KONSULTASYON_METINLERI } from './uygulama/konsultasyonMetinleri'
 import { ${B}_ARACLAR } from './uygulama/araclar'
 
 export const ${B}_ARAYUZ: UlkeArayuzu = {
@@ -307,6 +334,9 @@ export const ${B}_ARAYUZ: UlkeArayuzu = {
   randevuMetinleri: ${B}_RANDEVU_METINLERI,
   portalMetinleri: ${B}_PORTAL_METINLERI,
   formMetinleri: ${B}_FORM_METINLERI,
+  mesajMetinleri: ${B}_MESAJ_METINLERI,
+  sablonMetinleri: ${B}_SABLON_METINLERI,
+  konsultasyonMetinleri: ${B}_KONSULTASYON_METINLERI,
   araclar: ${B}_ARACLAR,
   roller: ${B}_ROL_TANIMLARI,
   asistan: ${KOD}AsistanKimligi,
@@ -366,6 +396,57 @@ const ${DIL_SABITI}: FormMetni = ${yaz(sekil.form, 'form', 'intake form', '', ''
 export const ${B}_FORM_METINLERI: Readonly<Partial<Record<DilKodu, FormMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
 `
 
+dosyalar['uygulama/mesajMetinleri.ts'] = `${BAS(`${B}: MESSAGES BETWEEN A DOCTOR AND A PATIENT in "${DIL}" — inside the patient portal, nowhere else.`, `Typed against the kit's keys (lib/ulke/arayuz/metinTipleri.ts → MesajMetni, where each key says what it is for).
+  hekim   the doctor's side: the card on the patient's file, the list of unread messages on the home screen
+  hasta   PATIENT-FACING: the section on the patient's own page. A patient reads these alone: a native reader reads
+          them first.
+ONLY THE DOCTOR OPENS A CONVERSATION; the patient's page says so plainly (hasta.yok) and shows the notice that the
+page is not for emergencies (hasta.acil) even when no conversation is open. hasta.acilNumara is the sentence that
+carries the ambulance number: the NUMBER is the pack's setting (../index.ts, uygulama.portal.acilNumara), never
+written here — a sentence with a digit in it fails the pack check. Nothing tells the patient outside the portal that
+a message is waiting (no SMS, no e-mail, no messenger): no text here may say or suggest otherwise.
+Whether a doctor may write to a patient this way is a question for a lawyer of the country. Placeholders % must stay.`)}import { eksik } from '@/lib/ulke/eksik'
+import type { MesajMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { DilKodu } from '@/lib/ulke/tipler'
+
+const ${DIL_SABITI}: MesajMetni = ${yaz(sekil.mesaj, 'mesaj', 'messages', '', '')}
+
+export const ${B}_MESAJ_METINLERI: Readonly<Partial<Record<DilKodu, MesajMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['uygulama/sablonMetinleri.ts'] = `${BAS(`${B}: "MY TEMPLATES" in "${DIL}" — the screen's own words. THE PACK BRINGS NO TEMPLATE.`, `Typed against the kit's keys (lib/ulke/arayuz/metinTipleri.ts → SablonMetni, where each key says what it is for).
+A template is a doctor's own reusable text, typed by that doctor and inserted by that doctor's own click at the end
+of a section of a draft note or of a message. Nothing here is a ready-made template: no wording for a note, no drug,
+no dose, no protocol. The notice (uyari) tells the doctor that no patient's name or data belongs in a template.
+Placeholders % must stay.`)}import { eksik } from '@/lib/ulke/eksik'
+import type { SablonMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { DilKodu } from '@/lib/ulke/tipler'
+
+const ${DIL_SABITI}: SablonMetni = ${yaz(sekil.sablon, 'sablon', 'my templates', '', '')}
+
+export const ${B}_SABLON_METINLERI: Readonly<Partial<Record<DilKodu, SablonMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['uygulama/konsultasyonMetinleri.ts'] = `${BAS(`${B}: CONSULTATION BETWEEN DOCTORS in "${DIL}".`, `Typed against the kit's keys (lib/ulke/arayuz/metinTipleri.ts → KonsultasyonMetni, where each key says what it is for).
+  kod     the account's own consultation code: how a colleague finds this doctor. There is NO directory of doctors.
+  iste    asking, on a patient's file: the colleague's code, the question, what is shared (one approved note, or a
+          summary the doctor types), the consent tick
+  giden   what this doctor asked;  gelen   what this doctor was asked
+iste.riza IS A LEGAL SENTENCE: the asking doctor ticks that the patient (or the patient's legal representative)
+agreed to this sharing. A lawyer of the country reads it; its stamp is konsultasyonRizasi.surum in
+../klinik/index.ts and is stored with every consultation — change the stamp whenever the sentence changes. The
+sentence carries no placeholder.
+The consulted doctor sees ONLY the copy that was shared, never the patient's file, and only for the periods of
+../index.ts (uygulama.konsultasyon). Nobody is notified of anything: no text here may say or suggest otherwise, and
+none may claim a law, an authority or an integration. Placeholders %, %1, %2 must stay.`)}import { eksik } from '@/lib/ulke/eksik'
+import type { KonsultasyonMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { DilKodu } from '@/lib/ulke/tipler'
+
+const ${DIL_SABITI}: KonsultasyonMetni = ${yaz(sekil.konsultasyon, 'konsultasyon', 'consultation', '', '')}
+
+export const ${B}_KONSULTASYON_METINLERI: Readonly<Partial<Record<DilKodu, KonsultasyonMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
 dosyalar['uygulama/araclar.ts'] = `${BAS(`${B}: THE TOOLS AREA (/tools) in "${DIL}" — its own words, and WHICH OF THE KIT'S TOOLS this country has.`, `Typed against the kit (lib/ulke/araclar/tipler.ts → UlkeAraclari; lib/ulke/arayuz/metinTipleri.ts → AraclarMetni).
 
   metinler      the area's own words: the grid and its search, what every tool's screen shares, keeping a result on a
@@ -374,7 +455,8 @@ dosyalar['uygulama/araclar.ts'] = `${BAS(`${B}: THE TOOLS AREA (/tools) in "${DI
                 (lib/ulke/araclar/katalog.ts), says WHO SEES IT — "roller: null" = a base tool, the same for every
                 role; or the list of this country's roles that see it — and brings every word of its screen. The
                 pack check refuses a tool that is not classified, a key the kit does not have, and a missing word.
-                A NEW COUNTRY STARTS WITH ONE TILE: the patient's page. Add the others one by one, each with a
+                A NEW COUNTRY STARTS WITH THE THREE BASE TILES that hold no clinical content: the patient's page,
+                "my templates" and consultations. Add the others one by one, each with a
                 clinician of this country: a tool is a translation of the kit's checklist or formula, never a
                 national schedule, drug list, dosing table, protocol or reference range.
   parametreler  some tools leave numbers to the country (a threshold, an interval): such a tool stays a slot until a
@@ -403,6 +485,26 @@ export const ${B}_ARACLAR: UlkeAraclari = {
         aciklama: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — one sentence: what the doctor does there') },
         alanlar: {},
         not: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — the line under it: the system sends nothing to the patient') },
+      },
+    },
+    {
+      // Base: every role keeps its own text blocks the same way. The pack brings no ready-made template.
+      anahtar: 'sablonlarim', roller: null,
+      metin: {
+        ad: { ${anahtar(DIL)}: eksik('tools: the tile of "my templates" — its title') },
+        aciklama: { ${anahtar(DIL)}: eksik('tools: the tile of "my templates" — one sentence: the doctor\\'s own ready texts for notes and messages') },
+        alanlar: {},
+        not: { ${anahtar(DIL)}: eksik('tools: the tile of "my templates" — the line under it: a template is the doctor\\'s own text; the system writes none and inserts none by itself') },
+      },
+    },
+    {
+      // Base: every role asks a colleague, and is asked, the same way.
+      anahtar: 'konsultasyonlar', roller: null,
+      metin: {
+        ad: { ${anahtar(DIL)}: eksik('tools: the consultations tile — its title') },
+        aciklama: { ${anahtar(DIL)}: eksik('tools: the consultations tile — one sentence: ask a colleague about a patient and answer what you were asked; a colleague is found by code') },
+        alanlar: {},
+        not: { ${anahtar(DIL)}: eksik('tools: the consultations tile — the line under it: the colleague sees only the copy you shared; the system sends nothing to anybody') },
       },
     },
   ],
@@ -656,6 +758,9 @@ export const ${B}_KLINIK: UlkeKlinigi = {
   hastaOzetiGirdisi: ${KOD}HastaOzetiGirdisi,
   // The intake form's questions (./hastaFormu.ts): clinical content, written with a clinician. Never given to the model.
   hastaFormu: ${B}_HASTA_FORMU,
+  // Consultation between doctors: the sentence the asking doctor ticks is \`iste.riza\` in ../uygulama/konsultasyonMetinleri.ts.
+  // This stamp is stored with every consultation; change it whenever the sentence changes. A lawyer reads the sentence.
+  konsultasyonRizasi: { surum: eksik('consultation: a version stamp for the consent sentence the asking doctor ticks, e.g. ${KOD}-consult-draft-2026-01-01 (at most 80 characters)'), hukukcuInceledi: false },
   // One language: a note cannot be rewritten in another. A second language adds these three (see docs/COUNTRY-PACK-HOWTO.md).
   yenidenYazimTalimati: () => null,
   yenidenYazimGirdisi: () => '',
