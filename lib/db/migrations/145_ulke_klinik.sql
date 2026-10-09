@@ -49,7 +49,7 @@
 -- WHAT THE DATABASE HOLDS BY ITSELF, whatever the application does: the keys above; the position a capability may be
 -- given to; that the owner stays the owner; that a member who changes position loses every grant; that an
 -- invitation is used once; that a grant and a record row do not change.
--- WHAT THE APPLICATION CHECKS ON EVERY REQUEST (lib/ulke/klinik/yetki.ts): that the grant exists now, is not
+-- WHAT THE APPLICATION CHECKS ON EVERY REQUEST (lib/ulke/klinikHesabi/yetki.ts): that the grant exists now, is not
 -- withdrawn, is inside its period, that both are members now, that the position and the role still fit, and that the
 -- country's pack allows the capability. Then it writes the record row, and only then reads.
 --

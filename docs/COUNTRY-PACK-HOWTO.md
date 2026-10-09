@@ -7,7 +7,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 ## The short version
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **897 for a one-language country (859 texts, 38 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **1082 for a one-language country (1039 texts, 43 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
@@ -40,7 +40,7 @@ node scripts/ulke-yeni.mjs gb --dil en --yol /uk
 
 It writes:
 
-- `countries/<code>/`, 17 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
+- `countries/<code>/`, 19 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
 - the registration: `lib/ulke/tipler.ts` (the code list, and the language if it is new), the three doors `countries/active/{index,klinik,arayuz}.ts`, and `countries/tumu.ts`;
 - `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 119 gates, all unticked, the six about the country's own database among them (section M).
 
@@ -54,7 +54,7 @@ Counts are for one language form. A second language or script repeats every text
 
 | # | What | File | Items | Who |
 |---|---|---|---|---|
-| 1 | **Settings**: currency, default time zone and every zone of the country, locale, date pattern, separators, first day of the week, 12 or 24 hour clock, units, phone prefix and rule, identity number or none, second name field or not, patient languages, appointment norms, guardian age; for the patient portal: **how many days a patient's link stays valid** and **the ambulance number, or none** | `index.ts`, `ayarlar.ts`, `derleme.mjs` | 20 settings, 11 short texts | product, with the local lead; guardian age and identity rule with a lawyer |
+| 1 | **Settings**: currency, default time zone and every zone of the country, locale, date pattern, separators, first day of the week, 12 or 24 hour clock, units, phone prefix and rule, identity number or none, second name field or not, patient languages, appointment norms, guardian age; for the patient portal: **how many days a patient's link stays valid** and **the ambulance number, or none**; for clinic accounts: **which capabilities exist**, which allied roles may be given a share, how long an invitation and cover last, who read the answers | `index.ts`, `ayarlar.ts`, `derleme.mjs` | 25 settings, 11 short texts | product, with the local lead; guardian age and identity rule with a lawyer; **the clinic settings with a lawyer** (who may read a record) |
 | 2 | **Roles**: which exist, of which kind, and their official local names | `klinik/roller.ts` | 1 list (Uzbekistan: 40 roles) | local clinical lead |
 | 3 | **Note templates**: each role's own fields, the guardian field, section headings | `klinik/notSablonlari.ts` | 5 lists (Uzbekistan: about 170 fields) | a reviewer per specialty |
 | 4 | **Assistant names**: one per role | `klinik/asistanlar.ts` | 1 function (Uzbekistan: 40 names) | the owner |
@@ -66,6 +66,7 @@ Counts are for one language form. A second language or script repeats every text
 | 9b | **Patient portal**: the doctor's controls (access, summary, requests) and what the **patient** reads (the PIN page, their own page) | `uygulama/portalMetinleri.ts` | 100 texts, 38 of them patient-facing | native writer; the patient-facing ones first |
 | 9c | **Intake form, the screens**: the doctor's card, the invitation the doctor copies, the form as the **patient** reads it, and the name of each unit of measure the pack uses | `uygulama/formMetinleri.ts` | 63 texts and 1 setting (the unit names); 33 of the texts are patient-facing | native writer; the patient-facing ones first |
 | 9d | **Intake form, the questions**: the core set every patient gets, one set per role, the consent sentence for a patient and for a guardian, and two version stamps | `klinik/hastaFormu.ts` | 4 texts, 2 settings (the core set; the role sets: Uzbekistan 23 and 228 questions) | **a local clinician per role**; the consent sentence with a lawyer |
+| 9e | **Clinic accounts**: the clinic's screen, the five position names, each capability's name and **the sentence a doctor reads before giving it**, the record, the shared and cover views, the front-desk workspace | `uygulama/klinikMetinleri.ts` | 180 texts | native writer; the position names with the local clinical lead |
 | 10 | **Landing page**: copy, 12 section anchors, language names, fonts, word mark; and the **price list** of its price section (what each plan costs a month, or "on request": data, never a number in the copy) | `acilis/icerik.ts` | 298 texts, 1 setting | marketing, native review; prices: the owner |
 | 11 | **Leak list**: what marks content as this country's | `sizintiTerimleri.ts` | 2 entries to start, growing | engineering |
 | 12 | Brand word mark | `arayuz.ts` | 1 text | the owner |
@@ -80,7 +81,7 @@ Some keys are required only under a condition and are written as comments in the
 
 Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the baseline of a country database and its migrations; the tests.
 
-Off for every new country until built and reviewed for it: tools, the assistant in text and voice, consultation and messaging, clinic accounts, the voice profile, image evaluation. The patient portal and the intake form are part of the kit since 2026-10-09 (next two sections).
+Off for every new country until built and reviewed for it: the assistant in text and voice, consultation and messaging, the voice profile, image evaluation. The patient portal, the intake form, the tools area and clinic accounts are part of the kit since 2026-10-09 (the sections below).
 
 ## The patient portal
 
@@ -153,6 +154,37 @@ Built once in the kit (NOTYA-ULKE-ARACLAR-01, 2026-10-09); a country fills it in
 - **A new country starts with one tile** (the patient's page) and the area's own words: 54 texts, 3 texts for the tile and one setting (who wrote and who read the tool texts).
 - **Two scripts.** Where a language has two scripts and one is derived from the other, store the derived text static and mark it. Uzbekistan's rule is `scripts/uz-kiril.mjs` (country tooling only; no build runs it), and its test holds every stored text to the rule.
 
+## Clinic accounts: a clinic, its staff, and who may help with whose patients
+
+Built once in the kit (NOTYA-ULKE-KLINIK-01, 2026-10-09); a country fills it in. Two addresses: `/clinic` (the clinic, its members, "who can help with my patients", the record, what was shared with me) and `/desk` (the front-desk workspace). Switched on in a new country's pack by the scaffold (`klinikHesaplari`); a country that wants no clinics switches it off and supplies nothing.
+
+**The rule everything else follows: a patient belongs to one doctor, and a position opens no patient.** A clinic is a list of accounts with one position each: owner, administrator, doctor, allied professional, front desk. Being a member, whatever the position, shows nobody a patient. Access is **added** as a permission that the patient's own doctor gives to one member, for one capability; the server checks it on every request, writes the request to the doctor's record before anything is read or written, and the permission can be withdrawn at once.
+
+What is the **kit's**, the same in every country:
+
+- **The five positions and the five capabilities.** Front desk, three separate ones: the doctor's appointments and the patient's card to book one (name, birth date, phone and nothing else); registering a new patient for the doctor; handing a patient the link and PIN of their page and asking for the intake form. Allied professional: the approved notes of **one named patient**. Another doctor: cover for a stated period, at most 31 days, **read-only**.
+- **The check and the record** (`lib/ulke/klinikHesabi/yetki.ts`). On every request: the pack has the capability; the requester is a member now, in a position that may hold it; the doctor is a member of the same clinic now; the permission exists, is not withdrawn, is inside its period and, for a share, names this patient; the member's role may hold it. Then the record row is written, and only then anything is read. A request that fails any step is answered "does not exist" and writes nothing.
+- **What the front desk is answered.** Every answer is built field by field (`lib/ulke/klinikHesabi/onBuro.ts`): no note, no visit, no transcript, no intake answer, no tool record, no summary, no reason of an appointment, no sex, no language, no identity number. A test holds the exact keys, and the walk-through reads them from a running server.
+- **What the database holds by itself** (migration 145): both sides of a permission are members of the same clinic, by key; a removed member's permissions go in the same statement; a member whose position changes loses every permission; an invitation is used once and is stored only as a hash; a permission never changes, it is only withdrawn; a record row is never changed or deleted.
+- **What a position does give.** The owner and an administrator manage members and invitations, and see the clinic's schedule: which member is busy when, with nothing of any patient. They read no doctor's record and no patient.
+- **The front desk needs no role.** An account that joins a clinic at the front desk is never asked for one; its application is the workspace, the clinic and the settings.
+
+What a **country** supplies:
+
+| What | Where | Note |
+|---|---|---|
+| The catalogue, once per language form | `uygulama/klinikMetinleri.ts` | 180 texts. The five position names are agreed with the local clinical lead. `yetkiAciklama` is **the sentence a doctor reads before giving a capability**: it says plainly what the other person will see. |
+| **Which capabilities exist** | `index.ts`, `uygulama.klinikHesaplari.yetkiTurleri` | From the kit's five. **Who may lawfully read a medical record is a question for a lawyer of the country**; list only what the lawyer accepts. |
+| **Which allied roles may be given a share** | `…paylasimRolleri` | Keys of the pack's allied roles. The scope of practice of each profession is the country's law. `[]` until it is decided. |
+| How long an invitation code lives; the longest cover | `…davetGecerlilikGun`, `…vekaletAzamiGun` | Whole days, 1 to 31. |
+| Whether the clinic's owner may enter a permission for a doctor | `…sahipHekimAdinaVerebilir` | **`false`, written by the scaffold.** The pack check refuses `true` until `inceleme.hukukcu` names the lawyer who read the answers. The server supports it; no screen offers it yet. |
+| Record retention | `…kayitSaklama` | **A slot, switched off: `null`, and the pack check refuses anything else.** The kit deletes no record row and has no purge. The period a country must or may keep the record is stated by a lawyer, and the purge is built then. |
+| Who wrote these answers, and which lawyer read them | `…inceleme` | `{ makineYazimi, hukukcu }`. |
+
+**The portal capability shows the link and the PIN to whoever hands them over.** That is what the capability is: a person at the front desk cannot give a patient a link and a PIN without seeing both, and with both the patient's page can be opened. The kit does not hide this; it makes the doctor decide knowingly: it is a capability of its own (not part of "appointments"), the sentence the doctor reads before giving it must say so in the form's own word for the PIN (the pack check looks for that word and refuses a catalogue without it), every link made is in the doctor's record with who made it, and every sign-in to the patient's page is in the portal's own record on the patient's file. A country whose lawyer does not accept this leaves `on-buro-portal` out of `yetkiTurleri`.
+
+**Not in clinic accounts, and not half-built:** billing, plans, seats and payment; more than one clinic per account; writing a visit under cover; a screen for the owner to give a permission on a doctor's behalf; an invitation that also creates the account (in a closed country the invitee needs an account first); closing a clinic or handing it to another owner; a reason typed at the front desk when booking; a purge of the record. Each is in `docs/OPEN-COMMITMENTS.md` (NOTYA-ULKE-KLINIK-01) with who it waits on.
+
 ## The country's own database
 
 **One database per country** (Kaan, 2026-10-09: "We had issues with common databases before. Keep seperation between the two and any other future country versions"). A country never shares a database with Türkiye or with another country, and no script of one is ever run on another's. Full text: `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
@@ -197,7 +229,8 @@ NOTYA_COUNTRY=<code> npm run build:ulke                  # pack scan + walls, th
 
 - `build:ulke` is the build command of a country deployment. A bare `next build` for a country is refused, so the build proof cannot be skipped.
 - A build with no country set is Türkiye's and runs exactly what it runs on `main`.
-- The pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`, run instructions at its top) walks any country in a real browser against the stand-ins: landing, login, first-login questions as far as the pack has any, home, settings, new patient, visit to approved note, appointment, a second account. It reads what to expect from the pack itself.
+- The pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`, run instructions at its top) walks any country in a real browser against the stand-ins: landing, login, first-login questions as far as the pack has any, home, settings, new patient, visit to approved note, appointment, a second account; and, where the pack has them, the patient portal, the intake form, the tools area and clinic accounts (two clinics, five more accounts, each in a browser of its own). It reads what to expect from the pack itself.
+- `node scripts/ulke-klinik-mutasyon.mjs` breaks the clinic rules one at a time (40 ways: a check skipped, a filter dropped, a field added to an answer) and expects the tests to notice each. Run it after any change under `lib/ulke/klinikHesabi/`.
 - A country may add a deeper walk-through of its own wording. Uzbekistan's is `scripts/ulke-yuruyus/yuruyus.mjs`.
 
 ## What building does NOT prove
@@ -274,13 +307,17 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 
 **With the tools area (2026-10-09, NOTYA-ULKE-ARACLAR-01) the proof was repeated only in part.** The scaffold now writes 18 files and answers **897 items (859 texts, 38 settings)**: 58 more (54 texts for the tools area's own words, 3 for the patient page's tile, 1 setting). A throwaway `qq` was scaffolded in the repository, type-checked clean, and its build was refused with the list of all 897 items, as it must be; then it was deleted. It was **not** filled, built and walked again (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-ARACLAR-01).
 
+**With clinic accounts (2026-10-09, NOTYA-ULKE-KLINIK-01) the proof was again repeated only in part.** The scaffold now writes 19 files and answers **1082 items (1039 texts, 43 settings)**: 185 more (180 texts of the clinic catalogue and 5 settings: which capabilities, which allied roles, the two periods, who read the answers). Two clinic settings are written by the scaffold and are not open: a clinic's owner may not enter a permission for a doctor (`false`), and record retention is a slot (`null`). A throwaway `zz` was scaffolded in the repository, type-checked clean, and its build was refused with the list of all 1082 items (185 of them for clinic accounts), as it must be; then it was deleted and the five registration files restored. It was **not** filled, built and walked (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-KLINIK-01).
+
 ## Known gaps
 
 - **Units**: the intake form is the first screen that reads them (height, weight and temperature are asked in the pack's units, each named by the pack). The visit note still shows no measurement in a unit.
 - **Instructions to the model** are assembled inside each pack (`klinik/talimatlar.ts`); the kit has no shared builder. The template's own small builder covers one language.
 - **Scaffold hints** are key paths, not reference wording.
 - **Prices** are a list the pack states (plan → amount a month, or on request) and the landing layout writes with the pack's number rules. Nothing else in the kit shows money yet.
-- **Four product pieces** are not in the kit and exist for no country but Türkiye: tools, consultation and messaging, the assistant in text and voice, clinic accounts. (The patient portal and the intake form are in the kit since 2026-10-09, without messaging, documents, payments or automatic reminders; the form's answers are not given to the model.)
+- **Two product pieces** are not in the kit and exist for no country but Türkiye: consultation and messaging, and the assistant in text and voice. (The patient portal, the intake form, the tools area and clinic accounts are in the kit since 2026-10-09: the portal without messaging, documents, payments or automatic reminders; the form's answers not given to the model; clinic accounts without billing, seats or payment.)
+- **Clinic accounts: cover is read-only.** A visit belongs to the patient's own doctor by a key of the visit table, which no clinic job may alter; a covering doctor reads approved notes and the appointments and writes nothing. Whether and how a visit is written under cover is an open decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-KLINIK-01).
+- **Clinic accounts: the settings are law, not product.** Which capabilities exist, which allied roles may read a share and how long the record is kept cannot be verified by a machine and are unverified for every country until a lawyer of that country is named in the pack.
 - **Intake answers stay beside the note.** They are shown to the doctor and never given to the model that writes the note; whether and how they should be is an open decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-INTAKE-01b).
 - **The portal's link validity and ambulance number** are settings a pack must state and that nothing can verify by machine: the first is the owner's, the second needs a local source.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.
