@@ -19,6 +19,8 @@
  *             and its moment, answers only with consent, one open form per patient, the appointment is that patient's),
  *             its trigger (a form never moves, its question set is fixed, submitted answers do not change) and the
  *             function `ulke_hasta_formu_iste`.
+ *             NOTYA-ULKE-KLINIK-01: what migration 145 puts in the database — the five tables of clinic accounts with
+ *             their keys, checks and triggers, and the six functions (./sahte-klinik.mjs).
  *   storage   upload / download / remove of objects. A browser session may upload only under `<its country>/<its own
  *             account id>/` (what the storage policy of migration 132 enforces in the real project); the service role
  *             may read and remove anything.
@@ -29,6 +31,7 @@
  */
 import http from 'node:http'
 import { createHash, randomUUID } from 'node:crypto'
+import { klinikVeritabani } from './sahte-klinik.mjs'
 
 const PORT = Number(process.argv[2] || 54399)
 const SERVIS = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sahte-servis'
@@ -44,6 +47,13 @@ const hesaplar = {
   'qa-ru@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000002', sifre: 'sinov-parol-2', ulke: ULKE, dil: DIL_2 || DIL_1, ad: 'QA Врач Два' },
   'qa-tr@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000003', sifre: 'sinov-parol-3', ulke: 'tr', dil: 'tr', ad: 'QA Hekim Uc' },
   'qa-damgasiz@notya.test': { id: 'aaaaaaaa-0000-4000-8000-000000000004', sifre: 'sinov-parol-4', ulke: null, dil: 'tr', ad: 'QA Damgasiz' },
+  // NOTYA-ULKE-KLINIK-01 — five accounts for the clinic step of the pack-neutral walk-through: two clinics. They sign
+  // in only there; until then each is a row of `ulke_hesaplari` and nothing else.
+  'qa-k1@notya.test': { id: 'cccccccc-0000-4000-8000-000000000001', sifre: 'sinov-parol-k1', ulke: ULKE, dil: DIL_1, ad: 'QA Clinic Owner One' },
+  'qa-k2@notya.test': { id: 'cccccccc-0000-4000-8000-000000000002', sifre: 'sinov-parol-k2', ulke: ULKE, dil: DIL_1, ad: 'QA Clinic Doctor Two' },
+  'qa-k3@notya.test': { id: 'cccccccc-0000-4000-8000-000000000003', sifre: 'sinov-parol-k3', ulke: ULKE, dil: DIL_1, ad: 'QA Clinic Allied Three' },
+  'qa-k4@notya.test': { id: 'cccccccc-0000-4000-8000-000000000004', sifre: 'sinov-parol-k4', ulke: ULKE, dil: DIL_1, ad: 'QA Clinic Desk Four' },
+  'qa-k5@notya.test': { id: 'cccccccc-0000-4000-8000-000000000005', sifre: 'sinov-parol-k5', ulke: ULKE, dil: DIL_1, ad: 'QA Other Clinic Five' },
 }
 const GECERLI_KOD = 'QATEST0000000001'
 const kodlar = new Map([[createHash('sha256').update(GECERLI_KOD).digest('hex'), { ulke: ULKE, kalan: 1 }]])
@@ -59,6 +69,9 @@ for (const h of Object.values(hesaplar)) if (h.ulke) tablolar.ulke_hesaplari.pus
 /** The one table of Türkiye a country build writes to, through the shared model gateway: it has no country column. */
 const ULKESIZ = new Set(['ai_token_kullanim'])
 const tablo = (ad) => (tablolar[ad] ??= [])
+/** NOTYA-ULKE-KLINIK-01 — migration 145: the constraints, triggers and functions of clinic accounts. */
+const KLINIK = klinikVeritabani({ tablo, tablolar })
+const klinikTablosu = (ad) => ad.startsWith('ulke_klinik')
 /** Tables whose rows have no id of their own (the key is another table's id). */
 const KIMLIKSIZ = new Set(['hekim_calisma_duzeni', 'hekim_dil_tercihleri', 'hekim_rolu', 'hasta_ulke_bilgisi', 'muayene_dil_kaydi', 'not_dil_kaydi', 'ulke_kullanim', 'ulke_kullanim_olcumu'])
 /** bucket/path → { tur, veri: Buffer } */
@@ -295,6 +308,8 @@ const ISLEVLER = {
     if (yeniBaglanti) ISLEVLER.ulke_portal_erisim_ver({ p_ulke: a.p_ulke, p_doctor_id: a.p_doctor_id, p_patient_id: a.p_patient_id, p_token_hash: a.p_token_hash, p_pin_hash: a.p_pin_hash, p_son_gecerlilik: a.p_son_gecerlilik, p_simdi: a.p_simdi })
     return { durum: 'TAMAM', form_id: form.id, yeni_form: yeni, erisim: yeniBaglanti ? 'YENI' : 'VAR' }
   },
+  // lib/db/migrations/145_ulke_klinik.sql — the six functions of clinic accounts (./sahte-klinik.mjs).
+  ...KLINIK.islevler,
 }
 /** One function call as ONE TRANSACTION: the tables are put back if a statement fails or the function raises. */
 function islevCalistir(ad, a) {
@@ -346,6 +361,7 @@ function rest(req, res, url, govde) {
       const yeni = { ...(KIMLIKSIZ.has(ad) ? {} : { id: randomUUID() }), created_at: new Date().toISOString(), ...y }
       if (ad === 'ulke_randevulari' && cakisiyor(yeni, satirlar)) return cakismaHatasi(res)
       { const c = portalKisiti(ad, yeni, satirlar); if (c) return hata(res, 409, c.code, c.message) }
+      if (klinikTablosu(ad)) { const c = KLINIK.kisit(ad, yeni, satirlar, 'insert'); if (c) return hata(res, 409, c.code, c.message) }
       if (ad === 'ulke_muayeneler' && !yeni.started_at) yeni.started_at = yeni.created_at
       satirlar.push(yeni); sonuc.push(yeni)
     }
@@ -355,10 +371,12 @@ function rest(req, res, url, govde) {
     if (ad === 'ulke_randevulari') for (const s of sonuc) if (cakisiyor({ ...s, ...govde }, satirlar.filter((x) => x !== s))) return cakismaHatasi(res)
     for (const s of sonuc) { const c = portalKisiti(ad, { ...s, ...govde }, satirlar.filter((x) => x !== s)); if (c) return hata(res, 409, c.code, c.message) }
     for (const s of sonuc) { const c = formKilidi(ad, s, { ...s, ...govde }); if (c) return hata(res, 409, c.code, c.message) }
+    if (klinikTablosu(ad)) for (const s of sonuc) { const c = KLINIK.kilit(ad, s, { ...s, ...govde }) ?? KLINIK.kisit(ad, { ...s, ...govde }, satirlar.filter((x) => x !== s), 'update'); if (c) return hata(res, 409, c.code, c.message) }
     for (const s of sonuc) Object.assign(s, govde)
   } else if (req.method === 'DELETE') {
     if (!suzgecler.length) return hata(res, 400, '21000', 'DELETE requires a WHERE clause')
     sonuc = satirlar.filter(uyan)
+    if (klinikTablosu(ad)) { const c = KLINIK.silme(ad, sonuc); if (c) return hata(res, 409, c.code, c.message) }
     tablolar[ad] = satirlar.filter((s) => !uyan(s))
   } else return hata(res, 405, 'PGRST000', 'method')
 

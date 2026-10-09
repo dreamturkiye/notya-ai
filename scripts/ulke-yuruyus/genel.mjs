@@ -27,6 +27,14 @@
  * without a follow-up day (the field starts empty), what the server refuses, the patient's file, the follow-up list
  * and "done"; and in step 5 the second account.
  *
+ * NOTYA-ULKE-KLINIK-01 — where the pack has clinic accounts, step 6 walks them with FIVE MORE ACCOUNTS in TWO CLINICS,
+ * each in a browser of its own: a clinic created, invitation codes (shown once, only a hash kept), a doctor, an allied
+ * professional and a front-desk member joining — the last without choosing a role; that a position alone opens no
+ * patient; permissions given one at a time on the doctor's own screen, with the pack's plain sentence about the link
+ * and PIN before the portal capability; the front desk at work and the exact fields it is answered; a share and
+ * cover, both read-only; the record the doctor reads and nobody else; the other clinic, which sees nothing; and a
+ * permission ending at once when it is withdrawn, when a position changes and when a member is removed.
+ *
  * A country's OWN deeper walk-through (its wording, its roles, its language switches) stays with that country:
  * Uzbekistan's is ./yuruyus.mjs.
  *
@@ -761,6 +769,454 @@ if (P.araclar) {
   kontrol(`every row the walk-through wrote carries this country's code (${toplam} rows in ${tablolar.length} tables)`, toplam > 5 && yabanciSatir.length === 0, yabanciSatir.join(' '))
   const hesaplar = await tabloOku('ulke_hesaplari')
   kontrol('the other country\'s account row in the shared table was not touched', hesaplar.some((h) => h.ulke !== P.kod) && hesaplar.filter((h) => h.ulke === P.kod).length >= 2)
+}
+
+// ───────────────────────── 6. clinic accounts (NOTYA-ULKE-KLINIK-01): two clinics, five accounts ─────────────────────────
+if (P.klinik) {
+  const K = P.klinik, KM = K.m
+  const KL = { sahip: 'cccccccc-0000-4000-8000-000000000001', hekim: 'cccccccc-0000-4000-8000-000000000002', muttefik: 'cccccccc-0000-4000-8000-000000000003', onBuro: 'cccccccc-0000-4000-8000-000000000004', diger: 'cccccccc-0000-4000-8000-000000000005' }
+  const AD = { sahip: 'QA Clinic Owner One', hekim: 'QA Clinic Doctor Two', muttefik: 'QA Clinic Allied Three', onBuro: 'QA Clinic Desk Four', diger: 'QA Other Clinic Five' }
+  const YOK = '{"code":"NOT_FOUND"}'
+  const yokMu = (...r) => r.every((x) => x.s === 404 && x.t === YOK)
+  const TUR = (t) => K.yetkiTurleri.includes(t)
+  const BURO_TURLERI = ['on-buro-randevu', 'on-buro-hasta', 'on-buro-portal'].filter((t) => TUR(t) && (t !== 'on-buro-randevu' || P.randevu) && (t !== 'on-buro-portal' || P.portal))
+  const BURO_RANDEVU = BURO_TURLERI.includes('on-buro-randevu'), BURO_HASTA = BURO_TURLERI.includes('on-buro-hasta'), BURO_PORTAL = BURO_TURLERI.includes('on-buro-portal')
+  const PAYLASIM = TUR('paylasim') && !!K.muttefikRolu, VEKALET = TUR('vekalet')
+  const anahtarlar = (o) => Object.keys(o ?? {}).sort().join(',')
+  const bilgiBekle = (p, m) => p.waitForFunction((t) => [...document.querySelectorAll('.uza-bilgi-kutu[role=status]')].some((e) => e.innerText.trim() === t), { timeout: 30000 }, m).then(() => true, () => false)
+  const hataBekle = (p, m) => p.waitForFunction((t) => [...document.querySelectorAll('[role=alert]')].some((e) => e.innerText.trim() === t), { timeout: 30000 }, m).then(() => true, () => false)
+  const buGun = new Intl.DateTimeFormat('en-CA', { timeZone: P.saatDilimleri[0], year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  const gunSonra = (n) => new Date(Date.parse(`${buGun}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10)
+  const yarin = gunSonra(1)
+  /** Login, and the first-login questions as far as the LANGUAGE: stops at the role question (or at the home, where the pack asks for no role). */
+  async function roleKadar(p) {
+    for (let i = 0; i < 4; i++) {
+      const durum = await p.waitForFunction((bugun, soru) => (location.pathname === bugun && document.querySelector('.uza-karsilama') ? 'ev' : location.pathname === soru && document.querySelector('select[name=rol], input[name=dil], input[name=yazi]') ? (document.querySelector('select[name=rol]') ? 'rol' : 'dil') : false), { timeout: 60000 }, adres('/today'), adres('/start')).then((h) => h.jsonValue())
+      if (durum !== 'dil') return durum
+      await p.click('button[type=submit]')
+      await p.waitForFunction((bugun) => (location.pathname === bugun && !!document.querySelector('.uza-karsilama')) || !document.querySelector('input[name=dil], input[name=yazi]'), { timeout: 60000 }, adres('/today'))
+    }
+    return 'dil'
+  }
+  async function hesapAc(eposta, sifre, rol) {
+    const p = await sayfaAc(MASA)
+    await git(p, '/login'); await giris(p, eposta, sifre)
+    if (rol !== null) await sorulariGec(p, rol)
+    return p
+  }
+  const tikla = async (p, sel) => { await p.waitForSelector(sel, { timeout: 30000 }); await p.click(sel) }
+  const klinikAc = async (p, gorunum) => { await git(p, `/clinic${gorunum ? `?gorunum=${gorunum}` : ''}`); await p.waitForSelector(gorunum === 'yetkiler' ? '[data-alan=yetkiler-basligi]' : gorunum === 'paylasilan' ? '[data-alan=paylasilanlar]' : '[data-alan=klinik-giris], [data-alan=klinik-basligi]', { timeout: 60000 }) }
+  const katil = async (p, kod) => { await yazDeger(p, '[data-alan=davet-kodu]', kod); await p.click('[data-eylem=klinige-katil]') }
+
+  // ── 6a. the owner of the first clinic ──
+  const S = await hesapAc('qa-k1@notya.test', 'sinov-parol-k1', K.hekimRolu ?? '')
+  kontrol('clinic: the shell offers the clinic to an account that is in none', (await S.$$eval('a[href]', (l, h) => l.filter((e) => e.getAttribute('href') === h).map((e) => e.innerText.trim()), adres('/clinic'))).includes(KM.kabuk.klinik))
+  await klinikAc(S)
+  kontrol('clinic: an account in no clinic is offered to join one with a code or to create one, in the pack\'s words', (await metin(S, '[data-alan=klinik-giris] h1')) === KM.giris.baslik && (await metin(S, '[data-alan=klinik-katil] h2')) === KM.giris.katilBaslik && (await metin(S, '[data-alan=klinik-kur] h2')) === KM.giris.kurBaslik)
+  await tara(S, 'clinic: no clinic yet')
+  await yazDeger(S, '[data-alan=klinik-adi]', 'X'); await S.click('[data-eylem=klinik-kur]')
+  kontrol('clinic: a name of one letter is refused with the pack\'s sentence, and nothing is written', (await hataBekle(S, KM.giris.adGerekli)) && (await tabloOku('ulke_klinikler')).length === 0)
+  await yazDeger(S, '[data-alan=klinik-adi]', 'QA Clinic One'); await S.click('[data-eylem=klinik-kur]')
+  await S.waitForSelector('[data-alan=klinik-basligi]', { timeout: 30000 })
+  let klinikler = await tabloOku('ulke_klinikler'), uyeler = await tabloOku('ulke_klinik_uyeleri')
+  const K1 = klinikler[0]?.id
+  kontrol('clinic: created — the account is its owner, and both rows carry this country', (await metin(S, '[data-alan=klinik-basligi] h1')) === 'QA Clinic One' && (await S.$eval('[data-alan=klinik-basligi]', (e) => e.getAttribute('data-konum'))) === 'sahip' && (await metin(S, '[data-alan=klinik-basligi]')).includes(KM.konum.sahip) && klinikler.length === 1 && klinikler[0].ulke === P.kod && klinikler[0].doctor_id === KL.sahip && uyeler.length === 1 && uyeler[0].konum === 'sahip' && uyeler[0].ulke === P.kod, JSON.stringify(uyeler))
+  kontrol('clinic: the screen says that a position alone opens no patient', (await metin(S, '[data-alan=klinik-uyeler]')).includes(KM.klinik.konumAciklama))
+  kontrol('clinic: the owner cannot leave or be removed (no control on the owner\'s own row)', !(await S.$('[data-eylem=klinikten-ayril], [data-eylem=uye-cikar]')) && (await api(S, '/api/ulke/klinik/uye', { method: 'DELETE', govde: { hesapId: KL.sahip } })).t === '{"code":"SAHIP"}')
+  await tara(S, 'clinic: the owner\'s screen')
+
+  // ── 6b. invitations: a code is shown once, only its hash is kept ──
+  const kodlar = {}
+  let iptalDavetId = ''
+  for (const konum of ['hekim', 'muttefik', 'on-buro', 'iptal']) {
+    const once = (await tabloOku('ulke_klinik_davetleri')).map((d) => d.id)
+    const onceki = await S.$eval('[data-alan=yeni-davet-kodu]', (e) => e.value).catch(() => '')
+    await S.select('[data-alan=davet-konumu]', konum === 'iptal' ? 'hekim' : konum)
+    await S.click('[data-eylem=davet-olustur]')
+    await S.waitForFunction((o) => { const e = document.querySelector('[data-alan=yeni-davet-kodu]'); return !!e && !!e.value && e.value !== o }, { timeout: 30000 }, onceki)
+    kodlar[konum] = await S.$eval('[data-alan=yeni-davet-kodu]', (e) => e.value)
+    if (konum === 'iptal') iptalDavetId = (await tabloOku('ulke_klinik_davetleri')).map((d) => d.id).find((id) => !once.includes(id)) ?? ''
+  }
+  let davetler = await tabloOku('ulke_klinik_davetleri')
+  const hamDavet = JSON.stringify(davetler)
+  kontrol('invitations: four codes made; the database holds a hash of each and none of the codes', davetler.length === 4 && new Set(Object.values(kodlar)).size === 4 && davetler.every((d) => /^[0-9a-f]{64}$/.test(d.kod_hash) && d.ulke === P.kod && d.klinik_id === K1 && d.doctor_id === KL.sahip) && Object.values(kodlar).every((k) => k.length >= 12 && !hamDavet.includes(k) && !hamDavet.includes(k.replace(/-/g, ''))))
+  kontrol('invitations: the screen says the code is shown this once', (await metin(S, '[data-alan=yeni-davet]')).includes(KM.davet.birKez))
+  await tikla(S, `li[data-davet="${iptalDavetId}"] [data-eylem=davet-geri-al]`)
+  kontrol('invitations: one is withdrawn by the owner', (await bilgiBekle(S, KM.davet.geriAlindi)) && !!(await tabloOku('ulke_klinik_davetleri')).find((d) => d.id === iptalDavetId)?.iptal_at)
+  await klinikAc(S)
+  await S.waitForSelector('[data-alan=klinik-davetler] li[data-davet]', { timeout: 30000 })
+  const kaynak = await S.content()
+  kontrol('invitations: after a reload no code is on the screen or in the page — the list shows positions and states only', !(await S.$('[data-alan=yeni-davet-kodu]')) && Object.values(kodlar).every((k) => !kaynak.includes(k)) && (await S.$$eval('[data-alan=klinik-davetler] li[data-davet]', (l) => l.map((e) => e.getAttribute('data-davet-durumu')).sort().join())) === 'acik,acik,acik,iptal')
+
+  // ── 6c. the second clinic: another owner, who cannot be a member of two ──
+  const D = await hesapAc('qa-k5@notya.test', 'sinov-parol-k5', K.hekimRolu ?? '')
+  await klinikAc(D)
+  await yazDeger(D, '[data-alan=klinik-adi]', 'QA Clinic Two'); await D.click('[data-eylem=klinik-kur]')
+  await D.waitForSelector('[data-alan=klinik-basligi]', { timeout: 30000 })
+  klinikler = await tabloOku('ulke_klinikler')
+  const K2 = klinikler.find((k) => k.doctor_id === KL.diger)?.id
+  const ikinci = await api(D, '/api/ulke/klinik/katil', { method: 'POST', govde: { kod: kodlar.hekim } })
+  kontrol('second clinic: created by another account; that account cannot also join the first (one clinic per account), and the code it tried is NOT used up', klinikler.length === 2 && !!K2 && K2 !== K1 && ikinci.s === 409 && ikinci.t === '{"code":"UYE"}' && (await tabloOku('ulke_klinik_davetleri')).every((d) => !d.kullanildi_at) && (await tabloOku('ulke_klinik_uyeleri')).length === 2, `${ikinci.s} ${ikinci.t}`)
+
+  // ── 6d. a doctor and an allied professional join the first clinic with their codes ──
+  const H = await hesapAc('qa-k2@notya.test', 'sinov-parol-k2', K.hekimRolu ?? '')
+  await klinikAc(H)
+  await katil(H, kodlar.iptal)
+  kontrol('joining: a withdrawn code is refused with the pack\'s sentence, and nobody joined', (await hataBekle(H, KM.giris.kodGecersiz)) && (await tabloOku('ulke_klinik_uyeleri')).length === 2)
+  await katil(H, kodlar.hekim)
+  await H.waitForSelector('[data-alan=klinik-basligi][data-konum=hekim]', { timeout: 30000 })
+  kontrol('joining: the doctor is a member in the position the code carried; a member who is not an administrator sees no invitations, no schedule and no control over anybody else', (await metin(H, '[data-alan=klinik-basligi] h1')) === 'QA Clinic One' && !(await H.$('[data-alan=klinik-davetler]')) && !(await H.$('[data-alan=klinik-takvimi]')) && !(await H.$('[data-eylem=konum-degistir], [data-eylem=uye-cikar]')) && !!(await H.$('[data-eylem=klinikten-ayril]')))
+  const M = await hesapAc('qa-k3@notya.test', 'sinov-parol-k3', K.muttefikRolu ?? K.paylasimsizRol ?? K.hekimRolu ?? '')
+  await klinikAc(M)
+  await katil(M, kodlar.hekim)
+  kontrol('joining: a code that was used once opens nothing a second time (the same sentence as a code that never existed)', (await hataBekle(M, KM.giris.kodGecersiz)) && (await tabloOku('ulke_klinik_uyeleri')).length === 3)
+  await katil(M, kodlar.muttefik)
+  await M.waitForSelector('[data-alan=klinik-basligi][data-konum=muttefik]', { timeout: 30000 })
+
+  // ── 6e. the front desk: no role is chosen; the application is the workspace, the clinic and the settings ──
+  const F = await sayfaAc(MASA)
+  await git(F, '/login'); await giris(F, 'qa-k4@notya.test', 'sinov-parol-k4')
+  const soru = await roleKadar(F)
+  if (soru === 'rol') {
+    kontrol('front desk: the role question offers the way to a clinic\'s code (nobody at the front desk has a role to choose)', (await F.$eval('[data-eylem=klinik-kodu]', (e) => `${e.getAttribute('href')}|${e.innerText.trim()}`)) === `${adres('/clinic')}|${KM.giris.katilBaslik}`)
+    await F.click('[data-eylem=klinik-kodu]')
+    await yolda(F, '/clinic')
+  } else await git(F, '/clinic')
+  await F.waitForSelector('[data-alan=klinik-katil]', { timeout: 60000 })
+  await tara(F, 'clinic: joining with a code, before any role')
+  await katil(F, kodlar['on-buro'])
+  if (P.randevu) { await yolda(F, '/desk'); await F.waitForSelector('[data-alan=on-buro-hekim]', { timeout: 60000 }) } else await F.waitForSelector('[data-alan=klinik-basligi][data-konum=on-buro]', { timeout: 60000 })
+  uyeler = await tabloOku('ulke_klinik_uyeleri')
+  kontrol('front desk: joined without choosing a role; four members in the first clinic, one in the second, every code used once', uyeler.filter((u) => u.klinik_id === K1).map((u) => u.konum).sort().join() === 'hekim,muttefik,on-buro,sahip' && uyeler.filter((u) => u.klinik_id === K2).length === 1 && (await tabloOku('hekim_rolu')).every((r) => r.doctor_id !== KL.onBuro) && (await tabloOku('ulke_klinik_davetleri')).filter((d) => d.kullanildi_at).length === 3)
+  if (P.randevu) {
+    kontrol('front desk: the workspace opens, and says in the pack\'s words that no doctor has given anything yet', (await metin(F, '[data-alan=on-buro-hekim] h1')) === KM.onBuro.baslik && (await metin(F, '[data-alan=hekim-yok]')) === KM.onBuro.hekimYok)
+    if (soru === 'rol') {
+      const baglantilar = await F.$$eval('a[href]', (l) => l.map((e) => e.getAttribute('href')))
+      kontrol('front desk: the navigation is the workspace, the clinic and the settings — no patients, no home, no calendar, no tools', ['/patients', '/today', '/calendar', '/tools', '/visit'].every((r) => !baglantilar.includes(adres(r))) && baglantilar.includes(adres('/desk')) && baglantilar.includes(adres('/clinic')) && baglantilar.includes(adres('/settings')), baglantilar.join(' '))
+      await git(F, '/patients')
+      kontrol('front desk: a doctor\'s screen typed into the address bar leads back to the workspace', await yolda(F, '/desk').then(() => true, () => false))
+      await F.waitForSelector('[data-alan=on-buro-hekim]', { timeout: 60000 })
+    }
+    await tara(F, 'front desk: nothing given yet')
+  }
+
+  // ── 6f. the owner's patients: one that will be shared, one that will not; an approved note; an appointment with a reason ──
+  const hastaYap = async (p, ad, dogum) => (await api(p, '/api/ulke/hastalar', { method: 'POST', govde: { ad, dogumTarihi: dogum, cinsiyet: 'male', telefon: P.telefonOrnek, dil: P.hastaDilleri[0] } })).j?.hasta?.id
+  const paylasilan = await hastaYap(S, 'QA-CLINIC Shared Patient', '1980-05-02')
+  const ozel = await hastaYap(S, 'QA-CLINIC Private Patient', '1975-11-20')
+  const hekimHastasi = await hastaYap(H, 'QA-CLINIC Doctor Two Patient', '1990-01-15')
+  writeFileSync(GUNLUK, ''); writeFileSync(SENARYO, JSON.stringify({ stt: 'yuksek', model: 'tamam' }))
+  await git(S, `/visit?hasta=${paylasilan}`)
+  await S.waitForSelector('input[name=riza]'); await S.click('input[name=riza]')
+  await S.waitForFunction(() => !document.querySelector('.uza-form button.uza-dugme').disabled)
+  await S.click('.uza-form button.uza-dugme'); await S.waitForSelector('.uza-sure', { timeout: 20000 }); await bekle(2600)
+  await S.click('.uza-kayit .uza-dugme')
+  await S.waitForFunction(() => new URLSearchParams(location.search).has('not'), { timeout: 120000 })
+  await S.waitForSelector('#uza-not-s', { timeout: 60000 })
+  const klinikNotu = new URL(S.url()).searchParams.get('not')
+  await S.click('[data-eylem=onayla]'); await S.waitForSelector('[data-bolum=s]', { timeout: 30000 })
+  // a second visit of the same patient whose note stays a DRAFT: no share and no cover may ever show it
+  await git(S, `/visit?hasta=${paylasilan}`)
+  await S.waitForSelector('input[name=riza]'); await S.click('input[name=riza]')
+  await S.waitForFunction(() => !document.querySelector('.uza-form button.uza-dugme').disabled)
+  await S.click('.uza-form button.uza-dugme'); await S.waitForSelector('.uza-sure', { timeout: 20000 }); await bekle(2600)
+  await S.click('.uza-kayit .uza-dugme')
+  await S.waitForFunction(() => new URLSearchParams(location.search).has('not'), { timeout: 120000 })
+  await S.waitForSelector('#uza-not-s', { timeout: 60000 })
+  const taslakNot = new URL(S.url()).searchParams.get('not')
+  let sure = 30
+  if (P.randevu) {
+    sure = (await api(S, '/api/ulke/calisma-duzeni')).j.sureSecenekleri[0]
+    const rnd = await api(S, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: paylasilan, gun: yarin, saat: '10:00', sureDk: sure, neden: 'QA-REASON-PRIVATE', yineDe: true } })
+    kontrol('the owner\'s own patients, an approved note, a draft and an appointment with a reason exist (the doctor\'s own routes, unchanged)', !!paylasilan && !!ozel && !!hekimHastasi && !!klinikNotu && !!taslakNot && taslakNot !== klinikNotu && rnd.s === 200, `${rnd.s} ${rnd.t}`)
+  } else kontrol('the owner\'s own patients, an approved note and a draft exist (the doctor\'s own routes, unchanged)', !!paylasilan && !!ozel && !!hekimHastasi && !!klinikNotu && !!taslakNot && taslakNot !== klinikNotu)
+
+  // ── 6g. A POSITION ALONE OPENS NO PATIENT: before any permission is given, every member is answered "does not exist" ──
+  {
+    const once = JSON.stringify(await tabloOku('ulke_klinik_erisim_kayitlari'))
+    const c = []
+    for (const p of [H, M, F, D]) {
+      c.push(await api(p, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}`), await api(p, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}&kart=1`), await api(p, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&q=QA-CLINIC`))
+      c.push(await api(p, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&q=QA-CLINIC`), await api(p, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&hasta=${paylasilan}`))
+      c.push(await api(p, '/api/ulke/klinik/on-buro', { method: 'POST', govde: { hekimId: KL.sahip, islem: 'hasta', ad: 'QA-CLINIC Intruder', dil: P.hastaDilleri[0] } }))
+      if (P.randevu) c.push(await api(p, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&gun=${yarin}`), await api(p, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&gun=${yarin}`), await api(p, '/api/ulke/klinik/on-buro', { method: 'POST', govde: { hekimId: KL.sahip, islem: 'randevu', hastaId: paylasilan, gun: yarin, saat: '15:00', sureDk: sure, yineDe: true } }))
+      if (P.portal) c.push(await api(p, '/api/ulke/klinik/on-buro', { method: 'POST', govde: { hekimId: KL.sahip, islem: 'portal', hastaId: paylasilan } }))
+      // … and the doctor's own routes, with the owner's patient id
+      c.push(await api(p, `/api/ulke/hasta?id=${paylasilan}`), await api(p, `/api/ulke/not?id=${klinikNotu}`))
+    }
+    kontrol(`A POSITION ALONE OPENS NO PATIENT: a doctor, an allied professional and the front desk of the same clinic, and the owner of another, are each answered exactly "does not exist" on ${c.length} requests about the owner's patient — and nothing was written, not even to the record`, yokMu(...c) && JSON.stringify(await tabloOku('ulke_klinik_erisim_kayitlari')) === once && (await tabloOku('ulke_hastalar')).every((h) => h.doctor_id !== KL.sahip || [paylasilan, ozel].includes(h.id)), [...new Set(c.map((r) => `${r.s} ${r.t}`))].join(' | '))
+    // the OWNER of the clinic and another doctor's patient: the owner's position opens nothing either
+    const s = [await api(S, `/api/ulke/klinik/paylasilan?hekim=${KL.hekim}&hasta=${hekimHastasi}`), await api(S, `/api/ulke/klinik/paylasilan?hekim=${KL.hekim}&q=QA-CLINIC`), await api(S, `/api/ulke/klinik/on-buro?hekim=${KL.hekim}&q=QA-CLINIC`), await api(S, `/api/ulke/hasta?id=${hekimHastasi}`)]
+    const adina = await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { hekimId: KL.hekim, alanId: KL.onBuro, tur: 'on-buro-hasta' } })
+    kontrol(`the clinic's OWNER and a member doctor's patient: "does not exist" by position; and a permission entered on that doctor's behalf is ${K.sahipHekimAdinaVerebilir ? 'accepted (the pack allows it, a lawyer is named)' : 'refused (the pack does not allow it)'}`, yokMu(...s) && (K.sahipHekimAdinaVerebilir ? adina.s === 200 || adina.s === 409 : adina.s === 403 && adina.t === '{"code":"YETKI_YOK"}'), `${adina.s} ${adina.t}`)
+    if (P.randevu) {
+      const t = await api(S, `/api/ulke/klinik/takvim?gun=${yarin}`)
+      const ham = JSON.stringify(t.j)
+      kontrol('the clinic\'s schedule (owner): when a member is busy, and nothing of any patient — no name, no id, no reason', t.s === 200 && t.j.dilimler.length === 1 && anahtarlar(t.j.dilimler[0]) === 'baslangic,bitis,durum,gun,hekimId,saat,sureDk' && !ham.includes(paylasilan) && !ham.includes('QA-CLINIC') && !ham.includes('QA-REASON') && yokMu(await api(H, `/api/ulke/klinik/takvim?gun=${yarin}`), await api(F, `/api/ulke/klinik/takvim?gun=${yarin}`)), ham.slice(0, 200))
+    }
+  }
+
+  // ── 6h. "who can help with my patients": the owner, as a doctor, gives permissions one at a time ──
+  await klinikAc(S, 'yetkiler')
+  kontrol('permissions: the screen opens in the pack\'s words, with nothing given and an empty record', (await metin(S, '[data-alan=yetkiler-basligi] h1')) === KM.yetki.baslik && (await metin(S, '[data-alan=verilen-yetkiler]')).includes(KM.yetki.verilenBos) && (await metin(S, '[data-alan=erisim-kaydi]')).includes(KM.kayit.bos))
+  const turSecenekleri = async () => S.$$eval('[data-alan=yetki-turu] option', (l) => l.map((e) => e.value).filter(Boolean).join())
+  const ver = async (alanId, tur, once) => {
+    await S.select('[data-alan=yetki-uyesi]', alanId); await S.waitForSelector('[data-alan=yetki-turu]')
+    await S.select('[data-alan=yetki-turu]', tur)
+    if (once) await once()
+    await S.click('[data-eylem=yetki-ver]')
+  }
+  const verildiMi = (alanId, tur) => S.waitForFunction((t) => !!document.querySelector(`[data-alan=verilen-yetkiler] li[data-tur="${t}"][data-gecerli=evet]`), { timeout: 30000 }, tur).then(() => true, () => false)
+  if (BURO_TURLERI.length) {
+    await S.select('[data-alan=yetki-uyesi]', KL.onBuro); await S.waitForSelector('[data-alan=yetki-turu]')
+    kontrol(`permissions: for the front desk the screen offers exactly the capabilities this pack has for it (${BURO_TURLERI.join(', ')})`, (await turSecenekleri()) === BURO_TURLERI.join())
+    if (BURO_PORTAL) {
+      await S.select('[data-alan=yetki-turu]', 'on-buro-portal')
+      const cumle = await metin(S, '[data-alan=yetki-aciklamasi]')
+      const pinSozcugu = (/^[\p{L}\p{N}]+/u.exec(KM.onBuro.pin.trim())?.[0] ?? '').toLocaleLowerCase()
+      kontrol('permissions: BEFORE the portal capability is given, the doctor reads the pack\'s plain sentence — the member will see the patient\'s link and PIN', cumle === KM.yetkiAciklama['on-buro-portal'] && pinSozcugu.length > 0 && cumle.toLocaleLowerCase().includes(pinSozcugu), cumle)
+      await S.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-portal-sentence.png`), fullPage: true })
+    }
+    let hepsi = true
+    for (const t of BURO_TURLERI) { await ver(KL.onBuro, t); hepsi = (await verildiMi(KL.onBuro, t)) && hepsi }
+    kontrol('permissions: given to the front desk one at a time; each is a row for THIS doctor, THIS member and this clinic, and each is in the record', hepsi && (await tabloOku('ulke_klinik_yetkileri')).filter((y) => y.alan_id === KL.onBuro).every((y) => y.doctor_id === KL.sahip && y.klinik_id === K1 && y.ulke === P.kod && y.kaydeden_id === KL.sahip && !y.iptal_at) && (await tabloOku('ulke_klinik_erisim_kayitlari')).filter((k) => k.olay === 'verildi' && k.alan_id === KL.onBuro).length === BURO_TURLERI.length)
+    await ver(KL.onBuro, BURO_TURLERI[0])
+    kontrol('permissions: giving the same one twice changes nothing and says so', (await bilgiBekle(S, KM.yetki.zatenVar)) && (await tabloOku('ulke_klinik_yetkileri')).filter((y) => y.alan_id === KL.onBuro).length === BURO_TURLERI.length)
+  }
+  if (PAYLASIM) {
+    await S.select('[data-alan=yetki-uyesi]', KL.muttefik); await S.waitForSelector('[data-alan=yetki-turu]')
+    kontrol('permissions: an allied professional can be given a share of ONE named patient, and nothing else', (await turSecenekleri()) === 'paylasim')
+    await ver(KL.muttefik, 'paylasim', async () => {
+      await yazDeger(S, '[data-alan=yetki-hasta-arama]', 'QA-CLINIC'); await S.click('[data-eylem=yetki-hasta-ara]')
+      await S.waitForSelector('[data-alan=yetki-hastasi]', { timeout: 30000 })
+      await S.select('[data-alan=yetki-hastasi]', paylasilan)
+    })
+    const y = (await verildiMi(KL.muttefik, 'paylasim')) ? (await tabloOku('ulke_klinik_yetkileri')).find((x) => x.tur === 'paylasim') : null
+    kontrol('permissions: the share names the patient, and only that one', !!y && y.patient_id === paylasilan && y.alan_id === KL.muttefik && y.doctor_id === KL.sahip && (await metin(S, '[data-alan=verilen-yetkiler] li[data-tur=paylasim]')).includes('QA-CLINIC Shared Patient'))
+    const baskasi = await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.muttefik, tur: 'paylasim', hastaId: hekimHastasi } })
+    kontrol('permissions: a doctor cannot share ANOTHER doctor\'s patient — "does not exist"', yokMu(baskasi), `${baskasi.s} ${baskasi.t}`)
+  } else if (TUR('paylasim')) {
+    const r = await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.muttefik, tur: 'paylasim', hastaId: paylasilan } })
+    kontrol('permissions: a share is refused for a member whose role the pack does not list for it', r.s === 409, `${r.s} ${r.t}`)
+  }
+  if (VEKALET) {
+    await ver(KL.hekim, 'vekalet', async () => { await yazDeger(S, '[data-alan=vekalet-bitis]', gunSonra(K.vekaletAzamiGun + 5)) })
+    kontrol(`permissions: cover longer than the pack allows (${K.vekaletAzamiGun} days) is refused with the pack's sentence, and nothing is written`, (await hataBekle(S, KM.yetki.hataGecersiz)) && (await tabloOku('ulke_klinik_yetkileri')).every((y) => y.tur !== 'vekalet'))
+    await ver(KL.hekim, 'vekalet', async () => { await yazDeger(S, '[data-alan=vekalet-bitis]', gunSonra(3)) })
+    const y = (await verildiMi(KL.hekim, 'vekalet')) ? (await tabloOku('ulke_klinik_yetkileri')).find((x) => x.tur === 'vekalet') : null
+    kontrol('permissions: cover is given to another doctor for a stated period', !!y && y.alan_id === KL.hekim && !!y.baslangic && !!y.bitis && new Date(y.bitis) > new Date(y.baslangic) && !y.patient_id)
+  }
+  // what the server refuses whatever the screen offers
+  {
+    const once = JSON.stringify(await tabloOku('ulke_klinik_yetkileri'))
+    const r = [
+      await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.diger, tur: 'vekalet', bitisGun: gunSonra(2) } }),      // a doctor of ANOTHER clinic
+      await api(D, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.onBuro, tur: 'on-buro-hasta' } }),                       // another clinic's owner, this clinic's front desk
+      await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.onBuro, tur: 'vekalet', bitisGun: gunSonra(2) } }),      // cover to the front desk
+      await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.hekim, tur: 'on-buro-hasta' } }),                        // a front-desk capability to a doctor
+      await api(F, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.hekim, tur: 'vekalet', bitisGun: gunSonra(2) } }),       // the front desk gives
+      await api(S, '/api/ulke/klinik/yetki', { method: 'POST', govde: { alanId: KL.sahip, tur: 'vekalet', bitisGun: gunSonra(2) } }),       // to oneself
+    ]
+    kontrol('permissions: refused by the server — to a member of another clinic, by another clinic\'s owner, a capability that does not fit the member\'s position, by the front desk, to oneself — and nothing was written', yokMu(r[0], r[1]) && r.slice(2).every((x) => x.s >= 400 && x.s < 500) && JSON.stringify(await tabloOku('ulke_klinik_yetkileri')) === once, r.map((x) => `${x.s} ${x.t}`).join(' | '))
+  }
+  await klinikAc(S, 'yetkiler')
+  await tara(S, 'clinic: who can help with my patients')
+  await S.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-permissions.png`), fullPage: true })
+
+  // ── 6i. the front desk at work ──
+  if (P.randevu && BURO_RANDEVU) {
+    await git(F, '/desk'); await F.waitForSelector('[data-alan=on-buro-hekimi]', { timeout: 60000 })
+    kontrol('front desk: the doctor who gave something is offered, with exactly what was given, and the screen says what the desk does not see', (await F.$$eval('[data-alan=on-buro-hekimi] option', (l) => l.map((e) => `${e.value}|${e.innerText.trim()}`).join())) === `${KL.sahip}|${AD.sahip}` && (await F.$$eval('[data-alan=on-buro-yetkileri] li', (l) => l.map((e) => e.getAttribute('data-tur')).join())) === BURO_TURLERI.join() && (await metin(F, '[data-alan=gordugunuz]')) === KM.onBuro.gordugunuz, `${await F.$$eval('[data-alan=on-buro-hekimi] option', (l) => l.map((e) => `${e.value}|${e.innerText.trim()}`).join())} / ${await F.$$eval('[data-alan=on-buro-yetkileri] li', (l) => l.map((e) => e.getAttribute('data-tur')).join())}`)
+    await F.waitForSelector('[data-alan=on-buro-randevular] [data-eylem=gun-sonraki]', { timeout: 30000 })
+    await F.click('[data-eylem=gun-sonraki]')
+    await F.waitForSelector('[data-alan=on-buro-randevular] li[data-randevu]', { timeout: 30000 })
+    let g = await govde(F)
+    kontrol('front desk: the doctor\'s day — who is coming and when; the REASON of the appointment is not on the screen', g.includes('QA-CLINIC Shared Patient') && (P.saatBicimi === 12 ? /10:00\s?AM/i.test(g) : g.includes('10:00')) && !g.includes('QA-REASON') && !(await F.content()).includes('QA-REASON'))
+    const gunCevabi = await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&gun=${yarin}`)
+    const aramaCevabi = await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&q=QA-CLINIC`)
+    const kartCevabi = await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&hasta=${paylasilan}`)
+    kontrol('front desk: THE ANSWERS HOLD THESE FIELDS AND NO OTHER — an appointment: id, patient, name, time, status; a card: id, name, second name, birth date, phone', anahtarlar(gunCevabi.j?.randevular?.[0]) === 'baslangic,bitis,durum,gun,hastaAdi,hastaId,id,mesaiDisi,saat,sureDk' && aramaCevabi.j?.hastalar?.length === 2 && aramaCevabi.j.hastalar.every((h) => anahtarlar(h) === 'ad,dogumTarihi,id,otaIsmi,telefon') && anahtarlar(kartCevabi.j?.hasta) === 'ad,dogumTarihi,id,otaIsmi,telefon', `${anahtarlar(gunCevabi.j?.randevular?.[0])} | ${anahtarlar(aramaCevabi.j?.hastalar?.[0])}`)
+    const kisa = await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&q=Q`)
+    kontrol('front desk: there is no "all patients" — a search of one character is refused', kisa.s === 400 && kisa.t === '{"code":"ARAMA_KISA"}', `${kisa.s} ${kisa.t}`)
+    await yazDeger(F, '[data-alan=on-buro-arama-girdisi]', 'QA-CLINIC'); await F.click('[data-eylem=on-buro-ara]')
+    await F.waitForSelector(`[data-alan=on-buro-arama] li[data-hasta="${paylasilan}"]`, { timeout: 30000 })
+    await F.click(`[data-alan=on-buro-arama] li[data-hasta="${paylasilan}"] [data-eylem=hasta-sec]`)
+    await F.waitForSelector('[data-alan=on-buro-hasta-karti]', { timeout: 30000 })
+    const dogum = P.tarihDeseni.replace('DD', '02').replace('MM', '05').replace('YYYY', '1980')
+    kontrol(`front desk: the card — name, birth date written the country's way (${dogum}), phone`, (await metin(F, '[data-alan=on-buro-hasta-karti] h2')).includes('QA-CLINIC Shared Patient') && (await metin(F, '[data-alan=kart-bilgisi]')).includes(dogum))
+    await F.click('[data-alan=on-buro-randevular] [data-eylem=durum-geldi]')
+    kontrol('front desk: "arrived" is marked for the doctor\'s appointment; "done" is not offered and not accepted', (await bilgiBekle(F, KM.onBuro.degistirildi)) && (await tabloOku('ulke_randevulari')).some((r) => r.doctor_id === KL.sahip && r.durum === 'geldi') && !(await F.$('[data-eylem=durum-tamamlandi]')) && (await api(F, '/api/ulke/klinik/on-buro', { method: 'PATCH', govde: { hekimId: KL.sahip, randevuId: gunCevabi.j.randevular[0].id, durum: 'tamamlandi' } })).s >= 400 && (await tabloOku('ulke_randevulari')).every((r) => r.doctor_id !== KL.sahip || r.durum !== 'tamamlandi'))
+    await yazDeger(F, '[data-alan=randevu-gunu]', yarin); await yazDeger(F, '[data-alan=randevu-saati]', '11:30')
+    if (!(await F.$eval('[data-alan=yine-de]', (e) => e.checked))) await F.click('[data-alan=yine-de]')
+    await F.click('[data-eylem=on-buro-randevu-al]')
+    const alindi = await bilgiBekle(F, KM.onBuro.alindi)
+    const yeniRandevu = (await tabloOku('ulke_randevulari')).filter((r) => r.doctor_id === KL.sahip && r.patient_id === paylasilan)
+    kontrol('front desk: an appointment is booked FOR THE DOCTOR — the row is the doctor\'s, with no reason', alindi && yeniRandevu.length === 2 && yeniRandevu.every((r) => r.ulke === P.kod) && (await tabloOku('ulke_randevulari')).every((r) => r.doctor_id !== KL.onBuro))
+    await F.click('[data-eylem=on-buro-randevu-al]')
+    kontrol('front desk: a taken time is refused with the pack\'s sentence (double booking is never overridable)', (await hataBekle(F, P.r.form.dolu)) && (await tabloOku('ulke_randevulari')).filter((r) => r.doctor_id === KL.sahip).length === 2)
+    if (BURO_PORTAL) {
+      await F.click('[data-eylem=on-buro-portal-ver]')
+      await F.waitForSelector('[data-alan=portal-pin]', { timeout: 30000 })
+      const pin = await F.$eval('[data-alan=portal-pin]', (e) => e.value), baglanti = await F.$eval('[data-alan=portal-baglanti]', (e) => e.value)
+      const erisim = (await tabloOku('ulke_portal_erisimleri')).filter((e) => e.doctor_id === KL.sahip && e.patient_id === paylasilan && !e.iptal_at)
+      kontrol('front desk: with the portal capability the link and PIN are made for the doctor\'s patient and shown this once — THE MEMBER SEES BOTH (the doctor was told so); the access is the doctor\'s row, and the making of it is in the doctor\'s record', new RegExp(`^\\d{${P.portal.pinHane}}$`).test(pin) && baglanti.startsWith(TABAN) && baglanti.includes('/portal') && erisim.length === 1 && !JSON.stringify(erisim).includes(pin) && (await metin(F, '[data-alan=yeni-erisim]')).includes(KM.onBuro.portalBirKez) && (await tabloOku('ulke_klinik_erisim_kayitlari')).some((k) => k.ne === 'portal-baglantisi' && k.kisi_id === KL.onBuro && k.doctor_id === KL.sahip && k.patient_id === paylasilan && k.olay === 'yazma'))
+    }
+    if (BURO_HASTA) {
+      kontrol('front desk: the new-patient form has no identity number field', !(await F.$('[data-alan=on-buro-yeni-hasta] input[id*=kimlik], [data-alan=on-buro-yeni-hasta] input[name*=kimlik]')))
+      await yazDeger(F, '[data-alan=hasta-adi]', 'QA-CLINIC Desk Created')
+      await F.click('[data-eylem=on-buro-hasta-kaydet]')
+      const kaydedildi = await bilgiBekle(F, KM.onBuro.hastaKaydedildi)
+      const satirlar = await tabloOku('ulke_hastalar')
+      kontrol('front desk: a patient is created FOR THE DOCTOR — the row is the doctor\'s, never the desk\'s own, and the name is encrypted', kaydedildi && satirlar.filter((h) => h.doctor_id === KL.sahip).length === 3 && satirlar.every((h) => h.doctor_id !== KL.onBuro) && !JSON.stringify(satirlar).includes('QA-CLINIC'))
+    }
+    // what the front desk is never answered, whatever it asks
+    const c = [await api(F, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}`), await api(F, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&q=QA-CLINIC`), await api(F, `/api/ulke/hasta?id=${paylasilan}`), await api(F, `/api/ulke/not?id=${klinikNotu}`), await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.hekim}&q=QA-CLINIC`), await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&hasta=${hekimHastasi}`), await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.diger}&q=QA`)]
+    const kendi = await api(F, '/api/ulke/klinik/kayit')
+    kontrol('front desk: no note, no file, no patient of a doctor who gave nothing, no patient of another clinic — "does not exist"; and it reads no record', yokMu(...c) && kendi.s === 200 && JSON.stringify(kendi.j) === '{"kayitlar":[]}', c.map((r) => r.s).join(' '))
+    await tara(F, 'front desk: at work')
+    await F.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-desk.png`), fullPage: true })
+    await F.setViewport({ width: TEL.genislik, height: TEL.yukseklik, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
+    await git(F, '/desk'); await F.waitForSelector('[data-alan=on-buro-hekimi]', { timeout: 60000 })
+    kontrol('front desk: on a phone-sized screen the page does not scroll sideways', (await F.evaluate(() => document.documentElement.scrollWidth)) <= TEL.genislik + 1, String(await F.evaluate(() => document.documentElement.scrollWidth)))
+    await F.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-desk-phone.png`), fullPage: true })
+    await F.setViewport({ width: MASA.genislik, height: MASA.yukseklik, deviceScaleFactor: 1 })
+  }
+
+  // ── 6j. the allied professional: one patient's approved notes, read-only ──
+  if (PAYLASIM) {
+    await klinikAc(M, 'paylasilan')
+    await M.waitForSelector('[data-alan=paylasilanlar] li[data-paylasilan=paylasim]', { timeout: 30000 })
+    await M.waitForFunction(() => document.querySelector('[data-alan=paylasilanlar] li')?.innerText.includes('QA-CLINIC Shared Patient'), { timeout: 30000 })
+    kontrol('share: the allied professional sees the one shared patient, and whose patient it is', (await M.$$('[data-alan=paylasilanlar] li')).length === 1 && (await metin(M, '[data-alan=paylasilanlar] li')).includes(AD.sahip))
+    await M.click('[data-alan=paylasilanlar] [data-eylem=paylasilani-ac]')
+    await M.waitForSelector('[data-alan=paylasilan-notlar] article[data-not]', { timeout: 30000 })
+    const notlar = await M.$$eval('[data-alan=paylasilan-notlar] article[data-not]', (l) => l.map((e) => e.getAttribute('data-not')))
+    kontrol('share: the patient\'s APPROVED note is shown under "read only" — the draft is not, and the section holds nothing to type into or press', JSON.stringify(notlar) === JSON.stringify([klinikNotu]) && (await metin(M, '[data-alan=paylasilan-notlar] [data-alan=salt-okunur]')) === KM.paylasilan.saltOkunur && (await metin(M, '[data-alan=paylasilan-notlar] [data-bolum=s]')).startsWith('SYNTHETIC-S') && (await M.$$('[data-alan=paylasilan-notlar] input, [data-alan=paylasilan-notlar] textarea, [data-alan=paylasilan-notlar] select, [data-alan=paylasilan-notlar] button')).length === 0, notlar.join(' '))
+    const nc = await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}`)
+    kontrol('share: THE ANSWER HOLDS the patient as id, name, second name, birth date (no phone), and each note as its approved content', anahtarlar(nc.j?.hasta) === 'ad,dogumTarihi,id,otaIsmi' && nc.j.notlar.length === 1 && anahtarlar(nc.j.notlar[0]) === 'alanAnahtarlari,dil,icerik,muayeneTarihi,notId,onayTarihi,sablon' && !JSON.stringify(nc.j).includes(taslakNot), anahtarlar(nc.j?.notlar?.[0]))
+    const c = [await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${ozel}`), await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${ozel}&kart=1`), await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&q=QA-CLINIC`), await api(M, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&q=QA-CLINIC`), await api(M, `/api/ulke/hasta?id=${paylasilan}`), await api(M, `/api/ulke/not?id=${klinikNotu}`), ...(P.randevu ? [await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&gun=${yarin}`)] : [])]
+    const yaz = [await api(M, '/api/ulke/klinik/paylasilan', { method: 'POST', govde: { hekim: KL.sahip, hasta: paylasilan } }), await api(M, '/api/ulke/muayene', { method: 'POST', govde: { yol: `${P.kod}/${KL.muttefik}/none.webm`, hastaId: paylasilan, sablon: P.genelSablon, riza: true } }), await api(M, '/api/ulke/not', { method: 'PATCH', govde: { notId: klinikNotu, dil: P.dil, s: 'CHANGED-BY-ALLIED', o: '', a: '', p: '' } })]
+    kontrol('share: the doctor\'s OTHER patient, a search, the appointments, the doctor\'s own routes — "does not exist"; there is no way to write (no such method; the doctor\'s routes do not open by a share)', yokMu(...c) && yaz.every((r) => r.s >= 400) && !JSON.stringify(await tabloOku('ulke_notlar')).includes('CHANGED-BY-ALLIED') && (await tabloOku('ulke_muayeneler')).every((m) => m.doctor_id !== KL.muttefik), [...c, ...yaz].map((r) => r.s).join(' '))
+    await tara(M, 'clinic: a shared patient')
+    await M.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-share.png`), fullPage: true })
+  }
+
+  // ── 6k. cover: another doctor, for the stated period, read-only ──
+  if (VEKALET) {
+    await klinikAc(H, 'paylasilan')
+    await H.waitForSelector('[data-alan=paylasilanlar] li[data-paylasilan=vekalet]', { timeout: 30000 })
+    await H.click('[data-alan=paylasilanlar] [data-eylem=paylasilani-ac]')
+    await H.waitForSelector('[data-alan=vekalet-hasta-arama]', { timeout: 30000 })
+    await yazDeger(H, '[data-alan=vekalet-arama]', 'QA-CLINIC'); await H.click('[data-eylem=vekalet-ara]')
+    await H.waitForSelector('[data-alan=vekalet-hasta-arama] [data-eylem=vekalet-hasta-ac]', { timeout: 30000 })
+    const bulunan = (await metin(H, '[data-alan=vekalet-hasta-arama]'))
+    kontrol('cover: the covering doctor finds the covered doctor\'s patients by name, under "read only"', bulunan.includes('QA-CLINIC Shared Patient') && bulunan.includes('QA-CLINIC Private Patient') && !bulunan.includes('Doctor Two Patient') && (await metin(H, '[data-alan=vekalet-hasta-arama] [data-alan=salt-okunur]')) === KM.paylasilan.saltOkunur)
+    const sira = await H.$$eval('[data-alan=vekalet-hasta-arama] li', (l) => l.findIndex((e) => e.innerText.includes('Shared Patient')))
+    await (await H.$$('[data-alan=vekalet-hasta-arama] [data-eylem=vekalet-hasta-ac]'))[sira].click()
+    await H.waitForSelector('[data-alan=paylasilan-notlar] article[data-not]', { timeout: 30000 })
+    kontrol('cover: a patient\'s approved note is read; the draft is not shown', JSON.stringify(await H.$$eval('[data-alan=paylasilan-notlar] article[data-not]', (l) => l.map((e) => e.getAttribute('data-not')))) === JSON.stringify([klinikNotu]))
+    if (P.randevu) kontrol('cover: the covered doctor\'s appointments are listed', !!(await H.$('[data-alan=vekalet-randevular]')))
+    const sayilar = async () => JSON.stringify([(await tabloOku('ulke_muayeneler')).length, (await tabloOku('ulke_randevulari')).length, (await tabloOku('ulke_hastalar')).length, JSON.stringify(await tabloOku('ulke_notlar')).length])
+    const once = await sayilar()
+    const yaz = [
+      await api(H, '/api/ulke/muayene', { method: 'POST', govde: { yol: `${P.kod}/${KL.hekim}/none.webm`, hastaId: paylasilan, sablon: P.genelSablon, riza: true } }),
+      await api(H, '/api/ulke/not', { method: 'PATCH', govde: { notId: taslakNot, dil: P.dil, s: 'CHANGED-UNDER-COVER', o: '', a: '', p: '' } }),
+      await api(H, '/api/ulke/not/onayla', { method: 'POST', govde: { notId: taslakNot } }),
+      await api(H, `/api/ulke/hasta?id=${paylasilan}`),
+      ...(P.randevu ? [await api(H, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: paylasilan, gun: yarin, saat: '16:00', sureDk: sure, yineDe: true } })] : []),
+      ...(P.portal ? [await api(H, '/api/ulke/hasta-portali', { method: 'POST', govde: { hastaId: paylasilan } })] : []),
+      await api(H, '/api/ulke/klinik/paylasilan', { method: 'POST', govde: { hekim: KL.sahip, hasta: paylasilan } }),
+    ]
+    kontrol('cover is READ-ONLY: a visit, a change to a note, an approval, the patient\'s file, an appointment, a portal link — the doctor\'s own routes do not open by cover, and nothing was written', yaz.every((r) => r.s >= 400) && (await sayilar()) === once && !JSON.stringify(await tabloOku('ulke_notlar')).includes('CHANGED-UNDER-COVER') && !(await tabloOku('ulke_notlar')).find((n) => n.id === taslakNot)?.approved_at, yaz.map((r) => r.s).join(' '))
+    await tara(H, 'clinic: cover')
+    await H.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-cover.png`), fullPage: true })
+  }
+
+  // ── 6l. THE RECORD: the doctor reads who did what about their patients; nobody else reads it ──
+  {
+    await klinikAc(S, 'yetkiler')
+    await S.waitForSelector('[data-alan=erisim-kaydi] li', { timeout: 30000 })
+    const satirlar = await S.$$eval('[data-alan=erisim-kaydi] li', (l) => l.map((e) => e.innerText.replace(/\s+/g, ' ')))
+    const kayitlar = await tabloOku('ulke_klinik_erisim_kayitlari')
+    const bekle_ = [
+      ...(P.randevu && BURO_RANDEVU ? [[AD.onBuro, KM.kayit.ne['hasta-arama']], [AD.onBuro, KM.kayit.ne['randevu-olusturma']], [AD.onBuro, KM.kayit.ne['randevu-degisiklik']]] : []),
+      ...(P.randevu && BURO_RANDEVU && BURO_PORTAL ? [[AD.onBuro, KM.kayit.ne['portal-baglantisi']]] : []),
+      ...(PAYLASIM ? [[AD.muttefik, KM.kayit.ne['not-listesi']]] : []),
+      ...(VEKALET ? [[AD.hekim, KM.kayit.ne['hasta-arama']], [AD.hekim, KM.kayit.ne['not-listesi']]] : []),
+    ]
+    const eksik = bekle_.filter(([kim, ne]) => !satirlar.some((s) => s.includes(kim) && s.includes(ne)))
+    kontrol(`the record: the doctor reads, in the pack's words, who was given what and who read or wrote what (${satirlar.length} lines on the screen for ${kayitlar.length} rows)`, eksik.length === 0 && satirlar.length === Math.min(kayitlar.filter((k) => k.doctor_id === KL.sahip).length, 200) && satirlar.some((s) => s.includes('QA-CLINIC Shared Patient')), eksik.map((x) => x.join(': ')).join(' | '))
+    kontrol('the record: every row is the owning doctor\'s, names who acted and carries this country; a read or a write names what', kayitlar.length > 5 && kayitlar.every((k) => k.ulke === P.kod && k.doctor_id === KL.sahip && !!k.kisi_id && !!k.alan_id && (['okuma', 'yazma'].includes(k.olay) ? !!k.ne : k.ne == null)))
+    const digerleri = [await api(H, '/api/ulke/klinik/kayit'), await api(M, '/api/ulke/klinik/kayit'), await api(F, '/api/ulke/klinik/kayit'), await api(D, '/api/ulke/klinik/kayit')]
+    kontrol('the record: no other member, and no other clinic\'s owner, reads a line of it (each reads their own, which is empty)', digerleri.every((r) => r.s === 200 && JSON.stringify(r.j) === '{"kayitlar":[]}'))
+    const sil = await fetch(`${SUPA}/rest/v1/ulke_klinik_erisim_kayitlari?ulke=eq.${P.kod}&doctor_id=eq.${KL.sahip}`, { method: 'DELETE', headers: { Authorization: 'Bearer sahte-servis' } })
+    const degis = await fetch(`${SUPA}/rest/v1/ulke_klinik_erisim_kayitlari?ulke=eq.${P.kod}&doctor_id=eq.${KL.sahip}`, { method: 'PATCH', headers: { Authorization: 'Bearer sahte-servis', 'Content-Type': 'application/json' }, body: JSON.stringify({ ne: 'baska' }) })
+    kontrol('the record: a row is neither deleted nor changed, even by a statement with the server\'s own key (the stand-in holds the trigger of migration 145)', sil.status === 409 && degis.status === 409 && (await tabloOku('ulke_klinik_erisim_kayitlari')).length === kayitlar.length, `${sil.status} ${degis.status}`)
+    await S.screenshot({ path: join(CIKTI, `genel-${P.kod}-clinic-record.png`), fullPage: true })
+  }
+
+  // ── 6m. the other clinic sees nothing of this one ──
+  {
+    const kendi = await api(D, '/api/ulke/klinik')
+    const ham = JSON.stringify(kendi.j)
+    const c = [
+      await api(D, '/api/ulke/klinik/uye', { method: 'DELETE', govde: { hesapId: KL.onBuro } }), await api(D, '/api/ulke/klinik/uye', { method: 'PATCH', govde: { hesapId: KL.hekim, konum: 'yonetici' } }),
+      await api(D, '/api/ulke/klinik/davet', { method: 'DELETE', govde: { davetId: iptalDavetId } }),
+      await api(D, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&q=QA-CLINIC`), await api(D, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}`),
+      ...((await tabloOku('ulke_klinik_yetkileri')).slice(0, 2).map((y) => api(D, '/api/ulke/klinik/yetki', { method: 'DELETE', govde: { yetkiId: y.id } }))),
+    ]
+    const cc = await Promise.all(c)
+    const dy = await api(D, '/api/ulke/klinik/yetki')
+    kontrol('ANOTHER CLINIC: its owner sees its own clinic and nobody of the first; removing or promoting a member, withdrawing an invitation or a permission, and every patient route of the first clinic answer "does not exist"', kendi.s === 200 && kendi.j.klinik?.ad === 'QA Clinic Two' && kendi.j.klinik.uyeler.length === 1 && !ham.includes('QA Clinic One') && [KL.sahip, KL.hekim, KL.muttefik, KL.onBuro].every((id) => !ham.includes(id)) && yokMu(...cc) && JSON.stringify(dy.j) === '{"verilen":[],"alinan":[]}' && (await tabloOku('ulke_klinik_uyeleri')).filter((u) => u.klinik_id === K1).length === 4, cc.map((r) => r.s).join(' '))
+  }
+
+  // ── 6n. withdrawn, moved, removed: a permission ends AT ONCE ──
+  if (P.randevu && BURO_RANDEVU) {
+    await klinikAc(S, 'yetkiler')
+    await S.waitForSelector('[data-alan=verilen-yetkiler] li[data-tur=on-buro-randevu] [data-eylem=yetki-geri-al]', { timeout: 30000 })
+    const onceKayit = (await tabloOku('ulke_klinik_erisim_kayitlari')).length
+    await S.click('[data-alan=verilen-yetkiler] li[data-tur=on-buro-randevu] [data-eylem=yetki-geri-al]')
+    const geri = await bilgiBekle(S, KM.yetki.geriAlindi)
+    const sonra = [await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&gun=${yarin}`), await api(F, `/api/ulke/klinik/on-buro?hekim=${KL.sahip}&q=QA-CLINIC`), await api(F, '/api/ulke/klinik/on-buro', { method: 'POST', govde: { hekimId: KL.sahip, islem: 'randevu', hastaId: paylasilan, gun: yarin, saat: '17:00', sureDk: sure, yineDe: true } })]
+    kontrol('WITHDRAWN: the front desk\'s very next request for the doctor\'s day, a patient or a booking is "does not exist"; the withdrawal is in the record and the refused requests are not', geri && yokMu(...sonra) && (await tabloOku('ulke_klinik_erisim_kayitlari')).length === onceKayit + 1 && (await tabloOku('ulke_klinik_erisim_kayitlari')).at(-1).olay === 'geri-alindi', sonra.map((r) => r.s).join(' '))
+    await git(F, '/desk'); await F.waitForSelector('[data-alan=on-buro-hekim]', { timeout: 60000 })
+    await F.waitForFunction(() => !!document.querySelector('[data-alan=on-buro-yetkileri], [data-alan=hekim-yok]'), { timeout: 30000 })
+    kontrol('WITHDRAWN: the workspace no longer draws the day or the search', !(await F.$('[data-alan=on-buro-randevular]')) && !(await F.$('[data-alan=on-buro-arama]')) && !(await F.$('[data-alan=on-buro-yetkileri] li[data-tur=on-buro-randevu]')))
+  }
+  if (PAYLASIM) {
+    await klinikAc(S)
+    await S.waitForSelector(`li[data-uye="${KL.muttefik}"] [data-eylem=konum-degistir]`, { timeout: 30000 })
+    await S.select(`li[data-uye="${KL.muttefik}"] [data-eylem=konum-degistir]`, 'hekim')
+    const degisti = await bilgiBekle(S, KM.klinik.degistirildi)
+    const y = (await tabloOku('ulke_klinik_yetkileri')).find((x) => x.tur === 'paylasim')
+    kontrol('A POSITION IS CHANGED: every permission of that member ends at once — the share is withdrawn, the record says "ended", and the next read is "does not exist"', degisti && !!y?.iptal_at && (await tabloOku('ulke_klinik_erisim_kayitlari')).some((k) => k.olay === 'bitti' && k.yetki_id === y.id && k.kisi_id === KL.sahip) && yokMu(await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}`), await api(M, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}&kart=1`)) && (await metin(S, '[data-alan=klinik-uyeler]')).includes(KM.klinik.konumUyari))
+  }
+  {
+    await klinikAc(S)
+    await S.waitForSelector(`li[data-uye="${KL.hekim}"] [data-eylem=uye-cikar]`, { timeout: 30000 })
+    const kayitOnce = (await tabloOku('ulke_klinik_erisim_kayitlari')).filter((k) => k.kisi_id === KL.hekim).length
+    await S.click(`li[data-uye="${KL.hekim}"] [data-eylem=uye-cikar]`)
+    await S.waitForSelector(`li[data-uye="${KL.hekim}"] [role=alertdialog]`, { timeout: 30000 })
+    const soruldu = (await metin(S, `li[data-uye="${KL.hekim}"] [role=alertdialog]`)).includes(KM.klinik.cikarOnay.replace('%', AD.hekim))
+    await S.click(`li[data-uye="${KL.hekim}"] [data-eylem=cikar-onayla]`)
+    const cikti = await bilgiBekle(S, KM.klinik.cikarildi)
+    const hk = await api(H, '/api/ulke/klinik')
+    kontrol('A MEMBER IS REMOVED (asked first, in the pack\'s words): the membership row is gone and every permission given by or to that member with it; cover opens nothing from the next request; the removed account is in no clinic; what it read STAYS in the doctor\'s record', soruldu && cikti && (await tabloOku('ulke_klinik_uyeleri')).every((u) => u.doctor_id !== KL.hekim) && (await tabloOku('ulke_klinik_yetkileri')).every((y) => y.alan_id !== KL.hekim && y.doctor_id !== KL.hekim) && yokMu(await api(H, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&q=QA-CLINIC`), await api(H, `/api/ulke/klinik/paylasilan?hekim=${KL.sahip}&hasta=${paylasilan}`)) && hk.j.klinik === null && (await tabloOku('ulke_klinik_erisim_kayitlari')).filter((k) => k.kisi_id === KL.hekim).length === kayitOnce && (!VEKALET || kayitOnce > 0))
+    const hastasi = await api(H, `/api/ulke/hasta?id=${hekimHastasi}`)
+    kontrol('the removed doctor keeps their own patients: leaving a clinic takes no patient from anybody', hastasi.s === 200 && hastasi.j?.hasta?.id === hekimHastasi)
+  }
+
+  // ── 6o. the shared database ──
+  {
+    const tablolar = ['ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari']
+    const yabanci = []
+    let toplam = 0
+    for (const ad of tablolar) for (const s of await tabloOku(ad)) { toplam++; if (s.ulke !== P.kod) yabanci.push(`${ad}:${s.ulke}`) }
+    kontrol(`clinic accounts: every row carries this country's code (${toplam} rows in ${tablolar.length} tables)`, toplam > 15 && yabanci.length === 0, yabanci.join(' '))
+    const istekler = (await (await fetch(`${SUPA}/__gunluk`)).json()).filter((x) => /ulke_klinik/.test(x))
+    kontrol(`clinic accounts: every statement the server sent about a clinic named the country (${istekler.length} statements)`, istekler.length > 50 && istekler.every((x) => /\/rpc\//.test(x) || x.startsWith('POST ') || /[?&]ulke=eq\.[a-z]{2}(&|$)/.test(x)))
+  }
+  for (const p of [S, D, H, M, F]) await p.close()
 }
 
 await tarayici.close()

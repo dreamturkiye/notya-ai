@@ -26,6 +26,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { formIste } from '../intake/form'
 import type { HastaFormuIcerigi } from '../intake/tipler'
 import { portalErisimVer } from '../portal/erisim'
+import { KLINIK_YETKI_TURLERI } from '../tipler'
 import { ulkePaketi } from '../ulke'
 import { hastaGetir, hastaGirdisiHatasi, hastaOlustur, hastalariListele, type Cinsiyet, type Hasta, type HastaGirdisi } from '../uygulama/hastalar'
 import { randevuDurumDegistir, randevuGetir, randevuOlustur, randevuTasi, randevulariListele, type Randevu, type RandevuDurumu, type RandevuRetKodu, type ZamanGirdisi } from '../uygulama/randevular'
@@ -57,7 +58,8 @@ export async function onBuroHekimleri(supabase: SupabaseClient, benId: string, s
     if (!h.yetkiler.includes(y.tur)) h.yetkiler.push(y.tur)
     harita.set(y.hekimId, h)
   }
-  return [...harita.values()].sort((a, b) => a.ad.localeCompare(b.ad, ulkePaketi().bicim.yerel))
+  // The capabilities in the kit's own order, whatever order they were given in: the screen does not reshuffle.
+  return [...harita.values()].map((h) => ({ ...h, yetkiler: KLINIK_YETKI_TURLERI.filter((t) => h.yetkiler.includes(t)) })).sort((a, b) => a.ad.localeCompare(b.ad, ulkePaketi().bicim.yerel))
 }
 
 /** That doctor's appointments on the `gunSayisi` days from `ilkGun`, as the front desk sees them. null = no grant (or not readable). */

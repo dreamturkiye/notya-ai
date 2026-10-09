@@ -116,10 +116,11 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       const rolTamam = Boolean(rol) || roller().length === 0
       // NOTYA-ULKE-KLINIK-01 — only an account WITHOUT a role is asked whether it is a clinic's front desk (one request,
       // and none for anybody who has chosen a role): a front-desk member needs no role, and works on the front-desk
-      // workspace, the clinic's screen and the settings. The clinic's screen is open to any account that has
-      // answered the language question, so that an invitation code can be entered before a role is chosen.
+      // workspace, the clinic's screen and the settings. (In a country that has no roles at all, nobody has one, and
+      // every account is asked.) The clinic's screen is open to any account that has answered the language question,
+      // so that an invitation code can be entered before a role is chosen.
       let onBuro = false
-      if (dilSoruldu && !rolTamam && ozellikAcik('klinikHesaplari')) {
+      if (dilSoruldu && !rol && ozellikAcik('klinikHesaplari')) {
         try { const kr = await api('/api/ulke/klinik'); onBuro = kr.ok && kr.j.klinik?.konum === 'on-buro' } catch { return }
         if (iptal) return
       }
