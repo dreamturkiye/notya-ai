@@ -258,7 +258,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       const html = cerceve(f, 'hastalar', React.createElement(Hastalar.YeniHastaGorunumu, { m, dil: f, a: Hastalar.BOS_HASTA, set: () => {}, gonder: () => {}, bekliyor: false, hata: 'dil', telefonOrnek: '+998 90 123 45 67' }))
       const g = gorunurMetin(html)
       const y = m.yeniHasta
-      for (const x of [y.baslik, y.ad, y.otaIsmi, y.istegeBagli, y.dogumTarihi, y.cinsiyet, y.kadin, y.erkek, y.telefon, y.dil, y.ulusalKimlik, y.kaydet, y.iptal, y.dilGerekli]) assert.ok(g.includes(x), x)
+      for (const x of [y.baslik, y.ad, y.otaIsmi, y.istegeBagli, y.dogumTarihi, y.cinsiyet, y.kadin, y.erkek, y.telefon, y.dil, y.ulusalKimlik, y.kaydet, y.iptal, y.dilGerekli]) assert.ok(g.includes(x ?? "\u0000"), String(x))
       const girdiler = [...html.matchAll(/<input\b[^>]*>/g)].map((x) => x[0])
       assert.deepEqual(girdiler.filter((x) => x.includes('name="hasta-dili"')).map((x) => /value="([^"]+)"/.exec(x)![1]), ['uz', 'ru'])
       assert.ok(html.includes('>Русский</span>'), 'Russian is offered in Russian')

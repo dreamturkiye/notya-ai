@@ -41,6 +41,9 @@ export type Hesap = {
   rol: string | null
   /** false = the first-login language question is still to be answered. */
   dilSoruldu: boolean
+  /** The account's time zone and the zones it may choose — present only where the country has more than one. */
+  saatDilimi?: string
+  saatDilimleri?: readonly string[]
 }
 export type ApiCevabi = { ok: boolean; status: number; j: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
 /** `yol` is a ROUTE of the API ('/api/ulke/hesap'); the call adds the country's path prefix. */
@@ -106,7 +109,8 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       if (dilSoruldu && rolTamam && ekran === 'baslangic') { window.location.replace(YOL.bugun); return }
       // Every day and hour the screens write from now on is in the account's own time zone (one of the pack's list).
       hesapSaatDilimiAyarla(r.j.saatDilimi)
-      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu })
+      const dilimler = Array.isArray(r.j.saatDilimleri) ? (r.j.saatDilimleri as unknown[]).filter((x): x is string => typeof x === 'string') : []
+      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}) })
     })()
     return () => { iptal = true }
   }, [api, cikis, ekran])

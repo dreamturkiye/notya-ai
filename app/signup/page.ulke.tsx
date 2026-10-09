@@ -7,7 +7,8 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import DavetliKayitFormu from '@/components/ulke/DavetliKayitFormu'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { kayitKoduGerekliMi } from '@/lib/ulke/davet'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { dilliYol, dilSecenekleri, sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
@@ -21,6 +22,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
   const dil = sayfaDili(searchParams)
   return (
     <DavetliKayitFormu
+      kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
       dil={dil}
       metin={yuzeyMetinleri('davetliKayit', dil)}
       anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}

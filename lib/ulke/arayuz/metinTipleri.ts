@@ -36,6 +36,9 @@ export type UygulamaMetni = {
     readonly kaydedilemedi: string
   }
   readonly ayarlar: {
+    /** Time zone of the account. REQUIRED where the pack lists more than one zone; not read otherwise. */
+    readonly saatDilimi?: string
+    readonly saatDilimiIzoh?: string
     readonly baslik: string
     readonly dilBolumu: string
     readonly arayuzDili: string
@@ -74,7 +77,8 @@ export type UygulamaMetni = {
   readonly yeniHasta: {
     readonly baslik: string
     readonly ad: string
-    readonly otaIsmi: string
+    /** Label of the second name field (patronymic, middle name). REQUIRED where the pack has `adAlanlari.ikinciAd`; not read otherwise. */
+    readonly otaIsmi?: string
     readonly istegeBagli: string
     readonly dogumTarihi: string
     readonly cinsiyet: string
@@ -82,7 +86,8 @@ export type UygulamaMetni = {
     readonly kadin: string
     readonly telefon: string
     readonly dil: string
-    readonly ulusalKimlik: string
+    /** Label of the national identity number. REQUIRED where the pack has `ulusalKimlik`; not read otherwise. */
+    readonly ulusalKimlik?: string
     readonly kaydet: string
     readonly kaydediliyor: string
     readonly iptal: string

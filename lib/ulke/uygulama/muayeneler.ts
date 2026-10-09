@@ -12,6 +12,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { hastaAdlari } from './hastalar'
 import { ulkeGunBasi } from './gun'
+import { hesapSaatDilimi } from './saatDilimi'
 import { ulkeTablosu } from './tablolar'
 
 export type MuayeneOzeti = {
@@ -56,7 +57,7 @@ export async function bugunkuMuayeneler(supabase: SupabaseClient, doktorId: stri
   const { data, error } = await ulkeTablosu(supabase, 'ulke_muayeneler')
     .select('id, patient_id, started_at, created_at')
     .eq('doctor_id', doktorId)
-    .gte('started_at', ulkeGunBasi().toISOString())
+    .gte('started_at', ulkeGunBasi(new Date(), await hesapSaatDilimi(supabase, doktorId)).toISOString())
     .order('started_at', { ascending: false })
     .limit(100)
   if (error || !data) return null

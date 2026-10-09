@@ -15,6 +15,7 @@ import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolSecimi } from './RolFormu'
 import { asistanAdi } from './Asistan'
 import { dilBirlestir, dilSecimiVarMi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
@@ -68,6 +69,31 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
   )
 }
 
+/**
+ * NOTYA-ULKE-SABLON-01 — the account's TIME ZONE, for a country that has more than one. Not drawn at all where the
+ * pack lists one zone. A zone is shown by its international name (a place, not a sentence: there is nothing to translate).
+ */
+export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, sonuc }: {
+  m: UygulamaMetni; dilim: string; dilimler: readonly string[]; sec: (d: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
+}) {
+  return (
+    <section className="uza-kart uza-dar" data-alan="saat-dilimi">
+      <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
+        <div className="uza-alan">
+          <label className="uza-etiket" htmlFor="uza-saat-dilimi">{m.ayarlar.saatDilimi}</label>
+          <select id="uza-saat-dilimi" name="saatDilimi" className="uza-girdi" value={dilim} onChange={(e) => sec(e.target.value)}>
+            {dilimler.map((d) => <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>)}
+          </select>
+        </div>
+        {m.ayarlar.saatDilimiIzoh ? <p className="uza-ipucu">{m.ayarlar.saatDilimiIzoh}</p> : null}
+        <Hata>{sonuc === 'hata' ? m.ayarlar.kaydedilemedi : null}</Hata>
+        <Bilgi>{sonuc === 'tamam' ? m.ayarlar.kaydedildi : null}</Bilgi>
+        <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="saat-dilimi-kaydet">{bekliyor ? m.ayarlar.kaydediliyor : m.ayarlar.kaydet}</button>
+      </form>
+    </section>
+  )
+}
+
 export default function Ayarlar() {
   const u = useUygulama('ayarlar')
   const [d, setD] = useState<AyarDurumu>(() => { const t = temelDil(ulkePaketi().varsayilanDil); return { arayuz: t, not: t, yazi: varsayilanYazi() } })
@@ -75,11 +101,15 @@ export default function Ayarlar() {
   const [bekliyor, setBekliyor] = useState(false)
   const [sonuc, setSonuc] = useState<'tamam' | 'hata' | null>(null)
 
+  const [dilim, setDilim] = useState('')
+  const [dilimBekliyor, setDilimBekliyor] = useState(false)
+  const [dilimSonucu, setDilimSonucu] = useState<'tamam' | 'hata' | null>(null)
+
   const [rol, setRol] = useState('')
   const [rolBekliyor, setRolBekliyor] = useState(false)
   const [rolSonucu, setRolSonucu] = useState<'tamam' | 'hata' | 'gerekli' | null>(null)
 
-  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setHazir(true) } }, [u.hesap, hazir])
+  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setDilim(u.hesap.saatDilimi ?? ''); setHazir(true) } }, [u.hesap, hazir])
 
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
 
@@ -92,6 +122,17 @@ export default function Ayarlar() {
       if (r.ok) { u.hesabiGuncelle({ dil: arayuzDili, notDili }); setSonuc('tamam') } else setSonuc('hata')
     } catch { setSonuc('hata') }
     setBekliyor(false)
+  }
+
+  async function dilimGonder() {
+    if (!u.hesap) return
+    setDilimBekliyor(true); setDilimSonucu(null)
+    try {
+      // The languages are sent as they stand: this request changes the time zone only.
+      const r = await u.api('/api/ulke/tercihler', { method: 'POST', govde: { arayuzDili: u.hesap.dil, notDili: u.hesap.notDili, saatDilimi: dilim } })
+      if (r.ok) { u.hesabiGuncelle({ saatDilimi: dilim }); hesapSaatDilimiAyarla(dilim); setDilimSonucu('tamam') } else setDilimSonucu('hata')
+    } catch { setDilimSonucu('hata') }
+    setDilimBekliyor(false)
   }
 
   async function rolGonder() {
@@ -107,6 +148,7 @@ export default function Ayarlar() {
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="ayarlar" cikis={u.cikis}>
       {dilSecimiVarMi() ? <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
+      {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
       {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
     </Cerceve>
   )

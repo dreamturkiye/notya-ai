@@ -10,7 +10,7 @@
  * structure of its visit notes; it stays changeable in /settings. An account that answered the language question
  * before roles existed is asked only this second question.
  */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Cerceve, Hata, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolGorunumu } from './RolFormu'
@@ -53,6 +53,7 @@ export default function Baslangic() {
   const [rol, setRol] = useState('')
   const [rolHatasi, setRolHatasi] = useState<'gerekli' | 'kaydedilemedi' | null>(null)
   const [hazir, setHazir] = useState(false)
+  const otomatik = useRef(false)
 
   // Start from the language chosen at sign-up.
   useEffect(() => {
@@ -61,18 +62,32 @@ export default function Baslangic() {
     setHazir(true)
   }, [u.hesap, hazir])
 
-  if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
-
   async function gonder() {
     const dil = dilBirlestir(temel, yazi)
     setBekliyor(true); setHata(false)
     try {
       const r = await u.api('/api/ulke/tercihler', { method: 'POST', govde: { arayuzDili: dil, notDili: dil } })
-      // Saved: the next question is asked in the language just chosen.
-      if (r.ok) { u.hesabiGuncelle({ dil, notDili: dil, dilSoruldu: true }); setAdim('rol') } else setHata(true)
+      if (r.ok) {
+        // A country without roles has no second question: straight to the home.
+        if (roller().length === 0) { window.location.assign(YOL.bugun); return }
+        // Saved: the next question is asked in the language just chosen.
+        u.hesabiGuncelle({ dil, notDili: dil, dilSoruldu: true }); setAdim('rol')
+      } else setHata(true)
     } catch { setHata(true) }
     setBekliyor(false)
   }
+
+  // A country with ONE language in ONE script has nothing to ask: its only form is recorded once, without a screen,
+  // and the next step follows. (Uzbekistan has three forms and is asked as before.)
+  const tekBicim = !dilSecimiVarMi()
+  useEffect(() => {
+    if (!tekBicim || !u.hesap || !hazir || u.hesap.dilSoruldu || otomatik.current) return
+    otomatik.current = true
+    void gonder()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tekBicim, u.hesap, hazir])
+
+  if (!u.hesap || (tekBicim && !u.hesap.dilSoruldu && !hata)) return <Yukleniyor m={u.m} dil={u.dil} />
 
   async function rolGonder() {
     if (!rolMu(rol)) { setRolHatasi('gerekli'); return }

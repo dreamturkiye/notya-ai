@@ -22,11 +22,13 @@ export type DavetliKayitFormuProps = {
   anaSayfa: string
   giris: string
   fiyat: string
+  /** false = the country's sign-up is open (pack setting `uygulama.kayitAcik`): no code is asked. Default: a code is required. */
+  kodGerekli?: boolean
 }
 
 const EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat }: DavetliKayitFormuProps) {
+export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true }: DavetliKayitFormuProps) {
   const [alan, setAlan] = useState({ adSoyad: '', eposta: '', sifre: '', sifreTekrar: '', davetKodu: '', dil: dil as string })
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState('')
@@ -36,7 +38,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
   async function gonder(e: FormEvent) {
     e.preventDefault()
     const adSoyad = alan.adSoyad.trim(), eposta = alan.eposta.toLowerCase().trim(), davetKodu = alan.davetKodu.trim()
-    if (!adSoyad || !eposta || !alan.sifre || !alan.sifreTekrar || !davetKodu) { setHata(metin.eksikAlan); return }
+    if (!adSoyad || !eposta || !alan.sifre || !alan.sifreTekrar || (kodGerekli && !davetKodu)) { setHata(metin.eksikAlan); return }
     if (!EPOSTA.test(eposta)) { setHata(metin.epostaGecersiz); return }
     if (alan.sifre.length < 8) { setHata(metin.sifreKisa); return }
     if (alan.sifre !== alan.sifreTekrar) { setHata(metin.sifreUyusmuyor); return }
@@ -46,7 +48,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, davetKodu, dil: alan.dil }),
+        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), dil: alan.dil }),
       })
       if (r.ok) { setTamam(true); return }
       const j = (await r.json().catch(() => ({}))) as { code?: string }
@@ -74,10 +76,12 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
     <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }}>
       <p style={{ margin: '0 0 18px', fontSize: 14, color: R.muted, textAlign: 'center', lineHeight: 1.5 }}>{metin.aciklama}</p>
       <form onSubmit={gonder} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div>
-          <label style={S.etiket} htmlFor="ulke-kayit-kod">{metin.davetKodu}</label>
-          <input id="ulke-kayit-kod" value={alan.davetKodu} onChange={yaz('davetKodu')} autoCapitalize="characters" autoCorrect="off" autoComplete="off" spellCheck={false} maxLength={40} style={{ ...S.girdi, letterSpacing: 1.5, textTransform: 'uppercase' }} />
-        </div>
+        {kodGerekli ? (
+          <div>
+            <label style={S.etiket} htmlFor="ulke-kayit-kod">{metin.davetKodu}</label>
+            <input id="ulke-kayit-kod" value={alan.davetKodu} onChange={yaz('davetKodu')} autoCapitalize="characters" autoCorrect="off" autoComplete="off" spellCheck={false} maxLength={40} style={{ ...S.girdi, letterSpacing: 1.5, textTransform: 'uppercase' }} />
+          </div>
+        ) : null}
         <div>
           <label style={S.etiket} htmlFor="ulke-kayit-ad">{metin.adSoyad}</label>
           <input id="ulke-kayit-ad" value={alan.adSoyad} onChange={yaz('adSoyad')} autoComplete="name" maxLength={120} style={S.girdi} />

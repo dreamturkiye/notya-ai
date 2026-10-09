@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { AsistanKarti } from './Asistan'
-import { bitisSaati, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
+import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -43,7 +43,7 @@ export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevul
           {randevular.map((x) => (
             <li key={x.id} className="uza-randevu-satiri" data-randevu={x.id} data-soluk={x.durum === 'iptal' || x.durum === 'gelmedi' ? 'evet' : undefined}>
               <a className="uza-satir" href={takvimYolu({ randevu: x.id })}>
-                <span className="uza-saat">{x.saat}–{bitisSaati(x.saat, x.sureDk)}</span>
+                <span className="uza-saat">{saatAraligi(x.saat, x.sureDk)}</span>
                 <span className="uza-liste-ad">{x.hastaAdi || m.bugun.hastasiz}{x.neden ? <span className="uza-liste-alt">{x.neden}</span> : null}</span>
                 <DurumRozeti r={r} durum={x.durum} />
               </a>

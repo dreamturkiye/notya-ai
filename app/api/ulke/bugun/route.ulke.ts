@@ -15,6 +15,7 @@ import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, KOD } from '@/lib/ulke/uygulama/cevap'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
+import { hesapSaatDilimi } from '@/lib/ulke/uygulama/saatDilimi'
 import { bugunkuMuayeneler } from '@/lib/ulke/uygulama/muayeneler'
 import { randevulariListele } from '@/lib/ulke/uygulama/randevular'
 
@@ -27,7 +28,8 @@ export const GET = sinirda('bugun GET', async (req: NextRequest) => {
   const muayeneler = await bugunkuMuayeneler(oturum.supabase, oturum.user.id)
   if (!muayeneler) return KOD.basarisiz()
   if (!ozellikAcik('randevu')) return cevap({ muayeneler, randevular: null })
-  const randevular = await randevulariListele(oturum.supabase, oturum.user.id, ulkeGunu(), 1)
+  // "Today" is the account's own day (its time zone, one of the pack's list).
+  const randevular = await randevulariListele(oturum.supabase, oturum.user.id, ulkeGunu(new Date(), await hesapSaatDilimi(oturum.supabase, oturum.user.id)), 1)
   if (!randevular) return KOD.basarisiz()
   return cevap({ muayeneler, randevular })
 })

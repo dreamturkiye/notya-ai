@@ -25,7 +25,8 @@ import React, { useEffect, useState, type FormEvent } from 'react'
 import { gunCoz, gunEkle, gunYazDesenle, haftaGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
-import { bitisSaati, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
+import { saatGoster } from '@/lib/ulke/arayuz/bicim'
+import { bitisSaati, saatAraligi, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
 import { temelDil, randevuMetni, gunAdi, type UygulamaMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
@@ -81,7 +82,7 @@ export function gunSatirlari(duzen: DuzenKaydi | null, gun: string, randevular: 
 function RandevuSatiri({ r, x, gunlu }: { r: RandevuMetni; x: RandevuKaydi; gunlu?: boolean }) {
   return (
     <a className="uza-satir" href={takvimYolu({ randevu: x.id })} data-randevu={x.id} data-soluk={x.durum === 'iptal' || x.durum === 'gelmedi' ? 'evet' : undefined}>
-      <span className="uza-saat">{gunlu ? `${gunYaz(x.gun)} ` : ''}{x.saat}–{bitisSaati(x.saat, x.sureDk)}</span>
+      <span className="uza-saat">{gunlu ? `${gunYaz(x.gun)} ` : ''}{saatAraligi(x.saat, x.sureDk)}</span>
       <span className="uza-liste-ad">
         {x.hastaAdi || '—'}
         {x.neden || x.mesaiDisi ? <span className="uza-liste-alt">{[x.neden, x.mesaiDisi ? r.takvim.mesaiDisi : ''].filter(Boolean).join(' · ')}</span> : null}
@@ -103,11 +104,11 @@ export function GunGorunumu({ r, gun, duzen, randevular }: { r: RandevuMetni; gu
           {satirlar.map((s) => s.tur === 'randevu' ? (
             <li key={`r-${s.randevu.id}`}><RandevuSatiri r={r} x={s.randevu} /></li>
           ) : s.tur === 'mola' ? (
-            <li key={`m-${s.dk}`}><div className="uza-satir uza-takvim-mola"><span className="uza-saat">{s.saat}–{s.bitis}</span><span className="uza-liste-ad">{r.takvim.mola}</span></div></li>
+            <li key={`m-${s.dk}`}><div className="uza-satir uza-takvim-mola"><span className="uza-saat">{saatGoster(s.saat)}–{saatGoster(s.bitis)}</span><span className="uza-liste-ad">{r.takvim.mola}</span></div></li>
           ) : (
             <li key={`b-${s.dk}`}>
               <a className="uza-satir uza-takvim-bos" href={takvimYolu({ yeni: '1', gun, saat: s.saat })} data-bos={s.saat}>
-                <span className="uza-saat">{s.saat}</span>
+                <span className="uza-saat">{saatGoster(s.saat)}</span>
                 <span className="uza-liste-ad">{r.takvim.bosSaat}</span>
                 <span className="uza-rozet">{r.takvim.yeni}</span>
               </a>
@@ -135,7 +136,7 @@ export function HaftaGorunumu({ r, gunler, bugun, randevular }: { r: RandevuMetn
                 {gununki.map((x) => (
                   <li key={x.id}>
                     <a className="uza-hafta-randevu" href={takvimYolu({ randevu: x.id })} data-randevu={x.id} data-randevu-durum={x.durum}>
-                      <span className="uza-saat">{x.saat}</span>
+                      <span className="uza-saat">{saatGoster(x.saat)}</span>
                       <span className="uza-hafta-ad">{x.hastaAdi || '—'}</span>
                       <span className="uza-hafta-durum">{r.durum[x.durum]}</span>
                     </a>
@@ -416,7 +417,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
         </div>
         <dl className="uza-bilgiler">
           <dt>{r.form.tarih}</dt><dd data-alan="gun">{gunBasligi(r, x.gun)}</dd>
-          <dt>{r.randevu.vakit}</dt><dd data-alan="saat">{x.saat}–{bitisSaati(x.saat, x.sureDk)} ({x.sureDk} {r.form.dakika})</dd>
+          <dt>{r.randevu.vakit}</dt><dd data-alan="saat">{saatAraligi(x.saat, x.sureDk)} ({x.sureDk} {r.form.dakika})</dd>
           {x.neden ? <><dt>{r.form.neden}</dt><dd>{x.neden}</dd></> : null}
         </dl>
         {x.mesaiDisi ? <p className="uza-ipucu">{r.randevu.mesaiDisiIsareti}</p> : null}

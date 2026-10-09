@@ -21,6 +21,7 @@ import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { cevap, KOD, uuidMi } from '@/lib/ulke/uygulama/cevap'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
+import { hesapSaatDilimi } from '@/lib/ulke/uygulama/saatDilimi'
 import { hastaGetir } from '@/lib/ulke/uygulama/hastalar'
 import { hastaninRandevulari, randevulariListele } from '@/lib/ulke/uygulama/randevular'
 import { gunCoz, gunEkle, haftaninIlkGunu } from '@/lib/ulke/uygulama/zaman'
@@ -42,7 +43,7 @@ export const GET = sinirda('randevular GET', async (req: NextRequest) => {
     return cevap({ randevular })
   }
   const paket = ulkePaketi()
-  const bugun = ulkeGunu()
+  const bugun = ulkeGunu(new Date(), await hesapSaatDilimi(oturum.supabase, oturum.user.id))
   const gunHam = p.get('gun')
   const gun = gunHam === null || gunHam === '' ? bugun : gunCoz(gunHam, paket.bicim.tarihDeseni)
   if (!gun) return KOD.gecersiz('gun')

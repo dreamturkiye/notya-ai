@@ -11,13 +11,15 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ulkeGunu } from './gun'
+import { hesapSaatDilimi } from './saatDilimi'
 import { ulkeTablosu } from './tablolar'
 
 const KOVA = 'soap'
 
 export async function muayeneKotasiKullan(supabase: SupabaseClient, doktorId: string, limit: number): Promise<boolean> {
-  const gun = ulkeGunu()
   try {
+    // The day is the ACCOUNT's own (its time zone, one of the pack's list).
+    const gun = ulkeGunu(new Date(), await hesapSaatDilimi(supabase, doktorId))
     const { data } = await ulkeTablosu(supabase, 'ulke_kullanim').select('sayac').eq('doctor_id', doktorId).eq('gun', gun).eq('kova', KOVA).maybeSingle()
     const mevcut = Number((data as { sayac?: number } | null)?.sayac ?? 0)
     if (mevcut >= limit) return false

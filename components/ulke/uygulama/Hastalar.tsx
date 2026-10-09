@@ -8,7 +8,7 @@
 import React, { useEffect, useState, type FormEvent } from 'react'
 import { AramaFormu } from './Bugun'
 import { Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
-import { bitisSaati, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
+import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { dilAdi, dilBirlestir, metninDili, randevuMetni, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -228,7 +228,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular }
             {randevular.map((x) => (
               <li key={x.id}>
                 <a className="uza-satir" href={takvimYolu({ randevu: x.id })} data-randevu={x.id}>
-                  <span className="uza-saat">{tarihYaz(x.gun)} {x.saat}–{bitisSaati(x.saat, x.sureDk)}</span>
+                  <span className="uza-saat">{tarihYaz(x.gun)} {saatAraligi(x.saat, x.sureDk)}</span>
                   <span className="uza-liste-ad">{x.neden}</span>
                   <DurumRozeti r={r} durum={x.durum} />
                 </a>

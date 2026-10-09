@@ -22,6 +22,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
+import { saatGoster } from '@/lib/ulke/arayuz/bicim'
 import { MUAYENE_SES_KOVASI } from '@/lib/ulke/tipler'
 import { sesKlasoru } from '@/lib/ulke/uygulama/tablolar'
 import { AramaFormu } from './Bugun'
@@ -117,7 +118,7 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
       <p className="uza-ust-yazi">{v.baslik}</p>
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
       <p className="uza-ipucu" data-alan="asistan">{m.asistan.qayd}: <span data-alan="asistan-ad">{asistanAdi(m, rol)}</span></p>
-      {randevu ? <p className="uza-ipucu" data-alan="randevu">{randevuMetni(metninDili(m)).randevu.baslik}: {gunBasligi(randevuMetni(metninDili(m)), randevu.gun)} · {randevu.saat}</p> : null}
+      {randevu ? <p className="uza-ipucu" data-alan="randevu">{randevuMetni(metninDili(m)).randevu.baslik}: {gunBasligi(randevuMetni(metninDili(m)), randevu.gun)} · {saatGoster(randevu.saat)}</p> : null}
       {durum === 'hazir' ? (
         <div className="uza-form">
           <dl className="uza-bilgiler" style={{ marginTop: 0 }}><dt>{v.sablon}</dt><dd data-alan="sablon">{sablonAdi(m, sablon)}</dd></dl>

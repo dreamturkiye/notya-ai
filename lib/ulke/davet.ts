@@ -38,3 +38,12 @@ export function davetKoduUret(): string {
   for (let i = 0; i < DAVET_KODU_UZUNLUGU; i++) k += DAVET_ALFABESI[randomInt(DAVET_ALFABESI.length)]
   return k.replace(/(.{4})(?=.)/g, '$1-')
 }
+
+/**
+ * NOTYA-ULKE-SABLON-01 — does sign-up in this country need an invitation code? YES, unless the pack says sign-up is
+ * open (`uygulama.kayitAcik: true`). Anything else — the setting absent, a pack without the application — is "by
+ * invitation": closed is the default, and opening a country is a decision of the owner, never of the code.
+ */
+export function kayitKoduGerekliMi(paket: { uygulama?: { kayitAcik?: boolean } }): boolean {
+  return paket.uygulama?.kayitAcik !== true
+}

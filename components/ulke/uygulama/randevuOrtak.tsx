@@ -5,6 +5,7 @@
  */
 import React from 'react'
 import { gunYazDesenle, haftaGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
+import { saatGoster } from '@/lib/ulke/arayuz/bicim'
 import { YOL } from './Kabuk'
 import { gunAdi, type RandevuMetni } from '@/lib/ulke/arayuz'
 import { tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
@@ -39,6 +40,9 @@ const gunYaz = (gun: string) => gunYazDesenle(gun, tarihDeseni())
 export const gunBasligi = (r: RandevuMetni, gun: string) => `${gunAdi(r, haftaGunu(gun), true)}, ${gunYaz(gun)}`
 /** 'HH:MM' + minutes → 'HH:MM' (past midnight it wraps: the day is not this function's business). */
 export const bitisSaati = (saat: string, sureDk: number) => saatYazDk(((saatCoz(saat) ?? 0) + sureDk) % 1440)
+
+/** "09:00–09:30" as the country writes a time of day (24- or 12-hour: the pack's `saatBicimi`). Display only. */
+export const saatAraligi = (saat: string, sureDk: number) => `${saatGoster(saat)}–${saatGoster(bitisSaati(saat, sureDk))}`
 
 export function DurumRozeti({ r, durum }: { r: RandevuMetni; durum: RandevuDurumu }) {
   return <span className="uza-rozet" data-randevu-durum={durum}>{r.durum[durum]}</span>
