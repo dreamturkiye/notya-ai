@@ -21,9 +21,12 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { AcilisSayfasi, ACILIS_FONT_HREF } from './AcilisSayfasi'
-import { ACILIS_DILLERI, ACILIS_ICERIGI, CAPA, acilisIcerigi, type AcilisDili } from './icerik'
-import { mailtoBaglantisi } from './IletisimFormu'
+import { AcilisSayfasi } from '@/components/ulke/acilis/AcilisSayfasi'
+import { ACILIS_DILLERI, ACILIS_ICERIGI, CAPA, UZ_ACILIS, acilisIcerigi, type AcilisDili } from './icerik'
+
+/** The pack's own stylesheet address for the page's fonts (was a constant of the layout before the layout became shared). */
+const ACILIS_FONT_HREF = UZ_ACILIS.fontHref
+import { mailtoBaglantisi } from '@/components/ulke/acilis/IletisimFormu'
 import { UZ_YASAKLI_IFADELER } from './yasakliIfadeler'
 import { UZ_PAKETI } from '../index'
 import { dilSec } from '@/lib/ulke/ulke'
@@ -34,7 +37,7 @@ const DILLER = [...ACILIS_DILLERI]
 const GORSELLER = { xona: '/uzbek/_next/static/media/xona.jpg', stol: '/uzbek/_next/static/media/stol.jpg', yolak: '/uzbek/_next/static/media/yolak.jpg' }
 /** The page as app/page.ulke.tsx renders it for the address `?dil=<dil>`. */
 const ciz = (dil: AcilisDili, iletisimEposta: string | null = 'pilot@example.com') =>
-  renderToStaticMarkup(React.createElement(AcilisSayfasi, { dil: dilSec(dil), istenenDil: dil, iletisimEposta, gorseller: GORSELLER }))
+  renderToStaticMarkup(React.createElement(AcilisSayfasi, { dil: dilSec(dil), istenenDil: dil, iletisimEposta, gorseller: GORSELLER, acilis: UZ_ACILIS }))
 /** Keys whose values are identifiers, not text. */
 const KIMLIK = new Set(['capa', 'id', 'rol'])
 /** Every piece of text in a catalogue, with its path — whatever the page shows it in. */
@@ -59,7 +62,7 @@ describe('Uzbekistan landing page', () => {
   })
 
   it('an address that asks for a form the page does not have gets the public language, never a guess', () => {
-    const R = (dil: 'uz-Latn' | 'ru', istenenDil: string | null) => renderToStaticMarkup(React.createElement(AcilisSayfasi, { dil, istenenDil, iletisimEposta: null, gorseller: GORSELLER }))
+    const R = (dil: 'uz-Latn' | 'ru', istenenDil: string | null) => renderToStaticMarkup(React.createElement(AcilisSayfasi, { dil, istenenDil, iletisimEposta: null, gorseller: GORSELLER, acilis: UZ_ACILIS }))
     assert.match(R('uz-Latn', 'tr'), /<div class="uzl" lang="uz-Latn"/)
     assert.match(R('uz-Latn', null), /<div class="uzl" lang="uz-Latn"/)
     assert.match(R('uz-Latn', 'uz-Cyrl'), /<div class="uzl" lang="uz-Cyrl"/)
@@ -209,15 +212,17 @@ describe('Uzbekistan landing page', () => {
     assert.ok(link.startsWith('mailto:pilot@example.com?subject='))
     const govde = decodeURIComponent(link.split('&body=')[1])
     assert.equal(govde, 'Ism va familiya: QA Sinov\nKlinika yoki amaliyot: QA Klinika\nTelefon: +998 90 123 45 67\nYoʻnalish: Pediatriya')
-    const kaynak = readFileSync(join(KOK, 'countries/uz/acilis/IletisimFormu.tsx'), 'utf8')
+    const kaynak = readFileSync(join(KOK, 'components/ulke/acilis/IletisimFormu.tsx'), 'utf8')
     assert.doesNotMatch(kaynak, /\bfetch\(|XMLHttpRequest|sendBeacon|action=/)
   })
 
   it('reuses from the Turkish landing page only presentational components, and none of its content', () => {
     const izinli = ['@/components/doktor-landing/button', '@/components/doktor-landing/cn', '@/components/doktor-landing/feature', '@/components/doktor-landing/icons']
     const kullanilan = new Set<string>()
-    for (const ad of readdirSync(join(KOK, 'countries/uz/acilis')).filter((d) => /\.tsx?$/.test(d) && !d.endsWith('.test.ts'))) {
-      const kaynak = readFileSync(join(KOK, 'countries/uz/acilis', ad), 'utf8')
+    // The layout (the country kit's) and the pack's own landing files: both are held to the rule.
+    const dosyalar = ['components/ulke/acilis', 'countries/uz/acilis'].flatMap((d) => readdirSync(join(KOK, d)).filter((x) => /\.tsx?$/.test(x) && !x.endsWith('.test.ts')).map((x) => `${d}/${x}`))
+    for (const ad of dosyalar) {
+      const kaynak = readFileSync(join(KOK, ad), 'utf8')
       for (const m of kaynak.matchAll(/from\s+'([^']+)'/g)) {
         if (/doktor-landing|klinik-landing|app\/doktor|app\/klinik/.test(m[1])) { assert.ok(izinli.includes(m[1]), `${ad} imports ${m[1]}`); kullanilan.add(m[1]) }
         assert.doesNotMatch(m[1], /lib\/doktor\/specialties|countries\/tr|\/content$/, `${ad} imports ${m[1]}`)
@@ -227,14 +232,14 @@ describe('Uzbekistan landing page', () => {
   })
 
   it('the compiled stylesheet is current, uses the Turkish page\'s own theme, and nothing on the page is unstyled', () => {
-    const css = readFileSync(join(KOK, 'countries/uz/acilis/utilities.css'), 'utf8')
-    const taban = readFileSync(join(KOK, 'countries/uz/acilis/acilis.css'), 'utf8')
+    const css = readFileSync(join(KOK, 'components/ulke/acilis/utilities.css'), 'utf8')
+    const taban = readFileSync(join(KOK, 'components/ulke/acilis/acilis.css'), 'utf8')
     // Recompiled here with the same command as in tailwind.config.cjs; a class added without recompiling fails this.
-    const r = spawnSync(process.execPath, [join(KOK, 'node_modules/tailwindcss/lib/cli.js'), '-c', 'countries/uz/acilis/tailwind.config.cjs', '-i', 'countries/uz/acilis/tw-kaynak.css', '--minify'], { cwd: KOK, encoding: 'utf8' })
+    const r = spawnSync(process.execPath, [join(KOK, 'node_modules/tailwindcss/lib/cli.js'), '-c', 'components/ulke/acilis/tailwind.config.cjs', '-i', 'components/ulke/acilis/tw-kaynak.css', '--minify'], { cwd: KOK, encoding: 'utf8' })
     assert.equal(r.status, 0, r.stderr)
-    assert.equal(css.trim(), r.stdout.trim(), 'countries/uz/acilis/utilities.css is stale — recompile it (command in tailwind.config.cjs)')
+    assert.equal(css.trim(), r.stdout.trim(), 'components/ulke/acilis/utilities.css is stale — recompile it (command in tailwind.config.cjs)')
     // Same colours and type scale as the Turkish page: the theme is its config, not a copy.
-    assert.match(readFileSync(join(KOK, 'countries/uz/acilis/tailwind.config.cjs'), 'utf8'), /theme: turkiye\.theme/)
+    assert.match(readFileSync(join(KOK, 'components/ulke/acilis/tailwind.config.cjs'), 'utf8'), /theme: turkiye\.theme/)
     for (const deger of ['rgb(243 246 245', 'rgb(14 107 102', 'clamp(2.45rem,5.2vw,5.15rem)', 'var(--font-fraunces)', 'var(--font-outfit-face)']) assert.ok(css.includes(deger), deger)
     assert.match(taban, /--font-fraunces: 'Fraunces', /)
     assert.match(taban, /--font-outfit-face: 'Outfit', /)

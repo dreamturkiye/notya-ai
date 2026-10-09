@@ -13,6 +13,7 @@ import { ulkePaketi, uygulamaDilleri, uygulamaDiliSec } from '../ulke'
 import * as D from './dilSecimi'
 import type { RandevuMetni, UygulamaMetni } from './metinTipleri'
 import * as S from './notSablonu'
+import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
 export type { RandevuMetni, UygulamaMetni } from './metinTipleri'
@@ -128,3 +129,11 @@ export const sablonAlanlari = (sablon: string, hasta?: S.SablonHastasi): readonl
 export const alanTanimi = (anahtar: string): NotAlani | null => S.alanTanimi(arayuz().notSablonlari, anahtar)
 export const alanAdi = (anahtar: string, dil: unknown): string | null => S.alanAdi(arayuz().notSablonlari, anahtar, uygulamaDili(dil))
 export const bolumAdi = (sablon: string, bolum: NotBolumu, dil: unknown): string | null => S.bolumAdi(arayuz().notSablonlari, roller(), sablon, bolum, uygulamaDili(dil))
+
+// ───────────────────────── landing page ─────────────────────────
+
+/** The landing page's content, or null where the pack brings none. */
+export const acilis = (): UlkeAcilisi | null => AKTIF_ARAYUZ?.acilis ?? null
+
+/** The anchor of a landing-page section in this country ('#…' is added by the caller). '' where there is no landing page. */
+export const acilisCapasi = (bolum: AcilisCapasi): string => acilis()?.capalar[bolum] ?? ''

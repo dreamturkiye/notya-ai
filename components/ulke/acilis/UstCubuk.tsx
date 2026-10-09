@@ -14,11 +14,13 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/doktor-landing/button'
 import { cn } from '@/components/doktor-landing/cn'
 import { ArrowUpRight, IconClose, IconMenu } from '@/components/doktor-landing/icons'
-import type { AcilisIcerigi } from './icerik'
+import type { AcilisIcerigi } from '@/lib/ulke/arayuz/acilisTipleri'
 
 export type DilSecenegi = { kod: string; ad: string; kisa: string; href: string; secili: boolean }
 
 export function DilSecici({ etiket, secenekler, className }: { etiket: string; secenekler: readonly DilSecenegi[]; className?: string }) {
+  // A page written in one form has nothing to switch between.
+  if (secenekler.length < 2) return null
   return (
     <nav className={cn('uzl-dil flex items-center gap-2 font-outfit text-sm', className)} aria-label={etiket}>
       {secenekler.map((d, i) => (
@@ -41,7 +43,7 @@ export function DilSecici({ etiket, secenekler, className }: { etiket: string; s
   )
 }
 
-export function UstCubuk({ metin, diller, girisHref, sorovHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string }) {
+export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -70,8 +72,8 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref }: { metin: Acili
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-          <a href="#top" className="font-display text-2xl italic leading-none tracking-tight">
-            notya
+          <a href={ustHref} className="font-display text-2xl italic leading-none tracking-tight">
+            {marka}
           </a>
           <nav className="hidden items-center gap-7 xl:flex" aria-label={metin.bolumler}>
             {metin.havolalar.map((item) => (

@@ -9,7 +9,7 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
 import { cn } from '@/components/doktor-landing/cn'
-import { CAPA, type AcilisIcerigi, type Sahne, type SahneNavbati } from './icerik'
+import type { AcilisIcerigi, Sahne, SahneNavbati } from '@/lib/ulke/arayuz/acilisTipleri'
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false)
@@ -126,12 +126,12 @@ function QabulVaraqi({ sahne, yozmoqda, tayyor }: { sahne: Sahne; yozmoqda: stri
   )
 }
 
-export function Suhbat({ metin }: { metin: AcilisIcerigi['suhbat'] }) {
+export function Suhbat({ metin, capa }: { metin: AcilisIcerigi['suhbat']; /** The section's anchor (the pack's). */ capa: string }) {
   const [active, setActive] = useState(0)
   const sahne = metin.sahneler[active] ?? metin.sahneler[0]
 
   return (
-    <section id={CAPA.suhbat} className="relative bg-paper py-20 sm:py-28">
+    <section id={capa} className="relative bg-paper py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">{metin.ustBaslik}</p>

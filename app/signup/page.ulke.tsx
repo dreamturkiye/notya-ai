@@ -7,6 +7,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import DavetliKayitFormu from '@/components/ulke/DavetliKayitFormu'
+import { acilisCapasi } from '@/lib/ulke/arayuz'
 import { kayitKoduGerekliMi } from '@/lib/ulke/davet'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
@@ -29,7 +30,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       diller={dilSecenekleri('/signup')}
       anaSayfa={dilliYol('/', dil)}
       giris={dilliYol('/login', dil)}
-      fiyat={dilliYol('/', dil, '#narx')}
+      fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
     />
   )
 }

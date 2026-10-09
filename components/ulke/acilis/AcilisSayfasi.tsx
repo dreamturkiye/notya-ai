@@ -1,16 +1,17 @@
 /**
- * NOTYA-UZ-ACILIS-02 — Uzbekistan landing page, rebuilt to match the Turkish doctor landing page section for section
- * (Kaan, 2026-10-08: "I need a landing page just like this for Uzbek").
+ * NOTYA-UZ-ACILIS-02 · NOTYA-ULKE-SABLON-01 — THE LANDING PAGE LAYOUT of the country kit: one layout for every
+ * country, matching the Turkish doctor landing page section for section (Kaan, 2026-10-08).
  *
  * The Turkish page (app/doktor/page.tsx, components/doktor-landing/*) is the visual specification and is NOT edited.
  *   - Reused as they are, because they are presentational and hold no text of their own: Button, FeatureSection,
  *     TypeCard, the icons and `cn` (allowed by name in lib/ulke/ulkeDuvarlari.test.ts).
- *   - Everything that holds Turkish text or Türkiye-only content (the bar, hero, the typed visits, the specialty
- *     list read from Türkiye's registry, learning, safety, prices, the trial form, the footer) is written again
- *     here with the same markup and classes. No Turkish landing content is imported.
- * Text: ./icerik.ts, three forms (Uzbek Latin, Uzbek Cyrillic, Russian). Styles: ./utilities.css (compiled with the
- * Turkish page's own theme) and ./acilis.css, both imported by ./index.tsx so this file renders in a plain Node test.
- * Photographs: the same three files as the Turkish page (public/landing), handed in by ./index.tsx.
+ *   - Everything else (the bar, hero, the typed visits, the list of specialties, learning, safety, prices, the request
+ *     form, the footer) is written here with the same markup and classes, and holds NO TEXT: every word, every anchor,
+ *     the names of the language forms, the fonts and the word mark come from the active pack (`UlkeAcilisi`,
+ *     lib/ulke/arayuz/acilisTipleri.ts — countries/<code>/acilis/icerik.ts).
+ * Styles: ./utilities.css (compiled with the Turkish page's own theme) and ./acilis.css, both imported by ./index.tsx
+ * so this file renders in a plain Node test. Photographs: the same three files as the Turkish page (public/landing),
+ * handed in by ./index.tsx.
  *
  * Server component. Client parts: the bar, the typed visits, the learning toggle, the request form.
  */
@@ -18,11 +19,12 @@ import React from 'react'
 import { Button } from '@/components/doktor-landing/button'
 import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
-import { dilSec } from '@/lib/ulke/ulke'
+import { dilSec, ulkePaketi } from '@/lib/ulke/ulke'
 import { dilliYol } from '@/lib/ulke/sayfaDili'
 import type { AcilisSayfasiProps } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
-import { CAPA, acilisDiliMi, acilisIcerigi, type AcilisDili, type AcilisIcerigi, type OzellikBolumu } from './icerik'
+import type { AcilisCapasi, AcilisIcerigi, OzellikBolumu, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
+import type { DilGrubu, DilKodu } from '@/lib/ulke/tipler'
 import { IletisimFormu } from './IletisimFormu'
 import { Organish } from './Organish'
 import { Suhbat } from './Suhbat'
@@ -31,23 +33,28 @@ import { DilSecici, UstCubuk, type DilSecenegi } from './UstCubuk'
 /** Addresses of the three photographs. The files are the Turkish page's own (public/landing); see ./index.tsx. */
 export type AcilisGorselleri = { xona: string; stol: string; yolak: string }
 
-/** Google Fonts: the two faces of the Turkish page (upright only, as there) and a Cyrillic companion for each. */
-export const ACILIS_FONT_HREF =
-  'https://fonts.googleapis.com/css2?family=Fraunces:wght@100..900&family=Outfit:wght@100..900&family=Source+Serif+4:wght@200..900&family=Onest:wght@100..900&display=swap'
+type Capalar = UlkeAcilisi['capalar']
 
-/** What each form of the page calls itself. `kisa` is what the switch shows on a phone. */
-const DIL_ADLARI: Record<AcilisDili, { ad: string; kisa: string }> = {
-  'uz-Latn': { ad: 'Oʻzbekcha', kisa: 'Oʻz' },
-  'uz-Cyrl': { ad: 'Ўзбекча', kisa: 'Ўз' },
-  ru: { ad: 'Русский', kisa: 'Ру' },
+/** The page's own address in one of its forms (the pack's default form needs no parameter). */
+const sayfa = (dil: DilKodu, capa = '') => ulkeYolu(`/${dil === ulkePaketi().varsayilanDil ? '' : `?dil=${dil}`}${capa}`)
+
+function dilSecenegi(a: UlkeAcilisi, kod: DilKodu, secili: boolean): DilSecenegi {
+  const ad = a.dilAdlari[kod]
+  if (!ad) throw new Error(`[ulke/acilis] the landing page has no name for its form "${kod}". No fallback to another language.`)
+  return { kod, ...ad, href: sayfa(kod), secili }
 }
-const VARSAYILAN: AcilisDili = 'uz-Latn'
 
-/** The page's own address in one of its forms (the default form needs no parameter). */
-const sayfa = (dil: AcilisDili, capa = '') => ulkeYolu(`/${dil === VARSAYILAN ? '' : `?dil=${dil}`}${capa}`)
-
-function dilSecenegi(kod: AcilisDili, secili: boolean): DilSecenegi {
-  return { kod, ...DIL_ADLARI[kod], href: sayfa(kod), secili }
+/**
+ * The switch at the top: ONE entry per language. A language the page is written in in several scripts appears in
+ * the script the visitor is reading, or in its first form when the visitor reads another language. The footer
+ * lists every form.
+ */
+export function ustDilSecenekleri(a: UlkeAcilisi, gruplar: readonly DilGrubu[], d: DilKodu): DilSecenegi[] {
+  const sayfaninki = (g: DilGrubu) => g.bicimler.map((b) => b.dil).filter((x) => a.diller.includes(x))
+  const gruplu = gruplar.map(sayfaninki).filter((x) => x.length > 0)
+  // A form of the page that no language group of the pack names stands by itself.
+  const kalan = a.diller.filter((x) => !gruplu.some((g) => g.includes(x))).map((x) => [x])
+  return [...gruplu, ...kalan].map((bicimler) => dilSecenegi(a, bicimler.includes(d) ? d : bicimler[0], bicimler.includes(d)))
 }
 
 function Ozellik({ id, b, tone, reverse }: { id: string; b: OzellikBolumu; tone: 'paper' | 'paper-2'; reverse?: boolean }) {
@@ -66,9 +73,9 @@ function Ozellik({ id, b, tone, reverse }: { id: string; b: OzellikBolumu; tone:
   )
 }
 
-function Kahraman({ t, gorsel }: { t: AcilisIcerigi['kahraman']; gorsel: string }) {
+function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: string; c: Capalar }) {
   return (
-    <section id={CAPA.ust} className="relative bg-paper">
+    <section id={c.ust} className="relative bg-paper">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:pb-14 lg:pt-28">
         <div className="min-w-0">
           <p className="uzl-reveal flex items-center gap-3 font-outfit text-xs uppercase tracking-[0.28em] text-ink-muted">
@@ -81,12 +88,12 @@ function Kahraman({ t, gorsel }: { t: AcilisIcerigi['kahraman']; gorsel: string 
           </h1>
           <p className="uzl-reveal mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{t.giris}</p>
           <div className="uzl-reveal mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button href={`#${CAPA.sorov}`} variant="pine" size="lg" className="w-full sm:w-auto">
+            <Button href={`#${c.sorov}`} variant="pine" size="lg" className="w-full sm:w-auto">
               {t.birinciDugme}
               <ArrowUpRight className="size-4" />
             </Button>
             {/* Scrolls to the typed illustration in section 01 of this page. Not a demo, not a video, no account. */}
-            <Button href={`#${CAPA.suhbat}`} variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button href={`#${c.suhbat}`} variant="outline" size="lg" className="w-full sm:w-auto">
               {t.ikinciDugme}
             </Button>
           </div>
@@ -111,9 +118,9 @@ function Kahraman({ t, gorsel }: { t: AcilisIcerigi['kahraman']; gorsel: string 
   )
 }
 
-function Yonalishlar({ t }: { t: AcilisIcerigi['yonalish'] }) {
+function Yonalishlar({ t, c }: { t: AcilisIcerigi['yonalish']; c: Capalar }) {
   return (
-    <section id={CAPA.yonalish} className="scroll-mt-16 bg-cream py-20 sm:py-28">
+    <section id={c.yonalish} className="scroll-mt-16 bg-cream py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">{t.ustBaslik}</p>
         <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -143,9 +150,9 @@ function Yonalishlar({ t }: { t: AcilisIcerigi['yonalish'] }) {
   )
 }
 
-function Xavfsizlik({ t, gorsel }: { t: AcilisIcerigi['xavfsizlik']; gorsel: string }) {
+function Xavfsizlik({ t, gorsel, c }: { t: AcilisIcerigi['xavfsizlik']; gorsel: string; c: Capalar }) {
   return (
-    <section id={CAPA.xavfsizlik} className="bg-paper py-20 sm:py-28">
+    <section id={c.xavfsizlik} className="bg-paper py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:items-end lg:gap-16">
         <div>
           <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">{t.ustBaslik}</p>
@@ -178,9 +185,9 @@ function Xavfsizlik({ t, gorsel }: { t: AcilisIcerigi['xavfsizlik']; gorsel: str
 }
 
 /** Section 10. The Turkish page lists plans with amounts and a trial; here: who it is for, no amount, "request a price". */
-function Narx({ t }: { t: AcilisIcerigi['narx'] }) {
+function Narx({ t, c }: { t: AcilisIcerigi['narx']; c: Capalar }) {
   return (
-    <section id={CAPA.narx} className="bg-paper py-20 sm:py-28">
+    <section id={c.narx} className="bg-paper py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -214,7 +221,7 @@ function Narx({ t }: { t: AcilisIcerigi['narx'] }) {
                 ))}
               </ul>
               <a
-                href={`#${CAPA.sorov}`}
+                href={`#${c.sorov}`}
                 className="inline-flex h-11 w-fit items-center justify-center gap-1.5 rounded-full bg-pine px-5 font-outfit text-sm font-medium text-cream transition-colors hover:bg-pine-2 sm:justify-self-end"
               >
                 {t.dugme}
@@ -230,9 +237,9 @@ function Narx({ t }: { t: AcilisIcerigi['narx'] }) {
 }
 
 /** Closing section. The Turkish page has a trial sign-up form here; this is the request form and the invitation link. */
-function Sorov({ t, iletisimEposta, kayitHref }: { t: AcilisIcerigi['sorov']; iletisimEposta: string | null; kayitHref: string }) {
+function Sorov({ t, iletisimEposta, kayitHref, c }: { t: AcilisIcerigi['sorov']; iletisimEposta: string | null; kayitHref: string; c: Capalar }) {
   return (
-    <section id={CAPA.sorov} className="scroll-mt-16 bg-pine text-cream">
+    <section id={c.sorov} className="scroll-mt-16 bg-pine text-cream">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2 lg:items-end">
         <div>
           <p className="font-outfit text-xs uppercase tracking-[0.22em] text-cream/65">{t.ustBaslik}</p>
@@ -264,42 +271,45 @@ function Sorov({ t, iletisimEposta, kayitHref }: { t: AcilisIcerigi['sorov']; il
   )
 }
 
-export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller }: AcilisSayfasiProps & { gorseller: AcilisGorselleri }) {
-  // `dil` is one of the pack's public languages (Uzbek Latin, Russian). The page is also written in Uzbek Cyrillic:
-  // that form is served when the address asks for it by name. Anything else stays what `dil` says — never a guess.
-  const d: AcilisDili = acilisDiliMi(istenenDil) ? istenenDil : acilisDiliMi(dil) ? dil : (acilisIcerigi(dil), VARSAYILAN)
-  const t = acilisIcerigi(d)
-  // Login and sign-up exist in the pack's public languages only; a Cyrillic visitor continues in Uzbek Latin.
+export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acilis: a }: AcilisSayfasiProps & { gorseller: AcilisGorselleri; acilis: UlkeAcilisi }) {
+  // `dil` is one of the pack's public languages. The page may be written in more forms than those (a second script):
+  // such a form is served when the address asks for it by name. Anything else stays what `dil` says — never a guess,
+  // and a form the page is not written in is an error, never another language's text.
+  const yazili = (x: unknown): x is DilKodu => typeof x === 'string' && (a.diller as readonly string[]).includes(x)
+  const d: DilKodu = yazili(istenenDil) ? istenenDil : dil
+  const t = a.icerik[d]
+  if (!yazili(d) || !t) throw new Error(`[ulke/acilis] no landing copy for "${d}". No fallback to another language.`)
+  const c = a.capalar
+  // Login and sign-up exist in the pack's public languages only; a visitor reading another form continues in the default.
   const girisHref = dilliYol('/login', dilSec(d))
   const kayitHref = dilliYol('/signup', dilSec(d))
-  const ozbekcha: AcilisDili = d === 'ru' ? VARSAYILAN : d
-  const ustDiller = [dilSecenegi(ozbekcha, d !== 'ru'), dilSecenegi('ru', d === 'ru')]
-  const altDiller = (['uz-Latn', 'uz-Cyrl', 'ru'] as const).map((k) => dilSecenegi(k, k === d))
+  const ustDiller = ustDilSecenekleri(a, ulkePaketi().uygulama?.dilGruplari ?? [], d)
+  const altDiller = a.diller.map((k) => dilSecenegi(a, k, k === d))
 
   return (
     <div className="uzl" lang={d}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="stylesheet" href={ACILIS_FONT_HREF} />
+      <link rel="stylesheet" href={a.fontHref} />
       <div className="relative bg-paper text-ink">
-        <UstCubuk metin={t.nav} diller={ustDiller} girisHref={girisHref} sorovHref={`#${CAPA.sorov}`} />
+        <UstCubuk metin={t.nav} diller={ustDiller} girisHref={girisHref} sorovHref={`#${c.sorov}`} marka={a.markaYazisi} ustHref={`#${c.ust}`} />
         <main>
-          <Kahraman t={t.kahraman} gorsel={gorseller.xona} />
-          <Suhbat metin={t.suhbat} />
-          <Ozellik id={CAPA.qabul} b={t.qabul} tone="paper-2" />
-          <Ozellik id={CAPA.portal} b={t.portal} tone="paper" reverse />
-          <Ozellik id={CAPA.maslahat} b={t.maslahat} tone="paper-2" />
-          <Ozellik id={CAPA.jadval} b={t.jadval} tone="paper" reverse />
-          <Yonalishlar t={t.yonalish} />
-          <Ozellik id={CAPA.kuzatuv} b={t.kuzatuv} tone="paper" />
-          <Organish metin={t.organish} gorsel={gorseller.stol} />
-          <Xavfsizlik t={t.xavfsizlik} gorsel={gorseller.yolak} />
-          <Narx t={t.narx} />
-          <Sorov t={t.sorov} iletisimEposta={iletisimEposta} kayitHref={kayitHref} />
+          <Kahraman c={c} t={t.kahraman} gorsel={gorseller.xona} />
+          <Suhbat metin={t.suhbat} capa={c.suhbat} />
+          <Ozellik id={c.qabul} b={t.qabul} tone="paper-2" />
+          <Ozellik id={c.portal} b={t.portal} tone="paper" reverse />
+          <Ozellik id={c.maslahat} b={t.maslahat} tone="paper-2" />
+          <Ozellik id={c.jadval} b={t.jadval} tone="paper" reverse />
+          <Yonalishlar c={c} t={t.yonalish} />
+          <Ozellik id={c.kuzatuv} b={t.kuzatuv} tone="paper" />
+          <Organish metin={t.organish} gorsel={gorseller.stol} capa={c.organish} />
+          <Xavfsizlik c={c} t={t.xavfsizlik} gorsel={gorseller.yolak} />
+          <Narx c={c} t={t.narx} />
+          <Sorov c={c} t={t.sorov} iletisimEposta={iletisimEposta} kayitHref={kayitHref} />
         </main>
         <footer className="border-t border-line bg-paper">
           <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-12 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="font-display text-3xl italic">notya</p>
+              <p className="font-display text-3xl italic">{a.markaYazisi}</p>
               <p className="mt-2 max-w-xs font-outfit text-sm leading-relaxed text-ink-muted">{t.altBilgi.tanim}</p>
             </div>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm" aria-label={t.altBilgi.havolalar}>
@@ -315,7 +325,7 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller }: Ac
             <p>
               © {new Date().getFullYear()} {t.altBilgi.haklar}
             </p>
-            {/* All three forms of the page, Uzbek Cyrillic among them. */}
+            {/* Every form the page is written in. */}
             <DilSecici etiket={t.altBilgi.diller} secenekler={altDiller} className="uzl-dil-alt gap-3 text-xs uppercase tracking-[0.14em]" />
           </div>
         </footer>

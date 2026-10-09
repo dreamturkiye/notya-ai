@@ -7,8 +7,10 @@
  *   roles (40) and their names        ./klinik/rolAdlari.ts
  *   assistant names (owner's list)    ./klinik/asistanAdlari.ts, derived forms in ./klinik/asistanKimligi.ts
  *   note templates                    ./klinik/notSablonlari.ts
+ *   landing page copy, three forms    ./acilis/icerik.ts
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
+import { UZ_ACILIS } from './acilis/icerik'
 import { uzAsistanKimligi } from './klinik/asistanKimligi'
 import { UZ_NOT_SABLONLARI } from './klinik/notSablonlari'
 import { UZ_ROL_TANIMLARI } from './klinik/rolAdlari'
@@ -22,4 +24,5 @@ export const UZ_ARAYUZ: UlkeArayuzu = {
   roller: UZ_ROL_TANIMLARI,
   asistan: uzAsistanKimligi,
   notSablonlari: UZ_NOT_SABLONLARI,
+  acilis: UZ_ACILIS,
 }

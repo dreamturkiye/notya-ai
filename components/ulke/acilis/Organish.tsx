@@ -7,14 +7,14 @@
 import React from 'react'
 import { useState } from 'react'
 import { cn } from '@/components/doktor-landing/cn'
-import { CAPA, type AcilisIcerigi } from './icerik'
+import type { AcilisIcerigi } from '@/lib/ulke/arayuz/acilisTipleri'
 
-export function Organish({ metin, gorsel }: { metin: AcilisIcerigi['organish']; gorsel: string }) {
+export function Organish({ metin, gorsel, capa }: { metin: AcilisIcerigi['organish']; gorsel: string; /** The section's anchor (the pack's). */ capa: string }) {
   const [tenth, setTenth] = useState(true)
   const card = tenth ? metin.oninchi : metin.birinchi
 
   return (
-    <section id={CAPA.organish} className="bg-paper-2 py-20 sm:py-28">
+    <section id={capa} className="bg-paper-2 py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
         <div className="relative">
           <img src={gorsel} alt={metin.gorselAlt} className="aspect-[3/2] w-full rounded-xl object-cover" />

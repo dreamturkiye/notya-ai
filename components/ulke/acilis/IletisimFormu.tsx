@@ -14,7 +14,7 @@
 import React from 'react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/doktor-landing/button'
-import type { AcilisIcerigi } from './icerik'
+import type { AcilisIcerigi } from '@/lib/ulke/arayuz/acilisTipleri'
 
 type FormMetni = AcilisIcerigi['sorov']['form']
 

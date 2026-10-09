@@ -21,6 +21,7 @@
  *   - the number of specialties is what the product is DESIGNED for, not what is switched on.
  * Uzbek Latin uses U+02BB (ʻ) in oʻ / gʻ and U+02BC (ʼ) for the tutuq belgisi.
  */
+import type { AcilisIcerigi, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 /** The forms the landing page is written in. Wider than the pack's public `acikDiller`: Cyrillic is here too. */
@@ -33,128 +34,7 @@ export const CAPA = {
   yonalish: 'yonalish', kuzatuv: 'kuzatuv', organish: 'organish', xavfsizlik: 'xavfsizlik', narx: 'narx', sorov: 'sorov',
 } as const
 
-export type KartSatiri = { k: string; v?: string; mark?: string }
-
-/** One capability section set in the shared pattern: eyebrow, two-line heading, lede, bullets, typographic card. */
-export type OzellikBolumu = {
-  ustBaslik: string
-  baslik: string
-  baslikVurgu: string
-  govde: string
-  maddeler?: readonly string[]
-  kart: { etiket: string; satirlar: readonly KartSatiri[]; not?: string }
-}
-
-export type SahneNavbati = { kim: string; rol: 'shifokor' | 'yordamchi' | 'ogohlantirish'; matn: string }
-export type Sahne = { id: string; meta: string; yordamchi: string; alan: string; saat: string; navbatlar: readonly SahneNavbati[] }
-
-export type AcilisIcerigi = {
-  meta: { baslik: string; aciklama: string }
-  nav: {
-    bolumler: string
-    mobil: string
-    dil: string
-    havolalar: readonly { capa: string; etiket: string; no: string }[]
-    giris: string
-    girisUzun: string
-    sorov: string
-    menyuAc: string
-    menyuYop: string
-  }
-  kahraman: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    giris: string
-    birinciDugme: string
-    ikinciDugme: string
-    gorselAlt: string
-    gorselAlti: string
-    serit: readonly string[]
-  }
-  suhbat: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    govde: string
-    maddeler: readonly string[]
-    sekmeler: string
-    yozmoqda: string
-    tayyor: string
-    izoh: string
-    sahneler: readonly Sahne[]
-  }
-  qabul: OzellikBolumu
-  portal: OzellikBolumu
-  maslahat: OzellikBolumu
-  jadval: OzellikBolumu
-  yonalish: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    govde: string
-    misollar: readonly { k: string; v: string }[]
-    royxatEtiketi: string
-    royxat: readonly string[]
-  }
-  kuzatuv: OzellikBolumu
-  organish: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    govde: string
-    gorselAlt: string
-    gorselAlti: string
-    sekmeler: string
-    birinchi: { etiket: string; sorov: string; javob: string }
-    oninchi: { etiket: string; sorov: string; javob: string }
-    izoh: string
-  }
-  xavfsizlik: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    iqtibos: string
-    izoh: string
-    gorselAlt: string
-    gorselAlti: string
-    dalillar: readonly { k: string; v: string }[]
-  }
-  narx: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    rejalar: readonly { ad: string; narx: string; maddeler: readonly string[] }[]
-    dugme: string
-    izoh: string
-  }
-  sorov: {
-    ustBaslik: string
-    baslik: string
-    baslikVurgu: string
-    govde: string
-    form: {
-      etiket: string
-      adSoyad: string
-      kurum: string
-      telefon: string
-      telefonOrnek: string
-      uzmanlik: string
-      mesaj: string
-      gonder: string
-      ipucu: string
-      eksik: string
-      konu: string
-      /** Labels of the lines in the message that the visitor's mail app opens with. */
-      satir: { adSoyad: string; kurum: string; telefon: string; uzmanlik: string; mesaj: string }
-    }
-    /** Shown instead of the form when no contact address is configured for the deployment. */
-    formYok: string
-    davetSorusu: string
-    davetBaglantisi: string
-  }
-  altBilgi: { tanim: string; havolalar: string; giris: string; kayit: string; haklar: string; diller: string }
-}
+export type { AcilisIcerigi, KartSatiri, OzellikBolumu, Sahne, SahneNavbati } from '@/lib/ulke/arayuz/acilisTipleri'
 
 // ───────────────────────── Uzbek, Latin script (source) ─────────────────────────
 
@@ -1080,4 +960,23 @@ export function acilisDiliMi(ham: unknown): ham is AcilisDili {
 export function acilisIcerigi(dil: DilKodu): AcilisIcerigi {
   if (!acilisDiliMi(dil)) throw new Error(`[uz/acilis] no landing copy for "${dil}". No fallback to another language.`)
   return ACILIS_ICERIGI[dil]
+}
+
+/**
+ * NOTYA-ULKE-SABLON-01 — everything Uzbekistan brings for the landing page, in the shape the shared layout reads
+ * (components/ulke/acilis/). The layout is the kit's; the copy above and the five facts below are this pack's.
+ */
+export const UZ_ACILIS: UlkeAcilisi = {
+  diller: ACILIS_DILLERI,
+  icerik: ACILIS_ICERIGI,
+  // What each form of the page calls itself. `kisa` is what the switch shows on a phone.
+  dilAdlari: {
+    'uz-Latn': { ad: 'Oʻzbekcha', kisa: 'Oʻz' },
+    'uz-Cyrl': { ad: 'Ўзбекча', kisa: 'Ўз' },
+    ru: { ad: 'Русский', kisa: 'Ру' },
+  },
+  capalar: CAPA,
+  // Google Fonts: the two faces of the layout (upright only) and a Cyrillic companion for each.
+  fontHref: 'https://fonts.googleapis.com/css2?family=Fraunces:wght@100..900&family=Outfit:wght@100..900&family=Source+Serif+4:wght@200..900&family=Onest:wght@100..900&display=swap',
+  markaYazisi: 'notya',
 }

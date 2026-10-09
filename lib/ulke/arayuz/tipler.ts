@@ -11,6 +11,7 @@
  * the SERVER half of a pack (UlkeKlinigi, countries/active/klinik) and are not here.
  */
 import type { DilKodu } from '../tipler'
+import type { UlkeAcilisi } from './acilisTipleri'
 import type { RandevuMetni, UygulamaMetni } from './metinTipleri'
 
 /** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
@@ -81,4 +82,6 @@ export type UlkeArayuzu = {
   /** The assistant of a role in a form, or null where the role has none: the screens then show the neutral line. */
   asistan: (rol: string, dil: DilKodu) => AsistanKimligi | null
   notSablonlari: NotSablonVerisi
+  /** The landing page's content. null = the country has no landing page of its own (feature `acilisSayfasi` off). */
+  acilis: UlkeAcilisi | null
 }

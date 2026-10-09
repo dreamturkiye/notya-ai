@@ -61,7 +61,21 @@ export function hastaGirdisiHatasi(g: HastaGirdisi): keyof HastaGirdisi | null {
   if (g.dogumTarihi && !dogumTarihiGecerli(g.dogumTarihi)) return 'dogumTarihi'
   if (g.cinsiyet && g.cinsiyet !== 'male' && g.cinsiyet !== 'female') return 'cinsiyet'
   if (!hastaDilleri().includes(g.dil)) return 'dil'
+  // NOTYA-ULKE-SABLON-01: the identity number is checked only where the pack says its rule is to be applied
+  // (`uygulama.kimlikNumarasi.dogrula`); elsewhere it is stored as typed. An empty value is always acceptable.
+  const p = ulkePaketi()
+  if (g.ulusalKimlik && p.ulusalKimlik && p.uygulama?.kimlikNumarasi.dogrula && !p.ulusalKimlik.gecerliMi(g.ulusalKimlik)) return 'ulusalKimlik'
   return null
+}
+
+/**
+ * NOTYA-ULKE-SABLON-01 — the fields a country does not have are not kept, whatever a request sends: a second name
+ * where the pack has no such field (`uygulama.adAlanlari.ikinciAd`), an identity number where the pack records none
+ * (`ulusalKimlik: null`).
+ */
+export function hastaGirdisiniSuz(g: HastaGirdisi): HastaGirdisi {
+  const p = ulkePaketi()
+  return { ...g, otaIsmi: p.uygulama?.adAlanlari.ikinciAd ? g.otaIsmi : '', ulusalKimlik: p.ulusalKimlik ? g.ulusalKimlik : '' }
 }
 
 const coz = (ham: unknown): string => {
@@ -97,7 +111,8 @@ const HASTA_KOLONLARI = 'id, name_encrypted, dob_encrypted, gender_encrypted, ph
 const EK_KOLONLARI = 'patient_id, ota_ismi_encrypted, dil, ulusal_kimlik_encrypted'
 
 /** Creates the patient for THIS doctor. null = nothing was saved (a half-written patient is removed again). */
-export async function hastaOlustur(supabase: SupabaseClient, doktorId: string, g: HastaGirdisi): Promise<Hasta | null> {
+export async function hastaOlustur(supabase: SupabaseClient, doktorId: string, ham: HastaGirdisi): Promise<Hasta | null> {
+  const g = hastaGirdisiniSuz(ham)
   const { data: h, error } = await ulkeTablosu(supabase, 'ulke_hastalar')
     .insert({
       doctor_id: doktorId,
