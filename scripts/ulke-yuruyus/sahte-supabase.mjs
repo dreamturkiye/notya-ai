@@ -8,7 +8,7 @@
  * Just enough of three services for the country screens:
  *   auth      password login, "who am I", logout, admin create / delete user
  *   rest      a small PostgREST: select / insert / upsert / update / delete with the filters the application uses
- *             (eq, neq, in, gte, gt, lt, is.null, not.is.null), order, limit, single-object answers, the two
+ *             (eq, neq, in, gte, gt, lt, lte, is.null, not.is.null), order, limit, single-object answers, the two
  *             invitation-code functions, and (NOTYA-UZ-RANDEVU-01) what migration 135 puts in the database: the
  *             no-double-booking constraint of `ulke_randevulari` and the function `ulke_not_onayla`. An operator it does not know is an ERROR (400) — it never ignores a filter,
  *             because an ignored filter would make a broken ownership check look fine.
@@ -19,6 +19,12 @@
  *             and its moment, answers only with consent, one open form per patient, the appointment is that patient's),
  *             its trigger (a form never moves, its question set is fixed, submitted answers do not change) and the
  *             function `ulke_hasta_formu_iste`.
+ *             NOTYA-ULKE-MESAJ-01: what migrations 140–142 put in the database, as far as a walk-through can meet it —
+ *             a conversation, a message and a consultation belong to a patient of that doctor; one open conversation
+ *             per patient; a closed conversation takes no message; a message's text never changes and it is read
+ *             once; a template has no patient and a deleted one does not change; one consultation code per account,
+ *             no two accounts with the same; a consultation's question and copy never change, it is answered once
+ *             and closed once. (The full rules are proved on a real PostgreSQL: scripts/ulke-goc-kaniti.mjs.)
  *   storage   upload / download / remove of objects. A browser session may upload only under `<its country>/<its own
  *             account id>/` (what the storage policy of migration 132 enforces in the real project); the service role
  *             may read and remove anything.
@@ -80,6 +86,7 @@ function suzgec(kolon, ham) {
   if (ham.startsWith('eq.')) { const v = deger(ham.slice(3)); return (s) => (typeof v === 'boolean' ? s[kolon] === v : es(s, ham.slice(3))) }
   if (ham.startsWith('neq.')) return (s) => !es(s, ham.slice(4))
   if (ham.startsWith('gte.')) return (s) => String(s[kolon] ?? '') >= ham.slice(4)
+  if (ham.startsWith('lte.')) return (s) => String(s[kolon] ?? '') <= ham.slice(4)
   if (ham.startsWith('lt.')) return (s) => String(s[kolon] ?? '') < ham.slice(3)
   if (ham.startsWith('gt.')) return (s) => String(s[kolon] ?? '') > ham.slice(3)
   if (ham === 'is.null') return (s) => (s[kolon] ?? null) === null
@@ -132,7 +139,22 @@ const kisitHatasi = (code, message) => Object.assign(new Error(message), { code 
  * link per patient that is not withdrawn; one unanswered request per patient; and the patient is this doctor's.
  */
 function portalKisiti(ad, yeni, digerleri) {
-  if (!['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari'].includes(ad)) return null
+  // NOTYA-ULKE-MESAJ-01 — migrations 141 and 142: the two tables that hold NO patient (a template, a consultation code).
+  const hesapVar = (id) => tablo('ulke_hesaplari').some((h) => h.id === id && h.ulke === yeni.ulke)
+  if (ad === 'ulke_hekim_sablonlari') {
+    if ('patient_id' in yeni) return kisitHatasi('42703', 'column "patient_id" of relation "ulke_hekim_sablonlari" does not exist')
+    if (!hesapVar(yeni.doctor_id)) return kisitHatasi('23503', 'insert or update on table "ulke_hekim_sablonlari" violates foreign key constraint "ulke_hekim_sablonlari_hesap_fk"')
+    if (!['not', 'mesaj', 'hepsi'].includes(String(yeni.kapsam)) || typeof yeni.icerik_encrypted !== 'string' || !yeni.icerik_encrypted) return kisitHatasi('23514', 'new row for relation "ulke_hekim_sablonlari" violates check constraint')
+    return null
+  }
+  if (ad === 'ulke_konsultasyon_kodlari') {
+    if (!hesapVar(yeni.doctor_id)) return kisitHatasi('23503', 'insert or update on table "ulke_konsultasyon_kodlari" violates foreign key constraint "ulke_konsultasyon_kodlari_hesap_fk"')
+    if (typeof yeni.kod_hash !== 'string' || !/^[0-9a-f]{64}$/.test(yeni.kod_hash) || !yeni.kod_encrypted) return kisitHatasi('23514', 'new row for relation "ulke_konsultasyon_kodlari" violates check constraint')
+    if (digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id)) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_konsultasyon_kodlari_hesap_tekil"')
+    if (digerleri.some((x) => x.ulke === yeni.ulke && x.kod_hash === yeni.kod_hash)) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_konsultasyon_kodlari_kod_tekil"')
+    return null
+  }
+  if (!['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_konsultasyonlar'].includes(ad)) return null
   if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return kisitHatasi('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
   if (ad === 'ulke_hasta_ozetleri') {
     const n = tablo('ulke_notlar').find((x) => x.id === yeni.note_id && x.doctor_id === yeni.doctor_id && x.ulke === yeni.ulke)
@@ -147,6 +169,33 @@ function portalKisiti(ad, yeni, digerleri) {
   }
   if (ad === 'ulke_portal_oturumlari' && !tablo('ulke_portal_erisimleri').some((e) => e.id === yeni.erisim_id && e.ulke === yeni.ulke && e.doctor_id === yeni.doctor_id && e.patient_id === yeni.patient_id)) return kisitHatasi('23503', 'insert or update on table "ulke_portal_oturumlari" violates foreign key constraint "ulke_portal_oturumlari_erisim_fk"')
   if (ad === 'ulke_randevu_istekleri' && (yeni.durum ?? 'bekliyor') === 'bekliyor' && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && (x.durum ?? 'bekliyor') === 'bekliyor')) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_randevu_istekleri_tek_bekleyen"')
+  // NOTYA-ULKE-MESAJ-01 — migration 140: one open conversation per patient; a message belongs to a conversation of that
+  // patient and that doctor, and (the insert half of the trigger) a closed conversation takes none.
+  const yeniSatir = !digerleri.includes(yeni) && !tablo(ad).some((x) => x.id === yeni.id)
+  if (ad === 'ulke_mesaj_yazismalari' && !yeni.kapandi_at && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && !x.kapandi_at)) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_mesaj_yazismalari_tek_acik"')
+  if (ad === 'ulke_hasta_mesajlari') {
+    if (!['hekim', 'hasta'].includes(String(yeni.gonderen)) || typeof yeni.metin_encrypted !== 'string' || !yeni.metin_encrypted) return kisitHatasi('23514', 'new row for relation "ulke_hasta_mesajlari" violates check constraint')
+    const y = tablo('ulke_mesaj_yazismalari').find((x) => x.id === yeni.yazisma_id && x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id)
+    if (!y) return kisitHatasi('23503', 'insert or update on table "ulke_hasta_mesajlari" violates foreign key constraint "ulke_hasta_mesajlari_yazisma_fk"')
+    if (yeniSatir && (y.kapandi_at || yeni.okundu_at)) return kisitHatasi('23514', 'ulke_hasta_mesajlari: a closed conversation takes no message, and a message is written unread')
+  }
+  // NOTYA-ULKE-MESAJ-01 — migration 142: the consulted doctor is an account of this country and not the asking one;
+  // what was shared and its copy go together; an approved note of that patient; the consent stamp and the period.
+  if (ad === 'ulke_konsultasyonlar') {
+    if (!tablo('ulke_hesaplari').some((h) => h.id === yeni.danisilan_id && h.ulke === yeni.ulke)) return kisitHatasi('23503', 'insert or update on table "ulke_konsultasyonlar" violates foreign key constraint "ulke_konsultasyonlar_danisilan_fk"')
+    if (yeni.doctor_id === yeni.danisilan_id || !['yok', 'not', 'ozet'].includes(String(yeni.paylasim_turu)) || !yeni.soru_encrypted) return kisitHatasi('23514', 'new row for relation "ulke_konsultasyonlar" violates check constraint')
+    if ((yeni.paylasim_turu === 'yok') !== !yeni.paylasim_encrypted || (yeni.paylasim_turu === 'yok') !== !yeni.note_id) return kisitHatasi('23514', 'new row for relation "ulke_konsultasyonlar" violates check constraint (what was shared and its copy)')
+    if (!yeni.riza_surumu || !yeni.riza_at || !yeni.son_gecerlilik) return kisitHatasi('23502', 'new row for relation "ulke_konsultasyonlar" has no consent stamp, no consent moment or no period')
+    if (!yeni.cevap_encrypted !== !yeni.cevap_at || !yeni.kapandi_at !== !yeni.erisim_bitis) return kisitHatasi('23514', 'new row for relation "ulke_konsultasyonlar" violates check constraint (an answer and its moment; closing and the end of reading)')
+    if (yeniSatir) {
+      if (yeni.note_id) {
+        const n = tablo('ulke_notlar').find((x) => x.id === yeni.note_id && x.doctor_id === yeni.doctor_id && x.ulke === yeni.ulke)
+        const m = n ? tablo('ulke_muayeneler').find((x) => x.id === n.session_id && x.doctor_id === n.doctor_id && x.ulke === n.ulke) : null
+        if (!n || !m || m.patient_id !== yeni.patient_id || !n.approved_at) return kisitHatasi('23514', 'ulke_konsultasyonlar: only an approved note of this patient is shared')
+      }
+      if (yeni.okundu_at || yeni.cevap_at || yeni.kapandi_at) return kisitHatasi('23514', 'ulke_konsultasyonlar: a consultation begins unread, unanswered and open')
+    }
+  }
   // NOTYA-ULKE-ARACLAR-01 — migration 139: the checks of ulke_arac_kayitlari.
   if (ad === 'ulke_arac_kayitlari') {
     if (typeof yeni.arac !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(yeni.arac) || yeni.arac.length > 60) return kisitHatasi('23514', 'new row for relation "ulke_arac_kayitlari" violates check constraint (arac)')
@@ -172,8 +221,19 @@ function portalKisiti(ad, yeni, digerleri) {
  * answers do not change (it can only be reopened).
  */
 function formKilidi(ad, eski, yeni) {
-  if (ad !== 'ulke_hasta_formlari' && ad !== 'ulke_arac_kayitlari') return null
   const farkli = (k) => (eski[k] ?? null) !== (yeni[k] ?? null)
+  // NOTYA-ULKE-MESAJ-01 — the triggers of migrations 140, 141 and 142, as far as the application can meet them.
+  if (ad === 'ulke_mesaj_yazismalari') return farkli('ulke') || farkli('doctor_id') || farkli('patient_id') || (eski.kapandi_at && farkli('kapandi_at')) ? kisitHatasi('23514', 'ulke_mesaj_yazismalari: a conversation never moves, and a closed one stays closed') : null
+  if (ad === 'ulke_hasta_mesajlari') return ['ulke', 'doctor_id', 'patient_id', 'yazisma_id', 'gonderen', 'metin_encrypted', 'created_at'].some(farkli) || (eski.okundu_at && farkli('okundu_at')) ? kisitHatasi('23514', 'ulke_hasta_mesajlari: a message does not change; it is read once') : null
+  if (ad === 'ulke_hekim_sablonlari') return farkli('ulke') || farkli('doctor_id') || eski.silindi_at ? kisitHatasi('23514', 'ulke_hekim_sablonlari: a template never moves, and a deleted one does not change') : null
+  if (ad === 'ulke_konsultasyon_kodlari') return farkli('ulke') || farkli('doctor_id') ? kisitHatasi('23514', 'ulke_konsultasyon_kodlari: a code never moves to another country or account') : null
+  if (ad === 'ulke_konsultasyonlar') {
+    if (['ulke', 'doctor_id', 'patient_id', 'danisilan_id', 'note_id', 'paylasim_turu', 'soru_encrypted', 'paylasim_encrypted', 'riza_surumu', 'riza_at', 'son_gecerlilik', 'created_at'].some(farkli)) return kisitHatasi('23514', 'ulke_konsultasyonlar: who asked whom about whom, the question, the copy, the consent and the period do not change')
+    if ((eski.okundu_at && farkli('okundu_at')) || (eski.cevap_at && (farkli('cevap_at') || farkli('cevap_encrypted'))) || (eski.kapandi_at && (farkli('kapandi_at') || farkli('erisim_bitis')))) return kisitHatasi('23514', 'ulke_konsultasyonlar: read once, answered once, closed once')
+    if (eski.kapandi_at && farkli('cevap_at')) return kisitHatasi('23514', 'ulke_konsultasyonlar: a closed consultation takes no answer')
+    return null
+  }
+  if (ad !== 'ulke_hasta_formlari' && ad !== 'ulke_arac_kayitlari') return null
   // NOTYA-ULKE-ARACLAR-01 — the trigger of migration 139 (`ulke_arac_kaydi_kilidi`).
   if (ad === 'ulke_arac_kayitlari') {
     if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return kisitHatasi('23514', 'ulke_arac_kayitlari: a record never moves to another country, doctor or patient')
