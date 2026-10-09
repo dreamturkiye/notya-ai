@@ -30,6 +30,18 @@
  *      moves; its tool, its content and its follow-up day never change; a closed follow-up stays closed; only a
  *      follow-up that exists can be closed; the tool key has the shape of a key; the content is one value; the table
  *      cannot be read by a browser session; removing the patient removes the records.
+ *   M. MESSAGES BETWEEN A DOCTOR AND A PATIENT (migration 140): a conversation belongs to one patient of one doctor
+ *      in one country and never moves; one open conversation per patient; a closed conversation stays closed and
+ *      takes no message; a message names its own patient's conversation, never changes, and "read" is set once;
+ *      there is no column for an attachment; neither table can be read by a browser session.
+ *   S. "MY TEMPLATES" (migration 141): a template belongs to one doctor in one country and never moves; the table
+ *      has no column that could name a patient; deleting is soft and a deleted template does not come back; the
+ *      table cannot be read by a browser session.
+ *   N. CONSULTATION BETWEEN DOCTORS (migration 142): the consulted account is of the same country and never the
+ *      asking one; only an APPROVED note of THIS patient is shared; the row is the record (who, whom, which
+ *      patient, what, which consent wording, when) and none of it changes; an answer is given once and only while
+ *      open; closed stays closed with its end of reading; a code names one account; neither table can be read by a
+ *      browser session, the asking doctor's or the consulted one's.
  *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave nothing.
  *   T. NOT ON ANY OTHER DATABASE. On a database that is NOT a country database — here one shaped like the Turkish
  *      product's, with its own tables and rows — the baseline refuses, and every migration written since the first
@@ -710,6 +722,226 @@ ok('132: the private bucket exists once', (await c.query(`select count(*)::int n
   }
 }
 
+// ── M. messages between a doctor and a patient (migration 140) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (tablo, kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ${tablo} where ${kosul}`, par)).rows[0].n
+  const A1 = await hasta(D1), A2 = await hasta(D1), A3 = await hasta(D2), SIL = await hasta(D1)
+  const YAZ = `insert into ulke_mesaj_yazismalari (ulke, doctor_id, patient_id) values ($1, $2, $3) returning id`
+  const MES = `insert into ulke_hasta_mesajlari (ulke, doctor_id, patient_id, yazisma_id, gonderen, metin_encrypted) values ($1, $2, $3, $4, $5, $6) returning id`
+  const y1 = (await q(YAZ, ['uz', D1, A1]))[0].id
+  const m1 = (await q(MES, ['uz', D1, A1, y1, 'hekim', 'sifreli-1']))[0].id
+  const m2 = (await q(MES, ['uz', D1, A1, y1, 'hasta', 'sifreli-2']))[0].id
+  ok('M. a conversation is stamped with its country, doctor and patient and begins open; a message with its writer, unread', JSON.stringify(await q(`select y.ulke, y.doctor_id, y.patient_id, y.kapandi_at, m.gonderen, m.metin_encrypted, m.okundu_at from ulke_mesaj_yazismalari y join ulke_hasta_mesajlari m on m.yazisma_id = y.id where m.id = $1`, [m1])) === JSON.stringify([{ ulke: 'uz', doctor_id: D1, patient_id: A1, kapandi_at: null, gonderen: 'hekim', metin_encrypted: 'sifreli-1', okundu_at: null }]))
+
+  // the keys
+  await bekle('M. keys: a second OPEN conversation for the same patient → refused 23505', YAZ, ['uz', D1, A1], '23505')
+  await bekle('M. keys: a conversation with ANOTHER doctor\'s patient → refused 23503', YAZ, ['uz', D1, A3], '23503')
+  await bekle('M. keys: a conversation under ANOTHER country for this patient → refused 23503', YAZ, ['kz', D1, A1], '23503')
+  await bekle('M. keys: a conversation with a patient of ANOTHER country\'s doctor → refused 23503', YAZ, ['uz', K1, HK], '23503')
+  const y2 = (await q(YAZ, ['uz', D1, A2]))[0].id
+  const y3 = (await q(YAZ, ['uz', D2, A3]))[0].id
+  await bekle('M. keys: a message that names ANOTHER patient\'s conversation (same doctor) → refused 23503', MES, ['uz', D1, A1, y2, 'hekim', 'x'], '23503')
+  await bekle('M. keys: a message that names ANOTHER doctor\'s conversation → refused 23503', MES, ['uz', D1, A1, y3, 'hekim', 'x'], '23503')
+  await bekle('M. keys: a message of another doctor into this conversation → refused 23503', MES, ['uz', D2, A1, y1, 'hekim', 'x'], '23503')
+  await bekle('M. keys: a message under another country into this conversation → refused 23503', MES, ['kz', D1, A1, y1, 'hekim', 'x'], '23503')
+  await bekle('M. keys: a writer that is neither the doctor nor the patient → refused 23514', MES, ['uz', D1, A1, y1, 'sistem', 'x'], '23514')
+  await bekle('M. keys: a message without text → refused 23514', MES, ['uz', D1, A1, y1, 'hekim', ''], '23514')
+  await bekle('M. keys: a message without text (null) → refused 23502', MES, ['uz', D1, A1, y1, 'hekim', null], '23502')
+  await bekle('M. trigger: a message is written unread → refused 23514', `insert into ulke_hasta_mesajlari (ulke, doctor_id, patient_id, yazisma_id, gonderen, metin_encrypted, okundu_at) values ('uz', $1, $2, $3, 'hekim', 'x', now())`, [D1, A1, y1], '23514')
+
+  // what a message may never do
+  await bekle('M. trigger: the text of a message does not change → refused 23514', `update ulke_hasta_mesajlari set metin_encrypted = 'baska' where id = $1`, [m1], '23514')
+  await bekle('M. trigger: nor its writer → refused 23514', `update ulke_hasta_mesajlari set gonderen = 'hasta' where id = $1`, [m1], '23514')
+  await bekle('M. trigger: nor its moment → refused 23514', `update ulke_hasta_mesajlari set created_at = now() + interval '1 day' where id = $1`, [m1], '23514')
+  await bekle('M. trigger: a message never moves to another conversation → refused 23514', `update ulke_hasta_mesajlari set patient_id = $2, yazisma_id = $3 where id = $1`, [m1, A2, y2], '23514')
+  await bekle('M. trigger: nor to another doctor → refused', `update ulke_hasta_mesajlari set doctor_id = $2 where id = $1`, [m1, D2], '23514')
+  await c.query(`update ulke_hasta_mesajlari set okundu_at = '2027-03-01T08:00:00Z' where id = $1`, [m2])
+  ok('M. the other side marks a message as read', (await say('ulke_hasta_mesajlari', 'id = $1 and okundu_at is not null', [m2])) === 1)
+  await bekle('M. trigger: a message that was read is not made unread → refused 23514', `update ulke_hasta_mesajlari set okundu_at = null where id = $1`, [m2], '23514')
+  await bekle('M. trigger: nor is the moment moved → refused 23514', `update ulke_hasta_mesajlari set okundu_at = now() where id = $1`, [m2], '23514')
+  ok('M. what a doctor has not read yet is the patients\' unread messages only', JSON.stringify(await q(`select count(*)::int n from ulke_hasta_mesajlari where ulke = 'uz' and doctor_id = $1 and gonderen = 'hasta' and okundu_at is null`, [D1])) === JSON.stringify([{ n: 0 }]) && (await say('ulke_hasta_mesajlari', `doctor_id = $1 and gonderen = 'hekim' and okundu_at is null`, [D1])) === 1)
+
+  // a conversation: never moves; closed stays closed and takes no message
+  await bekle('M. trigger: a conversation never moves to another patient → refused 23514', `update ulke_mesaj_yazismalari set patient_id = $2 where id = $1`, [y2, A1], '23514')
+  await bekle('M. trigger: nor to another doctor → refused 23514', `update ulke_mesaj_yazismalari set doctor_id = $2 where id = $1`, [y2, D2], '23514')
+  await bekle('M. trigger: nor to another country → refused 23514', `update ulke_mesaj_yazismalari set ulke = 'kz' where id = $1`, [y2], '23514')
+  await c.query(`update ulke_mesaj_yazismalari set kapandi_at = '2027-03-02T08:00:00Z', updated_at = now() where id = $1`, [y1])
+  ok('M. the doctor closes a conversation', (await say('ulke_mesaj_yazismalari', 'id = $1 and kapandi_at is not null', [y1])) === 1)
+  await bekle('M. trigger: a closed conversation takes no message from the patient → refused 23514', MES, ['uz', D1, A1, y1, 'hasta', 'x'], '23514')
+  await bekle('M. trigger: nor from the doctor → refused 23514', MES, ['uz', D1, A1, y1, 'hekim', 'x'], '23514')
+  await bekle('M. trigger: a closed conversation is not opened again → refused 23514', `update ulke_mesaj_yazismalari set kapandi_at = null where id = $1`, [y1], '23514')
+  await bekle('M. trigger: nor is its closing moved → refused 23514', `update ulke_mesaj_yazismalari set kapandi_at = now() where id = $1`, [y1], '23514')
+  await c.query(`update ulke_hasta_mesajlari set okundu_at = now() where id = $1`, [m1])
+  ok('M. a message of a closed conversation can still be marked as read', (await say('ulke_hasta_mesajlari', 'id = $1 and okundu_at is not null', [m1])) === 1)
+  const y1b = (await q(YAZ, ['uz', D1, A1]))[0].id
+  ok('M. after closing, the doctor opens a NEW conversation with the same patient; the closed one keeps its messages', y1b !== y1 && (await say('ulke_hasta_mesajlari', 'yazisma_id = $1', [y1])) === 2 && (await q(MES, ['uz', D1, A1, y1b, 'hekim', 'sifreli-3'])).length === 1)
+  ok('M. the tables have ONE column for the text, and none for an attachment', (await q(`select string_agg(column_name, ',' order by ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name = 'ulke_hasta_mesajlari'`))[0].k === 'id,ulke,doctor_id,patient_id,yazisma_id,gonderen,metin_encrypted,okundu_at,created_at' && (await q(`select string_agg(column_name, ',' order by ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name = 'ulke_mesaj_yazismalari'`))[0].k === 'id,ulke,doctor_id,patient_id,kapandi_at,created_at,updated_at')
+
+  // removing the patient removes the conversations and their messages
+  { const ys = (await q(YAZ, ['uz', D1, SIL]))[0].id; await q(MES, ['uz', D1, SIL, ys, 'hekim', 'sifreli-4']) }
+  await c.query(`delete from ulke_hastalar where id = $1 and doctor_id = $2 and ulke = 'uz'`, [SIL, D1])
+  ok('M. removing a patient removes that patient\'s conversations and messages and no one else\'s', (await say('ulke_mesaj_yazismalari', 'patient_id = $1', [SIL])) === 0 && (await say('ulke_hasta_mesajlari', 'patient_id = $1', [SIL])) === 0 && (await say('ulke_hasta_mesajlari', 'patient_id = $1', [A1])) === 3)
+
+  // SERVER ONLY
+  {
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(D1, ulke); else await c.query(`set role ${rol}`)
+      for (const sql of [`select 1 from ulke_hasta_mesajlari limit 1`, `select 1 from ulke_mesaj_yazismalari limit 1`, `delete from ulke_hasta_mesajlari`, `update ulke_hasta_mesajlari set okundu_at = now()`, `update ulke_mesaj_yazismalari set kapandi_at = now()`, `insert into ulke_mesaj_yazismalari (ulke, doctor_id, patient_id) values ('uz', '${D1}', '${A2}')`, `insert into ulke_hasta_mesajlari (ulke, doctor_id, patient_id, yazisma_id, gonderen, metin_encrypted) values ('uz', '${D1}', '${A2}', '${y2}', 'hekim', 'x')`, `select public.ulke_hasta_mesaji_kilidi()`, `select public.ulke_mesaj_yazismasi_kilidi()`]) { try { await c.query(sql); cikti.push(`${sql.slice(0, 50)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 50)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('M. server only: the doctor\'s own signed-in browser session can read and write NONE of it (its own rows included)', girisli.length === 0, girisli.join('; '))
+    ok('M. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select count(*) from ulke_hasta_mesajlari`); await c.query(MES, ['uz', D2, A3, y3, 'hekim', 'sifreli-5']) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('M. server only: the server\'s role can', sunucu === 'ok' && (await say('ulke_hasta_mesajlari', 'patient_id = $1', [A3])) === 1, sunucu)
+  }
+}
+
+// ── S. "my templates" (migration 141) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ulke_hekim_sablonlari where ${kosul}`, par)).rows[0].n
+  const EKLE = `insert into ulke_hekim_sablonlari (ulke, doctor_id, kapsam, icerik_encrypted) values ($1, $2, $3, $4) returning id`
+  const s1 = (await q(EKLE, ['uz', D1, 'not', 'sifreli-1']))[0].id
+  const s2 = (await q(EKLE, ['uz', D1, 'mesaj', 'sifreli-2']))[0].id
+  await q(EKLE, ['uz', D2, 'hepsi', 'sifreli-3'])
+  ok('S. a template is stamped with its country and doctor, and is in use', JSON.stringify(await q(`select ulke, doctor_id, kapsam, icerik_encrypted, silindi_at from ulke_hekim_sablonlari where id = $1`, [s1])) === JSON.stringify([{ ulke: 'uz', doctor_id: D1, kapsam: 'not', icerik_encrypted: 'sifreli-1', silindi_at: null }]))
+  ok('S. NO PATIENT IN THE ROW: the table has no column that could name one, and one column for the content', (await q(`select string_agg(column_name, ',' order by ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name = 'ulke_hekim_sablonlari'`))[0].k === 'id,ulke,doctor_id,kapsam,icerik_encrypted,silindi_at,created_at,updated_at')
+  await bekle('S. keys: a template of a doctor under ANOTHER country → refused 23503', EKLE, ['kz', D1, 'not', 'x'], '23503')
+  await bekle('S. keys: a template of an account that does not exist → refused 23503', EKLE, ['uz', '99999999-9999-4999-8999-999999999999', 'not', 'x'], '23503')
+  await bekle('S. keys: a place of use that is not one → refused 23514', EKLE, ['uz', D1, 'her-yer', 'x'], '23514')
+  await bekle('S. keys: a template without content → refused 23514', EKLE, ['uz', D1, 'not', ''], '23514')
+  await bekle('S. keys: a template without content (null) → refused 23502', EKLE, ['uz', D1, 'not', null], '23502')
+  await c.query(`update ulke_hekim_sablonlari set icerik_encrypted = 'sifreli-1b', kapsam = 'hepsi', updated_at = now() where id = $1`, [s1])
+  ok('S. the doctor edits a template', (await say(`id = $1 and icerik_encrypted = 'sifreli-1b' and kapsam = 'hepsi'`, [s1])) === 1)
+  await bekle('S. trigger: a template never moves to another doctor → refused 23514', `update ulke_hekim_sablonlari set doctor_id = $2 where id = $1`, [s1, D2], '23514')
+  await bekle('S. trigger: nor to another country → refused 23514', `update ulke_hekim_sablonlari set ulke = 'kz' where id = $1`, [s1], '23514')
+  await c.query(`update ulke_hekim_sablonlari set silindi_at = '2027-04-01T08:00:00Z', updated_at = now() where id = $1`, [s2])
+  ok('S. deleting is soft: the row stays, marked', (await say('id = $1 and silindi_at is not null', [s2])) === 1)
+  await bekle('S. trigger: a deleted template is not brought back → refused 23514', `update ulke_hekim_sablonlari set silindi_at = null where id = $1`, [s2], '23514')
+  await bekle('S. trigger: nor edited → refused 23514', `update ulke_hekim_sablonlari set icerik_encrypted = 'baska' where id = $1`, [s2], '23514')
+  ok('S. the list of a doctor is their own templates in use', (await say(`ulke = 'uz' and doctor_id = $1 and silindi_at is null`, [D1])) === 1)
+  {
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(D1, ulke); else await c.query(`set role ${rol}`)
+      for (const sql of [`select 1 from ulke_hekim_sablonlari limit 1`, `delete from ulke_hekim_sablonlari`, `update ulke_hekim_sablonlari set updated_at = now()`, `insert into ulke_hekim_sablonlari (ulke, doctor_id, kapsam, icerik_encrypted) values ('uz', '${D1}', 'not', 'x')`, `select public.ulke_hekim_sablonu_kilidi()`]) { try { await c.query(sql); cikti.push(`${sql.slice(0, 50)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 50)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('S. server only: the doctor\'s own signed-in browser session can read and write NONE of it (its own rows included)', girisli.length === 0, girisli.join('; '))
+    ok('S. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select count(*) from ulke_hekim_sablonlari`); await c.query(EKLE, ['uz', D2, 'not', 'sifreli-4']) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('S. server only: the server\'s role can', sunucu === 'ok' && (await say('doctor_id = $1', [D2])) === 2, sunucu)
+  }
+}
+
+// ── N. consultation between doctors (migration 142) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (tablo, kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ${tablo} where ${kosul}`, par)).rows[0].n
+  const A1 = await hasta(D1), A2 = await hasta(D1), A3 = await hasta(D2), SIL = await hasta(D1)
+  // an approved note of A1, a draft of A1, an approved note of A2 (same doctor), an approved note of D2's patient
+  const onayli = async (d, h) => { const x = await notKur(d, h, null); await c.query(`update ulke_notlar set approved_at = now(), approved_by = $2 where id = $1`, [x.n, d]); return x.n }
+  const N1 = await onayli(D1, A1), N2 = await onayli(D1, A2), N3 = await onayli(D2, A3), TASLAK = (await notKur(D1, A1, null)).n
+  const H = (h) => h.repeat(64)
+  const KOD = `insert into ulke_konsultasyon_kodlari (ulke, doctor_id, kod_hash, kod_encrypted) values ($1, $2, $3, $4) returning id`
+  await q(KOD, ['uz', D2, H('a'), 'sifreli-kod-2'])
+  ok('N. a consultation code is stamped with its country and account', (await say('ulke_konsultasyon_kodlari', `ulke = 'uz' and doctor_id = $1 and kod_hash = $2`, [D2, H('a')])) === 1)
+  await bekle('N. code: a second code for the same account → refused 23505', KOD, ['uz', D2, H('b'), 'x'], '23505')
+  await bekle('N. code: the same code for another account → refused 23505', KOD, ['uz', D1, H('a'), 'x'], '23505')
+  await bekle('N. code: a code under another country for this account → refused 23503', KOD, ['kz', D2, H('c'), 'x'], '23503')
+  await bekle('N. code: a hash that is not a hash → refused 23514', KOD, ['uz', D1, 'ABCD', 'x'], '23514')
+  await c.query(`update ulke_konsultasyon_kodlari set kod_hash = $2, kod_encrypted = 'sifreli-kod-2b', updated_at = now() where ulke = 'uz' and doctor_id = $1`, [D2, H('d')])
+  ok('N. code: a new code replaces the old one; the old one finds nobody', (await say('ulke_konsultasyon_kodlari', `kod_hash = $1`, [H('a')])) === 0 && (await say('ulke_konsultasyon_kodlari', `kod_hash = $1`, [H('d')])) === 1)
+  await bekle('N. code trigger: a code never moves to another account → refused 23514', `update ulke_konsultasyon_kodlari set doctor_id = $2 where ulke = 'uz' and doctor_id = $1`, [D2, D1], '23514')
+
+  const EKLE = `insert into ulke_konsultasyonlar (ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, note_id, soru_encrypted, paylasim_encrypted, riza_surumu, riza_at, son_gecerlilik) values ($1, $2, $3, $4, $5, $6, $7, $8, 'riza-1', now(), now() + interval '30 days') returning id`
+  const k1 = (await q(EKLE, ['uz', D1, A1, D2, 'not', N1, 'soru-1', 'kopya-1']))[0].id
+  const k2 = (await q(EKLE, ['uz', D1, A1, D2, 'yok', null, 'soru-2', null]))[0].id
+  ok('N. THE RECORD: who asked whom about which patient, what was shared from which note, on which consent wording, and when', JSON.stringify(await q(`select ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, note_id, soru_encrypted, paylasim_encrypted, riza_surumu, (riza_at is not null) riza, okundu_at, cevap_at, kapandi_at, erisim_bitis, (son_gecerlilik > created_at) sure from ulke_konsultasyonlar where id = $1`, [k1])) === JSON.stringify([{ ulke: 'uz', doctor_id: D1, patient_id: A1, danisilan_id: D2, paylasim_turu: 'not', note_id: N1, soru_encrypted: 'soru-1', paylasim_encrypted: 'kopya-1', riza_surumu: 'riza-1', riza: true, okundu_at: null, cevap_at: null, kapandi_at: null, erisim_bitis: null, sure: true }]))
+
+  // the keys
+  await bekle('N. keys: about ANOTHER doctor\'s patient → refused 23503', EKLE, ['uz', D1, A3, D2, 'yok', null, 's', null], '23503')
+  await bekle('N. keys: under ANOTHER country for this patient → refused 23503', EKLE, ['kz', D1, A1, K1, 'yok', null, 's', null], '23503')
+  await bekle('N. keys: A COLLEAGUE OF ANOTHER COUNTRY → refused 23503', EKLE, ['uz', D1, A1, K1, 'yok', null, 's', null], '23503')
+  await bekle('N. keys: a colleague that is no account → refused 23503', EKLE, ['uz', D1, A1, '99999999-9999-4999-8999-999999999999', 'yok', null, 's', null], '23503')
+  await bekle('N. keys: oneself as the colleague → refused 23514', EKLE, ['uz', D1, A1, D1, 'yok', null, 's', null], '23514')
+  await bekle('N. keys: a consultation without a question → refused 23514', EKLE, ['uz', D1, A1, D2, 'yok', null, '', null], '23514')
+  await bekle('N. keys: "a note is shared" without the copy → refused 23514', EKLE, ['uz', D1, A1, D2, 'not', N1, 's', null], '23514')
+  await bekle('N. keys: a copy without saying what it is → refused 23514', EKLE, ['uz', D1, A1, D2, 'yok', null, 's', 'kopya'], '23514')
+  await bekle('N. keys: a copy without the note it was taken from → refused 23514', EKLE, ['uz', D1, A1, D2, 'ozet', null, 's', 'kopya'], '23514')
+  await bekle('N. keys: without the consent wording\'s stamp → refused 23502', `insert into ulke_konsultasyonlar (ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, soru_encrypted, riza_surumu, riza_at, son_gecerlilik) values ('uz', $1, $2, $3, 'yok', 's', null, now(), now() + interval '1 day')`, [D1, A1, D2], '23502')
+  await bekle('N. keys: without the moment of the consent → refused 23502', `insert into ulke_konsultasyonlar (ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, soru_encrypted, riza_surumu, riza_at, son_gecerlilik) values ('uz', $1, $2, $3, 'yok', 's', 'riza-1', null, now() + interval '1 day')`, [D1, A1, D2], '23502')
+  await bekle('N. keys: without a period → refused 23502', `insert into ulke_konsultasyonlar (ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, soru_encrypted, riza_surumu, riza_at, son_gecerlilik) values ('uz', $1, $2, $3, 'yok', 's', 'riza-1', now(), null)`, [D1, A1, D2], '23502')
+  // what may be shared
+  await bekle('N. trigger: a note that is NOT APPROVED is not shared → refused 23514', EKLE, ['uz', D1, A1, D2, 'not', TASLAK, 's', 'kopya'], '23514')
+  await bekle('N. trigger: a note of ANOTHER patient of the same doctor is not shared for this patient → refused 23514', EKLE, ['uz', D1, A1, D2, 'not', N2, 's', 'kopya'], '23514')
+  await bekle('N. keys: a note of ANOTHER doctor → refused', EKLE, ['uz', D1, A1, D2, 'not', N3, 's', 'kopya'], '23514')
+  await bekle('N. trigger: a consultation begins unread, unanswered and open → refused 23514', `insert into ulke_konsultasyonlar (ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, soru_encrypted, riza_surumu, riza_at, son_gecerlilik, okundu_at) values ('uz', $1, $2, $3, 'yok', 's', 'riza-1', now(), now() + interval '1 day', now())`, [D1, A1, D2], '23514')
+
+  // what a consultation may never do
+  await bekle('N. trigger: a consultation never moves to another patient → refused 23514', `update ulke_konsultasyonlar set patient_id = $2 where id = $1`, [k2, A2], '23514')
+  await bekle('N. trigger: nor to another colleague → refused 23514', `update ulke_konsultasyonlar set danisilan_id = $2 where id = $1`, [k2, K1], '23514')
+  await bekle('N. trigger: nor to another asking doctor → refused 23514', `update ulke_konsultasyonlar set doctor_id = $2 where id = $1`, [k2, D2], '23514')
+  await bekle('N. trigger: the question does not change → refused 23514', `update ulke_konsultasyonlar set soru_encrypted = 'baska' where id = $1`, [k1], '23514')
+  await bekle('N. trigger: what was shared does not change → refused 23514', `update ulke_konsultasyonlar set paylasim_encrypted = 'baska' where id = $1`, [k1], '23514')
+  await bekle('N. trigger: nor is something shared afterwards → refused 23514', `update ulke_konsultasyonlar set paylasim_turu = 'not', note_id = $2, paylasim_encrypted = 'kopya' where id = $1`, [k2, N1], '23514')
+  await bekle('N. trigger: the consent wording\'s stamp does not change → refused 23514', `update ulke_konsultasyonlar set riza_surumu = 'riza-2' where id = $1`, [k1], '23514')
+  await bekle('N. trigger: the period is not extended → refused 23514', `update ulke_konsultasyonlar set son_gecerlilik = son_gecerlilik + interval '1 year' where id = $1`, [k1], '23514')
+  await c.query(`update ulke_konsultasyonlar set okundu_at = '2027-05-01T08:00:00Z' where id = $1`, [k1])
+  await bekle('N. trigger: the first reading is recorded once → refused 23514', `update ulke_konsultasyonlar set okundu_at = now() where id = $1`, [k1], '23514')
+  await bekle('N. state: an answer without its moment → refused 23514', `update ulke_konsultasyonlar set cevap_encrypted = 'cevap' where id = $1`, [k1], '23514')
+  await c.query(`update ulke_konsultasyonlar set cevap_encrypted = 'cevap-1', cevap_at = '2027-05-02T08:00:00Z', updated_at = now() where id = $1`, [k1])
+  ok('N. the consulted doctor answers', (await say('ulke_konsultasyonlar', `id = $1 and cevap_encrypted = 'cevap-1'`, [k1])) === 1)
+  await bekle('N. trigger: an answer is given once and does not change → refused 23514', `update ulke_konsultasyonlar set cevap_encrypted = 'cevap-2' where id = $1`, [k1], '23514')
+  await bekle('N. state: closing without saying until when it may still be read → refused 23514', `update ulke_konsultasyonlar set kapandi_at = now() where id = $1`, [k2], '23514')
+  await bekle('N. state: an end of reading before the closing → refused 23514', `update ulke_konsultasyonlar set kapandi_at = now(), erisim_bitis = now() - interval '1 day' where id = $1`, [k2], '23514')
+  await c.query(`update ulke_konsultasyonlar set kapandi_at = '2027-05-03T08:00:00Z', erisim_bitis = '2027-05-10T08:00:00Z', updated_at = now() where id = $1`, [k2])
+  ok('N. the asking doctor closes a consultation, with the moment until which it may still be read', (await say('ulke_konsultasyonlar', 'id = $1 and kapandi_at is not null and erisim_bitis > kapandi_at', [k2])) === 1)
+  await bekle('N. trigger: a closed consultation is not opened again → refused 23514', `update ulke_konsultasyonlar set kapandi_at = null, erisim_bitis = null where id = $1`, [k2], '23514')
+  await bekle('N. trigger: its end of reading is not moved → refused 23514', `update ulke_konsultasyonlar set erisim_bitis = erisim_bitis + interval '1 year' where id = $1`, [k2], '23514')
+  await bekle('N. trigger: a closed consultation takes no answer → refused 23514', `update ulke_konsultasyonlar set cevap_encrypted = 'gec', cevap_at = now() where id = $1`, [k2], '23514')
+  await c.query(`update ulke_konsultasyonlar set okundu_at = '2027-05-04T08:00:00Z' where id = $1`, [k2])
+  ok('N. a first reading after the closing is still recorded', (await say('ulke_konsultasyonlar', 'id = $1 and okundu_at is not null', [k2])) === 1)
+  ok('N. what the consulted doctor is listed is only where THEY were asked; the patient\'s own tables name them nowhere', (await say('ulke_konsultasyonlar', `ulke = 'uz' and danisilan_id = $1`, [D2])) === 2 && (await say('ulke_konsultasyonlar', `ulke = 'uz' and danisilan_id = $1`, [D1])) === 0 && (await say('ulke_hastalar', `doctor_id = $1 and id = $2`, [D2, A1])) === 0)
+
+  // removing the patient removes the consultations about them
+  await q(EKLE, ['uz', D1, SIL, D2, 'yok', null, 'soru-3', null])
+  await c.query(`delete from ulke_hastalar where id = $1 and doctor_id = $2 and ulke = 'uz'`, [SIL, D1])
+  ok('N. removing a patient removes the consultations about that patient and no one else\'s', (await say('ulke_konsultasyonlar', 'patient_id = $1', [SIL])) === 0 && (await say('ulke_konsultasyonlar', 'patient_id = $1', [A1])) === 2)
+
+  // SERVER ONLY — for the asking doctor's browser session and for the consulted doctor's
+  {
+    const kodlar = async (rol, ulke, kim = D1) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(kim, ulke); else await c.query(`set role ${rol}`)
+      for (const sql of [`select 1 from ulke_konsultasyonlar limit 1`, `select 1 from ulke_konsultasyon_kodlari limit 1`, `delete from ulke_konsultasyonlar`, `update ulke_konsultasyonlar set updated_at = now()`, `delete from ulke_konsultasyon_kodlari`, `insert into ulke_konsultasyon_kodlari (ulke, doctor_id, kod_hash, kod_encrypted) values ('uz', '${D1}', '${H('e')}', 'x')`, `insert into ulke_konsultasyonlar (ulke, doctor_id, patient_id, danisilan_id, paylasim_turu, soru_encrypted, riza_surumu, riza_at, son_gecerlilik) values ('uz', '${D1}', '${A1}', '${D2}', 'yok', 's', 'r', now(), now() + interval '1 day')`, `select public.ulke_konsultasyon_kilidi()`, `select public.ulke_konsultasyon_kodu_kilidi()`]) { try { await c.query(sql); cikti.push(`${sql.slice(0, 50)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 50)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const isteyen = await kodlar('authenticated', 'uz', D1), danisilan = await kodlar('authenticated', 'uz', D2), anon = await kodlar('anon', null)
+    ok('N. server only: the asking doctor\'s signed-in browser session can read and write NONE of it (its own rows included)', isteyen.length === 0, isteyen.join('; '))
+    ok('N. server only: nor can the consulted doctor\'s', danisilan.length === 0, danisilan.join('; '))
+    ok('N. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select count(*) from ulke_konsultasyonlar`); await c.query(EKLE, ['uz', D2, A3, D1, 'not', N3, 'soru-4', 'kopya-4']) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('N. server only: the server\'s role can', sunucu === 'ok' && (await say('ulke_konsultasyonlar', 'patient_id = $1', [A3])) === 1, sunucu)
+  }
+}
+
 // ── E. the rollback scripts ──
 const GERI = [...DOSYALAR].reverse().map((d) => d.replace(/\.sql$/, '.geri-al.sql'))
 const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 'utf8')
@@ -725,7 +957,7 @@ const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 
   await c.query(`delete from auth.users where id in ($1, $2, $3)`, [D1, D2, K1])
   const kalan = []
   for (const t of (await c.query(`select tablename t from pg_tables where schemaname = 'public' and tablename not in ('schema_migrations') order by 1`)).rows.map((r) => r.t)) { const n = (await c.query(`select count(*)::int n from public.${t}`)).rows[0].n; if (n) kalan.push(`${t}: ${n}`) }
-  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests, intake forms and tool records included', kalan.length === 0, kalan.join(', '))
+  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests, intake forms, tool records, conversations and messages, templates, consultations and consultation codes included', kalan.length === 0, kalan.join(', '))
   for (const tur of ['first run', 'second run (must be repeatable)']) {
     for (const d of GERI) {
       try { await c.query(geriOku(d)); ok(`E. rollback, ${tur}: ${d}`, true) }
