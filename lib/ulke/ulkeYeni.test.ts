@@ -57,6 +57,8 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
   it('creates the pack, registers the code, and says exactly how much is still to supply', async () => {
     const r = kos(K, '--dil', 'en', '--yol', `/${K}`)
     assert.equal(r.status, 0, r.stdout + r.stderr)
+    // the command says, as a step of its own, that the country needs a database of its own and which file makes it
+    assert.match(r.stdout, /THE COUNTRY'S OWN DATABASE[\s\S]*the owner creates a new, EMPTY database[\s\S]*000_yeni_ulke_veritabani\.sql on it, once/)
     for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
     // registration: the code list, the language, one branch per door, the side-by-side list
     assert.match(oku('lib/ulke/tipler.ts'), new RegExp(`export const ULKE_KODLARI = \\[[^\\]]*'${K}'\\] as const`))
@@ -120,6 +122,12 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.deepEqual(kutu(kayit).map((x) => x.slice(6)), liste.map((x) => x.slice(6)))
     assert.match(kayit, /What building the pack does NOT prove/)
     assert.match(kayit, /Sign-up is closed/)
+    // One database per country: the record says no database exists yet, names the baseline, and carries the steps as gates.
+    assert.match(kayit, /no database exists for this country yet/)
+    assert.match(kayit, /lib\/db\/ulke\/000_yeni_ulke_veritabani\.sql/)
+    assert.match(kayit, /^- \[ \] M1 The country's own database exists/m)
+    assert.match(kayit, /^- \[ \] M6 No script of this country was run on any other database/m)
+    assert.doesNotMatch(kayit, /every country shares one database|No migration is needed/)
   })
 
   it('refuses to run twice for the same country, and changes nothing the second time', () => {

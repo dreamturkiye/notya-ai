@@ -26,6 +26,11 @@
  *   - Every other country is untouched: a build holds one pack.
  *
  * It changes files in the repository and nothing else: no database, no deployment, no setting anywhere.
+ *
+ * THE COUNTRY'S OWN DATABASE is not made here. One database per country (Kaan, 2026-10-09): the owner creates a new,
+ * empty one, and the baseline (lib/db/ulke/000_yeni_ulke_veritabani.sql) is run on it once — never on the Turkish
+ * database, never on another country's. The record this command writes carries those steps as section M, unticked,
+ * and the command prints them (docs/COUNTRY-PACK-DB-ROLLOUT.md).
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
@@ -518,7 +523,7 @@ Answers to \`docs/COUNTRY-PACK-CHECKLIST.md\` for the country \`${KOD}\`. Code: 
 
 ## Status
 
-- **Nothing is live.** No deployment exists. No migration is needed for a new country: every country shares one database, and its rows carry the code \`${KOD}\` (\`docs/COUNTRY-PACK-DB-ROLLOUT.md\`).
+- **Nothing is live.** No deployment exists and **no database exists for this country yet.** One database per country: the owner creates a new, empty one, and the baseline (\`lib/db/ulke/000_yeni_ulke_veritabani.sql\`) is run on it once. No script of this country is ever run on the Turkish database or on another country's. Section M below; how each step is done: \`docs/COUNTRY-PACK-DB-ROLLOUT.md\`.
 - **The pack cannot be built yet.** \`node scripts/ulke-paket-denetimi.mjs --ulke ${KOD}\` prints every item still to supply.
 - **Sign-up is closed** (invitation code only) and **the site is hidden from search**. Both are opened by the owner only.
 - Language: \`${DIL}\`. Served at: \`${YOL || 'an address of its own (domain root)'}\`.
@@ -561,3 +566,7 @@ for (const [dosya, n] of dosyaBasina) console.log(`  ${String(n).padStart(4)}  $
 console.log(`\nThe full list, with a hint for each:   node scripts/ulke-paket-denetimi.mjs --ulke ${KOD}`)
 console.log(`What to supply, in which order, and what building does not prove:   docs/COUNTRY-PACK-HOWTO.md`)
 console.log(`Sign-up is closed and the site is hidden from search. No database, deployment or setting was touched.`)
+console.log(`\nTHE COUNTRY'S OWN DATABASE (one database per country; never the Turkish one, never another country's):`)
+console.log(`  1. the owner creates a new, EMPTY database for "${KOD}" (it has a monthly cost)`)
+console.log(`  2. run lib/db/ulke/000_yeni_ulke_veritabani.sql on it, once (it refuses a database that is not empty)`)
+console.log(`  3. check the result and tick section M of docs/COUNTRY-PACK-${B}.md          docs/COUNTRY-PACK-DB-ROLLOUT.md`)

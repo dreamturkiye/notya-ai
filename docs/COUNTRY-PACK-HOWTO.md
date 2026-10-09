@@ -1,9 +1,5 @@
 # How to start a new country
 
-> **DECISION — Kaan, 2026-10-09 02:26: every country has its own database.**
-> His words: "We had issues with common databases before. Keep seperation between the two and any other future country versions".
-> This supersedes the shared-database decision of 2026-10-08 19:09. Wherever the text below describes one database shared with Türkiye, read it as: the country's scripts run only on that country's own database, and **no country script is ever run on the Turkish database**. The country code carried on every row and in every query stays as a second wall. The sections below have not yet been rewritten for this.
-
 Written 2026-10-09 (NOTYA-ULKE-SABLON-01). The standard a country must meet is `docs/COUNTRY-PACK-CHECKLIST.md`; this page is the practical side: what a country is made of, the one command that starts it, what has to be supplied and in which order, and what a successful build does **not** prove.
 
 Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked example: three language forms, forty roles, a landing page.
@@ -14,9 +10,10 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **665 for a one-language country (633 texts, 32 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
-5. It is still **hidden from search and invitation-only**, and stays so until the gates of the checklist pass and the owner opens it. Building proves the pack is complete, not that it is right.
+5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
+6. It is still **hidden from search and invitation-only**, and stays so until the gates of the checklist pass and the owner opens it. Building proves the pack is complete, not that it is right.
 
-No step touches Türkiye, any other country, a database, a deployment or a setting.
+Steps 1 to 4 touch no database, no deployment and no setting, and nothing of Türkiye or of any other country. Step 5 touches the new country's own database and no other: **no country script is ever run on the Turkish database or on another country's.**
 
 ## What a country is made of
 
@@ -45,7 +42,7 @@ It writes:
 
 - `countries/<code>/`, 14 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
 - the registration: `lib/ulke/tipler.ts` (the code list, and the language if it is new), the three doors `countries/active/{index,klinik,arayuz}.ts`, and `countries/tumu.ts`;
-- `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 113 gates, all unticked.
+- `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 119 gates, all unticked, the six about the country's own database among them (section M).
 
 It refuses to run twice for the same code and changes nothing when it refuses.
 
@@ -78,24 +75,31 @@ Some keys are required only under a condition and are written as comments in the
 
 ## What is shared and never supplied
 
-Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the tests.
+Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the baseline of a country database and its migrations; the tests.
 
 Off for every new country until built and reviewed for it: tools, the assistant in text and voice, the patient portal, intake forms, consultation and messaging, clinic accounts, the voice profile, image evaluation.
 
-## How one database keeps countries apart
+## The country's own database
 
-Every country shares the database Türkiye uses. A new country needs **no migration**: the country tables exist once (after `docs/COUNTRY-PACK-DB-ROLLOUT.md` has been carried out, which waits on the owner) and a country is a value in a column.
+**One database per country** (Kaan, 2026-10-09: "We had issues with common databases before. Keep seperation between the two and any other future country versions"). A country never shares a database with Türkiye or with another country, and no script of one is ever run on another's. Full text: `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
 
-- Every country table has a `ulke` column, not null, with no default.
-- Every read and write goes through one door (`lib/ulke/uygulama/tablolar.ts`), which stamps and filters by the build's country. Code that reaches a country table any other way fails a test.
-- The database repeats the rule on its own: row-level security requires the row's country to equal the country in the signed-in session, and foreign keys carry the country, so a row cannot point across countries.
-- An account belongs to one country, set once at sign-up and locked by a trigger.
-- Recordings live under `<country>/<account>/` in storage.
+What to do for a new country, in order:
+
+1. **The owner creates the database**: a new, empty project of its own, in a region the country's data law allows (checklist A1). It has a monthly cost, so it is his decision each time. The organisation's free plan holds two projects, and Türkiye and Uzbekistan use them: every further country needs a paid plan.
+2. **Run the baseline on it, once**: the whole of `lib/db/ulke/000_yeni_ulke_veritabani.sql`. It is generated from the country migrations (`node scripts/ulke-temel-uret.mjs`), holds no `drop` statement, is one transaction, and **refuses to run on a database that is not empty**, so it cannot land on a database that is in use.
+3. **Check the result** with the two queries in the rollout document (tables, columns, row-level rules, functions, the ledger).
+4. **Settings**, on the owner's word: public sign-up switched off in the new project; the country's deployment given its country code, its database's address and keys, and an encryption key of its own; build command `npm run build:ulke`.
+5. Tick section M of the country's record, with the date.
+
+What keeps countries apart:
+
+- **First wall: the database.** A country's deployment holds the address and keys of its own database only.
+- **Second wall: the country on every row**, exactly as before the databases were separated. Every country table has a `ulke` column, not null, with no default. Every read and write goes through one door (`lib/ulke/uygulama/tablolar.ts`), which stamps and filters by the build's country; code that reaches a country table any other way fails a test. The database repeats the rule on its own: row-level security requires the row's country to equal the country in the signed-in session, and foreign keys carry the country, so a row cannot point across countries. An account belongs to one country, set once at sign-up and locked by a trigger. Recordings live under `<country>/<account>/` in storage.
 - Patient isolation between doctors is unchanged and sits underneath all of this.
 
-`lib/ulke/ulkeVeritabani.paket.test.ts` runs these rules once per country folder, so a new country is held to them the day it exists.
+`lib/ulke/ulkeVeritabani.paket.test.ts` runs the second wall's rules once per country folder, so a new country is held to them the day it exists. `lib/ulke/ulkeTemel.test.ts` keeps the baseline in step with the migrations, and `scripts/ulke-temel-kaniti.mjs` proves on a real local PostgreSQL that the baseline gives exactly the schema the migrations give.
 
-**One open point that affects every country**: the login pool is shared with Türkiye, and the live Turkish site does not yet check an account's country. Until that check is live there, no invitation code is issued for any country (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-SABLON-01b).
+**Logins are separate too.** Each database has its own sign-in service, so an account of one country does not exist at another, and the earlier hold on invitation codes (it came from a login pool shared with Türkiye) is gone.
 
 ## "Hidden, invitation only"
 
@@ -113,7 +117,7 @@ Serving a country under a path of the main site (`/uk`) also needs a routing rul
 ```
 node scripts/ulke-paket-denetimi.mjs --ulke <code>      # what is still to supply
 npx tsc --noEmit                                         # a missing or misspelled key is a type error
-npm run test:ulke                                        # every pack: walls, leak scan, shared-database rules, completeness
+npm run test:ulke                                        # every pack: walls, leak scan, database rules, completeness; the baseline is up to date
 NOTYA_COUNTRY=<code> npm run build:ulke                  # pack scan + walls, the build, then the build proof
 ```
 
@@ -149,7 +153,7 @@ The pack check lists whatever is left. Uzbekistan does all of this.
 
 ## English-speaking countries (United States, United Kingdom, Canada, Australia, New Zealand)
 
-**Each country still needs its own pack.** Law, consent wording, units, time zones, date and clock format, identity rules, phone rules, role names, assistant names and prices differ between them, and the walls, the leak scan and the shared database all work per country.
+**Each country still needs its own pack.** Law, consent wording, units, time zones, date and clock format, identity rules, phone rules, role names, assistant names and prices differ between them, and the walls and the leak scan work per country; each also has a database of its own.
 
 **What should be written once is the English text.** Of a pack's 633 texts, about 601 are language rather than country: the core surfaces, the application, appointments, the instructions to the model and most of the landing copy. The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
 

@@ -1,27 +1,35 @@
 #!/usr/bin/env node
 /**
- * NOTYA-ULKE-SABLON-01 — PROOF ON A REAL POSTGRESQL of the country migrations, for the SHARED DATABASE
- * (Kaan, 2026-10-08: every country lives in the same database as Türkiye). docs/COUNTRY-PACK-DB-ROLLOUT.md.
+ * NOTYA-ULKE-SABLON-01 · NOTYA-ULKE-PORTAL-01 — PROOF ON A REAL POSTGRESQL of the country migrations: the keys, the
+ * row-level rules, no double booking, all-or-nothing approval, the rollbacks.
  *
- *   A. TÜRKİYE IS UNCHANGED. Tables shaped like Türkiye's (`users`, `patients`, `sessions`, `notes`, `ai_kullanim`,
- *      `randevular`, plus auth.users and the storage tables) are created and seeded FIRST. Their definitions
- *      (columns, constraints, indexes, policies, triggers, row-level security) and their rows are fingerprinted
- *      before the migrations and after them: nothing may differ, except the three things the rollout document
- *      names (one new bucket row, one new policy on storage.objects, the ledger rows).
- *   B. THE MIGRATIONS RUN: 129–135 in order, each as it is written, then all of them a second time.
- *   C. COUNTRIES ARE KEPT APART BY THE DATABASE ITSELF: the country is part of every key — a row of one country
- *      cannot point at a row of another, nor at another doctor's; an account never changes country; row-level
- *      security shows a session only rows of its own account AND its own country; the recordings bucket accepts an
- *      upload only under `<the session's country>/<the session's account>/`; the approval function and the
- *      invitation functions act only inside the country they are called for.
- *   D. What the appointment slice leaves to the database still holds: NO DOUBLE BOOKING (also for two transactions
- *      at the same moment) and the ALL-OR-NOTHING approval of a note.
- *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave Türkiye's
- *      tables exactly as they were at the start.
- *   G. THE OWNER'S BEFORE/AFTER CHECK (scripts/ulke-goc-kontrol.sql) is run as the rollout document says: it reports
- *      exactly the three expected lines after 129–135, and it does notice a change to a table of Türkiye (128).
- *   F. MIGRATION 128 IS SUPERSEDED and is not part of the run above. It is exercised separately at the end, only to
- *      put on record what it WOULD change in Türkiye's `users` and that its rollback undoes it.
+ * ONE DATABASE PER COUNTRY (Kaan, 2026-10-09). A country's migrations are run only on that country's own database
+ * and NEVER on the Turkish one; a new country's database is made from the one-file baseline, whose proof is
+ * scripts/ulke-temel-kaniti.mjs. The list of migrations is lib/db/ulke/gocler.json.
+ *
+ * This script was written on 2026-10-08 for the plan that decision replaced (every country in the Turkish database),
+ * and sections A, G and F still exercise that plan's question — "is a database SHAPED LIKE the Turkish one left
+ * unchanged?" — on stand-in tables. Nobody runs these files on such a database any more; the sections are kept until
+ * the script is reshaped for a country database of its own, because what they prove (the files touch nothing but
+ * their own tables) is still true and still worth failing on.
+ *
+ *   A. Tables shaped like Türkiye's (`users`, `patients`, `sessions`, `notes`, `ai_kullanim`, `randevular`, plus
+ *      auth.users and the storage tables) are created and seeded FIRST. Their definitions and rows are fingerprinted
+ *      before the migrations and after them: nothing may differ, except one new bucket row, one new policy on
+ *      storage.objects, and the ledger rows.
+ *   B. THE MIGRATIONS RUN: every file of the list in order, each as it is written, then all of them a second time.
+ *   C. COUNTRIES ARE KEPT APART BY THE DATABASE ITSELF (the second wall): the country is part of every key — a row
+ *      of one country cannot point at a row of another, nor at another doctor's; an account never changes country;
+ *      row-level security shows a session only rows of its own account AND its own country; the recordings bucket
+ *      accepts an upload only under `<the session's country>/<the session's account>/`; the approval function and
+ *      the invitation functions act only inside the country they are called for.
+ *   D. NO DOUBLE BOOKING (also for two transactions at the same moment) and the ALL-OR-NOTHING approval of a note.
+ *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave the
+ *      stand-in tables exactly as they were at the start.
+ *   G. The before/after check file of the replaced plan (scripts/ulke-goc-kontrol.sql) still reports exactly the
+ *      expected lines.
+ *   F. MIGRATION 128 IS SUPERSEDED and is not on the list. It is exercised separately at the end, only to put on
+ *      record what it WOULD change in a table shaped like Türkiye's `users`, and that its rollback undoes it.
  *
  * It starts a THROWAWAY PostgreSQL inside this machine, in a temporary folder, and removes it afterwards. It connects
  * to 127.0.0.1 only. It never touches a Supabase project or any other remote database, and it applies nothing anywhere.
@@ -53,6 +61,7 @@ import { createRequire } from 'node:module'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { gocListesi } from './ulke-temel-uret.mjs'
 
 // The two packages are resolved from the folder the script is RUN in, not from the repository.
 const buradan = createRequire(join(process.cwd(), 'x.js'))
@@ -156,7 +165,9 @@ ok('G. the before/after check file runs and covers the Türkiye-shaped tables (r
 ok('A. Türkiye-shaped tables are seeded (2 accounts, 2 patients, 1 visit, 2 notes, 1 counter, 2 appointments, 1 stored file)', ONCE['public.users'].satirSayisi === 2 && ONCE['public.patients'].satirSayisi === 2 && ONCE['public.notes'].satirSayisi === 2 && ONCE['storage.objects'].satirSayisi === 1)
 
 // ── B. the migrations, in order, each as it is written; then all of them a second time. 128 is NOT among them. ──
-const DOSYALAR = ['129_davet_kodlari.sql', '130_hekim_dil_tercihleri.sql', '131_hasta_ulke_bilgisi.sql', '132_muayene_dil_kaydi.sql', '133_not_dil_kaydi.sql', '134_hekim_rolu.sql', '135_ulke_randevu.sql']
+// The list every script and test reads (lib/db/ulke/gocler.json): 129 on, never 128.
+const DOSYALAR = gocListesi(REPO).gocler
+const SURUMLER = DOSYALAR.map((d) => d.slice(0, 3)).join(',')
 const dosyaOku = (d) => readFileSync(join(REPO, 'lib/db/migrations', d), 'utf8')
 let IKINCI_ONCESI = null
 for (const tur of ['first run', 'second run (must be repeatable)']) {

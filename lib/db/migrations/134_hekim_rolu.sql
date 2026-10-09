@@ -1,3 +1,9 @@
+-- ONE DATABASE PER COUNTRY (Kaan, 2026-10-09) — READ FIRST. This file is run only on a country's OWN database, never on
+-- the Turkish one. A new country's database is created with the baseline (lib/db/ulke/000_yeni_ulke_veritabani.sql),
+-- which is generated from this file and its neighbours (lib/db/ulke/gocler.json); this file is not run by hand any
+-- more. Where the comments below speak of a "shared database" or of Türkiye's tables, they describe the plan of
+-- 2026-10-08, which this decision replaced. What holds now: docs/COUNTRY-PACK-DB-ROLLOUT.md.
+--
 -- 134 NOTYA-UZ-BRANSLAR-01 (Kaan, 2026-10-08) · reshaped for the shared database by NOTYA-ULKE-SABLON-01
 -- 1. The ROLE of an account inside a country's signed-in application: which doctor specialty, clinic doctor role
 --    or clinic allied profession it works as (docs/COUNTRY-PACK-CHECKLIST.md J2, J5). Chosen at first login, after
