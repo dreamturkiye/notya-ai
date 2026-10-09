@@ -102,9 +102,9 @@ export const UZ_ROL_SORULARI_3: Readonly<Record<string, RolSorulari>> = {
     baslik: u('Turmush tarzi va profilaktika', 'Турмуш тарзи ва профилактика', 'Образ жизни и профилактика'),
     inceleme: MAKINE,
     sorular: [
-      uzun('lg_maqsad', u('Sogʻligʻingiz boʻyicha asosiy maqsadingiz nima?', 'Соғлиғингиз бўйича асосий мақсадингиз нима?', 'Какая у вас главная цель в отношении здоровья?'), { zorunlu: true }),
+      uzun('lg_maqsad', u('Sogʻligʻingiz boʻyicha asosiy maqsadingiz nima?', 'Соғлиғингиз бўйича асосий мақсадингиз нима?', 'Какая у вас главная цель в отношении здоровья?'), { zorunlu: true, veliMetni: u('Bolaning sogʻligʻi boʻyicha asosiy maqsadingiz nima?', 'Боланинг соғлиғи бўйича асосий мақсадингиз нима?', 'Какая у вас главная цель в отношении здоровья ребёнка?') }),
       tek('lg_faollik', u('Jismoniy faollik', 'Жисмоний фаоллик', 'Физическая активность'), faollik()),
-      son('lg_uyqu', u('Tunda oʻrtacha necha soat uxlaysiz?', 'Тунда ўртача неча соат ухлайсиз?', 'Сколько часов в среднем вы спите ночью?'), SOAT, 1, 16),
+      son('lg_uyqu', u('Tunda oʻrtacha necha soat uxlaysiz?', 'Тунда ўртача неча соат ухлайсиз?', 'Сколько часов в среднем вы спите ночью?'), SOAT, 1, 16, { veliMetni: u('Bola tunda oʻrtacha necha soat uxlaydi?', 'Бола тунда ўртача неча соат ухлайди?', 'Сколько часов в среднем ребёнок спит ночью?') }),
       tek('lg_stress', u('Oxirgi oyda zoʻriqish darajasi', 'Охирги ойда зўриқиш даражаси', 'Уровень напряжения за последний месяц'), [
         s('past', 'Past', 'Паст', 'Низкий'),
         s('ortacha', 'Oʻrtacha', 'Ўртача', 'Средний'),

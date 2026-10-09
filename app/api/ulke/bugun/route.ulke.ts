@@ -21,7 +21,7 @@ import { randevulariListele } from '@/lib/ulke/uygulama/randevular'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = sinirda('bugun GET', async (req: NextRequest) => {
+export const GET = sinirda('today GET', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()

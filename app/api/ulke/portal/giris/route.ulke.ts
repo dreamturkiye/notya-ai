@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic'
 
 const DURUM: Record<PortalGirisRetKodu, number> = { NOT_FOUND: 404, KILITLI: 423, YAVAS: 429, PIN_YANLIS: 401, GECERSIZ: 400, BASARISIZ: 500 }
 
-export const POST = portalSinirinda('giris POST', async (req: NextRequest) => {
+export const POST = portalSinirinda('portal sign-in POST', async (req: NextRequest) => {
   if (!portalAcik()) return PORTAL_KOD.yok()
   if (!portalIstegiMi(req)) return PORTAL_KOD.gecersiz()
   const g = await govdeOku(req)

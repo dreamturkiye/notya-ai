@@ -33,7 +33,7 @@ const EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const cevap = (govde: Record<string, unknown>, status: number) =>
   NextResponse.json(govde, { status, headers: { 'Cache-Control': 'no-store' } })
 
-export const POST = sinirda('kayit POST', async (req: NextRequest) => {
+export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
   if (!ozellikAcik('davetliKayit')) return cevap({ code: 'NOT_FOUND' }, 404)
 
   const g = (await req.json().catch(() => null)) as Record<string, unknown> | null

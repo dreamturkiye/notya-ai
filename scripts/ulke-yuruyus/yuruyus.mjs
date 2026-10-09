@@ -31,6 +31,14 @@
  * the request accepted and seen, a second request declined, isolation between two patients on one phone and between
  * two doctors, a doctor's session refused by the patient's routes and the other way round, access withdrawn.
  *
+ * NOTYA-ULKE-INTAKE-01 — step 8d walks through the intake form: asked from the file of a patient without access (the
+ * form and the link made in one step), the invitation copied, a guardian fills it in for a child on a phone (consent,
+ * who fills it in, saved as they go, closed and resumed, a required question missed, submitted, read-only), the doctor
+ * reads the answers on the file and on the visit screen under "not verified", a visit is recorded and the model is
+ * given none of them, the form is reopened and sent again; asked from an appointment of a Russian-speaking adult who
+ * already has a link (the invitation in Russian without a link, the warning before a new link, then the new link),
+ * the adult fills it in in Russian; another role's questions never appear; isolation between patients and doctors.
+ *
  * Settings: TABAN (http://localhost:3111), SUPA (http://127.0.0.1:54399), ON_EK (/uzbek), CIKTI (./cikti, screenshots).
  * Exit code 0 only when every check passed.
  */
@@ -711,7 +719,7 @@ let notYuksek = '', notDusuk = '', seansYuksek = ''
     await p.waitForSelector('[data-bolum=s]', { timeout: 30000 })
     const onayli = (await tabloOku('ulke_notlar')).find((n) => n.id === notKardio)
     const onayliAlan = (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notKardio)
-    kontrol('the doctor edits a field and approves: the note is in the file with the field as edited, and nothing is left to change it', !!onayli.approved_at && onayliAlan.alanlar.ecg === 'Oʻzgarishsiz. Sinus ritmi.' && (await metin(p, '[data-alan-anahtar=ecg] p')) === 'Oʻzgarishsiz. Sinus ritmi.' && !(await p.$('textarea')) && !(await p.$('[data-eylem]')))
+    kontrol('the doctor edits a field and approves: the note is in the file with the field as edited, and nothing is left to change it', !!onayli.approved_at && onayliAlan.alanlar.ecg === 'Oʻzgarishsiz. Sinus ritmi.' && (await metin(p, '[data-alan-anahtar=ecg] p')) === 'Oʻzgarishsiz. Sinus ritmi.' && !(await p.$('[data-alan=not] textarea')) && !(await p.$('[data-alan=not] [data-eylem]')))
     const gec = await api(p, '/api/ulke/not', { method: 'PATCH', govde: { notId: notKardio, dil: 'uz-Latn', s: 'x', o: '', a: '', p: '', alanlar: { ecg: 'OʻZGARTIRILDI' } } })
     kontrol('approved: a late save of a field is refused and the field is unchanged', gec.s === 409 && (await tabloOku('not_dil_kaydi')).find((k) => k.note_id === notKardio).alanlar.ecg === 'Oʻzgarishsiz. Sinus ritmi.')
     await cek(p, 'note-cardiology-approved-uz.png')
@@ -1318,6 +1326,372 @@ const PORTAL = {}
   kontrol(`every row the portal wrote carries the country (${tumSatirlar.length} rows in ${PORTAL_TABLOLARI.length + 1} tables)`, tumSatirlar.length > 15 && tumSatirlar.every((s) => s.ulke === 'uz'))
   kontrol('the patient\'s browser: no console errors beyond the refusals it was meant to get, and no request to any outside address', H.konsol.filter((k) => !/40[0-9]|42[39]|Failed to load resource/.test(k)).length === 0 && H.disari.length === 0, [...H.konsol, ...H.disari].join(' | ').slice(0, 300))
   await H.browserContext().close()
+}
+
+// ───────────────────────── 8d. the intake form (NOTYA-ULKE-INTAKE-01): asked → invitation → filled in on a phone → read by the doctor → reopened; a child and an adult; isolation ─────────────────────────
+{
+  const p = A
+  const A_ID = 'aaaaaaaa-0000-4000-8000-000000000001'
+  const { hastaRu, hesap } = PORTAL
+  const K = '[data-alan=hasta-formu-karti]'
+  // Every answer typed here carries this mark: the stand-in model reports whether it was ever given one (./sahte-saglayicilar.cjs).
+  const ISARETLI = 'QA-FORM-JAVOB'
+  const rolA = (await tabloOku('hekim_rolu')).find((r) => r.doctor_id === A_ID)?.rol
+  // The two-letter mark the pack's question keys carry, for the roles this walk-through's accounts hold.
+  const ISARET = { pediatri: 'pd', kardiyoloji: 'kd', diyetisyen: 'dt' }
+  const CEKIRDEK = ['vakil_kim', 'vakil_ism', 'vakil_telefon', 'ota_ona_holati', 'sabab', 'qachondan', 'surunkali', 'surunkali_boshqa', 'operatsiyalar', 'kasalxona', 'dorilar', 'allergiya', 'oilada', 'chekish', 'alkogol', 'homiladorlik', 'uyda_chekish', 'boy', 'vazn', 'harorat', 'yaqin_ism', 'yaqin_kim', 'yaqin_telefon']
+  const gunEkle = (gun, n) => { const [y, a, g] = gun.split('-').map(Number); return new Date(Date.UTC(y, a - 1, g + n)).toISOString().slice(0, 10) }
+  const yazGun = (gun) => gun.split('-').reverse().join('.')
+  const ozetle = (t) => createHash('sha256').update(t).digest('hex')
+  const formlar = async (hasta) => (await tabloOku('ulke_hasta_formlari')).filter((x) => x.patient_id === hasta)
+  const erisimler = async (hasta) => (await tabloOku('ulke_portal_erisimleri')).filter((e) => e.patient_id === hasta)
+  const hamFormlar = async () => JSON.stringify(await tabloOku('ulke_hasta_formlari'))
+  /** A request as the patient's own page sends it: the browser's cookie, the link's mark; a change carries the portal's header. */
+  const hApi = (pg, rota, s = {}) => pg.evaluate(async (u, s) => {
+    const r = await fetch(u, { method: s.method || 'GET', credentials: 'same-origin', headers: { ...(s.token ? { 'x-notya-portal-baglanti': s.ozet } : {}), ...(s.jeton ? { Authorization: `Bearer ${s.jeton}` } : {}), ...(s.govde ? { 'Content-Type': 'application/json', 'x-notya-portal': '1' } : {}) }, body: s.govde ? JSON.stringify(s.govde) : undefined })
+    const t = await r.text()
+    let j = null; try { j = JSON.parse(t) } catch { /* not json */ }
+    return { s: r.status, t: t.slice(0, 300), j }
+  }, adres(rota), { ...s, ozet: s.token ? ozetle(s.token) : '' })
+  const pinGonder = async (pg, pin) => { await pg.waitForSelector('#uzp-pin', { timeout: 60000 }); await yazDeger(pg, '#uzp-pin', pin); await pg.click('[data-eylem=portal-giris]') }
+  const baglantiAc = async (pg, tamAdres) => { await pg.goto('about:blank'); const r = await pg.goto(tamAdres, { waitUntil: 'networkidle0', timeout: 180000 }); await pg.evaluate(() => document.fonts.ready); return r }
+  /** The patient's page after a reload: the session stands, or the PIN is asked again — either way the page with its form card. */
+  const sayfayaDon = async (pg, pin) => {
+    await pg.reload({ waitUntil: 'networkidle0' })
+    await pg.waitForSelector('[data-alan=portal-form-karti], #uzp-pin', { timeout: 30000 })
+    if (await pg.$('#uzp-pin')) { await bekle(2200); await pinGonder(pg, pin); await pg.waitForSelector('[data-alan=portal-form-karti]', { timeout: 30000 }) }
+  }
+  const panoKur = (pg) => pg.evaluate(() => { window.__kopya = []; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (t) => { window.__kopya.push(t) } }, configurable: true }) })
+  // ── the form on the patient's screen ──
+  let tasma = 0
+  const ekran = async (pg) => {
+    const e = await pg.$eval('[data-alan=hasta-formu]', (e) => ({ durum: e.getAttribute('data-form-durumu'), bolum: e.getAttribute('data-bolum'), h1: e.querySelector('h1')?.innerText ?? '', ust: e.querySelector('.uza-ust-yazi')?.innerText ?? '', sorular: [...e.querySelectorAll('[data-soru]')].map((x) => x.getAttribute('data-soru')), baglanti: document.querySelectorAll('a[href], form[action]').length, tasma: document.documentElement.scrollWidth - window.innerWidth }))
+    tasma = Math.max(tasma, e.tasma, e.baglanti)
+    return e
+  }
+  const bolumBekle = (pg, b) => pg.waitForSelector(`[data-alan=hasta-formu][data-bolum=${b}]`, { timeout: 30000 })
+  /** Waits until the stored answers of that patient's form are no longer `once` (the form saves by itself), and the screen says so. */
+  const kaydedildi = async (pg, hasta, once, sureMs = 15000) => {
+    const bitis = Date.now() + sureMs
+    while (Date.now() < bitis) { if ((await formlar(hasta))[0]?.cevaplar_encrypted !== once) break; await bekle(100) }
+    await pg.waitForSelector('[data-alan=hasta-formu][data-kayit=kaydedildi]', { timeout: 30000 })
+    return (await formlar(hasta))[0]?.cevaplar_encrypted !== once
+  }
+  const isaretle = (pg, soru, secenek) => pg.click(`input[name="uzf-${soru}-${secenek}"]`)
+  const isaretli = (pg, soru, secenek) => pg.$eval(`input[name="uzf-${soru}-${secenek}"]`, (x) => x.checked)
+  /** "Next": the part that follows, with the keys of its questions noted in `harita`. */
+  const sonraki = async (pg, harita) => {
+    const once = (await ekran(pg)).bolum
+    await pg.click('[data-eylem=form-ileri]')
+    await pg.waitForFunction((b) => { const x = document.querySelector('[data-alan=hasta-formu]')?.getAttribute('data-bolum'); return !!x && x !== b }, { timeout: 30000 }, once)
+    const y = await ekran(pg)
+    harita[y.bolum] = y.sorular
+    return y
+  }
+  const gonder = async (pg) => { await pg.click('[data-eylem=form-gonder]'); await pg.waitForSelector('[data-alan=hasta-formu][data-form-durumu=gonderildi]', { timeout: 30000 }) }
+
+  // 1. ASKED FROM THE PATIENT'S FILE. The patient is a child of five whose access was withdrawn in step 8c: no link stands.
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector(`${K} [data-eylem=form-iste]`, { timeout: 60000 })
+  kontrol('patient file: the intake card, in the doctor\'s language, says no form was asked for yet; nothing to withdraw, nothing to reopen', (await metin(p, `${K} h2`)) === 'Koʻrikdan oldingi soʻrovnoma' && (await metin(p, `${K} [data-alan=form-durumu]`)) === 'Bu bemordan soʻrovnoma hali soʻralmagan.' && (await p.$eval(K, (e) => e.getAttribute('data-form-durumu'))) === 'yok' && !(await p.$('[data-eylem=form-geri-cek]')) && !(await p.$('[data-eylem=form-yeniden-ac]')) && (await formlar(hastaA)).length === 0 && (await erisimler(hastaA)).every((e) => !!e.iptal_at))
+  const erisimOnce = (await erisimler(hastaA)).length
+  await panoKur(p)
+  await p.click(`${K} [data-eylem=form-iste]`)
+  await p.waitForSelector(`${K} [data-alan=form-daveti] [data-alan=portal-baglanti]`, { timeout: 30000 })
+  const cocuk = { adres: await p.$eval(`${K} [data-alan=portal-baglanti]`, (e) => e.value), pin: await p.$eval(`${K} [data-alan=portal-pin]`, (e) => e.value), davet: await p.$eval(`${K} [data-alan=form-davet-metni]`, (e) => ({ metin: e.value, dil: e.getAttribute('data-dil') })) }
+  const tokenC = cocuk.adres.split('#')[1] || ''
+  let satir = await formlar(hastaA)
+  kontrol('ASKED for a patient WITHOUT access: the form and the patient\'s link are made in ONE step — a link under /uzbek with the token in its fragment and a six-digit PIN, shown once', cocuk.adres.startsWith(`${TABAN}${ON_EK}/portal?dil=uz-Latn#`) && /^[A-Za-z0-9_-]{43}$/.test(tokenC) && /^\d{6}$/.test(cocuk.pin) && (await erisimler(hastaA)).length === erisimOnce + 1 && (await erisimler(hastaA)).filter((e) => !e.iptal_at).length === 1 && (await erisimler(hastaA)).find((e) => !e.iptal_at).token_hash === ozetle(tokenC) && (await govde(p)).includes('Havola va PIN-kod faqat hozir koʻrsatiladi.'), cocuk.adres.replace(tokenC, '<token>'))
+  kontrol('in the database: ONE form of this doctor for this patient, waiting; the GUARDIAN form (the patient is five), for the doctor\'s own role, stamped with the question set; no answers and no consent yet', satir.length === 1 && satir[0].doctor_id === A_ID && satir[0].ulke === 'uz' && satir[0].durum === 'bekliyor' && satir[0].veli === true && satir[0].rol === rolA && /^uz-taslak-/.test(satir[0].soru_surumu) && satir[0].cevaplar_encrypted === null && satir[0].riza_at === null && satir[0].randevu_id === null, JSON.stringify(satir[0] ?? null).slice(0, 300))
+  kontrol('THE INVITATION, in the patient\'s language (Uzbek, in the doctor\'s script): the doctor by name, the link LAST with nothing after it, and never the PIN', cocuk.davet.dil === 'uz-Latn' && cocuk.davet.metin === `Assalomu alaykum! Shifokor ${hesap.ad} koʻrikdan oldin qisqa soʻrovnomani toʻldirishingizni soʻraydi. PIN-kodni shifokoringiz alohida aytadi. Sahifangiz havolasi: ${cocuk.adres}` && !cocuk.davet.metin.includes(cocuk.pin) && (await metin(p, `${K} [data-alan=form-davet-dili]`)) === 'Matn tili (bemorning tili): Oʻzbekcha', `${cocuk.davet.metin.replace(tokenC, '<token>')} | ${await metin(p, `${K} [data-alan=form-davet-dili]`)}`)
+  await p.click(`${K} [data-eylem=davet-kopyala]`); await bekle(300)
+  kontrol('"copy" copies exactly the invitation; the card says the system sends nothing and the PIN is told separately; the card now says when the form was asked for', JSON.stringify(await p.evaluate(() => window.__kopya)) === JSON.stringify([cocuk.davet.metin]) && (await govde(p)).includes('Hech narsa avtomatik yuborilmaydi: matnni bemorga oʻzingiz yuborasiz. PIN-kodni alohida ayting.') && /^Soʻrovnoma \d{2}\.\d{2}\.\d{4} kuni soʻralgan\. Bemor hali boshlamagan\.$/.test(await metin(p, `${K} [data-alan=form-durumu]`)), await metin(p, `${K} [data-alan=form-durumu]`))
+  kontrol('asking sent the token to no address: the application\'s and the database\'s request logs do not hold it', p.istekler.every((i) => !i.split('#')[0].includes(tokenC)) && (await (await fetch(`${SUPA}/__gunluk`)).json()).every((x) => !x.includes(tokenC)))
+  await onEkAltinda(p, 'patient file with the intake card')
+  await cek(p, 'intake-asked-file.png')
+
+  // 2. THE GUARDIAN, on a phone of their own.
+  const H = await sayfaAc(TEL)
+  await baglantiAc(H, cocuk.adres)
+  await pinGonder(H, cocuk.pin)
+  await H.waitForSelector('[data-alan=portal-form-karti]', { timeout: 30000 })
+  kontrol('THE PAGE of a child\'s guardian: a card asks them to answer a few questions ABOUT THEIR CHILD before the visit', (await H.$eval('[data-alan=portal-form-karti]', (e) => e.getAttribute('data-form-durumu'))) === 'bekliyor' && (await metin(H, '[data-alan=portal-form-karti] h2')) === 'Koʻrikdan oldingi soʻrovnoma' && (await metin(H, '[data-alan=portal-form-karti]')).includes('Shifokor koʻrikdan oldin farzandingiz haqida bir necha savolga javob berishingizni soʻraydi. Bu bir necha daqiqa vaqt oladi.') && (await metin(H, '[data-eylem=form-ac]')) === 'Toʻldirishni boshlash')
+  await cek(H, 'intake-card-phone-uz.png')
+  await H.click('[data-eylem=form-ac]')
+  await bolumBekle(H, 'riza')
+  kontrol('CONSENT FIRST, in the pack\'s sentence for a parent or guardian: who sees the answers, why they are kept, that filling in is voluntary', (await metin(H, '[data-alan=form-riza]')) === 'Javoblaringizni faqat bolaning shifokori koʻradi. Ular bolaning tibbiy maʼlumotlari sifatida himoyalangan holda saqlanadi va koʻrikka tayyorlanish uchun ishlatiladi. Siz soʻrovnomani bolaning ota-onasi yoki qonuniy vakili sifatida toʻldirasiz. Toʻldirish ixtiyoriy.', await metin(H, '[data-alan=form-riza]'))
+  await H.click('[data-eylem=form-baslat]')
+  await H.waitForSelector('[data-alan=hasta-formu] [role=alert]', { timeout: 15000 })
+  kontrol('without consent nothing starts and nothing is stored', (await metin(H, '[data-alan=hasta-formu] [role=alert]')) === 'Davom etish uchun roziligingiz kerak.' && (await formlar(hastaA))[0].durum === 'bekliyor' && (await formlar(hastaA))[0].riza_at === null)
+  await cek(H, 'intake-consent-phone-uz.png')
+  await H.click('input[name=form-riza]')
+  await H.click('[data-eylem=form-baslat]')
+  await bolumBekle(H, 'toldiruvchi')
+  let e = await ekran(H)
+  const veliBolumleri = { [e.bolum]: e.sorular }
+  satir = await formlar(hastaA)
+  kontrol('consent given → stored with its stamp and the language it was read in, before any question; the form BEGINS WITH WHO IS FILLING IT IN (part 1 of 6), and asks the parents\' marital status there', satir[0].durum === 'taslak' && !!satir[0].riza_at && /^uz-taslak-/.test(satir[0].riza_surumu) && satir[0].dil === 'uz-Latn' && e.h1 === 'Soʻrovnomani kim toʻldirmoqda' && e.ust === 'Koʻrikdan oldingi soʻrovnoma · 1-qism, jami 6' && JSON.stringify(e.sorular) === JSON.stringify(['vakil_kim', 'vakil_ism', 'vakil_telefon', 'ota_ona_holati']), JSON.stringify(e))
+  let onceSifreli = satir[0].cevaplar_encrypted
+  await isaretle(H, 'vakil_kim', 'ona')
+  await H.type('#uzf-vakil_ism', `${ISARETLI} Karimova Zulfiya`)
+  await isaretle(H, 'ota_ona_holati', 'birga')
+  const kendiKaydetti = await kaydedildi(H, hastaA, onceSifreli)
+  satir = await formlar(hastaA)
+  kontrol('SAVED AS THEY GO: a moment after the last change, without a button; in the database the answers are ENCRYPTED — no answer and no question key can be read there', kendiKaydetti && (await metin(H, '[data-alan=form-kayit]')) === 'Javoblaringiz saqlandi.' && typeof satir[0].cevaplar_encrypted === 'string' && satir[0].cevaplar_encrypted.length > 40 && [ISARETLI, 'Zulfiya', 'vakil_ism'].every((x) => !satir[0].cevaplar_encrypted.includes(x)), String(satir[0].cevaplar_encrypted).slice(0, 40))
+  await cek(H, 'intake-who-fills-phone-uz.png')
+  // CLOSED AND OPENED AGAIN.
+  await sayfayaDon(H, cocuk.pin)
+  kontrol('RESUME: the page was closed and opened again — the card now offers to continue', (await H.$eval('[data-alan=portal-form-karti]', (x) => x.getAttribute('data-form-durumu'))) === 'taslak' && (await metin(H, '[data-eylem=form-ac]')) === 'Davom ettirish')
+  await H.click('[data-eylem=form-ac]')
+  await bolumBekle(H, 'toldiruvchi')
+  kontrol('… and the form opens on its first part with every answer where it was left; consent is not asked a second time', (await H.$eval('#uzf-vakil_ism', (x) => x.value)) === `${ISARETLI} Karimova Zulfiya` && (await isaretli(H, 'vakil_kim', 'ona')) && (await isaretli(H, 'ota_ona_holati', 'birga')) && !(await H.$('input[name=form-riza]')))
+  e = await sonraki(H, veliBolumleri) // the reason for the visit
+  onceSifreli = (await formlar(hastaA))[0].cevaplar_encrypted
+  await H.type('#uzf-sabab', `${ISARETLI} ikki kundan beri yoʻtal`)
+  // THE PHONE IS PUT DOWN right after the last letter: the page is hidden before the "moment after the last change" has come.
+  const yazildiAni = Date.now()
+  await H.evaluate(() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); document.dispatchEvent(new Event('visibilitychange')) })
+  let gizlenince = 0
+  while (Date.now() - yazildiAni < 5000) { if ((await formlar(hastaA))[0].cevaplar_encrypted !== onceSifreli) { gizlenince = Date.now() - yazildiAni; break } await bekle(40) }
+  await H.evaluate(() => { Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true }); document.dispatchEvent(new Event('visibilitychange')) })
+  kontrol('LEAVING THE PAGE SAVES AT ONCE: the page was hidden (another app, a locked phone) straight after typing, and the answer was stored without waiting for the pause the form normally takes', gizlenince > 0 && gizlenince < 1000, `${gizlenince} ms`)
+  e = await sonraki(H, veliBolumleri) // health
+  kontrol('each question that speaks to its reader is worded FOR A PARENT about the child ("does the child take medicines regularly?"), and required questions say so', (await metin(H, '[data-soru=dorilar] legend')) === 'Bola doimiy qabul qiladigan dorilar bormi? (majburiy)' && (await metin(H, '[data-soru=surunkali] legend')) === 'Bolada shifokor aniqlagan surunkali kasalliklar bormi? (majburiy)', `${await metin(H, '[data-soru=dorilar] legend')} | ${await metin(H, '[data-soru=surunkali] legend')}`)
+  await isaretle(H, 'surunkali', 'diabet'); await isaretle(H, 'surunkali', 'yoq')
+  kontrol('MULTIPLE CHOICE: "none of these" stands alone — choosing it clears the others, and choosing another clears it', !(await isaretli(H, 'surunkali', 'diabet')) && (await isaretli(H, 'surunkali', 'yoq')))
+  await isaretle(H, 'dorilar', 'hayir')
+  // (the required question about allergies is left unanswered on purpose)
+  e = await sonraki(H, veliBolumleri) // daily life: on a child's form, only smoking at home
+  e = await sonraki(H, veliBolumleri) // measures
+  const birimler = await H.$$eval('[data-alan=hasta-formu] [data-soru]', (l) => l.map((x) => [x.getAttribute('data-soru'), x.querySelector('[data-alan=birim]')?.innerText ?? '']))
+  await yazDeger(H, '#uzf-boy', '999')
+  await H.waitForSelector('[data-soru=boy] [role=alert]', { timeout: 15000 })
+  const aralik = await metin(H, '[data-soru=boy] [role=alert]')
+  await yazDeger(H, '#uzf-boy', '110'); await yazDeger(H, '#uzf-vazn', '18,5')
+  kontrol('MEASURES in the PACK\'s units, written beside the field and never in the question: centimetres, kilograms, degrees Celsius; a number no person measures is refused in plain words', JSON.stringify(birimler) === JSON.stringify([['boy', 'sm'], ['vazn', 'kg'], ['harorat', '°C']]) && /^\d+ dan \d+ gacha boʻlgan son kiriting\.$/.test(aralik) && !(await H.$('[data-soru=boy] [role=alert]')), `${JSON.stringify(birimler)} | ${aralik}`)
+  e = await sonraki(H, veliBolumleri) // the role's own questions
+  const tumVeli = Object.values(veliBolumleri).flat()
+  kontrol(`THE ROLE'S OWN QUESTIONS come last (${rolA}: ${e.sorular.join(', ')}) — and the whole form holds the core questions and that role's, nothing of any other role`, e.bolum === 'rol' && e.ust.endsWith('6-qism, jami 6') && e.sorular.length >= 3 && !!ISARET[rolA] && e.sorular.every((k) => k.startsWith(`${ISARET[rolA]}_`)) && tumVeli.every((k) => CEKIRDEK.includes(k) || k.startsWith(`${ISARET[rolA]}_`)), JSON.stringify(veliBolumleri))
+  kontrol('THE GUARDIAN FORM: six parts; an adult\'s smoking, alcohol, pregnancy and emergency contact are not asked about a child — smoking at home is', JSON.stringify(Object.keys(veliBolumleri)) === JSON.stringify(['toldiruvchi', 'murojaat', 'salomatlik', 'turmush', 'olchovlar', 'rol']) && JSON.stringify(veliBolumleri.turmush) === JSON.stringify(['uyda_chekish']) && ['chekish', 'alkogol', 'homiladorlik', 'yaqin_ism'].every((k) => !tumVeli.includes(k)), JSON.stringify(Object.keys(veliBolumleri)))
+  await cek(H, 'intake-role-part-phone-uz.png')
+  // SEND with a required question unanswered.
+  await H.click('[data-eylem=form-gonder]')
+  await H.waitForSelector('[data-alan=hasta-formu] [data-eksik=evet]', { timeout: 30000 })
+  e = await ekran(H)
+  kontrol('SENT TOO EARLY: the form goes back to the part with the unanswered required question, marks it, and says so; nothing was submitted', e.bolum === 'salomatlik' && JSON.stringify(await H.$$eval('[data-eksik=evet]', (l) => l.map((x) => x.getAttribute('data-soru')))) === '["allergiya"]' && (await metin(H, '[data-alan=hasta-formu] .uza-form > [role=alert]')) === 'Majburiy deb belgilangan savollarga javob bering.' && (await formlar(hastaA))[0].durum === 'taslak' && (await formlar(hastaA))[0].gonderildi_at == null, JSON.stringify(e))
+  await isaretle(H, 'allergiya', 'evet')
+  await H.waitForSelector('#uzf-allergiya-ayrinti', { timeout: 15000 })
+  await H.type('#uzf-allergiya-ayrinti', `${ISARETLI} tuxumga`)
+  kontrol('YES / NO WITH DETAIL: after "yes" a line asks what exactly', (await metin(H, '[data-soru=allergiya] label[for=uzf-allergiya-ayrinti]')).length > 5)
+  for (let i = 0; i < 3; i++) e = await sonraki(H, {})
+  await H.waitForSelector('[data-eylem=form-gonder]', { timeout: 15000 })
+  const uyari = await metin(H, '[data-alan=hasta-formu]')
+  await gonder(H)
+  satir = await formlar(hastaA)
+  const okunan = await H.$eval('[data-alan=hasta-formu]', (x) => ({ h1: x.querySelector('h1').innerText, metin: x.innerText, girdi: x.querySelectorAll('input, textarea, select').length, cevap: Object.fromEntries([...x.querySelectorAll('[data-cevap]')].map((d) => [d.getAttribute('data-cevap'), d.innerText])) }))
+  kontrol('SUBMITTED ONCE: the patient was told beforehand that answers can be read but not changed; the form is stored as submitted, with its moment', uyari.includes('Yuborganingizdan keyin javoblaringizni oʻqiy olasiz, lekin oʻzgartira olmaysiz.') && satir.length === 1 && satir[0].durum === 'gonderildi' && !!satir[0].gonderildi_at && !satir[0].cevaplar_encrypted.includes(ISARETLI))
+  kontrol('READ-ONLY AFTERWARDS: "my answers" — every answer in words (the option\'s name, yes with its detail, the number with its unit), nothing to type into, and what to do if something is wrong', okunan.h1 === 'Javoblarim' && okunan.girdi === 0 && okunan.metin.includes('Javoblarni oʻzgartirib boʻlmaydi. Biror narsa notoʻgʻri boʻlsa, shifokoringizga ayting.') && okunan.cevap.vakil_kim === 'Onasi' && okunan.cevap.vakil_ism === `${ISARETLI} Karimova Zulfiya` && okunan.cevap.surunkali === 'Bularning hech biri yoʻq' && okunan.cevap.dorilar === 'Yoʻq' && okunan.cevap.allergiya.startsWith('Ha') && okunan.cevap.allergiya.includes('tuxumga') && /^110\s?sm$/.test(okunan.cevap.boy) && /^18,5\s?kg$/.test(okunan.cevap.vazn) && !('harorat' in okunan.cevap), JSON.stringify(okunan.cevap))
+  await cek(H, 'intake-submitted-phone-uz.png')
+  const sifreli = satir[0].cevaplar_encrypted
+  const sonradanYaz = await hApi(H, '/api/ulke/portal/form', { token: tokenC, method: 'PUT', govde: { cevaplar: { sabab: 'changed afterwards' }, riza: true } })
+  const sonradanGonder = await hApi(H, '/api/ulke/portal/form', { token: tokenC, method: 'POST', govde: { cevaplar: { sabab: 'changed afterwards', surunkali: ['yoq'], dorilar: { e: false }, allergiya: { e: false }, vakil_kim: 'ota', vakil_ism: 'x' }, riza: true } })
+  kontrol('… and the SERVER holds it too: a change sent after submitting, and a second submission, are refused and the stored answers are the same bytes', sonradanYaz.s >= 400 && sonradanYaz.s < 500 && sonradanGonder.s >= 400 && sonradanGonder.s < 500 && (await formlar(hastaA))[0].cevaplar_encrypted === sifreli && (await formlar(hastaA)).length === 1, `${sonradanYaz.s} ${sonradanYaz.t} | ${sonradanGonder.s} ${sonradanGonder.t}`)
+  await H.click('[data-eylem=form-kapat]')
+  await H.waitForSelector('[data-alan=portal-form-karti][data-form-durumu=gonderildi]', { timeout: 30000 })
+  kontrol('back on the page: the card says the form was sent and that the doctor reads it before the visit; it opens "my answers"', (await metin(H, '[data-alan=portal-form-karti] h2')) === 'Soʻrovnoma yuborildi' && /^Soʻrovnomani \d{2}\.\d{2}\.\d{4} kuni yuborgansiz\. Shifokoringiz uni koʻrikdan oldin oʻqiydi\.$/.test(await metin(H, '[data-alan=portal-form-karti] .uza-aciklama')) && (await metin(H, '[data-eylem=form-ac]')) === 'Javoblarim')
+  kontrol('the form on a phone: nothing ran off the side of the screen in any part, and no part holds a link out of the page', tasma <= 0, String(tasma))
+
+  // 3. THE DOCTOR READS THE ANSWERS: on the patient's file and on the visit screen.
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector(`${K} [data-alan=form-son] [data-alan=form-cevaplari]`, { timeout: 60000 })
+  let dosya = await metin(p, `${K} [data-alan=form-son]`)
+  kontrol('ON THE PATIENT\'S FILE: the answers, under the line that says whose words they are — "filled in by a parent or legal guardian. Not verified." — first, before any answer; and that they are not used when the note is written', (await metin(p, `${K} [data-alan=form-beyan]`)) === 'Ota-onasi yoki qonuniy vakili toʻldirgan. Tekshirilmagan.' && (await p.$eval(`${K} [data-alan=form-cevaplari]`, (x) => !!x.firstElementChild?.querySelector('[data-alan=form-beyan]') && x.getAttribute('data-veli') === 'evet')) && [`${ISARETLI} Karimova Zulfiya`, 'Onasi', `${ISARETLI} ikki kundan beri yoʻtal`, 'tuxumga', 'Bularning hech biri yoʻq'].every((x) => dosya.includes(x)) && /110\s?sm/.test(dosya) && (await metin(p, `${K} [data-alan=form-nota-girmez]`)) === 'Bu javoblar qayd yozilishida ishlatilmaydi.' && /^Bemor soʻrovnomani \d{2}\.\d{2}\.\d{4} kuni yuborgan\.$/.test(await metin(p, `${K} [data-alan=form-durumu]`)), dosya.replace(/\s+/g, ' ').slice(0, 260))
+  await cek(p, 'intake-answers-file.png')
+  writeFileSync(GUNLUK, ''); senaryoYaz({ stt: 'yuksek', model: 'tamam' })
+  await git(p, `/visit?hasta=${hastaA}`)
+  await p.waitForSelector('[data-alan=muayene-formu] [data-alan=form-cevaplari]', { timeout: 60000 })
+  const muayeneGorunumu = await metin(p, '[data-alan=muayene-formu]')
+  kontrol('ON THE VISIT SCREEN, before recording: the same answers under the same line — read-only, with nothing to ask for, reopen or withdraw there', (await metin(p, '[data-alan=muayene-formu] h2')) === 'Bemorning javoblari' && (await metin(p, '[data-alan=muayene-formu] [data-alan=form-beyan]')) === 'Ota-onasi yoki qonuniy vakili toʻldirgan. Tekshirilmagan.' && muayeneGorunumu.includes(`${ISARETLI} ikki kundan beri yoʻtal`) && muayeneGorunumu.includes('Bu javoblar qayd yozilishida ishlatilmaydi.') && (await p.$$('[data-alan=muayene-formu] button, [data-alan=muayene-formu] input')).length === 0 && !(await p.$(K)))
+  await cek(p, 'intake-answers-visit.png')
+  await kayitYap(p)
+  await p.waitForSelector('[data-alan=not]', { timeout: 120000 })
+  const mdl = cagrilar().filter((x) => x.tur === 'model')
+  kontrol('NOT FED TO THE MODEL: a visit of this patient was recorded and its note written — and nothing the guardian typed into the form was in what the model was given', mdl.length >= 1 && mdl.every((x) => x.formCevabiVar === false), JSON.stringify(mdl.map((x) => [x.is, x.formCevabiVar])))
+  await p.waitForSelector('[data-alan=muayene-formu] [data-alan=form-cevaplari]', { timeout: 30000 }).catch(() => null)
+  const taslakYani = await p.evaluate(() => ({ form: document.querySelector('[data-alan=muayene-formu]')?.innerText ?? '', not: [...document.querySelectorAll('[data-alan=not] textarea')].map((x) => x.value).join('\n') }))
+  kontrol('BESIDE THE DRAFT the doctor still has the answers to read, under the same line — and the draft itself holds none of them', taslakYani.form.includes('Ota-onasi yoki qonuniy vakili toʻldirgan. Tekshirilmagan.') && taslakYani.form.includes(ISARETLI) && taslakYani.not.length > 20 && !taslakYani.not.includes(ISARETLI) && !JSON.stringify([await tabloOku('ulke_notlar'), await tabloOku('not_dil_kaydi')]).includes(ISARETLI))
+  await cek(p, 'intake-answers-beside-draft.png')
+
+  // 4. REOPEN: the doctor lets the guardian change the answers; the form must be sent again.
+  await git(p, `/patient?id=${hastaA}`)
+  await p.waitForSelector(`${K} [data-eylem=form-yeniden-ac]`, { timeout: 60000 })
+  kontrol('the doctor is told what reopening does before doing it; a submitted form cannot be withdrawn', (await govde(p)).includes('Qayta ochilgach, bemor javoblarini oʻzgartira oladi va soʻrovnomani yana yuborishi kerak boʻladi.') && !(await p.$('[data-eylem=form-geri-cek]')))
+  await p.click(`${K} [data-eylem=form-yeniden-ac]`)
+  await p.waitForFunction(() => document.querySelector('[data-alan=hasta-formu-karti]')?.getAttribute('data-form-durumu') === 'taslak', { timeout: 30000 })
+  satir = await formlar(hastaA)
+  kontrol('REOPENED: the same form is open again with its answers kept, and its moment of reopening is recorded; no second form was made', (await govde(p)).includes('Soʻrovnoma qayta ochildi.') && satir.length === 1 && satir[0].durum === 'taslak' && !!satir[0].yeniden_acildi_at && satir[0].gonderildi_at == null && satir[0].cevaplar_encrypted === sifreli, JSON.stringify({ d: satir[0].durum, y: satir[0].yeniden_acildi_at }))
+  await sayfayaDon(H, cocuk.pin)
+  kontrol('the guardian is told on their page: the doctor reopened the form — look through the answers and send again', (await H.$eval('[data-alan=portal-form-karti]', (x) => x.getAttribute('data-form-durumu'))) === 'taslak' && (await metin(H, '[data-alan=portal-form-karti]')).includes('Shifokoringiz soʻrovnomani qayta ochdi. Javoblaringizni koʻrib chiqing va yana yuboring.'))
+  await H.click('[data-eylem=form-ac]')
+  await bolumBekle(H, 'toldiruvchi')
+  await H.type('#uzf-vakil_telefon', '+998 90 000 00 02')
+  for (let i = 0; i < 5; i++) e = await sonraki(H, {})
+  await gonder(H)
+  satir = await formlar(hastaA)
+  kontrol('… they add an answer and send again: ONE form, submitted, read-only again; the answers changed in the database', satir.length === 1 && satir[0].durum === 'gonderildi' && !!satir[0].gonderildi_at && satir[0].cevaplar_encrypted !== sifreli && (await H.$eval('[data-cevap=vakil_telefon]', (x) => x.innerText)) === '+998 90 000 00 02' && (await H.$$('[data-alan=hasta-formu] input, [data-alan=hasta-formu] textarea')).length === 0)
+
+  // 5. ASKED FROM AN APPOINTMENT, for a Russian-speaking ADULT who already has a link (given in step 8c; it cannot be shown again).
+  const bugun = (await api(p, '/api/ulke/calisma-duzeni')).j.bugun
+  const rnd = await api(p, '/api/ulke/randevu', { method: 'POST', govde: { hastaId: hastaRu, gun: yazGun(gunEkle(bugun, 3)), saat: '07:10', sureDk: 20, yineDe: true } })
+  const randevuId = rnd.j?.randevu?.id
+  const ruErisimOnce = await erisimler(hastaRu)
+  await git(p, `/calendar?randevu=${randevuId}`)
+  await p.waitForSelector(`${K} [data-eylem=form-iste]`, { timeout: 60000 })
+  await panoKur(p)
+  kontrol('AN APPOINTMENT that is still to come carries the same card', rnd.s === 200 && (await metin(p, `${K} [data-alan=form-durumu]`)) === 'Bu bemordan soʻrovnoma hali soʻralmagan.' && ruErisimOnce.filter((x) => !x.iptal_at).length === 1, `${rnd.s} ${rnd.t}`)
+  await p.click(`${K} [data-eylem=form-iste]`)
+  await p.waitForSelector(`${K} [data-alan=form-daveti] [data-alan=form-davet-metni]`, { timeout: 30000 })
+  let ruDavet = await p.$eval(`${K} [data-alan=form-davet-metni]`, (x) => ({ metin: x.value, dil: x.getAttribute('data-dil') }))
+  let ruForm = await formlar(hastaRu)
+  kontrol('ASKED FROM THE APPOINTMENT: one form for that patient, tied to that appointment — the ADULT form, for the doctor\'s role; the patient\'s link was NOT touched', ruForm.length === 1 && ruForm[0].randevu_id === randevuId && ruForm[0].veli === false && ruForm[0].rol === rolA && ruForm[0].durum === 'bekliyor' && JSON.stringify(await erisimler(hastaRu)) === JSON.stringify(ruErisimOnce), JSON.stringify(ruForm[0] ?? null).slice(0, 240))
+  kontrol('THE INVITATION IN RUSSIAN — the patient\'s language, whatever the doctor reads — WITHOUT a link: the patient opens the link they were given; the card says why, in the doctor\'s language', ruDavet.dil === 'ru' && ruDavet.metin === `Здравствуйте! Врач ${hesap.ad} просит вас заполнить короткую анкету перед приёмом. Для этого откройте свою страницу по ссылке, которую вам дали раньше.` && !/https?:|#/.test(ruDavet.metin) && !(await p.$(`${K} [data-alan=portal-baglanti]`)) && !(await p.$(`${K} [data-alan=portal-pin]`)) && (await metin(p, `${K} [data-alan=form-baglanti-var]`)) === 'Bu bemorning havolasi bor. Uni qayta koʻrsatib boʻlmaydi, shuning uchun matnda havola yoʻq: bemor oʻzidagi havolani ochadi.' && (await metin(p, `${K} [data-alan=form-davet-dili]`)).startsWith('Matn tili (bemorning tili): ') && !(await metin(p, `${K} [data-alan=form-davet-dili]`)).endsWith('Oʻzbekcha'), `${ruDavet.metin} | ${await metin(p, `${K} [data-alan=form-davet-dili]`)}`)
+  await p.click(`${K} [data-eylem=davet-kopyala]`); await bekle(300)
+  kontrol('COPY THE INVITATION IN RUSSIAN: exactly that text is on the clipboard', JSON.stringify(await p.evaluate(() => window.__kopya)) === JSON.stringify([ruDavet.metin]))
+  await cek(p, 'intake-asked-appointment-ru.png')
+  // A NEW LINK: what it does to the link the patient holds is said BEFORE anything happens.
+  await p.click(`${K} [data-eylem=yeni-baglanti]`)
+  await p.waitForSelector(`${K} [data-alan=yeni-baglanti-onayi]`, { timeout: 15000 })
+  kontrol('"GIVE A NEW LINK": first the consequence, in plain words — the old link stops at once and the PIN changes too — with a way back; nothing has happened yet', (await metin(p, `${K} [data-alan=yeni-baglanti-onayi] [role=alert]`)) === 'Yangi havola bersangiz, bemordagi eski havola shu zahoti ishlamay qoladi va PIN-kod ham oʻzgaradi. Bemorga yangi havolani ham, yangi PIN-kodni ham berishingiz kerak boʻladi.' && (await metin(p, '[data-eylem=yeni-baglanti-onay]')) === 'Ha, yangi havola berilsin' && (await metin(p, '[data-eylem=yeni-baglanti-vazgec]')) === 'Bekor qilish' && JSON.stringify(await erisimler(hastaRu)) === JSON.stringify(ruErisimOnce))
+  await cek(p, 'intake-new-link-warning.png')
+  await p.click('[data-eylem=yeni-baglanti-vazgec]')
+  await p.waitForFunction(() => !document.querySelector('[data-alan=yeni-baglanti-onayi]'), { timeout: 15000 })
+  kontrol('"cancel": the warning is gone and the patient\'s link still stands', !!(await p.$(`${K} [data-eylem=yeni-baglanti]`)) && JSON.stringify(await erisimler(hastaRu)) === JSON.stringify(ruErisimOnce))
+  await p.click(`${K} [data-eylem=yeni-baglanti]`)
+  await p.waitForSelector('[data-eylem=yeni-baglanti-onay]', { timeout: 15000 })
+  await p.click('[data-eylem=yeni-baglanti-onay]')
+  await p.waitForSelector(`${K} [data-alan=portal-baglanti]`, { timeout: 30000 })
+  const yetiskin = { adres: await p.$eval(`${K} [data-alan=portal-baglanti]`, (x) => x.value), pin: await p.$eval(`${K} [data-alan=portal-pin]`, (x) => x.value) }
+  const tokenR = yetiskin.adres.split('#')[1] || ''
+  ruDavet = await p.$eval(`${K} [data-alan=form-davet-metni]`, (x) => ({ metin: x.value, dil: x.getAttribute('data-dil') }))
+  ruForm = await formlar(hastaRu)
+  kontrol('CONFIRMED: a new link in the patient\'s form (Russian) and a new PIN, shown once; the old link is withdrawn in the same step; the form is the same one; the Russian invitation now ends with the link and still has no PIN', yetiskin.adres.startsWith(`${TABAN}${ON_EK}/portal?dil=ru#`) && /^[A-Za-z0-9_-]{43}$/.test(tokenR) && /^\d{6}$/.test(yetiskin.pin) && (await erisimler(hastaRu)).length === ruErisimOnce.length + 1 && (await erisimler(hastaRu)).filter((x) => !x.iptal_at).length === 1 && (await erisimler(hastaRu)).find((x) => !x.iptal_at).token_hash === ozetle(tokenR) && ruForm.length === 1 && ruDavet.dil === 'ru' && ruDavet.metin === `Здравствуйте! Врач ${hesap.ad} просит вас заполнить короткую анкету перед приёмом. ПИН-код врач сообщит вам отдельно. Ссылка на вашу страницу: ${yetiskin.adres}` && !ruDavet.metin.includes(yetiskin.pin) && !(await p.$('[data-alan=yeni-baglanti-onayi]')), ruDavet.metin.replace(tokenR, '<token>'))
+  await p.evaluate(() => { window.__kopya = [] })
+  await p.click(`${K} [data-eylem=davet-kopyala]`); await bekle(300)
+  kontrol('the Russian invitation with the link is copied as it stands', JSON.stringify(await p.evaluate(() => window.__kopya)) === JSON.stringify([ruDavet.metin]))
+  await onEkAltinda(p, 'appointment with the intake card')
+
+  // 6. THE ADULT fills it in, in Russian, on a phone of her own.
+  const R = await sayfaAc(TEL)
+  await baglantiAc(R, yetiskin.adres)
+  await pinGonder(R, yetiskin.pin)
+  await R.waitForSelector('[data-alan=portal-form-karti]', { timeout: 30000 })
+  kontrol('THE ADULT\'S PAGE, in Russian: the card speaks to the patient herself', (await metin(R, '[data-alan=portal-form-karti] h2')) === 'Анкета перед приёмом' && (await metin(R, '[data-alan=portal-form-karti]')).includes('Ваш врач просит вас ответить на несколько вопросов перед приёмом. Это займёт несколько минут.') && (await metin(R, '[data-eylem=form-ac]')) === 'Начать заполнение')
+  await R.click('[data-eylem=form-ac]')
+  await bolumBekle(R, 'riza')
+  kontrol('the adult\'s consent sentence, in Russian', (await metin(R, '[data-alan=form-riza]')) === 'Ваши ответы увидит только ваш врач. Они хранятся в защищённом виде как ваши медицинские сведения и используются для подготовки к приёму. Заполнять анкету необязательно.')
+  await R.click('input[name=form-riza]')
+  await R.click('[data-eylem=form-baslat]')
+  await bolumBekle(R, 'murojaat')
+  e = await ekran(R)
+  const yetiskinBolumleri = { [e.bolum]: e.sorular }
+  kontrol('THE ADULT FORM does not ask who is filling it in: it begins with the reason for the visit (part 1 of 6), in Russian', e.ust === 'Анкета перед приёмом · Часть 1 из 6' && JSON.stringify(e.sorular) === JSON.stringify(['sabab', 'qachondan']) && !/[A-Za-z]/.test(e.h1), JSON.stringify(e))
+  await R.type('#uzf-sabab', `${ISARETLI} боль в груди при нагрузке`)
+  e = await sonraki(R, yetiskinBolumleri)
+  kontrol('the adult is asked about herself ("do you take medicines regularly?"), not about a child', !/ребён/i.test(await metin(R, '[data-alan=hasta-formu]')) && (await metin(R, '[data-soru=dorilar] legend')).endsWith('(обязательно)'), await metin(R, '[data-soru=dorilar] legend'))
+  await isaretle(R, 'surunkali', 'bosim'); await isaretle(R, 'dorilar', 'evet'); await isaretle(R, 'allergiya', 'hayir')
+  await R.waitForSelector('#uzf-dorilar-ayrinti', { timeout: 15000 })
+  await R.type('#uzf-dorilar-ayrinti', `${ISARETLI} от давления, название не помню`)
+  e = await sonraki(R, yetiskinBolumleri)
+  e = await sonraki(R, yetiskinBolumleri)
+  const ruBirimler = await R.$$eval('[data-alan=hasta-formu] [data-alan=birim]', (l) => l.map((x) => x.innerText))
+  await yazDeger(R, '#uzf-boy', '168'); await yazDeger(R, '#uzf-vazn', '71')
+  e = await sonraki(R, yetiskinBolumleri)
+  await R.type('#uzf-yaqin_ism', `${ISARETLI} Иванов Пётр`)
+  e = await sonraki(R, yetiskinBolumleri)
+  const tumYetiskin = Object.values(yetiskinBolumleri).flat()
+  kontrol('THE ADULT FORM: six parts; smoking, alcohol and (for a woman) pregnancy are asked, and an emergency contact; nothing of the guardian form — no "who fills it in", no parents\' marital status, no smoking at home; units in Russian', JSON.stringify(Object.keys(yetiskinBolumleri)) === JSON.stringify(['murojaat', 'salomatlik', 'turmush', 'olchovlar', 'yaqin', 'rol']) && JSON.stringify(yetiskinBolumleri.turmush) === JSON.stringify(['chekish', 'alkogol', 'homiladorlik']) && ['vakil_kim', 'vakil_ism', 'vakil_telefon', 'ota_ona_holati', 'uyda_chekish'].every((k) => !tumYetiskin.includes(k)) && JSON.stringify(ruBirimler) === JSON.stringify(['см', 'кг', '°С']), `${JSON.stringify(yetiskinBolumleri)} ${JSON.stringify(ruBirimler)}`)
+  kontrol(`the role's own questions last, for the same role (${rolA}), and nothing of another role`, e.bolum === 'rol' && e.sorular.every((k) => k.startsWith(`${ISARET[rolA]}_`)) && tumYetiskin.every((k) => CEKIRDEK.includes(k) || k.startsWith(`${ISARET[rolA]}_`)) && !/[A-Za-z]/.test((await metin(R, '[data-alan=hasta-formu]')).replace(ISARETLI, '')), e.sorular.join())
+  await cek(R, 'intake-role-part-phone-ru.png')
+  await gonder(R)
+  ruForm = await formlar(hastaRu)
+  const ruOkunan = await R.$eval('[data-alan=hasta-formu]', (x) => ({ h1: x.querySelector('h1').innerText, cevap: Object.fromEntries([...x.querySelectorAll('[data-cevap]')].map((d) => [d.getAttribute('data-cevap'), d.innerText])) }))
+  kontrol('SUBMITTED in Russian: stored as submitted with the language it was filled in; her answers read back in Russian words', ruForm[0].durum === 'gonderildi' && ruForm[0].dil === 'ru' && ruOkunan.h1 === 'Мои ответы' && ruOkunan.cevap.surunkali === 'Повышенное давление (гипертония)' && ruOkunan.cevap.allergiya === 'Нет' && ruOkunan.cevap.dorilar.startsWith('Да') && /^168\s?см$/.test(ruOkunan.cevap.boy), JSON.stringify(ruOkunan))
+  await cek(R, 'intake-submitted-phone-ru.png')
+  await git(p, `/calendar?randevu=${randevuId}`)
+  await p.waitForSelector(`${K} [data-alan=form-son] [data-alan=form-cevaplari]`, { timeout: 60000 })
+  dosya = await metin(p, `${K} [data-alan=form-son]`)
+  kontrol('THE DOCTOR reads them on the appointment, in the DOCTOR\'s language (Uzbek) with the patient\'s own words as she typed them (Russian), under "the patient\'s own words. Not verified."', (await metin(p, `${K} [data-alan=form-beyan]`)) === 'Bemorning oʻz soʻzlari. Tekshirilmagan.' && dosya.includes(`${ISARETLI} боль в груди при нагрузке`) && dosya.includes('Yuqori qon bosimi (gipertoniya)') && /168\s?sm/.test(dosya) && !dosya.includes('Повышенное давление'), dosya.replace(/\s+/g, ' ').slice(0, 240))
+  await cek(p, 'intake-answers-appointment.png')
+
+  // 7. ANOTHER ROLE'S QUESTIONS NEVER APPEAR. Doctor B is a dietitian; B's patient gets the core questions and the dietitian's.
+  // (B's patient was given a link in step 8c, which cannot be shown again: B asks with a new link, as the card's second button does.)
+  const bIste = await api(B, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaB, yeniBaglanti: true } })
+  const D = await sayfaAc(TEL)
+  await baglantiAc(D, `${TABAN}${ON_EK}${bIste.j?.yol ?? ''}`)
+  await pinGonder(D, bIste.j?.pin ?? '')
+  await D.waitForSelector('[data-alan=portal-form-karti]', { timeout: 30000 })
+  const tokenB = String(bIste.j?.yol ?? '').split('#')[1] || ''
+  const bFormu = await hApi(D, '/api/ulke/portal/form', { token: tokenB })
+  const bAnahtarlar = (bFormu.j?.form?.bolumler ?? []).flatMap((b) => b.sorular.map((q) => q.anahtar))
+  const bRol = (bFormu.j?.form?.bolumler ?? []).find((b) => b.anahtar === 'rol')?.sorular.map((q) => q.anahtar) ?? []
+  kontrol(`A SECOND ROLE: the dietitian's patient gets the core questions and the dietitian's own (${bRol.join(', ')}) — and not one question of doctor A's role; doctor A's patients got not one of the dietitian's`, bIste.s === 200 && bFormu.s === 200 && bRol.length >= 3 && bRol.every((k) => k.startsWith('dt_')) && bAnahtarlar.every((k) => CEKIRDEK.includes(k) || k.startsWith('dt_')) && !bAnahtarlar.some((k) => k.startsWith(`${ISARET[rolA]}_`)) && ![...tumVeli, ...tumYetiskin].some((k) => k.startsWith('dt_')) && (await formlar(hastaB))[0].rol === 'diyetisyen', JSON.stringify(bAnahtarlar))
+  kontrol('what the patient\'s browser is sent holds the questions of that one form only: no other role\'s key or text is in the answer', !/"(kd|pd|at|ah)_[a-z_]+"/.test(JSON.stringify(bFormu.j).replace(/"dt_[a-z_]+"/g, '')) || ISARET[rolA] === 'dt')
+
+  // 8. ISOLATION — two doctors.
+  const formA = (await formlar(hastaA))[0].id, formRu = (await formlar(hastaRu))[0].id
+  let onceki = await hamFormlar()
+  const erisimHam = JSON.stringify(await tabloOku('ulke_portal_erisimleri'))
+  {
+    const istekler = [
+      ['reads the forms of A\'s patient', await api(B, `/api/ulke/hasta-formu?hasta=${hastaA}`)],
+      ['asks A\'s patient for a form', await api(B, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaA } })],
+      ['asks A\'s patient for a form with a new link', await api(B, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaRu, yeniBaglanti: true } })],
+      ['asks their own patient for a form tied to A\'s appointment', await api(B, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaB, randevuId } })],
+      ['reopens A\'s submitted form', await api(B, '/api/ulke/hasta-formu', { method: 'PATCH', govde: { formId: formA, islem: 'yeniden-ac' } })],
+      ['withdraws A\'s form', await api(B, '/api/ulke/hasta-formu', { method: 'PATCH', govde: { formId: formRu, islem: 'geri-cek' } })],
+    ]
+    kontrol('DOCTOR B and everything of doctor A\'s: every one of these is "not found" — the same answer an id that never existed gets — and nothing changed in the database (forms and links)', istekler.every(([, r]) => r.s === 404 && r.t === '{"code":"NOT_FOUND"}') && (await hamFormlar()) === onceki && JSON.stringify(await tabloOku('ulke_portal_erisimleri')) === erisimHam, istekler.map(([ad, r]) => `${ad}: ${r.s} ${r.t}`).join(' | '))
+    const yok = await api(p, '/api/ulke/hasta-formu', { method: 'PATCH', govde: { formId: '00000000-0000-4000-8000-00000000dead', islem: 'yeniden-ac' } })
+    const capraz = await api(p, '/api/ulke/hasta-formu', { method: 'POST', govde: { hastaId: hastaA, randevuId } })
+    kontrol('doctor A with a form that never existed, and with one patient\'s id beside ANOTHER patient\'s appointment: "not found" as well', yok.s === 404 && capraz.s === 404 && (await hamFormlar()) === onceki, `${yok.s} ${capraz.s}`)
+    await git(B, `/patient?id=${hastaB}`)
+    await B.waitForSelector(`${K} [data-alan=form-durumu]`, { timeout: 60000 })
+    const bGovde = await govde(B)
+    kontrol('doctor B\'s own patient file, on a phone and in Russian: B\'s own waiting form, and nothing of doctor A\'s patients or their answers', /^Анкета запрошена \d{2}\.\d{2}\.\d{4}\. Пациент ещё не начал её заполнять\.$/.test(await metin(B, `${K} [data-alan=form-durumu]`)) && !bGovde.includes(ISARETLI) && !/Karimova|Иванова|Zulfiya/.test(bGovde) && (await B.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)) <= 0, await metin(B, `${K} [data-alan=form-durumu]`))
+    await cek(B, 'intake-doctor-b-phone-ru.png')
+  }
+
+  // 9. ISOLATION — a doctor's session is no patient, a patient's session is no doctor, and a patient reads only their own form.
+  {
+    const jetonA = await p.evaluate((k) => JSON.parse(localStorage.getItem(k) || 'null')?.access_token ?? '', OTURUM_ANAHTARI)
+    const hekimleHasta = await hApi(H, '/api/ulke/portal/form', { token: tokenC, jeton: jetonA })
+    const hastaIleHekim = [await hApi(R, `/api/ulke/hasta-formu?hasta=${hastaRu}`, { token: tokenR }), await hApi(R, '/api/ulke/hasta-formu', { token: tokenR, method: 'PATCH', govde: { formId: formRu, islem: 'yeniden-ac' } })]
+    const oturumsuz = await p.evaluate(async (u) => { const r = await fetch(u, { credentials: 'omit' }); return { s: r.status, t: (await r.text()).slice(0, 80) } }, adres('/api/ulke/portal/form'))
+    kontrol('a doctor\'s token on the patient\'s form route changes nothing about whose form is read (the guardian\'s own); a PATIENT\'s session on the doctor\'s routes is "no session"; no session at all is "no session"', hekimleHasta.s === 200 && hekimleHasta.j.form.bolumler[0].anahtar === 'toldiruvchi' && hastaIleHekim.every((r) => r.s === 401) && oturumsuz.s === 401 && (await formlar(hastaRu))[0].durum === 'gonderildi', `${hekimleHasta.s} | ${hastaIleHekim.map((r) => r.s).join()} | ${oturumsuz.s} ${oturumsuz.t}`)
+    const kendiR = await hApi(R, '/api/ulke/portal/form', { token: tokenR })
+    const kendiH = await hApi(H, '/api/ulke/portal/form', { token: tokenC })
+    kontrol('EACH PATIENT READS ONLY THEIR OWN FORM: the adult\'s session gives the adult\'s answers, the guardian\'s session the child\'s — neither holds a word of the other', kendiR.s === 200 && kendiH.s === 200 && JSON.stringify(kendiR.j).includes('боль в груди') && !JSON.stringify(kendiR.j).includes('Zulfiya') && JSON.stringify(kendiH.j).includes('Zulfiya') && !JSON.stringify(kendiH.j).includes('боль в груди') && kendiR.j.form.veli === false && kendiH.j.form.veli === true)
+    onceki = await hamFormlar()
+    // The guardian's browser (patient A's session) with the adult's link: the cookie is not that link's.
+    const baskaLinkle = await hApi(H, '/api/ulke/portal/form', { token: tokenR })
+    const baskaLinkleYaz = await hApi(H, '/api/ulke/portal/form', { token: tokenR, method: 'POST', govde: { cevaplar: { sabab: 'someone else' }, riza: true } })
+    kontrol('ONE PATIENT\'S SESSION WITH ANOTHER PATIENT\'S LINK reads nothing and writes nothing: "no session", and no form changed', baskaLinkle.s === 401 && baskaLinkleYaz.s === 401 && (await hamFormlar()) === onceki, `${baskaLinkle.s} ${baskaLinkle.t} | ${baskaLinkleYaz.s}`)
+  }
+
+  // 10. WITHDRAW a request that was not filled in: it leaves the patient's page.
+  await B.click(`${K} [data-eylem=form-geri-cek]`)
+  await B.waitForFunction(() => document.querySelector('[data-alan=hasta-formu-karti]')?.getAttribute('data-form-durumu') === 'yok', { timeout: 30000 })
+  const bSonra = await hApi(D, '/api/ulke/portal/form', { token: tokenB })
+  await D.reload({ waitUntil: 'networkidle0' })
+  await D.waitForSelector('[data-alan=hasta-ad], #uzp-pin', { timeout: 30000 })
+  kontrol('WITHDRAWN by doctor B: B is told; the form is kept as withdrawn (never deleted); the patient\'s page no longer shows a form and the route gives none', (await govde(B)).includes('Запрос отозван. Анкета убрана со страницы пациента.') && (await formlar(hastaB)).length === 1 && (await formlar(hastaB))[0].durum === 'iptal' && !!(await formlar(hastaB))[0].iptal_at && bSonra.s === 200 && bSonra.j.form === null && !(await D.$('[data-alan=portal-form-karti]')), `${bSonra.s} ${bSonra.t}`)
+
+  const tumu = await tabloOku('ulke_hasta_formlari')
+  kontrol(`every intake form carries the country and its doctor (${tumu.length} forms); no answer can be read in the database`, tumu.length === 3 && tumu.every((s) => s.ulke === 'uz' && !!s.doctor_id && !!s.patient_id) && !JSON.stringify(tumu).includes(ISARETLI) && !/Zulfiya|боль в груди|vakil_|sabab/.test(JSON.stringify(tumu)))
+  for (const [ad, pg] of [['guardian', H], ['adult', R], ['dietitian\'s patient', D]]) {
+    kontrol(`the ${ad}'s browser: no console errors beyond the refusals it was meant to get, no request to any outside address, the token in no request, nothing a script can read left behind`, pg.konsol.filter((k) => !/40[0-9]|42[39]|Failed to load resource/.test(k)).length === 0 && pg.disari.length === 0 && [tokenC, tokenR, tokenB].every((t) => pg.istekler.every((i) => !i.split('#')[0].includes(t))) && (await pg.evaluate(() => Object.keys(localStorage).length + Object.keys(sessionStorage).length + document.cookie.length)) === 0, [...pg.konsol, ...pg.disari].join(' | ').slice(0, 300))
+    await pg.browserContext().close()
+  }
 }
 
 // ───────────────────────── 9. every other screen of the application is closed, signed in or not ─────────────────────────

@@ -325,9 +325,19 @@ export function PortalFormu({ dil, iste, kapat, oturumBitti }: { dil: DilKodu; i
   // SAVED AS THEY GO: a moment after the last change.
   useEffect(() => {
     if (!kirli.current || !rizaVerildi.current) return
-    const z = window.setTimeout(() => { void kaydet() }, KAYIT_GECIKMESI_MS)
+    const z = window.setTimeout(() => { if (kirli.current) void kaydet() }, KAYIT_GECIKMESI_MS)
     return () => window.clearTimeout(z)
   }, [cevaplar, kaydet])
+
+  // … and AT ONCE when the page is left: another app, a locked phone, a closed tab. A patient who answers the last
+  // question and puts the phone down has not pressed anything; the moment above may never come.
+  useEffect(() => {
+    const birak = () => { if (kirli.current && rizaVerildi.current) void kaydet() }
+    const gizlendi = () => { if (document.visibilityState === 'hidden') birak() }
+    document.addEventListener('visibilitychange', gizlendi)
+    window.addEventListener('pagehide', birak)
+    return () => { document.removeEventListener('visibilitychange', gizlendi); window.removeEventListener('pagehide', birak) }
+  }, [kaydet])
 
   function degistir(anahtar: string, c: Cevap | undefined) {
     kirli.current = true

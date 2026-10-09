@@ -22,6 +22,12 @@ const ilkRol = a.roller[0] ?? null
 // when their doctor works in the default form, and the catalogues in that form.
 const portalAcik = Boolean(p.ozellikler.hastaPortali && a.portalMetinleri)
 const hastaBicimi = hastaIcinBicim(p.uygulama.dilGruplari, p.uygulama.hastaDilleri[0], { dil: d, notDili: d })
+// NOTYA-ULKE-INTAKE-01 — the intake form: the catalogues in the doctor's and the patient's form, the consent sentence
+// for each reader, and the KEYS of the question sets (the core set, the first role's, every other role's) — so the
+// walk-through can tell whose question is on a screen without holding a single question itself.
+const hf = k.hastaFormu
+const formAcik = Boolean(portalAcik && p.ozellikler.hastaFormu && a.formMetinleri && hf)
+const bicimde = (m: unknown) => (m as Record<string, string>)[hastaBicimi] ?? ''
 process.stdout.write(JSON.stringify({
   kod: p.kod, yolOnEki: p.yolOnEki ?? '', dil: d, acikDiller: p.acikDiller, uygulamaDilleri: p.uygulama.diller, dilGruplari: p.uygulama.dilGruplari,
   hastaDilleri: p.uygulama.hastaDilleri, saatDilimleri: p.uygulama.saatDilimleri, saatBicimi: p.uygulama.saatBicimi, tarihDeseni: p.bicim.tarihDeseni,
@@ -35,6 +41,14 @@ process.stdout.write(JSON.stringify({
   portal: portalAcik ? {
     hastaBicimi, gecerlilikGun: p.uygulama.portal?.baglantiGecerlilikGun ?? null, acilNumara: p.uygulama.portal?.acilNumara ?? null, pinHane: PIN_HANE, pinDeneme: PIN_DENEME_AZAMI, istekGunAzami: ISTEK_GUN_AZAMI,
     hekim: a.portalMetinleri?.[d], hasta: a.portalMetinleri?.[hastaBicimi], hastaRandevu: a.randevuMetinleri[hastaBicimi] ?? null, ilkRolAdi: ilkRol ? ilkRol.ad[hastaBicimi] : '',
+  } : null,
+  form: formAcik && hf && a.formMetinleri ? {
+    surum: hf.surum, rizaSurumu: hf.riza.surum, veliYasi: p.uygulama.veliYasi ?? null,
+    riza: { metin: bicimde(hf.riza.metin), veliMetni: bicimde(hf.riza.veliMetni) },
+    cekirdek: hf.cekirdek.bolumler.flatMap((b) => b.sorular.map((q) => q.anahtar)),
+    ilkRol: ilkRol ? (hf.roller[ilkRol.anahtar]?.sorular.map((q) => q.anahtar) ?? []) : [],
+    digerRoller: Object.entries(hf.roller).filter(([rol]) => rol !== ilkRol?.anahtar).flatMap(([, r]) => r.sorular.map((q) => q.anahtar)),
+    hekim: a.formMetinleri[d]?.hekim, hasta: a.formMetinleri[hastaBicimi]?.hasta, davet: a.formMetinleri[hastaBicimi]?.davet, birim: a.formMetinleri[hastaBicimi]?.birim,
   } : null,
   // what must NEVER be on a screen of this country: the "to be supplied" marker, and what marks another country's content
   eksikIsareti: EKSIK_ISARETI,

@@ -10,7 +10,7 @@ import { PORTAL_CEREZI } from '@/lib/ulke/portal/sabitler'
 
 export const dynamic = 'force-dynamic'
 
-export const POST = portalSinirinda('cikis POST', async (req: NextRequest) => {
+export const POST = portalSinirinda('portal sign-out POST', async (req: NextRequest) => {
   if (!portalAcik()) return PORTAL_KOD.yok()
   if (!portalIstegiMi(req)) return PORTAL_KOD.gecersiz()
   await portalCikis(ulkeServisSupabase(), req.cookies.get(PORTAL_CEREZI)?.value)

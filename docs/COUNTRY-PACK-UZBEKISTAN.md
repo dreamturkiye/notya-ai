@@ -13,10 +13,170 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 | Checked | the result was compared with the files: **14 tables, 136 columns, 17 row-level rules, 5 functions**. The baseline proof (`scripts/ulke-temel-kaniti.mjs`) builds a local database the same way, lines left out included, and finds it identical to one built from the files as written and to one built from the one-file baseline, with the same four figures. |
 | The preview site | has its **country, database address, public key and encryption key** set |
 | Still to do, by the owner | **add the secret server key** to the preview site. Until then the Uzbek preview cannot sign anybody up or in, or read or write a row. |
-| Still to do, later migrations | every country migration after 135 must be run on this database, in order, before the build that needs it is used (`lib/db/ulke/gocler.json`; this document's later sections say which). |
+| Still to do, later migrations | every country migration after 135 must be run on this database, in order, before the build that needs it is used (`lib/db/ulke/gocler.json`): today **136, 137** (the patient portal) and **138** (the intake form). The sections below say what each adds. |
 | Not checked | public sign-up switched off in the project (a setting; checklist M4); the application against this database (every application test uses a stand-in). |
 
 **Further countries need a paid plan.** The organisation's free plan holds only two projects, and Türkiye and Uzbekistan now use both. A database for the United States, the United Kingdom, Canada, Australia or New Zealand cannot be created until the organisation moves to a paid plan. That is the owner's decision; the monthly figure should be read from the provider's price page on the day.
+
+## The intake form (2026-10-09, NOTYA-ULKE-INTAKE-01)
+
+**Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database needs **migration 138** (below), after 136 and 137, before a build that has the form is used. Branch `feat/ulke-intake`, PR to be opened (base `feat/ulke-portal`, PR #573), unmerged.
+
+**What it is.** Before a visit the doctor asks a patient to fill in a short form. The patient fills it in on their own page (the patient portal), on a phone, in their own language; the doctor reads the answers before and during the visit. Nothing is sent to anybody by the application.
+
+| Part | What happens | Where |
+|---|---|---|
+| Asking | One button, "Soʻrovnomani toʻldirishni soʻrash". It makes the form and shows an **invitation text in the patient's language** for the doctor to copy and send by any means of their own. **No mail, no SMS, no messenger is contacted.** | the patient's file; an appointment that is still to come |
+| A patient without access | Asking **creates the patient's link and PIN in the same step** and shows them once, exactly as "give access" does. The invitation ends with the link. **The PIN is never in the invitation**; the doctor tells it separately. | the same card |
+| A patient who already has a link | The link is stored only as a hash and cannot be shown again, so the invitation says "open your page with the link you were given". The doctor may give a **new** link: the card first says, in plain words, that the old link stops at once and the PIN changes, and does nothing until the doctor confirms. | the same card |
+| Filling in | The patient's page shows a card. First the **consent sentence**; without it nothing starts and nothing is stored. Then the **core questions**, then **the questions of the doctor's role**, part by part. Answers are **saved as they go**: a moment after the last change, and at once when the page is left (another app, a locked phone), so the page can be closed and the form resumed. | the patient's phone |
+| Submitting | Once. Required questions that are unanswered are pointed out. After submitting, the patient can read the answers and **cannot change them**; the server refuses a later change as well. | the patient's phone |
+| The doctor reads | The answers, in the doctor's language (what the patient typed stays as typed), under a line that comes first: **"Bemorning oʻz soʻzlari. Tekshirilmagan."** (the patient's own words, not verified) or, for a child, **"Ota-onasi yoki qonuniy vakili toʻldirgan. Tekshirilmagan."** | the patient's file, the appointment, and the visit screen: before recording, on the recorded visit's page, and beside a draft note (an approved note shows none: it is finished) |
+| Reopening | The doctor can reopen a submitted form: the answers are kept, the patient may change them and must send the form again. A request that was not submitted can be withdrawn; a submitted form is never withdrawn or deleted. | the patient's file, the appointment |
+| Language | The same rule as the patient's page: Russian for a patient recorded as Russian-speaking, whatever the doctor reads; Uzbek for an Uzbek-speaking patient, in the doctor's script. The invitation is in that language too. | set by the patient's language on the file |
+
+**Children.** For a patient under 18 (the pack's guardian age, `uygulama.veliYasi`, the same rule that words the visit note), in every role, the form is addressed to a parent or guardian. It begins with **who is filling it in** (relation, name, phone) and asks the **parents' marital status** there and nowhere else. An adult's smoking, alcohol, pregnancy and emergency contact are not asked about a child; smoking at home is asked instead. Each core question that speaks to its reader has a second wording for a parent ("Bola doimiy qabul qiladigan dorilar bormi?"). The guardian's identity is not confirmed by anything (slot `consent_sentence`).
+
+**The questions are the pack's; the question types are the kit's.** Seven types: one choice, several choices ("none of these" stands alone), a short text, a long text, yes or no with a line of detail, a date, a number with its unit. Uzbekistan's content, in three forms each:
+
+| Set | Questions | File |
+|---|---|---|
+| Core, every patient: Soʻrovnomani kim toʻldirmoqda / Кто заполняет анкету (4, guardian form only), Murojaat sababi / Причина обращения (2), Salomatlik tarixi / Сведения о здоровье (7), Turmush tarzi / Образ жизни (4), Oʻlchovlar (bilsangiz) / Измерения (если знаете) (3), Zarur boʻlganda bogʻlanish uchun yaqiningiz (ixtiyoriy) / Близкий человек, с которым можно связаться при необходимости (по желанию) (3, adult form only) | 23 | `countries/uz/klinik/hastaFormu/cekirdek.ts` |
+| One set per role, 40 roles | 228 (4 to 9 per role) | `countries/uz/klinik/hastaFormu/roller1.ts`, `roller2.ts`, `roller3.ts` |
+| The consent sentence, for the patient and for a guardian | 2 | `countries/uz/klinik/hastaFormu/index.ts` |
+| The screens: the doctor's card, the invitation, the patient's form, unit names | 66 entries (30, 4, 29, 3) | `countries/uz/uygulama/formMetinleri.ts` |
+
+**A question belongs to one role.** A form holds the core questions and the questions of the role its doctor had when asking, and no other role's: one decision point in the kit (`lib/ulke/intake/sorular.ts`), which also filters what is stored and what is shown. Every question key is unique in the pack (the pack check refuses a repeat). The role's questions are in the pack's server half: in the Uzbek build no file a browser loads holds a question; a browser receives the questions of one form, inside that form.
+
+**Units.** Height, weight and temperature are asked in the pack's units (`uygulama.birimler`: centimetres, kilograms, degrees Celsius). The unit is written beside the field by the kit, never into a question, and the name of each unit is the pack's text.
+
+**Privacy.** The answers are encrypted before they are stored, with the same helper as a patient's name, and bound to the country, the doctor and the patient: a stored value read under another doctor or patient is refused. Every row carries all three, and every statement names them. Another doctor's patient or form answers exactly like one that does not exist. The patient's form route never accepts a doctor's session and the doctor's never a patient's. Nothing is cached. The table is reachable by the server only.
+
+**The consent sentence is a draft and has not been read by a lawyer** (`hukukcuInceledi: false`). Its stamp (`uz-taslak-2026-10-09`) is stored with every form it was accepted on, so that a later, reviewed wording can be told apart.
+
+**Off, on purpose.**
+
+| What | State |
+|---|---|
+| The answers as input to the model that writes the visit note | **Not done.** The model is given nothing a patient typed into a form; the doctor's card says so ("Bu javoblar qayd yozilishida ishlatilmaydi."). A later decision of the owner's, with a clinician: `docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-INTAKE-01b. |
+| File uploads, automatic sending, reminders | Not built: no page, no route, no table. |
+| Anything derived from an answer | Nothing is scored, summed, graded or flagged. No answer changes what any screen offers. No question tells a patient to seek urgent care (slot `red_flag_checklists`). |
+| Identity and payer | The form asks for no identity number and has no payer or insurance section. Name, date of birth, sex and phone are not asked again: they are on the patient's file. |
+
+**Decisions Claude took, for Kaan to change.** One open form per patient (asking again returns the same form). A form asked from an appointment is shown on that appointment. The role's questions are worded impersonally ("Koʻkrak qafasida ogʻriq bormi?"), so that one sentence serves an adult and a parent. An emergency contact is asked of adults only, and is optional. A withdrawn request is kept as withdrawn. When the pack's question set changes, forms already asked keep the set they were asked with, and the doctor's view says that some answers may not be shown.
+
+**Machine-written, all of it, and read by nobody.** 802 texts in the question files (questions, headings, options, help and detail lines, units, the consent sentence), each in three forms, and 66 screen entries in three forms. No clinician practising in Uzbekistan has read a question; nobody who speaks Uzbek or Russian as a first language has read a sentence. The Cyrillic form was written by hand, line by line. **Status per role: the last column of "Status of the 40 roles" below** (each of the 40 sets: machine-written, read by no clinician). The files say the same at their top, and each set carries it as data (`inceleme: { makineYazimi: true, klinisyen: null }`); a set is reviewed when that names the clinician who read and signed it.
+
+### What the intake form does not ask, and who must supply it first
+
+The structure of the form follows the Turkish product's forms; **no text was copied or translated, and nothing that exists only in Türkiye was carried over.** Wherever a form would need clinical reference content or local rules, the pack holds a **slot** instead: empty, switched off, read by no question (`countries/uz/klinik/hastaFormu/yerelIcerik.ts`). 18 slots:
+
+| # | Slot | Waits on | Roles | What is missing | What the form asks today |
+|---|---|---|---|---|---|
+| F1 | `red_flag_checklists` | a local clinician | `acil-tip`, `kardiyoloji`, `noroloji`, `dahiliye`, `genel-cerrahi`, `ortopedi`, `dermatoloji`, `kulak-burun-bogaz`, `goz-hastaliklari`, `kadin-hastaliklari-dogum`, `uroloji`, `endokrinoloji`, `gastroenteroloji`, `nefroloji`, `romatoloji`, `onkoloji`, `gogus-hastaliklari`, `gogus-cerrahisi`, `beyin-cerrahisi`, `kalp-damar-cerrahisi`, `enfeksiyon-hastaliklari`, `fizik-tedavi`, `spor-hekimligi`, `plastik-cerrahi`, `anestezi`, `radyoloji`, `psikiyatri` | Per role: the list of "red flag" symptoms a patient ticks before a visit, and the sentence that tells a patient who ticks one what to do now (which service to call, and its number). A triage rule and an instruction to a patient: both are clinical content, and the number is local. | Nothing. No question of any role tells a patient to seek emergency care; the patient's page says only that it is not for emergencies (the portal's own sentence). |
+| F2 | `self_harm_screening` | a local clinician | `psikiyatri`, `klinik-psikolog` | The safety (self-harm) screening question in locally validated Uzbek and Russian wording, and the clinic's procedure for a "yes" given on a form nobody is watching (who is told, how fast). | Nothing. The psychiatry and psychology sets ask about mood, sleep and what is hardest now, in free text; no question asks about self-harm. |
+| F3 | `validated_questionnaires` | a local clinician | `psikiyatri`, `klinik-psikolog`, `uroloji`, `dermatoloji`, `romatoloji`, `fizik-tedavi`, `fizyoterapi`, `ergoterapi`, `noroloji` | Validated questionnaires and scores in Uzbek and Russian versions accepted locally (mood and anxiety scales, urinary symptom score, skin and joint activity indices, functional independence scales). | Plain questions only. Pain is asked as a number from 0 to 10 with its two ends described in words; nothing is scored or summed. |
+| F4 | `vaccination_checklist` | a local clinician | `pediatri`, `cocuk-cerrahisi`, `aile-hekimligi`, `enfeksiyon-hastaliklari` | The national vaccination calendar as a check-list (which vaccine at which age), so that a parent can tick what was given. | One question: "were the vaccinations given on time, as far as you know?" — yes, no, I do not know. Paediatrics adds a line asking to bring the vaccination record. |
+| F5 | `development_milestones` | a local clinician | `pediatri` | The developmental milestone check-list in local use, by age. | One yes/no question: whether the parent is worried about the child's development, with a free-text line. |
+| F6 | `screening_programme` | a local clinician | `aile-hekimligi`, `kadin-hastaliklari-dogum`, `longevity`, `dahiliye` | The national screening and check-up programme by age and sex (which tests, how often), to ask which of them the patient has had. | Free text: "tests or check-ups in the last year" and "when was the last comprehensive check-up". No test is named as due. |
+| F7 | `antenatal_schedule` | a local clinician | `kadin-hastaliklari-dogum` | The antenatal visit and screening schedule of the national protocol, and the fields of the mandatory pregnancy record. | The week of pregnancy, the number of pregnancies and births, the first day of the last period. Nothing is derived from them. |
+| F8 | `preoperative_instructions` | a local clinician | `anestezi`, `genel-cerrahi`, `cocuk-cerrahisi`, `plastik-cerrahi`, `estetik-cerrahi`, `sac-ekimi`, `beyin-cerrahisi`, `gogus-cerrahisi`, `kalp-damar-cerrahisi` | Pre-operative instructions a form would ask the patient to confirm (fasting times, which medicines to stop and when) and the consent form required by law. | Nothing is instructed and nothing is confirmed. The sets ask about earlier anaesthesia, bleeding tendency and blood-thinning medicines (name as free text). |
+| F9 | `imaging_safety_checklist` | a local clinician | `radyoloji` | The safety check-list before imaging with contrast or a magnet, as used locally (which implants and conditions, in which wording), and what a "yes" means for the examination. | Four plain yes/no questions with a free-text line: an earlier reaction to contrast, metal or an implanted device, a known kidney problem, fear of closed spaces. The form decides nothing from them. |
+| F10 | `medicine_lists` | a local clinician | core (every form), `kardiyoloji`, `endokrinoloji`, `gogus-hastaliklari`, `anestezi`, `genel-cerrahi`, `kalp-damar-cerrahisi`, `dermatoloji` | Medicines registered in Uzbekistan with their local names, to offer as choices (blood thinners, inhalers, diabetes and heart medicines). | Free text everywhere: the patient writes the name as they know it. No medicine, group brand or dose is named. |
+| F11 | `registered_procedures` | a local clinician | `medikal-estetik`, `estetik-cerrahi`, `sac-ekimi`, `klinik-dermatoloji` | Aesthetic procedures, products and devices registered in Uzbekistan, to offer as choices. | Free text: "which procedure and when". No product or device is named. |
+| F12 | `sports_clearance` | a local clinician | `spor-hekimligi` | The pre-participation medical clearance form required for athletes, and the anti-doping declaration. | The sport, the reason for the visit, injuries in the last year, symptoms during exercise, an earlier heart examination. |
+| F13 | `hearing_programme` | a local clinician | `odyoloji`, `kulak-burun-bogaz` | The newborn hearing screening programme and the hearing-loss grading in local use. | Which ear, how the hearing fell, noise at work, a hearing aid. Nothing is graded. |
+| F14 | `nutrition_reference` | a local clinician | `diyetisyen` | Nutrient reference intakes and food composition tables for Uzbekistan, and locally named diets to offer as choices. | Meals and glasses of water a day as numbers, the diet followed and foods not eaten as free text. |
+| F15 | `blood_group_notation` | a local clinician | core (every form) | Whether a patient form should ask the blood group, and in which notation it is written locally. | Not asked. |
+| F16 | `payer_and_insurance` | the owner, with a local source | core (every form) | Whether the form should ask who pays (a state programme, an employer, an insurer) and which numbers that needs. The payer section of the Turkish form belongs to that country and was not carried over. | Not asked. The form asks for no identity, policy or insurance number. |
+| F17 | `consent_sentence` | a lawyer | core (every form) | The consent sentence shown before the first question, and the notice a parent or guardian reads, in wording a lawyer in Uzbekistan has approved (checklist I1, I2); and whether a guardian's identity must be confirmed. | A machine-written draft sentence, stamped "uz-taslak" and marked as not read by a lawyer; the guardian form asks the guardian's name, relation and phone, and confirms nothing. |
+| F18 | `scope_of_practice` | a lawyer | `fizyoterapi`, `klinik-psikolog`, `diyetisyen`, `ergoterapi`, `odyoloji` | What each allied profession may ask, record and decide without a doctor under Uzbek law. | The sets ask about the complaint, daily life and a doctor's referral; none asks for a diagnosis to be made. |
+
+### The database: migration 138
+
+| File | What it adds |
+|---|---|
+| `lib/db/migrations/138_ulke_hasta_formu.sql` | the intake form: 1 table (`ulke_hasta_formlari`), 2 functions (`ulke_hasta_formu_iste`, which makes the form and, where the patient has no working link, the link in one step; and the trigger's own), 1 trigger |
+
+What the database itself holds to, whatever the application does: a form belongs to one country, doctor and patient and never moves; its role, question set and reader (patient or guardian) are fixed when it is asked for; one open form per patient; answers only together with consent; a submitted form's answers do not change (it can only be reopened); a withdrawn form does not change; an appointment named on a form is that patient's own. The file is in the one-file baseline for a new country. For the Uzbek database it is run once, after 136 and 137; its rollback is beside the others (`lib/db/migrations/geri-al/`). After it the database has **21 tables, 212 columns, 17 row-level rules, 15 functions**, and the ledger lists 129 to 138. **Not applied anywhere by this job.**
+
+### What was tested, and how
+
+Everything below ran on the build machine on 2026-10-09 with **stand-ins for the database, sign-in, storage, speech recognition and the model**. No provider was called and nothing left the machine.
+
+| Check | Result | Against |
+|---|---|---|
+| Country test suite (`npm run test:ulke`) | 706 of 706 ordinary tests; 121 of 121 for each of `tr` and `uz` | stand-in database inside the test process |
+| of which: the form's rules (`lib/ulke/intake/intake.paket.test.ts`) | 34 per pack: asking (with and without a link, all or nothing), the invitation, consent, save, submit, read-only, reopen, withdraw, the guardian form by age, one role's questions only, units, encryption bound to country, doctor and patient, isolation in each direction | the real route handlers |
+| of which: the form's screens (`components/ulke/portal/formEkranlari.paket.test.ts`) | 17 per pack: every screen in every form, every question type, the read-only view, the doctor's card and visit view, the warning before a new link, leak test over every entry and screen | the real components |
+| of which: Uzbek content (`countries/uz/klinik/hastaFormu/hastaFormu.test.ts`) | 9: script purity and leak scan over all 802 texts and the 66 screen entries in three forms; the 40 roles one by one; the guardian form; nothing of Türkiye and no reference content; the 18 slots; this record | the pack |
+| Type check, wall check, pack check | clean | the repository |
+| Uzbek production build (`NOTYA_COUNTRY=uz npm run build:ulke`) | built; holds the Uzbek pack and no other; no file a browser loads holds a question | this machine |
+| Uzbek walk-through in a real browser (`scripts/ulke-yuruyus/yuruyus.mjs`) | **508 of 508**; 69 of them walk the intake form, with each patient in a browser of their own (a phone) | the Uzbek build, stand-in database and providers |
+| Pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`) | 294 of 294 for Uzbekistan; 276 of 276 for a throwaway English country | the same |
+| Migration proof, baseline proof | 238 of 238; 90 of 90 | a throwaway PostgreSQL 18 on this machine |
+| A new country from the scaffold | scaffolded, filled, type-checked, built, tested (121 of 121 pack tests) and walked, then deleted; 839 items to supply (802 texts, 37 settings) | a temporary copy of the repository |
+| The Turkish suite (`npm test`) | 25 tests fail and 4 are cancelled of 5,834; every one of the 25 also fails on `main` (26 fail and 4 are cancelled of 5,159 there), and none is a country test | this machine; `main` at `9891987c` beside it |
+
+The walk-through's intake steps, in order: the card on the file of a patient without access → asked: the form, the link and the PIN made in one step → the invitation in the patient's language, the link last, no PIN → copied → the guardian's page on a phone → consent, refused without it → who is filling in → saved by itself, encrypted → closed and resumed → the page is left right after typing and the answer is stored at once → a parent's wording → "none of these" stands alone → measures in centimetres, kilograms and degrees Celsius, an impossible number refused → the role's own questions last, no other role's → sent too early: the unanswered required question is shown → yes with its detail → submitted, read-only, a later change refused by the server → the doctor reads the answers on the file under "not verified" → the visit screen shows them → a visit is recorded and the model is given none of them → beside the draft, and not in it → reopened, changed, sent again → asked from an appointment of a Russian-speaking adult who has a link: the invitation in Russian without a link → the warning before a new link, cancelled, then confirmed → the adult's form in Russian (no "who fills in", smoking, alcohol, pregnancy, an emergency contact) → read by the doctor in Uzbek with her words as typed → the dietitian's patient gets the dietitian's questions and none of cardiology's → the other doctor reaches no form, patient or appointment → a patient's session on the doctor's routes and the other way round → one patient's session with another patient's link → a request withdrawn and gone from the patient's page.
+
+**Not tested:** the form against a real database or a real phone; a patient; any sentence with a native reader; any question with a clinician. **Not confirmed by anybody:** the consent sentence.
+
+### Patient-facing sentences of the intake form, for the native reader
+
+Machine-written, in three forms; nobody who speaks Uzbek or Russian as a first language has read them. **Read first: the questions themselves**, in `countries/uz/klinik/hastaFormu/` (`cekirdek.ts`, then `roller1.ts`, `roller2.ts`, `roller3.ts`): each line holds the three forms side by side, Uzbek Latin, Uzbek Cyrillic, Russian. A clinician of each specialty should read that specialty's set; the per-role status is in "Status of the 40 roles". Then the sentences below, which a patient reads alone on their own phone, or in a messenger under the doctor's name. `%`, `%1`, `%2` are places for a value (a name, a day, a number, the link) and must stay; in an invitation the link is last, with nothing after it. A test keeps this list equal to the code (`countries/uz/klinik/hastaFormu/hastaFormu.test.ts`).
+
+**The consent sentence** (`countries/uz/klinik/hastaFormu/index.ts`). A draft; not read by a lawyer.
+
+| For | Uzbek (Latin) | Uzbek (Cyrillic) | Russian |
+|---|---|---|---|
+| the patient | Javoblaringizni faqat shifokoringiz koʻradi. Ular sizning tibbiy maʼlumotlaringiz sifatida himoyalangan holda saqlanadi va koʻrikka tayyorlanish uchun ishlatiladi. Soʻrovnomani toʻldirish ixtiyoriy. | Жавобларингизни фақат шифокорингиз кўради. Улар сизнинг тиббий маълумотларингиз сифатида ҳимояланган ҳолда сақланади ва кўрикка тайёрланиш учун ишлатилади. Сўровномани тўлдириш ихтиёрий. | Ваши ответы увидит только ваш врач. Они хранятся в защищённом виде как ваши медицинские сведения и используются для подготовки к приёму. Заполнять анкету необязательно. |
+| a parent or guardian | Javoblaringizni faqat bolaning shifokori koʻradi. Ular bolaning tibbiy maʼlumotlari sifatida himoyalangan holda saqlanadi va koʻrikka tayyorlanish uchun ishlatiladi. Siz soʻrovnomani bolaning ota-onasi yoki qonuniy vakili sifatida toʻldirasiz. Toʻldirish ixtiyoriy. | Жавобларингизни фақат боланинг шифокори кўради. Улар боланинг тиббий маълумотлари сифатида ҳимояланган ҳолда сақланади ва кўрикка тайёрланиш учун ишлатилади. Сиз сўровномани боланинг ота-онаси ёки қонуний вакили сифатида тўлдирасиз. Тўлдириш ихтиёрий. | Ваши ответы увидит только врач ребёнка. Они хранятся в защищённом виде как медицинские сведения ребёнка и используются для подготовки к приёму. Вы заполняете анкету как родитель или законный представитель ребёнка. Заполнять её необязательно. |
+
+**`davet`** (the invitation the doctor copies; `countries/uz/uygulama/formMetinleri.ts`)
+
+| Key | Uzbek (Latin) | Uzbek (Cyrillic) | Russian |
+|---|---|---|---|
+| `metin` | Assalomu alaykum! Shifokor %1 koʻrikdan oldin qisqa soʻrovnomani toʻldirishingizni soʻraydi. PIN-kodni shifokoringiz alohida aytadi. Sahifangiz havolasi: %2 | Ассалому алайкум! Шифокор %1 кўрикдан олдин қисқа сўровномани тўлдиришингизни сўрайди. ПИН-кодни шифокорингиз алоҳида айтади. Саҳифангиз ҳаволаси: %2 | Здравствуйте! Врач %1 просит вас заполнить короткую анкету перед приёмом. ПИН-код врач сообщит вам отдельно. Ссылка на вашу страницу: %2 |
+| `metinAdsiz` | Assalomu alaykum! Shifokoringiz koʻrikdan oldin qisqa soʻrovnomani toʻldirishingizni soʻraydi. PIN-kodni shifokoringiz alohida aytadi. Sahifangiz havolasi: % | Ассалому алайкум! Шифокорингиз кўрикдан олдин қисқа сўровномани тўлдиришингизни сўрайди. ПИН-кодни шифокорингиз алоҳида айтади. Саҳифангиз ҳаволаси: % | Здравствуйте! Ваш врач просит вас заполнить короткую анкету перед приёмом. ПИН-код врач сообщит вам отдельно. Ссылка на вашу страницу: % |
+| `baglantisiz` | Assalomu alaykum! Shifokor % koʻrikdan oldin qisqa soʻrovnomani toʻldirishingizni soʻraydi. Buning uchun sizga avval berilgan havola orqali sahifangizni oching. | Ассалому алайкум! Шифокор % кўрикдан олдин қисқа сўровномани тўлдиришингизни сўрайди. Бунинг учун сизга аввал берилган ҳавола орқали саҳифангизни очинг. | Здравствуйте! Врач % просит вас заполнить короткую анкету перед приёмом. Для этого откройте свою страницу по ссылке, которую вам дали раньше. |
+| `baglantisizAdsiz` | Assalomu alaykum! Shifokoringiz koʻrikdan oldin qisqa soʻrovnomani toʻldirishingizni soʻraydi. Buning uchun sizga avval berilgan havola orqali sahifangizni oching. | Ассалому алайкум! Шифокорингиз кўрикдан олдин қисқа сўровномани тўлдиришингизни сўрайди. Бунинг учун сизга аввал берилган ҳавола орқали саҳифангизни очинг. | Здравствуйте! Ваш врач просит вас заполнить короткую анкету перед приёмом. Для этого откройте свою страницу по ссылке, которую вам дали раньше. |
+
+**`hasta`** (the form on the patient's page)
+
+| Key | Uzbek (Latin) | Uzbek (Cyrillic) | Russian |
+|---|---|---|---|
+| `bekliyorBaslik` | Koʻrikdan oldingi soʻrovnoma | Кўрикдан олдинги сўровнома | Анкета перед приёмом |
+| `bekliyorAciklama` | Shifokoringiz koʻrikdan oldin bir necha savolga javob berishingizni soʻraydi. Bu bir necha daqiqa vaqt oladi. | Шифокорингиз кўрикдан олдин бир неча саволга жавоб беришингизни сўрайди. Бу бир неча дақиқа вақт олади. | Ваш врач просит вас ответить на несколько вопросов перед приёмом. Это займёт несколько минут. |
+| `veliAciklama` | Shifokor koʻrikdan oldin farzandingiz haqida bir necha savolga javob berishingizni soʻraydi. Bu bir necha daqiqa vaqt oladi. | Шифокор кўрикдан олдин фарзандингиз ҳақида бир неча саволга жавоб беришингизни сўрайди. Бу бир неча дақиқа вақт олади. | Врач просит вас ответить на несколько вопросов о вашем ребёнке перед приёмом. Это займёт несколько минут. |
+| `baslat` | Toʻldirishni boshlash | Тўлдиришни бошлаш | Начать заполнение |
+| `devam` | Davom ettirish | Давом эттириш | Продолжить |
+| `yenidenAcildi` | Shifokoringiz soʻrovnomani qayta ochdi. Javoblaringizni koʻrib chiqing va yana yuboring. | Шифокорингиз сўровномани қайта очди. Жавобларингизни кўриб чиқинг ва яна юборинг. | Врач открыл анкету заново. Проверьте свои ответы и отправьте её ещё раз. |
+| `rizaBaslik` | Boshlashdan oldin | Бошлашдан олдин | Прежде чем начать |
+| `rizaKabul` | Roziman | Розиман | Я согласен (согласна) |
+| `rizaGerekli` | Davom etish uchun roziligingiz kerak. | Давом этиш учун розилигингиз керак. | Чтобы продолжить, нужно ваше согласие. |
+| `zorunlu` | majburiy | мажбурий | обязательно |
+| `evet` | Ha | Ҳа | Да |
+| `hayir` | Yoʻq | Йўқ | Нет |
+| `kaydediliyor` | Saqlanmoqda… | Сақланмоқда… | Сохраняем… |
+| `kaydedildi` | Javoblaringiz saqlandi. | Жавобларингиз сақланди. | Ваши ответы сохранены. |
+| `kaydedilemedi` | Saqlab boʻlmadi. Internetni tekshirib, qaytadan urinib koʻring. | Сақлаб бўлмади. Интернетни текшириб, қайтадан уриниб кўринг. | Не удалось сохранить. Проверьте интернет и попробуйте ещё раз. |
+| `ileri` | Keyingi | Кейинги | Далее |
+| `geri` | Orqaga | Орқага | Назад |
+| `bolum` | %1-qism, jami %2 | %1-қисм, жами %2 | Часть %1 из %2 |
+| `gonder` | Shifokorga yuborish | Шифокорга юбориш | Отправить врачу |
+| `gonderiliyor` | Yuborilmoqda… | Юборилмоқда… | Отправляем… |
+| `gonderilemedi` | Yuborib boʻlmadi. Qaytadan urinib koʻring. | Юбориб бўлмади. Қайтадан уриниб кўринг. | Не удалось отправить. Попробуйте ещё раз. |
+| `gonderUyari` | Yuborganingizdan keyin javoblaringizni oʻqiy olasiz, lekin oʻzgartira olmaysiz. | Юборганингиздан кейин жавобларингизни ўқий оласиз, лекин ўзгартира олмайсиз. | После отправки вы сможете читать свои ответы, но не сможете их изменить. |
+| `eksik` | Majburiy deb belgilangan savollarga javob bering. | Мажбурий деб белгиланган саволларга жавоб беринг. | Ответьте на вопросы, отмеченные как обязательные. |
+| `sayiGecersiz` | %1 dan %2 gacha boʻlgan son kiriting. | %1 дан %2 гача бўлган сон киритинг. | Введите число от %1 до %2. |
+| `gonderildiBaslik` | Soʻrovnoma yuborildi | Сўровнома юборилди | Анкета отправлена |
+| `gonderildi` | Soʻrovnomani % kuni yuborgansiz. Shifokoringiz uni koʻrikdan oldin oʻqiydi. | Сўровномани % куни юборгансиз. Шифокорингиз уни кўрикдан олдин ўқийди. | Вы отправили анкету %. Врач прочитает её перед приёмом. |
+| `cevaplarim` | Javoblarim | Жавобларим | Мои ответы |
+| `degistirilemez` | Javoblarni oʻzgartirib boʻlmaydi. Biror narsa notoʻgʻri boʻlsa, shifokoringizga ayting. | Жавобларни ўзгартириб бўлмайди. Бирор нарса нотўғри бўлса, шифокорингизга айтинг. | Изменить ответы нельзя. Если что-то неверно, скажите об этом врачу. |
+| `kapat` | Sahifamga qaytish | Саҳифамга қайтиш | Вернуться на мою страницу |
+
+**Unit names** beside a number: centimetres: sm / см / см; kilograms: kg / кг / кг; degrees Celsius: °C / °С / °С (Uzbek Latin / Uzbek Cyrillic / Russian).
 
 ## The patient portal (2026-10-09, NOTYA-ULKE-PORTAL-01)
 
@@ -48,7 +208,7 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 | Days a request may name, how far ahead | 3 of the next 21 | the kit's |
 | Ambulance number on the patient's page | **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`) | **the pack's: local content. Written by Claude from general knowledge and UNVERIFIED. A local source must confirm it before any patient sees the portal** ("Needs local content", row 78). The kit has no default: a pack that states no number shows none, only "this page is not for emergencies". The number is in no sentence of the catalogue; a sentence with a digit in it fails the pack check. |
 
-**Not in this job, and not half-built either** (no page, no route, no table): intake forms, messaging between patient and doctor, documents and uploads, payments, automatic reminders. The reminder text a doctor copies by hand (slice 3) is unchanged.
+**Not in this job, and not half-built either** (no page, no route, no table): messaging between patient and doctor, documents and uploads, payments, automatic reminders. (Intake forms, also left out here, were built afterwards: "The intake form" above, NOTYA-ULKE-INTAKE-01.) The reminder text a doctor copies by hand (slice 3) is unchanged.
 
 **Machine-written text.** 100 entries in each of the three forms (300 strings) in `countries/uz/uygulama/portalMetinleri.ts`, and three instructions to the model in `countries/uz/klinik/hastaOzeti.ts`. Nobody who speaks Uzbek or Russian as a first language has read any of it. The Cyrillic form was written by hand, line by line. 38 of the 100 entries are read by patients; they are listed at the end of this section.
 
@@ -230,50 +390,50 @@ The pack had no conversion from Latin to Cyrillic script before this slice (only
 
 ### Status of the 40 roles
 
-"Template built by machine: yes" means a machine put the template together; it does not mean anyone confirmed it. No role has a local reviewer.
+"Template built by machine: yes" means a machine put the template together; it does not mean anyone confirmed it. No role has a local reviewer. The last column is the role's set of **intake questions** ("The intake form" above): how many, that a machine wrote them, and that no clinician has read them; it changes only when `inceleme.klinisyen` of that set names the clinician who read and signed it.
 
-| # | Role (internal key) | Kind | Name: Uzbek Latin / Uzbek Cyrillic / Russian | Assistant (owner's names; title by the Turkish convention since 2026-10-09) | Template built by machine | Fields | Local reviewer | Local content missing (slots, all empty and off) |
-|---|---|---|---|---|---|---|---|---|
-| 1 | `acil-tip` | doctor specialty | Shoshilinch tibbiy yordam / Шошилинч тиббий ёрдам / Скорая и неотложная помощь | Prof. Dr. Jasur Tursunov | yes | 6 | none yet | 1: `triage_scale` |
-| 2 | `aile-hekimligi` | doctor specialty | Oilaviy tibbiyot / Оилавий тиббиёт / Семейная медицина | Prof. Dr. Nilufar Karimova | yes | 6 | none yet | 2: `screening_programme`, `vaccination_calendar` |
-| 3 | `anestezi` | doctor specialty | Anesteziologiya va reanimatologiya / Анестезиология ва реаниматология / Анестезиология и реаниматология | Prof. Dr. Bekzod Yusupov | yes | 8 | none yet | 1: `preop_risk_scale` |
-| 4 | `beyin-cerrahisi` | doctor specialty | Neyroxirurgiya / Нейрохирургия / Нейрохирургия | Prof. Dr. Alisher Ergashev | yes | 6 | none yet | 2: `consciousness_scale`, `surgical_consent_form` |
-| 5 | `cocuk-cerrahisi` | doctor specialty | Bolalar xirurgiyasi / Болалар хирургияси / Детская хирургия | Prof. Dr. Sardor Abdullayev | yes | 7 | none yet | 3: `growth_standard`, `pediatric_dosing`, `surgical_consent_form` |
-| 6 | `dahiliye` | doctor specialty | Terapiya (ichki kasalliklar) / Терапия (ички касалликлар) / Терапия (внутренние болезни) | Prof. Dr. Madina Rahimova | yes | 5 | none yet | 1: `lab_reference_ranges` |
-| 7 | `dermatoloji` | doctor specialty | Dermatovenerologiya / Дерматовенерология / Дерматовенерология | Prof. Dr. Sevara Ismailova | yes | 5 | none yet | 1: `severity_indices` |
-| 8 | `endokrinoloji` | doctor specialty | Endokrinologiya / Эндокринология / Эндокринология | Prof. Dr. Dilnoza Nazarova | yes | 6 | none yet | 2: `treatment_targets`, `lab_reference_ranges` |
-| 9 | `enfeksiyon-hastaliklari` | doctor specialty | Yuqumli kasalliklar / Юқумли касалликлар / Инфекционные болезни | Prof. Dr. Otabek Qodirov | yes | 5 | none yet | 2: `notifiable_diseases`, `vaccination_calendar` |
-| 10 | `gastroenteroloji` | doctor specialty | Gastroenterologiya / Гастроэнтерология / Гастроэнтерология | Prof. Dr. Jamshid Mirzayev | yes | 6 | none yet | 1: `endoscopy_classifications` |
-| 11 | `genel-cerrahi` | doctor specialty | Umumiy xirurgiya / Умумий хирургия / Общая хирургия | Prof. Dr. Sherzod Saidov | yes | 6 | none yet | 1: `surgical_consent_form` |
-| 12 | `gogus-cerrahisi` | doctor specialty | Torakal xirurgiya / Торакал хирургия / Торакальная хирургия | Prof. Dr. Farrux Holmatov | yes | 7 | none yet | 1: `surgical_consent_form` |
-| 13 | `gogus-hastaliklari` | doctor specialty | Pulmonologiya / Пульмонология / Пульмонология | Prof. Dr. Gulnoza Alimova | yes | 7 | none yet | 2: `spirometry_reference`, `tb_programme` |
-| 14 | `goz-hastaliklari` | doctor specialty | Oftalmologiya / Офтальмология / Офтальмология | Prof. Dr. Aziza Sodiqova | yes | 6 | none yet | 1: `acuity_notation` |
-| 15 | `kadin-hastaliklari-dogum` | doctor specialty | Akusherlik va ginekologiya / Акушерлик ва гинекология / Акушерство и гинекология | Prof. Dr. Shahnoza Rasulova | yes | 6 | none yet | 2: `antenatal_schedule`, `pregnancy_record_form` |
-| 16 | `kalp-damar-cerrahisi` | doctor specialty | Yurak-qon tomir xirurgiyasi / Юрак-қон томир хирургияси / Сердечно-сосудистая хирургия | Prof. Dr. Temur Karimov | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` |
-| 17 | `kardiyoloji` | doctor specialty | Kardiologiya / Кардиология / Кардиология | Prof. Dr. Kamola Yusupova | yes | 8 | none yet | 2: `cv_risk_score`, `bp_lipid_targets` |
-| 18 | `kulak-burun-bogaz` | doctor specialty | Otorinolaringologiya (LOR) / Оториноларингология (ЛОР) / Оториноларингология (ЛОР) | Prof. Dr. Nodir Ergashev | yes | 6 | none yet | 1: `hearing_loss_grading` |
-| 19 | `nefroloji` | doctor specialty | Nefrologiya / Нефрология / Нефрология | Prof. Dr. Mohira Abdullayeva | yes | 6 | none yet | 2: `ckd_staging`, `dialysis_standards` |
-| 20 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Prof. Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` |
-| 21 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Prof. Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` |
-| 22 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Prof. Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` |
-| 23 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` |
-| 24 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` |
-| 25 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Prof. Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` |
-| 26 | `radyoloji` | doctor specialty | Radiologiya (nur tashxisi) / Радиология (нур ташхиси) / Лучевая диагностика (радиология) | Prof. Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` |
-| 27 | `romatoloji` | doctor specialty | Revmatologiya / Ревматология / Ревматология | Prof. Dr. Saodat Holmatova | yes | 6 | none yet | 1: `activity_indices` |
-| 28 | `uroloji` | doctor specialty | Urologiya / Урология / Урология | Prof. Dr. Javohir Alimov | yes | 7 | none yet | 1: `symptom_questionnaires` |
-| 29 | `spor-hekimligi` | doctor specialty | Sport tibbiyoti / Спорт тиббиёти / Спортивная медицина | Prof. Dr. Sanjar Sodiqov | yes | 6 | none yet | 2: `clearance_form`, `prohibited_list` |
-| 30 | `fizik-tedavi` | doctor specialty | Tibbiy reabilitatsiya va fizioterapiya / Тиббий реабилитация ва физиотерапия / Медицинская реабилитация и физиотерапия | Prof. Dr. Laziz Rahimov | yes | 7 | none yet | 2: `functional_scales`, `disability_assessment` |
-| 31 | `sac-ekimi` | clinic doctor | Soch koʻchirib oʻtkazish / Соч кўчириб ўтказиш / Трансплантация волос | Dr. Shohruh Karimov | yes | 7 | none yet | 2: `hair_loss_scale`, `procedure_consent_form` |
-| 32 | `estetik-cerrahi` | clinic doctor | Estetik xirurgiya / Эстетик хирургия / Эстетическая хирургия | Prof. Dr. Lobar Yusupova | yes | 7 | none yet | 1: `procedure_consent_form` |
-| 33 | `medikal-estetik` | clinic doctor | Kosmetologiya (estetik tibbiyot) / Косметология (эстетик тиббиёт) / Косметология (эстетическая медицина) | Dr. Feruza Rasulova | yes | 8 | none yet | 2: `registered_products`, `procedure_consent_form` |
-| 34 | `klinik-dermatoloji` | clinic doctor | Dermatologiya (klinika) / Дерматология (клиника) / Дерматология (клиника) | Dr. Dilbar Ergasheva | yes | 7 | none yet | 2: `registered_products`, `severity_indices` |
-| 35 | `longevity` | clinic doctor | Profilaktik va yoshga qarshi tibbiyot / Профилактик ва ёшга қарши тиббиёт / Превентивная и антивозрастная медицина | Dr. Asal Qodirova | yes | 7 | none yet | 2: `lab_reference_ranges`, `screening_programme` |
-| 36 | `fizyoterapi` | clinic allied | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | Fizioterapevt Jasmina Abdullayeva | yes | 7 | none yet | 2: `functional_scales`, `scope_of_practice` |
-| 37 | `klinik-psikolog` | clinic allied | Klinik psixolog / Клиник психолог / Клинический психолог | Dr. Doniyor Saidov | yes | 7 | none yet | 2: `psychological_tests`, `scope_of_practice` |
-| 38 | `diyetisyen` | clinic allied | Diyetolog / Диетолог / Диетолог | Diyetolog Mahliyo Tursunova | yes | 8 | none yet | 3: `nutrient_reference`, `growth_standard`, `scope_of_practice` |
-| 39 | `ergoterapi` | clinic allied | Ergoterapevt / Эрготерапевт / Эрготерапевт | Ergoterapevt Oybek Holmatov | yes | 8 | none yet | 2: `functional_scales`, `scope_of_practice` |
-| 40 | `odyoloji` | clinic allied | Audiolog / Аудиолог / Аудиолог | Audiolog Rayhon Alimova | yes | 7 | none yet | 3: `hearing_loss_grading`, `newborn_hearing_screening`, `scope_of_practice` |
+| # | Role (internal key) | Kind | Name: Uzbek Latin / Uzbek Cyrillic / Russian | Assistant (owner's names; title by the Turkish convention since 2026-10-09) | Template built by machine | Fields | Local reviewer | Local content missing (slots, all empty and off) | Intake questions (2026-10-09) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | `acil-tip` | doctor specialty | Shoshilinch tibbiy yordam / Шошилинч тиббий ёрдам / Скорая и неотложная помощь | Prof. Dr. Jasur Tursunov | yes | 6 | none yet | 1: `triage_scale` | 5 questions, machine-written, read by no clinician |
+| 2 | `aile-hekimligi` | doctor specialty | Oilaviy tibbiyot / Оилавий тиббиёт / Семейная медицина | Prof. Dr. Nilufar Karimova | yes | 6 | none yet | 2: `screening_programme`, `vaccination_calendar` | 5 questions, machine-written, read by no clinician |
+| 3 | `anestezi` | doctor specialty | Anesteziologiya va reanimatologiya / Анестезиология ва реаниматология / Анестезиология и реаниматология | Prof. Dr. Bekzod Yusupov | yes | 8 | none yet | 1: `preop_risk_scale` | 6 questions, machine-written, read by no clinician |
+| 4 | `beyin-cerrahisi` | doctor specialty | Neyroxirurgiya / Нейрохирургия / Нейрохирургия | Prof. Dr. Alisher Ergashev | yes | 6 | none yet | 2: `consciousness_scale`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 5 | `cocuk-cerrahisi` | doctor specialty | Bolalar xirurgiyasi / Болалар хирургияси / Детская хирургия | Prof. Dr. Sardor Abdullayev | yes | 7 | none yet | 3: `growth_standard`, `pediatric_dosing`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 6 | `dahiliye` | doctor specialty | Terapiya (ichki kasalliklar) / Терапия (ички касалликлар) / Терапия (внутренние болезни) | Prof. Dr. Madina Rahimova | yes | 5 | none yet | 1: `lab_reference_ranges` | 5 questions, machine-written, read by no clinician |
+| 7 | `dermatoloji` | doctor specialty | Dermatovenerologiya / Дерматовенерология / Дерматовенерология | Prof. Dr. Sevara Ismailova | yes | 5 | none yet | 1: `severity_indices` | 6 questions, machine-written, read by no clinician |
+| 8 | `endokrinoloji` | doctor specialty | Endokrinologiya / Эндокринология / Эндокринология | Prof. Dr. Dilnoza Nazarova | yes | 6 | none yet | 2: `treatment_targets`, `lab_reference_ranges` | 5 questions, machine-written, read by no clinician |
+| 9 | `enfeksiyon-hastaliklari` | doctor specialty | Yuqumli kasalliklar / Юқумли касалликлар / Инфекционные болезни | Prof. Dr. Otabek Qodirov | yes | 5 | none yet | 2: `notifiable_diseases`, `vaccination_calendar` | 6 questions, machine-written, read by no clinician |
+| 10 | `gastroenteroloji` | doctor specialty | Gastroenterologiya / Гастроэнтерология / Гастроэнтерология | Prof. Dr. Jamshid Mirzayev | yes | 6 | none yet | 1: `endoscopy_classifications` | 6 questions, machine-written, read by no clinician |
+| 11 | `genel-cerrahi` | doctor specialty | Umumiy xirurgiya / Умумий хирургия / Общая хирургия | Prof. Dr. Sherzod Saidov | yes | 6 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 12 | `gogus-cerrahisi` | doctor specialty | Torakal xirurgiya / Торакал хирургия / Торакальная хирургия | Prof. Dr. Farrux Holmatov | yes | 7 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 13 | `gogus-hastaliklari` | doctor specialty | Pulmonologiya / Пульмонология / Пульмонология | Prof. Dr. Gulnoza Alimova | yes | 7 | none yet | 2: `spirometry_reference`, `tb_programme` | 6 questions, machine-written, read by no clinician |
+| 14 | `goz-hastaliklari` | doctor specialty | Oftalmologiya / Офтальмология / Офтальмология | Prof. Dr. Aziza Sodiqova | yes | 6 | none yet | 1: `acuity_notation` | 6 questions, machine-written, read by no clinician |
+| 15 | `kadin-hastaliklari-dogum` | doctor specialty | Akusherlik va ginekologiya / Акушерлик ва гинекология / Акушерство и гинекология | Prof. Dr. Shahnoza Rasulova | yes | 6 | none yet | 2: `antenatal_schedule`, `pregnancy_record_form` | 8 questions, machine-written, read by no clinician |
+| 16 | `kalp-damar-cerrahisi` | doctor specialty | Yurak-qon tomir xirurgiyasi / Юрак-қон томир хирургияси / Сердечно-сосудистая хирургия | Prof. Dr. Temur Karimov | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 17 | `kardiyoloji` | doctor specialty | Kardiologiya / Кардиология / Кардиология | Prof. Dr. Kamola Yusupova | yes | 8 | none yet | 2: `cv_risk_score`, `bp_lipid_targets` | 6 questions, machine-written, read by no clinician |
+| 18 | `kulak-burun-bogaz` | doctor specialty | Otorinolaringologiya (LOR) / Оториноларингология (ЛОР) / Оториноларингология (ЛОР) | Prof. Dr. Nodir Ergashev | yes | 6 | none yet | 1: `hearing_loss_grading` | 5 questions, machine-written, read by no clinician |
+| 19 | `nefroloji` | doctor specialty | Nefrologiya / Нефрология / Нефрология | Prof. Dr. Mohira Abdullayeva | yes | 6 | none yet | 2: `ckd_staging`, `dialysis_standards` | 6 questions, machine-written, read by no clinician |
+| 20 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Prof. Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` | 5 questions, machine-written, read by no clinician |
+| 21 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Prof. Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` | 6 questions, machine-written, read by no clinician |
+| 22 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Prof. Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` | 6 questions, machine-written, read by no clinician |
+| 23 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` | 9 questions, machine-written, read by no clinician |
+| 24 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 25 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Prof. Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` | 6 questions, machine-written, read by no clinician |
+| 26 | `radyoloji` | doctor specialty | Radiologiya (nur tashxisi) / Радиология (нур ташхиси) / Лучевая диагностика (радиология) | Prof. Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` | 7 questions, machine-written, read by no clinician |
+| 27 | `romatoloji` | doctor specialty | Revmatologiya / Ревматология / Ревматология | Prof. Dr. Saodat Holmatova | yes | 6 | none yet | 1: `activity_indices` | 5 questions, machine-written, read by no clinician |
+| 28 | `uroloji` | doctor specialty | Urologiya / Урология / Урология | Prof. Dr. Javohir Alimov | yes | 7 | none yet | 1: `symptom_questionnaires` | 5 questions, machine-written, read by no clinician |
+| 29 | `spor-hekimligi` | doctor specialty | Sport tibbiyoti / Спорт тиббиёти / Спортивная медицина | Prof. Dr. Sanjar Sodiqov | yes | 6 | none yet | 2: `clearance_form`, `prohibited_list` | 5 questions, machine-written, read by no clinician |
+| 30 | `fizik-tedavi` | doctor specialty | Tibbiy reabilitatsiya va fizioterapiya / Тиббий реабилитация ва физиотерапия / Медицинская реабилитация и физиотерапия | Prof. Dr. Laziz Rahimov | yes | 7 | none yet | 2: `functional_scales`, `disability_assessment` | 6 questions, machine-written, read by no clinician |
+| 31 | `sac-ekimi` | clinic doctor | Soch koʻchirib oʻtkazish / Соч кўчириб ўтказиш / Трансплантация волос | Dr. Shohruh Karimov | yes | 7 | none yet | 2: `hair_loss_scale`, `procedure_consent_form` | 7 questions, machine-written, read by no clinician |
+| 32 | `estetik-cerrahi` | clinic doctor | Estetik xirurgiya / Эстетик хирургия / Эстетическая хирургия | Prof. Dr. Lobar Yusupova | yes | 7 | none yet | 1: `procedure_consent_form` | 5 questions, machine-written, read by no clinician |
+| 33 | `medikal-estetik` | clinic doctor | Kosmetologiya (estetik tibbiyot) / Косметология (эстетик тиббиёт) / Косметология (эстетическая медицина) | Dr. Feruza Rasulova | yes | 8 | none yet | 2: `registered_products`, `procedure_consent_form` | 5 questions, machine-written, read by no clinician |
+| 34 | `klinik-dermatoloji` | clinic doctor | Dermatologiya (klinika) / Дерматология (клиника) / Дерматология (клиника) | Dr. Dilbar Ergasheva | yes | 7 | none yet | 2: `registered_products`, `severity_indices` | 5 questions, machine-written, read by no clinician |
+| 35 | `longevity` | clinic doctor | Profilaktik va yoshga qarshi tibbiyot / Профилактик ва ёшга қарши тиббиёт / Превентивная и антивозрастная медицина | Dr. Asal Qodirova | yes | 7 | none yet | 2: `lab_reference_ranges`, `screening_programme` | 7 questions, machine-written, read by no clinician |
+| 36 | `fizyoterapi` | clinic allied | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | Fizioterapevt Jasmina Abdullayeva | yes | 7 | none yet | 2: `functional_scales`, `scope_of_practice` | 6 questions, machine-written, read by no clinician |
+| 37 | `klinik-psikolog` | clinic allied | Klinik psixolog / Клиник психолог / Клинический психолог | Dr. Doniyor Saidov | yes | 7 | none yet | 2: `psychological_tests`, `scope_of_practice` | 4 questions, machine-written, read by no clinician |
+| 38 | `diyetisyen` | clinic allied | Diyetolog / Диетолог / Диетолог | Diyetolog Mahliyo Tursunova | yes | 8 | none yet | 3: `nutrient_reference`, `growth_standard`, `scope_of_practice` | 7 questions, machine-written, read by no clinician |
+| 39 | `ergoterapi` | clinic allied | Ergoterapevt / Эрготерапевт / Эрготерапевт | Ergoterapevt Oybek Holmatov | yes | 8 | none yet | 2: `functional_scales`, `scope_of_practice` | 5 questions, machine-written, read by no clinician |
+| 40 | `odyoloji` | clinic allied | Audiolog / Аудиолог / Аудиолог | Audiolog Rayhon Alimova | yes | 7 | none yet | 3: `hearing_loss_grading`, `newborn_hearing_screening`, `scope_of_practice` | 6 questions, machine-written, read by no clinician |
 
 ### Needs local content
 
@@ -360,6 +520,8 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 | 77 | all 40 roles (calendar) | `working_week` | The usual working week, hours, lunch break and appointment length of a private clinic. The pack's values (Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes) are starting values, not checked locally; every account can change its own. | the clinical lead |
 | 78 | all 40 roles (patient portal) | `emergency_number` | The number a patient dials for an ambulance, as it is written and dialled in Uzbekistan. The pack holds **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`), written by Claude from general knowledge: **UNVERIFIED. It must be confirmed by a local source before any patient sees the portal.** A wrong number here is shown to a patient who feels very unwell. If it cannot be confirmed, set it to `null`: the page then says only that it is not for emergencies and names no number. | a local source (the clinical lead, or the health ministry's own page), recorded here with name and date |
 | 79 | all 40 roles (patient portal) | `link_validity` | How long a patient's link works before the doctor must give a new one. The pack holds **30 days** (`uygulama.portal.baglantiGecerlilikGun`), a starting value chosen by Claude, not a local rule. | **the owner** confirms the number; a lawyer says how long a patient's access may stand (checklist I1) |
+
+The intake form has slots of its own, 18 of them, numbered F1 to F18: what a form deliberately does not ask until a local source has supplied it. They are listed in "The intake form" above ("What the intake form does not ask, and who must supply it first") and held in `countries/uz/klinik/hastaFormu/yerelIcerik.ts`.
 
 ### Assistant names in the three forms, and the forms that look doubtful
 
