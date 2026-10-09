@@ -26,12 +26,16 @@ import { sayiYaz } from '@/lib/ulke/arayuz/sayi'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { ulkePaketi } from '@/lib/ulke/ulke'
-import { alanAraligi, alanBirimi, kanonigeCevir, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
+import { alanAraligi, alanBirimi, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
+import { girdiyiCoz, hamdanGosterilen, type HamGirdi } from '@/lib/ulke/araclar/girdi'
 import { alanEtiketi, aracAra, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
-import type { AracAlani, AracGirdisi, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
-import { alanVarMi, kosullariUygula, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
+import type { AracAlani, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
+import { alanVarMi, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { panoyaKopyala } from './pano'
+
+// What was typed → what a tool takes: one function for the screen and for the server (lib/ulke/araclar/girdi.ts).
+export { girdiyiCoz, type HamGirdi } from '@/lib/ulke/araclar/girdi'
 
 /** The address of one tool. */
 export const aracYolu = (anahtar: string): string => `${YOL.araclar}?arac=${encodeURIComponent(anahtar)}`
@@ -99,28 +103,6 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q }: { a: AraclarMetni; d
 }
 
 // ───────────────────────── one tool ─────────────────────────
-
-/** What is typed, as it is typed: a field's text, an option key, a tick. */
-export type HamGirdi = Readonly<Record<string, string | boolean>>
-
-/** What was typed → what the tool's arithmetic takes. A number out of its range, or not a number, is "nothing". */
-export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: BirimOrtami): AracGirdisi {
-  const g: Record<string, number | string | boolean | null> = {}
-  for (const a of alanlar) {
-    const v = ham[a.anahtar]
-    if (a.tur === 'isaret') { g[a.anahtar] = v === true; continue }
-    if (a.tur === 'secim') { g[a.anahtar] = typeof v === 'string' && (a.secenekler ?? []).includes(v) ? v : null; continue }
-    if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
-    if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, METIN_UZUNLUGU) : ''; g[a.anahtar] = t || null; continue }
-    const metin = typeof v === 'string' ? v.trim().replace(',', '.') : ''
-    const n = metin === '' ? NaN : Number(metin)
-    const aralik = alanAraligi(a, o)
-    if (!Number.isFinite(n) || (a.tam && !Number.isInteger(n)) || (aralik && (n < aralik.enAz || n > aralik.enCok))) { g[a.anahtar] = null; continue }
-    g[a.anahtar] = kanonigeCevir(a, n, o)
-  }
-  // A field whose condition does not hold is not there: whatever was typed into it earlier is not read.
-  return kosullariUygula(alanlar, g)
-}
 
 function Alan({ x, alan, dil, a, ham, degistir, o, y }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici }) {
   const etiket = alanEtiketi(x, alan.anahtar, dil, a)
@@ -213,13 +195,6 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
       </section>
     </>
   )
-}
-
-/** For the summary: a number is repeated as the doctor typed it (their unit), not in the unit the arithmetic used. */
-function hamdanGosterilen(alanlar: readonly AracAlani[], ham: HamGirdi, g: AracGirdisi): AracGirdisi {
-  const cikti: Record<string, number | string | boolean | null> = { ...g }
-  for (const a of alanlar) if ((a.tur === 'sayi' || a.tur === 'puan') && g[a.anahtar] !== null) { const v = ham[a.anahtar]; cikti[a.anahtar] = typeof v === 'string' ? Number(v.trim().replace(',', '.')) : null }
-  return cikti
 }
 
 /** The patient portal's tile: access is given from a patient's file, so the tool finds the patient. */

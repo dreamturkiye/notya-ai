@@ -85,7 +85,7 @@ export function sahteVeritabani() {
     const c = cakisma(ad, yeni, digerleri)
     if (c) return c
     const hata = (code: string, message: string) => ({ code, message })
-    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari']
+    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari']
     // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
     if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
     if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
@@ -113,6 +113,12 @@ export function sahteVeritabani() {
       if (yeni.randevu_id && !tablo('ulke_randevulari').some((r) => r.id === yeni.randevu_id && r.ulke === yeni.ulke && r.doctor_id === yeni.doctor_id && r.patient_id === yeni.patient_id)) return hata('23503', 'insert or update on table "ulke_hasta_formlari" violates foreign key constraint "ulke_hasta_formlari_randevu_fk"')
       if (acik(yeni) && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && acik(x))) return hata('23505', 'duplicate key value violates unique constraint "ulke_hasta_formlari_tek_acik"')
     }
+    // NOTYA-ULKE-ARACLAR-01 — migration 139: the checks of ulke_arac_kayitlari.
+    if (ad === 'ulke_arac_kayitlari') {
+      if (typeof yeni.arac !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(yeni.arac) || yeni.arac.length > 60) return hata('23514', 'new row for relation "ulke_arac_kayitlari" violates check constraint (arac)')
+      if (typeof yeni.kayit_encrypted !== 'string' || !yeni.kayit_encrypted) return hata(yeni.kayit_encrypted === '' ? '23514' : '23502', 'new row for relation "ulke_arac_kayitlari" has no content (kayit_encrypted)')
+      if (yeni.kapandi_at && !yeni.takip_tarihi) return hata('23514', 'new row for relation "ulke_arac_kayitlari" violates check constraint (a follow-up that does not exist cannot be closed)')
+    }
     return null
   }
   /**
@@ -121,9 +127,16 @@ export function sahteVeritabani() {
    * form's answers do not change (it can only be reopened).
    */
   const guncellemeKilidi = (ad: string, eski: Satir, yeni: Satir): { message: string; code: string } | null => {
-    if (ad !== 'ulke_hasta_formlari' || eski.patient_id === undefined) return null
+    if ((ad !== 'ulke_hasta_formlari' && ad !== 'ulke_arac_kayitlari') || eski.patient_id === undefined) return null
     const hata = (message: string) => ({ code: '23514', message })
     const farkli = (k: string) => (eski[k] ?? null) !== (yeni[k] ?? null)
+    // NOTYA-ULKE-ARACLAR-01 — the trigger of migration 139 (`ulke_arac_kaydi_kilidi`).
+    if (ad === 'ulke_arac_kayitlari') {
+      if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return hata('ulke_arac_kayitlari: a record never moves to another country, doctor or patient')
+      if (farkli('arac') || farkli('kayit_encrypted') || farkli('takip_tarihi') || farkli('created_at')) return hata('ulke_arac_kayitlari: the tool, the content and the follow-up day of a record do not change; a new result is a new record')
+      if (eski.kapandi_at && farkli('kapandi_at')) return hata('ulke_arac_kayitlari: a follow-up that was closed stays closed')
+      return null
+    }
     if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return hata('ulke_hasta_formlari: a form never moves to another country, doctor or patient')
     if (farkli('rol') || farkli('soru_surumu') || farkli('veli')) return hata('ulke_hasta_formlari: the question set of a form is fixed when it is asked for')
     if (eski.durum === 'iptal') return hata('ulke_hasta_formlari: a withdrawn form does not change')
