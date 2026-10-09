@@ -270,6 +270,16 @@ esit('B = U as a whole: … and exactly the schema of a database built the way t
   try { await B.query(`select public.davet_kodu_kullan('x', 'uz')`) } catch (x) { kod = x.code }
   await B.query('reset role')
   ok('B holds the walls: a browser session may not call a server-only function', kod === '42501', kod)
+  // NOTYA-ULKE-ASISTAN-01 (migration 143): the assistant's conversations, in a database made from the baseline.
+  await bekle('B holds the walls: an assistant conversation of one doctor about another doctor\'s patient → refused 23503', `insert into ulke_asistan_konusmalari (ulke, doctor_id, patient_id, rol, baslik_encrypted) values ('uz', $1, $2, 'pediatri', 'x')`, [D2, H1], '23503')
+  const KN = (await B.query(`insert into ulke_asistan_konusmalari (ulke, doctor_id, patient_id, rol, baslik_encrypted) values ('uz', $1, $2, 'pediatri', 'x') returning id`, [D1, H1])).rows[0].id
+  await bekle('B holds the walls: a message of one doctor in another doctor\'s conversation → refused 23503', `insert into ulke_asistan_mesajlari (ulke, doctor_id, konusma_id, yazan, metin_encrypted) values ('uz', $1, $2, 'hekim', 'x')`, [D2, KN], '23503')
+  await bekle('B holds the walls: a conversation never moves to another doctor → refused 23514', `update ulke_asistan_konusmalari set doctor_id = $2 where id = $1`, [KN, D2], '23514')
+  await oturum(D1, 'uz')
+  let okuma = 'allowed'
+  try { await B.query(`select 1 from ulke_asistan_konusmalari limit 1`) } catch (x) { okuma = x.code }
+  await cik()
+  ok('B holds the walls: the doctor\'s own browser session cannot read the assistant\'s conversations (server only)', okuma === '42501', okuma)
 }
 
 await A.end(); await U.end(); await B.end(); await kok.end(); await epg.stop(); rmSync(VERI, { recursive: true, force: true })

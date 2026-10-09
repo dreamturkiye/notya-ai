@@ -30,6 +30,10 @@
  *      moves; its tool, its content and its follow-up day never change; a closed follow-up stays closed; only a
  *      follow-up that exists can be closed; the tool key has the shape of a key; the content is one value; the table
  *      cannot be read by a browser session; removing the patient removes the records.
+ *   L. THE ASSISTANT'S CONVERSATIONS (migration 143): a conversation belongs to one doctor in one country and is
+ *      general or about ONE patient of that doctor, for good; a message belongs to one conversation and never
+ *      changes; text is one encrypted value and there is no column for audio; deleting a conversation removes its
+ *      messages; removing a patient removes the conversations about them; no browser session can read either table.
  *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave nothing.
  *   T. NOT ON ANY OTHER DATABASE. On a database that is NOT a country database — here one shaped like the Turkish
  *      product's, with its own tables and rows — the baseline refuses, and every migration written since the first
@@ -710,8 +714,79 @@ ok('132: the private bucket exists once', (await c.query(`select count(*)::int n
   }
 }
 
+// ── L. the assistant's conversations (migration 143) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (tablo, kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ${tablo} where ${kosul}`, par)).rows[0].n
+  const P1 = await hasta(D1), P1b = await hasta(D1), P2 = await hasta(D2), SIL = await hasta(D1)
+  const KONUSMA = `insert into ulke_asistan_konusmalari (ulke, doctor_id, patient_id, rol, baslik_encrypted) values ($1, $2, $3, $4, $5) returning id`
+  const MESAJ = `insert into ulke_asistan_mesajlari (ulke, doctor_id, konusma_id, yazan, metin_encrypted) values ($1, $2, $3, $4, $5) returning id`
+  const g1 = (await q(KONUSMA, ['uz', D1, null, 'pediatri', 'sifreli-baslik-1']))[0].id
+  const h1 = (await q(KONUSMA, ['uz', D1, P1, 'pediatri', 'sifreli-baslik-2']))[0].id
+  const g2 = (await q(KONUSMA, ['uz', D2, null, 'kardiyoloji', 'sifreli-baslik-3']))[0].id
+  ok('L. a general conversation has no patient; one about a patient is stamped with country, doctor, patient and role', JSON.stringify(await q(`select ulke, doctor_id, patient_id, rol from ulke_asistan_konusmalari where id in ($1, $2) order by patient_id nulls first`, [g1, h1])) === JSON.stringify([{ ulke: 'uz', doctor_id: D1, patient_id: null, rol: 'pediatri' }, { ulke: 'uz', doctor_id: D1, patient_id: P1, rol: 'pediatri' }]))
+  const m1 = (await q(MESAJ, ['uz', D1, g1, 'hekim', 'sifreli-soru']))[0].id
+  await q(MESAJ, ['uz', D1, g1, 'asistan', 'sifreli-cevap'])
+  ok('L. a conversation holds its messages in the order they were written', JSON.stringify(await q(`select yazan from ulke_asistan_mesajlari where ulke = 'uz' and doctor_id = $1 and konusma_id = $2 order by created_at, yazan desc`, [D1, g1])) === JSON.stringify([{ yazan: 'hekim' }, { yazan: 'asistan' }]))
+
+  // the keys
+  await bekle('L. keys: a conversation about ANOTHER doctor\'s patient → refused 23503', KONUSMA, ['uz', D1, P2, 'pediatri', 'x'], '23503')
+  await bekle('L. keys: a conversation under ANOTHER country about this patient → refused 23503', KONUSMA, ['kz', D1, P1, 'pediatri', 'x'], '23503')
+  await bekle('L. keys: a conversation about a patient of ANOTHER country\'s doctor → refused 23503', KONUSMA, ['uz', D1, HK, 'pediatri', 'x'], '23503')
+  await bekle('L. keys: a general conversation under a country the account does not belong to → refused 23503', KONUSMA, ['kz', D1, null, 'pediatri', 'x'], '23503')
+  await bekle('L. keys: a conversation for a login that is not a country account → refused 23503', KONUSMA, ['uz', L0, null, 'pediatri', 'x'], '23503')
+  await bekle('L. keys: a role that is not a key → refused 23514', KONUSMA, ['uz', D1, null, 'Not A Role', 'x'], '23514')
+  await bekle('L. keys: a conversation without a title → refused 23514', KONUSMA, ['uz', D1, null, 'pediatri', ''], '23514')
+  await bekle('L. keys: a message in ANOTHER doctor\'s conversation → refused 23503', MESAJ, ['uz', D1, g2, 'hekim', 'x'], '23503')
+  await bekle('L. keys: a message under ANOTHER country in this conversation → refused 23503', MESAJ, ['kz', D1, g1, 'hekim', 'x'], '23503')
+  await bekle('L. keys: a message written by nobody the feature knows → refused 23514', MESAJ, ['uz', D1, g1, 'hasta', 'x'], '23514')
+  await bekle('L. keys: a message without text → refused 23514', MESAJ, ['uz', D1, g1, 'hekim', ''], '23514')
+  await bekle('L. keys: a message without text (null) → refused 23502', MESAJ, ['uz', D1, g1, 'hekim', null], '23502')
+
+  // what a conversation and a message may never do
+  await bekle('L. trigger: a general conversation is never given a patient afterwards → refused 23514', `update ulke_asistan_konusmalari set patient_id = $2 where id = $1`, [g1, P1], '23514')
+  await bekle('L. trigger: a conversation about a patient never moves to another patient → refused 23514', `update ulke_asistan_konusmalari set patient_id = $2 where id = $1`, [h1, P1b], '23514')
+  await bekle('L. trigger: nor loses its patient → refused 23514', `update ulke_asistan_konusmalari set patient_id = null where id = $1`, [h1], '23514')
+  await bekle('L. trigger: nor moves to another doctor → refused 23514', `update ulke_asistan_konusmalari set doctor_id = $2 where id = $1`, [g1, D2], '23514')
+  await bekle('L. trigger: nor to another country → refused 23514', `update ulke_asistan_konusmalari set ulke = 'kz' where id = $1`, [g1], '23514')
+  await bekle('L. trigger: the role it began with does not change → refused 23514', `update ulke_asistan_konusmalari set rol = 'kardiyoloji' where id = $1`, [g1], '23514')
+  await c.query(`update ulke_asistan_konusmalari set baslik_encrypted = 'sifreli-yeni', updated_at = now() where id = $1`, [g1])
+  ok('L. its title and the moment it was last used may change', (await say('ulke_asistan_konusmalari', `id = $1 and baslik_encrypted = 'sifreli-yeni'`, [g1])) === 1)
+  await bekle('L. trigger: a message does not change → refused 23514', `update ulke_asistan_mesajlari set metin_encrypted = 'baska' where id = $1`, [m1], '23514')
+  await bekle('L. trigger: nor move to another conversation → refused 23514', `update ulke_asistan_mesajlari set konusma_id = $2 where id = $1`, [m1, h1], '23514')
+  ok('L. the tables hold ONE encrypted column for text each, and no column for audio', (await q(`select string_agg(table_name || '.' || column_name, ',' order by table_name, ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name in ('ulke_asistan_konusmalari', 'ulke_asistan_mesajlari')`))[0].k === 'ulke_asistan_konusmalari.id,ulke_asistan_konusmalari.ulke,ulke_asistan_konusmalari.doctor_id,ulke_asistan_konusmalari.patient_id,ulke_asistan_konusmalari.rol,ulke_asistan_konusmalari.baslik_encrypted,ulke_asistan_konusmalari.created_at,ulke_asistan_konusmalari.updated_at,ulke_asistan_mesajlari.id,ulke_asistan_mesajlari.ulke,ulke_asistan_mesajlari.doctor_id,ulke_asistan_mesajlari.konusma_id,ulke_asistan_mesajlari.yazan,ulke_asistan_mesajlari.metin_encrypted,ulke_asistan_mesajlari.created_at')
+
+  // deleting
+  await q(MESAJ, ['uz', D1, h1, 'hekim', 'sifreli-soru-2'])
+  await c.query(`delete from ulke_asistan_konusmalari where id = $1 and doctor_id = $2 and ulke = 'uz'`, [h1, D1])
+  ok('L. deleting a conversation removes its messages and nothing else', (await say('ulke_asistan_mesajlari', 'konusma_id = $1', [h1])) === 0 && (await say('ulke_asistan_mesajlari', 'konusma_id = $1', [g1])) === 2 && (await say('ulke_hastalar', 'id = $1', [P1])) === 1)
+  const s1 = (await q(KONUSMA, ['uz', D1, SIL, 'pediatri', 'sifreli-baslik-4']))[0].id
+  await q(MESAJ, ['uz', D1, s1, 'hekim', 'sifreli-soru-3'])
+  await c.query(`delete from ulke_hastalar where id = $1 and doctor_id = $2 and ulke = 'uz'`, [SIL, D1])
+  ok('L. removing a patient removes the conversations ABOUT that patient with their messages, and no general one', (await say('ulke_asistan_konusmalari', 'id = $1', [s1])) === 0 && (await say('ulke_asistan_mesajlari', 'konusma_id = $1', [s1])) === 0 && (await say('ulke_asistan_konusmalari', 'id = $1', [g1])) === 1)
+
+  // SERVER ONLY
+  {
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(D1, ulke); else await c.query(`set role ${rol}`)
+      for (const sql of [`select 1 from ulke_asistan_konusmalari limit 1`, `select 1 from ulke_asistan_mesajlari limit 1`, `delete from ulke_asistan_konusmalari`, `delete from ulke_asistan_mesajlari`, `update ulke_asistan_konusmalari set updated_at = now()`, `insert into ulke_asistan_konusmalari (ulke, doctor_id, rol, baslik_encrypted) values ('uz', '${D1}', 'pediatri', 'x')`, `insert into ulke_asistan_mesajlari (ulke, doctor_id, konusma_id, yazan, metin_encrypted) values ('uz', '${D1}', '${g1}', 'hekim', 'x')`, `select public.ulke_asistan_konusma_kilidi()`, `select public.ulke_asistan_mesaj_kilidi()`]) { try { await c.query(sql); cikti.push(`${sql.slice(0, 48)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 48)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('L. server only: the doctor\'s own signed-in browser session can read and write NONE of it (its own conversations included)', girisli.length === 0, girisli.join('; '))
+    ok('L. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select count(*) from ulke_asistan_mesajlari`); await c.query(MESAJ, ['uz', D2, g2, 'hekim', 'sifreli-soru-4']) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('L. server only: the server\'s role can', sunucu === 'ok' && (await say('ulke_asistan_mesajlari', 'konusma_id = $1', [g2])) === 1, sunucu)
+  }
+}
+
 // ── E. the rollback scripts ──
-const GERI = [...DOSYALAR].reverse().map((d) => d.replace(/\.sql$/, '.geri-al.sql'))
+const GERI =[...DOSYALAR].reverse().map((d) => d.replace(/\.sql$/, '.geri-al.sql'))
 const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 'utf8')
 {
   // While a country's data exists, a rollback refuses and changes nothing. (129's table was emptied above.)
@@ -725,7 +800,7 @@ const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 
   await c.query(`delete from auth.users where id in ($1, $2, $3)`, [D1, D2, K1])
   const kalan = []
   for (const t of (await c.query(`select tablename t from pg_tables where schemaname = 'public' and tablename not in ('schema_migrations') order by 1`)).rows.map((r) => r.t)) { const n = (await c.query(`select count(*)::int n from public.${t}`)).rows[0].n; if (n) kalan.push(`${t}: ${n}`) }
-  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests, intake forms and tool records included', kalan.length === 0, kalan.join(', '))
+  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests, intake forms, tool records and the assistant\'s conversations included', kalan.length === 0, kalan.join(', '))
   for (const tur of ['first run', 'second run (must be repeatable)']) {
     for (const d of GERI) {
       try { await c.query(geriOku(d)); ok(`E. rollback, ${tur}: ${d}`, true) }
