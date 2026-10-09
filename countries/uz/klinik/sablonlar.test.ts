@@ -35,6 +35,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { gorunurMetin, sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
 import { UZ_ASISTAN_ADLARI } from './asistanAdlari'
+import { uzAsistanKimligi } from './asistanKimligi'
 import { UZ_ALANLAR, UZ_ORTAK_YEREL_ICERIK, UZ_ROL_ALANLARI, UZ_VASIY_ALANI, UZ_YEREL_ICERIK, uzAlanAdi, uzAlanTanimi, uzBolumAdi, uzResitDegilMi, uzSablonAlanlari, uzSablonMu } from './notSablonlari'
 import { UZ_ROL_ADLARI } from './rolAdlari'
 
@@ -53,7 +54,7 @@ const vt = sahteVeritabani()
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 type Form = (typeof FORMLAR)[number]
-const ROLLER = UZ_ASISTAN_ADLARI.map((a) => ({ rol: a.bransAnahtari, taraf: a.taraf, tamAd: a.tamAd }))
+const ROLLER = UZ_ASISTAN_ADLARI.map((a) => ({ rol: a.bransAnahtari, taraf: a.taraf, tamAd: uzAsistanKimligi(a.bransAnahtari, 'uz-Latn')!.tamAd }))
 const TUM_ALANLAR = Object.keys(UZ_ALANLAR)
 const TURKCE = /[çğıİşĞŞöüÖÜÇ]/
 const KIRILL = /[Ѐ-ӿ]/

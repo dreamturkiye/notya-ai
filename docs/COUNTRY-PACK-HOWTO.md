@@ -7,7 +7,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 ## The short version
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **628 for a one-language country (597 texts, 31 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **665 for a one-language country (633 texts, 32 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. It is still **hidden from search and invitation-only**, and stays so until the gates of the checklist pass and the owner opens it. Building proves the pack is complete, not that it is right.
@@ -62,7 +62,7 @@ Counts are for one language form. A second language or script repeats every text
 | 7 | **Core surfaces**: login, sign-up, holding page, error pages | `metinler.ts` | 48 texts | native writer |
 | 8 | **Application**: first login, settings, home, patients, visit, note | `uygulama/metinler.ts` | 144 texts | native writer; the consent sentence with a lawyer |
 | 9 | **Appointments**: working pattern, calendar, booking, reminder | `uygulama/randevuMetinleri.ts` | 113 texts | native writer |
-| 10 | **Landing page**: copy, 12 section anchors, language names, fonts, word mark | `acilis/icerik.ts` | 262 texts | marketing, native review |
+| 10 | **Landing page**: copy, 12 section anchors, language names, fonts, word mark; and the **price list** of its price section (what each plan costs a month, or "on request": data, never a number in the copy) | `acilis/icerik.ts` | 298 texts, 1 setting | marketing, native review; prices: the owner |
 | 11 | **Leak list**: what marks content as this country's | `sizintiTerimleri.ts` | 2 entries to start, growing | engineering |
 | 12 | Brand word mark | `arayuz.ts` | 1 text | the owner |
 
@@ -147,7 +147,7 @@ The pack check lists whatever is left. Uzbekistan does all of this.
 
 **Each country still needs its own pack.** Law, consent wording, units, time zones, date and clock format, identity rules, phone rules, role names, assistant names and prices differ between them, and the walls, the leak scan and the shared database all work per country.
 
-**What should be written once is the English text.** Of a pack's 597 texts, about 565 are language rather than country: the core surfaces, the application, appointments, the instructions to the model and most of the landing copy. The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
+**What should be written once is the English text.** Of a pack's 633 texts, about 601 are language rather than country: the core surfaces, the application, appointments, the instructions to the model and most of the landing copy. The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
 
 **That shared catalogue does not exist yet.** Today the scaffold gives each country its own full set of items to supply. Building the shared catalogue is its own job: the English text, a place for it in the kit, and a scaffold that points an English-speaking pack at it. It is recorded in `docs/OPEN-COMMITMENTS.md`.
 
@@ -170,6 +170,8 @@ A throwaway English-language country, `zz`, was created in a temporary copy of t
 | Pack-neutral walk-through | 120 of 120 |
 | Found by the proof and fixed in the kit | the settings page of a one-language country had no heading |
 
+Counts in this table are those of that run. Since NOTYA-UZ-FIYAT-UNVAN-01 (2026-10-09) the landing page has a price section with a price list: 36 more texts and one more setting, so the scaffold now answers 665 items (633 texts, 32 settings).
+
 From scaffold to a passing walk-through took about 16 minutes of machine time, two production builds included. That measures the mechanism only: supplying real, reviewed content is the work, and it is counted in the table of items above.
 
 ## Known gaps
@@ -177,5 +179,6 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 - **Units** are a setting every pack states and the pack check validates, but no shared screen shows a measurement yet, so nothing reads them.
 - **Instructions to the model** are assembled inside each pack (`klinik/talimatlar.ts`); the kit has no shared builder. The template's own small builder covers one language.
 - **Scaffold hints** are key paths, not reference wording.
+- **Prices** are a list the pack states (plan → amount a month, or on request) and the landing layout writes with the pack's number rules. Nothing else in the kit shows money yet.
 - **Six product pieces** are not in the kit and exist for no country but Türkiye: patient portal, intake forms, tools, consultation and messaging, the assistant in text and voice, clinic accounts.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.

@@ -87,6 +87,14 @@ describe('every pack is complete', () => {
       { const a = klon(arayuz); delete (a.acilis!.icerik as Record<string, unknown>)[f]; iceriyor(yerler(paket, a, klinik), `acilis.icerik[${f}]: no copy`) }
       { const a = klon(arayuz); (a.acilis!.icerik[f] as unknown as { kahraman: { baslik: string } }).kahraman.baslik = eksik('headline'); iceriyor(yerler(paket, a, klinik), `acilis.icerik[${f}].kahraman.baslik: to be supplied`) }
       { iceriyor(yerler(paket, { ...arayuz, acilis: null }, klinik), 'acilis: the landing page is switched on') }
+      // the price section: a plan of the copy without a price, a price without a plan, an amount that is not one, a text without the place for it
+      const planlar = arayuz.acilis.icerik[f]!.narx.gruplar.flatMap((g) => g.rejalar.map((r) => r.id))
+      if (planlar.length) {
+        { const a = klon(arayuz); delete (a.acilis!.fiyatlar as Record<string, unknown>)[planlar[0]]; iceriyor(yerler(paket, a, klinik), `acilis.fiyatlar.${planlar[0]}: the "${f}" copy names this plan`) }
+        { const a = klon(arayuz); (a.acilis!.fiyatlar as Record<string, unknown>)['no-such-plan'] = { aylik: null, oneCikan: false }; iceriyor(yerler(paket, a, klinik), 'acilis.fiyatlar.no-such-plan: is in the price list') }
+        { const a = klon(arayuz); (a.acilis!.fiyatlar as Record<string, { aylik: unknown }>)[planlar[0]].aylik = 0.5; iceriyor(yerler(paket, a, klinik), `acilis.fiyatlar.${planlar[0]}.aylik`) }
+        { const a = klon(arayuz); (a.acilis!.icerik[f] as unknown as { narx: { oylik: string } }).narx.oylik = 'a month'; iceriyor(yerler(paket, a, klinik), `acilis.icerik[${f}].narx.oylik`) }
+      }
     }
     // the application on, and a half of the pack missing altogether
     iceriyor(yerler(paket, null, klinik), 'the pack brings no content for the shared screens')

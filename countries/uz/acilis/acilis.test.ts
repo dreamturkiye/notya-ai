@@ -4,8 +4,14 @@
  *
  *   1. Leak test: nothing of Türkiye — in the rendered page AND in every string of the catalogue, shown at first
  *      paint or not (the typed visits, the menu, the form's messages are not in the first HTML).
- *   2. Uzbekistan's own rules for this page: no price, no trial, no demo, no integration claim, no named law, no voice
- *      profile, no image evaluation, the assistant unnamed, "30 specialties" only as what the product is designed for.
+ *   2. Uzbekistan's own rules for this page: no trial, no demo, no integration claim, no named law, no voice
+ *      profile, no image evaluation, no biography of the assistant, "30 specialties" only as what the product is
+ *      designed for.
+ *   2a. NOTYA-UZ-FIYAT-UNVAN-01 — PRICES: the amounts are the pack's price list, written by the pack's number rules;
+ *      each equals the Turkish page's price for the same plan at the recorded rate, rounded as recorded; nothing of
+ *      the Turkish currency is anywhere; plans the Turkish page sells by quote carry no amount.
+ *   2b. NOTYA-UZ-FIYAT-UNVAN-01 — THE ASSISTANT'S NAME: the page names one persona, the counterpart of the one the
+ *      Turkish page features, by short title and given name, read from the owner's list (never written in the copy).
  *   3. It mirrors the Turkish page section for section, and reuses only the presentational components named here.
  *   4. It links only to itself, /login and /signup, all under the build's path prefix (/uzbek) — never to a Turkish
  *      page; the Uzbek / Russian switch is in the bar; every form of the page is reachable from the footer.
@@ -21,8 +27,14 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { AcilisSayfasi } from '@/components/ulke/acilis/AcilisSayfasi'
-import { ACILIS_DILLERI, ACILIS_ICERIGI, CAPA, UZ_ACILIS, acilisIcerigi, type AcilisDili } from './icerik'
+import { AcilisSayfasi, narxSatirlari } from '@/components/ulke/acilis/AcilisSayfasi'
+import { Narx } from '@/components/ulke/acilis/Narx'
+import { sayiYazKuralla } from '@/lib/ulke/arayuz/sayi'
+import { ACILIS_ASISTAN_ROLU, ACILIS_DILLERI, ACILIS_ICERIGI, CAPA, UZ_ACILIS, acilisIcerigi, type AcilisDili } from './icerik'
+import { UZ_FIYATLAR, UZ_FIYAT_DONUSUMU, uzFiyatDonustur } from './fiyatlar'
+import { UZ_ASISTAN_ADLARI } from '../klinik/asistanAdlari'
+import { uzAsistanKimligi } from '../klinik/asistanKimligi'
+import { UZ_ASISTAN_UNVANLARI } from '../klinik/asistanUnvanlari'
 
 /** The pack's own stylesheet address for the page's fonts (was a constant of the layout before the layout became shared). */
 const ACILIS_FONT_HREF = UZ_ACILIS.fontHref
@@ -49,6 +61,42 @@ function metinler(o: unknown, yol = ''): { yol: string; metin: string }[] {
 const sekil = (o: unknown): unknown => (typeof o === 'string' ? '' : Array.isArray(o) ? o.map(sekil) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, KIMLIK.has(k) ? v : sekil(v)])) : o)
 const BOLUM_SIRASI = [CAPA.ust, CAPA.suhbat, CAPA.qabul, CAPA.portal, CAPA.maslahat, CAPA.jadval, CAPA.yonalish, CAPA.kuzatuv, CAPA.organish, CAPA.xavfsizlik, CAPA.narx, CAPA.sorov]
 const ek = (dil: AcilisDili) => (dil === 'uz-Latn' ? '' : `?dil=${dil}`)
+/** An amount as the pack writes numbers: its own separators, the currency's own decimal places. */
+const tutar = (n: number) => sayiYazKuralla(n, UZ_PAKETI.bicim, UZ_PAKETI.paraBirimi.ondalikHane)
+/** The price line of a plan as a form of the page shows it. */
+const narxSatiri = (dil: AcilisDili, id: string) => { const a = UZ_FIYATLAR[id]?.aylik; const n = ACILIS_ICERIGI[dil].narx; return typeof a === 'number' ? n.oylik.replace('%', tutar(a)) : n.sorovNarx }
+/** Section 10 with ONE group of plans shown: the first paint holds only the first group, the other is a tap away. */
+const cizNarx = (dil: AcilisDili, grup: number) => { const n = ACILIS_ICERIGI[dil].narx; return renderToStaticMarkup(React.createElement(Narx, { metin: { ...n, gruplar: [n.gruplar[grup]] }, fiyatlar: narxSatirlari(UZ_ACILIS), capa: CAPA.narx, sorovHref: `#${CAPA.sorov}` })) }
+/** Everything a form of the page can show about prices: both groups rendered, and every price line. */
+const fiyatMetni = (dil: AcilisDili) => [gorunurMetin(cizNarx(dil, 0)), gorunurMetin(cizNarx(dil, 1)), ...Object.keys(UZ_FIYATLAR).map((id) => narxSatiri(dil, id))].join('\n')
+/**
+ * The Turkish landing page's plans, READ AS TEXT (never imported: its content file is Türkiye's). Per group, in the
+ * page's order: the monthly price in lira (null = sold by quote), the badge, and how many lines the plan lists.
+ */
+function turkPlanlari(): Record<'bireysel' | 'klinik', { fiyat: number | null; oneCikan: boolean; madde: number }[]> {
+  const kaynak = readFileSync(join(KOK, 'components/doktor-landing/content.ts'), 'utf8')
+  const grup = (ad: string) => {
+    const govde = new RegExp(`export const ${ad} = \\[([\\s\\S]*?)\\n\\] as const`).exec(kaynak)
+    assert.ok(govde, `${ad} not found in the Turkish landing content: the price test must be re-read against it`)
+    return govde![1].split(/\n  \{\n/).slice(1).map((p) => {
+      const fiyat = /price: "([^"]+)"/.exec(p)![1]
+      const madde = /items: \[([\s\S]*?)\]/.exec(p)![1].match(/"(?:[^"\\]|\\.)*"/g)!.length
+      return { fiyat: /^[\d.]+$/.test(fiyat) ? Number(fiyat.replace(/\./g, '')) : null, oneCikan: /highlight: true/.test(p), madde }
+    })
+  }
+  return { bireysel: grup('INDIVIDUAL_PLANS'), klinik: grup('CLINIC_PLANS') }
+}
+/** The persona the Turkish landing page features, read as text: the specialty key of the assistant it names. */
+function turkSayfasininAsistani(): { rol: string; unvanliKisa: string; tamAd: string } {
+  const icerik = readFileSync(join(KOK, 'components/doktor-landing/content.ts'), 'utf8')
+  const adlar = [...new Set([...icerik.matchAll(/specialist: "([^"]+)"/g)].map((m) => m[1]))]
+  assert.equal(adlar.length, 1, 'the Turkish page features one assistant')
+  const katalog = readFileSync(join(KOK, 'lib/asistan/specialistsCatalog.ts'), 'utf8')
+  const kisa = adlar[0].split(' ').slice(1).join(' ')
+  const m = new RegExp(`specialtyKey: '([^']+)',\\s*name: '([^']+)',\\s*shortName: '${kisa}'`).exec(katalog)
+  assert.ok(m, `the Turkish catalogue has no specialist called "${kisa}"`)
+  return { rol: m![1], unvanliKisa: adlar[0], tamAd: m![2] }
+}
 /** Login and sign-up exist in Uzbek Latin and Russian only. */
 const genelEk = (dil: AcilisDili) => (dil === 'ru' ? '?dil=ru' : '')
 
@@ -86,10 +134,11 @@ describe('Uzbekistan landing page', () => {
       for (const { yol, metin } of hepsi) assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak: `catalogue ${dil}${yol}` }), [])
     })
 
-    it(`${dil}: no price, trial, demo, integration claim, named law, voice profile, image evaluation or name for the assistant`, () => {
+    it(`${dil}: no trial, demo, integration claim, named law, voice profile, image evaluation, foreign currency or biography of the assistant`, () => {
       const gorunen = gorunurMetin(ciz(dil))
       for (const y of UZ_YASAKLI_IFADELER) {
-        assert.doesNotMatch(gorunen, y.desen, y.neden)
+        // A rule marked for the copy only (an amount written into a sentence) does not apply to the page, which shows the price list.
+        if (!y.yalnizMetin) { assert.doesNotMatch(gorunen, y.desen, y.neden); assert.doesNotMatch(fiyatMetni(dil), y.desen, `${y.neden} — price section`) }
         for (const { yol, metin } of metinler(t)) assert.doesNotMatch(metin, y.desen, `${y.neden} — ${yol}`)
       }
       // Numbers. Allowed: section numbers, the clock and the figures of the fictional visits (age, weight, dose),
@@ -99,8 +148,12 @@ describe('Uzbekistan landing page', () => {
         if (metin === t.sorov.form.telefonOrnek) continue
         for (const s of metin.match(/\d{3,}/g) || []) assert.ok(izinli.has(s), `unexpected number ${s} in ${yol}`)
       }
-      const sayfadaki = (gorunen.replace(t.sorov.form.telefonOrnek, '').match(/\d{3,}/g) || []).filter((s) => s !== String(new Date().getFullYear()) && !izinli.has(s))
+      // On the page, beside those: the amounts of the price list, exactly as the pack writes numbers — and nothing else.
+      let fiyatsiz = gorunen.replace(t.sorov.form.telefonOrnek, '')
+      for (const r of t.narx.gruplar[0].rejalar) { const satir = narxSatiri(dil, r.id); assert.ok(fiyatsiz.includes(satir), `the price line of "${r.id}" is not on the page: ${satir}`); fiyatsiz = fiyatsiz.replace(satir, '') }
+      const sayfadaki = (fiyatsiz.match(/\d{3,}/g) || []).filter((s) => s !== String(new Date().getFullYear()) && !izinli.has(s))
       assert.deepEqual(sayfadaki, [], 'unexpected numbers on the page')
+      assert.doesNotMatch(fiyatsiz, /\d[\d\s.,]*\s*(soʻm|so'm|сум|сўм|UZS)/i, 'an amount of money on the page that is not a line of the price list')
     })
 
     it(`${dil}: "30 specialties" is what the product is designed for, never what is switched on`, () => {
@@ -133,12 +186,20 @@ describe('Uzbekistan landing page', () => {
       for (const g of gorseller) assert.match(g, /alt="[^"]{20,}"/)
     })
 
-    it(`${dil}: buttons — request a price leads to the request form, the second hero button to the illustration on this page`, () => {
+    it(`${dil}: buttons — every button of the bar, the hero and the price section leads to the request form; the second hero button to the illustration on this page`, () => {
       const html = ciz(dil)
-      const dugme = (etiket: string) => [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>([^<]*)</g)].filter((m) => m[2] === etiket).map((m) => m[1])
-      // Top-bar filled button, hero main button and every row of the price section: the request form. No trial.
-      assert.deepEqual(dugme(t.nav.sorov), [`#${CAPA.sorov}`, `#${CAPA.sorov}`].concat(t.nav.sorov === t.narx.dugme ? t.narx.rejalar.map(() => `#${CAPA.sorov}`) : []))
+      const baglantilar = (kaynak: string, etiket: string) => [...kaynak.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>([^<]*)</g)].filter((m) => m[2] === etiket).map((m) => m[1])
+      const dugme = (etiket: string) => baglantilar(html, etiket)
+      // Top-bar filled button and hero main button: the request form. No trial, no sign-up without an invitation.
+      assert.deepEqual(dugme(t.nav.sorov), [`#${CAPA.sorov}`, `#${CAPA.sorov}`])
       assert.equal(t.nav.sorov, t.kahraman.birinciDugme)
+      // Price section: a plan with an amount says "leave a request", a plan without one says "request a price" — both go to the request form.
+      const [yakka, klinika] = [cizNarx(dil, 0), cizNarx(dil, 1)]
+      assert.deepEqual(baglantilar(yakka, t.narx.dugme), t.narx.gruplar[0].rejalar.map(() => `#${CAPA.sorov}`))
+      assert.deepEqual(baglantilar(klinika, t.narx.sorovDugme), t.narx.gruplar[1].rejalar.map(() => `#${CAPA.sorov}`))
+      assert.deepEqual(baglantilar(yakka, t.narx.sorovDugme).concat(baglantilar(klinika, t.narx.dugme)), [], 'a plan carries the wrong button')
+      for (const kaynak of [yakka, klinika]) for (const m of kaynak.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)) assert.equal(m[1], `#${CAPA.sorov}`, 'a button of the price section leads somewhere else')
+      assert.deepEqual(dugme(t.narx.dugme), t.narx.gruplar[0].rejalar.map(() => `#${CAPA.sorov}`), 'the first paint shows the first group of plans')
       assert.deepEqual(dugme(t.kahraman.ikinciDugme), [`#${CAPA.suhbat}`])
       assert.match(html, new RegExp(`<section id="${CAPA.sorov}"[\\s\\S]*<form class="uzl-form`))
       // "Giriş" → the Uzbek login; sign-up stays by invitation code.
@@ -182,6 +243,165 @@ describe('Uzbekistan landing page', () => {
       assert.doesNotMatch(ciz(dil, 'pilot@example.com'), /pilot@example\.com/)
     })
   }
+
+  // ───────────────────────── NOTYA-UZ-FIYAT-UNVAN-01: prices ─────────────────────────
+
+  it('prices: every amount shown equals the Turkish page\'s price for the same plan at the recorded rate, rounded as recorded', () => {
+    const tr = turkPlanlari()
+    const D = UZ_FIYAT_DONUSUMU
+    const [yakka, klinika] = ACILIS_ICERIGI['uz-Latn'].narx.gruplar
+    // Same plans as the Turkish page, in its order: three for one doctor (with amounts), four for clinics (by quote).
+    assert.deepEqual([yakka.rejalar.length, klinika.rejalar.length], [tr.bireysel.length, tr.klinik.length])
+    assert.deepEqual(Object.keys(UZ_FIYATLAR), [...yakka.rejalar, ...klinika.rejalar].map((r) => r.id), 'the price list names exactly the plans of the copy, in its order')
+    assert.ok(tr.bireysel.every((p) => typeof p.fiyat === 'number') && tr.klinik.every((p) => p.fiyat === null), 'the Turkish page changed which plans carry a price: re-read the conversion')
+    yakka.rejalar.forEach((r, i) => {
+      const kaynak = tr.bireysel[i].fiyat as number
+      assert.equal(D.kaynakAylik[r.id], kaynak, `${r.id}: the recorded source price is not the Turkish page's (${kaynak})`)
+      const tam = kaynak * D.kur
+      const yuvarlak = Math.round(tam / D.yuvarlama) * D.yuvarlama
+      assert.equal(uzFiyatDonustur(kaynak), yuvarlak)
+      assert.equal(UZ_FIYATLAR[r.id].aylik, yuvarlak, `${r.id}: ${kaynak} × ${D.kur} = ${tam.toFixed(2)} → ${yuvarlak}, the price list says ${UZ_FIYATLAR[r.id].aylik}`)
+      assert.ok(Math.abs(yuvarlak - tam) <= D.yuvarlama / 2 && yuvarlak % D.yuvarlama === 0, `${r.id}: not the nearest ${D.yuvarlama}`)
+      assert.equal(UZ_FIYATLAR[r.id].oneCikan, tr.bireysel[i].oneCikan, `${r.id}: the badge`)
+      assert.equal(r.maddeler.length, tr.bireysel[i].madde, `${r.id}: as many lines as the Turkish plan (one line there may be shortened here, none dropped whole)`)
+    })
+    klinika.rejalar.forEach((r, i) => {
+      assert.equal(UZ_FIYATLAR[r.id].aylik, null, `${r.id}: sold by quote on the Turkish page, so no amount here`)
+      assert.equal(D.kaynakAylik[r.id], undefined, `${r.id}: a quote-only plan has no source price`)
+      assert.equal(UZ_FIYATLAR[r.id].oneCikan, tr.klinik[i].oneCikan, `${r.id}: the badge`)
+      assert.equal(r.maddeler.length, tr.klinik[i].madde, `${r.id}: as many lines as the Turkish plan`)
+    })
+    // The figures of this job, as plain numbers, so a silent change of the rule cannot pass.
+    assert.deepEqual([D.kur, D.kurTarihi, D.yuvarlama], [240.71, '2026-10-09', 10000])
+    assert.deepEqual(yakka.rejalar.map((r) => [D.kaynakAylik[r.id], UZ_FIYATLAR[r.id].aylik]), [[1490, 360000], [3490, 840000], [5990, 1440000]])
+  })
+
+  it('prices: written by the pack\'s number rules, with the currency as each form writes it; the same amounts in all three forms', () => {
+    assert.deepEqual([UZ_PAKETI.bicim.binlikAyraci, UZ_PAKETI.paraBirimi.ondalikHane, UZ_PAKETI.paraBirimi.kod], [' ', 0, 'UZS'])
+    assert.deepEqual([360000, 840000, 1440000].map(tutar), ['360 000', '840 000', '1 440 000'])
+    assert.deepEqual(['starter', 'pro', 'practice'].map((id) => narxSatiri('uz-Latn', id)), ['360 000 soʻm / oy', '840 000 soʻm / oy', '1 440 000 soʻm / oy'])
+    assert.deepEqual(['starter', 'pro', 'practice'].map((id) => narxSatiri('uz-Cyrl', id)), ['360 000 сўм / ой', '840 000 сўм / ой', '1 440 000 сўм / ой'])
+    assert.deepEqual(['starter', 'pro', 'practice'].map((id) => narxSatiri('ru', id)), ['360 000 сум / мес.', '840 000 сум / мес.', '1 440 000 сум / мес.'])
+    assert.equal(ACILIS_ICERIGI['uz-Latn'].narx.oylik.includes(UZ_PAKETI.paraBirimi.simge), true, 'the Latin form writes the currency as the pack names it')
+    for (const dil of DILLER) {
+      const n = ACILIS_ICERIGI[dil].narx
+      const [yakka, klinika] = [cizNarx(dil, 0), cizNarx(dil, 1)]
+      const satirlar = (html: string) => [...html.matchAll(/data-alan="narx">([^<]*)</g)].map((m) => m[1])
+      assert.deepEqual(satirlar(yakka), n.gruplar[0].rejalar.map((r) => narxSatiri(dil, r.id)), `${dil}: one doctor`)
+      assert.deepEqual(satirlar(klinika), n.gruplar[1].rejalar.map(() => n.sorovNarx), `${dil}: clinics are by request, without an amount`)
+      assert.doesNotMatch(gorunurMetin(klinika), /\d{3,}/, `${dil}: a number in the clinic plans`)
+      // The badge sits on the plans the price list marks, and on no other.
+      const rozet = (html: string) => [...html.matchAll(/<li[^>]*data-reja="([^"]+)"[\s\S]*?<\/li>\s*(?=<li[^>]*data-reja|<\/ol>)/g)].filter((m) => m[0].includes(`>${n.tavsiya}<`)).map((m) => m[1])
+      assert.deepEqual([...rozet(yakka), ...rozet(klinika)], Object.entries(UZ_FIYATLAR).filter(([, f]) => f.oneCikan).map(([id]) => id), `${dil}: the badge`)
+      // The switch: both groups by name, the first selected; the first paint of the page is the first group.
+      const sekmeler = [...renderToStaticMarkup(React.createElement(Narx, { metin: n, fiyatlar: narxSatirlari(UZ_ACILIS), capa: CAPA.narx, sorovHref: '#x' })).matchAll(/role="tab" aria-selected="(true|false)" data-guruh="([^"]+)"[^>]*>([^<]+)</g)].map((m) => [m[1], m[2], m[3]])
+      assert.deepEqual(sekmeler, n.gruplar.map((g, i) => [String(i === 0), g.id, g.ad]), `${dil}: the switch`)
+      // The line under each list is that group's own.
+      assert.ok(gorunurMetin(yakka).includes(n.gruplar[0].izoh) && gorunurMetin(klinika).includes(n.gruplar[1].izoh) && !gorunurMetin(klinika).includes(n.gruplar[0].izoh))
+    }
+    // An amount the price list does not give is never guessed: a plan without an entry shows "on request".
+    const n = ACILIS_ICERIGI['uz-Latn'].narx
+    const bos = renderToStaticMarkup(React.createElement(Narx, { metin: { ...n, gruplar: [n.gruplar[0]] }, fiyatlar: {}, capa: CAPA.narx, sorovHref: '#x' }))
+    assert.deepEqual([...bos.matchAll(/data-alan="narx">([^<]*)</g)].map((m) => m[1]), n.gruplar[0].rejalar.map(() => n.sorovNarx))
+    assert.doesNotMatch(gorunurMetin(bos), /\d{3,}/)
+  })
+
+  it('prices: no lira sign, no "TL", no lira amount — on the page, in the price section of both groups, in the copy, in the price data', () => {
+    const LIRA = /₺|(?<![\p{L}\p{N}])(TL|TRY)(?![\p{L}\p{N}])|(?<!\p{L})(lira\p{L}*|лир(а|ы|у|е|ой|ами|ах)?)(?!\p{L})/iu
+    const tr = turkPlanlari()
+    // Every way the Turkish amounts could be written: 1490, 1.490, 1 490, 1,490.
+    const tutarlar = tr.bireysel.map((p) => String(p.fiyat)).map((s) => new RegExp(`(?<![\\d])${s.slice(0, -3)}[\\s.,]?${s.slice(-3)}(?![\\d])`))
+    assert.equal(tutarlar.length, 3)
+    for (const dil of DILLER) {
+      const parcalar = [gorunurMetin(ciz(dil)), fiyatMetni(dil), ...metinler(ACILIS_ICERIGI[dil]).map((m) => m.metin)]
+      for (const p of parcalar) {
+        assert.doesNotMatch(p, LIRA, `${dil}: something of the lira`)
+        for (const d of tutarlar) assert.doesNotMatch(p, d, `${dil}: a Turkish amount`)
+        assert.deepEqual(sizintiTara(p, { hedefUlke: 'uz', kaynak: `prices ${dil}` }), [])
+      }
+    }
+    // The price list a browser may receive: plan ids, amounts of soʻm, the badge. No currency of another country, no source price.
+    const veri = JSON.stringify(UZ_FIYATLAR)
+    assert.doesNotMatch(veri, LIRA)
+    for (const d of tutarlar) assert.doesNotMatch(veri, d)
+    assert.deepEqual(sizintiTara(veri, { hedefUlke: 'uz', kaynak: 'price list' }), [])
+    // The record keeps the source prices as bare numbers; it names no currency of another country either.
+    assert.doesNotMatch(JSON.stringify({ ...UZ_FIYAT_DONUSUMU, kaynakAylik: 0 }), LIRA)
+    assert.deepEqual(sizintiTara(JSON.stringify(UZ_FIYAT_DONUSUMU), { hedefUlke: 'uz', kaynak: 'conversion record' }), [])
+  })
+
+  it('prices: the copy mirrors the Turkish plans and leaves out what exists only in Türkiye; the footnotes carry no trial and name no tax', () => {
+    for (const dil of DILLER) {
+      const n = ACILIS_ICERIGI[dil].narx
+      assert.deepEqual(n.gruplar.map((g) => g.id), ['solo', 'clinic'])
+      assert.deepEqual(n.gruplar.map((g) => g.rejalar.map((r) => r.id)), [['starter', 'pro', 'practice'], ['clinic5', 'clinic10', 'clinic20', 'enterprise']])
+      assert.ok(n.oylik.includes('%') && !/\d/.test(n.oylik), 'the amount is the price list\'s, not the copy\'s')
+      // The session limit of the first plan and "unlimited" of the second, as on the Turkish page.
+      assert.match(n.gruplar[0].rejalar[0].maddeler[0], /\b60\b/)
+      assert.doesNotMatch(n.gruplar[0].rejalar[1].maddeler.join(' '), /\d/)
+      // Users per clinic plan.
+      assert.deepEqual(n.gruplar[1].rejalar.slice(0, 3).map((r) => /\d+/.exec(r.maddeler[0])?.[0]), ['5', '10', '20'])
+      // Footnote of the priced plans: taxes (not a named tax), two months with yearly prepayment, 40% for the first 50 doctors for 12 months.
+      const [yakkaIzoh, klinikaIzoh] = n.gruplar.map((g) => g.izoh)
+      assert.deepEqual((yakkaIzoh.match(/\d+/g) || []).sort(), ['12', '2', '40', '50'], `${dil}: the figures of the footnote`)
+      assert.match(yakkaIzoh, /soliqlar|солиқлар|[Нн]алоги/, `${dil}: "taxes", in the plural and unnamed`)
+      assert.doesNotMatch(yakkaIzoh + klinikaIzoh, /QQS|ҚҚС|НДС|\bKDV\b|\bVAT\b/i, `${dil}: a tax is named`)
+      assert.doesNotMatch(klinikaIzoh, /\d/, `${dil}: the clinic footnote promises no figure`)
+      // Sign-up stays by invitation: both footnotes say so, and nothing promises a trial or a card-free start.
+      for (const izoh of [yakkaIzoh, klinikaIzoh]) assert.match(izoh, /taklif kodi|таклиф коди|код[ау]? приглашения/, `${dil}: by invitation`)
+      assert.doesNotMatch(JSON.stringify(n), /bepul|бепул|бесплатн|sinov|синов|пробн|kredit|кредит|bank karta|банк карта|банковск/i, `${dil}: a trial or a payment card`)
+    }
+  })
+
+  it('prices: the record is written beside the data and in the country document, figure for figure', () => {
+    const D = UZ_FIYAT_DONUSUMU
+    const satirlar = Object.entries(D.kaynakAylik).map(([id, kaynak]) => ({ id, kaynak, tam: (kaynak * D.kur).toFixed(2), gosterilen: UZ_FIYATLAR[id].aylik as number }))
+    const bosluklu = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+    for (const [ad, yol] of [['the comment beside the price data', 'countries/uz/acilis/fiyatlar.ts'], ['the country document', 'docs/COUNTRY-PACK-UZBEKISTAN.md']] as const) {
+      const metin = readFileSync(join(KOK, yol), 'utf8')
+      for (const parca of ['cbu.uz', String(D.kur), '09.10.2026', ...satirlar.flatMap((x) => [bosluklu(String(x.kaynak)), bosluklu(x.tam), bosluklu(String(x.gosterilen))])]) assert.ok(metin.includes(parca), `${ad} does not carry "${parca}"`)
+    }
+  })
+
+  // ───────────────────────── NOTYA-UZ-FIYAT-UNVAN-01: the assistant's name ─────────────────────────
+
+  it('the page names ONE assistant, the counterpart of the persona the Turkish page features, by short title and given name', () => {
+    const tr = turkSayfasininAsistani()
+    // The Turkish page: "Prof. <given>" of its paediatrics professor ("Prof. Dr. <given> <family>" in the catalogue).
+    assert.match(tr.unvanliKisa, /^Prof\. \S+$/)
+    assert.match(tr.tamAd, /^Prof\. Dr\. \S+ \S+$/)
+    assert.equal(ACILIS_ASISTAN_ROLU, tr.rol, 'the featured role is the Turkish page\'s')
+    const digerleri = UZ_ASISTAN_ADLARI.filter((a) => a.bransAnahtari !== ACILIS_ASISTAN_ROLU)
+    assert.equal(digerleri.length, 39)
+    for (const dil of DILLER) {
+      const t = ACILIS_ICERIGI[dil]
+      const k = uzAsistanKimligi(ACILIS_ASISTAN_ROLU, dil)!
+      assert.equal(k.unvanliKisaAd, `${UZ_ASISTAN_UNVANLARI[dil]['prof-dr'].kisa} ${k.kisaAd}`)
+      // Where the Turkish page names its assistant, this page names its own: hero, section 01, the three example visits, the first plan.
+      assert.ok(t.kahraman.giris.startsWith(`${k.unvanliKisaAd} `), `${dil}: hero`)
+      assert.ok(t.suhbat.govde.includes(k.unvanliKisaAd), `${dil}: section 01`)
+      assert.deepEqual(t.suhbat.sahneler.map((s) => s.yordamchi), [k.unvanliKisaAd, k.unvanliKisaAd, k.unvanliKisaAd])
+      assert.deepEqual(t.suhbat.sahneler.flatMap((s) => s.navbatlar.filter((n) => n.rol === 'yordamchi').map((n) => n.kim)), [k.kisaAd, k.kisaAd], `${dil}: the speaker is the given name alone`)
+      assert.ok(t.narx.gruplar[0].rejalar[0].maddeler.some((m) => m.endsWith(k.unvanliKisaAd)), `${dil}: the first plan`)
+      const html = gorunurMetin(ciz(dil))
+      assert.ok(html.includes(k.unvanliKisaAd))
+      for (const { yol, metin } of metinler(t)) {
+        // A title never stands without the featured given name, and never as the full form with the family name.
+        for (const u of Object.values(UZ_ASISTAN_UNVANLARI[dil]).flatMap((x) => [x.tam, x.kisa])) {
+          for (const m of metin.matchAll(new RegExp(`(?<![\\p{L}])${u.replace(/\./g, '\\.')}(?![\\p{L}])\\s*(\\S*)`, 'gu'))) assert.equal(m[1].replace(/[.,;:!?»”]+$/, ''), k.kisaAd, `${dil}${yol}: the title "${u}" stands before "${m[1]}"`)
+        }
+        assert.ok(!metin.includes(k.tamAd) && !metin.includes(k.tamAd.split(' ').slice(-2).join(' ')), `${dil}${yol}: the full name is not for the landing page`)
+        // No other role's assistant is named anywhere on the page.
+        for (const a of digerleri) { const ad = uzAsistanKimligi(a.bransAnahtari, dil)!.kisaAd; assert.doesNotMatch(metin, new RegExp(`(?<![\\p{L}])${ad}(?![\\p{L}])`, 'u'), `${dil}${yol}: names ${a.bransAnahtari}'s assistant`) }
+      }
+      // Leak scan over the name and the titles themselves, in this form.
+      for (const x of [k.tamAd, k.unvanliKisaAd, k.kisaAd, ...Object.values(UZ_ASISTAN_UNVANLARI[dil]).flatMap((u) => [u.tam, u.kisa])]) assert.deepEqual(sizintiTara(x, { hedefUlke: 'uz', kaynak: `assistant ${dil}` }), [])
+    }
+    // ONE SOURCE: the name is read from the owner's list; the copy file does not write it.
+    const kaynak = readFileSync(join(KOK, 'countries/uz/acilis/icerik.ts'), 'utf8')
+    for (const dil of DILLER) assert.ok(!kaynak.includes(uzAsistanKimligi(ACILIS_ASISTAN_ROLU, dil)!.kisaAd), `countries/uz/acilis/icerik.ts writes the featured name itself (${dil})`)
+    assert.match(kaynak, /uzAsistanKimligi\(ACILIS_ASISTAN_ROLU, dil\)/)
+  })
 
   it('the three forms carry the same page: same shape, no empty line, each in its own script', () => {
     const [uz, kiril, ru] = [ACILIS_ICERIGI['uz-Latn'], ACILIS_ICERIGI['uz-Cyrl'], ACILIS_ICERIGI.ru]

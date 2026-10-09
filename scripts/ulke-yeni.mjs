@@ -310,7 +310,9 @@ export const ${B}_RANDEVU_METINLERI: Readonly<Partial<Record<DilKodu, RandevuMet
 dosyalar['acilis/icerik.ts'] = `${BAS(`${B}: the landing page's copy in "${DIL}", and the few facts the shared layout needs.`, `The LAYOUT is the kit's (components/ulke/acilis/): same sections, same order, same look for every country. What the
 sections SAY is this country's own marketing copy — written for it, reviewed by a native reader, with no claim the
 product cannot keep in this country (no integration claims, no named sources, no public demo).
-Lists (bullets, cards, scenes, plans) may be longer or shorter than the template's; every entry must be complete.`)}import { eksik } from '@/lib/ulke/eksik'
+Lists (bullets, cards, scenes, plans) may be longer or shorter than the template's; every entry must be complete.
+Section 10 names the plans; what each costs is DATA (\`fiyatlar\` at the foot of this file), never a number in the copy:
+the layout writes each amount with this pack's own number rules. A plan's id ties its copy to its price.`)}import { eksik, eksikAyar } from '@/lib/ulke/eksik'
 import type { AcilisIcerigi, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 
 /** Anchors of the page's sections: one lower-case word each, in the country's language, all different. */
@@ -327,6 +329,7 @@ export const ${B}_ACILIS: UlkeAcilisi = {
   capalar: CAPA,
   fontHref: eksik('landing: the stylesheet address of the fonts. For a Latin-script language, the layout\\'s two faces: https://fonts.googleapis.com/css2?family=Fraunces:wght@100..900&family=Outfit:wght@100..900&display=swap'),
   markaYazisi: eksik('landing: the word mark as the page writes it, e.g. notya'),
+  fiyatlar: eksikAyar('landing: the price list — one entry per plan id of narx.gruplar above and no other: { starter: { aylik: 49, oneCikan: false }, … }. aylik = whole units of the currency for one month, or null where the price is given on request; oneCikan = true for the plan that carries the badge. Amounts are the owner\\'s decision for this country'),
 }
 `
 

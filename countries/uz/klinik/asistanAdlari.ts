@@ -1,64 +1,91 @@
 /**
- * NOTYA-ULKE-01 — Uzbekistan: the assistant's name for each specialty and clinic role.
+ * NOTYA-ULKE-01 · NOTYA-UZ-FIYAT-UNVAN-01 — Uzbekistan: the assistant's name for each specialty and clinic role.
  *
- * Source: the owner's list (Kaan, 2026-10-08), stored exactly as he gave it. `bransAnahtari` is the product's internal
- * specialty key: an identifier, never shown on a screen.
+ * THE SINGLE SOURCE of the 40 names. No other file of the pack or of the kit repeats one; every form a screen shows
+ * (with the title, without it, in Cyrillic, in Russian) is made from an entry here by ./asistanKimligi.ts.
  *
- * NOT YET USED by any screen or model instruction. Open before it is: Cyrillic and Russian forms of each name, a native
- * reader's check of the spellings, and each assistant's background text (see docs/COUNTRY-PACK-UZBEKISTAN.md).
+ * NAMES: the owner's list (Kaan, 2026-10-08). Given name and family name exactly as he wrote them, in Uzbek Latin.
+ * `bransAnahtari` is the product's internal specialty key: an identifier, never shown on a screen.
+ *
+ * TITLES: the owner, 2026-10-09: "If prof. is used then follow the same turkish naming convention." So the title of a
+ * role is the title its counterpart carries in the Turkish product, role by role (read there, never imported:
+ * lib/asistan/specialistsCatalog.ts for the 30 doctor specialties, lib/ai/personas/klinik_uzmanlar.ts for the 10
+ * clinic roles; ./asistanAdlari.test.ts compares the two lists on every run):
+ *
+ *   Turkish counterpart                        here            full form                    short form
+ *   "Prof. Dr. <given> <family>"               'prof-dr'       Prof. Dr. Malika Nazarova    Prof. Malika
+ *     the 30 doctor specialties, and the clinic's aesthetic surgery
+ *   "Dr. <given> <family>"                     'dr'            Dr. Shohruh Karimov          Dr. Shohruh
+ *     hair transplant, medical aesthetics, clinic dermatology, longevity, and the clinical psychologist
+ *   "Uzm. <given> <family>" + the profession   'meslek'        Fizioterapevt Jasmina …      Fizioterapevt Jasmina
+ *     physiotherapist, dietitian, occupational therapist, audiologist
+ *
+ * "Uzm." has no natural equivalent in Uzbek or Russian, so those four keep the closest common form: the profession's
+ * own title, as the owner wrote it (`meslekUnvani`; "Fizioterapevt" is his correction of 2026-10-09, "Use the common
+ * name"). The words of 'prof-dr' and 'dr' in each text form are in ./asistanUnvanlari.ts.
+ *
+ * Before 2026-10-09 every doctor carried "Dr." and the clinical psychologist "Psixolog": that was the owner's first
+ * list, replaced by his instruction above. No biography follows from a title: nothing anywhere says how long an
+ * assistant has practised, where, or with what degree (docs/COUNTRY-PACK-UZBEKISTAN.md).
  */
 export type AsistanTarafi = 'doktor' | 'klinik-hekim' | 'klinik-muttefik'
+
+/** Which title the role's assistant carries: the Turkish product's convention for the same role (table above). */
+export type AsistanUnvani = 'prof-dr' | 'dr' | 'meslek'
 
 export type AsistanAdi = {
   taraf: AsistanTarafi
   bransAnahtari: string
-  /** Full name with title, Uzbek Latin script, as the owner wrote it. */
-  tamAd: string
-  /** Given name, used where the assistant is addressed briefly. */
+  unvan: AsistanUnvani
+  /** Only with `unvan: 'meslek'`: the profession's own title, in Uzbek Latin, as the owner wrote it. */
+  meslekUnvani?: string
+  /** Given name, exactly as the owner wrote it. Also what the assistant is called briefly. */
   kisaAd: string
+  /** Family name, exactly as the owner wrote it. */
+  soyad: string
 }
 
 export const UZ_ASISTAN_ADLARI: readonly AsistanAdi[] = [
-  { taraf: 'doktor', bransAnahtari: 'acil-tip', tamAd: 'Dr. Jasur Tursunov', kisaAd: 'Jasur' },
-  { taraf: 'doktor', bransAnahtari: 'aile-hekimligi', tamAd: 'Dr. Nilufar Karimova', kisaAd: 'Nilufar' },
-  { taraf: 'doktor', bransAnahtari: 'anestezi', tamAd: 'Dr. Bekzod Yusupov', kisaAd: 'Bekzod' },
-  { taraf: 'doktor', bransAnahtari: 'beyin-cerrahisi', tamAd: 'Dr. Alisher Ergashev', kisaAd: 'Alisher' },
-  { taraf: 'doktor', bransAnahtari: 'cocuk-cerrahisi', tamAd: 'Dr. Sardor Abdullayev', kisaAd: 'Sardor' },
-  { taraf: 'doktor', bransAnahtari: 'dahiliye', tamAd: 'Dr. Madina Rahimova', kisaAd: 'Madina' },
-  { taraf: 'doktor', bransAnahtari: 'dermatoloji', tamAd: 'Dr. Sevara Ismailova', kisaAd: 'Sevara' },
-  { taraf: 'doktor', bransAnahtari: 'endokrinoloji', tamAd: 'Dr. Dilnoza Nazarova', kisaAd: 'Dilnoza' },
-  { taraf: 'doktor', bransAnahtari: 'enfeksiyon-hastaliklari', tamAd: 'Dr. Otabek Qodirov', kisaAd: 'Otabek' },
-  { taraf: 'doktor', bransAnahtari: 'gastroenteroloji', tamAd: 'Dr. Jamshid Mirzayev', kisaAd: 'Jamshid' },
-  { taraf: 'doktor', bransAnahtari: 'genel-cerrahi', tamAd: 'Dr. Sherzod Saidov', kisaAd: 'Sherzod' },
-  { taraf: 'doktor', bransAnahtari: 'gogus-cerrahisi', tamAd: 'Dr. Farrux Holmatov', kisaAd: 'Farrux' },
-  { taraf: 'doktor', bransAnahtari: 'gogus-hastaliklari', tamAd: 'Dr. Gulnoza Alimova', kisaAd: 'Gulnoza' },
-  { taraf: 'doktor', bransAnahtari: 'goz-hastaliklari', tamAd: 'Dr. Aziza Sodiqova', kisaAd: 'Aziza' },
-  { taraf: 'doktor', bransAnahtari: 'kadin-hastaliklari-dogum', tamAd: 'Dr. Shahnoza Rasulova', kisaAd: 'Shahnoza' },
-  { taraf: 'doktor', bransAnahtari: 'kalp-damar-cerrahisi', tamAd: 'Dr. Temur Karimov', kisaAd: 'Temur' },
-  { taraf: 'doktor', bransAnahtari: 'kardiyoloji', tamAd: 'Dr. Kamola Yusupova', kisaAd: 'Kamola' },
-  { taraf: 'doktor', bransAnahtari: 'kulak-burun-bogaz', tamAd: 'Dr. Nodir Ergashev', kisaAd: 'Nodir' },
-  { taraf: 'doktor', bransAnahtari: 'nefroloji', tamAd: 'Dr. Mohira Abdullayeva', kisaAd: 'Mohira' },
-  { taraf: 'doktor', bransAnahtari: 'noroloji', tamAd: 'Dr. Bobur Rahimov', kisaAd: 'Bobur' },
-  { taraf: 'doktor', bransAnahtari: 'onkoloji', tamAd: 'Dr. Nigora Tursunova', kisaAd: 'Nigora' },
-  { taraf: 'doktor', bransAnahtari: 'ortopedi', tamAd: 'Dr. Ulugbek Ismailov', kisaAd: 'Ulugbek' },
-  { taraf: 'doktor', bransAnahtari: 'pediatri', tamAd: 'Dr. Malika Nazarova', kisaAd: 'Malika' },
-  { taraf: 'doktor', bransAnahtari: 'plastik-cerrahi', tamAd: 'Dr. Barno Mirzayeva', kisaAd: 'Barno' },
-  { taraf: 'doktor', bransAnahtari: 'psikiyatri', tamAd: 'Dr. Zulfiya Saidova', kisaAd: 'Zulfiya' },
-  { taraf: 'doktor', bransAnahtari: 'radyoloji', tamAd: 'Dr. Akmal Qodirov', kisaAd: 'Akmal' },
-  { taraf: 'doktor', bransAnahtari: 'romatoloji', tamAd: 'Dr. Saodat Holmatova', kisaAd: 'Saodat' },
-  { taraf: 'doktor', bransAnahtari: 'uroloji', tamAd: 'Dr. Javohir Alimov', kisaAd: 'Javohir' },
-  { taraf: 'doktor', bransAnahtari: 'spor-hekimligi', tamAd: 'Dr. Sanjar Sodiqov', kisaAd: 'Sanjar' },
-  { taraf: 'doktor', bransAnahtari: 'fizik-tedavi', tamAd: 'Dr. Laziz Rahimov', kisaAd: 'Laziz' },
-  { taraf: 'klinik-hekim', bransAnahtari: 'sac-ekimi', tamAd: 'Dr. Shohruh Karimov', kisaAd: 'Shohruh' },
-  { taraf: 'klinik-hekim', bransAnahtari: 'estetik-cerrahi', tamAd: 'Dr. Lobar Yusupova', kisaAd: 'Lobar' },
-  { taraf: 'klinik-hekim', bransAnahtari: 'medikal-estetik', tamAd: 'Dr. Feruza Rasulova', kisaAd: 'Feruza' },
-  { taraf: 'klinik-hekim', bransAnahtari: 'klinik-dermatoloji', tamAd: 'Dr. Dilbar Ergasheva', kisaAd: 'Dilbar' },
-  { taraf: 'klinik-hekim', bransAnahtari: 'longevity', tamAd: 'Dr. Asal Qodirova', kisaAd: 'Asal' },
-  { taraf: 'klinik-muttefik', bransAnahtari: 'fizyoterapi', tamAd: 'Fizyoterapevt Jasmina Abdullayeva', kisaAd: 'Jasmina' },
-  { taraf: 'klinik-muttefik', bransAnahtari: 'klinik-psikolog', tamAd: 'Psixolog Doniyor Saidov', kisaAd: 'Doniyor' },
-  { taraf: 'klinik-muttefik', bransAnahtari: 'diyetisyen', tamAd: 'Diyetolog Mahliyo Tursunova', kisaAd: 'Mahliyo' },
-  { taraf: 'klinik-muttefik', bransAnahtari: 'ergoterapi', tamAd: 'Ergoterapevt Oybek Holmatov', kisaAd: 'Oybek' },
-  { taraf: 'klinik-muttefik', bransAnahtari: 'odyoloji', tamAd: 'Audiolog Rayhon Alimova', kisaAd: 'Rayhon' },
+  { taraf: 'doktor', bransAnahtari: 'acil-tip', unvan: 'prof-dr', kisaAd: 'Jasur', soyad: 'Tursunov' },
+  { taraf: 'doktor', bransAnahtari: 'aile-hekimligi', unvan: 'prof-dr', kisaAd: 'Nilufar', soyad: 'Karimova' },
+  { taraf: 'doktor', bransAnahtari: 'anestezi', unvan: 'prof-dr', kisaAd: 'Bekzod', soyad: 'Yusupov' },
+  { taraf: 'doktor', bransAnahtari: 'beyin-cerrahisi', unvan: 'prof-dr', kisaAd: 'Alisher', soyad: 'Ergashev' },
+  { taraf: 'doktor', bransAnahtari: 'cocuk-cerrahisi', unvan: 'prof-dr', kisaAd: 'Sardor', soyad: 'Abdullayev' },
+  { taraf: 'doktor', bransAnahtari: 'dahiliye', unvan: 'prof-dr', kisaAd: 'Madina', soyad: 'Rahimova' },
+  { taraf: 'doktor', bransAnahtari: 'dermatoloji', unvan: 'prof-dr', kisaAd: 'Sevara', soyad: 'Ismailova' },
+  { taraf: 'doktor', bransAnahtari: 'endokrinoloji', unvan: 'prof-dr', kisaAd: 'Dilnoza', soyad: 'Nazarova' },
+  { taraf: 'doktor', bransAnahtari: 'enfeksiyon-hastaliklari', unvan: 'prof-dr', kisaAd: 'Otabek', soyad: 'Qodirov' },
+  { taraf: 'doktor', bransAnahtari: 'gastroenteroloji', unvan: 'prof-dr', kisaAd: 'Jamshid', soyad: 'Mirzayev' },
+  { taraf: 'doktor', bransAnahtari: 'genel-cerrahi', unvan: 'prof-dr', kisaAd: 'Sherzod', soyad: 'Saidov' },
+  { taraf: 'doktor', bransAnahtari: 'gogus-cerrahisi', unvan: 'prof-dr', kisaAd: 'Farrux', soyad: 'Holmatov' },
+  { taraf: 'doktor', bransAnahtari: 'gogus-hastaliklari', unvan: 'prof-dr', kisaAd: 'Gulnoza', soyad: 'Alimova' },
+  { taraf: 'doktor', bransAnahtari: 'goz-hastaliklari', unvan: 'prof-dr', kisaAd: 'Aziza', soyad: 'Sodiqova' },
+  { taraf: 'doktor', bransAnahtari: 'kadin-hastaliklari-dogum', unvan: 'prof-dr', kisaAd: 'Shahnoza', soyad: 'Rasulova' },
+  { taraf: 'doktor', bransAnahtari: 'kalp-damar-cerrahisi', unvan: 'prof-dr', kisaAd: 'Temur', soyad: 'Karimov' },
+  { taraf: 'doktor', bransAnahtari: 'kardiyoloji', unvan: 'prof-dr', kisaAd: 'Kamola', soyad: 'Yusupova' },
+  { taraf: 'doktor', bransAnahtari: 'kulak-burun-bogaz', unvan: 'prof-dr', kisaAd: 'Nodir', soyad: 'Ergashev' },
+  { taraf: 'doktor', bransAnahtari: 'nefroloji', unvan: 'prof-dr', kisaAd: 'Mohira', soyad: 'Abdullayeva' },
+  { taraf: 'doktor', bransAnahtari: 'noroloji', unvan: 'prof-dr', kisaAd: 'Bobur', soyad: 'Rahimov' },
+  { taraf: 'doktor', bransAnahtari: 'onkoloji', unvan: 'prof-dr', kisaAd: 'Nigora', soyad: 'Tursunova' },
+  { taraf: 'doktor', bransAnahtari: 'ortopedi', unvan: 'prof-dr', kisaAd: 'Ulugbek', soyad: 'Ismailov' },
+  { taraf: 'doktor', bransAnahtari: 'pediatri', unvan: 'prof-dr', kisaAd: 'Malika', soyad: 'Nazarova' },
+  { taraf: 'doktor', bransAnahtari: 'plastik-cerrahi', unvan: 'prof-dr', kisaAd: 'Barno', soyad: 'Mirzayeva' },
+  { taraf: 'doktor', bransAnahtari: 'psikiyatri', unvan: 'prof-dr', kisaAd: 'Zulfiya', soyad: 'Saidova' },
+  { taraf: 'doktor', bransAnahtari: 'radyoloji', unvan: 'prof-dr', kisaAd: 'Akmal', soyad: 'Qodirov' },
+  { taraf: 'doktor', bransAnahtari: 'romatoloji', unvan: 'prof-dr', kisaAd: 'Saodat', soyad: 'Holmatova' },
+  { taraf: 'doktor', bransAnahtari: 'uroloji', unvan: 'prof-dr', kisaAd: 'Javohir', soyad: 'Alimov' },
+  { taraf: 'doktor', bransAnahtari: 'spor-hekimligi', unvan: 'prof-dr', kisaAd: 'Sanjar', soyad: 'Sodiqov' },
+  { taraf: 'doktor', bransAnahtari: 'fizik-tedavi', unvan: 'prof-dr', kisaAd: 'Laziz', soyad: 'Rahimov' },
+  { taraf: 'klinik-hekim', bransAnahtari: 'sac-ekimi', unvan: 'dr', kisaAd: 'Shohruh', soyad: 'Karimov' },
+  { taraf: 'klinik-hekim', bransAnahtari: 'estetik-cerrahi', unvan: 'prof-dr', kisaAd: 'Lobar', soyad: 'Yusupova' },
+  { taraf: 'klinik-hekim', bransAnahtari: 'medikal-estetik', unvan: 'dr', kisaAd: 'Feruza', soyad: 'Rasulova' },
+  { taraf: 'klinik-hekim', bransAnahtari: 'klinik-dermatoloji', unvan: 'dr', kisaAd: 'Dilbar', soyad: 'Ergasheva' },
+  { taraf: 'klinik-hekim', bransAnahtari: 'longevity', unvan: 'dr', kisaAd: 'Asal', soyad: 'Qodirova' },
+  { taraf: 'klinik-muttefik', bransAnahtari: 'fizyoterapi', unvan: 'meslek', meslekUnvani: 'Fizioterapevt', kisaAd: 'Jasmina', soyad: 'Abdullayeva' },
+  { taraf: 'klinik-muttefik', bransAnahtari: 'klinik-psikolog', unvan: 'dr', kisaAd: 'Doniyor', soyad: 'Saidov' },
+  { taraf: 'klinik-muttefik', bransAnahtari: 'diyetisyen', unvan: 'meslek', meslekUnvani: 'Diyetolog', kisaAd: 'Mahliyo', soyad: 'Tursunova' },
+  { taraf: 'klinik-muttefik', bransAnahtari: 'ergoterapi', unvan: 'meslek', meslekUnvani: 'Ergoterapevt', kisaAd: 'Oybek', soyad: 'Holmatov' },
+  { taraf: 'klinik-muttefik', bransAnahtari: 'odyoloji', unvan: 'meslek', meslekUnvani: 'Audiolog', kisaAd: 'Rayhon', soyad: 'Alimova' },
 ]
 
 const ANAHTARA_GORE: ReadonlyMap<string, AsistanAdi> = new Map(UZ_ASISTAN_ADLARI.map((a) => [a.bransAnahtari, a]))

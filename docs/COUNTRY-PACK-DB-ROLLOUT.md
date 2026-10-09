@@ -1,5 +1,7 @@
 # Country packs: database rollout on the shared database
 
+> **Open item, 2026-10-09: this plan may be reversed.** Kaan, 2026-10-09 01:43: "Make sure the database tables are seperate. Do not put or mix the database tables in the same database". Read as: a database of its own for Uzbekistan, and no script on the Turkish database. Awaiting his confirmation; until then nothing below is to be run anywhere. See `docs/OPEN-COMMITMENTS.md`, NOTYA-UZ-FIYAT-UNVAN-01a.
+
 Written 2026-10-08 for Kaan (NOTYA-ULKE-SABLON-01). Plain English; the SQL is in the files it names.
 
 Kaan, 2026-10-08 19:09: *"use the same database as what we are using for notya turkiye"*. Every country (Uzbekistan first; the US, UK, Canada, Australia and New Zealand next) lives in the **same Supabase database as Türkiye**, not in a database of its own.
