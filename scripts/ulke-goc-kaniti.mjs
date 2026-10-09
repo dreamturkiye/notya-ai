@@ -604,7 +604,9 @@ ok('132: the private bucket exists once', (await c.query(`select count(*)::int n
   }
   {
     const a = await baglan(), b = await baglan()
-    const [x, y] = await Promise.all([iste('uz', D1, F2, { token: T('e') }, a), iste('uz', D1, F2, { token: T('f') }, b)])
+    // (Two tokens nobody holds yet. The second was T('f') — sixty-four f's, the very token section P gave a link — so
+    // the check passed only while the first request won the race, and stopped the proof whenever the second did.)
+    const [x, y] = await Promise.all([iste('uz', D1, F2, { token: T('e') }, a), iste('uz', D1, F2, { token: T('9') }, b)])
     ok('F. two requests for the same patient at the same moment: ONE form, ONE link', x.form_id === y.form_id && [x.yeni_form, y.yeni_form].filter(Boolean).length === 1 && [x.erisim, y.erisim].sort().join() === 'VAR,YENI' && (await say('ulke_hasta_formlari', 'patient_id = $1', [F2])) === 1 && (await say('ulke_portal_erisimleri', 'patient_id = $1', [F2])) === 1, JSON.stringify([x, y]))
     await a.end(); await b.end()
   }

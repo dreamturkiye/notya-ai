@@ -158,6 +158,8 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] I5 Breach procedure with local deadlines.
 - [ ] I6 Where data lives and which outside providers receive it.
 - [ ] I7 Features gated by law.
+- [ ] I8 Messages between a doctor and a patient inside the product: whether the country's law permits them, what the patient must be told, who may be written to (minors, guardians), how long they are kept. Read by a lawyer before a patient is written to.
+- [ ] I9 Sharing a patient's data with a colleague for a consultation: the consent sentence the asking doctor ticks, whether a consent recorded by the doctor is enough, and how long the colleague may read the copy. Read by a lawyer; the two periods confirmed by the owner.
 
 ## J. Product settings
 

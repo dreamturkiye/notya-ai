@@ -185,3 +185,39 @@ describe('Uzbekistan — consultation between doctors: text in three forms, the 
     assert.match(KM.UZ_KONSULTASYON_METINLERI['uz-Latn'].iste.riza, /rozi boʻlganini tasdiqlayman/)
   })
 })
+
+describe('Uzbekistan — THE RECORD: what a patient reads in the messages, and what a lawyer must read, exactly as it stands in the code', () => {
+  let MM: typeof import('./mesajMetinleri')
+  let KM: typeof import('./konsultasyonMetinleri')
+  let P: typeof import('../index')
+  let KL: typeof import('../klinik')
+  before(async () => { MM = await import('./mesajMetinleri'); KM = await import('./konsultasyonMetinleri'); P = await import('../index'); KL = await import('../klinik') })
+  const kayit = () => readFileSync(join(KOK, 'docs/COUNTRY-PACK-UZBEKISTAN.md'), 'utf8')
+
+  it('FOR THE NATIVE READER: the country\'s record lists every patient-facing sentence of the messages, in three forms', () => {
+    const belge = kayit()
+    assert.match(belge, /^## Messages, "my templates" and consultation \(2026-10-09, NOTYA-ULKE-MESAJ-01\)$/m)
+    assert.match(belge, /^### Patient-facing sentences of the messages, for the native reader$/m)
+    let n = 0
+    for (const [k] of yaprak(MM.UZ_MESAJ_METINLERI['uz-Latn'].hasta)) {
+      for (const f of FORMLAR) {
+        const v = (MM.UZ_MESAJ_METINLERI[f].hasta as unknown as Record<string, string>)[k]
+        assert.ok(belge.includes(`| ${v.replace(/\|/g, '\\|')} |`), `docs/COUNTRY-PACK-UZBEKISTAN.md does not list ${f} hasta.${k}: "${v}" — the list in the record must be the text in countries/uz/uygulama/mesajMetinleri.ts`)
+        n++
+      }
+    }
+    assert.equal(n, 21 * 3, 'every patient-facing sentence of the messages, in three forms')
+  })
+
+  it('FOR THE LAWYER: the record carries the consent sentence of a consultation in three forms, its stamp, both periods, and says that all of it is unverified', () => {
+    const belge = kayit()
+    assert.match(belge, /^### The consent sentence of a consultation, for the lawyer$/m)
+    for (const f of FORMLAR) for (const k of ['rizaBaslik', 'riza', 'rizaGerekli'] as const) assert.ok(belge.includes(KM.UZ_KONSULTASYON_METINLERI[f].iste[k]), `the record does not carry ${f} iste.${k} as it stands in the code`)
+    assert.ok(belge.includes(`\`${KL.UZ_KLINIK.konsultasyonRizasi!.surum}\`, \`hukukcuInceledi: false\``), 'the stamp of the consent sentence, and that no lawyer has read it')
+    const k = P.UZ_PAKETI.uygulama!.konsultasyon!
+    assert.match(belge, new RegExp(`\\| A consultation stays open \\(\`uygulama\\.konsultasyon\\.acikGun\`\\) \\| ${k.acikGun} days \\| \\*\\*A starting value, not a local rule\\.\\*\\*`))
+    assert.match(belge, new RegExp(`\\| The colleague may read it after the closing \\(\`kapanisSonrasiGun\`\\) \\| ${k.kapanisSonrasiGun} days \\| \\*\\*A starting value, not a local rule\\.\\*\\*`))
+    assert.match(belge, /\| Outbound notification to a patient \(`uygulama\.mesaj\.disBildirim`\) \| \*\*off, no provider\*\* \| A slot\. Waits on Kaan/)
+    assert.match(belge, /migrations 140, 141 and 142 are not applied to any database/)
+  })
+})
