@@ -29,6 +29,7 @@ export const ISTEGE_BAGLI: Record<string, Record<string, string>> = {
     'sayfa.saatDilimi': 'REQUIRED if the country has more than one time zone: on the patient\'s page, "Times are in % time." (% = the doctor\'s zone)',
   },
   form: {},
+  araclar: {},
   acilis: {},
 }
 const SABIT_ANAHTARLAR = new Set(['id', 'rol'])
@@ -40,7 +41,8 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
   if (typeof deger === 'string') {
     if (bolum === 'acilis' && son === 'capa') { const k = Object.keys(capalar).find((x) => capalar[x] === deger); if (!k) throw new Error(`${yol}: "${deger}" is not an anchor of the pack`); return { $capa: k } }
     // A badge number ("01") or a clock time ("09:14") reads the same in every language; anything else is the country's text.
-    if (SABIT_ANAHTARLAR.has(son) || /^\d{1,2}(:\d{2})?$/.test(deger)) return { $sabit: deger }
+    // (In the tools area `rol` is a sentence — the heading of the role's own tools — not an enum of the layout.)
+    if ((bolum !== 'araclar' && SABIT_ANAHTARLAR.has(son)) || /^\d{1,2}(:\d{2})?$/.test(deger)) return { $sabit: deger }
     // A placeholder is '%' or '%1'. A percent sign straight after a number ("40%") is a percentage, not a placeholder.
     const yerler = [...new Set(deger.match(/(?<!\d)%\d?/g) ?? [])].sort()
     return yerler.length ? `$m:${yerler.join(',')}` : '$m'
@@ -53,7 +55,7 @@ export function sekilCikar(deger: unknown, bolum: string, capalar: Record<string
 
 /** The shape this pack's content has. Optional keys the pack does not use are added from ISTEGE_BAGLI, so the file never depends on which pack wrote it. */
 export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string, unknown> {
-  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form and a landing page; the shape is read from a pack that brings all four`)
+  if (!a || !p.uygulama || !a.acilis || !a.portalMetinleri || !a.formMetinleri || !a.araclar) throw new Error(`"${p.kod}" does not bring the application, the patient portal, the intake form, the tools area and a landing page; the shape is read from a pack that brings all five`)
   const d = p.varsayilanDil
   const ekle = (agac: Record<string, unknown>, bolum: string) => {
     for (const [yol, kosul] of Object.entries(ISTEGE_BAGLI[bolum])) {
@@ -72,6 +74,9 @@ export function paketSekli(p: UlkePaketi, a: UlkeArayuzu | null): Record<string,
     randevu: sirala(ekle(sekilCikar(a.randevuMetinleri[d], 'randevu') as Record<string, unknown>, 'randevu')),
     portal: sirala(ekle(sekilCikar(a.portalMetinleri[d], 'portal') as Record<string, unknown>, 'portal')),
     form: sirala(ekle(sekilCikar(a.formMetinleri[d], 'form') as Record<string, unknown>, 'form')),
+    // The tools area's OWN words (grid, a tool's screen, keeping a result, the follow-up list). The tools themselves are not
+    // part of the shape: which of the kit's tools a country switches on, and for which roles, is that country's decision.
+    araclar: sirala(ekle(sekilCikar(a.araclar.metinler[d], 'araclar') as Record<string, unknown>, 'araclar')),
     acilis: sirala(sekilCikar(a.acilis.icerik[d], 'acilis', a.acilis.capalar)),
   }
 }

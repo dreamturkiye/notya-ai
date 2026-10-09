@@ -59,7 +59,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr)
     // the command says, as a step of its own, that the country needs a database of its own and which file makes it
     assert.match(r.stdout, /THE COUNTRY'S OWN DATABASE[\s\S]*the owner creates a new, EMPTY database[\s\S]*000_yeni_ulke_veritabani\.sql on it, once/)
-    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'uygulama/portalMetinleri.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
+    for (const f of ['index.ts', 'derleme.mjs', 'sizintiTerimleri.ts', 'metinler.ts', 'arayuz.ts', 'ayarlar.ts', 'uygulama/metinler.ts', 'uygulama/randevuMetinleri.ts', 'uygulama/portalMetinleri.ts', 'uygulama/araclar.ts', 'acilis/icerik.ts', 'klinik/index.ts', 'klinik/roller.ts', 'klinik/asistanlar.ts', 'klinik/notSablonlari.ts', 'klinik/talimatlar.ts']) assert.ok(existsSync(join(gecici, 'countries', K, f)), `countries/${K}/${f} was not written`)
     // registration: the code list, the language, one branch per door, the side-by-side list
     assert.match(oku('lib/ulke/tipler.ts'), new RegExp(`export const ULKE_KODLARI = \\[[^\\]]*'${K}'\\] as const`))
     assert.match(oku('lib/ulke/tipler.ts'), /export type DilKodu = [^\n]*\| 'en'/)
@@ -90,7 +90,19 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.match(oku(`countries/${K}/uygulama/portalMetinleri.ts`), /^    \/\/ saatDilimi: '…',   ← REQUIRED if the country has more than one time zone/m)
     const yeniIndex = oku(`countries/${K}/index.ts`)
     assert.match(yeniIndex, /^\s+hastaPortali: true,$/m)
-    assert.match(yeniIndex, /'\/calendar', '\/portal'\]/)
+    assert.match(yeniIndex, /'\/calendar', '\/portal', '\/tools'\]/)
+    // NOTYA-ULKE-ARACLAR-01: the tools area is part of what a new country is given — its own words (every group), the
+    // patient page's tile as the one base tool, and NO other tool: which of the kit's tools a country has, and for
+    // which roles, is decided there with a clinician. No tool text of any country is copied.
+    assert.match(yeniIndex, /^\s+araclar: true,$/m)
+    const aracSekli = (JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as { araclar: Record<string, unknown> }).araclar
+    assert.deepEqual(Object.keys(aracSekli).sort(), ['arac', 'izgara', 'kabuk', 'kayit', 'portal', 'takip'])
+    const yeniAraclar = oku(`countries/${K}/uygulama/araclar.ts`)
+    for (const grup of Object.keys(aracSekli)) assert.match(yeniAraclar, new RegExp(`^  ${grup}: `, 'm'))
+    assert.deepEqual([...yeniAraclar.matchAll(/anahtar: '([a-z0-9-]+)'/g)].map((m) => m[1]), ['hasta-portali'], 'a new country starts with the patient page\'s tile and no other tool')
+    assert.match(yeniAraclar, /anahtar: 'hasta-portali', roller: null,/)
+    assert.match(yeniAraclar, /^  yuvalar: \[\],\n  inceleme: eksikAyar\('tools: who wrote the tool texts and who read them/m)
+    assert.match(oku(`countries/${K}/arayuz.ts`), new RegExp(`^  araclar: ${B}_ARACLAR,$`, 'm'))
     assert.match(yeniIndex, /portal: \{\n\s+baglantiGecerlilikGun: eksikAyar\('patient portal: days a patient\\'s link stays valid/)
     // The ambulance number is local content with NO default: the scaffold writes no number, only the decision to make.
     assert.match(yeniIndex, /^\s+acilNumara: eksikAyar\('patient portal: the number a patient dials for an ambulance[^\n]*confirmed by a local source; or null/m)

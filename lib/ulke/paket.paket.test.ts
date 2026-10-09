@@ -172,7 +172,7 @@ describe('every pack is complete', () => {
     if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !arayuz.portalMetinleri || !arayuz.formMetinleri || !paket.uygulama) return
     const dosya = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'))
     const simdi = paketSekli(paket, arayuz)
-    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'form', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
+    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'form', 'araclar', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
     // the file holds key paths only: no sentence of this pack, no letter outside ASCII
     assert.doesNotMatch(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'), /[^\x00-\x7F]/)
   })

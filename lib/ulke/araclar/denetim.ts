@@ -58,7 +58,8 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
   if (eksikAyarMi(a)) { ekle('arayuz.araclar', `${TESLIM}: ${a.__eksikAyar}`); return s }
 
   // who wrote the texts, and who read them
-  if (!a.inceleme || typeof a.inceleme.makineYazimi !== 'boolean' || !(a.inceleme.klinisyen === null || dolu(a.inceleme.klinisyen))) ekle('arayuz.araclar.inceleme', 'must say who wrote the tool texts ({ makineYazimi: true | false, klinisyen: null | "name" })')
+  if (eksikAyarMi(a.inceleme)) ekle('arayuz.araclar.inceleme', `${TESLIM}: ${(a.inceleme as unknown as { __eksikAyar: string }).__eksikAyar}`)
+  else if (!a.inceleme || typeof a.inceleme.makineYazimi !== 'boolean' || !(a.inceleme.klinisyen === null || dolu(a.inceleme.klinisyen))) ekle('arayuz.araclar.inceleme', 'must say who wrote the tool texts ({ makineYazimi: true | false, klinisyen: null | "name" })')
 
   const metinVar = (yer: string, m: BicimliMetin | undefined) => {
     for (const d of diller) {
