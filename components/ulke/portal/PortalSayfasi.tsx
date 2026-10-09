@@ -48,6 +48,12 @@ const gunYaz = (gun: string): string => gunYazDesenle(gun, tarihDeseni())
 /** A day with its weekday where the country has appointments (the weekday names are the appointment catalogue's). */
 export const portalGunu = (r: RandevuMetni | null, gun: string, uzun = true): string => (r ? `${gunAdi(r, haftaGunu(gun), uzun)}${uzun ? ',' : ''} ${uzun ? gunYaz(gun) : gunYaz(gun).slice(0, 5)}` : gunYaz(gun))
 
+/** The ambulance number the pack states, or null: the kit has none of its own and never falls back to one. */
+export function portalAcilNumarasi(): string | null {
+  const n = ulkePaketi().uygulama?.portal?.acilNumara
+  return typeof n === 'string' && n.trim() ? n.trim() : null
+}
+
 /** The frame: the word mark and nothing to navigate to. */
 export function PortalCercevesi({ dil, children }: { dil: DilKodu; children: ReactNode }) {
   return (
@@ -113,8 +119,10 @@ export type IstekFormu = { gunler: string[]; neden: string }
 export type IstekHatasi = 'gun' | 'cok' | 'gonderilemedi' | 'baglanti' | null
 
 /** The patient's own page. `r` = the appointment catalogue in the same form, or null where the country has no appointments. */
-export function PortalSayfaGorunumu({ p, r, icerik, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis }: {
+export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis }: {
   p: PortalMetni; r: RandevuMetni | null; icerik: PortalIcerigi
+  /** The pack's ambulance number, or null where the pack states none: then no number is shown, and no sentence that would need one. */
+  acilNumara: string | null
   form: IstekFormu; setForm: (y: IstekFormu) => void; istekGonder: (e: FormEvent) => void; istekBekliyor: boolean; istekHatasi: IstekHatasi
   cikis: () => void
 }) {
@@ -207,7 +215,7 @@ export function PortalSayfaGorunumu({ p, r, icerik, form, setForm, istekGonder, 
         </section>
       ) : null}
 
-      <p className="uza-ipucu" data-alan="portal-acil" style={{ textAlign: 'center' }}>{s.acil}</p>
+      <p className="uza-ipucu" data-alan="portal-acil" data-acil-numara={acilNumara ?? undefined} style={{ textAlign: 'center' }}>{s.acil}{acilNumara ? ` ${yerine(s.acilNumara, acilNumara)}` : ''}</p>
     </>
   )
 }
@@ -330,7 +338,7 @@ export default function PortalSayfasi() {
   return (
     <PortalCercevesi dil={dil}>
       {asama === 'sayfa' && icerik ? (
-        <PortalSayfaGorunumu p={p} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
+        <PortalSayfaGorunumu p={p} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()} form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
       ) : asama === 'pin' ? (
         <PortalGirisGorunumu p={p} pin={pin} setPin={(y) => { setPin(y); setHata(null) }} gonder={giris} bekliyor={bekliyor} hata={hata} oturumBitti={oturumBitti} />
       ) : (

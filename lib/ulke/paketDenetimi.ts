@@ -52,7 +52,7 @@ function metinleriGez(deger: unknown, yer: string, sorunlar: PaketSorunu[], bosO
 const PORTAL_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
   ['erisim.durumAcik', ['%']], ['erisim.sonGiris', ['%']], ['ozet.dil', ['%']], ['ozet.paylasildi', ['%']], ['istek.istekTarihi', ['%']],
   ['giris.pinBicimi', ['%']], ['giris.pinYanlis', ['%']],
-  ['sayfa.selam', ['%']], ['sayfa.saatDilimi', ['%']], ['sayfa.muayene', ['%']], ['sayfa.istekAciklama', ['%']], ['sayfa.istekCokGun', ['%']], ['sayfa.istekGunler', ['%']], ['sayfa.istekKabul', ['%1', '%2']],
+  ['sayfa.selam', ['%']], ['sayfa.saatDilimi', ['%']], ['sayfa.muayene', ['%']], ['sayfa.istekAciklama', ['%']], ['sayfa.istekCokGun', ['%']], ['sayfa.istekGunler', ['%']], ['sayfa.istekKabul', ['%1', '%2']], ['sayfa.acilNumara', ['%']],
 ]
 
 function saatDilimiGecerli(z: unknown): boolean {
@@ -200,6 +200,10 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
     else if (eksikAyarMi(gun)) ekle('uygulama.portal.baglantiGecerlilikGun', `${TESLIM}: ${gun.__eksikAyar}`)
     else if (!(Number.isInteger(gun) && (gun as number) >= 1 && (gun as number) <= 365)) ekle('uygulama.portal.baglantiGecerlilikGun', 'must be a whole number of days between 1 and 365')
     if (paket.rotalar !== 'hepsi' && !paket.rotalar.sayfalar.includes('/portal')) ekle('rotalar.sayfalar', 'the patient portal is on and "/portal" is not listed: every link a doctor gives would open "not found"')
+    // The ambulance number is local content with no default: a number as it is dialled, or null / absent (the page then names none).
+    const acil = u.portal && !eksikAyarMi(u.portal) ? u.portal.acilNumara : undefined
+    if (eksikAyarMi(acil)) ekle('uygulama.portal.acilNumara', `${TESLIM}: ${acil.__eksikAyar}`)
+    else if (acil !== undefined && acil !== null && !(typeof acil === 'string' && /^[0-9+][0-9 ()+-]{1,19}$/.test(acil))) ekle('uygulama.portal.acilNumara', 'must be null (the patient\'s page names no number) or the number as it is dialled: digits, with spaces, brackets, "+" or "-" at most')
   }
   // routes
   if (paket.rotalar !== 'hepsi') {
@@ -239,6 +243,9 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       else {
         metinleriGez(pm, `arayuz.portalMetinleri[${d}]`, s)
         if (dilimler.length > 1 && !dolu(pm.sayfa?.saatDilimi)) ekle(`arayuz.portalMetinleri[${d}].sayfa.saatDilimi`, 'the country has several time zones and the patient\'s page cannot say which one its times are in')
+        // THE NUMBER IS THE PACK'S SETTING, NEVER TEXT: a number written into the sentence would be shown even where the
+        // setting is null, and would not be the value a local source confirmed.
+        for (const k of ['acil', 'acilNumara'] as const) { const t = pm.sayfa?.[k]; if (typeof t === 'string' && !eksikMetinMi(t) && /\d/.test(t)) ekle(`arayuz.portalMetinleri[${d}].sayfa.${k}`, 'carries a digit: the ambulance number belongs in uygulama.portal.acilNumara, and the sentence holds "%" where it is written') }
         // A sentence that lost its placeholder would silently drop a name, a date or the tries that are left.
         for (const [yol, yerler] of PORTAL_YER_TUTUCULARI) {
           const metin = yol.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), pm)

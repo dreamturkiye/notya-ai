@@ -7,7 +7,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 ## The short version
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **665 for a one-language country (633 texts, 32 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **769 for a one-language country (735 texts, 34 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
@@ -40,7 +40,7 @@ node scripts/ulke-yeni.mjs gb --dil en --yol /uk
 
 It writes:
 
-- `countries/<code>/`, 14 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
+- `countries/<code>/`, 15 files, complete in shape, with every text as `eksik('hint')` and every undecided setting as `eksikAyar('hint')`;
 - the registration: `lib/ulke/tipler.ts` (the code list, and the language if it is new), the three doors `countries/active/{index,klinik,arayuz}.ts`, and `countries/tumu.ts`;
 - `docs/COUNTRY-PACK-<CODE>.md`: the checklist's 119 gates, all unticked, the six about the country's own database among them (section M).
 
@@ -54,22 +54,23 @@ Counts are for one language form. A second language or script repeats every text
 
 | # | What | File | Items | Who |
 |---|---|---|---|---|
-| 1 | **Settings**: currency, default time zone and every zone of the country, locale, date pattern, separators, first day of the week, 12 or 24 hour clock, units, phone prefix and rule, identity number or none, second name field or not, patient languages, appointment norms, guardian age | `index.ts`, `ayarlar.ts`, `derleme.mjs` | 18 settings, 11 short texts | product, with the local lead; guardian age and identity rule with a lawyer |
+| 1 | **Settings**: currency, default time zone and every zone of the country, locale, date pattern, separators, first day of the week, 12 or 24 hour clock, units, phone prefix and rule, identity number or none, second name field or not, patient languages, appointment norms, guardian age; for the patient portal: **how many days a patient's link stays valid** and **the ambulance number, or none** | `index.ts`, `ayarlar.ts`, `derleme.mjs` | 20 settings, 11 short texts | product, with the local lead; guardian age and identity rule with a lawyer |
 | 2 | **Roles**: which exist, of which kind, and their official local names | `klinik/roller.ts` | 1 list (Uzbekistan: 40 roles) | local clinical lead |
 | 3 | **Note templates**: each role's own fields, the guardian field, section headings | `klinik/notSablonlari.ts` | 5 lists (Uzbekistan: about 170 fields) | a reviewer per specialty |
 | 4 | **Assistant names**: one per role | `klinik/asistanlar.ts` | 1 function (Uzbekistan: 40 names) | the owner |
 | 5 | **Speech**: model, language codes, three thresholds, daily limit, consent version | `klinik/index.ts` | 6 settings, 2 texts | engineering; thresholds from real clinic audio |
-| 6 | **Instructions to the model** for a visit note, written fresh in the note's language | `klinik/talimatlar.ts` | 14 texts (one of them several paragraphs) | a clinician who practises in that language |
+| 6 | **Instructions to the model** for a visit note, written fresh in the note's language; and for the **summary for the patient** (what the model writes with it reaches a patient once the doctor shares it) | `klinik/talimatlar.ts` | 16 texts (two of them several paragraphs) | a clinician who practises in that language |
 | 7 | **Core surfaces**: login, sign-up, holding page, error pages | `metinler.ts` | 48 texts | native writer |
 | 8 | **Application**: first login, settings, home, patients, visit, note | `uygulama/metinler.ts` | 144 texts | native writer; the consent sentence with a lawyer |
 | 9 | **Appointments**: working pattern, calendar, booking, reminder | `uygulama/randevuMetinleri.ts` | 113 texts | native writer |
+| 9b | **Patient portal**: the doctor's controls (access, summary, requests) and what the **patient** reads (the PIN page, their own page) | `uygulama/portalMetinleri.ts` | 100 texts, 38 of them patient-facing | native writer; the patient-facing ones first |
 | 10 | **Landing page**: copy, 12 section anchors, language names, fonts, word mark; and the **price list** of its price section (what each plan costs a month, or "on request": data, never a number in the copy) | `acilis/icerik.ts` | 298 texts, 1 setting | marketing, native review; prices: the owner |
 | 11 | **Leak list**: what marks content as this country's | `sizintiTerimleri.ts` | 2 entries to start, growing | engineering |
 | 12 | Brand word mark | `arayuz.ts` | 1 text | the owner |
 
 Rows 2 to 4 count as one item each for the build and are the largest pieces of real work: a list of roles is one marker and forty decisions.
 
-Some keys are required only under a condition and are written as comments in the template: the time-zone label (if the country has several zones), the second-name label, the identity-number label. The pack check asks for each exactly when the setting that needs it is on.
+Some keys are required only under a condition and are written as comments in the template: the time-zone label and the portal's "times are in … time" sentence (if the country has several zones), the second-name label, the identity-number label. The pack check asks for each exactly when the setting that needs it is on.
 
 **Hints are key paths, not reference wording.** Today a hint reads `application: kabuk.bugun`. The meaning of each key is in the type files (`lib/ulke/arayuz/metinTipleri.ts`, `acilisTipleri.ts`) and in the Uzbek pack. An English reference wording per key does not exist yet (see "English-speaking countries").
 
@@ -77,7 +78,24 @@ Some keys are required only under a condition and are written as comments in the
 
 Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the baseline of a country database and its migrations; the tests.
 
-Off for every new country until built and reviewed for it: tools, the assistant in text and voice, the patient portal, intake forms, consultation and messaging, clinic accounts, the voice profile, image evaluation.
+Off for every new country until built and reviewed for it: tools, the assistant in text and voice, intake forms, consultation and messaging, clinic accounts, the voice profile, image evaluation. The patient portal is part of the kit since 2026-10-09 (next section).
+
+## The patient portal
+
+Part of the kit since NOTYA-ULKE-PORTAL-01 (2026-10-09), and switched on in a new country's pack by the scaffold (`hastaPortali`). The doctor gives a patient a link and a PIN; the patient sees their own name, their doctor, their coming appointments and what the doctor chose to share, and may ask for an appointment. What it does, step by step, is in `docs/COUNTRY-PACK-UZBEKISTAN.md` ("The patient portal").
+
+What is the **kit's**, the same in every country: the screens; the security limits (a 6-digit PIN, 5 wrong tries lock the link, 2 seconds between tries, a 30-minute session, `lib/ulke/portal/sabitler.ts`); the rules (the token alone shows nothing; nothing is shared by itself; an unapproved note is never shared; a request books nothing; isolation by country, doctor and patient; never indexed or cached); the tables (in the baseline).
+
+What a **country** supplies:
+
+| What | Where | Note |
+|---|---|---|
+| The catalogue, once per language form | `uygulama/portalMetinleri.ts` | 100 texts. 38 are read by patients, alone, on their own phone: a native reader reads those first. |
+| The instruction for the summary for the patient | `klinik/talimatlar.ts` | Written fresh, read by a clinician. One per language form a patient may read. |
+| **How long a link stays valid** | `index.ts`, `uygulama.portal.baglantiGecerlilikGun` | A whole number of days, 1 to 365. No default: **the owner confirms it**; how long a patient's access may stand is a question for a lawyer. |
+| **The ambulance number** | `index.ts`, `uygulama.portal.acilNumara` | **Local content with no default.** A string, confirmed by a local source before any patient sees the portal; or `null`, and the patient's page says only that it is not for emergencies and names no number. The number is never written into a sentence: a catalogue sentence with a digit in it fails the pack check. |
+
+**Not in the portal, and not half-built:** intake forms, messaging, documents and uploads, payments, automatic reminders.
 
 ## The country's own database
 
@@ -155,7 +173,7 @@ The pack check lists whatever is left. Uzbekistan does all of this.
 
 **Each country still needs its own pack.** Law, consent wording, units, time zones, date and clock format, identity rules, phone rules, role names, assistant names and prices differ between them, and the walls and the leak scan work per country; each also has a database of its own.
 
-**What should be written once is the English text.** Of a pack's 633 texts, about 601 are language rather than country: the core surfaces, the application, appointments, the instructions to the model and most of the landing copy. The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
+**What should be written once is the English text.** Of a pack's 735 texts, about 703 are language rather than country: the core surfaces, the application, appointments, the patient portal, the instructions to the model and most of the landing copy. The intended arrangement is one shared English catalogue that each country's pack takes and overrides where it differs (spelling, the consent sentence, legal wording, prices).
 
 **That shared catalogue does not exist yet.** Today the scaffold gives each country its own full set of items to supply. Building the shared catalogue is its own job: the English text, a place for it in the kit, and a scaffold that points an English-speaking pack at it. It is recorded in `docs/OPEN-COMMITMENTS.md`.
 
@@ -178,7 +196,7 @@ A throwaway English-language country, `zz`, was created in a temporary copy of t
 | Pack-neutral walk-through | 120 of 120 |
 | Found by the proof and fixed in the kit | the settings page of a one-language country had no heading |
 
-Counts in this table are those of that run. Since NOTYA-UZ-FIYAT-UNVAN-01 (2026-10-09) the landing page has a price section with a price list: 36 more texts and one more setting, so the scaffold now answers 665 items (633 texts, 32 settings).
+Counts in this table are those of that run. Since NOTYA-UZ-FIYAT-UNVAN-01 (2026-10-09) the landing page has a price section with a price list: 36 more texts and one more setting, so the scaffold then answered 665 items (633 texts, 32 settings). Since NOTYA-ULKE-PORTAL-01 (2026-10-09) it writes the patient portal too: 15 files, 119 gates, **769 items (735 texts, 34 settings)**: 100 portal texts, 2 texts for the summary's instruction, and 2 settings (link validity, ambulance number). **For the portal the proof was repeated only in part:** a throwaway `zz` was scaffolded in a temporary copy and type-checked clean; it was not filled, built and walked again (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-PORTAL-01h). The portal's rules and screens run in the test suite for every pack, and both walk-throughs walk it for Uzbekistan.
 
 From scaffold to a passing walk-through took about 16 minutes of machine time, two production builds included. That measures the mechanism only: supplying real, reviewed content is the work, and it is counted in the table of items above.
 
@@ -188,5 +206,6 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 - **Instructions to the model** are assembled inside each pack (`klinik/talimatlar.ts`); the kit has no shared builder. The template's own small builder covers one language.
 - **Scaffold hints** are key paths, not reference wording.
 - **Prices** are a list the pack states (plan → amount a month, or on request) and the landing layout writes with the pack's number rules. Nothing else in the kit shows money yet.
-- **Six product pieces** are not in the kit and exist for no country but Türkiye: patient portal, intake forms, tools, consultation and messaging, the assistant in text and voice, clinic accounts.
+- **Five product pieces** are not in the kit and exist for no country but Türkiye: intake forms, tools, consultation and messaging, the assistant in text and voice, clinic accounts. (The patient portal is in the kit since 2026-10-09, without intake forms, messaging, documents, payments or automatic reminders.)
+- **The portal's link validity and ambulance number** are settings a pack must state and that nothing can verify by machine: the first is the owner's, the second needs a local source.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.

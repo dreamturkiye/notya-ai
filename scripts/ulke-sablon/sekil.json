@@ -503,6 +503,7 @@
    "istekKabul": "$m:%1,%2",
    "istekRed": "$m",
    "acil": "$m",
+   "acilNumara": "$m:%",
    "yalniz": "$m",
    "saatDilimi": {
     "$istege": "REQUIRED if the country has more than one time zone: on the patient's page, \"Times are in % time.\" (% = the doctor's zone)"

@@ -11,7 +11,8 @@
  * text yet. `giris` and `sayfa` are PATIENT-FACING: a patient reads them on their own phone, with nobody beside
  * them to explain. They come first for the native reader, and must be read and corrected before a real doctor
  * gives a patient a link (docs/COUNTRY-PACK-UZBEKISTAN.md, "The patient portal"; checklist E8, E11).
- * `sayfa.acil` names the ambulance number 103: a fact of the country, to be confirmed by the local clinical lead.
+ * `sayfa.acilNumara` is the sentence that carries the ambulance number. The NUMBER is not in this file: it is a setting
+ * of the pack (../index.ts, `uygulama.portal.acilNumara`), unverified today, to be confirmed by a local source.
  * The Cyrillic form was written by hand, line by line — it is not a transliteration at run time.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  *
@@ -135,7 +136,8 @@ const UZ_LATN: PortalMetni = {
     istekGunler: 'Siz soʻragan kunlar: %',
     istekKabul: 'Shifokoringiz sizni qabulga yozdi: %1, soat %2.',
     istekRed: 'Shifokoringiz bu kunlarda qabul qila olmaydi. Yangi soʻrov yuborishingiz mumkin.',
-    acil: 'Bu sahifa shoshilinch holatlar uchun emas. Ahvolingiz ogʻir boʻlsa, tez yordam chaqiring: 103.',
+    acil: 'Bu sahifa shoshilinch holatlar uchun emas.',
+    acilNumara: 'Ahvolingiz ogʻir boʻlsa, tez yordam chaqiring: %.',
     yalniz: 'Bu yerda faqat shifokoringiz siz bilan ulashgan narsalar koʻrsatiladi.',
   },
 }
@@ -252,7 +254,8 @@ const UZ_CYRL: PortalMetni = {
     istekGunler: 'Сиз сўраган кунлар: %',
     istekKabul: 'Шифокорингиз сизни қабулга ёзди: %1, соат %2.',
     istekRed: 'Шифокорингиз бу кунларда қабул қила олмайди. Янги сўров юборишингиз мумкин.',
-    acil: 'Бу саҳифа шошилинч ҳолатлар учун эмас. Аҳволингиз оғир бўлса, тез ёрдам чақиринг: 103.',
+    acil: 'Бу саҳифа шошилинч ҳолатлар учун эмас.',
+    acilNumara: 'Аҳволингиз оғир бўлса, тез ёрдам чақиринг: %.',
     yalniz: 'Бу ерда фақат шифокорингиз сиз билан улашган нарсалар кўрсатилади.',
   },
 }
@@ -367,7 +370,8 @@ const RU: PortalMetni = {
     istekGunler: 'Дни, о которых вы просили: %',
     istekKabul: 'Врач записал вас на приём: %1, %2.',
     istekRed: 'Врач не может принять вас в эти дни. Вы можете отправить новый запрос.',
-    acil: 'Эта страница не для экстренных случаев. Если вам очень плохо, вызовите скорую помощь: 103.',
+    acil: 'Эта страница не для экстренных случаев.',
+    acilNumara: 'Если вам очень плохо, вызовите скорую помощь: %.',
     yalniz: 'Здесь показано только то, чем с вами поделился врач.',
   },
 }

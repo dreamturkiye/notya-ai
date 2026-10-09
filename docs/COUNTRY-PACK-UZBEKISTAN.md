@@ -43,14 +43,14 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 
 | What | Value | Whose decision |
 |---|---|---|
-| A link stays valid | **30 days** (`countries/uz/index.ts`, `uygulama.portal.baglantiGecerlilikGun`) | **the pack's. A starting value chosen by Claude: to confirm with the owner, and with a lawyer for how long a patient's access may stand (checklist I1).** |
+| A link stays valid | **30 days** (`countries/uz/index.ts`, `uygulama.portal.baglantiGecerlilikGun`) | **the pack's. A starting value chosen by Claude: the owner to confirm** ("Needs local content", row 79), and a lawyer for how long a patient's access may stand (checklist I1). |
 | PIN length, tries before the lock, pause between tries, session length | 6 digits, 5 tries, 2 seconds, 30 minutes | the kit's, the same in every country (`lib/ulke/portal/sabitler.ts`) |
 | Days a request may name, how far ahead | 3 of the next 21 | the kit's |
-| Ambulance number on the patient's page | **103** | a fact of the country, written by Claude from general knowledge: **to confirm with the local clinical lead** |
+| Ambulance number on the patient's page | **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`) | **the pack's: local content. Written by Claude from general knowledge and UNVERIFIED. A local source must confirm it before any patient sees the portal** ("Needs local content", row 78). The kit has no default: a pack that states no number shows none, only "this page is not for emergencies". The number is in no sentence of the catalogue; a sentence with a digit in it fails the pack check. |
 
 **Not in this job, and not half-built either** (no page, no route, no table): intake forms, messaging between patient and doctor, documents and uploads, payments, automatic reminders. The reminder text a doctor copies by hand (slice 3) is unchanged.
 
-**Machine-written text.** 99 entries in each of the three forms (297 strings) in `countries/uz/uygulama/portalMetinleri.ts`, and three instructions to the model in `countries/uz/klinik/hastaOzeti.ts`. Nobody who speaks Uzbek or Russian as a first language has read any of it. The Cyrillic form was written by hand, line by line. 37 of the 99 entries are read by patients; they are listed at the end of this section.
+**Machine-written text.** 100 entries in each of the three forms (300 strings) in `countries/uz/uygulama/portalMetinleri.ts`, and three instructions to the model in `countries/uz/klinik/hastaOzeti.ts`. Nobody who speaks Uzbek or Russian as a first language has read any of it. The Cyrillic form was written by hand, line by line. 38 of the 100 entries are read by patients; they are listed at the end of this section.
 
 **The database.** Two migrations are new since 135, both for a country database only (each refuses a database that has no `ulke_hesaplari`):
 
@@ -67,21 +67,21 @@ Everything below ran on the build machine on 2026-10-09 with **stand-ins for the
 
 | Check | Result | Against |
 |---|---|---|
-| Country test suite (`npm run test:ulke`) | 696 of 696 ordinary tests; 69 of 69 for each of `tr` and `uz` | stand-in database inside the test process |
+| Country test suite (`npm run test:ulke`) | 697 of 697 ordinary tests; 70 of 70 for each of `tr` and `uz` | stand-in database inside the test process |
 | of which: the portal's rules (`lib/ulke/portal/portal.paket.test.ts`) | 31: access, PIN, lock, sessions, isolation in each direction, sharing, requests, privacy headers | the real route handlers |
-| of which: the portal's screens (`components/ulke/portal/portalEkranlari.paket.test.ts`) | 16: every screen in every form, leak test over every entry and every screen, every link leads to a real page | the real components |
-| of which: Uzbek text (`countries/uz/uygulama/portal.test.ts`) | 5: three forms, each in its own script, the patient's language rule, the instructions, the list for the native reader | the catalogue |
+| of which: the portal's screens (`components/ulke/portal/portalEkranlari.paket.test.ts`) | 17: every screen in every form, leak test over every entry and every screen, every link leads to a real page, the ambulance number shown only where the pack states one | the real components |
+| of which: Uzbek text (`countries/uz/uygulama/portal.test.ts`) | 6: three forms, each in its own script, the patient's language rule, the instructions, the two unconfirmed settings, the list for the native reader | the catalogue |
 | Type check, wall check | clean | the repository |
 | Uzbek production build (`NOTYA_COUNTRY=uz npm run build:ulke`) | built; holds the Uzbek pack and no other | this machine |
 | Uzbek walk-through in a real browser (`scripts/ulke-yuruyus/yuruyus.mjs`) | **439 of 439**; 87 of them walk the portal, with the patient in a browser of their own (a phone) | the Uzbek build, stand-in database and providers |
 | Pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`) | 202 of 202 | the same |
 | Migration proof, baseline proof | 195 of 195; 87 of 87 | a throwaway PostgreSQL 18 on this machine |
-| A new country from the scaffold | type-checks with the portal's files; 767 items to supply | a temporary copy of the repository |
+| A new country from the scaffold | type-checks with the portal's files; 769 items to supply (735 texts, 34 settings) | a temporary copy of the repository |
 
 The walk-through's portal steps, in order: give access (link and PIN shown once, only hashes stored) → the token alone shows nothing → a PIN that is not six digits → a wrong PIN → too fast → five wrong PINs lock the link, and the right PIN no longer opens it → the doctor sees "locked" → a new link (the old one is dead) → sign in → the page (name, doctor, role, appointments) → a draft summary (not on the patient's page) → edited and shared → seen → cannot be changed while shared → taken back → gone → an unapproved note has no summary → a request with two days and a reason (no appointment made) → a second request refused → the request on the doctor's calendar → a taken time refused → accepted → seen by the patient → answered once only → the other doctor reaches none of it → the other doctor's patient sees only their own page, in Russian → a doctor's session on the patient's routes and a patient's session on the doctor's routes: refused → a second patient's link on the same phone: PIN form, and the first session ends → declined → sign out → withdrawn.
 
 
-**Not tested:** the portal against a real database or a real model provider; a real phone; a patient; the text with a native reader; the 30 days and the number 103 with anybody.
+**Not tested:** the portal against a real database or a real model provider; a real phone; a patient; the text with a native reader. **Not confirmed by anybody:** the number 103 and the 30 days.
 
 
 ### Patient-facing sentences, for the native reader
@@ -131,7 +131,8 @@ Machine-written, in three forms; nobody who speaks Uzbek or Russian as a first l
 | `istekGunler` | Siz soʻragan kunlar: % | Сиз сўраган кунлар: % | Дни, о которых вы просили: % |
 | `istekKabul` | Shifokoringiz sizni qabulga yozdi: %1, soat %2. | Шифокорингиз сизни қабулга ёзди: %1, соат %2. | Врач записал вас на приём: %1, %2. |
 | `istekRed` | Shifokoringiz bu kunlarda qabul qila olmaydi. Yangi soʻrov yuborishingiz mumkin. | Шифокорингиз бу кунларда қабул қила олмайди. Янги сўров юборишингиз мумкин. | Врач не может принять вас в эти дни. Вы можете отправить новый запрос. |
-| `acil` | Bu sahifa shoshilinch holatlar uchun emas. Ahvolingiz ogʻir boʻlsa, tez yordam chaqiring: 103. | Бу саҳифа шошилинч ҳолатлар учун эмас. Аҳволингиз оғир бўлса, тез ёрдам чақиринг: 103. | Эта страница не для экстренных случаев. Если вам очень плохо, вызовите скорую помощь: 103. |
+| `acil` | Bu sahifa shoshilinch holatlar uchun emas. | Бу саҳифа шошилинч ҳолатлар учун эмас. | Эта страница не для экстренных случаев. |
+| `acilNumara` | Ahvolingiz ogʻir boʻlsa, tez yordam chaqiring: %. | Аҳволингиз оғир бўлса, тез ёрдам чақиринг: %. | Если вам очень плохо, вызовите скорую помощь: %. |
 | `yalniz` | Bu yerda faqat shifokoringiz siz bilan ulashgan narsalar koʻrsatiladi. | Бу ерда фақат шифокорингиз сиз билан улашган нарсалар кўрсатилади. | Здесь показано только то, чем с вами поделился врач. |
 
 ## Correction of the record: where Uzbek data is stored (2026-10-08, NOTYA-ULKE-SABLON-01)
@@ -276,7 +277,7 @@ The pack had no conversion from Latin to Cyrillic script before this slice (only
 
 ### Needs local content
 
-Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`, `UZ_ORTAK_YEREL_ICERIK`): empty (`icerik: null`), switched off (`acik: false`), and read by no screen and no instruction. A slot is switched on only after a local clinician has supplied and signed its content. 75 rows. Rows 76 and 77 (slice 3, appointments) are not slots of a note template: they are local content the calendar needs, and nothing stands in for them.
+Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`, `UZ_ORTAK_YEREL_ICERIK`): empty (`icerik: null`), switched off (`acik: false`), and read by no screen and no instruction. A slot is switched on only after a local clinician has supplied and signed its content. 75 rows. Rows 76 and 77 (slice 3, appointments) are not slots of a note template: they are local content the calendar needs, and nothing stands in for them. Rows 78 and 79 (the patient portal) are **settings of the pack that are already filled in with an unconfirmed value**: unlike the slots above, a patient would see them.
 
 | # | Role | Slot | What is missing | Who must supply it |
 |---|---|---|---|---|
@@ -357,6 +358,8 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 | 75 | `odyoloji` (Аудиолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
 | 76 | all 40 roles (calendar) | `public_holidays` | Public holidays of Uzbekistan for each year: the fixed dates, the two religious holidays whose dates move every year, and the working days the government transfers. **Nothing is hard-coded**: the calendar treats a holiday as an ordinary day and the working-pattern screen says so. Needs an official source and somebody who updates it every year. | a local source and a yearly owner |
 | 77 | all 40 roles (calendar) | `working_week` | The usual working week, hours, lunch break and appointment length of a private clinic. The pack's values (Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes) are starting values, not checked locally; every account can change its own. | the clinical lead |
+| 78 | all 40 roles (patient portal) | `emergency_number` | The number a patient dials for an ambulance, as it is written and dialled in Uzbekistan. The pack holds **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`), written by Claude from general knowledge: **UNVERIFIED. It must be confirmed by a local source before any patient sees the portal.** A wrong number here is shown to a patient who feels very unwell. If it cannot be confirmed, set it to `null`: the page then says only that it is not for emergencies and names no number. | a local source (the clinical lead, or the health ministry's own page), recorded here with name and date |
+| 79 | all 40 roles (patient portal) | `link_validity` | How long a patient's link works before the doctor must give a new one. The pack holds **30 days** (`uygulama.portal.baglantiGecerlilikGun`), a starting value chosen by Claude, not a local rule. | **the owner** confirms the number; a lawyer says how long a patient's access may stand (checklist I1) |
 
 ### Assistant names in the three forms, and the forms that look doubtful
 

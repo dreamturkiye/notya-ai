@@ -470,7 +470,10 @@ export type PortalMetni = {
     /** %1 the day, %2 the time of the appointment the doctor booked */
     readonly istekKabul: string
     readonly istekRed: string
+    /** "This page is not for emergencies." Always shown. Names no number. */
     readonly acil: string
+    /** % the pack's ambulance number (`uygulama.portal.acilNumara`). Shown only where the pack states one; the sentence itself holds no number. */
+    readonly acilNumara: string
     readonly yalniz: string
   }
 }

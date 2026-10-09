@@ -33,7 +33,7 @@ process.stdout.write(JSON.stringify({
   marka: a.marka, m: a.metinler[d], r: a.randevuMetinleri[d] ?? null, giris: p.metinler[d]?.giris ?? null, hesap: p.metinler[d]?.hesap ?? null, kayit: p.metinler[d]?.davetliKayit ?? null,
   acilisIcerigi: a.acilis ? { baslik: a.acilis.icerik[d]?.kahraman.baslik, metaBaslik: a.acilis.icerik[d]?.meta.baslik, capalar: a.acilis.capalar } : null,
   portal: portalAcik ? {
-    hastaBicimi, gecerlilikGun: p.uygulama.portal?.baglantiGecerlilikGun ?? null, pinHane: PIN_HANE, pinDeneme: PIN_DENEME_AZAMI, istekGunAzami: ISTEK_GUN_AZAMI,
+    hastaBicimi, gecerlilikGun: p.uygulama.portal?.baglantiGecerlilikGun ?? null, acilNumara: p.uygulama.portal?.acilNumara ?? null, pinHane: PIN_HANE, pinDeneme: PIN_DENEME_AZAMI, istekGunAzami: ISTEK_GUN_AZAMI,
     hekim: a.portalMetinleri?.[d], hasta: a.portalMetinleri?.[hastaBicimi], hastaRandevu: a.randevuMetinleri[hastaBicimi] ?? null, ilkRolAdi: ilkRol ? ilkRol.ad[hastaBicimi] : '',
   } : null,
   // what must NEVER be on a screen of this country: the "to be supplied" marker, and what marks another country's content

@@ -92,6 +92,14 @@ describe('every pack is complete', () => {
       { const p = klon(paket); delete p.uygulama!.portal; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal: the patient portal is switched on') }
       { const p = klon(paket); p.uygulama!.portal = { baglantiGecerlilikGun: 0 }; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal.baglantiGecerlilikGun: must be a whole number of days') }
       { const p = klon(paket); p.uygulama!.portal = { baglantiGecerlilikGun: eksikAyar('days') }; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal.baglantiGecerlilikGun: to be supplied: days') }
+      // the ambulance number: local content with no default — still to be supplied, not a number, or written into the sentence instead of the setting
+      { const p = klon(paket); p.uygulama!.portal = { ...p.uygulama!.portal!, acilNumara: eksikAyar('ambulance') }; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal.acilNumara: to be supplied: ambulance') }
+      { const p = klon(paket); p.uygulama!.portal = { ...p.uygulama!.portal!, acilNumara: 'call us' }; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal.acilNumara: must be null') }
+      { const a = klon(arayuz); (a.portalMetinleri![d] as unknown as { sayfa: { acilNumara: string } }).sayfa.acilNumara = 'Call 555.'; const l = yerler(paket, a, klinik); iceriyor(l, `arayuz.portalMetinleri[${d}].sayfa.acilNumara: carries a digit`); iceriyor(l, `arayuz.portalMetinleri[${d}].sayfa.acilNumara: must hold "%"`) }
+      { const a = klon(arayuz); (a.portalMetinleri![d] as unknown as { sayfa: { acil: string } }).sayfa.acil = 'Not for emergencies: 555.'; iceriyor(yerler(paket, a, klinik), `arayuz.portalMetinleri[${d}].sayfa.acil: carries a digit`) }
+      // … and a pack that states NO number is complete: null and absent are both "the page names none"
+      { const p = klon(paket); p.uygulama!.portal = { baglantiGecerlilikGun: p.uygulama!.portal!.baglantiGecerlilikGun, acilNumara: null }; assert.deepEqual(yerler(p, arayuz, klinik), []) }
+      { const p = klon(paket); p.uygulama!.portal = { baglantiGecerlilikGun: p.uygulama!.portal!.baglantiGecerlilikGun }; assert.deepEqual(yerler(p, arayuz, klinik), []) }
       if (paket.rotalar !== 'hepsi') { const p = klon(paket); const rt = p.rotalar as unknown as { sayfalar: string[] }; rt.sayfalar = rt.sayfalar.filter((x) => x !== '/portal'); iceriyor(yerler(p, arayuz, klinik), 'rotalar.sayfalar: the patient portal is on and "/portal" is not listed') }
       { const p = klon(paket); p.uygulama!.saatDilimleri = [...new Set([p.saatDilimi, 'Europe/London', 'Asia/Tokyo'])]; const a = klon(arayuz); delete (a.portalMetinleri![d] as unknown as { sayfa: { saatDilimi?: string } }).sayfa.saatDilimi; iceriyor(yerler(p, a, klinik), `arayuz.portalMetinleri[${d}].sayfa.saatDilimi: the country has several time zones`) }
       if (klinik) {

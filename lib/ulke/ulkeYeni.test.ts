@@ -91,11 +91,14 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     const yeniIndex = oku(`countries/${K}/index.ts`)
     assert.match(yeniIndex, /^\s+hastaPortali: true,$/m)
     assert.match(yeniIndex, /'\/calendar', '\/portal'\]/)
-    assert.match(yeniIndex, /portal: \{ baglantiGecerlilikGun: eksikAyar\('patient portal: days a patient\\'s link stays valid/)
+    assert.match(yeniIndex, /portal: \{\n\s+baglantiGecerlilikGun: eksikAyar\('patient portal: days a patient\\'s link stays valid/)
+    // The ambulance number is local content with NO default: the scaffold writes no number, only the decision to make.
+    assert.match(yeniIndex, /^\s+acilNumara: eksikAyar\('patient portal: the number a patient dials for an ambulance[^\n]*confirmed by a local source; or null/m)
+    assert.doesNotMatch(oku(`countries/${K}/uygulama/portalMetinleri.ts`).replace(/\/\*[\s\S]*?\*\//, ''), /\d{3}/, 'the new catalogue carries a number')
     assert.match(oku(`countries/${K}/arayuz.ts`), new RegExp(`portalMetinleri: ${B}_PORTAL_METINLERI,`))
     assert.match(oku(`countries/${K}/klinik/index.ts`), new RegExp(`hastaOzetiTalimati: ${K}HastaOzetiTalimati,\\n\\s+hastaOzetiGirdisi: ${K}HastaOzetiGirdisi,`))
     assert.match(oku(`countries/${K}/klinik/talimatlar.ts`), /ozet: eksik\('instructions: the full instruction to the model for a short plain-language summary of an APPROVED note/)
-    for (const yol of ['giris.pinYanlis', 'sayfa.acil', 'sayfa.istekKabul', 'erisim.olay.geriAlma', 'ozet.paylas', 'istek.sec']) assert.ok(eksikler.some((e) => e.dosya.endsWith('uygulama/portalMetinleri.ts') && e.ipucu.includes(`patient portal: ${yol}`)), `portal key ${yol} is missing from the new pack`)
+    for (const yol of ['giris.pinYanlis', 'sayfa.acil', 'sayfa.acilNumara (keep the placeholders %)', 'sayfa.istekKabul', 'erisim.olay.geriAlma', 'ozet.paylas', 'istek.sec']) assert.ok(eksikler.some((e) => e.dosya.endsWith('uygulama/portalMetinleri.ts') && e.ipucu.includes(`patient portal: ${yol}`)), `portal key ${yol} is missing from the new pack`)
   })
 
   it('the new country starts closed: invitation only, hidden from search, and with the scan in its own build file', () => {

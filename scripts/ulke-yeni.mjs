@@ -249,7 +249,11 @@ ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new countr
     },
     // The patient portal. The security limits (PIN length, tries, session length) are the kit's and the same everywhere;
     // how long a link stays valid is this country's decision.
-    portal: { baglantiGecerlilikGun: eksikAyar('patient portal: days a patient\\'s link stays valid before the doctor must give a new one — a whole number from 1 to 365 (a starting value elsewhere: 30). How long a patient\\'s access may stand is a question for a lawyer') },
+    portal: {
+      baglantiGecerlilikGun: eksikAyar('patient portal: days a patient\\'s link stays valid before the doctor must give a new one — a whole number from 1 to 365 (a starting value elsewhere: 30). The owner confirms it; how long a patient\\'s access may stand is a question for a lawyer'),
+      // LOCAL CONTENT with no default. Confirmed by a local source before any patient sees the portal.
+      acilNumara: eksikAyar('patient portal: the number a patient dials for an ambulance, as it is written in this country (a string of digits) — confirmed by a local source; or null, and the patient\\'s page names no number'),
+    },
     // One language in one script: no account is asked a language question. A second language or script is added here.
     dilGruplari: [{ temel: '${TEMEL}', bicimler: [{ yazi: null, dil: '${DIL}' }] }],
     saatDilimleri: eksikAyar('time: EVERY IANA time zone an account of this country may work in, the default first — one entry if the country has one zone, e.g. [\\'Europe/London\\']'),
@@ -323,8 +327,9 @@ dosyalar['uygulama/portalMetinleri.ts'] = `${BAS(`${B}: the PATIENT PORTAL's tex
   erisim, ozet, istek   the doctor's controls: access on the patient's file, the summary on an approved note, requests on the calendar
   giris, sayfa          PATIENT-FACING: the PIN page and the patient's own page. A patient reads these alone, on their
                         own phone: a native reader reads them first (checklist E8, E11).
-sayfa.acil tells the patient that the page is not for emergencies and names the country's own emergency number: a
-fact of the country, confirmed by the local clinical lead. Placeholders %, %1, %2 must stay in the text.`)}import { eksik } from '@/lib/ulke/eksik'
+sayfa.acil tells the patient that the page is not for emergencies; sayfa.acilNumara is the sentence that carries the
+ambulance number. The NUMBER is never written here: it is the pack's setting (../index.ts, uygulama.portal.acilNumara),
+confirmed by a local source, and a sentence with a digit in it fails the pack check. Placeholders %, %1, %2 must stay.`)}import { eksik } from '@/lib/ulke/eksik'
 import type { PortalMetni } from '@/lib/ulke/arayuz/metinTipleri'
 import type { DilKodu } from '@/lib/ulke/tipler'
 

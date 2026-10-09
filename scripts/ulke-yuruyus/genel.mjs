@@ -371,7 +371,7 @@ if (P.portal) {
   const cerez = await H.cookies(`${TABAN}${adres('/api/ulke/portal')}`)
   kontrol('portal: signed in — one HttpOnly, SameSite=Strict cookie for the portal\'s own routes; a script on the page can read no cookie and no storage', cerez.length === 1 && cerez[0].httpOnly && cerez[0].sameSite === 'Strict' && cerez[0].path === adres('/api/ulke/portal') && (await H.evaluate(() => document.cookie + Object.keys(localStorage).join('') + Object.keys(sessionStorage).join(''))) === '')
   g = await govde(H)
-  kontrol('portal: the page greets the patient by name and names the doctor and the role as the pack names it', (await metin(H, '[data-alan=hasta-ad]')) === doldur(PM.sayfa.selam, HASTA_ADI) && (await metin(H, '[data-alan=hekim]')) === ['QA Shifokor Bir', K.ilkRolAdi].filter(Boolean).join(' · ') && g.includes(PM.sayfa.yalniz) && g.includes(PM.sayfa.acil))
+  kontrol('portal: the page greets the patient by name, names the doctor and the role as the pack names it, and names the ambulance number only if the pack states one', (await metin(H, '[data-alan=hasta-ad]')) === doldur(PM.sayfa.selam, HASTA_ADI) && (await metin(H, '[data-alan=hekim]')) === ['QA Shifokor Bir', K.ilkRolAdi].filter(Boolean).join(' · ') && g.includes(PM.sayfa.yalniz) && g.includes(PM.sayfa.acil) && (K.acilNumara ? g.includes(doldur(PM.sayfa.acilNumara, K.acilNumara)) : !g.includes(PM.sayfa.acilNumara.split('%')[0].trim())))
   if (P.randevu) {
     const satirlar = await H.$$eval('[data-alan=portal-randevular] .uza-satir', (l) => l.map((e) => e.innerText.replace(/\s+/g, ' ').trim()))
     const s = saatYaz('14:30')

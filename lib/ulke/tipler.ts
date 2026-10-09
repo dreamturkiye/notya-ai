@@ -259,6 +259,12 @@ export type Birimler = { agirlik: 'kg' | 'lb'; boy: 'cm' | 'in'; sicaklik: 'C' |
 export type PortalAyarlari = {
   /** How many days a portal link stays valid from the moment the doctor creates it. Afterwards the doctor gives a new one. */
   baglantiGecerlilikGun: number
+  /**
+   * The number a patient dials for an ambulance, as it is written in the country — LOCAL CONTENT, confirmed by a local
+   * source before any patient sees the portal. There is no default: null (or absent) = the patient's page says that it
+   * is not for emergencies and names NO number. The catalogue holds the sentence, never the number.
+   */
+  acilNumara?: string | null
 }
 
 export type RandevuAyarlari = {

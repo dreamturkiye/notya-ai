@@ -85,7 +85,7 @@ const p = (f: DilKodu): PortalMetni => A.portalMetni(f)
 const m = (f: DilKodu): UygulamaMetni => A.uygulamaMetni(f)
 const r = (f: DilKodu): RandevuMetni | null => (RANDEVU ? A.randevuMetni(f) : null)
 const gun = (g: string) => Z.gunYazDesenle(g, B.tarihDeseni())
-const hastaSayfasi = (f: DilKodu, i: PortalIcerigi, ek: Record<string, unknown> = {}) => renderToStaticMarkup(h(Sayfa.PortalCercevesi, { dil: f, children: h(Sayfa.PortalSayfaGorunumu, { p: p(f), r: r(f), icerik: i, form: { gunler: [], neden: '' }, setForm: bos, istekGonder: bos, istekBekliyor: false, istekHatasi: null, cikis: bos, ...ek }) }))
+const hastaSayfasi = (f: DilKodu, i: PortalIcerigi, ek: Record<string, unknown> = {}) => renderToStaticMarkup(h(Sayfa.PortalCercevesi, { dil: f, children: h(Sayfa.PortalSayfaGorunumu, { p: p(f), r: r(f), icerik: i, acilNumara: null, form: { gunler: [], neden: '' }, setForm: bos, istekGonder: bos, istekBekliyor: false, istekHatasi: null, cikis: bos, ...ek }) }))
 const hekimEkrani = (f: DilKodu, ic: React.ReactNode) => renderToStaticMarkup(h(Kabuk.Cerceve, { dil: f, m: m(f), ad: HEKIM_ADI, aktif: 'hastalar', cikis: bos, children: ic }))
 
 /** Every link of a rendered screen leads to a page of THIS build: under the country's path, listed by the pack, with a route file. */
@@ -178,6 +178,27 @@ describe('the patient portal\'s screens — the patient\'s side', () => {
       assert.doesNotMatch(html, /<a\b/)
       temiz(html, `patient's page (${f})`); temiz(g, `patient's page, visible text (${f})`)
     }
+  })
+
+  it('THE AMBULANCE NUMBER IS LOCAL CONTENT WITH NO DEFAULT: the page names the number the pack states, and no number where the pack states none', () => {
+    if (!ACIK) return
+    const paketinki = Sayfa.portalAcilNumarasi()
+    const ayar = paket.uygulama?.portal?.acilNumara
+    assert.equal(paketinki, typeof ayar === 'string' && ayar.trim() ? ayar.trim() : null, 'the screen reads the pack\'s setting and nothing else')
+    for (const f of FORMLAR) {
+      const acil = (html: string) => gorunurMetin(/<p[^>]*data-alan="portal-acil"[^>]*>([\s\S]*?)<\/p>/.exec(html)?.[0] ?? '').trim()
+      // no number stated → "not for emergencies", and nothing else: no number, and no sentence that would need one
+      const yok = hastaSayfasi(f, icerik(f, { ozetler: [], randevular: RANDEVU ? [] : null, istek: null }), { acilNumara: null })
+      assert.equal(acil(yok), p(f).sayfa.acil, `${f}: without a number`)
+      assert.doesNotMatch(acil(yok), /\d/)
+      assert.doesNotMatch(yok, /data-acil-numara/)
+      // a number stated → that number, in the pack's sentence
+      const var_ = hastaSayfasi(f, icerik(f), { acilNumara: '000 11' })
+      assert.equal(acil(var_), `${p(f).sayfa.acil} ${Y.yerine(p(f).sayfa.acilNumara, '000 11')}`, `${f}: with a number`)
+      assert.match(var_, /data-acil-numara="000 11"/)
+    }
+    // The kit has no number of its own anywhere: not in the screen, not in its fixed numbers.
+    for (const d of ['components/ulke/portal/PortalSayfasi.tsx', 'lib/ulke/portal/sabitler.ts', 'lib/ulke/portal/icerik.ts']) assert.doesNotMatch(kod(d), /acilNumara\s*(\?\?|\|\|)\s*['"`]\d|['"`](103|112|911|999|000|111)['"`]/, `${d} carries an emergency number`)
   })
 
   it('an empty page says so; several time zones are named; nothing is drawn for what the page was not given', () => {
@@ -398,8 +419,9 @@ describe('the patient portal\'s screens — rules', () => {
         assert.deepEqual([...y[n][1].matchAll(/%\d?/g)].map((x) => x[0]).sort(), [...ilk[n][1].matchAll(/%\d?/g)].map((x) => x[0]).sort(), `${f}/${y[n][0]}: the placeholders differ from ${FORMLAR[0]}`)
         temiz(y[n][1], `portal catalogue ${f}/${y[n][0]}`)
       }
-      // The emergency line carries a number a patient can dial.
-      assert.match(p(f).sayfa.acil, /\d{2,}/, `${f}: the emergency line names no number`)
+      // The ambulance number is the pack's SETTING, never text: neither sentence holds a digit, and the one that carries the number has its place.
+      assert.doesNotMatch(p(f).sayfa.acil + p(f).sayfa.acilNumara, /\d/, `${f}: a number is written into the emergency sentences`)
+      assert.match(p(f).sayfa.acilNumara, /%(?!\d)/, `${f}: the sentence has no place for the number`)
     }
   })
 

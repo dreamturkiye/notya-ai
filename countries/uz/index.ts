@@ -107,7 +107,10 @@ export const UZ_PAKETI: UlkePaketi = {
     },
     // NOTYA-ULKE-PORTAL-01 — a portal link works for 30 days, then the doctor gives a new one. A STARTING VALUE, not a
     // local rule: to confirm with the owner and, for how long a patient's access may stand, with a lawyer (checklist I1).
-    portal: { baglantiGecerlilikGun: 30 },
+    // The ambulance number the patient's page names is LOCAL CONTENT. 103 was written by Claude from general knowledge
+    // and is UNVERIFIED: a local source must confirm it before any patient sees the portal (docs/COUNTRY-PACK-UZBEKISTAN.md,
+    // "Needs local content", row 78). null here = the page names no number.
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '103' },
     // ── NOTYA-ULKE-SABLON-01: what the shared screens used to assume for Uzbekistan, said out loud. Each value is
     // what the Uzbek build did before the screens became shared; none is a new decision.
     // Uzbek in two scripts, Russian in one: the first-login question asks the language and, for Uzbek, the script.

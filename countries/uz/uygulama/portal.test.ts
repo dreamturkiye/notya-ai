@@ -36,14 +36,14 @@ describe('Uzbekistan — the patient portal: text in three forms, and the patien
 
   it('the catalogue and the instruction say, at their top, that they are machine-written, patient-facing, and await native review', () => {
     const katalog = readFileSync(join(KOK, 'countries/uz/uygulama/portalMetinleri.ts'), 'utf8').slice(0, 2200)
-    assert.match(katalog, /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW\./); assert.match(katalog, /PATIENT-FACING/); assert.match(katalog, /103/)
+    assert.match(katalog, /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW\./); assert.match(katalog, /PATIENT-FACING/); assert.match(katalog, /The NUMBER is not in this file/)
     const talimat = readFileSync(join(KOK, 'countries/uz/klinik/hastaOzeti.ts'), 'utf8').slice(0, 1200)
     assert.match(talimat, /MACHINE-WRITTEN, NOT READ BY A NATIVE-SPEAKING CLINICIAN/); assert.match(talimat, /PATIENT-FACING/)
   })
 
   it('LEAK TEST over every new string, in all three forms: same keys, nothing empty, each form in its own script, no Turkish word or letter', () => {
     const [lat, kir, ru] = FORMLAR.map((f) => yaprak(PM.UZ_PORTAL_METINLERI[f]))
-    assert.equal(lat.length, 99, `the portal catalogue has ${lat.length} entries per form`)
+    assert.equal(lat.length, 100, `the portal catalogue has ${lat.length} entries per form`)
     assert.deepEqual(kir.map((x) => x[0]), lat.map((x) => x[0])); assert.deepEqual(ru.map((x) => x[0]), lat.map((x) => x[0]))
     for (let i = 0; i < lat.length; i++) {
       const k = lat[i][0]
@@ -66,8 +66,8 @@ describe('Uzbekistan — the patient portal: text in three forms, and the patien
     }
     // Uzbek is written as Uzbek: the Latin form uses its own letters, the Cyrillic form its own.
     assert.match(lat.map((x) => x[1]).join(' '), /[ʻ]/); assert.match(kir.map((x) => x[1]).join(' '), /[ўқғҳ]/)
-    // The ambulance number is the same in the three forms, and the page says in each that it is not for emergencies.
-    for (const f of FORMLAR) assert.match(PM.UZ_PORTAL_METINLERI[f].sayfa.acil, /: 103\.$/, f)
+    // The ambulance number is NOT text: no form writes a digit into either emergency sentence; the number is the pack's setting.
+    for (const f of FORMLAR) { assert.doesNotMatch(PM.UZ_PORTAL_METINLERI[f].sayfa.acil + PM.UZ_PORTAL_METINLERI[f].sayfa.acilNumara, /\d/, f); assert.match(PM.UZ_PORTAL_METINLERI[f].sayfa.acilNumara, /: %\.$/, f) }
     // One time zone in this country: nothing to say about zones on a patient's page.
     for (const f of FORMLAR) assert.equal(PM.UZ_PORTAL_METINLERI[f].sayfa.saatDilimi, undefined)
     // The kit reads exactly these three, and nothing for a form the country does not have.
@@ -85,6 +85,19 @@ describe('Uzbekistan — the patient portal: text in three forms, and the patien
     assert.equal(b('uz', 'ru', 'uz-Cyrl'), 'uz-Cyrl'); assert.equal(b('uz', 'ru', 'uz-Latn'), 'uz-Latn')
     // … else Latin: an Uzbek-speaking patient never gets a Russian page because their doctor works in Russian.
     assert.equal(b('uz', 'ru', 'ru'), 'uz-Latn')
+  })
+
+  it('LOCAL CONTENT, UNVERIFIED: the ambulance number (103) and the link\'s 30 days are settings of the pack, said to be unconfirmed where they are set and in the record', async () => {
+    const { ulkePaketi } = await import('@/lib/ulke/ulke')
+    assert.deepEqual(ulkePaketi().uygulama?.portal, { baglantiGecerlilikGun: 30, acilNumara: '103' })
+    const paket = readFileSync(join(KOK, 'countries/uz/index.ts'), 'utf8')
+    assert.match(paket, /103 was written by Claude from general knowledge\s+\/\/ and is UNVERIFIED: a local source must confirm it before any patient sees the portal/)
+    assert.match(paket, /A STARTING VALUE, not a\s+\/\/ local rule: to confirm with the owner/)
+    const kayit = readFileSync(join(KOK, 'docs/COUNTRY-PACK-UZBEKISTAN.md'), 'utf8')
+    assert.match(kayit, /^\| 78 \| all 40 roles \(patient portal\) \| `emergency_number` \|[^\n]*\*\*103\*\*[^\n]*UNVERIFIED[^\n]*before any patient sees the portal/m)
+    assert.match(kayit, /^\| 79 \| all 40 roles \(patient portal\) \| `link_validity` \|[^\n]*\*\*30 days\*\*[^\n]*the owner/m)
+    // The number appears in no catalogue and in no kit file: one place states it.
+    for (const d of ['countries/uz/uygulama/portalMetinleri.ts', 'countries/uz/klinik/hastaOzeti.ts']) assert.doesNotMatch(readFileSync(join(KOK, d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), /\b103\b/, d)
   })
 
   it('THE SUMMARY\'S INSTRUCTION exists in each form, asks for that form, and keeps the contract with the code', () => {
@@ -120,7 +133,7 @@ describe('Uzbekistan — the patient portal: text in three forms, and the patien
         }
       }
     }
-    assert.equal(n, (14 + 23) * 3, 'every patient-facing sentence, in three forms')
+    assert.equal(n, (14 + 24) * 3, 'every patient-facing sentence, in three forms')
     // … and the three instructions the summary is written with are named as the first thing to read.
     assert.match(kayit, /countries\/uz\/klinik\/hastaOzeti\.ts/)
   })
