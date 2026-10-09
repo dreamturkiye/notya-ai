@@ -849,6 +849,44 @@ The full Turkish suite was not re-run. **No file the Turkish build executes was 
 | Tests, walk-through, screenshots | `countries/uz/acilis/acilis.test.ts`, `countries/uz/klinik/asistanAdlari.test.ts`, `roller.test.ts`, `sablonlar.test.ts`, `lib/ulke/paket.paket.test.ts`; `scripts/ulke-yuruyus/yuruyus.mjs`, `acilis-goruntuleri.mjs`; `docs/uz-landing/` |
 | What remains | `docs/OPEN-COMMITMENTS.md`, section NOTYA-UZ-FIYAT-UNVAN-01 |
 
+## The tools (2026-10-09, NOTYA-ULKE-ARACLAR-01)
+
+Built in the country kit and filled in for Uzbekistan. Per-tool outcome, checked by a test: `docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md`, "Outcome in the Uzbek build". How the area works for any country: `docs/COUNTRY-PACK-HOWTO.md`, "The tools area".
+
+### What a doctor has, under `/uzbek/tools`
+
+- **One base tool for all 40 roles:** the patient's page (the way to give a patient access).
+- **44 role tools for 23 roles**, each shown to its own role and to no other: calculators and scales with a published formula (KDIGO stage, PASI, EASI, SCORAD, DAS28, the pure-tone average, visual acuity conversion, PSA velocity, mid-parental height, dose arithmetic on a dose the doctor types), and checklists and structured notes that are the product's own.
+- **The follow-up list for the same 23 roles.** A doctor opens the tools from a patient's file, keeps a result there, and may enter a follow-up day. The list shows the open follow-ups, earliest first, overdue ones marked, and the doctor marks one as done. The application proposes no day and sends nothing to anybody.
+- **17 roles have the base tool only**: family medicine, gastroenterology, obstetrics and gynaecology, cardiology, neurology, psychiatry, physical medicine and the 10 clinic professions. Every tool they would have rests on national content or on a published questionnaire, and each is a slot.
+
+### What is deliberately not there
+
+- **52 slots** (`countries/uz/uygulama/araclar/yuvalar.ts`), each naming what is missing and who supplies it. Eight of them have their mechanism in the kit already and wait only for numbers a local clinician must state: `lab-izlem`, `dxa-tekrar`, `viral-izlem`, `ibd-skor`, `hepatit-izlem`, `kardiyo-izlem`, `anemi-izlem`, `iltihap-lab-izlem`.
+- **No national reference content**: no vaccination calendar, drug list, dosing table, protocol or reference range. No item of a published questionnaire is translated.
+- **No follow-up day proposed by the system.** The pre-split tools add days or months to a date in several places; the Uzbek tools ask the doctor for the day. An interval is clinical guidance of the country.
+- **Nothing of a Turkish state or payer system**, by the wall (rule D7).
+- **No document or image upload**, no consultation between doctors, no templates of the doctor's own. Listed in the audit file as absent, with the reason.
+
+### What is machine-written
+
+Every tool text: Uzbek in Latin script and Russian written by a machine, and **Uzbek in Cyrillic script derived from the Latin text by rule** (`scripts/uz-kiril.mjs`; a test holds every stored text to the rule). No native speaker and no clinician has read a line (`inceleme.klinisyen` is null). The unit `mg/g` for the albumin-to-creatinine ratio is unverified for Uzbek laboratories.
+
+### Storage
+
+Migration `139_ulke_arac_kayitlari.sql`: one table for the results a doctor keeps. **Not applied to the Uzbek database.** Until it is, keeping a result and the follow-up list fail; the tools themselves work, since they need no storage. `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
+
+### What was tested, and how
+
+- The arithmetic of every kit tool against the pre-split application's own function, input for input (`lib/ulke/araclar/esdegerlik.test.ts`), with the deliberate differences written down there.
+- The role gate over all 40 roles and every tool, in the grid, at the address and on the server.
+- Every tool's screen in the three forms, empty and filled; the summary that is copied; keeping a result; the patient's file; the follow-up list.
+- Keeping a result on the server with a stand-in database: the server works the result out again; isolation between doctors in both directions and against another country's rows.
+- Migration 139 on a local throwaway PostgreSQL, with its rollback and its refusal on a database that is not a country database.
+- In a browser against a production build: the grid, a tool filled in for a patient, kept with and without a follow-up day, the patient's file, the follow-up list and "done", and the second account.
+
+Not covered: a real database behind the provider's API layer; any reading by a native speaker or a clinician.
+
 ## Decisions by Kaan (2026-10-08)
 
 - Uzbekistan is the first country after Türkiye; Azerbaijan and the UAE follow.

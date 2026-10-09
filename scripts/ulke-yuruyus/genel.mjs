@@ -21,6 +21,12 @@
  * submitted, read-only, the answers on the doctor's file and visit screen under "not verified", a visit recorded
  * with none of them given to the model, reopened; and in step 5 the second account and both kinds of session.
  *
+ * NOTYA-ULKE-ARACLAR-01 — where the pack has the tools area, step 4d walks it: the grid of the account's role, a tool
+ * of another role that does not open from its address, the tools opened from a patient's file, one tool filled in
+ * with values the pack's information brings (the script holds no tool and no field), kept on the patient with and
+ * without a follow-up day (the field starts empty), what the server refuses, the patient's file, the follow-up list
+ * and "done"; and in step 5 the second account.
+ *
  * A country's OWN deeper walk-through (its wording, its roles, its language switches) stays with that country:
  * Uzbekistan's is ./yuruyus.mjs.
  *
@@ -596,6 +602,92 @@ if (P.form && portalOturumu) {
   portalOturumu.formId = sonra.id
 }
 
+// ───────────────────────── 4d. the tools area (NOTYA-ULKE-ARACLAR-01) ─────────────────────────
+let aracKaydiA = ''
+if (P.araclar) {
+  const T = P.araclar, AM = T.m, p = A
+  const kutular = () => p.$$eval('[data-arac]', (l) => l.map((x) => x.getAttribute('data-arac')))
+  const kayitlar = () => tabloOku('ulke_arac_kayitlari')
+  const kayitBekle = async (n) => { for (let i = 0; i < 100 && (await kayitlar()).length < n; i++) await bekle(150); return kayitlar() }
+  await git(p, '/tools')
+  await p.waitForSelector('.uza-kart h1')
+  kontrol(`tools: the grid of the account's role shows exactly the pack's tools for it (${T.ilkRolKutulari.length})`, JSON.stringify(await kutular()) === JSON.stringify(T.ilkRolKutulari) && (await metin(p, '.uza-kart h1')) === AM.izgara.baslik, JSON.stringify(await kutular()))
+  await tara(p, 'tools (the grid)')
+  if (T.ornek) {
+    const O = T.ornek
+    const govdeK = { hastaId: hastaA, arac: O.anahtar, ham: Object.fromEntries(O.ham.map((h) => [h.anahtar, h.deger])) }
+    if (!T.ilkRolKutulari.includes(O.anahtar)) {
+      // THE ROLE GATE, in the browser and on the server: a tool of another role does not open from its address, and its result is not kept.
+      await git(p, `/tools?arac=${O.anahtar}`)
+      await p.waitForSelector('[role=alert]', { timeout: 30000 })
+      const ret = await api(p, '/api/ulke/arac-kaydi', { method: 'POST', govde: govdeK })
+      kontrol('tools: a tool of ANOTHER role does not open from its address (the pack\'s sentence, and the account\'s own grid), and the server keeps no result of it', (await metin(p, '[role=alert]')) === AM.arac.yok && JSON.stringify(await kutular()) === JSON.stringify(T.ilkRolKutulari) && ret.s === 404 && ret.j?.code === 'ARAC_YOK' && (await kayitlar()).length === 0, `${ret.s} ${ret.t}`)
+      const rol = await api(p, '/api/ulke/rol', { method: 'POST', govde: { rol: O.rol } })
+      kontrol('tools: the account changes to the role that has the tool', rol.s === 200, `${rol.s} ${rol.t}`)
+    }
+    // from the patient's file: the card, and the tools FOR this patient
+    await git(p, `/patient?id=${hastaA}`)
+    await p.waitForSelector('[data-alan=hasta-arac-kayitlari] [data-eylem=hasta-icin-araclar]', { timeout: 60000 })
+    kontrol('tools: the patient\'s file has the card of kept results, empty, with the pack\'s words', (await metin(p, '[data-alan=hasta-arac-kayitlari]')).includes(AM.kayit.dosyaBaslik) && !(await p.$('[data-kayit]')))
+    await p.click('[data-eylem=hasta-icin-araclar]')
+    await p.waitForSelector('[data-alan=arac-hastasi]', { timeout: 60000 })
+    const baglantilar = await p.$$eval('[data-arac]', (l) => l.map((x) => x.getAttribute('href')))
+    kontrol('tools: opened from the file, the grid says for whom and every tile carries the patient', JSON.stringify(await kutular()) === JSON.stringify(T.ornekRolKutulari) && (await metin(p, '[data-alan=arac-hastasi]')).includes(HASTA_ADI) && baglantilar.every((h) => h.includes(`hasta=${hastaA}`)), baglantilar.join(' '))
+    await p.click(`[data-arac="${O.anahtar}"]`)
+    await p.waitForSelector('[data-bolum=girdiler]', { timeout: 60000 })
+    kontrol('tools: the tool opens under its own name; without a result nothing can be kept', (await metin(p, 'h1')) === O.ad && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === true && !(await p.$('[data-eylem=kopyala]')))
+    for (const h of O.ham) {
+      if (h.tur === 'isaret') { await p.waitForSelector(`[data-alan="${h.anahtar}"] input`); await p.click(`[data-alan="${h.anahtar}"] input`) }
+      else if (h.tur === 'secim' || h.tur === 'puan') { await p.waitForSelector(`input[name="uza-arac-${h.anahtar}"][value="${h.deger}"]`); await p.click(`input[name="uza-arac-${h.anahtar}"][value="${h.deger}"]`) }
+      else { await p.waitForSelector(`#uza-arac-${h.anahtar}`); await yazDeger(p, `#uza-arac-${h.anahtar}`, h.deger) }
+    }
+    await p.waitForSelector('[data-eylem=kopyala]', { timeout: 30000 })
+    kontrol('tools: filled in, the tool shows a result; the follow-up day is EMPTY (the application proposes none); nothing has been stored yet', (await p.$eval('#uza-arac-takip', (e) => e.value)) === '' && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === false && (await metin(p, '[data-bolum=kayit]')).includes(HASTA_ADI) && (await kayitlar()).length === 0)
+    await tara(p, 'tools (one tool, filled in, for a patient)')
+    // kept without a follow-up day
+    await p.click('[data-eylem=arac-kaydet]')
+    let satirlar = await kayitBekle(1)
+    await p.waitForSelector('[data-bolum=kayit] [role=status]', { timeout: 30000 })
+    const ham1 = JSON.stringify(satirlar)
+    kontrol('tools: KEPT — one row with this country, this account, this patient and the tool; the content is one encrypted value (no field, no result readable); no follow-up day', satirlar.length === 1 && satirlar[0].ulke === P.kod && satirlar[0].doctor_id === HESAP_A && satirlar[0].patient_id === hastaA && satirlar[0].arac === O.anahtar && satirlar[0].takip_tarihi === null && !ham1.includes('sayilar') && !ham1.includes('tamam') && (await metin(p, '[data-bolum=kayit] [role=status]')) === AM.kayit.kaydedildi, ham1.slice(0, 200))
+    // kept again, with the follow-up day the doctor types: today, in the country's own clock
+    await yazDeger(p, '#uza-arac-takip', T.bugun)
+    await p.waitForFunction(() => !document.querySelector('[data-eylem=arac-kaydet]').disabled, { timeout: 30000 })
+    await p.click('[data-eylem=arac-kaydet]')
+    satirlar = await kayitBekle(2)
+    const takipli = satirlar.find((x) => x.takip_tarihi)
+    aracKaydiA = takipli?.id ?? ''
+    kontrol('tools: kept with the follow-up day the doctor typed, exactly as typed', satirlar.length === 2 && takipli?.takip_tarihi === T.bugun && takipli?.kapandi_at == null, JSON.stringify(satirlar.map((x) => x.takip_tarihi)))
+    const gecmis = await api(p, '/api/ulke/arac-kaydi', { method: 'POST', govde: { ...govdeK, takipTarihi: '2000-01-01' } })
+    const bos = await api(p, '/api/ulke/arac-kaydi', { method: 'POST', govde: { ...govdeK, ham: {}, sonuc: { tamam: true, sayilar: [], bant: null, uyarilar: [], tarihler: [] } } })
+    kontrol('tools: the server refuses a follow-up day in the past, and an empty form even when a "result" is sent with it; nothing was written', gecmis.s === 422 && gecmis.j?.code === 'TAKIP' && bos.s === 422 && bos.j?.code === 'EKSIK' && (await kayitlar()).length === 2, `${gecmis.s} ${gecmis.t} | ${bos.s} ${bos.t}`)
+    // the patient's file lists both, each with its summary
+    await git(p, `/patient?id=${hastaA}`)
+    await p.waitForSelector('[data-kayit]', { timeout: 60000 })
+    const dosya = await p.$$eval('[data-kayit]', (l) => l.map((x) => ({ arac: x.getAttribute('data-arac'), ozet: x.querySelector('pre')?.textContent ?? '', takip: !!x.querySelector('[data-takip-durum=acik]') })))
+    kontrol('tools: the patient\'s file lists both kept results under the tool\'s name, each with its summary; one shows its follow-up', dosya.length === 2 && dosya.every((x) => x.arac === O.anahtar && x.ozet.startsWith(O.ad)) && dosya.filter((x) => x.takip).length === 1, JSON.stringify(dosya).slice(0, 300))
+    await tara(p, 'patient file (with kept tool results)')
+    if (T.panel) {
+      await git(p, `/tools?arac=${T.panel}`)
+      await p.waitForSelector('[data-takip]', { timeout: 60000 })
+      const satir = await p.$$eval('li[data-takip]', (l) => l.map((x) => ({ id: x.getAttribute('data-takip'), metin: x.innerText, bugun: !!x.querySelector('[data-takip-durum=bugun]'), gecikti: !!x.querySelector('[data-takip-durum=gecikti]') })))
+      kontrol('tools: THE FOLLOW-UP LIST shows the one open follow-up — the patient, the tool, due today, not overdue', satir.length === 1 && satir[0].id === aracKaydiA && satir[0].metin.includes(HASTA_ADI) && satir[0].metin.includes(O.ad) && satir[0].bugun && !satir[0].gecikti, JSON.stringify(satir).slice(0, 300))
+      await tara(p, 'tools (the follow-up list)')
+      await p.click('[data-eylem=takip-kapat]')
+      await p.waitForSelector('[data-takip=bos]', { timeout: 30000 })
+      const kapali = (await kayitlar()).find((x) => x.id === aracKaydiA)
+      const yine = await api(p, '/api/ulke/arac-kaydi', { method: 'PATCH', govde: { kayitId: aracKaydiA, islem: 'kapat' } })
+      kontrol('tools: marked as done ONCE — it leaves the list, the row keeps its day and its content, and a second "done" is refused', !!kapali?.kapandi_at && kapali.takip_tarihi === T.bugun && (await metin(p, '[data-takip=bos]')) === AM.takip.bos && yine.s === 409 && (await kayitlar()).length === 2, `${yine.s} ${yine.t}`)
+    }
+    if (!T.ilkRolKutulari.includes(O.anahtar)) {
+      const geri = await api(p, '/api/ulke/rol', { method: 'POST', govde: { rol: P.ilkRol.anahtar } })
+      await git(p, `/patient?id=${hastaA}`)
+      await p.waitForSelector('[data-kayit]', { timeout: 60000 })
+      kontrol('tools: back in the first role, the kept results stay in the patient\'s file under the tool\'s name (a file does not lose its history when the role changes)', geri.s === 200 && (await p.$$eval('[data-kayit] pre', (l) => l.length)) === 2)
+    }
+  }
+}
+
 // ───────────────────────── 5. a second account sees none of it; the shared database holds only this country's rows ─────────────────────────
 {
   const p = await sayfaAc(TEL)
@@ -612,6 +704,19 @@ if (P.form && portalOturumu) {
   const jetonsuz = await api(p, `/api/ulke/hasta?id=${hastaA}`, { jeton: 'none' })
   kontrol('without a valid session the API says "no session", with a code and no sentence', jetonsuz.s === 401 && jetonsuz.t === '{"code":"OTURUM_YOK"}', `${jetonsuz.s} ${jetonsuz.t}`)
   await tara(p, 'patients (account B)')
+  if (P.araclar) {
+    // NOTYA-ULKE-ARACLAR-01 — the second account and the first account's patient and kept results.
+    const yok = '30000000-0000-4000-8000-00000000dead'
+    const once = JSON.stringify(await tabloOku('ulke_arac_kayitlari'))
+    const cevaplar = [
+      await api(p, `/api/ulke/arac-kaydi?hasta=${hastaA}`),
+      await api(p, '/api/ulke/arac-kaydi', { method: 'POST', govde: { hastaId: hastaA, arac: P.araclar.ornek?.anahtar ?? 'x', ham: Object.fromEntries((P.araclar.ornek?.ham ?? []).map((h) => [h.anahtar, h.deger])) } }),
+      ...(aracKaydiA ? [await api(p, '/api/ulke/arac-kaydi', { method: 'PATCH', govde: { kayitId: aracKaydiA, islem: 'kapat' } })] : []),
+    ]
+    const olmayan = await api(p, `/api/ulke/arac-kaydi?hasta=${yok}`)
+    const liste = await api(p, '/api/ulke/arac-kaydi')
+    kontrol('tools: account B and account A\'s patient — reading the kept results, keeping one and closing a follow-up each answer exactly like "does not exist"; B\'s own follow-up list is empty; nothing changed', cevaplar.every((r) => r.s === 404 && r.t === olmayan.t) && liste.s === 200 && Array.isArray(liste.j?.takipler) && liste.j.takipler.length === 0 && JSON.stringify(await tabloOku('ulke_arac_kayitlari')) === once, cevaplar.map((r) => `${r.s} ${r.t}`).join(' | '))
+  }
   if (P.portal) {
     // NOTYA-ULKE-PORTAL-01 — the second account and the first account's patient: everything answers like "does not exist".
     const yok = '30000000-0000-4000-8000-00000000dead'
@@ -649,7 +754,7 @@ if (P.form && portalOturumu) {
     await H.close()
   }
   await p.close()
-  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', ...(P.portal ? ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri'] : []), ...(P.form ? ['ulke_hasta_formlari'] : [])]
+  const tablolar = ['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_muayeneler', 'muayene_dil_kaydi', 'ulke_notlar', 'not_dil_kaydi', 'ulke_randevulari', 'hekim_rolu', 'hekim_dil_tercihleri', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', ...(P.araclar ? ['ulke_arac_kayitlari'] : []), ...(P.portal ? ['ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri'] : []), ...(P.form ? ['ulke_hasta_formlari'] : [])]
   const yabanciSatir = []
   let toplam = 0
   for (const ad of tablolar) for (const s of await tabloOku(ad)) { toplam++; if (s.ulke !== P.kod) yabanciSatir.push(`${ad}:${s.ulke}`) }

@@ -7,7 +7,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 ## The short version
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **839 for a one-language country (802 texts, 37 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **897 for a one-language country (859 texts, 38 settings)**.
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
@@ -138,6 +138,21 @@ The pack check (`node scripts/ulke-paket-denetimi.mjs --ulke <code>`) refuses: a
 
 **Not in the intake form, and not half-built:** the answers as input to the model, file uploads, automatic sending, reminders, scoring.
 
+## The tools area: how a country gets its doctor tools
+
+Built once in the kit (NOTYA-ULKE-ARACLAR-01, 2026-10-09); a country fills it in. One address, `/tools`: the grid of the account's role, and `/tools?arac=<key>` for one tool.
+
+- **A tool is two halves that meet by key.** The kit holds the mechanism (`lib/ulke/araclar/katalog.ts`): the fields, pure arithmetic that returns numbers and keys only, and the citation of the published source. The pack holds everything a doctor reads, and **who sees the tool** (`countries/<code>/uygulama/araclar.ts`, or a folder as Uzbekistan has).
+- **Classify before adding.** Every entry says `roller: null` (a base tool: every role) or names the roles that see it. The pack check refuses a tool that is not classified, a key the kit does not have, and a missing word in any language form. The grid and the address ask the same gate, so a tool that is not on an account's grid does not open from its address, and the server does not keep its result.
+- **No tool of another country's state or payer system exists in the kit.** `countries/yasak-araclar.json` lists them, and wall rule D7 (`scripts/ulke-duvarlari.mjs`) stops the kit, any pack and any country route from naming one.
+- **No national reference content is written by a machine.** A tool that needs a vaccination calendar, a drug register, a dosing table, a protocol, a reference range or a legal form is a **slot** in the pack (`yuvalar`): empty, switched off, saying what is missing and who supplies it. A published questionnaire is a slot too: its wording belongs to its authors.
+- **Numbers the country decides.** Some mechanisms leave a threshold or an interval to the country (`parametreler`). The kit holds none of these numbers; a pack that switches such a tool on must state each one, and until a local clinician does, the tool stays a slot with `mekanizmaHazir: true`.
+- **The kit proposes no follow-up day of its own.** Wherever the pre-split application adds days or months to a date, the kit has an empty date field the doctor fills in. An interval is clinical guidance of a country.
+- **Units.** Length and weight follow the pack's units; a laboratory value follows `labBirimleri`, which the pack must state for every tool that reads one. The kit converts with the exact defined factors.
+- **Keeping a result (migration 139).** A tool stores nothing by itself. Opened from a patient's file, it offers "keep in this patient's file" with an optional follow-up day. The browser sends the form as typed; the server works the result out again and keeps its own, as one encrypted value. The patient's file lists what was kept. The follow-up list (`takip-paneli`) is a role tool: give it to every role that has a tool whose result can be kept, and to no other.
+- **A new country starts with one tile** (the patient's page) and the area's own words: 54 texts, 3 texts for the tile and one setting (who wrote and who read the tool texts).
+- **Two scripts.** Where a language has two scripts and one is derived from the other, store the derived text static and mark it. Uzbekistan's rule is `scripts/uz-kiril.mjs` (country tooling only; no build runs it), and its test holds every stored text to the rule.
+
 ## The country's own database
 
 **One database per country** (Kaan, 2026-10-09: "We had issues with common databases before. Keep seperation between the two and any other future country versions"). A country never shares a database with Türkiye or with another country, and no script of one is ever run on another's. Full text: `docs/COUNTRY-PACK-DB-ROLLOUT.md`.
@@ -256,6 +271,8 @@ Counts in this table are those of that run. Since NOTYA-UZ-FIYAT-UNVAN-01 (2026-
 This closes what was left open for the portal (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-PORTAL-01h): a 12-hour clock, several time zones and a pack with no ambulance number have now been walked in a browser.
 
 From scaffold to a passing walk-through took about 16 minutes of machine time, two production builds included. That measures the mechanism only: supplying real, reviewed content is the work, and it is counted in the table of items above.
+
+**With the tools area (2026-10-09, NOTYA-ULKE-ARACLAR-01) the proof was repeated only in part.** The scaffold now writes 18 files and answers **897 items (859 texts, 38 settings)**: 58 more (54 texts for the tools area's own words, 3 for the patient page's tile, 1 setting). A throwaway `qq` was scaffolded in the repository, type-checked clean, and its build was refused with the list of all 897 items, as it must be; then it was deleted. It was **not** filled, built and walked again (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-ARACLAR-01).
 
 ## Known gaps
 

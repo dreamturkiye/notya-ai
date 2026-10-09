@@ -132,7 +132,7 @@ const kisitHatasi = (code, message) => Object.assign(new Error(message), { code 
  * link per patient that is not withdrawn; one unanswered request per patient; and the patient is this doctor's.
  */
 function portalKisiti(ad, yeni, digerleri) {
-  if (!['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari'].includes(ad)) return null
+  if (!['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari'].includes(ad)) return null
   if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return kisitHatasi('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
   if (ad === 'ulke_hasta_ozetleri') {
     const n = tablo('ulke_notlar').find((x) => x.id === yeni.note_id && x.doctor_id === yeni.doctor_id && x.ulke === yeni.ulke)
@@ -147,6 +147,12 @@ function portalKisiti(ad, yeni, digerleri) {
   }
   if (ad === 'ulke_portal_oturumlari' && !tablo('ulke_portal_erisimleri').some((e) => e.id === yeni.erisim_id && e.ulke === yeni.ulke && e.doctor_id === yeni.doctor_id && e.patient_id === yeni.patient_id)) return kisitHatasi('23503', 'insert or update on table "ulke_portal_oturumlari" violates foreign key constraint "ulke_portal_oturumlari_erisim_fk"')
   if (ad === 'ulke_randevu_istekleri' && (yeni.durum ?? 'bekliyor') === 'bekliyor' && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && (x.durum ?? 'bekliyor') === 'bekliyor')) return kisitHatasi('23505', 'duplicate key value violates unique constraint "ulke_randevu_istekleri_tek_bekleyen"')
+  // NOTYA-ULKE-ARACLAR-01 — migration 139: the checks of ulke_arac_kayitlari.
+  if (ad === 'ulke_arac_kayitlari') {
+    if (typeof yeni.arac !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(yeni.arac) || yeni.arac.length > 60) return kisitHatasi('23514', 'new row for relation "ulke_arac_kayitlari" violates check constraint (arac)')
+    if (typeof yeni.kayit_encrypted !== 'string' || !yeni.kayit_encrypted) return kisitHatasi('23514', 'new row for relation "ulke_arac_kayitlari" has no content (kayit_encrypted)')
+    if (yeni.kapandi_at && !yeni.takip_tarihi) return kisitHatasi('23514', 'new row for relation "ulke_arac_kayitlari" violates check constraint (a follow-up that does not exist cannot be closed)')
+  }
   // NOTYA-ULKE-INTAKE-01 — migration 138: the checks of ulke_hasta_formlari, its appointment key and "one open form".
   if (ad === 'ulke_hasta_formlari') {
     const d = String(yeni.durum ?? 'bekliyor')
@@ -166,8 +172,15 @@ function portalKisiti(ad, yeni, digerleri) {
  * answers do not change (it can only be reopened).
  */
 function formKilidi(ad, eski, yeni) {
-  if (ad !== 'ulke_hasta_formlari') return null
+  if (ad !== 'ulke_hasta_formlari' && ad !== 'ulke_arac_kayitlari') return null
   const farkli = (k) => (eski[k] ?? null) !== (yeni[k] ?? null)
+  // NOTYA-ULKE-ARACLAR-01 — the trigger of migration 139 (`ulke_arac_kaydi_kilidi`).
+  if (ad === 'ulke_arac_kayitlari') {
+    if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return kisitHatasi('23514', 'ulke_arac_kayitlari: a record never moves to another country, doctor or patient')
+    if (farkli('arac') || farkli('kayit_encrypted') || farkli('takip_tarihi') || farkli('created_at')) return kisitHatasi('23514', 'ulke_arac_kayitlari: the tool, the content and the follow-up day of a record do not change; a new result is a new record')
+    if (eski.kapandi_at && farkli('kapandi_at')) return kisitHatasi('23514', 'ulke_arac_kayitlari: a follow-up that was closed stays closed')
+    return null
+  }
   if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return kisitHatasi('23514', 'ulke_hasta_formlari: a form never moves to another country, doctor or patient')
   if (farkli('rol') || farkli('soru_surumu') || farkli('veli')) return kisitHatasi('23514', 'ulke_hasta_formlari: the question set of a form is fixed when it is asked for')
   if (eski.durum === 'iptal') return kisitHatasi('23514', 'ulke_hasta_formlari: a withdrawn form does not change')

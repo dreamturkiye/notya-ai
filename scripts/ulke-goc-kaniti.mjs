@@ -26,6 +26,10 @@
  *      nothing; one open form per patient, also for two requests at the same moment; a form belongs to one patient
  *      of one doctor in one country and never moves; the answers of a submitted form do not change and a withdrawn
  *      form does not change at all; the table cannot be read by a browser session, nor the function called by one.
+ *   K. THE TOOL RECORDS (migration 139): a record belongs to one patient of one doctor in one country and never
+ *      moves; its tool, its content and its follow-up day never change; a closed follow-up stays closed; only a
+ *      follow-up that exists can be closed; the tool key has the shape of a key; the content is one value; the table
+ *      cannot be read by a browser session; removing the patient removes the records.
  *   E. THE ROLLBACK SCRIPTS (lib/db/migrations/geri-al/) refuse while data exists, run twice, and leave nothing.
  *   T. NOT ON ANY OTHER DATABASE. On a database that is NOT a country database — here one shaped like the Turkish
  *      product's, with its own tables and rows — the baseline refuses, and every migration written since the first
@@ -646,6 +650,66 @@ ok('132: the private bucket exists once', (await c.query(`select count(*)::int n
   }
 }
 
+// ── K. the tool records (migration 139) ──
+{
+  const q = async (sql, par) => (await c.query(sql, par)).rows
+  const say = async (kosul = 'true', par = []) => (await c.query(`select count(*)::int n from ulke_arac_kayitlari where ${kosul}`, par)).rows[0].n
+  const A1 = await hasta(D1), A2 = await hasta(D1), A3 = await hasta(D2), SIL = await hasta(D1)
+  const EKLE = `insert into ulke_arac_kayitlari (ulke, doctor_id, patient_id, arac, kayit_encrypted, takip_tarihi) values ($1, $2, $3, $4, $5, $6) returning id`
+  const k1 = (await q(EKLE, ['uz', D1, A1, 'kdigo-evre', 'sifreli-1', '2027-05-01']))[0].id
+  const k2 = (await q(EKLE, ['uz', D1, A1, 'das28', 'sifreli-2', null]))[0].id
+  ok('K. a record is stamped with its country, doctor, patient and tool; its follow-up is open', JSON.stringify(await q(`select ulke, doctor_id, patient_id, arac, kayit_encrypted, takip_tarihi::text t, kapandi_at from ulke_arac_kayitlari where id = $1`, [k1])) === JSON.stringify([{ ulke: 'uz', doctor_id: D1, patient_id: A1, arac: 'kdigo-evre', kayit_encrypted: 'sifreli-1', t: '2027-05-01', kapandi_at: null }]))
+  ok('K. a patient may have many records, of the same tool too', (await q(EKLE, ['uz', D1, A1, 'kdigo-evre', 'sifreli-3', '2027-06-01'])).length === 1 && (await say('patient_id = $1', [A1])) === 3)
+
+  // the keys
+  await bekle('K. keys: a record for ANOTHER doctor\'s patient → refused 23503', EKLE, ['uz', D1, A3, 'das28', 'x', null], '23503')
+  await bekle('K. keys: a record under ANOTHER country for this patient → refused 23503', EKLE, ['kz', D1, A1, 'das28', 'x', null], '23503')
+  await bekle('K. keys: a record for a patient of ANOTHER country\'s doctor → refused 23503', EKLE, ['uz', K1, HK, 'das28', 'x', null], '23503')
+  await bekle('K. keys: a tool key that is not a key → refused 23514', EKLE, ['uz', D1, A1, 'Not A Tool', 'x', null], '23514')
+  await bekle('K. keys: a record without content → refused 23514', EKLE, ['uz', D1, A1, 'das28', '', null], '23514')
+  await bekle('K. keys: a record without content (null) → refused 23502', EKLE, ['uz', D1, A1, 'das28', null, null], '23502')
+  await bekle('K. state: closing a follow-up that does not exist → refused 23514', `update ulke_arac_kayitlari set kapandi_at = now() where id = $1`, [k2], '23514')
+
+  // what a record may never do
+  await bekle('K. trigger: a record never moves to another patient → refused 23514', `update ulke_arac_kayitlari set patient_id = $2 where id = $1`, [k1, A2], '23514')
+  await bekle('K. trigger: nor to another doctor → refused 23514', `update ulke_arac_kayitlari set doctor_id = $2 where id = $1`, [k1, D2], '23514')
+  await bekle('K. trigger: nor to another country → refused 23514', `update ulke_arac_kayitlari set ulke = 'kz' where id = $1`, [k1], '23514')
+  await bekle('K. trigger: its tool does not change → refused 23514', `update ulke_arac_kayitlari set arac = 'das28' where id = $1`, [k1], '23514')
+  await bekle('K. trigger: its content does not change → refused 23514', `update ulke_arac_kayitlari set kayit_encrypted = 'baska' where id = $1`, [k1], '23514')
+  await bekle('K. trigger: its follow-up day does not change → refused 23514', `update ulke_arac_kayitlari set takip_tarihi = '2028-01-01' where id = $1`, [k1], '23514')
+  await bekle('K. trigger: a follow-up day is not added afterwards → refused 23514', `update ulke_arac_kayitlari set takip_tarihi = '2028-01-01' where id = $1`, [k2], '23514')
+  await c.query(`update ulke_arac_kayitlari set kapandi_at = '2027-05-02T08:00:00Z', updated_at = now() where id = $1`, [k1])
+  ok('K. the doctor closes a follow-up', (await say('id = $1 and kapandi_at is not null', [k1])) === 1)
+  await bekle('K. trigger: a closed follow-up is not opened again → refused 23514', `update ulke_arac_kayitlari set kapandi_at = null where id = $1`, [k1], '23514')
+  await bekle('K. trigger: nor is its moment moved → refused 23514', `update ulke_arac_kayitlari set kapandi_at = now() where id = $1`, [k1], '23514')
+  ok('K. the follow-up list of a doctor is the open follow-ups only, by day', JSON.stringify(await q(`select takip_tarihi::text t from ulke_arac_kayitlari where ulke = 'uz' and doctor_id = $1 and takip_tarihi is not null and kapandi_at is null order by takip_tarihi`, [D1])) === JSON.stringify([{ t: '2027-06-01' }]))
+  ok('K. the table has ONE column for the content and none per field', (await q(`select string_agg(column_name, ',' order by ordinal_position) k from information_schema.columns where table_schema = 'public' and table_name = 'ulke_arac_kayitlari'`))[0].k === 'id,ulke,doctor_id,patient_id,arac,kayit_encrypted,takip_tarihi,kapandi_at,created_at,updated_at')
+
+  // removing the patient removes the records
+  await q(EKLE, ['uz', D1, SIL, 'das28', 'sifreli-4', null])
+  await c.query(`delete from ulke_hastalar where id = $1 and doctor_id = $2 and ulke = 'uz'`, [SIL, D1])
+  ok('K. removing a patient removes that patient\'s records and no one else\'s', (await say('patient_id = $1', [SIL])) === 0 && (await say('patient_id = $1', [A1])) === 3)
+
+  // SERVER ONLY
+  {
+    const kodlar = async (rol, ulke) => {
+      const cikti = []
+      if (rol === 'authenticated') await oturum(D1, ulke); else await c.query(`set role ${rol}`)
+      for (const sql of [`select 1 from ulke_arac_kayitlari limit 1`, `delete from ulke_arac_kayitlari`, `update ulke_arac_kayitlari set updated_at = now()`, `insert into ulke_arac_kayitlari (ulke, doctor_id, patient_id, arac, kayit_encrypted) values ('uz', '${D1}', '${A1}', 'das28', 'x')`, `select public.ulke_arac_kaydi_kilidi()`]) { try { await c.query(sql); cikti.push(`${sql.slice(0, 40)}: allowed`) } catch (e) { if (e.code !== '42501') cikti.push(`${sql.slice(0, 40)}: ${e.code}`) } }
+      await cik()
+      return cikti
+    }
+    const girisli = await kodlar('authenticated', 'uz'), anon = await kodlar('anon', null)
+    ok('K. server only: the doctor\'s own signed-in browser session can read and write NONE of it (its own rows included)', girisli.length === 0, girisli.join('; '))
+    ok('K. server only: nor can a request that is not signed in', anon.length === 0, anon.join('; '))
+    await c.query('set role service_role')
+    let sunucu = 'ok'
+    try { await c.query(`select count(*) from ulke_arac_kayitlari`); await c.query(EKLE, ['uz', D2, A3, 'das28', 'sifreli-5', null]) } catch (e) { sunucu = e.code }
+    await c.query('reset role')
+    ok('K. server only: the server\'s role can', sunucu === 'ok' && (await say('patient_id = $1', [A3])) === 1, sunucu)
+  }
+}
+
 // ── E. the rollback scripts ──
 const GERI = [...DOSYALAR].reverse().map((d) => d.replace(/\.sql$/, '.geri-al.sql'))
 const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 'utf8')
@@ -661,7 +725,7 @@ const geriOku = (d) => readFileSync(join(REPO, 'lib/db/migrations/geri-al', d), 
   await c.query(`delete from auth.users where id in ($1, $2, $3)`, [D1, D2, K1])
   const kalan = []
   for (const t of (await c.query(`select tablename t from pg_tables where schemaname = 'public' and tablename not in ('schema_migrations') order by 1`)).rows.map((r) => r.t)) { const n = (await c.query(`select count(*)::int n from public.${t}`)).rows[0].n; if (n) kalan.push(`${t}: ${n}`) }
-  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests and intake forms included', kalan.length === 0, kalan.join(', '))
+  ok('E. removing a country account removes every row of it in every country table (cascade): usage, links, sessions, summaries, the record, requests, intake forms and tool records included', kalan.length === 0, kalan.join(', '))
   for (const tur of ['first run', 'second run (must be repeatable)']) {
     for (const d of GERI) {
       try { await c.query(geriOku(d)); ok(`E. rollback, ${tur}: ${d}`, true) }

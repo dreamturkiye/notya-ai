@@ -71,13 +71,18 @@ export const UZ_PAKETI: UlkePaketi = {
     // words. Nothing is sent to anybody, and the answers are not given to the model. The questions are machine-written
     // and await a local clinician (./klinik/hastaFormu/).
     hastaFormu: true,
+    // NOTYA-ULKE-ARACLAR-01 (2026-10-09): the tools area — a grid of tools, base tools for every role and role tools
+    // gated by role (./uygulama/araclar/). Nothing is stored and nothing is sent. The texts are machine-written and no
+    // clinician has read them; tools that need national reference content are empty slots, switched off.
+    araclar: true,
   },
-  // No tool is valid in Uzbekistan yet: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md is a proposal awaiting a local clinical lead.
+  // Routes of the PRE-SPLIT application's tool registry valid here: none, and it stays so. The country build has its own
+  // tools area (/tools, feature `araclar`; ./uygulama/araclar/), which shares no route and no screen with that registry.
   araclar: [],
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.

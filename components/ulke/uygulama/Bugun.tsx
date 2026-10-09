@@ -9,7 +9,8 @@ import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { AsistanKarti } from './Asistan'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { ozellikAcik } from '@/lib/ulke/ulke'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
@@ -79,6 +80,15 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular }: {
         <AramaFormu m={m} />
         <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
       </section>
+      {/* NOTYA-ULKE-ARACLAR-01: the way into the tools area from the home screen, where the country has it. */}
+      {ozellikAcik('araclar') ? (() => { const a = araclarMetni(metninDili(m)); return (
+        <section className="uza-kart" data-alan="bugun-araclar">
+          <div className="uza-baslik-satiri" style={{ marginBottom: 0 }}>
+            <h2 className="uza-h2" style={{ marginBottom: 0 }}>{a.izgara.baslik}</h2>
+            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{a.izgara.ac}</a>
+          </div>
+        </section>
+      ) })() : null}
       <section className="uza-kart">
         <h2 className="uza-h2">{m.bugun.baslik}</h2>
         <Hata>{hata ? m.kabuk.hata : null}</Hata>

@@ -13,6 +13,7 @@ import Ayarlar from './Ayarlar'
 import { HastaDosyasi, Hastalar, YeniHasta } from './Hastalar'
 import Muayene from './Muayene'
 import Takvim from './Takvim'
+import Araclar from './Araclar'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
   baslangic: Baslangic,
@@ -24,4 +25,6 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   muayene: Muayene,
   // The calendar, the booking form, one appointment, the working pattern (feature `randevu`).
   takvim: Takvim,
+  // The tools area: the grid and each tool's own screen (feature `araclar`).
+  araclar: Araclar,
 }

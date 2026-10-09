@@ -13,6 +13,10 @@ import { TUM_ULKELER } from '@/countries/tumu'
 import { EKSIK_ISARETI } from '@/lib/ulke/eksik'
 import { hastaIcinBicim } from '@/lib/ulke/arayuz/dilSecimi'
 import { ISTEK_GUN_AZAMI, PIN_DENEME_AZAMI, PIN_HANE } from '@/lib/ulke/portal/sabitler'
+import { kitAraci } from '@/lib/ulke/araclar/katalog'
+import { hesabinAraclari } from '@/lib/ulke/araclar/paket'
+import { ornekGirdiler } from '@/lib/ulke/testing/aracOrnekleri'
+import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 
 if (!a || !k || !p.uygulama) throw new Error(`"${p.kod}" does not bring the signed-in application: nothing to walk through`)
 const d = p.varsayilanDil
@@ -28,6 +32,25 @@ const hastaBicimi = hastaIcinBicim(p.uygulama.dilGruplari, p.uygulama.hastaDille
 const hf = k.hastaFormu
 const formAcik = Boolean(portalAcik && p.ozellikler.hastaFormu && a.formMetinleri && hf)
 const bicimde = (m: unknown) => (m as Record<string, string>)[hastaBicimi] ?? ''
+// NOTYA-ULKE-ARACLAR-01 — the tools area: the tiles of the first role (the role the walk-through signs up with), and
+// ONE tool whose result can be kept, with a form the kit's own samples fill in — for the first role that has one.
+// The walk-through holds no tool and no field: it types what is written here.
+const ar = p.ozellikler.araclar ? a.araclar ?? null : null
+const kutular = (rol: string | null) => { const x = hesabinAraclari(ar, rol); return [...x.temel, ...x.rol].map((t) => t.tanim.anahtar) }
+const bugun = ulkeGunu(new Date(), p.saatDilimi)
+const aracOrnegi = (() => {
+  if (!ar) return null
+  for (const r of a.roller) for (const x of hesabinAraclari(ar, r.anahtar).rol) {
+    const t = x.tanim
+    // no date field (a sample's dates are fixed days), no laboratory unit, no number the country has to state
+    if (t.tur === 'ekran' || (t.parametreler ?? []).length || t.alanlar.some((al) => al.tur === 'tarih' || al.lab || al.olcu)) continue
+    const g = ornekGirdiler(t).find((ornek) => t.hesapla(ornek, { bugun, p: {} }).tamam)
+    if (!g) continue
+    const ham = t.alanlar.filter((al) => g[al.anahtar] !== null && g[al.anahtar] !== false && g[al.anahtar] !== undefined).map((al) => ({ anahtar: al.anahtar, tur: al.tur, deger: g[al.anahtar] === true ? true : String(g[al.anahtar]) }))
+    return { rol: r.anahtar, anahtar: t.anahtar, ad: x.paket.metin.ad[d], ham }
+  }
+  return null
+})()
 process.stdout.write(JSON.stringify({
   kod: p.kod, yolOnEki: p.yolOnEki ?? '', dil: d, acikDiller: p.acikDiller, uygulamaDilleri: p.uygulama.diller, dilGruplari: p.uygulama.dilGruplari,
   hastaDilleri: p.uygulama.hastaDilleri, saatDilimleri: p.uygulama.saatDilimleri, saatBicimi: p.uygulama.saatBicimi, tarihDeseni: p.bicim.tarihDeseni,
@@ -49,6 +72,11 @@ process.stdout.write(JSON.stringify({
     ilkRol: ilkRol ? (hf.roller[ilkRol.anahtar]?.sorular.map((q) => q.anahtar) ?? []) : [],
     digerRoller: Object.entries(hf.roller).filter(([rol]) => rol !== ilkRol?.anahtar).flatMap(([, r]) => r.sorular.map((q) => q.anahtar)),
     hekim: a.formMetinleri[d]?.hekim, hasta: a.formMetinleri[hastaBicimi]?.hasta, davet: a.formMetinleri[hastaBicimi]?.davet, birim: a.formMetinleri[hastaBicimi]?.birim,
+  } : null,
+  araclar: ar ? {
+    m: ar.metinler[d], bugun, ilkRolKutulari: kutular(ilkRol?.anahtar ?? null), ornek: aracOrnegi, ornekRolKutulari: aracOrnegi ? kutular(aracOrnegi.rol) : [],
+    // the follow-up list, where the role of the sample tool has it
+    panel: aracOrnegi ? (kutular(aracOrnegi.rol).find((k) => kitAraci(k)?.ekran === 'takipPaneli') ?? null) : null,
   } : null,
   // what must NEVER be on a screen of this country: the "to be supplied" marker, and what marks another country's content
   eksikIsareti: EKSIK_ISARETI,

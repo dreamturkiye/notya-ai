@@ -11,12 +11,12 @@ import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import type { DilGrubu, DilKodu } from '../tipler'
 import { ulkePaketi, uygulamaDilleri, uygulamaDiliSec } from '../ulke'
 import * as D from './dilSecimi'
-import type { FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { AraclarMetni, FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 import * as S from './notSablonu'
 import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
-export type { FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
+export type { AraclarMetni, FormMetni, PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 export { NOT_BOLUMLERI, ROL_TARAFLARI, type AsistanKimligi, type NotBolumu, type RolTanimi, type RolTarafi } from './tipler'
 
 /** What the active pack brings for the shared screens. A country that brings none has no shared screens. */
@@ -82,6 +82,14 @@ export function formMetni(dil: unknown): FormMetni {
   const f = arayuz().formMetinleri?.[d]
   if (!f) throw new Error(`[ulke/arayuz] no intake-form catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
   return f
+}
+
+/** The tools area's catalogue in an account's form. */
+export function araclarMetni(dil: unknown): AraclarMetni {
+  const d = uygulamaDili(dil)
+  const a = arayuz().araclar?.metinler[d]
+  if (!a) throw new Error(`[ulke/arayuz] no tools catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
+  return a
 }
 
 /** The name of an ISO weekday (1 = Monday … 7 = Sunday). '' for anything else. */

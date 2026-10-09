@@ -226,11 +226,14 @@ export const ${B}_PAKETI: UlkePaketi = {
     // The intake form a patient fills in before a visit, on their own page. Its questions are this country's clinical
     // content (./klinik/hastaFormu.ts); nothing is sent to anybody and the answers are not given to the model.
     hastaFormu: true,
+    // The tools area (/tools): calculators, scales and checklists of the country kit, each switched on HERE for the
+    // roles this country names (./uygulama/araclar.ts). A new country starts with the patient page's tile only.
+    araclar: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
     apiOnEkleri: ['/api/ulke/'],
   },
 ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new country starts hidden. Only the owner changes this, after the pilot approves the site.
@@ -296,6 +299,7 @@ import { ${B}_UYGULAMA_METINLERI } from './uygulama/metinler'
 import { ${B}_RANDEVU_METINLERI } from './uygulama/randevuMetinleri'
 import { ${B}_PORTAL_METINLERI } from './uygulama/portalMetinleri'
 import { ${B}_FORM_METINLERI } from './uygulama/formMetinleri'
+import { ${B}_ARACLAR } from './uygulama/araclar'
 
 export const ${B}_ARAYUZ: UlkeArayuzu = {
   marka: eksik('brand: the word mark the screens show, e.g. Notya'),
@@ -303,6 +307,7 @@ export const ${B}_ARAYUZ: UlkeArayuzu = {
   randevuMetinleri: ${B}_RANDEVU_METINLERI,
   portalMetinleri: ${B}_PORTAL_METINLERI,
   formMetinleri: ${B}_FORM_METINLERI,
+  araclar: ${B}_ARACLAR,
   roller: ${B}_ROL_TANIMLARI,
   asistan: ${KOD}AsistanKimligi,
   notSablonlari: ${B}_NOT_SABLONLARI,
@@ -359,6 +364,53 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 const ${DIL_SABITI}: FormMetni = ${yaz(sekil.form, 'form', 'intake form', '', '')}
 
 export const ${B}_FORM_METINLERI: Readonly<Partial<Record<DilKodu, FormMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['uygulama/araclar.ts'] = `${BAS(`${B}: THE TOOLS AREA (/tools) in "${DIL}" — its own words, and WHICH OF THE KIT'S TOOLS this country has.`, `Typed against the kit (lib/ulke/araclar/tipler.ts → UlkeAraclari; lib/ulke/arayuz/metinTipleri.ts → AraclarMetni).
+
+  metinler      the area's own words: the grid and its search, what every tool's screen shares, keeping a result on a
+                patient (kayit), the follow-up list (takip). Placeholders %, %1, %2 must stay.
+  araclar       THE TOOLS THIS COUNTRY HAS. Every entry names a tool of the kit by its key
+                (lib/ulke/araclar/katalog.ts), says WHO SEES IT — "roller: null" = a base tool, the same for every
+                role; or the list of this country's roles that see it — and brings every word of its screen. The
+                pack check refuses a tool that is not classified, a key the kit does not have, and a missing word.
+                A NEW COUNTRY STARTS WITH ONE TILE: the patient's page. Add the others one by one, each with a
+                clinician of this country: a tool is a translation of the kit's checklist or formula, never a
+                national schedule, drug list, dosing table, protocol or reference range.
+  parametreler  some tools leave numbers to the country (a threshold, an interval): such a tool stays a slot until a
+                local clinician states each number with its source.
+  birimler      the name of every unit a switched-on tool shows, as a doctor reads it
+  labBirimleri  the unit this country's laboratories report each value in, for the tools that read one
+  yuvalar       tools this country does not have yet, each with what is missing and who supplies it. Empty, off.
+  inceleme      who wrote the tool texts and which clinician read them
+
+THE FOLLOW-UP LIST (takip-paneli) is a role tool: give it to every role that has at least one tool whose result
+can be kept, and to no other. The application proposes no follow-up day anywhere: an interval is clinical guidance
+of the country.`)}import { eksik, eksikAyar } from '@/lib/ulke/eksik'
+import type { AraclarMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
+
+const ${DIL_SABITI}: AraclarMetni = ${yaz(sekil.araclar, 'araclar', 'tools area', '', '')}
+
+export const ${B}_ARACLAR: UlkeAraclari = {
+  metinler: { ${anahtar(DIL)}: ${DIL_SABITI} },
+  araclar: [
+    {
+      // Base: every role gives patients access to their page the same way.
+      anahtar: 'hasta-portali', roller: null,
+      metin: {
+        ad: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — its title, the same words as the card on the patient\\'s file') },
+        aciklama: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — one sentence: what the doctor does there') },
+        alanlar: {},
+        not: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — the line under it: the system sends nothing to the patient') },
+      },
+    },
+  ],
+  birimler: {},
+  labBirimleri: {},
+  yuvalar: [],
+  inceleme: eksikAyar('tools: who wrote the tool texts and who read them — { makineYazimi: true | false, klinisyen: null | \\'name of the clinician of this country who read them\\' }'),
+}
 `
 
 dosyalar['klinik/hastaFormu.ts'] = `${BAS(`${B}: THE INTAKE FORM's QUESTIONS — what a patient is asked before a visit.`, `CLINICAL CONTENT. The kit owns the question TYPES and the rules (lib/ulke/intake/tipler.ts, sorular.ts); the

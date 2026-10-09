@@ -584,6 +584,74 @@
    "$dil": "birim"
   }
  },
+ "araclar": {
+  "kabuk": {
+   "araclar": "$m"
+  },
+  "izgara": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "ara": "$m",
+   "araOrnek": "$m",
+   "temel": "$m",
+   "rol": "$m:%",
+   "bos": "$m",
+   "sonucYok": "$m",
+   "ac": "$m"
+  },
+  "arac": {
+   "geri": "$m",
+   "girdiler": "$m",
+   "sonuc": "$m",
+   "eksik": "$m",
+   "madde": "$m:%",
+   "aralik": "$m:%1,%2",
+   "oran": "$m:%1,%2",
+   "kopyala": "$m",
+   "kopyalandi": "$m",
+   "kopyalanamadi": "$m",
+   "temizle": "$m",
+   "kaynak": "$m:%",
+   "saklanmaz": "$m",
+   "yok": "$m"
+  },
+  "portal": {
+   "nasil": "$m"
+  },
+  "kayit": {
+   "hastaIcin": "$m:%",
+   "hastaBulunamadi": "$m",
+   "hastasiz": "$m",
+   "baslik": "$m",
+   "aciklama": "$m",
+   "takipTarihi": "$m",
+   "takipIpucu": "$m",
+   "kaydet": "$m",
+   "kaydedildi": "$m",
+   "dosyayaGit": "$m",
+   "eksik": "$m",
+   "takipGecersiz": "$m",
+   "yapilamadi": "$m",
+   "dosyaBaslik": "$m",
+   "dosyaAciklama": "$m",
+   "dosyaBos": "$m",
+   "araclariAc": "$m",
+   "takipGunu": "$m:%",
+   "takipKapandi": "$m:%",
+   "okunamadi": "$m",
+   "aracYok": "$m"
+  },
+  "takip": {
+   "aciklama": "$m",
+   "bos": "$m",
+   "gecikti": "$m",
+   "bugun": "$m",
+   "kapat": "$m",
+   "kapatildi": "$m",
+   "yapilamadi": "$m",
+   "okunamadi": "$m"
+  }
+ },
  "acilis": {
   "meta": {
    "baslik": "$m",

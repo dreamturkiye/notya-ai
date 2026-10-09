@@ -14,6 +14,7 @@
 import type { UlkeAcilisi } from './arayuz/acilisTipleri'
 import { NOT_BOLUMLERI, ROL_TARAFLARI, type UlkeArayuzu } from './arayuz/tipler'
 import { eksikAyarMi, eksikMetinMi } from './eksik'
+import { ARACLAR_YER_TUTUCULARI, araclarSorunlari } from './araclar/denetim'
 import { formIcerigiSorunlari } from './intake/sorular'
 import type { DilGrubu, DilKodu, UlkeKlinigi, UlkePaketi } from './tipler'
 
@@ -74,7 +75,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   // … and every marker the rules did not name themselves, once each.
   const isaretler: PaketSorunu[] = []
   isaretleriTopla({ ...paket, metinler: undefined }, '', isaretler)
-  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
+  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, formMetinleri: undefined, araclar: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
   isaretleriTopla(klinik, 'klinik', isaretler)
   const bilinen = new Set(s.map((x) => x.yer))
   for (const i of isaretler) if (!bilinen.has(i.yer) && !bilinen.has(i.yer.replace(/^uygulama\./, '')) && !bilinen.has(`uygulama.${i.yer}`)) { s.push(i); bilinen.add(i.yer) }
@@ -159,6 +160,7 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
   // ── the signed-in application ──
   if (paket.ozellikler.hastaPortali && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.hastaPortali', 'the patient portal needs the signed-in application (cekirdekMuayene): a patient is given access from a patient file')
   if (paket.ozellikler.hastaFormu && !paket.ozellikler.hastaPortali) ekle('ozellikler.hastaFormu', 'the intake form needs the patient portal (hastaPortali): a patient fills it in on their own page')
+  if (paket.ozellikler.araclar && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.araclar', 'the tools area needs the signed-in application (cekirdekMuayene)')
   if (!paket.ozellikler.cekirdekMuayene) return s
   const u = paket.uygulama
   if (!u) { ekle('uygulama', 'the application is switched on and the pack has no settings for it'); return s }
@@ -284,6 +286,19 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
         if (dv && dolu(dv.baglantisizAdsiz) && !eksikMetinMi(dv.baglantisizAdsiz) && /%/.test(dv.baglantisizAdsiz)) ekle(`arayuz.formMetinleri[${d}].davet.baglantisizAdsiz`, 'carries a placeholder: this text names neither a doctor nor an address')
       }
     }
+    // the tools area's own catalogue (each TOOL's words are checked below, with the tool)
+    if (paket.ozellikler.araclar && arayuz.araclar && !eksikAyarMi(arayuz.araclar)) {
+      const am = arayuz.araclar.metinler?.[d]
+      if (!am) ekle(`arayuz.araclar.metinler[${d}]`, 'the tools area is on and this form has no catalogue for it')
+      else {
+        metinleriGez(am, `arayuz.araclar.metinler[${d}]`, s)
+        for (const [yol, yerler] of ARACLAR_YER_TUTUCULARI) {
+          const metin = yol.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), am)
+          if (typeof metin !== 'string' || eksikMetinMi(metin) || !metin.trim()) continue
+          for (const y of yerler) if (!(y === '%' ? /%(?!\d)/ : new RegExp(`${y}(?!\\d)`)).test(metin)) ekle(`arayuz.araclar.metinler[${d}].${yol}`, `must hold "${y}" where the value is written`)
+        }
+      }
+    }
     // roles and templates, per form
     for (const r of roller) if (!sahip(r.ad, d) || !dolu(r.ad[d])) ekle(`arayuz.roller.${r.anahtar}.ad.${d}`, 'the role has no name in this form')
     else if (eksikMetinMi(r.ad[d])) ekle(`arayuz.roller.${r.anahtar}.ad.${d}`, TESLIM)
@@ -292,6 +307,9 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
     if (sablon?.veliAlani && !eksikAyarMi(sablon.veliAlani) && (!dolu(sablon.veliAlani.tanim.ad[d]) || eksikMetinMi(sablon.veliAlani.tanim.ad[d]))) ekle(`arayuz.notSablonlari.veliAlani.ad.${d}`, 'the guardian field has no label in this form')
     for (const b of liste(sablon?.bolumBasliklari)) if (!dolu(b.ad[d]) || eksikMetinMi(b.ad[d])) ekle(`arayuz.notSablonlari.bolumBasliklari.${b.taraf}.${b.bolum}.${d}`, 'the section heading has no text in this form')
   }
+
+  // ── tools: which exist here, for whom, and every word of their screens ──
+  for (const x of araclarSorunlari(paket, arayuz, diller)) if (x.yer !== 'ozellikler.araclar') ekle(x.yer, x.sorun)
 
   // ── roles ──
   const rolAnahtarlari = roller.map((r) => r.anahtar)

@@ -63,7 +63,13 @@ export type Ozellik =
    * Needs `hastaPortali`. The questions are the pack's clinical content (countries/active/klinik → `hastaFormu`).
    */
   | 'hastaFormu'
-  /** Doktor Araçları (/doktor-tools). */
+  /**
+   * NOTYA-ULKE-ARACLAR-01 — the tools area of a country build (/tools): a grid of tools, base tools for every role and
+   * role tools gated by role, each on its own screen. Needs `cekirdekMuayene`. Which tools exist is the kit's catalogue
+   * (lib/ulke/araclar/katalog.ts); which are on, for whom and in which words is the pack's (countries/active/arayuz → `araclar`).
+   */
+  | 'araclar'
+  /** Doktor Araçları of the pre-split application (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
   | 'asistan'
@@ -320,6 +326,8 @@ export const UYGULAMA_EKRANLARI = {
    * ?yeni=1 the booking form, ?randevu=<id> one appointment, ?duzen=1 the working pattern.
    */
   takvim: '/calendar',
+  /** NOTYA-ULKE-ARACLAR-01 — one address, two views: the grid, and ?arac=<key> one tool. */
+  araclar: '/tools',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

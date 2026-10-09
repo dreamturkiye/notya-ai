@@ -141,3 +141,20 @@ textarea.uza-alt-girdi { min-height: 58px; font-size: 15px; }
 .uza-randevu-satiri > .uza-dugme { margin-bottom: 8px; }
 .uza-mola { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 8px; }
 textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
+
+/* ── NOTYA-ULKE-ARACLAR-01 — tools: a grid of tiles (one column on a phone), and a tool's result. ── */
+.uza-arac-izgara { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .uza-arac-izgara { grid-template-columns: 1fr 1fr; } }
+.uza-arac-kutu { display: flex; flex-direction: column; gap: 4px; height: 100%; min-height: 76px; padding: 14px 16px; border: 1px solid var(--uza-cizgi); border-radius: 14px; background: #fff; }
+.uza-arac-kutu:hover { border-color: var(--uza-cam); }
+.uza-arac-ad { font-weight: 600; color: var(--uza-cam); overflow-wrap: anywhere; }
+.uza-arac-aciklama { font-size: 13.5px; color: var(--uza-soluk); }
+.uza-arac-bant { margin-top: 12px; font-family: var(--uza-serif); font-weight: 560; font-size: 1.15rem; line-height: 1.3; }
+.uza-arac-uyarilar { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.uza-arac-uyarilar > li { padding-left: 12px; border-left: 2px solid var(--uza-altin); }
+/* NOTYA-ULKE-ARACLAR-01 — a kept result on the patient's file: one line that opens to its summary. */
+.uza-arac-kayit > summary { display: flex; align-items: center; gap: 12px; padding: 12px 4px; cursor: pointer; list-style: none; }
+.uza-arac-kayit > summary::-webkit-details-marker { display: none; }
+.uza-arac-ozet { margin: 0 4px 14px; padding: 12px 14px; border-left: 2px solid var(--uza-altin); background: rgba(212, 193, 150, 0.14); font: inherit; font-size: 14.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.uza-rozet[data-takip-durum='gecikti'] { background: rgba(164, 91, 62, 0.1); color: var(--uza-uyari); }
+.uza-rozet[data-takip-durum='kapandi'] { background: rgba(47, 67, 52, 0.12); color: var(--uza-cam); }
