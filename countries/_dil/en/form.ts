@@ -76,7 +76,7 @@ export const EN_FORM_TEMEL: FormMetni = {
     kaydedildi: 'Your answers have been saved.',
     kaydedilemedi: 'Could not save. Check your internet connection and try again.',
     ileri: 'Next',
-    geri: 'Back',
+    geri: 'Previous',
     bolum: 'Part %1 of %2',
     gonder: 'Send to the doctor',
     gonderiliyor: 'Sending…',

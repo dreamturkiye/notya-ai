@@ -65,7 +65,7 @@ export const KELIMELER: readonly Kelime[] = [
   ise('digit'), ise('central'), ise('critic', ISE_KISA), ise('general'), ise('character'), ise('catheter'), ise('normal'), ise('local'),
   ise('real'), ise('random'), ise('item'), ise('initial'), ise('familiar', ISE_KISA), ise('anonym'), ise('pseudonym'), ise('symbol', ISE_KISA),
   ise('mobil'), ise('immobil'), ise('individual'), ise('modern'), ise('neutral'), ise('formal'), ise('external'), ise('internal'),
-  ise('sensit'), ise('desensit'), ise('metabol', ISE_KISA), ise('metastas', ISE_KISA), ise('homogen'),
+  ise('sensit'), ise('desensit'), ise('lateral'), ise('pressur'), ise('metabol', ISE_KISA), ise('metastas', ISE_KISA), ise('homogen'),
   { gb: 'organiser', us: 'organizer', ca: 'us', ekler: ['', 's'] },
   { gb: 'nebulis', us: 'nebuliz', ca: 'us', ekler: ['e', 'ed', 'er', 'ers', 'ation'] },
   { gb: 'unauthorised', us: 'unauthorized', ca: 'us' },

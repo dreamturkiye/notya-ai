@@ -17,6 +17,8 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { EN_ACILIS_TEMEL } from './acilis'
+import { EN_ROL_ARACLARI, EN_TEMEL_ARACLAR } from './araclar'
 import { EN_ARACLAR_METNI_TEMEL } from './araclarMetni'
 import { EN_CEKIRDEK_TEMEL } from './cekirdek'
 import { EN_FORM_TEMEL } from './form'
@@ -46,9 +48,11 @@ const TEMEL = {
   formCekirdek: EN_CEKIRDEK_BOLUMLER,
   formRolleri: EN_ROL_SORULARI,
   formRizasi: EN_FORM_RIZASI,
+  araclar: Object.fromEntries([...EN_TEMEL_ARACLAR, ...EN_ROL_ARACLARI].map((a) => [a.anahtar, { ...a, roller: undefined }])),
+  acilis: EN_ACILIS_TEMEL,
 }
 /** Internal keys of the intake form sit beside its texts; they are not text. */
-const anahtarMi = (yer: string): boolean => /(^|\.)(anahtar|tur|kime|cinsiyet|olcu)$/.test(yer)
+const anahtarMi = (yer: string): boolean => /(^|\.)(anahtar|tur|kime|cinsiyet|olcu|capa|id|rol|no|saat)$/.test(yer)
 const METINLER = tumMetinler(TEMEL).filter((x) => !anahtarMi(x.yer))
 
 describe('English language set: the texts', () => {
