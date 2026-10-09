@@ -27,7 +27,7 @@ const DIZIN = join(KOK, 'countries/uz/uygulama/araclar')
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 
 /** Latin written inside a Cyrillic or Russian sentence on purpose: names the profession itself writes in Latin letters. */
-const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|I{1,3}|IV|V|E|A|B|C)\b/g
+const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|I{1,3}|IV|V|E|A|B|C)\b/g
 
 /** Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart. */
 const TEMEL = ['hasta-portali']
@@ -37,12 +37,16 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri'],
   'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc'],
   'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem'],
+  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop'],
+  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara'],
+  'gogus-hastaliklari': ['inhaler-teknik'],
+  'goz-hastaliklari': ['gorme-keskinligi'],
   dahiliye: ['kdigo-evre'],
   dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma'],
   endokrinoloji: ['rejim-karti'],
   'enfeksiyon-hastaliklari': ['antibiyotik-sure'],
-  gastroenteroloji: [], 'genel-cerrahi': [],
-  'gogus-cerrahisi': [], 'gogus-hastaliklari': [], 'goz-hastaliklari': [], 'kadin-hastaliklari-dogum': [], 'kalp-damar-cerrahisi': [], kardiyoloji: [],
+  gastroenteroloji: [],
+  'kadin-hastaliklari-dogum': [], 'kalp-damar-cerrahisi': [], kardiyoloji: [],
   'kulak-burun-bogaz': [], nefroloji: [], noroloji: [], onkoloji: [], ortopedi: [], pediatri: [], 'plastik-cerrahi': [], psikiyatri: [], radyoloji: [],
   romatoloji: [], uroloji: [], 'spor-hekimligi': [], 'fizik-tedavi': [],
   // clinic doctors and allied professions: base tools only (their own tools are a separate registry of the pre-split application)

@@ -67,7 +67,9 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'yara-dren-izlem', roller: ['cocuk-cerrahisi'],
+    // Two roles: paediatric surgery and general surgery follow a wound, a drain and sutures the same way (the pre-split
+    // application has the same tool in both). Not for thoracic, cardiovascular or plastic surgery: each has its own.
+    anahtar: 'yara-dren-izlem', roller: ['cocuk-cerrahisi', 'genel-cerrahi'],
     metin: {
       ad: u('Jarohat, drenaj va choklar kuzatuvi', 'Жароҳат, дренаж ва чоклар кузатуви', 'Наблюдение за раной, дренажом и швами'),
       aciklama: u('Nima kuzatilayotgani, sanasi va keyingi nazorat. Infeksiya tashxisi va dori dozasi yozilmaydi.', 'Нима кузатилаётгани, санаси ва кейинги назорат. Инфекция ташхиси ва дори дозаси ёзилмайди.', 'Что наблюдается, дата и следующий контроль. Диагноз инфекции и дозы препаратов не указываются.'),

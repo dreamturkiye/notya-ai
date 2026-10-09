@@ -11,6 +11,7 @@ import { BOS_SONUC } from './yardimci'
 import { ACIL_ANESTEZI_BEYIN } from './tanimlar/acilAnesteziBeyin'
 import { CERRAHI_DAHILIYE_DERM } from './tanimlar/cerrahiDahiliyeDerm'
 import { ENDO_ENFEKSIYON_GASTRO } from './tanimlar/endoEnfeksiyonGastro'
+import { CERRAHI_GOGUS_GOZ } from './tanimlar/cerrahiGogusGoz'
 
 /**
  * The patient portal as a tile: finding a patient and opening their file, where access is given (a link and a PIN)
@@ -18,7 +19,7 @@ import { ENDO_ENFEKSIYON_GASTRO } from './tanimlar/endoEnfeksiyonGastro'
  */
 const HASTA_PORTALI: AracTanimi = { anahtar: 'hasta-portali', tur: 'ekran', ekran: 'hastaPortali', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
 
-export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO]
+export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ]
 
 const DIZIN: ReadonlyMap<string, AracTanimi> = new Map(KIT_ARACLARI.map((a) => [a.anahtar, a]))
 

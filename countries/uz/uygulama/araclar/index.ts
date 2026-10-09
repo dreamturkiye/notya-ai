@@ -30,12 +30,13 @@ import { UZ_ARACLAR_METINLERI } from './metinler'
 import { UZ_TEMEL_ARACLAR } from './temel'
 import { UZ_ROL_ARACLARI_1 } from './rol1'
 import { UZ_ROL_ARACLARI_2 } from './rol2'
+import { UZ_ROL_ARACLARI_3 } from './rol3'
 import { UZ_ARAC_BIRIMLERI, UZ_LAB_BIRIMLERI } from './birimler'
 import { UZ_ARAC_YUVALARI } from './yuvalar'
 
 export const UZ_ARACLAR: UlkeAraclari = {
   metinler: UZ_ARACLAR_METINLERI,
-  araclar: [...UZ_TEMEL_ARACLAR, ...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2],
+  araclar: [...UZ_TEMEL_ARACLAR, ...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3],
   birimler: UZ_ARAC_BIRIMLERI,
   labBirimleri: UZ_LAB_BIRIMLERI,
   yuvalar: UZ_ARAC_YUVALARI,

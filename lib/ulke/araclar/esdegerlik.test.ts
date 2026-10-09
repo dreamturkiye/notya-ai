@@ -38,6 +38,13 @@ import { atbHesapla } from '@/specialties/enfeksiyon-hastaliklari/engines/atbSur
 import { viralPlanla } from '@/specialties/enfeksiyon-hastaliklari/engines/viralIzlem'
 import { skorHesapla, sonrakiKontrolTarihi } from '@/specialties/gastroenteroloji/engines/ibdIbs'
 import { hepatitPlanla } from '@/specialties/gastroenteroloji/engines/hbvHcv'
+import * as K4 from './tanimlar/cerrahiGogusGoz'
+import { PREOP_MADDELER as TR_GC_PREOP, preopSkorla as gcPreopSkorla } from '@/specialties/genel-cerrahi/engines/preop'
+import { yaraSkorla as gcYaraSkorla } from '@/specialties/genel-cerrahi/engines/yaraDren'
+import { PREOP_MADDELER as TR_TORAKS_PREOP, preopSkorla as toraksPreopSkorla } from '@/specialties/gogus-cerrahisi/engines/preop'
+import { TUP_YARA_DURUMLARI, TUP_YARA_TIPLERI, tupYaraSkorla } from '@/specialties/gogus-cerrahisi/engines/tupYara'
+import { INHALER_CIHAZLARI, INHALER_TEKNIK_CIHAZ, INHALER_TEKNIK_ORTAK, inhalerIzlem } from '@/specialties/gogus-hastaliklari/engines/inhaler'
+import { harfFarki, vaCoz } from '@/specialties/goz-hastaliklari/engines/va'
 
 const BUGUN = ORNEK_BUGUN
 /** What both sides are reduced to before they are compared. */
@@ -177,6 +184,56 @@ SATIRLAR_2: {
   ]
   SATIRLAR.push(...ek)
   void P
+}
+
+SATIRLAR_3: {
+  const va = (g: AracGirdisi, on: string): string | null => (g.bicim === 'ondalik' ? (typeof g[`${on}_ondalik`] === 'number' ? String(g[`${on}_ondalik`]) : null) : g.bicim === 'kesir' && typeof g[`${on}_pay`] === 'number' && typeof g[`${on}_payda`] === 'number' ? `${g[`${on}_pay`]}/${g[`${on}_payda`]}` : null)
+  SATIRLAR.push(
+    {
+      arac: 'genel-preop', karsilik: 'specialties/genel-cerrahi/engines/preop.ts → preopSkorla (an untouched form has no result in the kit)', listeler: [[K4.GENEL_PREOP_MADDELER, TR_GC_PREOP.map((m) => m.id)]], sayilar: ['tamamlanan'],
+      onlar: (g) => { const secili = isaretliler(g, K4.GENEL_PREOP_MADDELER); const r = gcPreopSkorla({ tamamlanan: secili, tarih: g.ameliyat_tarihi }); return { tamam: r.tamamMi && (secili.length > 0 || r.kart.ameliyatTarihi !== null), sayilar: { tamamlanan: r.kart.tamamlanan.length }, tarihler: dolu({ ameliyat_tarihi: r.kart.ameliyatTarihi }) } },
+    },
+    {
+      arac: 'yara-dren-izlem', karsilik: 'specialties/genel-cerrahi/engines/yaraDren.ts → yaraSkorla (the same follow-up, for general surgery)', listeler: [], sayilar: ['dren_cikis_ml'],
+      onlar: (g) => {
+        if (g.tip === null) return { tamam: false }
+        const r = gcYaraSkorla({ tip: g.tip, tarih: g.tarih, sonrakiKontrol: g.sonraki_kontrol, drenCikisMl: g.dren_cikis_ml })
+        return { tamam: r.tamamMi, sayilar: dolu({ dren_cikis_ml: r.tamamMi && r.kart.tip === 'dren' ? r.kart.drenCikisMl : null }), tarihler: r.tamamMi ? dolu({ tarih: r.kart.tarih, sonraki_kontrol: r.kart.sonrakiKontrol }) : {} }
+      },
+    },
+    { arac: 'toraks-preop', karsilik: 'specialties/gogus-cerrahisi/engines/preop.ts → preopSkorla', listeler: [[K4.TORAKS_PREOP_MADDELER, TR_TORAKS_PREOP.map((m) => m.kod)]], sayilar: [],
+      onlar: (g) => { const r = toraksPreopSkorla(isaretliler(g, K4.TORAKS_PREOP_MADDELER)); return { tamam: r.tamamMi, uyarilar: r.gorevOnerileri.map((x) => x.kod.replace(/^preop_/, '')).sort() } } },
+    {
+      arac: 'toraks-tup-yara', karsilik: 'specialties/gogus-cerrahisi/engines/tupYara.ts → tupYaraSkorla (the kit asks for what and its state; the other application assumes them)', listeler: [[K4.TUP_YARA_TIPLERI, TUP_YARA_TIPLERI.map((x) => x.kod)], [K4.TUP_YARA_DURUMLARI, TUP_YARA_DURUMLARI.map((x) => x.kod)]],
+      onlar: (g) => {
+        if (g.tip === null || g.durum === null) return { tamam: false }
+        const r = tupYaraSkorla({ tip: g.tip, durum: g.durum, tarih: g.tarih, sonrakiKontrol: g.sonraki_kontrol })
+        assert.deepEqual(r.gorevOnerileri.map((x) => x.due), r.kart.sonrakiKontrol && r.tamamMi ? [r.kart.sonrakiKontrol] : [])
+        return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ tarih: r.kart.tarih, sonraki_kontrol: r.kart.sonrakiKontrol }) : {} }
+      },
+    },
+    {
+      arac: 'inhaler-teknik', karsilik: 'specialties/gogus-hastaliklari/engines/inhaler.ts → inhalerIzlem (the next check only where the months are stated; that application assumes three)',
+      listeler: [[K4.INHALER_CIHAZLARI, INHALER_CIHAZLARI], [[String(K4.INHALER_ORTAK.length)], [String(INHALER_TEKNIK_ORTAK.length)]], ...K4.INHALER_CIHAZLARI.map((c) => [[String(K4.INHALER_CIHAZ_ADIMLARI[c].length)], [String(INHALER_TEKNIK_CIHAZ[c].length)]] as const)], sayilar: ['tamamlanan'],
+      onlar: (g) => {
+        if (g.cihaz === null) return { tamam: false }
+        const c = g.cihaz as (typeof K4.INHALER_CIHAZLARI)[number]
+        // that application names a step by its sentence; the kit's keys stand in the same order
+        const bizim = [...K4.INHALER_ORTAK, ...K4.INHALER_CIHAZ_ADIMLARI[c]], onlarin = [...INHALER_TEKNIK_ORTAK, ...INHALER_TEKNIK_CIHAZ[c]]
+        const r = inhalerIzlem({ cihaz: c, tamamlanan: bizim.flatMap((k, i) => (g[k] === true ? [onlarin[i]] : [])), bugun: BUGUN, ...(typeof g.kontrol_ay === 'number' ? { kontrolAy: g.kontrol_ay } : {}) })
+        assert.equal(r.toplam, bizim.length)
+        return { tamam: true, sayilar: { tamamlanan: r.tamamSayi }, tarihler: dolu({ sonraki: typeof g.kontrol_ay === 'number' ? r.sonrakiKontrolIso : null }) }
+      },
+    },
+    {
+      arac: 'gorme-keskinligi', karsilik: 'specialties/goz-hastaliklari/engines/va.ts → vaCoz, harfFarki (decimal and fraction; the worded categories of that application are not in the kit)', listeler: [], sayilar: ['logmar', 'onceki_logmar', 'harf_farki'],
+      onlar: (g) => {
+        const simdi = vaCoz(va(g, 'simdi')), onceki = vaCoz(va(g, 'onceki'))
+        if (!simdi || simdi.logmar === null) return { tamam: false }
+        return { tamam: true, sayilar: dolu({ logmar: simdi.logmar, onceki_logmar: onceki?.logmar ?? null, harf_farki: onceki?.logmar != null ? (harfFarki(va(g, 'onceki'), va(g, 'simdi')) as number) + 0 : null }) }
+      },
+    },
+  )
 }
 
 /** Tools of the kit that have no function to stand beside, and why. */

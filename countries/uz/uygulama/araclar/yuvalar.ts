@@ -56,6 +56,10 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
   yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
 
+  // ── chest diseases ──
+  yuva('cat-mmrc', ['gogus-hastaliklari'], 'COPD Assessment Test (CAT) with the mMRC dyspnoea grade: CAT is a published questionnaire whose wording belongs to its rights holder. Needed: the authorised Uzbek and Russian translations and the licence to use them. The wording is not translated by a machine; the scoring is not switched on without it.', 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions'),
+  yuva('akciger-aksiyon-plani', ['gogus-hastaliklari'], 'Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in the green, yellow and red zone), with the emergency number and the local stop-smoking service. RECLASSIFIED from "keep": every sentence is an instruction to a patient and must be supplied and signed by a local chest physician.'),
+
   // ── gastroenterology ──
   yuva('ibd-skor', ['gastroenteroloji'], 'Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the local gastroenterology protocols state them.', KLINISYEN, true),
   yuva('hepatit-izlem', ['gastroenteroloji'], 'Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the national hepatitis programme.', KLINISYEN, true),
