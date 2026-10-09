@@ -69,6 +69,14 @@ export type Ozellik =
    * (lib/ulke/araclar/katalog.ts); which are on, for whom and in which words is the pack's (countries/active/arayuz → `araclar`).
    */
   | 'araclar'
+  /**
+   * NOTYA-ULKE-KLINIK-01 — clinic accounts: a clinic with an owner, members who join by a one-use invitation code and
+   * hold one position each, and GRANTS by which a doctor lets a member help with that doctor's patients (front desk,
+   * a share with an allied professional, cover by another doctor), every use of which is recorded. A patient still
+   * belongs to one doctor; a position alone opens no patient. Needs `cekirdekMuayene`; the front-desk workspace needs
+   * `randevu`, its portal capability `hastaPortali`. Settings come from the pack (`uygulama.klinikHesaplari`).
+   */
+  | 'klinikHesaplari'
   /** Doktor Araçları of the pre-split application (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -214,6 +222,8 @@ export type UygulamaAyarlari = {
   randevu?: RandevuAyarlari
   /** NOTYA-ULKE-PORTAL-01 — the patient portal's settings. Present exactly where the feature `hastaPortali` is on. */
   portal?: PortalAyarlari
+  /** NOTYA-ULKE-KLINIK-01 — clinic accounts. Present exactly where the feature `klinikHesaplari` is on. */
+  klinikHesaplari?: KlinikHesabiAyarlari
 
   // ── NOTYA-ULKE-SABLON-01 — every assumption the shared screens used to carry for one country, as a setting. ──
   // All REQUIRED: a pack that brings the application says each of them out loud. lib/ulke/paketDenetimi.ts checks
@@ -278,6 +288,57 @@ export type PortalAyarlari = {
    * is not for emergencies and names NO number. The catalogue holds the sentence, never the number.
    */
   acilNumara?: string | null
+}
+
+/** The positions a member of a clinic can hold: owner, administrator, doctor, allied professional, front desk. One each. */
+export const KLINIK_KONUMLARI = ['sahip', 'yonetici', 'hekim', 'muttefik', 'on-buro'] as const
+export type KlinikKonumu = (typeof KLINIK_KONUMLARI)[number]
+
+/**
+ * The capabilities a doctor can grant, one grant each (migration 145 holds the same list):
+ *   on-buro-randevu  front desk: see and manage that doctor's appointments, and the minimal patient card
+ *   on-buro-hasta    front desk: create a patient with identity and contact fields only
+ *   on-buro-portal   front desk: give a patient the portal link and ask for the intake form
+ *   paylasim         allied professional: read the approved notes of one named patient
+ *   vekalet          another doctor: read approved notes and appointments for a stated period (cover)
+ */
+export const KLINIK_YETKI_TURLERI = ['on-buro-randevu', 'on-buro-hasta', 'on-buro-portal', 'paylasim', 'vekalet'] as const
+export type KlinikYetkiTuru = (typeof KLINIK_YETKI_TURLERI)[number]
+
+/**
+ * NOTYA-ULKE-KLINIK-01 — what a pack says about clinic accounts (feature `klinikHesaplari`).
+ *
+ * WHO MAY LAWFULLY READ A MEDICAL RECORD, what an allied profession may do, and how long a record of access must be
+ * kept are questions of the country's law. The kit decides none of them: each is a setting here, with no default,
+ * and `inceleme.hukukcu` says whether a lawyer of the country has read the answers. The kit's own rules are the
+ * narrow ones and do not bend to a setting: a grant is given per doctor (a share per patient), notes are read only
+ * when approved and never written, every use is recorded, and nobody reads anything by position alone.
+ */
+export type KlinikHesabiAyarlari = {
+  /** The capabilities that exist in this country. One that is not listed cannot be given, and a grant of it opens nothing. */
+  yetkiTurleri: readonly KlinikYetkiTuru[]
+  /**
+   * true = the clinic's OWNER may enter a grant for a doctor's patients on that doctor's behalf. false = only the
+   * doctor whose patients they are. Every new country states false until a lawyer of the country says otherwise.
+   */
+  sahipHekimAdinaVerebilir: boolean
+  /**
+   * The allied ROLES (keys of `uygulama.roller`) that may be given a share of a patient's approved notes. A role
+   * that is not listed cannot receive one. The scope of practice of each profession is the country's law: [] until
+   * it is decided.
+   */
+  paylasimRolleri: readonly string[]
+  /** Days an invitation to a clinic stays valid: 1 to 31. */
+  davetGecerlilikGun: number
+  /** The longest period of cover a doctor may give, in days: 1 to 31. */
+  vekaletAzamiGun: number
+  /**
+   * A SLOT, switched off: how long the record of access must be kept, and what happens to it afterwards. The kit
+   * deletes no record row and has no purge; when a lawyer of the country states the period, the purge is built with it.
+   */
+  kayitSaklama: null
+  /** Who wrote these answers and whether a lawyer of the country has read them (a name, or null). */
+  inceleme: { makineYazimi: boolean; hukukcu: string | null }
 }
 
 export type RandevuAyarlari = {
