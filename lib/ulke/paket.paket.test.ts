@@ -81,6 +81,26 @@ describe('every pack is complete', () => {
       { const k = { ...klinik, notTalimati: () => eksik('instruction') }; iceriyor(yerler(paket, arayuz, k), `klinik.notTalimati(${d}, ${klinik.sablonlar[0]}): to be supplied`) }
       { const k = { ...klinik, riza: { ...klinik.riza, surum: '' } }; iceriyor(yerler(paket, arayuz, k), 'klinik.riza.surum') }
     }
+    // the patient portal: no catalogue, an entry to be supplied, a sentence that lost its placeholder, no link validity,
+    // the page not listed, no instruction for the summary, and the portal without the application
+    if (paket.ozellikler.hastaPortali && arayuz.portalMetinleri) {
+      { const a = klon(arayuz); delete (a.portalMetinleri as Record<string, unknown>)[d]; iceriyor(yerler(paket, a, klinik), `arayuz.portalMetinleri[${d}]: the patient portal is on and this form has no portal catalogue`) }
+      { iceriyor(yerler(paket, { ...arayuz, portalMetinleri: undefined }, klinik), `arayuz.portalMetinleri[${d}]`) }
+      { const a = klon(arayuz); (a.portalMetinleri![d] as unknown as { sayfa: { acil: string } }).sayfa.acil = eksik('emergency line'); iceriyor(yerler(paket, a, klinik), `arayuz.portalMetinleri[${d}].sayfa.acil: to be supplied`) }
+      { const a = klon(arayuz); (a.portalMetinleri![d] as unknown as { giris: { pinYanlis: string } }).giris.pinYanlis = 'Wrong.'; iceriyor(yerler(paket, a, klinik), `arayuz.portalMetinleri[${d}].giris.pinYanlis: must hold "%"`) }
+      { const a = klon(arayuz); (a.portalMetinleri![d] as unknown as { sayfa: { istekKabul: string } }).sayfa.istekKabul = 'Booked: %1.'; iceriyor(yerler(paket, a, klinik), `arayuz.portalMetinleri[${d}].sayfa.istekKabul: must hold "%2"`) }
+      { const p = klon(paket); delete p.uygulama!.portal; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal: the patient portal is switched on') }
+      { const p = klon(paket); p.uygulama!.portal = { baglantiGecerlilikGun: 0 }; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal.baglantiGecerlilikGun: must be a whole number of days') }
+      { const p = klon(paket); p.uygulama!.portal = { baglantiGecerlilikGun: eksikAyar('days') }; iceriyor(yerler(p, arayuz, klinik), 'uygulama.portal.baglantiGecerlilikGun: to be supplied: days') }
+      if (paket.rotalar !== 'hepsi') { const p = klon(paket); const rt = p.rotalar as unknown as { sayfalar: string[] }; rt.sayfalar = rt.sayfalar.filter((x) => x !== '/portal'); iceriyor(yerler(p, arayuz, klinik), 'rotalar.sayfalar: the patient portal is on and "/portal" is not listed') }
+      { const p = klon(paket); p.uygulama!.saatDilimleri = [...new Set([p.saatDilimi, 'Europe/London', 'Asia/Tokyo'])]; const a = klon(arayuz); delete (a.portalMetinleri![d] as unknown as { sayfa: { saatDilimi?: string } }).sayfa.saatDilimi; iceriyor(yerler(p, a, klinik), `arayuz.portalMetinleri[${d}].sayfa.saatDilimi: the country has several time zones`) }
+      if (klinik) {
+        { const k = { ...klinik, hastaOzetiTalimati: undefined }; iceriyor(yerler(paket, arayuz, k), 'klinik.hastaOzetiTalimati: the patient portal is on') }
+        { const k = { ...klinik, hastaOzetiTalimati: () => null }; iceriyor(yerler(paket, arayuz, k), `klinik.hastaOzetiTalimati(${d}): no instruction`) }
+        { const k = { ...klinik, hastaOzetiTalimati: () => eksik('instruction') }; iceriyor(yerler(paket, arayuz, k), `klinik.hastaOzetiTalimati(${d}): to be supplied`) }
+      }
+      { const p = klon(paket); delete (p.ozellikler as Record<string, unknown>).cekirdekMuayene; iceriyor(yerler(p, arayuz, klinik), 'ozellikler.hastaPortali: the patient portal needs the signed-in application') }
+    }
     // the landing page
     if (paket.ozellikler.acilisSayfasi && arayuz.acilis) {
       const f = arayuz.acilis.diller[0]
@@ -104,10 +124,10 @@ describe('every pack is complete', () => {
   })
 
   it('the scaffold\'s shape file lists exactly the keys this pack fills (a key added to the kit cannot be forgotten there)', () => {
-    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !paket.uygulama) return
+    if (paket.ozellikler.bolunmemisUygulama || !arayuz || !arayuz.acilis || !arayuz.portalMetinleri || !paket.uygulama) return
     const dosya = JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'))
     const simdi = paketSekli(paket, arayuz)
-    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
+    for (const bolum of ['cekirdek', 'uygulama', 'randevu', 'portal', 'acilis']) assert.deepEqual(iskelet(dosya[bolum]), iskelet(simdi[bolum]), `scripts/ulke-sablon/sekil.json is stale in "${bolum}": run NOTYA_COUNTRY=${paket.kod} npx tsx scripts/ulke-sablon/sekil-uret.mts`)
     // the file holds key paths only: no sentence of this pack, no letter outside ASCII
     assert.doesNotMatch(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8'), /[^\x00-\x7F]/)
   })

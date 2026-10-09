@@ -33,15 +33,8 @@ export function baglantiGecerlilikGun(): number | null {
   return typeof g === 'number' && Number.isInteger(g) && g >= 1 && g <= 365 ? g : null
 }
 
-export type PortalErisimi = {
-  /** none · open · locked by wrong PINs · ended */
-  durum: 'yok' | 'acik' | 'kilitli' | 'suresi-doldu'
-  olusturuldu: string | null
-  sonGecerlilik: string | null
-  sonGiris: string | null
-}
-export type PortalOlayi = 'erisim' | 'iptal' | 'giris' | 'kilit' | 'paylasim' | 'geri-alma'
-export type PortalKaydi = { olay: PortalOlayi; an: string; ozetId: string | null }
+import type { PortalErisimi, PortalKaydi, PortalOlayi } from './tipler'
+export type { PortalErisimi, PortalKaydi, PortalOlayi } from './tipler'
 export type ErisimRetKodu = 'NOT_FOUND' | 'HAZIR_DEGIL' | 'BASARISIZ'
 
 const OLAYLAR: readonly string[] = ['erisim', 'iptal', 'giris', 'kilit', 'paylasim', 'geri-alma']

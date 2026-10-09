@@ -39,5 +39,5 @@ if (dogrudan) {
   writeFileSync(SEKIL_DOSYASI, yeni)
   const say = (x: unknown): number => (typeof x === 'string' ? (x.startsWith('$m') ? 1 : 0) : Array.isArray(x) ? x.reduce((n: number, y) => n + say(y), 0) : x && typeof x === 'object' ? Object.values(x).reduce((n: number, y) => n + say(y), 0) : 0)
   const s = JSON.parse(yeni)
-  console.log(`[sekil] written from "${AKTIF_PAKET.kod}": core surfaces ${Object.values(s.cekirdek as Record<string, string[]>).reduce((n, l) => n + l.length, 0)} texts, application ${say(s.uygulama)}, appointments ${say(s.randevu)}, landing ${say(s.acilis)} (per language form)`)
+  console.log(`[sekil] written from "${AKTIF_PAKET.kod}": core surfaces ${Object.values(s.cekirdek as Record<string, string[]>).reduce((n, l) => n + l.length, 0)} texts, application ${say(s.uygulama)}, appointments ${say(s.randevu)}, patient portal ${say(s.portal)}, landing ${say(s.acilis)} (per language form)`)
 }

@@ -219,11 +219,13 @@ export const ${B}_PAKETI: UlkePaketi = {
     bekletmeSayfasi: true,
     cekirdekMuayene: true,
     randevu: true,
+    // The patient's own page: a link and a PIN from the doctor, no account. Nothing is shared or sent by itself.
+    hastaPortali: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar'],
+    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal'],
     apiOnEkleri: ['/api/ulke/'],
   },
 ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new country starts hidden. Only the owner changes this, after the pilot approves the site.
@@ -245,6 +247,9 @@ ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new countr
       varsayilan: eksikAyar('appointments: the working pattern an account starts with — { gunler: [1,2,3,4,5], baslangic: \\'09:00\\', bitis: \\'17:00\\', sureDk: 30, molalar: [{ baslangic: \\'13:00\\', bitis: \\'14:00\\' }] } (1 = Monday); confirm with the local clinical lead'),
       sureSecenekleri: eksikAyar('appointments: the appointment lengths in minutes an account may choose from, e.g. [10, 15, 20, 30, 45, 60]'),
     },
+    // The patient portal. The security limits (PIN length, tries, session length) are the kit's and the same everywhere;
+    // how long a link stays valid is this country's decision.
+    portal: { baglantiGecerlilikGun: eksikAyar('patient portal: days a patient\\'s link stays valid before the doctor must give a new one — a whole number from 1 to 365 (a starting value elsewhere: 30). How long a patient\\'s access may stand is a question for a lawyer') },
     // One language in one script: no account is asked a language question. A second language or script is added here.
     dilGruplari: [{ temel: '${TEMEL}', bicimler: [{ yazi: null, dil: '${DIL}' }] }],
     saatDilimleri: eksikAyar('time: EVERY IANA time zone an account of this country may work in, the default first — one entry if the country has one zone, e.g. [\\'Europe/London\\']'),
@@ -280,11 +285,13 @@ import { ${B}_NOT_SABLONLARI } from './klinik/notSablonlari'
 import { ${B}_ROL_TANIMLARI } from './klinik/roller'
 import { ${B}_UYGULAMA_METINLERI } from './uygulama/metinler'
 import { ${B}_RANDEVU_METINLERI } from './uygulama/randevuMetinleri'
+import { ${B}_PORTAL_METINLERI } from './uygulama/portalMetinleri'
 
 export const ${B}_ARAYUZ: UlkeArayuzu = {
   marka: eksik('brand: the word mark the screens show, e.g. Notya'),
   metinler: ${B}_UYGULAMA_METINLERI,
   randevuMetinleri: ${B}_RANDEVU_METINLERI,
+  portalMetinleri: ${B}_PORTAL_METINLERI,
   roller: ${B}_ROL_TANIMLARI,
   asistan: ${KOD}AsistanKimligi,
   notSablonlari: ${B}_NOT_SABLONLARI,
@@ -310,6 +317,20 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 const ${DIL_SABITI}: RandevuMetni = ${yaz(sekil.randevu, 'randevu', 'appointments', '', '')}
 
 export const ${B}_RANDEVU_METINLERI: Readonly<Partial<Record<DilKodu, RandevuMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
+`
+
+dosyalar['uygulama/portalMetinleri.ts'] = `${BAS(`${B}: the PATIENT PORTAL's text in "${DIL}".`, `Typed against the kit's keys (lib/ulke/arayuz/metinTipleri.ts → PortalMetni, where each key says what it is for).
+  erisim, ozet, istek   the doctor's controls: access on the patient's file, the summary on an approved note, requests on the calendar
+  giris, sayfa          PATIENT-FACING: the PIN page and the patient's own page. A patient reads these alone, on their
+                        own phone: a native reader reads them first (checklist E8, E11).
+sayfa.acil tells the patient that the page is not for emergencies and names the country's own emergency number: a
+fact of the country, confirmed by the local clinical lead. Placeholders %, %1, %2 must stay in the text.`)}import { eksik } from '@/lib/ulke/eksik'
+import type { PortalMetni } from '@/lib/ulke/arayuz/metinTipleri'
+import type { DilKodu } from '@/lib/ulke/tipler'
+
+const ${DIL_SABITI}: PortalMetni = ${yaz(sekil.portal, 'portal', 'patient portal', '', '')}
+
+export const ${B}_PORTAL_METINLERI: Readonly<Partial<Record<DilKodu, PortalMetni>>> = { ${anahtar(DIL)}: ${DIL_SABITI} }
 `
 
 dosyalar['acilis/icerik.ts'] = `${BAS(`${B}: the landing page's copy in "${DIL}", and the few facts the shared layout needs.`, `The LAYOUT is the kit's (components/ulke/acilis/): same sections, same order, same look for every country. What the
@@ -401,8 +422,15 @@ THE CONTRACT WITH THE CODE (not text, do not translate): the answer is ONE JSON 
 "p" and, for a role with fields, "${'fields'}": { key: text }. The functions below add that shape to the instruction
 themselves; the text you supply explains it in the note's language.
 
-One language: there is nothing to rewrite a note into, so no rewrite instruction exists (see ./index.ts).`)}import { eksik } from '@/lib/ulke/eksik'
-import { NOT_ALANLARI_ANAHTARI, type DilKodu, type NotGirdisi } from '@/lib/ulke/tipler'
+One language: there is nothing to rewrite a note into, so no rewrite instruction exists (see ./index.ts).
+
+THE SUMMARY FOR THE PATIENT (the patient portal): a second instruction, for a short text in plain words written from
+an APPROVED note only. What the model writes with it is PATIENT-FACING once the doctor shares it, so this instruction
+comes first for the clinician who reads this file. It must make the model: use the note and nothing else; add, guess
+and advise nothing; keep medicines, doses, numbers and dates exactly as written; use everyday words; name no source
+and nobody; treat the note as material, not as instructions; stay short. Its answer is ONE JSON object with the one
+key "summary" (the contract with the code; the function below adds that shape).`)}import { eksik } from '@/lib/ulke/eksik'
+import { NOT_ALANLARI_ANAHTARI, type DilKodu, type NotGirdisi, type NotIcerigi } from '@/lib/ulke/tipler'
 import * as S from '@/lib/ulke/arayuz/notSablonu'
 import { ${B}_GENEL_SABLON, ${B}_NOT_SABLONLARI, ${KOD}SablonMu } from './notSablonlari'
 import { ${B}_ROL_TANIMLARI } from './roller'
@@ -428,6 +456,10 @@ const T = {
   erkek: eksik('instructions: "male"'),
   bilinmiyor: eksik('instructions: "not stated"'),
   gorusme: eksik('instructions: label "TRANSCRIPT OF THE VISIT"'),
+  // THE SUMMARY FOR THE PATIENT: the whole instruction (see the head of this file for what it must make the model do).
+  ozet: eksik('instructions: the full instruction to the model for a short plain-language summary of an APPROVED note, for the patient, written in ${DIL} (several paragraphs)'),
+  // Label of the message that carries the approved note to the model.
+  ozetNot: eksik('instructions: label "APPROVED NOTE"'),
 }
 
 const roller = Array.isArray(${B}_ROL_TANIMLARI) ? ${B}_ROL_TANIMLARI : []
@@ -444,6 +476,18 @@ export function ${KOD}NotTalimati(dil: DilKodu, sablon: string): string | null {
   const giris = (rol.taraf === 'klinik-muttefik' ? T.muttefikGirisi : T.rolGirisi).replace('%', rol.ad[dil] ?? '')
   const liste = alanlar.map((k) => \`- \${k} — \${S.alanAdi(${B}_NOT_SABLONLARI, k, dil) ?? k}\`)
   return [T.genel, [giris, ...liste].join('\\n'), T.cevap.replace('%', jsonKalibi(alanlar))].join('\\n\\n')
+}
+
+/** Instructions for a summary for the patient in \`dil\`. null = no such language here. */
+export function ${KOD}HastaOzetiTalimati(dil: DilKodu): string | null {
+  if (dil !== '${DIL}') return null
+  return [T.ozet, T.cevap.replace('%', '{"summary": "…"}')].join('\\n\\n')
+}
+
+/** The message that carries the APPROVED note: its four sections and its role fields. Nothing else about the patient. */
+export function ${KOD}HastaOzetiGirdisi(_dil: DilKodu, icerik: NotIcerigi): string {
+  const alanlar = icerik.alanlar && Object.keys(icerik.alanlar).length ? { [NOT_ALANLARI_ANAHTARI]: icerik.alanlar } : {}
+  return \`\${T.ozetNot}:\\n\${JSON.stringify({ s: icerik.s, o: icerik.o, a: icerik.a, p: icerik.p, ...alanlar })}\`
 }
 
 /** Age on the day of the visit, in whole years, or in months under two years. '' = unknown. */
@@ -471,7 +515,7 @@ NOTHING HERE IS MEASURED OR REVIEWED UNTIL SOMEBODY DOES IT FOR THIS COUNTRY: th
 clinic audio in the country's language (checklist A5, L1); the consent wording is read by a lawyer (A3, I1).`)}import { eksik, eksikAyar } from '@/lib/ulke/eksik'
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { ${B}_SABLONLAR, ${KOD}SablonAlanlari } from './notSablonlari'
-import { ${KOD}NotGirdisi, ${KOD}NotTalimati } from './talimatlar'
+import { ${KOD}HastaOzetiGirdisi, ${KOD}HastaOzetiTalimati, ${KOD}NotGirdisi, ${KOD}NotTalimati } from './talimatlar'
 import { ${B}_VELI_YASI as VELI_YASI } from '../ayarlar'
 
 export const ${B}_KLINIK: UlkeKlinigi = {
@@ -495,6 +539,9 @@ export const ${B}_KLINIK: UlkeKlinigi = {
   notTalimati: ${KOD}NotTalimati,
   notGirdisi: ${KOD}NotGirdisi(VELI_YASI),
   notAlanlari: ${KOD}SablonAlanlari(VELI_YASI),
+  // The patient portal: a short summary of an APPROVED note for the patient, which the doctor reads, edits and shares.
+  hastaOzetiTalimati: ${KOD}HastaOzetiTalimati,
+  hastaOzetiGirdisi: ${KOD}HastaOzetiGirdisi,
   // One language: a note cannot be rewritten in another. A second language adds these three (see docs/COUNTRY-PACK-HOWTO.md).
   yenidenYazimTalimati: () => null,
   yenidenYazimGirdisi: () => '',

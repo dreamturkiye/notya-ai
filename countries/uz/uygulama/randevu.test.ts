@@ -742,9 +742,13 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     const kod = (d: string) => readFileSync(join(KOK, d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
     assert.doesNotMatch(kod('lib/ulke/arayuz/hatirlatma.ts'), /fetch\(|api\(|supabase|iletisim|whatsapp|telegram|sms|eposta|mailto/i)
     // On the screen the only thing the button does with the text is put it on the clipboard.
+    // (NOTYA-ULKE-PORTAL-01: the clipboard helper moved to ./pano.ts, shared with the card that shows a patient's link and PIN.)
     const takvim = kod('components/ulke/uygulama/Takvim.tsx')
-    assert.match(takvim, /navigator\.clipboard\.writeText\(metin\)/)
-    assert.doesNotMatch(takvim, /whatsapp|telegram|wa\.me|t\.me|sms:|mailto:|tel:/i)
+    const pano = kod('components/ulke/uygulama/pano.ts')
+    assert.match(takvim, /panoyaKopyala\(metin\)/)
+    assert.match(pano, /navigator\.clipboard\.writeText\(metin\)/)
+    assert.doesNotMatch(pano, /fetch\(|XMLHttpRequest|sendBeacon|api\(/, 'the clipboard helper sends nothing anywhere')
+    assert.doesNotMatch(takvim + pano, /whatsapp|telegram|wa\.me|t\.me|sms:|mailto:|tel:/i)
     const { ulkePaketi } = await import('@/lib/ulke/ulke')
     const izin = ulkePaketi().rotalar
     if (izin !== 'hepsi') assert.deepEqual(izin.apiOnEkleri, ['/api/ulke/'])

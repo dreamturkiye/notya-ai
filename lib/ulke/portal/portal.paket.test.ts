@@ -123,12 +123,16 @@ function sifirla() {
   hastaEkle(H1, A); hastaEkle(H2, A); hastaEkle(H3, B)
 }
 
-type Secenek = { jeton?: string; cerez?: string; govde?: unknown; portal?: boolean; host?: string }
+type Secenek = { jeton?: string; cerez?: string; govde?: unknown; portal?: boolean; host?: string; /** the link the page says it is open for: a token, or false to send none */ baglanti?: string | false }
+/** Session key → the token of the link it was opened with: the portal page always says which link it is open for. */
+const oturumunBaglantisi = new Map<string, string>()
 /** One request to a real handler. `portal` true = the portal's own header and JSON, as the portal page sends them. */
 async function iste(mod: Mod, yontem: string, yol: string, s: Secenek = {}): Promise<{ status: number; govde: any; res: Response }> {
   const basliklar: Record<string, string> = { host: s.host ?? 'notya.test' }
   if (s.jeton) basliklar.authorization = `Bearer ${s.jeton}`
   if (s.cerez) basliklar.cookie = `${S.PORTAL_CEREZI}=${s.cerez}`
+  const baglanti = s.baglanti === false ? null : s.baglanti ?? (s.cerez ? oturumunBaglantisi.get(s.cerez) : null)
+  if (baglanti) basliklar[S.PORTAL_BAGLANTI_BASLIGI] = pinMod.anahtarHash(baglanti)
   if (s.govde !== undefined) basliklar['content-type'] = 'application/json'
   if (s.portal) { basliklar[S.PORTAL_ISTEK_BASLIGI] = '1'; basliklar['content-type'] = 'application/json' }
   const req = new NextRequest(`https://notya.test${yol}`, { method: yontem, headers: basliklar, ...(s.govde !== undefined ? { body: JSON.stringify(s.govde) } : s.portal && yontem !== 'GET' ? { body: '{}' } : {}) })
@@ -150,7 +154,9 @@ async function erisimVer(jeton: string, hasta: string): Promise<{ token: string;
 /** The patient signs in with the link's token and the PIN; the answer's cookie is the session key. */
 async function girisYap(token: string, pin: string) {
   const r = await iste(rota.pGiris, 'POST', '/api/ulke/portal/giris', { portal: true, govde: { token, pin } })
-  return { ...r, cerez: cerezOku(r.res) }
+  const cerez = cerezOku(r.res)
+  if (cerez) oturumunBaglantisi.set(cerez, token)
+  return { ...r, cerez }
 }
 const yanlisPin = (pin: string) => (pin === '000000' ? '000001' : '000000')
 /** Time moves for the handlers too (the stand-in clock of node:test). */
@@ -396,6 +402,36 @@ describe('patient portal — C. isolation', () => {
     assert.ok(l1.yol.startsWith(`${S.PORTAL_SAYFASI}?dil=${encodeURIComponent(bicim)}#`))
     const m1 = JSON.stringify(b1.govde)
     for (const yabanci of [AD[H2], AD[H3], 'QA Doctor B', TEL, KIMLIK, H2, H3, B, A, H1]) assert.ok(!m1.includes(yabanci), `the patient's page carries "${yabanci}"`)
+  })
+
+  it('a session answers only the page of ITS OWN link: a second patient\'s link on the same phone never shows the first patient\'s page', async () => {
+    if (!ACIK) return
+    const l1 = await erisimVer('jeton-a', H1)
+    const l2 = await erisimVer('jeton-a', H2)
+    const g1 = await girisYap(l1.token, l1.pin)
+    assert.equal((await iste(rota.portal, 'GET', '/api/ulke/portal', { cerez: g1.cerez })).status, 200)
+    // The browser still holds patient 1's session; the page was opened with patient 2's link (or with none, or with nonsense).
+    // The request route is asked FIRST each time: it refuses and leaves the session alone; the page route refuses and ends it.
+    for (const baglanti of [l2.token, false, pinMod.anahtarUret()] as const) {
+      if (RANDEVU) assert.equal((await iste(rota.istek, 'POST', '/api/ulke/portal/randevu-istegi', { cerez: g1.cerez, portal: true, baglanti, govde: { gunler: [] } })).status, 401)
+      const r = await iste(rota.portal, 'GET', '/api/ulke/portal', { cerez: g1.cerez, baglanti })
+      assert.deepEqual([r.status, r.govde], [401, { code: 'OTURUM_YOK' }], `link ${String(baglanti).slice(0, 6)}`)
+      assert.ok(!JSON.stringify(r.govde).includes(AD[H1]))
+    }
+    // A raw token in the header is not a link's mark either: only its hash is ever compared.
+    const ham = new NextRequest('https://notya.test/api/ulke/portal', { headers: { host: 'notya.test', cookie: `${S.PORTAL_CEREZI}=${g1.cerez}`, [S.PORTAL_BAGLANTI_BASLIGI]: l1.token } })
+    assert.equal((await rota.portal.GET(ham)).status, 401)
+    // … and the first patient's session was not left open behind the other page: it is closed in the database and its
+    // cookie is taken away, so its own page asks for the PIN again. The second patient's link is untouched.
+    const kendi = await iste(rota.portal, 'GET', '/api/ulke/portal', { cerez: g1.cerez })
+    assert.equal(kendi.status, 401, 'the first session must be over')
+    assert.ok(tablo('ulke_portal_oturumlari').every((o) => o.kapandi_at), 'the session is closed in the database')
+    assert.match(kendi.res.headers.get('set-cookie') ?? '', new RegExp(`${S.PORTAL_CEREZI}=;.*Max-Age=0`, 'i'))
+    const g2 = await girisYap(l2.token, l2.pin)
+    assert.deepEqual((await iste(rota.portal, 'GET', '/api/ulke/portal', { cerez: g2.cerez })).govde.hasta, { ad: AD[H2] })
+    // A request to another portal route with the wrong link's mark changes nothing and closes nothing.
+    await iste(rota.istek, 'POST', '/api/ulke/portal/randevu-istegi', { cerez: g2.cerez, portal: true, baglanti: l1.token, govde: { gunler: [] } })
+    assert.equal((await iste(rota.portal, 'GET', '/api/ulke/portal', { cerez: g2.cerez })).status, 200)
   })
 
   it('the page takes NO id from the request: naming another patient or doctor in it changes nothing', async () => {

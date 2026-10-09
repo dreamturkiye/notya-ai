@@ -30,28 +30,10 @@ import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeTablosu } from '../uygulama/tablolar'
 import { yerelAn } from '../uygulama/zaman'
 import type { PortalOturumu } from './giris'
-import { hastaninSonIstegi, istekAcik, istekGunleri, type IstekDurumu } from './istek'
+import { hastaninSonIstegi, istekAcik, istekGunleri } from './istek'
+import type { PortalIcerigi } from './tipler'
 
-export type PortalIcerigi = {
-  /** The language form the page is shown in. */
-  dil: DilKodu
-  hasta: { ad: string }
-  hekim: { ad: string; /** The doctor's role as the pack names it in `dil`; '' where the account has none. */ rol: string }
-  /** null = the country has no appointments. Upcoming ones only, in time order; day and time of the doctor's zone. */
-  randevular: { gun: string; saat: string; sureDk: number }[] | null
-  /** The doctor's time zone, named only where the country has more than one (elsewhere there is nothing to say). */
-  saatDilimi: string | null
-  /** Shared summaries, newest visit first. */
-  ozetler: { id: string; /** The day of the visit, 'YYYY-MM-DD' in the doctor's zone. */ gun: string; metin: string }[]
-  /** null = the country has no appointment requests. */
-  istek: {
-    /** The days the patient may choose from. */
-    gunler: string[]
-    son: { durum: IstekDurumu; gunler: string[]; olusturuldu: string; randevu: { gun: string; saat: string } | null } | null
-  } | null
-  /** When this session ends. */
-  bitis: string
-}
+export type { PortalIcerigi } from './tipler'
 
 const coz = (ham: unknown): string => {
   if (typeof ham !== 'string' || !ham) return ''

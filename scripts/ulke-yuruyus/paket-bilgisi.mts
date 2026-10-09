@@ -11,11 +11,17 @@ import { AKTIF_ARAYUZ as a } from '@/countries/active/arayuz'
 import { AKTIF_KLINIK as k } from '@/countries/active/klinik'
 import { TUM_ULKELER } from '@/countries/tumu'
 import { EKSIK_ISARETI } from '@/lib/ulke/eksik'
+import { hastaIcinBicim } from '@/lib/ulke/arayuz/dilSecimi'
+import { ISTEK_GUN_AZAMI, PIN_DENEME_AZAMI, PIN_HANE } from '@/lib/ulke/portal/sabitler'
 
 if (!a || !k || !p.uygulama) throw new Error(`"${p.kod}" does not bring the signed-in application: nothing to walk through`)
 const d = p.varsayilanDil
 const digerleri = Object.entries(TUM_ULKELER).filter(([kod]) => kod !== p.kod)
 const ilkRol = a.roller[0] ?? null
+// NOTYA-ULKE-PORTAL-01 — the patient portal: the form a patient of the first patient language reads their page in
+// when their doctor works in the default form, and the catalogues in that form.
+const portalAcik = Boolean(p.ozellikler.hastaPortali && a.portalMetinleri)
+const hastaBicimi = hastaIcinBicim(p.uygulama.dilGruplari, p.uygulama.hastaDilleri[0], { dil: d, notDili: d })
 process.stdout.write(JSON.stringify({
   kod: p.kod, yolOnEki: p.yolOnEki ?? '', dil: d, acikDiller: p.acikDiller, uygulamaDilleri: p.uygulama.diller, dilGruplari: p.uygulama.dilGruplari,
   hastaDilleri: p.uygulama.hastaDilleri, saatDilimleri: p.uygulama.saatDilimleri, saatBicimi: p.uygulama.saatBicimi, tarihDeseni: p.bicim.tarihDeseni,
@@ -26,6 +32,10 @@ process.stdout.write(JSON.stringify({
   sttKodu: Object.keys(k.konusma.beklenenDiller)[0], zorlamaKodu: k.konusma.zorlamaDilKodlari[d] ?? null, gunlukLimit: k.gunlukMuayeneLimiti,
   marka: a.marka, m: a.metinler[d], r: a.randevuMetinleri[d] ?? null, giris: p.metinler[d]?.giris ?? null, hesap: p.metinler[d]?.hesap ?? null, kayit: p.metinler[d]?.davetliKayit ?? null,
   acilisIcerigi: a.acilis ? { baslik: a.acilis.icerik[d]?.kahraman.baslik, metaBaslik: a.acilis.icerik[d]?.meta.baslik, capalar: a.acilis.capalar } : null,
+  portal: portalAcik ? {
+    hastaBicimi, gecerlilikGun: p.uygulama.portal?.baglantiGecerlilikGun ?? null, pinHane: PIN_HANE, pinDeneme: PIN_DENEME_AZAMI, istekGunAzami: ISTEK_GUN_AZAMI,
+    hekim: a.portalMetinleri?.[d], hasta: a.portalMetinleri?.[hastaBicimi], hastaRandevu: a.randevuMetinleri[hastaBicimi] ?? null, ilkRolAdi: ilkRol ? ilkRol.ad[hastaBicimi] : '',
+  } : null,
   // what must NEVER be on a screen of this country: the "to be supplied" marker, and what marks another country's content
   eksikIsareti: EKSIK_ISARETI,
   yabanci: digerleri.map(([kod, u]) => ({ kod, terimler: u.sizintiTerimleri.filter((t) => !t.terim.includes(EKSIK_ISARETI)), harfler: u.sizintiHarfleri, iz: u.paket.iz })),

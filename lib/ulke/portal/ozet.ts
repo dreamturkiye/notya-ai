@@ -37,16 +37,8 @@ import { notGetir } from '../uygulama/notlar'
 import { ulkeIslevi, ulkeTablosu } from '../uygulama/tablolar'
 import { OZET_AZAMI } from './sabitler'
 
-export type HastaOzeti = {
-  id: string
-  notId: string
-  /** The language form the summary is written in. */
-  dil: DilKodu
-  metin: string
-  paylasildi: boolean
-  paylasimAni: string | null
-  guncellendi: string
-}
+import type { HastaOzeti } from './tipler'
+export type { HastaOzeti } from './tipler'
 
 export type OzetRetKodu = 'NOT_FOUND' | 'ONAYSIZ' | 'PAYLASILDI' | 'BOS' | 'HAZIR_DEGIL' | 'OZET_YAZILAMADI' | 'BASARISIZ'
 type Ret = { tamam: false; kod: OzetRetKodu }

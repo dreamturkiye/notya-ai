@@ -23,6 +23,13 @@ export const HEKIM_PORTAL_API = '/api/ulke/hasta-portali'
 export const PORTAL_CEREZI = 'notya_portal'
 /** A request that changes something must carry this header: a page of another site cannot send it. */
 export const PORTAL_ISTEK_BASLIGI = 'x-notya-portal'
+/**
+ * Which link the page is open for: the SHA-256 of the link's token, hex. A session answers only the page of its own
+ * link — on a shared phone, opening a second patient's link never shows the first patient's page. The value cannot
+ * sign anybody in (signing in takes the token itself and the PIN).
+ */
+export const PORTAL_BAGLANTI_BASLIGI = 'x-notya-portal-baglanti'
+export const BAGLANTI_OZETI_BICIMI = /^[0-9a-f]{64}$/
 
 /** An appointment request names at most this many preferred days, among the next ISTEK_GUN_UFKU days. */
 export const ISTEK_GUN_AZAMI = 3

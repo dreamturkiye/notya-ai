@@ -47,7 +47,7 @@ export type Hesap = {
 }
 export type ApiCevabi = { ok: boolean; status: number; j: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
 /** `yol` is a ROUTE of the API ('/api/ulke/hesap'); the call adds the country's path prefix. */
-export type Api = (yol: string, secenek?: { method?: 'GET' | 'POST' | 'PATCH'; govde?: unknown }) => Promise<ApiCevabi>
+export type Api = (yol: string, secenek?: { method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'; govde?: unknown }) => Promise<ApiCevabi>
 
 export type Uygulama = {
   /** null until the account is known. */

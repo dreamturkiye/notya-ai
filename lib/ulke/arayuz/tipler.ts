@@ -12,7 +12,7 @@
  */
 import type { DilKodu } from '../tipler'
 import type { UlkeAcilisi } from './acilisTipleri'
-import type { RandevuMetni, UygulamaMetni } from './metinTipleri'
+import type { PortalMetni, RandevuMetni, UygulamaMetni } from './metinTipleri'
 
 /** The four sections of a visit note. The keys are the contract with the model; their headings are the pack's text. */
 export type NotBolumu = 's' | 'o' | 'a' | 'p'
@@ -77,6 +77,8 @@ export type UlkeArayuzu = {
   metinler: Readonly<Partial<Record<DilKodu, UygulamaMetni>>>
   /** The appointment catalogue, once per language form. Required where the feature `randevu` is on. */
   randevuMetinleri: Readonly<Partial<Record<DilKodu, RandevuMetni>>>
+  /** The patient portal's catalogue, once per language form. Required where the feature `hastaPortali` is on. */
+  portalMetinleri?: Readonly<Partial<Record<DilKodu, PortalMetni>>>
   /** The roles of `uygulama.roller`, each with its kind and its name in every form, in the order they are offered. */
   roller: readonly RolTanimi[]
   /** The assistant of a role in a form, or null where the role has none: the screens then show the neutral line. */

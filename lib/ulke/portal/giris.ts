@@ -30,7 +30,7 @@ import { ozellikAcik } from '../ulke'
 import { ulkeIslevi, ulkeTablosu } from '../uygulama/tablolar'
 import { ulkeYolOnEki } from '../yol'
 import { anahtarHash, anahtarMi, anahtarUret, pinDogrula } from './pin'
-import { PIN_DENEME_ARALIGI_SN, PIN_DENEME_AZAMI, pinBicimiGecerli, PORTAL_API, PORTAL_CEREZI, PORTAL_OTURUM_DK } from './sabitler'
+import { BAGLANTI_OZETI_BICIMI, PIN_DENEME_ARALIGI_SN, PIN_DENEME_AZAMI, pinBicimiGecerli, PORTAL_API, PORTAL_BAGLANTI_BASLIGI, PORTAL_CEREZI, PORTAL_OTURUM_DK } from './sabitler'
 
 /** true = the patient portal exists in this country. */
 export const portalAcik = (): boolean => ozellikAcik('cekirdekMuayene') && ozellikAcik('hastaPortali')
@@ -78,7 +78,7 @@ export type PortalOturumu = PortalKimligi & { supabase: SupabaseClient }
  * The session a key belongs to, or null. Checked against the database every time: the session is open and not over,
  * AND its link is still this patient's, not withdrawn, not locked and not ended.
  */
-export async function portalOturumuCoz(supabase: SupabaseClient, anahtar: unknown, simdi = Date.now()): Promise<PortalKimligi | null> {
+export async function portalOturumuCoz(supabase: SupabaseClient, anahtar: unknown, simdi = Date.now(), baglantiOzeti?: unknown): Promise<PortalKimligi | null> {
   if (!anahtarMi(anahtar)) return null
   const { data: o, error } = await ulkeTablosu(supabase, 'ulke_portal_oturumlari')
     .select('id, doctor_id, patient_id, erisim_id, son_gecerlilik, kapandi_at')
@@ -88,13 +88,15 @@ export async function portalOturumuCoz(supabase: SupabaseClient, anahtar: unknow
   if (error || !s || s.kapandi_at || !(new Date(s.son_gecerlilik).getTime() > simdi)) return null
   // The link, read by its id AND the session's doctor AND patient: a session cannot borrow another patient's link.
   const { data: e, error: erisimHatasi } = await ulkeTablosu(supabase, 'ulke_portal_erisimleri')
-    .select('id, iptal_at, kilitlendi_at, son_gecerlilik')
+    .select('id, token_hash, iptal_at, kilitlendi_at, son_gecerlilik')
     .eq('id', s.erisim_id)
     .eq('doctor_id', s.doctor_id)
     .eq('patient_id', s.patient_id)
     .maybeSingle()
-  const l = e as { iptal_at: string | null; kilitlendi_at: string | null; son_gecerlilik: string } | null
+  const l = e as { token_hash: string; iptal_at: string | null; kilitlendi_at: string | null; son_gecerlilik: string } | null
   if (erisimHatasi || !l || l.iptal_at || l.kilitlendi_at || !(new Date(l.son_gecerlilik).getTime() > simdi)) return null
+  // The page says which link it is open for. A session of another link (a second patient on the same phone) does not answer it.
+  if (baglantiOzeti !== undefined && (typeof baglantiOzeti !== 'string' || !BAGLANTI_OZETI_BICIMI.test(baglantiOzeti) || baglantiOzeti !== l.token_hash)) return null
   return { doktorId: s.doctor_id, hastaId: s.patient_id, erisimId: s.erisim_id, oturumId: s.id, bitis: s.son_gecerlilik }
 }
 
@@ -103,7 +105,8 @@ export async function portalOturum(req: NextRequest, simdi = Date.now()): Promis
   const anahtar = req.cookies.get(PORTAL_CEREZI)?.value
   if (!anahtarMi(anahtar)) return null
   const supabase = ulkeServisSupabase()
-  const k = await portalOturumuCoz(supabase, anahtar, simdi)
+  // ALWAYS asked of a request: a missing header is a wrong header.
+  const k = await portalOturumuCoz(supabase, anahtar, simdi, req.headers.get(PORTAL_BAGLANTI_BASLIGI) ?? '')
   return k ? { ...k, supabase } : null
 }
 

@@ -27,7 +27,8 @@ import { gunEkle, gunGecerli, yerelAn } from '../uygulama/zaman'
 import type { PortalKimligi } from './giris'
 import { ISTEK_GUN_AZAMI, ISTEK_GUN_UFKU, ISTEK_NEDEN_AZAMI } from './sabitler'
 
-export type IstekDurumu = 'bekliyor' | 'kabul' | 'red'
+import type { IstekDurumu } from './tipler'
+export type { IstekDurumu } from './tipler'
 export type RandevuIstegi = {
   id: string
   hastaId: string

@@ -48,6 +48,13 @@ function metinleriGez(deger: unknown, yer: string, sorunlar: PaketSorunu[], bosO
   if (deger && typeof deger === 'object') for (const [k, v] of Object.entries(deger)) metinleriGez(v, yer ? `${yer}.${k}` : k, sorunlar, bosOlabilir)
 }
 
+/** Sentences of the portal catalogue that carry a value: path → the placeholders they must hold (lib/ulke/arayuz/metinTipleri.ts → PortalMetni). */
+const PORTAL_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
+  ['erisim.durumAcik', ['%']], ['erisim.sonGiris', ['%']], ['ozet.dil', ['%']], ['ozet.paylasildi', ['%']], ['istek.istekTarihi', ['%']],
+  ['giris.pinBicimi', ['%']], ['giris.pinYanlis', ['%']],
+  ['sayfa.selam', ['%']], ['sayfa.saatDilimi', ['%']], ['sayfa.muayene', ['%']], ['sayfa.istekAciklama', ['%']], ['sayfa.istekCokGun', ['%']], ['sayfa.istekGunler', ['%']], ['sayfa.istekKabul', ['%1', '%2']],
+]
+
 function saatDilimiGecerli(z: unknown): boolean {
   if (!dolu(z)) return false
   try { new Intl.DateTimeFormat('en-GB', { timeZone: z }); return true } catch { return false }
@@ -59,7 +66,7 @@ export function paketiDenetle(paket: UlkePaketi, arayuz: UlkeArayuzu | null, kli
   // … and every marker the rules did not name themselves, once each.
   const isaretler: PaketSorunu[] = []
   isaretleriTopla({ ...paket, metinler: undefined }, '', isaretler)
-  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
+  isaretleriTopla(arayuz ? { ...arayuz, metinler: undefined, randevuMetinleri: undefined, portalMetinleri: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, icerik: undefined } : null } : null, 'arayuz', isaretler)
   isaretleriTopla(klinik, 'klinik', isaretler)
   const bilinen = new Set(s.map((x) => x.yer))
   for (const i of isaretler) if (!bilinen.has(i.yer) && !bilinen.has(i.yer.replace(/^uygulama\./, '')) && !bilinen.has(`uygulama.${i.yer}`)) { s.push(i); bilinen.add(i.yer) }
@@ -142,6 +149,7 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
   }
 
   // ── the signed-in application ──
+  if (paket.ozellikler.hastaPortali && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.hastaPortali', 'the patient portal needs the signed-in application (cekirdekMuayene): a patient is given access from a patient file')
   if (!paket.ozellikler.cekirdekMuayene) return s
   const u = paket.uygulama
   if (!u) { ekle('uygulama', 'the application is switched on and the pack has no settings for it'); return s }
@@ -184,6 +192,15 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
   const kimlikVar = Boolean(paket.ulusalKimlik) && !eksikAyarMi(paket.ulusalKimlik)
   if (u.kimlikNumarasi?.dogrula === true && !paket.ulusalKimlik) ekle('uygulama.kimlikNumarasi.dogrula', 'is true and the pack has no identity number (ulusalKimlik: null)')
   if (paket.ozellikler.randevu && !u.randevu) ekle('uygulama.randevu', 'appointments are switched on and the pack has no appointment norms')
+  // the patient portal: how long a link stays valid is the country's decision (law and custom), never the kit's
+  if (paket.ozellikler.hastaPortali) {
+    const gun = u.portal?.baglantiGecerlilikGun
+    if (!u.portal) ekle('uygulama.portal', 'the patient portal is switched on and the pack does not say how long a patient\'s link stays valid')
+    else if (eksikAyarMi(u.portal)) ekle('uygulama.portal', `${TESLIM}: ${u.portal.__eksikAyar}`)
+    else if (eksikAyarMi(gun)) ekle('uygulama.portal.baglantiGecerlilikGun', `${TESLIM}: ${gun.__eksikAyar}`)
+    else if (!(Number.isInteger(gun) && (gun as number) >= 1 && (gun as number) <= 365)) ekle('uygulama.portal.baglantiGecerlilikGun', 'must be a whole number of days between 1 and 365')
+    if (paket.rotalar !== 'hepsi' && !paket.rotalar.sayfalar.includes('/portal')) ekle('rotalar.sayfalar', 'the patient portal is on and "/portal" is not listed: every link a doctor gives would open "not found"')
+  }
   // routes
   if (paket.rotalar !== 'hepsi') {
     for (const r of ['/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', ...(paket.ozellikler.randevu ? ['/calendar'] : [])]) if (!paket.rotalar.sayfalar.includes(r)) ekle('rotalar.sayfalar', `the application is on and "${r}" is not listed`)
@@ -214,6 +231,20 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
         metinleriGez(r, `arayuz.randevuMetinleri[${d}]`, s)
         for (const t of hastaDilleri) if (!dolu(r.hatirlatma?.dilAdi?.[t])) ekle(`arayuz.randevuMetinleri[${d}].hatirlatma.dilAdi.${t}`, 'a patient language has no name in this form')
         for (const n of [1, 2, 3, 4, 5, 6, 7]) if (!dolu((r.gunKisa as Record<number, string> | undefined)?.[n]) || !dolu((r.gunUzun as Record<number, string> | undefined)?.[n])) ekle(`arayuz.randevuMetinleri[${d}].gunKisa/gunUzun.${n}`, 'a weekday has no name')
+      }
+    }
+    if (paket.ozellikler.hastaPortali) {
+      const pm = arayuz.portalMetinleri?.[d]
+      if (!pm) ekle(`arayuz.portalMetinleri[${d}]`, 'the patient portal is on and this form has no portal catalogue')
+      else {
+        metinleriGez(pm, `arayuz.portalMetinleri[${d}]`, s)
+        if (dilimler.length > 1 && !dolu(pm.sayfa?.saatDilimi)) ekle(`arayuz.portalMetinleri[${d}].sayfa.saatDilimi`, 'the country has several time zones and the patient\'s page cannot say which one its times are in')
+        // A sentence that lost its placeholder would silently drop a name, a date or the tries that are left.
+        for (const [yol, yerler] of PORTAL_YER_TUTUCULARI) {
+          const metin = yol.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), pm)
+          if (typeof metin !== 'string' || eksikMetinMi(metin) || !metin.trim()) continue
+          for (const y of yerler) if (!(y === '%' ? /%(?!\d)/ : new RegExp(`${y}(?!\\d)`)).test(metin)) ekle(`arayuz.portalMetinleri[${d}].${yol}`, `must hold "${y}" where the value is written`)
+        }
       }
     }
     // roles and templates, per form
@@ -269,6 +300,15 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       if (diger) { const t = klinik.yenidenYazimTalimati(diger); if (!dolu(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, 'a rewrite into this form is offered and has no instruction'); else if (eksikMetinMi(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, TESLIM) }
     }
     for (const t of new Set(Object.values(kayit(klinik.konusma?.beklenenDiller)))) if (!temeller.includes(t)) ekle('klinik.konusma.beklenenDiller', `"${t}" is not a language of uygulama.dilGruplari`)
+    // The patient portal: a summary for the patient is written in the patient's language form — any form of the application.
+    if (paket.ozellikler.hastaPortali) {
+      if (typeof klinik.hastaOzetiTalimati !== 'function' || typeof klinik.hastaOzetiGirdisi !== 'function') ekle('klinik.hastaOzetiTalimati', 'the patient portal is on and the clinical half has no instruction for a summary for the patient (hastaOzetiTalimati, hastaOzetiGirdisi)')
+      else for (const d of diller) {
+        const t = klinik.hastaOzetiTalimati(d)
+        if (!dolu(t)) ekle(`klinik.hastaOzetiTalimati(${d})`, 'no instruction to the model: a summary for a patient who reads this form cannot be written')
+        else if (eksikMetinMi(t)) ekle(`klinik.hastaOzetiTalimati(${d})`, TESLIM)
+      }
+    }
   }
   return s
 }
