@@ -20,7 +20,7 @@ Answers to `docs/COUNTRY-PACK-CHECKLIST.md` for Uzbekistan. Code: `countries/uz/
 
 ## The intake form (2026-10-09, NOTYA-ULKE-INTAKE-01)
 
-**Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database needs **migration 138** (below), after 136 and 137, before a build that has the form is used. Branch `feat/ulke-intake`, PR to be opened (base `feat/ulke-portal`, PR #573), unmerged.
+**Status.** Built in the country kit and switched on for Uzbekistan **in the code only**. Nothing is deployed and nothing was applied to any database by this job. The Uzbek database needs **migration 138** (below), after 136 and 137, before a build that has the form is used. Branch `feat/ulke-intake`, PR #574 (base `feat/ulke-portal`, PR #573), unmerged.
 
 **What it is.** Before a visit the doctor asks a patient to fill in a short form. The patient fills it in on their own page (the patient portal), on a phone, in their own language; the doctor reads the answers before and during the visit. Nothing is sent to anybody by the application.
 
