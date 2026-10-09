@@ -20,6 +20,18 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
   gun: u('kun', 'кун', 'дн.'),
   ay: u('oy', 'ой', 'мес.'),
   dB: u('dB', 'дБ', 'дБ'),
+  mg: u('mg', 'мг', 'мг'),
+  'mg/kg': u('mg/kg', 'мг/кг', 'мг/кг'),
+  saat: u('soat', 'соат', 'ч'),
+  mm: u('mm', 'мм', 'мм'),
+  'mg/L': u('mg/l', 'мг/л', 'мг/л'),
+  'mm/saat': u('mm/soat', 'мм/соат', 'мм/ч'),
+  'ng/mL': u('ng/ml', 'нг/мл', 'нг/мл'),
+  'ng/mL/yil': u('ng/ml bir yilda', 'нг/мл бир йилда', 'нг/мл в год'),
+  dk: u('daqiqa', 'дақиқа', 'мин'),
+  // length and weight as the pack measures them (index.ts → uygulama.birimler)
+  cm: u('sm', 'см', 'см'),
+  kg: u('kg', 'кг', 'кг'),
 }
 
 export const UZ_LAB_BIRIMLERI: Readonly<Partial<Record<LabOlcusu, string>>> = {

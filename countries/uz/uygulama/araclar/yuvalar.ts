@@ -56,6 +56,13 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
   yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
 
+  // ── nephrology ──
+  yuva('anemi-izlem', ['nefroloji'], 'Anaemia follow-up in chronic kidney disease: the target haemoglobin range, the lower limit and the months until the next check (6 numbers) from the national nephrology protocol; and the unit the local laboratories report haemoglobin in.', KLINISYEN, true),
+
+  // ── rheumatology ──
+  yuva('iltihap-lab-izlem', ['romatoloji'], 'CRP and ESR follow-up: the thresholds between the bands and the months until the next check (7 numbers), with the reference ranges the local laboratories use.', KLINISYEN, true),
+  yuva('basdai', ['romatoloji'], 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index): a published patient questionnaire of six questions. Needed: the authorised Uzbek and Russian versions and, where its owner requires one, the licence. The wording is not translated by a machine. The DAS28 half of the pre-split application\'s tool is switched on; this half is not.', 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions'),
+
   // ── cardiology ──
   yuva('kardiyo-izlem', ['kardiyoloji'], 'Hypertension, heart-failure and atrial-fibrillation follow-up: the office blood-pressure limits that raise a warning and the days until each next check (9 numbers), from the national cardiology protocols.', KLINISYEN, true),
 
@@ -66,4 +73,43 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   // ── gastroenterology ──
   yuva('ibd-skor', ['gastroenteroloji'], 'Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the local gastroenterology protocols state them.', KLINISYEN, true),
   yuva('hepatit-izlem', ['gastroenteroloji'], 'Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the national hepatitis programme.', KLINISYEN, true),
+
+  // ── obstetrics and gynaecology: every tool rests on a national protocol, a law or a reference table ──
+  yuva('gebelik-takvimi', ['kadin-hastaliklari-dogum'], 'Pregnancy calendar: the antenatal visit schedule and the screening windows of the Uzbek antenatal protocol. (Gestational-age arithmetic alone is universal; the tool is its schedule.)'),
+  yuva('dogum-analik-raporu', ['kadin-hastaliklari-dogum'], 'Maternity leave dates and certificate: the periods Uzbek labour law gives before and after birth, how they move with an early or late birth, and the certificate form.', HUKUK),
+  yuva('kontrasepsiyon-mec', ['kadin-hastaliklari-dogum'], 'Medical eligibility for contraception: the WHO eligibility table entered from the WHO edition and signed by a local clinician, and for emergency contraception the products and doses authorised in Uzbekistan. RECLASSIFIED from "keep": the pre-split tool carries a simplified rule set with doses and notes of another country\'s market; an eligibility table is not copied by a machine.'),
+  yuva('obstetrik-risk', ['kadin-hastaliklari-dogum'], 'Obstetric risk prompts and the caesarean indication note: the local protocol (who is offered which prophylaxis, in which window) and the form of the note Uzbek rules require.'),
+  yuva('kd-kohort', ['kadin-hastaliklari-dogum'], 'The follow-up panel of obstetrics and gynaecology: it lists patients by the antenatal and screening schedule above and has nothing to list until that exists.'),
+
+  // ── neurology ──
+  yuva('inme-kirmizi-bayrak', ['noroloji'], 'Stroke and TIA red flags: the emergency number confirmed by a local source and the stroke pathway of the region (where a patient is sent, within which time window).'),
+  yuva('midas', ['noroloji'], 'MIDAS (Migraine Disability Assessment): a published patient questionnaire. Needed: the authorised Uzbek and Russian versions and the licence. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
+  yuva('antiepileptik-izlem', ['noroloji'], 'Laboratory monitoring of antiseizure medicines: which tests, how soon after starting and how often, from the national protocol, and the register of medicines sold in Uzbekistan to recognise each by name. RECLASSIFIED from "keep": the pre-split tool recognises medicines by the names and brands of another country and cites that country\'s regulator.'),
+
+  // ── paediatrics ──
+  yuva('buyume-persentil', ['pediatri'], 'Growth and percentiles: the growth standard used in Uzbekistan (WHO standards to be confirmed) with its reference tables. The pre-split tool also carries a national reference of another country, which must not be shown here.'),
+  yuva('asi-takvimi', ['pediatri'], 'Vaccination calendar and catch-up: the national immunisation calendar of Uzbekistan with its catch-up rules.'),
+  yuva('gelisim-tarama', ['pediatri'], 'Development and screening panel: the national screening programme for children (hearing, vision, supplements: which, at which age).'),
+  yuva('mchat-rf', ['pediatri'], 'M-CHAT-R/F (Modified Checklist for Autism in Toddlers, Revised, with Follow-Up): a published questionnaire for parents. Needed: the authorised Uzbek and Russian versions and the permission of its authors. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
+  yuva('pediatri-kohort', ['pediatri'], 'The follow-up panel of paediatrics: it lists patients by the vaccination calendar and the screening programme above and has nothing to list until they exist.'),
+
+  // ── plastic surgery ──
+  yuva('plastik-onam', ['plastik-cerrahi'], 'Informed-consent checklist for a plastic-surgery procedure: the items and the wording Uzbek law requires.', HUKUK),
+
+  // ── psychiatry ──
+  yuva('phq9-gad7', ['psikiyatri'], 'PHQ-9 and GAD-7: published patient questionnaires. Needed: the authorised Uzbek and Russian versions (and the terms of use of their owner). The wording is not translated by a machine; the scoring, and the safety prompt on the ninth item of PHQ-9, are not switched on without it.', ANKET),
+  yuva('psikiyatri-guvenlik-triyaj', ['psikiyatri'], 'Safety and emergency triage: the emergency number confirmed by a local source, the referral path, the rules for involuntary admission, and the wording of a crisis plan signed by a local psychiatrist.'),
+  yuva('psikotrop-izlem', ['psikiyatri'], 'Monitoring calendar of psychotropic medicines: which tests and how often for each class, from the national protocol, and the register of medicines sold in Uzbekistan. RECLASSIFIED from "keep": a monitoring schedule by medicine is clinical reference content.'),
+
+  // ── radiology ──
+  yuva('radyo-kritik-bildirim', ['radyoloji'], 'Critical-finding notice: who must be told, how fast, by which channel, under the local rules of the institution and the country.'),
+
+  // ── urology ──
+  yuva('ipss', ['uroloji'], 'IPSS (International Prostate Symptom Score): a published patient questionnaire. Needed: the authorised Uzbek and Russian versions and the permission to use them. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
+  yuva('uroloji-acil-triyaj', ['uroloji'], 'Haematuria and stone emergency triage: the emergency number confirmed by a local source and the referral path.'),
+
+  // ── physical medicine and rehabilitation ──
+  yuva('ftr-seans-plani', ['fizik-tedavi'], 'Session plan: any local rule on the number and frequency of sessions (state or insurer), and the form a plan is written in.'),
+  yuva('vas-odi', ['fizik-tedavi'], 'Pain scale with the Oswestry Disability Index (ODI): ODI is a published patient questionnaire under licence. Needed: the authorised Uzbek and Russian versions and the licence. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
+  yuva('ev-egzersiz', ['fizik-tedavi'], 'Home exercise sheet: a sheet the PATIENT reads (exercise names, how often, when to stop, whom to call). Every sentence is an instruction to a patient and must be supplied and signed by a local rehabilitation physician.'),
 ]

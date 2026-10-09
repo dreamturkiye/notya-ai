@@ -27,7 +27,7 @@ const DIZIN = join(KOK, 'countries/uz/uygulama/araclar')
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 
 /** Latin written inside a Cyrillic or Russian sentence on purpose: names the profession itself writes in Latin letters. */
-const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|I{1,3}|IV|V|E|A|B|C)\b/g
+const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|I{1,3}|IV|V|E|A|B|C)\b/g
 
 /** Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart. */
 const TEMEL = ['hasta-portali']
@@ -50,8 +50,18 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri'],
   kardiyoloji: [],
   'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu'],
-  nefroloji: [], noroloji: [], onkoloji: [], ortopedi: [], pediatri: [], 'plastik-cerrahi': [], psikiyatri: [], radyoloji: [],
-  romatoloji: [], uroloji: [], 'spor-hekimligi': [], 'fizik-tedavi': [],
+  nefroloji: ['kdigo-serit', 'diyaliz-seans'],
+  noroloji: [],
+  onkoloji: ['kur-sayaci', 'toksisite-listesi'],
+  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon'],
+  pediatri: ['hedef-boy', 'doz-hesabi'],
+  'plastik-cerrahi': ['plastik-yara-greft'],
+  psikiyatri: [],
+  radyoloji: ['tetkik-kuyrugu', 'rapor-taslagi'],
+  romatoloji: ['das28', 'eklem-28'],
+  uroloji: ['psa-hizi'],
+  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu'],
+  'fizik-tedavi': [],
   // clinic doctors and allied professions: base tools only (their own tools are a separate registry of the pre-split application)
   'sac-ekimi': [], 'estetik-cerrahi': [], 'medikal-estetik': [], 'klinik-dermatoloji': [], longevity: [], fizyoterapi: [], 'klinik-psikolog': [], diyetisyen: [], ergoterapi: [], odyoloji: [],
 }
@@ -83,6 +93,9 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     assert.equal(P.hesabinAraci(icerik, 'kardiyoloji', 'esi-triyaj'), null); assert.equal(P.hesabinAraci(icerik, 'noroloji', 'nobet-bilinc'), null)
     assert.equal(P.hesabinAraci(icerik, 'genel-cerrahi', 'asa-preop'), null); assert.ok(P.hesabinAraci(icerik, 'anestezi', 'asa-preop'))
     assert.equal(P.hesabinAraci(icerik, 'pediatri', 'cocuk-prepost-op'), null); assert.equal(P.hesabinAraci(icerik, 'nefroloji', 'kdigo-evre'), null); assert.equal(P.hesabinAraci(icerik, 'klinik-dermatoloji', 'pasi'), null)
+    // the standing example of the rule: a child tool is for paediatrics and for no adult role
+    for (const rol of ['kardiyoloji', 'dahiliye', 'goz-hastaliklari', 'kadin-hastaliklari-dogum', 'aile-hekimligi', 'cocuk-cerrahisi']) { assert.equal(P.hesabinAraci(icerik, rol, 'hedef-boy'), null, `hedef-boy for ${rol}`); assert.equal(P.hesabinAraci(icerik, rol, 'doz-hesabi'), null) }
+    assert.ok(P.hesabinAraci(icerik, 'pediatri', 'hedef-boy'))
   })
 
   it('every text is in its own script, and the three forms are three texts', () => {
