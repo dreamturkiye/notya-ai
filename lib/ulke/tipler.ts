@@ -50,6 +50,12 @@ export type Ozellik =
    * link from an appointment to its visit. Needs `cekirdekMuayene`. Settings come from the pack (`uygulama.randevu`).
    */
   | 'randevu'
+  /**
+   * NOTYA-ULKE-PORTAL-01 — the patient portal: a link and a PIN the doctor gives a patient, the patient's own page
+   * (their name, their doctor, upcoming appointments, what the doctor chose to share), a request for an appointment.
+   * Needs `cekirdekMuayene`; its appointment parts need `randevu`. Settings come from the pack (`uygulama.portal`).
+   */
+  | 'hastaPortali'
   /** Doktor Araçları (/doktor-tools). */
   | 'doktorAraclari'
   /** Ayşe: floating panel, voice session, chat. */
@@ -193,6 +199,8 @@ export type UygulamaAyarlari = {
    * PUBLIC HOLIDAYS ARE NOT HERE: they are local content a local source must supply; nothing is hard-coded.
    */
   randevu?: RandevuAyarlari
+  /** NOTYA-ULKE-PORTAL-01 — the patient portal's settings. Present exactly where the feature `hastaPortali` is on. */
+  portal?: PortalAyarlari
 
   // ── NOTYA-ULKE-SABLON-01 — every assumption the shared screens used to carry for one country, as a setting. ──
   // All REQUIRED: a pack that brings the application says each of them out loud. lib/ulke/paketDenetimi.ts checks
@@ -246,6 +254,12 @@ export type DilGrubu = {
 
 /** Units of measure a country reads and writes (checklist E3, F4). */
 export type Birimler = { agirlik: 'kg' | 'lb'; boy: 'cm' | 'in'; sicaklik: 'C' | 'F' }
+
+/** What a pack says about the patient portal (feature `hastaPortali`). */
+export type PortalAyarlari = {
+  /** How many days a portal link stays valid from the moment the doctor creates it. Afterwards the doctor gives a new one. */
+  baglantiGecerlilikGun: number
+}
 
 export type RandevuAyarlari = {
   /** The working pattern an account has until it saves its own. Weekdays are ISO: 1 = Monday … 7 = Sunday. Times are 'HH:MM'. */
@@ -381,6 +395,14 @@ export type UlkeKlinigi = {
    * account's own languages (interface, notes), so that a script it already uses is chosen. null = there is none.
    */
   digerDil: (dil: DilKodu, hesapDilleri: readonly DilKodu[]) => DilKodu | null
+  /**
+   * NOTYA-ULKE-PORTAL-01 — INSTRUCTIONS TO THE MODEL for a plain-language summary of an APPROVED note, for the
+   * patient, written in `dil` (the patient's own language form). The pack's own text; core holds none.
+   * null = the pack has none for that form: no summary is written there. Required where `hastaPortali` is on.
+   */
+  hastaOzetiTalimati?: (dil: DilKodu) => string | null
+  /** The message that carries the approved note to the model, in the summary's language. The note and nothing else. */
+  hastaOzetiGirdisi?: (dil: DilKodu, icerik: NotIcerigi) => string
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

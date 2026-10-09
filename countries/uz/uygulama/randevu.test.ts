@@ -749,9 +749,13 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     const izin = ulkePaketi().rotalar
     if (izin !== 'hepsi') assert.deepEqual(izin.apiOnEkleri, ['/api/ulke/'])
     for (const d of ['hatirlatma', 'iletisim', 'mesaj', 'cron', 'randevu/hatirlatma']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
-    // Not in this job, and not half-built either: no calendar sync, no self-booking by patients, no clinic-wide calendar.
-    for (const d of ['google', 'takvim-esitleme', 'portal', 'klinik']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
-    assert.doesNotMatch(kod('lib/ulke/uygulama/randevular.ts') + takvim, /google|googleapis|ics\b|portal/i)
+    // Not built, and not half-built either: no calendar sync, no clinic-wide calendar.
+    for (const d of ['google', 'takvim-esitleme', 'klinik']) assert.equal(existsSync(join(KOK, 'app/api/ulke', d)), false, `app/api/ulke/${d} exists`)
+    assert.doesNotMatch(kod('lib/ulke/uygulama/randevular.ts') + takvim, /google|googleapis|ics\b/i)
+    // NOTYA-ULKE-PORTAL-01: the patient portal exists since 2026-10-09. A patient still BOOKS NOTHING: the one thing a
+    // portal session may write is a REQUEST, which holds no time; only the doctor's acceptance writes an appointment
+    // (lib/ulke/portal/portal.paket.test.ts, section E). No patient route names the appointment table or a booking function.
+    for (const f of ['route.ulke.ts', 'giris/route.ulke.ts', 'cikis/route.ulke.ts', 'randevu-istegi/route.ulke.ts']) assert.doesNotMatch(kod(`app/api/ulke/portal/${f}`), /randevuOlustur|randevuTasi|randevuDurumDegistir|istekKabul|ulke_randevulari/, `app/api/ulke/portal/${f} can book`)
   })
 
   it('the calendar screen exists: route file, pack list, screen — and the shell links to it in the account\'s form', async () => {

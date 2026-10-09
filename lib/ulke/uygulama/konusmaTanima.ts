@@ -54,6 +54,11 @@ export type TanimaSonucu =
       /** Confidence is still below the thresholds after everything that was tried. */
       dusukGuven: boolean
       gecisSayisi: number
+      /**
+       * NOTYA-ULKE-PORTAL-01 — for the usage record: the seconds of audio each ANSWERED pass reported (null = the
+       * provider did not say). `ikinci` is undefined where no second pass ran or the provider did not answer it.
+       */
+      gecisSureleri: { ilk: number | null; ikinci?: number | null }
     }
 
 type ScribeCevabi = { text?: unknown; language_code?: unknown; language_probability?: unknown; words?: unknown }
@@ -139,5 +144,6 @@ export async function konusmayiTani(ses: Blob, notDili: DilKodu): Promise<Tanima
     durum: 'tamam', secilen, secilenGecis,
     taninanDil: ilk.dilKodu, dilOlasiligi: ilk.dilOlasiligi,
     ikinciGecis: gecisSayisi > 1, ikinciGecisDili, dusukGuven, gecisSayisi,
+    gecisSureleri: { ilk: ilk.sureSn, ...(ikinci ? { ikinci: ikinci.sureSn } : {}) },
   }
 }

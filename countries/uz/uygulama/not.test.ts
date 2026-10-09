@@ -357,6 +357,10 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const { sonuc: r } = await sessiz(() => yenidenYaz('jeton-a', v.notId))
     assert.deepEqual(r, { s: 200, j: { dil: 'ru' } })
     assert.equal(model.cagrilar.length, 1)
+    // NOTYA-ULKE-PORTAL-01 — USAGE: the note and the rewrite are each counted once for the account, with the tokens
+    // the provider reported for the answer. Counts only: no amount of money, no patient, no text.
+    assert.deepEqual(vt.tablo('ulke_kullanim_olcumu').filter((k) => k.gorev === 'not' || k.gorev === 'yeniden-yazim').map((k) => [k.doctor_id, k.gorev, k.adet, k.giris_token, k.cikis_token]).sort(), [[A, 'not', 1, 900, 220], [A, 'yeniden-yazim', 1, 900, 220]])
+    assert.ok(vt.tablo('ulke_kullanim_olcumu').every((k) => Object.keys(k).sort().join() === 'adet,cikis_token,doctor_id,giris_token,gorev,gun,saniye,ulke'), 'a usage row has no column for a patient, a visit or a text')
     const c = model.cagrilar[0]
     assert.equal(c.model, R.modelSec('not-uretimi').model)
     assert.equal(c.sistem, T.uzYenidenYazimTalimati('ru'))

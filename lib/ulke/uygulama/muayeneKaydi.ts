@@ -27,6 +27,7 @@ import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
 import { muayeneKotasiKullan } from './kota'
+import { kullanimEkle } from './kullanimOlcumu'
 import { randevuMuayeneyeUygun, randevuyuMuayeneyeBagla } from './randevular'
 import { hekimRolunuOku, uygulamaRolleri } from './rol'
 import { sesYoluGecerli, ulkeTablosu } from './tablolar'
@@ -103,6 +104,10 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     const t = await konusmayiTani(ses, notDili)
     if (t.durum === 'hazir-degil') return { tamam: false, kod: 'HAZIR_DEGIL' }
     if (t.durum === 'okunamadi') return { tamam: false, kod: 'SES_OKUNAMADI' }
+    // NOTYA-ULKE-PORTAL-01 — usage: every pass the provider answered, with the seconds it reported. Recorded here,
+    // before anything can refuse the visit: a recording that turns out too short was transcribed all the same.
+    await kullanimEkle(supabase, doktorId, 'konusma-ilk', { saniye: t.gecisSureleri.ilk })
+    if (t.gecisSureleri.ikinci !== undefined) await kullanimEkle(supabase, doktorId, 'konusma-ikinci', { saniye: t.gecisSureleri.ikinci })
     if (t.secilen.metin.length < klinik.konusma.asgariKarakter) return { tamam: false, kod: 'KISA_KAYIT' }
 
     const rizaAni = new Date().toISOString()

@@ -11,6 +11,8 @@
     "132_muayene_dil_kaydi.sql",
     "133_not_dil_kaydi.sql",
     "134_hekim_rolu.sql",
-    "135_ulke_randevu.sql"
+    "135_ulke_randevu.sql",
+    "136_ulke_kullanim_olcumu.sql",
+    "137_ulke_hasta_portali.sql"
   ]
 }

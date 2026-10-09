@@ -156,10 +156,13 @@ describe('BOUNDARY: Turkish error text of shared infrastructure never reaches th
       const k = readFileSync(y, 'utf8')
       const isleyiciler = [...k.matchAll(/^export (?:async function|const) (GET|POST|PATCH|PUT|DELETE)\b([^\n]*)/gm)]
       assert.ok(isleyiciler.length >= 1, y)
-      for (const [, yontem, kalan] of isleyiciler) assert.match(kalan, /^ = sinirda\('/, `${y}: ${yontem} is not wrapped in sinirda(…)`)
+      // A route a PATIENT's browser calls has the portal's own boundary: the same rule, plus the privacy headers on a failure too.
+      for (const [, yontem, kalan] of isleyiciler) assert.match(kalan, /^ = (sinirda|portalSinirinda)\('/, `${y}: ${yontem} is not wrapped in sinirda(…) or portalSinirinda(…)`)
     }
     const sinir = readFileSync(join(KOK, 'lib/ulke/uygulama/sinir.ts'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
     assert.doesNotMatch(sinir, /\.message|String\(e\)|\$\{e\}/, 'the boundary must not log or forward an error\'s own text')
+    const portalSiniri = readFileSync(join(KOK, 'lib/ulke/portal/rotaYardimcisi.ts'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+    assert.doesNotMatch(portalSiniri, /\.message|String\(e\)|\$\{e\}/, 'the portal\'s boundary must not log or forward an error\'s own text')
   })
 })
 
@@ -246,6 +249,10 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     assert.equal(r.s, 200)
     // randevuBagli (NOTYA-UZ-RANDEVU-01): this visit was not started from an appointment.
     assert.deepEqual({ ...r.j, seansId: undefined }, { seansId: undefined, ikinciGecis: false, dusukGuven: false, randevuBagli: false })
+    // NOTYA-ULKE-PORTAL-01 — USAGE: the one pass is counted for the account, on the account's own day (Tashkent's),
+    // with the seconds of audio the provider reported. No patient, no visit, no text: the row has no such column.
+    const saniye = Math.round((UZ_METIN.split(' ').length * 0.5) * 10) / 10
+    assert.deepEqual(vt.tablo('ulke_kullanim_olcumu'), [{ ulke: 'uz', doctor_id: A, gun: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent' }).format(new Date()), gorev: 'konusma-ilk', adet: 1, saniye, giris_token: 0, cikis_token: 0 }])
     assert.deepEqual(stt.cagrilar, [{ adres: SCRIBE, model: 'scribe_v2', dil: null, bayt: vt.depo.size === 0 ? stt.cagrilar[0].bayt : -1, anahtar: 'sahte-konusma-anahtari' }])
     assert.ok(stt.cagrilar[0].bayt > 10, 'the recording itself was sent')
     assert.equal(vt.depo.size, 0, 'the recording is removed once transcribed')
@@ -277,6 +284,8 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     assert.deepEqual({ s: r.s, ikinciGecis: r.j.ikinciGecis, dusukGuven: r.j.dusukGuven }, { s: 200, ikinciGecis: true, dusukGuven: false })
     assert.deepEqual(stt.cagrilar.map((c) => [c.model, c.dil]), [['scribe_v2', null], ['scribe_v2', 'uzb']], 'first pass without a language, second forced to Uzbek')
     assert.equal(stt.cagrilar[0].bayt, stt.cagrilar[1].bayt, 'the same recording both times')
+    // USAGE: the second pass costs a second transcription, and is counted as its own task.
+    assert.deepEqual(vt.tablo('ulke_kullanim_olcumu').map((k) => [k.gorev, k.adet, Number(k.saniye) > 0]).sort(), [['konusma-ikinci', 1, true], ['konusma-ilk', 1, true]])
     const [k] = vt.tablo('muayene_dil_kaydi')
     // The language of the visit is what the FIRST pass predicted, with its probability — whichever pass was kept.
     assert.deepEqual([k.taninan_dil, k.dil_olasiligi, k.ikinci_gecis, k.ikinci_gecis_dili, k.secilen_gecis, k.gecis_sayisi, k.dusuk_guven], ['uzb', 0.55, true, 'uzb', 2, 2, false])
@@ -321,6 +330,8 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     const r = await muayeneYap('jeton-a', { yol: sesKoy(A), hastaId: hasta, sablon: 'genel', riza: true })
     assert.deepEqual([r.s, r.j.ikinciGecis, r.j.dusukGuven], [200, true, true])
     assert.equal(vt.tablo('ulke_muayeneler')[0].transcript_cleaned, UZ_METIN)
+    // USAGE: a pass the provider did not answer is not counted.
+    assert.deepEqual(vt.tablo('ulke_kullanim_olcumu').map((k) => [k.gorev, k.adet]), [['konusma-ilk', 1]])
   })
 
   it('CONSENT: without the tick the server refuses, the provider is never called, nothing is stored, the audio is removed', async () => {

@@ -6,7 +6,8 @@
  * (same rule as lib/security/testing/sahteSupabase.ts). Every query is recorded, so a test can prove that a read
  * of a patient table carried the doctor's id.
  *
- * SHARED DATABASE (NOTYA-ULKE-SABLON-01). Every table here is a COUNTRY table, and the stand-in holds the rule the
+ * THE SECOND WALL (NOTYA-ULKE-SABLON-01; one database per country since 2026-10-09, and the country on every row
+ * all the same). Every table here is a COUNTRY table, and the stand-in holds the rule the
  * real tables hold with `ulke text not null`: a statement that does not carry the country THROWS — a select, update
  * or delete without `ulke = …`, an insert or upsert whose row has no `ulke`, a function called without `p_ulke`.
  * So every one of the country tests also proves that the statement it exercised was bound to the build's country.
@@ -21,10 +22,11 @@ export type SahteHesap = { id: string; email: string; app_metadata?: Record<stri
 export type SorguKaydi = { tablo: string; islem: string; filtreler: string[]; ulke: string }
 
 /**
- * THE ONE TABLE OF TÜRKİYE a country build is known to write to, through shared infrastructure it does not own:
- * the model gateway's usage log (lib/ai/kullanim.ts — task, model, token counts, the account's id; no patient data).
- * It has no `ulke` column. Listed in docs/COUNTRY-PACK-DB-ROLLOUT.md; lib/ulke/ulkeVeritabani.test.ts proves it is the
- * only one. Every other table name reaching this stand-in is held to the country rule.
+ * THE ONE TABLE THAT IS NOT A COUNTRY TABLE a country build is known to reach for, through shared infrastructure it
+ * does not own: the model gateway's usage log (lib/ai/kullanim.ts — task, model, token counts, the account's id; no
+ * patient data). It has no `ulke` column. A country database does not hold it (the gateway's write fails quietly
+ * there; the country's own usage record is `ulke_kullanim_olcumu`). lib/ulke/ulkeVeritabani.paket.test.ts proves it
+ * is the only one. Every other table name reaching this stand-in is held to the country rule.
  */
 export const ORTAK_ALTYAPI_TABLOLARI: readonly string[] = ['ai_token_kullanim']
 
@@ -61,12 +63,54 @@ export function sahteVeritabani() {
    * is decided here, not by the application's earlier read.
    */
   /** Tables whose key is not a generated `id` (their key is the account, the patient, the visit or the note). */
-  const KIMLIKSIZ = new Set(['hasta_ulke_bilgisi', 'hekim_dil_tercihleri', 'hekim_rolu', 'muayene_dil_kaydi', 'not_dil_kaydi', 'hekim_calisma_duzeni', 'ulke_kullanim'])
+  const KIMLIKSIZ = new Set(['hasta_ulke_bilgisi', 'hekim_dil_tercihleri', 'hekim_rolu', 'muayene_dil_kaydi', 'not_dil_kaydi', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu'])
   const YER_TUTAN = ['planlandi', 'geldi', 'tamamlandi']
   const cakisma = (ad: string, yeni: Satir, digerleri: Satir[]): { message: string; code: string } | null => {
     if (ad !== 'ulke_randevulari' || !YER_TUTAN.includes(String(yeni.durum ?? 'planlandi'))) return null
     const cakisan = digerleri.some((s) => s.doctor_id === yeni.doctor_id && YER_TUTAN.includes(String(s.durum ?? 'planlandi')) && String(s.baslangic) < String(yeni.bitis) && String(s.bitis) > String(yeni.baslangic))
     return cakisan ? { message: 'conflicting key value violates exclusion constraint "ulke_randevulari_cakisma_yok"', code: '23P01' } : null
+  }
+
+  /**
+   * NOTYA-ULKE-PORTAL-01 — what migration 137 makes the database refuse, checked inside the statement as the
+   * database does (`yeni` is the row as it WOULD be, `digerleri` every other row of the table):
+   *   ulke_hasta_ozetleri      the trigger: the note must be this doctor's, about this patient, and APPROVED (23514);
+   *                            one summary per note (23505)
+   *   ulke_portal_erisimleri   one link per patient that is not withdrawn; a token hash is unique (23505)
+   *   ulke_portal_oturumlari   a session hangs from a link of the same country, doctor and patient (23503)
+   *   ulke_randevu_istekleri   one unanswered request per patient (23505)
+   * and every one of them: the patient must be this doctor's in this country (23503).
+   */
+  const kisit = (ad: string, yeni: Satir, digerleri: Satir[]): { message: string; code: string } | null => {
+    const c = cakisma(ad, yeni, digerleri)
+    if (c) return c
+    const hata = (code: string, message: string) => ({ code, message })
+    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri']
+    // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
+    if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
+    if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
+    if (ad === 'ulke_hasta_ozetleri' && yeni.note_id !== undefined) {
+      const n = tablo('ulke_notlar').find((x) => x.id === yeni.note_id && x.doctor_id === yeni.doctor_id && x.ulke === yeni.ulke)
+      const m = n ? tablo('ulke_muayeneler').find((x) => x.id === n.session_id && x.doctor_id === n.doctor_id && x.ulke === n.ulke) : undefined
+      if (!n || !m || m.patient_id !== yeni.patient_id) return hata('23514', 'ulke_hasta_ozetleri: the note is not a note of this patient')
+      if (!n.approved_at) return hata('23514', 'ulke_hasta_ozetleri: a summary for the patient exists only for an approved note')
+      if (digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.note_id === yeni.note_id)) return hata('23505', 'duplicate key value violates unique constraint "ulke_hasta_ozetleri_not_tekil"')
+    }
+    if (ad === 'ulke_portal_erisimleri') {
+      if (digerleri.some((x) => x.token_hash === yeni.token_hash)) return hata('23505', 'duplicate key value violates unique constraint "ulke_portal_erisimleri_token_tekil"')
+      if (!yeni.iptal_at && digerleri.some((x) => x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && !x.iptal_at)) return hata('23505', 'duplicate key value violates unique constraint "ulke_portal_erisimleri_tek_acik"')
+    }
+    if (ad === 'ulke_portal_oturumlari' && !tablo('ulke_portal_erisimleri').some((e) => e.id === yeni.erisim_id && e.ulke === yeni.ulke && e.doctor_id === yeni.doctor_id && e.patient_id === yeni.patient_id)) return hata('23503', 'insert or update on table "ulke_portal_oturumlari" violates foreign key constraint "ulke_portal_oturumlari_erisim_fk"')
+    if (ad === 'ulke_randevu_istekleri' && (yeni.durum ?? 'bekliyor') === 'bekliyor' && digerleri.some((x) => x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && (x.durum ?? 'bekliyor') === 'bekliyor')) return hata('23505', 'duplicate key value violates unique constraint "ulke_randevu_istekleri_tek_bekleyen"')
+    return null
+  }
+  /** A row written inside a function, held to the same constraints as a statement. */
+  const islevdeEkle = (ad: string, satir: Satir): Satir => {
+    const yeni = { id: yeniId(), created_at: new Date().toISOString(), ...satir }
+    const c = kisit(ad, yeni, tablo(ad))
+    if (c) throw Object.assign(new Error(c.message), { code: c.code })
+    tablo(ad).push(yeni)
+    return yeni
   }
 
   /**
@@ -98,6 +142,92 @@ export function sahteVeritabani() {
       if (bagli.length) yaz('ulke_randevulari')
       for (const r of bagli) Object.assign(r, { durum: 'tamamlandi', updated_at: a.p_onay_ani })
       return 'TAMAM'
+    },
+
+    // lib/db/migrations/136_ulke_kullanim_olcumu.sql — ulke_kullanim_ekle: adds to the row of (country, account, day, task).
+    ulke_kullanim_ekle: (a) => {
+      if (boz.yaz.has('ulke_kullanim_olcumu')) throw Object.assign(new Error('stand-in: ulke_kullanim_olcumu write failed inside the function'), { code: 'XX000' })
+      const poz = (x: unknown) => Math.max(Number(x ?? 0) || 0, 0)
+      let s = tablo('ulke_kullanim_olcumu').find((x) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.gun === a.p_gun && x.gorev === a.p_gorev)
+      if (!s) { s = { ulke: a.p_ulke, doctor_id: a.p_doctor_id, gun: a.p_gun, gorev: a.p_gorev, adet: 0, saniye: 0, giris_token: 0, cikis_token: 0 }; tablo('ulke_kullanim_olcumu').push(s) }
+      Object.assign(s, { adet: Number(s.adet) + poz(a.p_adet), saniye: Number(s.saniye) + poz(a.p_saniye), giris_token: Number(s.giris_token) + poz(a.p_giris_token), cikis_token: Number(s.cikis_token) + poz(a.p_cikis_token) })
+      return null
+    },
+
+    // lib/db/migrations/137_ulke_hasta_portali.sql — every statement carries `p_ulke`, as in the SQL.
+    ulke_portal_erisim_ver: (a) => {
+      if (!tablo('ulke_hastalar').some((h) => h.id === a.p_patient_id && h.doctor_id === a.p_doctor_id && h.ulke === a.p_ulke)) return null
+      const bu = (x: Satir) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.patient_id === a.p_patient_id
+      for (const o of tablo('ulke_portal_oturumlari')) if (bu(o) && !o.kapandi_at) o.kapandi_at = a.p_simdi
+      for (const e of tablo('ulke_portal_erisimleri')) if (bu(e) && !e.iptal_at) e.iptal_at = a.p_simdi
+      const yeni = islevdeEkle('ulke_portal_erisimleri', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, token_hash: a.p_token_hash, pin_hash: a.p_pin_hash, hatali_deneme: 0, son_deneme_at: null, kilitlendi_at: null, son_gecerlilik: a.p_son_gecerlilik, iptal_at: null, son_giris_at: null, created_at: a.p_simdi })
+      islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, olay: 'erisim', ozet_id: null, created_at: a.p_simdi })
+      return yeni.id
+    },
+    ulke_portal_erisim_iptal: (a) => {
+      const bu = (x: Satir) => x.ulke === a.p_ulke && x.doctor_id === a.p_doctor_id && x.patient_id === a.p_patient_id
+      const acik = tablo('ulke_portal_erisimleri').filter((e) => bu(e) && !e.iptal_at)
+      if (!acik.length) return false
+      for (const e of acik) e.iptal_at = a.p_simdi
+      for (const o of tablo('ulke_portal_oturumlari')) if (bu(o) && !o.kapandi_at) o.kapandi_at = a.p_simdi
+      islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: a.p_patient_id, olay: 'iptal', ozet_id: null, created_at: a.p_simdi })
+      return true
+    },
+    ulke_portal_deneme_al: (a) => {
+      const e = tablo('ulke_portal_erisimleri').find((x) => x.token_hash === a.p_token_hash && x.ulke === a.p_ulke)
+      if (!e || e.iptal_at || String(e.son_gecerlilik) <= String(a.p_simdi)) return { durum: 'YOK' }
+      if (e.kilitlendi_at) return { durum: 'KILITLI' }
+      if (Number(e.hatali_deneme) >= Number(a.p_azami)) {
+        e.kilitlendi_at = a.p_simdi
+        for (const o of tablo('ulke_portal_oturumlari')) if (o.erisim_id === e.id && o.ulke === a.p_ulke && !o.kapandi_at) o.kapandi_at = a.p_simdi
+        islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, olay: 'kilit', ozet_id: null, created_at: a.p_simdi })
+        return { durum: 'KILITLI' }
+      }
+      if (e.son_deneme_at && new Date(String(a.p_simdi)).getTime() < new Date(String(e.son_deneme_at)).getTime() + Number(a.p_aralik_sn) * 1000) return { durum: 'YAVAS' }
+      Object.assign(e, { hatali_deneme: Number(e.hatali_deneme) + 1, son_deneme_at: a.p_simdi })
+      return { durum: 'DENE', erisim_id: e.id, doctor_id: e.doctor_id, patient_id: e.patient_id, pin_hash: e.pin_hash }
+    },
+    ulke_portal_deneme_sonucu: (a) => {
+      const e = tablo('ulke_portal_erisimleri').find((x) => x.id === a.p_erisim_id && x.ulke === a.p_ulke)
+      if (!e || e.iptal_at || String(e.son_gecerlilik) <= String(a.p_simdi)) return { durum: 'YOK' }
+      if (e.kilitlendi_at) return { durum: 'KILITLI' }
+      if (a.p_dogru === true) {
+        Object.assign(e, { hatali_deneme: 0, son_giris_at: a.p_simdi })
+        const bitis = String(a.p_oturum_bitis) < String(e.son_gecerlilik) ? a.p_oturum_bitis : e.son_gecerlilik
+        islevdeEkle('ulke_portal_oturumlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, erisim_id: e.id, oturum_hash: a.p_oturum_hash, son_gecerlilik: bitis, kapandi_at: null, created_at: a.p_simdi })
+        islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, olay: 'giris', ozet_id: null, created_at: a.p_simdi })
+        return { durum: 'TAMAM', doctor_id: e.doctor_id, patient_id: e.patient_id }
+      }
+      if (Number(e.hatali_deneme) >= Number(a.p_azami)) {
+        e.kilitlendi_at = a.p_simdi
+        for (const o of tablo('ulke_portal_oturumlari')) if (o.erisim_id === e.id && o.ulke === a.p_ulke && !o.kapandi_at) o.kapandi_at = a.p_simdi
+        islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: e.doctor_id, patient_id: e.patient_id, olay: 'kilit', ozet_id: null, created_at: a.p_simdi })
+        return { durum: 'KILITLI' }
+      }
+      return { durum: 'YANLIS', kalan: Number(a.p_azami) - Number(e.hatali_deneme) }
+    },
+    ulke_ozet_paylas: (a) => {
+      const z = tablo('ulke_hasta_ozetleri').find((x) => x.id === a.p_ozet_id && x.doctor_id === a.p_doctor_id && x.ulke === a.p_ulke)
+      if (!z) return 'NOT_FOUND'
+      if (Boolean(z.paylasildi_at) === (a.p_paylas === true)) return 'AYNI'
+      if (boz.yaz.has('ulke_hasta_ozetleri')) throw Object.assign(new Error('stand-in: ulke_hasta_ozetleri update failed inside the function'), { code: 'XX000' })
+      // the trigger runs on this update too: a summary of a note that is not approved cannot be shared
+      const c = kisit('ulke_hasta_ozetleri', { ...z, paylasildi_at: a.p_paylas ? a.p_simdi : null }, tablo('ulke_hasta_ozetleri').filter((x) => x !== z))
+      if (c) throw Object.assign(new Error(c.message), { code: c.code })
+      Object.assign(z, { paylasildi_at: a.p_paylas ? a.p_simdi : null, updated_at: a.p_simdi })
+      if (boz.yaz.has('ulke_portal_kayitlari')) throw Object.assign(new Error('stand-in: ulke_portal_kayitlari insert failed inside the function'), { code: 'XX000' })
+      islevdeEkle('ulke_portal_kayitlari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: z.patient_id, olay: a.p_paylas ? 'paylasim' : 'geri-alma', ozet_id: a.p_ozet_id, created_at: a.p_simdi })
+      return 'TAMAM'
+    },
+    ulke_randevu_istegi_kabul: (a) => {
+      const i = tablo('ulke_randevu_istekleri').find((x) => x.id === a.p_istek_id && x.doctor_id === a.p_doctor_id && x.ulke === a.p_ulke)
+      if (!i) return { durum: 'NOT_FOUND' }
+      if ((i.durum ?? 'bekliyor') !== 'bekliyor') return { durum: 'CEVAPLANDI' }
+      // The appointment is inserted under the no-double-booking constraint: a taken time raises 23P01 and undoes everything.
+      const r = islevdeEkle('ulke_randevulari', { ulke: a.p_ulke, doctor_id: a.p_doctor_id, patient_id: i.patient_id, baslangic: a.p_baslangic, bitis: a.p_bitis, neden_encrypted: a.p_neden_encrypted ?? null, durum: 'planlandi', mesai_disi: a.p_mesai_disi === true, session_id: null, created_at: a.p_simdi, updated_at: a.p_simdi })
+      if (boz.yaz.has('ulke_randevu_istekleri')) throw Object.assign(new Error('stand-in: ulke_randevu_istekleri update failed inside the function'), { code: 'XX000' })
+      Object.assign(i, { durum: 'kabul', randevu_id: r.id, cevap_at: a.p_simdi })
+      return { durum: 'TAMAM', randevu_id: r.id }
     },
   }
   const rpc = async (ad: string, arg: Satir = {}): Promise<IslevCevabi> => {
@@ -161,7 +291,7 @@ export function sahteVeritabani() {
       if (this.islem === 'select') sonuc = satirlar.filter(uyan)
       else if (this.islem === 'insert') {
         sonuc = (Array.isArray(this.yuk) ? this.yuk : [this.yuk!]).map((y) => ({ ...(KIMLIKSIZ.has(this.ad) ? {} : { id: yeniId() }), created_at: new Date().toISOString(), ...(this.ad === 'ulke_muayeneler' ? { started_at: new Date().toISOString() } : {}), ...y }))
-        for (const y of sonuc) { const c = cakisma(this.ad, y, satirlar); if (c) return { data: null, error: c } }
+        for (const y of sonuc) { const c = kisit(this.ad, y, satirlar); if (c) return { data: null, error: c } }
         satirlar.push(...sonuc)
       } else if (this.islem === 'upsert') {
         const y = this.yuk as Satir
@@ -172,7 +302,7 @@ export function sahteVeritabani() {
         if (!this.filtreler.length) throw new Error(`stand-in database: update on ${this.ad} without a filter`)
         sonuc = satirlar.filter(uyan)
         // A constraint is checked on the row as it WOULD be; a refused statement changes nothing.
-        for (const s of sonuc) { const c = cakisma(this.ad, { ...s, ...this.yuk }, satirlar.filter((x) => x !== s)); if (c) return { data: null, error: c } }
+        for (const s of sonuc) { const c = kisit(this.ad, { ...s, ...this.yuk }, satirlar.filter((x) => x !== s)); if (c) return { data: null, error: c } }
         for (const s of sonuc) Object.assign(s, this.yuk)
       } else {
         if (!this.filtreler.length) throw new Error(`stand-in database: delete on ${this.ad} without a filter`)

@@ -1,12 +1,15 @@
 /**
  * NOTYA-ULKE-SABLON-01 — THE ONE DOOR to the database for a country build.
  *
- * SHARED DATABASE (Kaan, 2026-10-08: "use the same database as what we are using for notya turkiye"). Every country
- * lives in the same database as Türkiye. Two rules follow, and this file is where both are kept:
+ * ONE DATABASE PER COUNTRY (Kaan, 2026-10-09: "We had issues with common databases before. Keep seperation between
+ * the two and any other future country versions"). A country build is pointed at its own database. That is the first
+ * wall. This file is the SECOND: it was written on 2026-10-08, when every country was going to live in one database,
+ * and both of its rules stay exactly as they were — so that even inside one database no row of one country could be
+ * reached from another:
  *
- *   1. A country build touches COUNTRY TABLES ONLY — the list below (migrations 129–135). It never reads or writes a
- *      table Türkiye uses (`users`, `patients`, `sessions`, `notes`, `ai_kullanim`, …): Türkiye's screens, scheduled
- *      jobs and reports must never meet a foreign row, and a country build must never meet one of Türkiye's.
+ *   1. A country build touches COUNTRY TABLES ONLY — the list below (the country migrations, lib/db/ulke/gocler.json).
+ *      It never reads or writes a table of the Turkish product (`users`, `patients`, `sessions`, `notes`, …); a
+ *      country database does not even hold one.
  *   2. EVERY statement is bound to the build's own country. `ulkeTablosu` stamps the country on every row it
  *      inserts and adds `ulke = <this build's country>` to every select, update and delete — so a row of another
  *      country is not found, not changed and not removed, even when its id is valid and even when the doctor's id
@@ -37,11 +40,29 @@ export const ULKE_TABLOLARI = [
   'not_dil_kaydi',
   'ulke_randevulari',
   'ulke_kullanim',
+  // NOTYA-ULKE-PORTAL-01 — usage per account, day and task (migration 136); the patient portal (migration 137).
+  'ulke_kullanim_olcumu',
+  'ulke_portal_erisimleri',
+  'ulke_portal_oturumlari',
+  'ulke_hasta_ozetleri',
+  'ulke_portal_kayitlari',
+  'ulke_randevu_istekleri',
 ] as const
 export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
 
+/**
+ * Country tables NO BROWSER SESSION may read, not even its own rows: row-level security is on with no rule at all.
+ * Only the server's routes reach them. (Every other country table lets a signed-in account read its own rows of its
+ * own country, as a second line behind the server.)
+ */
+export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri']
+
 /** Database functions a country build may call. Each takes the country as `p_ulke`. */
-export const ULKE_ISLEVLERI = ['ulke_not_onayla', 'davet_kodu_kullan', 'davet_kodu_iade'] as const
+export const ULKE_ISLEVLERI = [
+  'ulke_not_onayla', 'davet_kodu_kullan', 'davet_kodu_iade',
+  // NOTYA-ULKE-PORTAL-01 (migrations 136, 137)
+  'ulke_kullanim_ekle', 'ulke_portal_erisim_ver', 'ulke_portal_erisim_iptal', 'ulke_portal_deneme_al', 'ulke_portal_deneme_sonucu', 'ulke_ozet_paylas', 'ulke_randevu_istegi_kabul',
+] as const
 export type UlkeIslevi = (typeof ULKE_ISLEVLERI)[number]
 
 /** The column every country table carries, and the argument every country function takes. */
