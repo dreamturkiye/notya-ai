@@ -19,6 +19,8 @@ if (process.env.NOTYA_COUNTRY === 'uz') {
   klinik = require('../gb/klinik/index').GB_KLINIK
 } else if (process.env.NOTYA_COUNTRY === 'us') {
   klinik = require('../us/klinik/index').US_KLINIK
+} else if (process.env.NOTYA_COUNTRY === 'au') {
+  klinik = require('../au/klinik/index').AU_KLINIK
 } else if (process.env.NOTYA_COUNTRY === 'tr' || !process.env.NOTYA_COUNTRY) {
   klinik = require('../tr/klinik').TR_KLINIK
 } else {

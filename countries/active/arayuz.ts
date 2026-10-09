@@ -22,6 +22,8 @@ if (process.env.NOTYA_COUNTRY === 'uz') {
   arayuz = require('../gb/arayuz').GB_ARAYUZ
 } else if (process.env.NOTYA_COUNTRY === 'us') {
   arayuz = require('../us/arayuz').US_ARAYUZ
+} else if (process.env.NOTYA_COUNTRY === 'au') {
+  arayuz = require('../au/arayuz').AU_ARAYUZ
 } else if (process.env.NOTYA_COUNTRY === 'tr' || !process.env.NOTYA_COUNTRY) {
   arayuz = null
 } else {

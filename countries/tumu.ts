@@ -13,6 +13,8 @@ import { GB_PAKETI } from './gb/index'
 import { GB_SIZINTI_HARFLERI, GB_SIZINTI_TERIMLERI } from './gb/sizintiTerimleri'
 import { US_PAKETI } from './us/index'
 import { US_SIZINTI_HARFLERI, US_SIZINTI_TERIMLERI } from './us/sizintiTerimleri'
+import { AU_PAKETI } from './au/index'
+import { AU_SIZINTI_HARFLERI, AU_SIZINTI_TERIMLERI } from './au/sizintiTerimleri'
 
 export type UlkeKaydi = { paket: UlkePaketi; sizintiTerimleri: readonly SizintiTerimi[]; sizintiHarfleri: string }
 
@@ -21,4 +23,5 @@ export const TUM_ULKELER: Record<UlkeKodu, UlkeKaydi> = {
   uz: { paket: UZ_PAKETI, sizintiTerimleri: UZ_SIZINTI_TERIMLERI, sizintiHarfleri: UZ_SIZINTI_HARFLERI },
   gb: { paket: GB_PAKETI, sizintiTerimleri: GB_SIZINTI_TERIMLERI, sizintiHarfleri: GB_SIZINTI_HARFLERI },
   us: { paket: US_PAKETI, sizintiTerimleri: US_SIZINTI_TERIMLERI, sizintiHarfleri: US_SIZINTI_HARFLERI },
+  au: { paket: AU_PAKETI, sizintiTerimleri: AU_SIZINTI_TERIMLERI, sizintiHarfleri: AU_SIZINTI_HARFLERI },
 }

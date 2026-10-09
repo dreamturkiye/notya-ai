@@ -22,6 +22,8 @@ if (process.env.NOTYA_COUNTRY === 'uz') {
   paket = require('../gb/index').GB_PAKETI
 } else if (process.env.NOTYA_COUNTRY === 'us') {
   paket = require('../us/index').US_PAKETI
+} else if (process.env.NOTYA_COUNTRY === 'au') {
+  paket = require('../au/index').AU_PAKETI
 } else if (process.env.NOTYA_COUNTRY === 'tr' || !process.env.NOTYA_COUNTRY) {
   paket = require('../tr/index').TR_PAKETI
 } else {
