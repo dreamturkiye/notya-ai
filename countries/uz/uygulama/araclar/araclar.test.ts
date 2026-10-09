@@ -46,8 +46,11 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   endokrinoloji: ['rejim-karti'],
   'enfeksiyon-hastaliklari': ['antibiyotik-sure'],
   gastroenteroloji: [],
-  'kadin-hastaliklari-dogum': [], 'kalp-damar-cerrahisi': [], kardiyoloji: [],
-  'kulak-burun-bogaz': [], nefroloji: [], noroloji: [], onkoloji: [], ortopedi: [], pediatri: [], 'plastik-cerrahi': [], psikiyatri: [], radyoloji: [],
+  'kadin-hastaliklari-dogum': [],
+  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri'],
+  kardiyoloji: [],
+  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu'],
+  nefroloji: [], noroloji: [], onkoloji: [], ortopedi: [], pediatri: [], 'plastik-cerrahi': [], psikiyatri: [], radyoloji: [],
   romatoloji: [], uroloji: [], 'spor-hekimligi': [], 'fizik-tedavi': [],
   // clinic doctors and allied professions: base tools only (their own tools are a separate registry of the pre-split application)
   'sac-ekimi': [], 'estetik-cerrahi': [], 'medikal-estetik': [], 'klinik-dermatoloji': [], longevity: [], fizyoterapi: [], 'klinik-psikolog': [], diyetisyen: [], ergoterapi: [], odyoloji: [],

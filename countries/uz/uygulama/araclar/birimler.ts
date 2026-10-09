@@ -19,6 +19,7 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
   '%': ayni('%'),
   gun: u('kun', 'кун', 'дн.'),
   ay: u('oy', 'ой', 'мес.'),
+  dB: u('dB', 'дБ', 'дБ'),
 }
 
 export const UZ_LAB_BIRIMLERI: Readonly<Partial<Record<LabOlcusu, string>>> = {

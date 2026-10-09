@@ -56,6 +56,9 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
   yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
 
+  // ── cardiology ──
+  yuva('kardiyo-izlem', ['kardiyoloji'], 'Hypertension, heart-failure and atrial-fibrillation follow-up: the office blood-pressure limits that raise a warning and the days until each next check (9 numbers), from the national cardiology protocols.', KLINISYEN, true),
+
   // ── chest diseases ──
   yuva('cat-mmrc', ['gogus-hastaliklari'], 'COPD Assessment Test (CAT) with the mMRC dyspnoea grade: CAT is a published questionnaire whose wording belongs to its rights holder. Needed: the authorised Uzbek and Russian translations and the licence to use them. The wording is not translated by a machine; the scoring is not switched on without it.', 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions'),
   yuva('akciger-aksiyon-plani', ['gogus-hastaliklari'], 'Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in the green, yellow and red zone), with the emergency number and the local stop-smoking service. RECLASSIFIED from "keep": every sentence is an instruction to a patient and must be supplied and signed by a local chest physician.'),
