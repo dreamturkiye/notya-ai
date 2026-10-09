@@ -14,6 +14,7 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { PortalErisimKarti } from './PortalErisimi'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { HastaAracKayitlariKarti } from './AracKayitlari'
+import { HastaMesajKarti } from './HastaMesajlari'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
@@ -183,7 +184,7 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, mesajlar }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -193,6 +194,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
   form?: ReactNode
   /** NOTYA-ULKE-ARACLAR-01: the tool results kept on this patient, and the way to the tools for them, where the country has the tools area. */
   araclar?: ReactNode
+  /** NOTYA-ULKE-MESAJ-01: the messages with this patient, where the country has them. Drawn after the portal's card: a patient reads them there. */
+  mesajlar?: ReactNode
 }) {
   const r = randevuMetni(metninDili(m))
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
@@ -248,6 +251,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
       ) : null}
       {form ?? null}
       {portal ?? null}
+      {mesajlar ?? null}
       {araclar ?? null}
       {taslak.length ? (
         <section className="uza-kart">
@@ -304,7 +308,7 @@ export function HastaDosyasi() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
+      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
           {durum === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{u.m.kabuk.geri}</a></p>}

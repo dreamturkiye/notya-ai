@@ -14,6 +14,15 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { dosyayiDoldur, kirill } from '../../../../scripts/uz-kiril.mjs'
 import { UZ_ARACLAR } from './index'
+import { UZ_MESAJ_AGACI } from '../mesajMetinleri'
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — catalogues of the pack that are written as one tree in the three forms (../uclu.ts): their
+ * Cyrillic form is derived by the same rule and held to it here, exactly like the tool texts.
+ */
+const UC_BICIMLI_KATALOGLAR: readonly { ad: string; dosya: string; agac: unknown; enAz: number }[] = [
+  { ad: 'mesaj', dosya: 'countries/uz/uygulama/mesajMetinleri.ts', agac: UZ_MESAJ_AGACI, enAz: 49 },
+]
 
 const KOK = resolve(__dirname, '../../../..')
 /** path of a text → who corrected its Cyrillic form by hand. Empty: no native reader has read the texts yet. */
@@ -56,6 +65,28 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
     gez(UZ_ARACLAR.birimler, 'birimler')
     assert.ok(sayi > 500, `only ${sayi} texts were compared`)
     assert.deepEqual(farkli, [])
+  })
+
+  it('EVERY stored Cyrillic text of the catalogues written in three forms side by side is what the rule gives for its Latin text, and none is left empty', () => {
+    for (const k of UC_BICIMLI_KATALOGLAR) {
+      let sayi = 0
+      const farkli: string[] = []
+      const gez = (x: unknown, yol: string) => {
+        if (!x || typeof x !== 'object') return
+        const o = x as Record<string, unknown>
+        if (typeof o['uz-Latn'] === 'string' && typeof o['uz-Cyrl'] === 'string') {
+          sayi++
+          if (kirill(o['uz-Latn']) !== o['uz-Cyrl'] && !ELLE_DUZELTILEN[yol]) farkli.push(`${yol}: stored "${o['uz-Cyrl']}", the rule gives "${kirill(o['uz-Latn'])}"`)
+          assert.doesNotMatch(o['uz-Cyrl'], /[A-Za-z]/, `${yol}: a Latin letter is left in the Cyrillic form`)
+          return
+        }
+        for (const [ad, v] of Object.entries(o)) gez(v, `${yol}.${ad}`)
+      }
+      gez(k.agac, k.ad)
+      assert.ok(sayi >= k.enAz, `${k.ad}: only ${sayi} texts were compared`)
+      assert.deepEqual(farkli, [], k.ad)
+      assert.equal(dosyayiDoldur(readFileSync(join(KOK, k.dosya), 'utf8')).n, 0, `${k.dosya} still has a text without its Cyrillic form`)
+    }
   })
 
   it('filling a file: only an EMPTY Cyrillic argument is written; a text that is already there is never overwritten', () => {

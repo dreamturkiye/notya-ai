@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { AsistanKarti } from './Asistan'
+import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { araclarMetni, metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
@@ -57,12 +58,14 @@ export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevul
   )
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
   /** NOTYA-UZ-BRANSLAR-01: the account's role — decides which assistant is shown. No role = the neutral assistant. */
   rol?: string | null
+  /** NOTYA-ULKE-MESAJ-01: the patients whose messages are unread, where the country has messages. Draws nothing while there is none. */
+  mesajlar?: React.ReactNode
 }) {
   return (
     <>
@@ -75,6 +78,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular }: {
         </div>
       </section>
       <AsistanKarti m={m} rol={rol} />
+      {mesajlar ?? null}
       {HAZIR.takvim && randevular ? <BugunRandevulari m={m} randevular={randevular} /> : null}
       <section className="uza-kart">
         <AramaFormu m={m} />
@@ -134,7 +138,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} />
     </Cerceve>
   )
 }

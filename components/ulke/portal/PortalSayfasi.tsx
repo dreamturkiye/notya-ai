@@ -36,6 +36,7 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { gunYazDesenle, haftaGunu } from '@/lib/ulke/uygulama/zaman'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { PortalFormKarti, PortalFormu, type PortalIstegi } from './HastaFormu'
+import { PortalMesajlar } from './Mesajlar'
 
 const DEGISKENLER = {
   '--uza-krem': R.cream, '--uza-kagit': R.paper, '--uza-murekkep': R.ink, '--uza-soluk': R.muted, '--uza-cam': R.pine,
@@ -120,8 +121,10 @@ export type IstekFormu = { gunler: string[]; neden: string }
 export type IstekHatasi = 'gun' | 'cok' | 'gonderilemedi' | 'baglanti' | null
 
 /** The patient's own page. `r` = the appointment catalogue in the same form, or null where the country has no appointments. */
-export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis, formKarti }: {
+export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis, formKarti, mesajlar }: {
   p: PortalMetni; r: RandevuMetni | null; icerik: PortalIcerigi
+  /** NOTYA-ULKE-MESAJ-01: the messages with the doctor, where the country has them. Drawn after the form's card. */
+  mesajlar?: ReactNode
   /** NOTYA-ULKE-INTAKE-01: the card of the intake form, where one is waiting or was sent. Drawn first: it is the thing to do. */
   formKarti?: ReactNode
   /** The pack's ambulance number, or null where the pack states none: then no number is shown, and no sentence that would need one. */
@@ -149,6 +152,7 @@ export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, i
       </section>
 
       {formKarti ?? null}
+      {mesajlar ?? null}
 
       {i.randevular && r ? (
         <section className="uza-kart" data-alan="portal-randevular">
@@ -348,7 +352,9 @@ export default function PortalSayfasi() {
         // The form instead of the page: on a phone there is room for one of them. Closing it reads the page again.
         <PortalFormu dil={dil} iste={iste} kapat={() => { setFormAcik(false); void yukle(true) }} oturumBitti={() => { void yukle(true) }} />
       ) : asama === 'sayfa' && icerik ? (
-        <PortalSayfaGorunumu p={p} formKarti={icerik.form ? <PortalFormKarti f={formMetni(dil)} ozet={icerik.form} ac={() => setFormAcik(true)} /> : null} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()} form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
+        <PortalSayfaGorunumu p={p} formKarti={icerik.form ? <PortalFormKarti f={formMetni(dil)} ozet={icerik.form} ac={() => setFormAcik(true)} /> : null} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()}
+          mesajlar={ozellikAcik('hastaMesajlari') ? <PortalMesajlar dil={dil} iste={iste} acilNumara={portalAcilNumarasi()} saatDilimi={icerik.saatDilimi} oturumBitti={() => { void yukle(true) }} /> : null}
+          form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
       ) : asama === 'pin' ? (
         <PortalGirisGorunumu p={p} pin={pin} setPin={(y) => { setPin(y); setHata(null) }} gonder={giris} bekliyor={bekliyor} hata={hata} oturumBitti={oturumBitti} />
       ) : (

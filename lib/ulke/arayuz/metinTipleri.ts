@@ -682,3 +682,96 @@ export type AraclarMetni = {
     readonly okunamadi: string
   }
 }
+
+/**
+ * NOTYA-ULKE-MESAJ-01 — MESSAGES BETWEEN A DOCTOR AND A PATIENT (feature `hastaMesajlari`), once per language form.
+ *
+ *   hekim   the DOCTOR's card on the patient's file and the list of unread messages on the home screen. Read in the
+ *           account's form.
+ *   hasta   what the PATIENT reads on their own page. Read in the patient's form.
+ *           PATIENT-FACING: a native reader reads these first.
+ *
+ * `hasta.acil` and `hasta.acilNumara` are the notice that messages are NOT FOR EMERGENCIES. It is shown ALWAYS, also
+ * when no conversation is open. The number is the pack's setting (`uygulama.portal.acilNumara`), never text: a
+ * sentence with a digit in it fails the pack check.
+ *
+ * Placeholders: '%' where a sentence carries one value (see each key).
+ */
+export type MesajMetni = {
+  readonly hekim: {
+    readonly baslik: string
+    /** What this is: the patient reads and answers on their own page, after signing in with their link and PIN. */
+    readonly aciklama: string
+    /** Nothing tells the patient that a message is waiting: the doctor does. (The outbound channel is a slot of the pack.) */
+    readonly bildirimYok: string
+    /** The patient has no link that works: they cannot read a message until the doctor gives access. */
+    readonly erisimYok: string
+    readonly bos: string
+    readonly yaz: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly gonderilemedi: string
+    readonly bosMesaj: string
+    /** % the most characters a message holds */
+    readonly cokUzun: string
+    /** Too many messages in one day. */
+    readonly limit: string
+    /** Who wrote a message: the doctor ("you"), the patient. */
+    readonly siz: string
+    readonly hasta: string
+    /** Under a message of the doctor's: the patient has read it / has not yet. */
+    readonly okundu: string
+    readonly okunmadi: string
+    /** On a message of the patient's the doctor has not read yet. */
+    readonly yeni: string
+    readonly acik: string
+    /** % the day the conversation was closed */
+    readonly kapali: string
+    readonly kapat: string
+    /** What closing does — shown BEFORE the doctor confirms. */
+    readonly kapatUyari: string
+    readonly kapatOnay: string
+    readonly vazgec: string
+    readonly kapatildi: string
+    readonly yapilamadi: string
+    readonly yuklenemedi: string
+    /** On the home screen: the heading of the patients whose messages are unread. */
+    readonly okunmamisBaslik: string
+    /** % how many messages of that patient are unread */
+    readonly okunmamisAdet: string
+  }
+  readonly hasta: {
+    readonly baslik: string
+    readonly aciklama: string
+    /** "Messages are not for emergencies." ALWAYS shown. Names no number. */
+    readonly acil: string
+    /** % the pack's ambulance number. Shown only where the pack states one; the sentence itself holds no number. */
+    readonly acilNumara: string
+    /** No answer time is promised. */
+    readonly yanitSuresi: string
+    /** A patient cannot start a conversation: said plainly wherever none is open. */
+    readonly baslatamaz: string
+    /** The doctor has not written yet. */
+    readonly yok: string
+    /** The doctor closed the conversation: it can be read, not written in. */
+    readonly kapali: string
+    /** % the day a conversation was closed */
+    readonly kapandi: string
+    readonly yaz: string
+    readonly gonder: string
+    readonly gonderiliyor: string
+    readonly gonderilemedi: string
+    readonly bosMesaj: string
+    /** % the most characters a message holds */
+    readonly cokUzun: string
+    readonly limit: string
+    /** Who wrote a message: the doctor, the patient ("you"). */
+    readonly hekim: string
+    readonly siz: string
+    /** On a message of the doctor's the patient has not read yet. */
+    readonly yeni: string
+    /** % how many messages are unread */
+    readonly okunmamis: string
+    readonly yuklenemedi: string
+  }
+}

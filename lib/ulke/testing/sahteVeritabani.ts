@@ -85,7 +85,7 @@ export function sahteVeritabani() {
     const c = cakisma(ad, yeni, digerleri)
     if (c) return c
     const hata = (code: string, message: string) => ({ code, message })
-    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari']
+    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari']
     // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
     if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
     if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
@@ -113,6 +113,20 @@ export function sahteVeritabani() {
       if (yeni.randevu_id && !tablo('ulke_randevulari').some((r) => r.id === yeni.randevu_id && r.ulke === yeni.ulke && r.doctor_id === yeni.doctor_id && r.patient_id === yeni.patient_id)) return hata('23503', 'insert or update on table "ulke_hasta_formlari" violates foreign key constraint "ulke_hasta_formlari_randevu_fk"')
       if (acik(yeni) && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && acik(x))) return hata('23505', 'duplicate key value violates unique constraint "ulke_hasta_formlari_tek_acik"')
     }
+    // NOTYA-ULKE-MESAJ-01 — migration 140: one open conversation per patient; a message names its own patient's
+    // conversation, is written into an OPEN one, by the doctor or the patient, with text and unread.
+    if (ad === 'ulke_mesaj_yazismalari' && !yeni.kapandi_at && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id && !x.kapandi_at)) return hata('23505', 'duplicate key value violates unique constraint "ulke_mesaj_yazismalari_tek_acik"')
+    if (ad === 'ulke_hasta_mesajlari') {
+      if (yeni.gonderen !== 'hekim' && yeni.gonderen !== 'hasta') return hata('23514', 'new row for relation "ulke_hasta_mesajlari" violates check constraint (gonderen)')
+      if (typeof yeni.metin_encrypted !== 'string' || !yeni.metin_encrypted) return hata(yeni.metin_encrypted === '' ? '23514' : '23502', 'new row for relation "ulke_hasta_mesajlari" has no text (metin_encrypted)')
+      const y = tablo('ulke_mesaj_yazismalari').find((x) => x.id === yeni.yazisma_id && x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.patient_id === yeni.patient_id)
+      if (!y) return hata('23503', 'insert or update on table "ulke_hasta_mesajlari" violates foreign key constraint "ulke_hasta_mesajlari_yazisma_fk"')
+      // the insert half of the trigger `ulke_hasta_mesaji_kilidi` (a row that is already in the table is an update: see guncellemeKilidi)
+      if (!tablo(ad).some((x) => x.id === yeni.id)) {
+        if (y.kapandi_at) return hata('23514', 'ulke_hasta_mesajlari: a closed conversation takes no message')
+        if (yeni.okundu_at) return hata('23514', 'ulke_hasta_mesajlari: a message is written unread')
+      }
+    }
     // NOTYA-ULKE-ARACLAR-01 — migration 139: the checks of ulke_arac_kayitlari.
     if (ad === 'ulke_arac_kayitlari') {
       if (typeof yeni.arac !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(yeni.arac) || yeni.arac.length > 60) return hata('23514', 'new row for relation "ulke_arac_kayitlari" violates check constraint (arac)')
@@ -127,9 +141,21 @@ export function sahteVeritabani() {
    * form's answers do not change (it can only be reopened).
    */
   const guncellemeKilidi = (ad: string, eski: Satir, yeni: Satir): { message: string; code: string } | null => {
-    if ((ad !== 'ulke_hasta_formlari' && ad !== 'ulke_arac_kayitlari') || eski.patient_id === undefined) return null
+    if (!['ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari'].includes(ad) || eski.patient_id === undefined) return null
     const hata = (message: string) => ({ code: '23514', message })
     const farkli = (k: string) => (eski[k] ?? null) !== (yeni[k] ?? null)
+    // NOTYA-ULKE-MESAJ-01 — the triggers of migration 140 (`ulke_mesaj_yazismasi_kilidi`, `ulke_hasta_mesaji_kilidi`).
+    if (ad === 'ulke_mesaj_yazismalari') {
+      if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id') || farkli('created_at')) return hata('ulke_mesaj_yazismalari: a conversation never moves to another country, doctor or patient')
+      if (eski.kapandi_at && farkli('kapandi_at')) return hata('ulke_mesaj_yazismalari: a closed conversation stays closed')
+      return null
+    }
+    if (ad === 'ulke_hasta_mesajlari') {
+      if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id') || farkli('yazisma_id')) return hata('ulke_hasta_mesajlari: a message never moves to another country, doctor, patient or conversation')
+      if (farkli('gonderen') || farkli('metin_encrypted') || farkli('created_at')) return hata('ulke_hasta_mesajlari: the writer, the text and the moment of a message do not change')
+      if (eski.okundu_at && farkli('okundu_at')) return hata('ulke_hasta_mesajlari: a message that was read stays read')
+      return null
+    }
     // NOTYA-ULKE-ARACLAR-01 — the trigger of migration 139 (`ulke_arac_kaydi_kilidi`).
     if (ad === 'ulke_arac_kayitlari') {
       if (farkli('ulke') || farkli('doctor_id') || farkli('patient_id')) return hata('ulke_arac_kayitlari: a record never moves to another country, doctor or patient')
@@ -334,6 +360,7 @@ export function sahteVeritabani() {
     neq(k: string, v: unknown) { this.filtreler.push({ ad: `${k}=neq.${String(v)}`, f: (s) => s[k] !== v }); return this }
     lt(k: string, v: string) { this.filtreler.push({ ad: `${k}=lt.${v}`, f: (s) => String(s[k] ?? '') < v }); return this }
     gt(k: string, v: string) { this.filtreler.push({ ad: `${k}=gt.${v}`, f: (s) => String(s[k] ?? '') > v }); return this }
+    lte(k: string, v: string) { this.filtreler.push({ ad: `${k}=lte.${v}`, f: (s) => String(s[k] ?? '') <= v }); return this }
     gte(k: string, v: string) { this.filtreler.push({ ad: `${k}=gte.${v}`, f: (s) => String(s[k] ?? '') >= v }); return this }
     is(k: string, v: null) { this.filtreler.push({ ad: `${k}=is.null`, f: (s) => (s[k] ?? null) === v }); return this }
     not(k: string, op: 'is', v: null) {

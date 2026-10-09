@@ -75,6 +75,11 @@ export const UZ_PAKETI: UlkePaketi = {
     // gated by role (./uygulama/araclar/). Nothing is stored and nothing is sent. The texts are machine-written and no
     // clinician has read them; tools that need national reference content are empty slots, switched off.
     araclar: true,
+    // NOTYA-ULKE-MESAJ-01 (2026-10-09): messages between a doctor and a patient, INSIDE the patient portal. The doctor
+    // writes from the patient's file; the patient reads and answers on their own page. Nothing leaves the product: no
+    // SMS, no e-mail, no messenger (see `uygulama.mesaj` below). The texts are machine-written and no native reader
+    // has read them; whether a doctor may write to a patient this way under local law has not been read by a lawyer.
+    hastaMesajlari: true,
   },
   // Routes of the PRE-SPLIT application's tool registry valid here: none, and it stays so. The country build has its own
   // tools area (/tools, feature `araclar`; ./uygulama/araclar/), which shares no route and no screen with that registry.
@@ -121,6 +126,16 @@ export const UZ_PAKETI: UlkePaketi = {
     // and is UNVERIFIED: a local source must confirm it before any patient sees the portal (docs/COUNTRY-PACK-UZBEKISTAN.md,
     // "Needs local content", row 78). null here = the page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '103' },
+    // NOTYA-ULKE-MESAJ-01 — TELLING A PATIENT THAT THEIR DOCTOR WROTE: A SLOT, SWITCHED OFF. No provider is contracted
+    // and the kit sends nothing to anybody; the doctor tells the patient. Waits on Kaan (which channel patients here
+    // really use, which provider, at what cost) and, before any patient is written to, on a lawyer.
+    mesaj: {
+      disBildirim: {
+        acik: false, saglayici: null,
+        eksik: 'An outbound channel that tells a patient a message is waiting on their page (SMS, a messenger or e-mail): no provider is contracted and none is built. The notice would carry no content of the message.',
+        kimden: 'Kaan (provider and cost; which channel patients in the country really use, checklist H4), then a lawyer of the country for the consent to be contacted',
+      },
+    },
     // ── NOTYA-ULKE-SABLON-01: what the shared screens used to assume for Uzbekistan, said out loud. Each value is
     // what the Uzbek build did before the screens became shared; none is a new decision.
     // Uzbek in two scripts, Russian in one: the first-login question asks the language and, for Uzbek, the script.
