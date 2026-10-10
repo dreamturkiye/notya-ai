@@ -373,6 +373,9 @@ describe('Uzbekistan landing page', () => {
     assert.equal(ACILIS_ASISTAN_ROLU, tr.rol, 'the featured role is the Turkish page\'s')
     const digerleri = UZ_ASISTAN_ADLARI.filter((a) => a.bransAnahtari !== ACILIS_ASISTAN_ROLU)
     assert.equal(digerleri.length, 39)
+    // NOTYA-ULKE-UYGULA-UZ (2026-10-10): five roles of the owner's list left the role list with the audit of the
+    // specialties. Their names stay in the list (it is the owner's) and are shown nowhere: no identity is made for them.
+    assert.deepEqual(digerleri.filter((a) => !uzAsistanKimligi(a.bransAnahtari, 'uz-Latn')).map((a) => a.bransAnahtari).sort(), ['diyetisyen', 'ergoterapi', 'longevity', 'odyoloji', 'sac-ekimi'])
     for (const dil of DILLER) {
       const t = ACILIS_ICERIGI[dil]
       const k = uzAsistanKimligi(ACILIS_ASISTAN_ROLU, dil)!
@@ -392,7 +395,7 @@ describe('Uzbekistan landing page', () => {
         }
         assert.ok(!metin.includes(k.tamAd) && !metin.includes(k.tamAd.split(' ').slice(-2).join(' ')), `${dil}${yol}: the full name is not for the landing page`)
         // No other role's assistant is named anywhere on the page.
-        for (const a of digerleri) { const ad = uzAsistanKimligi(a.bransAnahtari, dil)!.kisaAd; assert.doesNotMatch(metin, new RegExp(`(?<![\\p{L}])${ad}(?![\\p{L}])`, 'u'), `${dil}${yol}: names ${a.bransAnahtari}'s assistant`) }
+        for (const a of digerleri) { const ad = uzAsistanKimligi(a.bransAnahtari, dil)?.kisaAd; if (!ad) continue; assert.doesNotMatch(metin, new RegExp(`(?<![\\p{L}])${ad}(?![\\p{L}])`, 'u'), `${dil}${yol}: names ${a.bransAnahtari}'s assistant`) }
       }
       // Leak scan over the name and the titles themselves, in this form.
       for (const x of [k.tamAd, k.unvanliKisaAd, k.kisaAd, ...Object.values(UZ_ASISTAN_UNVANLARI[dil]).flatMap((u) => [u.tam, u.kisa])]) assert.deepEqual(sizintiTara(x, { hedefUlke: 'uz', kaynak: `assistant ${dil}` }), [])
