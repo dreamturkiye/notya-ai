@@ -46,6 +46,11 @@ function metinleriTopla(): Record<Bicim, Metin[]> {
 }
 const M = metinleriTopla()
 const bul = (l: Metin[], re: RegExp) => l.filter((x) => re.test(x.s)).map((x) => `${x.yol}: ${JSON.stringify(x.s.slice(0, 120))}`)
+/** A catalogue of one form; the kit types every form as optional, this pack has all three. */
+const zorunlu = <T,>(x: T | null | undefined, ad: string): T => { assert.ok(x !== null && x !== undefined, `${ad} is missing`); return x as T }
+const randevu = (b: Bicim) => zorunlu(UZ_ARAYUZ.randevuMetinleri?.[b], `randevuMetinleri[${b}]`)
+const uygulamaMetni = (b: Bicim) => zorunlu(UZ_ARAYUZ.metinler[b], `metinler[${b}]`)
+const acilisMetni = (b: Bicim) => zorunlu(UZ_ARAYUZ.acilis?.icerik[b], `acilis.icerik[${b}]`)
 /** Words that hold a Latin letter and a Cyrillic letter at once. */
 const karisikSozler = (l: Metin[]) => l.flatMap((x) => (x.s.match(/[\p{L}\p{M}ʻʼ]+/gu) ?? []).filter((w) => /[A-Za-z]/.test(w) && /[Ѐ-ӿ]/.test(w)).map((w) => `${x.yol}: ${w}`))
 
@@ -59,31 +64,29 @@ describe('Uzbekistan — the settings the audit found to conform (docs/COUNTRY-A
   })
 
   it('A1: the hint a doctor reads beside a typed date has the pattern\'s own order and separator, in the letters of each form', () => {
-    const r = UZ_ARAYUZ.randevuMetinleri
-    assert.equal(r['uz-Latn'].form.tarihOrnek, 'KK.OO.YYYY') // kun, oy, yil
-    assert.equal(r['uz-Cyrl'].form.tarihOrnek, 'КК.ОО.ЙЙЙЙ') // кун, ой, йил
-    assert.equal(r.ru.form.tarihOrnek, 'ДД.ММ.ГГГГ') // день, месяц, год
+    assert.equal(randevu('uz-Latn').form.tarihOrnek, 'KK.OO.YYYY') // kun, oy, yil
+    assert.equal(randevu('uz-Cyrl').form.tarihOrnek, 'КК.ОО.ЙЙЙЙ') // кун, ой, йил
+    assert.equal(randevu('ru').form.tarihOrnek, 'ДД.ММ.ГГГГ') // день, месяц, год
     for (const b of BICIMLER) {
-      assert.match(r[b].form.tarihOrnek, /^(.)\1\.(.)\2\.(.)\3\3\3$/u, b)
-      assert.ok(r[b].form.tarihGecersiz.includes(r[b].form.tarihOrnek), `${b}: the error sentence names another pattern than the hint`)
+      const f = randevu(b).form
+      assert.match(f.tarihOrnek, /^(.)\1\.(.)\2\.(.)\3\3\3$/u, b)
+      assert.ok(f.tarihGecersiz.includes(f.tarihOrnek), `${b}: the error sentence names another pattern than the hint`)
     }
   })
 
   it('A2: seven weekday names in each form, Monday first, each in its own script', () => {
-    const r = UZ_ARAYUZ.randevuMetinleri
-    assert.deepEqual(Object.values(r['uz-Latn'].gunUzun), ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'])
-    assert.deepEqual(Object.values(r['uz-Cyrl'].gunUzun), ['Душанба', 'Сешанба', 'Чоршанба', 'Пайшанба', 'Жума', 'Шанба', 'Якшанба'])
-    assert.deepEqual(Object.values(r.ru.gunUzun), ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'])
-    assert.deepEqual(Object.values(r.ru.gunKisa), ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'])
-    for (const b of BICIMLER) assert.deepEqual(Object.keys(r[b].gunKisa), ['1', '2', '3', '4', '5', '6', '7'], b)
+    assert.deepEqual(Object.values(randevu('uz-Latn').gunUzun), ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'])
+    assert.deepEqual(Object.values(randevu('uz-Cyrl').gunUzun), ['Душанба', 'Сешанба', 'Чоршанба', 'Пайшанба', 'Жума', 'Шанба', 'Якшанба'])
+    assert.deepEqual(Object.values(randevu('ru').gunUzun), ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'])
+    assert.deepEqual(Object.values(randevu('ru').gunKisa), ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'])
+    for (const b of BICIMLER) assert.deepEqual(Object.keys(randevu(b).gunKisa), ['1', '2', '3', '4', '5', '6', '7'], b)
   })
 
   it('A6: the soʻm — code UZS, no decimals, and the word of each form on the price line', () => {
     assert.deepEqual(UZ_PAKETI.paraBirimi, { kod: 'UZS', simge: 'soʻm', ondalikHane: 0 })
-    const a = UZ_ARAYUZ.acilis!.icerik
-    assert.match(a['uz-Latn'].narx.oylik, /soʻm/)
-    assert.match(a['uz-Cyrl'].narx.oylik, /сўм/)
-    assert.match(a.ru.narx.oylik, /сум/)
+    assert.match(acilisMetni('uz-Latn').narx.oylik, /soʻm/)
+    assert.match(acilisMetni('uz-Cyrl').narx.oylik, /сўм/)
+    assert.match(acilisMetni('ru').narx.oylik, /сум/)
   })
 
   it('A7: one time zone, five hours ahead of UTC all year (no daylight saving time in the zone data)', () => {
@@ -113,7 +116,7 @@ describe('Uzbekistan — the settings the audit found to conform (docs/COUNTRY-A
 
   it('A14: family name and given name, then the patronymic in a field of its own, in the three forms', () => {
     assert.equal(UZ_PAKETI.uygulama?.adAlanlari.ikinciAd, true)
-    const y = (b: Bicim) => UZ_ARAYUZ.metinler[b].yeniHasta
+    const y = (b: Bicim) => uygulamaMetni(b).yeniHasta
     assert.deepEqual([y('uz-Latn').ad, y('uz-Latn').otaIsmi], ['Familiyasi va ismi', 'Otasining ismi'])
     assert.deepEqual([y('uz-Cyrl').ad, y('uz-Cyrl').otaIsmi], ['Фамилияси ва исми', 'Отасининг исми'])
     assert.deepEqual([y('ru').ad, y('ru').otaIsmi], ['Фамилия и имя', 'Отчество'])
@@ -148,7 +151,7 @@ describe('Uzbekistan — the personal identification number as the state defines
     assert.equal(UZ_PAKETI.ulusalKimlik?.hane, 14)
     assert.equal(UZ_PAKETI.ulusalKimlik?.gecerliMi('12345678901234'), true)
     assert.equal(uzJshshirYapisiGecerliMi('12345678901234'), false)
-    const y = (b: Bicim) => UZ_ARAYUZ.metinler[b].yeniHasta.ulusalKimlik
+    const y = (b: Bicim) => uygulamaMetni(b).yeniHasta.ulusalKimlik
     assert.deepEqual([UZ_PAKETI.ulusalKimlik?.ad, y('uz-Latn'), y('uz-Cyrl'), y('ru')], ['JSHSHIR', 'JSHSHIR', 'ЖШШИР', 'ПИНФЛ'])
   })
 })
