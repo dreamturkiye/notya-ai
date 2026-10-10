@@ -276,7 +276,7 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
   })
 
   it('THE UNIT OF EVERY MEASURED FIELD OF EVERY LIVE TOOL; no tool of the shared set takes a body weight while weight is in pounds, and the one tool that does works out no dose', () => {
-    const o: BirimOrtami = { birimler: u.birimler, lab: a.labBirimleri }
+    const o: BirimOrtami = { birimler: u.birimler, lab: a.labBirimleri, sayi: US_PAKETI.bicim }
     const adi = (kod: string) => a.birimler[kod]?.[D] ?? `?${kod}?`
     const gorulen: Record<string, string> = {}
     for (const x of a.araclar) {
