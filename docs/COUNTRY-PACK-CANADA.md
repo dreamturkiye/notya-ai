@@ -20,7 +20,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 ## What is in this pack, and where it comes from
 
 - **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1958 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 43 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
-- **This country's own** (`countries/ca/`, six small files): 24 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **This country's own** (`countries/ca/`, six small files): 23 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -28,7 +28,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 |---|---|---|
 | Country code and path | `ca`, served at `/ca` | the owner (a routing rule on the live site is his decision) |
 | Language form and spelling | `en-CA` | a native editor |
-| Default time zone; zones an account may choose | America/Toronto; America/Toronto, America/St_Johns, America/Halifax, America/Winnipeg, America/Regina, America/Edmonton, America/Vancouver | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/Toronto) and the list are unverified choices. |
+| Default time zone; zones an account may choose | America/Toronto; America/Toronto, America/St_Johns, America/Halifax, America/Winnipeg, America/Regina, America/Edmonton, America/Vancouver, America/Whitehorse | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/Toronto) and the list are unverified choices. |
 | Date pattern; clock; first day of the week | YYYY-MM-DD; 12-hour; Sunday | a local lead |
 | Units | weight kg, height cm, temperature °C | a local clinical lead — a clinical-safety setting |
 | Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: umol/L; glucose: mmol/L; cholesterol: mmol/L | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
@@ -36,12 +36,12 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
 | Emergency (ambulance) number on the patient's page | `911` — UNVERIFIED | a local source, before any patient sees the portal |
 | Days a patient's link stays valid | 30 | the owner; how long access may stand: for a lawyer |
-| Patient identifier | optional free text, encrypted, never validated; label "Provincial health card number" | a local lead and a lawyer. Label "Provincial health card number". Format and name differ by province and territory; unverified. |
+| Patient identifier | optional free text, encrypted, never validated; label "Health card number" | a local lead and a lawyer. Label "Provincial health card number". Format and name differ by province and territory; unverified. |
 | Guardian age | 16 | **for a lawyer**. 16 as a starting value. Consent of minors is a matter of provincial law and differs by province; Quebec sets its own age. |
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `ca-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Federal and provincial rules on recording a consultation are open. |
 | Intake-form consent sentence | the shared draft — stamp `ca-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "staff physician" | a local clinical lead |
-| Phone: prefix, example, rule | +1; +1 613 555 0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
+| Phone: prefix, example, rule | +1; 613-555-0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
 | Speech: model, thresholds | scribe_v2; 0.8, -0.36, 40 characters | engineering, on real clinic audio of this country |
 | Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
@@ -72,7 +72,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `anaesthesia` | Anesthesiology | doctor specialty |
 | `neurosurgery` | Neurosurgery | doctor specialty |
 | `paediatric-surgery` | Pediatric surgery | doctor specialty |
-| `internal-medicine` | General internal medicine | doctor specialty |
+| `internal-medicine` | Internal medicine | doctor specialty |
 | `dermatology` | Dermatology | doctor specialty |
 | `endocrinology` | Endocrinology and metabolism | doctor specialty |
 | `infectious-diseases` | Infectious diseases | doctor specialty |
@@ -84,7 +84,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `obstetrics-gynaecology` | Obstetrics and gynecology | doctor specialty |
 | `cardiovascular-surgery` | Cardiac and vascular surgery | doctor specialty |
 | `cardiology` | Cardiology | doctor specialty |
-| `otolaryngology` | Otolaryngology, head and neck surgery | doctor specialty |
+| `otolaryngology` | Otolaryngology – head and neck surgery | doctor specialty |
 | `nephrology` | Nephrology | doctor specialty |
 | `neurology` | Neurology | doctor specialty |
 | `oncology` | Oncology | doctor specialty |
@@ -139,9 +139,9 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiac and vascular surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Cardiac and vascular surgery | no measured input |
 | `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Cardiac and vascular surgery | no measured input |
-| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology, head and neck surgery | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
-| `otoskopi-notu` | Otoscopy note | Otolaryngology, head and neck surgery | no measured input |
-| `vertigo-notu` | Vertigo: positional test note | Otolaryngology, head and neck surgery | no measured input |
+| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology – head and neck surgery | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
+| `otoskopi-notu` | Otoscopy note | Otolaryngology – head and neck surgery | no measured input |
+| `vertigo-notu` | Vertigo: positional test note | Otolaryngology – head and neck surgery | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Nephrology | no measured input |
 | `kur-sayaci` | Treatment cycle counter | Oncology | no measured input |
 | `toksisite-listesi` | Side effects checklist | Oncology | no measured input |
@@ -158,7 +158,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in µg/L per year, days |
 | `rtp-basamak` | Stages of return to sport | Sport and exercise medicine | no measured input |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology and metabolism, Infectious diseases, General surgery, Thoracic surgery, Respirology, Ophthalmology, Cardiac and vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology and metabolism, Infectious diseases, General surgery, Thoracic surgery, Respirology, Ophthalmology, Cardiac and vascular surgery, Otolaryngology – head and neck surgery, Nephrology, Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (3) — for a local clinical lead
 
@@ -167,7 +167,7 @@ The shared English set has the words of these tools and the kit has their mechan
 | Tool | Who would see it | Why it is off here | Waits on |
 |---|---|---|---|
 | `esi-triyaj` | Emergency medicine | The Emergency Severity Index is one triage scale among several. Which triage scale emergency departments in Canada use, and whether a tool that records an ESI level belongs here at all, is for a local emergency physician to say. | a clinical lead in Canada |
-| `kdigo-evre` | General internal medicine | UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. | a clinical lead in Canada |
+| `kdigo-evre` | Internal medicine | UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. | a clinical lead in Canada |
 | `kdigo-serit` | Nephrology | UNIT SAFETY: the same as the internal-medicine KDIGO tool. The albuminuria limits in mg/mmol (3 and 30) are not the exact conversion of the mg/g limits the kit classifies with. | a clinical lead in Canada |
 
 ### Slots in every English-speaking country (52) — empty, switched off
@@ -189,9 +189,9 @@ No national reference content is written by a machine, and no item of a publishe
 | `family-referral` | Family medicine | Referral and emergency triage in primary care: the referral routes of Canada, the criteria for each, and the emergency number confirmed by a local source. | a local clinical lead, with the national source named |
 | `family-follow-up-panel` | Family medicine | The follow-up panel of family medicine: it lists patients by the three tools above and has nothing to list until they exist. | a local clinical lead, with the national source named |
 | `child-surgery-consent` | Pediatric surgery | Consent for an operation on a child: the age below which a parent or guardian signs, who may sign, and the wording of the consent, under the law of Canada. | a lawyer of the country, with the local clinical lead |
-| `cardiovascular-risk` | General internal medicine, Cardiology | Ten-year cardiovascular risk: the risk calculator recommended in Canada, with its calibration and its tables. A risk score calibrated for one population must not be shown in another. | a local clinical lead, with the national source named |
-| `polypharmacy` | General internal medicine | Review of medicines in older patients: the criteria in a licensed edition, and the register of medicines sold in Canada to recognise each medicine by the name it has there. | a local clinical lead, with the national source named |
-| `anticoagulation-review` | General internal medicine | Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in Canada (age, weight, kidney function), targets and recheck intervals from the guidance followed there, and the local medicine names. | a local clinical lead, with the national source named |
+| `cardiovascular-risk` | Internal medicine, Cardiology | Ten-year cardiovascular risk: the risk calculator recommended in Canada, with its calibration and its tables. A risk score calibrated for one population must not be shown in another. | a local clinical lead, with the national source named |
+| `polypharmacy` | Internal medicine | Review of medicines in older patients: the criteria in a licensed edition, and the register of medicines sold in Canada to recognise each medicine by the name it has there. | a local clinical lead, with the national source named |
+| `anticoagulation-review` | Internal medicine | Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in Canada (age, weight, kidney function), targets and recheck intervals from the guidance followed there, and the local medicine names. | a local clinical lead, with the national source named |
 | `isotretinoin-pregnancy-prevention` | Dermatology | Pregnancy-prevention checks for isotretinoin: the programme the regulator of Canada requires (tests, contraception, prescription validity). | a local clinical lead, with the national source named |
 | `lab-izlem` | Endocrinology and metabolism | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in Canada; the unit HbA1c is reported in there (per cent or mmol/mol: the kit's field has no unit choice yet); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
 | `dxa-tekrar` | Endocrinology and metabolism | Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the guidance followed in Canada. | a local clinical lead, with the national source named |

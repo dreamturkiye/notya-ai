@@ -39,9 +39,13 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     // Shown beside the box that unlocks recording. The version stamped on every visit is `surum` below: change both
     // together when a reviewed wording arrives.
     kayitRizasi: 'The patient, or the person who can consent for them, has agreed to this visit being recorded.',
-    // UNVERIFIED WORDING (the name and the format differ by province and territory). An optional free-text field,
-    // stored encrypted, never validated and never required.
-    kimlikEtiketi: 'Provincial health card number',
+    // An optional free-text field, stored encrypted, never validated and never required.
+    // AUDIT 2026-10-09 (docs/COUNTRY-AUDIT-CANADA.md): was "Provincial health card number". The three territories issue
+    // health cards too, and the Government of Canada's own word is "health card" for every province and territory, so
+    // the label no longer says "provincial". The NUMBER's own name and format still differ by province and territory
+    // (unverified per province), and whether a product may ask for it at all is FOR A LAWYER (Ontario restricts who may
+    // collect a health number). NEVER a Social Insurance Number: no screen asks for one.
+    kimlikEtiketi: 'Health card number',
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'YYYY-MM-DD',
@@ -49,14 +53,18 @@ export const CA_GIRDI: EnUlkeGirdisi = {
   ulkeAdi: 'Canada',
   // UNVERIFIED: the word a senior hospital doctor goes by here.
   kidemliHekim: 'staff physician',
-  // UNVERIFIED: how each specialty is usually named in Canada, where it differs from the set's base name.
-  // Not checked against the official list of specialties (checklist C1).
+  // How each specialty is named in Canada, where it differs from the set's base name.
+  // AUDIT 2026-10-09: checked by a machine against the Royal College of Physicians and Surgeons of Canada's list of
+  // disciplines (docs/COUNTRY-AUDIT-CANADA.md, with the link). Two changes came out of it: `internal-medicine` no
+  // longer says "General internal medicine" (that is a SUBSPECIALTY there; the specialty is Internal Medicine, the
+  // set's base name), and otolaryngology is written as the College writes it. STILL NOT READ BY A CLINICIAN OF THE
+  // COUNTRY (checklist C1): the roles the College does not list as one discipline (oncology, cardiac and vascular
+  // surgery, the five clinic roles) keep the set's base name and wait on a local clinical lead.
   rolAdlari: {
     anaesthesia: 'Anesthesiology',
-    'internal-medicine': 'General internal medicine',
     endocrinology: 'Endocrinology and metabolism',
     'respiratory-medicine': 'Respirology',
-    otolaryngology: 'Otolaryngology, head and neck surgery',
+    otolaryngology: 'Otolaryngology – head and neck surgery',
     radiology: 'Diagnostic radiology',
     'rehabilitation-medicine': 'Physical medicine and rehabilitation',
   },
@@ -92,7 +100,9 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction
     // (555-0100 to 555-0199 in every area code): it is not issued to anybody. Not checked against the plan's current
     // rules by anybody of the country.
-    telefonOrnegi: '+1 613 555 0123',
+    // AUDIT 2026-10-09: written as a number is written in Canada, area code and digit groups joined by hyphens (the
+    // federal Translation Bureau's rule); it was in the international form "+1 613 555 0123". The form accepts both.
+    telefonOrnegi: '613-555-0123',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '$% a month',
     // PRICES: EMPTY, SWITCHED OFF. WAITING ON KAAN. No amount exists for Canada; every plan shows "by quote".
