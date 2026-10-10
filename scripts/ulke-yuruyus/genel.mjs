@@ -127,6 +127,27 @@ const yazDeger = (p, sel, v) => p.evaluate((s, d) => {
   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(e), 'value').set.call(e, d)
   e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true }))
 }, sel, v)
+/**
+ * NOTYA-ULKE-DENETIM-01b — the kit's own date and time fields (components/ulke/girdi/). `sel` selects the GROUP (its
+ * id or its data-alan); each part is typed into its own small field, in whatever order the pack draws them.
+ * A day is handed in as YYYY-MM-DD and a time of day as 24-hour HH:MM: on a 12-hour pack the half of the day is chosen.
+ */
+const yazGunAlani = async (p, sel, gun) => { const [y, a, g] = gun.split('-'); for (const [parca, v] of [['DD', g], ['MM', a], ['YYYY', y]]) await yazDeger(p, `${sel} [data-parca=${parca}] input`, v) }
+const yazSaatAlani = async (p, sel, saat) => {
+  const [s, d] = saat.split(':')
+  const onIki = !!(await p.$(`${sel} [data-parca=yari] select`))
+  await yazDeger(p, `${sel} [data-parca=saat] input`, onIki ? String(Number(s) % 12 || 12) : s)
+  await yazDeger(p, `${sel} [data-parca=dakika] input`, d)
+  if (onIki) await p.select(`${sel} [data-parca=yari] select`, Number(s) < 12 ? 'oo' : 'os')
+}
+/** What a date or time field of the kit holds now: the ISO day / the 24-hour time, or '' while it holds none. */
+const alanDegeri = (p, sel) => p.$eval(sel, (e) => e.getAttribute('data-deger') ?? '')
+/** How a date field is drawn: the order of its parts, and whether the page holds any browser date or time field. */
+const tarihAlaniDuzeni = (p, sel) => p.evaluate((s) => ({
+  sira: [...document.querySelectorAll(`${s} [data-parca]`)].map((e) => e.getAttribute('data-parca')).join(' '),
+  etiketler: [...document.querySelectorAll(`${s} [data-parca] label`)].map((e) => e.innerText.trim()),
+  tarayiciAlani: !!document.querySelector('input[type=date], input[type=time], input[type=datetime-local], input[type=month], input[type=week]'),
+}), sel)
 const api = (p, rota, secenek = {}) => p.evaluate(async (u, s, anahtar) => {
   const oturum = JSON.parse(localStorage.getItem(anahtar) || 'null')
   const r = await fetch(u, { method: s.method || 'GET', headers: { Authorization: `Bearer ${s.jeton ?? oturum?.access_token ?? ''}`, ...(s.govde ? { 'Content-Type': 'application/json' } : {}) }, body: s.govde ? JSON.stringify(s.govde) : undefined })
@@ -257,8 +278,17 @@ let notA = '', randevuGunu = ''
   kontrol('new patient: the phone example is the pack\'s', (await p.$eval('#uza-h-tel', (e) => e.placeholder)) === P.telefonOrnek)
   await tara(p, 'new patient')
   await p.type('#uza-h-ad', HASTA_ADI)
-  await yazDeger(p, '#uza-h-dogum', '2021-03-07')
+  // NOTYA-ULKE-DENETIM-01b — the date of birth is typed in the pack's own order, in the kit's own field: no browser date
+  // field stands on the page, whatever language this browser is set to.
+  const dogumAlani = await tarihAlaniDuzeni(p, '#uza-h-dogum')
+  kontrol(`new patient: the date of birth is typed as ${P.tarihDeseni} — three labelled parts in the pack's order, and no browser date field on the page`, dogumAlani.sira === P.tarihDeseni.match(/DD|MM|YYYY/g).join(' ') && dogumAlani.etiketler.length === 3 && dogumAlani.etiketler.every(Boolean) && !dogumAlani.tarayiciAlani, JSON.stringify(dogumAlani))
+  // a day that does not exist is said at once, in the pack's sentence, and is not a date of birth
+  await yazGunAlani(p, '#uza-h-dogum', '2021-02-30')
+  kontrol('new patient: 30 February is refused in the field itself', (await p.$eval('#uza-h-dogum', (e) => e.getAttribute('data-durum'))) === 'gecersiz' && !!(await p.$('#uza-h-dogum [role=alert]')) && (await alanDegeri(p, '#uza-h-dogum')) === '')
+  await yazGunAlani(p, '#uza-h-dogum', '2021-03-07')
+  kontrol('new patient: 7 March 2021 typed part by part is the day 2021-03-07, and reads on the screen as the pack writes it', (await alanDegeri(p, '#uza-h-dogum')) === '2021-03-07' && !(await p.$('#uza-h-dogum [role=alert]')) && (await p.$$eval('#uza-h-dogum [data-parca] input', (l) => l.map((e) => e.value))).join(P.tarihDeseni.replace(/DD|MM|YYYY/g, '')[0]) === P.tarihDeseni.replace('DD', '07').replace('MM', '03').replace('YYYY', '2021'))
   await p.type('#uza-h-tel', P.telefonOrnek)
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-new-patient.png`), fullPage: true })
   await p.click('input[name="cinsiyet"][value="female"]')
   if (await p.$('input[name="hasta-dili"]')) await p.click(`input[name="hasta-dili"][value="${P.hastaDilleri[0]}"]`)
   await p.click('button[type=submit]')
@@ -342,6 +372,31 @@ if (P.randevu) {
   kontrol(`calendar: the appointment is shown, and its time is written the pack's way (${P.saatBicimi}-hour)`, saat, g.match(/\d{1,2}:30[^\n]{0,6}/)?.[0] ?? '')
   await tara(p, 'calendar')
   await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-calendar.png`) })
+  // NOTYA-ULKE-DENETIM-01b — THE BOOKING FORM (opened, typed into, never sent): the day in the pack's order and the time
+  // on the pack's clock, in the kit's own fields. On a 12-hour clock the half of the day is an explicit choice.
+  const obur = new Date(Date.parse(`${buGun}T12:00:00Z`) + 2 * 86400000).toISOString().slice(0, 10)
+  await git(p, `/calendar?yeni=1&hasta=${hastaA}&gun=${obur}`)
+  await p.waitForSelector('#uza-rf-gun', { timeout: 60000 })
+  const gunAlani = await tarihAlaniDuzeni(p, '#uza-rf-gun')
+  const yariVar = !!(await p.$('#uza-rf-saat [data-parca=yari] select'))
+  kontrol(`booking form: the day stands in the pack's order (${P.tarihDeseni}) and is the day asked for; the time field is the pack's ${P.saatBicimi}-hour clock; no browser date or time field`, gunAlani.sira === P.tarihDeseni.match(/DD|MM|YYYY/g).join(' ') && (await alanDegeri(p, '#uza-rf-gun')) === obur && yariVar === (P.saatBicimi === 12) && !gunAlani.tarayiciAlani && (await alanDegeri(p, '#uza-rf-saat')) === '', JSON.stringify({ ...gunAlani, yariVar }))
+  const saatHali = async () => ({ deger: await alanDegeri(p, '#uza-rf-saat'), saat: await p.$eval('#uza-rf-saat [data-parca=saat] input', (e) => e.value), yari: yariVar ? await p.$eval('#uza-rf-saat [data-parca=yari] select', (e) => e.value) : '' })
+  if (yariVar) {
+    // hour and minute alone are not a time on a 12-hour clock: the half of the day has to be said
+    await yazDeger(p, '#uza-rf-saat [data-parca=saat] input', '2'); await yazDeger(p, '#uza-rf-saat [data-parca=dakika] input', '30')
+    const yarim = await saatHali()
+    await yazSaatAlani(p, '#uza-rf-saat', '14:30'); const ogledenSonra = await saatHali()
+    await yazSaatAlani(p, '#uza-rf-saat', '00:00'); const geceYarisi = await saatHali()
+    await yazSaatAlani(p, '#uza-rf-saat', '12:00'); const ogle = await saatHali()
+    kontrol('booking form, 12-hour clock: no time until the half of the day is chosen; 2:30 PM is 14:30; 12:00 AM is midnight (00:00) and 12:00 PM is noon (12:00)', yarim.deger === '' && yarim.yari === '' && JSON.stringify(ogledenSonra) === JSON.stringify({ deger: '14:30', saat: '2', yari: 'os' }) && JSON.stringify(geceYarisi) === JSON.stringify({ deger: '00:00', saat: '12', yari: 'oo' }) && JSON.stringify(ogle) === JSON.stringify({ deger: '12:00', saat: '12', yari: 'os' }), JSON.stringify({ yarim, ogledenSonra, geceYarisi, ogle }))
+  } else {
+    await yazSaatAlani(p, '#uza-rf-saat', '14:30'); const ogledenSonra = await saatHali()
+    await yazDeger(p, '#uza-rf-saat [data-parca=saat] input', '24'); const yirmiDort = await p.$eval('#uza-rf-saat', (e) => e.getAttribute('data-durum'))
+    kontrol('booking form, 24-hour clock: 14:30 is typed as 14 and 30, no half of the day is asked, and there is no hour 24', JSON.stringify(ogledenSonra) === JSON.stringify({ deger: '14:30', saat: '14', yari: '' }) && yirmiDort === 'gecersiz', JSON.stringify({ ogledenSonra, yirmiDort }))
+  }
+  await yazSaatAlani(p, '#uza-rf-saat', '14:30')
+  await tara(p, 'booking form')
+  await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-booking-form.png`), fullPage: true })
   randevuGunu = yarin
 }
 
@@ -562,7 +617,7 @@ if (P.form && portalOturumu) {
       else if (!q.zorunlu) continue
       else if (q.tur === 'tek-secim' || q.tur === 'cok-secim') await H.click(`input[name="uzf-${q.anahtar}-${q.secenekler[0].anahtar}"]`)
       else if (q.tur === 'evet-hayir') await H.click(`input[name="uzf-${q.anahtar}-hayir"]`)
-      else if (q.tur === 'tarih') await yazDeger(H, `#uzf-${q.anahtar}`, '2020-01-01')
+      else if (q.tur === 'tarih') await yazGunAlani(H, `#uzf-${q.anahtar}`, '2020-01-01')
     }
     await tara(H, `intake: part ${i + 1} of ${bolumler.length} of the form`)
     if (i === 0) {
@@ -656,10 +711,26 @@ if (P.araclar) {
     for (const h of O.ham) {
       if (h.tur === 'isaret') { await p.waitForSelector(`[data-alan="${h.anahtar}"] input`); await p.click(`[data-alan="${h.anahtar}"] input`) }
       else if (h.tur === 'secim' || h.tur === 'puan') { await p.waitForSelector(`input[name="uza-arac-${h.anahtar}"][value="${h.deger}"]`); await p.click(`input[name="uza-arac-${h.anahtar}"][value="${h.deger}"]`) }
+      else if (h.tur === 'tarih') { await p.waitForSelector(`#uza-arac-${h.anahtar}`); await yazGunAlani(p, `#uza-arac-${h.anahtar}`, h.deger) }
       else { await p.waitForSelector(`#uza-arac-${h.anahtar}`); await yazDeger(p, `#uza-arac-${h.anahtar}`, h.deger) }
     }
     await p.waitForSelector('[data-eylem=kopyala]', { timeout: 30000 })
-    kontrol('tools: filled in, the tool shows a result; the follow-up day is EMPTY (the application proposes none); nothing has been stored yet', (await p.$eval('#uza-arac-takip', (e) => e.value)) === '' && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === false && (await metin(p, '[data-bolum=kayit]')).includes(HASTA_ADI) && (await kayitlar()).length === 0)
+    // NOTYA-ULKE-DENETIM-01a — a number typed the OTHER way (a decimal comma where the comma groups thousands; a point
+    // that could be thousands where the comma is the decimal mark) is REFUSED in the pack's own sentence: the tool
+    // shows no result and can keep nothing until the number is typed again.
+    const sayiAlani = O.ham.find((h) => h.tur === 'sayi')
+    if (sayiAlani) {
+      const yanlis = P.ondalikAyraci === '.' ? '1,5' : P.binlikAyraci === '.' ? '1.5' : '1.500'
+      await yazDeger(p, `#uza-arac-${sayiAlani.anahtar}`, yanlis)
+      await p.waitForSelector(`[data-alan="${sayiAlani.anahtar}"] [data-hata=sayi-okunamadi]`, { timeout: 30000 })
+      const mesaj = await metin(p, `[data-alan="${sayiAlani.anahtar}"] [data-hata=sayi-okunamadi]`)
+      kontrol(`tools: a number typed "${yanlis}" is refused, not guessed — the pack's sentence under the field, no result, nothing to keep`, mesaj.length > 10 && !mesaj.includes('%') && !(await p.$('[data-eylem=kopyala]')) && !(await p.$('[data-sayi]')) && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === true, mesaj)
+      await tara(p, 'tools (a number that could not be read)')
+      await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-tool-number-refused.png`) })
+      await yazDeger(p, `#uza-arac-${sayiAlani.anahtar}`, sayiAlani.deger)
+      await p.waitForSelector('[data-eylem=kopyala]', { timeout: 30000 })
+    }
+    kontrol('tools: filled in, the tool shows a result; the follow-up day is EMPTY (the application proposes none); nothing has been stored yet', (await alanDegeri(p, '#uza-arac-takip')) === '' && (await p.$eval('#uza-arac-takip', (e) => e.getAttribute('data-durum'))) === 'bos' && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === false && (await metin(p, '[data-bolum=kayit]')).includes(HASTA_ADI) && (await kayitlar()).length === 0)
     await tara(p, 'tools (one tool, filled in, for a patient)')
     // kept without a follow-up day
     await p.click('[data-eylem=arac-kaydet]')
@@ -668,7 +739,7 @@ if (P.araclar) {
     const ham1 = JSON.stringify(satirlar)
     kontrol('tools: KEPT — one row with this country, this account, this patient and the tool; the content is one encrypted value (no field, no result readable); no follow-up day', satirlar.length === 1 && satirlar[0].ulke === P.kod && satirlar[0].doctor_id === HESAP_A && satirlar[0].patient_id === hastaA && satirlar[0].arac === O.anahtar && satirlar[0].takip_tarihi === null && !ham1.includes('sayilar') && !ham1.includes('tamam') && (await metin(p, '[data-bolum=kayit] [role=status]')) === AM.kayit.kaydedildi, ham1.slice(0, 200))
     // kept again, with the follow-up day the doctor types: today, in the country's own clock
-    await yazDeger(p, '#uza-arac-takip', T.bugun)
+    await yazGunAlani(p, '#uza-arac-takip', T.bugun)
     await p.waitForFunction(() => !document.querySelector('[data-eylem=arac-kaydet]').disabled, { timeout: 30000 })
     await p.click('[data-eylem=arac-kaydet]')
     satirlar = await kayitBekle(2)
@@ -1265,9 +1336,9 @@ if (P.klinik) {
     kontrol('permissions: a share is refused for a member whose role the pack does not list for it', r.s === 409, `${r.s} ${r.t}`)
   }
   if (VEKALET) {
-    await ver(KL.hekim, 'vekalet', async () => { await yazDeger(S, '[data-alan=vekalet-bitis]', gunSonra(K.vekaletAzamiGun + 5)) })
+    await ver(KL.hekim, 'vekalet', async () => { await yazGunAlani(S, '[data-alan=vekalet-bitis]', gunSonra(K.vekaletAzamiGun + 5)) })
     kontrol(`permissions: cover longer than the pack allows (${K.vekaletAzamiGun} days) is refused with the pack's sentence, and nothing is written`, (await hataBekle(S, KM.yetki.hataGecersiz)) && (await tabloOku('ulke_klinik_yetkileri')).every((y) => y.tur !== 'vekalet'))
-    await ver(KL.hekim, 'vekalet', async () => { await yazDeger(S, '[data-alan=vekalet-bitis]', gunSonra(3)) })
+    await ver(KL.hekim, 'vekalet', async () => { await yazGunAlani(S, '[data-alan=vekalet-bitis]', gunSonra(3)) })
     const y = (await verildiMi(KL.hekim, 'vekalet')) ? (await tabloOku('ulke_klinik_yetkileri')).find((x) => x.tur === 'vekalet') : null
     kontrol('permissions: cover is given to another doctor for a stated period', !!y && y.alan_id === KL.hekim && !!y.baslangic && !!y.bitis && new Date(y.bitis) > new Date(y.baslangic) && !y.patient_id)
   }
@@ -1311,7 +1382,7 @@ if (P.klinik) {
     kontrol(`front desk: the card — name, birth date written the country's way (${dogum}), phone`, (await metin(F, '[data-alan=on-buro-hasta-karti] h2')).includes('QA-CLINIC Shared Patient') && (await metin(F, '[data-alan=kart-bilgisi]')).includes(dogum))
     await F.click('[data-alan=on-buro-randevular] [data-eylem=durum-geldi]')
     kontrol('front desk: "arrived" is marked for the doctor\'s appointment; "done" is not offered and not accepted', (await bilgiBekle(F, KM.onBuro.degistirildi)) && (await tabloOku('ulke_randevulari')).some((r) => r.doctor_id === KL.sahip && r.durum === 'geldi') && !(await F.$('[data-eylem=durum-tamamlandi]')) && (await api(F, '/api/ulke/klinik/on-buro', { method: 'PATCH', govde: { hekimId: KL.sahip, randevuId: gunCevabi.j.randevular[0].id, durum: 'tamamlandi' } })).s >= 400 && (await tabloOku('ulke_randevulari')).every((r) => r.doctor_id !== KL.sahip || r.durum !== 'tamamlandi'))
-    await yazDeger(F, '[data-alan=randevu-gunu]', yarin); await yazDeger(F, '[data-alan=randevu-saati]', '11:30')
+    await yazGunAlani(F, '[data-alan=randevu-gunu]', yarin); await yazSaatAlani(F, '[data-alan=randevu-saati]', '11:30')
     if (!(await F.$eval('[data-alan=yine-de]', (e) => e.checked))) await F.click('[data-alan=yine-de]')
     await F.click('[data-eylem=on-buro-randevu-al]')
     const alindi = await bilgiBekle(F, KM.onBuro.alindi)

@@ -92,7 +92,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
   const kod = paket.kod
   const metinler = paketMetinleri(s)
   const a = arayuz.araclar!
-  const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: a.labBirimleri }
+  const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: a.labBirimleri, sayi: paket.bicim }
 
   describe(`${kod}: an English-speaking pack — the pack check`, () => {
     it('the pack is complete: the kit\'s pack check finds nothing', () => {
