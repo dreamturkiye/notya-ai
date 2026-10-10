@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1936 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
-- **This country's own** (`countries/nz/`, six small files): 29 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1966 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 42 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
+- **This country's own** (`countries/nz/`, six small files): 32 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -31,7 +31,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Default time zone; zones an account may choose | Pacific/Auckland; Pacific/Auckland, Pacific/Chatham | product, with a local lead. Two zones are offered (the main islands and the Chatham Islands) and an account chooses its own. |
 | Date pattern; clock; first day of the week | DD/MM/YYYY; 12-hour; Monday | a local lead |
 | Units | weight kg, height cm, temperature °C | a local clinical lead — a clinical-safety setting |
-| Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: umol/L; glucose: mmol/L; cholesterol: mmol/L; C-reactive protein: mg/L; prostate-specific antigen: µg/L | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
+| Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: umol/L; glucose: mmol/L; cholesterol: mmol/L; HbA1c: mmol/mol; C-reactive protein: mg/L; prostate-specific antigen: µg/L | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
 | Writing an amount of a medicine | no zero after the last figure ("5 mL", never "5.0 mL") | a local pharmacist or clinical lead — a clinical-safety setting; the source read is cited beside the setting in ayarlar.ts |
 | Currency | NZD | the owner |
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
@@ -123,64 +123,64 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (41) — with the unit each measured input takes
+### Switched on (42) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/nz/nz.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
 | Tool | Name | Who sees it | Measured inputs and their units |
 |---|---|---|---|
 | `hasta-portali` | Patient's page | every role | no measured input |
-| `kritik-yol` | Critical conditions checklist | Emergency medicine | no measured input |
+| `kritik-yol` | Critical conditions checklist | Emergency medicine, Urgent care medicine, Rural hospital medicine | no measured input |
 | `asa-preop` | ASA class and pre-operative checklist | Anaesthesia | no measured input |
 | `hava-yolu-notu` | Airway note | Anaesthesia | no measured input |
-| `postop-agri` | Post-operative pain follow-up | Anaesthesia | no measured input |
+| `postop-agri` | Post-operative pain follow-up | Anaesthesia, Pain medicine | no measured input |
 | `noro-postop` | Checklist after a neurosurgical operation | Neurosurgery | no measured input |
 | `nobet-bilinc` | Seizure and consciousness follow-up | Neurosurgery | no measured input |
 | `cocuk-prepost-op` | Checklist before and after an operation | Paediatric surgery | no measured input |
-| `yara-dren-izlem` | Wound, drain and stitches follow-up | Paediatric surgery, General surgery | Drain output (optional): **mL** · result in mL |
-| `genel-preop` | Pre-operative checklist | General surgery | no measured input |
-| `pasi` | PASI score | Dermatology | no measured input |
-| `easi` | EASI score | Dermatology | no measured input |
-| `scorad` | SCORAD index | Dermatology | Area of skin involved: **%** |
-| `yama-okuma` | Patch test: reading days | Dermatology | no measured input |
+| `yara-dren-izlem` | Wound, drain and stitches follow-up | Paediatric surgery, General surgery, Oral and maxillofacial surgery | Drain output (optional): **mL** · result in mL |
+| `genel-preop` | Pre-operative checklist | General surgery, Oral and maxillofacial surgery | no measured input |
+| `pasi` | PASI score | Dermatology, Dermatology | no measured input |
+| `easi` | EASI score | Dermatology, Dermatology | no measured input |
+| `scorad` | SCORAD index | Dermatology, Dermatology | Area of skin involved: **%** |
+| `yama-okuma` | Patch test: reading days | Dermatology, Dermatology | no measured input |
 | `rejim-karti` | Insulin and thyroid treatment: date card | Endocrinology | no measured input |
-| `antibiyotik-sure` | Antibiotic course: counting days | Infectious diseases | Length of the course: **days** |
+| `antibiyotik-sure` | Antibiotic course: counting days | General practice, Infectious diseases, Urgent care medicine | Length of the course: **days** |
 | `toraks-preop` | Checklist before a chest operation | Cardiothoracic surgery | no measured input |
 | `toraks-tup-yara` | Chest drain and wound follow-up | Cardiothoracic surgery | no measured input |
-| `inhaler-teknik` | Inhaler technique | Respiratory medicine | Check the technique again after (optional): **months** |
+| `inhaler-teknik` | Inhaler technique | General practice, Respiratory medicine, Paediatrics | Check the technique again after (optional): **months** |
 | `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology | no measured input |
-| `kalp-damar-preop` | Checklist before a heart or vascular operation | Vascular surgery | no measured input |
+| `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiothoracic surgery, Vascular surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Vascular surgery | no measured input |
 | `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Vascular surgery | no measured input |
-| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology, head and neck surgery | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
+| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology, head and neck surgery, Audiologist | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
 | `otoskopi-notu` | Otoscopy note | Otolaryngology, head and neck surgery | no measured input |
 | `vertigo-notu` | Vertigo: positional test note | Otolaryngology, head and neck surgery | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Nephrology | no measured input |
 | `kur-sayaci` | Treatment cycle counter | Medical oncology | no measured input |
 | `toksisite-listesi` | Side effects checklist | Medical oncology | no measured input |
-| `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopaedic surgery | no measured input |
+| `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopaedic surgery, Urgent care medicine | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopaedic surgery | no measured input |
-| `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery | no measured input |
+| `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery, Musculoskeletal medicine, Physiotherapist, Osteopath, Chiropractor | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Paediatrics | Mother's height: **cm**; Father's height: **cm** · result in cm |
-| `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic and reconstructive surgery | no measured input |
+| `doz-hesabi` | Dose arithmetic by body weight | Emergency medicine, General practice, Paediatric surgery, Paediatrics, Urgent care medicine, Rural hospital medicine | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
+| `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic and reconstructive surgery, Cosmetic surgery | no measured input |
 | `tetkik-kuyrugu` | Examination queue | Diagnostic and interventional radiology | no measured input |
 | `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L**; Erythrocyte sedimentation rate: **mm/h** |
 | `eklem-28` | 28-joint count | Rheumatology | no measured input |
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sport and exercise medicine | no measured input · result in days |
-| `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
+| `sakatlik-gunlugu` | Injury log | Sport and exercise medicine, Musculoskeletal medicine, Physiotherapist | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
+| `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Pain medicine, Oral and maxillofacial surgery, Cosmetic surgery, Dermatology, Physiotherapist, Audiologist, Osteopath, Chiropractor | no measured input |
 
-### Kept as slots FOR THIS COUNTRY (5) — for a local clinical lead
+### Kept as slots FOR THIS COUNTRY (4) — for a local clinical lead
 
 The shared English set has the words of these tools and the kit has their mechanism; this country keeps them switched off for the reason given.
 
 | Tool | Who would see it | Why it is off here | Waits on |
 |---|---|---|---|
 | `esi-triyaj` | Emergency medicine | Emergency departments in New Zealand use the Australasian triage scale, with five categories; the Emergency Severity Index is a different scale, so a tool that records an ESI level is kept off here. Needed: the decision of a local emergency physician whether a triage record belongs in this product at all, and, if it does, a tool for the scale used here with its content supplied and signed locally. LICENCE, off by the owner's order of 2026-10-10: the Emergency Severity Index belongs to the Emergency Nurses Association, which requires written permission for its use; none has been given. Needed: that permission, recorded. | the owner, with the rights holder's written permission; then a clinical lead in New Zealand |
-| `kdigo-evre` | Internal medicine | UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. SAFETY, off by the owner's order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b). | a clinical lead in New Zealand |
-| `kdigo-serit` | Nephrology | UNIT SAFETY: the same as the internal-medicine KDIGO tool. The albuminuria limits in mg/mmol (3 and 30) are not the exact conversion of the mg/g limits the kit classifies with. SAFETY, off by the owner's order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b). | a clinical lead in New Zealand |
-| `doz-hesabi` | Paediatrics | SAFETY, off by the owner's order of 2026-10-10: the tool rounds the volume of one dose to 0.1 mL and shows only the rounded figure (0.16 mL is shown as 0.2 mL), and it prints trailing zeros ("5.0 mL"), which can be misread as ten times the dose. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b). | a clinical lead in New Zealand |
+| `kdigo-evre` | Internal medicine | Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol, and the referral list read for New Zealand is another than the one the tool prints: which referral prompts a doctor here should see is for a local nephrologist to say. Off by the owner's order of 2026-10-10. The two faults the audits confirmed (a risk cell shown with no urine albumin result; limits applied after converting the unit) were corrected in the kit on 2026-10-10; the tool stays off because the licence of the KDIGO grid for commercial software is unsettled. Needed: the rights holder's terms, read and recorded by the owner. | the owner, with the rights holder's written permission; then a clinical lead in New Zealand |
+| `kdigo-serit` | Nephrology | The same as the internal-medicine kidney tool: laboratories here report the urine albumin-to-creatinine ratio in mg/mmol. Off by the owner's order of 2026-10-10. The two faults the audits confirmed (a risk cell shown with no urine albumin result; limits applied after converting the unit) were corrected in the kit on 2026-10-10; the tool stays off because the licence of the KDIGO grid for commercial software is unsettled. Needed: the rights holder's terms, read and recorded by the owner. | the owner, with the rights holder's written permission; then a clinical lead in New Zealand |
 | `rapor-taslagi` | Diagnostic and interventional radiology | The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in New Zealand use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. LICENCE, off by the owner's order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded. | the owner, with the rights holder's written permission; then a clinical lead in New Zealand |
 
 ### Slots in every English-speaking country (52) — empty, switched off
@@ -276,7 +276,7 @@ Every gate is unticked: a gate is ticked by a person, with a name and a date. Th
 - [ ] 2. No fallback between countries: a missing item hides the feature.
   - Nothing falls back: the pack check finds nothing missing, and a tool this country does not have is a slot, not another country's tool.
 - [ ] 3. Every tool, form, reference and feature declares the countries it is valid in; new ones start off everywhere except where they were built.
-  - Every tool is classified (base, or these roles) and 5 tool(s) of the shared English set are kept off for this country (below).
+  - Every tool is classified (base, or these roles) and 4 tool(s) of the shared English set are kept off for this country (below).
 - [ ] 4. The account carries its country and language, set at sign-up from that country's landing page.
   - As in the kit: country and language are stamped at sign-up. One language form, `en-NZ`.
 - [ ] 5. Ayşe answers only from the account's country pack and says so when no national source exists.

@@ -14,6 +14,12 @@
  * the branch audit/nz). A source check is a machine reading a public page. It is NOT a person of New Zealand
  * confirming the setting, and the mark above stands until one has.
  *
+ * NOTYA-ULKE-UYGULA-NZ (2026-10-10): the decisions of the tools-and-specialties audit (docs/araclar-denetim/NZ.md,
+ * nz-kararlar.json) applied to this pack: its own role list (NZ_ROLLER), who sees which tool (`gorenler`), the
+ * country's numbers for the tools that take one (`parametreler`), and — in ./arayuz.ts with ./araclar/ — the tools
+ * only this country has. A line marked "OPENED 2026-10-10" was read from its source on that day through a reading
+ * tool that returns the text of a page; a clinician of New Zealand opens the source again before relying on it.
+ *
  * Plain data: type-only imports, so that the pack's light data file can read it.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
@@ -92,15 +98,18 @@ export const NZ_ROLLER: EnRolDegisimi = {
 
 const KLINISYEN = 'a clinical lead in New Zealand'
 
-// ── NOTYA-ULKE-ARAC-01b — OFF BY KAAN'S ORDER OF 2026-10-10 ("Switch off the risky tools"), in every country: the dose
-// calculator, the ESI triage tool, the report outline that prints the BI-RADS categories, and both kidney tools. Each
-// stays a slot (`kapali` below) until its fault is corrected in the kit or its licence is granted. The guard test
+// ── NOTYA-ULKE-ARAC-01b — OFF BY KAAN'S ORDER OF 2026-10-10 ("Switch off the risky tools"), in every country: the ESI
+// triage tool, the report outline that prints the BI-RADS categories, and both kidney tools. Each stays a slot
+// (`kapali` below) until its licence is granted or settled. The guard test
 // lib/ulke/araclar/kapaliAraclar.paket.test.ts fails if a pack switches one of them on. Evidence: the audits of the
-// tools against national sources, docs/araclar-denetim/, "Second pass" (branches araclar-denetim/<code>). ──
-const EMIR_DOZ = 'SAFETY, off by the owner\'s order of 2026-10-10: the tool rounds the volume of one dose to 0.1 mL and shows only the rounded figure (0.16 mL is shown as 0.2 mL), and it prints trailing zeros ("5.0 mL"), which can be misread as ten times the dose. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b).'
+// tools against national sources, docs/araclar-denetim/, "Second pass".
+// THE DOSE CALCULATOR IS BACK ON (Kaan, 2026-10-10, later the same day: "Bring on all the tools ... We will test as
+// we go"): its two faults were corrected in the kit (pull request #615: the volume is no longer rounded to 0.1 mL, a
+// small volume carries a caution, and an amount is written by this pack's `dozYazimi`), and the guard list no longer
+// holds it. ──
 const EMIR_ESI = 'LICENCE, off by the owner\'s order of 2026-10-10: the Emergency Severity Index belongs to the Emergency Nurses Association, which requires written permission for its use; none has been given. Needed: that permission, recorded.'
 const EMIR_RAPOR = 'LICENCE, off by the owner\'s order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded.'
-const EMIR_BOBREK = 'SAFETY, off by the owner\'s order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b).'
+const EMIR_BOBREK = 'Off by the owner\'s order of 2026-10-10. The two faults the audits confirmed (a risk cell shown with no urine albumin result; limits applied after converting the unit) were corrected in the kit on 2026-10-10; the tool stays off because the licence of the KDIGO grid for commercial software is unsettled. Needed: the rights holder\'s terms, read and recorded by the owner.'
 /** Who lifts a licence block: the owner obtains the rights holder's permission; a local clinician then confirms the tool. */
 const HAK_SAHIBI = `the owner, with the rights holder's written permission; then ${KLINISYEN}`
 
@@ -169,34 +178,110 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
   },
   gunlukMuayeneLimiti: 200,
   araclar: {
-    // UNVERIFIED: the unit laboratories in New Zealand report each value in: SI units (checklist C8). The kit converts
-    // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
-    // SOURCE-CHECKED for three (the national data standard for cardiovascular risk assessment): serum creatinine in
-    // µmol/L, cholesterol in mmol/L, the urine albumin-to-creatinine ratio in mg/mmol. Glucose in mmol/L and
-    // haemoglobin in g/L were NOT found stated on an official page by that audit: for a local laboratory or clinical lead.
-    labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L' },
-    // C-REACTIVE PROTEIN in mg/L and PROSTATE-SPECIFIC ANTIGEN in µg/L (NOTYA-ULKE-ARAC-DUZELTME-01: each is now a
-    // statement of the pack; PSA used to be a renamed "ng/mL" — the same amount, and the same label on the screen as
-    // before). Both as the country's audit read them (docs/araclar-denetim/NZ.md); UNVERIFIED with a local laboratory.
-    // HOW A DOSE IS WRITTEN HERE: NO ZERO AFTER THE DECIMAL POINT ("5 mL", never "5.0 mL"). Source read 2026-10-10: Health
-    // Quality & Safety Commission, Medication Safety Expert Advisory Group, "Error-prone abbreviations, symbols and dose
-    // designations not to use" (May 2012), https://www.hqsc.govt.nz/assets/Medication-Safety/Alerts-PR/Poster-error-prone-abbreviations-not-to-use.pdf
-    // — "never write a zero after a decimal point. Write 1.0mg as 1mg." UNVERIFIED by a local clinical lead.
+    // THE UNIT LABORATORIES IN NEW ZEALAND REPORT EACH VALUE IN: SI units (checklist C8). The kit converts from the unit
+    // stated here with fixed factors; a wrong unit here is a wrong result. UNVERIFIED with a local laboratory.
+    //   OPENED 2026-10-10 — prostate-specific antigen in µg/L: Ministry of Health, "Prostate Cancer Management and
+    //     Referral Guidance" (September 2015), Table 1, whose column of abnormal levels is in µg/L,
+    //     https://www.health.govt.nz/system/files/2015-09/prostate-cancer-management-referral-guidance_sept15-c.pdf
+    //   OPENED 2026-10-10 — HbA1c in mmol/mol: Ministry of Health, "Diabetic Retinal Screening, Grading, Monitoring and
+    //     Referral Guidance" (March 2016), which writes every HbA1c value in mmol/mol (for example a limit of 64 mmol/mol),
+    //     https://www.tewhatuora.govt.nz/assets/Publications/Diabetes/diabetic-retinal-screening-grading-monitoring-referral-guidance-mar16.pdf
+    //     No switched-on tool reads HbA1c today; the unit is stated so that the day one does, it is this one.
+    //   AS THE AUDITS READ THEM (not opened again on 2026-10-10): creatinine in µmol/L, cholesterol in mmol/L and the
+    //     urine albumin-to-creatinine ratio in mg/mmol (the national data standard for cardiovascular risk
+    //     assessment; bpacnz); haemoglobin in g/L (a Health New Zealand laboratory's reference intervals);
+    //     C-reactive protein in mg/L (Pharmac's forms). Glucose in mmol/L was found stated on no official page.
+    labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', hba1c: 'mmol/mol', crp: 'mg/L', psa: 'ug/L' },
+    // HOW A DOSE IS WRITTEN HERE: NO ZERO AFTER THE DECIMAL POINT ("5 mL", never "5.0 mL"). The dose calculator is
+    // switched on in this pack, so this setting is on a doctor's screen. OPENED 2026-10-10: Health Quality & Safety
+    // Commission, National Medication Safety Expert Advisory Group, poster "Not to use: error-prone abbreviations,
+    // symbols and dose designations" (May 2012),
+    // https://www.hqsc.govt.nz/assets/Medication-Safety/Alerts-PR/Poster-error-prone-abbreviations-not-to-use.pdf
+    // — "never write a zero after a decimal point". UNVERIFIED by a local clinical lead.
     dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
       // SOURCE-CHECKED: emergency departments here use the Australasian triage scale (Health New Zealand's public page
-      // on emergency department triage), not the Emergency Severity Index.
+      // on emergency department triage), not the Emergency Severity Index. The audit's verdict for this tool is
+      // "remove": it stays off here whatever becomes of its licence.
       'esi-triyaj': { eksik: 'Emergency departments in New Zealand use the Australasian triage scale, with five categories; the Emergency Severity Index is a different scale, so a tool that records an ESI level is kept off here. Needed: the decision of a local emergency physician whether a triage record belongs in this product at all, and, if it does, a tool for the scale used here with its content supplied and signed locally. ' + EMIR_ESI, kimden: HAK_SAHIBI },
-      'kdigo-evre': { eksik: 'UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. ' + EMIR_BOBREK, kimden: KLINISYEN },
-      'kdigo-serit': { eksik: 'UNIT SAFETY: the same as the internal-medicine KDIGO tool. The albuminuria limits in mg/mmol (3 and 30) are not the exact conversion of the mg/g limits the kit classifies with. ' + EMIR_BOBREK, kimden: KLINISYEN },
+      'kdigo-evre': { eksik: 'Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol, and the referral list read for New Zealand is another than the one the tool prints: which referral prompts a doctor here should see is for a local nephrologist to say. ' + EMIR_BOBREK, kimden: HAK_SAHIBI },
+      'kdigo-serit': { eksik: 'The same as the internal-medicine kidney tool: laboratories here report the urine albumin-to-creatinine ratio in mg/mmol. ' + EMIR_BOBREK, kimden: HAK_SAHIBI },
       'rapor-taslagi': { eksik: 'The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in New Zealand use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. ' + EMIR_RAPOR, kimden: HAK_SAHIBI },
-      // switched off on 2026-10-10 by the order above (on in this pack until then):
-      'doz-hesabi': { eksik: EMIR_DOZ, kimden: KLINISYEN },
+    },
+    // UNIT NAMES ONLY THIS PACK NEEDS: the units of its own tools (./araclar/).
+    birimAdlari: { 'kg/m2': 'kg/m²', yil: 'years' },
+    // ── WORDS OF A SHARED TOOL THIS COUNTRY WRITES DIFFERENTLY. MACHINE-WRITTEN, for a local clinician to read. ──
+    degisen: {
+      // The caution names this country's own number of days (`parametreler` below), and the description says what the
+      // national guidance does with two results. The guidance: the address beside `labBirimleri` above.
+      'psa-hizi': {
+        aciklama: 'From two measurements and their dates, the change in a year is worked out. No threshold and no grade is shown. The prostate cancer guidance of the Ministry of Health (2015) states no rate of change: it asks for a repeat test after 6 to 12 weeks to confirm a raised result.',
+        uyarilar: { kisa_aralik: 'The measurements are less than 6 weeks apart: read the result with caution' },
+      },
+      // The national growth charts predict adult height another way; the tool says so and shows no range (below).
+      'hedef-boy': {
+        aciklama: 'From the height of the father and of the mother, an estimate of the child\'s adult height is worked out (the mid-parental method). It is an estimate, not a promise, and no range is shown around it. The New Zealand–WHO growth charts predict adult height another way, from the child\'s own height centile: this tool does not do that.',
+      },
+    },
+    // ── THE COUNTRY'S NUMBERS for the shared tools that take one (docs/araclar-denetim/DUZELTMELER.md). ──
+    parametreler: {
+      // PSA: THE CAUTION ABOUT TWO RESULTS CLOSE TOGETHER appears when they are FEWER THAN 42 DAYS apart (the kit's own
+      // number is 90). 42 days = 6 weeks, the earliest repeat the national guidance asks for: "men should always have
+      // a repeat PSA test after 6–12 weeks" — so a repeat taken 6 to 12 weeks (42 to 84 days) after the first no
+      // longer raises the caution, and one taken sooner than the guidance asks still does. OPENED 2026-10-10: Ministry
+      // of Health, "Prostate Cancer Management and Referral Guidance" (September 2015), Note 2.2 (the address beside
+      // `labBirimleri` above). The guidance states NO rate of change at all. FOR A LOCAL UROLOGIST.
+      'psa-hizi': { kisa_aralik_gun: 42 },
+      // EXPECTED HEIGHT: NO RANGE IS STATED (`aralik_cm` is left out on purpose), so the tool shows the mid-parental
+      // figure and no range. OPENED 2026-10-10: Ministry of Health, New Zealand–WHO Growth Charts, Fact Sheet 6 (July
+      // 2010), https://www.tewhatuora.govt.nz/assets/For-the-health-sector/Specific-life-stage/child-health/Growth-Charts-v2/factsheet-6-growth-charts-well-child.pdf
+      // — it predicts adult height from the child's own recent height centile and gives a spread for THAT prediction
+      // (6 cm either side for boys, with 80 per cent probability); it names no parents' heights and no
+      // mid-parental method. That figure belongs to another method and is NOT put here.
+      //
+      // NOTHING IS STATED, AND WHY, for three more shared tools (each then behaves as the kit's own, sourced, default):
+      //   rtp-basamak    NO STEPS. ACC's national concussion guideline has them, but ACC's terms (OPENED 2026-10-10,
+      //                  https://www.acc.co.nz/terms-of-use/disclaimer-copyright, last published 14 March 2024) keep
+      //                  commercial use and republishing for ACC's permission. The tool shows the days since the injury.
+      //   odyometri-pta  NO GRADE TABLE, FREQUENCIES OR ASYMMETRY RULE of New Zealand: the audit and one more search on
+      //                  2026-10-10 found no table of a New Zealand body. The tool shows the kit's cited table.
+      //   pasi, easi, scorad, das28   NO BANDS of a New Zealand body: Pharmac's figures are funding criteria, not
+      //                  severity bands, and the one article read (bpacnz, 2025) gives no number for mild eczema.
+    },
+    // ── WHO SEES A SHARED TOOL HERE, where it differs from the set's list (the audit's decisions: nz-kararlar.json,
+    // `specialties[].tools` and `clinicSpecialties[].tools`, existing tools only). A tool that is not named here is
+    // seen by the roles the set names for it. MACHINE-APPLIED; FOR A LOCAL CLINICAL LEAD. ──
+    gorenler: {
+      'kritik-yol': ['emergency-medicine', 'urgent-care-medicine', 'rural-hospital-medicine'],
+      'postop-agri': ['anaesthesia', 'pain-medicine'],
+      'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'oral-maxillofacial-surgery'],
+      'genel-preop': ['general-surgery', 'oral-maxillofacial-surgery'],
+      // the dermatology clinic role is the same scope as the doctor role: it sees the same four tools
+      pasi: ['dermatology', 'clinic-dermatology'],
+      easi: ['dermatology', 'clinic-dermatology'],
+      scorad: ['dermatology', 'clinic-dermatology'],
+      'yama-okuma': ['dermatology', 'clinic-dermatology'],
+      // most courses are prescribed in general practice and urgent care
+      'antibiyotik-sure': ['family-medicine', 'infectious-diseases', 'urgent-care-medicine'],
+      'inhaler-teknik': ['family-medicine', 'respiratory-medicine', 'paediatrics'],
+      // heart surgery belongs to "Cardiothoracic surgery" here (the shared role thoracic-surgery); the checklist
+      // names heart AND vascular operations, so "Vascular surgery" keeps it
+      'kalp-damar-preop': ['thoracic-surgery', 'cardiovascular-surgery'],
+      'odyometri-pta': ['otolaryngology', 'audiology'],
+      'kirik-alci-takip': ['orthopaedics', 'urgent-care-medicine'],
+      'vas-fonksiyon': ['orthopaedics', 'musculoskeletal-medicine', 'physiotherapy', 'osteopathy', 'chiropractic'],
+      'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
+      'sakatlik-gunlugu': ['sports-medicine', 'musculoskeletal-medicine', 'physiotherapy'],
+      // children here are mostly seen outside paediatrics
+      'doz-hesabi': ['emergency-medicine', 'family-medicine', 'paediatric-surgery', 'paediatrics', 'urgent-care-medicine', 'rural-hospital-medicine'],
     },
     // THE LICENCE STATE of the two tools whose rights holder requires permission (docs/COUNTRY-PACK-HOWTO.md, "Country-only
     // tools and roles", point 5): "izin-gerekli" = permission needed. While it stands, the pack check refuses to switch
     // either tool on, and the screen and the server refuse it a second time.
+    // NO OTHER SHARED TOOL'S LICENCE IS STATED: "free" is written only where the rights holder's own notice says so and
+    // was read (the three tools of this country's own state theirs: ./araclar/araclar.ts). What the audit found for
+    // the others is in docs/araclar-denetim/NZ.md, "Licence terms, as read".
     lisanslar: {
       'esi-triyaj': { durum: 'izin-gerekli', hakSahibi: 'Emergency Nurses Association (ENA)', kaynak: 'ENA, trademarks page (https://www.ena.org/ena-trademarks), and the copyright notice of the Emergency Severity Index handbook: read for the tools audit, second pass, 2026-10-10' },
       'rapor-taslagi': { durum: 'izin-gerekli', hakSahibi: 'American College of Radiology (ACR)', kaynak: 'ACR, BI-RADS permissions page (https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions): read for the tools audit, second pass, 2026-10-10' },
