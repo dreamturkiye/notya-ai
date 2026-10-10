@@ -5,17 +5,22 @@
     "audit": "NOTYA araclar-denetim",
     "dateRead": "2026-10-10",
     "branch": "araclar-denetim/us, from origin/feat/ulke-butun at e254ebf8",
-    "rule": "A verdict of keep, revise or remove rests on a source fetched on the date above (sourceUrl), or — only where the entry says so in `change` — on the product's own code read and run that day. Everything else is \"unverified — needs a local clinician\"; for those, `leaning` holds the direction a clinician is asked to confirm and is NOT a decision.",
+    "rule": "A verdict of keep, revise or remove rests on a source fetched on the date above (sourceUrl), or — only where the entry says so in `change` — on the product's own code read and run that day. Everything else is \"unverified — needs a local clinician\"; for those, `leaning` holds the direction a clinician is asked to confirm and is NOT a decision. Second pass: a row marked `recordOnly` is a record list or checklist with no formula, weight, cut-off, band, grade, interval or stage in its code; its verdict \"keep — record list; wording for a local clinician\" rests on the code read that day, and only its wording waits for a clinician.",
     "fields": {
       "tools[].state": "done = switched on in this country's build; slot = an empty, switched-off placeholder that no screen shows; absent = the kit has the mechanism, this country's pack does not list it",
       "tools[].mechanismReady": "for a slot: the kit already holds the arithmetic and only the country's numbers are missing",
       "tools[].class": "base = every role; specialty = the listed roles only",
       "tools[].specialties": "\"all\", or role keys of countries/_dil/en/klinik/roller.ts",
       "tools[].screenName": "the name on screen in en-US; for a slot (never shown) a plain description",
-      "addTools[].verifiedToday": "true = a US source naming the tool was fetched on the date above; false = named from general knowledge only, needs a local clinician",
+      "addTools[].verifiedToday": "true = a US source naming the tool was fetched on the date above. After the second pass no entry is false: a candidate named from general knowledge was either given a US source or moved to `droppedCandidates`",
       "addTools[].formulaSourceUrl": "a URL only where one was fetched; otherwise null and `formulaSource` carries the citation as far as it was read",
       "specialties[].tools": "\"@core\" = every tool of `coreSet`; other entries are keys of `tools` or ids of `addTools`",
-      "specialties[].candidateTools": "ids of `addTools` with verifiedToday false"
+      "specialties[].candidateTools": "empty after the second pass: kept candidates moved to `tools`, dropped ones are in `droppedCandidates`",
+      "tools[].pass": "2 = the row was resolved, or added to, in the second pass of 2026-10-10",
+      "tools[].recordOnly": "true = a record list or checklist with no number or grade in it; not counted as an unverified clinical tool",
+      "tools[].verdictPass1": "the verdict of the first pass, where the second pass changed it",
+      "addTools[].primaryPublicationOpened": "second-pass candidates only: false = a US body's page naming the tool was read, the publication that defines it was not; `formulaSource` says how far the citation was read",
+      "droppedCandidates[]": "candidates of the first pass that the second pass dropped, each with the reason and the pages read"
     },
     "coreSet": [
       "hasta-portali",
@@ -36,6 +41,36 @@
       "diagnosis-coding"
     ],
     "counts": {
+      "done": 45,
+      "slot": 53,
+      "absent": 2,
+      "keep": 26,
+      "revise": 55,
+      "remove": 1,
+      "unv": 18,
+      "doneKeep": 26,
+      "doneRevise": 17,
+      "doneRemove": 1,
+      "doneUnv": 1,
+      "slotRevise": 36,
+      "slotUnv": 17,
+      "coreNew": 14,
+      "specAdd": 15,
+      "cand": 0,
+      "sKeep": 25,
+      "sRename": 5,
+      "sRemove": 0,
+      "sAdd": 10,
+      "cKeep": 5,
+      "cRename": 0,
+      "cRemove": 1,
+      "cUnv": 4,
+      "cAdd": 8,
+      "recordOnly": 20,
+      "candKept": 25,
+      "candDropped": 5
+    },
+    "countsPass1": {
       "done": 45,
       "slot": 53,
       "absent": 2,
@@ -61,6 +96,12 @@
       "cRemove": 1,
       "cUnv": 4,
       "cAdd": 8
+    },
+    "pass2": {
+      "date": "2026-10-10",
+      "what": "A second pass with a search allowance of its own: 88 of 120 web searches used. Rows it resolved or added to carry `pass: 2`.",
+      "verdictsChanged": 44,
+      "reading": "Pages were read through a fetch tool that returns extracted text. Every figure taken from a source is as that tool returned it; a US clinician opens the source again before any number in the code is changed."
     }
   },
   "tools": [
@@ -86,14 +127,17 @@
         "emergency-medicine"
       ],
       "verdict": "remove",
-      "change": "Switch off (turn into a slot) until the Emergency Nurses Association gives written permission. ENA owns the Emergency Severity Index; the handbook's copyright notice forbids use \"in any form, electronic or mechanical\" without written permission, and this tool shows the ESI name, its five levels and paraphrases of its decision points. The handbook also says ESI is for triage nurses in emergency departments, which is not who uses this product. Smaller fault: the tool accepts contradictory entries (level 5 together with \"an immediate life-saving intervention is needed\").",
+      "change": "Switch off (turn into a slot) until the Emergency Nurses Association gives written permission. ENA owns the Emergency Severity Index; the handbook's copyright notice forbids use \"in any form, electronic or mechanical\" without written permission, and this tool shows the ESI name, its five levels and paraphrases of its decision points. The handbook also says ESI is for triage nurses in emergency departments, which is not who uses this product. Smaller fault: the tool accepts contradictory entries (level 5 together with \"an immediate life-saving intervention is needed\"). SECOND PASS. ENA's trademark page lists \"ESI\" and \"Emergency Severity Index\" as registered marks. No page read describes a way to license ESI for software: ask ENA in writing.",
       "sourceUrl": "https://media.emscimprovement.center/documents/Emergency_Severity_Index_Handbook.pdf",
       "moreSourceUrls": [
-        "https://www.ena.org/news-publications/newsroom/ena-updates-emergency-severity-index-resources-improve-patient-triage"
+        "https://www.ena.org/news-publications/newsroom/ena-updates-emergency-severity-index-resources-improve-patient-triage",
+        "https://www.ena.org/ena-trademarks",
+        "https://www.ena.org/education/triage"
       ],
       "licence": "needs permission — ENA, all rights reserved",
       "confidence": "high",
-      "needsLocalClinician": false
+      "needsLocalClinician": false,
+      "pass": 2
     },
     {
       "key": "kritik-yol",
@@ -103,13 +147,15 @@
       "specialties": [
         "emergency-medicine"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. Its items (early ECG, stroke assessment, primary survey, sepsis measures) should be read by a US emergency physician against ACC/AHA, AHA/ASA and sepsis guidance, none of which was opened today.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: tick-boxes for five critical pathways and eight items; the result is two counts. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. Its items (early ECG, stroke assessment, primary survey, sepsis measures) name no time limit and no protocol.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "asa-preop",
@@ -120,14 +166,18 @@
         "anaesthesia"
       ],
       "verdict": "revise",
-      "change": "The American Society of Anesthesiologists lists six classes, ASA I to ASA VI. The tool offers I to V plus \"E\" as if E were a sixth class: ASA VI cannot be recorded, and choosing E loses the class number. Add VI and record E beside a class, not instead of one (how ASA writes the emergency marker could not be read on an ASA page today: an anesthesiologist confirms). ASA's statement was revised on October 15, 2025; the tool's citation carries no date.",
+      "change": "The American Society of Anesthesiologists lists six classes, ASA I to ASA VI. The tool offers I to V plus \"E\" as if E were a sixth class: ASA VI cannot be recorded, and choosing E loses the class number. Add VI and record E beside a class, not instead of one (how ASA writes the emergency marker could not be read on an ASA page today: an anesthesiologist confirms). ASA's statement was revised on October 15, 2025; the tool's citation carries no date. SECOND PASS. Confirmed on an ASA page read today: six classes, ASA I to ASA VI, and \"The addition of 'E' denotes Emergency surgery\" — E is a marker added to a class, never a class. (That page carries the approval of October 15, 2014; the statement as revised on October 15, 2025 could not be opened.) Licence: ASA's terms say its content is its exclusive property and may not be reproduced without its written consent; it has a permission-request form.",
       "sourceUrl": "https://www.asahq.org/quality-and-practice-management/managing-your-practice/timely-topics-in-payment-and-practice-management/anesthesia-payment-basics-series-4-physical-status",
       "moreSourceUrls": [
-        "https://www.asahq.org/standards-and-practice-parameters"
+        "https://www.asahq.org/standards-and-practice-parameters",
+        "https://asahq.org/resources/clinical-information/asa-physical-status-classification-system",
+        "https://www.asahq.org/about-asa/terms-and-conditions",
+        "https://www.asahq.org/research-and-publications/publications/requests-to-reprint-asa-publications"
       ],
-      "licence": "unclear — only the class names are shown; the definitions are ASA's text and must not be copied in without permission",
+      "licence": "needs permission — ASA's terms forbid reproducing its content without written consent; the tool shows class numbers only and must not copy the definitions in",
       "confidence": "medium",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "hava-yolu-notu",
@@ -137,13 +187,15 @@
       "specialties": [
         "anaesthesia"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: six tick-boxes and one date. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "postop-agri",
@@ -153,13 +205,15 @@
       "specialties": [
         "anaesthesia"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. It records a 0 to 10 pain number and names no medicine.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: six tick-boxes, one date, and a pain number from 0 to 10 that is kept as typed and never graded. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. It names no medicine.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "noro-postop",
@@ -169,13 +223,15 @@
       "specialties": [
         "neurosurgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: eight tick-boxes; three of them come back as follow-up reminders. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "nobet-bilinc",
@@ -185,13 +241,15 @@
       "specialties": [
         "neurosurgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: six tick-boxes and one date. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "cocuk-prepost-op",
@@ -217,13 +275,15 @@
         "paediatric-surgery",
         "general-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: what is followed, the site, two dates, and a drain output in mL kept as typed, with no limit. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "genel-preop",
@@ -249,16 +309,18 @@
         "internal-medicine"
       ],
       "verdict": "revise",
-      "change": "SAFETY. (1) The referral flags are labelled \"KDIGO criterion\" but do not match the KDIGO 2024 list read today. KDIGO 2024 lists, among others: eGFR below 30; a sustained fall in GFR of more than 20%; albumin-to-creatinine ratio of 300 mg/g or more together with hematuria; a ratio consistently above 700 mg/g; a 5-year kidney-failure risk of 3 to 5% by a validated equation. The tool instead flags any ratio above 300 mg/g alone, a fall of more than 25% in a year, and \"the very-high-risk cell\" — the last is not on KDIGO's list at all. (2) With no albumin result typed, the tool still shows a risk colour, silently treating the patient as category A1: eGFR 75 with no urine test reads \"Low risk (green cell)\". The cell needs both values; with one missing the tool should show the GFR category only. (3) A ratio of exactly 300 mg/g is called A2; the two KDIGO/KDOQI texts read today write the severe category as \"300 mg/g or more\". The category table itself could not be read: a nephrologist settles the boundary. (4) The tool asks the doctor to type eGFR: add the US equation (CKD-EPI 2021, see the core set). Units (mg/g; mL/min/1.73 m²) are right for the US. Show it also to family medicine, endocrinology and cardiology.",
+      "change": "SAFETY. (1) The referral flags are labelled \"KDIGO criterion\" but do not match the KDIGO 2024 list read today. KDIGO 2024 lists, among others: eGFR below 30; a sustained fall in GFR of more than 20%; albumin-to-creatinine ratio of 300 mg/g or more together with hematuria; a ratio consistently above 700 mg/g; a 5-year kidney-failure risk of 3 to 5% by a validated equation. The tool instead flags any ratio above 300 mg/g alone, a fall of more than 25% in a year, and \"the very-high-risk cell\" — the last is not on KDIGO's list at all. (2) With no albumin result typed, the tool still shows a risk colour, silently treating the patient as category A1: eGFR 75 with no urine test reads \"Low risk (green cell)\". The cell needs both values; with one missing the tool should show the GFR category only. (3) A ratio of exactly 300 mg/g is called A2; the two KDIGO/KDOQI texts read today write the severe category as \"300 mg/g or more\". The category table itself could not be read: a nephrologist settles the boundary. (4) The tool asks the doctor to type eGFR: add the US equation (CKD-EPI 2021, see the core set). Units (mg/g; mL/min/1.73 m²) are right for the US. Show it also to family medicine, endocrinology and cardiology. SECOND PASS. Point (3) is settled, and the code is right: Table 3 of the full KDIGO 2024 guideline, read today, puts A2 at 30 to 300 mg/g and A3 above 300 mg/g, which is what the code does (300 is A2); the GFR categories match its Table 2. The referral list was read again and the three faulty flags stand as described in (1). Licence: the guideline is published under a Creative Commons licence that allows neither commercial use nor adaptations, and requests to reproduce go to KDIGO.",
       "sourceUrl": "https://kdigo.org/wp-content/uploads/2026/05/KDIGO-2024-CKD-Guideline-Summary-Recommendations-and-Practice-Points.pdf",
       "moreSourceUrls": [
         "https://kdigo.org/wp-content/uploads/2025/01/KDOQI-Commentary_KDIGO-2024-CKD-Guideline.pdf",
         "https://kdigo.org/wp-content/uploads/2017/02/KDIGO-2024-CKD-Guideline-Executive-Summary.pdf",
-        "https://www.niddk.nih.gov/research-funding/research-programs/kidney-clinical-research-epidemiology/laboratory/glomerular-filtration-rate-equations/adults"
+        "https://www.niddk.nih.gov/research-funding/research-programs/kidney-clinical-research-epidemiology/laboratory/glomerular-filtration-rate-equations/adults",
+        "https://kdigo.org/wp-content/uploads/2024/03/KDIGO-2024-CKD-Guideline.pdf"
       ],
-      "licence": "unclear — KDIGO's categories are widely reproduced; the guideline text and heat-map figure are KDIGO's copyright (terms not read)",
+      "licence": "needs permission for a commercial product — the guideline is under a non-commercial, no-adaptation licence (CC BY-NC-ND); the tool names categories and colours and reproduces no figure",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "pasi",
@@ -268,13 +330,18 @@
       "specialties": [
         "dermatology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "revise",
-      "change": "Neither the 1978 publication of the formula nor the US dermatology guidance (American Academy of Dermatology) could be opened today, so the formula, the weights and the \"mild / moderate / severe\" bands are not verified. Seen in the code: a form with one box filled is scored as if every empty box were 0 and gets a band (one erythema score alone gives \"PASI 0 — Mild\"); a score of 0 is called \"Mild\". A US dermatologist should say whether the bands belong on the screen at all.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. FORMULA RIGHT, BANDS NOT SUPPORTED. The arithmetic in the code (four regions weighted 0.1, 0.2, 0.3 and 0.4; three signs scored 0 to 4; an area score of 0 to 6; total 0 to 72) matches the formula as printed in a drug-review report held by the US National Library of Medicine. The three bands on the screen (\"Mild below 10, Moderate 10 to 19.9, Severe 20 or above\") were found on no US page: the same report calls 5 to 10 moderate and over 10 severe, and the National Psoriasis Foundation's statement of December 2025 says severity is not decided by a surface-area figure alone and counts the face, scalp, hands, feet, nails and genitals. So a PASI of 12 is shown as \"Moderate\" where the one source read calls it severe. Take the bands off, or let the country state them. Faults in the code, as in the first pass: a form with one box filled is scored as if every empty box were 0, and a score of 0 is called \"Mild\". Not opened: the 1978 publication (Fredriksson and Pettersson) and the text of the joint AAD–NPF guideline (the journal's site refused the fetch). A US dermatologist decides whether any band stays.",
+      "sourceUrl": "https://www.ncbi.nlm.nih.gov/books/NBK534046/",
+      "licence": "unclear — a formula published in 1978; no owner's page was found and no page read states terms",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: revise)",
+      "moreSourceUrls": [
+        "https://www.psoriasis.org/position-statement-on-psoriasis-severity/",
+        "https://www.psoriasis.org/psoriasis-guidelines/"
+      ],
+      "pass": 2
     },
     {
       "key": "easi",
@@ -284,13 +351,18 @@
       "specialties": [
         "dermatology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "revise",
-      "change": "Neither the 2001 publication nor the body that maintains EASI could be opened today: formula, weights and bands are not verified. Seen in the code: the body-region weights are fixed to \"a patient aged 8 or over\" and the tool never asks the age, so the score of a younger child is worked out with the wrong weights; the three bands have no \"clear\" step. For a dermatologist to confirm, with the instrument's licence terms.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. SAFETY — A WRONG SCORE FOR A CHILD UNDER 8. The instrument's own user guide gives two sets of region multipliers: for patients of 8 and over the ones the tool uses (head and neck 0.1, upper limbs 0.2, trunk 0.3, lower limbs 0.4), and for children under 8 another set (0.2, 0.2, 0.3, 0.3). The tool never asks the age and always uses the first set: a young child with severe eczema of the head and neck only (all four signs 3, area score 6) is given 7.2 where the guide's multiplier gives 14.4. Ask the age, or refuse a patient under 8. BANDS: the tool's three (\"Mild below 7, Moderate 7 to 20.9, Severe 21 or above\") are not the published strata read today (Leshem and colleagues, 2015: clear 0; almost clear 0.1 to 1.0; mild 1.1 to 7.0; moderate 7.1 to 21.0; severe 21.1 to 50.0; very severe 50.1 to 72.0). A score of 7.0 is shown as \"Moderate\" and 21.0 as \"Severe\" where the paper says mild and moderate; 0 is called \"Mild\"; there is no clear, almost clear or very severe step. Also: the guide allows half points (1.5 and 2.5) for a sign, and the tool takes whole numbers only. Right in the code: the four signs, the area table and the 0 to 72 range for a patient of 8 or over. The 2001 publication itself was not opened.",
+      "sourceUrl": "https://www.homeforeczema.org/documents/easi-user-guide-jan-2017-v3.pdf",
+      "licence": "unclear, leaning free — the owner's page says \"You do not need a license to translate EASI\", allows changes of layout, advises against changing the wording and asks users to say they are using it; it names no copyright holder and no fee",
+      "confidence": "high",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: revise)",
+      "moreSourceUrls": [
+        "https://academic.oup.com/bjd/article-abstract/172/5/1353/6616225",
+        "https://www.homeforeczema.org/research/easi-for-clinical-signs.aspx"
+      ],
+      "pass": 2
     },
     {
       "key": "scorad",
@@ -300,13 +372,17 @@
       "specialties": [
         "dermatology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "A European index (European Task Force on Atopic Dermatitis). Whether US dermatologists use it, and its bands, could not be checked: no source was opened. The arithmetic matches the formula written on the tool's own screen (maximum 103).",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. FORMULA RIGHT; ONE BOUNDARY, AND THE US VIEW STILL OPEN. The arithmetic (one fifth of A, plus three and a half times B, plus C; maximum 103) matches the formula given in the abstract of Oranje and colleagues, 2007. The bands were read only on the page of the foundation that holds the user rights of the SCORAD application: up to 25 minor, 25 to 50 moderate, above 50 severe. The tool calls exactly 50 \"Severe\" (the page: above 50) and calls 0 \"Mild\". Make 50 moderate, or drop the bands. Not opened: the 1993 publication, and the American Academy of Dermatology's guideline on assessing atopic dermatitis (the journal's site refused the fetch), so whether US dermatologists use SCORAD in the office is still for a dermatologist.",
+      "sourceUrl": "https://repub.eur.nl/pub/35156",
+      "licence": "unclear — the Eczema Foundation's page says SCORAD and PO-SCORAD are registered trademarks and that it holds the user rights of its application; its terms page was not opened",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "moreSourceUrls": [
+        "https://www.pierrefabreeczemafoundation.org/en/po-scorad-tool"
+      ],
+      "pass": 2
     },
     {
       "key": "yama-okuma",
@@ -331,13 +407,15 @@
       "specialties": [
         "endocrinology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. Dates only: no medicine and no dose.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: four dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. No medicine and no dose.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "antibiyotik-sure",
@@ -348,11 +426,12 @@
         "infectious-diseases"
       ],
       "verdict": "revise",
-      "change": "ARITHMETIC. The date labelled \"Last day of the course\" is the start date plus the number of days, which is one day late if the start day counts as day 1: a 7-day course started on October 1 shows October 8, a 1-day course shows October 2 (run today on the kit's code). Either subtract one day or relabel the date (\"day after the last dose\"). This is the kit's arithmetic, so it is the same in every country build and in the Turkish tool it was copied from.",
-      "sourceUrl": null,
+      "change": "ARITHMETIC. The date labelled \"Last day of the course\" is the start date plus the number of days, which is one day late if the start day counts as day 1: a 7-day course started on October 1 shows October 8, a 1-day course shows October 2 (run today on the kit's code). Either subtract one day or relabel the date (\"day after the last dose\"). This is the kit's arithmetic, so it is the same in every country build and in the Turkish tool it was copied from. SECOND PASS. Confirmed against a US counting rule: CDC's hospital antibiotic-use surveillance counts one antimicrobial day for each calendar day on which the medicine is given, so the day of the first dose is day 1, and a 7-day course begun on October 1 ends on October 7. The code adds the number of days to the start date and shows October 8.",
+      "sourceUrl": "https://www.cdc.gov/nhsn/faqs/faq-au.html",
       "licence": "none — date arithmetic",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "toraks-preop",
@@ -362,13 +441,15 @@
       "specialties": [
         "thoracic-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: seven tick-boxes; the first three not yet done are shown as tasks. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "toraks-tup-yara",
@@ -378,13 +459,15 @@
       "specialties": [
         "thoracic-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. A US editor should check the term \"chest drain\" (the usual US word could not be confirmed on a page read today).",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: what is followed, its state, two dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. A US editor should still check the term \"chest drain\" (the usual US word could not be confirmed on a page read).",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "inhaler-teknik",
@@ -424,13 +507,15 @@
       "specialties": [
         "cardiovascular-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. Note that heart surgery and vascular surgery are two different specialties in the US (Part 3).",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: eight tick-boxes; the first three not yet done are shown as tasks. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. Heart surgery and vascular surgery are two different specialties in the US (Part 3).",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "greft-yara-izlem",
@@ -440,13 +525,15 @@
       "specialties": [
         "cardiovascular-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: what is followed, its state, two dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "antikoagulan-vadeleri",
@@ -456,13 +543,15 @@
       "specialties": [
         "cardiovascular-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. Dates only: no medicine by name, no dose, no target.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: the group of the medicine and two dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. No medicine by name, no dose, no target.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "odyometri-pta",
@@ -473,11 +562,19 @@
         "otolaryngology"
       ],
       "verdict": "revise",
-      "change": "MISLEADING HERE. The tool calls any average up to 25 dB \"Within normal limits\". The American Speech-Language-Hearing Association's table, from the very paper the tool cites (Clark 1981), has Normal up to 15 dB and a separate \"Slight\" loss from 16 to 25 dB: a 20 dB average is reported as normal where the US reference calls it a slight hearing loss (it matters most in children). Add the \"Slight\" grade. Not verified today: which frequencies make up the average in US practice (the tool uses 0.5, 1, 2 and 4 kHz), and the 10 dB and 15 dB flags. The audiologist role should see this tool too; today only otolaryngology does.",
+      "change": "MISLEADING HERE. The tool calls any average up to 25 dB \"Within normal limits\". The American Speech-Language-Hearing Association's table, from the very paper the tool cites (Clark 1981), has Normal up to 15 dB and a separate \"Slight\" loss from 16 to 25 dB: a 20 dB average is reported as normal where the US reference calls it a slight hearing loss (it matters most in children). Add the \"Slight\" grade. Not verified today: which frequencies make up the average in US practice (the tool uses 0.5, 1, 2 and 4 kHz), and the 10 dB and 15 dB flags. The audiologist role should see this tool too; today only otolaryngology does. SECOND PASS. (a) Confirmed on two more ASHA pages: the table of the paper the tool cites has the \"Slight\" step. (b) Frequencies: the National Institute on Deafness and Other Communication Disorders describes the speech-frequency average as 500, 1000 and 2000 Hz, and the four-frequency average of 500, 1000, 2000 and 4000 Hz — the one the tool uses — as the one of population studies; the same page treats averages of 25 dB or less as normal speech hearing. So two US conventions exist and the tool mixes them: four frequencies, a citation whose table has a slight step, bands without it. Say which average is shown and offer the three-frequency one. (c) Asymmetry: the otolaryngology academy's red-flag statement speaks of a difference of more than 15 dB between the ears; the tool flags at exactly 15 dB (an average of 30 dB against 15 dB in the other ear is flagged). (d) The 10 dB flag on the average is the tool's own: the federal workplace rule that uses 10 dB averages 2000, 3000 and 4000 Hz, not these frequencies.",
       "sourceUrl": "https://asha.org/public/hearing/degree-of-hearing-loss",
       "licence": "unclear — a published classification table (not read)",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "moreSourceUrls": [
+        "https://www.asha.org/siteassets/ais/ais-type-degree-and-configuration-of-hearing-loss.pdf",
+        "https://www.asha.org/practice-portal/clinical-topics/hearing-loss/",
+        "https://www.nidcd.nih.gov/health/statistics/what-numbers-mean-epidemiological-perspective-hearing",
+        "https://www.entnet.org/resource/position-statement-red-flags-warning-of-ear-disease/",
+        "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-G/section-1910.95"
+      ],
+      "pass": 2
     },
     {
       "key": "otoskopi-notu",
@@ -487,13 +584,15 @@
       "specialties": [
         "otolaryngology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: findings for each ear, ticked. Seven of the findings add the sentence \"a decision is needed at this visit\": the product's own reminder, with no number in it. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "vertigo-notu",
@@ -505,11 +604,15 @@
       ],
       "verdict": "unverified — needs a local clinician",
       "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. The US guideline on positional vertigo (American Academy of Otolaryngology–Head and Neck Surgery Foundation) could not be opened today.",
-      "sourceUrl": null,
+      "change": "Second pass, STILL UNVERIFIED. Read today: the otolaryngology academy's own summary of its 2017 guideline on benign paroxysmal positional vertigo. The tests the tool names (Dix-Hallpike, supine roll) and the repositioning procedure are the ones its key statements name, and it asks clinicians to tell positional vertigo apart from other causes of dizziness, or refer. NOT checked: the tool's own rule — any of six \"central signs\" turns the result into \"a repositioning manoeuvre is not indicated\" and \"urgent neurological assessment first\" — and the list of those signs. The guideline's full text sits on the publisher's site, whose address the fetch tool would not open. The tool holds no number, but it holds a clinical rule, so it is not counted as a record list. For a US otolaryngologist or neurologist.",
+      "sourceUrl": "https://www.entnet.org/resource/aao-hnsf-updated-cpg-bppv-press-release-fact-sheet/",
       "licence": "none — the product's own list",
       "confidence": "low",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "moreSourceUrls": [
+        "https://www.entnet.org/quality-practice/quality-products/clinical-practice-guidelines/bppv/"
+      ],
+      "pass": 2
     },
     {
       "key": "kdigo-serit",
@@ -520,15 +623,17 @@
         "nephrology"
       ],
       "verdict": "revise",
-      "change": "SAFETY, as in the internal-medicine version: a risk colour is shown when no albumin result was typed (eGFR 95 alone reads \"Low risk\"), and the 300 mg/g boundary needs a nephrologist's ruling. Two tools for one grid is one too many: keep one, with the referral notes as an option. KDIGO 2024 also recommends a validated kidney-failure risk equation for categories G3 to G5 (Part 2).",
+      "change": "SAFETY, as in the internal-medicine version: a risk colour is shown when no albumin result was typed (eGFR 95 alone reads \"Low risk\"), and the 300 mg/g boundary needs a nephrologist's ruling. Two tools for one grid is one too many: keep one, with the referral notes as an option. KDIGO 2024 also recommends a validated kidney-failure risk equation for categories G3 to G5 (Part 2). SECOND PASS. The boundary is settled, and the code is right: KDIGO 2024 Table 3 puts A2 at 30 to 300 mg/g and A3 above 300 mg/g. The fault that stays is the risk colour shown when no albumin result was typed. Licence as for the internal-medicine version.",
       "sourceUrl": "https://kdigo.org/wp-content/uploads/2026/05/KDIGO-2024-CKD-Guideline-Summary-Recommendations-and-Practice-Points.pdf",
       "moreSourceUrls": [
         "https://kdigo.org/wp-content/uploads/2025/01/KDOQI-Commentary_KDIGO-2024-CKD-Guideline.pdf",
-        "https://kdigo.org/wp-content/uploads/2017/02/KDIGO-2024-CKD-Guideline-Executive-Summary.pdf"
+        "https://kdigo.org/wp-content/uploads/2017/02/KDIGO-2024-CKD-Guideline-Executive-Summary.pdf",
+        "https://kdigo.org/wp-content/uploads/2024/03/KDIGO-2024-CKD-Guideline.pdf"
       ],
-      "licence": "unclear — as above",
+      "licence": "needs permission for a commercial product — the guideline is under a non-commercial, no-adaptation licence (CC BY-NC-ND); the tool names categories and colours and reproduces no figure",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "diyaliz-seans",
@@ -538,13 +643,15 @@
       "specialties": [
         "nephrology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: the type of dialysis and two dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "kur-sayaci",
@@ -554,13 +661,15 @@
       "specialties": [
         "oncology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: a cycle counter and two dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "toksisite-listesi",
@@ -570,13 +679,15 @@
       "specialties": [
         "oncology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "revise",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. It records side effects with \"no grade\"; whether a US oncologist expects the National Cancer Institute's grading here could not be checked (that page would not open).",
-      "sourceUrl": null,
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: ten side effects, ticked; \"no grade\". The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. Read today: the National Cancer Institute's grading standard (CTCAE v6.0, 2025; grades 1 to 5) is written for adverse events in clinical trials. Whether a US oncologist wants grades in an office note is for an oncologist; a graded version is proposed in Part 2 as an option, not as a correction.",
+      "sourceUrl": "https://dctd.cancer.gov/research/ctep-trials/for-sites/adverse-events",
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: revise)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "kirik-alci-takip",
@@ -586,13 +697,15 @@
       "specialties": [
         "orthopaedics"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: what is followed, site, side, the state of circulation and nerve supply as the doctor chose it, three dates. Its warnings are a date that has passed and the doctor's own choice \"under threat\". The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "ortopedi-op-protokol",
@@ -602,13 +715,15 @@
       "specialties": [
         "orthopaedics"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: six tick-boxes and one date. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "vas-fonksiyon",
@@ -634,11 +749,12 @@
         "paediatrics"
       ],
       "verdict": "revise",
-      "change": "The correction is the one US family doctors are taught: 13 cm (5 in). The RANGE is not: the tool shows 8.5 cm either side (a 1970 British paper); the American Academy of Family Physicians' journal says most children end up \"within 10 cm (4 in), or two standard deviations\" of the figure. For 64 in and 70 in parents of a boy the tool shows 66.2 to 72.9 in where the US source gives about 65.6 to 73.5 in. Make the range a number the country states. Heights must also be typed in feet and inches (a kit gap already recorded by the earlier audit). Show it to family medicine as well.",
+      "change": "The correction is the one US family doctors are taught: 13 cm (5 in). The RANGE is not: the tool shows 8.5 cm either side (a 1970 British paper); the American Academy of Family Physicians' journal says most children end up \"within 10 cm (4 in), or two standard deviations\" of the figure. For 64 in and 70 in parents of a boy the tool shows 66.2 to 72.9 in where the US source gives about 65.6 to 73.5 in. Make the range a number the country states. Heights must also be typed in feet and inches (a kit gap already recorded by the earlier audit). Show it to family medicine as well. SECOND PASS. The US source was read again and nothing changes: the 13 cm (5 in) correction in the code is the one it gives, and it gives 10 cm (4 in) either side where the code has 8.5 cm.",
       "sourceUrl": "https://www.aafp.org/afp/2015/0701/p43.pdf",
       "licence": "none — published arithmetic",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "plastik-yara-greft",
@@ -648,13 +764,15 @@
       "specialties": [
         "plastic-surgery"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: what is followed, site, side, three dates. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "tetkik-kuyrugu",
@@ -664,13 +782,15 @@
       "specialties": [
         "radiology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "remove",
-      "change": "The product's own checklist or date card: no formula, no threshold, no national reference content in the code (read today). No US source was opened that could confirm or contradict its items, and whether US doctors of this specialty would use it is not something a web page settles. It records one examination at a time; a US radiology practice keeps its worklist in its imaging system. A radiologist should say whether it has any use.",
+      "verdict": "keep — record list; wording for a local clinician",
+      "change": "Second pass. A RECORD LIST: one examination with its method, priority, status and date; the \"next step\" follows from the status. The code holds no formula, weight, cut-off, band, grade, interval or stage (read again on 2026-10-10), so there is nothing for a guideline to confirm or contradict and it no longer counts as an unverified clinical tool. What stays open is its wording: a US clinician of the specialty reads the items. The first-pass doubt stands as a question, not a verdict: a US radiology practice keeps its worklist in its imaging system, and a radiologist should say whether this record has any use.",
       "sourceUrl": null,
       "licence": "none — the product's own list",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: remove)",
+      "recordOnly": true,
+      "pass": 2
     },
     {
       "key": "rapor-taslagi",
@@ -681,15 +801,17 @@
         "radiology"
       ],
       "verdict": "revise",
-      "change": "LICENCE AND LAW. (1) BI-RADS is a registered trademark of the American College of Radiology and its atlas is copyrighted; ACR says commercial software needs a copyright licensing agreement. Take the BI-RADS names off the screen until that agreement exists. (2) For mammography, federal rules (21 CFR 900.12) fix the wording of the final assessment in words, not numbers (seven statements, one of them for a mammogram done after a marker is placed), two separate \"Incomplete\" statements, and a breast-density statement in every report. The tool shows bare numbers 0 to 6, one incomplete category and no density. (3) ACR now publishes a v2025 manual; the tool cites the 2013 edition.",
+      "change": "LICENCE AND LAW. (1) BI-RADS is a registered trademark of the American College of Radiology and its atlas is copyrighted; ACR says commercial software needs a copyright licensing agreement. Take the BI-RADS names off the screen until that agreement exists. (2) For mammography, federal rules (21 CFR 900.12) fix the wording of the final assessment in words, not numbers (seven statements, one of them for a mammogram done after a marker is placed), two separate \"Incomplete\" statements, and a breast-density statement in every report. The tool shows bare numbers 0 to 6, one incomplete category and no density. (3) ACR now publishes a v2025 manual; the tool cites the 2013 edition. SECOND PASS. ACR's permission page was read again: a copyright licensing agreement with the College is needed to put BI-RADS into commercial software. The College's other reporting systems carry registered or claimed marks as well.",
       "sourceUrl": "https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions",
       "moreSourceUrls": [
         "https://www.acr.org/clinical-resources/reporting-and-data-systems/bi-rads",
-        "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-I/part-900/subpart-B/section-900.12"
+        "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-I/part-900/subpart-B/section-900.12",
+        "https://www.acr.org/Clinical-Resources/Clinical-Tools-and-Reference/Reporting-and-Data-Systems"
       ],
       "licence": "needs permission — ACR licence agreement for commercial software",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "das28",
@@ -699,13 +821,20 @@
       "specialties": [
         "rheumatology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "revise",
-      "change": "Neither the two publications of the formula nor the American College of Rheumatology's list of recommended measures could be opened today (PubMed answered with a robot check; the college's site would not open): the coefficients and the four bands are not verified. SAFETY, seen in the code: the C-reactive protein field takes mg/L only and the label tells the doctor to multiply a mg/dL value by 10 by hand. A value typed unconverted changes the score: with 4 tender and 2 swollen joints and a global score of 50, a CRP of 10 mg/L gives 4.04, the same result typed as 1.0 gives 3.43. Give the field a unit choice instead of an instruction.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. FORMULA, UNIT AND BANDS RIGHT; THE UNIT TRAP STAYS. Both formulas in the code (with ESR and with CRP) match, coefficient for coefficient, the formulas on the website of the group that developed the score, and that group's own calculator takes CRP in mg/L, as the code does. The four bands and their limits (remission below 2.6; low from 2.6 to below 3.2; moderate from 3.2 to 5.1; high above 5.1) are those of Table 1 of the American College of Rheumatology's 2019 list of recommended measures, which names DAS28 with ESR or CRP among the five it prefers. What must change is the field, as in the first pass: US laboratories may report CRP in mg/dL, and the label tells the doctor to multiply by 10 by hand. With 4 tender and 2 swollen joints and a global score of 50, a CRP of 10 mg/L gives 4.04; the same result typed as 1.0 gives 3.43. Give the field a unit choice instead of an instruction. The two original publications (1995, 2005) were not opened.",
+      "sourceUrl": "https://www.das-score.nl/en/das-and-das28/how-to-meaure-the-das28/how-to-calculate-the-das28/alternative-validated-formulae",
+      "licence": "unclear — the developers' website states no terms on the pages read; its disclaimer page would not open",
+      "confidence": "high",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: revise)",
+      "moreSourceUrls": [
+        "https://www.das-score.nl/en/das-and-das28/how-to-meaure-the-das28/how-to-calculate-the-das28",
+        "https://www.das-score.nl/das28/DAScalculators/DAS28_CRP_4VAR.html",
+        "https://www.das-score.nl/en/what-is-das-28/das28-score-eng",
+        "https://rheumatology.org/api/asset/blt65fc8b2649e03455"
+      ],
+      "pass": 2
     },
     {
       "key": "eklem-28",
@@ -715,13 +844,14 @@
       "specialties": [
         "rheumatology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "A counting aid for DAS28; no source opened today (see DAS28).",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "keep",
+      "change": "Second pass. The 28 joints in the code (both shoulders, elbows, wrists and knees, the ten metacarpophalangeal and the ten proximal interphalangeal joints) are the joints the score's developers list. A counting aid: it produces the two counts and nothing else.",
+      "sourceUrl": "https://www.das-score.nl/en/das-and-das28/how-to-meaure-the-das28/twenty-eight-joints",
+      "licence": "unclear — as DAS28",
+      "confidence": "high",
+      "needsLocalClinician": false,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "psa-hizi",
@@ -732,14 +862,16 @@
         "urology"
       ],
       "verdict": "keep",
-      "change": "The unit (ng/mL) is the US one (National Cancer Institute). The USPSTF names PSA velocity among newer methods and says the evidence does not support one method over another; the tool already shows \"no threshold and no grade\". The American Urological Association's guideline could not be opened: a urologist confirms that a two-point rate is wanted, and may ask for a line saying that velocity alone decides nothing.",
+      "change": "The unit (ng/mL) is the US one (National Cancer Institute). The USPSTF names PSA velocity among newer methods and says the evidence does not support one method over another; the tool already shows \"no threshold and no grade\". The American Urological Association's guideline could not be opened: a urologist confirms that a two-point rate is wanted, and may ask for a line saying that velocity alone decides nothing. SECOND PASS. The American Urological Association's guideline was opened (Early Detection of Prostate Cancer, 2023, amended 2026): its Statement 9 says clinicians should not use PSA velocity as the sole indication for a further marker, imaging or a biopsy. The tool shows no threshold, which fits; add one line on the screen saying that the rate alone decides nothing.",
       "sourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/prostate-cancer-screening",
       "moreSourceUrls": [
-        "https://www.cancer.gov/types/prostate/psa-fact-sheet"
+        "https://www.cancer.gov/types/prostate/psa-fact-sheet",
+        "https://www.auanet.org/documents/Guidelines/PDF/2026%20Guidelines/EDPC%202026%20Unabridged%20FINAL.pdf"
       ],
       "licence": "none — arithmetic",
-      "confidence": "medium",
-      "needsLocalClinician": true
+      "confidence": "high",
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "rtp-basamak",
@@ -750,11 +882,12 @@
         "sports-medicine"
       ],
       "verdict": "revise",
-      "change": "The tool has stages 0 to 5 beginning with \"rest and control of symptoms\". The CDC's return-to-play progression has six steps with other names: it begins with \"Back to regular activities\" and goes through light, moderate and heavy non-contact activity to full-contact practice and competition, each step at least 24 hours, started only with a health care provider's approval. Rename and renumber to the CDC steps, say on the screen that it is for concussion, and show it to pediatrics, family medicine, emergency medicine and neurology too. State laws on return to play were not read (a lawyer).",
+      "change": "The tool has stages 0 to 5 beginning with \"rest and control of symptoms\". The CDC's return-to-play progression has six steps with other names: it begins with \"Back to regular activities\" and goes through light, moderate and heavy non-contact activity to full-contact practice and competition, each step at least 24 hours, started only with a health care provider's approval. Rename and renumber to the CDC steps, say on the screen that it is for concussion, and show it to pediatrics, family medicine, emergency medicine and neurology too. State laws on return to play were not read (a lawyer). SECOND PASS. The CDC page was read again (updated September 15, 2025): six steps, numbered 1 to 6, each of at least 24 hours, begun only with a health care provider's approval. The code's six stages, numbered 0 to 5 under other names, are not these.",
       "sourceUrl": "https://www.cdc.gov/heads-up/guidelines/returning-to-sports.html",
       "licence": "unclear — CDC page, no reuse terms stated",
       "confidence": "high",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "sakatlik-gunlugu",
@@ -764,13 +897,14 @@
       "specialties": [
         "sports-medicine"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "revise",
-      "change": "The log itself is the product's own. The \"training load ratio\" with its two warning limits (1.3 and 1.5) comes from one 2016 paper that could not be opened today, and no US sports-medicine body's view of it was read. A sports physician should decide whether the two warnings stay.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. THE TWO LIMITS ARE IN THE CITED PAPER, BUT NOT AS THE TOOL USES THEM. Gabbett (2016) was read: it describes a ratio of about 0.8 to 1.3 as the range of lowest risk and 1.5 or above as the \"danger zone\". The tool warns from 1.3 inclusive (\"1.3 or above: needs attention\"), so a ratio of exactly 1.3, which the paper places at the top of its low-risk range, gets a warning. And the paper's loads are effort multiplied by minutes, or distances; the tool divides minutes alone, which is not the quantity the limits were described for. Either say on the screen that the ratio is of minutes only and show it without warnings, or collect the load the paper uses. No US sports-medicine body's position on this ratio was read: a sports physician decides whether the two warnings stay. The log itself (site, mechanism, severity, status) is a record list.",
+      "sourceUrl": "https://bjsm.bmj.com/content/50/5/273",
+      "licence": "none for the log; the ratio is arithmetic on a published idea",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: revise)",
+      "pass": 2
     },
     {
       "key": "takip-paneli",
@@ -816,13 +950,14 @@
       "mechanismReady": false,
       "class": "base",
       "specialties": "all",
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Still an empty slot. The earlier US audit (Part E) named the public US medicine-name lists; nothing about prescribing was re-read today. Controlled-substance rules and electronic prescribing are for a lawyer and a pharmacist.",
-      "sourceUrl": null,
-      "licence": "not read today",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. One US rule is now known and should be named in the slot: 21 CFR part 1311, subpart C (Drug Enforcement Administration), on electronic prescriptions for controlled substances. It requires identity proofing of the prescriber, two-factor authentication at signing, and an independent audit or certification of the application before first use and every two years. That is a build and a legal project of its own; until then the product drafts and does not transmit. State prescribing rules were not read. A lawyer and a pharmacist.",
+      "sourceUrl": "https://www.ecfr.gov/current/title-21/chapter-II/part-1311/subpart-C",
+      "licence": "not applicable — a federal regulation",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "visit-summary-document",
@@ -862,11 +997,12 @@
       "specialties": "all",
       "verdict": "unverified — needs a local clinician",
       "leaning": "keep",
-      "change": "Needs licensed interaction data (earlier audit, Part E). Nothing re-read today.",
-      "sourceUrl": null,
+      "change": "Needs licensed interaction data (earlier audit, Part E). Nothing re-read today. SECOND PASS, still unverified: the National Library of Medicine's page for its interaction service was read (it names two sources for its data); whether the service still runs, and on what terms, was not confirmed.",
+      "sourceUrl": "https://rxnav.nlm.nih.gov/InteractionAPIs.html",
       "licence": "paid licence — commercial drug databases (from the earlier audit; not re-read)",
       "confidence": "low",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "patient-certificates",
@@ -956,16 +1092,14 @@
       "specialties": [
         "family-medicine"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The follow-up intervals of the diabetes and heart associations were not read today. Read today: the USPSTF's screening intervals only (blood pressure yearly from age 40; diabetes screening about every 3 years).",
-      "sourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/hypertension-in-adults-screening",
-      "moreSourceUrls": [
-        "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-for-prediabetes-and-type-2-diabetes"
-      ],
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The US source is now known by name: the American Diabetes Association's Standards of Care in Diabetes—2026 (found; the journal's site refused the fetch). The association's own page for patients, read today, says how often each check is due (HbA1c, blood pressure, kidney tests, eyes, lipids). Name the Standards in the slot; a US clinician enters the intervals from them and signs. Blood-pressure follow-up intervals were not read.",
+      "sourceUrl": "https://diabetes.org/living-with-diabetes/newly-diagnosed/health-checks-people-with-diabetes",
+      "licence": "unclear — the association's Standards are its copyright; terms not read",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "family-referral",
@@ -1050,11 +1184,15 @@
       ],
       "verdict": "unverified — needs a local clinician",
       "leaning": "keep",
-      "change": "The CDC's fall-prevention algorithm names the Beers Criteria for medication review; the criteria and their owner's terms were not read.",
+      "change": "The CDC's fall-prevention algorithm names the Beers Criteria for medication review; the criteria and their owner's terms were not read. SECOND PASS, still unverified: the geriatrics society's pages show the 2023 update of the criteria (J Am Geriatr Soc, doi:10.1111/jgs.18372), a registered mark and \"All Rights Reserved\", and sell an app and pocket cards; no page read gives terms for use in software.",
       "sourceUrl": "https://www.cdc.gov/steadi/media/pdfs/STEADI-Algorithm-508.pdf",
       "licence": "unclear — the criteria belong to a professional society; terms not read",
       "confidence": "low",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "moreSourceUrls": [
+        "https://www.americangeriatrics.org/media-center/news/many-older-adults-take-multiple-medications-updated-ags-beers-criteriar-will-help"
+      ],
+      "pass": 2
     },
     {
       "key": "anticoagulation-review",
@@ -1130,13 +1268,17 @@
       "specialties": [
         "infectious-diseases"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The federal HIV guidelines and the liver society's guidance were not opened today.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The two US sources are now known. HIV: the federal Guidelines for the Use of Antiretroviral Agents in Adults and Adolescents With HIV, section on laboratory testing, which holds a table of the testing schedule (page updated September 24, 2026). Hepatitis C: the AASLD–IDSA guidance, section on monitoring before, during and after treatment (updated December 19, 2023). Hepatitis B was not read. The slot's three intervals do not fit either source (several tests, each with its own interval): split the slot. Reference content: entered from the source and signed by a US clinician.",
+      "sourceUrl": "https://clinicalinfo.hiv.gov/en/guidelines/hiv-clinical-guidelines-adult-and-adolescent-arv/tests-initial-assessment-follow-up",
+      "licence": "unclear — a federal guideline and two societies' guidance; reuse terms not read",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "moreSourceUrls": [
+        "https://www.hcvguidelines.org/guidance/monitoring-patients-who-are-starting-hcv-treatment-are-on-treatment-or-have-completed-therapy/"
+      ],
+      "pass": 2
     },
     {
       "key": "notifiable-diseases",
@@ -1147,13 +1289,14 @@
       "specialties": [
         "infectious-diseases"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The CDC's notifiable-diseases page failed to load today. Reporting duties are set by each state.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. Read today: CDC's site of surveillance case definitions. The Council of State and Territorial Epidemiologists recommends which conditions state health departments report to CDC, there is a list for each year (2026 is the current one), and \"the list of reportable conditions varies by state\". So the slot cannot hold one national list of what a clinician must report: it needs the state, which the pack does not have (a kit gap already listed). Isolation rules were not read.",
+      "sourceUrl": "https://ndc.services.cdc.gov/",
+      "licence": "free — CDC material (public domain, to be credited, by CDC's general policy)",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "anemi-izlem",
@@ -1164,13 +1307,14 @@
       "specialties": [
         "nephrology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "KDIGO's anaemia guideline was not read today. Haemoglobin is in g/dL here.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The source is now known: the KDIGO 2026 guideline on anaemia in chronic kidney disease. Its summary for clinicians, read today, has thresholds for diagnosing anaemia that differ by sex, limits for treatment, and a testing frequency that rises with the CKD category. The slot's single target range with one lower limit does not fit that shape. A US commentary on it was not looked for. Reference content: a nephrologist enters and signs.",
+      "sourceUrl": "https://kdigo.org/wp-content/uploads/2026/03/KDIGO-2026-Anemia-Guideline-Key-Takeaways-for-HCPs.pdf",
+      "licence": "needs permission for a commercial product — KDIGO guidelines are under a non-commercial, no-adaptation licence (read on the 2024 CKD guideline)",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "iltihap-lab-izlem",
@@ -1200,11 +1344,12 @@
       ],
       "verdict": "unverified — needs a local clinician",
       "leaning": "keep",
-      "change": "Licence terms not read today.",
-      "sourceUrl": null,
+      "change": "Licence terms not read today. SECOND PASS, still unverified: the distributor's page returned no text, and the spondyloarthritis society's page lists translations and no terms (its English form is marked as not available).",
+      "sourceUrl": "https://www.asas-group.org/instruments/patient-reported-outcomes/",
       "licence": "unclear — not read",
       "confidence": "low",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "kardiyo-izlem",
@@ -1231,13 +1376,18 @@
       "specialties": [
         "respiratory-medicine"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Licence terms not read today.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. LICENCE READ ON THE OWNER'S SITE. The COPD Assessment Test belongs to GSK. Its terms let health professionals use it unchanged in direct patient care; they do not allow building it into other works, and use inside an electronic medical record needs a signed agreement with GSK (requests go through Mapi Research Trust; academic and non-profit users are not charged). So this slot cannot be switched on without that agreement. The international COPD report (GOLD 2025) uses both the CAT and the mMRC grade; no US society's page was read, and the mMRC grade's terms were not read.",
+      "sourceUrl": "https://www.catestonline.org/hcp-homepage/legal-notices.html",
+      "licence": "needs permission — a signed agreement with GSK for use in an electronic record",
+      "confidence": "high",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "moreSourceUrls": [
+        "https://www.catestonline.org/hcp-homepage/logging-a-study.html",
+        "https://goldcopd.org/wp-content/uploads/2024/11/Pocket-Guide-2025-v1.0-12Nov2024_WMV-Draft.pdf"
+      ],
+      "pass": 2
     },
     {
       "key": "lung-action-plan",
@@ -1248,13 +1398,14 @@
       "specialties": [
         "respiratory-medicine"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "A sheet the patient reads; no US source read today.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The US form for asthma is known: the Asthma Action Plan of the National Heart, Lung, and Blood Institute (NIH Publication No. 20-HL-5251, February 2021), with green, yellow and red zones. The form states no reuse terms. No US action plan for COPD was found. Build the asthma sheet on the federal form; every medicine and dose on it is typed by the doctor.",
+      "sourceUrl": "https://www.nhlbi.nih.gov/sites/default/files/publications/Asthma-Action-Plan-2020_rev_508.pdf",
+      "licence": "unclear — a federal form with no reuse terms stated",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "ibd-skor",
@@ -1267,11 +1418,12 @@
       ],
       "verdict": "unverified — needs a local clinician",
       "leaning": "keep",
-      "change": "No US gastroenterology source read today.",
+      "change": "No US gastroenterology source read today. SECOND PASS, still unverified: the sites of the two US gastroenterology societies refuse automated readers.",
       "sourceUrl": null,
       "licence": "not read",
       "confidence": "low",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "hepatit-izlem",
@@ -1282,13 +1434,14 @@
       "specialties": [
         "gastroenterology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "No US liver-society source read today.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. Hepatitis C: the AASLD–IDSA guidance has a section on monitoring before, during and after treatment (updated December 19, 2023). Hepatitis B: not read. It is the same source as the infectious-disease slot: one tool for both roles is enough.",
+      "sourceUrl": "https://www.hcvguidelines.org/guidance/monitoring-patients-who-are-starting-hcv-treatment-are-on-treatment-or-have-completed-therapy/",
+      "licence": "unclear — two societies' guidance; reuse terms not read",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "pregnancy-calendar",
@@ -1299,13 +1452,14 @@
       "specialties": [
         "obstetrics-gynaecology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The obstetricians' college page on estimating the due date would not open today.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The US source is now known by name: the joint Committee Opinion of the obstetricians' college with two other societies (ACOG, AIUM, SMFM), \"Methods for Estimating the Due Date\"; the college says its own due-date calculator follows it. The Opinion itself could not be read (the college's site refuses automated readers), so no rule is stated here. Name it in the slot; an obstetrician enters the rules from it and signs. The separate candidate \"Estimated due date and gestational age\" is merged into this slot.",
+      "sourceUrl": "https://www.acog.org/news/news-releases/2016/01/acog-reinvents-the-pregnancy-wheel",
+      "licence": "unclear — the college's document; terms not read",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "maternity-leave",
@@ -1381,13 +1535,17 @@
       "specialties": [
         "neurology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The stroke guideline was not opened today (the emergency number, 911, was confirmed by the earlier audit).",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. A US source is now known: CDC's page on the signs of stroke (dated May 19, 2026) lists five sudden signs and a letter test, ending with the instruction to call 9-1-1 right away. CDC material may be reproduced when it is credited and no endorsement is implied. Build the prompt from that page, word for word, with its date. The stroke guideline for clinicians was not opened.",
+      "sourceUrl": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+      "licence": "free — CDC material (public domain; to be credited; no implied endorsement; no CDC logo)",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "moreSourceUrls": [
+        "https://www.cdc.gov/other/agencymaterials.html"
+      ],
+      "pass": 2
     },
     {
       "key": "midas",
@@ -1398,13 +1556,14 @@
       "specialties": [
         "neurology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Licence terms not read today.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The copyright notice was read on the National Headache Foundation's copy: Innovative Medical Research (1997) and AstraZeneca (2007), all rights reserved; developed by Lipton and Stewart. No page read grants any use. Record the holders in the slot and ask before building.",
+      "sourceUrl": "https://headaches.org/wp-content/uploads/2018/02/MIDAS.pdf",
+      "licence": "needs permission — all rights reserved (read on a third party's copy; the owner's own terms were not found)",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "antiseizure-monitoring",
@@ -1417,11 +1576,12 @@
       ],
       "verdict": "unverified — needs a local clinician",
       "leaning": "keep",
-      "change": "No US source read today.",
+      "change": "No US source read today. SECOND PASS, still unverified: addresses at the neurology academy and the epilepsy society were found by search; none was opened.",
       "sourceUrl": null,
       "licence": "not read",
       "confidence": "low",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "pass": 2
     },
     {
       "key": "growth-percentiles",
@@ -1487,13 +1647,14 @@
       "specialties": [
         "paediatrics"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Licence terms not read today (the authors' site was never reached).",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. LICENCE READ ON THE AUTHORS' OWN FORM (March 2025). Free to download for clinical, research and educational use; it must be used whole, unchanged and with its copyright line; anyone who wants to put it into an electronic record for others, into software, or into any commercial or electronic product must contact the authors (Diana Robins). So this product needs the authors' written agreement first.",
+      "sourceUrl": "https://www.mchatscreen.com/wp-content/uploads/2025/03/M-CHAT-R_F_Rev_March2025.pdf",
+      "licence": "needs permission — the authors must be contacted for commercial or electronic products",
+      "confidence": "high",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "paediatric-follow-up-panel",
@@ -1558,13 +1719,17 @@
       "specialties": [
         "psychiatry"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Not read today (the earlier audit confirmed the 988 line). Involuntary admission is state law.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. One US piece is now known: The Joint Commission's Quick Safety, issue 68 (March 2023), asks for validated screening tools used exactly as designed and names the Columbia scale and the ASQ tool. The Columbia scale's owner says no special permission is needed to use it or to place it in an electronic record. Build the screening step on one of them (Part 2). The 988 line was confirmed by the earlier audit; involuntary admission is state law.",
+      "sourceUrl": "https://digitalassets.jointcommission.org/api/public/content/3347985ae3a94704b17357051394825e?v=523a126e",
+      "licence": "the Columbia scale: free by its owner's statement",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "moreSourceUrls": [
+        "https://cssrs.columbia.edu/the-columbia-scale-c-ssrs/cssrs-for-communities-and-healthcare/"
+      ],
+      "pass": 2
     },
     {
       "key": "psychotropic-monitoring",
@@ -1575,13 +1740,14 @@
       "specialties": [
         "psychiatry"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "No US source read today.",
-      "sourceUrl": null,
+      "verdict": "revise",
+      "change": "Second pass. One US piece is now known: the psychiatrists' association's practice tool for its schizophrenia guideline asks for an assessment for tardive dyskinesia with a structured instrument (it names AIMS) at set intervals, shorter for patients at high risk. Metabolic monitoring was not read. Split the slot: the movement assessment can be built first (Part 2).",
+      "sourceUrl": "https://psychiatryonline.org/doi/10.1176/appi.focus.20200034",
       "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "critical-finding-notice",
@@ -1608,13 +1774,14 @@
       "specialties": [
         "urology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "The American Urological Association's pages would not open today: the name it goes by here and its licence terms are not verified.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. The American Urological Association's guideline on benign prostatic hyperplasia (2021, amended 2023) was opened: clinicians should use the International Prostate Symptom Score at the first evaluation and again at follow-up, and the guideline says the score is identical to the association's own Symptom Index. So the name on the screen is right for the US. The guideline states no terms for reproducing the questionnaire. (The association's prostate-cancer guideline, read the same day, says that use with artificial intelligence is prohibited without written permission: its text must not be fed to a model.) Ask the association before building.",
+      "sourceUrl": "https://www.auanet.org/documents/Guidelines/PDF/2023%20Guidelines/BPH%20Unabridged%2002-20-24%20Final.pdf",
+      "licence": "unclear — the association's instrument; no terms for the questionnaire were found",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "urology-emergency-triage",
@@ -1625,13 +1792,14 @@
       "specialties": [
         "urology"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "No US source read today.",
-      "sourceUrl": null,
-      "licence": "not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. For the blood-in-urine half the US source is now known: the AUA/SUFU microhematuria guideline (2020, amended 2025), which sorts patients into three risk groups, each with its own evaluation. The kidney-stone half was not read. Reference content: a urologist enters and signs.",
+      "sourceUrl": "https://www.auanet.org/documents/Guidelines/PDF/2025%20Guidelines/Microhematuria%20Amendment%20SUMMARY-%20Final.pdf",
+      "licence": "unclear — the association's guideline; all rights reserved",
+      "confidence": "medium",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "rehabilitation-session-plan",
@@ -1658,13 +1826,17 @@
       "specialties": [
         "rehabilitation-medicine"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Licence terms not read today.",
-      "sourceUrl": null,
-      "licence": "unclear — not read",
-      "confidence": "low",
-      "needsLocalClinician": true
+      "verdict": "revise",
+      "change": "Second pass. LICENCE READ. The Oswestry index is licensed through Mapi Research Trust: clinical and academic users get a licence at no charge, commercial users pay a fee, and electronic versions were still being prepared when the page was written. The orthopaedic surgeons' academy lists the index in its preferred set for the spine. A licence is needed before this slot is built.",
+      "sourceUrl": "https://www.mapi-trust.org/news-events/news/the-oswestry-disability-i",
+      "licence": "needs permission — a licence through Mapi Research Trust; a fee for commercial users",
+      "confidence": "high",
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "moreSourceUrls": [
+        "https://www.aaos.org/globalassets/quality-and-practice-resources/patient-reported-outcome-measures/2023-aaos-preferred-proms-report.pdf"
+      ],
+      "pass": 2
     },
     {
       "key": "home-exercise",
@@ -1692,13 +1864,14 @@
       "specialties": [
         "paediatrics"
       ],
-      "verdict": "unverified — needs a local clinician",
-      "leaning": "keep",
-      "change": "Kept off by this pack on purpose: weight is typed in pounds here and the tool multiplies a dose per kilogram. Nothing was re-read today (the earlier audit read the emergency nurses' position that weights are recorded in kilograms only). It should stay off until the kit has a weight field fixed to kilograms.",
-      "sourceUrl": null,
+      "verdict": "revise",
+      "change": "Second pass. Stays off, for the reason the pack gives (weight is typed in pounds here). Two things found for the day it is built. (1) ROUNDING: the tool rounds a dose volume to 0.1 mL. No US source read states a rounding step; the pharmacy-standards white paper that the FDA hosts asks for millilitres only, a zero before a decimal point, none after it, and a measuring device graduated finely enough for the amount. (2) TRAILING ZEROS: the kit prints a fixed number of decimals, so a 5 mL volume is written \"5.0 mL\" and a 160 mg dose \"160.00 mg\" — the form that white paper warns against (read in the kit's number-writing code today: the volume and the dose were worked out on the kit's code, the trailing zeros follow from how it writes a number). Print without trailing zeros. The academy of pediatrics' policy on metric dosing would not open.",
+      "sourceUrl": "https://www.fda.gov/media/88498/download",
       "licence": "none — arithmetic on the doctor's own numbers",
       "confidence": "medium",
-      "needsLocalClinician": true
+      "needsLocalClinician": true,
+      "verdictPass1": "unverified — needs a local clinician (leaning: keep)",
+      "pass": 2
     },
     {
       "key": "sablonlarim",
@@ -1783,13 +1956,15 @@
       "nationalSourceUrl": "https://professional.heart.org/en/science-news/2025-high-blood-pressure-guideline/top-things-to-know",
       "moreNationalSourceUrls": [
         "https://professional.heart.org/en/-/media/PHD-Files/Guidelines-and-Statements/PREVENT/PREVENT-FAQs-FINAL.pdf?sc_lang=en",
-        "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/statin-use-in-adults-preventive-medication"
+        "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/statin-use-in-adults-preventive-medication",
+        "https://professional.heart.org/en/guidelines-and-statements/about-prevent-calculator"
       ],
       "formulaSourceUrl": null,
       "formulaSource": "Khan SS, et al. Novel Prediction Equations for Absolute Risk Assessment of Total Cardiovascular Disease Incorporating Cardiovascular-Kidney-Metabolic Health. Circulation. doi:10.1161/CIRCULATIONAHA.123.067626 (as cited in the AHA's FAQ). Pooled Cohort Equations: primary publication not opened today",
-      "licence": "needs permission — AHA terms and conditions must be accepted before its source code is released",
+      "licence": "needs permission, at no cost — the AHA releases the PREVENT code under a licence agreement that must be accepted; its page says the code is free to health professionals, clinics, researchers and \"companies who provide health risk assessment tools\"",
       "verifiedToday": true,
-      "note": "Promoted from the existing slot. Adults 30 to 79."
+      "note": "Promoted from the existing slot. Adults 30 to 79.",
+      "pass": 2
     },
     {
       "id": "phq-9",
@@ -1799,13 +1974,15 @@
       "nationalSourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-depression-suicide-risk-adults",
       "moreNationalSourceUrls": [
         "https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-B/part-410/subpart-B/section-410.15",
-        "https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf"
+        "https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf",
+        "https://cdn.loinc.org/70274-6"
       ],
       "formulaSourceUrl": "https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf",
       "formulaSource": "The instrument's own form with its credit line (Spitzer, Williams, Kroenke and colleagues); the primary publication was not opened today",
-      "licence": "free to implement — \"No permission required to reproduce, translate, display or distribute\" (read on a state health department's copy; confirm on the official site)",
+      "licence": "free to implement — the owner's notice reads \"No permission required to reproduce, translate, display or distribute\" (read on LOINC's copy of the Pfizer notice and, in the first pass, on a state's copy; the owner's own site refuses automated readers, so a person should open it once)",
       "verifiedToday": true,
-      "note": "Promoted from the existing psychiatry slot. Also for the clinical psychologist role."
+      "note": "Promoted from the existing psychiatry slot. Also for the clinical psychologist role.",
+      "pass": 2
     },
     {
       "id": "gad-7",
@@ -1814,13 +1991,15 @@
       "specialties": "all-doctor-roles",
       "nationalSourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/anxiety-adults-screening",
       "moreNationalSourceUrls": [
-        "https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf"
+        "https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf",
+        "https://cdn.loinc.org/70274-6"
       ],
       "formulaSourceUrl": "https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf",
       "formulaSource": "The instrument's own form with its credit line; the primary publication was not opened today",
-      "licence": "free to implement — same line as PHQ-9; confirm on the official site",
+      "licence": "free to implement — the owner's notice reads \"No permission required to reproduce, translate, display or distribute\" (read on LOINC's copy of the Pfizer notice and, in the first pass, on a state's copy; the owner's own site refuses automated readers, so a person should open it once)",
       "verifiedToday": true,
-      "note": "The USPSTF recommendation covers adults 64 and younger."
+      "note": "The USPSTF recommendation covers adults 64 and younger.",
+      "pass": 2
     },
     {
       "id": "audit-c",
@@ -1829,10 +2008,15 @@
       "specialties": "all-doctor-roles",
       "nationalSourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/unhealthy-alcohol-use-in-adolescents-and-adults-screening-and-behavioral-counseling-interventions",
       "formulaSourceUrl": null,
-      "formulaSource": "Primary publications not opened today",
-      "licence": "unclear — not read (the longer AUDIT belongs to the World Health Organization)",
+      "formulaSource": "The AUDIT is a World Health Organization publication (1990), as the Veterans Affairs page says; that page gives the AUDIT-C scores that count as a positive screen in men and in women. The primary publications were not opened.",
+      "licence": "free for non-commercial use — the AUDIT's own site says it is in the public domain as a WHO-approved instrument and needs no permission \"for any non-commercial purpose\"; commercial use is not addressed there: ask WHO",
       "verifiedToday": true,
-      "note": "The USPSTF names both as the brief instruments with the best accuracy for adults."
+      "note": "The USPSTF names both as the brief instruments with the best accuracy for adults.",
+      "moreNationalSourceUrls": [
+        "https://auditscreen.org/about/faqs",
+        "https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp"
+      ],
+      "pass": 2
     },
     {
       "id": "drug-use-screen",
@@ -1866,13 +2050,15 @@
       "nationalSourceUrl": "https://www.cdc.gov/steadi/media/pdfs/STEADI-Algorithm-508.pdf",
       "moreNationalSourceUrls": [
         "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/falls-prevention-community-dwelling-older-adults-interventions",
-        "https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-B/part-410/subpart-B/section-410.15"
+        "https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-B/part-410/subpart-B/section-410.15",
+        "https://www.cdc.gov/other/agencymaterials.html"
       ],
       "formulaSourceUrl": "https://www.cdc.gov/steadi/media/pdfs/STEADI-Algorithm-508.pdf",
       "formulaSource": "CDC STEADI algorithm (three key questions; named assessments such as Timed Up and Go)",
-      "licence": "unclear — a CDC document with no reuse terms stated",
+      "licence": "free, by CDC's general policy read in the second pass — most CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo; confirm for this item",
       "verifiedToday": true,
-      "note": "Also for the physical therapist and occupational therapist roles."
+      "note": "Also for the physical therapist and occupational therapist roles.",
+      "pass": 2
     },
     {
       "id": "diabetes-ranges",
@@ -1894,9 +2080,13 @@
       "nationalSourceUrl": "https://www.cdc.gov/mmwr/volumes/71/rr/rr7103a1.htm",
       "formulaSourceUrl": "https://www.cdc.gov/mmwr/volumes/71/rr/rr7103a1.htm",
       "formulaSource": "Conversion factors are a table of the same CDC guideline (MMWR Recomm Rep. 2022;71(3):1–95); the table was not in the part of the page read",
-      "licence": "unclear — a federal publication; terms not read",
+      "licence": "free, by CDC's general policy read in the second pass — most CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo; confirm for this item",
       "verifiedToday": true,
-      "note": "A SLOT until a US pharmacist or physician enters and signs the factors: this is medicine content. The guideline addresses every outpatient clinician who prescribes opioids. Ask the lawyer whether it changes the device question (L3 of the earlier audit)."
+      "note": "A SLOT until a US pharmacist or physician enters and signs the factors: this is medicine content. The guideline addresses every outpatient clinician who prescribes opioids. Ask the lawyer whether it changes the device question (L3 of the earlier audit).",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/other/agencymaterials.html"
+      ],
+      "pass": 2
     },
     {
       "id": "preventive-care-checklist",
@@ -1921,9 +2111,13 @@
       "nationalSourceUrl": "https://www.cdc.gov/nchs/icd/icd-10-cm/index.html",
       "formulaSourceUrl": "https://www.cdc.gov/nchs/icd/icd-10-cm/index.html",
       "formulaSource": "The ICD-10-CM files published by the CDC's National Center for Health Statistics",
-      "licence": "unclear — federal publication; no terms stated on the page read",
+      "licence": "free, by CDC's general policy read in the second pass — most CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo; confirm for this item",
       "verifiedToday": true,
-      "note": "The existing base slot."
+      "note": "The existing base slot.",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/other/agencymaterials.html"
+      ],
+      "pass": 2
     },
     {
       "id": "growth-percentiles",
@@ -1936,13 +2130,18 @@
       "nationalSourceUrl": "https://www.cdc.gov/growth-chart-training/hcp/overview/recommended.html",
       "moreNationalSourceUrls": [
         "https://www.cdc.gov/growth-chart-training/hcp/extended-growth-charts/index.html",
-        "https://www.cdc.gov/bmi/child-teen-calculator/bmi-categories.html"
+        "https://www.cdc.gov/bmi/child-teen-calculator/bmi-categories.html",
+        "https://www.cdc.gov/other/agencymaterials.html",
+        "https://www.cdc.gov/growthcharts/cdc-data-files.htm",
+        "https://www.who.int/about/policies/publishing/copyright",
+        "https://www.who.int/tools/child-growth-standards/standards"
       ],
       "formulaSourceUrl": "https://www.cdc.gov/growth-chart-training/hcp/extended-growth-charts/index.html",
       "formulaSource": "CDC growth-chart data tables and percentile program; WHO growth standards (not opened)",
-      "licence": "unclear — CDC: federal, no terms stated; WHO: not read",
+      "licence": "CDC charts: free — CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo, and CDC publishes the data files. WHO standards (birth to 2 years): needs permission — WHO material is licensed for non-commercial use and \"Permission is required for commercial uses\"",
       "verifiedToday": true,
-      "note": "Existing slot. Highest priority for pediatrics."
+      "note": "Existing slot. Highest priority for pediatrics.",
+      "pass": 2
     },
     {
       "id": "vaccination-schedule",
@@ -1958,9 +2157,13 @@
       "nationalSourceUrl": "https://www.cdc.gov/vaccines/hcp/imz-schedules/index.html",
       "formulaSourceUrl": "https://www.cdc.gov/vaccines/hcp/imz-schedules/index.html",
       "formulaSource": "The CDC schedules",
-      "licence": "unclear — federal page; no reuse terms stated",
+      "licence": "free, by CDC's general policy read in the second pass — most CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo; confirm for this item",
       "verifiedToday": true,
-      "note": "Existing slot."
+      "note": "Existing slot.",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/other/agencymaterials.html"
+      ],
+      "pass": 2
     },
     {
       "id": "well-child-schedule",
@@ -1988,9 +2191,13 @@
       "nationalSourceUrl": "https://www.cdc.gov/act-early/milestones/index.html",
       "formulaSourceUrl": "https://www.cdc.gov/act-early/milestones/index.html",
       "formulaSource": "CDC checklists for 12 ages from 2 months to 5 years",
-      "licence": "unclear — federal page; no reuse terms stated",
+      "licence": "free, by CDC's general policy read in the second pass — most CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo; confirm for this item",
       "verifiedToday": true,
-      "note": "The CDC says these are not a screening tool: the screen must say so."
+      "note": "The CDC says these are not a screening tool: the screen must say so.",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/other/agencymaterials.html"
+      ],
+      "pass": 2
     },
     {
       "id": "contraception-eligibility",
@@ -2003,9 +2210,13 @@
       "nationalSourceUrl": "https://www.cdc.gov/contraception/hcp/usmec/index.html",
       "formulaSourceUrl": "https://www.cdc.gov/contraception/hcp/usmec/index.html",
       "formulaSource": "CDC, MMWR Recommendations and Reports, volume 73 (rr7304a1, as linked from the CDC page)",
-      "licence": "unclear — federal publication; no reuse terms stated",
+      "licence": "free, by CDC's general policy read in the second pass — most CDC material is in the public domain, to be credited, without implying endorsement or using the CDC logo; confirm for this item",
       "verifiedToday": true,
-      "note": "Existing slot."
+      "note": "Existing slot.",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/other/agencymaterials.html"
+      ],
+      "pass": 2
     },
     {
       "id": "preeclampsia-risk",
@@ -2035,9 +2246,13 @@
       "nationalSourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/screening-depression-suicide-risk-adults",
       "formulaSourceUrl": null,
       "formulaSource": "Primary publication not opened today",
-      "licence": "unclear — not read",
+      "licence": "needs permission — copyright of the Royal College of Psychiatrists: a clinician may photocopy it for their own use, whole and with its source; written permission is required for distribution or republication (read on LOINC's copy of the notice; the College's own page was not reached)",
       "verifiedToday": true,
-      "note": "Named by the USPSTF for pregnant and postpartum persons."
+      "note": "Named by the USPSTF for pregnant and postpartum persons.",
+      "moreNationalSourceUrls": [
+        "https://cdn.loinc.org/71354-5"
+      ],
+      "pass": 2
     },
     {
       "id": "kidney-failure-risk",
@@ -2145,9 +2360,13 @@
       "nationalSourceUrl": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/osteoporosis-screening",
       "formulaSourceUrl": null,
       "formulaSource": "Primary publications not opened today",
-      "licence": "unclear — FRAX belongs to its developers and its terms were not read: do not re-implement it, link to it; the simpler tools not read",
+      "licence": "FRAX: not free to re-implement — © Osteoporosis Research Ltd, a registered trademark, and no licence terms on the pages read: link to it, do not rebuild it. The simpler tools: not read",
       "verifiedToday": true,
-      "note": "Decide with an endocrinologist which one."
+      "note": "Decide with an endocrinologist which one.",
+      "moreNationalSourceUrls": [
+        "https://www.fraxplus.org/faq"
+      ],
+      "pass": 2
     },
     {
       "id": "leave-certification",
@@ -2172,27 +2391,33 @@
         "emergency-medicine",
         "neurology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://professional.heart.org/en/science-news/2023-acc-aha-accp-hrs-guideline-for-the-diagnosis-and-management-of-atrial-fibrillation/top-things-to-know",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the guideline (Circulation, published November 30, 2023, doi:10.1161/CIR.0000000000001193) names the score; neither its text nor the score's original publication was opened (the journal's site refused)",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The guideline's summary says to assess stroke risk \"using a validated clinical risk score, such as CHA2DS2-VASc\" and allows other validated scores. The points and the thresholds must be taken from the guideline by a cardiologist.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "heart-score",
-      "proposedName": "Chest pain risk score (HEART)",
+      "proposedName": "Chest pain decision pathway for the emergency department (HEART Pathway)",
       "core": false,
       "specialties": [
-        "emergency-medicine",
-        "cardiology"
+        "emergency-medicine"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://professional.heart.org/en/-/media/PHD-Files-2/Science-News/2/2021/2021-Chest-Pain-Guideline-Slide-Set-PDF-102821.pdf?sc_lang=en",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: 2021 AHA/ACC chest pain guideline (Circulation, doi:10.1161/CIR.0000000000001029); its Table 6 lists the HEART Pathway among the decision pathways; the original publications were not opened",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The guideline says clinical decision pathways for chest pain \"should be used routinely\" and should sort patients into low, intermediate and high risk (class 1). It names several pathways and prefers none; the choice depends on the hospital's troponin test. Emergency medicine only.",
+      "moreNationalSourceUrls": [
+        "https://professional.heart.org/en/science-news/2021-guideline-for-the-evaluation-and-diagnosis-of-chest-pain/top-things-to-know"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "wells-perc",
@@ -2203,12 +2428,17 @@
         "internal-medicine",
         "family-medicine"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.acponline.org/acp-newsroom/acp-doctors-should-stratify-patients-with-suspected-pulmonary-embolism-to-determine-diagnostic",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the College's Best Practice Advice (Annals of Internal Medicine 2015, doi:10.7326/M14-1772) is named on its page; the original Wells and PERC publications were not opened",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The American College of Physicians says the Wells and Geneva rules are validated and that physicians should apply the PERC rule to patients with a low pre-test probability. The emergency physicians' clinical policy gives PERC a level B recommendation (read on a slide deck; the policy page itself is behind a member sign-in).",
+      "moreNationalSourceUrls": [
+        "https://www.acep.org/siteassets/sites/acep/media/equal-documents/webinar_imagingw4_policy_avt.pdf"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "nih-stroke-scale",
@@ -2218,12 +2448,17 @@
         "emergency-medicine",
         "neurology"
       ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "nationalSourceUrl": "https://www.ninds.nih.gov/health-information/stroke/assess-and-treat/nih-stroke-scale",
+      "formulaSourceUrl": "https://www.ninds.nih.gov/health-information/stroke/assess-and-treat/nih-stroke-scale",
+      "formulaSource": "The scale itself, published by the National Institute of Neurological Disorders and Stroke (PDF dated March 2025)",
+      "licence": "unclear, leaning free — a federal institute's publication; no reuse statement on the pages read",
+      "verifiedToday": true,
+      "note": "The institute calls it the most widely used tool for assessing the severity of a stroke. Its items and wording are reference content: taken from the federal PDF, not typed.",
+      "moreNationalSourceUrls": [
+        "https://www.ninds.nih.gov/news-events/news/highlights-announcements/nih-stroke-scale-updated-new-visual-stimuli"
+      ],
+      "primaryPublicationOpened": true,
+      "pass": 2
     },
     {
       "id": "glasgow-coma-scale",
@@ -2233,12 +2468,17 @@
         "emergency-medicine",
         "neurosurgery"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.cdc.gov/mmwr/preview/mmwrhtml/rr6101a1.htm?s_cid=rr6101a1_w",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the CDC guideline does not cite the scale's original publication",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The national field-triage guideline (MMWR 2012;61(RR-1)) uses a Glasgow Coma Scale figure in its first step, and the radiologists' criteria for head injury in children are written in terms of it. The scale's wording has an owner whose terms were not read.",
+      "moreNationalSourceUrls": [
+        "https://gravitas.acr.org/ACPortal/TopicNarrativePdf?topicId=199"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "pecarn-head-injury",
@@ -2248,16 +2488,21 @@
         "emergency-medicine",
         "paediatrics"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://gravitas.acr.org/ACPortal/TopicNarrativePdf?topicId=199",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Kuppermann N, Holmes JF, Dayan PS, et al. Identification of children at very low risk of clinically important brain injuries after head trauma: a prospective cohort study. Lancet. 2009;374(9696):1160–1170 (as cited by the ACR; not opened)",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The ACR Appropriateness Criteria for head trauma in children are built on the rule's three risk groups. CDC's page on mild brain injury in children, read today, names no rule. The criteria differ by age and are reference content.",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/traumatic-brain-injury/hcp/clinical-guidance/index.html"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "ottawa-rules",
-      "proposedName": "Ottawa ankle and knee rules",
+      "proposedName": "Ottawa ankle rules",
       "core": false,
       "specialties": [
         "emergency-medicine",
@@ -2265,12 +2510,14 @@
         "orthopaedics",
         "sports-medicine"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://acsearch.acr.org/docs/69436/Narrative/",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Stiell IG, Greenberg GH, McKnight RD, et al. A study to develop clinical decision rules for the use of radiography in acute ankle injuries. Ann Emerg Med. 1992;21(4):384–390 (as cited by the ACR; not opened)",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The ACR criteria for acute ankle trauma (2020) rate an ankle radiograph as usually appropriate when the rules are positive, for adults and children of 5 and over, with stated exclusions. The knee rule was found by title only and is not proposed.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "revised-cardiac-risk-index",
@@ -2281,44 +2528,14 @@
         "general-surgery",
         "internal-medicine"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://professional.heart.org/-/media/PHD-Files-2/Science-News/2/2024/2024-Guideline-for-Perioperative-Cardiovascular-Management-slide-set.pdf?sc_lang=en",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
-    },
-    {
-      "id": "stop-bang",
-      "proposedName": "Sleep apnea screening (STOP-Bang)",
-      "core": false,
-      "specialties": [
-        "anaesthesia",
-        "respiratory-medicine",
-        "otolaryngology"
-      ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
-    },
-    {
-      "id": "epworth",
-      "proposedName": "Epworth Sleepiness Scale",
-      "core": false,
-      "specialties": [
-        "respiratory-medicine",
-        "otolaryngology",
-        "neurology"
-      ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: Table 4 of the 2024 guideline names the \"Revised Cardiac Risk Index (RCRI) (1999)\"; its original publication was not opened",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "2024 AHA/ACC guideline for noncardiac surgery (Circulation, doi:10.1161/CIR.0000000000001285): a validated risk-prediction tool can be useful in patients with known cardiovascular disease (class 2a). The table lists three other calculators beside it. A 2026 edition of this guideline appeared in the search results and was not opened: check which is current.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "cdai-rapid3",
@@ -2327,12 +2544,14 @@
       "specialties": [
         "rheumatology"
       ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "nationalSourceUrl": "https://rheumatology.org/api/asset/blt65fc8b2649e03455",
+      "formulaSourceUrl": "https://rheumatology.org/api/asset/blt65fc8b2649e03455",
+      "formulaSource": "England BR, Tiong BK, Bergman MJ, et al. 2019 Update of the American College of Rheumatology Recommended Rheumatoid Arthritis Disease Activity Measures. Arthritis Care Res. 2019;71(12):1540–1555 (opened; its Table 1 holds the thresholds)",
+      "licence": "not read for the individual measures",
+      "verifiedToday": true,
+      "note": "The College prefers five measures for regular use: CDAI, DAS28 (with ESR or CRP), PAS-II, RAPID3 and SDAI.",
+      "primaryPublicationOpened": true,
+      "pass": 2
     },
     {
       "id": "psoriasis-bsa-iga",
@@ -2341,12 +2560,17 @@
       "specialties": [
         "dermatology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.psoriasis.org/psoriasis-guidelines/",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the joint AAD–NPF guidelines (J Am Acad Dermatol) are listed on the foundation's page; the journal's site refused the fetch",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The National Psoriasis Foundation's page on the joint guidelines names body surface area, PASI and the physician's global assessment as the tools; its December 2025 statement says severity is not set by surface area alone and counts high-impact sites.",
+      "moreNationalSourceUrls": [
+        "https://www.psoriasis.org/position-statement-on-psoriasis-severity/"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "ecog-performance-status",
@@ -2355,12 +2579,14 @@
       "specialties": [
         "oncology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://ecog-acrin.org/resources/ecog-performance-status/",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Oken MM, et al. Toxicity and response criteria of the Eastern Cooperative Oncology Group. Am J Clin Oncol. 1982;5(6):649–655 (as cited by the group; not opened)",
+      "licence": "free to implement — the group says the scale \"circulates in the public domain\" and asks for a credit line",
+      "verifiedToday": true,
+      "note": "Six grades, 0 to 5. The wording of the grades is taken from the group's page with its credit line.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "ctcae-grading",
@@ -2369,27 +2595,14 @@
       "specialties": [
         "oncology"
       ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
-    },
-    {
-      "id": "body-surface-area",
-      "proposedName": "Body surface area",
-      "core": false,
-      "specialties": [
-        "oncology",
-        "paediatrics"
-      ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "nationalSourceUrl": "https://dctd.cancer.gov/research/ctep-trials/for-sites/adverse-events",
+      "formulaSourceUrl": "https://dctd.cancer.gov/research/ctep-trials/for-sites/adverse-events",
+      "formulaSource": "National Cancer Institute, CTCAE v6.0 (released 2025), on the institute's site",
+      "licence": "unclear, leaning free — a federal publication; it uses MedDRA terms, whose licence was not read",
+      "verifiedToday": true,
+      "note": "The institute's standard for grading adverse events in clinical trials, grades 1 to 5. It is a trial standard: whether a US oncologist wants it in an office note is for an oncologist. An option beside the \"no grade\" side-effects list, not a replacement.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "fib-4",
@@ -2401,26 +2614,33 @@
         "family-medicine",
         "endocrinology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.aasld.org/sites/default/files/2022-06/NAFLD%20Guidance%202018.pdf",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the original publication is cited on the liver society's pages by its PubMed number only and was not opened",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The liver society's practice guidance (Hepatology 2018;67(1):328) calls the index a clinically useful tool for finding patients likely to have advanced fibrosis. Its newer guidance, the gastroenterologists' care pathway and the diabetes association's 2025 report were found and could not be opened (the sites refused): a hepatologist confirms the current cut-offs.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "meld-child-pugh",
-      "proposedName": "Liver disease severity (MELD 3.0, Child-Pugh)",
+      "proposedName": "Liver disease severity for transplant listing (MELD 3.0)",
       "core": false,
       "specialties": [
         "gastroenterology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.hrsa.gov/sites/default/files/hrsa/optn/improving-liver-allocation-general-implementation-faq.pdf",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the transplant network's pages give the inputs and the date, not the publication",
+      "licence": "unclear — a federal network's calculator; terms not read",
+      "verifiedToday": true,
+      "note": "The national transplant network uses MELD 3.0 for candidates of 12 and older since July 13, 2023; it added albumin and sex. It is an allocation score: for hepatology and transplant practices only. Child-Pugh is dropped: no US source naming it was read.",
+      "moreNationalSourceUrls": [
+        "https://www.hrsa.gov/optn/data-calculators/allocation-calculators/meld-calculator"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "asthma-control-test",
@@ -2431,12 +2651,17 @@
         "family-medicine",
         "paediatrics"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.nhlbi.nih.gov/files/docs/guidelines/04_sec3_comp.pdf",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Nathan et al. 2004 (as cited in the federal asthma guideline; not opened)",
+      "licence": "needs permission — © 2002 QualityMetric Incorporated, which also holds the trademark",
+      "verifiedToday": true,
+      "note": "The federal asthma guideline (EPR-3, 2007) names it among four standard questionnaires for assessing control. Not to be built without the owner's licence.",
+      "moreNationalSourceUrls": [
+        "https://www.asthmacontroltest.com/content/dam/cf-pharma/asthma-control-test/en_GB/pdf/intellectual-property-v1.pdf"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "c-ssrs",
@@ -2445,12 +2670,17 @@
       "specialties": [
         "psychiatry"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://digitalassets.jointcommission.org/api/public/content/3347985ae3a94704b17357051394825e?v=523a126e",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "The scale's own forms on its owner's site (not reproduced here); the original publication was not opened",
+      "licence": "free to implement — the owner says no special permission is needed to use the tools and that they may be placed in an electronic record; it offers to check any version built",
+      "verifiedToday": true,
+      "note": "The Joint Commission's Quick Safety, issue 68 (March 2023), names it as a validated tool and asks that such tools be used exactly as designed. The USPSTF found the evidence insufficient for screening everybody for suicide risk (first pass): this is a tool for a clinician who has decided to ask.",
+      "moreNationalSourceUrls": [
+        "https://cssrs.columbia.edu/the-columbia-scale-c-ssrs/cssrs-for-communities-and-healthcare/"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "aims",
@@ -2459,16 +2689,18 @@
       "specialties": [
         "psychiatry"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://psychiatryonline.org/doi/10.1176/appi.focus.20200034",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the scale's original publication was not opened",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The psychiatrists' association's practice tool for its schizophrenia guideline asks for assessment with a structured instrument, naming AIMS, at set intervals.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "cognitive-screen",
-      "proposedName": "Brief cognitive screen (Mini-Cog, MoCA)",
+      "proposedName": "Brief cognitive screen for the Medicare wellness visit (Mini-Cog; GPCOG)",
       "core": false,
       "specialties": [
         "family-medicine",
@@ -2476,12 +2708,19 @@
         "neurology",
         "psychiatry"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.alz.org/professionals/health-systems-medical-professionals/cognitive-assessment",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Cordell CB, Borson S, Boustani M, et al. Alzheimer's Association recommendations for operationalizing the detection of cognitive impairment during the Medicare Annual Wellness Visit (as cited by the association; not opened)",
+      "licence": "Mini-Cog: free for clinical use — its owner says it should always be \"free of charge for clinical and educational use\"; terms for building it into software are not stated. GPCOG: not read",
+      "verifiedToday": true,
+      "note": "The Alzheimer's Association names GPCOG, Mini-Cog and two informant questionnaires for the Medicare wellness visit. The USPSTF (2020) found the evidence insufficient for screening everybody. MoCA is dropped from this candidate: its owner requires paid training and certification, and a licensing agreement for commercial entities.",
+      "moreNationalSourceUrls": [
+        "https://mini-cog.com/faqs/",
+        "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/cognitive-impairment-in-older-adults-screening",
+        "https://mocacognition.com/permission/"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "vanderbilt-adhd",
@@ -2492,60 +2731,56 @@
         "family-medicine",
         "psychiatry"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://nichq.org/downloadable/nichq-vanderbilt-assessment-scales/",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
-    },
-    {
-      "id": "due-date",
-      "proposedName": "Estimated due date and gestational age",
-      "core": false,
-      "specialties": [
-        "obstetrics-gynaecology",
-        "family-medicine",
-        "emergency-medicine"
-      ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "The NICHQ Vanderbilt Assessment Scales, first edition (authors: NICHQ, American Academy of Pediatrics, McNeil), on the owner's site",
+      "licence": "unclear — the first edition is a free download; © NICHQ, all rights reserved; no terms for electronic reproduction; a later edition is sold by the academy",
+      "verifiedToday": true,
+      "note": "For children of 6 to 12. The academy's ADHD guideline itself could not be opened (its journal site refused): a pediatrician confirms it is the scale wanted.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "promis",
-      "proposedName": "Patient-reported outcome measures (PROMIS)",
+      "proposedName": "Patient-reported outcome measures (PROMIS; the orthopaedic surgeons' preferred set)",
       "core": false,
       "specialties": [
         "orthopaedics",
         "rehabilitation-medicine",
         "sports-medicine"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.aaos.org/globalassets/quality-and-practice-resources/patient-reported-outcome-measures/2023-aaos-preferred-proms-report.pdf",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "The measures themselves, held by the PROMIS Health Organization (HealthMeasures)",
+      "licence": "needs permission — free for an individual clinician's own use; commercial users, and anyone building the measures into a proprietary system or app, need written permission",
+      "verifiedToday": true,
+      "note": "The orthopaedic surgeons' academy approved a preferred set on May 1, 2023 that includes PROMIS 10 and joint-specific measures (the Oswestry index for the spine among them).",
+      "moreNationalSourceUrls": [
+        "https://healthmeasures.net/wp-content/uploads/2026/06/Terms-of-Use_HM_approved_1-12-17-Updated-Copyright-Notices.pdf"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "strep-score",
-      "proposedName": "Sore throat score (Centor)",
+      "proposedName": "Sore throat: clinical score for deciding who is tested (Centor, McIsaac)",
       "core": false,
       "specialties": [
         "family-medicine",
         "paediatrics",
         "otolaryngology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.idsociety.org/practice-guideline/streptococcal-pharyngitis2/",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "Not reached: the guideline's Table 2 lists example scores; their original publications were not opened",
+      "licence": "not read",
+      "verifiedToday": true,
+      "note": "The Infectious Diseases Society's 2025 update suggests \"using a clinical scoring system to determine who should be tested\" (a conditional recommendation, very low certainty) and names no single score. CDC's own page, read today, names none.",
+      "moreNationalSourceUrls": [
+        "https://www.cdc.gov/group-a-strep/hcp/clinical-guidance/strep-throat.html"
+      ],
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "acr-rads",
@@ -2554,26 +2789,17 @@
       "specialties": [
         "radiology"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.acr.org/Clinical-Resources/Clinical-Tools-and-Reference/Reporting-and-Data-Systems",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
-    },
-    {
-      "id": "scat",
-      "proposedName": "Sport Concussion Assessment Tool",
-      "core": false,
-      "specialties": [
-        "sports-medicine"
+      "formulaSource": "The American College of Radiology's own manuals for each system",
+      "licence": "needs permission — the names are the College's registered or claimed marks; for BI-RADS it requires a copyright licensing agreement for commercial software, and the page read states no terms for the others: ask the College",
+      "verifiedToday": true,
+      "note": "The College lists ten published systems. None may be named on a screen before the College agrees.",
+      "moreNationalSourceUrls": [
+        "https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions"
       ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "qtc",
@@ -2584,12 +2810,14 @@
         "psychiatry",
         "emergency-medicine"
       ],
-      "nationalSourceUrl": null,
-      "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "nationalSourceUrl": "https://www.fda.gov/media/71372/download",
+      "formulaSourceUrl": "https://www.fda.gov/media/71372/download",
+      "formulaSource": "The two correction formulas are written out in the FDA guidance (October 2005); their original publications were not opened",
+      "licence": "free to implement — arithmetic; a federal guidance",
+      "verifiedToday": true,
+      "note": "The FDA guidance names the Bazett and Fridericia corrections, says the first is \"frequently used in clinical practice\" and that it is not ideal at high and low heart rates. It is a guidance for drug studies, not a practice guideline: the cardiology societies' 2009 recommendations were found by title and their journal refused the fetch. A cardiologist chooses the formula; no limit is proposed here.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "newborn-bilirubin",
@@ -2598,12 +2826,14 @@
       "specialties": [
         "paediatrics"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.healthychildren.org/English/news/Pages/AAP-revises-clinical-guidelines-for-hyperbilirubinemia-in-newborns.aspx",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "American Academy of Pediatrics. Clinical Practice Guideline Revision: Management of Hyperbilirubinemia in the Newborn Infant 35 or More Weeks of Gestation. Pediatrics, September 2022 (named in the academy's own news release; the guideline text would not open)",
+      "licence": "needs permission — the thresholds are the academy's published content",
+      "verifiedToday": true,
+      "note": "A SLOT: the thresholds are reference content. The 2022 revision replaced the 2004 guideline and changed the thresholds.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     },
     {
       "id": "child-blood-pressure",
@@ -2613,12 +2843,14 @@
         "paediatrics",
         "family-medicine"
       ],
-      "nationalSourceUrl": null,
+      "nationalSourceUrl": "https://www.nhlbi.nih.gov/health-topics/fourth-report-on-diagnosis-evaluation-treatment-high-blood-pressure-in-children-and-adolescents",
       "formulaSourceUrl": null,
-      "formulaSource": "not opened today",
-      "licence": "not read — unknown until the owner's terms are opened",
-      "verifiedToday": false,
-      "note": "Unverified — needs a local clinician. Named from general knowledge only; no page naming it was opened in this session."
+      "formulaSource": "National Heart, Lung, and Blood Institute, Fourth Report (Pediatrics 2004;114:555–576; issued as a report in May 2005). The American Academy of Pediatrics' 2017 guideline was found by title and its site refused the fetch",
+      "licence": "unclear — the federal report: no terms read; the academy's tables: its copyright",
+      "verifiedToday": true,
+      "note": "A SLOT: the tables are reference content. The federal report is the older source; a pediatrician confirms that the academy's 2017 tables are the ones in use, and where they may be taken from.",
+      "primaryPublicationOpened": false,
+      "pass": 2
     }
   ],
   "specialties": [
@@ -2636,9 +2868,7 @@
         "@core",
         "kritik-yol",
         "rtp-basamak",
-        "emergency-transfer"
-      ],
-      "candidateTools": [
+        "emergency-transfer",
         "nih-stroke-scale",
         "heart-score",
         "wells-perc",
@@ -2646,9 +2876,9 @@
         "pecarn-head-injury",
         "ottawa-rules",
         "cha2ds2-vasc",
-        "due-date",
         "qtc"
       ],
+      "candidateTools": [],
       "note": "ESI only after the licence."
     },
     {
@@ -2676,9 +2906,7 @@
         "annual-wellness-visit",
         "osteoporosis-risk",
         "rtp-basamak",
-        "inhaler-teknik"
-      ],
-      "candidateTools": [
+        "inhaler-teknik",
         "cha2ds2-vasc",
         "wells-perc",
         "ottawa-rules",
@@ -2686,10 +2914,10 @@
         "asthma-control-test",
         "cognitive-screen",
         "vanderbilt-adhd",
-        "due-date",
         "strep-score",
         "child-blood-pressure"
       ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page."
     },
     {
@@ -2706,12 +2934,10 @@
         "@core",
         "asa-preop",
         "hava-yolu-notu",
-        "postop-agri"
+        "postop-agri",
+        "revised-cardiac-risk-index"
       ],
-      "candidateTools": [
-        "revised-cardiac-risk-index",
-        "stop-bang"
-      ]
+      "candidateTools": []
     },
     {
       "key": "neurosurgery",
@@ -2726,11 +2952,10 @@
       "tools": [
         "@core",
         "noro-postop",
-        "nobet-bilinc"
-      ],
-      "candidateTools": [
+        "nobet-bilinc",
         "glasgow-coma-scale"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "paediatric-surgery",
@@ -2762,15 +2987,14 @@
         "kidney-failure-risk",
         "annual-wellness-visit",
         "osteoporosis-risk",
-        "vaccination-schedule"
-      ],
-      "candidateTools": [
+        "vaccination-schedule",
         "cha2ds2-vasc",
         "wells-perc",
         "fib-4",
         "cognitive-screen",
         "revised-cardiac-risk-index"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "dermatology",
@@ -2788,11 +3012,10 @@
         "easi",
         "scorad",
         "yama-okuma",
-        "isotretinoin-ipledge"
-      ],
-      "candidateTools": [
+        "isotretinoin-ipledge",
         "psoriasis-bsa-iga"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "endocrinology",
@@ -2809,11 +3032,10 @@
         "kdigo-evre",
         "osteoporosis-risk",
         "lab-izlem",
-        "dxa-tekrar"
-      ],
-      "candidateTools": [
+        "dxa-tekrar",
         "fib-4"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "infectious-diseases",
@@ -2845,12 +3067,11 @@
       "tools": [
         "@core",
         "ibd-skor",
-        "hepatit-izlem"
-      ],
-      "candidateTools": [
+        "hepatit-izlem",
         "fib-4",
         "meld-child-pugh"
       ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page."
     },
     {
@@ -2866,11 +3087,10 @@
       "tools": [
         "@core",
         "genel-preop",
-        "yara-dren-izlem"
-      ],
-      "candidateTools": [
+        "yara-dren-izlem",
         "revised-cardiac-risk-index"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "thoracic-surgery",
@@ -2886,11 +3106,10 @@
         "@core",
         "toraks-preop",
         "toraks-tup-yara",
-        "kalp-damar-preop"
-      ],
-      "candidateTools": [
+        "kalp-damar-preop",
         "revised-cardiac-risk-index"
       ],
+      "candidateTools": [],
       "note": "The board certificate covers the heart. If this role takes heart surgery, the neighbouring role can become vascular surgery alone. A US surgeon decides."
     },
     {
@@ -2906,13 +3125,10 @@
         "@core",
         "inhaler-teknik",
         "cat-mmrc",
-        "lung-action-plan"
+        "lung-action-plan",
+        "asthma-control-test"
       ],
-      "candidateTools": [
-        "asthma-control-test",
-        "stop-bang",
-        "epworth"
-      ],
+      "candidateTools": [],
       "note": "The earlier audit made this change on its own branch; it is not on the development branch. \"Pulmonology\" is the everyday word: a US clinician may prefer it."
     },
     {
@@ -2950,9 +3166,7 @@
         "osteoporosis-risk",
         "pregnancy-calendar"
       ],
-      "candidateTools": [
-        "due-date"
-      ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page."
     },
     {
@@ -2985,13 +3199,11 @@
       "tools": [
         "@core",
         "kdigo-evre",
-        "kardiyo-izlem"
-      ],
-      "candidateTools": [
+        "kardiyo-izlem",
         "cha2ds2-vasc",
-        "heart-score",
         "qtc"
       ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page. The core set gives it cardiovascular risk and the blood-pressure category."
     },
     {
@@ -3008,13 +3220,10 @@
         "@core",
         "odyometri-pta",
         "otoskopi-notu",
-        "vertigo-notu"
-      ],
-      "candidateTools": [
-        "stop-bang",
-        "epworth",
+        "vertigo-notu",
         "strep-score"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "nephrology",
@@ -3049,14 +3258,12 @@
         "rtp-basamak",
         "midas",
         "stroke-red-flags",
-        "antiseizure-monitoring"
-      ],
-      "candidateTools": [
+        "antiseizure-monitoring",
         "nih-stroke-scale",
         "cognitive-screen",
-        "epworth",
         "cha2ds2-vasc"
       ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page."
     },
     {
@@ -3071,13 +3278,11 @@
       "tools": [
         "@core",
         "kur-sayaci",
-        "toksisite-listesi"
-      ],
-      "candidateTools": [
+        "toksisite-listesi",
         "ecog-performance-status",
-        "ctcae-grading",
-        "body-surface-area"
+        "ctcae-grading"
       ],
+      "candidateTools": [],
       "note": "\"Oncology\" alone is on no official list read. A US oncologist chooses between \"Hematology/Oncology\" and \"Medical Oncology\"."
     },
     {
@@ -3094,12 +3299,11 @@
         "@core",
         "kirik-alci-takip",
         "ortopedi-op-protokol",
-        "vas-fonksiyon"
-      ],
-      "candidateTools": [
+        "vas-fonksiyon",
         "promis",
         "ottawa-rules"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "paediatrics",
@@ -3122,17 +3326,15 @@
         "epds",
         "rtp-basamak",
         "inhaler-teknik",
-        "doz-hesabi"
-      ],
-      "candidateTools": [
+        "doz-hesabi",
         "vanderbilt-adhd",
         "pecarn-head-injury",
         "asthma-control-test",
         "strep-score",
         "newborn-bilirubin",
-        "child-blood-pressure",
-        "body-surface-area"
+        "child-blood-pressure"
       ],
+      "candidateTools": [],
       "note": "Several core tools are for adults only: they need an age rule before pediatrics sees them (see \"What the kit lacks\")."
     },
     {
@@ -3165,15 +3367,14 @@
         "@core",
         "epds",
         "psychiatry-safety-triage",
-        "psychotropic-monitoring"
-      ],
-      "candidateTools": [
+        "psychotropic-monitoring",
         "c-ssrs",
         "aims",
         "cognitive-screen",
         "vanderbilt-adhd",
         "qtc"
       ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page. The core set gives it PHQ-9, GAD-7, alcohol and drug screening."
     },
     {
@@ -3190,11 +3391,10 @@
         "@core",
         "rapor-taslagi",
         "mammography-report",
-        "critical-finding-notice"
-      ],
-      "candidateTools": [
+        "critical-finding-notice",
         "acr-rads"
       ],
+      "candidateTools": [],
       "note": "The examination queue is of doubtful use here."
     },
     {
@@ -3211,11 +3411,10 @@
         "das28",
         "eklem-28",
         "osteoporosis-risk",
-        "basdai"
-      ],
-      "candidateTools": [
+        "basdai",
         "cdai-rapid3"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "urology",
@@ -3244,13 +3443,11 @@
       "tools": [
         "@core",
         "rtp-basamak",
-        "sakatlik-gunlugu"
-      ],
-      "candidateTools": [
-        "scat",
+        "sakatlik-gunlugu",
         "ottawa-rules",
         "promis"
-      ]
+      ],
+      "candidateTools": []
     },
     {
       "key": "rehabilitation-medicine",
@@ -3266,11 +3463,10 @@
         "@core",
         "therapy-plan-of-care",
         "pain-odi",
-        "home-exercise"
-      ],
-      "candidateTools": [
+        "home-exercise",
         "promis"
       ],
+      "candidateTools": [],
       "note": "Today: nothing but the patient's page."
     },
     {
@@ -3285,11 +3481,10 @@
       ],
       "tools": [
         "@core",
-        "inhaler-teknik"
-      ],
-      "candidateTools": [
+        "inhaler-teknik",
         "asthma-control-test"
       ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3305,11 +3500,10 @@
         "@core",
         "annual-wellness-visit",
         "osteoporosis-risk",
-        "polypharmacy"
-      ],
-      "candidateTools": [
+        "polypharmacy",
         "cognitive-screen"
       ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3323,11 +3517,10 @@
       ],
       "tools": [
         "@core",
-        "pain-odi"
-      ],
-      "candidateTools": [
+        "pain-odi",
         "promis"
       ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3340,10 +3533,7 @@
       "tools": [
         "@core"
       ],
-      "candidateTools": [
-        "stop-bang",
-        "epworth"
-      ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3377,12 +3567,11 @@
       "tools": [
         "@core",
         "kur-sayaci",
-        "toksisite-listesi"
-      ],
-      "candidateTools": [
+        "toksisite-listesi",
         "ecog-performance-status",
         "ctcae-grading"
       ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3393,12 +3582,11 @@
       "sourceUrl": "https://www.abms.org/member-boards/specialty-subspecialty-certificates/",
       "moreSourceUrls": [],
       "tools": [
-        "@core"
-      ],
-      "candidateTools": [
+        "@core",
         "vanderbilt-adhd",
         "c-ssrs"
       ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3424,11 +3612,10 @@
       "sourceUrl": "https://www.abms.org/member-boards/specialty-subspecialty-certificates/",
       "moreSourceUrls": [],
       "tools": [
-        "@core"
-      ],
-      "candidateTools": [
+        "@core",
         "ecog-performance-status"
       ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     },
     {
@@ -3442,9 +3629,7 @@
         "@core",
         "contraception-eligibility"
       ],
-      "candidateTools": [
-        "due-date"
-      ],
+      "candidateTools": [],
       "note": "Recognised on the list(s) cited. That it is common in private outpatient practice is a judgement: no source read measures it."
     }
   ],
@@ -3546,11 +3731,10 @@
         "therapy-plan-of-care",
         "fall-risk-steadi",
         "home-exercise",
-        "pain-odi"
-      ],
-      "candidateTools": [
+        "pain-odi",
         "promis"
       ],
+      "candidateTools": [],
       "note": "Sees no tool today."
     },
     {
@@ -3565,11 +3749,10 @@
         "phq-9",
         "gad-7",
         "audit-c",
-        "drug-use-screen"
-      ],
-      "candidateTools": [
+        "drug-use-screen",
         "c-ssrs"
       ],
+      "candidateTools": [],
       "note": "Sees no tool today; the PHQ-9 slot is for psychiatry only."
     },
     {
@@ -4041,6 +4224,676 @@
       "url": "https://medlineplus.gov/ency/patientinstructions/000041.htm",
       "title": "MedlinePlus (National Library of Medicine) — How to use an inhaler - no spacer (reviewed February 27, 2026)",
       "dateRead": "2026-10-10"
+    },
+    "KDIGO_FULL": {
+      "url": "https://kdigo.org/wp-content/uploads/2024/03/KDIGO-2024-CKD-Guideline.pdf",
+      "title": "KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD. Kidney Int. 2024;105(4S):S117–S314 — read as far as page S144 (Tables 2 and 3; the licence notice)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASA_PS": {
+      "url": "https://asahq.org/resources/clinical-information/asa-physical-status-classification-system",
+      "title": "American Society of Anesthesiologists — ASA Physical Status Classification System (the page carrying the approval of October 15, 2014)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASA_TERMS": {
+      "url": "https://www.asahq.org/about-asa/terms-and-conditions",
+      "title": "American Society of Anesthesiologists — Terms and Conditions",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASA_REPRINT": {
+      "url": "https://www.asahq.org/research-and-publications/publications/requests-to-reprint-asa-publications",
+      "title": "American Society of Anesthesiologists — Requests to Reprint ASA Publications",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASA_OSA": {
+      "url": "https://www.asahq.org/~/media/Sites/ASAHQ/Files/Public/Resources/standards-guidelines/practice-guidelines-for-the-perioperative-management-of-patients-with-obstructive-sleep-apnea.pdf",
+      "title": "ASA Practice Guidelines for the Perioperative Management of Patients with Obstructive Sleep Apnea. Anesthesiology 2014;120",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "HOME_EASI_GUIDE": {
+      "url": "https://www.homeforeczema.org/documents/easi-user-guide-jan-2017-v3.pdf",
+      "title": "Harmonising Outcome Measures for Eczema (HOME) — EASI guidance, version 3, January 2017",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "HOME_EASI": {
+      "url": "https://www.homeforeczema.org/research/easi-for-clinical-signs.aspx",
+      "title": "Harmonising Outcome Measures for Eczema (HOME) — EASI for clinical signs",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "LESHEM": {
+      "url": "https://academic.oup.com/bjd/article-abstract/172/5/1353/6616225",
+      "title": "Leshem YA, Hajar T, Hanifin JM, Simpson EL. What the Eczema Area and Severity Index score tells us about the severity of atopic dermatitis. Br J Dermatol. 2015;172(5):1353–1357 (abstract)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "DAS_CALC": {
+      "url": "https://www.das-score.nl/en/das-and-das28/how-to-meaure-the-das28/how-to-calculate-the-das28",
+      "title": "DAS-score website (the developers of the score) — How to calculate the DAS28",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "DAS_ALT": {
+      "url": "https://www.das-score.nl/en/das-and-das28/how-to-meaure-the-das28/how-to-calculate-the-das28/alternative-validated-formulae",
+      "title": "DAS-score website — Alternative validated formulae (DAS28 with CRP)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "DAS_SCORE": {
+      "url": "https://www.das-score.nl/en/what-is-das-28/das28-score-eng",
+      "title": "DAS-score website — DAS28 score (what the values mean)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "DAS_JOINTS": {
+      "url": "https://www.das-score.nl/en/das-and-das28/how-to-meaure-the-das28/twenty-eight-joints",
+      "title": "DAS-score website — Twenty-eight joints",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "DAS_CRP_CALC": {
+      "url": "https://www.das-score.nl/das28/DAScalculators/DAS28_CRP_4VAR.html",
+      "title": "DAS-score website — DAS28-CRP calculator (its field labels)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACR_RA_2019": {
+      "url": "https://rheumatology.org/api/asset/blt65fc8b2649e03455",
+      "title": "England BR, Tiong BK, Bergman MJ, et al. 2019 Update of the American College of Rheumatology Recommended Rheumatoid Arthritis Disease Activity Measures. Arthritis Care Res. 2019;71(12):1540–1555",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ORANJE": {
+      "url": "https://repub.eur.nl/pub/35156",
+      "title": "Oranje AP, Glazenburg EJ, Wolkerstorfer A, de Waard-van der Spek FB. Practical issues on interpretation of scoring atopic dermatitis. Br J Dermatol. 2007;157(4):645–648 (abstract, university repository)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ECZEMA_FOUNDATION": {
+      "url": "https://www.pierrefabreeczemafoundation.org/en/po-scorad-tool",
+      "title": "Eczema Foundation — PO-SCORAD: a tool for evaluating eczema",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CADTH_PASI": {
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK534046/",
+      "title": "Validity of Outcome Measures. Appendix 5 of a clinical review report (CADTH, March 2018), NCBI Bookshelf, National Library of Medicine",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NPF_GUIDELINES": {
+      "url": "https://www.psoriasis.org/psoriasis-guidelines/",
+      "title": "National Psoriasis Foundation — Psoriasis Guidelines (the joint AAD–NPF guidelines)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NPF_SEVERITY": {
+      "url": "https://www.psoriasis.org/position-statement-on-psoriasis-severity/",
+      "title": "National Psoriasis Foundation — Position Statement on Psoriasis Severity (December 30, 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASHA_AIS": {
+      "url": "https://www.asha.org/siteassets/ais/ais-type-degree-and-configuration-of-hearing-loss.pdf",
+      "title": "American Speech-Language-Hearing Association — Type, Degree, and Configuration of Hearing Loss",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASHA_PORTAL": {
+      "url": "https://www.asha.org/practice-portal/clinical-topics/hearing-loss/",
+      "title": "American Speech-Language-Hearing Association — Practice Portal: Hearing Loss in Adults",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AAO_REDFLAGS": {
+      "url": "https://www.entnet.org/resource/position-statement-red-flags-warning-of-ear-disease/",
+      "title": "American Academy of Otolaryngology–Head and Neck Surgery — Position Statement: Red Flags–Warning of Ear Disease (approved 2002, reviewed July 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NIDCD_PTA": {
+      "url": "https://www.nidcd.nih.gov/health/statistics/what-numbers-mean-epidemiological-perspective-hearing",
+      "title": "National Institute on Deafness and Other Communication Disorders — What the Numbers Mean: An Epidemiological Perspective on Hearing",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "OSHA_STS": {
+      "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-G/section-1910.95",
+      "title": "29 CFR 1910.95 — Occupational noise exposure (the standard threshold shift)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AAO_BPPV": {
+      "url": "https://www.entnet.org/quality-practice/quality-products/clinical-practice-guidelines/bppv/",
+      "title": "AAO-HNSF — Clinical Practice Guideline: Benign Paroxysmal Positional Vertigo (Update), 2017 (the academy's page)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AAO_BPPV_FACTS": {
+      "url": "https://www.entnet.org/resource/aao-hnsf-updated-cpg-bppv-press-release-fact-sheet/",
+      "title": "AAO-HNSF — BPPV: Experts Update Best Practices for Diagnosis and Treatment (fact sheet with the key statements)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "GABBETT": {
+      "url": "https://bjsm.bmj.com/content/50/5/273",
+      "title": "Gabbett TJ. The training–injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med. 2016;50(5):273–280",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_NHSN_AU": {
+      "url": "https://www.cdc.gov/nhsn/faqs/faq-au.html",
+      "title": "CDC National Healthcare Safety Network — FAQs: Antimicrobial Use (AU) Option",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NCPDP_ML": {
+      "url": "https://www.fda.gov/media/88498/download",
+      "title": "NCPDP white paper (hosted by the FDA) — Standardize the Dosing Designations on Prescription Container Labels for Oral Liquid Medications to Metric (mL) Only",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_AGENCY": {
+      "url": "https://www.cdc.gov/other/agencymaterials.html",
+      "title": "CDC — Use of Agency Materials (last reviewed May 1, 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_GROWTH_DATA": {
+      "url": "https://www.cdc.gov/growthcharts/cdc-data-files.htm",
+      "title": "CDC — Growth Charts: Data Files (updated September 2, 2024)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "WHO_COPYRIGHT": {
+      "url": "https://www.who.int/about/policies/publishing/copyright",
+      "title": "World Health Organization — Copyright",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "WHO_GROWTH": {
+      "url": "https://www.who.int/tools/child-growth-standards/standards",
+      "title": "World Health Organization — The WHO Child Growth Standards",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "LOINC_GAD7": {
+      "url": "https://cdn.loinc.org/70274-6",
+      "title": "LOINC (Regenstrief Institute) — GAD-7 panel, with the owner's copyright notice",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "LOINC_EPDS": {
+      "url": "https://cdn.loinc.org/71354-5",
+      "title": "LOINC (Regenstrief Institute) — Edinburgh Postnatal Depression Scale panel, with the owner's copyright notice",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AUDIT_FAQ": {
+      "url": "https://auditscreen.org/about/faqs",
+      "title": "AUDIT (Alcohol Use Disorders Identification Test) website — Frequently Asked Questions",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "VA_AUDITC": {
+      "url": "https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp",
+      "title": "US Department of Veterans Affairs — Alcohol Use Disorders Identification Test (AUDIT-C)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AHA_PREVENT_ABOUT": {
+      "url": "https://professional.heart.org/en/guidelines-and-statements/about-prevent-calculator",
+      "title": "American Heart Association — PREVENT Calculator (about; access to the source code)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "FRAX_FAQ": {
+      "url": "https://www.fraxplus.org/faq",
+      "title": "FRAXplus — FAQ (Osteoporosis Research Ltd)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ENA_TM": {
+      "url": "https://www.ena.org/ena-trademarks",
+      "title": "Emergency Nurses Association — ENA Trademarks",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ENA_TRIAGE": {
+      "url": "https://www.ena.org/education/triage",
+      "title": "Emergency Nurses Association — Triage Portfolio",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AUA_EDPC": {
+      "url": "https://www.auanet.org/documents/Guidelines/PDF/2026%20Guidelines/EDPC%202026%20Unabridged%20FINAL.pdf",
+      "title": "American Urological Association / Society of Urologic Oncology — Early Detection of Prostate Cancer: Guideline (2023, amended 2026)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AUA_BPH": {
+      "url": "https://www.auanet.org/documents/Guidelines/PDF/2023%20Guidelines/BPH%20Unabridged%2002-20-24%20Final.pdf",
+      "title": "American Urological Association — Management of Lower Urinary Tract Symptoms Attributed to Benign Prostatic Hyperplasia: Guideline (2021, amended 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AUA_MH": {
+      "url": "https://www.auanet.org/documents/Guidelines/PDF/2025%20Guidelines/Microhematuria%20Amendment%20SUMMARY-%20Final.pdf",
+      "title": "AUA/SUFU — Microhematuria Guideline (2020, amended 2025): amendment summary",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "USPSTF_OSA": {
+      "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obstructive-sleep-apnea-in-adults-screening",
+      "title": "USPSTF — Obstructive Sleep Apnea in Adults: Screening (November 15, 2022)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "USPSTF_COG": {
+      "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/cognitive-impairment-in-older-adults-screening",
+      "title": "USPSTF — Cognitive Impairment in Older Adults: Screening (February 25, 2020)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AHA_AF": {
+      "url": "https://professional.heart.org/en/science-news/2023-acc-aha-accp-hrs-guideline-for-the-diagnosis-and-management-of-atrial-fibrillation/top-things-to-know",
+      "title": "American Heart Association — 2023 ACC/AHA/ACCP/HRS Guideline for Atrial Fibrillation: Top Things to Know (Circulation, November 30, 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AHA_CHESTPAIN": {
+      "url": "https://professional.heart.org/en/science-news/2021-guideline-for-the-evaluation-and-diagnosis-of-chest-pain/top-things-to-know",
+      "title": "American Heart Association — 2021 Chest Pain Guideline: Top Things to Know",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AHA_CHESTPAIN_SLIDES": {
+      "url": "https://professional.heart.org/en/-/media/PHD-Files-2/Science-News/2/2021/2021-Chest-Pain-Guideline-Slide-Set-PDF-102821.pdf?sc_lang=en",
+      "title": "American Heart Association — 2021 AHA/ACC Chest Pain Guideline slide set",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACP_PE": {
+      "url": "https://www.acponline.org/acp-newsroom/acp-doctors-should-stratify-patients-with-suspected-pulmonary-embolism-to-determine-diagnostic",
+      "title": "American College of Physicians — news release on its Best Practice Advice for suspected pulmonary embolism (September 29, 2015)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACEP_VTE_SLIDES": {
+      "url": "https://www.acep.org/siteassets/sites/acep/media/equal-documents/webinar_imagingw4_policy_avt.pdf",
+      "title": "American College of Emergency Physicians — Clinical Policy: Suspected Acute Venous Thromboembolic Disease (slide deck)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NINDS_NIHSS": {
+      "url": "https://www.ninds.nih.gov/health-information/stroke/assess-and-treat/nih-stroke-scale",
+      "title": "National Institute of Neurological Disorders and Stroke — NIH Stroke Scale (reviewed December 8, 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NINDS_NIHSS_NEWS": {
+      "url": "https://www.ninds.nih.gov/news-events/news/highlights-announcements/nih-stroke-scale-updated-new-visual-stimuli",
+      "title": "NINDS — NIH Stroke Scale Updated with New Visual Stimuli (March 1, 2024)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_FIELD_TRIAGE": {
+      "url": "https://www.cdc.gov/mmwr/preview/mmwrhtml/rr6101a1.htm?s_cid=rr6101a1_w",
+      "title": "CDC — Guidelines for Field Triage of Injured Patients, 2011. MMWR Recomm Rep 2012;61(RR-1)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACR_AC_HEAD_CHILD": {
+      "url": "https://gravitas.acr.org/ACPortal/TopicNarrativePdf?topicId=199",
+      "title": "American College of Radiology — ACR Appropriateness Criteria: Head Trauma–Child",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACR_AC_ANKLE": {
+      "url": "https://acsearch.acr.org/docs/69436/Narrative/",
+      "title": "American College of Radiology — ACR Appropriateness Criteria: Acute Trauma to the Ankle (2020)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AHA_PERIOP_SLIDES": {
+      "url": "https://professional.heart.org/-/media/PHD-Files-2/Science-News/2/2024/2024-Guideline-for-Perioperative-Cardiovascular-Management-slide-set.pdf?sc_lang=en",
+      "title": "American Heart Association — 2024 AHA/ACC Guideline for Perioperative Cardiovascular Management for Noncardiac Surgery, slide set",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ECOG": {
+      "url": "https://ecog-acrin.org/resources/ecog-performance-status/",
+      "title": "ECOG-ACRIN Cancer Research Group — ECOG Performance Status Scale",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NCI_CTCAE": {
+      "url": "https://dctd.cancer.gov/research/ctep-trials/for-sites/adverse-events",
+      "title": "National Cancer Institute — CTCAE and Adverse Event Reporting (CTCAE v6.0, 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AASLD_2018": {
+      "url": "https://www.aasld.org/sites/default/files/2022-06/NAFLD%20Guidance%202018.pdf",
+      "title": "Chalasani N, et al. The Diagnosis and Management of Nonalcoholic Fatty Liver Disease: Practice Guidance From the AASLD. Hepatology. 2018;67(1):328",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "OPTN_MELD": {
+      "url": "https://www.hrsa.gov/optn/data-calculators/allocation-calculators/meld-calculator",
+      "title": "Organ Procurement and Transplantation Network (HRSA) — MELD Calculator",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "OPTN_MELD_FAQ": {
+      "url": "https://www.hrsa.gov/sites/default/files/hrsa/optn/improving-liver-allocation-general-implementation-faq.pdf",
+      "title": "OPTN (HRSA) — Improving Liver Allocation: General Implementation FAQ",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NHLBI_EPR3_S3": {
+      "url": "https://www.nhlbi.nih.gov/files/docs/guidelines/04_sec3_comp.pdf",
+      "title": "National Heart, Lung, and Blood Institute — Expert Panel Report 3 (2007), Section 3: The Four Components of Asthma Management (read in part)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACT_IP": {
+      "url": "https://www.asthmacontroltest.com/content/dam/cf-pharma/asthma-control-test/en_GB/pdf/intellectual-property-v1.pdf",
+      "title": "Asthma Control Test website — Intellectual Property",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CSSRS": {
+      "url": "https://cssrs.columbia.edu/the-columbia-scale-c-ssrs/cssrs-for-communities-and-healthcare/",
+      "title": "The Columbia Lighthouse Project — The Columbia Protocol for Healthcare and Other Community Settings",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "JC_QUICKSAFETY": {
+      "url": "https://digitalassets.jointcommission.org/api/public/content/3347985ae3a94704b17357051394825e?v=523a126e",
+      "title": "The Joint Commission — Quick Safety, Issue 68: Utilizing validated tools for suicide risk screening (March 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "APA_PIP": {
+      "url": "https://psychiatryonline.org/doi/10.1176/appi.focus.20200034",
+      "title": "American Psychiatric Association (Focus) — Performance in Practice: Practice Assessment Tool for the Care of Patients With Schizophrenia",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ALZ_COG": {
+      "url": "https://www.alz.org/professionals/health-systems-medical-professionals/cognitive-assessment",
+      "title": "Alzheimer's Association — Cognitive Screening and Assessment",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "MINICOG_FAQ": {
+      "url": "https://mini-cog.com/faqs/",
+      "title": "Mini-Cog — FAQs",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "MOCA_PERMISSION": {
+      "url": "https://mocacognition.com/permission/",
+      "title": "MoCA Cognition — Permission",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NICHQ_VANDERBILT": {
+      "url": "https://nichq.org/downloadable/nichq-vanderbilt-assessment-scales/",
+      "title": "National Institute for Children's Health Quality — NICHQ Vanderbilt Assessment Scales",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACOG_NEWS": {
+      "url": "https://www.acog.org/news/news-releases/2016/01/acog-reinvents-the-pregnancy-wheel",
+      "title": "American College of Obstetricians and Gynecologists — ACOG Reinvents the Pregnancy Wheel (news release)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "HM_TERMS": {
+      "url": "https://healthmeasures.net/wp-content/uploads/2026/06/Terms-of-Use_HM_approved_1-12-17-Updated-Copyright-Notices.pdf",
+      "title": "HealthMeasures — Terms of Use (PROMIS)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AAOS_PROMS": {
+      "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/patient-reported-outcome-measures/2023-aaos-preferred-proms-report.pdf",
+      "title": "American Academy of Orthopaedic Surgeons — AAOS-Preferred Set of Orthopaedic Patient-Reported Outcome Measures (approved May 1, 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "IDSA_GAS": {
+      "url": "https://www.idsociety.org/practice-guideline/streptococcal-pharyngitis2/",
+      "title": "Infectious Diseases Society of America — Clinical Practice Guideline Update on Group A Streptococcal Pharyngitis (October 14, 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_STREP": {
+      "url": "https://www.cdc.gov/group-a-strep/hcp/clinical-guidance/strep-throat.html",
+      "title": "CDC — Clinical Guidance for Group A Streptococcal Pharyngitis (November 18, 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ACR_RADS": {
+      "url": "https://www.acr.org/Clinical-Resources/Clinical-Tools-and-Reference/Reporting-and-Data-Systems",
+      "title": "American College of Radiology — Reporting and Data Systems (RADS)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "BJSM_SCAT6": {
+      "url": "https://bjsm.bmj.com/content/57/11/619",
+      "title": "Echemendia RJ, Brett BL, Broglio S, et al. Introducing the Sport Concussion Assessment Tool 6 (SCAT6). Br J Sports Med, volume 57, issue 11",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "FDA_E14": {
+      "url": "https://www.fda.gov/media/71372/download",
+      "title": "FDA — Guidance for Industry: E14 Clinical Evaluation of QT/QTc Interval Prolongation (October 2005)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AAP_HYPERBILI_NEWS": {
+      "url": "https://www.healthychildren.org/English/news/Pages/AAP-revises-clinical-guidelines-for-hyperbilirubinemia-in-newborns.aspx",
+      "title": "American Academy of Pediatrics (HealthyChildren.org) — AAP Revises Clinical Guidelines for Hyperbilirubinemia in Newborns (August 5, 2022)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NHLBI_BP4": {
+      "url": "https://www.nhlbi.nih.gov/health-topics/fourth-report-on-diagnosis-evaluation-treatment-high-blood-pressure-in-children-and-adolescents",
+      "title": "National Heart, Lung, and Blood Institute — The Fourth Report on High Blood Pressure in Children and Adolescents (May 2005)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_PED_MTBI": {
+      "url": "https://www.cdc.gov/traumatic-brain-injury/hcp/clinical-guidance/index.html",
+      "title": "CDC — Clinical Guidance for Pediatric Mild TBI (July 29, 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CAT_TERMS": {
+      "url": "https://www.catestonline.org/hcp-homepage/legal-notices.html",
+      "title": "COPD Assessment Test website (GSK) — Terms of Use",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CAT_PERMISSION": {
+      "url": "https://www.catestonline.org/hcp-homepage/logging-a-study.html",
+      "title": "COPD Assessment Test website (GSK) — Permission to Use",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "GOLD_2025": {
+      "url": "https://goldcopd.org/wp-content/uploads/2024/11/Pocket-Guide-2025-v1.0-12Nov2024_WMV-Draft.pdf",
+      "title": "Global Initiative for Chronic Obstructive Lung Disease — 2025 Pocket Guide",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "MCHAT": {
+      "url": "https://www.mchatscreen.com/wp-content/uploads/2025/03/M-CHAT-R_F_Rev_March2025.pdf",
+      "title": "M-CHAT-R/F form with its permissions for use (Robins, Fein and Barton; March 2025)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "EPWORTH_LIC": {
+      "url": "https://epworthsleepinessscale.com/licenses/",
+      "title": "Epworth Sleepiness Scale website — Licenses",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "MAPI_ODI": {
+      "url": "https://www.mapi-trust.org/news-events/news/the-oswestry-disability-i",
+      "title": "Mapi Research Trust — The Oswestry Disability Index (licensing)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "HIV_LABS": {
+      "url": "https://clinicalinfo.hiv.gov/en/guidelines/hiv-clinical-guidelines-adult-and-adolescent-arv/tests-initial-assessment-follow-up",
+      "title": "Clinicalinfo.HIV.gov — Guidelines for the Use of Antiretroviral Agents in Adults and Adolescents With HIV: Laboratory Testing (updated September 24, 2026)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "HCV_MONITOR": {
+      "url": "https://www.hcvguidelines.org/guidance/monitoring-patients-who-are-starting-hcv-treatment-are-on-treatment-or-have-completed-therapy/",
+      "title": "AASLD–IDSA HCV Guidance — Monitoring Persons Who Are Starting HCV Treatment, Are on Treatment, or Have Completed Therapy (December 19, 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "KDIGO_ANEMIA": {
+      "url": "https://kdigo.org/wp-content/uploads/2026/03/KDIGO-2026-Anemia-Guideline-Key-Takeaways-for-HCPs.pdf",
+      "title": "KDIGO 2026 Clinical Practice Guideline for the Management of Anemia in CKD — Top 10 Takeaways for Healthcare Professionals",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NHLBI_AAP": {
+      "url": "https://www.nhlbi.nih.gov/sites/default/files/publications/Asthma-Action-Plan-2020_rev_508.pdf",
+      "title": "National Heart, Lung, and Blood Institute — Asthma Action Plan (NIH Publication No. 20-HL-5251, February 2021)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_STROKE": {
+      "url": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+      "title": "CDC — Signs and Symptoms of Stroke (May 19, 2026)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "MIDAS_NHF": {
+      "url": "https://headaches.org/wp-content/uploads/2018/02/MIDAS.pdf",
+      "title": "National Headache Foundation — self-screeners page carrying the MIDAS copyright notice",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "DEA_EPCS": {
+      "url": "https://www.ecfr.gov/current/title-21/chapter-II/part-1311/subpart-C",
+      "title": "21 CFR part 1311, subpart C — Electronic Prescriptions (Drug Enforcement Administration)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ADA_CHECKS": {
+      "url": "https://diabetes.org/living-with-diabetes/newly-diagnosed/health-checks-people-with-diabetes",
+      "title": "American Diabetes Association — Key Medical Screenings for Diabetes",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "CDC_NNC": {
+      "url": "https://ndc.services.cdc.gov/",
+      "title": "CDC — Surveillance Case Definitions for Current and Historical Conditions (nationally notifiable conditions)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "NLM_INTERACTION": {
+      "url": "https://rxnav.nlm.nih.gov/InteractionAPIs.html",
+      "title": "National Library of Medicine — Drug Interaction API",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "AGS_BEERS_NEWS": {
+      "url": "https://www.americangeriatrics.org/media-center/news/many-older-adults-take-multiple-medications-updated-ags-beers-criteriar-will-help",
+      "title": "American Geriatrics Society — news release on the 2023 update of the AGS Beers Criteria (May 4, 2023)",
+      "dateRead": "2026-10-10",
+      "pass": 2
+    },
+    "ASAS_PRO": {
+      "url": "https://www.asas-group.org/instruments/patient-reported-outcomes/",
+      "title": "Assessment of SpondyloArthritis international Society — Patient reported outcomes",
+      "dateRead": "2026-10-10",
+      "pass": 2
     }
-  }
+  },
+  "droppedCandidates": [
+    {
+      "id": "stop-bang",
+      "proposedName": "Sleep apnea screening (STOP-Bang)",
+      "specialties": [
+        "anaesthesia",
+        "respiratory-medicine",
+        "otolaryngology"
+      ],
+      "reason": "The only US body read that names it, the USPSTF (2022), found the evidence inadequate and recommends no questionnaire; the anesthesiologists' 2014 guideline on sleep apnea names no questionnaire in its text. The owner's site could not be opened (it redirects in a loop).",
+      "sourcesRead": [
+        "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obstructive-sleep-apnea-in-adults-screening",
+        "https://www.asahq.org/~/media/Sites/ASAHQ/Files/Public/Resources/standards-guidelines/practice-guidelines-for-the-perioperative-management-of-patients-with-obstructive-sleep-apnea.pdf"
+      ],
+      "pass": 2
+    },
+    {
+      "id": "epworth",
+      "proposedName": "Epworth Sleepiness Scale",
+      "specialties": [
+        "respiratory-medicine",
+        "otolaryngology",
+        "neurology"
+      ],
+      "reason": "Named by the USPSTF (2022) without any accuracy figures and not recommended. Its owner requires a licence for every use, handled by Mapi Research Trust.",
+      "sourcesRead": [
+        "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/obstructive-sleep-apnea-in-adults-screening",
+        "https://epworthsleepinessscale.com/licenses/"
+      ],
+      "pass": 2
+    },
+    {
+      "id": "body-surface-area",
+      "proposedName": "Body surface area",
+      "specialties": [
+        "oncology",
+        "paediatrics"
+      ],
+      "reason": "No US national source naming a formula was found: the search returned journal articles only, and PubMed sits behind a robot check.",
+      "sourcesRead": [],
+      "pass": 2
+    },
+    {
+      "id": "due-date",
+      "proposedName": "Estimated due date and gestational age",
+      "specialties": [
+        "obstetrics-gynaecology",
+        "family-medicine",
+        "emergency-medicine"
+      ],
+      "reason": "Not dropped as an idea: merged into the existing slot `pregnancy-calendar`, whose US source is now named. The Committee Opinion itself could not be read (the college's site refuses automated readers).",
+      "sourcesRead": [
+        "https://www.acog.org/news/news-releases/2016/01/acog-reinvents-the-pregnancy-wheel"
+      ],
+      "pass": 2
+    },
+    {
+      "id": "scat",
+      "proposedName": "Sport Concussion Assessment Tool",
+      "specialties": [
+        "sports-medicine"
+      ],
+      "reason": "The tool belongs to an international consensus group; its publication (opened) allows no change or translation without the approval of the journal and the group. No US body recommending it was read: CDC's guidance asks for validated, age-appropriate symptom scales and names none.",
+      "sourcesRead": [
+        "https://bjsm.bmj.com/content/57/11/619",
+        "https://www.cdc.gov/traumatic-brain-injury/hcp/clinical-guidance/index.html"
+      ],
+      "pass": 2
+    }
+  ]
 }
