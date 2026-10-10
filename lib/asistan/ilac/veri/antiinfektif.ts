@@ -339,7 +339,10 @@ export const ANTIINFEKTIF: Record<string, TürkishDrug> = {
     },
     form: 'Tablet, krem, sprey',
     sgkCovered: true,
-    sgkRestriction: 'SUT: onikomikozda mikolojik doğrulama arandığı durumlar için ilgili SUT maddesine bakınız.',
+    // NOTYA-SUT-RAPOR-01 — SUT EK-4/E 10/10 "Terbinafin: KY" (no restriction); topical forms fall outside EK-4/E
+    // (closing NOT of the list) and under the topical antifungal quantity rule of SUT 4.1.4(5)-c.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali. The text has no mycological-confirmation article.
+    sgkRestriction: 'SUT EK-4/E: oral formda reçeteleme kısıtlaması yok. Topikal formlarda kutu ve süre sınırı için SUT 4.1.4’e bakınız.',
     category: 'Allilamin antifungal',
     siniflar: ['Allilamin', 'Antifungal', 'CYP2D6 inhibitörü'],
     contraindications: ['Terbinafine aşırı duyarlılık', 'Ciddi böbrek yetmezliği (KrKl <30 mL/dk)', 'Ciddi karaciğer yetmezliği'],
@@ -486,7 +489,10 @@ export const ANTIINFEKTIF: Record<string, TürkishDrug> = {
     },
     form: 'Kapsül, granül içeren saşe, oral süspansiyon',
     sgkCovered: true,
-    sgkRestriction: 'SUT: influenza sezonu ve endikasyon koşullarına bağlıdır.',
+    // NOTYA-SUT-RAPOR-01 — SUT EK-4/E 11/13 "Oseltamivir: UH-P (Yalnızca influenza ve avianinfluenza profilaksisi ve
+    // tedavisinde bedelleri Kurumca karşılanır.)". Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+    // The text has no season condition; the prescriber condition (UH-P) was missing.
+    sgkRestriction: 'SUT EK-4/E: yalnızca influenza ve avian influenza profilaksisi ve tedavisinde ödenir; ayaktan tedavide uzman hekimlerce veya uzman hekim raporuyla reçete edilir.',
     category: 'Nöraminidaz inhibitörü antiviral',
     siniflar: ['Antiviral', 'Nöraminidaz inhibitörü', 'İnfluenza antivirali'],
     yasKontrendikasyonAy: 12,

@@ -670,7 +670,10 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     },
     form: 'Uzatılmış salımlı tablet, kapsül, tablet',
     sgkCovered: true,
-    sgkRestriction: 'KIRMIZI REÇETE ile düzenlenir (TİTCK uyuşturucu/psikotrop madde listesi). SUT: DEHB tanısı ve uzman raporu koşullarına bakınız.',
+    // NOTYA-SUT-RAPOR-01 — SUT EK-4/E 13/5 "Metil Fenidat HCl: Hiperaktivite ve dikkat eksikliği tedavisinde, yalnızca
+    // 25 yaş altında ve psikiyatri uzmanlarınca reçete edilebilir." Source: SGK güncel SUT, 02.10.2026 (RG 33388)
+    // işlenmiş hali. The text gives no specialist-report route.
+    sgkRestriction: 'KIRMIZI REÇETE ile düzenlenir (TİTCK uyuşturucu/psikotrop madde listesi). SUT EK-4/E: DEHB tedavisinde yalnızca 25 yaş altında ve psikiyatri uzman hekimlerince reçete edilir.',
     category: 'Santral sinir sistemi stimülanı',
     siniflar: ['Psikostimülan', 'Stimülan', 'DEHB ilacı', 'Sempatomimetik'],
     yasKontrendikasyonAy: 72,
@@ -710,7 +713,10 @@ export const NOROPSIKIYATRI: Record<string, TürkishDrug> = {
     },
     form: 'Kapsül',
     sgkCovered: true,
-    sgkRestriction: 'SUT: DEHB tanısı ve uzman raporu koşullarına bakınız.',
+    // NOTYA-SUT-RAPOR-01 — SUT EK-4/F 16 "Atomoksetine: 6-25 yaş hastalarda psikiyatri uzman hekiminin yer aldığı sağlık
+    // kurulu raporuna dayanılarak psikiyatri uzman hekimi veya çocuk sağlığı ve hastalıkları uzman hekimlerince reçete
+    // edilir." Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali. A health board report, not a specialist report.
+    sgkRestriction: 'SUT EK-4/F: 6-25 yaş hastada, psikiyatri uzman hekiminin yer aldığı sağlık kurulu raporuyla; psikiyatri veya çocuk sağlığı ve hastalıkları uzman hekimlerince reçete edilir.',
     category: 'Selektif noradrenalin geri alım inhibitörü (DEHB)',
     siniflar: ['DEHB ilacı', 'Noradrenalin geri alım inhibitörü'],
     yasKontrendikasyonAy: 72,
