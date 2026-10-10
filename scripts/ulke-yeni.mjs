@@ -484,11 +484,31 @@ dosyalar['uygulama/araclar.ts'] = `${BAS(`${B}: THE TOOLS AREA (/tools) in "${DI
                 clinician of this country: a tool is a translation of the kit's checklist or formula, never a
                 national schedule, drug list, dosing table, protocol or reference range.
   parametreler  some tools leave numbers to the country (a threshold, an interval): such a tool stays a slot until a
-                local clinician states each number with its source.
+                local clinician states each number with its source. A number that is a LABORATORY VALUE is stated
+                with its unit — { deger: 110, birim: 'g/L' } — and the kit converts it.
   birimler      the name of every unit a switched-on tool shows, as a doctor reads it
-  labBirimleri  the unit this country's laboratories report each value in, for the tools that read one
+  labBirimleri  the unit this country's laboratories report each value in, for the tools that read one. A LIST
+                (['g/L', 'g/dL']) = the country accepts each of them and the doctor chooses the unit beside the
+                field; a number without its unit then gives no result.
   yuvalar       tools this country does not have yet, each with what is missing and who supplies it. Empty, off.
   inceleme      who wrote the tool texts and which clinician read them
+  lisans        THE LICENCE STATE of every tool and of every placeholder: serbest (free to implement), izin-gerekli
+                (permission needed), ucretli (a paid licence), belirsiz (unclear: nobody has read the terms) or
+                izin-alindi (permission granted), with who holds the rights and where the terms were read. A NEW
+                COUNTRY STATES IT FOR EVERY ONE (lisansTam: true below): the pack check refuses a tool or a
+                placeholder without it, AND REFUSES TO SWITCH ON A TOOL THAT IS NOT serbest OR izin-alindi — such a
+                tool stays a placeholder. Never write "serbest" on a guess: somebody reads the terms first.
+                A rights holder's notice (lisans.bildirim) is shown under every result of the tool.
+
+WHAT ONLY THIS COUNTRY HAS (docs/COUNTRY-PACK-HOWTO.md, "Country-only tools and roles"; every field is described at
+the top of lib/ulke/araclar/tipler.ts; a pack that uses all of them: lib/ulke/testing/ornekUlke/):
+  a tool of its own      its mechanism in THIS folder (kendiAraclari) and an entry in araclar; its key begins with
+                         "${KOD}-" and is added to the list for "${KOD}" in countries/yasak-araclar.json
+  a link-out tile        an entry with baglanti: { adres: 'https://…' } — it only opens an official calculator
+  every doctor role      sinif: 'hekimler' with roller: hekimRolleri(<the pack's roles>) — not the allied professions
+  its own bands/options  uyarlama, where the kit's definition allows it (bantSerbest, secenekSerbest)
+  its own table          tablolar, for a tool that leaves one to the country
+  by the patient         hasta: { enAzYas, enCokYas, cinsiyet } with metin.hastaKapisi: who the tool is for
 
 THE FOLLOW-UP LIST (takip-paneli) is a role tool: give it to every role that has at least one tool whose result
 can be kept, and to no other. The application proposes no follow-up day anywhere: an interval is clinical guidance
@@ -504,6 +524,8 @@ export const ${B}_ARACLAR: UlkeAraclari = {
     {
       // Base: every role gives patients access to their page the same way.
       anahtar: 'hasta-portali', roller: null,
+      // A screen of the product itself: nobody else's work is reproduced.
+      lisans: { durum: 'serbest' },
       metin: {
         ad: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — its title, the same words as the card on the patient\\'s file') },
         aciklama: { ${anahtar(DIL)}: eksik('tools: the patient page\\'s tile — one sentence: what the doctor does there') },
@@ -514,6 +536,7 @@ export const ${B}_ARACLAR: UlkeAraclari = {
     {
       // Base: every role keeps its own text blocks the same way. The pack brings no ready-made template.
       anahtar: 'sablonlarim', roller: null,
+      lisans: { durum: 'serbest' },
       metin: {
         ad: { ${anahtar(DIL)}: eksik('tools: the tile of "my templates" — its title') },
         aciklama: { ${anahtar(DIL)}: eksik('tools: the tile of "my templates" — one sentence: the doctor\\'s own ready texts for notes and messages') },
@@ -524,6 +547,7 @@ export const ${B}_ARACLAR: UlkeAraclari = {
     {
       // Base: every role asks a colleague, and is asked, the same way.
       anahtar: 'konsultasyonlar', roller: null,
+      lisans: { durum: 'serbest' },
       metin: {
         ad: { ${anahtar(DIL)}: eksik('tools: the consultations tile — its title') },
         aciklama: { ${anahtar(DIL)}: eksik('tools: the consultations tile — one sentence: ask a colleague about a patient and answer what you were asked; a colleague is found by code') },
@@ -536,6 +560,8 @@ export const ${B}_ARACLAR: UlkeAraclari = {
   labBirimleri: {},
   yuvalar: [],
   inceleme: eksikAyar('tools: who wrote the tool texts and who read them — { makineYazimi: true | false, klinisyen: null | \\'name of the clinician of this country who read them\\' }'),
+  // THIS COUNTRY STATES THE LICENCE OF EVERY TOOL AND PLACEHOLDER (see "lisans" above). Written by the scaffold; it stays true.
+  lisansTam: true,
 }
 `
 

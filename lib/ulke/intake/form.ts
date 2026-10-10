@@ -32,7 +32,8 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt, encrypt } from '@/lib/security/encryption'
-import { formMetni, hastaIcinBicim, rolAdi, veliYasindaMi } from '../arayuz'
+import { formMetni, hastaIcinBicim, rolAdi, roller, veliYasindaMi } from '../arayuz'
+import { icerikAnahtari } from '../arayuz/rolIcerigi'
 import { sayiYaz } from '../arayuz/sayi'
 import { anahtarHash, anahtarUret, pinHashle, pinUret } from '../portal/pin'
 import { baglantiGecerlilikGun } from '../portal/erisim'
@@ -65,9 +66,13 @@ export const FORM_LISTE_AZAMI = 10
 const durumMu = (ham: unknown): ham is FormDurumu => ham === 'bekliyor' || ham === 'taslak' || ham === 'gonderildi' || ham === 'iptal'
 const birimler = (): Birimler => ulkePaketi().uygulama?.birimler ?? { agirlik: 'kg', boy: 'cm', sicaklik: 'C' }
 
-/** Who the form of a row is for. The role counts only while the pack still has questions for it. */
+/**
+ * Who the form of a row is for. The role counts only while the pack still has questions for it: its own set, or —
+ * for a role only this country has — the set of the role it behaves like (NOTYA-ULKE-OZEL-01, ../arayuz/rolIcerigi.ts).
+ * The row keeps the account's own role; `rol` here is the key the QUESTIONS are found under.
+ */
 const baglam = (s: Pick<Satir, 'rol' | 'veli'>, hasta: Pick<Hasta, 'cinsiyet'>, icerik: HastaFormuIcerigi): FormBaglami => ({
-  rol: s.rol && Object.prototype.hasOwnProperty.call(icerik.roller, s.rol) ? s.rol : null,
+  rol: s.rol ? icerikAnahtari(roller(), s.rol, icerik.roller) : null,
   veli: s.veli === true,
   cinsiyet: hasta.cinsiyet,
 })
@@ -103,7 +108,7 @@ export async function formIste(supabase: SupabaseClient, doktorId: string, g: { 
   if (!hasta) return { tamam: false, kod: 'NOT_FOUND' }
   // The questions that follow the core ones are those of the doctor's own role — today's role, fixed on the form.
   const hekimRolu = await hekimRolunuOku(supabase, doktorId)
-  const rol = hekimRolu && Object.prototype.hasOwnProperty.call(icerik.roller, hekimRolu) ? hekimRolu : null
+  const rol = hekimRolu && icerikAnahtari(roller(), hekimRolu, icerik.roller) !== null ? hekimRolu : null
   // The guardian form: the kit's one age rule, on today's date in the doctor's own time zone.
   const bugun = yerelAn(simdi, await hesapSaatDilimi(supabase, doktorId)).gun
   const veli = veliYasindaMi(rol, hasta.dogumTarihi, bugun)

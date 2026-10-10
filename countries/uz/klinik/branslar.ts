@@ -10,11 +10,15 @@
  * local reviewer has confirmed them (docs/COUNTRY-PACK-CHECKLIST.md C12, C14). Switching them on before a sign-off
  * was the owner's decision; the status table is in docs/COUNTRY-PACK-UZBEKISTAN.md.
  *
- * Keys are Notya's internal specialty identifiers (the same ones the core tables store in `sessions.specialty`);
- * the type is imported as a type only, so nothing of the file that defines it is loaded. Typing this list by the
- * product's own key type makes a specialty added to the product a type error here until it has a template.
+ * THE LIST IS UZBEKISTAN'S OWN (NOTYA-ULKE-OZEL-01). The keys are the ones the pack started with — the product's
+ * original specialty identifiers — but the list is no longer typed by the Turkish product's key type: until
+ * 2026-10-10 a specialty added to, renamed in or taken out of the Turkish product was a type error in this file, so
+ * a change made for Türkiye could stop every country's build. Uzbekistan now adds, renames, removes, splits or merges
+ * a specialty here without asking any other country, and no other country's change reaches this file. Which key
+ * carries the same role in each country is data beside the packs (countries/rol-eslemesi.json), held to every side
+ * by lib/ulke/rolEslemesi.test.ts and lib/ulke/rolEslemesi.paket.test.ts: a difference shows up there as a test to
+ * update, never as a build that does not compile.
  */
-import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { UZ_SABLONLAR, uzSablonMu as sablonMu } from './notSablonlari'
 
 /** A template key: 'genel', or a role key. */
@@ -29,9 +33,9 @@ export type UzBrans = {
   yerelInceleyen: string | null
 }
 
-const kendi = (sablon: SpecialtyKey): UzBrans => ({ kendiSablonuAcik: true, sablon, yerelInceleyen: null })
+const kendi = (sablon: string): UzBrans => ({ kendiSablonuAcik: true, sablon, yerelInceleyen: null })
 
-export const UZ_BRANSLAR: Readonly<Record<SpecialtyKey, UzBrans>> = {
+export const UZ_BRANSLAR: Readonly<Record<string, UzBrans>> = {
   pediatri: kendi('pediatri'),
   kardiyoloji: kendi('kardiyoloji'),
   noroloji: kendi('noroloji'),

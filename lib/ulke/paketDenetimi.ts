@@ -12,6 +12,7 @@
  * A pack that is the pre-split application (`bolunmemisUygulama`) brings none of this and is not checked here.
  */
 import type { UlkeAcilisi } from './arayuz/acilisTipleri'
+import { gibiAnahtarlari, ROL_ANAHTARI_AZAMI, rolunGibisi } from './arayuz/rolIcerigi'
 import { NOT_BOLUMLERI, ROL_TARAFLARI, type UlkeArayuzu } from './arayuz/tipler'
 import { eksikAyarMi, eksikMetinMi } from './eksik'
 import { ARACLAR_YER_TUTUCULARI, araclarSorunlari } from './araclar/denetim'
@@ -343,16 +344,33 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
   for (const r of roller) {
     if (!liste(u.roller).includes(r.anahtar)) ekle('uygulama.roller', `"${r.anahtar}" is named in the content and is not a role of the pack`)
     if (!/^[a-z]+(-[a-z]+)*$/.test(r.anahtar)) ekle(`arayuz.roller.${r.anahtar}`, 'a role key is lower-case words joined by hyphens')
+    // The database keeps an account's role as text of this form and at most this long (migration 134): a longer key could never be saved.
+    else if (r.anahtar.length > ROL_ANAHTARI_AZAMI) ekle(`arayuz.roller.${r.anahtar}`, `a role key is at most ${ROL_ANAHTARI_AZAMI} characters (the database keeps it in that form)`)
     if (!ROL_TARAFLARI.includes(r.taraf)) ekle(`arayuz.roller.${r.anahtar}.taraf`, 'must be doktor, klinik-hekim or klinik-muttefik')
+    // NOTYA-ULKE-OZEL-01 — A ROLE ONLY THIS COUNTRY HAS says which role it behaves like: a key, never itself, never a chain.
+    if (r.gibi !== undefined) {
+      const y = `arayuz.roller.${r.anahtar}.gibi`
+      if (typeof r.gibi !== 'string' || !/^[a-z]+(-[a-z]+)*$/.test(r.gibi)) ekle(y, 'names the role this one behaves like, by its key')
+      else if (r.gibi === r.anahtar) ekle(y, 'a role cannot behave like itself: leave `gibi` out')
+      else {
+        if (roller.some((x) => x.anahtar === r.gibi && x.gibi !== undefined)) ekle(y, `"${r.gibi}" itself behaves like another role: name the role that has the template and the questions`)
+        // what it names must BE somewhere: a template, or a set of intake questions (checked with the form below)
+        const sablonVar = Boolean(sablon) && sahip(kayit(sablon?.rolAlanlari), r.gibi)
+        const formVar = Boolean(klinik?.hastaFormu) && !eksikAyarMi(klinik?.hastaFormu) && !eksikAyarMi(klinik?.hastaFormu?.roller) && sahip(kayit(klinik?.hastaFormu?.roller), r.gibi)
+        if (!sablonVar && !formVar) ekle(y, `"${r.gibi}" has neither a note template nor intake questions in this pack: there is nothing to behave like`)
+      }
+    }
   }
   if (new Set(rolAnahtarlari).size !== rolAnahtarlari.length) ekle('arayuz.roller', 'a role is listed twice')
+  const gibiler = gibiAnahtarlari(roller)
 
   // ── note templates ──
   if (!sablon) ekle('arayuz.notSablonlari', 'no note templates')
   else {
     if (!dolu(sablon.genelSablon)) ekle('arayuz.notSablonlari.genelSablon', 'the general template has no key')
     for (const [rol, alanlar] of Object.entries(kayit(sablon.rolAlanlari))) {
-      if (!rolAnahtarlari.includes(rol)) ekle(`arayuz.notSablonlari.rolAlanlari.${rol}`, 'a template for a role the pack does not have')
+      // A template may also stand under the key of a role some role of the pack BEHAVES LIKE (lib/ulke/arayuz/rolIcerigi.ts).
+      if (!rolAnahtarlari.includes(rol) && !gibiler.includes(rol)) ekle(`arayuz.notSablonlari.rolAlanlari.${rol}`, 'a template for a role the pack does not have')
       for (const k of liste(alanlar)) if (!sahip(kayit(sablon.alanlar), k)) ekle(`arayuz.notSablonlari.rolAlanlari.${rol}`, `names the field "${k}", which is not defined`)
     }
     for (const [k, alan] of Object.entries(kayit(sablon.alanlar))) {
@@ -392,7 +410,8 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
         // A set that is still to be supplied is reported once, by its marker, and not again line by line.
         const cekirdekEksik = eksikAyarMi(hf.cekirdek), rollerEksik = eksikAyarMi(hf.roller)
         const denetlenen = { ...hf, cekirdek: cekirdekEksik ? { bolumler: [], inceleme: { makineYazimi: true, klinisyen: null } } : hf.cekirdek, roller: rollerEksik ? {} : hf.roller }
-        for (const x of formIcerigiSorunlari(denetlenen, [...liste(u.roller)], diller, eksikMetinMi)) {
+        const gibiTablosu = Object.fromEntries(roller.map((r) => [r.anahtar, rolunGibisi(roller, r.anahtar)]).filter((x): x is [string, string] => x[1] !== null))
+        for (const x of formIcerigiSorunlari(denetlenen, [...liste(u.roller)], diller, eksikMetinMi, gibiTablosu)) {
           if ((cekirdekEksik && x.yer.startsWith('hastaFormu.cekirdek')) || (rollerEksik && x.yer.startsWith('hastaFormu.roller'))) continue
           ekle(`klinik.${x.yer}`, x.sorun)
         }
