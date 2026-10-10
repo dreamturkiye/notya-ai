@@ -1,7 +1,11 @@
 /**
  * NOTYA-ULKE-01 · NOTYA-UZ-FIYAT-UNVAN-01 — Uzbekistan: the assistant's name for each specialty and clinic role.
  *
- * THE SINGLE SOURCE of the 40 names. No other file of the pack or of the kit repeats one; every form a screen shows
+ * THE SINGLE SOURCE of the 40 names the owner gave. No other file of the pack or of the kit repeats one. IT IS NO
+ * LONGER THE LIST OF ROLES (NOTYA-ULKE-UYGULA-UZ, 2026-10-10): the roles are ./rolListesi.ts. Five entries below are
+ * of roles the audit took out (sac-ekimi, longevity, ergoterapi, diyetisyen, odyoloji): the owner's names for them
+ * are kept, and no screen shows them (./asistanKimligi.ts answers only for a role of the pack). Seven roles of the
+ * pack have no entry here and show the neutral assistant until the owner names them. Every form a screen shows
  * (with the title, without it, in Cyrillic, in Russian) is made from an entry here by ./asistanKimligi.ts.
  *
  * NAMES: the owner's list (Kaan, 2026-10-08). Given name and family name exactly as he wrote them, in Uzbek Latin.

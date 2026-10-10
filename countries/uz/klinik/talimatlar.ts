@@ -25,7 +25,7 @@
  * The answer is one JSON object with the keys s, o, a, p (lib/ulke/tipler.ts → NotIcerigi). The keys are Latin
  * letters in every form: they are the contract with the code, not text a person reads.
  *
- * NOTYA-UZ-BRANSLAR-01 — ONE INSTRUCTION PER ROLE, for all 40. A role's instruction is the same nine rules and four
+ * NOTYA-UZ-BRANSLAR-01 — ONE INSTRUCTION PER ROLE, for every role of the pack. A role's instruction is the same nine rules and four
  * sections, then that role's own block: the name of the role and the list of ITS fields (./notSablonlari.ts), each
  * with its key and its label in the note's language, to be returned under "fields". The block is composed from the
  * template — it names no field of another role, and a role without a template has no instruction at all.
@@ -40,7 +40,7 @@
  */
 import { NOT_ALANLARI_ANAHTARI, type DilKodu, type NotGirdisi, type NotIcerigi } from '@/lib/ulke/tipler'
 import { UZ_ROL_ADLARI, uzRolTarafi } from './rolAdlari'
-import { UZ_GENEL_SABLON, UZ_ROL_ALANLARI, UZ_VASIY_ALANI, uzAlanAdi, uzResitDegilMi, uzSablonMu } from './notSablonlari'
+import { UZ_GENEL_SABLON, UZ_VASIY_ALANI, uzAlanAdi, uzResitDegilMi, uzRolSablonAlanlari, uzSablonMu } from './notSablonlari'
 
 export type UzNotDili = 'uz-Latn' | 'uz-Cyrl' | 'ru'
 export const uzNotDiliMi = (ham: unknown): ham is UzNotDili => ham === 'uz-Latn' || ham === 'uz-Cyrl' || ham === 'ru'
@@ -162,15 +162,17 @@ const NOT: Record<UzNotDili, Parcalar> = {
  * the template (./notSablonlari.ts), so it cannot name a field the role does not own.
  */
 export function uzRolBlogu(dil: UzNotDili, sablon: string): string | null {
-  const alanlar = UZ_ROL_ALANLARI[sablon]
+  // The role's own fields, or — for a role only Uzbekistan has — those of the role it behaves like (./rolListesi.ts).
+  // The NAME in the block is always the role's own.
+  const alanlar = uzRolSablonAlanlari(sablon)
   const ad = UZ_ROL_ADLARI[sablon]?.[dil]
-  if (!uzSablonMu(sablon) || sablon === UZ_GENEL_SABLON || !alanlar || !ad) return null
+  if (!uzSablonMu(sablon) || sablon === UZ_GENEL_SABLON || !alanlar.length || !ad) return null
   const n = NOT[dil]
   const giris = (uzRolTarafi(sablon) === 'klinik-muttefik' ? n.muttefik : n.hekim).replace('%', ad)
   return [ad.toLocaleUpperCase(dil === 'ru' ? 'ru' : 'uz'), giris, n.alanlar, ...alanlar.map((k) => `- ${k} — ${uzAlanAdi(k, dil)}`), n.son].join('\n')
 }
 
-const rolJsonKalibi = (sablon: string): string => `{"s": "…", "o": "…", "a": "…", "p": "…", "${ALAN}": {${UZ_ROL_ALANLARI[sablon].map((k) => `"${k}": "…"`).join(', ')}}}`
+const rolJsonKalibi = (sablon: string): string => `{"s": "…", "o": "…", "a": "…", "p": "…", "${ALAN}": {${uzRolSablonAlanlari(sablon).map((k) => `"${k}": "…"`).join(', ')}}}`
 
 /** Instructions for writing a visit note in `dil` with the template `sablon`. null = no such language or template here. */
 export function uzNotTalimati(dil: DilKodu, sablon: string): string | null {

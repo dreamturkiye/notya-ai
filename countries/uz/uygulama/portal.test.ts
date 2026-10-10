@@ -91,11 +91,13 @@ describe('Uzbekistan — the patient portal: text in three forms, and the patien
     const { ulkePaketi } = await import('@/lib/ulke/ulke')
     assert.deepEqual(ulkePaketi().uygulama?.portal, { baglantiGecerlilikGun: 30, acilNumara: '103' })
     const paket = readFileSync(join(KOK, 'countries/uz/index.ts'), 'utf8')
-    assert.match(paket, /103 was written by Claude from general knowledge\s+\/\/ and is UNVERIFIED: a local source must confirm it before any patient sees the portal/)
+    // Country audit 2026-10-09 (docs/COUNTRY-AUDIT-UZBEKISTAN.md, A10): the number now names its official source where it
+    // is set, and still says that nobody in the country has confirmed it. The record's row 78 is unchanged.
+    assert.match(paket, /103 — CHECKED AGAINST AN OFFICIAL SOURCE on 2026-10-09[\s\S]{0,400}https:\/\/gov\.uz\/oz\/advice\/63\/document\/1090[\s\S]{0,500}Not yet confirmed by a person in the country/)
     assert.match(paket, /A STARTING VALUE, not a\s+\/\/ local rule: to confirm with the owner/)
     const kayit = readFileSync(join(KOK, 'docs/COUNTRY-PACK-UZBEKISTAN.md'), 'utf8')
-    assert.match(kayit, /^\| 78 \| all 40 roles \(patient portal\) \| `emergency_number` \|[^\n]*\*\*103\*\*[^\n]*UNVERIFIED[^\n]*before any patient sees the portal/m)
-    assert.match(kayit, /^\| 79 \| all 40 roles \(patient portal\) \| `link_validity` \|[^\n]*\*\*30 days\*\*[^\n]*the owner/m)
+    assert.match(kayit, /^\| 78 \| all 42 roles \(patient portal\) \| `emergency_number` \|[^\n]*\*\*103\*\*[^\n]*UNVERIFIED[^\n]*before any patient sees the portal/m)
+    assert.match(kayit, /^\| 79 \| all 42 roles \(patient portal\) \| `link_validity` \|[^\n]*\*\*30 days\*\*[^\n]*the owner/m)
     // The number appears in no catalogue and in no kit file: one place states it.
     for (const d of ['countries/uz/uygulama/portalMetinleri.ts', 'countries/uz/klinik/hastaOzeti.ts']) assert.doesNotMatch(readFileSync(join(KOK, d), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), /\b103\b/, d)
   })
