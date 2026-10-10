@@ -10,6 +10,11 @@
  *      signed-in application.
  *   2. THE ROUTE, with THE PACK'S OWN tools: a pack without the tools area answers "not found" on every method; a
  *      pack with it is held to the same behaviour through the real handlers.
+ *   3. NOTYA-ULKE-OZEL-01 — WHAT ONE COUNTRY MAY ADD, on the server: a tool that is not for this patient's age or sex
+ *      keeps nothing (an unknown birth date or sex never passes); a link-out tile keeps nothing; a tool only one
+ *      country has is run with THAT country's number, stated in its own unit, and without the number it keeps
+ *      nothing; a value typed without its unit keeps nothing; a tool whose licence is not free or permitted is not
+ *      a tool. Like layer 1: a tool list of no country, built here.
  *
  * Real handlers and real library code. The database and sign-in are stand-ins inside this process; any network
  * address fails the test. Synthetic data only.
@@ -30,7 +35,8 @@ import { pathToFileURL } from 'node:url'
 import { sahteVeritabani, type Satir } from '@/lib/ulke/testing/sahteVeritabani'
 import { ornekGirdiler } from '@/lib/ulke/testing/aracOrnekleri'
 import { KIT_ARACLARI } from './katalog'
-import type { AracGirdisi, AracTanimi, UlkeAraclari } from './tipler'
+import type { AracGirdisi, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
+import { BOS_SONUC, sayi, sayiMi } from './yardimci'
 
 ;(require as unknown as { extensions: Record<string, (m: { exports: unknown }) => void> }).extensions['.css'] = (m) => { m.exports = {} }
 
@@ -227,6 +233,88 @@ describe('tool records — keeping a result', () => {
     vt.boz.yaz.add('ulke_arac_kayitlari')
     assert.deepEqual(await kaydet(DA, H1), { tamam: false, kod: 'BASARISIZ' })
     assert.equal(kayitlar().length, 0)
+  })
+})
+
+// ═════════════════════════ 3. what one country may add (NOTYA-ULKE-OZEL-01) ═════════════════════════
+
+describe('tool records — what one country may add', () => {
+  const metin = { ad: {}, aciklama: {}, alanlar: {}, not: {} }
+  /** A tool only one country has: a haemoglobin against the limit that country states (a laboratory value, with its unit). */
+  const OZEL: AracTanimi = {
+    anahtar: 'qa-ozel', tur: 'hesap', alanlar: [sayi('hb', 2, 25, { lab: 'hemoglobin' })], parametreler: ['esik'], parametreOlculeri: { esik: 'hemoglobin' }, sayiOlculeri: { hb: 'hemoglobin' },
+    cikti: { sayilar: ['hb'], bantlar: ['alt', 'ust'], uyarilar: [], tarihler: [] }, bantSerbest: true, kaynak: null,
+    hesapla: (g, { p }) => (sayiMi(g.hb) && sayiMi(p.esik) ? { tamam: true, sayilar: [{ anahtar: 'hb', deger: g.hb, ondalik: 1 }], bant: g.hb < p.esik ? 'alt' : 'ust', uyarilar: [], tarihler: [] } : BOS_SONUC),
+  }
+  /** The synthetic list, with one more entry and what a country states beside it. */
+  const ile = (arac: Partial<PaketAraci> & { anahtar: string }, ek: Partial<UlkeAraclari> = {}): UlkeAraclari => ({ ...SENTETIK, ...ek, araclar: [...SENTETIK.araclar.filter((p) => p.anahtar !== arac.anahtar), { roller: [ROLLER[0]], metin, ...arac }] })
+  const kayitli = async (r: Awaited<ReturnType<typeof kaydet>>) => { assert.equal(r.tamam, true, JSON.stringify(r)); return JSON.parse(sifreCoz(String(satir((r as { id: string }).id).kayit_encrypted))) as { g: Record<string, unknown>; s: { bant: string | null; sayilar: { deger: number }[] } } }
+  const HB = { labBirimleri: { hemoglobin: ['g/L', 'g/dL'] }, kendiAraclari: [OZEL] }
+
+  it('A TOOL THAT IS NOT FOR THIS PATIENT keeps nothing: the age limit, the sex limit — and what is not known never passes', async () => {
+    if (!KIT) return
+    // the patient of this test was born on 1990-05-05 and has no recorded sex
+    assert.equal((await kaydet(DA, H1, {}, ile({ anahtar: T1.anahtar, hasta: { enAzYas: 18 } }))).tamam, true, 'an adult, a tool for adults')
+    assert.equal((await kaydet(DA, H1, {}, ile({ anahtar: T1.anahtar, hasta: { enAzYas: 18, enCokYas: 64 } }))).tamam, true)
+    const once = kayitlar().length
+    for (const hasta of [{ enAzYas: 40 }, { enCokYas: 17 }, { cinsiyet: 'female' as const }, { cinsiyet: 'male' as const }, { enAzYas: 18, cinsiyet: 'male' as const }]) {
+      assert.deepEqual(await kaydet(DA, H1, {}, ile({ anahtar: T1.anahtar, hasta })), { tamam: false, kod: 'ARAC_YOK' }, JSON.stringify(hasta))
+    }
+    // a patient without a birth date does not pass an age limit, whatever the limit
+    tablo('ulke_hastalar').find((h) => h.id === H2)!.dob_encrypted = null
+    assert.deepEqual(await kaydet(DA, H2, {}, ile({ anahtar: T1.anahtar, hasta: { enAzYas: 0 } })), { tamam: false, kod: 'ARAC_YOK' })
+    assert.equal((await kaydet(DA, H2)).tamam, true, 'the same tool without a limit is kept for the same patient')
+    assert.equal(kayitlar().length, once + 1, 'nothing was written by a refusal')
+  })
+
+  it('A LINK-OUT TILE keeps nothing; A TOOL WHOSE LICENCE IS NOT FREE OR PERMITTED is not a tool at all', async () => {
+    if (!KIT) return
+    assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-baglanti', ham: {} }, ile({ anahtar: 'qa-baglanti', baglanti: { adres: 'https://example.org/x' } })), { tamam: false, kod: 'ARAC_YOK' })
+    for (const durum of ['belirsiz', 'izin-gerekli', 'ucretli'] as const) assert.deepEqual(await kaydet(DA, H1, {}, ile({ anahtar: T1.anahtar, lisans: { durum, hakSahibi: 'QA' } })), { tamam: false, kod: 'ARAC_YOK' }, durum)
+    assert.equal((await kaydet(DA, H1, {}, ile({ anahtar: T1.anahtar, lisans: { durum: 'izin-alindi', hakSahibi: 'QA', kaynak: 'QA' } }))).tamam, true)
+    assert.equal(kayitlar().length, 1)
+  })
+
+  it('A TOOL ONLY ONE COUNTRY HAS is run with that country\'s number in that country\'s unit — typed in either accepted unit, the same answer is kept', async () => {
+    if (!KIT) return
+    const icerik = ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 110, birim: 'g/L' } } }, HB)
+    const nokta = (n: string) => n.replace('.', paket.bicim.ondalikAyraci)
+    for (const [hb, birim, bant] of [['105', 'g/L', 'alt'], [nokta('10.5'), 'g/dL', 'alt'], ['115', 'g/L', 'ust'], [nokta('11.5'), 'g/dL', 'ust']] as const) {
+      const z = await kayitli(await kaydet(DA, H1, { arac: 'qa-ozel', ham: { hb, 'hb.birim': birim } }, icerik))
+      assert.equal(z.s.bant, bant, `${hb} ${birim}`)
+      // what the doctor typed is kept as typed, WITH the unit it was typed in; the arithmetic\'s own number is in its own unit
+      assert.equal(z.g['hb.birim'], birim)
+      assert.ok(Math.abs(z.s.sayilar[0].deger - (birim === 'g/L' ? Number(hb) / 10 : Number(hb.replace(',', '.')))) < 1e-9)
+    }
+    // the same limit stated in the other unit: the same answers
+    const diger = ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 11, birim: 'g/dL' } } }, HB)
+    assert.equal((await kayitli(await kaydet(DA, H1, { arac: 'qa-ozel', ham: { hb: '105', 'hb.birim': 'g/L' } }, diger))).s.bant, 'alt')
+    assert.equal((await kayitli(await kaydet(DA, H1, { arac: 'qa-ozel', ham: { hb: '115', 'hb.birim': 'g/L' } }, diger))).s.bant, 'ust')
+  })
+
+  it('A MISSING INPUT NEVER GIVES A REASSURING RESULT: no unit, a unit the country does not accept, a number the country did not state, a limit without its unit — nothing is kept', async () => {
+    if (!KIT) return
+    const tam = ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 110, birim: 'g/L' } } }, HB)
+    for (const ham of [{ hb: '140' }, { hb: '140', 'hb.birim': 'mmol/L' }, { hb: '140', 'hb.birim': '' }, { 'hb.birim': 'g/L' }]) assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-ozel', ham }, tam), { tamam: false, kod: 'EKSIK' }, JSON.stringify(ham))
+    const ham = { hb: '140', 'hb.birim': 'g/L' }
+    assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-ozel', ham }, ile({ anahtar: 'qa-ozel' }, HB)), { tamam: false, kod: 'EKSIK' }, 'the country stated no limit')
+    assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-ozel', ham }, ile({ anahtar: 'qa-ozel', parametreler: { esik: 110 } }, HB)), { tamam: false, kod: 'EKSIK' }, 'a laboratory limit as a bare number')
+    assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-ozel', ham }, ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 6.8, birim: 'mmol/L' } } }, HB)), { tamam: false, kod: 'EKSIK' }, 'a limit in a unit the kit cannot convert')
+    // a mechanism the pack does not bring is no tool
+    assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-ozel', ham }, ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 110, birim: 'g/L' } } }, { labBirimleri: HB.labBirimleri })), { tamam: false, kod: 'ARAC_YOK' })
+    assert.equal(kayitlar().length, 0)
+  })
+
+  it('THE COUNTRY\'S OWN BANDS are what is kept: their number is the country\'s, their limits in its unit; a value no row takes keeps nothing', async () => {
+    if (!KIT) return
+    const bantlar = { sayi: 'hb', birim: 'g/L', satirlar: [{ ust: 80, bant: 'bir' }, { ust: 110, bant: 'iki' }, { ust: 160, dahil: true, bant: 'uc' }, { ust: null, bant: 'dort' }] }
+    const icerik = ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 110, birim: 'g/L' } }, uyarlama: { bantlar } }, HB)
+    for (const [hb, bant] of [['79', 'bir'], ['80', 'iki'], ['109', 'iki'], ['110', 'uc'], ['160', 'uc'], ['161', 'dort']] as const) assert.equal((await kayitli(await kaydet(DA, H1, { arac: 'qa-ozel', ham: { hb, 'hb.birim': 'g/L' } }, icerik))).s.bant, bant, hb)
+    const once = kayitlar().length
+    // a table that leaves a value out (the pack check refuses such a pack): on the server, no result rather than a result without its band
+    const acikDegil = ile({ anahtar: 'qa-ozel', parametreler: { esik: { deger: 110, birim: 'g/L' } }, uyarlama: { bantlar: { ...bantlar, satirlar: bantlar.satirlar.slice(0, 3) } } }, HB)
+    assert.deepEqual(await kaydet(DA, H1, { arac: 'qa-ozel', ham: { hb: '200', 'hb.birim': 'g/L' } }, acikDegil), { tamam: false, kod: 'EKSIK' })
+    assert.equal(kayitlar().length, once)
   })
 })
 

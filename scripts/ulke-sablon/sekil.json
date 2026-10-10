@@ -624,7 +624,10 @@
    "temizle": "$m",
    "kaynak": "$m:%",
    "saklanmaz": "$m",
-   "yok": "$m"
+   "yok": "$m",
+   "birimSec": {
+    "$istege": "REQUIRED if the country accepts more than one unit for a laboratory value (araclar.labBirimleri with a list): under a number whose unit is not chosen yet, \"Choose the unit of this value.\""
+   }
   },
   "portal": {
    "nasil": "$m"

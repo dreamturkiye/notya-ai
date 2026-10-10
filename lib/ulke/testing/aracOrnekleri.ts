@@ -2,7 +2,8 @@
  * NOTYA-ULKE-ARACLAR-01 — sample inputs for a tool of the kit, for tests: the same list every time it is asked.
  * Tests only (lib/ulke/testing/).
  */
-import type { AracAlani, AracGirdisi, AracOrtami, AracTanimi } from '../araclar/tipler'
+import type { AracAlani, AracGirdisi, AracOrtami, AracTanimi, PaketAraci } from '../araclar/tipler'
+import { parametreleriCoz } from '../araclar/uyarlama'
 import { kosullariUygula } from '../araclar/yardimci'
 
 export const ORNEK_BUGUN = '2026-10-09'
@@ -23,8 +24,12 @@ export const ORNEK_PARAMETRELER: Readonly<Record<string, Readonly<Record<string,
   'kardiyo-izlem': { sbp_dikkat: 140, dbp_dikkat: 90, gun_ht_kontrol: 30, gun_ht_lab: 90, gun_kky_kontrol: 30, gun_kky_kilo: 14, gun_af_kontrol: 60, gun_af_lab: 30, gun_diger_kontrol: 90 },
 }
 
-/** What a tool's arithmetic is handed in a test: the day, and either a pack's numbers or the sample ones. */
-export const ornekOrtam = (t: AracTanimi, paketinki?: Readonly<Record<string, number>>): AracOrtami => ({ bugun: ORNEK_BUGUN, p: paketinki ?? ORNEK_PARAMETRELER[t.anahtar] ?? {} })
+/**
+ * What a tool's arithmetic is handed in a test: the day, and either a pack's numbers or the sample ones. A pack's
+ * numbers are handed over as the kit hands them: each in the unit the arithmetic uses (a laboratory value the pack
+ * states with its unit is converted first — lib/ulke/araclar/uyarlama.ts).
+ */
+export const ornekOrtam = (t: AracTanimi, paketinki?: PaketAraci['parametreler']): AracOrtami => ({ bugun: ORNEK_BUGUN, p: paketinki ? parametreleriCoz(t, { parametreler: paketinki }).p : ORNEK_PARAMETRELER[t.anahtar] ?? {} })
 
 /** Deterministic inputs for a tool: empty, everything at its first value, everything at its last, and a spread of mixes. */
 export function ornekGirdiler(t: AracTanimi, adet = 40): AracGirdisi[] {

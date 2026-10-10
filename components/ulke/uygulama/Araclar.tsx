@@ -16,6 +16,16 @@
  *
  * NOTHING IS STORED AND NOTHING IS SENT. A tool works in the browser on what the doctor types; the result can be
  * copied, in the account's note language. No patient is attached and no request leaves the page.
+ *
+ * NOTYA-ULKE-OZEL-01 — what a country may add, drawn here from the pack and nothing else:
+ *   - A UNIT THE DOCTOR CHOOSES, where the pack accepts several for a laboratory value: nothing is pre-selected, and
+ *     a number without its unit gives no result (the pack's sentence says so under the field);
+ *   - WHO THE TOOL IS FOR, where the pack limits it by the patient's age or sex: opened for a patient it is not for,
+ *     the tool shows that sentence and no field; such a tool is not on that patient's grid at all;
+ *   - A RIGHTS HOLDER'S NOTICE under every result of a tool that has one;
+ *   - A LINK-OUT TILE: the pack's words and one link to an official calculator elsewhere. The address is fixed in the
+ *     pack; nothing of the patient is put into it, it opens in a tab of its own and tells that site nothing of where
+ *     the doctor came from.
  */
 import React, { useEffect, useMemo, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
@@ -25,9 +35,9 @@ import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { ulkePaketi } from '@/lib/ulke/ulke'
-import { alanAraligi, alanBirimi, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
-import { girdiyiCoz, hamdanGosterilen, okunamayanAlanlar, type HamGirdi } from '@/lib/ulke/araclar/girdi'
-import { alanEtiketi, aracAra, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
+import { alanAraligi, alanBirimi, alanBirimleri, birimAnahtari, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
+import { birimiSecilmeyenler, girdiyiCoz, hamdanGosterilen, okunamayanAlanlar, type HamGirdi } from '@/lib/ulke/araclar/girdi'
+import { alanEtiketi, aracAra, aracCalistir, aracinKapisi, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, lisansBildirimi, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { AracAlani, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { alanVarMi, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -49,7 +59,7 @@ export { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 function Kutu({ x, dil, hastaId }: { x: GorunurArac; dil: DilKodu; hastaId?: string | null }) {
   return (
     <li>
-      <a className="uza-arac-kutu" href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'}>
+      <a className="uza-arac-kutu" href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'} data-tur={x.tanim.tur === 'baglanti' ? 'baglanti' : undefined}>
         <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
         <span className="uza-arac-aciklama">{bicimli(x.paket.metin.aciklama, dil)}</span>
       </a>
@@ -57,12 +67,14 @@ function Kutu({ x, dil, hastaId }: { x: GorunurArac; dil: DilKodu; hastaId?: str
   )
 }
 
-export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta }: {
+export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
   a: AraclarMetni; dil: DilKodu; icerik: UlkeAraclari; rol: string | null; q: string
   /** The patient the tools were opened for (from that patient's file): every tile carries the patient to its tool. */
   hasta?: AracHastasi | null
+  /** Today in the account's time zone. With a patient: a tool that is not for that patient's age or sex is left out. */
+  bugun?: string
 }) {
-  const hepsi = hesabinAraclari(icerik, rol)
+  const hepsi = hesabinAraclari(icerik, rol, hasta && bugun ? { hasta, bugun } : null)
   const katla = ulkePaketi().uygulama?.aramaKatla
   const temel = aracAra(hepsi.temel, q, dil, katla), kendi = aracAra(hepsi.rol, q, dil, katla)
   const hicYok = hepsi.temel.length + hepsi.rol.length === 0
@@ -102,7 +114,7 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta }: {
 
 // ───────────────────────── one tool ─────────────────────────
 
-function Alan({ x, alan, dil, a, gm, ham, degistir, o, y }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; gm: GirdiMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici }) {
+function Alan({ x, alan, dil, a, gm, ham, degistir, o, y, birimEksik }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; gm: GirdiMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici; /** A number is typed here and its unit is not chosen yet. */ birimEksik?: boolean }) {
   const etiket = alanEtiketi(x, alan.anahtar, dil, a)
   const id = `uza-arac-${alan.anahtar}`
   const v = ham[alan.anahtar]
@@ -132,13 +144,27 @@ function Alan({ x, alan, dil, a, gm, ham, degistir, o, y }: { x: GorunurArac; al
     // The kit's own date field, in the pack's order: never the browser's (NOTYA-ULKE-DENETIM-01b).
     return <div className="uza-alan" data-alan={alan.anahtar}><TarihGirisi id={id} etiket={etiket} deger={typeof v === 'string' ? v : ''} degistir={(gun) => degistir(alan.anahtar, gun)} m={gm} /></div>
   }
-  const birim = alanBirimi(alan, o)
-  const aralik = alanAraligi(alan, o)
+  // WHERE THE PACK ACCEPTS SEVERAL UNITS, the doctor chooses one: nothing is selected for them (NOTYA-ULKE-OZEL-01).
+  const birimleri = alanBirimleri(alan, o)
+  const secilen = ham[birimAnahtari(alan.anahtar)]
+  const birim = alanBirimi(alan, o, secilen)
+  const aralik = alanAraligi(alan, o, secilen)
   return (
     <div className="uza-alan" data-alan={alan.anahtar}>
       <label className="uza-etiket" htmlFor={id}>{etiket}{birim ? <small> ({y.birim(birim)})</small> : null}</label>
       {/* Read by the pack's own number rules; what cannot be read without guessing is refused, with the pack's sentence (NOTYA-ULKE-DENETIM-01a). */}
       <SayiGirisi id={id} deger={typeof v === 'string' ? v : ''} degistir={(metin) => degistir(alan.anahtar, metin)} m={gm} kural={o.sayi} />
+      {birimleri.length > 1 ? (
+        <div className="uza-secim-satir" role="radiogroup" aria-label={etiket} data-birim-secimi={alan.anahtar}>
+          {birimleri.map((b) => (
+            <label key={b} className="uza-secenek" data-secili={secilen === b ? 'evet' : undefined}>
+              <input type="radio" name={`${id}-birim`} value={b} checked={secilen === b} onChange={() => degistir(birimAnahtari(alan.anahtar), b)} />
+              <span>{y.birim(b)}</span>
+            </label>
+          ))}
+        </div>
+      ) : null}
+      {birimEksik ? <div data-birim-eksik={alan.anahtar}><Hata>{a.arac.birimSec ?? null}</Hata></div> : null}
       {aralik ? <p className="uza-ipucu">{yerine(a.arac.aralik, y.sayi(aralik.enAz, Number.isInteger(aralik.enAz) ? 0 : 1), y.sayi(aralik.enCok, Number.isInteger(aralik.enCok) ? 0 : 1))}</p> : null}
     </div>
   )
@@ -157,7 +183,11 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   const o = birimOrtami(icerik)
   const y = yazici(icerik, dil)
   const g = girdiyiCoz(x.tanim.alanlar, ham, o)
-  const hesap = x.tanim.hesapla(g, { bugun, p: x.paket.parametreler ?? {} })
+  // The one way a tool is run, here and on the server: the country's numbers and tables in the unit the arithmetic uses.
+  const hesap = aracCalistir(x, g, bugun, icerik)
+  const birimsiz = birimiSecilmeyenler(x.tanim.alanlar, ham, g, o)
+  const bildirim = lisansBildirimi(x, dil)
+  const kapi = bicimli(x.paket.metin.hastaKapisi, dil)
   // NO RESULT WHILE A FIELD HOLDS WHAT COULD NOT BE READ (NOTYA-ULKE-DENETIM-01a) — also an optional field: a limit
   // that was typed and not read is never worked with as "no limit". The field itself says what to type again.
   const sonuc = okunamayanAlanlar(x.tanim.alanlar, ham, g, o).length ? { ...hesap, tamam: false } : hesap
@@ -169,8 +199,10 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
     <>
       <section className="uza-kart" data-bolum="girdiler">
         <h2 className="uza-h2">{a.arac.girdiler}</h2>
+        {/* Who the tool is for, where the pack limits it by the patient: said before anything is typed. */}
+        {x.paket.hasta && kapi ? <p className="uza-ipucu" data-hasta-kapisi>{kapi}</p> : null}
         <div className="uza-form" style={{ marginTop: 0 }}>
-          {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} gm={gm} ham={ham} degistir={degistir} o={o} y={y} />)}
+          {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} gm={gm} ham={ham} degistir={degistir} o={o} y={y} birimEksik={birimsiz.includes(alan.anahtar)} />)}
         </div>
         <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={temizle}>{a.arac.temizle}</button></div>
       </section>
@@ -197,10 +229,39 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
         )}
         <p className="uza-ipucu" data-not>{bicimli(t.not, dil)}</p>
         {x.tanim.kaynak ? <p className="uza-ipucu" data-kaynak>{yerine(a.arac.kaynak, x.tanim.kaynak)}</p> : null}
+        {/* The rights holder's notice, where the tool has one: under every result. */}
+        {bildirim ? <p className="uza-ipucu" data-lisans-bildirimi>{bildirim}</p> : null}
         {kayit ? null : <><p className="uza-ipucu">{a.arac.saklanmaz}</p><p className="uza-ipucu" data-alan="kayit-hastasiz">{a.kayit.hastasiz}</p></>}
       </section>
       {kayit ? kayit(sonuc.tamam) : null}
     </>
+  )
+}
+
+/**
+ * A LINK-OUT TILE (NOTYA-ULKE-OZEL-01): the pack's words, the rights holder's notice where there is one, and ONE link
+ * to an official calculator elsewhere. The address is the pack's, fixed; nothing typed here and nothing of a patient
+ * goes into it. It opens in a tab of its own, and that site is not told where the doctor came from.
+ */
+export function DisBaglantiAraci({ x, dil }: { x: GorunurArac; dil: DilKodu }) {
+  const bildirim = lisansBildirimi(x, dil)
+  return (
+    <section className="uza-kart" data-bolum="dis-baglanti">
+      <div className="uza-eylemler" style={{ marginTop: 0 }}>
+        <a className="uza-dugme" href={x.paket.baglanti?.adres} target="_blank" rel="noopener noreferrer external" referrerPolicy="no-referrer" data-eylem="dis-baglanti">{bicimli(x.paket.metin.baglanti, dil)}</a>
+      </div>
+      <p className="uza-ipucu" data-not>{bicimli(x.paket.metin.not, dil)}</p>
+      {bildirim ? <p className="uza-ipucu" data-lisans-bildirimi>{bildirim}</p> : null}
+    </section>
+  )
+}
+
+/** A tool opened for a patient it is not for (the pack's limit on age or sex): the pack's sentence, and no field. */
+export function HastaKapisiKapali({ x, dil }: { x: GorunurArac; dil: DilKodu }) {
+  return (
+    <section className="uza-kart" data-bolum="hasta-kapisi" data-kapi="degil">
+      <div data-hasta-kapisi><Hata>{bicimli(x.paket.metin.hastaKapisi, dil)}</Hata></div>
+    </section>
   )
 }
 
@@ -233,7 +294,7 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta }: { x: GorunurArac; 
   return (
     <>
       <AracBasligi x={x} a={a} dil={dil} hastaId={hasta?.id} />
-      {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : (
+      {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : x.tanim.tur === 'baglanti' ? <DisBaglantiAraci x={x} dil={dil} /> : hasta && aracinKapisi(x, hasta, bugun) === 'degil' ? <HastaKapisiKapali x={x} dil={dil} /> : (
         <AracGorunumu x={x} a={a} dil={dil} notDili={notDili} icerik={icerik} ham={ham} bugun={bugun} kopya={kopya}
           degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => ({ ...eski, [anahtar]: v })) }}
           temizle={() => { setKopya('yok'); k.degisti(); setHam({}) }}
@@ -261,7 +322,7 @@ export default function Araclar() {
         <>
           {/* An address that names a tool this account does not have: said once, above the grid it does have. */}
           <Hata>{adres.arac ? a.arac.yok : null}</Hata>
-          <AraclarIzgarasi a={a} dil={u.dil} icerik={icerik} rol={u.hesap.rol} q={adres.q} hasta={h.hasta} />
+          <AraclarIzgarasi a={a} dil={u.dil} icerik={icerik} rol={u.hesap.rol} q={adres.q} hasta={h.hasta} bugun={ulkeGunu(new Date(), hesapSaatDilimi())} />
         </>
       )}
     </Cerceve>
