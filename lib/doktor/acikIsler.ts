@@ -10,7 +10,7 @@
  * büyüme, yaşa göre tarama) BransSorguParametreleri'nden gelir — çekirdek takvim bilmez.
  */
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
-import { gunEkleIso, gunFarkiIso, trGun } from '@/lib/doktor/dosyaOlaylari'
+import { gunEkleIso, gunFarkiIso, kurSonGunuIso, trGun } from '@/lib/doktor/dosyaOlaylari'
 import { eksikDozEtiketi, parametreSec, type AsiDurumu } from '@/lib/asistan/dosyaSorgu/parametreler'
 import { SIKAYET_GRUPLARI, terimlerdenBiriGeciyor } from '@/lib/klinik/sikayetEsanlam'
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
@@ -158,10 +158,11 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
   // İlaç sonrası kontrol (NOTYA-ILK10-YAPI-01): süresi son 30 günde dolan kür, sonrasında vizit yok. Rutin sepetinde —
   // alarm değil, hatırlatma.
   for (const o of olaylar.filter((x) => x.kaynak === 'ilac' && x.tur === 'ilac' && x.durum === 'tamamlandi' && x.sureGun)) {
+    // `bitis` = first day after the course (start date is day 1); the sentence names the course's last day.
     const bitis = gunEkleIso(o.tarih, o.sureGun!)
     if (bitis > bugunIso || gunFarkiIso(bitis, bugunIso) > 30) continue
     if (olaylar.some((v) => v.kaynak === 'not' && v.tur === 'vizit' && v.tarih >= bitis)) continue
-    ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: bitis, metin: `İlaç sonrası kontrol: ${o.metin.split(' — ')[0].replace(/\s*\[.*$/, '').trim()} kürü ${trGun(bitis)} tarihinde doldu (başlangıç ${trGun(o.tarih)}, ${o.sureGun} gün); sonrasında vizit / değerlendirme kaydı yok.` })
+    ekle({ oncelik: 'rutin', tur: 'kontrol-planli', tarih: bitis, metin: `İlaç sonrası kontrol: ${o.metin.split(' — ')[0].replace(/\s*\[.*$/, '').trim()} kürü ${trGun(kurSonGunuIso(o.tarih, o.sureGun!))} tarihinde doldu (başlangıç ${trGun(o.tarih)}, ${o.sureGun} gün); sonrasında vizit / değerlendirme kaydı yok.` })
   }
 
   // Açık konsültasyonlar (yapılandırılmış satır).

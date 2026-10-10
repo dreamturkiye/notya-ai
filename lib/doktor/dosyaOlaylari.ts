@@ -143,6 +143,18 @@ const AKUT_ILAC = /amoksisilin|amoxicillin|klavulan|augmentin|sefdinir|sefuroksi
 /** Akut ilacın süresi yazmıyorsa bu kadar gün sonra "aktif olduğuna dair güncel kayıt yok" sayılır. */
 export const AKUT_ILAC_AKTIF_GUN = 14
 
+/**
+ * Last day of a medicine course: the start date is day 1, so a 10-day course begun on 19 September has its last day
+ * on 28 September and counts as completed from 29 September. The status checks below already worked that way
+ * (`gunEkleIso(bas, sureGun) <= bugun`); only the date written into the sentence was one day late. Same convention
+ * as the antibiotic course tool (specialties/enfeksiyon-hastaliklari/engines/atbSure.ts): CDC NHSN AUR Module
+ * protocol (July 2026), AU Option, "Antimicrobial Days (Days of Therapy)" — every calendar day on which the drug is
+ * given counts as one day, the first included. Opened 2026-10-10.
+ */
+export function kurSonGunuIso(baslangicIso: string, sureGun: number): string {
+  return gunEkleIso(baslangicIso, sureGun - 1)
+}
+
 export function sureGunCoz(...metinler: (string | null | undefined)[]): number | null {
   for (const m of metinler) {
     const n = trAramaNormalize(m)
@@ -165,7 +177,7 @@ export function ilacDurumu(
   if (i.aktif === false) return { durum: 'kesildi', neden: i.bitis_tarihi ? `sonlandırıldı (${trGun(i.bitis_tarihi)})` : 'kayıtta aktif değil', sureGun }
   if (i.bitis_tarihi && gun(i.bitis_tarihi) < bugunIso) return { durum: 'tamamlandi', neden: `bitiş tarihi geçti (${trGun(i.bitis_tarihi)})`, sureGun }
   if (bas && sureGun && gunEkleIso(bas, sureGun) <= bugunIso) {
-    return { durum: 'tamamlandi', neden: `planlanan süre (${sureGun} gün) ${trGun(gunEkleIso(bas, sureGun))} tarihinde doldu — aktif sayılmadı; kesildiğine / tamamlandığına dair ayrı kayıt yok`, sureGun }
+    return { durum: 'tamamlandi', neden: `planlanan süre (${sureGun} gün) ${trGun(kurSonGunuIso(bas, sureGun))} tarihinde doldu — aktif sayılmadı; kesildiğine / tamamlandığına dair ayrı kayıt yok`, sureGun }
   }
   if (bas && AKUT_ILAC.test(`${i.ilac_adi} ${i.etken_madde || ''}`) && gunFarkiIso(bas, bugunIso) > AKUT_ILAC_AKTIF_GUN) {
     return { durum: 'belirsiz', neden: `kısa süreli (akut) ilaç, ${gunFarkiIso(bas, bugunIso)} gün önce başlandı; hâlâ kullanıldığına dair güncel kayıt yok`, sureGun }
