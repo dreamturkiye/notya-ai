@@ -197,6 +197,20 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     kaydet: 'Save specialty',
     kaydedildi: 'Saved.',
   },
+  // NOTYA-ULKE-DENETIM-01 — the kit's own entry fields (a day, a time of day, a number). Read by doctors AND by
+  // patients (the intake form on the patient's page). The words for the two halves of a 12-hour day are not here:
+  // the platform writes them for the country's own locale, as beside every time on the screens.
+  girdi: {
+    gun: 'Day',
+    ay: 'Month',
+    yil: 'Year',
+    saat: 'Hour',
+    dakika: 'Minute',
+    tarihGecersiz: 'This is not a complete, real date. Check the day, the month and the four-digit year.',
+    saatGecersiz: 'This is not a complete time. Fill in every part of it; the minute takes two digits.',
+    sayiOkunamadi: 'This number could not be read. Type it again, for example %1 or %2.',
+    duzelt: 'Something you typed could not be read. Correct the marked fields, or clear them, and try again.',
+  },
 }
 
 /** Shared by the multi-zone countries: the label of the account's time zone in Settings, and the line under it. */

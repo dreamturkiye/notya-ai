@@ -20,13 +20,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { AramaFormu } from './Bugun'
-import { arayuz, araclarMetni, rolAdi, type AraclarMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { arayuz, araclarMetni, girdiMetni, rolAdi, type AraclarMetni, type GirdiMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { alanAraligi, alanBirimi, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
-import { girdiyiCoz, hamdanGosterilen, type HamGirdi } from '@/lib/ulke/araclar/girdi'
+import { girdiyiCoz, hamdanGosterilen, okunamayanAlanlar, type HamGirdi } from '@/lib/ulke/araclar/girdi'
 import { alanEtiketi, aracAra, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { AracAlani, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { alanVarMi, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
@@ -36,6 +36,8 @@ import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 import { AracKayitKarti, TakipPaneli, useAracHastasi, useAracKaydi, type AracHastasi } from './AracKayitlari'
 import { Sablonlarim } from './Sablonlarim'
 import { Konsultasyonlar } from './Konsultasyonlar'
+import { SayiGirisi } from '../girdi/SayiGirisi'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 
 // What was typed → what a tool takes: one function for the screen and for the server (lib/ulke/araclar/girdi.ts).
 export { girdiyiCoz, type HamGirdi } from '@/lib/ulke/araclar/girdi'
@@ -100,7 +102,7 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta }: {
 
 // ───────────────────────── one tool ─────────────────────────
 
-function Alan({ x, alan, dil, a, ham, degistir, o, y }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici }) {
+function Alan({ x, alan, dil, a, gm, ham, degistir, o, y }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; gm: GirdiMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici }) {
   const etiket = alanEtiketi(x, alan.anahtar, dil, a)
   const id = `uza-arac-${alan.anahtar}`
   const v = ham[alan.anahtar]
@@ -127,14 +129,16 @@ function Alan({ x, alan, dil, a, ham, degistir, o, y }: { x: GorunurArac; alan: 
     return <div className="uza-alan" data-alan={alan.anahtar}><label className="uza-etiket" htmlFor={id}>{etiket}</label><input id={id} type="text" maxLength={METIN_UZUNLUGU} autoComplete="off" className="uza-girdi" value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} /></div>
   }
   if (alan.tur === 'tarih') {
-    return <div className="uza-alan" data-alan={alan.anahtar}><label className="uza-etiket" htmlFor={id}>{etiket}</label><input id={id} type="date" className="uza-girdi" value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} /></div>
+    // The kit's own date field, in the pack's order: never the browser's (NOTYA-ULKE-DENETIM-01b).
+    return <div className="uza-alan" data-alan={alan.anahtar}><TarihGirisi id={id} etiket={etiket} deger={typeof v === 'string' ? v : ''} degistir={(gun) => degistir(alan.anahtar, gun)} m={gm} /></div>
   }
   const birim = alanBirimi(alan, o)
   const aralik = alanAraligi(alan, o)
   return (
     <div className="uza-alan" data-alan={alan.anahtar}>
       <label className="uza-etiket" htmlFor={id}>{etiket}{birim ? <small> ({y.birim(birim)})</small> : null}</label>
-      <input id={id} type="text" inputMode="decimal" autoComplete="off" className="uza-girdi" value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} />
+      {/* Read by the pack's own number rules; what cannot be read without guessing is refused, with the pack's sentence (NOTYA-ULKE-DENETIM-01a). */}
+      <SayiGirisi id={id} deger={typeof v === 'string' ? v : ''} degistir={(metin) => degistir(alan.anahtar, metin)} m={gm} kural={o.sayi} />
       {aralik ? <p className="uza-ipucu">{yerine(a.arac.aralik, y.sayi(aralik.enAz, Number.isInteger(aralik.enAz) ? 0 : 1), y.sayi(aralik.enCok, Number.isInteger(aralik.enCok) ? 0 : 1))}</p> : null}
     </div>
   )
@@ -153,16 +157,20 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   const o = birimOrtami(icerik)
   const y = yazici(icerik, dil)
   const g = girdiyiCoz(x.tanim.alanlar, ham, o)
-  const sonuc = x.tanim.hesapla(g, { bugun, p: x.paket.parametreler ?? {} })
+  const hesap = x.tanim.hesapla(g, { bugun, p: x.paket.parametreler ?? {} })
+  // NO RESULT WHILE A FIELD HOLDS WHAT COULD NOT BE READ (NOTYA-ULKE-DENETIM-01a) — also an optional field: a limit
+  // that was typed and not read is never worked with as "no limit". The field itself says what to type again.
+  const sonuc = okunamayanAlanlar(x.tanim.alanlar, ham, g, o).length ? { ...hesap, tamam: false } : hesap
   const t = x.paket.metin
   // The summary is written in the account's NOTE language: it is pasted into a note.
-  const ozet = aracOzeti(x, hamdanGosterilen(x.tanim.alanlar, ham, g), sonuc, notDili, araclarMetni(notDili), yazici(icerik, notDili), o)
+  const ozet = aracOzeti(x, hamdanGosterilen(x.tanim.alanlar, ham, g, o), sonuc, notDili, araclarMetni(notDili), yazici(icerik, notDili), o)
+  const gm = girdiMetni(dil)
   return (
     <>
       <section className="uza-kart" data-bolum="girdiler">
         <h2 className="uza-h2">{a.arac.girdiler}</h2>
         <div className="uza-form" style={{ marginTop: 0 }}>
-          {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} ham={ham} degistir={degistir} o={o} y={y} />)}
+          {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} gm={gm} ham={ham} degistir={degistir} o={o} y={y} />)}
         </div>
         <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={temizle}>{a.arac.temizle}</button></div>
       </section>
@@ -230,7 +238,7 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta }: { x: GorunurArac; 
           degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => ({ ...eski, [anahtar]: v })) }}
           temizle={() => { setKopya('yok'); k.degisti(); setHam({}) }}
           kopyalaTikla={(metin) => { void panoyaKopyala(metin).then((tamam) => setKopya(tamam ? 'tamam' : 'hata')) }}
-          kayit={hasta ? (tamam) => <AracKayitKarti a={a} hasta={hasta} tamam={tamam} takip={k.takip} takipDegistir={k.takipDegistir} kaydet={() => k.kaydet(ham)} durum={k.durum} /> : undefined} />
+          kayit={hasta ? (tamam) => <AracKayitKarti a={a} g={u.m.girdi} hasta={hasta} tamam={tamam} takip={k.takip} takipDegistir={k.takipDegistir} kaydet={() => k.kaydet(ham)} durum={k.durum} /> : undefined} />
       )}
     </>
   )

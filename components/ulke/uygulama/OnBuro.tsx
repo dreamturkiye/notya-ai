@@ -22,10 +22,13 @@ import { tamAd } from './Hastalar'
 import { panoyaKopyala } from './pano'
 import { portalAdresi } from './PortalErisimi'
 import { DurumRozeti, gunBasligi, saatAraligi, type RandevuDurumu } from './randevuOrtak'
-import { dilAdi, klinikMetni, randevuMetni, type KlinikMetni, type RandevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { dilAdi, klinikMetni, randevuMetni, type GirdiMetni, type KlinikMetni, type RandevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
+import { SaatGirisi } from '../girdi/SaatGirisi'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import type { HastaKarti, KlinikYetkiTuru, OnBuroRandevusu } from '@/lib/ulke/klinikHesabi/tipler'
-import { gunEkle } from '@/lib/ulke/uygulama/zaman'
+import { gunEkle, gunGecerli, saatCoz } from '@/lib/ulke/uygulama/zaman'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 
 const API = '/api/ulke/klinik/on-buro'
@@ -137,8 +140,11 @@ export function HastaAramaGorunumu({ k, q, setQ, ara, hastalar, aramaKisa, sec }
 }
 
 /** THE CARD: everything the front desk sees of a patient, and what the doctor's permissions let it do for them. */
-export function HastaKartiGorunumu({ k, r, hasta, yetkiler, form, setForm, sureler, randevuAl, portalVer, formIste, yeni, kopyala, kapat, bekliyor, portalVar, formVar }: {
-  k: KlinikMetni; r: RandevuMetni; hasta: HastaKarti; yetkiler: KlinikYetkiTuru[]
+export function HastaKartiGorunumu({ k, r, g, hasta, yetkiler, form, setForm, sureler, randevuAl, portalVer, formIste, yeni, kopyala, kapat, bekliyor, portalVar, formVar }: {
+  k: KlinikMetni; r: RandevuMetni
+  /** The pack's words for the parts of a date and of a time, in the form of the screen. */
+  g: GirdiMetni
+  hasta: HastaKarti; yetkiler: KlinikYetkiTuru[]
   form: RandevuFormu; setForm: (f: RandevuFormu) => void; sureler: readonly number[]
   randevuAl: () => void; portalVer: () => void; formIste: () => void
   /** A link and PIN that were just made: on the screen until the card is closed, never again. */
@@ -157,8 +163,9 @@ export function HastaKartiGorunumu({ k, r, hasta, yetkiler, form, setForm, surel
         <form className="uza-form" onSubmit={(e) => { e.preventDefault(); randevuAl() }} data-alan="on-buro-randevu-formu">
           <h3 className="uza-alt-baslik">{o.randevuAl}</h3>
           <div className="uza-iki">
-            <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-gun">{o.gun}</label><input id="uza-ob-gun" type="date" className="uza-girdi" value={form.gun} onChange={(e) => setForm({ ...form, gun: e.target.value })} required data-alan="randevu-gunu" /></div>
-            <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-saat">{r.form.saat}</label><input id="uza-ob-saat" type="time" className="uza-girdi" value={form.saat} onChange={(e) => setForm({ ...form, saat: e.target.value })} required data-alan="randevu-saati" /></div>
+            {/* The kit's own date and time fields, in the pack's order and clock: never the browser's (NOTYA-ULKE-DENETIM-01b). */}
+            <div className="uza-alan"><TarihGirisi id="uza-ob-gun" etiket={o.gun} deger={form.gun} degistir={(gun) => setForm({ ...form, gun })} m={g} alan="randevu-gunu" zorunlu /></div>
+            <div className="uza-alan"><SaatGirisi id="uza-ob-saat" etiket={r.form.saat} deger={form.saat} degistir={(saat) => setForm({ ...form, saat })} m={g} alan="randevu-saati" zorunlu /></div>
           </div>
           <div className="uza-alan">
             <label className="uza-etiket" htmlFor="uza-ob-sure">{r.form.sure}</label>
@@ -211,7 +218,7 @@ export function YeniHastaGorunumu({ k, m, f, setF, kaydet, bekliyor }: { k: Klin
         <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-ad">{y.ad}</label><input id="uza-ob-ad" className="uza-girdi" value={f.ad} onChange={(e) => setF({ ...f, ad: e.target.value })} required maxLength={160} data-alan="hasta-adi" /></div>
         {paket.uygulama?.adAlanlari.ikinciAd && y.otaIsmi ? <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-ota">{y.otaIsmi} <small>{y.istegeBagli}</small></label><input id="uza-ob-ota" className="uza-girdi" value={f.otaIsmi} onChange={(e) => setF({ ...f, otaIsmi: e.target.value })} maxLength={120} /></div> : null}
         <div className="uza-iki">
-          <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-dogum">{y.dogumTarihi} <small>{y.istegeBagli}</small></label><input id="uza-ob-dogum" type="date" className="uza-girdi" value={f.dogumTarihi} onChange={(e) => setF({ ...f, dogumTarihi: e.target.value })} /></div>
+          <div className="uza-alan"><TarihGirisi id="uza-ob-dogum" etiket={<>{y.dogumTarihi} <small>{y.istegeBagli}</small></>} deger={f.dogumTarihi} degistir={(dogumTarihi) => setF({ ...f, dogumTarihi })} m={m.girdi} alan="dogum-tarihi" /></div>
           <div className="uza-alan">
             <label className="uza-etiket" htmlFor="uza-ob-cinsiyet">{y.cinsiyet} <small>{y.istegeBagli}</small></label>
             <select id="uza-ob-cinsiyet" className="uza-girdi" value={f.cinsiyet} onChange={(e) => setF({ ...f, cinsiyet: e.target.value as HastaFormu['cinsiyet'] })}>
@@ -308,16 +315,16 @@ export default function OnBuro() {
             </>
           ) : null}
           {secili && hasta ? (
-            <HastaKartiGorunumu k={k} r={r} hasta={hasta} yetkiler={yetkiler} form={form} setForm={setForm} sureler={ulkePaketi().uygulama?.randevu?.sureSecenekleri ?? [form.sureDk]} yeni={yeni} bekliyor={bekliyor}
+            <HastaKartiGorunumu k={k} r={r} g={u.m.girdi} hasta={hasta} yetkiler={yetkiler} form={form} setForm={setForm} sureler={ulkePaketi().uygulama?.randevu?.sureSecenekleri ?? [form.sureDk]} yeni={yeni} bekliyor={bekliyor}
               portalVar={ozellikAcik('hastaPortali')} formVar={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu')} kapat={() => { setHasta(null); setYeni(null) }}
-              randevuAl={() => { void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'randevu', hastaId: hasta.id, gun: form.gun, saat: form.saat, sureDk: form.sureDk, yineDe: form.yineDe } }), async (j) => { await gunYukle(hekimId, String((j.randevu as { gun?: string } | undefined)?.gun ?? form.gun)); return 'alindi' as const }) }}
+              randevuAl={() => { if (!gunGecerli(form.gun) || saatCoz(form.saat) === null) { setBildirim('gecersiz'); return } void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'randevu', hastaId: hasta.id, gun: form.gun, saat: form.saat, sureDk: form.sureDk, yineDe: form.yineDe } }), async (j) => { await gunYukle(hekimId, String((j.randevu as { gun?: string } | undefined)?.gun ?? form.gun)); return 'alindi' as const }) }}
               portalVer={() => { void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'portal', hastaId: hasta.id } }), (j) => { setYeni({ adres: portalAdresi(window.location.origin, String(j.yol)), pin: String(j.pin) }); return null }) }}
               formIste={() => { void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'form', hastaId: hasta.id } }), (j) => { if (typeof j.yol === 'string' && typeof j.pin === 'string') setYeni({ adres: portalAdresi(window.location.origin, j.yol), pin: j.pin }); return 'form-istendi' }) }}
               kopyala={(ne) => { if (yeni) void panoyaKopyala(ne === 'pin' ? yeni.pin : yeni.adres).then((t) => setBildirim(t ? 'kopyalandi' : 'kopyalanamadi')) }} />
           ) : null}
           {secili && yetkiler.includes('on-buro-hasta') ? (
             <YeniHastaGorunumu k={k} m={u.m} f={yeniHasta} setF={setYeniHasta} bekliyor={bekliyor}
-              kaydet={() => { void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'hasta', ...yeniHasta } }), (j) => { const h = j.hasta as HastaKarti | undefined; setYeniHasta(bosHasta()); if (h && randevuYetkisi) hastaSec(h); return 'hasta-kaydedildi' }) }} />
+              kaydet={() => { if (yeniHasta.dogumTarihi === GIRDI_GECERSIZ) { setBildirim('gecersiz'); return } void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'hasta', ...yeniHasta } }), (j) => { const h = j.hasta as HastaKarti | undefined; setYeniHasta(bosHasta()); if (h && randevuYetkisi) hastaSec(h); return 'hasta-kaydedildi' }) }} />
           ) : null}
         </>
       )}

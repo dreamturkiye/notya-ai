@@ -21,14 +21,17 @@
  * the frame is the pack's (formMetni); the server answers with codes.
  */
 import React, { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { formMetni, portalMetni, type FormMetni } from '@/lib/ulke/arayuz'
+import { formMetni, girdiMetni, portalMetni, type FormMetni, type GirdiMetni } from '@/lib/ulke/arayuz'
 import { tarihYaz } from '@/lib/ulke/arayuz/bicim'
-import { sayiYaz } from '@/lib/ulke/arayuz/sayi'
+import { sayiAlanMetni, sayiCoz as ulkeSayiCoz, sayiYaz } from '@/lib/ulke/arayuz/sayi'
+import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import type { Cevap, Cevaplar, FormSorusu, HastaFormuGorunumu } from '@/lib/ulke/intake/tipler'
 import { PORTAL_FORM_API, PORTAL_API } from '@/lib/ulke/portal/sabitler'
 import type { PortalIcerigi } from '@/lib/ulke/portal/tipler'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { SayiGirisi } from '../girdi/SayiGirisi'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 
 const Hata = ({ children }: { children: ReactNode }) => (children ? <div role="alert" className="uza-uyari-kutu">{children}</div> : null)
 const Bilgi = ({ children }: { children: ReactNode }) => (children ? <div role="status" className="uza-bilgi-kutu">{children}</div> : null)
@@ -59,12 +62,23 @@ export function PortalFormKarti({ f, ozet, ac }: { f: FormMetni; ozet: NonNullab
 
 // ───────────────────────── one question ─────────────────────────
 
-/** A number as the patient typed it → the number, or null. Both decimal marks are accepted: people type either. */
+/**
+ * A number as the patient typed it → the number, or null. READ BY THE COUNTRY'S OWN NUMBER RULES, through the kit's
+ * one parser (lib/ulke/arayuz/sayi.ts): what cannot be read without guessing is not a number, and the field asks for
+ * it to be typed again. This used to turn a comma into a point whatever the country (NOTYA-ULKE-DENETIM-01a).
+ */
 export function sayiCoz(ham: string): number | null {
-  const t = ham.trim().replace(',', '.')
-  if (!/^-?\d+(\.\d+)?$/.test(t)) return null
-  const n = Number(t)
-  return Number.isFinite(n) ? n : null
+  const o = ulkeSayiCoz(ham)
+  return o.tamam ? o.sayi : null
+}
+
+/**
+ * true = something is typed into this question's field and it could not be read: a date that is not a day, a number
+ * that is not one or is outside the question's range. `ham` is what the field holds.
+ */
+export function okunamayanCevap(q: FormSorusu, ham: string, cevap: Cevap | undefined): boolean {
+  if (q.tur === 'tarih') return ham === GIRDI_GECERSIZ
+  return q.tur === 'sayi' && ham.trim() !== '' && cevap === undefined
 }
 
 /** An answer as text, for the read-only view: option names, yes/no and the unit in the form's own language. '' = no answer. */
@@ -79,9 +93,12 @@ export function gorunumCevapMetni(q: FormSorusu, c: Cevap | undefined, f: FormMe
   return 'n' in c ? `${sayiYaz(c.n, Number.isInteger(c.n) ? 0 : 1)} ${q.birim?.ad ?? ''}`.trim() : ''
 }
 
-export function SoruAlani({ q, f, cevap, ham, eksik, degistir, hamDegistir }: {
-  q: FormSorusu; f: FormMetni; cevap: Cevap | undefined
-  /** What is typed into a number field, kept as text until it is a number in range. */
+export function SoruAlani({ q, f, g, cevap, ham, eksik, degistir, hamDegistir }: {
+  q: FormSorusu; f: FormMetni
+  /** The pack's words of the kit's own date and number fields, in the form's own language. */
+  g: GirdiMetni
+  cevap: Cevap | undefined
+  /** What a number field holds as text until it is a number in range; for a date, what the date field handed over last. */
   ham: string
   /** true = required and unanswered, after the patient tried to send. */
   eksik: boolean
@@ -139,28 +156,37 @@ export function SoruAlani({ q, f, cevap, ham, eksik, degistir, hamDegistir }: {
       </fieldset>
     )
   }
+  if (q.tur === 'tarih') {
+    // The kit's own date field, in the pack's order: never the browser's (NOTYA-ULKE-DENETIM-01b). What it hands over
+    // is kept as `ham`, so a half-typed date stays on the screen; only a real day becomes the answer.
+    return (
+      <div className="uza-alan" {...sarici}>
+        <TarihGirisi id={id} etiket={baslik} deger={ham || (typeof cevap === 'string' ? cevap : '')} m={g} zorunlu={q.zorunlu} hata={eksik && ham === GIRDI_GECERSIZ}
+          degistir={(gun) => { hamDegistir(gun); degistir(/^\d{4}-\d{2}-\d{2}$/.test(gun) ? gun : undefined) }} />
+        {yardim}
+      </div>
+    )
+  }
   const ortak = { id, className: 'uza-girdi', 'aria-required': q.zorunlu || undefined }
   let girdi: ReactNode
   if (q.tur === 'uzun-metin') girdi = (<textarea {...ortak} rows={3} maxLength={2000} value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(e.target.value || undefined)} />)
   else if (q.tur === 'kisa-metin') girdi = (<input {...ortak} maxLength={200} autoComplete="off" value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(e.target.value || undefined)} />)
-  else if (q.tur === 'tarih') girdi = (<input {...ortak} type="date" value={typeof cevap === 'string' ? cevap : ''} onChange={(e) => degistir(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : undefined)} />)
   else {
     const b = q.birim
     const n = sayiCoz(ham)
-    const gecersiz = ham.trim() !== '' && (n === null || !b || n < b.enAz || n > b.enCok)
+    // Read, and outside what the question accepts: the form's own sentence. Not readable at all: the field's own
+    // sentence, which asks for the number to be typed again (components/ulke/girdi/SayiGirisi.tsx).
+    const aralikDisi = n !== null && (!b || n < b.enAz || n > b.enCok)
     girdi = (
       <>
-        <div className="uza-arama-satir">
-          <input {...ortak} inputMode="decimal" autoComplete="off" maxLength={12} value={ham} data-birim={b?.kod || undefined} aria-invalid={gecersiz || undefined}
-            onChange={(e) => {
-              const metin = e.target.value
-              hamDegistir(metin)
-              const sayi = sayiCoz(metin)
-              degistir(sayi !== null && b && sayi >= b.enAz && sayi <= b.enCok ? { n: sayi, b: b.kod } : undefined)
-            }} />
-          <span className="uza-rozet" data-alan="birim">{b?.ad}</span>
-        </div>
-        {gecersiz && b ? <p className="uza-ipucu" role="alert" style={{ marginTop: 6 }}>{yerine(f.hasta.sayiGecersiz, sayiYaz(b.enAz, Number.isInteger(b.enAz) ? 0 : 1), sayiYaz(b.enCok, 0))}</p> : null}
+        <SayiGirisi id={id} deger={ham} m={g} gecersiz={aralikDisi} satirSonu={<span className="uza-rozet" data-alan="birim">{b?.ad}</span>}
+          ek={{ maxLength: 16, 'data-birim': b?.kod || undefined, 'aria-required': q.zorunlu || undefined }}
+          degistir={(metin) => {
+            hamDegistir(metin)
+            const sayi = sayiCoz(metin)
+            degistir(sayi !== null && b && sayi >= b.enAz && sayi <= b.enCok ? { n: sayi, b: b.kod } : undefined)
+          }} />
+        {aralikDisi && b ? <p className="uza-ipucu uza-girdi-hata" role="alert" style={{ marginTop: 6 }} data-hata="sayi-aralik">{yerine(f.hasta.sayiGecersiz, sayiYaz(b.enAz, Number.isInteger(b.enAz) ? 0 : 1), sayiYaz(b.enCok, 0))}</p> : null}
       </>
     )
   }
@@ -176,7 +202,8 @@ export function SoruAlani({ q, f, cevap, ham, eksik, degistir, hamDegistir }: {
 // ───────────────────────── the form ─────────────────────────
 
 export type FormKaydi = 'yok' | 'kaydediliyor' | 'kaydedildi' | 'hata'
-export type FormGonderimi = 'yok' | 'gonderiliyor' | 'eksik' | 'hata'
+/** 'okunamadi' = something typed into a field could not be read: nothing is sent until it is corrected or cleared. */
+export type FormGonderimi = 'yok' | 'gonderiliyor' | 'eksik' | 'okunamadi' | 'hata'
 
 /** The form as it is drawn. Pure: it renders in a plain test. `bolum` -1 = the consent step. */
 export function HastaFormuGorunumu({ f, form, cevaplar, sayilar, bolum, riza, setRiza, rizaHatasi, kayit, gonderim, eksik, degistir, hamDegistir, git, gonder, kapat }: {
@@ -187,6 +214,8 @@ export function HastaFormuGorunumu({ f, form, cevaplar, sayilar, bolum, riza, se
   git: (bolum: number) => void; gonder: () => void; kapat: () => void
 }) {
   const h = f.hasta
+  // The words of the date and number fields, in the language the form itself is written in.
+  const g = girdiMetni(form.dil)
   if (form.durum === 'gonderildi') {
     return (
       <section className="uza-kart" data-alan="hasta-formu" data-form-durumu="gonderildi">
@@ -237,10 +266,10 @@ export function HastaFormuGorunumu({ f, form, cevaplar, sayilar, bolum, riza, se
       <h1 className="uza-h1">{b.baslik}</h1>
       <div className="uza-form">
         {b.sorular.map((q) => (
-          <SoruAlani key={q.anahtar} q={q} f={f} cevap={cevaplar[q.anahtar]} ham={sayilar[q.anahtar] ?? ''} eksik={eksik.includes(q.anahtar)} degistir={(c) => degistir(q.anahtar, c)} hamDegistir={(metin) => hamDegistir(q.anahtar, metin)} />
+          <SoruAlani key={q.anahtar} q={q} f={f} g={g} cevap={cevaplar[q.anahtar]} ham={sayilar[q.anahtar] ?? ''} eksik={eksik.includes(q.anahtar)} degistir={(c) => degistir(q.anahtar, c)} hamDegistir={(metin) => hamDegistir(q.anahtar, metin)} />
         ))}
         <p className="uza-ipucu" role="status" data-alan="form-kayit" style={{ marginTop: 0, minHeight: '1.4em' }}>{kayit === 'kaydediliyor' ? h.kaydediliyor : kayit === 'kaydedildi' ? h.kaydedildi : ''}</p>
-        <Hata>{kayit === 'hata' ? h.kaydedilemedi : gonderim === 'eksik' ? h.eksik : gonderim === 'hata' ? h.gonderilemedi : null}</Hata>
+        <Hata>{kayit === 'hata' ? h.kaydedilemedi : gonderim === 'eksik' ? h.eksik : gonderim === 'okunamadi' ? g.duzelt : gonderim === 'hata' ? h.gonderilemedi : null}</Hata>
         {son ? <p className="uza-ipucu" style={{ marginTop: 0 }}>{h.gonderUyari}</p> : null}
         <div className="uza-eylemler" style={{ marginTop: 0 }}>
           {son ? <button type="button" className="uza-dugme" disabled={gonderim === 'gonderiliyor'} onClick={gonder} data-eylem="form-gonder">{gonderim === 'gonderiliyor' ? h.gonderiliyor : h.gonder}</button>
@@ -253,8 +282,8 @@ export function HastaFormuGorunumu({ f, form, cevaplar, sayilar, bolum, riza, se
   )
 }
 
-/** A stored number as the text of its field. */
-const sayiMetni = (c: Cevap | undefined): string => (c && typeof c === 'object' && !Array.isArray(c) && 'n' in c ? String(c.n) : '')
+/** A stored number as the text of its field: written the way the country types it, so the field reads it back as the same number. */
+const sayiMetni = (c: Cevap | undefined): string => (c && typeof c === 'object' && !Array.isArray(c) && 'n' in c ? sayiAlanMetni(c.n) : '')
 const sayiAlanlari = (form: HastaFormuGorunumu): Record<string, string> => Object.fromEntries(form.bolumler.flatMap((b) => b.sorular.filter((q) => q.tur === 'sayi').map((q) => [q.anahtar, sayiMetni(form.cevaplar[q.anahtar])])))
 
 export type PortalIstegi = (yol: string, govde?: unknown, yontem?: 'GET' | 'POST' | 'PUT') => Promise<{ status: number; j: Record<string, any> }> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -358,6 +387,16 @@ export function PortalFormu({ dil, iste, kapat, oturumBitti }: { dil: DilKodu; i
 
   async function gonder() {
     if (!form) return
+    // NOTHING IS SENT WHILE A FIELD HOLDS WHAT COULD NOT BE READ. A form is sent once; a date or a number the patient
+    // typed and the form could not read would otherwise leave as "no answer". The part with the first such field is
+    // shown, the fields are marked, and each says what is wrong with it.
+    const okunamayan = form.bolumler.flatMap((b) => b.sorular).filter((q) => okunamayanCevap(q, sayilar[q.anahtar] ?? '', son.current[q.anahtar])).map((q) => q.anahtar)
+    if (okunamayan.length) {
+      setEksik(okunamayan); setGonderim('okunamadi')
+      const i = form.bolumler.findIndex((b) => b.sorular.some((q) => okunamayan.includes(q.anahtar)))
+      if (i >= 0) setBolum(i)
+      return
+    }
     setGonderim('gonderiliyor'); setEksik([])
     try {
       const r = await iste(FORM_YOLU, { cevaplar: son.current, riza: true }, 'POST')

@@ -8,7 +8,8 @@
  *                words come from the platform's data for the pack's own locale (`bicim.yerel`), not from this file.
  *   time zone    the ACCOUNT's (one of the pack's list), the pack's default until the account is known.
  *
- * Times are stored as instants and typed as 24-hour 'HH:MM'; only what a person READS follows `saatBicimi`.
+ * Times are stored as instants and handed over as 24-hour 'HH:MM'. What a person READS and what a person TYPES both
+ * follow `saatBicimi` (typing: components/ulke/girdi/SaatGirisi.tsx, never a browser's own time field).
  */
 import { ulkePaketi } from '../ulke'
 import { gunYazDesenle } from '../uygulama/zaman'
@@ -31,7 +32,8 @@ let hesabinDilimi: string | null = null
 export function hesapSaatDilimiAyarla(ham: unknown): void { hesabinDilimi = typeof ham === 'string' && saatDilimleri().includes(ham) ? ham : null }
 export const hesapSaatDilimi = (): string => hesabinDilimi ?? varsayilanSaatDilimi()
 
-const saatBicimi = (): 24 | 12 => ulkePaketi().uygulama?.saatBicimi ?? 24
+/** The pack's clock: 24 = 14:30, 12 = 2:30 PM. The same for what is shown and for what is typed (components/ulke/girdi/). */
+export const saatBicimi = (): 24 | 12 => ulkePaketi().uygulama?.saatBicimi ?? 24
 
 const onIki = new Map<string, Intl.DateTimeFormat>()
 function onIkilik(yerel: string): Intl.DateTimeFormat {
@@ -47,6 +49,16 @@ export function saatGoster(saat: string | null | undefined): string {
   const s = Number(m[1]) % 24, d = Number(m[2])
   const yirmiDort = `${String(s).padStart(2, '0')}:${m[2]}`
   return saatBicimi() === 24 ? yirmiDort : onIkilik(ulkePaketi().bicim.yerel).format(new Date(Date.UTC(2000, 0, 1, s, d)))
+}
+
+/**
+ * The two halves of a 12-hour day as the pack's own locale writes them ("AM" / "PM", "a.m." / "p.m.", "am" / "pm"):
+ * the very words `saatGoster` writes, so the choice a person makes when typing a time reads like the times on the screen.
+ */
+export function gunYarisiAdlari(): { oo: string; os: string } {
+  const b = onIkilik(ulkePaketi().bicim.yerel)
+  const al = (s: number) => b.formatToParts(new Date(Date.UTC(2000, 0, 1, s, 0))).find((x) => x.type === 'dayPeriod')?.value ?? ''
+  return { oo: al(9), os: al(15) }
 }
 
 /** A day in the pack's pattern, from an ISO date or timestamp, in `saatDilimi` (the account's). '' when it cannot be written. */

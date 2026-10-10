@@ -252,6 +252,17 @@
    "ayarIzoh": "$m",
    "kaydet": "$m",
    "kaydedildi": "$m"
+  },
+  "girdi": {
+   "gun": "$m",
+   "ay": "$m",
+   "yil": "$m",
+   "saat": "$m",
+   "dakika": "$m",
+   "tarihGecersiz": "$m",
+   "saatGecersiz": "$m",
+   "sayiOkunamadi": "$m:%1,%2",
+   "duzelt": "$m"
   }
  },
  "randevu": {
