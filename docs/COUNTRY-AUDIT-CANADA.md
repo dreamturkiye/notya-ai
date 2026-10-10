@@ -12,12 +12,13 @@ Audit of the Canada pack (`countries/ca/`, language form `en-CA`, served at `/ca
 - **Most important findings that cannot be fixed in the country's folder** (section "Core"):
   1. **British Columbia stopped changing its clocks in 2026.** The time-zone data of the Node runtime on this machine (2025b) still moves `America/Vancouver` back an hour on 1 November 2026. Until the runtime of the deployment (and each user's browser) carries the 2026b data or later, appointment times of an account in British Columbia will be one hour wrong from that day.
   2. **A typed comma is read as a decimal point** in every number field of the tools and of the intake form. In English Canada the comma separates thousands, so "1,250" typed into a field is read as 1.25.
-  3. **Date fields are the browser's, not the pack's.** Date of birth and every other date picker show the order of the browser's own language (for many Canadian browsers month/day/year), beside screens that write year-month-day.
+  3. **Date fields are the browser's, not the pack's.** Date of birth and every other date picker show the order of the browser's own language: seen as `03/04/2019` in a browser set to United States English, beside screens that write year-month-day.
+  3a. **The patient's day buttons show the year and no day** ("Sat 2026-") because the kit's short date is the first five characters of the written date, and Canada's date is year-first: a patient asking for an appointment cannot tell one Saturday from the next.
   4. **The identifier field asks a phone for the numeric keyboard**, and health numbers in at least two provinces contain letters.
   5. **Time zones are shown by their database names** ("America/St Johns", "America/Regina"), not by the names people use.
 - **For a lawyer before any real patient:** which health-privacy law applies in each province and what a vendor must sign; whether a health card number may be asked for at all; French in Quebec; the guardian age (Quebec 14, New Brunswick 16, elsewhere no fixed age); recording consent; medical-device status.
 
-Counts for Part B are at the end of that part.
+Counts for Part B are at the end of that part. The screens were seen on a local build (Part C); the walk-through passed 329 of 329.
 
 ---
 
@@ -93,17 +94,17 @@ Each line: the standard, then the source. "Opened" means the page was read durin
 ### A12. Doctors' titles and seniority
 
 - The profession's liability body speaks of the **"most responsible physician"** (the physician with overall responsibility for a patient's care at a given time), of the **"attending or admitting physician"**, and of a **"consultant"** or specialist who is asked for an opinion. CMPA, opened: https://www.cmpa-acpm.ca/en/advice-publications/browse-articles/2012/the-most-responsible-physician-a-key-link-in-the-coordination-of-care
-- Specialists are certified by the Royal College of Physicians and Surgeons of Canada (Fellows: FRCPC, FRCSC) and family physicians by the College of Family Physicians of Canada (CCFP). The designations are general knowledge; the Royal College's document on them was opened (https://news.royalcollege.ca/content/dam/documents/membership/royal-college-qualifications-fellowship-designations-2020-e.pdf) but the CFPC's page could not be: **CCFP UNVERIFIED**.
+- Specialists are certified by the Royal College of Physicians and Surgeons of Canada (Fellows: FRCPC, FRCSC) and family physicians by the College of Family Physicians of Canada (CCFP). The designations are general knowledge; the Royal College's document on them was opened (https://news.royalcollege.ca/content/dam/documents/membership/royal-college-qualifications-fellowship-designations-2020-e.pdf); the CFPC page opened names its "Certification Examination in Family Medicine" but not the letters: **CCFP UNVERIFIED**.
 - **"Staff physician"**, the pack's word for a senior doctor, was **not found on any official page opened: UNVERIFIED.** For a local clinical lead.
 
 ### A13. Specialty names
 
-The Royal College's list of disciplines, opened: https://www.royalcollege.ca/en/standards-and-accreditation/information-by-discipline.html . "Family Medicine" is the discipline of the College of Family Physicians of Canada (its page could not be opened: **UNVERIFIED by reading**).
+The Royal College's list of disciplines, opened: https://www.royalcollege.ca/en/standards-and-accreditation/information-by-discipline.html . "Family medicine" is the discipline of the College of Family Physicians of Canada, which "establishes the standards for and accredits postgraduate family medicine training"; opened: https://www.cfpc.ca/en/about-us/about-cfpc
 
 | Role key | Shown in the pack (after this audit) | On the Royal College's list | Note |
 |---|---|---|---|
 | `emergency-medicine` | Emergency medicine | Emergency Medicine (specialty) | matches |
-| `family-medicine` | Family medicine | — (College of Family Physicians of Canada) | name unverified by reading |
+| `family-medicine` | Family medicine | — (the College of Family Physicians of Canada names the discipline "family medicine") | matches |
 | `anaesthesia` | Anesthesiology | Anesthesiology (specialty) | matches |
 | `neurosurgery` | Neurosurgery | Neurosurgery (specialty) | matches |
 | `paediatric-surgery` | Pediatric surgery | Pediatric Surgery (subspecialty) | matches |
@@ -233,7 +234,7 @@ How the kit works, read from the code (all read-only for this audit):
 | 14 | How a zone is named | — | "America/St Johns", "America/Regina" | **DIFFERS** from what people call their zone. Core |
 | 15 | Communities with a time of their own (Atikokan, Blanc-Sablon, Southampton Island, Creston, the Peace region, the East Kootenay) | not listed | — | **NEEDS A LOCAL PERSON** |
 | 16 | Default zone | `America/Toronto` | a new account starts there | **CONFORMS** as a choice (the most populous zone); the owner's |
-| 17 | Appointment time for the patient | `ayarlar.ts` time sentence | the calendar says times are in the account's zone | **NEEDS A LOCAL PERSON**: seen on the patient's page in Part C |
+| 17 | Appointment time for the patient | `ayarlar.ts` time sentence | the calendar says times are in the account's zone; the patient's page says "Times are shown in your doctor's time zone: America/Toronto." (seen, Part C) | **CONFORMS** in substance: the zone is named to the patient (by its database name, row 14) |
 | 18 | Weight, height, temperature | `ayarlar.ts:30` kg, cm, °C | the intake form asks in them and names the unit | **CONFORMS** (A7) |
 | 19 | Patients who know only pounds and feet | — | no second unit is offered | **NEEDS A LOCAL PERSON** |
 | 20 | Albumin-to-creatinine ratio, creatinine, haemoglobin, cholesterol | `ayarlar.ts` `labBirimleri`: mg/mmol, umol/L, g/L, mmol/L | used by tools that are slots here | **CONFORMS** (A8) |
@@ -265,14 +266,36 @@ How the kit works, read from the code (all read-only for this audit):
 | 46 | French | English only, said plainly in `ayarlar.ts` | — | **NOT HANDLED BY THE PRODUCT**; for Kaan and a lawyer |
 | 47 | Appointment norms, 30-day portal link, speech thresholds | starting values | — | **NEEDS A LOCAL PERSON** / the owner (unchanged) |
 | 48 | Sex on the patient form | — | two choices, female and male | **NEEDS A LOCAL PERSON**: no official rule was read |
+| 49 | The year-first date on the patient's page | `tarihDeseni: 'YYYY-MM-DD'` | the day buttons of "Ask for an appointment" show "Sat 2026-": the kit's short date is the first five characters (seen, Part C) | **DIFFERS**: the day is missing where a patient chooses a day. Core |
 
-**Counts** (one per row; row 32 counted once as conforming, its two fixes under "differs"): **conforms 15** (1, 4, 8, 11, 16, 18, 20, 22, 24, 27, 29, 32, 39, 41, 45; row 43's "off" is counted under not handled). **Differs 10**: four fixed in the country's folder (12, 26, 38, and the two names of 32 counted as one) and six that are the kit's (2, 6, 10, 13, 14, 28). **Not handled by the product 8** (23, 25, 37, 40, 42, 43, 44, 46). **Needs a local person 16** (3, 5, 7, 9, 15, 17, 19, 21, 30, 31, 33, 34, 35, 36, 47, 48).
+**Counts** over the 49 rows (row 32 is counted once as conforming and its two fixed names once under "differs"; row 43's "off" is counted under not handled): **conforms 16** (1, 4, 8, 11, 16, 17, 18, 20, 22, 24, 27, 29, 32, 39, 41, 45). **Differs 11**: four rows fixed in the country's folder, holding the five fixes (12, 26, 38, and the two names of 32), and seven that are the kit's and are not fixed (2, 6, 10, 13, 14, 28, 49). **Not handled by the product 8** (23, 25, 37, 40, 42, 43, 44, 46). **Needs a local person 15** (3, 5, 7, 9, 15, 19, 21, 30, 31, 33, 34, 35, 36, 47, 48).
 
 ---
 
 ## Part C — what was seen on real screens
 
-**Not yet run when this commit was made.** The local build was stopped twice by the machine running out of memory while several audits built at once. This section is replaced by the next commit, or says plainly that nothing was seen.
+**It was run.** The pack was built on this machine with `NOTYA_COUNTRY=ca npm run build:ulke` (exit 0, whole-project type check included; build proof: "the ca pack present, no other country's pack"), **after** the five fixes, so every picture shows the fixed pack. Two earlier builds were stopped by the machine running out of memory while several audits built at once; there is therefore no "before" picture, and the "before" values in Part D are from the source. The built application ran on this machine only (`localhost:3131`) against the repository's stand-ins (`scripts/ulke-yuruyus/sahte-supabase.mjs`, `sahte-saglayicilar.cjs`); no deployed site, no real account, no provider.
+
+**The pack-neutral walk-through** (`scripts/ulke-yuruyus/genel.mjs`): **329 of 329 checks passed**, exit 0.
+
+**Screens**, captured with the installed Playwright Chromium (browser interface in Canadian English, time zone Toronto, unless said otherwise) and by the walk-through. Each image was opened and read; the texts quoted were also read from the page itself. Images are in `docs/audit/ca/`.
+
+| Image | Screen | What was seen | Against Part A |
+|---|---|---|---|
+| `01-landing.jpg` | Landing page | Page language `en-CA`. "A clinical assistant for doctors", "Note templates for 40 specialties and professions", "In English". Every plan "By quote"; no amount of money anywhere on the page. The phone field of the request form shows `613-555-0123`. | no price, no claim; phone example as fixed (A16); English only (A24) |
+| `02-signup.jpg` | Sign-up | "Create an account with an invitation code", "For now, accounts are opened by invitation only."; fields Invitation code, Full name, Email address, Password. | one name field (A18) |
+| `03-calendar.jpg` | Calendar, day view | "Friday, 2026-10-09"; slots "9:00 a.m." to "4:30 p.m."; "12:00 p.m.–1:00 p.m. Break"; "Times are shown in the time zone set for your account." | year-month-day with hyphens (A1); 12-hour clock written "a.m." / "p.m." (A2) |
+| `04-new-patient.jpg` | New patient, browser in Canadian English | Full name; Date of birth shown by the browser as `2019-03-04`; Phone number with the example `613-555-0123`; Sex: Female, Male; "Health card number (optional)" holding the typed `1234-567-890-AB`. | label as fixed (A11); letters are accepted |
+| `05-new-patient-us-browser.jpg` | The same form, browser interface in United States English | **The same birth date is shown as `03/04/2019`** (month first). A third run with a browser in Canadian French showed `2019-03-04` (not kept as an image). | **DIFFERS**: the date field follows the browser, not the pack (Core 3) |
+| `06-settings.jpg` | Settings | Time zone list as read from the page: "America/Toronto, America/St Johns, America/Halifax, America/Winnipeg, America/Regina, America/Edmonton, America/Vancouver, America/Whitehorse". Specialty list as read: "… Internal medicine … Otolaryngology – head and neck surgery … Respirology … Obstetrics and gynecology …". | Yukon present, the two names fixed; **zones by database name** (Core 6) |
+| `07-visit-note.jpg` | Visit note (draft, emergency medicine, a 5-year-old patient) | "Visit note · 2026-10-09 9:02 p.m."; "This note was drafted by artificial intelligence. Read it and correct it where needed before you approve it."; "Who gave the history (parent or guardian)" (patient under the guardian age); "Vital signs (figures as stated)". | date and clock as above; no unit is imposed on vital signs (A9: not handled) |
+| `08-tool-dose.jpg` | Tool: dose arithmetic by body weight (pediatrics) | Fields "Body weight (kg)", "Dose per kilogram (mg/kg)", "Concentration: millilitres (optional) (mL)"; ranges written "0 to 1,000", "0 to 100,000"; with 18.5 kg, 50 mg/kg a day in 2 doses and a day limit typed `1500`: "Dose each time 462.50 mg · Dose in a day 925.00 mg · Time between doses 12.0 hours". | kilograms, every field with its unit (A7); point as decimal (A4) |
+| `09-tool-dose-comma.jpg` | The same tool, day limit typed `1,500` | **"Dose each time, held to your limit 0.75 mg"** and "The dose worked out for a day is above the limit you set". The limit of one thousand five hundred milligrams was read as 1.5 mg. Typing the weight as `18,5` gave the same result as `18.5`. | **DIFFERS** (clinical safety): a typed comma is a decimal point, while the same screen writes thousands with a comma (Core 2) |
+| `10-patient-portal.jpg` | The patient's page, phone width | "Your appointments: 2:30 p.m. Saturday, 2026-10-10"; "Times are shown in your doctor's time zone: America/Toronto."; "This page is not for emergencies. If you are very unwell, call an ambulance: 911." **Under "Ask for an appointment" every day button reads "Sat 2026-", "Sun 2026-", "Mon 2026-" …: the month and the day are missing.** | 911 (A10); the zone is named, by its database name; **the day buttons cannot be told apart** (Core 11) |
+| `11-intake-form.jpg` | The intake form as the patient reads it after sending (guardian form), phone width | "You sent the form on 2026-10-09."; "The child's height … 21 cm", "The child's weight … 2 kg", "temperature … 31 °C" (the walk-through's stand-in values). **The answers are drawn in a column one letter wide** ("D i a b e t e s" down the page). | SI units named (A7); layout fault on a phone (Core 12) |
+| `12-patient-file.jpg` | Patient file | "Date of birth 2021-03-07 · Age 5 · Sex Female · Phone number 613-555-0123"; "Coming appointments 2026-10-10 2:30 p.m.–2:40 p.m."; tool results and notes dated 2026-10-09. | consistent with the calendar |
+
+**Not seen, said plainly:** the week view of the calendar (so the first day of the week was not checked on a screen); the appointment form's typed date field; the intake form while it is being filled in (only the sent form was read); a tool with a laboratory unit (PSA, DAS28); the reminder text; any printed page (there is none); a real phone; a browser older than the 2026 time-zone data. In images 08 and 09 the navigation bar appears in the middle of the page: that is how a full-page capture draws a fixed bar, not a fault of the page.
 
 ---
 
@@ -305,7 +328,9 @@ Each names the file and what would have to change. None was changed.
 7. **One emergency number, no health-advice line.** `uygulama.portal.acilNumara` is one string. Canada has 9-1-1 almost everywhere, none in Nunavut, and a non-urgent health line whose number differs by province. To change: an optional second, non-urgent line in the pack's portal settings (a slot, empty until a local source confirms it per province), and a way to state "no 9-1-1 here".
 8. **One thousands separator for numbers and for money** (`lib/ulke/tipler.ts`, `BicimKurallari`). The federal writing rule separates the two (A4). To change, if a local editor wants it: a separate separator for money.
 9. **The record's notes for Canada live in a shared script.** `scripts/ulke-en-kayit.mts`, the `ca` entry (`kimlikNotu`, `saatNotu`, `telefonNotu`, `ekNotlar`): after this audit the regenerated record still carries the old sentence `Label "Provincial health card number"` beside the new label, and calls the zone list and the date choice "unverified" without the sources found here. To change: those four strings.
-10. **The walk-through and the record cannot see any of the above**: they read what the pack says, not what a browser of another language draws.
+10. **The walk-through and the record cannot see any of the above**: they read what the pack says, not what a browser of another language draws. The walk-through passed 329 of 329 with findings 2, 3, 11 and 12 on the screens it walked.
+11. **The day buttons of the patient's "Ask for an appointment" show the year and no day** (seen: "Sat 2026-", `docs/audit/ca/10-patient-portal.jpg`). `components/ulke/portal/PortalSayfasi.tsx:51`, `portalGunu`: the short form of a day is `gunYaz(gun).slice(0, 5)`, the first five characters of the written date. That is the day and the month where a pattern begins with them (DD.MM.YYYY, DD/MM/YYYY, MM/DD/YYYY) and **the year and a hyphen where the pattern is year-first**, which is Canada's and only Canada's. A patient who asks for an appointment sees the same text on every button of a weekday and cannot tell one Saturday from the next. To change: build the short form from the pattern with its year part removed (for Canada "10-10"), not from a fixed number of characters; and a test that the short form of two different days of one year differs in every pack.
+12. **On a phone, the patient's sent intake form draws each answer in a column one letter wide** (seen: `docs/audit/ca/11-intake-form.jpg`). `components/ulke/portal/HastaFormu.tsx`, the read-only view. Not a matter of Canada: any country, any answer. To change: put the answer under its question at narrow widths.
 
 ## Shared English set — findings, not fixed
 
@@ -343,7 +368,7 @@ Each names the file and what would have to change. None was changed.
 |---|---|---|
 | 1 | Runtime time-zone data for British Columbia (Core 1): choose the Node version of the Canada deployment, add the kit test | Kaan (decision), Claude (the test and the check, in the kit) |
 | 2 | Comma typed into a number field (Core 2) | Claude, in the kit, after Kaan agrees; it changes every English-speaking pack |
-| 3 | Date and time fields that follow the browser (Core 3, 4) | Claude, in the kit |
+| 3 | Date and time fields that follow the browser (Core 3, 4); the patient's day buttons without a day, and the one-letter answer column on a phone (Core 11, 12) | Claude, in the kit; Core 11 before any Canadian patient sees the page |
 | 4 | Identifier keyboard; zone names; a second, non-urgent line; the stale notes in `scripts/ulke-en-kayit.mts` (Core 5, 6, 7, 9) | Claude, in the kit |
 | 5 | "anesthetist" and the other Shared English set findings | Claude (the table row), a native editor (the wording) |
 | 6 | Whether the product may ask for a health card number, in which provinces | a lawyer |
