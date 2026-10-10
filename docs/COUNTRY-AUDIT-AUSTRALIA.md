@@ -16,11 +16,11 @@ Audit of the pack `countries/au/` (served at `/au`, language form `en-AU`) again
 |---|---|
 | CONFORMS | 19 |
 | DIFFERS — fixed in the country's folder | 2 rows (4 values a user sees) |
-| DIFFERS — cannot be fixed in the country's folder (reported under "Core" or "Shared English set") | 5 |
+| DIFFERS — cannot be fixed in the country's folder (reported under "Core" or "Shared English set") | 6 |
 | NOT HANDLED BY THE PRODUCT | 11 |
 | NEEDS A LOCAL PERSON | 12 |
 
-49 rows, in Part B. The fixes are in Part D.
+50 rows, in Part B. The fixes are in Part D. What was seen on screens is in Part C.
 
 ---
 
@@ -235,6 +235,7 @@ How the kit works (read, not changed): a day is written from the pack's pattern 
 | 47 | Recording-consent sentence (legal question 2) | `kayitRizasi` (`ayarlar.ts`), "NOT READ BY A LAWYER" | an explicit box before recording, as the regulator's guidance asks | **NEEDS A LOCAL PERSON** — a lawyer |
 | 48 | Claims (legal questions 3, 5) | none | the pack's test refuses any claim word, regulator name or price | **CONFORMS** |
 | 49 | The generated record's fixed sentence | — | `docs/COUNTRY-PACK-AUSTRALIA.md` still says `Label "Medicare number"` and "every one unverified" in sentences written inside `scripts/ulke-en-kayit.mts` | **DIFFERS** — Core 7 |
+| 50 | Times in the landing page's example visits (A2) | nothing: the set's fixed text | "09:14", "11:03", "16:40" in the 24-hour form on a page of a 12-hour country | **DIFFERS** (minor) — Shared English set 6 |
 
 **Sense check of the settings asked about.**
 
@@ -248,7 +249,28 @@ How the kit works (read, not changed): a day is written from the pack's pattern 
 
 ## Part C — what was seen on real screens
 
-**NOT YET SEEN at this commit.** The country build was queued behind the other audits' builds on a shared machine when this draft was pushed. Nothing in Part B above was seen on a screen yet: it was read from the pack and the kit's code. This section is replaced when the build has run.
+**What was run.** `NOTYA_COUNTRY=au npm run build:ulke` on the fixed pack: built, exit 0, with the build proof ("`au` pack present (5 file(s)), no other country's pack"). The first two attempts did not finish: the machine (7 GB, shared by six audits) killed the type-check step for lack of memory; the third ran alone and passed. Then the repository's pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`) against the stand-ins on this machine only (application on `localhost:3161`, stand-in database on `127.0.0.1:54461`): **329 of 329 checks passed, exit 0**. Then twelve screenshots with the installed Playwright Chromium (1.56, no browser downloaded), signed in as the walk-through's stand-in account. No account was created on any deployed site and nothing outside this machine was contacted.
+
+**What was NOT seen.** The pack before the fixes was never built (one build slot was to be had), so the "before" values of Part D were read from the code, not from a screen. No screen was seen on a real phone or in Safari or Firefox: the date and time controls are those of Chromium. No real speech was recorded: the walk-through's stand-in supplies the transcript and the note ("SYNTHETIC-…"). The sign-in page, the booking form's time field, the clinic screens and the front desk were walked by the walk-through but not looked at by eye. Nothing was printed.
+
+Images are in `docs/audit/au/` (JPEG, 16–84 KB each).
+
+| Image | What is on it | Against Part A |
+|---|---|---|
+| `01-landing.jpg` | The landing page's top: "A clinical assistant for doctors", "Note templates for 40 specialties and professions", "In English". Read from the page's text further down: the list of 40 names with "Gastroenterology and hepatology", "Otolaryngology – head and neck surgery", "Paediatrics and child health", and also "Thoracic surgery", "Cardiac and vascular surgery", "Oncology", "Cosmetic surgery", "Cosmetic medicine"; "organisation" in the request form; the phone example "+61 491 570 006"; "Price by quote", no amount; "© 2026 NOTYA". The example visit is headed "A VISIT · 09:14 · GENERAL TEMPLATE". | Names as fixed (A13). Spelling Australian (A23). No price, no claim. **The example's time is in the 24-hour form** while every time inside the product is 12-hour: Shared English set 6. |
+| `02-signup.jpg` | "Create an account with an invitation code": invitation code, "Full name", email address, password twice. No date, no phone, no identifier. | One name field (A18, Core 5). |
+| `03-calendar-week.jpg` | The week runs "Mon · 05/10" to "Sun · 11/10"; the appointment reads "2:30 pm"; under it "Times are shown in the time zone set for your account." | Monday first (A3). Day before month (A1). 12-hour, lower-case "pm" with a space (A2). The zone is not named on the calendar (Core 3). |
+| `04-new-patient-browser-en-AU.jpg` | "Full name"; "Date of birth" as the browser's control, showing **04/03/2019** for 4 March 2019 in a Chromium started in Australian English; "Phone number" with the hint "+61 491 570 006"; "Sex": "Female", "Male"; "**Medicare card number** (optional)". | Identifier label as fixed (A12). Phone blocks as the Style Manual's (A16). Two answers for sex (A18, Core 6). |
+| `05-new-patient-browser-en-US.jpg` | The same form, the same date given to the control, in a Chromium started in American English: the control shows **03/04/2019**. | **Core 1 seen**: the order a date is typed in follows the browser, while the product writes the same day as 04/03/2019 everywhere it shows it. |
+| `06-patient-file.jpg` | "Date of birth 07/03/2021", "Age 5", "Sex Female", "Phone number +61 491 570 006"; coming appointments "11/10/2026 2:30 pm–2:40 pm" and "12/10/2026 9:30 am–9:40 am"; "Last saved: 10/10/2026"; tool results and notes dated "10/10/2026". | DD/MM/YYYY throughout (A1); 12-hour "am"/"pm" (A2). |
+| `07-visit-note.jpg` | "Visit note · 10/10/2026 12:09 pm", "Approved 10/10/2026 12:09 pm", template "Emergency medicine", the four sections "History and presenting complaint", "Examination", "Assessment", "Plan"; "Summary for the patient". The machine's clock was 01:09 UTC. | The time is Sydney's with daylight saving, eleven hours ahead of UTC (A6). The content is the stand-in's. |
+| `08-tool-psa-rate.jpg` | "Prostate-specific antigen: rate of change" (role set to Urology for this image): "Earlier value (µg/L)", "Accepted range: 0 to 1,000", result "1.67 µg/L per year", "273 days"; the two dates in the browser's control as 05/01/2026 and 05/10/2026 (5 January and 5 October, Australian-English browser). "No threshold and no grade is shown." | Unit as the pack states it (A8, unit not confirmed: B18). Decimal point and thousands comma (A4). |
+| `09-settings-time-zone.jpg` | "Time zone": a list reading "Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Darwin", "Australia/Perth", "Australia/Hobart"; "Specialty or profession" with the 40 names. | **Core 3 seen**: database names, no state, no AEST/AEDT. |
+| `10-patient-portal.jpg` | The patient's page on a phone-sized screen: "Sunday, 11/10/2026" at "2:30 pm"; "Times are shown in your doctor's time zone: Australia/Sydney."; day buttons "Sun 11/10", "Mon 12/10"…; at the foot "This page is not for emergencies. If you are very unwell, call an ambulance: 000." | Emergency number right (A10); it is not written "Triple Zero (000)" and no advice line is named (Shared English set 1, Core 4). The zone's name is the database's (Core 3). |
+| `11-intake-form-guardian.jpg` | The form for a patient aged 5: "Who is filling in this form", "What is your relationship to the child?" with "Mother", "Father", "Legal guardian", "Another close person". | Below the pack's guardian age (16) the form addresses a parent or guardian (A22, for a lawyer). |
+| `12-intake-form-units.jpg` | "Measurements (if you know them)": the child's height in "cm", weight in "kg", temperature in "°C". | Units as A7. |
+
+**Compared with Part A, in one paragraph.** Every date the product writes is day/month/year with slashes; every time is 12-hour with lower-case "am"/"pm" after a space; the week starts on Monday; numbers use a point and a comma; the units are metric; the phone example is in the Style Manual's blocks; the identifier reads "Medicare card number"; the specialty names are the Medical Board's wording where the pack could give it; the spelling is Australian; no currency amount is shown anywhere. Three things on the screens do not match: the date a person **types** follows their browser (images 04 and 05); the time zone is named "Australia/Sydney" to doctor and patient (images 09 and 10); the landing page's example visit carries a 24-hour time (image 01). None of the three can be changed in the country's folder.
 
 ---
 
@@ -267,7 +289,7 @@ D1 is row 25 of Part B and D2–D4 are row 28: two rows, four values a user sees
 
 **Tests that hold the fixes** (`countries/au/au.test.ts`, a new block "held by the audit against Australian sources", 10 tests; the file now has 84 passing tests): the 27 specialty names equal the list's wording and the three unmapped roles keep their base names until a clinician maps them; no role name says "surgeon" and none uses another country's usage; the allied professions' names; the separators and the currency; the emergency number, the phone prefix, the example's blocks and the mobile rule with five accepted and five refused spellings; the seven zones with their offsets in July and in January (daylight saving in four, none in three); "2:30 pm"; the laboratory units and the four closed tools; no text asks for a healthcare identifier or a tax file number; both spellings of the regulator's name in the leak list.
 
-**Checks run, each by its own exit code:** type check (`npx tsc --noEmit`), wall check (`node scripts/ulke-duvarlari.mjs`), pack check (`NOTYA_COUNTRY=au node scripts/ulke-paket-denetimi.mjs`), the pack's tests, the record regenerated (`NOTYA_COUNTRY=au npx --yes tsx scripts/ulke-en-kayit.mts --ulke au`), and the country build. Results at this commit: pack tests 84 of 84 (exit 0); pack check exit 0 ("nothing is marked 'to be supplied'"); wall check exit 0; record regenerated and its own test passing; type check of the pack's files and everything they import exit 0. The whole-repository type check was killed by the machine for lack of memory (exit 137, no type error printed) while four other builds ran, and the country build had not run yet: both are to be repeated.
+**Checks run, each by its own exit code:** type check (`npx tsc --noEmit`), wall check (`node scripts/ulke-duvarlari.mjs`), pack check (`NOTYA_COUNTRY=au node scripts/ulke-paket-denetimi.mjs`), the pack's tests, the record regenerated (`NOTYA_COUNTRY=au npx --yes tsx scripts/ulke-en-kayit.mts --ulke au`), and the country build. Results: pack tests 84 of 84 (exit 0); pack check exit 0 ("nothing is marked 'to be supplied'"); wall check exit 0; record regenerated and its own test passing; type check of the pack's files and everything they import exit 0; the country build exit 0, its own step "Checking validity of types" (the whole project) passed and the build proof passed; the walk-through 329 of 329, exit 0. The whole-repository type check on its own (`npx tsc --noEmit`) was killed once by the machine for lack of memory (exit 137, no type error printed) while other builds ran; repeated when the machine was free: exit 0, no output.
 
 ---
 
@@ -289,6 +311,7 @@ D1 is row 25 of Part B and D2–D4 are row 28: two rows, four values a user sees
 3. **Role names are the only place a country can state "this is not a specialty here".** The landing page heading "Specialties and professions" and the group label "Medical specialty" (`countries/_dil/en/acilis.ts`, `uygulama.ts`) sit over a list that in Australia includes names that are not specialties of the Board's list (the five clinic roles). To change: a pack-level wording for the heading, or a separate list for clinic roles on the landing page.
 4. **"Sex" with two answers** is also the set's wording (`countries/_dil/en/uygulama.ts:92-94`); see Core 6.
 5. **The Australian column of the spelling table** (`countries/_dil/en/sozluk.ts`) has one word, "program". No Australian editor has read it; the Style Manual's dictionaries (ACOD, Macquarie) were not consulted word by word.
+6. **The example visits on the landing page carry fixed 24-hour times.** `countries/_dil/en/acilis.ts:98, 109, 120` (`saat: '09:14'`, `'11:03'`, `'16:40'`) are shown as written ("A VISIT · 09:14 · GENERAL TEMPLATE", seen in Part C), while the product writes a time as "9:14 am" in a 12-hour country. To change: pass these through the kit's `saatGoster`, or let the set write them per form.
 
 ---
 
@@ -327,7 +350,7 @@ D1 is row 25 of Part B and D2–D4 are row 28: two rows, four values a user sees
 | 8 | Whether to offer Lord Howe Island and the external territories as time zones (B11) | Kaan |
 | 9 | Re-check by a person with a browser the pages this audit could not open: the ACMA list of numbers for creative works (the example phone number), the Style Manual's currency page, the Australian Government's time-zone page, the TGA pages, Australia Post's addressing guide, the RCPA's SPIA guideline, the Healthcare Identifiers Act | Claude with Kaan (a person must open them), or a local person |
 | 10 | Core findings 1–8 (date and time entry first; then the time-zone names and the first-login question) | Claude, on Kaan's word (kit work, outside this audit) |
-| 11 | Shared English set findings 1–5 | Claude, on Kaan's word (shared set, outside this audit) |
+| 11 | Shared English set findings 1–6 | Claude, on Kaan's word (shared set, outside this audit) |
 | 12 | Medicines: decide on the recommendation of Part E (register with the National Clinical Terminology Service; lawyer reads the two licences) | Kaan, then a lawyer |
 | 13 | Languages other than English on the patient's page and form (B46) | Kaan |
 | 14 | Prices for Australia; opening sign-up; showing the site to search engines | Kaan (unchanged by this audit) |
