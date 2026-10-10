@@ -121,6 +121,13 @@ export const US_GIRDI: EnUlkeGirdisi = {
     lisanslar: {
       'esi-triyaj': { durum: 'izin-gerekli', hakSahibi: 'Emergency Nurses Association (ENA)', kaynak: 'ENA, trademarks page (https://www.ena.org/ena-trademarks), and the copyright notice of the Emergency Severity Index handbook: read for the tools audit, second pass, 2026-10-10' },
       'rapor-taslagi': { durum: 'izin-gerekli', hakSahibi: 'American College of Radiology (ACR)', kaynak: 'ACR, BI-RADS permissions page (https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions): read for the tools audit, second pass, 2026-10-10' },
+      // FREE BY THE OWNER'S OWN LINE, PRINTED ON THE FORMS THEMSELVES (read 2026-10-10 on the copy of both forms issued by
+      // the North Dakota Department of Health and Human Services, https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf,
+      // and on the copy of the notice in the LOINC record of the GAD-7, https://cdn.loinc.org/70274-6): "No permission
+      // required to reproduce, translate, display or distribute". The record names Pfizer Inc. as the copyright holder.
+      // The owner's own site refuses automated readers: A PERSON OPENS IT ONCE. THE PLACEHOLDER STAYS A PLACEHOLDER: the
+      // forms read print no scoring table and no worked example, so no tool was built from them (the report of this job).
+      'phq9-gad7': { durum: 'serbest', hakSahibi: 'Pfizer Inc. (copyright); developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues', kaynak: 'the permission line printed on the PHQ-9 and GAD-7 forms (https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf) and in the LOINC record of the GAD-7 (https://cdn.loinc.org/70274-6): read 2026-10-10' },
     },
     // ── NOTYA-ULKE-UYGULA-US: WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set's list
     // (us-kararlar.json → specialties[].tools and clinicSpecialties[].tools; existing tools only). Every list names the
@@ -147,6 +154,55 @@ export const US_GIRDI: EnUlkeGirdisi = {
       // visual acuity: also optometry
       'gorme-keskinligi': ['ophthalmology', 'optometry'],
     },
+    // ── THE NUMBERS A NATIONAL SOURCE STATES, for the shared tools that take a country's. Each was read on 2026-10-10. ──
+    // EXPECTED HEIGHT: THE RANGE EITHER SIDE, 10 cm. Barstow C, Rerucha C. Evaluation of Short and Tall Stature in
+    // Children. Am Fam Physician. 2015;92(1):43-50, https://www.aafp.org/afp/2015/0701/p43.pdf: "within 10 cm (4 in),
+    // or two standard deviations, of their midparental height"; its formula is the kit's (13 cm, or 5 in). Before this
+    // the tool showed the expected height alone. FOR A US CLINICIAN.
+    parametreler: { 'hedef-boy': { aralik_cm: 10 } },
+    // THE GRADE TABLES OF TWO SHARED TOOLS, STATED AS THIS COUNTRY'S OWN FROM ITS NATIONAL BODIES. Each is, limit for
+    // limit, what the kit shows by itself today, so nothing changes on a screen; stated here, it is the United States'
+    // table with its source, and a later change of the kit's own table does not move it.
+    uyarlama: {
+      // HEARING, DEGREE OF LOSS. American Speech-Language-Hearing Association, "Degree of Hearing Loss",
+      // https://asha.org/public/hearing/degree-of-hearing-loss: Normal -10 to 15; Slight 16 to 25; Mild 26 to 40;
+      // Moderate 41 to 55; Moderately severe 56 to 70; Severe 71 to 90; Profound 91+ (dB HL), "Source: Clark, J. G.
+      // (1981)". An average between two printed ranges (15.5 dB) is in the higher grade, as in the kit.
+      // NOT STATED HERE, so the kit's own stand: WHICH FREQUENCIES are averaged (0.5, 1, 2 and 4 kHz: the audit found two
+      // US conventions, three frequencies and four, and a US audiologist chooses), and THE RULE FOR A DIFFERENCE BETWEEN
+      // THE EARS (more than 15 dB: the otolaryngology academy's statement, whose page forbids use of its content with
+      // artificial intelligence, so this job did not open it. FOR A LAWYER).
+      'odyometri-pta': { bantlar: { sayi: 'pta', satirlar: [{ ust: 15, dahil: true, bant: 'normal' }, { ust: 25, dahil: true, bant: 'hafifce' }, { ust: 40, dahil: true, bant: 'hafif' }, { ust: 55, dahil: true, bant: 'orta' }, { ust: 70, dahil: true, bant: 'orta_ileri' }, { ust: 90, dahil: true, bant: 'ileri' }, { ust: null, bant: 'cok_ileri' }] } },
+      // DAS28, DISEASE ACTIVITY. England BR, Tiong BK, Bergman MJ, et al. 2019 Update of the American College of
+      // Rheumatology Recommended Rheumatoid Arthritis Disease Activity Measures. Arthritis Care Res. 2019;71(12):
+      // 1540-1555, Table 1, https://rheumatology.org/api/asset/blt65fc8b2649e03455: remission <2.6; low 2.6 to <3.2;
+      // moderate 3.2 to ≤5.1; high >5.1.
+      das28: { bantlar: { sayi: 'das28', satirlar: [{ ust: 2.6, bant: 'remisyon' }, { ust: 3.2, bant: 'dusuk' }, { ust: 5.1, dahil: true, bant: 'orta' }, { ust: null, bant: 'yuksek' }] } },
+    },
+    // THE NAMES OF THOSE GRADES, as this country writes them (a country that states its own bands names them itself).
+    degisen: {
+      'odyometri-pta': { bantlar: { normal: 'Normal (up to 15 dB)', hafifce: 'Slight hearing loss (16 to 25 dB)', hafif: 'Mild hearing loss (26 to 40 dB)', orta: 'Moderate hearing loss (41 to 55 dB)', orta_ileri: 'Moderately severe hearing loss (56 to 70 dB)', ileri: 'Severe hearing loss (71 to 90 dB)', cok_ileri: 'Profound hearing loss (above 90 dB)' } },
+      das28: { bantlar: { remisyon: 'Remission (below 2.6)', dusuk: 'Low disease activity (2.6 to below 3.2)', orta: 'Moderate disease activity (3.2 to 5.1)', yuksek: 'High disease activity (above 5.1)' } },
+      // ONE WORD OF TWO CHECKLISTS, the audit's decision ("the pack can change the label by itself"): the set says "the
+      // anesthetist's note". The physician is an anesthesiologist here (the society's own page, as the audit read it on
+      // 2026-10-10: https://asahq.org/resources/clinical-information/asa-physical-status-classification-system);
+      // "anesthetist" usually means a nurse anesthetist. FOR A US EDITOR.
+      'cocuk-prepost-op': { alanlar: { anestezi_not: 'The anesthesiologist\'s note is in the patient\'s documents' } },
+      'genel-preop': { alanlar: { anestezi_not: 'The anesthesiologist\'s note is in the patient\'s documents' } },
+    },
+    // NOT STATED, EACH BECAUSE NO NATIONAL SOURCE OPENED ON 2026-10-10 STATES IT (the tool then shows its result without it):
+    //   RETURN TO SPORT, THE STEPS. CDC HEADS UP, "Returning to Sports" (updated September 15, 2025),
+    //     https://www.cdc.gov/heads-up/guidelines/returning-to-sports.html, has six steps, each of at least 24 hours,
+    //     begun with a health care provider's approval. It states NO day counted from the injury for any step, and the
+    //     kit's table holds only "the earliest day after the injury". No table: the tool shows the days since the injury.
+    //   PSA, THE DAYS OF ITS CAUTION. The unit, ng/mL, is the National Cancer Institute's ("Prostate-Specific Antigen
+    //     (PSA) Test", updated January 31, 2025, https://www.cancer.gov/types/prostate/psa-fact-sheet). No US source
+    //     read states how far apart two values must be for a rate of change; the kit's own 90 days stand (unsourced,
+    //     as the kit says). The same page describes a repeat test 6 to 8 weeks after an abnormal result: on such a
+    //     pair the caution shows. FOR A US UROLOGIST: keep 90 days, move it, or switch it off.
+    //   PASI, EASI, SCORAD: BANDS. No US national body read states severity bands for any of the three (the psoriasis
+    //     foundation's statement of December 2025 does not set severity by one figure). PASI shows its score and no
+    //     severity word; EASI and SCORAD keep the published bands of the kit.
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction
