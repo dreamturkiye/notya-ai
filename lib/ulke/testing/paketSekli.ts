@@ -32,7 +32,9 @@ export const ISTEGE_BAGLI: Record<string, Record<string, string>> = {
     'sayfa.saatDilimi': 'REQUIRED if the country has more than one time zone: on the patient\'s page, "Times are in % time." (% = the doctor\'s zone)',
   },
   form: {},
-  araclar: {},
+  araclar: {
+    'arac.birimSec': 'REQUIRED if the country accepts more than one unit for a laboratory value (araclar.labBirimleri with a list): under a number whose unit is not chosen yet, "Choose the unit of this value."',
+  },
   mesaj: {},
   sablon: {},
   konsultasyon: {},

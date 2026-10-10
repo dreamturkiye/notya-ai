@@ -6,11 +6,10 @@
  * Types only. Nothing here is a default: a pack states every field, and marks in its own file which of them nobody
  * of the country has verified yet.
  */
-import type { LabOlcusu } from '@/lib/ulke/araclar/tipler'
 import type { AcilisFiyatlari } from '@/lib/ulke/arayuz/acilisTipleri'
 import type { Birimler, KonusmaTanimaAyarlari } from '@/lib/ulke/tipler'
-import type { araciBicimle } from './araclar/yardimci'
-import type { EnRol } from './klinik/roller'
+import type { EnAraclarGirdisi } from './araclar'
+import type { EnRol, EnRolDegisimi } from './klinik/roller'
 import type { EnUlkeSozleri } from './ulke'
 
 export type EnUlkeGirdisi = {
@@ -22,6 +21,12 @@ export type EnUlkeGirdisi = {
   kidemliHekim: string
   /** The names THIS COUNTRY uses for a role where they differ from the set's base name, in the country's own spelling. */
   rolAdlari: Readonly<Partial<Record<EnRol, string>>>
+  /**
+   * NOTYA-ULKE-OZEL-01 — WHERE THIS COUNTRY'S ROLE LIST DIFFERS FROM THE SHARED FORTY (./klinik/roller.ts →
+   * EnRolDegisimi): the shared roles it does not have, and the roles only it has, each with the shared role it
+   * behaves like. Absent = the forty. The pack's `uygulama.roller` is then `enRolAnahtarlari(<this object>)`.
+   */
+  roller?: EnRolDegisimi
   /** Guardian age: a legal fact of the country. null = no such rule. The same value as the pack's `uygulama.veliYasi`. */
   veliYasi: number | null
   /** Units of measure: the same object as the pack's `uygulama.birimler`. */
@@ -34,16 +39,12 @@ export type EnUlkeGirdisi = {
   konusma: KonusmaTanimaAyarlari
   /** Visits (recordings turned into notes) one account may make per day. */
   gunlukMuayeneLimiti: number
-  araclar: {
-    /** The unit this country's laboratories report each value in. UNVERIFIED until a local source confirms it. */
-    labBirimleri: Readonly<Partial<Record<LabOlcusu, string>>>
-    /** Tools of the set this country keeps as slots: kit key → what is missing, and who decides. */
-    kapali: Readonly<Record<string, { eksik: string; kimden: string }>>
-    /** Unit names this country writes differently. */
-    birimAdlari?: Readonly<Record<string, string>>
-    /** Words of a tool this country writes differently. */
-    degisen?: Readonly<Record<string, NonNullable<Parameters<typeof araciBicimle>[2]>>>
-  }
+  /**
+   * THE TOOLS: the unit of each laboratory value, the tools of the set this country keeps as slots, the names and
+   * words it writes differently — and, since NOTYA-ULKE-OZEL-01, everything else one country may state about its
+   * tools without touching another's (./araclar/index.ts → EnAraclarGirdisi, where each field says what it is).
+   */
+  araclar: Omit<EnAraclarGirdisi, 'sozler' | 'ulke' | 'birimler' | 'roller'>
   acilis: {
     /** A phone number as people of the country write it: the example in the request form. */
     telefonOrnegi: string

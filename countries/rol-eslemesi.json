@@ -1,5 +1,5 @@
 {
-  "aciklama": "NOTYA-ULKE-EN-01 — ROLE KEYS ACROSS COUNTRIES. One row per role of the product: the key the five English-speaking packs share (countries/_dil/en/klinik/roller.ts), the key of the Turkish product (lib/asistan/specialistsCatalog.ts for the 30 doctor specialties, lib/ai/personas/klinik_uzmanlar.ts and lib/specialties/klinikDikey.ts for the 10 clinic roles), and the key of the Uzbek pack (countries/uz/klinik/asistanAdlari.ts). For TRACING ONLY: when a core fix is made for one specialty, this table says which key carries the same role in every other country. Tests and scripts read it; no application code, no pack and no build does. Forty rows, none missing, none extra: lib/ulke/rolEslemesi.test.ts holds it to all three sides. Explained in docs/COUNTRY-PACK-ROLE-KEYS.md.",
+  "aciklama": "NOTYA-ULKE-EN-01 — ROLE KEYS ACROSS COUNTRIES. One row per role of the product: the key the five English-speaking packs share (countries/_dil/en/klinik/roller.ts), the key of the Turkish product (lib/asistan/specialistsCatalog.ts for the 30 doctor specialties, lib/ai/personas/klinik_uzmanlar.ts and lib/specialties/klinikDikey.ts for the 10 clinic roles), and the key of the Uzbek pack (countries/uz/klinik/asistanAdlari.ts). For TRACING ONLY: when a core fix is made for one specialty, this table says which key carries the same role in every other country. Tests and scripts read it; no application code, no pack and no build does. Forty rows, none missing, none extra: lib/ulke/rolEslemesi.test.ts holds it to all three sides. Explained in docs/COUNTRY-PACK-ROLE-KEYS.md. NOTYA-ULKE-OZEL-01 — A COUNTRY'S OWN ROLE LIST: `ulkeyeOzel` holds, per country, where its list differs from its column above: `sutun` (the column the country's keys are read from: en or uz), `cikar` (the shared roles it does not have) and `ekle` (the roles only it has, each with its kind and `gibi`: the role of that column it behaves like, whose note template and intake questions it uses, or null where it brings its own). A country that is not listed there has exactly its column. \"xx\" is the kit's test country (lib/ulke/testing/ornekUlke/), in no build: it shows the form. lib/ulke/rolEslemesi.paket.test.ts holds every pack to this section.",
   "roller": [
     { "en": "emergency-medicine", "tr": "acil-tip", "uz": "acil-tip", "taraf": "doktor" },
     { "en": "family-medicine", "tr": "aile-hekimligi", "uz": "aile-hekimligi", "taraf": "doktor" },
@@ -41,5 +41,18 @@
     { "en": "dietetics", "tr": "diyetisyen", "uz": "diyetisyen", "taraf": "klinik-muttefik" },
     { "en": "occupational-therapy", "tr": "ergoterapi", "uz": "ergoterapi", "taraf": "klinik-muttefik" },
     { "en": "audiology", "tr": "odyoloji", "uz": "odyoloji", "taraf": "klinik-muttefik" }
-  ]
+  ],
+  "ulkeyeOzel": {
+    "xx": {
+      "sutun": "en",
+      "cikar": ["cardiovascular-surgery", "hair-transplant", "aesthetic-medicine", "clinic-dermatology"],
+      "ekle": [
+        { "anahtar": "xx-cardiac", "taraf": "doktor", "gibi": "cardiovascular-surgery" },
+        { "anahtar": "xx-vascular", "taraf": "doktor", "gibi": "cardiovascular-surgery" },
+        { "anahtar": "xx-geriatrics", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "xx-aesthetics", "taraf": "klinik-hekim", "gibi": "aesthetic-medicine" },
+        { "anahtar": "xx-nurse", "taraf": "klinik-muttefik", "gibi": null }
+      ]
+    }
+  }
 }
