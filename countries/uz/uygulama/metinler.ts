@@ -205,6 +205,19 @@ const UZ_LATN: UygulamaMetni = {
     kaydet: 'Mutaxassislikni saqlash',
     kaydedildi: 'Saqlandi.',
   },
+  // NOTYA-ULKE-DENETIM-01 — the kit's own entry fields (a day, a time of day, a number). Read by doctors AND by
+  // patients (the intake form on the patient's page). MACHINE-WRITTEN, awaits native review like the rest.
+  girdi: {
+    gun: 'Kun',
+    ay: 'Oy',
+    yil: 'Yil',
+    saat: 'Soat',
+    dakika: 'Daqiqa',
+    tarihGecersiz: 'Sana toʻliq emas yoki notoʻgʻri. Kun, oy va toʻrt xonali yilni tekshiring.',
+    saatGecersiz: 'Vaqt toʻliq emas yoki notoʻgʻri. Soat va ikki xonali daqiqani kiriting.',
+    sayiOkunamadi: 'Bu sonni oʻqib boʻlmadi. Uni qaytadan yozing, masalan: %1 yoki %2.',
+    duzelt: 'Yozganlaringizdan baʼzilarini oʻqib boʻlmadi. Belgilangan maydonlarni tuzating yoki tozalang va qaytadan urinib koʻring.',
+  },
 }
 
 
@@ -386,6 +399,19 @@ const UZ_CYRL: UygulamaMetni = {
     kaydet: 'Мутахассисликни сақлаш',
     kaydedildi: 'Сақланди.',
   },
+  // NOTYA-ULKE-DENETIM-01 — the kit's own entry fields (a day, a time of day, a number). Read by doctors AND by
+  // patients (the intake form on the patient's page). MACHINE-WRITTEN, awaits native review like the rest.
+  girdi: {
+    gun: 'Кун',
+    ay: 'Ой',
+    yil: 'Йил',
+    saat: 'Соат',
+    dakika: 'Дақиқа',
+    tarihGecersiz: 'Сана тўлиқ эмас ёки нотўғри. Кун, ой ва тўрт хонали йилни текширинг.',
+    saatGecersiz: 'Вақт тўлиқ эмас ёки нотўғри. Соат ва икки хонали дақиқани киритинг.',
+    sayiOkunamadi: 'Бу сонни ўқиб бўлмади. Уни қайтадан ёзинг, масалан: %1 ёки %2.',
+    duzelt: 'Ёзганларингиздан баъзиларини ўқиб бўлмади. Белгиланган майдонларни тузатинг ёки тозаланг ва қайтадан уриниб кўринг.',
+  },
 }
 
 const RU: UygulamaMetni = {
@@ -565,6 +591,19 @@ const RU: UygulamaMetni = {
     ayarIzoh: 'Изменение действует со следующих приёмов. Уже написанные записи не меняются.',
     kaydet: 'Сохранить специальность',
     kaydedildi: 'Сохранено.',
+  },
+  // NOTYA-ULKE-DENETIM-01 — the kit's own entry fields (a day, a time of day, a number). Read by doctors AND by
+  // patients (the intake form on the patient's page). MACHINE-WRITTEN, awaits native review like the rest.
+  girdi: {
+    gun: 'День',
+    ay: 'Месяц',
+    yil: 'Год',
+    saat: 'Часы',
+    dakika: 'Минуты',
+    tarihGecersiz: 'Дата указана не полностью или неверно. Проверьте день, месяц и год из четырёх цифр.',
+    saatGecersiz: 'Время указано не полностью или неверно. Введите часы и минуты двумя цифрами.',
+    sayiOkunamadi: 'Не удалось прочитать это число. Введите его ещё раз, например: %1 или %2.',
+    duzelt: 'Часть введённого не удалось прочитать. Исправьте или очистите отмеченные поля и повторите попытку.',
   },
 }
 

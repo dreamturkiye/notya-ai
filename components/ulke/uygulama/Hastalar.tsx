@@ -17,6 +17,8 @@ import { HastaAracKayitlariKarti } from './AracKayitlari'
 import { HastaMesajKarti } from './HastaMesajlari'
 import { KonsultasyonKarti } from './Konsultasyonlar'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export type DosyaMuayenesi = { seansId: string; notId: string | null; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -128,8 +130,8 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
         ) : null}
         <div className="uza-iki">
           <div className="uza-alan">
-            <label className="uza-etiket" htmlFor="uza-h-dogum">{y.dogumTarihi}</label>
-            <input id="uza-h-dogum" className="uza-girdi" type="date" value={a.dogumTarihi} onChange={(e) => set({ ...a, dogumTarihi: e.target.value })} />
+            {/* The kit's own date field, in the pack's order: never the browser's (NOTYA-ULKE-DENETIM-01b). */}
+            <TarihGirisi id="uza-h-dogum" etiket={y.dogumTarihi} deger={a.dogumTarihi} degistir={(dogumTarihi) => set({ ...a, dogumTarihi })} m={m.girdi} ad="dogumTarihi" hata={hata === 'dogumTarihi'} />
           </div>
           <div className="uza-alan">
             <label className="uza-etiket" htmlFor="uza-h-tel">{y.telefon}</label>
@@ -167,6 +169,8 @@ export function YeniHasta() {
     e.preventDefault()
     if (a.ad.trim().length < 2) { setHata('ad'); return }
     if (!a.dil) { setHata('dil'); return }
+    // A date of birth that is typed and is not a day is never sent as "no date of birth".
+    if (a.dogumTarihi === GIRDI_GECERSIZ) { setHata('dogumTarihi'); return }
     setBekliyor(true); setHata(null)
     try {
       const r = await u.api('/api/ulke/hastalar', { method: 'POST', govde: a })

@@ -108,6 +108,19 @@ export function gunYazDesenle(gun: string, tarihDeseni: string): string {
   return tarihDeseni.replace('YYYY', y).replace('MM', a).replace('DD', g)
 }
 
+/**
+ * A day WITHOUT ITS YEAR, in the pack's own order and with its own mark: '2026-10-09' → '09.10' (DD.MM.YYYY),
+ * '10/09' (MM/DD/YYYY), '10-09' (YYYY-MM-DD). For a place too narrow for a year, where the year is plain from what
+ * stands around it. Never "the first five characters of the written date": in a year-first country that is the year
+ * and no day (NOTYA-ULKE-DENETIM-01c).
+ */
+export function gunYazYilsiz(gun: string, tarihDeseni: string): string {
+  if (!gunGecerli(gun)) return ''
+  const [, a, g] = gun.split('-')
+  const ayrac = tarihDeseni.replace(/DD|MM|YYYY/g, '')[0] ?? ''
+  return (tarihDeseni.match(/DD|MM/g) ?? []).map((p) => (p === 'DD' ? g : a)).join(ayrac)
+}
+
 /** 'HH:MM' (24 hours; '24:00' allowed as the end of a day) → minutes after midnight, or null. */
 export function saatCoz(ham: unknown): number | null {
   if (typeof ham !== 'string') return null
