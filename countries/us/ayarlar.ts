@@ -13,11 +13,11 @@
  * (docs/araclar-denetim/US.md and us-kararlar.json on the branch araclar-denetim/us; the second pass supersedes the
  * first): its own role list (./roller.ts), who sees which tool (`gorenler`), the numbers a national source states
  * for the shared tools that take a country's (`parametreler`, `uyarlama`), the licence states that were read
- * (`lisanslar`), and six tools of its own, built and SWITCHED OFF (./araclar/). Every number below that is new
+ * (`lisanslar`). Six tools of its own are built in ./araclar/ and ARE NOT IN THIS PACK. Every number below that is new
  * stands beside the source it was read from on that day.
  *
  * The pack's light file (./index.ts) does not read this file any more: what it needs is in ./temel.ts and
- * ./roller.ts, which import types only. This file brings the arithmetic of the country's own tools.
+ * ./roller.ts, which import types only.
  */
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
@@ -203,6 +203,15 @@ export const US_GIRDI: EnUlkeGirdisi = {
     //   PASI, EASI, SCORAD: BANDS. No US national body read states severity bands for any of the three (the psoriasis
     //     foundation's statement of December 2025 does not set severity by one figure). PASI shows its score and no
     //     severity word; EASI and SCORAD keep the published bands of the kit.
+    // ── TOOLS ONLY THIS COUNTRY HAS: SIX ARE BUILT, AND NONE IS IN THIS PACK (./araclar/). Not as a tool, not as a
+    // placeholder, not as arithmetic: `ek` IS DELIBERATELY ABSENT, so no build of the United States holds a line of
+    // them. Each awaits a clinician's sign-off (./araclar/onayBekleyen.ts). On the day one is signed off and the owner
+    // says so, this file adds what ./araclar/metinler.ts → usAcilacakEk hands over, and the key is listed for "us" in
+    // countries/yasak-araclar.json. WHY NOT EVEN A PLACEHOLDER TODAY: two checks of the kit's own test
+    // lib/ulke/araclar/araclar.paket.test.ts refuse any real country that carries a key of its own (a placeholder
+    // "named after" a key of that list; a pack that brings a mechanism under such a key). The kit's test country is
+    // not run through that file. Reported to the owner: it must be corrected in the kit before any country switches
+    // on a tool of its own.
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction
