@@ -21,7 +21,12 @@ const metin = paketMetinleri({
   metinler: { 'en-NZ': cekirdek },
 })
 
-/** Mobile number: +64 and eight to ten digits beginning with 2, in any common spelling (02… at home). UNVERIFIED format rule. */
+/**
+ * Mobile number: +64 and eight to ten digits beginning with 2, in any common spelling (02… at home). UNVERIFIED format rule.
+ * (Mobile numbers here begin 02; the commonest have nine digits after the trunk 0. The numbering plan's own register
+ * was not read by the audit of 2026-10-09: the lengths are from general knowledge. A landline is not a mobile number
+ * and is refused by this rule. No screen of the country kit applies the rule today: a phone number is stored as typed.)
+ */
 function nzCepGecerliMi(ham: string | null | undefined): boolean {
   const t = String(ham ?? '').trim()
   if (!t || !/^[0-9+()\-.\s]+$/.test(t)) return false
@@ -40,12 +45,15 @@ export const NZ_PAKETI: UlkePaketi = {
   acikDiller: metin.acikDiller,
   varsayilanDil: 'en-NZ',
   paraBirimi: { kod: 'NZD', simge: '$', ondalikHane: 2 },
-  // The default time zone of a new account. UNVERIFIED choice.
+  // The default time zone of a new account. SOURCE-CHECKED (Time Act 1974): New Zealand standard time is 12 hours
+  // ahead of UTC and the Chatham Islands keep their own time, 45 minutes ahead of it; both move by one hour for
+  // daylight time. Nearly every account is on the main islands' time.
   saatDilimi: 'Pacific/Auckland',
   bicim: { yerel: 'en-NZ', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 2X XXX XXXX', cepGecerliMi: nzCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label ("NHI number") is unverified wording (./ayarlar.ts).
+  // below). `hane: 0` = no length is assumed. The label ("NHI number") is source-checked wording (./ayarlar.ts).
+  // An NHI number holds LETTERS and digits (seven characters, two forms): nothing here may assume digits only.
   ulusalKimlik: { ad: 'NHI number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
   // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
   // profile, image evaluation, consultation, messaging) is off.
@@ -89,14 +97,19 @@ export const NZ_PAKETI: UlkePaketi = {
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
     // A portal link works for 30 days: a STARTING VALUE the owner confirms; how long a patient's access may stand is
-    // for a lawyer. THE EMERGENCY NUMBER IS UNVERIFIED LOCAL CONTENT: written from general knowledge, to be confirmed
-    // by a local source before any patient sees the portal. null here = the patient's page names no number.
+    // for a lawyer. THE EMERGENCY NUMBER IS LOCAL CONTENT. SOURCE-CHECKED 2026-10-09: New Zealand Police's own page
+    // states that 111 is the emergency number for Police, Fire and Ambulance. Still to be confirmed by a person of
+    // New Zealand before any patient sees the portal. null here = the patient's page names no number.
+    // (The free health advice line is a different number and the kit has no place for it: see the audit document.)
     portal: { baglantiGecerlilikGun: 30, acilNumara: '111' },
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-NZ' }] }],
-    // Two time zones (the main islands and the Chatham Islands): an account chooses its own (settings). UNVERIFIED choice.
+    // Two time zones (the main islands and the Chatham Islands): an account chooses its own (settings).
+    // SOURCE-CHECKED (Time Act 1974): these are the two times the law sets for New Zealand.
     saatDilimleri: ['Pacific/Auckland', 'Pacific/Chatham'],
-    // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens.
+    // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens. FOR A LOCAL CLINICAL LEAD:
+    // the government's writing guidance for the public uses the 12-hour clock ("5:30pm"); the national medication
+    // charting standard requires the 24-hour clock in clinical records. The kit has ONE setting for every screen.
     saatBicimi: 12,
     birimler: NZ_BIRIMLER,
     adAlanlari: { ikinciAd: false },
