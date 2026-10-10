@@ -726,7 +726,7 @@ if (P.araclar) {
       const mesaj = await metin(p, `[data-alan="${sayiAlani.anahtar}"] [data-hata=sayi-okunamadi]`)
       kontrol(`tools: a number typed "${yanlis}" is refused, not guessed — the pack's sentence under the field, no result, nothing to keep`, mesaj.length > 10 && !mesaj.includes('%') && !(await p.$('[data-eylem=kopyala]')) && !(await p.$('[data-sayi]')) && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === true, mesaj)
       await tara(p, 'tools (a number that could not be read)')
-      await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-tool-number-refused.png`) })
+      await p.screenshot({ path: join(CIKTI, `genel-${P.kod}-tool-number-refused.png`), fullPage: true })
       await yazDeger(p, `#uza-arac-${sayiAlani.anahtar}`, sayiAlani.deger)
       await p.waitForSelector('[data-eylem=kopyala]', { timeout: 30000 })
     }

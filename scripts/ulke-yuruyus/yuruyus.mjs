@@ -1173,7 +1173,9 @@ const PORTAL = {}
   await H.click('[data-eylem=portal-istek]')
   await H.waitForSelector('[data-alan=portal-istek] [role=alert]', { timeout: 15000 })
   kontrol('a request without a day is refused in the browser', (await metin(H, '[data-alan=portal-istek] [role=alert]')) === 'Kamida bitta kunni tanlang.' && (await tabloOku('ulke_randevu_istekleri')).length === 0)
-  await H.click(`input[name=gunler][value="${g1}"]`); await H.click(`input[name=gunler][value="${g2}"]`)
+  // Chosen through the page itself: the day buttons now carry the whole day and stand one or two to a row on a phone,
+  // so a button scrolled into view can come to rest under the page's fixed top bar, where a pointer click misses it.
+  for (const g of [g1, g2]) await H.$eval(`input[name=gunler][value="${g}"]`, (e) => e.click())
   await H.type('#uzp-neden', 'QA bemor sababi')
   await cek(H, 'portal-request-form-phone-uz.png')
   await H.click('[data-eylem=portal-istek]')
@@ -1219,7 +1221,7 @@ const PORTAL = {}
   const ikinciKabul = await api(p, '/api/ulke/hasta-portali/istekler', { method: 'PATCH', govde: { id: istekler[0].id, gun: yazGun(g2), saat: '11:00', sureDk: 30 } })
   kontrol('a request is answered once: accepting it again books nothing', ikinciKabul.s === 409 && ikinciKabul.t === '{"code":"CEVAPLANDI"}' && (await tabloOku('ulke_randevulari')).length === randevuSayisi + 1, `${ikinciKabul.s} ${ikinciKabul.t}`)
   // A second request, which the doctor declines from the calendar.
-  await H.click(`input[name=gunler][value="${g2}"]`)
+  await H.$eval(`input[name=gunler][value="${g2}"]`, (e) => e.click())
   await H.click('[data-eylem=portal-istek]')
   await H.waitForSelector('[data-istek-durumu=bekliyor]', { timeout: 30000 })
   const bekleyen = (await tabloOku('ulke_randevu_istekleri')).find((i) => i.durum === 'bekliyor')

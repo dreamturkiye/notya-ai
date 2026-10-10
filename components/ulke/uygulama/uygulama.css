@@ -187,12 +187,12 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
    labelled parts in the pack's order, never a browser's own date or time field; and the message under a field whose
    date, time or number cannot be read. */
 .uza-parcali { display: block; }
-.uza-parcali-satir { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; }
+.uza-parcali-satir { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; }
 .uza-parca { display: flex; flex-direction: column; }
 .uza-parca-ad { font-size: 12px; color: var(--uza-soluk); margin-bottom: 4px; }
-.uza-parca .uza-girdi { width: 4.25em; padding-left: 8px; padding-right: 8px; text-align: center; }
-.uza-parca[data-parca='YYYY'] .uza-girdi { width: 5.75em; }
-.uza-parca select.uza-girdi { width: auto; min-width: 5.5em; text-align: left; }
+.uza-parca .uza-girdi { width: 3.5em; height: 48px; padding: 0 6px; text-align: center; }
+.uza-parca[data-parca='YYYY'] .uza-girdi { width: 4.75em; }
+.uza-parca select.uza-girdi { width: auto; min-width: 4.75em; text-align: left; }
 .uza-parca-ayrac { padding-bottom: 12px; font-size: 18px; color: var(--uza-soluk); }
 .uza-girdi[aria-invalid='true'] { border-color: var(--uza-uyari); }
 .uza-girdi-hata { color: var(--uza-uyari); }
