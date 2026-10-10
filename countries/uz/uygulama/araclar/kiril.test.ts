@@ -32,8 +32,34 @@ const UC_BICIMLI_KATALOGLAR: readonly { ad: string; dosya: string; agac: unknown
 ]
 
 const KOK = resolve(__dirname, '../../../..')
-/** path of a text → who corrected its Cyrillic form by hand. Empty: no native reader has read the texts yet. */
-const ELLE_DUZELTILEN: Readonly<Record<string, string>> = {}
+/**
+ * path of a text → who corrected its Cyrillic form by hand, and what.
+ *
+ * NO NATIVE READER HAS READ THE TEXTS YET. The entries below are NOT a native reader's: they are the country audit of
+ * 2026-10-09 (docs/COUNTRY-AUDIT-UZBEKISTAN.md, fix D2). The rule spells a loan word letter by letter, and its list
+ * of loan words (SOZLUK in scripts/uz-kiril.mjs) does not hold these stems, so the stored text read «тс» where Uzbek
+ * in Cyrillic script writes «ц», and lacked «ъ» / «ь». Each word was corrected in the stored text only; the Latin
+ * text is untouched. When the rule's list learns a stem, the entry here becomes unnecessary and the test below
+ * ("every hand correction is still needed") fails by name until it is removed.
+ */
+const DENETIM = 'country audit 2026-10-09, machine, awaits a native reader'
+const ELLE_DUZELTILEN: Readonly<Record<string, string>> = {
+  'easi.aciklama': `${DENETIM}: коэффициент (the rule: коэффитсиент)`,
+  'scorad.sayilar.c': `${DENETIM}: субъектив (the rule: субектив)`,
+  'yama-okuma.ad': `${DENETIM}: аппликацион (the rule: аппликатсион)`,
+  'toraks-preop.alanlar.goruntu_hazir': `${DENETIM}: компьютер (the rule: компютер)`,
+  'otoskopi-notu.alanlar.sag_zar_tup_var': `${DENETIM}: вентиляцион (the rule: вентилятсион)`,
+  'otoskopi-notu.alanlar.sol_zar_tup_var': `${DENETIM}: вентиляцион (the rule: вентилятсион)`,
+  'vertigo-notu.ad': `${DENETIM}: позицион (the rule: позитсион)`,
+  'vertigo-notu.bantlar.manevra_uygun_degil': `${DENETIM}: репозицион (the rule: репозитсион)`,
+  'vertigo-notu.uyarilar.repozisyon_santral': `${DENETIM}: репозицион (the rule: репозитсион)`,
+  'tetkik-kuyrugu.secenekler.modalite.bt': `${DENETIM}: компьютер (the rule: компютер)`,
+  'das28.alanlar.esr': `${DENETIM}: эритроцитлар (the rule: эритротситлар)`,
+  'das28.secenekler.varyant.esr': `${DENETIM}: эритроцитлар (the rule: эритротситлар)`,
+  'psa-hizi.ad': `${DENETIM}: специфик (the rule: спетсифик)`,
+}
+/** Letter sequences the rule leaves in a loan word and Uzbek in Cyrillic script does not write. Native words with «тс» (бахтсиз, ҳаракатсиз: -сиз after т) are not in this list. */
+const KURALIN_BIRAKTIGI = /тсион|тсиент|ротсит|петсифик|субектив|обектив|компютер|консентрац/i
 
 describe('Uzbek tools — Latin to Cyrillic by rule', () => {
   it('the rule: the letters of the 1995 Latin alphabet, the digraphs, the two apostrophes, e and the yo/yu/ya pairs', () => {
@@ -83,6 +109,27 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
       const { 'uz-Latn': lat, 'uz-Cyrl': kir } = UZ_ROL_ADLARI[k]
       if (k in elle) { assert.equal(kir, elle[k]); assert.equal(kirill(lat).replace('физкултураси', 'физкультураси'), kir, 'only the one word differs from the rule') } else assert.equal(kir, kirill(lat), k)
     }
+  })
+
+  // Country audit 2026-10-09 (docs/COUNTRY-AUDIT-UZBEKISTAN.md, fix D2).
+  it('every hand correction is still needed, names a text that exists, and no stored Cyrillic text of a tool keeps a loan word spelled letter by letter', () => {
+    const bulunan = new Map<string, { latin: string; kiril: string }>()
+    const gez = (x: unknown, yol: string) => {
+      if (!x || typeof x !== 'object') return
+      const o = x as Record<string, unknown>
+      if (typeof o['uz-Latn'] === 'string' && typeof o['uz-Cyrl'] === 'string') { bulunan.set(yol, { latin: o['uz-Latn'], kiril: o['uz-Cyrl'] }); return }
+      for (const [k, v] of Object.entries(o)) gez(v, `${yol}.${k}`)
+    }
+    for (const a of UZ_ARACLAR.araclar) gez(a.metin, a.anahtar)
+    for (const [yol, kim] of Object.entries(ELLE_DUZELTILEN)) {
+      const t = bulunan.get(yol)
+      assert.ok(t, `${yol}: listed as corrected by hand, and no such text exists`)
+      assert.ok(kim.trim().length > 0, `${yol}: who corrected it is not stated`)
+      assert.notEqual(kirill(t.latin), t.kiril, `${yol}: the rule now gives the stored text — remove it from ELLE_DUZELTILEN`)
+      assert.doesNotMatch(t.kiril, /[A-Za-z]{4,}/, `${yol}: a Latin word is left in the corrected Cyrillic text`)
+    }
+    const kalan = [...bulunan].filter(([, t]) => KURALIN_BIRAKTIGI.test(t.kiril)).map(([yol, t]) => `${yol}: "${t.kiril}"`)
+    assert.deepEqual(kalan, [])
   })
 
   it('EVERY stored Cyrillic text of the catalogues written in three forms side by side is what the rule gives for its Latin text, and none is left empty', () => {

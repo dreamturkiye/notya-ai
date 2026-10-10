@@ -38,7 +38,7 @@ const PARDA: Readonly<Record<string, Uc>> = {
   retrakte: u('nogʻora parda ichkariga tortilgan', 'ноғора парда ичкарига тортилган', 'барабанная перепонка втянута'),
   bombe: u('nogʻora parda boʻrtgan', 'ноғора парда бўртган', 'барабанная перепонка выбухает'),
   perforasyon: u('nogʻora pardada teshik bor', 'ноғора пардада тешик бор', 'перфорация барабанной перепонки'),
-  tup_var: u('ventilyatsion naycha bor', 'вентилятсион найча бор', 'установлена вентиляционная трубка'),
+  tup_var: u('ventilyatsion naycha bor', 'вентиляцион найча бор', 'установлена вентиляционная трубка'),
   seviye_hava_kabarcigi: u('parda ortida suyuqlik sathi yoki havo pufakchasi', 'парда ортида суюқлик сатҳи ёки ҳаво пуфакчаси', 'за перепонкой уровень жидкости или пузырёк воздуха'),
   degerlendirilemedi: u('nogʻora pardani baholab boʻlmadi', 'ноғора пардани баҳолаб бўлмади', 'барабанную перепонку оценить не удалось'),
 }
@@ -159,7 +159,7 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
   {
     anahtar: 'vertigo-notu', roller: ['kulak-burun-bogaz'],
     metin: {
-      ad: u('Bosh aylanishi: pozitsion sinamalar qaydi', 'Бош айланиши: позитсион синамалар қайди', 'Головокружение: запись позиционных проб'),
+      ad: u('Bosh aylanishi: pozitsion sinamalar qaydi', 'Бош айланиши: позицион синамалар қайди', 'Головокружение: запись позиционных проб'),
       aciklama: u('Oʻtkazilgan sinama va manyovrlar natijasi, nistagm xususiyatlari va markaziy sababga ishora qiluvchi belgilar. Tashxis va dori yozilmaydi.', 'Ўтказилган синама ва манёврлар натижаси, нистагм хусусиятлари ва марказий сабабга ишора қилувчи белгилар. Ташхис ва дори ёзилмайди.', 'Результаты проведённых проб и манёвров, характеристики нистагма и признаки, указывающие на центральную причину. Диагноз и препараты не указываются.'),
       alanlar: {
         dix_hallpike: u('Diks–Xollpayk sinamasi', 'Дикс–Холлпайк синамаси', 'Проба Дикса–Холлпайка'),
@@ -189,11 +189,11 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
       secenekler: { dix_hallpike: SINAMA_NATIJASI, supine_roll: SINAMA_NATIJASI, epley: SINAMA_NATIJASI, barbecue: SINAMA_NATIJASI, head_impulse: SINAMA_NATIJASI, romberg: SINAMA_NATIJASI },
       bantlar: {
         manevra_uygun: u('Markaziy sababga ishora qiluvchi belgi belgilanmagan', 'Марказий сабабга ишора қилувчи белги белгиланмаган', 'Признаки центральной причины не отмечены'),
-        manevra_uygun_degil: u('Markaziy sababga shubha: repozitsion manyovr mos emas', 'Марказий сабабга шубҳа: репозитсион манёвр мос эмас', 'Подозрение на центральную причину: репозиционный манёвр не показан'),
+        manevra_uygun_degil: u('Markaziy sababga shubha: repozitsion manyovr mos emas', 'Марказий сабабга шубҳа: репозицион манёвр мос эмас', 'Подозрение на центральную причину: репозиционный манёвр не показан'),
       },
       uyarilar: {
         santral_suphe: u('Markaziy sababga shubha: avval shoshilinch nevrologik baholash', 'Марказий сабабга шубҳа: аввал шошилинч неврологик баҳолаш', 'Подозрение на центральную причину: сначала неотложная неврологическая оценка'),
-        repozisyon_santral: u('Repozitsion manyovr markaziy belgi bilan birga qayd qilindi — sababini qaydga yozing', 'Репозитсион манёвр марказий белги билан бирга қайд қилинди — сабабини қайдга ёзинг', 'Репозиционный манёвр записан вместе с центральным признаком — укажите причину в записи'),
+        repozisyon_santral: u('Repozitsion manyovr markaziy belgi bilan birga qayd qilindi — sababini qaydga yozing', 'Репозицион манёвр марказий белги билан бирга қайд қилинди — сабабини қайдга ёзинг', 'Репозиционный манёвр записан вместе с центральным признаком — укажите причину в записи'),
         nistagmus_eksik: u('Musbat sinama bor, lekin nistagm xususiyati belgilanmagan', 'Мусбат синама бор, лекин нистагм хусусияти белгиланмаган', 'Есть положительная проба, но характеристика нистагма не отмечена'),
       },
       not: DOZASIZ,

@@ -141,7 +141,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'easi', roller: ['dermatoloji', 'klinik-dermatoloji'],
     metin: {
       ad: u('EASI indeksi', 'EASI индекси', 'Индекс EASI'),
-      aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Har bir sohaning vazn koeffitsiyenti bemorning yoshiga bogʻliq: 8 yoshgacha yoki 8 yosh va undan katta. Indeks yosh tanlanganda va har bir soha toʻliq kiritilganda chiqadi: maydon bali va, maydon 0 boʻlmasa, toʻrtta belgi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Ҳар бир соҳанинг вазн коэффитсиенти беморнинг ёшига боғлиқ: 8 ёшгача ёки 8 ёш ва ундан катта. Индекс ёш танланганда ва ҳар бир соҳа тўлиқ киритилганда чиқади: майдон бали ва, майдон 0 бўлмаса, тўртта белги.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовой коэффициент каждой области зависит от возраста пациента: до 8 лет либо 8 лет и старше. Индекс появляется, когда выбран возраст и каждая область заполнена: балл площади и, если площадь не 0, четыре признака.'),
+      aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Har bir sohaning vazn koeffitsiyenti bemorning yoshiga bogʻliq: 8 yoshgacha yoki 8 yosh va undan katta. Indeks yosh tanlanganda va har bir soha toʻliq kiritilganda chiqadi: maydon bali va, maydon 0 boʻlmasa, toʻrtta belgi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Ҳар бир соҳанинг вазн коэффициенти беморнинг ёшига боғлиқ: 8 ёшгача ёки 8 ёш ва ундан катта. Индекс ёш танланганда ва ҳар бир соҳа тўлиқ киритилганда чиқади: майдон бали ва, майдон 0 бўлмаса, тўртта белги.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовой коэффициент каждой области зависит от возраста пациента: до 8 лет либо 8 лет и старше. Индекс появляется, когда выбран возраст и каждая область заполнена: балл площади и, если площадь не 0, четыре признака.'),
       alanlar: { yas: u('Bemorning yoshi', 'Беморнинг ёши', 'Возраст пациента'), ...sohaAlanlari(EASI_BELGILARI) },
       secenekler: { yas: { yedi_ve_alti: u('8 yoshgacha', '8 ёшгача', 'До 8 лет'), sekiz_ve_ustu: u('8 yosh va undan katta', '8 ёш ва ундан катта', '8 лет и старше') } },
       sayilar: { easi: ayni('EASI') },
@@ -177,7 +177,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
         scorad: ayni('SCORAD'),
         a: u('A — tarqalganlik', 'A — тарқалганлик', 'A — распространённость'),
         b: u('B — intensivlik', 'B — интенсивлик', 'B — интенсивность'),
-        c: u('C — subyektiv belgilar', 'C — субектив белгилар', 'C — субъективные симптомы'),
+        c: u('C — subyektiv belgilar', 'C — субъектив белгилар', 'C — субъективные симптомы'),
       },
       bantlar: { hafif: u('Yengil (25 dan past)', 'Енгил (25 дан паст)', 'Лёгкая степень (менее 25)'), orta: u('Oʻrtacha (25–50)', 'Ўртача (25–50)', 'Средняя степень (25–50)'), siddetli: u('Ogʻir (50 dan yuqori)', 'Оғир (50 дан юқори)', 'Тяжёлая степень (более 50)') },
       not: KARAR,
@@ -186,7 +186,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
   {
     anahtar: 'yama-okuma', roller: ['dermatoloji', 'klinik-dermatoloji'],
     metin: {
-      ad: u('Applikatsion test: natijani oʻqish kunlari', 'Аппликатсион тест: натижани ўқиш кунлари', 'Аппликационный тест: дни чтения результата'),
+      ad: u('Applikatsion test: natijani oʻqish kunlari', 'Аппликацион тест: натижани ўқиш кунлари', 'Аппликационный тест: дни чтения результата'),
       aciklama: u('Applikatsiya qoʻyilgan sanadan ikkinchi va toʻrtinchi kun (D2, D4) hisoblanadi.', 'Аппликация қўйилган санадан иккинчи ва тўртинчи кун (D2, D4) ҳисобланади.', 'От даты наложения аппликаций рассчитываются второй и четвёртый день (D2, D4).'),
       alanlar: { uygulama: u('Applikatsiya qoʻyilgan sana', 'Аппликация қўйилган сана', 'Дата наложения аппликаций') },
       tarihler: { d2: u('Birinchi oʻqish (D2)', 'Биринчи ўқиш (D2)', 'Первое чтение (D2)'), d4: u('Ikkinchi oʻqish (D4)', 'Иккинчи ўқиш (D4)', 'Второе чтение (D4)') },
