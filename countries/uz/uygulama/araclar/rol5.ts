@@ -180,8 +180,9 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     },
   },
   {
-    // OFF BY KAAN'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b): a slot in ./yuvalar.ts, and not on the list of tools
-    // (./index.ts → UZ_KAPALI_ARACLAR). The words below are kept for the day the tool comes back; no screen shows them.
+    // ON AGAIN BY KAAN'S ORDER OF 2026-10-10, 14:17 ("Bring on all the tools ... We will test as we go"), after it was
+    // switched off earlier that day (NOTYA-ULKE-ARAC-01b) and its fault was corrected in the kit (pull request #615):
+    // ./index.ts. Paediatrics only, as before. No clinician of Uzbekistan has signed it off (./kendi/onay.ts).
     anahtar: 'doz-hesabi', roller: ['pediatri'],
     metin: {
       ad: u('Doza hisobi: vazn boʻyicha', 'Доза ҳисоби: вазн бўйича', 'Расчёт дозы по массе тела'),

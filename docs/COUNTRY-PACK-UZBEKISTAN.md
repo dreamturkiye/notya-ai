@@ -943,6 +943,8 @@ Built in the country kit and filled in for Uzbekistan. Per-tool outcome, checked
 
 **Changed on 2026-10-10 (NOTYA-ULKE-ARAC-01b), by the owner's order "Switch off the risky tools".** Five role tools that the lists below count as switched on are off, and are slots until their fault is corrected in the kit or their licence is granted: the dose calculator (`doz-hesabi`: it rounds the volume of one dose to 0.1 mL and prints trailing zeros), the ESI triage tool (`esi-triyaj`: the scale's owner requires written permission; licence stated as "permission needed"), the report outline that prints the BI-RADS categories (`rapor-taslagi`: a licence agreement is required for commercial software; stated as "permission needed"), and both kidney tools (`kdigo-evre`, `kdigo-serit`: a low-risk cell is shown when no urine albumin result was typed; the first also mislabels its referral flags). So today: **39 role tools for 22 roles, the follow-up list for the same 22, 18 roles with base tools only (internal medicine among them), 57 slots.** A doctor does not see the five on the grid; their old address shows "Your account does not have this tool" above the grid; the server keeps no result of them. Their words stay in the pack for the day they come back. A test that names the five fails if any country switches one on (`lib/ulke/araclar/kapaliAraclar.paket.test.ts`).
 
+**Changed again on 2026-10-10 (NOTYA-ULKE-UYGULA-UZ).** The lists below describe the tools as they were built on 2026-10-09, for the 40 roles of that day. What a doctor has since the decisions of the tools audit were applied (42 roles, the dose calculator on again, three tools only Uzbekistan has, the follow-up list for every doctor role) is in "After the tools audit" at the end of this section.
+
 ### What a doctor has, under `/uzbek/tools`
 
 - **One base tool for all 40 roles:** the patient's page (the way to give a patient access).
@@ -976,6 +978,93 @@ Migration `139_ulke_arac_kayitlari.sql`: one table for the results a doctor keep
 - In a browser against a production build: the grid, a tool filled in for a patient, kept with and without a follow-up day, the patient's file, the follow-up list and "done", and the second account.
 
 Not covered: a real database behind the provider's API layer; any reading by a native speaker or a clinician.
+
+### After the tools audit (2026-10-10, NOTYA-ULKE-UYGULA-UZ)
+
+The decisions of the tools audit (`docs/araclar-denetim/UZ.md`, "Second pass"; `docs/araclar-denetim/uz-kararlar.json`) applied to this pack, and two orders of the owner of the same day: "activate roles", and "Bring on all the tools built for the new 6 countries now. We will test as we go."
+
+**What a doctor has now.** Three base tools for all 42 roles (the patient's page, the doctor's own templates, consultations). 47 tools are switched on in all. Every one of the 40 doctor roles has the body mass index and the follow-up list; the two allied professions (physiotherapy, clinical psychology) have the base tools only. Examples, before → now:
+
+| Who | Before | Now |
+|---|---|---|
+| A cardiologist | the three base tools | + body mass index, follow-up list |
+| A family doctor | the three base tools | + body mass index, gestational age and expected date of birth, vaccination record, follow-up list |
+| A paediatrician | expected height, follow-up list | + dose calculator (on again), body mass index (adult patients only), vaccination record |
+| A vascular surgeon | no role of their own (one role with cardiac surgery) | the three cardiovascular-surgery tools, body mass index, follow-up list |
+| A surdologist | an allied "audiologist" with the base tools only | a doctor's role: the hearing average, body mass index, follow-up list |
+
+**The three tools only Uzbekistan has** (`countries/uz/uygulama/araclar/kendi/`; no other country's build holds them: `countries/yasak-araclar.json`, wall rule D7). Each number stands beside the place it was read in on 2026-10-10 (`tanimlar.ts`) and is held to it by `kendi.test.ts`.
+
+| Tool | For | What it does | Source of the numbers | Tested against |
+|---|---|---|---|---|
+| `uz-tana-vazni-indeksi` | every doctor role; patients of 20 and over | body mass index from weight and height, in one of four adult classes; waist circumference is recorded, not assessed | the national antenatal protocols of 2021 (Table 1: below 18,5; 18,5–24,9; 25,0–29,9; 30 and above); the same limits on WHO's and the CDC's pages; the age of 20 from the CDC page | the worked example of an NHS page: 89 kg and 1.62 m give 33.9 |
+| `uz-homiladorlik-muddati` | obstetrics and gynaecology, family medicine | expected date of birth and the gestational age today | the national antenatal protocols of 2021: 280 days from the first day of the last period; the ultrasound date of 11 to 14 weeks replaces it when they differ by more than 5 days; after an embryo transfer, 266 days minus the days of culture | the protocol's own equivalences (280 days = 40 weeks, 266 = 38 weeks) and the ACOG opinion's 261 and 263 days. **No source prints an example with calendar dates**; the dates in the tests were counted on a calendar |
+| `uz-emlash-qaydi` | paediatrics, family medicine | records one vaccination as the doctor types it | none: it holds no vaccine, no age and no interval. **The national calendar (SanQvaM 0239-07/3) is not in the product** | that its answer never depends on the vaccine's name, and that every day in a result is a day the doctor typed |
+
+**Switched on without a clinician's sign-off.** The three tools above and the dose calculator (`doz-hesabi`, on again after its fault was corrected in the kit, pull request #615). `countries/uz/uygulama/araclar/kendi/onay.ts` lists the four with what a clinician of Uzbekistan has to confirm for each; a test holds the list to what is switched on. The ESI triage tool, the radiology report outline and both kidney tools stay off.
+
+**Not built.** Kidney function from creatinine: the national protocol for chronic kidney disease was not found, so the equation it prescribes is unknown, and no national text read states the unit of creatinine. The ten-year cardiovascular risk stays an empty placeholder: three national documents name three different charts, and both charts need their owner's permission.
+
+**Country data.** The unit of each laboratory value now names the national document that writes it so (`countries/uz/uygulama/araclar/birimler.ts`): haemoglobin g/l, glucose mmol/l, glycated haemoglobin % (the antenatal protocols of 2021); cholesterol mmol/l (the cardiology collection of 2015); C-reactive protein mg/l (a protocol under order No. 180 of 23.06.2025); PSA ng/ml (a paper of the national urology centre, not a protocol). Not found, and not stated: the unit of creatinine; the unit of the urine albumin-to-creatinine ratio is the unverified starting value it was. **No limit of any value is stated.** No national source was found for the hearing grades and frequencies, the steps of a return to sport, the range of the expected height or a PSA caution, so the pack states none of them.
+
+**Licence.** "Free to implement" is stated in four places: the three tools above (the CDC's public-domain notice for the index; the copyright law of Uzbekistan, No. OʻRQ-42 of 20.07.2006, articles 5 and 8, for the date rule, since the protocol carries no notice of its own; the record is the product's own), and the placeholder of PHQ-9 and GAD-7, by the notice printed on both forms. These are a machine's readings, not a lawyer's. Nothing is stated for any other tool or placeholder.
+
+**The new texts, for the native reader.** Machine-written; Uzbek in Cyrillic script is what the rule gives for the Latin text. The ultrasound examination is written by its abbreviation (UTT / УТТ / УЗИ). The 16 role names that changed are in "Status of the 42 roles" above.
+
+| Text | Uzbek, Latin | Uzbek, Cyrillic | Russian |
+|---|---|---|---|
+| `uz-tana-vazni-indeksi.ad` | Tana vazni indeksi | Тана вазни индекси | Индекс массы тела |
+| `uz-tana-vazni-indeksi.aciklama` | Vazn va boʻydan tana vazni indeksini hisoblaydi va uni kattalar uchun toʻrt toifadan biriga kiritadi. Bel aylanasi faqat qayd etiladi. | Вазн ва бўйдан тана вазни индексини ҳисоблайди ва уни катталар учун тўрт тоифадан бирига киритади. Бел айланаси фақат қайд этилади. | Рассчитывает индекс массы тела по массе тела и росту и относит его к одной из четырёх категорий для взрослых. Окружность талии только записывается. |
+| `uz-tana-vazni-indeksi.alanlar.vazn` | Vazn | Вазн | Масса тела |
+| `uz-tana-vazni-indeksi.alanlar.boy` | Boʻy | Бўй | Рост |
+| `uz-tana-vazni-indeksi.alanlar.bel` | Bel aylanasi (ixtiyoriy) | Бел айланаси (ихтиёрий) | Окружность талии (необязательно) |
+| `uz-tana-vazni-indeksi.sayilar.tvi` | Tana vazni indeksi | Тана вазни индекси | Индекс массы тела |
+| `uz-tana-vazni-indeksi.bantlar.kam` | Vazn yetishmasligi (18,5 dan past) | Вазн етишмаслиги (18,5 дан паст) | Недостаточная масса тела (менее 18,5) |
+| `uz-tana-vazni-indeksi.bantlar.meyor` | Meʼyoriy vazn (18,5–24,9) | Меъёрий вазн (18,5–24,9) | Нормальная масса тела (18,5–24,9) |
+| `uz-tana-vazni-indeksi.bantlar.ortiqcha` | Ortiqcha vazn (25,0–29,9) | Ортиқча вазн (25,0–29,9) | Избыточная масса тела (25,0–29,9) |
+| `uz-tana-vazni-indeksi.bantlar.semizlik` | Semizlik (30 va undan yuqori) | Семизлик (30 ва ундан юқори) | Ожирение (30 и более) |
+| `uz-tana-vazni-indeksi.not` | Hisoblash vositasi: toifalar kattalar uchun, bel aylanasi baholanmaydi. Tashxis va davolash qarori shifokorniki. | Ҳисоблаш воситаси: тоифалар катталар учун, бел айланаси баҳоланмайди. Ташхис ва даволаш қарори шифокорники. | Расчётный инструмент: категории предназначены для взрослых, окружность талии не оценивается. Диагноз и лечение определяет врач. |
+| `uz-tana-vazni-indeksi.hastaKapisi` | Bu vosita 20 yosh va undan katta bemorlar uchun. | Бу восита 20 ёш ва ундан катта беморлар учун. | Этот инструмент предназначен для пациентов в возрасте 20 лет и старше. |
+| `uz-homiladorlik-muddati.ad` | Homiladorlik muddati va tugʻruq sanasi | Ҳомиладорлик муддати ва туғруқ санаси | Срок беременности и дата родов |
+| `uz-homiladorlik-muddati.aciklama` | Oxirgi hayzning birinchi kunidan yoki embrion koʻchirilgan kundan taxminiy tugʻruq sanasini va bugungi homiladorlik muddatini hisoblaydi. | Охирги ҳайзнинг биринчи кунидан ёки эмбрион кўчирилган кундан тахминий туғруқ санасини ва бугунги ҳомиладорлик муддатини ҳисоблайди. | Рассчитывает предполагаемую дату родов и срок беременности на сегодня от первого дня последней менструации или от даты переноса эмбриона. |
+| `uz-homiladorlik-muddati.alanlar.usul` | Hisoblash asosi | Ҳисоблаш асоси | Основа расчёта |
+| `uz-homiladorlik-muddati.alanlar.oxirgi_hayz` | Oxirgi hayzning birinchi kuni | Охирги ҳайзнинг биринчи куни | Первый день последней менструации |
+| `uz-homiladorlik-muddati.alanlar.sikl` | Hayz sikli | Ҳайз цикли | Менструальный цикл |
+| `uz-homiladorlik-muddati.alanlar.uzi_tugish` | UTT (11–14 hafta) boʻyicha tugʻruq sanasi (ixtiyoriy) | УТТ (11–14 ҳафта) бўйича туғруқ санаси (ихтиёрий) | Дата родов по УЗИ в 11–14 недель (необязательно) |
+| `uz-homiladorlik-muddati.alanlar.kochirish` | Embrion koʻchirilgan sana | Эмбрион кўчирилган сана | Дата переноса эмбриона |
+| `uz-homiladorlik-muddati.alanlar.kultivatsiya` | Embrion oʻstirilgan muddat | Эмбрион ўстирилган муддат | Срок культивирования эмбриона |
+| `uz-homiladorlik-muddati.secenekler.usul.hayz` | Oxirgi hayz sanasi | Охирги ҳайз санаси | Дата последней менструации |
+| `uz-homiladorlik-muddati.secenekler.usul.yrt` | Yordamchi reproduktiv texnologiyalar: embrion koʻchirish | Ёрдамчи репродуктив технологиялар: эмбрион кўчириш | Вспомогательные репродуктивные технологии: перенос эмбриона |
+| `uz-homiladorlik-muddati.secenekler.sikl.yigirma_sakkiz` | 28 kunlik | 28 кунлик | 28-дневный |
+| `uz-homiladorlik-muddati.secenekler.sikl.boshqa` | Boshqa davomiylik | Бошқа давомийлик | Другая продолжительность |
+| `uz-homiladorlik-muddati.sayilar.hafta` | Homiladorlik muddati (toʻliq haftalar) | Ҳомиладорлик муддати (тўлиқ ҳафталар) | Срок беременности (полных недель) |
+| `uz-homiladorlik-muddati.sayilar.kun` | Toʻliq haftalardan tashqari kunlar | Тўлиқ ҳафталардан ташқари кунлар | Дней сверх полных недель |
+| `uz-homiladorlik-muddati.sayilar.farq` | Hayz va UTT boʻyicha sanalar farqi | Ҳайз ва УТТ бўйича саналар фарқи | Расхождение дат по менструации и по УЗИ |
+| `uz-homiladorlik-muddati.bantlar.hayz_boyicha` | Sana oxirgi hayz boʻyicha belgilandi | Сана охирги ҳайз бўйича белгиланди | Дата установлена по последней менструации |
+| `uz-homiladorlik-muddati.bantlar.uzi_boyicha` | Farq 5 kundan ortiq: sana UTT boʻyicha belgilandi | Фарқ 5 кундан ортиқ: сана УТТ бўйича белгиланди | Расхождение более 5 дней: дата установлена по данным УЗИ |
+| `uz-homiladorlik-muddati.bantlar.yrt_boyicha` | Sana embrion koʻchirilgan kun boʻyicha belgilandi | Сана эмбрион кўчирилган кун бўйича белгиланди | Дата установлена по дате переноса эмбриона |
+| `uz-homiladorlik-muddati.uyarilar.sikl_tuzatilmagan` | Sikl 28 kunlik emas: 280 kun 28 kunlik sikl uchun berilgan, vosita tuzatish kiritmadi. | Цикл 28 кунлик эмас: 280 кун 28 кунлик цикл учун берилган, восита тузатиш киритмади. | Цикл не 28-дневный: 280 дней указаны для 28-дневного цикла, инструмент поправку не внёс. |
+| `uz-homiladorlik-muddati.uyarilar.muddat_otgan` | Taxminiy tugʻruq sanasi oʻtgan. | Тахминий туғруқ санаси ўтган. | Предполагаемая дата родов уже прошла. |
+| `uz-homiladorlik-muddati.tarihler.tugish` | Taxminiy tugʻruq sanasi | Тахминий туғруқ санаси | Предполагаемая дата родов |
+| `uz-homiladorlik-muddati.not` | Faqat sana hisobi: oxirgi hayzning birinchi kunidan 280 kun (40 hafta) yoki koʻchirish sanasidan 266 kun, embrion oʻstirilgan kunlar ayirilgan holda. Tashrif va tekshiruvlar jadvali bu yerda yoʻq; qaror shifokorniki. | Фақат сана ҳисоби: охирги ҳайзнинг биринчи кунидан 280 кун (40 ҳафта) ёки кўчириш санасидан 266 кун, эмбрион ўстирилган кунлар айирилган ҳолда. Ташриф ва текширувлар жадвали бу ерда йўқ; қарор шифокорники. | Только расчёт дат: 280 дней (40 недель) от первого дня последней менструации либо 266 дней от даты переноса за вычетом дней культивирования эмбриона. Графика визитов и обследований здесь нет; решение принимает врач. |
+| `uz-emlash-qaydi.ad` | Emlash qaydi | Эмлаш қайди | Запись о прививке |
+| `uz-emlash-qaydi.aciklama` | Bitta emlashni siz kiritgandek qayd etadi: vaksina nomi, doza raqami, sana va maʼlumot manbai. Vosita emlash kalendarini bilmaydi va hech narsa taklif qilmaydi. | Битта эмлашни сиз киритгандек қайд этади: вакцина номи, доза рақами, сана ва маълумот манбаи. Восита эмлаш календарини билмайди ва ҳеч нарса таклиф қилмайди. | Записывает одну прививку так, как вы её ввели: название вакцины, номер дозы, дата и источник сведений. Инструмент не знает календаря прививок и ничего не предлагает. |
+| `uz-emlash-qaydi.alanlar.vaksina` | Vaksina nomi | Вакцина номи | Название вакцины |
+| `uz-emlash-qaydi.alanlar.doza` | Doza raqami (ixtiyoriy) | Доза рақами (ихтиёрий) | Номер дозы (необязательно) |
+| `uz-emlash-qaydi.alanlar.sana` | Emlash sanasi | Эмлаш санаси | Дата прививки |
+| `uz-emlash-qaydi.alanlar.manba` | Maʼlumot manbai | Маълумот манбаи | Источник сведений |
+| `uz-emlash-qaydi.alanlar.keyingi` | Keyingi sana, oʻzingiz belgilaysiz (ixtiyoriy) | Кейинги сана, ўзингиз белгилайсиз (ихтиёрий) | Следующая дата, её назначаете вы (необязательно) |
+| `uz-emlash-qaydi.secenekler.manba.hujjat` | Emlash hujjati | Эмлаш ҳужжати | Документ о прививках |
+| `uz-emlash-qaydi.secenekler.manba.ogzaki` | Ogʻzaki maʼlumot (hujjatsiz) | Оғзаки маълумот (ҳужжатсиз) | Устные сведения (без документа) |
+| `uz-emlash-qaydi.sayilar.doza` | Doza raqami | Доза рақами | Номер дозы |
+| `uz-emlash-qaydi.bantlar.hujjat` | Emlash hujjati boʻyicha qayd etildi | Эмлаш ҳужжати бўйича қайд этилди | Записано по документу о прививках |
+| `uz-emlash-qaydi.bantlar.ogzaki` | Ogʻzaki maʼlumot boʻyicha qayd etildi (hujjat koʻrilmagan) | Оғзаки маълумот бўйича қайд этилди (ҳужжат кўрилмаган) | Записано по устным сведениям (документ не предъявлен) |
+| `uz-emlash-qaydi.uyarilar.keyingi_otgan` | Siz belgilagan keyingi sana oʻtgan. | Сиз белгилаган кейинги сана ўтган. | Назначенная вами следующая дата уже прошла. |
+| `uz-emlash-qaydi.tarihler.sana` | Emlash sanasi | Эмлаш санаси | Дата прививки |
+| `uz-emlash-qaydi.tarihler.keyingi` | Keyingi sana | Кейинги сана | Следующая дата |
+| `uz-emlash-qaydi.not` | Faqat qayd: vosita milliy emlash kalendarini oʻz ichiga olmaydi, vaksina yoki sana taklif qilmaydi va emlash kechikkanini aytmaydi. | Фақат қайд: восита миллий эмлаш календарини ўз ичига олмайди, вакцина ёки сана таклиф қилмайди ва эмлаш кечикканини айтмайди. | Только запись: инструмент не содержит национального календаря прививок, не предлагает ни вакцину, ни дату и не сообщает о пропущенной прививке. |
+| `unit.kg/m2` | kg/m² | кг/м² | кг/м² |
+| `unit.hafta` | hafta | ҳафта | нед. |
 
 ## Clinic accounts (2026-10-09, NOTYA-ULKE-KLINIK-01)
 
