@@ -43,6 +43,24 @@
     { "en": "audiology", "tr": "odyoloji", "uz": "odyoloji", "taraf": "klinik-muttefik" }
   ],
   "ulkeyeOzel": {
+    "us": {
+      "sutun": "en",
+      "cikar": ["clinic-dermatology"],
+      "ekle": [
+        { "anahtar": "allergy-immunology", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "geriatric-medicine", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "pain-medicine", "taraf": "doktor", "gibi": "rehabilitation-medicine" },
+        { "anahtar": "sleep-medicine", "taraf": "doktor", "gibi": "respiratory-medicine" },
+        { "anahtar": "colon-rectal-surgery", "taraf": "doktor", "gibi": "general-surgery" },
+        { "anahtar": "radiation-oncology", "taraf": "doktor", "gibi": "oncology" },
+        { "anahtar": "child-adolescent-psychiatry", "taraf": "doktor", "gibi": "psychiatry" },
+        { "anahtar": "addiction-medicine", "taraf": "doktor", "gibi": "psychiatry" },
+        { "anahtar": "hospice-palliative-medicine", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "reproductive-endocrinology-infertility", "taraf": "doktor", "gibi": "obstetrics-gynaecology" },
+        { "anahtar": "speech-language-pathology", "taraf": "klinik-muttefik", "gibi": "occupational-therapy" },
+        { "anahtar": "clinical-social-work", "taraf": "klinik-muttefik", "gibi": "clinical-psychology" }
+      ]
+    },
     "xx": {
       "sutun": "en",
       "cikar": ["cardiovascular-surgery", "hair-transplant", "aesthetic-medicine", "clinic-dermatology"],

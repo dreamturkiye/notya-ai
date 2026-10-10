@@ -18,6 +18,15 @@
     "bekleyen-konsultasyonlar",
     "kayit-kvkk"
   ],
+  "us": [
+    "us-blood-sugar-ranges",
+    "us-bmi",
+    "us-ecog-performance-status",
+    "us-egfr-ckd-epi-2021",
+    "us-fall-risk-screen",
+    "us-pack-years",
+    "us-phq-9"
+  ],
   "xx": [
     "xx-erken-uyari",
     "xx-izgara",
