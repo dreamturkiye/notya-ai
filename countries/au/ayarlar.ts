@@ -34,23 +34,39 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // law, which differs. Shown beside the box that unlocks recording. The version stamped on every visit is `surum`
     // below: change both together when a reviewed wording arrives.
     kayitRizasi: 'The patient, or the person who can consent for them, has agreed to this visit being recorded.',
-    // UNVERIFIED WORDING; whether a private clinic should record it in this product at all is open. An optional
-    // free-text field, stored encrypted, never validated and never required.
-    kimlikEtiketi: 'Medicare number',
+    // THE LABEL is the name of the national data element ("Medicare card number", AIHW METEOR 270101, N(11)). One card
+    // may list several people, so the number printed on a card is not, alone, one person. It is a government related
+    // identifier (Privacy Act 1988, APP 9: an organisation must not adopt one as its own identifier of a person).
+    // FOR A LAWYER: whether this product may hold it at all. An optional free-text field, stored encrypted, never
+    // validated, never required and never searched by. NEVER ADD a field for the Individual Healthcare Identifier or
+    // for a tax file number (docs/COUNTRY-AUDIT-AUSTRALIA.md, A12).
+    kimlikEtiketi: 'Medicare card number',
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'DD/MM/YYYY',
   },
   ulkeAdi: 'Australia',
-  // UNVERIFIED: the word a senior doctor goes by here.
+  // The word a senior doctor goes by here: the Medical Board registers "specialists" (specialist registration; a
+  // general practitioner's title is "specialist general practitioner"). Hospital usage ("consultant") NOT checked.
   kidemliHekim: 'specialist',
-  // UNVERIFIED: how each specialty is usually named in Australia, where it differs from the set's base name.
-  // Not checked against the official list of specialties (checklist C1).
+  // How each specialty is named in Australia, where it differs from the set's base name. CHECKED on 2026-10-09 against
+  // the Medical Board of Australia's "List of specialties, fields of specialty practice and related specialist titles"
+  // (22 September 2025): the first six names below are that list's own wording, the dash of the otolaryngology field
+  // included. Not read by a clinician of the country. STILL OPEN, for a local clinical lead
+  // (docs/COUNTRY-AUDIT-AUSTRALIA.md, A13):
+  //   - 'thoracic-surgery' and 'cardiovascular-surgery' keep the set's base names. The list has "Cardio-thoracic
+  //     surgery" and "Vascular surgery", which divide the work differently: neither key maps to one field.
+  //   - 'oncology' keeps the base name. The list has "Medical oncology" and "Radiation oncology", and no "Oncology".
+  //   - The five clinic roles are not specialties of the list. "Cosmetic medicine" is UNVERIFIED wording: the
+  //     regulator's own words are "cosmetic surgery" and "non-surgical cosmetic procedures". A role name is an area
+  //     of work, never a title: the title "surgeon" is protected by law here.
   rolAdlari: {
     'family-medicine': 'General practice',
     'internal-medicine': 'General medicine',
+    gastroenterology: 'Gastroenterology and hepatology',
     'respiratory-medicine': 'Respiratory and sleep medicine',
-    otolaryngology: 'Otolaryngology, head and neck surgery',
+    otolaryngology: 'Otolaryngology – head and neck surgery',
+    paediatrics: 'Paediatrics and child health',
     'aesthetic-medicine': 'Cosmetic medicine',
   },
   veliYasi: AU_VELI_YASI,

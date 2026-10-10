@@ -20,7 +20,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 ## What is in this pack, and where it comes from
 
 - **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1928 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 42 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 24 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **This country's own** (`countries/au/`, six small files): 26 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -36,7 +36,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
 | Emergency (ambulance) number on the patient's page | `000` — UNVERIFIED | a local source, before any patient sees the portal |
 | Days a patient's link stays valid | 30 | the owner; how long access may stand: for a lawyer |
-| Patient identifier | optional free text, encrypted, never validated; label "Medicare number" | a local lead and a lawyer. Label "Medicare number". Whether a private clinic should record it in this product at all is unverified. |
+| Patient identifier | optional free text, encrypted, never validated; label "Medicare card number" | a local lead and a lawyer. Label "Medicare number". Whether a private clinic should record it in this product at all is unverified. |
 | Guardian age | 16 | **for a lawyer**. 16 as a starting value. Consent of minors differs by state and territory. |
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `au-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Recording a consultation is governed by state and territory law, which differs. |
 | Intake-form consent sentence | the shared draft — stamp `au-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
@@ -76,7 +76,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `dermatology` | Dermatology | doctor specialty |
 | `endocrinology` | Endocrinology | doctor specialty |
 | `infectious-diseases` | Infectious diseases | doctor specialty |
-| `gastroenterology` | Gastroenterology | doctor specialty |
+| `gastroenterology` | Gastroenterology and hepatology | doctor specialty |
 | `general-surgery` | General surgery | doctor specialty |
 | `thoracic-surgery` | Thoracic surgery | doctor specialty |
 | `respiratory-medicine` | Respiratory and sleep medicine | doctor specialty |
@@ -84,12 +84,12 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `obstetrics-gynaecology` | Obstetrics and gynaecology | doctor specialty |
 | `cardiovascular-surgery` | Cardiac and vascular surgery | doctor specialty |
 | `cardiology` | Cardiology | doctor specialty |
-| `otolaryngology` | Otolaryngology, head and neck surgery | doctor specialty |
+| `otolaryngology` | Otolaryngology – head and neck surgery | doctor specialty |
 | `nephrology` | Nephrology | doctor specialty |
 | `neurology` | Neurology | doctor specialty |
 | `oncology` | Oncology | doctor specialty |
 | `orthopaedics` | Orthopaedic surgery | doctor specialty |
-| `paediatrics` | Paediatrics | doctor specialty |
+| `paediatrics` | Paediatrics and child health | doctor specialty |
 | `plastic-surgery` | Plastic surgery | doctor specialty |
 | `psychiatry` | Psychiatry | doctor specialty |
 | `radiology` | Radiology | doctor specialty |
@@ -139,17 +139,17 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiac and vascular surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Cardiac and vascular surgery | no measured input |
 | `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Cardiac and vascular surgery | no measured input |
-| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology, head and neck surgery | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
-| `otoskopi-notu` | Otoscopy note | Otolaryngology, head and neck surgery | no measured input |
-| `vertigo-notu` | Vertigo: positional test note | Otolaryngology, head and neck surgery | no measured input |
+| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology – head and neck surgery | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
+| `otoskopi-notu` | Otoscopy note | Otolaryngology – head and neck surgery | no measured input |
+| `vertigo-notu` | Vertigo: positional test note | Otolaryngology – head and neck surgery | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Nephrology | no measured input |
 | `kur-sayaci` | Treatment cycle counter | Oncology | no measured input |
 | `toksisite-listesi` | Side effects checklist | Oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopaedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopaedic surgery | no measured input |
 | `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery | no measured input |
-| `hedef-boy` | Expected height from the parents' heights | Paediatrics | Mother's height: **cm**; Father's height: **cm** · result in cm |
-| `doz-hesabi` | Dose arithmetic by body weight | Paediatrics | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
+| `hedef-boy` | Expected height from the parents' heights | Paediatrics and child health | Mother's height: **cm**; Father's height: **cm** · result in cm |
+| `doz-hesabi` | Dose arithmetic by body weight | Paediatrics and child health | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery | no measured input |
 | `tetkik-kuyrugu` | Examination queue | Radiology | no measured input |
 | `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L**; Erythrocyte sedimentation rate: **mm/h** |
@@ -157,7 +157,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in µg/L per year, days |
 | `rtp-basamak` | Stages of return to sport | Sport and exercise medicine | no measured input |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Cardiac and vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Oncology, Orthopaedic surgery, Paediatrics, Plastic surgery, Radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Cardiac and vascular surgery, Otolaryngology – head and neck surgery, Nephrology, Oncology, Orthopaedic surgery, Paediatrics and child health, Plastic surgery, Radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (4) — for a local clinical lead
 
@@ -203,8 +203,8 @@ No national reference content is written by a machine, and no item of a publishe
 | `kardiyo-izlem` | Cardiology | High blood pressure, heart-failure and atrial-fibrillation follow-up: the clinic blood-pressure limits that raise a warning and the days until each next check (9 numbers), from the guidance followed in Australia. | a local clinical lead, with the national source named |
 | `cat-mmrc` | Respiratory and sleep medicine | COPD Assessment Test (CAT) with the mMRC breathlessness grade: CAT is a published questionnaire whose wording belongs to its rights holder. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `lung-action-plan` | Respiratory and sleep medicine | Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in each zone), with the emergency number and the stop-smoking service of Australia. Every sentence is an instruction to a patient and must be supplied and signed by a local respiratory doctor. | a local clinical lead, with the national source named |
-| `ibd-skor` | Gastroenterology | Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the guidance followed in Australia states them. | a local clinical lead, with the national source named |
-| `hepatit-izlem` | Gastroenterology | Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the guidance followed in Australia. | a local clinical lead, with the national source named |
+| `ibd-skor` | Gastroenterology and hepatology | Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the guidance followed in Australia states them. | a local clinical lead, with the national source named |
+| `hepatit-izlem` | Gastroenterology and hepatology | Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the guidance followed in Australia. | a local clinical lead, with the national source named |
 | `pregnancy-calendar` | Obstetrics and gynaecology | Pregnancy calendar: the antenatal visit schedule and the screening windows followed in Australia. (Gestational-age arithmetic alone is universal; the tool is its schedule.) | a local clinical lead, with the national source named |
 | `maternity-leave` | Obstetrics and gynaecology | Maternity leave dates and certificate: the periods the law of Australia gives before and after birth, how they move with an early or late birth, and the certificate form. | a lawyer of the country, with the local clinical lead |
 | `contraception-eligibility` | Obstetrics and gynaecology | Medical eligibility for contraception: the eligibility criteria in the edition used in Australia, entered from the source and signed by a local clinician, and for emergency contraception the products authorised there. An eligibility table is not copied by a machine. | a local clinical lead, with the national source named |
@@ -213,11 +213,11 @@ No national reference content is written by a machine, and no item of a publishe
 | `stroke-red-flags` | Neurology | Stroke and TIA red flags: the emergency number confirmed by a local source and the stroke pathway of the region (where a patient is sent, within which time window). | a local clinical lead, with the national source named |
 | `midas` | Neurology | MIDAS (Migraine Disability Assessment): a published patient questionnaire. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `antiseizure-monitoring` | Neurology | Laboratory monitoring of antiseizure medicines: which tests, how soon after starting and how often, from the guidance followed in Australia, and the register of medicines sold there to recognise each by name. | a local clinical lead, with the national source named |
-| `growth-percentiles` | Paediatrics | Growth and percentiles: the growth charts used in Australia (which standard, which charts, from which age) with their reference tables. | a local clinical lead, with the national source named |
-| `vaccination-schedule` | Paediatrics | Vaccination schedule and catch-up: the immunisation schedule of Australia with its catch-up rules. | a local clinical lead, with the national source named |
-| `development-screening` | Paediatrics | Development and screening panel: the screening programme for children in Australia (hearing, vision, supplements: which, at which age). | a local clinical lead, with the national source named |
-| `mchat-rf` | Paediatrics | M-CHAT-R/F (Modified Checklist for Autism in Toddlers, Revised, with Follow-Up): a published questionnaire for parents. THE LICENCE QUESTION: the permission of its authors and their terms for use inside a product. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
-| `paediatric-follow-up-panel` | Paediatrics | The follow-up panel of paediatrics: it lists patients by the vaccination schedule and the screening programme above and has nothing to list until they exist. | a local clinical lead, with the national source named |
+| `growth-percentiles` | Paediatrics and child health | Growth and percentiles: the growth charts used in Australia (which standard, which charts, from which age) with their reference tables. | a local clinical lead, with the national source named |
+| `vaccination-schedule` | Paediatrics and child health | Vaccination schedule and catch-up: the immunisation schedule of Australia with its catch-up rules. | a local clinical lead, with the national source named |
+| `development-screening` | Paediatrics and child health | Development and screening panel: the screening programme for children in Australia (hearing, vision, supplements: which, at which age). | a local clinical lead, with the national source named |
+| `mchat-rf` | Paediatrics and child health | M-CHAT-R/F (Modified Checklist for Autism in Toddlers, Revised, with Follow-Up): a published questionnaire for parents. THE LICENCE QUESTION: the permission of its authors and their terms for use inside a product. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
+| `paediatric-follow-up-panel` | Paediatrics and child health | The follow-up panel of paediatrics: it lists patients by the vaccination schedule and the screening programme above and has nothing to list until they exist. | a local clinical lead, with the national source named |
 | `plastic-surgery-consent` | Plastic surgery | Informed-consent checklist for a plastic-surgery procedure: the items and the wording the law of Australia requires. | a lawyer of the country, with the local clinical lead |
 | `phq9-gad7` | Psychiatry | PHQ-9 and GAD-7: published patient questionnaires. THE LICENCE QUESTION: the terms of use of their owner for showing the original English wording inside a commercial product. No item is reproduced here; the scoring, and the safety prompt on the ninth item of PHQ-9, are not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `psychiatry-safety-triage` | Psychiatry | Safety and emergency triage: the emergency number and the crisis service confirmed by a local source, the referral path, the rules for involuntary admission in Australia, and the wording of a crisis plan signed by a local psychiatrist. | a local clinical lead, with the national source named |

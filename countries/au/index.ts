@@ -45,8 +45,8 @@ export const AU_PAKETI: UlkePaketi = {
   bicim: { yerel: 'en-AU', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+61', ulusalHane: 9, ornek: '+61 491 570 006', cepGecerliMi: auCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label ("Medicare number") is unverified wording (./ayarlar.ts).
-  ulusalKimlik: { ad: 'Medicare number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
+  // below). `hane: 0` = no length is assumed. The label is the national data element's name (./ayarlar.ts).
+  ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
   // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
   // profile, image evaluation, consultation, messaging) is off.
   ozellikler: {
@@ -89,14 +89,23 @@ export const AU_PAKETI: UlkePaketi = {
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
     // A portal link works for 30 days: a STARTING VALUE the owner confirms; how long a patient's access may stand is
-    // for a lawyer. THE EMERGENCY NUMBER IS UNVERIFIED LOCAL CONTENT: written from general knowledge, to be confirmed
-    // by a local source before any patient sees the portal. null here = the patient's page names no number.
+    // for a lawyer. THE EMERGENCY NUMBER: 000 ("Triple Zero (000)", police, fire or ambulance; triplezero.gov.au, read
+    // on 2026-10-09). Written as it is dialled: the kit takes digits only. Not yet confirmed by a person of the
+    // country. The national health advice line is NOT named: the patient's page has one place for one number
+    // (docs/COUNTRY-AUDIT-AUSTRALIA.md, A11). null here = the patient's page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '000' },
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-AU' }] }],
-    // Several time zones: an account chooses its own (settings). The default and the list are UNVERIFIED choices.
+    // Several time zones: an account chooses its own (settings). One zone for each state's and mainland territory's
+    // capital; the Australian Capital Territory keeps Sydney's time. New South Wales, Victoria, South Australia,
+    // Tasmania and the Australian Capital Territory observe daylight saving; Queensland, Western Australia and the
+    // Northern Territory do not (nsw.gov.au/about-nsw/daylight-saving, read on 2026-10-09). The offsets come from
+    // the platform's time-zone database, never from this file. NOT LISTED, an open item (docs/COUNTRY-AUDIT-AUSTRALIA.md,
+    // A6): Lord Howe Island and the external territories (Norfolk Island, Christmas Island, Cocos (Keeling) Islands).
+    // The default is the most populous zone: the owner's choice.
     saatDilimleri: ['Australia/Sydney', 'Australia/Melbourne', 'Australia/Brisbane', 'Australia/Adelaide', 'Australia/Darwin', 'Australia/Perth', 'Australia/Hobart'],
-    // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens.
+    // The 12-hour clock, as the Australian Government Style Manual writes a time of day ("2:30 pm"). Medication charts
+    // are written with the 24-hour clock; the kit has ONE setting for every screen. For a local clinical lead to confirm.
     saatBicimi: 12,
     birimler: AU_BIRIMLER,
     adAlanlari: { ikinciAd: false },
