@@ -11,8 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
-import { EN_ROLLER } from '../_dil/en/klinik/roller'
-import { GB_BIRIMLER, GB_VELI_YASI } from './ayarlar'
+import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
+import { GB_ROLLER } from './roller'
 
 const cekirdek = enCekirdek('en-GB')
 const metin = paketMetinleri({
@@ -44,8 +45,9 @@ export const GB_PAKETI: UlkePaketi = {
   bicim: { yerel: 'en-GB', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+44', ulusalHane: 10, ornek: '+44 7700 900123', cepGecerliMi: gbCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label ("NHS number") is unverified wording (./ayarlar.ts).
-  ulusalKimlik: { ad: 'NHS number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
+  // below). `hane: 0` = no length is assumed. The label names the identifiers of all four nations (./temel.ts):
+  // unverified wording, and whether a private clinic may record one is for a lawyer.
+  ulusalKimlik: { ad: GB_KIMLIK_ETIKETI, hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
   // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
   // profile, image evaluation, consultation, messaging) is off.
   ozellikler: {
@@ -80,7 +82,8 @@ export const GB_PAKETI: UlkePaketi = {
   uygulama: {
     diller: ['en-GB'],
     hastaDilleri: ['en'],
-    roller: EN_ROLLER,
+    // THE COUNTRY'S OWN ROLE LIST: the shared forty with this country's differences (./roller.ts → GB_ROLLER).
+    roller: enRolAnahtarlari(GB_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (and differ between the four nations).
     randevu: {
@@ -88,14 +91,21 @@ export const GB_PAKETI: UlkePaketi = {
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
     // A portal link works for 30 days: a STARTING VALUE the owner confirms; how long a patient's access may stand is
-    // for a lawyer. THE AMBULANCE NUMBER IS UNVERIFIED LOCAL CONTENT: written from general knowledge, to be confirmed
-    // by a local source before any patient sees the portal. null here = the patient's page names no number.
+    // for a lawyer. THE AMBULANCE NUMBER IS LOCAL CONTENT, UNVERIFIED BY A PERSON: to be confirmed by a local source
+    // before any patient sees the portal. null here = the patient's page names no number.
+    // LOCALISATION AUDIT 2026-10-09: "999 is for life-threatening emergencies" was read on the health service's own page
+    // (https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/). The non-emergency line
+    // (111 in England, Scotland and Wales; none of that kind in Northern Ireland) has no place in the kit: reported.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '999' },
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-GB' }] }],
     // One time zone in the country: no account is asked.
     saatDilimleri: ['Europe/London'],
     // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens.
+    // LOCALISATION AUDIT 2026-10-09: a clinical record is timed with the 24-hour clock (Royal College of Physicians,
+    // generic medical record keeping standards: https://www.rcp.ac.uk/resources/generic-medical-record-keeping-standards/);
+    // text for PATIENTS is written with the 12-hour clock in the health service's content guide. The kit has one
+    // setting for both readers, so the patient's page and the reminder text also show 24-hour times: reported.
     saatBicimi: 24,
     birimler: GB_BIRIMLER,
     adAlanlari: { ikinciAd: false },
