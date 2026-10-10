@@ -5,7 +5,7 @@
  * build. Where a key depends on the country's own languages or scripts it is a record keyed by their codes; the pack
  * check (lib/ulke/paketDenetimi.ts) requires an entry for each of them.
  *
- * 144 fixed entries + per-language entries in `UygulamaMetni`; 112 fixed + per-language in `RandevuMetni`.
+ * 153 fixed entries + per-language entries in `UygulamaMetni`; 112 fixed + per-language in `RandevuMetni`.
  * Placeholders inside a sentence are written %, %1, %2, %3 and are named where the catalogue is written.
  */
 
@@ -194,7 +194,39 @@ export type UygulamaMetni = {
     readonly kaydet: string
     readonly kaydedildi: string
   }
+  /**
+   * NOTYA-ULKE-DENETIM-01 — THE WORDS OF THE KIT'S OWN ENTRY FIELDS (components/ulke/girdi/): a day typed as its
+   * three parts in the pack's order, a time of day typed as hour and minute, a number. The kit draws these fields
+   * itself because a browser's own date and time fields follow the browser's language, not the country.
+   *
+   * READ BY DOCTORS AND BY PATIENTS: the same words stand on the intake form of the patient's page. A native reader
+   * reads them with the patient-facing texts. The two halves of a 12-hour day ("AM", "PM") are not here: they are
+   * written by the platform's data for the pack's own locale, as everywhere a time is shown (lib/ulke/arayuz/bicim.ts).
+   */
+  readonly girdi: {
+    /** The label of the day-of-the-month part of a date. */
+    readonly gun: string
+    readonly ay: string
+    readonly yil: string
+    /** The label of the hour part of a time of day. */
+    readonly saat: string
+    readonly dakika: string
+    /** Under a date whose parts do not make a day of the calendar, or that is typed in part. */
+    readonly tarihGecersiz: string
+    /** Under a time of day that is not one, or that is typed in part. */
+    readonly saatGecersiz: string
+    /**
+     * Under a number that cannot be read without guessing: the person is asked to type it again.
+     * %1 a whole number and %2 a number with a decimal, both written the pack's own way (examples of what is read).
+     */
+    readonly sayiOkunamadi: string
+    /** Above the buttons of a form that was asked to send while one of its fields holds something that could not be read. */
+    readonly duzelt: string
+  }
 }
+
+/** The words of the kit's own entry fields, in one language form. */
+export type GirdiMetni = UygulamaMetni['girdi']
 
 /** Appointments: calendar, booking form, one appointment, reminder, working pattern, home list, patient file. */
 export type RandevuMetni = {

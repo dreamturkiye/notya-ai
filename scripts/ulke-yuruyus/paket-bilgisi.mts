@@ -43,13 +43,17 @@ const kutular = (rol: string | null) => { const x = hesabinAraclari(ar, rol); re
 const bugun = ulkeGunu(new Date(), p.saatDilimi)
 const aracOrnegi = (() => {
   if (!ar) return null
-  for (const r of a.roller) for (const x of hesabinAraclari(ar, r.anahtar).rol) {
+  // NOTYA-ULKE-DENETIM-01a — a tool with a NUMBER field is preferred, so the walk-through can type a number the other
+  // country's way and see it refused; where the pack has none, any tool that answers serves.
+  for (const sayili of [true, false]) for (const r of a.roller) for (const x of hesabinAraclari(ar, r.anahtar).rol) {
     const t = x.tanim
+    if (sayili && !t.alanlar.some((al) => al.tur === 'sayi' && !al.kosul)) continue
     // no date field (a sample's dates are fixed days), no laboratory unit, no number the country has to state
     if (t.tur === 'ekran' || (t.parametreler ?? []).length || t.alanlar.some((al) => al.tur === 'tarih' || al.lab || al.olcu)) continue
     const g = ornekGirdiler(t).find((ornek) => t.hesapla(ornek, { bugun, p: {} }).tamam)
     if (!g) continue
-    const ham = t.alanlar.filter((al) => g[al.anahtar] !== null && g[al.anahtar] !== false && g[al.anahtar] !== undefined).map((al) => ({ anahtar: al.anahtar, tur: al.tur, deger: g[al.anahtar] === true ? true : String(g[al.anahtar]) }))
+    const ham = t.alanlar.filter((al) => g[al.anahtar] !== null && g[al.anahtar] !== false && g[al.anahtar] !== undefined).map((al) => ({ anahtar: al.anahtar, tur: al.tur, deger: g[al.anahtar] === true ? true : typeof g[al.anahtar] === 'number' ? String(g[al.anahtar]).replace('.', p.bicim.ondalikAyraci) /* typed the pack's way */ : String(g[al.anahtar]) }))
+    if (sayili && !ham.some((h) => h.tur === 'sayi')) continue
     return { rol: r.anahtar, anahtar: t.anahtar, ad: x.paket.metin.ad[d], ham }
   }
   return null
@@ -67,7 +71,7 @@ const klinikBilgisi = kh && a.klinikMetinleri?.[d] ? {
 } : null
 process.stdout.write(JSON.stringify({
   kod: p.kod, yolOnEki: p.yolOnEki ?? '', dil: d, acikDiller: p.acikDiller, uygulamaDilleri: p.uygulama.diller, dilGruplari: p.uygulama.dilGruplari,
-  hastaDilleri: p.uygulama.hastaDilleri, saatDilimleri: p.uygulama.saatDilimleri, saatBicimi: p.uygulama.saatBicimi, tarihDeseni: p.bicim.tarihDeseni,
+  hastaDilleri: p.uygulama.hastaDilleri, saatDilimleri: p.uygulama.saatDilimleri, saatBicimi: p.uygulama.saatBicimi, tarihDeseni: p.bicim.tarihDeseni, ondalikAyraci: p.bicim.ondalikAyraci, binlikAyraci: p.bicim.binlikAyraci,
   kayitAcik: p.uygulama.kayitAcik, gizli: p.aramaMotorlarinaGizli, ikinciAd: p.uygulama.adAlanlari.ikinciAd, kimlik: Boolean(p.ulusalKimlik), telefonOrnek: p.telefon.ornek,
   randevu: Boolean(p.ozellikler.randevu), acilis: Boolean(p.ozellikler.acilisSayfasi && a.acilis),
   roller: a.roller.map((r) => r.anahtar), ilkRol: ilkRol ? { anahtar: ilkRol.anahtar, ad: ilkRol.ad[d], alanlar: a.notSablonlari.rolAlanlari[ilkRol.anahtar] ?? [], asistan: a.asistan(ilkRol.anahtar, d) } : null,

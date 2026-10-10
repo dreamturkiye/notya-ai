@@ -183,7 +183,7 @@ describe('clinic accounts — the screens', () => {
     for (const dil of FORMLAR) {
       const k = A.klinikMetni(dil)
       const diger = uyeler().filter((u) => u.hesapId !== BEN)
-      const form = (alanId: string, tur: string, ek: Record<string, unknown> = {}) => ciz(h(Yetkiler.YetkiFormuGorunumu, { k, uyeler: diger, ayarlar: AYAR, alanId, setAlanId: bos, tur: tur as never, setTur: bos, hastalar: null, hastaQ: '', setHastaQ: bos, hastaAra: bos, hastaId: '', setHastaId: bos, bitisGun: '', setBitisGun: bos, gonder: bos, bekliyor: false, ...ek }))
+      const form = (alanId: string, tur: string, ek: Record<string, unknown> = {}) => ciz(h(Yetkiler.YetkiFormuGorunumu, { k, g: A.girdiMetni(dil), uyeler: diger, ayarlar: AYAR, alanId, setAlanId: bos, tur: tur as never, setTur: bos, hastalar: null, hastaQ: '', setHastaQ: bos, hastaAra: bos, hastaId: '', setHastaId: bos, bitisGun: '', setBitisGun: bos, gonder: bos, bekliyor: false, ...ek }))
       const secenekler = (html: string) => [...html.matchAll(/<option value="(on-buro-[a-z]+|paylasim|vekalet)"/g)].map((m) => m[1])
       assert.deepEqual(secenekler(form(ONB, '')), ['on-buro-randevu', 'on-buro-hasta', 'on-buro-portal'], `${dil}: the front desk`)
       assert.deepEqual(secenekler(form(MUT, '')), ['paylasim'], `${dil}: an allied professional`)
@@ -204,7 +204,7 @@ describe('clinic accounts — the screens', () => {
       assert.equal(say(form(MUT, 'paylasim'), 'data-alan="yetki-hasta-arama"'), 1)
       assert.ok(form(MUT, 'paylasim', { hastalar: [{ id: 'p1', ad: 'QA Patient', otaIsmi: '' }] }).includes('QA Patient'))
       assert.ok(gorunurMetin(form(DIGER, 'vekalet')).includes(Y.yerine(k.yetki.bitisIpucu, 9)), dil)
-      assert.ok(gorunurMetin(ciz(h(Yetkiler.YetkiFormuGorunumu, { k, uyeler: [], ayarlar: AYAR, alanId: '', setAlanId: bos, tur: '', setTur: bos, hastalar: null, hastaQ: '', setHastaQ: bos, hastaAra: bos, hastaId: '', setHastaId: bos, bitisGun: '', setBitisGun: bos, gonder: bos, bekliyor: false }))).includes(k.yetki.uyeYok))
+      assert.ok(gorunurMetin(ciz(h(Yetkiler.YetkiFormuGorunumu, { k, g: A.girdiMetni(dil), uyeler: [], ayarlar: AYAR, alanId: '', setAlanId: bos, tur: '', setTur: bos, hastalar: null, hastaQ: '', setHastaQ: bos, hastaAra: bos, hastaId: '', setHastaId: bos, bitisGun: '', setBitisGun: bos, gonder: bos, bekliyor: false }))).includes(k.yetki.uyeYok))
       temiz(gorunurMetin(form(ONB, 'on-buro-portal')), `permission form ${dil}`)
     }
   })
@@ -248,7 +248,7 @@ describe('clinic accounts — the screens', () => {
       assert.deepEqual([say(gun, 'data-eylem="durum-geldi"'), say(gun, 'data-eylem="durum-gelmedi"'), say(gun, 'data-eylem="durum-iptal"'), say(gun, 'data-eylem="durum-planlandi"')], [2, 2, 3, 2], dil)
       assert.deepEqual(OnBuro.onBuroGecisleri('tamamlandi'), []); assert.deepEqual(OnBuro.onBuroGecisleri('iptal'), [])
       const hasta = { id: 'p1', ad: 'QA Patient', otaIsmi: 'QA Mid', dogumTarihi: '1990-05-05', telefon: '+000 11 22' }
-      const kart = (yetkiler: string[], ek: Record<string, unknown> = {}) => ciz(h(OnBuro.HastaKartiGorunumu, { k, r, hasta, yetkiler: yetkiler as never[], form: { gun: '2026-10-12', saat: '10:00', sureDk: 30, yineDe: false }, setForm: bos, sureler: [15, 30], randevuAl: bos, portalVer: bos, formIste: bos, yeni: null, kopyala: bos, kapat: bos, bekliyor: false, portalVar: true, formVar: true, ...ek }))
+      const kart = (yetkiler: string[], ek: Record<string, unknown> = {}) => ciz(h(OnBuro.HastaKartiGorunumu, { k, r, g: A.girdiMetni(dil), hasta, yetkiler: yetkiler as never[], form: { gun: '2026-10-12', saat: '10:00', sureDk: 30, yineDe: false }, setForm: bos, sureler: [15, 30], randevuAl: bos, portalVer: bos, formIste: bos, yeni: null, kopyala: bos, kapat: bos, bekliyor: false, portalVar: true, formVar: true, ...ek }))
       const tam = kart(['on-buro-randevu', 'on-buro-portal'])
       assert.ok(gorunurMetin(tam).includes('QA Patient QA Mid') && gorunurMetin(tam).includes('+000 11 22') && gorunurMetin(tam).includes(Y.yerine(k.onBuro.dogum, Kabuk.tarihYaz('1990-05-05'))), dil)
       assert.deepEqual([say(tam, 'data-eylem="on-buro-randevu-al"'), say(tam, 'data-eylem="on-buro-portal-ver"'), say(tam, 'data-eylem="on-buro-form-iste"')], [1, 1, 1])
