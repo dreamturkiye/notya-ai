@@ -52,22 +52,41 @@ export const KRITIK_YOL: AracTanimi = {
 }
 
 /**
- * Pre-anaesthesia checklist with the ASA physical status class as the doctor records it (I to V, E).
+ * Pre-anaesthesia checklist with the ASA physical status class as the doctor records it.
  * Source of the classes: American Society of Anesthesiologists, ASA Physical Status Classification System.
  * Stands beside specialties/anestezi/engines/asa.ts → asaSkorla.
+ *
+ * NOTYA-ULKE-ARAC-DUZELTME-01, fault 4. Source opened on 2026-10-10: American Society of Anesthesiologists, "Statement
+ * on ASA Physical Status Classification System" ("Last approved by the ASA House of Delegates on October 15, 2014"),
+ * https://asahq.org/resources/clinical-information/asa-physical-status-classification-system — SIX classes, ASA I
+ * to ASA VI, and: "The addition of "E" denotes Emergency surgery".
+ *   THE CLASSES ARE I TO VI. The tool offered I to V and "E" as a sixth class: class VI could not be recorded, and
+ *   choosing E gave "ASA E" with no class at all.
+ *   "E" IS A MARK ADDED TO A CLASS, a tick of its own (`asa_acil`) that is there only once a class is chosen; the
+ *   result repeats the class as its band and the mark beside it (`asa_acil`).
+ *   THE SOCIETY'S OWN DEFINITIONS OF THE CLASSES ARE NOT IN THE PRODUCT, by the owner's instruction: the classes are
+ *   named by their numerals only (the society's terms forbid reproducing its content without written consent).
  */
 export const ASA_MADDELER = ['anamnez_tamam', 'asa_siniflandirma', 'acil_lab_goruntu', 'aclik_onam', 'alerji_ilac_listesi', 'hava_yolu_degerlendirme', 'kardiyopulmoner_risk', 'kontrol_randevu'] as const
+export const ASA_SINIFLARI = ['I', 'II', 'III', 'IV', 'V', 'VI'] as const
 const ASA_TAKIP = ['kontrol_randevu', 'acil_lab_goruntu', 'hava_yolu_degerlendirme', 'alerji_ilac_listesi']
-export const ASA: AracTanimi = kontrolListesi({
+const asaSinifiMi = (x: unknown): x is (typeof ASA_SINIFLARI)[number] => typeof x === 'string' && (ASA_SINIFLARI as readonly string[]).includes(x)
+const ASA_LISTESI: AracTanimi = kontrolListesi({
   anahtar: 'asa-preop',
   maddeler: ASA_MADDELER,
-  ek: [secim('asa_sinif', ['I', 'II', 'III', 'IV', 'V', 'E'], true)],
-  bantlar: ['I', 'II', 'III', 'IV', 'V', 'E'],
-  bant: (_s, g) => (typeof g.asa_sinif === 'string' ? g.asa_sinif : null),
-  uyarilar: ASA_TAKIP,
-  uyari: (s) => s.filter((k) => ASA_TAKIP.includes(k)),
+  ek: [secim('asa_sinif', ASA_SINIFLARI, true)],
+  bantlar: ASA_SINIFLARI,
+  bant: (_s, g) => (asaSinifiMi(g.asa_sinif) ? g.asa_sinif : null),
+  uyarilar: [...ASA_TAKIP, 'asa_acil'],
+  // the mark stands only beside a class: without a class there is nothing it could be added to
+  uyari: (s, g) => [...(g.asa_acil === true && asaSinifiMi(g.asa_sinif) ? ['asa_acil'] : []), ...s.filter((k) => ASA_TAKIP.includes(k))],
   kaynak: 'American Society of Anesthesiologists. ASA Physical Status Classification System.',
 })
+/** The class, then the emergency mark (there only once a class is chosen), then the items of the list. */
+export const ASA: AracTanimi = {
+  ...ASA_LISTESI,
+  alanlar: [ASA_LISTESI.alanlar[0], { anahtar: 'asa_acil', tur: 'isaret', kosul: { alan: 'asa_sinif', degerler: ASA_SINIFLARI } }, ...ASA_LISTESI.alanlar.slice(1)],
+}
 
 /** Airway note: flags and the day of the next check. Stands beside specialties/anestezi/engines/havaYolu.ts → havaYoluSkorla. */
 export const HAVA_YOLU_BAYRAKLARI = ['mallampati_kaydi', 'zor_hava_yolu_bayrak', 'boyun_hareket_kisit', 'dis_protez_notu', 'obezite_osahs', 'onceki_zor_entubasyon'] as const

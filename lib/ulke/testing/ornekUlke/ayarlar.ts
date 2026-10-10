@@ -17,6 +17,13 @@
  *              every doctor role; a shared tool renamed and its options relabelled; a tool only for some patients
  *   UNITS      two accepted units for two quantities: the doctor chooses
  *   LICENCE    states the licence of every tool and placeholder (`lisansTam`)
+ *
+ * NOTYA-ULKE-ARAC-DUZELTME-01 — and every point the tools-correction job opened on a SHARED tool (all INVENTED):
+ *   STEPS      its own steps of return to sport, each with an earliest day counted from the injury (`tablolar`)
+ *   FIELDS     its own frequencies for the hearing average: three where the kit has four (`uyarlama.alanlar`)
+ *   BANDS      its own grade table over the hearing average, and its own bands over a score the kit names none for
+ *   NUMBERS    numbers a country MAY state: the range of the expected height, its own asymmetry rule, the PSA caution off
+ *   DOSE       how it writes an amount of a medicine
  */
 import { EN_ROL_ARACLARI, EN_TEMEL_ARACLAR } from '@/countries/_dil/en/araclar'
 import { enAracYuvalari } from '@/countries/_dil/en/araclar/yuvalar'
@@ -95,15 +102,33 @@ export const XX_GIRDI: EnUlkeGirdisi = {
   gunlukMuayeneLimiti: 200,
   araclar: {
     // TWO ACCEPTED UNITS for two quantities: the doctor chooses beside the field; nothing is chosen for them.
-    labBirimleri: { albuminKreatinin: ['mg/mmol', 'mg/g'], hemoglobin: ['g/L', 'g/dL'], 'xx-olcek': ['xx-a', 'xx-b'] },
+    labBirimleri: { albuminKreatinin: ['mg/mmol', 'mg/g'], hemoglobin: ['g/L', 'g/dL'], 'xx-olcek': ['xx-a', 'xx-b'], crp: ['mg/L', 'mg/dL'], psa: ['ug/L', 'ng/mL'] },
+    // INVENTED for the tests, as everything here: how a dose is written is each real country's own national rule.
+    dozYazimi: { sondaSifir: false },
     kapali: {
       'doz-hesabi': { eksik: 'TEST: kept as a placeholder by the test country.', kimden: 'TEST: nobody' },
     },
     birimAdlari: { 'xx-a': 'scale A', 'xx-b': 'scale B' },
     degisen: {
       // RENAMED, and its options RELABELLED: the same tool of the kit under this country's own words
-      'asa-preop': { ad: 'Pre-anaesthetic record (test)', not: 'TEST DATA: the line under the result, as this country writes it.', secenekler: { asa_sinif: { I: 'Class one', II: 'Class two', III: 'Class three', IV: 'Class four', V: 'Class five', E: 'Emergency' } } },
+      'asa-preop': { ad: 'Pre-anaesthetic record (test)', not: 'TEST DATA: the line under the result, as this country writes it.', secenekler: { asa_sinif: { I: 'Class one', II: 'Class two', III: 'Class three', IV: 'Class four', V: 'Class five', VI: 'Class six' } } },
       'psa-hizi': { aciklama: 'TEST: the description, as this country writes it.' },
+      // ITS OWN STEPS OF RETURN TO SPORT: every step is named here, as an option and as the band it becomes
+      'rtp-basamak': { ad: 'Return to sport (test)', aciklama: 'TEST: the step the athlete is on, held against its earliest day.', secenekler: { basamak: { xa: 'Step A', xb: 'Step B', xc: 'Step C' } }, bantlar: { xa: 'Step A (test)', xb: 'Step B (test)', xc: 'Step C (test)' } },
+      // ITS OWN GRADE TABLE over the hearing average, its own words for its own asymmetry rule, and the description that names its own frequencies
+      'odyometri-pta': { aciklama: 'TEST: the average of three frequencies, graded by this country\'s own table.', bantlar: { xiyi: 'Grade 0 (test)', xorta: 'Grade 1 (test)', xkotu: 'Grade 2 (test)' }, uyarilar: { asimetri: 'TEST: the two ears differ by 20 dB or more' } },
+      // ITS OWN BANDS over a score for which the kit names none
+      pasi: { bantlar: { xdusuk: 'Lower band (test)', xyuksek: 'Upper band (test)' } },
+    },
+    // NUMBERS A COUNTRY MAY STATE (INVENTED): the range of the expected height either side, in centimetres; its own
+    // asymmetry rule for the hearing average; and the caution about two PSA results close together, turned off.
+    parametreler: { 'hedef-boy': { aralik_cm: 9 }, 'odyometri-pta': { asimetri_en_az: 20 }, 'psa-hizi': { kisa_aralik_gun: 0 } },
+    // A TABLE A COUNTRY MAY SUPPLY (INVENTED): three steps of return to sport, each with its earliest day after the injury.
+    tablolar: { 'rtp-basamak': { basamaklar: { satirlar: [{ basamak: 'xa', en_erken_gun: 0 }, { basamak: 'xb', en_erken_gun: 3 }, { basamak: 'xc', en_erken_gun: 10 }] } } },
+    uyarlama: {
+      // THREE FREQUENCIES where the kit has four, and THREE GRADES where it has seven (INVENTED limits)
+      'odyometri-pta': { alanlar: { frekans: ['e05', 'e1', 'e2'] }, bantlar: { sayi: 'pta', satirlar: [{ ust: 20, dahil: true, bant: 'xiyi' }, { ust: 60, dahil: true, bant: 'xorta' }, { ust: null, bant: 'xkotu' }] } },
+      pasi: { bantlar: { sayi: 'pasi', satirlar: [{ ust: 12, dahil: true, bant: 'xdusuk' }, { ust: null, bant: 'xyuksek' }] } },
     },
     // WHO SEES A SHARED TOOL HERE
     gorenler: {

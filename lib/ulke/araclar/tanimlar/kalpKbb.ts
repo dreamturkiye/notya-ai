@@ -67,33 +67,76 @@ export const KARDIYO_IZLEM: AracTanimi = {
 /**
  * Pure-tone average of one ear: the mean of the air-conduction thresholds at 0.5, 1, 2 and 4 kHz, the degree of
  * hearing loss it falls in, the change against an earlier average and the difference from the other ear.
- * Degrees: up to 25 dB normal, 26–40 mild, 41–55 moderate, 56–70 moderately severe, 71–90 severe, above 90 profound
- * (Goodman A. Reference zero levels for pure-tone audiometers. ASHA 1965;7:262–263; Clark JG. Uses and abuses of
- * hearing loss classification. ASHA 1981;23:493–500). A change of 10 dB or more and a difference of 15 dB or more
- * between the ears are flagged, as in the tool it stands beside.
+ * Degrees (Goodman A. Reference zero levels for pure-tone audiometers. ASHA 1965;7:262–263; Clark JG. Uses and abuses
+ * of hearing loss classification. ASHA 1981;23:493–500). A change of 10 dB or more is flagged, as in the tool it
+ * stands beside. Stands beside specialties/kulak-burun-bogaz/engines/odyometri.ts → skorla, degisim, asimetriNotu.
  *
- * ONE DELIBERATE DIFFERENCE. The other application's bands are written as whole-number ranges (… 25, 26 …), so an
- * average that falls between two of them — 25.5 dB — matches none and is called "profound". The kit's bands have no
- * gap: 25.5 dB is "mild". The comparison test states this case by case.
- * Stands beside specialties/kulak-burun-bogaz/engines/odyometri.ts → skorla, degisim, asimetriNotu.
+ * ── NOTYA-ULKE-ARAC-DUZELTME-01, fault 6. Sources opened on 2026-10-10: ──
+ *   [ASHA] American Speech-Language-Hearing Association, "Degree of Hearing Loss",
+ *     https://asha.org/public/hearing/degree-of-hearing-loss — the table, "Source: Clark, J. G. (1981). Uses and
+ *     abuses of hearing loss classification. Asha, 23, 493–500.": Normal –10 to 15; Slight 16 to 25; Mild 26 to 40;
+ *     Moderate 41 to 55; Moderately severe 56 to 70; Severe 71 to 90; Profound 91+ (dB HL).
+ *   [AAO-HNS] American Academy of Otolaryngology–Head and Neck Surgery, position statement "Red Flags-Warning of Ear
+ *     Disease" ("Approved September 2002", "Reviewed July 2025"),
+ *     https://www.entnet.org/resource/position-statement-red-flags-warning-of-ear-disease/ — "Unilateral or
+ *     asymmetric hearing loss (a difference of greater than 15 dB Pure Tone Average between ears)".
+ *
+ *   THE GRADES ARE THE TABLE THE TOOL CITES, seven of them. The tool had six and called everything up to 25 dB
+ *   "normal": the cited table ends "normal" at 15 dB and has a "slight" step from 16 to 25 dB (`hafifce`).
+ *   THE DIFFERENCE BETWEEN THE EARS is flagged when it is GREATER THAN 15 dB ([AAO-HNS]); the tool flagged exactly
+ *   15 dB. The difference itself is now a number of the result (`kulak_farki`), flagged or not.
+ *
+ *   ── WHAT A COUNTRY MAY SUPPLY (each replaces the kit's; none is supplied by any pack yet) ──
+ *   ITS OWN FREQUENCIES   `uyarlama.alanlar.frekans`: which of 0.25, 0.5, 1, 2, 3, 4, 6 and 8 kHz are averaged (at
+ *                         least two). The kit's own are 0.5, 1, 2 and 4 kHz.
+ *   ITS OWN GRADE TABLE   `uyarlama.bantlar` over `pta` (`bantSerbest`: nothing else follows from the grade).
+ *   ITS OWN ASYMMETRY RULE  one of two numbers it may state (`secimlikParametreler`): `asimetri_ustu` = flagged when
+ *                         the averages differ by MORE than this many dB; `asimetri_en_az` = flagged when they differ
+ *                         by this many dB OR MORE. Where a pack states one (or both: either is then enough), the
+ *                         kit's rule above is not applied. A rule on single frequencies of both ears is not a rule
+ *                         this tool can hold: the other ear is known here by its average only.
+ *
+ * ONE DELIBERATE DIFFERENCE FROM THE TOOL IT STANDS BESIDE (unchanged). That application's bands are written as
+ * whole-number ranges (… 25, 26 …), so an average that falls between two of them — 25.5 dB — matches none and is
+ * called "profound". The kit's bands have no gap: a value above one grade's upper limit is in the next grade
+ * (25.5 dB is "mild", 15.5 dB "slight"). The comparison test states this case by case.
  */
+export const PTA_TUM_FREKANSLAR = ['e025', 'e05', 'e1', 'e2', 'e3', 'e4', 'e6', 'e8'] as const
 export const PTA_FREKANSLARI = ['e05', 'e1', 'e2', 'e4'] as const
-export const ptaBandi = (pta: number): string => (pta <= 25 ? 'normal' : pta <= 40 ? 'hafif' : pta <= 55 ? 'orta' : pta <= 70 ? 'orta_ileri' : pta <= 90 ? 'ileri' : 'cok_ileri')
+export const PTA_BANTLARI = ['normal', 'hafifce', 'hafif', 'orta', 'orta_ileri', 'ileri', 'cok_ileri'] as const
+export const ptaBandi = (pta: number): (typeof PTA_BANTLARI)[number] => (pta <= 15 ? 'normal' : pta <= 25 ? 'hafifce' : pta <= 40 ? 'hafif' : pta <= 55 ? 'orta' : pta <= 70 ? 'orta_ileri' : pta <= 90 ? 'ileri' : 'cok_ileri')
+/** The difference between the two ears' averages above which the kit flags asymmetry ([AAO-HNS]: "greater than 15 dB"). */
+export const PTA_ASIMETRI_USTU = 15
 const bir = (x: number) => Math.round(x * 10) / 10
+const esikAlani = (k: string): AracAlani => sayi(k, -10, 130, { birim: 'dB' })
 export const ODYOMETRI: AracTanimi = {
   anahtar: 'odyometri-pta',
   tur: 'hesap',
-  alanlar: [secim('kulak', ['sag', 'sol'], true), ...PTA_FREKANSLARI.map((k) => sayi(k, -10, 130, { birim: 'dB' })), sayi('onceki_pta', -10, 130, { birim: 'dB', istege: true }), sayi('karsi_pta', -10, 130, { birim: 'dB', istege: true })],
-  cikti: { sayilar: ['pta', 'fark'], bantlar: ['normal', 'hafif', 'orta', 'orta_ileri', 'ileri', 'cok_ileri'], uyarilar: ['esik_artisi', 'esik_azalisi', 'asimetri'], tarihler: [] },
+  alanlar: [secim('kulak', ['sag', 'sol'], true), ...PTA_FREKANSLARI.map(esikAlani), sayi('onceki_pta', -10, 130, { birim: 'dB', istege: true }), sayi('karsi_pta', -10, 130, { birim: 'dB', istege: true })],
+  alanGruplari: { frekans: { secenekler: PTA_TUM_FREKANSLAR.map(esikAlani), enAz: 2 } },
+  secimlikParametreler: ['asimetri_ustu', 'asimetri_en_az'],
+  cikti: { sayilar: ['pta', 'fark', 'kulak_farki'], bantlar: [...PTA_BANTLARI], uyarilar: ['esik_artisi', 'esik_azalisi', 'asimetri'], tarihler: [] },
+  // Nothing else in the result follows from the grade: a country may state its own grade table over the average.
+  bantSerbest: true,
   sonucBirimleri: ['dB'],
   kaynak: 'Goodman A. ASHA 1965;7:262-263. Clark JG. ASHA 1981;23:493-500.',
-  hesapla: (g) => {
-    const e = PTA_FREKANSLARI.map((k) => g[k])
-    if (!e.every(sayiMi)) return BOS_SONUC
-    const pta = bir((e as number[]).reduce((t, x) => t + x, 0) / 4)
+  hesapla: (g, { p, alanlar }) => {
+    const frekanslar = alanlar?.frekans ?? PTA_FREKANSLARI
+    const e = frekanslar.map((k) => g[k])
+    if (!e.length || !e.every(sayiMi)) return BOS_SONUC
+    const pta = bir((e as number[]).reduce((t, x) => t + x, 0) / e.length)
     const fark = sayiMi(g.onceki_pta) ? bir(pta - g.onceki_pta) : null
-    const asimetri = sayiMi(g.karsi_pta) && Math.abs(bir(pta - g.karsi_pta)) >= 15
-    return { tamam: true, sayilar: [{ anahtar: 'pta', deger: pta, ondalik: 1, birim: 'dB' }, ...(fark !== null ? [{ anahtar: 'fark', deger: fark, ondalik: 1, birim: 'dB' }] : [])], bant: ptaBandi(pta), uyarilar: [...(fark !== null && fark >= 10 ? ['esik_artisi'] : []), ...(fark !== null && fark <= -10 ? ['esik_azalisi'] : []), ...(asimetri ? ['asimetri'] : [])], tarihler: [] }
+    const kulakFarki = sayiMi(g.karsi_pta) ? Math.abs(bir(pta - g.karsi_pta)) : null
+    // The country's own rule where it states one; otherwise the kit's: greater than 15 dB.
+    const kendiKurali = sayiMi(p.asimetri_ustu) || sayiMi(p.asimetri_en_az)
+    const asimetri = kulakFarki !== null && (kendiKurali ? (sayiMi(p.asimetri_ustu) && kulakFarki > p.asimetri_ustu) || (sayiMi(p.asimetri_en_az) && kulakFarki >= p.asimetri_en_az) : kulakFarki > PTA_ASIMETRI_USTU)
+    return {
+      tamam: true,
+      sayilar: [{ anahtar: 'pta', deger: pta, ondalik: 1, birim: 'dB' }, ...(fark !== null ? [{ anahtar: 'fark', deger: fark, ondalik: 1, birim: 'dB' }] : []), ...(kulakFarki !== null ? [{ anahtar: 'kulak_farki', deger: kulakFarki, ondalik: 1, birim: 'dB' }] : [])],
+      bant: ptaBandi(pta),
+      uyarilar: [...(fark !== null && fark >= 10 ? ['esik_artisi'] : []), ...(fark !== null && fark <= -10 ? ['esik_azalisi'] : []), ...(asimetri ? ['asimetri'] : [])],
+      tarihler: [],
+    }
   },
 }
 
@@ -126,10 +169,20 @@ export const OTOSKOPI: AracTanimi = {
  * to a central cause, an accompanying ear symptom. With any central sign a repositioning manoeuvre is "not suitable"
  * and urgent assessment comes first; a positive test without a nystagmus feature is flagged as incomplete.
  * Stands beside specialties/kulak-burun-bogaz/engines/vertigo.ts → vertigoNotu.
+ *
+ * NOTYA-ULKE-ARAC-DUZELTME-01, fault 8 — THREE CENTRAL SIGNS WERE MISSING. The six signs named weakness and numbness
+ * of the FACE only, and headache but not neck pain: a patient with a weak arm, or with neck pain, had no box, and
+ * the result read "no sign of a central cause was marked". Source opened on 2026-10-10: Johns P, Quinn J. Clinical
+ * diagnosis of benign paroxysmal positional vertigo and vestibular neuritis. CMAJ 2020;192(8):E182-6,
+ * https://cmaj.ca/content/cmaj/192/8/e182.full.pdf — Figure 1, the features that point to a central cause: "Focal
+ * weakness or paresthesia of face or limbs"; "Dysarthria, diplopia, dysphagia, dysmetria, dysphonia"; "Significant
+ * headache or neck pain"; "Unable to stand unaided"; "Spontaneous vertical nystagmus".
+ * Added, each a tick-box of its own: `santral_uzuv` (weakness or altered sensation of a limb), `santral_boyun_agrisi`
+ * (significant neck pain), `santral_koordinasyon` (dysmetria). The rule itself is unchanged.
  */
 export const MANEVRALAR = ['dix_hallpike', 'supine_roll', 'epley', 'barbecue', 'head_impulse', 'romberg'] as const
 export const NISTAGMUS = ['nis_torsiyonel', 'nis_horizontal', 'nis_latans_var', 'nis_yorulabilir', 'nis_latans_yok', 'nis_yon_degistiren', 'nis_fiksasyon'] as const
-export const SANTRAL = ['santral_cift_gorme', 'santral_yuz', 'santral_ayakta', 'santral_nistagmus', 'santral_fiksasyon', 'santral_bas_agrisi'] as const
+export const SANTRAL = ['santral_cift_gorme', 'santral_yuz', 'santral_uzuv', 'santral_koordinasyon', 'santral_ayakta', 'santral_nistagmus', 'santral_fiksasyon', 'santral_bas_agrisi', 'santral_boyun_agrisi'] as const
 export const VERTIGO: AracTanimi = {
   anahtar: 'vertigo-notu',
   tur: 'liste',
