@@ -58,7 +58,7 @@ export function enAracYuvalari(ulke: string): readonly AracYuvasi[] {
     yuva('isotretinoin-pregnancy-prevention', ['dermatology'], `Pregnancy-prevention checks for isotretinoin: the programme the regulator of ${ulke} requires (tests, contraception, prescription validity).`),
 
     // ── endocrinology: the mechanism is in the kit; the numbers are local guidance and are not here ──
-    yuva('lab-izlem', ['endocrinology'], `HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in ${ulke}; the unit HbA1c is reported in there (per cent or mmol/mol: the kit's field has no unit choice yet); and the reference range the local laboratories report for TSH.`, KLINISYEN, true),
+    yuva('lab-izlem', ['endocrinology'], `HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in ${ulke}; the unit HbA1c is reported in there (per cent or mmol/mol: the kit converts between the two, and the two cut-offs are stated with their unit); and the reference range the local laboratories report for TSH.`, KLINISYEN, true),
     yuva('dxa-tekrar', ['endocrinology'], `Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the guidance followed in ${ulke}.`, KLINISYEN, true),
 
     // ── infectious diseases ──

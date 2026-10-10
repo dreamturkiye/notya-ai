@@ -27,7 +27,7 @@ const DIZIN = join(KOK, 'countries/uz/uygulama/araclar')
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 
 /** Latin written inside a Cyrillic or Russian sentence on purpose: names the profession itself writes in Latin letters. */
-const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|I{1,3}|IV|V|E|A|B|C)\b/g
+const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|I{1,3}|IV|VI|V|E|A|B|C)\b/g
 
 /**
  * Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart.

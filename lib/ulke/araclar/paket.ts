@@ -26,6 +26,7 @@ import { kapiSonucu, type AracHastaBilgisi, type KapiSonucu } from './hastaKapis
 import { kitAraci } from './katalog'
 import { LISANS_ACIK, type AracGirdisi, type AracOrtami, type AracSonucu, type AracTanimi, type PaketAraci, type UlkeAraclari } from './tipler'
 import { etkinTanim, ulkeOrtami } from './uyarlama'
+import { gosterimOndaligi, yazilanOndalik } from './yazim'
 import { alanVarMi, BOS_SONUC } from './yardimci'
 
 export type GorunurArac = { tanim: AracTanimi; paket: PaketAraci }
@@ -131,14 +132,19 @@ export function alanEtiketi(x: GorunurArac, alanAnahtari: string, dil: string, m
   return sira >= 0 ? yerlestir(m.arac.madde, String(sira + 1)) : ''
 }
 
-export type Yazici = { sayi: (deger: number, ondalik: number) => string; tarih: (iso: string) => string; birim: (kod: string) => string }
+export type Yazici = {
+  sayi: (deger: number, ondalik: number) => string; tarih: (iso: string) => string; birim: (kod: string) => string
+  /** How THIS COUNTRY writes an amount of a medicine (`UlkeAraclari.dozYazimi`); absent = as any other number. */
+  doz?: (deger: number, ondalik: number) => string
+}
 
 /** One number of a result as it is written: "12 / 35", "4,2 ng/mL". */
 export function sayiMetni(s: AracSonucu['sayilar'][number], m: AraclarMetni, y: Yazici, o?: BirimOrtami): string {
   // A length or a weight the arithmetic worked out in cm / kg is written in the country's own unit of that measure.
   const carpan = s.olcu && o ? kanonigeCevir({ anahtar: s.anahtar, tur: 'sayi', olcu: s.olcu }, 1, o) ?? 1 : 1
   const birim = s.olcu && o ? o.birimler[s.olcu] : s.birim
-  const deger = y.sayi(s.deger / carpan, s.ondalik)
+  // As many places as the number states, more where its significant figures need them; an amount of a medicine by the pack's own rule for writing a dose (./yazim.ts).
+  const deger = (s.doz && y.doz ? y.doz : y.sayi)(s.deger / carpan, gosterimOndaligi(s.deger / carpan, s.ondalik, s.anlamli))
   const govde = typeof s.enCok === 'number' ? yerlestir(m.arac.oran, deger, y.sayi(s.enCok, 0)) : deger
   return birim ? `${govde} ${y.birim(birim)}` : govde
 }
@@ -162,7 +168,9 @@ export function aracOzeti(x: GorunurArac, g: AracGirdisi, sonuc: AracSonucu, dil
     else if (a.tur === 'tarih') satirlar.push(`${etiket}: ${y.tarih(String(v))}`)
     else if (a.tur === 'metin') satirlar.push(`${etiket}: ${String(v)}`)
     // The unit the doctor chose travels beside the number (./girdi.ts → hamdanGosterilen); otherwise the pack's one unit.
-    else if (typeof v === 'number') { const b = alanBirimi(a, o, g[birimAnahtari(a.anahtar)]); satirlar.push(`${etiket}: ${y.sayi(v, Number.isInteger(v) ? 0 : 1)}${b ? ` ${y.birim(b)}` : ''}`) }
+    // A TYPED NUMBER IS REPEATED WITH EVERY PLACE IT HAS (NOTYA-ULKE-ARAC-DUZELTME-01): this line used to write one
+    // place only, so a dose typed as 0.15 mg/kg went into the copied summary as "0.2 mg/kg".
+    else if (typeof v === 'number') { const b = alanBirimi(a, o, g[birimAnahtari(a.anahtar)]); satirlar.push(`${etiket}: ${y.sayi(v, yazilanOndalik(v))}${b ? ` ${y.birim(b)}` : ''}`) }
   }
   for (const s of sonuc.sayilar) satirlar.push(`${bicimli(t.sayilar?.[s.anahtar], dil)}: ${sayiMetni(s, m, y, o)}`)
   if (sonuc.bant) satirlar.push(bicimli(t.bantlar?.[sonuc.bant], dil))
