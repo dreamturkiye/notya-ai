@@ -74,9 +74,10 @@ export const UZ_ROL_ARACLARI_1: readonly PaketAraci[] = [
     anahtar: 'asa-preop', roller: ['anestezi'],
     metin: {
       ad: u('ASA va operatsiyadan oldingi nazorat roʻyxati', 'ASA ва операциядан олдинги назорат рўйхати', 'ASA и предоперационный контрольный список'),
-      aciklama: u('Anesteziyadan oldingi baholash bandlari va siz belgilagan ASA jismoniy holat klassi.', 'Анестезиядан олдинги баҳолаш бандлари ва сиз белгилаган ASA жисмоний ҳолат класси.', 'Пункты преданестезиологической оценки и указанный вами класс физического статуса ASA.'),
+      aciklama: u('Anesteziyadan oldingi baholash bandlari va siz belgilagan ASA jismoniy holat klassi (I–VI); operatsiya shoshilinch boʻlsa, klassga E belgisi qoʻshiladi.', 'Анестезиядан олдинги баҳолаш бандлари ва сиз белгилаган ASA жисмоний ҳолат класси (I–VI); операция шошилинч бўлса, классга E белгиси қўшилади.', 'Пункты преданестезиологической оценки и указанный вами класс физического статуса ASA (I–VI); при экстренной операции к классу добавляется отметка E.'),
       alanlar: {
         asa_sinif: u('ASA klassi (ixtiyoriy)', 'ASA класси (ихтиёрий)', 'Класс ASA (необязательно)'),
+        asa_acil: u('E: shoshilinch operatsiya (klassga qoʻshiladigan belgi)', 'E: шошилинч операция (классга қўшиладиган белги)', 'E: экстренная операция (отметка, добавляемая к классу)'),
         anamnez_tamam: u('Anesteziologik anamnez yigʻildi', 'Анестезиологик анамнез йиғилди', 'Анестезиологический анамнез собран'),
         asa_siniflandirma: u('ASA jismoniy holat klassi qayd qilindi', 'ASA жисмоний ҳолат класси қайд қилинди', 'Класс физического статуса ASA зафиксирован'),
         acil_lab_goruntu: u('Kerakli laboratoriya va tasviriy tekshiruvlar sanasi belgilandi', 'Керакли лаборатория ва тасвирий текширувлар санаси белгиланди', 'Назначена дата необходимых лабораторных исследований и визуализации'),
@@ -86,10 +87,11 @@ export const UZ_ROL_ARACLARI_1: readonly PaketAraci[] = [
         kardiyopulmoner_risk: u('Yurak va oʻpka tomonidan xavf omillari koʻrib chiqildi', 'Юрак ва ўпка томонидан хавф омиллари кўриб чиқилди', 'Оценены факторы сердечно-лёгочного риска'),
         kontrol_randevu: u('Operatsiyadan oldingi yoki nazorat qabuli belgilandi', 'Операциядан олдинги ёки назорат қабули белгиланди', 'Назначен предоперационный или контрольный приём'),
       },
-      secenekler: { asa_sinif: kendiAdi(['I', 'II', 'III', 'IV', 'V', 'E']) },
+      secenekler: { asa_sinif: kendiAdi(['I', 'II', 'III', 'IV', 'V', 'VI']) },
       sayilar: { isaretli: BELGILANGAN_BANDLAR },
-      bantlar: { I: ayni('ASA I'), II: ayni('ASA II'), III: ayni('ASA III'), IV: ayni('ASA IV'), V: ayni('ASA V'), E: ayni('ASA E') },
+      bantlar: { I: ayni('ASA I'), II: ayni('ASA II'), III: ayni('ASA III'), IV: ayni('ASA IV'), V: ayni('ASA V'), VI: ayni('ASA VI') },
       uyarilar: {
+        asa_acil: u('E: shoshilinch operatsiya', 'E: шошилинч операция', 'E: экстренная операция'),
         kontrol_randevu: vazifa('nazorat qabuli', 'назорат қабули', 'контрольный приём'),
         acil_lab_goruntu: vazifa('tekshiruv natijalari', 'текширув натижалари', 'результаты исследований'),
         hava_yolu_degerlendirme: vazifa('nafas yoʻllari boʻyicha qayd', 'нафас йўллари бўйича қайд', 'запись о дыхательных путях'),

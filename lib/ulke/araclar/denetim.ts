@@ -30,6 +30,17 @@
  *     country's own, a link-out tile and a placeholder of the country's own always state their licence; so does every
  *     tool and placeholder of a pack that says `lisansTam`;
  *   - A LINK-OUT TILE: a fixed https address with nothing in it but the address, and the words of its link.
+ *
+ * NOTYA-ULKE-ARAC-DUZELTME-01 — what the tools-correction job added:
+ *
+ *   - A NUMBER OR A TABLE THE COUNTRY MAY STATE (`secimlikParametreler`, `AracTablosu.istege`): nothing is asked where
+ *     the pack leaves it out; one that IS stated is held to every check of a required one;
+ *   - OPTIONS FROM THE COUNTRY'S TABLE (`tablodan`): each key once; the pack names each as an option (and as a band,
+ *     where the band is the option);
+ *   - THE FIELDS OF A GROUP (`uyarlama.alanlar`): only a group the definition offers, only fields of that group, each
+ *     once, at least as many as the definition asks for;
+ *   - HOW A DOSE IS WRITTEN (`dozYazimi`): a pack that switches on a tool which writes an amount of a medicine says
+ *     whether a zero is written after the decimal mark. A national rule: there is no default.
  */
 import type { BicimliMetin, UlkeArayuzu } from '../arayuz/tipler'
 import { eksikAyarMi, eksikMetinMi } from '../eksik'
@@ -41,6 +52,7 @@ import { hekimRolleri } from './paket'
 import { LISANS_ACIK, LISANS_DURUMLARI, type AracLisansi, type AracTanimi, type OlcuTanimi, type PaketAraci } from './tipler'
 import { anahtarUlkesi, ARAC_ANAHTARI, ARAC_ANAHTARI_AZAMI } from './ulkeyeOzel'
 import { bantSinirlari, birimliSayiMi, etkinTanim } from './uyarlama'
+import type { LabOlcusu } from './tipler'
 
 export type AracSorunu = { yer: string; sorun: string }
 
@@ -69,6 +81,8 @@ export function araciBirimleri(t: AracTanimi, paket: UlkePaketi, lab: Readonly<R
     if (a.lab) for (const birim of kabulEdilenler(lab[a.lab])) b.add(birim)
   }
   for (const k of t.sonucBirimleri ?? []) b.add(k)
+  // a result whose unit follows the unit a laboratory value was typed in: one code for every unit the pack accepts
+  for (const [olcu, ek] of Object.entries(t.sonucLabEkleri ?? {}) as [LabOlcusu, string][]) for (const birim of kabulEdilenler(lab[olcu])) b.add(`${birim}${ek}`)
   // a result written in the pack's unit of length or weight needs that unit's name
   for (const olcu of t.sonucOlculeri ?? []) if (u && !eksikAyarMi(u) && typeof u[olcu] === 'string') b.add(u[olcu])
   return [...b]
@@ -255,6 +269,18 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
         if (b && satirlar.length && bantSinirlari(t, b, olculer) === null && !(olcu && !dolu(b.birim))) ekle(`${y}.satirlar`, 'a limit cannot be converted to the unit the tool works in')
       }
     }
+    // THE FIELDS OF A GROUP, as the country chose them: only where the definition offers the group.
+    if (u?.alanlar !== undefined && !baglantiMi) {
+      for (const [grup, liste] of Object.entries(u.alanlar)) {
+        const y = `${yer}.uyarlama.alanlar.${grup}`
+        const tanim = t.alanGruplari?.[grup]
+        if (!tanim) { ekle(y, 'the tool offers no such group of fields: a country chooses its fields only where the kit\'s definition offers a group (alanGruplari)'); continue }
+        if (!Array.isArray(liste) || !liste.every(dolu)) { ekle(y, 'must list the keys of the fields this country has'); continue }
+        if (new Set(liste).size !== liste.length) ekle(y, 'a field is listed twice')
+        for (const k of liste) if (!tanim.secenekler.some((al) => al.anahtar === k)) ekle(y, `"${k}" is not a field of this group (${tanim.secenekler.map((al) => al.anahtar).join(', ')})`)
+        if (liste.length < tanim.enAz) ekle(y, `the tool needs at least ${tanim.enAz} field(s) of this group`)
+      }
+    }
     const e = baglantiMi ? t : etkinTanim(t, p, olculer)
 
     metinVar(`${yer}.ad`, m.ad); metinVar(`${yer}.aciklama`, m.aciklama); metinVar(`${yer}.not`, m.not)
@@ -305,11 +331,27 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
       } else if (birimliSayiMi(v)) ekle(`${yer}.parametreler.${k}`, 'this number is not a laboratory value: state it as a plain number')
       else if (typeof v !== 'number' || !Number.isFinite(v)) ekle(`${yer}.parametreler.${k}`, 'the tool leaves this number to the country and the pack does not state it')
     }
-    for (const k of Object.keys(p.parametreler ?? {})) if (!(t.parametreler ?? []).includes(k)) ekle(`${yer}.parametreler.${k}`, 'a number for a key this tool does not have')
+    // NUMBERS THE COUNTRY MAY STATE: nothing is asked where one is left out; one that is stated is a number (a laboratory value with its unit)
+    for (const k of t.secimlikParametreler ?? []) {
+      const v = p.parametreler?.[k]
+      if (v === undefined) continue
+      const olcu = t.parametreOlculeri?.[k]
+      if (eksikAyarMi(v)) ekle(`${yer}.parametreler.${k}`, `${TESLIM}: ${v.__eksikAyar}`)
+      else if (olcu) {
+        const tanim = olcuTanimi(olcu, olculer)
+        const birimleri = tanim ? Object.keys(tanim.birimler).join(', ') : ''
+        if (!birimliSayiMi(v)) ekle(`${yer}.parametreler.${k}`, `this number is a laboratory value (${olcu}): state it with its unit, { deger, birim }${birimleri ? `, in one of ${birimleri}` : ''}`)
+        else if (birimdenKanonige(tanim, v.birim, v.deger) === null) ekle(`${yer}.parametreler.${k}`, `"${v.birim}" is not a unit the kit can convert${birimleri ? ` (${birimleri})` : ''}`)
+      } else if (birimliSayiMi(v)) ekle(`${yer}.parametreler.${k}`, 'this number is not a laboratory value: state it as a plain number')
+      else if (typeof v !== 'number' || !Number.isFinite(v)) ekle(`${yer}.parametreler.${k}`, 'a number the country may state must be a number where it is stated; leave the key out to state none')
+    }
+    for (const k of Object.keys(p.parametreler ?? {})) if (!(t.parametreler ?? []).includes(k) && !(t.secimlikParametreler ?? []).includes(k)) ekle(`${yer}.parametreler.${k}`, 'a number for a key this tool does not have')
     // TABLES THE COUNTRY SUPPLIES: every column in every row; a laboratory column with its unit
     for (const tablo of t.tablolar ?? []) {
       const y = `${yer}.tablolar.${tablo.anahtar}`
       const veri = p.tablolar?.[tablo.anahtar]
+      // A TABLE THE COUNTRY MAY SUPPLY: nothing is asked where it is left out.
+      if (tablo.istege === true && veri === undefined) continue
       if (eksikAyarMi(veri)) { ekle(y, `${TESLIM}: ${veri.__eksikAyar}`); continue }
       const satirlar = Array.isArray(veri?.satirlar) ? veri!.satirlar : null
       if (!satirlar || !satirlar.length) { ekle(y, 'the tool leaves this table to the country and the pack does not supply it'); continue }
@@ -326,6 +368,12 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
       }
       for (const k of Object.keys(veri?.birimler ?? {})) if (!tablo.sutunlar.some((x) => x.anahtar === k && x.lab)) ekle(`${y}.birimler.${k}`, 'a unit for a column that is not a laboratory value of this table')
       satirlar.forEach((satir, i) => { for (const k of Object.keys(satir ?? {})) if (!tablo.sutunlar.some((x) => x.anahtar === k)) ekle(`${y}.satirlar[${i}].${k}`, 'a column this table does not have') })
+      // WHERE A FIELD'S OPTIONS ARE THIS TABLE'S KEYS, each key names one row: an option listed twice would be two rules for one choice.
+      for (const al of t.alanlar) if (al.tablodan?.tablo === tablo.anahtar) {
+        const anahtarlar = satirlar.map((satir) => satir?.[al.tablodan!.sutun]).filter(dolu)
+        if (new Set(anahtarlar).size !== anahtarlar.length) ekle(`${y}.satirlar`, `the column "${al.tablodan.sutun}" names the options of the field "${al.anahtar}": a key is listed twice`)
+        if (anahtarlar.length < 2) ekle(`${y}.satirlar`, `the column "${al.tablodan.sutun}" names the options of the field "${al.anahtar}": a choice needs at least two`)
+      }
     }
     for (const k of Object.keys(p.tablolar ?? {})) if (!(t.tablolar ?? []).some((x) => x.anahtar === k)) ekle(`${yer}.tablolar.${k}`, 'a table this tool does not have')
     // units and laboratory quantities this tool reads
@@ -344,6 +392,10 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
     for (const b of araciBirimleri(t, paket, lab)) gerekenBirimler.add(b)
   }
   for (const b of gerekenBirimler) metinVar(`arayuz.araclar.birimler.${b}`, birimler[b])
+  // HOW A DOSE IS WRITTEN: a national rule. A pack with a tool that writes an amount of a medicine states it; the kit has no default.
+  if (a.dozYazimi !== undefined && (eksikAyarMi(a.dozYazimi) || !a.dozYazimi || typeof a.dozYazimi.sondaSifir !== 'boolean')) ekle('arayuz.araclar.dozYazimi', eksikAyarMi(a.dozYazimi) ? `${TESLIM}: ${a.dozYazimi.__eksikAyar}` : 'must say whether a zero is written after the decimal mark of a dose ({ sondaSifir: true | false })')
+  const dozYazan = araclar.find((p) => { const t = p && (kitAraci(p.anahtar) ?? kendiAraci(p.anahtar)); return Boolean(t?.dozYazar) })
+  if (dozYazan && a.dozYazimi === undefined) ekle('arayuz.araclar.dozYazimi', `the tool "${dozYazan.anahtar}" writes an amount of a medicine and the pack does not say how this country writes a dose ({ sondaSifir: true | false }, with the national source beside it): where a zero after the decimal mark is forbidden, "5.0" can be read as 50`)
   // WHERE A UNIT IS CHOSEN ON THE SCREEN, the catalogue holds the sentence that asks for it — in every form.
   const secilenVar = araclar.some((p) => { const t = p && (kitAraci(p.anahtar) ?? kendiAraci(p.anahtar)); return Boolean(t) && t!.alanlar.some((al) => al.lab && kabulEdilenler(lab[al.lab]).length > 1) })
   if (secilenVar) for (const d of diller) {

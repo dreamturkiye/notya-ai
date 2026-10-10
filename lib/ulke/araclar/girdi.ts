@@ -12,11 +12,24 @@
  * laboratory value, the unit chosen beside the field travels in the form under the field's key plus ".birim". Until a
  * unit of the pack's list is chosen, a typed number is "nothing" AND counts as a field that could not be read — so
  * the tool shows no result and the server keeps none, also where the field is optional.
+ *
+ * THE UNIT TRAVELS WITH THE VALUE (NOTYA-ULKE-ARAC-DUZELTME-01). Every laboratory value that was read carries the
+ * unit it was typed in under the same ".birim" key — also where the pack has one unit only. The arithmetic gets the
+ * value in its own unit as before; a tool that holds limits printed per unit reads the key (`yazilanBirim`).
  */
 import { sayiCozKuralla } from '../arayuz/sayiOkuma'
 import { alanAraligi, birimAnahtari, birimSecilirMi, kanonigeCevir, seciliBirim, type BirimOrtami } from './birimler'
 import type { AracAlani, AracGirdisi } from './tipler'
 import { alanVarMi, kosullariUygula, METIN_UZUNLUGU } from './yardimci'
+
+/**
+ * The unit a laboratory value of an input was typed in, or — where the input does not say (a direct call with a value
+ * already in the arithmetic's unit) — the arithmetic's own unit of that quantity.
+ */
+export function yazilanBirim(g: AracGirdisi, alanAnahtari: string, kanonik: string): string {
+  const b = g[birimAnahtari(alanAnahtari)]
+  return typeof b === 'string' && b ? b : kanonik
+}
 
 /** What is typed, as it is typed: a field's text, an option key, a tick. */
 export type HamGirdi = Readonly<Record<string, string | boolean>>
@@ -56,7 +69,12 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     g[a.anahtar] = kanonigeCevir(a, n, o, secilen)
   }
   // A field whose condition does not hold is not there: whatever was typed into it earlier is not read.
-  return kosullariUygula(alanlar, g)
+  const c: Record<string, number | string | boolean | null> = { ...kosullariUygula(alanlar, g) }
+  // THE UNIT A LABORATORY VALUE WAS TYPED IN travels with it (NOTYA-ULKE-ARAC-DUZELTME-01), under the field's key plus
+  // ".birim": the value itself is in the unit the arithmetic uses, but a limit a guideline prints ONCE PER UNIT (3
+  // mg/mmol beside 30 mg/g — not the same amount) must be applied as printed for the unit the doctor read.
+  for (const a of alanlar) if (a.lab && typeof c[a.anahtar] === 'number') { const b = seciliBirim(a, o, ham[birimAnahtari(a.anahtar)]); if (b) c[birimAnahtari(a.anahtar)] = b }
+  return c
 }
 
 /**
@@ -87,6 +105,9 @@ export function birimiSecilmeyenler(alanlar: readonly AracAlani[], ham: HamGirdi
 /** For the summary: a number is repeated as the doctor typed it (their unit), not in the unit the arithmetic used. */
 export function hamdanGosterilen(alanlar: readonly AracAlani[], ham: HamGirdi, g: AracGirdisi, o: BirimOrtami): AracGirdisi {
   const cikti: Record<string, number | string | boolean | null> = { ...g }
+  // Where the pack has ONE unit for a quantity, nothing is added to what is kept: the unit is the pack's, and a record
+  // of before reads as before. (The key `girdiyiCoz` adds for the arithmetic is not part of the summary.)
+  for (const a of alanlar) if (a.lab && !birimSecilirMi(a, o)) delete cikti[birimAnahtari(a.anahtar)]
   for (const a of alanlar) if ((a.tur === 'sayi' || a.tur === 'puan') && g[a.anahtar] !== null) {
     const okuma = sayiCozKuralla(ham[a.anahtar], o.sayi); cikti[a.anahtar] = okuma.tamam ? okuma.sayi : null
     // The unit the doctor CHOSE is kept beside the number, so a kept result is read back in the unit it was typed in.

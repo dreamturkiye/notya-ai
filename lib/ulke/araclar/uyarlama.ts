@@ -13,6 +13,13 @@
  *   OPTIONS   `PaketAraci.uyarlama.secenekler` — the country's own list for a choice the arithmetic only repeats
  *             (`secenekSerbest`).
  *
+ * NOTYA-ULKE-ARAC-DUZELTME-01 — what the tools-correction job added, each used only where a tool's definition says so:
+ *   MAY-BE-STATED NUMBERS AND TABLES   `secimlikParametreler`, `AracTablosu.istege` — left out where the pack does not
+ *             state them: the tool then answers without what depends on them, never with a number of the kit's.
+ *   OPTIONS FROM THE COUNTRY'S TABLE   `AracAlani.tablodan` — a choice the kit holds no option for.
+ *   THE FIELDS OF A GROUP              `PaketAraci.uyarlama.alanlar` over `AracTanimi.alanGruplari`.
+ *   BANDS THAT ARE A FIELD'S OPTIONS   `AracTanimi.bantAlani`.
+ *
  * NOTHING MISSING IS EVER READ AS REASSURING. A number or a table the pack did not state, a unit the kit cannot
  * convert, a result that lacks the number the bands are read from: each gives NO result, never a result without the
  * part that could not be worked out. (The pack check refuses such a pack long before; this is the second lock.)
@@ -42,6 +49,14 @@ export function parametreleriCoz(t: AracTanimi, p: Pick<PaketAraci, 'parametrele
     const v = parametreyiCoz(t, k, p.parametreler?.[k], olculer)
     if (v === null) eksik.push(k); else cikti[k] = v
   }
+  // A NUMBER THE COUNTRY MAY STATE: left out where it is not stated (the tool then answers without what depends on
+  // it); where it IS stated and cannot be worked out, the tool gives no result at all — never half of one.
+  for (const k of t.secimlikParametreler ?? []) {
+    const ham = p.parametreler?.[k]
+    if (ham === undefined) continue
+    const v = parametreyiCoz(t, k, ham, olculer)
+    if (v === null) eksik.push(k); else cikti[k] = v
+  }
   return { p: cikti, eksik }
 }
 
@@ -51,6 +66,8 @@ export function tablolariCoz(t: AracTanimi, p: Pick<PaketAraci, 'tablolar'>, olc
   const eksik: string[] = []
   for (const tablo of t.tablolar ?? []) {
     const veri = p.tablolar?.[tablo.anahtar]
+    // A table the country MAY supply and did not: the tool answers without it.
+    if (tablo.istege === true && veri === undefined) continue
     const satirlar = Array.isArray(veri?.satirlar) ? veri!.satirlar : null
     if (!satirlar || !satirlar.length) { eksik.push(tablo.anahtar); continue }
     const cevrilen: AracTabloSatiri[] = []
@@ -84,7 +101,7 @@ export function ulkeOrtami(t: AracTanimi, p: Pick<PaketAraci, 'parametreler' | '
   if (!t.tablolar?.length) return { bugun, p: sayilar.p }
   const tablolar = tablolariCoz(t, p, olculer)
   if (tablolar.eksik.length) return null
-  return { bugun, p: sayilar.p, t: tablolar.t }
+  return Object.keys(tablolar.t).length ? { bugun, p: sayilar.p, t: tablolar.t } : { bugun, p: sayilar.p }
 }
 
 /** The upper limits of a country's bands in the unit the tool's number is in. null = a limit cannot be converted. */
@@ -120,23 +137,60 @@ function bantla(b: BantTablosu, sinirlar: readonly (number | null)[] | null, son
   return bant === null ? BOS_SONUC : { ...sonuc, bant }
 }
 
+/** The keys a pack's table names in one of its key columns, each once, in the table's order. [] = no such table. */
+export function tabloAnahtarlari(p: Pick<PaketAraci, 'tablolar'>, tablo: string, sutun: string): string[] {
+  const satirlar = p.tablolar?.[tablo]?.satirlar
+  if (!Array.isArray(satirlar)) return []
+  return [...new Set(satirlar.map((s) => s?.[sutun]).filter((v): v is string => typeof v === 'string' && v.length > 0))]
+}
+
+/** The fields of a group as this country chose them: the kit's own definitions of the keys it names, in the kit's order. null = the group is not restated. */
+export function grupAlanlari(t: AracTanimi, p: Pick<PaketAraci, 'uyarlama'>, grup: string): AracTanimi['alanlar'] | null {
+  const tanim = t.alanGruplari?.[grup], liste = p.uyarlama?.alanlar?.[grup]
+  if (!tanim || !Array.isArray(liste) || !liste.length) return null
+  return tanim.secenekler.filter((a) => liste.includes(a.anahtar))
+}
+
 /**
  * THE DEFINITION A COUNTRY'S SCREEN, CHECK AND SERVER WORK WITH: the kit's (or the pack's own), with this country's
- * options and bands in place. A pack that restates nothing gets THE SAME OBJECT back — nothing is wrapped.
+ * options, bands, chosen fields and table-given options in place. A pack that restates nothing gets THE SAME OBJECT
+ * back — nothing is wrapped.
  */
-export function etkinTanim(t: AracTanimi, p: Pick<PaketAraci, 'uyarlama'>, olculer?: Olculer): AracTanimi {
+export function etkinTanim(t: AracTanimi, p: Pick<PaketAraci, 'uyarlama' | 'tablolar'>, olculer?: Olculer): AracTanimi {
   const u = p.uyarlama
   const secenekler = u?.secenekler && Object.keys(u.secenekler).length ? u.secenekler : null
   const bantlar = u?.bantlar ?? null
-  if (!secenekler && !bantlar) return t
+  let alanlar = t.alanlar
   // Only what the definition itself allows is restated; anything else is left as the kit has it (the pack check names it).
-  const alanlar = secenekler ? t.alanlar.map((a) => (a.tur === 'secim' && a.secenekSerbest === true && Array.isArray(secenekler[a.anahtar]) && secenekler[a.anahtar].length ? { ...a, secenekler: secenekler[a.anahtar] } : a)) : t.alanlar
-  if (!bantlar || t.bantSerbest !== true) return alanlar === t.alanlar ? t : { ...t, alanlar }
-  const sinirlar = bantSinirlari(t, bantlar, olculer)
-  return {
-    ...t,
-    alanlar,
-    cikti: { ...t.cikti, bantlar: [...new Set(bantlar.satirlar.map((s) => s.bant))] },
-    hesapla: (g, ortam) => bantla(bantlar, sinirlar, t.hesapla(g, ortam)),
+  if (secenekler) alanlar = alanlar.map((a) => (a.tur === 'secim' && a.secenekSerbest === true && Array.isArray(secenekler[a.anahtar]) && secenekler[a.anahtar].length ? { ...a, secenekler: secenekler[a.anahtar] } : a))
+  // OPTIONS THE COUNTRY'S TABLE GIVES: the kit holds none, so without the table the field stays without options (and is not there).
+  if (t.alanlar.some((a) => a.tablodan && tabloAnahtarlari(p, a.tablodan.tablo, a.tablodan.sutun).length)) alanlar = alanlar.map((a) => { const k = a.tablodan ? tabloAnahtarlari(p, a.tablodan.tablo, a.tablodan.sutun) : []; return k.length ? { ...a, secenekler: k } : a })
+  // THE FIELDS OF A GROUP, as the country chose them: they take the place of the kit's, and the arithmetic is told which they are.
+  const secilen: Record<string, readonly string[]> = {}
+  for (const grup of Object.keys(t.alanGruplari ?? {})) {
+    const kendi = grupAlanlari(t, p, grup)
+    if (!kendi || !kendi.length) continue
+    const hepsi = t.alanGruplari![grup].secenekler.map((a) => a.anahtar)
+    const ilk = alanlar.findIndex((a) => hepsi.includes(a.anahtar))
+    const kalan = alanlar.filter((a) => !hepsi.includes(a.anahtar))
+    const yer = ilk < 0 ? kalan.length : alanlar.slice(0, ilk).filter((a) => !hepsi.includes(a.anahtar)).length
+    alanlar = [...kalan.slice(0, yer), ...kendi, ...kalan.slice(yer)]
+    secilen[grup] = kendi.map((a) => a.anahtar)
   }
+  let cikti = t.cikti
+  let hesapla = t.hesapla
+  // WHERE THE BAND IS THE OPTION CHOSEN IN A FIELD, the bands are that field's options — the country's, where it restated them.
+  if (t.bantAlani && alanlar !== t.alanlar) {
+    const kit = t.alanlar.find((a) => a.anahtar === t.bantAlani), simdi = alanlar.find((a) => a.anahtar === t.bantAlani)
+    if (simdi && simdi !== kit) cikti = { ...cikti, bantlar: [...(simdi.secenekler ?? [])] }
+  }
+  if (Object.keys(secilen).length) { const onceki = hesapla; hesapla = (g, ortam) => onceki(g, { ...ortam, alanlar: { ...(ortam.alanlar ?? {}), ...secilen } }) }
+  if (bantlar && t.bantSerbest === true) {
+    const sinirlar = bantSinirlari(t, bantlar, olculer)
+    const onceki = hesapla
+    hesapla = (g, ortam) => bantla(bantlar, sinirlar, onceki(g, ortam))
+    cikti = { ...cikti, bantlar: [...new Set(bantlar.satirlar.map((s) => s.bant))] }
+  }
+  if (alanlar === t.alanlar && cikti === t.cikti && hesapla === t.hesapla) return t
+  return { ...t, alanlar, cikti, hesapla }
 }

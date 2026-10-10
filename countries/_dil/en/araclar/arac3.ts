@@ -80,10 +80,9 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
   {
     anahtar: 'vas-fonksiyon', roller: ['orthopaedics'],
     ad: 'Pain and function rating',
-    aciklama: 'Pain from 0 to 10 and four items of function from 0 to 4 (0 = no difficulty, 4 = cannot do it). The grade is this tool\'s own summary, not a published scale.',
+    aciklama: 'Pain from 0 to 10 and four items of function from 0 to 4 (0 = no difficulty, 4 = cannot do it). The tool shows the two figures and names no grade.',
     alanlar: { vas: 'Pain from 0 to 10', yurume: 'Walking', merdiven: 'Going up and down stairs', gunluk: 'Daily activities (dressing, washing)', uyku: 'Sleep disturbed by pain' },
     sayilar: { vas: 'Pain', fonksiyon: 'Function' },
-    bantlar: { hafif: 'Mild pain and limitation of function', orta: 'Moderate pain and limitation of function', siddetli: 'Severe pain and limitation of function' },
     not: KARAR,
   },
 
@@ -91,7 +90,7 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
   {
     anahtar: 'hedef-boy', roller: ['paediatrics'],
     ad: 'Expected height from the parents\' heights',
-    aciklama: 'From the height of the father and of the mother, an estimate of the child\'s adult height and its range is worked out. It is an estimate, not a promise.',
+    aciklama: 'From the height of the father and of the mother, an estimate of the child\'s adult height is worked out. It is an estimate, not a promise.',
     alanlar: { cinsiyet: 'Sex of the child', anne: 'Mother\'s height', baba: 'Father\'s height' },
     secenekler: { cinsiyet: { kiz: 'Girl', erkek: 'Boy' } },
     sayilar: { hedef: 'Expected height', alt: 'Lower end of the range', ust: 'Upper end of the range' },
@@ -100,7 +99,7 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
   {
     anahtar: 'doz-hesabi', roller: ['paediatrics'],
     ad: 'Dose arithmetic by body weight',
-    aciklama: 'Arithmetic on the numbers YOU enter: body weight, milligrams per kilogram, doses per day; with a concentration, the volume per dose. The tool knows no medicine, no recommended dose and no limit.',
+    aciklama: 'Arithmetic on the numbers YOU enter: body weight, milligrams per kilogram, doses per day; with a concentration, the volume per dose. The volume is not rounded. The tool knows no medicine, no recommended dose and no limit.',
     alanlar: {
       kilo: 'Body weight',
       mg_kg: 'Dose per kilogram',
@@ -125,7 +124,8 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
       tavan_doz: 'The dose worked out for one time is above the limit you set',
       tavan_gun: 'The dose worked out for a day is above the limit you set',
       kilo_birim: 'The body weight is unusually large: check the unit',
-      ml_kucuk: 'The volume for one dose is smaller than can be measured accurately',
+      ml_yuvarlanmadi: 'The volume is the result of the arithmetic and is not rounded to any measuring device: check that the device you use can measure it',
+      ml_kucuk: 'The volume for one dose is below 1 mL: a small volume needs a device graduated finely enough to measure it',
     },
     not: 'The arithmetic rests on the numbers you entered; the medicine, the dose and the limit are the doctor\'s to decide and to check.',
   },
@@ -220,26 +220,23 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
   },
 
   // ── sports medicine ──
+  // The kit holds NO staging of return to sport: the steps are a table a country supplies (the kit's definition says
+  // what the table holds). These words are for a country that has supplied none: the tool then counts the days only.
+  // A country that supplies its steps names each one, and rewrites the description, in its own folder.
   {
     anahtar: 'rtp-basamak', roller: ['sports-medicine'],
-    ad: 'Stages of return to sport',
-    aciklama: 'Records which stage the athlete is at now. The stage is the doctor\'s decision; the tool proposes no timing.',
-    alanlar: { basamak: 'Stage' },
-    secenekler: { basamak: { 0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5' } },
-    bantlar: {
-      b0: 'Stage 0: rest and control of symptoms',
-      b1: 'Stage 1: light aerobic exercise',
-      b2: 'Stage 2: sport-specific exercise, no contact',
-      b3: 'Stage 3: training without contact',
-      b4: 'Stage 4: contact training, no competition',
-      b5: 'Stage 5: full training and return to competition',
-    },
-    not: 'The stage and the decision on return to sport are the doctor\'s.',
+    ad: 'Return to sport: days since the injury',
+    aciklama: 'From the date of the injury, the number of days since it is worked out. No steps of return to sport have been set for this country, so the tool shows no stage and proposes no timing.',
+    alanlar: { yaralanma: 'Date of the injury', basamak: 'Step' },
+    sayilar: { gun: 'Days since the injury (the day of the injury is day 0)' },
+    uyarilar: { basamak_tanimsiz: 'No steps of return to sport have been set for this country: only the days since the injury are shown', erken: 'Today is before the earliest day of this step' },
+    tarihler: { en_erken: 'Earliest day of this step' },
+    not: 'The decision on return to sport is the doctor\'s.',
   },
   {
     anahtar: 'sakatlik-gunlugu', roller: ['sports-medicine'],
     ad: 'Injury log',
-    aciklama: 'The site, mechanism, severity and status of an injury; from the minutes of training in the last seven days and the earlier weekly average, their ratio is worked out.',
+    aciklama: 'The site, mechanism, severity and status of an injury; from the minutes of training in the last seven days and the earlier weekly average, their ratio is worked out. The paper cited measures load as effort multiplied by minutes; this ratio uses minutes alone.',
     alanlar: { bolge: 'Site', mekanizma: 'Mechanism (optional)', siddet: 'Severity (optional)', durum: 'Status (optional)', dk_7gun: 'Training in the last 7 days (optional)', dk_onceki: 'Earlier average weekly training (optional)' },
     secenekler: {
       bolge: { diz: 'Knee', ayak_bilegi: 'Ankle', kalca: 'Hip', omuz: 'Shoulder', dirsek: 'Elbow', el_bilegi: 'Wrist', bel: 'Lower back', boyun: 'Neck', kas_bacak: 'Leg muscles', kas_govde: 'Trunk muscles', kas_ust: 'Arm muscles', bas_boyun: 'Head and neck (concussion)', diger: 'Other' },
@@ -248,7 +245,7 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
       durum: { aktif: 'Active', iyilesiyor: 'Healing', kapandi: 'Closed' },
     },
     sayilar: { yuklenme_orani: 'Training load ratio' },
-    uyarilar: { yuklenme_yuksek: 'Training load ratio 1.5 or above: high', yuklenme_dikkat: 'Training load ratio 1.3 or above: needs attention' },
+    uyarilar: { yuklenme_yuksek: 'Training load ratio 1.5 or above: the range the cited paper calls the danger zone', yuklenme_dikkat: 'Training load ratio above 1.3: above the range the cited paper calls the sweet spot (0.8 to 1.3)' },
     not: KARAR,
   },
 ]

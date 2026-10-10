@@ -19,6 +19,8 @@
  *                                    tile; what is not free or permitted cannot be switched on
  *   6. ITS KEYS ARE ITS OWN          every key it adds carries its code and is on the list wall rule D7 enforces
  *   7. THE PACK CHECK IS NOT BLIND   each mistake a country could make with these, refused by name
+ *   8. THE SHARED TOOLS, OPENED      (NOTYA-ULKE-ARAC-DUZELTME-01) a country's own steps, frequencies, grade table,
+ *                                    asymmetry rule and bands on a tool of the kit; numbers it may state
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -228,7 +230,7 @@ describe('2. a tool catalogue of its own', () => {
     const p = araci('asa-preop')
     assert.equal(p.metin.ad[D], 'Pre-anaesthetic record (test)')
     assert.equal(p.metin.not[D], 'TEST DATA: the line under the result, as this country writes it.')
-    assert.deepEqual(Object.values(p.metin.secenekler!.asa_sinif).map((x) => x[D]), ['Class one', 'Class two', 'Class three', 'Class four', 'Class five', 'Emergency'])
+    assert.deepEqual(Object.values(p.metin.secenekler!.asa_sinif).map((x) => x[D]), ['Class one', 'Class two', 'Class three', 'Class four', 'Class five', 'Class six'])
     assert.equal(paketinAraci(A, 'asa-preop')!.tanim, kitAraci('asa-preop'), 'the kit\'s own definition, untouched')
     assert.equal(araci('psa-hizi').metin.aciklama[D], 'TEST: the description, as this country writes it.')
   })
@@ -403,6 +405,75 @@ describe('6. its keys are its own', () => {
   })
 })
 
+describe('8. NOTYA-ULKE-ARAC-DUZELTME-01 — what the tools-correction job opened on the SHARED tools, used by one country', () => {
+  const D8 = BUGUN
+  it('ITS OWN STEPS OF RETURN TO SPORT: the options and the bands are the rows of its table; the earliest day is counted from the injury', () => {
+    const kit = kitAraci('rtp-basamak')!
+    assert.deepEqual(kit.alanlar.find((a) => a.anahtar === 'basamak')!.secenekler, [], 'the kit holds no step')
+    const x = paketinAraci(A, 'rtp-basamak')!
+    assert.deepEqual(x.tanim.alanlar.find((a) => a.anahtar === 'basamak')!.secenekler, ['xa', 'xb', 'xc'])
+    assert.deepEqual(x.tanim.cikti.bantlar, ['xa', 'xb', 'xc'])
+    // injured 5 days before today: step B (earliest day 3) is open, step C (earliest day 10) is early
+    const b = sonuc('rtp-basamak', { yaralanma: '2026-10-05', basamak: 'xb' })
+    assert.deepEqual([b.tamam, b.bant, b.uyarilar, b.sayilar.map((n) => [n.anahtar, n.deger]), b.tarihler], [true, 'xb', [], [['gun', 5]], [{ anahtar: 'en_erken', tarih: '2026-10-08' }]])
+    const c = sonuc('rtp-basamak', { yaralanma: '2026-10-05', basamak: 'xc' })
+    assert.deepEqual([c.bant, c.uyarilar, c.tarihler], ['xc', ['erken'], [{ anahtar: 'en_erken', tarih: '2026-10-15' }]])
+    // a step with no earliest day shows no date; exactly on the earliest day is not early
+    assert.deepEqual(sonuc('rtp-basamak', { yaralanma: '2026-10-05', basamak: 'xa' }).tarihler, [])
+    assert.deepEqual(sonuc('rtp-basamak', { yaralanma: '2026-09-30', basamak: 'xc' }).uyarilar, [])
+    // THE COUNTRY HAS STEPS: no result until one is chosen — and never the line "no steps have been set"
+    assert.equal(sonuc('rtp-basamak', { yaralanma: '2026-10-05' }).tamam, false)
+    assert.equal(sonuc('rtp-basamak', { yaralanma: '2026-10-05', basamak: '0' }).tamam, false, 'a step of nobody\'s list is no step')
+    assert.equal(sonuc('rtp-basamak', { yaralanma: '2026-10-11', basamak: 'xa' }).tamam, false, 'an injury dated after today')
+    for (const k of ['xa', 'xb', 'xc']) { assert.ok(x.paket.metin.secenekler?.basamak?.[k]?.[D], k); assert.ok(x.paket.metin.bantlar?.[k]?.[D], k) }
+    void D8
+  })
+
+  it('ITS OWN FREQUENCIES, GRADE TABLE AND ASYMMETRY RULE for the hearing average: three fields where the kit has four', () => {
+    const kit = kitAraci('odyometri-pta')!
+    const x = paketinAraci(A, 'odyometri-pta')!
+    const sayiAlanlari = (t: typeof kit) => t.alanlar.filter((a) => a.tur === 'sayi').map((a) => a.anahtar)
+    assert.deepEqual(sayiAlanlari(kit), ['e05', 'e1', 'e2', 'e4', 'onceki_pta', 'karsi_pta'])
+    assert.deepEqual(sayiAlanlari(x.tanim), ['e05', 'e1', 'e2', 'onceki_pta', 'karsi_pta'], 'the country\'s three, where the kit\'s four stood')
+    assert.ok(!('e4' in x.paket.metin.alanlar), 'no label is left over for a field that is not on this country\'s screen')
+    assert.deepEqual(x.tanim.cikti.bantlar, ['xiyi', 'xorta', 'xkotu'])
+    // the average of THREE thresholds; a fourth that is typed is not read
+    const s = sonuc('odyometri-pta', { e05: '10', e1: '20', e2: '30', e4: '100' })
+    assert.deepEqual([s.tamam, s.sayilar[0].deger, s.bant], [true, 20, 'xiyi'])
+    assert.equal(sonuc('odyometri-pta', { e05: '10', e1: '20' }).tamam, false, 'each of the country\'s fields is needed')
+    assert.equal(sonuc('odyometri-pta', { e05: '20', e1: '20', e2: '21' }).bant, 'xorta')
+    // ITS OWN RULE: 20 dB or more — 19.9 is not flagged, though it is greater than the kit's 15
+    const fark = (karsi: string) => sonuc('odyometri-pta', { e05: '40', e1: '40', e2: '40', karsi_pta: karsi }).uyarilar
+    assert.deepEqual([fark('20.1'), fark('20'), fark('24')], [[], ['asimetri'], []])
+    // the kit's own definition is untouched for every other country
+    assert.equal(kitAraci('odyometri-pta'), kit)
+    assert.deepEqual(kit.hesapla({ kulak: null, e05: 40, e1: 40, e2: 40, e4: 40, onceki_pta: null, karsi_pta: 24 }, { bugun: BUGUN, p: {} }).uyarilar, ['asimetri'])
+  })
+
+  it('ITS OWN BANDS over a score the kit names no band for', () => {
+    assert.deepEqual(kitAraci('pasi')!.cikti.bantlar, [])
+    const x = paketinAraci(A, 'pasi')!
+    assert.deepEqual(x.tanim.cikti.bantlar, ['xdusuk', 'xyuksek'])
+    const tam = (alan: string) => ({ bas_e: '4', bas_i: '4', bas_d: '4', bas_a: alan, ust_e: '4', ust_i: '4', ust_d: '4', ust_a: alan, govde_e: '4', govde_i: '4', govde_d: '4', govde_a: alan, alt_e: '4', alt_i: '4', alt_d: '4', alt_a: alan })
+    assert.deepEqual([sonuc('pasi', tam('1')).sayilar[0].deger, sonuc('pasi', tam('1')).bant], [12, 'xdusuk'])
+    assert.deepEqual([sonuc('pasi', tam('2')).sayilar[0].deger, sonuc('pasi', tam('2')).bant], [24, 'xyuksek'])
+  })
+
+  it('NUMBERS A COUNTRY MAY STATE: the range of the expected height; the PSA caution turned off', () => {
+    assert.deepEqual(sonuc('hedef-boy', { cinsiyet: 'erkek', anne: '160', baba: '180' }).sayilar.map((n) => [n.anahtar, n.deger]), [['hedef', 176.5], ['alt', 167.5], ['ust', 185.5]])
+    assert.deepEqual(kitAraci('hedef-boy')!.hesapla({ cinsiyet: 'erkek', anne: 160, baba: 180 }, { bugun: BUGUN, p: {} }).sayilar.map((n) => n.anahtar), ['hedef'], 'a country that states none gets no range')
+    // two results six weeks apart: the kit's caution (fewer than 90 days) is not raised here
+    const psa = sonuc('psa-hizi', { onceki_deger: '4.5', 'onceki_deger.birim': 'ug/L', onceki_tarih: '2026-01-01', son_deger: '5', 'son_deger.birim': 'ug/L', son_tarih: '2026-02-12' })
+    assert.deepEqual([psa.tamam, psa.uyarilar, psa.sayilar[0].birim], [true, [], 'ug/L/yil'])
+    assert.ok(A.birimler['ug/L/yil']?.[D] && A.birimler['ng/mL/yil']?.[D], 'the yearly change has a name in every unit the country accepts')
+    assert.equal(sonuc('psa-hizi', { onceki_deger: '4.5', onceki_tarih: '2026-01-01', son_deger: '5', son_tarih: '2026-02-12' }).tamam, false, 'a value without its unit is not a value')
+  })
+
+  it('HOW A DOSE IS WRITTEN is stated, and travels with the pack', () => {
+    assert.deepEqual(A.dozYazimi, { sondaSifir: false })
+  })
+})
+
 describe('7. the pack check is not blind: each mistake, refused by name', () => {
   /** The test country with one thing changed in what it states. */
   const ile = (degis: (g: typeof XX_GIRDI) => typeof XX_GIRDI) => { const g = degis(XX_GIRDI); return sorunlar(enArayuz(g), enKlinik(g), { ...XX_PAKETI, uygulama: { ...XX_PAKETI.uygulama!, roller: enRolAnahtarlari(g.roller) } }) }
@@ -453,7 +524,19 @@ describe('7. the pack check is not blind: each mistake, refused by name', () => 
     ['bands that do not ascend', () => ekArac('xx-erken-uyari', (p) => ({ ...p, uyarlama: { ...p.uyarlama, bantlar: { sayi: 'toplam', satirlar: [{ ust: 4, bant: 'sifir' }, { ust: 4, bant: 'bir' }, { ust: 7, bant: 'iki' }, { ust: null, bant: 'uc' }] } } })), /xx-erken-uyari\.uyarlama\.bantlar\.satirlar\[1\]\.ust: the limits ascend/],
     ['bands over a number the tool does not return', () => ekArac('xx-erken-uyari', (p) => ({ ...p, uyarlama: { ...p.uyarlama, bantlar: { ...p.uyarlama!.bantlar!, sayi: 'puan' } } })), /xx-erken-uyari\.uyarlama\.bantlar\.sayi: must name the number of the result the bands are read from/],
     ['a band the country added and did not name', () => ekArac('xx-erken-uyari', (p) => ({ ...p, metin: { ...p.metin, bantlar: { sifir: p.metin.bantlar!.sifir, bir: p.metin.bantlar!.bir, iki: p.metin.bantlar!.iki } } })), /xx-erken-uyari\.bantlar\.uc\.en-GB: no text in this language form/],
-    ['its own bands on a SHARED tool the kit does not mark for it', () => araclarla((a) => ({ ...a, uyarlama: { pasi: { bantlar: { sayi: 'pasi', satirlar: [{ ust: 5, bant: 'hafif' }, { ust: null, bant: 'agir' }] } } } })), /pasi\.uyarlama\.bantlar: a warning, a date or a number of this tool may follow from its band: a country cannot restate the bands/],
+    ['its own bands on a SHARED tool the kit does not mark for it', () => araclarla((a) => ({ ...a, uyarlama: { ...a.uyarlama, 'rapor-taslagi': { bantlar: { sayi: 'isaretli', satirlar: [{ ust: 5, bant: 'hafif' }, { ust: null, bant: 'agir' }] } } } })), /rapor-taslagi\.uyarlama\.bantlar: a warning, a date or a number of this tool may follow from its band: a country cannot restate the bands/],
+    // ── NOTYA-ULKE-ARAC-DUZELTME-01: what the tools-correction job opened on the shared tools ──
+    ['the fields of a group, on a tool that offers no such group', () => araclarla((a) => ({ ...a, uyarlama: { ...a.uyarlama, pasi: { ...a.uyarlama!.pasi, alanlar: { frekans: ['e05', 'e1'] } } } })), /pasi\.uyarlama\.alanlar\.frekans: the tool offers no such group of fields/],
+    ['a field that is not of the group', () => araclarla((a) => ({ ...a, uyarlama: { ...a.uyarlama, 'odyometri-pta': { ...a.uyarlama!['odyometri-pta'], alanlar: { frekans: ['e05', 'e1', 'onceki_pta'] } } } })), /odyometri-pta\.uyarlama\.alanlar\.frekans: "onceki_pta" is not a field of this group/],
+    ['fewer fields of a group than the tool needs', () => araclarla((a) => ({ ...a, uyarlama: { ...a.uyarlama, 'odyometri-pta': { ...a.uyarlama!['odyometri-pta'], alanlar: { frekans: ['e1'] } } } })), /odyometri-pta\.uyarlama\.alanlar\.frekans: the tool needs at least 2 field\(s\) of this group/],
+    ['a field of a group the country added and did not name', () => araclarla((a) => ({ ...a, uyarlama: { ...a.uyarlama, 'odyometri-pta': { ...a.uyarlama!['odyometri-pta'], alanlar: { frekans: ['e025', 'e05', 'e1', 'e2'] } } } })), /odyometri-pta\.alanlar\.e025\.en-GB: no text in this language form/],
+    ['a number the country may state, stated with a unit it does not have', () => araclarla((a) => ({ ...a, parametreler: { ...a.parametreler, 'hedef-boy': { aralik_cm: { deger: 9, birim: 'cm' } } } })), /hedef-boy\.parametreler\.aralik_cm: this number is not a laboratory value: state it as a plain number/],
+    ['a number for a key the tool neither needs nor allows', () => araclarla((a) => ({ ...a, parametreler: { ...a.parametreler, 'hedef-boy': { aralik_inc: 4 } } })), /hedef-boy\.parametreler\.aralik_inc: a number for a key this tool does not have/],
+    ['its own steps with one step listed twice', () => araclarla((a) => ({ ...a, tablolar: { 'rtp-basamak': { basamaklar: { satirlar: [{ basamak: 'xa', en_erken_gun: 0 }, { basamak: 'xa', en_erken_gun: 3 }, { basamak: 'xc', en_erken_gun: 10 }] } } } })), /rtp-basamak\.tablolar\.basamaklar\.satirlar: the column "basamak" names the options of the field "basamak": a key is listed twice/],
+    ['its own steps with a step that has no earliest day', () => araclarla((a) => ({ ...a, tablolar: { 'rtp-basamak': { basamaklar: { satirlar: [{ basamak: 'xa', en_erken_gun: 0 }, { basamak: 'xb' }, { basamak: 'xc', en_erken_gun: 10 }] as never } } } })), /rtp-basamak\.tablolar\.basamaklar\.satirlar\[1\]\.en_erken_gun: the column is a number/],
+    ['a step the country supplied and did not name', () => araclarla((a) => ({ ...a, tablolar: { 'rtp-basamak': { basamaklar: { satirlar: [...a.tablolar!['rtp-basamak'].basamaklar.satirlar, { basamak: 'xd', en_erken_gun: 20 }] } } } })), /rtp-basamak\.(secenekler\.basamak|bantlar)\.xd\.en-GB: no text in this language form/],
+    ['a tool that writes a dose, in a pack that does not say how a dose is written', () => araclarla((a) => ({ ...a, kapali: {}, dozYazimi: undefined as never })), /araclar\.dozYazimi: the tool "doz-hesabi" writes an amount of a medicine and the pack does not say how this country writes a dose/],
+    ['a rule for writing a dose that is no rule', () => araclarla((a) => ({ ...a, dozYazimi: { sondaSifir: 'no' } as never })), /araclar\.dozYazimi: must say whether a zero is written after the decimal mark of a dose/],
     ['its own options on a field the arithmetic reads', () => araclarla((a) => ({ ...a, uyarlama: { 'asa-preop': { secenekler: { asa_sinif: ['1', '2', '3'] } } } })), /asa-preop\.uyarlama\.secenekler\.asa_sinif: the tool's arithmetic reads the options of this field: a country cannot restate them/],
     ['an option the country added and did not name', () => ekArac('xx-erken-uyari', (p) => ({ ...p, uyarlama: { ...p.uyarlama, secenekler: { ortam: ['ward', 'clinic', 'home', 'other', 'transport'] } } })), /xx-erken-uyari\.secenekler\.ortam\.transport\.en-GB: no text in this language form/],
     // ── units ──
