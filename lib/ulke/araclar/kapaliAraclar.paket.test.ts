@@ -22,6 +22,11 @@
  * licence "izin-alindi" in the pack), then take its key off the list below IN THE SAME CHANGE, with the owner's word.
  *
  * The kit's test country "xx" (lib/ulke/testing/ornekUlke/) is in no build and is not a pack this test is run for.
+ *
+ * 2026-10-10, later the same day: `doz-hesabi` was TAKEN OFF THE LIST. Its fault was corrected in the kit (pull request
+ * #615: the volume is no longer rounded to 0.1 mL, small volumes carry a caution, trailing zeros follow the pack's
+ * setting) and Kaan ordered: "Bring on all the tools ... We will test as we go." A pack may switch it on again. The
+ * other four stay: two wait for a rights holder, and the kidney grid's licence is unsettled.
  */
 import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
@@ -33,7 +38,6 @@ const EMIR = 'off by Kaan\'s order of 2026-10-10 until NOTYA-ULKE-ARAC-01b is fi
 
 /** key → why it is off. */
 const KAPALI: Readonly<Record<string, string>> = {
-  'doz-hesabi': 'the dose calculator rounds the dose volume to 0.1 mL (0.16 mL shows as 0.2 mL) and prints trailing zeros',
   'esi-triyaj': 'the Emergency Nurses Association requires written permission for the Emergency Severity Index',
   'rapor-taslagi': 'the report outline prints the BI-RADS categories; the American College of Radiology requires a licence agreement for commercial software',
   'kdigo-serit': 'the KDIGO grid shows "low risk (green cell)" when no urine albumin result was typed',
@@ -52,7 +56,7 @@ before(async () => {
 })
 
 describe('tools switched off by the owner\'s order of 2026-10-10', () => {
-  it('NONE OF THE FIVE IS SWITCHED ON IN THIS PACK: not on its list, on no role\'s grid, at no address — and the two that wait for a rights holder say "permission needed"', (t) => {
+  it('NONE OF THE LISTED TOOLS IS SWITCHED ON IN THIS PACK: not on its list, on no role\'s grid, at no address — and the two that wait for a rights holder say "permission needed"', (t) => {
     if (!a) { t.skip('this pack has no tools area'); return }
     const roller: readonly (string | null)[] = [null, ...(paket.uygulama?.roller ?? [])]
     for (const [anahtar, neden] of Object.entries(KAPALI)) {
