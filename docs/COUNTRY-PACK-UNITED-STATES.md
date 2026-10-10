@@ -140,8 +140,8 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `noro-postop` | Checklist after a neurosurgical operation | Neurosurgery | no measured input |
 | `nobet-bilinc` | Seizure and consciousness follow-up | Neurosurgery | no measured input |
 | `cocuk-prepost-op` | Checklist before and after an operation | Pediatric surgery | no measured input |
-| `yara-dren-izlem` | Wound, drain and stitches follow-up | Pediatric surgery, General surgery | Drain output (optional): **mL** · result in mL |
-| `genel-preop` | Pre-operative checklist | General surgery | no measured input |
+| `yara-dren-izlem` | Wound, drain and stitches follow-up | Pediatric surgery, General surgery, Colon and Rectal Surgery, Podiatry | Drain output (optional): **mL** · result in mL |
+| `genel-preop` | Pre-operative checklist | General surgery, Colon and Rectal Surgery | no measured input |
 | `pasi` | PASI score | Dermatology | no measured input |
 | `easi` | EASI score | Dermatology | no measured input |
 | `scorad` | SCORAD index | Dermatology | Area of skin involved: **%** |
@@ -150,29 +150,29 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `antibiyotik-sure` | Antibiotic course: counting days | Infectious disease | Length of the course: **days** |
 | `toraks-preop` | Checklist before a chest operation | Thoracic and Cardiac Surgery | no measured input |
 | `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic and Cardiac Surgery | no measured input |
-| `inhaler-teknik` | Inhaler technique | Pulmonary Disease | Check the technique again after (optional): **months** |
-| `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology | no measured input |
-| `kalp-damar-preop` | Checklist before a heart or vascular operation | Vascular Surgery | no measured input |
+| `inhaler-teknik` | Inhaler technique | Pulmonary Disease, Family medicine, Pediatrics, Allergy and Immunology | Check the technique again after (optional): **months** |
+| `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology, Optometry | no measured input |
+| `kalp-damar-preop` | Checklist before a heart or vascular operation | Vascular Surgery, Thoracic and Cardiac Surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Vascular Surgery | no measured input |
 | `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Vascular Surgery | no measured input |
-| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology (ENT) | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
+| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology (ENT), Audiologist | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
 | `otoskopi-notu` | Otoscopy note | Otolaryngology (ENT) | no measured input |
 | `vertigo-notu` | Vertigo: positional test note | Otolaryngology (ENT) | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Nephrology | no measured input |
-| `kur-sayaci` | Treatment cycle counter | Hematology/Oncology | no measured input |
-| `toksisite-listesi` | Side effects checklist | Hematology/Oncology | no measured input |
+| `kur-sayaci` | Treatment cycle counter | Hematology/Oncology, Radiation Oncology | no measured input |
+| `toksisite-listesi` | Side effects checklist | Hematology/Oncology, Radiation Oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopedic surgery | no measured input |
 | `vas-fonksiyon` | Pain and function rating | Orthopedic surgery | no measured input |
-| `hedef-boy` | Expected height from the parents' heights | Pediatrics | Mother's height: **in**; Father's height: **in** · result in in |
-| `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery | no measured input |
+| `hedef-boy` | Expected height from the parents' heights | Pediatrics, Family medicine | Mother's height: **in**; Father's height: **in** · result in in |
+| `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery, Cosmetic surgery | no measured input |
 | `tetkik-kuyrugu` | Examination queue | Diagnostic Radiology | no measured input |
 | `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L or mg/dL**; Erythrocyte sedimentation rate: **mm/h** |
 | `eklem-28` | 28-joint count | Rheumatology | no measured input |
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in days |
-| `rtp-basamak` | Return to sport: days since the injury | Sports medicine | no measured input · result in days |
+| `rtp-basamak` | Return to sport: days since the injury | Sports medicine, Emergency medicine, Family medicine, Neurology, Pediatrics | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sports medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic and Cardiac Surgery, Pulmonary Disease, Ophthalmology, Vascular Surgery, Otolaryngology (ENT), Nephrology, Hematology/Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic Radiology, Rheumatology, Urology, Sports medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic and Cardiac Surgery, Pulmonary Disease, Ophthalmology, Vascular Surgery, Otolaryngology (ENT), Nephrology, Neurology, Hematology/Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic Radiology, Rheumatology, Urology, Sports medicine, Allergy and Immunology, Colon and Rectal Surgery, Radiation Oncology, Cosmetic surgery, Audiologist, Podiatry, Optometry | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (5) — for a local clinical lead
 

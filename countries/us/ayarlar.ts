@@ -122,6 +122,31 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'esi-triyaj': { durum: 'izin-gerekli', hakSahibi: 'Emergency Nurses Association (ENA)', kaynak: 'ENA, trademarks page (https://www.ena.org/ena-trademarks), and the copyright notice of the Emergency Severity Index handbook: read for the tools audit, second pass, 2026-10-10' },
       'rapor-taslagi': { durum: 'izin-gerekli', hakSahibi: 'American College of Radiology (ACR)', kaynak: 'ACR, BI-RADS permissions page (https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions): read for the tools audit, second pass, 2026-10-10' },
     },
+    // ── NOTYA-ULKE-UYGULA-US: WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set's list
+    // (us-kararlar.json → specialties[].tools and clinicSpecialties[].tools; existing tools only). Every list names the
+    // set's own role first, then the roles the audit adds. Nothing here switches a tool on: all eleven are on already.
+    gorenler: {
+      // days since an injury: also emergency medicine, family medicine, neurology and pediatrics
+      'rtp-basamak': ['sports-medicine', 'emergency-medicine', 'family-medicine', 'neurology', 'paediatrics'],
+      // expected height: also family medicine
+      'hedef-boy': ['paediatrics', 'family-medicine'],
+      // inhaler technique: also family medicine, pediatrics, and allergy and immunology
+      'inhaler-teknik': ['respiratory-medicine', 'family-medicine', 'paediatrics', 'allergy-immunology'],
+      // the checklist before a heart or vascular operation: also the thoracic and cardiac surgeon (the board's certificate for heart surgery)
+      'kalp-damar-preop': ['cardiovascular-surgery', 'thoracic-surgery'],
+      // the two general-surgery lists: also colon and rectal surgery; the wound list also podiatry
+      'genel-preop': ['general-surgery', 'colon-rectal-surgery'],
+      'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'colon-rectal-surgery', 'podiatry'],
+      // the two oncology lists: also radiation oncology
+      'kur-sayaci': ['oncology', 'radiation-oncology'],
+      'toksisite-listesi': ['oncology', 'radiation-oncology'],
+      // wound, graft and flap follow-up: also the cosmetic-surgery clinic doctor
+      'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
+      // the hearing average: also the audiologist
+      'odyometri-pta': ['otolaryngology', 'audiology'],
+      // visual acuity: also optometry
+      'gorme-keskinligi': ['ophthalmology', 'optometry'],
+    },
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction
