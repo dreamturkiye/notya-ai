@@ -704,7 +704,7 @@ if (P.araclar) {
     await p.click('[data-eylem=hasta-icin-araclar]')
     await p.waitForSelector('[data-alan=arac-hastasi]', { timeout: 60000 })
     const baglantilar = await p.$$eval('[data-arac]', (l) => l.map((x) => x.getAttribute('href')))
-    kontrol('tools: opened from the file, the grid says for whom and every tile carries the patient', JSON.stringify(await kutular()) === JSON.stringify(T.ornekRolKutulari) && (await metin(p, '[data-alan=arac-hastasi]')).includes(HASTA_ADI) && baglantilar.every((h) => h.includes(`hasta=${hastaA}`)), baglantilar.join(' '))
+    kontrol('tools: opened from the file, the grid says for whom and every tile carries the patient', JSON.stringify(await kutular()) === JSON.stringify(T.ornekHastaKutulari ?? T.ornekRolKutulari) && (await metin(p, '[data-alan=arac-hastasi]')).includes(HASTA_ADI) && baglantilar.every((h) => h.includes(`hasta=${hastaA}`)), baglantilar.join(' '))
     await p.click(`[data-arac="${O.anahtar}"]`)
     await p.waitForSelector('[data-bolum=girdiler]', { timeout: 60000 })
     kontrol('tools: the tool opens under its own name; without a result nothing can be kept', (await metin(p, 'h1')) === O.ad && (await p.$eval('[data-eylem=arac-kaydet]', (e) => e.disabled)) === true && !(await p.$('[data-eylem=kopyala]')))
