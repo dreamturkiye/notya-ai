@@ -9,6 +9,11 @@
  * knowledge. What each waits on is listed in docs/COUNTRY-PACK-UNITED-STATES.md.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  *
+ * READ AGAINST OFFICIAL SOURCES ON 2026-10-09 (NOTYA-ULKE-DENETIM-US, the localisation audit on the branch audit/us):
+ * where a line below says "source:", a machine read that page on that day and the value agrees with it. That is
+ * not a person of the country confirming it: the block above still holds, and nothing legal or clinical is settled
+ * by it.
+ *
  * NOTYA-ULKE-UYGULA-US (2026-10-10) — THE AUDIT'S DECISIONS FOR THIS COUNTRY, APPLIED HERE AND NOWHERE ELSE
  * (docs/araclar-denetim/US.md and us-kararlar.json on the branch araclar-denetim/us; the second pass supersedes the
  * first): its own role list (./roller.ts), who sees which tool (`gorenler`), the numbers a national source states
@@ -61,7 +66,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     tarihOrnegi: 'MM/DD/YYYY',
   },
   ulkeAdi: 'the United States',
-  // UNVERIFIED: the word a senior hospital doctor goes by here.
+  // The word a senior hospital doctor goes by here. Source: the glossary of the body that accredits residency
+  // programs defines "attending physician" (acgme.org/globalassets/pdfs/ab_acgmeglossary.pdf, read 2026-10-09).
   kidemliHekim: 'attending physician',
   // How each specialty is named in the United States, where it differs from the set's base name. The six names below
   // are the audit's "keep" (docs/araclar-denetim/US.md, 3a: each is on the board's, the council's or Medicare's list
@@ -94,8 +100,13 @@ export const US_GIRDI: EnUlkeGirdisi = {
   },
   gunlukMuayeneLimiti: 200,
   araclar: {
-    // UNVERIFIED: the unit laboratories in the United States report each value in: conventional units (checklist C8). The kit converts
-    // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
+    // The unit laboratories in the United States report each value in: conventional units (checklist C8). The kit converts
+    // from the unit stated here with fixed factors; a wrong unit here is a wrong result. Sources read 2026-10-09:
+    // albumin-to-creatinine ratio in mg/g (niddk.nih.gov/health-information/professionals/advanced-search/quick-reference-uacr-gfr);
+    // creatinine in mg/dL (niddk.nih.gov/research-funding/research-programs/kidney-clinical-research-epidemiology/laboratory/glomerular-filtration-rate-equations/adults);
+    // glucose in mg/dL (cdc.gov/diabetes/diabetes-testing); cholesterol in mg/dL (cdc.gov/cholesterol/about);
+    // hemoglobin in g/dL (medlineplus.gov/ency/article/003645.htm); C-reactive protein may be reported in mg/dL
+    // (medlineplus.gov/lab-tests/c-reactive-protein-crp-test). STILL UNVERIFIED with a local clinical lead.
     labBirimleri: { albuminKreatinin: 'mg/g', hemoglobin: 'g/dL', kreatinin: 'mg/dL', glukoz: 'mg/dL', kolesterol: 'mg/dL', crp: ['mg/L', 'mg/dL'], psa: 'ng/mL' },
     // C-REACTIVE PROTEIN (NOTYA-ULKE-ARAC-DUZELTME-01): BOTH UNITS ARE ACCEPTED, AND THE DOCTOR CHOOSES ONE beside the
     // field — a number without its unit gives no result. Laboratories here may report mg/L or mg/dL, and the DAS28
@@ -214,10 +225,12 @@ export const US_GIRDI: EnUlkeGirdisi = {
     // on a tool of its own.
   },
   acilis: {
-    // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction
-    // (555-0100 to 555-0199 in every area code): it is not issued to anybody. Not checked against the plan's current
-    // rules by anybody of the country.
-    telefonOrnegi: '+1 202 555 0123',
+    // THE EXAMPLE PHONE NUMBER — UNVERIFIED by anybody of the country. Read on 2026-10-09 at the plan's administrator:
+    // a number is ten digits written NXX-NXX-XXXX (nanpa.com/about), and 555-0100 to 555-0199 are "fictitious,
+    // non-working numbers" kept for entertainment and advertising (nanpa.com/numbering/555-line-numbers), so it is
+    // issued to nobody. WRITTEN THE NATIONAL WAY, as a person here writes a number of their own country; it was
+    // "+1 202 555 0123", the form for calling from abroad. A number typed with +1 is accepted all the same.
+    telefonOrnegi: '202-555-0123',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '$% a month',
     // PRICES: EMPTY, SWITCHED OFF. WAITING ON KAAN. No amount exists for the United States; every plan shows "by quote".

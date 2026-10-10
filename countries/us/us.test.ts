@@ -3,19 +3,27 @@
  * (countries/_dil/en/testing/paketSinamasi.ts), with what is the United States': American spelling, CONVENTIONAL
  * UNITS (pounds, inches, degrees Fahrenheit; mg/dL, g/dL, mg/g), several time zones, a neutral patient identifier
  * that is never a Social Security number, and the words of the other English-speaking countries that must not show.
+ *
+ * NOTYA-ULKE-DENETIM-US (2026-10-09), carried here on 2026-10-10 — the last block holds the pack to the standards
+ * sheet of the localisation audit (branch audit/us, where each source is given): how a day, a time, a number and an
+ * amount are written, the eight time zones and their daylight saving, the emergency number, the example phone number
+ * and the phone rule, and the unit of every measured field of every live tool. The role names it held are now held,
+ * for the fifty-five roles, by ./roller.test.ts.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
-import { INC_CM, LAB_BIRIMLERI, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
+import { INC_CM, LAB_BIRIMLERI, alanBirimi, alanBirimleri, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { girdiyiCoz } from '@/lib/ulke/araclar/girdi'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { sayiMetni, type Yazici } from '@/lib/ulke/araclar/paket'
+import { sayiYazKuralla } from '@/lib/ulke/arayuz/sayi'
 import { sayiBirimi } from '@/lib/ulke/intake/sorular'
+import { gunCoz, gunYazDesenle, haftaGunu, haftaninIlkGunu } from '@/lib/ulke/uygulama/zaman'
 import { ingilizcePaketSinamasi, kaynakOku } from '../_dil/en/testing/paketSinamasi'
 import { tumMetinler } from '../_dil/en/testing/yazimDenetimi'
 import { US_ARAYUZ } from './arayuz'
-import { US_GIRDI } from './ayarlar'
+import { US_BIRIMLER, US_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { US_PAKETI } from './index'
 import { US_KLINIK } from './klinik'
@@ -41,7 +49,8 @@ ingilizcePaketSinamasi({
   labBirimleri: { ...LAB, crp: CRP },
   kidemliHekim: 'attending physician',
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
-  ornekTelefon: /^\+1 \d{3} 555 01\d{2}$/,
+  // written the national way, NXX-NXX-XXXX, from the range the numbering plan keeps for fiction (555-0100 to 555-0199)
+  ornekTelefon: /^[2-9]\d{2}-555-01\d{2}$/,
   // NOTYA-ULKE-UYGULA-US: this country's own role list (one role taken out, sixteen added: ./roller.ts, ./roller.test.ts)
   rolDegisimi: US_ROLLER,
 })
@@ -61,7 +70,7 @@ describe('us: what is the United States\'', () => {
 
   it('several time zones: the default is one of them, an account is asked, and the calendar names no single zone', () => {
     const dilimler = [...US_PAKETI.uygulama!.saatDilimleri]
-    assert.deepEqual(dilimler, ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'])
+    assert.deepEqual(dilimler, ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'America/Adak', 'Pacific/Honolulu'])
     assert.ok(dilimler.includes(US_PAKETI.saatDilimi))
     assert.equal(US_ARAYUZ.metinler[D]!.ayarlar.saatDilimi, 'Time zone')
     assert.equal(US_ARAYUZ.randevuMetinleri![D]!.duzen.saatDilimi, 'Times are shown in the time zone set for your account.')
@@ -172,5 +181,128 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
       assert.ok(b.ad.trim(), `${s.anahtar}: the unit has no name`)
     }
     assert.ok(olculen > 0, 'the form measures something')
+  })
+})
+
+/**
+ * NOTYA-ULKE-DENETIM-US — THE STANDARDS SHEET, HELD (carried from the localisation audit of 2026-10-09, branch
+ * audit/us, where the source of each line is given). A change to the pack that breaks one of them must come with a
+ * source of its own.
+ */
+describe('us: held to the standards sheet of the localisation audit (2026-10-09)', () => {
+  const a = US_ARAYUZ.araclar!
+  const u = US_PAKETI.uygulama!
+
+  it('A DAY: month, day, four-digit year with slashes — written, typed and refused', () => {
+    const desen = US_PAKETI.bicim.tarihDeseni
+    assert.equal(desen, 'MM/DD/YYYY')
+    assert.equal(gunYazDesenle('2026-10-09', desen), '10/09/2026', 'the ninth of October, not the tenth of September')
+    assert.equal(gunYazDesenle('2026-03-04', desen), '03/04/2026')
+    assert.equal(gunCoz('10/09/2026', desen), '2026-10-09')
+    assert.equal(gunCoz('3/4/2026', desen), '2026-03-04', 'without leading zeros, as people here also write it')
+    assert.equal(gunCoz('13/01/2026', desen), null, 'a day typed the day-first way is refused, not turned round')
+    assert.equal(gunCoz('10/09/26', desen), null, 'a two-digit year is never guessed')
+    assert.equal(US_GIRDI.sozler.tarihOrnegi, desen, 'the example a person is shown is the pattern the kit reads')
+  })
+
+  it('A TIME OF DAY: the 12-hour clock, as the platform writes it for en-US', () => {
+    assert.equal(u.saatBicimi, 12)
+    const yaz = (s: number, dk: number) => new Intl.DateTimeFormat(US_PAKETI.bicim.yerel, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(Date.UTC(2000, 0, 1, s, dk)))
+    assert.match(yaz(14, 30), /^2:30\sPM$/u)
+    assert.match(yaz(9, 0), /^9:00\sAM$/u)
+    assert.match(yaz(0, 5), /^12:05\sAM$/u, 'five past midnight')
+    assert.match(yaz(12, 0), /^12:00\sPM$/u, 'noon')
+  })
+
+  it('THE WEEK BEGINS ON SUNDAY: the pack, the kit\'s calendar arithmetic and the platform\'s locale data agree', () => {
+    assert.equal(US_PAKETI.bicim.haftaBasi, 7)
+    // 2026-10-09 is a Friday; the week it lies in begins on Sunday 2026-10-04
+    assert.equal(haftaGunu('2026-10-09'), 5)
+    assert.equal(haftaninIlkGunu('2026-10-09', US_PAKETI.bicim.haftaBasi), '2026-10-04')
+    assert.equal(haftaGunu(haftaninIlkGunu('2026-10-09', US_PAKETI.bicim.haftaBasi)), 7)
+    const yerel = new Intl.Locale(US_PAKETI.bicim.yerel) as Intl.Locale & { getWeekInfo?: () => { firstDay: number }; weekInfo?: { firstDay: number } }
+    const bilgi = yerel.getWeekInfo?.() ?? yerel.weekInfo
+    if (bilgi) assert.equal(bilgi.firstDay, 7, 'the Unicode locale data for the United States')
+  })
+
+  it('A NUMBER AND AN AMOUNT: a point for decimals, a comma between thousands, the dollar sign before the number', () => {
+    assert.deepEqual({ o: US_PAKETI.bicim.ondalikAyraci, b: US_PAKETI.bicim.binlikAyraci }, { o: '.', b: ',' })
+    assert.equal(sayiYazKuralla(1234567.5, US_PAKETI.bicim, 2), '1,234,567.50')
+    assert.equal(sayiYazKuralla(0.25, US_PAKETI.bicim, 2), '0.25', 'a zero before the point')
+    assert.deepEqual({ ...US_PAKETI.paraBirimi }, { kod: 'USD', simge: '$', ondalikHane: 2 })
+    assert.equal(US_GIRDI.acilis.aylikTutarKalibi, '$% a month')
+    assert.equal(US_GIRDI.acilis.aylikTutarKalibi.replace('%', sayiYazKuralla(1250, US_PAKETI.bicim, 0)), '$1,250 a month')
+    // and still no price anywhere: every plan is by quote
+    for (const plan of Object.values(US_GIRDI.acilis.fiyatlar)) assert.equal(plan.aylik, null)
+  })
+
+  it('EIGHT TIME ZONES FOR THE FIFTY STATES, each a different clock: Arizona and Hawaii keep no daylight saving, the western Aleutians do', () => {
+    const fark = (dilim: string, an: string): number => {
+      const t = new Date(an)
+      const p = new Intl.DateTimeFormat('en-GB', { timeZone: dilim, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(t)
+      const al = (tur: string) => Number(p.find((x) => x.type === tur)!.value)
+      return (Date.UTC(al('year'), al('month') - 1, al('day'), al('hour') % 24, al('minute')) - t.getTime()) / 3_600_000
+    }
+    const kis = '2026-01-15T12:00:00Z', yaz = '2026-07-15T12:00:00Z'
+    const beklenen: Record<string, [number, number]> = {
+      'America/New_York': [-5, -4], 'America/Chicago': [-6, -5], 'America/Denver': [-7, -6], 'America/Phoenix': [-7, -7],
+      'America/Los_Angeles': [-8, -7], 'America/Anchorage': [-9, -8], 'America/Adak': [-10, -9], 'Pacific/Honolulu': [-10, -10],
+    }
+    assert.deepEqual([...u.saatDilimleri].sort(), Object.keys(beklenen).sort())
+    for (const [dilim, [k, y]] of Object.entries(beklenen)) assert.deepEqual([fark(dilim, kis), fark(dilim, yaz)], [k, y], dilim)
+    // no two of them are the same clock all year: each is listed for a reason
+    assert.equal(new Set(Object.values(beklenen).map((x) => x.join())).size, 8)
+    assert.equal(US_GIRDI.sozler.cokSaatDilimi, true)
+    assert.doesNotMatch(US_GIRDI.sozler.saatDilimiCumlesi, /Eastern|Central|Mountain|Pacific|New York/, 'the calendar names no single zone')
+  })
+
+  it('THE EMERGENCY NUMBER IS 911, a setting and never part of a sentence; no other number is named', () => {
+    assert.equal(u.portal?.acilNumara, '911')
+    const hepsi = tumMetinler({ paket: US_PAKETI.metinler, arayuz: { ...US_ARAYUZ, asistan: undefined }, form: US_KLINIK.hastaFormu })
+    for (const x of hepsi) assert.doesNotMatch(x.metin, /\b(911|988|999|112|111|000)\b/, x.yer)
+  })
+
+  it('THE PHONE: +1 and ten digits; the example is written the national way; the rule takes every common spelling and refuses the rest', () => {
+    assert.deepEqual({ onEk: US_PAKETI.telefon.ulkeOnEki, hane: US_PAKETI.telefon.ulusalHane, ornek: US_PAKETI.telefon.ornek }, { onEk: '+1', hane: 10, ornek: '202-555-0123' })
+    assert.equal(US_GIRDI.acilis.telefonOrnegi, US_PAKETI.telefon.ornek)
+    const gecerli = US_PAKETI.telefon.cepGecerliMi
+    for (const iyi of [US_PAKETI.telefon.ornek, '(202) 555-0123', '202.555.0123', '2025550123', '+1 202 555 0123', '1-202-555-0123']) assert.equal(gecerli(iyi), true, iyi)
+    for (const kotu of ['', '555-0123', '202-555-012', '102-555-0123', '202-155-0123', '+44 20 7946 0123', '202-555-0123 ext 4', '20255501234']) assert.equal(gecerli(kotu), false, kotu)
+  })
+
+  it('THE UNIT OF EVERY MEASURED FIELD OF EVERY LIVE TOOL, and no live tool takes a body weight while weight is in pounds', () => {
+    const o: BirimOrtami = { birimler: u.birimler, lab: a.labBirimleri }
+    const adi = (kod: string) => a.birimler[kod]?.[D] ?? `?${kod}?`
+    const gorulen: Record<string, string> = {}
+    for (const x of a.araclar) {
+      for (const alan of kitAraci(x.anahtar)?.alanlar ?? []) {
+        // a laboratory value the country accepts in two units is written with both: the doctor chooses one
+        const kodlar = alan.lab ? alanBirimleri(alan, o) : [alanBirimi(alan, o)].filter((k): k is string => Boolean(k))
+        if (!kodlar.length) continue
+        assert.notEqual(alan.olcu, 'agirlik', `${x.anahtar}.${alan.anahtar}: a body weight in pounds on a clinician's screen (see ./temel.ts, US_BIRIMLER)`)
+        gorulen[`${x.anahtar}.${alan.anahtar}`] = kodlar.map(adi).join(' or ')
+      }
+    }
+    assert.deepEqual(gorulen, {
+      'yara-dren-izlem.dren_cikis_ml': 'mL',
+      'scorad.yayginlik': '%', 'antibiyotik-sure.sure_gun': 'days', 'inhaler-teknik.kontrol_ay': 'months',
+      'odyometri-pta.e05': 'dB', 'odyometri-pta.e1': 'dB', 'odyometri-pta.e2': 'dB', 'odyometri-pta.e4': 'dB', 'odyometri-pta.onceki_pta': 'dB', 'odyometri-pta.karsi_pta': 'dB',
+      'hedef-boy.anne': 'in', 'hedef-boy.baba': 'in',
+      'das28.pga': 'mm', 'das28.crp': 'mg/L or mg/dL', 'das28.esr': 'mm/h',
+      'psa-hizi.onceki_deger': 'ng/mL', 'psa-hizi.son_deger': 'ng/mL',
+      'sakatlik-gunlugu.dk_7gun': 'min', 'sakatlik-gunlugu.dk_onceki': 'min',
+    })
+    assert.deepEqual({ ...US_BIRIMLER }, BIRIMLER)
+    assert.deepEqual(US_ARAYUZ.formMetinleri![D]!.birim, { cm: 'cm', in: 'in', kg: 'kg', lb: 'lb', C: '°C', F: '°F' })
+  })
+
+  it('what the audit could NOT settle stays marked in the pack\'s own files: the lawyer\'s questions and the clinical lead\'s', () => {
+    const ayarlar = kaynakOku(join(__dirname, 'ayarlar.ts')), temel = kaynakOku(join(__dirname, 'temel.ts'))
+    assert.match(ayarlar, /MACHINE-WRITTEN AND UNVERIFIED, EVERY LINE/)
+    assert.match(ayarlar, /That is\s+\*?\s*not a person of the country confirming it/)
+    assert.match(temel, /One number cannot be right in every state: FOR A LAWYER/)
+    assert.match(temel, /FOR A LOCAL CLINICAL LEAD \(audit of 2026-10-09\)/)
+    assert.equal(US_PAKETI.ulusalKimlik?.ad, 'Patient identifier', 'this country has no national patient number: the label names none')
+    assert.deepEqual([...u.hastaDilleri], ['en'], 'a second patient language (Spanish) is the owner\'s decision and is not half-built')
   })
 })

@@ -28,7 +28,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 |---|---|---|
 | Country code and path | `us`, served at `/us` | the owner (a routing rule on the live site is his decision) |
 | Language form and spelling | `en-US` | a native editor |
-| Default time zone; zones an account may choose | America/New_York; America/New_York, America/Chicago, America/Denver, America/Phoenix, America/Los_Angeles, America/Anchorage, Pacific/Honolulu | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed. |
+| Default time zone; zones an account may choose | America/New_York; America/New_York, America/Chicago, America/Denver, America/Phoenix, America/Los_Angeles, America/Anchorage, America/Adak, Pacific/Honolulu | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed. |
 | Date pattern; clock; first day of the week | MM/DD/YYYY; 12-hour; Sunday | a local lead |
 | Units | weight lb, height in, temperature °F | a local clinical lead — a clinical-safety setting |
 | Laboratory units | urine albumin-to-creatinine ratio: mg/g; haemoglobin: g/dL; creatinine: mg/dL; glucose: mg/dL; cholesterol: mg/dL; C-reactive protein: mg/L or mg/dL; prostate-specific antigen: ng/mL | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
@@ -42,7 +42,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `us-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. RECORDING-CONSENT LAW DIFFERS BY STATE (some states require the consent of everyone recorded): the sentence must not be relied on in any state until a lawyer has read it for that state. |
 | Intake-form consent sentence | the shared draft — stamp `us-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "attending physician" | a local clinical lead |
-| Phone: prefix, example, rule | +1; +1 202 555 0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
+| Phone: prefix, example, rule | +1; 202-555-0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
 | Speech: model, thresholds | scribe_v2; 0.8, -0.36, 40 characters | engineering, on real clinic audio of this country |
 | Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
