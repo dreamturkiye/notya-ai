@@ -37,4 +37,21 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
 export const UZ_LAB_BIRIMLERI: Readonly<Partial<Record<LabOlcusu, string>>> = {
   // Urine albumin-to-creatinine ratio, read by the KDIGO tool. To verify: mg/g or mg/mmol.
   albuminKreatinin: 'mg/g',
+  // NOTYA-ULKE-ARAC-DUZELTME-01: two values a switched-on tool reads are now quantities the pack states the unit of.
+  // C-reactive protein (DAS28): mg/l, the unit a national protocol writes, per the country's audit
+  // (docs/araclar-denetim/UZ.md, [P2-PROT-JIA]); the screen showed mg/l before. Not confirmed with a local laboratory.
+  crp: 'mg/L',
+  // Prostate-specific antigen (the rate of change): ng/ml, the unit the national urology centre writes, per the
+  // country's audit ([P2-PSA-UZ]); the screen showed ng/ml before. Not confirmed with a local laboratory.
+  psa: 'ng/mL',
 }
+
+/**
+ * HOW A DOSE IS WRITTEN HERE: THE DECIMALS STAND (NOTYA-ULKE-ARAC-DUZELTME-01, fault 1). The rule against a zero after
+ * the decimal mark is a national rule of the English-speaking countries, and it is not this country's: the
+ * prescribing regulation writes its own examples with one. Source read on 2026-10-10: Order No. 121 of the Minister
+ * of Health of 01.07.2020 (registered by the Ministry of Justice under No. 3277), clause 19,
+ * https://lex.uz/docs/-4880063 — "qattiq va sochiluvchan dori moddalari grammlarda (0,001; 0,5; 1,0)". The clause is
+ * about medicines made up to order and says nothing about rounding a dose. Not confirmed by a local pharmacist.
+ */
+export const UZ_DOZ_YAZIMI = { sondaSifir: true } as const

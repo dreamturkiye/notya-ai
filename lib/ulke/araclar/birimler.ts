@@ -25,16 +25,36 @@ export const LB_KG = 0.45359237
 
 /**
  * Laboratory quantity → the unit the kit's arithmetic uses (factor 1) and the other units a country may report in,
- * each with the factor that turns it into the canonical one. Factors are the molar-mass conversions in general use:
- * creatinine 88.4 µmol/L per mg/dL; glucose 18.016 mg/dL per mmol/L; cholesterol 38.67 mg/dL per mmol/L;
- * haemoglobin 10 g/L per g/dL; albumin-to-creatinine ratio 0.113 mg/mmol per mg/g.
+ * each with the way to the canonical one. Factors are the molar-mass conversions in general use:
+ * creatinine 88.4 µmol/L per mg/dL; glucose 18.016 mg/dL per mmol/L; cholesterol 38.67 mg/dL per mmol/L.
+ *
+ * NOTYA-ULKE-ARAC-DUZELTME-01 — the conversions below were each held against a source opened on 2026-10-10:
+ *
+ *   albuminKreatinin  mg/g × 0.113 = mg/mmol. KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management
+ *                     of Chronic Kidney Disease, Kidney Int 2024;105(4S), conversion table (p. S126): "Albumin-to-
+ *                     creatinine ratio (ACR) mg/g 0.113 mg/mmol". https://kdigo.org/wp-content/uploads/2024/03/KDIGO-2024-CKD-Guideline.pdf
+ *                     THE CATEGORY LIMITS ARE NOT CONVERTED WITH IT: the guideline prints them once per unit, and
+ *                     the kidney tools compare a value with the limits of the unit it was typed in (tanimlar/cerrahiDahiliyeDerm.ts).
+ *   hemoglobin        g/L × 0.1 = g/dL: one decilitre is a tenth of a litre (a definition of the metric system).
+ *   hba1c             NGSP (%) = 0.09148 × IFCC (mmol/mol) + 2.152 — the master equation. NGSP, "IFCC Standardization:
+ *                     IFCC and NGSP", Table 2: "NGSP = (0.09148*IFCC) + 2.152" and "IFCC = (10.93*NGSP) - 23.50";
+ *                     Table 1 prints 5.0% = 31, 6.0% = 42, 7.0% = 53, 8.0% = 64, 9.0% = 75, 10.0% = 86, 11.0% = 97 and
+ *                     12.0% = 108 mmol/mol (the pairs are a test). https://ngsp.org/ifccngsp.asp
+ *   crp               mg/dL × 10 = mg/L: one decilitre is a tenth of a litre. The DAS28 formula takes mg/L (the
+ *                     developers' calculator labels the field "CRP (mg/l)": https://www.das-score.nl/das28/DAScalculators/DAS28_CRP_4VAR.html).
+ *   psa               ng/mL and µg/L ("ug/L") are the same amount in the same volume, written two ways: a nanogram
+ *                     is a thousandth of a microgram and a millilitre a thousandth of a litre. Factor 1: only the
+ *                     label differs, and the label is the pack's.
  */
-export const LAB_BIRIMLERI: Readonly<Record<LabOlcusu, { kanonik: string; birimler: Readonly<Record<string, number>> }>> = {
+export const LAB_BIRIMLERI: Readonly<Record<LabOlcusu, OlcuTanimi>> = {
   kreatinin: { kanonik: 'mg/dL', birimler: { 'mg/dL': 1, 'umol/L': 1 / 88.4 } },
   hemoglobin: { kanonik: 'g/dL', birimler: { 'g/dL': 1, 'g/L': 0.1 } },
   glukoz: { kanonik: 'mg/dL', birimler: { 'mg/dL': 1, 'mmol/L': 18.016 } },
   kolesterol: { kanonik: 'mg/dL', birimler: { 'mg/dL': 1, 'mmol/L': 38.67 } },
   albuminKreatinin: { kanonik: 'mg/g', birimler: { 'mg/g': 1, 'mg/mmol': 1 / 0.113 } },
+  hba1c: { kanonik: '%', birimler: { '%': 1, 'mmol/mol': { carpan: 0.09148, kaydirma: 2.152 } } },
+  crp: { kanonik: 'mg/L', birimler: { 'mg/L': 1, 'mg/dL': 10 } },
+  psa: { kanonik: 'ng/mL', birimler: { 'ng/mL': 1, 'ug/L': 1 } },
 }
 
 /**

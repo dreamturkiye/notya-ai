@@ -44,10 +44,10 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     anahtar: 'kdigo-serit', roller: ['nefroloji'],
     metin: {
       ad: u('KDIGO jadvali: KFT va albuminuriya', 'KDIGO жадвали: КФТ ва альбуминурия', 'Таблица KDIGO: СКФ и альбуминурия'),
-      aciklama: u('KFT toifasi (G1–G5), albuminuriya toifasi (A1–A3) va xavf katagi. Davolash rejasi va kuzatuv muddati yozilmaydi.', 'КФТ тоифаси (G1–G5), альбуминурия тоифаси (A1–A3) ва хавф катаги. Даволаш режаси ва кузатув муддати ёзилмайди.', 'Категория СКФ (G1–G5), категория альбуминурии (A1–A3) и ячейка риска. План лечения и сроки наблюдения не указываются.'),
-      alanlar: { egfr: u('Hisoblangan KFT', 'Ҳисобланган КФТ', 'Расчётная СКФ'), uacr: u('Siydikda albumin va kreatinin nisbati (ixtiyoriy)', 'Сийдикда альбумин ва креатинин нисбати (ихтиёрий)', 'Отношение альбумина к креатинину в моче (необязательно)') },
+      aciklama: u('KFT toifasi (G1–G5), albuminuriya toifasi (A1–A3) va, ikkala natija kiritilganda, xavf katagi. Davolash rejasi va kuzatuv muddati yozilmaydi.', 'КФТ тоифаси (G1–G5), альбуминурия тоифаси (A1–A3) ва, иккала натижа киритилганда, хавф катаги. Даволаш режаси ва кузатув муддати ёзилмайди.', 'Категория СКФ (G1–G5), категория альбуминурии (A1–A3) и, когда введены оба результата, ячейка риска. План лечения и сроки наблюдения не указываются.'),
+      alanlar: { egfr: u('Hisoblangan KFT', 'Ҳисобланган КФТ', 'Расчётная СКФ'), uacr: u('Siydikda albumin va kreatinin nisbati (usiz xavf katagi koʻrsatilmaydi)', 'Сийдикда альбумин ва креатинин нисбати (усиз хавф катаги кўрсатилмайди)', 'Отношение альбумина к креатинину в моче (без него ячейка риска не показывается)') },
       bantlar: KDIGO.bantlar,
-      uyarilar: KDIGO_TOIFALARI,
+      uyarilar: { ...KDIGO_TOIFALARI, uacr_yok: KDIGO.uyarilar!.uacr_yok },
       not: KARAR,
     },
   },
@@ -157,13 +157,12 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     anahtar: 'vas-fonksiyon', roller: ['ortopedi'],
     metin: {
       ad: u('Ogʻriq va funksiya bali', 'Оғриқ ва функция бали', 'Оценка боли и функции'),
-      aciklama: u('Ogʻriq 0 dan 10 gacha va toʻrtta funksiya bandi 0 dan 4 gacha (0 — qiyinchiliksiz, 4 — bajara olmaydi). Daraja — vositaning oʻz umumlashtirilgan koʻrsatkichi, nashr etilgan shkala emas.', 'Оғриқ 0 дан 10 гача ва тўртта функция банди 0 дан 4 гача (0 — қийинчиликсиз, 4 — бажара олмайди). Даража — воситанинг ўз умумлаштирилган кўрсаткичи, нашр этилган шкала эмас.', 'Боль от 0 до 10 и четыре пункта функции от 0 до 4 (0 — без затруднений, 4 — не может выполнить). Степень — собственный сводный показатель инструмента, а не опубликованная шкала.'),
+      aciklama: u('Ogʻriq 0 dan 10 gacha va toʻrtta funksiya bandi 0 dan 4 gacha (0 — qiyinchiliksiz, 4 — bajara olmaydi). Vosita ikki koʻrsatkichni koʻrsatadi va darajani nomlamaydi.', 'Оғриқ 0 дан 10 гача ва тўртта функция банди 0 дан 4 гача (0 — қийинчиликсиз, 4 — бажара олмайди). Восита икки кўрсаткични кўрсатади ва даражани номламайди.', 'Боль от 0 до 10 и четыре пункта функции от 0 до 4 (0 — без затруднений, 4 — не может выполнить). Инструмент показывает два показателя и не называет степень.'),
       alanlar: {
         vas: u('Ogʻriq, 0 dan 10 gacha', 'Оғриқ, 0 дан 10 гача', 'Боль от 0 до 10'),
         yurume: u('Yurish', 'Юриш', 'Ходьба'), merdiven: u('Zinadan chiqish va tushish', 'Зинадан чиқиш ва тушиш', 'Подъём и спуск по лестнице'), gunluk: u('Kundalik ishlar (kiyinish, yuvinish)', 'Кундалик ишлар (кийиниш, ювиниш)', 'Повседневные дела (одевание, мытьё)'), uyku: u('Ogʻriq sababli uyqu buzilishi', 'Оғриқ сабабли уйқу бузилиши', 'Нарушение сна из-за боли'),
       },
       sayilar: { vas: u('Ogʻriq', 'Оғриқ', 'Боль'), fonksiyon: u('Funksiya', 'Функция', 'Функция') },
-      bantlar: { hafif: u('Yengil darajadagi ogʻriq va funksiya cheklanishi', 'Енгил даражадаги оғриқ ва функция чекланиши', 'Лёгкая степень боли и ограничения функции'), orta: u('Oʻrtacha darajadagi ogʻriq va funksiya cheklanishi', 'Ўртача даражадаги оғриқ ва функция чекланиши', 'Средняя степень боли и ограничения функции'), siddetli: u('Ogʻir darajadagi ogʻriq va funksiya cheklanishi', 'Оғир даражадаги оғриқ ва функция чекланиши', 'Тяжёлая степень боли и ограничения функции') },
       not: KARAR,
     },
   },
@@ -173,7 +172,7 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     anahtar: 'hedef-boy', roller: ['pediatri'],
     metin: {
       ad: u('Ota-ona boʻyiga koʻra kutilayotgan boʻy', 'Ота-она бўйига кўра кутилаётган бўй', 'Ожидаемый рост по росту родителей'),
-      aciklama: u('Ota va ona boʻyidan bolaning taxminiy yakuniy boʻyi va uning oraligʻi hisoblanadi. Bu taxmin, kafolat emas.', 'Ота ва она бўйидан боланинг тахминий якуний бўйи ва унинг оралиғи ҳисобланади. Бу тахмин, кафолат эмас.', 'По росту отца и матери рассчитывается ориентировочный конечный рост ребёнка и его диапазон. Это оценка, а не гарантия.'),
+      aciklama: u('Ota va ona boʻyidan bolaning taxminiy yakuniy boʻyi hisoblanadi. Bu taxmin, kafolat emas.', 'Ота ва она бўйидан боланинг тахминий якуний бўйи ҳисобланади. Бу тахмин, кафолат эмас.', 'По росту отца и матери рассчитывается ориентировочный конечный рост ребёнка. Это оценка, а не гарантия.'),
       alanlar: { cinsiyet: u('Bolaning jinsi', 'Боланинг жинси', 'Пол ребёнка'), anne: u('Onaning boʻyi', 'Онанинг бўйи', 'Рост матери'), baba: u('Otaning boʻyi', 'Отанинг бўйи', 'Рост отца') },
       secenekler: { cinsiyet: { kiz: u('Qiz', 'Қиз', 'Девочка'), erkek: u('Oʻgʻil', 'Ўғил', 'Мальчик') } },
       sayilar: { hedef: u('Kutilayotgan boʻy', 'Кутилаётган бўй', 'Ожидаемый рост'), alt: u('Oraliqning quyi chegarasi', 'Оралиқнинг қуйи чегараси', 'Нижняя граница диапазона'), ust: u('Oraliqning yuqori chegarasi', 'Оралиқнинг юқори чегараси', 'Верхняя граница диапазона') },
@@ -186,7 +185,7 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     anahtar: 'doz-hesabi', roller: ['pediatri'],
     metin: {
       ad: u('Doza hisobi: vazn boʻyicha', 'Доза ҳисоби: вазн бўйича', 'Расчёт дозы по массе тела'),
-      aciklama: u('SIZ kiritgan sonlar boʻyicha hisob: vazn, bir kilogrammga milligramm, kuniga necha marta; konsentratsiya kiritilsa — bir martalik hajm. Vosita hech qanday dori, tavsiya etilgan doza yoki chegara bilmaydi.', 'СИЗ киритган сонлар бўйича ҳисоб: вазн, бир килограммга миллиграмм, кунига неча марта; консентрация киритилса — бир марталик ҳажм. Восита ҳеч қандай дори, тавсия этилган доза ёки чегара билмайди.', 'Расчёт по числам, которые ввели ВЫ: масса тела, миллиграммы на килограмм, число приёмов в сутки; если указана концентрация — объём на приём. Инструмент не знает ни препаратов, ни рекомендуемых доз, ни пределов.'),
+      aciklama: u('SIZ kiritgan sonlar boʻyicha hisob: vazn, bir kilogrammga milligramm, kuniga necha marta; konsentratsiya kiritilsa — bir martalik hajm. Hajm yaxlitlanmaydi. Vosita hech qanday dori, tavsiya etilgan doza yoki chegara bilmaydi.', 'СИЗ киритган сонлар бўйича ҳисоб: вазн, бир килограммга миллиграмм, кунига неча марта; консентрация киритилса — бир марталик ҳажм. Ҳажм яхлитланмайди. Восита ҳеч қандай дори, тавсия этилган доза ёки чегара билмайди.', 'Расчёт по числам, которые ввели ВЫ: масса тела, миллиграммы на килограмм, число приёмов в сутки; если указана концентрация — объём на приём. Объём не округляется. Инструмент не знает ни препаратов, ни рекомендуемых доз, ни пределов.'),
       alanlar: {
         kilo: u('Vazn', 'Вазн', 'Масса тела'), mg_kg: u('Doza, bir kilogrammga', 'Доза, бир килограммга', 'Доза на килограмм'), mod: u('Kiritilgan doza', 'Киритилган доза', 'Введённая доза относится'), doz_sayisi: u('Kuniga necha marta', 'Кунига неча марта', 'Число приёмов в сутки'),
         kons_mg: u('Konsentratsiya: milligramm (ixtiyoriy)', 'Консентрация: миллиграмм (ихтиёрий)', 'Концентрация: миллиграммы (необязательно)'), kons_ml: u('Konsentratsiya: millilitr (ixtiyoriy)', 'Консентрация: миллилитр (ихтиёрий)', 'Концентрация: миллилитры (необязательно)'),
@@ -202,7 +201,8 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
         tavan_doz: u('Hisoblangan bir martalik doza siz belgilagan chegaradan oshadi', 'Ҳисобланган бир марталик доза сиз белгилаган чегарадан ошади', 'Рассчитанная доза на приём превышает заданный вами предел'),
         tavan_gun: u('Hisoblangan kunlik doza siz belgilagan chegaradan oshadi', 'Ҳисобланган кунлик доза сиз белгилаган чегарадан ошади', 'Рассчитанная суточная доза превышает заданный вами предел'),
         kilo_birim: u('Vazn odatdagidan ancha katta — birligini tekshiring', 'Вазн одатдагидан анча катта — бирлигини текширинг', 'Масса тела необычно велика — проверьте единицу измерения'),
-        ml_kucuk: u('Bir martalik hajm oʻlchash qadamidan kichik — aniq oʻlchab boʻlmaydi', 'Бир марталик ҳажм ўлчаш қадамидан кичик — аниқ ўлчаб бўлмайди', 'Объём на приём меньше шага измерения — точно отмерить нельзя'),
+        ml_yuvarlanmadi: u('Hajm hisob natijasi boʻlib, hech qanday oʻlchov asbobiga moslab yaxlitlanmagan: asbobingiz uni oʻlchay olishini tekshiring', 'Ҳажм ҳисоб натижаси бўлиб, ҳеч қандай ўлчов асбобига мослаб яхлитланмаган: асбобингиз уни ўлчай олишини текширинг', 'Объём — результат расчёта; он не округлён под какое-либо мерное устройство: проверьте, что ваше устройство может его отмерить'),
+        ml_kucuk: u('Bir martalik hajm 1 ml dan kam: kichik hajm uchun yetarlicha mayda boʻlinmali asbob kerak', 'Бир марталик ҳажм 1 мл дан кам: кичик ҳажм учун етарлича майда бўлинмали асбоб керак', 'Объём на приём меньше 1 мл: для малого объёма нужно устройство с достаточно мелкими делениями'),
       },
       not: u('Hisob siz kiritgan sonlar asosida; dori, doza va chegarani shifokor belgilaydi va tekshiradi.', 'Ҳисоб сиз киритган сонлар асосида; дори, доза ва чегарани шифокор белгилайди ва текширади.', 'Расчёт основан на введённых вами числах; препарат, дозу и предел определяет и проверяет врач.'),
     },
@@ -316,27 +316,26 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
   // ── sports medicine. Not for orthopaedics or physical medicine. ──
   {
     anahtar: 'rtp-basamak', roller: ['spor-hekimligi'],
+    // NOTYA-ULKE-ARAC-DUZELTME-01 (fault 7): the kit holds NO staging of return to sport. The steps are a table a
+    // country supplies, and this pack supplies none: the tool counts the days since the injury and names no stage.
     metin: {
-      ad: u('Sportga qaytish bosqichlari', 'Спортга қайтиш босқичлари', 'Этапы возвращения в спорт'),
-      aciklama: u('Sportchi hozir qaysi bosqichda ekani qayd qilinadi. Bosqichni shifokor belgilaydi; vosita muddat taklif qilmaydi.', 'Спортчи ҳозир қайси босқичда экани қайд қилинади. Босқични шифокор белгилайди; восита муддат таклиф қилмайди.', 'Фиксируется, на каком этапе сейчас спортсмен. Этап определяет врач; сроков инструмент не предлагает.'),
-      alanlar: { basamak: u('Bosqich', 'Босқич', 'Этап') },
-      secenekler: { basamak: kendiAdi(['0', '1', '2', '3', '4', '5']) },
-      bantlar: {
-        b0: u('0-bosqich: dam olish va simptomlarni nazorat qilish', '0-босқич: дам олиш ва симптомларни назорат қилиш', 'Этап 0: покой и контроль симптомов'),
-        b1: u('1-bosqich: yengil aerob yuklama', '1-босқич: енгил аэроб юклама', 'Этап 1: лёгкая аэробная нагрузка'),
-        b2: u('2-bosqich: sport turiga xos mashqlar, toʻqnashuvsiz', '2-босқич: спорт турига хос машқлар, тўқнашувсиз', 'Этап 2: упражнения, специфичные для вида спорта, без контакта'),
-        b3: u('3-bosqich: toʻqnashuvsiz mashgʻulot', '3-босқич: тўқнашувсиз машғулот', 'Этап 3: тренировка без контакта'),
-        b4: u('4-bosqich: toʻqnashuvli mashgʻulot, musobaqasiz', '4-босқич: тўқнашувли машғулот, мусобақасиз', 'Этап 4: контактная тренировка, без соревнований'),
-        b5: u('5-bosqich: toʻliq mashgʻulot va musobaqaga yaroqlilik', '5-босқич: тўлиқ машғулот ва мусобақага яроқлилик', 'Этап 5: полноценная тренировка и допуск к соревнованиям'),
+      ad: u('Sportga qaytish: shikastlanishdan keyingi kunlar', 'Спортга қайтиш: шикастланишдан кейинги кунлар', 'Возвращение в спорт: дни после травмы'),
+      aciklama: u('Shikastlanish sanasidan boshlab oʻtgan kunlar soni hisoblanadi. Bu mamlakat uchun sportga qaytish bosqichlari belgilanmagan, shuning uchun vosita bosqich koʻrsatmaydi va muddat taklif qilmaydi.', 'Шикастланиш санасидан бошлаб ўтган кунлар сони ҳисобланади. Бу мамлакат учун спортга қайтиш босқичлари белгиланмаган, шунинг учун восита босқич кўрсатмайди ва муддат таклиф қилмайди.', 'Рассчитывается число дней, прошедших с даты травмы. Этапы возвращения в спорт для этой страны не заданы, поэтому инструмент не показывает этап и не предлагает сроков.'),
+      alanlar: { yaralanma: u('Shikastlanish sanasi', 'Шикастланиш санаси', 'Дата травмы'), basamak: u('Bosqich', 'Босқич', 'Этап') },
+      sayilar: { gun: u('Shikastlanishdan keyin oʻtgan kunlar (shikastlanish kuni 0-kun hisoblanadi)', 'Шикастланишдан кейин ўтган кунлар (шикастланиш куни 0-кун ҳисобланади)', 'Дней после травмы (день травмы считается днём 0)') },
+      uyarilar: {
+        basamak_tanimsiz: u('Bu mamlakat uchun sportga qaytish bosqichlari belgilanmagan: faqat shikastlanishdan keyin oʻtgan kunlar koʻrsatiladi', 'Бу мамлакат учун спортга қайтиш босқичлари белгиланмаган: фақат шикастланишдан кейин ўтган кунлар кўрсатилади', 'Этапы возвращения в спорт для этой страны не заданы: показываются только дни после травмы'),
+        erken: u('Bugun bu bosqichning eng erta kunidan oldin', 'Бугун бу босқичнинг энг эрта кунидан олдин', 'Сегодня раньше самого раннего дня этого этапа'),
       },
-      not: u('Bosqich va sportga qaytish qarori shifokorniki.', 'Босқич ва спортга қайтиш қарори шифокорники.', 'Этап и решение о возвращении в спорт определяет врач.'),
+      tarihler: { en_erken: u('Bu bosqichning eng erta kuni', 'Бу босқичнинг энг эрта куни', 'Самый ранний день этого этапа') },
+      not: u('Sportga qaytish qarori shifokorniki.', 'Спортга қайтиш қарори шифокорники.', 'Решение о возвращении в спорт принимает врач.'),
     },
   },
   {
     anahtar: 'sakatlik-gunlugu', roller: ['spor-hekimligi'],
     metin: {
       ad: u('Shikastlanishlar kundaligi', 'Шикастланишлар кундалиги', 'Журнал травм'),
-      aciklama: u('Shikastlanish sohasi, mexanizmi, ogʻirligi va holati; oxirgi yetti kun va oldingi haftalik oʻrtacha yuklama daqiqalaridan ularning nisbati hisoblanadi.', 'Шикастланиш соҳаси, механизми, оғирлиги ва ҳолати; охирги етти кун ва олдинги ҳафталик ўртача юклама дақиқаларидан уларнинг нисбати ҳисобланади.', 'Область, механизм, тяжесть и состояние травмы; по минутам нагрузки за последние семь дней и прежнему недельному среднему рассчитывается их отношение.'),
+      aciklama: u('Shikastlanish sohasi, mexanizmi, ogʻirligi va holati; oxirgi yetti kun va oldingi haftalik oʻrtacha yuklama daqiqalaridan ularning nisbati hisoblanadi. Keltirilgan maqolada yuklama zoʻriqish darajasi va daqiqalar koʻpaytmasi sifatida oʻlchanadi; bu nisbat faqat daqiqalar boʻyicha hisoblanadi.', 'Шикастланиш соҳаси, механизми, оғирлиги ва ҳолати; охирги етти кун ва олдинги ҳафталик ўртача юклама дақиқаларидан уларнинг нисбати ҳисобланади. Келтирилган мақолада юклама зўриқиш даражаси ва дақиқалар кўпайтмаси сифатида ўлчанади; бу нисбат фақат дақиқалар бўйича ҳисобланади.', 'Область, механизм, тяжесть и состояние травмы; по минутам нагрузки за последние семь дней и прежнему недельному среднему рассчитывается их отношение. В цитируемой статье нагрузка измеряется как произведение усилия на минуты; это отношение считается только по минутам.'),
       alanlar: {
         bolge: u('Soha', 'Соҳа', 'Область'), mekanizma: u('Mexanizm (ixtiyoriy)', 'Механизм (ихтиёрий)', 'Механизм (необязательно)'), siddet: u('Ogʻirligi (ixtiyoriy)', 'Оғирлиги (ихтиёрий)', 'Тяжесть (необязательно)'), durum: u('Holati (ixtiyoriy)', 'Ҳолати (ихтиёрий)', 'Состояние (необязательно)'),
         dk_7gun: u('Oxirgi 7 kundagi yuklama (ixtiyoriy)', 'Охирги 7 кундаги юклама (ихтиёрий)', 'Нагрузка за последние 7 дней (необязательно)'), dk_onceki: u('Oldingi haftalik oʻrtacha yuklama (ixtiyoriy)', 'Олдинги ҳафталик ўртача юклама (ихтиёрий)', 'Прежняя средняя недельная нагрузка (необязательно)'),
@@ -348,7 +347,7 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
         durum: { aktif: u('Faol', 'Фаол', 'Активная'), iyilesiyor: u('Tuzalmoqda', 'Тузалмоқда', 'Заживает'), kapandi: u('Tugallangan', 'Тугалланган', 'Завершена') },
       },
       sayilar: { yuklenme_orani: u('Yuklama nisbati', 'Юклама нисбати', 'Отношение нагрузок') },
-      uyarilar: { yuklenme_yuksek: u('Yuklama nisbati 1,5 va undan yuqori: yuqori', 'Юклама нисбати 1,5 ва ундан юқори: юқори', 'Отношение нагрузок 1,5 и выше: высокое'), yuklenme_dikkat: u('Yuklama nisbati 1,3 va undan yuqori: ehtiyot boʻling', 'Юклама нисбати 1,3 ва ундан юқори: эҳтиёт бўлинг', 'Отношение нагрузок 1,3 и выше: требуется внимание') },
+      uyarilar: { yuklenme_yuksek: u('Yuklama nisbati 1,5 va undan yuqori: keltirilgan maqolada bu oraliq «xavfli zona» deb atalgan', 'Юклама нисбати 1,5 ва ундан юқори: келтирилган мақолада бу оралиқ «хавфли зона» деб аталган', 'Отношение нагрузок 1,5 и выше: в цитируемой статье этот диапазон назван «опасной зоной»'), yuklenme_dikkat: u('Yuklama nisbati 1,3 dan yuqori: keltirilgan maqolada maqbul deb atalgan oraliqdan (0,8–1,3) yuqori', 'Юклама нисбати 1,3 дан юқори: келтирилган мақолада мақбул деб аталган оралиқдан (0,8–1,3) юқори', 'Отношение нагрузок выше 1,3: выше диапазона, который в цитируемой статье назван оптимальным (0,8–1,3)') },
       not: KARAR,
     },
   },

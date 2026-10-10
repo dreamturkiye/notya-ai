@@ -81,7 +81,15 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
   araclar: {
     // UNVERIFIED: the unit laboratories in New Zealand report each value in: SI units (checklist C8). The kit converts
     // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
-    labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
+    labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L' },
+    // C-REACTIVE PROTEIN in mg/L and PROSTATE-SPECIFIC ANTIGEN in µg/L (NOTYA-ULKE-ARAC-DUZELTME-01: each is now a
+    // statement of the pack; PSA used to be a renamed "ng/mL" — the same amount, and the same label on the screen as
+    // before). Both as the country's audit read them (docs/araclar-denetim/NZ.md); UNVERIFIED with a local laboratory.
+    // HOW A DOSE IS WRITTEN HERE: NO ZERO AFTER THE DECIMAL POINT ("5 mL", never "5.0 mL"). Source read 2026-10-10: Health
+    // Quality & Safety Commission, Medication Safety Expert Advisory Group, "Error-prone abbreviations, symbols and dose
+    // designations not to use" (May 2012), https://www.hqsc.govt.nz/assets/Medication-Safety/Alerts-PR/Poster-error-prone-abbreviations-not-to-use.pdf
+    // — "never write a zero after a decimal point. Write 1.0mg as 1mg." UNVERIFIED by a local clinical lead.
+    dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
       'esi-triyaj': { eksik: 'The Emergency Severity Index is one triage scale among several. Which triage scale emergency departments in New Zealand use, and whether a tool that records an ESI level belongs here at all, is for a local emergency physician to say. ' + EMIR_ESI, kimden: HAK_SAHIBI },
@@ -98,8 +106,6 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
       'esi-triyaj': { durum: 'izin-gerekli', hakSahibi: 'Emergency Nurses Association (ENA)', kaynak: 'ENA, trademarks page (https://www.ena.org/ena-trademarks), and the copyright notice of the Emergency Severity Index handbook: read for the tools audit, second pass, 2026-10-10' },
       'rapor-taslagi': { durum: 'izin-gerekli', hakSahibi: 'American College of Radiology (ACR)', kaynak: 'ACR, BI-RADS permissions page (https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions): read for the tools audit, second pass, 2026-10-10' },
     },
-    // UNVERIFIED: prostate-specific antigen is written in µg/L here (numerically the same as ng/mL).
-    birimAdlari: { 'ng/mL': 'µg/L', 'ng/mL/yil': 'µg/L per year' },
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. A SHAPE, NOT A NUMBER: this job knows of no range New Zealand reserves for

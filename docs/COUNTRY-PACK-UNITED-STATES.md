@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1908 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-US` spelling by the set's spelling table.
-- **This country's own** (`countries/us/`, six small files): 26 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1913 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-US` spelling by the set's spelling table.
+- **This country's own** (`countries/us/`, six small files): 25 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -31,7 +31,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Default time zone; zones an account may choose | America/New_York; America/New_York, America/Chicago, America/Denver, America/Phoenix, America/Los_Angeles, America/Anchorage, Pacific/Honolulu | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed. |
 | Date pattern; clock; first day of the week | MM/DD/YYYY; 12-hour; Sunday | a local lead |
 | Units | weight lb, height in, temperature °F | a local clinical lead — a clinical-safety setting |
-| Laboratory units | urine albumin-to-creatinine ratio: mg/g; haemoglobin: g/dL; creatinine: mg/dL; glucose: mg/dL; cholesterol: mg/dL | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
+| Laboratory units | urine albumin-to-creatinine ratio: mg/g; haemoglobin: g/dL; creatinine: mg/dL; glucose: mg/dL; cholesterol: mg/dL; C-reactive protein: mg/L or mg/dL; prostate-specific antigen: ng/mL | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
+| Writing an amount of a medicine | no zero after the last figure ("5 mL", never "5.0 mL") | a local pharmacist or clinical lead — a clinical-safety setting; the source read is cited beside the setting in ayarlar.ts |
 | Currency | USD | the owner |
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
 | Emergency (ambulance) number on the patient's page | `911` — UNVERIFIED | a local source, before any patient sees the portal |
@@ -151,10 +152,10 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `hedef-boy` | Expected height from the parents' heights | Pediatrics | Mother's height: **in**; Father's height: **in** · result in in |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery | no measured input |
 | `tetkik-kuyrugu` | Examination queue | Radiology | no measured input |
-| `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein (in mg/L; multiply a value in mg/dL by 10): **mg/L**; Erythrocyte sedimentation rate: **mm/h** |
+| `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L or mg/dL**; Erythrocyte sedimentation rate: **mm/h** |
 | `eklem-28` | 28-joint count | Rheumatology | no measured input |
-| `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in ng/mL per year, days |
-| `rtp-basamak` | Stages of return to sport | Sports medicine | no measured input |
+| `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in days |
+| `rtp-basamak` | Return to sport: days since the injury | Sports medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sports medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
 | `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic surgery, Pulmonology, Ophthalmology, Cardiac and vascular surgery, Otolaryngology (ENT), Nephrology, Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Radiology, Rheumatology, Urology, Sports medicine | no measured input |
 
@@ -193,7 +194,7 @@ No national reference content is written by a machine, and no item of a publishe
 | `polypharmacy` | Internal medicine | Review of medicines in older patients: the criteria in a licensed edition, and the register of medicines sold in the United States to recognise each medicine by the name it has there. | a local clinical lead, with the national source named |
 | `anticoagulation-review` | Internal medicine | Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in the United States (age, weight, kidney function), targets and recheck intervals from the guidance followed there, and the local medicine names. | a local clinical lead, with the national source named |
 | `isotretinoin-pregnancy-prevention` | Dermatology | Pregnancy-prevention checks for isotretinoin: the programme the regulator of the United States requires (tests, contraception, prescription validity). | a local clinical lead, with the national source named |
-| `lab-izlem` | Endocrinology | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in the United States; the unit HbA1c is reported in there (per cent or mmol/mol: the kit's field has no unit choice yet); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
+| `lab-izlem` | Endocrinology | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in the United States; the unit HbA1c is reported in there (per cent or mmol/mol: the kit converts between the two, and the two cut-offs are stated with their unit); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
 | `dxa-tekrar` | Endocrinology | Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the guidance followed in the United States. | a local clinical lead, with the national source named |
 | `viral-izlem` | Infectious disease | HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the guidance followed in the United States. | a local clinical lead, with the national source named |
 | `notifiable-diseases` | Infectious disease | Isolation and notification: the list of notifiable diseases in the United States, to whom and by when each is reported, the report form, and isolation periods. | a local clinical lead, with the national source named |

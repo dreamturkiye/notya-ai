@@ -86,7 +86,16 @@ export const US_GIRDI: EnUlkeGirdisi = {
   araclar: {
     // UNVERIFIED: the unit laboratories in the United States report each value in: conventional units (checklist C8). The kit converts
     // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
-    labBirimleri: { albuminKreatinin: 'mg/g', hemoglobin: 'g/dL', kreatinin: 'mg/dL', glukoz: 'mg/dL', kolesterol: 'mg/dL' },
+    labBirimleri: { albuminKreatinin: 'mg/g', hemoglobin: 'g/dL', kreatinin: 'mg/dL', glukoz: 'mg/dL', kolesterol: 'mg/dL', crp: ['mg/L', 'mg/dL'], psa: 'ng/mL' },
+    // C-REACTIVE PROTEIN (NOTYA-ULKE-ARAC-DUZELTME-01): BOTH UNITS ARE ACCEPTED, AND THE DOCTOR CHOOSES ONE beside the
+    // field — a number without its unit gives no result. Laboratories here may report mg/L or mg/dL, and the DAS28
+    // formula takes mg/L: a result of 1.0 mg/dL read as 1.0 mg/L gave a score of 3.43 where it is 4.04. The label used
+    // to tell the doctor to multiply by 10 by hand. PSA is written in ng/mL (the urologists' guideline, per the audit).
+    // HOW A DOSE IS WRITTEN HERE: NO ZERO AFTER THE DECIMAL POINT ("5 mL", never "5.0 mL"). Source read 2026-10-10: NCPDP,
+    // "Standardize the Dosing Designations on Prescription Container Labels for Oral Liquid Medications to Metric (mL)
+    // Only" (the white paper the FDA hosts), https://www.fda.gov/media/88498/download — "Do NOT use trailing zeros
+    // after a decimal point". UNVERIFIED by a local clinical lead. (The dose tool is kept off here: see `kapali`.)
+    dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
       'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + EMIR_DOZ, kimden: KLINISYEN },
@@ -103,9 +112,6 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'esi-triyaj': { durum: 'izin-gerekli', hakSahibi: 'Emergency Nurses Association (ENA)', kaynak: 'ENA, trademarks page (https://www.ena.org/ena-trademarks), and the copyright notice of the Emergency Severity Index handbook: read for the tools audit, second pass, 2026-10-10' },
       'rapor-taslagi': { durum: 'izin-gerekli', hakSahibi: 'American College of Radiology (ACR)', kaynak: 'ACR, BI-RADS permissions page (https://acr.org/Clinical-Resources/Reporting-and-Data-Systems/Bi-Rads/Permissions): read for the tools audit, second pass, 2026-10-10' },
     },
-    // THE C-REACTIVE PROTEIN FIELD OF DAS28 TAKES mg/L (the formula's unit). Laboratories here may report mg/dL: the
-    // label says which unit the field takes and how to get there. UNVERIFIED with a local clinical lead.
-    degisen: { das28: { alanlar: { crp: 'C-reactive protein (in mg/L; multiply a value in mg/dL by 10)' } } },
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the numbers the North American numbering plan sets aside for fiction

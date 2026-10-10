@@ -8,6 +8,8 @@ import { sayiYaz } from '@/lib/ulke/arayuz/sayi'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { bicimli, paketinAraci, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
+import { sondakiSifirlariAt } from '@/lib/ulke/araclar/yazim'
+import { ulkePaketi } from '@/lib/ulke/ulke'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
 
 const ARACLAR = ulkeYolu(UYGULAMA_EKRANLARI.araclar)
@@ -22,7 +24,13 @@ export { birimOrtami } from '@/lib/ulke/araclar/ortam'
 
 /** How this country writes a number, a day and a unit, in the form `dil`. */
 export function yazici(icerik: UlkeAraclari, dil: string): Yazici {
-  return { sayi: (d, o) => sayiYaz(d, o), tarih: (iso) => tarihYaz(iso), birim: (kod) => bicimli(icerik.birimler[kod], dil) }
+  // AN AMOUNT OF A MEDICINE is written by the pack's own rule (NOTYA-ULKE-ARAC-DUZELTME-01): where the country writes no
+  // zero after the decimal mark, "5.00 mL" is written "5 mL". A pack that states no rule writes it as any other number.
+  const sifirsiz = icerik.dozYazimi?.sondaSifir === false
+  return {
+    sayi: (d, o) => sayiYaz(d, o), tarih: (iso) => tarihYaz(iso), birim: (kod) => bicimli(icerik.birimler[kod], dil),
+    ...(sifirsiz ? { doz: (d: number, o: number) => sondakiSifirlariAt(sayiYaz(d, o), ulkePaketi().bicim.ondalikAyraci) } : {}),
+  }
 }
 
 /**
