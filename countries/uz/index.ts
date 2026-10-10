@@ -123,8 +123,11 @@ export const UZ_PAKETI: UlkePaketi = {
     // The patient's own language, recorded per patient (script is the doctor's choice, not the patient's).
     hastaDilleri: ['uz', 'ru'],
     aramaKatla: uzAramaKatla,
-    // NOTYA-UZ-BRANSLAR-01: the 40 roles an account chooses from at first login (30 doctor specialties, 5 clinic
-    // doctors, 5 clinic allied professions). Keys only; the names are in ./klinik/rolAdlari.ts.
+    // NOTYA-UZ-BRANSLAR-01 · NOTYA-ULKE-UYGULA-UZ (2026-10-10): the roles an account chooses from at first login.
+    // UZBEKISTAN'S OWN LIST since the audit of the specialties against the Ministry of Health's nomenclature (order
+    // No. 6 of 12.05.2021, registration No. 3303) was applied: 42 roles — 37 doctor specialties, 3 clinic doctors,
+    // 2 clinic allied professions. What was renamed, split, added, moved and removed, and why: ./klinik/rolListesi.ts
+    // (and, as data, countries/rol-eslemesi.json → ulkeyeOzel.uz). Keys only; the names are in ./klinik/rolAdlari.ts.
     roller: UZ_ROLLER,
     // NOTYA-UZ-RANDEVU-01 — appointment norms. STARTING VALUES, to verify with the local clinical lead (checklist J4):
     // the usual working week and hours of a private clinic in Uzbekistan were not checked against a local source.
@@ -163,14 +166,18 @@ export const UZ_PAKETI: UlkePaketi = {
     // they are answered the pack takes the narrow side wherever there is one:
     //   yetkiTurleri              all five, each given by the doctor whose patients they are, one at a time.
     //   sahipHekimAdinaVerebilir  NO: a clinic's owner cannot give a permission for a doctor's patients. (Kaan / lawyer.)
-    //   paylasimRolleri           the five clinic specialist roles of this pack may be given ONE patient's approved
-    //                             notes by that patient's doctor. UNVERIFIED: the scope of each profession is for a lawyer.
+    //   paylasimRolleri           the clinic specialist roles of this pack (the allied professions) may be given ONE
+    //                             patient's approved notes by that patient's doctor. UNVERIFIED: the scope of each
+    //                             profession is for a lawyer. TWO since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): occupational
+    //                             therapy is not in the nomenclature and left the role list; dietology and surdology
+    //                             are doctors' specialties there, and a doctor is given cover or a consultation, not
+    //                             this share. Nobody gained access by that change; three roles lost this way in.
     //   davetGecerlilikGun        an invitation works for 7 days.   vekaletAzamiGun   cover lasts at most 14 days.
     //   kayitSaklama              a slot, off: no record row is ever deleted and no purge exists.
     klinikHesaplari: {
       yetkiTurleri: ['on-buro-randevu', 'on-buro-hasta', 'on-buro-portal', 'paylasim', 'vekalet'],
       sahipHekimAdinaVerebilir: false,
-      paylasimRolleri: ['fizyoterapi', 'klinik-psikolog', 'diyetisyen', 'ergoterapi', 'odyoloji'],
+      paylasimRolleri: ['fizyoterapi', 'klinik-psikolog'],
       davetGecerlilikGun: 7,
       vekaletAzamiGun: 14,
       kayitSaklama: null,

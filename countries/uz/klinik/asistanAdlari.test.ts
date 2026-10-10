@@ -19,6 +19,7 @@ import { uzKirillga, uzRuschaYozuvga } from '../yozuv'
 import { UZ_ASISTAN_ADLARI, uzAsistanAdi, type AsistanUnvani } from './asistanAdlari'
 import { uzAsistanKimligi } from './asistanKimligi'
 import { UZ_ASISTAN_UNVANLARI } from './asistanUnvanlari'
+import { uzRolMu } from './rolAdlari'
 
 const KOK = resolve(__dirname, '../../..')
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
@@ -87,8 +88,24 @@ test('titles follow the Turkish product\'s convention, role by role: the Uzbek a
   assert.equal(uzAsistanAdi('fizyoterapi')!.meslekUnvani, 'Fizioterapevt')
 })
 
+/**
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — THE OWNER'S LIST IS NO LONGER THE ROLE LIST. The audit of the specialties took
+ * five of its forty keys off the pack's role list (./rolListesi.ts); the owner's names for them stay in his list and
+ * are shown nowhere. What a screen can show is the identity of a role the pack HAS: 35 of the 40.
+ */
+const GORUNEN = UZ_ASISTAN_ADLARI.filter((a) => uzRolMu(a.bransAnahtari))
+const CIKARILAN = UZ_ASISTAN_ADLARI.filter((a) => !uzRolMu(a.bransAnahtari)).map((a) => a.bransAnahtari)
+
+test('35 of the owner\'s 40 names are shown: the five roles the audit took out keep their entry in his list and have no identity on any screen', () => {
+  assert.equal(GORUNEN.length, 35)
+  assert.deepEqual(CIKARILAN, ['sac-ekimi', 'longevity', 'diyetisyen', 'ergoterapi', 'odyoloji'])
+  for (const k of CIKARILAN) { assert.ok(uzAsistanAdi(k), k); for (const f of FORMLAR) assert.equal(uzAsistanKimligi(k, f), null, `${k}/${f}`) }
+  // every doctor specialty the owner named is still a doctor specialty, and still carries the professor's title
+  for (const a of GORUNEN) if (a.taraf === 'doktor') assert.equal(a.unvan, 'prof-dr', a.bransAnahtari)
+})
+
 test('full and short form, as the Turkish product writes them: "Prof. Dr. <given> <family>" and "Prof. <given>"; the given name alone', () => {
-  for (const a of UZ_ASISTAN_ADLARI) {
+  for (const a of GORUNEN) {
     const k = uzAsistanKimligi(a.bransAnahtari, 'uz-Latn')!
     const [tam, kisa] = a.unvan === 'prof-dr' ? ['Prof. Dr.', 'Prof.'] : a.unvan === 'dr' ? ['Dr.', 'Dr.'] : [a.meslekUnvani, a.meslekUnvani]
     assert.deepEqual(k, { tamAd: `${tam} ${a.kisaAd} ${a.soyad}`, kisaAd: a.kisaAd, unvanliKisaAd: `${kisa} ${a.kisaAd}`, makineTuretimi: false }, a.bransAnahtari)
@@ -96,7 +113,7 @@ test('full and short form, as the Turkish product writes them: "Prof. Dr. <given
   // In the other two forms: the title is the catalogue's word (or the profession's title converted by rule), the name is converted by rule.
   for (const f of ['uz-Cyrl', 'ru'] as const) {
     const cevir = (x: string) => (f === 'ru' ? uzRuschaYozuvga(uzKirillga(x)) : uzKirillga(x))
-    for (const a of UZ_ASISTAN_ADLARI) {
+    for (const a of GORUNEN) {
       const k = uzAsistanKimligi(a.bransAnahtari, f)!
       const u = a.unvan === 'meslek' ? { tam: cevir(a.meslekUnvani!), kisa: cevir(a.meslekUnvani!) } : UZ_ASISTAN_UNVANLARI[f][a.unvan]
       assert.deepEqual(k, { tamAd: `${u.tam} ${cevir(a.kisaAd)} ${cevir(a.soyad)}`, kisaAd: cevir(a.kisaAd), unvanliKisaAd: `${u.kisa} ${cevir(a.kisaAd)}`, makineTuretimi: true }, `${a.bransAnahtari}/${f}`)
@@ -106,7 +123,7 @@ test('full and short form, as the Turkish product writes them: "Prof. Dr. <given
   // Three examples, written out.
   assert.deepEqual(FORMLAR.map((f) => uzAsistanKimligi('pediatri', f)!.tamAd), ['Prof. Dr. Malika Nazarova', 'Проф. д-р Малика Назарова', 'Проф. д-р Малика Назарова'])
   assert.deepEqual(FORMLAR.map((f) => uzAsistanKimligi('pediatri', f)!.unvanliKisaAd), ['Prof. Malika', 'Проф. Малика', 'Проф. Малика'])
-  assert.deepEqual(FORMLAR.map((f) => uzAsistanKimligi('sac-ekimi', f)!.tamAd), ['Dr. Shohruh Karimov', 'Д-р Шоҳруҳ Каримов', 'Д-р Шохрух Каримов'])
+  assert.deepEqual(FORMLAR.map((f) => uzAsistanKimligi('enfeksiyon-hastaliklari', f)!.tamAd), ['Prof. Dr. Otabek Qodirov', 'Проф. д-р Отабек Қодиров', 'Проф. д-р Отабек Кодиров'])
   assert.deepEqual(FORMLAR.map((f) => uzAsistanKimligi('fizyoterapi', f)!.tamAd), ['Fizioterapevt Jasmina Abdullayeva', 'Физиотерапевт Жасмина Абдуллаева', 'Физиотерапевт Жасмина Абдуллаева'])
   assert.deepEqual(FORMLAR.map((f) => uzAsistanKimligi('klinik-psikolog', f)!.tamAd), ['Dr. Doniyor Saidov', 'Д-р Дониёр Саидов', 'Д-р Дониёр Саидов'])
 })
@@ -125,7 +142,7 @@ test('the catalogue of titles: three forms, each in its own script, marked machi
       assert.doesNotMatch(x, /professor|профессор|\d/i, x)
       assert.deepEqual(sizintiTara(x, { hedefUlke: 'uz', kaynak: `title ${f}` }), [])
     }
-    for (const a of UZ_ASISTAN_ADLARI) {
+    for (const a of GORUNEN) {
       const k = uzAsistanKimligi(a.bransAnahtari, f)!
       for (const x of [k.tamAd, k.unvanliKisaAd, k.kisaAd]) {
         assert.deepEqual(sizintiTara(x, { hedefUlke: 'uz', kaynak: `assistant ${a.bransAnahtari}/${f}` }), [])

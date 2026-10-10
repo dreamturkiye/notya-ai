@@ -109,6 +109,19 @@
         { "anahtar": "clinical-social-work", "taraf": "klinik-muttefik", "gibi": "clinical-psychology" }
       ]
     },
+    "uz": {
+      "sutun": "uz",
+      "cikar": ["sac-ekimi", "longevity", "diyetisyen", "ergoterapi", "odyoloji"],
+      "ekle": [
+        { "anahtar": "damar-cerrahisi", "taraf": "doktor", "gibi": "kalp-damar-cerrahisi" },
+        { "anahtar": "alerji-immunoloji", "taraf": "doktor", "gibi": "dahiliye" },
+        { "anahtar": "reproduktoloji", "taraf": "doktor", "gibi": "kadin-hastaliklari-dogum" },
+        { "anahtar": "cocuk-norolojisi", "taraf": "doktor", "gibi": "noroloji" },
+        { "anahtar": "narkoloji", "taraf": "doktor", "gibi": "psikiyatri" },
+        { "anahtar": "diyetoloji", "taraf": "doktor", "gibi": "diyetisyen" },
+        { "anahtar": "surdoloji", "taraf": "doktor", "gibi": "odyoloji" }
+      ]
+    },
     "xx": {
       "sutun": "en",
       "cikar": ["cardiovascular-surgery", "hair-transplant", "aesthetic-medicine", "clinic-dermatology"],

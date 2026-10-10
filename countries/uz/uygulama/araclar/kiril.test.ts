@@ -15,6 +15,8 @@ import { join, resolve } from 'node:path'
 import { dosyayiDoldur, katalogCevir, katalogKaynagi, kirill } from '../../../../scripts/uz-kiril.mjs'
 import { UZ_KLINIK_LATN, UZ_KLINIK_METINLERI } from '../klinikMetinleri'
 import { UZ_ARACLAR } from './index'
+import { UZ_ROL_ADLARI } from '../../klinik/rolAdlari'
+import { UZ_ROL_SATIRLARI } from '../../klinik/rolListesi'
 import { UZ_MESAJ_AGACI } from '../mesajMetinleri'
 import { UZ_SABLON_AGACI } from '../sablonMetinleri'
 import { UZ_KONSULTASYON_AGACI } from '../konsultasyonMetinleri'
@@ -70,6 +72,17 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
     gez(UZ_ARACLAR.birimler, 'birimler')
     assert.ok(sayi > 500, `only ${sayi} texts were compared`)
     assert.deepEqual(farkli, [])
+  })
+
+  it('NOTYA-ULKE-UYGULA-UZ — the Cyrillic form of every ROLE NAME the audit of 2026-10-10 changed is what the rule gives for its Latin name; one loan word is spelled by hand', () => {
+    const degisen = UZ_ROL_SATIRLARI.filter((x) => x.karar !== 'keep' && x.karar !== 'unverified').map((x) => x.anahtar)
+    assert.equal(degisen.length, 16)
+    // «физкультура» keeps its «ь» in Uzbek Cyrillic; the rule spells the word as it sounds. Written by a machine, like every other name: no native reader has confirmed it.
+    const elle: Record<string, string> = { 'fizik-tedavi': 'Реабилитология (даволаш физкультураси, курортология, физиотерапия)' }
+    for (const k of degisen) {
+      const { 'uz-Latn': lat, 'uz-Cyrl': kir } = UZ_ROL_ADLARI[k]
+      if (k in elle) { assert.equal(kir, elle[k]); assert.equal(kirill(lat).replace('физкултураси', 'физкультураси'), kir, 'only the one word differs from the rule') } else assert.equal(kir, kirill(lat), k)
+    }
   })
 
   it('EVERY stored Cyrillic text of the catalogues written in three forms side by side is what the rule gives for its Latin text, and none is left empty', () => {
