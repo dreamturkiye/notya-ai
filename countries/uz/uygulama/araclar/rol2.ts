@@ -32,11 +32,6 @@ const EASI_BELGILARI: Readonly<Record<string, Uc>> = {
 /** "Region: sign" for every field of a regional index. */
 const sohaAlanlari = (belgilar: Readonly<Record<string, Uc>>): Record<string, Uc> =>
   Object.fromEntries(Object.entries(SOHALAR).flatMap(([s, soha]) => Object.entries(belgilar).map(([b, belgi]) => [`${s}_${b}`, u(`${soha['uz-Latn']}: ${belgi['uz-Latn']}`, `${soha['uz-Cyrl']}: ${belgi['uz-Cyrl']}`, `${soha.ru}: ${belgi.ru}`)])))
-const ucBant = (orta: string, siddetliLatn: string, ortaAraligi: string): Record<string, Uc> => ({
-  hafif: u(`Yengil (${orta} dan past)`, `Енгил (${orta} дан паст)`, `Лёгкая степень (менее ${orta})`),
-  orta: u(`Oʻrtacha (${ortaAraligi})`, `Ўртача (${ortaAraligi})`, `Средняя степень (${ortaAraligi})`),
-  siddetli: u(`Ogʻir (${siddetliLatn} va undan yuqori)`, `Оғир (${siddetliLatn} ва ундан юқори)`, `Тяжёлая степень (${siddetliLatn} и выше)`),
-})
 
 export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
   // ── paediatric surgery. Not for paediatrics (no operation there) and not for general surgery (its own lists). ──
@@ -94,11 +89,11 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'kdigo-evre', roller: ['dahiliye'],
     metin: {
       ad: u('Buyrak surunkali kasalligi: KDIGO toifalari', 'Буйрак сурункали касаллиги: KDIGO тоифалари', 'Хроническая болезнь почек: категории KDIGO'),
-      aciklama: u('KFT toifasi (G1–G5), albuminuriya toifasi (A1–A3) va ular tushadigan xavf katagi. Davolash rejasi va kuzatuv muddati yozilmaydi.', 'КФТ тоифаси (G1–G5), альбуминурия тоифаси (A1–A3) ва улар тушадиган хавф катаги. Даволаш режаси ва кузатув муддати ёзилмайди.', 'Категория СКФ (G1–G5), категория альбуминурии (A1–A3) и ячейка риска, в которую они попадают. План лечения и сроки наблюдения не указываются.'),
+      aciklama: u('KFT toifasi (G1–G5), albuminuriya toifasi (A1–A3) va, ikkala natija kiritilganda, ular tushadigan xavf katagi. Davolash rejasi va kuzatuv muddati yozilmaydi.', 'КФТ тоифаси (G1–G5), альбуминурия тоифаси (A1–A3) ва, иккала натижа киритилганда, улар тушадиган хавф катаги. Даволаш режаси ва кузатув муддати ёзилмайди.', 'Категория СКФ (G1–G5), категория альбуминурии (A1–A3) и, когда введены оба результата, ячейка риска, в которую они попадают. План лечения и сроки наблюдения не указываются.'),
       alanlar: {
         egfr: u('Hisoblangan KFT', 'Ҳисобланган КФТ', 'Расчётная СКФ'),
-        uacr: u('Siydikda albumin va kreatinin nisbati (ixtiyoriy)', 'Сийдикда альбумин ва креатинин нисбати (ихтиёрий)', 'Отношение альбумина к креатинину в моче (необязательно)'),
-        egfr_bir_yil_once: u('Bir yil oldingi KFT (ixtiyoriy)', 'Бир йил олдинги КФТ (ихтиёрий)', 'СКФ год назад (необязательно)'),
+        uacr: u('Siydikda albumin va kreatinin nisbati (usiz xavf katagi koʻrsatilmaydi)', 'Сийдикда альбумин ва креатинин нисбати (усиз хавф катаги кўрсатилмайди)', 'Отношение альбумина к креатинину в моче (без него ячейка риска не показывается)'),
+        egfr_bir_yil_once: u('Oldingi KFT (ixtiyoriy)', 'Олдинги КФТ (ихтиёрий)', 'Прежняя СКФ (необязательно)'),
       },
       bantlar: {
         yesil: u('Past xavf (yashil katak)', 'Паст хавф (яшил катак)', 'Низкий риск (зелёная ячейка)'),
@@ -116,11 +111,14 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
         A1: u('A1: albumin va kreatinin nisbati 30 mg/g dan past', 'A1: альбумин ва креатинин нисбати 30 мг/г дан паст', 'A1: отношение альбумина к креатинину менее 30 мг/г'),
         A2: u('A2: albumin va kreatinin nisbati 30–300 mg/g', 'A2: альбумин ва креатинин нисбати 30–300 мг/г', 'A2: отношение альбумина к креатинину 30–300 мг/г'),
         A3: u('A3: albumin va kreatinin nisbati 300 mg/g dan yuqori', 'A3: альбумин ва креатинин нисбати 300 мг/г дан юқори', 'A3: отношение альбумина к креатинину более 300 мг/г'),
-        hizli_dusus: u('Bir yilda KFT 25 foizdan koʻproq pasaygan', 'Бир йилда КФТ 25 фоиздан кўпроқ пасайган', 'За год СКФ снизилась более чем на 25 %'),
-        sevk_egfr30: u('KDIGO boʻyicha nefrologga yoʻllash mezoni: KFT 30 dan past', 'KDIGO бўйича нефрологга йўллаш мезони: КФТ 30 дан паст', 'Критерий KDIGO для направления к нефрологу: СКФ менее 30'),
-        sevk_a3: u('KDIGO boʻyicha nefrologga yoʻllash mezoni: A3 albuminuriya', 'KDIGO бўйича нефрологга йўллаш мезони: A3 альбуминурия', 'Критерий KDIGO для направления к нефрологу: альбуминурия A3'),
-        sevk_hizli_dusus: u('KDIGO boʻyicha nefrologga yoʻllash mezoni: KFTning tez pasayishi', 'KDIGO бўйича нефрологга йўллаш мезони: КФТнинг тез пасайиши', 'Критерий KDIGO для направления к нефрологу: быстрое снижение СКФ'),
-        sevk_cok_yuksek_risk: u('KDIGO boʻyicha nefrologga yoʻllash mezoni: juda yuqori xavf katagi', 'KDIGO бўйича нефрологга йўллаш мезони: жуда юқори хавф катаги', 'Критерий KDIGO для направления к нефрологу: ячейка очень высокого риска'),
+        // NOTYA-ULKE-ARAC-DUZELTME-01 (fault 5): no risk cell without the urine result; each referral line says what the
+        // guideline's list names and what one result cannot show (the kit's definition cites the list). mg/g only: the
+        // one unit this pack states for the ratio.
+        uacr_yok: u('Siydikda albumin va kreatinin nisbati kiritilmagan: xavf katagi ikkala natijani talab qiladi va koʻrsatilmaydi', 'Сийдикда альбумин ва креатинин нисбати киритилмаган: хавф катаги иккала натижани талаб қилади ва кўрсатилмайди', 'Отношение альбумина к креатинину в моче не введено: для ячейки риска нужны оба результата, и она не показывается'),
+        sevk_egfr30: u('KDIGO roʻyxatida, buyrak mutaxassisiga yoʻllash holatlari orasida: KFT 30 dan past', 'KDIGO рўйхатида, буйрак мутахассисига йўллаш ҳолатлари орасида: КФТ 30 дан паст', 'В перечне KDIGO среди обстоятельств для направления к специалисту по болезням почек: СКФ менее 30'),
+        sevk_acr_hematuri: u('Nisbat 300 mg/g yoki undan yuqori. KDIGO roʻyxatida bu holat barqaror topilma sifatida va siydikda qon bilan birga koʻrsatilgan: bitta natija buni koʻrsatmaydi', 'Нисбат 300 мг/г ёки ундан юқори. KDIGO рўйхатида бу ҳолат барқарор топилма сифатида ва сийдикда қон билан бирга кўрсатилган: битта натижа буни кўрсатмайди', 'Отношение 300 мг/г или выше. В перечне KDIGO это названо как стойкая находка в сочетании с кровью в моче: один результат этого не показывает'),
+        sevk_acr700: u('Nisbat 700 mg/g dan yuqori. KDIGO roʻyxatida bu holat barqaror topilma sifatida koʻrsatilgan: bitta natija buni koʻrsatmaydi', 'Нисбат 700 мг/г дан юқори. KDIGO рўйхатида бу ҳолат барқарор топилма сифатида кўрсатилган: битта натижа буни кўрсатмайди', 'Отношение выше 700 мг/г. В перечне KDIGO это названо как стойкая находка: один результат этого не показывает'),
+        sevk_dusus20: u('KFT oldingi qiymatdan 20 foizdan koʻproq past. KDIGO roʻyxatida 20 foizdan ortiq barqaror pasayish koʻrsatilgan: ikki natija pasayish barqaror ekanini koʻrsatmaydi', 'КФТ олдинги қийматдан 20 фоиздан кўпроқ паст. KDIGO рўйхатида 20 фоиздан ортиқ барқарор пасайиш кўрсатилган: икки натижа пасайиш барқарор эканини кўрсатмайди', 'СКФ более чем на 20 % ниже прежнего значения. В перечне KDIGO названо устойчивое снижение более чем на 20 %: два результата не показывают, что снижение устойчиво'),
       },
       not: KARAR,
     },
@@ -131,10 +129,9 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'pasi', roller: ['dermatoloji'],
     metin: {
       ad: u('PASI indeksi', 'PASI индекси', 'Индекс PASI'),
-      aciklama: u('Psoriaz maydoni va ogʻirligi indeksi. Toʻrt soha; har birida eritema, induratsiya va qipiqlanish (0–4) hamda maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Boʻsh maydon 0 deb olinadi.', 'Псориаз майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида эритема, индурация ва қипиқланиш (0–4) ҳамда майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Бўш майдон 0 деб олинади.', 'Индекс площади и тяжести псориаза. Четыре области; в каждой эритема, инфильтрация и шелушение (0–4) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Пустое поле считается равным 0.'),
+      aciklama: u('Psoriaz maydoni va ogʻirligi indeksi. Toʻrt soha; har birida eritema, induratsiya va qipiqlanish (0–4) hamda maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Indeks har bir soha toʻliq kiritilganda chiqadi: maydon bali va, maydon 0 boʻlmasa, uchta belgi. Vosita ballni koʻrsatadi va ogʻirlik darajasini nomlamaydi.', 'Псориаз майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида эритема, индурация ва қипиқланиш (0–4) ҳамда майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Индекс ҳар бир соҳа тўлиқ киритилганда чиқади: майдон бали ва, майдон 0 бўлмаса, учта белги. Восита баллни кўрсатади ва оғирлик даражасини номламайди.', 'Индекс площади и тяжести псориаза. Четыре области; в каждой эритема, инфильтрация и шелушение (0–4) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Индекс появляется, когда каждая область заполнена: балл площади и, если площадь не 0, три признака. Инструмент показывает балл и не называет степень тяжести.'),
       alanlar: sohaAlanlari(PASI_BELGILARI),
       sayilar: { pasi: ayni('PASI') },
-      bantlar: ucBant('10', '20', '10–19,9'),
       not: KARAR,
     },
   },
@@ -142,10 +139,19 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'easi', roller: ['dermatoloji'],
     metin: {
       ad: u('EASI indeksi', 'EASI индекси', 'Индекс EASI'),
-      aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Vazn koeffitsiyentlari 8 yosh va undan katta bemor uchun. Boʻsh maydon 0 deb olinadi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Вазн коэффитсиентлари 8 ёш ва ундан катта бемор учун. Бўш майдон 0 деб олинади.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовые коэффициенты — для пациента 8 лет и старше. Пустое поле считается равным 0.'),
-      alanlar: sohaAlanlari(EASI_BELGILARI),
+      aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Har bir sohaning vazn koeffitsiyenti bemorning yoshiga bogʻliq: 8 yoshgacha yoki 8 yosh va undan katta. Indeks yosh tanlanganda va har bir soha toʻliq kiritilganda chiqadi: maydon bali va, maydon 0 boʻlmasa, toʻrtta belgi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Ҳар бир соҳанинг вазн коэффитсиенти беморнинг ёшига боғлиқ: 8 ёшгача ёки 8 ёш ва ундан катта. Индекс ёш танланганда ва ҳар бир соҳа тўлиқ киритилганда чиқади: майдон бали ва, майдон 0 бўлмаса, тўртта белги.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовой коэффициент каждой области зависит от возраста пациента: до 8 лет либо 8 лет и старше. Индекс появляется, когда выбран возраст и каждая область заполнена: балл площади и, если площадь не 0, четыре признака.'),
+      alanlar: { yas: u('Bemorning yoshi', 'Беморнинг ёши', 'Возраст пациента'), ...sohaAlanlari(EASI_BELGILARI) },
+      secenekler: { yas: { yedi_ve_alti: u('8 yoshgacha', '8 ёшгача', 'До 8 лет'), sekiz_ve_ustu: u('8 yosh va undan katta', '8 ёш ва ундан катта', '8 лет и старше') } },
       sayilar: { easi: ayni('EASI') },
-      bantlar: ucBant('7', '21', '7–20,9'),
+      // the published strata, six of them (the kit's definition cites the paper)
+      bantlar: {
+        temiz: u('Toza (0)', 'Тоза (0)', 'Чисто (0)'),
+        neredeyse_temiz: u('Deyarli toza (0,1–1,0)', 'Деярли тоза (0,1–1,0)', 'Почти чисто (0,1–1,0)'),
+        hafif: u('Yengil (1,1–7,0)', 'Енгил (1,1–7,0)', 'Лёгкая степень (1,1–7,0)'),
+        orta: u('Oʻrtacha (7,1–21,0)', 'Ўртача (7,1–21,0)', 'Средняя степень (7,1–21,0)'),
+        siddetli: u('Ogʻir (21,1–50,0)', 'Оғир (21,1–50,0)', 'Тяжёлая степень (21,1–50,0)'),
+        cok_siddetli: u('Juda ogʻir (50,1–72,0)', 'Жуда оғир (50,1–72,0)', 'Очень тяжёлая степень (50,1–72,0)'),
+      },
       not: KARAR,
     },
   },
@@ -153,7 +159,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'scorad', roller: ['dermatoloji'],
     metin: {
       ad: u('SCORAD indeksi', 'SCORAD индекси', 'Индекс SCORAD'),
-      aciklama: u('Atopik dermatit ogʻirligi: A — zararlangan yuza foizi, B — olti belgining intensivligi (0–3), C — qichishish va uyqu buzilishi (0–10). Hisob: A ning beshdan biri, B ning uch yarim barobari va C yigʻindisi.', 'Атопик дерматит оғирлиги: A — зарарланган юза фоизи, B — олти белгининг интенсивлиги (0–3), C — қичишиш ва уйқу бузилиши (0–10). Ҳисоб: A нинг бешдан бири, B нинг уч ярим баробари ва C йиғиндиси.', 'Тяжесть атопического дерматита: A — процент поражённой поверхности, B — интенсивность шести признаков (0–3), C — зуд и нарушение сна (0–10). Расчёт: пятая часть A, B, умноженное на три с половиной, и C в сумме.'),
+      aciklama: u('Atopik dermatit ogʻirligi: A — zararlangan yuza foizi, B — olti belgining intensivligi (0–3), C — qichishish va uyqu buzilishi (0–10). Hisob: A ning beshdan biri, B ning uch yarim barobari va C yigʻindisi. Indeks barcha maydonlar toʻldirilganda chiqadi.', 'Атопик дерматит оғирлиги: A — зарарланган юза фоизи, B — олти белгининг интенсивлиги (0–3), C — қичишиш ва уйқу бузилиши (0–10). Ҳисоб: A нинг бешдан бири, B нинг уч ярим баробари ва C йиғиндиси. Индекс барча майдонлар тўлдирилганда чиқади.', 'Тяжесть атопического дерматита: A — процент поражённой поверхности, B — интенсивность шести признаков (0–3), C — зуд и нарушение сна (0–10). Расчёт: пятая часть A, B, умноженное на три с половиной, и C в сумме. Индекс появляется, когда заполнены все поля.'),
       alanlar: {
         yayginlik: u('Zararlangan teri yuzasi', 'Зарарланган тери юзаси', 'Площадь поражения кожи'),
         eritem: u('Eritema (0–3)', 'Эритема (0–3)', 'Эритема (0–3)'),
@@ -171,7 +177,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
         b: u('B — intensivlik', 'B — интенсивлик', 'B — интенсивность'),
         c: u('C — subyektiv belgilar', 'C — субектив белгилар', 'C — субъективные симптомы'),
       },
-      bantlar: ucBant('25', '50', '25–49,9'),
+      bantlar: { hafif: u('Yengil (25 dan past)', 'Енгил (25 дан паст)', 'Лёгкая степень (менее 25)'), orta: u('Oʻrtacha (25–50)', 'Ўртача (25–50)', 'Средняя степень (25–50)'), siddetli: u('Ogʻir (50 dan yuqori)', 'Оғир (50 дан юқори)', 'Тяжёлая степень (более 50)') },
       not: KARAR,
     },
   },
@@ -213,14 +219,14 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'antibiyotik-sure', roller: ['enfeksiyon-hastaliklari'],
     metin: {
       ad: u('Antibiotik kursi: kunlar hisobi', 'Антибиотик курси: кунлар ҳисоби', 'Курс антибиотика: счёт дней'),
-      aciklama: u('Boshlangan sana va kunlar sonidan kurs tugaydigan sana va nazorat sanasi hisoblanadi. Dori, doza va tavsiya etiladigan muddat yozilmaydi.', 'Бошланган сана ва кунлар сонидан курс тугайдиган сана ва назорат санаси ҳисобланади. Дори, доза ва тавсия этиладиган муддат ёзилмайди.', 'По дате начала и числу дней рассчитываются дата окончания курса и дата контроля. Препарат, доза и рекомендуемая длительность не указываются.'),
+      aciklama: u('Boshlangan sana va kunlar sonidan kursning oxirgi kuni va nazorat sanasi hisoblanadi. Boshlangan sana 1-kun deb olinadi. Dori, doza va tavsiya etiladigan muddat yozilmaydi.', 'Бошланган сана ва кунлар сонидан курснинг охирги куни ва назорат санаси ҳисобланади. Бошланган сана 1-кун деб олинади. Дори, доза ва тавсия этиладиган муддат ёзилмайди.', 'По дате начала и числу дней рассчитываются последний день курса и дата контроля. Дата начала считается первым днём. Препарат, доза и рекомендуемая длительность не указываются.'),
       alanlar: {
         baslangic: u('Kurs boshlangan sana', 'Курс бошланган сана', 'Дата начала курса'),
         sure_gun: u('Kurs davomiyligi', 'Курс давомийлиги', 'Длительность курса'),
         kontrol: u('Nazorat sanasi (ixtiyoriy)', 'Назорат санаси (ихтиёрий)', 'Дата контроля (необязательно)'),
         sinif: u('Antibiotik guruhi, qisqacha (ixtiyoriy)', 'Антибиотик гуруҳи, қисқача (ихтиёрий)', 'Группа антибиотика, кратко (необязательно)'),
       },
-      tarihler: { bitis: u('Kurs tugaydigan sana', 'Курс тугайдиган сана', 'Дата окончания курса'), kontrol: u('Nazorat', 'Назорат', 'Контроль') },
+      tarihler: { bitis: u('Kursning oxirgi kuni', 'Курснинг охирги куни', 'Последний день курса'), kontrol: u('Nazorat', 'Назорат', 'Контроль') },
       not: DOZASIZ,
     },
   },

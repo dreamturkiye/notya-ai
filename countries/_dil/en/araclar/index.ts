@@ -17,6 +17,7 @@
  *   labBirimleri   the unit the country's laboratories report each value in, for the tools that read one
  *   kapali         tools of the set this country keeps as SLOTS: the scale is not the country's, or the tool's
  *                  arithmetic does not fit the country's unit. Said per tool, with what is missing and who decides.
+ *   dozYazimi      how the country writes an amount of a medicine: with or without a zero after the decimal point
  *   birimAdlari    unit names this country writes differently (the same quantity, another notation)
  *   degisen        words of a tool this country writes differently (a label that must name the unit)
  * THE FOLLOW-UP LIST is given to exactly the roles that have at least one switched-on tool of their own — worked out
@@ -104,6 +105,10 @@ export const EN_BIRIM_ADLARI: Readonly<Record<string, string>> = {
   'mg/dL': 'mg/dL',
   'mmol/L': 'mmol/L',
   'umol/L': 'µmol/L',
+  // NOTYA-ULKE-ARAC-DUZELTME-01: the units of the quantities added by the tools-correction job
+  'mmol/mol': 'mmol/mol',
+  'ug/L': 'µg/L',
+  'ug/L/yil': 'µg/L per year',
 }
 
 /** The sentence under a number whose unit the doctor has not chosen yet. Base spelling. Only in a pack that accepts several units for a value. */
@@ -135,6 +140,11 @@ export type EnAraclarGirdisi = {
    * A LIST = the country accepts each of these units, and the doctor chooses one beside the field.
    */
   labBirimleri: UlkeAraclari['labBirimleri']
+  /**
+   * HOW THIS COUNTRY WRITES AN AMOUNT OF A MEDICINE (NOTYA-ULKE-ARAC-DUZELTME-01): `sondaSifir: false` = never a zero
+   * after the decimal point ("5 mL", "2.5 mg"). A NATIONAL RULE: every country states it, with its source beside it.
+   */
+  dozYazimi: { sondaSifir: boolean }
   /** Tools of the set this country keeps as slots: kit key → what is missing, and who decides. */
   kapali: Readonly<Record<string, { eksik: string; kimden: string }>>
   /** Unit names this country writes differently: unit code → name. Used as written. */
@@ -177,6 +187,8 @@ function gerekenBirimler(araclar: readonly PaketAraci[], g: EnAraclarGirdisi): s
       if (a.lab) for (const birim of kabulEdilenBirimler(g.labBirimleri[a.lab])) b.add(birim)
     }
     for (const k of t.sonucBirimleri ?? []) b.add(k)
+    // a result whose unit follows the unit a laboratory value was typed in: one code for every unit the pack accepts
+    for (const [olcu, ek] of Object.entries(t.sonucLabEkleri ?? {})) for (const birim of kabulEdilenBirimler(g.labBirimleri[olcu as keyof typeof g.labBirimleri])) b.add(`${birim}${ek}`)
     for (const o of t.sonucOlculeri ?? []) b.add(g.birimler[o])
   }
   return [...b]
@@ -238,6 +250,7 @@ export function enAraclar(g: EnAraclarGirdisi): UlkeAraclari {
     araclar,
     birimler,
     labBirimleri: g.labBirimleri,
+    dozYazimi: g.dozYazimi,
     yuvalar: [...yuvalar, ...(g.ek?.yuvalar ?? [])],
     inceleme: { makineYazimi: true, klinisyen: null },
     ...(g.ek?.tanimlar?.length ? { kendiAraclari: g.ek.tanimlar } : {}),

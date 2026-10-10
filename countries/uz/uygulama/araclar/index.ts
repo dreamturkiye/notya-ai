@@ -35,7 +35,7 @@ import { UZ_ROL_ARACLARI_3 } from './rol3'
 import { UZ_ROL_ARACLARI_4 } from './rol4'
 import { UZ_ROL_ARACLARI_5 } from './rol5'
 import { UZ_TAKIP_ARACLARI } from './takip'
-import { UZ_ARAC_BIRIMLERI, UZ_LAB_BIRIMLERI } from './birimler'
+import { UZ_ARAC_BIRIMLERI, UZ_DOZ_YAZIMI, UZ_LAB_BIRIMLERI } from './birimler'
 import { UZ_ARAC_YUVALARI } from './yuvalar'
 
 /**
@@ -57,6 +57,7 @@ export const UZ_ARACLAR: UlkeAraclari = {
   araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5]), ...UZ_TAKIP_ARACLARI],
   birimler: UZ_ARAC_BIRIMLERI,
   labBirimleri: UZ_LAB_BIRIMLERI,
+  dozYazimi: UZ_DOZ_YAZIMI,
   yuvalar: UZ_ARAC_YUVALARI,
   inceleme: { makineYazimi: true, klinisyen: null },
 }

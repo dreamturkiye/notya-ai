@@ -12,8 +12,11 @@ export const puan = (anahtar: string, enAz: number, enCok: number, ek: Partial<A
 export const metin = (anahtar: string, ek: Partial<AracAlani> = {}): AracAlani => ({ anahtar, tur: 'metin', istege: true, ...ek })
 export const sayi = (anahtar: string, enAz: number, enCok: number, ek: Partial<AracAlani> = {}): AracAlani => ({ anahtar, tur: 'sayi', enAz, enCok, ...ek })
 
-/** true = the field is there for this input (its condition, if it has one, holds). */
-export const alanVarMi = (a: AracAlani, g: AracGirdisi): boolean => !a.kosul || (typeof g[a.kosul.alan] === 'string' && a.kosul.degerler.includes(g[a.kosul.alan] as string))
+/**
+ * true = the field is there for this input (its condition, if it has one, holds). A choice whose options are the
+ * country's (`tablodan`) and that has none — the pack supplied no table — is not there at all.
+ */
+export const alanVarMi = (a: AracAlani, g: AracGirdisi): boolean => !(a.tablodan && !(a.secenekler ?? []).length) && (!a.kosul || (typeof g[a.kosul.alan] === 'string' && a.kosul.degerler.includes(g[a.kosul.alan] as string)))
 /** An input with every field that is not there emptied: what a tool's arithmetic is always handed. */
 export function kosullariUygula(alanlar: readonly AracAlani[], g: AracGirdisi): AracGirdisi {
   const c: Record<string, number | string | boolean | null> = { ...g }
