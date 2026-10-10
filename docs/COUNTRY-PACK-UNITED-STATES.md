@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1956 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-US` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1948 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-US` spelling by the set's spelling table.
 - **This country's own** (`countries/us/`, six small files): 42 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -119,10 +119,6 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `audiology` | Audiologist | clinic allied profession |
 | `speech-language-pathology` | Speech-Language Pathologist | clinic allied profession |
 | `clinical-social-work` | Licensed Clinical Social Worker | clinic allied profession |
-| `podiatry` | Podiatry | clinic allied profession |
-| `optometry` | Optometry | clinic allied profession |
-| `chiropractic` | Chiropractic | clinic allied profession |
-| `nurse-midwifery` | Nurse Midwife | clinic allied profession |
 
 ## Tools
 
@@ -140,7 +136,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `noro-postop` | Checklist after a neurosurgical operation | Neurosurgery | no measured input |
 | `nobet-bilinc` | Seizure and consciousness follow-up | Neurosurgery | no measured input |
 | `cocuk-prepost-op` | Checklist before and after an operation | Pediatric surgery | no measured input |
-| `yara-dren-izlem` | Wound, drain and stitches follow-up | Pediatric surgery, General surgery, Colon and Rectal Surgery, Podiatry | Drain output (optional): **mL** · result in mL |
+| `yara-dren-izlem` | Wound, drain and stitches follow-up | Pediatric surgery, General surgery, Colon and Rectal Surgery | Drain output (optional): **mL** · result in mL |
 | `genel-preop` | Pre-operative checklist | General surgery, Colon and Rectal Surgery | no measured input |
 | `pasi` | PASI score | Dermatology | no measured input |
 | `easi` | EASI score | Dermatology | no measured input |
@@ -151,7 +147,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `toraks-preop` | Checklist before a chest operation | Thoracic and Cardiac Surgery | no measured input |
 | `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic and Cardiac Surgery | no measured input |
 | `inhaler-teknik` | Inhaler technique | Pulmonary Disease, Family medicine, Pediatrics, Allergy and Immunology | Check the technique again after (optional): **months** |
-| `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology, Optometry | no measured input |
+| `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology | no measured input |
 | `kalp-damar-preop` | Checklist before a heart or vascular operation | Vascular Surgery, Thoracic and Cardiac Surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Vascular Surgery | no measured input |
 | `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Vascular Surgery | no measured input |
@@ -172,7 +168,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sports medicine, Emergency medicine, Family medicine, Neurology, Pediatrics | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sports medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic and Cardiac Surgery, Pulmonary Disease, Ophthalmology, Vascular Surgery, Otolaryngology (ENT), Nephrology, Neurology, Hematology/Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic Radiology, Rheumatology, Urology, Sports medicine, Allergy and Immunology, Colon and Rectal Surgery, Radiation Oncology, Cosmetic surgery, Audiologist, Podiatry, Optometry | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic and Cardiac Surgery, Pulmonary Disease, Ophthalmology, Vascular Surgery, Otolaryngology (ENT), Nephrology, Neurology, Hematology/Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic Radiology, Rheumatology, Urology, Sports medicine, Allergy and Immunology, Colon and Rectal Surgery, Radiation Oncology, Cosmetic surgery, Audiologist | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (5) — for a local clinical lead
 

@@ -271,7 +271,7 @@ describe('us new tools 3: each is complete — WITH ALL SIX SWITCHED ON, IN THIS
     assert.deepEqual(goren('us-bmi'), sirali([...hekimler, 'dietetics']))
     assert.deepEqual(goren('us-egfr-ckd-epi-2021'), sirali(hekimler))
     assert.deepEqual(goren('us-pack-years'), sirali(hekimler))
-    assert.deepEqual(goren('us-blood-sugar-ranges'), sirali([...hekimler, 'dietetics', 'podiatry']))
+    assert.deepEqual(goren('us-blood-sugar-ranges'), sirali([...hekimler, 'dietetics']))
     assert.deepEqual(goren('us-fall-risk-screen'), sirali([...hekimler, 'physiotherapy', 'occupational-therapy']))
     assert.deepEqual(goren('us-ecog-performance-status'), ['oncology', 'radiation-oncology', 'hospice-palliative-medicine'])
     // "every doctor role" is a promise the pack check keeps when a doctor role is added
@@ -279,7 +279,7 @@ describe('us new tools 3: each is complete — WITH ALL SIX SWITCHED ON, IN THIS
     // an account without a role sees none of them
     for (const k of ANAHTARLAR) assert.equal(hesabinAraci(B, null, k), null, k)
     // no profession is shown a tool that was not named for it
-    for (const rol of ['clinical-psychology', 'clinical-social-work', 'audiology', 'optometry', 'chiropractic', 'nurse-midwifery', 'speech-language-pathology']) for (const k of ANAHTARLAR) assert.equal(hesabinAraci(B, rol, k), null, `${k} for ${rol}`)
+    for (const rol of ['clinical-psychology', 'clinical-social-work', 'audiology', 'speech-language-pathology']) for (const k of ANAHTARLAR) assert.equal(hesabinAraci(B, rol, k), null, `${k} for ${rol}`)
   })
 
   it('A TOOL FOR SOME PATIENTS ONLY IS HELD BACK FOR THE OTHERS: the ages each source states; an unknown birth date never opens it', () => {

@@ -5,7 +5,7 @@
  *
  *   1. NOTHING IS SWITCHED ON OR OFF by this job: the same tools are on as before, and the five the owner ordered
  *      off stay off.
- *   2. WHO SEES A TOOL: eleven tools of the set are shown to more roles here; every other tool to the set's roles.
+ *   2. WHO SEES A TOOL: ten tools of the set are shown to more roles here; every other tool to the set's roles.
  *   3. COUNTRY DATA, each number beside the source it was read from on 2026-10-10: the range of the expected height;
  *      the hearing grades; the DAS28 bands. And what is deliberately NOT stated, with what the tool then shows.
  *   4. LICENCES: "free" only where the rights holder's own notice was read; the others stated as before.
@@ -50,12 +50,11 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
   'inhaler-teknik': ['respiratory-medicine', 'family-medicine', 'paediatrics', 'allergy-immunology'],
   'kalp-damar-preop': ['cardiovascular-surgery', 'thoracic-surgery'],
   'genel-preop': ['general-surgery', 'colon-rectal-surgery'],
-  'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'colon-rectal-surgery', 'podiatry'],
+  'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'colon-rectal-surgery'],
   'kur-sayaci': ['oncology', 'radiation-oncology'],
   'toksisite-listesi': ['oncology', 'radiation-oncology'],
   'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
   'odyometri-pta': ['otolaryngology', 'audiology'],
-  'gorme-keskinligi': ['ophthalmology', 'optometry'],
 }
 
 describe('us tools 1: nothing is switched on or off by this job', () => {
@@ -82,7 +81,7 @@ describe('us tools 1: nothing is switched on or off by this job', () => {
 })
 
 describe('us tools 2: who sees which tool', () => {
-  it('ELEVEN TOOLS OF THE SET ARE SHOWN TO MORE ROLES HERE, exactly as the audit lists them', () => {
+  it('TEN TOOLS OF THE SET ARE SHOWN TO MORE ROLES HERE, as the audit lists them (two more wait on roles that are not added yet)', () => {
     assert.deepEqual(Object.keys(US_GIRDI.araclar.gorenler ?? {}).sort(), Object.keys(GORENLER).sort())
     for (const [k, roller] of Object.entries(GORENLER)) {
       assert.deepEqual([...(araci(k).roller ?? [])], [...roller], k)
@@ -122,9 +121,9 @@ describe('us tools 2: who sees which tool', () => {
     for (const rol of ROLLER) assert.ok(izgara(rol).includes('hasta-portali'), rol)
     const tasiyan = ROLLER.filter((r) => A.araclar.some((p) => p.anahtar !== 'takip-paneli' && p.roller?.includes(r)))
     assert.deepEqual([...(araci('takip-paneli').roller ?? [])], tasiyan)
-    // 22 roles had it before this job; the nine roles the audit gives a first tool to have it now
-    assert.equal(tasiyan.length, 22 + 9)
-    for (const rol of ['family-medicine', 'neurology', 'audiology', 'optometry', 'podiatry', 'aesthetic-surgery', 'allergy-immunology', 'colon-rectal-surgery', 'radiation-oncology']) assert.ok(tasiyan.includes(rol), rol)
+    // 22 roles had it before this job; the seven roles the audit gives a first tool to have it now
+    assert.equal(tasiyan.length, 22 + 7)
+    for (const rol of ['family-medicine', 'neurology', 'audiology', 'aesthetic-surgery', 'allergy-immunology', 'colon-rectal-surgery', 'radiation-oncology']) assert.ok(tasiyan.includes(rol), rol)
   })
 
   it('ONE WORD, the audit\'s decision: the two surgical checklists say "anesthesiologist" here (the set\'s "anesthetist" usually means a nurse anesthetist in the United States)', () => {

@@ -58,11 +58,7 @@
         { "anahtar": "hospice-palliative-medicine", "taraf": "doktor", "gibi": "internal-medicine" },
         { "anahtar": "reproductive-endocrinology-infertility", "taraf": "doktor", "gibi": "obstetrics-gynaecology" },
         { "anahtar": "speech-language-pathology", "taraf": "klinik-muttefik", "gibi": "occupational-therapy" },
-        { "anahtar": "clinical-social-work", "taraf": "klinik-muttefik", "gibi": "clinical-psychology" },
-        { "anahtar": "podiatry", "taraf": "klinik-muttefik", "gibi": "orthopaedics" },
-        { "anahtar": "optometry", "taraf": "klinik-muttefik", "gibi": "ophthalmology" },
-        { "anahtar": "chiropractic", "taraf": "klinik-muttefik", "gibi": "physiotherapy" },
-        { "anahtar": "nurse-midwifery", "taraf": "klinik-muttefik", "gibi": "obstetrics-gynaecology" }
+        { "anahtar": "clinical-social-work", "taraf": "klinik-muttefik", "gibi": "clinical-psychology" }
       ]
     },
     "xx": {

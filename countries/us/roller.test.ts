@@ -3,8 +3,10 @@
  * (docs/araclar-denetim/US.md, Part 3; us-kararlar.json on the branch araclar-denetim/us).
  *
  *   BEFORE  40 roles: 30 doctor specialties, 5 clinic doctors, 5 allied professions (the shared English set).
- *   AFTER   55 roles: 40 doctor specialties, 4 clinic doctors, 11 professions.
- *           kept 25 specialties and 9 clinic roles · renamed 5 · removed 1 · added 10 specialties and 6 professions.
+ *   AFTER   51 roles: 40 doctor specialties, 4 clinic doctors, 7 professions.
+ *           kept 25 specialties and 9 clinic roles · renamed 5 · removed 1 · added 10 specialties and 2 professions.
+ *           NOT added, each waiting on the kit: 6 professions the audit names (nurse practitioner, physician
+ *           assistant, podiatry, optometry, chiropractic, nurse midwife).
  *
  * Also held here: every added role says which shared role it behaves like and finds a note template and intake
  * questions there; a profession is never addressed as a senior doctor; AN ACCOUNT STORED WITH A KEY THIS COUNTRY TOOK
@@ -38,7 +40,7 @@ const ROLLER = US_PAKETI.uygulama!.roller!
 const tanim = (k: string) => US_ARAYUZ.roller.find((r) => r.anahtar === k)
 const ad = (k: string) => tanim(k)?.ad[D]
 
-/** The ten specialties and six professions the audit adds, each with the name the body cited writes and the shared role it behaves like. */
+/** The ten specialties and two professions added, each with the name the body cited writes and the shared role it behaves like. */
 const EKLENEN_HEKIMLIKLER: readonly (readonly [string, string, string])[] = [
   ['allergy-immunology', 'Allergy and Immunology', 'internal-medicine'],
   ['geriatric-medicine', 'Geriatric Medicine', 'internal-medicine'],
@@ -54,20 +56,16 @@ const EKLENEN_HEKIMLIKLER: readonly (readonly [string, string, string])[] = [
 const EKLENEN_MESLEKLER: readonly (readonly [string, string, string])[] = [
   ['speech-language-pathology', 'Speech-Language Pathologist', 'occupational-therapy'],
   ['clinical-social-work', 'Licensed Clinical Social Worker', 'clinical-psychology'],
-  ['podiatry', 'Podiatry', 'orthopaedics'],
-  ['optometry', 'Optometry', 'ophthalmology'],
-  ['chiropractic', 'Chiropractic', 'physiotherapy'],
-  ['nurse-midwifery', 'Nurse Midwife', 'obstetrics-gynaecology'],
 ]
 
 describe('us roles: the list before and after', () => {
-  it('BEFORE 40 (30 + 5 + 5); AFTER 55 (40 doctor specialties, 4 clinic doctors, 11 professions)', () => {
+  it('BEFORE 40 (30 + 5 + 5); AFTER 51 (40 doctor specialties, 4 clinic doctors, 7 professions)', () => {
     assert.equal(EN_ROLLER.length, 40)
-    assert.equal(ROLLER.length, 55)
+    assert.equal(ROLLER.length, 51)
     assert.deepEqual([...ROLLER], [...enRolAnahtarlari(US_ROLLER)])
     assert.deepEqual(US_ARAYUZ.roller.map((r) => r.anahtar), [...ROLLER])
     const say = (taraf: string) => US_ARAYUZ.roller.filter((r) => r.taraf === taraf).length
-    assert.deepEqual([say('doktor'), say('klinik-hekim'), say('klinik-muttefik')], [40, 4, 11])
+    assert.deepEqual([say('doktor'), say('klinik-hekim'), say('klinik-muttefik')], [40, 4, 7])
     // the three kinds stay together, in the order the picker shows them
     assert.deepEqual([...new Set(US_ARAYUZ.roller.map((r) => r.taraf))], ['doktor', 'klinik-hekim', 'klinik-muttefik'])
     assert.equal(new Set(ROLLER).size, ROLLER.length)
@@ -124,19 +122,25 @@ describe('us roles: the list before and after', () => {
     assert.deepEqual(hekimlikler.slice(0, 30), EN_ROLLER.slice(0, 30))
   })
 
-  it('ADDED 6 professions of a clinic, each an allied profession (the kit\'s one kind for a professional who is not a physician)', () => {
+  it('ADDED 2 professions of a clinic, each beside a profession the set already has and framed the same way', () => {
     for (const [k, v, gibi] of EKLENEN_MESLEKLER) {
       assert.equal(tanim(k)?.taraf, 'klinik-muttefik', k)
       assert.equal(ad(k), v, k)
       assert.equal(tanim(k)?.gibi, gibi, k)
     }
-    assert.deepEqual(ROLLER.slice(-6), EKLENEN_MESLEKLER.map((x) => x[0]))
+    assert.deepEqual(ROLLER.slice(-2), EKLENEN_MESLEKLER.map((x) => x[0]))
+    // the role each behaves like is itself an allied profession whose note has the field for a referring doctor's diagnosis, or none at all
+    for (const [, , gibi] of EKLENEN_MESLEKLER) assert.equal(EN_ROLLER.indexOf(gibi as (typeof EN_ROLLER)[number]) >= 35, true, `${gibi} is not one of the set's five professions`)
   })
 
-  it('NOT ADDED: nurse practitioner and physician assistant — the kit has one role per account and cannot hold a profession beside a specialty', () => {
-    assert.deepEqual([...US_EKLENMEYEN_MESLEKLER], ['nurse-practitioner', 'physician-assistant'])
+  it('NOT ADDED, each waiting on the kit: nurse practitioner and physician assistant (one role per account), podiatry, optometry, chiropractic and the nurse midwife (no opening of the instruction fits them)', () => {
+    assert.deepEqual([...US_EKLENMEYEN_MESLEKLER], ['nurse-practitioner', 'physician-assistant', 'podiatry', 'optometry', 'chiropractic', 'nurse-midwifery'])
     for (const k of US_EKLENMEYEN_MESLEKLER) assert.ok(!ROLLER.includes(k), `${k} is half-added`)
-    assert.doesNotMatch(JSON.stringify(US_ARAYUZ.roller), /nurse practitioner|physician assistant/i)
+    assert.doesNotMatch(JSON.stringify(US_ARAYUZ.roller), /nurse practitioner|physician assistant|podiatr|optometr|chiropract|midwi/i)
+    // no tool and no placeholder is given to one of them either
+    for (const p of US_ARAYUZ.araclar!.araclar) for (const r of p.roller ?? []) assert.ok(!US_EKLENMEYEN_MESLEKLER.includes(r), `${p.anahtar}: ${r}`)
+    // NO ROLE THAT IS NOT A PHYSICIAN'S BEHAVES LIKE A PHYSICIAN'S ROLE: the instruction for such a role would name a field its note does not have
+    for (const r of US_ARAYUZ.roller) if (r.taraf === 'klinik-muttefik' && r.gibi) assert.equal(US_ARAYUZ.roller.find((x) => x.anahtar === r.gibi)?.taraf, 'klinik-muttefik', `${r.anahtar} behaves like ${r.gibi}`)
   })
 
   it('every key is one the database can keep: lower-case words joined by hyphens, at most 60 characters', () => {
@@ -193,7 +197,7 @@ describe('us roles: an added role behaves like a shared role, under its own key 
     assert.equal(veliYasindaMi(v, US_PAKETI.uygulama!.veliYasi, 'addiction-medicine', null, null), false)
   })
 
-  it('"every doctor role" of this country: the 40 specialties and the 4 clinic doctors, none of the 11 professions', () => {
+  it('"every doctor role" of this country: the 40 specialties and the 4 clinic doctors, none of the 7 professions', () => {
     assert.deepEqual([...US_HEKIMLER], hekimRolleri(US_ARAYUZ.roller))
     assert.equal(US_HEKIMLER.length, 44)
     for (const [k] of EKLENEN_HEKIMLIKLER) assert.ok(US_HEKIMLER.includes(k), k)

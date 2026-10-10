@@ -48,8 +48,8 @@ export const US_YENIDEN_ADLANANLAR: Readonly<Partial<Record<EnRol, string>>> = {
 }
 
 /**
- * WHERE THE ROLE LIST DIFFERS FROM THE SHARED FORTY: one role taken out, sixteen added (ten doctor specialties, six
- * professions of a clinic). 40 − 1 + 16 = 55 roles.
+ * WHERE THE ROLE LIST DIFFERS FROM THE SHARED FORTY: one role taken out, twelve added (ten doctor specialties, two
+ * professions of a clinic). 40 − 1 + 12 = 51 roles.
  */
 export const US_ROLLER: EnRolDegisimi = {
   // REMOVED: "Dermatology (clinic)". There is one specialty, Dermatology [ABMS], and the doctor role carries it.
@@ -67,33 +67,36 @@ export const US_ROLLER: EnRolDegisimi = {
     { anahtar: 'addiction-medicine', taraf: 'doktor', ad: 'Addiction Medicine', gibi: 'psychiatry' },
     { anahtar: 'hospice-palliative-medicine', taraf: 'doktor', ad: 'Hospice and Palliative Medicine', gibi: 'internal-medicine' },
     { anahtar: 'reproductive-endocrinology-infertility', taraf: 'doktor', ad: 'Reproductive Endocrinology and Infertility', gibi: 'obstetrics-gynaecology' },
-    // ── SIX PROFESSIONS of a clinic. The kit has ONE kind of role for a professional who is not a physician (an
-    // allied profession): the instruction to the model then names the profession, says the colleague is not a doctor
-    // and writes the professional's own assessment as it was said. FOR A US CLINICIAN AND A LAWYER: whether that frame
-    // fits each of these six, whose scope of practice is set state by state.
+    // ── TWO PROFESSIONS of a clinic, each beside a profession the set already has and framed the same way: the
+    // instruction to the model names the profession, says the colleague is not a doctor, and writes the
+    // professional's own assessment as it was said.
     // The therapy rule names this profession beside physical and occupational therapists (42 CFR 410.61, as the audit
     // read it). Its note keeps the occupational therapist's fields that are not about the hand or the home.
     { anahtar: 'speech-language-pathology', taraf: 'klinik-muttefik', ad: 'Speech-Language Pathologist', gibi: 'occupational-therapy', sablon: ['referral_diagnosis', 'functional_status', 'daily_activities', 'session_content', 'assistive_devices', 'rehab_goals'] },
     { anahtar: 'clinical-social-work', taraf: 'klinik-muttefik', ad: 'Licensed Clinical Social Worker', gibi: 'clinical-psychology' },
-    { anahtar: 'podiatry', taraf: 'klinik-muttefik', ad: 'Podiatry', gibi: 'orthopaedics' },
-    { anahtar: 'optometry', taraf: 'klinik-muttefik', ad: 'Optometry', gibi: 'ophthalmology' },
-    { anahtar: 'chiropractic', taraf: 'klinik-muttefik', ad: 'Chiropractic', gibi: 'physiotherapy' },
-    // [CMS] writes "Certified Nurse Midwife". The first word reads as a claim about this product on a screen that
-    // carries none, so the name shown is the occupation as [BLS] names it ("Nurse Midwives"), in the singular.
-    { anahtar: 'nurse-midwifery', taraf: 'klinik-muttefik', ad: 'Nurse Midwife', gibi: 'obstetrics-gynaecology' },
   ],
 }
 
 /**
- * NOT ADDED, AND WHY (the audit's verdict for both is "add", and "first to add"): NURSE PRACTITIONER and PHYSICIAN
- * ASSISTANT [CMS]. They work in every specialty, so each is a title beside a specialty, and an account of the kit
- * has ONE role: it cannot say "nurse practitioner in cardiology", and the tools they should see are "the tools of
- * the specialty they work in" (the audit's own words). The kit also has only two openings for the instruction to
- * the model, a physician's and "a health professional and not a doctor" who makes no medical diagnosis; neither
- * describes them. Until the kit can hold a profession AND a specialty on one account, such a colleague chooses the
- * specialty they work in. Reported to the owner; nothing is switched on for them here.
+ * NOT ADDED, AND WHY. The audit's verdict for all six is "add"; each waits on the kit, and nothing is half-added.
+ *
+ * NURSE PRACTITIONER and PHYSICIAN ASSISTANT [CMS] ("first to add"). They work in every specialty, so each is a
+ * title beside a specialty, and an account of the kit has ONE role: it cannot say "nurse practitioner in
+ * cardiology", and the tools they should see are "the tools of the specialty they work in" (the audit's own words).
+ * Until the kit can hold a profession AND a specialty on one account, such a colleague chooses the specialty they
+ * work in.
+ *
+ * PODIATRY, OPTOMETRY, CHIROPRACTIC [CMS] and the NURSE MIDWIFE [CMS: "Certified Nurse Midwife"]. The kit has two
+ * openings for the instruction to the model and no third: a physician's, and "a health professional and not a
+ * doctor" who makes no medical diagnosis and writes a referring doctor's diagnosis "only in the field meant for it".
+ * The second was written for the therapist, the dietitian and the audiologist. Read out for these four (this job
+ * read the instruction the pack would hand the model for each), it tells the model that a podiatrist or an
+ * optometrist is not a doctor and diagnoses nothing, and it names a field their note would not have. What each may
+ * diagnose and treat is set state by state: FOR A US CLINICIAN AND A LAWYER, and for the kit a third opening (a
+ * practitioner who is not a physician and has a scope of their own). Adding each afterwards is one line here, one in
+ * countries/rol-eslemesi.json, and the tools the audit names for it (`gorenler` in ./ayarlar.ts).
  */
-export const US_EKLENMEYEN_MESLEKLER: readonly string[] = ['nurse-practitioner', 'physician-assistant']
+export const US_EKLENMEYEN_MESLEKLER: readonly string[] = ['nurse-practitioner', 'physician-assistant', 'podiatry', 'optometry', 'chiropractic', 'nurse-midwifery']
 
 /**
  * A ROLE KEY THIS COUNTRY NO LONGER HAS → THE NEAREST ROLE IT STILL HAS. An account is stored with its role's key

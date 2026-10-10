@@ -131,9 +131,10 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
       lisans: cdcLisansi('Screening for Lung Cancer'),
     },
     {
-      // CORE SET: every doctor role; and, from the audit's clinic list, the dietitian and podiatry.
+      // CORE SET: every doctor role; and, from the audit's clinic list, the dietitian. (The audit also names podiatry,
+      // which is not a role of this country yet: ../roller.ts.)
       anahtar: 'us-blood-sugar-ranges',
-      roller: [...r.hekimler, 'dietetics', 'podiatry'],
+      roller: [...r.hekimler, 'dietetics'],
       metin: {
         ad: m('Blood sugar tests: normal, prediabetes and diabetes ranges'),
         aciklama: m('One test result is placed in the range the CDC prints for that test: A1C, fasting blood sugar, the 2-hour value of a glucose tolerance test, or a random blood sugar. One result is not a diagnosis.'),

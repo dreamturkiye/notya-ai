@@ -81,7 +81,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     physiotherapy: 'Physical therapist',
     ...US_YENIDEN_ADLANANLAR,
   },
-  // THE ROLE LIST OF THIS COUNTRY: the shared forty without "Dermatology (clinic)", with ten specialties and six
+  // THE ROLE LIST OF THIS COUNTRY: the shared forty without "Dermatology (clinic)", with ten specialties and two
   // professions of its own, each saying which shared role it behaves like (./roller.ts).
   roller: US_ROLLER,
   veliYasi: US_VELI_YASI,
@@ -142,7 +142,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     },
     // ── NOTYA-ULKE-UYGULA-US: WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set's list
     // (us-kararlar.json → specialties[].tools and clinicSpecialties[].tools; existing tools only). Every list names the
-    // set's own role first, then the roles the audit adds. Nothing here switches a tool on: all eleven are on already.
+    // set's own role first, then the roles the audit adds. Nothing here switches a tool on: all ten are on already.
+    // (The audit also names the wound list for podiatry and visual acuity for optometry: neither role is added yet.)
     gorenler: {
       // days since an injury: also emergency medicine, family medicine, neurology and pediatrics
       'rtp-basamak': ['sports-medicine', 'emergency-medicine', 'family-medicine', 'neurology', 'paediatrics'],
@@ -152,9 +153,9 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'inhaler-teknik': ['respiratory-medicine', 'family-medicine', 'paediatrics', 'allergy-immunology'],
       // the checklist before a heart or vascular operation: also the thoracic and cardiac surgeon (the board's certificate for heart surgery)
       'kalp-damar-preop': ['cardiovascular-surgery', 'thoracic-surgery'],
-      // the two general-surgery lists: also colon and rectal surgery; the wound list also podiatry
+      // the two general-surgery lists: also colon and rectal surgery
       'genel-preop': ['general-surgery', 'colon-rectal-surgery'],
-      'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'colon-rectal-surgery', 'podiatry'],
+      'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'colon-rectal-surgery'],
       // the two oncology lists: also radiation oncology
       'kur-sayaci': ['oncology', 'radiation-oncology'],
       'toksisite-listesi': ['oncology', 'radiation-oncology'],
@@ -162,8 +163,6 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
       // the hearing average: also the audiologist
       'odyometri-pta': ['otolaryngology', 'audiology'],
-      // visual acuity: also optometry
-      'gorme-keskinligi': ['ophthalmology', 'optometry'],
     },
     // ── THE NUMBERS A NATIONAL SOURCE STATES, for the shared tools that take a country's. Each was read on 2026-10-10. ──
     // EXPECTED HEIGHT: THE RANGE EITHER SIDE, 10 cm. Barstow C, Rerucha C. Evaluation of Short and Tall Stature in
