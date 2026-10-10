@@ -174,6 +174,9 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     for (const soz of ['a link-out tile', "sinif: 'hekimler'", 'tablolar', 'metin.hastaKapisi', "{ deger: 110, birim: 'g/L' }", 'lib/ulke/testing/ornekUlke/']) assert.ok(araclar.includes(soz), soz)
     // the sentence that asks for a unit is needed only where a unit is chosen: offered as a comment, never as text to supply
     assert.match(araclar, /^\s+\/\/ birimSec: '…', {3}← REQUIRED if the country accepts more than one unit for a laboratory value/m)
+    // its role list is its own, and a role may behave like another
+    const roller = oku(`countries/${K}/klinik/roller.ts`)
+    for (const soz of ["THE LIST IS THIS COUNTRY'S OWN", "gibi: 'cardiology'", 'at most 60 characters', 'Tools are never inherited']) assert.ok(roller.includes(soz), soz)
     // a new country is not on the list of countries that may leave a licence out (it can only shrink)
     assert.ok(!(JSON.parse(readFileSync(join(KOK, 'countries/lisans-borcu.json'), 'utf8')) as { ulkeler: string[] }).ulkeler.includes(K))
   })

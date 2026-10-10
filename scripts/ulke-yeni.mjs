@@ -647,7 +647,13 @@ export const ${B}_ACILIS: UlkeAcilisi = {
 
 dosyalar['klinik/roller.ts'] = `${BAS(`${B}: the ROLES an account may work as (doctor specialties, clinic doctors, clinic allied professions).`, `Asked once at first login and stored with the account. A role's key is internal (lower-case words joined by hyphens);
 its name is this country's text. \`taraf\` is one of the product's three kinds: 'doktor' | 'klinik-hekim' | 'klinik-muttefik'.
-Which roles exist, and what the country officially calls them, is decided with the local clinical lead (checklist C1, J2, J3).`)}import { eksikAyar } from '@/lib/ulke/eksik'
+Which roles exist, and what the country officially calls them, is decided with the local clinical lead (checklist C1, J2, J3).
+
+THE LIST IS THIS COUNTRY'S OWN: no other country's list constrains it, and a change here reaches no other country.
+A role may say which role it BEHAVES LIKE — gibi: 'cardiology' — and then writes its notes with that role's template
+and asks that role's intake questions until this country supplies the role's own (one specialty split in two, two
+merged into one, a specialty that takes another's content for now). A role's key is at most 60 characters: the
+database keeps it in that form. Tools are never inherited: each tool names the roles that see it.`)}import { eksikAyar } from '@/lib/ulke/eksik'
 import type { RolTanimi } from '@/lib/ulke/arayuz/tipler'
 
 export const ${B}_ROL_TANIMLARI: readonly RolTanimi[] = eksikAyar('roles: the list — [] to ask for no role, or one { anahtar: \\'cardiology\\', taraf: \\'doktor\\', ad: { ${anahtar(DIL)}: \\'Cardiology\\' } } per role, in the order they are offered')
