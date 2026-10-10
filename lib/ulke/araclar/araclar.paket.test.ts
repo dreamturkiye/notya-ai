@@ -26,6 +26,7 @@ import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { ulkeyeOzelMi } from './ulkeyeOzel'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { eksik, eksikAyar } from '../eksik'
@@ -196,6 +197,9 @@ describe('tools — the pack\'s list', () => {
     { const a = klon(arayuz); ar(a).araclar.push({ ...klon(ilk), anahtar: 'no-such-tool' } as never); iceriyor(yerler(paket, a), 'arayuz.araclar.no-such-tool: is not a tool of the kit') }
     for (const yasak of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) {
       assert.equal(kitAraci(yasak), null, `the kit holds "${yasak}", a tool of one country's state or payer system`)
+      // a key that carries THIS pack's own code is this country's own tool (it must be on this list: ulkeyeOzel.paket.test.ts);
+      // the pack may switch it on, so it is not pushed here. Every other country's key, and Türkiye's, still is.
+      if (ulkeyeOzelMi(yasak, paket.kod)) continue
       const a = klon(arayuz); ar(a).araclar.push({ ...klon(ilk), anahtar: yasak } as never); iceriyor(yerler(paket, a), `arayuz.araclar.${yasak}: is not a tool of the kit`)
     }
     // classification: left open, an empty list, a role the pack does not have, a role twice; a tool twice
@@ -589,7 +593,7 @@ describe('tools — leak', () => {
     if (!icerik) return
     const yaprak = (o: unknown, on = ''): [string, string][] => Object.entries((o ?? {}) as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'string' ? [[`${on}${k}`, v] as [string, string]] : v && typeof v === 'object' ? yaprak(v, `${on}${k}.`) : []))
     for (const [yol, metin] of yaprak({ araclar: icerik.araclar.map((p) => ({ [p.anahtar]: p.metin })), birimler: icerik.birimler, metinler: icerik.metinler })) temiz(metin, `tools.${yol}`)
-    for (const y of icerik.yuvalar) for (const k of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) assert.notEqual(y.anahtar, k, `a slot is named after "${k}"`)
+    for (const y of icerik.yuvalar) for (const k of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) { if (ulkeyeOzelMi(k, paket.kod)) continue; assert.notEqual(y.anahtar, k, `a slot is named after "${k}"`) }
     const ilk = icerik.metinler[FORMLAR[0]]!
     for (const d of FORMLAR) assert.deepEqual(yaprak(icerik.metinler[d]).map(([k]) => k).sort(), yaprak(ilk).map(([k]) => k).sort(), `the tools catalogue of ${d} has other keys than ${FORMLAR[0]}`)
   })
