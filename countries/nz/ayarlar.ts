@@ -30,8 +30,9 @@ export const NZ_VELI_YASI = 16
 
 /**
  * Units a clinic in New Zealand records in: SI. Unverified with a local clinical lead (checklist C8, E3).
- * SOURCE-CHECKED for doses only (the national medication charting standard writes doses in grams, milligrams and
- * micrograms and per kilogram); no official page that states kg, cm and °C for body measurements was read.
+ * SOURCE-CHECKED: body weight in kilograms (the national data standard for cardiovascular risk assessment, which
+ * records height in metres; the national medication charting standard doses per kilogram). Centimetres for height on
+ * a clinic screen and °C for temperature were not found stated on an official page: for a local clinical lead.
  */
 export const NZ_BIRIMLER: Birimler = { agirlik: 'kg', boy: 'cm', sicaklik: 'C' }
 
@@ -91,9 +92,11 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
   araclar: {
     // UNVERIFIED: the unit laboratories in New Zealand report each value in: SI units (checklist C8). The kit converts
     // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
-    // No official page that states the reporting unit of each of these five values was read: for a local laboratory
-    // or clinical lead. (Glycated haemoglobin is reported in mmol/mol here; the kit's field has no unit choice yet,
-    // so the tool that reads it stays a slot.)
+    // SOURCE-CHECKED for three of the five (the national data standard for cardiovascular risk assessment): serum
+    // creatinine in µmol/L, cholesterol in mmol/L, the urine albumin-to-creatinine ratio in mg/mmol. Glucose in
+    // mmol/L and haemoglobin in g/L were NOT found stated on an official page: for a local laboratory or clinical
+    // lead. (The same standard gives glycated haemoglobin in mmol/mol; the kit's field has no unit choice yet, so
+    // the tool that reads it stays a slot.)
     labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {

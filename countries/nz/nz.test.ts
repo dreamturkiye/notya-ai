@@ -12,7 +12,7 @@ import { enYaz } from '../_dil/en/varyant'
 import { NZ_ARAYUZ } from './arayuz'
 import { NZ_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
-import { NZ_PAKETI } from './index'
+import { NZ_PAKETI, nzAramaKatla } from './index'
 import { NZ_KLINIK } from './klinik'
 
 const D = 'en-NZ'
@@ -124,6 +124,17 @@ describe('nz: what is New Zealand\'s', () => {
     const ad = 'Wiremu Pōtae'
     assert.equal(ad.normalize('NFC'), ad)
     assert.equal(new Intl.Collator(NZ_PAKETI.bicim.yerel, { sensitivity: 'base' }).compare('Pōtae', 'Potae'), 0)
+  })
+
+  it('AUDIT: a name with a macron is found with or without it, and the name itself is never changed', () => {
+    assert.equal(NZ_PAKETI.uygulama!.aramaKatla, nzAramaKatla)
+    assert.equal(nzAramaKatla('Wiremu Pōtae'), 'wiremu potae')
+    assert.equal(nzAramaKatla('PŌTAE'), nzAramaKatla('potae'))
+    assert.equal(nzAramaKatla('Ngāti Whātua Ōrākei'), 'ngati whatua orakei')
+    assert.equal(nzAramaKatla('O’Brien'), nzAramaKatla("O'Brien"))
+    assert.ok(nzAramaKatla('Wiremu Pōtae').includes(nzAramaKatla('Potae')))
+    // digits and plain letters pass through: an NHI number typed into the search box is not altered beyond its case
+    assert.equal(nzAramaKatla('ZZZ00AX'), 'zzz00ax')
   })
 
   it('AUDIT: the mobile rule takes the common spellings of a mobile number and refuses a landline and the emergency number', () => {

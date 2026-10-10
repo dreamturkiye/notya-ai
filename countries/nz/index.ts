@@ -37,6 +37,17 @@ function nzCepGecerliMi(ham: string | null | undefined): boolean {
   return /^2\d{7,9}$/.test(rakam)
 }
 
+/**
+ * FINDING A NAME (checklist E10). A name is stored and shown exactly as it was typed, macrons included ("Pōtae"); a
+ * search finds it whether or not the macron is typed ("potae"), because many keyboards and many callers leave it out.
+ * Lower case; marks above a letter and apostrophe variants are dropped FOR COMPARISON ONLY. Pure.
+ * Added by the audit of 2026-10-09: the national identity standard requires that names keep their macrons, and this
+ * rule changes nothing that is stored.
+ */
+export function nzAramaKatla(ham: string): string {
+  return String(ham ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/['\u2018\u2019\u02bb\u02bc`]/g, '').toLowerCase()
+}
+
 export const NZ_PAKETI: UlkePaketi = {
   kod: 'nz',
   // Unique marker: the build proof looks for it to show that a build holds this pack and no other. Never reuse it.
@@ -89,6 +100,7 @@ export const NZ_PAKETI: UlkePaketi = {
   uygulama: {
     diller: ['en-NZ'],
     hastaDilleri: ['en'],
+    aramaKatla: nzAramaKatla,
     roller: EN_ROLLER,
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (national and regional anniversary days).
