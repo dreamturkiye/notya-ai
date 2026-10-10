@@ -15,6 +15,7 @@ import { hastaIcinBicim } from '@/lib/ulke/arayuz/dilSecimi'
 import { ISTEK_GUN_AZAMI, PIN_DENEME_AZAMI, PIN_HANE } from '@/lib/ulke/portal/sabitler'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { hesabinAraclari } from '@/lib/ulke/araclar/paket'
+import { kapiSonucu } from '@/lib/ulke/araclar/hastaKapisi'
 import { ornekGirdiler } from '@/lib/ulke/testing/aracOrnekleri'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { MESAJ_AZAMI } from '@/lib/ulke/mesaj/sabitler'
@@ -94,6 +95,9 @@ process.stdout.write(JSON.stringify({
   } : null,
   araclar: ar ? {
     m: ar.metinler[d], bugun, ilkRolKutulari: kutular(ilkRol?.anahtar ?? null), ornek: aracOrnegi, ornekRolKutulari: aracOrnegi ? kutular(aracOrnegi.rol) : [],
+    // THE SAME GRID FOR THE WALK-THROUGH'S PATIENT (born 2021-03-07, female: ./genel.mjs): a tool the pack holds back by
+    // the patient's age or sex is rightly not on a child's grid, so the grid opened from the file is compared with this.
+    ornekHastaKutulari: aracOrnegi ? (() => { const x = hesabinAraclari(ar, aracOrnegi.rol); return [...x.temel, ...x.rol].filter((t) => kapiSonucu(t.paket.hasta, { dogumTarihi: '2021-03-07', cinsiyet: 'female' }, bugun) !== 'degil').map((t) => t.tanim.anahtar) })() : [],
     // the follow-up list, where the role of the sample tool has it
     panel: aracOrnegi ? (kutular(aracOrnegi.rol).find((k) => kitAraci(k)?.ekran === 'takipPaneli') ?? null) : null,
   } : null,
