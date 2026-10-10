@@ -37,7 +37,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
 | Emergency (ambulance) number on the patient's page | `999` — UNVERIFIED | a local source, before any patient sees the portal |
 | Days a patient's link stays valid | 30 | the owner; how long access may stand: for a lawyer |
-| Patient identifier | optional free text, encrypted, never validated; label "NHS number" | a local lead and a lawyer. Label "NHS number". Whether a clinic outside the health service records one, and whether the label fits Scotland and Northern Ireland (which use other identifiers), is unverified. |
+| Patient identifier | optional free text, encrypted, never validated; label "NHS number (CHI or H&C number)" | a local lead and a lawyer. Label "NHS number". Whether a clinic outside the health service records one, and whether the label fits Scotland and Northern Ireland (which use other identifiers), is unverified. |
 | Guardian age | 16 | **for a lawyer**. 16 as a starting value. How capacity and consent of under-16s and of 16 and 17 year olds bear on the guardian wording and on the form a parent fills in differs between the nations of the United Kingdom. |
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `gb-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Whether recording a consultation needs more than the patient's agreement recorded by the doctor (a written form, a notice, a retention rule) is open. |
 | Intake-form consent sentence | the shared draft — stamp `gb-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
