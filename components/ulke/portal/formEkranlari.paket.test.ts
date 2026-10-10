@@ -161,8 +161,10 @@ describe('the intake form\'s screens — the patient\'s side', () => {
       const iki = formEkrani(dil, fo, { bolum: 1 })
       for (const m of ['QA-PART-TWO', 'QA-Q-YESNO', x.evet, x.hayir, 'QA-Q-DATE', 'QA-Q-HEIGHT', f(dil).birim[paket.uygulama!.birimler.boy], Y.yerine(x.bolum, 2, 2), x.gonder, x.gonderUyari, x.geri]) var_(iki, m, `${dil} part two`)
       yok(iki, x.ileri, `${dil} part two`); yok(iki, 'QA-DETAIL-LABEL', `${dil}: the detail is asked only after "yes"`)
-      assert.match(iki, new RegExp(`inputMode="decimal"[^>]*data-birim="${paket.uygulama!.birimler.boy}"`), 'the number field must carry the pack\'s unit')
-      assert.match(iki, /<input id="uzf-q_tarih"[^>]*type="date"/)
+      assert.match(iki, new RegExp(`<input[^>]*data-birim="${paket.uygulama!.birimler.boy}"[^>]*inputMode="decimal"`), 'the number field must carry the pack\'s unit')
+      // NOTYA-ULKE-DENETIM-01b — the date question is the kit's own field in the pack's order, never the browser's
+      assert.match(iki, new RegExp(`<fieldset id="uzf-q_tarih" class="uza-parcali" data-girdi="tarih" data-desen="${paket.bicim.tarihDeseni.replace(/[.]/g, '\\.')}" data-durum="bos"`))
+      assert.doesNotMatch(iki, /type="(date|time|datetime-local)"/)
       for (const html of [bir, iki]) { temiz(gorunurMetin(html), `form ${dil}`); assert.doesNotMatch(html.slice(html.indexOf('data-alan="hasta-formu"')), /href=|<a /, 'the form must not lead away from itself') }
     }
   })
@@ -175,9 +177,12 @@ describe('the intake form\'s screens — the patient\'s side', () => {
     assert.match(bir, new RegExp(`data-secili="evet"><input type="checkbox" name="uzf-q_tek-b"`))
     assert.equal((bir.match(/data-secili="evet"/g) ?? []).length, 3, 'one single choice and two of the multiple choice')
     var_(bir, `${QA} long`, 'answer'); var_(bir, x.kaydedildi, 'saved'); assert.match(bir, /data-kayit="kaydedildi"/)
-    const iki = formEkrani(dil, fo, { bolum: 1, sayilar: { q_boy: '172.5' } })
+    // the height as a person of this country types it: with the pack's own decimal mark
+    const boy = `172${paket.bicim.ondalikAyraci}5`
+    const iki = formEkrani(dil, fo, { bolum: 1, sayilar: { q_boy: boy } })
     for (const m of ['QA-DETAIL-LABEL', `${QA} detail`]) var_(iki, m, 'detail after yes')
-    assert.match(iki, /value="172\.5"/); assert.match(iki, /value="2026-03-04"/)
+    assert.ok(iki.includes(`value="${boy}"`)); assert.doesNotMatch(iki, /data-hata="sayi-/, 'the pack\'s own way of writing the number is read')
+    assert.match(iki, /<fieldset id="uzf-q_tarih"[^>]*data-durum="tamam" data-deger="2026-03-04"/, 'the stored day stands in the date field')
     // A number outside the range is said beside its field, with the range.
     var_(formEkrani(dil, fo, { bolum: 1, sayilar: { q_boy: '9999' } }), Y.yerine(x.sayiGecersiz, '20', '260'), 'range')
     // Refused: the sentence, and each missing question marked.
@@ -202,9 +207,13 @@ describe('the intake form\'s screens — the patient\'s side', () => {
     }
   })
 
-  it('the helpers: a typed number with either decimal mark; an answer as text for every type; nothing for no answer', () => {
+  it('the helpers: a typed number read by THE PACK\'S number rules, never guessed; an answer as text for every type; nothing for no answer', () => {
     if (!ACIK) return
-    assert.deepEqual(['172', '172,5', '172.5', ' 36,6 ', '', 'abc', '1,2,3', '1e3'].map(Hasta.sayiCoz), [172, 172.5, 172.5, 36.6, null, null, null, null])
+    // NOTYA-ULKE-DENETIM-01a — the pack's own decimal mark is read; the other mark is not turned into it
+    const o = paket.bicim.ondalikAyraci
+    assert.deepEqual(['172', `172${o}5`, ` 36${o}6 `, '', 'abc', '1,2,3', '1e3'].map(Hasta.sayiCoz), [172, 172.5, 36.6, null, null, null, null])
+    if (o === '.' && paket.bicim.binlikAyraci === ',') assert.deepEqual(['172,5', '1,5', '1,500', '12,345.6'].map(Hasta.sayiCoz), [null, null, 1500, 12345.6], 'where the comma groups thousands it is never a decimal mark')
+    if (o === ',' && paket.bicim.binlikAyraci === ' ') assert.deepEqual(['172,5', '172.5', '1.500', '1 500', '1,500'].map(Hasta.sayiCoz), [172.5, 172.5, null, 1500, 1.5], 'where the comma is the decimal mark, a point is read only where it cannot be thousands')
     const dil = FORMLAR[0], fo = form(dil), q = (k: string) => fo.bolumler.flatMap((b) => b.sorular).find((s) => s.anahtar === k)!
     assert.equal(Hasta.gorunumCevapMetni(q('q_eh'), { e: false }, f(dil)), f(dil).hasta.hayir)
     assert.equal(Hasta.gorunumCevapMetni(q('q_eh'), { e: true }, f(dil)), f(dil).hasta.evet)

@@ -11,12 +11,12 @@ import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import type { DilGrubu, DilKodu } from '../tipler'
 import { ulkePaketi, uygulamaDilleri, uygulamaDiliSec } from '../ulke'
 import * as D from './dilSecimi'
-import type { AraclarMetni, FormMetni, KlinikMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
+import type { AraclarMetni, FormMetni, GirdiMetni, KlinikMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
 import * as S from './notSablonu'
 import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
-export type { AraclarMetni, FormMetni, KlinikMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
+export type { AraclarMetni, FormMetni, GirdiMetni, KlinikMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
 export { NOT_BOLUMLERI, ROL_TARAFLARI, type AsistanKimligi, type NotBolumu, type RolTanimi, type RolTarafi } from './tipler'
 
 /** What the active pack brings for the shared screens. A country that brings none has no shared screens. */
@@ -47,6 +47,12 @@ export function uygulamaMetni(dil: unknown): UygulamaMetni {
   if (!m) throw new Error(`[ulke/arayuz] no application catalogue for ${ulkePaketi().kod}/${d}. No fallback to another language.`)
   return m
 }
+
+/**
+ * The words of the kit's own entry fields (a day, a time of day, a number) in a form: the account's on the doctor's
+ * screens, the patient's on the patient's page. They are a group of the application's catalogue, which every form has.
+ */
+export const girdiMetni = (dil: unknown): GirdiMetni => uygulamaMetni(dil).girdi
 
 /** The form a catalogue is written in — for the few things a screen shows that are not sentences of the catalogue (a role's name, the assistant's name). */
 export function metninDili(m: UygulamaMetni): DilKodu {

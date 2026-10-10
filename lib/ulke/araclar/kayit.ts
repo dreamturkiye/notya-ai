@@ -36,7 +36,7 @@ import { hekimRolunuOku } from '../uygulama/rol'
 import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeTablosu } from '../uygulama/tablolar'
 import { gunEkle, gunGecerli, yerelAn } from '../uygulama/zaman'
-import { girdiyiCoz, hamdanGosterilen, hamiSuz } from './girdi'
+import { girdiyiCoz, hamdanGosterilen, hamiSuz, okunamayanAlanlar } from './girdi'
 import { KAYIT_LISTE_AZAMI, TAKIP_EN_UZAK_GUN, TAKIP_LISTE_AZAMI, type AracKaydi, type TakipSatiri } from './kayitTipleri'
 import { birimOrtami } from './ortam'
 import { hesabinAraci } from './paket'
@@ -94,12 +94,16 @@ export async function aracKaydet(supabase: SupabaseClient, doktorId: string, g: 
   if (!x || x.tanim.tur === 'ekran') return { tamam: false, kod: 'ARAC_YOK' }
   const bugun = yerelAn(simdi, await hesapSaatDilimi(supabase, doktorId)).gun
   const ham = hamiSuz(x.tanim.alanlar, g.ham)
-  const girdi = girdiyiCoz(x.tanim.alanlar, ham, birimOrtami(icerik))
+  const ortam = birimOrtami(icerik)
+  const girdi = girdiyiCoz(x.tanim.alanlar, ham, ortam)
+  // A field that holds something that could not be read ("1,5" where the comma groups thousands) keeps nothing: the
+  // screen refuses the same form with the same function, and never works an unread optional field as "left empty".
+  if (okunamayanAlanlar(x.tanim.alanlar, ham, girdi, ortam).length) return { tamam: false, kod: 'EKSIK' }
   const sonuc = x.tanim.hesapla(girdi, { bugun, p: x.paket.parametreler ?? {} })
   if (!sonuc.tamam) return { tamam: false, kod: 'EKSIK' }
   const takip = takipGunu(g.takipTarihi, bugun)
   if (!takip.tamam) return { tamam: false, kod: 'TAKIP' }
-  const deger = { d: doktorId, h: hasta.id, a: x.tanim.anahtar, gun: bugun, g: hamdanGosterilen(x.tanim.alanlar, ham, girdi), s: sonuc }
+  const deger = { d: doktorId, h: hasta.id, a: x.tanim.anahtar, gun: bugun, g: hamdanGosterilen(x.tanim.alanlar, ham, girdi, ortam), s: sonuc }
   if (JSON.stringify(deger).length > KAYIT_AZAMI) return { tamam: false, kod: 'BASARISIZ' }
   const an = new Date(simdi).toISOString()
   const { data, error } = await ulkeTablosu(supabase, TABLO).insert({ doctor_id: doktorId, patient_id: hasta.id, arac: x.tanim.anahtar, kayit_encrypted: sifrele(deger), takip_tarihi: takip.gun, kapandi_at: null, created_at: an, updated_at: an }).select('id').single()

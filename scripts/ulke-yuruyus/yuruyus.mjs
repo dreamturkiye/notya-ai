@@ -159,6 +159,12 @@ const yazDeger = (p, sel, v) => p.evaluate((s, d) => {
   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(e), 'value').set.call(e, d)
   e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true }))
 }, sel, v)
+/**
+ * NOTYA-ULKE-DENETIM-01b — the kit's own date and time fields (components/ulke/girdi/): `sel` selects the GROUP; a day
+ * is handed in as YYYY-MM-DD and typed part by part, a time of day as 24-hour HH:MM (this country's clock).
+ */
+const yazGunAlani = async (p, sel, gun) => { const [y, a, g] = gun.split('-'); for (const [parca, v] of [['DD', g], ['MM', a], ['YYYY', y]]) await yazDeger(p, `${sel} [data-parca=${parca}] input`, v) }
+const yazSaatAlani = async (p, sel, saat) => { const [s, d] = saat.split(':'); await yazDeger(p, `${sel} [data-parca=saat] input`, s); await yazDeger(p, `${sel} [data-parca=dakika] input`, d) }
 const sec = (p, ad, deger) => p.click(`input[name="${ad}"][value="${deger}"]`)
 /** Every link and form address on the page. */
 const adresler = async (p) => ({ hepsi: await p.evaluate(() => [...document.querySelectorAll('a[href], form[action]')].map((e) => e.getAttribute('href') ?? e.getAttribute('action'))) })
@@ -397,7 +403,7 @@ let hastaA = ''
   kontrol('new patient: the name is required', (await metin(p, '[role=alert]')) === 'Familiya va ismni kiriting.')
   await p.type('#uza-h-ad', 'QA Karimova Dilnoza')
   await p.type('#uza-h-ota', 'Rustam qizi')
-  await yazDeger(p, '#uza-h-dogum', '2021-03-07')
+  await yazGunAlani(p, '#uza-h-dogum', '2021-03-07')
   await p.type('#uza-h-tel', '+998 90 000 00 01')
   await sec(p, 'cinsiyet', 'female')
   await p.click('button[type=submit]'); await bekle(150)
@@ -821,12 +827,12 @@ const PORTAL = {}
   let PZT = gunEkle(bugun, 2); while (haftaGunu(PZT) !== 1) PZT = gunEkle(PZT, 1)
   await git(p, '/calendar?duzen=1')
   await p.waitForSelector('[data-eylem=duzen-kaydet]', { timeout: 60000 })
-  const ilk = await p.evaluate(() => ({ gunler: [...document.querySelectorAll('input[name=gunler]')].map((e) => [e.value, e.checked]), bas: document.querySelector('#uza-d-bas').value, bit: document.querySelector('#uza-d-bit').value, tatil: document.querySelector('[data-alan=tatil-notu]')?.innerText || '' }))
+  const ilk = await p.evaluate(() => ({ gunler: [...document.querySelectorAll('input[name=gunler]')].map((e) => [e.value, e.checked]), bas: document.querySelector('#uza-d-bas').getAttribute('data-deger'), bit: document.querySelector('#uza-d-bit').getAttribute('data-deger'), tatil: document.querySelector('[data-alan=tatil-notu]')?.innerText || '' }))
   kontrol('working pattern: the country\'s standard first — Monday to Friday, Monday first, 09:00–18:00', JSON.stringify(ilk.gunler) === JSON.stringify([['1', true], ['2', true], ['3', true], ['4', true], ['5', true], ['6', false], ['7', false]]) && ilk.bas === '09:00' && ilk.bit === '18:00', JSON.stringify(ilk))
   kontrol('working pattern: the screen says public holidays are not taken into account', ilk.tatil.length > 30 && !TURKCE_HARF.test(ilk.tatil), ilk.tatil)
   await onEkAltinda(p, 'working pattern')
   await p.click('input[name=gunler][value="6"]')
-  await yazDeger(p, '#uza-d-bas', '08:00')
+  await yazSaatAlani(p, '#uza-d-bas', '08:00')
   // (A notice is already on the screen before saving — "the standard pattern applies" — so the answer itself is awaited.)
   await Promise.all([p.waitForResponse((r) => r.url().endsWith('/api/ulke/calisma-duzeni') && r.request().method() === 'POST', { timeout: 30000 }), p.click('[data-eylem=duzen-kaydet]')])
   await p.waitForFunction(() => !document.querySelector('[data-eylem=duzen-kaydet]').disabled, { timeout: 30000 })
@@ -849,8 +855,9 @@ const PORTAL = {}
   await onEkAltinda(p, 'booking: choose the patient')
   await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click(`a[href*="hasta=${hastaRu}"]`)])
   await p.waitForSelector('#uza-rf-gun', { timeout: 60000 })
-  const form = await p.evaluate(() => ({ gun: document.querySelector('#uza-rf-gun').value, saat: document.querySelector('#uza-rf-saat').value, sure: document.querySelector('#uza-rf-sure').value, ad: document.querySelector('h1').innerText }))
-  kontrol('booking form: the patient, the day in DD.MM.YYYY, the time and the default length are filled in', form.gun === yazGun(PZT) && form.saat === '10:00' && form.sure === '30' && form.ad === 'QA Иванова Мария Петровна', JSON.stringify(form))
+  // The day is typed as day, month, year in the kit's own field (never a browser date field): what the three parts read, left to right, is DD.MM.YYYY.
+  const form = await p.evaluate(() => ({ gun: [...document.querySelectorAll('#uza-rf-gun [data-parca] input')].map((e) => e.value).join('.'), gunSirasi: [...document.querySelectorAll('#uza-rf-gun [data-parca]')].map((e) => e.getAttribute('data-parca')).join(' '), tarayiciAlani: !!document.querySelector('input[type=date], input[type=time]'), saat: document.querySelector('#uza-rf-saat').getAttribute('data-deger'), sure: document.querySelector('#uza-rf-sure').value, ad: document.querySelector('h1').innerText }))
+  kontrol('booking form: the patient, the day in DD.MM.YYYY, the time and the default length are filled in', form.gun === yazGun(PZT) && form.gunSirasi === 'DD MM YYYY' && !form.tarayiciAlani && form.saat === '10:00' && form.sure === '30' && form.ad === 'QA Иванова Мария Петровна', JSON.stringify(form))
   await p.type('#uza-rf-neden', 'QA nazorat')
   await onEkAltinda(p, 'booking form')
   await cek(p, 'calendar-booking.png')
@@ -868,7 +875,7 @@ const PORTAL = {}
   await p.waitForSelector('[role=alert]', { timeout: 30000 })
   const doluMetni = await metin(p, '[role=alert]')
   kontrol('a taken time: a clear message in the doctor\'s language, NO "book anyway", nothing written', doluMetni.length > 20 && !TURKCE_HARF.test(doluMetni) && !(await p.$('[data-eylem=yine-de]')) && (await randevular()).length === 1, doluMetni)
-  await yazDeger(p, '#uza-rf-saat', '19:30')
+  await yazSaatAlani(p, '#uza-rf-saat', '19:30')
   await p.click('[data-eylem=kaydet]')
   await p.waitForSelector('[data-eylem=yine-de]', { timeout: 30000 })
   const disMetni = await metin(p, '[role=alert]')
@@ -901,14 +908,14 @@ const PORTAL = {}
   await cek(p, 'calendar-appointment-reminder-ru.png')
 
   // 5. MOVE it: to 11:30 the same day.
-  await yazDeger(p, '#uza-rt-saat', '11:30')
+  await yazSaatAlani(p, '#uza-rt-saat', '11:30')
   await p.click('[data-eylem=tasi]')
   await p.waitForSelector('[data-alan=tasi] .uza-bilgi-kutu', { timeout: 30000 })
   satirlar = await randevular()
   const tasinan = satirlar.find((r) => r.id === randevuId)
   kontrol('MOVED: the same appointment now starts at 11:30 Tashkent time; no second row was made', tasinan.baslangic === `${PZT}T06:30:00.000Z` && tasinan.bitis === `${PZT}T07:00:00.000Z` && satirlar.length === 3 && (await metin(p, '[data-alan=saat]')).startsWith('11:30–12:00'), JSON.stringify(tasinan))
   kontrol('the reminder follows the new time', (await p.$eval('[data-alan=hatirlatma]', (e) => e.value)) === beklenen.replace('в 10:00', 'в 11:30'))
-  await yazDeger(p, '#uza-rt-saat', '15:10')
+  await yazSaatAlani(p, '#uza-rt-saat', '15:10')
   await p.click('[data-eylem=tasi]')
   await p.waitForSelector('[data-alan=tasi] [role=alert]', { timeout: 30000 })
   kontrol('moving onto another appointment: refused, no "move anyway", the appointment stays where it was', !(await p.$('[data-eylem=tasi-yine-de]')) && (await randevular()).find((r) => r.id === randevuId).baslangic === `${PZT}T06:30:00.000Z`)
@@ -1166,7 +1173,9 @@ const PORTAL = {}
   await H.click('[data-eylem=portal-istek]')
   await H.waitForSelector('[data-alan=portal-istek] [role=alert]', { timeout: 15000 })
   kontrol('a request without a day is refused in the browser', (await metin(H, '[data-alan=portal-istek] [role=alert]')) === 'Kamida bitta kunni tanlang.' && (await tabloOku('ulke_randevu_istekleri')).length === 0)
-  await H.click(`input[name=gunler][value="${g1}"]`); await H.click(`input[name=gunler][value="${g2}"]`)
+  // Chosen through the page itself: the day buttons now carry the whole day and stand one or two to a row on a phone,
+  // so a button scrolled into view can come to rest under the page's fixed top bar, where a pointer click misses it.
+  for (const g of [g1, g2]) await H.$eval(`input[name=gunler][value="${g}"]`, (e) => e.click())
   await H.type('#uzp-neden', 'QA bemor sababi')
   await cek(H, 'portal-request-form-phone-uz.png')
   await H.click('[data-eylem=portal-istek]')
@@ -1186,17 +1195,17 @@ const PORTAL = {}
   await cek(p, 'calendar-requests.png')
   await Promise.all([p.waitForNavigation({ waitUntil: 'networkidle0' }), p.click('[data-eylem=istek-sec]')])
   await p.waitForSelector('#uza-ri-gun', { timeout: 60000 })
-  const cevapFormu = await p.evaluate(() => ({ gun: document.querySelector('#uza-ri-gun').value, saat: document.querySelector('#uza-ri-saat').value, ad: document.querySelector('h1').innerText, gunler: [...document.querySelectorAll('[data-istek-gunu]')].map((e) => e.getAttribute('data-istek-gunu')) }))
+  const cevapFormu = await p.evaluate(() => ({ gun: [...document.querySelectorAll('#uza-ri-gun [data-parca] input')].map((e) => e.value).join('.'), saat: document.querySelector('#uza-ri-saat').getAttribute('data-deger'), ad: document.querySelector('h1').innerText, gunler: [...document.querySelectorAll('[data-istek-gunu]')].map((e) => e.getAttribute('data-istek-gunu')) }))
   kontrol('"choose a time": the answer form, with the patient, the days asked for, and the first of them filled in', new URL(p.url()).searchParams.get('istek') === istekler[0].id && cevapFormu.ad === 'QA Karimova Dilnoza' && cevapFormu.gun === yazGun(g1) && cevapFormu.saat === '08:00' && JSON.stringify(cevapFormu.gunler) === JSON.stringify([g1, g2]), JSON.stringify(cevapFormu))
   await onEkAltinda(p, 'answer to a request')
   // NO DOUBLE BOOKING through a request either: a time this doctor has already given away.
-  await yazDeger(p, '#uza-ri-gun', yazGun(PZT)); await yazDeger(p, '#uza-ri-saat', '15:10')
+  await yazGunAlani(p, '#uza-ri-gun', PZT); await yazSaatAlani(p, '#uza-ri-saat', '15:10')
   await p.click('[data-eylem=istek-kabul]')
   await p.waitForSelector('[data-alan=istek-cevabi] [role=alert]', { timeout: 30000 })
   istekler = await tabloOku('ulke_randevu_istekleri')
   kontrol('a TAKEN time: the same clear message as any booking, NO "book anyway"; the request still waits and nothing was written', (await metin(p, '[data-alan=istek-cevabi] [role=alert]')) === 'Bu vaqt band: shu vaqtda sizda boshqa qabul bor. Boshqa vaqtni tanlang.' && !(await p.$('[data-eylem=istek-yine-de]')) && istekler[0].durum === 'bekliyor' && (await tabloOku('ulke_randevulari')).length === randevuSayisi)
   await p.click(`[data-istek-gunu="${g1}"]`)
-  await yazDeger(p, '#uza-ri-saat', '10:00')
+  await yazSaatAlani(p, '#uza-ri-saat', '10:00')
   await cek(p, 'calendar-request-answer.png')
   await p.click('[data-eylem=istek-kabul]')
   await p.waitForFunction(() => new URLSearchParams(location.search).has('randevu'), { timeout: 60000 })
@@ -1212,7 +1221,7 @@ const PORTAL = {}
   const ikinciKabul = await api(p, '/api/ulke/hasta-portali/istekler', { method: 'PATCH', govde: { id: istekler[0].id, gun: yazGun(g2), saat: '11:00', sureDk: 30 } })
   kontrol('a request is answered once: accepting it again books nothing', ikinciKabul.s === 409 && ikinciKabul.t === '{"code":"CEVAPLANDI"}' && (await tabloOku('ulke_randevulari')).length === randevuSayisi + 1, `${ikinciKabul.s} ${ikinciKabul.t}`)
   // A second request, which the doctor declines from the calendar.
-  await H.click(`input[name=gunler][value="${g2}"]`)
+  await H.$eval(`input[name=gunler][value="${g2}"]`, (e) => e.click())
   await H.click('[data-eylem=portal-istek]')
   await H.waitForSelector('[data-istek-durumu=bekliyor]', { timeout: 30000 })
   const bekleyen = (await tabloOku('ulke_randevu_istekleri')).find((i) => i.durum === 'bekliyor')

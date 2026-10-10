@@ -18,7 +18,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Bilgi, Hata, saatYaz, tarihYaz, type Uygulama } from './Kabuk'
 import { tamAd } from './Hastalar'
-import { klinikMetni, type KlinikMetni } from '@/lib/ulke/arayuz'
+import { klinikMetni, type GirdiMetni, type KlinikMetni } from '@/lib/ulke/arayuz'
+import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { YETKI_ALAN_KONUMLARI, KLINIK_YETKI_TURLERI, type ErisimKaydi, type KlinikGorunumu, type KlinikUyesi, type KlinikYetkisi, type KlinikYetkiTuru } from '@/lib/ulke/klinikHesabi/tipler'
 import type { KlinikAyarOzeti } from './Klinik'
@@ -39,8 +41,11 @@ const donem = (k: KlinikMetni, y: Pick<KlinikYetkisi, 'baslangic' | 'bitis'>): s
   return yerine(k.yetki.donem, tarihYaz(y.baslangic), tarihYaz(new Date(new Date(y.bitis).getTime() - 1000).toISOString()))
 }
 
-export function YetkiFormuGorunumu({ k, uyeler, ayarlar, alanId, setAlanId, tur, setTur, hastalar, hastaQ, setHastaQ, hastaAra, hastaId, setHastaId, bitisGun, setBitisGun, gonder, bekliyor }: {
-  k: KlinikMetni; uyeler: KlinikUyesi[]; ayarlar: KlinikAyarOzeti
+export function YetkiFormuGorunumu({ k, g, uyeler, ayarlar, alanId, setAlanId, tur, setTur, hastalar, hastaQ, setHastaQ, hastaAra, hastaId, setHastaId, bitisGun, setBitisGun, gonder, bekliyor }: {
+  k: KlinikMetni
+  /** The pack's words for the parts of a date, in the form of the screen. */
+  g: GirdiMetni
+  uyeler: KlinikUyesi[]; ayarlar: KlinikAyarOzeti
   alanId: string; setAlanId: (x: string) => void; tur: KlinikYetkiTuru | ''; setTur: (x: KlinikYetkiTuru | '') => void
   /** null = no search yet. */
   hastalar: HastaSecenegi[] | null; hastaQ: string; setHastaQ: (x: string) => void; hastaAra: () => void; hastaId: string; setHastaId: (x: string) => void
@@ -89,8 +94,8 @@ export function YetkiFormuGorunumu({ k, uyeler, ayarlar, alanId, setAlanId, tur,
           ) : null}
           {tur === 'vekalet' ? (
             <div className="uza-alan">
-              <label className="uza-etiket" htmlFor="uza-yt-bitis">{y.bitisGun}</label>
-              <input id="uza-yt-bitis" type="date" className="uza-girdi" value={bitisGun} onChange={(e) => setBitisGun(e.target.value)} data-alan="vekalet-bitis" required />
+              {/* The kit's own date field, in the pack's order: never the browser's (NOTYA-ULKE-DENETIM-01b). */}
+              <TarihGirisi id="uza-yt-bitis" etiket={y.bitisGun} deger={bitisGun} degistir={setBitisGun} m={g} alan="vekalet-bitis" zorunlu />
               <p className="uza-ipucu">{yerine(y.bitisIpucu, ayarlar.vekaletAzamiGun)}</p>
             </div>
           ) : null}
@@ -211,6 +216,8 @@ export function KlinikYetkiler({ u, klinik, ayarlar, ben }: { u: Uygulama; klini
   }
   async function gonder() {
     if (!alanId || !tur) return
+    // Cover needs its last day, and a day that is typed must be a day: nothing is sent otherwise.
+    if (tur === 'vekalet' && (!bitisGun || bitisGun === GIRDI_GECERSIZ)) { setBildirim('GECERSIZ'); return }
     setBekliyor(true); setBildirim(null)
     try {
       const r = await api(YETKI_API, { method: 'POST', govde: { alanId, tur, ...(tur === 'paylasim' ? { hastaId } : {}), ...(tur === 'vekalet' ? { bitisGun } : {}) } })
@@ -240,7 +247,7 @@ export function KlinikYetkiler({ u, klinik, ayarlar, ben }: { u: Uygulama; klini
           <Hata>{hataMetni}</Hata>
         </div>
       </section>
-      <YetkiFormuGorunumu k={k} uyeler={uyeler} ayarlar={ayarlar} alanId={alanId} setAlanId={(x) => { setAlanId(x); setTur('') }} tur={tur} setTur={setTur} hastalar={hastalar} hastaQ={hastaQ} setHastaQ={setHastaQ}
+      <YetkiFormuGorunumu k={k} g={u.m.girdi} uyeler={uyeler} ayarlar={ayarlar} alanId={alanId} setAlanId={(x) => { setAlanId(x); setTur('') }} tur={tur} setTur={setTur} hastalar={hastalar} hastaQ={hastaQ} setHastaQ={setHastaQ}
         hastaAra={() => { void hastaAra() }} hastaId={hastaId} setHastaId={setHastaId} bitisGun={bitisGun} setBitisGun={setBitisGun} gonder={() => { void gonder() }} bekliyor={bekliyor} />
       <VerilenlerGorunumu k={k} verilen={verilen} geriAl={(id) => { void geriAl(id) }} bekliyor={bekliyor} />
       <AlinanlarGorunumu k={k} alinan={alinan} birak={(id) => { void geriAl(id) }} bekliyor={bekliyor} />

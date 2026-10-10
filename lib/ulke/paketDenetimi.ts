@@ -55,6 +55,9 @@ function metinleriGez(deger: unknown, yer: string, sorunlar: PaketSorunu[], bosO
 }
 
 /** Sentences of the portal catalogue that carry a value: path → the placeholders they must hold (lib/ulke/arayuz/metinTipleri.ts → PortalMetni). */
+/** The keys of `UygulamaMetni.girdi`: what the kit's own date, time and number fields say. */
+const GIRDI_ANAHTARLARI = ['gun', 'ay', 'yil', 'saat', 'dakika', 'tarihGecersiz', 'saatGecersiz', 'sayiOkunamadi', 'duzelt'] as const
+
 const PORTAL_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
   ['erisim.durumAcik', ['%']], ['erisim.sonGiris', ['%']], ['ozet.dil', ['%']], ['ozet.paylasildi', ['%']], ['istek.istekTarihi', ['%']],
   ['giris.pinBicimi', ['%']], ['giris.pinYanlis', ['%']],
@@ -245,6 +248,10 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       if (u.adAlanlari?.ikinciAd === true && !dolu(m.yeniHasta?.otaIsmi)) ekle(`arayuz.metinler[${d}].yeniHasta.otaIsmi`, 'the second name field is on and has no label')
       if (kimlikVar && !dolu(m.yeniHasta?.ulusalKimlik)) ekle(`arayuz.metinler[${d}].yeniHasta.ulusalKimlik`, 'the identity number is recorded and has no label')
       if (dilimler.length > 1 && !dolu(m.ayarlar?.saatDilimi)) ekle(`arayuz.metinler[${d}].ayarlar.saatDilimi`, 'the country has several time zones and the setting has no label')
+      // NOTYA-ULKE-DENETIM-01 — the words of the kit's own date, time and number fields (components/ulke/girdi/): every
+      // one of them, and the two places for the examples in the sentence that asks for a number to be typed again.
+      for (const k of GIRDI_ANAHTARLARI) if ((m.girdi as Record<string, unknown> | undefined)?.[k] === undefined) ekle(`arayuz.metinler[${d}].girdi.${k}`, 'the kit\'s own date, time and number fields have no word for this')
+      { const t = m.girdi?.sayiOkunamadi; if (dolu(t) && !eksikMetinMi(t)) for (const y of ['%1', '%2']) if (!new RegExp(`${y}(?!\\d)`).test(t)) ekle(`arayuz.metinler[${d}].girdi.sayiOkunamadi`, `must hold "${y}" where the example is written`) }
     }
     if (paket.ozellikler.randevu) {
       const r = arayuz.randevuMetinleri[d]

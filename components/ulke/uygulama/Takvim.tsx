@@ -24,12 +24,14 @@
  * The server answers with codes; every sentence here is the catalogue's (./randevuMetinleri.ts), in the account's form.
  */
 import React, { useEffect, useState, type FormEvent } from 'react'
-import { gunCoz, gunEkle, gunYazDesenle, haftaGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
+import { gunCoz, gunEkle, gunYazDesenle, gunYazYilsiz, haftaGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
 import { saatGoster } from '@/lib/ulke/arayuz/bicim'
 import { bitisSaati, saatAraligi, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
-import { temelDil, randevuMetni, gunAdi, type UygulamaMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
+import { temelDil, randevuMetni, gunAdi, type GirdiMetni, type UygulamaMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
+import { SaatGirisi } from '../girdi/SaatGirisi'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
 import { panoyaKopyala } from './pano'
@@ -136,7 +138,7 @@ export function HaftaGorunumu({ r, gunler, bugun, randevular }: { r: RandevuMetn
         return (
           <section key={g} className="uza-hafta-gun" data-gun={g} data-bugun={g === bugun ? 'evet' : undefined}>
             <div className="uza-hafta-baslik">
-              <a className="uza-baglanti" href={takvimYolu({ gun: g })} title={r.takvim.gunuAc}>{gunAdi(r, haftaGunu(g))} · {gunYaz(g).slice(0, 5)}</a>
+              <a className="uza-baglanti" href={takvimYolu({ gun: g })} title={r.takvim.gunuAc}>{gunAdi(r, haftaGunu(g))} · {gunYazYilsiz(g, tarihDeseni())}</a>
               <a className="uza-hafta-ekle" href={takvimYolu({ yeni: '1', gun: g })} aria-label={`${r.takvim.yeni}: ${gunBasligi(r, g)}`}>+</a>
             </div>
             {gununki.length === 0 ? <p className="uza-hafta-bos" aria-hidden="true">—</p> : (
@@ -227,18 +229,17 @@ function TakvimEkrani({ u, r, gunParam, gorunum }: { u: Uygulama; r: RandevuMetn
 export type RandevuFormu = { gun: string; saat: string; sureDk: number; neden: string }
 export type FormHatasi = { kod: string; alan?: string | null } | null
 
-function ZamanAlanlari({ r, a, set, sureler, on }: { r: RandevuMetni; a: Pick<RandevuFormu, 'gun' | 'saat' | 'sureDk'>; set: (y: Partial<RandevuFormu>) => void; sureler: readonly number[]; on: string }) {
+function ZamanAlanlari({ r, g, a, set, sureler, on }: { r: RandevuMetni; g: GirdiMetni; a: Pick<RandevuFormu, 'gun' | 'saat' | 'sureDk'>; set: (y: Partial<RandevuFormu>) => void; sureler: readonly number[]; on: string }) {
   return (
     <>
       <div className="uza-iki">
+        {/* The kit's own date and time fields (NOTYA-ULKE-DENETIM-01b): the parts in the pack's order, the pack's clock,
+            never a browser's own field. `a.gun` is the day as YYYY-MM-DD and `a.saat` 24-hour HH:MM, as they are sent. */}
         <div className="uza-alan">
-          <label className="uza-etiket" htmlFor={`${on}-gun`}>{r.form.tarih}</label>
-          {/* Typed in the pack's own pattern (DD.MM.YYYY): a browser date field would show the browser's pattern instead. */}
-          <input id={`${on}-gun`} name="gun" className="uza-girdi" inputMode="numeric" autoComplete="off" placeholder={r.form.tarihOrnek} value={a.gun} onChange={(e) => set({ gun: e.target.value })} required />
+          <TarihGirisi id={`${on}-gun`} etiket={r.form.tarih} deger={a.gun} degistir={(gun) => set({ gun })} m={g} ad="gun" zorunlu />
         </div>
         <div className="uza-alan">
-          <label className="uza-etiket" htmlFor={`${on}-saat`}>{r.form.saat}</label>
-          <input id={`${on}-saat`} name="saat" type="time" className="uza-girdi" value={a.saat} onChange={(e) => set({ saat: e.target.value })} required />
+          <SaatGirisi id={`${on}-saat`} etiket={r.form.saat} deger={a.saat} degistir={(saat) => set({ saat })} m={g} ad="saat" zorunlu />
         </div>
       </div>
       <div className="uza-alan">
@@ -264,7 +265,7 @@ export function RandevuFormuGorunumu({ m, r, hasta, a, set, sureler, gonder, bek
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
       <p className="uza-ipucu"><a className="uza-baglanti" href={takvimYolu({ yeni: '1', gun: gunCoz(a.gun, tarihDeseni()) ?? undefined, saat: a.saat })}>{r.form.hastaDegistir}</a></p>
       <form className="uza-form" onSubmit={(e: FormEvent) => { e.preventDefault(); gonder(false) }} noValidate>
-        <ZamanAlanlari r={r} a={a} set={set} sureler={sureler} on="uza-rf" />
+        <ZamanAlanlari r={r} g={m.girdi} a={a} set={set} sureler={sureler} on="uza-rf" />
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-rf-neden">{r.form.neden}</label>
           <input id="uza-rf-neden" name="neden" className="uza-girdi" maxLength={200} placeholder={r.form.nedenOrnek} value={a.neden} onChange={(e) => set({ neden: e.target.value })} />
@@ -355,7 +356,7 @@ function YeniRandevu({ u, r, hastaId, gunParam, saatParam, q }: { u: Uygulama; r
         if (!d.ok || !d.j.duzen) { setYuk('hata'); return }
         const dc = d.j as unknown as DuzenCevabi
         setHasta(h.j.hasta); setSureler(dc.sureSecenekleri ?? [])
-        setA({ gun: gunYaz(gun || dc.bugun), saat, sureDk: dc.duzen.sureDk, neden: '' })
+        setA({ gun: gun || dc.bugun, saat, sureDk: dc.duzen.sureDk, neden: '' })
         setYuk('tamam')
       } catch { if (!iptal) setYuk('hata') }
     })()
@@ -462,7 +463,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
         <section className="uza-kart" data-alan="tasi">
           <h2 className="uza-h2">{r.randevu.tasi}</h2>
           <form className="uza-form" style={{ marginTop: 0 }} onSubmit={(e: FormEvent) => { e.preventDefault(); tasiGonder(false) }} noValidate>
-            <ZamanAlanlari r={r} a={tasi} set={setTasi} sureler={sureler} on="uza-rt" />
+            <ZamanAlanlari r={r} g={m.girdi} a={tasi} set={setTasi} sureler={sureler} on="uza-rt" />
             {bildirim === 'tasindi' ? <Bilgi>{r.randevu.tasindi}</Bilgi> : null}
             <Hata>{hata?.nerede === 'tasi' ? randevuHataMetni(m, r, hata.kod, hata.alan, true) : null}</Hata>
             <div className="uza-eylemler" style={{ marginTop: 0 }}>
@@ -485,7 +486,7 @@ function RandevuDetay({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string }
   const [bildirim, setBildirim] = useState<DetayBildirimi>(null)
   const [bekliyor, setBekliyor] = useState(false)
   const { hesap, api } = u
-  const yerlestir = (x: RandevuKaydi) => { setRandevu((eski) => ({ ...x, hastaDili: x.hastaDili ?? eski?.hastaDili })); setTasi({ gun: gunYaz(x.gun), saat: x.saat, sureDk: x.sureDk }) }
+  const yerlestir = (x: RandevuKaydi) => { setRandevu((eski) => ({ ...x, hastaDili: x.hastaDili ?? eski?.hastaDili })); setTasi({ gun: x.gun, saat: x.saat, sureDk: x.sureDk }) }
 
   useEffect(() => {
     if (!hesap) return
@@ -553,7 +554,7 @@ function IstekCevabi({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string })
         if (!bulunan) { setYuk('yok'); return }
         const dc = d.j as unknown as DuzenCevabi
         setIstek(bulunan); setSureler(dc.sureSecenekleri ?? [])
-        setA({ gun: gunYaz(bulunan.gunler[0] ?? dc.bugun), saat: dc.duzen.baslangic, sureDk: dc.duzen.sureDk })
+        setA({ gun: bulunan.gunler[0] ?? dc.bugun, saat: dc.duzen.baslangic, sureDk: dc.duzen.sureDk })
         setYuk('tamam')
       } catch { if (!iptal) setYuk('hata') }
     })()
@@ -575,7 +576,7 @@ function IstekCevabi({ u, r, id }: { u: Uygulama; r: RandevuMetni; id: string })
   const set = (y: Partial<IstekCevapFormu>) => { setA({ ...a, ...y }); setHata(null) }
   const bilinen = hata && ['DOLU', 'MESAI_DISI', 'GECERSIZ', 'BAGLANTI'].includes(hata.kod)
   return (
-    <IstekCevabiGorunumu p={p} r={r} istek={istek} a={a} set={set} zaman={<ZamanAlanlari r={r} a={a} set={set} sureler={sureler} on="uza-ri" />}
+    <IstekCevabiGorunumu p={p} r={r} istek={istek} a={a} set={set} zaman={<ZamanAlanlari r={r} g={u.m.girdi} a={a} set={set} sureler={sureler} on="uza-ri" />}
       hataMetni={bilinen ? randevuHataMetni(u.m, r, hata?.kod ?? null, hata?.alan) : null}
       gonder={(yineDe) => { void cevapla({ gun: a.gun, saat: a.saat, sureDk: a.sureDk, neden: istek.neden, ...(yineDe ? { yineDe: true } : {}) }) }}
       reddet={() => { void cevapla({ red: true }) }} bekliyor={bekliyor} hata={hata} />
@@ -618,13 +619,12 @@ export function DuzenGorunumu({ m, r, a, set, sureler, gonder, bekliyor, hata, k
           </div>
         </fieldset>
         <div className="uza-iki">
+          {/* The kit's own time field, on the pack's clock: never the browser's (NOTYA-ULKE-DENETIM-01b). */}
           <div className="uza-alan">
-            <label className="uza-etiket" htmlFor="uza-d-bas">{d.baslangic}</label>
-            <input id="uza-d-bas" name="baslangic" type="time" className="uza-girdi" value={a.baslangic} onChange={(e) => set({ ...a, baslangic: e.target.value })} required />
+            <SaatGirisi id="uza-d-bas" etiket={d.baslangic} deger={a.baslangic} degistir={(baslangic) => set({ ...a, baslangic })} m={m.girdi} ad="baslangic" zorunlu />
           </div>
           <div className="uza-alan">
-            <label className="uza-etiket" htmlFor="uza-d-bit">{d.bitis}</label>
-            <input id="uza-d-bit" name="bitis" type="time" className="uza-girdi" value={a.bitis} onChange={(e) => set({ ...a, bitis: e.target.value })} required />
+            <SaatGirisi id="uza-d-bit" etiket={d.bitis} deger={a.bitis} degistir={(bitis) => set({ ...a, bitis })} m={m.girdi} ad="bitis" zorunlu />
           </div>
         </div>
         <div className="uza-alan">
@@ -637,8 +637,8 @@ export function DuzenGorunumu({ m, r, a, set, sureler, gonder, bekliyor, hata, k
           <legend className="uza-etiket">{d.molalar}</legend>
           {a.molalar.map((x, i) => (
             <div key={i} className="uza-mola" data-mola={i}>
-              <label className="uza-alan"><span className="uza-etiket">{d.molaBas}</span><input type="time" name={`mola-bas-${i}`} className="uza-girdi" value={x.baslangic} onChange={(e) => mola(i, { baslangic: e.target.value })} /></label>
-              <label className="uza-alan"><span className="uza-etiket">{d.molaBit}</span><input type="time" name={`mola-bit-${i}`} className="uza-girdi" value={x.bitis} onChange={(e) => mola(i, { bitis: e.target.value })} /></label>
+              <div className="uza-alan"><SaatGirisi id={`uza-d-mola-bas-${i}`} etiket={d.molaBas} deger={x.baslangic} degistir={(baslangic) => mola(i, { baslangic })} m={m.girdi} ad={`mola-bas-${i}`} /></div>
+              <div className="uza-alan"><SaatGirisi id={`uza-d-mola-bit-${i}`} etiket={d.molaBit} deger={x.bitis} degistir={(bitis) => mola(i, { bitis })} m={m.girdi} ad={`mola-bit-${i}`} /></div>
               <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => set({ ...a, molalar: a.molalar.filter((_, j) => j !== i) })}>{d.molaSil}</button>
             </div>
           ))}

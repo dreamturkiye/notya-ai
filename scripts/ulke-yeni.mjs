@@ -201,8 +201,8 @@ export const ${B}_PAKETI: UlkePaketi = {
   bicim: {
     yerel: eksik('format: the Intl locale for dates and numbers, e.g. en-GB'),
     tarihDeseni: eksik('format: how a date is written — DD, MM and YYYY once each with one separator: DD/MM/YYYY, MM/DD/YYYY, DD.MM.YYYY, YYYY-MM-DD'),
-    ondalikAyraci: eksikAyar('format: decimal separator — \\'.\\' or \\',\\''),
-    binlikAyraci: eksikAyar('format: thousands separator — \\',\\' or \\'.\\' or \\' \\''),
+    ondalikAyraci: eksikAyar('format: decimal separator — \\'.\\' or \\',\\'. It also decides how a number a person TYPES is read: the other mark is never taken for it'),
+    binlikAyraci: eksikAyar('format: thousands separator — \\',\\' or \\'.\\' or \\' \\'. A typed number may be grouped with it (or with a space), in correct groups of three only'),
     haftaBasi: eksikAyar('format: first day of the week on the calendar — 1 (Monday) or 7 (Sunday)'),
   },
   telefon: {

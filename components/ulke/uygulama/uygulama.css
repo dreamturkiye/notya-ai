@@ -139,7 +139,7 @@ textarea.uza-alt-girdi { min-height: 58px; font-size: 15px; }
 .uza-randevu-satiri { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .uza-randevu-satiri > .uza-satir { flex: 1; min-width: 220px; }
 .uza-randevu-satiri > .uza-dugme { margin-bottom: 8px; }
-.uza-mola { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 8px; }
+.uza-mola { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: flex-end; margin-top: 8px; }
 textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 
 /* ── NOTYA-ULKE-ARACLAR-01 — tools: a grid of tiles (one column on a phone), and a tool's result. ── */
@@ -182,3 +182,17 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-konsultasyon { padding: 14px 0; border-top: 1px solid var(--uza-cizgi); }
 .uza-konsultasyon:first-child { border-top: 0; }
 .uza-konsultasyon .uza-alt-baslik { margin-top: 10px; }
+
+/* NOTYA-ULKE-DENETIM-01 — the kit's own entry fields (components/ulke/girdi/): a day and a time of day typed as small
+   labelled parts in the pack's order, never a browser's own date or time field; and the message under a field whose
+   date, time or number cannot be read. */
+.uza-parcali { display: block; }
+.uza-parcali-satir { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; }
+.uza-parca { display: flex; flex-direction: column; }
+.uza-parca-ad { font-size: 12px; color: var(--uza-soluk); margin-bottom: 4px; }
+.uza-parca .uza-girdi { width: 3.5em; height: 48px; padding: 0 6px; text-align: center; }
+.uza-parca[data-parca='YYYY'] .uza-girdi { width: 4.75em; }
+.uza-parca select.uza-girdi { width: auto; min-width: 4.75em; text-align: left; }
+.uza-parca-ayrac { padding-bottom: 12px; font-size: 18px; color: var(--uza-soluk); }
+.uza-girdi[aria-invalid='true'] { border-color: var(--uza-uyari); }
+.uza-girdi-hata { color: var(--uza-uyari); }

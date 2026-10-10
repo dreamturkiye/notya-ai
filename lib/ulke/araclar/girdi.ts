@@ -2,10 +2,16 @@
  * NOTYA-ULKE-ARACLAR-01 — WHAT WAS TYPED → WHAT A TOOL'S ARITHMETIC TAKES. Pure, and the same on both sides: the
  * tool's screen reads the form with it, and the server reads the same form again before it keeps a result
  * (lib/ulke/araclar/kayit.ts) — so a kept result is always the kit's own arithmetic, never a number a browser sent.
+ *
+ * A NUMBER IS READ BY THE COUNTRY'S OWN RULES (NOTYA-ULKE-DENETIM-01a): the pack's decimal and thousands marks, through
+ * the kit's one parser (lib/ulke/arayuz/sayiOkuma.ts → sayiCozKuralla). A text that can be read two ways is "nothing": the
+ * tool shows no result, the server keeps none, and the field asks for the number to be typed again. This file used to
+ * turn the first comma into a point, which made "1,500" into 1.5 in every country that groups thousands with a comma.
  */
+import { sayiCozKuralla } from '../arayuz/sayiOkuma'
 import { alanAraligi, kanonigeCevir, type BirimOrtami } from './birimler'
 import type { AracAlani, AracGirdisi } from './tipler'
-import { kosullariUygula, METIN_UZUNLUGU } from './yardimci'
+import { alanVarMi, kosullariUygula, METIN_UZUNLUGU } from './yardimci'
 
 /** What is typed, as it is typed: a field's text, an option key, a tick. */
 export type HamGirdi = Readonly<Record<string, string | boolean>>
@@ -23,7 +29,7 @@ export function hamiSuz(alanlar: readonly AracAlani[], ham: unknown): HamGirdi {
   return cikti
 }
 
-/** What was typed → what the tool's arithmetic takes. A number out of its range, or not a number, is "nothing". */
+/** What was typed → what the tool's arithmetic takes. A number out of its range, not a number, or not readable without guessing is "nothing". */
 export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: BirimOrtami): AracGirdisi {
   const g: Record<string, number | string | boolean | null> = {}
   for (const a of alanlar) {
@@ -32,8 +38,8 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     if (a.tur === 'secim') { g[a.anahtar] = typeof v === 'string' && (a.secenekler ?? []).includes(v) ? v : null; continue }
     if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
     if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, METIN_UZUNLUGU) : ''; g[a.anahtar] = t || null; continue }
-    const metin = typeof v === 'string' ? v.trim().replace(',', '.') : ''
-    const n = metin === '' ? NaN : Number(metin)
+    const okuma = sayiCozKuralla(v, o.sayi)
+    const n = okuma.tamam ? okuma.sayi : NaN
     const aralik = alanAraligi(a, o)
     if (!Number.isFinite(n) || (a.tam && !Number.isInteger(n)) || (aralik && (n < aralik.enAz || n > aralik.enCok))) { g[a.anahtar] = null; continue }
     g[a.anahtar] = kanonigeCevir(a, n, o)
@@ -42,9 +48,27 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
   return kosullariUygula(alanlar, g)
 }
 
+/**
+ * THE FIELDS THAT HOLD SOMETHING THAT COULD NOT BE READ: a number field with a text that is not a number written this
+ * country's way, a date field with something that is not a day. While there is one, A TOOL SHOWS NO RESULT AND THE
+ * SERVER KEEPS NONE — also where the field is optional: a day limit the doctor typed and the tool could not read must
+ * never be worked with as "no limit". Only fields that are there for this input count (`g` is what `girdiyiCoz` gave).
+ */
+export function okunamayanAlanlar(alanlar: readonly AracAlani[], ham: HamGirdi, g: AracGirdisi, o: BirimOrtami): string[] {
+  const cikti: string[] = []
+  for (const a of alanlar) {
+    if (!alanVarMi(a, g)) continue
+    const v = ham[a.anahtar]
+    if (typeof v !== 'string' || v.trim() === '') continue
+    if (a.tur === 'sayi' && !sayiCozKuralla(v, o.sayi).tamam) cikti.push(a.anahtar)
+    if (a.tur === 'tarih' && !/^\d{4}-\d{2}-\d{2}$/.test(v)) cikti.push(a.anahtar)
+  }
+  return cikti
+}
+
 /** For the summary: a number is repeated as the doctor typed it (their unit), not in the unit the arithmetic used. */
-export function hamdanGosterilen(alanlar: readonly AracAlani[], ham: HamGirdi, g: AracGirdisi): AracGirdisi {
+export function hamdanGosterilen(alanlar: readonly AracAlani[], ham: HamGirdi, g: AracGirdisi, o: BirimOrtami): AracGirdisi {
   const cikti: Record<string, number | string | boolean | null> = { ...g }
-  for (const a of alanlar) if ((a.tur === 'sayi' || a.tur === 'puan') && g[a.anahtar] !== null) { const v = ham[a.anahtar]; cikti[a.anahtar] = typeof v === 'string' ? Number(v.trim().replace(',', '.')) : null }
+  for (const a of alanlar) if ((a.tur === 'sayi' || a.tur === 'puan') && g[a.anahtar] !== null) { const okuma = sayiCozKuralla(ham[a.anahtar], o.sayi); cikti[a.anahtar] = okuma.tamam ? okuma.sayi : null }
   return cikti
 }
