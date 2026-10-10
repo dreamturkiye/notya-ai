@@ -57,6 +57,12 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/belgeler/ingest/route.ts': T,
   // KONSULTASYON-01 — kapalı döngü konsültasyon (sevkler + Kasa belgesi + bugünkü not + Sağlığım hatırlatması)
   'app/api/doktor/konsultasyon/route.ts': T,
+  // KONSULTASYONLAR-01 — konsültan defteri (no patient data) + hesapsız konsültan portalı (signed link names ONE sevk)
+  'app/api/doktor/konsultasyon/defter/route.ts': T,
+  'app/api/konsultan/route.ts': T,
+  // NOTYA-TAKIP-01 — durable follow-up cases (kontrol / gelmedi / konsültasyon)
+  'app/api/doktor/takip/route.ts': T,
+  'app/api/doktor/on-buro-fisilti/route.ts': I('pratikOturum, GET only, takes no id from the request. Every source is read by the practice doctor id: randevular (doktor_id), patients (doctor_id), intake forms (doktor_id), gelen_belgeler (doctor_id), takip (takipSenkronize + takipAcikListe by doktor_id, names from patients.doctor_id); unread messages come from /api/doktor/mesajlar called with the caller\'s own authorization header'),
   // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar (core/eylemler/*)
   'app/api/doktor/eylem/route.ts': T,
   'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped, assertPatientOwned (lib/vault/service.acl.test.ts)'),
@@ -293,6 +299,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/portal/hasta/[token]/goruntu/route.ts': I('410 — patient cannot upload to belgeler; redirects to Mesajlar (no vault write)'),
   'app/api/portal/hasta/[token]/goruntu/[id]/route.ts': I('token unlock; jacket id+patient_id+doctor_id; portaldaGorunurMu else 404; vault download doctor-scoped'),
   'app/api/portal/hasta/[token]/mesajlar/route.ts': T,
+  'app/api/portal/hasta/[token]/belge/[id]/route.ts': T,
   'app/api/portal/hasta/[token]/mesajlar/ek/[ekId]/route.ts': I('token → patient_id+doctor_id; mesajEkOku filters both; no foreign patient bytes'),
   'app/api/portal/hasta/[token]/randevu/route.ts': T,
   'app/api/randevu/eylem/route.ts': I('NOTYA-RANDEVU-V2 e-mail links: HMAC-signed token (PORTAL_TOKEN_SECRET) names one randevu id + one action; that row\'s own doktor_id + patient_id scope every further read/write (hastaIslem re-resolves id + doktor_id + patient_id); response carries time, doctor name and state only — no patient name, phone, e-mail or clinical field'),
@@ -305,6 +312,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
   'app/api/cron/randevu-v2/route.ts': I('cron-secret gated; NOTYA-RANDEVU-V2 jobs: each randevu_isleri row is re-resolved as randevular.id + the job\'s own doktor_id, the patient via hastaIletisimi(doktor_id, patient_id), mail leaves only from that doctor\'s own account, every write .eq(doktor_id)'),
+  'app/api/cron/takip-hatirlatma/route.ts': I('cron-secret gated (cronYetkiliMi); takes no id from the request. For each doctor that has an open kontrol case: takipSenkronize + takipHatirlatmalariHazirla, every read and write scoped by that doktor_id; a case is opened and a reminder queued only for a patient re-checked as that doctor\'s own (patients.doctor_id) — nothing is sent, the item waits in that doctor\'s Hazır mesajlar'),
   'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id; then (NOTYA-ILETISIM-04) the dispatcher sends from each item\'s own doctor\'s account — see iletisim-otomatik'),
   'app/api/cron/iletisim-otomatik/route.ts': I('cron-secret gated; NOTYA-ILETISIM-04 dispatcher (lib/iletisim/otomatikGonderim.ts): every queue item is re-read via iletisimHazirla with the item\'s own doctor_id (queue row, appointment and patient each resolved with doctor_id), sent only from that doctor\'s own connected account, every write .eq(doctor_id)'),
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path (NOTYA-GELEN-BELGELER: deletes unfiled inbox rows + their files by age only, returns counts)'),

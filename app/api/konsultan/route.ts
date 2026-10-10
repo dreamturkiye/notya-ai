@@ -27,6 +27,7 @@ import {
 } from '@/lib/doktor/konsultanPortal'
 import { uploadDocument, VaultValidationError } from '@/lib/vault/service'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
+import { konsultasyonKaynakNotu } from '@/lib/doktor/konsultasyonKaynakNot'
 import { doktorIletisimAyari, muayenehaneTelefonAyari } from '@/lib/iletisim/sunucu'
 import { epostaAdresi } from '@/lib/iletisim/baglantilar'
 import { gorunenTelefonSec, telefonGorunum } from '@/lib/portal/hekimKarti'
@@ -91,8 +92,10 @@ async function hekimKartBilgisi(
   }
 }
 
-async function hastaAdi(sb: ReturnType<typeof servisSupabase>, patientId: string): Promise<string> {
-  const { data } = await sb.from('patients').select('name_encrypted').eq('id', patientId).maybeSingle()
+/** HASTA-IZOLASYON: the name is read only for a patient of the request's own doctor (a dirty row resolves to "Hasta"). */
+async function hastaAdi(sb: ReturnType<typeof servisSupabase>, doctorId: string, patientId: string): Promise<string> {
+  if (!doctorId || !patientId) return 'Hasta'
+  const { data } = await sb.from('patients').select('name_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
   try {
     if (data?.name_encrypted) {
       const j = JSON.parse(decrypt(data.name_encrypted)) as { ad?: string }
@@ -102,14 +105,13 @@ async function hastaAdi(sb: ReturnType<typeof servisSupabase>, patientId: string
   return 'Hasta'
 }
 
-/** Onaylı nottan kısa cümleler — ham SOAP / transkript değil. */
-async function onayliCumleler(sb: ReturnType<typeof servisSupabase>, noteId: string | null | undefined): Promise<string[]> {
-  if (!noteId) return []
-  const { data } = await sb
-    .from('notes')
-    .select('content_degerlendirme, content_plan, content_tani, approved_at')
-    .eq('id', noteId)
-    .maybeSingle()
+/**
+ * Onaylı nottan kısa cümleler — ham SOAP / transkript değil.
+ * HASTA-IZOLASYON: `kaynak_not_id` came from a request body. The note is read only if it is the requesting doctor's
+ * note of THIS patient's muayene and not archived (konsultasyonKaynakNotu) — never by its bare id.
+ */
+async function onayliCumleler(sb: ReturnType<typeof servisSupabase>, doctorId: string, patientId: string, noteId: string | null | undefined): Promise<string[]> {
+  const data = await konsultasyonKaynakNotu(sb, doctorId, patientId, noteId, 'content_degerlendirme, content_plan, content_tani, approved_at')
   if (!data || !data.approved_at) return []
   const parcalar = [data.content_tani, data.content_degerlendirme, data.content_plan]
     .map((x) => String(x || '').replace(/\s+/g, ' ').trim())
@@ -126,8 +128,8 @@ export async function GET(req: NextRequest) {
   const doctorId = String(s.doctor_id || '')
   const [hekim, hasta, cumleler] = await Promise.all([
     hekimKartBilgisi(sb, doctorId),
-    hastaAdi(sb, s.patient_id),
-    onayliCumleler(sb, s.kaynak_not_id),
+    hastaAdi(sb, doctorId, s.patient_id),
+    onayliCumleler(sb, doctorId, s.patient_id, s.kaynak_not_id),
   ])
   const dilim = konsultanDilimi({
     satir: s,
@@ -234,20 +236,13 @@ export async function POST(req: NextRequest) {
 
   // Asistan ön notunu isteyen muayeneye düşür (hekim onayına kadar hastaya gitmez).
   try {
-    if (s.kaynak_not_id) {
-      const { data: not } = await sb
-        .from('notes')
-        .select('id, content_degerlendirme, doctor_id')
-        .eq('id', s.kaynak_not_id)
-        .eq('doctor_id', doctorId)
-        .maybeSingle()
-      if (not) {
-        const once = String(not.content_degerlendirme || '').trim()
-        const sonra = once ? `${once}\n\n${onNot}` : onNot
-        await sb.from('notes').update({ content_degerlendirme: sonra }).eq('id', not.id).eq('doctor_id', doctorId)
-      } else {
-        await gununNotunaEkle(sb, doctorId, s.patient_id, onNot)
-      }
+    // HASTA-IZOLASYON: the source note is written only if it is this doctor's note of THIS patient's muayene (and
+    // not archived); otherwise the pre-note goes to the patient's own note of the day.
+    const not = await konsultasyonKaynakNotu(sb, doctorId, s.patient_id, s.kaynak_not_id, 'id, content_degerlendirme')
+    if (not) {
+      const once = String(not.content_degerlendirme || '').trim()
+      const sonra = once ? `${once}\n\n${onNot}` : onNot
+      await sb.from('notes').update({ content_degerlendirme: sonra }).eq('id', String(not.id)).eq('doctor_id', doctorId)
     } else {
       await gununNotunaEkle(sb, doctorId, s.patient_id, onNot)
     }

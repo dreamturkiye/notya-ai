@@ -140,7 +140,10 @@ describe('sesli tur — hekim özeti DUYAR', () => {
     const ekran = sonAsistanMesaji(s.oturum)
     assert.ok(sirali(ekran, BASLIKLAR) && ekran.includes('z −') && ekran.includes('KKK (Kızamık-Kızamıkçık-Kabakulak) 1. doz'), ekran)
     assert.equal(oturumBaglami(s.oturum).sesDevam, undefined, 'anlatım sınırın içinde: kalan yok')
-    assert.equal(ortam.modelIstekleri.length, 1, 'ekran cevabı için tek model isteği')
+    // One model request for the screen answer. Counted by shape (block system prompt = an Ayşe turn): the learning
+    // call of an EARLIER test's sentence ("… bana kısaca özetler misin?") runs in the background (arkaPlandaSurdur) and
+    // can land in this test's request list — it has a plain-text system prompt and is not this turn's.
+    assert.equal(ortam.modelIstekleri.filter((m) => Array.isArray((m.govde as { system?: unknown }).system)).length, 1, 'ekran cevabı için tek model isteği')
   })
 
   for (const ay of AYLAR) {

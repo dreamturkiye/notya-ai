@@ -504,14 +504,34 @@ export default function KonsultanPortal({ jeton, baslangicDilim = null, demoMu =
                         background: 'rgba(47,67,52,0.04)',
                       }}
                     >
+                      {/* KURAL — TÜRKÇE: tarayıcının dosya kontrolü İngilizce yazar ("Choose Files / No file chosen").
+                          Girdi gizli; çevreleyen <label> tıklamayı ona iletir, görünen düğme Türkçedir. */}
                       <input
-                        className="kp-focus"
                         type="file"
                         accept={KABUL}
                         multiple
                         onChange={(e) => setDosyalar(Array.from(e.target.files || []).slice(0, 5))}
-                        style={{ display: 'block', width: '100%', fontSize: 14, color: CHROME_RENK.ink }}
+                        style={{ display: 'none' }}
                       />
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          minHeight: 44,
+                          padding: '0 16px',
+                          borderRadius: 10,
+                          border: `1px solid ${CHROME_RENK.pine}`,
+                          background: '#fff',
+                          color: CHROME_RENK.pine,
+                          fontSize: 14,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span aria-hidden>📎</span>
+                        {dosyalar.length ? 'Dosyaları değiştir' : 'Dosya seç'}
+                      </span>
                       <div style={{ fontSize: 12.5, color: CHROME_RENK.muted, marginTop: 8, lineHeight: 1.4 }}>
                         JPEG, PNG, PDF, kısa video veya DICOM · en fazla 4 MB · 5 dosya
                       </div>

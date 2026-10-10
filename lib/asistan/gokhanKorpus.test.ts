@@ -584,10 +584,12 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
       assert.match(o.cevap, /\*\*Aşı:\*\* Yapılmış .*KKK/)
       assert.match(o.cevap, /kilo 9,8 kg; boy 76 cm; baş çevresi 46,4 cm/)
       assert.equal(bul('L-OZET-ERISKIN', yuzey).hasta, KORPUS_ADLARI.eriskin)
-      // Another doctor's patient: no chart is bound, no summary is written.
+      // Another doctor's patient: no chart is bound, no summary is written. Since NOTYA-IKI-BEYIN-BIRDE (3f8ca065) the
+      // empty count template ("Kayıtlarda 0 hasta. Filtre: 12 aylık.") is no longer the answer — an empty search falls
+      // through to the model with no chart — so the stand-in answers and the turn is VEKIL (not judged), no longer PASS.
       const y = bul('L-OZET-YABANCI', yuzey)
-      assert.deepEqual([y.karar, y.hasta], ['PASS', null])
-      assert.ok(!/\*\*Muayene:\*\*|9,8/.test(`${y.cevap} ${y.sozlu}`))
+      assert.deepEqual([y.karar, y.hasta, y.modeleGitti], ['VEKIL', null, true], `${yuzey}: ${y.nedenler.join('; ')}`)
+      assert.ok(!/\*\*Muayene:\*\*|9,8|Filtre:/.test(`${y.cevap} ${y.sozlu}`))
     }
     // Voice: the summary is HEARD — the narrative from the record, not "Dayanak. N madde, ekranınızda.".
     const ses = bul('L-OZET-12AY', 'ses')

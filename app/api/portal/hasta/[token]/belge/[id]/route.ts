@@ -8,6 +8,7 @@ import { resolvePortalToken } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { downloadDocument } from '@/lib/vault/service'
 import { contentDispositionAd } from '@/lib/vault/validation'
+import { konsultasyonBelgeIdleri, konsultasyonBelgesiMi } from '@/lib/portal/konsultasyonBelgeleri'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,13 +29,19 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
 
   const { data: row } = await client
     .from('medical_documents')
-    .select('id, file_name, file_type, deleted_at')
+    .select('id, file_name, file_type, category, deleted_at')
     .eq('id', params.id)
     .eq('patient_id', tok.patient_id)
     .eq('doctor_id', tok.doctor_id)
     .is('deleted_at', null)
     .maybeSingle()
   if (!row) return NextResponse.json({ error: 'Belge bulunamadı.' }, { status: 404 })
+  // KONSULTASYON-01: a consultation report is not a patient document — same answer as a document that does not
+  // exist, and the same rule the Sağlığım list applies (lib/portal/konsultasyonBelgeleri.ts). Fail closed.
+  const konsultasyonBelgeleri = await konsultasyonBelgeIdleri(client, tok.doctor_id, tok.patient_id)
+  if (!konsultasyonBelgeleri || konsultasyonBelgeleri.has(String(row.id)) || konsultasyonBelgesiMi(row.category)) {
+    return NextResponse.json({ error: 'Belge bulunamadı.' }, { status: 404 })
+  }
 
   try {
     const { meta, bytes } = await downloadDocument({ supabase: client }, tok.doctor_id, row.id)

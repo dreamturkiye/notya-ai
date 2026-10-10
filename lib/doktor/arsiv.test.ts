@@ -35,6 +35,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'app/api/notes/[id]/route.ts': { adet: 2, neden: 'open (GET) and delete (DELETE, NOTYA-NOT-SIL-01) one note by id — both ownership-scoped; a draft stays deletable even when its muayene is archived' },
   'app/api/doktor/medula/recete/route.ts': { adet: 1, neden: 'open one note by id (reçete) — allowed for archived, page shows the "Arşivde" banner' },
   'app/api/doktor/seans-paketi/route.ts': { adet: 2, neden: 'open one note by id (GET and POST), ownership-scoped — same print page as Medula; does not list visits' },
+  'app/api/doktor/araclar/enabiz/mbys/route.ts': { adet: 1, neden: 'MBYS-YARDIMCI-01 "Kaydettim / Aktarıldı" status write: ownership check of the ONE note the doctor marks, by id + doctor_id (then seansSahibi), before the mbys_aktarimlar upsert; nothing of the note is returned. The queue and the record view in the same file use arsivsizNotlar / arsivsizSeanslar' },
   'app/api/doktor/araclar/enabiz/route.ts': { adet: 1, neden: 'open one note by id (deep-link from seans/reçete); visit list uses arsivsizSeanslar/arsivsizNotlar' },
   'app/api/notes/[id]/approve/route.ts': { adet: 2, neden: 'doctor action on one note by id (approve) + content_tetkikler re-read before merge, both ownership-scoped' },
   'app/api/notes/[id]/ilac-sonlandir-geri-al/route.ts': { adet: 1, neden: 'Geri al after approving one note by id, ownership-scoped (same note as approve)' },
