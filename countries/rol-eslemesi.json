@@ -43,6 +43,19 @@
     { "en": "audiology", "tr": "odyoloji", "uz": "odyoloji", "taraf": "klinik-muttefik" }
   ],
   "ulkeyeOzel": {
+    "ca": {
+      "sutun": "en",
+      "cikar": [],
+      "ekle": [
+        { "anahtar": "vascular-surgery", "taraf": "doktor", "gibi": "cardiovascular-surgery" },
+        { "anahtar": "clinical-immunology-allergy", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "geriatric-medicine", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "hematology", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "pain-medicine", "taraf": "doktor", "gibi": "rehabilitation-medicine" },
+        { "anahtar": "reproductive-endocrinology", "taraf": "doktor", "gibi": "obstetrics-gynaecology" },
+        { "anahtar": "psychotherapy", "taraf": "klinik-muttefik", "gibi": "clinical-psychology" }
+      ]
+    },
     "gb": {
       "sutun": "en",
       "cikar": ["clinic-dermatology"],
