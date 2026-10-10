@@ -126,7 +126,9 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
 
   // ── dermatology. Not for the clinic dermatology role (cosmetic procedures) and not for rheumatology. ──
   {
-    anahtar: 'pasi', roller: ['dermatoloji'],
+    // ALSO THE CLINIC-SIDE ROLE OF THE SAME SPECIALTY since the audit of 2026-10-10: klinik-dermatoloji is
+    // "Dermatovenerologiya" in the order, as dermatoloji is. The four dermatology tools go to both.
+    anahtar: 'pasi', roller: ['dermatoloji', 'klinik-dermatoloji'],
     metin: {
       ad: u('PASI indeksi', 'PASI индекси', 'Индекс PASI'),
       aciklama: u('Psoriaz maydoni va ogʻirligi indeksi. Toʻrt soha; har birida eritema, induratsiya va qipiqlanish (0–4) hamda maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Indeks har bir soha toʻliq kiritilganda chiqadi: maydon bali va, maydon 0 boʻlmasa, uchta belgi. Vosita ballni koʻrsatadi va ogʻirlik darajasini nomlamaydi.', 'Псориаз майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида эритема, индурация ва қипиқланиш (0–4) ҳамда майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Индекс ҳар бир соҳа тўлиқ киритилганда чиқади: майдон бали ва, майдон 0 бўлмаса, учта белги. Восита баллни кўрсатади ва оғирлик даражасини номламайди.', 'Индекс площади и тяжести псориаза. Четыре области; в каждой эритема, инфильтрация и шелушение (0–4) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Индекс появляется, когда каждая область заполнена: балл площади и, если площадь не 0, три признака. Инструмент показывает балл и не называет степень тяжести.'),
@@ -136,7 +138,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'easi', roller: ['dermatoloji'],
+    anahtar: 'easi', roller: ['dermatoloji', 'klinik-dermatoloji'],
     metin: {
       ad: u('EASI indeksi', 'EASI индекси', 'Индекс EASI'),
       aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Har bir sohaning vazn koeffitsiyenti bemorning yoshiga bogʻliq: 8 yoshgacha yoki 8 yosh va undan katta. Indeks yosh tanlanganda va har bir soha toʻliq kiritilganda chiqadi: maydon bali va, maydon 0 boʻlmasa, toʻrtta belgi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Ҳар бир соҳанинг вазн коэффитсиенти беморнинг ёшига боғлиқ: 8 ёшгача ёки 8 ёш ва ундан катта. Индекс ёш танланганда ва ҳар бир соҳа тўлиқ киритилганда чиқади: майдон бали ва, майдон 0 бўлмаса, тўртта белги.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовой коэффициент каждой области зависит от возраста пациента: до 8 лет либо 8 лет и старше. Индекс появляется, когда выбран возраст и каждая область заполнена: балл площади и, если площадь не 0, четыре признака.'),
@@ -156,7 +158,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'scorad', roller: ['dermatoloji'],
+    anahtar: 'scorad', roller: ['dermatoloji', 'klinik-dermatoloji'],
     metin: {
       ad: u('SCORAD indeksi', 'SCORAD индекси', 'Индекс SCORAD'),
       aciklama: u('Atopik dermatit ogʻirligi: A — zararlangan yuza foizi, B — olti belgining intensivligi (0–3), C — qichishish va uyqu buzilishi (0–10). Hisob: A ning beshdan biri, B ning uch yarim barobari va C yigʻindisi. Indeks barcha maydonlar toʻldirilganda chiqadi.', 'Атопик дерматит оғирлиги: A — зарарланган юза фоизи, B — олти белгининг интенсивлиги (0–3), C — қичишиш ва уйқу бузилиши (0–10). Ҳисоб: A нинг бешдан бири, B нинг уч ярим баробари ва C йиғиндиси. Индекс барча майдонлар тўлдирилганда чиқади.', 'Тяжесть атопического дерматита: A — процент поражённой поверхности, B — интенсивность шести признаков (0–3), C — зуд и нарушение сна (0–10). Расчёт: пятая часть A, B, умноженное на три с половиной, и C в сумме. Индекс появляется, когда заполнены все поля.'),
@@ -182,7 +184,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'yama-okuma', roller: ['dermatoloji'],
+    anahtar: 'yama-okuma', roller: ['dermatoloji', 'klinik-dermatoloji'],
     metin: {
       ad: u('Applikatsion test: natijani oʻqish kunlari', 'Аппликатсион тест: натижани ўқиш кунлари', 'Аппликационный тест: дни чтения результата'),
       aciklama: u('Applikatsiya qoʻyilgan sanadan ikkinchi va toʻrtinchi kun (D2, D4) hisoblanadi.', 'Аппликация қўйилган санадан иккинчи ва тўртинчи кун (D2, D4) ҳисобланади.', 'От даты наложения аппликаций рассчитываются второй и четвёртый день (D2, D4).'),

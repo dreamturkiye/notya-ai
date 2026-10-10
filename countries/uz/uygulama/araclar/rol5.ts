@@ -210,7 +210,9 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
 
   // ── plastic surgery. Not for the aesthetic clinic roles (a separate registry) and not for general surgery. ──
   {
-    anahtar: 'plastik-yara-greft', roller: ['plastik-cerrahi'],
+    // ALSO THE CLINIC-SIDE ROLE OF THE SAME SPECIALTY since the audit of 2026-10-10: estetik-cerrahi is "Plastik
+    // xirurgiya" in the order, as plastik-cerrahi is.
+    anahtar: 'plastik-yara-greft', roller: ['plastik-cerrahi', 'estetik-cerrahi'],
     metin: {
       ad: u('Jarohat, transplantat va laxtak kuzatuvi', 'Жароҳат, трансплантат ва лахтак кузатуви', 'Наблюдение за раной, трансплантатом и лоскутом'),
       aciklama: u('Nima kuzatilayotgani, sohasi, muolaja, bogʻlam va choklarni olish sanalari. Tashxis va dori dozasi yozilmaydi.', 'Нима кузатилаётгани, соҳаси, муолажа, боғлам ва чокларни олиш саналари. Ташхис ва дори дозаси ёзилмайди.', 'Что наблюдается, область, даты процедуры, перевязки и снятия швов. Диагноз и дозы препаратов не указываются.'),

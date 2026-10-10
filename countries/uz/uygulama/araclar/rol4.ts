@@ -1,6 +1,7 @@
 /**
  * NOTYA-ULKE-ARACLAR-01 — Uzbekistan: ROLE TOOLS, fourth part, in the order of the pack's role list:
- * cardiovascular surgery (kalp-damar-cerrahisi), ear, nose and throat (kulak-burun-bogaz).
+ * cardiac surgery and vascular surgery (kalp-damar-cerrahisi, damar-cerrahisi: one specialty until the audit of
+ * 2026-10-10 split it), ear, nose and throat (kulak-burun-bogaz) with surdology (surdoloji).
  *
  * Every tool names the roles that see it. MACHINE-WRITTEN. AWAITS NATIVE REVIEW (see ./index.ts).
  */
@@ -51,7 +52,8 @@ const HOLAT = { izlemde: u('Kuzatuvda', 'Кузатувда', 'Под наблю
 export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
   // ── cardiovascular surgery. Not for cardiology (no operation there) and not for the other surgical roles. ──
   {
-    anahtar: 'kalp-damar-preop', roller: ['kalp-damar-cerrahisi'],
+    // BOTH HALVES of the specialty the audit split (2026-10-10): cardiac surgery and vascular surgery.
+    anahtar: 'kalp-damar-preop', roller: ['kalp-damar-cerrahisi', 'damar-cerrahisi'],
     metin: {
       ad: u('Yurak-qon tomir operatsiyasidan oldingi nazorat roʻyxati', 'Юрак-қон томир операциясидан олдинги назорат рўйхати', 'Контрольный список перед сердечно-сосудистой операцией'),
       aciklama: u('Operatsiyadan oldingi xavfni baholash bandlari. Bajarilmagan dastlabki uch band kuzatuv vazifasi sifatida koʻrsatiladi. Doza yozilmaydi.', 'Операциядан олдинги хавфни баҳолаш бандлари. Бажарилмаган дастлабки уч банд кузатув вазифаси сифатида кўрсатилади. Доза ёзилмайди.', 'Пункты предоперационной оценки риска. Первые три невыполненных пункта показываются как задачи для контроля. Дозы не указываются.'),
@@ -62,7 +64,7 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'greft-yara-izlem', roller: ['kalp-damar-cerrahisi'],
+    anahtar: 'greft-yara-izlem', roller: ['kalp-damar-cerrahisi', 'damar-cerrahisi'],
     metin: {
       ad: u('Tomir grefti va jarohat kuzatuvi', 'Томир грефти ва жароҳат кузатуви', 'Наблюдение за сосудистым графтом и раной'),
       aciklama: u('Nima kuzatilayotgani, holati, sanasi va keyingi nazorat. Tashxis va dori dozasi yozilmaydi.', 'Нима кузатилаётгани, ҳолати, санаси ва кейинги назорат. Ташхис ва дори дозаси ёзилмайди.', 'Что наблюдается, его состояние, дата и следующий контроль. Диагноз и дозы препаратов не указываются.'),
@@ -76,7 +78,7 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'antikoagulan-vadeleri', roller: ['kalp-damar-cerrahisi'],
+    anahtar: 'antikoagulan-vadeleri', roller: ['kalp-damar-cerrahisi', 'damar-cerrahisi'],
     metin: {
       ad: u('Antitrombotik davo: nazorat sanalari', 'Антитромботик даво: назорат саналари', 'Антитромботическая терапия: даты контроля'),
       aciklama: u('Dori guruhi, keyingi nazorat va laboratoriya tekshiruvi sanasi. Dori nomi, doza va maqsad koʻrsatkich yozilmaydi.', 'Дори гуруҳи, кейинги назорат ва лаборатория текшируви санаси. Дори номи, доза ва мақсад кўрсаткич ёзилмайди.', 'Группа препарата, дата следующего контроля и лабораторного исследования. Название препарата, доза и целевой показатель не указываются.'),
@@ -101,7 +103,9 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
 
   // ── ear, nose and throat. Not for the audiology role of a clinic (its own registry) and not for neurology. ──
   {
-    anahtar: 'odyometri-pta', roller: ['kulak-burun-bogaz'],
+    // ALSO SURDOLOGY since the audit of 2026-10-10: the doctor's specialty of hearing, which the order places under
+    // otorhinolaryngology (it was an allied "audiologist" role with base tools only).
+    anahtar: 'odyometri-pta', roller: ['kulak-burun-bogaz', 'surdoloji'],
     metin: {
       ad: u('Tonal audiometriya: oʻrtacha eshitish boʻsagʻasi', 'Тонал аудиометрия: ўртача эшитиш бўсағаси', 'Тональная аудиометрия: средний порог слуха'),
       aciklama: u('0,5, 1, 2 va 4 kHz dagi havo oʻtkazuvchanligi boʻsagʻalarining oʻrtachasi, eshitish pasayishi darajasi, oldingi oʻlchovdan va ikkinchi quloqdan farqi.', '0,5, 1, 2 ва 4 кГц даги ҳаво ўтказувчанлиги бўсағаларининг ўртачаси, эшитиш пасайиши даражаси, олдинги ўлчовдан ва иккинчи қулоқдан фарқи.', 'Среднее порогов воздушной проводимости на 0,5, 1, 2 и 4 кГц, степень снижения слуха, изменение от прежнего измерения и разница со вторым ухом.'),

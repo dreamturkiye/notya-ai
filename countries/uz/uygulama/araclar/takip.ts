@@ -3,7 +3,9 @@
  *
  * ROLE TOOL, NOT BASE. The list shows results a doctor KEPT on a patient with a follow-up day the doctor entered.
  * Only a tool of the account's own role can be kept, so the list is given to exactly the roles that have at least
- * one such tool here — 22 of the 40. For the other 18 it would stay empty for ever, and an empty tile is not a tool.
+ * one such tool here — 26 of the 42 (22 of 40 before the audit of 2026-10-10 was applied: the vascular half of the
+ * split specialty, surdology and the two clinic-side roles that now see their specialty's tools came with them).
+ * For the other 16 it would stay empty for ever, and an empty tile is not a tool.
  * countries/uz/uygulama/araclar/araclar.test.ts holds this list to the pack: a role that gains its first tool, or
  * loses its last, must be added or removed here or the test fails.
  *
@@ -22,8 +24,9 @@ import { u } from './yardimci'
 /** The roles that have at least one tool whose result can be kept. */
 export const UZ_TAKIP_ROLLERI: readonly string[] = [
   'acil-tip', 'anestezi', 'beyin-cerrahisi', 'cocuk-cerrahisi', 'genel-cerrahi', 'gogus-cerrahisi', 'gogus-hastaliklari', 'goz-hastaliklari',
-  'dermatoloji', 'endokrinoloji', 'enfeksiyon-hastaliklari', 'kalp-damar-cerrahisi', 'kulak-burun-bogaz', 'nefroloji', 'onkoloji',
+  'dermatoloji', 'endokrinoloji', 'enfeksiyon-hastaliklari', 'kalp-damar-cerrahisi', 'damar-cerrahisi', 'kulak-burun-bogaz', 'nefroloji', 'onkoloji',
   'ortopedi', 'pediatri', 'plastik-cerrahi', 'radyoloji', 'romatoloji', 'uroloji', 'spor-hekimligi',
+  'surdoloji', 'estetik-cerrahi', 'klinik-dermatoloji',
 ]
 
 export const UZ_TAKIP_ARACLARI: readonly PaketAraci[] = [

@@ -12,6 +12,7 @@
  * `mekanizmaHazir: true` = the country kit already holds the tool's country-neutral mechanism under this key.
  */
 import type { AracYuvasi } from '@/lib/ulke/araclar/tipler'
+import { UZ_HEKIM_ROLLERI } from '../../klinik/rolListesi'
 
 const KLINISYEN = 'a local clinical lead, with the national source named'
 const HUKUK = 'a lawyer in Uzbekistan, with the local clinical lead'
@@ -22,17 +23,23 @@ const HAK_SAHIBI = 'the owner, with the rights holder\'s written permission; the
 /** The fault both kidney tools share (NOTYA-ULKE-ARAC-01b). */
 const BOBREK_EMRI = 'SAFETY, off by the owner\'s order of 2026-10-10: the tool shows the low-risk (green) cell when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b).'
 
+/** Every doctor role of the pack (../../klinik/rolListesi.ts): who sees a tool of the core set once it exists. */
+const HEKIMLER: readonly string[] = UZ_HEKIM_ROLLERI
+
 const yuva = (anahtar: string, roller: readonly string[] | null, eksik: string, kimden: string = KLINISYEN, mekanizmaHazir = false): AracYuvasi => ({ anahtar, acik: false, icerik: null, mekanizmaHazir, eksik, kimden, roller })
 
 export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
-  // ── base (every role) ──
-  yuva('recete', null, 'Prescription drafting: the register of medicines authorised in Uzbekistan (names, forms, strengths), the prescription form and its mandatory fields, the language rule, and the rules for controlled medicines. Without the register no medicine can be offered or checked.'),
+  // ── THE CORE SET OF EVERY DOCTOR ROLE (the audit of 2026-10-10, section 2.1, second pass): five placeholders that
+  // were written "for every role". A prescription, a diagnosis code, a certificate and a laboratory request are a
+  // doctor's: the two allied professions and an account without a role are not among those who would see them. ──
+  yuva('recete', HEKIMLER, 'Prescription drafting: the register of medicines authorised in Uzbekistan (names, forms, strengths), the prescription form and its mandatory fields, the language rule, and the rules for controlled medicines. Without the register no medicine can be offered or checked.'),
+  // ── base (every role): dropped from the core set by the audit until their source is found; unchanged ──
   yuva('muayene-ozeti-belgesi', null, 'Visit and discharge summary as a document: the headings and mandatory fields of the summary an Uzbek clinic issues, in Uzbek and Russian, and whether a state form number applies.'),
-  yuva('tani-kodlama', null, 'Diagnosis coding: the coding edition in force in Uzbekistan and its official titles in Uzbek and Russian. A coding table is reference content of an authority and is not written by a machine.'),
+  yuva('tani-kodlama', HEKIMLER, 'Diagnosis coding: the coding edition in force in Uzbekistan and its official titles in Uzbek and Russian. A coding table is reference content of an authority and is not written by a machine.'),
   yuva('ilac-etkilesimi', null, 'Medicine interactions: the interaction data itself (by active substance) from a licensed or official source, and the register of products and brand names sold in Uzbekistan to search by.'),
-  yuva('hasta-belgeleri', null, 'Certificates for patients: the forms an Uzbek outpatient clinic issues (temporary incapacity certificate, fitness and attendance certificates), their numbers, fields and the periods the rules allow.', HUKUK),
-  yuva('tetkik-istek', null, 'Laboratory and imaging requests: the catalogue of tests offered locally with their names in Uzbek and Russian, units and reference ranges of the local laboratories, and the request form layout.'),
-  yuva('muayene-sonu', null, 'End-of-visit flow: it strings together prescription, certificate, follow-up appointment and the summary for the patient. It waits for the prescription and certificate slots above; the appointment and the summary exist already as screens of their own.'),
+  yuva('hasta-belgeleri', HEKIMLER, 'Certificates for patients: the forms an Uzbek outpatient clinic issues (temporary incapacity certificate, fitness and attendance certificates), their numbers, fields and the periods the rules allow.', HUKUK),
+  yuva('tetkik-istek', HEKIMLER, 'Laboratory and imaging requests: the catalogue of tests offered locally with their names in Uzbek and Russian, units and reference ranges of the local laboratories, and the request form layout.'),
+  yuva('muayene-sonu', HEKIMLER, 'End-of-visit flow: it strings together prescription, certificate, follow-up appointment and the summary for the patient. It waits for the prescription and certificate slots above; the appointment and the summary exist already as screens of their own.'),
 
   // ── emergency medicine ──
   yuva('acil-sevk', ['acil-tip'], 'Admission, referral and discharge package of an emergency department: the documents that go with each, the levels of care a patient can be referred to, and who must be notified.'),
@@ -52,7 +59,7 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('antikoagulan', ['dahiliye'], 'Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in Uzbekistan (age, weight, kidney function), INR targets and recheck intervals from the national protocol, and the local medicine names. RECLASSIFIED from "keep": the tool carries label criteria and intervals of another country.'),
 
   // ── dermatology ──
-  yuva('izotretinoin-gebelik-onleme', ['dermatoloji'], 'Pregnancy-prevention checks for isotretinoin: the programme the Uzbek regulator requires (tests, contraception, prescription validity).'),
+  yuva('izotretinoin-gebelik-onleme', ['dermatoloji', 'klinik-dermatoloji'], 'Pregnancy-prevention checks for isotretinoin: the programme the Uzbek regulator requires (tests, contraception, prescription validity).'),
 
   // ── endocrinology: the mechanism is in the kit; the numbers are local guidance and are not here ──
   yuva('lab-izlem', ['endokrinoloji'], 'HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the national diabetes and thyroid protocols, with the reference range the local laboratories report for TSH.', KLINISYEN, true),
@@ -100,7 +107,7 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('pediatri-kohort', ['pediatri'], 'The follow-up panel of paediatrics: it lists patients by the vaccination calendar and the screening programme above and has nothing to list until they exist.'),
 
   // ── plastic surgery ──
-  yuva('plastik-onam', ['plastik-cerrahi'], 'Informed-consent checklist for a plastic-surgery procedure: the items and the wording Uzbek law requires.', HUKUK),
+  yuva('plastik-onam', ['plastik-cerrahi', 'estetik-cerrahi'], 'Informed-consent checklist for a plastic-surgery procedure: the items and the wording Uzbek law requires.', HUKUK),
 
   // ── psychiatry ──
   yuva('phq9-gad7', ['psikiyatri'], 'PHQ-9 and GAD-7: published patient questionnaires. Needed: the authorised Uzbek and Russian versions (and the terms of use of their owner). The wording is not translated by a machine; the scoring, and the safety prompt on the ninth item of PHQ-9, are not switched on without it.', ANKET),
