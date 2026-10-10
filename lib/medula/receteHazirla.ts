@@ -102,8 +102,16 @@ const KURALLAR: Kural[] = [
   { eslesme: /kodein|tramadol/, uyari: ({ yasAy }) => yasAy !== null && yasAy < 144 ? '12 yaş altında kodein/tramadol kontrendike.' : null },
   { eslesme: /metoklopramid/, uyari: ({ yasAy }) => yasAy !== null && yasAy < 12 ? '1 yaş altında metoklopramid kontrendike; çocukta ekstrapiramidal risk.' : null },
   { eslesme: /amoksisilin|klavulan|sefuroksim|sefiksim|azitromisin|klaritromisin|sefdinir/, uyari: ({ gunSayisi }) => gunSayisi !== null && gunSayisi > 14 ? 'Antibiyotik süresi 14 günü aşıyor — SUT açıklama ister.' : 'Antibiyotik: SUT gereği reçetede ICD-10 tanı zorunlu; oral 3. kuşak sefalosporin/makrolid için endikasyon açıklaması eczaneye kolaylık sağlar.' },
-  { eslesme: /montelukast/, uyari: () => 'Montelukast SUT EK-4/F: astım/alerjik rinit tanısı reçetede yer almalı; uzun süreli kullanımda rapor gerekebilir.' },
-  { eslesme: /salbutamol|budesonid|flutikazon|beklometazon/, uyari: () => 'İnhaler/nebül: SUT’a göre astım/bronşiolit tanısı; ayda birden fazla kutu açıklama ister.' },
+  // NOTYA-SUT-RAPOR-01 — SUT 4.2.24.A(2): montelukast is prescribed by internal medicine, child health, chest diseases
+  // and allergy specialists, or by other doctors on a specialist report from one of them (4.2.24.C(1) adds ENT for the
+  // antihistamine combination in allergic rhinitis). EK-4/F 62 covers montelukast only for chronic idiopathic urticaria.
+  // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali. The earlier hint cited EK-4/F and tied the report to length of use.
+  { eslesme: /montelukast/, uyari: () => 'Montelukast (SUT 4.2.24.A): iç hastalıkları, çocuk sağlığı ve hastalıkları, göğüs hastalıkları ve alerji uzman hekimlerince; diğer hekimlerce bu uzmanlardan birinin düzenlediği uzman hekim raporuyla reçete edilir.' },
+  // NOTYA-SUT-RAPOR-01 — SUT 4.2.24.A(11) and 4.2.24.B(13): nebuliser forms are paid without a report for at most one box;
+  // continuation needs a specialist report (chest diseases, immunology/allergy, child health). Short-acting inhalers
+  // and inhaled steroids are otherwise outside these limits (4.2.24.A(4),(8)). Source: SGK güncel SUT, 02.10.2026
+  // (RG 33388) işlenmiş hali. The text has no "more than one box a month needs an explanation" rule.
+  { eslesme: /salbutamol|budesonid|flutikazon|beklometazon/, uyari: () => 'İnhaler/nebül (SUT 4.2.24): nebül formu raporsuz en fazla 1 kutu ödenir; devamı için göğüs hastalıkları, alerji-immünoloji veya çocuk sağlığı ve hastalıkları uzman hekim raporu gerekir.' },
   { eslesme: /omeprazol|lansoprazol|pantoprazol|esomeprazol|rabeprazol/, uyari: ({ gunSayisi }) => gunSayisi !== null && gunSayisi > 56 ? 'PPİ 8 haftayı aşan kullanımda SUT rapor ister.' : null },
   { eslesme: /vitamin d|kolekalsiferol|d3/, uyari: () => 'D vitamini damla 0-1 yaş profilaksi SUT kapsamında; yüksek doz ampul için 25-OH-D düzeyi açıklaması gerekir.' },
   { eslesme: /demir|ferr/, uyari: () => 'Demir preparatı: SUT geri ödemesi için hemogram/ferritin bulgusu açıklamada yer almalı.' },

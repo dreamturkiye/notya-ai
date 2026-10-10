@@ -4,27 +4,66 @@
 
 Kaan, 2026-10-10, after the Health Minister's statements reported by Anadolu Ajansı the same day: bring Notya and its tools in line with the new rules on reported medicines and family-physician authority. Rule for this work: only the official text changes the product, never a news article.
 
-**No rule was changed.** The official legal text could not be opened from where this was written: mevzuat.gov.tr and resmigazete.gov.tr refuse automated reading, and the attachment links on sgk.gov.tr did not return the documents they name (most returned the amendment of Resmî Gazete 2024-04-21 no. 32524 whatever the link). The branch carries two documents only: this entry and `docs/RAPORLU-ILAC-ECZANE-HAZIRLIK.md`. Nothing was merged or deployed.
+**First pass, 2026-10-10: no rule changed** — the official text could not be opened; the branch carried this entry and `docs/RAPORLU-ILAC-ECZANE-HAZIRLIK.md` only.
+
+**Second pass, 2026-10-10: the official text was read and eleven statements were corrected.** Source: the SGK consolidated Sağlık Uygulama Tebliği downloaded from www.sgk.gov.tr on 2026-10-10 ("02.10.2026 - Değişiklik Tebliği İşlenmiş Güncel 2013 SUT", amendment of Resmî Gazete 2026-10-02 no. 33388 worked in), with EK-4/A, EK-4/D, EK-4/E and EK-4/F. It sits on the branch `kaynak/sut-2026-10-02` under `docs/kaynak/sut-2026-10-02/`; it was read from there and is not copied onto this branch. The conversion to text lost strike-through, so repealed and current wording stand side by side; a rule was taken as current only where the amendment markers made the order clear. Nothing was merged or deployed.
+
+How each statement was judged: **wrong** = the text states a rule on the same subject that conflicts with the product → corrected, with the SUT article in a comment and a test. **Correct** → unchanged. **Text silent** = the text has no rule on the subject, even where the product says "SUT" → unchanged, listed under 01g for a decision.
+
+### Corrected on 2026-10-10 (second pass)
+
+| # | Where | Before | After | Text |
+|---|---|---|---|---|
+| 1 | `lib/asistan/ilac/veri/antibiyotik.ts` azitromisin | "penisilin alerjisi veya atipik pnömoni belgelendiğinde ödenir" | oral form unrestricted; parenteral by specialists or on a specialist report | EK-4/E 2-A/1 and 1.1 |
+| 2 | `lib/asistan/ilac/veri/antiinfektif.ts` terbinafin | pointed to a mycological-confirmation article | oral form unrestricted; topical quantity rule is SUT 4.1.4 | EK-4/E 10/10; 4.1.4(5)-c |
+| 3 | same file, oseltamivir | "influenza sezonu … koşullarına bağlıdır" | influenza / avian influenza only; specialists or specialist report | EK-4/E 11/13 |
+| 4 | `lib/asistan/ilac/veri/dermRomatoloji.ts` izotretinoin | "dermatoloji uzman hekim raporu" | oral forms paid only when a dermatologist prescribes | EK-4/E 13/17.1, added by RG 2026-08-29 no. 33355, in force 2026-09-05 |
+| 5 | `lib/asistan/ilac/veri/noropsikiyatri.ts` metilfenidat | "uzman raporu" | under 25 only, psychiatrists only | EK-4/E 13/5 |
+| 6 | same file, atomoksetin | "uzman raporu" | health board report with a psychiatrist, ages 6–25; psychiatry or child health prescribes | EK-4/F 16 |
+| 7 | `lib/asistan/ilac/veri/endokrin.ts` semaglutid | shown as SGK-covered, "SUT … rapor koşullarına bakınız" | not on EK-4/A; not paid | 4.1.9(1); EK-4/A in force 2026-10-02; 4.2.38 names no condition for it |
+| 8 | `lib/medula/receteHazirla.ts` montelukast hint (base tool, every branch) | "SUT EK-4/F … uzun süreli kullanımda rapor gerekebilir" | named specialists prescribe; other doctors on their specialist report | 4.2.24.A(2); EK-4/F 62 covers urticaria only |
+| 9 | same file, inhaler / nebuliser hint | "ayda birden fazla kutu açıklama ister" | nebuliser form: at most one box without a report; continuation on a specialist report | 4.2.24.A(11), 4.2.24.B(13) |
+| 10 | `specialties/dahiliye/engines/sgkRapor.ts` DOAK checklist (dahiliye only) | one recorded INR ticked "warfarin / INR justification"; "İnme risk skoru SUT eşiğini karşılıyor" | the tick needs the five-measurement INR rule; the risk line names the listed risk factors | 4.2.15.D-1(1), 4.2.15.D-2(1)-(2) |
+| 11 | same checklist | silent on report type | new line: first two report periods (24 months) need a one-year health board report; later reports may be specialist reports | 4.2.15.D-1(2), 4.2.15.D-2(3), as amended by RG 2025-03-25 no. 32852 |
+
+Tests: `core/eylemler/tests/ilacTablosu.test.ts` (7 new), `specialties/dahiliye/tests/sgkRapor.test.ts` (4 new), `lib/medula/receteHazirla.test.ts` (new file, 3 tests, added to `npm test`). No tool tile was added or moved; base tools are unchanged for every branch.
+
+### Verified and left as they are
+
+| Rule | Where | Text | Result |
+|---|---|---|---|
+| Medicine report at most 24 months; prompt line "SUT süresi en fazla 24 ay" | `lib/sgk/raporTipleri.ts`; dahiliye, kardiyoloji, nefroloji, psikiyatri, KBB engines | 4.1.3(5): at most two years, special arrangements apart; 4.1.8(2) the same for EK-4/F | Correct as the general ceiling. See 01h for the special terms. |
+| Tıbbi malzeme report 1–24 months | `lib/sgk/raporTipleri.ts` | 3.1.2.2(2): at most two years, exceptions apart | Correct |
+| Sağlık kurulu report 1–24 months | same | 4.1.3(5) covers both report kinds for medicines | Correct for medicine reports; text silent on other board reports |
+| Tek hekim durum bildirir 1–12 months; iş göremezlik 1–40 days | same | — | Text silent: neither is a SUT rule (01g) |
+| Göğüs hastalıkları draft: 6-month default, no ceiling | `specialties/gogus-hastaliklari/engines/sgkRapor.ts` | 3.1.2.2(2) | States no rule; unchanged (01h) |
+| Lipid panel "son 6 ay" | dahiliye checklist | 4.2.28.A-1(3) | Correct. The text also asks for two tests at least a week apart in the first report; the checklist looks at one (01h). |
+| 25-OH D below 20 ng/mL, B12 below 200 pg/mL | dahiliye checklist | EK-4/E 13/31 (kolekalsiferol: licensed indications only); EK-4/F 3 (kalsitriol, alfakalsidol on report) | Text silent on thresholds (clinical guideline) |
+| Hypertension confirmed on two visits | dahiliye checklist | — | Text silent (clinical guideline) |
+| "kullanım raporu gerekebilir" for antihypertensives, diabetes, lipid medicines, anticoagulants | `lib/seansPaketi/sutKurallari.ts` | EK-4/F 51; 4.2.38; 4.2.28; 4.2.15.D | Correct as a hedged reminder |
+| Antibiotic over 10 / 14 days; PPI over 8 weeks; more than 3 boxes | same file and `lib/medula/receteHazirla.ts` | — | Text silent: no such thresholds (01g) |
+| Antibiotic: diagnosis required on the prescription | `lib/medula/receteHazirla.ts` | 4.1.1(2) | Correct |
+| Vitamin D drops / ampoule hint; iron hint | same | EK-4/E 13/31; 4.2.41 covers parenteral iron only | Text silent on what the hints say (01g) |
+| Fluoroquinolone under 18 "SUT ayrıca EHU onayı isteyebilir" | same | EK-4/E 5: parenteral forms need infectious-disease approval; no age rule | Correct as hedged |
+| Assistant drug table, the other 41 lines | `lib/asistan/ilac/veri/*` | 4.2.2, 4.2.15, 4.2.19, 4.2.24, 4.2.28, 4.2.29, 4.2.30, 4.2.35, 4.2.38, 4.2.42, 4.2.52, 4.2.74, EK-4/E, EK-4/F | 34 point to a rule the text contains (correct; finasterid's alopecia note and sildenafil's erectile-dysfunction note are extra and the text is silent on them); 7 are text silent: the four reçete-colour lines (tramadol, alprazolam, lorazepam, gabapentin — TİTCK, not SUT) and metotreksat, hidroksiklorokin, sülfasalazin |
+| "SGK 01.02.2019'dan beri kâğıt nüshayı kabul etmez" | `app/doktor-tools/sgk-rapor/page.tsx` | 4.1.3(2), (8), (10) | Text silent: no date in the SUT, and 4.1.3(8) still describes reports not issued electronically (01g) |
+| Göz chapter: anti-VEGF report type and length, report content, response criteria, glaucoma, siklosporin drops, artificial tears and the family-physician rule | `specialties/goz-hastaliklari/engines/*` | 4.2.33(1)-(13), 4.2.33.A–D, 4.2.11 | Correct, re-read 2026-10-10 |
+
+### Open items
 
 | ID | Status | What | Waits on |
 |---|---|---|---|
-| NOTYA-SUT-RAPOR-01a | **DONE 2026-10-10 — documents only** | Inventory of every place the Turkish product states a medicine-report or prescribing-authority rule (list below), search of the official sources, and the preparation note for the planned monthly pharmacy supply. | — |
-| NOTYA-SUT-RAPOR-01b | OPEN 2026-10-10 | **Supply the official text.** Any one of: the consolidated SUT that SGK published on 2026-10-02 ("SUT Değişiklik Tebliği İşlenmiş Güncel 2013 SUT", a zip on sgk.gov.tr); or the amending tebliğs of Resmî Gazete 2024-05-18 no. 32550, 2025-03-25 no. 32852 and 2026-10-02 no. 33388; plus the Sağlık Raporları Yönetmeliği, Resmî Gazete 2026-05-19 no. 33258. Downloaded in a browser and placed in the repo or attached to a session. | Kaan |
-| NOTYA-SUT-RAPOR-01c | OPEN 2026-10-10 | With 01b in hand: compare each rule in the list below with the article that governs it; correct only what the text contradicts, with the SUT article and the Resmî Gazete date and number in a comment and in a test. | Claude, after 01b |
-| NOTYA-SUT-RAPOR-01d | OPEN 2026-10-10 — decision | Family medicine sees no SGK medicine-report draft tool (the dahiliye "SGK ilaç raporu" is dahiliye-only). If the text confirms that family medicine specialists issue or renew medicine reports, decide whether the branch gets its own draft tool (branch-only, classify before add). | Kaan, after 01c |
-| NOTYA-SUT-RAPOR-01e | OPEN 2026-10-10 | Monthly pharmacy supply of reported medicines: planned, no instrument. Nothing built. On publication, work from `docs/RAPORLU-ILAC-ECZANE-HAZIRLIK.md`. | The regulation, then Claude |
-| NOTYA-SUT-RAPOR-01f | OPEN 2026-10-10 | The amendment of Resmî Gazete 2026-10-02 no. 33388 was published eight days before this entry and its content was not read. It may touch any rule below. | Claude, with 01b |
+| NOTYA-SUT-RAPOR-01a | **DONE 2026-10-10** | Inventory of every place the Turkish product states a medicine-report or prescribing-authority rule. | — |
+| NOTYA-SUT-RAPOR-01b | **DONE 2026-10-10** | Official text supplied by Kaan (branch `kaynak/sut-2026-10-02`). | — |
+| NOTYA-SUT-RAPOR-01c | **DONE 2026-10-10** | Every listed rule compared with its article; eleven corrections above. Pull request #607, not merged. | Kaan: review and merge decision |
+| NOTYA-SUT-RAPOR-01d | OPEN 2026-10-10 — decision | Family medicine report draft tool. On the text a family medicine specialist may issue or renew a short, named set of reports (see `docs/RAPORLU-ILAC-ECZANE-HAZIRLIK.md`, question 4); it is not the dahiliye tool's set. Nothing built. | Kaan |
+| NOTYA-SUT-RAPOR-01e | OPEN 2026-10-10 | Pharmacy supply for the life of the report without a new prescription: not in the text. What the text has is the one-year prescription collected in three-month doses (4.1.6(1)). Nothing built. | The regulation, then Claude |
+| NOTYA-SUT-RAPOR-01f | **DONE 2026-10-10** | Resmî Gazete 2026-10-02 no. 33388 read: it changes 2.4.2 (organ, tissue and stem-cell transplants, in force 2026-11-02) and three entries of 4.2.14.C (trastuzumab emtansin, pertuzumab, satralizumab, in force 2026-10-10). It touches no rule on this list. | — |
+| NOTYA-SUT-RAPOR-01g | OPEN 2026-10-10 — decision | Statements that say "SUT" where the text is silent, left unchanged: PPI over 8 weeks "SUT rapor ister"; antibiotic over 14 days "SUT açıklama ister"; "3 kutuyu aşan miktar SUT'ta açıklama/rapor ister" (the text counts in months of dose, not boxes); the vitamin D and iron hints; the 01.02.2019 paper-report date; tek hekim 1–12 months and iş göremezlik 1–40 days. Decide: keep, reword without "SUT", or supply the source (an SGK announcement; the Sağlık Raporları Yönetmeliği, RG 2026-05-19 no. 33258, was not supplied). | Kaan |
+| NOTYA-SUT-RAPOR-01h | OPEN 2026-10-10 — decision | Special report terms the drafts do not know. The text sets three-year reports for coeliac disease and inborn metabolic disease (4.2.16) while Hasta Raporları stops at 24 months, and many shorter fixed terms (DOAK board report one year; klopidogrel at most 12 months; tikagrelor one year; finasterid six months). Branch drafts default to 12 months and accept up to 24 whatever the medicine; göğüs hastalıkları has no ceiling. Also: the lipid checklist checks one test where the first report needs two a week apart; the empagliflozin line omits chronic kidney disease (4.2.74 covers it); simvastatin is marked SGK-covered but no simvastatin product is on EK-4/A. | Kaan, then Claude |
+| NOTYA-SUT-RAPOR-01i | OPEN 2026-10-10 | Reimbursed medicines list (`data/sgk-ilaclar.json`, dated 2026-08-26). Not regenerated: `scripts/import-sgk-ilac.mjs` replaces each record and drops its active ingredient, which only `scripts/import-titck-etken.mjs` restores from a TİTCK "Ruhsatlı Beşeri Tıbbi Ürünler Listesi" export, and no such file is in the repo. Compared read-only with EK-4/A of 2026-10-02 (8,184 products): 23 added, 488 no longer listed (11 of them re-barcoded), 290 changed (244 names, 48 equivalence groups). A scratch run outside the repo confirmed the loss: 450 of 8,672 records kept an active ingredient. Two more things for the same job: the import never removes a product when given the full list, and it ignores the list's "Pasiflenme Tarihi" column (717 rows carry one). | Kaan: a current TİTCK export. Then Claude. |
 
-Rules found in the product and **not verified** against the official text (unchanged):
-
-- Report length. `lib/sgk/raporTipleri.ts`: ilaç kullanım 1–24 months and the prompt line "SUT süresi en fazla 24 ay"; tıbbi malzeme 1–24; sağlık kurulu 1–24; tek hekim 1–12; iş göremezlik 1–40 days. The same 24-month ceiling with a 12-month default in the dahiliye, kardiyoloji, nefroloji, psikiyatri and KBB report engines; göğüs hastalıkları defaults to 6 months with no ceiling.
-- `specialties/dahiliye/engines/sgkRapor.ts` checklist: lipid panel "son 6 ay"; 25-OH D below 20 ng/mL and B12 below 200 pg/mL as the report evidence; warfarin / INR justification for a DOAK report; hypertension confirmed on two visits.
-- `lib/medula/receteHazirla.ts` prescription hints: antibiotic over 14 days "SUT açıklama ister"; montelukast "SUT EK-4/F"; inhaler "ayda birden fazla kutu açıklama ister"; PPI over 8 weeks "SUT rapor ister"; vitamin D and iron conditions; "3 kutuyu aşan miktar SUT'ta açıklama/rapor ister"; fluoroquinolone under 18.
-- `lib/seansPaketi/sutKurallari.ts`: "kullanım raporu gerekebilir" for antihypertensives, diabetes medicines, lipid medicines and anticoagulants; PPI 8 weeks; 3 boxes.
-- `lib/asistan/ilac/veri/*`: 48 `sgkRestriction` lines. Most only point to the SUT. Fourteen name a specialist report: salmeterol + flutikazon, formoterol + budesonid, tiotropyum, montelukast ("uzman hekim raporu"); ketiapin, olanzapin, risperidon, aripiprazol ("psikiyatri uzman hekim raporu"); metilfenidat, atomoksetin ("uzman raporu"); donepezil; izotretinoin ("dermatoloji uzman hekim raporu"); mesalazin; sumatriptan ("nörolog reçetesi veya nöroloji raporu"). Three state a payment condition: azitromisin, finasterid, sildenafil.
-- `app/doktor-tools/sgk-rapor/page.tsx`: "SGK 01.02.2019'dan beri kâğıt nüshayı kabul etmez".
-- Göz chapter, SUT 4.2.33 and 4.2.11 (who issues, report length, the family-physician artificial-tears rule): recorded in the code as read from the consolidated text on 2026-09-17; not re-read on 2026-10-10.
-- Checklists that name a requirement without stating it ("Uzman hekim raporu koşulu karşılandı", "Rapor süresi SUT sınırları içinde") in psikiyatri, KBB, odyoloji, dermatoloji, romatoloji, onkoloji: nothing to verify until a rule is written into them.
+Checks on 2026-10-10: `npx tsc --noEmit` clean. The test files touched and their neighbours pass. Full `npm test`: 5,202 of 5,232 pass; the 26 failures and 4 cancellations are in 16 files this work did not touch (assistant voice routes, patient-isolation inventory, archive guard, konsültasyon, two wording guards) and they reproduce on an untouched copy of `main` @ 9b82cb1f (15 of the 16 files; the 16th is a wording guard that reads the git index and flags `components/doktor-landing/content.ts`, a file this work did not touch). Not run: `npm run build`, any browser check, any deploy.
 
 ## NOTYA-ONBOARDING-01 — onboarding asks every new doctor for their full details (Kaan, 2026-10-09, branch `fix/onboarding-tam-bilgi`, owner Claude)
 

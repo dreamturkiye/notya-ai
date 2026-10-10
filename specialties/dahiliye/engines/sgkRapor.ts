@@ -128,13 +128,22 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
       chaVascSkor = chaVascSkoru(g.chaVasc, g.hasta.yas, g.hasta.kadin)
       klinik.push(`CHA₂DS₂-VASc (hekim işaretli bileşenler): ${chaVascSkor}`)
       sutKontrol.push({ madde: 'Non-valvüler AF; EKG belgesi Belgeler\'de', tamam: null })
-      sutKontrol.push({ madde: 'İnme risk skoru SUT eşiğini karşılıyor (hekim doğrular)', tamam: null })
+      // NOTYA-SUT-RAPOR-01 — SUT 4.2.15.D-1(1): the text sets no score threshold; it asks for at least one of the
+      // listed risk factors to be stated in the report. Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+      sutKontrol.push({ madde: 'SUT 4.2.15.D-1: inme veya geçici iskemik atak öyküsü, 75 yaş ve üzeri, kalp yetmezliği (NYHA II ve üzeri), diyabet veya hipertansiyondan en az biri raporda belirtildi (hekim doğrular)', tamam: null })
     }
     for (const k of ['Kre', 'eGFR', 'Hb', 'Plt', 'ALT', 'INR']) { const l = sonLab(g, k); if (l) tetkik.push(fmtLab({ ...l, ad: k })) }
     if (!sonLab(g, 'Kre')) eksikler.push('Onaylı kreatinin (DOAK böbrek uygunluğu)')
     const inr = (g.labs.INR || []).slice(0, 6)
     if (inr.length) klinik.push(`INR geçmişi: ${inr.map((x) => `${String(x.deger).replace('.', ',')} (${x.tarih})`).join('; ')}`)
-    sutKontrol.push({ madde: 'Warfarin kullanım öyküsü / INR izlem güçlüğü veya kontrendikasyon gerekçesi belgelendi (gerekiyorsa)', tamam: inr.length ? true : null })
+    // NOTYA-SUT-RAPOR-01 — SUT 4.2.15.D-1(1)(a)-(b) and 4.2.15.D-2(1)(b),(2). Source: SGK güncel SUT, 02.10.2026
+    // (RG 33388) işlenmiş hali. One recorded INR used to tick this line; the text asks for five measurements at least
+    // a week apart with at least three outside 2–3, after at least two months of warfarin, or a listed exception.
+    // The tick now follows the recorded INR results only; warfarin duration and the exceptions stay with the doctor.
+    sutKontrol.push({ madde: 'SUT 4.2.15.D: en az 2 ay varfarin sonrası, en az birer hafta arayla son 5 INR ölçümünün en az 3’ü 2–3 dışında; veya SUT’taki istisna (varfarin altında serebrovasküler olay; DVT/PE’de tekrarlayan idiyopatik pulmoner emboli, homozigot trombofili, venöz tromboemboli geçirmiş aktif kanser, immobilite) raporda belirtildi', tamam: doakInrKosulu(inr) ? true : null })
+    // SUT 4.2.15.D-1(2) and 4.2.15.D-2(3) (as amended by RG 25.03.2025 no. 32852): the first two report periods
+    // (24 months in total) need a one-year health board report; later reports may be specialist reports.
+    sutKontrol.push({ madde: 'Rapor türü (SUT 4.2.15.D): ilk iki rapor dönemi (toplam 24 ay) 1 yıl süreli sağlık kurulu raporu; sonraki raporlar uzman hekim raporu (hekim doğrular)', tamam: null })
     dip.push({ ref: 'HARRISON', not: 'DOAK uygunluğu: endikasyon, böbrek fonksiyonu, yaş/kilo; mekanik kapakta warfarin' })
   }
   if (!etkenler.length) eksikler.push('Etken madde — önce muayenede reçete yazın (hasta_ilaclar)')
@@ -153,6 +162,21 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
     zorunluTetkikler: tetkik,
   }
   return { draft, sutKontrol, eksikler, chaVascSkor, dipnotlar: dip }
+}
+
+/**
+ * NOTYA-SUT-RAPOR-01 — SUT 4.2.15.D-1(1)(a) / 4.2.15.D-2(1)(b): "en az birer hafta ara ile yapılan son 5 ölçümün en az
+ * üçünde ... INR değerinin 2-3 arasında tutulamadığı". Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+ * `inr` is the approved series, newest first. True only when the five most recent results are each at least seven
+ * days apart and at least three lie outside 2–3; anything the records cannot show returns false.
+ */
+export function doakInrKosulu(inr: SgkLab[]): boolean {
+  const son5 = inr.slice(0, 5)
+  if (son5.length < 5) return false
+  const gun = son5.map((x) => Date.parse(`${String(x.tarih).slice(0, 10)}T00:00:00Z`))
+  if (gun.some((g) => !Number.isFinite(g))) return false
+  for (let i = 0; i < gun.length - 1; i++) if (gun[i] - gun[i + 1] < 7 * 86400000) return false
+  return son5.filter((x) => x.deger < 2 || x.deger > 3).length >= 3
 }
 
 function ekleAy(t: string, ay: number): string { const [y, m, d] = t.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + ay, d)).toISOString().slice(0, 10) }

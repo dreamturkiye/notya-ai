@@ -251,8 +251,11 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     dose: 'Başlangıç 1 ay boyunca günde bir kez 3 mg; sonra 7 mg idame. En az bir ay sonra gerekirse 14 mg. Önerilen maksimum günlük tek doz 14 mg.',
     pediatricDose: '18 yaş altında güvenlilik ve etkililik belirlenmemiştir',
     form: 'Tablet (oral), kalem enjektör (subkutan)',
-    sgkCovered: true,
-    sgkRestriction: 'SUT: tip 2 DM endikasyon ve rapor koşullarına bakınız; obezite endikasyonu ayrıdır.',
+    // NOTYA-SUT-RAPOR-01 — no semaglutide product is on SGK's EK-4/A list in force from 02.10.2026, and SUT 4.1.9(1)
+    // says a medicine not on that list is not paid under any condition; SUT 4.2.38 defines no condition for it.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali, and the EK-4/A list published with it.
+    sgkCovered: false,
+    sgkRestriction: 'SGK Bedeli Ödenecek İlaçlar Listesi’nde (EK-4/A) yer almıyor; SUT 4.1.9 gereği bedeli ödenmez.',
     category: 'GLP-1 reseptör agonisti',
     siniflar: ['Antidiyabetik', 'GLP-1 agonisti', 'İnkretin mimetik'],
     yasKontrendikasyonAy: 216,
