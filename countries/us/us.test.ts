@@ -8,7 +8,7 @@
  * sheet of the localisation audit (branch audit/us, where each source is given): how a day, a time, a number and an
  * amount are written, the eight time zones and their daylight saving, the emergency number, the example phone number
  * and the phone rule, and the unit of every measured field of every live tool. The role names it held are now held,
- * for the fifty-five roles, by ./roller.test.ts.
+ * for the fifty-one roles, by ./roller.test.ts.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'

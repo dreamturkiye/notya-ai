@@ -18,7 +18,7 @@
  * (docs/araclar-denetim/US.md and us-kararlar.json on the branch araclar-denetim/us; the second pass supersedes the
  * first): its own role list (./roller.ts), who sees which tool (`gorenler`), the numbers a national source states
  * for the shared tools that take a country's (`parametreler`, `uyarlama`), the licence states that were read
- * (`lisanslar`), and six tools of its own (./araclar/), SWITCHED ON by the owner's order of the same day without a
+ * (`lisanslar`), and seven tools of its own (./araclar/), SWITCHED ON by the owner's order of the same day without a
  * clinician's sign-off. Every number below that is new stands beside the source it was read from on that day.
  *
  * The pack's light file (./index.ts) does not read this file any more: what it needs is in ./temel.ts and
@@ -77,7 +77,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
   // The word a senior hospital doctor goes by here. Source: the glossary of the body that accredits residency
   // programs defines "attending physician" (acgme.org/globalassets/pdfs/ab_acgmeglossary.pdf, read 2026-10-09).
   kidemliHekim: 'attending physician',
-  // How each specialty is named in the United States, where it differs from the set's base name. The six names below
+  // How each specialty is named in the United States, where it differs from the set's base name. The five names below
   // are the audit's "keep" (docs/araclar-denetim/US.md, 3a: each is on the board's, the council's or Medicare's list
   // read on 2026-10-10); THE FIVE RENAMES of the audit follow them, each exactly as the body cited writes it
   // (./roller.ts → US_YENIDEN_ADLANANLAR, where the source of each stands). None has been read by a US clinician.
@@ -222,7 +222,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     //   PASI, EASI, SCORAD: BANDS. No US national body read states severity bands for any of the three (the psoriasis
     //     foundation's statement of December 2025 does not set severity by one figure). PASI shows its score and no
     //     severity word; EASI and SCORAD keep the published bands of the kit.
-    // ── TOOLS ONLY THIS COUNTRY HAS: SIX, SWITCHED ON BY THE OWNER'S ORDER OF 2026-10-10 ("Bring on all the tools built
+    // ── TOOLS ONLY THIS COUNTRY HAS: SEVEN, SWITCHED ON BY THE OWNER'S ORDER OF 2026-10-10 ("Bring on all the tools built
     // for the new 6 countries now. We will test as we go."). NO CLINICIAN OF THE UNITED STATES HAS SIGNED ONE OFF:
     // ./araclar/onayBekleyen.ts lists each with what a clinician is asked, and a test holds that list and the tools
     // switched on here to be the same. The arithmetic of each, with its source: ./araclar/tanimlar.ts; the words, who

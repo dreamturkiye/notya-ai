@@ -93,7 +93,7 @@ export const US_PAKETI: UlkePaketi = {
     diller: ['en-US'],
     hastaDilleri: ['en'],
     // THE COUNTRY'S OWN ROLE LIST (NOTYA-ULKE-UYGULA-US): the shared forty without one clinic role, with ten specialties
-    // and six professions of its own (./roller.ts → US_ROLLER, where each difference and its source stands).
+    // and two professions of its own (./roller.ts → US_ROLLER, where each difference and its source stands).
     roller: enRolAnahtarlari(US_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (federal and state holidays differ).
