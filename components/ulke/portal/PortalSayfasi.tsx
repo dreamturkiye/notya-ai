@@ -47,8 +47,13 @@ const Hata = ({ children }: { children: ReactNode }) => (children ? <div role="a
 const Bilgi = ({ children }: { children: ReactNode }) => (children ? <div role="status" className="uza-bilgi-kutu">{children}</div> : null)
 
 const gunYaz = (gun: string): string => gunYazDesenle(gun, tarihDeseni())
-/** A day with its weekday where the country has appointments (the weekday names are the appointment catalogue's). */
-export const portalGunu = (r: RandevuMetni | null, gun: string, uzun = true): string => (r ? `${gunAdi(r, haftaGunu(gun), uzun)}${uzun ? ',' : ''} ${uzun ? gunYaz(gun) : gunYaz(gun).slice(0, 5)}` : gunYaz(gun))
+/**
+ * A day with its weekday where the country has appointments (the weekday names are the appointment catalogue's).
+ * `uzun` false = the short weekday name, for a button. THE DAY IS ALWAYS WRITTEN IN FULL, in the pack's own pattern:
+ * the short form used to be the first five characters of the written date, which in a year-first country is the year
+ * and no day ("Sat 2026-"), so a patient could not tell one Saturday from the next (NOTYA-ULKE-DENETIM-01c).
+ */
+export const portalGunu = (r: RandevuMetni | null, gun: string, uzun = true): string => (r ? `${gunAdi(r, haftaGunu(gun), uzun)}${uzun ? ',' : ''} ${gunYaz(gun)}` : gunYaz(gun))
 
 /** The ambulance number the pack states, or null: the kit has none of its own and never falls back to one. */
 export function portalAcilNumarasi(): string | null {

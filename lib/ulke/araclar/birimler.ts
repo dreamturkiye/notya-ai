@@ -6,6 +6,7 @@
  * Length and weight follow the pack's `uygulama.birimler` (cm or in, kg or lb). A laboratory quantity follows the
  * pack's `araclar.labBirimleri`: a pack that switches on a tool reading that quantity must state its unit.
  */
+import type { SayiKurali } from '../arayuz/sayiOkuma'
 import type { Birimler } from '../tipler'
 import type { AracAlani, LabOlcusu } from './tipler'
 
@@ -27,7 +28,12 @@ export const LAB_BIRIMLERI: Readonly<Record<LabOlcusu, { kanonik: string; biriml
   albuminKreatinin: { kanonik: 'mg/g', birimler: { 'mg/g': 1, 'mg/mmol': 1 / 0.113 } },
 }
 
-export type BirimOrtami = { birimler: Birimler; lab: Readonly<Partial<Record<LabOlcusu, string>>> }
+/**
+ * What a tool needs to know about the country to read what was typed: its units, the unit of each laboratory value,
+ * and HOW IT WRITES A NUMBER (`sayi`: the pack's decimal and thousands marks — NOTYA-ULKE-DENETIM-01a). All three are
+ * the pack's; none has a default, so a typed "1,500" is never read by another country's rules.
+ */
+export type BirimOrtami = { birimler: Birimler; lab: Readonly<Partial<Record<LabOlcusu, string>>>; sayi: SayiKurali }
 
 /** The unit code a field is shown with in this country, or null where the field has none. */
 export function alanBirimi(a: AracAlani, o: BirimOrtami): string | null {

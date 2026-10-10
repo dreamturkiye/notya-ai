@@ -13,7 +13,7 @@
  * Every sentence is the pack's (portalMetni and the appointment catalogue), in the account's form.
  */
 import React, { useEffect, useState, type FormEvent } from 'react'
-import { gunCoz, gunYazDesenle } from '@/lib/ulke/uygulama/zaman'
+import { gunCoz } from '@/lib/ulke/uygulama/zaman'
 import { Bilgi, Hata, tarihYaz, type Uygulama } from './Kabuk'
 import { gunBasligi, takvimYolu } from './randevuOrtak'
 import { portalMetni, type PortalMetni, type RandevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
@@ -23,7 +23,6 @@ import { HEKIM_PORTAL_API } from '@/lib/ulke/portal/sabitler'
 import type { BekleyenIstek } from '@/lib/ulke/portal/tipler'
 
 const API = `${HEKIM_PORTAL_API}/istekler`
-const gunYaz = (gun: string) => gunYazDesenle(gun, tarihDeseni())
 
 export type IstekBildirimi = 'reddedildi' | 'cevaplandi' | 'yapilamadi' | null
 
@@ -116,7 +115,7 @@ export function IstekCevabiGorunumu({ p, r, istek, a, set, zaman, hataMetni, gon
           {/* One touch puts a day the patient asked for into the form; the day's own calendar opens beside it. */}
           <span className="uza-secim-satir">
             {istek.gunler.map((g) => (
-              <button key={g} type="button" className="uza-secenek" data-secili={secili === g ? 'evet' : undefined} onClick={() => set({ gun: gunYaz(g) })} data-istek-gunu={g}>{gunBasligi(r, g)}</button>
+              <button key={g} type="button" className="uza-secenek" data-secili={secili === g ? 'evet' : undefined} onClick={() => set({ gun: g })} data-istek-gunu={g}>{gunBasligi(r, g)}</button>
             ))}
           </span>
         </dd>
