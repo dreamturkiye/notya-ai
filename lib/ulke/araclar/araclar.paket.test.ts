@@ -26,6 +26,7 @@ import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { ulkeyeOzelMi } from './ulkeyeOzel'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { eksik, eksikAyar } from '../eksik'
@@ -37,8 +38,9 @@ import type { DilKodu, UlkeKlinigi, UlkePaketi } from '../tipler'
 import { alanBirimleri, birimAnahtari, kanoniktenBirime, kanonigeCevir, olcuTanimi, type BirimOrtami } from './birimler'
 import { girdiyiCoz } from './girdi'
 import { KIT_ARACLARI, kitAraci } from './katalog'
-import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, paketinTanimi, sayiMetni } from './paket'
+import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, lisansBildirimi, paketinTanimi, sayiMetni } from './paket'
 import type { AracAlani, AracGirdisi, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
+import { tablolariCoz } from './uyarlama'
 
 const KOK = resolve(__dirname, '../../..')
 const h = React.createElement
@@ -196,6 +198,9 @@ describe('tools — the pack\'s list', () => {
     { const a = klon(arayuz); ar(a).araclar.push({ ...klon(ilk), anahtar: 'no-such-tool' } as never); iceriyor(yerler(paket, a), 'arayuz.araclar.no-such-tool: is not a tool of the kit') }
     for (const yasak of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) {
       assert.equal(kitAraci(yasak), null, `the kit holds "${yasak}", a tool of one country's state or payer system`)
+      // a key that carries THIS pack's own code is this country's own tool (it must be on this list: ulkeyeOzel.paket.test.ts);
+      // the pack may switch it on, so it is not pushed here. Every other country's key, and Türkiye's, still is.
+      if (ulkeyeOzelMi(yasak, paket.kod)) continue
       const a = klon(arayuz); ar(a).araclar.push({ ...klon(ilk), anahtar: yasak } as never); iceriyor(yerler(paket, a), `arayuz.araclar.${yasak}: is not a tool of the kit`)
     }
     // classification: left open, an empty list, a role the pack does not have, a role twice; a tool twice
@@ -266,6 +271,9 @@ describe('tools — THE ROLE GATE', () => {
     if (!icerik) return
     for (const p of icerik.araclar) {
       if (p.roller === null) continue
+      // a kit SCREEN (the follow-up list) is not classified by the pack: it follows the roles that have a tool whose result
+      // can be kept, so a country whose core set reaches nearly every role shows it to nearly every role. Passed over here.
+      if (kitAraci(p.anahtar)?.tur === 'ekran') continue
       const goren = ROLLER.filter((r) => aracGorunurMu(p, r))
       assert.ok(goren.length >= 1, `${p.anahtar}: no role sees it`)
       if (ROLLER.length > 2) assert.ok(ROLLER.length - goren.length >= 2, `${p.anahtar}: a role tool that nearly every role sees is a base tool — classify it`)
@@ -352,7 +360,10 @@ describe('tools — the screens', () => {
           // exactly that typing
           const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: icerik.labBirimleri, sayi: paket.bicim }
           const ham = ulkeninHami(t, g, o)
-          const s = t.hesapla(girdiyiCoz(t.alanlar, ham, o), ornekOrtam(t, p.parametreler))
+          // the expected result is worked out as the screen works it out: with the TABLES the country supplies as well
+          // (the steps of a staged return, a grade table), not only its numbers
+          const tb = tablolariCoz(t, p, icerik.olculer).t
+          const s = t.hesapla(girdiyiCoz(t.alanlar, ham, o), Object.keys(tb).length ? { ...ornekOrtam(t, p.parametreler), t: tb } : ornekOrtam(t, p.parametreler))
           if (!s.tamam) continue
           const html = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham }))
           const metin = gorunurMetin(html)
@@ -382,7 +393,11 @@ describe('tools — the screens', () => {
         const s = t.hesapla(g, ornekOrtam(t, p.parametreler))
         const ozet = aracOzeti(x, g, s, dil, a, y, o)
         const satirlar = ozet.split('\n')
-        assert.equal(satirlar[0], bicimli(p.metin.ad, dil)); assert.equal(satirlar[satirlar.length - 1], bicimli(p.metin.not, dil))
+        assert.equal(satirlar[0], bicimli(p.metin.ad, dil))
+        // the tool's note closes the summary; a rights holder's notice, where the pack states one, goes right after it
+        { const bildirim = lisansBildirimi(x, dil).trim(); const notSatiri = bicimli(p.metin.not, dil)
+          if (bildirim) { assert.equal(satirlar[satirlar.length - 1], bildirim, `${p.anahtar}/${dil}: the rights holder's notice is the last line`); assert.equal(satirlar[satirlar.length - 2], notSatiri, `${p.anahtar}/${dil}: the tool's note comes right before the notice`) }
+          else assert.equal(satirlar[satirlar.length - 1], notSatiri) }
         // the ticked boxes, and only they, are listed — in the tool's order (two boxes may share a label; a list is compared, not a set)
         assert.deepEqual(satirlar.filter((x) => x.startsWith('- ')), t.alanlar.filter((al) => al.tur === 'isaret' && g[al.anahtar] === true).map((al) => `- ${bicimli(p.metin.alanlar[al.anahtar], dil)}`), `${p.anahtar}/${dil}: the ticked boxes in the summary`)
         if (s.bant) assert.ok(ozet.includes(bicimli(p.metin.bantlar?.[s.bant], dil)))
@@ -589,7 +604,7 @@ describe('tools — leak', () => {
     if (!icerik) return
     const yaprak = (o: unknown, on = ''): [string, string][] => Object.entries((o ?? {}) as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'string' ? [[`${on}${k}`, v] as [string, string]] : v && typeof v === 'object' ? yaprak(v, `${on}${k}.`) : []))
     for (const [yol, metin] of yaprak({ araclar: icerik.araclar.map((p) => ({ [p.anahtar]: p.metin })), birimler: icerik.birimler, metinler: icerik.metinler })) temiz(metin, `tools.${yol}`)
-    for (const y of icerik.yuvalar) for (const k of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) assert.notEqual(y.anahtar, k, `a slot is named after "${k}"`)
+    for (const y of icerik.yuvalar) for (const k of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) { if (ulkeyeOzelMi(k, paket.kod)) continue; assert.notEqual(y.anahtar, k, `a slot is named after "${k}"`) }
     const ilk = icerik.metinler[FORMLAR[0]]!
     for (const d of FORMLAR) assert.deepEqual(yaprak(icerik.metinler[d]).map(([k]) => k).sort(), yaprak(ilk).map(([k]) => k).sort(), `the tools catalogue of ${d} has other keys than ${FORMLAR[0]}`)
   })

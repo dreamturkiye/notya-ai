@@ -126,7 +126,7 @@ The asking doctor ticks this before a patient's data is shared with a colleague.
 | Set | Questions | File |
 |---|---|---|
 | Core, every patient: Soʻrovnomani kim toʻldirmoqda / Кто заполняет анкету (4, guardian form only), Murojaat sababi / Причина обращения (2), Salomatlik tarixi / Сведения о здоровье (7), Turmush tarzi / Образ жизни (4), Oʻlchovlar (bilsangiz) / Измерения (если знаете) (3), Zarur boʻlganda bogʻlanish uchun yaqiningiz (ixtiyoriy) / Близкий человек, с которым можно связаться при необходимости (по желанию) (3, adult form only) | 23 | `countries/uz/klinik/hastaFormu/cekirdek.ts` |
-| One set per role, 40 roles | 228 (4 to 9 per role) | `countries/uz/klinik/hastaFormu/roller1.ts`, `roller2.ts`, `roller3.ts` |
+| One set per role that has its own, 37 sets for 42 roles (40 sets and 228 questions until the audit of the specialties was applied on 2026-10-10: the sets of the three roles that left held 19; seven roles ask the questions of the role each behaves like) | 209 (4 to 9 per set) | `countries/uz/klinik/hastaFormu/roller1.ts`, `roller2.ts`, `roller3.ts` |
 | The consent sentence, for the patient and for a guardian | 2 | `countries/uz/klinik/hastaFormu/index.ts` |
 | The screens: the doctor's card, the invitation, the patient's form, unit names | 66 entries (30, 4, 29, 3) | `countries/uz/uygulama/formMetinleri.ts` |
 
@@ -159,22 +159,22 @@ The structure of the form follows the Turkish product's forms; **no text was cop
 |---|---|---|---|---|---|
 | F1 | `red_flag_checklists` | a local clinician | `acil-tip`, `kardiyoloji`, `noroloji`, `dahiliye`, `genel-cerrahi`, `ortopedi`, `dermatoloji`, `kulak-burun-bogaz`, `goz-hastaliklari`, `kadin-hastaliklari-dogum`, `uroloji`, `endokrinoloji`, `gastroenteroloji`, `nefroloji`, `romatoloji`, `onkoloji`, `gogus-hastaliklari`, `gogus-cerrahisi`, `beyin-cerrahisi`, `kalp-damar-cerrahisi`, `enfeksiyon-hastaliklari`, `fizik-tedavi`, `spor-hekimligi`, `plastik-cerrahi`, `anestezi`, `radyoloji`, `psikiyatri` | Per role: the list of "red flag" symptoms a patient ticks before a visit, and the sentence that tells a patient who ticks one what to do now (which service to call, and its number). A triage rule and an instruction to a patient: both are clinical content, and the number is local. | Nothing. No question of any role tells a patient to seek emergency care; the patient's page says only that it is not for emergencies (the portal's own sentence). |
 | F2 | `self_harm_screening` | a local clinician | `psikiyatri`, `klinik-psikolog` | The safety (self-harm) screening question in locally validated Uzbek and Russian wording, and the clinic's procedure for a "yes" given on a form nobody is watching (who is told, how fast). | Nothing. The psychiatry and psychology sets ask about mood, sleep and what is hardest now, in free text; no question asks about self-harm. |
-| F3 | `validated_questionnaires` | a local clinician | `psikiyatri`, `klinik-psikolog`, `uroloji`, `dermatoloji`, `romatoloji`, `fizik-tedavi`, `fizyoterapi`, `ergoterapi`, `noroloji` | Validated questionnaires and scores in Uzbek and Russian versions accepted locally (mood and anxiety scales, urinary symptom score, skin and joint activity indices, functional independence scales). | Plain questions only. Pain is asked as a number from 0 to 10 with its two ends described in words; nothing is scored or summed. |
+| F3 | `validated_questionnaires` | a local clinician | `psikiyatri`, `klinik-psikolog`, `uroloji`, `dermatoloji`, `romatoloji`, `fizik-tedavi`, `fizyoterapi`, `noroloji` | Validated questionnaires and scores in Uzbek and Russian versions accepted locally (mood and anxiety scales, urinary symptom score, skin and joint activity indices, functional independence scales). | Plain questions only. Pain is asked as a number from 0 to 10 with its two ends described in words; nothing is scored or summed. |
 | F4 | `vaccination_checklist` | a local clinician | `pediatri`, `cocuk-cerrahisi`, `aile-hekimligi`, `enfeksiyon-hastaliklari` | The national vaccination calendar as a check-list (which vaccine at which age), so that a parent can tick what was given. | One question: "were the vaccinations given on time, as far as you know?" — yes, no, I do not know. Paediatrics adds a line asking to bring the vaccination record. |
 | F5 | `development_milestones` | a local clinician | `pediatri` | The developmental milestone check-list in local use, by age. | One yes/no question: whether the parent is worried about the child's development, with a free-text line. |
-| F6 | `screening_programme` | a local clinician | `aile-hekimligi`, `kadin-hastaliklari-dogum`, `longevity`, `dahiliye` | The national screening and check-up programme by age and sex (which tests, how often), to ask which of them the patient has had. | Free text: "tests or check-ups in the last year" and "when was the last comprehensive check-up". No test is named as due. |
+| F6 | `screening_programme` | a local clinician | `aile-hekimligi`, `kadin-hastaliklari-dogum`, `dahiliye` | The national screening and check-up programme by age and sex (which tests, how often), to ask which of them the patient has had. | Free text: "tests or check-ups in the last year" and "when was the last comprehensive check-up". No test is named as due. |
 | F7 | `antenatal_schedule` | a local clinician | `kadin-hastaliklari-dogum` | The antenatal visit and screening schedule of the national protocol, and the fields of the mandatory pregnancy record. | The week of pregnancy, the number of pregnancies and births, the first day of the last period. Nothing is derived from them. |
-| F8 | `preoperative_instructions` | a local clinician | `anestezi`, `genel-cerrahi`, `cocuk-cerrahisi`, `plastik-cerrahi`, `estetik-cerrahi`, `sac-ekimi`, `beyin-cerrahisi`, `gogus-cerrahisi`, `kalp-damar-cerrahisi` | Pre-operative instructions a form would ask the patient to confirm (fasting times, which medicines to stop and when) and the consent form required by law. | Nothing is instructed and nothing is confirmed. The sets ask about earlier anaesthesia, bleeding tendency and blood-thinning medicines (name as free text). |
+| F8 | `preoperative_instructions` | a local clinician | `anestezi`, `genel-cerrahi`, `cocuk-cerrahisi`, `plastik-cerrahi`, `estetik-cerrahi`, `beyin-cerrahisi`, `gogus-cerrahisi`, `kalp-damar-cerrahisi` | Pre-operative instructions a form would ask the patient to confirm (fasting times, which medicines to stop and when) and the consent form required by law. | Nothing is instructed and nothing is confirmed. The sets ask about earlier anaesthesia, bleeding tendency and blood-thinning medicines (name as free text). |
 | F9 | `imaging_safety_checklist` | a local clinician | `radyoloji` | The safety check-list before imaging with contrast or a magnet, as used locally (which implants and conditions, in which wording), and what a "yes" means for the examination. | Four plain yes/no questions with a free-text line: an earlier reaction to contrast, metal or an implanted device, a known kidney problem, fear of closed spaces. The form decides nothing from them. |
 | F10 | `medicine_lists` | a local clinician | core (every form), `kardiyoloji`, `endokrinoloji`, `gogus-hastaliklari`, `anestezi`, `genel-cerrahi`, `kalp-damar-cerrahisi`, `dermatoloji` | Medicines registered in Uzbekistan with their local names, to offer as choices (blood thinners, inhalers, diabetes and heart medicines). | Free text everywhere: the patient writes the name as they know it. No medicine, group brand or dose is named. |
-| F11 | `registered_procedures` | a local clinician | `medikal-estetik`, `estetik-cerrahi`, `sac-ekimi`, `klinik-dermatoloji` | Aesthetic procedures, products and devices registered in Uzbekistan, to offer as choices. | Free text: "which procedure and when". No product or device is named. |
+| F11 | `registered_procedures` | a local clinician | `medikal-estetik`, `estetik-cerrahi`, `klinik-dermatoloji` | Aesthetic procedures, products and devices registered in Uzbekistan, to offer as choices. | Free text: "which procedure and when". No product or device is named. |
 | F12 | `sports_clearance` | a local clinician | `spor-hekimligi` | The pre-participation medical clearance form required for athletes, and the anti-doping declaration. | The sport, the reason for the visit, injuries in the last year, symptoms during exercise, an earlier heart examination. |
-| F13 | `hearing_programme` | a local clinician | `odyoloji`, `kulak-burun-bogaz` | The newborn hearing screening programme and the hearing-loss grading in local use. | Which ear, how the hearing fell, noise at work, a hearing aid. Nothing is graded. |
-| F14 | `nutrition_reference` | a local clinician | `diyetisyen` | Nutrient reference intakes and food composition tables for Uzbekistan, and locally named diets to offer as choices. | Meals and glasses of water a day as numbers, the diet followed and foods not eaten as free text. |
+| F13 | `hearing_programme` | a local clinician | `surdoloji`, `kulak-burun-bogaz` | The newborn hearing screening programme and the hearing-loss grading in local use. | Which ear, how the hearing fell, noise at work, a hearing aid. Nothing is graded. |
+| F14 | `nutrition_reference` | a local clinician | `diyetoloji` | Nutrient reference intakes and food composition tables for Uzbekistan, and locally named diets to offer as choices. | Meals and glasses of water a day as numbers, the diet followed and foods not eaten as free text. |
 | F15 | `blood_group_notation` | a local clinician | core (every form) | Whether a patient form should ask the blood group, and in which notation it is written locally. | Not asked. |
 | F16 | `payer_and_insurance` | the owner, with a local source | core (every form) | Whether the form should ask who pays (a state programme, an employer, an insurer) and which numbers that needs. The payer section of the Turkish form belongs to that country and was not carried over. | Not asked. The form asks for no identity, policy or insurance number. |
 | F17 | `consent_sentence` | a lawyer | core (every form) | The consent sentence shown before the first question, and the notice a parent or guardian reads, in wording a lawyer in Uzbekistan has approved (checklist I1, I2); and whether a guardian's identity must be confirmed. | A machine-written draft sentence, stamped "uz-taslak" and marked as not read by a lawyer; the guardian form asks the guardian's name, relation and phone, and confirms nothing. |
-| F18 | `scope_of_practice` | a lawyer | `fizyoterapi`, `klinik-psikolog`, `diyetisyen`, `ergoterapi`, `odyoloji` | What each allied profession may ask, record and decide without a doctor under Uzbek law. | The sets ask about the complaint, daily life and a doctor's referral; none asks for a diagnosis to be made. |
+| F18 | `scope_of_practice` | a lawyer | `fizyoterapi`, `klinik-psikolog` | What each allied profession may ask, record and decide without a doctor under Uzbek law. | The sets ask about the complaint, daily life and a doctor's referral; none asks for a diagnosis to be made. |
 
 ### The database: migration 138
 
@@ -472,52 +472,56 @@ What it adds, all under `/uzbek`:
 
 The pack had no conversion from Latin to Cyrillic script before this slice (only a fold of both scripts for search, never shown). `countries/uz/yozuv.ts` is new: a letter-by-letter rule, stated as a machine conversion at its top.
 
-### Status of the 40 roles
+### Status of the 42 roles (40 until 2026-10-10)
+
+**The role list is Uzbekistan's own since the audit of the specialties was applied (NOTYA-ULKE-UYGULA-UZ, 2026-10-10): 42 roles, 37 doctor specialties, 3 clinic doctors, 2 clinic allied professions.** What was renamed, split, added, moved and removed, and the source: the section "Roles and tools after the audit" near the top of this document, and `countries/uz/klinik/rolListesi.ts`. A role that "behaves like" another writes with that role's note template and asks its intake questions, under its own name; it has no template or question set of its own. Seven roles have no assistant name yet: a name is the owner's to give.
 
 "Template built by machine: yes" means a machine put the template together; it does not mean anyone confirmed it. No role has a local reviewer. The last column is the role's set of **intake questions** ("The intake form" above): how many, that a machine wrote them, and that no clinician has read them; it changes only when `inceleme.klinisyen` of that set names the clinician who read and signed it.
 
 | # | Role (internal key) | Kind | Name: Uzbek Latin / Uzbek Cyrillic / Russian | Assistant (owner's names; title by the Turkish convention since 2026-10-09) | Template built by machine | Fields | Local reviewer | Local content missing (slots, all empty and off) | Intake questions (2026-10-09) |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | `acil-tip` | doctor specialty | Shoshilinch tibbiy yordam / Шошилинч тиббий ёрдам / Скорая и неотложная помощь | Prof. Dr. Jasur Tursunov | yes | 6 | none yet | 1: `triage_scale` | 5 questions, machine-written, read by no clinician |
-| 2 | `aile-hekimligi` | doctor specialty | Oilaviy tibbiyot / Оилавий тиббиёт / Семейная медицина | Prof. Dr. Nilufar Karimova | yes | 6 | none yet | 2: `screening_programme`, `vaccination_calendar` | 5 questions, machine-written, read by no clinician |
+| 2 | `aile-hekimligi` | doctor specialty | Oilaviy shifokorlik / Оилавий шифокорлик / Семейная медицина | Prof. Dr. Nilufar Karimova | yes | 6 | none yet | 2: `screening_programme`, `vaccination_calendar` | 5 questions, machine-written, read by no clinician |
 | 3 | `anestezi` | doctor specialty | Anesteziologiya va reanimatologiya / Анестезиология ва реаниматология / Анестезиология и реаниматология | Prof. Dr. Bekzod Yusupov | yes | 8 | none yet | 1: `preop_risk_scale` | 6 questions, machine-written, read by no clinician |
 | 4 | `beyin-cerrahisi` | doctor specialty | Neyroxirurgiya / Нейрохирургия / Нейрохирургия | Prof. Dr. Alisher Ergashev | yes | 6 | none yet | 2: `consciousness_scale`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
 | 5 | `cocuk-cerrahisi` | doctor specialty | Bolalar xirurgiyasi / Болалар хирургияси / Детская хирургия | Prof. Dr. Sardor Abdullayev | yes | 7 | none yet | 3: `growth_standard`, `pediatric_dosing`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
-| 6 | `dahiliye` | doctor specialty | Terapiya (ichki kasalliklar) / Терапия (ички касалликлар) / Терапия (внутренние болезни) | Prof. Dr. Madina Rahimova | yes | 5 | none yet | 1: `lab_reference_ranges` | 5 questions, machine-written, read by no clinician |
+| 6 | `dahiliye` | doctor specialty | Terapiya / Терапия / Терапия | Prof. Dr. Madina Rahimova | yes | 5 | none yet | 1: `lab_reference_ranges` | 5 questions, machine-written, read by no clinician |
 | 7 | `dermatoloji` | doctor specialty | Dermatovenerologiya / Дерматовенерология / Дерматовенерология | Prof. Dr. Sevara Ismailova | yes | 5 | none yet | 1: `severity_indices` | 6 questions, machine-written, read by no clinician |
 | 8 | `endokrinoloji` | doctor specialty | Endokrinologiya / Эндокринология / Эндокринология | Prof. Dr. Dilnoza Nazarova | yes | 6 | none yet | 2: `treatment_targets`, `lab_reference_ranges` | 5 questions, machine-written, read by no clinician |
 | 9 | `enfeksiyon-hastaliklari` | doctor specialty | Yuqumli kasalliklar / Юқумли касалликлар / Инфекционные болезни | Prof. Dr. Otabek Qodirov | yes | 5 | none yet | 2: `notifiable_diseases`, `vaccination_calendar` | 6 questions, machine-written, read by no clinician |
 | 10 | `gastroenteroloji` | doctor specialty | Gastroenterologiya / Гастроэнтерология / Гастроэнтерология | Prof. Dr. Jamshid Mirzayev | yes | 6 | none yet | 1: `endoscopy_classifications` | 6 questions, machine-written, read by no clinician |
-| 11 | `genel-cerrahi` | doctor specialty | Umumiy xirurgiya / Умумий хирургия / Общая хирургия | Prof. Dr. Sherzod Saidov | yes | 6 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 11 | `genel-cerrahi` | doctor specialty | Xirurgiya / Хирургия / Хирургия | Prof. Dr. Sherzod Saidov | yes | 6 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
 | 12 | `gogus-cerrahisi` | doctor specialty | Torakal xirurgiya / Торакал хирургия / Торакальная хирургия | Prof. Dr. Farrux Holmatov | yes | 7 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
 | 13 | `gogus-hastaliklari` | doctor specialty | Pulmonologiya / Пульмонология / Пульмонология | Prof. Dr. Gulnoza Alimova | yes | 7 | none yet | 2: `spirometry_reference`, `tb_programme` | 6 questions, machine-written, read by no clinician |
 | 14 | `goz-hastaliklari` | doctor specialty | Oftalmologiya / Офтальмология / Офтальмология | Prof. Dr. Aziza Sodiqova | yes | 6 | none yet | 1: `acuity_notation` | 6 questions, machine-written, read by no clinician |
 | 15 | `kadin-hastaliklari-dogum` | doctor specialty | Akusherlik va ginekologiya / Акушерлик ва гинекология / Акушерство и гинекология | Prof. Dr. Shahnoza Rasulova | yes | 6 | none yet | 2: `antenatal_schedule`, `pregnancy_record_form` | 8 questions, machine-written, read by no clinician |
-| 16 | `kalp-damar-cerrahisi` | doctor specialty | Yurak-qon tomir xirurgiyasi / Юрак-қон томир хирургияси / Сердечно-сосудистая хирургия | Prof. Dr. Temur Karimov | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
-| 17 | `kardiyoloji` | doctor specialty | Kardiologiya / Кардиология / Кардиология | Prof. Dr. Kamola Yusupova | yes | 8 | none yet | 2: `cv_risk_score`, `bp_lipid_targets` | 6 questions, machine-written, read by no clinician |
-| 18 | `kulak-burun-bogaz` | doctor specialty | Otorinolaringologiya (LOR) / Оториноларингология (ЛОР) / Оториноларингология (ЛОР) | Prof. Dr. Nodir Ergashev | yes | 6 | none yet | 1: `hearing_loss_grading` | 5 questions, machine-written, read by no clinician |
-| 19 | `nefroloji` | doctor specialty | Nefrologiya / Нефрология / Нефрология | Prof. Dr. Mohira Abdullayeva | yes | 6 | none yet | 2: `ckd_staging`, `dialysis_standards` | 6 questions, machine-written, read by no clinician |
-| 20 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Prof. Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` | 5 questions, machine-written, read by no clinician |
-| 21 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Prof. Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` | 6 questions, machine-written, read by no clinician |
-| 22 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Prof. Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` | 6 questions, machine-written, read by no clinician |
-| 23 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` | 9 questions, machine-written, read by no clinician |
-| 24 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
-| 25 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Prof. Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` | 6 questions, machine-written, read by no clinician |
-| 26 | `radyoloji` | doctor specialty | Radiologiya (nur tashxisi) / Радиология (нур ташхиси) / Лучевая диагностика (радиология) | Prof. Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` | 7 questions, machine-written, read by no clinician |
-| 27 | `romatoloji` | doctor specialty | Revmatologiya / Ревматология / Ревматология | Prof. Dr. Saodat Holmatova | yes | 6 | none yet | 1: `activity_indices` | 5 questions, machine-written, read by no clinician |
-| 28 | `uroloji` | doctor specialty | Urologiya / Урология / Урология | Prof. Dr. Javohir Alimov | yes | 7 | none yet | 1: `symptom_questionnaires` | 5 questions, machine-written, read by no clinician |
-| 29 | `spor-hekimligi` | doctor specialty | Sport tibbiyoti / Спорт тиббиёти / Спортивная медицина | Prof. Dr. Sanjar Sodiqov | yes | 6 | none yet | 2: `clearance_form`, `prohibited_list` | 5 questions, machine-written, read by no clinician |
-| 30 | `fizik-tedavi` | doctor specialty | Tibbiy reabilitatsiya va fizioterapiya / Тиббий реабилитация ва физиотерапия / Медицинская реабилитация и физиотерапия | Prof. Dr. Laziz Rahimov | yes | 7 | none yet | 2: `functional_scales`, `disability_assessment` | 6 questions, machine-written, read by no clinician |
-| 31 | `sac-ekimi` | clinic doctor | Soch koʻchirib oʻtkazish / Соч кўчириб ўтказиш / Трансплантация волос | Dr. Shohruh Karimov | yes | 7 | none yet | 2: `hair_loss_scale`, `procedure_consent_form` | 7 questions, machine-written, read by no clinician |
-| 32 | `estetik-cerrahi` | clinic doctor | Estetik xirurgiya / Эстетик хирургия / Эстетическая хирургия | Prof. Dr. Lobar Yusupova | yes | 7 | none yet | 1: `procedure_consent_form` | 5 questions, machine-written, read by no clinician |
-| 33 | `medikal-estetik` | clinic doctor | Kosmetologiya (estetik tibbiyot) / Косметология (эстетик тиббиёт) / Косметология (эстетическая медицина) | Dr. Feruza Rasulova | yes | 8 | none yet | 2: `registered_products`, `procedure_consent_form` | 5 questions, machine-written, read by no clinician |
-| 34 | `klinik-dermatoloji` | clinic doctor | Dermatologiya (klinika) / Дерматология (клиника) / Дерматология (клиника) | Dr. Dilbar Ergasheva | yes | 7 | none yet | 2: `registered_products`, `severity_indices` | 5 questions, machine-written, read by no clinician |
-| 35 | `longevity` | clinic doctor | Profilaktik va yoshga qarshi tibbiyot / Профилактик ва ёшга қарши тиббиёт / Превентивная и антивозрастная медицина | Dr. Asal Qodirova | yes | 7 | none yet | 2: `lab_reference_ranges`, `screening_programme` | 7 questions, machine-written, read by no clinician |
-| 36 | `fizyoterapi` | clinic allied | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | Fizioterapevt Jasmina Abdullayeva | yes | 7 | none yet | 2: `functional_scales`, `scope_of_practice` | 6 questions, machine-written, read by no clinician |
-| 37 | `klinik-psikolog` | clinic allied | Klinik psixolog / Клиник психолог / Клинический психолог | Dr. Doniyor Saidov | yes | 7 | none yet | 2: `psychological_tests`, `scope_of_practice` | 4 questions, machine-written, read by no clinician |
-| 38 | `diyetisyen` | clinic allied | Diyetolog / Диетолог / Диетолог | Diyetolog Mahliyo Tursunova | yes | 8 | none yet | 3: `nutrient_reference`, `growth_standard`, `scope_of_practice` | 7 questions, machine-written, read by no clinician |
-| 39 | `ergoterapi` | clinic allied | Ergoterapevt / Эрготерапевт / Эрготерапевт | Ergoterapevt Oybek Holmatov | yes | 8 | none yet | 2: `functional_scales`, `scope_of_practice` | 5 questions, machine-written, read by no clinician |
-| 40 | `odyoloji` | clinic allied | Audiolog / Аудиолог / Аудиолог | Audiolog Rayhon Alimova | yes | 7 | none yet | 3: `hearing_loss_grading`, `newborn_hearing_screening`, `scope_of_practice` | 6 questions, machine-written, read by no clinician |
+| 16 | `kalp-damar-cerrahisi` | doctor specialty | Kardioxirurgiya / Кардиохирургия / Кардиохирургия | Prof. Dr. Temur Karimov | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 17 | `damar-cerrahisi` | doctor specialty; behaves like `kalp-damar-cerrahisi` (writes with its template, asks its intake questions) | Qon tomirlar xirurgiyasi / Қон томирлар хирургияси / Сосудистая хирургия | none named yet | yes | 7 | none yet | 2: `operative_risk_score`, `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 18 | `kardiyoloji` | doctor specialty | Kardiologiya / Кардиология / Кардиология | Prof. Dr. Kamola Yusupova | yes | 8 | none yet | 2: `cv_risk_score`, `bp_lipid_targets` | 6 questions, machine-written, read by no clinician |
+| 19 | `kulak-burun-bogaz` | doctor specialty | Otorinolaringologiya (LOR) / Оториноларингология (ЛОР) / Оториноларингология (ЛОР) | Prof. Dr. Nodir Ergashev | yes | 6 | none yet | 1: `hearing_loss_grading` | 5 questions, machine-written, read by no clinician |
+| 20 | `nefroloji` | doctor specialty | Nefrologiya / Нефрология / Нефрология | Prof. Dr. Mohira Abdullayeva | yes | 6 | none yet | 2: `ckd_staging`, `dialysis_standards` | 6 questions, machine-written, read by no clinician |
+| 21 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Prof. Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` | 5 questions, machine-written, read by no clinician |
+| 22 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Prof. Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` | 6 questions, machine-written, read by no clinician |
+| 23 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Prof. Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` | 6 questions, machine-written, read by no clinician |
+| 24 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` | 9 questions, machine-written, read by no clinician |
+| 25 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` | 5 questions, machine-written, read by no clinician |
+| 26 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Prof. Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` | 6 questions, machine-written, read by no clinician |
+| 27 | `radyoloji` | doctor specialty | Tibbiy radiologiya / Тиббий радиология / Медицинская радиология | Prof. Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` | 7 questions, machine-written, read by no clinician |
+| 28 | `romatoloji` | doctor specialty | Revmatologiya / Ревматология / Ревматология | Prof. Dr. Saodat Holmatova | yes | 6 | none yet | 1: `activity_indices` | 5 questions, machine-written, read by no clinician |
+| 29 | `uroloji` | doctor specialty | Urologiya / Урология / Урология | Prof. Dr. Javohir Alimov | yes | 7 | none yet | 1: `symptom_questionnaires` | 5 questions, machine-written, read by no clinician |
+| 30 | `spor-hekimligi` | doctor specialty | Sport tibbiyoti / Спорт тиббиёти / Спортивная медицина | Prof. Dr. Sanjar Sodiqov | yes | 6 | none yet | 2: `clearance_form`, `prohibited_list` | 5 questions, machine-written, read by no clinician |
+| 31 | `fizik-tedavi` | doctor specialty | Reabilitologiya (davolash fizkulturasi, kurortologiya, fizioterapiya) / Реабилитология (даволаш физкультураси, курортология, физиотерапия) / Реабилитология (лечебная физкультура, курортология, физиотерапия) | Prof. Dr. Laziz Rahimov | yes | 7 | none yet | 2: `functional_scales`, `disability_assessment` | 6 questions, machine-written, read by no clinician |
+| 32 | `alerji-immunoloji` | doctor specialty; behaves like `dahiliye` (writes with its template, asks its intake questions) | Allergologiya va klinik immunologiya / Аллергология ва клиник иммунология / Аллергология и клиническая иммунология | none named yet | yes | 5 | none yet | 1: `lab_reference_ranges` | 5 questions, machine-written, read by no clinician |
+| 33 | `reproduktoloji` | doctor specialty; behaves like `kadin-hastaliklari-dogum` (writes with its template, asks its intake questions) | Reproduktologiya / Репродуктология / Репродуктология | none named yet | yes | 6 | none yet | 2: `antenatal_schedule`, `pregnancy_record_form` | 8 questions, machine-written, read by no clinician |
+| 34 | `cocuk-norolojisi` | doctor specialty; behaves like `noroloji` (writes with its template, asks its intake questions) | Bolalar nevrologiyasi / Болалар неврологияси / Детская неврология | none named yet | yes | 6 | none yet | 1: `neuro_scales` | 5 questions, machine-written, read by no clinician |
+| 35 | `narkoloji` | doctor specialty; behaves like `psikiyatri` (writes with its template, asks its intake questions) | Narkologiya / Наркология / Наркология | none named yet | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` | 6 questions, machine-written, read by no clinician |
+| 36 | `diyetoloji` | doctor specialty; behaves like `diyetisyen` (writes with its template, asks its intake questions) | Diyetologiya / Диетология / Диетология | none named yet | yes | 8 | none yet | 2: `nutrient_reference`, `growth_standard` | 7 questions, machine-written, read by no clinician |
+| 37 | `surdoloji` | doctor specialty; behaves like `odyoloji` (writes with its template, asks its intake questions) | Surdologiya / Сурдология / Сурдология | none named yet | yes | 7 | none yet | 2: `hearing_loss_grading`, `newborn_hearing_screening` | 6 questions, machine-written, read by no clinician |
+| 38 | `estetik-cerrahi` | clinic doctor | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Lobar Yusupova | yes | 7 | none yet | 1: `procedure_consent_form` | 5 questions, machine-written, read by no clinician |
+| 39 | `medikal-estetik` | clinic doctor | Tibbiy kosmetologiya / Тиббий косметология / Медицинская косметология | Dr. Feruza Rasulova | yes | 8 | none yet | 2: `registered_products`, `procedure_consent_form` | 5 questions, machine-written, read by no clinician |
+| 40 | `klinik-dermatoloji` | clinic doctor | Dermatovenerologiya / Дерматовенерология / Дерматовенерология | Dr. Dilbar Ergasheva | yes | 7 | none yet | 2: `registered_products`, `severity_indices` | 5 questions, machine-written, read by no clinician |
+| 41 | `fizyoterapi` | clinic allied | Jismoniy reabilitatsiya mutaxassisi / Жисмоний реабилитация мутахассиси / Специалист по физической реабилитации | Fizioterapevt Jasmina Abdullayeva | yes | 7 | none yet | 2: `functional_scales`, `scope_of_practice` | 6 questions, machine-written, read by no clinician |
+| 42 | `klinik-psikolog` | clinic allied | Klinik psixolog / Клиник психолог / Клинический психолог | Dr. Doniyor Saidov | yes | 7 | none yet | 2: `psychological_tests`, `scope_of_practice` | 4 questions, machine-written, read by no clinician |
 
 ### Needs local content
 
@@ -525,10 +529,10 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 
 | # | Role | Slot | What is missing | Who must supply it |
 |---|---|---|---|---|
-| 1 | all 40 roles | `diagnosis_coding` | Diagnosis coding edition and the language it is used in; procedure coding | a local clinician |
-| 2 | all 40 roles | `medicines_register` | Register of medicines authorised in Uzbekistan, with local names, forms and strengths | a local clinician |
-| 3 | all 40 roles | `record_forms` | Mandatory medical record forms and their fields, and the script they must be kept in | a local clinician |
-| 4 | all 40 roles | `prescription_format` | Prescription format, language and rules for controlled medicines | a local clinician |
+| 1 | all 42 roles | `diagnosis_coding` | Diagnosis coding edition and the language it is used in; procedure coding | a local clinician |
+| 2 | all 42 roles | `medicines_register` | Register of medicines authorised in Uzbekistan, with local names, forms and strengths | a local clinician |
+| 3 | all 42 roles | `record_forms` | Mandatory medical record forms and their fields, and the script they must be kept in | a local clinician |
+| 4 | all 42 roles | `prescription_format` | Prescription format, language and rules for controlled medicines | a local clinician |
 | 5 | `acil-tip` (Скорая и неотложная помощь) | `triage_scale` | Triage scale used in emergency departments in Uzbekistan (categories and criteria) | a local clinician |
 | 6 | `aile-hekimligi` (Семейная медицина) | `screening_programme` | National preventive screening and check-up programme by age and sex | a local clinician |
 | 7 | `aile-hekimligi` (Семейная медицина) | `vaccination_calendar` | National vaccination calendar | a local clinician |
@@ -538,72 +542,72 @@ Every row is a slot in `countries/uz/klinik/notSablonlari.ts` (`UZ_YEREL_ICERIK`
 | 11 | `cocuk-cerrahisi` (Детская хирургия) | `growth_standard` | Growth chart standard for children (which standard, which charts) | a local clinician |
 | 12 | `cocuk-cerrahisi` (Детская хирургия) | `pediatric_dosing` | Paediatric dosing reference | a local clinician |
 | 13 | `cocuk-cerrahisi` (Детская хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
-| 14 | `dahiliye` (Терапия (внутренние болезни)) | `lab_reference_ranges` | Laboratory units and reference ranges in local use | a local clinician |
+| 14 | `dahiliye` (Терапия) | `lab_reference_ranges` | Laboratory units and reference ranges in local use | a local clinician |
 | 15 | `dermatoloji` (Дерматовенерология) | `severity_indices` | Skin disease severity indices in locally validated wording | a local clinician |
 | 16 | `endokrinoloji` (Эндокринология) | `treatment_targets` | Treatment targets (glucose, lipids, blood pressure) from the national protocol | a local clinician |
 | 17 | `endokrinoloji` (Эндокринология) | `lab_reference_ranges` | Laboratory units and reference ranges in local use | a local clinician |
 | 18 | `enfeksiyon-hastaliklari` (Инфекционные болезни) | `notifiable_diseases` | List of notifiable diseases and the mandatory report form | a local clinician |
 | 19 | `enfeksiyon-hastaliklari` (Инфекционные болезни) | `vaccination_calendar` | National vaccination calendar | a local clinician |
 | 20 | `gastroenteroloji` (Гастроэнтерология) | `endoscopy_classifications` | Endoscopy and liver disease classifications accepted locally | a local clinician |
-| 21 | `genel-cerrahi` (Общая хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
+| 21 | `genel-cerrahi` (Хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
 | 22 | `gogus-cerrahisi` (Торакальная хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
 | 23 | `gogus-hastaliklari` (Пульмонология) | `spirometry_reference` | Spirometry reference values and severity grading used locally | a local clinician |
 | 24 | `gogus-hastaliklari` (Пульмонология) | `tb_programme` | National tuberculosis programme forms and regimens | a local clinician |
 | 25 | `goz-hastaliklari` (Офтальмология) | `acuity_notation` | Visual acuity notation and chart in local use | a local clinician |
 | 26 | `kadin-hastaliklari-dogum` (Акушерство и гинекология) | `antenatal_schedule` | Antenatal visit schedule and screening programme from the national protocol | a local clinician |
 | 27 | `kadin-hastaliklari-dogum` (Акушерство и гинекология) | `pregnancy_record_form` | Mandatory pregnancy record form and its fields | a local clinician |
-| 28 | `kalp-damar-cerrahisi` (Сердечно-сосудистая хирургия) | `operative_risk_score` | Operative risk score in local use for cardiac and vascular surgery | a local clinician |
-| 29 | `kalp-damar-cerrahisi` (Сердечно-сосудистая хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
-| 30 | `kardiyoloji` (Кардиология) | `cv_risk_score` | Cardiovascular risk score calibrated for the region | a local clinician |
-| 31 | `kardiyoloji` (Кардиология) | `bp_lipid_targets` | Blood pressure and lipid targets from the national protocol | a local clinician |
-| 32 | `kulak-burun-bogaz` (Оториноларингология (ЛОР)) | `hearing_loss_grading` | Hearing loss grading in local use | a local clinician |
-| 33 | `nefroloji` (Нефрология) | `ckd_staging` | Chronic kidney disease staging in local use | a local clinician |
-| 34 | `nefroloji` (Нефрология) | `dialysis_standards` | Dialysis adequacy standards and record form | a local clinician |
-| 35 | `noroloji` (Неврология) | `neuro_scales` | Neurological scales (stroke, disability) in validated Uzbek and Russian wording | a local clinician |
-| 36 | `onkoloji` (Онкология) | `staging_system` | Tumour staging classification and edition in use | a local clinician |
-| 37 | `onkoloji` (Онкология) | `treatment_regimens` | Chemotherapy and radiotherapy regimens from national protocols | a local clinician |
-| 38 | `onkoloji` (Онкология) | `performance_scale` | Performance status scale in the wording used locally | a local clinician |
-| 39 | `ortopedi` (Травматология и ортопедия) | `fracture_classification` | Fracture classification in local use | a local clinician |
-| 40 | `pediatri` (Педиатрия) | `vaccination_calendar` | National vaccination calendar | a local clinician |
-| 41 | `pediatri` (Педиатрия) | `growth_standard` | Growth chart standard for children (which standard, which charts) | a local clinician |
-| 42 | `pediatri` (Педиатрия) | `development_milestones` | Developmental milestone checklist in local use | a local clinician |
-| 43 | `pediatri` (Педиатрия) | `pediatric_dosing` | Paediatric dosing reference | a local clinician |
-| 44 | `plastik-cerrahi` (Пластическая хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
-| 45 | `psikiyatri` (Психиатрия) | `rating_scales` | Psychiatric rating scales in validated Uzbek and Russian versions | a local clinician |
-| 46 | `psikiyatri` (Психиатрия) | `involuntary_care_law` | Legal procedure for involuntary assessment and treatment | a local clinician |
-| 47 | `radyoloji` (Лучевая диагностика (радиология)) | `reporting_systems` | Structured radiology reporting classifications accepted locally | a local clinician |
-| 48 | `radyoloji` (Лучевая диагностика (радиология)) | `dose_record` | Radiation dose recording requirements | a local clinician |
-| 49 | `romatoloji` (Ревматология) | `activity_indices` | Rheumatic disease activity indices in validated local wording | a local clinician |
-| 50 | `uroloji` (Урология) | `symptom_questionnaires` | Urological symptom questionnaires in validated Uzbek and Russian versions | a local clinician |
-| 51 | `spor-hekimligi` (Спортивная медицина) | `clearance_form` | Pre-participation medical clearance form required for athletes | a local clinician |
-| 52 | `spor-hekimligi` (Спортивная медицина) | `prohibited_list` | Anti-doping prohibited list reference | a local clinician |
-| 53 | `fizik-tedavi` (Медицинская реабилитация и физиотерапия) | `functional_scales` | Functional independence and disability scales in validated local wording | a local clinician |
-| 54 | `fizik-tedavi` (Медицинская реабилитация и физиотерапия) | `disability_assessment` | Medical-social (disability) assessment forms | a local clinician |
-| 55 | `sac-ekimi` (Трансплантация волос) | `hair_loss_scale` | Hair loss classification scale in local use | a local clinician |
-| 56 | `sac-ekimi` (Трансплантация волос) | `procedure_consent_form` | Consent form for an aesthetic procedure as required by law | a local clinician |
-| 57 | `estetik-cerrahi` (Эстетическая хирургия) | `procedure_consent_form` | Consent form for an aesthetic procedure as required by law | a local clinician |
-| 58 | `medikal-estetik` (Косметология (эстетическая медицина)) | `registered_products` | Injectable products and devices registered in Uzbekistan | a local clinician |
-| 59 | `medikal-estetik` (Косметология (эстетическая медицина)) | `procedure_consent_form` | Consent form for an aesthetic procedure as required by law | a local clinician |
-| 60 | `klinik-dermatoloji` (Дерматология (клиника)) | `registered_products` | Injectable products and devices registered in Uzbekistan | a local clinician |
-| 61 | `klinik-dermatoloji` (Дерматология (клиника)) | `severity_indices` | Skin disease severity indices in locally validated wording | a local clinician |
-| 62 | `longevity` (Превентивная и антивозрастная медицина) | `lab_reference_ranges` | Laboratory units and reference ranges in local use | a local clinician |
-| 63 | `longevity` (Превентивная и антивозрастная медицина) | `screening_programme` | National preventive screening and check-up programme by age and sex | a local clinician |
-| 64 | `fizyoterapi` (Специалист по физической реабилитации) | `functional_scales` | Functional independence and disability scales in validated local wording | a local clinician |
-| 65 | `fizyoterapi` (Специалист по физической реабилитации) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
-| 66 | `klinik-psikolog` (Клинический психолог) | `psychological_tests` | Psychological tests in validated Uzbek and Russian versions | a local clinician |
-| 67 | `klinik-psikolog` (Клинический психолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
-| 68 | `diyetisyen` (Диетолог) | `nutrient_reference` | Nutrient reference intakes and food composition tables for Uzbekistan | a local clinician |
-| 69 | `diyetisyen` (Диетолог) | `growth_standard` | Growth chart standard for children (which standard, which charts) | a local clinician |
-| 70 | `diyetisyen` (Диетолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
-| 71 | `ergoterapi` (Эрготерапевт) | `functional_scales` | Functional independence and disability scales in validated local wording | a local clinician |
-| 72 | `ergoterapi` (Эрготерапевт) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
-| 73 | `odyoloji` (Аудиолог) | `hearing_loss_grading` | Hearing loss grading in local use | a local clinician |
-| 74 | `odyoloji` (Аудиолог) | `newborn_hearing_screening` | Newborn hearing screening programme | a local clinician |
-| 75 | `odyoloji` (Аудиолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
-| 76 | all 40 roles (calendar) | `public_holidays` | Public holidays of Uzbekistan for each year: the fixed dates, the two religious holidays whose dates move every year, and the working days the government transfers. **Nothing is hard-coded**: the calendar treats a holiday as an ordinary day and the working-pattern screen says so. Needs an official source and somebody who updates it every year. | a local source and a yearly owner |
-| 77 | all 40 roles (calendar) | `working_week` | The usual working week, hours, lunch break and appointment length of a private clinic. The pack's values (Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes) are starting values, not checked locally; every account can change its own. | the clinical lead |
-| 78 | all 40 roles (patient portal) | `emergency_number` | The number a patient dials for an ambulance, as it is written and dialled in Uzbekistan. The pack holds **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`), written by Claude from general knowledge: **UNVERIFIED. It must be confirmed by a local source before any patient sees the portal.** A wrong number here is shown to a patient who feels very unwell. If it cannot be confirmed, set it to `null`: the page then says only that it is not for emergencies and names no number. | a local source (the clinical lead, or the health ministry's own page), recorded here with name and date |
-| 79 | all 40 roles (patient portal) | `link_validity` | How long a patient's link works before the doctor must give a new one. The pack holds **30 days** (`uygulama.portal.baglantiGecerlilikGun`), a starting value chosen by Claude, not a local rule. | **the owner** confirms the number; a lawyer says how long a patient's access may stand (checklist I1) |
+| 28 | `kalp-damar-cerrahisi` (Кардиохирургия) | `operative_risk_score` | Operative risk score in local use for cardiac and vascular surgery | a local clinician |
+| 29 | `kalp-damar-cerrahisi` (Кардиохирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
+| 30 | `damar-cerrahisi` (Сосудистая хирургия) | `operative_risk_score` | Operative risk score in local use for cardiac and vascular surgery | a local clinician |
+| 31 | `damar-cerrahisi` (Сосудистая хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
+| 32 | `kardiyoloji` (Кардиология) | `cv_risk_score` | Cardiovascular risk score calibrated for the region | a local clinician |
+| 33 | `kardiyoloji` (Кардиология) | `bp_lipid_targets` | Blood pressure and lipid targets from the national protocol | a local clinician |
+| 34 | `kulak-burun-bogaz` (Оториноларингология (ЛОР)) | `hearing_loss_grading` | Hearing loss grading in local use | a local clinician |
+| 35 | `nefroloji` (Нефрология) | `ckd_staging` | Chronic kidney disease staging in local use | a local clinician |
+| 36 | `nefroloji` (Нефрология) | `dialysis_standards` | Dialysis adequacy standards and record form | a local clinician |
+| 37 | `noroloji` (Неврология) | `neuro_scales` | Neurological scales (stroke, disability) in validated Uzbek and Russian wording | a local clinician |
+| 38 | `onkoloji` (Онкология) | `staging_system` | Tumour staging classification and edition in use | a local clinician |
+| 39 | `onkoloji` (Онкология) | `treatment_regimens` | Chemotherapy and radiotherapy regimens from national protocols | a local clinician |
+| 40 | `onkoloji` (Онкология) | `performance_scale` | Performance status scale in the wording used locally | a local clinician |
+| 41 | `ortopedi` (Травматология и ортопедия) | `fracture_classification` | Fracture classification in local use | a local clinician |
+| 42 | `pediatri` (Педиатрия) | `vaccination_calendar` | National vaccination calendar | a local clinician |
+| 43 | `pediatri` (Педиатрия) | `growth_standard` | Growth chart standard for children (which standard, which charts) | a local clinician |
+| 44 | `pediatri` (Педиатрия) | `development_milestones` | Developmental milestone checklist in local use | a local clinician |
+| 45 | `pediatri` (Педиатрия) | `pediatric_dosing` | Paediatric dosing reference | a local clinician |
+| 46 | `plastik-cerrahi` (Пластическая хирургия) | `surgical_consent_form` | Surgical consent form and pre-operative checklist required by law | a local clinician |
+| 47 | `psikiyatri` (Психиатрия) | `rating_scales` | Psychiatric rating scales in validated Uzbek and Russian versions | a local clinician |
+| 48 | `psikiyatri` (Психиатрия) | `involuntary_care_law` | Legal procedure for involuntary assessment and treatment | a local clinician |
+| 49 | `radyoloji` (Медицинская радиология) | `reporting_systems` | Structured radiology reporting classifications accepted locally | a local clinician |
+| 50 | `radyoloji` (Медицинская радиология) | `dose_record` | Radiation dose recording requirements | a local clinician |
+| 51 | `romatoloji` (Ревматология) | `activity_indices` | Rheumatic disease activity indices in validated local wording | a local clinician |
+| 52 | `uroloji` (Урология) | `symptom_questionnaires` | Urological symptom questionnaires in validated Uzbek and Russian versions | a local clinician |
+| 53 | `spor-hekimligi` (Спортивная медицина) | `clearance_form` | Pre-participation medical clearance form required for athletes | a local clinician |
+| 54 | `spor-hekimligi` (Спортивная медицина) | `prohibited_list` | Anti-doping prohibited list reference | a local clinician |
+| 55 | `fizik-tedavi` (Реабилитология (лечебная физкультура, курортология, физиотерапия)) | `functional_scales` | Functional independence and disability scales in validated local wording | a local clinician |
+| 56 | `fizik-tedavi` (Реабилитология (лечебная физкультура, курортология, физиотерапия)) | `disability_assessment` | Medical-social (disability) assessment forms | a local clinician |
+| 57 | `alerji-immunoloji` (Аллергология и клиническая иммунология) | `lab_reference_ranges` | Laboratory units and reference ranges in local use | a local clinician |
+| 58 | `reproduktoloji` (Репродуктология) | `antenatal_schedule` | Antenatal visit schedule and screening programme from the national protocol | a local clinician |
+| 59 | `reproduktoloji` (Репродуктология) | `pregnancy_record_form` | Mandatory pregnancy record form and its fields | a local clinician |
+| 60 | `cocuk-norolojisi` (Детская неврология) | `neuro_scales` | Neurological scales (stroke, disability) in validated Uzbek and Russian wording | a local clinician |
+| 61 | `narkoloji` (Наркология) | `rating_scales` | Psychiatric rating scales in validated Uzbek and Russian versions | a local clinician |
+| 62 | `narkoloji` (Наркология) | `involuntary_care_law` | Legal procedure for involuntary assessment and treatment | a local clinician |
+| 63 | `diyetoloji` (Диетология) | `nutrient_reference` | Nutrient reference intakes and food composition tables for Uzbekistan | a local clinician |
+| 64 | `diyetoloji` (Диетология) | `growth_standard` | Growth chart standard for children (which standard, which charts) | a local clinician |
+| 65 | `surdoloji` (Сурдология) | `hearing_loss_grading` | Hearing loss grading in local use | a local clinician |
+| 66 | `surdoloji` (Сурдология) | `newborn_hearing_screening` | Newborn hearing screening programme | a local clinician |
+| 67 | `estetik-cerrahi` (Пластическая хирургия) | `procedure_consent_form` | Consent form for an aesthetic procedure as required by law | a local clinician |
+| 68 | `medikal-estetik` (Медицинская косметология) | `registered_products` | Injectable products and devices registered in Uzbekistan | a local clinician |
+| 69 | `medikal-estetik` (Медицинская косметология) | `procedure_consent_form` | Consent form for an aesthetic procedure as required by law | a local clinician |
+| 70 | `klinik-dermatoloji` (Дерматовенерология) | `registered_products` | Injectable products and devices registered in Uzbekistan | a local clinician |
+| 71 | `klinik-dermatoloji` (Дерматовенерология) | `severity_indices` | Skin disease severity indices in locally validated wording | a local clinician |
+| 72 | `fizyoterapi` (Специалист по физической реабилитации) | `functional_scales` | Functional independence and disability scales in validated local wording | a local clinician |
+| 73 | `fizyoterapi` (Специалист по физической реабилитации) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
+| 74 | `klinik-psikolog` (Клинический психолог) | `psychological_tests` | Psychological tests in validated Uzbek and Russian versions | a local clinician |
+| 75 | `klinik-psikolog` (Клинический психолог) | `scope_of_practice` | What this allied profession may record and decide without a doctor under Uzbek law | a local clinician |
+| 76 | all 42 roles (calendar) | `public_holidays` | Public holidays of Uzbekistan for each year: the fixed dates, the two religious holidays whose dates move every year, and the working days the government transfers. **Nothing is hard-coded**: the calendar treats a holiday as an ordinary day and the working-pattern screen says so. Needs an official source and somebody who updates it every year. | a local source and a yearly owner |
+| 77 | all 42 roles (calendar) | `working_week` | The usual working week, hours, lunch break and appointment length of a private clinic. The pack's values (Monday to Friday, 09:00–18:00, break 13:00–14:00, 30 minutes) are starting values, not checked locally; every account can change its own. | the clinical lead |
+| 78 | all 42 roles (patient portal) | `emergency_number` | The number a patient dials for an ambulance, as it is written and dialled in Uzbekistan. The pack holds **103** (`countries/uz/index.ts`, `uygulama.portal.acilNumara`), written by Claude from general knowledge: **UNVERIFIED. It must be confirmed by a local source before any patient sees the portal.** A wrong number here is shown to a patient who feels very unwell. If it cannot be confirmed, set it to `null`: the page then says only that it is not for emergencies and names no number. | a local source (the clinical lead, or the health ministry's own page), recorded here with name and date |
+| 79 | all 42 roles (patient portal) | `link_validity` | How long a patient's link works before the doctor must give a new one. The pack holds **30 days** (`uygulama.portal.baglantiGecerlilikGun`), a starting value chosen by Claude, not a local rule. | **the owner** confirms the number; a lawyer says how long a patient's access may stand (checklist I1) |
 
 The intake form has slots of its own, 18 of them, numbered F1 to F18: what a form deliberately does not ask until a local source has supplied it. They are listed in "The intake form" above ("What the intake form does not ask, and who must supply it first") and held in `countries/uz/klinik/hastaFormu/yerelIcerik.ts`.
 
@@ -939,6 +943,8 @@ Built in the country kit and filled in for Uzbekistan. Per-tool outcome, checked
 
 **Changed on 2026-10-10 (NOTYA-ULKE-ARAC-01b), by the owner's order "Switch off the risky tools".** Five role tools that the lists below count as switched on are off, and are slots until their fault is corrected in the kit or their licence is granted: the dose calculator (`doz-hesabi`: it rounds the volume of one dose to 0.1 mL and prints trailing zeros), the ESI triage tool (`esi-triyaj`: the scale's owner requires written permission; licence stated as "permission needed"), the report outline that prints the BI-RADS categories (`rapor-taslagi`: a licence agreement is required for commercial software; stated as "permission needed"), and both kidney tools (`kdigo-evre`, `kdigo-serit`: a low-risk cell is shown when no urine albumin result was typed; the first also mislabels its referral flags). So today: **39 role tools for 22 roles, the follow-up list for the same 22, 18 roles with base tools only (internal medicine among them), 57 slots.** A doctor does not see the five on the grid; their old address shows "Your account does not have this tool" above the grid; the server keeps no result of them. Their words stay in the pack for the day they come back. A test that names the five fails if any country switches one on (`lib/ulke/araclar/kapaliAraclar.paket.test.ts`).
 
+**Changed again on 2026-10-10 (NOTYA-ULKE-UYGULA-UZ).** The lists below describe the tools as they were built on 2026-10-09, for the 40 roles of that day. What a doctor has since the decisions of the tools audit were applied (42 roles, the dose calculator on again, three tools only Uzbekistan has, the follow-up list for every doctor role) is in "After the tools audit" at the end of this section.
+
 ### What a doctor has, under `/uzbek/tools`
 
 - **One base tool for all 40 roles:** the patient's page (the way to give a patient access).
@@ -972,6 +978,93 @@ Migration `139_ulke_arac_kayitlari.sql`: one table for the results a doctor keep
 - In a browser against a production build: the grid, a tool filled in for a patient, kept with and without a follow-up day, the patient's file, the follow-up list and "done", and the second account.
 
 Not covered: a real database behind the provider's API layer; any reading by a native speaker or a clinician.
+
+### After the tools audit (2026-10-10, NOTYA-ULKE-UYGULA-UZ)
+
+The decisions of the tools audit (`docs/araclar-denetim/UZ.md`, "Second pass"; `docs/araclar-denetim/uz-kararlar.json`) applied to this pack, and two orders of the owner of the same day: "activate roles", and "Bring on all the tools built for the new 6 countries now. We will test as we go."
+
+**What a doctor has now.** Three base tools for all 42 roles (the patient's page, the doctor's own templates, consultations). 47 tools are switched on in all. Every one of the 40 doctor roles has the body mass index and the follow-up list; the two allied professions (physiotherapy, clinical psychology) have the base tools only. Examples, before → now:
+
+| Who | Before | Now |
+|---|---|---|
+| A cardiologist | the three base tools | + body mass index, follow-up list |
+| A family doctor | the three base tools | + body mass index, gestational age and expected date of birth, vaccination record, follow-up list |
+| A paediatrician | expected height, follow-up list | + dose calculator (on again), body mass index (adult patients only), vaccination record |
+| A vascular surgeon | no role of their own (one role with cardiac surgery) | the three cardiovascular-surgery tools, body mass index, follow-up list |
+| A surdologist | an allied "audiologist" with the base tools only | a doctor's role: the hearing average, body mass index, follow-up list |
+
+**The three tools only Uzbekistan has** (`countries/uz/uygulama/araclar/kendi/`; no other country's build holds them: `countries/yasak-araclar.json`, wall rule D7). Each number stands beside the place it was read in on 2026-10-10 (`tanimlar.ts`) and is held to it by `kendi.test.ts`.
+
+| Tool | For | What it does | Source of the numbers | Tested against |
+|---|---|---|---|---|
+| `uz-tana-vazni-indeksi` | every doctor role; patients of 20 and over | body mass index from weight and height, in one of four adult classes; waist circumference is recorded, not assessed | the national antenatal protocols of 2021 (Table 1: below 18,5; 18,5–24,9; 25,0–29,9; 30 and above); the same limits on WHO's and the CDC's pages; the age of 20 from the CDC page | the worked example of an NHS page: 89 kg and 1.62 m give 33.9 |
+| `uz-homiladorlik-muddati` | obstetrics and gynaecology, family medicine | expected date of birth and the gestational age today | the national antenatal protocols of 2021: 280 days from the first day of the last period; the ultrasound date of 11 to 14 weeks replaces it when they differ by more than 5 days; after an embryo transfer, 266 days minus the days of culture | the protocol's own equivalences (280 days = 40 weeks, 266 = 38 weeks) and the ACOG opinion's 261 and 263 days. **No source prints an example with calendar dates**; the dates in the tests were counted on a calendar |
+| `uz-emlash-qaydi` | paediatrics, family medicine | records one vaccination as the doctor types it | none: it holds no vaccine, no age and no interval. **The national calendar (SanQvaM 0239-07/3) is not in the product** | that its answer never depends on the vaccine's name, and that every day in a result is a day the doctor typed |
+
+**Switched on without a clinician's sign-off.** The three tools above and the dose calculator (`doz-hesabi`, on again after its fault was corrected in the kit, pull request #615). `countries/uz/uygulama/araclar/kendi/onay.ts` lists the four with what a clinician of Uzbekistan has to confirm for each; a test holds the list to what is switched on. The ESI triage tool, the radiology report outline and both kidney tools stay off.
+
+**Not built.** Kidney function from creatinine: the national protocol for chronic kidney disease was not found, so the equation it prescribes is unknown, and no national text read states the unit of creatinine. The ten-year cardiovascular risk stays an empty placeholder: three national documents name three different charts, and both charts need their owner's permission.
+
+**Country data.** The unit of each laboratory value now names the national document that writes it so (`countries/uz/uygulama/araclar/birimler.ts`): haemoglobin g/l, glucose mmol/l, glycated haemoglobin % (the antenatal protocols of 2021); cholesterol mmol/l (the cardiology collection of 2015); C-reactive protein mg/l (a protocol under order No. 180 of 23.06.2025); PSA ng/ml (a paper of the national urology centre, not a protocol). Not found, and not stated: the unit of creatinine; the unit of the urine albumin-to-creatinine ratio is the unverified starting value it was. **No limit of any value is stated.** No national source was found for the hearing grades and frequencies, the steps of a return to sport, the range of the expected height or a PSA caution, so the pack states none of them.
+
+**Licence.** "Free to implement" is stated in four places: the three tools above (the CDC's public-domain notice for the index; the copyright law of Uzbekistan, No. OʻRQ-42 of 20.07.2006, articles 5 and 8, for the date rule, since the protocol carries no notice of its own; the record is the product's own), and the placeholder of PHQ-9 and GAD-7, by the notice printed on both forms. These are a machine's readings, not a lawyer's. Nothing is stated for any other tool or placeholder.
+
+**The new texts, for the native reader.** Machine-written; Uzbek in Cyrillic script is what the rule gives for the Latin text. The ultrasound examination is written by its abbreviation (UTT / УТТ / УЗИ). The 16 role names that changed are in "Status of the 42 roles" above.
+
+| Text | Uzbek, Latin | Uzbek, Cyrillic | Russian |
+|---|---|---|---|
+| `uz-tana-vazni-indeksi.ad` | Tana vazni indeksi | Тана вазни индекси | Индекс массы тела |
+| `uz-tana-vazni-indeksi.aciklama` | Vazn va boʻydan tana vazni indeksini hisoblaydi va uni kattalar uchun toʻrt toifadan biriga kiritadi. Bel aylanasi faqat qayd etiladi. | Вазн ва бўйдан тана вазни индексини ҳисоблайди ва уни катталар учун тўрт тоифадан бирига киритади. Бел айланаси фақат қайд этилади. | Рассчитывает индекс массы тела по массе тела и росту и относит его к одной из четырёх категорий для взрослых. Окружность талии только записывается. |
+| `uz-tana-vazni-indeksi.alanlar.vazn` | Vazn | Вазн | Масса тела |
+| `uz-tana-vazni-indeksi.alanlar.boy` | Boʻy | Бўй | Рост |
+| `uz-tana-vazni-indeksi.alanlar.bel` | Bel aylanasi (ixtiyoriy) | Бел айланаси (ихтиёрий) | Окружность талии (необязательно) |
+| `uz-tana-vazni-indeksi.sayilar.tvi` | Tana vazni indeksi | Тана вазни индекси | Индекс массы тела |
+| `uz-tana-vazni-indeksi.bantlar.kam` | Vazn yetishmasligi (18,5 dan past) | Вазн етишмаслиги (18,5 дан паст) | Недостаточная масса тела (менее 18,5) |
+| `uz-tana-vazni-indeksi.bantlar.meyor` | Meʼyoriy vazn (18,5–24,9) | Меъёрий вазн (18,5–24,9) | Нормальная масса тела (18,5–24,9) |
+| `uz-tana-vazni-indeksi.bantlar.ortiqcha` | Ortiqcha vazn (25,0–29,9) | Ортиқча вазн (25,0–29,9) | Избыточная масса тела (25,0–29,9) |
+| `uz-tana-vazni-indeksi.bantlar.semizlik` | Semizlik (30 va undan yuqori) | Семизлик (30 ва ундан юқори) | Ожирение (30 и более) |
+| `uz-tana-vazni-indeksi.not` | Hisoblash vositasi: toifalar kattalar uchun, bel aylanasi baholanmaydi. Tashxis va davolash qarori shifokorniki. | Ҳисоблаш воситаси: тоифалар катталар учун, бел айланаси баҳоланмайди. Ташхис ва даволаш қарори шифокорники. | Расчётный инструмент: категории предназначены для взрослых, окружность талии не оценивается. Диагноз и лечение определяет врач. |
+| `uz-tana-vazni-indeksi.hastaKapisi` | Bu vosita 20 yosh va undan katta bemorlar uchun. | Бу восита 20 ёш ва ундан катта беморлар учун. | Этот инструмент предназначен для пациентов в возрасте 20 лет и старше. |
+| `uz-homiladorlik-muddati.ad` | Homiladorlik muddati va tugʻruq sanasi | Ҳомиладорлик муддати ва туғруқ санаси | Срок беременности и дата родов |
+| `uz-homiladorlik-muddati.aciklama` | Oxirgi hayzning birinchi kunidan yoki embrion koʻchirilgan kundan taxminiy tugʻruq sanasini va bugungi homiladorlik muddatini hisoblaydi. | Охирги ҳайзнинг биринчи кунидан ёки эмбрион кўчирилган кундан тахминий туғруқ санасини ва бугунги ҳомиладорлик муддатини ҳисоблайди. | Рассчитывает предполагаемую дату родов и срок беременности на сегодня от первого дня последней менструации или от даты переноса эмбриона. |
+| `uz-homiladorlik-muddati.alanlar.usul` | Hisoblash asosi | Ҳисоблаш асоси | Основа расчёта |
+| `uz-homiladorlik-muddati.alanlar.oxirgi_hayz` | Oxirgi hayzning birinchi kuni | Охирги ҳайзнинг биринчи куни | Первый день последней менструации |
+| `uz-homiladorlik-muddati.alanlar.sikl` | Hayz sikli | Ҳайз цикли | Менструальный цикл |
+| `uz-homiladorlik-muddati.alanlar.uzi_tugish` | UTT (11–14 hafta) boʻyicha tugʻruq sanasi (ixtiyoriy) | УТТ (11–14 ҳафта) бўйича туғруқ санаси (ихтиёрий) | Дата родов по УЗИ в 11–14 недель (необязательно) |
+| `uz-homiladorlik-muddati.alanlar.kochirish` | Embrion koʻchirilgan sana | Эмбрион кўчирилган сана | Дата переноса эмбриона |
+| `uz-homiladorlik-muddati.alanlar.kultivatsiya` | Embrion oʻstirilgan muddat | Эмбрион ўстирилган муддат | Срок культивирования эмбриона |
+| `uz-homiladorlik-muddati.secenekler.usul.hayz` | Oxirgi hayz sanasi | Охирги ҳайз санаси | Дата последней менструации |
+| `uz-homiladorlik-muddati.secenekler.usul.yrt` | Yordamchi reproduktiv texnologiyalar: embrion koʻchirish | Ёрдамчи репродуктив технологиялар: эмбрион кўчириш | Вспомогательные репродуктивные технологии: перенос эмбриона |
+| `uz-homiladorlik-muddati.secenekler.sikl.yigirma_sakkiz` | 28 kunlik | 28 кунлик | 28-дневный |
+| `uz-homiladorlik-muddati.secenekler.sikl.boshqa` | Boshqa davomiylik | Бошқа давомийлик | Другая продолжительность |
+| `uz-homiladorlik-muddati.sayilar.hafta` | Homiladorlik muddati (toʻliq haftalar) | Ҳомиладорлик муддати (тўлиқ ҳафталар) | Срок беременности (полных недель) |
+| `uz-homiladorlik-muddati.sayilar.kun` | Toʻliq haftalardan tashqari kunlar | Тўлиқ ҳафталардан ташқари кунлар | Дней сверх полных недель |
+| `uz-homiladorlik-muddati.sayilar.farq` | Hayz va UTT boʻyicha sanalar farqi | Ҳайз ва УТТ бўйича саналар фарқи | Расхождение дат по менструации и по УЗИ |
+| `uz-homiladorlik-muddati.bantlar.hayz_boyicha` | Sana oxirgi hayz boʻyicha belgilandi | Сана охирги ҳайз бўйича белгиланди | Дата установлена по последней менструации |
+| `uz-homiladorlik-muddati.bantlar.uzi_boyicha` | Farq 5 kundan ortiq: sana UTT boʻyicha belgilandi | Фарқ 5 кундан ортиқ: сана УТТ бўйича белгиланди | Расхождение более 5 дней: дата установлена по данным УЗИ |
+| `uz-homiladorlik-muddati.bantlar.yrt_boyicha` | Sana embrion koʻchirilgan kun boʻyicha belgilandi | Сана эмбрион кўчирилган кун бўйича белгиланди | Дата установлена по дате переноса эмбриона |
+| `uz-homiladorlik-muddati.uyarilar.sikl_tuzatilmagan` | Sikl 28 kunlik emas: 280 kun 28 kunlik sikl uchun berilgan, vosita tuzatish kiritmadi. | Цикл 28 кунлик эмас: 280 кун 28 кунлик цикл учун берилган, восита тузатиш киритмади. | Цикл не 28-дневный: 280 дней указаны для 28-дневного цикла, инструмент поправку не внёс. |
+| `uz-homiladorlik-muddati.uyarilar.muddat_otgan` | Taxminiy tugʻruq sanasi oʻtgan. | Тахминий туғруқ санаси ўтган. | Предполагаемая дата родов уже прошла. |
+| `uz-homiladorlik-muddati.tarihler.tugish` | Taxminiy tugʻruq sanasi | Тахминий туғруқ санаси | Предполагаемая дата родов |
+| `uz-homiladorlik-muddati.not` | Faqat sana hisobi: oxirgi hayzning birinchi kunidan 280 kun (40 hafta) yoki koʻchirish sanasidan 266 kun, embrion oʻstirilgan kunlar ayirilgan holda. Tashrif va tekshiruvlar jadvali bu yerda yoʻq; qaror shifokorniki. | Фақат сана ҳисоби: охирги ҳайзнинг биринчи кунидан 280 кун (40 ҳафта) ёки кўчириш санасидан 266 кун, эмбрион ўстирилган кунлар айирилган ҳолда. Ташриф ва текширувлар жадвали бу ерда йўқ; қарор шифокорники. | Только расчёт дат: 280 дней (40 недель) от первого дня последней менструации либо 266 дней от даты переноса за вычетом дней культивирования эмбриона. Графика визитов и обследований здесь нет; решение принимает врач. |
+| `uz-emlash-qaydi.ad` | Emlash qaydi | Эмлаш қайди | Запись о прививке |
+| `uz-emlash-qaydi.aciklama` | Bitta emlashni siz kiritgandek qayd etadi: vaksina nomi, doza raqami, sana va maʼlumot manbai. Vosita emlash kalendarini bilmaydi va hech narsa taklif qilmaydi. | Битта эмлашни сиз киритгандек қайд этади: вакцина номи, доза рақами, сана ва маълумот манбаи. Восита эмлаш календарини билмайди ва ҳеч нарса таклиф қилмайди. | Записывает одну прививку так, как вы её ввели: название вакцины, номер дозы, дата и источник сведений. Инструмент не знает календаря прививок и ничего не предлагает. |
+| `uz-emlash-qaydi.alanlar.vaksina` | Vaksina nomi | Вакцина номи | Название вакцины |
+| `uz-emlash-qaydi.alanlar.doza` | Doza raqami (ixtiyoriy) | Доза рақами (ихтиёрий) | Номер дозы (необязательно) |
+| `uz-emlash-qaydi.alanlar.sana` | Emlash sanasi | Эмлаш санаси | Дата прививки |
+| `uz-emlash-qaydi.alanlar.manba` | Maʼlumot manbai | Маълумот манбаи | Источник сведений |
+| `uz-emlash-qaydi.alanlar.keyingi` | Keyingi sana, oʻzingiz belgilaysiz (ixtiyoriy) | Кейинги сана, ўзингиз белгилайсиз (ихтиёрий) | Следующая дата, её назначаете вы (необязательно) |
+| `uz-emlash-qaydi.secenekler.manba.hujjat` | Emlash hujjati | Эмлаш ҳужжати | Документ о прививках |
+| `uz-emlash-qaydi.secenekler.manba.ogzaki` | Ogʻzaki maʼlumot (hujjatsiz) | Оғзаки маълумот (ҳужжатсиз) | Устные сведения (без документа) |
+| `uz-emlash-qaydi.sayilar.doza` | Doza raqami | Доза рақами | Номер дозы |
+| `uz-emlash-qaydi.bantlar.hujjat` | Emlash hujjati boʻyicha qayd etildi | Эмлаш ҳужжати бўйича қайд этилди | Записано по документу о прививках |
+| `uz-emlash-qaydi.bantlar.ogzaki` | Ogʻzaki maʼlumot boʻyicha qayd etildi (hujjat koʻrilmagan) | Оғзаки маълумот бўйича қайд этилди (ҳужжат кўрилмаган) | Записано по устным сведениям (документ не предъявлен) |
+| `uz-emlash-qaydi.uyarilar.keyingi_otgan` | Siz belgilagan keyingi sana oʻtgan. | Сиз белгилаган кейинги сана ўтган. | Назначенная вами следующая дата уже прошла. |
+| `uz-emlash-qaydi.tarihler.sana` | Emlash sanasi | Эмлаш санаси | Дата прививки |
+| `uz-emlash-qaydi.tarihler.keyingi` | Keyingi sana | Кейинги сана | Следующая дата |
+| `uz-emlash-qaydi.not` | Faqat qayd: vosita milliy emlash kalendarini oʻz ichiga olmaydi, vaksina yoki sana taklif qilmaydi va emlash kechikkanini aytmaydi. | Фақат қайд: восита миллий эмлаш календарини ўз ичига олмайди, вакцина ёки сана таклиф қилмайди ва эмлаш кечикканини айтмайди. | Только запись: инструмент не содержит национального календаря прививок, не предлагает ни вакцину, ни дату и не сообщает о пропущенной прививке. |
+| `unit.kg/m2` | kg/m² | кг/м² | кг/м² |
+| `unit.hafta` | hafta | ҳафта | нед. |
 
 ## Clinic accounts (2026-10-09, NOTYA-ULKE-KLINIK-01)
 

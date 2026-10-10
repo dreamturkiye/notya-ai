@@ -30,7 +30,8 @@ import { join, resolve } from 'node:path'
 import { sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { formBolumleri, formGorunumu, formIcerigiSorunlari, formSorulari, ROL_BOLUMU } from '@/lib/ulke/intake/sorular'
 import type { Soru } from '@/lib/ulke/intake/tipler'
-import { UZ_ROLLER } from '../rolAdlari'
+import { icerikAnahtari, rolunGibisi } from '@/lib/ulke/arayuz/rolIcerigi'
+import { UZ_ROLLER, UZ_ROL_TANIMLARI } from '../rolAdlari'
 import { UZ_FORM_YEREL_ICERIK, UZ_HASTA_FORMU } from './index'
 
 const KOK = resolve(__dirname, '../../../..')
@@ -82,7 +83,7 @@ function bicimTemiz(f: Form, v: string, yer: string) {
   if (f === 'ru') assert.doesNotMatch(v, /[A-Za-zʻʼўқғҳЎҚҒҲ]/, `ru/${yer} has a Latin or Uzbek-only letter: "${v}"`)
 }
 
-describe('Uzbekistan — the intake form: questions of the core set and of the 40 roles, in three forms', () => {
+describe('Uzbekistan — the intake form: questions of the core set and of the 42 roles, in three forms', () => {
   let FM: typeof import('../../uygulama/formMetinleri')
   let A: typeof import('@/lib/ulke/arayuz')
   before(async () => { FM = await import('../../uygulama/formMetinleri'); A = await import('@/lib/ulke/arayuz') })
@@ -106,7 +107,8 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
 
   it('LEAK TEST over every question, heading, option, help line, unit and the consent sentence, in all three forms', () => {
     const hepsi = butunMetinler()
-    assert.ok(hepsi.length >= 800, `only ${hepsi.length} texts were found`)
+    // 748 since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): the sets of the three roles the audit took out are gone; no text was added or reworded
+    assert.ok(hepsi.length >= 740, `only ${hepsi.length} texts were found`)
     for (const [yer, m] of hepsi) {
       assert.deepEqual(Object.keys(m).sort(), [...FORMLAR].sort(), `${yer}: exactly the three forms of this country`)
       for (const f of FORMLAR) bicimTemiz(f, m[f], yer)
@@ -157,46 +159,64 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
   })
 
   it('THE KIT\'S OWN CHECK finds nothing wrong with the content: types, keys, options, ranges, a set for every role', () => {
-    assert.deepEqual(formIcerigiSorunlari(UZ_HASTA_FORMU, UZ_ROLLER, FORMLAR), [])
+    // the roles only Uzbekistan has ask the questions of the role each behaves like: the kit is told which, as the pack check tells it
+    const gibiler = Object.fromEntries(UZ_ROL_TANIMLARI.flatMap((r) => { const g = rolunGibisi(UZ_ROL_TANIMLARI, r.anahtar); return g ? [[r.anahtar, g]] : [] }))
+    assert.deepEqual(Object.keys(gibiler).sort(), ['alerji-immunoloji', 'cocuk-norolojisi', 'damar-cerrahisi', 'diyetoloji', 'narkoloji', 'reproduktoloji', 'surdoloji'])
+    assert.deepEqual(formIcerigiSorunlari(UZ_HASTA_FORMU, UZ_ROLLER, FORMLAR, () => false, gibiler), [])
+    // without that table the kit would refuse the two sets kept under a key that is no role, and the seven roles without a set of their own
+    assert.equal(formIcerigiSorunlari(UZ_HASTA_FORMU, UZ_ROLLER, FORMLAR).length, 9)
   })
 
-  it('THE 40 ROLES, one by one: a set of its own, machine-written and read by no clinician, keys under the role\'s own mark, never another role\'s question', () => {
-    assert.equal(UZ_ROLLER.length, 40)
-    assert.deepEqual(Object.keys(UZ_HASTA_FORMU.roller).sort(), [...UZ_ROLLER].sort(), 'a set for each of the 40 roles, and for nothing else')
+  it('THE 42 ROLES, one by one: a set for each — its own, or that of the role it behaves like — machine-written and read by no clinician, keys under one mark, never another set\'s question', () => {
+    assert.equal(UZ_ROLLER.length, 42)
+    /** THE SET A ROLE REALLY ASKS: the kit's own rule (lib/ulke/intake/form.ts asks the same function). */
+    const setAnahtari = (rol: string) => icerikAnahtari(UZ_ROL_TANIMLARI, rol, UZ_HASTA_FORMU.roller)
+    // 37 sets for 42 roles: 35 under the role's own key, and the two kept for the doctor roles that behave like a key that is no role any more
+    const kendi = UZ_ROLLER.filter((r) => rolunGibisi(UZ_ROL_TANIMLARI, r) === null)
+    assert.equal(kendi.length, 35)
+    assert.deepEqual(Object.keys(UZ_HASTA_FORMU.roller).sort(), [...kendi, 'diyetisyen', 'odyoloji'].sort(), 'a set for each role that has its own, the two that are lent, and nothing else')
+    assert.deepEqual(Object.fromEntries(UZ_ROLLER.filter((r) => setAnahtari(r) !== r).map((r) => [r, setAnahtari(r)])), { 'damar-cerrahisi': 'kalp-damar-cerrahisi', 'alerji-immunoloji': 'dahiliye', reproduktoloji: 'kadin-hastaliklari-dogum', 'cocuk-norolojisi': 'noroloji', narkoloji: 'psikiyatri', diyetoloji: 'diyetisyen', surdoloji: 'odyoloji' })
+    for (const k of ['sac-ekimi', 'longevity', 'ergoterapi']) assert.equal(UZ_HASTA_FORMU.roller[k], undefined, `${k}: the set of a role the audit took out is still there`)
     const cekirdek = new Set(UZ_HASTA_FORMU.cekirdek.bolumler.flatMap((b) => b.sorular.map((q) => q.anahtar)))
     assert.equal(cekirdek.size, 23, 'the core questions')
     const isaretler = new Map<string, string>()
     const sahibi = new Map<string, string>()
     let toplam = 0
     for (const rol of UZ_ROLLER) {
-      const r = UZ_HASTA_FORMU.roller[rol]
+      const set = setAnahtari(rol)
+      assert.ok(set, `${rol}: no set`)
+      const r = UZ_HASTA_FORMU.roller[set!]
       assert.deepEqual(r.inceleme, { makineYazimi: true, klinisyen: null }, `${rol}: the set must say it is machine-written and unread`)
       assert.ok(r.sorular.length >= 4 && r.sorular.length <= 9, `${rol}: ${r.sorular.length} questions`)
-      toplam += r.sorular.length
+      // a set that two roles ask is counted, and held to its one mark, once
       // One mark per role, and every key of the role under it: a key can belong to one set only.
       const isaret = new Set(r.sorular.map((q) => q.anahtar.split('_')[0]))
       assert.equal(isaret.size, 1, `${rol}: keys under more than one mark: ${[...isaret].join(', ')}`)
       const m = [...isaret][0]
       assert.match(m, /^[a-z]{2}$/, `${rol}: mark "${m}"`)
-      assert.ok(!isaretler.has(m), `${rol}: the mark "${m}" is also ${isaretler.get(m)}'s`)
-      isaretler.set(m, rol)
-      for (const q of r.sorular) {
-        assert.ok(!cekirdek.has(q.anahtar), `${rol}.${q.anahtar} is a core key`)
-        assert.ok(!sahibi.has(q.anahtar), `${q.anahtar} is listed by ${rol} and by ${sahibi.get(q.anahtar)}`)
-        sahibi.set(q.anahtar, rol)
+      if (!isaretler.has(m) || isaretler.get(m) !== set) {
+        assert.ok(!isaretler.has(m), `${rol}: the mark "${m}" is also ${isaretler.get(m)}'s`)
+        isaretler.set(m, set!)
+        toplam += r.sorular.length
+        for (const q of r.sorular) {
+          assert.ok(!cekirdek.has(q.anahtar), `${rol}.${q.anahtar} is a core key`)
+          assert.ok(!sahibi.has(q.anahtar), `${q.anahtar} is listed by ${set} and by ${sahibi.get(q.anahtar)}`)
+          sahibi.set(q.anahtar, set!)
+        }
       }
       // A FORM of this role, for an adult and for a guardian, for each recorded sex and for none.
       for (const veli of [false, true]) for (const cinsiyet of ['female', 'male', ''] as const) {
-        const bolumler = formBolumleri(UZ_HASTA_FORMU, { rol, veli, cinsiyet })
+        // (a form is built for the SET's key: lib/ulke/intake/form.ts hands the kit's functions exactly that)
+        const bolumler = formBolumleri(UZ_HASTA_FORMU, { rol: set, veli, cinsiyet })
         const son = bolumler[bolumler.length - 1]
         assert.equal(son.anahtar, ROL_BOLUMU, `${rol}: the role's section comes last`)
         assert.equal(bolumler.filter((b) => b.anahtar === ROL_BOLUMU).length, 1)
         const kendi = new Set(r.sorular.map((q) => q.anahtar))
-        for (const q of formSorulari(UZ_HASTA_FORMU, { rol, veli, cinsiyet })) assert.ok(cekirdek.has(q.anahtar) || kendi.has(q.anahtar), `${rol}: the form holds "${q.anahtar}", which is ${sahibi.get(q.anahtar) ?? 'nobody'}'s`)
+        for (const q of formSorulari(UZ_HASTA_FORMU, { rol: set, veli, cinsiyet })) assert.ok(cekirdek.has(q.anahtar) || kendi.has(q.anahtar), `${rol}: the form holds "${q.anahtar}", which is ${sahibi.get(q.anahtar) ?? 'nobody'}'s`)
         assert.ok(son.sorular.length >= 3, `${rol}: only ${son.sorular.length} role question(s) on the ${veli ? 'guardian' : 'adult'} form (${cinsiyet || 'no sex recorded'})`)
         // Drawn in each form: every question has text, every choice its options, every number its unit and range.
         for (const f of FORMLAR) {
-          for (const b of formGorunumu(UZ_HASTA_FORMU, { rol, veli, cinsiyet }, f, BIRIMLER, { cm: 'cm', kg: 'kg', C: 'C' })) {
+          for (const b of formGorunumu(UZ_HASTA_FORMU, { rol: set, veli, cinsiyet }, f, BIRIMLER, { cm: 'cm', kg: 'kg', C: 'C' })) {
             assert.ok(b.baslik.length > 0, `${rol}/${f}: a section without a heading`)
             for (const q of b.sorular) {
               assert.ok(q.metin.length > 0, `${rol}/${f}/${q.anahtar}: no text`)
@@ -207,14 +227,18 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
         }
       }
     }
-    assert.equal(toplam, 228, 'the role questions of the 40 sets')
-    assert.equal(isaretler.size, 40)
+    // 228 questions in 40 sets until 2026-10-10; the three sets that left held 7, 7 and 5
+    assert.equal(toplam, 209, 'the role questions of the 37 sets')
+    assert.equal(isaretler.size, 37)
+    // A key that is no role any more gets no role section, though a set may still stand under it: the kit asks for a ROLE first.
+    for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) assert.equal(setAnahtari(k) !== null && UZ_ROLLER.includes(k), false, k)
     // A role the country does not have, and no role at all: the core questions only.
     for (const rol of ['pediatri-yok', 'toString', '__proto__', null]) assert.ok(formBolumleri(UZ_HASTA_FORMU, { rol, veli: false, cinsiyet: '' }).every((b) => b.anahtar !== ROL_BOLUMU), String(rol))
   })
 
   it('THE GUARDIAN FORM: begins with who is filling it in; the parents\' marital status is asked there only; an adult\'s habits and emergency contact are never asked about a child', () => {
-    for (const rol of UZ_ROLLER) {
+    for (const rolAnahtari of UZ_ROLLER) {
+      const rol = icerikAnahtari(UZ_ROL_TANIMLARI, rolAnahtari, UZ_HASTA_FORMU.roller)
       const cocuk = formBolumleri(UZ_HASTA_FORMU, { rol, veli: true, cinsiyet: '' })
       const yetiskin = formBolumleri(UZ_HASTA_FORMU, { rol, veli: false, cinsiyet: '' })
       assert.equal(cocuk[0].anahtar, 'toldiruvchi', `${rol}: the guardian form does not begin with who fills it in`)
@@ -303,7 +327,7 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
     for (const rol of UZ_ROLLER) {
       const satir = kayit.split('\n').find((x) => x.startsWith('| ') && x.includes(`| \`${rol}\` |`) && x.includes('| yes |'))
       assert.ok(satir, `${rol}: no status row`)
-      const n = UZ_HASTA_FORMU.roller[rol].sorular.length
+      const n = UZ_HASTA_FORMU.roller[icerikAnahtari(UZ_ROL_TANIMLARI, rol, UZ_HASTA_FORMU.roller)!].sorular.length
       assert.ok(satir!.endsWith(`| ${n} questions, machine-written, read by no clinician |`), `${rol}: the status row does not end with the intake status (${n} questions): …${satir!.slice(-90)}`)
     }
     // Every slot is a row, with who supplies it.

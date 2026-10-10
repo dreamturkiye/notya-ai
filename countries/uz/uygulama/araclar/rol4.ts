@@ -1,6 +1,7 @@
 /**
  * NOTYA-ULKE-ARACLAR-01 — Uzbekistan: ROLE TOOLS, fourth part, in the order of the pack's role list:
- * cardiovascular surgery (kalp-damar-cerrahisi), ear, nose and throat (kulak-burun-bogaz).
+ * cardiac surgery and vascular surgery (kalp-damar-cerrahisi, damar-cerrahisi: one specialty until the audit of
+ * 2026-10-10 split it), ear, nose and throat (kulak-burun-bogaz) with surdology (surdoloji).
  *
  * Every tool names the roles that see it. MACHINE-WRITTEN. AWAITS NATIVE REVIEW (see ./index.ts).
  */
@@ -37,7 +38,7 @@ const PARDA: Readonly<Record<string, Uc>> = {
   retrakte: u('nogʻora parda ichkariga tortilgan', 'ноғора парда ичкарига тортилган', 'барабанная перепонка втянута'),
   bombe: u('nogʻora parda boʻrtgan', 'ноғора парда бўртган', 'барабанная перепонка выбухает'),
   perforasyon: u('nogʻora pardada teshik bor', 'ноғора пардада тешик бор', 'перфорация барабанной перепонки'),
-  tup_var: u('ventilyatsion naycha bor', 'вентилятсион найча бор', 'установлена вентиляционная трубка'),
+  tup_var: u('ventilyatsion naycha bor', 'вентиляцион найча бор', 'установлена вентиляционная трубка'),
   seviye_hava_kabarcigi: u('parda ortida suyuqlik sathi yoki havo pufakchasi', 'парда ортида суюқлик сатҳи ёки ҳаво пуфакчаси', 'за перепонкой уровень жидкости или пузырёк воздуха'),
   degerlendirilemedi: u('nogʻora pardani baholab boʻlmadi', 'ноғора пардани баҳолаб бўлмади', 'барабанную перепонку оценить не удалось'),
 }
@@ -51,7 +52,8 @@ const HOLAT = { izlemde: u('Kuzatuvda', 'Кузатувда', 'Под наблю
 export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
   // ── cardiovascular surgery. Not for cardiology (no operation there) and not for the other surgical roles. ──
   {
-    anahtar: 'kalp-damar-preop', roller: ['kalp-damar-cerrahisi'],
+    // BOTH HALVES of the specialty the audit split (2026-10-10): cardiac surgery and vascular surgery.
+    anahtar: 'kalp-damar-preop', roller: ['kalp-damar-cerrahisi', 'damar-cerrahisi'],
     metin: {
       ad: u('Yurak-qon tomir operatsiyasidan oldingi nazorat roʻyxati', 'Юрак-қон томир операциясидан олдинги назорат рўйхати', 'Контрольный список перед сердечно-сосудистой операцией'),
       aciklama: u('Operatsiyadan oldingi xavfni baholash bandlari. Bajarilmagan dastlabki uch band kuzatuv vazifasi sifatida koʻrsatiladi. Doza yozilmaydi.', 'Операциядан олдинги хавфни баҳолаш бандлари. Бажарилмаган дастлабки уч банд кузатув вазифаси сифатида кўрсатилади. Доза ёзилмайди.', 'Пункты предоперационной оценки риска. Первые три невыполненных пункта показываются как задачи для контроля. Дозы не указываются.'),
@@ -62,7 +64,7 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'greft-yara-izlem', roller: ['kalp-damar-cerrahisi'],
+    anahtar: 'greft-yara-izlem', roller: ['kalp-damar-cerrahisi', 'damar-cerrahisi'],
     metin: {
       ad: u('Tomir grefti va jarohat kuzatuvi', 'Томир грефти ва жароҳат кузатуви', 'Наблюдение за сосудистым графтом и раной'),
       aciklama: u('Nima kuzatilayotgani, holati, sanasi va keyingi nazorat. Tashxis va dori dozasi yozilmaydi.', 'Нима кузатилаётгани, ҳолати, санаси ва кейинги назорат. Ташхис ва дори дозаси ёзилмайди.', 'Что наблюдается, его состояние, дата и следующий контроль. Диагноз и дозы препаратов не указываются.'),
@@ -76,7 +78,7 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'antikoagulan-vadeleri', roller: ['kalp-damar-cerrahisi'],
+    anahtar: 'antikoagulan-vadeleri', roller: ['kalp-damar-cerrahisi', 'damar-cerrahisi'],
     metin: {
       ad: u('Antitrombotik davo: nazorat sanalari', 'Антитромботик даво: назорат саналари', 'Антитромботическая терапия: даты контроля'),
       aciklama: u('Dori guruhi, keyingi nazorat va laboratoriya tekshiruvi sanasi. Dori nomi, doza va maqsad koʻrsatkich yozilmaydi.', 'Дори гуруҳи, кейинги назорат ва лаборатория текшируви санаси. Дори номи, доза ва мақсад кўрсаткич ёзилмайди.', 'Группа препарата, дата следующего контроля и лабораторного исследования. Название препарата, доза и целевой показатель не указываются.'),
@@ -101,7 +103,9 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
 
   // ── ear, nose and throat. Not for the audiology role of a clinic (its own registry) and not for neurology. ──
   {
-    anahtar: 'odyometri-pta', roller: ['kulak-burun-bogaz'],
+    // ALSO SURDOLOGY since the audit of 2026-10-10: the doctor's specialty of hearing, which the order places under
+    // otorhinolaryngology (it was an allied "audiologist" role with base tools only).
+    anahtar: 'odyometri-pta', roller: ['kulak-burun-bogaz', 'surdoloji'],
     metin: {
       ad: u('Tonal audiometriya: oʻrtacha eshitish boʻsagʻasi', 'Тонал аудиометрия: ўртача эшитиш бўсағаси', 'Тональная аудиометрия: средний порог слуха'),
       aciklama: u('0,5, 1, 2 va 4 kHz dagi havo oʻtkazuvchanligi boʻsagʻalarining oʻrtachasi, eshitish pasayishi darajasi, oldingi oʻlchovdan va ikkinchi quloqdan farqi.', '0,5, 1, 2 ва 4 кГц даги ҳаво ўтказувчанлиги бўсағаларининг ўртачаси, эшитиш пасайиши даражаси, олдинги ўлчовдан ва иккинчи қулоқдан фарқи.', 'Среднее порогов воздушной проводимости на 0,5, 1, 2 и 4 кГц, степень снижения слуха, изменение от прежнего измерения и разница со вторым ухом.'),
@@ -155,7 +159,7 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
   {
     anahtar: 'vertigo-notu', roller: ['kulak-burun-bogaz'],
     metin: {
-      ad: u('Bosh aylanishi: pozitsion sinamalar qaydi', 'Бош айланиши: позитсион синамалар қайди', 'Головокружение: запись позиционных проб'),
+      ad: u('Bosh aylanishi: pozitsion sinamalar qaydi', 'Бош айланиши: позицион синамалар қайди', 'Головокружение: запись позиционных проб'),
       aciklama: u('Oʻtkazilgan sinama va manyovrlar natijasi, nistagm xususiyatlari va markaziy sababga ishora qiluvchi belgilar. Tashxis va dori yozilmaydi.', 'Ўтказилган синама ва манёврлар натижаси, нистагм хусусиятлари ва марказий сабабга ишора қилувчи белгилар. Ташхис ва дори ёзилмайди.', 'Результаты проведённых проб и манёвров, характеристики нистагма и признаки, указывающие на центральную причину. Диагноз и препараты не указываются.'),
       alanlar: {
         dix_hallpike: u('Diks–Xollpayk sinamasi', 'Дикс–Холлпайк синамаси', 'Проба Дикса–Холлпайка'),
@@ -185,11 +189,11 @@ export const UZ_ROL_ARACLARI_4: readonly PaketAraci[] = [
       secenekler: { dix_hallpike: SINAMA_NATIJASI, supine_roll: SINAMA_NATIJASI, epley: SINAMA_NATIJASI, barbecue: SINAMA_NATIJASI, head_impulse: SINAMA_NATIJASI, romberg: SINAMA_NATIJASI },
       bantlar: {
         manevra_uygun: u('Markaziy sababga ishora qiluvchi belgi belgilanmagan', 'Марказий сабабга ишора қилувчи белги белгиланмаган', 'Признаки центральной причины не отмечены'),
-        manevra_uygun_degil: u('Markaziy sababga shubha: repozitsion manyovr mos emas', 'Марказий сабабга шубҳа: репозитсион манёвр мос эмас', 'Подозрение на центральную причину: репозиционный манёвр не показан'),
+        manevra_uygun_degil: u('Markaziy sababga shubha: repozitsion manyovr mos emas', 'Марказий сабабга шубҳа: репозицион манёвр мос эмас', 'Подозрение на центральную причину: репозиционный манёвр не показан'),
       },
       uyarilar: {
         santral_suphe: u('Markaziy sababga shubha: avval shoshilinch nevrologik baholash', 'Марказий сабабга шубҳа: аввал шошилинч неврологик баҳолаш', 'Подозрение на центральную причину: сначала неотложная неврологическая оценка'),
-        repozisyon_santral: u('Repozitsion manyovr markaziy belgi bilan birga qayd qilindi — sababini qaydga yozing', 'Репозитсион манёвр марказий белги билан бирга қайд қилинди — сабабини қайдга ёзинг', 'Репозиционный манёвр записан вместе с центральным признаком — укажите причину в записи'),
+        repozisyon_santral: u('Repozitsion manyovr markaziy belgi bilan birga qayd qilindi — sababini qaydga yozing', 'Репозицион манёвр марказий белги билан бирга қайд қилинди — сабабини қайдга ёзинг', 'Репозиционный манёвр записан вместе с центральным признаком — укажите причину в записи'),
         nistagmus_eksik: u('Musbat sinama bor, lekin nistagm xususiyati belgilanmagan', 'Мусбат синама бор, лекин нистагм хусусияти белгиланмаган', 'Есть положительная проба, но характеристика нистагма не отмечена'),
       },
       not: DOZASIZ,

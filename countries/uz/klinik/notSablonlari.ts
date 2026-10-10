@@ -1,7 +1,18 @@
 /**
- * NOTYA-UZ-BRANSLAR-01 — Uzbekistan: the NOTE TEMPLATE of each of the 40 roles. Which fields a note of that role has
- * beside the four shared sections, what each field is called in the three forms, and which local reference content
- * the template would need and does NOT have.
+ * NOTYA-UZ-BRANSLAR-01 — Uzbekistan: the NOTE TEMPLATE of each role. Which fields a note of that role has beside the
+ * four shared sections, what each field is called in the three forms, and which local reference content the
+ * template would need and does NOT have.
+ *
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — THE ROLE LIST IS UZBEKISTAN'S OWN NOW (./rolListesi.ts), and the templates
+ * follow it WITHOUT A NEW TEMPLATE BEING WRITTEN:
+ *   - a role only Uzbekistan has writes with the template of the role it BEHAVES LIKE (`gibi`; the rule is the
+ *     kit's, lib/ulke/arayuz/rolIcerigi.ts): vascular surgery with cardiac surgery's, allergology with therapy's,
+ *     reproductology with obstetrics and gynaecology's, paediatric neurology with neurology's, narcology with
+ *     psychiatry's, dietology with the dietitian's, surdology with the audiologist's. The template's KEY on a note is
+ *     the role's own. `diyetisyen` and `odyoloji` are no roles any more; their templates stay below as that content.
+ *   - the templates of the three roles that were taken out (hair transplantation, preventive and anti-ageing
+ *     medicine, occupational therapy) are gone, with the ten fields only they listed.
+ * No field was written, reworded or moved between roles by that job.
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  * MACHINE-BUILT. NO LOCAL REVIEWER YET. Every template here was put together by a machine from general knowledge
@@ -44,7 +55,7 @@
 import * as S from '@/lib/ulke/arayuz/notSablonu'
 import type { NotSablonVerisi } from '@/lib/ulke/arayuz/tipler'
 import { UZ_VELI_YASI } from '../ayarlar'
-import { uzAdDili, uzRolMu, UZ_ROL_TANIMLARI, UZ_ROLLER, type UcBicim } from './rolAdlari'
+import { uzAdDili, UZ_ROL_TANIMLARI, type UcBicim } from './rolAdlari'
 
 export type UzBolum = 's' | 'o' | 'a' | 'p'
 export const UZ_BOLUMLER: readonly UzBolum[] = ['s', 'o', 'a', 'p']
@@ -194,10 +205,6 @@ export const UZ_ALANLAR: Readonly<Record<string, UzAlan>> = {
   muscle_strength: alan('o', 'Mushak kuchi', 'Мушак кучи', 'Мышечная сила'),
   rehab_program: alan('p', 'Reabilitatsiya dasturi (muolajalar, mashqlar, seanslar soni)', 'Реабилитация дастури (муолажалар, машқлар, сеанслар сони)', 'Программа реабилитации (процедуры, упражнения, число сеансов)'),
   rehab_goals: alan('p', 'Reabilitatsiya maqsadlari', 'Реабилитация мақсадлари', 'Цели реабилитации'),
-  hair_loss_history: alan('s', 'Soch toʻkilishi anamnezi', 'Соч тўкилиши анамнези', 'Анамнез выпадения волос'),
-  scalp_exam: alan('o', 'Bosh terisi va soch koʻrigi', 'Бош териси ва соч кўриги', 'Осмотр кожи головы и волос'),
-  donor_area: alan('o', 'Donor soha bahosi', 'Донор соҳа баҳоси', 'Оценка донорской зоны'),
-  graft_plan: alan('p', 'Rejalashtirilgan usul va greftlar soni (aytilgani boʻyicha)', 'Режалаштирилган усул ва грефтлар сони (айтилгани бўйича)', 'Планируемый метод и число графтов (со слов врача)'),
   aftercare: alan('p', 'Muolajadan keyingi parvarish', 'Муолажадан кейинги парвариш', 'Уход после процедуры'),
   aesthetic_assessment: alan('o', 'Estetik baholash (soha, nisbatlar)', 'Эстетик баҳолаш (соҳа, нисбатлар)', 'Эстетическая оценка (зона, пропорции)'),
   skin_assessment: alan('o', 'Teri holati bahosi', 'Тери ҳолати баҳоси', 'Оценка состояния кожи'),
@@ -205,8 +212,6 @@ export const UZ_ALANLAR: Readonly<Record<string, UzAlan>> = {
   procedure_record: alan('p', 'Bajarilgan muolaja (vosita, soha, miqdor — aytilgani boʻyicha)', 'Бажарилган муолажа (восита, соҳа, миқдор — айтилгани бўйича)', 'Выполненная процедура (средство, зона, количество — со слов врача)'),
   skin_care: alan('p', 'Teri parvarishi boʻyicha tavsiyalar', 'Тери парвариши бўйича тавсиялар', 'Рекомендации по уходу за кожей'),
   body_composition: alan('o', 'Tana tarkibi va oʻlchovlar (aytilgan raqamlar)', 'Тана таркиби ва ўлчовлар (айтилган рақамлар)', 'Состав тела и измерения (названные цифры)'),
-  supplements: alan('s', 'Qabul qilinadigan qoʻshimchalar', 'Қабул қилинадиган қўшимчалар', 'Принимаемые добавки'),
-  prevention_plan: alan('p', 'Profilaktika rejasi', 'Профилактика режаси', 'План профилактики'),
   referral_diagnosis: alan('s', 'Yoʻllagan shifokor va yoʻllanma tashxisi', 'Йўллаган шифокор ва йўлланма ташхиси', 'Направивший врач и диагноз направления'),
   session_content: alan('p', 'Seansda bajarilgan ishlar', 'Сеансда бажарилган ишлар', 'Что выполнено на сеансе'),
   home_program: alan('p', 'Uy uchun mashqlar', 'Уй учун машқлар', 'Домашняя программа упражнений'),
@@ -218,10 +223,6 @@ export const UZ_ALANLAR: Readonly<Record<string, UzAlan>> = {
   food_intolerances: alan('s', 'Koʻtara olmaydigan mahsulotlar va cheklovlar', 'Кўтара олмайдиган маҳсулотлар ва чекловлар', 'Непереносимые продукты и ограничения'),
   nutrition_plan: alan('p', 'Ovqatlanish rejasi (aytilgani boʻyicha)', 'Овқатланиш режаси (айтилгани бўйича)', 'План питания (со слов специалиста)'),
   nutrition_goals: alan('p', 'Ovqatlanish boʻyicha maqsadlar', 'Овқатланиш бўйича мақсадлар', 'Цели по питанию'),
-  daily_activities: alan('o', 'Kundalik faoliyat koʻnikmalari bahosi', 'Кундалик фаолият кўникмалари баҳоси', 'Оценка навыков повседневной деятельности'),
-  hand_function: alan('o', 'Qoʻl funksiyasi va mayda motorika', 'Қўл функцияси ва майда моторика', 'Функция кисти и мелкая моторика'),
-  environment: alan('s', 'Uy va ish muhiti', 'Уй ва иш муҳити', 'Домашняя и рабочая среда'),
-  assistive_devices: alan('p', 'Yordamchi vositalar va moslashtirishlar', 'Ёрдамчи воситалар ва мослаштиришлар', 'Вспомогательные средства и адаптации'),
   noise_exposure: alan('s', 'Shovqin taʼsiri (ish, turmush)', 'Шовқин таъсири (иш, турмуш)', 'Воздействие шума (работа, быт)'),
   audiometry: alan('o', 'Audiometriya natijalari (aytilgan raqamlar)', 'Аудиометрия натижалари (айтилган рақамлар)', 'Результаты аудиометрии (названные цифры)'),
   tympanometry: alan('o', 'Timpanometriya natijalari (aytilgani boʻyicha)', 'Тимпанометрия натижалари (айтилгани бўйича)', 'Результаты тимпанометрии (со слов специалиста)'),
@@ -229,7 +230,10 @@ export const UZ_ALANLAR: Readonly<Record<string, UzAlan>> = {
   balance_complaint: alan('s', 'Bosh aylanishi va muvozanat', 'Бош айланиши ва мувозанат', 'Головокружение и равновесие'),
 }
 
-/** The fields of each role's note, in the order they are asked for and shown. All 40 roles are written out: there is no default. */
+/**
+ * The fields of each role's note, in the order they are asked for and shown. Every template is written out: there is
+ * no default. A role that is not listed finds its template through the role it behaves like (see the top of the file).
+ */
 export const UZ_ROL_ALANLARI: Readonly<Record<string, readonly string[]>> = {
   'acil-tip': ['arrival_mode', 'event_time', 'consciousness', 'vital_signs', 'emergency_actions', 'disposition'],
   'aile-hekimligi': ['chronic_conditions', 'regular_medicines', 'family_history', 'lifestyle', 'vital_signs', 'referrals'],
@@ -261,15 +265,12 @@ export const UZ_ROL_ALANLARI: Readonly<Record<string, readonly string[]>> = {
   uroloji: ['urinary_symptoms', 'urine_changes', 'sexual_function', 'urologic_exam', 'ultrasound_findings', 'lab_results', 'procedures_done'],
   'spor-hekimligi': ['sport_activity', 'injury_mechanism', 'musculoskeletal_exam', 'functional_tests', 'weight_bearing', 'return_to_sport'],
   'fizik-tedavi': ['functional_status', 'pain_description', 'musculoskeletal_exam', 'range_of_motion', 'muscle_strength', 'rehab_program', 'rehab_goals'],
-  'sac-ekimi': ['hair_loss_history', 'patient_expectation', 'scalp_exam', 'donor_area', 'graft_plan', 'consent_discussion', 'aftercare'],
   'estetik-cerrahi': ['patient_expectation', 'surgical_history', 'aesthetic_assessment', 'photo_note', 'surgery_plan', 'consent_discussion', 'aftercare'],
   'medikal-estetik': ['patient_expectation', 'prior_aesthetic', 'allergies', 'skin_assessment', 'photo_note', 'procedure_record', 'consent_discussion', 'aftercare'],
   'klinik-dermatoloji': ['onset_course', 'lesion_description', 'lesion_location', 'skin_assessment', 'photo_note', 'procedure_record', 'skin_care'],
-  longevity: ['lifestyle', 'sleep', 'family_history', 'supplements', 'body_composition', 'lab_results', 'prevention_plan'],
   fizyoterapi: ['referral_diagnosis', 'functional_status', 'pain_description', 'range_of_motion', 'muscle_strength', 'session_content', 'home_program'],
   'klinik-psikolog': ['session_themes', 'mood', 'social_context', 'risk_statements', 'observed_behavior', 'interventions', 'homework'],
   diyetisyen: ['referral_diagnosis', 'diet_history', 'food_intolerances', 'weight_change', 'weight_height', 'body_composition', 'nutrition_plan', 'nutrition_goals'],
-  ergoterapi: ['referral_diagnosis', 'functional_status', 'environment', 'daily_activities', 'hand_function', 'session_content', 'assistive_devices', 'rehab_goals'],
   odyoloji: ['referral_diagnosis', 'hearing_complaint', 'noise_exposure', 'balance_complaint', 'audiometry', 'tympanometry', 'hearing_aid'],
 }
 
@@ -285,8 +286,11 @@ const YAS_ALANLARI: Readonly<Record<string, UzAlan>> = {
   [UZ_VASIY_ALANI]: alan('s', 'Anamnezni kim bergani (ota-onasi yoki qonuniy vakili)', 'Анамнезни ким бергани (ота-онаси ёки қонуний вакили)', 'Кто сообщил анамнез (родители или законный представитель)'),
 }
 
-/** Roles whose patients are children: only there does an UNKNOWN age count as "under 18". */
-const BOLALAR_ROLLARI: readonly string[] = ['pediatri', 'cocuk-cerrahisi']
+/**
+ * Roles whose patients are children: only there does an UNKNOWN age count as "under 18". Paediatric neurology
+ * (added 2026-10-10) is one by its name in the order, "Bolalar nevrologiyasi".
+ */
+const BOLALAR_ROLLARI: readonly string[] = ['pediatri', 'cocuk-cerrahisi', 'cocuk-norolojisi']
 
 /**
  * A heading that belongs to some roles only: an allied professional's note has "the specialist's assessment" where
@@ -309,11 +313,14 @@ export const UZ_NOT_SABLONLARI: NotSablonVerisi = {
   bolumBasliklari: [{ taraf: 'klinik-muttefik', bolum: 'a', ad: MUTAXASSIS_BAHOSI }],
 }
 
-/** true = a template a note can be written with: the general one, or one of the 40 roles. */
+/** true = a template a note can be written with: the general one, or a role of the pack. */
 export const uzSablonMu = (ham: unknown): ham is string => S.sablonMu(UZ_NOT_SABLONLARI, UZ_ROL_TANIMLARI, ham)
 
-/** Templates, the general one first (the default of an account without a role), then the 40 roles in the owner's order. */
-export const UZ_SABLONLAR: readonly string[] = [UZ_GENEL_SABLON, ...UZ_ROLLER.filter((r) => r in UZ_ROL_ALANLARI)]
+/** Templates, the general one first (the default of an account without a role), then every role in the pack's order: each has a template, its own or that of the role it behaves like. */
+export const UZ_SABLONLAR: readonly string[] = S.sablonlar(UZ_NOT_SABLONLARI, UZ_ROL_TANIMLARI)
+
+/** The fields of a ROLE's template, in order: its own list, or the list of the role it behaves like. None = []. */
+export const uzRolSablonAlanlari = (rol: string): readonly string[] => S.rolSablonAlanlari(UZ_NOT_SABLONLARI, UZ_ROL_TANIMLARI, rol)
 
 /** Under 18 on the day of the visit. An unknown age is not a child — except in a role whose patients are children. */
 export function uzResitDegilMi(sablon: string, dogumTarihi: string | null | undefined, muayeneTarihi: string | null | undefined): boolean {
@@ -396,7 +403,6 @@ const EKSIK: Readonly<Record<string, string>> = {
   prohibited_list: 'Anti-doping prohibited list reference',
   functional_scales: 'Functional independence and disability scales in validated local wording',
   disability_assessment: 'Medical-social (disability) assessment forms',
-  hair_loss_scale: 'Hair loss classification scale in local use',
   procedure_consent_form: 'Consent form for an aesthetic procedure as required by law',
   registered_products: 'Injectable products and devices registered in Uzbekistan',
   scope_of_practice: 'What this allied profession may record and decide without a doctor under Uzbek law',
@@ -436,23 +442,25 @@ const ROL_YUVALARI: Readonly<Record<string, readonly string[]>> = {
   uroloji: ['symptom_questionnaires'],
   'spor-hekimligi': ['clearance_form', 'prohibited_list'],
   'fizik-tedavi': ['functional_scales', 'disability_assessment'],
-  'sac-ekimi': ['hair_loss_scale', 'procedure_consent_form'],
   'estetik-cerrahi': ['procedure_consent_form'],
   'medikal-estetik': ['registered_products', 'procedure_consent_form'],
   'klinik-dermatoloji': ['registered_products', 'severity_indices'],
-  longevity: ['lab_reference_ranges', 'screening_programme'],
   fizyoterapi: ['functional_scales', 'scope_of_practice'],
   'klinik-psikolog': ['psychological_tests', 'scope_of_practice'],
-  diyetisyen: ['nutrient_reference', 'growth_standard', 'scope_of_practice'],
-  ergoterapi: ['functional_scales', 'scope_of_practice'],
-  odyoloji: ['hearing_loss_grading', 'newborn_hearing_screening', 'scope_of_practice'],
+  // dietology and surdology are doctors' specialties since 2026-10-10: the question of an allied profession's scope no longer applies
+  diyetoloji: ['nutrient_reference', 'growth_standard'],
+  surdoloji: ['hearing_loss_grading', 'newborn_hearing_screening'],
 }
 
 const yuva = (anahtar: string, eksik: string): UzYerelYuva => ({ anahtar, acik: false, icerik: null, eksik, kimden: 'a local clinician' })
 
-/** Per role: the reference content its template would need. Empty and off, every one. */
+/**
+ * Per role: the reference content its template would need. Empty and off, every one. A role that writes with the
+ * template of the role it behaves like (./rolListesi.ts → `gibi`) needs what that template needs, unless it is listed
+ * above itself.
+ */
 export const UZ_YEREL_ICERIK: Readonly<Record<string, readonly UzYerelYuva[]>> = Object.fromEntries(
-  Object.entries(ROL_YUVALARI).map(([rol, anahtarlar]) => [rol, anahtarlar.map((a) => yuva(a, EKSIK[a]))]),
+  UZ_ROL_TANIMLARI.map((rol) => [rol.anahtar, (ROL_YUVALARI[rol.anahtar] ?? ROL_YUVALARI[rol.gibi ?? ''] ?? []).map((a) => yuva(a, EKSIK[a]))]),
 )
 
 /** Needed by every role alike, so listed once. Empty and off as well. */

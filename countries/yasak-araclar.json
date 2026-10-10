@@ -1,5 +1,15 @@
 {
   "aciklama": "TOOLS THAT ARE ONE COUNTRY'S ALONE, per owning country, by key. Two kinds: a tool bound to that country's state or payer system (for Türkiye: the last route segment it has in the pre-split application; source docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md, verdict Remove), and — since NOTYA-ULKE-OZEL-01 — any tool, link-out tile or placeholder that only that country's pack has; such a key carries the country's code in front (\"ca-…\"). A key listed here exists in NO OTHER country's build: not as a tool of the country kit (lib/ulke/araclar/), not in another pack, not in a language set, not as a route. Enforced by scripts/ulke-duvarlari.mjs, rule D7, before every country build; lib/ulke/ulkeyeOzel.paket.test.ts holds every pack's own keys to its list. A country adds its list under its own code. \"xx\" is the kit's test country (lib/ulke/testing/ornekUlke/): it is in no build, and listing its keys here is what proves that no real pack, language set or kit file names one.",
+  "au": [
+    "au-body-size",
+    "au-mental-health-screen",
+    "au-oncology-grading"
+  ],
+  "gb": [
+    "gb-four-at",
+    "gb-fracture-risk-link",
+    "gb-valproate-forms"
+  ],
   "tr": [
     "sgk-medula",
     "enabiz",
@@ -17,6 +27,24 @@
     "roma-biyolojik-sut",
     "bekleyen-konsultasyonlar",
     "kayit-kvkk"
+  ],
+  "ca": [
+    "ca-egfr-ckd-epi-2021",
+    "ca-unit-converter"
+  ],
+  "us": [
+    "us-blood-sugar-ranges",
+    "us-bmi",
+    "us-ecog-performance-status",
+    "us-egfr-ckd-epi-2021",
+    "us-fall-risk-screen",
+    "us-pack-years",
+    "us-phq-9"
+  ],
+  "uz": [
+    "uz-emlash-qaydi",
+    "uz-homiladorlik-muddati",
+    "uz-tana-vazni-indeksi"
   ],
   "xx": [
     "xx-erken-uyari",

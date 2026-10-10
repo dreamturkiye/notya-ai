@@ -13,6 +13,8 @@ export const GB_SIZINTI_TERIMLERI: readonly SizintiTerimi[] = [
   KELIME('NHS'), KELIME('GBP'), KELIME('MHRA'), KELIME('GMC'), KELIME('CQC'), parca('£'),
   parca('United Kingdom'), parca('Great Britain'), parca('England'), parca('Scotland'), parca('Northern Ireland'),
   parca('UK time'),
+  // the identifiers of Scotland and of Northern Ireland, named on this pack's patient form (localisation audit of 2026-10-09)
+  parca('CHI number'), parca('H&C number'),
 ]
 
 /** English is written in plain Latin letters: no letter marks this country. */

@@ -186,7 +186,8 @@ describe('1. roles of its own', () => {
     assert.match(rolTablosuSorunlari(t, XX, 'en', ROLLER, XX_ARAYUZ.roller.map((r) => (r.anahtar === 'xx-nurse' ? { ...r, taraf: 'doktor' as const } : r))).join('\n'), /"xx-nurse" is "doktor" in the pack and "klinik-muttefik" in the table/)
     assert.match(rolTablosuSorunlari(t, XX, 'en', ROLLER, XX_ARAYUZ.roller.map((r) => (r.anahtar === 'xx-geriatrics' ? { ...r, gibi: 'cardiology' } : r))).join('\n'), /"xx-geriatrics" behaves like "cardiology" in the pack and like "internal-medicine" in the table/)
     assert.match(rolTablosuSorunlari(t, XX, 'en', ROLLER, XX_ARAYUZ.roller.map((r) => (r.anahtar === 'cardiology' ? { ...r, gibi: 'neurology' } : r))).join('\n'), /"cardiology" behaves like "neurology" in the pack; the table does not list it as a role of the country's own/)
-    assert.match(rolTablosuSorunlari(t, 'gb', 'en', ROLLER, XX_ARAYUZ.roller).join('\n'), /gb: the pack's roles are not the column "en" of the table/, 'a country the table does not list must have exactly its column')
+    // 'zz' is a code no country has: a real country (gb, us, …) may be listed in the table as having roles of its own
+    assert.match(rolTablosuSorunlari(t, 'zz', 'en', ROLLER, XX_ARAYUZ.roller).join('\n'), /zz: the pack's roles are not the column "en" of the table/, 'a country the table does not list must have exactly its column')
   })
 })
 

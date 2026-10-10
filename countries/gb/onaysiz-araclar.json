@@ -1,0 +1,42 @@
+{
+  "aciklama": "UNITED KINGDOM — NEW TOOLS THAT ARE SWITCHED ON WITHOUT A CLINICIAN'S SIGN-OFF. By the owner's order of 2026-10-10 (\"Bring on all the tools built for the new 6 countries now. We will test as we go.\") every tool this country built for itself ships switched on. This is the list a clinician of the United Kingdom works through: for each tool, open the source named here, check the tool against it, and sign. A tool leaves the list when `klinisyen` names who signed it and when. A test (countries/gb/gb-araclar.test.ts) holds this list to the pack exactly: every tool of the country's own that is switched on is listed here, and nothing else is. The shared tools of the kit are not on this list; the dose calculator, switched back on the same day by the same order, is named under \"ayrica\".",
+  "araclar": [
+    {
+      "anahtar": "gb-four-at",
+      "ad": "4AT: rapid assessment test for delirium",
+      "kimGorur": "every doctor role (not the allied professions)",
+      "acildi": "2026-10-10",
+      "kaynak": "the authors' own site, opened 2026-10-10: https://www.the4at.com/userguide (items and scores), https://www.the4at.com/4at-faq (the three categories of the total), https://www.the4at.com/4atcases (six worked cases: the tool's tests)",
+      "lisans": "free: Creative Commons Attribution 4.0, read on https://www.the4at.com/attribution; the attribution for an adapted version stands under every result",
+      "klinisyeninBakacagi": "the shortened labels of the four items against the official test; whether the tool should be limited to adult patients",
+      "klinisyen": null
+    },
+    {
+      "anahtar": "gb-fracture-risk-link",
+      "ad": "Fracture risk: the FRAX calculator (link)",
+      "kimGorur": "every doctor role (not the allied professions)",
+      "acildi": "2026-10-10",
+      "kaynak": "the owner's calculator page, opened 2026-10-10: https://www.fraxplus.org/calculation-tool",
+      "lisans": "a link only: nothing of FRAX is in the product. The owner's pages state no terms about linking; whether a link from a commercial product needs the owner's word is for the lawyer",
+      "klinisyeninBakacagi": "whether the national calculator a doctor here expects is reached from this page",
+      "klinisyen": null
+    },
+    {
+      "anahtar": "gb-valproate-forms",
+      "ad": "Valproate: risk acknowledgement form and annual review",
+      "kimGorur": "Neurology, General psychiatry, Child and adolescent psychiatry, General practice",
+      "acildi": "2026-10-10",
+      "kaynak": "Medicines and Healthcare products Regulatory Agency, \"Valproate – reproductive risks\", GOV.UK, last updated 23 September 2025, opened 2026-10-10: https://www.gov.uk/guidance/valproate-reproductive-risks",
+      "lisans": "free: the page's own notice (Open Government Licence v3.0); no form is reproduced",
+      "klinisyeninBakacagi": "that \"one year after the form was last completed\" is how the annual review is counted in practice; what applies to patients of 55 and over (not read); whether old age psychiatry and paediatrics should see it",
+      "klinisyen": null
+    }
+  ],
+  "ayrica": [
+    {
+      "anahtar": "doz-hesabi",
+      "ad": "Dose arithmetic by body weight (a tool of the shared kit)",
+      "not": "switched back on for this country on 2026-10-10 by the same order, after its fault was corrected in the kit (pull request #615). No clinician of the United Kingdom has read it. Seen by Paediatrics only."
+    }
+  ]
+}
