@@ -173,8 +173,8 @@ The pack check (`node scripts/ulke-paket-denetimi.mjs --ulke <code>`) refuses: a
 Built once in the kit (NOTYA-ULKE-ARACLAR-01, 2026-10-09); a country fills it in. One address, `/tools`: the grid of the account's role, and `/tools?arac=<key>` for one tool.
 
 - **A tool is two halves that meet by key.** The kit holds the mechanism (`lib/ulke/araclar/katalog.ts`): the fields, pure arithmetic that returns numbers and keys only, and the citation of the published source. The pack holds everything a doctor reads, and **who sees the tool** (`countries/<code>/uygulama/araclar.ts`, or a folder as Uzbekistan has).
-- **Classify before adding.** Every entry says `roller: null` (a base tool: every role) or names the roles that see it. The pack check refuses a tool that is not classified, a key the kit does not have, and a missing word in any language form. The grid and the address ask the same gate, so a tool that is not on an account's grid does not open from its address, and the server does not keep its result.
-- **No tool of another country's state or payer system exists in the kit.** `countries/yasak-araclar.json` lists them, and wall rule D7 (`scripts/ulke-duvarlari.mjs`) stops the kit, any pack and any country route from naming one.
+- **Classify before adding.** Every entry says `roller: null` (a base tool: every role) or names the roles that see it; a tool of every doctor role says `sinif: 'hekimler'` ("Country-only tools and roles", below). The pack check refuses a tool that is not classified, a key the kit does not have, and a missing word in any language form. The grid and the address ask the same gate, so a tool that is not on an account's grid does not open from its address, and the server does not keep its result.
+- **No tool of another country's state or payer system exists in the kit.** `countries/yasak-araclar.json` lists them per country, with every tool only one country has, and wall rule D7 (`scripts/ulke-duvarlari.mjs`) stops the kit, any other pack, any language set and any country route from naming one.
 - **No national reference content is written by a machine.** A tool that needs a vaccination calendar, a drug register, a dosing table, a protocol, a reference range or a legal form is a **slot** in the pack (`yuvalar`): empty, switched off, saying what is missing and who supplies it. A published questionnaire is a slot too: its wording belongs to its authors.
 - **Numbers the country decides.** Some mechanisms leave a threshold or an interval to the country (`parametreler`). The kit holds none of these numbers; a pack that switches such a tool on must state each one, and until a local clinician does, the tool stays a slot with `mekanizmaHazir: true`.
 - **The kit proposes no follow-up day of its own.** Wherever the pre-split application adds days or months to a date, the kit has an empty date field the doctor fills in. An interval is clinical guidance of a country.
@@ -182,6 +182,51 @@ Built once in the kit (NOTYA-ULKE-ARACLAR-01, 2026-10-09); a country fills it in
 - **Keeping a result (migration 139).** A tool stores nothing by itself. Opened from a patient's file, it offers "keep in this patient's file" with an optional follow-up day. The browser sends the form as typed; the server works the result out again and keeps its own, as one encrypted value. The patient's file lists what was kept. The follow-up list (`takip-paneli`) is a role tool: give it to every role that has a tool whose result can be kept, and to no other.
 - **A new country starts with three base tiles** that hold no clinical content (the patient's page, "my templates", consultations) and the area's own words: 54 texts, 3 texts for each tile and one setting (who wrote and who read the tool texts).
 - **Two scripts.** Where a language has two scripts and one is derived from the other, store the derived text static and mark it. Uzbekistan's rule is `scripts/uz-kiril.mjs` (country tooling only; no build runs it), and its test holds every stored text to the rule.
+
+## Country-only tools and roles
+
+Built once in the kit (NOTYA-ULKE-OZEL-01, 2026-10-10), after six country audits reported the same limit: a country could only switch a shared tool off, reword it or rename a unit. The rule this section serves (Kaan): **a change to the core reaches every country; a country's own change affects that country only; a fault in one country never affects another.**
+
+Every point below is used by ONE country, in its own folder. Nothing here is a default, and **no real country uses any of it yet**: on the day it was built, every country showed exactly the roles, tools, names, numbers and results it showed the day before. The worked example is the kit's test country `xx` (`lib/ulke/testing/ornekUlke/`): a complete pack that uses every point, exists in no build, and holds invented test data only. Read its `ayarlar.ts` to see how a country writes each of these.
+
+**1. Roles of its own.** A pack's role list is its own: it may add, rename, remove, split or merge doctor roles and clinic roles.
+
+- A role only this country has says which role it **behaves like** (`gibi` on the role). It then writes its notes with that role's template and asks that role's intake questions, under its own name and its own key. Where the country supplies a template or a question set under the role's own key, its own is used instead. A split is two new roles that behave like the one removed; a merge is one new role that behaves like one of the two. Tools are never inherited: each tool names its roles.
+- A country of a shared language states only the difference from the set: `roller: { cikar: [...], ekle: [...] }` in its `ayarlar.ts`, and `roller: enRolAnahtarlari(<that object>)` in its `index.ts` (`countries/_dil/en/klinik/roller.ts`). Uzbekistan's lists are its own files; they are no longer typed by Türkiye's specialty keys, so a specialty added in Türkiye can no longer stop another country's build.
+- `countries/rol-eslemesi.json` keeps the forty shared roles and gains `ulkeyeOzel`: per country, the shared roles it dropped and the roles it added, each with the role it behaves like. Tests hold every pack to the table, so a core fix can still be traced to every country.
+- **No database change is needed.** A role is stored as text; the database checks only its form (lower-case words joined by hyphens, at most 60 characters), and the pack check now refuses a key the database would refuse.
+
+**2. A tool catalogue of its own.** A pack can:
+
+- **bring a tool only it has**: the arithmetic in its own folder (`kendiAraclari`), or an empty placeholder. The key begins with the country's code (`ca-...`);
+- **change who sees a shared tool** (a country of a shared language: `araclar.gorenler`; any other pack writes its own role list);
+- **give a tool to every doctor role**: `sinif: 'hekimler'`. "Base" (`roller: null`) still means every role, the allied professions included;
+- **rename a tool and relabel anything on its screen** (a country of a shared language: `araclar.degisen`), and **change how many bands or steps it has** (`uyarlama`): its own table of bands over one number of the result, and its own list of choices for a field. The kit allows this only where nothing else in the result depends on it: it marks such a tool `bantSerbest` and such a field `secenekSerbest`. **No tool of the kit is marked yet**: marking one means reading its arithmetic, which belongs to the job that corrects the tools. Until then a country that needs another number of bands closes the shared tool and brings its own;
+- **switch on a kit tool the shared language set has not written**, by bringing its words and its numbers (`araclar.ek`).
+
+**3. Numbers with their units.** The kit works in one unit per quantity; a country states its numbers in its own.
+
+- A threshold that is a laboratory value is stated **with its unit** (`{ deger: 110, birim: 'g/L' }`) and converted with the exact factor before anything is compared. Where the kit says a number is a laboratory value (`parametreOlculeri`), a bare number is refused. **No tool of the kit says so yet**, for the same reason as above.
+- **A quantity may have more than one accepted unit** (`labBirimleri: { hemoglobin: ['g/L', 'g/dL'] }`). The doctor then chooses the unit beside the field; nothing is chosen for them. **A number without its unit gives no result**, also in an optional field: a missing input is never read as a reassuring one. This works for the kit's shared tools today (haemoglobin, the albumin-to-creatinine ratio, creatinine, glucose, cholesterol).
+- A conversion may be a factor, or a factor and a shift (two scales of one measurement). A country's own tool may read a quantity of its own (`olculer`).
+- **A table**, not only single numbers (`tablolar`): a tool says which columns it needs; the pack supplies the rows, with the unit of each laboratory column. A country's table of bands must cover every value: its last row has no upper limit.
+
+**4. Tools by the patient's age and sex**, beside the role (`hasta: { enAzYas, enCokYas, cinsiyet }`, with the sentence that says who the tool is for). Opened from a patient's file, a tool that is not for that patient is not on the grid, shows only that sentence, and keeps nothing. **An unknown birth date or sex never opens such a tool for that patient.** Opened without a patient, the tool shows the sentence above its fields.
+
+**5. Licence state on every tool and placeholder** (`lisans`): free, permission needed, paid, unclear, or permission granted, with the rights holder and where the terms were read.
+
+- **A tool whose licence is not "free" or "permission granted" cannot be switched on**: the pack check refuses the build, and the screen and the server refuse it a second time. It stays a placeholder that says what is missing.
+- A rights holder's notice (`bildirim`) stands under every result of the tool and in the summary that is copied.
+- **A link-out tile** (`baglanti`) only opens an official calculator elsewhere: an `https` address fixed in the pack, nothing of the patient in it, nothing kept.
+- A new country (`lisansTam: true`, written by the scaffold) must state the licence of every tool and placeholder. **The six existing countries do not state it yet for the shared tools**, and are listed in `countries/lisans-borcu.json`, a list that can only shrink: stating a licence means somebody has read the instrument's terms, and no machine may write "free" on a guess.
+
+**6. One country's tools stay in that country.** `countries/yasak-araclar.json` lists, per country, the tools that are that country's alone: its state and payer tools, and any tool, link-out tile or placeholder only it has. Three locks: wall rule D7 stops every other country, every language set and the kit from naming a listed key, before every country build; the pack check refuses a key that carries another country's code; a test holds every pack's own keys to the list. The test country's keys are on the list, which is what proves that no real pack names one.
+
+**Five tools of the kit are off in every country by the owner's order (Kaan, 2026-10-10: "Switch off the risky tools").** The dose calculator (`doz-hesabi`), the ESI triage tool (`esi-triyaj`), the report outline that prints the BI-RADS categories (`rapor-taslagi`) and both kidney tools (`kdigo-evre`, `kdigo-serit`). The audits of the tools against national sources confirmed a fault or a licence problem in each. A pack keeps each as a placeholder, the usual way (a country of a shared language: `araclar.kapali`; Uzbekistan: `uygulama/araclar/yuvalar.ts`), and states the licence of the ESI tool and of the report outline as "permission needed" (`izin-gerekli`), so the pack check refuses them as well. `lib/ulke/araclar/kapaliAraclar.paket.test.ts` names the five and fails for any country that switches one on, a new country included. A tool comes back when its fault is corrected in the kit (job NOTYA-ULKE-ARAC-01b) or the rights holder's permission is recorded, with the owner's word, and leaves that test's list in the same change. Nothing of the tools themselves was changed: arithmetic, words and roles are as they were.
+
+What each field is: the top of `lib/ulke/araclar/tipler.ts`. What a new country gets from the scaffold: the three base tiles with their licence stated, `lisansTam: true`, and these points listed at the top of its `uygulama/araclar.ts`.
+
+**Not built** (each waits on the owner): a province or state setting below the country; a French language set; ethnicity or deprivation on the patient file; height in feet and inches; one tool's result as another tool's input. **Left for the job that corrects the tools** (clinical content): marking which kit tools allow a country's own bands and options, which kit thresholds are laboratory values, and the conversion for HbA1c and C-reactive protein (neither is a quantity of the kit yet).
 
 ## Messages, "my templates" and consultation between doctors
 
@@ -357,7 +402,7 @@ Each pack's own test proves that no text it shows, and no instruction it hands t
 
 ### Role keys
 
-All five countries share **one** set of 40 role keys, defined once (`countries/_dil/en/klinik/roller.ts`). `docs/COUNTRY-PACK-ROLE-KEYS.md` and `countries/rol-eslemesi.json` map each key to the Turkish product's key and to the Uzbek pack's key; `lib/ulke/rolEslemesi.test.ts` proves forty, none missing, none extra. The file is read by tests and scripts only.
+All five countries share **one** set of 40 role keys, defined once (`countries/_dil/en/klinik/roller.ts`). `docs/COUNTRY-PACK-ROLE-KEYS.md` and `countries/rol-eslemesi.json` map each key to the Turkish product's key and to the Uzbek pack's key; `lib/ulke/rolEslemesi.test.ts` proves forty, none missing, none extra. The file is read by tests and scripts only. Since 2026-10-10 a country may differ from the forty and says so in its own folder and in that table ("Country-only tools and roles", above); today none does.
 
 ### Units are a clinical-safety matter
 

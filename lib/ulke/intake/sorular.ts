@@ -195,7 +195,7 @@ const ANAHTAR = /^[a-z][a-z0-9_]{0,59}$/
  * roles that exist. What it cannot check — whether a question is the right one to ask — is a clinician's, and is
  * recorded per set (`inceleme`).
  */
-export function formIcerigiSorunlari(icerik: HastaFormuIcerigi, rolAnahtarlari: readonly string[], diller: readonly string[], eksikMi: (m: string) => boolean = () => false): IcerikSorunu[] {
+export function formIcerigiSorunlari(icerik: HastaFormuIcerigi, rolAnahtarlari: readonly string[], diller: readonly string[], eksikMi: (m: string) => boolean = () => false, /** NOTYA-ULKE-OZEL-01 — role → the role it behaves like, for the roles only this country has. */ gibiler: Readonly<Record<string, string>> = {}): IcerikSorunu[] {
   const s: IcerikSorunu[] = []
   const ekle = (yer: string, sorun: string) => s.push({ yer, sorun })
   const metinVar = (m: BicimliMetin | undefined, yer: string, zorunlu = true) => {
@@ -266,13 +266,20 @@ export function formIcerigiSorunlari(icerik: HastaFormuIcerigi, rolAnahtarlari: 
   }
   for (const [rol, r] of Object.entries(icerik.roller ?? {})) {
     const y = `hastaFormu.roller.${rol}`
-    if (!rolAnahtarlari.includes(rol)) ekle(y, 'questions for a role the pack does not have')
+    // A set may also stand under the key of a role some role of the pack BEHAVES LIKE (a specialty the country split is no role any more; its questions are the two halves').
+    if (!rolAnahtarlari.includes(rol) && !Object.values(gibiler).includes(rol)) ekle(y, 'questions for a role the pack does not have')
     metinVar(r.baslik, `${y}.baslik`)
     metinVar(r.veliBasligi, `${y}.veliBasligi`, false)
     inceleme(r.inceleme, `${y}.inceleme`)
     sorular(r.sorular, y)
   }
   // Every role of the pack has a set of its own: a role without one would silently get a shorter form.
-  for (const rol of rolAnahtarlari) if (!sahip(icerik.roller ?? {}, rol)) ekle(`hastaFormu.roller.${rol}`, 'the role has no questions of its own (an empty form section is not a decision: list the role with at least one question)')
+  for (const rol of rolAnahtarlari) {
+    if (sahip(icerik.roller ?? {}, rol)) continue
+    // A role only this country has asks the questions of the role it behaves like, until it has a set of its own.
+    const gibi = sahip(gibiler, rol) ? gibiler[rol] : null
+    if (gibi && sahip(icerik.roller ?? {}, gibi)) continue
+    ekle(`hastaFormu.roller.${rol}`, gibi ? `the role behaves like "${gibi}", and neither has questions (list one of them with at least one question)` : 'the role has no questions of its own (an empty form section is not a decision: list the role with at least one question)')
+  }
   return s
 }

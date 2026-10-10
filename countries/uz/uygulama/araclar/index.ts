@@ -26,7 +26,7 @@
  *
  * Verdict per tool of the pre-split application, and what was done: docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md.
  */
-import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
+import type { PaketAraci, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { UZ_ARACLAR_METINLERI } from './metinler'
 import { UZ_TEMEL_ARACLAR } from './temel'
 import { UZ_ROL_ARACLARI_1 } from './rol1'
@@ -38,9 +38,23 @@ import { UZ_TAKIP_ARACLARI } from './takip'
 import { UZ_ARAC_BIRIMLERI, UZ_LAB_BIRIMLERI } from './birimler'
 import { UZ_ARAC_YUVALARI } from './yuvalar'
 
+/**
+ * NOTYA-ULKE-ARAC-01b — OFF BY KAAN'S ORDER OF 2026-10-10 ("Switch off the risky tools"): the dose calculator, the ESI
+ * triage tool, the report outline that prints the BI-RADS categories, and both kidney tools. Each is a SLOT now
+ * (./yuvalar.ts says why, and what its licence state is) and is taken off the list of switched-on tools below, so it
+ * is on no grid, does not open from its address, and the server keeps no result of it: exactly like every other slot.
+ *
+ * THEIR WORDS STAY in ./rol1.ts, ./rol2.ts and ./rol5.ts, marked there (machine-written, read by nobody yet), so that
+ * nothing has to be translated a second time the day a tool comes back. What makes a tool exist in the build is the
+ * list below, and they are not on it. A tool comes back by leaving this list AND ./yuvalar.ts — after its fault is
+ * corrected in the kit or its licence is granted; lib/ulke/araclar/kapaliAraclar.paket.test.ts fails until then.
+ */
+export const UZ_KAPALI_ARACLAR: readonly string[] = ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'doz-hesabi', 'rapor-taslagi']
+const acikOlanlar = (liste: readonly PaketAraci[]): PaketAraci[] => liste.filter((p) => !UZ_KAPALI_ARACLAR.includes(p.anahtar))
+
 export const UZ_ARACLAR: UlkeAraclari = {
   metinler: UZ_ARACLAR_METINLERI,
-  araclar: [...UZ_TEMEL_ARACLAR, ...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5, ...UZ_TAKIP_ARACLARI],
+  araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5]), ...UZ_TAKIP_ARACLARI],
   birimler: UZ_ARAC_BIRIMLERI,
   labBirimleri: UZ_LAB_BIRIMLERI,
   yuvalar: UZ_ARAC_YUVALARI,

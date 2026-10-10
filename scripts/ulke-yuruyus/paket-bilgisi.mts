@@ -49,7 +49,8 @@ const aracOrnegi = (() => {
     const t = x.tanim
     if (sayili && !t.alanlar.some((al) => al.tur === 'sayi' && !al.kosul)) continue
     // no date field (a sample's dates are fixed days), no laboratory unit, no number the country has to state
-    if (t.tur === 'ekran' || (t.parametreler ?? []).length || t.alanlar.some((al) => al.tur === 'tarih' || al.lab || al.olcu)) continue
+    // …nor a link-out tile, nor a tool that takes a table of the country's (NOTYA-ULKE-OZEL-01): the sample is filled in with nothing but the form
+    if (t.tur === 'ekran' || t.tur === 'baglanti' || (t.parametreler ?? []).length || (t.tablolar ?? []).length || x.paket.hasta || t.alanlar.some((al) => al.tur === 'tarih' || al.lab || al.olcu)) continue
     const g = ornekGirdiler(t).find((ornek) => t.hesapla(ornek, { bugun, p: {} }).tamam)
     if (!g) continue
     const ham = t.alanlar.filter((al) => g[al.anahtar] !== null && g[al.anahtar] !== false && g[al.anahtar] !== undefined).map((al) => ({ anahtar: al.anahtar, tur: al.tur, deger: g[al.anahtar] === true ? true : typeof g[al.anahtar] === 'number' ? String(g[al.anahtar]).replace('.', p.bicim.ondalikAyraci) /* typed the pack's way */ : String(g[al.anahtar]) }))

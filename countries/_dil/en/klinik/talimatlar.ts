@@ -142,7 +142,8 @@ export function enTalimatlar(g: EnKlinikGirdisi) {
   /** A role's own block: its name, and the list of ITS fields — key and label. */
   function rolBlogu(sablon: string): string | null {
     const rol = g.roller.find((r) => r.anahtar === sablon)
-    const alanlar = g.sablonlar.rolAlanlari[sablon]
+    // The role's own fields, or — for a role only this country has — those of the role it behaves like (the kit's one rule).
+    const alanlar = rol && S.sablonMu(g.sablonlar, g.roller, sablon) ? S.rolSablonAlanlari(g.sablonlar, g.roller, sablon) : undefined
     const ad = rol?.ad[g.bicim]
     if (!rol || !alanlar || !ad || sablon === g.sablonlar.genelSablon) return null
     const cerceve = rol.taraf === 'klinik-muttefik' ? yaz(T.muttefik) : yaz(T.hekim).replace('%', ad)
@@ -155,7 +156,7 @@ export function enTalimatlar(g: EnKlinikGirdisi) {
     if (sablon === g.sablonlar.genelSablon) return [...giris(), yaz(T.genel), yaz(T.cevap).replace('%', jsonKalibi([]))].join('\n\n')
     const blok = rolBlogu(sablon)
     // A role without a block has no instruction: its note is not written. Never another role's, never the general one's.
-    return blok ? [...giris(g.roller.find((r) => r.anahtar === sablon)), blok, yaz(T.rolCevabi).replace('%', jsonKalibi(g.sablonlar.rolAlanlari[sablon]))].join('\n\n') : null
+    return blok ? [...giris(g.roller.find((r) => r.anahtar === sablon)), blok, yaz(T.rolCevabi).replace('%', jsonKalibi(S.rolSablonAlanlari(g.sablonlar, g.roller, sablon)))].join('\n\n') : null
   }
 
   /** The message that carries the visit: age and sex (never a name or a number that identifies), then the transcript. */

@@ -11,6 +11,8 @@ import { BELGILANGAN_BANDLAR, BELGILANGAN_BELGILAR, DOZASIZ, KARAR, KEYINGI_NAZO
 export const UZ_ROL_ARACLARI_1: readonly PaketAraci[] = [
   // ── emergency medicine. Not for cardiology, neurology or family medicine: triage of an emergency department. ──
   {
+    // OFF BY KAAN'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b): a slot in ./yuvalar.ts, and not on the list of tools
+    // (./index.ts → UZ_KAPALI_ARACLAR). The words below are kept for the day the tool comes back; no screen shows them.
     anahtar: 'esi-triyaj', roller: ['acil-tip'],
     metin: {
       ad: u('ESI triaj darajasi', 'ESI триаж даражаси', 'Уровень триажа ESI'),

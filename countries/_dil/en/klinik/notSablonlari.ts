@@ -24,7 +24,7 @@
  */
 import type { NotAlani, NotBolumu, NotSablonVerisi } from '@/lib/ulke/arayuz/tipler'
 import { enYaz, type EnBicim } from '../varyant'
-import { EN_COCUK_ROLLERI, type EnRol } from './roller'
+import { EN_COCUK_ROLLERI, enCocukRolleri, enGibiRolleri, enRolSatirlari, type EnRol, type EnRolDegisimi } from './roller'
 
 const a = (bolum: NotBolumu, ad: string): { bolum: NotBolumu; ad: string } => ({ bolum, ad })
 
@@ -256,16 +256,35 @@ const VELI_ALANI_ADI = 'Who gave the history (parent or guardian)'
 /** An allied professional's note has "the professional's own assessment" where a doctor's has "assessment". */
 const MUTTEFIK_DEGERLENDIRMESI = 'Professional assessment'
 
-/** The templates as the DATA the country kit reads, in a country's form of English. */
-export function enNotSablonlari(bicim: EnBicim): NotSablonVerisi {
+/**
+ * The templates as the DATA the country kit reads, in a country's form of English.
+ *
+ * `degisim` (NOTYA-ULKE-OZEL-01) = where this country's role list differs from the shared forty. The templates then
+ * hold: every shared role the country keeps; every shared role one of its own roles BEHAVES LIKE (also where that
+ * role itself was taken out — the kit finds the template through `RolTanimi.gibi`); and, under the role's own key, the
+ * fields a role of the country's own brings. A country that states no difference gets exactly the forty.
+ */
+export function enNotSablonlari(bicim: EnBicim, degisim?: EnRolDegisimi): NotSablonVerisi {
   const alanlar: Record<string, NotAlani> = {}
   for (const [k, v] of Object.entries(EN_ALANLAR)) alanlar[k] = { bolum: v.bolum, ad: { [bicim]: enYaz(v.ad, bicim) } }
+  const satirlar = enRolSatirlari(degisim)
+  const kendi = satirlar.some((r) => r.ek) || satirlar.length !== Object.keys(EN_ROL_ALANLARI).length
+  let rolAlanlari: Readonly<Record<string, readonly string[]>> = EN_ROL_ALANLARI
+  if (kendi) {
+    // A field only this country has is named as the country wrote it; it never replaces a field of the set.
+    for (const [k, v] of Object.entries(degisim?.alanlar ?? {})) if (!(k in alanlar)) alanlar[k] = { bolum: v.bolum, ad: { [bicim]: v.ad } }
+    const tutulan = new Set<string>([...satirlar.filter((r) => !r.ek).map((r) => r.anahtar), ...enGibiRolleri(degisim)])
+    const yeni: Record<string, readonly string[]> = {}
+    for (const [rol, liste] of Object.entries(EN_ROL_ALANLARI)) if (tutulan.has(rol)) yeni[rol] = liste
+    for (const r of satirlar) if (r.ek?.sablon) yeni[r.anahtar] = r.ek.sablon
+    rolAlanlari = yeni
+  }
   return {
     genelSablon: EN_GENEL_SABLON,
     alanlar,
-    rolAlanlari: EN_ROL_ALANLARI,
+    rolAlanlari,
     veliAlani: { anahtar: EN_VELI_ALANI, tanim: { bolum: 's', ad: { [bicim]: enYaz(VELI_ALANI_ADI, bicim) } } },
-    cocukRolleri: EN_COCUK_ROLLERI,
+    cocukRolleri: kendi ? enCocukRolleri(degisim) : EN_COCUK_ROLLERI,
     bolumBasliklari: [{ taraf: 'klinik-muttefik', bolum: 'a', ad: { [bicim]: enYaz(MUTTEFIK_DEGERLENDIRMESI, bicim) } }],
   }
 }
