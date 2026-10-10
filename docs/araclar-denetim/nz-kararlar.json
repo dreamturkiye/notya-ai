@@ -1,0 +1,3002 @@
+{
+  "country": "New Zealand",
+  "code": "nz",
+  "job": "NOTYA araclar-denetim (tools and specialties review), research only",
+  "dateRead": "2026-10-10",
+  "basedOn": "origin/feat/ulke-butun at e254ebf8; earlier audit read from origin/audit/nz (not merged)",
+  "verdictValues": "keep | revise | remove | unverified (= \"unverified — needs a local clinician\": no New Zealand source could be read this session; the \"change\" text gives the leaning) ; for specialties also rename | add",
+  "stateValues": "on | slot (marked, empty, switched off) | slot-mechanism-ready (the kit holds the mechanism; off in New Zealand) | absent (in the kit, not in the New Zealand build)",
+  "counts": {
+    "tools": {
+      "total": 100,
+      "on": 42,
+      "keep": 13,
+      "revise": 26,
+      "remove": 1,
+      "unverified": 60
+    },
+    "addTools": {
+      "total": 28,
+      "core": 5
+    },
+    "coreSetSize": 17,
+    "specialties": {
+      "existing": 30,
+      "keep": 24,
+      "rename": 6,
+      "remove": 0,
+      "add": 9
+    },
+    "clinicSpecialties": {
+      "existing": 10,
+      "keep": 8,
+      "rename": 1,
+      "remove": 0,
+      "add": 7,
+      "unverified": 1
+    }
+  },
+  "coreSet": [
+    "hasta-portali",
+    "takip-paneli",
+    "sablonlarim",
+    "konsultasyonlar",
+    "prescription",
+    "visit-summary-document",
+    "diagnosis-coding",
+    "medicine-interactions",
+    "patient-certificates",
+    "test-requests",
+    "end-of-visit",
+    "notifiable-diseases",
+    "nz-kidney-function",
+    "nz-acc-claim-checklist",
+    "nz-work-capacity-certificate",
+    "nz-fitness-to-drive",
+    "nz-bmi-waist"
+  ],
+  "tools": [
+    {
+      "key": "hasta-portali",
+      "screenName": "Patient's page",
+      "state": "on",
+      "class": "base",
+      "specialties": null,
+      "verdict": "keep",
+      "change": "No clinical content. Stays the one base tile.",
+      "sourceUrl": null,
+      "licence": "none — the kit's own screen",
+      "confidence": "high",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "takip-paneli",
+      "screenName": "Follow-up list",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "emergency-medicine",
+        "anaesthesia",
+        "neurosurgery",
+        "paediatric-surgery",
+        "dermatology",
+        "endocrinology",
+        "infectious-diseases",
+        "general-surgery",
+        "thoracic-surgery",
+        "respiratory-medicine",
+        "ophthalmology",
+        "cardiovascular-surgery",
+        "otolaryngology",
+        "nephrology",
+        "oncology",
+        "orthopaedics",
+        "paediatrics",
+        "plastic-surgery",
+        "radiology",
+        "rheumatology",
+        "urology",
+        "sports-medicine"
+      ],
+      "verdict": "keep",
+      "change": "No clinical content. Today only the 22 roles with a switched-on tool of their own see it; general practice and 17 other roles do not. Make it base once every role has a tool whose result can be kept.",
+      "sourceUrl": null,
+      "licence": "none — the kit's own screen",
+      "confidence": "high",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "kritik-yol",
+      "screenName": "Critical conditions checklist",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "emergency-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep; give it to urgent care medicine if that role is added. The stroke item should follow the stroke guideline read (severity recorded on a validated scale).",
+      "sourceUrl": "https://informme.org.au/media/rvroeucq/emergency-department-clinical-guidelines-summary_jun25.pdf",
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "asa-preop",
+      "screenName": "ASA class and pre-operative checklist",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "anaesthesia"
+      ],
+      "verdict": "unverified",
+      "change": "The pre-anaesthesia guideline that applies in New Zealand (ANZCA PG07, 2024) was read: it lists the elements of the consultation and does NOT name the ASA physical status class. Whether anaesthetists here record an ASA class was not confirmed from a source. Leaning: keep; a local anaesthetist checks the eight items against PG07.",
+      "sourceUrl": "https://www.anzca.edu.au/getContentAsset/d4eb4cab-69e6-4228-8568-bbc911c6c505/80feb437-d24d-46b8-a858-4a2a28b9b970/PG07-Pre-anaesthesia-consultation-2024.pdf?language=en",
+      "licence": "ASA class names: American Society of Anesthesiologists — terms not read (unclear). PG07 is all rights reserved: do not copy its wording.",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "hava-yolu-notu",
+      "screenName": "Airway note",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "anaesthesia"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. PG07 does not list airway assessment as a separate element. Leaning: keep.",
+      "sourceUrl": "https://www.anzca.edu.au/getContentAsset/d4eb4cab-69e6-4228-8568-bbc911c6c505/80feb437-d24d-46b8-a858-4a2a28b9b970/PG07-Pre-anaesthesia-consultation-2024.pdf?language=en",
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "postop-agri",
+      "screenName": "Post-operative pain follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "anaesthesia"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep; also for pain medicine if that role is added.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "noro-postop",
+      "screenName": "Checklist after a neurosurgical operation",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "neurosurgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "nobet-bilinc",
+      "screenName": "Seizure and consciousness follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "neurosurgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "cocuk-prepost-op",
+      "screenName": "Checklist before and after an operation",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "paediatric-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. The consent item (\"a parent or guardian\") rests on New Zealand law on the consent of minors: for a lawyer. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "yara-dren-izlem",
+      "screenName": "Wound, drain and stitches follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "paediatric-surgery",
+        "general-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "genel-preop",
+      "screenName": "Pre-operative checklist",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "general-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "pasi",
+      "screenName": "PASI score",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "dermatology"
+      ],
+      "verdict": "revise",
+      "change": "Arithmetic checked: the four region weights and the seven area steps in the code match DermNet (a New Zealand dermatology reference). NOT sourced: the three bands the tool prints (mild / moderate / severe). DermNet gives no bands, and the funding criteria read (Pharmac) speak of a whole-body PASI \"greater than 10\" and use the DLQI beside it. Change: drop or re-source the bands; add the DLQI (licence first); also show the tool to the clinic dermatology role.",
+      "sourceUrl": "https://dermnetnz.org/topics/pasi-score",
+      "licence": "PASI: published score, no licence statement read (unclear, generally treated as free). DLQI: owner's terms not read (unclear).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "easi",
+      "screenName": "EASI score",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "dermatology"
+      ],
+      "verdict": "revise",
+      "change": "RESULT WRONG FOR A CHILD UNDER 8. The code uses one set of region weights; DermNet gives different head-and-neck and lower-limb weights for ages 0 to 7. The tool says so only in its description and has no age field. Change: ask the age band and apply the published weights, or refuse under 8. The three bands are not sourced (DermNet gives none). Also show the tool to clinic dermatology.",
+      "sourceUrl": "https://dermnetnz.org/topics/easi-score",
+      "licence": "Published score; no licence statement read (unclear).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "scorad",
+      "screenName": "SCORAD index",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "dermatology"
+      ],
+      "verdict": "revise",
+      "change": "Arithmetic checked: the formula in the code is the one DermNet states. NOT sourced: the three bands (DermNet gives none). Change: drop or re-source the bands; also show the tool to clinic dermatology.",
+      "sourceUrl": "https://dermnetnz.org/topics/scorad",
+      "licence": "Published index; no licence statement read (unclear).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "yama-okuma",
+      "screenName": "Patch test: reading days",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "dermatology"
+      ],
+      "verdict": "unverified",
+      "change": "Date arithmetic only (day 2 and day 4 after application). Which reading days dermatologists in New Zealand use was not read from a source. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — date arithmetic",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "rejim-karti",
+      "screenName": "Insulin and thyroid treatment: date card",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "endocrinology"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Dates only, no dose. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "antibiyotik-sure",
+      "screenName": "Antibiotic course: counting days",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "infectious-diseases"
+      ],
+      "verdict": "revise",
+      "change": "POSSIBLE OFF-BY-ONE. The code returns start date plus the number of days and labels it \"Last day of the course\". If the start date is day 1, a 7-day course that starts on the 1st ends on the 7th; the tool says the 8th. Not specific to New Zealand: a clinical decision on the counting convention is needed, then either the arithmetic or the label changes. In New Zealand most courses are prescribed in general practice and urgent care: widen the roles.",
+      "sourceUrl": null,
+      "licence": "none — date arithmetic",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "toraks-preop",
+      "screenName": "Checklist before a chest operation",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "thoracic-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. The role itself is not a New Zealand scope (\"Cardiothoracic surgery\" is): see specialties. Leaning: keep.",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "toraks-tup-yara",
+      "screenName": "Chest drain and wound follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "thoracic-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "inhaler-teknik",
+      "screenName": "Inhaler technique",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "respiratory-medicine"
+      ],
+      "verdict": "revise",
+      "change": "Used here: the bpacnz COPD article says inhaler technique and adherence are checked at each consultation in primary care. Change: show it to general practice (and paediatrics) as well as respiratory medicine. The steps themselves (for example the breath-hold time) are the product's own wording and were read by no respiratory clinician.",
+      "sourceUrl": "https://bpac.org.nz/2020/docs/copd.pdf",
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "gorme-keskinligi",
+      "screenName": "Visual acuity: logMAR",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "ophthalmology"
+      ],
+      "verdict": "keep",
+      "change": "Arithmetic is a mathematical conversion. New Zealand writes acuity as a 6-metre Snellen fraction (the transport agency's fitness-to-drive guide writes 6/18, 6/60); the tool accepts any fraction, so 6/x works as typed. The 0.02-logMAR-per-letter step was not checked against a source read this session.",
+      "sourceUrl": "https://www.nzta.govt.nz/assets/resources/medical-aspects/Medical-aspects-of-fitness-to-drive-a-guide-for-health-practitioners.pdf",
+      "licence": "none — published conversion",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "kalp-damar-preop",
+      "screenName": "Checklist before a heart or vascular operation",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "cardiovascular-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. New Zealand registers heart and chest surgery (\"Cardiothoracic surgery\") and vessel surgery (\"Vascular surgery\") separately: both should see this list. Leaning: keep.",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "greft-yara-izlem",
+      "screenName": "Vascular graft and wound follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "cardiovascular-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Belongs with \"Vascular surgery\" here. Leaning: keep.",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "antikoagulan-vadeleri",
+      "screenName": "Antithrombotic treatment: review dates",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "cardiovascular-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Dates only. Leaning: keep; cardiology and general practice would use it too.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "odyometri-pta",
+      "screenName": "Pure-tone audiometry: average threshold",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "otolaryngology"
+      ],
+      "verdict": "unverified",
+      "change": "The grade scale in the code (six grades by average threshold) was not found in any New Zealand source. What WAS read: for injury claims ACC expresses hearing loss as a percentage loss of hearing under the 1999 regulations, not as a pure-tone average with grades. A local otolaryngologist or audiologist says which grade scale is used here. Leaning: keep the average, re-source the grades; show it to the audiologist role, which sees no tool today.",
+      "sourceUrl": "https://www.acc.co.nz/assets/provider/assessment-hearing-loss-acc7917.pdf",
+      "licence": "Grade scale: published papers, terms not read (unclear).",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "otoskopi-notu",
+      "screenName": "Otoscopy note",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "otolaryngology"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "vertigo-notu",
+      "screenName": "Vertigo: positional test note",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "otolaryngology"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. The tool states a clinical rule of its own (\"a repositioning manoeuvre is not indicated\" when a central sign is ticked): a local clinician must read it. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "diyaliz-seans",
+      "screenName": "Dialysis session and next date",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "nephrology"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Dates only. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "kur-sayaci",
+      "screenName": "Treatment cycle counter",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "oncology"
+      ],
+      "verdict": "unverified",
+      "change": "A counter with a free-text regimen name. New Zealand's cancer agency keeps one national library of agreed regimen names and definitions (ACT-NOW); the tool does not use it. Leaning: keep; later take regimen NAMES from the national library, with the agency's written permission.",
+      "sourceUrl": "https://teaho.govt.nz/index.php/our-work/canshare/act-now-programme",
+      "licence": "Regimen library: the agency's site says nothing may be reproduced without written permission (needs permission).",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "toksisite-listesi",
+      "screenName": "Side effects checklist",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "oncology"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. No grading scale. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "kirik-alci-takip",
+      "screenName": "Fracture, cast and brace follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "orthopaedics"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep; urgent care medicine would use it too.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "ortopedi-op-protokol",
+      "screenName": "Post-operative checklist",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "orthopaedics"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "vas-fonksiyon",
+      "screenName": "Pain and function rating",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "orthopaedics"
+      ],
+      "verdict": "unverified",
+      "change": "The tool prints mild / moderate / severe from a formula of the product's own; its own description says it is not a published scale. No New Zealand source supports the grade. Leaning: revise — keep the 0-to-10 pain score and the four items, drop the home-made grade.",
+      "sourceUrl": null,
+      "licence": "none — the product's own composite",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "hedef-boy",
+      "screenName": "Expected height from the parents' heights",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "revise",
+      "change": "METHOD DIFFERS FROM THE NATIONAL CHARTS. New Zealand's growth-chart fact sheet (health ministry, adapted from the UK college's material) predicts adult height from the CHILD'S OWN height centile on an adult-height prediction chart; it does not use a mid-parental formula. The tool uses a mid-parental formula with fixed constants and a fixed range that no New Zealand source read this session states. Change: a local paediatrician decides whether to keep it, re-source it, or replace it with the national chart's predictor.",
+      "sourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/Specific-life-stage/child-health/Growth-Charts-v2/factsheet-6-growth-charts-well-child.pdf",
+      "licence": "Formula: a published paper (terms not read). National charts: copyright 2009 Royal College of Paediatrics and Child Health, adapted by the health ministry (needs permission).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "doz-hesabi",
+      "screenName": "Dose arithmetic by body weight",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "revise",
+      "change": "Arithmetic checked against the code's own description: correct, and weight is in kilograms as New Zealand records it. Changes: (1) the tool works only in milligrams; it cannot do micrograms or units per kilogram; (2) only paediatrics sees it, while children here are mostly seen in general practice, urgent care and emergency departments; (3) the New Zealand Formulary, the medicines reference clinicians here read, is all rights reserved (the page read does not mention its children's edition), so the tool must keep knowing no medicine.",
+      "sourceUrl": "https://nzformulary.org/about.html",
+      "licence": "none for the arithmetic; any dosing content needs a licence from the New Zealand Formulary",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "plastik-yara-greft",
+      "screenName": "Wound, graft and flap follow-up",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "plastic-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "tetkik-kuyrugu",
+      "screenName": "Examination queue",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "radiology"
+      ],
+      "verdict": "unverified",
+      "change": "No national source for this list was read: it is the product's own checklist, read by no clinician in New Zealand. Leaning: keep.",
+      "sourceUrl": null,
+      "licence": "none — a list or date card of the product's own, no published instrument",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "das28",
+      "screenName": "DAS28 disease activity score",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "rheumatology"
+      ],
+      "verdict": "unverified",
+      "change": "ARITHMETIC NOT CHECKED: the publication of the formula could not be searched for (the session's search allowance ran out). Units: CRP in mg/L and ESR in mm per hour are what Pharmac's criteria write, so the fields fit. Note: New Zealand's funding criteria for rheumatoid arthritis use swollen and active joint counts, not DAS28. Leaning: keep after a rheumatologist checks the formula and the four bands.",
+      "sourceUrl": "https://www.pharmac.govt.nz/news-and-resources/consultations-and-decisions/2025-10-proposal-relating-to-funded-access-to-infliximab-etanercept-secukinumab-and-rituximab/proposed-changes-for-rheumatoid-arthritis",
+      "licence": "Published score; terms not read (unclear).",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "eklem-28",
+      "screenName": "28-joint count",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "rheumatology"
+      ],
+      "verdict": "revise",
+      "change": "The 28 joints have no ankles and no hips. Pharmac's criteria for rheumatoid and psoriatic arthritis count swollen or active joints and name the ankle and the hip. A count made with this tool is therefore not the count those criteria ask for. Change: add a full joint count for New Zealand beside the 28-joint one.",
+      "sourceUrl": "https://www.pharmac.govt.nz/news-and-resources/consultations-and-decisions/2025-10-proposal-relating-to-funded-access-to-infliximab-etanercept-secukinumab-and-rituximab/proposed-changes-for-rheumatoid-arthritis",
+      "licence": "none — a joint diagram of the product's own",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "psa-hizi",
+      "screenName": "Prostate-specific antigen: rate of change",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "urology"
+      ],
+      "verdict": "revise",
+      "change": "Unit confirmed: µg/L. The national referral guidance (2015) does not use a rate of change; it uses age-banded thresholds and a repeat test 6 to 12 weeks after an abnormal result. The tool warns \"less than 90 days apart: read with caution\", which fires on exactly that recommended repeat. bpacnz mentions a yearly rise as expert opinion only. Change: reword the caution; add the age-banded thresholds as a tool of their own (the guidance is CC BY 4.0).",
+      "sourceUrl": "https://www.health.govt.nz/system/files/2015-09/prostate-cancer-management-referral-guidance_sept15-c.pdf",
+      "licence": "none — arithmetic",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "rtp-basamak",
+      "screenName": "Stages of return to sport",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "sports-medicine"
+      ],
+      "verdict": "revise",
+      "change": "DOES NOT MATCH THE NATIONAL GUIDELINE. ACC's national concussion guidelines (updated January 2026) set six stages numbered 1 to 6 with minimum conditions: an earliest day for sport-specific training and a later earliest day for competition, counted from the injury. The tool has stages 0 to 5 with other names, no injury date and no minimum, so a doctor can record \"full training and return to competition\" with nothing recalling the national stand-down. Change: the stages, their names and the earliest days as the guideline states them, supplied and signed by a local sports physician.",
+      "sourceUrl": "https://www.acc.co.nz/assets/Uploads/National-concussion-guidelines-v4.pdf",
+      "licence": "ACC guideline: no licence statement in the document (needs ACC's permission to reproduce).",
+      "confidence": "high",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "sakatlik-gunlugu",
+      "screenName": "Injury log",
+      "state": "on",
+      "class": "specialty",
+      "specialties": [
+        "sports-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "The two training-load limits come from the paper the kit cites; no New Zealand source read this session uses them. Leaning: keep; musculoskeletal medicine and physiotherapists would use it too.",
+      "sourceUrl": null,
+      "licence": "Published paper; terms not read (unclear).",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "esi-triyaj",
+      "screenName": "ESI triage level",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "emergency-medicine"
+      ],
+      "verdict": "remove",
+      "change": "Not used here: emergency departments in New Zealand use the Australasian Triage Scale (five categories). Remove the ESI tool from the New Zealand list altogether and propose an Australasian Triage Scale record in its place.",
+      "sourceUrl": "https://tewhatuora.govt.nz/our-health-system/hospitals-and-specialist-services/emergency-departments/emergency-department-triage",
+      "licence": "ESI: its handbook's terms were not read. Moot for New Zealand.",
+      "confidence": "high",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "kdigo-evre",
+      "screenName": "Chronic kidney disease: KDIGO categories",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "internal-medicine"
+      ],
+      "verdict": "revise",
+      "change": "KEEP OFF until fixed. Confirmed against bpacnz: laboratories report the albumin-to-creatinine ratio in mg/mmol and the categories are cut at 3 and 30 mg/mmol. The kit converts to mg/g and cuts at 30 and 300, so a value from 3.0 to about 3.3 mg/mmol is placed one category too low, and so is a value from just above 30 to about 33.9. Second fault: the tool's \"referral to a nephrologist\" flags are not New Zealand's; bpacnz lists different criteria (a higher albuminuria figure, a rule for diabetes, a kidney-failure risk figure, and a lower threshold for Māori and Pacific patients and for younger patients). Change: classify in mg/mmol; take the referral prompts from the local source or drop them; show it to general practice.",
+      "sourceUrl": "https://bpac.org.nz/2022/ckd.aspx",
+      "licence": "KDIGO grid: terms not read (unclear). bpacnz text: its own copyright (needs permission to reproduce).",
+      "confidence": "high",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "kdigo-serit",
+      "screenName": "KDIGO grid: GFR and albuminuria",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "nephrology"
+      ],
+      "verdict": "revise",
+      "change": "KEEP OFF until fixed: the same unit fault as the internal-medicine tool (limits at 3 and 30 mg/mmol are not the kit's converted limits).",
+      "sourceUrl": "https://bpac.org.nz/2022/ckd.aspx",
+      "licence": "KDIGO grid: terms not read (unclear).",
+      "confidence": "high",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "rapor-taslagi",
+      "screenName": "Structured report outline",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "radiology"
+      ],
+      "verdict": "revise",
+      "change": "The tool offers BI-RADS 0 to 6. The national breast-screening programme's standards grade lesions on its own scale of 1 to 5 and do not use BI-RADS. What private radiologists use outside the programme was not read. Change: the list of categories must be the country's (a setting), not fixed in the kit; keep off until a local radiologist supplies it.",
+      "sourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/NSU/For-Health-professionals/Breast-screening-/BreastScreen-Aotearoa-National-Policy-and-Quality-Standards-2013-Revised-November-2022-pdf-2.6-MB.pdf",
+      "licence": "BI-RADS: American College of Radiology — terms not read (unclear, likely needs permission).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "lab-izlem",
+      "screenName": "HbA1c and TSH follow-up",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "endocrinology"
+      ],
+      "verdict": "revise",
+      "change": "UNUSABLE HERE AS BUILT. The kit refuses any HbA1c outside 3 to 20, which is the per-cent scale. New Zealand reports HbA1c in mmol/mol, so every local value would be refused. The diabetes society's guidance sets individual targets in mmol/mol and a recheck rhythm, not three fixed bands. Change: a unit choice for HbA1c in the kit; numbers from the society's guidance, signed by a local clinician; show it to general practice.",
+      "sourceUrl": "https://t2dm.nzssd.org.nz/Section-114-Glycaemic-targets-in-the-treatment-of-diabetes",
+      "licence": "Society guidance: all rights reserved (needs permission to reproduce).",
+      "confidence": "high",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "dxa-tekrar",
+      "screenName": "Bone densitometry repeat",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "endocrinology"
+      ],
+      "verdict": "unverified",
+      "change": "The osteoporosis society's page read gives who should be scanned but no interval between scans: the three numbers the tool needs were not found.",
+      "sourceUrl": "https://osteoporosis.org.nz/healthcare-professionals/diagnosis-of-osteoporosis-and-fracture-risk-assessment/bone-densitometry/",
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "viral-izlem",
+      "screenName": "HIV and viral hepatitis follow-up",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "infectious-diseases"
+      ],
+      "verdict": "unverified",
+      "change": "No New Zealand source for the three intervals was read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "anemi-izlem",
+      "screenName": "Anaemia follow-up in chronic kidney disease",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "nephrology"
+      ],
+      "verdict": "unverified",
+      "change": "No New Zealand source for the six numbers was read. TRAP IN THE KIT: the numbers a pack states are compared in g/dL while laboratories here report g/L; a limit typed as written locally would be ten times too high.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "iltihap-lab-izlem",
+      "screenName": "CRP and ESR follow-up",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "rheumatology"
+      ],
+      "verdict": "unverified",
+      "change": "Units confirmed (CRP mg/L, ESR mm per hour, as Pharmac writes them). No source for follow-up bands or intervals was read.",
+      "sourceUrl": "https://www.pharmac.govt.nz/assets/2021-11-Amgevita-Special-Authority.pdf",
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "kardiyo-izlem",
+      "screenName": "Blood pressure, heart failure and atrial fibrillation follow-up",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "cardiology"
+      ],
+      "verdict": "unverified",
+      "change": "No New Zealand source for the nine numbers was read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "ibd-skor",
+      "screenName": "Bowel disease activity index follow-up",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "gastroenterology"
+      ],
+      "verdict": "revise",
+      "change": "The tool takes a partial Mayo, a Harvey-Bradshaw or an IBS severity total. Pharmac's criteria use CDAI or Harvey-Bradshaw for Crohn's disease and SCCAI for ulcerative colitis (PCDAI and PUCAI for children); they do not use the Mayo score. Change: offer the indices New Zealand uses; the band limits stay a local clinician's to supply.",
+      "sourceUrl": "https://www.pharmac.govt.nz/assets/2021-11-Amgevita-Special-Authority.pdf",
+      "licence": "Each index is a published instrument; terms not read (unclear).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "hepatit-izlem",
+      "screenName": "Hepatitis B and C follow-up",
+      "state": "slot-mechanism-ready",
+      "class": "specialty",
+      "specialties": [
+        "gastroenterology"
+      ],
+      "verdict": "unverified",
+      "change": "No New Zealand source for the three intervals was read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "prescription",
+      "screenName": "Prescription drafting",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "keep",
+      "change": "Keep as a slot. The register is the New Zealand Universal List of Medicines with the New Zealand Medicines Terminology (earlier audit, Part E); its terms of commercial use are not stated and must be asked for in writing.",
+      "sourceUrl": "https://nzformulary.org/about.html",
+      "licence": "needs permission (terms not stated)",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "visit-summary-document",
+      "screenName": "Visit and discharge summary as a document",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "unverified",
+      "change": "No source on what a clinic summary must contain here was read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "diagnosis-coding",
+      "screenName": "Diagnosis coding",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "revise",
+      "change": "Two code systems matter here, and the slot names neither: SNOMED CT is the national terminology (earlier audit), and an ACC injury claim asks for a Read code. Change the slot's description to say both.",
+      "sourceUrl": "https://www.acc.co.nz/for-providers/lodging-claims/lodging-a-claim-for-a-patient",
+      "licence": "SNOMED CT and Read codes: licence terms not read (needs permission).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "medicine-interactions",
+      "screenName": "Medicine interactions",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "keep",
+      "change": "Keep as a slot. The New Zealand Formulary is the reference clinicians read; its site is all rights reserved.",
+      "sourceUrl": "https://nzformulary.org/about.html",
+      "licence": "paid licence or permission (New Zealand Formulary)",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "patient-certificates",
+      "screenName": "Certificates for patients",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "revise",
+      "change": "Name the three certificates doctors here actually write: ACC's work certificate (ACC18, after the first 14 days the claim form covers), Work and Income's Work Capacity Medical Certificate, and the transport agency's medical certificate for a driver licence (DL9).",
+      "sourceUrl": "https://www.workandincome.govt.nz/providers/health-and-disability/medical-certificates/work-capacity-medical-certificate.html",
+      "licence": "Forms belong to ACC, the Ministry of Social Development and the transport agency (needs permission); a lawyer first.",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "test-requests",
+      "screenName": "Laboratory and imaging requests",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "end-of-visit",
+      "screenName": "End-of-visit flow",
+      "state": "slot",
+      "class": "base",
+      "specialties": null,
+      "verdict": "keep",
+      "change": "Waits on the prescription and certificate slots.",
+      "sourceUrl": null,
+      "licence": "none",
+      "confidence": "medium",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "emergency-referral",
+      "screenName": "Admission, referral and discharge package",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "emergency-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "family-vaccination-screening",
+      "screenName": "Vaccination schedule and screening programmes",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "family-medicine"
+      ],
+      "verdict": "keep",
+      "change": "Keep as a slot. The source exists and is named: the Immunisation Handbook 2024 (version 4) holds the national schedule and the catch-up appendix. The screening programmes' own pages could not be read.",
+      "sourceUrl": "https://www.tewhatuora.govt.nz/for-health-professionals/clinical-guidance/immunisation-handbook",
+      "licence": "Handbook: no licence statement read (needs permission).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "family-chronic",
+      "screenName": "Diabetes and blood-pressure follow-up intervals",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "family-medicine"
+      ],
+      "verdict": "keep",
+      "change": "Keep as a slot. The diabetes society's guidance states a recheck rhythm for HbA1c; the 2018 cardiovascular consensus statement is the other source.",
+      "sourceUrl": "https://t2dm.nzssd.org.nz/Section-114-Glycaemic-targets-in-the-treatment-of-diabetes",
+      "licence": "Society guidance: all rights reserved (needs permission). Consensus statement: CC BY 4.0.",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "family-referral",
+      "screenName": "Referral and emergency triage in primary care",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "family-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "No source on referral routes was read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "family-follow-up-panel",
+      "screenName": "Follow-up panel of general practice",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "family-medicine"
+      ],
+      "verdict": "keep",
+      "change": "Waits on the three slots above.",
+      "sourceUrl": null,
+      "licence": "none",
+      "confidence": "medium",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "child-surgery-consent",
+      "screenName": "Consent for an operation on a child",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "paediatric-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "A legal question: for a lawyer in New Zealand.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "cardiovascular-risk",
+      "screenName": "Cardiovascular risk",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "internal-medicine",
+        "cardiology"
+      ],
+      "verdict": "revise",
+      "change": "THE SLOT DESCRIBES THE WRONG TOOL FOR NEW ZEALAND. It speaks of \"ten-year\" risk. New Zealand uses FIVE-year risk from its own equations (PREDICT, in the 2025 data standard HISO 10071), whose inputs include the patient's ethnicity in five groups and a deprivation quintile. General practice is the main user and is not among the slot's roles. Change the description and the roles; see the proposed tool.",
+      "sourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/HISO-100712025-Cardiovascular-Disease-Risk-Assessment-Data-Standard.pdf",
+      "licence": "free to implement with attribution (the standard is CC BY 4.0)",
+      "confidence": "high",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "polypharmacy",
+      "screenName": "Review of medicines in older patients",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "internal-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "anticoagulation-review",
+      "screenName": "Anticoagulation review",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "internal-medicine"
+      ],
+      "verdict": "revise",
+      "change": "bpacnz (2024) names what is used here: CHA2DS2-VASc for stroke risk, HAS-BLED for bleeding risk, and Cockcroft-Gault creatinine clearance (not eGFR) for the dose of a direct oral anticoagulant. Change the description to name them and add general practice and cardiology. Dose criteria stay a slot.",
+      "sourceUrl": "https://bpac.org.nz/2024/af.aspx",
+      "licence": "Scores: published, terms not read (unclear). Dose criteria: New Zealand Formulary (licence).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "isotretinoin-pregnancy-prevention",
+      "screenName": "Pregnancy-prevention checks for isotretinoin",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "dermatology"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "notifiable-diseases",
+      "screenName": "Isolation and notification",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "infectious-diseases"
+      ],
+      "verdict": "revise",
+      "change": "WRONG AUDIENCE. The duty to notify rests on health practitioners in general (the ministry's summary names medical practitioners, some nurses and midwives), on a well-founded suspicion, to the local medical officer of health. It is not an infectious-diseases specialist's tool: make it base for every doctor role.",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/notifiable-diseases/summary-of-infectious-disease-management",
+      "licence": "The list is in the Health Act 1956 (legislation; terms not read).",
+      "confidence": "high",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "basdai",
+      "screenName": "BASDAI",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "rheumatology"
+      ],
+      "verdict": "keep",
+      "change": "Keep as a slot, and treat it as wanted: Pharmac's criteria for ankylosing spondylitis are written on the BASDAI (0 to 10). Licence first.",
+      "sourceUrl": "https://www.pharmac.govt.nz/news-and-resources/consultations-and-decisions/2026-02-decision-to-update-the-access-criteria-for-infliximab-etanercept-secukinumab-and-rituximab",
+      "licence": "unclear — the rights holder's terms were not read",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "cat-mmrc",
+      "screenName": "COPD Assessment Test with the mMRC grade",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "respiratory-medicine"
+      ],
+      "verdict": "revise",
+      "change": "Used here: bpacnz names both for primary care. Add general practice to the roles. Licence first.",
+      "sourceUrl": "https://bpac.org.nz/2020/docs/copd.pdf",
+      "licence": "unclear — the CAT owner's terms were not read",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "lung-action-plan",
+      "screenName": "Written action plan for asthma and COPD",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "respiratory-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "The national respiratory guidelines' site refused to be read. bpacnz says a written COPD action plan is recommended.",
+      "sourceUrl": "https://bpac.org.nz/2020/docs/copd.pdf",
+      "licence": "unclear — the foundation's templates were not read",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "pregnancy-calendar",
+      "screenName": "Pregnancy calendar",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "obstetrics-gynaecology"
+      ],
+      "verdict": "unverified",
+      "change": "No maternity source could be searched for (search allowance ran out).",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "maternity-leave",
+      "screenName": "Maternity leave dates and certificate",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "obstetrics-gynaecology"
+      ],
+      "verdict": "unverified",
+      "change": "A legal question: for a lawyer.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "contraception-eligibility",
+      "screenName": "Medical eligibility for contraception",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "obstetrics-gynaecology"
+      ],
+      "verdict": "revise",
+      "change": "The edition is named by the ministry's 2020 guidance: clinicians are directed to the UK Medical Eligibility Criteria. Say so in the slot, and add general practice and the two scopes New Zealand has for this work if they are added.",
+      "sourceUrl": "https://health.govt.nz/system/files/2020-12/final_aotearoa_contraception_guidance.pdf",
+      "licence": "The ministry's guidance is CC BY 4.0; the UK criteria belong to their own publisher (needs permission).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "obstetric-risk",
+      "screenName": "Obstetric risk prompts",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "obstetrics-gynaecology"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "obstetric-follow-up-panel",
+      "screenName": "Follow-up panel of obstetrics and gynaecology",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "obstetrics-gynaecology"
+      ],
+      "verdict": "unverified",
+      "change": "Waits on the slots above.",
+      "sourceUrl": null,
+      "licence": "none",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "stroke-red-flags",
+      "screenName": "Stroke and TIA red flags",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "neurology"
+      ],
+      "verdict": "keep",
+      "change": "Keep as a slot. The stroke guidelines read (described on their own site as Australian and New Zealand) advise against using the ABCD2 score alone and ask for severity on a validated scale. The emergency number 111 was source-checked by the earlier audit.",
+      "sourceUrl": "https://informme.org.au/media/rvroeucq/emergency-department-clinical-guidelines-summary_jun25.pdf",
+      "licence": "Guidelines: no reproduction without the Stroke Foundation's permission.",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "midas",
+      "screenName": "MIDAS",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "neurology"
+      ],
+      "verdict": "unverified",
+      "change": "Use here and licence not read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "antiseizure-monitoring",
+      "screenName": "Laboratory monitoring of antiseizure medicines",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "neurology"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "growth-percentiles",
+      "screenName": "Growth and percentiles",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "revise",
+      "change": "The charts are named: the New Zealand–World Health Organization growth charts (ministry, 2010), built on the WHO standard and adapted from the United Kingdom's, with nine centile lines. Add general practice (Well Child checks). Permission first.",
+      "sourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/Specific-life-stage/child-health/Growth-Charts-v2/factsheet-1-growth-charts-well-child.pdf",
+      "licence": "needs permission — copyright 2009 Royal College of Paediatrics and Child Health, adapted by the ministry",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "vaccination-schedule",
+      "screenName": "Vaccination schedule and catch-up",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "revise",
+      "change": "Source named: Immunisation Handbook 2024 (version 4). Add general practice, where most vaccination happens.",
+      "sourceUrl": "https://www.tewhatuora.govt.nz/for-health-professionals/clinical-guidance/immunisation-handbook",
+      "licence": "needs permission (no licence statement read)",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "development-screening",
+      "screenName": "Development and screening panel",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "keep",
+      "change": "Keep as a slot. The B4 School Check uses the Strengths and Difficulties Questionnaire.",
+      "sourceUrl": "https://tewhatuora.govt.nz/for-health-professionals/clinical-guidance/specific-life-stage-health-information/child-health/well-child-tamariki-programme/te-mahau-tarearea-o-tamariki-ora/b4-school-check",
+      "licence": "Questionnaire owner's terms not read (unclear).",
+      "confidence": "medium",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "mchat-rf",
+      "screenName": "M-CHAT-R/F",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "unverified",
+      "change": "No New Zealand source read names it; the Well Child source names a different questionnaire.",
+      "sourceUrl": "https://tewhatuora.govt.nz/for-health-professionals/clinical-guidance/specific-life-stage-health-information/child-health/well-child-tamariki-programme/te-mahau-tarearea-o-tamariki-ora/b4-school-check",
+      "licence": "unclear — authors' terms not read",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "paediatric-follow-up-panel",
+      "screenName": "Follow-up panel of paediatrics",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "paediatrics"
+      ],
+      "verdict": "keep",
+      "change": "Waits on the slots above.",
+      "sourceUrl": null,
+      "licence": "none",
+      "confidence": "medium",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "plastic-surgery-consent",
+      "screenName": "Informed-consent checklist",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "plastic-surgery"
+      ],
+      "verdict": "unverified",
+      "change": "A legal question: for a lawyer. The medical council's statement on cosmetic procedures is relevant reading.",
+      "sourceUrl": "https://www.mcnz.org.nz/assets/standards/Statement-on-cosmetic-procedures.pdf",
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "phq9-gad7",
+      "screenName": "PHQ-9 and GAD-7",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "psychiatry"
+      ],
+      "verdict": "revise",
+      "change": "Roles: add general practice and clinical psychology. Licence: the owner's terms page could not be opened by the fetch tool this session.",
+      "sourceUrl": null,
+      "licence": "unclear — owner's terms not read",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "psychiatry-safety-triage",
+      "screenName": "Safety and emergency triage",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "psychiatry"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "psychotropic-monitoring",
+      "screenName": "Monitoring calendar of psychotropic medicines",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "psychiatry"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "critical-finding-notice",
+      "screenName": "Critical-finding notice",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "radiology"
+      ],
+      "verdict": "unverified",
+      "change": "No source read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "ipss",
+      "screenName": "IPSS",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "urology"
+      ],
+      "verdict": "unverified",
+      "change": "Use here and licence not read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "urology-emergency-triage",
+      "screenName": "Haematuria and stone emergency triage",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "urology"
+      ],
+      "verdict": "unverified",
+      "change": "The 2015 prostate guidance read has referral urgency bands for PSA with red flags; nothing on stones was read.",
+      "sourceUrl": "https://www.health.govt.nz/system/files/2015-09/prostate-cancer-management-referral-guidance_sept15-c.pdf",
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "rehabilitation-session-plan",
+      "screenName": "Session plan",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "rehabilitation-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "No source read (ACC's treatment rules would be the place to look).",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "pain-odi",
+      "screenName": "Pain scale with the Oswestry Disability Index",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "rehabilitation-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "Use here and licence not read.",
+      "sourceUrl": null,
+      "licence": "unclear",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "home-exercise",
+      "screenName": "Home exercise sheet",
+      "state": "slot",
+      "class": "specialty",
+      "specialties": [
+        "rehabilitation-medicine"
+      ],
+      "verdict": "unverified",
+      "change": "Patient-facing content: a local clinician writes and signs it.",
+      "sourceUrl": null,
+      "licence": "none",
+      "confidence": "low",
+      "needsLocalClinician": true
+    },
+    {
+      "key": "sablonlarim",
+      "screenName": "My templates",
+      "state": "absent",
+      "class": "base",
+      "specialties": null,
+      "verdict": "revise",
+      "change": "The kit has this screen and the New Zealand pack does not switch it on (the shared English set lists one base tile only). No clinical content. Switch it on: it is the cheapest useful base tool.",
+      "sourceUrl": null,
+      "licence": "none — the kit's own screen",
+      "confidence": "high",
+      "needsLocalClinician": false
+    },
+    {
+      "key": "konsultasyonlar",
+      "screenName": "Consultations",
+      "state": "absent",
+      "class": "base",
+      "specialties": null,
+      "verdict": "unverified",
+      "change": "The kit has this screen; the pack does not switch it on. Whether one doctor may share a note with another this way, and the consent sentence, are for a lawyer in New Zealand (health information privacy). Not a clinical question.",
+      "sourceUrl": null,
+      "licence": "none — the kit's own screen",
+      "confidence": "low",
+      "needsLocalClinician": false
+    }
+  ],
+  "addTools": [
+    {
+      "proposedKey": "nz-kidney-function",
+      "proposedName": "Kidney function: estimated GFR and creatinine clearance (creatinine in µmol/L)",
+      "core": true,
+      "specialties": null,
+      "nationalSourceUrl": "https://bpac.org.nz/2022/ckd.aspx",
+      "formulaSourceUrl": "CKD-EPI equation and Cockcroft-Gault equation, both named by bpacnz; primary publication not fetched this session — confirm before building",
+      "licence": "unclear — published equations, generally implemented freely; which version of the equation local laboratories report must be confirmed",
+      "note": "bpacnz: laboratories usually report eGFR by CKD-EPI; Cockcroft-Gault is used for some dosing decisions (also the 2024 atrial fibrillation article)."
+    },
+    {
+      "proposedKey": "nz-acc-claim-checklist",
+      "proposedName": "ACC injury claim checklist (what the claim form asks for; the work certificate after 14 days; the injury's Read code)",
+      "core": true,
+      "specialties": null,
+      "nationalSourceUrl": "https://www.acc.co.nz/for-providers/lodging-claims/lodging-a-claim-for-a-patient",
+      "formulaSourceUrl": "not a formula: ACC's own forms ACC45 and ACC18",
+      "licence": "needs permission — the forms and the lodging channel are ACC's; a lawyer first. A STATE-SYSTEM TOOL: must exist in the New Zealand pack only.",
+      "note": "Medical practitioners of any specialty can lodge; lodging itself goes through a practice system or ACC's online system, which this product is not."
+    },
+    {
+      "proposedKey": "nz-work-capacity-certificate",
+      "proposedName": "Work and Income work-capacity medical certificate: what it records",
+      "core": true,
+      "specialties": null,
+      "nationalSourceUrl": "https://www.workandincome.govt.nz/providers/health-and-disability/medical-certificates/work-capacity-medical-certificate.html",
+      "formulaSourceUrl": "not a formula: the ministry's own form",
+      "licence": "needs permission — the form is the Ministry of Social Development's and is sent through its own electronic channel. A STATE-SYSTEM TOOL: New Zealand pack only.",
+      "note": "Completed by medical practitioners and nurse practitioners (dentists and midwives in limited cases)."
+    },
+    {
+      "proposedKey": "nz-fitness-to-drive",
+      "proposedName": "Fitness to drive: record of the assessment and the driver-licence medical certificate (DL9)",
+      "core": true,
+      "specialties": null,
+      "nationalSourceUrl": "https://www.nzta.govt.nz/assets/resources/medical-aspects/Medical-aspects-of-fitness-to-drive-a-guide-for-health-practitioners.pdf",
+      "formulaSourceUrl": "https://www.nzta.govt.nz/assets/resources/medical-aspects/Medical-aspects-of-fitness-to-drive-a-guide-for-health-practitioners.pdf",
+      "licence": "free to implement with attribution — the guide is CC BY 4.0; the certificate form itself is the agency's",
+      "note": "Vision is written as a 6-metre fraction. The page on practitioners' legal duties came back empty and was not read."
+    },
+    {
+      "proposedKey": "nz-bmi-waist",
+      "proposedName": "Body mass index and waist",
+      "core": true,
+      "specialties": null,
+      "nationalSourceUrl": null,
+      "formulaSourceUrl": "primary publication not fetched this session — confirm before building",
+      "licence": "unclear",
+      "note": "UNVERIFIED: the ministry's weight-management guideline refused to be read. The diabetes society's page mentions a lower BMI threshold for Asian ethnicity: a local clinician supplies the classification."
+    },
+    {
+      "proposedKey": "nz-cvd-risk",
+      "proposedName": "New Zealand cardiovascular risk (five-year, PREDICT equations) — fills the slot \"cardiovascular-risk\"",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "internal-medicine",
+        "cardiology",
+        "endocrinology",
+        "nephrology",
+        "longevity"
+      ],
+      "nationalSourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/HISO-100712025-Cardiovascular-Disease-Risk-Assessment-Data-Standard.pdf",
+      "formulaSourceUrl": "Equations are set out in HISO 10071:2025, which cites Pylypchuk et al., Lancet 2018",
+      "licence": "free to implement with attribution — CC BY 4.0",
+      "note": "Inputs include ethnicity in five groups (Māori; Pacific; Indian and other South Asian; Chinese and other Asian; European and other) and a deprivation quintile; the standard also says what an implementing tool must do (refuse when an exclusion applies, show risk over time, save to the record). The product records neither ethnicity nor deprivation today."
+    },
+    {
+      "proposedKey": "nz-ats-triage",
+      "proposedName": "Australasian Triage Scale: record of the category chosen",
+      "core": false,
+      "specialties": [
+        "emergency-medicine"
+      ],
+      "nationalSourceUrl": "https://tewhatuora.govt.nz/our-health-system/hospitals-and-specialist-services/emergency-departments/emergency-department-triage",
+      "formulaSourceUrl": "https://acem.org.au/Content-Sources/Advancing-Emergency-Medicine/Better-Outcomes-for-Patients/Triage",
+      "licence": "unclear — the college (ACEM) publishes the scale as policy P06 and guideline G24; no reuse statement was read. Ask ACEM.",
+      "note": "Replaces the ESI tool. Record only; the tool must not work the category out."
+    },
+    {
+      "proposedKey": "nz-ews-adult",
+      "proposedName": "New Zealand early warning score (adult vital signs)",
+      "core": false,
+      "specialties": [
+        "emergency-medicine",
+        "internal-medicine",
+        "anaesthesia",
+        "general-surgery",
+        "neurosurgery",
+        "thoracic-surgery",
+        "cardiovascular-surgery"
+      ],
+      "nationalSourceUrl": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Vital_sign_chart_user_guide_July_2017_.pdf",
+      "formulaSourceUrl": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Vital_sign_chart_user_guide_July_2017_.pdf",
+      "licence": "needs permission — copyright Health Quality & Safety Commission 2017, no licence stated",
+      "note": "A hospital tool (seven parameters, four colour zones). Of little use in an outpatient clinic: build only if hospital doctors are a target."
+    },
+    {
+      "proposedKey": "nz-mews-maternity",
+      "proposedName": "Maternity early warning score",
+      "core": false,
+      "specialties": [
+        "obstetrics-gynaecology"
+      ],
+      "nationalSourceUrl": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/MVSC-user-guide-updated-September-2019.pdf",
+      "formulaSourceUrl": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/MVSC-user-guide-updated-September-2019.pdf",
+      "licence": "needs permission — copyright Health Quality & Safety Commission, no licence stated",
+      "note": "For women who are pregnant or within 42 days of birth and need repeated observations."
+    },
+    {
+      "proposedKey": "nz-pews-paediatric",
+      "proposedName": "Paediatric early warning score (four age bands)",
+      "core": false,
+      "specialties": [
+        "paediatrics",
+        "paediatric-surgery",
+        "emergency-medicine"
+      ],
+      "nationalSourceUrl": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Paediatric-vital-signs-chart-user-guide-2023.pdf",
+      "formulaSourceUrl": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Paediatric-vital-signs-chart-user-guide-2023.pdf",
+      "licence": "NOT USABLE AS LICENSED — CC BY-NC 4.0: commercial use is not permitted. Needs the commission's written permission.",
+      "note": "The national tools are stated to be un-editable."
+    },
+    {
+      "proposedKey": "nz-diabetes-hba1c-review",
+      "proposedName": "Diabetes review: HbA1c in mmol/mol against the patient's own target, and the next test",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "endocrinology",
+        "internal-medicine",
+        "longevity"
+      ],
+      "nationalSourceUrl": "https://t2dm.nzssd.org.nz/Section-114-Glycaemic-targets-in-the-treatment-of-diabetes",
+      "formulaSourceUrl": "https://t2dm.nzssd.org.nz/Section-114-Glycaemic-targets-in-the-treatment-of-diabetes",
+      "licence": "needs permission — society guidance, all rights reserved",
+      "note": "Targets are individual, not three fixed bands. The society ties diabetes screening to every cardiovascular risk assessment, with earlier start ages for Māori, Pacific and South Asian people (reported as the source states it)."
+    },
+    {
+      "proposedKey": "nz-ckd-staging",
+      "proposedName": "Chronic kidney disease categories with the ratio in mg/mmol, and New Zealand's referral prompts",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "internal-medicine",
+        "nephrology",
+        "endocrinology"
+      ],
+      "nationalSourceUrl": "https://bpac.org.nz/2022/ckd.aspx",
+      "formulaSourceUrl": "KDIGO 2024 guideline (the kit's own citation); category limits in mg/mmol as bpacnz states them",
+      "licence": "unclear for the KDIGO grid; bpacnz text needs permission",
+      "note": "Replaces the two KDIGO tools kept off. bpacnz also lists a five-year kidney-failure risk figure as a referral criterion and a lower referral threshold for Māori and Pacific patients."
+    },
+    {
+      "proposedKey": "nz-af-stroke-bleeding-risk",
+      "proposedName": "Atrial fibrillation: stroke risk and bleeding risk scores",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "cardiology",
+        "internal-medicine",
+        "neurology"
+      ],
+      "nationalSourceUrl": "https://bpac.org.nz/2024/af.aspx",
+      "formulaSourceUrl": "CHA2DS2-VASc and HAS-BLED, both named by bpacnz; primary publication not fetched this session — confirm before building",
+      "licence": "unclear — published scores, terms not read",
+      "note": "bpacnz reports that atrial fibrillation is diagnosed earlier in Māori and Pacific people and advises earlier opportunistic assessment."
+    },
+    {
+      "proposedKey": "nz-gout-urate",
+      "proposedName": "Gout: serum urate against target (mmol/L)",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "rheumatology",
+        "internal-medicine"
+      ],
+      "nationalSourceUrl": "https://bpac.org.nz/2025/gout.aspx",
+      "formulaSourceUrl": "https://bpac.org.nz/2025/gout.aspx",
+      "licence": "needs permission to reproduce bpacnz tables; the diagnostic score it adapts is another author's (unclear)",
+      "note": "bpacnz reports gout as about twice as common in Māori and three times as common in Pacific peoples."
+    },
+    {
+      "proposedKey": "nz-sore-throat-rheumatic-fever",
+      "proposedName": "Sore throat: rheumatic fever risk pathway",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "paediatrics",
+        "emergency-medicine"
+      ],
+      "nationalSourceUrl": "https://www.heartfoundation.org.nz/professionals/health-professionals/guidelines-on-rheumatic-fever-rheumatic-heart-disease-and-strep-a-sore-throat",
+      "formulaSourceUrl": "https://assets.heartfoundation.org.nz/documents/shop/heart-healthcare/non-stock-resources/sore-throat-algorithm.pdf",
+      "licence": "needs permission — copyright Heart Foundation; one table inside is another publisher's",
+      "note": "The 2019 algorithm sorts patients by criteria that include Māori or Pacific ethnicity, an age band and household circumstances (reported, not interpreted). A third edition of the guideline is dated 2024: build from that, not from the 2019 sheet."
+    },
+    {
+      "proposedKey": "nz-cognitive-screen",
+      "proposedName": "Cognitive screening record (Mini-ACE; also GPCOG and RUDAS)",
+      "core": false,
+      "specialties": [
+        "family-medicine",
+        "psychiatry",
+        "neurology",
+        "internal-medicine",
+        "rehabilitation-medicine"
+      ],
+      "nationalSourceUrl": "https://nzdementia.org/Mini-ACE",
+      "formulaSourceUrl": "https://bpac.org.nz/2020/dementia.aspx",
+      "licence": "unclear — the dementia foundation calls the Mini-ACE free; its owner's terms were not read. MoCA: PAID training and certification — do not add.",
+      "note": "bpacnz: a tool built for Māori (MANA) was in development; these screens must not be used alone to diagnose."
+    },
+    {
+      "proposedKey": "nz-honos-adom",
+      "proposedName": "Mental health outcome measures: HoNOS family and ADOM",
+      "core": false,
+      "specialties": [
+        "psychiatry"
+      ],
+      "nationalSourceUrl": "https://www.tepou.co.nz/resources/honos-guide-for-new-zealand-clinicians",
+      "formulaSourceUrl": "https://www.tepou.co.nz/initiatives/alcohol-and-drug-outcome-measure",
+      "licence": "unclear — HoNOS was developed by the Royal College of Psychiatrists' research unit, ADOM is mandated by the ministry; neither page states terms of use",
+      "note": "Mandated for specialist public services. Of doubtful use in private outpatient practice: confirm before building."
+    },
+    {
+      "proposedKey": "nz-sdq-b4sc",
+      "proposedName": "Strengths and Difficulties Questionnaire score (B4 School Check)",
+      "core": false,
+      "specialties": [
+        "paediatrics",
+        "family-medicine"
+      ],
+      "nationalSourceUrl": "https://tewhatuora.govt.nz/for-health-professionals/clinical-guidance/specific-life-stage-health-information/child-health/well-child-tamariki-programme/te-mahau-tarearea-o-tamariki-ora/b4-school-check",
+      "formulaSourceUrl": null,
+      "licence": "unclear — the questionnaire owner's terms were not read; expect a licence",
+      "note": null
+    },
+    {
+      "proposedKey": "nz-dlqi",
+      "proposedName": "Dermatology Life Quality Index score",
+      "core": false,
+      "specialties": [
+        "dermatology",
+        "clinic-dermatology"
+      ],
+      "nationalSourceUrl": "https://www.pharmac.govt.nz/assets/2021-11-Amgevita-Special-Authority.pdf",
+      "formulaSourceUrl": null,
+      "licence": "unclear — the owner's terms were not read; expect a licence for commercial use",
+      "note": "Pharmac's psoriasis and hidradenitis criteria are written on it, beside the PASI."
+    },
+    {
+      "proposedKey": "nz-ibd-indices",
+      "proposedName": "Bowel disease indices used here: CDAI, Harvey-Bradshaw, SCCAI (PCDAI and PUCAI for children)",
+      "core": false,
+      "specialties": [
+        "gastroenterology",
+        "paediatrics"
+      ],
+      "nationalSourceUrl": "https://www.pharmac.govt.nz/assets/2021-11-Amgevita-Special-Authority.pdf",
+      "formulaSourceUrl": null,
+      "licence": "unclear — each is a published index; terms not read",
+      "note": "Replaces the Mayo option of the slot \"ibd-skor\"."
+    },
+    {
+      "proposedKey": "nz-active-joint-count",
+      "proposedName": "Full swollen and active joint count (with ankles and hips)",
+      "core": false,
+      "specialties": [
+        "rheumatology"
+      ],
+      "nationalSourceUrl": "https://www.pharmac.govt.nz/news-and-resources/consultations-and-decisions/2025-10-proposal-relating-to-funded-access-to-infliximab-etanercept-secukinumab-and-rituximab/proposed-changes-for-rheumatoid-arthritis",
+      "formulaSourceUrl": "not a formula: a count",
+      "licence": "free to implement — a count on a diagram of the product's own",
+      "note": "For children, Pharmac's criteria also use the cJADAS10 score (not proposed until its source is read)."
+    },
+    {
+      "proposedKey": "nz-concussion-return",
+      "proposedName": "Concussion: graduated return to work, study and sport (six stages, days counted from the injury)",
+      "core": false,
+      "specialties": [
+        "sports-medicine",
+        "family-medicine",
+        "emergency-medicine",
+        "paediatrics"
+      ],
+      "nationalSourceUrl": "https://www.acc.co.nz/assets/Uploads/National-concussion-guidelines-v4.pdf",
+      "formulaSourceUrl": "https://www.acc.co.nz/assets/Uploads/National-concussion-guidelines-v4.pdf",
+      "licence": "needs permission — ACC's guideline carries no licence statement",
+      "note": "Replaces the content of \"rtp-basamak\" for New Zealand. Under review again before the end of 2027."
+    },
+    {
+      "proposedKey": "nz-hearing-loss-percentage",
+      "proposedName": "Percentage loss of hearing for an ACC claim",
+      "core": false,
+      "specialties": [
+        "otolaryngology",
+        "audiology"
+      ],
+      "nationalSourceUrl": "https://www.acc.co.nz/assets/provider/assessment-hearing-loss-acc7917.pdf",
+      "formulaSourceUrl": "Accident Compensation (Occupational Hearing Assessment Procedures) Regulations 1999 — the regulations themselves were not fetched",
+      "licence": "unclear — the scale comes from Australia's National Acoustic Laboratories; the regulations are legislation. A STATE-SYSTEM TOOL: New Zealand pack only.",
+      "note": "Includes an age correction that ACC says may change."
+    },
+    {
+      "proposedKey": "nz-diabetic-retinal-grade",
+      "proposedName": "Diabetic retinal screening: record of the grade and the next screen",
+      "core": false,
+      "specialties": [
+        "ophthalmology"
+      ],
+      "nationalSourceUrl": "https://www.tewhatuora.govt.nz/publications/diabetic-retinal-screening-grading-monitoring-and-referral-guidance",
+      "formulaSourceUrl": "https://www.tewhatuora.govt.nz/publications/diabetic-retinal-screening-grading-monitoring-and-referral-guidance",
+      "licence": "needs permission — the page lists the copyright as held by a non-Crown party",
+      "note": "Only the publication page was read, not the grading table."
+    },
+    {
+      "proposedKey": "nz-psa-thresholds",
+      "proposedName": "Prostate-specific antigen: age-banded thresholds and referral urgency (µg/L)",
+      "core": false,
+      "specialties": [
+        "urology",
+        "family-medicine"
+      ],
+      "nationalSourceUrl": "https://www.health.govt.nz/system/files/2015-09/prostate-cancer-management-referral-guidance_sept15-c.pdf",
+      "formulaSourceUrl": "https://www.health.govt.nz/system/files/2015-09/prostate-cancer-management-referral-guidance_sept15-c.pdf",
+      "licence": "free to implement with attribution — CC BY 4.0",
+      "note": "The guidance reports worse outcomes for Māori men after diagnosis and attributes them mainly to access."
+    },
+    {
+      "proposedKey": "nz-breast-screening-categories",
+      "proposedName": "Breast screening lesion category (the programme's 1 to 5) for the report outline",
+      "core": false,
+      "specialties": [
+        "radiology"
+      ],
+      "nationalSourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/NSU/For-Health-professionals/Breast-screening-/BreastScreen-Aotearoa-National-Policy-and-Quality-Standards-2013-Revised-November-2022-pdf-2.6-MB.pdf",
+      "formulaSourceUrl": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/NSU/For-Health-professionals/Breast-screening-/BreastScreen-Aotearoa-National-Policy-and-Quality-Standards-2013-Revised-November-2022-pdf-2.6-MB.pdf",
+      "licence": "unclear — a Health New Zealand standard; no licence statement read",
+      "note": "Replaces BI-RADS in the report outline for screening work; what is used outside the programme is for a local radiologist."
+    },
+    {
+      "proposedKey": "nz-nihss",
+      "proposedName": "Stroke severity record (NIHSS)",
+      "core": false,
+      "specialties": [
+        "neurology",
+        "emergency-medicine"
+      ],
+      "nationalSourceUrl": "https://informme.org.au/media/rvroeucq/emergency-department-clinical-guidelines-summary_jun25.pdf",
+      "formulaSourceUrl": null,
+      "licence": "unclear — terms not read",
+      "note": "The guidelines ask for severity on a validated tool and give this one as the example."
+    },
+    {
+      "proposedKey": "nz-sact-regimen-names",
+      "proposedName": "National regimen names for the treatment cycle counter",
+      "core": false,
+      "specialties": [
+        "oncology"
+      ],
+      "nationalSourceUrl": "https://teaho.govt.nz/index.php/our-work/canshare/act-now-programme",
+      "formulaSourceUrl": "https://teaho.govt.nz/index.php/our-work/canshare/act-now-programme",
+      "licence": "needs permission — the agency's site forbids reproduction without written permission",
+      "note": "Names only; never doses."
+    }
+  ],
+  "specialties": [
+    {
+      "key": "emergency-medicine",
+      "currentLabel": "Emergency medicine",
+      "verdict": "keep",
+      "officialName": "Emergency medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "kritik-yol",
+        "nz-ats-triage",
+        "nz-ews-adult",
+        "nz-pews-paediatric",
+        "emergency-referral",
+        "nz-nihss",
+        "nz-concussion-return",
+        "nz-sore-throat-rheumatic-fever",
+        "doz-hesabi"
+      ]
+    },
+    {
+      "key": "family-medicine",
+      "currentLabel": "General practice",
+      "verdict": "keep",
+      "officialName": "General practice",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "nz-cvd-risk",
+        "nz-diabetes-hba1c-review",
+        "nz-ckd-staging",
+        "nz-af-stroke-bleeding-risk",
+        "anticoagulation-review",
+        "nz-gout-urate",
+        "nz-sore-throat-rheumatic-fever",
+        "nz-cognitive-screen",
+        "phq9-gad7",
+        "cat-mmrc",
+        "inhaler-teknik",
+        "lung-action-plan",
+        "family-vaccination-screening",
+        "family-chronic",
+        "family-referral",
+        "family-follow-up-panel",
+        "growth-percentiles",
+        "vaccination-schedule",
+        "nz-sdq-b4sc",
+        "contraception-eligibility",
+        "nz-psa-thresholds",
+        "doz-hesabi",
+        "antibiyotik-sure",
+        "nz-concussion-return"
+      ],
+      "note": "Sees NO tool of its own today, only the patient's page."
+    },
+    {
+      "key": "anaesthesia",
+      "currentLabel": "Anaesthesia",
+      "verdict": "keep",
+      "officialName": "Anaesthesia",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "asa-preop",
+        "hava-yolu-notu",
+        "postop-agri",
+        "nz-ews-adult"
+      ]
+    },
+    {
+      "key": "neurosurgery",
+      "currentLabel": "Neurosurgery",
+      "verdict": "keep",
+      "officialName": "Neurosurgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "noro-postop",
+        "nobet-bilinc",
+        "nz-ews-adult"
+      ]
+    },
+    {
+      "key": "paediatric-surgery",
+      "currentLabel": "Paediatric surgery",
+      "verdict": "keep",
+      "officialName": "Paediatric surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "cocuk-prepost-op",
+        "yara-dren-izlem",
+        "child-surgery-consent",
+        "nz-pews-paediatric",
+        "doz-hesabi"
+      ]
+    },
+    {
+      "key": "internal-medicine",
+      "currentLabel": "General medicine",
+      "verdict": "rename",
+      "officialName": "Internal medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "nz-ckd-staging",
+        "nz-cvd-risk",
+        "nz-diabetes-hba1c-review",
+        "nz-af-stroke-bleeding-risk",
+        "anticoagulation-review",
+        "polypharmacy",
+        "nz-cognitive-screen",
+        "nz-gout-urate",
+        "nz-ews-adult"
+      ],
+      "note": "Already renamed on the branch audit/nz, which is not merged. Sees no tool of its own today."
+    },
+    {
+      "key": "dermatology",
+      "currentLabel": "Dermatology",
+      "verdict": "keep",
+      "officialName": "Dermatology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "pasi",
+        "easi",
+        "scorad",
+        "yama-okuma",
+        "nz-dlqi",
+        "isotretinoin-pregnancy-prevention"
+      ]
+    },
+    {
+      "key": "endocrinology",
+      "currentLabel": "Endocrinology",
+      "verdict": "keep",
+      "officialName": "endocrinology (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "rejim-karti",
+        "nz-diabetes-hba1c-review",
+        "lab-izlem",
+        "dxa-tekrar",
+        "nz-cvd-risk",
+        "nz-ckd-staging"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration."
+    },
+    {
+      "key": "infectious-diseases",
+      "currentLabel": "Infectious diseases",
+      "verdict": "keep",
+      "officialName": "infectious diseases (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "antibiyotik-sure",
+        "viral-izlem"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration."
+    },
+    {
+      "key": "gastroenterology",
+      "currentLabel": "Gastroenterology",
+      "verdict": "keep",
+      "officialName": "gastroenterology (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "nz-ibd-indices",
+        "ibd-skor",
+        "hepatit-izlem"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration. Sees no tool of its own today."
+    },
+    {
+      "key": "general-surgery",
+      "currentLabel": "General surgery",
+      "verdict": "keep",
+      "officialName": "General surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "genel-preop",
+        "yara-dren-izlem",
+        "nz-ews-adult"
+      ]
+    },
+    {
+      "key": "thoracic-surgery",
+      "currentLabel": "Thoracic surgery",
+      "verdict": "rename",
+      "officialName": "Cardiothoracic surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "toraks-preop",
+        "toraks-tup-yara",
+        "kalp-damar-preop",
+        "nz-ews-adult"
+      ],
+      "note": "The council's scope covers the heart and the chest together. A rename alone is not enough: this role must also get the heart-operation checklist."
+    },
+    {
+      "key": "respiratory-medicine",
+      "currentLabel": "Respiratory medicine",
+      "verdict": "keep",
+      "officialName": "respiratory medicine (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "inhaler-teknik",
+        "cat-mmrc",
+        "lung-action-plan"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration."
+    },
+    {
+      "key": "ophthalmology",
+      "currentLabel": "Ophthalmology",
+      "verdict": "keep",
+      "officialName": "Ophthalmology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "gorme-keskinligi",
+        "nz-diabetic-retinal-grade"
+      ]
+    },
+    {
+      "key": "obstetrics-gynaecology",
+      "currentLabel": "Obstetrics and gynaecology",
+      "verdict": "keep",
+      "officialName": "Obstetrics and gynaecology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "pregnancy-calendar",
+        "maternity-leave",
+        "contraception-eligibility",
+        "obstetric-risk",
+        "obstetric-follow-up-panel",
+        "nz-mews-maternity"
+      ],
+      "note": "Sees no tool of its own today."
+    },
+    {
+      "key": "cardiovascular-surgery",
+      "currentLabel": "Cardiac and vascular surgery",
+      "verdict": "rename",
+      "officialName": "Vascular surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "greft-yara-izlem",
+        "antikoagulan-vadeleri",
+        "kalp-damar-preop",
+        "nz-ews-adult"
+      ],
+      "note": "New Zealand has no combined heart-and-vessel scope. Heart surgery moves to \"Cardiothoracic surgery\"; this role becomes \"Vascular surgery\"."
+    },
+    {
+      "key": "cardiology",
+      "currentLabel": "Cardiology",
+      "verdict": "keep",
+      "officialName": "cardiology (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "kardiyo-izlem",
+        "nz-cvd-risk",
+        "nz-af-stroke-bleeding-risk",
+        "anticoagulation-review"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration. Sees no tool of its own today."
+    },
+    {
+      "key": "otolaryngology",
+      "currentLabel": "Otolaryngology, head and neck surgery",
+      "verdict": "keep",
+      "officialName": "Otolaryngology, head and neck surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "odyometri-pta",
+        "otoskopi-notu",
+        "vertigo-notu",
+        "nz-hearing-loss-percentage"
+      ]
+    },
+    {
+      "key": "nephrology",
+      "currentLabel": "Nephrology",
+      "verdict": "keep",
+      "officialName": "nephrology (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "nz-ckd-staging",
+        "kdigo-serit",
+        "diyaliz-seans",
+        "anemi-izlem",
+        "nz-cvd-risk"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration."
+    },
+    {
+      "key": "neurology",
+      "currentLabel": "Neurology",
+      "verdict": "keep",
+      "officialName": "neurology (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "stroke-red-flags",
+        "nz-nihss",
+        "midas",
+        "antiseizure-monitoring",
+        "nz-cognitive-screen",
+        "nz-af-stroke-bleeding-risk"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration. Sees no tool of its own today."
+    },
+    {
+      "key": "oncology",
+      "currentLabel": "Oncology",
+      "verdict": "rename",
+      "officialName": "Medical oncology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "kur-sayaci",
+        "toksisite-listesi",
+        "nz-sact-regimen-names"
+      ],
+      "note": "The council names \"medical oncology\" inside Internal medicine; \"Radiation oncology\" is a separate scope. The role's tools are about treatment cycles, so it is medical oncology."
+    },
+    {
+      "key": "orthopaedics",
+      "currentLabel": "Orthopaedic surgery",
+      "verdict": "keep",
+      "officialName": "Orthopaedic surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "kirik-alci-takip",
+        "ortopedi-op-protokol",
+        "vas-fonksiyon"
+      ]
+    },
+    {
+      "key": "paediatrics",
+      "currentLabel": "Paediatrics",
+      "verdict": "keep",
+      "officialName": "Paediatrics",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "hedef-boy",
+        "doz-hesabi",
+        "growth-percentiles",
+        "vaccination-schedule",
+        "development-screening",
+        "nz-sdq-b4sc",
+        "mchat-rf",
+        "paediatric-follow-up-panel",
+        "nz-pews-paediatric",
+        "nz-sore-throat-rheumatic-fever",
+        "nz-ibd-indices"
+      ]
+    },
+    {
+      "key": "plastic-surgery",
+      "currentLabel": "Plastic surgery",
+      "verdict": "rename",
+      "officialName": "Plastic and reconstructive surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "plastik-yara-greft",
+        "plastic-surgery-consent"
+      ],
+      "note": "Already renamed on the branch audit/nz, which is not merged."
+    },
+    {
+      "key": "psychiatry",
+      "currentLabel": "Psychiatry",
+      "verdict": "keep",
+      "officialName": "Psychiatry",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "phq9-gad7",
+        "psychiatry-safety-triage",
+        "psychotropic-monitoring",
+        "nz-honos-adom",
+        "nz-cognitive-screen"
+      ],
+      "note": "Sees no tool of its own today."
+    },
+    {
+      "key": "radiology",
+      "currentLabel": "Radiology",
+      "verdict": "rename",
+      "officialName": "Diagnostic and interventional radiology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "tetkik-kuyrugu",
+        "rapor-taslagi",
+        "nz-breast-screening-categories",
+        "critical-finding-notice"
+      ],
+      "note": "Already renamed on the branch audit/nz, which is not merged."
+    },
+    {
+      "key": "rheumatology",
+      "currentLabel": "Rheumatology",
+      "verdict": "keep",
+      "officialName": "rheumatology (an area of Internal medicine)",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "das28",
+        "eklem-28",
+        "nz-active-joint-count",
+        "iltihap-lab-izlem",
+        "basdai",
+        "nz-gout-urate"
+      ],
+      "note": "Not a vocational scope: the council names it as an area inside the scope \"Internal medicine\". Kept as a role because physicians practise under it; never show it as a registration."
+    },
+    {
+      "key": "urology",
+      "currentLabel": "Urology",
+      "verdict": "keep",
+      "officialName": "Urology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "psa-hizi",
+        "nz-psa-thresholds",
+        "ipss",
+        "urology-emergency-triage"
+      ]
+    },
+    {
+      "key": "sports-medicine",
+      "currentLabel": "Sport and exercise medicine",
+      "verdict": "keep",
+      "officialName": "Sport and exercise medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "rtp-basamak",
+        "nz-concussion-return",
+        "sakatlik-gunlugu"
+      ]
+    },
+    {
+      "key": "rehabilitation-medicine",
+      "currentLabel": "Rehabilitation medicine",
+      "verdict": "keep",
+      "officialName": "Rehabilitation medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "rehabilitation-session-plan",
+        "pain-odi",
+        "home-exercise",
+        "nz-cognitive-screen"
+      ],
+      "note": "Sees no tool of its own today."
+    },
+    {
+      "key": "urgent-care-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Urgent care medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "kritik-yol",
+        "nz-sore-throat-rheumatic-fever",
+        "doz-hesabi",
+        "antibiyotik-sure",
+        "nz-concussion-return",
+        "kirik-alci-takip",
+        "nz-cvd-risk"
+      ],
+      "note": "A scope particular to New Zealand. How common each added scope is in private outpatient practice was NOT verified from a source: for a local clinical lead."
+    },
+    {
+      "key": "musculoskeletal-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Musculoskeletal medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "vas-fonksiyon",
+        "sakatlik-gunlugu",
+        "pain-odi"
+      ]
+    },
+    {
+      "key": "occupational-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Occupational medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "nz-hearing-loss-percentage"
+      ]
+    },
+    {
+      "key": "pain-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Pain medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "postop-agri",
+        "pain-odi"
+      ]
+    },
+    {
+      "key": "sexual-health-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Sexual health medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "contraception-eligibility"
+      ]
+    },
+    {
+      "key": "family-planning-reproductive-health",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Family planning and reproductive health",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "contraception-eligibility",
+        "pregnancy-calendar"
+      ]
+    },
+    {
+      "key": "palliative-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Palliative medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [],
+      "note": "Core set only; no specialty tool identified from a source."
+    },
+    {
+      "key": "oral-maxillofacial-surgery",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Oral and maxillofacial surgery",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "genel-preop",
+        "yara-dren-izlem"
+      ]
+    },
+    {
+      "key": "rural-hospital-medicine",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Rural hospital medicine",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "kritik-yol",
+        "nz-cvd-risk",
+        "nz-sore-throat-rheumatic-fever",
+        "doz-hesabi",
+        "nz-ews-adult"
+      ],
+      "note": "A scope particular to New Zealand."
+    }
+  ],
+  "clinicSpecialties": [
+    {
+      "key": "hair-transplant",
+      "currentLabel": "Hair transplantation",
+      "verdict": "keep",
+      "officialName": null,
+      "sourceUrl": "https://www.mcnz.org.nz/assets/standards/Statement-on-cosmetic-procedures.pdf",
+      "tools": [],
+      "note": "A clinic type, not a specialty: no vocational scope exists. The council's statement on cosmetic procedures lists \"hair replacement therapy\" among non-surgical (category 2) procedures. The word \"specialist\" must never appear beside it. For a lawyer and a local clinician."
+    },
+    {
+      "key": "aesthetic-surgery",
+      "currentLabel": "Cosmetic surgery",
+      "verdict": "keep",
+      "officialName": null,
+      "sourceUrl": "https://www.mcnz.org.nz/assets/standards/Statement-on-cosmetic-procedures.pdf",
+      "tools": [
+        "plastik-yara-greft",
+        "plastic-surgery-consent"
+      ],
+      "note": "A clinic type, not a specialty. The council says surgical (category 1) cosmetic procedures are for doctors registered in a relevant surgical scope: an account of this type should also state that scope. For a lawyer and a local clinician."
+    },
+    {
+      "key": "aesthetic-medicine",
+      "currentLabel": "Cosmetic medicine",
+      "verdict": "keep",
+      "officialName": null,
+      "sourceUrl": "https://www.mcnz.org.nz/assets/standards/Statement-on-cosmetic-procedures.pdf",
+      "tools": [],
+      "note": "A clinic type, not a specialty. The council's statement names the New Zealand Society of Cosmetic Medicine, and suggests \"appearance medicine\" wording for general practitioners; it asks doctors not to use \"specialist\" without a matching vocational scope."
+    },
+    {
+      "key": "clinic-dermatology",
+      "currentLabel": "Dermatology (clinic)",
+      "verdict": "rename",
+      "officialName": "Dermatology",
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "pasi",
+        "easi",
+        "scorad",
+        "yama-okuma",
+        "nz-dlqi",
+        "isotretinoin-pregnancy-prevention"
+      ],
+      "note": "The same vocational scope as the doctor role \"Dermatology\". It sees none of the dermatology tools today."
+    },
+    {
+      "key": "longevity",
+      "currentLabel": "Preventive and longevity medicine",
+      "verdict": "unverified",
+      "officialName": null,
+      "sourceUrl": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/",
+      "tools": [
+        "nz-cvd-risk",
+        "nz-diabetes-hba1c-review"
+      ],
+      "note": "Not a vocational scope, and no New Zealand body for it was read. Keep only on the owner's decision, as a clinic type, with a local clinician's view."
+    },
+    {
+      "key": "physiotherapy",
+      "currentLabel": "Physiotherapist",
+      "verdict": "keep",
+      "officialName": "Practice of physiotherapy (Physiotherapy Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "vas-fonksiyon",
+        "sakatlik-gunlugu",
+        "home-exercise",
+        "pain-odi"
+      ]
+    },
+    {
+      "key": "clinical-psychology",
+      "currentLabel": "Clinical psychologist",
+      "verdict": "keep",
+      "officialName": "Practice of psychology (Psychologists Board); scope \"Clinical Psychologist\" per the earlier audit",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "phq9-gad7"
+      ]
+    },
+    {
+      "key": "dietetics",
+      "currentLabel": "Dietitian",
+      "verdict": "keep",
+      "officialName": "Practice of dietetics (Dietitians Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "nz-bmi-waist"
+      ]
+    },
+    {
+      "key": "occupational-therapy",
+      "currentLabel": "Occupational therapist",
+      "verdict": "keep",
+      "officialName": "Practice of occupational therapy (Occupational Therapy Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "nz-cognitive-screen"
+      ]
+    },
+    {
+      "key": "audiology",
+      "currentLabel": "Audiologist",
+      "verdict": "keep",
+      "officialName": null,
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "odyometri-pta",
+        "nz-hearing-loss-percentage"
+      ],
+      "note": "NOT on the ministry's list of regulated professions: no responsible authority exists for audiology. Keep, but what that means for access to a patient's record is for a lawyer."
+    },
+    {
+      "key": "nurse-practitioner",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Practice of nursing (Nursing Council of New Zealand)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [],
+      "note": "Nurse practitioners can complete ACC's work certificate and the Work and Income certificate. Tools as general practice, subject to scope: for a local clinical lead."
+    },
+    {
+      "key": "midwifery",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Midwifery (Midwifery Council)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "pregnancy-calendar",
+        "nz-mews-maternity"
+      ]
+    },
+    {
+      "key": "podiatry",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Practice of podiatry (Podiatrists Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [],
+      "note": "Named by ACC among those who can lodge an injury claim."
+    },
+    {
+      "key": "osteopathy",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Osteopathy (Osteopathic Council)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "vas-fonksiyon"
+      ],
+      "note": "Named by ACC among those who can lodge an injury claim."
+    },
+    {
+      "key": "chiropractic",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Practice of chiropractic (Chiropractic Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "vas-fonksiyon"
+      ],
+      "note": "Named by ACC among those who can lodge an injury claim."
+    },
+    {
+      "key": "optometry",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Practice of optometry (Optometrists and Dispensing Opticians Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": [
+        "gorme-keskinligi"
+      ]
+    },
+    {
+      "key": "psychotherapy",
+      "currentLabel": null,
+      "verdict": "add",
+      "officialName": "Psychotherapy services (Psychotherapists Board)",
+      "sourceUrl": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities",
+      "tools": []
+    }
+  ],
+  "recognisedScopesNotProposed": [
+    "Clinical genetics",
+    "Intensive care medicine",
+    "Medical administration",
+    "Pathology",
+    "Public health medicine",
+    "Radiation oncology"
+  ],
+  "kitGaps": [
+    "A country cannot change WHO SEES a tool of the shared English set: the roles sit on the shared text (countries/_dil/en/araclar/*.ts, HamArac.roller). A pack can only switch a tool off (araclar.kapali) or reword it (araclar.degisen).",
+    "A country cannot add, drop or re-divide a role: all five English packs take the same 40 keys (EN_ROLLER), and lib/ulke/rolEslemesi.test.ts requires exactly forty.",
+    "A country cannot bring a tool of its own: every mechanism must be in the kit catalogue shared by all countries, and the tool texts and slots are the shared set's. EnAraclarGirdisi has no place for a country's own tools or own slots (beyond tools it closes).",
+    "New Zealand state-system tools (ACC, Work and Income, Pharmac) need an \"nz\" list in countries/yasak-araclar.json so that wall rule D7 keeps them out of every other country.",
+    "Thresholds are applied only in the kit's own unit after conversion (albumin-to-creatinine ratio in mg/g). A country whose published limits are in another unit (mg/mmol) cannot state them.",
+    "HbA1c has no unit choice (lab-izlem refuses values outside 3 to 20); LabOlcusu has no entry for it.",
+    "A pack's numbers (parametreler) are compared in the kit's unit, with nothing saying so: haemoglobin limits would have to be typed in g/dL in a country that reports g/L.",
+    "The options of a choice field are fixed in the kit (report categories, return-to-sport stages): a country cannot supply its own list.",
+    "Dose arithmetic has one unit (mg per kg): no micrograms, no units.",
+    "The citation shown under a result (kaynak) is fixed in the kit: a country cannot show its national source.",
+    "The patient file has no ethnicity and no deprivation quintile, both inputs of the national cardiovascular equations (the earlier audit, finding C8, already notes ethnicity).",
+    "A slot records what is missing and who supplies it, but not a licence status: there is no field to hold \"permission asked / granted / refused\" per tool per country."
+  ],
+  "sourcesRead": [
+    {
+      "id": "mcnz",
+      "url": "https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/"
+    },
+    {
+      "id": "triage",
+      "url": "https://tewhatuora.govt.nz/our-health-system/hospitals-and-specialist-services/emergency-departments/emergency-department-triage"
+    },
+    {
+      "id": "acem",
+      "url": "https://acem.org.au/Content-Sources/Advancing-Emergency-Medicine/Better-Outcomes-for-Patients/Triage"
+    },
+    {
+      "id": "cvd2018",
+      "url": "https://www.tewhatuora.govt.nz/publications/cardiovascular-disease-risk-assessment-and-management-for-primary-care"
+    },
+    {
+      "id": "hiso",
+      "url": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/HISO-100712025-Cardiovascular-Disease-Risk-Assessment-Data-Standard.pdf"
+    },
+    {
+      "id": "bpacCvd",
+      "url": "https://bpac.org.nz/2018/cvd.aspx"
+    },
+    {
+      "id": "bpacCkd",
+      "url": "https://bpac.org.nz/2022/ckd.aspx"
+    },
+    {
+      "id": "nzews",
+      "url": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Vital_sign_chart_user_guide_July_2017_.pdf"
+    },
+    {
+      "id": "pews",
+      "url": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Paediatric-vital-signs-chart-user-guide-2023.pdf"
+    },
+    {
+      "id": "mews",
+      "url": "https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/MVSC-user-guide-updated-September-2019.pdf"
+    },
+    {
+      "id": "growth1",
+      "url": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/Specific-life-stage/child-health/Growth-Charts-v2/factsheet-1-growth-charts-well-child.pdf"
+    },
+    {
+      "id": "growth6",
+      "url": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/Specific-life-stage/child-health/Growth-Charts-v2/factsheet-6-growth-charts-well-child.pdf"
+    },
+    {
+      "id": "imm",
+      "url": "https://www.tewhatuora.govt.nz/for-health-professionals/clinical-guidance/immunisation-handbook"
+    },
+    {
+      "id": "ra",
+      "url": "https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities"
+    },
+    {
+      "id": "cosmetic",
+      "url": "https://www.mcnz.org.nz/assets/standards/Statement-on-cosmetic-procedures.pdf"
+    },
+    {
+      "id": "concussion",
+      "url": "https://www.acc.co.nz/assets/Uploads/National-concussion-guidelines-v4.pdf"
+    },
+    {
+      "id": "accClaim",
+      "url": "https://www.acc.co.nz/for-providers/lodging-claims/lodging-a-claim-for-a-patient"
+    },
+    {
+      "id": "nzssdTargets",
+      "url": "https://t2dm.nzssd.org.nz/Section-114-Glycaemic-targets-in-the-treatment-of-diabetes"
+    },
+    {
+      "id": "nzssdScreen",
+      "url": "https://t2dm.nzssd.org.nz/Section-112-Screening-for-diabetes-in-asymptomatic-adults"
+    },
+    {
+      "id": "bpacCopd",
+      "url": "https://bpac.org.nz/2020/docs/copd.pdf"
+    },
+    {
+      "id": "onzFracture",
+      "url": "https://osteoporosis.org.nz/healthcare-professionals/diagnosis-of-osteoporosis-and-fracture-risk-assessment/fracture-risk-assessment/"
+    },
+    {
+      "id": "onzDxa",
+      "url": "https://osteoporosis.org.nz/healthcare-professionals/diagnosis-of-osteoporosis-and-fracture-risk-assessment/bone-densitometry/"
+    },
+    {
+      "id": "miniAce",
+      "url": "https://nzdementia.org/Mini-ACE"
+    },
+    {
+      "id": "bpacDementia",
+      "url": "https://bpac.org.nz/2020/dementia.aspx"
+    },
+    {
+      "id": "honos",
+      "url": "https://www.tepou.co.nz/resources/honos-guide-for-new-zealand-clinicians"
+    },
+    {
+      "id": "adom",
+      "url": "https://www.tepou.co.nz/initiatives/alcohol-and-drug-outcome-measure"
+    },
+    {
+      "id": "b4sc",
+      "url": "https://tewhatuora.govt.nz/for-health-professionals/clinical-guidance/specific-life-stage-health-information/child-health/well-child-tamariki-programme/te-mahau-tarearea-o-tamariki-ora/b4-school-check"
+    },
+    {
+      "id": "rf",
+      "url": "https://www.heartfoundation.org.nz/professionals/health-professionals/guidelines-on-rheumatic-fever-rheumatic-heart-disease-and-strep-a-sore-throat"
+    },
+    {
+      "id": "rfAlgo",
+      "url": "https://assets.heartfoundation.org.nz/documents/shop/heart-healthcare/non-stock-resources/sore-throat-algorithm.pdf"
+    },
+    {
+      "id": "bpacAf",
+      "url": "https://bpac.org.nz/2024/af.aspx"
+    },
+    {
+      "id": "bsa",
+      "url": "https://www.tewhatuora.govt.nz/assets/For-the-health-sector/NSU/For-Health-professionals/Breast-screening-/BreastScreen-Aotearoa-National-Policy-and-Quality-Standards-2013-Revised-November-2022-pdf-2.6-MB.pdf"
+    },
+    {
+      "id": "anzca",
+      "url": "https://www.anzca.edu.au/getContentAsset/d4eb4cab-69e6-4228-8568-bbc911c6c505/80feb437-d24d-46b8-a858-4a2a28b9b970/PG07-Pre-anaesthesia-consultation-2024.pdf?language=en"
+    },
+    {
+      "id": "nzta",
+      "url": "https://www.nzta.govt.nz/assets/resources/medical-aspects/Medical-aspects-of-fitness-to-drive-a-guide-for-health-practitioners.pdf"
+    },
+    {
+      "id": "retinal",
+      "url": "https://www.tewhatuora.govt.nz/publications/diabetic-retinal-screening-grading-monitoring-and-referral-guidance"
+    },
+    {
+      "id": "contraception",
+      "url": "https://health.govt.nz/system/files/2020-12/final_aotearoa_contraception_guidance.pdf"
+    },
+    {
+      "id": "stroke",
+      "url": "https://informme.org.au/media/rvroeucq/emergency-department-clinical-guidelines-summary_jun25.pdf"
+    },
+    {
+      "id": "strokeHome",
+      "url": "https://informme.org.au/guidelines/living-clinical-guidelines-for-stroke-management"
+    },
+    {
+      "id": "dermPasi",
+      "url": "https://dermnetnz.org/topics/pasi-score"
+    },
+    {
+      "id": "dermEasi",
+      "url": "https://dermnetnz.org/topics/easi-score"
+    },
+    {
+      "id": "dermScorad",
+      "url": "https://dermnetnz.org/topics/scorad"
+    },
+    {
+      "id": "accHearing",
+      "url": "https://www.acc.co.nz/assets/provider/assessment-hearing-loss-acc7917.pdf"
+    },
+    {
+      "id": "pharmacAda",
+      "url": "https://www.pharmac.govt.nz/assets/2021-11-Amgevita-Special-Authority.pdf"
+    },
+    {
+      "id": "pharmac2026",
+      "url": "https://www.pharmac.govt.nz/news-and-resources/consultations-and-decisions/2026-02-decision-to-update-the-access-criteria-for-infliximab-etanercept-secukinumab-and-rituximab"
+    },
+    {
+      "id": "pharmacRa",
+      "url": "https://www.pharmac.govt.nz/news-and-resources/consultations-and-decisions/2025-10-proposal-relating-to-funded-access-to-infliximab-etanercept-secukinumab-and-rituximab/proposed-changes-for-rheumatoid-arthritis"
+    },
+    {
+      "id": "actNow",
+      "url": "https://teaho.govt.nz/index.php/our-work/canshare/act-now-programme"
+    },
+    {
+      "id": "psa2015",
+      "url": "https://www.health.govt.nz/system/files/2015-09/prostate-cancer-management-referral-guidance_sept15-c.pdf"
+    },
+    {
+      "id": "bpacPsa",
+      "url": "https://bpac.org.nz/2020/prostate.aspx"
+    },
+    {
+      "id": "bpacGout",
+      "url": "https://bpac.org.nz/2025/gout.aspx"
+    },
+    {
+      "id": "wcmc",
+      "url": "https://www.workandincome.govt.nz/providers/health-and-disability/medical-certificates/work-capacity-medical-certificate.html"
+    },
+    {
+      "id": "notifiable",
+      "url": "https://www.health.govt.nz/regulation-legislation/notifiable-diseases/summary-of-infectious-disease-management"
+    },
+    {
+      "id": "nzf",
+      "url": "https://nzformulary.org/about.html"
+    },
+    {
+      "id": "healthifyShort",
+      "url": "https://healthify.nz/health-a-z/s/short-stature"
+    },
+    {
+      "id": "chestPain",
+      "url": "https://connectsci.au/hc/article/10/1/90/34895/The-assessment-of-acute-chest-pain-in-New-Zealand"
+    },
+    {
+      "id": "pewsPage",
+      "url": "https://www.hqsc.govt.nz/our-work/improved-service-delivery/patient-deterioration/workstreams/paediatric-early-warning-system/"
+    },
+    {
+      "id": "pewsTools",
+      "url": "https://www.hqsc.govt.nz/resources/resource-library/pews-tools-and-guidance/"
+    },
+    {
+      "id": "nzewsPage",
+      "url": "https://www.hqsc.govt.nz/resources/resource-library/new-zealand-early-warning-score-vital-sign-chart-user-guide/"
+    },
+    {
+      "id": "hqscDeterioration",
+      "url": "https://www.hqsc.govt.nz/our-work/improved-service-delivery/patient-deterioration/"
+    },
+    {
+      "id": "hqscRecognition",
+      "url": "https://www.hqsc.govt.nz/our-work/improved-service-delivery/patient-deterioration/workstreams/recognition-and-response-systems/"
+    },
+    {
+      "id": "accConcussionPage",
+      "url": "https://www.acc.co.nz/preventing-injury/sport-recreation/concussion-in-sport-and-recreation-3"
+    },
+    {
+      "id": "notifiablePage",
+      "url": "https://www.tewhatuora.govt.nz/health-services-and-programmes/national-public-health-service/notifiable-diseases"
+    },
+    {
+      "id": "growthPageMinistry",
+      "url": "https://www.health.govt.nz/our-work/life-stages/child-health/growth-charts"
+    },
+    {
+      "id": "starshipCalculator",
+      "url": "https://www.starship.org.nz/health-professionals/calculators/anthropometry-height-weight-and-bmi-centiles/"
+    },
+    {
+      "id": "starshipGuidelineDevelopment",
+      "url": "https://www.starship.org.nz/health-professionals/clinical-guideline-development/"
+    },
+    {
+      "id": "dermnetBiologics",
+      "url": "https://dermnetnz.org/topics/biological-agents-for-psoriasis"
+    }
+  ],
+  "couldNotRead": [
+    {
+      "url": "https://www.tewhatuora.govt.nz/for-health-professionals/clinical-guidance/specific-life-stage-health-information/child-health/well-child-tamariki-ora-services/growth-charts",
+      "why": "refused to automated readers (robots)"
+    },
+    {
+      "url": "https://schedule.pharmac.govt.nz/2026/09/10/SA2525.pdf",
+      "why": "refused to automated readers (robots); Pharmac's own www site was read instead for the same criteria"
+    },
+    {
+      "url": "https://www.nzrespiratoryguidelines.co.nz/uploads/8/3/0/1/83014052/nz_copd_guidelines_web.pdf",
+      "why": "refused to automated readers (robots)"
+    },
+    {
+      "url": "https://www.nzrespiratoryguidelines.co.nz/adultguidelines.html",
+      "why": "refused to automated readers (robots)"
+    },
+    {
+      "url": "https://www.nsu.govt.nz/health-professionals/national-cervical-screening-programme/hpv-primary-screening/hpv-primary-0-2",
+      "why": "refused to automated readers (robots)"
+    },
+    {
+      "url": "https://www.tewhatuora.govt.nz/publications/clinical-guidelines-for-weight-management-in-new-zealand-adults",
+      "why": "refused to automated readers (robots)"
+    },
+    {
+      "url": "https://www.nzta.govt.nz/driver-licences/getting-a-licence/medical-requirements/information-for-health-practitioners",
+      "why": "the page came back empty"
+    },
+    {
+      "url": "https://bpac.org.nz/2019/cvd-risk-assessment.aspx",
+      "why": "page not found"
+    },
+    {
+      "url": "https://bpac.org.nz/2021/copd.aspx",
+      "why": "page not found"
+    },
+    {
+      "url": "https://starship.org.nz/guidelines/",
+      "why": "the fetch tool would not open an address that had not come from a search result"
+    },
+    {
+      "url": "https://www.phqscreeners.com/terms",
+      "why": "the fetch tool would not open an address that had not come from a search result"
+    },
+    {
+      "url": "https://cardiacandrespiratory.org.nz/our-work/guidelines/",
+      "why": "the fetch tool would not open it (redirect target of asthmafoundation.org.nz)"
+    },
+    {
+      "url": "https://www.das-score.nl/en/",
+      "why": "the fetch tool would not open an address that had not come from a search result"
+    }
+  ],
+  "searchesNotMade": "The session's web-search allowance (shared with the other country jobs) ran out. Not searched: the publication of the DAS28 formula; the weight-management guideline; smoking and alcohol brief-advice guidance; maternity guidelines (antenatal schedule, hypertension in pregnancy, growth charts in pregnancy); interRAI; the rehabilitation outcomes centre; whether anaesthetists here record an ASA class; the audiological society's grade scale; the colleges of general practice and urgent care; and the licence terms of PHQ-9, GAD-7, CAT, DLQI, BASDAI, IPSS, MIDAS, the Oswestry index, M-CHAT-R/F, the Strengths and Difficulties Questionnaire, FRAX, the Garvan calculator, the Mini-ACE, HoNOS, NIHSS and BI-RADS."
+}
