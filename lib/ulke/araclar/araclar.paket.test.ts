@@ -37,7 +37,7 @@ import type { DilKodu, UlkeKlinigi, UlkePaketi } from '../tipler'
 import { alanBirimleri, birimAnahtari, kanoniktenBirime, kanonigeCevir, olcuTanimi, type BirimOrtami } from './birimler'
 import { girdiyiCoz } from './girdi'
 import { KIT_ARACLARI, kitAraci } from './katalog'
-import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, paketinTanimi } from './paket'
+import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, paketinTanimi, sayiMetni } from './paket'
 import type { AracAlani, AracGirdisi, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
 
 const KOK = resolve(__dirname, '../../..')
@@ -109,7 +109,9 @@ describe('tools — the kit\'s catalogue', () => {
       assert.equal(new Set(alanlar).size, alanlar.length, `${t.anahtar}: a field key is used twice`)
       for (const a of t.alanlar) {
         assert.match(a.anahtar, /^[a-z][a-z0-9_]*$/, `${t.anahtar}.${a.anahtar}`)
-        if (a.tur === 'secim') assert.ok((a.secenekler ?? []).length >= 2, `${t.anahtar}.${a.anahtar}: a choice needs two options`)
+        // …unless its options are the rows of a table the country supplies (NOTYA-ULKE-ARAC-DUZELTME-01): the kit then holds none, and the table is one the tool declares
+        if (a.tur === 'secim' && a.tablodan) { assert.deepEqual(a.secenekler, [], `${t.anahtar}.${a.anahtar}: options from a table are the country's, never the kit's`); assert.ok((t.tablolar ?? []).some((x) => x.anahtar === a.tablodan!.tablo && x.sutunlar.some((c) => c.anahtar === a.tablodan!.sutun && c.tur === 'anahtar')), `${t.anahtar}.${a.anahtar}: its table and column`) }
+        else if (a.tur === 'secim') assert.ok((a.secenekler ?? []).length >= 2, `${t.anahtar}.${a.anahtar}: a choice needs two options`)
         if (a.tur === 'sayi' || a.tur === 'puan') assert.ok(typeof a.enAz === 'number' && typeof a.enCok === 'number' && a.enAz < a.enCok, `${t.anahtar}.${a.anahtar}: a number needs its range`)
       }
       for (const grup of [t.cikti.sayilar, t.cikti.bantlar, t.cikti.uyarilar, t.cikti.tarihler]) assert.equal(new Set(grup).size, grup.length, `${t.anahtar}: a result key is declared twice`)
@@ -219,7 +221,8 @@ describe('tools — the pack\'s list', () => {
         const a = klon(arayuz); delete (ar(a).araclar[i].metin[grup] as Record<string, unknown>)[k]
         iceriyor(yerler(paket, a), `arayuz.araclar.${p.anahtar}.${grup}.${k}.${d}: no text in this language form`)
       }
-      const secimli = t.alanlar.find((x) => x.tur === 'secim')
+      // (a choice whose options are a table this country has not supplied has no option to lose)
+      const secimli = t.alanlar.find((x) => x.tur === 'secim' && (x.secenekler ?? []).length)
       if (secimli) { const a = klon(arayuz); delete (ar(a).araclar[i].metin.secenekler as Record<string, Record<string, unknown>>)[secimli.anahtar][secimli.secenekler![0]]; iceriyor(yerler(paket, a), `arayuz.araclar.${p.anahtar}.secenekler.${secimli.anahtar}.${secimli.secenekler![0]}.${d}: no text in this language form`) }
     }
     // slots: switched on, without its reason, a slot and a tool at once, a mechanism the kit does not have
@@ -332,8 +335,10 @@ describe('tools — the screens', () => {
         assert.ok(bosMetin.includes(a.arac.eksik), `${p.anahtar}/${dil}: an empty tool does not say what to do`)
         assert.doesNotMatch(bosHtml, /data-bant=|data-sayi=|data-uyari=|data-eylem="kopyala"/, `${p.anahtar}/${dil}: an empty tool shows a result`)
         // a field with a condition is not there until its choice is made; every other field is drawn with its label
-        for (const al of t.alanlar) assert.equal(bosHtml.includes(`data-alan="${al.anahtar}"`), !al.kosul, `${p.anahtar}/${dil}: field ${al.anahtar}`)
-        for (const al of t.alanlar) if (!al.numarali && !al.kosul) assert.ok(bosMetin.includes(bicimli(p.metin.alanlar[al.anahtar], dil)), `${p.anahtar}/${dil}: label of ${al.anahtar}`)
+        // …and a choice whose options are a table the country has not supplied is not there at all (NOTYA-ULKE-ARAC-DUZELTME-01)
+        const yok = (al: AracTanimi['alanlar'][number]): boolean => !!al.kosul || (!!al.tablodan && !(al.secenekler ?? []).length)
+        for (const al of t.alanlar) assert.equal(bosHtml.includes(`data-alan="${al.anahtar}"`), !yok(al), `${p.anahtar}/${dil}: field ${al.anahtar}`)
+        for (const al of t.alanlar) if (!al.numarali && !yok(al)) assert.ok(bosMetin.includes(bicimli(p.metin.alanlar[al.anahtar], dil)), `${p.anahtar}/${dil}: label of ${al.anahtar}`)
         assert.ok(bosMetin.includes(bicimli(p.metin.not, dil)) && bosMetin.includes(a.arac.saklanmaz) && bosMetin.includes(a.kayit.hastasiz))
         assert.doesNotMatch(bosHtml, /data-bolum="kayit"|data-eylem="arac-kaydet"/, `${p.anahtar}/${dil}: a tool opened without a patient offers to keep its result`)
         if (t.kaynak) assert.ok(bosMetin.includes(t.kaynak), `${p.anahtar}/${dil}: the source is not shown`)
@@ -385,6 +390,23 @@ describe('tools — the screens', () => {
         temiz(ozet, `summary ${p.anahtar} ${dil}`)
         assert.equal(aracOzeti(x, ornekGirdiler(t)[0], t.hesapla(ornekGirdiler(t)[0], ornekOrtam(t, p.parametreler)), dil, a, y, o), '')
       }
+    }
+  })
+
+  it('AN AMOUNT OF A MEDICINE is written by THIS country\'s own rule: the pack states it, and the screen and the summary follow it (NOTYA-ULKE-ARAC-DUZELTME-01)', () => {
+    if (!icerik) return
+    // a pack that switches on a tool which writes an amount of a medicine has said how one is written
+    if (icerik.araclar.some((p) => paketinTanimi(icerik!, p)?.dozYazar)) assert.equal(typeof icerik.dozYazimi?.sondaSifir, 'boolean', 'a tool that writes a dose is switched on and the pack does not say how a dose is written')
+    if (!icerik.dozYazimi) return
+    const ayrac = paket.bicim.ondalikAyraci, sifirli = icerik.dozYazimi.sondaSifir
+    for (const dil of FORMLAR) {
+      const y = Ekran.yazici(icerik, dil), a = A.araclarMetni(dil)
+      const doz = (deger: number) => sayiMetni({ anahtar: 'x', deger, ondalik: 2, anlamli: 3, doz: true }, a, y)
+      assert.deepEqual([doz(5), doz(2.5), doz(160)], sifirli ? [`5${ayrac}00`, `2${ayrac}50`, `160${ayrac}00`] : ['5', `2${ayrac}5`, '160'], `${dil}: whole and half amounts`)
+      // under either rule a small amount keeps its figures: 0.16 is never written 0.2
+      assert.equal(doz(0.16), sifirli ? `0${ayrac}160` : `0${ayrac}16`, dil)
+      // a number that is not an amount of a medicine is written as it always was
+      assert.equal(sayiMetni({ anahtar: 'x', deger: 5, ondalik: 2 }, a, y), `5${ayrac}00`, dil)
     }
   })
 

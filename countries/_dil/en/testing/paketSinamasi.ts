@@ -56,8 +56,8 @@ export type EnPaketSinamasi = {
   kapaliAraclar: readonly string[]
   /** The country's units, as its record states them. */
   birimler: { agirlik: 'kg' | 'lb'; boy: 'cm' | 'in'; sicaklik: 'C' | 'F' }
-  /** The unit each laboratory value is reported in, as its record states it. */
-  labBirimleri: Readonly<Record<string, string>>
+  /** The unit each laboratory value is reported in, as its record states it: one unit, or — where the doctor chooses — each unit the country accepts. */
+  labBirimleri: Readonly<Record<string, string | readonly string[]>>
   /** The country's word for a senior doctor, as its record states it. */
   kidemliHekim: string
   /** The shape of the example phone number: a range the country reserves for fiction, or a shape that is no number at all. */
@@ -208,7 +208,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
   describe(`${kod}: UNITS — a clinical-safety matter`, () => {
     it('the pack measures in the units its record states', () => {
       assert.deepEqual(paket.uygulama!.birimler, s.birimler)
-      assert.deepEqual({ ...a.labBirimleri }, s.labBirimleri)
+      assert.deepEqual(JSON.parse(JSON.stringify(a.labBirimleri)), JSON.parse(JSON.stringify(s.labBirimleri)))
       for (const [olcu, birim] of Object.entries(a.labBirimleri)) for (const b of typeof birim === 'string' ? [birim] : birim ?? []) assert.ok(b in (olcuTanimi(olcu, a.olculer)?.birimler ?? {}), `${olcu}: ${b}`)
     })
 
@@ -228,6 +228,8 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
         if (alan.lab) assert.deepEqual(birimleri, typeof s.labBirimleri[alan.lab] === 'string' ? [s.labBirimleri[alan.lab]] : [...(s.labBirimleri[alan.lab] ?? [])], `${t.anahtar}.${alan.anahtar}`)
       }
       for (const { t } of acik) for (const k of t.sonucBirimleri ?? []) assert.ok(a.birimler[k]?.[bicim]?.trim(), `${t.anahtar}: the result unit "${k}" has no name`)
+      // a result whose unit follows the unit a laboratory value was typed in (PSA: the change in a year) has a name for every unit the pack accepts
+      for (const { t } of acik) for (const [olcu, ek] of Object.entries(t.sonucLabEkleri ?? {})) for (const birim of alanBirimleri({ anahtar: 'x', tur: 'sayi', lab: olcu as AracAlani['lab'] }, o)) assert.ok(a.birimler[`${birim}${ek}`]?.[bicim]?.trim(), `${t.anahtar}: the result unit "${birim}${ek}" has no name`)
       for (const { t } of acik) for (const olcu of t.sonucOlculeri ?? []) assert.ok(a.birimler[s.birimler[olcu]]?.[bicim]?.trim(), `${t.anahtar}: the result is written in ${s.birimler[olcu]}, which has no name`)
     })
 
@@ -252,7 +254,11 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
             const v = ornek[alan.anahtar]
             if (alan.tur === 'isaret') { if (v === true) ham[alan.anahtar] = true; continue }
             if (v === null || v === undefined) continue
-            if (typeof v === 'number' && (alan.olcu || alan.lab)) { const y = yazilan(alan, v, o); ham[alan.anahtar] = y.metin; beklenenGirdi[alan.anahtar] = y.kanonik; if (y.birim) ham[birimAnahtari(alan.anahtar)] = y.birim }
+            if (typeof v === 'number' && (alan.olcu || alan.lab)) {
+              const y = yazilan(alan, v, o); ham[alan.anahtar] = y.metin; beklenenGirdi[alan.anahtar] = y.kanonik; if (y.birim) ham[birimAnahtari(alan.anahtar)] = y.birim
+              // the reference is told the unit the value was typed in, as the screen tells the arithmetic: a limit a guideline prints per unit is applied as printed
+              if (alan.lab) beklenenGirdi[birimAnahtari(alan.anahtar)] = alanBirimleri(alan, o)[0]
+            }
             else ham[alan.anahtar] = String(v)
           }
           const ortam = ornekOrtam(t)
@@ -279,6 +285,9 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.equal(LB_KG, 0.45359237)
       assert.equal(LAB_BIRIMLERI.hemoglobin.birimler['g/L'], 0.1)
       assert.equal(LAB_BIRIMLERI.albuminKreatinin.birimler['mg/mmol'], 1 / 0.113)
+      assert.deepEqual(LAB_BIRIMLERI.hba1c.birimler['mmol/mol'], { carpan: 0.09148, kaydirma: 2.152 })
+      assert.equal(LAB_BIRIMLERI.crp.birimler['mg/dL'], 10)
+      assert.equal(LAB_BIRIMLERI.psa.birimler['ug/L'], 1)
     })
   })
 
@@ -299,7 +308,8 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     it('no tool with numbers a country must decide is switched on — except the ones whose numbers the country\'s record states', () => {
       for (const p of a.araclar) {
         const t = paketinTanimi(a, p)!
-        const sayili = (t.parametreler?.length ?? 0) > 0 || (t.tablolar?.length ?? 0) > 0
+        // a number or a table the country MAY state and need not (NOTYA-ULKE-ARAC-DUZELTME-01) is not one it must decide
+        const sayili = (t.parametreler?.length ?? 0) > 0 || (t.tablolar ?? []).some((x) => x.istege !== true)
         assert.equal(sayili, sayiliAraclar.includes(p.anahtar), p.anahtar)
       }
     })

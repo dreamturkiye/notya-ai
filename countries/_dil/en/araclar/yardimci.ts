@@ -5,6 +5,7 @@
  * A tool's words are written ONCE, as plain strings in en-GB spelling (`HamArac`); `araciBicimle` turns them into the
  * kit's shape in a country's form of English. MACHINE-WRITTEN: no clinician of any country has read a line.
  */
+import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import type { AracLisansi, AracMetni, AracUyarlamasi, HastaKapisi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { EnRol } from '../klinik/roller'
 import { enYaz, type EnBicim } from '../varyant'
@@ -92,10 +93,15 @@ export function araciBicimle(a: HamArac, bicim: EnBicim, degisen?: EnDegisen, ek
   const grup = (ad: 'alanlar' | 'sayilar' | 'bantlar' | 'uyarilar') => { const temel = ad === 'bantlar' && kendiBantlari ? undefined : cevir(a[ad], bicim); return temel || degisen?.[ad] ? { ...(temel ?? {}), ...kendi(degisen?.[ad]) } : undefined }
   const secenekler = a.secenekler || degisen?.secenekler ? { ...Object.fromEntries(Object.entries(a.secenekler ?? {}).map(([k, v]) => [k, cevir(v, bicim)!])), ...Object.fromEntries(Object.entries(degisen?.secenekler ?? {}).map(([k, v]) => [k, kendi(v)])) } : undefined
   const tarihler = a.tarihler || degisen?.tarihler ? { ...(cevir(a.tarihler, bicim) ?? {}), ...kendi(degisen?.tarihler) } : undefined
+  // A COUNTRY THAT CHOOSES THE FIELDS OF A GROUP (`uyarlama.alanlar`, NOTYA-ULKE-ARAC-DUZELTME-01) keeps the set's words
+  // only for the fields it has: a label for a field that is not on its screen would be refused by the pack check.
+  const gruplar = ek?.uyarlama?.alanlar ? kitAraci(a.anahtar)?.alanGruplari ?? {} : {}
+  const olmayan = new Set(Object.entries(ek?.uyarlama?.alanlar ?? {}).flatMap(([g, secilen]) => (gruplar[g]?.secenekler ?? []).map((al) => al.anahtar).filter((k) => !secilen.includes(k))))
+  const alanlar = Object.fromEntries(Object.entries(grup('alanlar') ?? {}).filter(([k]) => !olmayan.has(k)))
   const metin: AracMetni = {
     ad: { [bicim]: degisen?.ad ?? enYaz(a.ad, bicim) },
     aciklama: { [bicim]: degisen?.aciklama ?? enYaz(a.aciklama, bicim) },
-    alanlar: grup('alanlar') ?? {},
+    alanlar,
     ...(secenekler ? { secenekler } : {}),
     ...(grup('sayilar') ? { sayilar: grup('sayilar') } : {}),
     ...(grup('bantlar') ? { bantlar: grup('bantlar') } : {}),
