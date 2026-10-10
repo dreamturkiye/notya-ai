@@ -11,8 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
-import { EN_ROLLER } from '../_dil/en/klinik/roller'
+import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './ayarlar'
+import { GB_ROLLER } from './roller'
 
 const cekirdek = enCekirdek('en-GB')
 const metin = paketMetinleri({
@@ -81,7 +82,8 @@ export const GB_PAKETI: UlkePaketi = {
   uygulama: {
     diller: ['en-GB'],
     hastaDilleri: ['en'],
-    roller: EN_ROLLER,
+    // THE COUNTRY'S OWN ROLE LIST: the shared forty with this country's differences (./roller.ts → GB_ROLLER).
+    roller: enRolAnahtarlari(GB_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (and differ between the four nations).
     randevu: {

@@ -9,10 +9,11 @@
  * knowledge. What each waits on is listed in docs/COUNTRY-PACK-UNITED-KINGDOM.md.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  *
- * Plain data: type-only imports, so that the pack's light data file can read it.
+ * Plain data. The role list is ./roller.ts.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import type { Birimler } from '@/lib/ulke/tipler'
+import { GB_ROL_ADLARI, GB_ROLLER } from './roller'
 
 /**
  * GUARDIAN WORDING for a patient younger than this on the day of the visit ("who gave the history"), in every role.
@@ -76,18 +77,10 @@ export const GB_GIRDI: EnUlkeGirdisi = {
   // doctor role, so the general-practice instruction also opens "You are an experienced consultant" (reported: a
   // matter of the shared English set).
   kidemliHekim: 'consultant',
-  // UNVERIFIED: how each specialty is usually named in the United Kingdom, where it differs from the set's base name.
-  // Not checked against the official list of specialties (checklist C1).
-  rolAdlari: {
-    'family-medicine': 'General practice',
-    anaesthesia: 'Anaesthetics',
-    'internal-medicine': 'General internal medicine',
-    endocrinology: 'Endocrinology and diabetes',
-    otolaryngology: 'Ear, nose and throat (ENT)',
-    nephrology: 'Renal medicine',
-    orthopaedics: 'Trauma and orthopaedics',
-    radiology: 'Clinical radiology',
-  },
+  // THE NAMES OF THE SPECIALTIES, in the regulator's wording, and WHERE THE ROLE LIST DIFFERS FROM THE SHARED FORTY
+  // (twelve specialties and two professions added, one clinic role taken out): ./roller.ts, with its sources.
+  rolAdlari: GB_ROL_ADLARI,
+  roller: GB_ROLLER,
   veliYasi: GB_VELI_YASI,
   birimler: GB_BIRIMLER,
   surum: 'gb-draft-2026-10-09',

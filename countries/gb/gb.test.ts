@@ -12,6 +12,7 @@ import { GB_GIRDI, GB_KIMLIK_ETIKETI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { GB_PAKETI } from './index'
 import { GB_KLINIK } from './klinik'
+import { GB_ROLLER } from './roller'
 
 ingilizcePaketSinamasi({
   paket: GB_PAKETI,
@@ -26,6 +27,8 @@ ingilizcePaketSinamasi({
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L' },
   kidemliHekim: 'consultant',
+  // the role list of the audited decisions (./roller.ts; ./gb-roller.test.ts holds it to the decisions and the regulators' lists)
+  rolDegisimi: GB_ROLLER,
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
   ornekTelefon: /^\+44 7700 900\d{3}$/,
 })
@@ -49,7 +52,7 @@ describe('gb: what is the United Kingdom\'s', () => {
     assert.equal(ad('paediatrics'), 'Paediatrics')
     assert.equal(ad('family-medicine'), 'General practice')
     assert.equal(ad('anaesthesia'), 'Anaesthetics')
-    assert.equal(ad('orthopaedics'), 'Trauma and orthopaedics')
+    assert.equal(ad('orthopaedics'), 'Trauma and orthopaedic surgery')
     assert.equal(GB_ARAYUZ.randevuMetinleri['en-GB']!.durum.iptal, 'Cancelled')
     assert.match(GB_KLINIK.notTalimati('en-GB', 'general') ?? '', /You are an experienced consultant\.[\s\S]*in British spelling/)
   })
