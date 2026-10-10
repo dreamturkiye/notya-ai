@@ -38,13 +38,30 @@
  *   by the patient's age and sex     PaketAraci.hasta, with the sentence that says who the tool is for.
  *   licence                          PaketAraci.lisans and AracYuvasi.lisans; a tool that is not free or permitted
  *                                    cannot be switched on. `baglanti` = a tile that only opens an outside calculator.
+ *
+ * ── NOTYA-ULKE-ARAC-DUZELTME-01 — WHAT THE CORRECTION OF THE SHARED TOOLS ADDED (docs/araclar-denetim/DUZELTMELER.md).
+ * Each is optional again: a pack that states none of them gets the kit's own, sourced, behaviour. ──
+ *
+ *   a number the country MAY state   AracTanimi.secimlikParametreler (the range of the expected height; the hearing
+ *                                    asymmetry rule; the PSA interval caution): absent = the tool leaves it out.
+ *   a table the country MAY supply   AracTablosu.istege, and a field whose options are the rows of that table
+ *                                    (AracAlani.tablodan): the steps of a return to sport. No table, no field, no step.
+ *   its own choice of fields         AracTanimi.alanGruplari + PaketAraci.uyarlama.alanlar (the hearing frequencies).
+ *   bands by a choice, not a number  AracTanimi.bantAlani: the band is the option chosen in one field.
+ *   how a dose is written            UlkeAraclari.dozYazimi, required of a pack that switches on a tool marked
+ *                                    `dozYazar`: with or without a zero after the decimal mark (./yazim.ts).
+ *   the unit the doctor typed in     reaches the arithmetic as `<field>.birim` for every laboratory field, so a limit
+ *                                    printed in two units is compared in the unit of the value (KDIGO albuminuria).
  */
 import type { BicimliMetin } from '../arayuz/tipler'
 import type { AraclarMetni } from '../arayuz/metinTipleri'
 import type { DilKodu } from '../tipler'
 
-/** A laboratory quantity whose UNIT is the country's choice (the pack states it; the kit converts before it computes). */
-export type LabOlcusu = 'kreatinin' | 'hemoglobin' | 'glukoz' | 'kolesterol' | 'albuminKreatinin'
+/**
+ * A laboratory quantity whose UNIT is the country's choice (the pack states it; the kit converts before it computes).
+ * `hba1c`, `crp` and `psa` since NOTYA-ULKE-ARAC-DUZELTME-01 (lib/ulke/araclar/birimler.ts states each conversion and its source).
+ */
+export type LabOlcusu = 'kreatinin' | 'hemoglobin' | 'glukoz' | 'kolesterol' | 'albuminKreatinin' | 'hba1c' | 'crp' | 'psa'
 
 /**
  * A quantity ONLY ONE COUNTRY'S OWN TOOL reads (UlkeAraclari.olculer): its key begins with that country's code and a
@@ -96,6 +113,12 @@ export type AracAlani = {
    * particular option.
    */
   secenekSerbest?: boolean
+  /**
+   * THE OPTIONS ARE THE COUNTRY'S, FROM A TABLE IT SUPPLIES (NOTYA-ULKE-ARAC-DUZELTME-01): the choice offers the keys of
+   * column `sutun` of the pack's table `tablo`, in the table's order. THE KIT HOLDS NONE: where the pack supplies no
+   * such table the field has no option and is NOT THERE (`alanVarMi`), and the tool answers without it.
+   */
+  tablodan?: { tablo: string; sutun: string }
   /** true = may be left empty; the tool still answers. */
   istege?: boolean
   /** Shown, and read, only while the choice field `alan` holds one of `degerler`. Otherwise the field is not there. */
@@ -110,7 +133,20 @@ export type AracAlani = {
 /** What the doctor entered, already narrowed: a number in the canonical unit, an option key, a tick, an ISO day. */
 export type AracGirdisi = Readonly<Record<string, number | string | boolean | null>>
 
-export type AracSayisi = { anahtar: string; deger: number; /** Decimal places shown. */ ondalik: number; /** The scale's maximum, shown as "12 / 35". */ enCok?: number; /** A unit code the pack names. */ birim?: string; /** A length or a weight in cm / kg: shown in the PACK's unit of that measure. */ olcu?: 'boy' | 'agirlik' }
+export type AracSayisi = {
+  anahtar: string; deger: number; /** Decimal places shown. */ ondalik: number; /** The scale's maximum, shown as "12 / 35". */ enCok?: number; /** A unit code the pack names. */ birim?: string; /** A length or a weight in cm / kg: shown in the PACK's unit of that measure. */ olcu?: 'boy' | 'agirlik'
+  /**
+   * AT LEAST THIS MANY SIGNIFICANT FIGURES (NOTYA-ULKE-ARAC-DUZELTME-01): where `ondalik` places would show fewer, more
+   * places are written, so that a small amount is never written as "0.0" or with one figure only. It is how the
+   * ARITHMETIC'S RESULT is written, not a rounding to anything that can be measured (./yazim.ts → gosterimOndaligi).
+   */
+  anlamli?: number
+  /**
+   * true = AN AMOUNT OF A MEDICINE (a dose, a volume of a dose): written by the PACK's rule for writing a dose
+   * (`UlkeAraclari.dozYazimi`): with or without a zero after the decimal mark.
+   */
+  doz?: boolean
+}
 
 /** The answer of a tool: numbers and keys. Every key is named by the pack; the kit writes no sentence. */
 export type AracSonucu = {
@@ -132,7 +168,11 @@ export type AracTabloSatiri = Readonly<Record<string, number | string>>
  * the arithmetic uses) and — where the tool asks for one — the country's tables (`t`, laboratory columns already in
  * the unit the arithmetic uses). Built by lib/ulke/araclar/paket.ts → aracOrtami, for the screen and for the server.
  */
-export type AracOrtami = { bugun: string; p: Readonly<Record<string, number>>; t?: Readonly<Record<string, readonly AracTabloSatiri[]>> }
+export type AracOrtami = {
+  bugun: string; p: Readonly<Record<string, number>>; t?: Readonly<Record<string, readonly AracTabloSatiri[]>>
+  /** Where the country chose the fields of a group (`AracTanimi.alanGruplari`): group → the field keys it has, in the kit's order. Absent = the kit's own. */
+  alanlar?: Readonly<Record<string, readonly string[]>>
+}
 
 /** `baglanti` = a tile that ONLY OPENS AN OUTSIDE CALCULATOR: no field, no arithmetic, nothing kept. A pack's, never the kit's. */
 export type AracTuru = 'hesap' | 'olcek' | 'liste' | 'takvim' | 'ekran' | 'baglanti'
@@ -140,6 +180,12 @@ export type AracTuru = 'hesap' | 'olcek' | 'liste' | 'takvim' | 'ekran' | 'bagla
 /** A table a tool leaves to the country: its key, and the columns every row must have. */
 export type AracTablosu = {
   anahtar: string
+  /**
+   * true = THE COUNTRY MAY SUPPLY IT, AND NEED NOT (NOTYA-ULKE-ARAC-DUZELTME-01): without it the tool answers WITHOUT
+   * what the table would add: it never falls back on a table of the kit's own. A table that IS supplied is held to
+   * the same checks as a required one, and a table that cannot be read gives no result.
+   */
+  istege?: boolean
   sutunlar: readonly { anahtar: string; /** sayi = a number; anahtar = a key the tool returns or compares */ tur: 'sayi' | 'anahtar'; /** The laboratory quantity a number column is measured in: the pack states the column's unit. */ lab?: OlcuAnahtari }[]
 }
 
@@ -162,6 +208,32 @@ export type AracTanimi = {
    * (`{ deger, birim }`) and the kit converts it before the tool compares anything. A bare number is refused there.
    */
   parametreOlculeri?: Readonly<Record<string, OlcuAnahtari>>
+  /**
+   * NUMBERS THE COUNTRY MAY STATE, AND NEED NOT (NOTYA-ULKE-ARAC-DUZELTME-01), by key. Where the pack states one, the
+   * arithmetic is handed it as `p[key]`; where it does not, `p[key]` is absent and the tool leaves out what depends on
+   * it, or uses the rule its definition documents with its source. ONE EXCEPTION, said where it stands: the 90 days
+   * of `psa-hizi` (`kisa_aralik_gun`) is the number the tool always had, WITHOUT a source; it was left as it was and
+   * made something a country can change or turn off (docs/araclar-denetim/DUZELTMELER.md, fault 14).
+   * A stated number is held to the same checks as a required one (`parametreOlculeri` applies to these keys too).
+   */
+  secimlikParametreler?: readonly string[]
+  /**
+   * A SET OF FIELDS A COUNTRY MAY CHOOSE FROM (NOTYA-ULKE-ARAC-DUZELTME-01), by group. `alanlar` holds the kit's own
+   * choice; a pack names its own from `secenekler` (`PaketAraci.uyarlama.alanlar`), at least `enAz` of them; they
+   * take the place of the kit's, in the kit's order, and `hesapla` is handed the chosen keys (`ortam.alanlar`).
+   */
+  alanGruplari?: Readonly<Record<string, { secenekler: readonly AracAlani[]; enAz: number }>>
+  /**
+   * THE BAND IS THE OPTION CHOSEN IN THIS FIELD (the arithmetic only repeats it): where the country's options for the
+   * field are its own (`secenekSerbest` and `uyarlama.secenekler`, or `tablodan`), the bands are those options.
+   */
+  bantAlani?: string
+  /**
+   * RESULT UNITS THAT FOLLOW A LABORATORY QUANTITY'S UNIT: quantity → what is added to the unit code the value was
+   * typed in ("/yil": a value typed in "ng/mL" gives a result in "ng/mL/yil"). The pack names each such code for
+   * every unit it accepts for the quantity.
+   */
+  sonucLabEkleri?: Readonly<Partial<Record<LabOlcusu, string>>>
   /** Which numbers of the RESULT are a laboratory value: a country's own bands over one are stated with the unit. */
   sayiOlculeri?: Readonly<Record<string, OlcuAnahtari>>
   /** TABLES THE COUNTRY SUPPLIES (a grid of categories, a list of steps with their limits): handed to `hesapla` as `ortam.t`. */
@@ -178,6 +250,8 @@ export type AracTanimi = {
   kaynak: string | null
   /** For `tur: 'ekran'`: the kit screen that is the tool (it has no fields). */
   ekran?: 'hastaPortali' | 'takipPaneli' | 'sablonlarim' | 'konsultasyonlar'
+  /** true = the tool WRITES AN AMOUNT OF A MEDICINE (a result number marked `doz`): the pack must state how a dose is written (`UlkeAraclari.dozYazimi`). */
+  dozYazar?: boolean
   /** Unit codes the RESULT's numbers carry (the fields' units are on the fields). The pack names each. */
   sonucBirimleri?: readonly string[]
   /** Measures of the pack (length, weight) a RESULT is written in. */
@@ -251,6 +325,8 @@ export type AracUyarlamasi = {
   secenekler?: Readonly<Record<string, readonly string[]>>
   /** The country's own bands: they replace the kit's, and their number is the country's. */
   bantlar?: BantTablosu
+  /** Field group → the fields of that group this country has. Only a group the kit's definition offers (`alanGruplari`). */
+  alanlar?: Readonly<Record<string, readonly string[]>>
 }
 
 /** A table as a pack states it: the unit of each laboratory column, and the rows. */
@@ -331,6 +407,13 @@ export type UlkeAraclari = {
   kendiAraclari?: readonly AracTanimi[]
   /** Quantities only this country's own tools read, each with its units. Keys begin with the country's code. */
   olculer?: Readonly<Partial<Record<UlkeOlcusu, OlcuTanimi>>>
+  /**
+   * HOW THIS COUNTRY WRITES AN AMOUNT OF A MEDICINE (NOTYA-ULKE-ARAC-DUZELTME-01). `sondaSifir: false` = no zero is
+   * ever written after the decimal mark ("5 mL", "2.5 mg", never "5.0 mL"); `true` = the fixed decimals stand
+   * ("1,0"). A NATIONAL RULE WITH NO DEFAULT: required for every pack that switches on a tool which writes such an
+   * amount (a result number marked `doz`), with its source beside it in the pack.
+   */
+  dozYazimi?: { sondaSifir: boolean }
   /**
    * true = THIS PACK STATES THE LICENCE OF EVERY TOOL AND PLACEHOLDER, and the pack check refuses one without it.
    * Every new country starts with it. (A tool of the country's own, and a link-out tile, state it in every pack.)
