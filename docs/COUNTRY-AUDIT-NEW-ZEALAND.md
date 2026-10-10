@@ -202,7 +202,7 @@ Each is a question. None is answered here.
 | B3 | First day of the week | `bicim.haftaBasi: 1` (`index.ts:63`) | Week view starts on that day | **CONFORMS** with ISO 8601; the New Zealand source is UNVERIFIED |
 | B4 | Decimal and thousands separators | `'.'` and `','` (`index.ts:63`) | `sayiYaz` uses them | **CONFORMS** |
 | B5 | Currency | `NZD`, `$`, two decimals (`index.ts:58`); amount pattern `'$% a month'` (`ayarlar.ts:124`) | No amount is shown: every plan is "by quote" | **CONFORMS**; nothing to see until the owner sets prices |
-| B6 | Time zones | default `Pacific/Auckland` (`index.ts:62`); choices `Pacific/Auckland`, `Pacific/Chatham` (`index.ts:121`) | The account chooses in settings; the calendar says "Times are shown in the time zone set for your account."; the patient's page says "Times are shown in your doctor's time zone: …" | **CONFORMS** — the two legal times, chosen per account |
+| B6 | Time zones | default `Pacific/Auckland` (`index.ts:62`); choices `Pacific/Auckland`, `Pacific/Chatham` (`index.ts:121`) | The account chooses in settings; the calendar says "Times are shown in the time zone set for your account."; the patient's page says "Times are shown in your doctor's time zone: Pacific/Auckland." | **CONFORMS** — the two legal times, chosen per account. The zone is shown by its database identifier, not by a name (Core C13) |
 | B7 | Body weight, height, temperature | `kg`, `cm`, `C` (`ayarlar.ts:37`) | Tool and intake fields show the pack's unit | **CONFORMS** for weight; centimetres and °C are **UNVERIFIED** (no official page read), for a local clinical lead |
 | B8 | Laboratory units | ACR mg/mmol, haemoglobin g/L, creatinine µmol/L, glucose mmol/L, cholesterol mmol/L (`ayarlar.ts:100`); PSA shown in µg/L (`ayarlar.ts:112`) | Converts from the pack's unit; the two KDIGO tools are kept off because of the rounded limits | **CONFORMS** for creatinine, cholesterol, ACR and PSA (sourced); glucose and haemoglobin **UNVERIFIED**, for a local clinical lead |
 | B8a | HbA1c | no setting | The kit's field has no unit choice; the tool that reads it is an empty slot (`lab-izlem`) | **NOT HANDLED BY THE PRODUCT** (already recorded) |
@@ -277,7 +277,44 @@ The table above has 36 lines (B1 to B27 with their sub-lines). Counting each lin
 
 ## Part C — what was seen on real screens
 
-PART-C-PLACEHOLDER
+**How it was run.** The fixed pack was built on this machine (`NOTYA_COUNTRY=nz npm run build:ulke`: built, type check included; build proof "the `nz` pack present, no other country's pack"). The built application was started on this machine against the repository's stand-ins (a stand-in database and stand-in providers; nothing left the machine, and no account was created anywhere else). The pack-neutral walk-through (`scripts/ulke-yuruyus/genel.mjs`) passed **329 of 329 checks**. The screens were then opened with the installed Playwright Chromium and read; twelve images are in `docs/audit/nz/`.
+
+**Seen once, after the fixes.** The machine was shared with other builds and two earlier builds of the unfixed pack were killed for lack of memory, so the screens were not seen *before* the fixes. What the fixes change on screens is three role names and the name search; both are reported below as seen after the fix, and their earlier state is known from the pack's source only.
+
+The dates and times below are New Zealand's on the day of the run (10 October 2026 in `Pacific/Auckland`, daylight time).
+
+| Image | Screen | What was read on it | Against Part A |
+|---|---|---|---|
+| `01-landing.jpg` | Landing page (first screen) | "A clinical assistant for doctors"; "Request a quote"; "In English"; "Note templates for 40 specialties and professions". In the page's full text: the role names "General practice", "Internal medicine", "Plastic and reconstructive surgery", "Diagnostic and interventional radiology", "Cosmetic medicine"; the phone hint `+64 2X XXX XXXX`; "Price by quote", "By invitation. By quote."; no amount of money anywhere. Page language `en-NZ` | Role names as fixed (B13). No price seen. Only the first screen is in the image; the rest of the page was searched as text for these points and was not read sentence by sentence |
+| `02-signup.jpg` | Sign-up | Invitation code, Full name, Email address, Password, Password (again) | Nothing of a country's format on it; sign-up is by invitation |
+| `03-new-patient-form-browser-nz-english.jpg` | New patient, in a browser whose interface language is New Zealand English | "Full name": **Wiremu Pōtae** typed and kept; "Date of birth" 7 March 2011 drawn **07/03/2011**; phone hint `+64 2X XXX XXXX`; "Sex": Female, Male; "NHI number (optional)": ZZZ00AX accepted | Day first: conforms. Macron kept |
+| `04-new-patient-form-browser-us-english.jpg` | The same form, the same pack, in a browser whose interface language is United States English | The same date of birth drawn **03/07/2011** — month first | **DIFFERS (Core C3).** The field is the browser's own; the pack's pattern does not reach it. On the patient file the same date is written 07/03/2011 |
+| `10-patient-file.jpg` | Patient file | Heading "Wiremu Pōtae"; "Date of birth 07/03/2011"; "Age 15"; "Sex Male"; "Patient's language English"; "NHI number ZZZ00AX"; "Coming appointments 11/10/2026 9:00 am–9:30 am"; "The link works until 09/11/2026"; the invitation text holds no link and no PIN | Dates day/month/year: conforms. 12-hour clock. Macron shown. The stand-in database held no plain-text name (stored encrypted) |
+| `05-calendar-day.jpg` | Calendar, one day | "Sunday, 11/10/2026"; "This is not a working day."; "9:00 am–9:30 am Wiremu Pōtae"; "2:30 pm–2:40 pm"; "Times are shown in the time zone set for your account." The week view (read as text, no image) runs from "Mon · 05/10" to "Sun · 11/10" | Day first; week from Monday; 12-hour clock written "9:00 am" (the government's guidance writes "9am" and "5:30pm": Core C6) |
+| `06-booking-form.jpg` | Booking an appointment | "Date": a text field with the hint DD/MM/YYYY, 15/10/2026 typed; "Time": the browser's own time field, drawn **"03:45 PM"** by this browser; lengths from 10 to 90 min. A month-first date typed on purpose (10/15/2026) was refused: "The date is not valid. Enter it as DD/MM/YYYY." | The date follows the pack: conforms. The time field follows the browser, not the pack (Core C4) |
+| `07-visit-note.jpg` | An approved visit note (the walk-through's synthetic note, emergency medicine) | "Visit note · 10/10/2026 1:51 pm"; "Language of the note: English"; headings "History and presenting complaint", "Examination", "Assessment", "Plan"; "Vital signs (figures as stated)"; "This draft was written by artificial intelligence. Read it and correct it where needed before you share it." | Date and clock as the pack says. The note itself has no measurement field and no unit |
+| `08-tool-dose-arithmetic-units.jpg` | Tool: dose arithmetic by body weight (paediatrics) | "Body weight (kg)", "Dose per kilogram (mg/kg)", "(mg)", "(mL)"; "Accepted range: 0 to 1,000", "0 to 100,000"; "The tool knows no medicine, no recommended dose and no limit." | Kilograms and SI units; comma for thousands: conforms |
+| `09-tool-psa-units.jpg` | Tool: prostate-specific antigen, rate of change (urology) | "Earlier value (µg/L)", "Latest value (µg/L)"; result "1.30 µg/L per year", "365 days"; the two dates are the browser's own date fields | µg/L: conforms (B8). Decimal point. Dates typed in the browser's order (Core C3) |
+| `11-patient-portal-page.jpg` | The patient's page, phone width (a patient aged 15) | "Hello, Wiremu Pōtae"; "QA Shifokor Bir · Emergency medicine"; "The doctor asks you to answer a few questions about your child before the visit."; "9:00 am Sunday, 11/10/2026 30 min"; "Times are shown in your doctor's time zone: **Pacific/Auckland**."; days offered "Sun 11/10", "Mon 12/10" and so on; "This page is not for emergencies. If you are very unwell, call an ambulance: 111." | Guardian wording below 16: as the pack says. Emergency number 111: conforms. The time zone is named by its database identifier, not in words a patient uses (Core C13). No health advice line (Core C7) |
+| `12-intake-form-questions.jpg` | Intake form of an adult patient, part 4 of 6 | "Your height" **cm**, "Your weight" **kg**, "If you took your temperature today, what was it?" **°C**. The other parts (read as text, no image): reason for the visit; long-term conditions, operations, medicines and allergies as questions with free text; lifestyle; a contact person; the role's own questions | Units as the pack says. No identity, tax or insurance number is asked. No medicine is named |
+
+**Also seen, without an image**
+
+- **Settings:** the account chooses between two zones, shown as "Pacific/Auckland" and "Pacific/Chatham" (the database identifiers, not names: Core C13).
+- **Searching for a patient:** "potae", typed without the macron, found "Wiremu Pōtae", and so did "Pōtae": the pack's new search rule at work. Searching by the NHI number "ZZZ00AX" found **nothing** (Core C2).
+- **The identifier field** carries `inputmode="numeric"` in the page (read from the page; what a phone's keyboard then shows was not seen: Core C1).
+- **Tools area for emergency medicine:** "Critical conditions checklist" and "Follow-up list"; no triage tool, as the pack says.
+- **The consent screen of the intake form** for a child: "You are filling in this form as the child's parent or guardian. Filling it in is voluntary." (a draft, not read by a lawyer).
+
+**Not seen**
+
+- The screens **before** the fixes (see above).
+- A phone or tablet keyboard; anything printed (the country kit prints nothing).
+- An account set to the Chatham Islands zone, and a clock change for daylight saving. (The pack's test checks both zones' offsets in winter and in summer.)
+- The time field in a browser whose interface language is New Zealand English.
+- Real speech: the walk-through uses stand-ins for the speech and model providers, so no real note was drafted.
+- The clinic and front-desk screens: walked by the walk-through's checks, not looked at by eye.
+- A deployed site: none exists for New Zealand, and none was touched.
 
 ---
 
@@ -296,7 +333,7 @@ PART-C-PLACEHOLDER
 
 **Not changed, on purpose:** the 12-hour clock (two official sources point two ways: for a local clinical lead); the example phone number (no reserved range found); the guardian age; every unit; the consent sentences (for a lawyer); "Cosmetic medicine" and the roles that are no vocational scope (not confirmable as wrong from a source); the leak list.
 
-Gates, each by its own exit code: `countries/nz/nz.test.ts` 81 of 81; `node scripts/ulke-duvarlari.mjs` 0; `NOTYA_COUNTRY=nz node scripts/ulke-paket-denetimi.mjs` 0; the record check inside the pack's test 0. GATES-PLACEHOLDER
+Gates, each by its own exit code: `countries/nz/nz.test.ts` 81 of 81; `node scripts/ulke-duvarlari.mjs` 0; `NOTYA_COUNTRY=nz node scripts/ulke-paket-denetimi.mjs` 0; the record check inside the pack's test 0. The pack-parameterised tests for New Zealand (`node scripts/ulke-test.mjs --paket nz`): 323 of 323, exit 0. `NOTYA_COUNTRY=nz npm run build:ulke`: exit 0, with its type check and the build proof. The pack-neutral walk-through on the built pack: 329 of 329, exit 0. A separate `npx tsc --noEmit` was not run: the shared machine could not hold it beside the other countries' builds; the build's own type check is the type check reported here.
 
 ---
 
@@ -316,6 +353,7 @@ Gates, each by its own exit code: `countries/nz/nz.test.ts` 81 of 81; `node scri
 | C10 | `lib/ulke/araclar/` (the two KDIGO tools) | Classify in mg/g after an exact conversion; the published limits in mg/mmol are rounded | Already recorded in the pack (`ayarlar.ts`, `kdigo-evre`) |
 | C11 | `scripts/ulke-en-kayit.mts` (the record generator) | Prints "UNVERIFIED" beside every setting and "none was checked against the country's official list of specialties", which is no longer true for the source-checked items | Let a pack mark a setting as source-checked, with its source, and print that |
 | C12 | `lib/ulke/tipler.ts` (`telefon.cepGecerliMi`) | No screen applies the pack's mobile rule; a phone number is stored as typed | Decide whether to validate; a landline is a legitimate patient phone number, so the rule should not be applied to patients as it stands |
+| C13 | `components/ulke/uygulama/Ayarlar.tsx`, the patient's page (`components/ulke/portal/`), the set's sentence at `countries/_dil/en/portal.ts:141` | A time zone is shown by its database identifier: the settings offer "Pacific/Auckland" and "Pacific/Chatham", and a patient reads "Times are shown in your doctor's time zone: Pacific/Auckland." | Let a pack name each of its zones in words (for example "New Zealand time", "Chatham Islands time") and show the name |
 
 ## Shared English set — findings (not fixed: `countries/_dil/en/` is shared by five countries)
 
@@ -374,7 +412,7 @@ Write to Health New Zealand's terminology service and the NZULM team and ask, in
 | 5 | Units not found on an official page: centimetres, °C, glucose mmol/L, haemoglobin g/L, CRP mg/L, ESR mm/h (B7, B8, B8b) | **a local clinician** (or a local laboratory) |
 | 6 | Whether "specialist" is the right word for the model's instruction, and whether "consultant" should be allowed on screens (B12, S7) | **a local clinician** |
 | 7 | Whether the patient's page and the intake form should be offered in te reo Māori, and what the landing page should carry (A24) | **Kaan**, with a local person |
-| 8 | A second number on the patient's page for the health advice line (C7); the identifier field's keyboard and search (C1, C2); typed dates and times that follow the pack (C3, C4); a clock setting per surface (C5); name fields and gender (C8); the record generator's "unverified" lines (C11) | **Claude**, in the shared kit, on Kaan's word (each changes every country) |
+| 8 | A second number on the patient's page for the health advice line (C7); the identifier field's keyboard and search (C1, C2); typed dates and times that follow the pack (C3, C4); a clock setting per surface (C5); name fields and gender (C8); the record generator's "unverified" lines (C11); time zones named in words (C13) | **Claude**, in the shared kit, on Kaan's word (each changes every country) |
 | 9 | Medicines: the written request for the NZMT's terms of commercial use (Part E) | **Kaan** |
 | 10 | The example phone number: a number of a reserved range, if one exists | **a local person** |
 | 11 | A native New Zealand editor for every patient-facing text; a clinician per role for templates, questions and tools | **Kaan** (to name them) |
