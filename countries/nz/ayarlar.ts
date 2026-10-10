@@ -17,6 +17,7 @@
  * Plain data: type-only imports, so that the pack's light data file can read it.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
+import type { EnRolDegisimi } from '../_dil/en/klinik/roller'
 import type { Birimler } from '@/lib/ulke/tipler'
 
 /**
@@ -35,6 +36,59 @@ export const NZ_VELI_YASI = 16
  * a clinic screen and °C for temperature were not found stated on an official page: for a local clinical lead.
  */
 export const NZ_BIRIMLER: Birimler = { agirlik: 'kg', boy: 'cm', sicaklik: 'C' }
+
+/**
+ * THE ROLE LIST OF NEW ZEALAND: the shared forty, with thirteen roles only this country has. NO SHARED ROLE IS TAKEN
+ * OUT, so an account stored under any of the forty keys still loads (./nz.test.ts holds that).
+ *
+ * NAMES. The nine doctor roles are vocational scopes of practice, written exactly as the Medical Council of New
+ * Zealand's list writes them. OPENED 2026-10-10: Medical Council of New Zealand, "Types of vocational scope",
+ * https://www.mcnz.org.nz/registration/scopes-of-practice/vocational-and-provisional-vocational/types-of-vocational-scope/
+ * (36 scopes). The four allied professions are regulated under the Health Practitioners Competence Assurance Act;
+ * the role is named as the PROFESSION, as the set names its five (the regulator's own wording for the regulated
+ * activity is beside each). OPENED 2026-10-10: Ministry of Health, "Responsible authorities", last updated 26 January
+ * 2026, https://www.health.govt.nz/regulation-legislation/health-practitioners/responsible-authorities
+ *
+ * WHICH SHARED ROLE EACH BEHAVES LIKE (`gibi`: its note template and its intake questions) IS A MACHINE'S CHOICE of
+ * the nearest shared role. UNVERIFIED — FOR A LOCAL CLINICAL LEAD, role by role. Tools are never inherited: each
+ * tool names its roles (`gorenler` below). Where the HEADING a patient would read above the borrowed questions names
+ * another profession ("For your family doctor" for an occupational physician's patient), the role asks the same questions
+ * under a heading of this country's own: ./klinik/hastaFormu.ts (server half; eleven of the thirteen roles).
+ *
+ * THREE PROFESSIONS THE AUDIT NAMES ARE NOT ADDED, BECAUSE THE KIT CANNOT ADDRESS THEM YET: the nurse practitioner,
+ * the midwife and the optometrist. The nearest shared role of each is a DOCTOR's (general practice, obstetrics and
+ * gynaecology, ophthalmology), and the kit's one opening for a professional who is not a doctor tells the model to
+ * make no medical diagnosis and to write a referring doctor's diagnosis only in the field meant for it — a field a
+ * doctor's template does not have, and an instruction that does not describe how these three professions practise
+ * here. A role of a profession that is not a doctor's therefore behaves like another such profession, never like a
+ * doctor's role (./nz.test.ts holds that). They wait on the kit: an opening of their own, and templates of their own
+ * read by a local clinician. (The same decision was taken for the United States on 2026-10-10.) Whether the product should serve each added profession, and what a
+ * profession that is not a doctor may read of a record, are the owner's and a lawyer's questions.
+ */
+export const NZ_ROLLER: EnRolDegisimi = {
+  cikar: [],
+  ekle: [
+    // ── vocational scopes the shared set does not have (doctor roles) ──
+    { anahtar: 'urgent-care-medicine', taraf: 'doktor', ad: 'Urgent care medicine', gibi: 'emergency-medicine' },
+    { anahtar: 'rural-hospital-medicine', taraf: 'doktor', ad: 'Rural hospital medicine', gibi: 'family-medicine' },
+    { anahtar: 'musculoskeletal-medicine', taraf: 'doktor', ad: 'Musculoskeletal medicine', gibi: 'rehabilitation-medicine' },
+    { anahtar: 'occupational-medicine', taraf: 'doktor', ad: 'Occupational medicine', gibi: 'family-medicine' },
+    { anahtar: 'pain-medicine', taraf: 'doktor', ad: 'Pain medicine', gibi: 'rehabilitation-medicine' },
+    { anahtar: 'sexual-health-medicine', taraf: 'doktor', ad: 'Sexual health medicine', gibi: 'family-medicine' },
+    { anahtar: 'family-planning-reproductive-health', taraf: 'doktor', ad: 'Family planning and reproductive health', gibi: 'obstetrics-gynaecology' },
+    { anahtar: 'palliative-medicine', taraf: 'doktor', ad: 'Palliative medicine', gibi: 'internal-medicine' },
+    { anahtar: 'oral-maxillofacial-surgery', taraf: 'doktor', ad: 'Oral and maxillofacial surgery', gibi: 'plastic-surgery' },
+    // ── regulated professions the shared set does not have (clinic allied professions) ──
+    // the regulator's wording: "Practice of podiatry" (Podiatrists Board)
+    { anahtar: 'podiatry', taraf: 'klinik-muttefik', ad: 'Podiatrist', gibi: 'physiotherapy' },
+    // "Osteopathy" (Osteopathic Council)
+    { anahtar: 'osteopathy', taraf: 'klinik-muttefik', ad: 'Osteopath', gibi: 'physiotherapy' },
+    // "Practice of chiropractic" (Chiropractic Board)
+    { anahtar: 'chiropractic', taraf: 'klinik-muttefik', ad: 'Chiropractor', gibi: 'physiotherapy' },
+    // "Psychotherapy services" (Psychotherapists Board)
+    { anahtar: 'psychotherapy', taraf: 'klinik-muttefik', ad: 'Psychotherapist', gibi: 'clinical-psychology' },
+  ],
+}
 
 const KLINISYEN = 'a clinical lead in New Zealand'
 
@@ -72,20 +126,33 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
   // The word a senior doctor goes by here. SOURCE-CHECKED: the medical council describes vocational registration as
   // "specialist registration". Hospitals also say "consultant" and "senior medical officer": for a local clinical lead.
   kidemliHekim: 'specialist',
-  // How each specialty is named in New Zealand, where it differs from the set's base name.
-  // SOURCE-CHECKED against the medical council's list of vocational scopes of practice (checklist C1): "General
-  // practice", "Internal medicine", "Otolaryngology, head and neck surgery", "Plastic and reconstructive surgery" and
-  // "Diagnostic and interventional radiology" are written as that list writes them.
-  // UNVERIFIED, FOR A LOCAL CLINICAL LEAD: "Cosmetic medicine" is no vocational scope (the council speaks of "cosmetic
-  // procedures"); and the roles of the shared set do not all match the list — see the audit document.
+  // HOW EACH SPECIALTY IS NAMED IN NEW ZEALAND, where it differs from the set's base name: as the Medical Council of
+  // New Zealand's list of vocational scopes writes it (OPENED 2026-10-10, the address beside NZ_ROLLER above).
+  //   "General practice", "Internal medicine", "Otolaryngology, head and neck surgery", "Plastic and reconstructive
+  //   surgery", "Diagnostic and interventional radiology", "Cardiothoracic surgery" and "Vascular surgery" are scopes
+  //   of that list, written as it writes them. "Medical oncology" is not a scope: the list names it as an area inside
+  //   the scope "Internal medicine" (its "Radiation oncology" is a separate scope, which this pack does not have).
+  //   TWO RENAMES ARE MORE THAN A NAME (the audit's decision): New Zealand joins heart and chest surgery in ONE scope
+  //   and has vessel surgery as another. The shared role "thoracic-surgery" is therefore "Cardiothoracic surgery"
+  //   here and also sees the heart-operation checklist (`gorenler`); the shared role "cardiovascular-surgery" is
+  //   "Vascular surgery". An account stored under either key keeps its key. FOR A LOCAL CLINICAL LEAD.
+  //   The dermatology clinic role is the same scope as the doctor role, and is named as the scope ("Dermatology").
+  // UNVERIFIED, FOR A LOCAL CLINICAL LEAD AND A LAWYER: "Cosmetic medicine", "Cosmetic surgery" and "Hair
+  // transplantation" are clinic types, not vocational scopes, and none may ever be worded as a specialty; eight roles
+  // of the set (endocrinology, cardiology …) are areas of "Internal medicine", not scopes of their own.
   rolAdlari: {
     'family-medicine': 'General practice',
     'internal-medicine': 'Internal medicine',
+    'thoracic-surgery': 'Cardiothoracic surgery',
+    'cardiovascular-surgery': 'Vascular surgery',
     otolaryngology: 'Otolaryngology, head and neck surgery',
+    oncology: 'Medical oncology',
     'plastic-surgery': 'Plastic and reconstructive surgery',
     radiology: 'Diagnostic and interventional radiology',
     'aesthetic-medicine': 'Cosmetic medicine',
+    'clinic-dermatology': 'Dermatology',
   },
+  roller: NZ_ROLLER,
   veliYasi: NZ_VELI_YASI,
   birimler: NZ_BIRIMLER,
   surum: 'nz-draft-2026-10-09',

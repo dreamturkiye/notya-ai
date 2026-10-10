@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1910 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
-- **This country's own** (`countries/nz/`, six small files): 25 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1936 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
+- **This country's own** (`countries/nz/`, six small files): 29 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -78,16 +78,16 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `infectious-diseases` | Infectious diseases | doctor specialty |
 | `gastroenterology` | Gastroenterology | doctor specialty |
 | `general-surgery` | General surgery | doctor specialty |
-| `thoracic-surgery` | Thoracic surgery | doctor specialty |
+| `thoracic-surgery` | Cardiothoracic surgery | doctor specialty |
 | `respiratory-medicine` | Respiratory medicine | doctor specialty |
 | `ophthalmology` | Ophthalmology | doctor specialty |
 | `obstetrics-gynaecology` | Obstetrics and gynaecology | doctor specialty |
-| `cardiovascular-surgery` | Cardiac and vascular surgery | doctor specialty |
+| `cardiovascular-surgery` | Vascular surgery | doctor specialty |
 | `cardiology` | Cardiology | doctor specialty |
 | `otolaryngology` | Otolaryngology, head and neck surgery | doctor specialty |
 | `nephrology` | Nephrology | doctor specialty |
 | `neurology` | Neurology | doctor specialty |
-| `oncology` | Oncology | doctor specialty |
+| `oncology` | Medical oncology | doctor specialty |
 | `orthopaedics` | Orthopaedic surgery | doctor specialty |
 | `paediatrics` | Paediatrics | doctor specialty |
 | `plastic-surgery` | Plastic and reconstructive surgery | doctor specialty |
@@ -97,16 +97,29 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `urology` | Urology | doctor specialty |
 | `sports-medicine` | Sport and exercise medicine | doctor specialty |
 | `rehabilitation-medicine` | Rehabilitation medicine | doctor specialty |
+| `urgent-care-medicine` | Urgent care medicine | doctor specialty |
+| `rural-hospital-medicine` | Rural hospital medicine | doctor specialty |
+| `musculoskeletal-medicine` | Musculoskeletal medicine | doctor specialty |
+| `occupational-medicine` | Occupational medicine | doctor specialty |
+| `pain-medicine` | Pain medicine | doctor specialty |
+| `sexual-health-medicine` | Sexual health medicine | doctor specialty |
+| `family-planning-reproductive-health` | Family planning and reproductive health | doctor specialty |
+| `palliative-medicine` | Palliative medicine | doctor specialty |
+| `oral-maxillofacial-surgery` | Oral and maxillofacial surgery | doctor specialty |
 | `hair-transplant` | Hair transplantation | clinic doctor |
 | `aesthetic-surgery` | Cosmetic surgery | clinic doctor |
 | `aesthetic-medicine` | Cosmetic medicine | clinic doctor |
-| `clinic-dermatology` | Dermatology (clinic) | clinic doctor |
+| `clinic-dermatology` | Dermatology | clinic doctor |
 | `longevity` | Preventive and longevity medicine | clinic doctor |
 | `physiotherapy` | Physiotherapist | clinic allied profession |
 | `clinical-psychology` | Clinical psychologist | clinic allied profession |
 | `dietetics` | Dietitian | clinic allied profession |
 | `occupational-therapy` | Occupational therapist | clinic allied profession |
 | `audiology` | Audiologist | clinic allied profession |
+| `podiatry` | Podiatrist | clinic allied profession |
+| `osteopathy` | Osteopath | clinic allied profession |
+| `chiropractic` | Chiropractor | clinic allied profession |
+| `psychotherapy` | Psychotherapist | clinic allied profession |
 
 ## Tools
 
@@ -132,19 +145,19 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `yama-okuma` | Patch test: reading days | Dermatology | no measured input |
 | `rejim-karti` | Insulin and thyroid treatment: date card | Endocrinology | no measured input |
 | `antibiyotik-sure` | Antibiotic course: counting days | Infectious diseases | Length of the course: **days** |
-| `toraks-preop` | Checklist before a chest operation | Thoracic surgery | no measured input |
-| `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic surgery | no measured input |
+| `toraks-preop` | Checklist before a chest operation | Cardiothoracic surgery | no measured input |
+| `toraks-tup-yara` | Chest drain and wound follow-up | Cardiothoracic surgery | no measured input |
 | `inhaler-teknik` | Inhaler technique | Respiratory medicine | Check the technique again after (optional): **months** |
 | `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology | no measured input |
-| `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiac and vascular surgery | no measured input |
-| `greft-yara-izlem` | Vascular graft and wound follow-up | Cardiac and vascular surgery | no measured input |
-| `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Cardiac and vascular surgery | no measured input |
+| `kalp-damar-preop` | Checklist before a heart or vascular operation | Vascular surgery | no measured input |
+| `greft-yara-izlem` | Vascular graft and wound follow-up | Vascular surgery | no measured input |
+| `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Vascular surgery | no measured input |
 | `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology, head and neck surgery | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
 | `otoskopi-notu` | Otoscopy note | Otolaryngology, head and neck surgery | no measured input |
 | `vertigo-notu` | Vertigo: positional test note | Otolaryngology, head and neck surgery | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Nephrology | no measured input |
-| `kur-sayaci` | Treatment cycle counter | Oncology | no measured input |
-| `toksisite-listesi` | Side effects checklist | Oncology | no measured input |
+| `kur-sayaci` | Treatment cycle counter | Medical oncology | no measured input |
+| `toksisite-listesi` | Side effects checklist | Medical oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopaedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopaedic surgery | no measured input |
 | `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery | no measured input |
@@ -156,7 +169,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sport and exercise medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Thoracic surgery, Respiratory medicine, Ophthalmology, Cardiac and vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (5) — for a local clinical lead
 
@@ -360,7 +373,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 23 core questions and 228 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 23 core questions and 288 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

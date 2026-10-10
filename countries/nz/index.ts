@@ -11,8 +11,8 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
-import { EN_ROLLER } from '../_dil/en/klinik/roller'
-import { NZ_BIRIMLER, NZ_VELI_YASI } from './ayarlar'
+import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { NZ_BIRIMLER, NZ_ROLLER, NZ_VELI_YASI } from './ayarlar'
 
 const cekirdek = enCekirdek('en-NZ')
 const metin = paketMetinleri({
@@ -101,7 +101,9 @@ export const NZ_PAKETI: UlkePaketi = {
     diller: ['en-NZ'],
     hastaDilleri: ['en'],
     aramaKatla: nzAramaKatla,
-    roller: EN_ROLLER,
+    // THE COUNTRY'S OWN ROLE LIST: the shared forty, none taken out, with the thirteen roles only New Zealand has
+    // (./ayarlar.ts → NZ_ROLLER; recorded in countries/rol-eslemesi.json under `ulkeyeOzel.nz`).
+    roller: enRolAnahtarlari(NZ_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (national and regional anniversary days).
     randevu: {
