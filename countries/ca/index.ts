@@ -11,8 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
-import { EN_ROLLER } from '../_dil/en/klinik/roller'
-import { CA_BIRIMLER, CA_VELI_YASI } from './ayarlar'
+import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { CA_ROLLER } from './roller'
+import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-CA')
 const metin = paketMetinleri({
@@ -41,10 +42,11 @@ export const CA_PAKETI: UlkePaketi = {
   // The default time zone of a new account. UNVERIFIED choice.
   saatDilimi: 'America/Toronto',
   bicim: { yerel: 'en-CA', tarihDeseni: 'YYYY-MM-DD', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 7 },
-  telefon: { ulkeOnEki: '+1', ulusalHane: 10, ornek: '+1 613 555 0123', cepGecerliMi: caTelefonGecerliMi },
+  // AUDIT 2026-10-09: the example is written as a number is written in Canada, with hyphens (./ayarlar.ts).
+  telefon: { ulkeOnEki: '+1', ulusalHane: 10, ornek: '613-555-0123', cepGecerliMi: caTelefonGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label ("Provincial health card number") is unverified wording (./ayarlar.ts).
-  ulusalKimlik: { ad: 'Provincial health card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
+  // below). `hane: 0` = no length is assumed. The label ("Health card number") and what it waits on: ./ayarlar.ts.
+  ulusalKimlik: { ad: 'Health card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
   // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
   // profile, image evaluation, consultation, messaging) is off.
   ozellikler: {
@@ -79,7 +81,9 @@ export const CA_PAKETI: UlkePaketi = {
   uygulama: {
     diller: ['en-CA'],
     hastaDilleri: ['en'],
-    roller: EN_ROLLER,
+    // THE COUNTRY'S OWN ROLE LIST (NOTYA-ULKE-UYGULA-CA): the shared forty, with six disciplines and one profession of
+    // its own (./roller.ts → CA_ROLLER, where each difference and its source stands).
+    roller: enRolAnahtarlari(CA_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (federal and provincial holidays differ).
     randevu: {
@@ -92,8 +96,13 @@ export const CA_PAKETI: UlkePaketi = {
     portal: { baglantiGecerlilikGun: 30, acilNumara: '911' },
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-CA' }] }],
-    // Several time zones: an account chooses its own (settings). The default and the list are UNVERIFIED choices.
-    saatDilimleri: ['America/Toronto', 'America/St_Johns', 'America/Halifax', 'America/Winnipeg', 'America/Regina', 'America/Edmonton', 'America/Vancouver'],
+    // Several time zones: an account chooses its own (settings). The default is an UNVERIFIED choice.
+    // AUDIT 2026-10-09 (the localisation audit, on its own record): Yukon added. It keeps one time all year (seven hours
+    // behind UTC), which none of the other entries gives in both summer and winter. Saskatchewan (America/Regina)
+    // likewise keeps one time. NOT LISTED, for a local lead: the few communities that keep a time other than their
+    // province's. Whether a zone's rule is current depends on the time-zone data of the server and of each browser,
+    // not on this list.
+    saatDilimleri: ['America/Toronto', 'America/St_Johns', 'America/Halifax', 'America/Winnipeg', 'America/Regina', 'America/Edmonton', 'America/Vancouver', 'America/Whitehorse'],
     // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens.
     saatBicimi: 12,
     birimler: CA_BIRIMLER,

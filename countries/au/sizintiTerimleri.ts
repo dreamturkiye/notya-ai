@@ -12,7 +12,8 @@ const parca = (terim: string): SizintiTerimi => ({ terim, eslesme: 'parca' })
 const KELIME = (terim: string): SizintiTerimi => ({ terim, eslesme: 'kelime', buyukKucukDuyarli: true })
 
 export const AU_SIZINTI_TERIMLERI: readonly SizintiTerimi[] = [
-  KELIME('AHPRA'), parca('Australia'), parca('Medicare'), parca('My Health Record'), parca('Respiratory and sleep medicine'),
+  // the regulator writes its own name "Ahpra"; the older all-capitals spelling is still in circulation
+  KELIME('AHPRA'), KELIME('Ahpra'), parca('Australia'), parca('Medicare'), parca('My Health Record'), parca('Respiratory and sleep medicine'),
 ]
 
 /** English is written in plain Latin letters: no letter marks this country. */

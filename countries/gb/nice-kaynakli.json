@@ -1,0 +1,41 @@
+{
+  "aciklama": "UNITED KINGDOM — EVERY ITEM OF THIS PACK THAT IS TAKEN FROM NICE GUIDANCE. FOR THE LAWYER. By the owner's order of 2026-10-10 (\"Bring on the NICE tables. We will do a lawyer review later.\") numbers and category names of NICE guidance may stand in this pack as country data, each credited to NICE, with its meaning unchanged, and never NICE's prose. NICE's own terms, as the tools audit read them (docs/araclar-denetim/GB.md, \"Licence terms, as read\"): commercial reuse inside the United Kingdom is allowed under its UK Open Content Licence with conditions; use for AI purposes needs NICE's written permission; use outside the United Kingdom needs NICE's agreement. Each entry: the file and the line where the item stands (the line carries the mark NICE-KAYNAKLI: and the guidance number), the guidance, the address opened, the date, and exactly what was taken. A test (countries/gb/gb-araclar.test.ts) holds this list to the marks in the folder: an item without an entry, or an entry without its mark on that line, fails. NOT TAKEN, although the order allows it, and why: the PSA referral levels by age (NG12), the HbA1c and haemoglobin limits (NG28, NG203), the albuminuria categories and the referral list (NG203), the PASI treatment criteria (CG153) and the blood pressure thresholds (NG136) — no switched-on tool of this pack has a place for them (see the pull request's report).",
+  "ogeler": [
+    {
+      "dosya": "countries/gb/araclar.ts",
+      "satir": 43,
+      "kilavuz": "NG203, NG12",
+      "baslik": "NG203 Chronic kidney disease: assessment and management; NG12 Suspected cancer: recognition and referral",
+      "adres": "https://www.nice.org.uk/guidance/ng203/chapter/Recommendations ; https://www.nice.org.uk/guidance/ng12/documents/draft-guideline-4",
+      "okundu": "2026-10-09 (localisation audit) and 2026-10-10 (tools-correction job); not opened again in this job",
+      "alinan": "the unit three laboratory values are written in: urine albumin-to-creatinine ratio in mg/mmol, haemoglobin in g/L, prostate-specific antigen in micrograms per litre. No number."
+    },
+    {
+      "dosya": "countries/gb/araclar.ts",
+      "satir": 109,
+      "kilavuz": "TA195",
+      "baslik": "NICE technology appraisal guidance TA195 (rheumatoid arthritis after the failure of a TNF inhibitor), section 2 Clinical need and practice, paragraph 2.10",
+      "adres": "https://www.nice.org.uk/guidance/ta195/chapter/2-clinical-need-and-practice",
+      "okundu": "2026-10-10, in this job",
+      "alinan": "the four cut-points of the DAS28 score: greater than 5.1, 3.2 to 5.1, less than 3.2, less than 2.6. They replace the kit's bands for this country (the same four numbers)."
+    },
+    {
+      "dosya": "countries/gb/araclar.ts",
+      "satir": 163,
+      "kilavuz": "TA195",
+      "baslik": "as above",
+      "adres": "https://www.nice.org.uk/guidance/ta195/chapter/2-clinical-need-and-practice",
+      "okundu": "2026-10-10, in this job",
+      "alinan": "the four category names (high, moderate and low disease activity; remission) as labels of the bands, and a sentence on the tool's screen crediting NICE."
+    },
+    {
+      "dosya": "countries/gb/araclar.ts",
+      "satir": 148,
+      "kilavuz": "NG98",
+      "baslik": "NICE guideline NG98 Hearing loss in adults: assessment and management, recommendation 1.3.2",
+      "adres": "https://www.nice.org.uk/guidance/NG98/chapter/recommendations",
+      "okundu": "2026-10-10, in this job",
+      "alinan": "one phrase in the description of the hearing tool: an asymmetry of 15 dB or more at any 2 adjacent test frequencies (0.5, 1, 2, 4 and 8 kHz). The tool does not apply the rule; the sentence says it cannot check it."
+    }
+  ]
+}
