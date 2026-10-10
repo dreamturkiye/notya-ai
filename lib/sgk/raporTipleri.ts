@@ -65,7 +65,10 @@ export const RAPOR_TIPLERI: RaporTipiMeta[] = [
     id: 'ilac_kullanim',
     label: 'İlaç Kullanım Raporu',
     kanal: 'sgk_medula',
-    aciklama: 'Medula e-Rapor — SUT’a göre etken madde + ICD-10. Kâğıt nüsha SGK’da geçerli değildir (e-imza zorunlu).',
+    // NOTYA-SUT-RAPOR-01 — "Kâğıt nüsha SGK’da geçerli değildir" is not in the text: SUT 4.1.3(2) has MEDULA users
+    // issue reports electronically, and 4.1.3(8) still describes a report that was not issued electronically.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+    aciklama: 'Medula e-Rapor — SUT’a göre etken madde + ICD-10. MEDULA’yı kullanan sağlık hizmeti sunucuları raporu elektronik ortamda düzenler (SUT 4.1.3(2)).',
     sureBirimi: 'ay',
     sureMin: 1,
     sureMax: 24,
@@ -118,6 +121,35 @@ export const RAPOR_TIPLERI: RaporTipiMeta[] = [
     bolumler: ['hasta', 'rapor_meta', 'tani', 'gerekce', 'klinik', 'sure', 'hekim', 'ozel_uyari'],
   },
 ]
+
+/**
+ * NOTYA-SUT-RAPOR-01 — the arrangement in the text that is LONGER than the general ceiling.
+ * Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+ *  - SUT 4.1.3(5): "Sağlık raporları, SUT’ta yer alan özel düzenlemeler hariç olmak üzere en fazla iki yıl süre ile
+ *    geçerlidir." → `sureMax: 24` on the medicine report above.
+ *  - SUT 4.2.16(2)(a)-(b): the special formulas used in inborn metabolic disease, protein metabolism disorders and
+ *    diseases causing malabsorption are prescribed on a "3 yıl süreli uzman hekim raporu".
+ *  - SUT 4.2.16(6): "Çölyak hastalığında; … 3 yıl süreli rapor düzenlenir."
+ * Hasta Raporları stopped at 24 months for these too. The doctor now says the report is one of these; only then is
+ * 36 months accepted. The other paragraphs of 4.2.16 keep shorter terms (cystic fibrosis formulas: one year,
+ * 4.2.16(4)) and are not covered by this option.
+ */
+export const UC_YILLIK_RAPOR = {
+  id: 'sut-4-2-16',
+  ay: 36,
+  madde: 'SUT 4.2.16(2), 4.2.16(6)',
+  etiket: 'SUT 4.2.16 raporu: çölyak hastalığı; doğuştan metabolik hastalık, protein metabolizması bozukluğu veya malabsorbsiyonda özel mama — 3 yıl süreli düzenlenir',
+} as const
+
+/** Shortest and longest length the draft accepts for this report type; `ozelSure` is UC_YILLIK_RAPOR.id or nothing. */
+export function raporSureSiniri(tip: RaporTipiMeta, ozelSure?: string | null): { min: number; max: number; madde: string | null } {
+  if (tip.id === 'ilac_kullanim') {
+    return ozelSure === UC_YILLIK_RAPOR.id
+      ? { min: tip.sureMin, max: UC_YILLIK_RAPOR.ay, madde: UC_YILLIK_RAPOR.madde }
+      : { min: tip.sureMin, max: tip.sureMax, madde: 'SUT 4.1.3(5)' }
+  }
+  return { min: tip.sureMin, max: tip.sureMax, madde: tip.id === 'tibbi_malzeme' ? 'SUT 3.1.2.2(2)' : null }
+}
 
 export function raporTipiById(id: string): RaporTipiMeta | undefined {
   return RAPOR_TIPLERI.find((t) => t.id === id)
@@ -199,7 +231,7 @@ export function llmJsonSchemaHint(tip: RaporTipiMeta): string {
   return `${base},onerilen_sure_ay:number,zorunluTetkikler:[]}`
 }
 
-export function systemPromptFor(tip: RaporTipiMeta): string {
+export function systemPromptFor(tip: RaporTipiMeta, ozelSure?: string | null): string {
   const common =
     'Türkiye klinik rapor taslağı üreten asistansın. ICD-10 kullan. Hasta adı, T.C., hekim kimliği ve hekim notu SENİN alanın değildir. SADECE geçerli JSON döndür. '
 
@@ -214,7 +246,7 @@ export function systemPromptFor(tip: RaporTipiMeta): string {
     case 'ilac_kullanim':
       return (
         common +
-        'Bu bir SGK Medula ilaç kullanım e-Raporu taslağıdır. Etken maddeleri INN (Türkçe yazım) ile yaz; SUT süresi en fazla 24 ay. ' +
+        `Bu bir SGK Medula ilaç kullanım e-Raporu taslağıdır. Etken maddeleri INN (Türkçe yazım) ile yaz; SUT süresi en fazla ${raporSureSiniri(tip, ozelSure).max} ay. ` +
         `JSON şema: ${llmJsonSchemaHint(tip)}`
       )
     case 'tibbi_malzeme':

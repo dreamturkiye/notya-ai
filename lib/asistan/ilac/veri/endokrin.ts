@@ -149,7 +149,11 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     pediatricDose: 'Pediyatrik kullanım için doz önerisi bu KÜB\'de verilmemektedir',
     form: 'Film kaplı tablet',
     sgkCovered: true,
-    sgkRestriction: 'SUT: tip 2 DM / kalp yetmezliği endikasyon ve rapor koşullarına bakınız.',
+    // NOTYA-SUT-RAPOR-01 — the line named type 2 diabetes and heart failure only. SUT 4.2.74 is "Kalp yetmezliği ve
+    // kronik böbrek hastalığında dapagliflozin ve empagliflozin kullanım ilkeleri"; 4.2.74(2) covers empagliflozin in
+    // chronic kidney disease on a health board report with a nephrologist. Type 2 diabetes: SUT 4.2.38(6).
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+    sgkRestriction: 'SUT 4.2.38 (tip 2 diyabet) ve SUT 4.2.74 (kalp yetmezliği, kronik böbrek hastalığı): endikasyon ve rapor koşullarına bakınız.',
     category: 'SGLT2 inhibitörü',
     siniflar: ['Antidiyabetik', 'SGLT2 inhibitörü', 'Oral antidiyabetik'],
     contraindications: ['Empagliflozine aşırı duyarlılık'],
@@ -488,8 +492,13 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
       metin: 'KÜB §4.2 (sabit doz, mg/kg değil): heterozigot ailesel hiperkolesterolemili 10–17 yaş arası çocuk ve adolesanlarda (erkeklerde Tanner evresi II ve üzeri, kızlarda menarştan en az bir yıl sonra) tavsiye edilen klasik başlangıç dozu akşamları günde bir kez 10 mg.',
     },
     form: 'Film kaplı tablet',
-    sgkCovered: true,
-    sgkRestriction: 'SUT: lipid düşürücü ilaçların ödeme koşullarına bakınız.',
+    // NOTYA-SUT-RAPOR-01 — no simvastatin product is on SGK's EK-4/A list in force from 02.10.2026 (checked by
+    // active ingredient in the catalogue built from that list, data/sgk-ilaclar.json, and by product name), and
+    // SUT 4.1.9(1) says a medicine not on that list is not paid under any condition. SUT 4.2.28.A-1(4) still names
+    // simvastatin among the statins; there is no listed product for it to apply to.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali, and the EK-4/A list published with it.
+    sgkCovered: false,
+    sgkRestriction: 'SGK Bedeli Ödenecek İlaçlar Listesi’nde (EK-4/A) simvastatin içeren ürün yer almıyor; SUT 4.1.9 gereği bedeli ödenmez.',
     category: 'Statin (HMG-CoA redüktaz inhibitörü)',
     siniflar: [...STATIN_SINIF],
     contraindications: [

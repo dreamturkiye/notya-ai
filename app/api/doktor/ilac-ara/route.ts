@@ -1,5 +1,5 @@
 /**
- * NOTYA-ILAC-05 — ilaç arama servisi (SGK EK-4/A, 8.649 ürün).
+ * NOTYA-ILAC-05 — ilaç arama servisi (SGK EK-4/A).
  *
  * Server-side on purpose: the dataset is 1.2 MB, and shipping it to the browser would add more
  * weight to the page than the rest of the application combined — on a phone, on hospital wifi,
@@ -15,12 +15,16 @@
  * NOTYA-ILAC-07: `etkenMadde` and `atc` come from TİTCK's licensed-products list, joined by
  * barcode (scripts/import-titck-etken.mjs). The group carries the first pack's ingredient for
  * display; each presentation carries its own, and the presentation's value is what gets recorded.
+ *
+ * NOTYA-SUT-RAPOR-01i: the catalogue is the EK-4/A list in force from 02.10.2026. Products passive on that list or
+ * no longer on it stay searchable and are marked not reimbursed, pack by pack (lib/ilac/ilacGrupla.ts).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import path from 'path'
 import { ilacAra, type IlacKaydi } from '@/lib/ilac/ilacArama'
+import { ilaclariGrupla } from '@/lib/ilac/ilacGrupla'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,36 +42,8 @@ function veri(): IlacKaydi[] {
   return KAYITLAR
 }
 
-export interface SunumSecenegi {
-  ad: string
-  barkod: string
-  esdegerGrubu?: string
-  /**
-   * NOTYA-ILAC-07: the ingredient belongs to the PACK, not the brand. Brands are not molecules:
-   * A-FERİN sells a parasetamol + klorfeniramin pack and a parasetamol + klorfeniramin + kodein
-   * pack under the same name. Recording the group-level ingredient for the codeine pack would put
-   * the wrong molecule in the patient's record and blind the interaction check to an opioid.
-   */
-  etkenMadde?: string
-  atc?: string
-  /**
-   * NOTYA-ILAC-09: TİTCK licence suspension code (1 = madde-23, 3 = madde-22). 62 SGK-reimbursed
-   * products carry it — including fentanyl (ABSTRAL) and common OTC brands (ACTIFED). The flag
-   * has been in the data since NOTYA-ILAC-07 but was never surfaced, so a doctor could pick a
-   * suspended product with no indication anything was wrong. Suspension is per PACK (per barcode),
-   * like the ingredient — it travels on the sunum, not the brand.
-   */
-  ruhsatAskida?: number
-}
-export interface GruplanmisIlac {
-  marka: string
-  etkenMadde?: string
-  sgk: boolean
-  /** NOTYA-ILAC-09: true only when EVERY pack of the brand is suspended — a partial suspension
-   * badge on the brand row would wrongly taint the packs that are still licensed. */
-  ruhsatAskida?: boolean
-  sunumlar: SunumSecenegi[]
-}
+// Types and grouping live in lib/ilac/ilacGrupla.ts (tested there); re-exported for the pickers that import them from here.
+export type { GruplanmisIlac, SunumSecenegi } from '@/lib/ilac/ilacGrupla'
 
 export async function GET(request: NextRequest) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
@@ -102,25 +78,7 @@ export async function GET(request: NextRequest) {
   const kisaSorgu = q.length <= 2
   const ham = ilacAra(veri(), q, kisaSorgu ? 400 : 60, { prefixOnly: kisaSorgu })
 
-  const gruplar = new Map<string, GruplanmisIlac>()
-  for (const k of ham) {
-    const anahtar = (k.marka || k.ad).toLocaleUpperCase('tr')
-    let g = gruplar.get(anahtar)
-    if (!g) {
-      g = { marka: k.marka || k.ad, etkenMadde: k.etkenMadde, sgk: k.sgk !== false, sunumlar: [] }
-      gruplar.set(anahtar, g)
-    }
-    if (!g.sunumlar.some((s) => s.barkod === k.barkod)) {
-      g.sunumlar.push({ ad: k.ad, barkod: k.barkod || '', esdegerGrubu: k.esdegerGrubu, etkenMadde: k.etkenMadde, atc: k.atc, ruhsatAskida: k.ruhsatAskida })
-    }
-  }
-
-  let sonuclar = [...gruplar.values()]
-    .map((g) => ({
-      ...g,
-      ruhsatAskida: g.sunumlar.length > 0 && g.sunumlar.every((s) => !!s.ruhsatAskida),
-      sunumlar: g.sunumlar.sort((a, b) => a.ad.localeCompare(b.ad, 'tr')),
-    }))
+  let sonuclar = ilaclariGrupla(ham)
 
   if (kisaSorgu) {
     sonuclar = sonuclar.sort((a, b) =>

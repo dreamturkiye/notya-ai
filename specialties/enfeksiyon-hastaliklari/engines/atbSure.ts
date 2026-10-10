@@ -1,6 +1,6 @@
 /**
  * ENFEKSIYON-EXCEPTIONAL-01 — Antibiyotik süre sayacı. SAF fonksiyon.
- * Başlangıç + süre gün → bitiş / kontrol. Doz, mg, etken madde invent YOK.
+ * Başlangıç (1. gün) + süre gün → son gün (bitiş) / kontrol. Doz, mg, etken madde invent YOK.
  */
 import type { Dipnot } from './enfeksiyon'
 import { gunEkle, ISO_GUN } from './enfeksiyon'
@@ -40,7 +40,14 @@ export function atbHesapla(baslangic: string | null | undefined, sureGunHam: num
       dipnot,
     }
   }
-  const bitis = gunEkle(baslangic, sureGun)
+  // The start date is day 1 of the course: a 7-day course begun on 1 September has its last day on 7 September
+  // (it used to be shown as 8 September). Convention: every calendar day on which the antimicrobial is given counts
+  // as one day of therapy, the first day included — CDC NHSN, Antimicrobial Use and Resistance (AUR) Module protocol
+  // (July 2026), AU Option, "Antimicrobial Days (Days of Therapy)": "the aggregate sum of days for which any amount
+  // of a specific antimicrobial agent was administered"; NHSN AU FAQ (reviewed 3 August 2026): one antimicrobial day
+  // per calendar day of administration. Opened 2026-10-10: https://www.cdc.gov/nhsn/pdfs/pscmanual/11pscaurcurrent.pdf
+  // and https://www.cdc.gov/nhsn/faqs/faq-au.html. `bitis` is the LAST DAY of the course.
+  const bitis = atbSonGun(baslangic, sureGun)
   const kontrolTarih = kontrol && ISO_GUN.test(kontrol) ? kontrol : bitis
   const sinif = sinifEtiket ? String(sinifEtiket).slice(0, 80) : null
   const notMetin = not ? String(not).slice(0, 500) : null
@@ -51,6 +58,11 @@ export function atbHesapla(baslangic: string | null | undefined, sureGunHam: num
     ozet: `ATB süre: ${baslangic} → ${bitis} (${sureGun} gün)${sinif ? ` · sınıf: ${sinif}` : ''}. Kontrol ${kontrolTarih}. Doz ve etken madde hekimin — Notya bunları kendisi üretmez.`,
     dipnot,
   }
+}
+
+/** Last day of a course that starts on `baslangic` (day 1) and runs `sureGun` calendar days. See atbHesapla. */
+export function atbSonGun(baslangic: string, sureGun: number): string {
+  return gunEkle(baslangic, sureGun - 1)
 }
 
 export function atbNormalize(ham: unknown): AtbKart {

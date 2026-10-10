@@ -1,6 +1,6 @@
 # Reported medicines at the pharmacy — preparation note (NOTYA-SUT-RAPOR-01)
 
-Written 2026-10-10, updated the same day after the official text was read. **Nothing in this note is built.** It says what the current SUT contains on reported medicines and family-medicine authority, and what would change in the Turkish product on the day a new regulation is published. Open items: `docs/OPEN-COMMITMENTS.md`, section NOTYA-SUT-RAPOR-01.
+Written 2026-10-10, updated the same day after the official text was read, and again after the third pass of corrections (branch `fix/tr-sut-duzeltmeleri`). **Nothing in this note is built.** It says what the current SUT contains on reported medicines and family-medicine authority, and what would change in the Turkish product on the day a new regulation is published. Open items: `docs/OPEN-COMMITMENTS.md`, section NOTYA-SUT-RAPOR-01.
 
 Source for every article below: the SGK consolidated Sağlık Uygulama Tebliği downloaded from www.sgk.gov.tr on 2026-10-10 ("02.10.2026 - Değişiklik Tebliği İşlenmiş Güncel 2013 SUT", amendment of Resmî Gazete 2026-10-02 no. 33388 worked in), branch `kaynak/sut-2026-10-02`. The Minister's statements of 2026-10-10 are news, not text; nothing here rests on them.
 
@@ -39,7 +39,7 @@ Source for every article below: the SGK consolidated Sağlık Uygulama Tebliği 
 
 **What a doctor would no longer need to do**
 - Write a repeat prescription for an unchanged reported treatment. Today the text already allows one prescription a year for EK-4/D medicines (4.1.6(1)); the repeat-only visit through e-Reçete Asistanı and Muayene sonu paketi would become optional for more patients.
-- Read the quantity warnings as they stand: the box-count and "rapor gerekebilir" hints in `lib/medula/receteHazirla.ts` and `lib/seansPaketi/sutKurallari.ts` must be re-read against the new text. The current text counts in months of dose, not boxes (NOTYA-SUT-RAPOR-01g).
+- Read the quantity warnings as they stand: the "rapor gerekebilir" hints in `lib/seansPaketi/sutKurallari.ts` and the hints in `lib/medula/receteHazirla.ts` must be re-read against the new text. The current text counts in months of dose, not boxes; the box-count line that cited SUT was removed on 2026-10-10 (third pass, row 18).
 
 **What a patient-portal reminder could say** (wording only after the official text; no medicine name, no diagnosis)
 - "Raporlu ilacınız için raporunuz geçerli olduğu sürece yeni reçete gerekmeyebilir. Eczanenize danışın."
@@ -53,5 +53,7 @@ Source for every article below: the SGK consolidated Sağlık Uygulama Tebliği 
 ## What the text means for the product today
 
 - **Family medicine is a branch in Notya.** It sees the 12 shared tools (including Hasta Raporları and e-Reçete Asistanı) and four of its own: Aşı / tarama paketi, Kronik paket, Sevk / acil triyaj, kohort. It does not see the dahiliye "SGK ilaç raporu" draft tool. See question 4; the decision is Kaan's (classify before add: branch-only, not shared).
-- **Drug information.** Seven of the assistant's SGK lines were corrected on 2026-10-10 against EK-4/E, EK-4/F and EK-4/A; the rest were checked and left. Details in `docs/OPEN-COMMITMENTS.md`.
+- **Drug information.** Nine of the assistant's SGK lines were corrected on 2026-10-10 against EK-4/E, EK-4/F and EK-4/A (seven in the second pass; simvastatin and empagliflozin in the third); the rest were checked and left. Details in `docs/OPEN-COMMITMENTS.md`.
+- **Report lengths.** Hasta Raporları accepts three years for SUT 4.2.16 reports (coeliac disease; special formulas in inborn metabolic disease) when the doctor marks the report as such, two years otherwise (4.1.3(5)). The dahiliye draft proposes at most 12 months for the anticoagulants of 4.2.15.D, 6 for evolokumab (4.2.28.E) and 12 for insülin glarjin + liksisenatid (4.2.38(7)).
+- **Reimbursed medicines list.** The catalogue is the EK-4/A list in force from 2026-10-02; products passive on it or no longer on it are shown as "SGK ödemiyor".
 - **Home reports.** Notya has no home-visit report flow. Hasta Raporları drafts work on a phone during a home visit; nothing changes.
