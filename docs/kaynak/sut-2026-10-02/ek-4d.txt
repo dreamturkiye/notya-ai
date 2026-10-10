@@ -1,0 +1,7065 @@
+
+
+HASTA KATILIM PAYINDAN MUAF İLAÇLAR LİSTESİ (EK-4/D)
+
+1. Tüberküloz (A15-A19) (Ek:RG-23/05/2026-33262/10-a md. Yürürlük: 04/06/2026) (A31) (P37.0)
+
+A15
+Solunum yolları tüberkülozu, bakteriyolojik ve histolojik olarak onaylanmış
+A15.0
+Akciğer tüberkülozu, kültürlü ya da kültürsüz balgam mikroskopisi ile kanıtlanmış 
+A15.1
+Akciğer tüberkülozu, sadece kültürle kanıtlanmış
+A15.2
+Akciğer tüberkülozu, histolojik olarak kanıtlanmış
+A15.3
+Akciğer tüberkülozu, tanımlanmamış yolla kanıtlanmış
+A15.4
+İntratorasik lenf nodu tüberkülozu, bakteriyolojik ve histolojik olarak kanıtlanmış
+A15.5
+Larinks, trakea ve bronş tüberkülozu, bakteriyolojik ve histolojik olarak kanıtlanmış
+A15.6
+Tüberküloz plörezi, bakteriyolojik ve histolojik olarak kanıtlanmış
+A15.7
+Primer solunum yolları tüberkülozu, bakteriyolojik ve histolojik olarak kanıtlanmış
+A15.8
+Solunum yolları diğer tüberkülozu, bakteriyolojik ve histolojik olarak kanıtlanmış
+A15.9
+Solunum yolları tüberkülozu tanımlanmamış, bakteriyolojik ve histolojik olarak kanıtlanmış
+A16
+Solunum yolları tüberkülozu, bakteriyolojik ve histolojik olarak onaylanmamış
+A16.0
+Akciğer tüberkülozu, bakteriyolojik ve histolojik olarak negatif
+A16.1
+Akciğer tüberkülozu, bakteriyolojik ve histolojik inceleme yapılmamış
+A16.2
+Akciğer tüberkülozu, bakteriyolojik ya da histolojik kanıt hakkında bilgi verilmemiş
+A16.3
+İntratorasik lenf nodları tüberkülozu, bakteriyolojik ya da histolojik tanı konulmamış
+A16.4
+Larinks, trakea ve bronş tüberkülozu, bakteriyolojik ya da histolojik tanı konulmamış
+A16.5
+Tüberküloz plörezi, bakteriyolojik ya da histolojik tanı konulmamış
+A16.7
+Primer solunum yolları tüberkülozu, bakteriyolojik ya da histolojik tanı konulmamış
+A16.8
+Primer solunum yolları diğer tüberkülozu, bakteriyolojik ya da histolojik tanı konulmamış
+A16.9
+Solunum yolları tüberkülozu, bakteriyolojik ya da histolojik tanı konulmamış
+A17†
+Sinir sistemi tüberkülozu
+A17.0† 
+Tüberküloz menenjit (G01*)
+A17.1†
+Menenjial tüberkülom (G07*)
+A17.8†
+Sinir sisteminin tüberkülozu, diğer 
+A17.9†
+Sinir sistemi tüberkülozu, tanımlanmamış (G99.8*)
+A18
+Organların tüberkülozu, diğer
+A18.0†
+Kemik ve eklem tüberkülozu
+A18.1†
+Ürogenital sistem tüberkülozu
+A18.2
+Tüberküloz periferik lenfadenopati
+A18.3
+Bağırsak, periton ve mezenterik lenf bezi tüberkülozu
+A18.4
+Deri ve derialtı dokusu tüberkülozu
+A18.5†
+Göz tüberkülozu
+A18.6†
+Kulak tüberkülozu
+A18.7†
+Adrenal bezlerin tüberkülozu (E35.1*)
+A18.8†
+Tüberküloz, diğer tanımlanmış organların
+A19
+Miliyer tüberküloz
+A19.0
+Akut miliyer tüberküloz, tanımlanmış tek bir yerin
+A19.1
+Akut miliyer tüberküloz, birden fazla yerin
+A19.2
+Akut miliyer tüberküloz, tanımlanmamış
+A19.8
+Miliyer diğer tüberkülozlar
+A19.9
+Miliyer tüberküloz, tanımlanmamış
+A31 (Ek:RG-23/05/2026-33262/10-a md. Yürürlük: 04/06/2026)
+Diğer mikobakteri türlerine bağlı enfeksiyon
+A31.0    (Ek:RG-23/05/2026-33262/10-a md. Yürürlük: 04/06/2026)
+Pulmoner mikobakteri enfeksiyonu
+A31.1               (Ek:RG-23/05/2026-33262/10-a md. Yürürlük: 04/06/2026)
+Kutanöz mikobakteri enfeksiyonu
+A31.8               (Ek:RG-23/05/2026-33262/10-a md. Yürürlük: 04/06/2026)
+Mikobakteri enfeksiyonları, diğer
+A31.9  (Ek:RG-23/05/2026-33262/10-a md. Yürürlük: 04/06/2026)
+Mikobakteri enfeksiyonu, tanımlanmamış
+P37.0
+Konjenital tüberküloz
+
+1.1.	Anti-tüberküloz ilaçlar 
+	1.1.1.       Morfozinamid 
+             1.1.2.       Etiyonamid
+1.2.	Antibiyotikler (çoklu ilaç direnci olan tüberkülozlar)
+	1.2.1. 	Kanamisin
+	1.2.2. 	Siprofloksasin
+	1.2.3.	Levofloksasin
+	1.2.4.	Moksifloksasin
+	1.2.5.	Gatifloksasin
+	1.2.6.	Amoksisilin/klavunat
+	1.2.7.	Klaritromisin
+	1.2.8.	Rifapentin
+	1.2.9. 	Linezolid
+	1.2.10.	Azitromisin
+	1.2.11.	Roksitromisin
+	(Ek: RG-23/05/2026-33262/10-b md. Yürürlük: 04/06/2026) 
+	1.2.12. Kinolon grubu antibiyotikler (Sadece A31.0, A31.1, A31.8 ve A31.9 ICD kodlarında muafiyet kapsamındadır.) (Sağlık Bakanlığı Endikasyon Dışı Genelge ve Kılavuzuna uyulacaktır.)
+	1.2.13. Linezolid (Sadece A31.0, A31.1, A31.8 ve A31.9 ICD kodlarında muafiyet kapsamındadır.) (Sağlık Bakanlığı Endikasyon Dışı Genelge ve Kılavuzuna uyulacaktır.)
+1.3.	Kortikosteroidler
+1.4.	Viomisin
+
+2. Kanser (C00- C97)  (D00--D48) C8C844
+C84C84
+C00
+Dudak malign neoplazmları
+C00.0
+Üst dudak malign neoplazmı, dış bölge 
+C00.1
+Alt dudak malign neoplazmı, dış bölge 
+C00.2
+Dudak malign neoplazmı, dış bölge, dudak tanımlanmamış
+C00.3
+Üst dudak malign neoplazmı, iç yüz 
+C00.4
+Alt dudak malign neoplazmı, iç yüz 
+C00.5
+Dudak iç yüz malign neoplazmı, dudak tanımlanmamış
+C00.6
+Dudak komissüru malign neoplazmı
+C00.8
+Dudak overlapping lezyonu
+C00.9
+Dudak malign neoplazmı, dudak tanımlanmamış
+
+
+C01
+Dil kökü malign neoplazmları
+
+
+C02
+Dil malign neoplazmları, diğer ve tanımlanmamış kısımlarının
+C02.0
+Dil arka yüzeyi malign neoplazmı
+C02.1
+Dil kenarları malign neoplazmı
+C02.2
+Dil ön yüzü malign neoplazmı
+C02.3
+Dil 2/3 önü malign neoplazmı, tanımlanmamış kısım
+C02.4
+Lingual tonsil malign neoplazmı
+C02.8
+Dilin overlapping lezyonu
+C02.9
+Dil malign neoplazmı, tanımlanmamış
+ 
+ 
+C03
+Diş eti malign neoplazmları
+C03.0
+Üst diş eti malign neoplazmı 
+C03.1
+Alt diş eti malign neoplazmı
+C03.9
+Diş eti malign neoplazmı, yer tanımlanmamış
+ 
+ 
+C04
+Ağız tabanı malign neoplazmları
+C04.0
+Ağzın ön tabanı malign neoplazmı
+C04.1
+Ağız yan duvarı malign neoplazmı
+C04.8
+Ağız tabanı overlapping lezyonu
+C04.9
+Ağız tabanı malign neoplazmı, yer tanımlanmamış
+ 
+ 
+C05
+Damak malign neoplazmları
+C05.0
+Sert damak malign neoplazmı
+C05.1
+Yumuşak damak malign neoplazmı
+C05.2
+Uvula malign neoplazmı
+C05.8
+Damak overlapping lezyonu
+C05.9
+Damak malign neoplazmı, yer tanımlanmamış
+ 
+ 
+C06
+Ağzın malign neoplazmları, diğer ve tanımlanmamış kısımlarının
+C06.0
+Yanak mukozası malign neoplazmı
+C06.1
+Ağız vestibülü malign neoplazmı
+C06.2
+Retromolar bölge malign neoplazmı 
+C06.8
+Ağız diğer ve tanımlanmamış kısımlarının overlapping lezyonu
+C06.9
+Ağız malign neoplazmı, yer tanımlanmamış
+ 
+ 
+C07
+Parotis bezi malign neoplazmı
+ 
+ 
+C08
+Majör tükrük bezlerinin malign neoplazmları, diğer ve tanımlanmamış
+C08.0
+Submandibüler bez malign neoplazmı
+C08.1
+Sublingual bez malign neoplazmı
+C08.8
+Majör tükrük bezler overlapping lezyonu
+C08.9
+Majör tükrük bezi malign neoplazmı, yer tanımlanmamış
+ 
+ 
+C09
+Tonsil malign neoplazmı
+C09.0
+Tonsiller fossada malign neoplazm
+C09.1
+Tonsiller plika (ön) (arka) malign neoplazmı
+C09.8
+Tonsil overlapping lezyonu
+C09.9
+Tonsil malign neoplazmı, yer tanımlanmamış
+ 
+ 
+C10
+Orofarinks malign neoplazmı
+C10.0
+Vallekula malign neoplazmı
+C10.1
+Epiglot ön yüzünde malign neoplazm
+C10.2
+Orofarinks yan duvarında malign neoplazm
+C10.3
+Orofarinks arka duvarında malign neoplazm 
+C10.4
+Brankial yarık malign neoplazmı
+C10.8
+Orofarinks overlapping lezyonu
+C10.9
+Orofarinks malign neoplazmı, tanımlanmamış
+ 
+ 
+C11
+Nazofarinks malign neoplazmı
+C11.0
+Nazofarinks üst duvarında malign neoplazm
+C11.1
+Nazofarinks arka duvarında malign neoplazm
+C11.2
+Nazofarinks yan duvarında malign neoplazm
+C11.3
+Nazofarinks ön duvarında malign neoplazm
+C11.8
+Nazofarinks overlapping lezyonu
+C11.9
+Nazofarinks malign neoplazmı, tanımlanmamış
+ 
+ 
+C12
+Priform sinüsün malign neoplazmı
+ 
+ 
+C13
+Hipofarinks malign neoplazmı
+C13.0
+Postkrikoid bölgede malign neoplazm
+C13.1
+Ariepiglottik katlantı, hipofaringeal yüzde malign neoplazm
+C13.2
+Hipofarinks arka duvarında malign neoplazm
+C13.8
+Hipofarinks overlapping lezyonu
+C13.9
+Hipofarinks malign neoplazmı, tanımlanmamış
+ 
+ 
+C14
+Dudak, oral kavite ve farinksin malign neoplazmları, diğer ve sınırları belirsiz bölgelerin
+C14.0
+Farinks malign neoplazmı, tanımlanmamış
+C14.1
+Laringofarinks malign neoplazmı
+C14.2
+Waldeyer halkası malign neoplazmı
+C14.8
+Dudak oral kavite ve farinksin overlapping lezyonu
+ 
+ 
+C15
+Özefagus malign neoplazmı
+C15.0
+Özefagus malign neoplazmı, servikal kısmı
+C15.1
+Özefagus malign neoplazmı, torasik kısmı
+C15.2
+Özefagus malign neoplazmı, abdominal kısmı
+C15.3
+Özefagus malign neoplazmı, 1/3 üst kısmı
+C15.4
+Özefagus malign neoplazmı, 1/3 orta kısmı
+C15.5
+Özefagus malign neoplazmı, 1/3 alt kısmı
+C15.8
+Özefagus overlapping lezyonu
+C15.9
+Özefagus malign neoplazmı, tanımlanmamış
+ 
+ 
+C16
+Mide malign neoplazmı
+C16.0
+Kardiada malign neoplazm
+C16.1
+Mide fundusunda malign neoplazm
+C16.2
+Mide korpusunda malign neoplazm
+C16.3
+Pilorik antrumda malign neoplazm
+C16.4
+Pilor malign neoplazmı
+C16.5
+Mide küçük kurvaturunda malign neoplazm, tanımlanmamış
+C16.6
+Mide büyük kurvaturunda malign neoplazm, tanımlanmamış
+C16.8
+Mide overlapping lezyonu
+C16.9
+Mide malign neoplazmı, tanımlanmamış
+ 
+ 
+C17 
+İnce bağırsak malign neoplazmı
+C17.0
+Duodenum malign neoplazmı
+C17.1
+Jejunum malign neoplazmı
+C17.2
+İleum malign neoplazmı
+C17.3
+Meckel divertikülünde malign neoplazm
+C17.8
+İnce barsak overlapping lezyonu
+C17.9
+İnce barsak malign neoplazmı, tanımlanmamış
+ 
+ 
+C18
+Kolon malign neoplazmı
+C18.0
+Çekumda malign neoplazm
+C18.1
+Appendiksde malign neoplazm
+C18.2
+Çıkan kolonda malign neoplazm
+C18.3
+Kolon hepatik fleksürde malign neoplazm
+C18.4
+Transvers kolonda malign neoplazm
+C18.5
+Kolon splenik fleksürde malign neoplazm
+C18.6
+İnen kolonda malign neoplazm
+C18.7
+Sigmoid kolonda malign neoplazm
+C18.8
+Kolon overlapping lezyonu
+C18.9
+Kolon malign neoplazmı, tanımlanmamış
+ 
+ 
+C19
+Rektosigmoid bileşim malign neoplazmı
+ 
+ 
+C20
+Rektum malign neoplazmı
+ 
+ 
+C21
+Anüs ve anal kanal malign neoplazmı
+C21.0
+Anüs malign neoplazmı, tanımlanmamış
+C21.1
+Anal kanal malign neoplazmı
+C21.2
+Kloakojenik bölge malign neoplazmı
+C21.8
+Rektum, anüs ve anal kanalın overlapping lezyonu
+ 
+ 
+C22
+Karaciğer ve intrahepatik safra yolları malign neoplazmı
+C22.0
+Hepatoselüler karsinom
+C22.1
+İntrehepatik safra yolu karsinomu
+C22.2
+Hepatoblastom
+C22.3
+Karaciğerin anjiosarkomu
+C22.4
+Karaciğer sarkomu, diğer
+C22.7
+Karaciğerin diğer tanımlanmış karsinomları
+C22.9
+Karaciğer malign neoplazmı, tanımlanmamış
+ 
+ 
+C23
+Safra kesesi malign neoplazmı
+ 
+ 
+C24
+Safra kanalı malign neoplazmı, diğer ve tanımlanmamış bölgelerin
+C24.0
+Ekstrahepatik safra yolu malign neoplazmı
+C24.1
+Ampulla vateride malign neoplazm
+C24.8
+Safra yollarının overlapping lezyonu
+C24.9
+Safra yolu malign neoplazmı, tanımlanmamış
+
+
+C25
+Pankreas malign neoplazmı
+C25.0
+Pankreas başı malign neoplazmı
+C25.1
+Pankreas gövdesi malign neoplazmı
+C25.2
+Pankreas kuyruğu malign neoplazmı
+C25.3
+Pankreatik kanal malign neoplazmı
+C25.4
+Endokrin pankreas malign neoplazmı
+C25.7
+Pankreasın diğer kısımlarının malign neoplazmı
+C25.8
+Pankreas overlapping lezyonu
+C25.9
+Pankreas malign neoplazmı, tanımlanmamış
+ 
+ 
+C26
+Sindirim organları malign neoplazmı, diğer ve sınırları belirsiz bölgelerin
+C26.0
+Barsak kanalı malign neoplazmı, tanımlanmamış kısım
+C26.1
+Dalak malign neoplazmı
+C26.8
+Sindirim sisteminin overlapping lezyonu
+C26.9
+Sindirim sistemi içinde sınırları belirsiz yerlerin malign neoplazmı
+ 
+ 
+C30
+Burun boşluğu ve ortakulak malign neoplazmı
+C30.0
+Burun boşluğunda malign neoplazm
+C30.1
+Ortakulakta malign neoplazm
+ 
+ 
+C31
+Aksesuar sinüslerin malign neoplazmı
+C31.0
+Maksiller sinüs malign neoplazmı
+C31.1
+Etmoid sinüs malign neoplazmı
+C31.2
+Frontal sinüs malign neoplazmı
+C31.3
+Sfenoid sinüs malign neoplazmı
+C31.8
+Aksesuar sinüs overlapping lezyonu
+C31.9
+Aksesuar sinüs malign neoplazmı, tanımlanmamış
+ 
+ 
+C32
+Larinks malign neoplazmı
+C32.0
+Glottis malign neoplazmı
+C32.1
+Supraglottis malign neoplazmı
+C32.2
+Subglottis malign neoplazmı
+C32.3
+Larinks kıkırdağı malign neoplazmı
+C32.8
+Larinksin overlapping lezyonu
+C32.9
+Larinks malign neoplazmı, tanımlanmamış
+ 
+ 
+C33
+Trakea malign neoplazmı
+ 
+ 
+C34
+Bronş ve akciğer malign neoplazmı
+C34.0
+Ana bronş malign neoplazmı
+C34.1
+Bronş veya akciğer malign neoplazmı, üst lob
+C34.2
+Bronş veya akciğer malign neoplazmı, orta lob
+C34.3
+Bronş veya akciğer malign neoplazmı, alt lob
+C34.8
+Bronş ve akciğer overlapping lezyonu
+C34.9
+Bronş veya akciğer malign neoplazmı, tanımlanmamış
+ 
+ 
+C37
+Timus malign neoplazmı
+ 
+ 
+C38
+Kalp, mediasten ve plevra malign neoplazmı
+C38.0
+Kalp malign neoplazmı
+C38.1
+Ön mediasten malign neoplazmı
+C38.2
+Arka mediasten malign neoplazmı
+C38.3
+Mediasten malign neoplazmı, tanımlanmamış kısım
+C38.4
+Plevra malign neoplazmı
+C38.8
+Kalp, mediasten ve plevra overlapping lezyonu
+ 
+ 
+C39
+Solunum sistemi ve toraks-içi organların malign neoplazmı, diğer ve sınırları belirsiz bölgelerin
+C39.0
+Üst solunum yolu malign neoplazmı, tanımlanmamış kısım
+C39.8
+Solunum organları ve intratorasik organların overlapping lezyonu
+C39.9
+Solunum sisteminde eksik tanımlanmış yerlerin malign neoplazmı
+ 
+ 
+C40
+Ekstremite kemik ve eklem kıkırdağının malign neoplazmı
+C40.0
+Üst ekstremite uzun kemikleri ve skapula malign neoplazmı
+C40.1
+Üst eksremitenin kısa kemiklerinin malign neoplazmı
+C40.2
+Alt ekstremite uzun kemiklerinin malign neoplazmı
+C40.3
+Alt ekstremite kısa kemiklerinin malign neoplazmı
+C40.8
+Ekstremite kemik ve eklem kıkırdağı overlopping lezyonları
+C40.9
+Ekstremite kemik ve eklem kıkırdağı malign neoplazmı, tanımlanmamış
+ 
+ 
+C41
+Kemik ve eklem kıkırdağının malign neoplazmı, diğer ve tanımlanmamış bölgelerin 
+C41.0
+Kafa ve yüz kemikleri malign neoplazmı
+C41.1
+Mandibula malign neoplazmı
+C41.2
+Vertebral kolon malign neoplazmı
+C41.3
+Kaburgalar, sternum ve klavikula malign neoplazmı
+C41.4
+Pelvik kemikleri, sakrum ve koksiks malign neoplazmı
+C41.8
+Kemik ve eklem kıkırdağının overlapping lezyonu
+C41.9
+Kemik ve eklem kıkırdakları malign neoplazmı, tanımlanmamış
+ 
+ 
+C43
+Deri malign melanomu
+C43.0
+Malign melanom, dudakta
+C43.1
+Malign melanom, kantus dahil göz kapağında
+C43.2
+Malign melanom, kulak ve dış kulak yolunda
+C43.3
+Malign melanom, yüz diğer ve tanımlanmamış kısımlarının 
+C43.4
+Malign melanom, kafa derisi ve boyunda
+C43.5
+Malign melanom, gövdede
+C43.6
+Malign melanom, omuz dahil üst ekstremitede
+C43.7
+Malign melanom, kalça dahil alt ekstremitede
+C43.8
+Deri overlapping malign melanomu
+C43.9
+Deri malign melanomu, tanımlanmamış
+ 
+ 
+C44
+Derinin diğer malign neoplazmları
+C44.0
+Dudak derisi malign neoplazmı
+C44.1
+Göz kapağı derisi malign neoplazmı, kantus dahil
+C44.2
+Kulak ve kanal derisi malign neoplazmı
+C44.3
+Yüz derisi malign neoplazmı, diğer ve tanımlanmamış kısımlarının
+C44.4
+Kafa ve boyun derisi malign neoplazmı
+C44.5
+Gövde derisi malign neoplazmı
+C44.6
+Üst ekstremite derisi malign neoplazmı, omuz dahil
+C44.7
+Alt ekstremite derisi malign neoplazmı, kalça dahil
+C44.8
+Deri overlapping lezyonu
+C44.9
+Deri malign neoplazmı malign neoplazmı, tanımlanmamış
+ 
+ 
+C45
+Mezotelyoma
+C45.0
+Plevra mezotelyoması
+C45.1
+Periton mezotelyoması
+C45.2
+Perikard mezotelyoması
+C45.7
+Mezotelyoma, diğer yerlerin
+C45.9
+Mezotelyoma, tanımlanmamış
+ 
+ 
+C46
+Kaposi sarkomu
+C46.0
+Kaposi sarkomu, deri
+C46.1
+Kaposi sarkomu, yumuşak doku
+C46.2
+Kaposi sarkomu, damak
+C46.3
+Kaposi sarkomu, lenf nodları
+C46.7
+Kaposi sarkomu, diğer yerlerin
+C46.8
+Kaposi sarkomu, birden fazla organın
+C46.9
+Kaposi sarkomu, tanımlanmamış
+ 
+ 
+C47
+Periferik sinirler ve otonom sinir sistemi malign neoplazmı
+C47.0
+Periferik sinirlerin malign neoplazmı, baş, yüz ve boyunda
+C47.1
+Üst ekstremite periferik sinirleri malign neoplazmı, omuz dahil
+C47.2
+Alt ekstremite periferik sinirleri malign neoplazmı, kalça dahil
+C47.3
+Toraks periferik sinirleri malign neoplazmı
+C47.4
+Karnın periferik sinirleri malign neoplazmı
+C47.5
+Pelvis periferik sinirleri malign neoplazmı
+C47.6
+Gövde periferik sinirleri malign neoplazmı, tanımlanmamış
+C47.8
+Periferik sinirlerin ve otonom sinir sistemi overlapping lezyonu
+C47.9
+Periferik sinirler ve otonom sinir sistemi malign neoplazmı, tanımlanmamış
+ 
+ 
+C48
+Retroperiton ve periton malign neoplazmları
+C48.0
+Retroperiton malign neoplazmı
+C48.1
+Peritonun tanımlanmış kısımları malign neoplazmı
+C48.2
+Periton malign neoplazmı, tanımlanmamış
+C48.8
+Retroperiton ve periton overlapping lezyonları
+ 
+ 
+C49
+Bağ dokusu ve yumuşak doku diğer malign neoplazmı
+C49.0
+Baş, yüz ve boyun bağ ve yumuşak dokusu
+C49.1
+Üst ekstremite bağ ve yumuşak dokusu malign neoplazmı, omuz dahil
+C49.2
+Alt ekstremite bağ ve yumuşak dokusu malign neoplazmı, kalça dahil
+C49.3
+Toraks bağ ve yumuşak dokusu malign neoplazmı
+C49.4
+Karın bağ ve yumuşak dokusu malign neoplazmı
+C49.5
+Pelvis bağ ve yumuşak dokusu malign neoplazmı
+C49.6
+Gövde bağ ve yumuşak dokusu, tanımlanmamış
+C49.8
+Bağ dokusu ve yumuşak doku overlapping lezyonu
+C49.9
+Bağ ve yumuşak doku, tanımlanmamış
+ 
+ 
+C50
+Meme malign neoplazmı
+C50.0
+Meme ucu ve areola malign neoplazmı
+C50.1
+Meme merkezi kısmı malign neoplazmı
+C50.2
+Meme üst iç kadranı malign neoplazmı
+C50.3
+Meme alt iç kadranı malign neoplazmı
+C50.4
+Meme üst dış kadranı malign neoplazmı
+C50.5
+Meme alt dış kadranı malign neoplazmı
+C50.6
+Meme aksiller kuyruğu malign neoplazmı
+C50.8
+Meme overlapping lezyonu
+C50.9
+Meme malign neoplazmı, tanımlanmamış
+ 
+ 
+C51
+Vulva malign neoplazmı
+C51.0
+Labium majus malign neoplazmı
+C51.1
+Labium minüs malign neoplazmı
+C51.2
+Klitoris malign neoplazmı
+C51.8
+Vulva overlapping lezyonu
+C51.9
+Vulva malign neoplazmı, tanımlanmamış
+ 
+ 
+C52
+Vajina malign neoplazmı
+ 
+ 
+C53
+Serviks uteri malign neoplazmı
+C53.0
+Endoserviks malign neoplazmı
+C53.1
+Ekzoserviks malign neoplazmı
+C53.8
+Serviks uteri overlapping lezyonu
+C53.9
+Serviks uteri malign neoplazmı, tanımlanmamış
+ 
+ 
+C54
+Korpus uteri malign neoplazmı
+C54.0
+İstmus uteri malign neoplazmı
+C54.1
+Endometrium malign neoplazmı
+C54.2
+Miyometrium malign neoplazmı
+C54.3
+Fundus uteri malign neoplazmı
+C54.8
+Korpus uteri overlapping lezyonu
+C54.9
+Korpus uteri malign neoplazmı, tanımlanmamış
+ 
+ 
+C55
+Uterus malign neoplazmı, tanımlanmamış kısım
+ 
+ 
+C56
+Over malign neoplazmı
+ 
+ 
+C57
+Kadın genital organları malign neoplazmı, diğer ve tanımlanmamış
+C57.0
+Fallop tüpü malign neoplazmı
+C57.1
+Geniş ligament malign neoplazmı
+C57.2
+Yuvarlak ligament malign neoplazmı
+C57.3
+Parametrium malign neoplazmı
+C57.4
+Uterus adneksleri malign neoplazmı, tanımlanmamış
+C57.7
+Kadın genital organları malign neoplazmı, diğer tanımlanmış
+C57.8
+Kadın genital organlarının overlapping lezyonu
+C57.9
+Kadın genital organı malign neoplazmı, tanımlanmamış
+ 
+ 
+C58
+Plasenta malign neoplazmı
+ 
+ 
+C60
+Penis malign neoplazmı
+C60.0
+Sünnet derisi malign neoplazmı
+C60.1
+Glans penis malign neoplazmı
+C60.2
+Penis gövdesi malign neoplazmı
+C60.8
+Penis overlapping lezyonu
+C60.9
+Penis malign neoplazmı, tanımlanmamış
+ 
+ 
+C61
+Prostat malign neoplazmı
+ 
+ 
+C62
+Testis malign neoplazmı
+C62.0
+İnmemiş testis malign neoplazmı
+C62.1
+İnmiş testis malign neoplazmı
+C62.9
+Testis malign neoplazmı, tanımlanmamış
+ 
+ 
+C63
+Erkek genital organlarının malign neoplazmı, diğer ve tanımlanmamış
+C63.0
+Epididimis malign neoplazmı
+C63.1
+Spermatik kord malign neoplazmı
+C63.2
+Skrotum malign neoplazmı
+C63.7
+Erkek genital organları malign neoplazmı, diğer tanımlanmış
+C63.8
+Erkek genital organlarının overlapping lezyonu
+C63.9
+Erkek genital organı malign neoplazmı, tanımlanmamış
+ 
+ 
+C64
+Böbrek malign neoplazmı, renal pelvis hariç
+ 
+ 
+C65
+Renal pelvis malign neoplazmı
+ 
+ 
+C66
+Üreter malign neoplazmı
+ 
+ 
+C67
+Mesane malign neoplazmı
+C67.0
+Mesane trigonu malign neoplazmı
+C67.1
+Mesane kubbesi malign neoplazmı
+C67.2
+Mesane yan duvarı malign neoplazmı
+C67.3
+Mesane ön duvarı malign neoplazmı
+C67.4
+Mesane arka duvarı malign neoplazmı
+C67.5
+Mesane boynu malign neoplazmı
+C67.6
+Üreterik orifis malign neoplazmı
+C67.7
+Urakus malign neoplazmı
+C67.8
+Mesane overlapping lezyonu
+C67.9
+Mesane malign neoplazmı, tanımlanmamış
+ 
+ 
+C68
+İdrar yollarının malign neoplazmı, diğer ve tanımlanmamış
+C68.0
+Üretra malign neoplazmı
+C68.1
+Paraüretral bez malign neoplazmı
+C68.8
+Üriner organların overlapping lezyonu
+C68.9
+Üriner organ malign neoplazmı, tanımlanmamış
+ 
+ 
+C69
+Göz ve adneks malign neoplazmı
+C69.0
+Konjonktiva malign neoplazmı
+C69.1
+Kornea malign neoplazmı
+C69.2
+Retina malign neoplazmı
+C69.3
+Koroid malign neoplazmı
+C69.4
+Siliyer cisim malign neoplazmı
+C69.5
+Lakrimal bez ve kanal malign neoplazmı
+C69.6
+Orbita malign neoplazmı
+C69.8
+Göz ve adneks overlapping lezyonu
+C69.9
+Göz malign neoplazmı, tanımlanmamış
+ 
+ 
+C70
+Meninks malign neoplazmı
+C70.0
+Serebral meninksler malign neoplazmı
+C70.1
+Spinal meninksler malign neoplazmı
+C70.9
+Meninkslerin malign neoplazmı, tanımlanmamış
+ 
+ 
+C71
+Beyin malign neoplazmı
+C71.0
+Beyin malign neoplazmı, loblar ve ventriküller hariç
+C71.1
+Frontal lob malign neoplazmı
+C71.2
+Temporal lob malign neoplazmı
+C71.3
+Paryetal lob malign neoplazmı
+C71.4
+Oksipital lob malign neoplazmı
+C71.5
+Serebral ventrikül malign neoplazmı
+C71.6
+Beyincik malign neoplazmı
+C71.7
+Beyin sapı malign neoplazmı
+C71.8
+Beyin overlapping lezyonu
+C71.9
+Beyin malign neoplazmı, tanımlanmamış
+ 
+ 
+C72
+Spinal kord, kranial sinirler ve merkezi sinir sisteminin diğer kısımlarının malign neoplazmı
+C72.0
+Spinal kord malign neoplazmı
+C72.1
+Kauda equina malign neoplazmı
+C72.2
+Olfaktor sinir malign neoplazmı
+C72.3
+Optik sinir malign neoplazmı
+C72.4
+Akustik sinir malign neoplazmı
+C72.5
+Kranial sinirlerin malign neoplazmı, diğer ve tanımlanmamış
+C72.8
+Beynin ve merkezi sinir sisteminin overlapping lezyonu, diğer kısımlarının
+C72.9
+Merkezi sinir sistemi malign neoplazmı, tanımlanmamış
+
+
+C73
+Tiroid bez malign neoplazmı
+ 
+ 
+C74
+Adrenal bez malign neoplazmı
+C74.0
+Adrenal bez korteksi malign neoplazmı
+C74.1
+Adrenal bez medüllası malign neoplazmı
+C74.9
+Adrenal bez malign neoplazmı, tanımlanmamış
+ 
+ 
+C75
+Endokrin bez ve ilgili yapıların diğer malign neoplazmı
+C75.0
+Paratiroid bez malign neoplazmı
+C75.1
+Hipofiz bezi malign neoplazmı
+C75.2
+Kraniofaringeal dukt malign neoplazmı
+C75.3
+Pineal bez malign neoplazmı
+C75.4
+Karotid cisim malign neoplazmı
+C75.5
+Aortik cisim ve diğer paraganlionlar malign neoplazmı
+C75.8
+Birden fazla bez tutulumlu malign neoplazm, tanımlanmamış
+C75.9
+Endokrin bez malign neoplazmı, tanımlanmamış
+ 
+ 
+C76
+Malign neoplazm, diğer ve sınırları belirsiz yerlerin
+C76.0
+Baş, yüz ve boyun malign neoplazmı
+C76.1
+Toraks malign neoplazmı
+C76.2
+Karın malign neoplazmı
+C76.3
+Pelvis malign neoplazmı
+C76.4
+Üst ekstremite malign neoplazmı
+C76.5
+Alt ekstremite malign neoplazmı
+C76.7
+Sınırları belirsiz yerlerin malign neoplazmı, diğer
+C76.8
+Overlapping lezyonu diğer ve sınırları belirsiz yerlerin
+ 
+ 
+C77
+Lenf nodlarının malign neoplazmı, sekonder ve tanımlanmamış
+C77.0
+Baş, yüz ve boyun lenf nodları sekonder malign neoplazmı
+C77.1
+Toraks-içi lenf nodları sekonder malign neoplazmı
+C77.2
+Karın-içi lenf nodları sekonder malign neoplazmı
+C77.3
+Aksiller ve kol lenf nodları sekonder malign neoplazmı
+C77.4
+İnguinal ve bacak lenf nodları sekonder malign neoplazmı
+C77.5
+İntrapelvik lenf nodları sekonder malign neoplazmı
+C77.8
+Birden fazla organların lenf nodlarının sekonder malign neoplazmı
+C77.9
+Lenf nodu sekonder malign neoplazmı, tanımlanmamış
+ 
+ 
+C78
+Solunum ve sindirim organlarının sekonder malign neoplazmı
+C78.0
+Akciğer sekonder malign neoplazmı
+C78.1
+Mediasten sekonder malign neoplazmı
+C78.2
+Plevra sekonder malign neoplazmı
+C78.3
+Solunum organlarının sekonder malign neoplazmı, diğer ve tanımlanmamış
+C78.4
+İnce bağırsak sekonder malign neoplazmı
+C78.5
+Kalın bağırsak ve rektum sekonder malign neoplazmı
+C78.6
+Retroperiton ve periton sekonder malign neoplazmı
+C78.7
+Karaciğer sekonder malign neoplazmı
+C78.8
+Sindirim organlarının sekonder malign neoplazmı, diğer ve tanımlanmamış
+ 
+ 
+C79
+Sekonder malign neoplazmı, diğer yerlerin
+C79.0
+Böbrek ve renal pelvis sekonder malign neoplazmı
+C79.1
+Mesane ve diğer ve tanımlanmamış üriner organların sekonder malign neoplazmı
+C79.2
+Deri sekonder malign neoplazmı
+C79.3
+Beyin ve serebral meninkslerin sekonder malign neoplazmı
+C79.4
+Sinir sistemi diğer ve tanımlanmamış bölümlerinin sekonder malign neoplazmı
+C79.5
+Kemik ve kemik iliği sekonder malign neoplazmı
+C79.6
+Over sekonder malign neoplazmı
+C79.7
+Adrenal bez sekonder malign neoplazmı
+C79.8
+Sekonder malign neoplazm, diğer tanımlanmış yerlerin
+ 
+ 
+C80
+Malign neoplazm, bölge belirtilmemiş
+ 
+ 
+C81
+Hodgkin hastalığı
+C81.0
+Hodgkin hastalığı, Lenfosit ağırlıklı
+C81.1
+Hodgkin hastalığı, Nodüler skleroz
+C81.2
+Hodgkin hastalığı, Karma hücreli
+C81.3
+Hodgkin hastalığı, Lenfositten fakir
+C81.7
+Hodgkin hastalığı, diğer
+C81.9
+Hodgkin hastalığı, tanımlanmamış
+ 
+ 
+C82
+Folliküler [nodüler] non-Hodgkin lenfoma
+C82.0
+Folliküler non-Hodgkin lenfoma, Küçük yarık hücreli, folliküler
+C82.1
+Folliküler non-Hodgkin lenfoma, Karma küçük yarık ve geniş hücreli, folliküler
+C82.2
+Folliküler non-Hodgkin lenfoma, Büyük hücreli, folliküler
+C82.7
+Folliküler non-Hodgkin lenfoma diğer tipleri
+C82.9
+Folliküler non-Hodgkin lenfoma, tanımlanmamış
+ 
+ 
+C83
+Yaygın non-Hodgkin lenfoma
+C83.0
+Yaygın non-Hodgkin lenfoma, Küçük hücreli (yaygın)
+C83.1
+Yaygın non-Hodgkin lenfoma, Küçük yarık hücreli (yaygın)
+C83.2
+Yaygın non-Hodgkin lenfoma, Karma küçük ve büyük hücreli (yaygın)
+C83.3
+Yaygın non-Hodgkin lenfoma, Büyük hücreli (yaygın)
+C83.4
+Yaygın non-Hodgkin lenfoma, İmmünoblastik (yaygın)
+C83.5
+Yaygın non-Hodgkin lenfoma, Lenfoblastik (yaygın)
+C83.6
+Yaygın non-Hodgkin lenfoma, İndiferensiye (yaygın)
+C83.7
+Burkitt tümörü
+C83.8
+Yaygın non-Hodgkin lenfoma, diğer
+C83.9
+Yaygın non-Hodgkin lenfoma, tanımlanmamış
+ 
+ 
+C84
+Periferal ve kutanöz T- hücreli lenfomalar
+C84.1
+Sézary hastalığı
+C84.2
+T-bölge lenfoması
+C84.3
+Lenfoepiteloid lenfoma
+C84.4
+Periferal T-hücreli lenfoma
+C84.5
+T-hücreli lenfomalar, diğer ve tanımlanmamış
+
+
+C85
+Non-Hodgkin lenfoma, diğer ve tanımlanmamış tipler
+C85.0
+Lenfosarkom
+C85.1
+B-hücreli lenfoma, tanımlanmamış
+C85.7
+Non-Hodgkin lenfomanın, diğer tanımlanmış tipler
+C85.9
+Non-Hodgkin lenfoma, tanımlanmamış tip
+ 
+ 
+C88
+Malign immünoproliferatif hastalıklar
+C88.0
+Waldenström makroglobulinemi
+C88.1
+Alfa ağır zincir hastalığı
+C88.2
+Gama ağır zincir hastalığı
+C88.3
+İmmünoproliferatif ince bağırsak hastalığı
+C88.7
+Malign immünoproliferatif hastalıklar, diğer
+C88.9
+Malign immünoproliferatif hastalık, tanımlanmamış
+ 
+ 
+C90
+Multipl myelom ve malign plazma hücreli neoplazmlar
+C90.0
+Multipl miyelom
+C90.1
+Plazma hücreli lösemi
+C90.2
+Plazmositom, ekstramedüller
+ 
+ 
+C91
+Lenfoid lösemi
+C91.0
+Akut lenfoblastik lösemi
+C91.1
+Kronik lenfositik lösemi
+C91.2
+Subakut lenfositik lösemi
+C91.3
+Prolenfositik lösemi
+C91.4
+Saçlı hücreli lösemi
+C91.5
+Yetişkin T-hücreli lösemi
+C91.7
+Lenfoid lösemiler, diğer
+C91.9
+Lenfoid lösemi, tanımlanmamış
+ 
+ 
+C92
+Myeloid lösemi
+C92.0
+Akut myeloid lösemi
+C92.1
+Kronik myeloid lösemi
+C92.2
+Subakut myeloid lösemi
+C92.3
+Myeloid sarkoma
+C92.4
+Akut promyelositik lösemi
+C92.5
+Akut myelomonositik lösemi
+C92.7
+Myeloid lösemiler, diğer
+C92.9
+Myeloid lösemi, tanımlanmamış
+ 
+ 
+C93
+Monositik lösemi
+C93.0
+Akut monositik lösemi
+C93.1
+Kronik monositik lösemi
+C93.2
+Subakut monositik lösemi
+C93.7
+Monositik lösemiler, diğer
+C93.9
+Monositik lösemi, tanımlanmamış
+ 
+ 
+C94
+Lösemiler diğer, özel hücre tipli
+C94.0
+Akut eritremi ve eritrolösemi
+C94.1
+Kronik eritremi
+C94.2
+Akut megakaryoblastik lösemi
+C94.3
+Mast hücreli lösemi
+C94.4
+Akut panmyelozis
+C94.5
+Akut myelofibrozis
+C94.7
+Lösemiler, diğer tanımlanmış
+ 
+ 
+C95
+Lösemi, tanımlanmamış hücre tipli
+C95.0
+Akut lösemi, tanımlanmamış hücre tipli
+C95.1
+Kronik lösemi, tanımlanmamış hücre tipli
+C95.2
+Subakut lösemi, tanımlanmamış hücre tipli
+C95.7
+Lösemiler, tanımlanmamış hücre tipli, diğer
+C95.9
+Lösemi, tanımlanmamış
+ 
+ 
+C96
+Lenfoid, hematopoetik ve ilgili dokuların malign neoplazmları diğer ve tanımlanmamış
+C96.0
+Letterer-Siwe hastalığı
+C96.1
+Malign histiositoz
+C96.2
+Malign mast hücreli tümör
+C96.3
+Gerçek histiyositik lenfoma
+C96.7
+Lenfoid, hematopoetik ve ilgili dokuların malign neoplazmları, diğer tanımlanmış
+C96.9
+Lenfoid hematopoetik ve ilgili dokuların malign neoplazmı, tanımlanmamış
+
+
+C97
+Bağımsız (primer) birden fazla bölgenin malign neoplazmı
+
+
+D00
+Karsinoma in situ, oral kavite, özefagus ve mide
+D00.0
+Dudak, oral kavite ve farinkste karsinoma in situ
+D00.1
+Özefagusda karsinoma in situ
+D00.2
+Midede karsinoma in situ
+ 
+ 
+D01
+Karsinoma in situ, diğer ve tanımlanmamış sindirim organlarının
+D01.0
+Kolonda karsinoma in situ
+D01.1
+Rektosigmoid bileşkede karsinoma in situ
+D01.2
+Rektumda karsinoma in situ
+D01.3
+Anüs ve anal kanalda karsinoma in situ
+D01.4
+Barsakta karsinoma in situ, diğer ve tanımlanmamış kısımları
+D01.5
+Karaciğer, safrakesesi ve safra yollarında karsinoma in situ
+D01.7
+Sindirim organlarında karsinoma in situ, diğer, tanımlanmış
+D01.9
+Sindirim organında karsinoma in situ, tanımlanmamış
+ 
+ 
+D02
+Karsinoma in situ, ortakulak ve solunum sisteminin
+D02.0
+Larinkste karsinoma in situ
+D02.1
+Trakeada karsinoma in situ
+D02.2
+Bronş ve akciğerde karsinoma in situ
+D02.3
+Solunum sisteminde karsinoma in situ, diğer kısımları
+D02.4
+Solunum sisteminde karsinoma in situ, tanımlanmamış
+ 
+ 
+D03
+Melanoma in situ
+D03.0
+Dudakta, melanoma in situ
+D03.1
+Göz kapağında melanoma in situ, kantus dahil
+D03.2
+Kulak ve dış kulak yolunda melanoma in situ
+D03.3
+Yüzde melanoma in situ, diğer ve tanımlanmamış kısmının
+D03.4
+Kafa derisi ve boyunda melanoma in situ
+D03.5
+Gövdede melanoma in situ
+D03.6
+Üst ekstremitede melanoma in situ, omuz dahil
+D03.7
+Alt ekstremitede melanoma in situ, kalça dahil
+D03.8
+Melanoma in situ, diğer yerlerin
+D03.9
+Melanoma in situ, tanımlanmamış
+ 
+ 
+D04
+Karsinoma in situ, deri
+D04.0
+Dudak derisinde karsinoma in situ
+D04.1
+Gözkapağı derisinde karsinoma in situ, kantus dahil
+D04.2
+Kulak ve dış kulak yolunun derisinde karsinoma in situ
+D04.3
+Yüzün derisinde karsinoma in situ, diğer ve tanımlanmamış kısmının
+D04.4
+Kafa ve boyun derisinde karsinoma in situ
+D04.5
+Gövde derisinde karsinoma in situ
+D04.6
+Üst ekstremite derisinde karsinoma in situ, omuz dahil
+D04.7
+Alt ekstremite derisinde karsinoma in situ, kalça dahil
+D04.8
+Deride karsinoma in situ, diğer yerlerin
+D04.9
+Deride karsinoma in situ, tanımlanmamış
+ 
+ 
+D05
+Karsinoma in situ, meme
+D05.0
+Lobüler karsinoma in situ
+D05.1
+İntraduktal karsinoma in situ
+D05.7
+Memenin karsinoma in situsu, diğer
+D05.9
+Memenin karsinoma in situsu, tanımlanmamış
+ 
+ 
+D06
+Karsinoma in situ, serviks uteri
+D06.0
+Endoserviksde karsinoma in situ
+D06.1
+Ekzoservisksdekarsinoma in situ
+D06.7
+Serviksde karsinoma in situ, diğer kısımları
+D06.9
+Serviksde karsinoma in situ, tanımlanmamış
+ 
+ 
+D07
+Karsinoma in situ, diğer ve tanımlanmamış genital organların
+D07.0
+Endometriumda karsinoma in situ
+D07.1
+Vulvada karsinoma in situ
+D07.2
+Vajinada karsinoma in situ
+D07.3
+Kadın genital organlarında karsinoma in situ, diğer ve tanımlanmamış
+D07.4
+Penisde karsinoma in situ
+D07.5
+Prostatda karsinoma in situ
+D07.6
+Erkek genital organlarında, diğer ve tanımlanmamış
+ 
+ 
+D09
+Karsinoma in situ, diğer ve tanımlanmamış yerlerinin
+D09.0
+Mesanede karsinoma in situ
+D09.1
+Üriner organlarda karsinoma in situ, diğer ve tanımlanmamış
+D09.2
+Gözde karsinoma in situ
+D09.3
+Tiroid ve diğer endokrin bezlerde karsinoma in situ
+D09.7
+Karsinoma in situ, diğer tanımlanmış yerlerin
+D09.9
+Karsinoma in situ, tanımlanmamış
+ 
+ 
+D10
+Ağız ve farinks benign neoplazmı
+D10.0
+Dudak benign neoplazmı
+D10.1
+Dil benign neoplazmı
+D10.2
+Ağız tabanı benign neoplazmı
+D10.3
+Ağız benign neoplazmı, diğer ve tanımlanmamış kısımları
+D10.4
+Tonsil benign neoplazmı
+D10.5
+Orofarinks benign neoplazmı, diğer kısımları
+D10.6
+Nazofarinks benign neoplazmı
+D10.7
+Hipofarinks benign neoplazmı
+D10.9
+Farinks benign neoplazmı, tanımlanmamış
+ 
+ 
+D11
+Majör tükrük bezleri benign neoplazmı
+D11.0
+Parotid bez benign neoplazmı
+D11.7
+Majör tükrük bezleri benign neoplazmı, diğer
+D11.9
+Majör tükrük bezi benign neoplazmı, tanımlanmamış
+ 
+ 
+D12
+Kolon, rektum, anüs ve anal kanal benign neoplazmı
+D12.0
+Çekum benign neoplazmı
+D12.1
+Appendiks benign neoplazmı
+D12.2
+Çıkan kolon benign neoplazmı
+D12.3
+Transvers kolon benign neoplazmı
+D12.4
+İnen kolon benign neoplazmı
+D12.5
+Sigmoid kolon benign neoplazmı
+D12.6
+Kolon benign neoplazmı, tanımlanmamış
+D12.7
+Rektosigmoid bileşke benign neoplazmı
+D12.8
+Rektum benign neoplazmı
+D12.9
+Anüs ve anal kanal benign neoplazmı
+
+
+D13
+Sindirim sisteminin diğer ve sınırları belirsiz kısımlarının benign neoplazmı
+D13.0
+Özefagus benign neoplazmı
+D13.1
+Mide benign neoplazmı
+D13.2
+Duodenum benign neoplazmı
+D13.3
+İnce barsak benign neoplazmı, diğer ve tanımlanmamış kısımları
+D13.4
+Karaciğer benign neoplazmı
+D13.5.1
+Ekstrahepatik safra yolları benign neoplazmı
+D13.6
+Pankreas benign neoplazmı
+D13.7
+Endokrin pankreas benign neoplazmı
+D13.9
+Sindirim sisteminin sınırları belirsiz yerlerinin benign neoplazmı
+ 
+ 
+D14
+Ortakulak ve solunum sistemi benign neoplazmı
+D14.0
+Ortakulak, burun boşluğu ve aksesuar sinüslerin benign neoplazmı
+D14.1
+Larinks benign neoplazmı
+D14.2
+Trakea benign neoplazmı
+D14.3
+Bronş ve akciğer benign neoplazmı
+D14.4
+Solunum sistemi benign neoplazmı, tanımlanmamış 
+ 
+ 
+D15
+Benign neoplazm, diğer ve tanımlanmamış intratorasik organların
+D15.0
+Timüs benign neoplazmı
+D15.1
+Kalp benign neoplazmı
+D15.2
+Mediasten benign neoplazmı
+D15.7
+Toraks-içi organların benign neoplazmı, diğer tanımlanmış
+D15.9
+Toraks-içi organ benign neoplazmı, tanımlanmamış
+ 
+ 
+D16
+Kemik ve eklem kıkırdağı benign neoplazmı
+D16.0
+Üst ekstremite uzun kemikleri ve skapula benign neoplazmı
+D16.1
+Üst ekstremite kısa kemikleri benign neoplazmı
+D16.2
+Alt eksremite uzun kemikleri benign neoplazmı
+D16.3
+Alt eksremite kısa kemikleri benign neoplazmı
+D16.4
+Kafa ve yüz kemikleri benign neoplazmı
+D16.5
+Alt çene kemiği benign neoplazmı
+D16.6
+Vertebral kolon benign neoplazmı
+D16.7
+Kaburgalar, sternum ve klavikula benign neoplazmı
+D16.8
+Pelvik kemikler, sakrum ve koksiks benign neoplazmı
+D16.9
+Kemik ve eklem kıkırdağı benign neoplazmı, tanımlanmamış
+ 
+ 
+D17
+Benign lipomatöz neoplazm
+D17.0
+Benign lipomatöz neoplazm, baş, yüz ve boyun deri ve subkütanöz dokusu
+D17.1
+Benign lipomatöz neoplazm, gövde deri ve subkütanöz doku
+D17.2
+Benign lipomatöz neoplazm, ekstremitelerin deri ve subkütanöz dokusunun
+D17.3
+Benign lipomatöz neoplazm, diğer ve tanımlanmamış yerlerin deri ve subkütanöz 
+D17.4
+Benign lipomatöz neoplazm, intratorasik organların
+D17.5
+Benign lipomatöz neoplazm, intraabdominal organların
+D17.6
+Benign lipomatöz neoplazm, spermatik kord
+D17.7
+Benign lipomatöz neoplazm, diğer yerlerin
+D17.9
+Benign lipomatöz neoplazm, tanımlanmamış
+ 
+ 
+D18
+Hemanjiom ve lenfanjiom, herhangi bir yerde
+D18.0
+Hemanjiom, herhangi bir yerde
+D18.1
+Lenfanjiom, herhangi bir yerde
+ 
+ 
+D19
+Mezotelyal doku benign neoplazmı
+D19.0
+Plevra mezotelyal dokusu benign neoplazmı
+D19.1
+Periton mezotelyal dokusu benign neoplazmı
+D19.7
+Mezotelyal doku benign neoplazmı, diğer yerlerin
+D19.9
+Mezotelyal doku benign neoplazmı, tanımlanmamış
+ 
+ 
+D20
+Retroperiton ve periton yumuşak dokusunun benign neoplazmı
+D20.0
+Retroperiton benign neoplazmı
+D20.1
+Periton benign neoplazmı
+ 
+ 
+D21
+Bağ dokusu ve diğer yumuşak dokunun diğer benign neoplazmı
+D21.0
+Baş yüz ve boynun bağ dokusu ve diğer yumuşak dokularının benign neoplazmı
+D21.1
+Bağ dokusu ve diğer yumuşak dokular benign neoplazmı, omuz dahil üst ekstremitenin
+D21.2
+Bağ dokusu ve diğer yumuşak dokular benign neoplazmı, kalça dahil alt ekstremitenin
+D21.3
+Bağ dokusu ve diğer yumuşak dokular benign neoplazmı, toraks
+D21.4
+Bağ dokusu ve diğer yumuşak dokuların benign neoplazmı, karın
+D21.5
+Bağ dokusu ve diğer yumuşak dokuların benign neoplazmı, pelvis
+D21.6
+Bağ dokusu ve diğer yumuşak dokuların benign neoplazmı, gövde tanımlanmamış
+D21.9
+Bağ dokusu ve diğer yumuşak dokuların benign neoplazmı, tanımlanmamış
+ 
+ 
+D22
+Melanositik nevüs
+D22.0
+Dudak melanositik nevüsü
+D22.1
+Kantus dahil göz kapağı melanositik nevüsü
+D22.2
+Kulak ve dış kulak yolu melanositik nevüsü
+D22.3
+Yüzün diğer ve tanımlanmamış kısımlarının melanositik nevüsü
+D22.4
+Saçlı deri ve boyun melanositik nevüsü
+D22.5
+Gövde melanositik nevüsü
+D22.6
+Omuz dahil üst ekstremitenin melanositik nevüsü
+D22.7
+Kalça dahil alt ekstremitenin melanositik nevüsü
+D22.9
+Melanositik nevüs, tanımlanmamış
+ 
+ 
+D23
+Derinin diğer benign neoplazmları
+D23.0
+Dudak derisi benign neoplazmı, diğer
+D23.1
+Kantus dahil göz kapağı derisi benign neoplazmı, diğer
+D23.2
+Kulak ve dış kulak yolu derisi benign neoplazmı, diğer
+D23.3
+Yüzün diğer ve tanımlanmamış kısımlarının derisi benign neoplazmı, diğer
+D23.4
+Kafa ve boyun derisi benign neoplazmı, diğer
+D23.5
+Gövde derisi benign neoplazmı, diğer
+D23.6
+Omuz dahil üst ekstremite derisi benign neoplazmı, diğer
+D23.7
+Kalça dahil alt ekstremite derisi benign neoplazmı, diğer
+D23.9
+Deri benign neoplazmı, diğer, tanımlanmamış
+ 
+ 
+D24
+Meme benign neoplazmı
+
+
+D25
+Uterusun leiomiyoması
+D25.0
+Uterus submükoz leiomiyomu
+D25.1
+Uterus intramural leiomiyomu
+D25.2
+Uterus subserozal leiomiyomu
+D25.9
+Uterus leiomiyomu, tanımlanmamış
+ 
+ 
+D26
+Uterus diğer benign neoplazmları
+D26.0
+Serviks uteri benign neoplazmı, diğer
+D26.1
+Korpus uteri benign neoplazmı, diğer
+D26.7
+Uterusun diğer kısımları benign neoplazmı, diğer
+D26.9
+Uterus benign neoplazmı, diğer, tanımlanmamış
+ 
+ 
+D27
+Over benign neoplazmı
+ 
+ 
+D28
+Benign neoplazm, diğer ve tanımlanmamış kadın genital organlarının
+D28.0
+Vulva benign neoplazmı
+D28.1
+Vajina benign neoplazmı
+D28.2
+Uterus tüpleri ve ligamentler benign neoplazmı
+D28.7
+Kadın genital organı benign neoplazmı, diğer tanımlanmış
+D28.9
+Kadın genital organı benign neoplazmı, tanımlanmamış
+ 
+ 
+D29
+Erkek genital organlarının benign neoplazmı
+D29.0
+Penis benign neoplazmı
+D29.1
+Prostat benign neoplazmı
+D29.2
+Testis benign neoplazmı
+D29.3
+Epididimis benign neoplazmı
+D29.4
+Skrotum benign neoplazmı
+D29.7
+Erkek genital organları benign neoplazmı, diğer
+D29.9
+Erkek genital organı benign neoplazmı, tanımlanmamış
+ 
+ 
+D30
+Üriner organların benign neoplazmı
+D30.0
+Böbrek benign neoplazmı
+D30.1
+Renal pelvis benign neoplazmı
+D30.2 
+Üreter benign neoplazmı
+D30.3
+Mesane benign neoplazmı
+D30.4
+Üretra benign neoplazmı
+D30.7
+Üriner diğer organlar benign neoplazmı
+D30.9
+Üriner organ benign neoplazmı, tanımlanmamış
+ 
+ 
+D31
+Göz ve adnekslerin benign neoplazmı 
+D31.0
+Konjonktiva benign neoplazmı
+D31.1
+Kornea benign neoplazmı
+D31.2
+Retina benign neoplazmı
+D31.3
+Koroid benign neoplazmı
+D31.4
+Siliyer cisim benign neoplazmı
+D31.5
+Gözyaşı bezi ve kanalı benign neoplazmı
+D31.6
+Orbita benign neoplazmı, tanımlanmamış
+D31.9
+Göz benign neoplazmı, tanımlanmamış
+ 
+ 
+D32
+Meninks benign neoplazmı
+D32.0
+Serebral meninksler benign neoplazmı
+D32.1
+Spinal meninksler benign neoplazmı
+D32.9
+Meninksler benign neoplazmı, tanımlanmamış
+ 
+ 
+D33
+Beynin ve merkezi sinir sistemi diğer kısımlarının benign neoplazmı
+D33.0
+Beyin benign neoplazmı, supratentoryal
+D33.1
+Beyin benign neoplazmı, infratentoryal
+D33.2
+Beyin benign neoplazmı, tanımlanmamış
+D33.3
+Kranial sinirler benign neoplazmı
+D33.4
+Spinal kord benign neoplazmı
+D33.7
+Merkezi sinir sistemi benign neoplazmı, diğer tanımlanmış kısımları
+D33.9
+Merkezi sinir sistemi benign neoplazmı, tanımlanmamış
+ 
+ 
+D34
+Tiroid bez benign neoplazmı
+ 
+ 
+D35
+Benign neoplazm, diğer ve tanımlanmamış endokrin bezlerin
+D35.0
+Adrenal bez benign neoplazmı
+D35.1
+Paratiroid bez benign neoplazmı
+D35.2
+Hipofiz bezi benign neoplazmı
+D35.3
+Kraniofaringeal kanal benign neoplazmı
+D35.4
+Pineal bez benign neoplazmı
+D35.5
+Karotid cisim benign neoplazmı
+D35.6
+Aort cismi ve diğer paraganglionlar benign neoplazmı
+D35.7
+Endokrin bezler benign neoplazmı, diğer tanımlanmış
+D35.8
+Birden fazla bez tutulumlu benign neoplazmı
+D35.9
+Endokrin bez benign neoplazmı, tanımlanmamış
+ 
+ 
+D36
+Benign neoplazmı, diğer ve tanımlanmamış yerlerin
+D36.0
+Lenf nodları benign neoplazmı
+D36.1
+Periferik sinirler ve otonom sinir sistemi benign neoplazmı
+D36.7
+Tanımlanmış diğer yerlerin benign neoplazmı
+D36.9
+Benign neoplazm, tanımlanmamış yerlerin
+ 
+ 
+D37
+Oral kavite ve sindirim sistemi belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.0
+Dudak, oral kavite ve farinksin belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.1
+Mide belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.2
+İnce barsak belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.3
+Appendiks belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.4
+Kolon belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.5
+Rektum belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.6
+Karaciğer, safrakesesi ve safra yolları belirsiz veya bilinmeyen davranışlı neoplazmı
+D37.7
+Sindirim organları belirsiz veya bilinmeyen davranışlı neoplazmı, diğer
+D37.9
+Sindirim organının belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D38
+Orta kulak ve solunum ve intratorasik organlarının belirsiz veya bilinmeyen davranışlı neoplazmı
+D38.0
+Larinksin belirsiz veya bilinmeyen davranışlı neoplazmı
+D38.1
+Trakea, bronş ve akciğerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D38.2
+Plevra belirsiz veya bilinmeyen davranışlı neoplazmı
+D38.3
+Mediasten belirsiz veya bilinmeyen davranışlı neoplazmı
+D38.4
+Timüs belirsiz veya bilinmeyen davranışlı neoplazmı
+D38.5
+Solunum organlarının belirsiz veya bilinmeyen davranışlı neoplazmı, diğer
+D38.6
+Solunum organlarının belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D39
+Kadın genital organlarının belirsiz veya bilinmeyen davranışlı neoplazmı
+D39.0
+Uterusun belirsiz veya bilinmeyen davranışlı neoplazmı
+D39.1
+Overin belirsiz veya bilinmeyen davranışlı neoplazmı
+D39.2
+Plasentanın belirsiz veya bilinmeyen davranışlı neoplazmı
+D39.7
+Kadın genital organlarının belirsiz veya bilinmeyen davranışlı neoplazmı, diğer
+D39.9
+Kadın genital organının belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D40
+Erkek genital organlarının belirsiz veya bilinmeyen davranışlı neoplazmı
+D40.0
+Prostatın belirsiz veya bilinmeyen davranışlı neoplazmı
+D40.1
+Testisin belirsiz veya bilinmeyen davranışlı neoplazmı
+D40.7
+Erkek genital organlarının belirsiz veya bilinmeyen davranışlı neoplazmı, diğer
+D40.9
+Erkek genital organının belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D41
+İdrar yollarının belirsiz veya bilinmeyen davranışlı neoplazmı
+D41.0
+Böbreğin belirsiz veya bilinmeyen davranışlı neoplazmı
+D41.1
+Renal pelvisin belirsiz veya bilinmeyen davranışlı neoplazmı
+D41.2
+Üreterin belirsiz veya bilinmeyen davranışlı neoplazmı
+D41.3
+Üretranın belirsiz veya bilinmeyen davranışlı neoplazmı
+D41.4
+Mesanenin belirsiz veya bilinmeyen davranışlı neoplazmı
+D41.7
+Üriner organların belirsiz veya bilinmeyen davranışlı neoplazmı, diğer
+D41.9
+Üriner organın belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D42
+Meninkslerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D42.0
+Serebral meninkslerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D42.1
+Spinal meninkslerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D42.9
+Meninkslerin belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D43
+Beyin ve merkezi sinir sisteminin belirsiz veya bilinmeyen davranışlı neoplazmı
+D43.0
+Beyinin belirsiz veya bilinmeyen davranışlı neoplazmı, supratentorial
+D43.1
+Beyinin belirsiz veya bilinmeyen davranışlı neoplazmı, infratentoryal
+D43.2
+Beyinin belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+D43.3
+Kranial sinirlerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D43.4
+Spinal kordun belirsiz veya bilinmeyen davranışlı neoplazmı
+D43.7
+Merkezi sinir sisteminin diğer kısımlarının belirsiz veya bilinmeyen davranışlı neoplazmı
+D43.9
+Merkezi sinir sisteminin belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D44
+Endokrin bezlerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.0
+Tiroid bezinin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.1
+Adrenal bezin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.2
+Paratiroid bezin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.3
+Hipofiz bezinin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.4
+Kraniofaringeal kanalın belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.5
+Pineal bezin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.6
+Karotid cisimin belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.7
+Aort cismi ve diğer paraganglionların belirsiz veya bilinmeyen davranışlı neoplazmı
+D44.8
+Birden fazla bez tutulumlu belirsiz veya bilinmeyen davranışlı neoplazm
+D44.9
+Endokrin bezin belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D45
+Polisitemia vera
+ 
+ 
+D46
+Myelodisplastik sendromlar
+D46.0
+İnatçı anemi, sideroblaslar olmadan, tarif edildiği şekilde
+D46.1
+İnatçı anemi, sideroblastlarla birlikte
+D46.2
+İnatçı anemi, blastların baskın olduğu
+D46.3
+İnatçı anemi, transformasyonla birlikte blastların baskın olduğu
+D46.4
+İnatçı anemi, tanımlanmamış
+D46.7
+Myelodisplastik sendromlar, diğer
+D46.9
+Myelodisplastik sendrom, tanımlanmamış
+ 
+ 
+D47
+Lenfoid, hematopoetik ve ilgili dokuların belirsiz veya bilinmeyen davranışlı diğer neoplazmı
+D47.0
+Histiositik ve mast hücreli tümörler, belirsiz veya bilinmeyen davranışlı
+D47.1
+Kronik myeloproliferatif hastalık
+D47.2
+Monoklonal gammopati
+D47.3
+Esansiyel (hemorajik) trombositemi
+D47.7
+Lenfoid, hematopoetik ve ilgili dokuların diğer tanımlanmış belirsiz veya bilinmeyen davranışlı neoplazmları
+D47.9
+Lenfoid hematopoetik ve ilgili dokuların belirsiz veya bilinmeyen davranışlı neoplazmı, tanımlanmamış
+ 
+ 
+D48
+Belirsiz veya bilinmeyen davranışlı neoplazmı, diğer ve tanımlanmamış yerlerin
+D48.0
+Kemik ve eklem kıkırdağının belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.1
+Bağ dokusu ve diğer yumuşak dokunun belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.2
+Periferik sinir ve otonom sinir sisteminın belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.3
+Retroperitonun belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.4
+Peritonun belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.5
+Derinin belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.6
+Memenin belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.7
+Tanımlanmış diğer yerlerin belirsiz veya bilinmeyen davranışlı neoplazmı
+D48.9
+Belirsiz veya bilinmeyen davranışlı neoplazm, tanımlanmamış
+
+2.1.	Analjezikler ve narkotik Analjezikler
+2.2. 	Antineoplastik ilaçlar * (Sağlık Bakanlığı Endikasyon dışı Genelge ve Kılavuzuna uyulacaktır.)
+2.3. 	İmmünglobulin preparatları * 
+2.4. 	İmmünsupressifler * (Azathiopurin, Siklosporin, Siklofosfamid, Klorambusil, Methotrexat ve kortikosteroidlerden endikasyon uyumu aranmayacaktır.)
+2.5. 	Kanser tedavisi sırasında ortaya çıkan yan etkileri önlemek amacıyla kullanılan ilaçlar
+2.6. 	Enteral beslenme ürünleri 
+2.7. 	Radyofarmasötik müstahzarlar * 
+2.8. 	Bunların uygulanması ile ilgili parenteral sıvılar, antidotlar, antiemetikler ve aşılar
+2.9. 	Parenteral Beslenme Ürünleri
+2.10. 	LH-RH analogları
+2.11.     Pilokarpin tablet (sadece Kserostomi tedavisinde)
+2.12.     Cinacalcet * 
+2.13. 	Abirateron *
+2.14.	Denosumab* (yukarıda tanımlı C40 ve C41 ICD 10 kodlarında muafiyet kapsamındadır.) 
+2.15. 	Enzalutamid* 
+2.16. 	Nivolumab*
+(Ek: RG-09/05/2020-31122/7-a md. Yürürlük:16/05/2020)
+2.17. 	Ribosiklib* 
+2.18. 	Palbosiklib* 
+2.19. 	Midostaurin* 
+2.20. 	Daratumumab*
+(Ek: RG-28/04/2021-31468/26-a md. Yürürlük:06/05/2021)
+2.21.     Dinutuksimab beta
+2.22.     Koloni stimüle edici faktörler*
+(Ek: RG-09/05/2024-32541/20-a md. Yürürlük:17/05/2024)
+2.23.     Avelumab*
+2.24.     Sacituzumab govitekan*
+2.25.     Apalutamid*      
+(Ek: RG- 02/11/2024-32710/28-a md. Yürürlük: 09/11/2024)
+2.26.     Demir Karboksimaltoz*
+(Ek: RG- 25/03/2025- 32852/ 24-a md. Yürürlük: 04/04/2025)
+2.27.     Selineksor*
+2.28.     Darolutamid*
+2.29.     Elranatamab*
+(Ek: RG- 10/07/2025- 32952/ 5-a md. Yürürlük: 26/07/2025)
+2.30.     Atezolizumab*
+2.31.     Durvalumab*
+2.32.     Pembrolizumab*
+2.33.     İpilimumab*
+(Ek: RG- 25/11/2025- 33088/ 19-a md. Yürürlük: 03/12/2025)
+2.34.     İsatuksimab*
+
+3. Kronik böbrek hastalıkları, organ ve doku nakli  v(N01- N08*) (N11) (N15-N16) (N18-N19)  (N25-N29*) (D63.8*) (Y83.0) (Z94) (Ek:RG-25/08/2022-31934/58-a md.Yürürlük:03/09/2022) (Q61.2*)
+
+N01
+Hızlı ilerleyen nefritik sendrom
+N01.0
+Hızlı ilerleyen nefritik sendrom, minör glomerüler anormallikle
+N01.1
+Hızlı ilerleyen nefritik sendrom, fokal ve segmental glomerüler lezyonlarla
+N01.2
+Hızlı ilerleyen nefritik sendrom, diffüz memranöz glomerülonefritle
+N01.3
+Hızlı ilerleyen nefritik sendrom, diffüz mezenşimal proliferatif glomerülonefritle
+N01.4
+Hızlı ilerleyen nefritik sendrom, diffüz endokapiller proliferatif glomerülonefritle
+N01.5
+Hızlı ilerleyen nefritik sendrom, diffüz mezanşiokapiller glomerülonefritle
+N01.6
+Hızlı ilerleyen nefritik sendrom, dens depozit hastalığı ile
+N01.7
+Hızlı ilerleyen nefritik sendrom, diffüz kresentik glomerülonefritle
+N01.8
+Hızlı ilerleyen nefritik sendrom, diğer
+N01.9
+Hızlı ilerleyen nefritik sendrom, tanımlanmamış
+ 
+ 
+N02
+Tekrarlayan ve inatçı hematüri
+N02.0
+Tekrarlayan ve inatçı hematüri, minör glomerüler anormallikle
+N02.1
+Tekrarlayan ve inatçı hematüri, fokal ve segmental glomerüler lezyonlarla
+N02.2
+Tekrarlayan ve inatçı hematüri, diffüz memranöz glomerülonefritle
+N02.3
+Tekrarlayan ve inatçı hematüri, diffüz mezenşimal proliferatif glomerülonefritle
+N02.4
+Tekrarlayan ve inatçı hematüri, diffüz endokapiller proliferatif glomerülonefritle
+N02.5
+Tekrarlayan ve inatçı hematüri, diffüz mezanşiokapiller glomerülonefritle
+N02.6
+Tekrarlayan ve inatçı hematüri, dens depozit hastalığı ile
+N02.7
+Tekrarlayan ve inatçı hematüri, diffüz kresentik glomerülonefritle
+N02.8
+Tekrarlayan ve inatçı hematüri, diğer
+N02.9
+Tekrarlayan ve inatçı hematüri, tanımlanmamış
+ 
+ 
+N03
+Kronik nefritik sendrom
+N03.0
+Kronik nefritik sendrom, minör glomerüler anormallikle
+N03.1
+Kronik nefritik sendrom, fokal ve segmental glomerüler lezyonlarla
+N03.2
+Kronik nefritik sendrom, diffüz memranöz glomerülonefritle
+N03.3
+Kronik nefritik sendrom, diffüz mezenşimal proliferatif glomerülonefritle
+N03.4
+Kronik nefritik sendrom, diffüz endokapiller proliferatif glomerülonefritle
+N03.5
+Kronik nefritik sendrom, diffüz mezanşiokapiller glomerülonefritle
+N03.6
+Kronik nefritik sendrom, dens depozit hastalığı ile
+N03.7
+Kronik nefritik sendrom, diffüz kresentik glomerülonefritle
+N03.8
+Kronik nefritik sendrom, diğer
+N03.9
+Kronik nefritik sendrom, tanımlanmamış
+ 
+ 
+N04
+Nefrotik sendrom
+N04.0
+Nefrotik sendrom, minör glomerüler anormallikle
+N04.1
+Nefrotik sendrom, fokal ve segmental glomerüler lezyonlarla
+N04.2
+Nefrotik sendrom, diffüz memranöz glomerülonefritle
+N04.3
+Nefrotik sendrom, diffüz mezenşimal proliferatif glomerülonefritle
+N04.4
+Nefrotik sendrom, diffüz endokapiller proliferatif glomerülonefritle
+N04.5
+Nefrotik sendrom, diffüz mezanşiokapiller glomerülonefritle
+N04.6
+Nefrotik sendrom, dens depozit hastalığı ile
+N04.7
+Nefrotik sendrom, diffüz kresentik glomerülonefritle
+N04.8
+Nefrotik sendrom, diğer
+N04.9
+Nefrotik sendrom, tanımlanmamış
+ 
+ 
+N05
+Nefritik sendrom, tanımlanmamış
+N05.0
+Nefritik sendrom, minör glomerüler anormallikle
+N05.1
+Nefritik sendrom, fokal ve segmental glomerüler lezyonlarla
+N05.2
+Nefritik sendrom, diffüz memranöz glomerülonefritle
+N05.3
+Nefritik sendrom, diffüz mezenşimal proliferatif glomerülonefritle
+N05.4
+Nefritik sendrom, diffüz endokapiller proliferatif glomerülonefritle
+N05.5
+Nefritik sendrom, diffüz mezanşiokapiller glomerülonefritle
+N05.6
+Nefritik sendrom, dens depozit hastalığı ile
+N05.7
+Nefritik sendrom, diffüz kresentik glomerülonefritle
+N05.8
+Nefritik sendrom, diğer
+N05.9
+Nefritik sendrom, tanımlanmamış
+ 
+ 
+N06
+İzole proteinüri, tanımlanmış morfolojik lezyon ile
+N06.0
+İzole proteinüri, minör glomerüler anormallikle
+N06.1
+İzole proteinüri, fokal ve segmental glomerüler lezyonlarla
+N06.2
+İzole proteinüri, diffüz memranöz glomerülonefritle
+N06.3
+İzole proteinüri, diffüz mezenşimal proliferatif glomerülonefritle
+N06.4
+İzole proteinüri, diffüz endokapiller proliferatif glomerülonefritle
+N06.5
+İzole proteinüri, diffüz mezanşiokapiller glomerülonefritle
+N06.6
+İzole proteinüri, dens depozit hastalığı ile
+N06.7
+İzole proteinüri, diffüz kresentik glomerülonefritle
+N06.8
+İzole proteinüri, diğer
+N06.9
+İzole proteinüri, tanımlanmamış
+ 
+ 
+N07
+Herediter nefropati, başka yerde sınıflanmamış
+N07.0
+Herediter nefropati, başka yerde sınıflanmamış, minör glomerüler anormallikle
+N07.1
+Herediter nefropati, başka yerde sınıflanmamış, fokal ve segmental glomerüler lezyonlarla
+N07.2
+Herediter nefropati, başka yerde sınıflanmamış, diffüz memranöz glomerülonefritle
+N07.3
+Herediter nefropati, başka yerde sınıflanmamış, diffüz mezenşimal proliferatif 
+N07.4
+Herediter nefropati, başka yerde sınıflanmamış, diffüz endokapiller proliferatif 
+N07.5
+Herediter nefropati, başka yerde sınıflanmamış, diffüz mezanşiokapiller glomerülonefritle
+N07.6
+Herediter nefropati, başka yerde sınıflanmamış, dens depozit hastalığı ile
+N07.7
+Herediter nefropati, başka yerde sınıflanmamış, diffüz kresentik glomerülonefritle
+N07.8
+Herediter nefropati, başka yerde sınıflanmamış, diğer
+N07.9
+Herediter nefropati, başka yerde sınıflanmamış, tanımlanmamış
+ 
+ 
+N08*
+Glomerüler bozukluklar, başka yerde sınıflanmış hastalıklarda
+N08.0*
+Glomerüler bozukluklar, başka yerde sınıflanmış enfeksiyöz ve paraziter hastalıklarda
+N08.1*
+Glomerüler bozukluklar, neoplastik hastalıklarda
+N08.2*
+Glomerüler bozukluklar, kan hastalıkları ve immün mekanizmayı tutan bozukluklarda 
+N08.3*
+Glomerüler bozukluklar, Diyabetes mellitüsde (E10-E14† genel dördüncü karakter .2 ile)
+N08.4*
+Glomerüler bozukluklar, diğer endokrin, nütrisyonel ve metabolik hastalıklarda
+N08.5*
+Glomerüler bozukluklar, sistemik bağ dokusu hastalıklarında
+N08.8*
+Glomerüler bozukluklar, başka yerde sınıflanmış diğer hastalıklarda
+ 
+ 
+N11
+Kronik tübülo-interstisyel nefrit
+N11.0
+Kronik pyelonefrit, obstrüktif olmayan reflü ile birlikte 
+N11.1
+Kronik obstrüktif pyelonefrit
+N11.8
+Kronik tübülo-intersitisyel nefrit, diğer
+N11.9
+Kronik tübülo-interstisyel nefrit, tanımlanmamış
+ 
+ 
+N15
+Renal tübülo-interstisyel hastalıklar, diğer
+N15.0
+Balkan nefropatisi
+N15.1
+Renal ve perinefrik apse
+N15.8
+Renal tübülo-interstisyel hastalıklar diğer, tanımlanmış
+N15.9
+Renal tübülo-interstisyel hastalık, tanımlanmamış
+
+
+N16*
+Renal tübülo-interstisyel bozukluklar, başka yerde sınıflanmış hastalıklarda
+N16.0*
+Renal tübülo-interstisyel bozukluklar, başka yerde sınıflanmış enfeksiyöz ve paraziter 
+N16.1*
+Renal tübülo-interstisyel bozukluklar, neoplastik hastalıklarda
+N16.2*
+Renal tübülo-interstisyel bozukluklar, kan hastalıkları ve immün sistemi tutan bozukluklarda
+N16.3*
+Renal tübülo-intersitisyel bozukluklar, metabolik hastalıklarda
+N16.4*
+Renal tübülo-intersitisyel bozukluklar, sistemik bağ dokusu hastalıklarında
+N16.5*
+Renal tübülo-interstisyel bozukluklar, transplant reddinde (T86.- †)
+N16.8*
+Renal tübülo-interstisyel bozukluklar, başka yerde sınıflanmış diğer hastalıklarda
+
+
+N18
+Kronik böbrek yetmezliği
+N18.0
+Son dönem böbrek hastalığı
+N18.8
+Kronik böbrek yetmezlikleri, diğer
+N18.9
+Kronik böbrek yetmezliği, tanımlanmamış
+
+
+N19
+Böbrek yetmezlikleri, tanımlanmamış
+
+
+N20
+Böbrek ve Üreter taşı
+N20.0
+Böbrek taşı
+N20.1
+Üreter taşı
+
+
+N25
+Renal tübüler fonksiyonun harabiyeti sonucu oluşan bozukluklar
+N25.0
+Renal osteodistrofi
+N25.1
+Nefrojenik Diyabetes insipidus
+N25.8
+Bozulmuş renal tübüler fonksiyona bağlı bozukluklar, diğer
+N25.9
+Bozulmuş renal tübüler fonksiyondan dolayı bozukluk, tanımlanmamış
+
+
+N26
+Kontrakte böbrek, tanımlanmamış
+
+
+N27
+Küçük böbrek, nedeni bilinmeyen
+N27.0
+Küçük böbrek, tek taraflı
+N27.1
+Küçük böbrek, iki taraflı
+N27.9
+Küçük böbrek, tanımlanmamış
+ 
+ 
+N28
+Böbrek ve üreterin diğer bozuklukları, başka yerde sınıflanmamış
+N28.0
+Böbreğin iskemi ve enfarktüsü
+N28.1
+Böbrek kisti, kazanılmış
+N28.8
+Böbreğin ve üreterin diğer tanımlanmış bozuklukları
+N28.9
+Böbrek ve üreter bozuklukları, tanımlanmamış
+ 
+ 
+N29*
+Böbrek ve üreterin diğer bozuklukları, başka yerde sınıflanmamış hastalıklarda
+N29.0*
+Böbreğin geç sifilizi (A52.7†)
+N29.1*
+Böbrek ve üreterin diğer bozuklukları, başka yerde sınıflanmış enjeksiyöz ve paraziter hastalıklarda
+N29.8
+Böbrek ve üreterin diğer bozuklukları, başka yerde sınıflanmış diğer hastalıklarda
+
+
+Y83.0
+Bütün organ nakilli cerrahi operasyon sonrası anormal reaksiyon veya geç komplikasyon
+
+
+Z94
+Organ ve doku nakilleri
+Z94.0
+Böbrek nakli
+Z94.1
+Kalp nakli
+Z94.2
+Akciğer nakli
+Z94.3
+Kalp ve akciğerler nakli
+Z94.4
+Karaciğer nakli
+Z94.5
+Deri nakli
+Z94.6
+Kemik nakli
+Z94.7
+Kornea nakli
+Z94.8
+Organ ve doku nakli, diğer
+Z94.9
+Organ ve doku nakli, tanımlanmamış
+
+3.1. 	Antiagreganlar
+3.2. 	Antianemik İlaçlar
+3.3. 	Antihipertansifler ve kombinasyonları
+3.4. 	Antimikotik (SUT’un 4.2.23 numaralı maddesinde yer alan etkin maddeler*)
+3.5. 	Antiviral İlaçlar*
+3.6. 	Asit, baz, elektrolit, kalsiyum ve fosfat dengesini sağlamaya yönelik ilaçlar, parenteral sıvılar
+3.7. 	Diüretik ilaçlar
+3.8. 	Esansiyel amino asitler
+3.9. 	İmmünglobulinler *
+3.10. 	İmmünsupresif ilaçlar * 
+3.11. 	Kolşisin
+3.12. 	Kortikosteroidler
+3.13. 	Kronik böbrek yetmezliğine eklenen piyelonefrit ve peritonitte kullanılan antibiyotikler
+3.14. 	Periton diyaliz solüsyonları
+3.15. 	Aktif D vitaminleri ve metabolitleri
+3.16. 	Antikoagülanlar (sadece organ ve doku naklinde)
+3.17.   Enteral ve parenteral beslenme solüsyonları (Enteral beslenme solüsyonları sadece malnütrisyon   gelişmiş hastalarda muafiyet kapsamındadır.) 
+3.18. 	Karnitin (sadece hemodiyaliz uygulanan hastalarda)
+3.19.     Chlorthalidone*
+3.20.	Potasyum sitrat [yalnızca N25.8 ve N25.9 ICD 10 kodunda ve kalsiyum taşlı renal tübüler asidoz tanısında ayrıca N20.0 ve N20.1 ICD 10 kodunda en az bir kez girişimsel (ESWL veya cerrahi) tedavi uygulanmış rekürren böbrek taşı olan ve idrar Ph değeri 6,5’in altındaki hastalarda]
+(Ek: RG-26/10/2021-31640/12-a md. Yürürlük:04/11/2021)
+3.21.   Büyüme hormonu *(Yalnızca kronik böbrek yetmezliği ile ilişkili büyüme bozuklukları tanısında muaftır.) (SUT’un 4.2.6.A-5 numaralı maddesinde yer alan ilkelere göre)
+(Ek: RG-25/08/2022-31934/ 58-a md. Yürürlük: 03/09/2022)
+3.22.     Tolvaptan* (Yalnızca ADPKD tanısında muaftır.)
+(Ek: RG- 25/03/2025- 32852/ 24-b md. Yürürlük: 04/04/2025)
+3.23.  Sodyum zirkonyum siklosilikat* (Yalnızca Evre 4 KBH veya Evre 5 KBH prediyaliz hastalarında)
+
+
+(Ek: RG-08/04/2026- 33218/ 13-a md. Yürürlük: 16/04/2026)
+3.24. Dapagliflozin* (yalnızca N18-N19 tanı kodlarında)
+3.25. Empagliflozin* (yalnızca N18-N19 tanı kodlarında)
+
+4. Uzun süreli kalp ve damar hastalıkları
+4.1. 	Kalp Yetmezliği (I50)
+I50
+Kalp yetmezliği
+I50.0
+Konjestif kalp yetmezliği
+I50.1
+Sol ventrikül yetmezliği
+I50.9
+Kalp yetmezliği, tanımlanmamış
+	
+              4.1.1. 	Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları
+	4.1.2. 	Digoxin
+	4.1.3. 	Anjiotensin reseptör blokerleri ve kombinasyonları
+	4.1.4. 	Antiagreganlar
+	4.1.5. 	Beta blokerler ve kombinasyonları
+	4.1.6. 	Diüretikler
+	4.1.7. 	Nitratlar
+	4.1.8. 	Vasodilatatörler
+	4.1.9. 	Alfa beta reseptör blokerleri
+4.1.10.     İvabradin*
+(Ek: RG- 02/11/2024-32710/28-b md. Yürürlük: 09/11/2024)
+4.1.11.     Demir Karboksimaltoz*
+(Ek: RG-08/04/2026- 33218/ 13-b md. Yürürlük: 16/04/2026)
+4.1.12.     Dapagliflozin*
+4.1.13.     Empagliflozin*
+
+
+4.2. 	Koroner Arter Hastalığı (I20) (I21) (I25) (Z95.1)  (Z95.5-Z95.9) 
+I20
+Angina pektoris
+I20.0
+Unstable angina
+I20.1
+Angina pectoris, gösterilmiş spazm ile
+I20.8
+Angina pektoris’in diğer formları
+I20.9
+Angina pectoris, tanımlanmamış
+
+
+I21
+Akut miyokard enfarktüsü
+I21.0
+Ön duvar akut transmural miyokard enfarktüsü
+I21.1
+Alt duvar akut transmural miyokard enfarktüsü
+I21.2
+Akut transmural miyokard enfarktüsü diğer yerlerin
+I21.3
+Akut transmural miyokard enfarktüsü tanımlanmamış yerlerin
+I21.4
+Akut subendokardiyal miyokard enfarktüsü
+I21.9
+Akut miyokardiyal enfarktüs, tanımlanmamış)
+
+
+I25
+Kronik iskemik kalp hastalığı
+I25.0
+Aterosklerotik kardiyovasküler hastalık
+I25.1
+Aterosklerotik kalp hastalığı
+I25.2
+Eski miyokard enfarktüsü
+I25.3
+Kalp anevrizması
+I25.4
+Koroner arter anevrizması
+I25.5
+İskemik kardiyopati
+I25.6
+Sessiz miyokardiyal iskemi
+I25.8
+Kronik iskemik kalp hastalığının diğer formları
+I25.9
+Kronik iskemik kalp hastalığı, tanımlanmamış
+
+
+Z95.1
+Aortakoroner bypass grefti
+Z95.5
+Koroner anjioplasti implant ve grefti
+Z95.8
+Kalp ve damar implant ve greftleri, diğer
+Z95.9
+Kalp ve damar implat ve grefti, tanımlanmamış
+
+	4.2.1. 	Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları
+	4.2.2. 	Antiagregan ilaçlar
+	4.2.3. 	Beta blokerler ve kombinasyonları
+	4.2.4. 	Kalsiyum kanal blokerleri ve kombinasyonları
+	4.2.5. 	Kolesterol ve lipid düşürücüler (kombine şekilleri dahil)*  
+	4.2.6. 	Nitratlar (uzun ve kısa etkili)
+	4.2.7. 	Antikoagülanlar (I20.0) (I25.2-I25.5) (Z95.1-Z95.9) sadece bu ICD-10 kodlarında muaftır.
+	4.2.8. 	Alfa beta reseptör blokerleri
+	4.2.9. 	Anjiotensin reseptör blokerleri ve kombinasyonları
+	4.2.10.	Trimetazidin HCl
+             4.2.11.     İvabradin
+ Molsidomin 
+ Ranolazin 
+
+4.3. 	Disritmiler (I44-I45)  (I47- I49)
+I44
+Atriyoventriküler ve sol anadal-dal bloğu
+I44.0
+Atriyoventriküler blok, birinci derece
+I44.1
+Atriyoventriküler blok, ikinci derece
+I44.2
+Atriyoventriküler blok, komplet
+I44.3
+Atriyoventriküler bloklar, diğer ve tanımlanmamış
+I44.4
+Sol anterior fasiküler blok
+I44.5
+Sol posterior fasiküler blok
+I44.6
+Fasiküler blok, diğer ve tanımlanmamış
+I44.7
+Sol-dal bloğu, tanımlanmamış
+
+
+I45
+İleti bozuklukları diğer
+I45.0
+Sağ fasiküler blok
+I45.1
+Sağ-dal bloğu diğer ve tanımlanmamış
+I45.2
+Bifasiküler blok
+I45.3
+Trifasiküler blok
+I45.4
+İntraventriküler blok, nonspesifik
+I45.5
+Kalp blokları diğer, tanımlanmış
+I45.6
+Ön-uyarılma sendromu
+I45.8
+İleti bozuklukları diğer, tanımlanmış
+I45.9
+İleti bozuklukları, tanımlanmamış
+
+
+I47
+Paroksismal taşikardi
+I47.0
+Re-entran ventriküler aritmi
+I47.1
+Supraventriküler taşikardi
+I47.2
+Ventriküler taşikardi
+I47.9
+Paroksismal taşikardi, tanımlanmamış
+
+
+I48
+Atrial fibrilasyon ve flutter
+
+
+I49
+Kardiyak aritmiler, diğer
+I49.0
+Ventriküler fibrilasyon ve flutter
+I49.1
+Atrial prematür depolarizasyon
+I49.2
+Junctional prematür depolarizasyon
+I49.3
+Ventriküler prematür depolarizasyon
+I49.4
+Prematür depolarizasyon, diğer ve tanımlanmamış
+I49.5
+Hasta sinüs sendromu
+I49.8
+Kardiyak aritmiler diğer, tanımlanmış
+I49.9
+Kardiyak aritmi, tanımlanmamış
+
+	4.3.1. 	Antiaritmik ilaçlar 
+	4.3.2. 	Antiagreganlar
+	4.3.3. 	Antikoagülanlar (I48) (I49.5) sadece bu ICD-10 kodlarında muaftır.
+	4.3.4. 	Digoxin
+              4.3.5.      Beta blokerler ve kombinasyonları *
+              4.3.6.	Kalsiyum antagonistleri*
+
+4.4. 	Periferik ve serebral (serebrovasküler) damar hastalıkları, venöz yetmezlikler (G46)                 ( I63) (I65 - I70) (I71.2)  (I71.4)  (I71.6)  (I71.9)  (I72 ) (I73.1) ( I73.8-   I73.9)  ( I74 )  (I77)   (I79.0*)      ( I79.2*)   (I82)   (I83.0)   (I83.2)   (I85.9)   (I87)
+G46*
+Serebrovasküler hastalıklarda beynin vasküler sendromları (I60-I67†)
+G46.0*
+Orta serebral arter sendromu (I66.0†)
+G46.1*
+Anterior serebral arter sendromu (I66.1†)
+G46.2*
+Posterior serebral arter sendromu (I66.2†)
+G46.3*
+Beyin sapı felç sendromu (I60-I67†)
+G46.4*
+Serebellar felç sendromu (I60-I67†)
+G46.5*
+Saf motor laküner sendrom (I60-I67†)
+G46.6*
+Saf duyusal laküner sendrom (I60-I67†)
+G46.7*
+Laküner sendromlar, diğer (I60-I67†)
+G46.8*
+Serebrovasküler hastalıklarda beynin diğer vasküler sendromları (I60-I67†)
+
+
+I63
+Serebral enfarktüs
+I63.0
+Serebral enfarktüs, preserebral arter trombozuna bağlı
+I63.1
+Serebral enfarktüs, preserebral arter embolizmine bağlı
+I63.2
+Serebral enfarktüs, preserebral arterlerin tanımlanmamış oklüzyon veya stenozuna bağlı
+I63.3
+Serebral enfarktüs, serebral arterlerin trombozuna bağlı
+I63.4
+Serebral enfarktüs, serebral arterlerin embolizmine bağlı
+I63.5
+Serebral enfarktüs, serebral arterlerin tanımlanmamış oklüzyon ve stenoza bağlı
+I63.6
+Serebral enfarktüs, serebral venlerin piyojenik olmayan trombozuna bağlı
+I63.8
+Serebral diğer enfarktüsler
+I63.9
+Serebral enfarktüs, tanımlanmamış
+
+
+I65
+Preserebral arterlerin oklüzyon ve stenozu, serebral enfarktüsle sonuçlanmayan
+I65.0
+Vertebral arterin oklüzyon ve stenozu
+I65.1
+Baziler arterin oklüzyon ve stenozu
+I65.2
+Karotid arterin oklüzyon ve stenozu
+I65.3
+Birden fazla ve bilateral preserebral arterin oklüzyon ve stenozu
+I65.8
+Preserebral arterlerin oklüzyon ve diğer stenozu
+I65.9
+Preserebral arterin oklüzyon ve stenozu, tanımlanmamış
+
+
+I66
+Serebral arterlerin oklüzyon ve stenozu, serebral enfarktüsle sonuçlanmayan
+I66.0
+Medial serebral arterin oklüzyon ve stenozu
+I66.1
+Anterior serebral arterin oklüzyon ve stenozu
+I66.2
+Posterior serebral arterin oklüzyon ve stenozu
+I66.3
+Serebellar arterlerin oklüzyon ve stenozu
+I66.4
+Birden fazla ve bilateral serebral arterin oklüzyon ve stenozu
+I66.8
+Serebral arterlerin oklüzyon ve diğer stenozu
+I66.9
+Serebral arterin oklüzyon ve stenozu, tanımlanmamış
+
+
+I67
+Serebrovasküler hastalıklar, diğer
+I67.0
+Serebral arterlerin diseksiyonu, rüptüre olmamış
+I67.1
+Serebral anevrizma, rüptüre olmamış
+I67.2
+Serebral ateroskleroz
+I67.3
+İlerleyici vasküler lökoensefalopati
+I67.4
+Hipertansif ensefalopati
+I67.5
+Moyamoya hastalığı
+I67.6
+Kafa içi venöz sistemin piyojenik olmayan trombozu
+I67.7
+Serebral arterit başka yerde sınıflanmamış
+I67.8
+Serebrovasküler hastalıklar diğer, tanımlanmış
+I67.9
+Serebrovasküler hastalık, tanımlanmamış
+
+
+I68*
+Serebrovasküler bozukluklar, başka yerde sınıflanmış hastalıklarda
+I68.0*
+Serebral amiloid anjiyopati (E85.- †)
+I68.1* 
+Serebral arterit, başka yerde sınıflanmış enfeksiyöz ve parazitik hastalıklarda 
+I68.2*
+Serebral arterit, başka yerde sınıflanmış hastalıklarda
+I68.8*
+Serebrovasküler bozuklukları diğer, başka yerde sınıflanmış hastalıklarda
+
+
+I69
+Serebrovasküler hastalık sekeli
+I69.0
+Subaraknoid hemoraji sekeli
+I69.1
+İntraserebral hemoraji sekeli
+I69.2
+Kafa içi hemoraji sekelleri diğer, travmatik olmayan
+I69.3
+Serebral enfarktüs sekeli
+I69.4
+İnme sekeli, hemoraji veya enfarktüs olarak tanımlanmamış
+I69.8
+Serebrovasküler hastalıkların sekelleri diğer ve tanımlanmamış
+
+
+I70
+Ateroskleroz
+I70.0
+Aorta aterosklerozu
+I70.1
+Renal arter aterosklerozu
+I70.2
+Ekstremite arterlerinin aterosklerozu
+I70.8
+Arterlerin diğer aterosklerozu
+I70.9
+Yaygın ve tanımlanmamış ateroskleroz
+
+
+I71.2
+Torasik aorta anevrizması, rüptür olmaksızın
+I71.4
+Abdominal aorta anevrizması, rüptür olmaksızın
+I71.6
+Torakoabdominal aorta anevrizması, rüptür olmaksızın
+I71.9
+Aorta tanımlanmamış bölgesinin anevrizması, rüptür olmaksızın
+
+
+I72
+Anevrizmalar, diğer
+I72.0
+Karotid arter anevrizması
+I72.1
+Üst ekstremite arter anevrizması
+I72.2
+Renal arter anevrizması
+I72.3
+İliak arter anevrizması
+I72.4
+Alt ekstremite arter anevrizması
+I72.8
+Arterlerin anevrizması diğer, tanımlanmış
+I72.9
+Tanımlanmamış yerlerin anevrizması
+
+
+I73.1
+Tromboanjitis obliterans [Buerger]
+I73.8
+Periferik vasküler hastalıklar diğer, tanımlanmış
+I73.9
+Periferik vasküler hastalık, tanımlanmamış
+
+
+I74
+Arteriyel embolizm ve tromboz
+I74.0
+Abdominal aorta embolizm ve trombozu
+I74.1
+Aortanın diğer ve tanımlanmayan kısımlarının embolizm ve trombozu
+I74.2
+Üst ekstremite arterlerinin embolizm ve trombozu
+I74.3
+Alt ekstremite arterlerinin embolizm ve trombozu
+I74.4
+Ekstremite arterlerinin embolizm ve trombozu, tanımlanmamış
+I74.5
+İliak arterin embolizm ve trombozu
+I74.8
+Arterlerin embolizm ve diğer trombozu
+I74.9
+Arterlerin embolizm ve trombozu, tanımlanmamış
+
+
+I77
+Arterler ve arteriollerin diğer bozuklukları
+I77.0
+Arteriovenöz fistül, kazanılmış
+I77.1
+Arter striktürü
+I77.2
+Arter rüptürü
+I77.3
+Arteriyel fibromusküler displazi
+I77.4
+Çöliak arter kompresyonu sendromu
+I77.5
+Arter nekrozu
+I77.6
+Arteritis, tanımlanmamış
+I77.8
+Arterler ve arteriollerin diğer tanımlanmış bozuklukları
+I77.9
+Arterler ve arteriollerin bozuklukları, tanımlanmamış
+
+
+I79.0*
+Aort anevrizması, başka yerde sınıflanmış hastalıklarda
+I79.2*
+Periferal anjiopati, başka yerde sınıflanmış hastalıklarda
+
+
+I82
+Venöz emboli ve tromboz diğer
+I82.0
+Budd-Chiari sendromu
+I82.1
+Tromboflebitis migrans
+I82.2
+Vena kava embolisi ve trombozu
+I82.3
+Renal venin embolisi ve trombozu
+I82.8
+Emboli ve tromboz, diğer tanımlanmış venlerin
+I82.9
+Emboli ve tromboz, tanımlanmamış venlerin
+
+
+I83.0
+Alt ekstremitenin variköz venleri, ülserli
+I83.2
+Ülser ve enflamasyonla birlikte alt ekstremitenin variköz venleri
+
+
+I85.9
+Özefagus varisleri, kanamasız
+
+
+I87
+Venlerin diğer bozuklukları 
+I87.0
+Postflebitik sendrom
+I87.1
+Venlerin kompresyonu
+I87.2
+Venöz yetersizlik (kronik) (periferik)
+I87.8
+Venlerin diğer tanımlanmış bozuklukları
+I87.9
+Ven bozuklukları, tanımlanmamış
+
+	4.4.1. 	Antiagreganlar
+	4.4.2. 	Antikoagülanlar (G46) (I63) (I65-I66) (I67.0) (I69) (I71.2) (I71.4) (I71.6) (I71.9)    (I72) (I74) (I79.0) (I82) (I87) sadece bu ICD-10 kodlarında muaftır.
+	4.4.3. 	Periferik ve serebral damar düzenleyiciler
+	4.4.4.   Enteral beslenme ürünleri (Sadece G46 ve I69 kodlarında malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+4.5. 	Arteriyel hipertansiyon (I10 -I13)   (I15)
+I10
+Esansiyel (primer) hipertansiyon
+
+
+I11
+Hipertansif kalp hastalığı
+I11.0
+Hipertansif kalp hastalığı, kalp yetmezliği (konjestif) ile birlikte
+I11.9
+Hipertansif kalp hastalığı, kalp yetmezliği (konjestif) olmaksızın
+
+
+I12
+Hipertansif böbrek hastalığı
+I12.0
+Hipertansif böbrek hastalığı, böbrek yetmezliği ile birlikte 
+I12.9
+Hipertansif böbrek hastalığı, böbrek yetmezliği olmaksızın
+ 
+ 
+I13
+Hipertansif kalp ve böbrek hastalığı
+I13.0
+Hipertansif kalp ve böbrek hastalığı, kalp yetmezliği (konjestif) ile birlikte
+I13.1
+Hipertansif kalp ve böbrek hastalığı, böbrek yetmezliği ile birlikte
+I13.2
+Hipertansif kalp ve böbrek hastalığı, kalp (konjestif) ve böbrek yetmezliği ile birlikte 
+
+
+I15
+Sekonder hipertansiyon
+I15.0
+Renovasküler hipertansiyon
+I15.1
+Sekonder hipertansiyon, diğer böbrek bozukluklarına bağlı
+I15.2
+Sekonder hipertansiyon, endokrin hastalıklara bağlı
+I15.8
+Sekonder hipertansiyon, diğer
+I15.9
+Sekonder hipertansiyon, tanımlanmamış
+
+	4.5.1. 	Adrenerjik nöron blokerleri
+	4.5.2. 	Alfa adrenerjik reseptör blokerleri
+	4.5.3. 	Alfa- beta reseptör blokerleri
+	4.5.4. 	Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları
+	4.5.5. 	Antiagreganlar
+	4.5.6. 	Beta adrenerjik reseptör blokerleri
+	4.5.7. 	Diüretikler
+	4.5.8. 	İmidazolin reseptör agonistleri
+	4.5.9. 	Kalsiyum antagonistleri
+	4.5.10. 	Santral etkili vasodilatatörler
+	4.5.11.    Anjiotensin reseptör blokerleri ve kombinasyonları
+
+Doğuştan kalp hastalıkları (Q20-Q28)
+Q20
+Kalp odacıkları ve bağlantılarının konjenital malformasyonları
+Q20.0
+Ortak arteriyel turunkus
+Q20.1
+Çift çıkışlı sağ ventrikül
+Q20.2
+Çift çıkışlı sol ventrikül
+Q20.3
+Diskordan ventriküloarteryel bağlantı
+Q20.4
+Çift girişli ventrikül
+Q20.5
+Diskordan artrioventriküler bağlantı
+Q20.6
+Atrial appendikslerin izomerizmi
+Q20.8
+Kalp odacıkları ve bağlantılarının diğer konjenital malformasyonları
+Q20.9
+Kalp odacıkları ve bağlantılarının konjenital malformasyonu, 
+ 
+ 
+Q21
+Kardiak septanın konjenital malformasyonları
+Q21.0
+Ventriküler septal defekt
+Q21.1
+Atrial septal defekt
+Q21.2
+Atrioventriküler septal defekt
+Q21.3
+Fallot tetralojisi
+Q21.4
+Aortopulmoner septal defekt
+Q21.8
+Kardiak septanın diğer konjenital malformasyonları
+Q21.9
+Kardiak septum konjenital malformasyonu, tanımlanmamış
+
+
+Q22
+Pulmoner ve trikuspid kapakların konjenital malformasyonları
+Q22.0
+Pulmoner kapak atrezisi
+Q22.1
+Konjenital pulmoner kapak stenozu
+Q22.2
+Konjenital pulmoner kapak yetersizliği
+Q22.3
+Pulmoner kapağın diğer konjenital malformasyonları
+Q22.4
+Konjenital triküspid stenoz
+Q22.5
+Ebstein anomalisi
+Q22.6
+Hipoplastik sağ kalp sendromu
+Q22.8
+Triküspid kapağın diğer konjenital malformasyonları
+Q22.9
+Triküspid kapağın konjenital malformasyonu, tanımlanmamış
+
+
+Q23
+Aort ve mitral kapakların konjenital malformasyonları
+Q23.0
+Aort kapağı konjenital stenozu
+Q23.1
+Aort kapağın konjenital yetmezliği
+Q23.2
+Konjenital mitral stenozu
+Q23.3
+Konjenital mitral yetmezlik
+Q23.4
+Hipoplastik sol kalp sendromu
+Q23.8
+Aort ve mitral kapakların diğer konjenital malformasyonları
+Q23.9
+Aort ve mitral kapakların konjenital malformasyonu, tanımlanmamış
+ 
+ 
+Q24
+Kalbin diğer konjenital malformasyonları
+Q24.0
+Dekstrokardi
+Q24.1
+Levokardi
+Q24.2
+Kor triatriatum
+Q24.3
+Pulmoner infundibuler stenoz
+Q24.4
+Konjenital subaortik stenoz
+Q24.5
+Koroner damarların malformasyonu
+Q24.6
+Konjenital kalp bloğu
+Q24.8
+Kalbin diğer tanımlanmamış konjenital malformasyonları
+Q24.9
+Kalbin konjenital malformasyonu, tanımlanmamış
+
+
+Q25
+Büyük arterlerin konjenital malformasyonları
+Q25.0
+Patent duktus arteriosus
+Q25.1
+Aort koarktasyonu
+Q25.2
+Aort atrezisi
+Q25.3
+Aort stenozu
+Q25.4
+Aortanın diğer konjenital malformasyonları  
+Q25.5
+Pulmoner arter atrezisi
+Q25.6
+Pulmoner arter stenozu
+Q25.7
+Pulmoner arterin diğer konjenital malformasyonları
+Q25.8
+Büyük arterlerin diğer konjenital malformasyonları
+Q25.9
+Büyük arterlerin konjenital malformasyonu, tanımlanmamış
+
+
+Q26
+Büyük venlerin konjenital malformasyonları
+Q26.0
+Vena kava konjenital stenozu
+Q26.1
+Persisten sol süperior vena kava
+Q26.2
+Total anormal pulmoner venöz bağlantı
+Q26.3
+Parsiyel anormal pulmoner venöz bağlantı
+Q26.4
+Anormal pulmoner venöz bağlantı, tanımlanmamış
+Q26.5
+Anormal portal venöz bağlantı
+Q26.6
+Portal ven-hepatik arter fistülü
+Q26.8
+Büyük venlerin diğer konjenital malformasyonları
+Q26.9
+Büyük venlerin konjenital malformasyonu, tanımlanmamış
+
+
+Q27
+Periferik vasküler sistemin diğer konjenital malformasyonları
+Q27.0
+Umbilikal arterin konjenital yokluğu ve hipoplazisi
+Q27.1
+Konjenital renal arter stenozu
+Q27.2
+Renal arterin diğer konjenital malformasyonları
+Q27.3
+Periferik arteriovenöz malformasyon
+Q27.4
+Konjenital filebektazi
+Q27.8
+Periferik vasküler sistemin diğer tanımlanmış konjenital malformasyonları
+Q27.9
+Periferik vasküler sistemin konjenital malformasyonu, tanımlanmamış
+
+
+Q28
+Dolaşım sisteminin diğer konjenital malformasyonları
+Q28.0
+Preserebral damarların arteriovenöz malformasyonu
+Q28.1
+Preserebral damarların diğer malformasyonları
+Q28.2
+Serebral damarların arteriovenöz malformasyonu
+Q28.3
+Serebral damarların diğer malformasyonları
+Q28.8
+Dolaşım sisteminin diğer tanımlanmış konjenital malformasyonları
+Q28.9
+Dolaşım sisteminin konjenital malformasyonu, tanımlanmamış
+
+Antiagreganlar
+Antikoagülanlar
+Beta blokerler ve kombinasyonları
+Diüretikler
+Digoxin
+Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları
+Anjiotensin reseptör blokerleri ve kombinasyonları
+
+4.7. 	Akut romatizmal ateş (ARA) ve kapak hastalıkları (I34-I37) (I39) (I05-I08)
+I34
+Mitral kapak bozuklukları, romatizmal olmayan
+I34.0
+Mitral kapak yetmezliği
+I34.1
+Mitral kapak prolapsusu
+I34.2
+Romatizmal olmayan mitral kapak stenozu
+I34.8
+Romatizmal olmayan mitral kapak bozuklukları, diğer
+I34.9
+Romatizmal olmayan mitral kapak bozukluğu, tanımlanmamış
+ 
+ 
+I35
+Aortik kapak bozuklukları, romatizmal olmayan
+I35.0
+Aortik kapak stenozu
+I35.1
+Aortik kapak yetmezliği
+I35.2
+Aortik kapak stenozu, yetmezlikle birlikte
+I35.8
+Aortik kapak diğer bozuklukları
+I35.9
+Aortik kapak bozukluğu, tanımlanmamış
+
+
+I36
+Trikuspid kapak bozuklukları, romatizmal olmayan
+I36.0
+Romatizmal olmayan triküspid kapak stenozu
+I36.1
+Romatizmal olmayan triküspid kapak yetmezliği
+I36.2
+Romatizmal olmayan triküspid kapak stenozu, yetmezlikle birlikte
+I36.8
+Romatizmal olmayan triküspid kapak diğer bozuklukları
+I36.9
+Romatizmal olmayan triküspid kapak bozukluğu, tanımlanmamış
+ 
+ 
+I37
+Pulmoner kapak bozuklukları
+I37.0
+Pulmoner kapak stenozu
+I37.1
+Pulmoner kapak yetmezliği
+I37.2
+Pulmoner kapak stenozu, yetmezlikle
+I37.8
+Pulmoner kapak diğer bozuklukları
+I37.9
+Pulmoner kapak bozukluğu, tanımlanmamış
+
+
+I39*
+Endokardit ve kalp kapak bozuklukları, başka yerde sınıflanmış hastalıklarda
+I39.0*
+Mitral kapak bozuklukları, başka yerde sınıflanmış hastalıklarda
+I39.1*
+Aortik kapak bozuklukları, başka yerde sınıflanmış hastalıklarda
+I39.2*
+Triküspid kapak bozuklukları, başka yerde sınıflanmış hastalıklarda
+I39.3*
+Pulmoner kapak bozuklukları, başka yerde sınıflanmış hastalıklarda
+I39.4*
+Birden fazla kapak bozuklukları, başka yerde sınıflanmış hastalıklarda
+I39.8*
+Endokardit, kapak tanımlanmamış, başka yerde sınıflanmış hastalıklarda
+
+
+I05
+Romatizmal mitral kapak hastalığı
+I05.0
+Mitral stenoz
+I05.1
+Romatizmal mitral yetmezlik
+I05.2
+Mitral stenoz, yetmezlikle birlikte
+I05.8
+Mitral kapak hastalıkları, diğer
+I05.9
+Mitral kapak hastalığı, tanımlanmamış
+ 
+ 
+I06
+Romatizmal aort kapağı hastalıkları
+I06.0
+Romatizmal aort stenozu
+I06.1
+Romatizmal aort yetmezliği
+I06.2
+Romatizmal aort stenozu, yetmezlikle birlikte
+I06.8
+Romatizmal aort kapağı hastalıkları, diğer
+I06.9
+Romatizmal aort kapağı hastalığı, tanımlanmamış
+ 
+ 
+I07
+Romatizmal trikuspid kapak hastalıkları
+I07.0
+Triküspid stenozu
+I07.1
+Triküspid yetmezliği
+I07.2
+Triküspid stenozu, yetmezlikle birlikte
+I07.8
+Triküspid kapak hastalıkları, diğer
+I07.9
+Triküspid kapak hastalığı, tanımlanmamış
+ 
+ 
+I08
+Birden fazla kapak hastalıkları
+I08.0
+Mitral ve aort kapaklarının bozuklukları
+I08.1
+Mitral ve triküspid kapak bozuklukları
+I08.2
+Aort ve triküspid kapak bozuklukları
+I08.3
+Mitral, aort ve triküspid kapakların kombine bozuklukları
+I08.8
+Birden fazla kapak hastalığı, diğer
+I08.9
+Birden fazla kapak hastalığı, tanımlanmamış
+
+	
+             4.7.1. 	Antiagreganlar
+	4.7.2. 	Asetil salisilik asit (pediatrik yaş grubunda efervesan formları dahil) 
+	4.7.3. 	Kortikosteroidler
+	4.7.4. 	Antikoagülanlar (I34.2) (I36.0) (I36.2) (I39) (I05) (I07) sadece bu ICD-10 kodlarında muaftır.
+	4.7.5. 	Antiaritmikler
+	4.7.6. 	Digoxin
+	4.7.7. 	Beta blokerler ve kombinasyonları
+	4.7.8. 	Anjiotensin reseptör blokerleri ve kombinasyonları
+	4.7.9. 	Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları
+ 4.7.10	Benzatin penisilin
+ 4.7.11	Diüretikler
+
+4.8. 	Hiperkolesterolemi*, hiperlipidemi * (E78)
+E78
+Lipoprotein metabolizması bozuklukları ve diğer lipidemiler
+E78.0
+Saf hiperkolesterolemi
+E78.1
+Saf hipergliseridemi
+E78.2
+Hiperlipidemi karma
+E78.3
+Hiperşilomikronemi
+E78.4
+Hiperlipidemi, diğer
+E78.5
+Hiperlipidemi, tanımlanmamış
+E78.6
+Lipoprotein eksikliği
+E78.8
+Lipoprotein metabolizması diğer bozuklukları
+E78.9
+Lipoprotein metabolizması bozuklukları, tanımlanmamış
+
+	4.8.1. 	Fibrik asit türevleri*
+	4.8.2. 	Niasin*
+	4.8.3. 	(Değişik: RG-28/04/2021-31468/26-b md. Yürürlük:06/05/2021) Reçineler (Kolestramin) * Safra asidi tutucular*
+	4.8.4. 	Statinler ve kombinasyonları *
+	4.8.5. 	Ezetimib ve kombinasyonları *
+(Ek: RG- 11/08/2021-31565/ 15-a md. Yürürlük: 19/08/2021)
+             4.8.6.       Evolokumab *
+
+4.9. 	Kardiyomiyopati  (I42- I43)
+I42
+Kardiyomiyopati
+I42.0
+Dilate kardiyomiyopati
+I42.1
+Obstrüktif hipertrofik kardiyomiyopati
+I42.2
+Hipertrofik diğer kardiyomiyopatiler
+I42.3
+Endokardiyal (eozinofilik) hastalık
+I42.4
+Endokardiyal fibroelastozis
+I42.5
+Restrüktif diğer kardiyomiyopatiler
+I42.6
+Alkolik kardiyomiyopati
+I42.7
+Kardiyomiyopatiler, ilaçlar ve diğer dış etkenlere bağlı
+I42.8
+Kardiyomiyopatiler, diğer
+I42.9
+Kardiyomiyopati, tanımlanmamış
+
+
+I43*
+Kardiyomiyopati, başka yerde sınıflanmış hastalıklarda
+I43.0*
+Kardiyomiyopati, başka yerde sınıflanmış enfeksiyöz ve parazitik hastalıklarda
+I43.1*
+Kardiyomiyopati, metabolik hastalıklarda
+I43.2*
+Kardiyomiyopati, nütrisyonel hastalıklarda
+I43.8*
+Kardiyomiyopati, başka yerde sınıflanmış hastalıklarda
+
+	4.9.1. 	Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları
+	4.9.2. 	Anjiotensin reseptör blokerleri ve kombinasyonları
+	4.9.3. 	Antikoagülanlar
+	4.9.4. 	Antiagreganlar
+	4.9.5. 	Antiaritmikler
+	4.9.6. 	Beta blokerler ve kombinasyonları
+	4.9.7. 	Diüretikler
+	4.9.8. 	Nitratlar
+	4.9.9. 	Vasodilatatörler
+	4.9.10. 	Digoxin
+	4.9.11. 	Alfa beta reseptör blokerleri
+	4.9.12. 	Kalsiyum kanal blokerleri ve kombinasyonları
+
+4.10. 	Pulmoner hipertansiyon    (I27.0) ( I27.2) 
+I27.0
+Primer pulmoner hipertansiyon
+I27.2
+Sekonder Pulmoner Hipertansiyon
+	
+	4.10.1. 	Alfa adrenerjik blokerler
+	4.10.2. 	Antikoagülanlar
+	4.10.3. 	Vasodilatatörler
+	4.10.4. 	 İloprost trometamol * (sadece inhaler formu muafiyet kapsamındadır)
+	4.10.5.     Bosentan *  
+	4.10.6.     Sildenafil sitrat *  
+	4.10.7.   Kalsiyum kanal blokerleri ve kombinasyonları
+	4.10.8.    Ambrisentan*  
+	4.10.9.     Tadalafil* 
+4.10.10.   Riociguat* (Mülga: RG- 04/09/2019-30878/ 62-a md. Yürürlük: 12/09/2019) (Yalnızca KTEPH endikasyonunda muafiyet kapsamındadır.)
+4.10.11.   Masitentan* 
+(Ek: RG- 04/09/2019-30878/ 62-b md. Yürürlük: 12/09/2019)
+4.10.12.   Seleksipag*
+(Ek: RG-16/06/2020-31157/24-a md. Yürürlük: 24/06/2020)
+4.10.13.   Epoprostenol*
+            (Ek: RG- 09/05/2024- 32541/ 20-b md. Yürürlük: 17/05/2024)
+             4.10.14.   Trepostenil*
+            (Ek: RG-23/05/2026-33262/10-c md. Yürürlük: 04/06/2026)
+	4.10.15. Masitentan ve tadalafil kombinasyonu*
+
+4.11. 	Raynaud hastalığı   (I73.0)
+I73.0
+Raynaud sendromu
+
+	4.11.1. 	Alfa adrenerjik blokerler
+	4.11.2. 	Kalsiyum kanal blokerleri ve kombinasyonları
+             4.11.3.     Pentoksifilin
+
+4.12. 	Pulmoner tromboemboli (I26)
+I26
+Pulmoner embolizm
+I26.0
+Pulmoner embolizm, akut kor pulmonale ile birlikte
+I26.9
+Pulmoner embolizm, akut kor pulmonale olmaksızın
+
+	4.12.1.	Antikoagülanlar
+
+4.13. 	Kronik romatizmal kalp hastalığı   (I09)
+I09
+Romatizmal kalp hastalıkları diğer
+I09.0
+Romatizmal miyokardit
+I09.1
+Endokardın romatizmal hastalıkları, kapak tanımlanmamış
+I09.2
+Kronik romatizmal perikardit
+I09.8
+Romatizmal kalp hastalıkları, diğer, tanımlanmış
+I09.9
+Romatizmal kalp hastalığı, tanımlanmamış
+
+             4.13.1. 	 Antiagreganlar
+	4.13.2. 	 Asetil salisilik asit (pediatrik yaş grubunda efervesan formları dahil) 
+	4.13.3. 	 Kortikosteroidler
+	4.13.4. 	 Antikoagülanlar
+	4.13.5. 	 Antiaritmikler
+	4.13.6. 	 Digoxin
+	4.13.7.      Beta blokerler ve kombinasyonları
+	4.13.8.      Anjiotensin reseptör blokerleri ve kombinasyonları
+	4.13.9.     Anjiotensin dönüştürücü enzim inhibitörleri ve kombinasyonları 
+	4.13.10	 Benzatin penisilin
+	4.13.11	 Diüretikler
+
+5. Solunum sistemi hastalıkları:
+5.1. 	Astım       (J45)
+J45
+Astım
+J45.0
+Astım, alerjik
+J45.1
+Astım, İntrensek (allerjik olmayan)
+J45.8
+Astım, karma
+J45.9
+Astım, tanımlanmamış
+
+	5.1.1. 	Antiastmatikler 
+	5.1.2. 	Bronkodilatatör ajanlar
+		5.1.2.1. 	Beta 2 agonistler  (kombinasyonları dahil)
+		5.1.2.2. 	Teofilin grubu  (kombinasyonları dahil
+		5.1.2.3. 	Antikolinerjikler  (kombinasyonları dahil, tiotropium hariç
+	5.1.3. 	Antiinflamatuar ajanlar
+		5.1.3.1.      Kromolin ve tuzları
+	               5.1.3.2.      Kortikosteroid ajanlar
+	               5.1.3.3.      Lökotrien reseptör antagonistleri
+5.1.4.    Omalizumab	
+(Ek: RG- 04/09/2019-30878/ 62-c md. Yürürlük: 12/09/2019)
+5.1.5.    Mepolizumab*
+(Ek: RG- 19/10/2023-32344/ 16-a md. Yürürlük: 27/10/2023)
+5.1.6.    Benralizumab*
+
+5.2. 	Kronik Obstrüktif Akciğer Hastalıkları (J43- J44)
+J43
+Amfizem
+J43.0
+MacLeod sendromu
+J43.1
+Panlobüler amfizem
+J43.2
+Sentrilobüler amfizem
+J43.8
+Amfizem, diğer
+J43.9
+Amfizem, tanımlanmamış
+ 
+ 
+J44
+Kronik obstrüktif akciğer hastalığı, diğer
+J44.0
+Kronik obstrüktif akciğer hastalığı, akut alt solunum yolu enfeksiyon ile
+J44.1
+Kronik obstrüktif akciğer hastalığı, akut alevlenmelerle, tanımlanmamış
+J44.8
+Kronik obstrüktif akciğer hastalığı, diğer, tanımlanmamış
+J44.9
+Kronik obstrüktif akciğer hastalığı, tanımlanmamış
+
+	5.2.1. 	Bronkodilatatör ajanlar  
+		5.2.1.1. 	Beta 2 agonistler (kombinasyonları dahil)
+		5.2.1.2. 	Teofilin grubu  (kombinasyonları dahil
+		5.2.1.3.	Antikolinerjikler  (kombinasyonları dahil)
+	5.2.2. 	Kortikosteroid ajanlar
+	5.2.3.	Diprofilin 
+	5.2.4.       Roflumilast*
+
+Difüz intertisiyel akciğer hastalıkları (J84 )   (J98.2)   (J99.0-J99.1)
+J84
+İntersitisyel akciğer hastalıkları, diğer 
+J84.0
+Alveolar ve paryetoalveolar durumlar
+J84.1
+İntersitisyel akciğer hastalığı, diğer, fibrozisli
+J84.8
+İntersitisyel akciğer hastalıkları, diğer, tanımlanmış
+J84.9
+İntersitisyel pulmoner hastalık, tanımlanmamış
+
+
+J98.2
+İntersitisyel amfizem
+
+
+J99.0*
+Romatoid akciğer hastalığı 
+J99.1*
+Solunum bozuklukları, diğer yaygın bağ dokusu bozukluklarında
+
+	5.3.1. 	İmmünsupresifler * (Azathiopurin, Siklosporin, Siklofosfamid, Klorambusil ve Methotrexat için endikasyon uyumu aranmayacaktır.)
+	5.3.2. 	Kortikosteroidler
+	5.3.3. 	Sitostatik ajanlar
+	5.3.4. 	Beta 2 agonistler, teofilin 
+	5.3.5.   Sargramostim Leukine*(Sadece J84.0 ICD kodu kullanılarak Pulmoner Alveolar Proteinozis tanısında muaftır) 
+             (Değişik: RG- 25/09/2024- 32673/ 16-a md. Yürürlük: 03/10/2024)
+             5.3.6.        Nintedanib 
+                5.3.6.        Nintedanib*
+
+5.4. 	Bronşektazi   (J47)
+J47
+Bronşiektazi
+
+	5.4.1. 	Ekspektoranlar
+	5.4.2. 	Mukolitikler
+	5.4.3. 	Bronkodilatatörler (kombine şekilleri hariç)
+
+Akciğer kist hidatiği  (B67.1)
+B67.1
+Akciğerde Echinococcus granulosus enfeksiyonu
+
+	5.5.1. 	Albendazol
+	5.5.2. 	Mebendazol
+
+6. Gastrointestinal sistem hastalıkları
+
+6.1. 	Hepatit B, C, D ve Otoimmün Hepatit (B18.0-B18.2)    (K75.4)
+B18.0   
+Kronik Viral Hepatit B, delta ajanlı
+B18.1   
+Kronik Viral Hepatit B, delta ajansız
+B18.2   
+Kronik Viral Hepatit C  
+K75.4
+Otoimmün hepatit
+
+	6.1.1. 	Antiviral ajanlar * 
+	6.1.2. 	Azothioprine
+	6.1.3. 	Diüretikler 
+	6.1.4. 	Hepatit-B immünglobulini * 
+	6.1.5. 	İnterferon *
+	6.1.6. 	Kortikosteroidler
+	6.1.7. 	Ursodeoksikolikasit *
+
+6.2. 	Ailevi akdeniz ateşi (FMF)       (E85.0)
+E85.0
+Heredofamilyal amiloidozis, nöropatik olmayan
+	
+              6.2.1. 	Kolsisin
+             (Ek: RG-09/05/2024-32541/20-c md. Yürürlük: 17/05/2024)
+                 6.2.2.      Kanakinumab*
+             (Ek: RG-12/12/2024-32750/21-a md. Yürürlük: 20/12/2024)
+              6.2.3.      Anakinra*
+
+                                                                                                                                                                                                       
+6.3. 	İnflamatuar barsak hastalıkları: (K50-K52)
+K50
+Crohn hastalığı [regional enterit]
+K50.0
+Crohn hastalığı, ince barsak
+K50.1
+Crohn hastalığı, kalın barsak
+K50.8
+Crohn hastalığı, diğer
+K50.9
+Crohn hastalığı, tanımlanmamış
+
+
+K51
+Ülseratif kolit
+K51.0
+Ülseratif (kronik) enterokolit
+K51.1
+Ülseratif (kronik) ileokolit
+K51.2
+Ülseratif (kronik) proktit
+K51.3
+Ülseratif (kronik) rektosigmoidit
+K51.4
+Kolon psödopolipozisi
+K51.5
+Mukozal proktokolit
+K51.8
+Ülseratif kolit, diğer
+K51.9
+Ülseratif kolit, tanımlanmamış
+
+
+K52
+Enfektif olmayan diğer gastroenterit ve kolit
+K52.0
+Gastroenterit ve kolit, radyasyona bağlı
+K52.1
+Toksik gastroenterit ve kolit
+K52.2
+Allerjik ve dietetik gastroenterit ve kolit
+K52.8
+Gastroenterit ve kolit diğer, tanımlanmış enfektif olmayan
+K52.9
+Gastroenterit ve kolit, enfektif olmayan, tanımlanmamış
+
+	6.3.1. 	İmmünsupresifler * (azatioprin, siklofosfamid, klorambusil, methotreksate etken maddelerinde endikasyon uyumu aranmayacaktır.) 
+	6.3.2. 	İnterferon * 
+	6.3.3. 	Kortikosteroidler
+	6.3.4. 	Mesalazin
+	6.3.5. 	Olsalazin
+	6.3.6. 	Salisilazosulfapiridin 
+	6.3.7. 	İnfliksimab * 
+	6.3.8. 	Parenteral beslenme solüsyonları
+	6.3.9. 	Adalimumab * 
+	6.3.10. Enteral beslenme ürünleri (sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır. (Ek:RG-25/08/2022-31934/58-b md. Yürürlük:03/09/2022) Çocukluk çağında Crohn hastalığında malnutrisyon gelişmesi aranmadan muafiyet kapsamındadır.) 
+	6.3.11. 	Sertolizumab * 
+	6.3.12.    Vedolizumab* 
+            (Ek: RG-26/10/2021-31640/12-b md. Yürürlük:04/11/2021)
+                6.3.13.     Ustekinumab*
+            (Ek: RG-09/05/2024-32541/20-ç md. Yürürlük:17/05/2024)
+6.3.14.     Upadasitinib*
+            (Ek: RG- 02/11/2024-32710/28-c md. Yürürlük: 09/11/2024)
+            6.3.15.     Tofacitinib*
+            6.3.16.     Demir Karboksimaltoz*
+
+
+6.4. 	Kronik karaciğer hastalıkları (K70.3- K70.9)  (K71-K77)
+K70.3
+Karaciğer alkolik sirozu
+K70.4
+Alkolik karaciğer yetmezliği
+K70.9
+Alkolik karaciğer hastalığı, tanımlanmamış
+
+
+K71
+Toksik karaciğer hastalığı
+K71.0
+Toksik karaciğer hastalığı, kolestaz ile
+K71.1
+Toksik karaciğer hastalığı, hepatik nekroz ile
+K71.2
+Toksik karaciğer hastalığı, akut hepatit ile
+K71.3
+Toksik karaciğer hastalığı, kronik persistan hepatit ile
+K71.4
+Toksik karaciğer hastalığı, kronik lobuler hepatit ile
+K71.5
+Toksik karaciğer hastalığı, kronik aktif hepatit ile
+K71.6
+Toksik karaciğer hastalığı, hepatit ile, başka yerde sınıflanmamış
+K71.7
+Toksik karaciğer hastalığı, karaciğer fibroz ve sirozu ile
+K71.8
+Toksik karaciğer hastalığı, diğer karaciğer bozuklukları ile
+K71.9
+Toksik karaciğer hastalığı, tanımlanmamış
+
+
+K72
+Karaciğer yetmezliği, başka yerde sınıflanmamış
+K72.0
+Akut ve subakut karaciğer yetmezliği 
+K72.1
+Karaciğer yetmezliği, kronik
+K72.9
+Karaciğer yetmezliği, tanımlanmamış
+
+
+K73
+Kronik hepatit, başka yerde sınıflanmamış
+K73.0
+Kronik persistan hepatit, başka yerde sınıflanmamış
+K73.1
+Kronik lobüler hepatit, başka yerde sınıflanmamış
+K73.2
+Kronik aktif hepatit, başka yerde sınıflanmamış
+K73.8
+Kronik hepatit, başka yerde sınıflanmamış diğer
+K73.9
+Kronik hepatit, tanımlanmamış
+
+
+K74
+Karaciğer fibroz ve sirozu
+K74.0
+Hepatik fibroz
+K74.1
+Hepatik skleroz
+K74.2
+Hepatik fibroz, hepatik skleroz ile
+K74.3
+Primer biliyer siroz
+K74.4
+Sekonder biliyer siroz
+K74.5
+Biliyer siroz, tanımlanmamış
+K74.6
+Karaciğerin diğer ve tanımlanmamış sirozu
+
+
+K75
+Enflamatuvar karaciğer hastalıkları, diğer
+K75.0
+Karaciğer apsesi
+K75.1
+Portal ven flebiti
+K75.2
+Reaktif hepatit, spesifik olmayan
+K75.3
+Granülomatöz hepatit, başka yerde sınıflanmamış
+K75.8
+Enflamatuvar karaciğer hastalıkları diğer, tanımlanmış
+K75.9
+Enflamatuvar karaciğer hastalığı, tanımlanmamış
+
+
+K76
+Karaciğerin diğer hastalıkları
+K76.1
+Karaciğerin kronik pasif konjesyonu
+K76.2
+Karaciğerin merkezi hemorajik nekrozu
+K76.3
+Karaciğer enfarktüsü
+K76.4
+Peliozis hepatis
+K76.5
+Hepatik veno-okluzif hastalık
+K76.6
+Portal hipertansiyon
+K76.7
+Hepatorenal sendrom
+K76.8
+Karaciğerin diğer tanımlanmış hastalıkları
+K76.9
+Karaciğer hastalığı, tanımlanmamış
+
+
+K77*
+Karaciğer bozuklukları, başka yerde sınıflanmış hastalıklarda
+K77.0*
+Karaciğer bozuklukları, başka yerde sınıflanmış enfeksiyöz ve parazitik hastalıklarda
+K77.8*
+Karaciğer bozuklukları, başka yerde sınıflanmış hastalıklarda
+
+	6.4.1. 	Diüretikler
+	6.4.2. 	Ursedeoksikolikasit *
+	6.4.3.      L-Ornithin- L- Aspartat 
+	6.4.4.     Tauroursodeoksikolik asit* 
+6.4.5.   Enteral beslenme ürünleri (sadece K72 ve K74 ve alt kodlarında muafiyet kapsamındadır.) 
+6.4.6.      Antiviraller
+
+6.5. 	Koroziv gastrointestinal yanıklar (T28.0-T28.2) (T28.5-T28.7)
+T28.0
+Ağız ve farenks yanığı
+T28.1
+Özefagus yanığı
+T28.2
+Beslenme yolu diğer kısımlarının yanığı
+T28.5
+Ağız ve farenks korozyonları
+T28.6
+Özefagus korozyonları
+T28.7
+Beslenme yolunun diğer kısımlarının korozyonları
+
+	6.5.1. Beslenme ürünleri
+	
+6.6. 	Wilson hastalığı     (E83.0)
+E83.0
+Bakır metabolizması bozuklukları
+
+	6.6.1. 	D-penisillamin 
+	6.6.2. 	Çinko preparatları
+	6.6.3. 	(Değişik: RG-28/04/2021-31468/26-c md. Yürürlük:06/05/2021) Trientine hidrokloride Trientin hidroklorür
+6.7. 	Ekzokrin pankreas bozuklukları        (K86)
+K86
+Pankreasın diğer hastalıkları
+K86.0
+Kronik pankreatit, alkole bağlı
+K86.1
+Kronik pankreatitler, diğer
+K86.2
+Pankreas kisti
+K86.3
+Pankreas psödokisti
+K86.8
+Pankreasın diğer tanımlanmamış hastalıkları
+K86.9
+Pankreas hastalığı, tanımlanmamış
+
+	6.7.1. 	Enzim preparatları
+	6.7.2.      Simetikon (300mg) (kombinasyonları dahil)
+	6.7.3.      Enteral beslenme ürünleri (sadece K86.1 kodunda malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.)
+
+7. Endokrin sistem hastalıkları
+7.1. 	Hipotalamus-hipofiz hastalıkları (E23.0-E23.1) (E23.3-E23.7)
+	7.1.1. 	Hipofiz yetmezliği
+E23.0
+Hipopitüitarizm
+E23.1
+Hipopitüitarizm, ilaca bağlı
+E23.3
+Hipotalamik disfonksiyon, başka yerde sınıflanmamış
+E23.6
+Hipofiz bezinin bozuklukları, diğer
+E23.7
+Hipofiz bezinin bozuklukları, tanımlanmamış
+
+		7.1.1.1. 	Büyüme hormonu * 
+		7.1.1.2. 	Kortikosteroidler
+		7.1.1.3. 	Tiroid hormonları
+
+	 7.1.2.           Hipogonadizm (E28.3-E28.9) (E29.1-E29.9)
+E28.3
+Primer over yetmezliği
+E28.8
+Over disfonksiyonu, diğer
+E28.9
+Over disfonksiyonu, tanımlanmamış
+
+
+E29.1
+Testiküler hipofonksiyon
+E29.8
+Testiküler fonksiyon bozukluğu, diğer
+E29.9
+
+Testiküler fonksiyon bozukluğu, tanımlanmamış
+
+
+		7.1.2.1. 	FSH, LH ve FSH-LH kombine preparatları
+		7.1.2.2. 	Koryonik gonadotropinler
+		7.1.2.3. 	Gonodal steroidler
+	7.1.3. 	Diabetes insipitus       (E23.2)
+E23.2
+Diyabetes insipitus
+
+		7.1.3.1. 	Pitressin ve sentetikleri
+
+	7.1.4. 	Hipofiz hormon fazlalığı (akromegali, hiperprolaktinemi) (E22. 0) ( E22.1)
+E22.0
+Akromegali ve hipofizer devlik
+E22.1
+Hiperprolaktinemi
+		
+                             7.1.4.1. 	Somatostatin ve analogları 
+		7.1.4.2. 	Bromokriptin  
+		7.1.4.3. 	Kabergolin
+	               7.1.4.4.        Pegvisomant
+		7.1.4.5.        Kinagolit * 
+
+	7.1.5. 	Puberte prekoks (E30.1)
+E30.1
+Puberte prekoks
+
+		7.1.5.1. 	LH-RH analogları
+		7.1.5.2. 	Anastrazole
+		7.1.5.3. 	Testelacton
+
+	7.1.6.      Laron Sendromu (E34.3)
+E34.3
+Boy kısalığı, başka yerde sınıflanmamış
+
+		 7.1.6. 1.  Mecasermin
+
+	7.1.7. Cushing sendromu (E24.0) (E24.3) (E24.8-E24.9) 
+
+E24.0
+Cushing hastalığı, pitüiter beze bağlı
+E24.3
+Ektopik ACTH sendromu
+E24.8
+Cushing sendromu, diğer
+E24.9
+Cushing sendromu, tanımlanmamış
+	      
+7.1.7.1. Metyrapon* 
+     7.1.7.2. Pasireotid 
+	
+7.2. 	Pankreas hastalıkları  (E10- E14)
+	7.2.1. 	Diabetes Mellitus
+E10
+İnsülin-bağımlı Diyabetes mellitüs
+E10.0
+İnsülin bağımlı Diyabetes mellitüs, komayla birlikte
+E10.1
+İnsülin bağımlı Diyabetes mellitüs, ketoasidozla birlikte
+E10.2†
+İnsülin bağımlı Diyabetes mellitüs, böbrek komplikasyonuyla birlikte
+E10.3†
+İnsülin bağımlı Diyabetes mellitüs, göz komplikasyonuyla birlikte
+E10.4†
+İnsülin bağımlı Diyabetes mellitüs, nörolojik komplikasyonla birlikte
+E10.5
+İnsülin bağımlı Diyabetes mellitüs, periferik dolaşım komplikasyonuyla birlikte
+E10.6
+İnsülin bağımlı Diyabetes mellitüs, tanımlanmış diğer komplikasyonlarla birlikte
+E10.7
+İnsülin bağımlı Diyabetes mellitüs, birden fazla komplikasyonla birlikte
+E10.8
+İnsülin bağımlı Diyabetes mellitüs, tanımlanmamış komplikasyonlarla birlikte
+E10.9
+İnsülin bağımlı Diyabetes mellitüs, komplikasyonları olmayan
+
+
+E11
+İnsülin-bağımlı olmayan Diyabetes mellitüs
+E11.0
+İnsülin bağımlı olmayan Diyabetes mellitüs, komayla birlikte
+E11.1
+İnsülin bağımlı olmayan Diyabetes mellitüs, ketoasidozla birlikte
+E11.2†
+İnsülin bağımlı olmayan Diyabetes mellitüs, böbrek komplikasyonuyla birlikte
+E11.3†
+İnsülin bağımlı olmayan Diyabetes mellitüs, göz komplikasyonuyla birlikte
+E11.4†
+İnsülin bağımlı olmayan Diyabetes mellitüs, nörolojik komplikasyonla birlikte
+E11.5
+İnsülin bağımlı olmayan Diyabetes mellitüs, periferik dolaşım komplikasyonuyla birlikte
+E11.6
+İnsülin bağımlı olmayan Diyabetes mellitüs, tanımlanmış diğer komplikasyonlarla birlikte
+E11.7
+İnsülin bağımlı olmayan Diyabetes mellitüs, birden fazla komplikasyonla birlikte
+E11.8
+İnsülin bağımlı olmayan Diyabetes mellitüs, tanımlanmamış komplikasyonlarla birlikte
+E11.9
+İnsülin bağımlı olmayan Diyabetes mellitüs, komplikasyonları olmayan
+
+
+E12
+Malnütrisyona bağlı Diyabetes mellitüs
+E12.0
+Malnütrisyona bağlı Diyabetes mellitüs, komayla birlikte
+E12.1
+Malnütrisyona bağlı Diyabetes mellitüs, ketoasidozla birlikte
+E12.2†
+Malnütrisyona bağlı Diyabetes mellitüs, böbrek komplikasyonuyla birlikte
+E12.3†
+Malnütrisyona bağlı Diyabetes mellitüs, göz komplikasyonuyla birlikte
+E12.4†
+Malnütrisyona bağlı Diyabetes mellitüs, nörolojik komplikasyonla birlikte
+E12.5
+Malnütrisyona bağlı Diyabetes mellitüs, periferik dolaşım komplikasyonuyla birlikte
+E12.6
+Malnütrisyona bağlı Diyabetes mellitüs, tanımlanmış diğer komplikasyonlarla birlikte
+E12.7
+Malnütrisyona bağlı Diyabetes mellitüs, birden fazla komplikasyonla birlikte
+E12.8
+Malnütrisyona bağlı Diyabetes mellitüs, tanımlanmamış komplikasyonlarla birlikte
+E12.9
+Malnütrisyona bağlı Diyabetes mellitüs, komplikasyonları olmayan
+
+
+E13
+Diyabetes mellitüs, diğer tanımlanmış
+E13.0
+Diyabetes mellitüs, diğer tanımlanmış, komayla birlikte
+E13.1
+Diyabetes mellitüs, diğer tanımlanmış, ketoasidozla birlikte
+E13.2†
+Diyabetes mellitüs, diğer tanımlanmış, böbrek komplikasyonuyla birlikte
+E13.3†
+Diyabetes mellitüs, diğer tanımlanmış, göz komplikasyonuyla birlikte
+E13.4†
+Diyabetes mellitüs, diğer tanımlanmış, nörolojik komplikasyonla birlikte
+E13.5
+Diyabetes mellitüs, diğer tanımlanmış, periferik dolaşım komplikasyonuyla birlikte
+E13.6
+Diyabetes mellitüs, diğer tanımlanmış, tanımlanmış diğer komplikasyonlarla birlikte
+E13.7
+Diyabetes mellitüs, diğer tanımlanmış, birden fazla komplikasyonla birlikte
+E13.8
+Diyabetes mellitüs, diğer tanımlanmış, tanımlanmamış komplikasyonlarla birlikte
+E13.9
+Diyabetes mellitüs, diğer tanımlanmış, komplikasyonları olmayan
+
+
+E14
+Diyabetes mellitüs, tanımlanmamış
+E14.0
+Diyabetes mellitüs, tanımlanmamış, komayla birlikte
+E14.1
+Diyabetes mellitüs, tanımlanmamış, ketoasidozla birlikte
+E14.2†
+Diyabetes mellitüs, tanımlanmamış, böbrek komplikasyonuyla birlikte
+E14.3†
+Diyabetes mellitüs, tanımlanmamış, göz komplikasyonuyla birlikte
+E14.4†
+Diyabetes mellitüs, tanımlanmamış, nörolojik komplikasyonla birlikte
+E14.5
+Diyabetes mellitüs, tanımlanmamış, periferik dolaşım komplikasyonuyla birlikte
+E14.6
+Diyabetes mellitüs, tanımlanmamış, tanımlanmış diğer komplikasyonlarla birlikte
+E14.7
+Diyabetes mellitüs, tanımlanmamış, birden fazla komplikasyonla birlikte
+E14.8
+Diyabetes mellitüs, tanımlanmamış, tanımlanmamış komplikasyonlarla birlikte
+E14.9
+Diyabetes mellitüs, tanımlanmamış, komplikasyonları olmayan
+		
+                             7.2.1.1. 	İnsülin
+		7.2.1.2. 	Oral antidiabetikler (kombine şekilleri dahil)
+		7.2.1.3. 	Glucagon
+                             7.2.1.4.      Eksenatit
+                             (Ek: RG-28/12/2018-30639/41-a md. Yürürlük:08/01/2019)
+                             7.2.1.5.     Linezolid* (EK-4/G 4.1. maddesinde yer alan koşullarda E 10.6, E 11.6, E 13.6 ve E 14.6 kodlarında muaftır.)
+                             (Ek: RG-11/08/2021-31565/15-b md. Yürürlük:19/08/2021)
+                             7.2.1.6.      Epidermal büyüme faktörü (topikal formu)*
+                             (Ek: RG-09/05/2024-32541/20-d md. Yürürlük:17/05/2024)
+                             7.2.1.7.      Liksisenatid ve kombinasyonları
+
+	7.2.2. 	Hiperinsülinemiye bağlı hipoglisemiler     (E16.0)  (E16.8-E16.9)
+E16.0
+İlaca bağlı hipoglisemi, koma olmadan
+E16.8
+Pankreas iç salgısının diğer tanımlanmış bozuklukları
+E16.9
+Pankreas iç salgısının bozuklukları, tanımlanmamış
+
+		7.2.2.1. 	Diazoxide
+		7.2.2.2. 	Somatostatin ve analogları
+
+7.3. 	Paratiroid hastalıklar
+	7.3.1. 	Hipoparatiroidi    (E20) (E89.2)
+E20
+Hipoparatiroidizm
+E20.0
+İdiopatik hipoparatiroidizm
+E20.1
+Psödohipoparatiroidizm
+E20.8
+Hipoparatiroidizmler, diğer
+E20.9
+Hipoparatiroidizm, tanımlanmamış
+
+
+E89.2
+Hipoparatiroidizm, girişim sonrası gelişen
+		
+		7.3.1.1. 	Kalsiyum preparatları
+		7.3.1.2. 	Vitamin D ve metabolitleri
+		
+	7.3.2. 	Hiperparatiroidi (E21.0-E21.3)
+E21.0
+Primer hiperparatiroidizm
+E21.1
+Sekonder hiperparatiroidizm, başka yerde sınıflanmamış
+E21.2
+Hiperparatiroidizm, diğer
+E21.3
+Hiperparatiroidizm, tanımlanmamış 
+
+		7.3.2.1. 	Kalsitonin
+	                7.3.2.2.      Cinacalcet*
+		7.3.2.3.       Parikalsitol*
+                             (Ek: RG-28/04/2021-31468/26-ç md. Yürürlük:06/05/2021)
+                             7.3.2.4.       Etelkalsetid*
+
+7.4. 	Adrenal hastalıkları
+	7.4.1.	Adrenal yetmezliği (E27.0 -E27.4)
+E27.0
+Adrenokortikal aşırı aktiviteler, diğer
+E27.1
+Primer adrenokortikal yetmezlik
+E27.2
+Addison krizi
+E27.3
+Adrenokortikal yetmezlik, ilaçlara bağlı
+E27.4
+Adrenokortikal yetmezlik, diğer ve tanımlanmamış
+
+		7.4.1.1. 	Lorenzo yağı
+		7.4.1.2. 	ACTH 
+		7.4.1.3. 	Kortikosteroidler 
+		7.4.1.4. 	Mineralokortikoidler
+
+	7.4.2. 	Adrenal hiperfonksiyonu
+		7.4.2.1. 	Hiperaldosteronizm (E26)
+E26
+Hiperaldosteronizm
+E26.0
+Primer hiperaldosteronizm
+E26.1
+Sekonder hiperaldosteronizm
+E26.8
+Hiperaldosteronizm, diğer
+E26.9
+Hiperaldosteronizm, tanımlanmamış
+
+			7.4.2.1.1. 	Aldosteron antagonistleri
+			7.4.2.1.2. 	Antihipertansifler ve kombinasyonları
+
+7.4.3. 	    Bartter Sendromu
+E26.9
+Hiperaldosteronizm, tanımlanmamış
+			
+	7.4.3.1.       Potasyum Klorür 
+
+7.5. 	Kemik hastalıkları
+	7.5.1. 	Rezistan rickets ve osteomalazi   (E55.0)   (M83)
+E55.0
+Raşitizm, aktif
+
+
+M83
+Erişkin osteomalazi
+M83.0
+Puerperal osteomalazi
+M83.1
+Senil osteomalazi
+M83.2
+Yetişkin osteomalazisi, malabsorbsiyona bağlı
+M83.3
+Erişkin osteomalazisi, malnütrisyona bağlı
+M83.4
+Alüminyum kemik hastalığı
+M83.5
+Osteomalazi, erişkinlerde diğer, ilaca bağlı
+M83.8
+Erişkin osteomalazisi, diğer
+M83.9
+Erişkin osteomalazisi, tanımlanmamış
+
+		7.5.1.1. 	Vit D ve metabolitleri
+		7.5.1.2. 	Fosfat preparatları
+		7.5.1.3. 	Kalsiyum preparatları
+
+	7.5.2. 	Juvenil Osteoporoz, kronik steroid kullanımına bağlı oluşan osteoporoz, paget 		hastalığı, osteogenezis imperfekta, osteokondrodisplazi, sudek atrofisi; (M80.4)  (M81.4)  (M88) (M89.0)  (Q77-Q78)  
+M80.4
+İlaca bağlı osteoporoz, patolojik kırık ile
+
+
+M81.4
+İlaca bağlı osteoporoz
+
+
+M88
+Kemiğin paget hastalığı [osteitis deformans]
+M88.0
+Kafa kemiklerinin paget hastalığı
+M88.8
+Kemiklerin paget hastalığı, diğer
+M88.9
+Kemiğin paget hastalığı, tanımlanmamış
+
+
+M89.0
+Algonörodistrofi
+
+
+Q77	
+Tübüler kemikler ve vertebranın büyüme defektleri ile birlikte
+Q77.0
+Akondrogenez
+Q77.1
+Tanatoforik boy kısalığı
+Q77.2
+Kısa kosta sendromu
+Q77.3
+Kondrodisplazi punktata
+Q77.4
+Akondroplazi
+Q77.5
+Diastrofik displazi
+Q77.6
+Kondroektodermal displazi
+Q77.7
+Spondiloepifizeal displazi
+Q77.8
+Tubüler kemikler ve vertebranın büyüme defektleri ile birlikte olan diğer 
+Q77.9
+Osteokondrodisplazi, tubuler kemiklerin ve vertebranın büyüme 
+
+
+Q78
+Osteokondrodisplaziler, diğer
+Q78.0
+Osteogenezis imperfekta
+Q78.1
+Poliostotik fibröz displazi
+Q78.2
+Osteopetrozis
+Q78.3
+Progresif diafizeal displazi
+Q78.4
+Enkondromatozis
+Q78.5
+Metafizeal displazi
+Q78.6
+Multipl konjenital eksostoz
+Q78.8
+Osteokondrodisplaziler diğer, tanımlanmış
+Q78.9
+Osteokondrodisplazi, tanımlanmamış
+
+		7.5.2.1.	Bifosfonatlar ve kombinasyonları
+		7.5.2.2. 	Calcitonin
+		7.5.2.3. 	Kalsiyum preparatları (C vitamini ile kombine formları hariç)
+		7.5.2.4. 	Vit D ve metabolitleri
+		    (Ek: RG-08/04/2026- 33218/ 13-c md. Yürürlük: 01/05/2026)
+		7.5.2.5.      Vosoritide* (Yalnızca akondroplazi tanısında muaftır.)
+
+	7.5.3. 	İdiyopatik masif osteoliz (Gorham hastalığı) (M89.5)
+M89.5
+Osteoliz
+
+		7.5.3.1.        Bevacizumab *
+
+7.6. 	Fosfor metabolizması bozuklukları (E83.3)
+E83.3
+Fosfor metabolizması bozuklukları
+
+		7.6.1. 	Vit D ve metabolitleri
+		7.6.2. 	Fosfor preparatları
+
+7. 7. Nöroendokrin tümörler (C16) (C17) (C18) (C19) (C20) (C22) (C23) (C24) (C25) (C26) (C34.9) (C75.9)  (D35.7)  (K86.8)  
+C16
+Mide malign neoplazmı
+C17 
+İnce bağırsak malign neoplazmı
+C18
+Kolon malign neoplazmı
+C19
+Rektosigmoid bileşim malign neoplazmı
+C20
+Rektum malign neoplazmı
+C22
+Karaciğer ve intrahepatik safra yolları malign neoplazmı
+C23
+Safra kesesi malign neoplazmı
+C24
+Safra kanalı malign neoplazmı, diğer ve tanımlanmamış bölgelerin
+C25
+Pankreas malign neoplazmı
+C26
+Sindirim organları malign neoplazmı, diğer ve sınırları belirsiz bölgelerin
+C34.9
+Bronş veya akciğer malign neoplazmı, tanımlanmamış
+C75.9
+Endokrin bez malign neoplazmı, tanımlanmamış
+D35.7
+Endokrin bezler benign neoplazmı, diğer tanımlanmış
+K86.8
+Pankreasın diğer tanımlanmamış hastalıkları
+
+           7.7.1. 	Somatostatin ve analogları
+
+Hiperkalsiüri       (E83.5)
+E83.5
+Kalsiyum metabolizması bozuklukları
+	
+		7.8.1. 	Hidroklortiyazid
+
+7.9	Tiroid Hastalıkları
+	7.9.1. 	Hipotiroidizm (E00-E02) (E03.0-E03.4) (E03.8-E03.9) (E89.0)
+E00
+Konjenital iyot-eksikliği sendromu
+E00.0
+Konjenital iyot-eksikliği sendromu, nörolojik tip
+E00.1
+Konjenital iyot-eksikliği sendromu, miksödematöz tip
+E00.2
+Konjenital iyot-eksikliği sendromu, karma tip
+E00.9
+Konjenital iyot-eksikliği sendromu, tanımlanmamış
+
+
+E01
+Tiroid bezi bozuklukları ve benzer durumlar, iyot-eksikliğine-bağlı
+E01.0
+İyot-eksikliğine-bağlı diffüz (endemik) guatr
+E01.1
+İyot-eksikliğine-bağlı multinodüler (endemik) guatr
+E01.2
+İyot-eksikliğine-bağlı (endemik) guatr, tanımlanmamış
+E01.8
+İyot-eksikliğine-bağlı tiroid bezi hastalıkları ve benzer durumlar, diğer
+
+
+E02
+Subklinik iyot-eksikliği hipotroidizmi
+
+
+E03.0
+Konjenital hipotiroidizm, diffüz guatrın eşlik ettiği
+E03.1
+Konjenital hipotiroidizm, guatrsız
+E03.2
+Hipotiroidizm, ilaçlara ve diğer eksojen maddelere bağlı gelişen
+E03.3
+Hipotiroidizm, enfeksiyon sonrası
+E03.4
+Tiroid atrofisi (kazanılmış)
+E03.8
+Hipotroidizm tanımlanmış, diğer
+E03.9
+Hipotroidizm, tanımlanmamış
+
+
+E89.0
+Hipotiroidizm, girişim sonrası gelişen
+
+		7.9.1.1. 	Tiroid hormonları
+
+	7.9.2. 	Hipertiroidizm    (E05) 
+E05
+Tirotoksikoz [hipertiroidizm]
+E05.0
+Tirotoksikoz, diffüz guatrlı
+E05.1
+Tirotoksikoz, toksik tek tiroid nodüllü
+E05.2
+Tirotoksikoz, toksik multinodüler guatrlı
+E05.3
+Tirotoksikoz, ektopik tiroid dokusundan kaynaklanan
+E05.4
+Tirotoksikoz factitia
+E05.5
+Tiroid krizi veya fırtınası
+E05.8
+Tirotoksikozlar, diğer
+E05.9
+Tirotoksikoz, tanımlanmamış
+
+		7.9.2.1. 	Propilthiouracil
+		7.9.2.2. 	Beta Blokerler ve kombinasyonları
+                             7.9.2.3.       Metimazol 
+7.10. 	Turner Sendromu   (Q96)
+Q96
+Turner Sendromu
+Q96.0
+Karyotip 45, X 
+Q96.1
+Karyotip 46, X iso (Xq) 
+Q96.2
+Karyotip 46, X, anormal seks kromozomu ile, iso (Xq) hariç
+Q96.3
+Mosaisizm, 45, X/46, XX veya XY 
+Q96.4
+Mosaisizm, 45, X/diğer anormal seks kromozomu hücresi taşıyan(lar)
+Q96.8
+Turner sendromunun diğer varyantları
+Q96.9
+Turner sendromu, tanımlanmamış 
+
+	                  7.10.1. 	Büyüme hormonu *
+
+(Ek: RG-28/04/2021-31468/26-d md. Yürürlük:06/05/2021)
+  7.11.      Yavaş Fetal Büyüme ve Fetal Malnütrisyon (P05)
+P05
+Yavaş fetal büyüme ve feta lmalnütrisyon
+P05.0
+Hamilelik yaşına göre hafif fetus
+P05.1
+Hamilelik yaşına göre küçük fetus
+P05.2
+Hamilelik yaşına göre hafif veya küçük olmaksızın fetal malnütrisyon
+P05.9
+Yavaş fetal büyüme, tanımlanmamış
+	       
+                               7.11.1.       Büyüme hormonu*
+
+8. Kan hastalıkları
+8.1. 	Hastalıklar
+	8.1.1. 	Aplastik anemi, hipoplastik anemi (D60.0) (D60.8-D60.9) (D61)
+
+D60.0
+Kazanılmış saf kırmızı hücre aplazisi, kronik
+D60.8
+Kazanılmış saf kırmızı hücreli aplazileri, diğer
+D60.9
+Kazanılmış saf kırmızı hücre aplazisi, tanımlanmamış
+
+
+D61
+Aplastik diğer anemiler
+D61.0
+Yapısal aplastik anemi
+D61.1
+Aplastik anemi, ilaca bağlı
+D61.2
+Aplastik anemi, diğer dış etkenlere bağlı
+D61.3
+İdiyopatik aplastik anemi
+D61.8
+Aplastik anemiler, diğer, tanımlanmış
+D61.9
+Aplastik anemi, tanımlanmamış
+
+Hemolitik anemiler
+                            8.1.2.1. 	Non-immün hemolitik anemi (D55) (D58) (D59.2-D59.9)
+
+D55
+Enzim bozukluklarına bağlı anemi
+D55.0
+Anemi, glikoz-6-fosfat dehidrogenaz (G6PD) eksikliğine bağlı
+D55.1
+Anemi, glutatyon metabolizmasının diğer bozukluklarına bağlı
+D55.2
+Anemi glikolitik enzimlerin bozukluğuna bağlı
+D55.3
+Anemiler, nükleotid metabolizma bozukluklarına bağlı
+D55.8
+Anemiler, enzim bozukluklarına bağlı diğer
+D55.9
+Enzim bozukluğuna bağlı anemi, tanımlanmamış
+
+
+D58
+Kalıtsal diğer hemolitik anemiler
+D58.0
+Herediter siferositozis
+D58.1
+Kalıtsal eliptositoz
+D58.2
+Hemoglobinopatiler, diğer
+D58.8
+Kalıtsal hemolitik anemiler, diğer, tanımlanmış
+D58.9
+Kalıtsal hemolitik anemiler, tanımlanmamış
+
+
+D59.2
+Hemolitik anemi, ilaca bağlı, otoimmün olmayan
+D59.3
+Hemolitik-üremik sendrom
+D59.4
+Hemolitik anemiler, diğer, otoimmün olmayan
+D59.5
+Paroksimal noktürnal hemoglobinüri (Marchiafava-Micheli) 
+D59.6
+Hemoglobinüri, diğer, dış etkenli hemolize bağlı
+D59.8
+Hematolik Anemiler, diğer kazanılmış 
+D59.9
+Hemolitik anemi kazanılmış, tanımlanmamış 
+	
+		8.1.2.2.	Otoimmün hemolitik anemi (D59.0)  (D59.1)
+D59.0
+Otoimmün hemolitik anemi, ilaca 
+D59.1
+Otoimmün hemolitik anemiler, diğer
+
+		8.1.2.3. 	Paroksismal noktürnal hemoglobinuri  (D59.5)
+D59.5
+Paroksismal noktürnal hemoglobinüri [Marchiafava-Micheli]
+
+Trombotik trombositopenik purpura (M31.1)
+M31.1
+Trombotik mikroanjiopati
+
+	8.1.3. 	Hemoglobinopatiler 
+		8.1.3.1. 	Orak (sickle cell) hücre anemiler (D57)
+
+D57
+Orak-hücre bozuklukları
+D57.0
+Orak hücreli anemi, krizle birlikte
+D57.1
+Orak hücreli anemi, kriz olmadan
+D57.2
+Çifte heterozigot oraklaşma bozuklukları
+D57.3
+Orak-hücre taşıyıcılığı
+D57.8
+Orak hücre bozuklukları, diğer
+D57.0
+Orak hücreli anemi, krizle birlikte
+
+		8.1.3.2. 	Talasemiler (D56)
+D56
+Talasemiler
+D56.0
+Alfa talasemi
+D56.1
+Beta talasemi
+D56.2
+Delta-beta talasemi
+D56.3
+Talasemi taşıyıcılığı
+D56.4
+Fetal hemoglobinin kalıtsal kalıcılığı (HPFH)
+D56.8
+Talasemiler, diğer
+D56.9
+Talesemi tanımlanmamış 
+
+
+	
+             8.1.4. 	Kronik miyeloproliferatif hastalıklar
+		8.1.4.1. 	Kronik miyelositik lösemi (C92.1)  (C93.1)
+C92.1
+Kronik myeloid lösemi
+
+
+C93.1
+Kronik monositik lösemi
+
+		8.1.4.2. 	Miyelofibrozis (D47.1)
+D47.1
+Kronik myeloproliferatif hastalık
+
+		8.1.4.3. 	Polistemia vera (D45)
+D45
+Polisitemia vera
+
+Trombositemi (Primer/idiyopatik/hemorajik/esansiyel) (D47.3)
+D47.3
+Esansiyel (hemorajik)
+
+	8.1.5. 	Miyelodisplastik sendrom (D46)
+D46
+Myelodisplastik 
+
+	8.1.6. 	Akut ve kronik lösemiler (C91-C95)
+C91
+Lenfoid lösemi
+C92
+Myeloid lösemi
+C93
+Monositik lösemi
+C94
+Lösemiler diğer, özel hücre tipli
+C95
+Lösemi, tanımlanmamış hücre tipli
+
+	8.1.7. 	Non-hodgkin    (C82-C85)
+                            (Ek: RG-09/05/2020-31122/7-b md. Yürürlük: 05/05/2020)
+                             8.1.7.1.    Belinostat
+
+C82
+Folliküler [nodüler] non-Hodgkin lenfoma
+C83
+Yaygın non-Hodgkin lenfoma
+C84
+Periferal ve kutanöz T- hücreli lenfomalar
+C85
+Non-Hodgkin lenfoma, diğer ve tanımlanmamış tipler
+
+	8.1.8. 	Herediter hemorajik telenjiektazi   (I78.0)
+I78.0
+Herediter hemorajik telenjiektazi
+
+	8.1.9. 	Hodgkin hastalığı (C81)
+C81
+Hodgkin hastalığı   
+
+	8.1.10. 	Multiple miyeloma ve plazma hücre diskrazileri (C90)   (C88.1-C88.2)
+C90
+Multipl miyelom ve malign plazma hücreli neoplazmlar 
+C90.0
+Multipl miyelom
+C90.1
+Plazma hücreli lösemi
+C90.2
+Plazmositom, ekstramedüller
+
+
+C88.1
+Alfa ağır zincir hastalığı
+C88.2
+Gama ağır zincir hastalığı
+	
+	8.1.11. 	Trombositopeniler   (D69.3-D69.6)
+D69.3
+İdiyopatik trombositopenik purpura (Primer İmmun Trombositopeni) 
+D69.4
+Primer trombositopeniler, diğer
+D69.5
+Sekonder trombositopeni
+D69.6
+Trombositopeni, tanımlanmamış
+	
+Nötropeniler (D70)
+D70
+Agranülositoz
+
+              8.1.13.     Faktör noksanlıklarına bağlı hastalıklar (hemofililer) (D65-D68)
+D65
+Dissemine intravasküler koagülasyon [defibrinasyon sendromu]
+
+
+D66
+Kalıtsal faktör VIII eksikliği
+
+
+D67
+Kalıtsal faktör IX eksikliği
+
+
+D68
+Koagülasyon bozuklukları, diğer
+D68.0
+Von Willebrand hastalığı
+D68.1
+Kalıtsal faktör XI eksikliği
+D68.2
+Pıhtılaşma faktörleri kalıtsal eksikliği, diğer
+D68.3
+Hemorajik bozukluk, dolaşımdaki antikoagülanlara bağlı
+D68.4
+Kazanılmış koagülasyon faktörü eksikliği
+D68.8
+Koagülasyon bozuklukları, diğer, tanımlanmış
+D68.9
+Koagülasyon bozukluğu, tanımlanmamış
+
+	 8.1.14. 	İmmün yetmezlik
+		8.1.14.1. 	Agamaglobulinemi, hipogamaglobulinemi
+			- Hiper IgM sendromu, kombine immün yetmezlik
+                             (Ek: RG-09/05/2020-31122/7-c md. Yürürlük: 05/05/2020)
+                             8.1.14.1.1. Elapegademase (Sadece D81.1-Şiddetli kombine immün yetmezlik [SCID], düşük T ve B-hücre sayısıyla birlikte, D81.3- Adenozin deaminaz [ADA] eksikliği, D81.8- Kombine immün yetmezlikler, diğer ve D81.9 Kombine immün yetmezlik tanımlanmamış, tanılarında muaftır)
+
+
+   (D80- D81)
+D80
+İmmün yetmezlik, antikor bozuklukları baskın
+D80.0
+Hipogammaglobulinemi, kalıtsal
+D80.1
+Hipogamaglobulinemi, ailesel olmayan
+D80.2
+Selektif immünglobulin A [IgA] eksikliği
+D80.3
+Selektif immünglobulin G [IgG] alt sınıfları eksikliği
+D80.4
+Selektif immünglobulin M [IgM] eksikliği
+D80.5
+İmmün yetmezlik immünglobulin M [IgM] artışı ile birlikte olan
+D80.6
+Antikor eksikliği, normale yakın immünglobulin ya da
+D80.7
+Hipogamaglobulinemi, çocukluk çağı, geçici
+D80.8
+İmmün yetmezlikler, baskın olarak antikor kusurlu, diğer
+D80.9
+İmmün yetmezlik antikor bozukluğu baskın, tanımlanmamış
+
+
+D81
+Kombine immün yetmezlikler
+D81.0
+Şiddetli kombine immün yetmezlik [SCID], retiküler disgenez ile birlikte
+D81.1
+Şiddetli kombine immün yetmezlik [SCID], düşük T-ve B-hücre sayısıyla birlikte
+D81.2
+Şiddetli kombine immün yetmezlik [SCID], düşük ya da normal B-hücre sayısıyla birlikte
+D81.3
+Adenozin deaminaz [ADA] eksikliği
+D81.4
+Nezelof sendromu
+D81.5
+Pürin nükleosid fosforilaz [PNP] eksikliği
+D81.6
+Majör histokompabilite kompleksi sınıf 1 eksikliği
+D81.7
+Majör histokompatibilite kompleksi sınıf 2 eksikliği
+D81.8
+Kombine immün yetmezlikler, diğer
+D81.9
+Kombine immün yetmezlik, tanımlanmamış
+
+Prematüre anemisi (P61.2)
+P61.2
+Prematürite anemisi
+
+Primer ve sekonder trombofili olan hastalar (D68.8)
+D68.8
+Koagülasyon bozuklukları, diğer, tanımlanmış
+
+Histiositoz (D76)
+D76
+Lenforetiküler doku ve retikülohistiyositik sistemi tutan bazı hastalıklar 
+D76.0
+Langerhans hücre histiyositozu, başka yerde sınıflanmamış
+D76.1
+Hemofagositik lenfohistiyositoz
+D76.2
+Hemofagositik sendrom, enfeksiyonla bağlantılı
+D76.3
+Histiyositoz sendromları, diğer
+
+Graft versus host hastalığı (T86.0)
+T86.0
+   Kemik iliği nakil reddi
+
+Hipereozonofilik Sendrom  (D72.1) 
+
+   8.1.19. 1. İmatinib* 
+
+D72.1 
+Eozinofili
+
+8.2. 	Yalnızca bu hastalıkların tedavisine yönelik kullanılan ilaçlar
+	8.2.1. 	Hemapoetik büyüme faktörleri *
+	             8.2.2. 	Şelatörler* (Ek: RG-25/11/2025- 33088/19-b md. Yürürlük: 03/12/2025) (Deferasiroks kan transfüzyonlarına bağlı kronik demir yüklemesi tedavisinde; Miyelodisplastik sendrom (D46), Kronik myeloproliferatif hastalık (D47.1), Orak (sickle cell) hücre anemiler (D57), Kalıtsal diğer hemolitik anemiler (D58), (Ek: RG-29/08/2026-33355/20-a md. Yürürlük:05/09/2026) Kazanılmış saf kırmızı hücre aplazisi, kronik (D60.0), Kazanılmış saf kırmızı hücreli aplazileri, diğer (D60.8), Kazanılmış saf kırmızı hücre aplazisi, tanımlanmamış (D60.9), Aplastik diğer anemiler (D61) ICD kodlarında ve Talasemi tedavisinde (D56); ICD kodlarında, EK-4/F hükümlerine göre)
+	8.2.3. 	Faktörler *  
+	8.2.4. 	Antikoagülanlar
+	8.2.5. 	İmmünomodülatörler * 
+	8.2.6. 	Analjezikler ve narkotik analjezikler
+	8.2.7. 	Antibiyotikler – (hastanın ayaktan tedavisinde sağlık raporunda belirtilenler dışındakiler muaf değildir)
+	8.2.8. 	Antineoplastik ilaçlar * (SUT’un 4.2.14 numaralı maddesinde belirtilen endikasyon dışı kullanım izni aranmayacak etken maddeler hariç)
+	8.2.9. 	Antiviral ilaçlar – (hastanın ayaktan tedavisinde sağlık raporunda belirtilenler dışındakiler muaf değildir)
+	8.2.10. 	İmmünglobulin preparatları * 
+	8.2.11. 	İmmünsupresifler * (Azathiopurin, Siklosporin, Siklofosfamid, Klorambusil, Methotrexat ve kortikosteroidlerden endikasyon uyumu aranmayacaktır.) (Sağlık Bakanlığı Endikasyon dışı Genelge ve Kılavuz hükümleri saklı kalmak kaydı ile)
+	8.2.12.     Kanser tedavisi sırasında ortaya çıkan yan etkileri önlemek amacıyla    kullanılan ilaçlar 
+	8.2.13. 	   Enteral beslenme ürünleri (sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.)  C81, C81.0, C81.1, C81.2, C81.3, C81.7, C81.9, C82, C82.0, C82.1, C82.2, C82.7, C82.9, C83, C83.0, C83.1, C83.2, C83.3, C83.4, C83.5, C83.6, C83.7, C83.8, C83.9, C84, C84.1, C84.2, C84.3, C84.4, C84.5, C85, C85.0, C85.1, C85.7, C85.9, C88.1, C88.2, C90, C90.0, C90.1, C90.2, C91, C91.0, C91.1, C91.2, C91.3, C91.4, C91.5, C91.7, C91.9, C92, C92.0, C92.1, C92.2, C92.3, C92.4, C92.5, C92.7, C92.9, C93, C93.0, C93.1, C93.2, C93.7, C93.9, C94, C94.0, C94.1, C94.2, C94.3, C94.4, C94.5, C94.7, C95, C95.0, C95.1, C95.2, C95.7, C95.9, D46, D46.0, D46.1, D46.2, D46.3, D46.4, D46.7, D46.9 kodlarında malnütrisyon koşulları aranmaz. 
+
+	8.2.14. 	Radyofarmasötik ürünler * 
+	8.2.15. 	Bunların uygulanması ile ilgili parenteral sıvılar, antidotlar, antiemetikler ve aşılar
+             8.2.16.     Eltrombopag*
+	8.2.17. 	Antifungaller*
+             (Ek: RG-28/04/2021-31468/26-e md. Yürürlük:06/05/2021)
+8.2.18.      Koloni stimüle edici faktörler*
+(Ek: RG- 19/10/2023-32344/16-b md. Yürürlük:27/10/2023)
+8.2.19.      Desmopressin*
+             (Ek: RG- 09/05/2024-32541/20-e md. Yürürlük:17/05/2024)
+             8.2.20.      Romiplostim*
+                (Ek: RG- 08/03/2025-32835/19 md. Yürürlük: 15/03/2025)
+                8.2.21.      Emicizumab*      
+
+9. Konnektif doku hastalıkları
+9.1. 	Hastalıklar
+	9.1.1. 	Sistemik lupus eritematozus ve ilişkili sendromlar (M32)
+M32
+Sistemik lupus eritematozus
+M32.0
+Sistemik lupus eritematozus, ilaca bağlı
+M32.1†*
+Sistemik lupus eritematozus, organ veya sistem tutulumu ile
+M32.8
+Sistemik lupus eritematozusun diğer formları
+M32.9
+Sistemik lupus eritematozus, tanımlanmamış
+
+	9.1.2. 	Primer antifosfolipid antikor sendromu (M32.8-M32.9)
+M32.8
+Sistemik lupus eritematozusun diğer formları
+M32.9
+Sistemik lupus eritematozus, tanımlanmamış
+
+	9.1.3. 	Vaskülitler
+		9.1.3.1. 	Churg Straus (M30.1)
+M30.1
+Poliarteritis, akciğer tutulumu ile [Churg-Strauss]
+
+Henoch Schonlein     (D69.0)
+D69.0
+Allerjik purpura
+
+		9.1.3.3. 	Hipersensitivite vaskülitleri (M31.0)
+M31.0
+Hipersensitivite anjiit
+
+		9.1.3.4. 	Kawasaki (M30.3)
+M30.3
+Mukokutanöz lenf nodu sendromu [Kawasaki]
+
+		9.1.3.5. 	Poliarteritis Nodosa (M30.0)
+M30.0
+Poliarterit nodoza 
+
+		9.1.3.6. 	Polimiyalji Romatika (M35.3)
+M35.3
+Polimiyalji romatika
+
+		9.1.3.7. 	Takayashu (M31.4)
+M31.4
+Aortik ark sendromu [Takayasu]
+
+		9.1.3.8. 	Temporal arteritis (M31.6)
+M31.6
+Dev hücreli arterit, diğer
+
+		9.1.3.9. 	Wegener Granulomatozis     (M31.3)
+M31.3
+Wegener granülomatozu
+	
+9.1.3.10. Mikroskopik polianjitis (M31.7)
+M31.7
+Mikroskopik polianjitis
+
+	9.1.4. 	Skleroderma, mikst konnektif doku hastalığı   (M34.9) (M35.1)  ( M35.8)  ( M35.9)
+M34.9
+Sistemik sklerozis, tanımlanmamış
+
+
+M35.1
+Overlap sendromları, diğer
+M35.8
+Bağ dokusunun diğer tanımlanmış sistemik tutulumu
+M35.9
+Bağ dokusunun sistemik tutulumu, tanımlanmamış
+
+	9.1.5. 	Romatoid artrit ve ilişkili sendromlar (Sjögren vb) (M05-M06) (M08.0) (Ek: RG-30/12/2020-31350/17-a md. Yürürlük: 30/12/2020) (M08.2-M08.3) (M35.0-M35.1) (M35.3-M35.8)
+M05
+Seropozitif romatoid artrit
+M05.0
+Felty sendromu
+M05.1†
+Romatoid akciğer hastalığı (J99.0*)
+M05.2
+Romatoid vaskülit
+M05.3†
+Romatoid artrit, diğer organların ve sistemlerin tutulumu ile birlikte
+M05.8
+Seropozitif romatoid artrit, diğer
+M05.9
+Seropozitif romatoid artrit, tanımlanmamış
+
+
+M06
+Romatoid artrit, diğer
+M06.0
+Seronegatif romatoid artrit
+M06.1
+Erişkin başlangıçlı Still hastalığı
+M06.2
+Romatoid bursit
+M06.3
+Romatoid nodül
+M06.4
+Enflamatuvar poliartropati
+M06.8
+Romatoid artrit diğer, tanımlanmış
+M06.9
+Romatoid artrit, tanımlanmamış
+
+
+M08.0
+Juvenil romatoid artrit
+M08.2              (Ek: RG-30/12/2020-31350/17-b md. Yürürlük: 30/12/2020)
+
+
+Juvenil artrit, sistemik başlangıçlı
+
+M08.3  (Ek: RG-30/12/2020-31350/17-b md. Yürürlük: 30/12/2020)
+
+
+Juvenil poliartrit (seronegatif)
+
+
+M35.0
+Sikka sendromu [Sjögren]
+M35.1
+Overlap sendromları, diğer
+M35.3
+Polimiyalji romatika
+M35.4
+Diffüz (eozinofilik) fasit
+M35.5
+Multifokal fibrosklerozis
+M35.6
+Relapsing pannikulit [Wever-Christian]
+M35.7
+Hipermobilite sendromu
+M35.8
+Bağ dokusunun diğer tanımlanmış sistemik tutulumu
+
+	9.1.6. 	Seronegatif spondilortropatiler
+		9.1.6.1. 	Andiferansiye spondilortropati (M46.5)  ( M46.8- M46.9) 
+M46.5
+Enfektif spondilopatiler, diğer
+M46.8
+Enflamatuvar spondilopatiler, diğer tanımlanmış
+M46.9
+Enflamatuvar spondilopati, tanımlanmamış
+
+		9.1.6.2. 	Ankilozan spondilit (M45)
+M45
+Ankilozan spondilit
+M45.0
+Ankilozan spondilit, birden fazla yerde
+M45.1
+Ankilozan spondilit, oksipito-atlanto-aksial bölge
+M45.2
+Ankilozan spondilit, servikal bölge
+M45.3
+Ankilozan spondilit, servikotorasik bölge
+M45.4
+Ankilozan spondilit, torasik bölge
+M45.5
+Ankilozan spondilit, torakolomber bölge 
+M45.6
+Ankilozan spondilit, lomber bölge
+M45.7
+Ankilozan spondilit, lumbosakral bölge
+M45.8
+Ankilozan spondilit, sakral ve sakrokoksigeal bölge
+M45.9
+Ankilozan spondilit, yer tanımlanmamış 
+
+		9.1.6.3. 	Enteropatik artropatiler (M07.4- M07.6)
+M07.4*
+Artropati, Crohn hastalığında (regional enterit) (K50.-†)
+M07.5*
+Artropati, ülseratif kolitte (K51.-†)
+M07.6*
+Enteropatik artropatiler, diğer
+
+Psöriatik artrit (M07.0*)  (M07.3*)
+M07.0*
+Distal interfalangeal psoriatik artropati (L40.5†)
+M07.3*
+Psoriatik artropatiler, diğer (L40.5†)
+
+		9.1.6.5. 	Reiter (M02.3)
+M02.3
+Reiter hastalığı
+
+	9.1.7. 	İnflamatuar kas hastalıkları
+		9.1.7.1. 	Dermatomiyozit    (M33.0) ( M33.1) ( M33.9)
+M33.0
+Juvenil dermatomiyozit
+M33.1
+Dermatomiyozit, diğer
+M33.9
+Dermatopolimiyozit, tanımlanmamış
+
+		9.1.7.2. 	Polimiyozit   (M33.2)
+M33.2
+Polimiyozit
+
+	9.1.8. 	Kristal artropatiler (M10-M11)  
+M10
+Gut
+M10.0
+Gut, idiopatik
+M10.1
+Gut, kurşuna bağlı
+M10.2
+Gut, ilaca bağlı
+M10.3
+Gut, renal fonksiyonun azalmasına bağlı
+M10.4
+Gut, diğer sekonder
+M10.9
+Gut, tanımlanmamış
+
+
+M11
+Kristal artropatileri, diğer
+M11.0
+Hidroksiapatit depo hastalığı
+M11.1
+Ailesel kondrokalsinoz
+M11.2
+Kondrokalsinoz, diğer
+M11.8
+Kristal artropatileri diğer, tanımlanmış
+M11.9
+Kristal artropati, tanımlanmamış
+
+	9.1.9. 	Relapsing polikondritis (M94.1)
+M94.1
+Relapsing polikondrit
+                
+              (Ek: RG- 25/09/2024- 32673/ 16-b md. Yürürlük: 03/10/2024)
+              9.1.10.    Progressif Sistemik Sklerozis (M34.0)
+M34.0
+
+Progressif Sistemik Sklerozis
+                                                                                                                                                                                
+9.2. 	Bu hastalıkların tedavisinde kullanılan ilaçlar
+	9.2.1. 	6-Merkaptopürin
+	9.2.2. 	Altın Preparatları * 
+	9.2.3. 	Antimalaryaller
+	9.2.4. 	Azatioprin
+	9.2.5. 	Dapson
+	9.2.6. 	D-Penisillamine
+	9.2.7. 	Klorambusil
+	9.2.8. 	Kortikosteroidler
+	9.2.9. 	Leflunomid * 
+	9.2.10. 	Methotreksate
+	9.2.11. 	Siklofosfamid
+	9.2.12. 	Siklosporin
+	9.2.13. 	Sulfasalazin
+	9.2.14. 	Anti TNF İlaçlar * 
+	9.2.15. 	İV İmmünglobulinler * (sadece Kawasaki hastalığında muafiyet kapsamındadır.)
+             (Değişik: RG- 12/12/2024- 32750/21-b md. Yürürlük: 20/12/2024)
+9.2.16.     Anakinra
+                9.2.16.     Anakinra*
+9.2.17.     Pilokarpin tablet (sadece sjögren sendromunda)
+             9.2.18.     Rituksimab * 
+9.2.19.   Enteral beslenme ürünleri (sadece malnütrisyon gelişmiş skleroderma hastalığında muafiyet kapsamındadır.) 
+9.2.20.     Mikofenolat mofetil *
+9.2.21.     Non-steriod yapılı antiinflamatuvarlar 
+9.2.22. Tociluzumab (sadece 9.1.5. (Ek:RG-04/09/2019-30878/62-ç md. Yürürlük: 08/01/2019) ve 9.1.3.8. maddede tanımlı ICD-10 kodlarında (Ek: RG-29/08/2026-33355/20-b md. Yürürlük:05/09/2026) ve Sağlık Bakanlığı Endikasyon Dışı İlaç Kullanım Kılavuzu, TİTCK Ek Onayı Alınmadan Kullanılabilecek Endikasyon Dışı İlaç Listesine göre 9.1.3.7. maddesinde tanımlı ICD-10 kodlarında)
+             9.2.23.     Abatacept  (sadece 9.1.5. maddede tanımlı ICD-10 kodlarında)	
+             9.2.24.   İntravenöz iloprost trometamol* (yalnızca sistemik skleroz endikasyonunda (dijital ülser dahil))
+   9.2.25.     Bosentan* (yalnızca sistemik skleroza bağlı dijital ülser endikasyonunda)
+   9.2.26.     Canakinumab* (yalnızca M06.1 ve M08.0 kodlarında muafiyet kapsamındadır)
+                (Değişik: RG- 16/03/2023-32134/44-a md. Yürürlük: 24/03/2023)
+9.2.27.      Tofasitinib  (sadece 9.1.5. maddede tanımlı ICD-10 kodlarında)
+             9.2.27.     (Değişik:RG-09/05/2024- 32541/20-f md. Yürürlük:17/05/2024) Tofasitinib Tofasitinib* (sadece 9.1.5., 9.1.6.2. ve 9.1.6.4. maddelerinde tanımlı ICD-10 kodlarında)
+             9.2.28.      Ustekinumab* (yalnızca Psöriatik artrit (M07.0*) (M07.3*)
+             9.2.29.      Sekukinumab* (yalnızca Psöriatik artrit (M07.0*) (M07.3*) ve Ankilozan spondilit (M45) endikasyonunda muaftır)
+             (Ek: RG-28/04/2021-31468/26-f md. Yürürlük:06/05/2021)
+9.2.30.      Barisitinib* (yalnızca 9.1.5. maddede tanımlı ICD-10 kodlarında) 
+            (Ek: RG-26/10/2021-31640/12-c md. Yürürlük:04/11/2021)
+9.2.31.      İksekizumab* (Yalnızca psöriatik artrit (M07.0*) (M07.3*) endikasyonunda muaftır.)
+            (Ek: RG- 19/10/2023-32344/16-c md. Yürürlük: 27/10/2023)
+9.2.32.      Apremilast* (sadece 9.1.6.4. maddelerinde tanımlı ICD-10 kodlarında)
+             9.2.33.   Upadasitinib* (sadece (Ek:RG-25/11/2025-33088/19-c md. Yürürlük:03/12/2025) 9.1.3.8., 9.1.5., 9.1.6.2. ve 9.1.6.4. maddelerinde tanımlı ICD-10 kodlarında)
+            (Ek: RG- 25/09/2024- 32673/16-c md. Yürürlük: 03/10/2024)
+	9.2.34.      Nintedanib* (Sadece 9.1.10 maddesinde tanımlı ICD10 kodlarında)
+
+10. Kronik nörolojik hastalıklar
+10.1. 	Kas hastalıkları
+10.1.1. 	Miyopatiler     (G71.0)  (G71.2)   (G71.8-G71.9)  (G72.1-G72.2)  (G72.4)  (G72.8-G72.9)   (G73.1) (G73.4-G73.7) 
+G71.0
+Musküler distrofi
+G71.2
+Konjenital miyopatiler
+G71.8
+Primer kas bozuklukları, diğer
+G71.9
+Primer kas bozukluğu, tanımlanmamış
+
+
+G72.1
+Alkolik miyopati
+G72.2
+Miyopati toksik ajanlara bağlı, diğer
+G72.4
+Enflamatuvar miyopati, başka yerde sınıflanmamış
+G72.8
+Miyopatiler diğer, tanımlanmış
+G72.9
+Miyopati, tanımlanmamış
+G73.1
+Lambert-Eaton Sendromu 
+G73.4*
+Miyopati, başka yerde sınıflanmış enfeksiyöz ve parazitik hastalıklarda
+G73.5*
+Miyopati, endokrin hastalıklarda
+G73.6*
+Miyopati, metabolik hastalıklarda
+G73.7*
+Miyopati, başka yerde sınıflanmış diğer hastalıklarda
+
+
+
+		10.1.1.1. 	Kortikosteroidler
+		10.1.1.2.     3-4 Diaminopyridine-DAP * 
+		   10.1.1.3.     Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+
+	10.1.2.	 Mitokondriyal sitopatiler (G71.3)
+G71.3
+Mitokondriyal miyopati, başka yerde sınıflanmamış
+
+		10.1.2.1. 	Karnitin
+		10.1.2.2. 	Coenzyme Q
+		10.1.2.3.   Biotin*
+		10.1.2.4.   Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+		
+	10.1.3. 	Miyotoniler (G71.1)
+G71.1
+Miyotonik bozukluklar
+
+		10.1.3.1. 	Hidantoin
+		10.1.3.2. 	Karbamazepin
+
+             10.1.4 Otozomal resesif serebral ataksiler
+                            10.1.4.1. Friedreich ataksisi (G11.1)
+G11.1
+Erken-başlangıçlı serebellar ataksi 
+
+		             10.1.4.1.1. İdebenon  
+
+	               10.1.4.2.Serebrotendinöz ksantomatozis (G11.9)
+G11.9
+Herediter ataksi, tanımlanmamış
+
+                                          10.1.4.2.1. Kenodeoksikolik asit*
+		             10.1.4.2.2. İdebenon * (Ek-4/F 59 numaralı madde kapsamında reçetelenir.)
+10.2. 	Nöromusküler hastalıklar
+	10.2.1. 	Myasthenia Gravis (G70.0)
+G70.0
+Miyastenia gravis
+
+		10.2.1.1. 	İmmünglobulinler
+10.2.1.2. 	İmmünsupresif İlaçlar * (azatioprin, siklofosfamid, klorambusil, methotreksate etken maddelerinde endikasyon uyumu aranmayacaktır,)
+		10.2.1.3. 	Kortikosteroidler
+		10.2.1.4. 	Neostigmin
+		10.2.1.5. 	Pridostigmin
+		10.2.1.6.    Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+	10.2.2. 	Motor nöron (A.L.S) (G12.2)
+G12.2
+Motor nöron hastalığı
+
+		10.2.2.1. 	Riluzole
+		10.2.2.2.   Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+		10.2.2.3.	 Dextromethorphan hydrobromide/quinidine sulfate 
+      
+              (Değişik: RG- 25/06/2023- 32232/3 md. Yürürlük: 06/07/2023)
+              10.2.3. Infantil Spinal Müsküler Atrofi, Tip I (G 12.0)
+ G 12.0
+ İnfantil SMA, Tip I
+                 
+                              10.2.3.1 Nusinersen
+              10.2.3. Spinal musküler atrofi ve ilgili sendromlar (G 12.0, G12.1, G12.1.2, G12.1.3, G12.1.4, G12.1.5, G12.9)
+G12.0
+İnfantil Spinal Musküler Atrofi, Tip I Werdnig-Hoffman
+G12.1
+Kalıtsal Spinal Musküler Atrofi, Diğer
+G12.1.2
+Spinal Musküler Atrofi, Yetişkin Formu
+G12.1.3
+Spinal Musküler Atrofi, Çocukluk Formu, Tip Iı
+G12.1.4
+Spinal Musküler Atrofi, Distal
+G12.1.5
+Spinal Musküler Atrofi, Juvenil Form, Tip Iıı [Kugelberg-Welander]
+G12.9
+Spinal Musküler Atrofi, Tanımlanmamış
+                 
+            (Değişik: RG-26/04/2025-32882/14-a md. Yürürlük: 06/05/2025)
+                                      10.2.3.1. Nusinersen sodyum
+		  10.2.3.1. Nusinersen sodyum*
+             (Ek: RG-26/04/2025-32882/14-a md. Yürürlük: 06/05/2025)
+		  10.2.3.2. Risdiplam*
+             (Ek: RG- 25/08/2022- 31934/58-c md. Yürürlük: 03/09/2022)
+ 10.2.4. Konjenital ve gelişimsel miyasteni
+G70.2
+Konjenital ve Gelişimsel Miyasteni
+          
+                 10.2.4.1.     3,4 diaminopyridin*
+
+10.3. 	Ekstrapiramidal sistem hastalıkları
+	10.3.1. 	Parkinson hastalığı (G20)
+G20
+Parkinson hastalığı
+
+		10.3.1.1. 	Amantadin
+		10.3.1.2. 	Apomorfin
+		10.3.1.3. 	Trihexyphenidyl HCl
+		10.3.1.4. 	Benztropin
+		10.3.1.5. 	Biperidene
+		10.3.1.6. 	Bornaprin HCL
+		10.3.1.7. 	Bromokriptin
+		10.3.1.8.	Cabergolin
+		10.3.1.9. 	Difenhidramin
+		10.3.1.10. 	Domperidon
+		10.3.1.11. 	Entakapon
+		10.3.1.12. 	L-Dopa+Benserazide
+		10.3.1.13. 	L-Dopa+Karbidopa ve kombinasyonları
+		10.3.1.14. 	Lisurid
+		10.3.1.15. 	Nonergolin dopa agonistleri
+		10.3.1.16. 	Pergolid
+		10.3.1.17. 	Piribedil
+		10.3.1.18. 	Pramipeksol
+		10.3.1.19. 	Ropinirol
+		10.3.1.20. 	Selegilin hidroklorid
+		10.3.1.21.  Rasajilin
+   10.3.1.22.  Tolkapon  
+	   10.3.1.23. Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+	10.3.2. 	Distoniler, hemifasyal spazm  (G24.1- G24.9)   (G51.3)
+G24.1
+İdiopatik ailesel distoni
+G24.2
+İdiopatik ailesel olmayan distoni
+G24.3
+Spazmodik tortikolis
+G24.4
+İdiopatik orofasyal distoni
+G24.5
+Blefarospazm
+G24.8
+Distoni, diğer
+G24.9
+Distoni, tanımlanmamış
+
+
+G51.3
+Klonik hemifasiyal spazm
+
+		10.3.2.1. 	Biperiden
+		10.3.2.2. 	Botulismus toksini Tip A *
+		10.3.2.3. 	Klonazepam
+		10.3.2.4.    Tetrabenazin
+	   10.3.2.5. Enteral beslenme ürünleri (Sadece G24.1 ve G24.2 kodlarında malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+
+10.4. 	Epilepsi, Narkolepsi ve febril konvülsiyonlar (G40)  (G47.4) ( R56.0)
+G40
+Epilepsi
+G40.0
+Lokalize (fokal) (kısmi) idiopatik epilepsi ve lokalize nöbetlerle başlayan epileptik sendromlar, lokalize başlangıçlı nöbetlerle birlikte
+G40.1
+Lokalize (fokal) (kısmi) semptomatik epilepsi ve epileptik sendromlar, basit kısmi nöbetlerle birlikte
+G40.2
+Lokalize (fokal) (kısmi) semptomatik epilepsi ve epileptik sendromlar,
+G40.3
+Yaygın idiopatik epilepsi ve epileptik sendromlar
+G40.4
+Yaygın epilepsi ve epileptik sendromlar, diğer
+G40.5
+Özel epileptik sendromlar
+G40.6
+Grand mal nöbetler, tanımlanmamış (petit mal ile birlikte veya değil)
+G40.7
+Petit mal, tanımlanmamış, grand mal nöbetler olmadan
+G40.8
+Epilepsiler, diğer
+G40.9
+Epilepsi, tanımlanmamış
+
+
+G47.4
+Narkolepsi ve katapleksi
+
+
+R56.0
+Febril konvülziyon 
+
+	10.4.1. 	Asetezolamid
+	10.4.2. 	Benzodiazepinler
+	10.4.3. 	Ethosuksimide
+	10.4.4. 	Felbamat
+	10.4.5. 	Fenitoinler
+	10.4.6.	Fenobarbital, Barbekselon
+	10.4.7. 	Flunerazin
+	10.4.8. 	Gabapentin
+	10.4.9. 	Karbamazepin
+	10.4.10. 	Klobazam
+	10.4.11. 	Lamotrigin
+	10.4.12. 	Okskarbazepin
+	10.4.13. 	Pirimidon
+	10.4.14. 	Topiramate
+	10.4.15. 	Valproatlar
+	10.4.16. 	Vigabatrin
+	10.4.17. 	Zorasamide
+	10.4.18. 	Levatiracetem
+	10.4.19. 	Sultiam
+	10.4.20. 	Modafinil
+             10.4.21.   Pregabalin ve kombinasyonları 
+	10.4.22.   Zonisamit 
+             10.4.23.   Sodium oxybata*
+  	10.4.24.   Stiripentol*
+  	10.4.25.   Rufinamide*
+             10.4.26.   Lacosamide* 
+        10.4.27. Ketojenik tıbbi mama* (G40 ICD-10 kodlarında ve SUT eki Ek-4/F listesi 61 numaralı maddede yer alan ilkelere göre) 
+              10.4.28.   Armodafinil*
+
+10.5. 	Demiyelinizan hastalıklar (lökodistrofi, multipl skleroz v.b.) (G35)   ( G37)
+G35
+Multipl skleroz
+
+
+G37
+Merkezi sinir sisteminin demiyelinizan hastalıkları, diğer
+G37.0
+Diffüz skleroz
+G37.1
+Korpus kallozumun merkezi demiyelinizasyonu
+G37.2
+Merkezi pontin miyelinolizis
+G37.3
+Akut transvers miyelit, merkezi sinir sisteminin demiyelinizan hastalıklarında
+G37.4
+Subakut nekrotizan miyelit
+G37.5
+Konsantrik skleroz [Balo]
+G37.8
+Merkezi sinir sisteminin diğer tanımlanmış demiyelinizan hastalıkları
+G37.9
+Merkezi sinir sisteminin demiyelinizan hastalıkları, tanımlanmamış
+
+	10.5.1. 	Antiepileptikler
+	10.5.2. 	Baklofen (Ek: RG- 04/09/2019-30878/ 62-d md. Yürürlük: 12/09/2019) (intratekal formları*)
+	10.5.3. 	Copolimer I
+	10.5.4. 	İmmünglobulinler * 
+	10.5.5. 	İmmünsupresif ilaçlar * (azatioprin, siklofosfamid, klorambusil, methotreksate etken maddelerinde endikasyon uyumu aranmayacaktır.)
+	10.5.6. 	İnterferon * 
+	10.5.7. 	Kortikosteroidler
+             10.5.8.     Mitoksantron* 
+	10.5.9.     Dalfampridine* / Fampiridin 
+10.5.10. Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+10.5.11. Alemtuzumab * (Yukarıda tanımlı G35 ICD kodunda muafiyet kapsamındadır) 
+10.5.12. Dimetil fumarat*
+(Ek: RG-09/05/2020-31122/7-ç md. Yürürlük: 16/05/2020)
+10.5.13. Kladribin* (Yukarıda tanımlı G35 ICD kodunda muafiyet kapsamındadır)
+
+10.6. 	Subakut Sklerozan Panansafalit (SSPE) Hastalığı (A81.1)
+A81.1
+Subakut sklerozan panensefalit
+
+	10.6.1. 	Antiepileptikler
+	10.6.2. 	Antiviraller
+	10.6.3. 	İmmünglobulinler * 
+	10.6.4. 	 İmmünsupresif ilaçlar * (azatioprin, siklofosfamid, klorambusil, methotreksate etken maddelerinde endikasyon uyumu aranmayacaktır.)
+	10.6.5. 	Sitostatikler
+	10.6.6.    İnterferon *
+
+10.6.7.   Amantadin *
+10.6.8.    Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+
+10.7. 	Demans (F00)  (F01.1-  F01.9) (F02-F03)  (G30) 
+F00*
+Bunama, Alzheimer hastalığında (G30.-†)
+F00.0*
+Erken başlangıçlı Alzheimer hastalığında bunama (G30.†)
+F00.1*
+Geç başlayan Alzheimer hastalığında bunama (G30.1†)
+F00.2*
+Alzheimer hastalığında bunama, atipik veya karma tip (G30.8†)
+F00.9*
+Alzheimer hastalığında bunama, tanımlanmamış (G30.9†)
+
+
+F01.1
+Multipl enfarktlı bunama
+F01.2
+Subkortikal vasküler bunama
+F01.3
+Karma kortikal ve subkortikal vasküler bunama
+F01.8
+Vasküler bunamalar, diğer
+F01.9
+Vasküler bunama, tanımlanmamış
+
+
+F02*
+Bunama, başka yerde sınıflanmış diğer hastalıklarda
+F02.0*
+Bunama, Pick hastalığında (G31.0†)
+F02.1*
+Bunama, Creutzfeldt-Jakob hastalığında (A81.0†)
+F02.2*
+Bunama, Huntington hastalığında (G10†)
+F02.3*
+Bunama, Parkinson hastalığında (G20†)
+F02.4*
+Bunama, İnsan immünyetmezlik virüs [HIV] hastalığında (B22.0†)
+F02.8*
+Bunama, diğer tanımlanmış, başka yerde sınıflanmış hastalıklarda
+
+
+F03
+Bunama, tanımlanmamış
+
+
+G30
+Alzheimer hastalığı
+G30.0
+Alzheimer hastalığı, erken başlangıçlı
+G30.1
+Alzheimer hastalığı, geç başlangıçlı
+G30.8
+Alzheimer hastalığı, diğer
+G30.9
+Alzheimer hastalığı, tanımlanmamış
+
+	10.7.1. 	Donepezil
+	10.7.2. 	Rivastigmin
+	10.7.3. 	Antipsikotikler (G30 ve alt kodlarında endikasyon uyumu aranacaktır.)
+	10.7.4. 	Galantamin
+	10.7.5. 	Memantin
+10.7.6.     Enteral beslenme ürünleri (Sadece (F00),(F02-F03) kodlarında malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+10.9. 	Serebral palsy (G80)
+G80
+İnfantil serebral palsi
+G80.0
+Spastik serebral palsi
+G80.1
+Spastik dipleji
+G80.2
+İnfantil hemipleji
+G80.3
+Diskinetik serebral palsi
+G80.4
+Ataksik serebral palsi
+G80.8
+İnfantil serebral palsiler, diğer
+G80.9
+İnfantil serebral palsi, tanımlanmamış
+
+	10.9.1.	Baklofen (Ek: RG- 04/09/2019-30878/ 62-d md. Yürürlük: 12/09/2019) (intratekal formları*)
+	10.9.2. 	Botulismus toksini * (SUT’un 4.2.5 numaralı maddesinde yer alan ilkelere göre)
+	10.9.3.   Dantrolen 
+	10.9.4.   Tetrabenazin 
+             10.9.5.   Enteral beslenme ürünleri (malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+10.10. 	Trigeminal nevralji (G50.0)
+G50.0
+Trigeminal nevralji
+
+	10.10.1. 	Karbamazepin
+	10.10.2. 	Difenil hidantoin
+	10.10.3. 	Oksikarbamazepin
+
+10.11. 	Spastisite   (G11.4)  (G81.1)  (G82.1)  (G82.4)
+G11.4
+Herediter spastik parapleji
+
+
+G81.1
+Spastik hemipleji
+
+
+G82.1
+Spastik parapleji
+G82.4
+Spastik tetrapleji
+
+	10.11.1. 	Baklofen (Ek: RG- 04/09/2019-30878/ 62-d md. Yürürlük: 12/09/2019) (intratekal formları*)
+	10.11.2 	Botulismus toksini A * (sadece fokal spastisitede muafiyet kapsamındadır.)
+             (Ek: RG- 25/08/2022-31934/58-ç md. Yürürlük: 03/09/2022)
+             10.11.3. Tolperison hidroklorür*
+10.12. 	Nöropatik ağrı (G53.0) (G52.1) (G56- G63) 
+G53.0
+Postzoster nevralji (B02.2†)
+
+
+G52.1
+Glossofaringeal sinir bozuklukları
+ 
+ 
+G56
+Üst ekstremite mononöropatileri
+G56.0
+Karpal tünel sendromu
+G56.1
+Median sinirin diğer lezyonları
+G56.2
+Ulnar sinir lezyonu
+G56.3
+Radial sinir lezyonu
+G56.4
+Kozalji
+G56.8
+Üst ekstremitenin diğer mononöropatileri
+G56.9
+Üst ekstremite mononöropatisi, tanımlanmamış
+ 
+ 
+G57
+Alt ekstremite mononöropatileri
+G57.0
+Siyatik sinir lezyonu
+G57.1
+Meralgia paraestetika
+G57.2
+Femoral sinir lezyonu
+G57.3
+Lateral popliteal sinir lezyonu
+G57.4
+Medial popliteal sinir lezyonu
+G57.5
+Tarsal tünel sendromu
+G57.6
+Plantar sinir lezyonu
+G57.8
+Alt ekstremitenin diğer mononöropatileri
+G57.9
+Alt ekstremite mononöropatisi, tanımlanmamış
+ 
+ 
+G58
+Mononöropatiler, diğer
+G58.0
+İnterkostal nöropati
+G58.7
+Mononöritis multipleks
+G58.8
+Mononöropatiler diğer, tanımlanmış
+G58.9
+Mononöropati, tanımlanmamış
+ 
+ 
+G59
+Mononöropati, başka yerde sınıflanmış hastalıklarda
+G59.0*
+Diyabetik mononöropati (E10-E14† ortak dördüncü karakterle .4 birlikte)
+G59.8
+Mononöropatiler diğer, başka yerde sınıflanmış hastalıklarda
+ 
+ 
+G60
+Kalıtsal ve idiopatik nöropati
+G60.0
+Kalıtsal motor ve sensoriyal nöropati
+G60.1
+Refsum hastalığı
+G60.2
+Nöropati, kalıtsal ataksi ile birlikte
+G60.3
+İdiopatik ilerleyici nöropati
+G60.8
+Kalıtsal ve idiopatik nöropatiler, diğer
+G60.9
+Kalıtsal ve idiopatik nöropati, tanımlanmamış
+ 
+ 
+G61
+Enflamatuvar polinöropati
+G61.0
+Guillain-Barre sendromu
+G61.1
+Serum nöropatisi
+G61.8
+Enflamatuvar polinöropatiler, diğer
+G61.9
+Enflamatuvar polinöropati, tanımlanmamış
+ 
+ 
+G62
+Polinöropatiler, diğer
+G62.0
+Polinöropati ilaca bağlı
+G62.1
+Alkolik polinöropati
+G62.2
+Polinöropatiler, diğer toksik ajanlara bağlı
+G62.8
+Polinöropatiler tanımlanmış, diğer
+G62.9
+Polinöropati, tanımlanmamış
+ 
+ 
+G63
+Polinöropati, başka yerde sınıflanmış hastalıklarda
+G63.0
+Polinöropati, başka yerde sınıflanmış enfeksiyöz ve parazitik hastalıklarda 
+G63.1*
+Polinöropati, neoplastik hastalıklarda (C00-D48†)
+G63.2*
+Diyabetik polinöropati (E10-E14† ortak dördüncü karakter .4 ile)
+G63.3*
+Polinöropati, diğer endokrin ve metabolik hastalıklarda 
+G63.4*
+Polinöropati, nütrisyonel yetmezlikte (E40-E64†)
+G63.5*
+Polinöropati, sistemik bağ dokusu bozukluklarında (M30-M35†)
+G63.6*
+Polinöropati, diğer musküloskeletal bozukluklarda (M00-M25†, M40-M96†)
+G63.8*
+Polinöropati, başka yerde sınıflanmış diğer hastalıklarda
+
+              (Mülga: RG- 25/03/2025- 32852/ 24-c md. Yürürlük: 04/04/2025)  
+              10.12.2. Karbamazepin
+	
+G63.2*
+Diyabetik polinöropati (E10-E14† ortak dördüncü karakter .4 ile)
+G59.0*
+Diyabetik mononöropati (E10-E14† ortak dördüncü karakterle .4 birlikte)
+
+             (Değişik: RG- 09/05/2024- 32541/20-g md. Yürürlük: 17/05/2024)
+             10.12.1. Gabapentin (sadece diabetik nöropati)
+             10.12.1.   Gabapentin (Sadece G59.0* ve G63.2*)
+             10.12.2. Karbamazepin
+	(Değişik: RG- 09/05/2024- 32541/20-g md. Yürürlük: 17/05/2024)
+	10.12.3. Pregabalin ve kombinasyonları (sadece diabetik nöropati)
+	10.12.4. Alfa lipoik asit (sadece periferik diabetik nöropatide) 
+	10.12.5. Duloksetin (sadece diyabetik periferal nöropatik ağrıda)
+              10.12.3. Pregabalin ve kombinasyonları (Sadece G59.0* ve G63.2*)
+              10.12.4. Alfa lipoik asit (Sadece G63.2*)
+              10.12.5. Duloksetin (Sadece G63.2*)
+10.13. 	Rasmussen ensefaliti   (G05.8)
+G05.8
+Ensefalit, miyelit ve ensefalomiyelit, başka yerde sınıflanmış diğer hastalıklar
+              10.13.1 İmmunglobulinler 
+
+
+10.14. Huntington Hastalığı (G10)
+G10
+Huntington Hastalığı (Sinir Sistemi Hastalıkları)
+	  
+10.14.1. Tetrabenazine 
+
+11. Psikiyatrik hastalıklar
+11.1. 	Genel tıbbi duruma bağlı mental bozukluklar (F04-F07) (F09) (F99) (Z81.0)
+F04
+Organik amnezik sendrom, alkol ve diğer psikoaktif maddelerin sebep olmadığı
+
+
+F05
+Deliryum, alkol ve diğer psikoaktif maddelere bağlı olmayan
+F05.0
+Deliryum, demans üzerine eklenmeyen
+F05.1
+Deliryum, demans üzerine eklenen
+F05.8
+Deliryumlar, diğer
+F05.9
+Deliryum, tanımlanmamış
+
+
+F06
+Mental diğer bozukluklar, beyin hasarı ve disfonksiyonu ve fiziksel hastalıklara bağlı
+F06.0
+Organik hallusinozis
+F06.1
+Organik katatonik bozukluk
+F06.2
+Organik delüzyonel [şizofreni-benzeri] bozukluklar
+F06.3
+Organik duygu [affektivite] bozuklukları
+F06.4
+Organik anksiyete bozuklukları
+F06.5
+Organik disosiyatif bozukluk
+F06.6
+Organik duygusal labilite [astenik] bozukluk
+F06.7
+Hafif bilişsel bozukluk
+F06.8
+Beyin hasarı ve disfonksiyonuna ve fiziksel hastalığa bağlı diğer tanımlanmış mental bozukluklar
+F06.9
+Beyin hasarı ve disfonksiyonuna ve fiziksel hastalığa bağlı tanımlanmamış mental bozukluk
+
+
+F07
+Kişilik ve davranış bozukluğu, beyin hastalığı, hasarı disfonksiyonuna bağlı
+F07.0
+Organik kişilik bozukluğu
+F07.1
+Postensefalitik sendrom
+F07.2
+Postkonküzyonel sendrom
+F07.8
+Beyin hastalığı, hasarı ve disfonksiyonuna bağlı diğer organik kişilik ve davranış bozukluğu
+F07.9
+Beyin hastalığı, hasarı ve disfonksiyonuna bağlı tanımlanmamış organik kişilik ve davranış bozukluğu
+
+
+F09
+Organik veya semptomatik mental bozukluk, tanımlanmamış
+
+
+F99
+Mental bozukluk, başka şekilde sınıflanmamış
+
+
+Z81.0
+Mental retardasyon aile öyküsü
+	11.1.1. 	Antidepresanlar 
+	11.1.2. 	Antiepileptikler * 
+	11.1.3. 	Antipsikotikler 
+	11.1.4. 	Biperiden
+	11.1.5. 	Lityum
+	
+11.2.	Demans    (F00)  (F01.1-  F01.9) (F02-F03)  (G30) 
+F00*
+Bunama, Alzheimer hastalığında (G30.-†)
+F00.0*
+Erken başlangıçlı Alzheimer hastalığında bunama (G30.†)
+F00.1*
+Geç başlayan Alzheimer hastalığında bunama (G30.1†)
+F00.2*
+Alzheimer hastalığında bunama, atipik veya karma tip (G30.8†)
+F00.9*
+Alzheimer hastalığında bunama, tanımlanmamış (G30.9†)
+
+
+F01.1
+Multipl enfarktlı bunama
+F01.2
+Subkortikal vasküler bunama
+F01.3
+Karma kortikal ve subkortikal vasküler bunama
+F01.8
+Vasküler bunamalar, diğer
+F01.9
+Vasküler bunama, tanımlanmamış
+
+
+F02*
+Bunama, başka yerde sınıflanmış diğer hastalıklarda
+F02.0*
+Bunama, Pick hastalığında (G31.0†)
+F02.1*
+Bunama, Creutzfeldt-Jakob hastalığında (A81.0†)
+F02.2*
+Bunama, Huntington hastalığında (G10†)
+F02.3*
+Bunama, Parkinson hastalığında (G20†)
+F02.4*
+Bunama, İnsan immünyetmezlik virüs [HIV] hastalığında (B22.0†)
+F02.8*
+Bunama, diğer tanımlanmış, başka yerde sınıflanmış hastalıklarda
+
+
+F03
+Bunama, tanımlanmamış
+
+
+G30
+Alzheimer hastalığı
+G30.0
+Alzheimer hastalığı, erken başlangıçlı
+G30.1
+Alzheimer hastalığı, geç başlangıçlı
+G30.8
+Alzheimer hastalığı, diğer
+G30.9
+Alzheimer hastalığı, tanımlanmamış
+
+	11.2.1. 	Donepezil
+	11.2.2. 	Rivastigmin
+	11.2.3. 	Antipsikotikler (G30 ve alt kodlarında endikasyon uyumu aranacaktır.)
+	11.2.4.	Galantamin
+	11.2.5. 	Memantin
+
+Şizofreni, şizoaffektif bozukluk, sanrısal bozukluk, atipik psikoz, şizofreniform bozukluk, bipolar mizaç bozukluğu   (F20-F22)  (F24-F25)  (F28-F29) (F31) 
+F20
+Şizofreni
+F20.0
+Paranoid şizofreni
+F20.1
+Hebefrenik şizofreni
+F20.2
+Katatonik şizofreni
+F20.3
+Ayrışmamış şizofreni
+F20.4
+Post-şizofrenik depresyon
+F20.5
+Rezidüel şizofreni
+F20.6
+Basit şizofreni
+F20.8
+Şizofreni, diğer
+F20.9
+Şizofreni, tanımlanmamış
+
+
+F21
+Şizotipal bozukluk
+
+
+F22
+Persistan deluzyonel bozukluklar
+F22.0
+Deluzyonel bozukluk
+F22.8
+Persistan deluzyonel bozukluklar, diğer
+F22.9
+Persistan delusional bozukluk, tanımlanmamış
+
+
+F24
+Deluzyon, başka etkenlerle ortaya çıkan
+
+
+F25
+Şizoafektif bozukluklar
+F25.0
+Şizoafektif bozukluk, manik tip
+F25.1
+Şizoafektif bozukluk, depresif tip
+F25.2
+Şizoafektif bozukluk, karma tip
+F25.8
+Şizoafektif bozukluklar, diğer
+F25.9
+Şizoafektif bozukluk, tanımlanmamış
+
+
+F28
+Organik olmayan psikotik bozukluklar, diğer
+
+
+F29
+Organik olmayan psikoz, tanımlanmamış
+
+
+F31
+Bipolar duygulanım bozukluğu
+F31.0
+Bipolar duygulanım bozukluğu, şimdiki nöbet hiponamik
+F31.1
+Bipolar duygulanım bozukluğu, psikotik belirtisiz şimdiki nöbet manik
+F31.2
+Bipolar duygulanım bozukluğu, psikotik belirtili şimdiki nöbet manik
+F31.3
+Bipolar duygulanım bozukluğu, şimdiki nöbet hafif veya orta şiddetli depresyon
+F31.4
+Bipolar duygulanım bozukluğu, şimdiki nöbet psikotik belirtisiz ağır depresyon
+F31.5
+Bipolar duygulanım bozukluğu, şimdiki nöbet psikotik belirtili ağır depresyon 
+F31.6
+Bipolar duygulanım bozukluğu, şimdiki nöbet karışık
+F31.7
+Bipolar duygulanım bozukluğu, remisyonda
+F31.8
+Bipolar duygulanım bozuklukları, diğer
+F31.9
+Bipolar duygulanım bozukluğu, tanımlanmamış
+
+	11.3.1. 	Antidepresanlar ve kombinasyonları
+	11.3.2. 	Antiepileptikler * 
+	11.3.3. 	Antipsikotikler ve kombinasyonları 
+	11.3.4. 	Biperiden
+	11.3.5. 	Lityum
+
+11.4. 	Anksiyete bozuklukları (panik bozukluk, sosyal fobi, obsesif-kompulsif bozukluk, travma sonrası stres bozukluğu, yaygın anksiyete bozukluğu, somatoform bozukluk,yeme bozuklukları, depresyon [unipolar, bipolar], distimik bozukluk) (F40.1)  (F41.0-F41.2)  (F42)  (F43.1)   (F45)  (F50)   (F32-F34) ( F38-F39)     
+F40.1
+Sosyal fobiler
+
+
+F41.0
+Panik bozukluk [epizodik paroksismal anksiyete]
+F41.1
+Yaygın anksiyete bozukluğu
+F41.2
+Karışık anksiyete ve depresif bozukluk
+
+
+F42
+Obsesif-kompulsif bozukluk
+F42.0
+Baskın obsesyonal düşünceler veya uzun boylu düşünmeler (ruminasyon)
+F42.1
+Baskın kompulsif eylemler [obsesyonal törenler]
+F42.2
+Karışık obsesyonal düşünceler ve eylemler
+F42.8
+Obsesif-kompulsif bozukluklar, diğer
+F42.9
+Obsesif-kompulsif bozukluk, tanımlanmamış
+
+
+F43.1
+Travma sonrası stres bozukluğu
+
+
+F45
+Somatoform bozukluklar
+F45.0
+Somatizasyon bozukluğu
+F45.1
+Ayrışmamış somatoform bozukluk
+F45.2
+Hipokondriak bozukluk
+F45.3
+Somatoform otonom işlev bozukluğu
+F45.4
+İnatçı somatoform ağrı bozukluğu
+F45.8
+Somatoform bozukluklar, diğer
+F45.9
+Somatoform bozukluk, tanımlanmamış
+
+
+F50
+Yeme bozuklukları
+F50.0
+Anoreksia nervosa
+F50.1
+Atipik anoreksia nervosa
+F50.2
+Bulimia nervosa
+F50.3
+Atipik bulimia nervosa
+F50.4
+Aşırı yeme, diğer, psikolojik bozuklukların eşlik ettiği
+F50.5
+Kusma, diğer, psikolojik bozukluklarla ilişkili
+F50.8
+Yeme bozuklukları, diğer
+F50.9
+Yeme bozukluğu, tanımlanmamış tip
+
+
+F32
+Depresif nöbet
+F32.0
+Hafif depresif nöbet
+F32.1
+Orta depresif nöbet
+F32.2
+Psikotik belirtisiz ağır depresif nöbet
+F32.3
+Psikotik belirtili ağır depresif nöbet
+F32.8
+Depresif epizodlar, diğer
+F32.9
+Depresif nöbet, tanımlanmamış
+
+
+F33
+Yineleyen depresif bozukluk
+F33.0
+Yineleyen depresif bozukluk, şimdiki nöbet hafif şiddetli
+F33.1
+Yineleyen depresif bozukluk, şimdiki nöbet orta şiddetli
+F33.2
+Yineleyen depresif bozukluk, şimdiki nöbet psikotik belirtisiz ağır şiddetli
+F33.3
+Yineleyen depresif bozukluk, şimdiki nöbet psikotik belirtili ağır
+F33.4
+Yineleyici depresif bozukluk, remisyonda
+F33.8
+Yineleyen depresif bozukluklar, diğer
+F33.9
+Yineleyen depresif bozukluk, tanımlanmamış
+
+
+F34
+İnatçı duygu durum [duygulanım] bozuklukları
+F34.0
+Siklotimi
+F34.1
+Distimi
+F34.8
+İnatçı duygu durum [duygulanım] bozuklukları, diğer
+F34.9
+İnatçı duygu durum [duygulanım] bozukluğu, tanımlanmamış
+
+
+F38
+Duygu durum [duygulanım] bozuklukları, diğer
+F38.0
+Tek duygu durum [duygulanım] bozuklukları, diğer
+F38.1
+Yineleyen duygu durum [duygulanım] bozuklukları, diğer
+F38.8
+Duygu durum [duygulanım] bozuklukları, diğer tanımlanmış
+
+
+F39
+Duygu durum [duygulanım] bozuklukları tanımlanmamış
+
+	11.4.1. 	Antidepresanlar ve kombinasyonları 
+	11.4.2. 	Antiepileptikler *
+	11.4.3. 	Antipsikotikler ve kombinasyonları 
+	11.4.4. 	Biperiden
+
+11.5. Aktivite ve Dikkat Bozukluğu   (F90.0)
+F90.0
+Aktivite ve dikkat bozukluğu
+
+	  11.5.1.      Metil fenidat
+	  11.5.2.      Atomoksetin hidroklorür
+               (Ek: RG- 25/08/2022-31934/58-d md. Yürürlük: 03/09/2022)
+               11.5.3.      Guanfasin
+
+    (Ek: RG- 25/08/2022-31934/58-e md. Yürürlük: 03/09/2022)
+11.6. Çocukluk otizmi (F84.0)
+F84.0
+Çocukluk otizmi 
+   
+               11.6.1.Aripiprazol*
+               (Ek: RG- 25/03/2025- 32852/ 24-ç md. Yürürlük: 04/04/2025)
+   11.6.2. Melatonin*
+
+               (Ek: RG- 25/03/2025- 32852/ 24-d md. Yürürlük: 04/04/2025)
+11.7. Smith-Magenis sendromu (Q93.5)
+Q93.5
+Smith-Magenis sendromu
+	             
+                  11.7.1. Melatonin*
+
+12. Göz hastalıkları
+12.1. 	Glokom (H40.1-H40.9)
+H40.1
+Primer açık açılı glokom
+H40.2
+Primer kapalı açılı glokom
+H40.3
+Göz travmasına bağlı sekonder glokom
+H40.4
+Göz inflamasyonuna bağlı sekonder glokom 
+H40.5
+Diğer göz bozukluklarına bağlı sekonder glokom 
+H40.6
+İlaca bağlı sekonder glokom 
+H40.8
+Glokomlar, diğer
+H40.9
+Glokom, tanımlanmamış
+
+	12.1.1. 	Bu hastalıkta kullanılan tüm ilaçlar
+
+Kronik ve nükseden üveitler, tiroide bağlı oftalmopati ve sempatik oftalmi, keratoplasti red reaksiyonu (H20.1) (H20.8) (H06.2) (H44.1) (T86.8-T86.9)
+H20.1
+Kronik iridosiklit
+H20.8
+İridosiklit, diğer
+
+
+H06.2*
+Distiroid ekzoftalmus (E05.- †)
+
+
+H44.1
+Endoftalmi, diğer
+
+
+T86.8
+Nakledilen diğer organ ve dokuların reddi
+T86.9
+Nakledilen tanımlanmamış organ ve dokuların reddi
+
+	12.2.1. 	Siklosporin
+	12.2.2. 	Kortikosteroidler
+              (Ek: RG- 28/12/2018-30639/ 41-b md. Yürürlük: 08/01/2019)
+              12.2.3. Adalimumab*
+
+
+12.3. 	Kuru göz sendromu (H04.1)  
+H04.1
+Lakrimal bezin diğer bozuklukları
+
+	12.3.1. 	Suni Gözyaşları 
+	12.3.2. 	Siklosporin topikal preparatları
+
+13. Cilt hastalıkları
+13.1. 	Psoriasis, Vitiligo (L80  )  (L40 )8 L808080L80
+L80
+Vitiligo
+
+
+L40
+Psoriazis
+L40.0
+Psoriazis vulgaris
+L40.1
+Yaygın püstüler psoriazis
+L40.2
+Akrodermatit kontinua
+L40.3
+Püstülosis palmaris et plantaris
+L40.4
+Guttate psoriazis
+L40.5†
+Atropatik psoriazis (M07.0-M07.3*, M09.0*)
+L40.8
+Psoriazis diğer
+L40.9
+Psoriazis, tanımlanmamış
+
+	13.1.1. 	Kalsipotriol (Kortikosteroidlerle kombinasyonu dahil)
+	13.1.2. 	Kortikosteroidler
+	13.1.3. 	Methotreksate
+	13.1.4. 	Retinoidler
+	13.1.5. 	Siklosporinler
+	13.1.6. 	TNF alfa blokerleri (yalnız psoriazis vulgaristemuafiyet kapsamındadır.)
+	13.1.7.    Efalizumab
+	13.1.8.    Kolşisin
+	13.1.9.    Tazarotene*
+	13.1.10.  Pimekrolimus* 
+	13.1.11.   Ustekinumab (yalnız psoriazis vulgariste muafiyet kapsamındadır.)
+13.1.12.   Takrolimus* 
+             13.1.13.   Sekukinumab* 
+             (Ek: RG- 04/09/2019-30878/ 62-e md. Yürürlük: 12/09/2019)
+             13.1.14.   İksekizumab*
+             (Ek: RG- 26/10/2021-31640/ 12-ç md. Yürürlük: 04/11/2021)
+                13.1.15.   Guselkumab* (Yalnızca psoriazis vulgariste muafiyet kapsamındadır.)
+             13.1.16.   Risankizumab* (Yalnızca psoriazis vulgariste muafiyet kapsamındadır.) 
+             (Ek: RG- 19/10/2023-32344/ 16-ç md. Yürürlük: 27/10/2023)
+                13.1.17.   Apremilast *
+             (Ek: RG- 02/11/2024-32710/28-ç md. Yürürlük: 09/11/2024)
+             13.1.18.   Bimekizumab*
+
+13.2. 	Ichtiyosis  (Q80)  (L85.0)
+Q80
+Konjenital iktiyozis
+Q80.0
+İktiyozis vulgaris
+Q80.1
+X-bağlı iktiyozis
+Q80.2
+Lamellar iktiyozis
+Q80.3
+Konjenital büllöz iktioziform eritroderma
+Q80.4
+Palyaço fetüs
+Q80.8
+Konjenital diğer iktiyozis
+Q80.9
+Konjenital iktiyozis, tanımlanmamış
+
+
+L85.0
+Kazanılmış iktiyoz
+
+	13.2.1. 	Retinoidler
+	13.2.2. 	Cildi nemlendirici ve yağlandırıcı preparatlar
+
+
+13.3. 	Pemfigus (L10)
+L10
+Pemfigus
+L10.0
+Pemfigus vulgaris
+L10.1
+Pemfigus vegetans
+L10.2
+Pemfigus foliaseus
+L10.3
+Brezilya pemfigusu [fogo selvagem]
+L10.4
+Pemfigus eritematöz
+L10.5
+İlaca bağlı pemfigus
+L10.8
+Pemfigus, diğer
+L10.9
+Pemfigus, tanımlanmamış
+
+	13.3.1. 	Kortikosteroidler
+	13.3.2. 	İmmünsupresifler
+             (Ek: RG- 16/03/2023-32134/44-b md. Yürürlük: 24/03/2023)
+             13.3.3.     Rituksimab*
+
+13.4. 	Mukozis fungoides (C84.0)
+C84.0
+Mikozis fungoides
+	
+13.4.1.	Antineoplastik ajanlar *(SUT’un 4.2.14 numaralı maddesinde belirtilen endikasyon dışı kullanım izni aranmayacak etken maddeler hariç)
+
+13.5. 	Hidraadenitis suppurativa (L73.2)
+L73.2
+Hidradenitis supurativa
+
+	13.5.1. 	Kortikosteroidler
+	13.5.2. 	Retinoidler
+             13.5.3.	TNF-alfa blokerleri * 
+              (Değişik: RG- 12/12/2024- 32750/ 21-c md. Yürürlük: 20/12/2024)
+	13.5.4. 	Anakinra 
+                 13.5.4.    Anakinra*
+                (Ek: RG-25/11/2025- 33088/ 19-ç md. Yürürlük: 03/12/2025)
+ 13.5.5.    Sekukinumab*
+
+
+13.6. 	Epidermolysis bullosa(Q81)
+Q81
+Epidermolizis bülloza
+Q81.0
+Epidermolizis bülloza simpleks
+Q81.1
+Epidermolizis bülloza letalis
+Q81.2
+Epidermolizis bülloza distrofika
+Q81.8
+Epidermolizis diğer bülloza
+Q81.9
+Epidermolizis bülloza, tanımlanmamış
+
+	13.6.1. 	Hidantoinler
+	13.6.2. 	Kortikosteroidler
+	13.6.3. 	Antibiyotikli pomatlar
+ 13.6.4.    Sikatrizanlar 
+	13.6.5.    Majistral* 
+              13.6.6. Enteral beslenme ürünleri (Sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.) 
+
+13.7. 	Liken (L43)  (L28.0)  (L44.1-L44.3)  (L66.1)  (L90.0)
+L43
+Liken planus
+L43.0
+Hipertrofik liken planus
+L43.1
+Büllöz liken planus
+L43.2
+Likenoid ilaç reaksiyonu
+L43.3
+Subakut (aktif) liken planus
+L43.8
+Liken planus diğer
+L43.9
+Liken planus, tanımlanmamış
+
+
+L28.0
+Lichen simpleks chronicus
+
+
+L44.0
+Pityriasis rubra pilaris
+L44.1
+Liken nitidus
+L44.2
+Liken striatus
+L44.3
+Liken ruber moniliformis
+
+
+L66.1
+Liken planopilaris
+
+
+L90.0
+Liken sklerozus et atrofikus
+
+	13.7.1. 	Siklosporin
+	13.7.2. 	Retinoidler
+	13.7.3. 	Kortikosteroidler 
+
+13.8. 	Pyoderma gangronosum (L88)
+L88
+Pyoderma gangrenosum 
+
+	13.8.1. 	Siklosporin
+             13.8.2.    Kortikosteroidler
+
+13.9.      Epidermodisplasia verruciformis (B07.8)
+B07.8
+Epidermodisplasia verruciformis
+
+	 13.9.1.    İnterferon *
+              13.9.2.    Asitretin *
+
+13.10. 	Kronik İdiyopatik ürtiker (L50.1)
+L50.1
+İdiyopatik (Spontan) Ürtiker
+
+	13.10.1. Omalizumab 
+
+13.11.      Darier (Q82.8)
+Q82.8
+Derinin diğer tanımlanmış konjenital malformasyonları
+	
+	13.11.1  Asitretin*
+
+13.12.     Sistemik Mastositoz (Q82.2) 
+              13.12. 1. İmatinib* 
+
+Q82.2
+Mastositoz
+
+             
+ (Ek: RG- 01/02/2019-30673/ 21-a md. Yürürlük: 09/02/2019)
+13.13.    Atopik dermatit (L20)
+             (Değişik: RG- 02/11/2024- 32710/28-d md. Yürürlük: 09/11/2024)
+              13.13.1. Dupilumab
+              13.13.1. Dupilumab*
+              (Ek: RG- 09/05/2024-32541/20-ğ md. Yürürlük: 17/05/2024)
+              13.13.2. Abrositinib*
+              13.13.3. Upadasitinib*
+              (Ek: RG-26/04/2025-32882/14-b md. Yürürlük: 04/04/2025)
+	13.13.4. Barisitinib*
+
+
+14. Enfeksiyon hastalıkları 
+14.1. Hepatit B, C, D   (Bkz. 6.1 maddesi)
+
+14.2. 	AİDS (HIV) (B20- B24) (Ek: RG-25/11/2025-33088/19-d md. Yürürlük:03/12/2025) (Z20.6)                                                                                      
+
+B20
+İnsan immünyetmezlik virüsü [HIV] hastalığı, enfeksiyöz ve
+B20.0
+HIV hastalığı sonucu mikobakteri enfeksiyonu
+B20.1
+HIV hastalığı sonucu diğer bakteriyel enfeksiyonlar
+B20.2
+HIV hastalığı sonucu sitomegalovirüs hastalığı
+B20.3
+HIV hastalığı sonucu diğer viral enfeksiyonlar
+B20.4
+HIV hastalığı sonucu kandidiyaz
+B20.5
+HIV hastalığı sonucu diğer mikozlar
+B20.6
+HIV hastalığı sonucu Pneumocystis carinii pnömonisi
+B20.7
+HIV hastalığı sonucu multipl enfeksiyon
+B20.8
+HIV hastalığı sonucu diğer enfeksiyöz ve paraziter hastalıklar
+B20.9
+HIV hastalığı sonucu tanımlanmamış enfeksiyöz ve paraziter hastalıklar
+
+
+B21
+İnsan immünyetmezlik virüsü [HIV] hastalığı, malign neoplazmlar ile sonuçlanan
+B21.0
+HIV hastalığı sonucu Kaposi sarkomu
+B21.1
+HIV hastalığı sonucu Burkitt lenfoması
+B21.2
+HIV hastalığı sonucu diğer non-Hodgkin lenfoma türleri
+B21.3
+HIV hastalığı sonucu diğer lenfoid, hematopoetik ve ilgili dokuların malign neoplazmları
+B21.7
+HIV hastalığı sonucu birden fazla malign neoplazm
+B21.8
+HIV hastalığı sonucu diğer malign neoplazmlar
+B21.9
+HIV hastalığı sonucu tanımlanmamış malign neoplazmlar
+
+
+B22
+İnsan immünyetmezlik virüsü [HIV] hastalığı, diğer tanımlanmış hastalıklarla 
+B22.0
+HIV hastalığı sonucu ensefalopati
+B22.1
+HIV hastalığı sonucu lenfoid interstisiyel pnömoni
+B22.2
+HIV hastalığı sonucu erime sendromu
+B22.7
+HIV hastalığı sonucu başka yerde sınıflanmış birden fazla hastalık
+
+
+B23
+İnsan immünyetmezlik virüsü [HIV] hastalığı, diğer durumlar ile sonuçlanan
+B23.0
+Akut HIV enfeksiyonu sendromu
+B23.1
+HIV hastalığı sonucu (persistan) yaygın lenfadenopati
+B23.2
+HIV hastalığı sonucu hematolojik ve immünolojik anormallikler, başka 
+B23.8
+HIV hastalığı sonucu diğer tanımlanmış durumlar
+
+
+B24
+İnsan immünyetmezlik virüsü [HIV] hastalığı, tanımlanmamış,
+Z20.6             (Ek: RG-25/11/2025- 33088/19-d md. Yürürlük: 03/12/2025)
+İnsan immünyetmezlik virüsü [HIV]’ ne temas ve maruz kalma
+
+	 14.2.1.	   Antiviraller (Ek: RG-25/11/2025- 33088/19-d md. Yürürlük:03/12/2025) (Z20.6   Kodu ile ödenmesi sadece bir aylık dozda ve çocuk hastalar içindir.)
+	14.2.2. 	Antibakteriyeller
+	14.2.3. 	Antifungaller
+	14.2.4. 	Antituberküloz ilaçlar
+
+14.3. 	Sistemik mantar enfeksiyonları (B37.1)  (B37.5- B37.7)  (B38.1- B38.9)  (B39.1- B39.9)  (B40.1- B40.9) (B41 - B47)
+B37.1
+Akciğer kandidiyazı
+B37.5†
+Kandidal menenjit (G02.1*)
+B37.6†
+Kandidal endokardit (I39.8*)
+B37.7
+Kandidal septisemi
+
+
+B38.1
+Kronik akciğer koksidioidomikozu
+B38.2
+Akciğer koksidioidomikozu, tanımlanmamış
+B38.3
+Deri koksidioidomikozu
+B38.4†
+Koksidioidomikoz menenjiti (G02.1*)
+B38.7
+Dissemine koksidioidomikoz
+B38.8
+Koksidioidomikoz türleri, diğer
+B38.9
+Koksidioidomikoz, tanımlanmamış
+
+
+B39.1
+Kronik pulmoner histoplasmosis capsulati
+B39.2
+Pulmoner histoplasmosis capsulati, tanımlanmamış
+B39.3
+Dissemine histoplasmosis capsulati
+B39.4
+Histoplasmosis capsulati, tanımlanmamış
+B39.5
+Histoplasmosis duboisii
+B39.9
+Histoplazmoz, tanımlanmamış
+
+
+B40.1
+Kronik akciğer blastomikozu
+B40.2
+Akciğer blastomikozu, tanımlanmamış
+B40.3
+Deri blastomikozu
+B40.7
+Dissemine blastomikoz
+B40.8
+Blastomikoz, diğer formları
+B40.9
+Blastomikoz, tanımlanmamış
+
+
+B41
+Parakoksidioidomikoz
+B41.0
+Akciğer parakoksidioidomikozu
+B41.7
+Dissemine parakoksidioidomikoz
+B41.8
+Parakoksidioidomikoz, diğer formları
+B41.9
+Parakoksidioidomikoz, tanımlanmamış
+
+
+B42
+Sporotrikoz
+B42.0†
+Akciğer sporotrikozu (J99.8*)
+B42.1
+Lenfokutanöz sporotrikoz
+B42.7
+Dissemine sporotrikoz
+B42.8
+Sporotrikoz, diğer formları
+
+
+B43
+Kromomikoz ve faomikotik apse
+B43.0
+Deri kromomikozu
+B43.1
+Faomikotik beyin apsesi
+B43.2
+Deri altı faomikotik apse ve kisti
+B43.8
+Kromomikoz, diğer formları
+B43.9
+Kromomikoz, tanımlanmamış
+
+
+B44
+Aspergilloz
+B44.0
+İnvaziv pulmoner aspergilloz
+B44.1
+Pulmoner aspergillozlar, diğer
+B44.2
+Tonsiller aspergilloz
+B44.7
+Dissemine aspergilloz
+B44.8
+Aspergilloz, diğer formları
+B44.9
+Aspergilloz, tanımlanmamış
+
+
+B45
+Kriptokokoz
+B45.0
+Akciğer kriptokokozu
+B45.1
+Serebral kriptokokoz
+B45.2
+Deri kriptokokozu
+B45.3
+Kemik kriptokokozu
+B45.7
+Dissemine kriptokokoz
+B45.8
+Kriptokokoz, diğer formları
+B45.9
+Kriptokokoz, tanımlanmamış
+
+
+B46
+Zigomikoz
+B46.0
+Akciğer mukormikozu
+B46.1
+Rinoserebral mukormikoz
+B46.2
+Gastrointestinal mukormikoz
+B46.3
+Deri mukormikozu
+B46.4
+Dissemine mukormikoz
+B46.5
+Mukormikoz, tanımlanmamış
+B46.8
+Zigomikozlar, diğer
+B46.9
+Zigomikoz, tanımlanmamış
+
+
+B47
+Miçetoma
+B47.0
+Ömiçetoma
+B47.1
+Aktinomiçetoma
+B47.9
+Miçetoma, tanımlanmamış
+	
+                14.3.1. Antifungaller (Parenteral veya oral formları)
+
+              (Ek: RG- 01/02/2019-30673/ 21-b md. Yürürlük: 09/02/2019)
+14.4.      Leishmaniasis (B55)
+	14.4.1. Miltefosine
+
+15. Diğer hastalıklar
+15.1.       Amiloidozis (E85.1-E85.9)
+
+E85.0
+(Ek: RG- 16/03/2023-32134/44-c md. Yürürlük: 24/03/2023)
+Heredofamilyal amiloidozis, nöropatik olmayan
+E85.1
+Herodofamilyal amiloidozis, nöropatik
+E85.2
+Amiloidozis, herodofamilyal tanımlanmamış
+E85.3
+Amiloidozis, sekonder sistemik
+E85.4
+Amiloidozis, organla sınırlı
+E85.8
+Amiloidozis, diğer
+E85.9
+Amiloidozis, tanımlanmamış
+
+	15.1.1. 	Kolşisin
+	15.1.2. 	Kortikosteroidler
+	15.1.3. 	Melfalan
+	15.1.4.    Tafamidis Meglumine*
+              (Ek: RG- 16/03/2023-32134/44-c md. Yürürlük: 24/03/2023)
+             15.1.5.     Tafamidis*
+	(Ek: RG- 02/11/2024-32710/28-e md. Yürürlük: 09/11/2024)
+	15.1.6.    Daratumumab* (yalnızca SC formu)
+
+15.2. 	Behçet hastalığı (M35.2)    
+M35.2
+Behçet hastalığı  
+
+	15.2.1. 	Antikoagülanlar
+	15.2.2. 	İmmünsupresif ilaçlar *
+	15.2.3.	İnterferon *
+	15.2.4.   Kolşisin
+	15.2.5.   Kortikosteroidler
+             15.2.6.   Anti-TNF*
+
+15.3. 	Sarkoidosis (D86)
+D86
+Sarkoidoz
+D86.0
+Akciğer Sarkoidozu 
+D86.1
+Lenf nodları Sarkoidozu 
+D86.2
+Akciğer Sarkoidozu, lenf nodları sarkoidozu ile birlikte
+D86.3
+Deri Sarkoidozu
+D86.8
+Sarkoidozu, diğer ve kombine yerlerin
+D86.9
+Sarkoidoz, tanımlanmamış
+
+Kortikosteroidler
+Anti-TNF*
+İmmünsupresifler*
+Bronkodilatörler*
+
+15.4. 	Barsak operasyonundan dolayı oluşan malabsorbsiyonlar ve malnütrisyonlar. İlk iki yaşta inek sütü alerjisi. Doğuştan metabolik ve kalıtsal hastalıklar
+15.4.1. Barsak operasyonundan dolayı oluşan malabsorbsiyonlar ve malnütrisyonlar. İlk iki yaşta inek sütü alerjisi. Doğuştan metabolik ve kalıtsal hastalıklar (G.71.0) (K52.2) (T78.1) (K91.2) (E70-E72) (E74-E77) (E79-E80) (E88.0) (E88.2) (E88.8) (E88.9)
+K91.2
+Malabsorbsiyon cerrahi sonrası, başka yerde sınıflanmamış
+G71.0
+Musküler distrofi (Duchenne veya Becker'i andıran dahil) 
+K52.2
+Allerjik ve dietetik gastroenterit ve kolit (yalnızca inek sütü alerjisi için)
+T78.1
+Ters gıda reaksiyonları diğer, başka yerde sınıflanmamış (yalnızca inek sütü alerjisi için)
+
+
+E70
+Aromatik amino-asit metabolizması bozuklukları
+E70.0
+Klasik fenilketonüri
+E70.1
+Hiperfenilalaninemiler, diğer
+E70.2
+Tirozin metabolizması bozuklukları
+E70.3
+Albinizm
+E70.8
+Aromatik amino-asit metabolizması diğer bozuklukları
+E70.9
+Aromatik amino-asit metabolizması bozuklukları, tanımlanmamış
+
+
+E71
+Dallı-zincirli amino-asit metabolizması ve yağ-asidi metabolizması bozuklukları
+E71.0
+Maple-şurup-idrar hastalığı
+E71.1
+Dallı-zincirli amino-asit metabolizmasının diğer bozuklukları
+E71.2
+Dallı-zincirli amino-asit metabolizması bozuklukları, tanımlanmamış
+E71.3
+Yağ-asidi metabolizması bozuklukları
+
+
+E72
+Amino-asit metabolizmasının diğer bozuklukları
+E72.0
+Amino-asit taşıma bozuklukları
+E72.1
+Sülfür-taşıyan amino-asit metabolizması bozuklukları
+E72.2
+Üre siklus metabolizması bozuklukları
+E72.3
+Lizin ve hidroksilizin metabolizması bozuklukları
+E72.3
+Lizin ve hidroksilizin metabolizması bozuklukları
+E72.4
+Ornitin metabolizması bozuklukları
+E72.5
+Glisin metabolizması bozuklukları
+E72.8
+Amino-asit metabolizması diğer tanımlanmış bozuklukları
+E72.9
+Amino asit metabolizması bozuklukları, tanımlanmamış
+
+
+E74
+Karbonhidrat metabolizmasının diğer bozuklukları
+E74.0
+Glikojen depo hastalıkları
+E74.1
+Fruktoz metabolizma bozuklukları
+E74.2
+Galaktoz metabolizması bozuklukları
+E74.3
+Barsak karbonhidrat emilimi diğer bozuklukları
+E74.4
+Piruvat metabolizması ve glukoneojenez bozuklukları
+E74.8
+Karbonhidrat metabolizması tanımlanmış diğer bozuklukları
+E74.9
+Karbonhidrat metabolizması bozuklukları, tanımlanmamış
+
+
+E75
+Sfingolipid metabolizması bozuklukları ve diğer lipid depo bozuklukları
+E75.0
+GM2 gangliosidozis
+E75.1
+Gangliosidozlar, diğer
+E75.2
+Sifingolipidozlar, diğer
+E75.3
+Sfingolipidozis, tanımlanmamış 
+E75.4
+Nöronal seroid lipofuksinoz
+E75.5
+Lipid depo bozuklukları, diğer
+E75.6
+Lipid depo bozukluğu, tanımlanmamış
+
+
+E76
+Glikozaminoglikan metabolizması bozuklukları
+E76.0
+Mukopolisakkaridoz, tip I
+E76.1
+Mukopolisakkaridoz, tip II
+E76.2
+Mukopolisakkaridozlar, diğer
+E76.3
+Mukopolisakkaridoz, tanımlanmamış
+E76.8
+Glikozaminoglikan metabolizmasının diğer bozuklukları
+E76.9
+Glikozaminoglikan metabolizması bozuklukları, tanımlanmamış
+
+
+E77
+Glikoprotein metabolizması bozuklukları
+E77.0
+Lizozomal enzimlerin translasyon sonrası modifikasyon kusurları
+E77.1
+Glikoprotein yıkım defektleri
+E77.8
+Glikoprotein metabolizmasının diğer bozuklukları
+E77.9
+Glikoprotein metabolizması bozuklukları, tanımlanmamış
+
+
+E79
+Purin ve pirimidin metabolizması bozuklukları
+E79.0
+Hiperürisemi, enflamatuvar artrit ve tofüs hastalığı bulgularının bulunmadığı
+E79.1
+Lesch-Nyhan sendromu
+E79.8
+Pürin ve pirimidin metabolizması diğer bozuklukları
+E79.9
+Pürin ve pirimidin metabolizması bozuklukları, tanımlanmamış
+
+
+E80
+Porfirin ve bilirubin metabolizması bozuklukları
+E80.0
+Herediter eritropoetik porfiri
+E80.1
+Porfiri kutena tarda
+E80.2
+Porfiri, diğer
+E80.3
+Katalaz ve peroksidaz defektleri
+E80.4
+Gilbert sendromu
+E80.5
+Crigler-Najjar sendromu
+E80.6
+Bilirubin metabolizmasının diğer bozuklukları
+E80.7
+Bilirubin metabolizması bozuklukları, tanımlanmamış
+
+
+E88.0
+Plazma-protein metabolizması bozuklukları, başka yerde sınıflanmamış
+E88.1
+Lipodistrofi, başka yerde sınıflanmamış 
+E88.2
+Lipomatozis, başka yerde sınıflanmamış
+E88.8
+Metabolik bozukluklar diğer tanımlanmamış
+E88.9
+Metabolik bozukluklar, tanımlanmamış
+
+	15.4.1.1 	Enzim preparatları ve bu grup hastalıkların tedavisine yönelik spesifik ilaçlar ve özel formüllü besleyiciler 
+	15.4.1.2.   Vitaminler (Biotin K91.2, K52.2 ve T78.1 kodlarında muafiyet kapsamında bulunmamaktadır.)   
+	15.4.1.3.   Sodyum Dikloroasetat
+	15.4.1.4.   İyonik Magnezyum*
+          	15.4.1.5. Demir şelatörü ajanlar*
+              (Değişik: RG- 28/12/2018-30639/ 41-c md. Yürürlük: 08/01/2019)
+	15.4.1.6. Ketojenik tıbbi mama (E74.4 ICD-10 kodu ile ve SUT eki Ek-4/F listesi 61 numaralı maddesinde yer alan ilkelere göre)
+             15.4.1.6. Ketojenik tıbbi mama (E74.0 da tanımlanan hastalıklardan kalp ve/veya kas tutulumu olanlarda veya E74.4 de tanımlanan hastalıklardan piruvat dehidrogenaz eksikliği olanlarda veya E74.9 da tanımlanan hastalıklardan sadece GLUT 1 eksikliği olan hastalarda ve SUT eki EK-4/F listesi 61 numaralı maddesinde yer alan ilkelere göre)
+15.4.1.7. Karnitin (yalnızca E71.1 ve E72.3 ICD 10 kodlarında ve primer karnitin yetmezliği olanlarda muafiyet kapsamındadır.) 
+15.4.1.8. Nitisinon* (yalnızca E70.2 ICD kodunda muaftır.) 
+	15.4.1.9. Enteral beslenme ürünleri (E70.3, E74.9, E80.3, E80.4, E80.5, E80.6, E80.7, E88.0, E88.2 ve E88.9 kodlarında muafiyet kapsamında bulunmamaktadır.) (Ek: RG-25/08/2022-31934/58-f md. Yürürlük:03/09/2022) Bunların dışında kalan ICD-10 kodlarında; çocukluk çağında muafiyet kapsamında, yetişkinlerde ise sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.
+	15.4.1.10. Metreleptin* (Sadece E.88.1 ICD kodu kullanılarak konjenital jeneralize lipodistrofi tanısında ve Konjenital Leptin Eksikliği tanısında muaftır.) 
+            (Değişik: RG- 25/08/2022- 31934/58-g md. Yürürlük: 03/09/2022)
+            15.4.1.11. Kolik asit* (Sadece E.88.8 ICD kodu kullanılarak 3 Beta Hidroksi Steroid Dehidrogenaz (BHSD) tanısında muaftır.) 
+15.4.1.11. Kolik asit* (Sadece E.88.8 veya E88.9 ICD kodu kullanılarak kalıtsal safra asit metabolizması bozuklukları tanısında muaftır.)
+            (Değişik: RG-08/04/2026- 33218/ 13-ç md. Yürürlük: 16/04/2026) 
+	15.4.1.12.Hydroxybutyric acid (Sadece E74.0 ICD kodu kullanılarak Glikojen Depo Hastalığı Tip 3 tanısında muaftır.) 
+	15.4.1.12. Hydroxybutyric acid (E74.0 ICD kodu kullanılarak Glikojen Depo Hastalığı Tip 3 tanısında ve E71.3 kodu kullanılarak Multipl Açil-KoA Dehidrogenaz eksikliği tanılarında muaftır.)
+              (Ek: RG- 28/12/2018-30639/ 41-ç md. Yürürlük: 08/01/2019)
+            15.4.1.13. Alfa-1-Proteinaz inhibitörü, insan* (Sadece E88.0 ICD kodu kullanılarak alfa-1 antitripsin eksikliği tanısında muaftır)
+              (Ek: RG- 01/02/2019-30673/ 21-c md. Yürürlük: 09/02/2019)
+            15.4.1.14. LNNA (Large Neutral Amino Acids) (Sadece E70.0 ICD kodu kullanılarak klasik fenilketonüri tanısında muaftır)
+              (Ek: RG- 09/05/2020-31122/7-d md. Yürürlük: 05/05/2020)
+            15.4.1.15. Sodium benzoate (Sadece E72.2 ICD kodu kullanılarak üre siklus metabolizması bozuklukları (Ek: RG-28/04/2021-31468/26-g md. Yürürlük:06/05/2021) ve Nonketotik hiperglisinemi, glisin metabolizması bozuklukları/glisin ensefalopatisi endikasyonu tanısında muaftır.)
+             (Ek: RG-16/06/2020-31157/24-b md. Yürürlük: 24/06/2020)
+            15.4.1.16. (Ek:RG-25/08/2022-31934/58-ğ md. Yürürlük:03/09/2022) Karglumik asit* (Mülga: RG-30/12/2020-31350/17-c md. Yürürlük:24/06/2020) * (Yalnızca E72.2 ICD-10 kodunda N-asetilglutamat sentaz primer yetmezliğine bağlı hiperamonyemi tanısında muaftır.)
+             (Ek: RG-28/04/2021-31468/26-ğ md. Yürürlük:06/05/2021)
+             15.4.1.17. Vestronidase alfa* (Yalnızca E76.2 Diğer mukopolisakkaridozlar ICD-10 kodunda Mukopolisakkaridoz Tip VII tanısında muaftır.)
+             (Ek: RG-26/10/2021-31640/12-d md. Yürürlük:04/11/2021)
+             15.4.1.18. Sodyum fenilbütirat*
+             (Ek: RG- 21/04/2022-31816/10 md. Yürürlük: 29/04/2022)
+15.4.1.19. Betain anhidroz *
+(Ek: RG- 16/03/2023-32134/44-ç md. Yürürlük: 24/03/2023)
+15.4.1.20. Sisteamin hidroklorür (Merkaptamin hidroklorür) *
+(Ek: RG- 17/01/2026-33140/22 md. Yürürlük: 24/01/2026)
+            15.4.1.21.    Migalastat*
+
+15.4.2. MNGIE (Mitokondriyal Nörogastrointestinal Ensefalomiyelopati) (E88.8)
+E88.8
+Metabolik bozukluklar diğer tanımlanmamış
+
+	15.4.2.1.   Enzim preparatları ve bu grup hastalıkların tedavisine yönelik spesifik ilaçlar ve özel formüllü besleyiciler 
+	15.4.2.2.   Vitaminler, Mineraller, Elektrolit çözeltileri
+	15.4.2.3.   Sodyum Dikloroasetat
+	15.4.2.4.   Heparin 
+	15.4.2.5.   Parenteral beslenme ürünleri
+             15.4.2.6. Enteral beslenme ürünleri (Ek: RG-25/08/2022-31934/58-h md. Yürürlük: 03/09/2022) (Yetişkinlerde sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.)
+15.4.3.   Herediter Anjioödem (E88.0)
+E88.0
+Plazma-protein metabolizması bozuklukları, başka yerde sınıflanmamış
+
+	15.4.3.1. Danazol *
+	15.4.3.2. Traneksamik asit *
+	15.4.3.3. İcatibant *
+	15.4.3.4. Ecallantide *  
+(Ek: RG- 08/04/2026- 33218/ 13-d md. Yürürlük: 01/07/2026)
+	15.4.3.5. Lanadelumab *
+
+15.5. 	Kistik fibrozis (Mukovizidozis) (E84)
+E84
+Kistik fibrozis
+E84.0
+Kistik fibrozis, akciğer tutulumu ile birlikte
+E84.1
+Kistik fibrozis, barsak tutulum ile birlikte
+E84.8
+Kistik fibrozis, diğer tutulumlar ile birlikte
+E84.9
+Kistik fibrozis, tanımlanmamış
+
+	 15.5.1. 	Enzim preparatları
+	 15.5.2. 	Tobramisin inhaler
+	 15.5.3.   Gentamisin (parenteral)
+         15.5.4. Enteral beslenme ürünleri (Ek:RG-25/08/2022-31934/58-h md. Yürürlük:03/09/2022) (Yetişkinlerde sadece malnütrisyon gelişmiş hastalarda muafiyet kapsamındadır.)
+    15.5.5.   Makrolid grubu antibiyotikler  
+ 15.5.6.   Kolistimetat sodyum   
+ 15.5.7.   Özel formüllü besleyiciler*
+ 15.5.8.   A,D,E,K Vitaminlerinin tamamı ile birlikte mineraller içeren kombine preparatlar* 
+    
+
+    (Ek: RG-10/07/2025-32952/5-b md. Yürürlük: 26/07/2025)
+ 15.5.9.   Elexacaftor/Tezacaftor/Ivacaftor and Ivacaftor *
+
+15.6. 	Alerjik hastalıklar (T63.4) (X23)
+T63.4
+Artropotların diğer zehirinin toksik etkisi
+X23
+Eşek arısı ve arılarla temas
+
+	15.6.1. 	Yalnızca arı venom alerjisi aşıları
+              15.6.2.   Adrenalin otoenjektör
+
+15.7. 	Kuduz serumları (Z20.3)
+Z20.3
+Kuduza temas ve maruz kalma
+
+Hepatit-A aşıları ve Hepatit-B  serumları (Z20.4) (Z20.5)
+Z20.4
+Rubellaya temas ve maruz kalma
+Z20.5
+Viral hepatite temas ve maruz kalma
+
+15.9. 	Tetanoz serumları (A33)  ( A34) ( A35)  ( Z29.8)
+A33
+Yenidoğan Tetanozu
+A34
+Gebelik Tetanozu
+A35
+Tetanoz, diğer
+Z29.8
+Profilaktik tedbirler diğer, tanımlanmış
+
+15.10. 	Osteomiyelit (M86.3- M86.6)
+M86.3
+Kronik multifokal osteomyelit
+M86.4
+Kronik osteomyelit, direne sinüs ile
+M86.5
+Kronik hematojenöz osteomyelit, diğer
+M86.6
+Kronik osteomyelit, diğer
+
+	15.10.1. 	Antibiyotikler (Ek: RG-25/08/2022-31934/58-ı md. Yürürlük: 03/09/2022) (Enfeksiyon hastalıkları uzman hekimi raporuna dayanılarak tüm uzman hekimlerce reçete edilebilir.) 
+15.11. 	Nörojenik mesane (N31)
+N31
+Mesanenin nöromusküler fonksiyon bozukluğu, başka yerde sınıflanmamış
+N31.0
+Baskılanamamış nöropatik mesane, başka yerde sınıflanmamış
+N31.1
+Refleks nöropatik mesane, başka yerde sınıflanmamış
+N31.2
+Flask nöropatik mesane, başka yerde sınıflanmamış
+N31.8
+Mesanenin diğer nöromusküler disfonksiyonları
+N31.9
+Mesanenin nöromusküler disfonksiyonu, tanımlanmamış
+
+	15.11.1. 	Tolterodine-L  
+	15.11.2. 	Oksibutin   
+	15.11.3. 	Trospium    
+	15.11.4.   Propiverin     
+	15.11.5.   Darifenasin
+	15.11.6.   Solifenasin
+	15.11.7.   Fesoterodin 
+	15.11.8.   Mirabegron 
+
+15.12    Respiratuvar sinsisyal virüs enfeksiyonunun önlenmesi için immünizasyon (B97.4)
+B97.4
+Respiratuvar sinsisyal virüs, diğer bölümlerde sınıflanmış hastalıkların etkeni
+	 15.12.1.   Palivizumab*
+
+Ailesel (herediter) oto inflamatuar hastalıklar (CAPS, NOMİD, FMF ve muckle wells sendromu) (E85.0) (L50.8)
+E85.0
+Heredofamilyal amiloidozis, nöropatik olmayan
+L50.8
+Ürtiker, diğer
+
+  15.13.1.   Anakinra*
+  15.13.2.   Tociluzumab*
+     15.13.3    Canakimumab *
+
+Pierre Robin Sendromu (Q87.0)
+Q87.0
+Yüz görünüşünü etkileyen konjenital malformasyon sendromları
+	
+ Enteral beslenme ürünleri 
+
+Gastrostomi durumu (Z93.1, Z93.4) 
+Z93.1
+Gastrostomi durumu
+Z93.4
+Gastrointestinal yol diğer yapay açıklıklar (Oro-gastrik/nazo-enterik) 
+15.15.1. Enteral beslenme ürünleri 
+
+Periyodik ateş (R50.9)
+R50.9
+Ateş, tanımlanmamış
+                15.16.1.   Canakimumab *
+	      (Ek: RG- 12/12/2024- 32750/ 21-ç md. Yürürlük: 20/12/2024)
+                15.16.2.    Anakinra*
+
+15.17.    Tuberoskleroz (Q85.1)
+Q85.1
+   Tuberoskleroz
+15.17.1. Everolimus *
+
+15.18. Mitokondrial hastalık+metabolik asidoz (E88.9)
+E88.9
+Metabolik bozukluklar tanımlanmamış
+
+    15.18.1. Sodyum bikarbonat *
+
+15.19. Hemipleji, parapleji, tetrapleji ve spinal kord yaralanmalarına bağlı gastrointestinal fonksiyon bozukluğu (G81-G82) (T91.3)
+G81
+   Hemipleji
+G81.0
+   Flaksid hemipleji
+G81.1
+   Spastik hemipleji
+G81.9
+   Hemipleji, tanımlanmamış
+
+
+G82
+   Parapleji ve tetrapileji
+ G82.0
+   Flaksid parapleji
+G82.1
+   Spastik parapleji
+G82.2
+   Parapleji, tanımlanmamış
+G82.3
+   Flaksid tetrapleji
+G82.4
+   Spastik tetrapleji
+G82.5
+   Tetrapleji, tanımlanmamış
+
+
+T91.3
+   Spinal kord yaralanması sekeli
+
+15.19.1. Gliserol+sorbitol içeren laksatifler
+
+             (Ek: RG-28/04/2021-31468/26-h md. Yürürlük:06/05/2021)
+15.20.    İnterstisyel sistit (kronik) (N30.1)
+N30.1
+    İnterstisyel sistit (kronik)
+
+
+              15.20.1. Pentosan Polisülfat Sodyum* 
+
+             (Ek: RG-26/10/2021-31640/12-e md. Yürürlük:04/11/2021)
+15.21. Prader-Willi Sendromu (Q87.1)
+
+Q87.1
+Kısa boy ile birlikte olan konjenital malformasyon sendromları
+
+                 15.21.1. Büyüme hormonu *(Yalnızca Prader-Willi Sendromu (PWS) tanısında muaftır.) (SUT’un 4.2.6.A-4 numaralı maddesinde yer alan ilkelere göre)   
+ 
+            (Ek: RG- 25/08/2022-31934/58-i md. Yürürlük: 03/09/2022)
+15.22. Zellweger Sendromu (Q 87.8)
+Q87.8
+   Sendromlar diğer tanımlanmış, başka yerde sınıflanmamış
+
+
+15.22.1. Kolik asit*
+
+
+	NOT:
+1- Bu liste, ilaçların etken maddeleri dikkate alınarak düzenlenmiş olmakla birlikte Bedeli Ödenecek İlaçlar Listesinde (EK-4/A) yer almayan herhangi bir ilacın ödenmesi veya muafiyeti mümkün değildir.
+2- (*) İşaretli etken madde veya grupların kullanımında endikasyon uyumu aranacak, Sağlık Bakanlığınca izin verilen endikasyon dışında kullanımları da ancak Sağlık Bakanlığınca yayımlanan Endikasyon Dışı Kullanım Kılavuzunda tanımlanan veya Sağlık Bakanlığınca verilen onayla mümkün olacaktır.)
+	3- Listede ICD – 10 Kodları yalnızca ana kod olarak yazılı ise alt kodlar dahildir. Parantez içinde ana kodlar aralığı belirtilmiş ise bu kodlar aralığında yer alan ana kodlar ve bu kodlara ait alt kodlamalara ait tanılar dahildir. Ana kod belirtilmeyip alt kod belirtilmiş ise yalnızca bu alt kodun muafiyeti mümkündür.
+
+           (RG- 10/05/2018- 30417/ 32-ç md. Yürürlük: 10/05/2018)
+
+
+
+
+
+
+
+
+
+
+PAGE  62
+
+
+
+
