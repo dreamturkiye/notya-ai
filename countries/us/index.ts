@@ -21,7 +21,11 @@ const metin = paketMetinleri({
   metinler: { 'en-US': cekirdek },
 })
 
-/** Phone number: +1 and ten digits (area code and exchange each beginning 2 to 9), in any common spelling. UNVERIFIED format rule; mobile and fixed numbers cannot be told apart here. */
+/**
+ * Phone number: ten digits, with or without +1 or 1 in front (area code and exchange each beginning 2 to 9), in any
+ * common spelling. The shape is the numbering plan's own, NXX-NXX-XXXX with N = 2 to 9 (nanpa.com/about, read
+ * 2026-10-09); mobile and fixed numbers cannot be told apart here. No person of the country has checked the rule.
+ */
 function usTelefonGecerliMi(ham: string | null | undefined): boolean {
   const t = String(ham ?? '').trim()
   if (!t || !/^[0-9+()\-.\s]+$/.test(t)) return false
@@ -40,8 +44,15 @@ export const US_PAKETI: UlkePaketi = {
   paraBirimi: { kod: 'USD', simge: '$', ondalikHane: 2 },
   // The default time zone of a new account. UNVERIFIED choice.
   saatDilimi: 'America/New_York',
+  // HOW THIS COUNTRY WRITES A DAY AND A NUMBER. Sources read 2026-10-09 (docs/COUNTRY-AUDIT-UNITED-STATES.md):
+  // month, day, four-digit year — Medicare's claim form asks every date of birth as "MM | DD | CCYY"
+  // (hhs.gov/guidance/sites/default/files/hhs-guidance-documents/CMS/clm104c26.pdf); a point for decimals and a comma
+  // in numbers of four or more digits — the federal style manual, rules 12.9d and 12.14
+  // (govinfo.gov/content/pkg/GPO-STYLEMANUAL-2016/pdf/GPO-STYLEMANUAL-2016-14.pdf); the week begins on Sunday — the
+  // Unicode locale data for this country, as the platform holds it (a test asks it).
   bicim: { yerel: 'en-US', tarihDeseni: 'MM/DD/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 7 },
-  telefon: { ulkeOnEki: '+1', ulusalHane: 10, ornek: '+1 202 555 0123', cepGecerliMi: usTelefonGecerliMi },
+  // The example is written the national way and is nobody's number (./ayarlar.ts, the same value).
+  telefon: { ulkeOnEki: '+1', ulusalHane: 10, ornek: '202-555-0123', cepGecerliMi: usTelefonGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
   // below). `hane: 0` = no length is assumed. The label ("Patient identifier") is unverified wording (./ayarlar.ts). NEVER A SOCIAL
   // SECURITY NUMBER: no screen of this pack asks for one, and a test fails if any text mentions it.
@@ -88,14 +99,23 @@ export const US_PAKETI: UlkePaketi = {
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
     // A portal link works for 30 days: a STARTING VALUE the owner confirms; how long a patient's access may stand is
-    // for a lawyer. THE EMERGENCY NUMBER IS UNVERIFIED LOCAL CONTENT: written from general knowledge, to be confirmed
-    // by a local source before any patient sees the portal. null here = the patient's page names no number.
+    // for a lawyer. THE EMERGENCY NUMBER: read on 2026-10-09 at the National 911 Program's own site ("In an
+    // emergency, dial 911": 911.gov/calling-911). No person of the country has confirmed it for this product, and one
+    // must before any patient sees the portal. The kit has room for ONE number: the suicide and crisis line 988
+    // (fcc.gov/988-suicide-and-crisis-lifeline) is not named anywhere. null here = the patient's page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '911' },
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-US' }] }],
-    // Several time zones: an account chooses its own (settings). The default and the list are UNVERIFIED choices; territories are not listed.
-    saatDilimleri: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'],
-    // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens.
+    // Several time zones: an account chooses its own (settings). The law names nine zones (49 CFR part 71,
+    // ecfr.gov/current/title-49/subtitle-A/part-71, read 2026-10-09). THE EIGHT BELOW COVER THE FIFTY STATES AND THE
+    // DISTRICT: Eastern, Central, Mountain, Arizona (Mountain time with no daylight saving), Pacific, Alaska, the
+    // western Aleutian Islands (Hawaii-Aleutian time WITH daylight saving: 49 CFR 71.12; added by the audit) and
+    // Hawaii (no daylight saving). THE TERRITORIES ARE NOT LISTED (Atlantic, Samoa and Chamorro time): whether this
+    // pack serves them is the owner's decision. The default is an unverified choice.
+    saatDilimleri: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'America/Adak', 'Pacific/Honolulu'],
+    // The 12-hour clock with a.m. and p.m. is the everyday form (the federal style manual, rule 12.9b: "4:30 p.m.").
+    // FOR A LOCAL CLINICAL LEAD: hospitals often chart in 24-hour time, and the federal rule on hospital records asks
+    // only that an entry be "dated, timed" by the hospital's own policy (42 CFR 482.24(c)(1)). One setting serves both.
     saatBicimi: 12,
     birimler: US_BIRIMLER,
     adAlanlari: { ikinciAd: false },

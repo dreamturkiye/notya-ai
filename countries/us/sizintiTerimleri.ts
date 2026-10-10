@@ -13,7 +13,9 @@ const KELIME = (terim: string): SizintiTerimi => ({ terim, eslesme: 'kelime', bu
 
 export const US_SIZINTI_TERIMLERI: readonly SizintiTerimi[] = [
   KELIME('USD'), KELIME('HIPAA'), KELIME('Medicaid'), parca('United States'), parca('Social Security'),
-  parca('attending physician'), parca('Pulmonology'), parca('Physical therapist'),
+  // "Pulmonary disease" (this pack's name for the role since the audit of 2026-10-09) is NOT listed: the words are
+  // part of an ordinary clinical phrase in every English-speaking country.
+  parca('attending physician'), parca('Physical therapist'),
 ]
 
 /** English is written in plain Latin letters: no letter marks this country. */

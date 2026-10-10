@@ -28,7 +28,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 |---|---|---|
 | Country code and path | `us`, served at `/us` | the owner (a routing rule on the live site is his decision) |
 | Language form and spelling | `en-US` | a native editor |
-| Default time zone; zones an account may choose | America/New_York; America/New_York, America/Chicago, America/Denver, America/Phoenix, America/Los_Angeles, America/Anchorage, Pacific/Honolulu | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed. |
+| Default time zone; zones an account may choose | America/New_York; America/New_York, America/Chicago, America/Denver, America/Phoenix, America/Los_Angeles, America/Anchorage, America/Adak, Pacific/Honolulu | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (America/New_York) and the list are unverified choices, and territories are not listed. |
 | Date pattern; clock; first day of the week | MM/DD/YYYY; 12-hour; Sunday | a local lead |
 | Units | weight lb, height in, temperature °F | a local clinical lead — a clinical-safety setting |
 | Laboratory units | urine albumin-to-creatinine ratio: mg/g; haemoglobin: g/dL; creatinine: mg/dL; glucose: mg/dL; cholesterol: mg/dL | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
@@ -41,7 +41,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `us-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. RECORDING-CONSENT LAW DIFFERS BY STATE (some states require the consent of everyone recorded): the sentence must not be relied on in any state until a lawyer has read it for that state. |
 | Intake-form consent sentence | the shared draft — stamp `us-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "attending physician" | a local clinical lead |
-| Phone: prefix, example, rule | +1; +1 202 555 0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
+| Phone: prefix, example, rule | +1; 202-555-0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
 | Speech: model, thresholds | scribe_v2; 0.8, -0.36, 40 characters | engineering, on real clinic audio of this country |
 | Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
@@ -79,7 +79,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `gastroenterology` | Gastroenterology | doctor specialty |
 | `general-surgery` | General surgery | doctor specialty |
 | `thoracic-surgery` | Thoracic surgery | doctor specialty |
-| `respiratory-medicine` | Pulmonology | doctor specialty |
+| `respiratory-medicine` | Pulmonary disease | doctor specialty |
 | `ophthalmology` | Ophthalmology | doctor specialty |
 | `obstetrics-gynaecology` | Obstetrics and gynecology | doctor specialty |
 | `cardiovascular-surgery` | Cardiac and vascular surgery | doctor specialty |
@@ -136,7 +136,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `antibiyotik-sure` | Antibiotic course: counting days | Infectious disease | Length of the course: **days** |
 | `toraks-preop` | Checklist before a chest operation | Thoracic surgery | no measured input |
 | `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic surgery | no measured input |
-| `inhaler-teknik` | Inhaler technique | Pulmonology | Check the technique again after (optional): **months** |
+| `inhaler-teknik` | Inhaler technique | Pulmonary disease | Check the technique again after (optional): **months** |
 | `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology | no measured input |
 | `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiac and vascular surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Cardiac and vascular surgery | no measured input |
@@ -160,7 +160,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in ng/mL per year, days |
 | `rtp-basamak` | Stages of return to sport | Sports medicine | no measured input |
 | `sakatlik-gunlugu` | Injury log | Sports medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Internal medicine, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic surgery, Pulmonology, Ophthalmology, Cardiac and vascular surgery, Otolaryngology (ENT), Nephrology, Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Radiology, Rheumatology, Urology, Sports medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Internal medicine, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic surgery, Pulmonary disease, Ophthalmology, Cardiac and vascular surgery, Otolaryngology (ENT), Nephrology, Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Radiology, Rheumatology, Urology, Sports medicine | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (1) — for a local clinical lead
 
@@ -201,8 +201,8 @@ No national reference content is written by a machine, and no item of a publishe
 | `iltihap-lab-izlem` | Rheumatology | CRP and ESR follow-up: the thresholds between the bands and the months until the next check (7 numbers), with the reference ranges and the CRP unit the laboratories of the United States use. | a local clinical lead, with the national source named |
 | `basdai` | Rheumatology | BASDAI (Bath Ankylosing Spondylitis Disease Activity Index): a published patient questionnaire of six questions. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `kardiyo-izlem` | Cardiology | High blood pressure, heart-failure and atrial-fibrillation follow-up: the clinic blood-pressure limits that raise a warning and the days until each next check (9 numbers), from the guidance followed in the United States. | a local clinical lead, with the national source named |
-| `cat-mmrc` | Pulmonology | COPD Assessment Test (CAT) with the mMRC breathlessness grade: CAT is a published questionnaire whose wording belongs to its rights holder. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
-| `lung-action-plan` | Pulmonology | Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in each zone), with the emergency number and the stop-smoking service of the United States. Every sentence is an instruction to a patient and must be supplied and signed by a local respiratory doctor. | a local clinical lead, with the national source named |
+| `cat-mmrc` | Pulmonary disease | COPD Assessment Test (CAT) with the mMRC breathlessness grade: CAT is a published questionnaire whose wording belongs to its rights holder. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
+| `lung-action-plan` | Pulmonary disease | Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in each zone), with the emergency number and the stop-smoking service of the United States. Every sentence is an instruction to a patient and must be supplied and signed by a local respiratory doctor. | a local clinical lead, with the national source named |
 | `ibd-skor` | Gastroenterology | Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the guidance followed in the United States states them. | a local clinical lead, with the national source named |
 | `hepatit-izlem` | Gastroenterology | Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the guidance followed in the United States. | a local clinical lead, with the national source named |
 | `pregnancy-calendar` | Obstetrics and gynecology | Pregnancy calendar: the antenatal visit schedule and the screening windows followed in the United States. (Gestational-age arithmetic alone is universal; the tool is its schedule.) | a local clinical lead, with the national source named |
