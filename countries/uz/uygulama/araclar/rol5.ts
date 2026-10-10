@@ -39,6 +39,8 @@ function eklemAlanlari(): Record<string, Uc> {
 export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
   // ── nephrology. Not for internal medicine (its own KDIGO tool, with referral flags) and not for urology. ──
   {
+    // OFF BY KAAN'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b): a slot in ./yuvalar.ts, and not on the list of tools
+    // (./index.ts → UZ_KAPALI_ARACLAR). The words below are kept for the day the tool comes back; no screen shows them.
     anahtar: 'kdigo-serit', roller: ['nefroloji'],
     metin: {
       ad: u('KDIGO jadvali: KFT va albuminuriya', 'KDIGO жадвали: КФТ ва альбуминурия', 'Таблица KDIGO: СКФ и альбуминурия'),
@@ -179,6 +181,8 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     },
   },
   {
+    // OFF BY KAAN'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b): a slot in ./yuvalar.ts, and not on the list of tools
+    // (./index.ts → UZ_KAPALI_ARACLAR). The words below are kept for the day the tool comes back; no screen shows them.
     anahtar: 'doz-hesabi', roller: ['pediatri'],
     metin: {
       ad: u('Doza hisobi: vazn boʻyicha', 'Доза ҳисоби: вазн бўйича', 'Расчёт дозы по массе тела'),
@@ -242,6 +246,8 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     },
   },
   {
+    // OFF BY KAAN'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b): a slot in ./yuvalar.ts, and not on the list of tools
+    // (./index.ts → UZ_KAPALI_ARACLAR). The words below are kept for the day the tool comes back; no screen shows them.
     anahtar: 'rapor-taslagi', roller: ['radyoloji'],
     metin: {
       ad: u('Tuzilgan xulosa qoralamasi', 'Тузилган хулоса қораламаси', 'Черновик структурированного заключения'),

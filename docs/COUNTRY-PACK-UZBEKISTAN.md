@@ -937,6 +937,8 @@ The full Turkish suite was not re-run. **No file the Turkish build executes was 
 
 Built in the country kit and filled in for Uzbekistan. Per-tool outcome, checked by a test: `docs/COUNTRY-PACK-UZ-TOOLS-AUDIT.md`, "Outcome in the Uzbek build". How the area works for any country: `docs/COUNTRY-PACK-HOWTO.md`, "The tools area".
 
+**Changed on 2026-10-10 (NOTYA-ULKE-ARAC-01b), by the owner's order "Switch off the risky tools".** Five role tools that the lists below count as switched on are off, and are slots until their fault is corrected in the kit or their licence is granted: the dose calculator (`doz-hesabi`: it rounds the volume of one dose to 0.1 mL and prints trailing zeros), the ESI triage tool (`esi-triyaj`: the scale's owner requires written permission; licence stated as "permission needed"), the report outline that prints the BI-RADS categories (`rapor-taslagi`: a licence agreement is required for commercial software; stated as "permission needed"), and both kidney tools (`kdigo-evre`, `kdigo-serit`: a low-risk cell is shown when no urine albumin result was typed; the first also mislabels its referral flags). So today: **39 role tools for 22 roles, the follow-up list for the same 22, 18 roles with base tools only (internal medicine among them), 57 slots.** A doctor does not see the five on the grid; their old address shows "Your account does not have this tool" above the grid; the server keeps no result of them. Their words stay in the pack for the day they come back. A test that names the five fails if any country switches one on (`lib/ulke/araclar/kapaliAraclar.paket.test.ts`).
+
 ### What a doctor has, under `/uzbek/tools`
 
 - **One base tool for all 40 roles:** the patient's page (the way to give a patient access).

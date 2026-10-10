@@ -32,7 +32,8 @@ ingilizcePaketSinamasi({
   ayarlarKaynagi: kaynakOku(join(__dirname, 'ayarlar.ts')),
   // United Kingdom, Canada, Australia, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|Medicare|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/,
-  kapaliAraclar: ['doz-hesabi'],
+  // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): all five; only 'doz-hesabi' was off here before that day
+  kapaliAraclar: ['doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: BIRIMLER,
   labBirimleri: LAB,
   kidemliHekim: 'attending physician',
@@ -128,8 +129,14 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
     assert.equal(kitAraci('das28')!.alanlar.find((x) => x.anahtar === 'crp')?.birim, 'mg/L')
   })
 
-  it('the tools the other English-speaking packs keep off for their units or scales are on here: KDIGO in mg/g, ESI, the report outline', () => {
-    for (const k of ['kdigo-evre', 'kdigo-serit', 'esi-triyaj', 'rapor-taslagi']) assert.ok(a.araclar.some((x) => x.anahtar === k), k)
+  it('OFF BY KAAN\'S ORDER OF 2026-10-10 (they were on here until that day): KDIGO in mg/g (both tools), ESI, the report outline — each a slot that says why, the two licence cases stated as "permission needed"', () => {
+    for (const k of ['kdigo-evre', 'kdigo-serit', 'esi-triyaj', 'rapor-taslagi']) {
+      assert.ok(!a.araclar.some((x) => x.anahtar === k), `${k} is switched on`)
+      assert.match(a.yuvalar.find((y) => y.anahtar === k)?.eksik ?? '', /off by the owner's order of 2026-10-10/, k)
+    }
+    for (const k of ['esi-triyaj', 'rapor-taslagi']) assert.equal(a.yuvalar.find((y) => y.anahtar === k)?.lisans?.durum, 'izin-gerekli', k)
+    // internal medicine had the kidney tool and nothing else: with no tool whose result can be kept, it has no follow-up list
+    assert.ok(!a.araclar.find((x) => x.anahtar === 'takip-paneli')!.roller!.includes('internal-medicine'))
   })
 
   it('the intake form asks every height, weight and temperature in this country\'s unit, with the unit named', () => {
