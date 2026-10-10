@@ -309,7 +309,8 @@ export function enAcilis(g: EnAcilisGirdisi): AcilisIcerigi {
     ...metin,
     yonalish: {
       ...metin.yonalish,
-      misollar: MISALLER.map((m) => ({ k: ad(m.rol), v: enCevir(m.v, bicim) })),
+      // An example names a role: a country that does not have the role (NOTYA-ULKE-OZEL-01) shows no example for it.
+      misollar: MISALLER.filter((m) => g.roller.some((r) => r.anahtar === m.rol)).map((m) => ({ k: ad(m.rol), v: enCevir(m.v, bicim) })),
       royxat: g.roller.map((r) => r.ad[bicim]),
     },
     narx: { ...metin.narx, oylik: g.aylikTutarKalibi },

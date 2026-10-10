@@ -11,7 +11,11 @@
  *
  * WHICH TOOL. Only a tool the account may open: the same gate as the grid and the address (./paket.ts →
  * hesabinAraci), on the role the account has NOW. A key of another role's tool, of a slot, of a tool the pack does
- * not list, or of no tool at all is refused.
+ * not list, or of no tool at all is refused. So is a tool that is NOT FOR THIS PATIENT (NOTYA-ULKE-OZEL-01: the
+ * pack's limit on age or sex, ./hastaKapisi.ts — an unknown birth date or sex never passes), and a link-out tile.
+ *
+ * THE COUNTRY'S NUMBERS. The result is worked out by the one function the screen uses (./paket.ts → aracCalistir),
+ * with the pack's numbers and tables in the unit the arithmetic uses. A number the pack did not state keeps nothing.
  *
  * THE FOLLOW-UP DAY IS THE DOCTOR'S. The kit proposes none — an interval is clinical guidance of a country, and the
  * kit holds no such content. The day is today or later, in the account's own time zone.
@@ -39,7 +43,7 @@ import { gunEkle, gunGecerli, yerelAn } from '../uygulama/zaman'
 import { girdiyiCoz, hamdanGosterilen, hamiSuz, okunamayanAlanlar } from './girdi'
 import { KAYIT_LISTE_AZAMI, TAKIP_EN_UZAK_GUN, TAKIP_LISTE_AZAMI, type AracKaydi, type TakipSatiri } from './kayitTipleri'
 import { birimOrtami } from './ortam'
-import { hesabinAraci } from './paket'
+import { aracCalistir, aracinKapisi, hesabinAraci } from './paket'
 import type { AracGirdisi, AracSonucu, UlkeAraclari } from './tipler'
 
 const TABLO = 'ulke_arac_kayitlari'
@@ -91,15 +95,17 @@ export async function aracKaydet(supabase: SupabaseClient, doktorId: string, g: 
   if (!hasta) return { tamam: false, kod: 'NOT_FOUND' }
   // THE GATE: a tool of the account's own role, as on the grid. A screen-only tile works nothing out and keeps nothing.
   const x = hesabinAraci(icerik, await hekimRolunuOku(supabase, doktorId), g.arac)
-  if (!x || x.tanim.tur === 'ekran') return { tamam: false, kod: 'ARAC_YOK' }
+  if (!x || x.tanim.tur === 'ekran' || x.tanim.tur === 'baglanti') return { tamam: false, kod: 'ARAC_YOK' }
   const bugun = yerelAn(simdi, await hesapSaatDilimi(supabase, doktorId)).gun
+  // THE PATIENT GATE, on the server too: a tool that is not for this patient's age or sex keeps nothing.
+  if (aracinKapisi(x, { dogumTarihi: hasta.dogumTarihi, cinsiyet: hasta.cinsiyet }, bugun) === 'degil') return { tamam: false, kod: 'ARAC_YOK' }
   const ham = hamiSuz(x.tanim.alanlar, g.ham)
   const ortam = birimOrtami(icerik)
   const girdi = girdiyiCoz(x.tanim.alanlar, ham, ortam)
   // A field that holds something that could not be read ("1,5" where the comma groups thousands) keeps nothing: the
   // screen refuses the same form with the same function, and never works an unread optional field as "left empty".
   if (okunamayanAlanlar(x.tanim.alanlar, ham, girdi, ortam).length) return { tamam: false, kod: 'EKSIK' }
-  const sonuc = x.tanim.hesapla(girdi, { bugun, p: x.paket.parametreler ?? {} })
+  const sonuc = aracCalistir(x, girdi, bugun, icerik)
   if (!sonuc.tamam) return { tamam: false, kod: 'EKSIK' }
   const takip = takipGunu(g.takipTarihi, bugun)
   if (!takip.tamam) return { tamam: false, kod: 'TAKIP' }

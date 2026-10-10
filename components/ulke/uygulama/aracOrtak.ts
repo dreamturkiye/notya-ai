@@ -6,8 +6,7 @@
 import { tarihYaz } from '@/lib/ulke/arayuz/bicim'
 import { sayiYaz } from '@/lib/ulke/arayuz/sayi'
 import { ulkeYolu } from '@/lib/ulke/yol'
-import { kitAraci } from '@/lib/ulke/araclar/katalog'
-import { bicimli, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
+import { bicimli, paketinAraci, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
 
@@ -31,7 +30,6 @@ export function yazici(icerik: UlkeAraclari, dil: string): Yazici {
  * account's role changes). null = the pack or the kit no longer has the tool. Never used to open a tool.
  */
 export function paketAraci(icerik: UlkeAraclari, anahtar: string): GorunurArac | null {
-  const paket = icerik.araclar.find((p) => p.anahtar === anahtar)
-  const tanim = kitAraci(anahtar)
-  return paket && tanim ? { tanim, paket } : null
+  // The mechanism is the kit's, or — for a tool only this country has — the pack's own (lib/ulke/araclar/paket.ts).
+  return paketinAraci(icerik, anahtar)
 }

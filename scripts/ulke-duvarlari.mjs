@@ -25,6 +25,10 @@
  *       under app/tools/ carries it. And the kit never imports the pre-split application's tool code
  *       (app/doktor-tools, app/klinik-tools, specialties/, lib/doktor/doktorAraclari, lib/klinik/klinikAraclari):
  *       what the two share is arithmetic, proven equal by test, never a module that carries one country's text.
+ *       NOTYA-ULKE-OZEL-01 — the list is PER COUNTRY and holds, beside state and payer tools, every tool, link-out
+ *       tile and placeholder that only one country's pack has. So the same rule keeps a country's own tools out of
+ *       every other country. The list itself is held to its form: a code and a list of keys per country; a key is
+ *       listed for ONE country; and a key that carries a country's code ("ca-…") is listed for that country.
  *   D8  NOTYA-ULKE-EN-01 — LANGUAGE SETS (countries/_dil/<language>/): the text a language has in common across the
  *       countries that speak it. A country pack MAY import a language set. A language set imports NO country pack,
  *       not countries/active, not countries/tumu and no other language set; it may import core. It reads no country
@@ -113,6 +117,25 @@ export function duvarlariDenetle() {
   const yasakDosyasi = join(KOK, ULKELER_DIZINI, 'yasak-araclar.json')
   const yasak = existsSync(yasakDosyasi) ? JSON.parse(readFileSync(yasakDosyasi, 'utf8')) : {}
   const yasakAnahtarlar = Object.entries(yasak).filter(([kod, liste]) => /^[a-z]{2}$/.test(kod) && Array.isArray(liste)).map(([kod, liste]) => ({ kod, anahtarlar: liste.map(String) }))
+  {
+    // D7 — the list is well-formed: nothing in it can be read two ways.
+    const LISTE = `${ULKELER_DIZINI}/yasak-araclar.json`
+    for (const [kod, liste] of Object.entries(yasak)) {
+      if (kod === 'aciklama') continue
+      if (!/^[a-z]{2}$/.test(kod) || !Array.isArray(liste)) { ekle('D7', LISTE, `"${kod}": every entry is a country code with a list of tool keys`); continue }
+      for (const k of liste) if (typeof k !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(k)) ekle('D7', LISTE, `"${kod}": ${JSON.stringify(k)} is not a tool key (lower-case letters and digits joined by hyphens)`)
+      if (new Set(liste).size !== liste.length) ekle('D7', LISTE, `"${kod}": a key is listed twice`)
+    }
+    // A key belongs to ONE country; and a key that carries a country's code belongs to THAT country.
+    const kodlar = new Set([...ulkeler, ...yasakAnahtarlar.map((y) => y.kod)])
+    const sahibi = new Map()
+    for (const y of yasakAnahtarlar) for (const k of y.anahtarlar) {
+      if (sahibi.has(k) && sahibi.get(k) !== y.kod) ekle('D7', LISTE, `"${k}" is listed for "${sahibi.get(k)}" and for "${y.kod}": a tool is one country's alone`)
+      sahibi.set(k, y.kod)
+      const onEk = /^([a-z]{2})-/.exec(k)?.[1]
+      if (onEk && onEk !== y.kod && kodlar.has(onEk)) ekle('D7', LISTE, `"${k}" carries the code "${onEk}" and is listed for "${y.kod}"`)
+    }
+  }
   const aracRotalari = join(KOK, 'app', 'tools')
   if (existsSync(aracRotalari)) for (const ad of readdirSync(aracRotalari)) for (const y of yasakAnahtarlar) if (y.anahtarlar.includes(ad)) ekle('D7', `app/tools/${ad}/`, `a route named after "${ad}", a tool of "${y.kod}" only`)
   const kitDosyasiMi = (g) => !testMi(g) && !g.startsWith('lib/ulke/testing/') && (g.startsWith('lib/ulke/') || g.startsWith('components/ulke/') || /\.ulke\.(ts|tsx)$/.test(g))
