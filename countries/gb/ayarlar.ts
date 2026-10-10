@@ -86,7 +86,18 @@ export const GB_GIRDI: EnUlkeGirdisi = {
   araclar: {
     // UNVERIFIED: the unit laboratories in the United Kingdom report each value in (checklist C8). The kit converts
     // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
-    labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
+    labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L' },
+    // C-REACTIVE PROTEIN in mg/L and PROSTATE-SPECIFIC ANTIGEN in µg/L (NOTYA-ULKE-ARAC-DUZELTME-01: each is now a
+    // statement of the pack). PSA: NICE writes "micrograms/litre" (NICE guideline NG12, draft for consultation of
+    // October 2021, Table 1, https://www.nice.org.uk/guidance/ng12/documents/draft-guideline-4, read 2026-10-10; the
+    // audit read the same unit in the current NG12). The screen used to show "ng/mL": the same amount, another label.
+    // CRP: that laboratories here report mg/L is NOT confirmed by a source read (the audit says so).
+    // HOW A DOSE IS WRITTEN HERE: NO ZERO AFTER THE DECIMAL POINT ("5 mL", never "5.0 mL"). Source read 2026-10-10: MHRA,
+    // "Best practice guidance on the labelling and packaging of medicines" (2026), section 4.3.2,
+    // https://assets.publishing.service.gov.uk/media/6a4770118effd97622f53be5/Best_practice_guidance_labelling_MHRA_Final_July_2026.pdf
+    // — "Trailing zeros should not appear i.e., 2.5 mg and NOT 2.50 mg." It is guidance on labels; the BNF's page on
+    // prescription writing was not found by the audit. UNVERIFIED by a local clinical lead.
+    dozYazimi: { sondaSifir: false },
     kapali: {
       'esi-triyaj': { eksik: 'The Emergency Severity Index is one triage scale among several. Which triage scale emergency departments in the United Kingdom use, and whether a tool that records an ESI level belongs here at all, is for a local emergency physician to say. ' + EMIR_ESI, kimden: HAK_SAHIBI },
       'kdigo-evre': { eksik: 'UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. ' + EMIR_BOBREK, kimden: KLINISYEN },

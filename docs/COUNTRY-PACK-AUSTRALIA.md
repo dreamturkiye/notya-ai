@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1908 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 26 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1910 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 24 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -31,7 +31,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Default time zone; zones an account may choose | Australia/Sydney; Australia/Sydney, Australia/Melbourne, Australia/Brisbane, Australia/Adelaide, Australia/Darwin, Australia/Perth, Australia/Hobart | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (Australia/Sydney) and the list are unverified choices. |
 | Date pattern; clock; first day of the week | DD/MM/YYYY; 12-hour; Monday | a local lead |
 | Units | weight kg, height cm, temperature °C | a local clinical lead — a clinical-safety setting |
-| Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: umol/L; glucose: mmol/L; cholesterol: mmol/L | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
+| Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: umol/L; glucose: mmol/L; cholesterol: mmol/L; C-reactive protein: mg/L; prostate-specific antigen: µg/L | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
+| Writing an amount of a medicine | no zero after the last figure ("5 mL", never "5.0 mL") | a local pharmacist or clinical lead — a clinical-safety setting; the source read is cited beside the setting in ayarlar.ts |
 | Currency | AUD | the owner |
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
 | Emergency (ambulance) number on the patient's page | `000` — UNVERIFIED | a local source, before any patient sees the portal |
@@ -153,8 +154,8 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `tetkik-kuyrugu` | Examination queue | Radiology | no measured input |
 | `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L**; Erythrocyte sedimentation rate: **mm/h** |
 | `eklem-28` | 28-joint count | Rheumatology | no measured input |
-| `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in µg/L per year, days |
-| `rtp-basamak` | Stages of return to sport | Sport and exercise medicine | no measured input |
+| `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in days |
+| `rtp-basamak` | Return to sport: days since the injury | Sport and exercise medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
 | `takip-paneli` | Follow-up list | Emergency medicine, Anaesthesia, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology, Infectious diseases, General surgery, Thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Cardiac and vascular surgery, Otolaryngology, head and neck surgery, Nephrology, Oncology, Orthopaedic surgery, Paediatrics, Plastic surgery, Radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
 
@@ -193,7 +194,7 @@ No national reference content is written by a machine, and no item of a publishe
 | `polypharmacy` | General medicine | Review of medicines in older patients: the criteria in a licensed edition, and the register of medicines sold in Australia to recognise each medicine by the name it has there. | a local clinical lead, with the national source named |
 | `anticoagulation-review` | General medicine | Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in Australia (age, weight, kidney function), targets and recheck intervals from the guidance followed there, and the local medicine names. | a local clinical lead, with the national source named |
 | `isotretinoin-pregnancy-prevention` | Dermatology | Pregnancy-prevention checks for isotretinoin: the programme the regulator of Australia requires (tests, contraception, prescription validity). | a local clinical lead, with the national source named |
-| `lab-izlem` | Endocrinology | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in Australia; the unit HbA1c is reported in there (per cent or mmol/mol: the kit's field has no unit choice yet); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
+| `lab-izlem` | Endocrinology | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in Australia; the unit HbA1c is reported in there (per cent or mmol/mol: the kit converts between the two, and the two cut-offs are stated with their unit); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
 | `dxa-tekrar` | Endocrinology | Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the guidance followed in Australia. | a local clinical lead, with the national source named |
 | `viral-izlem` | Infectious diseases | HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the guidance followed in Australia. | a local clinical lead, with the national source named |
 | `notifiable-diseases` | Infectious diseases | Isolation and notification: the list of notifiable diseases in Australia, to whom and by when each is reported, the report form, and isolation periods. | a local clinical lead, with the national source named |

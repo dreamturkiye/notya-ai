@@ -166,7 +166,7 @@ describe('5. the country\'s own bands and options, in its words', () => {
     const x = paketinAraci(A, 'asa-preop')!
     assert.ok(gorunurMetin(renderToStaticMarkup(h(Ekran.AracBasligi, { x, a, dil: D }))).includes('Pre-anaesthetic record (test)'))
     const html = arac('asa-preop', {})
-    for (const ad of ['Class one', 'Class five', 'Emergency']) assert.ok(gorunurMetin(html).includes(ad), ad)
+    for (const ad of ['Class one', 'Class five', 'Class six']) assert.ok(gorunurMetin(html).includes(ad), ad)
     assert.ok(gorunurMetin(html).includes('TEST DATA: the line under the result, as this country writes it.'))
   })
 })
