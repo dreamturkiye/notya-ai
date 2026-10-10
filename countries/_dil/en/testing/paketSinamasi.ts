@@ -20,21 +20,26 @@
  *   7. STATUS        every set says "machine-written, read by no clinician"; no consent wording is marked as read
  *                    by a lawyer; the source file of the country carries the "not read by a lawyer" mark; the
  *                    country's record under docs/ is what the pack says today
+ *
+ * NOTYA-ULKE-OZEL-01 — A COUNTRY THAT DIFFERS FROM THE SET says so here too, in its own test file: `rolDegisimi` (its
+ * role list), `ekAraclar` (the tools it has beyond the set) and `sayiliAraclar` (the tools whose numbers it states).
+ * A country that hands in none of them is held to the set exactly as before: the shared forty roles, the set's tools
+ * minus the ones it closes, and no tool with numbers a country must decide.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { alanBirimi, INC_CM, LAB_BIRIMLERI, LB_KG, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
+import { alanBirimi, alanBirimleri, birimAnahtari, birimdenKanonige, INC_CM, kanoniktenBirime, LAB_BIRIMLERI, LB_KG, olcuTanimi, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { girdiyiCoz, type HamGirdi } from '@/lib/ulke/araclar/girdi'
-import { kitAraci } from '@/lib/ulke/araclar/katalog'
-import type { AracAlani, AracGirdisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
+import { paketinTanimi } from '@/lib/ulke/araclar/paket'
+import type { AracAlani, AracGirdisi } from '@/lib/ulke/araclar/tipler'
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { paketiDenetle } from '@/lib/ulke/paketDenetimi'
 import { ornekGirdiler, ornekOrtam } from '@/lib/ulke/testing/aracOrnekleri'
 import type { UlkeKlinigi, UlkePaketi } from '@/lib/ulke/tipler'
 import { EN_ROL_ARACLARI } from '../araclar'
-import { EN_ROLLER } from '../klinik/roller'
+import { enRolAnahtarlari, type EnRolDegisimi } from '../klinik/roller'
 import type { EnBicim } from '../varyant'
 import { bicimYazimSorunlari, tumMetinler } from './yazimDenetimi'
 
@@ -57,6 +62,12 @@ export type EnPaketSinamasi = {
   kidemliHekim: string
   /** The shape of the example phone number: a range the country reserves for fiction, or a shape that is no number at all. */
   ornekTelefon: RegExp
+  /** NOTYA-ULKE-OZEL-01 — where the country's role list differs from the shared forty, as its record states it. Absent = the forty. */
+  rolDegisimi?: EnRolDegisimi
+  /** The tools this country has BEYOND the set (a kit tool the set has not written, a tool of its own, a link-out tile), by key. Absent = none. */
+  ekAraclar?: readonly string[]
+  /** The tools whose numbers this country states (thresholds, intervals, a table), by key. Absent = none: no such tool is on. */
+  sayiliAraclar?: readonly string[]
 }
 
 const TURKIYE_OZBEKISTAN = /Türkiye|Turkey|Turkish|Uzbek|Tashkent|\bSGK\b|MEDULA|e-Nabız|\bKVKK\b|JSHSHIR|PINFL|[çğıöşüİĞŞÇÖÜʻўқғҳЎҚҒҲ]/
@@ -76,8 +87,20 @@ export function paketMetinleri(s: Pick<EnPaketSinamasi, 'paket' | 'arayuz' | 'kl
 }
 
 /** A canonical value as a person of the country would type it: in the pack's unit, to two decimals. */
-function yazilan(a: AracAlani, kanonik: number, o: BirimOrtami): { metin: string; kanonik: number } {
-  const carpan = a.olcu === 'boy' ? (o.birimler.boy === 'in' ? INC_CM : 1) : a.olcu === 'agirlik' ? (o.birimler.agirlik === 'lb' ? LB_KG : 1) : a.lab ? LAB_BIRIMLERI[a.lab].birimler[o.lab[a.lab] ?? ''] : 1
+function yazilan(a: AracAlani, kanonik: number, o: BirimOrtami): { metin: string; kanonik: number; birim?: string } {
+  if (a.lab) {
+    // A laboratory value: typed in the pack's unit — where the pack accepts several, in the first, chosen explicitly.
+    const t = olcuTanimi(a.lab, o.olculer), birim = alanBirimleri(a, o)[0]
+    const cevir = (x: number) => kanoniktenBirime(t, birim, x)
+    assert.ok(t && birim && cevir(1) !== null, `${a.anahtar}: the pack's unit is one the kit converts`)
+    const uclar = [cevir(a.enAz ?? -Infinity) ?? -Infinity, cevir(a.enCok ?? Infinity) ?? Infinity]
+    const alt = Math.min(...uclar), ust = Math.max(...uclar)
+    let n = Math.round((cevir(kanonik) as number) * 100) / 100
+    if (n < Math.ceil(alt * 100) / 100) n = Math.ceil(alt * 100) / 100
+    if (n > Math.floor(ust * 100) / 100) n = Math.floor(ust * 100) / 100
+    return { metin: String(n), kanonik: birimdenKanonige(t, birim, n) as number, ...(alanBirimleri(a, o).length > 1 ? { birim } : {}) }
+  }
+  const carpan = a.olcu === 'boy' ? (o.birimler.boy === 'in' ? INC_CM : 1) : a.olcu === 'agirlik' ? (o.birimler.agirlik === 'lb' ? LB_KG : 1) : 1
   assert.ok(typeof carpan === 'number' && carpan > 0, `${a.anahtar}: the pack's unit is one the kit converts`)
   const alt = (a.enAz ?? -Infinity) / carpan, ust = (a.enCok ?? Infinity) / carpan
   // typed to two decimals, and kept inside the range the screen states for the field in this unit
@@ -92,7 +115,11 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
   const kod = paket.kod
   const metinler = paketMetinleri(s)
   const a = arayuz.araclar!
-  const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: a.labBirimleri, sayi: paket.bicim }
+  const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: a.labBirimleri, sayi: paket.bicim, ...(a.olculer ? { olculer: a.olculer } : {}) }
+  // The country's role list: the shared forty, or what its record states (NOTYA-ULKE-OZEL-01).
+  const ROLLER = enRolAnahtarlari(s.rolDegisimi)
+  const ekAraclar = s.ekAraclar ?? []
+  const sayiliAraclar = s.sayiliAraclar ?? []
 
   describe(`${kod}: an English-speaking pack — the pack check`, () => {
     it('the pack is complete: the kit\'s pack check finds nothing', () => {
@@ -131,9 +158,9 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
         assert.deepEqual(yuvaMetinleri.filter((x) => desen.test(x.metin)).map((x) => `${x.yer}: ${desen.exec(x.metin)?.[0]}`), [])
       }
     })
-    it('the role keys are the shared English set, in its order', () => {
-      assert.deepEqual([...(paket.uygulama!.roller ?? [])], [...EN_ROLLER])
-      assert.deepEqual(arayuz.roller.map((r) => r.anahtar), [...EN_ROLLER])
+    it('the role keys are the shared English set, in its order — with exactly the differences the country\'s record states', () => {
+      assert.deepEqual([...(paket.uygulama!.roller ?? [])], [...ROLLER])
+      assert.deepEqual(arayuz.roller.map((r) => r.anahtar), [...ROLLER])
       for (const r of arayuz.roller) assert.ok(r.ad[bicim]?.trim(), r.anahtar)
     })
   })
@@ -151,7 +178,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.deepEqual(n.gruplar.flatMap((g) => g.rejalar.map((r) => r.id)).sort(), Object.keys(f).sort())
     })
     it('no assistant is named: every role shows the neutral line', () => {
-      for (const r of EN_ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
+      for (const r of ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
     })
     it('hidden from search; sign-up by invitation code only', () => {
       assert.equal(paket.aramaMotorlarinaGizli, true)
@@ -182,20 +209,23 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     it('the pack measures in the units its record states', () => {
       assert.deepEqual(paket.uygulama!.birimler, s.birimler)
       assert.deepEqual({ ...a.labBirimleri }, s.labBirimleri)
-      for (const [olcu, birim] of Object.entries(a.labBirimleri)) assert.ok(birim! in LAB_BIRIMLERI[olcu as keyof typeof LAB_BIRIMLERI].birimler, `${olcu}: ${birim}`)
+      for (const [olcu, birim] of Object.entries(a.labBirimleri)) for (const b of typeof birim === 'string' ? [birim] : birim ?? []) assert.ok(b in (olcuTanimi(olcu, a.olculer)?.birimler ?? {}), `${olcu}: ${b}`)
     })
 
-    const acik = a.araclar.map((p) => ({ p, t: kitAraci(p.anahtar)! })).filter((x) => x.t.tur !== 'ekran')
+    // The mechanism of every switched-on tool: the kit's, or — for a tool only this country has — the pack's own. A screen of the kit and a link-out tile work nothing out.
+    const acik = a.araclar.map((p) => ({ p, t: paketinTanimi(a, p)! })).filter((x) => x.t.tur !== 'ekran' && x.t.tur !== 'baglanti')
 
     it('NEVER A FIELD WITHOUT ITS UNIT: every measured field of every switched-on tool shows a unit the pack names', () => {
       for (const { t } of acik) for (const alan of t.alanlar) {
         if (!(alan.olcu || alan.lab || alan.birim)) continue
-        const birim = alanBirimi(alan, o)
-        assert.ok(birim, `${t.anahtar}.${alan.anahtar}: a measured field without a unit`)
-        assert.ok(a.birimler[birim]?.[bicim]?.trim(), `${t.anahtar}.${alan.anahtar}: the unit "${birim}" has no name`)
+        // every unit the field may be typed in: the pack's one unit, or each unit it accepts (the doctor chooses one)
+        const birimleri = alan.lab ? alanBirimleri(alan, o) : [alanBirimi(alan, o)].filter((b): b is string => Boolean(b))
+        assert.ok(birimleri.length, `${t.anahtar}.${alan.anahtar}: a measured field without a unit`)
+        for (const birim of birimleri) assert.ok(a.birimler[birim]?.[bicim]?.trim(), `${t.anahtar}.${alan.anahtar}: the unit "${birim}" has no name`)
+        const birim = birimleri[0]
         if (alan.olcu === 'boy') assert.equal(birim, s.birimler.boy, `${t.anahtar}.${alan.anahtar}`)
         if (alan.olcu === 'agirlik') assert.equal(birim, s.birimler.agirlik, `${t.anahtar}.${alan.anahtar}`)
-        if (alan.lab) assert.equal(birim, s.labBirimleri[alan.lab], `${t.anahtar}.${alan.anahtar}`)
+        if (alan.lab) assert.deepEqual(birimleri, typeof s.labBirimleri[alan.lab] === 'string' ? [s.labBirimleri[alan.lab]] : [...(s.labBirimleri[alan.lab] ?? [])], `${t.anahtar}.${alan.anahtar}`)
       }
       for (const { t } of acik) for (const k of t.sonucBirimleri ?? []) assert.ok(a.birimler[k]?.[bicim]?.trim(), `${t.anahtar}: the result unit "${k}" has no name`)
       for (const { t } of acik) for (const olcu of t.sonucOlculeri ?? []) assert.ok(a.birimler[s.birimler[olcu]]?.[bicim]?.trim(), `${t.anahtar}: the result is written in ${s.birimler[olcu]}, which has no name`)
@@ -222,7 +252,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
             const v = ornek[alan.anahtar]
             if (alan.tur === 'isaret') { if (v === true) ham[alan.anahtar] = true; continue }
             if (v === null || v === undefined) continue
-            if (typeof v === 'number' && (alan.olcu || alan.lab)) { const y = yazilan(alan, v, o); ham[alan.anahtar] = y.metin; beklenenGirdi[alan.anahtar] = y.kanonik }
+            if (typeof v === 'number' && (alan.olcu || alan.lab)) { const y = yazilan(alan, v, o); ham[alan.anahtar] = y.metin; beklenenGirdi[alan.anahtar] = y.kanonik; if (y.birim) ham[birimAnahtari(alan.anahtar)] = y.birim }
             else ham[alan.anahtar] = String(v)
           }
           const ortam = ornekOrtam(t)
@@ -258,22 +288,31 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       const yuvalar = a.yuvalar.map((y) => y.anahtar)
       for (const k of s.kapaliAraclar) { assert.ok(!anahtarlar.includes(k), `${k} is switched on`); assert.ok(yuvalar.includes(k), `${k} is not a slot`); assert.equal(a.yuvalar.find((y) => y.anahtar === k)?.mekanizmaHazir, true) }
       assert.deepEqual(EN_ROL_ARACLARI.map((x) => x.anahtar).filter((k) => !anahtarlar.includes(k)).sort(), [...s.kapaliAraclar].sort())
-      assert.equal(anahtarlar.length, EN_ROL_ARACLARI.length - s.kapaliAraclar.length + 2, 'the role tools, the patient page and the follow-up list')
+      // … and beyond the set, exactly the tools the country's record states (none, for a country that states none)
+      for (const k of ekAraclar) assert.ok(anahtarlar.includes(k), `${k} is stated as a tool of this country and is not switched on`)
+      assert.equal(anahtarlar.length, EN_ROL_ARACLARI.length - s.kapaliAraclar.length + 2 + ekAraclar.length, 'the role tools, the patient page, the follow-up list, and the tools this country has beyond the set')
     })
     it('every slot is empty and off, and says what is missing and who supplies it; none is also switched on', () => {
       for (const y of a.yuvalar) { assert.equal(y.acik, false); assert.equal(y.icerik, null); assert.ok(y.eksik.trim() && y.kimden.trim(), y.anahtar); assert.ok(!anahtarlar.includes(y.anahtar), y.anahtar) }
       assert.equal(new Set(a.yuvalar.map((y) => y.anahtar)).size, a.yuvalar.length)
     })
-    it('no tool with numbers a country must decide is switched on', () => {
-      for (const p of a.araclar) assert.equal((kitAraci(p.anahtar) as AracTanimi).parametreler?.length ?? 0, 0, p.anahtar)
+    it('no tool with numbers a country must decide is switched on — except the ones whose numbers the country\'s record states', () => {
+      for (const p of a.araclar) {
+        const t = paketinTanimi(a, p)!
+        const sayili = (t.parametreler?.length ?? 0) > 0 || (t.tablolar?.length ?? 0) > 0
+        assert.equal(sayili, sayiliAraclar.includes(p.anahtar), p.anahtar)
+      }
     })
     it('the follow-up list is given to exactly the roles that have a tool of their own', () => {
-      const rolluler = EN_ROLLER.filter((r) => a.araclar.some((p) => p.anahtar !== 'takip-paneli' && p.roller?.includes(r)))
+      // a tool whose result can be kept: not the list itself, not a screen of the kit, not a link-out tile
+      const kayitli = a.araclar.filter((p) => p.anahtar !== 'takip-paneli' && !['ekran', 'baglanti'].includes(paketinTanimi(a, p)!.tur))
+      const rolluler = kayitli.some((p) => p.roller === null) ? [...ROLLER] : ROLLER.filter((r) => kayitli.some((p) => p.roller?.includes(r)))
       assert.deepEqual([...(a.araclar.find((p) => p.anahtar === 'takip-paneli')?.roller ?? [])], rolluler)
     })
     it('AN ALLIED PROFESSION IS NEVER ADDRESSED AS A SENIOR DOCTOR: its instruction opens with the profession and "not a doctor"', () => {
       const muttefikler = arayuz.roller.filter((r) => r.taraf === 'klinik-muttefik')
-      assert.equal(muttefikler.length, 5)
+      // the set's five allied professions, with the country's stated differences
+      assert.equal(muttefikler.length, 5 - (s.rolDegisimi?.cikar ?? []).filter((k) => ['physiotherapy', 'clinical-psychology', 'dietetics', 'occupational-therapy', 'audiology'].includes(k)).length + (s.rolDegisimi?.ekle ?? []).filter((r) => r.taraf === 'klinik-muttefik').length)
       for (const r of arayuz.roller) {
         const talimat = klinik.notTalimati(bicim, r.anahtar) ?? ''
         const ilkCumle = talimat.split('\n')[0]

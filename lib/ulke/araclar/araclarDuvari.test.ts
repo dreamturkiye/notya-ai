@@ -6,6 +6,9 @@
  *   1. the list of such tools (countries/yasak-araclar.json) holds every tool the audit removes, and no tool of the kit
  *   2. synthetic repositories with one breach each: the rule fires, by name
  *   3. the repository as it is: nothing of the kit reaches the other application's tool folders
+ *   4. NOTYA-ULKE-OZEL-01 — the list is per country and holds a country's own tools too: its form is checked (one
+ *      country per key; a key that carries a country's code is listed for that country), and the keys of the kit's
+ *      test country are on it, so the rule itself proves that no real pack, language set or kit file names one
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -13,6 +16,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
+import { XX_OZEL_ARACLAR } from '../testing/ornekUlke/araclar'
 import { KIT_ARACLARI } from './katalog'
 
 const KOK = resolve(__dirname, '../../..')
@@ -85,6 +89,52 @@ describe('wall D7 — tools of one country\'s state or payer system', () => {
       'lib/ulke/araclar/yorum.ts': "// 'aa-devlet' is another country's and is named here only in a comment\nexport const x = 1\n",
     })
     try { const r = kos(kok); assert.equal(r.status, 0, r.stderr || r.stdout) } finally { rmSync(kok, { recursive: true, force: true }) }
+  })
+
+  // ── NOTYA-ULKE-OZEL-01: the list per country, and a country's own tools ──
+  const LISTE_IHLALLERI: [string, unknown, RegExp][] = [
+    ['a key listed for two countries', { aa: ['aa-devlet'], bb: ['aa-devlet'] }, /D7 {2}countries\/yasak-araclar\.json: "aa-devlet" is listed for "aa" and for "bb"/],
+    ['a key that carries one country\'s code, listed for another', { aa: ['aa-devlet'], bb: ['aa-odeme'] }, /D7 {2}countries\/yasak-araclar\.json: "aa-odeme" carries the code "aa" and is listed for "bb"/],
+    ['an entry that is no country', { aa: ['aa-devlet'], hepsi: ['x'] }, /D7 {2}countries\/yasak-araclar\.json: "hepsi": every entry is a country code with a list of tool keys/],
+    ['an entry that is no list', { aa: 'aa-devlet' }, /D7 {2}countries\/yasak-araclar\.json: "aa": every entry is a country code with a list of tool keys/],
+    ['a key that is no tool key', { aa: ['AA Devlet'] }, /D7 {2}countries\/yasak-araclar\.json: "aa": "AA Devlet" is not a tool key/],
+    ['a key listed twice', { aa: ['aa-devlet', 'aa-devlet'] }, /D7 {2}countries\/yasak-araclar\.json: "aa": a key is listed twice/],
+  ]
+  for (const [ad, liste, beklenen] of LISTE_IHLALLERI) {
+    it(`the list — fires: ${ad}`, () => {
+      const kok = sahteDepo({ 'countries/aa/index.ts': "export const P = { kod: 'aa' }\n", 'countries/yasak-araclar.json': JSON.stringify({ aciklama: 'x', ...(liste as object) }) })
+      try { const r = kos(kok); assert.equal(r.status, 1, `expected a violation:\n${r.stdout}`); assert.match(r.stderr, beklenen) } finally { rmSync(kok, { recursive: true, force: true }) }
+    })
+  }
+
+  it('the list — does not fire: each country its own keys; a country with no folder (the kit\'s test country) may be listed; plain keys stay plain', () => {
+    const kok = sahteDepo({ 'countries/yasak-araclar.json': JSON.stringify({ aciklama: 'x', aa: ['aa-devlet', 'aa-odeme', 'eski-anahtar'], bb: ['bb-devlet'], zz: ['zz-deneme'] }) })
+    try { const r = kos(kok); assert.equal(r.status, 0, r.stderr || r.stdout) } finally { rmSync(kok, { recursive: true, force: true }) }
+  })
+
+  it('A COUNTRY\'S OWN TOOL IN ANOTHER COUNTRY: named by another pack, by a language set, by the kit — each fires; its own pack and a test may name it', () => {
+    const liste = { 'countries/yasak-araclar.json': JSON.stringify({ aciklama: 'x', aa: ['aa-devlet', 'aa-odeme'], bb: ['bb-olcek'] }) }
+    for (const [dosya, beklenen] of [
+      ['countries/aa/araclar.ts', /D7 {2}countries\/aa\/araclar\.ts: names "bb-olcek", a tool of "bb" only/],
+      ['countries/_dil/qq/araclar.ts', /D7 {2}countries\/_dil\/qq\/araclar\.ts: names "bb-olcek", a tool of "bb" only/],
+      ['lib/ulke/araclar/tanimlar/x.ts', /D7 {2}lib\/ulke\/araclar\/tanimlar\/x\.ts: names "bb-olcek", a tool of "bb" only/],
+    ] as const) {
+      const kok = sahteDepo({ ...liste, [dosya]: "export const A = [{ anahtar: 'bb-olcek', roller: null }]\n" })
+      try { const r = kos(kok); assert.equal(r.status, 1, `${dosya}: expected a violation:\n${r.stdout}`); assert.match(r.stderr, beklenen) } finally { rmSync(kok, { recursive: true, force: true }) }
+    }
+    const kok = sahteDepo({ ...liste, 'countries/bb/araclar.ts': "export const A = [{ anahtar: 'bb-olcek', roller: null }]\n", 'lib/ulke/araclar/x.test.ts': "export const k = 'bb-olcek'\n", 'lib/ulke/testing/ornek.ts': "export const k = 'bb-olcek'\n" })
+    try { const r = kos(kok); assert.equal(r.status, 0, r.stderr || r.stdout) } finally { rmSync(kok, { recursive: true, force: true }) }
+  })
+
+  it('THE TEST COUNTRY\'S KEYS ARE ON THE LIST — so the wall, which holds, is the proof that no real pack, language set or kit file names one', () => {
+    assert.deepEqual([...(YASAK.xx as string[])].sort(), [...XX_OZEL_ARACLAR].sort())
+    for (const k of XX_OZEL_ARACLAR) assert.match(k, /^xx-/)
+    // no folder of that code: it is in no build
+    assert.equal(existsSync(join(KOK, 'countries/xx')), false)
+    assert.equal(kos(KOK).status, 0)
+    // …and the rule is not blind to them: planted in a copy of nothing but one real pack file, it fires
+    const kok = sahteDepo({ 'countries/yasak-araclar.json': readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8'), 'countries/aa/araclar.ts': `export const A = ['${XX_OZEL_ARACLAR[0]}']\n` })
+    try { const r = kos(kok); assert.equal(r.status, 1); assert.match(r.stderr, new RegExp(`names "${XX_OZEL_ARACLAR[0]}", a tool of "xx" only`)) } finally { rmSync(kok, { recursive: true, force: true }) }
   })
 
   it('the repository: the wall holds, and no file of the kit or of a country route reaches the other application\'s tool code', () => {
