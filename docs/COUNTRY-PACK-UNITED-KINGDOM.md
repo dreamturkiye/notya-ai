@@ -36,7 +36,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
 | Emergency (ambulance) number on the patient's page | `999` — UNVERIFIED | a local source, before any patient sees the portal |
 | Days a patient's link stays valid | 30 | the owner; how long access may stand: for a lawyer |
-| Patient identifier | optional free text, encrypted, never validated; label "NHS number" | a local lead and a lawyer. Label "NHS number". Whether a clinic outside the health service records one, and whether the label fits Scotland and Northern Ireland (which use other identifiers), is unverified. |
+| Patient identifier | optional free text, encrypted, never validated; label "NHS number (CHI or H&C number)" | a local lead and a lawyer. Label "NHS number". Whether a clinic outside the health service records one, and whether the label fits Scotland and Northern Ireland (which use other identifiers), is unverified. |
 | Guardian age | 16 | **for a lawyer**. 16 as a starting value. How capacity and consent of under-16s and of 16 and 17 year olds bear on the guardian wording and on the form a parent fills in differs between the nations of the United Kingdom. |
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `gb-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Whether recording a consultation needs more than the patient's agreement recorded by the doctor (a written form, a notice, a retention rule) is open. |
 | Intake-form consent sentence | the shared draft — stamp `gb-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
@@ -70,9 +70,9 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `anaesthesia` | Anaesthetics | doctor specialty |
 | `neurosurgery` | Neurosurgery | doctor specialty |
 | `paediatric-surgery` | Paediatric surgery | doctor specialty |
-| `internal-medicine` | General internal medicine | doctor specialty |
+| `internal-medicine` | General (internal) medicine | doctor specialty |
 | `dermatology` | Dermatology | doctor specialty |
-| `endocrinology` | Endocrinology and diabetes | doctor specialty |
+| `endocrinology` | Endocrinology and diabetes mellitus | doctor specialty |
 | `infectious-diseases` | Infectious diseases | doctor specialty |
 | `gastroenterology` | Gastroenterology | doctor specialty |
 | `general-surgery` | General surgery | doctor specialty |
@@ -82,11 +82,11 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `obstetrics-gynaecology` | Obstetrics and gynaecology | doctor specialty |
 | `cardiovascular-surgery` | Cardiac and vascular surgery | doctor specialty |
 | `cardiology` | Cardiology | doctor specialty |
-| `otolaryngology` | Ear, nose and throat (ENT) | doctor specialty |
+| `otolaryngology` | Otolaryngology (ENT) | doctor specialty |
 | `nephrology` | Renal medicine | doctor specialty |
 | `neurology` | Neurology | doctor specialty |
 | `oncology` | Oncology | doctor specialty |
-| `orthopaedics` | Trauma and orthopaedics | doctor specialty |
+| `orthopaedics` | Trauma and orthopaedic surgery | doctor specialty |
 | `paediatrics` | Paediatrics | doctor specialty |
 | `plastic-surgery` | Plastic surgery | doctor specialty |
 | `psychiatry` | Psychiatry | doctor specialty |
@@ -128,7 +128,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `easi` | EASI score | Dermatology | no measured input |
 | `scorad` | SCORAD index | Dermatology | Area of skin involved: **%** |
 | `yama-okuma` | Patch test: reading days | Dermatology | no measured input |
-| `rejim-karti` | Insulin and thyroid treatment: date card | Endocrinology and diabetes | no measured input |
+| `rejim-karti` | Insulin and thyroid treatment: date card | Endocrinology and diabetes mellitus | no measured input |
 | `antibiyotik-sure` | Antibiotic course: counting days | Infectious diseases | Length of the course: **days** |
 | `toraks-preop` | Checklist before a chest operation | Thoracic surgery | no measured input |
 | `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic surgery | no measured input |
@@ -137,15 +137,15 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiac and vascular surgery | no measured input |
 | `greft-yara-izlem` | Vascular graft and wound follow-up | Cardiac and vascular surgery | no measured input |
 | `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Cardiac and vascular surgery | no measured input |
-| `odyometri-pta` | Pure-tone audiometry: average threshold | Ear, nose and throat (ENT) | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
-| `otoskopi-notu` | Otoscopy note | Ear, nose and throat (ENT) | no measured input |
-| `vertigo-notu` | Vertigo: positional test note | Ear, nose and throat (ENT) | no measured input |
+| `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology (ENT) | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
+| `otoskopi-notu` | Otoscopy note | Otolaryngology (ENT) | no measured input |
+| `vertigo-notu` | Vertigo: positional test note | Otolaryngology (ENT) | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Renal medicine | no measured input |
 | `kur-sayaci` | Treatment cycle counter | Oncology | no measured input |
 | `toksisite-listesi` | Side effects checklist | Oncology | no measured input |
-| `kirik-alci-takip` | Fracture, cast and brace follow-up | Trauma and orthopaedics | no measured input |
-| `ortopedi-op-protokol` | Post-operative checklist | Trauma and orthopaedics | no measured input |
-| `vas-fonksiyon` | Pain and function rating | Trauma and orthopaedics | no measured input |
+| `kirik-alci-takip` | Fracture, cast and brace follow-up | Trauma and orthopaedic surgery | no measured input |
+| `ortopedi-op-protokol` | Post-operative checklist | Trauma and orthopaedic surgery | no measured input |
+| `vas-fonksiyon` | Pain and function rating | Trauma and orthopaedic surgery | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Paediatrics | Mother's height: **cm**; Father's height: **cm** · result in cm |
 | `doz-hesabi` | Dose arithmetic by body weight | Paediatrics | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery | no measured input |
@@ -155,7 +155,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in ng/mL per year, days |
 | `rtp-basamak` | Stages of return to sport | Sport and exercise medicine | no measured input |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthetics, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology and diabetes, Infectious diseases, General surgery, Thoracic surgery, Respiratory medicine, Ophthalmology, Cardiac and vascular surgery, Ear, nose and throat (ENT), Renal medicine, Oncology, Trauma and orthopaedics, Paediatrics, Plastic surgery, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Anaesthetics, Neurosurgery, Paediatric surgery, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, General surgery, Thoracic surgery, Respiratory medicine, Ophthalmology, Cardiac and vascular surgery, Otolaryngology (ENT), Renal medicine, Oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (4) — for a local clinical lead
 
@@ -164,7 +164,7 @@ The shared English set has the words of these tools and the kit has their mechan
 | Tool | Who would see it | Why it is off here | Waits on |
 |---|---|---|---|
 | `esi-triyaj` | Emergency medicine | The Emergency Severity Index is one triage scale among several. Which triage scale emergency departments in the United Kingdom use, and whether a tool that records an ESI level belongs here at all, is for a local emergency physician to say. | a clinical lead in the United Kingdom |
-| `kdigo-evre` | General internal medicine | UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. | a clinical lead in the United Kingdom |
+| `kdigo-evre` | General (internal) medicine | UNIT SAFETY. Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol; the kit classifies in mg/g after an exact conversion. The published KDIGO limits in mg/mmol (3 and 30) are rounded and are not the exact conversion of 30 and 300 mg/g, so a value between 3.0 and 3.3 mg/mmol (or between 30 and 33.8) would be placed one category lower by the kit than by the published table. Needed: a clinical decision on which limits apply, and limits in mg/mmol in the kit. | a clinical lead in the United Kingdom |
 | `kdigo-serit` | Renal medicine | UNIT SAFETY: the same as the internal-medicine KDIGO tool. The albuminuria limits in mg/mmol (3 and 30) are not the exact conversion of the mg/g limits the kit classifies with. | a clinical lead in the United Kingdom |
 | `rapor-taslagi` | Clinical radiology | The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in the United Kingdom use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. | a clinical lead in the United Kingdom |
 
@@ -187,12 +187,12 @@ No national reference content is written by a machine, and no item of a publishe
 | `family-referral` | General practice | Referral and emergency triage in primary care: the referral routes of the United Kingdom, the criteria for each, and the emergency number confirmed by a local source. | a local clinical lead, with the national source named |
 | `family-follow-up-panel` | General practice | The follow-up panel of family medicine: it lists patients by the three tools above and has nothing to list until they exist. | a local clinical lead, with the national source named |
 | `child-surgery-consent` | Paediatric surgery | Consent for an operation on a child: the age below which a parent or guardian signs, who may sign, and the wording of the consent, under the law of the United Kingdom. | a lawyer of the country, with the local clinical lead |
-| `cardiovascular-risk` | General internal medicine, Cardiology | Ten-year cardiovascular risk: the risk calculator recommended in the United Kingdom, with its calibration and its tables. A risk score calibrated for one population must not be shown in another. | a local clinical lead, with the national source named |
-| `polypharmacy` | General internal medicine | Review of medicines in older patients: the criteria in a licensed edition, and the register of medicines sold in the United Kingdom to recognise each medicine by the name it has there. | a local clinical lead, with the national source named |
-| `anticoagulation-review` | General internal medicine | Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in the United Kingdom (age, weight, kidney function), targets and recheck intervals from the guidance followed there, and the local medicine names. | a local clinical lead, with the national source named |
+| `cardiovascular-risk` | General (internal) medicine, Cardiology | Ten-year cardiovascular risk: the risk calculator recommended in the United Kingdom, with its calibration and its tables. A risk score calibrated for one population must not be shown in another. | a local clinical lead, with the national source named |
+| `polypharmacy` | General (internal) medicine | Review of medicines in older patients: the criteria in a licensed edition, and the register of medicines sold in the United Kingdom to recognise each medicine by the name it has there. | a local clinical lead, with the national source named |
+| `anticoagulation-review` | General (internal) medicine | Anticoagulation review: the dose-reduction criteria of each anticoagulant as authorised in the United Kingdom (age, weight, kidney function), targets and recheck intervals from the guidance followed there, and the local medicine names. | a local clinical lead, with the national source named |
 | `isotretinoin-pregnancy-prevention` | Dermatology | Pregnancy-prevention checks for isotretinoin: the programme the regulator of the United Kingdom requires (tests, contraception, prescription validity). | a local clinical lead, with the national source named |
-| `lab-izlem` | Endocrinology and diabetes | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in the United Kingdom; the unit HbA1c is reported in there (per cent or mmol/mol: the kit's field has no unit choice yet); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
-| `dxa-tekrar` | Endocrinology and diabetes | Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the guidance followed in the United Kingdom. | a local clinical lead, with the national source named |
+| `lab-izlem` | Endocrinology and diabetes mellitus | HbA1c and TSH follow-up: the thresholds between the bands (12 numbers: two HbA1c cut-offs, four TSH limits, six intervals in months) from the guidance followed in the United Kingdom; the unit HbA1c is reported in there (per cent or mmol/mol: the kit's field has no unit choice yet); and the reference range the local laboratories report for TSH. | a local clinical lead, with the national source named |
+| `dxa-tekrar` | Endocrinology and diabetes mellitus | Bone densitometry repeat: the years between two scans for a low, a medium and a high risk band (3 numbers) from the guidance followed in the United Kingdom. | a local clinical lead, with the national source named |
 | `viral-izlem` | Infectious diseases | HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the guidance followed in the United Kingdom. | a local clinical lead, with the national source named |
 | `notifiable-diseases` | Infectious diseases | Isolation and notification: the list of notifiable diseases in the United Kingdom, to whom and by when each is reported, the report form, and isolation periods. | a local clinical lead, with the national source named |
 | `anemi-izlem` | Renal medicine | Anaemia follow-up in chronic kidney disease: the target haemoglobin range, the lower limit and the months until the next check (6 numbers) from the guidance followed in the United Kingdom, stated in the unit its laboratories report haemoglobin in. | a local clinical lead, with the national source named |

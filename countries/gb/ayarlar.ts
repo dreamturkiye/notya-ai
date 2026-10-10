@@ -22,8 +22,17 @@ import type { Birimler } from '@/lib/ulke/tipler'
  */
 export const GB_VELI_YASI = 16
 
-/** Units a clinic in the United Kingdom records in: SI. Unverified with a local clinical lead (checklist C8, E3). */
+/**
+ * Units a clinic in the United Kingdom records in: metric (kg, cm, °C). Unverified with a local clinical lead
+ * (checklist C8, E3). Read on official pages by the audit of 2026-10-09 (docs/COUNTRY-AUDIT-UNITED-KINGDOM.md):
+ * "We generally use metric", Celsius for temperature (https://service-manual.nhs.uk/content/numbers-measurements-dates-time).
+ * PATIENTS often know their own weight in stones and pounds and their height in feet and inches: the intake form asks
+ * in kg and cm only (for a local clinical lead; the kit has no such entry).
+ */
 export const GB_BIRIMLER: Birimler = { agirlik: 'kg', boy: 'cm', sicaklik: 'C' }
+
+/** The label of the optional patient identifier: one wording for the form (`sozler.kimlikEtiketi`) and the pack (`ulusalKimlik.ad`). */
+export const GB_KIMLIK_ETIKETI = 'NHS number (CHI or H&C number)'
 
 const KLINISYEN = 'a clinical lead in the United Kingdom'
 
@@ -35,7 +44,11 @@ export const GB_GIRDI: EnUlkeGirdisi = {
     // The version stamped on every visit is `surum` below: change both together when a reviewed wording arrives.
     kayitRizasi: 'The patient, or the person who can consent for them, has agreed to this visit being recorded.',
     // UNVERIFIED WORDING. An optional free-text field, stored encrypted, never validated and never required.
-    kimlikEtiketi: 'NHS number',
+    // AUDIT 2026-10-09: the NHS number identifies a patient "within the NHS in England and Wales"; Scotland uses the
+    // Community Health Index (CHI) number and Northern Ireland the Health and Care (H&C) number
+    // (https://www.datadictionary.nhs.uk/attributes/nhs_number.html). The label therefore names all three. Whether a
+    // clinic outside the health service may record any of them is FOR A LAWYER. Same wording as `ulusalKimlik.ad` (./index.ts).
+    kimlikEtiketi: GB_KIMLIK_ETIKETI,
     cokSaatDilimi: false,
     saatDilimiCumlesi: 'All times are UK time.',
     tarihOrnegi: 'DD/MM/YYYY',
@@ -43,17 +56,26 @@ export const GB_GIRDI: EnUlkeGirdisi = {
   ulkeAdi: 'the United Kingdom',
   // UNVERIFIED: the word a senior hospital doctor goes by here. (A consultant surgeon is addressed as Mr, Ms, Miss or
   // Mrs rather than Dr: that matters when an assistant is given a name and a title, which this pack does not do.)
+  // AUDIT 2026-10-09: a general practitioner is not a consultant, yet the set has one word for every doctor role, so
+  // the general-practice instruction also opens "You are an experienced consultant" (reported: shared English set).
   kidemliHekim: 'consultant',
-  // UNVERIFIED: how each specialty is usually named in the United Kingdom, where it differs from the set's base name.
-  // Not checked against the official list of specialties (checklist C1).
+  // How each specialty is named in the United Kingdom, where it differs from the set's base name.
+  // AUDIT 2026-10-09: compared with the regulator's list of specialties (General Medical Council, table of minimum UK
+  // training time per specialty:
+  // https://www.gmc-uk.org/registration-and-licensing/join-our-registers/registration-applications/specialist-application-guides/applications-for-retrospective-ccts--certificates-of-completion-of-training).
+  // The names below are the regulator's ("Otolaryngology" with the everyday abbreviation kept in brackets). STILL
+  // UNVERIFIED BY A PERSON (checklist C1), and FOR A LOCAL CLINICAL LEAD: four roles of the set have no specialty of
+  // the same scope on that list and keep the set's base name — thoracic surgery and cardiac-and-vascular surgery (the
+  // list has "Cardio-thoracic surgery" and "Vascular surgery"), oncology ("Clinical oncology", "Medical oncology")
+  // and psychiatry ("General psychiatry" and five more). The five clinic-doctor roles are not specialties on the list.
   rolAdlari: {
     'family-medicine': 'General practice',
     anaesthesia: 'Anaesthetics',
-    'internal-medicine': 'General internal medicine',
-    endocrinology: 'Endocrinology and diabetes',
-    otolaryngology: 'Ear, nose and throat (ENT)',
+    'internal-medicine': 'General (internal) medicine',
+    endocrinology: 'Endocrinology and diabetes mellitus',
+    otolaryngology: 'Otolaryngology (ENT)',
     nephrology: 'Renal medicine',
-    orthopaedics: 'Trauma and orthopaedics',
+    orthopaedics: 'Trauma and orthopaedic surgery',
     radiology: 'Clinical radiology',
   },
   veliYasi: GB_VELI_YASI,
@@ -72,8 +94,11 @@ export const GB_GIRDI: EnUlkeGirdisi = {
   },
   gunlukMuayeneLimiti: 200,
   araclar: {
-    // UNVERIFIED: the unit laboratories in the United Kingdom report each value in (checklist C8). The kit converts
-    // from the unit stated here with fixed factors; a wrong unit here is a wrong result.
+    // UNVERIFIED BY A PERSON: the unit laboratories in the United Kingdom report each value in (checklist C8). The kit
+    // converts from the unit stated here with fixed factors; a wrong unit here is a wrong result.
+    // AUDIT 2026-10-09, each read on an official page (docs/COUNTRY-AUDIT-UNITED-KINGDOM.md has the links): urine
+    // albumin-to-creatinine ratio mg/mmol and haemoglobin g/L (NICE NG203), creatinine µmol/L (an NHS laboratory),
+    // glucose and cholesterol mmol/L (nhs.uk). No switched-on tool of this pack reads any of the five today.
     labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
     kapali: {
       'esi-triyaj': { eksik: 'The Emergency Severity Index is one triage scale among several. Which triage scale emergency departments in the United Kingdom use, and whether a tool that records an ESI level belongs here at all, is for a local emergency physician to say.', kimden: KLINISYEN },
@@ -83,9 +108,10 @@ export const GB_GIRDI: EnUlkeGirdisi = {
     },
   },
   acilis: {
-    // THE EXAMPLE PHONE NUMBER — UNVERIFIED. From the range the communications regulator sets aside for television and
-    // radio drama (mobile numbers 07700 900000 to 900999): it is not issued to anybody. Not checked against the
-    // regulator's current list by anybody of the country.
+    // THE EXAMPLE PHONE NUMBER — UNVERIFIED BY A PERSON. From the range the communications regulator sets aside for
+    // television and radio drama (mobile numbers 07700 900000 to 900999): it is not issued to anybody. AUDIT
+    // 2026-10-09: the range was read on the regulator's own page
+    // (https://www.ofcom.org.uk/phones-and-broadband/phone-numbers/numbers-for-drama); nobody of the country has checked it.
     telefonOrnegi: '+44 7700 900123',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '£% a month',
