@@ -19,13 +19,15 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Bilgi, Hata, tarihYaz, YOL, type Api, type Uygulama } from './Kabuk'
 import { araclarYolu, birimOrtami, paketAraci, yazici } from './aracOrtak'
-import { arayuz, araclarMetni, type AraclarMetni } from '@/lib/ulke/arayuz'
+import { arayuz, araclarMetni, type AraclarMetni, type GirdiMetni } from '@/lib/ulke/arayuz'
+import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import type { HamGirdi } from '@/lib/ulke/araclar/girdi'
 import { ARAC_KAYDI_API, type AracKaydi, type TakipSatiri } from '@/lib/ulke/araclar/kayitTipleri'
 import { aracOzeti, bicimli } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { TarihGirisi } from '../girdi/TarihGirisi'
 
 /** The patient a tool was opened for. */
 export type AracHastasi = { id: string; ad: string }
@@ -65,6 +67,8 @@ export function useAracKaydi(api: Api, hastaId: string | null, arac: string) {
   const [durum, setDurum] = useState<KayitDurumu>('yok')
   const kaydet = useCallback((ham: HamGirdi) => {
     if (!hastaId) return
+    // A follow-up day that is typed and is not a day is never sent as "no follow-up": the field says so, and nothing is kept.
+    if (takip === GIRDI_GECERSIZ) { setDurum('takip'); return }
     setDurum('bekliyor')
     api(ARAC_KAYDI_API, { method: 'POST', govde: { hastaId, arac, ham, takipTarihi: takip } })
       .then((r) => setDurum(r.ok ? 'tamam' : r.j.code === 'EKSIK' ? 'eksik' : r.j.code === 'TAKIP' ? 'takip' : 'hata'))
@@ -74,8 +78,11 @@ export function useAracKaydi(api: Api, hastaId: string | null, arac: string) {
 }
 
 /** The part of a tool's screen that keeps its result. `tamam` = the tool has a result now. Pure. */
-export function AracKayitKarti({ a, hasta, tamam, takip, takipDegistir, kaydet, durum }: {
-  a: AraclarMetni; hasta: AracHastasi; tamam: boolean
+export function AracKayitKarti({ a, g, hasta, tamam, takip, takipDegistir, kaydet, durum }: {
+  a: AraclarMetni
+  /** The pack's words for the parts of a date, in the form of the screen. */
+  g: GirdiMetni
+  hasta: AracHastasi; tamam: boolean
   takip: string; takipDegistir: (v: string) => void; kaydet: () => void; durum: KayitDurumu
 }) {
   const k = a.kayit
@@ -86,8 +93,8 @@ export function AracKayitKarti({ a, hasta, tamam, takip, takipDegistir, kaydet, 
       <p className="uza-ipucu">{k.aciklama}</p>
       <div className="uza-form">
         <div className="uza-alan" data-alan="takip-tarihi">
-          <label className="uza-etiket" htmlFor="uza-arac-takip">{k.takipTarihi}</label>
-          <input id="uza-arac-takip" type="date" className="uza-girdi" value={takip} onChange={(e) => takipDegistir(e.target.value)} />
+          {/* The kit's own date field, in the pack's order: never the browser's (NOTYA-ULKE-DENETIM-01b). */}
+          <TarihGirisi id="uza-arac-takip" etiket={k.takipTarihi} deger={takip} degistir={takipDegistir} m={g} hata={durum === 'takip'} />
           <p className="uza-ipucu">{k.takipIpucu}</p>
         </div>
       </div>

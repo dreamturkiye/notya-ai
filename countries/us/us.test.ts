@@ -93,7 +93,7 @@ describe('us: what is the United States\'', () => {
 
 describe('us: CONVENTIONAL UNITS — worked by hand', () => {
   const a = US_ARAYUZ.araclar!
-  const o: BirimOrtami = { birimler: US_PAKETI.uygulama!.birimler, lab: a.labBirimleri }
+  const o: BirimOrtami = { birimler: US_PAKETI.uygulama!.birimler, lab: a.labBirimleri, sayi: US_PAKETI.bicim }
   const yazici: Yazici = { sayi: (deger, ondalik) => deger.toFixed(ondalik), tarih: (iso) => iso, birim: (kod) => a.birimler[kod]?.[D] ?? `?${kod}?` }
 
   it('pounds, inches, degrees Fahrenheit; and the laboratory units are the ones the kit\'s arithmetic is written in', () => {

@@ -8,7 +8,7 @@ Uzbekistan (`countries/uz/`, `docs/COUNTRY-PACK-UZBEKISTAN.md`) is the worked ex
 
 1. `node scripts/ulke-yeni.mjs <code> --dil <language> --yol </path>` creates the country: a folder, its registration, and its own record with every gate unticked.
 2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **1066 for a one-language country (1026 texts, 40 settings)**.
-2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **1082 for a one-language country (1039 texts, 43 settings)**.
+2. The country cannot be built yet. `node scripts/ulke-paket-denetimi.mjs --ulke <code>` prints every item still to supply: **1260 for a one-language country (1215 texts, 45 settings)**, as the scaffold itself printed on 2026-10-10 (the line above and the 1082 further down were written before messages and clinic accounts stood in one branch; the command's own figure is the one to trust).
 3. Supply them (sections below). Nothing falls back to another country's text or to a default.
 4. `NOTYA_COUNTRY=<code> npm run build:ulke` builds it; the walk-through walks it.
 5. **The country gets a database of its own.** The owner creates a new, empty one; one file, the baseline (`lib/db/ulke/000_yeni_ulke_veritabani.sql`), is run on it once. Section "The country's own database" below.
@@ -63,7 +63,7 @@ Counts are for one language form. A second language or script repeats every text
 | 5 | **Speech**: model, language codes, three thresholds, daily limit, consent version | `klinik/index.ts` | 6 settings, 2 texts | engineering; thresholds from real clinic audio |
 | 6 | **Instructions to the model** for a visit note, written fresh in the note's language; and for the **summary for the patient** (what the model writes with it reaches a patient once the doctor shares it) | `klinik/talimatlar.ts` | 16 texts (two of them several paragraphs) | a clinician who practises in that language |
 | 7 | **Core surfaces**: login, sign-up, holding page, error pages | `metinler.ts` | 48 texts | native writer |
-| 8 | **Application**: first login, settings, home, patients, visit, note | `uygulama/metinler.ts` | 144 texts | native writer; the consent sentence with a lawyer |
+| 8 | **Application**: first login, settings, home, patients, visit, note; and the words of the kit's own date, time and number fields (`girdi`, read by patients too) | `uygulama/metinler.ts` | 153 texts | native writer; the consent sentence with a lawyer |
 | 9 | **Appointments**: working pattern, calendar, booking, reminder | `uygulama/randevuMetinleri.ts` | 113 texts | native writer |
 | 9b | **Patient portal**: the doctor's controls (access, summary, requests) and what the **patient** reads (the PIN page, their own page) | `uygulama/portalMetinleri.ts` | 100 texts, 38 of them patient-facing | native writer; the patient-facing ones first |
 | 9c | **Intake form, the screens**: the doctor's card, the invitation the doctor copies, the form as the **patient** reads it, and the name of each unit of measure the pack uses | `uygulama/formMetinleri.ts` | 63 texts and 1 setting (the unit names); 33 of the texts are patient-facing | native writer; the patient-facing ones first |
@@ -88,6 +88,29 @@ Some keys are required only under a condition and are written as comments in the
 Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the baseline of a country database and its migrations; the tests.
 
 Off for every new country until built and reviewed for it: the assistant in text and voice, consultation and messaging, the voice profile, image evaluation. The patient portal, the intake form, the tools area and clinic accounts are part of the kit since 2026-10-09 (the sections below).
+
+## Numbers, days and times a person types
+
+Built once in the kit (NOTYA-ULKE-DENETIM-01, 2026-10-10); a country states its rules and writes nine short texts. Two faults found by the six country audits are closed here, and tests keep them closed.
+
+**A typed number is read by the country's own rules, or refused. It is never guessed.** One parser reads every number a person types (`lib/ulke/arayuz/sayiOkuma.ts`): a tool's fields on the screen and again on the server, and the patient's intake form.
+
+- The decimal mark is the pack's `bicim.ondalikAyraci`; thousands may be grouped with the pack's `bicim.binlikAyraci` or with a space, and only as correct grouping (groups of exactly three, a first group that does not begin with 0, never after the decimal mark).
+- Where the point is the decimal mark (the English-speaking packs): "1,500" is one thousand five hundred, "12,345.6" is read, and **"1,5" is refused**.
+- Where the comma is the decimal mark and the point is not the thousands mark (Uzbekistan): "1,5" and "1 500" are read; a point is read as a decimal mark ("1.5", "36.6", "0.125"), because many phone keypads offer no comma, **except where the same text could be thousands written with points ("1.500", "12.345.678"): refused**.
+- What is refused is said under the field in the pack's own sentence, with two examples written the pack's way. While any field of a tool holds something that could not be read, the tool shows no result and the server keeps none, also where the field is optional: a limit that was typed and not read is never worked with as "no limit". The intake form is not sent while one of its fields holds something that could not be read.
+
+**A day and a time of day are typed in the kit's own fields, never in a browser's.** A browser's own date and time fields are drawn in the order and clock of the browser's language, whatever the country. The kit draws its own (`components/ulke/girdi/`):
+
+- a day as three small labelled fields in the order of the pack's `bicim.tarihDeseni`, with the pack's own mark between them; only a real day of the calendar with a four-digit year is a day;
+- a time of day on the pack's `uygulama.saatBicimi`: hour and minute on a 24-hour clock; hour, minute and an explicit choice of the half of the day on a 12-hour clock (12 before noon is midnight, 12 after noon is noon). The words for the two halves are the ones the screens write beside every time (the platform's data for the pack's own locale);
+- what is stored and sent did not change: a day is `YYYY-MM-DD`, a time of day is 24-hour `HH:MM`.
+
+What a **country** supplies: its two number marks, its date pattern and its clock (settings it already states, row 1 of the table above), and the group `girdi` of the application catalogue (`uygulama/metinler.ts`): the labels of day, month, year, hour and minute, and four sentences. **Patients read these too** (the intake form), so a native reader reads them with the patient-facing texts.
+
+What **kit code** must not do, and a test refuses (`lib/ulke/arayuz/sayiOkuma.test.ts`): draw `type="date"`, `type="time"` or `type="datetime-local"`; turn a comma into a point; call `parseFloat`; draw a field with the decimal keypad other than the kit's one number field.
+
+Not built: height in feet and inches; a calendar to pick a day from; a read-back of the number as it was understood. A phone whose keypad offers only the other country's decimal mark cannot type a decimal in an English-speaking pack; the person switches the keyboard.
 
 ## The patient portal
 
@@ -408,6 +431,8 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 **With messages, "my templates" and consultation (2026-10-09, NOTYA-ULKE-MESAJ-01) the proof was again repeated only in part.** The scaffold now writes 21 files and answers **1066 items (1026 texts, 40 settings)**: 169 more (49 texts for messages, 29 for "my templates", 82 for consultation, 6 for the two new base tiles, 1 for the stamp of the consent sentence, and 2 settings: the two consultation periods). A throwaway `qq` was scaffolded in a copy of the repository, type-checked clean, and its build was refused with the list of all 1066 items, as it must be; then the copy was deleted. It was **not** filled, built and walked. The type check found one hint with an unescaped apostrophe that the scaffold's test had passed; the test now parses every file the scaffold writes (`lib/ulke/ulkeYeni.test.ts`).
 
 **With clinic accounts (2026-10-09, NOTYA-ULKE-KLINIK-01) the proof was again repeated only in part.** The scaffold now writes 19 files and answers **1082 items (1039 texts, 43 settings)**: 185 more (180 texts of the clinic catalogue and 5 settings: which capabilities, which allied roles, the two periods, who read the answers). Two clinic settings are written by the scaffold and are not open: a clinic's owner may not enter a permission for a doctor (`false`), and record retention is a slot (`null`). A throwaway `zz` was scaffolded in the repository, type-checked clean, and its build was refused with the list of all 1082 items (185 of them for clinic accounts), as it must be; then it was deleted and the five registration files restored. It was **not** filled, built and walked (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-KLINIK-01).
+
+**With the kit's own date, time and number fields (2026-10-10, NOTYA-ULKE-DENETIM-01) the proof was not repeated.** The scaffold writes 9 more texts (the group `girdi` of the application catalogue: the labels of day, month, year, hour and minute, and four sentences) and answers **1260 items (1215 texts, 45 settings)** in 22 files, read from a run in a throwaway folder that was then deleted. No throwaway country was filled, built and walked for it; the scaffold's own test passed.
 
 ## Known gaps
 
