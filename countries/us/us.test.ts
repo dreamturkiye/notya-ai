@@ -16,7 +16,7 @@ import { join } from 'node:path'
 import { INC_CM, LAB_BIRIMLERI, alanBirimi, alanBirimleri, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { girdiyiCoz } from '@/lib/ulke/araclar/girdi'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
-import { sayiMetni, type Yazici } from '@/lib/ulke/araclar/paket'
+import { paketinTanimi, sayiMetni, type Yazici } from '@/lib/ulke/araclar/paket'
 import { sayiYazKuralla } from '@/lib/ulke/arayuz/sayi'
 import { sayiBirimi } from '@/lib/ulke/intake/sorular'
 import { gunCoz, gunYazDesenle, haftaGunu, haftaninIlkGunu } from '@/lib/ulke/uygulama/zaman'
@@ -28,6 +28,7 @@ import derleme from './derleme.mjs'
 import { US_PAKETI } from './index'
 import { US_KLINIK } from './klinik'
 import { US_ROLLER } from './roller'
+import { US_ONAY_BEKLEYEN_ANAHTARLAR } from './araclar/onayBekleyen'
 
 const D = 'en-US'
 const BIRIMLER = { agirlik: 'lb', boy: 'in', sicaklik: 'F' } as const
@@ -53,6 +54,8 @@ ingilizcePaketSinamasi({
   ornekTelefon: /^[2-9]\d{2}-555-01\d{2}$/,
   // NOTYA-ULKE-UYGULA-US: this country's own role list (one role taken out, sixteen added: ./roller.ts, ./roller.test.ts)
   rolDegisimi: US_ROLLER,
+  // the tools this country has beyond the set: seven of its own, switched on by the owner's order of 2026-10-10 (./araclar/)
+  ekAraclar: US_ONAY_BEKLEYEN_ANAHTARLAR,
 })
 
 describe('us: what is the United States\'', () => {
@@ -164,8 +167,10 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
       assert.match(a.yuvalar.find((y) => y.anahtar === k)?.eksik ?? '', /off by the owner's order of 2026-10-10/, k)
     }
     for (const k of ['esi-triyaj', 'rapor-taslagi']) assert.equal(a.yuvalar.find((y) => y.anahtar === k)?.lisans?.durum, 'izin-gerekli', k)
-    // internal medicine had the kidney tool and nothing else: with no tool whose result can be kept, it has no follow-up list
-    assert.ok(!a.araclar.find((x) => x.anahtar === 'takip-paneli')!.roller!.includes('internal-medicine'))
+    // internal medicine had the kidney tool and nothing else of the set. It has the follow-up list again since
+    // NOTYA-ULKE-UYGULA-US, for the tools of this country's own that every doctor role has (./araclar/), not for the kidney tool
+    assert.ok(a.araclar.find((x) => x.anahtar === 'takip-paneli')!.roller!.includes('internal-medicine'))
+    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'takip-paneli'])
   })
 
   it('the intake form asks every height, weight and temperature in this country\'s unit, with the unit named', () => {
@@ -270,16 +275,19 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
     for (const kotu of ['', '555-0123', '202-555-012', '102-555-0123', '202-155-0123', '+44 20 7946 0123', '202-555-0123 ext 4', '20255501234']) assert.equal(gecerli(kotu), false, kotu)
   })
 
-  it('THE UNIT OF EVERY MEASURED FIELD OF EVERY LIVE TOOL, and no live tool takes a body weight while weight is in pounds', () => {
+  it('THE UNIT OF EVERY MEASURED FIELD OF EVERY LIVE TOOL; no tool of the shared set takes a body weight while weight is in pounds, and the one tool that does works out no dose', () => {
     const o: BirimOrtami = { birimler: u.birimler, lab: a.labBirimleri }
     const adi = (kod: string) => a.birimler[kod]?.[D] ?? `?${kod}?`
     const gorulen: Record<string, string> = {}
     for (const x of a.araclar) {
-      for (const alan of kitAraci(x.anahtar)?.alanlar ?? []) {
+      // the kit's mechanism, or — for a tool only this country has — the pack's own
+      for (const alan of paketinTanimi(a, x)?.alanlar ?? []) {
         // a laboratory value the country accepts in two units is written with both: the doctor chooses one
         const kodlar = alan.lab ? alanBirimleri(alan, o) : [alanBirimi(alan, o)].filter((k): k is string => Boolean(k))
         if (!kodlar.length) continue
         assert.notEqual(alan.olcu, 'agirlik', `${x.anahtar}.${alan.anahtar}: a body weight in pounds on a clinician's screen (see ./temel.ts, US_BIRIMLER)`)
+        // a weight typed in pounds: only the body mass index, as the CDC's own adult calculator takes it
+        if (kodlar.includes('lb')) assert.equal(x.anahtar, 'us-bmi', `${x.anahtar}.${alan.anahtar} takes a weight in pounds`)
         gorulen[`${x.anahtar}.${alan.anahtar}`] = kodlar.map(adi).join(' or ')
       }
     }
@@ -291,7 +299,13 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
       'das28.pga': 'mm', 'das28.crp': 'mg/L or mg/dL', 'das28.esr': 'mm/h',
       'psa-hizi.onceki_deger': 'ng/mL', 'psa-hizi.son_deger': 'ng/mL',
       'sakatlik-gunlugu.dk_7gun': 'min', 'sakatlik-gunlugu.dk_onceki': 'min',
+      // the tools of this country's own (./araclar/)
+      'us-bmi.boy_ft': 'ft', 'us-bmi.boy_in': 'in', 'us-bmi.agirlik_lb': 'lb',
+      'us-egfr-ckd-epi-2021.kreatinin': 'mg/dL',
+      'us-blood-sugar-ranges.a1c': '%', 'us-blood-sugar-ranges.glukoz': 'mg/dL',
     })
+    // no tool writes an amount of a medicine: weight-based dose arithmetic is off
+    for (const x of a.araclar) assert.notEqual(paketinTanimi(a, x)?.dozYazar, true, x.anahtar)
     assert.deepEqual({ ...US_BIRIMLER }, BIRIMLER)
     assert.deepEqual(US_ARAYUZ.formMetinleri![D]!.birim, { cm: 'cm', in: 'in', kg: 'kg', lb: 'lb', C: '°C', F: '°F' })
   })

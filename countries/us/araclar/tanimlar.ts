@@ -1,24 +1,22 @@
 /**
  * NOTYA-ULKE-UYGULA-US — United States: THE MECHANISMS OF THE TOOLS ONLY THIS COUNTRY HAS. Arithmetic only: numbers
- * and keys, never a sentence (the words are in ./metinler.ts). Every key begins with "us-": the day a tool is
- * switched on its key is listed for the United States in countries/yasak-araclar.json, and no other country, no
- * language set and no kit file can then name it. Another country cannot import this folder at any time (wall D3).
+ * and keys, never a sentence (the words are in ./metinler.ts). Every key begins with "us-" and is listed for the
+ * United States in countries/yasak-araclar.json, so no other country, no language set and no kit file can name one.
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
- * EVERY TOOL HERE IS SWITCHED OFF, AND NONE IS IN THE PACK: ../ayarlar.ts does not import this file, so no build of
- * the United States holds this arithmetic until a clinician of the United States has read it and signed it off
- * (./onayBekleyen.ts; the test beside it fails if one is in the pack while it stands on that list).
+ * EVERY TOOL HERE IS SWITCHED ON, by the owner's order of 2026-10-10 ("We will test as we go"), AND NONE HAS BEEN
+ * SIGNED OFF BY A CLINICIAN of the United States: each stands on ./onayBekleyen.ts with what a clinician is asked.
  *
  * THE RULE THIS FILE WAS WRITTEN UNDER. Every formula, limit, band and criterion below is as its source prints it,
  * and each source was OPENED ON 2026-10-10 through a tool that returns the text of a page. Nothing is from memory.
  * The source stands beside the code; its own worked examples are the tests (./yeniAraclar.test.ts). A clinician
- * opens each source again before a tool is switched on. The limits a field may be typed in (`sayi(key, least, most)`)
+ * opens each source again before signing a tool off. The limits a field may be typed in (`sayi(key, least, most)`)
  * are input limits of the screen and say nothing clinical, except where a line says the source states them.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
 import { INC_CM, LB_KG } from '@/lib/ulke/araclar/birimler'
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
-import { BOS_SONUC, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
+import { BOS_SONUC, puan, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
 
 const EVET_HAYIR = ['evet', 'hayir'] as const
 
@@ -272,5 +270,51 @@ export const US_ECOG: AracTanimi = {
   },
 }
 
-/** Every mechanism this country brings, in the order the grid would show the tools. */
-export const US_TANIMLAR: readonly AracTanimi[] = [US_BMI, US_EGFR, US_PAKET_YIL, US_GLUKOZ, US_DUSME, US_ECOG]
+// ───────────────────────── 7. PHQ-9: the total, and the range the form prints for it ─────────────────────────
+
+/**
+ * PHQ-9: nine items, each scored 0 to 3 by the patient on the form; the total, and the label the form prints for it.
+ * THE WORDING OF THE ITEMS AND OF THE FOUR ANSWERS IS NOT IN THE PRODUCT: the screen shows "Item 1" to "Item 9", and
+ * the doctor enters the score of each from the form in their hand.
+ *
+ * SOURCES:
+ *   [PHQ9-FORM]  The PHQ-9 form as its owner issues it, in the copy the Agency for Healthcare Research and Quality
+ *                hosts (form codes A2663B and A2662B, dated 10-04-2005),
+ *                https://integrationacademy.ahrq.gov/sites/default/files/2021-09/PHQ-9.pdf — nine items; each box is
+ *                worth 0, 1, 2 or 3; the points are added up to the total; "Interpretation of Total Score": 1-4
+ *                Minimal depression; 5-9 Mild depression; 10-14 Moderate depression; 15-19 Moderately severe
+ *                depression; 20-27 Severe depression. The last question on the form (how difficult the problems
+ *                have made things) is not scored and is not part of the total.
+ *   [PHQ9-ND]    The same form as issued by the North Dakota Department of Health and Human Services,
+ *                https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf — the owner's
+ *                permission line (./metinler.ts), and item 9 as the item on thoughts of self-harm.
+ *
+ * WHAT THE FORM LEAVES OPEN, AND WHAT THIS TOOL DOES — FOR A US CLINICIAN:
+ *   - A TOTAL OF 0 has no label on the form (its table begins at 1): the tool shows the total and says so.
+ *   - ITEM 9. The form prints no instruction for it. A total can hide it (a total of 3 reads "minimal" whether or not
+ *     item 9 is among the points), so the tool says, beside the total, whenever item 9 is scored above 0. It says
+ *     nothing else about it: what follows is the clinician's.
+ *   - NOT HERE: the unscored last question; any diagnosis; any proposed action (the form read prints none).
+ * No worked example is printed on the form: the two ends of every printed range are the test.
+ */
+export const US_PHQ9_MADDELERI = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'] as const
+export const US_PHQ9_BANTLARI = ['sifir', 'minimal', 'hafif', 'orta', 'orta_ileri', 'siddetli'] as const
+export const usPhq9Bandi = (toplam: number): (typeof US_PHQ9_BANTLARI)[number] => (toplam <= 0 ? 'sifir' : toplam <= 4 ? 'minimal' : toplam <= 9 ? 'hafif' : toplam <= 14 ? 'orta' : toplam <= 19 ? 'orta_ileri' : 'siddetli')
+export const US_PHQ9: AracTanimi = {
+  anahtar: 'us-phq-9',
+  tur: 'olcek',
+  // `numarali`: an item of a published questionnaire, shown by its number; the pack does not word it
+  alanlar: US_PHQ9_MADDELERI.map((k) => puan(k, 0, 3, { numarali: true })),
+  cikti: { sayilar: ['toplam'], bantlar: [...US_PHQ9_BANTLARI], uyarilar: ['madde9'], tarihler: [] },
+  kaynak: 'PHQ-9 (Patient Health Questionnaire-9). Developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues.',
+  hesapla: (g) => {
+    // all nine are scored: an item left open is never counted as 0
+    const p = US_PHQ9_MADDELERI.map((k) => g[k])
+    if (!p.every((x) => sayiMi(x) && Number.isInteger(x) && x >= 0 && x <= 3)) return BOS_SONUC
+    const toplam = (p as number[]).reduce((t, x) => t + x, 0)
+    return { tamam: true, sayilar: [{ anahtar: 'toplam', deger: toplam, ondalik: 0, enCok: 27 }], bant: usPhq9Bandi(toplam), uyarilar: (g.m9 as number) > 0 ? ['madde9'] : [], tarihler: [] }
+  },
+}
+
+/** Every mechanism this country brings, in the order the grid shows the tools. */
+export const US_TANIMLAR: readonly AracTanimi[] = [US_BMI, US_EGFR, US_PAKET_YIL, US_GLUKOZ, US_DUSME, US_PHQ9, US_ECOG]

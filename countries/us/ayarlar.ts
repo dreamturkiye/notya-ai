@@ -18,15 +18,16 @@
  * (docs/araclar-denetim/US.md and us-kararlar.json on the branch araclar-denetim/us; the second pass supersedes the
  * first): its own role list (./roller.ts), who sees which tool (`gorenler`), the numbers a national source states
  * for the shared tools that take a country's (`parametreler`, `uyarlama`), the licence states that were read
- * (`lisanslar`). Six tools of its own are built in ./araclar/ and ARE NOT IN THIS PACK. Every number below that is new
- * stands beside the source it was read from on that day.
+ * (`lisanslar`), and six tools of its own (./araclar/), SWITCHED ON by the owner's order of the same day without a
+ * clinician's sign-off. Every number below that is new stands beside the source it was read from on that day.
  *
  * The pack's light file (./index.ts) does not read this file any more: what it needs is in ./temel.ts and
- * ./roller.ts, which import types only.
+ * ./roller.ts, which import types only. This file brings the arithmetic of the country's own tools.
  */
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
+import { usAcilacakEk } from './araclar/metinler'
 import { US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
 
@@ -35,14 +36,21 @@ export { US_BIRIMLER, US_VELI_YASI } from './temel'
 /** The doctor roles of this country (every role that is not an allied profession), from its own role list. */
 export const US_HEKIMLER: readonly string[] = hekimRolleri(enRolSatirlari(US_ROLLER))
 
+/** The tools only this country has, as the pack carries them: switched on, with their arithmetic and the names of their units (./araclar/). */
+const US_EK = usAcilacakEk({ hekimler: US_HEKIMLER })
+
 const KLINISYEN = 'a clinical lead in the United States'
 
-// ── NOTYA-ULKE-ARAC-01b — OFF BY KAAN'S ORDER OF 2026-10-10 ("Switch off the risky tools"), in every country: the dose
-// calculator, the ESI triage tool, the report outline that prints the BI-RADS categories, and both kidney tools. Each
-// stays a slot (`kapali` below) until its fault is corrected in the kit or its licence is granted. The guard test
-// lib/ulke/araclar/kapaliAraclar.paket.test.ts fails if a pack switches one of them on. Evidence: the audits of the
-// tools against national sources, docs/araclar-denetim/, "Second pass" (branches araclar-denetim/<code>). ──
-const EMIR_DOZ = 'SAFETY, off by the owner\'s order of 2026-10-10: the tool rounds the volume of one dose to 0.1 mL and shows only the rounded figure (0.16 mL is shown as 0.2 mL), and it prints trailing zeros ("5.0 mL"), which can be misread as ten times the dose. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b).'
+// ── NOTYA-ULKE-ARAC-01b — OFF BY KAAN'S ORDER OF 2026-10-10 ("Switch off the risky tools"), in every country: the ESI
+// triage tool, the report outline that prints the BI-RADS categories, and both kidney tools. Each stays a slot
+// (`kapali` below) until the owner says otherwise. The guard test lib/ulke/araclar/kapaliAraclar.paket.test.ts fails
+// if a pack switches one of them on. Evidence: the audits of the tools against national sources,
+// docs/araclar-denetim/, "Second pass" (branches araclar-denetim/<code>).
+// THE DOSE CALCULATOR IS NOT ONE OF THEM ANY MORE (the owner's order no longer holds it; its two faults were corrected
+// in the kit on 2026-10-10: docs/araclar-denetim/DUZELTMELER.md, fault 1). IT STAYS OFF HERE BY THIS PACK'S OWN,
+// EARLIER DECISION: body weight is measured in pounds in this pack. What switching it on would need is said in its
+// sentence below. ──
+const DOZ_BUGUN = 'The two faults the audits found in the tool itself (it rounded the volume of a dose to 0.1 mL and printed trailing zeros) were corrected in the kit on 2026-10-10, and the owner\'s order of that day no longer holds this tool: what keeps it off in this pack is the unit question above, and nothing else.'
 const EMIR_ESI = 'LICENCE, off by the owner\'s order of 2026-10-10: the Emergency Severity Index belongs to the Emergency Nurses Association, which requires written permission for its use; none has been given. Needed: that permission, recorded.'
 const EMIR_RAPOR = 'LICENCE, off by the owner\'s order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded.'
 const EMIR_BOBREK = 'SAFETY, off by the owner\'s order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b).'
@@ -119,7 +127,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
-      'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + EMIR_DOZ, kimden: KLINISYEN },
+      'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + DOZ_BUGUN, kimden: KLINISYEN },
       // switched off on 2026-10-10 by the order above (on in this pack until then):
       'esi-triyaj': { eksik: EMIR_ESI, kimden: HAK_SAHIBI },
       'kdigo-evre': { eksik: EMIR_BOBREK, kimden: KLINISYEN },
@@ -136,8 +144,9 @@ export const US_GIRDI: EnUlkeGirdisi = {
       // the North Dakota Department of Health and Human Services, https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf,
       // and on the copy of the notice in the LOINC record of the GAD-7, https://cdn.loinc.org/70274-6): "No permission
       // required to reproduce, translate, display or distribute". The record names Pfizer Inc. as the copyright holder.
-      // The owner's own site refuses automated readers: A PERSON OPENS IT ONCE. THE PLACEHOLDER STAYS A PLACEHOLDER: the
-      // forms read print no scoring table and no worked example, so no tool was built from them (the report of this job).
+      // The owner's own site refuses automated readers: A PERSON OPENS IT ONCE. THE PLACEHOLDER STAYS A PLACEHOLDER (the
+      // set's tool for both forms is not written). This country's own tool for the PHQ-9 total is ./araclar/ ("us-phq-9");
+      // none was built for the GAD-7: the owner's form prints no cut points, and the copies that print them are others'.
       'phq9-gad7': { durum: 'serbest', hakSahibi: 'Pfizer Inc. (copyright); developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues', kaynak: 'the permission line printed on the PHQ-9 and GAD-7 forms (https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf) and in the LOINC record of the GAD-7 (https://cdn.loinc.org/70274-6): read 2026-10-10' },
     },
     // ── NOTYA-ULKE-UYGULA-US: WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set's list
@@ -213,15 +222,14 @@ export const US_GIRDI: EnUlkeGirdisi = {
     //   PASI, EASI, SCORAD: BANDS. No US national body read states severity bands for any of the three (the psoriasis
     //     foundation's statement of December 2025 does not set severity by one figure). PASI shows its score and no
     //     severity word; EASI and SCORAD keep the published bands of the kit.
-    // ── TOOLS ONLY THIS COUNTRY HAS: SIX ARE BUILT, AND NONE IS IN THIS PACK (./araclar/). Not as a tool, not as a
-    // placeholder, not as arithmetic: `ek` IS DELIBERATELY ABSENT, so no build of the United States holds a line of
-    // them. Each awaits a clinician's sign-off (./araclar/onayBekleyen.ts). On the day one is signed off and the owner
-    // says so, this file adds what ./araclar/metinler.ts → usAcilacakEk hands over, and the key is listed for "us" in
-    // countries/yasak-araclar.json. WHY NOT EVEN A PLACEHOLDER TODAY: two checks of the kit's own test
-    // lib/ulke/araclar/araclar.paket.test.ts refuse any real country that carries a key of its own (a placeholder
-    // "named after" a key of that list; a pack that brings a mechanism under such a key). The kit's test country is
-    // not run through that file. Reported to the owner: it must be corrected in the kit before any country switches
-    // on a tool of its own.
+    // ── TOOLS ONLY THIS COUNTRY HAS: SIX, SWITCHED ON BY THE OWNER'S ORDER OF 2026-10-10 ("Bring on all the tools built
+    // for the new 6 countries now. We will test as we go."). NO CLINICIAN OF THE UNITED STATES HAS SIGNED ONE OFF:
+    // ./araclar/onayBekleyen.ts lists each with what a clinician is asked, and a test holds that list and the tools
+    // switched on here to be the same. The arithmetic of each, with its source: ./araclar/tanimlar.ts; the words, who
+    // sees it, the patients it is for and its licence: ./araclar/metinler.ts. Each key is listed for "us" in
+    // countries/yasak-araclar.json, so no other country can name it.
+    birimAdlari: US_EK.birimAdlari,
+    ek: US_EK.ek,
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED by anybody of the country. Read on 2026-10-09 at the plan's administrator:

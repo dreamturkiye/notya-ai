@@ -23,5 +23,7 @@ export const US_VELI_YASI = 18
  * FOR A LOCAL CLINICAL LEAD (audit of 2026-10-09): these are the units a PATIENT states on the intake form. For a
  * clinician's own entries the Emergency Nurses Association asks for weights "in kilograms only" and names other
  * safety bodies that ask the same (ena.org/sites/default/files/2025-08/Weighing%20All%20Patients%20in%20Kilograms%20Position%20Statement.pdf).
- * The kit has ONE unit setting for both; no live tool of this pack takes a body weight, and a test holds that. */
+ * The kit has ONE unit setting for both. No live tool of the shared set takes a body weight, and a test holds that.
+ * ONE TOOL OF THIS COUNTRY'S OWN DOES: the body mass index (./araclar/) takes the weight in pounds, as the CDC's own
+ * adult calculator does. It works out no dose. Weight-based dose arithmetic stays off (./ayarlar.ts → `kapali`). */
 export const US_BIRIMLER: Birimler = { agirlik: 'lb', boy: 'in', sicaklik: 'F' }

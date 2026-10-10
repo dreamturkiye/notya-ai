@@ -1,15 +1,15 @@
 /**
- * NOTYA-ULKE-UYGULA-US — United States: TOOLS AWAITING A CLINICIAN'S SIGN-OFF. Every tool this country has built for
- * itself (./tanimlar.ts, ./metinler.ts) stands on this list from the day it is written, and A TOOL ON THIS LIST IS
- * NOT IN THE PACK AT ALL: ./yeniAraclar.test.ts fails if one of them is among the pack's tools, its placeholders or
- * its mechanisms.
+ * NOTYA-ULKE-UYGULA-US — United States: TOOLS SWITCHED ON WITHOUT A CLINICIAN'S SIGN-OFF. Every tool this country has
+ * built for itself (./tanimlar.ts, ./metinler.ts) is switched on by the owner's order of 2026-10-10 ("Bring on all the
+ * tools built for the new 6 countries now. We will test as we go.") and stands on this list until a clinician of the
+ * United States has signed it off. ./yeniAraclar.test.ts holds THIS LIST AND THE PACK'S SWITCHED-ON TOOLS OF ITS OWN
+ * TO BE EXACTLY THE SAME: a new tool cannot be switched on without being listed here, and a tool cannot be dropped
+ * from the list while it is on.
  *
  * HOW A TOOL LEAVES THE LIST. A clinician of the United States opens the source cited beside the tool's arithmetic,
- * reads every word of its screen and answers the questions below; the owner says it may be switched on. Then, in one
- * change: the entry is taken off this list with the clinician's name and the date written into the country's record,
- * ../ayarlar.ts adds the tool (./metinler.ts → usAcilacakEk), and its key is listed for "us" in
- * countries/yasak-araclar.json. Not before. (The kit's own test lib/ulke/araclar/araclar.paket.test.ts must first be
- * corrected: today it refuses any real country that carries a tool of its own. See ../ayarlar.ts.)
+ * reads every word of its screen and answers the questions below. Then the entry moves to a list of signed-off
+ * tools, with the clinician's name and the date (to be written on the day the first one is signed: none is today),
+ * and the test is extended to hold both lists.
  *
  * Plain data: read by tests and by the country's record; no screen reads it.
  */
@@ -57,6 +57,15 @@ export const US_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
     sorular: [
       'The three questions are in this product\'s own words, not the CDC\'s. Do they ask the same thing?',
       'The tool stops at the screen: no assessment (timed walk, chair stand, balance test) is offered, because the page read prints no limit for any of them.',
+    ],
+  },
+  {
+    anahtar: 'us-phq-9',
+    sorular: [
+      'The nine items are shown by number only ("Item 1" to "Item 9"); the doctor enters each score from the form. Is that usable in an office visit, or must the items be worded on the screen (the owner\'s line allows it)?',
+      'When item 9 is scored above 0 the tool says so beside the total and nothing more. Is that the right prompt, and should anything follow it on the screen?',
+      'A total of 0 is shown without a label, because the form\'s table begins at 1. The tool is not held back by the patient\'s age: for which ages should it be shown?',
+      'The scoring table was read on an older printing of the owner\'s form (2005). Is it the table in use?',
     ],
   },
   {

@@ -3,10 +3,9 @@
  * (their arithmetic: ./tanimlar.ts). Written in American spelling, as they would stand on the screen.
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
- * NONE OF THESE TOOLS IS SWITCHED ON, AND NONE IS IN THE PACK. This file holds each tool complete, so that switching
- * one on is one addition to ../ayarlar.ts (`usAcilacakEk`, below) on the day a clinician of the United States has
- * signed it off (./onayBekleyen.ts). Until then ../ayarlar.ts does not import this file and no screen shows a word
- * of it.
+ * ALL OF THESE TOOLS ARE SWITCHED ON, by the owner's order of 2026-10-10 ("Bring on all the tools built for the new 6
+ * countries now. We will test as we go."), and NONE HAS A CLINICIAN'S SIGN-OFF: each stands on ./onayBekleyen.ts with
+ * what a clinician of the United States is asked.
  *
  * MACHINE-WRITTEN AND UNREAD: no clinician and no native editor of the United States has read a line.
  *
@@ -51,6 +50,22 @@ const NIDDK_LISANSI: AracLisansi = {
   bildirim: m('Equation as published by the National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK), "eGFR Equations for Adults". NIDDK does not endorse this product.'),
 }
 
+/**
+ * [PHQ]  THE OWNER'S OWN LINE, PRINTED ON THE FORM: "No permission required to reproduce, translate, display or
+ *        distribute" — read on 2026-10-10 on the form as issued by the North Dakota Department of Health and Human
+ *        Services (https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf) and in the LOINC
+ *        record that carries the same notice for the companion form (https://cdn.loinc.org/70274-6), which names
+ *        Pfizer Inc. as the copyright holder. An older printing of the form (the copy the scoring table was read on)
+ *        says "All rights reserved. Reproduced with permission" instead. The owner's own site refuses automated
+ *        readers: A PERSON OPENS IT ONCE. The product reproduces none of the form's wording.
+ */
+const PHQ_LISANSI: AracLisansi = {
+  durum: 'serbest',
+  hakSahibi: 'Pfizer Inc. (copyright); developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues',
+  kaynak: 'the permission line printed on the PHQ-9 form (https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf) and in the LOINC record https://cdn.loinc.org/70274-6, read 2026-10-10',
+  bildirim: m('PHQ-9. Developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues, with an educational grant from Pfizer Inc.'),
+}
+
 const ECOG_LISANSI: AracLisansi = {
   durum: 'serbest',
   hakSahibi: 'ECOG-ACRIN Cancer Research Group',
@@ -66,7 +81,7 @@ export type UsRolleri = {
 
 /**
  * THE TOOLS ONLY THIS COUNTRY HAS, complete: who would see each (the audit's decision, us-kararlar.json), every word
- * of its screen, the patients it is for, and its licence. NOT IN THE PACK.
+ * of its screen, the patients it is for, and its licence.
  */
 export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
   return [
@@ -117,7 +132,7 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
       metin: {
         ad: m('Pack-years and lung cancer screening criteria'),
         aciklama: m('From packs smoked a day and years of smoking, the pack-years are worked out and held against the three criteria the CDC lists for yearly lung cancer screening: age 50 to 80, a history of 20 pack-years or more, and smoking now or having quit within the past 15 years.'),
-        alanlar: sozluk({ yas: 'Age in years', paket_gun: 'Packs smoked a day, on average', icilen_yil: 'Years of smoking', durum: 'Smoking now', birakali_yil: 'Years since quitting' }),
+        alanlar: sozluk({ yas: 'Age in years', paket_gun: 'Packs smoked a day, on average', icilen_yil: 'Years of smoking', durum: 'Smoking status', birakali_yil: 'Years since quitting' }),
         secenekler: { durum: sozluk({ iciyor: 'Smokes now', birakti: 'Has quit' }) },
         sayilar: sozluk({ paket_yil: 'Pack-years' }),
         bantlar: sozluk({ karsiliyor: 'The three criteria are met', karsilamiyor: 'The three criteria are not all met' }),
@@ -171,6 +186,29 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
       lisans: cdcLisansi('STEADI: Algorithm for Fall Risk Screening, Assessment, and Intervention'),
     },
     {
+      // CORE SET: every doctor role; and, from the audit's clinic list, the clinical psychologist and the clinical social worker.
+      anahtar: 'us-phq-9',
+      roller: [...r.hekimler, 'clinical-psychology', 'clinical-social-work'],
+      metin: {
+        ad: m('PHQ-9: total score'),
+        aciklama: m('Enter the score of each of the nine items of the PHQ-9 as the patient marked it on the form (0 to 3). The total is worked out and shown with the label the form prints for it. The wording of the items is not shown here: read it from the form.'),
+        // the nine items are shown by their number: their wording belongs to the form
+        alanlar: {},
+        sayilar: sozluk({ toplam: 'Total score' }),
+        bantlar: sozluk({
+          sifir: 'Total 0: the form prints no label for a total of 0',
+          minimal: 'Minimal depression (1 to 4), as the form labels the total',
+          hafif: 'Mild depression (5 to 9), as the form labels the total',
+          orta: 'Moderate depression (10 to 14), as the form labels the total',
+          orta_ileri: 'Moderately severe depression (15 to 19), as the form labels the total',
+          siddetli: 'Severe depression (20 to 27), as the form labels the total',
+        }),
+        uyarilar: sozluk({ madde9: 'Item 9 is scored above 0. The total does not show this: read item 9 itself.' }),
+        not: m('A screening score, not a diagnosis. The last question of the form is not scored and is not part of the total. Assessment, diagnosis and what follows are the clinician\'s.'),
+      },
+      lisans: PHQ_LISANSI,
+    },
+    {
       // SPECIALTY TOOL (the audit: oncology, radiation oncology, hospice and palliative medicine).
       anahtar: 'us-ecog-performance-status',
       roller: ['oncology', 'radiation-oncology', 'hospice-palliative-medicine'],
@@ -191,10 +229,8 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
 export const US_KENDI_BIRIM_ADLARI: Readonly<Record<string, string>> = { ft: 'ft', 'kg/m2': 'kg/m²' }
 
 /**
- * WHAT ../ayarlar.ts ADDS TO `araclar` ON THE DAY THESE TOOLS ARE SWITCHED ON — and not before: the tools with their
- * arithmetic (`ek`) and the names of their units. Used today by the test only (./yeniAraclar.test.ts), which runs
- * the whole pack check on a pack that has them, so that each is complete on the day it is signed off. `anahtarlar`
- * = only these tools (the ones that have left ./onayBekleyen.ts); absent = all of them.
+ * WHAT ../ayarlar.ts HANDS THE LANGUAGE SET FOR THESE TOOLS: the tools with their arithmetic (`ek`) and the names of
+ * their units. `anahtarlar` = only these tools (to switch one off, name the others); absent = all of them.
  */
 export function usAcilacakEk(r: UsRolleri, anahtarlar?: readonly string[]): { ek: { araclar: readonly PaketAraci[]; tanimlar: readonly AracTanimi[] }; birimAdlari: Readonly<Record<string, string>> } {
   const secili = (k: string) => !anahtarlar || anahtarlar.includes(k)
