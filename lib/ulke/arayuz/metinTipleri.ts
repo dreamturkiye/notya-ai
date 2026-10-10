@@ -660,6 +660,12 @@ export type AraclarMetni = {
     readonly saklanmaz: string
     /** The address names a tool this account does not have. */
     readonly yok: string
+    /**
+     * NOTYA-ULKE-OZEL-01 — under a number whose UNIT the doctor has not chosen yet ("Choose the unit of this value.").
+     * REQUIRED only where the pack accepts more than one unit for a laboratory value (`labBirimleri` with a list):
+     * the pack check asks for it exactly then.
+     */
+    readonly birimSec?: string
   }
   /** The patient portal's tile: how access is given, said in one or two sentences above the patient search. */
   readonly portal: {

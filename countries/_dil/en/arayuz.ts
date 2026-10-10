@@ -20,18 +20,19 @@ import { enUygulama } from './uygulama'
 
 export function enArayuz(g: EnUlkeGirdisi): UlkeArayuzu {
   const bicim = g.sozler.bicim
-  const roller = enRolTanimlari(bicim, g.rolAdlari)
+  // `g.roller`: where this country's role list differs from the shared forty (NOTYA-ULKE-OZEL-01); absent = the forty.
+  const roller = enRolTanimlari(bicim, g.rolAdlari, g.roller)
   return {
     marka: g.sozler.marka,
     metinler: { [bicim]: enUygulama(g.sozler) },
     randevuMetinleri: { [bicim]: enRandevu(g.sozler) },
     portalMetinleri: { [bicim]: enPortal(g.sozler) },
     formMetinleri: { [bicim]: enForm(g.sozler) },
-    araclar: enAraclar({ sozler: g.sozler, ulke: g.ulkeAdi, birimler: g.birimler, ...g.araclar }),
+    araclar: enAraclar({ sozler: g.sozler, ulke: g.ulkeAdi, birimler: g.birimler, ...g.araclar, ...(g.roller ? { roller } : {}) }),
     roller,
     // No persona is named in an English-speaking pack: the screens show the neutral line for every role.
     asistan: () => null,
-    notSablonlari: enNotSablonlari(bicim),
+    notSablonlari: enNotSablonlari(bicim, g.roller),
     acilis: {
       diller: [bicim],
       icerik: { [bicim]: enAcilis({ sozler: g.sozler, roller, telefonOrnegi: g.acilis.telefonOrnegi, aylikTutarKalibi: g.acilis.aylikTutarKalibi }) },

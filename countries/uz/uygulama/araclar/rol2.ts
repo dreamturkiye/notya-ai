@@ -89,6 +89,8 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
 
   // ── internal medicine. Not for nephrology (its own tool) and not for cardiology or endocrinology. ──
   {
+    // OFF BY KAAN'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b): a slot in ./yuvalar.ts, and not on the list of tools
+    // (./index.ts → UZ_KAPALI_ARACLAR). The words below are kept for the day the tool comes back; no screen shows them.
     anahtar: 'kdigo-evre', roller: ['dahiliye'],
     metin: {
       ad: u('Buyrak surunkali kasalligi: KDIGO toifalari', 'Буйрак сурункали касаллиги: KDIGO тоифалари', 'Хроническая болезнь почек: категории KDIGO'),

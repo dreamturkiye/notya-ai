@@ -9,7 +9,12 @@
  * GUARDIAN WORDING follows the patient's AGE, in every role: below the country's guardian age on the day of the
  * visit the note gets the pack's "who gave the history" field; at or above it, never. An unknown age counts as
  * below it only in a role whose patients are children. The age is a setting of the pack (`uygulama.veliYasi`).
+ *
+ * A ROLE ONLY ONE COUNTRY HAS (NOTYA-ULKE-OZEL-01) writes with the template of the role it behaves like, unless the
+ * pack lists fields under the role's own key (./rolIcerigi.ts → icerikAnahtari). The template's KEY stays the
+ * role's own everywhere: on the note, in the instruction to the model, in what is stored.
  */
+import { icerikAnahtari } from './rolIcerigi'
 import type { NotAlani, NotBolumu, NotSablonVerisi, RolTanimi } from './tipler'
 
 const sahip = (o: object, k: string): boolean => Object.prototype.hasOwnProperty.call(o, k)
@@ -18,12 +23,18 @@ export type SablonHastasi = { dogumTarihi?: string | null; muayeneTarihi?: strin
 
 /** true = a template a note can be written with: the general one, or a role that has fields of its own. */
 export function sablonMu(v: NotSablonVerisi, roller: readonly RolTanimi[], ham: unknown): ham is string {
-  return typeof ham === 'string' && (ham === v.genelSablon || (roller.some((r) => r.anahtar === ham) && sahip(v.rolAlanlari, ham)))
+  return typeof ham === 'string' && (ham === v.genelSablon || (roller.some((r) => r.anahtar === ham) && icerikAnahtari(roller, ham, v.rolAlanlari) !== null))
+}
+
+/** The fields of a ROLE's template, in order: its own list, or the list of the role it behaves like. None = []. */
+export function rolSablonAlanlari(v: NotSablonVerisi, roller: readonly RolTanimi[], rol: string): readonly string[] {
+  const k = roller.some((r) => r.anahtar === rol) ? icerikAnahtari(roller, rol, v.rolAlanlari) : null
+  return k === null ? [] : v.rolAlanlari[k]
 }
 
 /** Templates, the general one first (the default of an account without a role), then the roles in the pack's order. */
 export function sablonlar(v: NotSablonVerisi, roller: readonly RolTanimi[]): readonly string[] {
-  return [v.genelSablon, ...roller.map((r) => r.anahtar).filter((r) => sahip(v.rolAlanlari, r))]
+  return [v.genelSablon, ...roller.map((r) => r.anahtar).filter((r) => icerikAnahtari(roller, r, v.rolAlanlari) !== null)]
 }
 
 /** Below `veliYasi` on the day of the visit. An unknown age is not a child — except in a role whose patients are children. */
@@ -42,7 +53,7 @@ export function veliYasindaMi(v: NotSablonVerisi, veliYasi: number | null, sablo
  */
 export function sablonAlanlari(v: NotSablonVerisi, roller: readonly RolTanimi[], veliYasi: number | null, sablon: string, hasta?: SablonHastasi): readonly string[] {
   if (!sablonMu(v, roller, sablon)) return []
-  const rolAlanlari = sablon === v.genelSablon ? [] : v.rolAlanlari[sablon]
+  const rolAlanlari = sablon === v.genelSablon ? [] : rolSablonAlanlari(v, roller, sablon)
   return v.veliAlani && hasta && veliYasindaMi(v, veliYasi, sablon, hasta.dogumTarihi, hasta.muayeneTarihi) ? [v.veliAlani.anahtar, ...rolAlanlari] : rolAlanlari
 }
 

@@ -10,5 +10,6 @@ export function birimOrtami(icerik: UlkeAraclari): BirimOrtami {
   const u = ulkePaketi().uygulama
   if (!u) throw new Error('[ulke/araclar] the pack has no application settings')
   const { ondalikAyraci, binlikAyraci } = ulkePaketi().bicim
-  return { birimler: u.birimler, lab: icerik.labBirimleri, sayi: { ondalikAyraci, binlikAyraci } }
+  // `olculer`: the quantities the pack's own tools read (NOTYA-ULKE-OZEL-01); a pack that has none adds nothing.
+  return { birimler: u.birimler, lab: icerik.labBirimleri, sayi: { ondalikAyraci, binlikAyraci }, ...(icerik.olculer ? { olculer: icerik.olculer } : {}) }
 }
