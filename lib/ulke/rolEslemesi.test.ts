@@ -89,7 +89,7 @@ describe('role keys across countries (countries/rol-eslemesi.json)', () => {
       assert.deepEqual(rolFarkiSorunlari(TABLO, kod), [], kod)
     }
     // TODAY NO REAL COUNTRY DIFFERS FROM ITS COLUMN: the one entry is the test country, which is in no build.
-    assert.deepEqual(Object.keys(TABLO.ulkeyeOzel ?? {}), ['gb', 'us', 'xx'])
+    assert.deepEqual(Object.keys(TABLO.ulkeyeOzel ?? {}), ['ca', 'gb', 'us', 'xx'])
   })
 
   it('the table is data beside the packs: no application code, no pack and no language set reads it', () => {
