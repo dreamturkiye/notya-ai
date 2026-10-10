@@ -45,7 +45,9 @@ export const UZ_PAKETI: UlkePaketi = {
   saatDilimi: 'Asia/Tashkent',
   bicim: { yerel: 'uz-Latn-UZ', tarihDeseni: 'DD.MM.YYYY', ondalikAyraci: ',', binlikAyraci: ' ', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+998', ulusalHane: 9, ornek: '+998 90 123 45 67', cepGecerliMi: uzCepGecerliMi },
-  // JSHSHIR (PINFL): 14 digits. Format only — the check-digit rule is to verify (checklist G5).
+  // JSHSHIR (PINFL): 14 digits. Format only here. The structure and the control-digit rule were verified on 2026-10-09
+  // against Cabinet of Ministers Resolution No. 177 of 12.04.2022 (https://lex.uz/docs/5955665) and are stated in
+  // ./kimlik.ts (`uzJshshirYapisiGecerliMi`); they are NOT applied: see `uygulama.kimlikNumarasi` below.
   ulusalKimlik: { ad: 'JSHSHIR', hane: 14, gecerliMi: (ham) => /^\d{14}$/.test(String(ham ?? '').trim()) },
   // Fail closed: only what has been built FOR Uzbekistan is on. Landing page, login, sign-up by invitation code, and
   // the single holding page an account sees after login (NOTYA-ULKE-01, 2026-10-08). Everything else is off —
@@ -137,9 +139,12 @@ export const UZ_PAKETI: UlkePaketi = {
     },
     // NOTYA-ULKE-PORTAL-01 — a portal link works for 30 days, then the doctor gives a new one. A STARTING VALUE, not a
     // local rule: to confirm with the owner and, for how long a patient's access may stand, with a lawyer (checklist I1).
-    // The ambulance number the patient's page names is LOCAL CONTENT. 103 was written by Claude from general knowledge
-    // and is UNVERIFIED: a local source must confirm it before any patient sees the portal (docs/COUNTRY-PACK-UZBEKISTAN.md,
-    // "Needs local content", row 78). null here = the page names no number.
+    // The ambulance number the patient's page names is LOCAL CONTENT. null here = the page names no number.
+    // 103 — CHECKED AGAINST AN OFFICIAL SOURCE on 2026-10-09 (country audit, docs/COUNTRY-AUDIT-UZBEKISTAN.md, A10): the
+    // state services portal's page of the emergency medical service says to call the short number "103", free of charge
+    // (https://gov.uz/oz/advice/63/document/1090). The single dispatch number 112 also exists (Cabinet of Ministers
+    // Resolution No. 304 of 29.05.2024, https://gov.uz/en/advice/502/document/3256); whether the patient's page should
+    // name 112 beside or instead of 103 is for a local clinician and the owner. Not yet confirmed by a person in the country.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '103' },
     // NOTYA-ULKE-MESAJ-01 — TELLING A PATIENT THAT THEIR DOCTOR WROTE: A SLOT, SWITCHED OFF. No provider is contracted
     // and the kit sends nothing to anybody; the doctor tells the patient. Waits on Kaan (which channel patients here
@@ -189,7 +194,9 @@ export const UZ_PAKETI: UlkePaketi = {
     birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
     // The patronymic (otasining ismi / отчество) is its own field on the patient form.
     adAlanlari: { ikinciAd: true },
-    // JSHSHIR is optional free text, stored encrypted and NOT validated: the check-digit rule is to verify (checklist G5).
+    // JSHSHIR is optional free text, stored encrypted and NOT validated. The official structure is now known (./kimlik.ts,
+    // verified 2026-10-09); refusing a number that fails it is the owner's decision, and whether a private product may
+    // ask for the number is a question for a lawyer (checklist G5; docs/COUNTRY-AUDIT-UZBEKISTAN.md, "Open items").
     kimlikNumarasi: { dogrula: false },
     // Guardian wording for a patient under 18 on the day of the visit. An assumption to confirm with a lawyer (checklist B12).
     veliYasi: UZ_VELI_YASI,

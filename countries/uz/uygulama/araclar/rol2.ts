@@ -140,7 +140,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
     anahtar: 'easi', roller: ['dermatoloji'],
     metin: {
       ad: u('EASI indeksi', 'EASI индекси', 'Индекс EASI'),
-      aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Vazn koeffitsiyentlari 8 yosh va undan katta bemor uchun. Boʻsh maydon 0 deb olinadi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Вазн коэффитсиентлари 8 ёш ва ундан катта бемор учун. Бўш майдон 0 деб олинади.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовые коэффициенты — для пациента 8 лет и старше. Пустое поле считается равным 0.'),
+      aciklama: u('Ekzema maydoni va ogʻirligi indeksi. Toʻrt soha; har birida toʻrt belgi (0–3) va maydon bali (0 — zararlanmagan, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Vazn koeffitsiyentlari 8 yosh va undan katta bemor uchun. Boʻsh maydon 0 deb olinadi.', 'Экзема майдони ва оғирлиги индекси. Тўрт соҳа; ҳар бирида тўрт белги (0–3) ва майдон бали (0 — зарарланмаган, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Вазн коэффициентлари 8 ёш ва ундан катта бемор учун. Бўш майдон 0 деб олинади.', 'Индекс площади и тяжести экземы. Четыре области; в каждой четыре признака (0–3) и балл площади (0 — нет поражения, 1 — 1–9 %, 2 — 10–29 %, 3 — 30–49 %, 4 — 50–69 %, 5 — 70–89 %, 6 — 90–100 %). Весовые коэффициенты — для пациента 8 лет и старше. Пустое поле считается равным 0.'),
       alanlar: sohaAlanlari(EASI_BELGILARI),
       sayilar: { easi: ayni('EASI') },
       bantlar: ucBant('7', '21', '7–20,9'),
@@ -167,7 +167,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
         scorad: ayni('SCORAD'),
         a: u('A — tarqalganlik', 'A — тарқалганлик', 'A — распространённость'),
         b: u('B — intensivlik', 'B — интенсивлик', 'B — интенсивность'),
-        c: u('C — subyektiv belgilar', 'C — субектив белгилар', 'C — субъективные симптомы'),
+        c: u('C — subyektiv belgilar', 'C — субъектив белгилар', 'C — субъективные симптомы'),
       },
       bantlar: ucBant('25', '50', '25–49,9'),
       not: KARAR,
@@ -176,7 +176,7 @@ export const UZ_ROL_ARACLARI_2: readonly PaketAraci[] = [
   {
     anahtar: 'yama-okuma', roller: ['dermatoloji'],
     metin: {
-      ad: u('Applikatsion test: natijani oʻqish kunlari', 'Аппликатсион тест: натижани ўқиш кунлари', 'Аппликационный тест: дни чтения результата'),
+      ad: u('Applikatsion test: natijani oʻqish kunlari', 'Аппликацион тест: натижани ўқиш кунлари', 'Аппликационный тест: дни чтения результата'),
       aciklama: u('Applikatsiya qoʻyilgan sanadan ikkinchi va toʻrtinchi kun (D2, D4) hisoblanadi.', 'Аппликация қўйилган санадан иккинчи ва тўртинчи кун (D2, D4) ҳисобланади.', 'От даты наложения аппликаций рассчитываются второй и четвёртый день (D2, D4).'),
       alanlar: { uygulama: u('Applikatsiya qoʻyilgan sana', 'Аппликация қўйилган сана', 'Дата наложения аппликаций') },
       tarihler: { d2: u('Birinchi oʻqish (D2)', 'Биринчи ўқиш (D2)', 'Первое чтение (D2)'), d4: u('Ikkinchi oʻqish (D4)', 'Иккинчи ўқиш (D4)', 'Второе чтение (D4)') },
