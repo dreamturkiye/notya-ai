@@ -74,7 +74,7 @@ Publisher of the national rules: the Royal College of Pathologists of Australasi
 | HbA1c | reported in both per cent and mmol/mol | https://www.rcpa.edu.au/Manuals/RCPA-Manual/Pathology-Tests/H/HbA1c |
 | Creatinine | µmol/L — **UNVERIFIED**: the creatinine page could not be opened; the creatinine-clearance page writes "plasma creatinine (mmol/L)" inside a formula | https://www.rcpa.edu.au/Manuals/RCPA-Manual/Pathology-Tests/C/Creatinine-clearance |
 | Haemoglobin | g/L — **UNVERIFIED**: the page could not be opened | https://www.rcpa.edu.au/Manuals/RCPA-Manual/Pathology-Tests/H/Haemoglobin |
-| Urine albumin-to-creatinine ratio | **CONFLICTING, UNVERIFIED**: the RCPA Manual page writes the categories in "mg albumin/g creatinine"; the pack states mg/mmol from general knowledge of Australian laboratory reports | https://www.rcpa.edu.au/Manuals/RCPA-Manual/Pathology-Tests/A/Albumin-urine |
+| Urine albumin-to-creatinine ratio | **CONFLICTING, UNVERIFIED**: the RCPA Manual page writes the categories in "mg albumin/g creatinine"; Kidney Health Australia's fact sheet for patients (a national charity, not a regulator or a college) writes the ratio in "mg/mmol", which is what the pack states | https://www.rcpa.edu.au/Manuals/RCPA-Manual/Pathology-Tests/A/Albumin-urine ; https://kidney.org.au/wp-content/uploads/2025/10/KHA-Factsheet-Albuminuria-Jan2025.pdf |
 | Prostate-specific antigen | µg/L — **UNVERIFIED**: the RCPA guideline *PSA Test Reporting* could not be opened | https://www.rcpa.edu.au/getattachment/75ca004c-4bc3-4104-8e1c-7e6a37f4ce15/PSA-Test-Reporting.aspx |
 | C-reactive protein, erythrocyte sedimentation rate (the two other laboratory values a switched-on tool takes) | mg/L and mm/h — **UNVERIFIED** | not found |
 
@@ -132,7 +132,7 @@ Publisher of the national rules: the Royal College of Pathologists of Australasi
 ### A18. Names
 
 - "In many English-speaking countries, the order of a name is given name then family name." "The order of names is culturally based." Use "'given name' instead of 'Christian name'" and "'family name' instead of 'surname'". — Style Manual, *Personal names*: https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/names-and-terms/personal-names
-- National health data standards hold family name and given name as separate items: **UNVERIFIED** (AIHW METEOR was not read for these two items).
+- The national health data dictionary holds the family name as an item of its own: "Person—family name", text of up to 40 characters, recorded "in the format preferred by the person"; a person with only one name has it recorded as the family name, with the given name left empty. — AIHW METEOR 613331: https://meteor.aihw.gov.au/content/613331
 - **Sex and gender.** The national statistical standard's answers for sex are "Male", "Female", "Another term (please specify)"; gender is a separate question with its own answers. — ABS, *Standard for Sex, Gender, Variations of Sex Characteristics and Sexual Orientation Variables*: https://www.abs.gov.au/statistics/standards/standard-sex-gender-variations-sex-characteristics-and-sexual-orientation-variables/latest-release
 
 ### A19. Medicine naming convention (convention only; no list)
@@ -165,7 +165,8 @@ Publisher of the national rules: the Royal College of Pathologists of Australasi
 
 ### A24. Languages a patient-facing page may need
 
-- English. Other languages widely spoken at home, the national interpreting service and any duty to offer an interpreter: **UNVERIFIED**, not read. For the owner and a local clinician.
+- English. "Top 5 languages used at home, other than English, were Mandarin (2.7 per cent), Arabic (1.4 per cent)", then Vietnamese, Cantonese and Punjabi (2021 Census). — Australian Bureau of Statistics: https://www.abs.gov.au/statistics/people/people-and-communities/cultural-diversity-census/latest-release
+- The national interpreting service (TIS National) and any duty to offer an interpreter: **UNVERIFIED** (https://www.health.gov.au/contacts/translating-and-interpreting-service-tis-national refuses automated readers). For the owner and a local clinician.
 
 ### Questions for a lawyer
 
