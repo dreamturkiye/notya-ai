@@ -19,6 +19,7 @@ import { US_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { US_PAKETI } from './index'
 import { US_KLINIK } from './klinik'
+import { US_ROLLER } from './roller'
 
 const D = 'en-US'
 const BIRIMLER = { agirlik: 'lb', boy: 'in', sicaklik: 'F' } as const
@@ -41,6 +42,8 @@ ingilizcePaketSinamasi({
   kidemliHekim: 'attending physician',
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
   ornekTelefon: /^\+1 \d{3} 555 01\d{2}$/,
+  // NOTYA-ULKE-UYGULA-US: this country's own role list (one role taken out, sixteen added: ./roller.ts, ./roller.test.ts)
+  rolDegisimi: US_ROLLER,
 })
 
 describe('us: what is the United States\'', () => {
@@ -70,7 +73,8 @@ describe('us: what is the United States\'', () => {
     assert.equal(ad('anaesthesia'), 'Anesthesiology')
     assert.equal(ad('orthopaedics'), 'Orthopedic surgery')
     assert.equal(ad('obstetrics-gynaecology'), 'Obstetrics and gynecology')
-    assert.equal(ad('respiratory-medicine'), 'Pulmonology')
+    // renamed by the audit of 2026-10-10 to the board's own name for the certificate (it was "Pulmonology")
+    assert.equal(ad('respiratory-medicine'), 'Pulmonary Disease')
     assert.equal(ad('physiotherapy'), 'Physical therapist')
     assert.equal(US_ARAYUZ.randevuMetinleri![D]!.durum.iptal, 'Canceled')
     assert.match(US_KLINIK.notTalimati(D, 'general') ?? '', /You are an experienced attending physician\.[\s\S]*in American spelling/)
@@ -111,7 +115,8 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
     assert.ok(Math.abs((g.anne as number) - 64 * INC_CM) < 1e-9 && Math.abs((g.baba as number) - 70 * INC_CM) < 1e-9, 'inches become centimetres with the exact factor')
     const sonuc = t.hesapla(g, { bugun: '2026-10-09', p: {} })
     assert.equal(sonuc.tamam, true)
-    // NO RANGE: the range either side is a number the country may state, and this pack states none (NOTYA-ULKE-ARAC-DUZELTME-01, fault 11)
+    // THE KIT BY ITSELF (no number of a country handed in) shows no range: the range either side is a number the country
+    // states. This pack states 10 cm since NOTYA-ULKE-UYGULA-US, with its source: ./araclar/araclar.test.ts shows it.
     assert.deepEqual(sonuc.sayilar.map((x) => x.anahtar), ['hedef'])
     // by hand: 64 in = 162.56 cm → 162.6; 70 in = 177.8 cm; (177.8 + 162.6 + 13) / 2 = 176.7 cm = 69.57 in
     const hedef = sonuc.sayilar.find((x) => x.anahtar === 'hedef')!

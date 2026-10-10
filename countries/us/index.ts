@@ -11,8 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
-import { EN_ROLLER } from '../_dil/en/klinik/roller'
-import { US_BIRIMLER, US_VELI_YASI } from './ayarlar'
+import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { US_ROLLER } from './roller'
+import { US_BIRIMLER, US_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-US')
 const metin = paketMetinleri({
@@ -80,7 +81,9 @@ export const US_PAKETI: UlkePaketi = {
   uygulama: {
     diller: ['en-US'],
     hastaDilleri: ['en'],
-    roller: EN_ROLLER,
+    // THE COUNTRY'S OWN ROLE LIST (NOTYA-ULKE-UYGULA-US): the shared forty without one clinic role, with ten specialties
+    // and six professions of its own (./roller.ts → US_ROLLER, where each difference and its source stands).
+    roller: enRolAnahtarlari(US_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // PUBLIC HOLIDAYS are deliberately absent: they are local content (federal and state holidays differ).
     randevu: {

@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1913 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-US` spelling by the set's spelling table.
-- **This country's own** (`countries/us/`, six small files): 25 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 1943 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 41 tools, the landing copy — written in `en-US` spelling by the set's spelling table.
+- **This country's own** (`countries/us/`, six small files): 29 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -79,35 +79,50 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 | `infectious-diseases` | Infectious disease | doctor specialty |
 | `gastroenterology` | Gastroenterology | doctor specialty |
 | `general-surgery` | General surgery | doctor specialty |
-| `thoracic-surgery` | Thoracic surgery | doctor specialty |
-| `respiratory-medicine` | Pulmonology | doctor specialty |
+| `thoracic-surgery` | Thoracic and Cardiac Surgery | doctor specialty |
+| `respiratory-medicine` | Pulmonary Disease | doctor specialty |
 | `ophthalmology` | Ophthalmology | doctor specialty |
 | `obstetrics-gynaecology` | Obstetrics and gynecology | doctor specialty |
-| `cardiovascular-surgery` | Cardiac and vascular surgery | doctor specialty |
+| `cardiovascular-surgery` | Vascular Surgery | doctor specialty |
 | `cardiology` | Cardiology | doctor specialty |
 | `otolaryngology` | Otolaryngology (ENT) | doctor specialty |
 | `nephrology` | Nephrology | doctor specialty |
 | `neurology` | Neurology | doctor specialty |
-| `oncology` | Oncology | doctor specialty |
+| `oncology` | Hematology/Oncology | doctor specialty |
 | `orthopaedics` | Orthopedic surgery | doctor specialty |
 | `paediatrics` | Pediatrics | doctor specialty |
 | `plastic-surgery` | Plastic surgery | doctor specialty |
 | `psychiatry` | Psychiatry | doctor specialty |
-| `radiology` | Radiology | doctor specialty |
+| `radiology` | Diagnostic Radiology | doctor specialty |
 | `rheumatology` | Rheumatology | doctor specialty |
 | `urology` | Urology | doctor specialty |
 | `sports-medicine` | Sports medicine | doctor specialty |
 | `rehabilitation-medicine` | Physical medicine and rehabilitation | doctor specialty |
+| `allergy-immunology` | Allergy and Immunology | doctor specialty |
+| `geriatric-medicine` | Geriatric Medicine | doctor specialty |
+| `pain-medicine` | Pain Medicine | doctor specialty |
+| `sleep-medicine` | Sleep Medicine | doctor specialty |
+| `colon-rectal-surgery` | Colon and Rectal Surgery | doctor specialty |
+| `radiation-oncology` | Radiation Oncology | doctor specialty |
+| `child-adolescent-psychiatry` | Child and Adolescent Psychiatry | doctor specialty |
+| `addiction-medicine` | Addiction Medicine | doctor specialty |
+| `hospice-palliative-medicine` | Hospice and Palliative Medicine | doctor specialty |
+| `reproductive-endocrinology-infertility` | Reproductive Endocrinology and Infertility | doctor specialty |
 | `hair-transplant` | Hair transplantation | clinic doctor |
 | `aesthetic-surgery` | Cosmetic surgery | clinic doctor |
 | `aesthetic-medicine` | Aesthetic medicine | clinic doctor |
-| `clinic-dermatology` | Dermatology (clinic) | clinic doctor |
 | `longevity` | Preventive and longevity medicine | clinic doctor |
 | `physiotherapy` | Physical therapist | clinic allied profession |
 | `clinical-psychology` | Clinical psychologist | clinic allied profession |
 | `dietetics` | Dietitian | clinic allied profession |
 | `occupational-therapy` | Occupational therapist | clinic allied profession |
 | `audiology` | Audiologist | clinic allied profession |
+| `speech-language-pathology` | Speech-Language Pathologist | clinic allied profession |
+| `clinical-social-work` | Licensed Clinical Social Worker | clinic allied profession |
+| `podiatry` | Podiatry | clinic allied profession |
+| `optometry` | Optometry | clinic allied profession |
+| `chiropractic` | Chiropractic | clinic allied profession |
+| `nurse-midwifery` | Nurse Midwife | clinic allied profession |
 
 ## Tools
 
@@ -133,31 +148,31 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `yama-okuma` | Patch test: reading days | Dermatology | no measured input |
 | `rejim-karti` | Insulin and thyroid treatment: date card | Endocrinology | no measured input |
 | `antibiyotik-sure` | Antibiotic course: counting days | Infectious disease | Length of the course: **days** |
-| `toraks-preop` | Checklist before a chest operation | Thoracic surgery | no measured input |
-| `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic surgery | no measured input |
-| `inhaler-teknik` | Inhaler technique | Pulmonology | Check the technique again after (optional): **months** |
+| `toraks-preop` | Checklist before a chest operation | Thoracic and Cardiac Surgery | no measured input |
+| `toraks-tup-yara` | Chest drain and wound follow-up | Thoracic and Cardiac Surgery | no measured input |
+| `inhaler-teknik` | Inhaler technique | Pulmonary Disease | Check the technique again after (optional): **months** |
 | `gorme-keskinligi` | Visual acuity: logMAR | Ophthalmology | no measured input |
-| `kalp-damar-preop` | Checklist before a heart or vascular operation | Cardiac and vascular surgery | no measured input |
-| `greft-yara-izlem` | Vascular graft and wound follow-up | Cardiac and vascular surgery | no measured input |
-| `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Cardiac and vascular surgery | no measured input |
+| `kalp-damar-preop` | Checklist before a heart or vascular operation | Vascular Surgery | no measured input |
+| `greft-yara-izlem` | Vascular graft and wound follow-up | Vascular Surgery | no measured input |
+| `antikoagulan-vadeleri` | Antithrombotic treatment: review dates | Vascular Surgery | no measured input |
 | `odyometri-pta` | Pure-tone audiometry: average threshold | Otolaryngology (ENT) | Threshold at 0.5 kHz: **dB**; Threshold at 1 kHz: **dB**; Threshold at 2 kHz: **dB**; Threshold at 4 kHz: **dB**; Earlier average threshold (optional): **dB**; Average threshold of the other ear (optional): **dB** · result in dB |
 | `otoskopi-notu` | Otoscopy note | Otolaryngology (ENT) | no measured input |
 | `vertigo-notu` | Vertigo: positional test note | Otolaryngology (ENT) | no measured input |
 | `diyaliz-seans` | Dialysis session and next date | Nephrology | no measured input |
-| `kur-sayaci` | Treatment cycle counter | Oncology | no measured input |
-| `toksisite-listesi` | Side effects checklist | Oncology | no measured input |
+| `kur-sayaci` | Treatment cycle counter | Hematology/Oncology | no measured input |
+| `toksisite-listesi` | Side effects checklist | Hematology/Oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopedic surgery | no measured input |
 | `vas-fonksiyon` | Pain and function rating | Orthopedic surgery | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Pediatrics | Mother's height: **in**; Father's height: **in** · result in in |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery | no measured input |
-| `tetkik-kuyrugu` | Examination queue | Radiology | no measured input |
+| `tetkik-kuyrugu` | Examination queue | Diagnostic Radiology | no measured input |
 | `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L or mg/dL**; Erythrocyte sedimentation rate: **mm/h** |
 | `eklem-28` | 28-joint count | Rheumatology | no measured input |
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **ng/mL**; Latest value: **ng/mL** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sports medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sports medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
-| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic surgery, Pulmonology, Ophthalmology, Cardiac and vascular surgery, Otolaryngology (ENT), Nephrology, Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Radiology, Rheumatology, Urology, Sports medicine | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Dermatology, Endocrinology, Infectious disease, General surgery, Thoracic and Cardiac Surgery, Pulmonary Disease, Ophthalmology, Vascular Surgery, Otolaryngology (ENT), Nephrology, Hematology/Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Diagnostic Radiology, Rheumatology, Urology, Sports medicine | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (5) — for a local clinical lead
 
@@ -169,7 +184,7 @@ The shared English set has the words of these tools and the kit has their mechan
 | `kdigo-evre` | Internal medicine | SAFETY, off by the owner's order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b). | a clinical lead in the United States |
 | `kdigo-serit` | Nephrology | SAFETY, off by the owner's order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b). | a clinical lead in the United States |
 | `doz-hesabi` | Pediatrics | UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack's unit. SAFETY, off by the owner's order of 2026-10-10: the tool rounds the volume of one dose to 0.1 mL and shows only the rounded figure (0.16 mL is shown as 0.2 mL), and it prints trailing zeros ("5.0 mL"), which can be misread as ten times the dose. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b). | a clinical lead in the United States |
-| `rapor-taslagi` | Radiology | LICENCE, off by the owner's order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded. | the owner, with the rights holder's written permission; then a clinical lead in the United States |
+| `rapor-taslagi` | Diagnostic Radiology | LICENCE, off by the owner's order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded. | the owner, with the rights holder's written permission; then a clinical lead in the United States |
 
 ### Slots in every English-speaking country (52) — empty, switched off
 
@@ -202,8 +217,8 @@ No national reference content is written by a machine, and no item of a publishe
 | `iltihap-lab-izlem` | Rheumatology | CRP and ESR follow-up: the thresholds between the bands and the months until the next check (7 numbers), with the reference ranges and the CRP unit the laboratories of the United States use. | a local clinical lead, with the national source named |
 | `basdai` | Rheumatology | BASDAI (Bath Ankylosing Spondylitis Disease Activity Index): a published patient questionnaire of six questions. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `kardiyo-izlem` | Cardiology | High blood pressure, heart-failure and atrial-fibrillation follow-up: the clinic blood-pressure limits that raise a warning and the days until each next check (9 numbers), from the guidance followed in the United States. | a local clinical lead, with the national source named |
-| `cat-mmrc` | Pulmonology | COPD Assessment Test (CAT) with the mMRC breathlessness grade: CAT is a published questionnaire whose wording belongs to its rights holder. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
-| `lung-action-plan` | Pulmonology | Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in each zone), with the emergency number and the stop-smoking service of the United States. Every sentence is an instruction to a patient and must be supplied and signed by a local respiratory doctor. | a local clinical lead, with the national source named |
+| `cat-mmrc` | Pulmonary Disease | COPD Assessment Test (CAT) with the mMRC breathlessness grade: CAT is a published questionnaire whose wording belongs to its rights holder. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
+| `lung-action-plan` | Pulmonary Disease | Written action plan for asthma and COPD: a sheet the PATIENT reads (what to do in each zone), with the emergency number and the stop-smoking service of the United States. Every sentence is an instruction to a patient and must be supplied and signed by a local respiratory doctor. | a local clinical lead, with the national source named |
 | `ibd-skor` | Gastroenterology | Activity index follow-up (partial Mayo, Harvey-Bradshaw, IBS severity total): the cut-offs between remission, mild, moderate and severe and the months until the next check (13 numbers), as the guidance followed in the United States states them. | a local clinical lead, with the national source named |
 | `hepatit-izlem` | Gastroenterology | Hepatitis B and C follow-up: the months until the next check for a stable patient, one under active follow-up and one being assessed for treatment (3 numbers) from the guidance followed in the United States. | a local clinical lead, with the national source named |
 | `pregnancy-calendar` | Obstetrics and gynecology | Pregnancy calendar: the antenatal visit schedule and the screening windows followed in the United States. (Gestational-age arithmetic alone is universal; the tool is its schedule.) | a local clinical lead, with the national source named |
@@ -223,7 +238,7 @@ No national reference content is written by a machine, and no item of a publishe
 | `phq9-gad7` | Psychiatry | PHQ-9 and GAD-7: published patient questionnaires. THE LICENCE QUESTION: the terms of use of their owner for showing the original English wording inside a commercial product. No item is reproduced here; the scoring, and the safety prompt on the ninth item of PHQ-9, are not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `psychiatry-safety-triage` | Psychiatry | Safety and emergency triage: the emergency number and the crisis service confirmed by a local source, the referral path, the rules for involuntary admission in the United States, and the wording of a crisis plan signed by a local psychiatrist. | a local clinical lead, with the national source named |
 | `psychotropic-monitoring` | Psychiatry | Monitoring calendar of psychotropic medicines: which tests and how often for each class, from the guidance followed in the United States, and the register of medicines sold there. A monitoring schedule by medicine is clinical reference content. | a local clinical lead, with the national source named |
-| `critical-finding-notice` | Radiology | Critical-finding notice: who must be told, how fast, by which channel, under the rules of the institution and of the United States. | a local clinical lead, with the national source named |
+| `critical-finding-notice` | Diagnostic Radiology | Critical-finding notice: who must be told, how fast, by which channel, under the rules of the institution and of the United States. | a local clinical lead, with the national source named |
 | `ipss` | Urology | IPSS (International Prostate Symptom Score): a published patient questionnaire. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. | the rights holder of the questionnaire, through the owner (licence terms for showing its original English wording in a commercial product); the local clinical lead confirms the version |
 | `urology-emergency-triage` | Urology | Haematuria and stone emergency triage: the emergency number confirmed by a local source and the referral path. | a local clinical lead, with the national source named |
 | `rehabilitation-session-plan` | Physical medicine and rehabilitation | Session plan: any rule of the United States on the number and frequency of sessions (a public programme or an insurer), and the form a plan is written in. | a local clinical lead, with the national source named |
@@ -361,7 +376,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 23 core questions and 228 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 23 core questions and 223 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

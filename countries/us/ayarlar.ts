@@ -9,21 +9,26 @@
  * knowledge. What each waits on is listed in docs/COUNTRY-PACK-UNITED-STATES.md.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  *
- * Plain data: type-only imports, so that the pack's light data file can read it.
+ * NOTYA-ULKE-UYGULA-US (2026-10-10) — THE AUDIT'S DECISIONS FOR THIS COUNTRY, APPLIED HERE AND NOWHERE ELSE
+ * (docs/araclar-denetim/US.md and us-kararlar.json on the branch araclar-denetim/us; the second pass supersedes the
+ * first): its own role list (./roller.ts), who sees which tool (`gorenler`), the numbers a national source states
+ * for the shared tools that take a country's (`parametreler`, `uyarlama`), the licence states that were read
+ * (`lisanslar`), and six tools of its own, built and SWITCHED OFF (./araclar/). Every number below that is new
+ * stands beside the source it was read from on that day.
+ *
+ * The pack's light file (./index.ts) does not read this file any more: what it needs is in ./temel.ts and
+ * ./roller.ts, which import types only. This file brings the arithmetic of the country's own tools.
  */
+import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
-import type { Birimler } from '@/lib/ulke/tipler'
+import { enRolSatirlari } from '../_dil/en/klinik/roller'
+import { US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
+import { US_BIRIMLER, US_VELI_YASI } from './temel'
 
-/**
- * GUARDIAN WORDING for a patient younger than this on the day of the visit ("who gave the history"), in every role.
- * UNVERIFIED — FOR A LAWYER (checklist B12). 18 is a starting value: the age of majority and the rules on a minor's own consent differ by state;
- * what that means for this product's wording and for the form a parent fills in is a legal question.
- */
-export const US_VELI_YASI = 18
+export { US_BIRIMLER, US_VELI_YASI } from './temel'
 
-/** Units a clinic in the United States records in: pounds, inches, degrees Fahrenheit. A CLINICAL-SAFETY SETTING, unverified
- * with a local clinical lead (checklist C8, E3): the kit converts with exact factors, and a wrong unit here is a wrong result. */
-export const US_BIRIMLER: Birimler = { agirlik: 'lb', boy: 'in', sicaklik: 'F' }
+/** The doctor roles of this country (every role that is not an allied profession), from its own role list. */
+export const US_HEKIMLER: readonly string[] = hekimRolleri(enRolSatirlari(US_ROLLER))
 
 const KLINISYEN = 'a clinical lead in the United States'
 
@@ -58,16 +63,21 @@ export const US_GIRDI: EnUlkeGirdisi = {
   ulkeAdi: 'the United States',
   // UNVERIFIED: the word a senior hospital doctor goes by here.
   kidemliHekim: 'attending physician',
-  // UNVERIFIED: how each specialty is usually named in the United States, where it differs from the set's base name.
-  // Not checked against the official list of specialties (checklist C1).
+  // How each specialty is named in the United States, where it differs from the set's base name. The six names below
+  // are the audit's "keep" (docs/araclar-denetim/US.md, 3a: each is on the board's, the council's or Medicare's list
+  // read on 2026-10-10); THE FIVE RENAMES of the audit follow them, each exactly as the body cited writes it
+  // (./roller.ts → US_YENIDEN_ADLANANLAR, where the source of each stands). None has been read by a US clinician.
   rolAdlari: {
     anaesthesia: 'Anesthesiology',
     'infectious-diseases': 'Infectious disease',
-    'respiratory-medicine': 'Pulmonology',
     'sports-medicine': 'Sports medicine',
     'rehabilitation-medicine': 'Physical medicine and rehabilitation',
     physiotherapy: 'Physical therapist',
+    ...US_YENIDEN_ADLANANLAR,
   },
+  // THE ROLE LIST OF THIS COUNTRY: the shared forty without "Dermatology (clinic)", with ten specialties and six
+  // professions of its own, each saying which shared role it behaves like (./roller.ts).
+  roller: US_ROLLER,
   veliYasi: US_VELI_YASI,
   birimler: US_BIRIMLER,
   surum: 'us-draft-2026-10-09',
