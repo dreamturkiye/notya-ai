@@ -19,6 +19,8 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 import {
   MOLEKUL_SAYISI,
@@ -407,5 +409,30 @@ describe('NOTYA-SUT-RAPOR-01 · SGK satırları resmî SUT metniyle aynı kural�
     assert.equal(TURKISH_DRUGS.semaglutidOral.sgkCovered, false)
     assert.match(satir('semaglutidOral'), /EK-4\/A/)
     assert.doesNotMatch(satir('semaglutidOral'), /rapor koşullarına bakınız/)
+  })
+
+  it('SUT 4.1.9(1) + EK-4/A (02.10.2026): simvastatin içeren ürün listede yok, SGK öder diye gösterilmez', () => {
+    assert.equal(TURKISH_DRUGS.simvastatin.sgkCovered, false)
+    assert.match(satir('simvastatin'), /EK-4\/A/)
+    assert.match(satir('simvastatin'), /SUT 4\.1\.9/)
+    assert.doesNotMatch(satir('simvastatin'), /ödeme koşullarına bakınız/)
+    // The list itself: no record of the catalogue built from the 02.10.2026 list carries simvastatin.
+    const katalog = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'sgk-ilaclar.json'), 'utf8')) as { guncelleme: string; ilaclar: { ad: string; etkenMadde?: string }[] }
+    assert.equal(katalog.guncelleme, '2026-10-02')
+    assert.equal(katalog.ilaclar.filter((k) => /simvastatin/i.test(`${k.etkenMadde || ''} ${k.ad}`)).length, 0)
+    const markalar = TURKISH_DRUGS.simvastatin.brand.map((b) => b.toLocaleUpperCase('tr'))
+    assert.equal(katalog.ilaclar.filter((k) => markalar.some((m) => k.ad.toLocaleUpperCase('tr').startsWith(`${m} `))).length, 0, markalar.join(', '))
+    // The other statins of the table are on the list and stay covered.
+    for (const anahtar of ['atorvastatin', 'rosuvastatin']) {
+      if (TURKISH_DRUGS[anahtar]) assert.equal(TURKISH_DRUGS[anahtar].sgkCovered, true, anahtar)
+    }
+  })
+
+  it('SUT 4.2.74(2): empagliflozin satırı kronik böbrek hastalığını da söyler (önceki metin yalnız tip 2 DM / kalp yetmezliği)', () => {
+    assert.match(satir('empagliflozin'), /SUT 4\.2\.74/)
+    assert.match(satir('empagliflozin'), /kronik böbrek hastalığı/)
+    assert.match(satir('empagliflozin'), /kalp yetmezliği/)
+    assert.match(satir('empagliflozin'), /SUT 4\.2\.38/)
+    assert.equal(TURKISH_DRUGS.empagliflozin.sgkCovered, true)
   })
 })

@@ -439,7 +439,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             >
               <option value="">— Sunum seçin —</option>
               {secili.sunumlar.map((su) => (
-                <option key={su.barkod} value={su.barkod}>{su.ad}{su.ruhsatAskida ? ' — RUHSAT ASKIDA' : ''}</option>
+                <option key={su.barkod} value={su.barkod}>{su.ad}{su.sgk === false ? ' — SGK ödemiyor' : ''}{su.ruhsatAskida ? ' — RUHSAT ASKIDA' : ''}</option>
               ))}
             </select>
           </div>
@@ -449,7 +449,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           <div className="ni-barkod">Barkod: <strong>{sunum.barkod}</strong> · e-reçetede bu ürün kaydedilir</div>
         )}
 
-        {secili && !secili.sgk && <div className="ni-warn">Bu ürün SGK tarafından ödenmiyor.</div>}
+        {/* NOTYA-SUT-RAPOR-01i: reimbursement is per PACK. A brand can have paid packs and a pack that is passive on
+            SGK's list or no longer on it (SUT 4.1.9(1)); the warning follows the chosen pack. */}
+        {((secili && !secili.sgk) || sunum?.sgk === false) && <div className="ni-warn">Bu ürün SGK tarafından ödenmiyor.</div>}
 
         {/* NOTYA-ILAC-09: 62 SGK-reimbursed products have a suspended TİTCK licence (madde-22/23) —
             among them fentanyl. The flag rides the PACK (barcode), so the warning fires on the
