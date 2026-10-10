@@ -5,7 +5,7 @@
  * MACHINE-WRITTEN. No clinician of any country has read a line. Written in en-GB spelling.
  */
 import { DIS_KULAK, KULAK_ZARI, KULAKLAR, otoAlani } from '@/lib/ulke/araclar/tanimlar/kalpKbb'
-import { KDIGO_A_MG_G, KDIGO_G } from './arac1'
+import { KDIGO_A, KDIGO_G, KDIGO_UACR_YOK } from './arac1'
 import { DOZSUZ, GOZLEM_TARIHI, gorev, ISARETLI_MADDE, KARAR, SONRAKI_KONTROL, SONRAKI_KONTROL_TARIHI, type HamArac } from './yardimci'
 
 const KULAK: Readonly<Record<(typeof KULAKLAR)[number], string>> = { sag: 'Right ear', sol: 'Left ear' }
@@ -196,9 +196,10 @@ export const EN_ARACLAR_2: readonly HamArac[] = [
       karsi_pta: 'Average threshold of the other ear (optional)',
     },
     secenekler: { kulak: { sag: 'Right ear', sol: 'Left ear' } },
-    sayilar: { pta: 'Average threshold', fark: 'Change from the earlier measurement' },
+    sayilar: { pta: 'Average threshold', fark: 'Change from the earlier measurement', kulak_farki: 'Difference from the other ear' },
     bantlar: {
-      normal: 'Within normal limits (up to 25 dB)',
+      normal: 'Normal (up to 15 dB)',
+      hafifce: 'Slight hearing loss (16 to 25 dB)',
       hafif: 'Mild hearing loss (26 to 40 dB)',
       orta: 'Moderate hearing loss (41 to 55 dB)',
       orta_ileri: 'Moderately severe hearing loss (56 to 70 dB)',
@@ -208,7 +209,7 @@ export const EN_ARACLAR_2: readonly HamArac[] = [
     uyarilar: {
       esik_artisi: 'The threshold is 10 dB or more higher than at the earlier measurement',
       esik_azalisi: 'The threshold is 10 dB or more lower than at the earlier measurement',
-      asimetri: 'The two ears differ by 15 dB or more',
+      asimetri: 'The averages of the two ears differ by more than 15 dB',
     },
     not: 'The grade supports a decision; the type of hearing loss and the diagnosis are the doctor\'s.',
   },
@@ -249,10 +250,13 @@ export const EN_ARACLAR_2: readonly HamArac[] = [
       nis_fiksasyon: 'Nystagmus is not suppressed by fixation',
       santral_cift_gorme: 'Central sign: double vision, slurred speech or difficulty swallowing',
       santral_yuz: 'Central sign: facial asymmetry, numbness or weakness',
+      santral_uzuv: 'Central sign: weakness or altered sensation of an arm or a leg',
+      santral_koordinasyon: 'Central sign: poor coordination of a limb (dysmetria)',
       santral_ayakta: 'Central sign: cannot stand or walk without support',
       santral_nistagmus: 'Central sign: nystagmus without a latent period, not fatiguing or changing direction',
       santral_fiksasyon: 'Central sign: nystagmus not suppressed by fixation',
       santral_bas_agrisi: 'Central sign: sudden, severe and unusual headache',
+      santral_boyun_agrisi: 'Central sign: significant neck pain',
       kulak_belirtisi: 'There are ear symptoms (hearing loss, tinnitus, fullness)',
     },
     secenekler: { dix_hallpike: TEST_SONUCU, supine_roll: TEST_SONUCU, epley: TEST_SONUCU, barbecue: TEST_SONUCU, head_impulse: TEST_SONUCU, romberg: TEST_SONUCU },
@@ -269,10 +273,10 @@ export const EN_ARACLAR_2: readonly HamArac[] = [
   {
     anahtar: 'kdigo-serit', roller: ['nephrology'],
     ad: 'KDIGO grid: GFR and albuminuria',
-    aciklama: 'The GFR category (G1 to G5), the albuminuria category (A1 to A3) and the risk cell. No treatment plan and no follow-up interval is stated.',
-    alanlar: { egfr: 'Estimated GFR', uacr: 'Urine albumin-to-creatinine ratio (optional)' },
+    aciklama: 'The GFR category (G1 to G5), the albuminuria category (A1 to A3) and, once both results are entered, the risk cell. No treatment plan and no follow-up interval is stated.',
+    alanlar: { egfr: 'Estimated GFR', uacr: 'Urine albumin-to-creatinine ratio (without it no risk cell is shown)' },
     bantlar: { yesil: 'Low risk (green cell)', sari: 'Moderately increased risk (yellow cell)', turuncu: 'High risk (orange cell)', kirmizi: 'Very high risk (red cell)' },
-    uyarilar: { ...KDIGO_G, ...KDIGO_A_MG_G },
+    uyarilar: { ...KDIGO_G, ...KDIGO_A, uacr_yok: KDIGO_UACR_YOK },
     not: KARAR,
   },
   {

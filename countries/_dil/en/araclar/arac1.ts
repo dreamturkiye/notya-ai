@@ -20,8 +20,13 @@ const bolgeAlanlari = (ekler: Readonly<Record<string, string>>): Record<string, 
 const KDIGO_BANTLARI = { yesil: 'Low risk (green cell)', sari: 'Moderately increased risk (yellow cell)', turuncu: 'High risk (orange cell)', kirmizi: 'Very high risk (red cell)' }
 /** GFR categories carry no laboratory unit of a country. The albuminuria categories do: each country's pack writes A1 to A3 in its own unit. */
 export const KDIGO_G = { G1: 'G1: GFR 90 or above', G2: 'G2: GFR 60 to 89', G3a: 'G3a: GFR 45 to 59', G3b: 'G3b: GFR 30 to 44', G4: 'G4: GFR 15 to 29', G5: 'G5: GFR below 15' }
-/** The albuminuria categories as the kit computes them: in mg/g. For a pack whose laboratories report mg/g. */
-export const KDIGO_A_MG_G = { A1: 'A1: albumin-to-creatinine ratio below 30 mg/g', A2: 'A2: albumin-to-creatinine ratio 30 to 300 mg/g', A3: 'A3: albumin-to-creatinine ratio above 300 mg/g' }
+/**
+ * The albuminuria categories with the guideline's limits IN BOTH UNITS, as it prints them: the kit compares a value
+ * with the limits of the unit it was typed in (NOTYA-ULKE-ARAC-DUZELTME-01, fault 5), so one wording serves every pack.
+ */
+export const KDIGO_A = { A1: 'A1: albumin-to-creatinine ratio below 30 mg/g (below 3 mg/mmol)', A2: 'A2: albumin-to-creatinine ratio 30 to 300 mg/g (3 to 30 mg/mmol)', A3: 'A3: albumin-to-creatinine ratio above 300 mg/g (above 30 mg/mmol)' }
+/** Said in place of a risk cell while the urine result is missing: the cell is defined by two results. */
+export const KDIGO_UACR_YOK = 'No urine albumin-to-creatinine ratio was entered: the risk cell needs both results and is not shown'
 
 export const EN_ARACLAR_1: readonly HamArac[] = [
   // ── emergency medicine. Not for cardiology, neurology or family medicine: triage of an emergency department. ──
@@ -70,9 +75,10 @@ export const EN_ARACLAR_1: readonly HamArac[] = [
   {
     anahtar: 'asa-preop', roller: ['anaesthesia'],
     ad: 'ASA class and pre-operative checklist',
-    aciklama: 'Items of the pre-anaesthetic assessment, and the ASA physical status class you stated.',
+    aciklama: 'Items of the pre-anaesthetic assessment, and the ASA physical status class you stated (I to VI), with the mark E where the operation is an emergency.',
     alanlar: {
       asa_sinif: 'ASA class (optional)',
+      asa_acil: 'E: emergency surgery (a mark added to the class)',
       anamnez_tamam: 'Anaesthetic history taken',
       asa_siniflandirma: 'ASA physical status class recorded',
       acil_lab_goruntu: 'Date set for the laboratory tests and imaging that are needed',
@@ -82,10 +88,10 @@ export const EN_ARACLAR_1: readonly HamArac[] = [
       kardiyopulmoner_risk: 'Heart and lung risk factors assessed',
       kontrol_randevu: 'Pre-operative or follow-up visit booked',
     },
-    secenekler: { asa_sinif: kendiAdi(['I', 'II', 'III', 'IV', 'V', 'E']) },
+    secenekler: { asa_sinif: kendiAdi(['I', 'II', 'III', 'IV', 'V', 'VI']) },
     sayilar: { isaretli: ISARETLI_MADDE },
-    bantlar: { I: 'ASA I', II: 'ASA II', III: 'ASA III', IV: 'ASA IV', V: 'ASA V', E: 'ASA E' },
-    uyarilar: { kontrol_randevu: gorev('follow-up visit'), acil_lab_goruntu: gorev('test results'), hava_yolu_degerlendirme: gorev('airway note'), alerji_ilac_listesi: gorev('allergies and list of medicines') },
+    bantlar: { I: 'ASA I', II: 'ASA II', III: 'ASA III', IV: 'ASA IV', V: 'ASA V', VI: 'ASA VI' },
+    uyarilar: { asa_acil: 'E: emergency surgery', kontrol_randevu: gorev('follow-up visit'), acil_lab_goruntu: gorev('test results'), hava_yolu_degerlendirme: gorev('airway note'), alerji_ilac_listesi: gorev('allergies and list of medicines') },
     not: DOZSUZ,
   },
   {
@@ -228,16 +234,17 @@ export const EN_ARACLAR_1: readonly HamArac[] = [
   {
     anahtar: 'kdigo-evre', roller: ['internal-medicine'],
     ad: 'Chronic kidney disease: KDIGO categories',
-    aciklama: 'The GFR category (G1 to G5), the albuminuria category (A1 to A3) and the risk cell they fall in. No treatment plan and no follow-up interval is stated.',
-    alanlar: { egfr: 'Estimated GFR', uacr: 'Urine albumin-to-creatinine ratio (optional)', egfr_bir_yil_once: 'GFR a year ago (optional)' },
+    aciklama: 'The GFR category (G1 to G5), the albuminuria category (A1 to A3) and, once both results are entered, the risk cell they fall in. No treatment plan and no follow-up interval is stated.',
+    alanlar: { egfr: 'Estimated GFR', uacr: 'Urine albumin-to-creatinine ratio (without it no risk cell is shown)', egfr_bir_yil_once: 'An earlier GFR (optional)' },
     bantlar: KDIGO_BANTLARI,
+    // Each referral line says what the guideline's list names AND what one result cannot show (the kit's definition cites the list).
     uyarilar: {
-      ...KDIGO_G, ...KDIGO_A_MG_G,
-      hizli_dusus: 'GFR has fallen by more than 25% in a year',
-      sevk_egfr30: 'KDIGO criterion for referral to a nephrologist: GFR below 30',
-      sevk_a3: 'KDIGO criterion for referral to a nephrologist: albuminuria A3',
-      sevk_hizli_dusus: 'KDIGO criterion for referral to a nephrologist: a rapid fall in GFR',
-      sevk_cok_yuksek_risk: 'KDIGO criterion for referral to a nephrologist: the very-high-risk cell',
+      ...KDIGO_G, ...KDIGO_A,
+      uacr_yok: KDIGO_UACR_YOK,
+      sevk_egfr30: 'On the KDIGO list of circumstances for referral to a kidney specialist: GFR below 30',
+      sevk_acr_hematuri: 'The ratio is 300 mg/g (30 mg/mmol) or more. The KDIGO list of circumstances for referral names this as a consistent finding together with blood in the urine: one result does not show either',
+      sevk_acr700: 'The ratio is above 700 mg/g (70 mg/mmol). The KDIGO list of circumstances for referral names this as a consistent finding: one result does not show that',
+      sevk_dusus20: 'GFR is more than 20% below the earlier value. The KDIGO list of circumstances for referral names a sustained fall of more than 20%: two results do not show that the fall is sustained',
     },
     not: KARAR,
   },
@@ -246,25 +253,25 @@ export const EN_ARACLAR_1: readonly HamArac[] = [
   {
     anahtar: 'pasi', roller: ['dermatology'],
     ad: 'PASI score',
-    aciklama: 'Psoriasis Area and Severity Index. Four regions; in each, erythema, induration and scaling (0 to 4) and an area score (0 = none, 1 = 1 to 9%, 2 = 10 to 29%, 3 = 30 to 49%, 4 = 50 to 69%, 5 = 70 to 89%, 6 = 90 to 100%). An empty field counts as 0.',
+    aciklama: 'Psoriasis Area and Severity Index. Four regions; in each, erythema, induration and scaling (0 to 4) and an area score (0 = none, 1 = 1 to 9%, 2 = 10 to 29%, 3 = 30 to 49%, 4 = 50 to 69%, 5 = 70 to 89%, 6 = 90 to 100%). The score appears once every region is finished: its area score and, where the area is not 0, its three signs. The tool shows the score and names no grade of severity.',
     alanlar: bolgeAlanlari({ e: 'erythema (0 to 4)', i: 'induration (0 to 4)', d: 'scaling (0 to 4)', a: 'area involved (0 to 6)' }),
     sayilar: { pasi: 'PASI' },
-    bantlar: { hafif: 'Mild (below 10)', orta: 'Moderate (10 to 19.9)', siddetli: 'Severe (20 or above)' },
     not: KARAR,
   },
   {
     anahtar: 'easi', roller: ['dermatology'],
     ad: 'EASI score',
-    aciklama: 'Eczema Area and Severity Index. Four regions; in each, four signs (0 to 3) and an area score (0 = none, 1 = 1 to 9%, 2 = 10 to 29%, 3 = 30 to 49%, 4 = 50 to 69%, 5 = 70 to 89%, 6 = 90 to 100%). The weights are those for a patient aged 8 or over. An empty field counts as 0.',
-    alanlar: bolgeAlanlari({ e: 'erythema (0 to 3)', i: 'oedema or papulation (0 to 3)', d: 'excoriation (0 to 3)', l: 'lichenification (0 to 3)', a: 'area involved (0 to 6)' }),
+    aciklama: 'Eczema Area and Severity Index. Four regions; in each, four signs (0 to 3) and an area score (0 = none, 1 = 1 to 9%, 2 = 10 to 29%, 3 = 30 to 49%, 4 = 50 to 69%, 5 = 70 to 89%, 6 = 90 to 100%). The weight of each region depends on the age of the patient: under 8 years, or 8 years or over. The score appears once the age is chosen and every region is finished: its area score and, where the area is not 0, its four signs.',
+    alanlar: { yas: 'Age of the patient', ...bolgeAlanlari({ e: 'erythema (0 to 3)', i: 'oedema or papulation (0 to 3)', d: 'excoriation (0 to 3)', l: 'lichenification (0 to 3)', a: 'area involved (0 to 6)' }) },
+    secenekler: { yas: { yedi_ve_alti: 'Under 8 years', sekiz_ve_ustu: '8 years or over' } },
     sayilar: { easi: 'EASI' },
-    bantlar: { hafif: 'Mild (below 7)', orta: 'Moderate (7 to 20.9)', siddetli: 'Severe (21 or above)' },
+    bantlar: { temiz: 'Clear (0)', neredeyse_temiz: 'Almost clear (0.1 to 1.0)', hafif: 'Mild (1.1 to 7.0)', orta: 'Moderate (7.1 to 21.0)', siddetli: 'Severe (21.1 to 50.0)', cok_siddetli: 'Very severe (50.1 to 72.0)' },
     not: KARAR,
   },
   {
     anahtar: 'scorad', roller: ['dermatology'],
     ad: 'SCORAD index',
-    aciklama: 'Severity of atopic dermatitis: A, the percentage of skin involved; B, the intensity of six signs (0 to 3); C, itch and sleep loss (0 to 10). The sum of one fifth of A, three and a half times B, and C.',
+    aciklama: 'Severity of atopic dermatitis: A, the percentage of skin involved; B, the intensity of six signs (0 to 3); C, itch and sleep loss (0 to 10). The sum of one fifth of A, three and a half times B, and C. The index appears once every field is filled in.',
     alanlar: {
       yayginlik: 'Area of skin involved',
       eritem: 'Erythema (0 to 3)',
@@ -277,7 +284,7 @@ export const EN_ARACLAR_1: readonly HamArac[] = [
       uykusuzluk: 'Sleep loss, as the patient rates it (0 to 10)',
     },
     sayilar: { scorad: 'SCORAD', a: 'A: extent', b: 'B: intensity', c: 'C: subjective symptoms' },
-    bantlar: { hafif: 'Mild (below 25)', orta: 'Moderate (25 to 49.9)', siddetli: 'Severe (50 or above)' },
+    bantlar: { hafif: 'Mild (below 25)', orta: 'Moderate (25 to 50)', siddetli: 'Severe (above 50)' },
     not: KARAR,
   },
   {
@@ -303,7 +310,7 @@ export const EN_ARACLAR_1: readonly HamArac[] = [
   {
     anahtar: 'antibiyotik-sure', roller: ['infectious-diseases'],
     ad: 'Antibiotic course: counting days',
-    aciklama: 'From the start date and the number of days, the last day of the course and a review date are worked out. No medicine, no dose and no recommended length is stated.',
+    aciklama: 'From the start date and the number of days, the last day of the course and a review date are worked out. The start date counts as day 1. No medicine, no dose and no recommended length is stated.',
     alanlar: { baslangic: 'Start date of the course', sure_gun: 'Length of the course', kontrol: 'Review date (optional)', sinif: 'Group of the antibiotic, in a few words (optional)' },
     tarihler: { bitis: 'Last day of the course', kontrol: 'Review' },
     not: DOZSUZ,

@@ -28,7 +28,7 @@ ingilizcePaketSinamasi({
   // off by Kaan's order of 2026-10-10 as well (NOTYA-ULKE-ARAC-01b): all five; 'doz-hesabi' was on here until that day
   kapaliAraclar: ['doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
-  labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
+  labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L' },
   kidemliHekim: 'specialist',
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
   ornekTelefon: /^\+61 491 570 (006|110|15[6-9])$/,
@@ -77,8 +77,10 @@ describe('au: what is Australia\'s', () => {
 
   it('prostate-specific antigen is written in µg/L; the consent stamp is Australia\'s own draft', () => {
     const a = AU_ARAYUZ.araclar!
-    assert.equal(a.birimler['ng/mL'][D], 'µg/L')
-    assert.equal(a.birimler['ng/mL/yil'][D], 'µg/L per year')
+    assert.equal(a.labBirimleri.psa, 'ug/L')
+    assert.equal(a.birimler['ug/L'][D], 'µg/L')
+    assert.equal(a.birimler['ug/L/yil'][D], 'µg/L per year')
+    assert.ok(!('ng/mL' in a.birimler), 'no tool shows ng/mL here')
     assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-09')
     assert.equal(AU_ARAYUZ.metinler[D]!.muayene.riza, AU_GIRDI.sozler.kayitRizasi)
   })

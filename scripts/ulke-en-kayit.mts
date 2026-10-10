@@ -45,7 +45,7 @@ type Ulke = {
   ekNotlar: readonly string[]
 }
 const LAWYER = 'for a lawyer'
-const LAB_ADLARI: Readonly<Record<string, string>> = { albuminKreatinin: 'urine albumin-to-creatinine ratio', hemoglobin: 'haemoglobin', kreatinin: 'creatinine', glukoz: 'glucose', kolesterol: 'cholesterol' }
+const LAB_ADLARI: Readonly<Record<string, string>> = { albuminKreatinin: 'urine albumin-to-creatinine ratio', hemoglobin: 'haemoglobin', kreatinin: 'creatinine', glukoz: 'glucose', kolesterol: 'cholesterol', hba1c: 'HbA1c', crp: 'C-reactive protein', psa: 'prostate-specific antigen' }
 const ULKELER: Readonly<Record<string, Ulke>> = {
   gb: {
     ad: 'United Kingdom', dosya: 'COUNTRY-PACK-UNITED-KINGDOM.md',
@@ -245,6 +245,7 @@ ${[
   satir('Date pattern; clock; first day of the week', `${p.bicim.tarihDeseni}; ${u.saatBicimi}-hour; ${p.bicim.haftaBasi === 1 ? 'Monday' : 'Sunday'}`, 'a local lead'),
   satir('Units', `weight ${u.birimler.agirlik}, height ${u.birimler.boy}, temperature °${u.birimler.sicaklik}`, 'a local clinical lead — a clinical-safety setting'),
   satir('Laboratory units', Object.entries(a.araclar.labBirimleri).map(([q, b]) => `${LAB_ADLARI[q] ?? q}: ${(typeof b === 'string' ? [b] : [...(b ?? [])]).map(birimAdi).join(' or ')}`).join('; '), 'a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here'),
+  satir('Writing an amount of a medicine', a.araclar.dozYazimi ? (a.araclar.dozYazimi.sondaSifir ? 'the decimals are written out ("5.00 mL")' : 'no zero after the last figure ("5 mL", never "5.0 mL")') : 'not stated', 'a local pharmacist or clinical lead — a clinical-safety setting; the source read is cited beside the setting in ayarlar.ts'),
   satir('Currency', `${p.paraBirimi.kod}`, 'the owner'),
   satir('Prices', 'EMPTY, SWITCHED OFF: every plan "by quote"', '**WAITING ON KAAN**'),
   satir('Emergency (ambulance) number on the patient\'s page', `\`${u.portal?.acilNumara ?? 'none'}\` — UNVERIFIED`, 'a local source, before any patient sees the portal'),
