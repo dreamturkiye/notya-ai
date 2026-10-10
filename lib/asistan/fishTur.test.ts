@@ -113,9 +113,17 @@ describe('NOTYA-AYSE-GERI-02 — sesli onay Fish rotasında (denetim §4.6, PR 3
     assert.deepEqual(oturumBaglami(oturum).bekleyenOneriler, [])
     assert.equal(sonAsistanMesaji(oturum), 'Kaydedildi Hocam — Alerji ekle.')
 
-    // With nothing pending, "Evet" is ordinary conversation again — nothing is written.
+    // With nothing pending, a second "Evet" straight after writes nothing. Since NOTYA-SES-TEK-CEVAP-01 (79c503fd) it
+    // is also not a model turn: the same voice sentence, already answered in this session, is a replay and is dropped.
     ortam.yanit = { metin: JSON.stringify({ speech: 'Buyurun Hocam.' }) }
     await fishTur(s, 'Evet', { oturum })
+    assert.equal(ortam.modelIstekleri.length, modelOnce, 'yanıtlanmış "Evet"in tekrarı yeni bir tur değildir')
+    assert.equal(ortam.db.tablo('eylem_kayitlari').length, 1)
+    assert.equal(hastaNotlari(hasta).alerjiler, 'Penisilin')
+    // In a conversation where "Evet" was not just answered and nothing is pending, it is ordinary conversation:
+    // the model answers, nothing is written.
+    const yeni = oturumAc(s, { id: hasta, ad: AD })
+    await fishTur(s, 'Evet', { oturum: yeni })
     assert.equal(ortam.modelIstekleri.length, modelOnce + 1)
     assert.equal(ortam.db.tablo('eylem_kayitlari').length, 1)
   })

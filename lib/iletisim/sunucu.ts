@@ -4,7 +4,7 @@
  * consent, no log) — the product must never crash because a table is missing.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { decrypt, encrypt } from '@/lib/security/encryption'
+import { decrypt } from '@/lib/security/encryption'
 import { veliDiliMi } from '@/lib/specialties/kapsam'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { sonrakiDozKarsilandiMi } from '@/lib/asi/hatirlatma'
@@ -51,11 +51,20 @@ export type HastaIletisimi = {
   izinEposta: IzinDegeri
   /** false when migration 095 is not applied yet — consent cannot be stored. */
   izinKaydedilebilir: boolean
+  /**
+   * NOTYA-INTAKE-EMAIL-01: `eposta` is the address typed on the patient's latest appointment — the card has none.
+   * Saving it on the card is hastaIletisimiTamamla's job (lib/iletisim/hastaIletisimiTamamla.ts), never this file's.
+   */
+  epostaRandevudan?: boolean
 }
 
 /**
  * Contact data of ONE patient of this doctor, or null (foreign / unknown id → null, same as 404).
  * Consent is read in a separate query so a missing column only makes consent "unknown".
+ *
+ * READ ONLY. This module is inside the chat / voice import graph, where NOTYA-EYLEM-24
+ * (core/eylemler/tests/sessizYol.test.ts) allows no write to a clinical table. A path that prepares a message and
+ * should also save the appointment's e-mail on an empty card calls hastaIletisimiTamamla instead.
  */
 export async function hastaIletisimi(sb: Sb, doktorId: string, patientId: string, doktorBransi?: string | null): Promise<HastaIletisimi | null> {
   if (!doktorId || !patientId) return null
@@ -82,7 +91,8 @@ export async function hastaIletisimi(sb: Sb, doktorId: string, patientId: string
   }
   let eposta = coz(p.email_encrypted)
   // NOTYA-INTAKE-EMAIL-01: hasta kartında e-posta yoksa randevudaki serbest e-postayı anında kullan
-  // (ve boş kart alanına yaz — form gönderiminde "kayıtlı e-posta yok" kalmasın).
+  // (boş kart alanına yazmak hastaIletisimiTamamla'nın işi — form gönderiminde "kayıtlı e-posta yok" kalmasın).
+  let epostaRandevudan = false
   if (!eposta) {
     const { data: rv } = await sb
       .from('randevular')
@@ -96,12 +106,7 @@ export async function hastaIletisimi(sb: Sb, doktorId: string, patientId: string
     const aday = String(rv?.hasta_email_serbest || '').trim()
     if (aday.includes('@')) {
       eposta = aday
-      const { error: yazHata } = await sb
-        .from('patients')
-        .update({ email_encrypted: encrypt(aday), updated_at: new Date().toISOString() })
-        .eq('id', patientId)
-        .eq('doctor_id', doktorId)
-      if (yazHata) console.error('[iletisim] randevu e-posta → hasta:', yazHata.message)
+      epostaRandevudan = true
     }
   }
   return {
@@ -113,6 +118,7 @@ export async function hastaIletisimi(sb: Sb, doktorId: string, patientId: string
     izinWhatsapp,
     izinEposta,
     izinKaydedilebilir,
+    ...(epostaRandevudan ? { epostaRandevudan: true } : {}),
   }
 }
 

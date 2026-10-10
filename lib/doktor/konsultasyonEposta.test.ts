@@ -17,9 +17,11 @@ describe('konsultasyonEposta — alıcı, taslak, durum (cihaz postası)', () =>
     assert.match(t.metin, /https:\/\/www\.notya\.io\/konsultan\/abc/)
     assert.equal(t.portalLink, 'https://www.notya.io/konsultan/abc')
   })
-  it('durum metinleri cihaz postasına yönlendirir; OAuth istemez', () => {
+  it('durum metinleri: e-posta açıldı, Gönder yeterli — posta programı adı sorulmaz / söylenmez; OAuth istemez', () => {
     assert.match(epostaDurumMetni('gonderildi', 'a@b.com'), /işaretlendi/)
-    assert.match(epostaDurumMetni('hazir', 'a@b.com'), /Posta uygulamanız|Mac Mail|iPhone/)
+    // NOTYA-KONSULT-GONDERIM-01 (Kaan, 2026-10-07, #559): the doctor is never asked — or told — which mail program.
+    assert.equal(epostaDurumMetni('hazir', 'a@b.com'), 'E-postanız açıldı (a@b.com) — Gönder’e basmanız yeterli.')
+    assert.doesNotMatch(epostaDurumMetni('hazir', 'a@b.com'), /Posta uygulamanız|Mac Mail|iPhone|Outlook|Gmail/)
     assert.match(epostaDurumMetni('yok'), /Defter|e-posta/)
     assert.match(epostaDurumMetni('hata'), /yeniden/)
     assert.doesNotMatch(epostaDurumMetni('hazir'), /bağlı değil|Gmail\/Outlook bağla/)

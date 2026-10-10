@@ -1,5 +1,57 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-KIRMIZI-TESTLER-01 — the 16 red test files on `main` (Kaan, 2026-10-10, branch `fix/tr-kirmizi-testler`, owner Claude)
+
+Kaan, 2026-10-10: "Fix everything that needs to be fixed." A job that day ran the full `npm test` on `main` and found 16 test files failing that it had not touched. Baseline on untouched `origin/main` (da4dd706): 5232 tests, **26 failed, 4 cancelled, 16 files**. Every failure was traced to the commit that caused it; nothing was deleted or weakened to turn green. Cause in one line: between 2026-10-03 and 2026-10-07 a run of commits went to `main` without the full test run (the repository has no check that runs `npm test` on a pull request).
+
+### Product faults found and fixed (the tests were right)
+
+| # | What a doctor / patient / consultant would have met | Cause | Fix |
+|---|---|---|---|
+| 1 | **Patient isolation.** A consultation request accepts a "source muayene note" id in its body and stored it unchecked; the account-less consultant portal then showed sentences of that note (diagnosis, assessment, plan) to whoever held the link, and wrote the consultant's reply into it. A logged-in doctor who knew another doctor's note id could have exposed that note through his own consultation link. No screen sends the field today, so it was reachable only by a hand-made request. The portal also read the patient name by id alone. | `app/api/doktor/konsultasyon/route.ts` + `app/api/konsultan/route.ts` (e12661b3, 2026-10-04), never classified in the isolation inventory | `lib/doktor/konsultasyonKaynakNot.ts`: the note must be this doctor's note of THIS patient's muayene and not archived — checked when the request is created (404) and again on every portal read / write. Patient name read with the doctor filter. Four cross-doctor cases in `hasta-izolasyon.test.ts` (verified red against the old code). |
+| 2 | **Consultant's report on the patient's Sağlığım.** KONSULTASYON-01 (Kaan, 2026-09-19): the patient sees only "yönlendirildiniz · sonuç alındı", never the report. Since 2026-10-04 Sağlığım listed every document in the patient's vault with a download link — the consultant's report included (also the ones a consultant uploads, which the product says are "not put on the portal before the doctor approves"). | NOTYA-PORTAL-TETKIK-01 (96ece4bc) | `lib/portal/konsultasyonBelgeleri.ts`: a document a consultation points at, or filed as a consultation report, is neither listed nor served (`…/belge/[id]` answers 404). Fails closed. |
+| 3 | **Ayşe said a phone number aloud.** On the ElevenLabs voice a sentence with a phone or T.C. number must not be read ("İletişim bilgisini ekranınıza yazdım."). Since 2026-10-05 the digits were spelled out as words before that check ran, so the number was spoken in the room. | NOTYA-SES-SAYI-NET-01 (ea5a8735) | `lib/asistan/konusma.ts`: the identity check reads the sentence as written, before the speech normaliser. |
+| 4 | **Emergency flag missing from Ayşe's voice summary.** In a voice turn Ayşe gets a short, "safety-complete" file. A document evaluation flagged as an emergency (e.g. an EEG) was no longer in it. | The Bluetooth removal (d5b8e2da, 2026-10-04) renamed the file section "CİHAZ VE BELGE DEĞERLENDİRMELERİ" → "BELGE DEĞERLENDİRMELERİ"; the short summary still looked for the old name | `lib/doktor/hastaDosyaKisa.ts` reads the new heading (and the old one, for cached file texts). |
+| 5 | **English on the consultant's page.** The report upload showed the browser's own "Choose Files / No file chosen". | `components/konsultan/KonsultanPortal.tsx` (e12661b3) | Hidden input + Turkish button ("Dosya seç" / "Dosyaları değiştir"). |
+| 6 | **"Kadın Doğum" on the doctor landing page.** The naming standard (Kaan, 2026-09-18) is "Kadın Hastalıkları ve Doğum". | `components/doktor-landing/content.ts` (#554) | One label changed: "Kadın Doğum" → "Kadın Hastalıkları ve Doğum". |
+| 7 | Nothing visible; a guard was tripped. The helper that READS a patient's contact data had gained a write (copy the appointment's e-mail onto an empty patient card) and sits in the code a chat / voice turn imports — NOTYA-EYLEM-24 allows no write to a clinical table there. No chat / voice path called it. | 7ff5addd (2026-10-03) + d8cca082 (2026-10-04) | Read and write split: `hastaIletisimi` only reads; `lib/iletisim/hastaIletisimiTamamla.ts` (outside that import graph) saves the address. Same behaviour for Hazır mesajlar, iletişim kaydı and Randevu V2. |
+| 8 | Nothing visible (defence in depth). The follow-up sync opened a case for any appointment / consultation row of the doctor, without re-checking that its patient is the doctor's own. | `lib/doktor/takip/senkron.ts` (d8cca082) | Cases are opened only for the doctor's own patients. Covered by the new takip isolation cases. |
+
+### Six routes that had never been classified for patient isolation
+
+`app/api/doktor/takip`, `…/konsultasyon/defter`, `app/api/konsultan`, `app/api/portal/hasta/[token]/belge/[id]` → reviewed and now under the cross-doctor suite (positive control + A→B + B→A). `app/api/doktor/on-buro-fisilti` and `app/api/cron/takip-hatirlatma` → reviewed by hand, scoping written in `lib/security/hastaIzolasyonEnvanteri.ts`. The fake database learned `{ count: 'exact' }` on update / delete.
+
+### Stale tests (the product changed on purpose; the test was not updated)
+
+| Test | Product change it had missed |
+|---|---|
+| `hasta-izolasyon.test.ts` voice cases (3), `fishTur.test.ts` (1), `fishTurSessiz.test.ts` (4) | NOTYA-SES-ARKA-01 / NOTYA-SES-TEK-CEVAP-01 (0f97c058, 79c503fd): a voice question is answered once; a repeat, or a sentence made of Ayşe's last answer, gets no model turn. The tests sent the same sentence twice. They now use a second, different sentence; every isolation assertion is unchanged. |
+| `tekBeyin.test.ts` foreign-token case | Same lock: another doctor's token cannot claim this doctor's session, the turn ends silent. The test now asserts silence, no patient, no model call, nothing written. |
+| `tekBeyin.test.ts` "kaç kilo" after a page change; `hastaDosyaKart.test.ts` table floor | Bluetooth removal (d5b8e2da): the quick card no longer reads the device table. Fixture weights moved to the visit's vital signs; the compiler guard names its nine tables instead of counting ten. |
+| `tekBeyin.test.ts` voice-context cases (2) | The learning call runs in the background and can land before the next turn's request; the test now picks the main turn by its shape instead of by position. |
+| `asiRotalari.test.ts` | 4157dab4: Aşı Karnesi is always on in Sağlığım, also for a patient without records. |
+| `konsultasyonEposta.test.ts` | #559 (Kaan, 2026-10-07): the doctor is not told which mail program. |
+| `gokhanKorpus.test.ts` foreign-patient summary | NOTYA-IKI-BEYIN-BIRDE (3f8ca065): an empty search falls through to the model instead of the "0 hasta · Filtre" template. |
+| `gokhanKorpus.test.ts` source check | **NOTYA-SES-SLUR-02** (Dr. Gökhan, 2026-10-03, f6514f27) shipped without a ledger line, and corpus entry L-OZET-TAM cites it. Recorded here: answers read from the chart are capped again at the short spoken lead (five sentences), the full detail stays on screen; "hepsini anlat" reads everything (NOTYA-SES-OKUNUS-01). |
+| `arsiv.test.ts` | MBYS-YARDIMCI-01 (#562): the "Kaydettim" status write checks the note's ownership by id — allow-listed with its reason, as the guard asks. |
+
+### Environment
+
+`lib/ai/sureButcesi.test.ts` (4 cancelled): the fake slow request held nothing open, and `AbortSignal.timeout()`'s timer does not keep a Node process alive, so the test process ended before the timeout fired. The fake now holds the event loop the way an open socket does. The assertions are unchanged.
+
+`lib/doktor/konsultasyon-rota.test.ts` (found by this job's own full run, at 00:05 Turkish time): the test dated a consultant's reply with the UTC day while the route counts days in Türkiye, so it failed every day between 21:00 and 24:00 UTC. It now uses the Turkish day.
+
+### OPEN — for Kaan
+
+| Date | Item | Waits on |
+|---|---|---|
+| 2026-10-10 | **Sağlığım shows every vault document to the patient** (NOTYA-PORTAL-TETKIK-01, 2026-10-04): any file the doctor files for the patient — incoming documents, reports from other doctors, scans — is downloadable by the patient at once, with no "share with patient" step. Only consultation reports are held back (fix 2). Decide: keep as is, or show a document only after the doctor releases it. | Kaan |
+| 2026-10-10 | **The consultant's reply is written into the muayene note by itself** (KONSULTASYONLAR-01, 2026-10-04): the text an outside consultant types on the link page is appended to the Değerlendirme of the doctor's note — also an approved note — marked "hekim onayı bekliyor", without a card or a tap. Elsewhere Ayşe prepares and the doctor approves. Decide whether this should become an approval card. | Kaan |
+| 2026-10-10 | **No automatic test run before merge.** The repository has no check that runs `npm test` on a pull request; that is how 16 files stayed red for a week. Decide whether to add one (about six minutes per run). | Kaan |
+| 2026-10-10 | **Voice: a follow-up that reuses Ayşe's own words gets no reply** (NOTYA-SES-ARKA-01, by design against echo). "Akut otitte ilk seçenek nedir?" right after an answer containing those words is dropped as echo. Worth a listen in the beta. | Kaan / Dr. Gökhan |
+| 2026-10-10 | **Dates near midnight for a doctor outside Türkiye.** Request and reply dates are counted in Turkish time on the server. Not checked here: whether a browser in another time zone (a doctor travelling, or in the US) can send "today" as its own local day and have a same-evening consultation reply refused as "before the request". | Claude (check), Kaan (priority) |
+| 2026-10-10 | The legacy status text `bagli_degil` in `lib/doktor/konsultasyonEposta.ts` still names "posta uygulaması" (old clients only); not changed here. | Claude |
+
 ## NOTYA-SUT-RAPOR-01 — medicine-report and prescribing-authority rules against the current SUT (Kaan, 2026-10-10, branches `fix/sut-rapor-kurallari` and `fix/tr-sut-duzeltmeleri`, owner Claude)
 
 Kaan, 2026-10-10, after the Health Minister's statements reported by Anadolu Ajansı the same day: bring Notya and its tools in line with the new rules on reported medicines and family-physician authority. Rule for this work: only the official text changes the product, never a news article.
