@@ -93,6 +93,7 @@ export function kullanimSekliBul(metin: string): number {
 // SUT / güvenlik kuralları — Ayşe'nin reçete onayında söyleyecekleri.
 // Tümü uyarıdır, engel değildir (yetki doktordadır). Klinik kurallar: pediatri yaş kısıtları
 // (kaynak: prospektüs/AAP genel kabul), SUT: geri ödeme kısıt hatırlatmaları (SUT EK-4/E,F).
+// A line says "SUT" only where the text states that rule; each such line carries its article (NOTYA-SUT-RAPOR-01).
 // ------------------------------------------------------------------
 interface Kural { eslesme: RegExp; uyari: (b: { yasAy: number | null; gunSayisi: number | null; kutu: number }) => string | null }
 const KURALLAR: Kural[] = [
@@ -101,7 +102,11 @@ const KURALLAR: Kural[] = [
   { eslesme: /asetilsalisilik|aspirin/, uyari: ({ yasAy }) => yasAy !== null && yasAy < 192 ? 'Viral tabloda 16 yaş altına aspirin — Reye sendromu riski.' : null },
   { eslesme: /kodein|tramadol/, uyari: ({ yasAy }) => yasAy !== null && yasAy < 144 ? '12 yaş altında kodein/tramadol kontrendike.' : null },
   { eslesme: /metoklopramid/, uyari: ({ yasAy }) => yasAy !== null && yasAy < 12 ? '1 yaş altında metoklopramid kontrendike; çocukta ekstrapiramidal risk.' : null },
-  { eslesme: /amoksisilin|klavulan|sefuroksim|sefiksim|azitromisin|klaritromisin|sefdinir/, uyari: ({ gunSayisi }) => gunSayisi !== null && gunSayisi > 14 ? 'Antibiyotik süresi 14 günü aşıyor — SUT açıklama ister.' : 'Antibiyotik: SUT gereği reçetede ICD-10 tanı zorunlu; oral 3. kuşak sefalosporin/makrolid için endikasyon açıklaması eczaneye kolaylık sağlar.' },
+  // NOTYA-SUT-RAPOR-01 — the text sets no length limit for an antibiotic course and asks for no "açıklama" above
+  // 14 days: EK-4/E decides who may prescribe which antibiotic, SUT 4.1.4(1) limits only parenteral forms written
+  // without a report (10 days). The 14-day line is now a plain reminder of what was written; it names no rule.
+  // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+  { eslesme: /amoksisilin|klavulan|sefuroksim|sefiksim|azitromisin|klaritromisin|sefdinir/, uyari: ({ gunSayisi }) => gunSayisi !== null && gunSayisi > 14 ? 'Antibiyotik süresi 14 günü aşıyor.' : 'Antibiyotik: SUT gereği reçetede ICD-10 tanı zorunlu; oral 3. kuşak sefalosporin/makrolid için endikasyon açıklaması eczaneye kolaylık sağlar.' },
   // NOTYA-SUT-RAPOR-01 — SUT 4.2.24.A(2): montelukast is prescribed by internal medicine, child health, chest diseases
   // and allergy specialists, or by other doctors on a specialist report from one of them (4.2.24.C(1) adds ENT for the
   // antihistamine combination in allergic rhinitis). EK-4/F 62 covers montelukast only for chronic idiopathic urticaria.
@@ -112,10 +117,26 @@ const KURALLAR: Kural[] = [
   // and inhaled steroids are otherwise outside these limits (4.2.24.A(4),(8)). Source: SGK güncel SUT, 02.10.2026
   // (RG 33388) işlenmiş hali. The text has no "more than one box a month needs an explanation" rule.
   { eslesme: /salbutamol|budesonid|flutikazon|beklometazon/, uyari: () => 'İnhaler/nebül (SUT 4.2.24): nebül formu raporsuz en fazla 1 kutu ödenir; devamı için göğüs hastalıkları, alerji-immünoloji veya çocuk sağlığı ve hastalıkları uzman hekim raporu gerekir.' },
-  { eslesme: /omeprazol|lansoprazol|pantoprazol|esomeprazol|rabeprazol/, uyari: ({ gunSayisi }) => gunSayisi !== null && gunSayisi > 56 ? 'PPİ 8 haftayı aşan kullanımda SUT rapor ister.' : null },
-  { eslesme: /vitamin d|kolekalsiferol|d3/, uyari: () => 'D vitamini damla 0-1 yaş profilaksi SUT kapsamında; yüksek doz ampul için 25-OH-D düzeyi açıklaması gerekir.' },
-  { eslesme: /demir|ferr/, uyari: () => 'Demir preparatı: SUT geri ödemesi için hemogram/ferritin bulgusu açıklamada yer almalı.' },
-  { eslesme: /.*/, uyari: ({ kutu }) => kutu > 3 ? `${kutu} kutu — 3 kutuyu aşan miktar SUT’ta açıklama/rapor ister.` : null },
+  // NOTYA-SUT-RAPOR-01 — proton pump inhibitors: the text has no report rule tied to eight weeks of use. Its only
+  // entry is EK-4/E 13/6 (pantoprazol: 20 mg forms not in H. pylori, at most 2x1 a day in other indications).
+  // The former "SUT rapor ister" is gone; the line states the length that was written and names no rule.
+  // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+  { eslesme: /omeprazol|lansoprazol|pantoprazol|esomeprazol|rabeprazol/, uyari: ({ gunSayisi }) => gunSayisi !== null && gunSayisi > 56 ? 'PPİ kullanım süresi 8 haftayı aşıyor.' : null },
+  // NOTYA-SUT-RAPOR-01 — SUT EK-4/E 13/31: "Kolekalsiferol (Vitamin D3) mono preparatları: Yalnızca ruhsatlı
+  // endikasyonlarında reçetelenmesi halinde bedelleri Kurumca karşılanır." The text has no "0-1 yaş profilaksi" rule
+  // and asks for no 25-OH-D statement for ampoules. Calcium combinations are not mono preparations: no hint.
+  // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+  { eslesme: /^(?![\s\S]*(?:kalsi\u0307?yum|calcium))[\s\S]*(?:vitamin d|kolekalsiferol|d3)/, uyari: () => 'Kolekalsiferol (D3 vitamini) mono preparatları yalnızca ruhsatlı endikasyonlarında reçete edildiğinde ödenir (SUT EK-4/E 13/31).' },
+  // NOTYA-SUT-RAPOR-01 — iron: the text has a rule only for PARENTERAL iron (SUT 4.2.41(1): iron deficiency in the
+  // conditions the article lists, on a report that states the condition). It says nothing on oral iron and asks for
+  // no haemogram/ferritin statement, so oral iron gets no hint. Who issues the report and for how long is left to
+  // the article: the conversion of the amended sentence cannot be read with confidence on that point.
+  // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+  { eslesme: /^(?=[\s\S]*(?:demir|ferr(?!itin)))(?=[\s\S]*(?:ampul|flakon|enjeks|nf[uü]zyon|parenteral|intraven|\bi\.?v\b))/, uyari: () => 'Parenteral demir (SUT 4.2.41): maddede sayılan durumlardaki demir eksikliğinde, bu durumun belirtildiği rapora dayanılarak ödenir.' },
+  // NOTYA-SUT-RAPOR-01 — the former "3 kutuyu aşan miktar SUT’ta açıklama/rapor ister" line is removed: the text
+  // counts in length of treatment, not boxes (SUT 4.1.4(5)(a): a first prescription is paid for at most one month
+  // of dose; 4.1.4(3): three months of dose for long-term medicines documented by a report; 4.1.4(1): ten days for
+  // parenteral forms without a report). The line could not fire either: the draft always writes one box.
 ]
 
 function yasAyHesapla(dogum: string | null | undefined): number | null {

@@ -20,9 +20,12 @@ export const SGK_SABLONLARI: { id: SgkSablon; ad: string }[] = [
 
 const SINIF_RE: Record<SgkSablon, RegExp> = {
   ht: /pril\b|sartan|dipin\b|amlodipin|nifedipin|lerkanidipin|hidroklorotiyazid|indapamid|klortalidon|spironolakton|eplerenon|bisoprolol|metoprolol|nebivolol|karvedilol|doksazosin|moksonidin/i,
-  dm: /metformin|gliflozin|gliptin|glutid|tirzepatid|gliklazid|glimepirid|glibenklamid|pioglitazon|akarboz|insülin|insulin|repaglinid/i,
-  statin: /statin|ezetimib|fenofibrat|gemfibrozil|evolokumab|alirokumab/i,
-  doak: /apiksaban|rivaroksaban|dabigatran|edoksaban|warfarin/i,
+  // "nsülin" also matches the catalogue's capital-İ spelling ("İnsülin glarjin"), which /insülin/i does not.
+  dm: /metformin|gliflozin|gliptin|glutid|tirzepatid|gliklazid|glimepirid|glibenklamid|pioglitazon|akarboz|nsülin|insulin|liksisenatid|repaglinid/i,
+  // "evolocumab", "rivoraksaban", "varfarin": the spellings the medicines catalogue (TİTCK) writes into
+  // hasta_ilaclar — without them the template did not see the medicine and the report-length rule could not apply.
+  statin: /statin|ezetimib|fenofibrat|gemfibrozil|evolokumab|evolocumab|alirokumab/i,
+  doak: /apiksaban|rivaroksaban|rivoraksaban|dabigatran|edoksaban|warfarin|varfarin/i,
   vitd: /kolekalsiferol|kalsitriol|alfakalsidol|d3 vitamini|d vitamini/i,
   b12: /siyanokobalamin|hidroksokobalamin|metilkobalamin|kobalamin|b12/i,
 }
@@ -44,7 +47,10 @@ export interface SgkRaporGirdi {
   sureAy?: number
   bugun: string
 }
-export interface SgkRaporSonuc { draft: SgkRaporDraft; sutKontrol: { madde: string; tamam: boolean | null }[]; eksikler: string[]; chaVascSkor: number | null; dipnotlar: Dipnot[] }
+export interface SgkRaporSonuc { draft: SgkRaporDraft; sutKontrol: { madde: string; tamam: boolean | null }[]; eksikler: string[]; chaVascSkor: number | null; dipnotlar: Dipnot[]; /** longest report length the draft may propose, in months (raporSureTavani) */ sureTavani: number }
+
+/** The four medicines of SUT 4.2.15.D (dabigatran, rivaroksaban, apiksaban, edoksaban), with the catalogue's "rivoraksaban" spelling. */
+const DOAK_RE = /dabigatran|rivaroksaban|rivoraksaban|apiksaban|edoksaban/i
 
 const ICD: Record<string, { icd10: string; aciklama: string }> = {
   ht: { icd10: 'I10', aciklama: 'Esansiyel (primer) hipertansiyon' },
@@ -83,7 +89,12 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
     else eksikler.push('En az bir ofis KB ölçümü (Dahiliye › Özet)')
     if (g.htEvreHekim) klinik.push(`Hekim evresi: ${g.htEvreHekim}`); else eksikler.push('HT evresi hekim kilidi (HT kartı)')
     for (const k of ['Kre', 'eGFR', 'K']) { const l = sonLab(g, k); if (l) tetkik.push(fmtLab({ ...l, ad: k })) }
-    sutKontrol.push({ madde: 'Tanı ≥2 ayrı vizitte yüksek ofis KB veya ev/ambulatuvar KB ile doğrulanmış', tamam: kb.filter((k) => k.sbp >= 140 || k.dbp >= 90).length >= 2 ? true : kb.length ? false : null })
+    // NOTYA-SUT-RAPOR-01 — the text has no "confirmed on two visits" condition for a hypertension report; that is the
+    // clinical guideline in the footnote below, and the office readings stay in the draft. What the text does ask
+    // for is EK-4/F 51: when an angiotensin receptor blocker is combined with other antihypertensives, the report
+    // states that monotherapy did not control blood pressure adequately.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+    sutKontrol.push({ madde: 'SUT EK-4/F 51: anjiyotensin reseptör blokerinin diğer antihipertansiflerle kombinasyonu kullanılıyorsa, monoterapi ile kan basıncının yeterince kontrol altına alınamadığı raporda belirtildi (hekim doğrular)', tamam: null })
     dip.push({ ref: 'HT_UZLASI2025', not: 'HT tanısı tekrarlanan ofis ölçümü veya ev/ambulatuvar KB ile doğrulanır' })
   } else if (g.sablon === 'dm') {
     tani = g.dmTip === 'T1' ? ICD.dm_T1 : ICD.dm_T2
@@ -102,20 +113,31 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
     for (const k of ['TChol', 'HDL', 'TG', 'ALT', 'CK']) { const l = sonLab(g, k); if (l) tetkik.push(fmtLab({ ...l, ad: k })) }
     if (g.kvrKategoriHekim) klinik.push(`KVR kategorisi (hekim kilidi): ${g.kvrKategoriHekim}`); else eksikler.push('KVR kategorisi hekim kilidi (KVR sekmesi)')
     if (g.askvh) klinik.push('Aterosklerotik KVH öyküsü mevcut')
-    const ldlSon = ldl[0]?.tarih
-    sutKontrol.push({ madde: 'Güncel lipid profili (son 6 ay) rapora ekli', tamam: ldlSon ? ldlSon >= ekleAy(g.bugun, -6) : false })
+    // NOTYA-SUT-RAPOR-01 — SUT 4.2.28.A-1(3): "Tedaviye başlamaya esas olan ilk uzman hekim raporunda, bu rapor
+    // öncesi son 6 ay içinde, birinci fıkranın a, b ve c bentleri için en az bir hafta ara ile iki defa olmak üzere,
+    // yapılmış kan lipid düzeylerinin her ikisinde de yüksek olduğunu gösteren tetkik sonuçları belirtilir."
+    // One recent result used to tick this line. It is ticked now only when the approved LDL series holds two results
+    // from the last six months at least a week apart; one recent result leaves it to the doctor (enough only under
+    // 4.2.28.A-1(1)(ç)); no recent result fails it. Whether the levels are high enough is the next line.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+    const lipidDurumu = lipidIkiOlcum(g.labs.LDL || [], g.bugun)
+    sutKontrol.push({ madde: 'SUT 4.2.28.A-1(3): ilk raporda, rapor öncesi son 6 ay içinde en az bir hafta arayla yapılmış iki kan lipid düzeyi sonucu belirtildi (birinci fıkranın a, b ve c bentleri için; ç bendinde hekim doğrular)', tamam: lipidDurumu === 'iki' ? true : lipidDurumu === 'tek' ? null : false })
     sutKontrol.push({ madde: 'LDL eşiği / risk durumu (KVH, DM vb.) SUT lipid düşürücü ilaç ilkelerine göre hekim tarafından doğrulandı', tamam: null })
     dip.push({ ref: 'TEMD_LIPID', not: 'Risk kategorisi ve LDL hedefi hekim kilidi; rapor kanıtı onaylı lipid paneli' })
   } else if (g.sablon === 'vitd' || g.sablon === 'b12') {
     const vd = g.sablon === 'vitd'
     const seri = (g.labs[vd ? 'VitD' : 'B12'] || []).slice(0, 2)
-    const esik = vd ? 20 : 200
     const hb = sonLab(g, 'Hb')
     tani = vd ? ICD.vitd : hb && hb.deger < (g.hasta.kadin ? 12 : 13) ? ICD.b12_anemi : ICD.b12
     if (seri.length) klinik.push(`${vd ? '25-OH D' : 'B12'}: ${seri.map((x) => `${String(x.deger).replace('.', ',')} ${vd ? 'ng/mL' : 'pg/mL'} (${x.tarih})`).join('; ')}`)
     else eksikler.push(`Onaylı ${vd ? '25-OH D vitamini' : 'B12'} lab satırı`)
     for (const k of vd ? ['Ca', 'P', 'ALP', 'Kre'] : ['Hb', 'MCV', 'Folate']) { const l = sonLab(g, k); if (l) tetkik.push(fmtLab({ ...l, ad: k })) }
-    sutKontrol.push({ madde: `Eksikliği gösteren tarihli onaylı lab sonucu (${vd ? '25-OH D <20 ng/mL' : 'B12 <200 pg/mL'}) rapora ekli`, tamam: seri.length ? seri[0].deger < esik : false })
+    // NOTYA-SUT-RAPOR-01 — the text sets no laboratory threshold for vitamin D or B12 ("25-OH D <20 ng/mL",
+    // "B12 <200 pg/mL" were shown as SUT conditions and ticked from the lab value). What it has: EK-4/E 13/31
+    // (kolekalsiferol mono preparations are paid only in their licensed indications) and EK-4/F 3 (kalsitriol and
+    // alfakalsidol are on the report list). It has no B12 rule. The lab results stay in the draft as evidence.
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+    if (vd) sutKontrol.push({ madde: 'SUT EK-4/E 13/31: kolekalsiferol (D3) mono preparatları yalnızca ruhsatlı endikasyonlarında ödenir; kalsitriol ve alfakalsidol EK-4/F 3 kapsamında sağlık raporuyla verilir (hekim doğrular)', tamam: null })
     sutKontrol.push({ madde: 'Raporla/raporsuz reçetelenebilirlik ve ilgili SUT maddesi hekim tarafından güncel metinle doğrulandı', tamam: null })
     if (vd && !sonLab(g, 'Ca')) eksikler.push('Onaylı kalsiyum (replasman öncesi)')
     dip.push(vd ? { ref: 'TEMD_OSTEO2025', not: '25-OH D <20 ng/mL eksiklik; replasman sonrası düzey ve Ca izlemi' } : { ref: 'HARRISON', not: 'B12 eksikliği: düzey + hemogram; nörolojik bulguda parenteral yol' })
@@ -123,7 +145,7 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
     const end = g.doakEndikasyon || null
     tani = end === 'dvt' ? ICD.doak_dvt : end === 'pe' ? ICD.doak_pe : ICD.doak_af
     if (!end) eksikler.push('Endikasyon seçimi (AF / DVT / PE)')
-    if (g.mekanikKapak && etkenler.some((e) => /apiksaban|rivaroksaban|dabigatran|edoksaban/i.test(e))) eksikler.push('MEKANİK KAPAK: DOAK kontrendike — rapor oluşturulmaz, hekim değerlendirmeli')
+    if (g.mekanikKapak && etkenler.some((e) => DOAK_RE.test(e))) eksikler.push('MEKANİK KAPAK: DOAK kontrendike — rapor oluşturulmaz, hekim değerlendirmeli')
     if (end === 'af' && g.chaVasc) {
       chaVascSkor = chaVascSkoru(g.chaVasc, g.hasta.yas, g.hasta.kadin)
       klinik.push(`CHA₂DS₂-VASc (hekim işaretli bileşenler): ${chaVascSkor}`)
@@ -148,7 +170,15 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
   }
   if (!etkenler.length) eksikler.push('Etken madde — önce muayenede reçete yazın (hasta_ilaclar)')
 
-  const sure = Math.min(24, Math.max(1, Math.round(g.sureAy || 12)))
+  // NOTYA-SUT-RAPOR-01 — report length. General ceiling: SUT 4.1.3(5), two years. Shorter terms the text fixes for
+  // a medicine of this template win (raporSureTavani below). Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+  const tavan = raporSureTavani(g.sablon, etkenler)
+  const sure = Math.min(tavan.ay, Math.max(1, Math.round(g.sureAy || 12)))
+  if (tavan.madde) {
+    // The anticoagulant checklist already carries its report-type line (4.2.15.D); the others get the term here.
+    if (g.sablon !== 'doak') sutKontrol.push({ madde: tavan.aciklama, tamam: null })
+    dip.push({ ref: 'SGK', not: tavan.aciklama })
+  }
   const draft: SgkRaporDraft = {
     raporBasligi: 'İlaç Kullanım Raporu',
     raporTuru: 'Ilk',
@@ -161,7 +191,53 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
     etkenMaddeler: etkenler,
     zorunluTetkikler: tetkik,
   }
-  return { draft, sutKontrol, eksikler, chaVascSkor, dipnotlar: dip }
+  return { draft, sutKontrol, eksikler, chaVascSkor, dipnotlar: dip, sureTavani: tavan.ay }
+}
+
+/**
+ * NOTYA-SUT-RAPOR-01 — the longest report this draft may propose, in months.
+ * Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+ *  - SUT 4.1.3(5): "Sağlık raporları, SUT’ta yer alan özel düzenlemeler hariç olmak üzere en fazla iki yıl süre ile
+ *    geçerlidir." → 24 months unless a rule below applies.
+ *  - SUT 4.2.15.D-1(2) and 4.2.15.D-2(3) (as amended by RG 25.03.2025 no. 32852): dabigatran, rivaroksaban,
+ *    apiksaban and edoksaban are paid on a "1 yıl süreli sağlık kurulu raporu" for the first two report periods
+ *    (24 months in total); later reports are specialist reports. The draft is a first report → 12 months.
+ *  - SUT 4.2.28.E(1): evolokumab starts on a "6 ay süreli sağlık kurulu raporu"; continuation is a new one-year
+ *    health board report. The draft is a first report → 6 months.
+ *  - SUT 4.2.38(7): the insülin glarjin + liksisenatid combination is paid on a "1 yıl süreli endokrinoloji uzman
+ *    hekim raporu" → 12 months.
+ * The draft cannot tell a first report from a later one; where the text allows more later (specialist reports for
+ * the anticoagulants after 24 months), it still proposes the first-report term — a shorter report is always valid.
+ */
+export function raporSureTavani(sablon: SgkSablon, etkenler: string[]): { ay: number; madde: string | null; aciklama: string } {
+  const metin = etkenler.join(' | ')
+  if (sablon === 'doak' && DOAK_RE.test(metin)) {
+    return { ay: 12, madde: 'SUT 4.2.15.D-1(2), 4.2.15.D-2(3)', aciklama: 'Rapor süresi (SUT 4.2.15.D): dabigatran, rivaroksaban, apiksaban ve edoksaban için ilk iki rapor dönemi 1 yıl süreli sağlık kurulu raporudur — taslak en fazla 12 ay önerir' }
+  }
+  if (sablon === 'statin' && /evolokumab|evolocumab/i.test(metin)) {
+    return { ay: 6, madde: 'SUT 4.2.28.E(1)', aciklama: 'Rapor süresi (SUT 4.2.28.E): evolokumab için ilk rapor 6 ay süreli sağlık kurulu raporudur; devamında 1 yıl süreli yeni sağlık kurulu raporu düzenlenir — taslak en fazla 6 ay önerir' }
+  }
+  if (sablon === 'dm' && /liksisenatid|lixisenatid/i.test(metin)) {
+    return { ay: 12, madde: 'SUT 4.2.38(7)', aciklama: 'Rapor süresi (SUT 4.2.38(7)): insülin glarjin + liksisenatid kombinasyonu 1 yıl süreli endokrinoloji uzman hekim raporuyla ödenir — taslak en fazla 12 ay önerir' }
+  }
+  return { ay: 24, madde: null, aciklama: 'Rapor süresi (SUT 4.1.3(5)): sağlık raporu, özel düzenlemeler dışında en fazla iki yıl geçerlidir' }
+}
+
+/**
+ * NOTYA-SUT-RAPOR-01 — SUT 4.2.28.A-1(3): two blood lipid results in the six months before the first report, at
+ * least a week apart. Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+ * `ldl` is the approved series. 'iki' = two results inside the window at least seven days apart; 'tek' = at least
+ * one result inside the window but no such pair; 'yok' = nothing inside the window. Levels are not judged here.
+ */
+export function lipidIkiOlcum(ldl: SgkLab[], bugun: string): 'iki' | 'tek' | 'yok' {
+  const alt = ekleAy(bugun, -6)
+  const gunler = ldl
+    .map((x) => String(x.tarih).slice(0, 10))
+    .filter((t) => t >= alt && t <= bugun)
+    .map((t) => Date.parse(`${t}T00:00:00Z`))
+    .filter((t) => Number.isFinite(t))
+  if (!gunler.length) return 'yok'
+  return Math.max(...gunler) - Math.min(...gunler) >= 7 * 86400000 ? 'iki' : 'tek'
 }
 
 /**

@@ -12,6 +12,8 @@ import {
 } from '@/lib/doktor/toolsUi'
 import {
   RAPOR_TIPLERI,
+  UC_YILLIK_RAPOR,
+  raporSureSiniri,
   type HekimKimlik,
   type RaporTipiMeta,
   type SgkRaporDraft,
@@ -29,6 +31,10 @@ export default function SgkRaporPage() {
     [raporTipiId]
   )
   const [sure, setSure] = useState(RAPOR_TIPLERI[0].sureVarsayilan)
+  // NOTYA-SUT-RAPOR-01 — SUT 4.2.16(2),(6): three-year reports (coeliac disease; special formulas in inborn
+  // metabolic disease). Off by default: every other medicine report stays within SUT 4.1.3(5), two years.
+  const [ucYil, setUcYil] = useState(false)
+  const sinir = useMemo(() => raporSureSiniri(tipMeta, ucYil ? UC_YILLIK_RAPOR.id : null), [tipMeta, ucYil])
   const [rapor, setRapor] = useState<SgkRaporDraft | null>(null)
   const [hekim, setHekim] = useState<HekimKimlik | null>(null)
   const [aktifTip, setAktifTip] = useState<RaporTipiMeta | null>(null)
@@ -41,6 +47,7 @@ export default function SgkRaporPage() {
     const t = RAPOR_TIPLERI.find((x) => x.id === id) || RAPOR_TIPLERI[0]
     setRaporTipiId(t.id)
     setSure(t.sureVarsayilan)
+    setUcYil(false)
     setRapor(null)
     setEnabiz(null)
   }
@@ -71,6 +78,7 @@ export default function SgkRaporPage() {
           raporTipiId,
           raporTipi: tipMeta.label,
           sure: Number(sure) || tipMeta.sureVarsayilan,
+          ozelSure: tipMeta.id === 'ilac_kullanim' && ucYil ? UC_YILLIK_RAPOR.id : undefined,
           hekimNotu,
         }),
       })
@@ -224,12 +232,34 @@ export default function SgkRaporPage() {
           </label>
           <input
             type="number"
-            min={tipMeta.sureMin}
-            max={tipMeta.sureMax}
+            min={sinir.min}
+            max={sinir.max}
             value={sure}
             onChange={(e) => setSure(parseInt(e.target.value || String(tipMeta.sureVarsayilan), 10))}
-            style={{ ...toolsInput, marginBottom: 18 }}
+            style={{ ...toolsInput, marginBottom: tipMeta.id === 'ilac_kullanim' ? 8 : 18 }}
           />
+          {tipMeta.id === 'ilac_kullanim' && (
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.4, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={ucYil}
+                  onChange={(e) => {
+                    setUcYil(e.target.checked)
+                    setSure(e.target.checked ? UC_YILLIK_RAPOR.ay : tipMeta.sureVarsayilan)
+                    setRapor(null)
+                  }}
+                  style={{ marginTop: 3, flexShrink: 0 }}
+                />
+                <span>{UC_YILLIK_RAPOR.etiket}</span>
+              </label>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>
+                {ucYil
+                  ? `En fazla ${UC_YILLIK_RAPOR.ay} ay (${UC_YILLIK_RAPOR.madde}).`
+                  : 'En fazla 24 ay: sağlık raporu, özel düzenlemeler dışında en fazla iki yıl geçerlidir (SUT 4.1.3(5)).'}
+              </div>
+            </div>
+          )}
 
           <button
             type="button"
@@ -456,11 +486,15 @@ export default function SgkRaporPage() {
               </section>
             )}
 
+            {/* NOTYA-SUT-RAPOR-01 — the notice used to say "SGK 01.02.2019’dan beri kâğıt nüshayı kabul etmez". That
+                date and that statement are not in the text: SUT 4.1.3(2) has MEDULA users issue reports electronically,
+                and 4.1.3(8) still describes a report not issued electronically. The notice now says what 4.1.3(2) says.
+                Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali. */}
             {show('medula_not') && (
               <section style={noteBox}>
-                <strong>Yasal / Medula notu:</strong> Bu çıktı Medula’ya girilecek verinin taslağıdır. İlaç
-                kullanım raporlarında SGK 01.02.2019’dan beri kâğıt nüshayı kabul etmez; geçerli rapor Medula’da
-                e-Rapor kaydı + hekim <strong>güvenli elektronik imzası</strong> ile oluşur. Rapor teşhis kodu ve
+                <strong>Yasal / Medula notu:</strong> Bu çıktı Medula’ya girilecek verinin taslağıdır. MEDULA’yı
+                kullanan sağlık hizmeti sunucuları ilaç kullanım raporunu elektronik ortamda düzenler (SUT 4.1.3(2));
+                geçerli rapor Medula’da e-Rapor kaydı + hekim <strong>güvenli elektronik imzası</strong> ile oluşur. Rapor teşhis kodu ve
                 (varsa) etken madde / SUT kodları SGK Medula listelerinden seçilmelidir.
                 {hekim && !hekim.medulaBagli
                   ? ' Medula hesabınız Notya’ya bağlı değil — Entegrasyonlar sayfasından bağlayın.'
