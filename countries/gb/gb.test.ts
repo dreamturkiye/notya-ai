@@ -21,7 +21,8 @@ ingilizcePaketSinamasi({
   ayarlarKaynagi: kaynakOku(join(__dirname, 'ayarlar.ts')),
   // United States, Canada, Australia, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(Medicare|Medicaid|HIPAA|United States|U\.S\.|USD|CAD|AUD|NZD|Canada|Canadian|provincial|Australia|Australian|New Zealand|NHI|health card|ZIP|attending physician|Anesthesiology|Pulmonology|Respirology|Physical therapist)\b|\$/,
-  kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  // off by Kaan's order of 2026-10-10 as well (NOTYA-ULKE-ARAC-01b): all five; 'doz-hesabi' was on here until that day
+  kapaliAraclar: ['doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
   kidemliHekim: 'consultant',
