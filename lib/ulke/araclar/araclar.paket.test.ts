@@ -16,6 +16,11 @@
  *                               and asks for a follow-up day without proposing one; opened without a patient it
  *                               keeps nothing and says how to; the patient's file lists what was kept; the
  *                               follow-up list. (The server's rules: ./kayit.paket.test.ts.)
+ *
+ * NOTYA-ULKE-OZEL-01 — a pack may have tools of its own. A tool's MECHANISM is therefore asked of the pack
+ * (./paket.ts → paketinTanimi: the kit's, or the pack's own); a link-out tile works nothing out and is passed over
+ * wherever a screen of the kit is; a laboratory value the pack accepts in several units is typed in the first, chosen
+ * explicitly. What only one country may add is tested on a pack that uses all of it: lib/ulke/ornekUlke.test.ts.
  */
 import { describe, it, before } from 'node:test'
 import assert from 'node:assert/strict'
@@ -29,10 +34,10 @@ import { ORNEK_PARAMETRELER, ornekGirdiler, ornekOrtam } from '../testing/aracOr
 import { gorunurMetin, sizintiTara } from '../testing/sizintiTarayici'
 import type { UlkeArayuzu } from '../arayuz/tipler'
 import type { DilKodu, UlkeKlinigi, UlkePaketi } from '../tipler'
-import { kanonigeCevir, type BirimOrtami } from './birimler'
+import { alanBirimleri, birimAnahtari, kanoniktenBirime, kanonigeCevir, olcuTanimi, type BirimOrtami } from './birimler'
 import { girdiyiCoz } from './girdi'
 import { KIT_ARACLARI, kitAraci } from './katalog'
-import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari } from './paket'
+import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, paketinTanimi } from './paket'
 import type { AracAlani, AracGirdisi, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
 
 const KOK = resolve(__dirname, '../../..')
@@ -69,7 +74,7 @@ before(async () => {
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: paket.kod, kaynak }), [])
 
 /** The first input a tool answers: what a doctor would see after filling the form in. */
-const doluGirdi = (t: AracTanimi, p?: Readonly<Record<string, number>>): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, ornekOrtam(t, p)).tamam) ?? null
+const doluGirdi = (t: AracTanimi, p?: PaketAraci['parametreler']): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, ornekOrtam(t, p)).tamam) ?? null
 /** A number as a person of the pack's country types it: no grouping, the pack's own decimal mark. */
 const yazilan = (n: number) => String(n).replace('.', paket.bicim.ondalikAyraci)
 /** An input as the screen holds it (what was typed). */
@@ -79,11 +84,20 @@ function ulkeninHami(t: AracTanimi, g: AracGirdisi, o: BirimOrtami): Record<stri
   const ham = hamGirdi(g)
   for (const a of t.alanlar) {
     const v = g[a.anahtar]
+    // a laboratory value the pack accepts in SEVERAL units: typed in the first of them, and that unit chosen explicitly
+    if (typeof v === 'number' && a.lab && alanBirimleri(a, o).length > 1) {
+      const birim = alanBirimleri(a, o)[0]
+      const yazi = kanoniktenBirime(olcuTanimi(a.lab, o.olculer), birim, v)
+      if (yazi !== null) { ham[a.anahtar] = yazilan(Math.round(yazi * 100) / 100); ham[birimAnahtari(a.anahtar)] = birim }
+      continue
+    }
     const bir = typeof v === 'number' ? kanonigeCevir(a, 1, o) : null
     if (typeof v === 'number' && bir && bir !== 1) ham[a.anahtar] = yazilan(Math.round((v / bir) * 100) / 100)
   }
   return ham
 }
+/** true = the tool works something out on the doctor's input: not a screen of the kit, not a link-out tile. */
+const hesaplar = (t: AracTanimi): boolean => t.tur !== 'ekran' && t.tur !== 'baglanti'
 
 describe('tools — the kit\'s catalogue', () => {
   it('keys are well-formed and unique; field and result keys too', () => {
@@ -107,7 +121,7 @@ describe('tools — the kit\'s catalogue', () => {
 
   it('every tool answers "nothing" to an empty form, and for ANY input returns only keys it declared', () => {
     for (const t of KIT_ARACLARI) {
-      if (t.tur === 'ekran') continue
+      if (!hesaplar(t)) continue
       const girdiler = ornekGirdiler(t)
       assert.equal(t.hesapla(girdiler[0], ornekOrtam(t)).tamam, false, `${t.anahtar}: an empty form has a result`)
       let tamamlanan = 0
@@ -128,7 +142,7 @@ describe('tools — the kit\'s catalogue', () => {
   })
 
   it('the kit holds no text a doctor reads: no letter outside ASCII in a definition, except in a citation', () => {
-    for (const d of ['katalog.ts', 'yardimci.ts', 'paket.ts', 'denetim.ts', 'birimler.ts', 'tipler.ts', ...readdirSync(join(KOK, 'lib/ulke/araclar/tanimlar')).map((ad) => `tanimlar/${ad}`)].map((ad) => `lib/ulke/araclar/${ad}`)) assert.doesNotMatch(kod(d), /[^\x00-\x7F]/, `${d} carries a non-ASCII character outside a comment`)
+    for (const d of ['katalog.ts', 'yardimci.ts', 'paket.ts', 'denetim.ts', 'birimler.ts', 'tipler.ts', 'girdi.ts', 'uyarlama.ts', 'hastaKapisi.ts', 'ulkeyeOzel.ts', ...readdirSync(join(KOK, 'lib/ulke/araclar/tanimlar')).map((ad) => `tanimlar/${ad}`)].map((ad) => `lib/ulke/araclar/${ad}`)) assert.doesNotMatch(kod(d), /[^\x00-\x7F]/, `${d} carries a non-ASCII character outside a comment`)
     for (const t of KIT_ARACLARI) for (const a of t.alanlar) assert.doesNotMatch(JSON.stringify(a), /[^\x00-\x7F]/, `${t.anahtar}.${a.anahtar}`)
   })
 })
@@ -145,7 +159,8 @@ describe('tools — the pack\'s list', () => {
     assert.deepEqual(paketiDenetle(paket, arayuz, klinik), [])
     assert.ok(icerik.araclar.length > 0)
     for (const p of icerik.araclar) {
-      const t = kitAraci(p.anahtar)
+      // the kit's mechanism, or — for a tool only this country has — the pack's own (a link-out tile has none to find)
+      const t = paketinTanimi(icerik, p)
       assert.ok(t, `${p.anahtar} is not in the kit`)
       assert.ok(p.roller === null || (p.roller.length > 0 && p.roller.every((r) => ROLLER.includes(r))), `${p.anahtar}: roles`)
       for (const d of FORMLAR) {
@@ -197,7 +212,7 @@ describe('tools — the pack\'s list', () => {
     { const a = klon(arayuz); ar(a).araclar[sira].metin.alanlar.no_such_field = { [d]: 'x' }; iceriyor(yerler(paket, a), `arayuz.araclar.${ilk.anahtar}.alanlar.no_such_field: a text for a field this tool does not have`) }
     { const a = klon(arayuz); (ar(a).araclar[sira] as unknown as { metin: unknown }).metin = eksikAyar('the tool\'s words'); iceriyor(yerler(paket, a), `arayuz.araclar.${ilk.anahtar}.metin: to be supplied: the tool's words`) }
     for (const p of icerik.araclar) {
-      const t = kitAraci(p.anahtar)!
+      const t: AracTanimi = paketinTanimi(icerik!, p)!
       const i = icerik.araclar.indexOf(p)
       for (const grup of ['sayilar', 'bantlar', 'uyarilar', 'tarihler'] as const) if (t.cikti[grup].length) {
         const k = t.cikti[grup][0]
@@ -293,7 +308,7 @@ describe('tools — the screens', () => {
   it('every tool, in every form: empty it asks for its fields and shows no result; filled it shows every number, band, warning and date in the pack\'s words', () => {
     if (!icerik) return
     for (const p of icerik.araclar) {
-      const t = kitAraci(p.anahtar)!
+      const t: AracTanimi = paketinTanimi(icerik!, p)!
       const x = { tanim: t, paket: p }
       for (const dil of FORMLAR) {
         const a = A.araclarMetni(dil)
@@ -306,6 +321,8 @@ describe('tools — the screens', () => {
           temiz(html, `tool ${p.anahtar} ${dil}`)
           continue
         }
+        // a link-out tile works nothing out: its own screen is tested where a pack has one (lib/ulke/ornekUlkeEkranlari.test.ts)
+        if (t.tur === 'baglanti') continue
         // the follow-up list has its own section below (F)
         // "my templates" and consultation have their own tests (lib/ulke/sablon/, lib/ulke/konsultasyon/, components/ulke/*Ekranlari.paket.test.ts)
         if (t.tur === 'ekran') { assert.ok(t.ekran === 'takipPaneli' || t.ekran === 'sablonlarim' || t.ekran === 'konsultasyonlar', `${p.anahtar}: a screen tool this test does not know`); continue }
@@ -349,8 +366,8 @@ describe('tools — the screens', () => {
   it('the summary that is copied: the tool\'s name, what was entered, the result, the line that says what the tool is not — and nothing while the tool has no result', () => {
     if (!icerik) return
     for (const p of icerik.araclar) {
-      const t = kitAraci(p.anahtar)!
-      if (t.tur === 'ekran') continue
+      const t: AracTanimi = paketinTanimi(icerik!, p)!
+      if (!hesaplar(t)) continue
       const x = { tanim: t, paket: p }
       const g = doluGirdi(t, p.parametreler)!
       assert.ok(g, `${p.anahtar}: no sample input has a result`)
@@ -424,8 +441,8 @@ describe('tools — keeping a result: the screens', () => {
   /** The first tool of the pack whose result can be kept, with an input that gives one. */
   const ilkSaklanabilir = () => {
     for (const p of icerik!.araclar) {
-      const t = kitAraci(p.anahtar)!
-      if (t.tur === 'ekran') continue
+      const t: AracTanimi = paketinTanimi(icerik!, p)!
+      if (!hesaplar(t)) continue
       const g = doluGirdi(t, p.parametreler)
       if (g) return { x: { tanim: t, paket: p }, g }
     }
@@ -435,7 +452,7 @@ describe('tools — keeping a result: the screens', () => {
   it('a tool opened FOR A PATIENT: the part that keeps the result names the patient, asks for a follow-up day WITHOUT proposing one, and is off until the tool has a result', () => {
     if (!icerik) return
     const s = ilkSaklanabilir()
-    if (!s) { assert.ok(!icerik.araclar.some((p) => kitAraci(p.anahtar)!.tur !== 'ekran'), 'the samples fill in no tool of this pack: nothing was checked'); return }
+    if (!s) { assert.ok(!icerik.araclar.some((p) => hesaplar(paketinTanimi(icerik!, p)!)), 'the samples fill in no tool of this pack: nothing was checked'); return }
     for (const dil of FORMLAR) {
       const a = A.araclarMetni(dil)
       const kart = (tamam: boolean, durum: 'yok' | 'bekliyor' | 'tamam' | 'eksik' | 'takip' | 'hata' = 'yok') => h(Kayit.AracKayitKarti, { a, g: A.girdiMetni(dil), hasta: HASTA, tamam, takip: '', takipDegistir: () => {}, kaydet: () => {}, durum })
@@ -485,7 +502,7 @@ describe('tools — keeping a result: the screens', () => {
   it('the patient\'s file: what was kept, newest first as the server sent it, each with the summary in the pack\'s words; the follow-up; a record that cannot be read; a tool that is gone; nothing yet', () => {
     if (!icerik) return
     const s = ilkSaklanabilir()
-    if (!s) { assert.ok(!icerik.araclar.some((p) => kitAraci(p.anahtar)!.tur !== 'ekran'), 'the samples fill in no tool of this pack: nothing was checked'); return }
+    if (!s) { assert.ok(!icerik.araclar.some((p) => hesaplar(paketinTanimi(icerik!, p)!)), 'the samples fill in no tool of this pack: nothing was checked'); return }
     const sonuc = s.x.tanim.hesapla(s.g, ornekOrtam(s.x.tanim, s.x.paket.parametreler))
     const kayit = (id: string, ek: Record<string, unknown> = {}) => ({ id, arac: s.x.tanim.anahtar, olusturuldu: '2026-10-09T05:00:00.000Z', gun: '2026-10-09', takipTarihi: null, kapandi: null, girdiler: s.g, sonuc, ...ek })
     for (const dil of FORMLAR) {

@@ -20,7 +20,7 @@ import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
-import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
+import type { AracYuvasi, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 
 const KOK = resolve(__dirname, '../../../..')
 const DIZIN = join(KOK, 'countries/uz/uygulama/araclar')
@@ -29,10 +29,16 @@ const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 /** Latin written inside a Cyrillic or Russian sentence on purpose: names the profession itself writes in Latin letters. */
 const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|V|E))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|I{1,3}|IV|V|E|A|B|C)\b/g
 
-/** Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart. */
+/**
+ * Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart.
+ * NOTYA-ULKE-ARAC-01b — five tools are OFF BY KAAN'S ORDER OF 2026-10-10 and are slots now (KAPALI below): the table
+ * shows the grid without them, and internal medicine, whose only tool was one of them, has no follow-up list either.
+ */
 const TEMEL = ['hasta-portali', 'sablonlarim', 'konsultasyonlar']
+/** Off by Kaan's order of 2026-10-10, each with the role it was shown to until that day. */
+const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'doz-hesabi': 'pediatri', 'rapor-taslagi': 'radyoloji' }
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
-  'acil-tip': ['esi-triyaj', 'kritik-yol', 'takip-paneli'],
+  'acil-tip': ['kritik-yol', 'takip-paneli'],
   'aile-hekimligi': [],
   anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', 'takip-paneli'],
   'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', 'takip-paneli'],
@@ -41,7 +47,7 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', 'takip-paneli'],
   'gogus-hastaliklari': ['inhaler-teknik', 'takip-paneli'],
   'goz-hastaliklari': ['gorme-keskinligi', 'takip-paneli'],
-  dahiliye: ['kdigo-evre', 'takip-paneli'],
+  dahiliye: [],
   dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'takip-paneli'],
   endokrinoloji: ['rejim-karti', 'takip-paneli'],
   'enfeksiyon-hastaliklari': ['antibiyotik-sure', 'takip-paneli'],
@@ -50,14 +56,14 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', 'takip-paneli'],
   kardiyoloji: [],
   'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', 'takip-paneli'],
-  nefroloji: ['kdigo-serit', 'diyaliz-seans', 'takip-paneli'],
+  nefroloji: ['diyaliz-seans', 'takip-paneli'],
   noroloji: [],
   onkoloji: ['kur-sayaci', 'toksisite-listesi', 'takip-paneli'],
   ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', 'takip-paneli'],
-  pediatri: ['hedef-boy', 'doz-hesabi', 'takip-paneli'],
+  pediatri: ['hedef-boy', 'takip-paneli'],
   'plastik-cerrahi': ['plastik-yara-greft', 'takip-paneli'],
   psikiyatri: [],
-  radyoloji: ['tetkik-kuyrugu', 'rapor-taslagi', 'takip-paneli'],
+  radyoloji: ['tetkik-kuyrugu', 'takip-paneli'],
   romatoloji: ['das28', 'eklem-28', 'takip-paneli'],
   uroloji: ['psa-hizi', 'takip-paneli'],
   'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', 'takip-paneli'],
@@ -98,7 +104,21 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     assert.ok(P.hesabinAraci(icerik, 'pediatri', 'hedef-boy'))
   })
 
-  it('THE FOLLOW-UP LIST over the 40-role table: a role sees it exactly when it has a tool whose result can be kept — 23 roles see it, 17 do not', async () => {
+  it('OFF BY KAAN\'S ORDER OF 2026-10-10: the five are slots that say why, open for no role — not even the one that had them — and the two licence cases say "permission needed"', async () => {
+    const { UZ_KAPALI_ARACLAR } = await import('./index')
+    assert.deepEqual([...UZ_KAPALI_ARACLAR].sort(), Object.keys(KAPALI).sort())
+    for (const [anahtar, rol] of Object.entries(KAPALI)) {
+      assert.ok(!icerik.araclar.some((p) => p.anahtar === anahtar), `${anahtar} is switched on`)
+      for (const r of [null, ...roller]) assert.equal(P.hesabinAraci(icerik, r, anahtar), null, `${anahtar} opens for ${r}`)
+      const yuva: AracYuvasi | undefined = icerik.yuvalar.find((y) => y.anahtar === anahtar)
+      assert.ok(yuva, `${anahtar} is not a slot`)
+      assert.deepEqual([yuva.acik, yuva.icerik, yuva.mekanizmaHazir, yuva.roller], [false, null, true, [rol]], anahtar)
+      assert.match(yuva.eksik, /off by the owner's order of 2026-10-10/, anahtar)
+    }
+    for (const anahtar of ['esi-triyaj', 'rapor-taslagi']) assert.equal(icerik.yuvalar.find((y) => y.anahtar === anahtar)!.lisans?.durum, 'izin-gerekli', anahtar)
+  })
+
+  it('THE FOLLOW-UP LIST over the 40-role table: a role sees it exactly when it has a tool whose result can be kept — 22 roles see it, 18 do not', async () => {
     const { kitAraci } = await import('@/lib/ulke/araclar/katalog')
     const saklanabilir = (anahtar: string) => kitAraci(anahtar)!.tur !== 'ekran'
     const goren: string[] = [], gormeyen: string[] = []
@@ -109,11 +129,11 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       assert.equal(Boolean(panel), araciVar, `${rol}: the follow-up list is ${panel ? 'shown' : 'not shown'} and the role ${araciVar ? 'has' : 'has no'} tool whose result can be kept`)
       if (panel) { goren.push(rol); assert.equal(kendi[kendi.length - 1], 'takip-paneli', `${rol}: the list comes after the role's own tools`) } else gormeyen.push(rol)
     }
-    assert.deepEqual([goren.length, gormeyen.length], [23, 17])
-    // the 17: the roles that are base-only here, written out — a role that gains its first tool must gain the list with it
-    assert.deepEqual(gormeyen.sort(), ['aile-hekimligi', 'diyetisyen', 'ergoterapi', 'estetik-cerrahi', 'fizik-tedavi', 'fizyoterapi', 'gastroenteroloji', 'kadin-hastaliklari-dogum', 'kardiyoloji', 'klinik-dermatoloji', 'klinik-psikolog', 'longevity', 'medikal-estetik', 'noroloji', 'odyoloji', 'psikiyatri', 'sac-ekimi'])
+    assert.deepEqual([goren.length, gormeyen.length], [22, 18])
+    // the 18: the roles that are base-only here (internal medicine since 2026-10-10: its one tool is off by the owner's order), written out — a role that gains its first tool must gain the list with it
+    assert.deepEqual(gormeyen.sort(), ['aile-hekimligi', 'dahiliye', 'diyetisyen', 'ergoterapi', 'estetik-cerrahi', 'fizik-tedavi', 'fizyoterapi', 'gastroenteroloji', 'kadin-hastaliklari-dogum', 'kardiyoloji', 'klinik-dermatoloji', 'klinik-psikolog', 'longevity', 'medikal-estetik', 'noroloji', 'odyoloji', 'psikiyatri', 'sac-ekimi'])
     assert.equal(P.hesabinAraci(icerik, null, 'takip-paneli'), null, 'an account without a role has no tool to keep and no list')
-    assert.equal(icerik.araclar.find((p) => p.anahtar === 'takip-paneli')!.roller!.length, 23)
+    assert.equal(icerik.araclar.find((p) => p.anahtar === 'takip-paneli')!.roller!.length, 22)
   })
 
   it('THE AUDIT, LINE BY LINE: every one of the 144 audited tools is done, a slot or absent — as the document says, checked against the pack; the sums are 96, 34 and 14', async () => {
@@ -145,11 +165,11 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       assert.ok(x.karar !== 'Remove' || x.durum === 'absent (blocked)', `${x.rota}: a removed tool is in the build`)
       say[x.karar][x.durum === 'absent (blocked)' ? 'absent' : x.durum]++
     }
-    assert.deepEqual(say, { Keep: { done: 66, slot: 19, absent: 11 }, Adapt: { done: 2, slot: 32, absent: 0 }, Remove: { done: 0, slot: 0, absent: 14 } })
+    assert.deepEqual(say, { Keep: { done: 60, slot: 24, absent: 12 }, Adapt: { done: 2, slot: 32, absent: 0 }, Remove: { done: 0, slot: 0, absent: 14 } })
     const topla = (o: Record<string, number>) => o.done + o.slot + o.absent
     assert.deepEqual([topla(say.Keep), topla(say.Adapt), topla(say.Remove)], [96, 34, 14])
     // the document's own summary table says the same numbers
-    assert.match(sonuc, /\| \*\*Keep\*\* \| 66 \| 19 \| 11 \| 96 \|\n\| \*\*Adapt\*\* \| 2 \| 32 \| 0 \| 34 \|\n\| \*\*Remove\*\* \| 0 \| 0 \| 14 \| 14 \|/)
+    assert.match(sonuc, /\| \*\*Keep\*\* \| 60 \| 24 \| 12 \| 96 \|\n\| \*\*Adapt\*\* \| 2 \| 32 \| 0 \| 34 \|\n\| \*\*Remove\*\* \| 0 \| 0 \| 14 \| 14 \|/)
     // nothing is switched on, and nothing is a slot, that the document does not account for
     const hesapli = new Set(satirlar.map((x) => x.anahtar).filter(Boolean))
     const belgesiz = [...acik, ...yuvalar].filter((k) => !hesapli.has(k))

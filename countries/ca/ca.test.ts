@@ -26,7 +26,8 @@ ingilizcePaketSinamasi({
   ayarlarKaynagi: kaynakOku(join(__dirname, 'ayarlar.ts')),
   // United Kingdom, United States, Australia, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(NHS|NHI|GBP|USD|AUD|NZD|United Kingdom|United States|Australia|Australian|New Zealand|HIPAA|Medicaid|Medicare|General practice|Anaesthetics|Pulmonology|Respiratory and sleep medicine|Physical therapist|attending physician|consultant)\b|£/,
-  kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit'],
+  // off by Kaan's order of 2026-10-10 as well (NOTYA-ULKE-ARAC-01b): all five; 'doz-hesabi' and 'rapor-taslagi' were on here until that day
+  kapaliAraclar: ['doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L' },
   kidemliHekim: 'staff physician',
@@ -85,11 +86,12 @@ describe('ca: what is Canada\'s', () => {
     assert.equal(CA_PAKETI.uygulama!.veliYasi, 16)
   })
 
-  it('prostate-specific antigen is written in µg/L; the report outline is on; the consent stamp is Canada\'s own draft', () => {
+  it('prostate-specific antigen is written in µg/L; the report outline is OFF (Kaan\'s order of 2026-10-10; it was on here until that day) and says "permission needed"; the consent stamp is Canada\'s own draft', () => {
     const a = CA_ARAYUZ.araclar!
     assert.equal(a.birimler['ng/mL'][D], 'µg/L')
     assert.equal(a.birimler['ng/mL/yil'][D], 'µg/L per year')
-    assert.ok(a.araclar.some((x) => x.anahtar === 'rapor-taslagi'))
+    assert.ok(!a.araclar.some((x) => x.anahtar === 'rapor-taslagi'))
+    assert.equal(a.yuvalar.find((y) => y.anahtar === 'rapor-taslagi')?.lisans?.durum, 'izin-gerekli')
     assert.equal(CA_KLINIK.riza.surum, 'ca-draft-2026-10-09')
     assert.equal(CA_ARAYUZ.metinler[D]!.muayene.riza, CA_GIRDI.sozler.kayitRizasi)
   })

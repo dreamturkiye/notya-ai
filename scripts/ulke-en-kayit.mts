@@ -16,8 +16,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { alanBirimi } from '@/lib/ulke/araclar/birimler'
+import { alanBirimi, alanBirimleri } from '@/lib/ulke/araclar/birimler'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
+import { paketinTanimi } from '@/lib/ulke/araclar/paket'
 import { enFormYuvalari } from '@/countries/_dil/en/klinik/hastaFormu'
 import { paketMetinleri } from '@/countries/_dil/en/testing/paketSinamasi'
 import type { EnUlkeGirdisi } from '@/countries/_dil/en/girdi'
@@ -133,12 +134,15 @@ if (!U) throw new Error(`"${p.kod}" is not one of the English-speaking countries
 
 // ───────────────────────── what the pack says about itself ─────────────────────────
 const birimAdi = (kod: string | null): string => (kod ? a.araclar!.birimler[kod]?.[d] ?? kod : '—')
-const o = { birimler: u.birimler, lab: a.araclar.labBirimleri }
-const acik = a.araclar.araclar.map((x) => ({ x, t: kitAraci(x.anahtar)! }))
+const o = { birimler: u.birimler, lab: a.araclar.labBirimleri, sayi: p.bicim, ...(a.araclar.olculer ? { olculer: a.araclar.olculer } : {}) }
+// NOTYA-ULKE-OZEL-01: a tool's mechanism is the kit's, or — for a tool only this country has — the pack's own.
+const acik = a.araclar.araclar.map((x) => ({ x, t: paketinTanimi(a.araclar!, x)! }))
+// A laboratory value the country accepts in several units is written with each of them.
+const alaninBirimi = (al: Parameters<typeof alanBirimi>[0]): string => (al.lab ? alanBirimleri(al, o).map(birimAdi).join(' or ') || birimAdi(null) : birimAdi(alanBirimi(al, o)))
 const rolAdi = (r: string): string => a.roller.find((y) => y.anahtar === r)?.ad[d] ?? r
 const roller = (liste: readonly string[] | null): string => (liste === null ? 'every role' : liste.map(rolAdi).join(', '))
 const aracSatirlari = acik.map(({ x, t }) => {
-  const olculen = t.alanlar.filter((al) => al.olcu || al.lab || al.birim).map((al) => `${x.metin.alanlar[al.anahtar]?.[d] ?? al.anahtar}: **${birimAdi(alanBirimi(al, o))}**`)
+  const olculen = t.alanlar.filter((al) => al.olcu || al.lab || al.birim).map((al) => `${x.metin.alanlar[al.anahtar]?.[d] ?? al.anahtar}: **${alaninBirimi(al)}**`)
   const sonuc = [...(t.sonucBirimleri ?? []).map(birimAdi), ...(t.sonucOlculeri ?? []).map((m) => birimAdi(u.birimler[m]))]
   return `| \`${x.anahtar}\` | ${x.metin.ad[d]} | ${roller(x.roller)} | ${olculen.length ? olculen.join('; ') : 'no measured input'}${sonuc.length ? ` · result in ${[...new Set(sonuc)].join(', ')}` : ''} |`
 })
@@ -240,7 +244,7 @@ ${[
   satir('Default time zone; zones an account may choose', `${p.saatDilimi}; ${u.saatDilimleri.join(', ')}`, `product, with a local lead. ${U.saatNotu}`),
   satir('Date pattern; clock; first day of the week', `${p.bicim.tarihDeseni}; ${u.saatBicimi}-hour; ${p.bicim.haftaBasi === 1 ? 'Monday' : 'Sunday'}`, 'a local lead'),
   satir('Units', `weight ${u.birimler.agirlik}, height ${u.birimler.boy}, temperature °${u.birimler.sicaklik}`, 'a local clinical lead — a clinical-safety setting'),
-  satir('Laboratory units', Object.entries(a.araclar.labBirimleri).map(([q, b]) => `${LAB_ADLARI[q] ?? q}: ${birimAdi(b as string)}`).join('; '), 'a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here'),
+  satir('Laboratory units', Object.entries(a.araclar.labBirimleri).map(([q, b]) => `${LAB_ADLARI[q] ?? q}: ${(typeof b === 'string' ? [b] : [...(b ?? [])]).map(birimAdi).join(' or ')}`).join('; '), 'a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here'),
   satir('Currency', `${p.paraBirimi.kod}`, 'the owner'),
   satir('Prices', 'EMPTY, SWITCHED OFF: every plan "by quote"', '**WAITING ON KAAN**'),
   satir('Emergency (ambulance) number on the patient\'s page', `\`${u.portal?.acilNumara ?? 'none'}\` — UNVERIFIED`, 'a local source, before any patient sees the portal'),

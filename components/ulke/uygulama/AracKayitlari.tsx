@@ -29,8 +29,11 @@ import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { TarihGirisi } from '../girdi/TarihGirisi'
 
-/** The patient a tool was opened for. */
-export type AracHastasi = { id: string; ad: string }
+/**
+ * The patient a tool was opened for. `dogumTarihi` and `cinsiyet` are what a tool's patient gate reads
+ * (NOTYA-ULKE-OZEL-01, lib/ulke/araclar/hastaKapisi.ts): '' = not recorded, which never passes a limit.
+ */
+export type AracHastasi = { id: string; ad: string; dogumTarihi?: string; cinsiyet?: string }
 export type KayitDurumu = 'yok' | 'bekliyor' | 'tamam' | 'eksik' | 'takip' | 'hata'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -54,7 +57,7 @@ export function useAracHastasi(api: Api, hazir: boolean, hastaId: string | null 
     if (!UUID.test(hastaId)) { setS({ durum: 'bulunamadi', hasta: null }); return }
     let iptal = false
     api(`/api/ulke/hasta?id=${encodeURIComponent(hastaId)}`)
-      .then((r) => { if (!iptal) setS(r.ok && r.j.hasta ? { durum: 'tamam', hasta: { id: r.j.hasta.id, ad: [r.j.hasta.ad, r.j.hasta.otaIsmi].filter(Boolean).join(' ') } } : { durum: 'bulunamadi', hasta: null }) })
+      .then((r) => { if (!iptal) setS(r.ok && r.j.hasta ? { durum: 'tamam', hasta: { id: r.j.hasta.id, ad: [r.j.hasta.ad, r.j.hasta.otaIsmi].filter(Boolean).join(' '), dogumTarihi: typeof r.j.hasta.dogumTarihi === 'string' ? r.j.hasta.dogumTarihi : '', cinsiyet: typeof r.j.hasta.cinsiyet === 'string' ? r.j.hasta.cinsiyet : '' } } : { durum: 'bulunamadi', hasta: null }) })
       .catch(() => { if (!iptal) setS({ durum: 'bulunamadi', hasta: null }) })
     return () => { iptal = true }
   }, [api, hazir, hastaId])

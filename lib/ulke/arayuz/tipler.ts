@@ -32,6 +32,13 @@ export type RolTanimi = {
   taraf: RolTarafi
   /** The role's name in every form. */
   ad: BicimliMetin
+  /**
+   * NOTYA-ULKE-OZEL-01 — THE ROLE THIS ONE BEHAVES LIKE, for a role only this country has: its notes are written
+   * with that role's template and its intake form asks that role's questions, unless the pack supplies the role's
+   * own (lib/ulke/arayuz/rolIcerigi.ts). The key need not be a role of the pack any more. Omitted = the role stands
+   * on its own, as every role did before.
+   */
+  gibi?: string
 }
 
 /** The assistant a role works with, as a screen names it. */

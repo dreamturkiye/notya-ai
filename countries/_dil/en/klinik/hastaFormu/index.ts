@@ -16,7 +16,7 @@
  */
 import type { HastaFormuIcerigi } from '@/lib/ulke/intake/tipler'
 import { enYaz, type EnBicim } from '../../varyant'
-import { EN_ROLLER, type EnRol } from '../roller'
+import { EN_ROLLER, enGibiRolleri, enRolSatirlari, type EnRol, type EnRolDegisimi } from '../roller'
 import { EN_CEKIRDEK_BOLUMLER } from './cekirdek'
 import { EN_ROL_SORULARI_1 } from './roller1'
 import { EN_ROL_SORULARI_2 } from './roller2'
@@ -40,12 +40,23 @@ export type EnFormGirdisi = {
   surum: string
   /** The country's own consent sentence, in its own spelling, where it brings one. Still a draft until a lawyer reads it. */
   riza?: { metin: string; veliMetni: string }
+  /**
+   * NOTYA-ULKE-OZEL-01 — where this country's role list differs from the shared forty: the sets of the roles it took
+   * out are not in its pack; a role of its own asks the questions of the role it behaves like (the kit finds them
+   * through `RolTanimi.gibi`), or its own (`EnEkRol.form`).
+   */
+  rolDegisimi?: EnRolDegisimi
 }
 
 /** The intake form's content in a country's form of English. */
 export function enHastaFormu(g: EnFormGirdisi): HastaFormuIcerigi {
   const roller: Record<string, ReturnType<typeof roluBicimle>> = {}
-  for (const rol of EN_ROLLER) roller[rol] = roluBicimle(EN_ROL_SORULARI[rol], g.bicim)
+  const satirlar = enRolSatirlari(g.rolDegisimi)
+  // The shared roles this country keeps, and the shared roles one of its own roles behaves like — in the set's order.
+  const tutulan = new Set<string>([...satirlar.filter((r) => !r.ek).map((r) => r.anahtar), ...enGibiRolleri(g.rolDegisimi)])
+  for (const rol of EN_ROLLER) if (tutulan.has(rol)) roller[rol] = roluBicimle(EN_ROL_SORULARI[rol], g.bicim)
+  // A role of the country's own that brings its own questions: written like the set's (base spelling), in the country's own folder.
+  for (const r of satirlar) if (r.ek?.form) roller[r.anahtar] = roluBicimle(r.ek.form, g.bicim)
   return {
     surum: g.surum,
     riza: {
