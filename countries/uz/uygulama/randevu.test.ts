@@ -834,13 +834,20 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
 
     it(`${f}: BOOKING — the form; "taken" has no way round it; "outside working hours" offers an explicit "book anyway"`, () => {
       const m = M.uygulamaMetni(f); const r = RM.randevuMetni(f)
-      const a = { gun: '12.10.2026', saat: '10:00', sureDk: 30, neden: '' }
+      const a = { gun: '2026-10-12', saat: '10:00', sureDk: 30, neden: '' }
       const form = (hata: import('@/components/ulke/uygulama/Takvim').FormHatasi, bekliyor = false) => cerceve(f, 'takvim', React.createElement(T.RandevuFormuGorunumu, { m, r, hasta: HASTA, a, set: bos, sureler: [10, 15, 20, 30, 45, 60, 90], gonder: bos, bekliyor, hata, geri: T.takvimYolu({ gun: PZT }) }))
       const html = form(null)
       const g = gorunurMetin(html)
       for (const s of [r.form.baslik, 'QA Karimova Dilnoza Rustamovna', r.form.tarih, r.form.saat, r.form.sure, r.form.neden, r.form.kaydet, r.form.vazgec, r.form.hastaDegistir, r.duzen.saatDilimi, `30 ${r.form.dakika}`]) assert.ok(g.includes(s), s)
-      assert.match(html, new RegExp(`name="gun"[^>]*placeholder="${r.form.tarihOrnek}"[^>]*value="12\\.10\\.2026"`), 'the day is typed in the pack\'s pattern')
-      assert.match(html, /name="saat" type="time"[^>]*value="10:00"/)
+      // NOTYA-ULKE-DENETIM-01b — the day is typed as day, month, year (the pack's own order, DD.MM.YYYY) in the kit's own
+      // field, and the time on the pack's 24-hour clock: never a browser's own date or time field.
+      assert.match(html, /<fieldset id="uza-rf-gun" class="uza-parcali" data-girdi="tarih" data-desen="DD\.MM\.YYYY" data-durum="tamam" data-deger="2026-10-12"/, 'the day is typed in the pack\'s pattern')
+      assert.deepEqual([...html.matchAll(/<input id="uza-rf-gun-(gun|ay|yil)"[^>]*value="(\d+)"/g)].map((x) => `${x[1]}=${x[2]}`), ['gun=12', 'ay=10', 'yil=2026'])
+      for (const [parca, ad] of [['gun', m.girdi.gun], ['ay', m.girdi.ay], ['yil', m.girdi.yil]]) assert.ok(html.includes(`<label class="uza-parca-ad" for="uza-rf-gun-${parca}">${ad}</label>`), `${f}: the label of ${parca}`)
+      assert.match(html, /<fieldset id="uza-rf-saat" class="uza-parcali" data-girdi="saat" data-saat-bicimi="24" data-durum="tamam" data-deger="10:00"/)
+      assert.deepEqual([...html.matchAll(/<input id="uza-rf-saat-(saat|dakika)"[^>]*value="(\d+)"/g)].map((x) => `${x[1]}=${x[2]}`), ['saat=10', 'dakika=00'])
+      assert.match(html, /<input type="hidden" name="gun" value="2026-10-12"\/>/); assert.match(html, /<input type="hidden" name="saat" value="10:00"\/>/)
+      assert.doesNotMatch(html, /type="(date|time|datetime-local)"|<select id="uza-rf-saat-yari"/, 'no browser date or time field, and no half of the day on a 24-hour clock')
       assert.equal(html.includes('data-eylem="yine-de"'), false)
       ekranTemiz(html, `/calendar booking (${f})`)
       // TAKEN: the sentence, and no second button of any kind.
@@ -921,7 +928,9 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       const g = gorunurMetin(html)
       for (const s of [r.duzen.baslik, r.duzen.aciklama, r.duzen.gunler, r.duzen.baslangic, r.duzen.bitis, r.duzen.sure, r.duzen.molalar, r.duzen.molaBas, r.duzen.molaBit, r.duzen.molaEkle, r.duzen.molaSil, r.duzen.kaydet, r.duzen.saatDilimi, r.duzen.tatilNotu, r.randevu.takvimeDon]) assert.ok(g.includes(s), s)
       assert.deepEqual([...html.matchAll(/<input type="checkbox" name="gunler"( checked="")? value="(\d)"\/><span>([^<]+)<\/span>/g)].map((x) => [x[2], Boolean(x[1]), x[3]]), [1, 2, 3, 4, 5, 6, 7].map((gn) => [String(gn), gn <= 5, r.gunKisa[gn as 1]]))
-      assert.match(html, /name="baslangic" type="time"[^>]*value="09:00"/); assert.match(html, /name="bitis" type="time"[^>]*value="18:00"/); assert.match(html, /name="mola-bas-0"[^>]*value="13:00"/)
+      assert.match(html, /<input type="hidden" name="baslangic" value="09:00"\/>/); assert.match(html, /<input type="hidden" name="bitis" value="18:00"\/>/); assert.match(html, /<input type="hidden" name="mola-bas-0" value="13:00"\/>/)
+      for (const id of ['uza-d-bas', 'uza-d-bit', 'uza-d-mola-bas-0', 'uza-d-mola-bit-0']) assert.match(html, new RegExp(`<fieldset id="${id}" class="uza-parcali" data-girdi="saat" data-saat-bicimi="24"`), `${f}: ${id} is the kit's own time field`)
+      assert.doesNotMatch(html, /type="(date|time|datetime-local)"/, 'never a browser\'s own time field')
       assert.ok(!g.includes(r.duzen.varsayilan)); assert.ok(gorunurMetin(duzen({ kayitli: false })).includes(r.duzen.varsayilan))
       for (const [hata, metin] of [['gunler', r.duzen.gunGerekli], ['saatler', r.duzen.saatGecersiz], ['sure', r.duzen.sureGecersiz], ['molalar', r.duzen.molaGecersiz], ['kayit', r.duzen.kaydedilemedi], ['baglanti', m.kabuk.baglanti]] as const) assert.ok(gorunurMetin(duzen({ hata })).includes(metin), hata)
       assert.ok(gorunurMetin(duzen({ kaydedildi: true })).includes(r.duzen.kaydedildi)); assert.ok(gorunurMetin(duzen({ bekliyor: true })).includes(r.duzen.kaydediliyor))

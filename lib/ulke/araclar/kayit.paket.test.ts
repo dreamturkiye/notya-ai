@@ -84,7 +84,7 @@ const yansiz = (t: AracTanimi) => t.tur !== 'ekran' && !(t.parametreler ?? []).l
 const ortam = () => ({ bugun: BUGUN, p: {} })
 const doluGirdi = (t: AracTanimi): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, ortam()).tamam) ?? null
 /** An input as the screen holds it (what was typed). */
-const hamGirdi = (g: AracGirdisi) => Object.fromEntries(Object.entries(g).filter(([, v]) => v !== null && v !== false).map(([k, v]) => [k, typeof v === 'number' ? String(v) : v])) as Record<string, string | boolean>
+const hamGirdi = (g: AracGirdisi) => Object.fromEntries(Object.entries(g).filter(([, v]) => v !== null && v !== false).map(([k, v]) => [k, typeof v === 'number' ? String(v).replace('.', paket.bicim.ondalikAyraci) : v])) as Record<string, string | boolean>
 /** Two kit tools for the role gate: T1 for the first role of the pack, T2 for the second. */
 let T1: AracTanimi, T2: AracTanimi
 let HAM1: Record<string, string | boolean>

@@ -70,15 +70,17 @@ const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(me
 
 /** The first input a tool answers: what a doctor would see after filling the form in. */
 const doluGirdi = (t: AracTanimi, p?: Readonly<Record<string, number>>): AracGirdisi | null => ornekGirdiler(t).find((g) => t.hesapla(g, ornekOrtam(t, p)).tamam) ?? null
+/** A number as a person of the pack's country types it: no grouping, the pack's own decimal mark. */
+const yazilan = (n: number) => String(n).replace('.', paket.bicim.ondalikAyraci)
 /** An input as the screen holds it (what was typed). */
-const hamGirdi = (g: AracGirdisi) => Object.fromEntries(Object.entries(g).filter(([, v]) => v !== null).map(([k, v]) => [k, typeof v === 'number' ? String(v) : v])) as Record<string, string | boolean>
+const hamGirdi = (g: AracGirdisi) => Object.fromEntries(Object.entries(g).filter(([, v]) => v !== null).map(([k, v]) => [k, typeof v === 'number' ? yazilan(v) : v])) as Record<string, string | boolean>
 /** The same, as a person of the pack's country types it: a measured value in the pack's unit (to two decimals), every other value as it is. */
 function ulkeninHami(t: AracTanimi, g: AracGirdisi, o: BirimOrtami): Record<string, string | boolean> {
   const ham = hamGirdi(g)
   for (const a of t.alanlar) {
     const v = g[a.anahtar]
     const bir = typeof v === 'number' ? kanonigeCevir(a, 1, o) : null
-    if (typeof v === 'number' && bir && bir !== 1) ham[a.anahtar] = String(Math.round((v / bir) * 100) / 100)
+    if (typeof v === 'number' && bir && bir !== 1) ham[a.anahtar] = yazilan(Math.round((v / bir) * 100) / 100)
   }
   return ham
 }
@@ -326,7 +328,7 @@ describe('tools — the screens', () => {
           // the sample is stated in the kit's units; the screen is given what a person of THIS country types (a
           // length, a weight or a laboratory value in the pack's own unit), and the result expected is the one of
           // exactly that typing
-          const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: icerik.labBirimleri }
+          const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: icerik.labBirimleri, sayi: paket.bicim }
           const ham = ulkeninHami(t, g, o)
           const s = t.hesapla(girdiyiCoz(t.alanlar, ham, o), ornekOrtam(t, p.parametreler))
           if (!s.tamam) continue
@@ -369,11 +371,23 @@ describe('tools — the screens', () => {
     }
   })
 
-  it('what is typed is narrowed before the arithmetic sees it: a comma is a decimal sign, text is nothing, a number out of range is nothing', () => {
+  it('what is typed is narrowed before the arithmetic sees it: a number is read by THE PACK\'S number rules, text is nothing, a number out of range is nothing', async () => {
     if (!icerik) return
     const o = Ekran.birimOrtami(icerik)
+    assert.deepEqual(o.sayi, { ondalikAyraci: paket.bicim.ondalikAyraci, binlikAyraci: paket.bicim.binlikAyraci }, 'the tools read a number with the pack\'s own two marks')
     const alanlar: AracAlani[] = [{ anahtar: 'n', tur: 'sayi', enAz: 0, enCok: 10 }, { anahtar: 'p', tur: 'puan', enAz: 0, enCok: 5, tam: true }, { anahtar: 's', tur: 'secim', secenekler: ['a', 'b'] }, { anahtar: 't', tur: 'tarih' }, { anahtar: 'i', tur: 'isaret' }]
-    assert.deepEqual(Ekran.girdiyiCoz(alanlar, { n: ' 2,5 ', p: '3', s: 'b', t: '2026-10-09', i: true }, o), { n: 2.5, p: 3, s: 'b', t: '2026-10-09', i: true })
+    // two and a half, typed the pack's way: "2.5" where the point is the decimal mark, "2,5" where the comma is
+    assert.deepEqual(Ekran.girdiyiCoz(alanlar, { n: ` ${yazilan(2.5)} `, p: '3', s: 'b', t: '2026-10-09', i: true }, o), { n: 2.5, p: 3, s: 'b', t: '2026-10-09', i: true })
+    // THE OTHER MARK IS NOT GUESSED (NOTYA-ULKE-DENETIM-01a): where the comma groups thousands, "2,5" is nothing, and
+    // the field is reported as holding something that could not be read
+    if (paket.bicim.ondalikAyraci === '.' && paket.bicim.binlikAyraci === ',') {
+      const ham = { n: '2,5', p: '3', s: 'b' }
+      const g = Ekran.girdiyiCoz(alanlar, ham, o)
+      assert.equal(g.n, null)
+      assert.deepEqual((await import('./girdi')).okunamayanAlanlar(alanlar, ham, g, o), ['n'])
+      const binli: AracAlani[] = [{ anahtar: 'n', tur: 'sayi', enAz: 0, enCok: 100000 }]
+      assert.deepEqual(Ekran.girdiyiCoz(binli, { n: '1,500' }, o), { n: 1500 }, '"1,500" is one thousand five hundred where the comma groups thousands')
+    }
     assert.deepEqual(Ekran.girdiyiCoz(alanlar, { n: 'abc', p: '2.5', s: 'c', t: '09.10.2026', i: 'yes' as unknown as boolean }, o), { n: null, p: null, s: null, t: null, i: false })
     assert.deepEqual(Ekran.girdiyiCoz(alanlar, { n: '11', p: '-1' }, o), { n: null, p: null, s: null, t: null, i: false })
     assert.deepEqual(Ekran.girdiyiCoz(alanlar, {}, o), { n: null, p: null, s: null, t: null, i: false })
@@ -424,14 +438,16 @@ describe('tools — keeping a result: the screens', () => {
     if (!s) { assert.ok(!icerik.araclar.some((p) => kitAraci(p.anahtar)!.tur !== 'ekran'), 'the samples fill in no tool of this pack: nothing was checked'); return }
     for (const dil of FORMLAR) {
       const a = A.araclarMetni(dil)
-      const kart = (tamam: boolean, durum: 'yok' | 'bekliyor' | 'tamam' | 'eksik' | 'takip' | 'hata' = 'yok') => h(Kayit.AracKayitKarti, { a, hasta: HASTA, tamam, takip: '', takipDegistir: () => {}, kaydet: () => {}, durum })
+      const kart = (tamam: boolean, durum: 'yok' | 'bekliyor' | 'tamam' | 'eksik' | 'takip' | 'hata' = 'yok') => h(Kayit.AracKayitKarti, { a, g: A.girdiMetni(dil), hasta: HASTA, tamam, takip: '', takipDegistir: () => {}, kaydet: () => {}, durum })
       const ortak = { x: s.x, a, dil, notDili: dil, icerik, degistir: () => {}, temizle: () => {}, bugun: '2026-10-09', kopya: 'yok' as const, kopyalaTikla: () => {}, kayit: (tamam: boolean) => kart(tamam) }
       const dolu = renderToStaticMarkup(h(Ekran.AracGorunumu, { ...ortak, ham: hamGirdi(s.g) }))
       const metin = gorunurMetin(dolu)
       assert.match(dolu, new RegExp(`data-bolum="kayit" data-hasta="${HASTA.id}"`))
       for (const beklenen of [a.kayit.baslik, a.kayit.hastaIcin.replace('%', HASTA.ad), a.kayit.aciklama, a.kayit.takipTarihi, a.kayit.takipIpucu, a.kayit.kaydet, a.kayit.dosyayaGit]) assert.ok(metin.includes(beklenen), `${dil}: "${beklenen}"`)
       // THE KIT PROPOSES NO DAY: the field is there and it is empty
-      assert.match(dolu, /<input id="uza-arac-takip" type="date" class="uza-girdi" value=""\/>/)
+      assert.match(dolu, /<fieldset id="uza-arac-takip" class="uza-parcali" data-girdi="tarih"[^>]*data-durum="bos"/)
+      for (const parca of ['gun', 'ay', 'yil']) assert.match(dolu, new RegExp(`<input id="uza-arac-takip-${parca}"[^>]*value=""`), `the ${parca} part of the follow-up day is empty`)
+      assert.doesNotMatch(dolu, /type="date"/, 'never the browser\'s own date field')
       assert.match(dolu, /<button type="button" class="uza-dugme" data-eylem="arac-kaydet">/, 'with a result the button is on')
       assert.ok(dolu.includes(`href="${Kabuk.YOL.hasta}?id=${HASTA.id}"`), 'the way back to the patient\'s file')
       // "nothing is stored" is not said where something can be: the two sentences never stand together

@@ -359,7 +359,7 @@ describe('the patient portal\'s screens — the doctor\'s side', () => {
       assert.ok(liste.includes(`href="${ON_EK}/calendar?istek=${istek.id}"`))
       for (const [b, metin] of [['reddedildi', i.reddedildi], ['cevaplandi', i.cevaplandi], ['yapilamadi', i.yapilamadi]] as const) assert.ok(gorunurMetin(renderToStaticMarkup(h(Istek.IsteklerGorunumu, { p: p(f), r: rm, istekler: [], bekliyor: false, bildirim: b, reddet: bos }))).includes(metin), `${f}/${b}`)
 
-      const cevap = (ek: Record<string, unknown> = {}) => hekimEkrani(f, h(Istek.IstekCevabiGorunumu, { p: p(f), r: rm, istek, a: { gun: gun(PZT), saat: '10:00', sureDk: 30 }, set: bos, zaman: h('input', { name: 'saat', defaultValue: '10:00' }), hataMetni: null, gonder: bos, reddet: bos, bekliyor: false, hata: null, ...ek }))
+      const cevap = (ek: Record<string, unknown> = {}) => hekimEkrani(f, h(Istek.IstekCevabiGorunumu, { p: p(f), r: rm, istek, a: { gun: PZT, saat: '10:00', sureDk: 30 }, set: bos, zaman: h('input', { name: 'saat', defaultValue: '10:00' }), hataMetni: null, gonder: bos, reddet: bos, bekliyor: false, hata: null, ...ek }))
       const c = cevap()
       const gc = gorunurMetin(c)
       for (const x of [i.formBaslik, HASTA_ADI, 'QA-PATIENTS-REASON', i.kabul, i.reddet, rm.form.vazgec, `${rm.takvim.gunuAc}: ${A.gunAdi(rm, 1, true)}, ${gun(PZT)}`]) assert.ok(gc.includes(x), `${f}: "${x}"`)
