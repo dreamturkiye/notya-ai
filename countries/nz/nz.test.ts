@@ -15,6 +15,7 @@ import { aracCalistir, hesabinAraci, paketinAraci } from '@/lib/ulke/araclar/pak
 import { EN_ROLLER } from '../_dil/en/klinik/roller'
 import { ingilizcePaketSinamasi, kaynakOku } from '../_dil/en/testing/paketSinamasi'
 import { enYaz } from '../_dil/en/varyant'
+import { NZ_ONAYSIZ_ARACLAR } from './araclar/onaysiz'
 import { NZ_ARAYUZ } from './arayuz'
 import { NZ_GIRDI, NZ_ROLLER } from './ayarlar'
 import derleme from './derleme.mjs'
@@ -41,8 +42,9 @@ ingilizcePaketSinamasi({
   kidemliHekim: 'specialist',
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
   ornekTelefon: /^\+64 2X XXX XXXX$/,
-  // NOTYA-ULKE-UYGULA-NZ: the country's own role list
+  // NOTYA-ULKE-UYGULA-NZ: the country's own role list, and the tools it has beyond the shared set
   rolDegisimi: NZ_ROLLER,
+  ekAraclar: NZ_ONAYSIZ_ARACLAR,
 })
 
 const a = NZ_ARAYUZ.araclar!
@@ -407,9 +409,9 @@ describe('nz: country data for the shared tools — each from a national source 
     assert.deepEqual(s.uyarilar, ['ml_yuvarlanmadi', 'ml_kucuk'], 'both cautions: not rounded to a device; below 1 mL')
   })
 
-  it('LICENCES: "permission needed" for the two the owner\'s order names; nothing for any other', () => {
+  it('LICENCES: "free" is stated only for the three tools whose source prints its own free licence; "permission needed" for the two the owner\'s order names; nothing for any other', () => {
     const belirtilen = [...a.araclar.filter((p) => p.lisans).map((p) => `${p.anahtar}:${p.lisans!.durum}`), ...a.yuvalar.filter((y) => y.lisans).map((y) => `${y.anahtar}:${y.lisans!.durum}`)].sort()
-    assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'rapor-taslagi:izin-gerekli'])
+    assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'nz-bmi-waist:serbest', 'nz-psa-thresholds:serbest', 'nz-smoking-abc:serbest', 'rapor-taslagi:izin-gerekli'])
     assert.notEqual(a.lisansTam, true, 'this pack does not state every licence: it stays on countries/lisans-borcu.json')
   })
 })
