@@ -12,7 +12,7 @@
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
-import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './ayarlar'
+import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
 import { GB_ROLLER } from './roller'
 
 const cekirdek = enCekirdek('en-GB')
@@ -45,7 +45,7 @@ export const GB_PAKETI: UlkePaketi = {
   bicim: { yerel: 'en-GB', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+44', ulusalHane: 10, ornek: '+44 7700 900123', cepGecerliMi: gbCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label names the identifiers of all four nations (./ayarlar.ts):
+  // below). `hane: 0` = no length is assumed. The label names the identifiers of all four nations (./temel.ts):
   // unverified wording, and whether a private clinic may record one is for a lawyer.
   ulusalKimlik: { ad: GB_KIMLIK_ETIKETI, hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
   // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
