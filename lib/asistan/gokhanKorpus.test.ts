@@ -70,9 +70,9 @@ function kaynakMetni(k: { dosya: string; kimlik: string }): string | null {
 }
 
 describe('Gökhan korpusu — girdiler', () => {
-  it('korpus yalnız büyür (Q-40): en az 436 girdi; yapısal denetim temiz; id tekil', () => {
+  it('korpus yalnız büyür (Q-40): en az 452 girdi; yapısal denetim temiz; id tekil', () => {
     // A floor, not a window: an entry is never removed to make a run green. Raise the floor when entries are added.
-    assert.ok(GOKHAN_SIKAYET_KORPUSU.length >= 436, String(GOKHAN_SIKAYET_KORPUSU.length))
+    assert.ok(GOKHAN_SIKAYET_KORPUSU.length >= 452, String(GOKHAN_SIKAYET_KORPUSU.length))
     assert.deepEqual(korpusDenetle(GOKHAN_SIKAYET_KORPUSU), [])
     assert.equal(new Set(GOKHAN_SIKAYET_KORPUSU.map((g) => g.id)).size, GOKHAN_SIKAYET_KORPUSU.length)
   })
@@ -499,9 +499,12 @@ describe('Gökhan korpusu — sentetik dosyalar', () => {
   })
 })
 
+/** NOTYA-AYSE-SAYI-SIRA-01: the live count sentence, its twelve wordings and the three that state a filter. */
+const SAYI_SIRA = GOKHAN_SIKAYET_KORPUSU.filter((g) => g.id.startsWith('L-SAYI-')).map((g) => g.id)
+
 describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
   let satirlar: KorpusSatiri[] = []
-  const SECILEN = ['L-KIMLIK-ANNE', 'C-2', 'C-3', 'R-ASI-2', 'E-01', 'L-EYLEM-HEPB', 'Y-097', 'I-01', 'L-SAYFA-KILO', 'T-088', 'T-089', 'L-AKTIF-TANSIYON', 'L-BIRIM-02', 'G-K1', 'G-K2', 'L-DANIS-12AY', 'L-DANIS-15AY', 'L-TUR-15AY', 'L-TUR-18AY', 'L-TUR-24AY', 'L-TUR-6AY-PANEL', 'L-OZET-12AY', 'L-OZET-15AY', 'L-OZET-24AY-DEVAM', 'L-OZET-ERISKIN', 'L-OZET-YABANCI', 'K-G01', 'K-OLCUM-ATES', 'K-TARIH-SON']
+  const SECILEN = ['L-KIMLIK-ANNE', 'C-2', 'C-3', 'R-ASI-2', 'E-01', 'L-EYLEM-HEPB', 'Y-097', 'I-01', 'L-SAYFA-KILO', 'T-088', 'T-089', 'L-AKTIF-TANSIYON', 'L-BIRIM-02', 'G-K1', 'G-K2', 'L-DANIS-12AY', 'L-DANIS-15AY', 'L-TUR-15AY', 'L-TUR-18AY', 'L-TUR-24AY', 'L-TUR-6AY-PANEL', 'L-OZET-12AY', 'L-OZET-15AY', 'L-OZET-24AY-DEVAM', 'L-OZET-ERISKIN', 'L-OZET-YABANCI', 'K-G01', 'K-OLCUM-ATES', 'K-TARIH-SON', ...SAYI_SIRA]
   before(async () => {
     await sahneHazirla()
     assert.equal(gercekModelAc(vekilOpenRouter), true)
@@ -559,6 +562,23 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
     assert.deepEqual([p.rota, p.cagrilan, p.kartlar.map((k) => k.eylem), p.hasta], ['panel', ['asi_kaydi_ekle'], ['asi_kaydi_ekle'], undefined])
     // The card is real; whether the model would have refused in words is not something a stand-in can show.
     assert.equal(p.karar, 'VEKIL')
+  })
+
+  it('panel sayımı sohbet sözcükleriyle de hekimin gerçek sayısıdır; söylenen filtre kalır ve adıyla geçer — yazıda ve seste, modelsiz (NOTYA-AYSE-SAYI-SIRA-01)', () => {
+    assert.equal(SAYI_SIRA.length, 16)
+    for (const yuzey of ['yazi', 'ses'] as const) {
+      for (const id of SAYI_SIRA) {
+        const s = bul(id, yuzey)
+        assert.deepEqual([s.karar, s.rota, s.modeleGitti], ['PASS', 'arama', false], `${id}/${yuzey}: ${s.nedenler.join('; ')} | ${s.cevap} | ${s.sozlu}`)
+      }
+      // The live sentence: the whole panel, by name, and no filter line.
+      const canli = bul('L-SAYI-T4', yuzey)
+      assert.match(yuzey === 'ses' ? canli.sozlu : canli.cevap, new RegExp(`^Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta: `))
+      assert.doesNotMatch(`${canli.cevap} ${canli.sozlu}`, /Filtre|\b0 hasta/)
+      // A stated diagnosis nobody carries: zero, the word that narrowed it, and the registered total.
+      const tani = bul('L-SAYI-F3', yuzey)
+      assert.match(yuzey === 'ses' ? tani.sozlu : tani.cevap, new RegExp(`^Kayıtlarda 0 hasta\\. Filtre: aranan söz: şizofreni\\. Kayıtlı toplam ${KORPUS_PANEL_SAYISI} hastanız var\\.$`))
+    }
   })
 
   it('adı geçen muayenenin ölçümü üç yüzeyde kayıttan gelir — panelde vekil ne yazarsa yazsın (NOTYA-DANIS-OLCUM)', () => {

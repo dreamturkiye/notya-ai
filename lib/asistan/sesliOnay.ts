@@ -20,6 +20,7 @@ import { sesCiddiUyariEngeli, sesEksikAlanEngeli, sesOnayMetniGecerliMi, sesVazg
 import type { IlacUyarisi } from '@/core/eylemler/ilacUyari'
 import type { HazirOneri } from '@/core/eylemler/oneri'
 import type { OturumMesaji } from '@/lib/asistan/ayseCevapla'
+import { turZamanlari } from '@/lib/asistan/balonSirasi'
 
 function kimlikListesi(v: unknown): string[] {
   return Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 10) : []
@@ -36,6 +37,7 @@ export function sesliKararCumlesiMi(mesaj: string): boolean {
  */
 export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: string, oturumId: string, mesaj: string, saatDilimi?: string | null): Promise<{ soz: string } | null> {
   if (!sesliKararCumlesiMi(mesaj)) return null
+  const turBaslangic = new Date().toISOString()
   const { data: oturum } = await supabase
     .from('asistan_sessions')
     .select('id, messages, active_context')
@@ -56,13 +58,14 @@ export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: stri
   if (!taslaklar.length) return null
 
   const karar = await uygula(supabase, doktorId, taslaklar, sesOnayMetniGecerliMi(mesaj), saatDilimi)
-  const zaman = new Date().toISOString()
+  // NOTYA-AYSE-SAYI-SIRA-01: the doctor's line keeps its own time; the reply is strictly later (one instant for both before).
+  const zaman = turZamanlari(turBaslangic)
   const mesajlar = ((oturum as { messages?: OturumMesaji[] }).messages || [])
   await supabase.from('asistan_sessions').update({
     messages: [
       ...mesajlar,
-      { role: 'user', content: mesaj, kanal: 'ses', zaman },
-      { role: 'assistant', content: karar.soz, kanal: 'ses', zaman },
+      { role: 'user', content: mesaj, kanal: 'ses', zaman: zaman.soru },
+      { role: 'assistant', content: karar.soz, kanal: 'ses', zaman: zaman.cevap },
     ].slice(-SOHBET_SAKLANAN_MESAJ),
     active_context: { ...baglam, bekleyenOneriler: karar.kalan },
   }).eq('id', oturumId).eq('doctor_id', doktorId)
