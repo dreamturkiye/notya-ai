@@ -4,10 +4,13 @@
  *
  * Nothing is written here: the English language set (countries/_dil/en/arayuz.ts) assembles the catalogues, the role
  * names, the note templates, the tools and the landing copy in New Zealand spelling (en-NZ) from what this country states in
- * ./ayarlar.ts.
+ * ./ayarlar.ts — and, since NOTYA-ULKE-UYGULA-NZ, takes the tools only this country has from ./araclar/ (`ek`). They
+ * are handed over HERE and not in ./ayarlar.ts, which stays plain data: the pack's light settings file (./index.ts)
+ * reads it, and a tool's mechanism is code.
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { enArayuz } from '../_dil/en/arayuz'
+import { NZ_EK } from './araclar/araclar'
 import { NZ_GIRDI } from './ayarlar'
 
-export const NZ_ARAYUZ: UlkeArayuzu = enArayuz(NZ_GIRDI)
+export const NZ_ARAYUZ: UlkeArayuzu = enArayuz({ ...NZ_GIRDI, araclar: { ...NZ_GIRDI.araclar, ek: NZ_EK } })

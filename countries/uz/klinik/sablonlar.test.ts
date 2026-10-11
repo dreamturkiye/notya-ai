@@ -1,6 +1,8 @@
 /**
- * NOTYA-UZ-BRANSLAR-01 — NOTE TEMPLATES AND MODEL INSTRUCTIONS of an Uzbekistan build (NOTYA_COUNTRY=uz), for all
- * 40 roles. Table-driven: every check below runs for every role.
+ * NOTYA-UZ-BRANSLAR-01 · NOTYA-ULKE-UYGULA-UZ — NOTE TEMPLATES AND MODEL INSTRUCTIONS of an Uzbekistan build
+ * (NOTYA_COUNTRY=uz), for all 42 roles of the pack's own list (./rolListesi.ts). Table-driven: every check below
+ * runs for every role. A ROLE ONLY UZBEKISTAN HAS writes with the template of the role it behaves like, under its
+ * own key and its own name: 37 templates for 42 roles, and the checks follow the template a role really gets.
  *
  *   1. TEMPLATES: each role has its own fields, labelled in three forms, each form in its own script.
  *   2. NO CLINICAL REFERENCE CONTENT: no number, dose, schedule, scale or source in a label or an instruction;
@@ -36,8 +38,9 @@ import { gorunurMetin, sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
 import { UZ_ASISTAN_ADLARI } from './asistanAdlari'
 import { uzAsistanKimligi } from './asistanKimligi'
-import { UZ_ALANLAR, UZ_ORTAK_YEREL_ICERIK, UZ_ROL_ALANLARI, UZ_VASIY_ALANI, UZ_YEREL_ICERIK, uzAlanAdi, uzAlanTanimi, uzBolumAdi, uzResitDegilMi, uzSablonAlanlari, uzSablonMu } from './notSablonlari'
+import { UZ_ALANLAR, UZ_ORTAK_YEREL_ICERIK, UZ_ROL_ALANLARI, UZ_VASIY_ALANI, UZ_YEREL_ICERIK, uzAlanAdi, uzAlanTanimi, uzBolumAdi, uzResitDegilMi, uzRolSablonAlanlari, uzSablonAlanlari, uzSablonMu } from './notSablonlari'
 import { UZ_ROL_ADLARI } from './rolAdlari'
+import { UZ_ROL_SATIRLARI } from './rolListesi'
 
 const KOK = resolve(__dirname, '../../..')
 ;(require as unknown as { extensions: Record<string, (m: { exports: unknown }) => void> }).extensions['.css'] = (m) => { m.exports = {} }
@@ -54,7 +57,10 @@ const vt = sahteVeritabani()
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 type Form = (typeof FORMLAR)[number]
-const ROLLER = UZ_ASISTAN_ADLARI.map((a) => ({ rol: a.bransAnahtari, taraf: a.taraf, tamAd: uzAsistanKimligi(a.bransAnahtari, 'uz-Latn')!.tamAd }))
+/** The 42 roles of the pack. `tamAd` = the assistant the owner named for the role, or null: seven roles have none yet. `gibi` = the role whose template it writes with, where it has none under its own key. */
+const ROLLER = UZ_ROL_SATIRLARI.map((x) => ({ rol: x.anahtar, taraf: x.taraf, gibi: x.gibi ?? null, tamAd: uzAsistanKimligi(x.anahtar, 'uz-Latn')?.tamAd ?? null }))
+/** THE TEMPLATE A ROLE REALLY GETS: its own fields, or those of the role it behaves like. */
+const ALAN = (rol: string): readonly string[] => uzRolSablonAlanlari(rol)
 const TUM_ALANLAR = Object.keys(UZ_ALANLAR)
 const TURKCE = /[çğıİşĞŞöüÖÜÇ]/
 const KIRILL = /[Ѐ-ӿ]/
@@ -125,16 +131,25 @@ before(async () => {
   R.not = await import('../../../app/api/ulke/not/route.ulke'); R.yeniden = await import('../../../app/api/ulke/not/yeniden-yaz/route.ulke'); R.onayla = await import('../../../app/api/ulke/not/onayla/route.ulke')
 })
 
-describe('40 roles: note templates', () => {
-  it('every one of the 40 roles has a template of its own; the general template and anything unknown have no role field', () => {
-    assert.deepEqual(Object.keys(UZ_ROL_ALANLARI).sort(), ROLLER.map((r) => r.rol).sort())
+describe('42 roles: note templates', () => {
+  it('every one of the 42 roles has a template — 35 under their own key, 7 through the role they behave like; the general template and anything unknown have no role field', () => {
+    // 37 templates: one for each role that has its own, and the two kept for the roles that behave like a key that is no role any more
+    const kendi = ROLLER.filter((r) => !r.gibi).map((r) => r.rol)
+    assert.equal(kendi.length, 35)
+    assert.deepEqual(Object.keys(UZ_ROL_ALANLARI).sort(), [...kendi, 'diyetisyen', 'odyoloji'].sort())
+    for (const { rol, gibi } of ROLLER) assert.deepEqual([...ALAN(rol)], [...UZ_ROL_ALANLARI[gibi ?? rol]], `${rol}: the template of ${gibi ?? 'its own key'}`)
+    // a template that is nobody's is gone: the three roles the audit took out, and a key that only lends its template is no template itself
+    for (const k of ['sac-ekimi', 'longevity', 'ergoterapi']) assert.equal(UZ_ROL_ALANLARI[k], undefined, k)
+    for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) { assert.equal(uzSablonMu(k), false, k); assert.deepEqual([...uzSablonAlanlari(k, { dogumTarihi: COCUK, muayeneTarihi: '2026-10-08' })], [], k) }
     for (const { rol } of ROLLER) {
-      const alanlar = UZ_ROL_ALANLARI[rol]
+      const alanlar = ALAN(rol)
       assert.ok(alanlar.length >= 5 && alanlar.length <= 8 && new Set(alanlar).size === alanlar.length, `${rol}: ${alanlar.length} fields`)
       for (const k of alanlar) assert.ok(uzAlanTanimi(k), `${rol}: unknown field ${k}`)
       assert.equal(uzSablonMu(rol), true); assert.deepEqual([...uzSablonAlanlari(rol)], [...alanlar])
     }
-    assert.equal(new Set(ROLLER.map((r) => [...UZ_ROL_ALANLARI[r.rol]].sort().join())).size, 40, 'two roles with the same set of fields')
+    // two roles have the same set of fields only where one behaves like the other (or both like the same key): 37 sets for 42 roles
+    assert.equal(new Set(ROLLER.map((r) => [...ALAN(r.rol)].sort().join())).size, 37, 'two roles with the same set of fields')
+    assert.equal(new Set(ROLLER.filter((r) => !r.gibi).map((r) => [...ALAN(r.rol)].sort().join())).size, 35)
     assert.deepEqual([...uzSablonAlanlari('genel')], [])
     for (const ham of ['kadin-dogum', 'Pediatri', '', 'cardiology', 'constructor', '__proto__']) { assert.equal(uzSablonMu(ham), false, ham); assert.deepEqual([...uzSablonAlanlari(ham, { dogumTarihi: COCUK, muayeneTarihi: '2026-10-08' })], [], ham) }
     // Every field in the library is somebody's; none is left over to leak by accident.
@@ -148,13 +163,16 @@ describe('40 roles: note templates', () => {
   })
 
   it('fields that are one specialty\'s alone stay that specialty\'s: no other role lists them', () => {
-    const sahipler = (k: string) => ROLLER.filter((r) => UZ_ROL_ALANLARI[r.rol].includes(k)).map((r) => r.rol)
+    const sahipler = (k: string) => ROLLER.filter((r) => ALAN(r.rol).includes(k)).map((r) => r.rol)
     assert.deepEqual(sahipler('head_circumference'), ['pediatri'])
     for (const k of ['visual_acuity', 'eye_pressure', 'fundus']) assert.deepEqual(sahipler(k), ['goz-hastaliklari'], k)
-    for (const k of ['menstrual_history', 'obstetric_history', 'current_pregnancy', 'gyn_exam']) assert.deepEqual(sahipler(k), ['kadin-hastaliklari-dogum'], k)
+    // (a role only Uzbekistan has shares the fields of the role it behaves like, and of no other)
+    for (const k of ['menstrual_history', 'obstetric_history', 'current_pregnancy', 'gyn_exam']) assert.deepEqual(sahipler(k), ['kadin-hastaliklari-dogum', 'reproduktoloji'], k)
     for (const k of ['chest_pain', 'ecg', 'echo']) assert.deepEqual(sahipler(k), ['kardiyoloji'], k)
-    for (const k of ['mental_status', 'psychiatric_history']) assert.deepEqual(sahipler(k), ['psikiyatri'], k)
-    for (const k of ['audiometry', 'tympanometry', 'hearing_aid']) assert.deepEqual(sahipler(k), ['odyoloji'], k)
+    for (const k of ['mental_status', 'psychiatric_history']) assert.deepEqual(sahipler(k), ['psikiyatri', 'narkoloji'], k)
+    for (const k of ['audiometry', 'tympanometry', 'hearing_aid']) assert.deepEqual(sahipler(k), ['surdoloji'], k)
+    for (const k of ['cardiac_exam']) assert.deepEqual(sahipler(k), ['kalp-damar-cerrahisi', 'damar-cerrahisi', 'kardiyoloji'], k)
+    for (const k of ['nutrition_plan', 'diet_history']) assert.deepEqual(sahipler(k), ['diyetoloji'], k)
     assert.deepEqual(sahipler('birth_history'), ['cocuk-cerrahisi', 'pediatri'])
     // The guardian field is nobody's: no role lists it. It comes from the patient's age alone.
     assert.deepEqual(sahipler(UZ_VASIY_ALANI), []); assert.ok(!TUM_ALANLAR.includes(UZ_VASIY_ALANI))
@@ -162,7 +180,7 @@ describe('40 roles: note templates', () => {
 
   for (const { rol } of ROLLER) {
     it(`${rol}: every field label in three forms, each in its own script; no number, unit or source; nothing of Türkiye`, () => {
-      for (const k of UZ_ROL_ALANLARI[rol]) {
+      for (const k of ALAN(rol)) {
         assert.match(k, /^[a-z][a-z0-9_]*$/, 'a field key is a plain identifier')
         const t = uzAlanTanimi(k)!
         assert.ok(['s', 'o', 'a', 'p'].includes(t.bolum))
@@ -189,10 +207,10 @@ describe('40 roles: note templates', () => {
   it('GUARDIAN WORDING FOLLOWS AGE in every role: under 18 → the one guardian field, first; adult → never, paediatrics included; unknown age → only the children\'s roles', () => {
     const gun = '2026-10-08'
     for (const sablon of ['genel', ...ROLLER.map((r) => r.rol)]) {
-      const rolun = sablon === 'genel' ? [] : [...UZ_ROL_ALANLARI[sablon]]
+      const rolun = sablon === 'genel' ? [] : [...ALAN(sablon)]
       assert.deepEqual([...uzSablonAlanlari(sablon, { dogumTarihi: COCUK, muayeneTarihi: gun })], [UZ_VASIY_ALANI, ...rolun], `${sablon}: child`)
       assert.deepEqual([...uzSablonAlanlari(sablon, { dogumTarihi: YETISKIN, muayeneTarihi: gun })], rolun, `${sablon}: adult`)
-      assert.deepEqual([...uzSablonAlanlari(sablon, { dogumTarihi: '', muayeneTarihi: gun })], ['pediatri', 'cocuk-cerrahisi'].includes(sablon) ? [UZ_VASIY_ALANI, ...rolun] : rolun, `${sablon}: unknown age`)
+      assert.deepEqual([...uzSablonAlanlari(sablon, { dogumTarihi: '', muayeneTarihi: gun })], ['pediatri', 'cocuk-cerrahisi', 'cocuk-norolojisi'].includes(sablon) ? [UZ_VASIY_ALANI, ...rolun] : rolun, `${sablon}: unknown age`)
     }
     assert.equal(uzResitDegilMi('kardiyoloji', '2008-10-09', gun), true, 'the day before the eighteenth birthday'); assert.equal(uzResitDegilMi('kardiyoloji', '2008-10-08', gun), false, 'the eighteenth birthday')
     assert.equal(uzResitDegilMi('pediatri', '1990-01-01', gun), false, 'an adult in paediatrics is an adult')
@@ -212,6 +230,10 @@ describe('40 roles: note templates', () => {
     assert.deepEqual(Object.keys(UZ_YEREL_ICERIK).sort(), ROLLER.map((r) => r.rol).sort())
     const hepsi = [...Object.values(UZ_YEREL_ICERIK).flat(), ...UZ_ORTAK_YEREL_ICERIK]
     assert.equal(hepsi.length, 75)
+    // a role that writes with another role's template needs what that template needs; the two that moved to the doctor side no longer ask about an allied profession's scope
+    for (const [rol, gibi] of [['damar-cerrahisi', 'kalp-damar-cerrahisi'], ['alerji-immunoloji', 'dahiliye'], ['reproduktoloji', 'kadin-hastaliklari-dogum'], ['cocuk-norolojisi', 'noroloji'], ['narkoloji', 'psikiyatri']]) assert.deepEqual(UZ_YEREL_ICERIK[rol], UZ_YEREL_ICERIK[gibi], rol)
+    assert.deepEqual([UZ_YEREL_ICERIK.diyetoloji.map((y) => y.anahtar), UZ_YEREL_ICERIK.surdoloji.map((y) => y.anahtar)], [['nutrient_reference', 'growth_standard'], ['hearing_loss_grading', 'newborn_hearing_screening']])
+    assert.deepEqual(Object.entries(UZ_YEREL_ICERIK).filter(([, y]) => y.some((x) => x.anahtar === 'scope_of_practice')).map(([rol]) => rol), ['fizyoterapi', 'klinik-psikolog'])
     for (const { rol } of ROLLER) assert.ok(UZ_YEREL_ICERIK[rol].length >= 1, rol)
     for (const y of hepsi) {
       assert.equal(y.acik, false, y.anahtar); assert.equal(y.icerik, null, y.anahtar); assert.equal(y.kimden, 'a local clinician')
@@ -229,22 +251,24 @@ describe('40 roles: note templates', () => {
   })
 })
 
-describe('40 roles: the Uzbekistan document', () => {
+describe('42 roles: the Uzbekistan document', () => {
   it('has a status row for every role (machine-built, no reviewer) and a "needs local content" row for every slot', () => {
     const belge = readFileSync(join(KOK, 'docs/COUNTRY-PACK-UZBEKISTAN.md'), 'utf8')
     for (const { rol, tamAd } of ROLLER) {
       const satir = belge.split('\n').find((x) => x.startsWith('| ') && x.includes(`| \`${rol}\` |`) && x.includes('| yes |'))
       assert.ok(satir, `${rol}: no status row`)
-      for (const x of [tamAd, UZ_ROL_ADLARI[rol]['uz-Latn'], UZ_ROL_ADLARI[rol].ru, `| ${UZ_ROL_ALANLARI[rol].length} |`, '| none yet |', ...UZ_YEREL_ICERIK[rol].map((y) => `\`${y.anahtar}\``)]) assert.ok(satir!.includes(x), `${rol}: status row lacks "${x}"`)
+      for (const x of [tamAd ?? '| none named yet |', UZ_ROL_ADLARI[rol]['uz-Latn'], UZ_ROL_ADLARI[rol].ru, `| ${ALAN(rol).length} |`, '| none yet |', ...UZ_YEREL_ICERIK[rol].map((y) => `\`${y.anahtar}\``)]) assert.ok(satir!.includes(x), `${rol}: status row lacks "${x}"`)
       for (const y of UZ_YEREL_ICERIK[rol]) assert.ok(belge.includes(`| \`${rol}\` (${UZ_ROL_ADLARI[rol].ru}) | \`${y.anahtar}\` | ${y.eksik} | a local clinician |`), `${rol}/${y.anahtar}: no "needs local content" row`)
     }
-    for (const y of UZ_ORTAK_YEREL_ICERIK) assert.ok(belge.includes(`| all 40 roles | \`${y.anahtar}\` | ${y.eksik} | a local clinician |`), y.anahtar)
+    for (const y of UZ_ORTAK_YEREL_ICERIK) assert.ok(belge.includes(`| all 42 roles | \`${y.anahtar}\` | ${y.eksik} | a local clinician |`), y.anahtar)
+    // a key the audit took out has no status row any more
+    for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) assert.ok(!belge.split('\n').some((x) => x.includes(`| \`${k}\` |`) && x.includes('| yes |')), `${k}: still has a status row`)
     assert.equal(belge.split('\n').filter((x) => x.endsWith('| a local clinician |')).length, 75)
     assert.match(belge, /Machine-derived\*\* from the Latin form by rule/)
   })
 })
 
-describe('40 roles: instructions to the model', () => {
+describe('42 roles: instructions to the model', () => {
   let T: typeof import('./talimatlar')
   before(async () => { T = await import('./talimatlar') })
   /** Text a person reads: keys and the JSON shape are the contract with the code, not prose. */
@@ -252,7 +276,7 @@ describe('40 roles: instructions to the model', () => {
 
   for (const { rol, taraf } of ROLLER) {
     it(`${rol}: one instruction per form, built from this role's template — its fields and no other role's; no source, no protocol, no number`, () => {
-      const alanlar = [...UZ_ROL_ALANLARI[rol]]
+      const alanlar = [...ALAN(rol)]
       for (const f of FORMLAR) {
         const t = T.uzNotTalimati(f, rol)
         assert.ok(t && t.length > 1500, `${rol}/${f}`)
@@ -286,9 +310,13 @@ describe('40 roles: instructions to the model', () => {
     })
   }
 
-  it('40 roles × 3 forms: 120 different instructions; the general one is not any of them; another country\'s language has none', () => {
+  it('42 roles × 3 forms: 126 different instructions — also where two roles write with one template, or carry one name; the general one is not any of them; another country\'s language has none', () => {
     const hepsi = ROLLER.flatMap((r) => FORMLAR.map((f) => T.uzNotTalimati(f, r.rol)!))
-    assert.equal(new Set(hepsi).size, 120)
+    assert.equal(new Set(hepsi).size, 126)
+    // a role that behaves like another is told ITS OWN name over the same fields
+    for (const f of FORMLAR) { const a = T.uzNotTalimati(f, 'damar-cerrahisi')!, b = T.uzNotTalimati(f, 'kalp-damar-cerrahisi')!; assert.equal(a.split(UZ_ROL_ADLARI['damar-cerrahisi'][f]).join('#').split(UZ_ROL_ADLARI['damar-cerrahisi'][f].toLocaleUpperCase(f === 'ru' ? 'ru' : 'uz')).join('#'), b.split(UZ_ROL_ADLARI['kalp-damar-cerrahisi'][f]).join('#').split(UZ_ROL_ADLARI['kalp-damar-cerrahisi'][f].toLocaleUpperCase(f === 'ru' ? 'ru' : 'uz')).join('#'), f) }
+    // a key that is no role any more has no instruction: no note is written under it
+    for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) for (const f of FORMLAR) assert.equal(T.uzNotTalimati(f, k), null, `${k}/${f}`)
     for (const f of FORMLAR) { assert.ok(!hepsi.includes(T.uzNotTalimati(f, 'genel')!)); assert.ok(!T.uzNotTalimati(f, 'genel')!.includes('fields')) }
     for (const { rol } of ROLLER) assert.equal(T.uzNotTalimati('tr', rol), null)
     assert.equal(T.uzRolBlogu('ru', 'genel'), null); assert.equal(T.uzRolBlogu('ru', 'kadin-dogum'), null)
@@ -314,7 +342,7 @@ describe('40 roles: instructions to the model', () => {
   })
 })
 
-describe('40 roles: visit → draft in the role\'s template, with a model that returns every role\'s fields', () => {
+describe('42 roles: visit → draft in the role\'s template, with a model that returns every role\'s fields', () => {
   let Not: typeof import('@/components/ulke/uygulama/Not')
   let Muayene: typeof import('@/components/ulke/uygulama/Muayene')
   let Kabuk: typeof import('@/components/ulke/uygulama/Kabuk')
@@ -331,13 +359,15 @@ describe('40 roles: visit → draft in the role\'s template, with a model that r
     React.createElement(Not.NotGorunumu, { m: M.uygulamaMetni(f), not, aktifDil: not.dil, setAktifDil: bos, icerik: not.icerik, setIcerik: bos, islem: null, bildirim: null, kaydet: bos, yenidenYaz: bos, onayla: bos }) })))
 
   ROLLER.forEach(({ rol, taraf }, i) => {
-    // The three forms take turns across the 40 roles, so every form writes notes for doctors and for allied roles.
+    // The three forms take turns across the 42 roles, so every form writes notes for doctors and for allied roles.
     const f = FORMLAR[i % 3]
-    it(`${rol} (${f}): role on the account → visit → draft with this role's fields only; nothing of the other 39 roles is stored, returned or drawn`, async () => {
+    it(`${rol} (${f}): role on the account → visit → draft with this role's fields only; nothing of the other roles is stored, returned or drawn`, async () => {
       sifirla(f)
       assert.deepEqual(await oku(await R.rol.POST(istek('/api/ulke/rol', 'jeton-a', { rol }))), { s: 200, j: { ok: true, rol } })
-      const alanlar = [...UZ_ROL_ALANLARI[rol]]
-      const baskaRol = ROLLER[(i + 7) % 40].rol
+      const alanlar = [...ALAN(rol)]
+      const baskaRol = ROLLER[(i + 7) % ROLLER.length].rol
+      // the assistant the screens name for this role: the owner's, or — for a role nobody has named one for — the neutral one
+      const asistan = (form: Form) => K.uzAsistanKimligi(rol, form)?.tamAd ?? M.uygulamaMetni(form).asistan.notr.replace('%', 'Notya')
       // Another role's template is refused for this account; nothing reaches the speech engine.
       vt.depo.set(`muayene-sesleri/uz/${A}/yabanci.webm`, new Blob(['sentetik ses']))
       assert.deepEqual(await oku(await R.muayene.POST(istek('/api/ulke/muayene', 'jeton-a', { yol: `uz/${A}/yabanci.webm`, hastaId: await hastaEkle('jeton-a', YETISKIN), sablon: baskaRol, riza: true }))), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } })
@@ -370,15 +400,15 @@ describe('40 roles: visit → draft in the role\'s template, with a model that r
         assert.ok(!html.includes('made_up_key') && !g.includes('QIYMAT-made'))
         // Keys are never read by a person (they are attributes and ids, not text).
         for (const k of alanlar) assert.ok(!new RegExp(`(^|[^a-zA-Z_-])${k}([^a-zA-Z_-]|$)`).test(g), `${rol}/${ekran}: the key ${k} is visible`)
-        assert.match(html, new RegExp(`data-alan="asistan-ad">${K.uzAsistanKimligi(rol, ekran)!.tamAd.replace('.', '\\.')}<`), `${rol}/${ekran}: the assistant on the draft`)
+        assert.ok(html.includes(`data-alan="asistan-ad">${asistan(ekran)}<`), `${rol}/${ekran}: the assistant on the draft`)
         assert.ok(g.includes(UZ_ROL_ADLARI[rol][ekran]), 'the template is named by the role\'s name')
         assert.ok(g.includes(taraf === 'klinik-muttefik' ? uzBolumAdi(rol, 'a', ekran)! : m.not.a)); if (taraf === 'klinik-muttefik') assert.ok(!g.includes(m.not.a), `${rol}/${ekran}: a doctor's heading on an allied note`)
         temiz(html, `note draft ${rol}/${ekran}`); temiz(g, `note draft ${rol}/${ekran} (visible)`); assert.doesNotMatch(html, /[çğıİşĞŞ]/)
       }
       // The visit screen names the template and the assistant; the screen's own gate refuses a key the template does not own.
       const kayit = renderToStaticMarkup(React.createElement(Muayene.KayitGorunumu, { m: M.uygulamaMetni(f), hasta: { id: y.hasta, ad: 'QA Bemor Sinov', otaIsmi: '' }, sablon: Muayene.hesapSablonu(rol), riza: false, setRiza: bos, durum: 'hazir', sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos, rol }))
-      assert.ok(kayit.includes(`data-alan="sablon">${UZ_ROL_ADLARI[rol][f]}<`) && kayit.includes(`data-alan="asistan-ad">${K.uzAsistanKimligi(rol, f)!.tamAd}<`))
-      const sizdirilmis = { ...y.not, alanAnahtarlari: [...alanlar, ...UZ_ROL_ALANLARI[baskaRol], UZ_VASIY_ALANI, 'made_up_key'], icerik: { ...y.not.icerik, alanlar: DUSMAN_ALANLAR } }
+      assert.ok(kayit.includes(`data-alan="sablon">${UZ_ROL_ADLARI[rol][f]}<`) && kayit.includes(`data-alan="asistan-ad">${asistan(f)}<`))
+      const sizdirilmis = { ...y.not, alanAnahtarlari: [...alanlar, ...ALAN(baskaRol), UZ_VASIY_ALANI, 'made_up_key'], icerik: { ...y.not.icerik, alanlar: DUSMAN_ALANLAR } }
       assert.deepEqual(Object.values(Not.notAlanlari(sizdirilmis)).flat().sort(), [...alanlar].sort(), 'the screen draws a key only when the template owns it, whatever the server lists')
 
       // ── a CHILD, same role: the guardian field appears — and only that is added.
@@ -405,7 +435,7 @@ describe('40 roles: visit → draft in the role\'s template, with a model that r
     const html = ciz('ru', y.not)
     assert.ok(!html.includes('data-alan-anahtar') && !html.includes('QIYMAT-'))
     assert.ok(html.includes(`data-alan="asistan-ad">${M.uygulamaMetni('ru').asistan.notr.replace('%', 'Notya')}<`))
-    for (const a of UZ_ASISTAN_ADLARI) assert.ok(!html.includes(K.uzAsistanKimligi(a.bransAnahtari, 'ru')!.kisaAd), `the neutral draft shows ${a.bransAnahtari}'s assistant`)
+    for (const r of ROLLER) { const k = K.uzAsistanKimligi(r.rol, 'ru'); if (k) assert.ok(!html.includes(k.kisaAd), `the neutral draft shows ${r.rol}'s assistant`) }
     // A child with the general template: the guardian field, and still no role field.
     const c = await muayeneVeNot('jeton-b', B, 'genel', COCUK)
     assert.deepEqual(c.not.alanAnahtarlari, [UZ_VASIY_ALANI]); assert.deepEqual(c.not.icerik.alanlar, { [UZ_VASIY_ALANI]: isaret(UZ_VASIY_ALANI) })

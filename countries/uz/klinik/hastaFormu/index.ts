@@ -1,11 +1,11 @@
 /**
  * NOTYA-ULKE-INTAKE-01 — Uzbekistan: THE INTAKE FORM's content — the core questions every patient gets, the
- * questions of each of the 40 roles, and the consent sentence. Part of the pack's CLINICAL half: reached only
+ * questions of each role, and the consent sentence. Part of the pack's CLINICAL half: reached only
  * through countries/active/klinik, and only on the server. A role's questions reach a browser only inside a form
  * that was asked for by a doctor of that role (lib/ulke/intake/form.ts).
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
- * MACHINE-WRITTEN, EVERY SET. AWAITS A LOCAL CLINICIAN. The core set and each of the 40 role sets carries
+ * MACHINE-WRITTEN, EVERY SET. AWAITS A LOCAL CLINICIAN. The core set and each of the 37 role sets carries
  * `inceleme: { makineYazimi: true, klinisyen: null }`: written by a machine, read by no clinician practising in
  * Uzbekistan. The same status is in the roles table of docs/COUNTRY-PACK-UZBEKISTAN.md. A set is reviewed when
  * `klinisyen` names the person who read and signed it — and when a set changes, `surum` below changes with it.
@@ -13,6 +13,12 @@
  * THE CONSENT SENTENCE IS A DRAFT. NOT READ BY A LAWYER (`hukukcuInceledi: false`; checklist I1, I2). Its stamp is
  * stored with every form it was accepted on, so that a reviewed wording can be told apart from this one.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ *
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — 37 SETS FOR 42 ROLES. The role list is Uzbekistan's own now (../rolListesi.ts).
+ * Thirty-five roles have a set under their own key; the seven roles only Uzbekistan has ask the questions of the
+ * role each behaves like (the kit's rule, lib/ulke/arayuz/rolIcerigi.ts), two of them through the sets kept under
+ * `diyetisyen` and `odyoloji`, which are no roles any more. The sets of the three roles the audit took out are gone.
+ * NO QUESTION CHANGED, so the version stamp of the question set did not change.
  *
  * What the form deliberately does not ask, and what a local source must supply first: ./yerelIcerik.ts.
  * The answers are NOT given to the model that writes a visit note (docs/OPEN-COMMITMENTS.md, NOTYA-ULKE-INTAKE-01).

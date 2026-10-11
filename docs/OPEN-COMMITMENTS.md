@@ -3704,3 +3704,36 @@ Kaan's order: audit the doctor tools (core and specialty) and the specialty and 
 - Two scheduled tasks created on Kaan's order: "Notya regulatory watch: Türkiye" (1st of each month, 08:47 New York) and "Notya regulatory watch: six countries" (2nd of each month, 08:57 New York). Research only; each ends in a documents-only pull request and a notification.
 - **Known limit:** resmigazete.gov.tr and mevzuat.gov.tr refuse automated reading, so the Türkiye run can see that an amendment exists but not read its text. The consolidated SUT can be downloaded from sgk.gov.tr on Kaan's Mac on his word (done once on 2026-10-10; source text on branch `kaynak/sut-2026-10-02`). **Waits on Kaan** each month for that word when a new amendment appears.
 - The Turkish report-rules check against that text is running on `fix/sut-rapor-kurallari` (#607). **Waits on Claude.**
+
+## NOTYA-HEPSI-01 — "Merge and deploy all. Fix everything that needs to be fixed." (Kaan, 2026-10-10 14:08)
+
+Standing word for this round: every job below is merged and deployed when it reports READY TO MERGE with passing checks; a job that reports NOT READY is stopped and reported.
+
+**Done on that word (2026-10-10):**
+- Türkiye: #607 (eleven report-rule corrections against the consolidated SUT of 02.10.2026) and #578 (documents) merged into `main`; the Turkish site deploys from `main`.
+- Countries: the corrected shared tools (#615) and the audit and research documents (#586–#589, #591, #592, #600–#605) promoted to all six release branches (#616–#621) and deploys started.
+
+**Running, to be merged and deployed on READY:**
+- Country decisions, one job per country, each on `ulke-uygula/<code>`: United States, Uzbekistan, United Kingdom, Canada, Australia, New Zealand. Each folds in its earlier localisation audit (`audit/<code>`, pull requests #581–#585 and #590, to be closed as superseded afterwards).
+- Türkiye `fix/tr-sut-duzeltmeleri`: antibiotic last day, hints with no SUT basis, report lengths, lipid checklist, two medicine lines, reimbursed-medicines list refreshed from EK-4/A of 02.10.2026.
+- Türkiye `fix/tr-kirmizi-testler`: the 16 test files already failing on `main`.
+
+**Held back on purpose, each waits on Kaan (2026-10-10):**
+- **#580 (`feat/ulke-butun` into `main`) is NOT merged.** No country deploys from `main`, and merging the country kit into the live Turkish build adds risk to the beta for no gain. Claude's recommendation: keep it out.
+- **The dose calculator and both kidney tools stay off** although their faults are fixed: no clinician has signed them off, and the kidney grid's licence is unsettled. ESI and the report outline stay off for licence.
+- **New country tools are built switched off**, each on its country's list awaiting a clinician's sign-off.
+- **TİTCK export** for the active ingredients of products new on the reimbursed list: a download from titck.gov.tr needs Kaan's word.
+- **Family medicine report-draft tool** (limited to the six report kinds a family medicine specialist may issue): a new feature, not started.
+- **United Kingdom:** no NICE table or wording goes into the pack until a lawyer reads NICE's terms on AI use and use outside the UK.
+
+### NOTYA-HEPSI-01 — state at 2026-10-10 20:05 (New York)
+
+**Live.** Türkiye: #607, #625 (SUT fixes, antibiotic day, medicines list of 02.10.2026) and #627 (three privacy faults, 5,284 of 5,284 tests) on `main`, production deployment succeeded. Countries: #622 US, #624 UK, #628 Canada, #630 Australia, #632 Uzbekistan merged, promoted (#623, #626, #629, #631, #633) and deployed. New Zealand (`ulke-uygula/nz`) on final checks: **waits on Claude** to merge, promote and deploy. Audit pull requests #581–#585 and #590 closed as superseded; their branches are kept for the audit documents and screenshots.
+
+**New country tools are switched on without a clinician's sign-off** (Kaan, 2026-10-10: "Bring on all the tools… We will test as we go"); each pack lists them (`onayBekleyen` / `onaysiz-araclar` / `onay.ts`). Dose calculator back on in UK, Canada, Australia, Uzbekistan (and New Zealand when merged); never on in the US (weight is in pounds; the kit has no field fixed to kilograms). NICE-derived items are listed in `countries/gb/nice-kaynakli.json` for the lawyer. ESI, the report outline and both kidney tools stay off: **wait on Kaan**.
+
+**Kit gaps the country jobs reported (wait on Claude, on Kaan's word to schedule):** a removed or split role key is not mapped at sign-in (the account is asked its role once; a note under a removed key does not draw that role's fields); one role per account, so no nurse practitioner or physician assistant, and no instruction for independent non-physician practitioners; a country cannot restate the citation under a restated band table (the UK hearing tool still cites the American papers), reword a shared placeholder or intake heading (a podiatrist's patient reads "Before physiotherapy"), change who a placeholder is for, or restate the landing page's "40 specialties" (Uzbekistan: "30"); the return-to-sport table cannot hold medical clearance or a minimum time per step; no weight field fixed to kilograms; no hearing asymmetry rule by adjacent frequencies; "My templates" and "Consultations" have no English texts; the record generator prints stale fixed sentences; seven new Uzbek roles have no assistant name.
+
+**Türkiye, wait on Kaan (2026-10-10):** whether Sağlığım should show every vault document to the patient at once or only after the doctor releases it; whether a consultant's reply may enter the visit note without an approval card; a required test run before every merge (about six minutes); the red lock on antibiotics over 14 days (no legal basis); a "report period" field so anticoagulant renewals can run 24 months; antibiotic end dates saved before the fix stay one day late; the TİTCK export for 12 new products; a family-medicine report-draft tool.
+
+**People, wait on Kaan:** a lawyer (licences, NICE, medical-device status of calculators, Uzbek copyright reading), one clinician per country, a native reader for the Uzbek and Russian texts.
