@@ -164,7 +164,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
   roller: NZ_ROLLER,
   veliYasi: NZ_VELI_YASI,
   birimler: NZ_BIRIMLER,
-  surum: 'nz-draft-2026-10-09',
+  surum: 'nz-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',

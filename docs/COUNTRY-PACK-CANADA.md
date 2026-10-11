@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2080 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 44 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2166 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 44 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
 - **This country's own** (`countries/ca/`, six small files): 44 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -39,8 +39,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Days a patient's link stays valid | 30 | the owner; how long access may stand: for a lawyer |
 | Patient identifier | optional free text, encrypted, never validated; label "Health card number" | a local lead and a lawyer. Label "Provincial health card number". Format and name differ by province and territory; unverified. |
 | Guardian age | 16 | **for a lawyer**. 16 as a starting value. Consent of minors is a matter of provincial law and differs by province; Quebec sets its own age. |
-| Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `ca-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Federal and provincial rules on recording a consultation are open. |
-| Intake-form consent sentence | the shared draft — stamp `ca-draft-2026-10-09`, NOT READ BY A LAWYER | **for a lawyer** |
+| Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `ca-draft-2026-10-11`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Federal and provincial rules on recording a consultation are open. |
+| Intake-form consent sentence | the shared draft — stamp `ca-draft-2026-10-11`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "staff physician" | a local clinical lead |
 | Phone: prefix, example, rule | +1; 613-555-0123; a format rule only | a local lead. The example is one of the numbers the North American numbering plan sets aside for fiction (555-0100 to 555-0199 in every area code). Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
@@ -243,8 +243,8 @@ No national reference content is written by a machine, and no item of a publishe
 
 | Slot | What is missing | What the form asks today | Waits on |
 |---|---|---|---|
-| `red_flag_checklists` | Per role: the list of "red flag" symptoms a patient selects before a visit, and the sentence that tells a patient who selects one what to do now (which service to call, and its number). A triage rule and an instruction to a patient: both are clinical content, and the service and its number are Canada's. | Nothing. No question of any role tells a patient to seek emergency care; the patient's page says only that it is not for emergencies (the portal's own sentence). | a local clinical lead |
-| `self_harm_screening` | The safety (self-harm) screening question in wording a clinician of Canada has chosen, and the clinic's procedure for a "yes" given on a form nobody is watching (who is told, how fast, which crisis service is named). | Nothing. The psychiatry and psychology sets ask about mood, sleep and what is hardest now, in free text; no question asks about self-harm. | a local clinical lead |
+| `red_flag_checklists` | Per role: the list of "red flag" symptoms a patient selects before a visit, and the sentence that tells a patient who selects one what to do now (which service to call, and its number). A triage rule and an instruction to a patient: both are clinical content, and the service and its number are Canada's. | A machine-written checklist on each role. The help line is the country's own emergency sentence, including its number. Pending a local clinician. Not a signed triage rule. | a local clinical lead |
+| `self_harm_screening` | The safety (self-harm) screening question in wording a clinician of Canada has chosen, and the clinic's procedure for a "yes" given on a form nobody is watching (who is told, how fast, which crisis service is named). | Psychiatry and clinical psychology ask one safety question about thoughts of suicide or self-harm in the last two weeks. The help line uses the country's emergency sentence and says a clinician reviews the answer. The clinic's procedure for a yes on an unattended form is still missing. | a local clinical lead |
 | `validated_questionnaires` | Published questionnaires and scores (for example PHQ-9, GAD-7, IPSS, CAT, MIDAS, BASDAI, ODI, M-CHAT-R/F, DLQI). THE LICENCE QUESTION: each belongs to its authors or a rights holder; whether, on which terms and at what cost its original English wording may be shown inside a commercial product must be answered for each instrument before one item is displayed. None of their item wording is reproduced here. | Plain questions only. Pain is asked as a number from 0 to 10 with its two ends described in words; nothing is scored or summed. | the rights holder of each questionnaire, through the owner |
 | `vaccination_checklist` | The vaccination schedule of Canada as a checklist (which vaccine at which age), so that a parent can mark what was given. | One question: "are the vaccinations up to date, as far as you know?" — yes, no, I do not know. Paediatrics adds a line asking to bring the vaccination record. | a local clinical lead |
 | `development_milestones` | The developmental milestone checklist in use in Canada, by age. | One yes/no question: whether the parent is worried about the child's development, with a free-text line. | a local clinical lead |
@@ -258,8 +258,8 @@ No national reference content is written by a machine, and no item of a publishe
 | `hearing_programme` | The newborn hearing screening programme of Canada and the hearing-loss grading in use there. | Which ear, how the hearing went down, noise at work, a hearing aid. Nothing is graded. | a local clinical lead |
 | `nutrition_reference` | Nutrient reference values and food composition tables of Canada, and named diets to offer as choices. | Meals and glasses of water a day as numbers, the diet followed and foods not eaten as free text. | a local clinical lead |
 | `birth_weight_unit` | How a parent in Canada states a birth weight (grams, or pounds and ounces), so that it can be asked as a number with its unit. The kit's weight measure is kilograms or decimal pounds and fits neither. | Free text: "weight at birth, with its unit, as you know it". Nothing is calculated from it. | a local clinical lead |
-| `payer_and_insurance` | Whether the form should ask who pays (a public programme, an employer, an insurer) and which numbers that needs in Canada. | Not asked. The form asks for no identity, policy or insurance number of any kind. | the owner, with a local source |
-| `consent_sentence` | The consent sentence shown before the first question, and the notice a parent or guardian reads, in wording a lawyer in Canada has approved (checklist I1, I2); and whether a guardian's identity must be confirmed. | A machine-written draft sentence, stamped as a draft and marked as not read by a lawyer; the guardian form asks the guardian's name, relationship and phone, and confirms nothing. | a lawyer |
+| `payer_and_insurance` | Whether the form should ask who pays (a public programme, an employer, an insurer) and which numbers that needs in Canada. | The country adds its own payer and identifier section. Draft wording, pending a local source and a lawyer. No identity number of another country is asked. | the owner, with a local source |
+| `consent_sentence` | The consent sentence shown before the first question, and the notice a parent or guardian reads, in wording a lawyer in Canada has approved (checklist I1, I2); and whether a guardian's identity must be confirmed. | A machine-written draft sentence, stamped as a draft and marked as not read by a lawyer, plus acknowledgement questions the country adds. Still not read by a lawyer. The guardian form asks the guardian's name, relationship and phone, and confirms nothing. | a lawyer |
 | `scope_of_practice` | What each allied profession may ask, record and decide without a doctor under the law of Canada. | The sets ask about the problem, daily life and a doctor's referral; none asks for a diagnosis to be made. | a lawyer |
 
 ## The checklist
@@ -370,7 +370,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 23 core questions and 228 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 42 core questions and 350 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

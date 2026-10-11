@@ -101,7 +101,7 @@ export const CA_GIRDI: EnUlkeGirdisi = {
   roller: CA_ROLLER,
   veliYasi: CA_VELI_YASI,
   birimler: CA_BIRIMLER,
-  surum: 'ca-draft-2026-10-09',
+  surum: 'ca-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',

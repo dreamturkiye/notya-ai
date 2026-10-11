@@ -27,6 +27,7 @@ import { US_BIRIMLER, US_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { US_PAKETI } from './index'
 import { US_KLINIK } from './klinik'
+import { US_ACIL_CUMLE } from './klinik/formEk'
 import { US_ROLLER } from './roller'
 import { US_ONAY_BEKLEYEN_ANAHTARLAR } from './araclar/onayBekleyen'
 
@@ -56,6 +57,9 @@ ingilizcePaketSinamasi({
   rolDegisimi: US_ROLLER,
   // the tools this country has beyond the set: seven of its own, switched on by the owner's order of 2026-10-10 (./araclar/)
   ekAraclar: US_ONAY_BEKLEYEN_ANAHTARLAR,
+  acilCumle: US_ACIL_CUMLE,
+  yasakAcil: /\b(999|111|000|112|103)\b/,
+  idIpucu: /\bMedicaid\b/,
 })
 
 describe('us: what is the United States\'', () => {
@@ -104,7 +108,7 @@ describe('us: what is the United States\'', () => {
   it('the guardian age is the pack\'s setting in both halves; the consent stamp is the country\'s own draft', () => {
     assert.equal(US_PAKETI.uygulama!.veliYasi, 18)
     assert.equal(US_PAKETI.uygulama!.veliYasi, US_GIRDI.veliYasi)
-    assert.equal(US_KLINIK.riza.surum, 'us-draft-2026-10-09')
+    assert.equal(US_KLINIK.riza.surum, 'us-draft-2026-10-11')
     assert.equal(US_ARAYUZ.metinler[D]!.muayene.riza, US_GIRDI.sozler.kayitRizasi)
     assert.match(kaynakOku(join(__dirname, 'ayarlar.ts')), /RECORDING-CONSENT LAW DIFFERS BY STATE/)
   })
@@ -261,10 +265,17 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
     assert.doesNotMatch(US_GIRDI.sozler.saatDilimiCumlesi, /Eastern|Central|Mountain|Pacific|New York/, 'the calendar names no single zone')
   })
 
-  it('THE EMERGENCY NUMBER IS 911, a setting and never part of a sentence; no other number is named', () => {
+  it('THE EMERGENCY NUMBER IS 911: a setting, and in a sentence only on intake help; no other number is named', () => {
     assert.equal(u.portal?.acilNumara, '911')
     const hepsi = tumMetinler({ paket: US_PAKETI.metinler, arayuz: { ...US_ARAYUZ, asistan: undefined }, form: US_KLINIK.hastaFormu })
-    for (const x of hepsi) assert.doesNotMatch(x.metin, /\b(911|988|999|112|111|000)\b/, x.yer)
+    for (const x of hepsi) {
+      // Red-flag and safety help name 911. Portal copy and every other sentence still do not.
+      if (/\.yardim\./.test(x.yer)) {
+        assert.doesNotMatch(x.metin, /\b(988|999|112|111|000)\b/, x.yer)
+        continue
+      }
+      assert.doesNotMatch(x.metin, /\b(911|988|999|112|111|000)\b/, x.yer)
+    }
   })
 
   it('THE PHONE: +1 and ten digits; the example is written the national way; the rule takes every common spelling and refuses the rest', () => {

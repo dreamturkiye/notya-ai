@@ -21,6 +21,7 @@ import { NZ_GIRDI, NZ_ROLLER } from './ayarlar'
 import derleme from './derleme.mjs'
 import { NZ_PAKETI, nzAramaKatla } from './index'
 import { NZ_KLINIK } from './klinik'
+import { NZ_ACIL_CUMLE } from './klinik/formEk'
 import { NZ_KENDI_BASLIKLI_ROLLER } from './klinik/hastaFormu'
 
 const D = 'en-NZ'
@@ -45,6 +46,9 @@ ingilizcePaketSinamasi({
   // NOTYA-ULKE-UYGULA-NZ: the country's own role list, and the tools it has beyond the shared set
   rolDegisimi: NZ_ROLLER,
   ekAraclar: NZ_ONAYSIZ_ARACLAR,
+  acilCumle: NZ_ACIL_CUMLE,
+  yasakAcil: /\b(911|999|000|112|103)\b/,
+  idIpucu: /\bNHI\b/,
 })
 
 const a = NZ_ARAYUZ.araclar!
@@ -98,7 +102,7 @@ describe('nz: what is New Zealand\'s', () => {
     assert.equal(a.birimler['ug/L'][D], 'µg/L')
     assert.equal(a.birimler['ug/L/yil'][D], 'µg/L per year')
     assert.ok(!('ng/mL' in a.birimler), 'no tool shows ng/mL here')
-    assert.equal(NZ_KLINIK.riza.surum, 'nz-draft-2026-10-09')
+    assert.equal(NZ_KLINIK.riza.surum, 'nz-draft-2026-10-11')
     assert.equal(NZ_ARAYUZ.metinler[D]!.muayene.riza, NZ_GIRDI.sozler.kayitRizasi)
   })
 })

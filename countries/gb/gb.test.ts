@@ -12,6 +12,7 @@ import { GB_GIRDI, GB_KIMLIK_ETIKETI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { GB_PAKETI } from './index'
 import { GB_KLINIK } from './klinik'
+import { GB_ACIL_CUMLE } from './klinik/formEk'
 import { GB_ROLLER } from './roller'
 
 ingilizcePaketSinamasi({
@@ -34,6 +35,9 @@ ingilizcePaketSinamasi({
   rolDegisimi: GB_ROLLER,
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
   ornekTelefon: /^\+44 7700 900\d{3}$/,
+  acilCumle: GB_ACIL_CUMLE,
+  yasakAcil: /\b(911|000|112|103)\b/,
+  idIpucu: /\bNHS\b/,
 })
 
 describe('gb: what is the United Kingdom\'s', () => {
@@ -71,7 +75,7 @@ describe('gb: what is the United Kingdom\'s', () => {
   })
 
   it('the recording-consent stamp is the United Kingdom\'s own draft', () => {
-    assert.equal(GB_KLINIK.riza.surum, 'gb-draft-2026-10-09')
+    assert.equal(GB_KLINIK.riza.surum, 'gb-draft-2026-10-11')
     assert.equal(GB_ARAYUZ.metinler['en-GB']!.muayene.riza, GB_GIRDI.sozler.kayitRizasi)
   })
 })

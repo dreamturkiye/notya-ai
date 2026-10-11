@@ -28,6 +28,7 @@ import { AU_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { AU_PAKETI } from './index'
 import { AU_KLINIK } from './klinik'
+import { AU_ACIL_CUMLE } from './klinik/formEk'
 import { AU_KENDI_FORMLU_ROLLER, AU_ROLLER } from './klinik/roller'
 import { AU_CIKAN_ROLLER, AU_EK_ROLLER, AU_ESKI_ROL_ESLEMESI, AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
@@ -56,6 +57,9 @@ ingilizcePaketSinamasi({
   // NOTYA-ULKE-UYGULA-AU: Australia's own role list, and the tools it has beyond the set
   rolDegisimi: AU_ROLLER,
   ekAraclar: KENDI_ARACLARI,
+  acilCumle: AU_ACIL_CUMLE,
+  yasakAcil: /\b(911|999|111|112|103)\b/,
+  idIpucu: /\bMedicare\b/,
 })
 
 const A = AU_ARAYUZ.araclar as UlkeAraclari
@@ -115,7 +119,7 @@ describe('au: what is Australia\'s', () => {
     assert.equal(A.birimler['ug/L'][D], 'µg/L')
     assert.equal(A.birimler['ug/L/yil'][D], 'µg/L per year')
     assert.ok(!('ng/mL' in A.birimler), 'no tool shows ng/mL here')
-    assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-09')
+    assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-11')
     assert.equal(AU_ARAYUZ.metinler[D]!.muayene.riza, AU_GIRDI.sozler.kayitRizasi)
   })
 })
