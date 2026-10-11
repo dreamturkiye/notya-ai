@@ -14,7 +14,8 @@ import { soruTuruBul } from '@/lib/asistan/dosyaSorgu/soruTuru'
 // the practice, never about the open chart — with R.D. open, "bu hafta pnömoni vakası kimdi" was answered from R.D.
 // NOTYA-KORPUS-KALAN-01 (Y-083): "kaç tane hasta kaydım var toplam" — "kaç TANE hasta" and "hasta kaydım" are the
 // panel count too. With a chart open the question went to the model with that chart instead of the count.
-const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac (tane |adet )?hasta|kac kisi|kac cocuk|kac vaka|\bhasta (kaydim|kaydimiz|kayitlarim)\b|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(lari|lar)\w*|tum hasta|butun hasta|istatistik/
+// NOTYA-AYSE-SAYI-SIRA-01: "hasta sayımız kaç", "kaç kayıtlı hastam var" are the panel count as well.
+const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac (tane |adet )?(kayitli |aktif )?hasta|\bhasta sayi(si|sini|miz|mizi|m|mi|niz|nizi)?\b|kac kisi|kac cocuk|kac vaka|\bhasta (kaydim|kaydimiz|kayitlarim)\b|hangi hasta|\bkimler\b|\bkimdi\b|\bkimlerdi\b|\bvaka(lari|lar)\w*|tum hasta|butun hasta|istatistik/
 /**
  * NOTYA-AYSE-GERI-01 (audit §4.3, PR 9): "toplam / en çok / en sık / vaka" alone are not a practice-wide question.
  * With a chart open, "Toplam kaç aşısı var" and "En çok hangi şikayetle geldi" are about THAT patient and were

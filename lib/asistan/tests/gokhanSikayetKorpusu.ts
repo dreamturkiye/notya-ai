@@ -199,6 +199,23 @@ const BULUNAMADI = 'bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı deği
 /** The patient-count template's sentence shapes (lib/doktor/hastaAramaFiltre.ts). */
 const SAYIM_SABLONU = 'Kayıtlarda \\d+ hasta|\\b0 hasta|Filtre:'
 const PANEL_SAYI = `\\b${KORPUS_PANEL_SAYISI}\\b|beş`
+/** NOTYA-AYSE-SAYI-SIRA-01: a plain panel count — the doctor's real number, no filter the doctor did not state. */
+const SAYI_TAM: Beklenti = { rota: ['arama'], icerir: [`Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta`], icermez: ['\\b0 hasta', 'Filtre:'] }
+const SAYI_NOTU = 'A wording of the live sentence of NOTYA-AYSE-SAYI-SIRA-01 ("how many patients do we have") with other words of conversation — şu anda, bizim, toplam, hocam, tabii — as the founder listed them in the brief of 2026-10-10. None states a filter.'
+const SAYI_VARYANTLARI = [
+  'Kaç tane hastamız var şu anda bizim?',
+  'toplam kaç hasta kayıtlı',
+  'hasta sayımız kaç',
+  'Hocam şu anda hasta sayımız nedir?',
+  'Tabii hocam, bizim toplam kaç hastamız var?',
+  'Peki, bizde kaç hasta kayıtlı şu anda?',
+  'Yani şu an elimizde kaç hasta var hocam?',
+  'Evet, tamam. Kaç tane hastamız oldu toplamda?',
+  'Kaç kişi kayıtlı bizde?',
+  'Hasta sayımızı söyler misin?',
+  'Sistemde kaç hastam görünüyor?',
+  'Tabii, tabii. Toplam kaç adet hastamız var?',
+]
 /** NOTYA-AYSE-OZET-01: the eight parts of one visit's summary, as bold headings, in their fixed order. */
 const OZET_SIRASI = ['Muayene', 'Şikayet', 'Muayene bulgusu', 'Laboratuvar', 'Aşı', 'Büyüme ve gelişme', 'Tedavi', 'Plan'].map((b) => `\\*\\*${b}:\\*\\*`).join('[\\s\\S]*')
 
@@ -248,6 +265,17 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
   // ── counts ──
   g('L-SAYIM-ANDA', 'sayim', 'Hocam benim şu anda toplam kaç hastam var?', [L('NOTYA-SAYIM-ANDA-01'), C(1)],
     { rota: ['arama'], icerir: [`Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta`], icermez: ['Kayıtlarda 0 hasta'] }),
+  // NOTYA-AYSE-SAYI-SIRA-01 (Kaan live, voice, 2026-10-11): the panel count said with words of conversation. "tabii" and
+  // "bizim" became mandatory search terms → "Kayıtlarda 0 hasta." for a doctor with one patient.
+  g('L-SAYI-T4', 'sayim', 'Tabii, tabii. Hocam, kaç tane hastamız var şu anda bizim?', L('NOTYA-AYSE-SAYI-SIRA-01'), SAYI_TAM),
+  ...SAYI_VARYANTLARI.map((soz, i) => g(`L-SAYI-V${String(i + 1).padStart(2, '0')}`, 'sayim', soz, L('NOTYA-AYSE-SAYI-SIRA-01'), SAYI_TAM, { turetilmis: true, not: SAYI_NOTU })),
+  // A filter the doctor DOES state is kept and named, with the same words of conversation around it.
+  g('L-SAYI-F1', 'sayim', 'Tabii hocam, bizim 5 yaşında kaç hastamız var şu anda?', L('NOTYA-AYSE-SAYI-SIRA-01'),
+    { rota: ['arama'], icerir: ['Filtre: 5 yaş', 'Ayşe Bozkurt'], icermez: [`Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta`, 'söz:'] }, { turetilmis: true, not: 'The live sentence with an age stated: only the five-year-old chart of the fixture is counted, and the answer names the age filter.' }),
+  g('L-SAYI-F2', 'sayim', 'Tabii, bizim bu hafta kaç hasta muayene ettik hocam?', L('NOTYA-AYSE-SAYI-SIRA-01'),
+    { rota: ['arama'], icerir: ['[Bb]u hafta'], icermez: ['söz:'] }, { turetilmis: true, not: 'The live sentence with a time window and a visit verb stated: the window stays (the number depends on the weekday of the run, as in Y-084).' }),
+  g('L-SAYI-F3', 'sayim', 'Peki bizim şizofreni tanılı kaç hastamız var şu anda?', L('NOTYA-AYSE-SAYI-SIRA-01'),
+    { rota: ['arama'], icerir: ['\\b0 hasta', 'Filtre:[^.]*şizofreni', `Kayıtlı toplam ${KORPUS_PANEL_SAYISI} hastanız var`], icermez: ['tabii|bizim|peki'] }, { turetilmis: true, not: 'The live sentence with a diagnosis no chart of the fixture carries: zero is right, and the answer says which word narrowed the count and gives the registered total — never a bare "0 hasta".' }),
   g('L-1TO1-YAS', 'dosya', 'hastamız kaç yaşında', L('NOTYA-SES-1TO1-02'),
     { hasta: 'bebek', icerir: ['2 yaş'], icermez: [SAYIM_SABLONU], rotaDegil: ['arama'] }, { acik: 'bebek' }),
   g('L-1TO1-AC', 'hasta-cozum', `${P}'nun dosyasını aç`, L('NOTYA-SES-1TO1-02'),
