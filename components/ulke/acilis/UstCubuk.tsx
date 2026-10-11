@@ -43,7 +43,7 @@ export function DilSecici({ etiket, secenekler, className }: { etiket: string; s
   )
 }
 
-export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string }) {
+export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, ustHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** Small word beside the mark, as on the Turkish clinic page. Omitted on the doctor page. */ markaEk?: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -72,8 +72,9 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-          <a href={ustHref} className="font-display text-2xl italic leading-none tracking-tight">
+          <a href={ustHref} className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight">
             {marka}
+            {markaEk ? <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">{markaEk}</span> : null}
           </a>
           <nav className="hidden items-center gap-7 xl:flex" aria-label={metin.bolumler}>
             {metin.havolalar.map((item) => (

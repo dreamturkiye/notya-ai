@@ -248,7 +248,7 @@ export const ${B}_PAKETI: UlkePaketi = {
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
     apiOnEkleri: ['/api/ulke/'],
   },
 ${YOL ? `  yolOnEki: '${YOL}',\n` : ''}  // HIDDEN FROM SEARCH: every new country starts hidden. Only the owner changes this, after the pilot approves the site.

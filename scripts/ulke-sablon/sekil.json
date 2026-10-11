@@ -1645,8 +1645,132 @@
    "havolalar": "$m",
    "giris": "$m",
    "kayit": "$m",
+   "klinik": "$m",
    "haklar": "$m",
    "diller": "$m"
+  },
+  "klinik": {
+   "meta": {
+    "baslik": "$m",
+    "aciklama": "$m"
+   },
+   "markaEk": "$m",
+   "nav": {
+    "bolumler": "$m",
+    "mobil": "$m",
+    "dil": "$m",
+    "havolalar": [
+     {
+      "capa": {
+       "$capa": "klinikPortal"
+      },
+      "etiket": "$m",
+      "no": {
+       "$sabit": "01"
+      }
+     },
+     {
+      "capa": {
+       "$capa": "klinikDallar"
+      },
+      "etiket": "$m",
+      "no": {
+       "$sabit": "02"
+      }
+     },
+     {
+      "capa": {
+       "$capa": "klinikFiyat"
+      },
+      "etiket": "$m",
+      "no": {
+       "$sabit": "03"
+      }
+     }
+    ],
+    "giris": "$m",
+    "girisUzun": "$m",
+    "sorov": "$m",
+    "menyuAc": "$m",
+    "menyuYop": "$m"
+   },
+   "kahraman": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "giris": "$m",
+    "birinciDugme": "$m",
+    "ikinciDugme": "$m",
+    "gorselAlt": "$m",
+    "gorselAlti": "$m"
+   },
+   "portal": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "govde": "$m",
+    "maddeler": [
+     "$m",
+     "$m",
+     "$m"
+    ],
+    "kart": {
+     "etiket": "$m",
+     "satirlar": [
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      }
+     ],
+     "not": "$m"
+    }
+   },
+   "dallar": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "govde": "$m",
+    "royxatEtiketi": "$m",
+    "royxat": [
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m"
+    ]
+   },
+   "guven": "$m",
+   "fiyat": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m"
+   },
+   "cta": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "govde": "$m",
+    "ikinciDugme": "$m"
+   },
+   "altBilgi": {
+    "tanim": "$m",
+    "havolalar": "$m",
+    "doktor": "$m",
+    "giris": "$m",
+    "haklar": "$m",
+    "diller": "$m"
+   }
   }
  }
 }

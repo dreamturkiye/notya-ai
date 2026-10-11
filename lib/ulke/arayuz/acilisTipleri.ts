@@ -157,11 +157,61 @@ export type AcilisIcerigi = {
     davetSorusu: string
     davetBaglantisi: string
   }
-  altBilgi: { tanim: string; havolalar: string; giris: string; kayit: string; haklar: string; diller: string }
+  altBilgi: { tanim: string; havolalar: string; giris: string; kayit: string; /** Link to the clinic landing. */ klinik: string; haklar: string; diller: string }
+  /**
+   * THE CLINIC LANDING (`/for-clinics`). Same section inventory as the Turkish clinic page: hero, patient page,
+   * disciplines, trust line, price, closing request. The form reuses `sorov` above so a label is written once.
+   * `dallar.royxat` is the pack's own clinic-side role names (empty in a shared text, filled when the pack is assembled).
+   */
+  klinik: KlinikAcilisIcerigi
+}
+
+/** What the clinic landing says. Anchors are values of `UlkeAcilisi.capalar` (keys `klinikUst` … `klinikSorov`). */
+export type KlinikAcilisIcerigi = {
+  meta: { baslik: string; aciklama: string }
+  /** The small word beside the word mark, as the Turkish clinic page writes "klinik". */
+  markaEk: string
+  nav: {
+    bolumler: string
+    mobil: string
+    /** Label of the language switch in the bar. */
+    dil: string
+    havolalar: readonly { capa: string; etiket: string; no: string }[]
+    giris: string
+    girisUzun: string
+    sorov: string
+    menyuAc: string
+    menyuYop: string
+  }
+  kahraman: {
+    ustBaslik: string
+    baslik: string
+    baslikVurgu: string
+    giris: string
+    birinciDugme: string
+    ikinciDugme: string
+    gorselAlt: string
+    gorselAlti: string
+  }
+  portal: OzellikBolumu
+  dallar: {
+    ustBaslik: string
+    baslik: string
+    baslikVurgu: string
+    govde: string
+    royxatEtiketi: string
+    royxat: readonly string[]
+  }
+  /** One line, the Turkish page's trust line: a record-keeping tool; the decision stays with the clinician. */
+  guven: string
+  fiyat: { ustBaslik: string; baslik: string; baslikVurgu: string }
+  /** Closing band. The request form's own labels are `sorov.form` of the doctor page. */
+  cta: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; ikinciDugme: string }
+  altBilgi: { tanim: string; havolalar: string; doktor: string; giris: string; haklar: string; diller: string }
 }
 
 /** The sections of the page that can be linked to. Keys are the layout's; the anchor words are the pack's. */
-export const ACILIS_CAPA_ANAHTARLARI = ['ust', 'suhbat', 'qabul', 'portal', 'maslahat', 'jadval', 'yonalish', 'kuzatuv', 'organish', 'xavfsizlik', 'narx', 'sorov'] as const
+export const ACILIS_CAPA_ANAHTARLARI = ['ust', 'suhbat', 'qabul', 'portal', 'maslahat', 'jadval', 'yonalish', 'kuzatuv', 'organish', 'xavfsizlik', 'narx', 'sorov', 'klinikUst', 'klinikPortal', 'klinikDallar', 'klinikFiyat', 'klinikSorov'] as const
 export type AcilisCapasi = (typeof ACILIS_CAPA_ANAHTARLARI)[number]
 
 /** What a country brings for the landing page: its copy, and the facts the shared layout needs about it. */

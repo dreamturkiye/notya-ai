@@ -35,15 +35,24 @@ import { DilSecici, UstCubuk, type DilSecenegi } from './UstCubuk'
 /** Addresses of the three photographs. The files are the Turkish page's own (public/landing); see ./index.tsx. */
 export type AcilisGorselleri = { xona: string; stol: string; yolak: string }
 
+/**
+ * The form of the page to render. A form the address names and the page is written in wins; anything else stays
+ * the public language already narrowed by the caller. Never a guess, and never another language's text.
+ */
+export function acilisFormu(a: UlkeAcilisi, dil: DilKodu, istenenDil: unknown): DilKodu {
+  const yazili = (x: unknown): x is DilKodu => typeof x === 'string' && (a.diller as readonly string[]).includes(x)
+  return yazili(istenenDil) ? istenenDil : dil
+}
+
 type Capalar = UlkeAcilisi['capalar']
 
-/** The page's own address in one of its forms (the pack's default form needs no parameter). */
-const sayfa = (dil: DilKodu, capa = '') => ulkeYolu(`/${dil === ulkePaketi().varsayilanDil ? '' : `?dil=${dil}`}${capa}`)
+/** The page's own address in one of its forms (the pack's default form needs no parameter). `yol` is '/' or '/for-clinics'. */
+export const acilisAdresi = (yol: '/' | '/for-clinics', dil: DilKodu) => ulkeYolu(`${yol}${dil === ulkePaketi().varsayilanDil ? '' : `?dil=${dil}`}`)
 
-function dilSecenegi(a: UlkeAcilisi, kod: DilKodu, secili: boolean): DilSecenegi {
+function dilSecenegi(a: UlkeAcilisi, kod: DilKodu, secili: boolean, yol: '/' | '/for-clinics'): DilSecenegi {
   const ad = a.dilAdlari[kod]
   if (!ad) throw new Error(`[ulke/acilis] the landing page has no name for its form "${kod}". No fallback to another language.`)
-  return { kod, ...ad, href: sayfa(kod), secili }
+  return { kod, ...ad, href: acilisAdresi(yol, kod), secili }
 }
 
 /**
@@ -51,12 +60,12 @@ function dilSecenegi(a: UlkeAcilisi, kod: DilKodu, secili: boolean): DilSecenegi
  * the script the visitor is reading, or in its first form when the visitor reads another language. The footer
  * lists every form.
  */
-export function ustDilSecenekleri(a: UlkeAcilisi, gruplar: readonly DilGrubu[], d: DilKodu): DilSecenegi[] {
+export function ustDilSecenekleri(a: UlkeAcilisi, gruplar: readonly DilGrubu[], d: DilKodu, yol: '/' | '/for-clinics' = '/'): DilSecenegi[] {
   const sayfaninki = (g: DilGrubu) => g.bicimler.map((b) => b.dil).filter((x) => a.diller.includes(x))
   const gruplu = gruplar.map(sayfaninki).filter((x) => x.length > 0)
   // A form of the page that no language group of the pack names stands by itself.
   const kalan = a.diller.filter((x) => !gruplu.some((g) => g.includes(x))).map((x) => [x])
-  return [...gruplu, ...kalan].map((bicimler) => dilSecenegi(a, bicimler.includes(d) ? d : bicimler[0], bicimler.includes(d)))
+  return [...gruplu, ...kalan].map((bicimler) => dilSecenegi(a, bicimler.includes(d) ? d : bicimler[0], bicimler.includes(d), yol))
 }
 
 function Ozellik({ id, b, tone, reverse }: { id: string; b: OzellikBolumu; tone: 'paper' | 'paper-2'; reverse?: boolean }) {
@@ -234,16 +243,15 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
   // `dil` is one of the pack's public languages. The page may be written in more forms than those (a second script):
   // such a form is served when the address asks for it by name. Anything else stays what `dil` says — never a guess,
   // and a form the page is not written in is an error, never another language's text.
-  const yazili = (x: unknown): x is DilKodu => typeof x === 'string' && (a.diller as readonly string[]).includes(x)
-  const d: DilKodu = yazili(istenenDil) ? istenenDil : dil
+  const d: DilKodu = acilisFormu(a, dil, istenenDil)
   const t = a.icerik[d]
-  if (!yazili(d) || !t) throw new Error(`[ulke/acilis] no landing copy for "${d}". No fallback to another language.`)
+  if (!t) throw new Error(`[ulke/acilis] no landing copy for "${d}". No fallback to another language.`)
   const c = a.capalar
   // Login and sign-up exist in the pack's public languages only; a visitor reading another form continues in the default.
   const girisHref = dilliYol('/login', dilSec(d))
   const kayitHref = dilliYol('/signup', dilSec(d))
   const ustDiller = ustDilSecenekleri(a, ulkePaketi().uygulama?.dilGruplari ?? [], d)
-  const altDiller = a.diller.map((k) => dilSecenegi(a, k, k === d))
+  const altDiller = a.diller.map((k) => dilSecenegi(a, k, k === d, '/'))
 
   return (
     <div className="uzl" lang={d}>
@@ -272,6 +280,9 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
               <p className="mt-2 max-w-xs font-outfit text-sm leading-relaxed text-ink-muted">{t.altBilgi.tanim}</p>
             </div>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm" aria-label={t.altBilgi.havolalar}>
+              <a href={dilliYol('/for-clinics', dilSec(d))} className="text-ink-2 hover:text-ink">
+                {t.altBilgi.klinik}
+              </a>
               <a href={girisHref} className="text-ink-2 hover:text-ink">
                 {t.altBilgi.giris}
               </a>
