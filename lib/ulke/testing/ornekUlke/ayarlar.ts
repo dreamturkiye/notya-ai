@@ -90,6 +90,7 @@ export const XX_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: false,
     saatDilimiCumlesi: 'All times are local time.',
     tarihOrnegi: 'DD/MM/YYYY',
+    meslekKaydiEtiketi: 'Professional registration number',
   },
   ulkeAdi: 'the test country',
   kidemliHekim: 'consultant',

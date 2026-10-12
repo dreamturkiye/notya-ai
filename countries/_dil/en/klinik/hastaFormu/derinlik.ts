@@ -3,7 +3,7 @@
  * box. MACHINE-WRITTEN. AWAITS A CLINICIAN OF EACH ROLE IN EACH COUNTRY. PATIENT-FACING.
  *
  * THE EMERGENCY NUMBER IS NOT HERE. The help line holds the token `{{ACIL}}`. The country pack replaces it with its
- * own sentence (911, 999/111, 000, …) when the form is assembled. This file names no country and no number.
+ * own sentence (one number: 911, 999, 000, 111 or 103) when the form is assembled. This file names no country and no number.
  *
  * A red-flag list is a machine's choice of everyday symptoms, not a signed triage rule and not an instruction beyond
  * the country's own sentence. The safety question on psychiatry and clinical psychology is the same: a clinician

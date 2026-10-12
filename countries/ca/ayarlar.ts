@@ -77,6 +77,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'YYYY-MM-DD',
+    // Optional. Not checked against a provincial college or any other register. Not an authorisation.
+    meslekKaydiEtiketi: 'Professional registration number',
   },
   ulkeAdi: 'Canada',
   // UNVERIFIED: the word a senior hospital doctor goes by here.

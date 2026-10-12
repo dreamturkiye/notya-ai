@@ -12,6 +12,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { AKTIF_PAKET } from '@/countries/active'
+import { bulunamadiHtml } from '@/lib/ulke/bulunamadiHtml'
 import { ARAMA_GIZLI_BASLIGI, ROBOTS_HERKESE_KAPALI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
 
@@ -38,7 +39,7 @@ export function middleware(req: NextRequest) {
   if (!rotaAcikMi(izin, pathname)) {
     const r = pathname.startsWith('/api/')
       ? NextResponse.json({ code: 'NOT_FOUND' }, { status: 404 })
-      : new NextResponse(null, { status: 404 })
+      : new NextResponse(bulunamadiHtml(), { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     r.headers.set('Cache-Control', 'no-store')
     guvenlikBasliklari(r.headers)
     return r

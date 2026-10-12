@@ -73,6 +73,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'DD/MM/YYYY',
+    // Optional. Not checked against the AHPRA register. Not an authorisation.
+    meslekKaydiEtiketi: 'AHPRA registration number',
   },
   ulkeAdi: 'Australia',
   // The word a senior doctor goes by here: the Medical Board registers "specialists" (specialist registration; a

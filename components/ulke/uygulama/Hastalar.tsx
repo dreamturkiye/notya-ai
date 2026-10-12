@@ -7,7 +7,7 @@
  */
 import React, { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { AramaFormu } from './Bugun'
-import { Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
+import { Bilgi, Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { dilAdi, dilBirlestir, metninDili, randevuMetni, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
@@ -104,9 +104,12 @@ export type YeniHastaAlanlari = { ad: string; otaIsmi: string; dogumTarihi: stri
 export const BOS_HASTA: YeniHastaAlanlari = { ad: '', otaIsmi: '', dogumTarihi: '', cinsiyet: '', telefon: '', dil: '', ulusalKimlik: '' }
 export type YeniHastaHatasi = 'ad' | 'dogumTarihi' | 'dil' | 'kayit' | 'baglanti' | null
 
-export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, telefonOrnek }: {
+export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, telefonOrnek, baslik, iptal }: {
   m: UygulamaMetni; dil: DilKodu; a: YeniHastaAlanlari; set: (a: YeniHastaAlanlari) => void
   gonder: (e: FormEvent) => void; bekliyor: boolean; hata: YeniHastaHatasi; telefonOrnek: string
+  baslik?: string
+  /** When set, Cancel stays on this page instead of leaving for the patient list. */
+  iptal?: () => void
 }) {
   const y = m.yeniHasta
   const hataMetni = hata === 'ad' ? y.adGerekli : hata === 'dogumTarihi' ? y.dogumGecersiz : hata === 'dil' ? y.dilGerekli : hata === 'kayit' ? y.kaydedilemedi : hata === 'baglanti' ? m.kabuk.baglanti : null
@@ -116,7 +119,7 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
   const istegeBagli = <small> ({y.istegeBagli})</small>
   return (
     <section className="uza-kart uza-dar">
-      <h1 className="uza-h1">{y.baslik}</h1>
+      <h1 className="uza-h1">{baslik ?? y.baslik}</h1>
       <form className="uza-form" onSubmit={gonder} noValidate>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-h-ad">{y.ad}</label>
@@ -150,7 +153,7 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
         <Hata>{hataMetni}</Hata>
         <div className="uza-eylemler">
           <button type="submit" className="uza-dugme" disabled={bekliyor}>{bekliyor ? y.kaydediliyor : y.kaydet}</button>
-          <a className="uza-dugme uza-dugme-cizgi" href={YOL.hastalar}>{y.iptal}</a>
+          {iptal ? <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={iptal}>{y.iptal}</button> : <a className="uza-dugme uza-dugme-cizgi" href={YOL.hastalar}>{y.iptal}</a>}
         </div>
       </form>
     </section>
@@ -189,7 +192,7 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, mesajlar, konsultasyon }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, mesajlar, konsultasyon, duzenle }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -203,6 +206,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
   mesajlar?: ReactNode
   /** NOTYA-ULKE-MESAJ-01: asking a colleague for an opinion on this patient, and this patient's consultations, where the country has consultation. */
   konsultasyon?: ReactNode
+  /** Opens the editor for this patient's identity fields. */
+  duzenle?: () => void
 }) {
   const r = randevuMetni(metninDili(m))
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
@@ -226,6 +231,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
         <div className="uza-baslik-satiri">
           <h1 className="uza-h1">{tamAd(hasta)}</h1>
           <div className="uza-eylemler" style={{ marginTop: 0 }}>
+            {duzenle ? <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={duzenle} data-eylem="hasta-duzenle" data-yazdirma-gizle>{m.hasta.duzenle}</button> : null}
             {HAZIR.muayene ? <a className="uza-dugme" href={`${YOL.muayene}?hasta=${hasta.id}`}>{m.bugun.muayeneBaslat}</a> : null}
             {/* NOTYA-UZ-RANDEVU-01: booking from the patient's file — the form opens with this patient chosen. */}
             {HAZIR.takvim ? <a className="uza-dugme uza-dugme-cizgi" href={takvimYolu({ yeni: '1', hasta: hasta.id })} data-eylem="randevu-al">{r.hasta.randevuAl}</a> : null}
@@ -295,6 +301,11 @@ export function HastaDosyasi() {
   const [veri, setVeri] = useState<{ hasta: HastaKaydi; muayeneler: DosyaMuayenesi[] } | null>(null)
   const [randevular, setRandevular] = useState<RandevuKaydi[] | null>(null)
   const [durum, setDurum] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
+  const [duzenleme, setDuzenleme] = useState(false)
+  const [alanlar, setAlanlar] = useState<YeniHastaAlanlari>(BOS_HASTA)
+  const [bekliyor, setBekliyor] = useState(false)
+  const [hata, setHata] = useState<YeniHastaHatasi>(null)
+  const [kaydedildi, setKaydedildi] = useState(false)
   const { hesap, api } = u
 
   useEffect(() => {
@@ -314,9 +325,35 @@ export function HastaDosyasi() {
   }, [hesap, api])
 
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
+
+  function duzenleAc() {
+    if (!veri) return
+    const h = veri.hasta
+    setAlanlar({ ad: h.ad, otaIsmi: h.otaIsmi, dogumTarihi: h.dogumTarihi, cinsiyet: h.cinsiyet, telefon: h.telefon, dil: h.dil, ulusalKimlik: h.ulusalKimlik })
+    setHata(null); setKaydedildi(false); setDuzenleme(true)
+  }
+  async function duzenleKaydet(e: FormEvent) {
+    e.preventDefault()
+    if (!veri) return
+    if (alanlar.ad.trim().length < 2) { setHata('ad'); return }
+    if (!alanlar.dil) { setHata('dil'); return }
+    if (alanlar.dogumTarihi === GIRDI_GECERSIZ) { setHata('dogumTarihi'); return }
+    setBekliyor(true); setHata(null)
+    try {
+      const r = await api(`/api/ulke/hasta?id=${encodeURIComponent(veri.hasta.id)}`, { method: 'PATCH', govde: alanlar })
+      if (r.ok && r.j.hasta) { setVeri({ ...veri, hasta: r.j.hasta as HastaKaydi }); setDuzenleme(false); setKaydedildi(true) }
+      else setHata(r.j.code === 'GECERSIZ' && (r.j.alan === 'ad' || r.j.alan === 'dogumTarihi' || r.j.alan === 'dil') ? r.j.alan : 'kayit')
+    } catch { setHata('baglanti') }
+    setBekliyor(false)
+  }
+
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
-      {durum === 'tamam' && veri ? <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} /> : (
+      {durum === 'tamam' && veri ? <>
+        <Bilgi>{kaydedildi ? u.m.hasta.duzenlendi : null}</Bilgi>
+        {duzenleme ? <YeniHastaGorunumu m={u.m} dil={u.dil} a={alanlar} set={(yeni) => { setAlanlar(yeni); setHata(null) }} gonder={duzenleKaydet} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} baslik={u.m.hasta.duzenle} iptal={() => { setDuzenleme(false); setHata(null) }} /> : null}
+        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} />
+      </> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}
           {durum === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{u.m.kabuk.geri}</a></p>}

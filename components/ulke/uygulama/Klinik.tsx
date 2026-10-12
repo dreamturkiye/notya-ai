@@ -23,7 +23,7 @@ import { klinikMetni, randevuMetni, rolAdi, type KlinikMetni, type RandevuMetni 
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { DAVET_KONUMLARI, yonetebilir, yoneticiMi, type KlinikDaveti, type KlinikGorunumu, type KlinikKonumu, type KlinikTakvimDilimi, type KlinikUyesi, type KlinikYetkiTuru } from '@/lib/ulke/klinikHesabi/tipler'
 import { gunEkle } from '@/lib/ulke/uygulama/zaman'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export const KLINIK_API = '/api/ulke/klinik'
@@ -296,6 +296,13 @@ function KlinikAna({ u, veri, yenile }: { u: Uygulama; veri: KlinikVerisi; yenil
   return (
     <>
       <KlinikBasligi k={k} klinik={klinik} />
+      {klinik.konum === 'sahip' && ulkePaketi().uygulama?.klinikHesaplari?.kayitSaklama == null ? (
+        <section className="uza-kart" data-alan="kayit-saklama">
+          <h2 className="uza-h2">{k.saklama.baslik}</h2>
+          <p className="uza-aciklama">{k.saklama.aciklama}</p>
+          <p className="uza-ipucu">{k.saklama.sahip}</p>
+        </section>
+      ) : null}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Bilgi>{bildirim === 'degistirildi' ? c.degistirildi : bildirim === 'cikarildi' ? c.cikarildi : bildirim === 'davet-geri-alindi' ? k.davet.geriAlindi : bildirim === 'kopyalandi' ? k.davet.kopyalandi : null}</Bilgi>
         <Hata>{bildirim === 'yetki-yok' ? c.yetkiYok : bildirim === 'yapilamadi' ? c.yapilamadi : bildirim === 'kopyalanamadi' ? k.davet.kopyalanamadi : null}</Hata>

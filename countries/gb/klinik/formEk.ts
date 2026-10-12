@@ -2,7 +2,7 @@
  * NOTYA-ULKE-INTAKE-02 — United Kingdom: NHS number, previous GP, ethnicity, and consent acknowledgements.
  * MACHINE-WRITTEN. AWAITS A UK CLINICIAN. CONSENT TEXT PENDING A LAWYER.
  * Ethnicity options are the high-level groups of the 2021 census, plus rather-not-say. The NHS number is optional
- * free text and is not checked. The emergency sentence names 999 and 111.
+ * free text and is not checked. The emergency sentence names 999 only. NHS 111 is not in the kit.
  */
 import type { HamBolum } from '../../_dil/en/klinik/hastaFormu/yardimci'
 import { kisa, s, tek } from '../../_dil/en/klinik/hastaFormu/yardimci'
@@ -36,4 +36,4 @@ export const GB_CEKIRDEK_EK: readonly HamBolum[] = [
   }),
 ]
 
-export const GB_ACIL_CUMLE = 'If any of these is happening now, do not wait to finish this form. Call 999 for a life-threatening emergency, or 111 if you need urgent advice and it is not life-threatening. This form does not replace emergency care.'
+export const GB_ACIL_CUMLE = 'If any of these is happening now, do not wait to finish this form. Call 999. This form does not replace emergency care.'

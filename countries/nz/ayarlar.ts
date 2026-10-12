@@ -130,6 +130,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     // SOURCE-CHECKED: day, month, year (the national medication charting standard: "day/month/year format").
     tarihOrnegi: 'DD/MM/YYYY',
+    // Optional. Not checked against the Medical Council or any other register. Not an authorisation.
+    meslekKaydiEtiketi: 'Professional registration number',
   },
   ulkeAdi: 'New Zealand',
   // The word a senior doctor goes by here. SOURCE-CHECKED: the medical council describes vocational registration as

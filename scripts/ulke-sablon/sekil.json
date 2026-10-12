@@ -98,6 +98,9 @@
    "kaydediliyor": "$m",
    "kaydedildi": "$m",
    "kaydedilemedi": "$m",
+   "meslekKaydi": "$m",
+   "meslekKaydiIzoh": "$m",
+   "meslekKaydiGecersiz": "$m",
    "saatDilimi": {
     "$istege": "REQUIRED if the country has more than one time zone (uygulama.saatDilimleri): label of the setting"
    },
@@ -163,7 +166,9 @@
    "taslaklar": "$m",
    "notsuzlar": "$m",
    "notsuz": "$m",
-   "ac": "$m"
+   "ac": "$m",
+   "duzenle": "$m",
+   "duzenlendi": "$m"
   },
   "muayene": {
    "baslik": "$m",
@@ -200,7 +205,11 @@
    "notHazirla": "$m",
    "notYaziliyor": "$m",
    "notuAc": "$m",
-   "hastaSec": "$m"
+   "hastaSec": "$m",
+   "sesDosyasi": "$m",
+   "sesDosyasiIzoh": "$m",
+   "sesBuyuk": "$m",
+   "sesTur": "$m"
   },
   "not": {
    "baslik": "$m",
@@ -227,7 +236,28 @@
    "kaydedilemedi": "$m",
    "onaylanamadi": "$m",
    "zatenOnayli": "$m",
-   "ikinciTaslak": "$m"
+   "ikinciTaslak": "$m",
+   "ekBaslik": "$m",
+   "ekIzoh": "$m",
+   "ekKaydet": "$m",
+   "ekKaydedildi": "$m",
+   "ekKaydedilemedi": "$m",
+   "ekTaslak": "$m",
+   "yazdir": "$m",
+   "disaAktar": "$m",
+   "kopyaIzoh": "$m",
+   "sil": "$m",
+   "silOnay": "$m",
+   "silindi": "$m",
+   "silinemedi": "$m",
+   "silOnayli": "$m",
+   "kapaliBaslik": "$m",
+   "kapaliIzoh": "$m",
+   "kapaliKodlama": "$m",
+   "kapaliRecete": "$m",
+   "kapaliIlac": "$m",
+   "kapaliTalep": "$m",
+   "kapaliDevlet": "$m"
   },
   "asistan": {
    "etiket": "$m",
@@ -1056,6 +1086,11 @@
    "yapilamadi": "$m",
    "bekliyor": "$m",
    "kapat": "$m"
+  },
+  "saklama": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "sahip": "$m"
   }
  },
  "acilis": {

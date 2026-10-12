@@ -72,6 +72,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'MM/DD/YYYY',
+    // Optional, stored on the account, never checked against the NPPES register. Not an authorisation.
+    meslekKaydiEtiketi: 'National Provider Identifier',
   },
   ulkeAdi: 'the United States',
   // The word a senior hospital doctor goes by here. Source: the glossary of the body that accredits residency

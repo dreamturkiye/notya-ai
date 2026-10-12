@@ -94,6 +94,27 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
   )
 }
 
+/** Optional professional registration. Not checked against a register. */
+export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: {
+  m: UygulamaMetni; deger: string; set: (v: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gecersiz' | null
+}) {
+  const a = m.ayarlar
+  return (
+    <section className="uza-kart uza-dar" data-alan="meslek-kaydi">
+      <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
+        <div className="uza-alan">
+          <label className="uza-etiket" htmlFor="uza-meslek-kaydi">{a.meslekKaydi}</label>
+          <input id="uza-meslek-kaydi" name="meslekKaydi" className="uza-girdi" value={deger} onChange={(e) => set(e.target.value)} autoComplete="off" maxLength={40} data-alan="meslek-kaydi-girdi" />
+        </div>
+        <p className="uza-ipucu">{a.meslekKaydiIzoh}</p>
+        <Hata>{sonuc === 'gecersiz' ? a.meslekKaydiGecersiz : sonuc === 'hata' ? a.kaydedilemedi : null}</Hata>
+        <Bilgi>{sonuc === 'tamam' ? a.kaydedildi : null}</Bilgi>
+        <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="meslek-kaydi-kaydet">{bekliyor ? a.kaydediliyor : a.kaydet}</button>
+      </form>
+    </section>
+  )
+}
+
 export default function Ayarlar() {
   const u = useUygulama('ayarlar')
   const [d, setD] = useState<AyarDurumu>(() => { const t = temelDil(ulkePaketi().varsayilanDil); return { arayuz: t, not: t, yazi: varsayilanYazi() } })
@@ -109,7 +130,11 @@ export default function Ayarlar() {
   const [rolBekliyor, setRolBekliyor] = useState(false)
   const [rolSonucu, setRolSonucu] = useState<'tamam' | 'hata' | 'gerekli' | null>(null)
 
-  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setDilim(u.hesap.saatDilimi ?? ''); setHazir(true) } }, [u.hesap, hazir])
+  const [meslek, setMeslek] = useState('')
+  const [meslekBekliyor, setMeslekBekliyor] = useState(false)
+  const [meslekSonucu, setMeslekSonucu] = useState<'tamam' | 'hata' | 'gecersiz' | null>(null)
+
+  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setDilim(u.hesap.saatDilimi ?? ''); setMeslek(u.hesap.meslekKaydi ?? ''); setHazir(true) } }, [u.hesap, hazir])
 
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
 
@@ -135,6 +160,18 @@ export default function Ayarlar() {
     setDilimBekliyor(false)
   }
 
+  async function meslekGonder() {
+    setMeslekBekliyor(true); setMeslekSonucu(null)
+    try {
+      const r = await u.api('/api/ulke/meslek-kaydi', { method: 'POST', govde: { meslekKaydi: meslek.trim() } })
+      if (r.ok) {
+        u.hesabiGuncelle({ meslekKaydi: typeof r.j.meslekKaydi === 'string' ? r.j.meslekKaydi : undefined })
+        setMeslekSonucu('tamam')
+      } else setMeslekSonucu(r.j.code === 'GECERSIZ' ? 'gecersiz' : 'hata')
+    } catch { setMeslekSonucu('hata') }
+    setMeslekBekliyor(false)
+  }
+
   async function rolGonder() {
     if (!rolMu(rol)) { setRolSonucu('gerekli'); return }
     setRolBekliyor(true); setRolSonucu(null)
@@ -151,6 +188,7 @@ export default function Ayarlar() {
       {dilSecimiVarMi() ? <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : <div className="uza-dar"><h1 className="uza-h1">{u.m.ayarlar.baslik}</h1></div>}
       {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
       {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
+      <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
     </Cerceve>
   )
 }

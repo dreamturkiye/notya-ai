@@ -222,6 +222,11 @@ export const EN_KLINIK_METIN_TEMEL: KlinikMetni = {
     bekliyor: 'Please wait…',
     kapat: 'Close',
   },
+  saklama: {
+    baslik: 'How long records are kept',
+    aciklama: 'No period is set. Nothing is deleted on a schedule.',
+    sahip: 'Before any deletion is built, the clinic owner must ask a lawyer of this country to state the period. A lawyer has not read this wording.',
+  },
 }
 
 /** The catalogue in a country's form of English. */

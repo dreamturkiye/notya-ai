@@ -28,6 +28,7 @@ import { KonusmaBildirimleri, konusmaDiliAdi, sablonAdi, type MuayeneDetayi } fr
 import { asistanAdi } from './Asistan'
 import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, sablonMetni, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
+import { DosyaEk } from './DosyaEk'
 import { PortalOzetKarti } from './PortalOzeti'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
@@ -43,6 +44,8 @@ export type NotDetayi = {
   /** Field keys the server allows for this note, in order. */
   alanAnahtarlari?: readonly string[]
   muayene: MuayeneDetayi
+  /** Addendum on an approved note. Absent on a draft. */
+  ekMetin?: string
 }
 export type NotIslemi = 'kaydediliyor' | 'cevriliyor' | 'onaylaniyor' | null
 /** What the last action answered: a code of the note API, or one of the two good outcomes. */
@@ -256,6 +259,7 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}
       {!not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={not.muayene.hasta.id} mod="muayene" /> : null}
       {not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') ? <PortalOzetKarti key={`${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
+      <DosyaEk m={u.m} not={not} api={api} yenile={() => yukle()} />
     </>
   )
 }

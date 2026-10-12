@@ -16,7 +16,7 @@ Rewritten 2026-10-09 (NOTYA-ULKE-PORTAL-01) for Kaan's decision of the same day.
 3. Migrations written after the baseline was generated are run on each country's database one by one, in order. The ledger in each database says which it holds.
 4. **The country code stays on every row and in every key**, as before. With a database per country it is no longer what keeps countries apart; it is the **second wall**: if two countries' data ever met in one database by mistake, no row of one could be read, changed or pointed at from the other.
 5. **The shared login pool is gone.** Each database has its own sign-in service, so an account of one country does not exist at another. See "Logins".
-6. Uzbekistan's database exists and holds migrations 129 to 135 (`docs/COUNTRY-PACK-UZBEKISTAN.md`, "The Uzbek database"). **It still needs 136, 137, 138, 139 and 145**, in that order: section "Bringing Uzbekistan's database up to date" below. (Numbers 140 to 144 belong to other jobs; each says in its own pull request where it goes.)
+6. Uzbekistan's database exists and holds migrations 129 to 135 (`docs/COUNTRY-PACK-UZBEKISTAN.md`, "The Uzbek database"). **Nothing after 135 has been applied to it, or to any of the other five country databases.** The files still to run, and the variables the apply tool needs, are in "Pending apply, 2026-10-12" below. The older "Bringing Uzbekistan's database up to date" section is the history of how those files were written; where its order or its check figures disagree with the pending-apply section, follow the pending-apply section.
 
 ## What a country database holds
 
@@ -134,13 +134,49 @@ Applying one: on **each** country's database, separately, in order, each file in
 | `141_ulke_hekim_sablonlari.sql` | `ulke_hekim_sablonlari` with its trigger (function `ulke_hekim_sablonu_kilidi`): a doctor's own text blocks. **No patient column.** The name and the text as ONE encrypted value; where it may be inserted (a note, a message, both); deleted softly, and a deleted row does not change. Server only |
 | `142_ulke_konsultasyon.sql` | `ulke_konsultasyon_kodlari` (one row per account that chose to be findable: its code as a hash and as an encrypted value; no statement lists it) and `ulke_konsultasyonlar` (one row per consultation and the record of it: who asked whom about which patient, the question, the READ-ONLY COPY of what was shared, the consent stamp and its moment, read, answered, closed, and until when the consulted doctor may read), each with its trigger (functions `ulke_konsultasyon_kodu_kilidi`, `ulke_konsultasyon_kilidi`): only an approved note of that patient is shared; nothing but "read", the answer and the closing ever changes, each once. Server only |
 | `145_ulke_klinik.sql` | **Clinic accounts** (NOTYA-ULKE-KLINIK-01). Five tables: `ulke_klinikler`, `ulke_klinik_uyeleri`, `ulke_klinik_davetleri`, `ulke_klinik_yetkileri`, `ulke_klinik_erisim_kayitlari`. Five triggers with their functions (`ulke_klinik_kilidi`, `ulke_klinik_uye_kilidi`, `ulke_klinik_davet_kilidi`, `ulke_klinik_yetki_kilidi`, `ulke_klinik_erisim_kaydi_kilidi`), the helper `ulke_klinik_yonetebilir`, and six functions closed to browser sessions: `ulke_klinik_kur`, `ulke_klinik_katil`, `ulke_klinik_uye_cikar`, `ulke_klinik_konum_degistir`, `ulke_klinik_yetki_ver`, `ulke_klinik_yetki_geri_al`. **It alters no existing table, key, rule, trigger or function**: the proof compares a database built without it and with it, object by object. It needs only the account table and the patient table. Row-level security on with no rule: server only. **Not applied anywhere.** |
+| `146_ulke_not_ek.sql` | **An addendum on an approved note.** One column, `ek_metin`, on `ulke_notlar`, and one check (`ulke_notlar_ek_metin_uzunluk`: null, or at most 4000 characters). The SOAP columns and `approved_at` are not altered. The note text is plain, as the SOAP sections already are. The application reads the column in a second query, so a database that has not taken this file still opens every note; saving an addendum fails until the file is in. Needs `ulke_hesaplari` and `ulke_notlar`. **Not applied anywhere.** |
 
 Files 129 to 135 were written when the plan was a shared database, and their own comments still describe that plan; a line at the top of each says what holds now. **They are not run by hand any more**: a new country's database gets the baseline, and the only database that received them one by one, Uzbekistan's, already holds them.
 
 Files 136 to 142 were written for a database per country. Each **refuses a database that has no `ulke_hesaplari`**, holds no `drop … if exists`, and is one transaction.
 Files 136, 137, 138, 139 and 145 were written for a database per country. Each **refuses a database that has no `ulke_hesaplari`**, holds no `drop … if exists`, and is one transaction.
 
+## Pending apply, 2026-10-12
+
+**Not applied. No hosted database was reached.** On 2026-10-12 the job that wrote migration 146 looked for credentials and found none: no `DATABASE_URL`, no `SUPABASE_DB_URL`, no Supabase project URL, and no `.env.local` in the environment. There is no project address in the repository. Running `node scripts/run-sql-migration.mjs` without those variables exits 0 and only prints that the file must be run by hand; that exit is not a successful apply.
+
+**Never on the Turkish database. Never one country's file on another country's database.** Six projects, six applies.
+
+### What each database runs
+
+| Database | What it already holds | What to run, in this order, each file once, each in one go |
+|---|---|---|
+| Uzbekistan (`uz`) | 129 to 135, applied by hand. Do not run the baseline (it refuses a database that is not empty). | `136_ulke_kullanim_olcumu.sql`, `137_ulke_hasta_portali.sql`, `138_ulke_hasta_formu.sql`, `139_ulke_arac_kayitlari.sql`, `140_ulke_hasta_mesajlari.sql`, `141_ulke_hekim_sablonlari.sql`, `142_ulke_konsultasyon.sql`, `145_ulke_klinik.sql`, `146_ulke_not_ek.sql` |
+| United States, United Kingdom, Canada, Australia, New Zealand (`us`, `gb`, `ca`, `au`, `nz`) | Nothing, unless a project was created outside this repository. No address is recorded here. | If the database is empty: `lib/db/ulke/000_yeni_ulke_veritabani.sql` once. That baseline is generated from `lib/db/ulke/gocler.json` and already contains 129 through 146. If a project was already given 129 to 135 by hand, use the Uzbekistan list instead and do not run the baseline. |
+
+Each file is `lib/db/migrations/<name>` except the baseline, which is the one path in the table. A file that fails leaves nothing behind. A file run twice changes nothing. None of 136 to 142, 145 or 146 contains `drop … if exists`.
+
+Without 145 every clinic screen answers "could not be done". Without 146 an addendum cannot be saved; the note still opens. The earlier files are what the portal, the intake form, kept tool results, messages, templates and consultation need. Those features stay switched off in the English packs until a clinician and a lawyer say otherwise; the tables can still be created so the database matches the baseline.
+
+### How to run one file
+
+On the machine that can reach that country's database, with that country's connection string only:
+
+```
+DATABASE_URL='postgresql://…' node scripts/run-sql-migration.mjs 136_ulke_kullanim_olcumu.sql
+```
+
+`SUPABASE_DB_URL` is accepted in place of `DATABASE_URL`. The script also reads either name from `.env.local`. Point it at one project, run the files for that project, then change the variable before the next project. The SQL editor of that project is the same apply if the script cannot be used: paste one file, run it, then the next.
+
+The running application, separately from the apply, needs for that deployment: `NOTYA_COUNTRY` (one of `us`, `gb`, `ca`, `au`, `nz`, `uz`), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `ENCRYPTION_MASTER_KEY`. The country build is `NOTYA_COUNTRY=<code> npm run build:ulke`. None of those values is in this repository.
+
+### What this job did not re-count
+
+The local proofs recorded further down were run before migration 146. After 145 they answered 27 tables, 270 columns, 17 rules and 28 functions. Migration 146 adds no table: one column (`ek_metin`) and one check on `ulke_notlar`. This job did not re-run `scripts/ulke-temel-kaniti.mjs` or `scripts/ulke-goc-kaniti.mjs`, so those four figures are not restated as a count taken after 146. After the files are in, the ledger must list every version that was run.
+
 ## Bringing Uzbekistan's database up to date
+
+The order and the check figures in this section were written as the files arrived and disagree with each other. **The list to follow is "Pending apply, 2026-10-12" above.** The paragraphs below stay as the record of what each job proved.
 
 Uzbekistan's database was built by hand from 129 to 135, so it does not get the baseline (the baseline refuses a database that is not empty). It gets the later files, **in this order, each once, each in one go**:
 

@@ -22,7 +22,7 @@ import { enCevir } from './varyant'
 type Temel = Omit<UygulamaMetni, 'muayene' | 'yeniHasta' | 'ayarlar'> & {
   muayene: Omit<UygulamaMetni['muayene'], 'riza'>
   yeniHasta: Omit<UygulamaMetni['yeniHasta'], 'ulusalKimlik' | 'otaIsmi'>
-  ayarlar: Omit<UygulamaMetni['ayarlar'], 'saatDilimi' | 'saatDilimiIzoh'>
+  ayarlar: Omit<UygulamaMetni['ayarlar'], 'saatDilimi' | 'saatDilimiIzoh' | 'meslekKaydi'>
 }
 
 export const EN_UYGULAMA_TEMEL: Temel = {
@@ -59,6 +59,8 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     kaydediliyor: 'Saving…',
     kaydedildi: 'Saved.',
     kaydedilemedi: 'Could not save. Please try again.',
+    meslekKaydiIzoh: 'Optional. Stored on this account. Not checked against a register. A clinician and a lawyer have not read this wording.',
+    meslekKaydiGecersiz: 'Use 2–40 letters, digits, spaces, full stops or hyphens.',
   },
   arama: {
     etiket: 'Find a patient',
@@ -113,6 +115,8 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     notsuzlar: 'Visits without a note',
     notsuz: 'Transcript',
     ac: 'Open',
+    duzenle: 'Edit patient',
+    duzenlendi: 'Saved.',
   },
   muayene: {
     baslik: 'Visit',
@@ -147,6 +151,10 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     notYaziliyor: 'Preparing the visit note…',
     notuAc: 'Open the visit note',
     hastaSec: 'Choose a patient first.',
+    sesDosyasi: 'Upload an existing recording',
+    sesDosyasiIzoh: 'An audio file you already have, up to 25 MB. The same consent applies. A clinician has not read this wording.',
+    sesBuyuk: 'The file is too large. The limit is 25 MB.',
+    sesTur: 'Choose an audio file.',
   },
   not: {
     baslik: 'Visit note',
@@ -172,6 +180,27 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     onaylanamadi: 'Could not approve. Please try again.',
     zatenOnayli: 'This note has already been approved. An approved note is not changed.',
     ikinciTaslak: 'This is a second draft. The first draft has not been changed: choose one of them to approve.',
+    ekBaslik: 'Addendum',
+    ekIzoh: 'This does not change the approved note. A clinician has not read this wording.',
+    ekKaydet: 'Save addendum',
+    ekKaydedildi: 'Addendum saved.',
+    ekKaydedilemedi: 'Could not save the addendum.',
+    ekTaslak: 'An addendum is saved on an approved note.',
+    yazdir: 'Print',
+    disaAktar: 'Download a copy',
+    kopyaIzoh: 'A copy for your file. Not a certificate. Not signed. A clinician has not read this wording.',
+    sil: 'Delete draft visit',
+    silOnay: 'Delete this draft visit? An approved note is not deleted.',
+    silindi: 'Deleted.',
+    silinemedi: 'Could not delete.',
+    silOnayli: 'An approved note is not deleted.',
+    kapaliBaslik: 'Not available yet',
+    kapaliIzoh: 'These are not part of this product yet. Nothing is sent. A clinician has not read this wording.',
+    kapaliKodlama: 'Diagnosis coding',
+    kapaliRecete: 'Prescriptions',
+    kapaliIlac: 'Medicines',
+    kapaliTalep: 'Claims',
+    kapaliDevlet: 'State systems',
   },
   asistan: {
     etiket: 'Your assistant',
@@ -221,7 +250,7 @@ export function enUygulama(u: EnUlkeSozleri): UygulamaMetni {
   const t = enCevir(EN_UYGULAMA_TEMEL, u.bicim)
   return {
     ...t,
-    ayarlar: { ...t.ayarlar, ...(u.cokSaatDilimi ? enCevir(SAAT_DILIMI, u.bicim) : {}) },
+    ayarlar: { ...t.ayarlar, meslekKaydi: u.meslekKaydiEtiketi, ...(u.cokSaatDilimi ? enCevir(SAAT_DILIMI, u.bicim) : {}) },
     yeniHasta: { ...t.yeniHasta, ...(u.kimlikEtiketi ? { ulusalKimlik: u.kimlikEtiketi } : {}) },
     muayene: { ...t.muayene, riza: u.kayitRizasi },
   }

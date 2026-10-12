@@ -5,7 +5,7 @@
  * build. Where a key depends on the country's own languages or scripts it is a record keyed by their codes; the pack
  * check (lib/ulke/paketDenetimi.ts) requires an entry for each of them.
  *
- * 153 fixed entries + per-language entries in `UygulamaMetni`; 112 fixed + per-language in `RandevuMetni`.
+ * Fixed entries + per-language entries in `UygulamaMetni`; 112 fixed + per-language in `RandevuMetni`.
  * Placeholders inside a sentence are written %, %1, %2, %3 and are named where the catalogue is written.
  */
 
@@ -49,6 +49,11 @@ export type UygulamaMetni = {
     readonly kaydediliyor: string
     readonly kaydedildi: string
     readonly kaydedilemedi: string
+    /** Label of the optional professional registration. The country's own name (NPI, AHPRA, …). Not checked against a register. */
+    readonly meslekKaydi: string
+    /** Says the value is optional, stored on the account, and not checked. Machine-written until a clinician or a lawyer reads it. */
+    readonly meslekKaydiIzoh: string
+    readonly meslekKaydiGecersiz: string
   }
   readonly arama: {
     readonly etiket: string
@@ -107,6 +112,8 @@ export type UygulamaMetni = {
     readonly notsuzlar: string
     readonly notsuz: string
     readonly ac: string
+    readonly duzenle: string
+    readonly duzenlendi: string
   }
   readonly muayene: {
     readonly baslik: string
@@ -143,6 +150,10 @@ export type UygulamaMetni = {
     readonly notYaziliyor: string
     readonly notuAc: string
     readonly hastaSec: string
+    readonly sesDosyasi: string
+    readonly sesDosyasiIzoh: string
+    readonly sesBuyuk: string
+    readonly sesTur: string
   }
   readonly not: {
     readonly baslik: string
@@ -169,6 +180,27 @@ export type UygulamaMetni = {
     readonly onaylanamadi: string
     readonly zatenOnayli: string
     readonly ikinciTaslak: string
+    readonly ekBaslik: string
+    readonly ekIzoh: string
+    readonly ekKaydet: string
+    readonly ekKaydedildi: string
+    readonly ekKaydedilemedi: string
+    readonly ekTaslak: string
+    readonly yazdir: string
+    readonly disaAktar: string
+    readonly kopyaIzoh: string
+    readonly sil: string
+    readonly silOnay: string
+    readonly silindi: string
+    readonly silinemedi: string
+    readonly silOnayli: string
+    readonly kapaliBaslik: string
+    readonly kapaliIzoh: string
+    readonly kapaliKodlama: string
+    readonly kapaliRecete: string
+    readonly kapaliIlac: string
+    readonly kapaliTalep: string
+    readonly kapaliDevlet: string
   }
   readonly asistan: {
     readonly etiket: string
@@ -1216,5 +1248,11 @@ export type KlinikMetni = {
     readonly yapilamadi: string
     readonly bekliyor: string
     readonly kapat: string
+  }
+  /** Shown to the clinic owner while the pack has set no retention period. The kit deletes nothing on a schedule. */
+  readonly saklama: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly sahip: string
   }
 }

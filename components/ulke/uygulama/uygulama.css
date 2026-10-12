@@ -196,3 +196,7 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-parca-ayrac { padding-bottom: 12px; font-size: 18px; color: var(--uza-soluk); }
 .uza-girdi[aria-invalid='true'] { border-color: var(--uza-uyari); }
 .uza-girdi-hata { color: var(--uza-uyari); }
+
+@media print {
+  .uza-ust, .uza-nav, .uza-hesap, [data-yazdirma-gizle] { display: none !important; }
+}
