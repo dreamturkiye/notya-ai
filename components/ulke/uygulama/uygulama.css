@@ -57,13 +57,20 @@
   display: block;
   grid-column: 2;
   grid-row: 1 / span 2;
-  position: relative;
+  /* Absolute, inset 0: the box fills the content column (the grid area), the same way the
+     reference chrome's plant layer fills its column. A relative box here collapses — its only
+     child is absolute — and overflow:hidden then clips the photo to nothing. */
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
   min-width: 0;
-  align-self: stretch;
-  min-height: 100%;
+  /* The photo is the only child and is itself absolute, so a content-sized box is 0px tall and
+     overflow clips it away. A viewport floor keeps the layer up even when the grid area is short. */
+  min-height: 100dvh;
+  width: auto;
+  height: auto;
 }
 .uza:has(.uza-nav) .uza-bitki {
   display: block;
@@ -295,7 +302,9 @@
 }
 
 @media (min-width: 900px) {
-  .uza:has(.uza-nav) .uza-bitki {
+  /* The home shifts the plant down, matching the reference dashboard. Other signed-in pages keep
+     the full-height plant the reference chrome uses outside the home. */
+  .uza:has(.uza-nav):has(.yg-ana) .uza-bitki {
     top: 5.5rem;
     bottom: auto;
     right: -8%;
@@ -318,7 +327,8 @@
     grid-column: 1;
     grid-row: 2;
   }
-  .uza:has(.uza-nav) .uza-bitki {
+  .uza:has(.uza-nav) .uza-bitki { opacity: 0.28; }
+  .uza:has(.uza-nav):has(.yg-ana) .uza-bitki {
     top: 18rem;
     right: -22%;
     bottom: auto;
@@ -452,6 +462,23 @@
 .yg-sayfa { display: flex; flex-direction: column; gap: 10px; }
 .yg-sayfa .uza-h1 { font-weight: 500; font-size: 32px; color: #2e251d; letter-spacing: -0.02em; margin: 0; }
 .yg-sayfa .uza-arama { max-width: 640px; }
+/* The patient list search is one field, the same slot as the reference list. The label and the
+   submit stay in the document (the list test reads them) and out of the layout. */
+.yg-arama-sade { position: relative; max-width: 640px; }
+.yg-arama-sade .uza-etiket,
+.yg-arama-sade .uza-dugme {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.yg-arama-sade .uza-arama-satir { display: block; }
 .yg-sayfa .uza-girdi { background: #fff; border-radius: 10px; }
 .yg-kicker { font-family: var(--uza-serif); font-style: italic; font-size: 15px; color: #6d6055; margin-bottom: 4px; }
 .yg-satir { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--uza-cizgi); border-radius: 16px; padding: 16px 18px; color: var(--uza-murekkep); box-shadow: 0 8px 18px rgba(58, 44, 34, 0.045); text-decoration: none; }

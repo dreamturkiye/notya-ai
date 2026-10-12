@@ -50,7 +50,7 @@ export function HastalarGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
         <h1 className="uza-h1">{m.hastalar.baslik}</h1>
         <a className="uza-dugme" href={YOL.yeniHasta} style={{ borderRadius: 999, background: 'var(--uza-cam)', color: '#FAF8F4', padding: '10px 18px', minHeight: 0 }}>+ {m.bugun.yeniHasta}</a>
       </div>
-      <AramaFormu m={m} q={q} />
+      <div className="yg-arama-sade"><AramaFormu m={m} q={q} /></div>
       <Hata>{hata ? m.kabuk.hata : null}</Hata>
       {hastalar === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : hastalar.length === 0 ? (
         <p className="uza-bos">{q ? m.arama.sonucYok : m.hastalar.bos}</p>
