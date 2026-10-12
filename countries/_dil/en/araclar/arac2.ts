@@ -183,7 +183,7 @@ export const EN_ARACLAR_2: readonly HamArac[] = [
 
   // ── otolaryngology ──
   {
-    anahtar: 'odyometri-pta', roller: ['otolaryngology'],
+    anahtar: 'odyometri-pta', roller: ['otolaryngology', 'audiology'],
     ad: 'Pure-tone audiometry: average threshold',
     aciklama: 'The average of the air-conduction thresholds at 0.5, 1, 2 and 4 kHz, the grade of hearing loss, the change from an earlier measurement and the difference from the other ear.',
     alanlar: {

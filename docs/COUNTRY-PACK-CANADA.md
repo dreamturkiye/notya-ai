@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2166 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 44 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2385 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 62 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
 - **This country's own** (`countries/ca/`, six small files): 44 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -118,7 +118,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (44) — with the unit each measured input takes
+### Switched on (62) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/ca/ca.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -155,7 +155,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `toksisite-listesi` | Side effects checklist | Medical Oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopedic surgery | no measured input |
-| `vas-fonksiyon` | Pain and function rating | Orthopedic surgery | no measured input |
+| `vas-fonksiyon` | Pain and function rating | Orthopedic surgery, Physiotherapist, Physical medicine and rehabilitation | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Pediatrics | Mother's height: **cm**; Father's height: **cm** · result in cm |
 | `doz-hesabi` | Dose arithmetic by body weight | Pediatrics, Family medicine, Emergency medicine | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery, Cosmetic surgery | no measured input |
@@ -165,6 +165,24 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L (= ng/mL)**; Latest value: **µg/L (= ng/mL)** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sport and exercise medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
+| `endoskopi-kaydi` | Endoscopy record | Gastroenterology | no measured input |
+| `kronik-izlem-kaydi` | Chronic-condition record | Family medicine, Internal Medicine, Geriatric Medicine | no measured input |
+| `birinci-acil-bayrak` | Danger signs | Family medicine | no measured input |
+| `gebelik-gun` | Days since the last menstrual period | Obstetrics and gynecology, Family medicine, Gynecologic Reproductive Endocrinology and Infertility | no measured input · result in days, weeks |
+| `kardiyo-not` | Cardiology note | Cardiology | Systolic pressure (optional): **mmHg**; Diastolic pressure (optional): **mmHg** · result in mmHg |
+| `inme-bayraklari` | Stroke signs | Neurology | no measured input |
+| `psikiyatri-guvenlik` | Safety signs | Psychiatry, Psychologist, Psychotherapist / counselling therapist | no measured input |
+| `seans-plani` | Session plan | Physical medicine and rehabilitation, Physiotherapist, Occupational therapist, Pain Medicine | no measured input |
+| `icf-ozet` | Functioning summary | Physiotherapist, Occupational therapist, Physical medicine and rehabilitation, Pain Medicine | no measured input |
+| `greft-tahmini` | Graft count | Hair transplantation | Area: **cm²**; Density: **/cm²** |
+| `sac-bakim-vade` | Hair-transplant reminders | Hair transplantation | no measured input |
+| `estetik-cerrahi-vade` | Cosmetic-surgery reminders | Cosmetic surgery | no measured input |
+| `estetik-islem-vade` | Aesthetic-procedure reminders | Aesthetic medicine | no measured input |
+| `akne-vade` | Acne review reminders | Dermatology | no measured input |
+| `lazer-vade` | Laser interval | Dermatology | Interval in days (14 to 90): **days** |
+| `infuzyon-guvenlik` | Infusion safety check | Longevity medicine | no measured input |
+| `makro-kaydi` | Intake record | Dietitian | Kilocalories: **kcal**; Protein: **g** · result in kcal, g |
+| `sonraki-seans` | Next session | Psychologist, Audiologist | no measured input |
 | `ca-unit-converter` | Unit converter: pounds, feet and inches | every role | Weight (optional): **lb**; Height: feet (optional): **ft**; Height: inches (enter 0 if there are none): **in** · result in kg, cm |
 | `ca-egfr-ckd-epi-2021` | Estimated GFR (2021 CKD-EPI creatinine equation) | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Internal Medicine, Dermatology, Endocrinology and metabolism, Infectious diseases, Gastroenterology, General surgery, Thoracic surgery, Respirology, Ophthalmology, Obstetrics and gynecology, Cardiac Surgery, Vascular Surgery, Cardiology, Otolaryngology-Head and Neck Surgery, Nephrology, Neurology, Medical Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Psychiatry, Diagnostic radiology, Rheumatology, Urology, Sport and exercise medicine, Physical medicine and rehabilitation, Clinical Immunology and Allergy, Geriatric Medicine, Hematology, Pain Medicine, Gynecologic Reproductive Endocrinology and Infertility, Hair transplantation, Cosmetic surgery, Aesthetic medicine, Dermatology, Longevity medicine | Serum creatinine: **µmol/L** · result in mL/min/1.73 m² |
 | `takip-paneli` | Follow-up list | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Internal Medicine, Dermatology, Endocrinology and metabolism, Infectious diseases, Gastroenterology, General surgery, Thoracic surgery, Respirology, Ophthalmology, Obstetrics and gynecology, Cardiac Surgery, Vascular Surgery, Cardiology, Otolaryngology-Head and Neck Surgery, Nephrology, Neurology, Medical Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Psychiatry, Diagnostic radiology, Rheumatology, Urology, Sport and exercise medicine, Physical medicine and rehabilitation, Clinical Immunology and Allergy, Geriatric Medicine, Hematology, Pain Medicine, Gynecologic Reproductive Endocrinology and Infertility, Hair transplantation, Cosmetic surgery, Aesthetic medicine, Dermatology, Longevity medicine, Physiotherapist, Psychologist, Dietitian, Occupational therapist, Audiologist, Psychotherapist / counselling therapist | no measured input |

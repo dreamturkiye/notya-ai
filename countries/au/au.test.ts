@@ -48,7 +48,7 @@ ingilizcePaketSinamasi({
   yabanci: /\b(NHS|NHI|GBP|USD|CAD|NZD|United Kingdom|United States|Canada|Canadian|provincial|Quebec|New Zealand|HIPAA|Medicaid|health card|Anaesthetics|Anesthesiology|Pulmonology|Respirology|Physical therapist|attending physician|staff physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. The dose calculator is ON AGAIN by his later
   // order of the same day (its fault was corrected in the kit; the guard list no longer holds it).
-  kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: LAB,
   kidemliHekim: 'specialist',

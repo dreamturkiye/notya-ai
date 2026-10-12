@@ -270,7 +270,7 @@ describe('2. a tool catalogue of its own', () => {
     assert.deepEqual([...takip], ROLLER.filter((r) => kayitli.some((p) => p.roller?.includes(r))))
     assert.ok(takip.includes('xx-nurse'), 'an allied profession with a tool of its own')
     assert.ok(takip.includes('xx-cardiac'))
-    assert.ok(!takip.includes('clinical-psychology'), 'a role with no tool whose result is kept')
+    assert.ok(takip.includes('clinical-psychology'), 'a safety record and a next session can be kept')
   })
 })
 

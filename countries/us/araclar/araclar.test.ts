@@ -45,7 +45,7 @@ const calistir = (k: string, ham: Record<string, string | boolean>) => { const x
  * The five tools of the set that are off here: four by the owner's order of 2026-10-10 (ESI triage, the report
  * outline, both kidney tools), and the dose calculator by this pack's own, earlier decision (weight is in pounds).
  */
-const EMIRLE_KAPALI = ['doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']
+const EMIRLE_KAPALI = ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
 /** The six tools of this country's own that every doctor role sees (the seventh, the ECOG grade, is for three specialties). */
 const CEKIRDEK = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9']
 
@@ -61,14 +61,20 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
   'toksisite-listesi': ['oncology', 'radiation-oncology'],
   'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
   'odyometri-pta': ['otolaryngology', 'audiology'],
+  'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine'],
+  'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine'],
+  'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'child-adolescent-psychiatry', 'addiction-medicine', 'clinical-social-work'],
+  'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+  'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'reproductive-endocrinology-infertility'],
+  'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-language-pathology'],
 }
 
 describe('us tools 1: no tool of the shared set is switched on or off by this job', () => {
   it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the seven of this country\'s own', () => {
     const setten = ['hasta-portali', ...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
-    assert.equal(setten.length + 1, 41, 'the 41 that were on before this job')
-    assert.equal(acik.length, 41 + 7)
+    assert.equal(setten.length + 1, 57, 'the patient page, the open role tools and the follow-up list')
+    assert.equal(acik.length, 57 + 7)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the seven of this country's own`)
   })
 
@@ -110,20 +116,24 @@ describe('us tools 2: who sees which tool', () => {
 
   it('WHAT A DOCTOR SEES ON THE GRID, before and after — three examples', () => {
     // FAMILY MEDICINE: before, the patient's page and nothing else
-    assert.deepEqual(izgara('family-medicine'), ['hasta-portali', 'inhaler-teknik', 'hedef-boy', 'rtp-basamak', ...CEKIRDEK, 'takip-paneli'])
-    // THE AUDIOLOGIST: before, the patient's page and nothing else
-    assert.deepEqual(izgara('audiology'), ['hasta-portali', 'odyometri-pta', 'takip-paneli'])
+    assert.deepEqual(izgara('family-medicine'), ['hasta-portali', 'inhaler-teknik', 'hedef-boy', 'rtp-basamak', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', ...CEKIRDEK, 'takip-paneli'])
+    // THE AUDIOLOGIST: the hearing average and the next-session record
+    assert.deepEqual(izgara('audiology'), ['hasta-portali', 'odyometri-pta', 'sonraki-seans', 'takip-paneli'])
     // THORACIC AND CARDIAC SURGERY: the checklist before a heart operation is new, and the six of every doctor role
     assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', ...CEKIRDEK, 'takip-paneli'])
     // a specialty the audit adds: radiation oncology, with the two oncology lists of the set and the ECOG grade
     assert.deepEqual(izgara('radiation-oncology'), ['hasta-portali', 'kur-sayaci', 'toksisite-listesi', ...CEKIRDEK, 'us-ecog-performance-status', 'takip-paneli'])
     // CARDIOLOGY and PSYCHIATRY: before, the patient's page and nothing else; now the six of every doctor role
-    for (const rol of ['cardiology', 'psychiatry', 'geriatric-medicine', 'sleep-medicine', 'longevity']) assert.deepEqual(izgara(rol), ['hasta-portali', ...CEKIRDEK, 'takip-paneli'], rol)
+    assert.deepEqual(izgara('cardiology'), ['hasta-portali', 'kardiyo-not', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('psychiatry'), ['hasta-portali', 'psikiyatri-guvenlik', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('geriatric-medicine'), ['hasta-portali', 'kronik-izlem-kaydi', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('sleep-medicine'), ['hasta-portali', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('longevity'), ['hasta-portali', 'infuzyon-guvenlik', ...CEKIRDEK, 'takip-paneli'])
     // the professions: only what was named for each
-    assert.deepEqual(izgara('dietetics'), ['hasta-portali', 'us-bmi', 'us-blood-sugar-ranges', 'takip-paneli'])
-    assert.deepEqual(izgara('clinical-social-work'), ['hasta-portali', 'us-phq-9', 'takip-paneli'])
-    assert.deepEqual(izgara('physiotherapy'), ['hasta-portali', 'us-fall-risk-screen', 'takip-paneli'])
-    assert.deepEqual(izgara('speech-language-pathology'), ['hasta-portali'])
+    assert.deepEqual(izgara('dietetics'), ['hasta-portali', 'makro-kaydi', 'us-bmi', 'us-blood-sugar-ranges', 'takip-paneli'])
+    assert.deepEqual(izgara('clinical-social-work'), ['hasta-portali', 'psikiyatri-guvenlik', 'us-phq-9', 'takip-paneli'])
+    assert.deepEqual(izgara('physiotherapy'), ['hasta-portali', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', 'us-fall-risk-screen', 'takip-paneli'])
+    assert.deepEqual(izgara('speech-language-pathology'), ['hasta-portali', 'sonraki-seans', 'takip-paneli'])
     // an account without a role: the base tool only
     assert.deepEqual(izgara(null), ['hasta-portali'])
   })
@@ -133,8 +143,8 @@ describe('us tools 2: who sees which tool', () => {
     const tasiyan = ROLLER.filter((r) => A.araclar.some((p) => p.anahtar !== 'takip-paneli' && p.roller?.includes(r)))
     assert.deepEqual([...(araci('takip-paneli').roller ?? [])], tasiyan)
     // 22 roles had it before this job; now every role but one has a tool whose result can be kept
-    assert.deepEqual(ROLLER.filter((r) => !tasiyan.includes(r)), ['speech-language-pathology'])
-    assert.equal(tasiyan.length, 50)
+    assert.deepEqual(ROLLER.filter((r) => !tasiyan.includes(r)), [])
+    assert.equal(tasiyan.length, ROLLER.length)
   })
 
   it('ONE WORD, the audit\'s decision: the two surgical checklists say "anesthesiologist" here (the set\'s "anesthetist" usually means a nurse anesthetist in the United States)', () => {

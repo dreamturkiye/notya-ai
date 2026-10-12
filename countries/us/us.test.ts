@@ -46,7 +46,7 @@ ingilizcePaketSinamasi({
   // United Kingdom, Canada, Australia, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|Medicare|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): all five; only 'doz-hesabi' was off here before that day
-  kapaliAraclar: ['doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  kapaliAraclar: ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   birimler: BIRIMLER,
   labBirimleri: { ...LAB, crp: CRP },
   kidemliHekim: 'attending physician',
@@ -171,10 +171,10 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
       assert.match(a.yuvalar.find((y) => y.anahtar === k)?.eksik ?? '', /off by the owner's order of 2026-10-10/, k)
     }
     for (const k of ['esi-triyaj', 'rapor-taslagi']) assert.equal(a.yuvalar.find((y) => y.anahtar === k)?.lisans?.durum, 'izin-gerekli', k)
-    // internal medicine had the kidney tool and nothing else of the set. It has the follow-up list again since
-    // NOTYA-ULKE-UYGULA-US, for the tools of this country's own that every doctor role has (./araclar/), not for the kidney tool
+    // internal medicine had the kidney tool and nothing else of the set. The chronic-condition record is the set's
+    // tool for it now. The follow-up list is there for the tools of this country's own that every doctor role has.
     assert.ok(a.araclar.find((x) => x.anahtar === 'takip-paneli')!.roller!.includes('internal-medicine'))
-    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'takip-paneli'])
+    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['kronik-izlem-kaydi', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'takip-paneli'])
   })
 
   it('the intake form asks every height, weight and temperature in this country\'s unit, with the unit named', () => {
@@ -310,6 +310,9 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
       'das28.pga': 'mm', 'das28.crp': 'mg/L or mg/dL', 'das28.esr': 'mm/h',
       'psa-hizi.onceki_deger': 'ng/mL', 'psa-hizi.son_deger': 'ng/mL',
       'sakatlik-gunlugu.dk_7gun': 'min', 'sakatlik-gunlugu.dk_onceki': 'min',
+      'kardiyo-not.sistol': 'mmHg', 'kardiyo-not.diyastol': 'mmHg',
+      'greft-tahmini.alan': 'cm²', 'greft-tahmini.yogunluk': '/cm²',
+      'makro-kaydi.kcal': 'kcal', 'makro-kaydi.protein': 'g',
       // the tools of this country's own (./araclar/)
       'us-bmi.boy_ft': 'ft', 'us-bmi.boy_in': 'in', 'us-bmi.agirlik_lb': 'lb',
       'us-egfr-ckd-epi-2021.kreatinin': 'mg/dL',

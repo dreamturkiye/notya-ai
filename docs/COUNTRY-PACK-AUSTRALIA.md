@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2202 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 45 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 28 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2401 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 61 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 32 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -117,7 +117,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (45) — with the unit each measured input takes
+### Switched on (61) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -154,7 +154,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `toksisite-listesi` | Side effects checklist | Medical oncology, Radiation oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopaedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopaedic surgery | no measured input |
-| `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery | no measured input |
+| `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery, Physiotherapist, Rehabilitation medicine | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Paediatrics and child health, General practice | Mother's height: **cm**; Father's height: **cm** · result in cm |
 | `doz-hesabi` | Dose arithmetic by body weight | Paediatrics and child health, General practice | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery, Cosmetic surgery | no measured input |
@@ -164,12 +164,28 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sport and exercise medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
+| `endoskopi-kaydi` | Endoscopy record | Gastroenterology and hepatology | no measured input |
+| `kronik-izlem-kaydi` | Chronic-condition record | General practice, General medicine, Geriatric medicine | no measured input |
+| `birinci-acil-bayrak` | Danger signs | General practice | no measured input |
+| `gebelik-gun` | Days since the last menstrual period | Obstetrics and gynaecology, General practice | no measured input · result in days, weeks |
+| `kardiyo-not` | Cardiology note | Cardiology | Systolic pressure (optional): **mmHg**; Diastolic pressure (optional): **mmHg** · result in mmHg |
+| `inme-bayraklari` | Stroke signs | Neurology | no measured input |
+| `psikiyatri-guvenlik` | Safety signs | Psychiatry, Psychologist | no measured input |
+| `seans-plani` | Session plan | Rehabilitation medicine, Physiotherapist, Occupational therapist, Pain medicine, Podiatrist | no measured input |
+| `icf-ozet` | Functioning summary | Physiotherapist, Occupational therapist, Rehabilitation medicine, Pain medicine | no measured input |
+| `greft-tahmini` | Graft count | Hair transplantation | Area: **cm²**; Density: **/cm²** |
+| `sac-bakim-vade` | Hair-transplant reminders | Hair transplantation | no measured input |
+| `estetik-cerrahi-vade` | Cosmetic-surgery reminders | Cosmetic surgery | no measured input |
+| `estetik-islem-vade` | Aesthetic-procedure reminders | Non-surgical cosmetic procedures | no measured input |
+| `infuzyon-guvenlik` | Infusion safety check | Preventive and longevity medicine | no measured input |
+| `makro-kaydi` | Intake record | Dietitian | Kilocalories: **kcal**; Protein: **g** · result in kcal, g |
+| `sonraki-seans` | Next session | Psychologist, Audiologist, Speech pathologist | no measured input |
 | `au-body-size` | Body mass index and waist measurement (adults) | every role | Weight: **kg**; Height: **cm**; Waist measurement (optional): **cm** · result in kg/m², cm |
 | `au-mental-health-screen` | K10 psychological distress scale: total score | Emergency medicine, General practice, Anaesthesia, Neurosurgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Cardio-thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Radiation oncology, Orthopaedic surgery, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Hair transplantation, Cosmetic surgery, Non-surgical cosmetic procedures, Preventive and longevity medicine, Psychologist | no measured input |
 | `au-oncology-grading` | ECOG performance status: record the grade | Medical oncology, Radiation oncology | no measured input |
 | `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Cardio-thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Radiation oncology, Orthopaedic surgery, Paediatrics and child health, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Hair transplantation, Cosmetic surgery, Non-surgical cosmetic procedures, Preventive and longevity medicine, Physiotherapist, Psychologist, Dietitian, Occupational therapist, Audiologist, Podiatrist, Speech pathologist | no measured input |
 
-### Kept as slots FOR THIS COUNTRY (4) — for a local clinical lead
+### Kept as slots FOR THIS COUNTRY (6) — for a local clinical lead
 
 The shared English set has the words of these tools and the kit has their mechanism; this country keeps them switched off for the reason given.
 
@@ -179,6 +195,8 @@ The shared English set has the words of these tools and the kit has their mechan
 | `kdigo-evre` | General medicine | Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol, and the national handbook for primary care writes its categories as below 3.0, 3.0 to 30 and above 30 mg/mmol and has a colour chart of its own that differs from the international grid in two cells; the handbook may not be reproduced without its publisher's written permission. Needed: a nephrologist's decision on which chart applies here, and that permission. Off by the owner's order of 2026-10-10. The faults found in the tool (a risk colour shown with no urine albumin result; referral flags the guideline does not state that way; limits compared after converting the unit) were corrected in the kit the same day; the tool stays off because the licence of the risk grid is unsettled and no clinician has read it. Needed: the rights holder's terms, recorded, and a nephrologist's reading. | a clinical lead in Australia |
 | `kdigo-serit` | Nephrology | The same as the general-medicine kidney tool: the national handbook's categories in mg/mmol and its own colour chart, which needs its publisher's permission. A nephrologist may prefer the international grid; the screen must then say which grid it shows. Off by the owner's order of 2026-10-10. The faults found in the tool (a risk colour shown with no urine albumin result; referral flags the guideline does not state that way; limits compared after converting the unit) were corrected in the kit the same day; the tool stays off because the licence of the risk grid is unsettled and no clinician has read it. Needed: the rights holder's terms, recorded, and a nephrologist's reading. | a clinical lead in Australia |
 | `rapor-taslagi` | Radiology | The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in Australia use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. LICENCE, off by the owner's order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded. | the owner, with the rights holder's written permission; then a clinical lead in Australia |
+| `akne-vade` |  | This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule. | a clinical lead in Australia |
+| `lazer-vade` |  | This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack. | a clinical lead in Australia |
 
 ### Slots in every English-speaking country (52) — empty, switched off
 
@@ -273,7 +291,7 @@ Every gate is unticked: a gate is ticked by a person, with a name and a date. Th
 - [ ] 2. No fallback between countries: a missing item hides the feature.
   - Nothing falls back: the pack check finds nothing missing, and a tool this country does not have is a slot, not another country's tool.
 - [ ] 3. Every tool, form, reference and feature declares the countries it is valid in; new ones start off everywhere except where they were built.
-  - Every tool is classified (base, or these roles) and 4 tool(s) of the shared English set are kept off for this country (below).
+  - Every tool is classified (base, or these roles) and 6 tool(s) of the shared English set are kept off for this country (below).
 - [ ] 4. The account carries its country and language, set at sign-up from that country's landing page.
   - As in the kit: country and language are stamped at sign-up. One language form, `en-AU`.
 - [ ] 5. Ayşe answers only from the account's country pack and says so when no national source exists.

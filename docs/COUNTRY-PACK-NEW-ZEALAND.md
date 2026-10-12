@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2206 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 45 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2425 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 63 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
 - **This country's own** (`countries/nz/`, six small files): 32 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -123,7 +123,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (45) — with the unit each measured input takes
+### Switched on (63) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/nz/nz.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -160,7 +160,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `toksisite-listesi` | Side effects checklist | Medical oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Orthopaedic surgery, Urgent care medicine | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Orthopaedic surgery | no measured input |
-| `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery, Musculoskeletal medicine, Physiotherapist, Osteopath, Chiropractor | no measured input |
+| `vas-fonksiyon` | Pain and function rating | Orthopaedic surgery, Rehabilitation medicine, Musculoskeletal medicine, Physiotherapist, Osteopath, Chiropractor | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Paediatrics | Mother's height: **cm**; Father's height: **cm** · result in cm |
 | `doz-hesabi` | Dose arithmetic by body weight | Emergency medicine, General practice, Paediatric surgery, Paediatrics, Urgent care medicine, Rural hospital medicine | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
 | `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic and reconstructive surgery, Cosmetic surgery | no measured input |
@@ -170,10 +170,28 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in days |
 | `rtp-basamak` | Return to sport: days since the injury | Sport and exercise medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine, Musculoskeletal medicine, Physiotherapist | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
+| `endoskopi-kaydi` | Endoscopy record | Gastroenterology | no measured input |
+| `kronik-izlem-kaydi` | Chronic-condition record | General practice, Internal medicine, Rural hospital medicine, Occupational medicine | no measured input |
+| `birinci-acil-bayrak` | Danger signs | General practice, Rural hospital medicine, Urgent care medicine | no measured input |
+| `gebelik-gun` | Days since the last menstrual period | Obstetrics and gynaecology, General practice, Family planning and reproductive health, Sexual health medicine | no measured input · result in days, weeks |
+| `kardiyo-not` | Cardiology note | Cardiology | Systolic pressure (optional): **mmHg**; Diastolic pressure (optional): **mmHg** · result in mmHg |
+| `inme-bayraklari` | Stroke signs | Neurology | no measured input |
+| `psikiyatri-guvenlik` | Safety signs | Psychiatry, Clinical psychologist, Psychotherapist | no measured input |
+| `seans-plani` | Session plan | Rehabilitation medicine, Physiotherapist, Occupational therapist, Pain medicine, Musculoskeletal medicine, Podiatrist, Osteopath, Chiropractor | no measured input |
+| `icf-ozet` | Functioning summary | Physiotherapist, Occupational therapist, Rehabilitation medicine, Pain medicine, Musculoskeletal medicine | no measured input |
+| `greft-tahmini` | Graft count | Hair transplantation | Area: **cm²**; Density: **/cm²** |
+| `sac-bakim-vade` | Hair-transplant reminders | Hair transplantation | no measured input |
+| `estetik-cerrahi-vade` | Cosmetic-surgery reminders | Cosmetic surgery | no measured input |
+| `estetik-islem-vade` | Aesthetic-procedure reminders | Cosmetic medicine | no measured input |
+| `akne-vade` | Acne review reminders | Dermatology | no measured input |
+| `lazer-vade` | Laser interval | Dermatology | Interval in days (14 to 90): **days** |
+| `infuzyon-guvenlik` | Infusion safety check | Preventive and longevity medicine | no measured input |
+| `makro-kaydi` | Intake record | Dietitian | Kilocalories: **kcal**; Protein: **g** · result in kcal, g |
+| `sonraki-seans` | Next session | Clinical psychologist, Audiologist | no measured input |
 | `nz-bmi-waist` | Body mass index and waist | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Internal medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Plastic and reconstructive surgery, Psychiatry, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Occupational medicine, Pain medicine, Sexual health medicine, Family planning and reproductive health, Palliative medicine, Oral and maxillofacial surgery, Hair transplantation, Cosmetic surgery, Cosmetic medicine, Dermatology, Preventive and longevity medicine, Dietitian | Weight: **kg**; Height: **cm**; Waist circumference (optional): **cm** · result in kg/m² |
 | `nz-smoking-abc` | Smoking: record of the ABC steps | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, Internal medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Psychiatry, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Occupational medicine, Pain medicine, Sexual health medicine, Family planning and reproductive health, Palliative medicine, Oral and maxillofacial surgery, Hair transplantation, Cosmetic surgery, Cosmetic medicine, Dermatology, Preventive and longevity medicine | no measured input |
 | `nz-psa-thresholds` | Prostate-specific antigen: level by age and referral group | General practice, Urology | Age: **years**; PSA result: **µg/L** · result in µg/L |
-| `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, Internal medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Psychiatry, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Occupational medicine, Pain medicine, Sexual health medicine, Family planning and reproductive health, Palliative medicine, Oral and maxillofacial surgery, Hair transplantation, Cosmetic surgery, Cosmetic medicine, Dermatology, Preventive and longevity medicine, Physiotherapist, Dietitian, Audiologist, Osteopath, Chiropractor | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, Internal medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Psychiatry, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Occupational medicine, Pain medicine, Sexual health medicine, Family planning and reproductive health, Palliative medicine, Oral and maxillofacial surgery, Hair transplantation, Cosmetic surgery, Cosmetic medicine, Dermatology, Preventive and longevity medicine, Physiotherapist, Clinical psychologist, Dietitian, Occupational therapist, Audiologist, Podiatrist, Osteopath, Chiropractor, Psychotherapist | no measured input |
 
 ### Kept as slots FOR THIS COUNTRY (4) — for a local clinical lead
 

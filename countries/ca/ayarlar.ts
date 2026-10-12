@@ -181,6 +181,11 @@ export const CA_GIRDI: EnUlkeGirdisi = {
       'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
       // post-operative pain follow-up: also pain medicine
       'postop-agri': ['anaesthesia', 'pain-medicine'],
+      'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine'],
+      'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine'],
+      'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'psychotherapy'],
+      'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+      'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'reproductive-endocrinology'],
     },
     // NOT APPLIED, AND WHY. The audit also changes who would see 17 PLACEHOLDERS (the PHQ-9 with GAD-7, the kidney
     // tool, the family-medicine lists and others) and makes five base placeholders doctor-only. A placeholder is on no

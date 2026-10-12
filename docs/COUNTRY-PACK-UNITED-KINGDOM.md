@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2221 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 45 tools, the landing copy — written in `en-GB` spelling by the set's spelling table.
-- **This country's own** (`countries/gb/`, six small files): 63 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2420 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 61 tools, the landing copy — written in `en-GB` spelling by the set's spelling table.
+- **This country's own** (`countries/gb/`, six small files): 67 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -122,7 +122,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (45) — with the unit each measured input takes
+### Switched on (61) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/gb/gb.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -159,22 +159,38 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `toksisite-listesi` | Side effects checklist | Medical oncology, Clinical oncology | no measured input |
 | `kirik-alci-takip` | Fracture, cast and brace follow-up | Trauma and orthopaedic surgery | no measured input |
 | `ortopedi-op-protokol` | Post-operative checklist | Trauma and orthopaedic surgery | no measured input |
-| `vas-fonksiyon` | Pain and function rating | Trauma and orthopaedic surgery | no measured input |
+| `vas-fonksiyon` | Pain and function rating | Trauma and orthopaedic surgery, Physiotherapist, Rehabilitation medicine | no measured input |
 | `hedef-boy` | Expected height from the parents' heights | Paediatrics | Mother's height: **cm**; Father's height: **cm** · result in cm |
 | `doz-hesabi` | Dose arithmetic by body weight | Paediatrics | Body weight: **kg**; Dose per kilogram: **mg/kg**; Concentration: milligrams (optional): **mg**; Concentration: millilitres (optional): **mL**; The limit you set for one dose (optional): **mg**; The limit you set for one day (optional): **mg** · result in mg, mL, hours |
-| `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery | no measured input |
+| `plastik-yara-greft` | Wound, graft and flap follow-up | Plastic surgery, Cosmetic surgery | no measured input |
 | `tetkik-kuyrugu` | Examination queue | Clinical radiology | no measured input |
 | `das28` | DAS28 disease activity score | Rheumatology | Patient's global assessment: **mm**; C-reactive protein: **mg/L**; Erythrocyte sedimentation rate: **mm/h** |
 | `eklem-28` | 28-joint count | Rheumatology | no measured input |
 | `psa-hizi` | Prostate-specific antigen: rate of change | Urology | Earlier value: **µg/L**; Latest value: **µg/L** · result in days |
 | `rtp-basamak` | Return to activity and sport after concussion | Sport and exercise medicine, General practice, Emergency medicine | no measured input · result in days |
 | `sakatlik-gunlugu` | Injury log | Sport and exercise medicine | Training in the last 7 days (optional): **min**; Earlier average weekly training (optional): **min** |
+| `endoskopi-kaydi` | Endoscopy record | Gastroenterology | no measured input |
+| `kronik-izlem-kaydi` | Chronic-condition record | General practice, General (internal) medicine, Geriatric medicine | no measured input |
+| `birinci-acil-bayrak` | Danger signs | General practice | no measured input |
+| `gebelik-gun` | Days since the last menstrual period | Obstetrics and gynaecology, General practice, Community sexual and reproductive health | no measured input · result in days, weeks |
+| `kardiyo-not` | Cardiology note | Cardiology | Systolic pressure (optional): **mmHg**; Diastolic pressure (optional): **mmHg** · result in mmHg |
+| `inme-bayraklari` | Stroke signs | Neurology | no measured input |
+| `psikiyatri-guvenlik` | Safety signs | General psychiatry, Clinical psychologist, Child and adolescent psychiatry, Old age psychiatry | no measured input |
+| `seans-plani` | Session plan | Rehabilitation medicine, Physiotherapist, Occupational therapist, Podiatrist | no measured input |
+| `icf-ozet` | Functioning summary | Physiotherapist, Occupational therapist, Rehabilitation medicine | no measured input |
+| `greft-tahmini` | Graft count | Hair transplantation | Area: **cm²**; Density: **/cm²** |
+| `sac-bakim-vade` | Hair-transplant reminders | Hair transplantation | no measured input |
+| `estetik-cerrahi-vade` | Cosmetic-surgery reminders | Cosmetic surgery | no measured input |
+| `estetik-islem-vade` | Aesthetic-procedure reminders | Aesthetic medicine | no measured input |
+| `infuzyon-guvenlik` | Infusion safety check | Preventive and longevity medicine | no measured input |
+| `makro-kaydi` | Intake record | Dietitian | Kilocalories: **kcal**; Protein: **g** · result in kcal, g |
+| `sonraki-seans` | Next session | Clinical psychologist, Audiologist, Speech and language therapist | no measured input |
 | `gb-four-at` | 4AT: rapid assessment test for delirium | Emergency medicine, General practice, Anaesthetics, Neurosurgery, Paediatric surgery, General (internal) medicine, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, Gastroenterology, General surgery, Cardio-thoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, Renal medicine, Neurology, Medical oncology, Clinical oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, General psychiatry, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Haematology, Allergy, Genito-urinary medicine, Community sexual and reproductive health, Occupational medicine, Child and adolescent psychiatry, Old age psychiatry, Oral and maxillo-facial surgery, Palliative medicine, Audio vestibular medicine, Hair transplantation, Cosmetic surgery, Aesthetic medicine, Preventive and longevity medicine | no measured input |
 | `gb-fracture-risk-link` | Fracture risk: the FRAX calculator (link) | Emergency medicine, General practice, Anaesthetics, Neurosurgery, Paediatric surgery, General (internal) medicine, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, Gastroenterology, General surgery, Cardio-thoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, Renal medicine, Neurology, Medical oncology, Clinical oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, General psychiatry, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Haematology, Allergy, Genito-urinary medicine, Community sexual and reproductive health, Occupational medicine, Child and adolescent psychiatry, Old age psychiatry, Oral and maxillo-facial surgery, Palliative medicine, Audio vestibular medicine, Hair transplantation, Cosmetic surgery, Aesthetic medicine, Preventive and longevity medicine | no measured input |
 | `gb-valproate-forms` | Valproate: risk acknowledgement form and annual review | Neurology, General psychiatry, Child and adolescent psychiatry, General practice | no measured input |
-| `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthetics, Neurosurgery, Paediatric surgery, General (internal) medicine, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, Gastroenterology, General surgery, Cardio-thoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, Renal medicine, Neurology, Medical oncology, Clinical oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, General psychiatry, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Haematology, Allergy, Genito-urinary medicine, Community sexual and reproductive health, Occupational medicine, Child and adolescent psychiatry, Old age psychiatry, Oral and maxillo-facial surgery, Palliative medicine, Audio vestibular medicine, Hair transplantation, Cosmetic surgery, Aesthetic medicine, Preventive and longevity medicine, Audiologist | no measured input |
+| `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthetics, Neurosurgery, Paediatric surgery, General (internal) medicine, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, Gastroenterology, General surgery, Cardio-thoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, Renal medicine, Neurology, Medical oncology, Clinical oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, General psychiatry, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Haematology, Allergy, Genito-urinary medicine, Community sexual and reproductive health, Occupational medicine, Child and adolescent psychiatry, Old age psychiatry, Oral and maxillo-facial surgery, Palliative medicine, Audio vestibular medicine, Hair transplantation, Cosmetic surgery, Aesthetic medicine, Preventive and longevity medicine, Physiotherapist, Clinical psychologist, Dietitian, Occupational therapist, Audiologist, Podiatrist, Speech and language therapist | no measured input |
 
-### Kept as slots FOR THIS COUNTRY (4) — for a local clinical lead
+### Kept as slots FOR THIS COUNTRY (6) — for a local clinical lead
 
 The shared English set has the words of these tools and the kit has their mechanism; this country keeps them switched off for the reason given.
 
@@ -184,6 +200,8 @@ The shared English set has the words of these tools and the kit has their mechan
 | `kdigo-evre` | General (internal) medicine | The referral lines of the tool follow the list of the KDIGO guideline. The national guideline on chronic kidney disease (NICE NG203) has categories in mg/mmol and a referral list of its own, which the tools audit of 2026-10-10 found different (docs/araclar-denetim/GB.md): a doctor here follows the national list. Needed: a clinical decision on which list the tool shows. Off by the owner's order of 2026-10-10, and it stays off. The two faults the audits found (a risk cell shown when no urine albumin result was typed; referral lines labelled as criteria) were corrected in the kit on 2026-10-10, and the albuminuria limits are now applied as printed for the unit the value was typed in. Still open: the licence of the KDIGO grid is not settled, and no clinician of the United Kingdom has read the tool. Needed: the owner's word. | a clinical lead in the United Kingdom |
 | `kdigo-serit` | Renal medicine | The same grid as the general-medicine kidney tool, without referral lines. The tools audit proposes one kidney tool for this country, not two. Off by the owner's order of 2026-10-10, and it stays off. The two faults the audits found (a risk cell shown when no urine albumin result was typed; referral lines labelled as criteria) were corrected in the kit on 2026-10-10, and the albuminuria limits are now applied as printed for the unit the value was typed in. Still open: the licence of the KDIGO grid is not settled, and no clinician of the United Kingdom has read the tool. Needed: the owner's word. | a clinical lead in the United Kingdom |
 | `rapor-taslagi` | Clinical radiology | The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in the United Kingdom use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. LICENCE, off by the owner's order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded. | the owner, with the rights holder's written permission; then a clinical lead in the United Kingdom |
+| `akne-vade` |  | This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule. | a clinical lead in the United Kingdom |
+| `lazer-vade` |  | This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack. | a clinical lead in the United Kingdom |
 
 ### Slots in every English-speaking country (52) — empty, switched off
 
@@ -278,7 +296,7 @@ Every gate is unticked: a gate is ticked by a person, with a name and a date. Th
 - [ ] 2. No fallback between countries: a missing item hides the feature.
   - Nothing falls back: the pack check finds nothing missing, and a tool this country does not have is a slot, not another country's tool.
 - [ ] 3. Every tool, form, reference and feature declares the countries it is valid in; new ones start off everywhere except where they were built.
-  - Every tool is classified (base, or these roles) and 4 tool(s) of the shared English set are kept off for this country (below).
+  - Every tool is classified (base, or these roles) and 6 tool(s) of the shared English set are kept off for this country (below).
 - [ ] 4. The account carries its country and language, set at sign-up from that country's landing page.
   - As in the kit: country and language are stamped at sign-up. One language form, `en-GB`.
 - [ ] 5. Ayşe answers only from the account's country pack and says so when no national source exists.

@@ -25,7 +25,7 @@ ingilizcePaketSinamasi({
   yabanci: /\b(Medicare|Medicaid|HIPAA|United States|U\.S\.|USD|CAD|AUD|NZD|Canada|Canadian|provincial|Australia|Australian|New Zealand|NHI|health card|ZIP|attending physician|Anesthesiology|Pulmonology|Respirology|Physical therapist)\b|\$/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. The dose calculator was switched back on by his
   // order of the same day, after its fault was corrected in the kit (./araclar.ts).
-  kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   // the tools only this country has, all switched on (./kendiAraclari.ts; ./gb-araclar.test.ts tests each against its source)
   ekAraclar: ['gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
