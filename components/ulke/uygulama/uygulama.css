@@ -39,7 +39,7 @@
 .uza-hesap { margin-left: auto; display: flex; align-items: center; gap: 12px; min-width: 0; }
 .uza-hesap-ad { font-size: 14px; color: var(--uza-soluk); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 34vw; }
 
-.uza-bitki { display: none; }
+.uza-bitki, .uza-bitki-kutu { display: none; }
 
 .uza:has(.uza-nav) {
   display: grid;
@@ -48,6 +48,22 @@
   align-items: start;
   position: relative;
   background: var(--uza-krem);
+  width: 100%;
+  max-width: 100%;
+}
+/* The plant is clipped to the content column, the same way the Turkish chrome clips it
+   (an overflow-hidden layer), so a photo that hangs past the right edge does not widen the page. */
+.uza:has(.uza-nav) .uza-bitki-kutu {
+  display: block;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  min-width: 0;
+  align-self: stretch;
+  min-height: 100%;
 }
 .uza:has(.uza-nav) .uza-bitki {
   display: block;
@@ -232,6 +248,10 @@
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
+  }
+  .uza:has(.uza-nav) .uza-bitki-kutu {
+    grid-column: 1;
+    grid-row: 2;
   }
   .uza:has(.uza-nav) .uza-bitki {
     top: 18rem;
@@ -483,5 +503,5 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-girdi-hata { color: var(--uza-uyari); }
 
 @media print {
-  .uza-ust, .uza-nav, .uza-hesap, .uza-bitki, [data-yazdirma-gizle] { display: none !important; }
+  .uza-ust, .uza-nav, .uza-hesap, .uza-bitki, .uza-bitki-kutu, [data-yazdirma-gizle] { display: none !important; }
 }

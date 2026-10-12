@@ -177,7 +177,11 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
       {/* The same plant the Turkish doctor chrome uses (public/doktor-chrome/plant.jpg). The address goes through
           the country's path prefix; alt stays empty so it is decoration, not a sentence. */}
-      {sade ? null : <img src={ulkeYolu('/doktor-chrome/plant.jpg')} alt="" className="uza-bitki" />}
+      {sade ? null : (
+        <div className="uza-bitki-kutu" aria-hidden="true">
+          <img src={ulkeYolu('/doktor-chrome/plant.jpg')} alt="" className="uza-bitki" />
+        </div>
+      )}
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic">
           <a href={sade ? undefined : onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun} className="uza-marka">{marka()}</a>
