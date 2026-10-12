@@ -135,7 +135,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     const yeniIndex = oku(`countries/${K}/index.ts`)
     assert.match(yeniIndex, /^\s+klinikHesaplari: true,$/m)
     const klinikSekli = (JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as { klinik: Record<string, unknown> }).klinik
-    assert.deepEqual(Object.keys(klinikSekli).sort(), ['davet', 'giris', 'kabuk', 'kayit', 'klinik', 'konum', 'onBuro', 'paylasilan', 'takvim', 'yetki', 'yetkiAciklama', 'yetkiTuru'])
+    assert.deepEqual(Object.keys(klinikSekli).sort(), ['davet', 'giris', 'kabuk', 'kayit', 'klinik', 'konum', 'onBuro', 'paylasilan', 'saklama', 'takvim', 'yetki', 'yetkiAciklama', 'yetkiTuru'])
     const yeniKlinik = oku(`countries/${K}/uygulama/klinikMetinleri.ts`)
     for (const grup of Object.keys(klinikSekli)) assert.match(yeniKlinik, new RegExp(`^  ${grup}: `, 'm'))
     assert.match(yeniKlinik, new RegExp(`^const EN: KlinikMetni = \\{$`, 'm'))
