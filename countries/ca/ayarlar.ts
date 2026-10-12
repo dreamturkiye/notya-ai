@@ -79,6 +79,7 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     tarihOrnegi: 'YYYY-MM-DD',
     // Optional. Not checked against a provincial college or any other register. Not an authorisation.
     meslekKaydiEtiketi: 'Professional registration number',
+    odeme: 'Health card',
   },
   ulkeAdi: 'Canada',
   // UNVERIFIED: the word a senior hospital doctor goes by here.

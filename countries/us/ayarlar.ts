@@ -74,6 +74,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     tarihOrnegi: 'MM/DD/YYYY',
     // Optional, stored on the account, never checked against the NPPES register. Not an authorisation.
     meslekKaydiEtiketi: 'National Provider Identifier',
+    odeme: 'Health plan',
   },
   ulkeAdi: 'the United States',
   // The word a senior hospital doctor goes by here. Source: the glossary of the body that accredits residency

@@ -5,15 +5,17 @@
  * (NOTYA-UZ-RANDEVU-01), today's visits, a patient search, "new patient", "start a visit".
  * Replaces the holding page for accounts of a country where the application is switched on.
  */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, type CSSProperties } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
-import { AsistanKarti } from './Asistan'
+import { AsistanKarti, asistanAdi, asistanSatiri } from './Asistan'
+import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
+import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
 import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { araclarMetni, metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { araclarMetni, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
@@ -60,6 +62,30 @@ export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevul
   )
 }
 
+/** Hour in the account's zone. Bands match the reference clock: night, morning, afternoon, evening. */
+function yerelSaat(tz: string): number {
+  const h = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(new Date())
+  const n = Number(h)
+  return Number.isFinite(n) ? n : 12
+}
+
+function gunSelami(p: NonNullable<UygulamaMetni['pano']>, tz: string): string {
+  const s = yerelSaat(tz)
+  if (s < 5 || s >= 23) return p.gece
+  if (s < 11) return p.sabah
+  if (s < 18) return p.gun
+  return p.aksam
+}
+
+function uzunGun(tz: string): string {
+  return new Intl.DateTimeFormat(ulkePaketi().bicim.yerel, { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz }).format(new Date())
+}
+
+const S = (s: CSSProperties) => s
+const KART: CSSProperties = { background: R.paper, border: `1px solid ${R.border}`, borderRadius: 20, boxShadow: '0 16px 34px rgba(58,44,34,0.06)' }
+const ETIKET: CSSProperties = { fontSize: 14, fontWeight: 700, color: '#4A4030', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }
+const ARAC: CSSProperties = { color: R.pine, fontSize: 13, fontWeight: 600 }
+
 export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
@@ -73,57 +99,202 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   /** Appointment requests from the patient's page. Draws nothing while there is none. */
   istekler?: React.ReactNode
 }) {
+  const p = m.pano
+  const tz = hesapSaatDilimi()
+  const [gorunum, setGorunum] = useState<'bugun' | 'hafta'>('bugun')
+  const dil = metninDili(m)
+  const r = randevuMetni(dil)
+  const arac = ozellikAcik('araclar') ? araclarMetni(dil) : null
+  const bekleyen = (muayeneler ?? []).filter((v) => v.durum === 'taslak').length
+  const onayli = (muayeneler ?? []).filter((v) => v.durum === 'onayli').length
+  const bugunSayi = muayeneler?.length ?? 0
+  const hastaSayi = new Set((muayeneler ?? []).map((v) => v.hastaId).filter(Boolean)).size
+  const asistan = asistanAdi(m, rol)
+  const satir = asistanSatiri(m, rol)
+  const karo = (href: string | null, text: string, not?: string) => {
+    const ic = (
+      <>
+        <span style={S({ fontSize: 14, fontWeight: 600, lineHeight: 1.15 })}>{text}</span>
+        {not ? <span style={S({ fontSize: 11, lineHeight: 1, color: R.muted })}>{not}</span> : null}
+      </>
+    )
+    const stil = S({ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, minHeight: 64, padding: 8, borderRadius: 16, border: '1px solid rgba(30,51,54,0.18)', background: '#d0d8d5', color: R.ink, textAlign: 'left', textDecoration: 'none' })
+    return href ? <a key={text} href={href} style={stil}>{ic}</a> : <span key={text} className="uza-duvar" style={stil}>{ic}</span>
+  }
   return (
-    <>
+    <div className="yg-ana" style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
       <section className="uza-karsilama">
-        <p className="uza-ust-yazi">{m.bugun.selam}</p>
-        <h1 className="uza-h1">{ad}</h1>
+        <p className="uza-ust-yazi">{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</p>
+        <h1 className="uza-h1">{m.bugun.selam}, {ad}</h1>
+        {satir ? (
+          <div style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
+            <span style={S({ color: R.pine, fontWeight: 700 })}>{asistan}:</span> {satir}
+          </div>
+        ) : null}
         <div className="uza-eylemler">
           {HAZIR.muayene ? <a className="uza-dugme" href={YOL.muayene}>{m.bugun.muayeneBaslat}</a> : null}
           <a className={HAZIR.muayene ? 'uza-dugme uza-dugme-cizgi' : 'uza-dugme'} href={YOL.yeniHasta}>{m.bugun.yeniHasta}</a>
         </div>
       </section>
+
+      {p ? (
+        <div className="yg-masa-arac">
+          <h2 style={ETIKET}>{p.hizliAraclar}</h2>
+          <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', ...KART, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
+            <span style={ARAC}>{asistan} ›</span>
+            <span style={ARAC}>{p.epikriz} ›</span>
+            <span style={ARAC}>{p.kodlama} ›</span>
+            {arac ? <a href={YOL.araclar} style={{ ...ARAC, textDecoration: 'none' }}>{arac.izgara.baslik} ›</a> : null}
+          </div>
+        </div>
+      ) : null}
+
+      {p ? (
+        <div className="yg-mobil-ust">
+          <h2 style={S({ ...ETIKET, fontSize: 12, marginBottom: 8 })}>{p.hizliErisim}</h2>
+          <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 })}>
+            {karo(YOL.bugun, m.kabuk.bugun)}
+            {HAZIR.takvim ? karo(YOL.takvim, r.kabuk.takvim) : null}
+            {karo(YOL.hastalar, m.kabuk.hastalar)}
+            {karo(YOL.yeniHasta, m.bugun.yeniHasta)}
+            {karo(null, p.epikriz, p.kodlama)}
+            {karo(null, p.mesajlar)}
+            {karo(null, p.belgeler)}
+            {karo(null, p.raporlar)}
+            {arac ? karo(YOL.araclar, arac.izgara.baslik) : karo(null, p.inceleme)}
+          </div>
+        </div>
+      ) : null}
+
       <AsistanKarti m={m} rol={rol} />
       {mesajlar ?? null}
       {konsultasyon ?? null}
       {istekler ?? null}
-      {HAZIR.takvim && randevular ? <BugunRandevulari m={m} randevular={randevular} /> : null}
+
+      <div className="yg-takvim">
+        {p && HAZIR.takvim ? (
+          <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 })}>
+            <div style={S({ display: 'flex', background: '#EFE9DC', borderRadius: 11, padding: 4, gap: 2 })}>
+              {([['bugun', p.bugun], ['hafta', p.buHafta]] as const).map(([k, v]) => (
+                <button key={k} type="button" onClick={() => setGorunum(k)} style={S({ background: gorunum === k ? R.pine : 'transparent', border: 'none', color: gorunum === k ? '#FAF8F4' : '#4A4030', fontWeight: gorunum === k ? 700 : 600, borderRadius: 8, padding: '9px 18px', fontSize: 13.5, cursor: 'pointer' })}>{v}</button>
+              ))}
+            </div>
+            <div style={S({ display: 'flex', gap: 8, flexWrap: 'wrap' })}>
+              <a href={takvimYolu()} style={S({ background: 'transparent', border: `1.5px solid ${R.border}`, color: R.ink, borderRadius: 999, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, textDecoration: 'none' })}>{r.bugun.takvimiAc}</a>
+              <a href={takvimYolu({ yeni: '1' })} style={S({ background: R.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, textDecoration: 'none' })}>+ {p.randevuEkle}</a>
+            </div>
+          </div>
+        ) : null}
+        {HAZIR.takvim && randevular && (gorunum === 'bugun' || !p) ? <BugunRandevulari m={m} randevular={randevular} /> : null}
+        {p && HAZIR.takvim && gorunum === 'hafta' ? <div style={S({ ...KART, padding: '16px 20px', fontSize: 14, color: R.muted })}>{p.haftaYok}</div> : null}
+        {p && !(HAZIR.takvim && randevular) ? <div style={S({ ...KART, padding: '16px 20px', fontSize: 14, color: R.muted })}>{p.planYok}</div> : null}
+      </div>
+
       <section className="uza-kart">
         <AramaFormu m={m} />
         <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
       </section>
-      {/* NOTYA-ULKE-ARACLAR-01: the way into the tools area from the home screen, where the country has it. */}
-      {ozellikAcik('araclar') ? (() => { const a = araclarMetni(metninDili(m)); return (
+
+      {arac ? (
         <section className="uza-kart" data-alan="bugun-araclar">
           <div className="uza-baslik-satiri" style={{ marginBottom: 0 }}>
-            <h2 className="uza-h2" style={{ marginBottom: 0 }}>{a.izgara.baslik}</h2>
-            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{a.izgara.ac}</a>
+            <h2 className="uza-h2" style={{ marginBottom: 0 }}>{arac.izgara.baslik}</h2>
+            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{arac.izgara.ac}</a>
           </div>
         </section>
-      ) })() : null}
-      <section className="uza-kart">
-        <h2 className="uza-h2">{m.bugun.baslik}</h2>
-        <Hata>{hata ? m.kabuk.hata : null}</Hata>
-        {muayeneler === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : muayeneler.length === 0 ? (
-          <p className="uza-bos">{m.bugun.bos}</p>
-        ) : (
-          <ul className="uza-liste">
-            {muayeneler.map((v) => {
-              // A visit with a note opens the note; one without opens the recorded visit (its transcript).
-              const hedef = !HAZIR.muayene ? (v.hastaId ? `${YOL.hasta}?id=${v.hastaId}` : null) : v.notId ? `${YOL.muayene}?not=${v.notId}` : `${YOL.muayene}?seans=${v.seansId}`
-              const icerik = (
-                <>
-                  <span className="uza-saat">{saatYaz(v.baslangic)}</span>
-                  <span className="uza-liste-ad">{v.hastaAdi || m.bugun.hastasiz}</span>
-                  {v.durum === 'notsuz' ? null : <span className="uza-rozet" data-durum={v.durum}>{v.durum === 'onayli' ? m.durum.onayli : m.durum.taslak}</span>}
-                </>
-              )
-              return <li key={v.seansId}>{hedef ? <a className="uza-satir" href={hedef}>{icerik}</a> : <div className="uza-satir">{icerik}</div>}</li>
+      ) : null}
+
+      {p ? (
+        <div className="yg-kpi" style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 })}>
+          {[
+            { label: p.kpiMuayene, value: muayeneler === null ? null : bugunSayi, color: R.pine, sub: p.kpiMuayeneAlt },
+            { label: p.kpiOnay, value: muayeneler === null ? null : bekleyen, color: '#B4832F', sub: p.kpiOnayAlt },
+            { label: p.kpiAy, value: muayeneler === null ? null : bugunSayi, color: '#4A5C8A', sub: p.kpiAyAlt },
+            { label: p.kpiHasta, value: muayeneler === null ? null : hastaSayi, color: R.pine, sub: p.kpiHastaAlt, href: YOL.hastalar },
+          ].map((c) => {
+            const govde = (
+              <>
+                <div style={S({ fontSize: 13, color: R.muted })}>{c.label}</div>
+                {c.value === null ? <div style={S({ height: 40, width: 60, background: '#EFE9DC', borderRadius: 8, margin: '10px 0 6px' })} /> : <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 40, fontWeight: 600, color: c.color, lineHeight: 1.15, fontVariantNumeric: 'tabular-nums', margin: '4px 0 2px' })}>{c.value}</div>}
+                <div style={S({ fontSize: 12, color: R.muted })}>{c.sub}</div>
+              </>
+            )
+            const stil = S({ ...KART, padding: 22, display: 'block', textDecoration: 'none', color: 'inherit' })
+            return c.href ? <a key={c.label} href={c.href} style={stil}>{govde}</a> : <div key={c.label} style={stil}>{govde}</div>
+          })}
+        </div>
+      ) : null}
+
+      {p ? (
+        <div className="yg-erisim">
+          <div style={ETIKET}>{p.hizliErisim}</div>
+          <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
+            {[
+              HAZIR.takvim ? { href: YOL.takvim, text: r.kabuk.takvim } : null,
+              { href: null, text: asistan },
+              { href: YOL.yeniHasta, text: m.bugun.yeniHasta },
+              arac ? { href: YOL.araclar, text: arac.izgara.baslik } : null,
+              { href: null, text: p.belgeler },
+              { href: null, text: p.inceleme },
+              { href: null, text: p.raporlar },
+              { href: null, text: p.odeme },
+            ].filter((x): x is { href: string | null; text: string } => Boolean(x)).map((k) => {
+              const ic = <span style={S({ fontSize: 13.5, fontWeight: 600 })}>{k.text}</span>
+              const stil = S({ ...KART, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: 16, color: R.ink, textAlign: 'left', textDecoration: 'none' })
+              return k.href ? <a key={k.text} href={k.href} style={stil}>{ic}</a> : <span key={k.text} style={stil}>{ic}</span>
             })}
-          </ul>
-        )}
-      </section>
-    </>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="yg-alt" style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
+        <div className="yg-notlar" style={S({ flex: '1 1 280px', minWidth: 0 })}>
+          <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 })}>
+            <div style={S({ ...ETIKET, margin: 0 })}>{p ? p.onayBekleyen : m.bugun.baslik}</div>
+            {p ? <span style={S({ fontSize: 13, color: R.pine, fontWeight: 600 })}>{p.tumunuGor} ›</span> : null}
+          </div>
+          <div style={S({ ...KART, padding: '8px 20px' })}>
+            <h2 className="uza-h2">{m.bugun.baslik}</h2>
+            <Hata>{hata ? m.kabuk.hata : null}</Hata>
+            {muayeneler === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : muayeneler.length === 0 ? (
+              <p className="uza-bos">{m.bugun.bos}</p>
+            ) : (
+              <ul className="uza-liste">
+                {muayeneler.map((v) => {
+                  const hedef = !HAZIR.muayene ? (v.hastaId ? `${YOL.hasta}?id=${v.hastaId}` : null) : v.notId ? `${YOL.muayene}?not=${v.notId}` : `${YOL.muayene}?seans=${v.seansId}`
+                  const icerik = (
+                    <>
+                      <span className="uza-saat">{saatYaz(v.baslangic)}</span>
+                      <span className="uza-liste-ad">{v.hastaAdi || m.bugun.hastasiz}</span>
+                      {v.durum === 'notsuz' ? null : <span className="uza-rozet" data-durum={v.durum}>{v.durum === 'onayli' ? m.durum.onayli : m.durum.taslak}</span>}
+                    </>
+                  )
+                  return <li key={v.seansId}>{hedef ? <a className="uza-satir" href={hedef}>{icerik}</a> : <div className="uza-satir">{icerik}</div>}</li>
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+        {p ? (
+          <div className="yg-hafta" style={S({ flex: '1 1 240px', minWidth: 0 })}>
+            <div style={S({ ...KART, padding: '20px 20px 18px' })}>
+              <div style={ETIKET}>{p.haftaOzeti}</div>
+              {[
+                { dot: R.pine, label: p.haftaSeans, val: bugunSayi },
+                { dot: '#3F7D4A', label: p.haftaOnay, val: onayli },
+                { dot: '#B4832F', label: p.haftaBekleyen, val: bekleyen },
+              ].map((row, i) => (
+                <div key={row.label} style={S({ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: i < 2 ? `1px solid ${R.border}` : 'none' })}>
+                  <span style={S({ width: 8, height: 8, background: row.dot, borderRadius: '50%' })} />
+                  <span style={S({ flex: 1, fontSize: 14, color: R.ink })}>{row.label}</span>
+                  <span style={S({ fontSize: 15, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: R.ink })}>{row.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
@@ -145,7 +316,7 @@ export default function Bugun() {
 
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
-    <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="bugun" cikis={u.cikis}>
+    <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="bugun" cikis={u.cikis}>
       <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} />
     </Cerceve>
   )

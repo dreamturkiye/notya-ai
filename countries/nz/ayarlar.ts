@@ -132,6 +132,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     tarihOrnegi: 'DD/MM/YYYY',
     // Optional. Not checked against the Medical Council or any other register. Not an authorisation.
     meslekKaydiEtiketi: 'Professional registration number',
+    odeme: 'NHI',
   },
   ulkeAdi: 'New Zealand',
   // The word a senior doctor goes by here. SOURCE-CHECKED: the medical council describes vocational registration as

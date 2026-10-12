@@ -89,16 +89,16 @@ function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: stri
     <section id={c.ust} className="relative bg-paper">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:pb-14 lg:pt-28">
         <div className="min-w-0">
-          <p className="uzl-reveal flex items-center gap-3 font-outfit text-xs uppercase tracking-[0.28em] text-ink-muted">
+          <p className="dl-reveal flex items-center gap-3 font-outfit text-xs uppercase tracking-[0.28em] text-ink-muted">
             <span className="inline-block size-1.5 shrink-0 bg-pine" aria-hidden="true" />
             {t.ustBaslik}
           </p>
-          <h1 className="uzl-reveal mt-5 font-display text-hero font-medium leading-hero tracking-hero">
+          <h1 className="dl-reveal mt-5 font-display text-hero font-medium leading-hero tracking-hero">
             {t.baslik}
             <span className="mt-1 block italic font-normal text-pine">{t.baslikVurgu}</span>
           </h1>
-          <p className="uzl-reveal mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{t.giris}</p>
-          <div className="uzl-reveal mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <p className="dl-reveal mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{t.giris}</p>
+          <div className="dl-reveal mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Button href={`#${c.sorov}`} variant="pine" size="lg" className="w-full sm:w-auto">
               {t.birinciDugme}
               <ArrowUpRight className="size-4" />

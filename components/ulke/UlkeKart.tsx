@@ -28,6 +28,7 @@ export function UlkeKart({
   altBaslik,
   diller,
   anaSayfa,
+  genislik = 420,
   children,
 }: {
   dil: DilKodu
@@ -37,13 +38,15 @@ export function UlkeKart({
   diller?: readonly DilSecenegi[]
   /** Link back to the landing page. */
   anaSayfa?: { href: string; ad: string }
+  /** Card width. Sign-in uses 420; sign-up uses 440, the same widths as the reference cards. */
+  genislik?: number
   children: ReactNode
 }) {
   return (
     <div lang={dil} style={{ minHeight: '100dvh', background: R.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', fontFamily: CHROME_FONT.sans, color: R.ink, boxSizing: 'border-box' }}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
-      <div style={{ width: '100%', maxWidth: 420 }}>
+      <div style={{ width: '100%', maxWidth: genislik }}>
         <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(28px, 6vw, 44px)', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <a href={anaSayfa?.href ?? ulkeYolu('/')} style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1, textDecoration: 'none' }}>Notya</a>

@@ -135,36 +135,63 @@
   background-color: rgb(243 246 245 / 0.92);
 }
 
-.uzl-reveal {
-  animation: uzl-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+/* Motion, copied from the reference landing and scoped under .uzl. */
+.uzl .dl-ticker {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
 }
 
-.uzl-caret {
+.uzl .dl-marquee {
+  animation: dl-marquee 42s linear infinite;
+}
+
+.uzl .dl-listen-bar {
+  animation: dl-listen 1.1s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.uzl .dl-reveal {
+  animation: dl-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.uzl .dl-caret {
   display: inline-block;
   width: 0.45em;
   height: 1em;
   margin-left: 0.08em;
   background: currentColor;
   vertical-align: -0.12em;
-  animation: uzl-caret 1s steps(1) infinite;
+  animation: dl-caret 1s steps(1) infinite;
 }
 
-@keyframes uzl-reveal {
+@keyframes dl-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes dl-listen {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes dl-reveal {
   from { opacity: 0; transform: translateY(12px); filter: blur(6px); }
   to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
-@keyframes uzl-caret {
+@keyframes dl-caret {
   0%, 45% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .uzl-reveal,
-  .uzl-caret {
+  .uzl .dl-marquee,
+  .uzl .dl-listen-bar,
+  .uzl .dl-reveal,
+  .uzl .dl-caret {
     animation: none;
   }
-  .uzl-reveal {
+  .uzl .dl-reveal {
     opacity: 1;
     filter: none;
     transform: none;

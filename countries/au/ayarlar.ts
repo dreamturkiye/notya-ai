@@ -75,6 +75,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     tarihOrnegi: 'DD/MM/YYYY',
     // Optional. Not checked against the AHPRA register. Not an authorisation.
     meslekKaydiEtiketi: 'AHPRA registration number',
+    odeme: 'Medicare',
   },
   ulkeAdi: 'Australia',
   // The word a senior doctor goes by here: the Medical Board registers "specialists" (specialist registration; a

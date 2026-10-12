@@ -9,7 +9,7 @@ import React, { useEffect, useState, type FormEvent, type ReactNode } from 'reac
 import { AramaFormu } from './Bugun'
 import { Bilgi, Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { dilAdi, dilBirlestir, metninDili, randevuMetni, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { dilAdi, dilBirlestir, metninDili, randevuMetni, rolAdi, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { PortalErisimKarti } from './PortalErisimi'
 import { HastaFormuKarti } from './HastaFormuKarti'
@@ -45,30 +45,29 @@ export function yasYaz(m: UygulamaMetni, dogumTarihi: string, bugun: Date = new 
 
 export function HastalarGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q: string; hastalar: HastaKaydi[] | null; hata: boolean }) {
   return (
-    <section className="uza-kart">
+    <div className="yg-sayfa">
       <div className="uza-baslik-satiri">
         <h1 className="uza-h1">{m.hastalar.baslik}</h1>
-        <a className="uza-dugme" href={YOL.yeniHasta}>{m.bugun.yeniHasta}</a>
+        <a className="uza-dugme" href={YOL.yeniHasta} style={{ borderRadius: 999, background: 'var(--uza-cam)', color: '#FAF8F4', padding: '10px 18px', minHeight: 0 }}>+ {m.bugun.yeniHasta}</a>
       </div>
       <AramaFormu m={m} q={q} />
       <Hata>{hata ? m.kabuk.hata : null}</Hata>
       {hastalar === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : hastalar.length === 0 ? (
         <p className="uza-bos">{q ? m.arama.sonucYok : m.hastalar.bos}</p>
       ) : (
-        <ul className="uza-liste" style={{ marginTop: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {hastalar.map((h) => (
-            <li key={h.id}>
-              <a className="uza-satir" href={`${YOL.hasta}?id=${h.id}`} aria-label={`${m.hastalar.dosya}: ${tamAd(h)}`}>
-                <span className="uza-liste-ad">
-                  {tamAd(h)}
-                  <span className="uza-liste-alt">{[tarihYaz(h.dogumTarihi), h.telefon].filter(Boolean).join(' · ')}</span>
-                </span>
-              </a>
-            </li>
+            <a key={h.id} className="yg-satir" href={`${YOL.hasta}?id=${h.id}`} aria-label={`${m.hastalar.dosya}: ${tamAd(h)}`}>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontWeight: 600 }}>{tamAd(h)}</span>
+                <span className="uza-liste-alt" style={{ display: 'block', color: 'var(--uza-soluk)', fontSize: 13, marginTop: 4 }}>{[tarihYaz(h.dogumTarihi), h.telefon].filter(Boolean).join(' · ')}</span>
+              </span>
+              {m.pano ? <span style={{ color: '#3F7D4A', flexShrink: 0, fontSize: 13, fontWeight: 600 }}>{m.pano.aktif}</span> : null}
+            </a>
           ))}
-        </ul>
+        </div>
       )}
-    </section>
+    </div>
   )
 }
 
@@ -92,7 +91,7 @@ export function Hastalar() {
 
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
-    <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
+    <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="hastalar" cikis={u.cikis}>
       <HastalarGorunumu key={q} m={u.m} q={q} hastalar={hastalar} hata={hata} />
     </Cerceve>
   )
@@ -184,7 +183,7 @@ export function YeniHasta() {
   }
 
   return (
-    <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="hastalar" cikis={u.cikis}>
+    <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="hastalar" cikis={u.cikis}>
       <YeniHastaGorunumu m={u.m} dil={u.dil} a={a} set={(yeni) => { setA(yeni); setHata(null) }} gonder={gonder} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} />
     </Cerceve>
   )
@@ -348,7 +347,7 @@ export function HastaDosyasi() {
   }
 
   return (
-    <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="hastalar" cikis={u.cikis}>
+    <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="hastalar" cikis={u.cikis}>
       {durum === 'tamam' && veri ? <>
         <Bilgi>{kaydedildi ? u.m.hasta.duzenlendi : null}</Bilgi>
         {duzenleme ? <YeniHastaGorunumu m={u.m} dil={u.dil} a={alanlar} set={(yeni) => { setAlanlar(yeni); setHata(null) }} gonder={duzenleKaydet} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} baslik={u.m.hasta.duzenle} iptal={() => { setDuzenleme(false); setHata(null) }} /> : null}

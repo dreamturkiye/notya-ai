@@ -14,7 +14,7 @@ import { Bilgi, Cerceve, Hata, useUygulama, Yukleniyor, type Hesap } from './Kab
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolSecimi } from './RolFormu'
 import { asistanAdi } from './Asistan'
-import { dilBirlestir, dilSecimiVarMi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -31,8 +31,10 @@ export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc }: {
   m: UygulamaMetni; d: AyarDurumu; set: (d: AyarDurumu) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
 }) {
   return (
-    <section className="uza-kart uza-dar">
+    <section className="uza-kart uza-dar yg-sayfa">
+      {m.pano ? <div className="yg-kicker">{m.pano.ayarKas}</div> : null}
       <h1 className="uza-h1">{m.ayarlar.baslik}</h1>
+      {m.pano ? <p className="uza-aciklama" style={{ marginTop: 0 }}>{m.pano.ayarAciklama}</p> : null}
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <DilSecimi etiket={m.ayarlar.arayuzDili} ad="arayuz" deger={d.arayuz} yazi={d.yazi} sec={(arayuz) => set({ ...d, arayuz })} />
         <DilSecimi etiket={m.ayarlar.notDili} ad="not" deger={d.not} yazi={d.yazi} sec={(not) => set({ ...d, not })} />
@@ -183,12 +185,19 @@ export default function Ayarlar() {
   }
 
   return (
-    <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="ayarlar" cikis={u.cikis} onBuro={u.hesap.onBuro}>
+    <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="ayarlar" cikis={u.cikis} onBuro={u.hesap.onBuro}>
       {/* The page's heading sits in the language section. A country with one language form has no such section: the heading stands alone. */}
       {dilSecimiVarMi() ? <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : <div className="uza-dar"><h1 className="uza-h1">{u.m.ayarlar.baslik}</h1></div>}
       {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
       {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
       <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
+      {u.m.pano ? (
+        <div className="yg-sayfa">
+          {[u.m.pano.odeme, u.m.pano.belgeler, u.m.pano.raporlar, u.m.pano.inceleme].map((ad) => (
+            <div key={ad} className="yg-satir"><span style={{ flex: 1, fontWeight: 700 }}>{ad}</span><span style={{ color: '#C9BEA9' }}>›</span></div>
+          ))}
+        </div>
+      ) : null}
     </Cerceve>
   )
 }

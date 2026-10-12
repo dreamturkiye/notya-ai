@@ -65,7 +65,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
 
   if (tamam) {
     return (
-      <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }}>
+      <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }} genislik={440}>
         <div role="status" style={S.bilgi}>{metin.basarili}</div>
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <a href={giris} style={S.cizgiDugme}>{metin.girisBaglantisi}</a>
@@ -75,7 +75,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
   }
 
   return (
-    <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }}>
+    <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }} genislik={440}>
       <p style={{ margin: '0 0 18px', fontSize: 14, color: R.muted, textAlign: 'center', lineHeight: 1.5 }}>{metin.aciklama}</p>
       <form onSubmit={gonder} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {kodGerekli ? (

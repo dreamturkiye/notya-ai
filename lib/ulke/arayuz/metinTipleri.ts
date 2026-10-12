@@ -21,6 +21,14 @@ export type UygulamaMetni = {
     readonly hata: string
     readonly baglanti: string
     readonly geri: string
+    /** Sidebar group above the daily screens. Optional: a pack written before the slot still type-checks. */
+    readonly calismaAlani?: string
+    /** Sidebar group above tools and settings. */
+    readonly diger?: string
+    /** Small capitals under the word mark for a doctor. */
+    readonly kas?: string
+    /** Small capitals under the word mark for a front-desk account. */
+    readonly onBuroKas?: string
   }
   /** The name of each language of the country (key: the language's code in the pack's `dilGruplari`, e.g. 'uz', 'en'). */
   readonly diller: Readonly<Record<string, string>>
@@ -73,6 +81,49 @@ export type UygulamaMetni = {
     readonly muayeneBaslat: string
     readonly hastasiz: string
     readonly tumHastalar: string
+  }
+  /**
+   * The signed-in home, the patient list and the settings door, in the same slots as the reference layout.
+   * Optional: a pack that has not filled it keeps the earlier home. Every sentence is the country's own.
+   * `odeme` is that country's payer (the slot a national payer occupies), never another country's.
+   */
+  readonly pano?: {
+    readonly sabah: string
+    readonly gun: string
+    readonly aksam: string
+    readonly gece: string
+    readonly hizliAraclar: string
+    readonly hizliErisim: string
+    readonly bugun: string
+    readonly buHafta: string
+    readonly randevuEkle: string
+    readonly haftaYok: string
+    readonly planYok: string
+    readonly kpiMuayene: string
+    readonly kpiMuayeneAlt: string
+    readonly kpiOnay: string
+    readonly kpiOnayAlt: string
+    readonly kpiAy: string
+    readonly kpiAyAlt: string
+    readonly kpiHasta: string
+    readonly kpiHastaAlt: string
+    readonly haftaOzeti: string
+    readonly haftaSeans: string
+    readonly haftaOnay: string
+    readonly haftaBekleyen: string
+    readonly tumunuGor: string
+    readonly onayBekleyen: string
+    readonly epikriz: string
+    readonly kodlama: string
+    readonly raporlar: string
+    readonly mesajlar: string
+    readonly belgeler: string
+    readonly inceleme: string
+    readonly odeme: string
+    readonly aktif: string
+    readonly pasif: string
+    readonly ayarKas: string
+    readonly ayarAciklama: string
   }
   readonly hastalar: {
     readonly baslik: string
