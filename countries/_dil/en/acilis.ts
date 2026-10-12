@@ -8,15 +8,15 @@
  *
  * The LAYOUT is the kit's (components/ulke/acilis/): the same sections, in the same order, for every country. What
  * the sections SAY is written here FOR THE ENGLISH-SPEAKING BUILDS, and it describes ONLY WHAT SUCH A BUILD DOES:
- * recording a visit, a drafted note the doctor approves, role templates, the calendar, the patient's page, the form
- * before a visit, the tools area with the follow-up list. Nothing of the pre-split application that a country build
- * does not have is promised (no spoken assistant, no consultation between colleagues, no messaging, no reminders
- * sent by the system, no learning of a doctor's habits, no dose warnings).
+ * recording a visit, a drafted note the doctor approves, role templates, the calendar, the patient's page, messages
+ * kept on that page, the form before a visit, the tools area with the follow-up list, and a clinic account with a
+ * front desk. Nothing of the pre-split application that a country build does not have is promised (no spoken
+ * assistant, no consultation between colleagues, no doctor's own text templates, no reminders sent by the system,
+ * no learning of a doctor's habits, no dose warnings).
  *
- * THE CLINIC PAGE (`/for-clinics`) uses the Turkish clinic page's section inventory. It describes only what an
- * English-speaking build does for a clinic: one account per clinician, each seeing only their own patients, a page
- * for each patient, the discipline's note and tools. It does not claim a shared front desk, team permissions,
- * messaging or a free trial. Discipline names are the pack's own clinic-side roles, filled in `enAcilis`.
+ * THE CLINIC PAGE (`/for-clinics`) uses the Turkish clinic page's section inventory. It describes a clinic account:
+ * positions, permissions a clinician grants, and a front desk that sees only what was granted. It does not claim a
+ * free trial. Discipline names are the pack's own clinic-side roles, filled in `enAcilis`.
  *
  * STANDING RULES (checked by ./acilis.test.ts and by each pack's own test):
  *   - NO CLAIM of compliance with any law or standard, of approval, clearance or certification by any authority, of
@@ -147,11 +147,11 @@ const TEMEL: AcilisIcerigi = {
     ustBaslik: '03 — Patient\'s page',
     baslik: 'A page of their own',
     baslikVurgu: 'for each patient.',
-    govde: 'You give a patient a link and a PIN. On their page: coming appointments, the summaries you chose to share, a request for an appointment, and the form before a visit. No app to install.',
-    maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'The system sends nothing: you give the link and the PIN yourself'],
+    govde: 'You give a patient a link and a PIN. On their page: coming appointments, the summaries you chose to share, a request for an appointment, the form before a visit, and messages you write, which they read and answer there. No app to install.',
+    maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'A message stays on the page: nothing is sent out, and you tell the patient'],
     kart: {
       etiket: 'Patient\'s page',
-      satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'The form before a visit' }],
+      satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'Messages you write' }, { k: 'The form before a visit' }],
       not: 'One link and a PIN. No app.',
     },
   },
@@ -220,7 +220,7 @@ const TEMEL: AcilisIcerigi = {
     dalillar: [
       { k: 'Separate access', v: 'Each doctor sees only their own patients.' },
       { k: 'The doctor\'s approval', v: 'A note, and everything a patient sees, passes your approval first.' },
-      { k: 'Nothing sent by itself', v: 'The system sends no message to a patient: you send what you choose.' },
+      { k: 'Nothing sent by itself', v: 'The system sends nothing out. A message stays on the patient\'s page, and you tell the patient it is there.' },
       { k: 'Decision support', v: '%M supports your decisions; diagnosis and treatment are the doctor\'s.' },
     ],
   },
@@ -238,13 +238,13 @@ const TEMEL: AcilisIcerigi = {
       {
         id: GRUP.solo,
         ad: 'Doctor',
-        rejalar: [{ id: EN_PLANLAR.doctor, ad: 'One doctor', maddeler: ['A visit recorded with consent, and a drafted note', 'The note template of your specialty', 'Unclear places marked, never guessed', 'Calendar, working hours, and a reminder text you send yourself', 'A protected page for each patient', 'The form before a visit', 'The tools of your specialty and the follow-up dates you set'] }],
+        rejalar: [{ id: EN_PLANLAR.doctor, ad: 'One doctor', maddeler: ['A visit recorded with consent, and a drafted note', 'The note template of your specialty', 'Unclear places marked, never guessed', 'Calendar, working hours, and a reminder text you send yourself', 'A protected page for each patient', 'Messages with a patient, kept on their page', 'The form before a visit', 'The tools of your specialty and the follow-up dates you set'] }],
         izoh: 'Accounts are opened by invitation code for now. Prices are given by quote.',
       },
       {
         id: GRUP.clinic,
         ad: 'Clinic',
-        rejalar: [{ id: EN_PLANLAR.clinic, ad: 'Clinic', maddeler: ['An account for each doctor and health professional', 'Each account sees only its own patients', 'The note, the page and the tools of that account\'s discipline', 'A quote for the number of accounts'] }],
+        rejalar: [{ id: EN_PLANLAR.clinic, ad: 'Clinic', maddeler: ['An account for each doctor and health professional', 'Positions, and permissions a clinician grants', 'A front desk that sees only what was granted', 'Each account sees only its own patients, unless a permission says otherwise', 'The note, the page and the tools of that account\'s discipline', 'A quote for the number of accounts'] }],
         izoh: 'Accounts are opened by invitation code for now. The price depends on the number of accounts.',
       },
     ],
@@ -316,11 +316,11 @@ const TEMEL: AcilisIcerigi = {
       ustBaslik: '01 — Patient\'s page',
       baslik: 'A page of their own,',
       baslikVurgu: 'for every patient.',
-      govde: 'Coming appointments, the summaries you chose to share, a request for an appointment, and the form before a visit, on one link and a PIN. No app to install.',
-      maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'You give the link and the PIN yourself'],
+      govde: 'Coming appointments, the summaries you chose to share, a request for an appointment, messages kept on the page, and the form before a visit, on one link and a PIN. No app to install.',
+      maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'You give the link and the PIN yourself', 'A message stays on the page: nothing is sent out'],
       kart: {
         etiket: 'Patient\'s page',
-        satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'The form before a visit' }],
+        satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'Messages' }, { k: 'The form before a visit' }],
         not: 'One link and a PIN. No app.',
       },
     },

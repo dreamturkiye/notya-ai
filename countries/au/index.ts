@@ -11,7 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
+import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -48,8 +50,9 @@ export const AU_PAKETI: UlkePaketi = {
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
   // below). `hane: 0` = no length is assumed. The label is the national data element's name (./ayarlar.ts).
   ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
-  // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
-  // profile, image evaluation, consultation, messaging) is off.
+  // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
+  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
+  // consultation between doctors, and a doctor's own templates.
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -60,11 +63,13 @@ export const AU_PAKETI: UlkePaketi = {
     hastaPortali: true,
     hastaFormu: true,
     araclar: true,
+    hastaMesajlari: true,
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
@@ -97,6 +102,8 @@ export const AU_PAKETI: UlkePaketi = {
     // Not yet confirmed by a person of the country. The national health advice line is NOT named: the patient's page
     // has one place for one number. null here = the patient's page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '000' },
+    mesaj: enMesajAyarlari('Australia'),
+    klinikHesaplari: enKlinikHesaplari(AU_ROL_LISTESI),
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-AU' }] }],
     // Several time zones: an account chooses its own (settings). One zone for each state's and mainland territory's

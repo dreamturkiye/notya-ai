@@ -11,7 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
+import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { NZ_BIRIMLER, NZ_ROLLER, NZ_VELI_YASI } from './ayarlar'
 
 const cekirdek = enCekirdek('en-NZ')
@@ -66,8 +68,9 @@ export const NZ_PAKETI: UlkePaketi = {
   // below). `hane: 0` = no length is assumed. The label ("NHI number") is source-checked wording (./ayarlar.ts).
   // An NHI number holds LETTERS and digits (seven characters, two forms): nothing here may assume digits only.
   ulusalKimlik: { ad: 'NHI number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
-  // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
-  // profile, image evaluation, consultation, messaging) is off.
+  // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
+  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
+  // consultation between doctors, and a doctor's own templates.
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -78,11 +81,13 @@ export const NZ_PAKETI: UlkePaketi = {
     hastaPortali: true,
     hastaFormu: true,
     araclar: true,
+    hastaMesajlari: true,
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
@@ -116,6 +121,8 @@ export const NZ_PAKETI: UlkePaketi = {
     // New Zealand before any patient sees the portal. null here = the patient's page names no number.
     // (The free health advice line is a different number and the kit has no place for it: see the audit document.)
     portal: { baglantiGecerlilikGun: 30, acilNumara: '111' },
+    mesaj: enMesajAyarlari('New Zealand'),
+    klinikHesaplari: enKlinikHesaplari(NZ_ROLLER),
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-NZ' }] }],
     // Two time zones (the main islands and the Chatham Islands): an account chooses its own (settings).

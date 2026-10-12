@@ -10,6 +10,7 @@ import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './K
 import { AsistanKarti } from './Asistan'
 import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
+import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { araclarMetni, metninDili, randevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
@@ -59,7 +60,7 @@ export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevul
   )
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -69,6 +70,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   mesajlar?: React.ReactNode
   /** NOTYA-ULKE-MESAJ-01: how many consultations wait for this doctor's answer, where the country has consultation. Draws nothing while none waits. */
   konsultasyon?: React.ReactNode
+  /** Appointment requests from the patient's page. Draws nothing while there is none. */
+  istekler?: React.ReactNode
 }) {
   return (
     <>
@@ -83,6 +86,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       <AsistanKarti m={m} rol={rol} />
       {mesajlar ?? null}
       {konsultasyon ?? null}
+      {istekler ?? null}
       {HAZIR.takvim && randevular ? <BugunRandevulari m={m} randevular={randevular} /> : null}
       <section className="uza-kart">
         <AramaFormu m={m} />
@@ -142,7 +146,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} />
     </Cerceve>
   )
 }

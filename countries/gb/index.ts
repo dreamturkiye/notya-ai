@@ -11,7 +11,9 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
+import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
 import { GB_ROLLER } from './roller'
 
@@ -48,8 +50,9 @@ export const GB_PAKETI: UlkePaketi = {
   // below). `hane: 0` = no length is assumed. The label names the identifiers of all four nations (./temel.ts):
   // unverified wording, and whether a private clinic may record one is for a lawyer.
   ulusalKimlik: { ad: GB_KIMLIK_ETIKETI, hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
-  // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
-  // profile, image evaluation, consultation, messaging) is off.
+  // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
+  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
+  // consultation between doctors, and a doctor's own templates.
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -60,11 +63,13 @@ export const GB_PAKETI: UlkePaketi = {
     hastaPortali: true,
     hastaFormu: true,
     araclar: true,
+    hastaMesajlari: true,
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The country's code is `gb`; the path it is served under is /uk.
@@ -97,6 +102,8 @@ export const GB_PAKETI: UlkePaketi = {
     // (https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/). The non-emergency line
     // (111 in England, Scotland and Wales; none of that kind in Northern Ireland) has no place in the kit: reported.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '999' },
+    mesaj: enMesajAyarlari('the United Kingdom'),
+    klinikHesaplari: enKlinikHesaplari(GB_ROLLER),
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-GB' }] }],
     // One time zone in the country: no account is asked.

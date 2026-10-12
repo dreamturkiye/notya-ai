@@ -191,7 +191,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.equal(paket.uygulama!.kayitAcik, false)
     })
     it('only what the country kit has built is switched on', () => {
-      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaPortali', 'randevu'])
+      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', 'randevu'])
       assert.deepEqual([...paket.araclar], [])
     })
   })
@@ -382,6 +382,29 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     })
     it('who wrote the tool texts: a machine; which clinician read them: nobody yet', () => {
       assert.deepEqual(a.inceleme, { makineYazimi: true, klinisyen: null })
+    })
+    it('messages and clinic accounts are on; templates and consultation stay off', () => {
+      assert.equal(paket.ozellikler.hastaMesajlari, true)
+      assert.equal(paket.ozellikler.klinikHesaplari, true)
+      assert.equal('hekimSablonlari' in paket.ozellikler, false)
+      assert.equal('konsultasyon' in paket.ozellikler, false)
+      assert.ok(arayuz.mesajMetinleri?.[bicim])
+      assert.ok(arayuz.klinikMetinleri?.[bicim])
+      assert.equal(arayuz.sablonMetinleri, undefined)
+      assert.equal(arayuz.konsultasyonMetinleri, undefined)
+      assert.equal(paket.uygulama?.mesaj?.disBildirim.acik, false)
+      assert.equal(paket.uygulama?.mesaj?.disBildirim.saglayici, null)
+      assert.equal(paket.uygulama?.klinikHesaplari?.inceleme.makineYazimi, true)
+      assert.equal(paket.uygulama?.klinikHesaplari?.inceleme.hukukcu, null)
+      assert.equal(paket.uygulama?.klinikHesaplari?.sahipHekimAdinaVerebilir, false)
+      assert.equal(paket.uygulama?.klinikHesaplari?.kayitSaklama, null)
+      if (paket.rotalar !== 'hepsi') {
+        assert.ok(paket.rotalar.sayfalar.includes('/clinic'))
+        assert.ok(paket.rotalar.sayfalar.includes('/desk'))
+      }
+      const muttefik = arayuz.roller.filter((r) => r.taraf === 'klinik-muttefik').map((r) => r.anahtar)
+      assert.deepEqual([...(paket.uygulama?.klinikHesaplari?.paylasimRolleri ?? [])], muttefik)
+      assert.ok(muttefik.length >= 5, 'the shared allied professions, plus any this country adds')
     })
   })
 

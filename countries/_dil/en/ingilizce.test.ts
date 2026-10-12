@@ -28,6 +28,8 @@ import { EN_FORM_RIZASI, EN_ROL_SORULARI, enHastaFormu } from './klinik/hastaFor
 import { EN_ALANLAR, EN_ROL_ALANLARI, enNotSablonlari } from './klinik/notSablonlari'
 import { EN_ROL_SATIRLARI, EN_ROLLER, enRolTanimlari } from './klinik/roller'
 import { EN_TALIMAT_TEMEL, enTalimatlar } from './klinik/talimatlar'
+import { EN_KLINIK_METIN_TEMEL } from './klinikMetinleri'
+import { EN_MESAJ_TEMEL } from './mesaj'
 import { EN_PORTAL_TEMEL } from './portal'
 import { EN_RANDEVU_TEMEL } from './randevu'
 import { KELIMELER, KORUNAN } from './sozluk'
@@ -41,6 +43,8 @@ const TEMEL = {
   uygulama: EN_UYGULAMA_TEMEL,
   randevu: EN_RANDEVU_TEMEL,
   portal: EN_PORTAL_TEMEL,
+  mesaj: EN_MESAJ_TEMEL,
+  klinikMetin: EN_KLINIK_METIN_TEMEL,
   form: EN_FORM_TEMEL,
   araclarMetni: EN_ARACLAR_METNI_TEMEL,
   roller: Object.fromEntries(EN_ROL_SATIRLARI.map((r) => [r.anahtar, r.ad])),
