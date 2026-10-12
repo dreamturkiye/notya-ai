@@ -7,7 +7,7 @@
  */
 import React, { useEffect, useState, type CSSProperties } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
-import { AsistanKarti, asistanAdi, asistanSatiri } from './Asistan'
+import { asistanAdi, asistanSatiri } from './Asistan'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { OkunmamisMesajlarKarti } from './HastaMesajlari'
@@ -131,10 +131,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             <span style={S({ color: R.pine, fontWeight: 700 })}>{asistan}:</span> {satir}
           </div>
         ) : null}
-        <div className="uza-eylemler">
-          {HAZIR.muayene ? <a className="uza-dugme" href={YOL.muayene}>{m.bugun.muayeneBaslat}</a> : null}
-          <a className={HAZIR.muayene ? 'uza-dugme uza-dugme-cizgi' : 'uza-dugme'} href={YOL.yeniHasta}>{m.bugun.yeniHasta}</a>
-        </div>
       </section>
 
       {p ? (
@@ -166,11 +162,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         </div>
       ) : null}
 
-      <AsistanKarti m={m} rol={rol} />
-      {mesajlar ?? null}
-      {konsultasyon ?? null}
-      {istekler ?? null}
-
       <div className="yg-takvim">
         {p && HAZIR.takvim ? (
           <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 })}>
@@ -187,22 +178,12 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         ) : null}
         {HAZIR.takvim && randevular && (gorunum === 'bugun' || !p) ? <BugunRandevulari m={m} randevular={randevular} /> : null}
         {p && HAZIR.takvim && gorunum === 'hafta' ? <div style={S({ ...KART, padding: '16px 20px', fontSize: 14, color: R.muted })}>{p.haftaYok}</div> : null}
-        {p && !(HAZIR.takvim && randevular) ? <div style={S({ ...KART, padding: '16px 20px', fontSize: 14, color: R.muted })}>{p.planYok}</div> : null}
+        {p && !(HAZIR.takvim && randevular) ? <div style={S({ ...KART, padding: '6px 20px' })}><div style={S({ padding: '16px 0', fontSize: 14, color: R.muted })}>{p.planYok}</div></div> : null}
       </div>
 
-      <section className="uza-kart">
-        <AramaFormu m={m} />
-        <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
-      </section>
-
-      {arac ? (
-        <section className="uza-kart" data-alan="bugun-araclar">
-          <div className="uza-baslik-satiri" style={{ marginBottom: 0 }}>
-            <h2 className="uza-h2" style={{ marginBottom: 0 }}>{arac.izgara.baslik}</h2>
-            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{arac.izgara.ac}</a>
-          </div>
-        </section>
-      ) : null}
+      {mesajlar ?? null}
+      {konsultasyon ?? null}
+      {istekler ?? null}
 
       {p ? (
         <div className="yg-kpi" style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 })}>
@@ -238,8 +219,13 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
               { href: null, text: p.inceleme },
               { href: null, text: p.raporlar },
               { href: null, text: p.odeme },
-            ].filter((x): x is { href: string | null; text: string } => Boolean(x)).map((k) => {
-              const ic = <span style={S({ fontSize: 13.5, fontWeight: 600 })}>{k.text}</span>
+            ].concat(HAZIR.muayene ? [{ href: YOL.muayene, text: m.bugun.muayeneBaslat }] : []).filter((x): x is { href: string | null; text: string } => Boolean(x)).map((k) => {
+              const ic = (
+                <>
+                  <span style={S({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: '#E4F3F1' })} />
+                  <span style={S({ fontSize: 13.5, fontWeight: 600 })}>{k.text}</span>
+                </>
+              )
               const stil = S({ ...KART, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: 16, color: R.ink, textAlign: 'left', textDecoration: 'none' })
               return k.href ? <a key={k.text} href={k.href} style={stil}>{ic}</a> : <span key={k.text} style={stil}>{ic}</span>
             })}
@@ -294,6 +280,19 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           </div>
         ) : null}
       </div>
+
+      <section className="uza-kart yg-arama">
+        <AramaFormu m={m} />
+        <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
+      </section>
+      {arac ? (
+        <section className="uza-kart" data-alan="bugun-araclar">
+          <div className="uza-baslik-satiri" style={{ marginBottom: 0 }}>
+            <h2 className="uza-h2" style={{ marginBottom: 0 }}>{arac.izgara.baslik}</h2>
+            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{arac.izgara.ac}</a>
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }

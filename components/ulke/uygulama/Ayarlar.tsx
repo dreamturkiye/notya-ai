@@ -31,7 +31,7 @@ export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc }: {
   m: UygulamaMetni; d: AyarDurumu; set: (d: AyarDurumu) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
 }) {
   return (
-    <section className="uza-kart uza-dar yg-sayfa">
+    <section className="yg-sayfa yg-ayar-baslik">
       {m.pano ? <div className="yg-kicker">{m.pano.ayarKas}</div> : null}
       <h1 className="uza-h1">{m.ayarlar.baslik}</h1>
       {m.pano ? <p className="uza-aciklama" style={{ marginTop: 0 }}>{m.pano.ayarAciklama}</p> : null}
@@ -186,18 +186,20 @@ export default function Ayarlar() {
 
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="ayarlar" cikis={u.cikis} onBuro={u.hesap.onBuro}>
+      <div className="yg-ayarlar">
       {/* The page's heading sits in the language section. A country with one language form has no such section: the heading stands alone. */}
-      {dilSecimiVarMi() ? <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : <div className="uza-dar"><h1 className="uza-h1">{u.m.ayarlar.baslik}</h1></div>}
+      {dilSecimiVarMi() ? <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : <div className="yg-sayfa"><h1 className="uza-h1">{u.m.ayarlar.baslik}</h1></div>}
       {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
       {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
       <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
       {u.m.pano ? (
         <div className="yg-sayfa">
           {[u.m.pano.odeme, u.m.pano.belgeler, u.m.pano.raporlar, u.m.pano.inceleme].map((ad) => (
-            <div key={ad} className="yg-satir"><span style={{ flex: 1, fontWeight: 700 }}>{ad}</span><span style={{ color: '#C9BEA9' }}>›</span></div>
+            <div key={ad} className="yg-satir"><span className="yg-satir-isaret" aria-hidden="true" /><span style={{ flex: 1, fontWeight: 700 }}>{ad}</span><span style={{ color: '#C9BEA9', fontSize: 18 }}>›</span></div>
           ))}
         </div>
       ) : null}
+      </div>
     </Cerceve>
   )
 }

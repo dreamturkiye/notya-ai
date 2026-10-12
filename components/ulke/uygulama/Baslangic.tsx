@@ -26,7 +26,7 @@ export function BaslangicGorunumu({ temel, yazi, setTemel, setYazi, gonder, bekl
   const m = uygulamaMetni(dil)
   return (
     <Cerceve dil={dil} m={m} sade>
-      <section className="uza-kart uza-dar">
+      <section className="yg-kayit">
         <h1 className="uza-h1">{m.baslangic.baslik}</h1>
         <p className="uza-aciklama">{m.baslangic.aciklama}</p>
         <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>

@@ -60,7 +60,12 @@ function Kutu({ x, dil, hastaId }: { x: GorunurArac; dil: DilKodu; hastaId?: str
   return (
     <li>
       <a className="uza-arac-kutu" href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'} data-tur={x.tanim.tur === 'baglanti' ? 'baglanti' : undefined}>
-        <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
+        <span className="uza-arac-serit" aria-hidden="true" />
+        <span className="uza-arac-ust">
+          <span className="uza-arac-daire" aria-hidden="true" />
+          <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
+          <span className="uza-arac-ok" aria-hidden="true">→</span>
+        </span>
         <span className="uza-arac-aciklama">{bicimli(x.paket.metin.aciklama, dil)}</span>
       </a>
     </li>
@@ -81,7 +86,8 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
   const rolunAdi = rolAdi(rol, dil)
   return (
     <>
-      <section className="uza-kart">
+      <section className="yg-arac-baslik">
+        <p className="yg-kicker">{a.kabuk.araclar}</p>
         <h1 className="uza-h1">{a.izgara.baslik}</h1>
         <p className="uza-aciklama">{a.izgara.aciklama}</p>
         {hasta ? <p className="uza-ipucu" data-alan="arac-hastasi" data-hasta={hasta.id}><a className="uza-baglanti" href={`${YOL.hasta}?id=${hasta.id}`}>{yerine(a.kayit.hastaIcin, hasta.ad)}</a></p> : null}
@@ -97,14 +103,14 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
       </section>
       {hicYok ? <p className="uza-bos">{a.izgara.bos}</p> : temel.length + kendi.length === 0 ? <p className="uza-bos" role="status">{a.izgara.sonucYok}</p> : null}
       {temel.length ? (
-        <section className="uza-kart" data-grup="temel">
-          <h2 className="uza-h2">{a.izgara.temel}</h2>
+        <section data-grup="temel">
+          <div className="yg-arac-grup"><span className="yg-arac-cubuk" data-grup="temel" /><h2 className="uza-h2">{a.izgara.temel}</h2></div>
           <ul className="uza-arac-izgara">{temel.map((x) => <Kutu key={x.tanim.anahtar} x={x} dil={dil} hastaId={hasta?.id} />)}</ul>
         </section>
       ) : null}
       {kendi.length && rolunAdi ? (
-        <section className="uza-kart" data-grup="rol">
-          <h2 className="uza-h2">{yerine(a.izgara.rol, rolunAdi)}</h2>
+        <section data-grup="rol">
+          <div className="yg-arac-grup"><span className="yg-arac-cubuk" data-grup="rol" /><h2 className="uza-h2">{yerine(a.izgara.rol, rolunAdi)}</h2></div>
           <ul className="uza-arac-izgara">{kendi.map((x) => <Kutu key={x.tanim.anahtar} x={x} dil={dil} hastaId={hasta?.id} />)}</ul>
         </section>
       ) : null}

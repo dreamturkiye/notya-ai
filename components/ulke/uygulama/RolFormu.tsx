@@ -37,7 +37,7 @@ export function RolGorunumu({ dil, m, rol, setRol, gonder, bekliyor, hata }: {
 }) {
   return (
     <Cerceve dil={dil} m={m} sade>
-      <section className="uza-kart uza-dar" data-alan="rol-sorusu">
+      <section className="yg-kayit" data-alan="rol-sorusu">
         <h1 className="uza-h1">{m.rol.baslik}</h1>
         <p className="uza-aciklama">{m.rol.aciklama}</p>
         <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
