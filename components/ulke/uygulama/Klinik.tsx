@@ -43,7 +43,7 @@ export function KlinikGirisGorunumu({ k, ad, setAd, kod, setKod, kur, katil, bek
 }) {
   const g = k.giris
   return (
-    <>
+    <div className="yg-klinik-giris">
       <section className="uza-kart uza-dar" data-alan="klinik-giris">
         <h1 className="uza-h1">{g.baslik}</h1>
         <p className="uza-aciklama">{g.aciklama}</p>
@@ -71,7 +71,7 @@ export function KlinikGirisGorunumu({ k, ad, setAd, kod, setKod, kur, katil, bek
           <button type="submit" className="uza-dugme uza-dugme-cizgi" disabled={bekliyor} data-eylem="klinik-kur">{bekliyor ? g.bekliyor : g.kur}</button>
         </form>
       </section>
-    </>
+    </div>
   )
 }
 
@@ -88,7 +88,7 @@ export function UyelerGorunumu({ k, dil, klinik, ben, onay, setOnay, konumDegist
 }) {
   const c = k.klinik
   return (
-    <section className="uza-kart" data-alan="klinik-uyeler">
+    <section className="uza-kart yg-uye-tablo" data-alan="klinik-uyeler">
       <h2 className="uza-h2">{c.uyeler}</h2>
       <p className="uza-ipucu" style={{ marginTop: 0 }}>{c.konumAciklama}</p>
       <ul className="uza-liste">
@@ -224,9 +224,9 @@ export function KlinikTakvimGorunumu({ k, r, veri, gun, git, hata }: { k: Klinik
 export function KlinikBasligi({ k, klinik }: { k: KlinikMetni; klinik: KlinikGorunumu }) {
   const c = k.klinik
   return (
-    <section className="uza-kart" data-alan="klinik-basligi" data-konum={klinik.konum}>
-      <h1 className="uza-h1">{klinik.ad}</h1>
-      <p className="uza-aciklama">{yerine(c.konumunuz, k.konum[klinik.konum])}</p>
+    <section className="yg-klinik-baslik" data-alan="klinik-basligi" data-konum={klinik.konum}>
+      <h1 className="yg-klinik-h1">{klinik.ad}</h1>
+      <p className="yg-klinik-alt">{yerine(c.konumunuz, k.konum[klinik.konum])}</p>
       <div className="uza-eylemler">
         {klinik.konum !== 'on-buro' ? <a className="uza-dugme" href={klinikYolu('yetkiler')} data-eylem="yetkileri-ac">{c.yetkilerBaglanti}</a> : null}
         {klinik.konum !== 'on-buro' ? <a className="uza-dugme uza-dugme-cizgi" href={klinikYolu('paylasilan')} data-eylem="paylasilani-ac">{c.paylasilanBaglanti}</a> : null}
@@ -293,9 +293,16 @@ function KlinikAna({ u, veri, yenile }: { u: Uygulama; veri: KlinikVerisi; yenil
   if (!veri.klinik) return <KlinikGirisGorunumu k={k} ad={ad} setAd={setAd} kod={kod} setKod={setKod} kur={() => { void girisYap('kur') }} katil={() => { void girisYap('katil') }} bekliyor={bekliyor} hata={girisHatasi} />
   const klinik = veri.klinik
   const c = k.klinik
+  const say = (konum: KlinikKonumu) => klinik.uyeler.filter((u) => u.konum === konum).length
   return (
-    <>
+    <div className="yg-klinik">
       <KlinikBasligi k={k} klinik={klinik} />
+      <div className="yg-klinik-kpi">
+        <div><span>{c.uyeler}</span><strong>{klinik.uyeler.length}</strong></div>
+        <div><span>{k.konum.hekim}</span><strong>{say('hekim')}</strong></div>
+        <div><span>{k.konum.muttefik}</span><strong>{say('muttefik')}</strong></div>
+        <div data-duvar="vekalet"><span>{k.yetkiTuru.vekalet}</span><strong>{'\u2014'}</strong></div>
+      </div>
       {klinik.konum === 'sahip' && ulkePaketi().uygulama?.klinikHesaplari?.kayitSaklama == null ? (
         <section className="uza-kart" data-alan="kayit-saklama">
           <h2 className="uza-h2">{k.saklama.baslik}</h2>
@@ -316,7 +323,7 @@ function KlinikAna({ u, veri, yenile }: { u: Uygulama; veri: KlinikVerisi; yenil
           geriAl={(davetId) => { void yap(() => api(`${KLINIK_API}/davet`, { method: 'DELETE', govde: { davetId } }), 'davet-geri-alindi') }} />
       ) : null}
       {takvimVar && gun ? <KlinikTakvimGorunumu k={k} r={randevuMetni(u.dil)} veri={takvim} gun={gun} git={(g) => { setGun(g); takvimYukle(g).catch(() => {}) }} /> : null}
-    </>
+    </div>
   )
 }
 

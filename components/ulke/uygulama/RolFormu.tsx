@@ -35,11 +35,21 @@ export function RolSecimi({ m, deger, sec, kimlik = 'uza-rol' }: { m: UygulamaMe
 export function RolGorunumu({ dil, m, rol, setRol, gonder, bekliyor, hata }: {
   dil: DilKodu; m: UygulamaMetni; rol: string; setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; hata: 'gerekli' | 'kaydedilemedi' | null
 }) {
+  const gruplar = rolGruplari()
+  const secili = gruplar.find((g) => g.roller.some((x) => x.anahtar === rol))?.taraf
   return (
     <Cerceve dil={dil} m={m} sade>
       <section className="yg-kayit" data-alan="rol-sorusu">
+        {m.kabuk.kas ? <div className="yg-kayit-kas">{m.kabuk.kas}</div> : null}
         <h1 className="uza-h1">{m.rol.baslik}</h1>
         <p className="uza-aciklama">{m.rol.aciklama}</p>
+        <div className="yg-rol-izgara">
+          {gruplar.map((g) => (
+            <button type="button" key={g.taraf} className="yg-rol-kart" data-secili={secili === g.taraf ? 'evet' : undefined} onClick={() => { const ilk = g.roller[0]; if (ilk) setRol(ilk.anahtar) }}>
+              <span className="yg-rol-kart-ad">{grupAdi(m, g.taraf)}</span>
+            </button>
+          ))}
+        </div>
         <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
           <RolSecimi m={m} deger={rol} sec={setRol} />
           <Hata>{hata === 'gerekli' ? m.rol.gerekli : hata === 'kaydedilemedi' ? m.rol.kaydedilemedi : null}</Hata>

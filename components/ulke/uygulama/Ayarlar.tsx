@@ -10,13 +10,13 @@
  * keep the structure they were written with.
  */
 import React, { useEffect, useState } from 'react'
-import { Bilgi, Cerceve, Hata, useUygulama, Yukleniyor, type Hesap } from './Kabuk'
+import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolSecimi } from './RolFormu'
 import { asistanAdi } from './Asistan'
-import { dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
-import { ulkePaketi } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
 export type AyarDurumu = { arayuz: string; not: string; yazi: string | null }
@@ -27,27 +27,43 @@ export function ayarDurumu(h: Pick<Hesap, 'dil' | 'notDili'>): AyarDurumu {
   return { arayuz: temelDil(h.dil), not: temelDil(h.notDili), yazi: cokYazili ? yaziSec(cokYazili) : varsayilanYazi() }
 }
 
-export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc }: {
+export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc, kart }: {
   m: UygulamaMetni; d: AyarDurumu; set: (d: AyarDurumu) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
+  /** Inside one settings card. The page heading stays above the card list. */
+  kart?: boolean
 }) {
+  const form = (
+    <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
+      <DilSecimi etiket={m.ayarlar.arayuzDili} ad="arayuz" deger={d.arayuz} yazi={d.yazi} sec={(arayuz) => set({ ...d, arayuz })} />
+      <DilSecimi etiket={m.ayarlar.notDili} ad="not" deger={d.not} yazi={d.yazi} sec={(not) => set({ ...d, not })} />
+      {yaziSorulurMu(d.arayuz) || yaziSorulurMu(d.not) ? (
+        <div>
+          <YaziSecimi m={m} etiket={m.ayarlar.yazi} deger={d.yazi} sec={(yazi) => set({ ...d, yazi })} />
+          <p className="uza-ipucu">{m.ayarlar.yaziIzoh}</p>
+        </div>
+      ) : null}
+      <Hata>{sonuc === 'hata' ? m.ayarlar.kaydedilemedi : null}</Hata>
+      <Bilgi>{sonuc === 'tamam' ? m.ayarlar.kaydedildi : null}</Bilgi>
+      <button type="submit" className="uza-dugme" disabled={bekliyor}>{bekliyor ? m.ayarlar.kaydediliyor : m.ayarlar.kaydet}</button>
+    </form>
+  )
+  if (kart) {
+    return (
+      <section className="yg-satir yg-ayar-kart" data-alan="dil-ayari">
+        <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F310}'}</span>
+        <div className="yg-satir-metin">
+          <span className="yg-satir-ad">{m.ayarlar.dilBolumu}</span>
+          {form}
+        </div>
+      </section>
+    )
+  }
   return (
     <section className="yg-sayfa yg-ayar-baslik">
       {m.pano ? <div className="yg-kicker">{m.pano.ayarKas}</div> : null}
       <h1 className="uza-h1">{m.ayarlar.baslik}</h1>
       {m.pano ? <p className="uza-aciklama" style={{ marginTop: 0 }}>{m.pano.ayarAciklama}</p> : null}
-      <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
-        <DilSecimi etiket={m.ayarlar.arayuzDili} ad="arayuz" deger={d.arayuz} yazi={d.yazi} sec={(arayuz) => set({ ...d, arayuz })} />
-        <DilSecimi etiket={m.ayarlar.notDili} ad="not" deger={d.not} yazi={d.yazi} sec={(not) => set({ ...d, not })} />
-        {yaziSorulurMu(d.arayuz) || yaziSorulurMu(d.not) ? (
-          <div>
-            <YaziSecimi m={m} etiket={m.ayarlar.yazi} deger={d.yazi} sec={(yazi) => set({ ...d, yazi })} />
-            <p className="uza-ipucu">{m.ayarlar.yaziIzoh}</p>
-          </div>
-        ) : null}
-        <Hata>{sonuc === 'hata' ? m.ayarlar.kaydedilemedi : null}</Hata>
-        <Bilgi>{sonuc === 'tamam' ? m.ayarlar.kaydedildi : null}</Bilgi>
-        <button type="submit" className="uza-dugme" disabled={bekliyor}>{bekliyor ? m.ayarlar.kaydediliyor : m.ayarlar.kaydet}</button>
-      </form>
+      {form}
     </section>
   )
 }
@@ -57,7 +73,9 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
   setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gerekli' | null
 }) {
   return (
-    <section className="uza-kart uza-dar" data-alan="rol-ayari">
+    <section className="yg-satir yg-ayar-kart" data-alan="rol-ayari">
+      <span className="yg-satir-emoji" aria-hidden="true">{'\u2695'}</span>
+      <div className="yg-satir-metin">
       <h2 className="uza-h2">{m.rol.ayarBaslik}</h2>
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <RolSecimi m={m} deger={rol} sec={setRol} kimlik="uza-rol-ayar" />
@@ -67,6 +85,7 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
         <Bilgi>{sonuc === 'tamam' ? m.rol.kaydedildi : null}</Bilgi>
         <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="rol-kaydet">{bekliyor ? m.rol.kaydediliyor : m.rol.kaydet}</button>
       </form>
+      </div>
     </section>
   )
 }
@@ -79,7 +98,9 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
   m: UygulamaMetni; dilim: string; dilimler: readonly string[]; sec: (d: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
 }) {
   return (
-    <section className="uza-kart uza-dar" data-alan="saat-dilimi">
+    <section className="yg-satir yg-ayar-kart" data-alan="saat-dilimi">
+      <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F550}'}</span>
+      <div className="yg-satir-metin">
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-saat-dilimi">{m.ayarlar.saatDilimi}</label>
@@ -92,6 +113,7 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
         <Bilgi>{sonuc === 'tamam' ? m.ayarlar.kaydedildi : null}</Bilgi>
         <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="saat-dilimi-kaydet">{bekliyor ? m.ayarlar.kaydediliyor : m.ayarlar.kaydet}</button>
       </form>
+      </div>
     </section>
   )
 }
@@ -102,7 +124,9 @@ export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: 
 }) {
   const a = m.ayarlar
   return (
-    <section className="uza-kart uza-dar" data-alan="meslek-kaydi">
+    <section className="yg-satir yg-ayar-kart" data-alan="meslek-kaydi">
+      <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F4CB}'}</span>
+      <div className="yg-satir-metin">
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-meslek-kaydi">{a.meslekKaydi}</label>
@@ -113,6 +137,7 @@ export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: 
         <Bilgi>{sonuc === 'tamam' ? a.kaydedildi : null}</Bilgi>
         <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="meslek-kaydi-kaydet">{bekliyor ? a.kaydediliyor : a.kaydet}</button>
       </form>
+      </div>
     </section>
   )
 }
@@ -184,27 +209,44 @@ export default function Ayarlar() {
     setRolBekliyor(false)
   }
 
+  const pano = u.m.pano
+  const arac = ozellikAcik('araclar') ? araclarMetni(u.dil) : null
+  const duvar = (emoji: string, ad: string, alt?: string) => (
+    <div key={ad} className="yg-satir" data-duvar="evet">
+      <span className="yg-satir-emoji" aria-hidden="true">{emoji}</span>
+      <span className="yg-satir-metin">
+        <span className="yg-satir-ad">{ad}</span>
+        {alt ? <span className="yg-satir-alt">{alt}</span> : null}
+      </span>
+      <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
+    </div>
+  )
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="ayarlar" cikis={u.cikis} onBuro={u.hesap.onBuro}>
       <div className="yg-ayarlar">
-      {/* The page's heading sits in the language section. A country with one language form has no such section: the heading stands alone. */}
-      {dilSecimiVarMi() ? <AyarlarGorunumu m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : (
-        <div className="yg-sayfa">
-          {u.m.pano ? <div className="yg-kicker">{u.m.pano.ayarKas}</div> : null}
-          <h1 className="uza-h1">{u.m.ayarlar.baslik}</h1>
-          {u.m.pano ? <p className="uza-aciklama" style={{ marginTop: 0 }}>{u.m.pano.ayarAciklama}</p> : null}
+        {pano ? <div className="yg-kicker">{pano.ayarKas}</div> : null}
+        <h1 className="uza-h1">{u.m.ayarlar.baslik}</h1>
+        {pano ? <p className="uza-aciklama">{pano.ayarAciklama}</p> : null}
+        <div className="yg-ayar-liste">
+          {dilSecimiVarMi() ? <AyarlarGorunumu kart m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
+          {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
+          {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
+          <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
+          {pano ? duvar('\u{1F4E5}', pano.belgeler, pano.belgeYukle) : null}
+          {pano ? duvar('\u{1F4C4}', pano.raporlar, pano.epikriz) : null}
+          {pano ? duvar('\u2713', pano.inceleme, pano.onayBekleyen) : null}
+          {pano ? duvar('\u{1F3E5}', pano.odeme) : null}
+          {arac ? (
+            <a className="yg-satir" href={YOL.araclar}>
+              <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F9F0}'}</span>
+              <span className="yg-satir-metin">
+                <span className="yg-satir-ad">{arac.kabuk.araclar}</span>
+                <span className="yg-satir-alt">{arac.izgara.aciklama}</span>
+              </span>
+              <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
+            </a>
+          ) : null}
         </div>
-      )}
-      {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
-      {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
-      <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
-      {u.m.pano ? (
-        <div className="yg-sayfa">
-          {[u.m.pano.odeme, u.m.pano.belgeler, u.m.pano.raporlar, u.m.pano.inceleme].map((ad) => (
-            <div key={ad} className="yg-satir"><span className="yg-satir-isaret" aria-hidden="true" /><span style={{ flex: 1, fontWeight: 700 }}>{ad}</span><span style={{ color: '#C9BEA9', fontSize: 18 }}>›</span></div>
-          ))}
-        </div>
-      ) : null}
       </div>
     </Cerceve>
   )
