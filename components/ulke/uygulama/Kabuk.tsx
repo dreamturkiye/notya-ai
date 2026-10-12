@@ -156,9 +156,22 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
 
 export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar'
 
-/** Clock in the account's zone, in the same slot as the reference chrome. Empty until the browser has painted. */
+/** WMO weather code to a glyph. Same bands as the reference chrome; no sentence, so nothing to translate. */
+function havaIkonu(kod: number): string {
+  if (kod === 0) return '\u2600\uFE0F'
+  if (kod <= 3) return '\u26C5'
+  if (kod === 45 || kod === 48) return '\u{1F32B}\uFE0F'
+  if (kod >= 51 && kod <= 67) return '\u{1F326}\uFE0F'
+  if (kod >= 71 && kod <= 77) return '\u2744\uFE0F'
+  if (kod >= 80 && kod <= 82) return '\u{1F326}\uFE0F'
+  if (kod >= 95) return '\u26C8\uFE0F'
+  return '\u{1F324}\uFE0F'
+}
+
+/** Clock in the account's zone, with the weather chip under it when the browser shares a place. */
 function SaatKutusu() {
   const [saat, setSaat] = useState('')
+  const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null)
   useEffect(() => {
     const yaz = () => {
       const tz = hesapSaatDilimi()
@@ -169,7 +182,31 @@ function SaatKutusu() {
     const t = setInterval(yaz, 30000)
     return () => clearInterval(t)
   }, [])
-  return <div className="uza-saat-buyuk">{saat || '\u00A0'}</div>
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
+    let iptal = false
+    navigator.geolocation.getCurrentPosition(
+      (konum) => {
+        const { latitude, longitude } = konum.coords
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: { current?: { temperature_2m?: number; weather_code?: number } } | null) => {
+            if (iptal || !d?.current || typeof d.current.temperature_2m !== 'number') return
+            setHava({ sicaklik: Math.round(d.current.temperature_2m), kod: Number(d.current.weather_code) })
+          })
+          .catch(() => {})
+      },
+      () => {},
+      { timeout: 8000, maximumAge: 30 * 60 * 1000 },
+    )
+    return () => { iptal = true }
+  }, [])
+  return (
+    <div className="uza-saat-kutu">
+      <div className="uza-saat-buyuk">{saat || '\u00A0'}</div>
+      {hava ? <div className="uza-hava"><span>{havaIkonu(hava.kod)}</span><span>{hava.sicaklik}{'°'}</span></div> : null}
+    </div>
+  )
 }
 
 function harfler(ad: string): string {
@@ -223,16 +260,16 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
             </nav>
           ) : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
-              {m.pano ? <span className="uza-duvar">{m.asistan.etiket}</span> : null}
+              {m.pano ? <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span> : null}
               {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
               {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
               {HAZIR.takvim ? baglanti('takvim', YOL.takvim, randevuMetni(dil).kabuk.takvim) : null}
               {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
-              {m.pano ? <span className="uza-duvar">{m.pano.mesajlar}</span> : null}
+              {m.pano ? <span className="uza-duvar" data-duvar="mesaj">{m.pano.mesajlar}</span> : null}
               {m.kabuk.diger ? <><div className="uza-ayrac" /><div className="uza-grup">{m.kabuk.diger}</div></> : null}
-              {m.pano ? <span className="uza-duvar">{m.pano.odeme}</span> : null}
-              {m.pano ? <span className="uza-duvar">{m.pano.raporlar}</span> : null}
+              {m.pano ? <span className="uza-duvar" data-duvar="rapor">{m.pano.raporlar}</span> : null}
+              {m.pano ? <span className="uza-duvar" data-duvar="odeme">{m.pano.odeme}</span> : null}
               {/* NOTYA-ULKE-ARACLAR-01: the tools area, where the country has it. Its name is in the tools catalogue, in the same form. */}
               {ozellikAcik('araclar') ? baglanti('araclar', YOL.araclar, araclarMetni(dil).kabuk.araclar) : null}
               {/* NOTYA-ULKE-KLINIK-01: the clinic, where the country has clinic accounts. Its name is in the clinic catalogue, in the same form. */}

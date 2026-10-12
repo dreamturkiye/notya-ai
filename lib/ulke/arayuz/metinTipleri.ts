@@ -124,6 +124,15 @@ export type UygulamaMetni = {
     readonly pasif: string
     readonly ayarKas: string
     readonly ayarAciklama: string
+    /** Green sidebar pill, in the same slot as the reference "ask the assistant". */
+    readonly asistanaSor: string
+    /** Quiet callout under the greeting: its name, then the line shown when nothing is waiting. */
+    readonly fisilti: string
+    readonly fisiltiBos: string
+    /** Quick-access tile that opens the assistant. */
+    readonly asistanAc: string
+    /** Quick-access tile for documents. */
+    readonly belgeYukle: string
   }
   readonly hastalar: {
     readonly baslik: string

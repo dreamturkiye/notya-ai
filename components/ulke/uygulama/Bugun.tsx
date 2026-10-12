@@ -39,9 +39,9 @@ export function AramaFormu({ m, q, hedef }: { m: UygulamaMetni; q?: string; /** 
 export function BugunRandevulari({ m, randevular }: { m: UygulamaMetni; randevular: RandevuKaydi[] }) {
   const r = randevuMetni(metninDili(m))
   return (
-    <section className="uza-kart" data-alan="bugun-randevular">
-      <div className="uza-baslik-satiri" style={{ marginBottom: 6 }}>
-        <h2 className="uza-h2" style={{ marginBottom: 0 }}>{r.bugun.randevular}</h2>
+    <section data-alan="bugun-randevular">
+      <div className="uza-ekran-disi">
+        <h2 className="uza-h2">{r.bugun.randevular}</h2>
         <a className="uza-baglanti" href={takvimYolu()}>{r.bugun.takvimiAc}</a>
       </div>
       {randevular.length === 0 ? <p className="uza-bos">{r.bugun.randevuYok}</p> : (
@@ -85,6 +85,20 @@ const S = (s: CSSProperties) => s
 const KART: CSSProperties = { background: R.paper, border: `1px solid ${R.border}`, borderRadius: 20, boxShadow: '0 16px 34px rgba(58,44,34,0.06)' }
 const ETIKET: CSSProperties = { fontSize: 14, fontWeight: 700, color: '#4A4030', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }
 const ARAC: CSSProperties = { color: R.pine, fontSize: 13, fontWeight: 600 }
+
+/** Stroke icons for the seven quick-access tiles. Paths only — the words sit beside them. */
+function KaroIkon({ ad }: { ad: string }) {
+  const ortak = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  switch (ad) {
+    case 'takvim': return <svg {...ortak}><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /></svg>
+    case 'asistan': return <svg {...ortak}><rect x="9.2" y="3.5" width="5.6" height="10" rx="2.8" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M9 20.5h6" /></svg>
+    case 'hastaEkle': return <svg {...ortak}><circle cx="10" cy="8.5" r="3.5" /><path d="M4 20c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5" /><path d="M18.5 8v5M16 10.5h5" /></svg>
+    case 'belge': return <svg {...ortak}><path d="M7 3.5h7l4 4V19a1.8 1.8 0 0 1-1.8 1.8H7A1.8 1.8 0 0 1 5.2 19V5.3A1.8 1.8 0 0 1 7 3.5Z" /><path d="M14 3.5V8h4.5" /></svg>
+    case 'inceleme': return <svg {...ortak}><rect x="4.5" y="4.5" width="15" height="16" rx="2.5" /><path d="m8.6 13.6 2.2 2.2 4.6-4.8" /></svg>
+    case 'araclar': return <svg {...ortak}><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9" /><circle cx="15" cy="7.5" r="2.2" /><circle cx="9" cy="16.5" r="2.2" /></svg>
+    default: return <svg {...ortak}><path d="M4.5 20V4.5M4.5 20H20" /><path d="M8.5 16.5v-5M12.5 16.5V8M16.5 16.5v-8.5" /></svg>
+  }
+}
 
 export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
@@ -133,10 +147,17 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       </section>
 
       {p ? (
+        <div className="yg-fisilti">
+          <div className="yg-fisilti-ad">{p.fisilti}</div>
+          <div className="yg-fisilti-bos">{p.fisiltiBos}</div>
+        </div>
+      ) : null}
+
+      {p ? (
         <div className="yg-masa-arac">
           <h2 style={ETIKET}>{p.hizliAraclar}</h2>
           <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', ...KART, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
-            <span style={ARAC}>{asistan} ›</span>
+            <span style={ARAC}>{m.asistan.etiket} ›</span>
             <span style={ARAC}>{p.epikriz} ›</span>
             <span style={ARAC}>{p.kodlama} ›</span>
             {arac ? <a href={YOL.araclar} style={{ ...ARAC, textDecoration: 'none' }}>{arac.izgara.baslik} ›</a> : null}
@@ -175,9 +196,11 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             </div>
           </div>
         ) : null}
-        {HAZIR.takvim && randevular && (gorunum === 'bugun' || !p) ? <BugunRandevulari m={m} randevular={randevular} /> : null}
-        {p && HAZIR.takvim && gorunum === 'hafta' ? <div style={S({ ...KART, padding: '16px 20px', fontSize: 14, color: R.muted })}>{p.haftaYok}</div> : null}
-        {p && !(HAZIR.takvim && randevular) ? <div style={S({ ...KART, padding: '6px 20px' })}><div style={S({ padding: '16px 0', fontSize: 14, color: R.muted })}>{p.planYok}</div></div> : null}
+        <div style={S({ ...KART, padding: '6px 20px' })}>
+          {HAZIR.takvim && randevular && (gorunum === 'bugun' || !p) ? <BugunRandevulari m={m} randevular={randevular} /> : null}
+          {p && HAZIR.takvim && gorunum === 'hafta' ? <div style={S({ padding: '16px 0', fontSize: 14, color: R.muted })}>{p.haftaYok}</div> : null}
+          {p && !(HAZIR.takvim && randevular) ? <div style={S({ padding: '16px 0', fontSize: 14, color: R.muted })}>{p.planYok}</div> : null}
+        </div>
       </div>
 
       {mesajlar ?? null}
@@ -208,20 +231,19 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       {p ? (
         <div className="yg-erisim">
           <div style={ETIKET}>{p.hizliErisim}</div>
-          <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
+          <div className="yg-erisim-izgara" style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
             {[
-              HAZIR.takvim ? { href: YOL.takvim, text: r.kabuk.takvim } : null,
-              { href: null, text: asistan },
-              { href: YOL.yeniHasta, text: m.bugun.yeniHasta },
-              arac ? { href: YOL.araclar, text: arac.izgara.baslik } : null,
-              { href: null, text: p.belgeler },
-              { href: null, text: p.inceleme },
-              { href: null, text: p.raporlar },
-              { href: null, text: p.odeme },
-            ].concat(HAZIR.muayene ? [{ href: YOL.muayene, text: m.bugun.muayeneBaslat }] : []).filter((x): x is { href: string | null; text: string } => Boolean(x)).map((k) => {
+              HAZIR.takvim ? { href: YOL.takvim, text: r.kabuk.takvim, ikon: 'takvim' } : null,
+              { href: null, text: p.asistanAc, ikon: 'asistan' },
+              { href: YOL.yeniHasta, text: m.bugun.yeniHasta, ikon: 'hastaEkle' },
+              arac ? { href: YOL.araclar, text: arac.izgara.baslik, ikon: 'araclar' } : null,
+              { href: null, text: p.belgeYukle, ikon: 'belge' },
+              { href: null, text: p.inceleme, ikon: 'inceleme' },
+              { href: null, text: p.raporlar, ikon: 'raporlar' },
+            ].filter((x): x is { href: string | null; text: string; ikon: string } => Boolean(x)).map((k) => {
               const ic = (
                 <>
-                  <span style={S({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: '#E4F3F1' })} />
+                  <span style={S({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: '#E4F3F1', color: R.pine })}><KaroIkon ad={k.ikon} /></span>
                   <span style={S({ fontSize: 13.5, fontWeight: 600 })}>{k.text}</span>
                 </>
               )
@@ -233,13 +255,13 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       ) : null}
 
       <div className="yg-alt" style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
-        <div className="yg-notlar" style={S({ flex: '1 1 280px', minWidth: 0 })}>
+        <div className={muayeneler !== null && muayeneler.length === 0 && !hata ? 'uza-ekran-disi' : 'yg-notlar'} style={S({ flex: '1 1 280px', minWidth: 0 })}>
           <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 })}>
             <div style={S({ ...ETIKET, margin: 0 })}>{p ? p.onayBekleyen : m.bugun.baslik}</div>
             {p ? <span style={S({ fontSize: 13, color: R.pine, fontWeight: 600 })}>{p.tumunuGor} ›</span> : null}
           </div>
           <div style={S({ ...KART, padding: '8px 20px' })}>
-            <h2 className="uza-h2">{m.bugun.baslik}</h2>
+            <h2 className="uza-h2 uza-ekran-disi">{m.bugun.baslik}</h2>
             <Hata>{hata ? m.kabuk.hata : null}</Hata>
             {muayeneler === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : muayeneler.length === 0 ? (
               <p className="uza-bos">{m.bugun.bos}</p>
@@ -280,18 +302,18 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         ) : null}
       </div>
 
-      <section className="uza-kart yg-arama">
-        <AramaFormu m={m} />
-        <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
-      </section>
-      {arac ? (
-        <section className="uza-kart" data-alan="bugun-araclar">
-          <div className="uza-baslik-satiri" style={{ marginBottom: 0 }}>
-            <h2 className="uza-h2" style={{ marginBottom: 0 }}>{arac.izgara.baslik}</h2>
-            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{arac.izgara.ac}</a>
-          </div>
+      <div className="uza-ekran-disi">
+        <section className="uza-kart yg-arama">
+          <AramaFormu m={m} />
+          <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.hastalar}>{m.bugun.tumHastalar}</a></p>
         </section>
-      ) : null}
+        {HAZIR.muayene ? <a href={YOL.muayene}>{m.bugun.muayeneBaslat}</a> : null}
+        {arac ? (
+          <section data-alan="bugun-araclar">
+            <a className="uza-baglanti" href={YOL.araclar} data-eylem="araclari-ac">{arac.izgara.ac}</a>
+          </section>
+        ) : null}
+      </div>
     </div>
   )
 }

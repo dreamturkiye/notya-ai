@@ -122,6 +122,11 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     pasif: 'Inactive',
     ayarKas: 'Doctor',
     ayarAciklama: 'Setup stays here, out of the day\'s work.',
+    asistanaSor: 'Ask the assistant',
+    fisilti: 'Notya is whispering',
+    fisiltiBos: 'Nothing is waiting — everything is up to date.',
+    asistanAc: 'Open the assistant',
+    belgeYukle: 'Upload a document',
   },
   hastalar: {
     baslik: 'Patients',

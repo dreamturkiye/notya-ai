@@ -167,7 +167,12 @@
    "aktif": "$m",
    "pasif": "$m",
    "ayarKas": "$m",
-   "ayarAciklama": "$m"
+   "ayarAciklama": "$m",
+   "asistanaSor": "$m",
+   "fisilti": "$m",
+   "fisiltiBos": "$m",
+   "asistanAc": "$m",
+   "belgeYukle": "$m"
   },
   "hastalar": {
    "baslik": "$m",
