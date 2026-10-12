@@ -43,8 +43,8 @@ export function UlkeKart({
     <div lang={dil} style={{ minHeight: '100dvh', background: R.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', fontFamily: CHROME_FONT.sans, color: R.ink, boxSizing: 'border-box' }}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
-      <div style={{ width: '100%', maxWidth: 440 }}>
-        <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(26px, 6vw, 44px)', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(28px, 6vw, 44px)', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <a href={anaSayfa?.href ?? ulkeYolu('/')} style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1, textDecoration: 'none' }}>Notya</a>
             {altBaslik ? <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>{altBaslik}</div> : null}

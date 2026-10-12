@@ -149,9 +149,9 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
 }
 
 /** Colours and fonts as variables on the root, from the one source of the look (lib/doktor/chromeRenk.ts). */
-const DEGISKENLER = {
+  const DEGISKENLER = {
   '--uza-krem': R.cream, '--uza-kagit': R.paper, '--uza-murekkep': R.ink, '--uza-soluk': R.muted, '--uza-cam': R.pine,
-  '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
+  '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
 export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar'
@@ -175,6 +175,9 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
     <div className="uza" lang={dil} style={DEGISKENLER}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      {/* The same plant the Turkish doctor chrome uses (public/doktor-chrome/plant.jpg). The address goes through
+          the country's path prefix; alt stays empty so it is decoration, not a sentence. */}
+      {sade ? null : <img src={ulkeYolu('/doktor-chrome/plant.jpg')} alt="" className="uza-bitki" />}
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic">
           <a href={sade ? undefined : onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun} className="uza-marka">{marka()}</a>
@@ -197,12 +200,15 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>
           )}
-          <div className="uza-hesap">
-            {ad ? <span className="uza-hesap-ad">{ad}</span> : null}
-            {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
-          </div>
         </div>
       </header>
+      {/* Account row sits beside the sidebar (the Turkish chrome's top-right cluster), not inside it. */}
+      {ad || cikis ? (
+        <div className="uza-hesap">
+          {ad ? <span className="uza-hesap-ad">{ad}</span> : null}
+          {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
+        </div>
+      ) : null}
       <main className="uza-ic uza-govde">{children}</main>
     </div>
   )
