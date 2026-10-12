@@ -495,6 +495,22 @@
 .yg-arac-grup .uza-h2 { margin: 0; font-family: var(--uza-sans); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
 .yg-arac-cubuk { width: 3px; height: 16px; border-radius: 2px; background: var(--uza-cam); flex-shrink: 0; }
 .yg-arac-cubuk[data-grup='rol'] { background: #8B6FB8; }
+.yg-takvim-govde { display: flex; flex-direction: column; gap: 16px; }
+.yg-ay-kutu { background: #F6F0E4; border-radius: 16px; padding: 16px 14px; }
+.yg-ay-baslik { font-size: 22px; font-weight: 800; line-height: 1.1; text-transform: capitalize; margin-bottom: 10px; }
+.yg-ay { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 2px; }
+.yg-ay-ad { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8a7b6c; text-align: center; padding: 4px 0; }
+.yg-ay-gun { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 36px; border-radius: 8px; padding: 3px 0 4px; font-size: 13px; color: inherit; text-decoration: none; }
+.yg-ay-gun[data-baska='evet'] { color: #a89a86; }
+.yg-ay-gun[data-secili='evet'] { box-shadow: inset 0 0 0 1px rgba(47, 67, 52, 0.35); }
+.yg-ay-gun[data-bugun='evet'] { background: var(--uza-cam); color: #faf8f4; font-weight: 700; }
+.yg-ay-nokta { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+.yg-ay-gun[data-dolu='evet'] .yg-ay-nokta { background: var(--uza-cam); }
+.yg-ay-gun[data-bugun='evet'] .yg-ay-nokta { background: transparent; }
+.yg-ay-gun[data-bugun='evet'][data-dolu='evet'] .yg-ay-nokta { background: #fff; }
+@media (min-width: 900px) {
+  .yg-takvim-govde { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 16px; align-items: start; }
+}
 
 /* ── buttons ── */
 .uza-dugme { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 11px 20px; border-radius: 12px; border: 1px solid var(--uza-cam); background: var(--uza-cam); color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.1px; cursor: pointer; text-align: center; }

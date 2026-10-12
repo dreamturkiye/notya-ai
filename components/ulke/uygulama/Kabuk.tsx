@@ -20,6 +20,7 @@ import React, { useCallback, useEffect, useRef, useState, type CSSProperties, ty
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { useBitki } from './bitki'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { araclarMetni, klinikMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
@@ -231,6 +232,9 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
   const baglanti = (s: Sekme, href: string, ad2: string) => (
     <a href={href} className="uza-sekme" aria-current={aktif === s ? 'page' : undefined}>{ad2}</a>
   )
+  // Bundled photograph when the page provides one. The public/ address is only a fallback for a
+  // test render: a country build does not serve files from public/.
+  const bitkiSrc = useBitki() || ulkeYolu('/doktor-chrome/plant.jpg')
   return (
     <div className="uza" lang={dil} style={DEGISKENLER}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
@@ -239,7 +243,7 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
           the country's path prefix; alt stays empty so it is decoration, not a sentence. */}
       {sade ? null : (
         <div className="uza-bitki-kutu" aria-hidden="true">
-          <img src={ulkeYolu('/doktor-chrome/plant.jpg')} alt="" className="uza-bitki" />
+          <img src={bitkiSrc} alt="" className="uza-bitki" />
         </div>
       )}
       <header className="uza-ust">

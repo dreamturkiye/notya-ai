@@ -24,7 +24,7 @@
  * The server answers with codes; every sentence here is the catalogue's (./randevuMetinleri.ts), in the account's form.
  */
 import React, { useEffect, useState, type FormEvent } from 'react'
-import { gunCoz, gunEkle, gunYazDesenle, gunYazYilsiz, haftaGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
+import { gunCoz, gunEkle, gunYazDesenle, gunYazYilsiz, haftaGunu, haftaninIlkGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
 import { saatGoster } from '@/lib/ulke/arayuz/bicim'
@@ -37,7 +37,7 @@ import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
 import { panoyaKopyala } from './pano'
 import { ISTEK_API, IstekCevabiGorunumu, Istekler, IstekYokGorunumu, type IstekCevapFormu, type IstekCevapHatasi } from './PortalIstekleri'
 import { portalMetni } from '@/lib/ulke/arayuz'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { BekleyenIstek } from '@/lib/ulke/portal/tipler'
 import { HastaFormuKarti } from './HastaFormuKarti'
 
@@ -161,6 +161,32 @@ export function HaftaGorunumu({ r, gunler, bugun, randevular }: { r: RandevuMetn
   )
 }
 
+/** A month of days, Monday or Sunday first as the pack says, in the same place as the reference month rail. */
+function AyIzgarasi({ r, gun, bugun, randevular }: { r: RandevuMetni; gun: string; bugun: string; randevular: RandevuKaydi[] }) {
+  const haftaBasi = ulkePaketi().bicim.haftaBasi
+  const ay = gun.slice(0, 7)
+  const bas = haftaninIlkGunu(`${ay}-01`, haftaBasi)
+  const hucreler = Array.from({ length: 42 }, (_, i) => gunEkle(bas, i))
+  const sira = (haftaBasi === 1 ? [1, 2, 3, 4, 5, 6, 7] : [7, 1, 2, 3, 4, 5, 6]) as readonly (1 | 2 | 3 | 4 | 5 | 6 | 7)[]
+  const [yil, ayNo] = ay.split('-').map(Number)
+  const baslik = new Intl.DateTimeFormat(ulkePaketi().bicim.yerel, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(yil, ayNo - 1, 1)))
+  const dolu = new Set(randevular.filter((x) => x.durum !== 'iptal').map((x) => x.gun))
+  return (
+    <div className="yg-ay-kutu" data-alan="ay">
+      <div className="yg-ay-baslik">{baslik}</div>
+      <div className="yg-ay">
+        {sira.map((k) => <div key={k} className="yg-ay-ad">{r.gunKisa[k]}</div>)}
+        {hucreler.map((h) => (
+          <a key={h} className="yg-ay-gun" href={takvimYolu({ gun: h })} data-bugun={h === bugun ? 'evet' : undefined} data-baska={h.slice(0, 7) === ay ? undefined : 'evet'} data-dolu={dolu.has(h) ? 'evet' : undefined} data-secili={h === gun ? 'evet' : undefined}>
+            <span>{Number(h.slice(8, 10))}</span>
+            <span className="yg-ay-nokta" aria-hidden="true" />
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function TakvimGorunumu({ m, r, gorunum, gun, gunler, bugun, duzen, randevular, hata }: {
   m: UygulamaMetni; r: RandevuMetni; gorunum: Gorunum
   /** The day the calendar stands on (the country's day). */
@@ -190,9 +216,14 @@ export function TakvimGorunumu({ m, r, gorunum, gun, gunler, bugun, duzen, rande
         </div>
       </div>
       <Hata>{hata ? m.kabuk.hata : null}</Hata>
-      {randevular === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : gorunum === 'hafta'
-        ? <HaftaGorunumu r={r} gunler={gunler} bugun={bugun} randevular={randevular} />
-        : <GunGorunumu r={r} gun={gunler[0] ?? gun} duzen={duzen} randevular={randevular} />}
+      <div className="yg-takvim-govde">
+        {randevular ? <AyIzgarasi r={r} gun={gun} bugun={bugun} randevular={randevular} /> : null}
+        <div className="yg-takvim-ana">
+          {randevular === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : gorunum === 'hafta'
+            ? <HaftaGorunumu r={r} gunler={gunler} bugun={bugun} randevular={randevular} />
+            : <GunGorunumu r={r} gun={gunler[0] ?? gun} duzen={duzen} randevular={randevular} />}
+        </div>
+      </div>
       <p className="uza-ipucu" style={{ marginTop: 14 }}>
         <a className="uza-baglanti" href={takvimYolu({ duzen: '1' })}>{r.takvim.duzen}</a> · {r.duzen.saatDilimi}
       </p>
