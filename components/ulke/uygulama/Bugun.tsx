@@ -126,11 +126,10 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       <section className="uza-karsilama">
         <p className="uza-ust-yazi">{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</p>
         <h1 className="uza-h1">{m.bugun.selam}, {ad}</h1>
-        {satir ? (
-          <div style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
-            <span style={S({ color: R.pine, fontWeight: 700 })}>{asistan}:</span> {satir}
-          </div>
-        ) : null}
+        <div style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
+          <span style={S({ color: R.pine, fontWeight: 700 })} data-alan="asistan-ad">{asistan}</span>
+          {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
+        </div>
       </section>
 
       {p ? (

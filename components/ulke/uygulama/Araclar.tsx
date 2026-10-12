@@ -64,7 +64,7 @@ function Kutu({ x, dil, hastaId }: { x: GorunurArac; dil: DilKodu; hastaId?: str
         <span className="uza-arac-ust">
           <span className="uza-arac-daire" aria-hidden="true" />
           <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
-          <span className="uza-arac-ok" aria-hidden="true">→</span>
+          <span className="uza-arac-ok" aria-hidden="true" />
         </span>
         <span className="uza-arac-aciklama">{bicimli(x.paket.metin.aciklama, dil)}</span>
       </a>
