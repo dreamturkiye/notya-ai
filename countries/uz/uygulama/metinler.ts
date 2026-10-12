@@ -125,8 +125,8 @@ const UZ_LATN: UygulamaMetni = {
     asistanaSor: 'Yordamchidan soʻrang',
     fisilti: 'Notya pichirlamoqda',
     fisiltiBos: 'Hozir kutilayotgan narsa yoʻq — hammasi yangi.',
-    asistanAc: 'Yordamchini ochish',
-    belgeYukle: 'Hujjat yuklash',
+    asistanAc: 'Yordamchi',
+    belgeYukle: 'Hujjat',
   },
   hastalar: {
     baslik: 'Bemorlar',
@@ -399,8 +399,8 @@ const UZ_CYRL: UygulamaMetni = {
     asistanaSor: 'Ёрдамчидан сўранг',
     fisilti: 'Нотя пичирламоқда',
     fisiltiBos: 'Ҳозир кутилаётган нарса йўқ — ҳаммаси янги.',
-    asistanAc: 'Ёрдамчини очиш',
-    belgeYukle: 'Ҳужжат юклаш',
+    asistanAc: 'Ёрдамчи',
+    belgeYukle: 'Ҳужжат',
   },
   hastalar: {
     baslik: 'Беморлар',
@@ -669,8 +669,8 @@ const RU: UygulamaMetni = {
     asistanaSor: 'Спросить помощника',
     fisilti: 'Помощник шепчет',
     fisiltiBos: 'Сейчас ничего не ждёт — всё актуально.',
-    asistanAc: 'Открыть помощника',
-    belgeYukle: 'Загрузить документ',
+    asistanAc: 'Помощник',
+    belgeYukle: 'Документ',
   },
   hastalar: {
     baslik: 'Пациенты',

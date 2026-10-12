@@ -140,8 +140,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       <section className="uza-karsilama">
         <p className="uza-ust-yazi">{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</p>
         <h1 className="uza-h1">{m.bugun.selam}, {ad}</h1>
-        <div style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
-          <span style={S({ color: R.pine, fontWeight: 700 })} data-alan="asistan-ad">{asistan}</span>
+        <div className="uza-ekran-disi">
+          <span data-alan="asistan-ad">{asistan}</span>
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
       </section>
@@ -160,7 +160,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             <span style={ARAC}>{m.asistan.etiket} ›</span>
             <span style={ARAC}>{p.epikriz} ›</span>
             <span style={ARAC}>{p.kodlama} ›</span>
-            {arac ? <a href={YOL.araclar} style={{ ...ARAC, textDecoration: 'none' }}>{arac.izgara.baslik} ›</a> : null}
           </div>
         </div>
       ) : null}
@@ -284,6 +283,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         </div>
         {p ? (
           <div className="yg-hafta" style={S({ flex: '1 1 240px', minWidth: 0 })}>
+            <div className="yg-ozet-bos" aria-hidden="true">&nbsp;</div>
             <div style={S({ ...KART, padding: '20px 20px 18px' })}>
               <div style={ETIKET}>{p.haftaOzeti}</div>
               {[

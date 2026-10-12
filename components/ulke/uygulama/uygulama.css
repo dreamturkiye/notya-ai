@@ -440,6 +440,7 @@
 .yg-fisilti-ad { font-family: var(--uza-serif); font-style: italic; color: #2f5155; font-size: 15px; display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
 .yg-fisilti-ad::before { content: ""; width: 16px; height: 16px; flex: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z' stroke='%232f5155' stroke-width='1.15'/%3E%3Cpath d='M10 13.2c2-2 4.2-3 6.8-3.4' stroke='%232f5155' stroke-width='1.05'/%3E%3Cpath d='M6.2 20c1.2-4 2.2-6.6 4.8-9.8' stroke='%232f5155' stroke-width='1.05'/%3E%3C/svg%3E") center / contain no-repeat; }
 .yg-fisilti-bos { font-family: var(--uza-serif); font-style: italic; font-size: 17px; line-height: 1.3; font-weight: 500; }
+.yg-ozet-bos { font-size: 14px; font-weight: 700; margin: 0 0 12px; }
 @media (min-width: 1100px) {
   .yg-erisim-izgara { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; }
 }
