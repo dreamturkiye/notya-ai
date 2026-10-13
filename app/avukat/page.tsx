@@ -288,7 +288,7 @@ export default function AvukatPage() {
             </div>
             <span style={{fontSize:"15px",fontWeight:"700",color:"#fff",fontFamily:"Merriweather,serif"}}>Notya AI</span>
           </div>
-          <div style={{fontSize:"12px",color:"rgba(255,255,255,.4)",fontFamily:"Lato,sans-serif"}}>2026 Dream Türkiye · KVKK Uyumlu</div>
+          <div style={{fontSize:"12px",color:"rgba(255,255,255,.4)",fontFamily:"Lato,sans-serif"}}>2026 Notya · KVKK Uyumlu</div>
         </div>
       </footer>
     </main>
