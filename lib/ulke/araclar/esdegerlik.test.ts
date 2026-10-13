@@ -21,7 +21,7 @@ import assert from 'node:assert/strict'
 import { ORNEK_BUGUN, ORNEK_PARAMETRELER, ornekGirdiler, ornekOrtam } from '../testing/aracOrnekleri'
 import { KIT_ARACLARI, kitAraci } from './katalog'
 import type { AracGirdisi, AracSonucu } from './tipler'
-import { gunEkle, isaretliler } from './yardimci'
+import { isaretliler } from './yardimci'
 import * as K1 from './tanimlar/acilAnesteziBeyin'
 import { ESI_KAYNAKLAR, esiSkorla } from '@/specialties/acil-tip/engines/esi'
 import { KRITIK_MADDELER, KRITIK_YOLLAR, kritikYolSkorla } from '@/specialties/acil-tip/engines/kritikYol'
@@ -211,8 +211,8 @@ SATIRLAR_2: {
         return { tamam: Object.keys(tarihler).length > 0, tarihler }
       },
     },
-    { arac: 'antibiyotik-sure', karsilik: 'specialties/enfeksiyon-hastaliklari/engines/atbSure.ts → atbHesapla (THE KIT\'S LAST DAY IS ONE DAY EARLIER: the first day is day 1; see DELIBERATE DIFFERENCES)', listeler: [],
-      onlar: (g) => { const r = atbHesapla(g.baslangic as string | null, g.sure_gun as number | null, g.kontrol as string | null); const bitis = r.tamamMi && r.kart.bitis ? gunEkle(r.kart.bitis, -1) : null; return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ bitis, kontrol: typeof g.kontrol === 'string' ? r.kart.kontrol : bitis }) : {} } } },
+    { arac: 'antibiyotik-sure', karsilik: 'specialties/enfeksiyon-hastaliklari/engines/atbSure.ts → atbHesapla (the first day is day 1 in both, since the pre-split application was corrected)', listeler: [],
+      onlar: (g) => { const r = atbHesapla(g.baslangic as string | null, g.sure_gun as number | null, g.kontrol as string | null); return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ bitis: r.kart.bitis, kontrol: typeof g.kontrol === 'string' ? r.kart.kontrol : r.kart.bitis }) : {} } } },
     { arac: 'viral-izlem', karsilik: 'specialties/enfeksiyon-hastaliklari/engines/viralIzlem.ts → viralPlanla (with that application\'s own months as parameters)', listeler: [],
       onlar: (g) => { if (g.tur === null) return { tamam: false }; const r = viralPlanla(g.tur as 'hbv', g.son_tarih as string | null, BUGUN); return { tamam: r.tamamMi, tarihler: dolu({ sonraki: r.sonrakiTarih }), uyarilar: r.sonrakiTarih && r.sonrakiTarih < BUGUN ? ['gecikti'] : [] } } },
     {
@@ -543,8 +543,8 @@ describe('tools — the kit\'s arithmetic equals the pre-split application\'s, i
       assert.equal(s.sayilar.find((x) => x.anahtar === 'doz_ml')!.deger, 0.16)
     })
 
-    it('fault 3, antibiotic course: 7 days from 1 October — that application ends on 8 October, the kit on 7 October', () => {
-      assert.equal(atbHesapla('2026-10-01', 7).kart.bitis, '2026-10-08')
+    it('fault 3, antibiotic course: 7 days from 1 October ends on 7 October in both — the pre-split application was corrected to count the first day as day 1', () => {
+      assert.equal(atbHesapla('2026-10-01', 7).kart.bitis, '2026-10-07')
       assert.deepEqual(kit('antibiyotik-sure').hesapla({ baslangic: '2026-10-01', sure_gun: 7, kontrol: null, sinif: null }, O).tarihler, [{ anahtar: 'bitis', tarih: '2026-10-07' }, { anahtar: 'kontrol', tarih: '2026-10-07' }])
     })
 
