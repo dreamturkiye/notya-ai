@@ -5,8 +5,6 @@ import { bransDegistirebilir } from '@/lib/auth/superuserBranslar'
 import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
 import { cepTelefonuKolonuYokMu, profilGovdesiDogrula } from '@/lib/onboarding/profilDogrula'
 import { kvkkKayitliMi, kvkkMetaDamgasi, kvkkSatirDamgasi } from '@/lib/onboarding/kvkkOnay'
-import { hesapUlkesiDamgala } from '@/lib/ulke/hesapDamga'
-import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,14 +20,7 @@ async function oturum(req: NextRequest) {
   if (!authHeader?.startsWith('Bearer ')) return null
   const { data: { user } } = await getSupabase().auth.getUser(authHeader.split(' ')[1])
   if (!user?.id) return null
-  // NOTYA-ULKE-01: an account of another country gets the answer no session gets.
-  if (!hesapBuUlkedeMi(user)) return null
-  return {
-    userId: user.id,
-    userEmail: user.email || null,
-    existingMeta: (user.user_metadata as Record<string, unknown>) || {},
-    appMeta: (user.app_metadata as Record<string, unknown>) || {},
-  }
+  return { userId: user.id, userEmail: user.email || null, existingMeta: (user.user_metadata as Record<string, unknown>) || {} }
 }
 
 /**
@@ -58,7 +49,7 @@ export async function POST(req: NextRequest) {
   try {
     const o = await oturum(req)
     if (!o) return NextResponse.json({ error: OTURUM_YOK }, { status: 401 })
-    const { userId, userEmail, existingMeta, appMeta } = o
+    const { userId, userEmail, existingMeta } = o
 
     const body = await req.json().catch(() => null)
     const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name,
@@ -162,9 +153,6 @@ export async function POST(req: NextRequest) {
       },
     })
     if (metaHatasi) console.error('[profile] auth metadata could not be written', { userId, hata: metaHatasi.message })
-
-    // NOTYA-ULKE-01: first onboarding writes the deployment's country onto the account (best effort — see hesapDamga.ts).
-    if (!kayit?.onboarding_completed) await hesapUlkesiDamgala(getSupabase(), userId, appMeta)
 
     hekimProfilDusur(userId)
     return NextResponse.json({
