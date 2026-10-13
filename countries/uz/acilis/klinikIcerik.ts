@@ -10,6 +10,7 @@
 import type { KlinikAcilisIcerigi } from '@/lib/ulke/arayuz/acilisTipleri'
 import { UZ_ROL_TANIMLARI } from '../klinik/rolAdlari'
 import type { AcilisDili } from './icerik'
+import { UZ_YASAL_CYRL, UZ_YASAL_LATN, UZ_YASAL_RU } from './yasalBaglantilar'
 
 const C = { portal: 'klinikaportal', dallar: 'dallar', fiyat: 'klinikafiyat' } as const
 
@@ -84,6 +85,7 @@ const LATN: KlinikAcilisIcerigi = {
     giris: 'Kirish',
     haklar: 'Notya',
     diller: 'Til va yozuv',
+    yasal: UZ_YASAL_LATN,
   },
 }
 
@@ -154,6 +156,7 @@ const RU: KlinikAcilisIcerigi = {
     giris: 'Войти',
     haklar: 'Notya',
     diller: 'Язык и письмо',
+    yasal: UZ_YASAL_RU,
   },
 }
 
@@ -224,6 +227,7 @@ const CYRL: KlinikAcilisIcerigi = {
     giris: 'Кириш',
     haklar: 'Notya',
     diller: 'Тил ва ёзув',
+    yasal: UZ_YASAL_CYRL,
   },
 }
 

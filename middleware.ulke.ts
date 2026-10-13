@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AKTIF_PAKET } from '@/countries/active'
 import { bulunamadiHtml } from '@/lib/ulke/bulunamadiHtml'
 import { ARAMA_GIZLI_BASLIGI, ROBOTS_HERKESE_KAPALI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
+import { securityTxt } from '@/lib/ulke/yasal/securityTxt'
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
 
 function guvenlikBasliklari(h: Headers) {
@@ -29,6 +30,12 @@ export function middleware(req: NextRequest) {
 
   if (pathname === '/robots.txt' && AKTIF_PAKET.aramaMotorlarinaGizli) {
     const r = new NextResponse(ROBOTS_HERKESE_KAPALI, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+    guvenlikBasliklari(r.headers)
+    return r
+  }
+
+  if (pathname === '/.well-known/security.txt') {
+    const r = new NextResponse(securityTxt(), { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
     guvenlikBasliklari(r.headers)
     return r
   }

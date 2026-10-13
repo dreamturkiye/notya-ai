@@ -419,6 +419,7 @@ The amounts are **not** in the copy. The page writes them from the price list (`
 | `altBilgi.haklar` | Notya | Notya | Notya |
 | `altBilgi.klinik` | Klinikalar uchun | Для клиник | For clinics |
 | `altBilgi.diller` | Til va yozuv | Язык и письмо | Language and script |
+| `altBilgi.yasal` | Maxfiylik · Foydalanish shartlari · Cookie-fayllar · Maʼlumot soʻrovi · Foydalanish qulayligi · Tibbiy ogohlantirish · Xavfsizlik | Конфиденциальность · Условия использования · Файлы куки · Запрос о данных · Доступность · Медицинское предупреждение · Безопасность | Privacy, terms, cookies, your information, accessibility, medical disclaimer, security. Labels only; the pages name the statute. |
 
 ### Clinic landing (`/for-clinics`)
 
@@ -487,6 +488,7 @@ Same section order as the Turkish clinic page: hero, patient page, disciplines, 
 | `klinik.altBilgi.giris` | Kirish | Войти | Log in |
 | `klinik.altBilgi.haklar` | Notya | Notya | Notya |
 | `klinik.altBilgi.diller` | Til va yozuv | Язык и письмо | Language and script |
+| `klinik.altBilgi.yasal` | Maxfiylik · Foydalanish shartlari · Cookie-fayllar · Maʼlumot soʻrovi · Foydalanish qulayligi · Tibbiy ogohlantirish · Xavfsizlik | Конфиденциальность · Условия использования · Файлы куки · Запрос о данных · Доступность · Медицинское предупреждение · Безопасность | Same policy links as the doctor footer. |
 
 ### Page title and description (not visible on the page)
 

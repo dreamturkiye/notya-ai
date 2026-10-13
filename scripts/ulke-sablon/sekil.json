@@ -1729,7 +1729,16 @@
    "kayit": "$m",
    "klinik": "$m",
    "haklar": "$m",
-   "diller": "$m"
+   "diller": "$m",
+   "yasal": [
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m"
+   ]
   },
   "klinik": {
    "meta": {
@@ -1851,7 +1860,16 @@
     "doktor": "$m",
     "giris": "$m",
     "haklar": "$m",
-    "diller": "$m"
+    "diller": "$m",
+    "yasal": [
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m"
+    ]
    }
   }
  }

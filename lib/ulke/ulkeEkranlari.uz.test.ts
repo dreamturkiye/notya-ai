@@ -343,7 +343,7 @@ describe('an Uzbekistan build: routes', () => {
     if (izin === 'hepsi') return
     const d = ulkeRotaDosyalari()
     assert.deepEqual(d.sayfalar, [...izin.sayfalar].sort())
-    assert.deepEqual(d.sayfalar, ['/', '/calendar', '/clinic', '/desk', '/for-clinics', '/login', '/patient', '/patients', '/patients/new', '/portal', '/settings', '/signup', '/start', '/today', '/tools', '/visit', '/welcome'])
+    assert.deepEqual(d.sayfalar, ['/', '/accessibility', '/calendar', '/clinic', '/cookies', '/data-request', '/desk', '/for-clinics', '/login', '/medical-disclaimer', '/patient', '/patients', '/patients/new', '/portal', '/privacy', '/security', '/settings', '/signup', '/start', '/terms', '/today', '/tools', '/visit', '/welcome'])
     assert.deepEqual(d.api, ['/api/ulke/arac-kaydi', '/api/ulke/bugun', '/api/ulke/calisma-duzeni', '/api/ulke/hasta', '/api/ulke/hasta-formu', '/api/ulke/hasta-mesajlari', '/api/ulke/hasta-portali', '/api/ulke/hasta-portali/istekler', '/api/ulke/hasta-portali/ozet', '/api/ulke/hastalar', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/klinik', '/api/ulke/klinik/davet', '/api/ulke/klinik/katil', '/api/ulke/klinik/kayit', '/api/ulke/klinik/on-buro', '/api/ulke/klinik/paylasilan', '/api/ulke/klinik/takvim', '/api/ulke/klinik/uye', '/api/ulke/klinik/yetki', '/api/ulke/konsultasyon', '/api/ulke/meslek-kaydi', '/api/ulke/muayene', '/api/ulke/not', '/api/ulke/not/ek', '/api/ulke/not/onayla', '/api/ulke/not/yeniden-yaz', '/api/ulke/portal', '/api/ulke/portal/cikis', '/api/ulke/portal/form', '/api/ulke/portal/giris', '/api/ulke/portal/mesaj', '/api/ulke/portal/randevu-istegi', '/api/ulke/randevu', '/api/ulke/randevular', '/api/ulke/rol', '/api/ulke/sablonlar', '/api/ulke/tercihler'])
     for (const a of d.api) assert.ok(izin.apiOnEkleri.some((o) => `${a}/`.startsWith(o)), `${a} is a route file but the pack does not list it`)
     for (const o of izin.apiOnEkleri) assert.ok(d.api.some((a) => `${a}/`.startsWith(o)), `the pack lists ${o} but no route file exists`)
@@ -435,7 +435,7 @@ describe('an Uzbekistan build: routes', () => {
     assert.deepEqual(ara.config.matcher, ['/', '/((?!_next/static|_next/image|favicon.ico).*)'])
   })
 
-  it('middleware: listed paths pass with "do not index"; every other path of the application is 404 before any screen', () => {
+  it('middleware: listed paths pass with "do not index"; every other path of the application is 404 before any screen', async () => {
     const git = (yol: string) => ara.middleware(new NextRequest(`https://uz.notya.test${yol}`))
     for (const yol of ['/', '/?dil=ru', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients?q=karim', '/patients/new', '/patient?id=x', '/visit', '/visit?hasta=x', '/visit?seans=x', '/visit?not=x', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/api/ulke/hastalar?q=a', '/api/ulke/hasta?id=x', '/api/ulke/muayene', '/api/ulke/muayene?id=x', '/api/ulke/not?id=x', '/api/ulke/not/yeniden-yaz', '/api/ulke/not/onayla', '/_next/static/chunks/x.js']) {
       const r = git(yol)
@@ -452,6 +452,12 @@ describe('an Uzbekistan build: routes', () => {
     const robots = git('/robots.txt')
     assert.equal(robots.status, 200)
     assert.match(robots.headers.get('content-type') || '', /^text\/plain/)
+    const guvenlik = git('/.well-known/security.txt')
+    assert.equal(guvenlik.status, 200)
+    assert.match(guvenlik.headers.get('content-type') || '', /^text\/plain/)
+    const guvenlikMetni = await guvenlik.text()
+    assert.match(guvenlikMetni, /^Contact: mailto:security@notya\.io\n/)
+    assert.doesNotMatch(guvenlikMetni, /kvkk@/i)
     const kaynak = readFileSync(join(KOK, 'middleware.ulke.ts'), 'utf8')
     assert.ok(kaynak.indexOf('rotaAcikMi(izin, pathname)') < kaynak.indexOf('NextResponse.next()'))
   })

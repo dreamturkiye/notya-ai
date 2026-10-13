@@ -52,6 +52,9 @@ export const EN_PLANLAR = { doctor: 'doctor', clinic: 'clinic' } as const
 const GRUP = { solo: 'solo', clinic: 'clinic' } as const
 
 /** `%M` the word mark; `%K` the country's word for a senior doctor. The lists a country fills are put in by `enAcilis`. */
+/** Footer labels for the policy pages, in YASAL_ANAHTARLARI order. No statute is named. */
+const EN_YASAL = ['Privacy', 'Terms of use', 'Cookies', 'Your information', 'Accessibility', 'Medical disclaimer', 'Security'] as const
+
 const TEMEL: AcilisIcerigi = {
   meta: {
     baslik: '%M — a clinical assistant for doctors',
@@ -280,6 +283,7 @@ const TEMEL: AcilisIcerigi = {
     klinik: 'For clinics',
     haklar: '%M',
     diller: 'Language',
+    yasal: EN_YASAL,
   },
   klinik: {
     meta: {
@@ -348,6 +352,7 @@ const TEMEL: AcilisIcerigi = {
       giris: 'Sign in',
       haklar: '%M',
       diller: 'Language',
+      yasal: EN_YASAL,
     },
   },
 }

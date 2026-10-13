@@ -27,6 +27,7 @@
  */
 import type { AcilisIcerigi, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import { UZ_KLINIK } from './klinikIcerik'
+import { UZ_YASAL_CYRL, UZ_YASAL_LATN, UZ_YASAL_RU } from './yasalBaglantilar'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { uzAsistanKimligi } from '../klinik/asistanKimligi'
 import { UZ_FIYATLAR } from './fiyatlar'
@@ -407,6 +408,7 @@ const UZ_LATN: AcilisIcerigi = {
     klinik: 'Klinikalar uchun',
     haklar: 'Notya',
     diller: 'Til va yozuv',
+    yasal: UZ_YASAL_LATN,
   },
   klinik: UZ_KLINIK['uz-Latn'],
 }
@@ -753,6 +755,7 @@ const RU: AcilisIcerigi = {
     klinik: 'Для клиник',
     haklar: 'Notya',
     diller: 'Язык и письмо',
+    yasal: UZ_YASAL_RU,
   },
   klinik: UZ_KLINIK.ru,
 }
@@ -1098,6 +1101,7 @@ const UZ_CYRL: AcilisIcerigi = {
     klinik: 'Клиникалар учун',
     haklar: 'Notya',
     diller: 'Тил ва ёзув',
+    yasal: UZ_YASAL_CYRL,
   },
   klinik: UZ_KLINIK['uz-Cyrl'],
 }

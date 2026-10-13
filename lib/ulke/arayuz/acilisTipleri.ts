@@ -157,7 +157,7 @@ export type AcilisIcerigi = {
     davetSorusu: string
     davetBaglantisi: string
   }
-  altBilgi: { tanim: string; havolalar: string; giris: string; kayit: string; /** Link to the clinic landing. */ klinik: string; haklar: string; diller: string }
+  altBilgi: { tanim: string; havolalar: string; giris: string; kayit: string; /** Link to the clinic landing. */ klinik: string; haklar: string; diller: string; /** Policy-page labels, in YASAL_ANAHTARLARI order. The path is the kit's. No statute name. */ yasal: readonly string[] }
   /**
    * THE CLINIC LANDING (`/for-clinics`). Same section inventory as the Turkish clinic page: hero, patient page,
    * disciplines, trust line, price, closing request. The form reuses `sorov` above so a label is written once.
@@ -207,7 +207,7 @@ export type KlinikAcilisIcerigi = {
   fiyat: { ustBaslik: string; baslik: string; baslikVurgu: string }
   /** Closing band. The request form's own labels are `sorov.form` of the doctor page. */
   cta: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; ikinciDugme: string }
-  altBilgi: { tanim: string; havolalar: string; doktor: string; giris: string; haklar: string; diller: string }
+  altBilgi: { tanim: string; havolalar: string; doktor: string; giris: string; haklar: string; diller: string; /** Same policy labels as the doctor footer, in the same order. */ yasal: readonly string[] }
 }
 
 /** The sections of the page that can be linked to. Keys are the layout's; the anchor words are the pack's. */

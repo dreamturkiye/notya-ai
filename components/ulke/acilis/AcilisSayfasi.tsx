@@ -21,6 +21,7 @@ import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
 import { dilSec, ulkePaketi } from '@/lib/ulke/ulke'
 import { dilliYol } from '@/lib/ulke/sayfaDili'
+import { YASAL_ANAHTARLARI, YASAL_YOLLAR } from '@/lib/ulke/yasal/tipler'
 import type { AcilisSayfasiProps } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import type { AcilisCapasi, AcilisIcerigi, OzellikBolumu, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
@@ -289,6 +290,11 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
               <a href={kayitHref} className="text-ink-2 hover:text-ink">
                 {t.altBilgi.kayit}
               </a>
+              {t.altBilgi.yasal.map((etiket, i) => (
+                <a key={YASAL_ANAHTARLARI[i]} href={dilliYol(YASAL_YOLLAR[YASAL_ANAHTARLARI[i]], d)} className="text-ink-2 hover:text-ink">
+                  {etiket}
+                </a>
+              ))}
             </nav>
           </div>
           <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-line px-5 py-6 font-outfit text-xs uppercase tracking-[0.14em] text-ink-muted sm:flex-row sm:justify-between sm:px-8">

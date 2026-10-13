@@ -13,6 +13,7 @@ import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
 import { dilSec, ulkePaketi } from '@/lib/ulke/ulke'
 import { dilliYol } from '@/lib/ulke/sayfaDili'
+import { YASAL_ANAHTARLARI, YASAL_YOLLAR } from '@/lib/ulke/yasal/tipler'
 import type { AcilisSayfasiProps } from '@/lib/ulke/tipler'
 import type { UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import { acilisAdresi, acilisFormu, narxSatirlari, ustDilSecenekleri } from './AcilisSayfasi'
@@ -163,6 +164,11 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
               <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">{k.markaEk}</span>
             </a>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm text-ink-2" aria-label={k.altBilgi.havolalar}>
+              {k.altBilgi.yasal.map((etiket, i) => (
+                <a key={YASAL_ANAHTARLARI[i]} href={dilliYol(YASAL_YOLLAR[YASAL_ANAHTARLARI[i]], d)} className="hover:text-ink">
+                  {etiket}
+                </a>
+              ))}
               <a href={doktorHref} className="hover:text-ink">
                 {k.altBilgi.doktor}
               </a>
