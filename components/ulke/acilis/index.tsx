@@ -16,7 +16,13 @@ import xona from '../../../public/landing/hero-clinic.jpg'
 import stol from '../../../public/landing/desk-notes.jpg'
 import yolak from '../../../public/landing/corridor.jpg'
 import { AcilisSayfasi } from './AcilisSayfasi'
+import { KlinikSayfasi } from './KlinikSayfasi'
 
 export function UlkeAcilisSayfasi(props: AcilisSayfasiProps & { acilis: UlkeAcilisi }) {
   return <AcilisSayfasi {...props} gorseller={{ xona: xona.src, stol: stol.src, yolak: yolak.src }} />
+}
+
+/** Clinic landing. The corridor photograph is the Turkish clinic page's hero. */
+export function UlkeKlinikSayfasi(props: AcilisSayfasiProps & { acilis: UlkeAcilisi }) {
+  return <KlinikSayfasi {...props} gorsel={yolak.src} />
 }

@@ -30,13 +30,13 @@ import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD, metinAlani, uuidMi } from '@/lib/ulke/uygulama/cevap'
-import { muayeneGetir, muayeneKaydet, type MuayeneRetKodu } from '@/lib/ulke/uygulama/muayeneKaydi'
+import { muayeneGetir, muayeneKaydet, muayeneSil, type MuayeneRetKodu } from '@/lib/ulke/uygulama/muayeneKaydi'
 
 export const dynamic = 'force-dynamic'
 // Two transcription passes of a long recording at most; the platform must not cut the request before they finish.
 export const maxDuration = 300
 
-const DURUM: Record<MuayeneRetKodu, number> = { RIZA_GEREKLI: 400, GECERSIZ: 400, NOT_FOUND: 404, KISA_KAYIT: 422, LIMIT: 429, SES_OKUNAMADI: 502, HAZIR_DEGIL: 503, BASARISIZ: 500 }
+const DURUM: Record<MuayeneRetKodu, number> = { RIZA_GEREKLI: 400, GECERSIZ: 400, NOT_FOUND: 404, KISA_KAYIT: 422, LIMIT: 429, SES_OKUNAMADI: 502, HAZIR_DEGIL: 503, BASARISIZ: 500, ONAYLI: 409 }
 
 export const POST = sinirda('muayene POST', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
@@ -65,4 +65,16 @@ export const GET = sinirda('muayene GET', async (req: NextRequest) => {
   const muayene = await muayeneGetir(oturum.supabase, oturum.user.id, id)
   if (!muayene) return KOD.yok()
   return cevap({ muayene })
+})
+
+/** Deletes a draft visit of the caller. An approved note is not deleted (409 ONAYLI). A foreign id is 404. */
+export const DELETE = sinirda('muayene DELETE', async (req: NextRequest) => {
+  if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
+  const oturum = await ulkeOturum(req)
+  if (!oturum) return KOD.oturumYok()
+  const g = await govdeOku(req)
+  if (!uuidMi(g.seansId)) return KOD.yok()
+  const r = await muayeneSil(oturum.supabase, oturum.user.id, g.seansId)
+  if (!r.tamam) return cevap({ code: r.kod }, DURUM[r.kod])
+  return cevap({ ok: true })
 })

@@ -100,9 +100,11 @@ describe('Uzbekistan — messages between a doctor and a patient: text in three 
     assert.match(MM.UZ_MESAJ_METINLERI['uz-Latn'].hasta.acil, /shoshilinch holatlar uchun emas/)
   })
 
-  it('THE EMERGENCY NUMBER is the pack\'s setting (unverified, said so where it is set) and stands in no sentence; each form has the place for it', () => {
+  // Country audit 2026-10-09: 103 was checked against the state services portal (docs/COUNTRY-AUDIT-UZBEKISTAN.md, A10);
+  // it is still not confirmed by a person in the country, and the pack says both where the number is set.
+  it('THE EMERGENCY NUMBER is the pack\'s setting (its source and what is still unconfirmed are said where it is set) and stands in no sentence; each form has the place for it', () => {
     assert.equal(P.UZ_PAKETI.uygulama!.portal!.acilNumara, '103')
-    assert.match(readFileSync(join(KOK, 'countries/uz/index.ts'), 'utf8'), /103 was written by Claude from general knowledge\s+\/\/ and is UNVERIFIED/)
+    assert.match(readFileSync(join(KOK, 'countries/uz/index.ts'), 'utf8'), /103 — CHECKED AGAINST AN OFFICIAL SOURCE on 2026-10-09[\s\S]{0,400}https:\/\/gov\.uz\/oz\/advice\/63\/document\/1090[\s\S]{0,500}Not yet confirmed by a person in the country/)
     for (const f of FORMLAR) {
       const h = MM.UZ_MESAJ_METINLERI[f].hasta
       assert.doesNotMatch(`${h.acil} ${h.acilNumara}`, /103|\d/)

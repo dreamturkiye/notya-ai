@@ -24,12 +24,14 @@ export type DavetliKayitFormuProps = {
   fiyat: string
   /** false = the country's sign-up is open (pack setting `uygulama.kayitAcik`): no code is asked. Default: a code is required. */
   kodGerekli?: boolean
+  /** Optional professional registration. From the signed-in catalogue, not a new key of the public sign-up surface. */
+  meslek?: { etiket: string; izoh: string; gecersiz: string }
 }
 
 const EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true }: DavetliKayitFormuProps) {
-  const [alan, setAlan] = useState({ adSoyad: '', eposta: '', sifre: '', sifreTekrar: '', davetKodu: '', dil: dil as string })
+export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true, meslek }: DavetliKayitFormuProps) {
+  const [alan, setAlan] = useState({ adSoyad: '', eposta: '', sifre: '', sifreTekrar: '', davetKodu: '', dil: dil as string, meslekKaydi: '' })
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState('')
   const [tamam, setTamam] = useState(false)
@@ -48,11 +50,11 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), dil: alan.dil }),
+        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}) }),
       })
       if (r.ok) { setTamam(true); return }
       const j = (await r.json().catch(() => ({}))) as { code?: string }
-      const kod: Record<string, string> = { EKSIK_ALAN: metin.eksikAlan, EPOSTA_GECERSIZ: metin.epostaGecersiz, SIFRE_KISA: metin.sifreKisa, KOD_GECERSIZ: metin.kodGecersiz }
+      const kod: Record<string, string> = { EKSIK_ALAN: metin.eksikAlan, EPOSTA_GECERSIZ: metin.epostaGecersiz, SIFRE_KISA: metin.sifreKisa, KOD_GECERSIZ: metin.kodGecersiz, GECERSIZ: meslek?.gecersiz ?? metin.olusturulamadi }
       setHata(kod[String(j.code)] ?? metin.olusturulamadi)
     } catch {
       setHata(metin.baglantiHatasi)
@@ -63,7 +65,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
 
   if (tamam) {
     return (
-      <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }}>
+      <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }} genislik={440}>
         <div role="status" style={S.bilgi}>{metin.basarili}</div>
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <a href={giris} style={S.cizgiDugme}>{metin.girisBaglantisi}</a>
@@ -73,7 +75,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
   }
 
   return (
-    <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }}>
+    <UlkeKart dil={dil} altBaslik={metin.baslik} anaSayfa={{ href: anaSayfa, ad: anaSayfaAdi }} genislik={440}>
       <p style={{ margin: '0 0 18px', fontSize: 14, color: R.muted, textAlign: 'center', lineHeight: 1.5 }}>{metin.aciklama}</p>
       <form onSubmit={gonder} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {kodGerekli ? (
@@ -98,6 +100,13 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
           <label style={S.etiket} htmlFor="ulke-kayit-sifre2">{metin.sifreTekrar}</label>
           <input id="ulke-kayit-sifre2" type="password" value={alan.sifreTekrar} onChange={yaz('sifreTekrar')} autoComplete="new-password" maxLength={200} style={S.girdi} />
         </div>
+        {meslek ? (
+          <div>
+            <label style={S.etiket} htmlFor="ulke-kayit-meslek">{meslek.etiket}</label>
+            <input id="ulke-kayit-meslek" value={alan.meslekKaydi} onChange={yaz('meslekKaydi')} autoComplete="off" maxLength={40} style={S.girdi} data-alan="meslek-kaydi" />
+            <p style={{ margin: '6px 0 0', fontSize: 13, color: R.muted, lineHeight: 1.45 }}>{meslek.izoh}</p>
+          </div>
+        ) : null}
         {diller.length > 1 ? (
           <div>
             <label style={S.etiket} htmlFor="ulke-kayit-dil">{metin.dil}</label>

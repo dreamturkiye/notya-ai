@@ -33,6 +33,9 @@ export const GB_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: false,
     saatDilimiCumlesi: 'All times are UK time.',
     tarihOrnegi: 'DD/MM/YYYY',
+    // Optional. Not checked against the GMC, NMC or any other register. Not an authorisation.
+    meslekKaydiEtiketi: 'Professional registration number',
+    odeme: 'NHS',
   },
   ulkeAdi: 'the United Kingdom',
   // UNVERIFIED: the word a senior hospital doctor goes by here. (A consultant surgeon is addressed as Mr, Ms, Miss or
@@ -47,7 +50,7 @@ export const GB_GIRDI: EnUlkeGirdisi = {
   roller: GB_ROLLER,
   veliYasi: GB_VELI_YASI,
   birimler: GB_BIRIMLER,
-  surum: 'gb-draft-2026-10-09',
+  surum: 'gb-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',

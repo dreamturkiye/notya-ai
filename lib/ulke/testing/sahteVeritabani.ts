@@ -679,6 +679,19 @@ export function sahteVeritabani() {
       },
       getSession: async () => ({ data: { session: null }, error: null }),
       signOut: async () => ({ error: null }),
+      admin: {
+        updateUserById: async (id: string, g: { user_metadata?: Record<string, unknown> }) => {
+          const kayit = Object.entries(hesaplar).find(([, h]) => h.id === id)
+          if (!kayit) return { data: { user: null }, error: { message: 'not found' } }
+          const [jeton, h] = kayit
+          const once = { ...(h.user_metadata ?? {}) }
+          const gelen = g.user_metadata ?? {}
+          h.user_metadata = { ...once, ...gelen }
+          if (!('meslekKaydi' in gelen) || gelen.meslekKaydi === '' || gelen.meslekKaydi == null) delete h.user_metadata.meslekKaydi
+          hesaplar[jeton] = h
+          return { data: { user: { id, user_metadata: h.user_metadata, app_metadata: h.app_metadata } }, error: null }
+        },
+      },
     },
     from: (ad: string) => new Sorgu(ad),
     rpc,

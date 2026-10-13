@@ -60,13 +60,18 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
   'yama-okuma': ['dermatology', 'clinic-dermatology'],
   'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
   'postop-agri': ['anaesthesia', 'pain-medicine'],
+  'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine'],
+  'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine'],
+  'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'psychotherapy'],
+  'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+  'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'reproductive-endocrinology'],
 }
 
 describe('ca tools 1: which tools of the shared set are on', () => {
   it('every tool of the set but the four the owner ordered off, the patient\'s page and the follow-up list; beyond the set, the two of this country\'s own', () => {
     const setten = ['hasta-portali', ...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
-    assert.equal(acik.length, 44)
+    assert.equal(acik.length, 62)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the two of this country's own`)
   })
 
@@ -110,7 +115,7 @@ describe('ca tools 1: which tools of the shared set are on', () => {
 })
 
 describe('ca tools 2: who sees which tool', () => {
-  it('ELEVEN TOOLS OF THE SET ARE SHOWN TO MORE ROLES HERE, as the audit lists them', () => {
+  it('TOOLS OF THE SET ARE SHOWN TO MORE ROLES HERE, as the audit lists them and as this job adds', () => {
     assert.deepEqual(Object.keys(CA_GIRDI.araclar.gorenler ?? {}).sort(), Object.keys(GORENLER).sort())
     for (const [k, roller] of Object.entries(GORENLER)) {
       assert.deepEqual([...(araci(k).roller ?? [])], [...roller], k)
@@ -134,12 +139,12 @@ describe('ca tools 2: who sees which tool', () => {
   it('WHAT A DOCTOR SEES ON THE GRID, before and after — examples', () => {
     const HEKIM = 'ca-egfr-ckd-epi-2021'
     // FAMILY MEDICINE: before, the patient's page and nothing else
-    assert.deepEqual(izgara('family-medicine'), ['hasta-portali', 'ca-unit-converter', 'antikoagulan-vadeleri', 'doz-hesabi', HEKIM, 'takip-paneli'])
-    // THE AUDIOLOGIST: before, the patient's page and nothing else; an allied profession, so no estimated GFR
-    assert.deepEqual(izgara('audiology'), ['hasta-portali', 'ca-unit-converter', 'odyometri-pta', 'takip-paneli'])
-    // THE DERMATOLOGIST OF A CLINIC: before, the patient's page and nothing else; now the four dermatology tools
-    assert.deepEqual(izgara('clinic-dermatology'), ['hasta-portali', 'ca-unit-converter', 'pasi', 'easi', 'scorad', 'yama-okuma', HEKIM, 'takip-paneli'])
-    assert.deepEqual(izgara('clinic-dermatology'), izgara('dermatology'))
+    assert.deepEqual(izgara('family-medicine'), ['hasta-portali', 'ca-unit-converter', 'antikoagulan-vadeleri', 'doz-hesabi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', HEKIM, 'takip-paneli'])
+    // THE AUDIOLOGIST: the hearing average and the next-session record; an allied profession, so no estimated GFR
+    assert.deepEqual(izgara('audiology'), ['hasta-portali', 'ca-unit-converter', 'odyometri-pta', 'sonraki-seans', 'takip-paneli'])
+    // THE DERMATOLOGIST OF A CLINIC: the four scores, plus the two clinic reminder calendars
+    assert.deepEqual(izgara('dermatology'), ['hasta-portali', 'ca-unit-converter', 'pasi', 'easi', 'scorad', 'yama-okuma', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('clinic-dermatology'), ['hasta-portali', 'ca-unit-converter', 'pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', HEKIM, 'takip-paneli'])
     // THE SPLIT: both halves see the three lists of the specialty that was one
     assert.deepEqual(izgara('vascular-surgery'), ['hasta-portali', 'ca-unit-converter', 'kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', HEKIM, 'takip-paneli'])
     assert.deepEqual(izgara('cardiovascular-surgery'), izgara('vascular-surgery'))
@@ -148,11 +153,22 @@ describe('ca tools 2: who sees which tool', () => {
     assert.deepEqual(izgara('emergency-medicine'), ['hasta-portali', 'ca-unit-converter', 'kritik-yol', 'doz-hesabi', HEKIM, 'takip-paneli'])
     // roles the audit adds
     assert.deepEqual(izgara('hematology'), ['hasta-portali', 'ca-unit-converter', 'antikoagulan-vadeleri', HEKIM, 'takip-paneli'])
-    assert.deepEqual(izgara('pain-medicine'), ['hasta-portali', 'ca-unit-converter', 'postop-agri', HEKIM, 'takip-paneli'])
-    // doctor roles with no tool of the set: before, the patient's page and nothing else; now the two of the core set
-    for (const rol of ['psychiatry', 'neurology', 'gastroenterology', 'obstetrics-gynaecology', 'rehabilitation-medicine', 'geriatric-medicine', 'clinical-immunology-allergy', 'reproductive-endocrinology', 'longevity', 'hair-transplant']) assert.deepEqual(izgara(rol), ['hasta-portali', 'ca-unit-converter', HEKIM, 'takip-paneli'], rol)
-    // the professions with no tool of the set: the base tools and the follow-up list
-    for (const rol of ['physiotherapy', 'clinical-psychology', 'dietetics', 'occupational-therapy', 'psychotherapy']) assert.deepEqual(izgara(rol), ['hasta-portali', 'ca-unit-converter', 'takip-paneli'], rol)
+    assert.deepEqual(izgara('pain-medicine'), ['hasta-portali', 'ca-unit-converter', 'postop-agri', 'seans-plani', 'icf-ozet', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('psychiatry'), ['hasta-portali', 'ca-unit-converter', 'psikiyatri-guvenlik', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('neurology'), ['hasta-portali', 'ca-unit-converter', 'inme-bayraklari', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('gastroenterology'), ['hasta-portali', 'ca-unit-converter', 'endoskopi-kaydi', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('obstetrics-gynaecology'), ['hasta-portali', 'ca-unit-converter', 'gebelik-gun', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('rehabilitation-medicine'), ['hasta-portali', 'ca-unit-converter', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('geriatric-medicine'), ['hasta-portali', 'ca-unit-converter', 'kronik-izlem-kaydi', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('reproductive-endocrinology'), ['hasta-portali', 'ca-unit-converter', 'gebelik-gun', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('longevity'), ['hasta-portali', 'ca-unit-converter', 'infuzyon-guvenlik', HEKIM, 'takip-paneli'])
+    assert.deepEqual(izgara('hair-transplant'), ['hasta-portali', 'ca-unit-converter', 'greft-tahmini', 'sac-bakim-vade', HEKIM, 'takip-paneli'])
+    for (const rol of ['clinical-immunology-allergy']) assert.deepEqual(izgara(rol), ['hasta-portali', 'ca-unit-converter', HEKIM, 'takip-paneli'], rol)
+    assert.deepEqual(izgara('physiotherapy'), ['hasta-portali', 'ca-unit-converter', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', 'takip-paneli'])
+    assert.deepEqual(izgara('clinical-psychology'), ['hasta-portali', 'ca-unit-converter', 'psikiyatri-guvenlik', 'sonraki-seans', 'takip-paneli'])
+    assert.deepEqual(izgara('dietetics'), ['hasta-portali', 'ca-unit-converter', 'makro-kaydi', 'takip-paneli'])
+    assert.deepEqual(izgara('occupational-therapy'), ['hasta-portali', 'ca-unit-converter', 'seans-plani', 'icf-ozet', 'takip-paneli'])
+    assert.deepEqual(izgara('psychotherapy'), ['hasta-portali', 'ca-unit-converter', 'psikiyatri-guvenlik', 'takip-paneli'])
     // an account without a role: the base tools only
     assert.deepEqual(izgara(null), ['hasta-portali', 'ca-unit-converter'])
   })

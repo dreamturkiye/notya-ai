@@ -10,6 +10,11 @@
     "gb-fracture-risk-link",
     "gb-valproate-forms"
   ],
+  "nz": [
+    "nz-bmi-waist",
+    "nz-psa-thresholds",
+    "nz-smoking-abc"
+  ],
   "tr": [
     "sgk-medula",
     "enabiz",
@@ -40,6 +45,11 @@
     "us-fall-risk-screen",
     "us-pack-years",
     "us-phq-9"
+  ],
+  "uz": [
+    "uz-emlash-qaydi",
+    "uz-homiladorlik-muddati",
+    "uz-tana-vazni-indeksi"
   ],
   "xx": [
     "xx-erken-uyari",

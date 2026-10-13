@@ -31,4 +31,14 @@ export type EnUlkeSozleri = {
   saatDilimiCumlesi: string
   /** The date pattern as a person is asked to type it, in the country's order: DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD. */
   tarihOrnegi: string
+  /**
+   * The label of the optional professional registration on sign-up and in Settings. The country's own name, written
+   * as the country writes it (NPI, AHPRA): the spelling table does not touch it. Not checked against a register.
+   */
+  meslekKaydiEtiketi: string
+  /**
+   * The country's own payer, written in the country's spelling, for the slot a national payer occupies.
+   * Omitted on the shared English base, which says "Cover" until a country names its own.
+   */
+  odeme?: string
 }

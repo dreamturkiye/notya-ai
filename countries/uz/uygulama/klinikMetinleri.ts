@@ -9,6 +9,7 @@
  *   davet      invitations                            takvim    the clinic's schedule
  *   yetki      "who can help with my patients"        kayit     the record of what was done
  *   paylasilan what was shared with the account       onBuro    the front-desk workspace
+ *   saklama    no retention period is set; the owner asks a lawyer before any deletion is built
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  * MACHINE-WRITTEN. AWAITS NATIVE REVIEW. Nobody who speaks Uzbek or Russian as a first language has read this
@@ -224,6 +225,11 @@ export const UZ_KLINIK_LATN: KlinikMetni = {
     bekliyor: 'Kuting…',
     kapat: 'Yopish',
   },
+  saklama: {
+    baslik: 'Qaydlar qancha saqlanadi',
+    aciklama: 'Muddat belgilanmagan. Hech narsa jadval boʻyicha oʻchirilmaydi.',
+    sahip: 'Oʻchirish qurilishidan oldin klinika egasi bu mamlakat huquqshunosidan muddatni soʻrashi kerak. Bu matnni huquqshunos koʻrib chiqmagan.',
+  },
 }
 
 export const UZ_KLINIK_RU: KlinikMetni = {
@@ -418,6 +424,11 @@ export const UZ_KLINIK_RU: KlinikMetni = {
     yapilamadi: 'Не удалось выполнить. Попробуйте ещё раз.',
     bekliyor: 'Подождите…',
     kapat: 'Закрыть',
+  },
+  saklama: {
+    baslik: 'Срок хранения записей',
+    aciklama: 'Срок не задан. Ничего не удаляется по расписанию.',
+    sahip: 'Прежде чем строить удаление, владелец клиники должен спросить юриста этой страны о сроке. Этот текст юрист не читал.',
   },
 }
 
