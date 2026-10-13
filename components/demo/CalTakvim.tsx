@@ -45,7 +45,7 @@ function calYukleyici(): CalFn {
       api.q = api.q || [];
       if (typeof namespace === "string") {
         c.ns[namespace] = c.ns[namespace] || api;
-        p(c.ns[namespace] as { q: unknown[] }, ar);
+        p(c.ns[namespace] as unknown as { q: unknown[] }, ar);
         p(c, ["initNamespace", namespace]);
       } else p(c, ar);
       return;
