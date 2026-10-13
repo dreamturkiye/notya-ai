@@ -7,7 +7,7 @@ export function SiteFooter() {
         <div>
           <p className="font-display text-3xl italic">notya</p>
           <p className="mt-2 max-w-xs font-outfit text-sm leading-relaxed text-ink-muted">
-            Hekimler için yapay zekâ klinik asistanı. Dream Türkiye, İstanbul.
+            Hekimler için yapay zekâ klinik asistanı. İstanbul.
           </p>
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm" aria-label="Alt bağlantılar">
@@ -23,7 +23,7 @@ export function SiteFooter() {
         </nav>
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-line px-5 py-6 font-outfit text-xs uppercase tracking-[0.14em] text-ink-muted sm:flex-row sm:justify-between sm:px-8">
-        <p>© {new Date().getFullYear()} Notya · Dream Türkiye</p>
+        <p>© {new Date().getFullYear()} Notya</p>
         <p>KVKK · AES-256 · Türkçe</p>
       </div>
     </footer>
