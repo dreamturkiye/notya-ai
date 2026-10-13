@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { demoBaglantisiCoz, demoCspGenislet, demoYoluMu } from './demoBaglantisi'
 import { Hero } from '../../components/doktor-landing/hero'
 import { SiteNav } from '../../components/doktor-landing/site-nav'
+import { DemoSection } from '../../components/doktor-landing/demo-section'
 import DemoPage from '../../app/demo/page'
 
 // The landing components use the automatic JSX runtime under Next; tsx compiles them with the classic one.
@@ -93,6 +94,7 @@ describe('landing + /demo, both states', () => {
     delete process.env.NEXT_PUBLIC_DEMO_BOOKING_URL
     assert.doesNotMatch(renderToStaticMarkup(createElement(Hero)), /Demo planla|href="\/demo"/)
     assert.doesNotMatch(renderToStaticMarkup(createElement(SiteNav)), /Demo planla|href="\/demo"/)
+    assert.equal(renderToStaticMarkup(createElement(DemoSection)), '')
     const s = renderToStaticMarkup(createElement(DemoPage))
     assert.match(s, /<h1[^>]*>Demo planla<\/h1>/)
     assert.match(s, /Dr\. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme/)
@@ -114,17 +116,25 @@ describe('landing + /demo, both states', () => {
     process.env.NEXT_PUBLIC_DEMO_BOOKING_URL = 'https://cal.com/example'
     assert.match(renderToStaticMarkup(createElement(Hero)), /href="\/demo"[^>]*>Demo planla/)
     assert.match(renderToStaticMarkup(createElement(SiteNav)), /href="\/demo"[^>]*>Demo planla/)
+    const bolum = renderToStaticMarkup(createElement(DemoSection))
+    assert.match(bolum, /<section id="demo"/)
+    assert.match(bolum, /href="\/demo"[^>]*>Demo planla/)
+    assert.match(bolum, /Dr\. Gökhan Mamur/)
+    assert.doesNotMatch(bolum, /Google|Meet|Zoom/)
     const s = renderToStaticMarkup(createElement(DemoPage))
     assert.match(s, /aria-label="Demo randevu takvimi"/)
     assert.doesNotMatch(s, /çok yakında açılıyor/)
     assert.match(s, /Randevu işlemleri Cal\.com üzerinden yürütülür\./)
-    // the nav on /demo sends section links back to the landing
+    // the nav on /demo sends section links back to the landing and has no button to itself
     assert.match(s, /href="\/doktor#fiyat"/)
+    assert.doesNotMatch(s, /href="\/demo"/)
   })
 
   it('/demo copy makes no compliance, certification, integration, price or result claims', () => {
     process.env.NEXT_PUBLIC_DEMO_BOOKING_URL = 'https://cal.com/example'
     const main = renderToStaticMarkup(createElement(DemoPage)).split('<main>')[1].split('</main>')[0].replace(/<[^>]+>/g, ' ')
-    assert.doesNotMatch(main, /KVKK|uyumlu|sertifika|onaylı|entegrasyon|₺|fiyat|garanti|%/i)
+    assert.doesNotMatch(main, /KVKK|uyumlu|sertifika|onaylı|entegrasyon|₺|fiyat|garanti|%|Google|Meet|Zoom/i)
+    const bolum = renderToStaticMarkup(createElement(DemoSection)).replace(/<[^>]+>/g, ' ')
+    assert.doesNotMatch(bolum, /KVKK|uyumlu|sertifika|onaylı|entegrasyon|₺|fiyat|garanti|%|Google|Meet|Zoom/i)
   })
 })

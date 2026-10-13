@@ -12,7 +12,8 @@ import { ArrowUpRight, IconClose, IconMenu } from "./icons";
  * (NOTYA-DEMO-01: /demo passes "/doktor" so "#nasil" becomes "/doktor#nasil").
  */
 export function SiteNav({ home = "" }: { home?: string } = {}) {
-  const demoAcik = demoBaglantisi() !== null;
+  // On /demo itself (home set) the bar does not link to the page it is on.
+  const demoAcik = !home && demoBaglantisi() !== null;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -59,7 +60,7 @@ export function SiteNav({ home = "" }: { home?: string } = {}) {
               Giriş
             </a>
             {demoAcik ? (
-              <Button href={LINKS.demo} variant="outline" size="sm" className="hidden sm:inline-flex">
+              <Button href={LINKS.demo} variant="outline" size="sm">
                 {DEMO.cta}
               </Button>
             ) : null}

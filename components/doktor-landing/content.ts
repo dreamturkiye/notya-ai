@@ -17,6 +17,19 @@ export const DEMO = {
   soonBody: "Takvim hazır olduğunda bu sayfadan doğrudan randevu alabileceksiniz.",
   provider: "Randevu işlemleri Cal.com üzerinden yürütülür.",
   calendarLabel: "Demo randevu takvimi",
+  // Landing section right after the hero (shown only when the booking link is set).
+  section: {
+    eyebrow: "Demo",
+    title: "Notya'yı bir hekimle birlikte görün.",
+    titleItalic: "60 dakikalık bir görüşmede.",
+    body: "Dr. Gökhan Mamur ile görüntülü bir görüşme planlayın. Size uygun saati takvimden seçin; saatler kendi saat diliminizde gösterilir.",
+    cardLabel: "Demo görüşmesi",
+    rows: [
+      { k: "60 dakika", v: "Görüntülü görüşme" },
+      { k: "Dr. Gökhan Mamur", v: "Sorularınızı birlikte konuşun" },
+      { k: "Kendi saatinizle", v: "Takvim saat diliminize göre açılır" },
+    ],
+  },
 } as const;
 
 export const NAV = [
