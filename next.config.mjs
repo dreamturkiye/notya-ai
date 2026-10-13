@@ -76,8 +76,19 @@ const nextConfig = {
   // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
   async redirects() {
     // NOTYA-ULKE-01: the list below belongs to the pre-split application (Türkiye today) and is returned only for it.
-    // Any other country gets its own list from countries/<kod>/derleme.mjs — never these.
-    if (!ulkeDerleme.bolunmemisUygulama) return ulkeDerleme.yonlendirmeler
+    // Any other country gets its own list from countries/<kod>/derleme.mjs, plus the one redirect below that every
+    // country build gets for free — never the Türkiye list.
+    if (!ulkeDerleme.bolunmemisUygulama) {
+      // NOTYA-ANASAYFA-404-01 (Kaan, 2026-10-13): a country build's real home page (app/page.ulke.tsx) only exists
+      // under its own prefix (the setting above already puts every route of the pack there). The BARE
+      // domain root sits outside that prefix, so Next never mounts anything there — confirmed live, "/" 404s on
+      // every one of the six country subdomains today, while the prefixed page (/us, /uk, /ca, /au, /nz, /uzbek —
+      // Uzbekistan's prefix is "/uzbek", never "/uz") answers fine. The flag below (`false`, on this entry only) is
+      // the documented way to still match that unprefixed root from a prefixed build and send it straight to the
+      // prefixed page — no page content moves, and the prefixed paths keep answering exactly as they do today.
+      const KOK_YONLENDIRME = YOL_ON_EKI ? [{ source: '/', destination: YOL_ON_EKI, basePath: false, permanent: false }] : []
+      return [...KOK_YONLENDIRME, ...ulkeDerleme.yonlendirmeler]
+    }
     return [
       // NOTYA-KOK-DOKTOR-01 (Kaan, 2026-09-27): alan adının kökü doğrudan hekim açılış sayfasına. Uçta GERÇEK 307 + Location
       // (geçici: dikeyler yeniden öne çıkarsa bu satır silinir). app/page.tsx'teki redirect() tek başına yetmedi: statik
