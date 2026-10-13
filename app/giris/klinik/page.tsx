@@ -2,8 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import { authHataMesaji, GIRIS_HATALI } from '../authHataMesaji'
-import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
+import { authHataMesaji } from '../authHataMesaji'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
 export default function KlinikGiris() {
@@ -25,8 +24,6 @@ export default function KlinikGiris() {
       setLoading(false)
       return
     }
-    // NOTYA-ULKE-01: an account of another country is refused with the sentence a wrong password gets.
-    if (!hesapBuUlkedeMi(data.user)) { await supabase.auth.signOut(); setError(GIRIS_HATALI); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,

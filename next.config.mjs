@@ -1,37 +1,8 @@
 
-import { existsSync } from 'node:fs'
-
-// NOTYA-ULKE-01 (Kaan, 2026-10-08): one repository, one build per country. NOTYA_COUNTRY says which country THIS build
-// serves; unset = Türkiye, exactly as before countries existed. It is inlined below so countries/active/ can drop every
-// other country's pack at build time. An unknown code stops the build — it never guesses.
-// Build-level facts (time zone, and for a new country its redirects) come from that country's own countries/<kod>/derleme.mjs.
-const ULKE = process.env.NOTYA_COUNTRY || 'tr'
-if (!/^[a-z]{2}$/.test(ULKE) || !existsSync(new URL(`./countries/${ULKE}/derleme.mjs`, import.meta.url))) {
-  throw new Error(`NOTYA_COUNTRY="${ULKE}" is not a country in countries/. Refusing to build.`)
-}
-const { default: ulkeDerleme } = await import(`./countries/${ULKE}/derleme.mjs`)
-// NOTYA-UZ-MUAYENE-01: a country may be served under a path of the main site (Uzbekistan: /uzbek). Empty / absent = the
-// domain root, and then NOTHING is set below — Türkiye's config is what it was. A malformed value stops the build.
-const YOL_ON_EKI = ulkeDerleme.yolOnEki || ''
-if (!/^(\/[a-z0-9][a-z0-9-]*)?$/.test(YOL_ON_EKI)) {
-  throw new Error(`countries/${ULKE}/derleme.mjs: yolOnEki="${YOL_ON_EKI}" must be empty or one path segment like "/uzbek". Refusing to build.`)
-}
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // NOTYA-ULKE-01: WHICH FILES ARE ROUTES. The pre-split application (Türkiye today) keeps Next's default — nothing is
-  // set, exactly as before. Any other country's build takes ONLY files named *.ulke.tsx / *.ulke.ts as routes
-  // (app/layout.ulke.tsx, app/page.ulke.tsx, middleware.ulke.ts, …): the Turkish route files are not part of that
-  // build at all, and the *.ulke.* files are not routes in a Türkiye build. See app/layout.ulke.tsx.
-  // `mjs` is there for ONE file, app/not-found.mjs: Next 14.2 builds the root not-found page only when its file name
-  // has a single extension (see that file). Tests allow no other .mjs route file. Türkiye never treats .mjs as a route.
-  ...(ulkeDerleme.bolunmemisUygulama ? {} : { pageExtensions: ['ulke.tsx', 'ulke.ts', 'mjs'] }),
-  // NOTYA-UZ-MUAYENE-01: pages, API routes, assets (/_next/…), redirects and the middleware all move under the prefix.
-  // Plain links and fetch() calls of the country screens add it themselves (lib/ulke/yol.ts).
-  ...(YOL_ON_EKI ? { basePath: YOL_ON_EKI } : {}),
   env: {
-    TZ: ulkeDerleme.saatDilimi,
-    NOTYA_COUNTRY: ULKE,
+    TZ: 'Europe/Istanbul',
     // NOTYA-SES-ELEVEN-GERI-01: Ayşe's voice provider (elevenlabs | fish), inlined so the page and the server read
     // the same value — the page decides inside the tap, before any request. Empty → elevenlabs (lib/asistan/sesSaglayici.ts).
     AYSE_SES_SAGLAYICI: process.env.AYSE_SES_SAGLAYICI || '',
@@ -75,9 +46,6 @@ const nextConfig = {
 
   // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
   async redirects() {
-    // NOTYA-ULKE-01: the list below belongs to the pre-split application (Türkiye today) and is returned only for it.
-    // Any other country gets its own list from countries/<kod>/derleme.mjs — never these.
-    if (!ulkeDerleme.bolunmemisUygulama) return ulkeDerleme.yonlendirmeler
     return [
       // NOTYA-KOK-DOKTOR-01 (Kaan, 2026-09-27): alan adının kökü doğrudan hekim açılış sayfasına. Uçta GERÇEK 307 + Location
       // (geçici: dikeyler yeniden öne çıkarsa bu satır silinir). app/page.tsx'teki redirect() tek başına yetmedi: statik
