@@ -24,6 +24,7 @@ import { dilliYol } from '@/lib/ulke/sayfaDili'
 import { YASAL_ANAHTARLARI, YASAL_YOLLAR } from '@/lib/ulke/yasal/tipler'
 import type { AcilisSayfasiProps } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { demoDugmesi } from '@/lib/ulke/demo'
 import type { AcilisCapasi, AcilisIcerigi, OzellikBolumu, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import type { DilGrubu, DilKodu } from '@/lib/ulke/tipler'
 import { tutarYaz } from '@/lib/ulke/arayuz/sayi'
@@ -85,7 +86,7 @@ function Ozellik({ id, b, tone, reverse }: { id: string; b: OzellikBolumu; tone:
   )
 }
 
-function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: string; c: Capalar }) {
+function Kahraman({ t, gorsel, c, demo }: { t: AcilisIcerigi['kahraman']; gorsel: string; c: Capalar; demo: { href: string; etiket: string } | null }) {
   return (
     <section id={c.ust} className="relative bg-paper">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:pb-14 lg:pt-28">
@@ -108,6 +109,12 @@ function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: stri
             <Button href={`#${c.suhbat}`} variant="outline" size="lg" className="w-full sm:w-auto">
               {t.ikinciDugme}
             </Button>
+            {/* NOTYA-ULKE-DEMO-01: booking a call with Dr. Mamur (/demo), only when the booking link is set. */}
+            {demo ? (
+              <Button href={demo.href} variant="outline" size="lg" className="w-full sm:w-auto">
+                {demo.etiket}
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -253,15 +260,16 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
   const kayitHref = dilliYol('/signup', dilSec(d))
   const ustDiller = ustDilSecenekleri(a, ulkePaketi().uygulama?.dilGruplari ?? [], d)
   const altDiller = a.diller.map((k) => dilSecenegi(a, k, k === d, '/'))
+  const demo = demoDugmesi(d)
 
   return (
     <div className="uzl" lang={d}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={a.fontHref} />
       <div className="relative bg-paper text-ink">
-        <UstCubuk metin={t.nav} diller={ustDiller} girisHref={girisHref} sorovHref={`#${c.sorov}`} marka={a.markaYazisi} ustHref={`#${c.ust}`} />
+        <UstCubuk metin={t.nav} diller={ustDiller} girisHref={girisHref} sorovHref={`#${c.sorov}`} marka={a.markaYazisi} ustHref={`#${c.ust}`} demo={demo} />
         <main>
-          <Kahraman c={c} t={t.kahraman} gorsel={gorseller.xona} />
+          <Kahraman c={c} t={t.kahraman} gorsel={gorseller.xona} demo={demo} />
           <Suhbat metin={t.suhbat} capa={c.suhbat} />
           <Ozellik id={c.qabul} b={t.qabul} tone="paper-2" />
           <Ozellik id={c.portal} b={t.portal} tone="paper" reverse />

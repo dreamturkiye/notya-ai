@@ -69,7 +69,7 @@ export const CA_PAKETI: UlkePaketi = {
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/demo'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
