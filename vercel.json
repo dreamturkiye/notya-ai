@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build:ulke",
+  "buildCommand": "node scripts/vercel-ulke-derle.mjs",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "regions": [
