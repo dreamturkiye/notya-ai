@@ -15,6 +15,7 @@ import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
+import { AU_RESMI_GUNLER } from './resmiGunler'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-AU')
@@ -84,6 +85,7 @@ export const AU_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-AU': 'English' },
+  resmiGunler: AU_RESMI_GUNLER,
   uygulama: {
     diller: ['en-AU'],
     hastaDilleri: ['en'],
@@ -91,7 +93,7 @@ export const AU_PAKETI: UlkePaketi = {
     // surgical roles split along the Medical Board's line, one clinic role removed, seven roles added.
     roller: enRolAnahtarlari(AU_ROL_LISTESI),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (and differ between the states and territories).
+    // The working pattern does not close a public day. National days and the state selector are `resmiGunler` on this pack.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '12:00', bitis: '13:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],

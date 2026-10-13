@@ -15,6 +15,7 @@ import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { US_ROLLER } from './roller'
+import { US_RESMI_GUNLER } from './resmiGunler'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-US')
@@ -94,6 +95,7 @@ export const US_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-US': 'English' },
+  resmiGunler: US_RESMI_GUNLER,
   uygulama: {
     diller: ['en-US'],
     hastaDilleri: ['en'],
@@ -101,7 +103,7 @@ export const US_PAKETI: UlkePaketi = {
     // and two professions of its own (./roller.ts → US_ROLLER, where each difference and its source stands).
     roller: enRolAnahtarlari(US_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (federal and state holidays differ).
+    // The working pattern does not close a public day. Federal days are `resmiGunler` on this pack, shown on the calendar.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '12:00', bitis: '13:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],

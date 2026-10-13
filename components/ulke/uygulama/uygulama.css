@@ -584,6 +584,9 @@
 .yg-ay-olay::before { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--uza-cam); flex-shrink: 0; box-sizing: border-box; }
 .yg-ay-olay > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .yg-ay-fazla { font-size: 10px; color: #8a7b6c; padding-left: 15px; }
+.yg-ay-tatil { display: block; max-width: 100%; font-size: 10px; font-weight: 600; color: #a45b3e; background: #FBEAE3; border-radius: 4px; padding: 1px 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yg-ay-tatil-uyari { background: #FBEAE3; border: 1px solid rgba(164, 91, 62, 0.4); color: #a45b3e; border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 0 0 8px; }
+.yg-ay-bolge select { font-size: 12px; min-height: 28px; padding: 2px 8px; border-radius: 8px; border: 1px solid rgba(58, 44, 34, 0.18); background: #fff; color: inherit; }
 .yg-ay-kenar { display: flex; flex-direction: column; gap: 16px; }
 .yg-ay-kenar-ad { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--uza-cam); margin-bottom: 8px; }
 .yg-ay-kenar-bos { font-size: 12px; color: #a89a86; }

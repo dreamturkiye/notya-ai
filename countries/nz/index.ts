@@ -15,6 +15,7 @@ import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { NZ_BIRIMLER, NZ_ROLLER, NZ_VELI_YASI } from './ayarlar'
+import { NZ_RESMI_GUNLER } from './resmiGunler'
 
 const cekirdek = enCekirdek('en-NZ')
 const metin = paketMetinleri({
@@ -102,6 +103,7 @@ export const NZ_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-NZ': 'English' },
+  resmiGunler: NZ_RESMI_GUNLER,
   uygulama: {
     diller: ['en-NZ'],
     hastaDilleri: ['en'],
@@ -110,7 +112,7 @@ export const NZ_PAKETI: UlkePaketi = {
     // (./ayarlar.ts → NZ_ROLLER; recorded in countries/rol-eslemesi.json under `ulkeyeOzel.nz`).
     roller: enRolAnahtarlari(NZ_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (national and regional anniversary days).
+    // The working pattern does not close a public day. National days and anniversary days are `resmiGunler` on this pack.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '12:00', bitis: '13:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],

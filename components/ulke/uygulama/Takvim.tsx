@@ -42,6 +42,7 @@ import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
 import { panoyaKopyala } from './pano'
 import { ISTEK_API, IstekCevabiGorunumu, Istekler, IstekYokGorunumu, type IstekCevapFormu, type IstekCevapHatasi } from './PortalIstekleri'
 import { portalMetni } from '@/lib/ulke/arayuz'
+import { bolgeSec, gununTatili, resmiGunKaynagi } from '@/lib/ulke/tatiller/oku'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { BekleyenIstek } from '@/lib/ulke/portal/tipler'
 import { HastaFormuKarti } from './HastaFormuKarti'
@@ -49,6 +50,19 @@ import { HastaFormuKarti } from './HastaFormuKarti'
 export { bitisSaati, DurumRozeti, gunBasligi, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type DuzenKaydi, type Gorunum, type RandevuDurumu, type RandevuKaydi } from './randevuOrtak'
 
 const gunYaz = (gun: string) => gunYazDesenle(gun, tarihDeseni())
+
+/** Keeps a non-default region on calendar links. The default region adds nothing, so existing addresses stay. */
+function takvimAdresi(bolge: string | undefined, p: Record<string, string | undefined | null> = {}): string {
+  const k = resmiGunKaynagi()
+  const b = bolge && k && bolge !== k.varsayilan && k.bolgeler.some((x) => x.kod === bolge) ? bolge : undefined
+  return takvimYolu({ ...p, bolge: b })
+}
+
+function TatilUyarisi({ gun, bolge }: { gun: string; bolge?: string }) {
+  const tatil = gununTatili(gun, bolge)
+  if (!tatil) return null
+  return <p className="yg-ay-tatil-uyari" data-alan="resmi-gun">{tatil.ad}</p>
+}
 
 /** A code of the appointment API → the catalogue's sentence. `tasima` = the request was a move, not a booking. */
 export function randevuHataMetni(m: UygulamaMetni, r: RandevuMetni, kod: string | null, alan?: string | null, tasima = false): string | null {
@@ -75,19 +89,24 @@ export type GunSatiri =
  * (steps of the default length, inside the working hours, outside the breaks, not under an appointment that still
  * holds its time). A day that is not a working day has no free rows — it can still be booked with the form.
  */
-export function gunSatirlari(duzen: DuzenKaydi | null, gun: string, randevular: RandevuKaydi[]): GunSatiri[] {
+export function gunSatirlari(duzen: DuzenKaydi | null, gun: string, randevular: RandevuKaydi[], bolge?: string | null): GunSatiri[] {
   const gununki = randevular.filter((x) => x.gun === gun)
   const satirlar: GunSatiri[] = gununki.map((x) => ({ tur: 'randevu', dk: saatCoz(x.saat) ?? 0, randevu: x }))
   const bas = duzen ? saatCoz(duzen.baslangic) : null
   const bit = duzen ? saatCoz(duzen.bitis) : null
+  const tatil = gununTatili(gun, bolge)
   if (duzen && bas !== null && bit !== null && duzen.sureDk >= 5 && duzen.gunler.includes(haftaGunu(gun))) {
     const molalar = duzen.molalar.map((x) => ({ bas: saatCoz(x.baslangic) ?? 0, bit: saatCoz(x.bitis) ?? 0 })).filter((x) => x.bit > x.bas)
     for (const x of molalar) satirlar.push({ tur: 'mola', dk: x.bas, saat: saatYazDk(x.bas), bitis: saatYazDk(x.bit) })
-    const dolu = gununki.filter((x) => x.durum === 'planlandi' || x.durum === 'geldi' || x.durum === 'tamamlandi').map((x) => ({ bas: saatCoz(x.saat) ?? 0, bit: (saatCoz(x.saat) ?? 0) + x.sureDk }))
-    for (let dk = bas; dk + duzen.sureDk <= bit; dk += duzen.sureDk) {
-      const son = dk + duzen.sureDk
-      if ([...molalar, ...dolu].some((x) => dk < x.bit && son > x.bas)) continue
-      satirlar.push({ tur: 'bos', dk, saat: saatYazDk(dk) })
+    // A full public day offers no free time. A half day closes from 13:00. Booked rows stay.
+    if (!tatil || tatil.yarim) {
+      const dolu = gununki.filter((x) => x.durum === 'planlandi' || x.durum === 'geldi' || x.durum === 'tamamlandi').map((x) => ({ bas: saatCoz(x.saat) ?? 0, bit: (saatCoz(x.saat) ?? 0) + x.sureDk }))
+      for (let dk = bas; dk + duzen.sureDk <= bit; dk += duzen.sureDk) {
+        if (tatil?.yarim && dk >= 780) continue
+        const son = dk + duzen.sureDk
+        if ([...molalar, ...dolu].some((x) => dk < x.bit && son > x.bas)) continue
+        satirlar.push({ tur: 'bos', dk, saat: saatYazDk(dk) })
+      }
     }
   }
   const sira = { mola: 0, randevu: 1, bos: 2 }
@@ -107,12 +126,13 @@ function RandevuSatiri({ r, x, gunlu }: { r: RandevuMetni; x: RandevuKaydi; gunl
   )
 }
 
-export function GunGorunumu({ r, gun, duzen, randevular }: { r: RandevuMetni; gun: string; duzen: DuzenKaydi | null; randevular: RandevuKaydi[] }) {
-  const satirlar = gunSatirlari(duzen, gun, randevular)
+export function GunGorunumu({ r, gun, duzen, randevular, bolge }: { r: RandevuMetni; gun: string; duzen: DuzenKaydi | null; randevular: RandevuKaydi[]; bolge?: string }) {
+  const satirlar = gunSatirlari(duzen, gun, randevular, bolge)
   const isGunu = !duzen || duzen.gunler.includes(haftaGunu(gun))
   return (
     <div data-gorunum="gun">
       <h2 className="uza-h2" style={{ marginBottom: 6 }}>{gunBasligi(r, gun)}</h2>
+      <TatilUyarisi gun={gun} bolge={bolge} />
       {isGunu ? null : <p className="uza-ipucu" style={{ marginTop: 0, marginBottom: 8 }}>{r.takvim.isGunuDegil}</p>}
       {satirlar.length === 0 ? <p className="uza-bos">{r.takvim.bos}</p> : (
         <ul className="uza-liste">
@@ -122,7 +142,7 @@ export function GunGorunumu({ r, gun, duzen, randevular }: { r: RandevuMetni; gu
             <li key={`m-${s.dk}`}><div className="uza-satir uza-takvim-mola"><span className="uza-saat">{saatGoster(s.saat)}–{saatGoster(s.bitis)}</span><span className="uza-liste-ad">{r.takvim.mola}</span></div></li>
           ) : (
             <li key={`b-${s.dk}`}>
-              <a className="uza-satir uza-takvim-bos" href={takvimYolu({ yeni: '1', gun, saat: s.saat })} data-bos={s.saat}>
+              <a className="uza-satir uza-takvim-bos" href={takvimAdresi(bolge, { yeni: '1', gun, saat: s.saat })} data-bos={s.saat}>
                 <span className="uza-saat">{saatGoster(s.saat)}</span>
                 <span className="uza-liste-ad">{r.takvim.bosSaat}</span>
                 <span className="uza-rozet">{r.takvim.yeni}</span>
@@ -135,22 +155,24 @@ export function GunGorunumu({ r, gun, duzen, randevular }: { r: RandevuMetni; gu
   )
 }
 
-export function HaftaGorunumu({ r, gunler, bugun, randevular }: { r: RandevuMetni; gunler: string[]; bugun: string; randevular: RandevuKaydi[] }) {
+export function HaftaGorunumu({ r, gunler, bugun, randevular, bolge }: { r: RandevuMetni; gunler: string[]; bugun: string; randevular: RandevuKaydi[]; bolge?: string }) {
   return (
     <div className="uza-hafta" data-gorunum="hafta">
       {gunler.map((g) => {
         const gununki = randevular.filter((x) => x.gun === g)
+        const tatil = gununTatili(g, bolge)
         return (
           <section key={g} className="uza-hafta-gun" data-gun={g} data-bugun={g === bugun ? 'evet' : undefined}>
             <div className="uza-hafta-baslik">
-              <a className="uza-baglanti" href={takvimYolu({ gun: g })} title={r.takvim.gunuAc}>{gunAdi(r, haftaGunu(g))} · {gunYazYilsiz(g, tarihDeseni())}</a>
-              <a className="uza-hafta-ekle" href={takvimYolu({ yeni: '1', gun: g })} aria-label={`${r.takvim.yeni}: ${gunBasligi(r, g)}`}>+</a>
+              <a className="uza-baglanti" href={takvimAdresi(bolge, { gun: g })} title={r.takvim.gunuAc}>{gunAdi(r, haftaGunu(g))} · {gunYazYilsiz(g, tarihDeseni())}</a>
+              {tatil ? <span className="yg-ay-tatil" data-alan="resmi-gun">{tatil.ad}</span> : null}
+              <a className="uza-hafta-ekle" href={takvimAdresi(bolge, { yeni: '1', gun: g })} aria-label={`${r.takvim.yeni}: ${gunBasligi(r, g)}`}>+</a>
             </div>
             {gununki.length === 0 ? <p className="uza-hafta-bos" aria-hidden="true">—</p> : (
               <ul className="uza-hafta-liste">
                 {gununki.map((x) => (
                   <li key={x.id}>
-                    <a className="uza-hafta-randevu" href={takvimYolu({ randevu: x.id })} data-randevu={x.id} data-randevu-durum={x.durum}>
+                    <a className="uza-hafta-randevu" href={takvimAdresi(bolge, { randevu: x.id })} data-randevu={x.id} data-randevu-durum={x.durum}>
                       <span className="uza-saat">{saatGoster(x.saat)}</span>
                       <span className="uza-hafta-ad">{x.hastaAdi || '—'}</span>
                       <span className="uza-hafta-durum">{r.durum[x.durum]}</span>
@@ -167,7 +189,7 @@ export function HaftaGorunumu({ r, gunler, bugun, randevular }: { r: RandevuMetn
 }
 
 /** A month of days, Monday or Sunday first as the pack says, in the same place as the reference month rail. */
-function AyIzgarasi({ r, gun, bugun, randevular }: { r: RandevuMetni; gun: string; bugun: string; randevular: RandevuKaydi[] }) {
+function AyIzgarasi({ r, gun, bugun, randevular, bolge }: { r: RandevuMetni; gun: string; bugun: string; randevular: RandevuKaydi[]; bolge?: string }) {
   const haftaBasi = ulkePaketi().bicim.haftaBasi
   const ay = gun.slice(0, 7)
   const bas = haftaninIlkGunu(`${ay}-01`, haftaBasi)
@@ -182,7 +204,7 @@ function AyIzgarasi({ r, gun, bugun, randevular }: { r: RandevuMetni; gun: strin
       <div className="yg-ay">
         {sira.map((k) => <div key={k} className="yg-ay-ad">{r.gunKisa[k]}</div>)}
         {hucreler.map((h) => (
-          <a key={h} className="yg-ay-gun" href={takvimYolu({ gun: h })} data-bugun={h === bugun ? 'evet' : undefined} data-baska={h.slice(0, 7) === ay ? undefined : 'evet'} data-dolu={dolu.has(h) ? 'evet' : undefined} data-secili={h === gun ? 'evet' : undefined}>
+          <a key={h} className="yg-ay-gun" href={takvimAdresi(bolge, { gun: h })} data-bugun={h === bugun ? 'evet' : undefined} data-baska={h.slice(0, 7) === ay ? undefined : 'evet'} data-dolu={dolu.has(h) ? 'evet' : undefined} data-secili={h === gun ? 'evet' : undefined} data-tatil={gununTatili(h, bolge) ? 'evet' : undefined}>
             <span>{Number(h.slice(8, 10))}</span>
             <span className="yg-ay-nokta" aria-hidden="true" />
           </a>
@@ -218,8 +240,22 @@ function haftaSirasi(): readonly (1 | 2 | 3 | 4 | 5 | 6 | 7)[] {
  * The reference month: a 264px rail (mini month, today, the next day) and a 7-column month of cells.
  * A cell opens that day; a chip opens that appointment. Nothing here is dragged.
  */
-export function AyPlani({ m, r, gun, bugun, randevular, hata }: {
-  m: UygulamaMetni; r: RandevuMetni; gun: string; bugun: string; randevular: RandevuKaydi[] | null; hata: boolean
+function BolgeSecici({ gun, bolge }: { gun: string; bolge?: string }) {
+  const k = resmiGunKaynagi()
+  if (!k || k.bolgeler.length < 2) return null
+  const secili = bolgeSec(bolge) ?? k.varsayilan
+  const ad = k.bolgeler.find((b) => b.kod === secili)?.ad ?? secili
+  return (
+    <label className="yg-ay-bolge">
+      <select aria-label={ad} value={secili} onChange={(e) => { window.location.assign(takvimAdresi(e.target.value, { gun })) }}>
+        {k.bolgeler.map((b) => <option key={b.kod} value={b.kod}>{b.ad}</option>)}
+      </select>
+    </label>
+  )
+}
+
+export function AyPlani({ m, r, gun, bugun, randevular, hata, bolge }: {
+  m: UygulamaMetni; r: RandevuMetni; gun: string; bugun: string; randevular: RandevuKaydi[] | null; hata: boolean; bolge?: string
 }) {
   const ay = gun.slice(0, 7)
   const hucreler = ayHucreleri(gun)
@@ -246,13 +282,13 @@ export function AyPlani({ m, r, gun, bugun, randevular, hata }: {
         <aside className="yg-ay-yan">
           <div className="yg-ay-yan-ust">
             <div className="yg-ay-baslik">{ayAd} {yil ? <span className="yg-ay-yil">{yil}</span> : null}</div>
-            <a className="yg-ay-ok" href={takvimYolu({ gun: ayKaydir(gun, -1) })} data-eylem="ay-onceki">{'\u2039'}</a>
-            <a className="yg-ay-ok" href={takvimYolu({ gun: ayKaydir(gun, 1) })} data-eylem="ay-sonraki">{'\u203A'}</a>
+            <a className="yg-ay-ok" href={takvimAdresi(bolge, { gun: ayKaydir(gun, -1) })} data-eylem="ay-onceki">{'\u2039'}</a>
+            <a className="yg-ay-ok" href={takvimAdresi(bolge, { gun: ayKaydir(gun, 1) })} data-eylem="ay-sonraki">{'\u203A'}</a>
           </div>
           <div className="yg-ay">
             {sira.map((k) => <div key={k} className="yg-ay-ad">{r.gunKisa[k]}</div>)}
             {hucreler.map((h) => (
-              <a key={h} className="yg-ay-gun" href={takvimYolu({ gun: h, gorunum: 'gun' })} data-bugun={h === bugun ? 'evet' : undefined} data-baska={h.slice(0, 7) === ay ? undefined : 'evet'} data-dolu={dolu.has(h) ? 'evet' : undefined} data-secili={h === gun ? 'evet' : undefined}>
+              <a key={h} className="yg-ay-gun" href={takvimAdresi(bolge, { gun: h, gorunum: 'gun' })} data-bugun={h === bugun ? 'evet' : undefined} data-baska={h.slice(0, 7) === ay ? undefined : 'evet'} data-dolu={dolu.has(h) ? 'evet' : undefined} data-secili={h === gun ? 'evet' : undefined} data-tatil={gununTatili(h, bolge) ? 'evet' : undefined}>
                 <span>{Number(h.slice(8, 10))}</span>
                 <span className="yg-ay-nokta" aria-hidden="true" />
               </a>
@@ -266,20 +302,22 @@ export function AyPlani({ m, r, gun, bugun, randevular, hata }: {
         <div className="yg-ay-ana">
           <div className="yg-ay-toolbar">
             <div className="yg-ay-gezin">
-              <a className="yg-ay-ok" href={takvimYolu({ gun: ayKaydir(gun, -1) })} data-eylem="onceki">{'\u2039'}</a>
-              <a className="yg-ay-bugun" href={takvimYolu({ gun: bugun })} data-eylem="bugun">{r.takvim.bugun}</a>
-              <a className="yg-ay-ok" href={takvimYolu({ gun: ayKaydir(gun, 1) })} data-eylem="sonraki">{'\u203A'}</a>
+              <a className="yg-ay-ok" href={takvimAdresi(bolge, { gun: ayKaydir(gun, -1) })} data-eylem="onceki">{'\u2039'}</a>
+              <a className="yg-ay-bugun" href={takvimAdresi(bolge, { gun: bugun })} data-eylem="bugun">{r.takvim.bugun}</a>
+              <a className="yg-ay-ok" href={takvimAdresi(bolge, { gun: ayKaydir(gun, 1) })} data-eylem="sonraki">{'\u203A'}</a>
             </div>
             <div className="yg-ay-toolbar-baslik">{ayAd} {yil}</div>
+            <BolgeSecici gun={gun} bolge={bolge} />
             <span className="yg-ay-rozet">{r.duzen.saatDilimi}</span>
             <div className="yg-ay-modlar" aria-label={r.takvim.baslik}>
-              <a className="yg-ay-mod" href={takvimYolu({ gun })} aria-current="page">{m.girdi.ay}</a>
-              <a className="yg-ay-mod" href={takvimYolu({ gun, gorunum: 'gun' })}>{r.takvim.gun}</a>
-              <a className="yg-ay-mod" href={takvimYolu({ gun, gorunum: 'hafta' })}>{r.takvim.hafta}</a>
+              <a className="yg-ay-mod" href={takvimAdresi(bolge, { gun })} aria-current="page">{m.girdi.ay}</a>
+              <a className="yg-ay-mod" href={takvimAdresi(bolge, { gun, gorunum: 'gun' })}>{r.takvim.gun}</a>
+              <a className="yg-ay-mod" href={takvimAdresi(bolge, { gun, gorunum: 'hafta' })}>{r.takvim.hafta}</a>
             </div>
-            <a className="yg-ay-ekle" href={takvimYolu({ yeni: '1', gun })} data-eylem="yeni-randevu">+ {r.takvim.yeni}</a>
+            <a className="yg-ay-ekle" href={takvimAdresi(bolge, { yeni: '1', gun })} data-eylem="yeni-randevu">+ {r.takvim.yeni}</a>
           </div>
           <Hata>{hata ? m.kabuk.hata : null}</Hata>
+          <TatilUyarisi gun={bugun} bolge={bolge} />
           {randevular === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : (
             <div className="yg-ay-buyuk">
               <div className="yg-ay-buyuk-adlar">
@@ -291,7 +329,8 @@ export function AyPlani({ m, r, gun, bugun, randevular, hata }: {
                   const goster = liste.slice(0, 3)
                   return (
                     <div key={h} className="yg-ay-hucre" data-bugun={h === bugun ? 'evet' : undefined} data-baska={h.slice(0, 7) === ay ? undefined : 'evet'}>
-                      <a className="yg-ay-sayi" href={takvimYolu({ gun: h, gorunum: 'gun' })}>{Number(h.slice(8, 10))}</a>
+                      <a className="yg-ay-sayi" href={takvimAdresi(bolge, { gun: h, gorunum: 'gun' })}>{Number(h.slice(8, 10))}</a>
+                      {gununTatili(h, bolge) ? <span className="yg-ay-tatil" data-alan="resmi-gun">{gununTatili(h, bolge)?.ad}</span> : null}
                       {goster.map((x) => (
                         <a key={x.id} className="yg-ay-olay" href={takvimYolu({ randevu: x.id })} data-randevu={x.id}>
                           <span>{saatGoster(x.saat)}</span>
@@ -311,22 +350,22 @@ export function AyPlani({ m, r, gun, bugun, randevular, hata }: {
   )
 }
 
-export function TakvimGorunumu({ m, r, gorunum, gun, gunler, bugun, duzen, randevular, hata }: {
+export function TakvimGorunumu({ m, r, gorunum, gun, gunler, bugun, duzen, randevular, hata, bolge }: {
   m: UygulamaMetni; r: RandevuMetni; gorunum: Gorunum
   /** The day the calendar stands on (the country's day). */
   gun: string
   /** The days shown: one for the day view, seven for the week. */
   gunler: string[]; bugun: string; duzen: DuzenKaydi | null
   /** null = still loading. */
-  randevular: RandevuKaydi[] | null; hata: boolean
+  randevular: RandevuKaydi[] | null; hata: boolean; bolge?: string
 }) {
   const adim = gorunum === 'hafta' ? 7 : 1
-  const g = (x: string, gr: Gorunum = gorunum) => takvimYolu({ gun: x, gorunum: gr === 'hafta' ? 'hafta' : undefined })
+  const g = (x: string, gr: Gorunum = gorunum) => takvimAdresi(bolge, { gun: x, gorunum: gr === 'hafta' ? 'hafta' : undefined })
   return (
     <section className="uza-kart">
       <div className="uza-baslik-satiri">
         <h1 className="uza-h1">{r.takvim.baslik}</h1>
-        <a className="uza-dugme" href={takvimYolu({ yeni: '1', gun })} data-eylem="yeni-randevu">{r.takvim.yeni}</a>
+        <a className="uza-dugme" href={takvimAdresi(bolge, { yeni: '1', gun })} data-eylem="yeni-randevu">{r.takvim.yeni}</a>
       </div>
       <div className="uza-takvim-ust">
         <nav className="uza-takvim-gorunumler" aria-label={r.takvim.baslik}>
@@ -341,21 +380,21 @@ export function TakvimGorunumu({ m, r, gorunum, gun, gunler, bugun, duzen, rande
       </div>
       <Hata>{hata ? m.kabuk.hata : null}</Hata>
       <div className="yg-takvim-govde">
-        {randevular ? <AyIzgarasi r={r} gun={gun} bugun={bugun} randevular={randevular} /> : null}
+        {randevular ? <AyIzgarasi r={r} gun={gun} bugun={bugun} randevular={randevular} bolge={bolge} /> : null}
         <div className="yg-takvim-ana">
           {randevular === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : gorunum === 'hafta'
-            ? <HaftaGorunumu r={r} gunler={gunler} bugun={bugun} randevular={randevular} />
-            : <GunGorunumu r={r} gun={gunler[0] ?? gun} duzen={duzen} randevular={randevular} />}
+            ? <HaftaGorunumu r={r} gunler={gunler} bugun={bugun} randevular={randevular} bolge={bolge} />
+            : <GunGorunumu r={r} gun={gunler[0] ?? gun} duzen={duzen} randevular={randevular} bolge={bolge} />}
         </div>
       </div>
       <p className="uza-ipucu" style={{ marginTop: 14 }}>
-        <a className="uza-baglanti" href={takvimYolu({ duzen: '1' })}>{r.takvim.duzen}</a> · {r.duzen.saatDilimi}
+        <a className="uza-baglanti" href={takvimAdresi(bolge, { duzen: '1' })}>{r.takvim.duzen}</a> · {r.duzen.saatDilimi}
       </p>
     </section>
   )
 }
 
-function TakvimEkrani({ u, r, gunParam, gorunum }: { u: Uygulama; r: RandevuMetni; gunParam: string; gorunum: SayfaGorunumu }) {
+function TakvimEkrani({ u, r, gunParam, gorunum, bolge }: { u: Uygulama; r: RandevuMetni; gunParam: string; gorunum: SayfaGorunumu; bolge?: string }) {
   const [veri, setVeri] = useState<{ gunler: string[]; bugun: string; randevular: RandevuKaydi[] } | null>(null)
   const [duzen, setDuzen] = useState<DuzenKaydi | null>(null)
   const [hata, setHata] = useState(false)
@@ -376,8 +415,8 @@ function TakvimEkrani({ u, r, gunParam, gorunum }: { u: Uygulama; r: RandevuMetn
   // Until the server has said which day "today" is, the address's own day is the only day known.
   const gun = (gunParam && gunCoz(gunParam, tarihDeseni())) || veri?.bugun || ''
   if (!gun) return <section className="uza-kart"><Hata>{hata ? u.m.kabuk.hata : null}</Hata>{hata ? null : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>}</section>
-  if (gorunum === 'ay') return <AyPlani m={u.m} r={r} gun={gun} bugun={veri?.bugun ?? gun} randevular={veri?.randevular ?? null} hata={hata} />
-  return <TakvimGorunumu m={u.m} r={r} gorunum={gorunum} gun={gun} gunler={veri?.gunler ?? [gun]} bugun={veri?.bugun ?? gun} duzen={duzen} randevular={veri?.randevular ?? null} hata={hata} />
+  if (gorunum === 'ay') return <AyPlani m={u.m} r={r} gun={gun} bugun={veri?.bugun ?? gun} randevular={veri?.randevular ?? null} hata={hata} bolge={bolge} />
+  return <TakvimGorunumu m={u.m} r={r} gorunum={gorunum} gun={gun} gunler={veri?.gunler ?? [gun]} bugun={veri?.bugun ?? gun} duzen={duzen} randevular={veri?.randevular ?? null} hata={hata} bolge={bolge} />
 }
 
 // ───────────────────────── booking ─────────────────────────
@@ -408,17 +447,18 @@ function ZamanAlanlari({ r, g, a, set, sureler, on }: { r: RandevuMetni; g: Gird
   )
 }
 
-export function RandevuFormuGorunumu({ m, r, hasta, a, set, sureler, gonder, bekliyor, hata, geri }: {
+export function RandevuFormuGorunumu({ m, r, hasta, a, set, sureler, gonder, bekliyor, hata, geri, bolge }: {
   m: UygulamaMetni; r: RandevuMetni; hasta: Pick<HastaKaydi, 'id' | 'ad' | 'otaIsmi'>
   a: RandevuFormu; set: (y: Partial<RandevuFormu>) => void; sureler: readonly number[]
   /** `yineDe` true = the explicit "book anyway", offered only after the server said "outside working hours". */
-  gonder: (yineDe: boolean) => void; bekliyor: boolean; hata: FormHatasi; geri: string
+  gonder: (yineDe: boolean) => void; bekliyor: boolean; hata: FormHatasi; geri: string; bolge?: string
 }) {
   const mesaiDisi = hata?.kod === 'MESAI_DISI'
   return (
     <section className="uza-kart uza-dar">
       <p className="uza-ust-yazi">{r.form.baslik}</p>
       <h1 className="uza-h1">{tamAd(hasta)}</h1>
+      <TatilUyarisi gun={a.gun} bolge={bolge} />
       <p className="uza-ipucu"><a className="uza-baglanti" href={takvimYolu({ yeni: '1', gun: gunCoz(a.gun, tarihDeseni()) ?? undefined, saat: a.saat })}>{r.form.hastaDegistir}</a></p>
       <form className="uza-form" onSubmit={(e: FormEvent) => { e.preventDefault(); gonder(false) }} noValidate>
         <ZamanAlanlari r={r} g={m.girdi} a={a} set={set} sureler={sureler} on="uza-rf" />
@@ -483,7 +523,7 @@ export function RandevuHastaSecGorunumu({ m, r, q, hastalar, hata, gun, saat }: 
 
 type DuzenCevabi = { duzen: DuzenKaydi; kayitli: boolean; sureSecenekleri: number[]; bugun: string }
 
-function YeniRandevu({ u, r, hastaId, gunParam, saatParam, q }: { u: Uygulama; r: RandevuMetni; hastaId: string; gunParam: string; saatParam: string; q: string }) {
+function YeniRandevu({ u, r, hastaId, gunParam, saatParam, q, bolge }: { u: Uygulama; r: RandevuMetni; hastaId: string; gunParam: string; saatParam: string; q: string; bolge?: string }) {
   const [hasta, setHasta] = useState<HastaKaydi | null>(null)
   const [hastalar, setHastalar] = useState<HastaKaydi[] | null>(null)
   const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
@@ -539,7 +579,7 @@ function YeniRandevu({ u, r, hastaId, gunParam, saatParam, q }: { u: Uygulama; r
       </section>
     )
   }
-  return <RandevuFormuGorunumu m={u.m} r={r} hasta={hasta} a={a} set={(y) => { setA({ ...a, ...y }); setHata(null) }} sureler={sureler} gonder={gonder} bekliyor={bekliyor} hata={hata} geri={takvimYolu({ gun: gun || undefined })} />
+  return <RandevuFormuGorunumu m={u.m} r={r} hasta={hasta} a={a} set={(y) => { setA({ ...a, ...y }); setHata(null) }} sureler={sureler} gonder={gonder} bekliyor={bekliyor} hata={hata} geri={takvimAdresi(bolge, { gun: gun || undefined })} bolge={bolge} />
 }
 
 // ───────────────────────── one appointment ─────────────────────────
@@ -807,7 +847,7 @@ export function DuzenGorunumu({ m, r, a, set, sureler, gonder, bekliyor, hata, k
           <a className="uza-dugme uza-dugme-cizgi" href={takvimYolu()}>{r.randevu.takvimeDon}</a>
         </div>
         <p className="uza-ipucu" style={{ marginTop: 0 }}>{d.saatDilimi}</p>
-        {/* No public holiday is known to the application: the doctor is told so, plainly. */}
+        {/* The calendar shows the pack's public days. This screen still does not close one: a booking stays the doctor's. */}
         <p className="uza-ipucu" style={{ marginTop: 0 }} data-alan="tatil-notu">{d.tatilNotu}</p>
       </form>
     </section>
@@ -853,11 +893,11 @@ function Duzen({ u, r }: { u: Uygulama; r: RandevuMetni }) {
 
 export default function Takvim() {
   const u = useUygulama('takvim')
-  const [p, setP] = useState<{ gun: string; gorunum: SayfaGorunumu; yeni: boolean; hasta: string; saat: string; randevu: string; duzen: boolean; q: string; istek: string } | null>(null)
+  const [p, setP] = useState<{ gun: string; gorunum: SayfaGorunumu; yeni: boolean; hasta: string; saat: string; randevu: string; duzen: boolean; q: string; istek: string; bolge: string } | null>(null)
   useEffect(() => {
     const s = new URLSearchParams(window.location.search)
     const istenen = s.get('gorunum')
-    setP({ gun: s.get('gun') ?? '', gorunum: istenen === 'hafta' ? 'hafta' : istenen === 'gun' ? 'gun' : 'ay', yeni: s.get('yeni') === '1', hasta: s.get('hasta') ?? '', saat: s.get('saat') ?? '', randevu: s.get('randevu') ?? '', duzen: s.get('duzen') === '1', q: s.get('q') ?? '', istek: s.get('istek') ?? '' })
+    setP({ gun: s.get('gun') ?? '', gorunum: istenen === 'hafta' ? 'hafta' : istenen === 'gun' ? 'gun' : 'ay', yeni: s.get('yeni') === '1', hasta: s.get('hasta') ?? '', saat: s.get('saat') ?? '', randevu: s.get('randevu') ?? '', duzen: s.get('duzen') === '1', q: s.get('q') ?? '', istek: s.get('istek') ?? '', bolge: s.get('bolge') ?? '' })
   }, [])
   if (!u.hesap || !p) return <Yukleniyor m={u.m} dil={u.dil} />
   const r = randevuMetni(u.dil)
@@ -868,8 +908,8 @@ export default function Takvim() {
       {p.randevu ? <RandevuDetay u={u} r={r} id={p.randevu} />
         : p.duzen ? <Duzen u={u} r={r} />
           : p.istek && portal ? <IstekCevabi u={u} r={r} id={p.istek} />
-            : p.yeni ? <YeniRandevu u={u} r={r} hastaId={p.hasta} gunParam={p.gun} saatParam={p.saat} q={p.q} />
-              : <>{portal ? <Istekler u={u} r={r} /> : null}<TakvimEkrani u={u} r={r} gunParam={p.gun} gorunum={p.gorunum} /></>}
+            : p.yeni ? <YeniRandevu u={u} r={r} hastaId={p.hasta} gunParam={p.gun} saatParam={p.saat} q={p.q} bolge={p.bolge} />
+              : <>{portal ? <Istekler u={u} r={r} /> : null}<TakvimEkrani u={u} r={r} gunParam={p.gun} gorunum={p.gorunum} bolge={p.bolge} /></>}
     </Cerceve>
   )
 }

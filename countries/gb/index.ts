@@ -14,6 +14,7 @@ import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
+import { GB_RESMI_GUNLER } from './resmiGunler'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
 import { GB_ROLLER } from './roller'
 
@@ -84,13 +85,14 @@ export const GB_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-GB': 'English' },
+  resmiGunler: GB_RESMI_GUNLER,
   uygulama: {
     diller: ['en-GB'],
     hastaDilleri: ['en'],
     // THE COUNTRY'S OWN ROLE LIST: the shared forty with this country's differences (./roller.ts → GB_ROLLER).
     roller: enRolAnahtarlari(GB_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (and differ between the four nations).
+    // The working pattern does not close a public day. Bank holidays are `resmiGunler` on this pack, shown on the calendar.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
