@@ -91,6 +91,23 @@ const nextConfig = {
   },
 
   async headers() {
+    const CSP = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: https: blob:",
+      "media-src 'self' blob: https:",
+      // Critical: allow ElevenLabs WebSocket connections
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.groq.com https://api.open-meteo.com",
+      "worker-src 'self' blob: data:",
+    ]
+    // NOTYA-ULKE-DEMO-01: /demo of a country build embeds Cal.com's booking calendar: its loader script (app.cal.com),
+    // its frame (cal.com, app.cal.com) and its font (cal.com). Allowed on that path only; every other path keeps CSP
+    // as it is. The /demo entry comes after the catch-all one: for the same header the later entry wins.
+    // The pre-split application gets nothing here.
+    const CAL_EMBED = 'https://app.cal.com https://cal.com'
+    const DEMO_CSP = [...CSP.map((y) => (/^(script-src|font-src) /.test(y) ? `${y} ${CAL_EMBED}` : y)), `frame-src 'self' ${CAL_EMBED}`]
     return [
       {
         source: "/(.*)",
@@ -103,17 +120,7 @@ const nextConfig = {
           {
             // Allow connections to ElevenLabs WebSocket and Supabase
             key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https: blob:",
-              "media-src 'self' blob: https:",
-              // Critical: allow ElevenLabs WebSocket connections
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.groq.com https://api.open-meteo.com",
-              "worker-src 'self' blob: data:",
-            ].join("; "),
+            value: CSP.join("; "),
           },
           {
             key: "Cross-Origin-Opener-Policy",
@@ -121,6 +128,9 @@ const nextConfig = {
           },
         ],
       },
+      ...(ulkeDerleme.bolunmemisUygulama ? [] : [
+        { source: '/demo', headers: [{ key: 'Content-Security-Policy', value: DEMO_CSP.join('; ') }] },
+      ]),
     ]
   },
 }
