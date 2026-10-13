@@ -367,9 +367,11 @@ What the tools job did with each of the 144 tools above, and what the messaging 
 
 **Changed on 2026-10-10 (NOTYA-ULKE-ARAC-01b), by the owner's order "Switch off the risky tools".** Five tools that were done are slots again until their fault is corrected in the kit or their licence is granted: the dose calculator (`doz-hesabi`), the ESI triage tool (`esi-triyaj`), the report outline that prints the BI-RADS categories (`rapor-taslagi`) and both kidney tools (`kdigo-evre`, `kdigo-serit`). Internal medicine had `kdigo-evre` and no other tool, so its follow-up list is absent too. The sums below moved from 66 / 19 / 11 to 60 / 24 / 12 in the **Keep** row; each of the six rows says so in its note. The kit's arithmetic, words and roles were not changed, and the words of the five tools stay in the pack for the day they come back.
 
+**Changed again on 2026-10-10 (NOTYA-ULKE-UYGULA-UZ), when the decisions of the tools audit were applied and the owner ordered "Bring on all the tools built for the new 6 countries now. We will test as we go."** Three things moved in this table. (1) The dose calculator (`doz-hesabi`) is done again: its fault was corrected in the kit (pull request #615). The ESI triage tool, the report outline and both kidney tools stay slots. (2) Uzbekistan now has three tools of its own, which no row of this table accounts for because the pre-split application had none of them: the body mass index (`uz-tana-vazni-indeksi`, every doctor role, patients of 20 and over), the gestational age and expected date of birth (`uz-homiladorlik-muddati`, obstetrics and family medicine) and a vaccination record (`uz-emlash-qaydi`, paediatrics and family medicine). They are switched on without a clinician's sign-off; `countries/uz/uygulama/araclar/kendi/onay.ts` lists them with what a clinician has to confirm. (3) Because every doctor role now has a tool whose result can be kept, the follow-up list is shown to every doctor role, and the six cohort rows that were absent for that reason are done. The **Keep** row moved from 60 / 24 / 12 to 67 / 23 / 6. The role list itself changed the same day (40 roles became 42: `docs/COUNTRY-PACK-UZBEKISTAN.md`); where a note below says "all 40 roles" for a base tool, read "every role of the pack".
+
 | | done | slot | absent | sum |
 |---|---:|---:|---:|---:|
-| **Keep** | 60 | 24 | 12 | 96 |
+| **Keep** | 67 | 23 | 6 | 96 |
 | **Adapt** | 2 | 32 | 0 | 34 |
 | **Remove** | 0 | 0 | 14 | 14 |
 
@@ -380,7 +382,7 @@ What the tools job did with each of the 144 tools above, and what the messaging 
 
 The kit proposes **no follow-up day of its own** in any tool. Where the pre-split tool adds a number of days or months to a date (suture removal, a control visit, a repeat test), the Uzbek tool has an empty date field the doctor fills in. An interval is clinical guidance of a country, and the kit holds no such content.
 
-A cohort panel counts as done only where the generic follow-up list (`takip-paneli`) is shown to that role, which the same test checks over all 40 roles. The list replaces "who is due or overdue"; it does not carry the disease-specific columns of the pre-split panels.
+A cohort panel counts as done only where the generic follow-up list (`takip-paneli`) is shown to that role, which the same test checks over all 42 roles (since 2026-10-10: every doctor role, and neither allied profession). The list replaces "who is due or overdue"; it does not carry the disease-specific columns of the pre-split panels.
 
 | Route | Verdict | Outcome | Kit key or slot key | Role (cohorts) | Note |
 |---|---|---|---|---|---|
@@ -398,12 +400,12 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `konsultasyonlar` | Keep | done | `konsultasyonlar` |  | Base tool: all 40 roles (NOTYA-ULKE-MESAJ-01). Between two accounts of the same country database, found by a consultation code (no directory); a read-only copy of one approved note or its summary; nothing is sent to anybody, so there is no e-mail template. Tables of its own (migration 142). |
 | `hedef-boy` | Keep | done | `hedef-boy` |  |  |
 | `pedi-buyume` | Adapt | slot | `buyume-persentil` |  |  |
-| `pedi-doz` | Keep | slot | `doz-hesabi` |  | OFF BY THE OWNER'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b); it was done (switched on) until that day. The tool rounds the volume of one dose to 0.1 mL (0.16 mL is shown as 0.2 mL) and prints trailing zeros. Arithmetic only: the doctor types the dose per kilogram; the tool holds no drug and no dose. |
+| `pedi-doz` | Keep | done | `doz-hesabi` |  | ON AGAIN BY THE OWNER'S ORDER OF 2026-10-10, 14:17 ("Bring on all the tools ... We will test as we go"), after it was switched off earlier that day (NOTYA-ULKE-ARAC-01b). Its fault was corrected in the kit (pull request #615): the volume is no longer rounded to a step, a volume below 1 ml carries a caution, and an amount is written by the country's own rule. No clinician of Uzbekistan has signed it off (`countries/uz/uygulama/araclar/kendi/onay.ts`). Arithmetic only: the doctor types the dose per kilogram; the tool holds no drug and no dose. |
 | `pedi-asi` | Adapt | slot | `asi-takvimi` |  |  |
 | `pedi-gelisim` | Adapt | slot | `gelisim-tarama` |  |  |
 | `pedi-mchat` | Keep | slot | `mchat-rf` |  | Published questionnaire: authorised translation and licence needed. |
 | `pedi-kohort` | Adapt | slot | `pediatri-kohort` |  | Its columns are vaccination and growth, which are national content. (The generic follow-up list is shown to paediatrics all the same.) |
-| `dahiliye-kohort` | Keep | absent |  | dahiliye | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. (Since 2026-10-10: the role's one tool, `kdigo-evre`, is off by the owner's order; the list comes back with it.) |
+| `dahiliye-kohort` | Keep | done | `takip-paneli` | dahiliye | The follow-up list, shown to this role since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): every doctor role now has a tool whose result can be kept, the body mass index (`uz-tana-vazni-indeksi`). It was absent until that day. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
 | `dahiliye-score2` | Adapt | slot | `kv-risk-score2` |  |  |
 | `dahiliye-ckd` | Keep | slot | `kdigo-evre` |  | OFF BY THE OWNER'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b); it was done (switched on) until that day. The tool shows the low-risk (green) cell when no urine albumin result was typed, and mislabels its referral flags. |
 | `dahiliye-sgk` | Remove | absent (blocked) |  |  |  |
@@ -429,7 +431,7 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `psik-risk` | Adapt | slot | `psikiyatri-guvenlik-triyaj` |  |  |
 | `psik-ilac-izlem` | Keep | slot | `psikotrop-izlem` |  | Reclassified from keep: monitoring intervals per medicine are local guidance. |
 | `psik-sgk` | Remove | absent (blocked) |  |  |  |
-| `psik-kohort` | Keep | absent |  | psikiyatri | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `psik-kohort` | Keep | done | `takip-paneli` | psikiyatri | The follow-up list, shown to this role since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): every doctor role now has a tool whose result can be kept, the body mass index (`uz-tana-vazni-indeksi`). It was absent until that day. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
 | `kbb-otoskopi` | Keep | done | `otoskopi-notu` |  |  |
 | `kbb-odyometri` | Keep | done | `odyometri-pta` |  | Bands without gaps (the pre-split tool has gaps between whole numbers; see OPEN-COMMITMENTS). |
 | `kbb-vertigo` | Keep | done | `vertigo-notu` |  |  |
@@ -438,7 +440,7 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `kardio-score2` | Adapt | slot | `kv-risk-score2` |  |  |
 | `kardio-ht-kky` | Keep | slot | `kardiyo-izlem` |  | Reclassified from keep: targets and intervals are local guidance. Mechanism in the kit. |
 | `kardio-sgk` | Remove | absent (blocked) |  |  |  |
-| `kardio-kohort` | Keep | absent |  | kardiyoloji | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `kardio-kohort` | Keep | done | `takip-paneli` | kardiyoloji | The follow-up list, shown to this role since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): every doctor role now has a tool whose result can be kept, the body mass index (`uz-tana-vazni-indeksi`). It was absent until that day. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
 | `gogus-cat-mmrc` | Keep | slot | `cat-mmrc` |  | Published questionnaires: authorised translation and licence needed. |
 | `gogus-aksiyon-plani` | Keep | slot | `akciger-aksiyon-plani` |  | Reclassified from keep: an action plan names medicines and doses. |
 | `gogus-inhaler` | Keep | done | `inhaler-teknik` |  |  |
@@ -447,7 +449,7 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `noro-inme` | Adapt | slot | `inme-kirmizi-bayrak` |  |  |
 | `noro-migren` | Keep | slot | `midas` |  | Published questionnaire: authorised translation and licence needed. |
 | `noro-ilac-izlem` | Keep | slot | `antiepileptik-izlem` |  | Reclassified from keep: monitoring per medicine is local guidance. |
-| `noro-kohort` | Keep | absent |  | noroloji | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `noro-kohort` | Keep | done | `takip-paneli` | noroloji | The follow-up list, shown to this role since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): every doctor role now has a tool whose result can be kept, the body mass index (`uz-tana-vazni-indeksi`). It was absent until that day. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
 | `uro-ipss` | Keep | slot | `ipss` |  | Published questionnaire: authorised translation and licence needed. |
 | `uro-psa` | Keep | done | `psa-hizi` |  | The velocity arithmetic only; the pre-split tool's bands are not carried (they have gaps, and a band is clinical guidance). |
 | `uro-acil` | Adapt | slot | `uroloji-acil-triyaj` |  |  |
@@ -459,7 +461,7 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `ftr-seans` | Adapt | slot | `ftr-seans-plani` |  |  |
 | `ftr-vas-odi` | Keep | slot | `vas-odi` |  | Published questionnaire: authorised translation and licence needed. |
 | `ftr-egzersiz` | Adapt | slot | `ev-egzersiz` |  |  |
-| `ftr-kohort` | Keep | absent |  | fizik-tedavi | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `ftr-kohort` | Keep | done | `takip-paneli` | fizik-tedavi | The follow-up list, shown to this role since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): every doctor role now has a tool whose result can be kept, the body mass index (`uz-tana-vazni-indeksi`). It was absent until that day. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
 | `aile-asi-tarama` | Adapt | slot | `aile-asi-tarama` |  |  |
 | `aile-kronik` | Adapt | slot | `aile-kronik` |  |  |
 | `aile-sevk` | Adapt | slot | `aile-sevk` |  |  |
@@ -474,7 +476,7 @@ A cohort panel counts as done only where the generic follow-up list (`takip-pane
 | `gastro-ibd-ibs` | Keep | slot | `ibd-skor` |  | Reclassified from keep: the bands are published thresholds the country must confirm. Mechanism in the kit. |
 | `gastro-endoskopi` | Keep | absent |  |  | A bridge to uploaded documents; document and image upload stays out of this job. |
 | `gastro-hepatit` | Keep | slot | `hepatit-izlem` |  | Reclassified from keep: intervals are local guidance. Mechanism in the kit. |
-| `gastro-kohort` | Keep | absent |  | gastroenteroloji | This role has no tool whose result can be kept here, so the follow-up list would stay empty; it is not shown. |
+| `gastro-kohort` | Keep | done | `takip-paneli` | gastroenteroloji | The follow-up list, shown to this role since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): every doctor role now has a tool whose result can be kept, the body mass index (`uz-tana-vazni-indeksi`). It was absent until that day. One list of the follow-up days the doctor entered on kept results; no column of a disease. |
 | `nef-egfr-kdigo` | Keep | slot | `kdigo-serit` |  | OFF BY THE OWNER'S ORDER OF 2026-10-10 (NOTYA-ULKE-ARAC-01b); it was done (switched on) until that day. The tool shows the low-risk (green) cell when no urine albumin result was typed. |
 | `nef-diyaliz` | Keep | done | `diyaliz-seans` |  |  |
 | `nef-anemi` | Keep | slot | `anemi-izlem` |  | Reclassified from keep: targets are local guidance. Mechanism in the kit. |

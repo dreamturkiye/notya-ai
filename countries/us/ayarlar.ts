@@ -72,6 +72,9 @@ export const US_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'MM/DD/YYYY',
+    // Optional, stored on the account, never checked against the NPPES register. Not an authorisation.
+    meslekKaydiEtiketi: 'National Provider Identifier',
+    odeme: 'Health plan',
   },
   ulkeAdi: 'the United States',
   // The word a senior hospital doctor goes by here. Source: the glossary of the body that accredits residency
@@ -94,7 +97,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
   roller: US_ROLLER,
   veliYasi: US_VELI_YASI,
   birimler: US_BIRIMLER,
-  surum: 'us-draft-2026-10-09',
+  surum: 'us-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',
@@ -133,6 +136,9 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'kdigo-evre': { eksik: EMIR_BOBREK, kimden: KLINISYEN },
       'kdigo-serit': { eksik: EMIR_BOBREK, kimden: KLINISYEN },
       'rapor-taslagi': { eksik: EMIR_RAPOR, kimden: HAK_SAHIBI },
+      // This pack has no clinic-dermatology role (./roller.ts). The two reminder calendars are for that role only.
+      'akne-vade': { eksik: 'This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule.', kimden: KLINISYEN },
+      'lazer-vade': { eksik: 'This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack.', kimden: KLINISYEN },
     },
     // THE LICENCE STATE of the two tools whose rights holder requires permission (docs/COUNTRY-PACK-HOWTO.md, "Country-only
     // tools and roles", point 5): "izin-gerekli" = permission needed. While it stands, the pack check refuses to switch
@@ -172,6 +178,13 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
       // the hearing average: also the audiologist
       'odyometri-pta': ['otolaryngology', 'audiology'],
+      // structural tools of the set, plus roles only this country has (the set's roles are restated: a list here replaces the set's)
+      'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine'],
+      'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine'],
+      'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'child-adolescent-psychiatry', 'addiction-medicine', 'clinical-social-work'],
+      'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+      'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'reproductive-endocrinology-infertility'],
+      'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-language-pathology'],
     },
     // ── THE NUMBERS A NATIONAL SOURCE STATES, for the shared tools that take a country's. Each was read on 2026-10-10. ──
     // EXPECTED HEIGHT: THE RANGE EITHER SIDE, 10 cm. Barstow C, Rerucha C. Evaluation of Short and Tall Stature in

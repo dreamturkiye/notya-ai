@@ -12,7 +12,7 @@ const parca = (terim: string): SizintiTerimi => ({ terim, eslesme: 'parca' })
 const KELIME = (terim: string): SizintiTerimi => ({ terim, eslesme: 'kelime', buyukKucukDuyarli: true })
 
 export const NZ_SIZINTI_TERIMLERI: readonly SizintiTerimi[] = [
-  KELIME('NZD'), KELIME('NHI'), parca('New Zealand'), parca('Medsafe'), parca('Aotearoa'),
+  KELIME('NZD'), KELIME('NHI'), KELIME('ACC'), parca('New Zealand'), parca('Medsafe'), parca('Aotearoa'), parca('Māori'),
 ]
 
 /** English is written in plain Latin letters: no letter marks this country. */

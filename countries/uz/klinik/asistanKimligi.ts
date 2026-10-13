@@ -28,11 +28,17 @@
  * NO FALLBACK TO ANOTHER ROLE. A key without an entry — an unknown key, no role chosen, the general template — has
  * no assistant: `null`, and the screen shows the neutral "Notya assistant". Never another role's name, never a
  * persona of another country.
+ *
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — THE SEVEN ROLES THE AUDIT ADDED HAVE NO NAME YET, and show the neutral
+ * assistant: vascular surgery, allergology and clinical immunology, reproductology, paediatric neurology, narcology,
+ * dietology and surdology (./rolListesi.ts). A name is the owner's to give: no machine invents one, and a role that
+ * behaves like another does NOT take that role's assistant. The names the owner gave the five roles that were taken
+ * out stay in his list (./asistanAdlari.ts), unused: a key that is no role of the pack has no assistant.
  */
 import { uzKirillga, uzRuschaYozuvga } from '../yozuv'
 import { uzAsistanAdi } from './asistanAdlari'
 import { UZ_ASISTAN_UNVANLARI } from './asistanUnvanlari'
-import { uzAdDili, type UzAdDili } from './rolAdlari'
+import { uzAdDili, uzRolMu, type UzAdDili } from './rolAdlari'
 
 export type AsistanKimligi = {
   /** Full name with its title, in the form asked for. */
@@ -53,7 +59,9 @@ function yaz(latin: string, d: UzAdDili): string {
 }
 
 export function uzAsistanKimligi(rol: unknown, dil: unknown): AsistanKimligi | null {
-  const a = typeof rol === 'string' ? uzAsistanAdi(rol) : null
+  // Only a role of the pack has an assistant: the owner's list still holds the names of the roles the audit of
+  // 2026-10-10 took out (./rolListesi.ts), and none of them is shown any more.
+  const a = uzRolMu(rol) ? uzAsistanAdi(rol) : null
   if (!a) return null
   const d = uzAdDili(dil)
   const kisaAd = yaz(a.kisaAd, d)

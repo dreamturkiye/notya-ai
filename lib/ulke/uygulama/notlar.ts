@@ -54,6 +54,8 @@ export type NotDetayi = {
   /** Field keys this note's template owns for this patient, in display order. Empty = four sections only. */
   alanAnahtarlari: readonly string[]
   muayene: MuayeneDetayi
+  /** Text added after approval. '' when there is none, or when the column is not on this database yet. */
+  ekMetin: string
 }
 
 export type NotRetKodu = 'NOT_FOUND' | 'ONAYLI' | 'GECERSIZ' | 'BOS' | 'NOT_YAZILAMADI' | 'YENIDEN_YAZILAMADI' | 'HAZIR_DEGIL' | 'BASARISIZ'
@@ -70,6 +72,27 @@ const kolonlara = (i: NotIcerigi) => ({ content_subjektif: i.s, content_objektif
 /** The database function that approves a note in one transaction (migration 135). */
 export const NOT_ONAY_ISLEVI = 'ulke_not_onayla' as const
 const bosMu = (i: NotIcerigi) => !(i.s.trim() || i.o.trim() || i.a.trim() || i.p.trim())
+
+/** The addendum is plain text beside the note, never one of the four sections. At most 4000 characters (migration 146). */
+export const EK_AZAMI = 4000
+
+/** The addendum from a request. null = not text, or longer than the column allows. */
+export function ekMetinAl(ham: unknown): string | null {
+  if (typeof ham !== 'string') return null
+  const s = ham.replace(/\u0000/g, '')
+  return s.length <= EK_AZAMI ? s : null
+}
+
+/**
+ * The addendum, in its own query. A database that has not taken migration 146 answers 42703: the note is still
+ * shown, with no addendum. Any other error fails the read (null), so a stored addendum is not quietly dropped.
+ */
+async function ekMetinOku(supabase: SupabaseClient, doktorId: string, notId: string): Promise<string | null> {
+  const { data, error } = await ulkeTablosu(supabase, 'ulke_notlar').select('ek_metin').eq('id', notId).eq('doctor_id', doktorId).maybeSingle()
+  if (error) return (error as { code?: string }).code === '42703' ? '' : null
+  const v = (data as { ek_metin?: unknown } | null)?.ek_metin
+  return typeof v === 'string' ? v : ''
+}
 
 /**
  * The four sections from a request body: text only, trimmed of nothing but length. `alanlar` is present exactly when
@@ -177,7 +200,30 @@ export async function notGetir(supabase: SupabaseClient, doktorId: string, notId
     const diger = AKTIF_KLINIK.digerDil(dil, [h.notDili, h.arayuzDili])
     yenidenYazilabilir = diger && AKTIF_KLINIK.yenidenYazimTalimati(diger) ? diger : null
   }
-  return { notId: o.not.id, seansId: o.not.session_id, onayli, onayTarihi: o.not.approved_at ?? null, dil, icerik: alanliIcerik(satirdan(o.not), alanlariSuz(o.dil.alanlar, alanAnahtarlari)), ikinci, yenidenYazilabilir, alanAnahtarlari, muayene }
+  const ekMetin = await ekMetinOku(supabase, doktorId, notId)
+  if (ekMetin === null) return null
+  return { notId: o.not.id, seansId: o.not.session_id, onayli, onayTarihi: o.not.approved_at ?? null, dil, icerik: alanliIcerik(satirdan(o.not), alanlariSuz(o.dil.alanlar, alanAnahtarlari)), ikinci, yenidenYazilabilir, alanAnahtarlari, muayene, ekMetin }
+}
+
+/**
+ * Writes the addendum of ONE approved note. The four sections are not in the statement. A draft answers GECERSIZ
+ * (it is edited, not appended). The update itself requires approved_at to be set.
+ */
+export async function notEkKaydet(supabase: SupabaseClient, doktorId: string, notId: string, ham: unknown): Promise<{ tamam: true } | Ret> {
+  const o = await notuOku(supabase, doktorId, notId)
+  if (!o) return ret('NOT_FOUND')
+  if (!o.not.approved_at) return ret('GECERSIZ', 'taslak')
+  const metin = ekMetinAl(ham)
+  if (metin === null) return ret('GECERSIZ', 'ek')
+  const { data, error } = await ulkeTablosu(supabase, 'ulke_notlar')
+    .update({ ek_metin: metin.trim() ? metin : null })
+    .eq('id', notId)
+    .eq('doctor_id', doktorId)
+    .not('approved_at', 'is', null)
+    .select('id')
+  if (error) return ret('BASARISIZ')
+  if (!(data as unknown[] | null)?.length) return ret('NOT_FOUND')
+  return { tamam: true }
 }
 
 /** Saves the doctor's edits to ONE draft (named by its language). Never an approved note. */

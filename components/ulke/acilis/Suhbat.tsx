@@ -94,7 +94,7 @@ function Navbat({ turn, caret = false }: { turn: SahneNavbati; caret?: boolean }
         )}
       >
         {turn.matn}
-        {caret ? <span className="uzl-caret" /> : null}
+        {caret ? <span className="dl-caret" /> : null}
       </p>
     </li>
   )

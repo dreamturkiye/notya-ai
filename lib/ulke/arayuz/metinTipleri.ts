@@ -5,7 +5,7 @@
  * build. Where a key depends on the country's own languages or scripts it is a record keyed by their codes; the pack
  * check (lib/ulke/paketDenetimi.ts) requires an entry for each of them.
  *
- * 153 fixed entries + per-language entries in `UygulamaMetni`; 112 fixed + per-language in `RandevuMetni`.
+ * Fixed entries + per-language entries in `UygulamaMetni`; 112 fixed + per-language in `RandevuMetni`.
  * Placeholders inside a sentence are written %, %1, %2, %3 and are named where the catalogue is written.
  */
 
@@ -21,6 +21,14 @@ export type UygulamaMetni = {
     readonly hata: string
     readonly baglanti: string
     readonly geri: string
+    /** Sidebar group above the daily screens. Optional: a pack written before the slot still type-checks. */
+    readonly calismaAlani?: string
+    /** Sidebar group above tools and settings. */
+    readonly diger?: string
+    /** Small capitals under the word mark for a doctor. */
+    readonly kas?: string
+    /** Small capitals under the word mark for a front-desk account. */
+    readonly onBuroKas?: string
   }
   /** The name of each language of the country (key: the language's code in the pack's `dilGruplari`, e.g. 'uz', 'en'). */
   readonly diller: Readonly<Record<string, string>>
@@ -49,6 +57,11 @@ export type UygulamaMetni = {
     readonly kaydediliyor: string
     readonly kaydedildi: string
     readonly kaydedilemedi: string
+    /** Label of the optional professional registration. The country's own name (NPI, AHPRA, …). Not checked against a register. */
+    readonly meslekKaydi: string
+    /** Says the value is optional, stored on the account, and not checked. Machine-written until a clinician or a lawyer reads it. */
+    readonly meslekKaydiIzoh: string
+    readonly meslekKaydiGecersiz: string
   }
   readonly arama: {
     readonly etiket: string
@@ -68,6 +81,58 @@ export type UygulamaMetni = {
     readonly muayeneBaslat: string
     readonly hastasiz: string
     readonly tumHastalar: string
+  }
+  /**
+   * The signed-in home, the patient list and the settings door, in the same slots as the reference layout.
+   * Optional: a pack that has not filled it keeps the earlier home. Every sentence is the country's own.
+   * `odeme` is that country's payer (the slot a national payer occupies), never another country's.
+   */
+  readonly pano?: {
+    readonly sabah: string
+    readonly gun: string
+    readonly aksam: string
+    readonly gece: string
+    readonly hizliAraclar: string
+    readonly hizliErisim: string
+    readonly bugun: string
+    readonly buHafta: string
+    readonly randevuEkle: string
+    readonly haftaYok: string
+    readonly planYok: string
+    readonly kpiMuayene: string
+    readonly kpiMuayeneAlt: string
+    readonly kpiOnay: string
+    readonly kpiOnayAlt: string
+    readonly kpiAy: string
+    readonly kpiAyAlt: string
+    readonly kpiHasta: string
+    readonly kpiHastaAlt: string
+    readonly haftaOzeti: string
+    readonly haftaSeans: string
+    readonly haftaOnay: string
+    readonly haftaBekleyen: string
+    readonly tumunuGor: string
+    readonly onayBekleyen: string
+    readonly epikriz: string
+    readonly kodlama: string
+    readonly raporlar: string
+    readonly mesajlar: string
+    readonly belgeler: string
+    readonly inceleme: string
+    readonly odeme: string
+    readonly aktif: string
+    readonly pasif: string
+    readonly ayarKas: string
+    readonly ayarAciklama: string
+    /** Green sidebar pill, in the same slot as the reference "ask the assistant". */
+    readonly asistanaSor: string
+    /** Quiet callout under the greeting: its name, then the line shown when nothing is waiting. */
+    readonly fisilti: string
+    readonly fisiltiBos: string
+    /** Quick-access tile that opens the assistant. */
+    readonly asistanAc: string
+    /** Quick-access tile for documents. */
+    readonly belgeYukle: string
   }
   readonly hastalar: {
     readonly baslik: string
@@ -107,6 +172,8 @@ export type UygulamaMetni = {
     readonly notsuzlar: string
     readonly notsuz: string
     readonly ac: string
+    readonly duzenle: string
+    readonly duzenlendi: string
   }
   readonly muayene: {
     readonly baslik: string
@@ -143,6 +210,10 @@ export type UygulamaMetni = {
     readonly notYaziliyor: string
     readonly notuAc: string
     readonly hastaSec: string
+    readonly sesDosyasi: string
+    readonly sesDosyasiIzoh: string
+    readonly sesBuyuk: string
+    readonly sesTur: string
   }
   readonly not: {
     readonly baslik: string
@@ -169,6 +240,27 @@ export type UygulamaMetni = {
     readonly onaylanamadi: string
     readonly zatenOnayli: string
     readonly ikinciTaslak: string
+    readonly ekBaslik: string
+    readonly ekIzoh: string
+    readonly ekKaydet: string
+    readonly ekKaydedildi: string
+    readonly ekKaydedilemedi: string
+    readonly ekTaslak: string
+    readonly yazdir: string
+    readonly disaAktar: string
+    readonly kopyaIzoh: string
+    readonly sil: string
+    readonly silOnay: string
+    readonly silindi: string
+    readonly silinemedi: string
+    readonly silOnayli: string
+    readonly kapaliBaslik: string
+    readonly kapaliIzoh: string
+    readonly kapaliKodlama: string
+    readonly kapaliRecete: string
+    readonly kapaliIlac: string
+    readonly kapaliTalep: string
+    readonly kapaliDevlet: string
   }
   readonly asistan: {
     readonly etiket: string
@@ -1216,5 +1308,11 @@ export type KlinikMetni = {
     readonly yapilamadi: string
     readonly bekliyor: string
     readonly kapat: string
+  }
+  /** Shown to the clinic owner while the pack has set no retention period. The kit deletes nothing on a schedule. */
+  readonly saklama: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly sahip: string
   }
 }

@@ -40,6 +40,7 @@ import { girdiyiCoz } from './girdi'
 import { KIT_ARACLARI, kitAraci } from './katalog'
 import { aracGorunurMu, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, lisansBildirimi, paketinTanimi, sayiMetni } from './paket'
 import type { AracAlani, AracGirdisi, AracTanimi, PaketAraci, UlkeAraclari } from './tipler'
+import { tablolariCoz } from './uyarlama'
 
 const KOK = resolve(__dirname, '../../..')
 const h = React.createElement
@@ -359,7 +360,10 @@ describe('tools — the screens', () => {
           // exactly that typing
           const o: BirimOrtami = { birimler: paket.uygulama!.birimler, lab: icerik.labBirimleri, sayi: paket.bicim }
           const ham = ulkeninHami(t, g, o)
-          const s = t.hesapla(girdiyiCoz(t.alanlar, ham, o), ornekOrtam(t, p.parametreler))
+          // the expected result is worked out as the screen works it out: with the TABLES the country supplies as well
+          // (the steps of a staged return, a grade table), not only its numbers
+          const tb = tablolariCoz(t, p, icerik.olculer).t
+          const s = t.hesapla(girdiyiCoz(t.alanlar, ham, o), Object.keys(tb).length ? { ...ornekOrtam(t, p.parametreler), t: tb } : ornekOrtam(t, p.parametreler))
           if (!s.tamam) continue
           const html = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham }))
           const metin = gorunurMetin(html)

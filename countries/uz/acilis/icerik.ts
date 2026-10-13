@@ -26,6 +26,8 @@
  * Uzbek Latin uses U+02BB (ʻ) in oʻ / gʻ and U+02BC (ʼ) for the tutuq belgisi.
  */
 import type { AcilisIcerigi, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
+import { UZ_KLINIK } from './klinikIcerik'
+import { UZ_YASAL_CYRL, UZ_YASAL_LATN, UZ_YASAL_RU } from './yasalBaglantilar'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { uzAsistanKimligi } from '../klinik/asistanKimligi'
 import { UZ_FIYATLAR } from './fiyatlar'
@@ -38,6 +40,7 @@ export type AcilisDili = (typeof ACILIS_DILLERI)[number]
 export const CAPA = {
   ust: 'top', suhbat: 'suhbat', qabul: 'qabul', portal: 'portal', maslahat: 'maslahat', jadval: 'jadval',
   yonalish: 'yonalish', kuzatuv: 'kuzatuv', organish: 'organish', xavfsizlik: 'xavfsizlik', narx: 'narx', sorov: 'sorov',
+  klinikUst: 'klinika', klinikPortal: 'klinikaportal', klinikDallar: 'dallar', klinikFiyat: 'klinikafiyat', klinikSorov: 'klinikasorov',
 } as const
 
 export type { AcilisIcerigi, KartSatiri, OzellikBolumu, Sahne, SahneNavbati } from '@/lib/ulke/arayuz/acilisTipleri'
@@ -402,9 +405,12 @@ const UZ_LATN: AcilisIcerigi = {
     havolalar: 'Quyi havolalar',
     giris: 'Kirish',
     kayit: 'Taklif kodi bilan roʻyxatdan oʻtish',
+    klinik: 'Klinikalar uchun',
     haklar: 'Notya',
     diller: 'Til va yozuv',
+    yasal: UZ_YASAL_LATN,
   },
+  klinik: UZ_KLINIK['uz-Latn'],
 }
 
 // ───────────────────────── Russian ─────────────────────────
@@ -746,9 +752,12 @@ const RU: AcilisIcerigi = {
     havolalar: 'Нижние ссылки',
     giris: 'Войти',
     kayit: 'Регистрация по коду приглашения',
+    klinik: 'Для клиник',
     haklar: 'Notya',
     diller: 'Язык и письмо',
+    yasal: UZ_YASAL_RU,
   },
+  klinik: UZ_KLINIK.ru,
 }
 
 // ───────────────────────── Uzbek, Cyrillic script ─────────────────────────
@@ -1089,9 +1098,12 @@ const UZ_CYRL: AcilisIcerigi = {
     havolalar: 'Қуйи ҳаволалар',
     giris: 'Кириш',
     kayit: 'Таклиф коди билан рўйхатдан ўтиш',
+    klinik: 'Клиникалар учун',
     haklar: 'Notya',
     diller: 'Тил ва ёзув',
+    yasal: UZ_YASAL_CYRL,
   },
+  klinik: UZ_KLINIK['uz-Cyrl'],
 }
 
 /** One entry per form the page is written in. A form without an entry here fails the type check. */

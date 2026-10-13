@@ -110,8 +110,9 @@ describe('C. every tool of this pack has a mechanism and may be on', () => {
     let karsilastirilan = 0
     for (const p of a.araclar) {
       const kit = kitAraci(p.anahtar)
-      // a tool of the kit for which the country restates no band and no option
-      if (!kit || p.baglanti || p.uyarlama) continue
+      // a tool of the kit for which the country restates no band and no option, and supplies no table (a table may
+      // carry the tool's options: the steps of a staged return — the definition handed over is then the country's)
+      if (!kit || p.baglanti || p.uyarlama || p.tablolar) continue
       const x: GorunurArac = paketinAraci(a, p.anahtar)!
       assert.equal(x.tanim, kit, `${p.anahtar}: the pack is handed something other than the kit's own definition`)
       // …and whose numbers, where it has any, are plain numbers (a laboratory value with its unit is converted: tested where a pack has one)
