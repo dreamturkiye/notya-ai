@@ -10,8 +10,8 @@ import { betaNotu } from '@/lib/ulke/acikIcerik'
 import { arayuz, araclarMetni } from '@/lib/ulke/arayuz'
 import { alanEtiketi, bicimli, paketinAraci } from '@/lib/ulke/araclar/paket'
 import type { AracYuvasi, PaketAraci } from '@/lib/ulke/araclar/tipler'
-import { sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
-import { ulkePaketi } from '@/lib/ulke/ulke'
+import type { AramaParametreleri } from '@/lib/ulke/sayfaDili'
+import { ulkePaketi, uygulamaDiliSec, uygulamaDilleri } from '@/lib/ulke/ulke'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { AKTIF_YASAL } from '@/countries/active/yasal'
 import { YASAL_EPOSTA } from '@/lib/ulke/yasal/eposta'
@@ -90,10 +90,17 @@ function YuvaGovdesi({ y }: { y: AracYuvasi }) {
   )
 }
 
+/** A language the signed-in application already has tool text for. The public catalogue uses that text. */
+export function tibbiDili(searchParams?: AramaParametreleri): DilKodu {
+  const ham = searchParams?.dil
+  const istenen = uygulamaDiliSec(Array.isArray(ham) ? ham[0] : ham)
+  return arayuz().araclar?.metinler[istenen] ? istenen : ulkePaketi().varsayilanDil
+}
+
 export function TibbiSayfa({ searchParams }: { searchParams?: AramaParametreleri }) {
   const icerik = arayuz().araclar
   if (!icerik) notFound()
-  const dil = sayfaDili(searchParams)
+  const dil = tibbiDili(searchParams)
   const ham = searchParams?.arac
   const anahtar = (Array.isArray(ham) ? ham[0] : ham)?.trim() || ''
   const arac = anahtar ? icerik.araclar.find((p) => p.anahtar === anahtar) : undefined
@@ -101,7 +108,8 @@ export function TibbiSayfa({ searchParams }: { searchParams?: AramaParametreleri
   if (anahtar && !arac && !yuva) notFound()
   const m = araclarMetni(dil)
   const yasal = dilPaketi(dil)
-  const diller = ulkePaketi().acikDiller.flatMap((kod) => {
+  const diller = uygulamaDilleri().flatMap((kod) => {
+    if (!icerik.metinler[kod]) return []
     const ad = ulkePaketi().dilAdlari[kod]
     return ad ? [{ kod, ad, href: adres('/medical', kod, anahtar ? { arac: anahtar } : undefined) }] : []
   })
