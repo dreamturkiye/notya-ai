@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://anjayzospuurymjmmtim.supabase.co',
@@ -25,6 +26,8 @@ export default function Giris() {
       setLoading(false)
       return
     }
+    // NOTYA-ULKE-01: an account of another country is refused with the sentence a wrong password gets.
+    if (!hesapBuUlkedeMi(data.user)) { await supabase.auth.signOut(); setError('E-posta veya şifre hatalı'); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,

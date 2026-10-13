@@ -1,0 +1,240 @@
+# Country packs: one database per country
+
+Rewritten 2026-10-09 (NOTYA-ULKE-PORTAL-01) for Kaan's decision of the same day. Plain English; the SQL is in the files it names.
+
+**The decision.** Kaan, 2026-10-09 02:26: *"We had issues with common databases before. Keep seperation between the two and any other future country versions"*. Every country has **a database of its own**: Uzbekistan now, and the United States, the United Kingdom, Canada, Australia and New Zealand when they come. It replaces the decision of 2026-10-08 19:09 (one database shared with Türkiye), on which the earlier version of this page was written.
+
+**Two rules follow, and they do not bend:**
+
+1. **No country script is ever run on the Turkish database.** Not a migration, not the baseline, not a check. The Turkish database is not part of any step on this page.
+2. **No country script is run on another country's database.** Each country's database receives the same files, separately.
+
+## The short version
+
+1. A new country needs **one new, empty database** (its own project at the database provider). Creating it costs money and is the owner's decision each time.
+2. **One file is run on it, once:** `lib/db/ulke/000_yeni_ulke_veritabani.sql`, the baseline. It creates everything a country build needs. It is one transaction, it holds no `drop` statement, and **it refuses to run on a database that is not empty**.
+3. Migrations written after the baseline was generated are run on each country's database one by one, in order. The ledger in each database says which it holds.
+4. **The country code stays on every row and in every key**, as before. With a database per country it is no longer what keeps countries apart; it is the **second wall**: if two countries' data ever met in one database by mistake, no row of one could be read, changed or pointed at from the other.
+5. **The shared login pool is gone.** Each database has its own sign-in service, so an account of one country does not exist at another. See "Logins".
+6. Uzbekistan's database exists and holds migrations 129 to 135 (`docs/COUNTRY-PACK-UZBEKISTAN.md`, "The Uzbek database"). **Nothing after 135 has been applied to it, or to any of the other five country databases.** The files still to run, and the variables the apply tool needs, are in "Pending apply, 2026-10-12" below. The older "Bringing Uzbekistan's database up to date" section is the history of how those files were written; where its order or its check figures disagree with the pending-apply section, follow the pending-apply section.
+
+## What a country database holds
+
+Twenty-seven tables, twenty-eight functions, one private storage bucket with one upload rule (as of migration 145). Nothing else, and no table of the Turkish product.
+
+| Table | Holds |
+|---|---|
+| `schema_migrations` | the ledger: one row per country migration applied to this database. Server only. |
+| `davet_kodlari` | invitation codes, stored only as a hash |
+| `ulke_hesaplari` | the account: its country, name, interface language, time zone |
+| `hekim_dil_tercihleri`, `hekim_rolu`, `hekim_calisma_duzeni` | per-account choices: note language, role, working pattern |
+| `ulke_hastalar`, `hasta_ulke_bilgisi` | patients, and what the country records beside a patient (second name, the patient's language, optional identity number) |
+| `ulke_muayeneler`, `muayene_dil_kaydi` | visits and their transcripts; the consent and speech record of a visit |
+| `ulke_notlar`, `not_dil_kaydi` | visit notes; the note's language, second-language draft and role fields |
+| `ulke_randevulari` | appointments |
+| `ulke_kullanim` | the daily counter behind the ceiling on visits |
+| `ulke_kullanim_olcumu` | **the usage record** (migration 136): per account, per day in the account's time zone, per task (speech first pass, speech second pass, note, rewrite, patient summary): how many, and the seconds or tokens the provider reported. No amounts of money. Server only. |
+| `ulke_portal_erisimleri`, `ulke_portal_oturumlari` | **the patient portal** (migration 137): a patient's link (only a hash of its token and a slow hash of its PIN, the wrong tries, the lock, when it ends) and the sessions opened with it (only a hash of the session key). Server only. |
+| `ulke_hasta_ozetleri` | the summary for the patient that belongs to one approved note, encrypted, and whether the doctor has shared it. A trigger refuses a summary for a note that is not approved or not that patient's. Server only. |
+| `ulke_portal_kayitlari` | the record for the doctor: access given and withdrawn, each sign-in, a lock, each share and take-back. Server only. |
+| `ulke_randevu_istekleri` | a patient's appointment request (preferred days, an encrypted reason) and its answer. One unanswered request per patient. Server only. |
+| `ulke_hasta_formlari` | **the intake form** (migration 138): one form a doctor asked a patient to fill in before a visit — its role, the stamp of its question set, whether it is addressed to a guardian, its state, the consent stamp, and the answers, encrypted. One open form per patient. A trigger keeps a form with its country, doctor and patient, its question set fixed, and a submitted form's answers unchanged. Server only. |
+| `ulke_arac_kayitlari` | **tool records** (migration 139): one result of a doctor tool kept on a patient — the tool's key, the content as one encrypted value, the follow-up day the doctor entered, when it was closed. Server only. |
+| `ulke_klinikler`, `ulke_klinik_uyeleri` | **clinic accounts** (migration 145): a clinic and its owner; its members, each with one position (owner, administrator, doctor, allied professional, front desk). One clinic per account. Exactly one owner, who cannot be removed. Server only. |
+| `ulke_klinik_davetleri` | a one-use invitation code to join a clinic in a stated position: only a hash of the code, who issued it, when it ends, who used it. Server only. |
+| `ulke_klinik_yetkileri` | **a permission**: the doctor whose patients it is about, the member it is given to, one capability, and for a share the one patient, for cover the period. Both are members of the same clinic by key; removing a member removes the row in the same statement. A permission never changes; it is only withdrawn, once. Server only. |
+| `ulke_klinik_erisim_kayitlari` | **the access record**: every permission given, withdrawn or ended, and every read and write made through one — whose patients, who acted, which patient, what, when. A row is never changed and never deleted by a statement. Server only. |
+
+Tables added by later migrations are listed in the migration files themselves and in `lib/db/ulke/gocler.json`.
+
+"Server only" means: row-level security is on and there is **no rule** for a browser session, and the functions are closed to the browser roles. Only the application's server reaches them. Every one of these rows carries the country, the doctor and (where there is one) the patient, and its keys make the database refuse a row that points at another country, another doctor or another doctor's patient.
+
+**Not in a country database, on purpose:** the model gateway's own usage log (`ai_token_kullanim`). The gateway is shared code and tries to write one row per model call; in a country database that table does not exist, the write fails quietly and the call goes on. **A country build's usage is recorded in the country's own table instead** (`ulke_kullanim_olcumu`, written by the country kit through `ulke_kullanim_ekle`; no shared code was changed for it).
+
+## Creating a new country's database
+
+In this order. Steps 1 and 5 are the owner's; the rest can be done for him on his word.
+
+1. **The owner creates the project**: a new, empty database of its own for the country, in a region the country's data law allows (checklist A1). It has a monthly cost; the owner sees the figure first. (The organisation's free plan holds two projects, and Türkiye and Uzbekistan use them: every further country needs a paid plan.)
+2. **Check that it is the right database and that it is empty.** This must return no row:
+   ```sql
+   select relname from pg_class where relnamespace = 'public'::regnamespace and relkind in ('r', 'p', 'v', 'm', 'f');
+   ```
+   If it returns anything, stop: this is not a new country database.
+3. **Run the baseline, once:** the whole of `lib/db/ulke/000_yeni_ulke_veritabani.sql`, in one go. It checks step 2 by itself before it does anything, and refuses otherwise. It is applied completely or not at all.
+4. **Check the result against the file.** With migrations 129 to 142 (the baseline as it stands) the answer is **27, 272, 17, 21**, and the ledger lists 129 to 142. (With 129 to 139 only: 22, 222, 17, 16. With 129 to 138 only: 21, 212, 17, 15.) (A database that holds 129 to 135 only, as Uzbekistan's does today, answers 14, 136, 17, 5.)
+   ```sql
+   select (select count(*) from pg_tables where schemaname = 'public') as tables,
+          (select count(*) from information_schema.columns where table_schema = 'public') as columns,
+          (select count(*) from pg_policies where schemaname in ('public', 'storage')) as policies,
+          (select count(*) from pg_proc p where p.pronamespace = 'public'::regnamespace
+              and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')) as functions;
+   select version, filename from schema_migrations order by 1;
+   ```
+   The figures for the current baseline are printed by the baseline proof (`scripts/ulke-temel-kaniti.mjs`). (`policies` counts the rules the database had before as well: on a new project, the storage schema has none.)
+5. **Settings of the country's own project and deployment** (the owner, or on his word): public sign-up switched **off** in the project (accounts are created only by the country's own invitation route); the country's deployment given its country code, the database's address, its public key, its secret server key and **an encryption key of its own**; the deployment's build command set to `npm run build:ulke`.
+6. **Run every migration written after the baseline was generated**, if the database was created from an older copy of the file. The ledger says what it holds; `lib/db/ulke/gocler.json` says what exists.
+7. Record all of it, with the date, in the country's own document (`docs/COUNTRY-PACK-<CODE>.md`, checklist section M).
+
+## The baseline
+
+`lib/db/ulke/000_yeni_ulke_veritabani.sql` is **generated**, never written by hand:
+
+```
+node scripts/ulke-temel-uret.mjs              # writes it
+node scripts/ulke-temel-uret.mjs --kontrol    # says whether it is up to date
+```
+
+It is put together from `lib/db/ulke/defter.sql` (the ledger) and the country migrations listed in `lib/db/ulke/gocler.json`, in order, each exactly as written, with three things taken out: the migration's own `begin` and `commit` (the baseline is one transaction), every `drop … if exists` statement (they exist only so that a migration can be run twice; on an empty database there is nothing to drop), and comment lines outside function bodies (the commented source is the migration file). A function's text is kept byte for byte.
+
+What the file promises, and how each promise is held:
+
+| Promise | Held by |
+|---|---|
+| It gives exactly the schema the migrations give | the proof below, on a real PostgreSQL |
+| It is up to date with the migrations | a test (`lib/ulke/ulkeTemel.test.ts`): the file must equal what the generator gives |
+| No migration can be left out | the same test: every migration that creates or alters a country table must be on the list |
+| It holds no `drop` statement | the generator refuses to write one; the test and the proof check the file |
+| It names nothing that exists only in the Turkish database | the test, over statements and comments |
+| It cannot be run on a database that is in use, or twice | its first statement: it refuses a `public` schema that holds any table. Proven. |
+| It is all or nothing | one transaction. Proven with a failure forced at its end. |
+
+## Later migrations
+
+A country migration is a file in `lib/db/migrations/` with the next free number, **added to `lib/db/ulke/gocler.json`**; then the baseline is regenerated. The tests fail until both are done.
+
+Rules for writing one (a test checks each):
+
+- one transaction, with a lock timeout of 4 seconds;
+- **no `drop … if exists`**: the tool that applies SQL to a hosted database by hand refuses those. Write "create only if missing" instead;
+- it **refuses a database that has no country tables**, as its first statement: run by mistake on a database that is not a country's, it stops and changes nothing;
+- country on every row and in every key, row-level security on, no write from the browser;
+- its own row in the ledger; a rollback file in `lib/db/migrations/geri-al/`;
+- it names no table of the Turkish database.
+
+Applying one: on **each** country's database, separately, in order, each file in one go. A file that fails leaves nothing behind; a file run twice changes nothing.
+
+## The files today
+
+| File | Creates |
+|---|---|
+| `128_hesap_ulke_dil.sql` | **Not a country migration. Superseded; never run.** It would add two columns to the Turkish account table. No country build needs it. The file is kept, with that written at its top, so the record stays. |
+| `129_davet_kodlari.sql` | `davet_kodlari`; the functions `davet_kodu_kullan` and `davet_kodu_iade`, closed to browser sessions |
+| `130_hekim_dil_tercihleri.sql` | the function `ulke_oturum_ulkesi`; `ulke_hesaplari` with the trigger that stops an account changing country; `hekim_dil_tercihleri` |
+| `131_hasta_ulke_bilgisi.sql` | `ulke_hastalar`, `hasta_ulke_bilgisi` |
+| `132_muayene_dil_kaydi.sql` | `ulke_muayeneler`, `muayene_dil_kaydi`, `ulke_kullanim`; the private bucket `muayene-sesleri` and its upload rule |
+| `133_not_dil_kaydi.sql` | `ulke_notlar`, `not_dil_kaydi` |
+| `134_hekim_rolu.sql` | `hekim_rolu`; two columns on `not_dil_kaydi` |
+| `135_ulke_randevu.sql` | `hekim_calisma_duzeni`, `ulke_randevulari`, the rule against double booking (needs the extension `btree_gist`, which the file switches on), the function `ulke_not_onayla` |
+| `136_ulke_kullanim_olcumu.sql` | `ulke_kullanim_olcumu`; the function `ulke_kullanim_ekle`, closed to browser sessions |
+| `137_ulke_hasta_portali.sql` | `ulke_portal_erisimleri`, `ulke_portal_oturumlari`, `ulke_hasta_ozetleri` with its trigger (and the trigger's function `ulke_hasta_ozeti_kilidi`), `ulke_portal_kayitlari`, `ulke_randevu_istekleri`; one more key on `ulke_randevulari`; six functions closed to browser sessions: `ulke_portal_erisim_ver`, `ulke_portal_erisim_iptal`, `ulke_portal_deneme_al`, `ulke_portal_deneme_sonucu`, `ulke_ozet_paylas`, `ulke_randevu_istegi_kabul` |
+| `138_ulke_hasta_formu.sql` | `ulke_hasta_formlari` with its trigger (and the trigger's function `ulke_hasta_formu_kilidi`); one function closed to browser sessions: `ulke_hasta_formu_iste`, which makes the form and, where the patient has no working link, the link (through `ulke_portal_erisim_ver`) in one transaction |
+| `139_ulke_arac_kayitlari.sql` | `ulke_arac_kayitlari` with its trigger (and the trigger's function `ulke_arac_kaydi_kilidi`): one row per result of a doctor tool that a doctor kept on a patient. Country, doctor and patient in the key (the patient by the `(ulke, doctor_id, patient_id)` foreign key, removed with the patient); the tool by its key, whose shape the database checks and whose existence and role gate the application checks; what was entered and what came out as ONE encrypted value; the follow-up day the doctor entered (plain, like the day of an appointment) and when the doctor closed it. A record never changes: only its follow-up can be closed, once. Row-level security on with no rule: server only. **Not applied anywhere.** |
+| `140_ulke_hasta_mesajlari.sql` | `ulke_mesaj_yazismalari` (one row per conversation between a doctor and a patient; at most one open per patient; closed once, by the doctor) and `ulke_hasta_mesajlari` (one row per message: who wrote it, the text as ONE encrypted value, when it was read), each with its trigger (functions `ulke_mesaj_yazismasi_kilidi`, `ulke_hasta_mesaji_kilidi`): a conversation and a message never move; a message's text never changes and it is read once; a closed conversation takes no message. Country, doctor and patient in the key; removed with the patient. No column for an attachment. Server only. NOTYA-ULKE-MESAJ-01 |
+| `141_ulke_hekim_sablonlari.sql` | `ulke_hekim_sablonlari` with its trigger (function `ulke_hekim_sablonu_kilidi`): a doctor's own text blocks. **No patient column.** The name and the text as ONE encrypted value; where it may be inserted (a note, a message, both); deleted softly, and a deleted row does not change. Server only |
+| `142_ulke_konsultasyon.sql` | `ulke_konsultasyon_kodlari` (one row per account that chose to be findable: its code as a hash and as an encrypted value; no statement lists it) and `ulke_konsultasyonlar` (one row per consultation and the record of it: who asked whom about which patient, the question, the READ-ONLY COPY of what was shared, the consent stamp and its moment, read, answered, closed, and until when the consulted doctor may read), each with its trigger (functions `ulke_konsultasyon_kodu_kilidi`, `ulke_konsultasyon_kilidi`): only an approved note of that patient is shared; nothing but "read", the answer and the closing ever changes, each once. Server only |
+| `145_ulke_klinik.sql` | **Clinic accounts** (NOTYA-ULKE-KLINIK-01). Five tables: `ulke_klinikler`, `ulke_klinik_uyeleri`, `ulke_klinik_davetleri`, `ulke_klinik_yetkileri`, `ulke_klinik_erisim_kayitlari`. Five triggers with their functions (`ulke_klinik_kilidi`, `ulke_klinik_uye_kilidi`, `ulke_klinik_davet_kilidi`, `ulke_klinik_yetki_kilidi`, `ulke_klinik_erisim_kaydi_kilidi`), the helper `ulke_klinik_yonetebilir`, and six functions closed to browser sessions: `ulke_klinik_kur`, `ulke_klinik_katil`, `ulke_klinik_uye_cikar`, `ulke_klinik_konum_degistir`, `ulke_klinik_yetki_ver`, `ulke_klinik_yetki_geri_al`. **It alters no existing table, key, rule, trigger or function**: the proof compares a database built without it and with it, object by object. It needs only the account table and the patient table. Row-level security on with no rule: server only. **Not applied anywhere.** |
+| `146_ulke_not_ek.sql` | **An addendum on an approved note.** One column, `ek_metin`, on `ulke_notlar`, and one check (`ulke_notlar_ek_metin_uzunluk`: null, or at most 4000 characters). The SOAP columns and `approved_at` are not altered. The note text is plain, as the SOAP sections already are. The application reads the column in a second query, so a database that has not taken this file still opens every note; saving an addendum fails until the file is in. Needs `ulke_hesaplari` and `ulke_notlar`. **Not applied anywhere.** |
+
+Files 129 to 135 were written when the plan was a shared database, and their own comments still describe that plan; a line at the top of each says what holds now. **They are not run by hand any more**: a new country's database gets the baseline, and the only database that received them one by one, Uzbekistan's, already holds them.
+
+Files 136 to 142 were written for a database per country. Each **refuses a database that has no `ulke_hesaplari`**, holds no `drop … if exists`, and is one transaction.
+Files 136, 137, 138, 139 and 145 were written for a database per country. Each **refuses a database that has no `ulke_hesaplari`**, holds no `drop … if exists`, and is one transaction.
+
+## Pending apply, 2026-10-12
+
+**Not applied. No hosted database was reached.** On 2026-10-12 the job that wrote migration 146 looked for credentials and found none: no `DATABASE_URL`, no `SUPABASE_DB_URL`, no Supabase project URL, and no `.env.local` in the environment. There is no project address in the repository. Running `node scripts/run-sql-migration.mjs` without those variables exits 0 and only prints that the file must be run by hand; that exit is not a successful apply.
+
+**Never on the Turkish database. Never one country's file on another country's database.** Six projects, six applies.
+
+### What each database runs
+
+| Database | What it already holds | What to run, in this order, each file once, each in one go |
+|---|---|---|
+| Uzbekistan (`uz`) | 129 to 135, applied by hand. Do not run the baseline (it refuses a database that is not empty). | `136_ulke_kullanim_olcumu.sql`, `137_ulke_hasta_portali.sql`, `138_ulke_hasta_formu.sql`, `139_ulke_arac_kayitlari.sql`, `140_ulke_hasta_mesajlari.sql`, `141_ulke_hekim_sablonlari.sql`, `142_ulke_konsultasyon.sql`, `145_ulke_klinik.sql`, `146_ulke_not_ek.sql` |
+| United States, United Kingdom, Canada, Australia, New Zealand (`us`, `gb`, `ca`, `au`, `nz`) | Nothing, unless a project was created outside this repository. No address is recorded here. | If the database is empty: `lib/db/ulke/000_yeni_ulke_veritabani.sql` once. That baseline is generated from `lib/db/ulke/gocler.json` and already contains 129 through 146. If a project was already given 129 to 135 by hand, use the Uzbekistan list instead and do not run the baseline. |
+
+Each file is `lib/db/migrations/<name>` except the baseline, which is the one path in the table. A file that fails leaves nothing behind. A file run twice changes nothing. None of 136 to 142, 145 or 146 contains `drop … if exists`.
+
+Without 145 every clinic screen answers "could not be done". Without 146 an addendum cannot be saved; the note still opens. The earlier files are what the portal, the intake form, kept tool results, messages, templates and consultation need. Those features stay switched off in the English packs until a clinician and a lawyer say otherwise; the tables can still be created so the database matches the baseline.
+
+### How to run one file
+
+On the machine that can reach that country's database, with that country's connection string only:
+
+```
+DATABASE_URL='postgresql://…' node scripts/run-sql-migration.mjs 136_ulke_kullanim_olcumu.sql
+```
+
+`SUPABASE_DB_URL` is accepted in place of `DATABASE_URL`. The script also reads either name from `.env.local`. Point it at one project, run the files for that project, then change the variable before the next project. The SQL editor of that project is the same apply if the script cannot be used: paste one file, run it, then the next.
+
+The running application, separately from the apply, needs for that deployment: `NOTYA_COUNTRY` (one of `us`, `gb`, `ca`, `au`, `nz`, `uz`), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `ENCRYPTION_MASTER_KEY`. The country build is `NOTYA_COUNTRY=<code> npm run build:ulke`. None of those values is in this repository.
+
+### What this job did not re-count
+
+The local proofs recorded further down were run before migration 146. After 145 they answered 27 tables, 270 columns, 17 rules and 28 functions. Migration 146 adds no table: one column (`ek_metin`) and one check on `ulke_notlar`. This job did not re-run `scripts/ulke-temel-kaniti.mjs` or `scripts/ulke-goc-kaniti.mjs`, so those four figures are not restated as a count taken after 146. After the files are in, the ledger must list every version that was run.
+
+## Bringing Uzbekistan's database up to date
+
+The order and the check figures in this section were written as the files arrived and disagree with each other. **The list to follow is "Pending apply, 2026-10-12" above.** The paragraphs below stay as the record of what each job proved.
+
+Uzbekistan's database was built by hand from 129 to 135, so it does not get the baseline (the baseline refuses a database that is not empty). It gets the later files, **in this order, each once, each in one go**:
+
+1. `lib/db/migrations/136_ulke_kullanim_olcumu.sql`
+2. `lib/db/migrations/137_ulke_hasta_portali.sql`
+3. `lib/db/migrations/138_ulke_hasta_formu.sql` (the intake form, NOTYA-ULKE-INTAKE-01; it needs 137)
+4. `lib/db/migrations/139_ulke_arac_kayitlari.sql` (the results of doctor tools a doctor keeps on a patient, and their follow-up day, NOTYA-ULKE-ARACLAR-01; it needs only the patient table)
+5. `lib/db/migrations/140_ulke_hasta_mesajlari.sql` (messages between a doctor and a patient, NOTYA-ULKE-MESAJ-01; it needs only the patient table, and the feature needs the portal of 137)
+6. `lib/db/migrations/141_ulke_hekim_sablonlari.sql` ("my templates"; it needs only the account table)
+7. `lib/db/migrations/142_ulke_konsultasyon.sql` (consultation between doctors; it needs the patient and note tables)
+5. `lib/db/migrations/145_ulke_klinik.sql` (clinic accounts, NOTYA-ULKE-KLINIK-01; it needs only the account table and the patient table, so it may also be run before 136 to 139 — but the build that has clinic accounts also has the portal, the form and the tools, and needs all of them)
+
+Then the check of step 4 above must answer **27, 272, 17, 21**, and the ledger must list 129 to 142 (after 139 and before 140: 22, 222, 17, 16) (after 138 and before 139: 21, 212, 17, 15) (after 136 and 137 alone: 20, 194, 17, 13). None of these files holds a `drop … if exists`, so the tool that refused those lines in 129 to 135 has nothing to refuse here. A file that fails leaves nothing behind; a file run twice changes nothing. The Uzbek build that has the patient portal must not be used before 136 and 137 are in, and the build that has the intake form not before 138, the tools area's kept results not before 139, and messages, "my templates" and consultation not before 140, 141 and 142 (each feature fails without its own file; the others work). **Not done yet: nothing was applied to any hosted database by the jobs that wrote these files.** It is the owner's decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-PORTAL-01f, NOTYA-ULKE-INTAKE-01a, NOTYA-ULKE-ARACLAR-01a and NOTYA-ULKE-MESAJ-01a).
+Then the check of step 4 above must answer **27 tables, 270 columns, 17 rules, 28 functions**, and the ledger must list 129 to 139 and 145 (after 139 and before 145: 22, 222, 17, 16) (after 138 and before 139: 21, 212, 17, 15) (after 136 and 137 alone: 20, 194, 17, 13). No file of the three holds a `drop … if exists`, so the tool that refused those lines in 129 to 135 has nothing to refuse here. A file that fails leaves nothing behind; a file run twice changes nothing. The Uzbek build that has the patient portal must not be used before 136 and 137 are in, the build that has the intake form not before 138, and **the build that has clinic accounts not before 145: without it every clinic screen answers "could not be done"; nothing else of the application is affected, and no patient is exposed, because the check fails closed.** **Not done yet: nothing was applied to any hosted database by the jobs that wrote these files.** It is the owner's decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-PORTAL-01f, NOTYA-ULKE-INTAKE-01a, NOTYA-ULKE-ARACLAR-01a and NOTYA-ULKE-KLINIK-01a).
+
+## Rollback
+
+One file per migration, in `lib/db/migrations/geri-al/`, named like the migration with `.geri-al.sql`. Run them in reverse order, on the country's own database only.
+
+- Each is one transaction with the same lock timeout, and is safe to run twice.
+- **Each refuses to run while a table it would drop still holds a row.** A rollback never destroys a country's data silently; export and empty the tables by hand first.
+- Not undone by the scripts: the bucket `muayene-sesleri` (delete the empty bucket in the dashboard), the extension `btree_gist` (harmless; left in place), and the logins of the country's accounts (remove them in the sign-in service by hand if they must go).
+- The rollback files hold `drop` statements by nature. Applying one to a hosted database is a deliberate act with the owner's word, never a routine step.
+- **Removing an account that a clinic knows (migration 145).** A clinic goes with its owner's account, and a membership, an invitation and a permission go with the account they belong to: the database removes them by itself. **The access record does not let go as easily, on purpose:** a row names the doctor whose patients it is about, who acted and the member concerned. It goes with the doctor it belongs to (and with the patient it names), but the database **refuses to delete an account that is named in ANOTHER doctor's record** as the one who acted or the member concerned, as long as that record stands. So: to remove an account that once worked at a front desk, as an allied professional or as a covering doctor, either keep the account (remove it from the clinic instead; that ends every permission at once) or first decide, with the owner, what happens to the record of the doctors it worked for. Deleting record rows is a deliberate act on the database, never a step of the application: the application has no such statement.
+
+A whole country database that is no longer wanted is removed by deleting its project. That too is the owner's act.
+
+## Logins
+
+Each country's database has its own sign-in service. An account created by the Uzbek build exists in the Uzbek project only: the Turkish site does not know its e-mail address or password, and the reverse. **The shared-login-pool problem of the earlier plan does not arise**, and the hold that came with it ("no invitation code for any country until the Turkish site checks an account's country") no longer applies.
+
+What remains true:
+
+- **Public sign-up must be switched off in each country's project.** Otherwise somebody could create a login by calling the sign-in service directly. Such a login would still be refused by every screen and route of the country build (it has no country stamp, which only the server can write, and no account row), but it should not exist. A setting, not code.
+- **The same person may hold an account in two countries** with the same e-mail address. They are two unrelated accounts.
+- E-mails sent by a project's sign-in service (password reset, confirmation) use that project's own templates and site address. Country builds send none today.
+- The country check on the Turkish site (pull request #565) is now optional hardening. Whether to ship it is the owner's call, later.
+- A country build still refuses a session that is not stamped with its own country, and an account whose row belongs to another country. With separate databases neither can happen through normal use; the checks stay as part of the second wall.
+
+## What was proven, and what was not
+
+**Proven on a throwaway local PostgreSQL 18.4**, with nothing leaving the machine:
+
+- `scripts/ulke-temel-kaniti.mjs` (the baseline proof). Three empty databases are built three ways: every migration as written (and again a second time); the way Uzbekistan's database was really built (129 to 135 with every `drop … if exists` line left out, as the tool applied them); and the baseline, once. **All three are identical** in tables, columns, constraints, indexes, row-level rules with their definitions, triggers, function bodies, who may execute each function, every role's privileges on every table, extensions, the storage bucket and its rule, and the ledger's rows. Built from 129 to 135 alone, a country database has 14 tables, 136 columns, 17 rules and 5 functions: **the same four figures that were counted on the real Uzbek database on 2026-10-09.** With 136, 137 and 138 the baseline gives 21 tables, 212 columns, 17 rules and 15 functions; the "Uzbek way" database of the proof is 129 to 135 with the `drop … if exists` lines left out and then 136, 137 and 138 as written, which is exactly what Uzbekistan's database will be after the three files. The comparison is shown not to be blind (seven deliberate changes, each noticed). The baseline refuses a second run and a database that already holds a table, and leaves nothing behind in either case or after a failure. The ledger cannot be read or written by a browser role.
+- `scripts/ulke-goc-kaniti.mjs` (the migration proof, **390 checks** since migrations 140 to 142: 37 in section M for messages, 17 in section S for "my templates", 49 in section N for consultation, 28 in section K for the tool records; it also proves the usage record, the portal and the intake form in SQL: a link, PIN tries and the lock, sessions, the summary's trigger, sharing, a request and its acceptance without double booking; a form and the patient's link made in one call or not at all, one open form per patient also for two requests at the same moment, a form that cannot move or change its question set, submitted answers that cannot change; every function closed to browser roles; 136, 137 and 138 refusing a database that is not a country's): the keys refuse a row of one country pointing at another country or at another doctor; an account cannot change country; row-level rules; the recordings bucket; invitation codes and note approval act only inside the country they are called for; no double booking, also for two requests at the same moment; note approval is all or nothing; the rollbacks refuse while data exists. Sections M, S and N prove in SQL: one open conversation per patient also for two statements at the same moment; a closed conversation that takes no message; a message whose text cannot change and that is read once; a template row that has no patient column and does not change once deleted; one code per account and no two accounts with the same code; a consultation that shares only an approved note of that patient, cannot be asked of oneself or of another country's account, cannot change its question, copy, consent or periods, is answered once and only while open, and stays closed; every table closed to the browser roles; 140, 141 and 142 refusing a database that is not a country's; and each rollback refusing while a row exists. **The proof itself was corrected on 2026-10-09:** its check of two simultaneous form requests (section F) used a token that section P had already given a link, so it passed only while the first of the two requests won the race and stopped the whole proof when the second did. It now uses two tokens nobody holds; three runs in a row answered 390 of 390.
+- `scripts/ulke-goc-kaniti.mjs` (the migration proof, **399 checks since migration 145: 130 more, 124 of them section L for clinic accounts** (the other six are the file's own refusal, second run and rollback in the sections that hold those for every migration) — see the next point; before it 269 since migration 139, 28 of them section K for the tool records; it also proves the usage record, the portal and the intake form in SQL: a link, PIN tries and the lock, sessions, the summary's trigger, sharing, a request and its acceptance without double booking; a form and the patient's link made in one call or not at all, one open form per patient also for two requests at the same moment, a form that cannot move or change its question set, submitted answers that cannot change; every function closed to browser roles; 136, 137 and 138 refusing a database that is not a country's): the keys refuse a row of one country pointing at another country or at another doctor; an account cannot change country; row-level rules; the recordings bucket; invitation codes and note approval act only inside the country they are called for; no double booking, also for two requests at the same moment; note approval is all or nothing; the rollbacks refuse while data exists.
+- **Migration 145, section L of the migration proof** (clinic accounts). In SQL, on the throwaway database: one clinic per owner and per account; exactly one owner, who cannot be removed, demoted or replaced; a member of a clinic of another country is refused; an invitation is stored as a hash, works once, not after it is withdrawn or has ended, not for an account that is already a member, and two accounts using one code at the same moment make one member; a permission is refused between members of two clinics, to oneself, for a capability that does not fit the member's position, for another doctor's patient, for cover without a period or longer than 31 days; a permission cannot be changed, only withdrawn once; removing a member removes every permission given by or to that member in the same statement and writes "ended" to the record; changing a position withdraws them; a record row can be neither changed nor deleted by a statement, and an account named in another doctor's record cannot be deleted; every function is closed to the browser roles and every table has row-level security with no rule; the file refuses a database that is not a country's, runs twice without change, and its rollback refuses while a row exists. **And that 145 alters nothing that existed:** a database built from 129 to 139 and one built with 145 are compared object by object (tables, columns, constraints, indexes, rules, triggers, function bodies, privileges), and every difference is one of the new objects. With 145 the baseline proof makes 96 checks and the three databases are again identical: 27 tables, 270 columns, 17 rules, 28 functions.
+
+**Not proven locally:**
+
+1. **The provider's own parts** are stand-ins in both proofs: its roles and default grants, the sign-in tables and functions, the storage tables, and whether the role that runs a file there may create a rule on `storage.objects` and the extension `btree_gist`. On the real Uzbek database migrations 129 to 135 did run, which answers this for those files as applied by hand; **the baseline file itself has not been run on any hosted database yet.** The first new country is its first real run: follow steps 2 to 4 above.
+2. **The provider's API layer.** The application calls the functions and filters through it; the proofs call them in SQL.
+3. **The application against a real database.** Every application test uses a stand-in database. The first real use of the Uzbek database by the Uzbek preview is still ahead (it waits on the secret server key).
+
+How to run the proofs again (they need a package that is not a dependency of the repository, installed outside it):
+
+```
+mkdir /var/tmp/notya-pg-check && cd /var/tmp/notya-pg-check && npm init -y && npm install embedded-postgres pg
+node <repo>/scripts/ulke-temel-kaniti.mjs      # exit code 0 = every check passed
+node <repo>/scripts/ulke-goc-kaniti.mjs
+```

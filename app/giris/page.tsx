@@ -1,7 +1,8 @@
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { authHataMesaji } from "./authHataMesaji"
+import { authHataMesaji, GIRIS_HATALI } from "./authHataMesaji"
+import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 
 const SUPA_URL = "https://anjayzospuurymjmmtim.supabase.co"
@@ -29,6 +30,8 @@ export default function LoginPage() {
       })
       const data = await resp.json()
       if (!data.access_token) throw new Error(authHataMesaji(data.error_description || data.msg || data.error, mode === "login" ? "Giriş başarısız. Lütfen tekrar deneyin." : "Kayıt tamamlanamadı. Lütfen tekrar deneyin."))
+      // NOTYA-ULKE-01: an account of another country is refused with the sentence a wrong password gets.
+      if (!hesapBuUlkedeMi(data.user)) throw new Error(GIRIS_HATALI)
       localStorage.setItem("sb-anjayzospuurymjmmtim-auth-token", JSON.stringify({
         access_token: data.access_token, refresh_token: data.refresh_token,
         expires_at: Math.floor(Date.now() / 1000) + data.expires_in,

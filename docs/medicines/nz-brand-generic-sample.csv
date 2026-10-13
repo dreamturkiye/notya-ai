@@ -1,0 +1,48 @@
+generic_name,commercial_name,manufacturer_if_shown,strength_and_form_if_shown,register_url
+Paracetamol,Paracetamol (Noumed),Noumed Pharmaceuticals Limited,"500 mg, uncoated tablets",https://www.medsafe.govt.nz/profs/datasheet/p/paracetamolPharmacaretab.pdf
+Paracetamol,Pacimol,Ipca Pharma (NZ) Pty Limited,"paracetamol 500 mg, uncoated tablets",https://www.medsafe.govt.nz/profs/Datasheet/p/pacimoltab.pdf
+Paracetamol,PANADOL OSTEO,Haleon New Zealand ULC,modified-release tablet; Paracetamol (BP) 665 mg/tablet,https://www.medsafe.govt.nz/profs/datasheet/p/panadolOsteocaplets.pdf
+Atorvastatin,ATORVASTATIN PFIZER®,Pfizer New Zealand Limited,"10 mg, 20 mg, 40 mg and 80 mg tablets",https://www.medsafe.govt.nz/Profs/Datasheet/a/atorvastatinpfizetabr.pdf
+Atorvastatin,Lorstat,Viatris Ltd,"10 mg, 20 mg, 40 mg & 80 mg, film coated tablet",https://www.medsafe.govt.nz/profs/datasheet/l/lorstattab.pdf
+Omeprazole,Omeprazole actavis 10,,Cap 10 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Omeprazole Teva,,Cap 10 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Omeprazole actavis 20,,Cap 20 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Omeprazole Teva,,Cap 20 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Omeprazole actavis 40,,Cap 40 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Omeprazole Teva,,Cap 40 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Midwest,,Powder,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Dr Reddy's Omeprazole,,Inj 40 mg ampoule with diluent,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Omeprazole,Ocicure,,Inj 40 mg ampoule with diluent,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Ibuprofen,IBUPROFEN,Viatris Ltd,200 mg film coated tablet,https://www.medsafe.govt.nz/profs/datasheet/i/IbuprofenRelieveTab.pdf
+Ibuprofen,IBUGESIC,Rex Medical Limited,Ibuprofen 200 mg; tablet,https://www.medsafe.govt.nz/profs/datasheet/i/ibugesictab.pdf
+Ibuprofen,Nurofen 12 Hour,Reckitt Benckiser (New Zealand) Ltd,"Modified release tablet, Ibuprofen 300mg",https://www.medsafe.govt.nz/profs/datasheet/n/Nurofen12Hourtab.pdf
+Amoxicillin,Miro-Amoxicillin,Miro Healthcare Limited,Capsules 250 mg; Capsules 500 mg,https://www.medsafe.govt.nz/profs/datasheet/m/MiroAmoxicillincap.pdf
+Amoxicillin,Amoxycillin Sandoz®,Sandoz New Zealand Limited,Capsule; 250 mg or 500 mg amoxicillin (as trihydrate),https://www.medsafe.govt.nz/profs/datasheet/a/amoxycillinSandozcap.pdf
+Amoxicillin,Alphamox,Viatris Ltd,"250 mg and 500 mg, capsules",https://www.medsafe.govt.nz/profs/datasheet/a/alphamoxcap.pdf
+Colecalciferol,Vit.D3,,"Cap 1.25 mg (50,000 iu)",https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Colecalciferol,Clinicians,,"Oral liq 188 mcg per ml (7,500 iu per ml)",https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Metoprolol succinate,Myloc CR,Viatris Ltd,"23.75 mg, 47.5 mg, 95 mg and 190 mg, modified-release tablets",https://www.medsafe.govt.nz/profs/datasheet/m/myloccrtab.pdf
+Metoprolol succinate,Topreloc-xl,Pharmacor Limited,"23.75 mg, 47.5 mg, 95 mg and 190 mg, modified-release tablets",https://www.medsafe.govt.nz/Profs/Datasheet/t/ToprelocXLtab.pdf
+Salbutamol,Ventolin Inhaler (CFC-Free),GlaxoSmithKline NZ Limited,"100 micrograms; Inhaler, aerosol, metered",https://www.medsafe.govt.nz/profs/datasheet/v/VentolinCFC-freeinh.pdf
+Salbutamol,Respigen®,Viatris Ltd,100 micrograms per actuation inhalation aerosol,https://www.medsafe.govt.nz/profs/Datasheet/r/respigeninh.pdf
+Salbutamol,Asthalin™,Rex Medical Ltd,Solution for inhalation; salbutamol 1 mg/mL; salbutamol 2 mg/mL,https://www.medsafe.govt.nz/profs/datasheet/a/Asthalininh.pdf
+Candesartan cilexetil,Candestar,Viatris Ltd,"4 mg, 8 mg, 16 mg and 32 mg tablets",https://www.medsafe.govt.nz/profs/datasheet/c/candestartab.pdf
+Candesartan cilexetil,Candesartan Viatris,Viatris Ltd,"4 mg, 8 mg, 16 mg and 32 mg tablets",https://www.medsafe.govt.nz/Profs/Datasheet/c/CandesartanViatrisTab.pdf
+Amlodipine,Vasorex,Rex Medical Limited,"Amlodipine besilate 2.5 mg, 5 mg and 10 mg tablets",https://www.medsafe.govt.nz/profs/datasheet/v/vasorextab.pdf
+Cetirizine hydrochloride,Cetirizine Indoco,Miro Healthcare Ltd,Cetirizine hydrochloride 10 mg film coated tablets,https://www.medsafe.govt.nz/profs/datasheet/c/CetirizineIndocotab.pdf
+Cetirizine hydrochloride,Zista,Teva Pharma (New Zealand) Limited,"10 mg, tablets",https://www.medsafe.govt.nz/profs/datasheet/z/zistatab.pdf
+Cetirizine hydrochloride,Razene,Viatris Ltd,"10 mg, film coated tablet",https://www.medsafe.govt.nz/profs/datasheet/r/razenetab.pdf
+Levothyroxine,LEVOTHYROXINE,Boucher & Muir (NZ) Ltd t/a Mercury Pharma (NZ),50 microgram and 100 microgram tablets,https://www.medsafe.govt.nz/profs/datasheet/l/Levothyroxinetab.pdf
+Levothyroxine,ELTROXIN®,Pharmacy Retailing (NZ) Limited trading as Healthcare Logistics,"25 mcg, 50 mcg, 75 mcg, 100 mcg tablets",https://www.medsafe.govt.nz/profs/Datasheet/e/EltroxintabNEW.pdf
+Levothyroxine,Synthroid,Viatris Ltd,"25 mcg, 50 mcg, 75 mcg, 88 mcg, 100 mcg, 112 mcg, 125 mcg, 137 mcg, 150 mcg, 175 mcg, 200 mcg, 300 mcg tablets",https://www.medsafe.govt.nz/profs/datasheet/s/Synthroidtab.pdf
+Prednisone,PREDNISONE TABLETS,Clinect NZ Pty Limited,1 mg tablets; 2.5 mg tablets; 5 mg tablets; 20 mg tablets,https://www.medsafe.govt.nz/profs/datasheet/a/apoprednisonetab.pdf
+Zopiclone,Zopiclone Actavis,Teva Pharma (New Zealand) Limited,"3.75 mg, film coated tablet; 7.5 mg, film coated tablet",https://www.medsafe.govt.nz/profs/datasheet/z/zopicloneactavistab.pdf
+Zopiclone,Imovane,Pharmacy Retailing (NZ) Ltd t/a Healthcare Logistics,7.5 mg film coated tablet,https://www.medsafe.govt.nz/profs/datasheet/i/imovanetab.pdf
+Docusate sodium with sennosides,Solax,,Tab 50 mg with sennosides 8 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Celecoxib,Celebrex®,Pharmacy Retailing (NZ) Limited trading as Healthcare Logistics,100 mg and 200 mg capsules,https://www.medsafe.govt.nz/profs/datasheet/c/celecoxibPfizercap.pdf
+Celecoxib,Celostea,Viatris Ltd,"100 mg, 200 mg, capsule",https://www.medsafe.govt.nz/profs/datasheet/c/CelosteaCap.pdf
+Loratadine,LORA-TABS ALLERGY & HAYFEVER,Arrotex Pharmaceuticals (NZ) Limited,"10 mg, tablet",https://www.medsafe.govt.nz/profs/datasheet/l/LoratabsAllergyAndHayfevertab.pdf
+Codeine phosphate,Codeine Phosphate Tablets (Noumed),Noumed Pharmaceuticals Limited,"15 mg, 30 mg & 60 mg tablets",https://www.medsafe.govt.nz/profs/datasheet/c/codeinephosphatepsmtab.pdf
+Codeine phosphate,Aspen Codeine Phosphate,Pharmacy Retailing Pty Ltd,30 mg tablets,https://www.medsafe.govt.nz/Profs/Datasheet/a/aspencodeinetab.pdf
+Metformin hydrochloride,Metformin Viatris,,Tab immediate-release 500 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf
+Metformin hydrochloride,Metformin Viatris,,Tab immediate-release 850 mg,https://schedule.pharmac.govt.nz/latest/Schedule.pdf

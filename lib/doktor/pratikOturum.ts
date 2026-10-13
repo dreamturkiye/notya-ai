@@ -25,6 +25,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { type SupabaseClient, type User } from '@supabase/supabase-js'
 import { servisSupabase, OTURUM_YOK } from './serverAuth'
+import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 
 export type PratikRol = 'doktor' | 'sekreter'
 
@@ -49,6 +50,8 @@ export async function pratikOturum(
   const supabase = servisSupabase()
   const { data, error } = await supabase.auth.getUser(token)
   if (error || !data.user) return hata()
+  // NOTYA-ULKE-01: an account of another country has no session here — same answer as no session at all.
+  if (!hesapBuUlkedeMi(data.user)) return hata()
   const user = data.user
 
   const { data: personelRow } = await supabase

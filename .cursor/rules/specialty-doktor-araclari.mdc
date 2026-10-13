@@ -1,7 +1,8 @@
 ---
 description: >-
   Before any Notya section work — especially Doktor Araçları — classify tools as
-  base (all ~30 specialties, identical), specialty-only, or new-universal.
+  base (all ~30 specialties, identical), specialty-only, or new-universal, and
+  name the countries each tool is valid in (required `ulkeler` field).
   Commercial product; no audit HTML / named beta-doctor copy on /doktor-tools.
 alwaysApply: true
 ---
@@ -20,5 +21,6 @@ Boss standing rule (commercial app, not one clinic’s private toolbox):
 3. **Always analyze visibility:** which specialties should see this tool? Child tools (e.g. Hedef Boy / anne-baba boyu) must **never** appear in kardiyoloji or other non-pediatri branşlar — showing them there makes no sense.
 4. Never put sprint audits, gap HTML, ticket jargon, or named people (`Gökhan …`) on the Araçlar grid. Never embed full studios on the landing — specialty tools are **cards you open**.
 5. No cross-leak: göz ≠ dahiliye tools; KD ≠ göz tools; kardiyoloji ≠ Hedef Boy.
+6. **Which countries?** (NOTYA-ULKE-01, 2026-10-08) Every entry carries a required `ulkeler` list — there is no “all countries”. A new tool is valid only in the country it was built for; another country is added after its audit verdict (Remove / Adapt / Keep) and clinical sign-off, and the route must also be listed in that country's pack (`countries/<kod>/araclar.ts`). No cross-country leak: a Türkiye tool never appears in Uzbekistan by default, nor the reverse. Changing Türkiye's tools on purpose → `npm run ulke:arac-anlik` in the same commit.
 
-Name the bucket in the commit/PR before implementing. Catalog: `lib/doktor/doktorAraclari.ts`.
+Name the bucket **and the countries** in the commit/PR before implementing. Catalog: `lib/doktor/doktorAraclari.ts`.

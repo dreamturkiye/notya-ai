@@ -1,0 +1,602 @@
+generic_name,commercial_name,manufacturer_if_shown,strength_and_form_if_shown,register_url
+(not shown by this DPD endpoint),LIPITOR [DIN 02230711],BGP PHARMA ULC,Tablet (form shown for DIN 02230711 only; strength not shown by this endpoint),https://health-products.canada.ca/api/drug/drugproduct/?lang=en&type=json&brandname=lipitor
+(not shown by this DPD endpoint),LIPITOR [DIN 02230713],BGP PHARMA ULC,,https://health-products.canada.ca/api/drug/drugproduct/?lang=en&type=json&brandname=lipitor
+(not shown by this DPD endpoint),LIPITOR [DIN 02230714],BGP PHARMA ULC,,https://health-products.canada.ca/api/drug/drugproduct/?lang=en&type=json&brandname=lipitor
+(not shown by this DPD endpoint),LIPITOR [DIN 02243097],BGP PHARMA ULC,,https://health-products.canada.ca/api/drug/drugproduct/?lang=en&type=json&brandname=lipitor
+AMLODIPINE BESYLATE & ATORVASTATIN CALCIUM,Apo-Amlodipine-Atorvastatin,Apotex Inc. (APX),10mg & 80mg Tab; 10mg & 10mg Tab; 5mg & 80mg Tab; 5mg & 10mg Tab; 5mg & 40mg Tab; 10mg & 20mg Tab; 5mg & 20mg Tab; 10mg & 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+AMLODIPINE BESYLATE & ATORVASTATIN CALCIUM,Caduet,Upjohn Canada ULC (UJC),10mg & 20mg Tab; 5mg & 10mg Tab; 10mg & 10mg Tab; 10mg & 40mg Tab; 5mg & 80mg Tab; 5mg & 20mg Tab; 10mg & 80mg Tab; 5mg & 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+AMLODIPINE BESYLATE & ATORVASTATIN CALCIUM,Gd-Amlodipine/Atorvastatin,Upjohn Canada ULC (UJC),10mg & 80mg Tab; 10mg & 40mg Tab; 10mg & 20mg Tab; 10mg & 10mg Tab; 5mg & 80mg Tab; 5mg & 40mg Tab; 5mg & 20mg Tab; 5mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,AG-Atorvastatin,Angita Pharma Inc. (ANG),20mg Tab; 40mg Tab; 80mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Ach-Atorvastatin Calcium,Accord Healthcare Inc. (ACH),20mg Tab; 40mg Tab; 80mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Apo-Atorvastatin,Apotex Inc. (APX),80mg Tab; 40mg Tab; 20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin,Sanis Health Inc. (SAI),10mg Tab; 20mg Tab; 40mg Tab; 80mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin,Laboratoire Riva Inc. (RIA),10mg Tab; 20mg Tab; 40mg Tab; 80mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin,Teva Canada Limited (TEV),10mg Tab; 20mg Tab; 40mg Tab; 80mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin-10,Sivem Pharmaceuticals ULC (SIV),10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin-20,Sivem Pharmaceuticals ULC (SIV),20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin-40,Sivem Pharmaceuticals ULC (SIV),40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Atorvastatin-80,Sivem Pharmaceuticals ULC (SIV),80mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Auro-Atorvastatin,Auro Pharma Inc. (AUR),20mg Tab; 40mg Tab; 80mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Bio-Atorvastatin,Biomed Pharma Products (BMP),10mg Tab; 80mg Tab; 40mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Jamp Atorvastatin Calcium,Jamp Pharma Corporation (JPC),20mg Tab; 40mg Tab; 80mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Jamp-Atorvastatin,Jamp Pharma Corporation (JPC),80mg Tab; 20mg Tab; 40mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Lipitor,Upjohn Canada ULC (UJC),10mg Tab; 80mg Tab; 40mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,M-Atorvastatin,Mantra Pharma Inc. (MAT),80mg Tab; 40mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Mar-Atorvastatin,Marcan Pharmaceuticals Inc. (MAR),10mg Tab; 80mg Tab; 40mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Mint-Atorvastatin,Mint Pharmaceuticals Inc. (MIN),80mg Tab; 40mg Tab; 20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Mylan-Atorvastatin,Mylan Pharmaceuticals ULC (MYL),40mg Tab; 10mg Tab; 80mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,NRA-Atorvastatin,Nora Pharma Products (NRA),10mg Tab; 80mg Tab; 40mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,PMS-Atorvastatin,Pharmascience Inc. (PMS),10mg Tab; 20mg Tab; 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,PMSC-Atorvastatin,Pharmascience Inc. (PMS),80mg Tab; 40mg Tab; 20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,PRZ-Atorvastatin,Pharmaris Canada Inc. (PRZ),40mg Tab; 80mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Ratio-Atorvastatin,Ratiopharm Inc. (RPH),80mg Tab; 20mg Tab; 40mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Reddy-Atorvastatin,Dr. Reddy's Laboratories Inc. (DRR),40mg Tab; 80mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Sandoz Atorvastatin,Sandoz Canada Inc. (SDZ),10mg Tab; 80mg Tab; 40mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Taro-Atorvastatin,Sun Pharma Products (SPC),20mg Tab; 40mg Tab; 80mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ATORVASTATIN CALCIUM,Teva-Atorvastatin,Teva Canada Limited (TEV),80mg Tab; 20mg Tab; 40mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=atorvastatin&type=1
+ROSUVASTATIN CALCIUM,Ach-Rosuvastatin,ACH,10mg Tab; 5mg Tab; 20mg Tab; 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Apo-Rosuvastatin,APX,40mg Tab; 5mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Auro-Rosuvastatin,AUR,10mg Tab; 40mg Tab; 20mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Bio-Rosuvastatin,BMP,20mg Tab; 40mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Co Rosuvastatin,COB,40mg Tab; 10mg Tab; 5mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Crestor,AZC,5mg Tab; 10mg Tab; 20mg Tab; 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Jamp Rosuvastatin Calcium,JPC,40mg Tab; 20mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Jamp-Rosuvastatin,JPC,5mg Tab; 20mg Tab; 40mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,M-Rosuvastatin,MAT,40mg Tab; 5mg Tab; 20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Mar-Rosuvastatin,MAR,40mg Tab; 5mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Med-Rosuvastatin,GMP,40mg Tab; 5mg Tab; 20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Mint-Rosuvastatin,MIN,10mg Tab; 20mg Tab; 40mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,NRA-Rosuvastatin,NRA,20mg Tab; 40mg Tab; 10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,NRA-Rosuvastatin Tablets,NRA,40mg Tab; 5mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,PMS-Rosuvastatin,PMS,20mg Tab; 40mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,PRZ-Rosuvastatin,PRZ,10mg Tab; 5mg Tab; 40mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Rosuvastatin,SIV,5mg Tab; 20mg Tab; 10mg Tab; 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Rosuvastatin,SAI,20mg Tab; 40mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Sandoz Rosuvastatin,SDZ,10mg Tab; 5mg Tab; 20mg Tab; 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Taro-Rosuvastatin,SPC,40mg Tab; 20mg Tab; 10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+ROSUVASTATIN CALCIUM,Teva-Rosuvastatin,TEV,20mg Tab; 5mg Tab; 40mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=rosuvastatin&type=1
+PANTOPRAZOLE MAGNESIUM,Mylan-Pantoprazole T,MYL,40mg Ent Coated Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE MAGNESIUM,Pantoprazole Magnesium,ALH,40mg Ent Coated Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE MAGNESIUM,Pantoprazole T,SAI,40mg Ent Coated Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE MAGNESIUM,Pantoprazole T,SIV,40mg Ent Coated Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE MAGNESIUM,Tecta,NYC,40mg Ent Coated Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE MAGNESIUM,Teva-Pantoprazole Magnesium,TEV,40mg Ent Coated Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,AG-Pantoprazole Sodium,ANG,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Apo-Pantoprazole (Off-Formulary Interchangeable),APX,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Apo-Pantoprazole,APX,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Auro-Pantoprazole,AUR,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Co Pantoprazole,COB,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Jamp Pantoprazole Sodium,JPC,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Jamp Pantoprazole Sodium (Off-Formulary Interchangeable),JPC,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Jamp-Pantoprazole,JPC,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Jamp-Pantoprazole (Off-Formulary Interchangeable),JPC,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,M-Pantoprazole,MAT,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Mar-Pantoprazole (Off-Formulary Interchangeable),MAR,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Mar-Pantoprazole,MAR,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Mint-Pantoprazole,MIN,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,NRA-Pantoprazole,NRA,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,PMS-Pantoprazole,PMS,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoloc (Off-Formulary Interchangeable),NYC,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoloc,NYC,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoprazole,SAI,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoprazole (Off-Formulary Interchangeable),SAI,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoprazole (Off-Formulary Interchangeable),SIV,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoprazole,DAC,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoprazole,RIA,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Pantoprazole,SIV,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Ran-Pantoprazole (Off-Formulary Interchangeable),RAN,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Ran-Pantoprazole,RAN,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Sandoz Pantoprazole (Off-Formulary Interchangeable),SDZ,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Sandoz Pantoprazole,SDZ,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Teva-Pantoprazole (Off-Formulary Interchangeable),TEV,20mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+PANTOPRAZOLE SODIUM,Teva-Pantoprazole,TEV,40mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pantoprazole&type=1
+AMLODIPINE,PDP-Amlodipine,PEN,1mg/mL Oral Sol,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Ach-Amlodipine,ACH,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Ach-Amlodipine (Off-Formulary Interchangeable),ACH,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Act Amlodipine,TEV,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Amlodipine (Off-Formulary Interchangeable),SIV,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Amlodipine,JPC,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Amlodipine (Off-Formulary Interchangeable),JPC,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Amlodipine,SAI,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Amlodipine (Off-Formulary Interchangeable),SAI,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Amlodipine,SIV,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Apo-Amlodipine,APX,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Auro-Amlodipine,AUR,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Bio-Amlodipine,BMP,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Bio-Amlodipine (Off-Formulary Interchangeable),BMP,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Gd-Amlodipine,GEM,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Jamp-Amlodipine,JPC,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Jamp-Amlodipine (Off-Formulary Interchangeable),JPC,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,M-Amlodipine,MAT,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,M-Amlodipine (Off-Formulary Interchangeable),MAT,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Mar-Amlodipine (Off-Formulary Interchangeable),MAR,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Mar-Amlodipine Tablets,MAR,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Mint-Amlodipine,MIN,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Mylan-Amlodipine,MYL,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,NRA-Amlodipine,NRA,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Norvasc,UJC,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Norvasc (Off-Formulary Interchangeable),UJC,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,PMS-Amlodipine,PMS,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,PMS-Amlodipine (Off-Formulary Interchangeable),PMS,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,PRZ-Amlodipine,PRZ,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,PRZ-Amlodipine (Off-Formulary Interchangeable),PRZ,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Ran-Amlodipine,RAN,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Ratio-Amlodipine,RPH,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Sandoz Amlodipine,SDZ,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Sandoz Amlodipine (Off-Formulary Interchangeable),SDZ,2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Septa-Amlodipine,SET,5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE,Teva-Amlodipine,TEV,10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE BESYLATE & ATORVASTATIN CALCIUM,Apo-Amlodipine-Atorvastatin,APX,5mg & 20mg Tab; 5mg & 40mg Tab; 5mg & 80mg Tab; 10mg & 10mg Tab; 10mg & 20mg Tab; 10mg & 40mg Tab; 10mg & 80mg Tab; 5mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE BESYLATE & ATORVASTATIN CALCIUM,Caduet,UJC,5mg & 20mg Tab; 10mg & 20mg Tab; 5mg & 10mg Tab; 5mg & 80mg Tab; 10mg & 80mg Tab; 10mg & 10mg Tab; 10mg & 40mg Tab; 5mg & 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+AMLODIPINE BESYLATE & ATORVASTATIN CALCIUM,Gd-Amlodipine/Atorvastatin,UJC,5mg & 10mg Tab; 10mg & 80mg Tab; 10mg & 40mg Tab; 10mg & 20mg Tab; 10mg & 10mg Tab; 5mg & 80mg Tab; 5mg & 20mg Tab; 5mg & 40mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+PERINDOPRIL ARGININE & AMLODIPINE BESYLATE,Apo-Perindopril/Amlodipine (Off-Formulary Interchangeable),APX,3.5mg & 2.5mg Tab; 14mg & 10mg Tab; 7mg & 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+PERINDOPRIL ARGININE & AMLODIPINE BESYLATE,PMS-Perindopril-Amlodipine (Off-Formulary Interchangeable),PMS,3.5mg & 2.5mg Tab; 7mg & 5mg Tab; 14mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+PERINDOPRIL ARGININE & AMLODIPINE BESYLATE,Viacoram (Off-Formulary Interchangeable),SEV,14mg & 10mg Tab; 7mg & 5mg Tab; 3.5mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+TELMISARTAN & AMLODIPINE BESYLATE,Riva-Telmisartan / Amlodipine,RIA,40mg & 5mg Tab; 40mg & 10mg Tab; 80mg & 10mg Tab; 80mg & 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+TELMISARTAN & AMLODIPINE BESYLATE,Twynsta,BOE,40mg & 10mg Tab; 40mg & 5mg Tab; 80mg & 5mg Tab; 80mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=amlodipine&type=1
+APIXABAN,Ach-Apixaban,ACH,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Apixaban,SIV,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Apixaban,SAI,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Apo-Apixaban,APX,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Auro-Apixaban,AUR,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Bio-Apixaban,BMP,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Eliquis,BQU,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Jamp Apixaban,JPC,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,M-Apixaban,MAT,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Mar-Apixaban,MAR,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Mint-Apixaban,MIN,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,NRA-Apixaban,NRA,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,NRA-Apixaban Tablets,NRA,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Nat-Apixaban,NAT,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Riva-Apixaban,RIA,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Sandoz Apixaban SDZ,SDZ,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Sandoz Apixaban Tablet,SDZ,5mg Tab; 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Taro-Apixaban,TAR,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+APIXABAN,Teva-Apixaban,TEV,2.5mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=apixaban&type=1
+PREGABALIN,AG-Pregabalin,ANG (Angita Pharma Inc.),25mg Cap; 150mg Cap; 75mg Cap; 50mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Ach-Pregabalin,ACH (Accord Healthcare Inc.),25mg Cap; 75mg Cap; 300mg Cap; 150mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Ach-Pregabalin (Off-Formulary Interchangeable),ACH (Accord Healthcare Inc.),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Apo-Pregabalin,APX (Apotex Inc.),150mg Cap; 300mg Cap; 25mg Cap; 75mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Apo-Pregabalin (Off-Formulary Interchangeable),APX (Apotex Inc.),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Auro-Pregabalin,AUR (Auro Pharma Inc.),75mg Cap; 150mg Cap; 50mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Bio-Pregabalin,BMP (Biomed Pharma Products),75mg Cap; 300mg Cap; 25mg Cap; 50mg Cap; 150mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Co Pregabalin,COB (Cobalt Pharmaceuticals Company),25mg Cap; 150mg Cap; 50mg Cap; 300mg Cap; 75mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Co Pregabalin (Off-Formulary Interchangeable),COB (Cobalt Pharmaceuticals Company),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Jamp-Pregabalin,JPC (Jamp Pharma Corporation),25mg Cap; 150mg Cap; 75mg Cap; 50mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Lyrica,UJC (Upjohn Canada ULC),25mg Cap; 50mg Cap; 75mg Cap; 150mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Lyrica (Off-Formulary Interchangeable),UJC (Upjohn Canada ULC),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,M-Pregabalin,MAT (Mantra Pharma Inc.),75mg Cap; 150mg Cap; 300mg Cap; 25mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Mar-Pregabalin,MAR (Marcan Pharmaceuticals Inc.),25mg Cap; 75mg Cap; 50mg Cap; 150mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Mar-Pregabalin (Off-Formulary Interchangeable),MAR (Marcan Pharmaceuticals Inc.),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Mint-Pregabalin,MIN (Mint Pharmaceuticals Inc.),50mg Cap; 150mg Cap; 75mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,NRA-Pregabalin,NRA (Nora Pharma),75mg Cap; 25mg Cap; 150mg Cap; 300mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Nat-Pregabalin,NAT (Natco Pharma (Canada) Inc.),50mg Cap; 25mg Cap; 300mg Cap; 150mg Cap; 75mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Nat-Pregabalin (Off-Formulary Interchangeable),NAT (Natco Pharma (Canada) Inc.),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,PMS-Pregabalin,PMS (Pharmascience Inc.),50mg Cap; 150mg Cap; 75mg Cap; 300mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,PMS-Pregabalin (Off-Formulary Interchangeable),PMS (Pharmascience Inc.),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Pregabalin,SIV (Sivem Pharmaceuticals ULC),50mg Cap; 75mg Cap; 300mg Cap; 25mg Cap; 150mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Pregabalin,SAI (Sanis Health Inc.),50mg Cap; 75mg Cap; 300mg Cap; 25mg Cap; 150mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Ran-Pregabalin,RAN (Ranbaxy Pharmaceuticals Canada Inc.),150mg Cap; 300mg Cap; 25mg Cap; 50mg Cap; 75mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Ran-Pregabalin (Off-Formulary Interchangeable),RAN (Ranbaxy Pharmaceuticals Canada Inc.),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Sandoz Pregabalin,SDZ (Sandoz Canada Inc.),50mg Cap; 150mg Cap; 300mg Cap; 25mg Cap; 75mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Teva-Pregabalin,TEV (Teva Canada Limited),50mg Cap; 150mg Cap; 75mg Cap; 300mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+PREGABALIN,Teva-Pregabalin (Off-Formulary Interchangeable),TEV (Teva Canada Limited),225mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pregabalin&type=1
+QUETIAPINE,Ach-Quetiapine Fumarate XR,ACH,300mg ER Tab; 200mg ER Tab; 150mg ER Tab; 400mg ER Tab; 50mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Apo-Quetiapine XR,APX,50mg ER Tab; 300mg ER Tab; 200mg ER Tab; 150mg ER Tab; 400mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,M-Quetiapine Fumarate XR,MAT,150mg ER Tab; 200mg ER Tab; 400mg ER Tab; 300mg ER Tab; 50mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Mint-Quetiapine XR,MIN,50mg ER Tab; 300mg ER Tab; 400mg ER Tab; 150mg ER Tab; 200mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,NRA-Quetiapine XR,NRA,300mg ER Tab; 200mg ER Tab; 50mg ER Tab; 400mg ER Tab; 150mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine Fumarate XR,SAI,50mg ER Tab; 300mg ER Tab; 150mg ER Tab; 200mg ER Tab; 400mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine XR,JPC,200mg ER Tab; 150mg ER Tab; 50mg ER Tab; 400mg ER Tab; 300mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine XR,SIV,200mg ER Tab; 150mg ER Tab; 400mg ER Tab; 50mg ER Tab; 300mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Sandoz Quetiapine XRT,SDZ,400mg ER Tab; 50mg ER Tab; 150mg ER Tab; 200mg ER Tab; 300mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Seroquel XR,AZC,150mg ER Tab; 300mg ER Tab; 50mg ER Tab; 200mg ER Tab; 400mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Teva-Quetiapine XR,TEV,400mg ER Tab; 300mg ER Tab; 200mg ER Tab; 150mg ER Tab; 50mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,AG-Quetiapine,ANG,25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Act Quetiapine,TEV,25mg Tab; 100mg Tab; 200mg Tab; 300mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Apo-Quetiapine,APX,200mg Tab; 300mg Tab; 100mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Apo-Quetiapine Fumarate,APX,25mg Tab; 100mg Tab; 200mg Tab; 300mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Auro-Quetiapine,AUR,25mg Tab; 300mg Tab; 200mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Bio-Quetiapine,BMP,200mg Tab; 100mg Tab; 300mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Jamp Quetiapine Fumarate,JPC,25mg Tab; 200mg Tab; 100mg Tab; 300mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Jamp-Quetiapine,JPC,25mg Tab; 300mg Tab; 100mg Tab; 200mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Mar-Quetiapine,MAR,100mg Tab; 300mg Tab; 200mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Mint-Quetiapine,MIN,25mg Tab; 100mg Tab; 200mg Tab; 300mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,NRA-Quetiapine,NRA,25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,PMS-Quetiapine,PMS,100mg Tab; 300mg Tab; 200mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine,SAI,200mg Tab; 25mg Tab; 100mg Tab; 300mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine,SIV,100mg Tab; 300mg Tab; 25mg Tab; 200mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine Tablets,ACH,300mg Tab; 200mg Tab; 100mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Quetiapine Tablets (Off-Formulary Interchangeable),ACH,150mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Ran-Quetiapine,RAN,200mg Tab; 25mg Tab; 300mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Sandoz Quetiapine,SDZ,200mg Tab; 300mg Tab; 100mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Seroquel,AZC,300mg Tab; 200mg Tab; 100mg Tab; 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Seroquel (Off-Formulary Interchangeable),AZC,150mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Teva-Quetiapine,TEV,200mg Tab; 100mg Tab; 25mg Tab; 300mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+QUETIAPINE,Teva-Quetiapine (Off-Formulary Interchangeable),TEV,150mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=quetiapine&type=1
+CANDESARTAN CILEXETIL,Apo-Candesartan,APX,4mg Tab; 8mg Tab; 32mg Tab; 16mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Apo-Candesartan Tablets,APX,32mg Tab; 4mg Tab; 8mg Tab; 16mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Atacand,CHE,4mg Tab; 32mg Tab; 8mg Tab; 16mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Auro-Candesartan,AUR,4mg Tab; 8mg Tab; 16mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Candesartan,SIV,32mg Tab; 16mg Tab; 8mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Candesartan,SAI,16mg Tab; 8mg Tab; 4mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Candesartan Cilexetil Tablets,ACH,4mg Tab; 16mg Tab; 8mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Co Candesartan,COB,16mg Tab; 4mg Tab; 8mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Jamp-Candesartan,JPC,32mg Tab; 8mg Tab; 4mg Tab; 16mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Mint-Candesartan,MIN,8mg Tab; 16mg Tab; 4mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,NRA-Candesartan,NRA,8mg Tab; 4mg Tab; 16mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,PMS-Candesartan,PMS,4mg Tab; 16mg Tab; 8mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Ran-Candesartan,RAN,16mg Tab; 4mg Tab; 8mg Tab; 32mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Sandoz Candesartan,SDZ,8mg Tab; 4mg Tab; 32mg Tab; 16mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL,Teva-Candesartan,TEV,8mg Tab; 32mg Tab; 16mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Atacand Plus,CHE,32mg & 12.5mg Tab; 32mg & 25mg Tab; 16mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Auro-Candesartan HCT,AUR,32mg & 12.5mg Tab; 16mg & 12.5mg Tab; 32mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Candesartan HCT,SIV,16mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Candesartan/HCTZ,SAI,32mg & 12.5mg Tab; 16mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Jamp Candesartan-HCT,JPC,32mg & 25mg Tab; 16mg & 12.5mg Tab; 32mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,NRA-Candesartan HCTZ,NRA,32mg & 12.5mg Tab; 32mg & 25mg Tab; 16mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,PMS-Candesartan-HCTZ,PMS,16mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Sandoz Candesartan Plus,SDZ,32mg & 25mg Tab; 32mg & 12.5mg Tab; 16mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+CANDESARTAN CILEXETIL & HYDROCHLOROTHIAZIDE,Teva-Candesartan/HCTZ,TEV,16mg & 12.5mg Tab; 32mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=candesartan&type=1
+DULOXETINE,AG-Duloxetine,Angita Pharma Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Accel-Duloxetine,Accel Pharma Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Apo-Duloxetine,Apotex Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Auro-Duloxetine,Auro Pharma Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Bio-Duloxetine,Biomed Pharma Products,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Cymbalta (Not a Benefit),Eli Lilly Canada Inc.,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Duloxetine,Sanis Health Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Duloxetine,Sivem Pharmaceuticals ULC,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Duloxetine DR,Teva Canada Limited,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Jamp Duloxetine Capsules,Jamp Pharma Corporation,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Jamp-Duloxetine,Jamp Pharma Corporation,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,M-Duloxetine,Mantra Pharma Inc.,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Mar-Duloxetine,Marcan Pharmaceuticals Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Mint-Duloxetine,Mint Pharmaceuticals Inc.,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,NRA-Duloxetine,Nora Pharma,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,PMS-Duloxetine,Pharmascience Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Ran-Duloxetine,Ranbaxy Pharmaceuticals Canada Inc.,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Sandoz Duloxetine,Sandoz Canada Inc.,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Taro-Duloxetine,Taro Pharmaceuticals Inc.,60mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+DULOXETINE,Teva-Duloxetine,Teva Canada Limited,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=duloxetine&type=1
+BUPRENORPHINE,Sublocade,IND,100mg/0.5mL Inj Sol- 0.5mL Pref Syr; 300mg/1.5mL Inj Sol- 1.5mL Pref Syr,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=buprenorphine&type=1
+BUPRENORPHINE & NALOXONE,Act Buprenorphine/Naloxone,ACV,2mg & 0.5mg SL Tab; 8mg & 2mg SL Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=buprenorphine&type=1
+BUPRENORPHINE & NALOXONE,PMS-Buprenorphine-Naloxone,PMS,2mg & 0.5mg SL Tab; 8mg & 2mg SL Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=buprenorphine&type=1
+BUPRENORPHINE & NALOXONE,Suboxone,IND,2mg & 0.5mg SL Tab; 8mg & 2mg SL Tab; 2mg & 0.5mg Soluble Film; 4mg & 1mg Soluble Film; 8mg & 2mg Soluble Film; 12mg & 3mg Soluble Film,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=buprenorphine&type=1
+BUPRENORPHINE HYDROCHLORIDE,Probuphine,KNT,80mg Subdermal Implant-Kit Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=buprenorphine&type=1
+ESCITALOPRAM,Act Escitalopram ODT,ACV,10mg Orally Disintegrating Tab; 20mg Orally Disintegrating Tablet,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Cipralex MELTZ (Not a Benefit),VLH,10mg Orally Disintegrating Tab; 20mg Orally Disintegrating Tablet,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Ach-Escitalopram,ACH,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Apo-Escitalopram,APX,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Auro-Escitalopram,AUR,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Cipralex,VLH,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Escitalopram,SAI,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Escitalopram,SIV,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Sandoz Escitalopram,SDZ,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Jamp Escitalopram,JPC,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Jamp-Escitalopram,JPC,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,M-Escitalopram,MAT,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Mar-Escitalopram,MAR,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Mint-Escitalopram,MIN,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Mylan-Escitalopram,MYL,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,NRA-Escitalopram,NRA,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Natco-Escitalopram,NAT,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,PMS-Escitalopram,PMS,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Ran-Escitalopram,RAN,10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+ESCITALOPRAM,Teva-Escitalopram,TEV,20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=escitalopram&type=1
+PERINDOPRIL ARGININE & AMLODIPINE BESYLATE,Apo-Perindopril/Amlodipine (Off-Formulary Interchangeable),APX,7mg & 5mg Tab; 3.5mg & 2.5mg Tab; 14mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ARGININE & AMLODIPINE BESYLATE,PMS-Perindopril-Amlodipine (Off-Formulary Interchangeable),PMS,3.5mg & 2.5mg Tab; 7mg & 5mg Tab; 14mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ARGININE & AMLODIPINE BESYLATE,Viacoram (Off-Formulary Interchangeable),SEV,14mg & 10mg Tab; 3.5mg & 2.5mg Tab; 7mg & 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,AG-Perindopril,ANG,4mg Tab; 2mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Apo-Perindopril,APX,2mg Tab; 4mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Auro-Perindopril,AUR,4mg Tab; 8mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Coversyl,SEV,8mg Tab; 2mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Jamp Perindopril Erbumine,JPC,8mg Tab; 2mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Jamp-Perindopril,JPC,4mg Tab; 2mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,M-Perindopril Erbumine,MAT,2mg Tab; 4mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Mar-Perindopril,MAR,4mg Tab; 8mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Mint-Perindopril,MIN,8mg Tab; 4mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,NRA-Perindopril,NRA,2mg Tab; 4mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,PMS-Perindopril,PMS,4mg Tab; 2mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Perindopril Erbumine (SIV),SIV,4mg Tab; 8mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Perindopril Erbumine (SAI),SAI,8mg Tab; 4mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Sandoz Perindopril Erbumine,SDZ,4mg Tab; 2mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE,Teva-Perindopril,TEV,2mg Tab; 8mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Apo-Perindopril-Indapamide,APX,4mg & 1.25mg Tab; 8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Coversyl Plus,SEV,4mg & 1.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Coversyl Plus HD,SEV,8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Coversyl Plus LD,SEV,2mg & 0.625mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Jamp Perindopril / Indapamide,JPC,2mg & 0.625mg Tab; 4mg & 1.25mg Tab; 8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,PMS-Perindopril-Indapamide,PMS,2mg & 0.625mg Tab; 8mg & 2.5mg Tab; 4mg & 1.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Perindopril Erbumine/Indapamide,SIV,4mg & 1.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Perindopril Erbumine/Indapamide HD,SIV,8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Perindopril/Indapamide,SAI,4mg & 1.25mg Tab; 8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Sandoz Perindopril Erbumine/Indapamide,SDZ,4mg & 1.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Sandoz Perindopril Erbumine/IndapamideHD,SDZ,8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Sandoz Perindopril Erbumine/IndapamideLD,SDZ,2mg & 0.625mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+PERINDOPRIL ERBUMINE & INDAPAMIDE,Teva-Perindopril/Indapamide,TEV,4mg & 1.25mg Tab; 8mg & 2.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=perindopril&type=1
+SERTRALINE HCL,AG-Sertraline,Angita Pharma Inc.,100mg Cap; 50mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Apo-Sertraline,Apotex Inc.,100mg Cap; 25mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Auro-Sertraline,Auro Pharma Inc.,100mg Cap; 25mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Co Sertraline,Cobalt Pharmaceuticals Company,50mg Cap; 100mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Jamp-Sertraline,Jamp Pharma Corporation,25mg Cap; 50mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,M-Sertraline,Mantra Pharma Inc.,25mg Cap; 50mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Mar-Sertraline,Marcan Pharmaceuticals Inc.,25mg Cap; 100mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Mint-Sertraline,Mint Pharmaceuticals Inc.,25mg Cap; 100mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,NRA-Sertraline,Nora Pharma Products,25mg Cap; 100mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,PMS-Sertraline,Pharmascience Inc.,100mg Cap; 50mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Ran-Sertraline,Ranbaxy Pharmaceuticals Canada Inc.,100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Sandoz Sertraline,Sandoz Canada Inc.,50mg Cap; 25mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Sertraline,Sivem Pharmaceuticals ULC,50mg Cap; 100mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Sertraline,Jamp Pharma Corporation,50mg Cap; 100mg Cap; 25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Sertraline,Sanis Health Inc.,50mg Cap; 25mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Teva-Sertraline,Teva Canada Limited,50mg Cap; 25mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+SERTRALINE HCL,Zoloft,Upjohn Canada ULC,100mg Cap; 25mg Cap; 50mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=sertraline&type=1
+GABAPENTIN,AG-Gabapentin,Angita Pharma Inc.,100mg Cap; 300mg Cap; 400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Apo-Gabapentin,Apotex Inc.,100mg Cap; 400mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Auro-Gabapentin,Auro Pharma Inc.,100mg Cap; 300mg Cap; 400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Co Gabapentin,Cobalt Pharmaceuticals Company,300mg Cap; 400mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin,Sivem Pharmaceuticals ULC,300mg Cap; 400mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin,Sanis Health Inc.,400mg Cap; 100mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin Capsules USP,Accord Healthcare Inc.,100mg Cap; 400mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Jamp Gabapentin Capsules,Jamp Pharma Corporation,300mg Cap; 100mg Cap; 400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Jamp-Gabapentin,Jamp Pharma Corporation,400mg Cap; 100mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Mar-Gabapentin,Marcan Pharmaceuticals Inc.,300mg Cap; 400mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Mint-Gabapentin,Mint Pharmaceuticals Inc.,300mg Cap; 100mg Cap; 400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,NRA-Gabapentin,Nora Pharma Products,400mg Cap; 100mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Neurontin,Upjohn Canada ULC,100mg Cap; 300mg Cap; 400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,PMS-Gabapentin,Pharmascience Inc.,300mg Cap; 100mg Cap; 400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Ran-Gabapentin,Ranbaxy Pharmaceuticals Canada Inc.,400mg Cap; 100mg Cap; 300mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Ratio-Gabapentin,Ratiopharm Inc.,400mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Teva-Gabapentin,Teva Canada Limited,400mg Cap; 300mg Cap; 100mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Apo-Gabapentin (Off-Formulary Interchangeable),Apotex Inc.,600mg Tab; 800mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Auro-Gabapentin Tablets (Off-Formulary Interchangeable),Auro Pharma Inc.,800mg Tab; 600mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,GLN-Gabapentin (Off-Formulary Interchangeable),Glenmark Pharmaceuticals Canada Inc.,800mg Tab; 600mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin (Off-Formulary Interchangeable),Sivem Pharmaceuticals ULC,600mg Tab; 800mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin (Off-Formulary Interchangeable),Sanis Health Inc.,800mg Tab; 600mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin (Off-Formulary Interchangeable),Jamp Pharma Corporation,800mg Tab; 600mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Gabapentin Tablets USP (Off-Formulary Interchangeable),Accord Healthcare Inc.,600mg Tab; 800mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Jamp-Gabapentin Tablets (Off-Formulary Interchangeable),Jamp Pharma Corporation,800mg Tab; 600mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Neurontin (Off-Formulary Interchangeable),Upjohn Canada ULC,600mg Tab; 800mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+GABAPENTIN,Teva-Gabapentin (Off-Formulary Interchangeable),Teva Canada Limited,800mg Tab; 600mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=gabapentin&type=1
+RAMIPRIL,AG-Ramipril,ANG,Cap 2.5mg; Cap 10mg; Cap 5mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Altace,SAV,Cap 10mg; Cap 5mg; Cap 2.5mg; Cap 1.25mg; (Off-Formulary Interchangeable) 15mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Apo-Ramipril,APX,Cap 2.5mg; Cap 1.25mg; Cap 10mg; Cap 5mg; (Off-Formulary Interchangeable) 15mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Auro-Ramipril,AUR,Cap 2.5mg; Cap 1.25mg; Cap 5mg; Cap 10mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Co Ramipril,COB,Cap 2.5mg; Cap 10mg; Cap 5mg; Cap 1.25mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Jamp-Ramipril,JPC,Cap 2.5mg; Cap 5mg; Cap 10mg; Cap 1.25mg; (Off-Formulary Interchangeable) 15mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Mar-Ramipril,MAR,Cap 1.25mg; Cap 2.5mg; Cap 5mg; Cap 10mg; (Off-Formulary Interchangeable) 15mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Mint-Ramipril,MIN,Cap 2.5mg; Cap 5mg; Cap 10mg; (Off-Formulary Interchangeable) 15mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,NRA-Ramipril,NRA,Cap 5mg; Cap 10mg; Cap 2.5mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,PMS-Ramipril,PMS,Cap 1.25mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,PMSC-Ramipril,PMS,Cap 2.5mg; Cap 5mg; Cap 10mg; Cap 1.25mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Pharma-Ramipril,PMS,1.25mg; 10mg; 5mg; 2.5mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Ramipril,SIV,Cap 2.5mg; Cap 5mg; Cap 10mg; Cap 1.25mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Ramipril,SAI,Cap 2.5mg; Cap 5mg; Cap 10mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Ramipril,RIA,Cap (Not a Benefit) 5mg; Cap (Not a Benefit) 1.25mg; Cap (Not a Benefit) 10mg; Cap (Not a Benefit) 2.5mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Ran-Ramipril,RAN,Cap 2.5mg; Cap 10mg; Cap 1.25mg; Cap 5mg; (Off-Formulary Interchangeable) 15mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Ratio-Ramipril,RPH,Cap 2.5mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL,Teva-Ramipril,TEV,Cap 5mg; Cap 2.5mg; Cap 10mg,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL & HYDROCHLOROTHIAZIDE,Altace HCT,SAV,(Not a Benefit) 2.5mg & 12.5mg Tab; (Not a Benefit) 5mg & 12.5mg Tab; 10mg & 25mg Tab; 10mg & 12.5mg Tab; 5mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL & HYDROCHLOROTHIAZIDE,PMS-Ramipril-HCTZ,PMS,10mg & 25mg Tab; 10mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+RAMIPRIL & HYDROCHLOROTHIAZIDE,Ran-Ramipril HCTZ,RAN,5mg & 25mg Tab; 10mg & 12.5mg Tab; 5mg & 12.5mg Tab; 10mg & 25mg Tab; 2.5mg & 12.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=ramipril&type=1
+ARIPIPRAZOLE,Abilify Asimtufii,Otsuka Pharmaceutical Co. Ltd. (OTS),720mg/2.4mL Inj Sol-Pref Syr; 960mg/3.2mL Inj Sol-Pref Syr,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Abilify Maintena,Otsuka Pharmaceutical Co. Ltd. (OTS),300mg/Vial Prolong-Rel Inj Pd-Vial Pk; 400mg/Vial Prolong-Rel Inj Pd-Vial Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Abilify,Otsuka Pharmaceutical Co. Ltd. (OTS),2mg Tab; 30mg Tab; 20mg Tab; 15mg Tab; 10mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Apo-Aripiprazole,Apotex Inc. (APX),20mg Tab; 10mg Tab; 30mg Tab; 5mg Tab; 15mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Aripiprazole,Sanis Health Inc. (SAI),2mg Tab; 5mg Tab; 10mg Tab; 15mg Tab; 20mg Tab; 30mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Aripiprazole,Sivem Pharmaceuticals ULC (SIV),2mg Tab; 5mg Tab; 10mg Tab; 15mg Tab; 20mg Tab; 30mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Auro-Aripiprazole,Auro Pharma Inc. (AUR),2mg Tab; 15mg Tab; 5mg Tab; 10mg Tab; 20mg Tab; 30mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Jamp Aripiprazole,Jamp Pharma Corporation (JPC),15mg Tab; 10mg Tab; 20mg Tab; 2mg Tab; 30mg Tab; 5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Mint-Aripiprazole,Mint Pharmaceuticals Inc. (MIN),5mg Tab; 2mg Tab; 30mg Tab; 20mg Tab; 15mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,NRA-Aripiprazole,Nora Pharma (NRA),30mg Tab; 20mg Tab; 5mg Tab; 15mg Tab; 10mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,PMS-Aripiprazole,Pharmascience Inc. (PMS),15mg Tab; 5mg Tab; 30mg Tab; 2mg Tab; 10mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Sandoz Aripiprazole,Sandoz Canada Inc. (SDZ),10mg Tab; 30mg Tab; 20mg Tab; 15mg Tab; 5mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+ARIPIPRAZOLE,Teva-Aripiprazole,Teva Canada Limited (TEV),10mg Tab; 30mg Tab; 2mg Tab; 5mg Tab; 15mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=aripiprazole&type=1
+NABILONE,Cesamet (Off-Formulary Interchangeable),VAL,0.25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+NABILONE,Cesamet,VAL,0.5mg Cap; 1mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+NABILONE,PMS-Nabilone,PMS,0.5mg Cap; 1mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+NABILONE,PMS-Nabilone (Off-Formulary Interchangeable),PMS,0.25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+NABILONE,Ran-Nabilone (Off-Formulary Interchangeable),RAN,0.25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+NABILONE,Teva-Nabilone (Off-Formulary Interchangeable),TEV,0.25mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+NABILONE,Teva-Nabilone,TEV,1mg Cap; 0.5mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=nabilone&type=1
+DEXLANSOPRAZOLE,Apo-Dexlansoprazole (Off-Formulary Interchangeable),APX,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+DEXLANSOPRAZOLE,Dexilant (Off-Formulary Interchangeable),TAK,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+DEXLANSOPRAZOLE,Dexlansoprazole (Off-Formulary Interchangeable),ALH,30mg DR Cap; 60mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Apo-Lansoprazole,APX,15mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Lansoprazole,SIV,30mg DR Cap; 15mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Lansoprazole,SAI,30mg DR Cap; 15mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Mylan-Lansoprazole,MYL,30mg DR Cap; 15mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Prevacid,TPA,30mg DR Cap; 15mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Sandoz Lansoprazole,SDZ,15mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Taro-Lansoprazole,SPC,30mg DR Cap; 15mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE,Teva-Lansoprazole,TEV,15mg DR Cap; 30mg DR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE & CLARITHROMYCIN & AMOXICILLIN,AA-LansoprazoleAmoxicillinClarithromycin,AAP,30mg & 500mg & 500mg Tab/Cap Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+LANSOPRAZOLE & CLARITHROMYCIN & AMOXICILLIN,Hp-PAC (Not a Benefit),TPA,30mg & 500mg & 500mg Tab/Cap Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=lansoprazole&type=1
+RISPERIDONE,Jamp-Risperidone,JPC,1mg/mL O/L; 3mg Tab; 0.25mg Tab; 4mg Tab; 1mg Tab; 2mg Tab; 0.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,PMS-Risperidone,PMS,1mg/mL O/L; 3mg Tab; 0.5mg Tab; 4mg Tab; 0.25mg Tab; 1mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Risperdal (Not a Benefit),JAN,1mg/mL O/L; 2mg Tab; 4mg Tab; 0.25mg Tab; 0.5mg Tab; 3mg Tab; 1mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Mylan-Risperidone ODT,MYL,3mg Orally Disintegrating Tab; 4mg Orally Disintegrating Tab; 2mg Orally Disintegrating Tab; 1mg Orally Disintegrating Tab; 0.5mg Orally Disintegrating Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Risperdal M-Tab (Not a Benefit),JAN,1mg Orally Disintegrating Tab; 3mg Orally Disintegrating Tab; 2mg Orally Disintegrating Tab; 4mg Orally Disintegrating Tab; 0.5mg Orally Disintegrating Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Risperdal Consta,JAN,25mg Pd for Inj-Vial Pk; 37.5mg Pd for Inj-Vial Pk; 50mg Pd for Inj-Vial Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Apo-Risperidone,APX,3mg Tab; 0.5mg Tab; 0.25mg Tab; 2mg Tab; 4mg Tab; 1mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Mar-Risperidone,MAR,4mg Tab; 0.5mg Tab; 1mg Tab; 3mg Tab; 2mg Tab; 0.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Mint-Risperidon,MIN,1mg Tab; 0.25mg Tab; 0.5mg Tab; 4mg Tab; 3mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Ran-Risperidone,RAN,0.5mg Tab; 4mg Tab; 1mg Tab; 3mg Tab; 0.25mg Tab; 2mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Risperidone,SAI,0.25mg Tab; 0.5mg Tab; 1mg Tab; 2mg Tab; 3mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Risperidone,SIV,0.25mg Tab; 0.5mg Tab; 1mg Tab; 2mg Tab; 3mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Sandoz Risperidone,SDZ,1mg Tab; 3mg Tab; 2mg Tab; 4mg Tab; 0.5mg Tab; 0.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+RISPERIDONE,Teva-Risperidone,TEV,3mg Tab; 1mg Tab; 4mg Tab; 0.5mg Tab; 2mg Tab; 0.25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=risperidone&type=1
+MYCOPHENOLATE MOFETIL,Apo-Mycophenolate,APX,250mg Cap; 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,CellCept,HLR,250mg Cap; 200mg/mL Pd for Oral Susp-175mL Pk; 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Jamp-Mycophenolate Capsules,JPC,250mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Jamp-Mycophenolate,JPC,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Mycophenolate Mofetil,SAI,250mg Cap; 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Mycophenolate Mofetil Capsules,ACH,250mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Ach-Mycophenolate,ACH,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Sandoz Mycophenolate Mofetil,SDZ,250mg Cap; 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Teva-Mycophenolate,TEV,250mg Cap; 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE MOFETIL,Mar-Mycophenolate Mofetil,MAR,200mg/mL Pd for Oral Susp-175mL Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE SODIUM,Apo-Mycophenolic Acid,APX,180mg Ent Tab; 360mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE SODIUM,Jamp Mycophenolic Acid,JPC,180mg Ent Tab; 360mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE SODIUM,Mar-Mycophenolic Acid,MAR,180mg Ent Tab; 360mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+MYCOPHENOLATE SODIUM,Myfortic,NOV,180mg Ent Tab; 360mg Ent Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=mycophenol&type=1
+SALMETEROL XINAFOATE,SereVent Diskus,GSK,50mcg Pd Inh-60 Dose Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=salmeterol&type=1
+SALMETEROL XINAFOATE & FLUTICASONE PROPIONATE,Advair 125,GSK,25/125mcg/Metered Dose Inh-120 Dose Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=salmeterol&type=1
+SALMETEROL XINAFOATE & FLUTICASONE PROPIONATE,Advair 250,GSK,25/250mcg/Metered Dose Inh-120 Dose Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=salmeterol&type=1
+SALMETEROL XINAFOATE & FLUTICASONE PROPIONATE,Advair Diskus,GSK,50/500mcg Inh-60 Dose Pk; 50/250mcg Inh-60 Dose Pk; 50/100mcg Inh-60 Dose Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=salmeterol&type=1
+SALMETEROL XINAFOATE & FLUTICASONE PROPIONATE,PMS-FluticasonePropionateSalmeterol DPI,PMS,50/250mcg Inh-60 Dose Pk; 50/500mcg Inh-60 Dose Pk; 50/100mcg Inh-60 Dose Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=salmeterol&type=1
+SALMETEROL XINAFOATE & FLUTICASONE PROPIONATE,Wixela Inhub,MYL,50/250mcg Inh-60 Dose Pk; 50/500mcg Inh-60 Dose Pk; 50/100mcg Inh-60 Dose Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=salmeterol&type=1
+TAMSULOSIN HCL,Apo-Tamsulosin CR,APX,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Auro-Tamsulosin CR,AUR,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Flomax CR,BOE,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Sandoz Tamsulosin CR,SDZ,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Tamsulosin CR,SAI,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Tamsulosin CR,SIV,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Teva-Tamsulosin CR,TEV,0.4mg; Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Flomax (Not a Benefit),BOE,0.4mg; ER Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Jamp Tamsulosin,JPC,0.4mg; ER Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+TAMSULOSIN HCL,Sandoz Tamsulosin,SDZ,0.4mg; ER Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=tamsulosin&type=1
+HYDROMORPHONE HCL,Hydromorph Contin,PFP,9mg CR Cap; 4.5mg CR Cap; 3mg CR Cap; 6mg CR Cap; 12mg CR Cap; 18mg CR Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Dilaudid (Not a Benefit),PFP,2mg/mL Inj Sol-1mL Pk; 1mg/mL Oral Sol,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Dilaudid-HP (Not a Benefit),PFP,10mg/mL Inj Sol-1mL Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Hydromorphone,SDZ,2mg/mL Inj Sol-1mL Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Hydromorphone HP-10,SDZ,10mg/mL Inj Sol-1mL Pk,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,PMS-HYDROmorphone,PMS,1mg/mL Oral Sol; 4mg Tab; 2mg Tab; 1mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Apo-Hydromorphone,APX,4mg Tab; 2mg Tab; 1mg Tab; 8mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Dilaudid,PFP,4mg Tab; 8mg Tab; 2mg Tab; 1mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+HYDROMORPHONE HCL,Teva-Hydromorphone,TEV,1mg Tab; 8mg Tab; 2mg Tab; 4mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=hydromorphone&type=1
+LEVODOPA & BENSERAZIDE,Prolopa,HLR,100-25 100mg & 25mg Cap; 200-50 200mg & 50mg Cap; 50-12.5 50mg & 12.5mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,AA-Levocarb CR,AAP,100mg & 25mg CR Tab; 200mg & 50mg CR Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Sinemet CR (Not a Benefit),MFC,200mg & 50mg CR Tab; 100mg & 25mg CR Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Sinemet (Not a Benefit),MFC,100mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Sinemet (Not a Benefit),OCI,100mg & 25mg Tab; 250mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Apo-Levocarb,APX,100mg & 10mg Tab; 100mg & 25mg Tab; 250mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Auro-Levocarb,AUR,250mg & 25mg Tab; 100mg & 25mg Tab; 100mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Jamp Levocarb,JPC,250mg & 25mg Tab; 100mg & 10mg Tab; 100mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Mint-Levocarb,MIN,100mg & 25mg Tab; 250mg & 25mg Tab; 100mg & 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,PMS-Levodopa-Carbidopa,PMS,100mg & 10mg Tab; 250mg & 25mg Tab; 100mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA,Teva-Levocarbidopa,TEV,250mg & 25mg Tab; 100mg & 10mg Tab; 100mg & 25mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+LEVODOPA & CARBIDOPA & ENTACAPONE,Stalevo,SDZ,75 & 18.75 & 200mg Tab; 125 & 31.25 & 200mg Tab; 50 & 12.5 & 200mg Tab; 100 & 25 & 200mg Tab; 150 & 37.5 & 200mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=levodopa&type=1
+OLANZAPINE,Act Olanzapine ODT,TEV,(Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Apo-Olanzapine ODT,APX,(Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Auro-Olanzapine ODT,AUR,10mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Jamp-Olanzapine ODT,JPC,15mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Mint-Olanzapine ODT,MIN,15mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,NRA-Olanzapine ODT,NRA,5mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Novo-Olanzapine OD,NOP,10mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Olanzapine ODT,SIV,10mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Olanzapine ODT,SAI,5mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,PMS-Olanzapine ODT,PMS,15mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Ran-Olanzapine ODT,RAN,10mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Sandoz Olanzapine ODT,SDZ,(Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 5mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Zyprexa Zydis,LIL,5mg Rapid Dissolve Tab; 10mg Rapid Dissolve Tab; (Off-Formulary Interchangeable) 20mg Rapid Dissolve Tab; 15mg Rapid Dissolve Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,AG-Olanzapine FC,ANG,2.5mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Apo-Olanzapine,APX,2.5mg Tab; 5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Co Olanzapine,COB,2.5mg Tab; 5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Jamp Olanzapine FC,JPC,2.5mg Tab; 5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Mint-Olanzapine,MIN,2.5mg Tab; 5mg Tab; 15mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,NRA-Olanzapine,NRA,2.5mg Tab; 5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Olanzapine,SAI,2.5mg Tab; 5mg Tab; 7.5mg Tab; 10mg Tab; 15mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Olanzapine,SIV,2.5mg Tab; 5mg Tab; 7.5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,PMS-Olanzapine,PMS,2.5mg Tab; 5mg Tab; 15mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Ran-Olanzapine,RAN,5mg Tab; 15mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Sandoz Olanzapine,SDZ,2.5mg Tab; 5mg Tab; 15mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Teva-Olanzapine,TEV,2.5mg Tab; 5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+OLANZAPINE,Zyprexa,LIL,2.5mg Tab; 5mg Tab; 15mg Tab; (Off-Formulary Interchangeable) 20mg Tab; 10mg Tab; 7.5mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=olanzapine&type=1
+PIRFENIDONE,Esbriet (Off-Formulary Interchangeable),"InterMune Canada, Inc. (INT)",267mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,Jamp Pirfenidone (Off-Formulary Interchangeable),Jamp Pharma Corporation (JPC),267mg Cap; 801mg Tab; 267mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,Sandoz Pirfenidone Capsules (Off-Formulary Interchangeable),Sandoz Canada Inc. (SDZ),267mg Cap,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,Auro-Pirfenidone (Off-Formulary Interchangeable),Auro Pharma Inc. (AUR),267mg Tab; 801mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,Esbriet (Off-Formulary Interchangeable),Hoffmann-La Roche Limited (HLR),801mg Tab; 267mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,M-Pirfenidone (Off-Formulary Interchangeable),Mantra Pharma Inc. (MAT),801mg Tab; 267mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,PMS-Pirfenidone (Off-Formulary Interchangeable),Pharmascience Inc. (PMS),801mg Tab; 267mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+PIRFENIDONE,Sandoz Pirfenidone Tablets (Off-Formulary Interchangeable),Sandoz Canada Inc. (SDZ),267mg Tab; 801mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=pirfenidone&type=1
+DAPAGLIFLOZIN & METFORMIN,Apo-Dapagliflozin-Metformin,APX,5mg & 1000mg Tab; 5mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+DAPAGLIFLOZIN & METFORMIN,Auro-Dapagliflozin / Metformin,AUR,5mg & 1000mg Tab; 5mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+DAPAGLIFLOZIN & METFORMIN,Xigduo,AZC,5mg & 1000mg Tab; 5mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+EMPAGLIFLOZIN & METFORMIN,Synjardy,BOE,5mg & 850mg Tab; 5mg & 500mg Tab; 5mg & 1000mg Tab; 12.5mg & 1000mg Tab; 12.5mg & 850mg Tab; 12.5mg & 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+LINAGLIPTIN & METFORMIN,Jentadueto,BOE,2.5mg & 1000mg Tab; 2.5mg & 500mg Tab; 2.5mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Apo-Metformin ER (Off-Formulary Interchangeable),APX,1000mg ER Tab; 500mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Apo-Metformin (Off-Formulary Interchangeable),APX,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Apo-Metformin,APX,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Glumetza (Off-Formulary Interchangeable),BIO,500mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Glumetza (Off-Formulary Interchangeable),VAL,1000mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Mar-Metformin XR (Off-Formulary Interchangeable),MAR,500mg ER Tab; 1000mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Metformin ER (Off-Formulary Interchangeable),SAI,500mg ER Tab; 1000mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Mint-Metformin XR (Off-Formulary Interchangeable),MIN,1000mg ER Tab; 500mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Taro-Metformin XR (Off-Formulary Interchangeable),TAR,500mg ER Tab; 1000mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Auro-Metformin,AUR,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Auro-Metformin (Off-Formulary Interchangeable),AUR,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Ecl-Metformin (Off-Formulary Interchangeable),ECL,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Glucophage (Off-Formulary Interchangeable),SAV,850mg Tab; 1000mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Glucophage,SAV,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Jamp-Metformin (Off-Formulary Interchangeable),JPC,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Jamp-Metformin,JPC,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Jamp-Metformin Blackberry (Off-Formulary Interchangeable),JPC,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,M-Metformin,MAT,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,M-Metformin (Off-Formulary Interchangeable),MAT,1000mg Tab; 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Mar-Metformin (Off-Formulary Interchangeable),MAR,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Mar-Metformin,MAR,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Metformin,SAI,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Metformin (Off-Formulary Interchangeable),SAI,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Metformin FC,SIV,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Metformin FC (Off-Formulary Interchangeable),SIV,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Mint-Metformin (Off-Formulary Interchangeable),MIN,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Mint-Metformin,MIN,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,NRA-Metformin (Off-Formulary Interchangeable),NRA,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,NRA-Metformin,NRA,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Novo-Metformin,NOP,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,PMS-Metformin,PMS,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,PMS-Metformin (Off-Formulary Interchangeable),PMS,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,PMSC-Metformin (Off-Formulary Interchangeable),PMS,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,PMSC-Metformin,PMS,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,PRZ-Metformin,PRZ,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,PRZ-Metformin (Off-Formulary Interchangeable),PRZ,850mg Tab; 1000mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Ran-Metformin (Off-Formulary Interchangeable),RAN,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Ran-Metformin,RAN,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Ratio-Metformin,RPH,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Ratio-Metformin (Off-Formulary Interchangeable),RPH,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Sandoz Metformin FC (Off-Formulary Interchangeable),SDZ,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Sandoz Metformin FC,SDZ,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Septa-Metformin,SET,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Teva-Metformin,TEV,500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METFORMIN HCL,Teva-Metformin (Off-Formulary Interchangeable),TEV,850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SAXAGLIPTIN & METFORMIN,Komboglyze,AZC,2.5mg & 1000mg Tab; 2.5mg & 500mg Tab; 2.5mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Apo-Sitagliptin/Metformin XR,APX,100mg & 1000mg ER Tab; 50mg & 500mg ER Tab; 50mg & 1000mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Janumet XR,MEK,50mg & 500mg ER Tab; 50mg & 1000mg ER Tab; 100mg & 1000mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Sandoz Sitagliptin-Metformin XR,SDZ,50mg & 1000mg ER Tab; 100mg & 1000mg ER Tab; 50mg & 500mg ER Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Apo-Sitagliptin Malate/Metformin HCl,APX,50mg & 850mg Tab; 50mg & 1000mg Tab; 50mg & 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Apo-Sitagliptin-Metformin,APX,50mg & 850mg Tab; 50mg & 500mg Tab; 50mg & 1000mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Auro-Sitagliptin HCl and Metformin HCl,AUR,50mg & 850mg Tab; 50mg & 1000mg Tab; 50mg & 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Jamp Sitagliptin HCl / Metformin,JPC,50mg & 1000mg Tab; 50mg & 850mg Tab; 50mg & 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Janumet,MEK,50mg & 500mg Tab; 50mg & 1000mg Tab; 50mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,PRZ-Sitagliptin-Metformin,PRZ,50mg & 1000mg Tab; 50mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Reddy-Sitagliptin and Metformin HCl,DRR,50mg & 1000mg Tab; 50mg & 850mg Tab; 50mg & 500mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Sandoz Sitagliptin-Metformin,SDZ,50mg & 500mg Tab; 50mg & 1000mg Tab; 50mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Sitagliptin-Metformin,SIV,50mg & 500mg Tab; 50mg & 1000mg Tab; 50mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Sitagliptin/Metformin,SAI,50mg & 500mg Tab; 50mg & 1000mg Tab; 50mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+SITAGLIPTIN & METFORMIN,Teva-Sitagliptin Malate / Metformin,TEV,50mg & 1000mg Tab; 50mg & 500mg Tab; 50mg & 850mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metformin&type=1
+METOPROLOL TARTRATE,AA-Metoprolol SR,AAP,100mg LA Tab; 200mg LA Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Lopresor SR (Not a Benefit),NOV,200mg LA Tab; 100mg LA Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,AG-Metoprolol-L,ANG,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Apo-Metoprolol,APX,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Apo-Metoprolol (Type L),APX,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Betaloc (Not a Benefit),AZC,100mg Tab; 50mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Jamp-Metoprolol-L,JPC,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Lopresor (Not a Benefit),NOV,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Metoprolol,SAI,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Metoprolol-L,SIV,100mg Tab; 50mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,PMS-Metoprolol-L,PMS,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Sandoz Metoprolol (Type L),SDZ,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Teva-Metoprolol,TEV,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+METOPROLOL TARTRATE,Teva-Metoprolol (Uncoated),TEV,50mg Tab; 100mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=metoprolol&type=1
+OXYCODONE HCL,Oxy.IR (Off-Formulary Interchangeable),PFP,20mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL,PMS-Oxycodone (Off-Formulary Interchangeable),PMS,20mg Tab; 5mg Tab; 10mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL,Supeudol (Off-Formulary Interchangeable),SDZ,10mg Tab; 5mg Tab; 20mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETAMINOPHEN,Apo-Oxycodone/Acet,APX,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETAMINOPHEN,Endocet,BQU,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETAMINOPHEN,Percocet (Not a Benefit),BQU,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETAMINOPHEN,Sandoz Oxycodone/Acetaminophen,SDZ,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETAMINOPHEN,Teva-Oxycocet,TEV,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETYLSALICYLIC ACID,Percodan (Not a Benefit),BQU,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1
+OXYCODONE HCL & ACETYLSALICYLIC ACID,Ratio-Oxycodan,RPH,5mg & 325mg Tab,https://www.formulary.health.gov.on.ca/formulary/results.xhtml?q=oxycodone&type=1

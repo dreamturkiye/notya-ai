@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 
 const supabase = createClient(
   'https://anjayzospuurymjmmtim.supabase.co',
@@ -26,6 +27,8 @@ export default function MaliGiris() {
       setLoading(false)
       return
     }
+    // NOTYA-ULKE-01: an account of another country is refused with the sentence a wrong password gets.
+    if (!hesapBuUlkedeMi(data.user)) { await supabase.auth.signOut(); setError('Invalid login credentials'); setLoading(false); return }
     router.replace('/dashboard/mali')
   }
 
